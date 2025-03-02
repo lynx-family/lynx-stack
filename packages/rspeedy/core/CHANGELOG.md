@@ -1,5 +1,12 @@
 # @lynx-js/rspeedy
 
+## 0.8.2
+
+### Patch Changes
+
+- 1abf8f0: feat(rspeedy): support generateStatsFile
+- 1abf8f0: Bump Rsbuild v1.2.11 with Rspack v1.2.3
+
 ## 0.8.1
 
 ### Patch Changes

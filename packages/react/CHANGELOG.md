@@ -1,5 +1,22 @@
 # @lynx-js/react
 
+## 0.105.0
+
+### Minor Changes
+
+- 1abf8f0: Support `estimated-main-axis-size-px`
+
+  NOTE: This changes behavior of `transformReactLynx` so certain features (like lazy bundle) will be BROKEN if version mismatch.
+
+- 1abf8f0: Support JSXSpread on `<list-item/>` component.
+
+  NOTE: This changes behavior of `transformReactLynx` so certain features (like lazy bundle) will be BROKEN if version mismatch.
+
+### Patch Changes
+
+- 1abf8f0: Update readme.
+- 1abf8f0: Save some bytes if `<page/>` is not used.
+
 ## 0.104.1
 
 ### Patch Changes

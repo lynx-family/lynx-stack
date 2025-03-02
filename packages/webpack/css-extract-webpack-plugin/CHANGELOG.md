@@ -1,5 +1,15 @@
 # @lynx-js/css-extract-webpack-plugin
 
+## 0.5.0
+
+### Minor Changes
+
+- 1abf8f0: Use compilation hash for `css.hot-update.json` to avoid cache.
+
+### Patch Changes
+
+- 1abf8f0: Set the default `targetSdkVersion` to 3.2.
+
 ## 0.4.1
 
 ### Patch Changes

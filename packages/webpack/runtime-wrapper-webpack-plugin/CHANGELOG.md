@@ -1,5 +1,11 @@
 # @lynx-js/runtime-wrapper-webpack-plugin
 
+## 0.0.7
+
+### Patch Changes
+
+- 1abf8f0: Set the default `targetSdkVersion` to 3.2.
+
 ## 0.0.6
 
 ### Patch Changes

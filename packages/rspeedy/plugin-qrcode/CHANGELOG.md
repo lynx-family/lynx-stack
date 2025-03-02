@@ -1,5 +1,11 @@
 # @lynx-js/qrcode-rsbuild-plugin
 
+## 0.3.3
+
+### Patch Changes
+
+- f6c56fb: Add `README.md`.
+
 ## 0.3.2
 
 ### Patch Changes
