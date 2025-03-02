@@ -11,6 +11,8 @@
   </a>
 </p>
 
+The built tool for Lynx.
+
 ## Getting Started
 
 ```bash
@@ -19,7 +21,7 @@ npm create rspeedy@latest
 
 ## Documentation
 
-Visit [Rspeedy Website](https://lynxjs.org/rspeedy/index) to view the full documentation.
+Visit [Lynx Website](https://lynxjs.org/rspeedy/index) to view the full documentation.
 
 ## Contributing
 

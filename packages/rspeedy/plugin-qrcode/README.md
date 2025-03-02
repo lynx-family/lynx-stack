@@ -21,8 +21,6 @@ npm install -D @lynx-js/qrcode-rsbuild-plugin
 
 ## Usage
 
-The QRCode Rsbuild Plugin allows you to display QR codes in your terminal for easy access to your application on mobile devices during development.
-
 <!-- eslint-disable -->
 
 ```js
