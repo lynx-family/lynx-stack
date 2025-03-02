@@ -16,6 +16,7 @@
 
 - 1abf8f0: Update readme.
 - 1abf8f0: Save some bytes if `<page/>` is not used.
+- 1abf8f0: Should escape newline character in jsx
 
 ## 0.104.1
 
