@@ -24,3 +24,7 @@ Visit [Rspeedy Website](https://lynxjs.org/rspeedy/index) to view the full docum
 ## Contributing
 
 Contributions to Rspeedy are welcome and highly appreciated. However, before you jump right into it, we would like you to review our [Contribution Guidelines](/contributing.md) to make sure you have a smooth experience contributing to Rspeedy.
+
+## License
+
+Rspeedy is Apache-2.0 licensed.
