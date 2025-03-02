@@ -1,5 +1,19 @@
 # @lynx-js/web-elements
 
+## 0.2.4
+
+### Patch Changes
+
+- 1abf8f0: feat: `inline-text` is deprecated, now you can use `x-text` instead in `x-text`.
+- 1abf8f0: fix: Removed the list-item style `contain: strict`. Previously we thought it would affect `content-visibility: auto`, but it turns out that this is wrong.
+
+  Now, you don't need to specify the width and height of list-item, it will be stretched by the child elements.
+
+- 1abf8f0: fix: do truncation layout calculation after fonts loaded
+- 1abf8f0: refractor: x-foldview-ng gesture use pageX&pageY to replace the screenX&screenY
+- 1abf8f0: fix: x-input should inherit color style
+- 1abf8f0: feat: `inline-image` is deprecated, now you can use `x-image` instead in `x-text`.
+
 ## 0.2.3
 
 ### Patch Changes

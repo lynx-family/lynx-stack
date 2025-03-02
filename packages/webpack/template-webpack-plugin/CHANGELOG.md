@@ -1,5 +1,23 @@
 # @lynx-js/template-webpack-plugin
 
+## 0.6.3
+
+### Patch Changes
+
+- 1abf8f0: Set the default value of `enableNativeList` to `true`.
+- 1abf8f0: Add `entryNames` parameter to `beforeEncode` hook.
+
+  ```js
+  import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin';
+
+  const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(compilation);
+  hooks.beforeEncode.tap('MyPlugin', ({ entryNames }) => {
+    console.log(entryNames);
+  });
+  ```
+
+- 1abf8f0: Set the default `targetSdkVersion` to 3.2.
+
 ## 0.6.2
 
 ### Patch Changes

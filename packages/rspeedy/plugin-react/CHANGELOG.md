@@ -1,5 +1,30 @@
 # @lynx-js/react-rsbuild-plugin
 
+## 0.9.0
+
+### Minor Changes
+
+- 1abf8f0: The `targetSdkVersion` has been deprecated. Please use `engineVersion` instead, as `targetSdkVersion` is now an alias for `engineVersion`.
+
+### Patch Changes
+
+- 1abf8f0: feat: pass options to CssExtractPlugin
+- 1abf8f0: Be compat with `@lynx-js/react` v0.105.0
+- 1abf8f0: Set the default `targetSdkVersion` to 3.2.
+- Updated dependencies [1abf8f0]
+- Updated dependencies [1abf8f0]
+- Updated dependencies [1abf8f0]
+- Updated dependencies [1abf8f0]
+- Updated dependencies [1abf8f0]
+- Updated dependencies [1abf8f0]
+  - @lynx-js/template-webpack-plugin@0.6.3
+  - @lynx-js/react-webpack-plugin@0.6.6
+  - @lynx-js/css-extract-webpack-plugin@0.5.0
+  - @lynx-js/runtime-wrapper-webpack-plugin@0.0.7
+  - @lynx-js/web-webpack-plugin@0.6.1
+  - @lynx-js/react-alias-rsbuild-plugin@0.9.0
+  - @lynx-js/react-refresh-webpack-plugin@0.3.1
+
 ## 0.8.1
 
 ### Patch Changes

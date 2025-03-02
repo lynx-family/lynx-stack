@@ -1,5 +1,12 @@
 # @lynx-js/react-webpack-plugin
 
+## 0.6.6
+
+### Patch Changes
+
+- 1abf8f0: Be compat with `@lynx-js/react` v0.105.0
+- 1abf8f0: Improve compilation performance by avoid using `compilation.updateAsset`.
+
 ## 0.6.5
 
 ### Patch Changes
