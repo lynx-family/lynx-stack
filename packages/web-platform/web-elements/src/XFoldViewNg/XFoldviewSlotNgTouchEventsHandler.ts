@@ -4,8 +4,8 @@
 // LICENSE file in the root directory of this source tree.
 */
 import type { AttributeReactiveClass } from '@lynx-js/web-elements-reactive';
-import { XFoldviewNg } from './XFoldviewNg.js';
-import { XFoldviewSlotNg } from './XFoldviewSlotNg.js';
+import type { XFoldviewNg } from './XFoldviewNg.js';
+import type { XFoldviewSlotNg } from './XFoldviewSlotNg.js';
 import { isChromium } from '../common/constants.js';
 export class XFoldviewSlotNgTouchEventsHandler
   implements InstanceType<AttributeReactiveClass<typeof XFoldviewSlotNg>>

@@ -4,9 +4,9 @@
 // LICENSE file in the root directory of this source tree.
 */
 import { commonComponentEventSetting } from '../common/commonEventInitConfiguration.js';
-import { XOverlayNg } from './XOverlayNg.js';
+import type { XOverlayNg } from './XOverlayNg.js';
 import {
-  AttributeReactiveClass,
+  type AttributeReactiveClass,
   registerAttributeHandler,
   genDomGetter,
 } from '@lynx-js/web-elements-reactive';

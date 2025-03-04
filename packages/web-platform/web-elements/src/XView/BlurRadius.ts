@@ -4,11 +4,11 @@
 // LICENSE file in the root directory of this source tree.
 */
 import {
-  AttributeReactiveClass,
+  type AttributeReactiveClass,
   genDomGetter,
   registerAttributeHandler,
 } from '@lynx-js/web-elements-reactive';
-import { XBlurView } from './XBlurView.js';
+import type { XBlurView } from './XBlurView.js';
 
 export class BlurRadius
   implements InstanceType<AttributeReactiveClass<typeof XBlurView>>

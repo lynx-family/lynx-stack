@@ -128,9 +128,9 @@ const config = {
         publicPath: '/common.css',
       },
     ],
-    hot: !isCI,
+    hot: false,
   },
-  watch: !isCI,
+  watch: false,
   module: {
     rules: [
       {

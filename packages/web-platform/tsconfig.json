@@ -9,7 +9,6 @@
     "esModuleInterop": false,
     "exactOptionalPropertyTypes": false,
     "isolatedDeclarations": false,
-    "verbatimModuleSyntax": false,
   },
   "references": [
     /** packages-start */

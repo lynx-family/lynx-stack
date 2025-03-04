@@ -8,9 +8,9 @@ import {
   registerAttributeHandler,
   genDomGetter,
 } from '@lynx-js/web-elements-reactive';
-import { XRefreshHeader } from './XRefreshHeader.js';
+import type { XRefreshHeader } from './XRefreshHeader.js';
 import { XRefreshIntersectionObserverEvent } from './XRefreshSubElementIntersectionObserver.js';
-import { XRefreshView } from './XRefreshView.js';
+import type { XRefreshView } from './XRefreshView.js';
 import { commonComponentEventSetting } from '../common/commonEventInitConfiguration.js';
 
 export class XRefreshViewEventsEmitter

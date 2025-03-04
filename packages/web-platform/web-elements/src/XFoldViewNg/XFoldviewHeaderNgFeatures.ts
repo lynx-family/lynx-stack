@@ -4,8 +4,8 @@
 // LICENSE file in the root directory of this source tree.
 */
 import type { AttributeReactiveClass } from '@lynx-js/web-elements-reactive';
-import { XFoldviewHeaderNg } from './XFoldviewHeaderNg.js';
-import { XFoldviewNg } from './XFoldviewNg.js';
+import type { XFoldviewHeaderNg } from './XFoldviewHeaderNg.js';
+import type { XFoldviewNg } from './XFoldviewNg.js';
 
 export class XFoldviewHeaderNgFeatures
   implements InstanceType<AttributeReactiveClass<typeof XFoldviewHeaderNg>>

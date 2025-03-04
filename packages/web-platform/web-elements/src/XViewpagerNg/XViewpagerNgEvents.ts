@@ -9,7 +9,7 @@ import {
   registerAttributeHandler,
 } from '@lynx-js/web-elements-reactive';
 import { commonComponentEventSetting } from '../common/commonEventInitConfiguration.js';
-import { XViewpagerNg } from './XViewpagerNg.js';
+import type { XViewpagerNg } from './XViewpagerNg.js';
 import { useScrollEnd } from '../common/constants.js';
 
 export class XViewpagerNgEvents

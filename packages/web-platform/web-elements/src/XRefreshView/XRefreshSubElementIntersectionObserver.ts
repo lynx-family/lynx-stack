@@ -3,9 +3,9 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 */
-import { AttributeReactiveClass } from '@lynx-js/web-elements-reactive';
-import { XRefreshFooter } from './XRefreshFooter.js';
-import { XRefreshHeader } from './XRefreshHeader.js';
+import type { AttributeReactiveClass } from '@lynx-js/web-elements-reactive';
+import type { XRefreshFooter } from './XRefreshFooter.js';
+import type { XRefreshHeader } from './XRefreshHeader.js';
 
 export class XRefreshIntersectionObserverEvent extends Event {
   static EventName = 'x-refresh-view-intersecting';

@@ -3,11 +3,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 */
-import {
-  AttributeReactiveClass,
-  genDomGetter,
-} from '@lynx-js/web-elements-reactive';
-import { ScrollView } from './ScrollView.js';
+import { type AttributeReactiveClass } from '@lynx-js/web-elements-reactive';
+import type { ScrollView } from './ScrollView.js';
 
 export class ScrollIntoView
   implements InstanceType<AttributeReactiveClass<typeof ScrollView>>

@@ -5,7 +5,7 @@
 */
 
 import {
-  AttributeReactiveClass,
+  type AttributeReactiveClass,
   bindToAttribute,
   genDomGetter,
   registerAttributeHandler,

@@ -9,7 +9,7 @@ import {
   genDomGetter,
   registerAttributeHandler,
 } from '@lynx-js/web-elements-reactive';
-import { XSwiper } from './XSwiper.js';
+import type { XSwiper } from './XSwiper.js';
 import { commonComponentEventSetting } from '../common/commonEventInitConfiguration.js';
 import { useScrollEnd } from '../common/constants.js';
 

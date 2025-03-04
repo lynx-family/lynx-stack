@@ -4,11 +4,11 @@
 // LICENSE file in the root directory of this source tree.
 */
 import {
-  AttributeReactiveClass,
+  type AttributeReactiveClass,
   registerAttributeHandler,
 } from '@lynx-js/web-elements-reactive';
 import { commonComponentEventSetting } from '../common/commonEventInitConfiguration.js';
-import { XFoldviewNg } from './XFoldviewNg.js';
+import type { XFoldviewNg } from './XFoldviewNg.js';
 
 export class XFoldviewNgEvents
   implements InstanceType<AttributeReactiveClass<typeof XFoldviewNg>>

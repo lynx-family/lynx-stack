@@ -4,13 +4,13 @@
 // LICENSE file in the root directory of this source tree.
 */
 import {
-  AttributeReactiveClass,
+  type AttributeReactiveClass,
   bindToAttribute,
   genDomGetter,
   registerAttributeHandler,
 } from '@lynx-js/web-elements-reactive';
 import { commonComponentEventSetting } from '../common/commonEventInitConfiguration.js';
-import { XCanvas } from './XCanvas.js';
+import type { XCanvas } from './XCanvas.js';
 
 export class CanvasAttributes
   implements InstanceType<AttributeReactiveClass<typeof XCanvas>>
