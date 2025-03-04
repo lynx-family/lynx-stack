@@ -19,8 +19,8 @@
   "types": "lib/index.d.ts",
   "scripts": {},
   "devDependencies": {
-    "@rspack/core": "1.2.6",
-    "@rspack/test-tools": "1.2.6",
+    "@rspack/core": "1.2.7",
+    "@rspack/test-tools": "1.2.7",
     "@types/fs-extra": "11.0.4",
     "fs-extra": "^11.3.0",
     "rimraf": "^6.0.1",

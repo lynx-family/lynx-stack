@@ -37,7 +37,7 @@
   },
   "devDependencies": {
     "@microsoft/api-extractor": "catalog:",
-    "@rspack/core": "1.2.6"
+    "@rspack/core": "1.2.7"
   },
   "engines": {
     "node": ">=18"
