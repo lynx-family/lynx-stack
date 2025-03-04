@@ -35,7 +35,7 @@
     "globals": "^16.0.0",
     "husky": "^9.1.7",
     "lint-staged": "^15.4.3",
-    "sort-package-json": "^2.15.0",
+    "sort-package-json": "^2.15.1",
     "ts-patch": "^3.3.0",
     "turbo": "^2.4.4",
     "typescript": "^5.7.3",
