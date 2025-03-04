@@ -3,14 +3,16 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 */
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { destroyWorklet } from '../../src/worklet/jsImpl';
-import { globalEnvManager } from '../utils/envManager';
-import { MainThreadRef, useMainThreadRef } from '../../src/worklet/workletRef';
-import { __root } from '../../src/root';
 import { render } from 'preact';
-import { setupPage } from '../../src/snapshot';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { injectUpdatePatch, replaceCommitHook } from '../../src/lifecycle/patchUpdate';
+import { __root } from '../../src/root';
+import { setupPage } from '../../src/snapshot';
+import { clearConfigCacheForTesting } from '../../src/worklet/functionality';
+import { destroyWorklet } from '../../src/worklet/jsImpl';
+import { MainThreadRef, useMainThreadRef } from '../../src/worklet/workletRef';
+import { globalEnvManager } from '../utils/envManager';
 
 beforeAll(() => {
   setupPage(__CreatePage('0', 0));
@@ -21,6 +23,7 @@ beforeAll(() => {
 beforeEach(() => {
   globalEnvManager.resetEnv();
   SystemInfo.lynxSdkVersion = '999.999';
+  clearConfigCacheForTesting();
 });
 
 afterEach(() => {
@@ -50,7 +53,7 @@ describe('WorkletRef in js', () => {
   it('to json', () => {
     globalEnvManager.switchToBackground();
     const ref = new MainThreadRef(1);
-    expect(JSON.stringify(ref)).toMatchInlineSnapshot(`"{"_wvid":1}"`);
+    expect(JSON.stringify(ref)).toMatchInlineSnapshot(`"{"_wvid":2}"`);
   });
 
   it('should send init value to the main thread', () => {
@@ -84,7 +87,7 @@ describe('WorkletRef in js', () => {
           [
             "rLynxChange",
             {
-              "data": "{"workletRefInitValuePatch":[[1,233]]}",
+              "data": "{"workletRefInitValuePatch":[[3,233]]}",
               "patchOptions": {
                 "commitTaskId": 1,
                 "reloadVersion": 0,
@@ -154,7 +157,7 @@ describe('WorkletRef in js', () => {
   });
 
   it('should not send init value to the main thread when native capabilities not fulfilled', () => {
-    lynx.getCoreContext = undefined;
+    SystemInfo.lynxSdkVersion = '2.13';
     const Comp = () => {
       const ref = useMainThreadRef(233);
       return <view></view>;

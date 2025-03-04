@@ -3,15 +3,15 @@
 // LICENSE file in the root directory of this source tree.
 import type { JsFnHandle } from '@lynx-js/react/worklet-runtime/bindings';
 
-import { lynxWorkletJsImpl } from './jsImpl.js';
+let lastId = 0;
+
 /**
  * transform args of `runOnBackground()`.
  *
  * @internal
  */
 export function transformToWorklet(obj: (...args: any[]) => any): JsFnHandle {
-  const impl = lynxWorkletJsImpl();
-  const id = impl ? ++impl._workletJsFnLastId : 0;
+  const id = ++lastId;
   if (typeof obj !== 'function') {
     // We save the error message in the object, so that we can throw it later when the function is called on the main thread.
     return {

@@ -4,16 +4,15 @@
 import { WorkletEvents } from '@lynx-js/react/worklet-runtime/bindings';
 
 import { WorkletExecIdMap } from './execMap.js';
-import { enableRunOnBackground } from './functionality.js';
+import { isRunOnBackgroundEnabled } from './functionality.js';
 import type { RunOnBackgroundData } from './runOnBackground.js';
+import { takeWorkletRefInitValuePatch } from './workletRefPool.js';
 
 interface LynxWorkletJsImpl {
   _workletExecIdMap?: WorkletExecIdMap;
-  _workletJsFnLastId: number;
-  _workletRefLastId: number;
-  _workletRefInitValueSet: Set<number>;
-  _workletRefInitValuePatch: [number, unknown][];
 }
+
+let impl: LynxWorkletJsImpl | undefined;
 
 /**
  * @internal
@@ -50,15 +49,10 @@ function initWorklet(): boolean {
     return false;
   }
 
-  lynx.lynxWorkletJsImpl = {
-    _workletJsFnLastId: 0,
-    _workletRefLastId: 0,
-    _workletRefInitValueSet: new Set<number>(),
-    _workletRefInitValuePatch: [],
-  };
+  impl = {};
 
-  if (enableRunOnBackground()) {
-    lynx.lynxWorkletJsImpl._workletExecIdMap = new WorkletExecIdMap();
+  if (isRunOnBackgroundEnabled()) {
+    impl._workletExecIdMap = new WorkletExecIdMap();
     lynx.getCoreContext().addEventListener(WorkletEvents.runOnBackground, runJSFunction);
     lynx.getCoreContext().addEventListener(WorkletEvents.releaseBackgroundWorkletCtx, removeJsWorklets);
   }
@@ -67,21 +61,23 @@ function initWorklet(): boolean {
 }
 
 export function destroyWorklet(): void {
-  if (!lynx.lynxWorkletJsImpl) {
+  takeWorkletRefInitValuePatch();
+
+  if (!impl) {
     return;
   }
 
-  lynx.lynxWorkletJsImpl = undefined;
+  impl = undefined;
 
-  if (enableRunOnBackground()) {
+  if (isRunOnBackgroundEnabled()) {
     lynx.getCoreContext?.().removeEventListener(WorkletEvents.runOnBackground, runJSFunction);
     lynx.getCoreContext?.().removeEventListener(WorkletEvents.releaseBackgroundWorkletCtx, removeJsWorklets);
   }
 }
 
 export function lynxWorkletJsImpl(shouldInit: boolean = true): LynxWorkletJsImpl | undefined {
-  if (lynx.lynxWorkletJsImpl || (shouldInit && initWorklet())) {
-    return lynx.lynxWorkletJsImpl;
+  if (impl || (shouldInit && initWorklet())) {
+    return impl;
   }
   return undefined;
 }

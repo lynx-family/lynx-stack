@@ -6,9 +6,10 @@ import type { RefObject } from 'react';
 import type { WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bindings';
 import { WorkletEvents } from '@lynx-js/react/worklet-runtime/bindings';
 
-import { lynxWorkletJsImpl } from './jsImpl.js';
 import { addWorkletRefInitValue } from './workletRefPool.js';
 import { useMemo } from '../hooks/react.js';
+
+let lastId = 0;
 
 abstract class WorkletRef<T> {
   /**
@@ -33,8 +34,7 @@ abstract class WorkletRef<T> {
    */
   protected constructor(initValue: T, type: string) {
     if (__JS__) {
-      const impl = lynxWorkletJsImpl();
-      this._id = impl ? ++impl._workletRefLastId : 0;
+      this._id = ++lastId;
       this._initValue = initValue;
       this._type = type;
       addWorkletRefInitValue(this._id, initValue);

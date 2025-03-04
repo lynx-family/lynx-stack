@@ -57,8 +57,8 @@ class JsFunctionLifecycleManager {
   }
 }
 
-function enableRunOnBackground(): boolean {
+function isRunOnBackgroundEnabled(): boolean {
   return isSdkVersionGt(2, 15);
 }
 
-export { JsFunctionLifecycleManager, enableRunOnBackground };
+export { JsFunctionLifecycleManager, isRunOnBackgroundEnabled };

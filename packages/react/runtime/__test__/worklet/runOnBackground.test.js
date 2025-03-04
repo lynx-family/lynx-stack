@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { clearConfigCacheForTesting } from '../../src/worklet/functionality';
 import { destroyWorklet } from '../../src/worklet/jsImpl';
 import { runOnBackground } from '../../src/worklet/runOnBackground';
 import { globalEnvManager } from '../utils/envManager';
@@ -46,6 +47,7 @@ describe('runOnBackground', () => {
   });
 
   it('should throw when native capabilities not fulfilled', () => {
+    clearConfigCacheForTesting();
     globalEnvManager.switchToMainThread();
     SystemInfo.lynxSdkVersion = '2.15';
     const worklet = {
@@ -54,6 +56,7 @@ describe('runOnBackground', () => {
     expect(() => {
       runOnBackground(worklet)(1, ['args']);
     }).toThrowError('runOnBackground requires Lynx sdk version 2.16.');
+    clearConfigCacheForTesting();
   });
 
   it('should throw when _error exists', () => {
