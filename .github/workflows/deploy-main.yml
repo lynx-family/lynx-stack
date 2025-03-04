@@ -64,6 +64,9 @@ jobs:
       contents: write
       pull-requests: write
       statuses: read
+      # `id-token: write` is required for npm provenance
+      # See: https://docs.npmjs.com/generating-provenance-statements#publishing-packages-with-provenance-via-github-actions
+      id-token: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -107,6 +110,9 @@ jobs:
       contents: read
       pull-requests: read
       statuses: read
+      # `id-token: write` is required for npm provenance
+      # See: https://docs.npmjs.com/generating-provenance-statements#publishing-packages-with-provenance-via-github-actions
+      id-token: write
     steps:
       - uses: actions/checkout@v4
         with:
