@@ -7,7 +7,6 @@
     "lib": ["DOM", "ESNext", "WebWorker"],
     "noUnusedParameters": false,
     "noImplicitReturns": false,
-    "verbatimModuleSyntax": true,
   },
   "include": ["src"],
   "references": [

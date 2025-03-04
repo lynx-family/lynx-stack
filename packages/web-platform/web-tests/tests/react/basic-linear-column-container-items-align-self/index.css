@@ -5,11 +5,10 @@
 */
 .container {
   display: linear;
-  linear-gravity: none;
   linear-weight-sum: 0;
 }
 .items-center {
-  linear-cross-gravity: center;
+  align-items: center;
 }
 .pink {
   background-color: pink;
@@ -46,39 +45,27 @@
   width: 40px;
   height: 40px;
 }
-.self-left {
-  linear-layout-gravity: left;
-}
-.self-right {
-  linear-layout-gravity: right;
-}
-.self-top {
-  linear-layout-gravity: top;
-}
-.self-bottom {
-  linear-layout-gravity: bottom;
-}
-.self-start {
-  linear-layout-gravity: start;
-}
-.self-end {
-  linear-layout-gravity: end;
+.self-auto {
+  align-self: auto;
 }
 .self-center {
-  linear-layout-gravity: center;
+  align-self: center;
 }
-.self-center-vertical {
-  linear-layout-gravity: center-vertical;
+.self-start {
+  align-self: start;
 }
-.self-center-horizontal {
-  linear-layout-gravity: center-horizontal;
+.self-end {
+  align-self: end;
+}
+.self-flex-start {
+  align-self: flex-start;
+}
+.self-flex-end {
+  align-self: flex-end;
+}
+.self-baseline {
+  align-self: baseline;
 }
 .self-stretch {
-  linear-layout-gravity: stretch;
-}
-.self-fill-vertical {
-  linear-layout-gravity: fill-vertical;
-}
-.self-fill-horizontal {
-  linear-layout-gravity: fill-horizontal;
+  align-self: stretch;
 }

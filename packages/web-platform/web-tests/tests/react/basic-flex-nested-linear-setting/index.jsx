@@ -21,7 +21,6 @@ class Page extends Component {
           style={{
             display: 'linear',
             linearGravity: 'space-between',
-            justifyContent: 'space-around',
             height: '100px',
             width: '100px',
           }}
