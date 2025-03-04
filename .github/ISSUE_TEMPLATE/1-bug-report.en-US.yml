@@ -17,7 +17,7 @@ body:
     id: system-info
     attributes:
       label: System Info
-      description: Output of `npx envinfo --system --npmPackages '@lynx-js/*' --binaries --browsers`
+      description: Output of `npx envinfo --system --npmPackages '@lynx-js/*' --binaries`
       placeholder: |
         System:
         Binaries:
