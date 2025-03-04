@@ -10,7 +10,7 @@ import {
   registerAttributeHandler,
 } from '@lynx-js/web-elements-reactive';
 import { commonComponentEventSetting } from '../common/commonEventInitConfiguration.js';
-import { XText } from './XText.js';
+import type { XText } from './XText.js';
 type NodeInfo = {
   node: Text | Element;
   start: number;

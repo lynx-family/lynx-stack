@@ -4,12 +4,12 @@
 // LICENSE file in the root directory of this source tree.
 */
 import {
-  AttributeReactiveClass,
+  type AttributeReactiveClass,
   bindSwitchToEventListener,
   genDomGetter,
   registerAttributeHandler,
 } from '@lynx-js/web-elements-reactive';
-import { XSwiper } from './XSwiper.js';
+import type { XSwiper } from './XSwiper.js';
 
 export class XSwiperCircular
   implements InstanceType<AttributeReactiveClass<typeof XSwiper>>

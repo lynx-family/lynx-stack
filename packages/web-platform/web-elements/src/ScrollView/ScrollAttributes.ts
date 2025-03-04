@@ -4,11 +4,10 @@
 // LICENSE file in the root directory of this source tree.
 */
 import {
-  AttributeReactiveClass,
-  genDomGetter,
+  type AttributeReactiveClass,
   registerAttributeHandler,
 } from '@lynx-js/web-elements-reactive';
-import { ScrollView } from './ScrollView.js';
+import type { ScrollView } from './ScrollView.js';
 
 export class ScrollAttributes
   implements InstanceType<AttributeReactiveClass<typeof ScrollView>>

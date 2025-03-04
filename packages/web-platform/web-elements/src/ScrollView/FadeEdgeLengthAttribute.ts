@@ -4,13 +4,13 @@
 // LICENSE file in the root directory of this source tree.
 */
 import {
-  AttributeReactiveClass,
+  type AttributeReactiveClass,
   bindToStyle,
   genDomGetter,
   registerAttributeHandler,
   registerStyleChangeHandler,
 } from '@lynx-js/web-elements-reactive';
-import { ScrollView } from './ScrollView.js';
+import type { ScrollView } from './ScrollView.js';
 
 export class FadeEdgeLengthAttribute
   implements InstanceType<AttributeReactiveClass<typeof ScrollView>>

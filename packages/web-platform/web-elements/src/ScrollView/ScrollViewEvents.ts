@@ -10,7 +10,7 @@ import {
   registerAttributeHandler,
 } from '@lynx-js/web-elements-reactive';
 import { commonComponentEventSetting } from '../common/commonEventInitConfiguration.js';
-import { ScrollView } from './ScrollView.js';
+import type { ScrollView } from './ScrollView.js';
 import { bindToIntersectionObserver } from '../common/bindToIntersectionObserver.js';
 import { useScrollEnd } from '../common/constants.js';
 

@@ -14,7 +14,7 @@ import type {
   CssInJsInfo,
   BrowserConfig,
 } from '@lynx-js/web-constants';
-import { createMainThreadLynx, MainThreadLynx } from './MainThreadLynx.js';
+import { createMainThreadLynx, type MainThreadLynx } from './MainThreadLynx.js';
 import { initializeElementCreatingFunction } from './elementAPI/elementCreating/elementCreatingFunctions.js';
 import * as attributeAndPropertyApis from './elementAPI/attributeAndProperty/attributeAndPropertyFunctions.js';
 import * as domTreeApis from './elementAPI/domTree/domTreeFunctions.js';
