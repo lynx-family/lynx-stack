@@ -65,6 +65,13 @@ pub struct DarkModeConfig {
 
 #[napi(object)]
 #[derive(Clone, Debug)]
+pub struct AddComponentElementConfig {
+  /// @public
+  pub compiler_only: bool,
+}
+
+#[napi(object)]
+#[derive(Clone, Debug)]
 pub struct CompatVisitorConfig {
   /// @internal
   #[napi(ts_type = "'LEPUS' | 'JS' | 'MIXED'")]
@@ -78,7 +85,7 @@ pub struct CompatVisitorConfig {
   /// @public
   pub additional_component_attributes: Vec<String>,
   /// @public
-  pub add_component_element: bool,
+  pub add_component_element: Either<bool, AddComponentElementConfig>,
   /// @public
   /// @deprecated
   pub simplify_ctor_like_react_lynx_2: bool,
@@ -101,7 +108,7 @@ impl Default for CompatVisitorConfig {
       old_runtime_pkg: vec!["@lynx-js/react-runtime".into()],
       new_runtime_pkg: "@lynx-js/react".into(),
       additional_component_attributes: vec![],
-      add_component_element: false,
+      add_component_element: Either::A(false),
       simplify_ctor_like_react_lynx_2: false,
       remove_component_attr_regex: None,
       disable_deprecated_warning: false,
@@ -298,23 +305,28 @@ where
 
   fn visit_mut_expr(&mut self, n: &mut Expr) {
     match n {
-      Expr::JSXElement(_) => {
-        let state = (vec![], JSXElement::dummy(), false, false);
-        self.add_component_element_state.push(state);
-        n.visit_mut_children_with(self);
+      Expr::JSXElement(_) => match self.opts.add_component_element {
+        Either::A(true) => {
+          let state = (vec![], JSXElement::dummy(), false, false);
+          self.add_component_element_state.push(state);
+          n.visit_mut_children_with(self);
 
-        let (primitive_attrs, component_jsx, has_spread, should_handle) =
-          self.add_component_element_state.pop().unwrap();
+          let (primitive_attrs, component_jsx, has_spread, should_handle) =
+            self.add_component_element_state.pop().unwrap();
 
-        if should_handle {
-          *n = self.wrap_with_lynx_component_helper((
-            primitive_attrs,
-            component_jsx,
-            has_spread,
-            should_handle,
-          ))
+          if should_handle {
+            *n = self.wrap_with_lynx_component_helper((
+              primitive_attrs,
+              component_jsx,
+              has_spread,
+              should_handle,
+            ))
+          }
         }
-      }
+        _ => {
+          n.visit_mut_children_with(self);
+        }
+      },
       _ => {
         n.visit_mut_children_with(self);
       }
@@ -323,26 +335,31 @@ where
 
   fn visit_mut_jsx_element_child(&mut self, child: &mut JSXElementChild) {
     match child {
-      JSXElementChild::JSXElement(_) => {
-        let state = (vec![], JSXElement::dummy(), false, false);
-        self.add_component_element_state.push(state);
-        child.visit_mut_children_with(self);
+      JSXElementChild::JSXElement(_) => match self.opts.add_component_element {
+        Either::A(true) => {
+          let state = (vec![], JSXElement::dummy(), false, false);
+          self.add_component_element_state.push(state);
+          child.visit_mut_children_with(self);
 
-        let (primitive_attrs, component_jsx, has_spread, should_handle) =
-          self.add_component_element_state.pop().unwrap();
+          let (primitive_attrs, component_jsx, has_spread, should_handle) =
+            self.add_component_element_state.pop().unwrap();
 
-        if should_handle {
-          *child = JSXElementChild::JSXExprContainer(JSXExprContainer {
-            span: DUMMY_SP,
-            expr: JSXExpr::Expr(Box::new(self.wrap_with_lynx_component_helper((
-              primitive_attrs,
-              component_jsx,
-              has_spread,
-              should_handle,
-            )))),
-          });
+          if should_handle {
+            *child = JSXElementChild::JSXExprContainer(JSXExprContainer {
+              span: DUMMY_SP,
+              expr: JSXExpr::Expr(Box::new(self.wrap_with_lynx_component_helper((
+                primitive_attrs,
+                component_jsx,
+                has_spread,
+                should_handle,
+              )))),
+            });
+          }
         }
-      }
+        _ => {
+          child.visit_mut_children_with(self);
+        }
+      },
       _ => {
         child.visit_mut_children_with(self);
       }
@@ -458,7 +475,7 @@ where
       // ignore_this_jsx, default false,
       // if some attr is removeComponentElement={true}, ignore_this_jsx = true
       // if some attr is JSXSpread, ignore_this_jsx = true
-      if self.opts.add_component_element {
+      if !matches!(self.opts.add_component_element, Either::A(false)) {
         // we use `iter().rev()` because JSXAttr will override previous SpreadElement
         ignore_this_jsx = n.opening.attrs.iter().rev().any(|attr| match attr {
           JSXAttrOrSpread::JSXAttr(attr) => match (&attr.name, &attr.value) {
@@ -480,13 +497,29 @@ where
             (JSXAttrName::JSXNamespacedName(_), None) => false,
             (JSXAttrName::JSXNamespacedName(_), Some(_)) => false,
           },
-          JSXAttrOrSpread::SpreadElement(_) => {
-            has_spread = true;
+          JSXAttrOrSpread::SpreadElement(spread) => {
+            if matches!(
+              self.opts.add_component_element,
+              Either::B(AddComponentElementConfig {
+                compiler_only: true
+              })
+            ) {
+              HANDLER.with(|handler| {
+                handler
+                  .struct_span_warn(
+                    spread.dot3_token,
+                    "addComponentElement: component with JSXSpread is ignored to avoid badcase, you can switch addComponentElement.compilerOnly to false to enable JSXSpread support",
+                  )
+                  .emit()
+              });
+            } else {
+              has_spread = true;
+            }
             true
           }
         });
 
-        if has_spread {
+        if matches!(self.opts.add_component_element, Either::A(true)) && has_spread {
           ignore_this_jsx = false;
         }
       }
@@ -538,7 +571,10 @@ where
 
       let mut primitive_attrs = vec![];
 
-      if self.opts.add_component_element && !ignore_this_jsx && !has_spread {
+      if !matches!(self.opts.add_component_element, Either::A(false))
+        && !ignore_this_jsx
+        && !has_spread
+      {
         n.opening.attrs.retain(|a| match &a {
           JSXAttrOrSpread::JSXAttr(attr) => match &attr.name {
             JSXAttrName::Ident(ident) => {
@@ -602,20 +638,45 @@ where
       n.visit_mut_children_with(self);
       self.is_target_jsx_element.pop();
 
-      if self.opts.add_component_element && !ignore_this_jsx {
+      if !matches!(self.opts.add_component_element, Either::A(false)) && !ignore_this_jsx {
         // <C /> => <view><C/></view>
+        if matches!(
+          self.opts.add_component_element,
+          Either::B(AddComponentElementConfig {
+            compiler_only: true
+          })
+        ) {
+          *n = JSXElement {
+            span: Default::default(),
+            opening: JSXOpeningElement {
+              span: Default::default(),
+              name: JSXElementName::Ident(IdentName::new("view".into(), Default::default()).into()),
+              self_closing: false,
+              attrs: primitive_attrs,
+              type_args: None,
+            },
+            children: vec![JSXElementChild::JSXElement(Box::new(n.clone()))],
+            closing: Some(JSXClosingElement {
+              span: Default::default(),
+              name: JSXElementName::Ident(IdentName::new("view".into(), Default::default()).into()),
+            }),
+          };
 
-        let (
-          ref mut primitive_attrs_state,
-          ref mut component_jsx,
-          ref mut has_spread_state,
-          ref mut should_handle,
-        ) = self.add_component_element_state.last_mut().unwrap();
+          n.opening.visit_mut_children_with(self);
+          n.closing.visit_mut_children_with(self);
+        } else {
+          let (
+            ref mut primitive_attrs_state,
+            ref mut component_jsx,
+            ref mut has_spread_state,
+            ref mut should_handle,
+          ) = self.add_component_element_state.last_mut().unwrap();
 
-        *primitive_attrs_state = primitive_attrs;
-        *component_jsx = n.take();
-        *has_spread_state = has_spread;
-        *should_handle = true;
+          *primitive_attrs_state = primitive_attrs;
+          *component_jsx = n.take();
+          *has_spread_state = has_spread;
+          *should_handle = true;
+        }
       }
     } else {
       self.is_target_jsx_element.push(is_target_jsx_element);
@@ -942,6 +1003,7 @@ where
 
 #[cfg(test)]
 mod tests {
+  use napi::Either;
   use swc_core::{
     common::{chain, comments::SingleThreadedComments, Mark},
     ecma::{
@@ -954,8 +1016,8 @@ mod tests {
     },
   };
 
-  use crate::CompatVisitor;
   use crate::CompatVisitorConfig;
+  use crate::{swc_plugin_compat::AddComponentElementConfig, CompatVisitor};
 
   test!(
     module,
@@ -1124,7 +1186,7 @@ mod tests {
       resolver(Mark::new(), Mark::new(), true),
       as_folder(CompatVisitor::<&SingleThreadedComments>::new(
         CompatVisitorConfig {
-          add_component_element: true,
+          add_component_element: Either::A(true),
           ..Default::default()
         },
         None
@@ -1161,7 +1223,46 @@ mod tests {
       resolver(Mark::new(), Mark::new(), true),
       as_folder(CompatVisitor::<&SingleThreadedComments>::new(
         CompatVisitorConfig {
-          add_component_element: true,
+          add_component_element: Either::B(AddComponentElementConfig {
+            compiler_only: true
+          }),
+          ..Default::default()
+        },
+        None
+      )),
+      hygiene_with_config(Default::default()),
+    ),
+    should_add_component_element_compiler_only,
+    r#"
+    <Component />;
+    <Component item-key="111"/>;
+    <Component id="1" exposure-screen-margin-top/>;
+    <Component bindtap={() => {}} id="1"/>;
+    <Component ui:bindtap={() => {}} id="1"/>;
+    <Component item-key="111" lynx-key="222"/>;
+    <Component item-key="111" lynx-key="222" style={s}/>;
+    <Component {...props} lynx-key="222"/>;
+    <Component {...props} lynx-key="222" id="!!!" className="!!!!"/>;
+    <Component {...props} lynx-key="222" id="!!!" className="!!!!" removeComponentElement={true}/>;
+    <Component {...props} lynx-key="222" id="!!!" className="!!!!" someProps={p}/>;
+    <Component {...props} lynx-key="222" id="!!!" className="!!!!" style={s}/>;
+    <Component removeComponentElement/>;
+    <Component removeComponentElement={false}/>;
+    <Component removeComponentElement={true}/>;
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    |_| chain!(
+      resolver(Mark::new(), Mark::new(), true),
+      as_folder(CompatVisitor::<&SingleThreadedComments>::new(
+        CompatVisitorConfig {
+          add_component_element: Either::A(true),
           ..Default::default()
         },
         None
@@ -1184,7 +1285,32 @@ mod tests {
       resolver(Mark::new(), Mark::new(), true),
       as_folder(CompatVisitor::<&SingleThreadedComments>::new(
         CompatVisitorConfig {
-          // add_component_element: true,
+          add_component_element: Either::B(AddComponentElementConfig {
+            compiler_only: true
+          }),
+          ..Default::default()
+        },
+        None
+      )),
+      hygiene_with_config(Default::default()),
+    ),
+    should_add_component_element_embedded_compiler_only,
+    r#"
+    <Component><Component /></Component>;
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    |_| chain!(
+      resolver(Mark::new(), Mark::new(), true),
+      as_folder(CompatVisitor::<&SingleThreadedComments>::new(
+        CompatVisitorConfig {
+          // add_component_element: Either::A(true),
           ..Default::default()
         },
         None
@@ -1207,7 +1333,7 @@ mod tests {
       resolver(Mark::new(), Mark::new(), true),
       as_folder(CompatVisitor::<&SingleThreadedComments>::new(
         CompatVisitorConfig {
-          add_component_element: true,
+          add_component_element: Either::A(true),
           simplify_ctor_like_react_lynx_2: true,
           ..Default::default()
         },
@@ -1245,7 +1371,7 @@ mod tests {
       resolver(Mark::new(), Mark::new(), true),
       as_folder(CompatVisitor::<&SingleThreadedComments>::new(
         CompatVisitorConfig {
-          add_component_element: true,
+          add_component_element: Either::A(true),
           simplify_ctor_like_react_lynx_2: true,
           ..Default::default()
         },
@@ -1285,7 +1411,7 @@ mod tests {
       resolver(Mark::new(), Mark::new(), true),
       as_folder(CompatVisitor::<&SingleThreadedComments>::new(
         CompatVisitorConfig {
-          add_component_element: true,
+          add_component_element: Either::A(true),
           simplify_ctor_like_react_lynx_2: true,
           ..Default::default()
         },
@@ -1323,7 +1449,7 @@ mod tests {
       resolver(Mark::new(), Mark::new(), true),
       as_folder(CompatVisitor::<&SingleThreadedComments>::new(
         CompatVisitorConfig {
-          add_component_element: true,
+          add_component_element: Either::A(true),
           simplify_ctor_like_react_lynx_2: true,
           ..Default::default()
         },
@@ -1363,7 +1489,7 @@ mod tests {
       resolver(Mark::new(), Mark::new(), true),
       as_folder(CompatVisitor::<&SingleThreadedComments>::new(
         CompatVisitorConfig {
-          add_component_element: true,
+          add_component_element: Either::A(true),
           simplify_ctor_like_react_lynx_2: true,
           ..Default::default()
         },

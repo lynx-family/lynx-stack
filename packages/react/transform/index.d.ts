@@ -48,6 +48,10 @@ export interface DarkModeConfig {
   /** @public */
   themeExpr: string
 }
+export interface AddComponentElementConfig {
+  /** @public */
+  compilerOnly: boolean
+}
 export interface CompatVisitorConfig {
   /** @internal */
   target: 'LEPUS' | 'JS' | 'MIXED'
@@ -60,7 +64,7 @@ export interface CompatVisitorConfig {
   /** @public */
   additionalComponentAttributes: Array<string>
   /** @public */
-  addComponentElement: boolean
+  addComponentElement: boolean | AddComponentElementConfig
   /**
    * @public
    * @deprecated

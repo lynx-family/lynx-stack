@@ -287,6 +287,36 @@ Component, View
     }
 
     {
+      cfg.compat.addComponentElement = {
+        compilerOnly: true,
+      };
+      const result = await transformReactLynx(`<Comp {...s}/>;`, cfg);
+      expect(
+        await formatMessages(result.warnings, {
+          kind: 'warning',
+          color: false,
+        }),
+      ).toMatchInlineSnapshot(`
+        [
+          "▲ [WARNING] addComponentElement: component with JSXSpread is ignored to avoid badcase, you can switch addComponentElement.compilerOnly to false to enable JSXSpread support
+
+            :1:7:
+              1 │ <Comp {...s}/>;
+                ╵        ~~~
+
+        ",
+        ]
+      `);
+      expect(result.code).toMatchInlineSnapshot(`
+        "/*#__PURE__*/ import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
+        _jsx(Comp, {
+            ...s
+        });
+        "
+      `);
+    }
+
+    {
       cfg.compat.addComponentElement = true;
       const result = await transformReactLynx(`<Comp {...s}/>;`, cfg);
       expect(
