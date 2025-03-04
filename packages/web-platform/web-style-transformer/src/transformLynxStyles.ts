@@ -2,6 +2,10 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { parseFlexShorthand } from './parseFlexShorthand.js';
+/**
+ * replace values of the property
+ * if one value is not listed, it will be ignored and kept as is.
+ */
 const replaceRules: {
   [declarationPropertyName: string]: {
     [plainValue: string]:
@@ -210,6 +214,16 @@ const replaceRules: {
       ['--align-self-column', 'stretch'],
     ],
   },
+  'justify-content': {
+    left: [],
+    right: [],
+    start: [
+      ['justify-content', 'flex-start'],
+    ],
+    end: [
+      ['justify-content', 'flex-end'],
+    ],
+  },
 };
 
 const renameRules: {
@@ -244,12 +258,6 @@ const renameRules: {
   ],
   'flex-wrap': [
     '--flex-wrap',
-  ],
-  'justify-content': [
-    '--justify-content',
-  ],
-  'align-self': [
-    '--align-self',
   ],
   'flex-grow': [
     '--flex-grow',

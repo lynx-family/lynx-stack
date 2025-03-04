@@ -66,14 +66,6 @@
   syntax: "*";
   inherits: false;
 }
-@property --justify-content {
-  syntax: "*";
-  inherits: false;
-}
-@property --align-self {
-  syntax: "*";
-  inherits: false;
-}
 @property --flex-grow {
   syntax: "<number>";
   inherits: false;
@@ -207,8 +199,7 @@ x-viewpager-ng {
     --lynx-display-flex,
     var(--flex-direction)
   );
-  justify-content: var(--lynx-display-linear, var(--linear-justify-content))
-    var(--lynx-display-flex, var(--justify-content));
+  justify-content: var(--lynx-display-linear, var(--linear-justify-content));
 }
 
 /** For @container
@@ -318,7 +309,6 @@ x-viewpager-ng {
       flex-grow: var(--flex-grow);
       flex-shrink: var(--flex-shrink);
       flex-basis: var(--flex-basis);
-      align-self: var(--align-self);
     }
   }
 

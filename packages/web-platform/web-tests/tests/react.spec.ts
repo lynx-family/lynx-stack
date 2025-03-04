@@ -3342,6 +3342,24 @@ test.describe('reactlynx3 tests', () => {
       },
     );
     test(
+      'basic-linear-row-container-main-axis-justify-content-right-left-with-direction-rtl',
+      async ({
+        page,
+      }, { title }) => {
+        await goto(page, title);
+        await diffScreenShot(page, title, 'index');
+      },
+    );
+    test(
+      'basic-linear-row-container-main-axis-justify-content-start-end-with-direction-rtl',
+      async ({
+        page,
+      }, { title }) => {
+        await goto(page, title);
+        await diffScreenShot(page, title, 'index');
+      },
+    );
+    test(
       'basic-linear-row-container-main-axis-graverty-top-bottom-with-direction-rtl',
       async ({
         page,
@@ -3416,13 +3434,26 @@ test.describe('reactlynx3 tests', () => {
       await goto(page, title);
       await diffScreenShot(page, title, 'index');
     });
+    test('basic-linear-column-align-items', async ({ page }, { title }) => {
+      await goto(page, title);
+      await diffScreenShot(page, title, 'index');
+    });
+    test(
+      'basic-linear-column-container-items-layout-gravity',
+      async ({ page }, {
+        title,
+      }) => {
+        await goto(page, title);
+        await diffScreenShot(page, title, 'index');
+      },
+    );
     test('basic-linear-column-container-items-align-self', async ({ page }, {
       title,
     }) => {
       await goto(page, title);
       await diffScreenShot(page, title, 'index');
     });
-    test('basic-linear-row-container-items-align-self', async ({ page }, {
+    test('basic-linear-row-container-items-layout-gravity', async ({ page }, {
       title,
     }) => {
       await goto(page, title);
@@ -3440,6 +3471,27 @@ test.describe('reactlynx3 tests', () => {
       await goto(page, title);
       await diffScreenShot(page, title, 'index');
     });
+    test(
+      'basic-linear-column-container-main-axis-justify-content-right-left-with-direction-rtl',
+      async ({ page }, { title }) => {
+        await goto(page, title);
+        await diffScreenShot(page, title, 'index');
+      },
+    );
+    test(
+      'basic-linear-column-container-main-axis-justify-content-center',
+      async ({ page }, { title }) => {
+        await goto(page, title);
+        await diffScreenShot(page, title, 'index');
+      },
+    );
+    test(
+      'basic-linear-column-container-main-axis-justify-content-start-end-with-direction-rtl',
+      async ({ page }, { title }) => {
+        await goto(page, title);
+        await diffScreenShot(page, title, 'index');
+      },
+    );
 
     test(
       'config-css-default-display-linear-false',
@@ -3484,6 +3536,31 @@ test.describe('reactlynx3 tests', () => {
       await goto(page, title);
       await diffScreenShot(page, title, 'index');
     });
+    test(
+      'basic-flex-column-container-main-axis-justify-content-start-end-with-direction-rtl',
+      async ({ page }, { title }) => {
+        await goto(page, title);
+        await diffScreenShot(page, title, 'index');
+      },
+    );
+    test(
+      'basic-flex-column-container-items-align-self',
+      async ({ page }, { title }) => {
+        await goto(page, title);
+        await diffScreenShot(page, title, 'index');
+      },
+    );
+    test('basic-flex-column-align-items', async ({ page }, { title }) => {
+      await goto(page, title);
+      await diffScreenShot(page, title, 'index');
+    });
+    test(
+      'basic-flex-row-container-main-axis-justify-content-start-end-with-direction-rtl',
+      async ({ page }, { title }) => {
+        await goto(page, title);
+        await diffScreenShot(page, title, 'index');
+      },
+    );
   });
 
   test.afterEach(async ({ page, browserName, baseURL, browser }, { title }) => {

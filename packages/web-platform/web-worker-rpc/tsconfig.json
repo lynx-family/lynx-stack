@@ -5,7 +5,6 @@
     "rootDir": "./src",
     "outDir": "./dist",
     "lib": ["ESNext", "WebWorker"],
-    "verbatimModuleSyntax": true,
     "isolatedDeclarations": true,
   },
   "include": ["src"],

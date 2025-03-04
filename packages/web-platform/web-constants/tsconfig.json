@@ -5,7 +5,6 @@
     "rootDir": "./src",
     "outDir": "./dist",
     "lib": ["ESNext"],
-    "verbatimModuleSyntax": true,
   },
   "include": ["src"],
   "references": [

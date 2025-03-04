@@ -77,22 +77,22 @@
 
 [lynx-computed-display="linear"][lynx-linear-orientation="vertical"] {
   flex-direction: column !important;
-  justify-content: var(--justify-content-column) !important;
+  justify-content: var(--justify-content-column);
 }
 
 [lynx-computed-display="linear"][lynx-linear-orientation="horizontal"] {
   flex-direction: row !important;
-  justify-content: var(--justify-content-row) !important;
+  justify-content: var(--justify-content-row);
 }
 
 [lynx-computed-display="linear"][lynx-linear-orientation="vertical-reverse"] {
   flex-direction: column-reverse !important;
-  justify-content: var(--justify-content-column-reverse) !important;
+  justify-content: var(--justify-content-column-reverse);
 }
 
 [lynx-computed-display="linear"][lynx-linear-orientation="horizontal-reverse"] {
   flex-direction: row-reverse !important;
-  justify-content: var(--justify-content-row-reverse) !important;
+  justify-content: var(--justify-content-row-reverse);
 }
 
 [lynx-computed-display="linear"][lynx-linear-orientation="vertical"] > *,
@@ -103,7 +103,7 @@
 [lynx-computed-display="linear"][lynx-linear-orientation="vertical-reverse"]
   > lynx-wrapper
   > * {
-  align-self: var(--align-self-column) !important;
+  align-self: var(--align-self-column);
 }
 [lynx-computed-display="linear"][lynx-linear-orientation="horizontal"] > *,
 [lynx-computed-display="linear"][lynx-linear-orientation="horizontal-reverse"],
@@ -113,5 +113,5 @@
 [lynx-computed-display="linear"][lynx-linear-orientation="horizontal-reverse"]
   > lynx-wrapper
   > * {
-  align-self: var(--align-self-row) !important;
+  align-self: var(--align-self-row);
 }
