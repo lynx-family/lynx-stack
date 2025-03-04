@@ -5,6 +5,7 @@ import { WorkletEvents } from '@lynx-js/react/worklet-runtime/bindings';
 
 import { WorkletExecIdMap } from './execMap.js';
 import { enableRunOnBackground } from './functionality.js';
+import type { RunOnBackgroundData } from './runOnBackground.js';
 
 interface LynxWorkletJsImpl {
   _workletExecIdMap?: WorkletExecIdMap;
@@ -22,8 +23,8 @@ export function runJSFunction(event: RuntimeProxy.Event): void {
   if (!impl || !impl._workletExecIdMap) {
     return;
   }
-  const data = JSON.parse(event.data);
-  const obj = impl._workletExecIdMap.findJsFnHandle(data.obj._execId, data.obj._jsFnId);
+  const data = JSON.parse(event.data as string) as RunOnBackgroundData;
+  const obj = impl._workletExecIdMap.findJsFnHandle(data.obj._execId!, data.obj._jsFnId);
   const f = obj?._fn;
   if (!f) {
     throw new Error('runOnBackground: JS function not found: ' + JSON.stringify(data.obj));

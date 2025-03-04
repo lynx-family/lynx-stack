@@ -4,7 +4,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { destroyWorklet } from '../../src/worklet/jsImpl';
-import { runOnBackground } from '../../src/worklet/runWorklet';
+import { runOnBackground } from '../../src/worklet/runOnBackground';
 import { globalEnvManager } from '../utils/envManager';
 
 beforeEach(() => {
