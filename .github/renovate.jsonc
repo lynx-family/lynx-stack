@@ -4,13 +4,13 @@
     "config:recommended",
     ":automergeStableNonMajor",
     ":automergeTypes",
-    ":maintainLockFilesWeekly"
+    ":maintainLockFilesWeekly",
   ],
 
   "enabledManagers": [
     "npm",
     "nvm",
-    "github-actions"
+    "github-actions",
   ],
 
   "labels": ["renovate"],
@@ -18,9 +18,9 @@
   "packageRules": [
     {
       "matchPackageNames": [
-        "*"
+        "*",
       ],
-      "rangeStrategy": "bump"
+      "rangeStrategy": "bump",
     },
     {
       "groupName": "Rspack",
@@ -28,13 +28,13 @@
       "addLabels": ["Rspack"],
       "matchDepTypes": [
         "devDependencies",
-        "dependencies"
+        "dependencies",
       ],
       "matchPackageNames": [
-        "/@rspack/*/"
+        "/@rspack/*/",
       ],
       "rangeStrategy": "pin",
-      "automerge": false
+      "automerge": false,
     },
     {
       "groupName": "Rsbuild",
@@ -42,35 +42,35 @@
       "addLabels": ["Rsbuild"],
       "matchDepTypes": [
         "devDependencies",
-        "dependencies"
+        "dependencies",
       ],
       "matchPackageNames": [
         "/@rsbuild/*/",
-        "/rsbuild-plugin-*/"
+        "/rsbuild-plugin-*/",
       ],
       "rangeStrategy": "pin",
-      "automerge": false
+      "automerge": false,
     },
     {
       "groupName": "changesets",
       "groupSlug": "changesets",
       "matchPackageNames": [
-        "/^@changesets/*/"
-      ]
+        "/^@changesets/*/",
+      ],
     },
     {
       "matchDepTypes": [
-        "peerDependencies"
+        "peerDependencies",
       ],
       "addLabels": ["peerDependencies"],
-      "rangeStrategy": "widen"
-    }
+      "rangeStrategy": "widen",
+    },
   ],
   "postUpdateOptions": [
-    "pnpmDedupe"
+    "pnpmDedupe",
   ],
   "ignoreDeps": [
     // align Node.js version minimum requirements
-    "node"
-  ]
+    "node",
+  ],
 }
