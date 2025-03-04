@@ -52,8 +52,8 @@
     "@lynx-js/template-webpack-plugin": "workspace:*",
     "@lynx-js/test-tools": "workspace:*",
     "@microsoft/api-extractor": "catalog:",
-    "@rspack/cli": "1.2.6",
-    "@rspack/core": "1.2.6",
+    "@rspack/cli": "1.2.7",
+    "@rspack/core": "1.2.7",
     "css-loader": "^7.1.2",
     "sass-loader": "^16.0.5",
     "webpack": "^5.98.0"
