@@ -29,7 +29,11 @@ impl StmtGen {
 
     (
       StmtGen::gen_transformed_worklet_expr(
-        target,
+        if target == TransformTarget::MIXED {
+          TransformTarget::JS
+        } else {
+          target
+        },
         extracted_value,
         ident_collector.take_this_expr(),
         extracted_js_fns.clone(),
@@ -38,7 +42,11 @@ impl StmtGen {
       ),
       StmtGen::gen_register_worklet_stmt(
         mode,
-        target,
+        if target == TransformTarget::MIXED {
+          TransformTarget::LEPUS
+        } else {
+          target
+        },
         worklet_type,
         function_name,
         function,

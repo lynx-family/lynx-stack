@@ -26,7 +26,7 @@ function runOnBackground<Fn extends (...args: any[]) => any>(f: Fn): (...args: P
     throw new Error('runOnBackground requires Lynx sdk version 2.16.');
   }
   if (__JS__) {
-    throw new Error('runOnBackground can not be used on the main thread.');
+    throw new Error('runOnBackground can only be used on the main thread.');
   }
   const obj = f as any as JsFnHandle;
   if (obj._error) {

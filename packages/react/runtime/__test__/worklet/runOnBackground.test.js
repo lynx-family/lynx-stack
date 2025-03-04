@@ -42,7 +42,7 @@ describe('runOnBackground', () => {
     };
     expect(() => {
       runOnBackground(worklet)(1, ['args']);
-    }).toThrowError('runOnBackground can not be used on the main thread.');
+    }).toThrowError('runOnBackground can only be used on the main thread.');
   });
 
   it('should throw when native capabilities not fulfilled', () => {

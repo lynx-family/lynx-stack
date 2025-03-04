@@ -525,6 +525,35 @@ function worklet(event: Event) {
         TransformMode::Test,
         WorkletVisitorConfig {
           filename: "index.js".into(),
+          target: TransformTarget::MIXED,
+          custom_global_ident_names: None,
+          runtime_pkg: "@lynx-js/react".into(),
+        }
+      )),
+      hygiene()
+    ),
+    should_transform_lepus_general_mixed,
+    r#"
+function worklet(event: Event) {
+    "main thread";
+    console.log(y1);
+    console.log(this.y1);
+    let a: object = y1;
+}
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Typescript(TsSyntax {
+      ..Default::default()
+    }),
+    |_| chain!(
+      resolver(Mark::new(), Mark::new(), true),
+      as_folder(WorkletVisitor::new(
+        TransformMode::Test,
+        WorkletVisitorConfig {
+          filename: "index.js".into(),
           target: TransformTarget::JS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
