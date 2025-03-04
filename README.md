@@ -6,27 +6,10 @@
   </a>
 </p>
 
-### 🎨 Multi-Platform Support
-
-**Write once, run anywhere!**
-
-Lynx offers robust native rendering for Android and iOS, while also supporting custom rendering across desktop platforms like Windows and macOS. With its versatile renderer, Lynx can even power web applications, making it a true cross-platform solution.
-
-### 🌐 Web-Inspired Development
-
-**Familiar tools, faster results!**
-
-Lynx brings the simplicity of web development to mobile and desktop platforms. By incorporating JavaScript and CSS concepts, it introduces a tailored CSS subset with Lynx-specific extensions, an optimized JavaScript runtime, and support for many W3C APIs. Developers can seamlessly apply their knowledge of React, CSS, and web development to create sophisticated apps with Lynx.
-
-### 🚀 High Performance
-
-**Blazing fast, every time!**
-
-Lynx is engineered for speed, offering native UI responsiveness through a custom layout engine and a browser-inspired multithreading architecture. Whether used as a standalone framework or embedded within native views, Lynx ensures exceptional performance and a seamless user experience.
+This repository contains the **core JavaScript stack** of Lynx, including [ReactLynx][1], [Rspeedy][2], [Lynx for Web][3], and more. For other repositories in the Lynx family, visit our [org homepage](https://github.com/lynx-family).
 
 ## Content
 
-- [Showcases](#Showcases)
 - [Getting Started](#Getting-Started)
 - [Documentation](#Documentation)
 - [How to Contribute](#How-to-Contribute)
@@ -35,43 +18,32 @@ Lynx is engineered for speed, offering native UI responsiveness through a custom
 
 ## Getting Started
 
-### Requirements
-
-- **App Development**:
-
-  - **Node.js 18** or later. Requires **Node.js 18.19** when using TypeScript as configuration.
-
-- **Client Development**:
-
-  - Lynx apps should target **iOS 15.1** and **Android 7.0 (API 24)** or newer.
-
-  - **Windows**, **macOS**, or **Linux**. Building and running iOS apps is only supported on **macOS**.
-
-### Explore Lynx with a “Hello World” Example
-
-Experience Lynx in action with the Lynx Explorer App, a demo app that showcases Lynx's capabilities:
-Get the app here (link coming soon)
-
-### Creating a New Lynx Application
-
-Learn how to create a new Lynx project from scratch:
-[Quick Start](https://lynxjs.org/guide/start-with-react/quick-start)
+- Trying out Lynx with [hello world](https://lynxjs.org/guide/start/quick-start.html)
+- [Integrating Lynx with an Existing Application](https://lynxjs.org/guide/start/integrate-with-existing-apps.html)
 
 ## Documentation
 
-Find the complete documentation for Lynx on [our official website](https://lynxjs.org).
+Find the complete documentation for Lynx on [lynxjs.org](https://lynxjs.org).
 
 ## How to Contribute
 
-[Code of Conduct](./CODE_OF_CONDUCT.md)
+### [Code of Conduct][coc]
 
-[Contributing Guide](./CONTRIBUTING.md)
+We are devoted to ensuring a positive, inclusive, and safe environment for all contributors. Please find our [Code of Conduct][coc] for detailed information.
+
+[coc]: CODE_OF_CONDUCT.md
+
+### [Contributing Guide][contributing]
+
+We welcome you to join and become a member of Lynx Authors. It's people like you that make this project great.
+
+Please refer to our [contributing guide][contributing] for details.
+
+[contributing]: CONTRIBUTING.md
 
 ## Discussions
 
-Join the conversation!
-
-For in-depth discussions, proposals, and community feedback, visit our GitHub Discussions.
+Large discussions and proposals are discussed in [Github Discussions](https://github.com/lynx-family/lynx-stack/discussions)
 
 ## License
 
@@ -86,3 +58,7 @@ Thanks to:
 - [React Native](https://reactnative.dev/) for groundbreaking work in allowing developers to create truly native apps using JavaScript and React.
 - [Rspack](https://rspack.dev/) for providing a fast and flexible build tool that has significantly enhanced the build performance of Lynx projects.
 - [React Native for Web](https://necolas.github.io/react-native-web/) project for inspiring the Lynx for Web project, motivating our architectural design with its accessible implementation and interoperability with React DOM.
+
+[1]: https://github.com/lynx-family/lynx-stack/tree/main/packages/react
+[2]: https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy
+[3]: https://github.com/lynx-family/lynx-stack/tree/main/packages/web-platform
