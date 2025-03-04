@@ -6,6 +6,11 @@
     "webpack",
     "Lynx"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/webpack/webpack-runtime-globals"
+  },
   "license": "Apache-2.0",
   "author": {
     "name": "Qingyu Wang",
