@@ -69,3 +69,4 @@ Thanks to:
 
 - [Preact](https://preactjs.com/) for creating a lightweight and efficient UI library that served as a foundation for the ReactLynx project.
 - [React](https://react.dev/) for creating a comprehensive and intuitive library for building user interfaces and providing the inspiration for ReactLynx's development model.
+- [SWC](https://github.com/swc-project/swc) project created by [@kdy1](https://github.com/kdy1), which turbocharges ReactLynx's code transformation with Rust-powered efficiency, achieving sub-second build times and frictionless developer experience.

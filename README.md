@@ -58,6 +58,7 @@ Thanks to:
 - [React Native](https://reactnative.dev/) for groundbreaking work in allowing developers to create truly native apps using JavaScript and React.
 - [Rspack](https://rspack.dev/) for providing a fast and flexible build tool that has significantly enhanced the build performance of Lynx projects.
 - [React Native for Web](https://necolas.github.io/react-native-web/) project for inspiring the Lynx for Web project, motivating our architectural design with its accessible implementation and interoperability with React DOM.
+- [SWC](https://github.com/swc-project/swc) project created by [@kdy1](https://github.com/kdy1), which turbocharges ReactLynx's code transformation with Rust-powered efficiency, achieving sub-second build times and frictionless developer experience.
 
 [1]: https://github.com/lynx-family/lynx-stack/tree/main/packages/react
 [2]: https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy
