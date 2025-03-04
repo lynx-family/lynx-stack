@@ -7,8 +7,8 @@ settings:
 catalogs:
   default:
     '@microsoft/api-extractor':
-      specifier: 7.51.0
-      version: 7.51.0
+      specifier: 7.51.1
+      version: 7.51.1
 
 patchedDependencies:
   '@napi-rs/cli@2.18.4':
@@ -33,10 +33,10 @@ importers:
         version: 9.21.0
       '@microsoft/api-extractor':
         specifier: 'catalog:'
-        version: 7.51.0(@types/node@22.13.5)
+        version: 7.51.1(@types/node@22.13.5)
       '@rslib/core':
         specifier: ^0.5.2
-        version: 0.5.2(@microsoft/api-extractor@7.51.0(@types/node@22.13.5))(typescript@5.7.3)
+        version: 0.5.2(@microsoft/api-extractor@7.51.1(@types/node@22.13.5))(typescript@5.7.3)
       '@tsconfig/node20':
         specifier: ^20.1.4
         version: 20.1.4
@@ -146,7 +146,7 @@ importers:
         version: 3.2.0
       '@microsoft/api-extractor':
         specifier: 'catalog:'
-        version: 7.51.0(@types/node@22.13.5)
+        version: 7.51.1(@types/node@22.13.5)
       '@types/react':
         specifier: ^18.3.18
         version: 18.3.18
@@ -233,7 +233,7 @@ importers:
         version: link:../websocket
       '@microsoft/api-extractor':
         specifier: 'catalog:'
-        version: 7.51.0(@types/node@22.13.5)
+        version: 7.51.1(@types/node@22.13.5)
       '@rsbuild/core':
         specifier: 1.2.11
         version: 1.2.11
@@ -335,7 +335,7 @@ importers:
         version: link:../core
       '@microsoft/api-extractor':
         specifier: 'catalog:'
-        version: 7.51.0(@types/node@22.13.5)
+        version: 7.51.1(@types/node@22.13.5)
       '@rsbuild/core':
         specifier: 1.2.11
         version: 1.2.11
@@ -378,7 +378,7 @@ importers:
         version: link:../../tools/vitest-setup
       '@microsoft/api-extractor':
         specifier: 'catalog:'
-        version: 7.51.0(@types/node@22.13.5)
+        version: 7.51.1(@types/node@22.13.5)
       '@rollup/plugin-typescript':
         specifier: ^12.1.2
         version: 12.1.2(patch_hash=926ba262ec682d27369f1a8648a0dfb657fb5f1b28539ca3628d292276c91c3d)(rollup@4.21.1)(tslib@2.8.1)(typescript@5.7.3)
@@ -424,7 +424,7 @@ importers:
         version: link:../../webpack/react-webpack-plugin
       '@microsoft/api-extractor':
         specifier: 'catalog:'
-        version: 7.51.0(@types/node@22.13.5)
+        version: 7.51.1(@types/node@22.13.5)
       '@rsbuild/core':
         specifier: 1.2.11
         version: 1.2.11
@@ -437,7 +437,7 @@ importers:
     devDependencies:
       '@microsoft/api-extractor':
         specifier: 'catalog:'
-        version: 7.51.0(@types/node@22.13.5)
+        version: 7.51.1(@types/node@22.13.5)
       '@types/ws':
         specifier: ^8.5.14
         version: 8.5.14
@@ -653,7 +653,7 @@ importers:
         version: link:../test-tools
       '@microsoft/api-extractor':
         specifier: 'catalog:'
-        version: 7.51.0(@types/node@22.13.5)
+        version: 7.51.1(@types/node@22.13.5)
       '@rspack/core':
         specifier: 1.2.6
         version: 1.2.6(@swc/helpers@0.5.15)
@@ -684,7 +684,7 @@ importers:
         version: link:../test-tools
       '@microsoft/api-extractor':
         specifier: 'catalog:'
-        version: 7.51.0(@types/node@22.13.5)
+        version: 7.51.1(@types/node@22.13.5)
       '@rspack/cli':
         specifier: 1.2.6
         version: 1.2.6(@rspack/core@1.2.6(@swc/helpers@0.5.15))(@types/express@4.17.21)(webpack@5.98.0)
@@ -717,7 +717,7 @@ importers:
         version: link:../test-tools
       '@microsoft/api-extractor':
         specifier: 'catalog:'
-        version: 7.51.0(@types/node@22.13.5)
+        version: 7.51.1(@types/node@22.13.5)
       '@rspack/core':
         specifier: 1.2.6
         version: 1.2.6(@swc/helpers@0.5.15)
@@ -754,7 +754,7 @@ importers:
         version: link:../../tools/vitest-setup
       '@microsoft/api-extractor':
         specifier: 'catalog:'
-        version: 7.51.0(@types/node@22.13.5)
+        version: 7.51.1(@types/node@22.13.5)
       '@rspack/core':
         specifier: 1.2.6
         version: 1.2.6(@swc/helpers@0.5.15)
@@ -779,7 +779,7 @@ importers:
         version: link:../test-tools
       '@microsoft/api-extractor':
         specifier: 'catalog:'
-        version: 7.51.0(@types/node@22.13.5)
+        version: 7.51.1(@types/node@22.13.5)
       webpack:
         specifier: ^5.98.0
         version: 5.98.0
@@ -810,7 +810,7 @@ importers:
         version: link:../test-tools
       '@microsoft/api-extractor':
         specifier: 'catalog:'
-        version: 7.51.0(@types/node@22.13.5)
+        version: 7.51.1(@types/node@22.13.5)
       '@types/css-tree':
         specifier: ^2.3.10
         version: 2.3.10
@@ -871,7 +871,7 @@ importers:
     devDependencies:
       '@microsoft/api-extractor':
         specifier: 'catalog:'
-        version: 7.51.0(@types/node@22.13.5)
+        version: 7.51.1(@types/node@22.13.5)
       webpack:
         specifier: ^5.98.0
         version: 5.98.0
@@ -880,7 +880,7 @@ importers:
     devDependencies:
       '@microsoft/api-extractor':
         specifier: 'catalog:'
-        version: 7.51.0(@types/node@22.13.5)
+        version: 7.51.1(@types/node@22.13.5)
       '@rspack/core':
         specifier: 1.2.6
         version: 1.2.6(@swc/helpers@0.5.15)
@@ -1813,8 +1813,8 @@ packages:
   '@microsoft/api-extractor-model@7.30.3':
     resolution: {integrity: sha512-yEAvq0F78MmStXdqz9TTT4PZ05Xu5R8nqgwI5xmUmQjWBQ9E6R2n8HB/iZMRciG4rf9iwI2mtuQwIzDXBvHn1w==}
 
-  '@microsoft/api-extractor@7.51.0':
-    resolution: {integrity: sha512-LjyQ2xljliss2kIsSo8Npu9mBv6wnaR3ikBagCU2mC7Ggn30sTAOFLzVNyMLOMiuSOFxsEbskrBO5lLn92qnZQ==}
+  '@microsoft/api-extractor@7.51.1':
+    resolution: {integrity: sha512-VoFvIeYXme8QctXDkixy1KIn750kZaFy2snAEOB3nhDFfbBcJNEcvBrpCIQIV09MqI4g9egKUkg+/12WMRC77w==}
     hasBin: true
 
   '@microsoft/tsdoc-config@0.17.1':
@@ -7909,7 +7909,7 @@ snapshots:
     transitivePeerDependencies:
       - '@types/node'
 
-  '@microsoft/api-extractor@7.51.0(@types/node@22.13.5)':
+  '@microsoft/api-extractor@7.51.1(@types/node@22.13.5)':
     dependencies:
       '@microsoft/api-extractor-model': 7.30.3(@types/node@22.13.5)
       '@microsoft/tsdoc': 0.15.1
@@ -8326,13 +8326,13 @@ snapshots:
       - supports-color
       - webpack
 
-  '@rslib/core@0.5.2(@microsoft/api-extractor@7.51.0(@types/node@22.13.5))(typescript@5.7.3)':
+  '@rslib/core@0.5.2(@microsoft/api-extractor@7.51.1(@types/node@22.13.5))(typescript@5.7.3)':
     dependencies:
       '@rsbuild/core': 1.2.11
-      rsbuild-plugin-dts: 0.5.2(@microsoft/api-extractor@7.51.0(@types/node@22.13.5))(@rsbuild/core@1.2.11)(typescript@5.7.3)
+      rsbuild-plugin-dts: 0.5.2(@microsoft/api-extractor@7.51.1(@types/node@22.13.5))(@rsbuild/core@1.2.11)(typescript@5.7.3)
       tinyglobby: 0.2.12
     optionalDependencies:
-      '@microsoft/api-extractor': 7.51.0(@types/node@22.13.5)
+      '@microsoft/api-extractor': 7.51.1(@types/node@22.13.5)
       typescript: 5.7.3
     transitivePeerDependencies:
       - '@rspack/tracing'
@@ -12396,7 +12396,7 @@ snapshots:
 
   rrweb-cssom@0.8.0: {}
 
-  rsbuild-plugin-dts@0.5.2(@microsoft/api-extractor@7.51.0(@types/node@22.13.5))(@rsbuild/core@1.2.11)(typescript@5.7.3):
+  rsbuild-plugin-dts@0.5.2(@microsoft/api-extractor@7.51.1(@types/node@22.13.5))(@rsbuild/core@1.2.11)(typescript@5.7.3):
     dependencies:
       '@ast-grep/napi': 0.35.0
       '@rsbuild/core': 1.2.11
@@ -12405,7 +12405,7 @@ snapshots:
       tinyglobby: 0.2.12
       tsconfig-paths: 4.2.0
     optionalDependencies:
-      '@microsoft/api-extractor': 7.51.0(@types/node@22.13.5)
+      '@microsoft/api-extractor': 7.51.1(@types/node@22.13.5)
       typescript: 5.7.3
 
   rslog@1.2.3: {}
