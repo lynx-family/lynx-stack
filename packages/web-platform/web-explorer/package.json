@@ -2,6 +2,11 @@
   "name": "@lynx-js/web-explorer",
   "version": "0.0.1",
   "private": false,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/web-platform/web-explorer"
+  },
   "license": "Apache-2.0",
   "type": "module",
   "main": "index.html",
