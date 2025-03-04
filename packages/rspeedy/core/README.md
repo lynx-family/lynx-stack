@@ -11,7 +11,7 @@
   </a>
 </p>
 
-The built tool for Lynx.
+The Rspack-based build tool for Lynx.
 
 ## Getting Started
 
