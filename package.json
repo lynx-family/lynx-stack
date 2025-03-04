@@ -16,7 +16,7 @@
     "@changesets/cli": "^2.28.1",
     "@eslint/js": "^9.21.0",
     "@microsoft/api-extractor": "catalog:",
-    "@rslib/core": "^0.5.2",
+    "@rslib/core": "^0.5.3",
     "@tsconfig/node20": "^20.1.4",
     "@tsconfig/strictest": "^2.0.5",
     "@types/node": "^22.13.5",
