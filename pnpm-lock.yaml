@@ -407,8 +407,8 @@ importers:
         specifier: 7.6.4
         version: 7.6.4(@samchon/openapi@2.4.2)(typescript@5.7.3)
       typia-rspack-plugin:
-        specifier: ^1.0.1
-        version: 1.0.1(typescript@5.7.3)(typia@7.6.4(@samchon/openapi@2.4.2)(typescript@5.7.3))
+        specifier: ^1.0.2
+        version: 1.0.2(typescript@5.7.3)(typia@7.6.4(@samchon/openapi@2.4.2)(typescript@5.7.3))
 
   packages/rspeedy/plugin-react-alias:
     dependencies:
@@ -6625,8 +6625,8 @@ packages:
     engines: {node: '>=14.17'}
     hasBin: true
 
-  typia-rspack-plugin@1.0.1:
-    resolution: {integrity: sha512-x67JLFyokroUAUPvkzd1H0w6ZiZ5eO1wxMoDLOrayJ2WoLdRg88KFg5KXgOYoXK7K513uQNt9mFez3NT04UCpw==}
+  typia-rspack-plugin@1.0.2:
+    resolution: {integrity: sha512-5vCunp+l8A985K0An7yjgTKCU+SUA4iC9OGbaa8+OifaqDECQKBVH61wZy927dkcnzK8z/aFgJc18GiSTCvuiw==}
     engines: {node: '>=18'}
     peerDependencies:
       typescript: '*'
@@ -6671,8 +6671,8 @@ packages:
     resolution: {integrity: sha512-pjy2bYhSsufwWlKwPc+l3cN7+wuJlK6uz0YdJEOlQDbl6jo/YlPi4mb8agUkVC8BF7V8NuzeyPNqRksA3hztKQ==}
     engines: {node: '>= 0.8'}
 
-  unplugin@2.1.2:
-    resolution: {integrity: sha512-Q3LU0e4zxKfRko1wMV2HmP8lB9KWislY7hxXpxd+lGx0PRInE4vhMBVEZwpdVYHvtqzhSrzuIfErsob6bQfCzw==}
+  unplugin@2.2.0:
+    resolution: {integrity: sha512-m1ekpSwuOT5hxkJeZGRxO7gXbXT3gF26NjQ7GdVHoLoF8/nopLcd/QfPigpCy7i51oFHiRJg/CyHhj4vs2+KGw==}
     engines: {node: '>=18.12.0'}
 
   update-browserslist-db@1.1.1:
@@ -13236,11 +13236,11 @@ snapshots:
 
   typescript@5.7.3: {}
 
-  typia-rspack-plugin@1.0.1(typescript@5.7.3)(typia@7.6.4(@samchon/openapi@2.4.2)(typescript@5.7.3)):
+  typia-rspack-plugin@1.0.2(typescript@5.7.3)(typia@7.6.4(@samchon/openapi@2.4.2)(typescript@5.7.3)):
     dependencies:
       typescript: 5.7.3
       typia: 7.6.4(@samchon/openapi@2.4.2)(typescript@5.7.3)
-      unplugin: 2.1.2
+      unplugin: 2.2.0
 
   typia@7.6.4(@samchon/openapi@2.4.2)(typescript@5.7.3):
     dependencies:
@@ -13279,7 +13279,7 @@ snapshots:
 
   unpipe@1.0.0: {}
 
-  unplugin@2.1.2:
+  unplugin@2.2.0:
     dependencies:
       acorn: 8.14.0
       webpack-virtual-modules: 0.6.2
