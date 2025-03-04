@@ -4,7 +4,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { destroyWorklet } from '../../src/worklet/jsImpl';
-import { transformToWorklet } from '../../src/worklet/runWorklet';
+import { transformToWorklet } from '../../src/worklet/transformToWorklet';
 
 afterEach(() => {
   destroyWorklet();

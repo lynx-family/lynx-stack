@@ -200,7 +200,3 @@ declare class RuntimeProxy {
 
   onTriggerEvent(callback: (event: RuntimeProxy.Event) => void);
 }
-
-declare namespace lynx {
-  function getJSContext(): RuntimeProxy;
-}

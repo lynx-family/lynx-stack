@@ -46,7 +46,7 @@ export interface Worklet {
  */
 export interface JsFnHandle {
   _jsFnId: number;
-  _fn?: Function;
+  _fn?: (...args: unknown[]) => unknown;
   _execId?: number;
   _error?: string;
 }

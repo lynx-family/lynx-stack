@@ -1,3 +1,5 @@
+import type { Worklet } from './types.js';
+
 const enum WorkletEvents {
   runWorkletCtx = 'Lynx.Worklet.runWorkletCtx',
   runOnBackground = 'Lynx.Worklet.runOnBackground',
@@ -5,4 +7,9 @@ const enum WorkletEvents {
   releaseWorkletRef = 'Lynx.Worklet.releaseWorkletRef',
 }
 
-export { WorkletEvents };
+interface RunWorkletCtxData {
+  worklet: Worklet;
+  params: unknown[];
+}
+
+export { WorkletEvents, type RunWorkletCtxData };

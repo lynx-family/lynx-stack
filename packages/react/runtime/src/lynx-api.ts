@@ -7,9 +7,9 @@ import { useState } from 'preact/hooks';
 import type { Consumer, FC, ReactNode } from 'react';
 
 import { factory, withInitDataInState } from './compat/initData.js';
+import { useLynxGlobalEventListener } from './hooks/useLynxGlobalEventListener.js';
 import { LifecycleConstant } from './lifecycleConstant.js';
 import { flushDelayedLifecycleEvents } from './lynx/tt.js';
-import { useLynxGlobalEventListener } from './hooks/useLynxGlobalEventListener.js';
 import { __root } from './root.js';
 
 /**
@@ -87,8 +87,8 @@ export const root: Root = {
     } else {
       __root.__jsx = jsx;
       render(jsx, __root as any);
-      if (__FIRST_SCREEN_SYNC_TIMING__ === 'immediately') {
-      } else {
+      if (__FIRST_SCREEN_SYNC_TIMING__ === 'immediately') {}
+      else {
         lynx.getNativeApp().callLepusMethod(LifecycleConstant.jsReady, {});
       }
 
@@ -369,6 +369,7 @@ export interface Lynx {
   registerDataProcessors: (dataProcessorDefinition: DataProcessorDefinition) => void;
 }
 
-export { runOnBackground, runOnMainThread } from './worklet/runWorklet.js';
+export { runOnMainThread } from './worklet/runOnMainThread.js';
+export { runOnBackground } from './worklet/runOnBackground.js';
 export { MainThreadRef, useMainThreadRef } from './worklet/workletRef.js';
 export { useLynxGlobalEventListener } from './hooks/useLynxGlobalEventListener.js';
