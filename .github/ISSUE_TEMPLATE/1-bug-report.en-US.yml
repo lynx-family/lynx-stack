@@ -21,7 +21,6 @@ body:
       placeholder: |
         System:
         Binaries:
-        Browsers:
         npmPackages:
     validations:
       required: true
