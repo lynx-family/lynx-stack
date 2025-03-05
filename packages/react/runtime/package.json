@@ -20,7 +20,7 @@
   "devDependencies": {
     "@lynx-js/react": "workspace:*",
     "@lynx-js/react-transform": "workspace:*",
-    "@types/react": "^18.3.18",
+    "@types/react": "^19.0.10",
     "@vitejs/plugin-react": "4.3.4",
     "@vitest/coverage-v8": "^3.0.7",
     "@vitest/ui": "^3.0.7",
@@ -29,7 +29,7 @@
     "vitest": "^3.0.7"
   },
   "peerDependencies": {
-    "@types/react": "^18.0.0"
+    "@types/react": "^18.0.0 || ^19.0.0"
   },
   "showcase": "__fake_entry__/showcase.js"
 }
