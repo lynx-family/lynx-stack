@@ -228,22 +228,10 @@ export const initElementTree = () => {
 
     __CreateRawText(text: string) {
       // @ts-ignore
-      const json = injectDOMMethods({
-        type: 'raw-text',
-        children: [],
-        props: {
-          text,
-        },
-        parentComponentUniqueId: 0,
-        nodeType: 3,
-      });
-      Object.defineProperty(json, '$$typeof', {
-        value: Symbol.for('react.test.json'),
-      });
-      Object.defineProperty(json, '$$uiSign', {
-        value: uiSignNext++,
-      });
-      uniqueId2Element.set(json.$$uiSign, json);
+      const json = this.__CreateElement('raw-text', 0);
+      json.props.text = text;
+
+      this.root ??= json;
       return json;
     }
 
@@ -630,6 +618,7 @@ export const initElementTree = () => {
         console.log('__SendEvent', e, eventType, eventName, data);
       }
       const eventHandler = e.props?.event?.[`${eventType}:${eventName}`];
+      debugger;
       if (eventHandler) {
         // main thread events
         if (

@@ -1,0 +1,30 @@
+{
+  "name": "lynx-testing-library-example-basic",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "rspeedy build",
+    "dev": "rspeedy dev",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "@lynx-js/react": "workspace:*"
+  },
+  "devDependencies": {
+    "@lynx-js/lynx-dom": "workspace:*",
+    "@lynx-js/lynx-dom-jest-matchers": "workspace:*",
+    "@lynx-js/lynx-dom-testing-library": "workspace:*",
+    "@lynx-js/react-lynx-testing-library": "workspace:*",
+    "@lynx-js/react-rsbuild-plugin": "workspace:*",
+    "@lynx-js/rspeedy": "workspace:*",
+    "@tsconfig/node18": "^18.2.4",
+    "@tsconfig/strictest": "^2.0.5",
+    "@types/react": "^18.3.11",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.7"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

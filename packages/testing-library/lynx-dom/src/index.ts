@@ -160,15 +160,25 @@ function createPolyfills() {
     chunkName: string,
     options,
   ) {
+    const isBackground = !__LEPUS__;
+    globalThis.lynxDOM.switchToMainThread();
+
     if (process.env.DEBUG) {
       console.log('__LoadLepusChunk', chunkName, options);
     }
-    debugger;
+    let ans;
     if (chunkName === 'worklet-runtime') {
-      return globalThis.onInitWorkletRuntime?.();
+      ans = globalThis.onInitWorkletRuntime?.();
     } else {
       throw new Error(`__LoadLepusChunk: Unknown chunk name: ${chunkName}`);
     }
+
+    // restore the original thread state
+    if (isBackground) {
+      globalThis.lynxDOM.switchToBackgroundThread();
+    }
+
+    return ans;
   }
 
   return {
@@ -180,7 +190,7 @@ function createPolyfills() {
   };
 }
 
-export function injectMainThreadGlobals(target?: any) {
+export function injectMainThreadGlobals(target?: any, polyfills?: any) {
   __injectElementApi(target);
 
   const {
@@ -188,7 +198,7 @@ export function injectMainThreadGlobals(target?: any) {
     CoreContext,
     JsContext,
     __LoadLepusChunk,
-  } = createPolyfills();
+  } = polyfills || {};
   if (typeof target === 'undefined') {
     target = globalThis;
   }
@@ -203,7 +213,7 @@ export function injectMainThreadGlobals(target?: any) {
   target.globDynamicComponentEntry = '__Card__';
   target.lynx = {
     performance,
-    getCoreContext: (() => CoreContext),
+    // getCoreContext: (() => CoreContext),
     getJSContext: (() => JsContext),
   };
   target.requestAnimationFrame = setTimeout;
@@ -222,14 +232,14 @@ const BLACKLIST_GLOBALS = [
   'global',
 ];
 
-export function injectBackgroundThreadGlobals(target?: any) {
+export function injectBackgroundThreadGlobals(target?: any, polyfills?: any) {
   const {
     app,
     performance,
     CoreContext,
     JsContext,
     __LoadLepusChunk,
-  } = createPolyfills();
+  } = polyfills || {};
   if (typeof target === 'undefined') {
     target = globalThis;
   }
@@ -293,7 +303,7 @@ export function injectBackgroundThreadGlobals(target?: any) {
       };
     }),
     getCoreContext: (() => CoreContext),
-    getJSContext: (() => JsContext),
+    // getJSContext: (() => JsContext),
     getJSModule: (moduleName) => {
       if (moduleName === 'GlobalEventEmitter') {
         return globalEventEmiter;
@@ -352,8 +362,9 @@ export class LynxDOM {
   }
 
   injectGlobals() {
-    injectBackgroundThreadGlobals(this.backgroundThread.globalThis);
-    injectMainThreadGlobals(this.mainThread.globalThis);
+    const polyfills = createPolyfills();
+    injectBackgroundThreadGlobals(this.backgroundThread.globalThis, polyfills);
+    injectMainThreadGlobals(this.mainThread.globalThis, polyfills);
   }
 
   switchToBackgroundThread() {

@@ -3,5 +3,6 @@
   "packages/rspeedy/*/vitest.config.ts",
   "packages/tools/*/vitest.config.ts",
   "packages/webpack/*/vitest.config.ts",
-  "packages/testing-library/*/vitest.config.ts"
+  "packages/testing-library/*/vitest.config.ts",
+  "packages/testing-library/examples/*/vitest.config.ts"
 ]

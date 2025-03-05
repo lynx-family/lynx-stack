@@ -9,12 +9,12 @@ import { BackgroundSnapshotInstance, hydrate } from '../backgroundSnapshot.js';
 import { destroyBackground } from '../lifecycle/destroy.js';
 import { commitPatchUpdate, genCommitTaskId, globalCommitTaskMap } from '../lifecycle/patchUpdate.js';
 import { reloadBackground } from '../lifecycle/reload.js';
-import { runWithForce } from '../lynx.js';
 import { CHILDREN } from '../renderToOpcodes/constants.js';
 import { __root } from '../root.js';
 import { globalRefsToSet, updateBackgroundRefs } from '../snapshot/ref.js';
 import { backgroundSnapshotInstanceManager } from '../snapshot.js';
 import { destroyWorklet } from '../worklet/jsImpl.js';
+import { runWithForce } from './runWithForce.js';
 
 function injectTt(): void {
   // @ts-ignore
