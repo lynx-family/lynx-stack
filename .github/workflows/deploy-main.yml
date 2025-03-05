@@ -137,6 +137,9 @@ jobs:
         run: |
           corepack pnpm turbo --filter !@lynx-js/web-tests build --summarize
       - name: version canary packages
+        env:
+          # changesets-changelog-github requires a GITHUB_TOKEN
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           pnpm changeset version --snapshot canary
           node packages/tools/canary-release/snapshot.js
