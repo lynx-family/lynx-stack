@@ -4,7 +4,7 @@
 import { Element } from './api/element.js';
 import type { ClosureValueType, Worklet, WorkletRefImpl } from './bindings/types.js';
 import { delayExecUntilJsReady, initEventDelay } from './delayWorkletEvent.js';
-import { enableRunOnBackground, JsFunctionLifecycleManager } from './jsFunctionLifecycle.js';
+import { isRunOnBackgroundEnabled, JsFunctionLifecycleManager } from './jsFunctionLifecycle.js';
 import { profile } from './utils/profile.js';
 import { getFromWorkletRefMap, initWorkletRef } from './workletRef.js';
 
@@ -15,7 +15,7 @@ function initWorklet(): void {
     _refImpl: initWorkletRef(),
   };
 
-  if (enableRunOnBackground()) {
+  if (isRunOnBackgroundEnabled()) {
     globalThis.lynxWorkletImpl._jsFunctionLifecycleManager = new JsFunctionLifecycleManager();
   }
 

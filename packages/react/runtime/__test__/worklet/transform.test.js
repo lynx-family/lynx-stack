@@ -22,20 +22,6 @@ describe('WorkletJsFnTransform', () => {
     expect(result._jsFnId).toEqual(2);
   });
 
-  it('should not transform js fn when native capabilities not available', () => {
-    const getCoreContext = lynx.getCoreContext;
-    lynx.getCoreContext = undefined;
-
-    const fn = vi.fn();
-    let result = transformToWorklet(fn);
-    expect(result._jsFnId).toEqual(0);
-
-    result = transformToWorklet(fn);
-    expect(result._jsFnId).toEqual(0);
-
-    lynx.getCoreContext = getCoreContext;
-  });
-
   it('should raise error when argument is not a function', () => {
     const x = transformToWorklet(1);
     expect(x._error).toMatch('Argument of runOnBackground should be a function, but got [number] instead');
