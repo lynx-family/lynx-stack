@@ -57,7 +57,7 @@
     "@lynx-js/webpack-dev-transport": "workspace:^",
     "@lynx-js/websocket": "workspace:^",
     "@microsoft/api-extractor": "catalog:",
-    "@rsbuild/core": "1.2.11",
+    "@rsbuild/core": "1.2.15",
     "@rsbuild/plugin-css-minimizer": "1.0.2",
     "@rsdoctor/rspack-plugin": "^0.4.13",
     "chokidar": "^4.0.3",

@@ -43,7 +43,7 @@
     "@lynx-js/react": "workspace:*",
     "@lynx-js/react-webpack-plugin": "workspace:*",
     "@microsoft/api-extractor": "catalog:",
-    "@rsbuild/core": "1.2.11"
+    "@rsbuild/core": "1.2.15"
   },
   "engines": {
     "node": ">=18"
