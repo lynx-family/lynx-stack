@@ -227,6 +227,15 @@ export interface PluginReactLynxOptions {
   firstScreenSyncTiming?: 'immediately' | 'jsReady'
 
   /**
+   * `enableSSR` enable Lynx SSR feature for this build.
+   *
+   * @defaultValue `false`
+   *
+   * @public
+   */
+  enableSSR?: boolean
+
+  /**
    * The `jsx` option controls how JSX is transformed.
    */
   jsx?: Partial<JsxTransformerConfig> | undefined
@@ -330,6 +339,7 @@ export function pluginReactLynx(
     enableParallelElement: true,
     enableRemoveCSSScope: true,
     firstScreenSyncTiming: 'immediately',
+    enableSSR: false,
     jsx: undefined,
     pipelineSchedulerConfig: 0x00010000,
     removeDescendantSelectorScope: true,

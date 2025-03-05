@@ -223,8 +223,17 @@ export const __pendingListUpdates = {
   },
 };
 
-const gSignMap: Record<number, Map<number, SnapshotInstance>> = {};
-const gRecycleMap: Record<number, Map<string, Map<number, SnapshotInstance>>> = {};
+export const gSignMap: Record<number, Map<number, SnapshotInstance>> = {};
+export const gRecycleMap: Record<number, Map<string, Map<number, SnapshotInstance>>> = {};
+
+export function clearListGlobal(): void {
+  for (const key in gSignMap) {
+    delete gSignMap[key];
+  }
+  for (const key in gRecycleMap) {
+    delete gRecycleMap[key];
+  }
+}
 
 export function componentAtIndexFactory(ctx: SnapshotInstance[]): ComponentAtIndexCallback {
   const componentAtIndex = (
