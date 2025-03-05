@@ -17,6 +17,7 @@
     "@eslint/js": "^9.21.0",
     "@microsoft/api-extractor": "catalog:",
     "@rslib/core": "^0.5.3",
+    "@svitejs/changesets-changelog-github-compact": "^1.2.0",
     "@tsconfig/node20": "^20.1.4",
     "@tsconfig/strictest": "^2.0.5",
     "@types/node": "^22.13.5",
