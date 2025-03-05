@@ -13,5 +13,8 @@ packages:
   - .github/actions/eco-ci
 catalog:
   "@microsoft/api-extractor": 7.51.1
+  "@rsbuild/core": 1.2.15
+  "@rspack/cli": 1.2.7
+  "@rspack/core": 1.2.7
 ignoredBuiltDependencies:
   - core-js
