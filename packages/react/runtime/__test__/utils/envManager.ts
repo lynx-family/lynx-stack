@@ -9,6 +9,7 @@ import { BackgroundSnapshotInstance } from '../../src/backgroundSnapshot.js';
 import { backgroundSnapshotInstanceManager, SnapshotInstance, snapshotInstanceManager } from '../../src/snapshot.js';
 import { deinitGlobalSnapshotPatch } from '../../src/lifecycle/patch/snapshotPatch.js';
 import { globalPipelineOptions, setPipeline } from '../../src/lynx/performance.js';
+import { clearListGlobal } from '../../src/list.js';
 
 export class EnvManager {
   root: typeof __root | undefined;
@@ -69,6 +70,7 @@ export class EnvManager {
     backgroundSnapshotInstanceManager.nextId = 0;
     snapshotInstanceManager.clear();
     snapshotInstanceManager.nextId = 0;
+    clearListGlobal();
     deinitGlobalSnapshotPatch();
     this.switchToBackground();
     this.switchToMainThread();

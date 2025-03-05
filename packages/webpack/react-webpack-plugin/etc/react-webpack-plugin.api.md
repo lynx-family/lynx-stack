@@ -42,6 +42,7 @@ export interface ReactWebpackPluginOptions {
     disableCreateSelectorQueryIncompatibleWarning?: boolean | undefined;
     // @alpha
     experimental_isLazyBundle?: boolean;
+    enableSSR?: boolean;
     firstScreenSyncTiming?: 'immediately' | 'jsReady';
     mainThreadChunks?: string[] | undefined;
 }
