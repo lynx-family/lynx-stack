@@ -47,7 +47,7 @@
     "@lynx-js/test-tools": "workspace:*",
     "@lynx-js/vitest-setup": "workspace:*",
     "@microsoft/api-extractor": "catalog:",
-    "@rspack/core": "1.2.7",
+    "@rspack/core": "catalog:",
     "css-loader": "^7.1.2",
     "swc-loader": "^0.2.6",
     "webpack": "^5.98.0"
