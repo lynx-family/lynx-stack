@@ -36,6 +36,9 @@ function renderMainThread(): void {
       console.profile('renderOpcodesInto');
     }
     renderOpcodesInto(opcodes, __root as any);
+    if (__ENABLE_SSR__) {
+      __root.__opcodes = opcodes;
+    }
     if (__PROFILE__) {
       console.profileEnd();
     }
