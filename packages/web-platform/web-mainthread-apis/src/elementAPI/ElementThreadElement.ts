@@ -79,10 +79,10 @@ export class ElementThreadElement {
   };
   public children: ElementThreadElement[] = [];
   public parent?: ElementThreadElement;
+  // public parentComponentUniqueId!: number;
   constructor(
     public tag: string,
     public uniqueId: number,
-    public parentComponentUniqueId: number,
     public readonly pageConfig: PageConfig,
     private operationsRef: {
       operations: ElementOperation[];
@@ -99,7 +99,6 @@ export class ElementThreadElement {
       type: OperationType.Create,
       uid: uniqueId,
       tag: tag,
-      puid: parentComponentUniqueId.toString(),
     });
   }
   setProperty(key: string, value: any) {

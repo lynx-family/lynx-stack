@@ -35,10 +35,6 @@ export interface CreateOperation extends ElementOperationBase {
   type: OperationType.Create;
   tag: string;
   cssId?: number;
-  /**
-   * parent component unique id
-   */
-  puid: string;
 }
 
 export interface SetAttributeOperation extends ElementOperationBase {
