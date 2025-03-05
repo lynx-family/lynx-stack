@@ -14,7 +14,7 @@ import { CHILDREN } from '../renderToOpcodes/constants.js';
 import { __root } from '../root.js';
 import { globalRefsToSet, updateBackgroundRefs } from '../snapshot/ref.js';
 import { backgroundSnapshotInstanceManager } from '../snapshot.js';
-import { destroyWorklet } from '../worklet/jsImpl.js';
+import { destroyWorklet } from '../worklet/destroy.js';
 
 function injectTt(): void {
   // @ts-ignore

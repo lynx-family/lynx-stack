@@ -9,8 +9,8 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 import { injectUpdatePatch, replaceCommitHook } from '../../src/lifecycle/patchUpdate';
 import { __root } from '../../src/root';
 import { setupPage } from '../../src/snapshot';
+import { destroyWorklet } from '../../src/worklet/destroy';
 import { clearConfigCacheForTesting } from '../../src/worklet/functionality';
-import { destroyWorklet } from '../../src/worklet/jsImpl';
 import { MainThreadRef, useMainThreadRef } from '../../src/worklet/workletRef';
 import { globalEnvManager } from '../utils/envManager';
 
