@@ -10,7 +10,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   validate-pr-title:
-    runs-on: lynx-ubuntu-24.04-xlarge #todo: use medium once its ready
+    runs-on: lynx-ubuntu-24.04-medium
     steps:
       - name: PR Conventional Commit Validation
         uses: ytanikin/PRConventionalCommits@1.3.0
