@@ -24,4 +24,4 @@ export const lynxViewRootDomId = 'lynx-view-root' as const;
 
 export const __lynx_timing_flag = '__lynx_timing_flag' as const;
 
-export const lynxViewEntryIdPrefix = 'lynx-view-id';
+export const lynxViewEntryIdPrefix = 'lynx-view-id' as const;
