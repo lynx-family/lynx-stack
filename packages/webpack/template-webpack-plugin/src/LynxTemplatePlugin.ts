@@ -277,6 +277,13 @@ export interface LynxTemplatePluginOptions {
   targetSdkVersion: string;
 
   /**
+   * When enabled, the default overflow CSS property for views and components will be `'visible'`. Otherwise, it will be `'hidden'`.
+   *
+   * @defaultValue `true`
+   */
+  defaultOverflowVisible?: boolean;
+
+  /**
    * `encodeBinary` is used to specify the binary of the template encoder.
    *
    * @defaultValue `napi`
@@ -398,6 +405,7 @@ export class LynxTemplatePlugin {
       enableRemoveCSSScope: false,
       pipelineSchedulerConfig: 0x00010000,
       targetSdkVersion: '3.2',
+      defaultOverflowVisible: true,
       removeDescendantSelectorScope: false,
       dsl: 'react_nodiff',
       encodeBinary: 'napi',
@@ -731,6 +739,7 @@ class LynxTemplatePluginImpl {
       pipelineSchedulerConfig,
       removeDescendantSelectorScope,
       targetSdkVersion,
+      defaultOverflowVisible,
       dsl,
       cssPlugins,
     } = this.#options;
@@ -761,6 +770,7 @@ class LynxTemplatePluginImpl {
         enableParallelElement,
         enableRemoveCSSScope,
         targetSdkVersion,
+        defaultOverflowVisible,
       },
       sourceContent: {
         dsl,
