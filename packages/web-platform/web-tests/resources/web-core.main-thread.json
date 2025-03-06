@@ -1,7 +1,7 @@
 {
   "styleInfo": {},
   "lepusCode": {
-    "root": "globalThis.runtime = lynx_runtime;globalThis.__lynx_worker_type = 'main'",
+    "root": "self.runtime = lynx_runtime;self.__lynx_worker_type = 'main'",
     "/manifest-chunk.js": "module.exports = 'hello';",
     "/manifest-chunk2.js": "module.exports = 'world';"
   },
