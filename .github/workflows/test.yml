@@ -20,13 +20,13 @@ jobs:
     uses: ./.github/workflows/workflow-build.yml
     secrets: inherit
     with:
-      runs-on: lynx-ubuntu-24.04-xlarge #todo: use medium once its ready
+      runs-on: lynx-ubuntu-24.04-medium
   test-rspeedy:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
     secrets: inherit
     with:
-      runs-on: lynx-ubuntu-24.04-xlarge #todo: use medium once its ready
+      runs-on: lynx-ubuntu-24.04-medium
       run: >
         sudo apt-get update &&
         sudo apt-get install -y iproute2 &&
@@ -49,7 +49,7 @@ jobs:
     uses: ./.github/workflows/workflow-test.yml
     secrets: inherit
     with:
-      runs-on: lynx-ubuntu-24.04-xlarge #todo: use medium once its ready
+      runs-on: lynx-ubuntu-24.04-medium
       run: >
         pnpm
         --filter @lynx-js/react-runtime
@@ -71,7 +71,7 @@ jobs:
     uses: ./.github/workflows/workflow-test.yml
     secrets: inherit
     with:
-      runs-on: lynx-ubuntu-24.04-xlarge #todo: use medium once its ready
+      runs-on: lynx-ubuntu-24.04-medium
       run: >
         pnpm run test
         --project 'webpack/*'
@@ -101,7 +101,7 @@ jobs:
     uses: ./.github/workflows/rust.yml
     secrets: inherit
     with:
-      runs-on: lynx-ubuntu-24.04-xlarge #todo: use medium once its ready
+      runs-on: lynx-ubuntu-24.04-medium
       files: |
         **/*.rs
         **/Cargo.toml

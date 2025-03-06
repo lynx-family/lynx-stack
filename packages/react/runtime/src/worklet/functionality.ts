@@ -4,9 +4,32 @@
 
 import { isSdkVersionGt } from '../utils.js';
 
+let mtsEnabled: boolean | undefined;
+let runOnBackgroundEnabled: boolean | undefined;
+
 /**
  * @internal
  */
-export function enableRunOnBackground(): boolean {
-  return isSdkVersionGt(2, 15);
+function isMtsEnabled(): boolean {
+  if (mtsEnabled === undefined) {
+    mtsEnabled = isSdkVersionGt(2, 13);
+  }
+  return mtsEnabled;
 }
+
+/**
+ * @internal
+ */
+function isRunOnBackgroundEnabled(): boolean {
+  if (runOnBackgroundEnabled === undefined) {
+    runOnBackgroundEnabled = isSdkVersionGt(2, 15);
+  }
+  return runOnBackgroundEnabled;
+}
+
+function clearConfigCacheForTesting(): void {
+  mtsEnabled = undefined;
+  runOnBackgroundEnabled = undefined;
+}
+
+export { isMtsEnabled, isRunOnBackgroundEnabled, clearConfigCacheForTesting };

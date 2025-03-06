@@ -1,5 +1,5 @@
 ---
-"@lynx-js/react": patch
+"@lynx-js/react": minor
 ---
 
 Support Lynx SSR.

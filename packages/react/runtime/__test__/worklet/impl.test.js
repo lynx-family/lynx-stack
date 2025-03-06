@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { clearConfigCacheForTesting } from '../../src/worklet/functionality';
 import { destroyWorklet, lynxWorkletJsImpl, removeJsWorklets, runJSFunction } from '../../src/worklet/jsImpl';
 
 beforeEach(() => {
@@ -32,6 +33,7 @@ describe('WorkletImpl', () => {
   });
 
   it('should not listen when not enableRunOnBackground', () => {
+    clearConfigCacheForTesting();
     SystemInfo.lynxSdkVersion = '2.15';
     expect(lynxWorkletJsImpl()).toEqual(expect.any(Object));
     expect(lynx.getCoreContext().addEventListener).toHaveBeenCalledTimes(0);
@@ -39,9 +41,11 @@ describe('WorkletImpl', () => {
     expect(lynx.getCoreContext().addEventListener).toHaveBeenCalledTimes(0);
     destroyWorklet();
     expect(lynx.getCoreContext().removeEventListener).toHaveBeenCalledTimes(0);
+    clearConfigCacheForTesting();
   });
 
   it('should not listen when not enableRunOnBackground 2', () => {
+    clearConfigCacheForTesting();
     SystemInfo.lynxSdkVersion = undefined;
     expect(lynxWorkletJsImpl()).toEqual(expect.any(Object));
     expect(lynx.getCoreContext().addEventListener).toHaveBeenCalledTimes(0);
@@ -49,6 +53,7 @@ describe('WorkletImpl', () => {
     expect(lynx.getCoreContext().addEventListener).toHaveBeenCalledTimes(0);
     destroyWorklet();
     expect(lynx.getCoreContext().removeEventListener).toHaveBeenCalledTimes(0);
+    clearConfigCacheForTesting();
   });
 });
 

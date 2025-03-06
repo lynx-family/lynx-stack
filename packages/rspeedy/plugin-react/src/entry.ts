@@ -79,6 +79,10 @@ export function applyEntry(
           : config.output?.filename
       ) ?? '[name].[platform].bundle'
 
+      // We do not use `${entryName}__background` since the default CSS name is `[name]/[name].css`.
+      // We would like to avoid adding `__background` to the output CSS filename.
+      const mainThreadEntry = `${entryName}__main-thread`
+
       const mainThreadName = path.join(
         isLynx
           // TODO: config intermediate
@@ -86,11 +90,8 @@ export function applyEntry(
           // For non-Lynx environment, the entry is not deleted.
           // So we do not put it in the intermediate.
           : '',
-        `${entryName}/main-thread.js`,
+        `${mainThreadEntry}/main-thread.js`,
       )
-      // We do not use `${entryName}:main-thread` since the default CSS name is `[name]/[name].css`.
-      // We would like to avoid adding `:main-thread` to the output CSS filename.
-      const mainThreadEntry = entryName
 
       const backgroundName = path.join(
         isLynx
@@ -101,7 +102,7 @@ export function applyEntry(
           : '',
         getBackgroundFilename(entryName, environment.config, isProd),
       )
-      const backgroundEntry = `${entryName}:background`
+      const backgroundEntry = entryName
 
       mainThreadChunks.push(mainThreadName)
 

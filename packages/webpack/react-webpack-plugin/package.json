@@ -47,13 +47,13 @@
     "@lynx-js/test-tools": "workspace:*",
     "@lynx-js/vitest-setup": "workspace:*",
     "@microsoft/api-extractor": "catalog:",
-    "@rspack/core": "1.2.7",
+    "@rspack/core": "catalog:",
     "css-loader": "^7.1.2",
     "swc-loader": "^0.2.6",
     "webpack": "^5.98.0"
   },
   "peerDependencies": {
-    "@lynx-js/react": "^0.103.0 || ^0.104.0 || ^0.105.0",
+    "@lynx-js/react": "^0.103.0 || ^0.104.0 || ^0.105.0 || ^0.106.0",
     "@lynx-js/template-webpack-plugin": "^0.4.0 || ^0.5.0 || ^0.6.0"
   },
   "peerDependenciesMeta": {

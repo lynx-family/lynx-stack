@@ -38,7 +38,7 @@ jobs:
           cargo test
 
   rustfmt:
-    runs-on: lynx-ubuntu-24.04-xlarge #todo: use medium once its ready
+    runs-on: lynx-ubuntu-24.04-medium
     steps:
       - uses: actions/checkout@v4
       - name: Get Changed Files

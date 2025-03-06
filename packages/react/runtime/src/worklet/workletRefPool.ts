@@ -1,25 +1,29 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { lynxWorkletJsImpl } from './jsImpl.js';
 
+import { isMtsEnabled } from './functionality.js';
+
+let initValuePatch: [number, unknown][] = [];
+const initValueIdSet = /*#__PURE__*/ new Set<number>();
+
+/**
+ * @internal
+ */
 export function addWorkletRefInitValue(id: number, value: unknown): void {
-  const impl = lynxWorkletJsImpl();
-  if (!impl) {
+  if (!isMtsEnabled()) {
     return;
   }
 
-  impl._workletRefInitValueSet.add(id);
-  impl._workletRefInitValuePatch.push([id, value]);
+  initValueIdSet.add(id);
+  initValuePatch.push([id, value]);
 }
 
+/**
+ * @internal
+ */
 export function takeWorkletRefInitValuePatch(): [number, unknown][] {
-  const impl = lynxWorkletJsImpl(false);
-  if (!impl) {
-    return [];
-  }
-
-  const res = impl._workletRefInitValuePatch;
-  impl._workletRefInitValuePatch = [];
+  const res = initValuePatch;
+  initValuePatch = [];
   return res;
 }

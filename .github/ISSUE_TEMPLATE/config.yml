@@ -1,0 +1,5 @@
+---
+contact_links:
+  - about: "Please raise issues about the site on its own repo."
+    name: Website
+    url: "https://github.com/lynx-family/lynx-website/issues"

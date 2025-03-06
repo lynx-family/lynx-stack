@@ -6,6 +6,7 @@ import {
   type ElementOperation,
   cssIdAttribute,
   type CssInJsInfo,
+  parentComponentUniqueIdAttribute,
 } from '@lynx-js/web-constants';
 import { __UpdateComponentID } from '../attributeAndProperty/attributeAndPropertyFunctions.js';
 import {
@@ -15,6 +16,7 @@ import {
   ElementThreadElement,
 } from '../ElementThreadElement.js';
 import { __SetCSSId } from '../style/styleFunctions.js';
+import { createOffscreenDocument } from '../createOffscreenDocument.js';
 
 export interface initializeElementCreatingFunctionConfig {
   operationsRef: {
@@ -28,9 +30,13 @@ export interface initializeElementCreatingFunctionConfig {
 export function initializeElementCreatingFunction(
   config: initializeElementCreatingFunctionConfig,
 ) {
-  let incrementalUniqueId = 0;
   const tagSet = new Set<string>();
   const { operationsRef, pageConfig, styleInfo } = config;
+  const document = createOffscreenDocument({
+    pageConfig,
+    operationsRef,
+    styleInfo,
+  });
   function createLynxElement(
     tag: Exclude<string, 'list'>,
     parentComponentUniqueId: number,
@@ -57,14 +63,11 @@ export function initializeElementCreatingFunction(
       config.onNewTag(tag);
       tagSet.add(tag);
     }
-    const uniqueId = incrementalUniqueId++;
-    const element = new (tag === 'list' ? ListElement : ElementThreadElement)(
-      tag,
-      uniqueId,
-      parentComponentUniqueId,
-      pageConfig,
-      operationsRef,
-      styleInfo,
+    const element = document.createElement(tag);
+    // element.parentComponentUniqueId = parentComponentUniqueId;
+    element.setAttribute(
+      parentComponentUniqueIdAttribute,
+      parentComponentUniqueId.toString(),
     );
     if (cssId !== undefined) __SetCSSId([element], cssId);
     else if (parentComponentUniqueId >= 0) { // don't infer for uniqueid === -1
@@ -125,7 +128,10 @@ export function initializeElementCreatingFunction(
     info: Record<string, any> | null | undefined,
   ) {
     const page = createLynxElement('page', 0, cssID, componentID, info);
-    page.parentComponentUniqueId = page.uniqueId;
+    page.setAttribute(
+      parentComponentUniqueIdAttribute,
+      page.uniqueId.toString(),
+    );
     return page;
   }
 

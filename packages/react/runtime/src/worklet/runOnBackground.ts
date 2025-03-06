@@ -5,7 +5,7 @@
 import type { JsFnHandle } from '@lynx-js/react/worklet-runtime/bindings';
 import { WorkletEvents } from '@lynx-js/react/worklet-runtime/bindings';
 
-import { enableRunOnBackground } from './functionality.js';
+import { isRunOnBackgroundEnabled } from './functionality.js';
 
 /**
  * @internal
@@ -22,7 +22,7 @@ interface RunOnBackgroundData {
  * @public
  */
 function runOnBackground<Fn extends (...args: any[]) => any>(f: Fn): (...args: Parameters<Fn>) => void {
-  if (!enableRunOnBackground()) {
+  if (!isRunOnBackgroundEnabled()) {
     throw new Error('runOnBackground requires Lynx sdk version 2.16.');
   }
   if (__JS__) {
