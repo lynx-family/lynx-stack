@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { destroyWorklet } from '../../src/worklet/jsImpl';
+import { destroyWorklet } from '../../src/worklet/destroy';
 import { transformToWorklet } from '../../src/worklet/transformToWorklet';
 
 afterEach(() => {

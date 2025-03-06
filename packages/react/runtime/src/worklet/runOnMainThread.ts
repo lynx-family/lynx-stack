@@ -5,7 +5,7 @@ import type { RunWorkletCtxData, Worklet } from '@lynx-js/react/worklet-runtime/
 import { WorkletEvents } from '@lynx-js/react/worklet-runtime/bindings';
 
 import { onPostWorkletCtx } from './ctx.js';
-import { lynxWorkletJsImpl } from './jsImpl.js';
+import { isMtsEnabled } from './functionality.js';
 
 /**
  * `runOnMainThread` allows triggering main thread functions on the main thread asynchronously.
@@ -17,8 +17,7 @@ export function runOnMainThread<Fn extends (...args: any[]) => any>(fn: Fn): (..
   if (__LEPUS__) {
     throw new Error('runOnMainThread can only be used on the background thread.');
   }
-  const impl = lynxWorkletJsImpl();
-  if (!impl) {
+  if (!isMtsEnabled()) {
     throw new Error('runOnMainThread requires Lynx sdk version 2.14.');
   }
   return (...params: any[]): void => {
