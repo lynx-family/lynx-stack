@@ -104,13 +104,7 @@ export class MainThreadRuntime {
   }
 
   get globalThis() {
-    const global = Object.assign(globalThis, this);
-    Object.defineProperty(
-      global,
-      'renderPage',
-      Object.getOwnPropertyDescriptor(this, 'renderPage')!,
-    );
-    return global;
+    return this;
   }
 
   lynx: MainThreadLynx;
