@@ -54,11 +54,11 @@ test.describe('web core tests', () => {
     await goto(page);
     const mainWorker = await getMainThreadWorker(page);
     await mainWorker.evaluate(() => {
-      globalThis.renderPage = () => {
-        const root = __CreatePage('0', '0', {});
-        const element = __CreateElement('view', '0', {});
-        __AppendElement(root, element);
-        const component = __CreateComponent(
+      globalThis.runtime.renderPage = () => {
+        const root = globalThis.runtime.__CreatePage('0', '0', {});
+        const element = globalThis.runtime.__CreateElement('view', '0', {});
+        globalThis.runtime.__AppendElement(root, element);
+        const component = globalThis.runtime.__CreateComponent(
           '1',
           '0-13826000',
           '0',
@@ -68,8 +68,8 @@ test.describe('web core tests', () => {
           {},
           {},
         );
-        __AddClass(component, 'wrapper');
-        __AppendElement(element, component);
+        globalThis.runtime.__AddClass(component, 'wrapper');
+        globalThis.runtime.__AppendElement(element, component);
       };
     });
     const backWorker = await getBackgroundThreadWorker(page);
