@@ -102,6 +102,7 @@ export default defineConfig({
     setupFiles: [
       path.join(__dirname, './__test__/utils/globals.js'),
       path.join(__dirname, './__test__/utils/setup.js'),
+      path.join(__dirname, './__test__/utils/runtimeProxy.ts'),
     ],
   },
 });
