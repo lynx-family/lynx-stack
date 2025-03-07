@@ -76,7 +76,7 @@
     "@rsbuild/webpack": "1.2.3",
     "eventemitter3": "^5.0.1",
     "type-fest": "^4.37.0",
-    "vitest": "^3.0.7",
+    "vitest": "^3.0.8",
     "webpack": "^5.98.0"
   },
   "engines": {
