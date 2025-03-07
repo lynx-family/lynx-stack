@@ -42,7 +42,6 @@ export function registerFlushElementTreeHandler(
     backgroundRpc: Rpc;
     rootDom: HTMLElement;
     entryId: string;
-    currentLoadingTags: Promise<void>[];
   },
   onCommit: (info: {
     pipelineId: string | undefined;
@@ -61,7 +60,6 @@ export function registerFlushElementTreeHandler(
     backgroundRpc,
     rootDom,
     entryId,
-    currentLoadingTags,
   } = options;
   const uniqueIdToElement: WeakRef<
     HTMLElement & RuntimePropertyOnElement
@@ -146,37 +144,35 @@ export function registerFlushElementTreeHandler(
       const pipelineId = pipelineOptions?.pipelineID;
       const timingFlags: string[] = [];
       markTimingInternal('dispatch_start', pipelineId);
-      Promise.all(currentLoadingTags).then(() => {
-        markTimingInternal('layout_start', pipelineId);
-        markTimingInternal('ui_operation_flush_start', pipelineId);
-        const page = decodeElementOperation(operations, {
-          timingFlags,
-          uniqueIdToElement,
-          uniqueIdToCssInJsRule,
-          createElementImpl,
-          createStyleRuleImpl,
-          eventHandler: {
-            mtsHandler,
-            btsHandler,
-          },
-        });
-        markTimingInternal('ui_operation_flush_end', pipelineId);
-        const isFP = !!page;
-        if (isFP) {
-          // on FP
-          const styleElement = document.createElement('style');
-          styleElement.innerHTML = cardCss!;
-          rootDom.append(styleElement);
-          rootDom.append(page);
-          applyPageAttributes(page, pageConfig, entryId);
-        }
-        markTimingInternal('layout_end', pipelineId);
-        markTimingInternal('dispatch_end', pipelineId);
-        onCommit({
-          pipelineId,
-          timingFlags,
-          isFP,
-        });
+      markTimingInternal('layout_start', pipelineId);
+      markTimingInternal('ui_operation_flush_start', pipelineId);
+      const page = decodeElementOperation(operations, {
+        timingFlags,
+        uniqueIdToElement,
+        uniqueIdToCssInJsRule,
+        createElementImpl,
+        createStyleRuleImpl,
+        eventHandler: {
+          mtsHandler,
+          btsHandler,
+        },
+      });
+      markTimingInternal('ui_operation_flush_end', pipelineId);
+      const isFP = !!page;
+      if (isFP) {
+        // on FP
+        const styleElement = document.createElement('style');
+        styleElement.innerHTML = cardCss!;
+        rootDom.append(styleElement);
+        rootDom.append(page);
+        applyPageAttributes(page, pageConfig, entryId);
+      }
+      markTimingInternal('layout_end', pipelineId);
+      markTimingInternal('dispatch_end', pipelineId);
+      onCommit({
+        pipelineId,
+        timingFlags,
+        isFP,
       });
     },
   );
