@@ -1,7 +1,7 @@
 {
   "styleInfo": {},
   "lepusCode": {
-    "root": "self.runtime = lynx_runtime;self.__lynx_worker_type = 'main'",
+    "root": "self.runtime = lynx_runtime;self.__lynx_worker_type = 'main'; globalThis.registerDataProcessor='pass'; self.registerDataProcessor = registerDataProcessor;",
     "/manifest-chunk.js": "module.exports = 'hello';",
     "/manifest-chunk2.js": "module.exports = 'world';"
   },
