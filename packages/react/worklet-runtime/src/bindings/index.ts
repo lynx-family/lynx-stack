@@ -13,4 +13,4 @@ export {
 
 export type * from './types.js';
 
-export { WorkletEvents, type RunWorkletCtxData } from './events.js';
+export { WorkletEvents, type RunWorkletCtxData, type RunWorkletCtxRetData } from './events.js';
