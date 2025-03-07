@@ -360,7 +360,9 @@ export class LynxView extends HTMLElement {
             nativeModulesUrl: this.#nativeModulesUrl,
             callbacks: {
               loadNewTag: loadElement,
-              nativeModulesCall: (...args: unknown[]) => {
+              nativeModulesCall: (
+                ...args: [name: string, data: any, moduleName: string]
+              ) => {
                 if (this.#onNativeModulesCall) {
                   return this.#onNativeModulesCall(...args);
                 } else if (this.#cachedNativeModulesCall) {
