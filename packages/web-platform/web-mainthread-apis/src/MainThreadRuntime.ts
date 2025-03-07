@@ -30,7 +30,6 @@ import {
 
 export interface MainThreadRuntimeCallbacks {
   mainChunkReady: () => void;
-  onNewTag: (tag: string) => void;
   flushElementTree: (
     operations: ElementOperation[],
     options: FlushElementTreeOptions,
@@ -79,7 +78,6 @@ export class MainThreadRuntime {
       initializeElementCreatingFunction({
         operationsRef: this.operationsRef,
         pageConfig: config.pageConfig,
-        onNewTag: config.callbacks.onNewTag,
         styleInfo: cssInJs,
       }),
     );
