@@ -12,6 +12,7 @@ import { globalEnvManager } from '../utils/envManager';
 beforeEach(() => {
   SystemInfo.lynxSdkVersion = '999.999';
   clearConfigCacheForTesting();
+  globalEnvManager.switchToBackground();
 });
 
 afterEach(() => {
@@ -31,12 +32,33 @@ describe('runOnBackground', () => {
       [
         [
           {
-            "data": "{"obj":{"_jsFnId":233,"_execId":244},"params":[1,["args"]]}",
+            "data": "{"obj":{"_jsFnId":233,"_execId":244},"params":[1,["args"]],"resolveId":1}",
             "type": "Lynx.Worklet.runOnBackground",
           },
         ],
       ]
     `);
+  });
+
+  it('should get return value', async () => {
+    const fn = vi.fn(() => 'world');
+    const worklet = {
+      xxx: {
+        yyy: 1,
+        zzz: {
+          _jsFnId: 233,
+          _fn: fn,
+        },
+      },
+    };
+    const id = onPostWorkletCtx(worklet)._execId;
+    globalEnvManager.switchToMainThread();
+    const ret = await runOnBackground({
+      _jsFnId: 233,
+      _execId: id,
+    })('hello');
+    expect(fn).toBeCalledWith('hello');
+    expect(ret).toBe('world');
   });
 
   it('should throw when on the main thread', () => {
@@ -122,8 +144,10 @@ describe('runJSFunction', () => {
       },
     };
     const id = onPostWorkletCtx(worklet)._execId;
+
+    globalEnvManager.switchToMainThread();
     const trigger = () => {
-      lynx.getCoreContext().dispatchEvent({
+      lynx.getJSContext().dispatchEvent({
         type: 'Lynx.Worklet.runOnBackground',
         data: JSON.stringify({
           obj: {
@@ -138,7 +162,7 @@ describe('runJSFunction', () => {
     trigger();
     expect(fn).toBeCalledWith('hello');
 
-    lynx.getCoreContext().dispatchEvent({
+    lynx.getJSContext().dispatchEvent({
       type: 'Lynx.Worklet.releaseBackgroundWorkletCtx',
       data: [id],
     });

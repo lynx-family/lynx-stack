@@ -2,12 +2,13 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { JsFnHandle, Worklet } from '@lynx-js/react/worklet-runtime/bindings';
+import type { JsFnHandle, RunWorkletCtxRetData, Worklet } from '@lynx-js/react/worklet-runtime/bindings';
 import { WorkletEvents } from '@lynx-js/react/worklet-runtime/bindings';
 
 import { destroyTasks } from './destroy.js';
 import { WorkletExecIdMap } from './execMap.js';
 import { isRunOnBackgroundEnabled } from './functionality.js';
+import { onFunctionCall } from './functionCall.js';
 
 /**
  * @internal
@@ -15,6 +16,7 @@ import { isRunOnBackgroundEnabled } from './functionality.js';
 interface RunOnBackgroundData {
   obj: JsFnHandle;
   params: unknown[];
+  resolveId: number;
 }
 
 let execIdMap: WorkletExecIdMap | undefined;
@@ -47,7 +49,14 @@ function runJSFunction(event: RuntimeProxy.Event): void {
   if (!f) {
     throw new Error('runOnBackground: JS function not found: ' + JSON.stringify(data.obj));
   }
-  f(...data.params);
+  const returnValue = f(...data.params);
+  lynx.getCoreContext!().dispatchEvent({
+    type: WorkletEvents.FunctionCallRet,
+    data: JSON.stringify({
+      resolveId: data.resolveId,
+      returnValue,
+    } as RunWorkletCtxRetData),
+  });
 }
 
 function releaseBackgroundWorkletCtx(event: RuntimeProxy.Event): void {
@@ -67,12 +76,24 @@ function registerWorkletCtx(ctx: Worklet): void {
 }
 
 /**
- * `runOnBackground` allows triggering js functions on the js context asynchronously.
+ * `runOnBackground` allows triggering js functions on the background thread asynchronously.
  * @param f - The js function to be called.
- * @returns A function. Calling which with the arguments to be passed to the js function to trigger it on the js context.
+ * @returns A function. Calling which with the arguments to be passed to the js function to trigger it on the background thread. This function returns a promise that resolves to the return value of the js function.
+ * @example
+ * ```ts
+ * import { runOnBackground } from '@lynx-js/react';
+ *
+ * async function someMainthreadFunction() {
+ *   'main thread';
+ *   const fn = runOnBackground(() => {
+ *     return 'hello';
+ *   });
+ *   const result = await fn();
+}
+ * ```
  * @public
  */
-function runOnBackground<Fn extends (...args: any[]) => any>(f: Fn): (...args: Parameters<Fn>) => void {
+function runOnBackground<R, Fn extends (...args: any[]) => R>(f: Fn): (...args: Parameters<Fn>) => Promise<R> {
   if (!isRunOnBackgroundEnabled()) {
     throw new Error('runOnBackground requires Lynx sdk version 2.16.');
   }
@@ -83,18 +104,22 @@ function runOnBackground<Fn extends (...args: any[]) => any>(f: Fn): (...args: P
   if (obj._error) {
     throw new Error(obj._error);
   }
-  return (...params: any[]): void => {
-    lynx.getJSContext().dispatchEvent({
-      type: WorkletEvents.runOnBackground,
-      data: JSON.stringify({
-        obj: {
-          _jsFnId: obj._jsFnId,
-          _execId: obj._execId!,
-        },
-        params,
-      } as RunOnBackgroundData),
+  return async (...params: any[]): Promise<R> => {
+    return new Promise((resolve) => {
+      const resolveId = onFunctionCall(resolve);
+      lynx.getJSContext!().dispatchEvent({
+        type: WorkletEvents.runOnBackground,
+        data: JSON.stringify({
+          obj: {
+            _jsFnId: obj._jsFnId,
+            _execId: obj._execId!,
+          },
+          params,
+          resolveId,
+        } as RunOnBackgroundData),
+      });
     });
   };
 }
 
-export { runJSFunction, registerWorkletCtx, runOnBackground };
+export { registerWorkletCtx, runJSFunction, runOnBackground };
