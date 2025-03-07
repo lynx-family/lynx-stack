@@ -33,9 +33,9 @@ function generateJavascriptUrl<T extends Record<string, string>>(
             ...muteableVars.map((nm) =>
               `${nm} = lynx_runtime.__lynxGlobalBindingValues.${nm};`
             ),
-            '};',
+            '};\n',
             content,
-            'return module.exports;}',
+            '\n return module.exports;}',
           ].join(''),
         ),
       ];
