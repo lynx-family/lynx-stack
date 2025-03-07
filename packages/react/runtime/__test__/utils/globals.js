@@ -31,36 +31,6 @@ const performance = {
   }),
 };
 
-class EventListener {
-  _listeners = {};
-  _addEventListener = (type, listener) => {
-    if (this._listeners[type]) {
-      this._listeners[type].push(listener);
-    } else {
-      this._listeners[type] = [listener];
-    }
-  };
-  _removeEventListener = (type, listener) => {
-    if (this._listeners[type]) {
-      this._listeners[type] = this._listeners[type].filter((l) => l !== listener);
-    }
-  };
-  _dispatchEvent = (event) => {
-    if (this._listeners[event.type]) {
-      this._listeners[event.type].forEach((listener) => listener(event));
-    }
-  };
-
-  addEventListener = vi.fn(this._addEventListener);
-
-  removeEventListener = vi.fn(this._removeEventListener);
-
-  dispatchEvent = vi.fn(this._dispatchEvent);
-}
-
-const coreContext = new EventListener();
-const jsContext = new EventListener();
-
 function injectGlobals() {
   globalThis.__DEV__ = true;
   globalThis.__PROFILE__ = true;
@@ -85,8 +55,6 @@ function injectGlobals() {
         },
       };
     }),
-    getCoreContext: vi.fn(() => coreContext),
-    getJSContext: vi.fn(() => jsContext),
   };
   globalThis.requestAnimationFrame = setTimeout;
   globalThis.cancelAnimationFrame = clearTimeout;

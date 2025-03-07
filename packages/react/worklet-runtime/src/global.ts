@@ -14,7 +14,7 @@ declare global {
     _refImpl: RefImpl;
   };
 
-  function runWorklet(ctx: Worklet, params: ClosureValueType[]): void;
+  function runWorklet(ctx: Worklet, params: ClosureValueType[]): unknown;
 
   function registerWorklet(type: string, id: string, worklet: Function): void;
   function registerWorkletInternal(type: string, id: string, worklet: Function): void;
