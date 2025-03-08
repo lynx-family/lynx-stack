@@ -1,4 +1,4 @@
-import type { LynxTemplate } from '@lynx-js/web-constants';
+import { globalMuteableVars, type LynxTemplate } from '@lynx-js/web-constants';
 
 const TemplateCache: Record<string, LynxTemplate> = {};
 
@@ -10,24 +10,33 @@ function generateJavascriptUrl<T extends Record<string, string>>(
   obj: T,
   injectVars: string[],
   injectWithBind: string[],
+  muteableVars: readonly string[],
 ) {
+  injectVars = injectVars.concat(muteableVars);
   return Object.fromEntries(
     Object.entries(obj).map(([name, content]) => {
       return [
         name,
         createJsModuleUrl(
-          `globalThis.module.exports = function(lynx_runtime) {
-const module= {exports:{}};let exports = module.exports;
-var {${injectVars.join(',')}} = lynx_runtime; 
-${
-            injectWithBind.map((nm) =>
-              `const ${nm} = lynx_runtime.${nm}?.bind(lynx_runtime)`
-            ).join(';')
-          }
-var globDynamicComponentEntry = '__Card__';
-var {__globalProps} = lynx;
-${content}
-return module.exports;}`,
+          [
+            'globalThis.module.exports = function(lynx_runtime) {',
+            'const module= {exports:{}};let exports = module.exports;',
+            'var {',
+            injectVars.join(','),
+            '} = lynx_runtime;',
+            ...injectWithBind.map((nm) =>
+              `const ${nm} = lynx_runtime.${nm}?.bind(lynx_runtime);`
+            ),
+            ';var globDynamicComponentEntry = \'__Card__\';',
+            'var {__globalProps} = lynx;',
+            'lynx_runtime._updateVars=()=>{',
+            ...muteableVars.map((nm) =>
+              `${nm} = lynx_runtime.__lynxGlobalBindingValues.${nm};`
+            ),
+            '};\n',
+            content,
+            '\n return module.exports;}',
+          ].join(''),
         ),
       ];
     }),
@@ -114,11 +123,13 @@ export async function loadTemplate(url: string): Promise<LynxTemplate> {
       template.lepusCode,
       mainThreadInjectVars,
       [],
+      globalMuteableVars,
     ),
     manifest: generateJavascriptUrl(
       template.manifest,
       backgroundInjectVars,
       backgroundInjectWithBind,
+      [],
     ),
   };
   TemplateCache[url] = decodedTemplate;

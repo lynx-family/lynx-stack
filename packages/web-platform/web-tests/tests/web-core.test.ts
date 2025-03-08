@@ -209,6 +209,14 @@ test.describe('web core tests', () => {
     expect(success).toBe(true);
     expect(fail).toBe(false);
   });
+  test('registerDataProcessor-as-global-var-update', async ({ page, browserName }) => {
+    await goto(page);
+    const mainWorker = await getMainThreadWorker(page);
+    const registerDataProcessor = await mainWorker.evaluate(() => {
+      return globalThis.registerDataProcessor;
+    });
+    expect(registerDataProcessor).toBe('pass');
+  });
 
   test('createJSObjectDestructionObserver', async ({ page, browserName }) => {
     // firefox dose not support this.

@@ -2,18 +2,19 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type {
-  ElementOperation,
-  LynxLifecycleEvent,
-  LynxTemplate,
-  PageConfig,
-  ProcessDataCallback,
-  StyleInfo,
-  FlushElementTreeOptions,
-  Cloneable,
-  CssInJsInfo,
-  BrowserConfig,
+import {
+  type ElementOperation,
+  type LynxLifecycleEvent,
+  type LynxTemplate,
+  type PageConfig,
+  type ProcessDataCallback,
+  type StyleInfo,
+  type FlushElementTreeOptions,
+  type Cloneable,
+  type CssInJsInfo,
+  type BrowserConfig,
 } from '@lynx-js/web-constants';
+import { globalMuteableVars } from '@lynx-js/web-constants';
 import { createMainThreadLynx, type MainThreadLynx } from './MainThreadLynx.js';
 import { initializeElementCreatingFunction } from './elementAPI/elementCreating/elementCreatingFunctions.js';
 import * as attributeAndPropertyApis from './elementAPI/attributeAndProperty/attributeAndPropertyFunctions.js';
@@ -101,7 +102,23 @@ export class MainThreadRuntime {
         queueMicrotask(this.config.callbacks.mainChunkReady);
       },
     });
+    for (const nm of globalMuteableVars) {
+      Object.defineProperty(this, nm, {
+        get: () => {
+          return this.__lynxGlobalBindingValues[nm];
+        },
+        set: (v: any) => {
+          this.__lynxGlobalBindingValues[nm] = v;
+          this._updateVars?.();
+        },
+      });
+    }
   }
+
+  /**
+   * @private
+   */
+  __lynxGlobalBindingValues: Record<string, any> = {};
 
   get globalThis() {
     return this;
@@ -147,4 +164,6 @@ export class MainThreadRuntime {
   };
 
   updatePage?: (data: Cloneable, options?: Record<string, string>) => void;
+
+  _updateVars?: () => void;
 }
