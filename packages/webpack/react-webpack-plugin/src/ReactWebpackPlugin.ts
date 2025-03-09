@@ -33,6 +33,11 @@ interface ReactWebpackPluginOptions {
   firstScreenSyncTiming?: 'immediately' | 'jsReady';
 
   /**
+   * {@inheritdoc @lynx-dev/react-rsbuild-plugin#PluginReactLynxOptions.enableSSR}
+   */
+  enableSSR?: boolean;
+
+  /**
    * The chunk names to be considered as main thread chunks.
    */
   mainThreadChunks?: string[] | undefined;
@@ -104,6 +109,7 @@ class ReactWebpackPlugin {
     .freeze<Required<ReactWebpackPluginOptions>>({
       disableCreateSelectorQueryIncompatibleWarning: false,
       firstScreenSyncTiming: 'immediately',
+      enableSSR: false,
       mainThreadChunks: [],
     });
 
@@ -146,6 +152,7 @@ class ReactWebpackPlugin {
       __FIRST_SCREEN_SYNC_TIMING__: JSON.stringify(
         options.firstScreenSyncTiming,
       ),
+      __ENABLE_SSR__: JSON.stringify(options.enableSSR),
       __DISABLE_CREATE_SELECTOR_QUERY_INCOMPATIBLE_WARNING__: JSON.stringify(
         options.disableCreateSelectorQueryIncompatibleWarning,
       ),

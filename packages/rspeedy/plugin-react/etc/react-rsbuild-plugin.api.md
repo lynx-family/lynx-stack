@@ -33,6 +33,7 @@ export interface PluginReactLynxOptions {
     enableNewGesture?: boolean;
     enableParallelElement?: boolean;
     enableRemoveCSSScope?: boolean | undefined;
+    enableSSR?: boolean;
     engineVersion?: string;
     // @alpha
     experimental_isLazyBundle?: boolean;
