@@ -16,7 +16,7 @@
     "@lynx-js/rspeedy": "workspace:*",
     "@lynx-js/types": "^3.2.0",
     "@types/react": "^18.3.18",
-    "typescript": "~5.7.3"
+    "typescript": "~5.8.2"
   },
   "engines": {
     "node": ">=18"
