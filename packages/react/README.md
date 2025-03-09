@@ -1,6 +1,6 @@
 <p align="center">
   <a aria-label="ReactLynx banner" href="https://lynxjs.org/react/">
-    <img alt="@lynx-js/react" src="https://lynxjs.org/assets/react-lynx-banner.png" />
+    <img alt="@lynx-js/react" src="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/lynx-website/assets/react-lynx-banner.png" />
   </a>
 </p>
 
