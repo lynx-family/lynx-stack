@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://lynxjs.org/rspeedy" target="blank"><img src="https://lynxjs.org/assets/rspeedy-banner.png" alt="Rspeedy Logo" /></a>
+  <a href="https://lynxjs.org/rspeedy" target="blank"><img src="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/lynx-website/assets/rspeedy-banner.png" alt="Rspeedy Logo" /></a>
 </p>
 
 # create-rspeedy
