@@ -165,43 +165,47 @@ function replaceCommitHook(): void {
     if (workletRefInitValuePatch.length) {
       patch.workletRefInitValuePatch = workletRefInitValuePatch;
     }
-    await commitPatchUpdate(patch, { commitTaskId });
+    const obj = commitPatchUpdate(patch, { commitTaskId });
 
-    const commitTask = globalCommitTaskMap.get(commitTaskId);
-    if (commitTask) {
-      commitTask();
-      globalCommitTaskMap.delete(commitTaskId);
-    }
+    lynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
+      const commitTask = globalCommitTaskMap.get(commitTaskId);
+      if (commitTask) {
+        commitTask();
+        globalCommitTaskMap.delete(commitTaskId);
+      }
+    });
   };
 }
 
-function commitPatchUpdate(data: Patch, patchOptions: PatchOptions): Promise<void> {
-  return new Promise(resolve => {
-    // console.debug('********** JS update:');
-    // printSnapshotInstance(
-    //   (backgroundSnapshotInstanceManager.values.get(1) || backgroundSnapshotInstanceManager.values.get(-1))!,
-    // );
-    // console.debug('commitPatchUpdate: ', JSON.stringify(data));
-    const obj: {
-      data: string;
-      patchOptions: PatchOptions;
-    } = {
-      data: JSON.stringify(data),
-      patchOptions: {
-        ...patchOptions,
-        reloadVersion: getReloadVersion(),
-      },
-    };
-    markTiming(PerformanceTimingKeys.pack_changes_end);
-    if (globalPipelineOptions) {
-      obj.patchOptions.pipelineOptions = globalPipelineOptions;
-      setPipeline(undefined);
-    }
-    if (__PROFILE__) {
-      console.profileEnd();
-    }
-    lynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, resolve);
-  });
+function commitPatchUpdate(data: Patch, patchOptions: PatchOptions): {
+  data: string;
+  patchOptions: PatchOptions;
+} {
+  // console.debug('********** JS update:');
+  // printSnapshotInstance(
+  //   (backgroundSnapshotInstanceManager.values.get(1) || backgroundSnapshotInstanceManager.values.get(-1))!,
+  // );
+  // console.debug('commitPatchUpdate: ', JSON.stringify(data));
+  const obj: {
+    data: string;
+    patchOptions: PatchOptions;
+  } = {
+    data: JSON.stringify(data),
+    patchOptions: {
+      ...patchOptions,
+      reloadVersion: getReloadVersion(),
+    },
+  };
+  markTiming(PerformanceTimingKeys.pack_changes_end);
+  if (globalPipelineOptions) {
+    obj.patchOptions.pipelineOptions = globalPipelineOptions;
+    setPipeline(undefined);
+  }
+  if (__PROFILE__) {
+    console.profileEnd();
+  }
+
+  return obj;
 }
 
 function commitMainThreadPatchUpdate(commitTaskId?: number): void {

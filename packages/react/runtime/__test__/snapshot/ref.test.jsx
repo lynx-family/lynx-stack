@@ -223,6 +223,7 @@ describe('element ref', () => {
       globalThis.__OnLifecycleEvent.mockClear();
       const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
       globalThis[rLynxChange[0]](rLynxChange[1]);
+      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
       rLynxChange[2]();
       expect(globalThis.__OnLifecycleEvent.mock.calls).toMatchInlineSnapshot(`
         [
@@ -242,7 +243,6 @@ describe('element ref', () => {
     // ref
     {
       globalEnvManager.switchToBackground();
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
       await waitSchedule();
       expect(ref1.mock.calls).toMatchInlineSnapshot(`
         [
@@ -334,7 +334,6 @@ describe('element ref', () => {
       globalThis.__OnLifecycleEvent.mockClear();
       const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
       globalThis[rLynxChange[0]](rLynxChange[1]);
-      rLynxChange[2]();
       expect(globalThis.__OnLifecycleEvent.mock.calls).toMatchInlineSnapshot(`
         [
           [
@@ -348,12 +347,15 @@ describe('element ref', () => {
           ],
         ]
       `);
+      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      globalThis.__OnLifecycleEvent.mockClear();
+      rLynxChange[2]();
+      expect(globalThis.__OnLifecycleEvent.mock.calls).toMatchInlineSnapshot(`[]`);
     }
 
     // ref patch
     {
       globalEnvManager.switchToBackground();
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
       await waitSchedule();
       expect(ref1.mock.calls).toMatchInlineSnapshot(`
         [
@@ -426,6 +428,7 @@ describe('element ref', () => {
       globalThis.__OnLifecycleEvent.mockClear();
       const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
       globalThis[rLynxChange[0]](rLynxChange[1]);
+      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
       rLynxChange[2]();
       expect(globalThis.__OnLifecycleEvent.mock.calls).toMatchInlineSnapshot(`
         [
@@ -445,7 +448,6 @@ describe('element ref', () => {
     // ref patch
     {
       globalEnvManager.switchToBackground();
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
       await waitSchedule();
       expect(ref1).not.toBeCalled();
       expect(cleanup.mock.calls).toMatchInlineSnapshot(`
@@ -529,7 +531,6 @@ describe('element ref', () => {
       globalThis.__OnLifecycleEvent.mockClear();
       const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
       globalThis[rLynxChange[0]](rLynxChange[1]);
-      rLynxChange[2]();
       expect(globalThis.__OnLifecycleEvent.mock.calls).toMatchInlineSnapshot(`
         [
           [
@@ -543,12 +544,13 @@ describe('element ref', () => {
           ],
         ]
       `);
+      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      rLynxChange[2]();
     }
 
     // ref patch
     {
       globalEnvManager.switchToBackground();
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
       await waitSchedule();
       ref1.forEach(ref => expect(ref).toHaveBeenCalledWith(null));
       expect(ref2).toHaveBeenCalledWith(null);
@@ -629,6 +631,7 @@ describe('element ref', () => {
       globalThis.__OnLifecycleEvent.mockClear();
       const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
       globalThis[rLynxChange[0]](rLynxChange[1]);
+      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
       rLynxChange[2]();
       expect(__root.__element_root).toMatchInlineSnapshot(`
         <page
@@ -651,7 +654,6 @@ describe('element ref', () => {
       // ref patch
       {
         globalEnvManager.switchToBackground();
-        lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
         await waitSchedule();
         expect(ref1.current).toBeNull();
         expect(ref2).toMatchInlineSnapshot(`
@@ -725,12 +727,12 @@ describe('element ref', () => {
       globalEnvManager.switchToMainThread();
       const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
       globalThis[rLynxChange[0]](rLynxChange[1]);
+      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
       rLynxChange[2]();
 
       // ref patch
       {
         globalEnvManager.switchToBackground();
-        lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
         await waitSchedule();
         expect(ref1.current).toBeNull();
         expect(ref2).toMatchInlineSnapshot(`
@@ -852,6 +854,7 @@ describe('element ref', () => {
       globalThis.__OnLifecycleEvent.mockClear();
       const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
       globalThis[rLynxChange[0]](rLynxChange[1]);
+      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
       rLynxChange[2]();
       expect(globalThis.__OnLifecycleEvent.mock.calls).toMatchInlineSnapshot(`
         [
@@ -871,7 +874,6 @@ describe('element ref', () => {
     // ref
     {
       globalEnvManager.switchToBackground();
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
       await waitSchedule();
       expect(ref1.mock.calls).toMatchInlineSnapshot(`
         [
@@ -1018,6 +1020,7 @@ describe('element ref in spread', () => {
       globalThis.__OnLifecycleEvent.mockClear();
       const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
       globalThis[rLynxChange[0]](rLynxChange[1]);
+      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
       rLynxChange[2]();
       expect(globalThis.__OnLifecycleEvent.mock.calls).toMatchInlineSnapshot(`
         [
@@ -1037,7 +1040,6 @@ describe('element ref in spread', () => {
     // ref
     {
       globalEnvManager.switchToBackground();
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
       await waitSchedule();
       expect(ref1.mock.calls).toMatchInlineSnapshot(`
         [
@@ -1138,12 +1140,12 @@ describe('element ref in spread', () => {
       globalThis.__OnLifecycleEvent.mockClear();
       const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
       globalThis[rLynxChange[0]](rLynxChange[1]);
+      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
       rLynxChange[2]();
     }
 
     // ref
     {
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
       await waitSchedule();
       expect(ref1.mock.calls).toMatchInlineSnapshot(`
         [
@@ -1264,6 +1266,7 @@ describe('element ref in spread', () => {
       globalThis.__OnLifecycleEvent.mockClear();
       const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
       globalThis[rLynxChange[0]](rLynxChange[1]);
+      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
       rLynxChange[2]();
       expect(globalThis.__OnLifecycleEvent.mock.calls).toMatchInlineSnapshot(`
         [
@@ -1283,7 +1286,6 @@ describe('element ref in spread', () => {
     // ref
     {
       globalEnvManager.switchToBackground();
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
       await waitSchedule();
       expect(ref1.mock.calls).toMatchInlineSnapshot(`
         [

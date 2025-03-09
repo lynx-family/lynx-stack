@@ -10,6 +10,8 @@ packages:
   - packages/web-platform/*
   - packages/webpack/*
   - packages/third-party/*
+  - packages/testing-library/*
+  - packages/testing-library/examples/*
   - .github/actions/eco-ci
 catalog:
   "@microsoft/api-extractor": 7.51.1

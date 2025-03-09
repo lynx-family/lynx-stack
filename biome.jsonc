@@ -43,6 +43,8 @@
       "packages/web-platform/**",
 
       "packages/third-party/**",
+
+      "packages/testing-library/**",
     ],
     "rules": {
       // We are migrating from ESLint to Biome

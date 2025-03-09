@@ -1,0 +1,84 @@
+{
+  "name": "@lynx-js/lynx-dom-jest-matchers",
+  "version": "0.0.0",
+  "description": "Custom jest matchers to test the state of the LynxDOM",
+  "keywords": [
+    "testing",
+    "dom",
+    "jest",
+    "jsdom"
+  ],
+  "exports": {
+    ".": {
+      "require": {
+        "types": "./types/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "import": {
+        "types": "./types/index.d.ts",
+        "default": "./dist/index.mjs"
+      }
+    },
+    "./jest-globals": {
+      "require": {
+        "types": "./types/jest-globals.d.ts",
+        "default": "./dist/jest-globals.js"
+      },
+      "import": {
+        "types": "./types/jest-globals.d.ts",
+        "default": "./dist/jest-globals.mjs"
+      }
+    },
+    "./matchers": {
+      "require": {
+        "types": "./types/matchers-standalone.d.ts",
+        "default": "./dist/matchers.js"
+      },
+      "import": {
+        "types": "./types/matchers-standalone.d.ts",
+        "default": "./dist/matchers.mjs"
+      }
+    },
+    "./vitest": {
+      "require": {
+        "types": "./types/vitest.d.ts",
+        "default": "./dist/vitest.js"
+      },
+      "import": {
+        "types": "./types/vitest.d.ts",
+        "default": "./dist/vitest.mjs"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "types/index.d.ts",
+  "files": [
+    "dist",
+    "types",
+    "*.d.ts",
+    "jest-globals.js",
+    "matchers.js",
+    "vitest.js"
+  ],
+  "scripts": {
+    "build": "rollup -c",
+    "dev": "rollup -c -w",
+    "setup": "npm install && npm run validate -s",
+    "test": "vitest",
+    "test:types": "tsc -p types/__tests__/jest && tsc -p types/__tests__/jest-globals && tsc -p types/__tests__/vitest && tsc -p types/__tests__/bun",
+    "test:update": "vitest -u"
+  },
+  "dependencies": {
+    "aria-query": "^5.0.0",
+    "redent": "^3.0.0"
+  },
+  "devDependencies": {
+    "@lynx-js/lynx-dom": "workspace:*",
+    "@rollup/plugin-commonjs": "^25.0.4",
+    "rollup": "^3.28.1",
+    "rollup-plugin-delete": "^2.0.0",
+    "vitest": "^3.0.7"
+  }
+}

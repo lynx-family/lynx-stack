@@ -1,0 +1,58 @@
+{
+  "name": "@lynx-js/react-lynx-testing-library",
+  "version": "0.0.0",
+  "description": "",
+  "keywords": [],
+  "license": "ISC",
+  "author": "",
+  "exports": {
+    ".": {
+      "types": "./types/index.d.ts",
+      "import": "./src/index.js",
+      "require": "./src/index.js"
+    },
+    "./pure": {
+      "types": "./types/pure.d.ts",
+      "import": "./src/pure.jsx",
+      "require": "./src/pure.jsx"
+    },
+    "./vitest-config": {
+      "types": "./src/vitest.config.ts",
+      "import": "./dist/vitest.config.mjs",
+      "require": "./dist/vitest.config.cjs"
+    }
+  },
+  "main": "./src/index.js",
+  "module": "./src/index.js",
+  "types": "./types/index.d.ts",
+  "files": [
+    "src",
+    "dist",
+    "types"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest",
+    "test:ui": "vitest --ui"
+  },
+  "dependencies": {
+    "@lynx-js/lynx-dom": "workspace:*",
+    "@lynx-js/lynx-dom-testing-library": "workspace:*",
+    "@vitejs/plugin-react": "^4.3.4",
+    "enhanced-resolve": "^5.18.0"
+  },
+  "devDependencies": {
+    "@lynx-js/lynx-dom-jest-matchers": "workspace:*",
+    "@lynx-js/react": "workspace:*",
+    "@preact/preset-vite": "^2.9.3",
+    "@rsbuild/plugin-react": "^1.1.0",
+    "@rslib/core": "^0.5.1",
+    "@types/node": "^22.10.7",
+    "@vitest/ui": "3.0.7",
+    "esbuild-fix-imports-plugin": "^1.0.14",
+    "jsdom": "^26.0.0",
+    "tsup": "^8.4.0",
+    "vitest": "^3.0.7"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "name": "@lynx-js/lynx-dom-testing-library",
+  "version": "0.0.0",
+  "description": "Simple and complete Lynx DOM testing utilities that encourage good testing practices.",
+  "keywords": [
+    "testing",
+    "ui",
+    "dom",
+    "jsdom",
+    "unit",
+    "integration",
+    "functional",
+    "end-to-end",
+    "e2e"
+  ],
+  "main": "dist/index.js",
+  "umd:main": "dist/@testing-library/dom.umd.js",
+  "module": "dist/@testing-library/dom.esm.js",
+  "source": "src/index.js",
+  "types": "types/index.d.ts",
+  "files": [
+    "dist",
+    "types/*.d.ts"
+  ],
+  "scripts": {
+    "build": "rslib build",
+    "dev": "rslib build --watch",
+    "test": "vitest",
+    "test:update": "vitest -u"
+  },
+  "dependencies": {
+    "@babel/code-frame": "^7.10.4",
+    "@babel/runtime": "^7.12.5",
+    "@types/aria-query": "^5.0.1",
+    "aria-query": "5.3.0",
+    "chalk": "^4.1.0",
+    "dom-accessibility-api": "^0.5.9",
+    "lz-string": "^1.5.0",
+    "pretty-format": "^27.0.2",
+    "vitest": "^3.0.7"
+  },
+  "devDependencies": {
+    "@lynx-js/lynx-dom": "workspace:*",
+    "@rslib/core": "^0.3.1"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
