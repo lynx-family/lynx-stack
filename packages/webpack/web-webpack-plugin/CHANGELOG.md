@@ -1,5 +1,14 @@
 # @lynx-js/web-webpack-plugin
 
+## 0.6.2
+
+### Patch Changes
+
+- Support NPM provenance. ([#30](https://github.com/lynx-family/lynx-stack/pull/30))
+
+- Updated dependencies [[`c617453`](https://github.com/lynx-family/lynx-stack/commit/c617453aea967aba702967deb2916b5c883f03bb), [`399a6d9`](https://github.com/lynx-family/lynx-stack/commit/399a6d973024aa8a46ab2f2f13e7c82214066f9e)]:
+  - @lynx-js/web-style-transformer@0.2.2
+
 ## 0.6.1
 
 ### Patch Changes

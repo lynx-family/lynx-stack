@@ -1,5 +1,40 @@
 # @lynx-js/web-core
 
+## 0.7.1
+
+### Patch Changes
+
+- Support NPM provenance. ([#30](https://github.com/lynx-family/lynx-stack/pull/30))
+
+- fix: some valus should be updateable by global scope ([#130](https://github.com/lynx-family/lynx-stack/pull/130))
+
+  Now we add an allowlist to allow some identifiers could be updated by globalThis.
+
+  For those values in the allowlist:
+
+  ```
+  globalThis.foo = 'xx';
+  console.log(foo); //'xx'
+  ```
+
+- refactor: isolate the globalThis in mts ([#90](https://github.com/lynx-family/lynx-stack/pull/90))
+
+  After this commit, developers' mts code won't be able to access the globalThis
+
+  The following usage will NOT work
+
+  ```
+  globalThis.foo = () =>{};
+  foo();//crash
+  ```
+
+- refractor: improve some internal logic for element creating in MTS ([#71](https://github.com/lynx-family/lynx-stack/pull/71))
+
+- Updated dependencies [[`c617453`](https://github.com/lynx-family/lynx-stack/commit/c617453aea967aba702967deb2916b5c883f03bb), [`2044571`](https://github.com/lynx-family/lynx-stack/commit/204457166531dae6e9f653db56b14187553b7666), [`7da7601`](https://github.com/lynx-family/lynx-stack/commit/7da7601f00407970c485046ad73eeb8534aaa4f6)]:
+  - @lynx-js/web-worker-runtime@0.7.1
+  - @lynx-js/web-worker-rpc@0.7.1
+  - @lynx-js/web-constants@0.7.1
+
 ## 0.7.0
 
 ### Minor Changes

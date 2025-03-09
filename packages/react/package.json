@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/react",
-  "version": "0.105.0",
+  "version": "0.105.1",
   "description": "ReactLynx is a framework for developing Lynx applications with familiar React.",
   "repository": {
     "type": "git",

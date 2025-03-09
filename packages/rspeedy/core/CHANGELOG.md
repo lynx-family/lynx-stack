@@ -1,5 +1,20 @@
 # @lynx-js/rspeedy
 
+## 0.8.3
+
+### Patch Changes
+
+- Support NPM provenance. ([#30](https://github.com/lynx-family/lynx-stack/pull/30))
+
+- Fix error "'wmic' is not recognized as an internal or external command" ([#91](https://github.com/lynx-family/lynx-stack/pull/91))
+
+- Bump Rsbuild v1.2.15 with Rspack v1.2.7. ([#44](https://github.com/lynx-family/lynx-stack/pull/44))
+
+- Updated dependencies [[`c617453`](https://github.com/lynx-family/lynx-stack/commit/c617453aea967aba702967deb2916b5c883f03bb)]:
+  - @lynx-js/chunk-loading-webpack-plugin@0.1.7
+  - @lynx-js/webpack-dev-transport@0.1.1
+  - @lynx-js/websocket@0.0.4
+
 ## 0.8.2
 
 ### Patch Changes
