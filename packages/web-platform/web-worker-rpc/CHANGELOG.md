@@ -1,5 +1,11 @@
 # @lynx-js/web-worker-rpc
 
+## 0.7.1
+
+### Patch Changes
+
+- Support NPM provenance. ([#30](https://github.com/lynx-family/lynx-stack/pull/30))
+
 ## 0.7.0
 
 ## 0.6.2

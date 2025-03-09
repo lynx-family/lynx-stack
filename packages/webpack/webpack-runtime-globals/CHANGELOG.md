@@ -1,5 +1,11 @@
 # @lynx-js/webpack-runtime-globals
 
+## 0.0.5
+
+### Patch Changes
+
+- Support NPM provenance. ([#30](https://github.com/lynx-family/lynx-stack/pull/30))
+
 ## 0.0.4
 
 ### Patch Changes

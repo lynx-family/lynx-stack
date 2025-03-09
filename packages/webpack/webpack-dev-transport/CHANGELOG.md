@@ -1,5 +1,11 @@
 # @lynx-js/webpack-dev-transport
 
+## 0.1.1
+
+### Patch Changes
+
+- Support NPM provenance. ([#30](https://github.com/lynx-family/lynx-stack/pull/30))
+
 ## 0.1.0
 
 ### Minor Changes

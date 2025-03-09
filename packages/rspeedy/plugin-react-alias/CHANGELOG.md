@@ -1,5 +1,11 @@
 # @lynx-js/react-alias-rsbuild-plugin
 
+## 0.9.1
+
+### Patch Changes
+
+- Support NPM provenance. ([#30](https://github.com/lynx-family/lynx-stack/pull/30))
+
 ## 0.9.0
 
 ## 0.8.1
