@@ -1,0 +1,30 @@
+{
+  "name": "@lynx-js/lynx-dom",
+  "version": "0.0.0",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rslib build",
+    "dev": "rslib build --watch"
+  },
+  "dependencies": {
+    "css-what": "^6.1.0",
+    "pretty-format": "^29.7.0"
+  },
+  "devDependencies": {
+    "@rslib/core": "^0.3.1",
+    "@types/node": "^22.8.1",
+    "typescript": "^5.7.3"
+  }
+}
