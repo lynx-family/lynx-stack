@@ -23,14 +23,12 @@ export interface initializeElementCreatingFunctionConfig {
     operations: ElementOperation[];
   };
   pageConfig: PageConfig;
-  onNewTag: (tag: string) => void;
   styleInfo: CssInJsInfo;
 }
 
 export function initializeElementCreatingFunction(
   config: initializeElementCreatingFunctionConfig,
 ) {
-  const tagSet = new Set<string>();
   const { operationsRef, pageConfig, styleInfo } = config;
   const document = createOffscreenDocument({
     pageConfig,
@@ -59,10 +57,6 @@ export function initializeElementCreatingFunction(
     // @ts-expect-error
     info?: Record<string, any> | null | undefined,
   ) {
-    if (!tagSet.has(tag)) {
-      config.onNewTag(tag);
-      tagSet.add(tag);
-    }
     const element = document.createElement(tag);
     // element.parentComponentUniqueId = parentComponentUniqueId;
     element.setAttribute(
