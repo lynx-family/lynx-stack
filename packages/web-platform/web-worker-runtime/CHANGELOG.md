@@ -1,5 +1,16 @@
 # @lynx-js/web-worker-runtime
 
+## 0.7.2
+
+### Patch Changes
+
+- feat: add pixelRatio of SystemInfo, now you can use `SystemInfo.pixelRatio`. ([#150](https://github.com/lynx-family/lynx-stack/pull/150))
+
+- Updated dependencies []:
+  - @lynx-js/web-constants@0.7.2
+  - @lynx-js/web-mainthread-apis@0.7.2
+  - @lynx-js/web-worker-rpc@0.7.2
+
 ## 0.7.1
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @lynx-js/react
 
+## 0.105.2
+
+### Patch Changes
+
+- Support new css properties: `offset-path` and `offset-distance` ([#152](https://github.com/lynx-family/lynx-stack/pull/152))
+
 ## 0.105.1
 
 ### Patch Changes
