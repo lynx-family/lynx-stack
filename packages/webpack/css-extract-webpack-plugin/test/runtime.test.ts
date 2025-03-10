@@ -38,7 +38,7 @@ describe('HMR Runtime', () => {
     expect(vi.getTimerCount()).toBe(1);
 
     expect(() => vi.runAllTimers()).toThrowErrorMatchingInlineSnapshot(
-      `[Error: Css Filename not found]`,
+      `[Error: cssHotUpdateList is not found]`,
     );
   });
 
