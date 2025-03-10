@@ -1,5 +1,18 @@
 # @lynx-js/web-core
 
+## 0.7.2
+
+### Patch Changes
+
+- feat: add pixelRatio of SystemInfo, now you can use `SystemInfo.pixelRatio`. ([#150](https://github.com/lynx-family/lynx-stack/pull/150))
+
+- Improve LynxView resize observer cleanup ([#124](https://github.com/lynx-family/lynx-stack/pull/124))
+
+- Updated dependencies [[`eab1328`](https://github.com/lynx-family/lynx-stack/commit/eab1328a83797fc903255c984d9f39537b9138b9)]:
+  - @lynx-js/web-worker-runtime@0.7.2
+  - @lynx-js/web-constants@0.7.2
+  - @lynx-js/web-worker-rpc@0.7.2
+
 ## 0.7.1
 
 ### Patch Changes
