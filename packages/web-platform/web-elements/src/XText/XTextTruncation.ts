@@ -11,6 +11,7 @@ import {
 } from '@lynx-js/web-elements-reactive';
 import { commonComponentEventSetting } from '../common/commonEventInitConfiguration.js';
 import type { XText } from './XText.js';
+import { registerEventEnableStatusChangeHandler } from '@lynx-js/web-elements-reactive';
 type NodeInfo = {
   node: Text | Element;
   start: number;
@@ -29,7 +30,6 @@ export class XTextTruncation
     'text-maxlength',
     'text-maxline',
     'tail-color-convert',
-    'x-enable-layout-event',
   ];
   #scheduledTextLayout = false;
   #componentConnected: boolean = false;
@@ -317,9 +317,9 @@ export class XTextTruncation
     this.#layoutText();
   }
 
-  @registerAttributeHandler('x-enable-layout-event', true)
-  #handleEnableLayoutEvent(newVal: string | null) {
-    this.#enableLayoutEvent = newVal !== null;
+  @registerEventEnableStatusChangeHandler('layout')
+  #handleEnableLayoutEvent(status: boolean) {
+    this.#enableLayoutEvent = status;
   }
 
   #sendLayoutEvent(truncateAt?: number) {
@@ -387,7 +387,7 @@ export class XTextTruncation
   connectedCallback(): void {
     this.#componentConnected = true;
     this.#handleEnableLayoutEvent(
-      this.#dom.getAttribute('x-enable-layout-event'),
+      this.#enableLayoutEvent,
     );
     document.fonts.ready.then(() => {
       this.#handleAttributeChange();

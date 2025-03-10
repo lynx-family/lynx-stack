@@ -9,4 +9,9 @@
     "noUnusedLocals": false,
   },
   "include": ["src"],
+  "references": [
+    {
+      "path": "../web-elements-reactive",
+    },
+  ],
 }

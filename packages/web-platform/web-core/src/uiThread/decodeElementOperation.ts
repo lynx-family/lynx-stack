@@ -203,10 +203,8 @@ export function decodeElementOperation<
           const isCaptureEvent = op.eventType === 'capture-bind'
             || op.eventType === 'capture-catch';
           if (op.hname === undefined) {
-            target.removeAttribute(`x-enable-${lynxEventName}-event`);
             target[lynxRuntimeValue].eventHandler[lynxEventName] = undefined;
           } else {
-            target.setAttribute(`x-enable-${lynxEventName}-event`, '');
             target.addEventListener(htmlEventName, handleHtmlEvent, {
               passive: true,
               capture: isCaptureEvent,

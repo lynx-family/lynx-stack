@@ -24,12 +24,6 @@
       href="/web-elements.css"
       rel="stylesheet"
     />
-    <script type="module">
-    document.querySelector('#target').addEventListener('error', (ev) => {
-      ev.target.style.setProperty('background-color', 'green');
-    });
-    document.querySelector('#target').setAttribute('src', '/unknown/path');
-    </script>
     <style>
     @import url("../../common.css");
     </style>
@@ -37,11 +31,16 @@
 
   <body>
     <script src="/web-elements.js" defer></script>
+    <script type="module">
+    document.querySelector('#target').addEventListener('error', (ev) => {
+      ev.target.style.setProperty('background-color', 'green');
+    });
+    document.querySelector('#target').setAttribute('src', '/unknown/path');
+    </script>
     <x-view class="page">
       <x-image
         src="../../resources/firefox-logo.png"
         id="target"
-        x-enable-error-event
         style="width:100px; height:400px; background-color: aquamarine;"
       >
       </x-image>

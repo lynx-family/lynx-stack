@@ -7,22 +7,16 @@ import {
   type AttributeReactiveClass,
   bindSwitchToEventListener,
   genDomGetter,
-  registerAttributeHandler,
 } from '@lynx-js/web-elements-reactive';
 import type { XSwiper } from './XSwiper.js';
 import { commonComponentEventSetting } from '../common/commonEventInitConfiguration.js';
 import { useScrollEnd } from '../common/constants.js';
+import { registerEventEnableStatusChangeHandler } from '@lynx-js/web-elements-reactive';
 
 export class XSwipeEvents
   implements InstanceType<AttributeReactiveClass<typeof XSwiper>>
 {
-  static observedAttributes = [
-    'x-enable-scrollstart-event',
-    'x-enable-scrollend-event',
-    'x-enable-change-event',
-    'x-enable-change-event-for-indicator',
-    'x-enable-transition-event',
-  ];
+  static observedAttributes = [];
   readonly #dom: XSwiper;
   #current: number = 0;
   #pervScrollPosition: number = 0;
@@ -37,7 +31,7 @@ export class XSwipeEvents
     '#content',
   ).bind(this);
 
-  @registerAttributeHandler('x-enable-transition-event', true)
+  @registerEventEnableStatusChangeHandler('transition')
   #handleEnableTransitionEvent = bindSwitchToEventListener(
     this.#getContentContainer,
     'scroll',
@@ -165,24 +159,30 @@ export class XSwipeEvents
     ),
   ];
 
-  @registerAttributeHandler('x-enable-scrollstart-event', false)
-  @registerAttributeHandler('x-enable-scrollend-event', false)
-  @registerAttributeHandler('x-enable-change-event', false)
-  @registerAttributeHandler('x-enable-change-event-for-indicator', false)
-  #enableScrollEventProcessor() {
-    const enableScrollstartEvent =
-      this.#dom.getAttribute('x-enable-scrollstart-event') !== null;
-    const enableScrollendEvent =
-      this.#dom.getAttribute('x-enable-scrollend-event') !== null;
-    const enableChangeEvent =
-      this.#dom.getAttribute('x-enable-change-event') !== null;
-    const enableChangeforindicatorEvent =
-      this.#dom.getAttribute('x-enable-change-event-for-indicator') !== null;
-    const enableEvent = enableChangeEvent
-      || enableScrollendEvent
-      || enableScrollstartEvent
-      || enableChangeforindicatorEvent;
-    this.#listeners.forEach((l) => l(enableEvent ? '' : null));
+  #eventSwitches = {
+    scrollstart: false,
+    lynxscrollend: false,
+    change: false,
+    'change-event-for-indicator': false,
+  };
+
+  @registerEventEnableStatusChangeHandler('scrollstart')
+  @registerEventEnableStatusChangeHandler('lynxscrollend')
+  @registerEventEnableStatusChangeHandler('change')
+  @registerEventEnableStatusChangeHandler('change-event-for-indicator')
+  #enableScrollEventProcessor(value: boolean, eventName: string) {
+    this
+      .#eventSwitches[
+        eventName as
+          | 'scrollstart'
+          | 'lynxscrollend'
+          | 'change'
+          | 'change-event-for-indicator'
+      ] = value;
+    const { lynxscrollend, scrollstart, change } = this.#eventSwitches;
+    const changeEventEnabled = change || lynxscrollend || scrollstart
+      || this.#eventSwitches['change-event-for-indicator'];
+    this.#listeners.forEach((l) => l(changeEventEnabled));
   }
 
   connectedCallback(): void {

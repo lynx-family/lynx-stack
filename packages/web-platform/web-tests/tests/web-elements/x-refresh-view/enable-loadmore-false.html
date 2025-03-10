@@ -23,20 +23,6 @@
       href="/web-elements.css"
       rel="stylesheet"
     />
-    <script type="module">
-    const content = document.getElementById('content');
-    const refreshView = document.querySelector('x-refresh-view');
-    const refreshFooter = document.querySelector('x-refresh-footer');
-    const observer = new IntersectionObserver((e) => {
-      if (e[0].isIntersecting) {
-        content.style.backgroundColor = 'chartreuse';
-      }
-    }, {
-      root: refreshView,
-      threshold: 1,
-    });
-    observer.observe(refreshFooter);
-    </script>
     <style>
     .refresh-view {
       width: 100%;
@@ -84,6 +70,20 @@
 
   <body>
     <script src="/web-elements.js" defer></script>
+    <script type="module">
+    const content = document.getElementById('content');
+    const refreshView = document.querySelector('x-refresh-view');
+    const refreshFooter = document.querySelector('x-refresh-footer');
+    const observer = new IntersectionObserver((e) => {
+      if (e[0].isIntersecting) {
+        content.style.backgroundColor = 'chartreuse';
+      }
+    }, {
+      root: refreshView,
+      threshold: 1,
+    });
+    observer.observe(refreshFooter);
+    </script>
     <x-refresh-view
       class="refresh-view"
       id="refresh-view"

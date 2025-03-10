@@ -24,6 +24,13 @@
       href="/web-elements.css"
       rel="stylesheet"
     />
+    <style>
+    @import url("../../common.css");
+    </style>
+  </head>
+
+  <body>
+    <script src="/web-elements.js" defer></script>
     <script type="module">
     document.querySelector('#target').addEventListener('load', (ev) => {
       if (ev.detail.height === 984 && ev.detail.width === 953) {
@@ -35,17 +42,9 @@
       '../../resources/firefox-logo.png',
     );
     </script>
-    <style>
-    @import url("../../common.css");
-    </style>
-  </head>
-
-  <body>
-    <script src="/web-elements.js" defer></script>
     <x-view class="page">
       <filter-image
         id="target"
-        x-enable-load-event
         style="width:100px; height:400px; background-color: aquamarine;"
       >
       </filter-image>

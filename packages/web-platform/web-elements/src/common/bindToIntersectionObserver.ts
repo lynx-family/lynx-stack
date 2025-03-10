@@ -8,7 +8,7 @@ export function bindToIntersectionObserver(
   callback: IntersectionObserverCallback,
 ) {
   let observer: IntersectionObserver | undefined;
-  return (newVal: string | null) => {
+  return (newVal: string | boolean | null) => {
     if (newVal !== null) {
       if (!observer) {
         observer = new IntersectionObserver(callback, {

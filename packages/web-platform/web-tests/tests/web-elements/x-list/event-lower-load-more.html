@@ -24,21 +24,6 @@
       rel="stylesheet"
     />
 
-    <script type="module">
-    document.querySelector('#target').addEventListener('click', () => {
-      const newItem = document.createElement('list-item');
-      newItem.setAttribute('item-key', 21);
-      newItem.setAttribute('id', 21);
-      const textElement = document.createElement('x-text');
-      textElement.textContent = 21;
-      newItem.appendChild(textElement);
-
-      document.querySelector('x-list').appendChild(newItem);
-    });
-    document.querySelector('x-list').addEventListener('scrolltolower', (e) => {
-      console.log(e);
-    });
-    </script>
     <style>
     @import url("../../common.css");
     x-list {
@@ -58,12 +43,25 @@
 
   <body>
     <script src="/web-elements.js" defer></script>
+    <script type="module">
+    document.querySelector('#target').addEventListener('click', () => {
+      const newItem = document.createElement('list-item');
+      newItem.setAttribute('item-key', 21);
+      newItem.setAttribute('id', 21);
+      const textElement = document.createElement('x-text');
+      textElement.textContent = 21;
+      newItem.appendChild(textElement);
+
+      document.querySelector('x-list').appendChild(newItem);
+    });
+    document.querySelector('x-list').addEventListener('scrolltolower', (e) => {
+      console.log(e);
+    });
+    </script>
     <x-view class="page">
       <x-text id="target">添加 list-item</x-text>
       <x-list
         list-type="single"
-        x-enable-scrolltoupper-event
-        x-enable-scrolltolower-event
         lower-threshold-item-count="2"
       >
         <list-item item-key="1" id="1"><x-view class="item"

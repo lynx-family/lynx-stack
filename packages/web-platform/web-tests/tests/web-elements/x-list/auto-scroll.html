@@ -24,14 +24,6 @@
       rel="stylesheet"
     />
 
-    <script type="module">
-    document.querySelector('#autoScroll').addEventListener('click', () => {
-      document.querySelector('x-list').autoScroll({ rate: 100, start: true });
-    });
-    document.querySelector('x-list').addEventListener('lynxscroll', (e) => {
-      console.log(e);
-    });
-    </script>
     <style>
     @import url("../../common.css");
     x-list {
@@ -51,10 +43,17 @@
 
   <body>
     <script src="/web-elements.js" defer></script>
+    <script type="module">
+    document.querySelector('#autoScroll').addEventListener('click', () => {
+      document.querySelector('x-list').autoScroll({ rate: 100, start: true });
+    });
+    document.querySelector('x-list').addEventListener('lynxscroll', (e) => {
+      console.log(e);
+    });
+    </script>
     <x-view class="page">
       <x-list
         list-type="single"
-        x-enable-scroll-event
         scroll-event-throttle="1000"
       >
         <list-item item-key="1" id="1"><x-view class="item"

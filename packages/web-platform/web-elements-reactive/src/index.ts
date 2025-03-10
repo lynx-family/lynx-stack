@@ -21,3 +21,5 @@ export { registerAttributeHandler } from './registerAttributeHandler.js';
 export type { AttributeChangeHandler } from './registerAttributeHandler.js';
 export { registerStyleChangeHandler } from './registerStyleChangeHandler.js';
 export type { StyleChangeHandler } from './registerStyleChangeHandler.js';
+export { registerEventEnableStatusChangeHandler } from './registerEventStatusChangedHandler.js';
+export type { EventStatusChangeHandler } from './registerEventStatusChangedHandler.js';

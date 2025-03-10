@@ -23,14 +23,6 @@
       href="/web-elements.css"
       rel="stylesheet"
     />
-    <script type="module">
-    document.querySelector('x-list').addEventListener('scrolltoupper', (e) => {
-      console.log(e);
-    });
-    document.querySelector('x-list').addEventListener('scrolltolower', (e) => {
-      console.log(e);
-    });
-    </script>
     <style>
     @import url("../../common.css");
     x-list {
@@ -50,11 +42,17 @@
 
   <body>
     <script src="/web-elements.js" defer></script>
+    <script type="module">
+    document.querySelector('x-list').addEventListener('scrolltoupper', (e) => {
+      console.log(e);
+    });
+    document.querySelector('x-list').addEventListener('scrolltolower', (e) => {
+      console.log(e);
+    });
+    </script>
     <x-view class="page">
       <x-list
         list-type="single"
-        x-enable-scrolltoupper-event
-        x-enable-scrolltolower-event
         lower-threshold-item-count="10"
       >
         <list-item item-key="1" id="1"><x-view class="item"

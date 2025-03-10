@@ -29,8 +29,6 @@ export interface ExposureEvent {
 
 export class LynxExposure {
   static readonly observedAttributes = [
-    'x-enable-uiappear-event',
-    'x-enable-uidisappear-event',
     'exposure-id',
     'exposure-area',
     'exposure-screen-margin-top',
@@ -42,6 +40,9 @@ export class LynxExposure {
     'exposure-ui-margin-bottom',
     'exposure-ui-margin-left',
   ];
+
+  #uiAppearEnabled = false;
+  #uiDisappearEnabled = false;
 
   readonly #currentElement: HTMLElement;
 
@@ -62,9 +63,8 @@ export class LynxExposure {
 
   get #exposureEnabled() {
     return (
-      this.#currentElement.getAttribute('x-enable-uiappear-event') !== null
-      || this.#currentElement.getAttribute('x-enable-uidisappear-event')
-        !== null
+      this.#uiAppearEnabled
+      || this.#uiDisappearEnabled
       || this.#currentElement.getAttribute('exposure-id') !== null
     );
   }
@@ -105,6 +105,17 @@ export class LynxExposure {
       return;
     },
   });
+
+  eventStatusChangedHandler = {
+    'uiappear': (status: boolean) => {
+      this.#uiAppearEnabled = status;
+      this.onExposureParamsChanged();
+    },
+    'uidisappear': (status: boolean) => {
+      this.#uiDisappearEnabled = status;
+      this.onExposureParamsChanged();
+    },
+  };
 
   #updateExposure() {
     const newParams: ExposureParameters = {

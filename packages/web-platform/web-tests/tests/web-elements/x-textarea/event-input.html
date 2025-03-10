@@ -25,11 +25,6 @@
       rel="stylesheet"
     />
 
-    <script type="module">
-    document.querySelector('x-textarea').addEventListener('input', (e) => {
-      document.querySelector('.result').innerHTML = e.detail.value;
-    });
-    </script>
     <style>
     @import url("../../common.css");
     </style>
@@ -37,11 +32,15 @@
 
   <body>
     <script src="/web-elements.js" defer></script>
+    <script type="module">
+    document.querySelector('x-textarea').addEventListener('input', (e) => {
+      document.querySelector('.result').innerHTML = e.detail.value;
+    });
+    </script>
     <x-view class="page">
       <x-textarea
         id="target"
         style="height:50px; width:200px;border: 1px;"
-        x-enable-input-event
       ></x-textarea>
       <text class="result"></text>
     </x-view>
