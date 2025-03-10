@@ -315,8 +315,8 @@ export class LynxView extends HTMLElement {
    * @private
    */
   disconnectedCallback() {
+    this.cleanupResizeObserver();
     if (this.#instance) {
-      this.#instance.resizeObserver?.disconnect();
       this.#instance.lynxView.dispose();
       this.#instance.rootDom.remove();
     }
@@ -360,7 +360,9 @@ export class LynxView extends HTMLElement {
             nativeModulesUrl: this.#nativeModulesUrl,
             callbacks: {
               loadNewTag: loadElement,
-              nativeModulesCall: (...args) => {
+              nativeModulesCall: (
+                ...args: [name: string, data: any, moduleName: string]
+              ) => {
                 if (this.#onNativeModulesCall) {
                   return this.#onNativeModulesCall(...args);
                 } else if (this.#cachedNativeModulesCall) {
@@ -393,6 +395,13 @@ export class LynxView extends HTMLElement {
    */
   connectedCallback() {
     this.#render();
+  }
+
+  private cleanupResizeObserver() {
+    if (this.#instance?.resizeObserver) {
+      this.#instance.resizeObserver.disconnect();
+      this.#instance.resizeObserver = undefined;
+    }
   }
 }
 
