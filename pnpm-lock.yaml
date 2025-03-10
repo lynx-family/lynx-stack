@@ -435,6 +435,51 @@ importers:
         specifier: 'catalog:'
         version: 1.2.16
 
+  packages/rspeedy/upgrade-rspeedy:
+    devDependencies:
+      '@lynx-js/qrcode-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../plugin-qrcode
+      '@lynx-js/react':
+        specifier: workspace:*
+        version: link:../../react
+      '@lynx-js/react-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../plugin-react
+      '@lynx-js/rspeedy':
+        specifier: workspace:*
+        version: link:../core
+      '@lynx-js/types':
+        specifier: ^3.2.0
+        version: 3.2.0
+      '@rsbuild/plugin-less':
+        specifier: 1.1.1
+        version: 1.1.1(@rsbuild/core@1.2.16)
+      '@rsbuild/plugin-sass':
+        specifier: 1.2.2
+        version: 1.2.2(@rsbuild/core@1.2.16)
+      commander:
+        specifier: ^13.1.0
+        version: 13.1.0
+      detect-indent:
+        specifier: ^7.0.1
+        version: 7.0.1
+      memfs:
+        specifier: ^4.17.0
+        version: 4.17.0
+      picocolors:
+        specifier: ^1.1.1
+        version: 1.1.1
+      rsbuild-plugin-tailwindcss:
+        specifier: 0.2.0
+        version: 0.2.0(@rsbuild/core@1.2.16)(tailwindcss@3.4.17)
+      rslog:
+        specifier: ^1.2.3
+        version: 1.2.3
+      type-fest:
+        specifier: ^4.37.0
+        version: 4.37.0
+
   packages/rspeedy/websocket:
     dependencies:
       eventemitter3:
@@ -2108,6 +2153,11 @@ packages:
     peerDependenciesMeta:
       '@rsbuild/core':
         optional: true
+
+  '@rsbuild/plugin-less@1.1.1':
+    resolution: {integrity: sha512-Gkp73c9p4CQs2dB4BVCmw/cJ6JpIaWbsKcmZqyr+tlsKqZvZn9aYU+Zx4qWSqPR8I5zatiV2Lh15ObL9CCnlXw==}
+    peerDependencies:
+      '@rsbuild/core': 1.x
 
   '@rsbuild/plugin-sass@1.2.2':
     resolution: {integrity: sha512-vznLfxxPXDyFSPYW7JWTYf/6SJMx5DEgKParNd5lXo7FRa1IKsQOrJdf6F3Rm+T7jKoAvnCVXjM2IkxBW2yJSA==}
@@ -5807,6 +5857,15 @@ packages:
       typescript:
         optional: true
 
+  rsbuild-plugin-tailwindcss@0.2.0:
+    resolution: {integrity: sha512-JxixXVuUO8F0gr4EX8j8DZG0FJxUGAj1YECg2K+5XRw/EQXKHbynE0EmiVdMbRukUj+etcK/8lo35Lfyhr2MZA==}
+    peerDependencies:
+      '@rsbuild/core': ^1.1.0
+      tailwindcss: ^3.1.0
+    peerDependenciesMeta:
+      '@rsbuild/core':
+        optional: true
+
   rslog@1.2.3:
     resolution: {integrity: sha512-antALPJaKBRPBU1X2q9t085K4htWDOOv/K1qhTUk7h0l1ePU/KbDqKJn19eKP0dk7PqMioeA0+fu3gyPXCsXxQ==}
     engines: {node: '>=14.17.6'}
@@ -8148,6 +8207,12 @@ snapshots:
       - esbuild
       - lightningcss
       - webpack
+
+  '@rsbuild/plugin-less@1.1.1(@rsbuild/core@1.2.16)':
+    dependencies:
+      '@rsbuild/core': 1.2.16
+      deepmerge: 4.3.1
+      reduce-configs: 1.1.0
 
   '@rsbuild/plugin-sass@1.2.2(@rsbuild/core@1.2.16)':
     dependencies:
@@ -12335,6 +12400,12 @@ snapshots:
     optionalDependencies:
       '@microsoft/api-extractor': 7.51.1(@types/node@22.13.5)
       typescript: 5.7.3
+
+  rsbuild-plugin-tailwindcss@0.2.0(@rsbuild/core@1.2.16)(tailwindcss@3.4.17):
+    dependencies:
+      tailwindcss: 3.4.17
+    optionalDependencies:
+      '@rsbuild/core': 1.2.16
 
   rslog@1.2.3: {}
 
