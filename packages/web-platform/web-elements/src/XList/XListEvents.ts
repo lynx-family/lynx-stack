@@ -168,8 +168,8 @@ export class XListEvents
   };
 
   #eventSwitches = {
-    scroll: false,
-    scrollend: false,
+    lynxscroll: false,
+    lynxscrollend: false,
     snap: false,
     scrolltolower: false,
     scrolltoupper: false,
@@ -348,10 +348,11 @@ export class XListEvents
   @registerEventEnableStatusChangeHandler('lynxscrollend')
   @registerEventEnableStatusChangeHandler('snap')
   #handleScrollEventsSwitches = (enabled: boolean, name: string) => {
-    this.#eventSwitches[name as 'scroll' | 'scrollend' | 'snap'] = enabled;
-    const { scroll, scrollend, snap } = this.#eventSwitches;
+    this.#eventSwitches[name as 'lynxscroll' | 'lynxscrollend' | 'snap'] =
+      enabled;
+    const { lynxscroll, lynxscrollend, snap } = this.#eventSwitches;
     const scrollEventThrottle = this.#dom.getAttribute('scroll-event-throttle');
-    this.#enableScrollEnd = scrollend !== null || snap !== null;
+    this.#enableScrollEnd = lynxscrollend !== null || snap !== null;
     const listContainer = this.#getListContainer();
 
     // cancel the previous listener first

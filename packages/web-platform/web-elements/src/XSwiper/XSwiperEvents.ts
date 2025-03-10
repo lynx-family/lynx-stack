@@ -161,13 +161,13 @@ export class XSwipeEvents
 
   #eventSwitches = {
     scrollstart: false,
-    scrollend: false,
+    lynxscrollend: false,
     change: false,
     'change-event-for-indicator': false,
   };
 
   @registerEventEnableStatusChangeHandler('scrollstart')
-  @registerEventEnableStatusChangeHandler('scrollend')
+  @registerEventEnableStatusChangeHandler('lynxscrollend')
   @registerEventEnableStatusChangeHandler('change')
   @registerEventEnableStatusChangeHandler('change-event-for-indicator')
   #enableScrollEventProcessor(value: boolean, eventName: string) {
@@ -175,12 +175,12 @@ export class XSwipeEvents
       .#eventSwitches[
         eventName as
           | 'scrollstart'
-          | 'scrollend'
+          | 'lynxscrollend'
           | 'change'
           | 'change-event-for-indicator'
       ] = value;
-    const { scrollend, scrollstart, change } = this.#eventSwitches;
-    const changeEventEnabled = change || scrollend || scrollstart
+    const { lynxscrollend, scrollstart, change } = this.#eventSwitches;
+    const changeEventEnabled = change || lynxscrollend || scrollstart
       || this.#eventSwitches['change-event-for-indicator'];
     this.#listeners.forEach((l) => l(changeEventEnabled));
   }
