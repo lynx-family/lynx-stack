@@ -40,6 +40,7 @@ export class ReactWebpackPlugin {
 // @public
 export interface ReactWebpackPluginOptions {
     disableCreateSelectorQueryIncompatibleWarning?: boolean | undefined;
+    enableSSR?: boolean;
     firstScreenSyncTiming?: 'immediately' | 'jsReady';
     mainThreadChunks?: string[] | undefined;
 }

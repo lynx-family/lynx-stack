@@ -13,6 +13,43 @@ import { renderMainThread } from '../lifecycle/render.js';
 import { hydrate } from '../hydrate.js';
 import { markTiming, PerformanceTimingKeys, setPipeline } from './performance.js';
 import { __pendingListUpdates } from '../list.js';
+import { ssrHydrateByOpcodes } from '../opcodes.js';
+
+function ssrEncode() {
+  const { __opcodes } = __root;
+  delete __root.__opcodes;
+
+  const oldToJSON = SnapshotInstance.prototype.toJSON;
+  SnapshotInstance.prototype.toJSON = function(this: SnapshotInstance): any {
+    return [
+      this.type,
+      this.__id,
+      this.__elements,
+    ];
+  };
+
+  try {
+    return JSON.stringify({ __opcodes, __root_values: __root.__values });
+  } finally {
+    SnapshotInstance.prototype.toJSON = oldToJSON;
+  }
+}
+
+function ssrHydrate(info: string) {
+  const nativePage = __GetPageElement();
+  if (!nativePage) {
+    throw 'SSR Hydration Failed! Please check if the SSR content loaded successfully!';
+  }
+
+  const refsMap = __GetTemplateParts(nativePage);
+
+  const { __opcodes, __root_values } = JSON.parse(info);
+  __root_values && __root.setAttribute('values', __root_values);
+  ssrHydrateByOpcodes(__opcodes, __root as SnapshotInstance, refsMap);
+
+  (__root as SnapshotInstance).__elements = [nativePage];
+  (__root as SnapshotInstance).__element_root = nativePage;
+}
 
 function injectCalledByNative(): void {
   const calledByNative: LynxCallByNative = {
@@ -23,6 +60,7 @@ function injectCalledByNative(): void {
       return null;
     },
     removeComponents: function(): void {},
+    ...(__ENABLE_SSR__ ? { ssrEncode, ssrHydrate } : {}),
   };
 
   Object.assign(globalThis, calledByNative);

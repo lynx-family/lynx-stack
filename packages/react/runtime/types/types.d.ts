@@ -11,6 +11,7 @@ declare const __LEPUS__: boolean;
 declare const __BACKGROUND__: boolean;
 declare const __MAIN_THREAD__: boolean;
 declare const __PROFILE__: boolean;
+declare const __ENABLE_SSR__: boolean;
 
 declare interface FiberElement {}
 
@@ -107,7 +108,10 @@ declare function __AddEvent(
 ): void;
 declare function __SetID(e: FiberElement, id: string | undefined | null): void;
 declare function __GetElementUniqueID(e: FiberElement): number;
+declare function __GetElementSSRID(e: FiberElement): string;
+declare function __GetSSRID(e: string): FiberElement;
 declare function __GetTag(e: FiberElement): string;
+declare function __GetTemplateParts(e: FiberElement): Record<string, FiberElement>;
 declare function __FlushElementTree(): void;
 declare function __FlushElementTree(element: FiberElement): void;
 declare function __FlushElementTree(
@@ -148,6 +152,9 @@ declare interface LynxCallByNative {
   updateGlobalProps: (data: any, options?: UpdatePageOption) => void;
   getPageData: () => any;
   removeComponents: () => void;
+
+  ssrEncode?: () => void;
+  ssrHydrate?: (info: string, listIds: number[]) => void;
 }
 
 declare let lynx: any;
