@@ -32,6 +32,7 @@ jobs:
         sudo apt-get install -y iproute2 &&
         pnpm run test
         --project rspeedy
+        --project upgrade-rspeedy
         --project 'rspeedy/*'
         --test-timeout=50000
         --coverage
