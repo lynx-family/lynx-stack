@@ -291,7 +291,9 @@ css_properties!(
     "auto"
   ),
   V(XHandleCor, "-x-handle-color", "transparent"),
-  V(XHandleSize, "-x-handle-size", "0px")
+  V(XHandleSize, "-x-handle-size", "0px"),
+  V(OffsetPath, "offset-path", ""),
+  V(OffsetDistance, "offset-distance", "0%")
 );
 
 #[test]
