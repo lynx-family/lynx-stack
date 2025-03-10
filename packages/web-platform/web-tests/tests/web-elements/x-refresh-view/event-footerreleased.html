@@ -23,14 +23,6 @@
       href="/web-elements.css"
       rel="stylesheet"
     />
-    <script type="module">
-    const content = document.getElementById('content');
-    const refreshView = document.querySelector('x-refresh-view');
-    const refreshFooter = document.querySelector('x-refresh-footer');
-    refreshView.addEventListener('footerreleased', () => {
-      content.style.backgroundColor = 'chartreuse';
-    });
-    </script>
     <style>
     .refresh-view {
       width: 100%;
@@ -78,10 +70,17 @@
 
   <body>
     <script src="/web-elements.js" defer></script>
+    <script type="module">
+    const content = document.getElementById('content');
+    const refreshView = document.querySelector('x-refresh-view');
+    const refreshFooter = document.querySelector('x-refresh-footer');
+    refreshView.addEventListener('footerreleased', () => {
+      content.style.backgroundColor = 'chartreuse';
+    });
+    </script>
     <x-refresh-view
       class="refresh-view"
       id="refresh-view"
-      x-enable-footerreleased-event
     >
       <x-refresh-header class="refresh-header"> </x-refresh-header>
 
