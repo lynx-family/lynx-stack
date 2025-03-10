@@ -45,7 +45,7 @@ describe('HMR Runtime', () => {
   test('cssFileName', () => {
     vi.stubGlobal('__webpack_require__', {
       p: '/',
-      lynxCssFileName: [['chunkName', 'foo.css']],
+      cssHotUpdateList: [['chunkName', 'foo.css']],
     });
     vi.useFakeTimers();
 
@@ -68,7 +68,7 @@ describe('HMR Runtime', () => {
     await import('../runtime/hotModuleReplacement.lepus.cjs');
     vi.stubGlobal('__webpack_require__', {
       p: '/',
-      lynxCssFileName: [['chunkName', 'foo.css']],
+      cssHotUpdateList: [['chunkName', 'foo.css']],
     });
     const __FlushElementTree = vi.fn();
     vi.stubGlobal('__FlushElementTree', __FlushElementTree);
@@ -98,7 +98,7 @@ describe('HMR Runtime', () => {
     await import('../runtime/hotModuleReplacement.lepus.cjs');
     vi.stubGlobal('__webpack_require__', {
       p: '/',
-      lynxCssFileName: [['chunkName', 'bar.css']],
+      cssHotUpdateList: [['chunkName', 'bar.css']],
     });
     const __FlushElementTree = vi.fn();
     vi.stubGlobal('__FlushElementTree', __FlushElementTree);
@@ -128,7 +128,7 @@ describe('HMR Runtime', () => {
     await import('../runtime/hotModuleReplacement.lepus.cjs');
     vi.stubGlobal('__webpack_require__', {
       p: 'https://example.com/',
-      lynxCssFileName: [['chunkName', 'bar.css']],
+      cssHotUpdateList: [['chunkName', 'bar.css']],
     });
     const __FlushElementTree = vi.fn();
     vi.stubGlobal('__FlushElementTree', __FlushElementTree);
@@ -158,7 +158,7 @@ describe('HMR Runtime', () => {
     await import('../runtime/hotModuleReplacement.lepus.cjs');
     vi.stubGlobal('__webpack_require__', {
       p: '/',
-      lynxCssFileName: [['asyncChunkName', 'async.bar.css'], [
+      cssHotUpdateList: [['asyncChunkName', 'async.bar.css'], [
         'chunkName',
         'foo.css',
       ]],

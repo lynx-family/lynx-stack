@@ -304,9 +304,9 @@ class CssExtractRspackPluginImpl {
     const { RuntimeGlobals } = compiler.webpack;
     runtimeModule.source!.source = Buffer.concat([
       Buffer.from(runtimeModule.source!.source),
-      // lynxCssFileName
+      // cssHotUpdateList
       Buffer.from(`
-      ${RuntimeGlobals.require}.lynxCssFileName = ${
+      ${RuntimeGlobals.require}.cssHotUpdateList = ${
         cssHotUpdateList ? JSON.stringify(cssHotUpdateList) : 'null'
       };
     `),

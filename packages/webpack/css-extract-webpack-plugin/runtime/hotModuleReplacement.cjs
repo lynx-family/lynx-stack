@@ -17,9 +17,9 @@ function debounce(fn, time) {
 }
 
 function updateStyle(cssId = 0) {
-  const cssHotUpdateList = __webpack_require__.lynxCssFileName;
+  const cssHotUpdateList = __webpack_require__.cssHotUpdateList;
   if (!cssHotUpdateList) {
-    throw new Error('Css Filename not found');
+    throw new Error('cssHotUpdateList is not found');
   }
 
   for (const [chunkName, cssHotUpdatePath] of cssHotUpdateList) {
@@ -31,7 +31,7 @@ function updateStyle(cssId = 0) {
       (err, ret) => {
         if (err) {
           throw new Error(
-            'Load update css file `' + cssHotUpdatePath + '` failed',
+            `Failed to load CSS update file: ${cssHotUpdatePath}`,
           );
         }
 
