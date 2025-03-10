@@ -2,11 +2,8 @@ coverage:
   status:
     project: off
     patch:
-      target: auto
-  component:
-    default:
-      target: auto
-      threshold: "5%"
+      default:
+        threshold: "1%"
 
 comment:
   layout: "header, diff, flags, components" # show component info in the PR comment
@@ -21,7 +18,7 @@ component_management:
       - type: project
         target: auto
       - type: patch
-        threshold: "5%"
+        threshold: "1%"
   individual_components:
     - component_id: react
       name: React
@@ -32,6 +29,6 @@ component_management:
       paths:
         - packages/rspeedy/**
     - component_id: webpack
-      name: core
+      name: Webpack
       paths:
         - packages/webpack/**
