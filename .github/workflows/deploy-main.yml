@@ -53,6 +53,22 @@ jobs:
     secrets: inherit
     with:
       runs-on: lynx-ubuntu-24.04-xlarge
+  coverage:
+    needs: build-all
+    uses: ./.github/workflows/workflow-test.yml
+    secrets: inherit
+    with:
+      runs-on: lynx-ubuntu-24.04-medium
+      run: >
+        pnpm run test
+        --test-timeout=50000
+        --reporter=dot
+        --reporter=junit
+        --outputFile=test-report.junit.xml
+        --coverage
+        --no-cache
+        --logHeapUsage
+        --silent
   publish:
     needs: build
     runs-on: ubuntu-latest
