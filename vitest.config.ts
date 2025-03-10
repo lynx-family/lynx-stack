@@ -23,7 +23,7 @@ export default defineConfig({
         '.lintstagedrc.mjs',
         'eslint.config.js',
 
-        'packages/tools/**',
+        'packages/tools/canary-release/**',
         'packages/web-platform/**',
         'packages/webpack/test-tools/**',
       ],
