@@ -44,7 +44,6 @@ export class XSvgFeatures
   );
 
   #fireLoadEvent = () => {
-    if (this.#dom.getAttribute('x-enable-load-event') === null) return;
     const { width, height } = this.#loadEventInvoker;
     this.#dom.dispatchEvent(
       new CustomEvent('load', {

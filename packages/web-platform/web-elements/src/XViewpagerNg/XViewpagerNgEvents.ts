@@ -6,24 +6,20 @@
 import {
   type AttributeReactiveClass,
   genDomGetter,
-  registerAttributeHandler,
 } from '@lynx-js/web-elements-reactive';
 import { commonComponentEventSetting } from '../common/commonEventInitConfiguration.js';
 import type { XViewpagerNg } from './XViewpagerNg.js';
 import { useScrollEnd } from '../common/constants.js';
+import { registerEventEnableStatusChangeHandler } from '@lynx-js/web-elements-reactive';
 
 export class XViewpagerNgEvents
   implements InstanceType<AttributeReactiveClass<typeof XViewpagerNg>>
 {
-  static observedAttributes = [
-    'x-enable-change-event',
-    'x-enable-offsetchange-event',
-  ];
+  static observedAttributes = [];
   readonly #dom: XViewpagerNg;
   #isDragging: boolean = false;
   #connected = false;
   #currentIndex = 0;
-  #enableChange = false;
   #debounceScrollForMockingScrollEnd?: ReturnType<typeof setTimeout>;
 
   constructor(dom: XViewpagerNg) {
@@ -81,16 +77,22 @@ export class XViewpagerNgEvents
     this.#isDragging = false;
   };
 
-  @registerAttributeHandler('x-enable-change-event', true)
-  @registerAttributeHandler('x-enable-offsetchange-event', true)
-  #enableScrollEventListener() {
-    this.#enableChange =
-      this.#dom.getAttribute('x-enable-change-event') !== null;
-    const enableOffsetChange =
-      this.#dom.getAttribute('x-enable-offsetchange-event') !== null;
+  #enableChange = false;
+  @registerEventEnableStatusChangeHandler('change')
+  #enableChangeEvent(status: boolean) {
+    this.#enableChange = status;
+    this.#enableScrollEventListener();
+  }
 
+  #enableOffsetChange: boolean = false;
+  @registerEventEnableStatusChangeHandler('offsetchange')
+  #enableOffsetChangeEvent(status: boolean) {
+    this.#enableChange = status;
+    this.#enableScrollEventListener();
+  }
+  #enableScrollEventListener() {
     const scrollContainer = this.#getScrollContainer();
-    if (enableOffsetChange !== null || this.#enableChange) {
+    if (this.#enableOffsetChange || this.#enableChange) {
       scrollContainer.addEventListener(
         'scroll',
         this.#scrollHandler,

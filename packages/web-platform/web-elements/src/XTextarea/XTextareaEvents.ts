@@ -10,11 +10,12 @@ import {
 } from '@lynx-js/web-elements-reactive';
 import { commonComponentEventSetting } from '../common/commonEventInitConfiguration.js';
 import { renameEvent } from '../common/renameEvent.js';
+import { registerEventEnableStatusChangeHandler } from '@lynx-js/web-elements-reactive';
 
 export class XTextareaEvents
   implements InstanceType<AttributeReactiveClass<typeof HTMLElement>>
 {
-  static observedAttributes = ['x-enable-input-event', 'send-composing-input'];
+  static observedAttributes = ['send-composing-input'];
   #dom: HTMLElement;
 
   #sendComposingInput = false;
@@ -28,10 +29,10 @@ export class XTextareaEvents
     '#form',
   );
 
-  @registerAttributeHandler('x-enable-input-event', true)
-  #handleEnableConfirmEvent(newValue: string | null) {
+  @registerEventEnableStatusChangeHandler('input')
+  #handleEnableConfirmEvent(status: boolean) {
     const textareaElement = this.#getTextareaElement();
-    if (newValue !== null) {
+    if (status) {
       textareaElement.addEventListener(
         'input',
         this.#teleportInput as (ev: Event) => void,

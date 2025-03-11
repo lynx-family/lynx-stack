@@ -23,11 +23,6 @@ LICENSE file in the root directory of this source tree. -->
       href="/web-elements.css"
       rel="stylesheet"
     />
-    <script type="module">
-    document.querySelector('scroll-view').addEventListener('scrolltolower', () => {
-      document.querySelector('div').style.setProperty('background-color', 'green');
-    });
-    </script>
     <style>
     x-view {
       width: 100%;
@@ -38,13 +33,17 @@ LICENSE file in the root directory of this source tree. -->
 
   <body>
     <script src="/web-elements.js" defer></script>
+    <script type="module">
+    document.querySelector('scroll-view').addEventListener('scrolltolower', () => {
+      document.querySelector('div').style.setProperty('background-color', 'green');
+    });
+    </script>
     <x-view
       style="height:100vh;width: 100vw; display:flex; --lynx-display:flex;--lynx-display-toggle:var(--lynx-display-flex); flex-direction: column;"
     >
       <scroll-view
         style="width:300px; height:400px; background-color: wheat;"
         scroll-y
-        x-enable-scrolltolower-event
         lower-threshold="100"
       >
         <x-view style="background-color:aqua;"> </x-view>

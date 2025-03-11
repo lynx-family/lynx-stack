@@ -6,37 +6,37 @@
 import {
   type AttributeReactiveClass,
   genDomGetter,
-  registerAttributeHandler,
 } from '@lynx-js/web-elements-reactive';
 import { commonComponentEventSetting } from '../common/commonEventInitConfiguration.js';
+import { registerEventEnableStatusChangeHandler } from '@lynx-js/web-elements-reactive';
 
 export class ImageEvents
   implements InstanceType<AttributeReactiveClass<typeof HTMLElement>>
 {
-  static observedAttributes = ['x-enable-load-event', 'x-enable-error-event'];
+  static observedAttributes = [];
   #dom: HTMLElement;
 
   #getImg = genDomGetter<HTMLImageElement>(() => this.#dom.shadowRoot!, '#img');
 
-  @registerAttributeHandler('x-enable-load-event', true)
-  #enableLoadEvent(value: string | null) {
-    if (value === null) {
-      this.#getImg().removeEventListener('load', this.#teleportLoadEvent);
-    } else {
+  @registerEventEnableStatusChangeHandler('load')
+  #enableLoadEvent(status: boolean) {
+    if (status) {
       this.#getImg().addEventListener('load', this.#teleportLoadEvent, {
         passive: true,
       });
+    } else {
+      this.#getImg().removeEventListener('load', this.#teleportLoadEvent);
     }
   }
 
-  @registerAttributeHandler('x-enable-error-event', true)
-  #enableErrorEvent(value: string | null) {
-    if (value === null) {
-      this.#getImg().removeEventListener('error', this.#teleportErrorEvent);
-    } else {
+  @registerEventEnableStatusChangeHandler('error')
+  #enableErrorEvent(status: boolean) {
+    if (status) {
       this.#getImg().addEventListener('error', this.#teleportErrorEvent, {
         passive: true,
       });
+    } else {
+      this.#getImg().removeEventListener('error', this.#teleportErrorEvent);
     }
   }
 

@@ -5,34 +5,19 @@
 */
 import {
   type AttributeReactiveClass,
-  registerAttributeHandler,
   genDomGetter,
 } from '@lynx-js/web-elements-reactive';
 import type { XRefreshHeader } from './XRefreshHeader.js';
 import { XRefreshIntersectionObserverEvent } from './XRefreshSubElementIntersectionObserver.js';
 import type { XRefreshView } from './XRefreshView.js';
 import { commonComponentEventSetting } from '../common/commonEventInitConfiguration.js';
+import { registerEventEnableStatusChangeHandler } from '@lynx-js/web-elements-reactive';
 
 export class XRefreshViewEventsEmitter
   implements InstanceType<AttributeReactiveClass<typeof XRefreshView>>
 {
   #dom: XRefreshView;
-  #enableStartRefreshEvent: boolean = false;
-  #enableHeaderReleasedEvent: boolean = false;
-  #enableHeaderOffsetEvent: boolean = false;
-  #enableHeaderShowEvent: boolean = false;
-  #enableStartLoadMoreEvent: boolean = false;
-  #enableFooterReleasedEvent: boolean = false;
-  #enableFooterOffsetEvent: boolean = false;
-  static observedAttributes = [
-    'x-enable-startrefresh-event',
-    'x-enable-headerreleased-event',
-    'x-enable-headeroffset-event',
-    'x-enable-headershow-event',
-    'x-enable-startloadmore-event',
-    'x-enable-footerreleased-event',
-    'x-enable-footeroffset-event',
-  ];
+  static observedAttributes = [];
   #getXRefreshHeader = genDomGetter<XRefreshHeader>(
     () => this.#dom,
     'x-refresh-view > x-refresh-header:first-of-type',
@@ -49,29 +34,30 @@ export class XRefreshViewEventsEmitter
     );
   }
 
+  #eventSwitches = {
+    headeroffset: false,
+    headerreleased: false,
+    startrefresh: false,
+    footeroffset: false,
+    headershow: false,
+    footerreleased: false,
+    startloadmore: false,
+  };
+
   // complex events switches
-  @registerAttributeHandler('x-enable-headeroffset-event', true)
-  #handleXEnableHeaderOffsetEvent(newVal: string | null) {
-    this.#enableHeaderOffsetEvent = newVal !== null;
-    this.#handleComplexEventEnableAttributes();
-  }
-
-  @registerAttributeHandler('x-enable-headershow-event', true)
-  #handleXEnableHeaderShowEvent(newVal: string | null) {
-    this.#enableHeaderShowEvent = newVal !== null;
-    this.#handleComplexEventEnableAttributes();
-  }
-
-  @registerAttributeHandler('x-enable-footeroffset-event', true)
-  #handleXEnableFooterOffsetEvent(newVal: string | null) {
-    this.#enableFooterOffsetEvent = newVal !== null;
-    this.#handleComplexEventEnableAttributes();
-  }
-  #handleComplexEventEnableAttributes() {
+  @registerEventEnableStatusChangeHandler('headeroffset')
+  @registerEventEnableStatusChangeHandler('headershow')
+  @registerEventEnableStatusChangeHandler('footeroffset')
+  #handleComplexEventEnableAttributes(status: boolean, eventName: string) {
+    this
+      .#eventSwitches[
+        eventName as 'headeroffset' | 'headershow' | 'footeroffset'
+      ] = status;
+    const { headeroffset, headershow, footeroffset } = this.#eventSwitches;
     if (
-      this.#enableHeaderOffsetEvent
-      || this.#enableHeaderShowEvent
-      || this.#enableFooterOffsetEvent
+      headeroffset
+      || headershow
+      || footeroffset
     ) {
       this.#enableComplexRefreshViewEvents();
     } else {
@@ -79,37 +65,26 @@ export class XRefreshViewEventsEmitter
     }
   }
 
-  // simple events switches
-  @registerAttributeHandler('x-enable-startrefresh-event', true)
-  #handleXEnableStartRefreshEvent(newVal: string | null) {
-    this.#enableStartRefreshEvent = newVal !== null;
-    this.#handleSimpleEventEnableAttributes();
-  }
-
-  @registerAttributeHandler('x-enable-headerreleased-event', true)
-  #handleXEnableHeaderReleasedEvent(newVal: string | null) {
-    this.#enableHeaderReleasedEvent = newVal !== null;
-    this.#handleSimpleEventEnableAttributes();
-  }
-
-  @registerAttributeHandler('x-enable-startloadmore-event', true)
-  #handleXEnableStartLoadMoreEvent(newVal: string | null) {
-    this.#enableStartLoadMoreEvent = newVal !== null;
-    this.#handleSimpleEventEnableAttributes();
-  }
-
-  @registerAttributeHandler('x-enable-footerreleased-event', true)
-  #handleXEnableFooterReleasedEvent(newVal: string | null) {
-    this.#enableFooterReleasedEvent = newVal !== null;
-    this.#handleSimpleEventEnableAttributes();
-  }
-
-  #handleSimpleEventEnableAttributes() {
+  @registerEventEnableStatusChangeHandler('startrefresh')
+  @registerEventEnableStatusChangeHandler('headerreleased')
+  @registerEventEnableStatusChangeHandler('startloadmore')
+  @registerEventEnableStatusChangeHandler('footerreleased')
+  #handleXEnableHeaderOffsetEvent(status: boolean, eventName: string) {
+    this
+      .#eventSwitches[
+        eventName as
+          | 'startrefresh'
+          | 'headerreleased'
+          | 'startloadmore'
+          | 'footerreleased'
+      ] = status;
+    const { startrefresh, headerreleased, startloadmore, footerreleased } =
+      this.#eventSwitches;
     if (
-      this.#enableHeaderReleasedEvent
-      || this.#enableFooterReleasedEvent
-      || this.#enableStartLoadMoreEvent
-      || this.#enableStartRefreshEvent
+      headerreleased
+      || footerreleased
+      || startloadmore
+      || startrefresh
     ) {
       this.#enableSimpleRefreshViewEvents();
     } else {
@@ -207,7 +182,7 @@ export class XRefreshViewEventsEmitter
   #handleScroll = () => {
     if (
       this.#headerShowing
-      && (this.#enableHeaderShowEvent || this.#enableHeaderOffsetEvent)
+      && (this.#eventSwitches.headershow || this.#eventSwitches.headeroffset)
     ) {
       const header = this.#getXRefreshHeader();
       if (header) {
@@ -233,7 +208,7 @@ export class XRefreshViewEventsEmitter
           }),
         );
       }
-    } else if (this.#footerShowing && this.#enableFooterOffsetEvent) {
+    } else if (this.#footerShowing && this.#eventSwitches.footeroffset) {
       const footer = this.#getXRefreshFooter();
       if (footer) {
         const contentDom = this.#dom.shadowRoot!.querySelector('#container')!;
