@@ -54,6 +54,9 @@ declare namespace CSSPlugins {
 }
 
 // @public
+export const LAZY_CHUNK = "lynx:lazy-chunk";
+
+// @public
 export class LynxEncodePlugin {
     constructor(options?: LynxEncodePluginOptions | undefined);
     apply(compiler: Compiler): void;
@@ -117,6 +120,9 @@ export interface LynxTemplatePluginOptions {
     removeDescendantSelectorScope: boolean;
     targetSdkVersion: string;
 }
+
+// @public
+export const REACT_REFRESH = "_react_refresh_dist_index_js";
 
 // @public
 export interface TemplateHooks {

@@ -133,6 +133,7 @@ export function defineConfig(config: Config): Config;
 export interface Dev {
     assetPrefix?: string | boolean | undefined;
     client?: DevClient | undefined;
+    lazyCompilation?: boolean | LazyCompilationOptions | undefined;
     progressBar?: boolean | {
         id?: string;
     } | undefined;
@@ -184,6 +185,11 @@ export interface Filename {
     svg?: string | undefined;
     // @deprecated
     template?: string | undefined;
+}
+
+// @public
+export interface LazyCompilationOptions {
+    entries?: boolean;
 }
 
 // @public
