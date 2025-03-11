@@ -1,17 +1,22 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { BackgroundSnapshotInstance } from '../src/backgroundSnapshot';
+import { elementTree } from './utils/nativeMethod';
+import { registerWorkletOnBackground } from '../src/internal';
 import {
-  backgroundSnapshotInstanceManager,
-  createSnapshot,
+  SnapshotOperation,
+  initGlobalSnapshotPatch,
+  takeGlobalSnapshotPatch,
+} from '../src/lifecycle/patch/snapshotPatch';
+import { snapshotPatchApply } from '../src/lifecycle/patch/snapshotPatchApply';
+import {
   DynamicPartType,
   SnapshotInstance,
+  backgroundSnapshotInstanceManager,
+  createSnapshot,
   snapshotInstanceManager,
   snapshotManager,
 } from '../src/snapshot';
-import { initGlobalSnapshotPatch, SnapshotOperation, takeGlobalSnapshotPatch } from '../src/snapshotPatch';
-import { snapshotPatchApply } from '../src/snapshotPatchApply';
-import { elementTree } from './utils/nativeMethod';
-import { registerWorkletOnBackground } from '../src/internal';
 
 const HOLE = null;
 
@@ -228,8 +233,7 @@ describe('insertBefore', () => {
     const bsi1 = new BackgroundSnapshotInstance(snapshot1);
     const bsi2 = new BackgroundSnapshotInstance(snapshot2);
     const patch = takeGlobalSnapshotPatch();
-    patch.push(SnapshotOperation.InsertBefore, 1, 100, null);
-    patch.push(SnapshotOperation.InsertBefore, 100, 2, null);
+    patch.push(SnapshotOperation.InsertBefore, 1, 100, null, SnapshotOperation.InsertBefore, 100, 2, null);
     expect(patch).toMatchInlineSnapshot(`
       [
         0,
@@ -406,8 +410,7 @@ describe('removeChild', () => {
     `);
 
     patch = takeGlobalSnapshotPatch();
-    patch.push(SnapshotOperation.RemoveChild, 1, 2);
-    patch.push(SnapshotOperation.RemoveChild, 100, 1);
+    patch.push(SnapshotOperation.RemoveChild, 1, 2, SnapshotOperation.RemoveChild, 100, 1);
     expect(patch).toMatchInlineSnapshot(`
       [
         2,

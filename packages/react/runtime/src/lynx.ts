@@ -9,7 +9,7 @@ import './hooks/react.js';
 import { initProfileHook } from './debug/profile.js';
 import { document, setupBackgroundDocument } from './document.js';
 import { initDelayUnmount } from './lifecycle/delayUnmount.js';
-import { injectUpdatePatch, replaceCommitHook, replaceRequestAnimationFrame } from './lifecycle/patchUpdate.js';
+import { injectUpdatePatch, replaceCommitHook, replaceRequestAnimationFrame } from './lifecycle/patch/patchUpdate.js';
 import { injectCalledByNative } from './lynx/calledByNative.js';
 import { setupLynxEnv } from './lynx/env.js';
 import { injectLepusMethods } from './lynx/injectLepusMethods.js';

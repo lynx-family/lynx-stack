@@ -4,7 +4,7 @@
 import { options } from 'preact';
 import type { VNode } from 'preact';
 import { DIFF } from '../renderToOpcodes/constants.js';
-import { __globalSnapshotPatch } from '../snapshotPatch.js';
+import { __globalSnapshotPatch } from '../lifecycle/patch/snapshotPatch.js';
 
 enum PerformanceTimingKeys {
   update_set_state_trigger,

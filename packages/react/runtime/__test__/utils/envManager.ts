@@ -7,7 +7,7 @@ import { setupBackgroundDocument, setupDocument } from '../../src/document.js';
 import { __root, setRoot } from '../../src/root.js';
 import { BackgroundSnapshotInstance } from '../../src/backgroundSnapshot.js';
 import { backgroundSnapshotInstanceManager, SnapshotInstance, snapshotInstanceManager } from '../../src/snapshot.js';
-import { deinitGlobalSnapshotPatch } from '../../src/snapshotPatch.js';
+import { deinitGlobalSnapshotPatch } from '../../src/lifecycle/patch/snapshotPatch.js';
 import { globalPipelineOptions, setPipeline } from '../../src/lynx/performance.js';
 
 export class EnvManager {

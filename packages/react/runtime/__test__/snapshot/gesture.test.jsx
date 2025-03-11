@@ -1,10 +1,11 @@
 import { render } from 'preact';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { injectUpdatePatch, replaceCommitHook } from '../../src/lifecycle/patch/patchUpdate';
+import { __root } from '../../src/root';
 import { setupPage } from '../../src/snapshot';
 import { globalEnvManager } from '../utils/envManager';
-import { elementTree, waitSchedule } from '../utils/nativeMethod';
-import { __root } from '../../src/root';
-import { injectUpdatePatch, replaceCommitHook } from '../../src/lifecycle/patchUpdate';
+import { elementTree } from '../utils/nativeMethod';
 
 beforeAll(() => {
   setupPage(__CreatePage('0', 0));
