@@ -11,6 +11,7 @@ import {
   type Cloneable,
   lynxViewEntryIdPrefix,
   lynxViewRootDomId,
+  type NapiLoaderCall,
   type NativeModulesCall,
   type UpdateDataType,
 } from '@lynx-js/web-constants';
@@ -34,6 +35,7 @@ loadElement('scroll-view');
  * @param {INativeModulesCall} onNativeModulesCall [optional] the NativeModules value handler. Arguments will be cached before this property is assigned.
  * @param {"auto" | null} height [optional] set it to "auto" for height auto-sizing
  * @param {"auto" | null} width [optional] set it to "auto" for width auto-sizing
+ * @param {INativeModulesCall} onNapiLoaderCall [optional] the napiLoader value handler in lynx-core. key is moduleName which is used in `napiLoader.load(moduleName)`, value is esm url.
  *
  * @property entryId the currently Lynx view entryId.
  *
@@ -185,6 +187,18 @@ export class LynxView extends HTMLElement {
   }
   set nativeModulesUrl(val: string) {
     this.#nativeModulesUrl = val;
+  }
+
+  #onNapiLoaderCall?: NapiLoaderCall;
+  /**
+   * @param
+   * @property
+   */
+  get onNapiLoaderCall(): NapiLoaderCall | undefined {
+    return this.#onNapiLoaderCall;
+  }
+  set onNapiLoaderCall(handler: NapiLoaderCall) {
+    this.#onNapiLoaderCall = handler;
   }
 
   #autoHeight = false;
@@ -358,6 +372,7 @@ export class LynxView extends HTMLElement {
             initData: this.#initData,
             overrideLynxTagToHTMLTagMap: this.#overrideLynxTagToHTMLTagMap,
             nativeModulesUrl: this.#nativeModulesUrl,
+            napiLoaderCall: this.#onNapiLoaderCall,
             callbacks: {
               loadNewTag: loadElement,
               nativeModulesCall: (...args) => {

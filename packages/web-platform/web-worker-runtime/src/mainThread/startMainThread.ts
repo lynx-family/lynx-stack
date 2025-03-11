@@ -47,6 +47,7 @@ export function startMainThread(
         entryId,
         browserConfig,
         nativeModulesUrl,
+        napiLoaderCall,
       } = config;
       const { styleInfo, pageConfig, customSections, cardType, lepusCode } =
         template;
@@ -94,6 +95,7 @@ export function startMainThread(
                 ).map(([k, v]) => [k, v.content]),
               ),
               nativeModulesUrl,
+              napiLoaderCall,
             });
 
             runtime.renderPage!(initData);

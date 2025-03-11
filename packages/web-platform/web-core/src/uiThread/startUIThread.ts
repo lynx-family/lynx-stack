@@ -23,6 +23,7 @@ import {
   sendGlobalEventEndpoint,
   uiThreadFpReadyEndpoint,
   type MainThreadStartConfigs,
+  type NapiLoaderCall,
   type NativeModulesCall,
 } from '@lynx-js/web-constants';
 import { loadTemplate } from '../utils/loadTemplate.js';
@@ -39,6 +40,7 @@ export function startUIThread(
   },
   overrideTagMap: Record<string, string> = {},
   nativeModulesUrl: string | undefined,
+  napiLoaderCall?: NapiLoaderCall,
 ): LynxView {
   const createLynxStartTiming = performance.now() + performance.timeOrigin;
   const { entryId } = configs;
@@ -64,6 +66,7 @@ export function startUIThread(
       ...configs,
       template,
       nativeModulesUrl,
+      napiLoaderCall,
     });
   });
   registerLoadNewTagHandler(
