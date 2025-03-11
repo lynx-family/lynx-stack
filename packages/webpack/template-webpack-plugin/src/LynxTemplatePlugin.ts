@@ -565,7 +565,16 @@ class LynxTemplatePluginImpl {
         );
       });
 
-      compilation.hooks.processAssets.tapPromise(this.name, async () => {
+      compilation.hooks.processAssets.tapPromise({
+        name: this.name,
+        stage:
+          /**
+           * Generate the html after minification and dev tooling is done
+           * and source-map is generated
+           */
+          compiler.webpack.Compilation
+            .PROCESS_ASSETS_STAGE_REPORT,
+      }, async () => {
         await this.#generateAsyncTemplate(compilation);
       });
     });

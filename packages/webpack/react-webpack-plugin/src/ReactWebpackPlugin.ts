@@ -36,6 +36,13 @@ interface ReactWebpackPluginOptions {
    * The chunk names to be considered as main thread chunks.
    */
   mainThreadChunks?: string[] | undefined;
+
+  /**
+   * Whether to enable lazy bundle.
+   *
+   * @alpha
+   */
+  experimental_isLazyBundle?: boolean;
 }
 
 /**
@@ -105,6 +112,7 @@ class ReactWebpackPlugin {
       disableCreateSelectorQueryIncompatibleWarning: false,
       firstScreenSyncTiming: 'immediately',
       mainThreadChunks: [],
+      experimental_isLazyBundle: false,
     });
 
   /**
@@ -119,13 +127,15 @@ class ReactWebpackPlugin {
     );
     const { BannerPlugin, DefinePlugin, EnvironmentPlugin } = compiler.webpack;
 
-    new BannerPlugin({
-      // TODO: handle cases that do not have `'use strict'`
-      banner:
-        `'use strict';var globDynamicComponentEntry=globDynamicComponentEntry||'__Card__';`,
-      raw: true,
-      test: options.mainThreadChunks!,
-    }).apply(compiler);
+    if (!options.experimental_isLazyBundle) {
+      new BannerPlugin({
+        // TODO: handle cases that do not have `'use strict'`
+        banner:
+          `'use strict';var globDynamicComponentEntry=globDynamicComponentEntry||'__Card__';`,
+        raw: true,
+        test: options.mainThreadChunks!,
+      }).apply(compiler);
+    }
 
     new EnvironmentPlugin({
       // Default values of null and undefined behave differently.
