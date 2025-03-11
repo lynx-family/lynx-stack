@@ -2,4 +2,10 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+/**
+ * Identifier for lazyCompilation in Lynx.
+ * Used to mark chunks that should be loaded on demand during runtime.
+ *
+ * @public
+ */
 export const LAZY_CHUNK = 'lynx:lazy-chunk';

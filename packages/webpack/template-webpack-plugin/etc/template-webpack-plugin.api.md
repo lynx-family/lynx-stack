@@ -54,6 +54,9 @@ declare namespace CSSPlugins {
 }
 
 // @public
+export const LAZY_CHUNK = "lynx:lazy-chunk";
+
+// @public
 export class LynxEncodePlugin {
     constructor(options?: LynxEncodePluginOptions | undefined);
     apply(compiler: Compiler): void;
