@@ -13,21 +13,14 @@ import type { XList } from './XList.js';
 import { throttle } from '../common/throttle.js';
 import { bindToIntersectionObserver } from '../common/bindToIntersectionObserver.js';
 import { useScrollEnd } from '../common/constants.js';
+import { registerEventEnableStatusChangeHandler } from '@lynx-js/web-elements-reactive';
 
 export class XListEvents
   implements InstanceType<AttributeReactiveClass<typeof HTMLElement>>
 {
   static observedAttributes = [
-    'x-enable-scroll-event',
-    'x-enable-scrollend-event',
     'upper-threshold-item-count',
     'lower-threshold-item-count',
-    'x-enable-scrolltoupper-event',
-    'x-enable-scrolltolower-event',
-    'x-enable-scrolltoupperedge-event',
-    'x-enable-scrolltoloweredge-event',
-    'x-enable-snap-event',
-    'scroll-event-throttle',
   ];
 
   #dom: XList;
@@ -74,13 +67,10 @@ export class XListEvents
   }
 
   #handleUpperObserver = (entries: IntersectionObserverEntry[]) => {
-    const { isIntersecting, target } = entries[0]!;
-    const scrolltoupper = this.#dom.getAttribute(
-      'x-enable-scrolltoupper-event',
-    );
+    const { isIntersecting } = entries[0]!;
 
     if (isIntersecting) {
-      scrolltoupper !== null && this.#dom.dispatchEvent(
+      this.#dom.dispatchEvent(
         new CustomEvent('scrolltoupper', {
           ...commonComponentEventSetting,
           detail: this.#getScrollDetail(),
@@ -89,18 +79,14 @@ export class XListEvents
     }
   };
 
-  @registerAttributeHandler('upper-threshold-item-count', true)
-  @registerAttributeHandler('x-enable-scrolltoupper-event', true)
-  #updateUpperIntersectionObserver(
-    newValue: string | null,
-    oldValue: string | null,
-    name: string,
-  ) {
-    const enableScrollToUpper = this.#dom.getAttribute(
-      'x-enable-scrolltoupper-event',
-    );
+  @registerEventEnableStatusChangeHandler('scrolltoupper')
+  #updateEventSwitches = (enableScrollToUpper: boolean) => {
+    enableScrollToUpper
+      ? this.#dom.setAttribute('x-enable-scrolltoupper-event', '')
+      : this.#dom.removeAttribute('x-enable-scrolltoupper-event'); // css needs this;
+    this.#eventSwitches.scrolltoupper = enableScrollToUpper;
 
-    if (enableScrollToUpper === null) {
+    if (!enableScrollToUpper) {
       // if x-enable-scrolltoupper-event null, no need to handle upper-threshold-item-count
       if (this.#upperObserver) {
         this.#upperObserver.disconnect();
@@ -110,24 +96,20 @@ export class XListEvents
         this.#childrenObserver.disconnect();
         this.#childrenObserver = undefined;
       }
-      return;
-    }
-
-    if (!this.#upperObserver) {
-      this.#upperObserver = new IntersectionObserver(
-        this.#handleUpperObserver,
-        {
-          root: this.#getListContainer(),
-        },
-      );
-    }
-    if (!this.#childrenObserver) {
-      this.#childrenObserver = new MutationObserver(
-        this.#handleChildrenObserver,
-      );
-    }
-
-    if (name === 'x-enable-scrolltoupper-event') {
+    } else {
+      if (!this.#upperObserver) {
+        this.#upperObserver = new IntersectionObserver(
+          this.#handleUpperObserver,
+          {
+            root: this.#getListContainer(),
+          },
+        );
+      }
+      if (!this.#childrenObserver) {
+        this.#childrenObserver = new MutationObserver(
+          this.#handleChildrenObserver,
+        );
+      }
       const upperThresholdItemCount = this.#dom.getAttribute(
         'upper-threshold-item-count',
       );
@@ -145,38 +127,38 @@ export class XListEvents
         childList: true,
       });
     }
+  };
 
-    if (name === 'upper-threshold-item-count') {
-      const oldItemCount = oldValue !== null
-        ? parseFloat(oldValue)
-        : 0;
-      const oldObserverDom = oldItemCount === 0
-        ? this.#getUpperThresholdObserverDom()
-        : this.#dom.children[
-          oldItemCount - 1
-        ];
-      oldObserverDom && this.#upperObserver.unobserve(oldObserverDom);
+  @registerAttributeHandler('upper-threshold-item-count', true)
+  #handleUpperThresholdItemCountChange(
+    newValue: string | null,
+    oldValue: string | null,
+  ) {
+    const oldItemCount = oldValue !== null
+      ? parseFloat(oldValue)
+      : 0;
+    const oldObserverDom = oldItemCount === 0
+      ? this.#getUpperThresholdObserverDom()
+      : this.#dom.children[
+        oldItemCount - 1
+      ];
+    oldObserverDom && this.#upperObserver?.unobserve(oldObserverDom);
 
-      const itemCount = newValue !== null
-        ? parseFloat(newValue)
-        : 0;
-      const observerDom = itemCount === 0
-        ? this.#getUpperThresholdObserverDom()
-        : this.#dom.children[
-          itemCount - 1
-        ];
-      observerDom && this.#upperObserver.observe(observerDom);
-    }
+    const itemCount = newValue !== null
+      ? parseFloat(newValue)
+      : 0;
+    const observerDom = itemCount === 0
+      ? this.#getUpperThresholdObserverDom()
+      : this.#dom.children[
+        itemCount - 1
+      ];
+    observerDom && this.#upperObserver?.observe(observerDom);
   }
 
   #handleLowerObserver = (entries: IntersectionObserverEntry[]) => {
     const { isIntersecting } = entries[0]!;
-    const scrolltolower = this.#dom.getAttribute(
-      'x-enable-scrolltolower-event',
-    );
-
     if (isIntersecting) {
-      scrolltolower !== null && this.#dom.dispatchEvent(
+      this.#dom.dispatchEvent(
         new CustomEvent('scrolltolower', {
           ...commonComponentEventSetting,
           detail: this.#getScrollDetail(),
@@ -185,18 +167,22 @@ export class XListEvents
     }
   };
 
-  @registerAttributeHandler('lower-threshold-item-count', true)
-  @registerAttributeHandler('x-enable-scrolltolower-event', true)
-  #updateLowerIntersectionObserver(
-    newValue: string | null,
-    oldValue: string | null,
-    name: string,
-  ) {
-    const enableScrollToLower = this.#dom.getAttribute(
-      'x-enable-scrolltolower-event',
-    );
+  #eventSwitches = {
+    lynxscroll: false,
+    lynxscrollend: false,
+    snap: false,
+    scrolltolower: false,
+    scrolltoupper: false,
+  };
 
-    if (enableScrollToLower === null) {
+  @registerEventEnableStatusChangeHandler('scrolltolower')
+  #updateScrollToLowerEventSwitches = (enableScrollToLower: boolean) => {
+    this.#eventSwitches.scrolltolower = enableScrollToLower;
+    enableScrollToLower
+      ? this.#dom.setAttribute('x-enable-scrolltolower-event', '')
+      : this.#dom.removeAttribute('x-enable-scrolltolower-event'); // css needs this;
+
+    if (!enableScrollToLower) {
       if (this.#lowerObserver) {
         this.#lowerObserver.disconnect();
         this.#lowerObserver = undefined;
@@ -205,24 +191,20 @@ export class XListEvents
         this.#childrenObserver.disconnect();
         this.#childrenObserver = undefined;
       }
-      return;
-    }
-
-    if (!this.#lowerObserver) {
-      this.#lowerObserver = new IntersectionObserver(
-        this.#handleLowerObserver,
-        {
-          root: this.#getListContainer(),
-        },
-      );
-    }
-    if (!this.#childrenObserver) {
-      this.#childrenObserver = new MutationObserver(
-        this.#handleChildrenObserver,
-      );
-    }
-
-    if (name === 'x-enable-scrolltolower-event') {
+    } else {
+      if (!this.#lowerObserver) {
+        this.#lowerObserver = new IntersectionObserver(
+          this.#handleLowerObserver,
+          {
+            root: this.#getListContainer(),
+          },
+        );
+      }
+      if (!this.#childrenObserver) {
+        this.#childrenObserver = new MutationObserver(
+          this.#handleChildrenObserver,
+        );
+      }
       const lowerThresholdItemCount = this.#dom.getAttribute(
         'lower-threshold-item-count',
       );
@@ -241,27 +223,31 @@ export class XListEvents
         childList: true,
       });
     }
+  };
 
-    if (name === 'lower-threshold-item-count') {
-      const oldItemCount = oldValue !== null
-        ? parseFloat(oldValue)
-        : 0;
-      const oldObserverDom = oldItemCount === 0
-        ? this.#getLowerThresholdObserverDom()
-        : this.#dom.children[this.#dom.children.length - oldItemCount];
-      oldObserverDom && this.#lowerObserver.unobserve(oldObserverDom);
+  @registerAttributeHandler('lower-threshold-item-count', true)
+  #handleLowerThresholdItemCountChange(
+    newValue: string | null,
+    oldValue: string | null,
+  ) {
+    const oldItemCount = oldValue !== null
+      ? parseFloat(oldValue)
+      : 0;
+    const oldObserverDom = oldItemCount === 0
+      ? this.#getLowerThresholdObserverDom()
+      : this.#dom.children[this.#dom.children.length - oldItemCount];
+    oldObserverDom && this.#lowerObserver?.unobserve(oldObserverDom);
 
-      const itemCount = newValue !== null
-        ? parseFloat(newValue)
-        : 0;
-      const observerDom = itemCount === 0
-        ? this.#getLowerThresholdObserverDom()
-        : this.#dom.children[
-          this.#dom.children.length
-          - itemCount
-        ];
-      observerDom && this.#lowerObserver.observe(observerDom);
-    }
+    const itemCount = newValue !== null
+      ? parseFloat(newValue)
+      : 0;
+    const observerDom = itemCount === 0
+      ? this.#getLowerThresholdObserverDom()
+      : this.#dom.children[
+        this.#dom.children.length
+        - itemCount
+      ];
+    observerDom && this.#lowerObserver?.observe(observerDom);
   }
 
   #handleChildrenObserver = (mutationList: MutationRecord[]) => {
@@ -270,9 +256,7 @@ export class XListEvents
     // reset upper and lower observers
     if (mutation?.type === 'childList') {
       if (
-        this.#dom.getAttribute(
-          'x-enable-scrolltolower-event',
-        ) !== null
+        this.#eventSwitches.scrolltolower
       ) {
         // The reason why unobserve cannot be used is that the structure of list-item has changed,
         // and the list-item before the change cannot be obtained.
@@ -360,16 +344,15 @@ export class XListEvents
     );
   };
 
-  @registerAttributeHandler('x-enable-scroll-event', true)
-  @registerAttributeHandler('scroll-event-throttle', true)
-  @registerAttributeHandler('x-enable-scrollend-event', true)
-  @registerAttributeHandler('x-enable-snap-event', true)
-  #handleScrollEvents() {
-    const scroll = this.#dom.getAttribute('x-enable-scroll-event') !== null;
+  @registerEventEnableStatusChangeHandler('lynxscroll')
+  @registerEventEnableStatusChangeHandler('lynxscrollend')
+  @registerEventEnableStatusChangeHandler('snap')
+  #handleScrollEventsSwitches = (enabled: boolean, name: string) => {
+    this.#eventSwitches[name as 'lynxscroll' | 'lynxscrollend' | 'snap'] =
+      enabled;
+    const { lynxscroll, lynxscrollend, snap } = this.#eventSwitches;
     const scrollEventThrottle = this.#dom.getAttribute('scroll-event-throttle');
-    const scrollend = this.#dom.getAttribute('x-enable-scrollend-event');
-    const snap = this.#dom.getAttribute('x-enable-snap-event');
-    this.#enableScrollEnd = scrollend !== null || snap !== null;
+    this.#enableScrollEnd = lynxscrollend !== null || snap !== null;
     const listContainer = this.#getListContainer();
 
     // cancel the previous listener first
@@ -398,7 +381,7 @@ export class XListEvents
     } else {
       listContainer.removeEventListener('scrollend', this.#handleScrollEnd);
     }
-  }
+  };
 
   #handleObserver = (entries: IntersectionObserverEntry[]) => {
     const { isIntersecting, target } = entries[0]!;
@@ -422,14 +405,28 @@ export class XListEvents
     }
   };
 
-  @registerAttributeHandler('x-enable-scrolltoupperedge-event', true)
+  @registerEventEnableStatusChangeHandler('scrolltoupperedge')
+  #handleScrollToUpperEdgeEventEnable = (enabled: boolean) => {
+    enabled
+      ? this.#dom.setAttribute('x-enable-scrolltoupperedge-event', '')
+      : this.#dom.removeAttribute('x-enable-scrolltoupperedge-event'); // css needs this;
+    this.#updateUpperEdgeIntersectionObserver(enabled);
+  };
+
   #updateUpperEdgeIntersectionObserver = bindToIntersectionObserver(
     this.#getListContainer,
     this.#getUpperThresholdObserverDom,
     this.#handleObserver,
   );
 
-  @registerAttributeHandler('x-enable-scrolltoloweredge-event', true)
+  @registerEventEnableStatusChangeHandler('scrolltoloweredge')
+  #handleScrollToLowerEdgeEventEnable = (enabled: boolean) => {
+    enabled
+      ? this.#dom.setAttribute('x-enable-scrolltoloweredge-event', '')
+      : this.#dom.removeAttribute('x-enable-scrolltoloweredge-event'); // css needs this;
+    this.#updateLowerEdgeIntersectionObserver(enabled);
+  };
+
   #updateLowerEdgeIntersectionObserver = bindToIntersectionObserver(
     this.#getListContainer,
     this.#getLowerThresholdObserverDom,
@@ -437,19 +434,15 @@ export class XListEvents
   );
 
   #handleScrollEnd = () => {
-    const scrollend = this.#dom.getAttribute('x-enable-scrollend-event');
     const itemSnap = this.#dom.getAttribute('item-snap');
-    const snap = this.#dom.getAttribute('x-enable-snap-event');
 
-    if (scrollend !== null) {
-      this.#dom.dispatchEvent(
-        new CustomEvent('lynxscrollend', {
-          ...commonComponentEventSetting,
-        }),
-      );
-    }
+    this.#dom.dispatchEvent(
+      new CustomEvent('lynxscrollend', {
+        ...commonComponentEventSetting,
+      }),
+    );
 
-    if (itemSnap !== null && snap !== null) {
+    if (itemSnap !== null) {
       const children = Array.from(this.#dom.children).filter(node => {
         return node.tagName === 'LIST-ITEM';
       });

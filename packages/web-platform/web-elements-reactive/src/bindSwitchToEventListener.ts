@@ -13,8 +13,7 @@ export function bindSwitchToEventListener<T>(
   options?: AddEventListenerOptions,
 ) {
   let listening = false;
-  return function(this: T, newVal: string | null) {
-    const enable = newVal !== null;
+  return function(this: T, enable: boolean) {
     if (enable !== listening) {
       const target = elementGetter.call(this);
       if (enable) {

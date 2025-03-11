@@ -244,6 +244,7 @@ export function getMainThreadTransformOptions(
         'useLayoutEffect',
         '__runInJS',
         'useLynxGlobalEventListener',
+        'useImperativeHandle',
         ...(shake?.removeCallParams ?? []),
       ],
     },
