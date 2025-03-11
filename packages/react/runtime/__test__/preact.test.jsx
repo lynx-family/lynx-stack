@@ -10,7 +10,7 @@ import {
   initGlobalSnapshotPatch,
   takeGlobalSnapshotPatch,
 } from '../src/lifecycle/patch/snapshotPatch';
-import { runWithForce } from '../src/lynx';
+import { runWithForce } from '../src/lynx/tt';
 import {
   SnapshotInstance,
   backgroundSnapshotInstanceManager,
