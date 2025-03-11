@@ -59,6 +59,11 @@ describe('Config Validation', () => {
         { writeToDisk: false },
         { writeToDisk: () => false },
         { writeToDisk: (p) => p.includes('foo') },
+        { lazyCompilation: true },
+        { lazyCompilation: false },
+        { lazyCompilation: {} },
+        { lazyCompilation: { imports: true } },
+        { lazyCompilation: { entries: true } },
       ]
 
       cases.forEach(dev => {
@@ -171,6 +176,32 @@ describe('Config Validation', () => {
           Invalid config on \`$input.dev.writeToDisk\`.
             - Expect to be (boolean | undefined)
             - Got: null
+          ]
+        `)
+
+      expect(() => validate({ dev: { lazyCompilation: null } }))
+        .toThrowErrorMatchingInlineSnapshot(`
+          [Error: Invalid configuration.
+
+          Invalid config on \`$input.dev.lazyCompilation\`.
+            - Expect to be (LazyCompilationOptions | boolean | undefined)
+            - Got: null
+          ]
+        `)
+
+      expect(() => validate({ dev: { lazyCompilation: { backend: {} } } }))
+        .toThrowErrorMatchingInlineSnapshot(`
+          [Error: Invalid configuration.
+
+          Unknown property: \`$input.dev.lazyCompilation.backend\` in configuration
+          ]
+        `)
+
+      expect(() => validate({ dev: { lazyCompilation: { test: () => true } } }))
+        .toThrowErrorMatchingInlineSnapshot(`
+          [Error: Invalid configuration.
+
+          Unknown property: \`$input.dev.lazyCompilation.test\` in configuration
           ]
         `)
     })
