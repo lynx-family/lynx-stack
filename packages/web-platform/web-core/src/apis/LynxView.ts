@@ -35,7 +35,7 @@ loadElement('scroll-view');
  * @param {INativeModulesCall} onNativeModulesCall [optional] the NativeModules value handler. Arguments will be cached before this property is assigned.
  * @param {"auto" | null} height [optional] set it to "auto" for height auto-sizing
  * @param {"auto" | null} width [optional] set it to "auto" for width auto-sizing
- * @param {INativeModulesCall} onNapiLoaderCall [optional] the napiLoader value handler in lynx-core. key is moduleName which is used in `napiLoader.load(moduleName)`, value is esm url.
+ * @param {INativeModulesCall} onNapiLoaderCall [optional] the napiLoader value handler in lynx-core. key is moduleName which is called in `napiLoader.load(moduleName)`, value is esm url.
  *
  * @property entryId the currently Lynx view entryId.
  *

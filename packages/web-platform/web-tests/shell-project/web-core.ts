@@ -8,6 +8,44 @@ import '@lynx-js/web-elements-compat/LinearContainer';
 import '@lynx-js/web-core/index.css';
 import './index.css';
 
+const userNativeModule = URL.createObjectURL(
+  new Blob(
+    [
+      `export default {
+  CustomModule: {
+    async getColor(data, callback) {
+      const color = await this.nativeModulesCall('getColor', data);
+      callback(color);
+    },
+  },
+};`,
+    ],
+    { type: 'text/javascript' },
+  ),
+);
+
+const color_environment = URL.createObjectURL(
+  new Blob(
+    [
+      `export default {
+  getColor() {
+    this.nativeModules.CustomModule.getColor({ color: 'green' }, color => {
+      console.log(color)
+    });
+  },
+  ColorEngine: class ColorEngine {
+    getColor(name) {
+      this.nativeModules.CustomModule.getColor({ color: 'green' }, color => {
+        console.log(color)
+      });
+    }
+  },
+};`,
+    ],
+    { type: 'text/javascript' },
+  ),
+);
+
 async function run() {
   const lepusjs = '/resources/web-core.main-thread.json';
   const lynxView = document.createElement('lynx-view') as LynxView;
@@ -15,9 +53,16 @@ async function run() {
   lynxView.initData = { mockData: 'mockData' };
   lynxView.globalProps = { pink: 'pink' };
   lynxView.height = 'auto';
-  lynxView.onNativeModulesCall = (name, data, callback) => {
-    if (name === 'getColor') {
-      callback(data.color);
+  lynxView.nativeModulesUrl = userNativeModule;
+  lynxView.onNapiLoaderCall = {
+    'color_environment': color_environment,
+  };
+  lynxView.onNativeModulesCall = (name, data, moduleName) => {
+    if (name === 'getColor' && moduleName === 'CustomModule') {
+      return data.color;
+    }
+    if (name === 'getColor' && moduleName === 'bridge') {
+      return data.color;
     }
   };
   lynxView.addEventListener('error', () => {
