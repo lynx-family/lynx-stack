@@ -14,4 +14,10 @@ describe('processEvalResult', () => {
     expect(processEvalResult(fn, 'https://example.com/')).toBe('bar');
     expect(fn).toBeCalledWith('https://example.com/');
   });
+
+  test('call with undefined', () => {
+    globalEnvManager.switchToMainThread();
+
+    expect(processEvalResult(undefined, 'https://example.com/')).toBeUndefined();
+  });
 });
