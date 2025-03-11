@@ -256,7 +256,8 @@ describe('Gesture', () => {
     }
   });
   it('update gesture', async function() {
-    let _gesture, id = 1;
+    let _gesture,
+      id = 1;
     function Comp() {
       _gesture = {
         id: id++,
@@ -517,6 +518,113 @@ describe('Gesture', () => {
       `);
     }
   });
+  it('gesture with config', async function() {
+    function Comp() {
+      const gesture = {
+        id: 1,
+        type: 0,
+        callbacks: {
+          onUpdate: {
+            _wkltId: 'bdd4:dd564:2',
+          },
+        },
+        config: {
+          minDistance: 100,
+        },
+        __isGesture: true,
+        toJSON: () => ({
+          ...gesture,
+          __isSerialized: true,
+        }),
+      };
+
+      return (
+        <view>
+          <text main-thread:gesture={gesture}>1</text>
+        </view>
+      );
+    }
+
+    // main thread render
+    {
+      __root.__jsx = <Comp />;
+      renderPage();
+      expect(__root.__element_root).toMatchInlineSnapshot(`
+        <page
+          cssId="default-entry-from-native:0"
+        >
+          <view>
+            <text>
+              <raw-text
+                text="1"
+              />
+            </text>
+          </view>
+        </page>
+      `);
+    }
+
+    // background render
+    {
+      globalEnvManager.switchToBackground();
+      render(<Comp />, __root);
+    }
+
+    // hydrate
+    {
+      // LifecycleConstant.firstScreen
+      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+
+      // rLynxChange
+      globalEnvManager.switchToMainThread();
+      const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
+      globalThis[rLynxChange[0]](rLynxChange[1]);
+    }
+
+    {
+      expect(__root.__element_root).toMatchInlineSnapshot(`
+        <page
+          cssId="default-entry-from-native:0"
+        >
+          <view>
+            <text
+              flatten={false}
+              gesture={
+                {
+                  "config": {
+                    "callbacks": [
+                      {
+                        "callback": {
+                          "_execId": 7,
+                          "_wkltId": "bdd4:dd564:2",
+                        },
+                        "name": "onUpdate",
+                      },
+                    ],
+                    "config": {
+                      "minDistance": 100,
+                    },
+                  },
+                  "id": 1,
+                  "relationMap": {
+                    "continueWith": [],
+                    "simultaneous": [],
+                    "waitFor": [],
+                  },
+                  "type": 0,
+                }
+              }
+              has-react-gesture={true}
+            >
+              <raw-text
+                text="1"
+              />
+            </text>
+          </view>
+        </page>
+      `);
+    }
+  });
 });
 
 describe('Gesture in spread', () => {
@@ -599,7 +707,7 @@ describe('Gesture in spread', () => {
                     "callbacks": [
                       {
                         "callback": {
-                          "_execId": 7,
+                          "_execId": 8,
                           "_wkltId": "bdd4:dd564:2",
                         },
                         "name": "onUpdate",
@@ -719,7 +827,7 @@ describe('Gesture in spread', () => {
                     "callbacks": [
                       {
                         "callback": {
-                          "_execId": 9,
+                          "_execId": 10,
                           "_wkltId": "bdd4:dd564:2",
                         },
                         "name": "onUpdate",
@@ -843,7 +951,7 @@ describe('Gesture in spread', () => {
                     "callbacks": [
                       {
                         "callback": {
-                          "_execId": 10,
+                          "_execId": 11,
                           "_wkltId": "bdd4:dd564:2",
                         },
                         "name": "onUpdate",

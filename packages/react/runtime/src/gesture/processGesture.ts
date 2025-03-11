@@ -17,6 +17,10 @@ function getGestureInfo(gesture: BaseGesture, dom: FiberElement) {
   } as GestureConfig;
   const baseGesture = gesture;
 
+  if (baseGesture.config) {
+    config.config = baseGesture.config;
+  }
+
   for (
     const key of Object.keys(baseGesture.callbacks) as Array<
       keyof BaseGesture['callbacks']
