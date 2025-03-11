@@ -5,12 +5,14 @@
 import { createRequire } from 'node:module';
 
 import type {
+  Chunk,
   Compilation,
   Compiler,
   CssExtractRspackPluginOptions as ExternalCssExtractRspackPluginOptions,
 } from '@rspack/core';
 
 import {
+  LAZY_CHUNK,
   LynxEncodePlugin,
   LynxTemplatePlugin,
 } from '@lynx-js/template-webpack-plugin';
@@ -135,6 +137,17 @@ type RuntimeModule = Parameters<
   Compilation['hooks']['runtimeModule']['call']
 >[0];
 
+interface PathData {
+  filename?: string;
+  hash?: string;
+  contentHash?: string;
+  runtime?: string;
+  url?: string;
+  id?: string;
+  chunk?: Chunk;
+  contentHashType?: string;
+}
+
 class CssExtractRspackPluginImpl {
   name = 'CssExtractRspackPlugin';
   private hash: string | null = null;
@@ -166,27 +179,48 @@ class CssExtractRspackPluginImpl {
           },
         );
 
+        // TODO: replace LynxTemplatePlugin types with Rspack
+        const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(
+          // @ts-expect-error Rspack x Webpack compilation not match
+          compilation,
+        );
+
         compilation.hooks.runtimeModule.tap(
           this.name,
           (runtimeModule, chunk) => {
             if (runtimeModule.name === 'require_chunk_loading') {
               const asyncChunks = Array.from(chunk.getAllAsyncChunks())
+                .filter(c =>
+                  c.id
+                    !== '_react_background_packages_react_refresh_dist_index_js'
+                )
                 .map(c => {
-                  const { path } = compilation.getAssetPathWithInfo(
-                    options.chunkFilename ?? '.rspeedy/async/[name]/[name].css',
-                    { chunk: c },
-                  );
-                  return [c.name!, path];
+                  let pathData: PathData = { chunk: c };
+                  let chunkName = c.name;
+
+                  if (hooks.asyncChunkName.call(c.name) === LAZY_CHUNK) {
+                    pathData = { filename: c.id! };
+                    chunkName = c.id;
+                  }
+
+                  const { path: cssHotUpdatePat } = compilation
+                    .getAssetPathWithInfo(
+                      options.chunkFilename
+                        ?? '.rspeedy/async/[name]/[name].css',
+                      pathData,
+                    );
+
+                  return [chunkName, cssHotUpdatePat];
                 });
 
-              const { path } = compilation.getPathWithInfo(
+              const { path: cssHotUpdatePath } = compilation.getPathWithInfo(
                 options.filename ?? '[name].css',
                 // Rspack does not pass JsChunk to Rust.
                 // See: https://github.com/web-infra-dev/rspack/blob/73c31abcb78472eb5a3d93e4ece19d9f106727a6/crates/rspack_binding_values/src/path_data.rs#L62
                 { filename: chunk.name! },
               );
 
-              const initialChunk = [chunk.name!, path];
+              const initialChunk = [chunk.name!, cssHotUpdatePath];
 
               const cssHotUpdateList = [...asyncChunks, initialChunk].map((
                 [chunkName, cssHotUpdatePath],

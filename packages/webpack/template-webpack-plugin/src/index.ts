@@ -17,3 +17,4 @@ export { LynxEncodePlugin } from './LynxEncodePlugin.js';
 export type { LynxEncodePluginOptions } from './LynxEncodePlugin.js';
 export * as CSSPlugins from './css/plugins/index.js';
 export * as CSS from './css/index.js';
+export { LAZY_CHUNK } from './LazyChunk.js';

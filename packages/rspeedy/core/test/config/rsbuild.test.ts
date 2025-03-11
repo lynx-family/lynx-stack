@@ -14,6 +14,7 @@ describe('Config - toRsBuildConfig', () => {
       })
       expect(rsbuildConfig.dev).toMatchInlineSnapshot(`
         {
+          "lazyCompilation": false,
           "watchFiles": undefined,
           "writeToDisk": true,
         }
@@ -47,6 +48,28 @@ describe('Config - toRsBuildConfig', () => {
         },
       })
       expect(rsbuildConfig.dev?.writeToDisk).toStrictEqual(expect.any(Function))
+    })
+
+    test('transform dev.lazyCompilation: true', () => {
+      const rsbuildConfig = toRsbuildConfig({
+        dev: {
+          lazyCompilation: true,
+        },
+      })
+      expect(rsbuildConfig.dev?.lazyCompilation).toStrictEqual(
+        expect.any(Object),
+      )
+    })
+
+    test('transform dev.lazyCompilation: Object', () => {
+      const rsbuildConfig = toRsbuildConfig({
+        dev: {
+          lazyCompilation: {},
+        },
+      })
+      expect(rsbuildConfig.dev?.lazyCompilation).toStrictEqual(
+        expect.any(Object),
+      )
     })
   })
 
