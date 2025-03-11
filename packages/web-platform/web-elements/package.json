@@ -22,10 +22,6 @@
       "types": "./dist/all.d.ts",
       "default": "./dist/all.js"
     },
-    "./lazy": {
-      "types": "./dist/lazy.d.ts",
-      "default": "./dist/lazy.js"
-    },
     "./LynxWrapper": {
       "types": "./dist/LynxWrapper/index.d.ts",
       "default": "./dist/LynxWrapper/index.js"
