@@ -4,7 +4,7 @@
 import { createSocketURL } from './createSocketURL.js';
 import { log, logEnabledFeatures } from './log.js';
 import { parseURL } from './parseURL.js';
-import reloadApp from './reloadApp.js';
+import reloadApp from './reloadApp.background.js';
 import socket from './socket.js';
 import { LynxTransportClient } from './transport.js';
 

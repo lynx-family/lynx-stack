@@ -11,5 +11,6 @@ export default defineProject({
   },
   test: {
     name: 'webpack/dev-transport',
+    setupFiles: ['test/setup-env.js'],
   },
 });

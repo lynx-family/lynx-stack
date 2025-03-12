@@ -73,6 +73,7 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
                   .set('@lynx-js/react/lepus$', reactLepus.mainThread)
                   .set('@lynx-js/react/lepus/jsx-runtime', jsxRuntime.mainThread)
                   .set('@lynx-js/react/lepus/jsx-dev-runtime', jsxDevRuntime.mainThread)
+                  .set('@lynx-js/webpack-dev-transport/reloadApp.noop.main-thread', require.resolve('@lynx-js/webpack-dev-transport/reloadApp.noop.main-thread'))
                 .end()
               .end()
             .end()

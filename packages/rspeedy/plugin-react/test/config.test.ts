@@ -1003,6 +1003,7 @@ describe('Config', () => {
             "import": [
               "./fixtures/basic.tsx",
               "<WORKSPACE>/packages/webpack/css-extract-webpack-plugin/runtime/hotModuleReplacement.lepus.cjs",
+              "<WORKSPACE>/packages/webpack/webpack-dev-transport/lib/client/reloadApp.noop.main-thread.js",
             ],
             "layer": "react:main-thread",
           },
@@ -1053,6 +1054,7 @@ describe('Config', () => {
             "import": [
               "./fixtures/basic.tsx",
               "<WORKSPACE>/packages/webpack/css-extract-webpack-plugin/runtime/hotModuleReplacement.lepus.cjs",
+              "<WORKSPACE>/packages/webpack/webpack-dev-transport/lib/client/reloadApp.noop.main-thread.js",
             ],
             "layer": "react:main-thread",
           },

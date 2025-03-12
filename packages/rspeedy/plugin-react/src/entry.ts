@@ -121,6 +121,12 @@ export function applyEntry(
                 '@lynx-js/css-extract-webpack-plugin/runtime/hotModuleReplacement.lepus.cjs',
               ),
             })
+            .add({
+              layer: LAYERS.MAIN_THREAD,
+              import: require.resolve(
+                '@lynx-js/webpack-dev-transport/reloadApp.noop.main-thread',
+              ),
+            })
         })
         .end()
         .entry(backgroundEntry)

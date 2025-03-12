@@ -23,6 +23,16 @@
       "node": "./lib/client/index.js",
       "import": "./lib/client/index.js"
     },
+    "./reloadApp.main-thread": {
+      "types": "./lib/client/reloadApp.main-thread.d.ts",
+      "node": "./lib/client/reloadApp.main-thread.js",
+      "import": "./lib/client/reloadApp.main-thread.js"
+    },
+    "./reloadApp.noop.main-thread": {
+      "types": "./lib/client/reloadApp.noop.main-thread.d.ts",
+      "node": "./lib/client/reloadApp.noop.main-thread.js",
+      "import": "./lib/client/reloadApp.noop.main-thread.js"
+    },
     ".": {
       "types": "./lib/client/index.d.ts",
       "node": "./lib/client/index.js",
