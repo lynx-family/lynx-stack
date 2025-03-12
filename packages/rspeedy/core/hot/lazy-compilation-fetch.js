@@ -1,3 +1,4 @@
+/* c8 ignore start */
 /* global __resourceQuery */
 
 'use strict'
@@ -43,3 +44,4 @@ export function keepAlive(options) {
     ac.abort()
   }
 }
+/* c8 ignore stop */
