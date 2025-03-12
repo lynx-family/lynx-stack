@@ -17,7 +17,7 @@ import type {
 import type { PageConfig } from './types/PageConfig.js';
 import type { IdentifierType, InvokeCallbackRes } from './types/NativeApp.js';
 import type { LynxTemplate } from './types/LynxModule.js';
-import type { NapiLoaderCall } from './types/NapiLoader.js';
+import type { NapiModulesMap } from './types/NapiModules.js';
 
 export const postExposureEndpoint = createRpcEndpoint<
   [{ exposures: ExposureWorkerEvent[]; disExposures: ExposureWorkerEvent[] }],
@@ -105,7 +105,7 @@ export const BackgroundThreadStartEndpoint = createRpcEndpoint<[
     cardType: string;
     customSections: Record<string, Cloneable>;
     nativeModulesUrl?: string;
-    napiLoaderCall?: NapiLoaderCall;
+    napiModulesMap: NapiModulesMap;
   },
 ], void>('start', false, true);
 
@@ -175,6 +175,11 @@ export const nativeModulesCallEndpoint = createRpcEndpoint<
   [name: string, data: Cloneable, moduleName: string],
   any
 >('nativeModulesCall', false, true);
+
+export const napiModulesCallEndpoint = createRpcEndpoint<
+  [name: string, data: Cloneable, moduleName: string],
+  any
+>('napiModulesCall', false, true);
 
 export const getCustomSectionsEndpoint = createRpcEndpoint<
   [string],

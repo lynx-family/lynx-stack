@@ -2,55 +2,37 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { type NapiLoaderCall, type NativeApp } from '@lynx-js/web-constants';
+import {
+  napiModulesCallEndpoint,
+  type Cloneable,
+  type NapiModulesMap,
+} from '@lynx-js/web-constants';
+import type { Rpc } from '@lynx-js/web-worker-rpc';
 
 export const createNapiLoader = async (
-  napiLoaderUrl: NapiLoaderCall,
-  nativeApp: NativeApp,
+  rpc: Rpc,
+  napiModulesMap: NapiModulesMap,
 ) => {
-  const napiLoaderCall: Record<string, any> = {};
-  for (
-    const [moduleName, moduleString] of Object.entries(
-      napiLoaderUrl,
-    )
-  ) {
-    napiLoaderCall[moduleName] = (await import(
-      /* webpackIgnore: true */ moduleString
-    ))?.default;
-  }
-  recursiveFunctionCallBinder(
-    napiLoaderCall,
-    nativeApp.nativeModuleProxy,
+  const napiModulesCall = rpc.createCall(napiModulesCallEndpoint);
+  let napiModules: Record<string, Record<string, any>> = {};
+  await Promise.all(
+    Object.entries(napiModulesMap).map((
+      [moduleName, moduleStr],
+    ) =>
+      import(/* webpackIgnore: true */ moduleStr).then(
+        module =>
+          napiModules[moduleName] = module?.default?.(
+            napiModules,
+            (name: string, data: Cloneable) =>
+              napiModulesCall(name, data, moduleName),
+          ),
+      )
+    ),
   );
-  (globalThis as any)['napiLoaderOnRT' + nativeApp.id] = {
+
+  return {
     load(moduleName: string) {
-      return napiLoaderCall[moduleName];
+      return napiModules[moduleName];
     },
   };
 };
-
-function recursiveFunctionCallBinder(
-  napiLoaderCall: Record<string, Record<string, any>>,
-  nativeModules: any,
-): Record<string, Record<string, any>> {
-  const newObj = Object.fromEntries(
-    Object.entries(napiLoaderCall).map(([loaderName, loaderImpl]) => {
-      if (typeof loaderImpl === 'object') {
-        for (const [property, value] of Object.entries(loaderImpl)) {
-          if (
-            typeof value === 'function'
-          ) {
-            // Class && Function: support `this.nativeModules` to call nativeModules
-            if (value?.prototype?.constructor === value) {
-              value.prototype.nativeModules = nativeModules;
-            }
-            loaderImpl[property] = value.bind({ nativeModules });
-          }
-        }
-      }
-      return [loaderName, loaderImpl];
-    }),
-  );
-
-  return newObj;
-}

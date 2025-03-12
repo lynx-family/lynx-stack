@@ -39,9 +39,11 @@ export function startBackgroundThread(
         markTimingInternal,
         customNativeModules,
       });
-
-      config.napiLoaderCall
-        && await createNapiLoader(config.napiLoaderCall, nativeApp);
+      (globalThis as any)['napiLoaderOnRT' + nativeApp.id] =
+        await createNapiLoader(
+          uiThreadRpc,
+          config.napiModulesMap,
+        );
 
       const nativeLynx = createBackgroundLynx(config, nativeApp, mainThreadRpc);
       lynxCore.then(

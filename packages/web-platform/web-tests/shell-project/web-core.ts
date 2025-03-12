@@ -8,40 +8,38 @@ import '@lynx-js/web-elements-compat/LinearContainer';
 import '@lynx-js/web-core/index.css';
 import './index.css';
 
-const userNativeModule = URL.createObjectURL(
+const color_environment = URL.createObjectURL(
   new Blob(
-    [
-      `export default {
-  CustomModule: {
-    async getColor(data, callback) {
-      const color = await this.nativeModulesCall('getColor', data);
-      callback(color);
+    [`export default function(NapiModules, NapiModulesCall) {
+  return {
+    getColor() {
+      NapiModules.color_methods.getColor({ color: 'green' }, color => {
+        console.log(color);
+      });
     },
-  },
-};`,
-    ],
+    ColorEngine: class ColorEngine {
+      getColor(name) {
+        NapiModules.color_methods.getColor({ color: 'green' }, color => {
+          console.log(color);
+        });
+      }
+    },
+  };
+};`],
     { type: 'text/javascript' },
   ),
 );
 
-const color_environment = URL.createObjectURL(
+const color_methods = URL.createObjectURL(
   new Blob(
-    [
-      `export default {
-  getColor() {
-    this.nativeModules.CustomModule.getColor({ color: 'green' }, color => {
-      console.log(color)
-    });
-  },
-  ColorEngine: class ColorEngine {
-    getColor(name) {
-      this.nativeModules.CustomModule.getColor({ color: 'green' }, color => {
-        console.log(color)
-      });
-    }
-  },
-};`,
-    ],
+    [`export default function(NapiModules, NapiModulesCall) {
+  return {
+    async getColor(data, callback) {
+      const color = await NapiModulesCall('getColor', data);
+      callback(color);
+    },
+  };
+};`],
     { type: 'text/javascript' },
   ),
 );
@@ -53,15 +51,12 @@ async function run() {
   lynxView.initData = { mockData: 'mockData' };
   lynxView.globalProps = { pink: 'pink' };
   lynxView.height = 'auto';
-  lynxView.nativeModulesUrl = userNativeModule;
-  lynxView.onNapiLoaderCall = {
+  lynxView.napiModulesMap = {
     'color_environment': color_environment,
+    'color_methods': color_methods,
   };
-  lynxView.onNativeModulesCall = (name, data, moduleName) => {
-    if (name === 'getColor' && moduleName === 'CustomModule') {
-      return data.color;
-    }
-    if (name === 'getColor' && moduleName === 'bridge') {
+  lynxView.onNapiModulesCall = (name, data, moduleName) => {
+    if (name === 'getColor' && moduleName === 'color_methods') {
       return data.color;
     }
   };

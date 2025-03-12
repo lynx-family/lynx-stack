@@ -11,4 +11,4 @@ export * from './MainThreadStartConfigs.js';
 export * from './NativeApp.js';
 export * from './UpdateDataOptions.js';
 export * from './NativeModules.js';
-export * from './NapiLoader.js';
+export * from './NapiModules.js';

@@ -4,36 +4,75 @@
 "@lynx-js/web-core": patch
 ---
 
-feat: add new prop `onNapiLoaderCall` of lynx-view, which is the `napiLoader` value handler in `@lynx-js/lynx-core`. key is moduleName which is called in `napiLoader.load(moduleName)`, value is esm url.
+feat: add two prop of lynx-view about `napiLoader`:
 
-Each function and class of napiLoader-module will be bound to a function nativeModules. You can use `this.nativeModules` to call nativeModules.
+- `napiModulesMap`: [optional] the napiModule which is called in lynx-core. key is module-name, value is esm url.
+
+- `onNapiModulesCall`: [optional] the NapiModule value handler.
+
+**Warning:** This is the internal implementation of `@lynx-js/lynx-core`. In most cases, this API is not required for projects.
+
+1. The `napiModulesMap` value should be a esm url which export default a function with two parameters:
+
+- `NapiModules`: oriented `napiModulesMap`, which you can use to call other Napi-Modules
+
+- `NapiModulesCall`: trigger `onNapiModulesCall`
 
 example:
 
 ```js
 const color_environment = URL.createObjectURL(
   new Blob(
-    [
-      `export default {
-  getColor() {
-    this.nativeModules.CustomModule.getColor({ color: 'green' }, color => {
-      console.log(color)
-    });
-  },
-  ColorEngine: class ColorEngine {
-    getColor(name) {
-      this.nativeModules.CustomModule.getColor({ color: 'green' }, color => {
-        console.log(color)
+    [`export default function(NapiModules, NapiModulesCall) {
+  return {
+    getColor() {
+      NapiModules.color_methods.getColor({ color: 'green' }, color => {
+        console.log(color);
       });
-    }
-  },
-};`,
-    ],
+    },
+    ColorEngine: class ColorEngine {
+      getColor(name) {
+        NapiModules.color_methods.getColor({ color: 'green' }, color => {
+          console.log(color);
+        });
+      }
+    },
+  };
+};`],
     { type: 'text/javascript' },
   ),
 );
 
-lynxView.onNapiLoaderCall = {
+const color_methods = URL.createObjectURL(
+  new Blob(
+    [`export default function(NapiModules, NapiModulesCall) {
+  return {
+    async getColor(data, callback) {
+      const color = await NapiModulesCall('getColor', data);
+      callback(color);
+    },
+  };
+};`],
+    { type: 'text/javascript' },
+  ),
+);
+
+lynxView.napiModuleMap = {
   'color_environment': color_environment,
+  'color_methods': color_methods,
+};
+```
+
+2. The `onNapiModulesCall` function has three parameters:
+
+- `name`: the first parameter of `NapiModulesCall`, the function name
+- `data`: the second parameter of `NapiModulesCall`, data
+- `moduleName`: the module-name of the called napi-module
+
+```js
+lynxView.onNapiModulesCall = (name, data, moduleName) => {
+  if (name === 'getColor' && moduleName === 'color_methods') {
+    return data.color;
+  }
 };
 ```

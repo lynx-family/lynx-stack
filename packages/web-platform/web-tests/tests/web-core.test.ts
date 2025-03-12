@@ -266,7 +266,7 @@ test.describe('web core tests', () => {
     expect(ret).toBe('destructionObserver');
   });
 
-  test('api-onNapiLoaderCall-func', async ({ page, browserName }) => {
+  test('api-onNapiModulesCall-func', async ({ page, browserName }) => {
     // firefox dose not support this.
     test.skip(browserName === 'firefox');
     await goto(page);
@@ -293,7 +293,7 @@ test.describe('web core tests', () => {
     expect(successCallback).toBeTruthy();
   });
 
-  test('api-onNapiLoaderCall-class', async ({ page, browserName }) => {
+  test('api-onNapiModulesCall-class', async ({ page, browserName }) => {
     // firefox dose not support this.
     test.skip(browserName === 'firefox');
     await goto(page);

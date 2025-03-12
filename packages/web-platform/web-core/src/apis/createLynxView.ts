@@ -4,7 +4,7 @@
 
 import type {
   Cloneable,
-  NapiLoaderCall,
+  NapiModulesMap,
   UpdateDataType,
 } from '@lynx-js/web-constants';
 import { startUIThread } from '../uiThread/startUIThread.js';
@@ -19,7 +19,7 @@ export interface LynxViewConfigs {
   callbacks: Parameters<typeof startUIThread>[3];
   overrideLynxTagToHTMLTagMap?: Record<string, string>;
   nativeModulesUrl: string | undefined;
-  napiLoaderCall?: NapiLoaderCall;
+  napiModulesMap: NapiModulesMap;
 }
 
 export interface LynxView {
@@ -42,7 +42,7 @@ export function createLynxView(configs: LynxViewConfigs): LynxView {
     initData,
     overrideLynxTagToHTMLTagMap,
     nativeModulesUrl,
-    napiLoaderCall,
+    napiModulesMap,
   } = configs;
   return startUIThread(
     templateUrl,
@@ -53,11 +53,11 @@ export function createLynxView(configs: LynxViewConfigs): LynxView {
       browserConfig: {
         supportAtScope,
       },
+      napiModulesMap,
     },
     rootDom,
     callbacks,
     overrideLynxTagToHTMLTagMap,
     nativeModulesUrl,
-    napiLoaderCall,
   );
 }
