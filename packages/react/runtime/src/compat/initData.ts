@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import type { ComponentClass, Consumer, Context, FC, PropsWithChildren, ReactNode } from 'react';
+
 import { useLynxGlobalEventListener } from '../hooks/useLynxGlobalEventListener.js';
 
 type Getter<T> = {
@@ -104,9 +105,9 @@ export function withInitDataInState<P, S>(App: ComponentClass<P, S>): ComponentC
   }
 
   class C extends App {
-    h?: Function;
+    h?: () => void;
 
-    constructor(props: any) {
+    constructor(props: P) {
       super(props);
       this.state = {
         ...this.state,
@@ -114,11 +115,10 @@ export function withInitDataInState<P, S>(App: ComponentClass<P, S>): ComponentC
       };
 
       if (!__LEPUS__) {
-        // @ts-ignore
         lynx.getJSModule('GlobalEventEmitter').addListener(
           'onDataChanged',
           this.h = () => {
-            this.setState(lynx.__initData);
+            this.setState(lynx.__initData as S);
           },
         );
       }
@@ -127,10 +127,9 @@ export function withInitDataInState<P, S>(App: ComponentClass<P, S>): ComponentC
     override componentWillUnmount(): void {
       super.componentWillUnmount?.();
       if (!__LEPUS__) {
-        // @ts-ignore
         lynx.getJSModule('GlobalEventEmitter').removeListener(
           'onDataChanged',
-          this.h,
+          this.h!,
         );
       }
     }

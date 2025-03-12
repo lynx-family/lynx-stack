@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { options } from 'preact';
 import type { VNode } from 'preact';
+
 import { DIFF } from '../renderToOpcodes/constants.js';
 import { __globalSnapshotPatch } from '../lifecycle/patch/snapshotPatch.js';
 
@@ -61,7 +62,7 @@ function markTimingLegacy(key: PerformanceTimingKeys, timingFlag_?: string): voi
       break;
     }
   }
-  lynx.getNativeApp().markTiming?.(timingFlag, PerformanceTimingKeys[key]);
+  lynx.getNativeApp().markTiming?.(timingFlag!, PerformanceTimingKeys[key]);
 }
 
 function beginPipeline(needTimestamps: boolean, timingFlag?: string): void {
