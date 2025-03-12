@@ -398,8 +398,8 @@ importers:
         specifier: 1.0.2
         version: 1.0.2(@rsbuild/core@1.2.16)
       '@rsbuild/plugin-webpack-swc':
-        specifier: 1.0.11
-        version: 1.0.11(@rsbuild/core@1.2.16)
+        specifier: 1.0.12
+        version: 1.0.12(@rsbuild/core@1.2.16)
       '@rsbuild/webpack':
         specifier: 1.2.3
         version: 1.2.3(@rsbuild/core@1.2.16)(@rspack/core@1.2.7(@swc/helpers@0.5.15))
@@ -2172,8 +2172,8 @@ packages:
       '@rsbuild/core':
         optional: true
 
-  '@rsbuild/plugin-webpack-swc@1.0.11':
-    resolution: {integrity: sha512-dZ1rB66Kv5qgz1HODvFOXywrigLslqceSvk71hIBmmqOqdDBb0LrAEI78quQm3rTPecYJVFFoMOv5kVPPh6MRg==}
+  '@rsbuild/plugin-webpack-swc@1.0.12':
+    resolution: {integrity: sha512-KMikpF9WfjZu+rZPFwsIb9QPTWTRy6CUE5JoRE5rmHwlMfIq3c4Jam5bykPevc8CjWTda6KmTYrDnPX0rB9olg==}
     peerDependencies:
       '@rsbuild/core': 1.x
 
@@ -8227,7 +8227,7 @@ snapshots:
     optionalDependencies:
       '@rsbuild/core': 1.2.16
 
-  '@rsbuild/plugin-webpack-swc@1.0.11(@rsbuild/core@1.2.16)':
+  '@rsbuild/plugin-webpack-swc@1.0.12(@rsbuild/core@1.2.16)':
     dependencies:
       '@modern-js/swc-plugins': 0.6.11(@swc/helpers@0.5.15)
       '@rsbuild/core': 1.2.16

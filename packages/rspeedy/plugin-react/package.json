@@ -55,7 +55,7 @@
     "@rsbuild/core": "catalog:",
     "@rsbuild/plugin-sass": "1.2.2",
     "@rsbuild/plugin-typed-css-modules": "1.0.2",
-    "@rsbuild/plugin-webpack-swc": "1.0.11",
+    "@rsbuild/plugin-webpack-swc": "1.0.12",
     "@rsbuild/webpack": "1.2.3",
     "tailwindcss": "^3.4.17",
     "type-fest": "^4.37.0",
