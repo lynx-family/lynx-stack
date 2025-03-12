@@ -67,8 +67,17 @@ describe('Config - toRsBuildConfig', () => {
           lazyCompilation: {},
         },
       })
-      expect(rsbuildConfig.dev?.lazyCompilation).toStrictEqual(
-        expect.any(Object),
+      const lazyCompilation = rsbuildConfig.dev
+        ?.lazyCompilation as Rspack.LazyCompilationOptions
+
+      expect(typeof lazyCompilation).toBe('object')
+      expect(typeof lazyCompilation.test).toBe('function')
+
+      expect(lazyCompilation.backend).toBeDefined()
+      expect(typeof lazyCompilation.backend).toBe('object')
+      expect(typeof lazyCompilation.backend?.client).toBe('string')
+      expect(lazyCompilation.backend?.client).toContain(
+        'lazy-compilation-fetch.js',
       )
     })
 
