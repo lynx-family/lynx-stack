@@ -18,8 +18,8 @@ import { injectTt } from './lynx/tt.js';
 // @ts-expect-error Element implicitly has an 'any' type because type 'typeof globalThis' has no index signature
 if (__LEPUS__ && typeof globalThis.processEvalResult === 'undefined') {
   // @ts-expect-error Element implicitly has an 'any' type because type 'typeof globalThis' has no index signature
-  globalThis.processEvalResult = <T>(result: (schema: string) => T, schema: string) => {
-    return result(schema);
+  globalThis.processEvalResult = <T>(result: ((schema: string) => T) | undefined, schema: string) => {
+    return result?.(schema);
   };
 }
 
