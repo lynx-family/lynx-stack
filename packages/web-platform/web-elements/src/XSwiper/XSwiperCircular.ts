@@ -159,9 +159,8 @@ export class XSwiperCircular
 
   @registerAttributeHandler('circular', false)
   #handleCircular(newVal: string | null) {
-    this.#listeners.forEach((l) => l(newVal));
+    this.#listeners.forEach((l) => l(newVal != null));
     if (newVal !== null) {
-      this.#dom.setAttribute('x-enable-change-event-for-indicator', '');
       this.#changeEventHandler({
         detail: {
           current: this.#dom.current,

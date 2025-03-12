@@ -1,33 +1,24 @@
 import EventEmitter from 'events';
 import { createGlobalThis, LynxGlobalThis } from './lynx/GlobalThis';
-import {
-  LynxFiberElement,
-  initElementTree,
-  initNativeMethodQueue,
-} from './lynx/nativeMethod';
+import { initElementTree, initNativeMethodQueue } from './lynx/nativeMethod';
 import { VirtualConsole } from './lynx/virtual-console';
 export type { LynxFiberElement } from './lynx/nativeMethod';
 
+type ElementTree = ReturnType<typeof initElementTree>;
+type FilterUnderscoreKeys<T> = {
+  [K in keyof T]: K extends `__${string}` ? K : never;
+}[keyof T];
+type PickUnderscoreKeys<T> = Pick<T, FilterUnderscoreKeys<T>>;
+type ElementTreeGlobals = PickUnderscoreKeys<ElementTree>;
+
 declare global {
   var lynxDOM: LynxDOM;
-  var elementTree: {
-    root: LynxFiberElement;
-  };
-  const __DISABLE_CREATE_SELECTOR_QUERY_INCOMPATIBLE_WARNING__: boolean;
-  const __REF_FIRE_IMMEDIATELY__: boolean;
-  const __TESTING_FORCE_RENDER_TO_OPCODE__: boolean;
-  const __FIRST_SCREEN_SYNC_TIMING__: 'immediately' | 'jsReady';
-  const __DEV__: boolean;
-  const __JS__: boolean;
-  const __LEPUS__: boolean;
-  const __BACKGROUND__: boolean;
-  const __MAIN_THREAD__: boolean;
-  const __PROFILE__: boolean;
-
-  const __SendEvent: any;
+  var elementTree: ElementTree;
+  var __JS__: boolean;
+  var __LEPUS__: boolean;
 
   namespace lynxCoreInject {
-    const tt: any;
+    var tt: any;
   }
 
   function onInjectBackgroundThreadGlobals(globals: any): void;
@@ -36,6 +27,8 @@ declare global {
   function onSwitchedToMainThread(): void;
   function onResetLynxEnv(): void;
   function onInitWorkletRuntime(): void;
+
+  var global: ElementTreeGlobals & typeof globalThis;
 }
 
 export function __injectElementApi(target?: any) {
@@ -227,7 +220,7 @@ export function injectMainThreadGlobals(target?: any, polyfills?: any) {
   globalThis.onInjectMainThreadGlobals?.(target);
 }
 
-const BLACKLIST_GLOBALS = [
+const IGNORE_LIST_GLOBALS = [
   'globalThis',
   'global',
 ];
@@ -340,7 +333,7 @@ export type ThreadType = 'background' | 'main';
 export class LynxDOM {
   private originals: Map<string, any> = new Map();
   backgroundThread: LynxGlobalThis;
-  mainThread: LynxGlobalThis;
+  mainThread: LynxGlobalThis & ElementTreeGlobals;
   constructor() {
     const virtualConsole = console && global.console
       ? new VirtualConsole().sendTo(global.console)
@@ -348,10 +341,10 @@ export class LynxDOM {
 
     this.backgroundThread = createGlobalThis({
       virtualConsole,
-    });
+    }) as any;
     this.mainThread = createGlobalThis({
       virtualConsole,
-    });
+    }) as any;
 
     this.injectGlobals();
 
@@ -371,7 +364,7 @@ export class LynxDOM {
     this.originals = new Map();
     Object.getOwnPropertyNames(this.backgroundThread.globalThis).forEach(
       (key) => {
-        if (BLACKLIST_GLOBALS.includes(key)) {
+        if (IGNORE_LIST_GLOBALS.includes(key)) {
           return;
         }
         this.originals.set(key, global[key]);
@@ -384,7 +377,7 @@ export class LynxDOM {
   switchToMainThread() {
     this.originals = new Map();
     Object.getOwnPropertyNames(this.mainThread.globalThis).forEach((key) => {
-      if (BLACKLIST_GLOBALS.includes(key)) {
+      if (IGNORE_LIST_GLOBALS.includes(key)) {
         return;
       }
       this.originals.set(key, global[key]);

@@ -1,5 +1,11 @@
 # @lynx-js/web-explorer
 
+## 0.0.2
+
+### Patch Changes
+
+- Support NPM provenance. ([#30](https://github.com/lynx-family/lynx-stack/pull/30))
+
 ## 0.0.1
 
 ### Patch Changes

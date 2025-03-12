@@ -1229,6 +1229,7 @@ test.describe('reactlynx3 tests', () => {
         'basic-element-text-set-native-props-with-setData',
         async ({ page }, { title }) => {
           await goto(page, title);
+          await wait(200);
           // --initialtextinitial
           let count = await page.getByText('--').count();
           expect(count).toBe(1);

@@ -13,7 +13,6 @@ import {
   LynxEventNameToW3cByTagName,
   LynxEventNameToW3cCommon,
   W3cEventNameToLynx,
-  parentComponentUniqueIdAttribute,
   __lynx_timing_flag,
 } from '@lynx-js/web-constants';
 
@@ -110,9 +109,6 @@ export function decodeElementOperation<
       if (typeof op.cssId === 'number') {
         element.setAttribute(cssIdAttribute, op.cssId.toString());
       }
-      if (op.puid) {
-        element.setAttribute(parentComponentUniqueIdAttribute, op.puid);
-      }
       if (op.tag === 'page') pageElement = element;
     } else {
       const target = getElement(op.uid, uniqueIdToElement);
@@ -207,10 +203,8 @@ export function decodeElementOperation<
           const isCaptureEvent = op.eventType === 'capture-bind'
             || op.eventType === 'capture-catch';
           if (op.hname === undefined) {
-            target.removeAttribute(`x-enable-${lynxEventName}-event`);
             target[lynxRuntimeValue].eventHandler[lynxEventName] = undefined;
           } else {
-            target.setAttribute(`x-enable-${lynxEventName}-event`, '');
             target.addEventListener(htmlEventName, handleHtmlEvent, {
               passive: true,
               capture: isCaptureEvent,

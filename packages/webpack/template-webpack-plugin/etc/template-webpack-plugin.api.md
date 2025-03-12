@@ -95,6 +95,7 @@ export interface LynxTemplatePluginOptions {
     customCSSInheritanceList: string[] | undefined;
     debugInfoOutside: boolean;
     defaultDisplayLinear: boolean;
+    defaultOverflowVisible?: boolean;
     dsl?: 'tt' | 'react' | 'react_nodiff';
     enableA11y: boolean;
     enableAccessibilityElement: boolean;

@@ -3,20 +3,20 @@
 // LICENSE file in the root directory of this source tree.
 import type { Worklet } from '@lynx-js/react/worklet-runtime/bindings';
 
-import { lynxWorkletJsImpl } from './jsImpl.js';
+import { isMtsEnabled, isRunOnBackgroundEnabled } from './functionality.js';
+import { registerWorkletCtx } from './runOnBackground.js';
 
 /**
  * @internal
  */
 export function onPostWorkletCtx(afterValue: Worklet | null): Worklet | null {
-  const impl = lynxWorkletJsImpl();
-  if (!impl && afterValue) {
+  if (!isMtsEnabled() && afterValue) {
     lynx.reportError(new Error('Main thread script requires Lynx sdk version 2.14'));
     return null;
   }
-  if (!afterValue) {
+  if (!afterValue || !isRunOnBackgroundEnabled()) {
     return afterValue;
   }
-  impl?._workletExecIdMap?.add(afterValue);
+  registerWorkletCtx(afterValue);
   return afterValue;
 }

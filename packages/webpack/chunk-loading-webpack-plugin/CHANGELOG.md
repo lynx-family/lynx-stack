@@ -1,5 +1,14 @@
 # @lynx-js/chunk-loading-webpack-plugin
 
+## 0.1.7
+
+### Patch Changes
+
+- Support NPM provenance. ([#30](https://github.com/lynx-family/lynx-stack/pull/30))
+
+- Updated dependencies [[`c617453`](https://github.com/lynx-family/lynx-stack/commit/c617453aea967aba702967deb2916b5c883f03bb)]:
+  - @lynx-js/webpack-runtime-globals@0.0.5
+
 ## 0.1.6
 
 ### Patch Changes

@@ -181,7 +181,7 @@ function injectDOMMethods(element: LynxFiberElement) {
     },
   });
   Object.defineProperty(element, 'ownerDocument', {
-    get: function(): LynxFiberElement {
+    get: function(): LynxFiberElement | undefined {
       return elementTree.root;
     },
   });
@@ -194,7 +194,7 @@ function injectDOMMethods(element: LynxFiberElement) {
   });
   Object.defineProperty(element, 'dispatchEvent', {
     value: function(event: any) {
-      __SendEvent(
+      global.__SendEvent(
         this,
         event.eventType || 'bindEvent',
         event.eventName,

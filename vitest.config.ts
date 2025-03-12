@@ -10,12 +10,20 @@ export default defineConfig({
       exclude: [
         '**/*.d.ts',
         '**/vitest.config.ts',
+        '**/rslib.config.ts',
         '**/dist/**',
+        '.github/**',
+        'examples/**',
         'packages/**/lib/**',
         'packages/**/test/**',
 
-        '.lintstagedrc.mjs',
+        'packages/react/transform/tests/__swc_snapshots__/**',
+        'packages/rspeedy/create-rspeedy/template-*/**',
 
+        '.lintstagedrc.mjs',
+        'eslint.config.js',
+
+        'packages/tools/canary-release/**',
         'packages/web-platform/**',
         'packages/webpack/test-tools/**',
       ],

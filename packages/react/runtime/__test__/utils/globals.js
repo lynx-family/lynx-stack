@@ -31,18 +31,6 @@ const performance = {
   }),
 };
 
-const CoreContext = {
-  addEventListener: vi.fn(),
-  removeEventListener: vi.fn(),
-  dispatchEvent: vi.fn(),
-};
-
-const JsContext = {
-  addEventListener: vi.fn(),
-  removeEventListener: vi.fn(),
-  dispatchEvent: vi.fn(),
-};
-
 function injectGlobals() {
   globalThis.__DEV__ = true;
   globalThis.__PROFILE__ = true;
@@ -67,8 +55,6 @@ function injectGlobals() {
         },
       };
     }),
-    getCoreContext: vi.fn(() => CoreContext),
-    getJSContext: vi.fn(() => JsContext),
   };
   globalThis.requestAnimationFrame = setTimeout;
   globalThis.cancelAnimationFrame = clearTimeout;

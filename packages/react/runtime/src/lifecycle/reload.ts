@@ -14,6 +14,7 @@ import { LifecycleConstant } from '../lifecycleConstant.js';
 import { __pendingListUpdates } from '../list.js';
 import { takeGlobalRefPatchMap } from '../snapshot/ref.js';
 import { deinitGlobalSnapshotPatch } from '../snapshotPatch.js';
+import { destroyWorklet } from '../worklet/destroy.js';
 
 function reloadMainThread(data: any, options: UpdatePageOption): void {
   if (__PROFILE__) {
@@ -26,6 +27,7 @@ function reloadMainThread(data: any, options: UpdatePageOption): void {
     Object.assign(lynx.__initData, data);
   }
 
+  destroyWorklet();
   snapshotInstanceManager.clear();
   __pendingListUpdates.clear();
 

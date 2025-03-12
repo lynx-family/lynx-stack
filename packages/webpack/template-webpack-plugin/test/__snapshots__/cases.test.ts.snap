@@ -5,6 +5,7 @@ exports[`template > template/defaults/compile-options > template/defaults/compil
   "bundleModuleMode": "ReturnByFunction",
   "debugInfoOutside": true,
   "defaultDisplayLinear": true,
+  "defaultOverflowVisible": true,
   "enableCSSInvalidation": false,
   "enableCSSSelector": true,
   "enableFiberArch": true,

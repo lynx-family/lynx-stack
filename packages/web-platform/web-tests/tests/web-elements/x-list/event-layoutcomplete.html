@@ -24,11 +24,6 @@
       rel="stylesheet"
     />
 
-    <script type="module">
-    document.querySelector('x-list').addEventListener('layoutcomplete', (e) => {
-      console.log(e);
-    });
-    </script>
     <style>
     @import url("../../common.css");
     x-list {
@@ -48,6 +43,11 @@
 
   <body>
     <script src="/web-elements.js" defer></script>
+    <script type="module">
+    document.querySelector('x-list').addEventListener('layoutcomplete', (e) => {
+      console.log(e);
+    });
+    </script>
     <x-view class="page">
       <x-list list-type="single">
         <list-item item-key="1" id="1"><x-view class="item"

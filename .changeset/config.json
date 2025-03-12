@@ -1,5 +1,11 @@
 {
   "$schema": "https://unpkg.com/@changesets/config@3.0.0/schema.json",
+  "changelog": [
+    "@svitejs/changesets-changelog-github-compact",
+    {
+      "repo": "lynx-family/lynx-stack"
+    }
+  ],
   "commit": false,
   "fixed": [
     [
@@ -15,7 +21,8 @@
     ],
     [
       "@lynx-js/rspeedy",
-      "create-rspeedy"
+      "create-rspeedy",
+      "upgrade-rspeedy"
     ]
   ],
   "linked": [],

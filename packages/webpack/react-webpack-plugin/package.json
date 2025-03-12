@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/react-webpack-plugin",
-  "version": "0.6.6",
+  "version": "0.6.7",
   "description": "A webpack plugin for ReactLynx",
   "keywords": [
     "webpack",
