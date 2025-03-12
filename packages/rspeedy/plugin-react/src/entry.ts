@@ -221,6 +221,7 @@ export function applyEntry(
           ?.disableCreateSelectorQueryIncompatibleWarning ?? false,
         firstScreenSyncTiming,
         mainThreadChunks,
+        experimental_isLazyBundle,
       }])
   })
 }
