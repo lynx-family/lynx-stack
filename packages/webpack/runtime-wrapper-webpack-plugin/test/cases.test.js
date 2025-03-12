@@ -16,6 +16,9 @@ describeCases({
   casePath: path.join(__dirname, 'cases'),
   beforeExecute() {
     vi.stubGlobal('bundleSupportLoadScript', true);
+    // globalThis.fetch does not exist in Lynx environment at the beginning
+    // eslint-disable-next-line n/no-unsupported-features/node-builtins
+    delete globalThis.fetch;
   },
   afterExecute(result) {
     expect(result.length).toBe(1);
