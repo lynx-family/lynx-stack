@@ -28,12 +28,12 @@ function init() {
   }
 
   execIdMap = new WorkletExecIdMap();
-  lynx.getCoreContext().addEventListener(WorkletEvents.runOnBackground, runJSFunction);
-  lynx.getCoreContext().addEventListener(WorkletEvents.releaseBackgroundWorkletCtx, releaseBackgroundWorkletCtx);
+  lynx.getCoreContext!().addEventListener(WorkletEvents.runOnBackground, runJSFunction);
+  lynx.getCoreContext!().addEventListener(WorkletEvents.releaseBackgroundWorkletCtx, releaseBackgroundWorkletCtx);
 
   destroyTasks.push(() => {
-    lynx.getCoreContext().removeEventListener(WorkletEvents.runOnBackground, runJSFunction);
-    lynx.getCoreContext().removeEventListener(WorkletEvents.releaseBackgroundWorkletCtx, releaseBackgroundWorkletCtx);
+    lynx.getCoreContext!().removeEventListener(WorkletEvents.runOnBackground, runJSFunction);
+    lynx.getCoreContext!().removeEventListener(WorkletEvents.releaseBackgroundWorkletCtx, releaseBackgroundWorkletCtx);
     execIdMap = undefined;
   });
 }

@@ -96,7 +96,7 @@ export function loadLazyBundle<
       if (typeof lynx.QueryComponent === 'function') {
         lynx.QueryComponent(source, callback);
       } else {
-        lynx.getNativeLynx().QueryComponent(source, callback);
+        lynx.getNativeLynx().QueryComponent!(source, callback);
       }
     });
   }

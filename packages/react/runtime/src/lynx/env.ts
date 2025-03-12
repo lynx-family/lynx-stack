@@ -94,8 +94,8 @@ export function setupLynxEnv(): void {
           }
         }
 
-        if (processorName) {
-        } else {
+        if (processorName) {}
+        else {
           hasDefaultDataProcessorExecuted = true;
         }
 

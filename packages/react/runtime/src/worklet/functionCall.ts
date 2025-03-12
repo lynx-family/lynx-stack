@@ -11,7 +11,7 @@ import { IndexMap } from './indexMap.js';
 let resolveMap: IndexMap<(value: any) => void> | undefined;
 
 function initReturnValueListener(): void {
-  const context: RuntimeProxy = __JS__ ? lynx.getCoreContext() : lynx.getJSContext();
+  const context: RuntimeProxy = __JS__ ? lynx.getCoreContext!() : lynx.getJSContext!();
 
   resolveMap = new IndexMap();
   context.addEventListener(WorkletEvents.FunctionCallRet, onFunctionCallRet);

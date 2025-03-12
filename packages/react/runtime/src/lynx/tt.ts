@@ -76,7 +76,7 @@ async function OnLifecycleEvent([type, data]: [string, any]) {
           try {
             publishEvent([idStr, ...rest].join(':'), data);
           } catch (e) {
-            lynx.reportError(e);
+            lynx.reportError(e as Error);
           }
         });
         delayedEvents.length = 0;
@@ -139,7 +139,7 @@ function flushDelayedLifecycleEvents(): void {
       try {
         OnLifecycleEvent(e);
       } catch (e) {
-        lynx.reportError(e);
+        lynx.reportError(e as Error);
       }
     });
     delayedLifecycleEvents.length = 0;
