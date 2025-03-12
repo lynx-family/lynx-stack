@@ -11,7 +11,6 @@ import color from 'picocolors'
 import type { Dev } from '../config/dev/index.js'
 import type { Server } from '../config/server/index.js'
 import { debug } from '../debug.js'
-import { getIp } from '../utils/getIp.js'
 import { CompilationIdPlugin } from '../webpack/CompilationIdPlugin.js'
 import { ProvidePlugin } from '../webpack/ProvidePlugin.js'
 
@@ -21,8 +20,8 @@ export function pluginDev(
 ): RsbuildPlugin {
   return {
     name: 'lynx:rsbuild:dev',
-    setup(api) {
-      const hostname = server?.host ?? getIp()
+    async setup(api) {
+      const hostname = server?.host ?? await findIp('v4')
 
       let assetPrefix = options?.assetPrefix
 
@@ -65,15 +64,35 @@ export function pluginDev(
       debug(`dev.assetPrefix is normalized to ${assetPrefix}`)
 
       api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
-        return mergeRsbuildConfig(config, {
+        const lazyCompilationConfig = config.dev?.lazyCompilation
+          ? {
+            dev: {
+              lazyCompilation: {
+                backend: {
+                  listen: {
+                    host: hostname,
+                  },
+                },
+              },
+            },
+          }
+          : {}
+
+        const baseConfig = {
           dev: {
             assetPrefix,
             client: {
-              // Lynx cannot use `location.hostname`.
+              // Lynx cannot use `location.hostname`
               host: hostname,
             },
           },
-        } as RsbuildConfig)
+        } as RsbuildConfig
+
+        return mergeRsbuildConfig(
+          config,
+          baseConfig,
+          lazyCompilationConfig,
+        )
       })
 
       const require = createRequire(import.meta.url)
@@ -132,4 +151,57 @@ export function pluginDev(
       })
     },
   }
+}
+
+export async function findIp(
+  family: 'v4' | 'v6',
+  isInternal = false,
+): Promise<string> {
+  const [
+    { default: ipaddr },
+    os,
+  ] = await Promise.all([
+    import('ipaddr.js'),
+    import('node:os'),
+  ])
+
+  let host: string | undefined
+
+  Object.values(os.networkInterfaces())
+    .flatMap((networks) => networks ?? [])
+    .filter((network) => {
+      if (!network || !network.address) {
+        return false
+      }
+
+      if (network.family !== `IP${family}`) {
+        return false
+      }
+
+      if (network.internal !== isInternal) {
+        return false
+      }
+
+      if (family === 'v6') {
+        const range = ipaddr.parse(network.address).range()
+
+        if (range !== 'ipv4Mapped' && range !== 'uniqueLocal') {
+          return false
+        }
+      }
+
+      return network.address
+    })
+    .forEach((network) => {
+      host = network.address
+      if (host.includes(':')) {
+        host = `[${host}]`
+      }
+    })
+
+  if (!host) {
+    throw new Error(`No valid IP found`)
+  }
+
+  return host
 }

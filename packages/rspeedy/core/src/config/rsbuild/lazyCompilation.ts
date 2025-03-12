@@ -6,7 +6,6 @@ import { fileURLToPath } from 'node:url'
 
 import type { Rspack } from '@rsbuild/core'
 
-import { getIp } from '../../utils/getIp.js'
 import type { LazyCompilationOptions } from '../dev/lazyCompilation.js'
 
 const __filename = fileURLToPath(import.meta.url)
@@ -14,7 +13,6 @@ const require = createRequire(__filename)
 
 export function toRsbuildLazyCompilation(
   options: boolean | LazyCompilationOptions | undefined,
-  hostname: string | undefined,
 ):
   | boolean
   | Rspack.LazyCompilationOptions
@@ -40,16 +38,13 @@ export function toRsbuildLazyCompilation(
       client: require.resolve(
         '../../../hot/lazy-compilation-fetch.js',
       ),
-      listen: {
-        host: hostname ?? getIp(),
-      },
     },
   }
 
   if (options === true) return defaultOptions
 
   return {
-    ...options,
     ...defaultOptions,
+    ...options,
   }
 }

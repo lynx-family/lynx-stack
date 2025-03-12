@@ -8,4 +8,8 @@
  *
  * @public
  */
-export const LAZY_CHUNK = 'lynx:lazy-chunk';
+const LAZY_CHUNK = 'lynx:lazy-chunk';
+
+const REACT_REFRESH = '_react_background_packages_react_refresh_dist_index_js';
+
+export { LAZY_CHUNK, REACT_REFRESH };

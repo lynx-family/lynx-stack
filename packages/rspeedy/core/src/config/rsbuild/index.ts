@@ -25,7 +25,6 @@ export function toRsbuildConfig(
 
       lazyCompilation: toRsbuildLazyCompilation(
         config.dev?.lazyCompilation,
-        config.server?.host,
       ),
     },
     environments: config.environments ?? { lynx: {} },

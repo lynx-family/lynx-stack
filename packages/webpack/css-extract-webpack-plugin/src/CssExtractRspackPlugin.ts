@@ -15,6 +15,7 @@ import {
   LAZY_CHUNK,
   LynxEncodePlugin,
   LynxTemplatePlugin,
+  REACT_REFRESH,
 } from '@lynx-js/template-webpack-plugin';
 
 /**
@@ -190,10 +191,7 @@ class CssExtractRspackPluginImpl {
           (runtimeModule, chunk) => {
             if (runtimeModule.name === 'require_chunk_loading') {
               const asyncChunks = Array.from(chunk.getAllAsyncChunks())
-                .filter(c =>
-                  c.id
-                    !== '_react_background_packages_react_refresh_dist_index_js'
-                )
+                .filter(c => c.id !== REACT_REFRESH)
                 .map(c => {
                   let pathData: PathData = { chunk: c };
                   let chunkName = c.name;
@@ -203,14 +201,14 @@ class CssExtractRspackPluginImpl {
                     chunkName = c.id;
                   }
 
-                  const { path: cssHotUpdatePat } = compilation
+                  const { path: cssHotUpdatePath } = compilation
                     .getAssetPathWithInfo(
                       options.chunkFilename
                         ?? '.rspeedy/async/[name]/[name].css',
                       pathData,
                     );
 
-                  return [chunkName, cssHotUpdatePat];
+                  return [chunkName, cssHotUpdatePath];
                 });
 
               const { path: cssHotUpdatePath } = compilation.getPathWithInfo(

@@ -6,7 +6,7 @@ import type { RuntimeModule } from 'webpack';
 
 import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
-import { LAZY_CHUNK } from './LazyChunk.js';
+import { LAZY_CHUNK, REACT_REFRESH } from './LazyChunk.js';
 
 type LynxAsyncChunksRuntimeModule = new(
   getChunkName: (chunkName: string | undefined) => string,
@@ -32,7 +32,7 @@ ${RuntimeGlobals.lynxLazyChunkIds} = [${
         Array.from(chunk.getAllAsyncChunks())
           .filter(c =>
             this.getChunkName(c.name) === LAZY_CHUNK
-            && c.id !== '_react_background_packages_react_refresh_dist_index_js'
+            && c.id !== REACT_REFRESH
           )
           .map(c => JSON.stringify(c.id))
           .join(', ')
