@@ -69,10 +69,11 @@ describe('worklet', () => {
     const callLepusMethodCalls = lynx.getNativeApp().callLepusMethod.mock.calls;
     expect(callLepusMethodCalls).toMatchInlineSnapshot(`[]`);
 
+    globalThis.cb = vi.fn();
     const mainThreadFn = () => {
       'main thread';
       console.log('main thread');
-      this.cb();
+      globalThis.cb();
     };
     mainThreadFn.cb = vi.fn();
     const Comp = () => {
@@ -85,7 +86,7 @@ describe('worklet', () => {
       );
     };
     const { container } = render(<Comp />, {
-      enableMainThread: true,
+      enableMainThread: false,
       enableBackgroundThread: true,
     });
 
@@ -94,7 +95,7 @@ describe('worklet', () => {
         [
           "rLynxChange",
           {
-            "data": "{"snapshotPatch":[3,-2,0,{"_wkltId":"15ab:test:2","_workletType":"main-thread","_execId":1}]}",
+            "data": "{"snapshotPatch":[0,"__Card__:__snapshot_15ab0_test_2",2,4,2,[{"_wkltId":"15ab:test:2","_execId":1}],1,-1,2,null]}",
             "patchOptions": {
               "commitTaskId": 3,
               "isHydration": true,
@@ -122,7 +123,6 @@ describe('worklet', () => {
                   "_execId": 1,
                   "_wkltId": "15ab:test:2",
                   "_workletType": "main-thread",
-                  "cb": [MockFunction spy],
                 },
               },
             }
@@ -139,8 +139,8 @@ describe('worklet', () => {
     fireEvent.tap(container.children[0], {
       key: 'value',
     });
-    expect(mainThreadFn.cb).toBeCalledTimes(1);
-    expect(mainThreadFn.cb.mock.calls).toMatchInlineSnapshot(`
+    expect(globalThis.cb).toBeCalledTimes(1);
+    expect(globalThis.cb.mock.calls).toMatchInlineSnapshot(`
       [
         [],
       ]
