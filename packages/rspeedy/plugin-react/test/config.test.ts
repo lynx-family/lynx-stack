@@ -447,7 +447,7 @@ describe('Config', () => {
             "layer": "react:background",
           },
           "main__main-thread": {
-            "filename": ".rspeedy/main__main-thread/main-thread.js",
+            "filename": ".rspeedy/main/main-thread.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
@@ -491,7 +491,7 @@ describe('Config', () => {
             "layer": "react:background",
           },
           "bar__main-thread": {
-            "filename": ".rspeedy/bar__main-thread/main-thread.js",
+            "filename": ".rspeedy/bar/main-thread.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
@@ -505,7 +505,7 @@ describe('Config', () => {
             "layer": "react:background",
           },
           "foo__main-thread": {
-            "filename": ".rspeedy/foo__main-thread/main-thread.js",
+            "filename": ".rspeedy/foo/main-thread.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
@@ -549,7 +549,7 @@ describe('Config', () => {
             "layer": "react:background",
           },
           "foo/bar__main-thread": {
-            "filename": ".rspeedy/foo/bar__main-thread/main-thread.js",
+            "filename": ".rspeedy/foo/bar/main-thread.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
@@ -563,7 +563,7 @@ describe('Config', () => {
             "layer": "react:background",
           },
           "foo/baz__main-thread": {
-            "filename": ".rspeedy/foo/baz__main-thread/main-thread.js",
+            "filename": ".rspeedy/foo/baz/main-thread.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
@@ -613,7 +613,7 @@ describe('Config', () => {
             "layer": "react:background",
           },
           "bar__main-thread": {
-            "filename": ".rspeedy/bar__main-thread/main-thread.js",
+            "filename": ".rspeedy/bar/main-thread.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
@@ -634,14 +634,14 @@ describe('Config', () => {
             "layer": "react:background",
           },
           "foo/baz__main-thread": {
-            "filename": ".rspeedy/foo/baz__main-thread/main-thread.js",
+            "filename": ".rspeedy/foo/baz/main-thread.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
             "layer": "react:main-thread",
           },
           "foo__main-thread": {
-            "filename": ".rspeedy/foo__main-thread/main-thread.js",
+            "filename": ".rspeedy/foo/main-thread.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
@@ -689,7 +689,7 @@ describe('Config', () => {
             "layer": "react:background",
           },
           "main__main-thread": {
-            "filename": ".rspeedy/main__main-thread/main-thread.js",
+            "filename": ".rspeedy/main/main-thread.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
@@ -740,7 +740,7 @@ describe('Config', () => {
             "layer": "react:background",
           },
           "bar__main-thread": {
-            "filename": ".rspeedy/bar__main-thread/main-thread.js",
+            "filename": ".rspeedy/bar/main-thread.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
@@ -761,14 +761,14 @@ describe('Config', () => {
             "layer": "react:background",
           },
           "foo/baz__main-thread": {
-            "filename": ".rspeedy/foo/baz__main-thread/main-thread.js",
+            "filename": ".rspeedy/foo/baz/main-thread.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
             "layer": "react:main-thread",
           },
           "foo__main-thread": {
-            "filename": ".rspeedy/foo__main-thread/main-thread.js",
+            "filename": ".rspeedy/foo/main-thread.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
@@ -814,7 +814,7 @@ describe('Config', () => {
             "layer": "react:background",
           },
           "main__main-thread": {
-            "filename": ".rspeedy/main__main-thread/main-thread.js",
+            "filename": ".rspeedy/main/main-thread.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
@@ -861,7 +861,7 @@ describe('Config', () => {
             "layer": "react:background",
           },
           "main__main-thread": {
-            "filename": ".rspeedy/main__main-thread/main-thread.js",
+            "filename": ".rspeedy/main/main-thread.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
@@ -907,7 +907,7 @@ describe('Config', () => {
             "layer": "react:background",
           },
           "main__main-thread": {
-            "filename": ".rspeedy/main__main-thread/main-thread.js",
+            "filename": ".rspeedy/main/main-thread.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
@@ -953,7 +953,7 @@ describe('Config', () => {
             "layer": "react:background",
           },
           "main__main-thread": {
-            "filename": ".rspeedy/main__main-thread/main-thread.js",
+            "filename": ".rspeedy/main/main-thread.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
@@ -999,7 +999,7 @@ describe('Config', () => {
             "layer": "react:background",
           },
           "main__main-thread": {
-            "filename": ".rspeedy/main__main-thread/main-thread.js",
+            "filename": ".rspeedy/main/main-thread.js",
             "import": [
               "./fixtures/basic.tsx",
               "<WORKSPACE>/packages/webpack/css-extract-webpack-plugin/runtime/hotModuleReplacement.lepus.cjs",
@@ -1049,7 +1049,7 @@ describe('Config', () => {
             "layer": "react:background",
           },
           "main__main-thread": {
-            "filename": ".rspeedy/main__main-thread/main-thread.js",
+            "filename": ".rspeedy/main/main-thread.js",
             "import": [
               "./fixtures/basic.tsx",
               "<WORKSPACE>/packages/webpack/css-extract-webpack-plugin/runtime/hotModuleReplacement.lepus.cjs",
@@ -1611,8 +1611,8 @@ describe('MPA Config', () => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     expect(reactWebpackPlugin.options.mainThreadChunks).toMatchInlineSnapshot(`
       [
-        ".rspeedy/foo__main-thread/main-thread.js",
-        ".rspeedy/bar__main-thread/main-thread.js",
+        ".rspeedy/foo/main-thread.js",
+        ".rspeedy/bar/main-thread.js",
       ]
     `)
   })
@@ -1677,8 +1677,8 @@ describe('MPA Config', () => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     expect(reactWebpackPlugin.options.mainThreadChunks).toMatchInlineSnapshot(`
       [
-        ".rspeedy/foo__main-thread/main-thread.js",
-        ".rspeedy/bar__main-thread/main-thread.js",
+        ".rspeedy/foo/main-thread.js",
+        ".rspeedy/bar/main-thread.js",
       ]
     `)
   })
@@ -1720,8 +1720,8 @@ describe('MPA Config', () => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     expect(reactWebpackPlugin.options.mainThreadChunks).toMatchInlineSnapshot(`
       [
-        "foo__main-thread/main-thread.js",
-        "bar__main-thread/main-thread.js",
+        "foo/main-thread.js",
+        "bar/main-thread.js",
       ]
     `)
   })
@@ -1786,8 +1786,8 @@ describe('MPA Config', () => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     expect(reactWebpackPlugin.options.mainThreadChunks).toMatchInlineSnapshot(`
       [
-        ".rspeedy/foo__main-thread/main-thread.js",
-        ".rspeedy/bar__main-thread/main-thread.js",
+        ".rspeedy/foo/main-thread.js",
+        ".rspeedy/bar/main-thread.js",
       ]
     `)
   })
@@ -1852,8 +1852,8 @@ describe('MPA Config', () => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     expect(reactWebpackPlugin.options.mainThreadChunks).toMatchInlineSnapshot(`
       [
-        ".rspeedy/foo__main-thread/main-thread.js",
-        ".rspeedy/bar__main-thread/main-thread.js",
+        ".rspeedy/foo/main-thread.js",
+        ".rspeedy/bar/main-thread.js",
       ]
     `)
   })
@@ -1919,8 +1919,8 @@ describe('MPA Config', () => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     expect(reactWebpackPlugin.options.mainThreadChunks).toMatchInlineSnapshot(`
       [
-        ".rspeedy/foo__main-thread/main-thread.js",
-        ".rspeedy/bar__main-thread/main-thread.js",
+        ".rspeedy/foo/main-thread.js",
+        ".rspeedy/bar/main-thread.js",
       ]
     `)
   })
@@ -1992,9 +1992,9 @@ describe('MPA Config', () => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     expect(reactWebpackPlugin.options.mainThreadChunks).toMatchInlineSnapshot(`
       [
-        ".rspeedy/foo__main-thread/main-thread.js",
-        ".rspeedy/bar__main-thread/main-thread.js",
-        ".rspeedy/baz__main-thread/main-thread.js",
+        ".rspeedy/foo/main-thread.js",
+        ".rspeedy/bar/main-thread.js",
+        ".rspeedy/baz/main-thread.js",
       ]
     `)
   })
