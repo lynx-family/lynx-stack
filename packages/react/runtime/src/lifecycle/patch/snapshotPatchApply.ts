@@ -1,9 +1,9 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { createSnapshot, SnapshotInstance, snapshotInstanceManager, snapshotManager } from './snapshot.js';
 import type { SnapshotPatch } from './snapshotPatch.js';
 import { SnapshotOperation } from './snapshotPatch.js';
+import { SnapshotInstance, createSnapshot, snapshotInstanceManager, snapshotManager } from '../../snapshot.js';
 
 function reportCtxNotFound(): void {
   lynx.reportError(new Error(`snapshotPatchApply failed: ctx not found`));
@@ -25,7 +25,7 @@ export function snapshotPatchApply(snapshotPatch: SnapshotPatch): void {
         const beforeId = snapshotPatch[++i];
         const parent = snapshotInstanceManager.values.get(parentId);
         const child = snapshotInstanceManager.values.get(childId);
-        const existingNode = snapshotInstanceManager.values.get(beforeId!);
+        const existingNode = snapshotInstanceManager.values.get(beforeId);
         if (!parent || !child) {
           reportCtxNotFound();
         } else {

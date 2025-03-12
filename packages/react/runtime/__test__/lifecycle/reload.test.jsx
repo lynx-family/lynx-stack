@@ -3,16 +3,17 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 */
+import { render } from 'preact';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { BasicBG, ListBG, ListConditionalBG, ViewBG, setObj, setStr } from './reloadBG';
+import { BasicMT, ListConditionalMT, ListMT, ViewMT } from './reloadMT';
 import { root } from '../../src/index';
+import { injectUpdatePatch, replaceCommitHook } from '../../src/lifecycle/patch/patchUpdate';
 import { __root } from '../../src/root';
 import { setupPage } from '../../src/snapshot';
 import { globalEnvManager } from '../utils/envManager';
 import { elementTree, waitSchedule } from '../utils/nativeMethod';
-import { injectUpdatePatch, replaceCommitHook } from '../../src/lifecycle/patchUpdate';
-import { BasicMT, ListConditionalMT, ListMT, ViewMT } from './reloadMT';
-import { BasicBG, ListBG, ListConditionalBG, setObj, setStr, ViewBG } from './reloadBG';
-import { render } from 'preact';
 
 beforeAll(() => {
   setupPage(__CreatePage('0', 0));

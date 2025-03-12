@@ -6,7 +6,7 @@
 import { render } from 'preact';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { injectUpdatePatch, replaceCommitHook } from '../../src/lifecycle/patchUpdate';
+import { injectUpdatePatch, replaceCommitHook } from '../../src/lifecycle/patch/patchUpdate';
 import { __root } from '../../src/root';
 import { setupPage } from '../../src/snapshot';
 import { destroyWorklet } from '../../src/worklet/destroy';
