@@ -1,5 +1,16 @@
 # @lynx-js/web-worker-runtime
 
+## 0.7.1
+
+### Patch Changes
+
+- Support NPM provenance. ([#30](https://github.com/lynx-family/lynx-stack/pull/30))
+
+- Updated dependencies [[`c617453`](https://github.com/lynx-family/lynx-stack/commit/c617453aea967aba702967deb2916b5c883f03bb), [`2044571`](https://github.com/lynx-family/lynx-stack/commit/204457166531dae6e9f653db56b14187553b7666), [`82285ce`](https://github.com/lynx-family/lynx-stack/commit/82285cefbc87a5b9b9f5b79b082b5030d1a7b772), [`7da7601`](https://github.com/lynx-family/lynx-stack/commit/7da7601f00407970c485046ad73eeb8534aaa4f6)]:
+  - @lynx-js/web-mainthread-apis@0.7.1
+  - @lynx-js/web-worker-rpc@0.7.1
+  - @lynx-js/web-constants@0.7.1
+
 ## 0.7.0
 
 ### Minor Changes

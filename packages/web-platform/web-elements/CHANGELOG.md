@@ -1,5 +1,24 @@
 # @lynx-js/web-elements
 
+## 0.3.0
+
+### Minor Changes
+
+- feat: support `justify-content`, `align-self` in linear container ([#37](https://github.com/lynx-family/lynx-stack/pull/37))
+
+  Now these two properties could work in a linear container.
+
+  We don't transforms the `justify-content` and `align-self` to css vars any more.
+
+  The previous version of `@lynx-js/web-core` won't work with current `@lynx-js/web-core` after this change.
+
+### Patch Changes
+
+- Support NPM provenance. ([#30](https://github.com/lynx-family/lynx-stack/pull/30))
+
+- Updated dependencies [[`c617453`](https://github.com/lynx-family/lynx-stack/commit/c617453aea967aba702967deb2916b5c883f03bb)]:
+  - @lynx-js/web-elements-reactive@0.1.1
+
 ## 0.2.4
 
 ### Patch Changes

@@ -133,50 +133,55 @@ export function pluginDev(
   }
 }
 
-export async function findIp(family: 'v4' | 'v6'): Promise<string> {
+export async function findIp(
+  family: 'v4' | 'v6',
+  isInternal = false,
+): Promise<string> {
   const [
-    { default: defaultGateway },
     { default: ipaddr },
     os,
   ] = await Promise.all([
-    import('default-gateway'),
-
     import('ipaddr.js'),
     import('node:os'),
   ])
-  const gateway = await (async () => {
-    if (family === 'v4') {
-      const { gateway } = await defaultGateway.gateway4async()
-      return gateway
-    } else {
-      const { gateway } = await defaultGateway.gateway6async()
-      return gateway
-    }
-  })()
-  const gatewayIp = ipaddr.parse(gateway)
 
-  // Look for the matching interface in all local interfaces.
-  for (const addresses of Object.values(os.networkInterfaces())) {
-    if (!addresses) {
-      continue
-    }
+  let host: string | undefined
 
-    for (const { cidr, internal } of addresses) {
-      if (!cidr || internal) {
-        continue
+  Object.values(os.networkInterfaces())
+    .flatMap((networks) => networks ?? [])
+    .filter((network) => {
+      if (!network || !network.address) {
+        return false
       }
 
-      const net = ipaddr.parseCIDR(cidr)
-
-      if (
-        net[0]
-        && net[0].kind() === gatewayIp.kind()
-        && gatewayIp.match(net)
-      ) {
-        return net[0].toString()
+      if (network.family !== `IP${family}`) {
+        return false
       }
-    }
+
+      if (network.internal !== isInternal) {
+        return false
+      }
+
+      if (family === 'v6') {
+        const range = ipaddr.parse(network.address).range()
+
+        if (range !== 'ipv4Mapped' && range !== 'uniqueLocal') {
+          return false
+        }
+      }
+
+      return network.address
+    })
+    .forEach((network) => {
+      host = network.address
+      if (host.includes(':')) {
+        host = `[${host}]`
+      }
+    })
+
+  if (!host) {
+    throw new Error(`No valid IP found`)
   }
 
-  throw new Error(`No valid IP found for the default gateway ${gateway}`)
+  return host
 }

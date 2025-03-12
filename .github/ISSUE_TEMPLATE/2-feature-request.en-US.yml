@@ -1,5 +1,5 @@
 name: "✨ Feature Request"
-description: Submit a new feature request to Rspack
+description: Submit a new feature request to Lynx
 title: "[Feature]: "
 type: Feature
 labels: ["pending triage"]
@@ -25,6 +25,6 @@ body:
     id: api
     attributes:
       label: What does the proposed API of configuration look like?
-      description: Describe the new API, give some code examples. If webpack has its own implementation, you can provide some related links.
+      description: Describe the new API, give some code examples.
     validations:
       required: true

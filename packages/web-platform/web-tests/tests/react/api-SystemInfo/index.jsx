@@ -6,7 +6,9 @@ import { root, useEffect, useState } from '@lynx-js/react';
 function App() {
   const [color, setColor] = useState('pink');
   useEffect(() => {
-    if (SystemInfo.platform === 'web') {
+    if (
+      SystemInfo.platform === 'web' && typeof SystemInfo.pixelRatio === 'number'
+    ) {
       setColor('green');
     }
   }, []);

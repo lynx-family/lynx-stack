@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/react-alias-rsbuild-plugin",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "A rsbuild plugin for making alias in ReactLynx",
   "keywords": [
     "rsbuild",
@@ -43,7 +43,7 @@
     "@lynx-js/react": "workspace:*",
     "@lynx-js/react-webpack-plugin": "workspace:*",
     "@microsoft/api-extractor": "catalog:",
-    "@rsbuild/core": "1.2.11"
+    "@rsbuild/core": "catalog:"
   },
   "engines": {
     "node": ">=18"

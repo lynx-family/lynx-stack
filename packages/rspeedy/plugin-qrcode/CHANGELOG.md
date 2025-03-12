@@ -1,5 +1,11 @@
 # @lynx-js/qrcode-rsbuild-plugin
 
+## 0.3.4
+
+### Patch Changes
+
+- Support NPM provenance. ([#30](https://github.com/lynx-family/lynx-stack/pull/30))
+
 ## 0.3.3
 
 ### Patch Changes

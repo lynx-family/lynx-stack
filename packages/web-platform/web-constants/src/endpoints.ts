@@ -109,11 +109,6 @@ export const BackgroundThreadStartEndpoint = createRpcEndpoint<[
   },
 ], void>('start', false, true);
 
-export const loadNewTagEndpoint = createRpcEndpoint<
-  [tag: string],
-  void
->('loadNewTag', false, true);
-
 /**
  * threadLabel, Error message, info
  */

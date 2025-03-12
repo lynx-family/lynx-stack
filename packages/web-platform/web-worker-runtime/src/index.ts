@@ -9,10 +9,13 @@ export interface WorkerStartMessage {
   mode: 'main' | 'background';
   toPeerThread: MessagePort;
   toUIThread: MessagePort;
+  pixelRatio: number;
 }
 
 self.onmessage = (ev) => {
-  const { mode, toPeerThread, toUIThread } = ev.data as WorkerStartMessage;
+  const { mode, toPeerThread, toUIThread, pixelRatio } = ev
+    .data as WorkerStartMessage;
+  (globalThis as any).SystemInfo.pixelRatio = pixelRatio;
   if (mode === 'main') {
     startMainThread(toUIThread, toPeerThread);
   } else {

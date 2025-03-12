@@ -102,10 +102,10 @@ export interface Root {
 export const root: Root;
 
 // @public
-export function runOnBackground<Fn extends (...args: any[]) => any>(f: Fn): (...args: Parameters<Fn>) => void;
+export function runOnBackground<R, Fn extends (...args: any[]) => R>(f: Fn): (...args: Parameters<Fn>) => Promise<R>;
 
 // @public
-export function runOnMainThread<Fn extends (...args: any[]) => any>(fn: Fn): (...args: Parameters<Fn>) => void;
+export function runOnMainThread<R, Fn extends (...args: any[]) => R>(fn: Fn): (...args: Parameters<Fn>) => Promise<R>;
 
 export { Suspense }
 

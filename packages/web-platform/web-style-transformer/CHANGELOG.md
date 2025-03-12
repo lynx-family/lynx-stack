@@ -1,5 +1,19 @@
 # @lynx-js/web-style-transformer
 
+## 0.2.2
+
+### Patch Changes
+
+- Support NPM provenance. ([#30](https://github.com/lynx-family/lynx-stack/pull/30))
+
+- feat: support `justify-content`, `align-self` in linear container ([#37](https://github.com/lynx-family/lynx-stack/pull/37))
+
+  Now these two properties could work in a linear container.
+
+  We don't transforms the `justify-content` and `align-self` to css vars any more.
+
+  The previous version of `@lynx-js/web-core` won't work with current `@lynx-js/web-core` after this change.
+
 ## 0.2.1
 
 ### Patch Changes

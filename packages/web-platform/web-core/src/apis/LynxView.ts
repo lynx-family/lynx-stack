@@ -15,16 +15,10 @@ import {
   type NativeModulesCall,
   type UpdateDataType,
 } from '@lynx-js/web-constants';
-import { loadElement } from '@lynx-js/web-elements/lazy';
 
 /**
  * Based on our experiences, these elements are almost used in all lynx cards.
  */
-loadElement('lynx-wrapper');
-loadElement('x-view');
-loadElement('x-text');
-loadElement('x-image');
-loadElement('scroll-view');
 
 /**
  * @param {string} url [required] The url of the entry of your Lynx card
@@ -329,8 +323,8 @@ export class LynxView extends HTMLElement {
    * @private
    */
   disconnectedCallback() {
+    this.cleanupResizeObserver();
     if (this.#instance) {
-      this.#instance.resizeObserver?.disconnect();
       this.#instance.lynxView.dispose();
       this.#instance.rootDom.remove();
     }
@@ -374,8 +368,9 @@ export class LynxView extends HTMLElement {
             nativeModulesUrl: this.#nativeModulesUrl,
             napiLoaderCall: this.#onNapiLoaderCall,
             callbacks: {
-              loadNewTag: loadElement,
-              nativeModulesCall: (...args) => {
+              nativeModulesCall: (
+                ...args: [name: string, data: any, moduleName: string]
+              ) => {
                 if (this.#onNativeModulesCall) {
                   return this.#onNativeModulesCall(...args);
                 } else if (this.#cachedNativeModulesCall) {
@@ -408,6 +403,13 @@ export class LynxView extends HTMLElement {
    */
   connectedCallback() {
     this.#render();
+  }
+
+  private cleanupResizeObserver() {
+    if (this.#instance?.resizeObserver) {
+      this.#instance.resizeObserver.disconnect();
+      this.#instance.resizeObserver = undefined;
+    }
   }
 }
 

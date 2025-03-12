@@ -3,7 +3,6 @@
 // LICENSE file in the root directory of this source tree.
 
 import type { LynxView } from '../apis/createLynxView.js';
-import { registerLoadNewTagHandler } from './crossThreadHandlers/registerLoadNewTagHandler.js';
 import { createExposureService } from './crossThreadHandlers/createExposureService.js';
 import { registerInvokeUIMethodHandler } from './crossThreadHandlers/registerInvokeUIMethodHandler.js';
 import { registerNativePropsHandler } from './crossThreadHandlers/registerSetNativePropsHandler.js';
@@ -17,7 +16,6 @@ import { registerTriggerComponentEventHandler } from './crossThreadHandlers/regi
 import { registerSelectComponentHandler } from './crossThreadHandlers/registerSelectComponentHandler.js';
 import {
   flushElementTreeEndpoint,
-  loadNewTagEndpoint,
   mainThreadChunkReadyEndpoint,
   mainThreadStartEndpoint,
   sendGlobalEventEndpoint,
@@ -34,7 +32,6 @@ export function startUIThread(
   configs: Omit<MainThreadStartConfigs, 'template'>,
   rootDom: HTMLElement,
   callbacks: {
-    loadNewTag?: (tag: string) => void;
     nativeModulesCall: NativeModulesCall;
     onError?: () => void;
   },
@@ -44,7 +41,6 @@ export function startUIThread(
 ): LynxView {
   const createLynxStartTiming = performance.now() + performance.timeOrigin;
   const { entryId } = configs;
-  const currentLoadingTags: Promise<void>[] = [];
   const {
     mainThreadRpc,
     backgroundRpc,
@@ -69,21 +65,6 @@ export function startUIThread(
       napiLoaderCall,
     });
   });
-  registerLoadNewTagHandler(
-    mainThreadRpc,
-    loadNewTagEndpoint,
-    (tag) => {
-      if (callbacks.loadNewTag) {
-        callbacks.loadNewTag(tag);
-      } else {
-        if (!customElements.get(tag) && tag.includes('-')) {
-          throw new Error(`[lynx-web] cannot find custom element ${tag}`);
-        }
-      }
-    },
-    overrideTagMap,
-    currentLoadingTags,
-  );
   registerReportErrorHandler(
     mainThreadRpc,
     callbacks.onError,
@@ -101,7 +82,6 @@ export function startUIThread(
           backgroundRpc,
           rootDom,
           entryId,
-          currentLoadingTags,
         },
         (info) => {
           const { pipelineId, timingFlags, isFP } = info;
