@@ -21,7 +21,8 @@
     ],
     [
       "@lynx-js/rspeedy",
-      "create-rspeedy"
+      "create-rspeedy",
+      "upgrade-rspeedy"
     ]
   ],
   "linked": [],

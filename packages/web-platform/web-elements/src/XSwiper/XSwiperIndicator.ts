@@ -114,7 +114,6 @@ export class XSwiperIndicator
       subtree: false,
     });
     if (!CSS.supports('timeline-scope', '--a, --b')) {
-      this.#dom.setAttribute('x-enable-change-event-for-indicator', '');
       this.#dom.addEventListener(
         'change',
         (({ detail }: CustomEvent<{ current: number }>) => {

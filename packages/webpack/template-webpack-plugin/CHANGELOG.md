@@ -1,5 +1,27 @@
 # @lynx-js/template-webpack-plugin
 
+## 0.6.4
+
+### Patch Changes
+
+- Support NPM provenance. ([#30](https://github.com/lynx-family/lynx-stack/pull/30))
+
+- Use WASM when NAPI is not available. ([#138](https://github.com/lynx-family/lynx-stack/pull/138))
+
+- Add `defaultOverflowVisible` option to `LynxTemplatePlugin`. ([#78](https://github.com/lynx-family/lynx-stack/pull/78))
+
+  ```js
+  import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin';
+
+  new LynxTemplatePlugin({
+    defaultOverflowVisible: false,
+  });
+  ```
+
+- Updated dependencies [[`c617453`](https://github.com/lynx-family/lynx-stack/commit/c617453aea967aba702967deb2916b5c883f03bb)]:
+  - @lynx-js/webpack-runtime-globals@0.0.5
+  - @lynx-js/css-serializer@0.1.2
+
 ## 0.6.3
 
 ### Patch Changes

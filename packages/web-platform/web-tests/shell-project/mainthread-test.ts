@@ -66,6 +66,7 @@ function getElementThreadElements() {
 
 function initializeMainThreadTest() {
   const runtime = new MainThreadRuntime({
+    lepusCode: { root: '' },
     customSections: {},
     entryId: 't',
     browserConfig: { supportAtScope: true },
@@ -78,8 +79,6 @@ function initializeMainThreadTest() {
     globalProps: {},
     callbacks: {
       mainChunkReady: function(): void {
-      },
-      onNewTag: function(tag: string): void {
       },
       flushElementTree: (operations) => {
         console.log(operations);

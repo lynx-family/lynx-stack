@@ -7,7 +7,6 @@ import {
   mainThreadChunkReadyEndpoint,
   mainThreadStartEndpoint,
   onLifecycleEventEndpoint,
-  loadNewTagEndpoint,
   type LynxJSModule,
   flushElementTreeEndpoint,
 } from '@lynx-js/web-constants';
@@ -35,7 +34,6 @@ export function startMainThread(
   const mainThreadChunkReady = uiThreadRpc.createCall(
     mainThreadChunkReadyEndpoint,
   );
-  const onNewTag = uiThreadRpc.createCall(loadNewTagEndpoint);
   const flushElementTree = uiThreadRpc.createCall(flushElementTreeEndpoint);
   markTimingInternal('lepus_excute_start');
   uiThreadRpc.registerHandler(
@@ -99,7 +97,6 @@ export function startMainThread(
             runtime.renderPage!(initData);
             runtime.__FlushElementTree(undefined, {});
           },
-          onNewTag,
           flushElementTree,
           _ReportError: function(error: Error, info?: unknown): void {
             console.error('main-thread:', error, info);

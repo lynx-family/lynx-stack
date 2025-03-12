@@ -3,6 +3,8 @@
 // LICENSE file in the root directory of this source tree.
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { WorkletEvents } from '@lynx-js/react/worklet-runtime/bindings';
+
 import { destroyWorklet } from '../../src/worklet/destroy';
 import { clearConfigCacheForTesting } from '../../src/worklet/functionality';
 import { runOnMainThread } from '../../src/worklet/runOnMainThread';
@@ -28,12 +30,28 @@ describe('runOnMainThread', () => {
       [
         [
           {
-            "data": "{"worklet":{"_wkltId":"835d:450ef:2"},"params":[1,["args"]]}",
+            "data": "{"worklet":{"_wkltId":"835d:450ef:2"},"params":[1,["args"]],"resolveId":1}",
             "type": "Lynx.Worklet.runWorkletCtx",
           },
         ],
       ]
     `);
+  });
+
+  it('should get return value', async () => {
+    globalEnvManager.switchToBackground();
+    const promise = runOnMainThread('someWorklet')('hello');
+
+    globalEnvManager.switchToMainThread();
+    lynx.getJSContext().dispatchEvent({
+      type: WorkletEvents.FunctionCallRet,
+      data: JSON.stringify({
+        resolveId: 1,
+        returnValue: 'world',
+      }),
+    });
+
+    await expect(promise).resolves.toBe('world');
   });
 
   it('should throw when on the main thread', () => {

@@ -1,5 +1,44 @@
 # @lynx-js/react
 
+## 0.105.1
+
+### Patch Changes
+
+- Support NPM provenance. ([#30](https://github.com/lynx-family/lynx-stack/pull/30))
+
+- feat: add compiler only version of addComponentElement, it does not support spread props but have no runtime overhead, use it by: ([#15](https://github.com/lynx-family/lynx-stack/pull/15))
+
+  ```js
+  pluginReactLynx({
+    compat: {
+      addComponentElement: {
+        compilerOnly: true,
+      },
+    },
+  });
+  ```
+
+- Fix error `createRef is not a function` ([#16](https://github.com/lynx-family/lynx-stack/pull/16))
+
+- Support `MIXED` target for worklet, it will be used by unit testing frameworks, etc. ([#27](https://github.com/lynx-family/lynx-stack/pull/27))
+
+- Support return value for `runOnBackground()` and `runOnMainThread()`. ([#119](https://github.com/lynx-family/lynx-stack/pull/119))
+
+  Now you can get the return value from `runOnBackground()` and `runOnMainThread()`, which enables more flexible data flow between the main thread and the background thread.
+
+  ```js
+  import { runOnBackground } from '@lynx-js/react';
+
+  const onTap = async () => {
+    'main thread';
+    const text = await runOnBackground(() => {
+      'background only';
+      return 'Hello, world!';
+    })();
+    console.log(text);
+  };
+  ```
+
 ## 0.105.0
 
 ### Minor Changes

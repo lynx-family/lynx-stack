@@ -82,7 +82,7 @@ export function applyEntry(
       // We would like to avoid adding `__background` to the output CSS filename.
       const mainThreadEntry = `${entryName}__main-thread`
 
-      const mainThreadName = path.join(
+      const mainThreadName = path.posix.join(
         isLynx
           // TODO: config intermediate
           ? DEFAULT_DIST_PATH_INTERMEDIATE
@@ -92,7 +92,7 @@ export function applyEntry(
         `${mainThreadEntry}/main-thread.js`,
       )
 
-      const backgroundName = path.join(
+      const backgroundName = path.posix.join(
         isLynx
           // TODO: config intermediate
           ? DEFAULT_DIST_PATH_INTERMEDIATE
@@ -155,7 +155,7 @@ export function applyEntry(
             '[platform]',
             environment.name,
           ),
-          intermediate: path.join(
+          intermediate: path.posix.join(
             // TODO: config intermediate
             DEFAULT_DIST_PATH_INTERMEDIATE,
             entryName,

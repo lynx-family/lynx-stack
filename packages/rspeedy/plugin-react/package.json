@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/react-rsbuild-plugin",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "A rsbuild plugin for ReactLynx",
   "keywords": [
     "rsbuild",

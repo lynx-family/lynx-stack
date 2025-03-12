@@ -33,5 +33,6 @@ export function createStubLynx(vi, require, replaceStyleSheetByIdWithBase64) {
     getDevtool: vi.fn().mockReturnValue({
       replaceStyleSheetByIdWithBase64,
     }),
+    __chunk_entries__: {},
   };
 }
