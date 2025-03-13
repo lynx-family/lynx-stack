@@ -1553,7 +1553,8 @@ describe('Config Validation', () => {
     test('valid type', () => {
       const cases: Server[] = [
         {},
-        { base: 'foo' },
+        { base: '/foo' },
+        { base: '/bar' },
         { headers: {} },
         { headers: { foo: 'bar' } },
         { headers: { foo: [] } },

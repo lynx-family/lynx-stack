@@ -15,13 +15,15 @@ export interface Server {
    *
    * If you want to access lynx bundle through `http://<host>:<port>/foo/main.lynx.bundle`, you can change `server.base` to `/foo`
    *
+   * you can refer to {@link https://rsbuild.dev/config/server/base | server.base } for more information.
+   *
    * @example
    *
    * ```js
    * import { defineConfig } from '@lynx-js/rspeedy'
    * export default defineConfig({
    *   server: {
-   *     base: '/foo'
+   *     base: '/dist'
    *   },
    * })
    * ```

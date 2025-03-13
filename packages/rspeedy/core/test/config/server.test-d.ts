@@ -8,7 +8,7 @@ import type { Server } from '../../src/index.js'
 describe('Config - Server', () => {
   test('server.base', () => {
     assertType<Server>({})
-    assertType<Server>({ base: 'foo' })
+    assertType<Server>({ base: '/foo' })
   })
 
   test('server.headers', () => {

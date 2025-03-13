@@ -61,6 +61,13 @@ export function pluginDev(
         }
       }
 
+      if (server?.base) {
+        if ((assetPrefix as string).endsWith('/')) {
+          assetPrefix = (assetPrefix as string).slice(0, -1)
+        }
+        assetPrefix = `${assetPrefix}${server.base}/`
+      }
+
       debug(`dev.assetPrefix is normalized to ${assetPrefix}`)
 
       api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
