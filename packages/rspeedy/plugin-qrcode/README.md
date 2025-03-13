@@ -80,6 +80,38 @@ export default defineConfig({
 })
 ```
 
+### `tunnelConfig`
+
+Type: `{ authtoken?: string; protocol?: 'http' | 'https'; region?: string; }`
+export interface
+Default: `{}`
+
+The `tunnelConfig` option allows you to customize the ngrok tunnel.
+
+Example:
+
+<!-- eslint-disable -->
+
+```js
+import { pluginQRCode } from '@lynx-js/qrcode-rsbuild-plugin'
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  plugins: [
+    pluginQRCode({
+      schema(url) {
+        return `${url}?fullscreen=true`
+      },
+      tunnelConfig: {
+        protocol: 'http',
+        region: 'in', // one of ngrok regions (us, eu, au, ap, sa, jp, in)
+        authtoken: '<Your auth token>', // your authtoken if u want to use it
+      },
+    }),
+  ],
+})
+```
+
 ## Documentation
 
 Visit [Lynx Website](https://lynxjs.org/api/rspeedy/qrcode-rsbuild-plugin.pluginqrcode.html) to view the full documentation.

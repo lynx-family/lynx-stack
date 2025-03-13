@@ -47,11 +47,6 @@ export async function registerConsoleShortcuts(
       log.error(
         'Unable to connect to the ngrok \nfalling back to localhost',
       )
-      await new Promise(
-        (res) => {
-          setTimeout(() => res(1), 1000)
-        },
-      )
     } else {
       options.tunnel.url = tunnelUrl
       options.tunnel.isOpen = true
@@ -132,11 +127,6 @@ async function loop(
         if (tunnelUrl === null) {
           log.error(
             'Unable to connect to the ngrok \nfalling back to localhost',
-          )
-          await new Promise(
-            (res) => {
-              setTimeout(() => res(1), 1000)
-            },
           )
         } else {
           options.tunnel.isOpen = true
