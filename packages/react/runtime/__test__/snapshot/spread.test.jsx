@@ -3,15 +3,16 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 */
-import { h, render } from 'preact';
+import { render } from 'preact';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { hydrate } from '../../src/backgroundSnapshot';
 import { useState } from '../../src/index';
+import { initGlobalSnapshotPatch, takeGlobalSnapshotPatch } from '../../src/lifecycle/patch/snapshotPatch';
+import { snapshotPatchApply } from '../../src/lifecycle/patch/snapshotPatchApply';
 import { backgroundSnapshotInstanceManager, setupPage, snapshotInstanceManager } from '../../src/snapshot';
 import { globalEnvManager } from '../utils/envManager';
 import { elementTree } from '../utils/nativeMethod';
-import { hydrate } from '../../src/backgroundSnapshot';
-import { initGlobalSnapshotPatch, takeGlobalSnapshotPatch } from '../../src/snapshotPatch';
-import { snapshotPatchApply } from '../../src/snapshotPatchApply';
 
 let scratch;
 let scratchBackground;

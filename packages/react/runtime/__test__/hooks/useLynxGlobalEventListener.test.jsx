@@ -3,20 +3,19 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 */
+import { EventEmitter } from 'node:events';
+
 import { render } from 'preact';
+import { useState } from 'preact/compat';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { elementTree } from '../utils/nativeMethod';
 import { BackgroundSnapshotInstance } from '../../src/backgroundSnapshot';
 import { setupBackgroundDocument } from '../../src/document';
-import { backgroundSnapshotInstanceManager, setupPage, SnapshotInstance } from '../../src/snapshot';
-
-import { backgroundSnapshotInstanceToJSON } from '../utils/debug';
-import { useState } from 'preact/compat';
+import { replaceRequestAnimationFrame } from '../../src/lifecycle/patch/patchUpdate';
 import { useLynxGlobalEventListener } from '../../src/lynx-api';
-
-import { EventEmitter } from 'node:events';
-import { replaceRequestAnimationFrame } from '../../src/lifecycle/patchUpdate';
+import { SnapshotInstance, backgroundSnapshotInstanceManager, setupPage } from '../../src/snapshot';
+import { backgroundSnapshotInstanceToJSON } from '../utils/debug.js';
+import { elementTree } from '../utils/nativeMethod';
 
 describe('useLynxGlobalEventListener', () => {
   /** @type {SnapshotInstance} */

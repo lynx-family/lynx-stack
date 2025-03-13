@@ -1,23 +1,26 @@
-import { Component, h, render } from 'preact';
+import { Component, render } from 'preact';
+import { Suspense, lazy } from 'preact/compat';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { elementTree } from './utils/nativeMethod';
 import { BackgroundSnapshotInstance, hydrate } from '../src/backgroundSnapshot';
 import { setupBackgroundDocument, setupDocument } from '../src/document';
+import { globalBackgroundSnapshotInstancesToRemove } from '../src/lifecycle/patch/patchUpdate';
 import {
+  deinitGlobalSnapshotPatch,
+  initGlobalSnapshotPatch,
+  takeGlobalSnapshotPatch,
+} from '../src/lifecycle/patch/snapshotPatch';
+import { runWithForce } from '../src/lynx/tt';
+import {
+  SnapshotInstance,
   backgroundSnapshotInstanceManager,
   setupPage,
-  SnapshotInstance,
   snapshotInstanceManager,
   traverseSnapshotInstance,
 } from '../src/snapshot';
+import { backgroundSnapshotInstanceToJSON, snapshotInstanceToJSON } from './utils/debug.js';
 import { globalEnvManager } from './utils/envManager';
-
-import { deinitGlobalSnapshotPatch, initGlobalSnapshotPatch, takeGlobalSnapshotPatch } from '../src/snapshotPatch';
-import { backgroundSnapshotInstanceToJSON, snapshotInstanceToJSON } from './utils/debug';
-import { runWithForce } from '../src/lynx';
-import { globalBackgroundSnapshotInstancesToRemove } from '../src/lifecycle/patchUpdate';
-import { lazy, Suspense } from 'preact/compat';
+import { elementTree } from './utils/nativeMethod';
 
 function randomize(arr) {
   for (let i = arr.length - 1; i > 0; i--) {

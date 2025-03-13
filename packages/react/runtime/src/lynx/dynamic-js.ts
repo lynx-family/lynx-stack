@@ -12,12 +12,11 @@ export function loadDynamicJS<T>(url: string): Promise<T> {
     return Promise.reject();
   }
   return new Promise((resolve, reject) => {
-    // @ts-ignore
-    lynx.requireModuleAsync(url, (err, data) => {
+    lynx.requireModuleAsync<T>(url, (err, data) => {
       if (err) {
         reject(err);
       } else {
-        resolve(data);
+        resolve(data as T);
       }
     });
   });

@@ -89,7 +89,7 @@ export function applyEntry(
           // For non-Lynx environment, the entry is not deleted.
           // So we do not put it in the intermediate.
           : '',
-        `${mainThreadEntry}/main-thread.js`,
+        `${entryName}/main-thread.js`,
       )
 
       const backgroundName = path.posix.join(
@@ -221,6 +221,7 @@ export function applyEntry(
           ?.disableCreateSelectorQueryIncompatibleWarning ?? false,
         firstScreenSyncTiming,
         mainThreadChunks,
+        experimental_isLazyBundle,
       }])
   })
 }

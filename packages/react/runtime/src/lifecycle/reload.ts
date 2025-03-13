@@ -13,7 +13,7 @@ import { hydrate } from '../hydrate.js';
 import { LifecycleConstant } from '../lifecycleConstant.js';
 import { __pendingListUpdates } from '../list.js';
 import { takeGlobalRefPatchMap } from '../snapshot/ref.js';
-import { deinitGlobalSnapshotPatch } from '../snapshotPatch.js';
+import { deinitGlobalSnapshotPatch } from './patch/snapshotPatch.js';
 import { destroyWorklet } from '../worklet/destroy.js';
 
 function reloadMainThread(data: any, options: UpdatePageOption): void {

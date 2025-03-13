@@ -366,7 +366,7 @@ export interface Lynx {
    * ```
    * @public
    */
-  registerDataProcessors: (dataProcessorDefinition: DataProcessorDefinition) => void;
+  registerDataProcessors: (dataProcessorDefinition?: DataProcessorDefinition) => void;
 }
 
 export { runOnMainThread } from './worklet/runOnMainThread.js';

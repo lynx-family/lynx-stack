@@ -4,7 +4,7 @@
 import type { Worklet } from '@lynx-js/react/worklet-runtime/bindings';
 
 import { diffArrayAction, diffArrayLepus } from './hydrate.js';
-import { globalBackgroundSnapshotInstancesToRemove } from './lifecycle/patchUpdate.js';
+import { globalBackgroundSnapshotInstancesToRemove } from './lifecycle/patch/patchUpdate.js';
 import { markRefToRemove } from './snapshot/ref.js';
 import { transformSpread } from './snapshot/spread.js';
 import {
@@ -19,8 +19,8 @@ import {
   __globalSnapshotPatch,
   initGlobalSnapshotPatch,
   takeGlobalSnapshotPatch,
-} from './snapshotPatch.js';
-import type { SnapshotPatch } from './snapshotPatch.js';
+} from './lifecycle/patch/snapshotPatch.js';
+import type { SnapshotPatch } from './lifecycle/patch/snapshotPatch.js';
 import { isDirectOrDeepEqual } from './utils.js';
 import { onPostWorkletCtx } from './worklet/ctx.js';
 import { processGestureBackground } from './gesture/processGestureBagkround.js';

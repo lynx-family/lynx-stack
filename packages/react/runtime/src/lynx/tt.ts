@@ -1,20 +1,69 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { render } from 'preact';
+import { options, render } from 'preact';
+import type { VNode } from 'preact';
 
 import { LifecycleConstant, NativeUpdateDataType } from '../lifecycleConstant.js';
 import { PerformanceTimingKeys, beginPipeline, markTiming } from './performance.js';
 import { BackgroundSnapshotInstance, hydrate } from '../backgroundSnapshot.js';
 import { destroyBackground } from '../lifecycle/destroy.js';
-import { commitPatchUpdate, genCommitTaskId, globalCommitTaskMap } from '../lifecycle/patchUpdate.js';
+import { commitPatchUpdate, genCommitTaskId, globalCommitTaskMap } from '../lifecycle/patch/patchUpdate.js';
 import { reloadBackground } from '../lifecycle/reload.js';
-import { runWithForce } from '../lynx.js';
-import { CHILDREN } from '../renderToOpcodes/constants.js';
+import { CHILDREN, COMPONENT, DIFF, DIFFED, FORCE } from '../renderToOpcodes/constants.js';
 import { __root } from '../root.js';
 import { globalRefsToSet, updateBackgroundRefs } from '../snapshot/ref.js';
 import { backgroundSnapshotInstanceManager } from '../snapshot.js';
 import { destroyWorklet } from '../worklet/destroy.js';
+
+export function runWithForce(cb: () => void): void {
+  // save vnode and its `_component` in WeakMap
+  const m = new WeakMap<VNode, any>();
+
+  const oldDiff = options[DIFF];
+
+  options[DIFF] = (vnode: VNode) => {
+    if (oldDiff) {
+      oldDiff(vnode);
+    }
+
+    // when `options[DIFF]` is called, a newVnode is passed in
+    // so its `vnode[COMPONENT]` should be null,
+    // but it will be set later
+    Object.defineProperty(vnode, COMPONENT, {
+      configurable: true,
+      set(c) {
+        m.set(vnode, c);
+        if (c) {
+          c[FORCE] = true;
+        }
+      },
+      get() {
+        return m.get(vnode);
+      },
+    });
+  };
+
+  const oldDiffed = options[DIFFED];
+
+  options[DIFFED] = (vnode: VNode) => {
+    if (oldDiffed) {
+      oldDiffed(vnode);
+    }
+
+    // delete is a reverse operation of previous `Object.defineProperty`
+    delete vnode[COMPONENT];
+    // restore
+    vnode[COMPONENT] = m.get(vnode);
+  };
+
+  try {
+    cb();
+  } finally {
+    options[DIFF] = oldDiff as (vnode: VNode) => void;
+    options[DIFFED] = oldDiffed as (vnode: VNode) => void;
+  }
+}
 
 function injectTt(): void {
   // @ts-ignore
@@ -76,7 +125,7 @@ async function OnLifecycleEvent([type, data]: [string, any]) {
           try {
             publishEvent([idStr, ...rest].join(':'), data);
           } catch (e) {
-            lynx.reportError(e);
+            lynx.reportError(e as Error);
           }
         });
         delayedEvents.length = 0;
@@ -139,7 +188,7 @@ function flushDelayedLifecycleEvents(): void {
       try {
         OnLifecycleEvent(e);
       } catch (e) {
-        lynx.reportError(e);
+        lynx.reportError(e as Error);
       }
     });
     delayedLifecycleEvents.length = 0;

@@ -29,6 +29,7 @@ export interface BaseGesture extends GestureKind {
   waitFor: BaseGesture[];
   simultaneousWith: BaseGesture[];
   continueWith: BaseGesture[];
+  config?: Record<string, unknown>;
 }
 
 export interface GestureConfig {
@@ -36,4 +37,5 @@ export interface GestureConfig {
     name: string;
     callback: Worklet;
   }[];
+  config?: Record<string, unknown>;
 }

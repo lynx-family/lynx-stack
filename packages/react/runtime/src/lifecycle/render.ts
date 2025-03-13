@@ -24,7 +24,7 @@ function renderMainThread(): void {
       // @ts-ignore
       opcodes = renderToString(__root.__jsx);
     } catch (e) {
-      lynx.reportError(e);
+      lynx.reportError(e as Error);
       opcodes = [];
     } finally {
       if (__PROFILE__) {
