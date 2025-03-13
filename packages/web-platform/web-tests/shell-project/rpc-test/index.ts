@@ -9,6 +9,7 @@ import {
   throwErrorSync,
   wait,
   waitSync,
+  addAsyncWithTransfer,
 } from './endpoints.ts';
 
 const channel = new MessageChannel();
@@ -45,5 +46,11 @@ const emptyObj: any = {};
 Object.assign(globalThis, { emptyObj });
 rpc.registerHandlerLazy(testLazy, emptyObj, 'testLazy');
 emptyObj.testLazy = (a, b) => a + b;
+rpc.registerHandler(addAsyncWithTransfer, () => {
+  const ele = document.createElement('canvas') as HTMLCanvasElement;
+  document.body.appendChild(ele);
+  const offscreen = ele.transferControlToOffscreen();
+  return { data: offscreen, transfer: [offscreen] };
+});
 
 worker.postMessage({ port: channel.port2 }, { transfer: [channel.port2] });
