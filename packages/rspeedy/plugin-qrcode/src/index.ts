@@ -11,6 +11,7 @@
 import type { EnvironmentContext, RsbuildPlugin } from '@rsbuild/core'
 
 import { registerConsoleShortcuts } from './shortcuts.js'
+import type { TunnelConfig } from './tunnel.js'
 
 /**
  * {@inheritdoc PluginQRCodeOptions.schema}
@@ -72,6 +73,7 @@ export interface PluginQRCodeOptions {
    * })
    * ```   */
   schema?: CustomizedSchemaFn | undefined
+  tunnelConfig?: TunnelConfig
 }
 
 /**
@@ -93,9 +95,14 @@ export function pluginQRCode(
 ): RsbuildPlugin {
   const defaultPluginOptions = {
     schema: (url) => ({ http: url }),
+    tunnelConfig: {},
   } satisfies Required<PluginQRCodeOptions>
 
-  const { schema } = Object.assign({}, defaultPluginOptions, options)
+  const { schema, tunnelConfig } = Object.assign(
+    {},
+    defaultPluginOptions,
+    options,
+  )
 
   return {
     name: 'lynx:rsbuild:qrcode',
@@ -154,6 +161,12 @@ export function pluginQRCode(
             api,
             port,
             schema,
+            tunnel: {
+              isOpen: true,
+              port: port,
+              url: '',
+              tunnelConfig,
+            },
           },
         )
         api.onCloseDevServer(unregister)

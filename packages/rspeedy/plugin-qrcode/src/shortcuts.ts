@@ -6,6 +6,8 @@ import type { RsbuildPluginAPI } from '@rsbuild/core'
 import type { ExposedAPI } from '@lynx-js/rspeedy'
 
 import generateDevUrls from './generateDevUrls.js'
+import { connectNgrokTunnel } from './tunnel.js'
+import type { TunnelData } from './tunnel.js'
 
 import type { CustomizedSchemaFn } from './index.js'
 
@@ -21,6 +23,7 @@ interface Options {
     { value: string, label: string, hint?: string, action?(): Promise<void> }
   >
   onPrint?: ((url: string) => Promise<void>) | undefined
+  tunnel: TunnelData
 }
 
 export async function registerConsoleShortcuts(
@@ -38,6 +41,7 @@ export async function registerConsoleShortcuts(
     currentEntry,
     options.schema,
     options.port,
+    options.tunnel,
   )
 
   const value: string | symbol = Object.values(devUrls)[0]!
@@ -61,7 +65,7 @@ async function loop(
   devUrls: Record<string, string>,
 ) {
   const [
-    { select, selectKey, isCancel, cancel },
+    { select, selectKey, isCancel, cancel, log },
     { default: showQRCode },
   ] = await Promise.all([
     import('@clack/prompts'),
@@ -72,12 +76,16 @@ async function loop(
   let currentSchema = Object.keys(devUrls)[0]!
 
   while (!isCancel(value)) {
+    const tunnelLabel = `Tunnel(${
+      options.tunnel.isOpen ? 'Active' : 'Deactive'
+    })`
     const name = await selectKey({
       message: 'Usage',
       options: [
         { value: 'r', label: 'Switch entries' },
         { value: 'a', label: 'Switch schema' },
         { value: 'h', label: 'Help' },
+        { value: 't', label: tunnelLabel },
         ...Object.values(options.customShortcuts ?? {}),
         { value: 'q', label: 'Quit' },
       ],
@@ -92,6 +100,31 @@ async function loop(
     ) {
       break
     }
+    if (name === 't') {
+      if (options.tunnel.isOpen) {
+        options.tunnel.isOpen = false
+        options.tunnel.url = ''
+      } else {
+        const tunnelUrl = await connectNgrokTunnel(options.tunnel)
+        if (tunnelUrl === null) {
+          log.error(
+            'Unable to connect to the ngrok \nfalling back to localhost',
+          )
+          await new Promise(
+            (res) => {
+              setTimeout(() => res(1), 250)
+            },
+          )
+        } else {
+          options.tunnel.isOpen = true
+          options.tunnel.url = tunnelUrl
+          value = getCurrentUrl()
+          await options.onPrint?.(value)
+          await showQRCode(value)
+        }
+      }
+    }
+
     if (name === 'r') {
       const selection = await select({
         message: 'Select entry',
@@ -103,6 +136,7 @@ async function loop(
             entry,
             options.schema,
             options.port,
+            options.tunnel,
           )[currentSchema]!,
         })),
         initialValue: currentEntry,
@@ -118,6 +152,7 @@ async function loop(
         currentEntry,
         options.schema,
         options.port,
+        options.tunnel,
       )
       const selection = await select({
         message: 'Select schema',
@@ -155,6 +190,7 @@ async function loop(
       currentEntry,
       options.schema,
       options.port,
+      options.tunnel,
     )[currentSchema]!
   }
 

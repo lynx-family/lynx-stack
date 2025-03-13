@@ -5,9 +5,9 @@ import type { RsbuildPluginAPI } from '@rsbuild/core'
 import { describe, expect, test, vi } from 'vitest'
 
 import { registerConsoleShortcuts } from '../src/shortcuts.js'
+import type { TunnelData } from '../src/tunnel.js'
 
 vi.mock('@clack/prompts')
-
 describe('PluginQRCode - CLI Shortcuts', () => {
   const mockedRsbuildAPI = {
     getNormalizedConfig: vi.fn().mockReturnValue({
@@ -17,6 +17,14 @@ describe('PluginQRCode - CLI Shortcuts', () => {
       config: { filename: '[name].[platform].bundle' },
     }),
   } as unknown as RsbuildPluginAPI
+
+  const port = 3000
+  const tunnelData = {
+    port,
+    isOpen: false,
+    url: '',
+    tunnelConfig: {},
+  } as TunnelData
 
   test('open page', async () => {
     vi.stubEnv('NODE_ENV', 'development')
@@ -40,11 +48,12 @@ describe('PluginQRCode - CLI Shortcuts', () => {
       api: mockedRsbuildAPI,
       entries: ['foo', 'bar'],
       schema: i => i,
-      port: 3000,
+      port,
       customShortcuts: {
         o: { value: 'o', label: 'Open Page', action: onOpen },
       },
       onPrint,
+      tunnel: tunnelData,
     })
 
     expect(onPrint).toBeCalledWith('https://example.com/foo.lynx.bundle')

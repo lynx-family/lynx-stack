@@ -5,6 +5,8 @@ import type { RsbuildPluginAPI } from '@rsbuild/core'
 
 import type { ExposedAPI } from '@lynx-js/rspeedy'
 
+import type { TunnelData } from './tunnel.js'
+
 import type { CustomizedSchemaFn } from './index.js'
 
 export default function generateDevUrls(
@@ -12,6 +14,7 @@ export default function generateDevUrls(
   entry: string,
   schemaFn: CustomizedSchemaFn,
   port: number,
+  tunnel: TunnelData,
 ): Record<string, string> {
   const { dev: { assetPrefix } } = api.getNormalizedConfig()
   const { config } = api.useExposed<ExposedAPI>(
@@ -35,11 +38,16 @@ export default function generateDevUrls(
     name = filename
   }
 
+  // <port> is supported in `dev.assetPrefix`, we should replace it with the real port
+  let prefix = assetPrefix.replaceAll('<port>', String(port))
+  if (tunnel.isOpen) {
+    prefix = tunnel.url
+  }
+
   const customSchema = schemaFn(
     new URL(
       name.replace('[name]', entry).replace('[platform]', 'lynx'),
-      // <port> is supported in `dev.assetPrefix`, we should replace it with the real port
-      assetPrefix.replaceAll('<port>', String(port)),
+      prefix,
     ).toString(),
   )
 
