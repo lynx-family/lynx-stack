@@ -24,7 +24,7 @@
     "@vitejs/plugin-react": "4.3.4",
     "@vitest/coverage-v8": "^3.0.8",
     "@vitest/ui": "^3.0.8",
-    "esbuild": "^0.25.0",
+    "esbuild": "^0.25.1",
     "pretty-format": "^29.7.0",
     "vitest": "^3.0.8"
   },

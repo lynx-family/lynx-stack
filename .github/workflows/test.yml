@@ -32,7 +32,12 @@ jobs:
         sudo apt-get install -y iproute2 &&
         pnpm run test
         --project rspeedy
+        --project upgrade-rspeedy
         --project 'rspeedy/*'
+        --reporter=github-actions
+        --reporter=dot
+        --reporter=junit
+        --outputFile=test-report.junit.xml
         --test-timeout=50000
         --coverage
         --no-cache
@@ -76,6 +81,10 @@ jobs:
         pnpm run test
         --project 'webpack/*'
         --test-timeout=50000
+        --reporter=github-actions
+        --reporter=dot
+        --reporter=junit
+        --outputFile=test-report.junit.xml
         --coverage
         --no-cache
         --logHeapUsage

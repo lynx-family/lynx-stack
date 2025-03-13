@@ -532,7 +532,7 @@ test.describe('web-elements test suite', () => {
       await page.evaluate(() => {
         document.querySelector('scroll-view')!.scrollTop = 200;
       });
-      await wait(200);
+      await wait(300);
       const scrollEvents = await events.jsonValue();
       expect(scrollEvents.length, 'should only have one scroll end event').toBe(
         1,

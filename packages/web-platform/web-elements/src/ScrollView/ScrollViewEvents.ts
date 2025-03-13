@@ -13,12 +13,12 @@ import { commonComponentEventSetting } from '../common/commonEventInitConfigurat
 import type { ScrollView } from './ScrollView.js';
 import { bindToIntersectionObserver } from '../common/bindToIntersectionObserver.js';
 import { useScrollEnd } from '../common/constants.js';
+import { registerEventEnableStatusChangeHandler } from '@lynx-js/web-elements-reactive';
 
 export class ScrollViewEvents
   implements InstanceType<AttributeReactiveClass<typeof ScrollView>>
 {
   readonly #dom: ScrollView;
-  #enableScrollEnd = false;
   #debounceScrollForMockingScrollEnd?: NodeJS.Timeout;
   #prevX: number = 0;
   #prevY: number = 0;
@@ -61,22 +61,32 @@ export class ScrollViewEvents
   };
 
   static observedAttributes = [
-    'x-enable-scrolltoupper-event',
-    'x-enable-scrolltolower-event',
-    'x-enable-scroll-event',
-    'x-enable-scrollend-event',
     'upper-threshold',
     'lower-threshold',
   ];
 
-  @registerAttributeHandler('x-enable-scrolltoupper-event', true)
+  @registerEventEnableStatusChangeHandler('scrolltoupper')
+  #handleScrollUpperThresholdEventEnabled = (enabled: boolean) => {
+    enabled
+      ? this.#dom.setAttribute('x-enable-scrolltoupper-event', '')
+      : this.#dom.removeAttribute('x-enable-scrolltoupper-event'); // css needs this;
+    this.#updateUpperIntersectionObserver(enabled);
+  };
+
   #updateUpperIntersectionObserver = bindToIntersectionObserver(
     this.#getScrollContainer,
     this.#getUpperThresholdObserverDom,
     this.#handleObserver,
   );
 
-  @registerAttributeHandler('x-enable-scrolltolower-event', true)
+  @registerEventEnableStatusChangeHandler('scrolltolower')
+  #handleScrollLowerThresholdEventEnabled = (enabled: boolean) => {
+    enabled
+      ? this.#dom.setAttribute('x-enable-scrolltolower-event', '')
+      : this.#dom.removeAttribute('x-enable-scrolltolower-event'); // css needs this;
+    this.#updateLowerIntersectionObserver(enabled);
+  };
+
   #updateLowerIntersectionObserver = bindToIntersectionObserver(
     this.#getScrollContainer,
     this.#getLowerThresholdObserverDom,
@@ -121,7 +131,7 @@ export class ScrollViewEvents
   }
 
   #handleScroll = () => {
-    if (this.#enableScrollEnd && !useScrollEnd) {
+    if (this.#scrollEndEventEnabled && !useScrollEnd) {
       // debounce
       clearTimeout(this.#debounceScrollForMockingScrollEnd);
       this.#debounceScrollForMockingScrollEnd = setTimeout(() => {
@@ -145,13 +155,22 @@ export class ScrollViewEvents
     );
   };
 
-  @registerAttributeHandler('x-enable-scroll-event', true)
-  @registerAttributeHandler('x-enable-scrollend-event', true)
+  #scrollEventEnabled = false;
+  @registerEventEnableStatusChangeHandler('lynxscroll')
+  #handleScrollEventEnabled = (enabled: boolean) => {
+    this.#scrollEventEnabled = enabled;
+    this.#handleScrollEventsSwitches();
+  };
+
+  #scrollEndEventEnabled = false;
+  @registerEventEnableStatusChangeHandler('lynxscrollend')
+  #handleScrollEndEventEnabled = (enabled: boolean) => {
+    this.#scrollEndEventEnabled = enabled;
+    this.#handleScrollEventsSwitches();
+  };
+
   #handleScrollEventsSwitches() {
-    const scroll = this.#dom.getAttribute('x-enable-scroll-event');
-    this.#enableScrollEnd =
-      this.#dom.getAttribute('x-enable-scrollend-event') !== null;
-    if (scroll !== null || this.#enableScrollEnd) {
+    if (this.#scrollEventEnabled || this.#scrollEndEventEnabled) {
       this.#getScrollContainer().addEventListener('scroll', this.#handleScroll);
       this.#getScrollContainer().addEventListener(
         'scrollend',

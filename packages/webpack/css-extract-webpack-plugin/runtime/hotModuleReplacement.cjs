@@ -17,29 +17,38 @@ function debounce(fn, time) {
 }
 
 function updateStyle(cssId = 0) {
-  const filename = __webpack_require__.lynxCssFileName;
-  if (!filename) {
-    throw new Error('Css Filename not found');
+  const cssHotUpdateList = __webpack_require__.cssHotUpdateList;
+  if (!cssHotUpdateList) {
+    throw new Error('cssHotUpdateList is not found');
   }
 
-  lynx.requireModuleAsync(
-    // lynx.requireModuleAsync has two level hash and we cannot delete
-    // the LynxGroup level cache here.
-    // Temporarily using `Date.now` to avoid being cached.
-    __webpack_require__.p + filename,
-    (err, ret) => {
-      if (err) {
-        throw new Error('Load update css file `' + filename + '` failed');
-      }
+  for (const [chunkName, cssHotUpdatePath] of cssHotUpdateList) {
+    lynx.requireModuleAsync(
+      // lynx.requireModuleAsync has two level hash and we cannot delete
+      // the LynxGroup level cache here.
+      // Temporarily using `Date.now` to avoid being cached.
+      __webpack_require__.p + cssHotUpdatePath,
+      (err, ret) => {
+        if (err) {
+          throw new Error(
+            `Failed to load CSS update file: ${cssHotUpdatePath}`,
+          );
+        }
 
-      if (ret.content) {
-        lynx.getCoreContext().dispatchEvent({
-          type: 'lynx.hmr.css',
-          data: { cssId, content: ret.content, deps: ret.deps },
-        });
-      }
-    },
-  );
+        if (ret.content) {
+          lynx.getCoreContext().dispatchEvent({
+            type: 'lynx.hmr.css',
+            data: {
+              cssId,
+              content: ret.content,
+              deps: ret.deps,
+              entry: lynx.__chunk_entries__[chunkName],
+            },
+          });
+        }
+      },
+    );
+  }
 }
 
 /**

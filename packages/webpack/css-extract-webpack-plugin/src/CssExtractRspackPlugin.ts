@@ -170,6 +170,15 @@ class CssExtractRspackPluginImpl {
           this.name,
           (runtimeModule, chunk) => {
             if (runtimeModule.name === 'require_chunk_loading') {
+              const asyncChunks = Array.from(chunk.getAllAsyncChunks())
+                .map(c => {
+                  const { path } = compilation.getAssetPathWithInfo(
+                    options.chunkFilename ?? '.rspeedy/async/[name]/[name].css',
+                    { chunk: c },
+                  );
+                  return [c.name!, path];
+                });
+
               const { path } = compilation.getPathWithInfo(
                 options.filename ?? '[name].css',
                 // Rspack does not pass JsChunk to Rust.
@@ -177,13 +186,22 @@ class CssExtractRspackPluginImpl {
                 { filename: chunk.name! },
               );
 
-              this.#overrideChunkLoadingRuntimeModule(
-                compiler,
-                runtimeModule,
-                path.replace(
+              const initialChunk = [chunk.name!, path];
+
+              const cssHotUpdateList = [...asyncChunks, initialChunk].map((
+                [chunkName, cssHotUpdatePath],
+              ) => [
+                chunkName!,
+                cssHotUpdatePath!.replace(
                   '.css',
                   `${this.hash ? `.${this.hash}` : ''}.css.hot-update.json`,
                 ),
+              ]);
+
+              this.#overrideChunkLoadingRuntimeModule(
+                compiler,
+                runtimeModule,
+                cssHotUpdateList,
               );
             }
           },
@@ -253,7 +271,6 @@ class CssExtractRspackPluginImpl {
                     true,
                   ),
                 );
-                this.hash = compilation.hash;
               } catch (error) {
                 if (
                   error && typeof error === 'object' && 'error_msg' in error
@@ -272,6 +289,7 @@ class CssExtractRspackPluginImpl {
                 }
               }
             }
+            this.hash = compilation.hash;
           },
         );
       }
@@ -281,15 +299,15 @@ class CssExtractRspackPluginImpl {
   #overrideChunkLoadingRuntimeModule(
     compiler: Compiler,
     runtimeModule: RuntimeModule,
-    filename: string,
+    cssHotUpdateList: string[][],
   ) {
     const { RuntimeGlobals } = compiler.webpack;
     runtimeModule.source!.source = Buffer.concat([
       Buffer.from(runtimeModule.source!.source),
-      // lynxCssFileName
+      // cssHotUpdateList
       Buffer.from(`
-      ${RuntimeGlobals.require}.lynxCssFileName = ${
-        filename ? JSON.stringify(filename) : 'null'
+      ${RuntimeGlobals.require}.cssHotUpdateList = ${
+        cssHotUpdateList ? JSON.stringify(cssHotUpdateList) : 'null'
       };
     `),
     ]);

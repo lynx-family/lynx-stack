@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/react-refresh-webpack-plugin",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "A webpack plugin to hot refresh for Lynx.",
   "keywords": [
     "webpack",

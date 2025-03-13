@@ -1,0 +1,55 @@
+{
+  "name": "upgrade-rspeedy",
+  "version": "0.8.3",
+  "description": "Upgrade Rspeedy-related packages",
+  "keywords": [
+    "webpack",
+    "Rspack",
+    "Rsbuild",
+    "Rspeedy",
+    "Lynx"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/rspeedy/upgrade-rspeedy"
+  },
+  "license": "Apache-2.0",
+  "author": {
+    "name": "Qingyu Wang",
+    "email": "colinwang.0616@gmail.com"
+  },
+  "type": "module",
+  "exports": null,
+  "bin": {
+    "upgrade-rspeedy": "./dist/upgrade-rspeedy.js"
+  },
+  "files": [
+    "dist/upgrade-rspeedy.js",
+    "CHANGELOG.md",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "rslib build",
+    "test": "vitest"
+  },
+  "devDependencies": {
+    "@lynx-js/qrcode-rsbuild-plugin": "workspace:*",
+    "@lynx-js/react": "workspace:*",
+    "@lynx-js/react-rsbuild-plugin": "workspace:*",
+    "@lynx-js/rspeedy": "workspace:*",
+    "@lynx-js/types": "^3.2.0",
+    "@rsbuild/plugin-less": "1.1.1",
+    "@rsbuild/plugin-sass": "1.2.2",
+    "commander": "^13.1.0",
+    "detect-indent": "^7.0.1",
+    "memfs": "^4.17.0",
+    "picocolors": "^1.1.1",
+    "rsbuild-plugin-tailwindcss": "0.2.0",
+    "rslog": "^1.2.3",
+    "type-fest": "^4.37.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

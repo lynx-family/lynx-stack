@@ -23,6 +23,9 @@ jobs:
     runs-on: ${{ inputs.runs-on }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Codecov requires fetch-depth: 0
+          fetch-depth: 0
       - name: Get Changed Files
         id: changed-files
         uses: tj-actions/changed-files@v45.0.7
@@ -77,6 +80,16 @@ jobs:
           NODE_OPTIONS: --max-old-space-size=8192
         if: steps.changed-files.outputs.any_changed == 'true'
         run: ${{ inputs.run }}
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        if: steps.changed-files.outputs.any_changed == 'true' && inputs.is-web != 'true'
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+      - name: Upload test results to Codecov
+        if: ${{ steps.changed-files.outputs.any_changed == 'true' && inputs.is-web != 'true' && !cancelled() }}
+        uses: codecov/test-results-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
       - name: Upload Test Result
         if: ${{ inputs.is-web && failure() }}
         uses: actions/upload-artifact@v4

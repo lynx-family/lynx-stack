@@ -14,16 +14,10 @@ import {
   type NativeModulesCall,
   type UpdateDataType,
 } from '@lynx-js/web-constants';
-import { loadElement } from '@lynx-js/web-elements/lazy';
 
 /**
  * Based on our experiences, these elements are almost used in all lynx cards.
  */
-loadElement('lynx-wrapper');
-loadElement('x-view');
-loadElement('x-text');
-loadElement('x-image');
-loadElement('scroll-view');
 
 /**
  * @param {string} url [required] The url of the entry of your Lynx card
@@ -359,8 +353,14 @@ export class LynxView extends HTMLElement {
             overrideLynxTagToHTMLTagMap: this.#overrideLynxTagToHTMLTagMap,
             nativeModulesUrl: this.#nativeModulesUrl,
             callbacks: {
+<<<<<<< HEAD
               loadNewTag: loadElement,
               nativeModulesCall: (...args: [name: string, data: any, moduleName: string]) => {
+=======
+              nativeModulesCall: (
+                ...args: [name: string, data: any, moduleName: string]
+              ) => {
+>>>>>>> 497425893e0e2ddff9ddf8e27d350ee5025ef864
                 if (this.#onNativeModulesCall) {
                   return this.#onNativeModulesCall(...args);
                 } else if (this.#cachedNativeModulesCall) {

@@ -5,11 +5,12 @@
 */
 import { Component, h, options, render } from 'preact';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { injectUpdatePatch, replaceCommitHook } from '../../src/lifecycle/patch/patchUpdate';
+import { initTimingAPI } from '../../src/lynx/performance';
 import { setupPage } from '../../src/snapshot';
 import { globalEnvManager } from '../utils/envManager';
 import { elementTree, waitSchedule } from '../utils/nativeMethod';
-import { injectUpdatePatch, replaceCommitHook } from '../../src/lifecycle/patchUpdate';
-import { initTimingAPI } from '../../src/lynx/performance';
 import '../../src/lynx/component';
 import { __root } from '../../src/root';
 

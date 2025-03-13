@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/web-elements",
-  "version": "0.2.4",
+  "version": "0.3.0",
   "private": false,
   "repository": {
     "type": "git",
@@ -21,10 +21,6 @@
     "./all": {
       "types": "./dist/all.d.ts",
       "default": "./dist/all.js"
-    },
-    "./lazy": {
-      "types": "./dist/lazy.d.ts",
-      "default": "./dist/lazy.js"
     },
     "./LynxWrapper": {
       "types": "./dist/LynxWrapper/index.d.ts",

@@ -3,13 +3,13 @@
 // LICENSE file in the root directory of this source tree.
 import type { Worklet, WorkletRef } from '@lynx-js/react/worklet-runtime/bindings';
 
-import { nextCommitTaskId } from '../lifecycle/patchUpdate.js';
+import { nextCommitTaskId } from '../lifecycle/patch/patchUpdate.js';
 import { SnapshotInstance, backgroundSnapshotInstanceManager } from '../snapshot.js';
 import { workletUnRef } from './workletRef.js';
 
 let globalRefPatch: Record<string, number | null> = {};
-let globalRefsToRemove: Map</* commitId */ number, Map</* sign */ string, /* ref */ any>> = /* @__PURE__ */ new Map();
-let globalRefsToSet: Map</* commitId */ number, Record<string, number>> = /* @__PURE__ */ new Map();
+const globalRefsToRemove: Map</* commitId */ number, Map</* sign */ string, /* ref */ any>> = /* @__PURE__ */ new Map();
+const globalRefsToSet: Map</* commitId */ number, Record<string, number>> = /* @__PURE__ */ new Map();
 let nextRefId = 1;
 
 function unref(snapshot: SnapshotInstance, recursive: boolean): void {
@@ -35,7 +35,7 @@ function unref(snapshot: SnapshotInstance, recursive: boolean): void {
 function applyRef(ref: any, value: any) {
   // TODO: ref: exceptions thrown in user functions should be able to be caught by an Error Boundary
   if (typeof ref == 'function') {
-    let hasRefUnmount = typeof ref._unmount == 'function';
+    const hasRefUnmount = typeof ref._unmount == 'function';
     if (hasRefUnmount) {
       // @ts-ignore TS doesn't like moving narrowing checks into variables
       ref._unmount();
@@ -54,7 +54,7 @@ function updateBackgroundRefs(commitId: number): void {
   const oldRefMap = globalRefsToRemove.get(commitId);
   if (oldRefMap) {
     globalRefsToRemove.delete(commitId);
-    for (let ref of oldRefMap.values()) {
+    for (const ref of oldRefMap.values()) {
       applyRef(ref, null);
     }
   }
@@ -65,10 +65,7 @@ function updateBackgroundRefs(commitId: number): void {
       const ref = backgroundSnapshotInstanceManager.getValueBySign(sign);
       if (ref) {
         // TODO: ref: support __REF_FIRE_IMMEDIATELY__
-        const v = newRefMap[sign]
-          && lynx.createSelectorQuery().selectUniqueID(
-            newRefMap[sign],
-          );
+        const v = newRefMap[sign] && lynx.createSelectorQuery().selectUniqueID(newRefMap[sign]);
         applyRef(ref, v);
       }
     }

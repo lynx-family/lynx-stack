@@ -1,0 +1,34 @@
+coverage:
+  status:
+    project: off
+    patch:
+      default:
+        threshold: "1%"
+
+comment:
+  layout: "header, diff, flags, components" # show component info in the PR comment
+  behavior: default
+  require_changes: true # if true: only post the comment if coverage changes
+  require_base: false # [true :: must have a base report to post]
+  require_head: true # [true :: must have a head report to post]
+
+component_management:
+  default_rules: # default rules that will be inherited by all components
+    statuses:
+      - type: project
+        target: auto
+      - type: patch
+        threshold: "1%"
+  individual_components:
+    - component_id: react
+      name: React
+      paths:
+        - packages/react/**
+    - component_id: rspeedy
+      name: Rspeedy
+      paths:
+        - packages/rspeedy/**
+    - component_id: webpack
+      name: Webpack
+      paths:
+        - packages/webpack/**

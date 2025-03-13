@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/webpack-runtime-globals",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Use runtime wrapper which allow JavaScript to be load by Lynx.",
   "keywords": [
     "webpack",

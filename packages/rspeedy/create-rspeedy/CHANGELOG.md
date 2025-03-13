@@ -1,5 +1,13 @@
 # create-rspeedy
 
+## 0.8.3
+
+### Patch Changes
+
+- Support NPM provenance. ([#30](https://github.com/lynx-family/lynx-stack/pull/30))
+
+- Changing filename of index.jsx to index.js because rspeedy requires index.js. Then edit index.js import statement to make it import App.jsx instead of App.js since App.jsx is present in the template. This resolves "Module not found" error. ([#106](https://github.com/lynx-family/lynx-stack/pull/106))
+
 ## 0.8.2
 
 ### Patch Changes

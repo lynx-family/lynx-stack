@@ -1,5 +1,27 @@
 # @lynx-js/web-constants
 
+## 0.7.1
+
+### Patch Changes
+
+- Support NPM provenance. ([#30](https://github.com/lynx-family/lynx-stack/pull/30))
+
+- fix: some valus should be updateable by global scope ([#130](https://github.com/lynx-family/lynx-stack/pull/130))
+
+  Now we add an allowlist to allow some identifiers could be updated by globalThis.
+
+  For those values in the allowlist:
+
+  ```
+  globalThis.foo = 'xx';
+  console.log(foo); //'xx'
+  ```
+
+- refractor: improve some internal logic for element creating in MTS ([#71](https://github.com/lynx-family/lynx-stack/pull/71))
+
+- Updated dependencies [[`c617453`](https://github.com/lynx-family/lynx-stack/commit/c617453aea967aba702967deb2916b5c883f03bb)]:
+  - @lynx-js/web-worker-rpc@0.7.1
+
 ## 0.7.0
 
 ### Minor Changes

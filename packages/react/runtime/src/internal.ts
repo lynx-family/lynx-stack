@@ -5,12 +5,14 @@
 import { Suspense, createElement, lazy } from 'preact/compat';
 import type { FC } from 'react';
 
+import './lynx.js';
+
 import { factory as factory2 } from './compat/componentIs.js';
 import { useMemo } from './hooks/react.js';
 import { snapshotCreateList } from './list.js';
 import { loadLazyBundle } from './lynx/lazy-bundle.js';
 import { __root } from './root.js';
-import { DynamicPartType, SnapshotInstance, snapshotManager, __page, __pageId, createSnapshot } from './snapshot.js';
+import { DynamicPartType, SnapshotInstance, __page, __pageId, createSnapshot, snapshotManager } from './snapshot.js';
 
 export { __page, __pageId, __root };
 
@@ -47,7 +49,7 @@ export { wrapWithLynxComponent } from './compat/lynxComponent.js';
  * @internal a polyfill for <component is=? />
  */
 export const __ComponentIsPolyfill: FC<{ is: string }> = /* @__PURE__ */ factory2(
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   { Suspense, lazy, createElement, useMemo } as any,
   loadLazyBundle,
 );

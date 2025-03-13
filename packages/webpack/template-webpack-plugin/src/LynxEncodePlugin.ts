@@ -199,7 +199,9 @@ export class LynxEncodePluginImpl {
       }, async (args) => {
         const { encodeOptions } = args;
 
-        const { encode } = await import('@lynx-js/tasm');
+        const { getEncodeMode } = await import('@lynx-js/tasm');
+
+        const encode = getEncodeMode();
 
         const { buffer, lepus_debug } = await Promise.resolve(
           encode(encodeOptions),

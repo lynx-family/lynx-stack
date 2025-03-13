@@ -4,7 +4,7 @@
 import { Component } from 'preact';
 
 import { PerfSpecificKey, PerformanceTimingKeys, markTimingLegacy } from './performance.js';
-import { globalFlushOptions } from '../lifecycle/patchUpdate.js';
+import { globalFlushOptions } from '../lifecycle/patch/patchUpdate.js';
 import { NEXT_STATE } from '../renderToOpcodes/constants.js';
 
 if (__JS__) {
@@ -91,7 +91,7 @@ if (__JS__) {
 
   __Component.prototype.GlobalEventEmitter = lynxCoreInject.tt.GlobalEventEmitter;
 
-  __Component.prototype.createSelectorQuery = function(...args: any[]) {
+  __Component.prototype.createSelectorQuery = function() {
     if (!__DISABLE_CREATE_SELECTOR_QUERY_INCOMPATIBLE_WARNING__) {
       lynx.reportError(
         new Error(
@@ -99,7 +99,7 @@ if (__JS__) {
         ),
       );
     }
-    return lynx.createSelectorQuery(...args);
+    return lynx.createSelectorQuery();
   };
 
   const oldSetState = __Component.prototype.setState;
