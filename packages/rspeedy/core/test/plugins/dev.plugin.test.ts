@@ -375,4 +375,45 @@ describe('Plugins - Dev', () => {
       ],
     })
   })
+
+  test('server.base without /', async () => {
+    try {
+      const rsbuild = await createStubRspeedy({
+        server: {
+          base: 'dist',
+        },
+      })
+
+      await rsbuild.unwrapConfig()
+    } catch (error) {
+      expect(error).toMatchInlineSnapshot(
+        `[Error: [rsbuild:config] The "server.base" option should start with a slash, for example: "/base"]`,
+      )
+    }
+  })
+
+  test('dev.assetPrefix with server.base', async () => {
+    const rsbuild = await createStubRspeedy({
+      dev: {
+        assetPrefix: 'http://example.com/',
+      },
+      server: {
+        base: '/dist',
+      },
+    })
+
+    const config = await rsbuild.unwrapConfig()
+
+    expect(typeof config.output?.publicPath).toBe('string')
+
+    expect(config.output?.publicPath).toContain('http://example.com/')
+    expect(config.output?.publicPath).toContain('/dist/')
+
+    const { port, hostname, pathname } = new URL(config.output!.publicPath!)
+
+    expect(port).toBe('')
+    expect(isIP(hostname)).toBe(0)
+    expect(hostname).toBe('example.com')
+    expect(pathname).toBe('/dist/')
+  })
 })
