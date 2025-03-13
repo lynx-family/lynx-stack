@@ -1,17 +1,13 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { options } from 'preact';
 import type { VNode } from 'preact';
+import { options } from 'preact';
 import type { Component } from 'preact/compat';
 
-import { clearDelayedWorklets, updateWorkletRefInitValueChanges } from '@lynx-js/react/worklet-runtime/bindings';
-
-import { takeGlobalSnapshotPatch } from './snapshotPatch.js';
 import type { SnapshotPatch } from './snapshotPatch.js';
-import { snapshotPatchApply } from './snapshotPatchApply.js';
+import { takeGlobalSnapshotPatch } from './snapshotPatch.js';
 import { LifecycleConstant } from '../../lifecycleConstant.js';
-import { __pendingListUpdates } from '../../list.js';
 import {
   PerformanceTimingKeys,
   globalPipelineOptions,
@@ -20,8 +16,8 @@ import {
   setPipeline,
 } from '../../lynx/performance.js';
 import { CATCH_ERROR, COMMIT, RENDER_CALLBACKS, VNODE } from '../../renderToOpcodes/constants.js';
-import { takeGlobalRefPatchMap, updateBackgroundRefs } from '../../snapshot/ref.js';
-import { __page, backgroundSnapshotInstanceManager } from '../../snapshot.js';
+import { updateBackgroundRefs } from '../../snapshot/ref.js';
+import { backgroundSnapshotInstanceManager } from '../../snapshot.js';
 import { isEmptyObject } from '../../utils.js';
 import { takeWorkletRefInitValuePatch } from '../../worklet/workletRefPool.js';
 import { runDelayedUnmounts, takeDelayedUnmounts } from '../delayUnmount.js';
@@ -45,48 +41,6 @@ interface PatchOptions {
   pipelineOptions?: PipelineOptions;
   reloadVersion?: number;
   isHydration?: boolean;
-}
-
-function injectUpdatePatch(): void {
-  function updatePatch(
-    { data, patchOptions }: {
-      data: string;
-      patchOptions: PatchOptions;
-    },
-  ): void {
-    if ((patchOptions.reloadVersion ?? 0) < getReloadVersion()) {
-      return;
-    }
-
-    setPipeline(patchOptions.pipelineOptions);
-    markTiming(PerformanceTimingKeys.parse_changes_start);
-    let { snapshotPatch, workletRefInitValuePatch, flushOptions } = JSON.parse(data) as Patch;
-    markTiming(PerformanceTimingKeys.parse_changes_end);
-
-    markTiming(PerformanceTimingKeys.patch_changes_start);
-    updateWorkletRefInitValueChanges(workletRefInitValuePatch);
-    __pendingListUpdates.clear();
-    if (snapshotPatch) {
-      snapshotPatchApply(snapshotPatch);
-    }
-    __pendingListUpdates.flush();
-    // console.debug('********** Lepus updatePatch:');
-    // printSnapshotInstance(snapshotInstanceManager.values.get(-1)!);
-
-    commitMainThreadPatchUpdate(patchOptions.commitTaskId);
-    if (patchOptions.isHydration) {
-      clearDelayedWorklets();
-    }
-    markTiming(PerformanceTimingKeys.patch_changes_end);
-    flushOptions ||= {};
-    if (patchOptions.pipelineOptions) {
-      flushOptions.pipelineOptions = patchOptions.pipelineOptions;
-    }
-    // TODO: triggerDataUpdated?
-    __FlushElementTree(__page, flushOptions);
-  }
-
-  Object.assign(globalThis, { [LifecycleConstant.patchUpdate]: updatePatch });
 }
 
 function replaceCommitHook(): void {
@@ -204,13 +158,6 @@ function commitPatchUpdate(data: Patch, patchOptions: PatchOptions): Promise<voi
   });
 }
 
-function commitMainThreadPatchUpdate(commitTaskId?: number): void {
-  const refPatch = takeGlobalRefPatchMap();
-  if (!isEmptyObject(refPatch)) {
-    __OnLifecycleEvent([LifecycleConstant.ref, { commitTaskId, refPatch: JSON.stringify(refPatch) }]);
-  }
-}
-
 function genCommitTaskId(): number {
   return nextCommitTaskId++;
 }
@@ -227,14 +174,14 @@ function replaceRequestAnimationFrame(): void {
  * @internal
  */
 export {
-  injectUpdatePatch,
   commitPatchUpdate,
-  replaceCommitHook,
   genCommitTaskId,
-  commitMainThreadPatchUpdate,
-  replaceRequestAnimationFrame,
-  globalFlushOptions,
-  globalCommitTaskMap,
   globalBackgroundSnapshotInstancesToRemove,
+  globalCommitTaskMap,
+  globalFlushOptions,
   nextCommitTaskId,
+  replaceCommitHook,
+  replaceRequestAnimationFrame,
+  type PatchOptions,
+  type Patch,
 };

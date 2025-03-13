@@ -8,7 +8,8 @@ import './hooks/react.js';
 import { initProfileHook } from './debug/profile.js';
 import { document, setupBackgroundDocument } from './document.js';
 import { initDelayUnmount } from './lifecycle/delayUnmount.js';
-import { injectUpdatePatch, replaceCommitHook, replaceRequestAnimationFrame } from './lifecycle/patch/patchUpdate.js';
+import { replaceCommitHook, replaceRequestAnimationFrame } from './lifecycle/patch/commit.js';
+import { injectUpdateMainThread } from './lifecycle/patch/updateMainThread.js';
 import { injectCalledByNative } from './lynx/calledByNative.js';
 import { setupLynxEnv } from './lynx/env.js';
 import { injectLepusMethods } from './lynx/injectLepusMethods.js';
@@ -25,7 +26,7 @@ if (__LEPUS__ && typeof globalThis.processEvalResult === 'undefined') {
 
 if (__LEPUS__) {
   injectCalledByNative();
-  injectUpdatePatch();
+  injectUpdateMainThread();
   if (__DEV__) {
     injectLepusMethods();
   }

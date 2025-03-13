@@ -6,7 +6,8 @@
 import { render } from 'preact';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { injectUpdatePatch, replaceCommitHook } from '../../src/lifecycle/patch/patchUpdate';
+import { replaceCommitHook } from '../../src/lifecycle/patch/commit';
+import { injectUpdateMainThread } from '../../src/lifecycle/patch/updateMainThread';
 import { __root } from '../../src/root';
 import { setupPage } from '../../src/snapshot';
 import { destroyWorklet } from '../../src/worklet/destroy';
@@ -16,7 +17,7 @@ import { globalEnvManager } from '../utils/envManager';
 
 beforeAll(() => {
   setupPage(__CreatePage('0', 0));
-  injectUpdatePatch();
+  injectUpdateMainThread();
   replaceCommitHook();
 });
 

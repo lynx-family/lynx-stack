@@ -3,12 +3,12 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 */
-import { h, render } from 'preact';
+import { render } from 'preact';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { injectUpdatePatch } from '../../src/lifecycle/patch/patchUpdate';
 import { takeGlobalSnapshotPatch } from '../../src/lifecycle/patch/snapshotPatch';
 import { snapshotPatchApply } from '../../src/lifecycle/patch/snapshotPatchApply';
+import { injectUpdateMainThread } from '../../src/lifecycle/patch/updateMainThread';
 import { delayedLifecycleEvents, injectTt } from '../../src/lynx/tt';
 import { root } from '../../src/lynx-api';
 import { CHILDREN } from '../../src/renderToOpcodes/constants';
@@ -19,7 +19,7 @@ import { elementTree } from '../utils/nativeMethod';
 
 beforeAll(() => {
   setupPage(__CreatePage('0', 0));
-  injectUpdatePatch();
+  injectUpdateMainThread();
 });
 
 beforeEach(() => {

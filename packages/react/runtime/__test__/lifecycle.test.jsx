@@ -5,11 +5,7 @@ import { useEffect, useLayoutEffect, useState } from '../src/index';
 import { globalEnvManager } from './utils/envManager';
 import { waitSchedule } from './utils/nativeMethod';
 import { initDelayUnmount } from '../src/lifecycle/delayUnmount';
-import {
-  globalCommitTaskMap,
-  replaceCommitHook,
-  replaceRequestAnimationFrame,
-} from '../src/lifecycle/patch/patchUpdate';
+import { globalCommitTaskMap, replaceCommitHook, replaceRequestAnimationFrame } from '../src/lifecycle/patch/commit';
 import { deinitGlobalSnapshotPatch, initGlobalSnapshotPatch } from '../src/lifecycle/patch/snapshotPatch';
 import { LifecycleConstant } from '../src/lifecycleConstant';
 import { CATCH_ERROR } from '../src/renderToOpcodes/constants';
