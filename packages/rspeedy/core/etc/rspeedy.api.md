@@ -254,6 +254,7 @@ export type RspeedyInstance = RsbuildInstance & {
 
 // @public
 export interface Server {
+    base?: string;
     headers?: Record<string, string | string[]> | undefined;
     host?: string | undefined;
     port?: number | undefined;
