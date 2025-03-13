@@ -6,7 +6,7 @@ import type { Worklet, WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bin
 import type { BackgroundSnapshotInstance } from './backgroundSnapshot.js';
 import { ListUpdateInfoRecording, __pendingListUpdates, snapshotDestroyList } from './list.js';
 import { unref } from './snapshot/ref.js';
-import { SnapshotOperation, __globalSnapshotPatch } from './snapshotPatch.js';
+import { SnapshotOperation, __globalSnapshotPatch } from './lifecycle/patch/snapshotPatch.js';
 import { isDirectOrDeepEqual } from './utils.js';
 
 export const enum DynamicPartType {

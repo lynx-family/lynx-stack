@@ -89,7 +89,7 @@ export class MainThreadRef<T> extends WorkletRef<T> {
     super(initValue, 'main-thread');
     if (__JS__) {
       const id = this._id;
-      this._lifecycleObserver = lynx.getNativeApp().createJSObjectDestructionObserver(() => {
+      this._lifecycleObserver = lynx.getNativeApp().createJSObjectDestructionObserver?.(() => {
         lynx.getCoreContext?.().dispatchEvent({
           type: WorkletEvents.releaseWorkletRef,
           data: {

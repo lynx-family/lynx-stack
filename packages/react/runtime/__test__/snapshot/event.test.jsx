@@ -5,16 +5,17 @@
 */
 import { h, render } from 'preact';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { injectUpdatePatch } from '../../src/lifecycle/patch/patchUpdate';
+import { takeGlobalSnapshotPatch } from '../../src/lifecycle/patch/snapshotPatch';
+import { snapshotPatchApply } from '../../src/lifecycle/patch/snapshotPatchApply';
+import { delayedLifecycleEvents, injectTt } from '../../src/lynx/tt';
+import { root } from '../../src/lynx-api';
+import { CHILDREN } from '../../src/renderToOpcodes/constants';
+import { __root } from '../../src/root';
 import { backgroundSnapshotInstanceManager, setupPage } from '../../src/snapshot';
 import { globalEnvManager } from '../utils/envManager';
 import { elementTree } from '../utils/nativeMethod';
-import { __root } from '../../src/root';
-import { root } from '../../src/lynx-api';
-import { injectUpdatePatch } from '../../src/lifecycle/patchUpdate';
-import { snapshotPatchApply } from '../../src/snapshotPatchApply';
-import { takeGlobalSnapshotPatch } from '../../src/snapshotPatch';
-import { delayedLifecycleEvents, injectTt } from '../../src/lynx/tt';
-import { CHILDREN } from '../../src/renderToOpcodes/constants';
 
 beforeAll(() => {
   setupPage(__CreatePage('0', 0));

@@ -7,25 +7,25 @@ import type { Component } from 'preact/compat';
 
 import { clearDelayedWorklets, updateWorkletRefInitValueChanges } from '@lynx-js/react/worklet-runtime/bindings';
 
-import { LifecycleConstant } from '../lifecycleConstant.js';
-import { __pendingListUpdates } from '../list.js';
-import { runDelayedUnmounts, takeDelayedUnmounts } from './delayUnmount.js';
-import { getReloadVersion } from './pass.js';
+import { takeGlobalSnapshotPatch } from './snapshotPatch.js';
+import type { SnapshotPatch } from './snapshotPatch.js';
+import { snapshotPatchApply } from './snapshotPatchApply.js';
+import { LifecycleConstant } from '../../lifecycleConstant.js';
+import { __pendingListUpdates } from '../../list.js';
 import {
   PerformanceTimingKeys,
   globalPipelineOptions,
   markTiming,
   markTimingLegacy,
   setPipeline,
-} from '../lynx/performance.js';
-import { CATCH_ERROR, COMMIT, RENDER_CALLBACKS, VNODE } from '../renderToOpcodes/constants.js';
-import { takeGlobalRefPatchMap, updateBackgroundRefs } from '../snapshot/ref.js';
-import { __page, backgroundSnapshotInstanceManager } from '../snapshot.js';
-import { takeGlobalSnapshotPatch } from '../snapshotPatch.js';
-import type { SnapshotPatch } from '../snapshotPatch.js';
-import { snapshotPatchApply } from '../snapshotPatchApply.js';
-import { isEmptyObject } from '../utils.js';
-import { takeWorkletRefInitValuePatch } from '../worklet/workletRefPool.js';
+} from '../../lynx/performance.js';
+import { CATCH_ERROR, COMMIT, RENDER_CALLBACKS, VNODE } from '../../renderToOpcodes/constants.js';
+import { takeGlobalRefPatchMap, updateBackgroundRefs } from '../../snapshot/ref.js';
+import { __page, backgroundSnapshotInstanceManager } from '../../snapshot.js';
+import { isEmptyObject } from '../../utils.js';
+import { takeWorkletRefInitValuePatch } from '../../worklet/workletRefPool.js';
+import { runDelayedUnmounts, takeDelayedUnmounts } from '../delayUnmount.js';
+import { getReloadVersion } from '../pass.js';
 
 let globalFlushOptions: FlushOptions = {};
 

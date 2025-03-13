@@ -1,15 +1,20 @@
 import { Component, options, render } from 'preact';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { useEffect, useLayoutEffect, useState } from '../src/index';
-import { globalCommitTaskMap, replaceCommitHook, replaceRequestAnimationFrame } from '../src/lifecycle/patchUpdate';
-import { backgroundSnapshotInstanceManager, setupPage } from '../src/snapshot';
-import { deinitGlobalSnapshotPatch, initGlobalSnapshotPatch } from '../src/snapshotPatch';
 import { globalEnvManager } from './utils/envManager';
 import { waitSchedule } from './utils/nativeMethod';
 import { initDelayUnmount } from '../src/lifecycle/delayUnmount';
+import {
+  globalCommitTaskMap,
+  replaceCommitHook,
+  replaceRequestAnimationFrame,
+} from '../src/lifecycle/patch/patchUpdate';
+import { deinitGlobalSnapshotPatch, initGlobalSnapshotPatch } from '../src/lifecycle/patch/snapshotPatch';
+import { LifecycleConstant } from '../src/lifecycleConstant';
 import { CATCH_ERROR } from '../src/renderToOpcodes/constants';
 import { __root } from '../src/root';
-import { LifecycleConstant } from '../src/lifecycleConstant';
+import { backgroundSnapshotInstanceManager, setupPage } from '../src/snapshot';
 
 beforeAll(() => {
   setupPage(__CreatePage('0', 0));

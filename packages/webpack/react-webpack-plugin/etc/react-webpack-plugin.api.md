@@ -40,6 +40,8 @@ export class ReactWebpackPlugin {
 // @public
 export interface ReactWebpackPluginOptions {
     disableCreateSelectorQueryIncompatibleWarning?: boolean | undefined;
+    // @alpha
+    experimental_isLazyBundle?: boolean;
     firstScreenSyncTiming?: 'immediately' | 'jsReady';
     mainThreadChunks?: string[] | undefined;
 }

@@ -76,7 +76,7 @@ export { lazy }
 
 // @public
 export interface Lynx {
-    registerDataProcessors: (dataProcessorDefinition: DataProcessorDefinition) => void;
+    registerDataProcessors: (dataProcessorDefinition?: DataProcessorDefinition) => void;
     triggerGlobalEventFromLepus: (eventName: string, params: any) => void;
 }
 
