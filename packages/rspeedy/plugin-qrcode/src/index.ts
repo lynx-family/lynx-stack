@@ -162,7 +162,7 @@ export function pluginQRCode(
             port,
             schema,
             tunnel: {
-              isOpen: true,
+              isOpen: false,
               port: port,
               url: '',
               tunnelConfig,

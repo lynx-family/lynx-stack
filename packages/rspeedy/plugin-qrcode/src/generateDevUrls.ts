@@ -38,10 +38,12 @@ export default function generateDevUrls(
     name = filename
   }
 
-  // <port> is supported in `dev.assetPrefix`, we should replace it with the real port
-  let prefix = assetPrefix.replaceAll('<port>', String(port))
-  if (tunnel.isOpen) {
+  let prefix = ''
+  if (tunnel.isOpen && tunnel.url !== '') {
     prefix = tunnel.url
+  } else {
+    // <port> is supported in `dev.assetPrefix`, we should replace it with the real port
+    prefix = assetPrefix.replaceAll('<port>', String(port))
   }
 
   const customSchema = schemaFn(

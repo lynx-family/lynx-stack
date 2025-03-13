@@ -31,11 +31,32 @@ export async function registerConsoleShortcuts(
 ): Promise<() => void> {
   const [
     { default: showQRCode },
+    { log },
   ] = await Promise.all([
     import('./showQRCode.js'),
+    import('@clack/prompts'),
   ])
 
   const currentEntry = options.entries[0]!
+
+  if (options.tunnel.isOpen && options.tunnel.url === '') {
+    const tunnelUrl = await connectNgrokTunnel(options.tunnel)
+    if (tunnelUrl === null) {
+      options.tunnel.url = ''
+      options.tunnel.isOpen = false
+      log.error(
+        'Unable to connect to the ngrok \nfalling back to localhost',
+      )
+      await new Promise(
+        (res) => {
+          setTimeout(() => res(1), 1000)
+        },
+      )
+    } else {
+      options.tunnel.url = tunnelUrl
+      options.tunnel.isOpen = true
+    }
+  }
   const devUrls = generateDevUrls(
     options.api,
     currentEntry,
@@ -105,24 +126,26 @@ async function loop(
         options.tunnel.isOpen = false
         options.tunnel.url = ''
       } else {
-        const tunnelUrl = await connectNgrokTunnel(options.tunnel)
+        const tunnelUrl: string | null = await connectNgrokTunnel(
+          options.tunnel,
+        )
         if (tunnelUrl === null) {
           log.error(
             'Unable to connect to the ngrok \nfalling back to localhost',
           )
           await new Promise(
             (res) => {
-              setTimeout(() => res(1), 250)
+              setTimeout(() => res(1), 1000)
             },
           )
         } else {
           options.tunnel.isOpen = true
           options.tunnel.url = tunnelUrl
-          value = getCurrentUrl()
-          await options.onPrint?.(value)
-          await showQRCode(value)
         }
       }
+      value = getCurrentUrl()
+      await options.onPrint?.(value)
+      await showQRCode(value)
     }
 
     if (name === 'r') {

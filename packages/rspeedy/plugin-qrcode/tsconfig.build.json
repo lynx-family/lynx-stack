@@ -7,7 +7,11 @@
     "rootDir": "./src",
   },
   "references": [
-    { "path": "../core/tsconfig.build.json" },
+    {
+      "path": "../core/tsconfig.build.json",
+    },
   ],
-  "include": ["src"],
+  "include": [
+    "src",
+  ],
 }
