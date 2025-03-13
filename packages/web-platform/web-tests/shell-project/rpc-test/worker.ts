@@ -9,6 +9,7 @@ import {
   wait,
   waitSync,
   testLazy,
+  addAsyncWithTransfer,
 } from './endpoints.ts';
 globalThis.onmessage = (ev) => {
   const port = ev.data.port as MessagePort;
@@ -23,5 +24,6 @@ globalThis.onmessage = (ev) => {
     wait: rpc.createCall(wait),
     waitSync: rpc.createCall(waitSync),
     testLazy: rpc.createCall(testLazy),
+    addAsyncWithTransfer: rpc.createCall(addAsyncWithTransfer),
   });
 };

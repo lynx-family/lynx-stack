@@ -181,4 +181,28 @@ test.describe('rpc tests', () => {
     });
     expect(ret2).toBe(100);
   });
+
+  test('async return with transfer', async ({ page }) => {
+    const worker = page.workers().pop()!;
+    await worker.evaluate(async () => {
+      // @ts-ignore
+      const offscreen = await globalThis.addAsyncWithTransfer();
+      offscreen.width = 100;
+      offscreen.height = 100;
+      const ctx = offscreen.getContext('2d');
+      ctx.fillStyle = 'red';
+      ctx.fillRect(0, 0, 100, 100);
+    });
+    await waitImpl(100);
+    expect(
+      await page.evaluate(() => {
+        return document.querySelector('canvas')?.width === 100;
+      }),
+    ).toBeTruthy;
+    expect(
+      await page.evaluate(() => {
+        return document.querySelector('canvas')?.height === 100;
+      }),
+    ).toBeTruthy;
+  });
 });
