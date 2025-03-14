@@ -12,9 +12,30 @@ packages:
   - packages/third-party/*
   - .github/actions/eco-ci
 catalog:
-  "@microsoft/api-extractor": 7.51.1
-  "@rsbuild/core": 1.2.16
-  "@rspack/cli": 1.2.8
-  "@rspack/core": 1.2.8
+  "@microsoft/api-extractor": "7.51.1"
+
+catalogs:
+  # Rsbuild monorepo packages
+  rsbuild:
+    "@rsbuild/core": "1.2.16"
+    "@rsbuild/webpack": "1.2.3"
+    "@rsbuild/plugin-less": "1.1.1"
+    "@rsbuild/plugin-sass": "1.2.2"
+    "@rsbuild/plugin-webpack-swc": "1.0.12"
+
+  # Rspack monorepo packages
+  rspack:
+    "@rspack/cli": "1.2.8"
+    "@rspack/core": "1.2.8"
+    "@rspack/test-tools": "1.2.8"
+
+overrides:
+  "@rspack/core": "$@rspack/core"
+  "@rsbuild/core>@rspack/core": "$@rspack/core"
+
+patchedDependencies:
+  "@napi-rs/cli@2.18.4": "patches/@napi-rs__cli@2.18.4.patch"
+  "@rollup/plugin-typescript": "patches/@rollup__plugin-typescript.patch"
+
 ignoredBuiltDependencies:
   - core-js
