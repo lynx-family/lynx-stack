@@ -12,13 +12,14 @@ import type {
   PostCSSLoaderOptions,
   Rspack,
 } from '@rsbuild/core'
-import { describe, expect, test } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 
 import {
   CssExtractRspackPlugin,
   CssExtractWebpackPlugin,
 } from '@lynx-js/css-extract-webpack-plugin'
 import { LAYERS } from '@lynx-js/react-webpack-plugin'
+import { createRspeedy } from '@lynx-js/rspeedy'
 
 import { getLoaderOptions } from './getLoaderOptions.js'
 import { pluginStubRspeedyAPI } from './stub-rspeedy-api.plugin.js'
@@ -580,6 +581,49 @@ describe('Plugins - CSS', () => {
 
       // Has `lightningcss-loader`
       expect(config).not.toHaveLoader('builtin:lightningcss-loader')
+    })
+  })
+
+  describe('minification', () => {
+    test('default', async () => {
+      vi.stubEnv('NODE_ENV', 'production')
+      const rspeedy = await createRspeedy({
+        rspeedyConfig: {
+          plugins: [pluginReactLynx(), pluginStubRspeedyAPI()],
+        },
+      })
+
+      const [config] = await rspeedy.initConfigs()
+
+      expect(
+        config?.optimization?.minimizer?.find(minimizer =>
+          minimizer && minimizer !== '...'
+          && minimizer.constructor.name === 'CssMinimizerPlugin'
+        ),
+      ).toBeDefined()
+    })
+
+    test('with enableRemoveCSSScope: false', async () => {
+      vi.stubEnv('NODE_ENV', 'production')
+      const rspeedy = await createRspeedy({
+        rspeedyConfig: {
+          plugins: [
+            pluginReactLynx({
+              enableRemoveCSSScope: false,
+            }),
+            pluginStubRspeedyAPI(),
+          ],
+        },
+      })
+
+      const [config] = await rspeedy.initConfigs()
+
+      expect(
+        config?.optimization?.minimizer?.find(minimizer =>
+          minimizer && minimizer !== '...'
+          && minimizer.constructor.name === 'CssMinimizerPlugin'
+        ),
+      ).toBeDefined()
     })
   })
 })
