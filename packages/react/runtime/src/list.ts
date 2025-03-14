@@ -3,7 +3,8 @@
 // LICENSE file in the root directory of this source tree.
 import { hydrate } from './hydrate.js';
 import { commitMainThreadPatchUpdate } from './lifecycle/patch/updateMainThread.js';
-import type { SnapshotInstance } from './snapshot.js';
+import { LifecycleConstant } from './lifecycleConstant.js';
+import { type SnapshotInstance } from './snapshot.js';
 
 export interface ListUpdateInfo {
   flush(): void;
@@ -223,9 +224,28 @@ export const __pendingListUpdates = {
   },
 };
 
-export const gSignMap: Record<number, Map<number, SnapshotInstance>> = {};
-export const gRecycleMap: Record<number, Map<string, Map<number, SnapshotInstance>>> = {};
+const gSignMap: Record<number, Map<number, SnapshotInstance>> = {};
+const gRecycleMap: Record<number, Map<string, Map<number, SnapshotInstance>>> = {};
+const { gReadyCallbacks, saveReadyCallback } = /* @__PURE__ */ (function() {
+  const gReadyCallbacks: Record<number, Map<number, () => void>> = {};
 
+  function saveReadyCallback(listID: number, childCtxId: number, cb: () => void): void {
+    gReadyCallbacks[listID] ??= new Map();
+    gReadyCallbacks[listID]!.set(childCtxId, cb);
+  }
+
+  // @ts-expect-error `rLynxOnListItemReady` is a global function
+  globalThis.rLynxOnListItemReady = (data: any) => {
+    const { listID, childCtxId } = data;
+    const cb = gReadyCallbacks[listID]?.get(childCtxId);
+    if (cb) {
+      gReadyCallbacks[listID]?.delete(childCtxId);
+      cb();
+    }
+  };
+
+  return { gReadyCallbacks, saveReadyCallback };
+})();
 export function clearListGlobal(): void {
   for (const key in gSignMap) {
     delete gSignMap[key];
@@ -233,13 +253,16 @@ export function clearListGlobal(): void {
   for (const key in gRecycleMap) {
     delete gRecycleMap[key];
   }
+  for (const key in gReadyCallbacks) {
+    delete gReadyCallbacks[key];
+  }
 }
 
 export function componentAtIndexFactory(ctx: SnapshotInstance[]): ComponentAtIndexCallback {
-  const componentAtIndex = (
+  const componentAtChildCtx = (
     list: FiberElement,
     listID: number,
-    cellIndex: number,
+    childCtx: SnapshotInstance,
     operationID: number,
     enableReuseNotification: boolean,
   ) => {
@@ -249,12 +272,26 @@ export function componentAtIndexFactory(ctx: SnapshotInstance[]): ComponentAtInd
       throw new Error('componentAtIndex called on removed list');
     }
 
-    const childCtx = ctx[cellIndex];
-    if (!childCtx) {
-      throw new Error('childCtx not found');
-    }
-
     const platformInfo = childCtx.__listItemPlatformInfo || {};
+
+    if (
+      childCtx.__values?.[0]['data-isReady'] === false
+    ) {
+      __OnLifecycleEvent([LifecycleConstant.publishEvent, {
+        handlerName: `${childCtx.__id}:0:bindComponentAtIndex`,
+        data: {
+          listID,
+          childCtxId: childCtx.__id,
+        },
+      }]);
+
+      saveReadyCallback(listID, childCtx.__id, () => {
+        // the cellIndex may be changed already, but the `childCtx` is the same
+        componentAtChildCtx(list, listID, childCtx, operationID, enableReuseNotification);
+      });
+
+      return;
+    }
 
     const uniqID = childCtx.type + (platformInfo['reuse-identifier'] ?? '');
     const recycleSignMap = recycleMap.get(uniqID);
@@ -329,7 +366,20 @@ export function componentAtIndexFactory(ctx: SnapshotInstance[]): ComponentAtInd
     commitMainThreadPatchUpdate(undefined);
     return sign;
   };
-  return componentAtIndex;
+
+  return function componentAtIndex(
+    list: FiberElement,
+    listID: number,
+    cellIndex: number,
+    operationID: number,
+    enableReuseNotification: boolean,
+  ) {
+    const childCtx = ctx[cellIndex];
+    if (!childCtx) {
+      throw new Error('childCtx not found');
+    }
+    return componentAtChildCtx(list, listID, childCtx, operationID, enableReuseNotification);
+  };
 }
 
 export function enqueueComponentFactory(): EnqueueComponentCallback {
@@ -381,4 +431,5 @@ export function snapshotDestroyList(si: SnapshotInstance): void {
   const listID = __GetElementUniqueID(list);
   delete gSignMap[listID];
   delete gRecycleMap[listID];
+  delete gReadyCallbacks[listID];
 }

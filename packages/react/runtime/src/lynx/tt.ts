@@ -192,6 +192,11 @@ async function onLifecycleEventImpl(type: string, data: any): Promise<void> {
       }
       break;
     }
+    case LifecycleConstant.publishEvent: {
+      const { handlerName, data: data2 } = data;
+      publishEvent(handlerName, data2);
+      break;
+    }
   }
 }
 
