@@ -1,5 +1,29 @@
 # @lynx-js/react-webpack-plugin
 
+## 0.6.8
+
+### Patch Changes
+
+- Shake `useImperativeHandle` on the main-thread by default. ([#153](https://github.com/lynx-family/lynx-stack/pull/153))
+
+  ```js
+  import { forwardRef, useImperativeHandle } from '@lynx-js/react';
+
+  export default forwardRef(function App(_, ref) {
+    useImperativeHandle(ref, () => {
+      // This should be considered as background only
+      return {
+        name() {
+          // This should be considered as background only
+          console.info('This should not exist in main-thread');
+        },
+      };
+    });
+  });
+  ```
+
+- Avoid wrapping standalone lazy bundles with `var globDynamicComponentEntry`. ([#177](https://github.com/lynx-family/lynx-stack/pull/177))
+
 ## 0.6.7
 
 ### Patch Changes

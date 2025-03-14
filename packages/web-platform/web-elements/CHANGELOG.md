@@ -1,5 +1,38 @@
 # @lynx-js/web-elements
 
+## 0.4.0
+
+### Minor Changes
+
+- refactor: remove web-elements/lazy and loadNewTag ([#123](https://github.com/lynx-family/lynx-stack/pull/123))
+
+  - remove @lynx-js/web-elements/lazy
+  - remove loadElement
+  - remove loadNewTag callback
+
+  **This is a breaking change**
+
+  Now we removed the default lazy loading preinstalled in web-core
+
+  Please add the following statement in your web project
+
+  ```
+  import "@lynx-js/web-elements/all";
+  ```
+
+### Patch Changes
+
+- feat: never require the x-enable-xx-event attributes ([#157](https://github.com/lynx-family/lynx-stack/pull/157))
+
+  After this commit, we do not need user to add `x-enable-xx-event` to enable corresponding events
+
+- feat: add support for `<lynx-view/>` with shadowroot ([#198](https://github.com/lynx-family/lynx-stack/pull/198))
+
+  add a minor logic in `<x-overlay-ng>` to be compatiable with the <lynx-view> with a shadowroot
+
+- Updated dependencies [[`4c2ee65`](https://github.com/lynx-family/lynx-stack/commit/4c2ee65368eb4b39722ed36305101fe89a782b1a)]:
+  - @lynx-js/web-elements-reactive@0.2.0
+
 ## 0.3.0
 
 ### Minor Changes
