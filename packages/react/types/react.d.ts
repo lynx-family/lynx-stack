@@ -142,6 +142,6 @@ declare module '@lynx-js/types' {
      * we can use typeof item as the reuse-identifier.
      * By default, the developer does not provide a reuse-identifier, which is determined by the framework at the compile stage.
      */
-    'reuse-identifier'?: Key;
+    'reuse-identifier'?: Key | null | undefined;
   }
 }
