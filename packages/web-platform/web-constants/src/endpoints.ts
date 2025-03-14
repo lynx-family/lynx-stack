@@ -59,7 +59,7 @@ export const mainThreadStartEndpoint = createRpcEndpoint<
 export const updateDataEndpoint = createRpcEndpoint<
   [Cloneable, Record<string, string>],
   void
->('updateData', false, true, false);
+>('updateData', false, true);
 
 export const sendGlobalEventEndpoint = createRpcEndpoint<
   [string, Cloneable[] | undefined],
@@ -69,7 +69,7 @@ export const sendGlobalEventEndpoint = createRpcEndpoint<
 export const disposeEndpoint = createRpcEndpoint<
   [],
   void
->('dispose', false, true, false);
+>('dispose', false, true);
 
 export const postTimingResult = createRpcEndpoint<
   [
@@ -105,7 +105,7 @@ export const BackgroundThreadStartEndpoint = createRpcEndpoint<[
     customSections: Record<string, Cloneable>;
     nativeModulesUrl?: string;
   },
-], void>('start', false, true, false);
+], void>('start', false, true);
 
 /**
  * threadLabel, Error message, info
@@ -113,7 +113,7 @@ export const BackgroundThreadStartEndpoint = createRpcEndpoint<[
 export const reportErrorEndpoint = createRpcEndpoint<
   [string, string, unknown],
   void
->('reportError', false, true, false);
+>('reportError', false, true);
 
 export const flushElementTreeEndpoint = createRpcEndpoint<
   [
@@ -122,7 +122,7 @@ export const flushElementTreeEndpoint = createRpcEndpoint<
     styleContent: string | undefined,
   ],
   void
->('flushElementTree', false, true, false);
+>('flushElementTree', false, true);
 
 export const mainThreadChunkReadyEndpoint = createRpcEndpoint<
   [{
@@ -143,7 +143,7 @@ export const postTimingInfoFromMainThread = createRpcEndpoint<
 export const callLepusMethodEndpoint = createRpcEndpoint<
   [name: string, data: unknown],
   void
->('callLepusMethod', false, true, false);
+>('callLepusMethod', false, true);
 
 export const invokeUIMethodEndpoint = createRpcEndpoint<
   [
@@ -155,7 +155,7 @@ export const invokeUIMethodEndpoint = createRpcEndpoint<
     root_unique_id: number | undefined,
   ],
   InvokeCallbackRes
->('__invokeUIMethod', false, true, false);
+>('__invokeUIMethod', false, true);
 
 export const setNativePropsEndpoint = createRpcEndpoint<
   [
@@ -167,17 +167,17 @@ export const setNativePropsEndpoint = createRpcEndpoint<
     root_unique_id: number | undefined,
   ],
   void
->('__setNativeProps', false, true, false);
+>('__setNativeProps', false, true);
 
 export const nativeModulesCallEndpoint = createRpcEndpoint<
   [name: string, data: Cloneable, moduleName: string],
   any
->('nativeModulesCall', false, true, false);
+>('nativeModulesCall', false, true);
 
 export const getCustomSectionsEndpoint = createRpcEndpoint<
   [string],
   Cloneable
->('getCustomSections', false, true, false);
+>('getCustomSections', false, true);
 
 export const postTimingInfoFromBackgroundThread = createRpcEndpoint<
   [
@@ -207,4 +207,4 @@ export const selectComponentEndpoint = createRpcEndpoint<
     single: boolean,
   ],
   void
->('__selectComponent', false, true, false);
+>('__selectComponent', false, true);

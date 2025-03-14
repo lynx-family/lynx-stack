@@ -100,6 +100,11 @@ export function createRpcEndpoint<Parameters extends any[], Return = void>(
   name: string,
   isSync: false,
   hasReturn: true,
+): RpcEndpointAsync<Parameters, Return>;
+export function createRpcEndpoint<Parameters extends any[], Return = void>(
+  name: string,
+  isSync: false,
+  hasReturn: true,
   hasReturnTransfer: false,
 ): RpcEndpointAsync<Parameters, Return>;
 export function createRpcEndpoint<Parameters extends any[], Return = void>(
