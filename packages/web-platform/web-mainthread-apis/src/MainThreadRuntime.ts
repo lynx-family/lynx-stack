@@ -152,9 +152,7 @@ export class MainThreadRuntime {
       this.isFp
         ? genCssContent(
           this.config.styleInfo,
-          this.config.entryId,
           this.config.pageConfig,
-          this.config.browserConfig,
         )
         : undefined,
     );

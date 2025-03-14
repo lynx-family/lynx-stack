@@ -7,10 +7,8 @@ import {
   type StyleInfo,
   type CssInJsInfo,
   type PageConfig,
-  type BrowserConfig,
   cssIdAttribute,
   lynxTagAttribute,
-  cardIdAttribute,
 } from '@lynx-js/web-constants';
 import { transformLynxStyles } from '@lynx-js/web-style-transformer';
 
@@ -69,9 +67,7 @@ export function transformToWebCss(styleInfo: StyleInfo) {
  */
 export function genCssContent(
   styleInfo: StyleInfo,
-  entryId: string,
   pageConfig: PageConfig,
-  browserConfig: BrowserConfig,
 ): string {
   function getExtraSelectors(
     cssId?: string,
@@ -84,10 +80,8 @@ export function genCssContent(
         // To make sure the Specificity correct
         suffix += `[${lynxTagAttribute}]`;
       }
-    }
-    if (!browserConfig.supportAtScope) {
-      prepend = `[${cardIdAttribute}="${entryId}"] `
-        + prepend;
+    } else {
+      suffix += `[${lynxTagAttribute}]`;
     }
     return { prepend, suffix };
   }

@@ -8,5 +8,4 @@ export interface PageConfig {
 }
 
 export interface BrowserConfig {
-  supportAtScope: boolean;
 }

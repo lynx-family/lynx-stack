@@ -72,8 +72,13 @@ export class XOverlayAttributes
     if (e.target === this.#dom || e.target === diaglogDom) {
       diaglogDom.close();
       const { clientX, clientY } = e;
-      const targetElemnt = document.elementFromPoint(clientX, clientY);
-      targetElemnt?.dispatchEvent(new MouseEvent('click', e));
+      let targetElement = document.elementFromPoint(clientX, clientY);
+      if (targetElement?.tagName === 'LYNX-VIEW' && targetElement.shadowRoot) {
+        targetElement =
+          targetElement.shadowRoot.elementFromPoint(clientX, clientY)
+            ?? targetElement;
+      }
+      targetElement?.dispatchEvent(new MouseEvent('click', e));
       requestAnimationFrame(() => {
         if (this.#visible && diaglogDom.isConnected) {
           diaglogDom.showModal();

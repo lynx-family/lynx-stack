@@ -16,6 +16,7 @@ import {
   type NativeModulesCall,
   type UpdateDataType,
 } from '@lynx-js/web-constants';
+import { inShadowRootStyles } from './inShadowRootStyles.js';
 
 /**
  * Based on our experiences, these elements are almost used in all lynx cards.
@@ -32,6 +33,7 @@ import {
  * @param {"auto" | null} width [optional] set it to "auto" for width auto-sizing
  * @param {NapiModulesMap} napiModulesMap [optional] the napiModule which is called in lynx-core. key is module-name, value is esm url.
  * @param {NapiModulesCall} onNapiModulesCall [optional] the NapiModule value handler.
+ * @param {"false" | "true" | null} injectHeadLinks [optional] @default true set it to "false" to disable injecting the <link href="" ref="stylesheet"> styles into shadowroot
  *
  * @property entryId the currently Lynx view entryId.
  *
@@ -343,6 +345,9 @@ export class LynxView extends HTMLElement {
       this.#instance.rootDom.remove();
     }
     this.#instance = undefined;
+    if (this.shadowRoot) {
+      this.shadowRoot.innerHTML = '';
+    }
   }
 
   /**
@@ -410,7 +415,24 @@ export class LynxView extends HTMLElement {
             rootDom,
           };
           this.#handleAutoSize();
-          this.append(rootDom);
+          if (!this.shadowRoot) {
+            this.attachShadow({ mode: 'open' });
+          }
+          const styleElement = document.createElement('style');
+          this.shadowRoot!.append(styleElement);
+          const styleSheet = styleElement.sheet!;
+          styleSheet.insertRule(inShadowRootStyles);
+          const injectHeadLinks =
+            this.getAttribute('inject-head-links') !== 'false';
+          if (injectHeadLinks) {
+            document.head.querySelectorAll('link[rel="stylesheet"]').forEach(
+              (linkElement) => {
+                const href = (linkElement as HTMLLinkElement).href;
+                styleSheet.insertRule(`@import url("${href}");`);
+              },
+            );
+          }
+          this.shadowRoot!.append(rootDom);
         }
       });
     }
