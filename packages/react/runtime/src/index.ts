@@ -87,3 +87,4 @@ export {
 };
 
 export * from './lynx-api.js';
+export { List } from '@lynx-js/react/runtime-components';
