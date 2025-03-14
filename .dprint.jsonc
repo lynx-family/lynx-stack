@@ -51,6 +51,8 @@
     "**/expected/**",
     "**/rspack-expected/**",
     "packages/**/test/**/hotCases/**",
+
+    "packages/testing-library/react-lynx-testing-library/tsconfig.json",
   ],
   "plugins": [
     "https://plugins.dprint.dev/exec-0.5.0.json@8d9972eee71fa1590e04873540421f3eda7674d0f1aae3d7c788615e7b7413d0",
