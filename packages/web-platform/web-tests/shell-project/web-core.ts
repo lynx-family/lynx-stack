@@ -57,7 +57,7 @@ async function run() {
   };
   lynxView.onNapiModulesCall = (name, data, moduleName) => {
     if (name === 'getColor' && moduleName === 'color_methods') {
-      return data.color;
+      return { data: data.color };
     }
   };
   lynxView.addEventListener('error', () => {
