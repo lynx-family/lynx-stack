@@ -74,6 +74,8 @@ export default tseslint.config(
       // TODO: enable eslint for web-platform
       // web-platform
       'packages/web-platform/**',
+
+      'packages/third-party/tailwind-preset/README.md',
     ],
   },
   js.configs.recommended,
