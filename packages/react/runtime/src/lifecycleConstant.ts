@@ -7,6 +7,7 @@ export class LifecycleConstant {
   public static readonly globalEventFromLepus = 'globalEventFromLepus';
   public static readonly jsReady = 'rLynxJSReady';
   public static readonly patchUpdate = 'rLynxChange';
+  public static readonly publishEvent = 'rLynxPublishEvent';
 }
 
 export const enum NativeUpdateDataType {
