@@ -1,0 +1,43 @@
+name: Web Platform Report
+"on":
+  pull_request:
+    branches:
+      - main
+    paths:
+      - package.json
+      - pnpm-lock.yaml
+      - "packages/web-platform/**"
+permissions:
+  contents: read
+  pull-requests: write
+env:
+  CI: 1
+  TURBO_TELEMETRY_DISABLED: 1
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  bundle-size-report:
+    runs-on: lynx-ubuntu-24.04-medium
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: |
+          pnpm install --frozen-lockfile
+          pnpm turbo --filter "@lynx-js/web-explorer" build
+          mv ./packages/web-platform/web-explorer/dist/stats.json ../stats.head.json
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.base_ref }}
+      - run: |
+          pnpm install --frozen-lockfile
+          pnpm turbo --filter "@lynx-js/web-explorer" build
+          mv ./packages/web-platform/web-explorer/dist/stats.json ../stats.base.json
+      - uses: github/webpack-bundlesize-compare-action@v2.1.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          current-stats-json-path: ../stats.head.json
+          base-stats-json-path: ../stats.base.json
