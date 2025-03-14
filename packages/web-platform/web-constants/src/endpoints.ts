@@ -179,7 +179,7 @@ export const nativeModulesCallEndpoint = createRpcEndpoint<
 export const napiModulesCallEndpoint = createRpcEndpoint<
   [name: string, data: Cloneable, moduleName: string],
   any
->('napiModulesCall', false, true);
+>('napiModulesCall', false, true, true);
 
 export const getCustomSectionsEndpoint = createRpcEndpoint<
   [string],
