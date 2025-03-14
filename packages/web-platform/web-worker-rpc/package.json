@@ -20,5 +20,8 @@
     "Notice.txt",
     "CHANGELOG.md",
     "README.md"
-  ]
+  ],
+  "scripts": {
+    "api-extractor": "api-extractor run --verbose"
+  }
 }
