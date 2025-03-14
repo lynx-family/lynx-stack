@@ -38,10 +38,16 @@ import { createSnapshotSerializer } from 'path-serializer';
 import { beforeAll, expect } from 'vitest';
 import type { Configuration, RuleSetRule } from 'webpack';
 
+declare global {
+  var printLogger: boolean;
+}
+
 beforeAll((suite) => {
   process.env['REBUILD_TEST_SUITE_CWD'] = suite.file.filepath
     ? path.dirname(suite.file.filepath)
     : '';
+
+  globalThis.printLogger = process.argv.includes('--verbose');
 });
 
 const __filename = fileURLToPath(import.meta.url);
