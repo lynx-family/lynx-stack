@@ -46,11 +46,14 @@ export class Rpc {
   #textDecoder = new TextDecoder();
   #handlerMap = new Map<
     string,
-    (
+    | ((
       ...args: any[]
     ) =>
       | unknown
-      | Promise<unknown>
+      | Promise<unknown>)
+    | ((
+      ...args: any[]
+    ) =>
       | {
         data: unknown;
         transfer: Transferable[];
@@ -58,7 +61,7 @@ export class Rpc {
       | Promise<{
         data: unknown;
         transfer: Transferable[];
-      }>
+      }>)
   >();
 
   /**
