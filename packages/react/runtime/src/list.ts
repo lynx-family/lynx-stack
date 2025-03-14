@@ -3,10 +3,34 @@
 // LICENSE file in the root directory of this source tree.
 import { applyRefQueue } from './snapshot/workletRef.js';
 import type { SnapshotInstance } from './snapshot.js';
+import { LifecycleConstant } from './lifecycleConstant.js';
 
 export const gSignMap: Record<number, Map<number, SnapshotInstance>> = {};
 export const gRecycleMap: Record<number, Map<string, Map<number, SnapshotInstance>>> = {};
 const gParentWeakMap: WeakMap<SnapshotInstance, unknown> = new WeakMap();
+
+const { gReadyCallbacks, saveReadyCallback } = /* @__PURE__ */ (function() {
+  const gReadyCallbacks: Record<number, Map<number, () => void>> = {};
+
+  function saveReadyCallback(listID: number, childCtxId: number, cb: () => void): void {
+    gReadyCallbacks[listID] ??= new Map();
+    gReadyCallbacks[listID]!.set(childCtxId, cb);
+  }
+
+  // @ts-expect-error `rLynxOnListItemReady` is a global function
+  globalThis.rLynxOnListItemReady = (data: any) => {
+    const { listID, childCtxId } = data;
+    const cb = gReadyCallbacks[listID]?.get(childCtxId);
+    if (cb) {
+      gReadyCallbacks[listID]?.delete(childCtxId);
+      cb();
+    }
+  };
+
+  return { gReadyCallbacks, saveReadyCallback };
+})();
+
+export { gReadyCallbacks };
 
 export function clearListGlobal(): void {
   for (const key in gSignMap) {
@@ -14,6 +38,9 @@ export function clearListGlobal(): void {
   }
   for (const key in gRecycleMap) {
     delete gRecycleMap[key];
+  }
+  for (const key in gReadyCallbacks) {
+    delete gReadyCallbacks[key];
   }
 }
 
@@ -38,10 +65,10 @@ export function componentAtIndexFactory(
     }
   });
 
-  const componentAtIndex = (
+  const componentAtChildCtx = (
     list: FiberElement,
     listID: number,
-    cellIndex: number,
+    childCtx: SnapshotInstance,
     operationID: number,
     enableReuseNotification: boolean,
     enableBatchRender: boolean = false,
@@ -53,12 +80,26 @@ export function componentAtIndexFactory(
       throw new Error('componentAtIndex called on removed list');
     }
 
-    const childCtx = ctx[cellIndex];
-    if (!childCtx) {
-      throw new Error('childCtx not found');
-    }
-
     const platformInfo = childCtx.__listItemPlatformInfo ?? {};
+
+    if (
+      childCtx.__values?.[0]['data-isReady'] === false
+    ) {
+      __OnLifecycleEvent([LifecycleConstant.publishEvent, {
+        handlerName: `${childCtx.__id}:0:bindComponentAtIndex`,
+        data: {
+          listID,
+          childCtxId: childCtx.__id,
+        },
+      }]);
+
+      return new Promise<number>((resolve) => {
+        saveReadyCallback(listID, childCtx.__id, () => {
+          // the cellIndex may be changed already, but the `childCtx` is the same
+          resolve(componentAtChildCtx(list, listID, childCtx, operationID, enableReuseNotification));
+        });
+      });
+    }
 
     const uniqID = childCtx.type + (platformInfo['reuse-identifier'] ?? '');
     const recycleSignMap = recycleMap.get(uniqID);
@@ -102,6 +143,12 @@ export function componentAtIndexFactory(
       oldCtx.unRenderElements();
       if (!oldCtx.__id) {
         oldCtx.tearDown();
+      } else if (
+        oldCtx.__values?.[0]['data-isReady'] === true
+      ) {
+        __OnLifecycleEvent([LifecycleConstant.publishEvent, {
+          handlerName: `${oldCtx.__id}:0:bindEnqueueComponent`,
+        }]);
       }
       const root = childCtx.__element_root!;
       applyRefQueue();
@@ -156,25 +203,68 @@ export function componentAtIndexFactory(
     return sign;
   };
 
-  const componentAtIndexes = (
+  function componentAtIndex(
+    list: FiberElement,
+    listID: number,
+    cellIndex: number,
+    operationID: number,
+    enableReuseNotification: boolean,
+  ) {
+    const childCtx = ctx[cellIndex];
+    if (!childCtx) {
+      throw new Error('childCtx not found');
+    }
+    return componentAtChildCtx(list, listID, childCtx, operationID, enableReuseNotification);
+  }
+
+  function componentAtIndexes(
     list: FiberElement,
     listID: number,
     cellIndexes: number[],
     operationIDs: number[],
     enableReuseNotification: boolean,
     asyncFlush: boolean,
-  ) => {
-    const uiSigns = cellIndexes.map((cellIndex, index) => {
+  ) {
+    const readyOperationIDs: number[] = [];
+    const readyUiSigns: number[] = [];
+    const unreadyOperationIDs: number[] = [];
+    const unreadyPromises: Promise<number>[] = [];
+
+    cellIndexes.forEach((cellIndex, index) => {
       const operationID = operationIDs[index] ?? 0;
-      return componentAtIndex(list, listID, cellIndex, operationID, enableReuseNotification, true, asyncFlush);
+      const childCtx = ctx[cellIndex];
+      if (!childCtx) {
+        throw new Error('childCtx not found');
+      }
+
+      const u = componentAtChildCtx(list, listID, childCtx, operationID, enableReuseNotification, true, asyncFlush);
+      if (typeof u === 'number') {
+        readyOperationIDs.push(operationID);
+        readyUiSigns.push(u);
+      } else {
+        unreadyOperationIDs.push(operationID);
+        unreadyPromises.push(u);
+      }
     });
+
+    if (unreadyPromises.length > 0) {
+      Promise.all(unreadyPromises).then((uiSigns) => {
+        __FlushElementTree(list, {
+          triggerLayout: true,
+          operationIDs: unreadyOperationIDs,
+          elementIDs: uiSigns,
+          listID,
+        });
+      });
+    }
+
     __FlushElementTree(list, {
       triggerLayout: true,
-      operationIDs: operationIDs,
-      elementIDs: uiSigns,
+      operationIDs: readyOperationIDs,
+      elementIDs: readyUiSigns,
       listID,
     });
-  };
+  }
   return [componentAtIndex, componentAtIndexes] as const;
 }
 

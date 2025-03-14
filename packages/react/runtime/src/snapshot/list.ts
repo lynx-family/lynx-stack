@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { hydrate } from '../hydrate.js';
-import { componentAtIndexFactory, enqueueComponentFactory, gRecycleMap, gSignMap } from '../list.js';
+import { componentAtIndexFactory, enqueueComponentFactory, gRecycleMap, gSignMap, gReadyCallbacks } from '../list.js';
 import type { SnapshotInstance } from '../snapshot.js';
 
 export function snapshotCreateList(
@@ -33,4 +33,5 @@ export function snapshotDestroyList(si: SnapshotInstance): void {
   const listID = __GetElementUniqueID(list);
   delete gSignMap[listID];
   delete gRecycleMap[listID];
+  delete gReadyCallbacks[listID];
 }

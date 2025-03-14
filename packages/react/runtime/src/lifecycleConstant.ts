@@ -7,6 +7,7 @@ export const enum LifecycleConstant {
   globalEventFromLepus = 'globalEventFromLepus',
   jsReady = 'rLynxJSReady',
   patchUpdate = 'rLynxChange',
+  publishEvent = 'rLynxPublishEvent',
 }
 
 export interface FirstScreenData {
