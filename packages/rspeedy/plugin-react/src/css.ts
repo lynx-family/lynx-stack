@@ -151,11 +151,6 @@ export function applyCSS(
         .end()
         .end()
 
-      if (enableRemoveCSSScope !== true) {
-        // TODO: enable CSS minimizer when `LightningCssMinimizerRspackPlugin` supports custom parser options.
-        chain.optimization.minimizers.delete(CHAIN_ID.MINIMIZER.CSS)
-      }
-
       // We add `sideEffects: false` to all Scoped CSS Modules.
       // Since there is no need to emit scoped CSS when the CSS Modules is not used.
       chain
