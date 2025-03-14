@@ -6,6 +6,12 @@
       "inputs": ["tests/**"],
       "outputs": ["dist"],
       "env": ["PORT", "CI"]
+    },
+    "build:cases": {
+      "dependsOn": ["^build"],
+      "inputs": ["tests/**"],
+      "outputs": ["dist"],
+      "env": ["PORT", "CI"]
     }
   }
 }
