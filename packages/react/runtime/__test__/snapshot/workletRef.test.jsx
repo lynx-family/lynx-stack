@@ -223,9 +223,8 @@ describe('WorkletRef', () => {
           [
             "rLynxChange",
             {
-              "data": "{"workletRefInitValuePatch":[[5,null],[6,null],[7,null],[8,null],[9,null],[10,null]]}",
+              "data": "{"patchList":[{"id":5,"workletRefInitValuePatch":[[5,null],[6,null],[7,null],[8,null],[9,null],[10,null]]}]}",
               "patchOptions": {
-                "commitTaskId": 5,
                 "reloadVersion": 0,
               },
             },
@@ -234,9 +233,8 @@ describe('WorkletRef', () => {
           [
             "rLynxChange",
             {
-              "data": "{"snapshotPatch":[3,-2,0,{"_wvid":5},3,-3,0,{"_wkltId":233,"_execId":2},3,-4,0,{"_wkltId":233,"_execId":3}]}",
+              "data": "{"patchList":[{"snapshotPatch":[3,-2,0,{"_wvid":5},3,-3,0,{"_wkltId":233,"_execId":2},3,-4,0,{"_wkltId":233,"_execId":3}],"id":6}]}",
               "patchOptions": {
-                "commitTaskId": 6,
                 "isHydration": true,
                 "pipelineOptions": {
                   "needTimestamps": true,
@@ -316,9 +314,8 @@ describe('WorkletRef', () => {
           [
             "rLynxChange",
             {
-              "data": "{"snapshotPatch":[3,-2,0,{"_wvid":6},3,-3,0,{"_wvid":7},3,-4,0,{"_wkltId":233,"_execId":4}]}",
+              "data": "{"patchList":[{"id":7,"snapshotPatch":[3,-2,0,{"_wvid":6},3,-3,0,{"_wvid":7},3,-4,0,{"_wkltId":233,"_execId":4}]}]}",
               "patchOptions": {
-                "commitTaskId": 7,
                 "reloadVersion": 0,
               },
             },

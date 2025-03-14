@@ -96,9 +96,8 @@ describe('reload', () => {
       expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1]).toMatchInlineSnapshot(`
         {
-          "data": "{"snapshotPatch":[]}",
+          "data": "{"patchList":[{"snapshotPatch":[],"id":2}]}",
           "patchOptions": {
-            "commitTaskId": 2,
             "isHydration": true,
             "pipelineOptions": {
               "needTimestamps": true,
@@ -121,9 +120,8 @@ describe('reload', () => {
       expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1]).toMatchInlineSnapshot(`
         {
-          "data": "{"snapshotPatch":[3,-5,0,{"dataX2":"WorldX2"},3,-8,0,"update",3,-6,0,{"attr":{"dataX2":"WorldX2"}}]}",
+          "data": "{"patchList":[{"id":3,"snapshotPatch":[3,-5,0,{"dataX2":"WorldX2"},3,-8,0,"update",3,-6,0,{"attr":{"dataX2":"WorldX2"}}]}]}",
           "patchOptions": {
-            "commitTaskId": 3,
             "reloadVersion": 0,
           },
         }
@@ -230,9 +228,8 @@ describe('reload', () => {
       expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1]).toMatchInlineSnapshot(`
         {
-          "data": "{"snapshotPatch":[3,-8,0,"???"]}",
+          "data": "{"patchList":[{"id":4,"snapshotPatch":[3,-8,0,"???"]}]}",
           "patchOptions": {
-            "commitTaskId": 4,
             "reloadVersion": 0,
           },
         }
@@ -311,9 +308,8 @@ describe('reload', () => {
       expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1]).toMatchInlineSnapshot(`
         {
-          "data": "{"snapshotPatch":[]}",
+          "data": "{"patchList":[{"snapshotPatch":[],"id":7}]}",
           "patchOptions": {
-            "commitTaskId": 7,
             "isHydration": true,
             "pipelineOptions": {
               "needTimestamps": true,
@@ -379,9 +375,8 @@ describe('reload', () => {
       expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1]).toMatchInlineSnapshot(`
         {
-          "data": "{"snapshotPatch":[3,-16,0,"update"]}",
+          "data": "{"patchList":[{"id":8,"snapshotPatch":[3,-16,0,"update"]}]}",
           "patchOptions": {
-            "commitTaskId": 8,
             "reloadVersion": 2,
           },
         }
@@ -495,9 +490,8 @@ describe('reload', () => {
       expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1]).toMatchInlineSnapshot(`
         {
-          "data": "{"snapshotPatch":[]}",
+          "data": "{"patchList":[{"snapshotPatch":[],"id":10}]}",
           "patchOptions": {
-            "commitTaskId": 10,
             "isHydration": true,
             "pipelineOptions": {
               "needTimestamps": true,
@@ -524,9 +518,8 @@ describe('reload', () => {
       expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1]).toMatchInlineSnapshot(`
         {
-          "data": "{"snapshotPatch":[3,-5,0,{"dataX2":"WorldX2"},3,-8,0,"update",3,-6,0,{"attr":{"dataX2":"WorldX2"}}]}",
+          "data": "{"patchList":[{"id":11,"snapshotPatch":[3,-5,0,{"dataX2":"WorldX2"},3,-8,0,"update",3,-6,0,{"attr":{"dataX2":"WorldX2"}}]}]}",
           "patchOptions": {
-            "commitTaskId": 11,
             "reloadVersion": 2,
           },
         }
@@ -637,9 +630,8 @@ describe('reload', () => {
       expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1]).toMatchInlineSnapshot(`
         {
-          "data": "{"snapshotPatch":[3,-8,0,"???"]}",
+          "data": "{"patchList":[{"id":12,"snapshotPatch":[3,-8,0,"???"]}]}",
           "patchOptions": {
-            "commitTaskId": 12,
             "reloadVersion": 2,
           },
         }
@@ -720,9 +712,8 @@ describe('reload', () => {
       expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1]).toMatchInlineSnapshot(`
         {
-          "data": "{"snapshotPatch":[]}",
+          "data": "{"patchList":[{"snapshotPatch":[],"id":15}]}",
           "patchOptions": {
-            "commitTaskId": 15,
             "isHydration": true,
             "pipelineOptions": {
               "needTimestamps": true,
@@ -790,9 +781,8 @@ describe('reload', () => {
       expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1]).toMatchInlineSnapshot(`
         {
-          "data": "{"snapshotPatch":[3,-17,0,"update"]}",
+          "data": "{"patchList":[{"id":16,"snapshotPatch":[3,-17,0,"update"]}]}",
           "patchOptions": {
-            "commitTaskId": 16,
             "reloadVersion": 4,
           },
         }
@@ -976,9 +966,8 @@ describe('reload', () => {
           [
             "rLynxChange",
             {
-              "data": "{"snapshotPatch":[3,-6,0,"d",3,-7,0,"e",3,-8,0,"f"]}",
+              "data": "{"patchList":[{"id":19,"snapshotPatch":[3,-6,0,"d",3,-7,0,"e",3,-8,0,"f"]}]}",
               "patchOptions": {
-                "commitTaskId": 19,
                 "reloadVersion": 4,
               },
             },
@@ -1319,9 +1308,8 @@ describe('firstScreenSyncTiming - jsReady', () => {
       expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1]).toMatchInlineSnapshot(`
         {
-          "data": "{"snapshotPatch":[2,-17,-21,0,"__Card__:__snapshot_a94a8_test_5",2,0,"__Card__:__snapshot_a94a8_test_2",3,4,3,[{"dataX":"WorldX"}],0,"__Card__:__snapshot_a94a8_test_3",4,0,null,5,4,5,["Hello 2"],1,4,5,null,1,3,4,null,0,"__Card__:__snapshot_a94a8_test_4",6,0,null,7,4,7,["World"],1,6,7,null,1,3,6,null,0,"wrapper",8,0,"__Card__:__snapshot_a94a8_test_1",9,4,9,[{"attr":{"dataX":"WorldX"}}],1,8,9,null,1,3,8,null,1,2,3,null,1,-17,2,null]}",
+          "data": "{"patchList":[{"snapshotPatch":[2,-17,-21,0,"__Card__:__snapshot_a94a8_test_5",2,0,"__Card__:__snapshot_a94a8_test_2",3,4,3,[{"dataX":"WorldX"}],0,"__Card__:__snapshot_a94a8_test_3",4,0,null,5,4,5,["Hello 2"],1,4,5,null,1,3,4,null,0,"__Card__:__snapshot_a94a8_test_4",6,0,null,7,4,7,["World"],1,6,7,null,1,3,6,null,0,"wrapper",8,0,"__Card__:__snapshot_a94a8_test_1",9,4,9,[{"attr":{"dataX":"WorldX"}}],1,8,9,null,1,3,8,null,1,2,3,null,1,-17,2,null],"id":21}]}",
           "patchOptions": {
-            "commitTaskId": 21,
             "isHydration": true,
             "pipelineOptions": {
               "needTimestamps": true,
@@ -1521,9 +1509,8 @@ describe('firstScreenSyncTiming - jsReady', () => {
       expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1]).toMatchInlineSnapshot(`
         {
-          "data": "{"snapshotPatch":[]}",
+          "data": "{"patchList":[{"snapshotPatch":[],"id":23}]}",
           "patchOptions": {
-            "commitTaskId": 23,
             "isHydration": true,
             "pipelineOptions": {
               "needTimestamps": true,
@@ -1684,9 +1671,8 @@ describe('firstScreenSyncTiming - jsReady', () => {
       expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1]).toMatchInlineSnapshot(`
         {
-          "data": "{"snapshotPatch":[]}",
+          "data": "{"patchList":[{"snapshotPatch":[],"id":25}]}",
           "patchOptions": {
-            "commitTaskId": 25,
             "isHydration": true,
             "pipelineOptions": {
               "needTimestamps": true,

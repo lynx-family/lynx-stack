@@ -4,6 +4,7 @@
 
 import { clearDelayedWorklets, updateWorkletRefInitValueChanges } from '@lynx-js/react/worklet-runtime/bindings';
 
+import type { PatchList, PatchOptions } from './commit.js';
 import { snapshotPatchApply } from './snapshotPatchApply.js';
 import { LifecycleConstant } from '../../lifecycleConstant.js';
 import { __pendingListUpdates } from '../../list.js';
@@ -12,7 +13,6 @@ import { takeGlobalRefPatchMap } from '../../snapshot/ref.js';
 import { __page } from '../../snapshot.js';
 import { isEmptyObject } from '../../utils.js';
 import { getReloadVersion } from '../pass.js';
-import type { Patch, PatchOptions } from './commit.js';
 
 function updateMainThread(
   { data, patchOptions }: {
@@ -20,31 +20,33 @@ function updateMainThread(
     patchOptions: PatchOptions;
   },
 ): void {
-  if ((patchOptions.reloadVersion ?? 0) < getReloadVersion()) {
+  if ((patchOptions.reloadVersion) < getReloadVersion()) {
     return;
   }
 
   setPipeline(patchOptions.pipelineOptions);
   markTiming(PerformanceTimingKeys.parse_changes_start);
-  let { snapshotPatch, workletRefInitValuePatch, flushOptions } = JSON.parse(data) as Patch;
+  const { patchList, flushOptions = {} } = JSON.parse(data) as PatchList;
+
   markTiming(PerformanceTimingKeys.parse_changes_end);
-
   markTiming(PerformanceTimingKeys.patch_changes_start);
-  updateWorkletRefInitValueChanges(workletRefInitValuePatch);
-  __pendingListUpdates.clear();
-  if (snapshotPatch) {
-    snapshotPatchApply(snapshotPatch);
-  }
-  __pendingListUpdates.flush();
-  // console.debug('********** Lepus updatePatch:');
-  // printSnapshotInstance(snapshotInstanceManager.values.get(-1)!);
 
-  commitMainThreadPatchUpdate(patchOptions.commitTaskId);
+  for (const { snapshotPatch, workletRefInitValuePatch, id } of patchList) {
+    updateWorkletRefInitValueChanges(workletRefInitValuePatch);
+    __pendingListUpdates.clear();
+    if (snapshotPatch) {
+      snapshotPatchApply(snapshotPatch);
+    }
+    __pendingListUpdates.flush();
+    // console.debug('********** Lepus updatePatch:');
+    // printSnapshotInstance(snapshotInstanceManager.values.get(-1)!);
+
+    commitMainThreadPatchUpdate(id);
+  }
+  markTiming(PerformanceTimingKeys.patch_changes_end);
   if (patchOptions.isHydration) {
     clearDelayedWorklets();
   }
-  markTiming(PerformanceTimingKeys.patch_changes_end);
-  flushOptions ||= {};
   if (patchOptions.pipelineOptions) {
     flushOptions.pipelineOptions = patchOptions.pipelineOptions;
   }
@@ -66,4 +68,4 @@ function commitMainThreadPatchUpdate(commitTaskId?: number): void {
 /**
  * @internal
  */
-export { injectUpdateMainThread, commitMainThreadPatchUpdate };
+export { commitMainThreadPatchUpdate, injectUpdateMainThread };

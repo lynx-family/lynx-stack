@@ -88,9 +88,8 @@ describe('WorkletRef in js', () => {
           [
             "rLynxChange",
             {
-              "data": "{"workletRefInitValuePatch":[[3,233]]}",
+              "data": "{"patchList":[{"id":1,"workletRefInitValuePatch":[[3,233]]}]}",
               "patchOptions": {
-                "commitTaskId": 1,
                 "reloadVersion": 0,
               },
             },
@@ -99,9 +98,8 @@ describe('WorkletRef in js', () => {
           [
             "rLynxChange",
             {
-              "data": "{"snapshotPatch":[]}",
+              "data": "{"patchList":[{"snapshotPatch":[],"id":2}]}",
               "patchOptions": {
-                "commitTaskId": 2,
                 "isHydration": true,
                 "pipelineOptions": {
                   "needTimestamps": true,
@@ -189,9 +187,8 @@ describe('WorkletRef in js', () => {
           [
             "rLynxChange",
             {
-              "data": "{"snapshotPatch":[]}",
+              "data": "{"patchList":[{"snapshotPatch":[],"id":4}]}",
               "patchOptions": {
-                "commitTaskId": 4,
                 "isHydration": true,
                 "pipelineOptions": {
                   "needTimestamps": true,

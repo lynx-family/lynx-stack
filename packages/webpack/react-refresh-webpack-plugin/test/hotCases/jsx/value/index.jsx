@@ -1,5 +1,6 @@
 import { root } from "@lynx-js/react";
 import { update } from "@lynx-js/test-tools/update.js";
+
 import { App } from "./app.jsx";
 
 const createFn = vi.fn();
@@ -45,9 +46,11 @@ it("should call renderer", () =>
       update(done, true, () => {
         expect(createFn.mock.calls[1][0]).toEqual("content 2");
 
-        const { snapshotPatch } = JSON.parse(
+        const { patchList } = JSON.parse(
           callLepusMethod.mock.calls[1][1].data
         );
+        expect(patchList.length).toEqual(1);
+        const { snapshotPatch } = patchList[0];
         // Should have updates
         expect(snapshotPatch.length).toBeGreaterThan(0);
         // Should not have AddSnapshot
