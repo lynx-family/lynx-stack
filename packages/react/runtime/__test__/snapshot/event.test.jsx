@@ -90,9 +90,8 @@ describe('eventUpdate', () => {
           [
             "rLynxChange",
             {
-              "data": "{"snapshotPatch":[]}",
+              "data": "{"patchList":[{"snapshotPatch":[],"id":1}]}",
               "patchOptions": {
-                "commitTaskId": 1,
                 "isHydration": true,
                 "pipelineOptions": {
                   "needTimestamps": true,
@@ -292,7 +291,9 @@ describe('eventUpdate', () => {
     {
       // LifecycleConstant.firstScreen
       lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
-      expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1].data).toMatchInlineSnapshot(`"{"snapshotPatch":[]}"`);
+      expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1].data).toMatchInlineSnapshot(
+        `"{"patchList":[{"snapshotPatch":[],"id":3}]}"`,
+      );
 
       // rLynxChange
       globalEnvManager.switchToMainThread();
@@ -408,7 +409,9 @@ describe('eventUpdate', () => {
     {
       // LifecycleConstant.firstScreen
       lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
-      expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1].data).toMatchInlineSnapshot(`"{"snapshotPatch":[]}"`);
+      expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1].data).toMatchInlineSnapshot(
+        `"{"patchList":[{"snapshotPatch":[],"id":4}]}"`,
+      );
 
       // rLynxChange
       globalEnvManager.switchToMainThread();
@@ -503,7 +506,7 @@ describe('eventUpdate', () => {
       // LifecycleConstant.firstScreen
       lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1].data).toMatchInlineSnapshot(
-        `"{"snapshotPatch":[3,-2,1,"-2:1:"]}"`,
+        `"{"patchList":[{"snapshotPatch":[3,-2,1,"-2:1:"],"id":5}]}"`,
       );
 
       // rLynxChange
@@ -584,7 +587,9 @@ describe('eventUpdate', () => {
     {
       // LifecycleConstant.firstScreen
       lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
-      expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1].data).toMatchInlineSnapshot(`"{"snapshotPatch":[]}"`);
+      expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1].data).toMatchInlineSnapshot(
+        `"{"patchList":[{"snapshotPatch":[],"id":6}]}"`,
+      );
 
       // rLynxChange
       globalEnvManager.switchToMainThread();
@@ -714,7 +719,7 @@ describe('event in spread', () => {
       // LifecycleConstant.firstScreen
       lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1].data).toMatchInlineSnapshot(
-        `"{"snapshotPatch":[]}"`,
+        `"{"patchList":[{"snapshotPatch":[],"id":7}]}"`,
       );
 
       // rLynxChange
@@ -915,7 +920,9 @@ describe('event in spread', () => {
     {
       // LifecycleConstant.firstScreen
       lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
-      expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1].data).toMatchInlineSnapshot(`"{"snapshotPatch":[]}"`);
+      expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1].data).toMatchInlineSnapshot(
+        `"{"patchList":[{"snapshotPatch":[],"id":8}]}"`,
+      );
 
       // rLynxChange
       globalEnvManager.switchToMainThread();

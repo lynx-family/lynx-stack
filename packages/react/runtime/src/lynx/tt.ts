@@ -150,7 +150,7 @@ async function OnLifecycleEvent([type, data]: [string, any]) {
         console.profile('commitChanges');
       }
       const commitTaskId = genCommitTaskId();
-      await commitPatchUpdate({ snapshotPatch }, { commitTaskId, isHydration: true });
+      await commitPatchUpdate({ patchList: [{ snapshotPatch, id: commitTaskId }] }, { isHydration: true });
       updateBackgroundRefs(commitTaskId);
       globalCommitTaskMap.forEach((commitTask, id) => {
         if (id > commitTaskId) {

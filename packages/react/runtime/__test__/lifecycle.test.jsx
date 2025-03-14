@@ -100,9 +100,8 @@ describe('useEffect', () => {
     expect(mtCallback[0]).toEqual(LifecycleConstant.patchUpdate);
     expect(mtCallback[1]).toMatchInlineSnapshot(`
       {
-        "data": "{"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_2",2,0,null,3,3,3,0,1,1,2,3,null,1,1,2,null]}",
+        "data": "{"patchList":[{"id":3,"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_2",2,0,null,3,3,3,0,1,1,2,3,null,1,1,2,null]}]}",
         "patchOptions": {
-          "commitTaskId": 3,
           "reloadVersion": 0,
         },
       }
@@ -117,9 +116,8 @@ describe('useEffect', () => {
     expect(mtCallback[0]).toEqual(LifecycleConstant.patchUpdate);
     expect(mtCallback[1]).toMatchInlineSnapshot(`
       {
-        "data": "{}",
+        "data": "{"patchList":[{"id":4}]}",
         "patchOptions": {
-          "commitTaskId": 4,
           "reloadVersion": 0,
         },
       }
@@ -134,9 +132,8 @@ describe('useEffect', () => {
     expect(mtCallback[0]).toEqual(LifecycleConstant.patchUpdate);
     expect(mtCallback[1]).toMatchInlineSnapshot(`
       {
-        "data": "{}",
+        "data": "{"patchList":[{"id":5}]}",
         "patchOptions": {
-          "commitTaskId": 5,
           "reloadVersion": 0,
         },
       }
@@ -194,7 +191,7 @@ describe('useEffect', () => {
       lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
       expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1].data).toMatchInlineSnapshot(
-        `"{"snapshotPatch":[3,-3,0,400]}"`,
+        `"{"patchList":[{"snapshotPatch":[3,-3,0,400],"id":9}]}"`,
       );
       globalThis.__OnLifecycleEvent.mockClear();
 
@@ -313,9 +310,8 @@ describe('useEffect', () => {
     expect(mtCallback[0]).toEqual(LifecycleConstant.patchUpdate);
     expect(mtCallback[1]).toMatchInlineSnapshot(`
       {
-        "data": "{"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_4",2,0,null,3,3,3,0,1,1,2,3,null,1,1,2,null]}",
+        "data": "{"patchList":[{"id":14,"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_4",2,0,null,3,3,3,0,1,1,2,3,null,1,1,2,null]}]}",
         "patchOptions": {
-          "commitTaskId": 14,
           "reloadVersion": 0,
         },
       }
@@ -362,9 +358,8 @@ describe('componentDidMount', () => {
     expect(mtCallback[0]).toEqual(LifecycleConstant.patchUpdate);
     expect(mtCallback[1]).toMatchInlineSnapshot(`
       {
-        "data": "{"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_5",2,0,null,3,3,3,0,1,1,2,3,null,1,1,2,null]}",
+        "data": "{"patchList":[{"id":17,"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_5",2,0,null,3,3,3,0,1,1,2,3,null,1,1,2,null]}]}",
         "patchOptions": {
-          "commitTaskId": 17,
           "reloadVersion": 0,
         },
       }
@@ -410,9 +405,8 @@ describe('componentDidMount', () => {
     expect(mtCallback[0]).toEqual(LifecycleConstant.patchUpdate);
     expect(mtCallback[1]).toMatchInlineSnapshot(`
       {
-        "data": "{"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_6",2,0,null,3,3,3,0,1,1,2,3,null,1,1,2,null]}",
+        "data": "{"patchList":[{"id":20,"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_6",2,0,null,3,3,3,0,1,1,2,3,null,1,1,2,null]}]}",
         "patchOptions": {
-          "commitTaskId": 20,
           "reloadVersion": 0,
         },
       }
@@ -744,7 +738,7 @@ describe('useState', () => {
       await waitSchedule();
       expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1].data).toMatchInlineSnapshot(
-        `"{"snapshotPatch":[3,-2,1,"abcd",3,-2,2,{"str":"efgh"}]}"`,
+        `"{"patchList":[{"id":36,"snapshotPatch":[3,-2,1,"abcd",3,-2,2,{"str":"efgh"}]}]}"`,
       );
     }
   });
@@ -802,7 +796,7 @@ describe('useState', () => {
       await waitSchedule();
       expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1].data).toMatchInlineSnapshot(
-        `"{"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_17",2,4,2,[false,{"str":"str"}],1,-1,2,null]}"`,
+        `"{"patchList":[{"id":39,"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_17",2,4,2,[false,{"str":"str"}],1,-1,2,null]}]}"`,
       );
     }
   });
