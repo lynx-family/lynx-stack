@@ -72,3 +72,5 @@ export { Component, PureComponent, createElement, createRef, isValidElement } fr
  * RL-defined Lynx APIs
  */
 export * from '../runtime/lib/lynx-api.js';
+
+export { List } from '@lynx-js/react/runtime-components';
