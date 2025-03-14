@@ -11,6 +11,8 @@ import {
   type Cloneable,
   lynxViewEntryIdPrefix,
   lynxViewRootDomId,
+  type NapiModulesCall,
+  type NapiModulesMap,
   type NativeModulesCall,
   type UpdateDataType,
 } from '@lynx-js/web-constants';
@@ -28,6 +30,8 @@ import {
  * @param {INativeModulesCall} onNativeModulesCall [optional] the NativeModules value handler. Arguments will be cached before this property is assigned.
  * @param {"auto" | null} height [optional] set it to "auto" for height auto-sizing
  * @param {"auto" | null} width [optional] set it to "auto" for width auto-sizing
+ * @param {NapiModulesMap} napiModulesMap [optional] the napiModule which is called in lynx-core. key is module-name, value is esm url.
+ * @param {NapiModulesCall} onNapiModulesCall [optional] the NapiModule value handler.
  *
  * @property entryId the currently Lynx view entryId.
  *
@@ -179,6 +183,30 @@ export class LynxView extends HTMLElement {
   }
   set nativeModulesUrl(val: string) {
     this.#nativeModulesUrl = val;
+  }
+
+  #napiModulesMap: NapiModulesMap = {};
+  /**
+   * @param
+   * @property
+   */
+  get napiModulesMap(): NapiModulesMap | undefined {
+    return this.#napiModulesMap;
+  }
+  set napiModulesMap(map: NapiModulesMap) {
+    this.#napiModulesMap = map;
+  }
+
+  #onNapiModulesCall?: NapiModulesCall;
+  /**
+   * @param
+   * @property
+   */
+  get onNapiModulesCall(): NapiModulesCall | undefined {
+    return this.#onNapiModulesCall;
+  }
+  set onNapiModulesCall(handler: NapiModulesCall) {
+    this.#onNapiModulesCall = handler;
   }
 
   #autoHeight = false;
@@ -352,6 +380,7 @@ export class LynxView extends HTMLElement {
             initData: this.#initData,
             overrideLynxTagToHTMLTagMap: this.#overrideLynxTagToHTMLTagMap,
             nativeModulesUrl: this.#nativeModulesUrl,
+            napiModulesMap: this.#napiModulesMap,
             callbacks: {
               nativeModulesCall: (
                 ...args: [name: string, data: any, moduleName: string]
@@ -363,6 +392,9 @@ export class LynxView extends HTMLElement {
                 } else {
                   this.#cachedNativeModulesCall = [args];
                 }
+              },
+              napiModulesCall: (...args) => {
+                return this.#onNapiModulesCall?.(...args);
               },
               onError: () => {
                 this.dispatchEvent(

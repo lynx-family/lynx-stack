@@ -21,10 +21,12 @@ import {
   sendGlobalEventEndpoint,
   uiThreadFpReadyEndpoint,
   type MainThreadStartConfigs,
+  type NapiModulesCall,
   type NativeModulesCall,
 } from '@lynx-js/web-constants';
 import { loadTemplate } from '../utils/loadTemplate.js';
 import { createUpdateData } from './crossThreadHandlers/createUpdateData.js';
+import { registerNapiModulesCallHandler } from './crossThreadHandlers/registerNapiModulesCallHandler.js';
 
 export function startUIThread(
   templateUrl: string,
@@ -32,13 +34,14 @@ export function startUIThread(
   rootDom: HTMLElement,
   callbacks: {
     nativeModulesCall: NativeModulesCall;
+    napiModulesCall: NapiModulesCall;
     onError?: () => void;
   },
   overrideTagMap: Record<string, string> = {},
   nativeModulesUrl: string | undefined,
 ): LynxView {
   const createLynxStartTiming = performance.now() + performance.timeOrigin;
-  const { entryId } = configs;
+  const { entryId, napiModulesMap } = configs;
   const {
     mainThreadRpc,
     backgroundRpc,
@@ -60,6 +63,7 @@ export function startUIThread(
       ...configs,
       template,
       nativeModulesUrl,
+      napiModulesMap,
     });
   });
   registerReportErrorHandler(
@@ -111,6 +115,10 @@ export function startUIThread(
   registerNativeModulesCallHandler(
     backgroundRpc,
     callbacks.nativeModulesCall,
+  );
+  registerNapiModulesCallHandler(
+    backgroundRpc,
+    callbacks.napiModulesCall,
   );
   return {
     updateData: createUpdateData(mainThreadRpc, backgroundRpc),
