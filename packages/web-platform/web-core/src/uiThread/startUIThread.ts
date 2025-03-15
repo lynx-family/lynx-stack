@@ -41,7 +41,7 @@ export function startUIThread(
   nativeModulesUrl: string | undefined,
 ): LynxView {
   const createLynxStartTiming = performance.now() + performance.timeOrigin;
-  const { entryId, napiModulesMap } = configs;
+  const { napiModulesMap } = configs;
   const {
     mainThreadRpc,
     backgroundRpc,
@@ -82,7 +82,6 @@ export function startUIThread(
           overrideTagMap,
           backgroundRpc,
           rootDom,
-          entryId,
         },
         (info) => {
           const { pipelineId, timingFlags, isFP } = info;

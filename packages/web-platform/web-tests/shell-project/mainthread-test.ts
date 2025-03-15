@@ -68,7 +68,6 @@ function initializeMainThreadTest() {
   const runtime = new MainThreadRuntime({
     lepusCode: { root: '' },
     customSections: {},
-    entryId: 't',
     browserConfig: {},
     pageConfig: {
       enableCSSSelector: true,

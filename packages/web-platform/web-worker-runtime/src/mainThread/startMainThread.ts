@@ -42,7 +42,6 @@ export function startMainThread(
       const {
         globalProps,
         template,
-        entryId,
         browserConfig,
         nativeModulesUrl,
         napiModulesMap,
@@ -55,7 +54,6 @@ export function startMainThread(
       );
       const entry = (globalThis.module as LynxJSModule).exports!;
       const runtime = new MainThreadRuntime({
-        entryId,
         browserConfig,
         customSections,
         globalProps,
