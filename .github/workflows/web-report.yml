@@ -9,7 +9,9 @@ name: Web Platform Report
       - "packages/web-platform/**"
       - .github/workflows/web-report.yml
 permissions:
+  repository-projects: read
   contents: read
+  actions: write
   pull-requests: write
 env:
   CI: 1
