@@ -5,7 +5,7 @@ env:
   CI: 1
   TURBO_TELEMETRY_DISABLED: 1
 jobs:
-  build-all:
+  nodejs-benchmark:
     runs-on: lynx-ubuntu-24.04-xlarge
     steps:
       - uses: actions/checkout@v4
