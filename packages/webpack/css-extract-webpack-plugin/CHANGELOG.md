@@ -1,5 +1,11 @@
 # @lynx-js/css-extract-webpack-plugin
 
+## 0.5.2
+
+### Patch Changes
+
+- feat(css-extra-webpack-plugin): Support css hmr for lazy bundle ([#155](https://github.com/lynx-family/lynx-stack/pull/155))
+
 ## 0.5.1
 
 ### Patch Changes

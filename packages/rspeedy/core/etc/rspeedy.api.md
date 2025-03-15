@@ -200,6 +200,9 @@ export interface LoadConfigResult {
 export { logger }
 
 // @public
+export function mergeRspeedyConfig(...configs: Config[]): Config;
+
+// @public
 export interface Minify {
     css?: boolean | undefined;
     js?: boolean | undefined;

@@ -1,5 +1,15 @@
 # @lynx-js/web-worker-rpc
 
+## 0.8.0
+
+### Patch Changes
+
+- feat: `createRpcEndpoint` adds a new parameter: `hasReturnTransfer`. ([#194](https://github.com/lynx-family/lynx-stack/pull/194))
+
+  When `isSync`: false, `hasReturn`: true, you can add `transfer` to the callback postMessage created.
+
+  At this time, the return value structure of register-handler is changed: `{ data: unknown; transfer: Transferable[]; } | Promise<{ data: unknown; transfer: Transferable[];}>`.
+
 ## 0.7.1
 
 ### Patch Changes

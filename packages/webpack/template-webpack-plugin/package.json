@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/template-webpack-plugin",
-  "version": "0.6.4",
+  "version": "0.6.5",
   "description": "Simplifies creation of Lynx template files to serve your webpack bundles",
   "keywords": [
     "webpack",
@@ -45,6 +45,7 @@
   },
   "devDependencies": {
     "@lynx-js/test-tools": "workspace:*",
+    "@lynx-js/vitest-setup": "workspace:*",
     "@microsoft/api-extractor": "catalog:",
     "@types/css-tree": "^2.3.10",
     "@types/object.groupby": "^1.0.4",

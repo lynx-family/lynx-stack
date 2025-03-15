@@ -8,7 +8,8 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 
 import { createCompBG1, createCompBGList, createCompBGSpread } from './workletRefBG';
 import { createCompMT1, createCompMTList, createCompMTSpread } from './workletRefMT';
-import { injectUpdatePatch, replaceCommitHook } from '../../src/lifecycle/patch/patchUpdate';
+import { replaceCommitHook } from '../../src/lifecycle/patch/commit';
+import { injectUpdateMainThread } from '../../src/lifecycle/patch/updateMainThread';
 import { __root } from '../../src/root';
 import { setupPage } from '../../src/snapshot';
 import { globalEnvManager } from '../utils/envManager';
@@ -16,7 +17,7 @@ import { elementTree } from '../utils/nativeMethod';
 
 beforeAll(() => {
   setupPage(__CreatePage('0', 0));
-  injectUpdatePatch();
+  injectUpdateMainThread();
   replaceCommitHook();
 
   globalThis.__TESTING_FORCE_RENDER_TO_OPCODE__ = true;

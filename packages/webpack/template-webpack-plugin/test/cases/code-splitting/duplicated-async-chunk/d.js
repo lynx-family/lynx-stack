@@ -11,7 +11,7 @@ it('should have foo', async () => {
     './shared/foo.js'
   );
 
-  expect(foo()).resolves.toBe('foo bar baz');
+  await expect(foo()).resolves.toBe('foo bar baz');
 });
 
 it('should have correct tasm.json', async () => {

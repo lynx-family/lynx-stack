@@ -20,7 +20,6 @@ import type { RuntimePropertyOnElement } from '../../types/RuntimePropertyOnElem
 import { decodeElementOperation } from '../decodeElementOperation.js';
 import { getElementTag } from '../getElementTag.js';
 import { createCrossThreadEvent } from '../../utils/createCrossThreadEvent.js';
-import { isWebkit, supportAtScope } from '../../utils/browser.js';
 
 function applyPageAttributes(
   page: HTMLElement,
@@ -69,17 +68,8 @@ export function registerFlushElementTreeHandler(
   >[] = [];
   const rootStyleElementForCssInJs = document.createElement('style');
   if (!pageConfig.enableCSSSelector) {
-    rootStyleElementForCssInJs.innerHTML = `/* enableCSSSelector: false */ ${
-      supportAtScope && !isWebkit ? '@scope { :scope{} }' : ''
-    }`;
-    // safari testing needs this :scope{} see: https://github.com/microsoft/playwright/issues/33647
-    // for 18.2 the :scope{} placeholder dose not work neither. we fired an issue for this https://bugs.webkit.org/show_bug.cgi?id=285130
     rootDom.append(rootStyleElementForCssInJs);
   }
-  // dom must connected to get the sheet property
-  const rootScopeRule = rootStyleElementForCssInJs?.sheet?.cssRules[0] as
-    | CSSScopeRule
-    | undefined;
   const createElementImpl = (tag: string) => {
     const htmlTag = getElementTag(tag, overrideTagMap);
     const element = document.createElement(htmlTag) as
@@ -94,15 +84,10 @@ export function registerFlushElementTreeHandler(
   const createStyleRuleImpl = (uniqueId: number, initialStyle: string) => {
     const commonStyleSheetText =
       `[${lynxUniqueIdAttribute}="${uniqueId.toString()}"]{${initialStyle}}`;
-    if (rootScopeRule) {
-      const idx = rootScopeRule.insertRule(commonStyleSheetText);
-      return rootScopeRule.cssRules[idx] as CSSStyleRule;
-    } else {
-      const idx = rootStyleElementForCssInJs.sheet!.insertRule(
-        `[${cardIdAttribute}="${entryId}"] ${commonStyleSheetText}`,
-      );
-      return rootStyleElementForCssInJs.sheet!.cssRules[idx] as CSSStyleRule;
-    }
+    const idx = rootStyleElementForCssInJs.sheet!.insertRule(
+      commonStyleSheetText,
+    );
+    return rootStyleElementForCssInJs.sheet!.cssRules[idx] as CSSStyleRule;
   };
   const mtsHandler = (event: Event) => {
     const crossThreadEvent = createCrossThreadEvent(event);

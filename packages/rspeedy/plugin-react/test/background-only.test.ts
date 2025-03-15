@@ -169,7 +169,7 @@ describe('Build background-only', () => {
       await rsbuild.build()
     } catch (error) {
       expect((error as Error).message).toBe(
-        'Rspack build failed!',
+        'Rspack build failed.',
       )
     }
   })

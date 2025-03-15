@@ -22,7 +22,8 @@ export default defineConfig({
   },
   performance: {
     chunkSplit: {
-      strategy: 'split-by-module',
+      // Rspack 1.2.8 introduced a bug that causes the split-by-module strategy to fail.
+      // strategy: 'split-by-module',
     },
   },
 });

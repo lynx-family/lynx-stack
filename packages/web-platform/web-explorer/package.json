@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/web-explorer",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "private": false,
   "repository": {
     "type": "git",
@@ -29,7 +29,7 @@
     "@lynx-js/lynx-core": "0.1.0",
     "@lynx-js/web-core": "workspace:*",
     "@lynx-js/web-elements": "workspace:*",
-    "@rsbuild/core": "catalog:",
+    "@rsbuild/core": "catalog:rsbuild",
     "tslib": "^2.8.1"
   }
 }

@@ -1,5 +1,11 @@
 # @lynx-js/webpack-dev-transport
 
+## 0.1.2
+
+### Patch Changes
+
+- Export `reloadApp` module. ([#202](https://github.com/lynx-family/lynx-stack/pull/202))
+
 ## 0.1.1
 
 ### Patch Changes

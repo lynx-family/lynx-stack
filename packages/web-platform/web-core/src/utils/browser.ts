@@ -5,5 +5,3 @@ export const isWebkit = /\b(iPad|iPhone|iPod|OS X)\b/.test(UA)
   && /WebKit/.test(UA)
   // @ts-expect-error
   && !window.MSStream;
-
-export const supportAtScope = !!globalThis.CSSScopeRule;

@@ -55,7 +55,7 @@
   "devDependencies": {
     "@lynx-js/rspeedy": "workspace:*",
     "@microsoft/api-extractor": "catalog:",
-    "@rsbuild/core": "catalog:",
+    "@rsbuild/core": "catalog:rsbuild",
     "@types/qrcode-terminal": "^0.12.2"
   },
   "engines": {
