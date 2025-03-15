@@ -13,6 +13,7 @@ export default defineConfig({
         '**/rslib.config.ts',
         '**/dist/**',
         '.github/**',
+        'benchmark/**',
         'examples/**',
         'packages/**/lib/**',
         'packages/**/test/**',
