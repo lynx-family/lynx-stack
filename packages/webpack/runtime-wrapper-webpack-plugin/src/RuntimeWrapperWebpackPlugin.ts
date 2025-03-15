@@ -229,8 +229,8 @@ lynx = lynx || {};
 lynx.targetSdkVersion=lynx.targetSdkVersion||${
       JSON.stringify(targetSdkVersion)
     };
-${overrideRuntimePromise ? `var Promise = lynx.Promise;` : ''}
-var fetch = lynx.fetch;
+${overrideRuntimePromise ? `g.Promise = g.Promise || lynx.Promise;` : ''}
+g.fetch = g.fetch || lynx.fetch;
 `
   );
 };
