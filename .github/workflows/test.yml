@@ -3,6 +3,8 @@ on:
   pull_request:
     branches:
       - main
+  merge_group:
+    branches: [main]
 permissions:
   repository-projects: read
   contents: read
@@ -47,12 +49,6 @@ jobs:
         --no-cache
         --logHeapUsage
         --silent
-      files: |
-        package.json
-        pnpm-lock.yaml
-        vitest.config.ts
-        packages/rspeedy/**
-        .github/workflows/**
   test-react:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
@@ -69,12 +65,6 @@ jobs:
         --no-cache
         --logHeapUsage
         --silent
-      files: |
-        package.json
-        pnpm-lock.yaml
-        vitest.config.ts
-        packages/react/**
-        .github/workflows/**
   test-plugins:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
@@ -93,12 +83,6 @@ jobs:
         --no-cache
         --logHeapUsage
         --silent
-      files: |
-        package.json
-        pnpm-lock.yaml
-        vitest.config.ts
-        packages/webpack/**
-        .github/workflows/**
   playwright-linux:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
@@ -115,10 +99,3 @@ jobs:
     secrets: inherit
     with:
       runs-on: lynx-ubuntu-24.04-medium
-      files: |
-        **/*.rs
-        **/Cargo.toml
-        packages/react/transform/index.d.ts
-        .rustfmt.toml
-        rust-toolchain
-        .github/workflows/rust.yml
