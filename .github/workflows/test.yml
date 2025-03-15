@@ -20,17 +20,18 @@ concurrency:
 jobs:
   build:
     uses: ./.github/workflows/workflow-build.yml
-    secrets: inherit
     with:
       runs-on: lynx-ubuntu-24.04-xlarge
   benchmark:
     needs: build
     uses: ./.github/workflows/workflow-bench.yml
-    secrets: inherit
+    secrets:
+      CODSPEED_TOKEN: ${{ secrets.CODSPEED_TOKEN }}
   test-rspeedy:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
-    secrets: inherit
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
       runs-on: lynx-ubuntu-24.04-medium
       run: >
@@ -52,7 +53,8 @@ jobs:
   test-react:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
-    secrets: inherit
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
       runs-on: lynx-ubuntu-24.04-medium
       run: >
@@ -68,7 +70,8 @@ jobs:
   test-plugins:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
-    secrets: inherit
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
       runs-on: lynx-ubuntu-24.04-medium
       run: >
@@ -86,7 +89,6 @@ jobs:
   playwright-linux:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
-    secrets: inherit
     with:
       runs-on: lynx-ubuntu-24.04-xlarge
       is-web: true
@@ -96,6 +98,5 @@ jobs:
         pnpm --filter @lynx-js/web-tests run test
   test-rust:
     uses: ./.github/workflows/rust.yml
-    secrets: inherit
     with:
       runs-on: lynx-ubuntu-24.04-medium

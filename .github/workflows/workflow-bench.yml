@@ -1,5 +1,8 @@
 on:
   workflow_call:
+    secrets:
+      CODSPEED_TOKEN:
+        required: false
 
 env:
   CI: 1
@@ -22,6 +25,6 @@ jobs:
           pnpm build
       - name: Run benchmark
         run: |
-          curl -fsSL https://github.com/CodSpeedHQ/runner/releases/download/v3.5.0/codspeed-runner-installer.sh | bash -x -s -- --verbose
+          curl -fsSL https://github.com/CodSpeedHQ/runner/releases/download/v3.5.0/codspeed-runner-installer.sh | bash -s -- --quiet
           . "$HOME/.cargo/env"
           codspeed run --token ${{ secrets.CODSPEED_TOKEN }} -- pnpm vitest bench
