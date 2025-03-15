@@ -53,6 +53,10 @@ jobs:
     secrets: inherit
     with:
       runs-on: lynx-ubuntu-24.04-xlarge
+  benchmark:
+    needs: build-all
+    uses: ./.github/workflows/workflow-bench.yml
+    secrets: inherit
   coverage:
     needs: build-all
     uses: ./.github/workflows/workflow-test.yml

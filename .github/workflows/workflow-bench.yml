@@ -1,0 +1,38 @@
+on:
+  workflow_call:
+
+env:
+  CI: 1
+  TURBO_TELEMETRY_DISABLED: 1
+jobs:
+  build-all:
+    runs-on: lynx-ubuntu-24.04-xlarge
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: TurboCache
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: turbo-v3-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ github.sha }}
+          # We can restore caches from
+          #   1. Runs in the same PR
+          #   2. Previous PRs
+          restore-keys: |
+            turbo-v3-${{ hashFiles('**/packages/**/src/**/*.rs') }}-
+      - name: Install
+        run: |
+          npm install -g corepack@latest
+          corepack enable
+          pnpm install --frozen-lockfile
+      - name: Build
+        id: build
+        run: |
+          pnpm turbo build --summarize
+      - name: Run benchmark
+        uses: CodSpeedHQ/action@63ae6025a0ffee97d7736a37c9192dbd6ed4e75f # v3
+        with:
+          run: pnpm vitest bench
+          token: ${{ secrets.CODSPEED_TOKEN }}
