@@ -36,7 +36,6 @@ jobs:
         run: |
           export PATH="$PATH:$HOME/.cargo/bin"
       - name: Run benchmark
-        uses: CodSpeedHQ/action@v3
-        with:
-          run: pnpm vitest bench
-          token: ${{ secrets.CODSPEED_TOKEN }}
+        run: |
+          curl -fsSL https://github.com/CodSpeedHQ/runner/releases/download/v3.5.0/codspeed-runner-installer.sh | bash -x -s -- --verbose
+          codspeed run --token ${{ secrets.CODSPEED_TOKEN }} -- pnpm vitest bench
