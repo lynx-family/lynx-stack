@@ -12,30 +12,19 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - name: TurboCache
-        uses: actions/cache@v4
-        with:
-          path: .turbo
-          key: turbo-v3-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ github.sha }}
-          # We can restore caches from
-          #   1. Runs in the same PR
-          #   2. Previous PRs
-          restore-keys: |
-            turbo-v3-${{ hashFiles('**/packages/**/src/**/*.rs') }}-
       - name: Install
         run: |
           npm install -g corepack@latest
           corepack enable
           pnpm install --frozen-lockfile
       - name: Build
-        id: build
         run: |
-          pnpm turbo build --summarize
-      # codspeed is installed at $HOME/.cargo/bin
-      - name: Setup PATH
-        run: |
-          export PATH="$PATH:$HOME/.cargo/bin"
+          pnpm build
       - name: Run benchmark
         run: |
+          echo "$PATH"
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+          echo "$PATH"
           curl -fsSL https://github.com/CodSpeedHQ/runner/releases/download/v3.5.0/codspeed-runner-installer.sh | bash -x -s -- --verbose
+          echo "$PATH"
           codspeed run --token ${{ secrets.CODSPEED_TOKEN }} -- pnpm vitest bench
