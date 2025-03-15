@@ -3,7 +3,6 @@
 // LICENSE file in the root directory of this source tree.
 
 import { defineConfig } from 'vitest/config';
-import codspeedVitestPlugin from '@codspeed/vitest-plugin';
 
 export default defineConfig({
   test: {
@@ -42,5 +41,4 @@ export default defineConfig({
       NODE_ENV: 'test',
     },
   },
-  plugins: [codspeedVitestPlugin()],
 });
