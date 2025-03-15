@@ -13,6 +13,7 @@ permissions:
   contents: read
   actions: write
   pull-requests: write
+  issues: write
 env:
   CI: 1
   TURBO_TELEMETRY_DISABLED: 1
