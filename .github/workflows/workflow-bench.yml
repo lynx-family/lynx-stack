@@ -6,7 +6,7 @@ env:
   TURBO_TELEMETRY_DISABLED: 1
 jobs:
   nodejs-benchmark:
-    runs-on: ubuntu-latest
+    runs-on: lynx-ubuntu-24.04-xlarge
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -32,7 +32,7 @@ jobs:
         run: |
           pnpm turbo build --summarize
       - name: Run benchmark
-        uses: CodSpeedHQ/action@63ae6025a0ffee97d7736a37c9192dbd6ed4e75f # v3
+        uses: CodSpeedHQ/action@v3
         with:
           run: pnpm vitest bench
           token: ${{ secrets.CODSPEED_TOKEN }}
