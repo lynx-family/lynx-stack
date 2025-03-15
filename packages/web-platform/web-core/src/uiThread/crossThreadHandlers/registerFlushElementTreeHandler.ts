@@ -2,7 +2,6 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import {
-  cardIdAttribute,
   componentIdAttribute,
   lynxDefaultDisplayLinearAttribute,
   lynxRuntimeValue,
@@ -24,9 +23,7 @@ import { createCrossThreadEvent } from '../../utils/createCrossThreadEvent.js';
 function applyPageAttributes(
   page: HTMLElement,
   pageConfig: PageConfig,
-  entryId: string,
 ) {
-  page.setAttribute(cardIdAttribute, entryId);
   if (pageConfig.defaultDisplayLinear === false) {
     page.setAttribute(lynxDefaultDisplayLinearAttribute, 'false');
   }
@@ -40,7 +37,6 @@ export function registerFlushElementTreeHandler(
     overrideTagMap: Record<string, string>;
     backgroundRpc: Rpc;
     rootDom: HTMLElement;
-    entryId: string;
   },
   onCommit: (info: {
     pipelineId: string | undefined;
@@ -58,7 +54,6 @@ export function registerFlushElementTreeHandler(
     overrideTagMap,
     backgroundRpc,
     rootDom,
-    entryId,
   } = options;
   const uniqueIdToElement: WeakRef<
     HTMLElement & RuntimePropertyOnElement
@@ -150,7 +145,7 @@ export function registerFlushElementTreeHandler(
         styleElement.innerHTML = cardCss!;
         rootDom.append(styleElement);
         rootDom.append(page);
-        applyPageAttributes(page, pageConfig, entryId);
+        applyPageAttributes(page, pageConfig);
       }
       markTimingInternal('layout_end', pipelineId);
       markTimingInternal('dispatch_end', pipelineId);

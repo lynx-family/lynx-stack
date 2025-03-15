@@ -11,7 +11,6 @@ export interface MainThreadStartConfigs {
   template: LynxTemplate;
   initData: Cloneable;
   globalProps: Cloneable;
-  entryId: string;
   browserConfig: BrowserConfig;
   nativeModulesUrl?: string;
   napiModulesMap: NapiModulesMap;

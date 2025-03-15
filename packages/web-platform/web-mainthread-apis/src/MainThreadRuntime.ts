@@ -47,7 +47,6 @@ export interface MainThreadConfig {
   styleInfo: StyleInfo;
   customSections: LynxTemplate['customSections'];
   lepusCode: LynxTemplate['lepusCode'];
-  entryId: string;
   browserConfig: BrowserConfig;
 }
 
