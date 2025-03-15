@@ -31,16 +31,16 @@ jobs:
       - run: |
           pnpm install --frozen-lockfile
           pnpm turbo --filter "@lynx-js/web-explorer" build
-          mv ./packages/web-platform/web-explorer/dist/stats.json ../stats.head.json
+          mv ./packages/web-platform/web-explorer/dist/stats.json ./stats.head.json
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.base_ref }}
       - run: |
           pnpm install --frozen-lockfile
           pnpm turbo --filter "@lynx-js/web-explorer" build
-          mv ./packages/web-platform/web-explorer/dist/stats.json ../stats.base.json
+          mv ./packages/web-platform/web-explorer/dist/stats.json ./stats.base.json
       - uses: github/webpack-bundlesize-compare-action@v2.1.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          current-stats-json-path: ../stats.head.json
-          base-stats-json-path: ../stats.base.json
+          current-stats-json-path: ./stats.head.json
+          base-stats-json-path: ./stats.head.json
