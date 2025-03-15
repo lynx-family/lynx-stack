@@ -1,4 +1,5 @@
 packages:
+  - .github/actions/eco-ci
   - examples/*
   - packages/react
   - packages/react/refresh
@@ -10,7 +11,9 @@ packages:
   - packages/web-platform/*
   - packages/webpack/*
   - packages/third-party/*
-  - .github/actions/eco-ci
+  - website
+
+# Default catalogs
 catalog:
   "@microsoft/api-extractor": "7.51.1"
 
@@ -36,6 +39,9 @@ overrides:
 patchedDependencies:
   "@napi-rs/cli@2.18.4": "patches/@napi-rs__cli@2.18.4.patch"
   "@rollup/plugin-typescript": "patches/@rollup__plugin-typescript.patch"
+
+onlyBuiltDependencies:
+  - dprint
 
 ignoredBuiltDependencies:
   - core-js

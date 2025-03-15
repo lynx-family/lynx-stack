@@ -1,0 +1,54 @@
+name: Website
+
+on:
+  workflow_call:
+
+env:
+  CI: 1
+  TURBO_TELEMETRY_DISABLED: 1
+jobs:
+  build:
+    runs-on: lynx-ubuntu-24.04-medium
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: TurboCache
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: turbo-v3-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ github.sha }}
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+      - name: Install
+        run: |
+          npm install -g corepack@latest
+          corepack enable
+          pnpm install --frozen-lockfile
+      - name: Build
+        run: |
+          pnpm turbo --filter website build:docs
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: website/doc_build
+
+  deploy:
+    needs: build
+    if: github.repository == 'lynx-family/lynx-stack' && github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
+    permissions:
+      pages: write # to deploy to Pages
+      id-token: write # to verify the deployment originates from an appropriate source
+
+    # Deploy to the github-pages environment
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

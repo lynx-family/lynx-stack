@@ -95,3 +95,6 @@ jobs:
     secrets: inherit
     with:
       runs-on: lynx-ubuntu-24.04-medium
+  website:
+    needs: build
+    uses: ./.github/workflows/workflow-website.yml

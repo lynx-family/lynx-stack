@@ -1,0 +1,104 @@
+@use "./external-links";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import "./theme.scss";
+
+:root {
+  --major-brand-color: rgba(255, 154, 0, 1);
+  --second-brand-color: rgba(255, 53, 26, 1);
+  --gradient-brand-color: rgba(239, 155, 255, 1);
+  --home-blog-bg-img: url("https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/lynx-website/assets/rspeedy.PNG");
+  --home-features-list-frame-bg: url("https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/lynx-website/assets/home/rs-f-light-bg.svg")
+    no-repeat center center;
+}
+
+:root.dark {
+  --major-brand-color: rgba(255, 154, 0, 1);
+  --second-brand-color: rgba(255, 53, 26, 1);
+  --home-blog-bg-img: url("https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/lynx-website/assets/rspeedy.PNG");
+  --home-features-list-frame-bg: url("https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/lynx-website/assets/home/rs-f-dark-bg.svg")
+    no-repeat center center;
+}
+
+.hero-text {
+  animation: fade-in 0.8s ease-out;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  white-space: normal;
+  hyphens: auto;
+  max-width: 100%;
+
+  .brand {
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: var(--second-brand-color);
+    background-color: var(--second-brand-color);
+  }
+
+  .brand-ani {
+    color: transparent;
+    background: linear-gradient(
+      270deg,
+      var(--major-brand-color),
+      var(--gradient-brand-color),
+      var(--second-brand-color),
+      var(--gradient-brand-color),
+      var(--major-brand-color)
+    );
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    animation:
+      blink-caret 1s cubic-bezier(1, 0, 0, 1) infinite,
+      fade-in 0.8s ease-out,
+      gradientMove 6s linear infinite;
+  }
+  .normal {
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: var(--hero-normal-text-color);
+    background-color: var(--hero-normal-text-color);
+  }
+}
+
+@keyframes blink-caret {
+  from, 49% {
+    border-image: linear-gradient(
+      to bottom,
+      var(--major-brand-color),
+      var(--gradient-brand-color),
+      var(--second-brand-color)
+    ) 1;
+  }
+  50%, to {
+    border-image: linear-gradient(to bottom, transparent, transparent) 1;
+  }
+}
+
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes gradientMove {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: -200% 50%;
+  }
+}
+
+// This targets all <a target="_blank"> in the main doc container to add a
+// visual indicator to help users identify external links.
+.rspress-doc-container {
+  @include external-links.external-links;
+}

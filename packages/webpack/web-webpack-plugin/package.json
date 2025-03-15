@@ -22,6 +22,7 @@
     "README.md"
   ],
   "scripts": {
+    "api-extractor": "api-extractor run --verbose",
     "test": "pnpm vitest --project webpack/web-webpack-plugin"
   },
   "dependencies": {

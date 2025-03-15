@@ -166,3 +166,7 @@ jobs:
           pnpm --recursive publish --no-git-checks --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+  website:
+    needs: build-all
+    if: github.repository == 'lynx-family/lynx-stack'
+    uses: ./.github/workflows/workflow-website.yml

@@ -22,6 +22,10 @@
       "lib/**",
       "output/**",
       "etc/*.md",
+      "website/docs/en/api/**",
+      "website/docs/zh/api/**",
+      "website/docs/en/changelog/**",
+      "website/docs/zh/changelog/**",
 
       "fixtures/error/**",
       "test/diagnostic/**",
