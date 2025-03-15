@@ -41,6 +41,7 @@ export type { Config } from './config/index.js'
 // Dev
 export type { Dev } from './config/dev/index.js'
 export type { Client as DevClient } from './config/dev/client.js'
+export type { LazyCompilationOptions } from './config/dev/lazyCompilation.js'
 
 // Output
 export type {
