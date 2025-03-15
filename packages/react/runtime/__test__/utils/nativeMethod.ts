@@ -13,8 +13,14 @@ interface Element {
   children: any[];
 }
 
+interface ElementOptions {
+  onCreateElement?: ((element: Element) => void) | undefined;
+}
+
 export let uiSignNext = 0;
 export const parentMap = new WeakMap<Element, Element>();
+// export const elementPrototype = Object.create(null);
+export const options: ElementOptions = {};
 
 export const elementTree = new (class {
   root?: Element = undefined;
@@ -24,22 +30,11 @@ export const elementTree = new (class {
   }
 
   __CreateRawText(text: string) {
-    // return text;
-    const json = {
-      type: 'raw-text',
-      children: [],
-      props: {
-        text,
-      },
-      parentComponentUniqueId: 0,
-    };
-    Object.defineProperty(json, '$$typeof', {
-      value: Symbol.for('react.test.json'),
-    });
-    Object.defineProperty(json, '$$uiSign', {
-      value: uiSignNext++,
-    });
-    return json;
+    const r = this.__CreateElement('raw-text', 0);
+    // @ts-ignore
+    r.props.text = text;
+    this.root ??= r;
+    return r;
   }
 
   __GetElementUniqueID(e: Element): number {
@@ -65,6 +60,8 @@ export const elementTree = new (class {
       value: uiSignNext++,
     });
 
+    options.onCreateElement?.(json);
+
     this.root ??= json;
     return json;
   }
@@ -77,37 +74,15 @@ export const elementTree = new (class {
   }
 
   __CreateText(parentComponentUniqueId: number) {
-    const json = {
-      type: 'text',
-      children: [],
-      props: {},
-      parentComponentUniqueId,
-    };
-    Object.defineProperty(json, '$$typeof', {
-      value: Symbol.for('react.test.json'),
-    });
-    Object.defineProperty(json, '$$uiSign', {
-      value: uiSignNext++,
-    });
-    this.root ??= json;
-    return json;
+    const r = this.__CreateElement('text', parentComponentUniqueId);
+    this.root ??= r;
+    return r;
   }
 
   __CreateImage(parentComponentUniqueId: number) {
-    const json = {
-      type: 'image',
-      children: [],
-      props: {},
-      parentComponentUniqueId,
-    };
-    Object.defineProperty(json, '$$typeof', {
-      value: Symbol.for('react.test.json'),
-    });
-    Object.defineProperty(json, '$$uiSign', {
-      value: uiSignNext++,
-    });
-    this.root ??= json;
-    return json;
+    const r = this.__CreateElement('image', parentComponentUniqueId);
+    this.root ??= r;
+    return r;
   }
 
   __CreateWrapperElement(parentComponentUniqueId: number) {
