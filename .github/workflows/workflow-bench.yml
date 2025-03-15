@@ -31,6 +31,10 @@ jobs:
         id: build
         run: |
           pnpm turbo build --summarize
+      # codspeed is installed at $HOME/.cargo/bin
+      - name: Setup PATH
+        run: |
+          export PATH="$PATH:$HOME/.cargo/bin"
       - name: Run benchmark
         uses: CodSpeedHQ/action@v3
         with:
