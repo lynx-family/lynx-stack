@@ -22,9 +22,6 @@ jobs:
           pnpm build
       - name: Run benchmark
         run: |
-          echo "$PATH"
-          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
-          echo "$PATH"
           curl -fsSL https://github.com/CodSpeedHQ/runner/releases/download/v3.5.0/codspeed-runner-installer.sh | bash -x -s -- --verbose
-          echo "$PATH"
+          . "$HOME/.cargo/env"
           codspeed run --token ${{ secrets.CODSPEED_TOKEN }} -- pnpm vitest bench
