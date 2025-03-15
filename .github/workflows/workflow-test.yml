@@ -1,5 +1,8 @@
 on:
   workflow_call:
+    secrets:
+      CODECOV_TOKEN:
+        required: false
     inputs:
       runs-on:
         required: true

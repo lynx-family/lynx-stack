@@ -1,4 +1,5 @@
 packages:
+  - benchmark
   - examples/*
   - packages/react
   - packages/react/refresh

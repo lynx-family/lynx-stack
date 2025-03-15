@@ -1,0 +1,13 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "jsx": "preserve",
+    "isolatedDeclarations": false,
+    "noEmit": true,
+  },
+  "include": [
+    "cases",
+    "*.bench.ts",
+    "vitest.config.ts",
+  ],
+}
