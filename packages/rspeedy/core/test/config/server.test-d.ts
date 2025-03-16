@@ -6,6 +6,11 @@ import { assertType, describe, test } from 'vitest'
 import type { Server } from '../../src/index.js'
 
 describe('Config - Server', () => {
+  test('server.base', () => {
+    assertType<Server>({})
+    assertType<Server>({ base: '/foo' })
+  })
+
   test('server.headers', () => {
     assertType<Server>({})
     assertType<Server>({

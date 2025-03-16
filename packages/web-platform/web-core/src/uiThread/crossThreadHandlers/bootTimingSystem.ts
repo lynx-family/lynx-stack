@@ -53,6 +53,7 @@ export function bootTimingSystem(
         detail: isFp ? setupTiming : timingInfo,
         bubbles: true,
         cancelable: true,
+        composed: true,
       }),
     );
     if (pipelineId) {

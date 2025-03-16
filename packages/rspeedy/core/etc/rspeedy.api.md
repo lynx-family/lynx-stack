@@ -200,6 +200,9 @@ export interface LoadConfigResult {
 export { logger }
 
 // @public
+export function mergeRspeedyConfig(...configs: Config[]): Config;
+
+// @public
 export interface Minify {
     css?: boolean | undefined;
     js?: boolean | undefined;
@@ -254,6 +257,7 @@ export type RspeedyInstance = RsbuildInstance & {
 
 // @public
 export interface Server {
+    base?: string | undefined;
     headers?: Record<string, string | string[]> | undefined;
     host?: string | undefined;
     port?: number | undefined;

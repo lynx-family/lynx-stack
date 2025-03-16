@@ -6,7 +6,7 @@
 ## Asset Files
 - Bundle: rspack-bundle.js
 - Manifest: main.LAST_HASH.hot-update.json, size: 28
-- Update: main.LAST_HASH.hot-update.js, size: 4077
+- Update: main.LAST_HASH.hot-update.js, size: 4146
 
 ## Manifest
 
@@ -34,7 +34,11 @@ var globDynamicComponentEntry;
 "use strict";
 exports.ids = ['main'];
 exports.modules = {
-"./app.jsx": (function (module, __webpack_exports__, __webpack_require__) {
+"./app.jsx": 
+/*!*****************!*\
+  !*** ./app.jsx ***!
+  \*****************/
+(function (module, __webpack_exports__, __webpack_require__) {
 __webpack_require__.r(__webpack_exports__);
 __webpack_require__.d(__webpack_exports__, {
   App: () => (App)

@@ -69,7 +69,7 @@ function initializeMainThreadTest() {
     lepusCode: { root: '' },
     customSections: {},
     entryId: 't',
-    browserConfig: { supportAtScope: true },
+    browserConfig: {},
     pageConfig: {
       enableCSSSelector: true,
       enableRemoveCSSScope: true,

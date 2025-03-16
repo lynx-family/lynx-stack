@@ -4,7 +4,7 @@
 import { Component } from 'preact';
 
 import { PerfSpecificKey, PerformanceTimingKeys, markTimingLegacy } from './performance.js';
-import { globalFlushOptions } from '../lifecycle/patch/patchUpdate.js';
+import { globalFlushOptions } from '../lifecycle/patch/commit.js';
 import { NEXT_STATE } from '../renderToOpcodes/constants.js';
 
 if (__JS__) {

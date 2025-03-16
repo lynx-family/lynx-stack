@@ -9,7 +9,8 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import { BasicBG, ListBG, ListConditionalBG, ViewBG, setObj, setStr } from './reloadBG';
 import { BasicMT, ListConditionalMT, ListMT, ViewMT } from './reloadMT';
 import { root } from '../../src/index';
-import { injectUpdatePatch, replaceCommitHook } from '../../src/lifecycle/patch/patchUpdate';
+import { replaceCommitHook } from '../../src/lifecycle/patch/commit';
+import { injectUpdateMainThread } from '../../src/lifecycle/patch/updateMainThread';
 import { __root } from '../../src/root';
 import { setupPage } from '../../src/snapshot';
 import { globalEnvManager } from '../utils/envManager';
@@ -19,7 +20,7 @@ beforeAll(() => {
   setupPage(__CreatePage('0', 0));
 
   replaceCommitHook();
-  injectUpdatePatch();
+  injectUpdateMainThread();
 
   globalThis.__TESTING_FORCE_RENDER_TO_OPCODE__ = true;
 });

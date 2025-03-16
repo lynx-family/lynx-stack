@@ -5,6 +5,7 @@ import type {
   RpcEndpoint,
   RpcEndpointAsync,
   RpcEndpointAsyncVoid,
+  RpcEndpointAsyncWithTransfer,
   RpcEndpointBase,
   RpcEndpointSync,
   RpcEndpointSyncVoid,
@@ -14,6 +15,7 @@ interface RpcMessageData {
   name: string;
   data: unknown[];
   sync: false;
+  hasTransfer?: boolean;
 }
 interface RpcMessageDataSync {
   name: string;
@@ -44,7 +46,22 @@ export class Rpc {
   #textDecoder = new TextDecoder();
   #handlerMap = new Map<
     string,
-    (...args: any[]) => unknown | Promise<unknown>
+    | ((
+      ...args: any[]
+    ) =>
+      | unknown
+      | Promise<unknown>)
+    | ((
+      ...args: any[]
+    ) =>
+      | {
+        data: unknown;
+        transfer: Transferable[];
+      }
+      | Promise<{
+        data: unknown;
+        transfer: Transferable[];
+      }>)
   >();
 
   /**
@@ -71,7 +88,9 @@ export class Rpc {
     } as unknown as RetEndpoint<Return>;
   }
 
-  #onMessage: (message: RpcMessageData | RpcMessageDataSync) => void = async (
+  #onMessage: (
+    message: RpcMessageData | RpcMessageDataSync,
+  ) => void = async (
     message,
   ) => {
     console.warn(`[rpc] on ${this.name} received ${message.name}`, message);
@@ -84,7 +103,19 @@ export class Rpc {
         ? Rpc.createRetEndpoint(message.retId)
         : undefined;
       try {
-        const retData = await handler(...message.data);
+        const result = await handler(...message.data);
+        let retData = undefined, transfer: Transferable[] = [];
+        if (message.sync) {
+          retData = result;
+        } else if (message.hasTransfer) {
+          ({ data: retData, transfer } = (result || {}) as {
+            data: unknown;
+            transfer: Transferable[];
+          });
+        } else {
+          retData = result;
+        }
+
         if (message.sync) {
           if (message.buf) {
             const retStr = JSON.stringify(retData);
@@ -105,7 +136,7 @@ export class Rpc {
             this.invoke<RetEndpoint<unknown>>(replyTempEndpoint!, [
               retData,
               false,
-            ]);
+            ], transfer || []);
           }
         }
       } catch (e) {
@@ -169,11 +200,24 @@ export class Rpc {
       | ((...args: T['_TypeParameters']) => T['_TypeReturn'])
       | ((...args: T['_TypeParameters']) => Promise<T['_TypeReturn']>),
   ): void;
-  registerHandler<T extends RpcEndpoint<any[], any>>(
+  registerHandler<T extends RpcEndpointAsyncWithTransfer<any[], any>>(
     endpoint: T,
     handler:
-      | ((...args: T['_TypeParameters']) => T['_TypeReturn'])
-      | ((...args: T['_TypeParameters']) => Promise<T['_TypeReturn']>),
+      | ((
+        ...args: T['_TypeParameters']
+      ) => { data: T['_TypeReturn']; transfer: Transferable[] })
+      | ((
+        ...args: T['_TypeParameters']
+      ) => Promise<{ data: T['_TypeReturn']; transfer: Transferable[] }>),
+  ): void;
+  registerHandler<T extends RpcEndpoint<any[], any>>(
+    endpoint: T,
+    handler: (
+      ...args: T['_TypeParameters']
+    ) => void | T['_TypeReturn'] | {
+      data: T['_TypeReturn'];
+      transfer: Transferable[];
+    } | Promise<{ data: T['_TypeReturn']; transfer: Transferable[] }>,
   ): void {
     this.#handlerMap.set(endpoint.name, handler);
     const currentCache = this.#messageCache[endpoint.name];
@@ -394,6 +438,7 @@ export class Rpc {
           data: parameters,
           sync: false,
           retId: retHandler?.name,
+          hasTransfer: endpoint.hasReturnTransfer,
         };
         this.port.postMessage(message, { transfer });
         return promise;

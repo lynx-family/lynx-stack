@@ -1553,6 +1553,8 @@ describe('Config Validation', () => {
     test('valid type', () => {
       const cases: Server[] = [
         {},
+        { base: '/foo' },
+        { base: '/bar' },
         { headers: {} },
         { headers: { foo: 'bar' } },
         { headers: { foo: [] } },
@@ -1568,6 +1570,26 @@ describe('Config Validation', () => {
     })
 
     test('invalid type', () => {
+      expect(() => validate({ server: { base: 123 } }))
+        .toThrowErrorMatchingInlineSnapshot(`
+        [Error: Invalid configuration.
+
+        Invalid config on \`$input.server.base\`.
+          - Expect to be (string | undefined)
+          - Got: number
+        ]
+      `)
+
+      expect(() => validate({ server: { base: null } }))
+        .toThrowErrorMatchingInlineSnapshot(`
+        [Error: Invalid configuration.
+
+        Invalid config on \`$input.server.base\`.
+          - Expect to be (string | undefined)
+          - Got: null
+        ]
+      `)
+
       expect(() => validate({ server: { headers: null } }))
         .toThrowErrorMatchingInlineSnapshot(`
           [Error: Invalid configuration.

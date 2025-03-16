@@ -12,6 +12,7 @@ const config: UserWorkspaceConfig = defineProject({
       DEBUG: 'rspeedy',
     },
     name: 'webpack/template',
+    setupFiles: ['@lynx-js/vitest-setup/setup.ts'],
   },
 });
 

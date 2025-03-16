@@ -7,7 +7,8 @@ import { render } from 'preact';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Component, useState } from '../../src/index';
-import { injectUpdatePatch, replaceCommitHook } from '../../src/lifecycle/patch/patchUpdate';
+import { replaceCommitHook } from '../../src/lifecycle/patch/commit';
+import { injectUpdateMainThread } from '../../src/lifecycle/patch/updateMainThread';
 import { __root } from '../../src/root';
 import { setupPage } from '../../src/snapshot';
 import { globalEnvManager } from '../utils/envManager';
@@ -15,7 +16,7 @@ import { elementTree, waitSchedule } from '../utils/nativeMethod';
 
 beforeAll(() => {
   setupPage(__CreatePage('0', 0));
-  injectUpdatePatch();
+  injectUpdateMainThread();
   replaceCommitHook();
 });
 

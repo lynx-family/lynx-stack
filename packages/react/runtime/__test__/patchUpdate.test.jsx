@@ -1,13 +1,13 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { injectUpdatePatch } from '../src/lifecycle/patch/patchUpdate';
 import { initGlobalSnapshotPatch } from '../src/lifecycle/patch/snapshotPatch';
+import { injectUpdateMainThread } from '../src/lifecycle/patch/updateMainThread';
 import { SnapshotInstance, setupPage } from '../src/snapshot';
 import { globalEnvManager } from './utils/envManager';
 
 beforeAll(() => {
   setupPage(__CreatePage('0', 0));
-  injectUpdatePatch();
+  injectUpdateMainThread();
 });
 
 beforeEach(() => {

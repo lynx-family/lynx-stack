@@ -2,9 +2,12 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { Cloneable, UpdateDataType } from '@lynx-js/web-constants';
+import type {
+  Cloneable,
+  NapiModulesMap,
+  UpdateDataType,
+} from '@lynx-js/web-constants';
 import { startUIThread } from '../uiThread/startUIThread.js';
-import { supportAtScope } from '../utils/browser.js';
 
 export interface LynxViewConfigs {
   templateUrl: string;
@@ -15,6 +18,7 @@ export interface LynxViewConfigs {
   callbacks: Parameters<typeof startUIThread>[3];
   overrideLynxTagToHTMLTagMap?: Record<string, string>;
   nativeModulesUrl: string | undefined;
+  napiModulesMap: NapiModulesMap;
 }
 
 export interface LynxView {
@@ -37,6 +41,7 @@ export function createLynxView(configs: LynxViewConfigs): LynxView {
     initData,
     overrideLynxTagToHTMLTagMap,
     nativeModulesUrl,
+    napiModulesMap,
   } = configs;
   return startUIThread(
     templateUrl,
@@ -44,9 +49,8 @@ export function createLynxView(configs: LynxViewConfigs): LynxView {
       initData,
       globalProps,
       entryId,
-      browserConfig: {
-        supportAtScope,
-      },
+      napiModulesMap,
+      browserConfig: {},
     },
     rootDom,
     callbacks,

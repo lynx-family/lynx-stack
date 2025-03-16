@@ -422,6 +422,7 @@ test.describe('reactlynx3 tests', () => {
       const target = page.locator('#target');
       await expect(target).toHaveCSS('background-color', 'rgb(255, 192, 203)'); // pink
       await page.evaluate(() => {
+        // @ts-expect-error
         globalThis.lynxView.updateData({ mockData: 'updatedData' }, 1, () => {
           console.log('update Data success');
         });
@@ -443,6 +444,7 @@ test.describe('reactlynx3 tests', () => {
       await goto(page, title);
       await wait(1000);
       await page.evaluate(() => {
+        // @ts-expect-error
         globalThis.lynxView.updateData({ mockData: 'updatedData' }, 0, () => {
           console.log('update Data success');
         });
@@ -540,8 +542,10 @@ test.describe('reactlynx3 tests', () => {
           await goto(page, title);
           await diffScreenShot(page, module, title, 'initial');
           await page.evaluate(() => {
-            // @ts-ignore
-            document.getElementById('x').scrollTo({ offset: 200 });
+            // @ts-expect-error
+            document.querySelector('lynx-view')!.shadowRoot!.querySelector(
+              '#x',
+            )!.scrollTo({ offset: 200 });
           });
           await wait(200);
           await diffScreenShot(
@@ -552,8 +556,10 @@ test.describe('reactlynx3 tests', () => {
           );
           await wait(200);
           await page.evaluate(() => {
-            // @ts-ignore
-            document.getElementById('x').scrollTo({ offset: 400 });
+            // @ts-expect-error
+            document.querySelector('lynx-view')!.shadowRoot!.querySelector(
+              '#x',
+            )!.scrollTo({ offset: 400 });
           });
           await diffScreenShot(page, module, title, 'scroll-200-green');
         },
@@ -571,8 +577,9 @@ test.describe('reactlynx3 tests', () => {
         });
         await wait(100);
         await page.evaluate(() => {
-          // @ts-ignore
-          document.getElementById('x').scrollTo({ offset: 600 });
+          // @ts-expect-error
+          document.querySelector('lynx-view')!.shadowRoot!.querySelector('#x')!
+            .scrollTo({ offset: 600 });
         });
         await wait(100);
         await diffScreenShot(page, module, title, '1-right-yellow', {
@@ -580,8 +587,9 @@ test.describe('reactlynx3 tests', () => {
         });
         await wait(100);
         await page.evaluate(() => {
-          // @ts-ignore
-          document.getElementById('x').scrollTo({ offset: 0 });
+          // @ts-expect-error
+          document.querySelector('lynx-view')!.shadowRoot!.querySelector('#x')!
+            .scrollTo({ offset: 0 });
         });
         await wait(100);
         await diffScreenShot(page, module, title, '2-white-back', {
@@ -589,8 +597,9 @@ test.describe('reactlynx3 tests', () => {
         });
         await wait(100);
         await page.evaluate(() => {
-          // @ts-ignore
-          document.getElementById('y').scrollTo({ offset: 50 });
+          // @ts-expect-error
+          document.querySelector('lynx-view')!.shadowRoot!.querySelector('#y')!
+            .scrollTo({ offset: 50 });
         });
         await wait(100);
         await diffScreenShot(page, module, title, '3-red-down', {
@@ -598,8 +607,9 @@ test.describe('reactlynx3 tests', () => {
         });
         await wait(100);
         await page.evaluate(() => {
-          // @ts-ignore
-          document.getElementById('y').scrollTo({ offset: 0 });
+          // @ts-expect-error
+          document.querySelector('lynx-view')!.shadowRoot!.querySelector('#y')!
+            .scrollTo({ offset: 0 });
         });
         await wait(100);
         await diffScreenShot(page, module, title, '4-white-down-back', {
@@ -653,7 +663,9 @@ test.describe('reactlynx3 tests', () => {
           });
           await wait(100);
           await page.evaluate(() => {
-            document.querySelector('#y').scrollTop = 200;
+            document.querySelector('lynx-view')!.shadowRoot!.querySelector(
+              '#y',
+            )!.scrollTop = 200;
           });
           await wait(100);
           await diffScreenShot(
@@ -665,7 +677,9 @@ test.describe('reactlynx3 tests', () => {
           );
           await wait(100);
           await page.evaluate(() => {
-            document.querySelector('#y').scrollTop = 800;
+            document.querySelector('lynx-view')!.shadowRoot!.querySelector(
+              '#y',
+            )!.scrollTop = 800;
           });
           await wait(100);
           await diffScreenShot(
@@ -677,7 +691,9 @@ test.describe('reactlynx3 tests', () => {
           );
           await wait(100);
           await page.evaluate(() => {
-            document.querySelector('#y').scrollTop = 1000;
+            document.querySelector('lynx-view')!.shadowRoot!.querySelector(
+              '#y',
+            )!.scrollTop = 1000;
           });
           await wait(100);
           await diffScreenShot(page, module, title, '3-green-half-do-trigger', {
@@ -693,7 +709,8 @@ test.describe('reactlynx3 tests', () => {
         });
         await wait(100);
         await page.evaluate(() => {
-          document.querySelector('#y').scrollTop = 200;
+          document.querySelector('lynx-view')!.shadowRoot!.querySelector('#y')!
+            .scrollTop = 200;
         });
         await wait(100);
         await diffScreenShot(page, module, title, '1-orange-half-do-trigger', {
@@ -701,7 +718,8 @@ test.describe('reactlynx3 tests', () => {
         });
         await wait(100);
         await page.evaluate(() => {
-          document.querySelector('#y').scrollTop = 800;
+          document.querySelector('lynx-view')!.shadowRoot!.querySelector('#y')!
+            .scrollTop = 800;
         });
         await wait(100);
         await diffScreenShot(page, module, title, '2-green-half-not-trigger', {
@@ -709,7 +727,8 @@ test.describe('reactlynx3 tests', () => {
         });
         await wait(100);
         await page.evaluate(() => {
-          document.querySelector('#y').scrollTop = 1000;
+          document.querySelector('lynx-view')!.shadowRoot!.querySelector('#y')!
+            .scrollTop = 1000;
         });
         await wait(100);
         await diffScreenShot(page, module, title, '3-green-half-do-trigger', {
@@ -1046,12 +1065,19 @@ test.describe('reactlynx3 tests', () => {
       test.describe('basic-element-text-text-selection', () => {
         const title = 'basic-element-text-text-selection';
 
-        test('selection-true-boolean-flatten-false', async ({ page }) => {
+        test('selection-true-boolean-flatten-false', async ({ page, browserName }) => {
           await goto(page, title);
-          await page
-            .getByText('text-selection-true-boolean-flatten-false')
-            .first()
-            .selectText();
+          if (browserName === 'webkit') {
+            await page
+              .getByText('text-selection-true-boolean-flatten-false')
+              .first()
+              .click({ 'clickCount': 3 });
+          } else {
+            await page
+              .getByText('text-selection-true-boolean-flatten-false')
+              .first()
+              .selectText();
+          }
           await wait(1000);
           await diffScreenShot(
             page,
@@ -1462,7 +1488,9 @@ test.describe('reactlynx3 tests', () => {
           await wait(100);
           const eventDetails = await page.evaluate(() => {
             const event = JSON.parse(
-              document.querySelector('#result>raw-text')!.innerHTML,
+              document.querySelector('lynx-view')!.shadowRoot!.querySelector(
+                '#result>raw-text',
+              )!.innerHTML,
             );
             const { scrollTop, scrollLeft, scrollHeight, scrollWidth } =
               event.detail;
@@ -1492,12 +1520,16 @@ test.describe('reactlynx3 tests', () => {
           await goto(page, title);
           await wait(300);
           await page.evaluate(() => {
-            document.querySelector('scroll-view')!.scrollTop = 200;
+            document.querySelector('lynx-view')!.shadowRoot!.querySelector(
+              'scroll-view',
+            )!.scrollTop = 200;
           });
           await wait(200);
           const eventDetails = await page.evaluate(() => {
             const event = JSON.parse(
-              document.querySelector('#result>raw-text')!.innerHTML,
+              document.querySelector('lynx-view')!.shadowRoot!.querySelector(
+                '#result>raw-text',
+              )!.innerHTML,
             );
             const { scrollTop, scrollLeft, scrollHeight, scrollWidth } =
               event.detail;
@@ -1543,7 +1575,9 @@ test.describe('reactlynx3 tests', () => {
         await wait(600);
         const eventDetails = await page.evaluate(() => {
           const event = JSON.parse(
-            document.querySelector('#result>raw-text')!.innerHTML,
+            document.querySelector('lynx-view')!.shadowRoot!.querySelector(
+              '#result>raw-text',
+            )!.innerHTML,
           );
           const { scrollTop, scrollLeft, scrollHeight, scrollWidth } =
             event.detail;
@@ -1588,7 +1622,9 @@ test.describe('reactlynx3 tests', () => {
         await wait(100);
         const eventDetails = await page.evaluate(() => {
           const event = JSON.parse(
-            document.querySelector('#result>raw-text')!.innerHTML,
+            document.querySelector('lynx-view')!.shadowRoot!.querySelector(
+              '#result>raw-text',
+            )!.innerHTML,
           );
           const { scrollTop, scrollLeft, scrollHeight, scrollWidth } =
             event.detail;
@@ -1658,7 +1694,7 @@ test.describe('reactlynx3 tests', () => {
           const cdpSession = await context.newCDPSession(page);
           const eventDetails: any[] = [];
           page.on('console', async (msg) => {
-            eventDetails.push(await msg.args()[0].jsonValue());
+            eventDetails.push(await msg.args()[0]!.jsonValue());
           });
           await swipe(cdpSession, {
             x: 300,
@@ -1684,7 +1720,6 @@ test.describe('reactlynx3 tests', () => {
         const cdpSession = await context.newCDPSession(page);
         const offsets: any[] = [];
         page.on('console', async (msg) => {
-          const event = await msg.args()[0].jsonValue();
           offsets.push(offsets);
         });
         await swipe(cdpSession, {
@@ -1755,7 +1790,9 @@ test.describe('reactlynx3 tests', () => {
             'select-index',
           );
           await page.evaluateHandle(() => {
-            document.querySelector('x-viewpager-ng')?.setAttribute(
+            document.querySelector('lynx-view')!.shadowRoot!.querySelector(
+              'x-viewpager-ng',
+            )?.setAttribute(
               'select-index',
               '3',
             );
@@ -1853,7 +1890,7 @@ test.describe('reactlynx3 tests', () => {
         async ({ page, browserName }, { title }) => {
           test.skip(browserName === 'firefox', 'flaky');
           await goto(page, title);
-          await page.locator('.focus').click();
+          await page.locator('.focus').click({ force: true });
           await wait(100);
           const result = await page.locator('.result').first().innerText();
           expect(result).toBe('bindfocus');
@@ -1864,7 +1901,7 @@ test.describe('reactlynx3 tests', () => {
       // input/bindfocus test-case start
       test('basic-element-x-input-bindfocus', async ({ page }, { title }) => {
         await goto(page, title);
-        await page.locator('input').click();
+        await page.locator('input').click({ force: true });
         await wait(100);
         const result = await page.locator('.result').first().innerText();
         expect(result).toBe('bindfocus');
@@ -2043,7 +2080,7 @@ test.describe('reactlynx3 tests', () => {
         await goto(page, 'basic-element-x-overlay-ng-playground-test');
         await page.mouse.click(0, 0); // webkit needs this
         await wait(200);
-        await page.mouse.click(100, 370);
+        await page.locator('#toggleModal4').click({ force: true });
         await wait(50);
         await diffScreenShot(
           page,
@@ -3126,7 +3163,7 @@ test.describe('reactlynx3 tests', () => {
             // NOTE: dataset is not included in the previous json value, so we should
             // manually find it from the JSHandle.
             const dataset = await (
-              await (await msg.args()[0].getProperty('target')).getProperty(
+              await (await msg.args()[0]!.getProperty('target')).getProperty(
                 'dataset',
               )
             ).jsonValue();
@@ -3155,7 +3192,7 @@ test.describe('reactlynx3 tests', () => {
             }
           });
           await wait(100);
-          await page.locator('textarea')?.click();
+          await page.locator('textarea')?.click({ force: true });
           await wait(50);
           await page.locator('textarea')?.blur();
           await wait(50);
@@ -3197,7 +3234,9 @@ test.describe('reactlynx3 tests', () => {
           await goto(page, title);
           await diffScreenShot(page, elementName, title);
           await page.evaluate(() => {
-            document.querySelector('x-list')?.shadowRoot?.querySelector(
+            document.querySelector('lynx-view')!.shadowRoot!.querySelector(
+              'x-list',
+            )?.shadowRoot?.querySelector(
               '#content',
             )
               ?.scrollTo(0, 500);

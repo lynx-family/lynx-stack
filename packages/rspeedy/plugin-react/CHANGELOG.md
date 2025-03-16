@@ -1,5 +1,23 @@
 # @lynx-js/react-rsbuild-plugin
 
+## 0.9.2
+
+### Patch Changes
+
+- Avoid entry IIFE in `main-thread.js` ([#206](https://github.com/lynx-family/lynx-stack/pull/206))
+
+- Enable CSS minification for scoped CSS. ([#205](https://github.com/lynx-family/lynx-stack/pull/205))
+
+- Should generate `.rspeedy/[name]/main-thread.js` instead of `.rspeedy/[name]__main-thread/main-thread.js` ([#180](https://github.com/lynx-family/lynx-stack/pull/180))
+
+- Updated dependencies [[`984a51e`](https://github.com/lynx-family/lynx-stack/commit/984a51e62a42b7f3d2670189f722f0d51f9fce9b), [`5e01cef`](https://github.com/lynx-family/lynx-stack/commit/5e01cef366a20d48b430b11eedbf9e5141f316a2), [`315ba3b`](https://github.com/lynx-family/lynx-stack/commit/315ba3b7fac7872884edcdd5ef3e6d6230bbe115), [`315ba3b`](https://github.com/lynx-family/lynx-stack/commit/315ba3b7fac7872884edcdd5ef3e6d6230bbe115)]:
+  - @lynx-js/css-extract-webpack-plugin@0.5.2
+  - @lynx-js/react-webpack-plugin@0.6.8
+  - @lynx-js/template-webpack-plugin@0.6.5
+  - @lynx-js/react-alias-rsbuild-plugin@0.9.2
+  - @lynx-js/react-refresh-webpack-plugin@0.3.2
+  - @lynx-js/web-webpack-plugin@0.6.2
+
 ## 0.9.1
 
 ### Patch Changes

@@ -4,7 +4,7 @@
 import type { Worklet } from '@lynx-js/react/worklet-runtime/bindings';
 
 import { diffArrayAction, diffArrayLepus } from './hydrate.js';
-import { globalBackgroundSnapshotInstancesToRemove } from './lifecycle/patch/patchUpdate.js';
+import { globalBackgroundSnapshotInstancesToRemove } from './lifecycle/patch/commit.js';
 import { markRefToRemove } from './snapshot/ref.js';
 import { transformSpread } from './snapshot/spread.js';
 import {

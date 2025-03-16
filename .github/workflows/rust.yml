@@ -4,9 +4,6 @@ on:
       runs-on:
         required: true
         type: string
-      files:
-        required: true
-        type: string
 env:
   CI: 1
   TURBO_TELEMETRY_DISABLED: 1
@@ -18,22 +15,14 @@ jobs:
     runs-on: ${{ inputs.runs-on }}
     steps:
       - uses: actions/checkout@v4
-      - name: Get Changed Files
-        id: changed-files
-        uses: tj-actions/changed-files@v45.0.7
-        with:
-          files: ${{ inputs.files }}
       - uses: actions-rust-lang/setup-rust-toolchain@v1
-        if: steps.changed-files.outputs.any_changed == 'true'
         with:
           cache-key: test-${{ runner.os }}
       - id: date
-        if: steps.changed-files.outputs.any_changed == 'true'
         run: |
           echo "month=$(date +%m)" >> $GITHUB_OUTPUT
           echo "date=$(date +%d)" >> $GITHUB_OUTPUT
       - name: Test
-        if: steps.changed-files.outputs.any_changed == 'true'
         run: |
           cargo test
 
@@ -41,16 +30,9 @@ jobs:
     runs-on: lynx-ubuntu-24.04-medium
     steps:
       - uses: actions/checkout@v4
-      - name: Get Changed Files
-        id: changed-files
-        uses: tj-actions/changed-files@v45.0.7
-        with:
-          files: ${{ inputs.files }}
       - uses: actions-rust-lang/setup-rust-toolchain@v1
-        if: steps.changed-files.outputs.any_changed == 'true'
         with:
           components: rustfmt
           cache-key: test-${{ runner.os }}
       - name: Format
-        if: steps.changed-files.outputs.any_changed == 'true'
         run: cargo fmt --check

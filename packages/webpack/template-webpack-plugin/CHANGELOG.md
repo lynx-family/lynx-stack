@@ -1,5 +1,11 @@
 # @lynx-js/template-webpack-plugin
 
+## 0.6.5
+
+### Patch Changes
+
+- The code of lazy bundle should be minimized. ([#177](https://github.com/lynx-family/lynx-stack/pull/177))
+
 ## 0.6.4
 
 ### Patch Changes

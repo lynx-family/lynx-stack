@@ -14,8 +14,20 @@ export interface RpcEndpointSync<Parameters extends any[], Return>
   readonly bufferSize: number;
 }
 
-export type RpcEndpointAsync<Parameters extends any[], Return> =
-  RpcEndpointBase<Parameters, Return, false, true>;
+export interface RpcEndpointAsync<
+  Parameters extends any[],
+  Return,
+> extends RpcEndpointBase<Parameters, Return, false, true> {
+  readonly hasReturnTransfer: false;
+}
+
+export interface RpcEndpointAsyncWithTransfer<
+  Parameters extends any[],
+  Return,
+> extends RpcEndpointBase<Parameters, Return, true, true> {
+  readonly hasReturnTransfer: true;
+}
+
 export type RpcEndpointAsyncVoid<Parameters extends any[]> = RpcEndpointBase<
   Parameters,
   void,
@@ -64,13 +76,20 @@ export interface RpcEndpointBase<
    * So you should ensure this size is enough for your stringified return value.
    */
   readonly bufferSize: never | number;
+  /**
+   * @public
+   * Make the message invoke created by hasReturn support transfer.
+   * Only valid for async and hasReturn endpoints
+   */
+  readonly hasReturnTransfer: never | boolean;
 }
 
 export type RpcEndpoint<Parameters extends any[], Return> =
   | RpcEndpointSyncVoid<Parameters>
   | RpcEndpointSync<Parameters, Return>
   | RpcEndpointAsync<Parameters, Return>
-  | RpcEndpointAsyncVoid<Parameters>;
+  | RpcEndpointAsyncVoid<Parameters>
+  | RpcEndpointAsyncWithTransfer<Parameters, Return>;
 
 export function createRpcEndpoint<Parameters extends any[], Return = void>(
   name: string,
@@ -82,6 +101,18 @@ export function createRpcEndpoint<Parameters extends any[], Return = void>(
   isSync: false,
   hasReturn: true,
 ): RpcEndpointAsync<Parameters, Return>;
+export function createRpcEndpoint<Parameters extends any[], Return = void>(
+  name: string,
+  isSync: false,
+  hasReturn: true,
+  hasReturnTransfer: false,
+): RpcEndpointAsync<Parameters, Return>;
+export function createRpcEndpoint<Parameters extends any[], Return = void>(
+  name: string,
+  isSync: false,
+  hasReturn: true,
+  hasReturnTransfer: true,
+): RpcEndpointAsyncWithTransfer<Parameters, Return>;
 export function createRpcEndpoint<Parameters extends any[]>(
   name: string,
   isSync: true,
@@ -91,18 +122,21 @@ export function createRpcEndpoint<Parameters extends any[], Return>(
   name: string,
   isSync: true,
   hasReturn: true,
+  hasReturnTransfer: false,
   bufferSize: number,
 ): RpcEndpointSync<Parameters, Return>;
 export function createRpcEndpoint(
   name: string,
   isSync: boolean,
   hasReturn: boolean = true,
+  hasReturnTransfer: boolean = false,
   bufferSize?: number,
 ) {
   return {
     name,
     isSync,
     hasReturn,
+    hasReturnTransfer,
     bufferSize,
   } as any;
 }

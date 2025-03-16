@@ -1,6 +1,6 @@
 {
   "name": "upgrade-rspeedy",
-  "version": "0.8.3",
+  "version": "0.8.4",
   "description": "Upgrade Rspeedy-related packages",
   "keywords": [
     "webpack",
@@ -39,8 +39,8 @@
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@lynx-js/rspeedy": "workspace:*",
     "@lynx-js/types": "^3.2.0",
-    "@rsbuild/plugin-less": "1.1.1",
-    "@rsbuild/plugin-sass": "1.2.2",
+    "@rsbuild/plugin-less": "catalog:rsbuild",
+    "@rsbuild/plugin-sass": "catalog:rsbuild",
     "commander": "^13.1.0",
     "detect-indent": "^7.0.1",
     "memfs": "^4.17.0",

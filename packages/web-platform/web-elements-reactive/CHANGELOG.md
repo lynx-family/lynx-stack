@@ -1,5 +1,30 @@
 # @lynx-js/web-elements-reactive
 
+## 0.2.0
+
+### Minor Changes
+
+- feat: add new decorator `registerEventEnableStatusChangeHandler` ([#157](https://github.com/lynx-family/lynx-stack/pull/157))
+
+  example
+
+  ```typescript
+  @registerEventEnableStatusChangeHandler('load')
+   #enableLoadEvent(status:boolean) {
+     if (status) {
+       this.#getImg().addEventListener('load', this.#teleportLoadEvent, {
+         passive: true,
+       });
+     } else {
+       this.#getImg().removeEventListener('load', this.#teleportLoadEvent);
+     }
+   }
+  ```
+
+  After this commit, we override the `HTMLElement.addEventListener` and the `HTMLElement.removeEventListner` to know if there is any listener attached on current element.
+
+  If event should be enabled/disabled, the callback will be invoked.
+
 ## 0.1.1
 
 ### Patch Changes

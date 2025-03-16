@@ -3,20 +3,21 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 */
-import { Component, h, options, render } from 'preact';
+import { Component, options, render } from 'preact';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { injectUpdatePatch, replaceCommitHook } from '../../src/lifecycle/patch/patchUpdate';
+import { replaceCommitHook } from '../../src/lifecycle/patch/commit';
+import { injectUpdateMainThread } from '../../src/lifecycle/patch/updateMainThread';
+import '../../src/lynx/component';
 import { initTimingAPI } from '../../src/lynx/performance';
+import { __root } from '../../src/root';
 import { setupPage } from '../../src/snapshot';
 import { globalEnvManager } from '../utils/envManager';
 import { elementTree, waitSchedule } from '../utils/nativeMethod';
-import '../../src/lynx/component';
-import { __root } from '../../src/root';
 
 beforeAll(() => {
   setupPage(__CreatePage('0', 0));
-  injectUpdatePatch();
+  injectUpdateMainThread();
   replaceCommitHook();
   initTimingAPI();
 });

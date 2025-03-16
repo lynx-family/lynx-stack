@@ -38,25 +38,5 @@ jobs:
     runs-on: lynx-ubuntu-24.04-medium
     steps:
       - uses: actions/checkout@v4
-      - name: Get Changed Files
-        id: changed-files
-        uses: tj-actions/changed-files@v45.0.7
-        with:
-          files_ignore: |
-            **/output/**
-            **/*.min.js
-            **/pnpm-lock.yaml
-            packages/web-platform/web-tests/tests/**
-            packages/webpack/*/test/**
-            packages/webpack/css-extract-webpack-plugin/src/loader.ts
-            packages/webpack/react-refresh-webpack-plugin/runtime/refresh.cjs
       - name: coolkiid/no-confusion
         uses: coolkiid/no-confusion-action@0.1.2
-        with:
-          include: ${{ steps.changed-files.outputs.all_changed_files }}
-      - name: pupiltong/forked_ms_Inclusiveness_Analyzer
-        uses: PupilTong/InclusivenessAnalyzer@1.1.0-alpha6
-        with:
-          include: ${{ steps.changed-files.outputs.all_changed_files }}
-          failOnNonInclusiveTerm: true
-          maxLineLength: 2000

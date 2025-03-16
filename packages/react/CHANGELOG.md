@@ -1,5 +1,23 @@
 # @lynx-js/react
 
+## 0.105.2
+
+### Patch Changes
+
+- Support new css properties: `offset-path` and `offset-distance` ([#152](https://github.com/lynx-family/lynx-stack/pull/152))
+
+- Fix 'SystemInfo is not defined' error when using MTS and not importing anything manually from the react package. ([#172](https://github.com/lynx-family/lynx-stack/pull/172))
+
+- Fix `not a function` error when using lazy bundle without MTS. ([#170](https://github.com/lynx-family/lynx-stack/pull/170))
+
+- fix: gesture config not processed correctly ([#175](https://github.com/lynx-family/lynx-stack/pull/175))
+
+  ```typescript
+  const pan = Gesture.Pan().minDistance(100);
+  ```
+
+  After this commit, gesture config like `minDistance` should work as expected.
+
 ## 0.105.1
 
 ### Patch Changes

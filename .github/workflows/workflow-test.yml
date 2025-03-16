@@ -4,10 +4,6 @@ on:
       runs-on:
         required: true
         type: string
-      files: # the filter
-        required: false
-        type: string
-        default: ""
       run:
         required: true
         type: string
@@ -26,42 +22,21 @@ jobs:
         with:
           # Codecov requires fetch-depth: 0
           fetch-depth: 0
-      - name: Get Changed Files
-        id: changed-files
-        uses: tj-actions/changed-files@v45.0.7
-        with:
-          files: ${{ inputs.files }}
       - uses: actions/setup-node@v4
-        if: steps.changed-files.outputs.any_changed == 'true'
         with:
           node-version: "22"
-      - name: PNPM Cache
-        uses: actions/cache@v4
-        if: steps.changed-files.outputs.any_changed == 'true'
-        with:
-          path: .pnpm-store
-          key: ${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: ${{ runner.os }}-
-          # The reason why don't we use the actions/setup-node@v4 to cache:
-          # It doesn't support corepack
-          # See: https://github.com/actions/setup-node/issues/480
-          # See: https://github.com/actions/setup-node/issues/531
       - name: TurboCache
         uses: actions/cache@v4
-        if: steps.changed-files.outputs.any_changed == 'true'
         with:
           path: .turbo
           # We have to be strict here to make sure getting the cache of build-all
           key: turbo-v3-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ github.sha }}
       - name: Install
-        if: steps.changed-files.outputs.any_changed == 'true'
         run: |
           npm install -g corepack@latest
           corepack enable
-          pnpm config set store-dir .pnpm-store
           pnpm install --frozen-lockfile
       - name: Build
-        if: steps.changed-files.outputs.any_changed == 'true'
         run: |
           pnpm turbo build --summarize
       - name: Upload Turbo Summary
@@ -78,15 +53,14 @@ jobs:
         id: test
         env:
           NODE_OPTIONS: --max-old-space-size=8192
-        if: steps.changed-files.outputs.any_changed == 'true'
         run: ${{ inputs.run }}
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
-        if: steps.changed-files.outputs.any_changed == 'true' && inputs.is-web != 'true'
+        if: inputs.is-web != 'true'
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
       - name: Upload test results to Codecov
-        if: ${{ steps.changed-files.outputs.any_changed == 'true' && inputs.is-web != 'true' && !cancelled() }}
+        if: ${{ inputs.is-web != 'true' && !cancelled() }}
         uses: codecov/test-results-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
