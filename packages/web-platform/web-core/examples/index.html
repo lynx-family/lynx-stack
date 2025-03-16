@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Lynx View Example</title>
+  </head>
+  <body>
+    <custom-lynx-view
+      url="/template.html"
+      global-props='{"theme": "light"}'
+      init-data='{"count": 0}'
+    >
+    </custom-lynx-view>
+
+    <script type="module">
+    import './CustomLynxView.js';
+
+    // Configure global settings
+    import { ConfigManager } from '@lynx-js/web-core';
+
+    const config = ConfigManager.getInstance();
+    config.updateConfig({
+      debug: true,
+      performance: {
+        enabled: true,
+        sampleRate: 1.0,
+      },
+    });
+    </script>
+  </body>
+</html>
