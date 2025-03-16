@@ -9,21 +9,23 @@ import '@lynx-js/web-elements-compat/LinearContainer';
 import '@lynx-js/web-core/index.css';
 import './index.css';
 
-const userNativeModule = URL.createObjectURL(
-  new Blob(
-    [
-      `export default {
-  CustomModule: {
-    async getColor(data, callback) {
-      const color = await this.nativeModulesCall('getColor', data);
-      callback(color);
-    },
-  }
-};`,
-    ],
-    { type: 'text/javascript' },
+const nativeModulesMap = {
+  CustomModule: URL.createObjectURL(
+    new Blob(
+      [
+        `export default function(NativeModules, NativeModulesCall) {
+    return {
+      async getColor(data, callback) {
+        const color = await NativeModulesCall('getColor', data);
+        callback(color);
+      },
+    }
+  };`,
+      ],
+      { type: 'text/javascript' },
+    ),
   ),
-);
+};
 
 async function run() {
   const searchParams = new URLSearchParams(document.location.search);
@@ -45,7 +47,7 @@ async function run() {
       // @ts-expect-error
       globalThis.timing = Object.assign(globalThis.timing ?? {}, ev.detail);
     });
-    lynxView.nativeModulesUrl = userNativeModule;
+    lynxView.nativeModulesMap = nativeModulesMap;
     lynxView.onNativeModulesCall = (name, data, moduleName) => {
       if (name === 'getColor' && moduleName === 'CustomModule') {
         return data.color;

@@ -5,6 +5,7 @@
 import type { Cloneable } from './Cloneable.js';
 import type { LynxTemplate } from './LynxModule.js';
 import type { NapiModulesMap } from './NapiModules.js';
+import type { NativeModulesMap } from './NativeModules.js';
 import type { BrowserConfig } from './PageConfig.js';
 
 export interface MainThreadStartConfigs {
@@ -13,6 +14,6 @@ export interface MainThreadStartConfigs {
   globalProps: Cloneable;
   entryId: string;
   browserConfig: BrowserConfig;
-  nativeModulesUrl?: string;
+  nativeModulesMap: NativeModulesMap;
   napiModulesMap: NapiModulesMap;
 }

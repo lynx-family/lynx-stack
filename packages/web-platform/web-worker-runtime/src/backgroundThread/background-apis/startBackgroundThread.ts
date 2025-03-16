@@ -26,18 +26,11 @@ export function startBackgroundThread(
     BackgroundThreadStartEndpoint,
     async (config) => {
       markTimingInternal('load_core_end');
-      const customNativeModules: Record<string, Record<string, any>> =
-        config.nativeModulesUrl
-          ? (await import(
-            /* webpackIgnore: true */ config.nativeModulesUrl
-          ))?.default ?? {}
-          : {};
-      const nativeApp = createNativeApp({
+      const nativeApp = await createNativeApp({
         ...config,
         uiThreadRpc,
         mainThreadRpc,
         markTimingInternal,
-        customNativeModules,
       });
       (globalThis as any)['napiLoaderOnRT' + nativeApp.id] =
         await createNapiLoader(
