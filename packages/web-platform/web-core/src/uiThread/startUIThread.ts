@@ -14,6 +14,7 @@ import { createDispose } from './crossThreadHandlers/createDispose.js';
 import { bootTimingSystem } from './crossThreadHandlers/bootTimingSystem.js';
 import { registerTriggerComponentEventHandler } from './crossThreadHandlers/registerTriggerComponentEventHandler.js';
 import { registerSelectComponentHandler } from './crossThreadHandlers/registerSelectComponentHandler.js';
+import { registerStyleHandler } from './crossThreadHandlers/registerStyleHandler.js';
 import {
   flushElementTreeEndpoint,
   mainThreadChunkReadyEndpoint,
@@ -99,6 +100,7 @@ export function startUIThread(
               backgroundRpc,
               rootDom,
             );
+            registerStyleHandler(backgroundRpc);
             createExposureService(backgroundRpc, rootDom);
             uiThreadFpReady();
           }

@@ -560,6 +560,9 @@ importers:
 
   packages/web-platform/web-elements:
     dependencies:
+      '@lynx-js/web-constants':
+        specifier: workspace:*
+        version: link:../web-constants
       '@lynx-js/web-elements-reactive':
         specifier: workspace:*
         version: link:../web-elements-reactive

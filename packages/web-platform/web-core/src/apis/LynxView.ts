@@ -353,14 +353,9 @@ export class LynxView extends HTMLElement {
             overrideLynxTagToHTMLTagMap: this.#overrideLynxTagToHTMLTagMap,
             nativeModulesUrl: this.#nativeModulesUrl,
             callbacks: {
-<<<<<<< HEAD
-              loadNewTag: loadElement,
-              nativeModulesCall: (...args: [name: string, data: any, moduleName: string]) => {
-=======
               nativeModulesCall: (
                 ...args: [name: string, data: any, moduleName: string]
               ) => {
->>>>>>> 497425893e0e2ddff9ddf8e27d350ee5025ef864
                 if (this.#onNativeModulesCall) {
                   return this.#onNativeModulesCall(...args);
                 } else if (this.#cachedNativeModulesCall) {

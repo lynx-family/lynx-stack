@@ -23,3 +23,6 @@ export { registerStyleChangeHandler } from './registerStyleChangeHandler.js';
 export type { StyleChangeHandler } from './registerStyleChangeHandler.js';
 export { registerEventEnableStatusChangeHandler } from './registerEventStatusChangedHandler.js';
 export type { EventStatusChangeHandler } from './registerEventStatusChangedHandler.js';
+export { responsive } from './decorators/responsive.js';
+export { generateRegister } from './generateRegister.js';
+export { registerEventEnableStatusChangeHandler as registerEventStatusChangedHandler } from './registerEventStatusChangedHandler.js';

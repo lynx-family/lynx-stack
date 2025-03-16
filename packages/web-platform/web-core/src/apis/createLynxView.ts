@@ -4,7 +4,7 @@
 
 import type { Cloneable, UpdateDataType } from '@lynx-js/web-constants';
 import { startUIThread } from '../uiThread/startUIThread.js';
-import { supportAtScope } from '../utils/browser.js';
+import { supportAtScope, supportMediaQueries } from '../utils/browser.js';
 
 export interface LynxViewConfigs {
   templateUrl: string;
@@ -46,6 +46,7 @@ export function createLynxView(configs: LynxViewConfigs): LynxView {
       entryId,
       browserConfig: {
         supportAtScope,
+        supportMediaQueries,
       },
     },
     rootDom,

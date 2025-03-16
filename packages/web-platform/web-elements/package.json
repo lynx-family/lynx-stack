@@ -100,6 +100,7 @@
     "**/*.css"
   ],
   "dependencies": {
+    "@lynx-js/web-constants": "workspace:*",
     "@lynx-js/web-elements-reactive": "workspace:*"
   },
   "devDependencies": {

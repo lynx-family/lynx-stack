@@ -2,6 +2,10 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { parseFlexShorthand } from './parseFlexShorthand.js';
+import {
+  transformMediaQueries,
+  type MediaQueryStyle,
+} from './transformMediaQueries.js';
 /**
  * replace values of the property
  * if one value is not listed, it will be ignored and kept as is.
@@ -271,10 +275,33 @@ const renameRules: {
 };
 export function transformLynxStyles(
   hypenNameStyles: [string, string][],
-): { childStyle: [string, string][]; transformedStyle: [string, string][] } {
-  const newStyle: [string, string][] = [];
+): {
+  childStyle: [string, string][];
+  transformedStyle: [string, string][];
+  mediaQueries: MediaQueryStyle[];
+} {
+  const mediaQueries = transformMediaQueries(hypenNameStyles);
+  const nonMediaStyles = hypenNameStyles.filter(([prop]) =>
+    !prop.startsWith('@media')
+  );
+
+  const { childStyle, transformedStyle } = processStyles(nonMediaStyles);
+
+  return {
+    childStyle,
+    transformedStyle,
+    mediaQueries,
+  };
+}
+
+function processStyles(styles: [string, string][]): {
+  childStyle: [string, string][];
+  transformedStyle: [string, string][];
+} {
   const childStyle: [string, string][] = [];
-  for (const declaration of hypenNameStyles) {
+  const transformedStyle: [string, string][] = [];
+
+  for (const declaration of styles) {
     const [property, value] = declaration;
     const rule = replaceRules[property];
     if (rule?.[value]) {
@@ -284,18 +311,18 @@ export function transformLynxStyles(
           value
         ]!
       ) {
-        newStyle.push([newProperty, newValue]);
+        transformedStyle.push([newProperty, newValue]);
       }
     } else if (renameRules[property]) {
       const important = value.includes('!important');
       for (const oneRule of renameRules[property]) {
         if (typeof oneRule === 'string') {
-          newStyle.push([
+          transformedStyle.push([
             oneRule,
             value,
           ]);
         } else {
-          newStyle.push([
+          transformedStyle.push([
             oneRule.name,
             oneRule.valueProcessor(value.replace('!important', '').trim())
             + (important ? ' !important' : ''),
@@ -306,7 +333,7 @@ export function transformLynxStyles(
       const { flexGrow, flexShrink, flexBasis } = parseFlexShorthand(
         value,
       );
-      newStyle.push([
+      transformedStyle.push([
         '--flex-grow',
         flexGrow,
       ], [
@@ -317,7 +344,7 @@ export function transformLynxStyles(
         flexBasis,
       ]);
     } else {
-      newStyle.push(declaration);
+      transformedStyle.push(declaration);
     }
     if (property === 'linear-weight-sum') {
       let linearWeightSum = value;
@@ -327,5 +354,6 @@ export function transformLynxStyles(
       childStyle.push(['--lynx-linear-weight-sum', linearWeightSum]);
     }
   }
-  return { transformedStyle: newStyle, childStyle };
+
+  return { childStyle, transformedStyle };
 }

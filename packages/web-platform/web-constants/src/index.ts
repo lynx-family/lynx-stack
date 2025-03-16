@@ -6,3 +6,4 @@ export * from './constants.js';
 export * from './eventName.js';
 export * from './endpoints.js';
 export * from './types/index.js';
+export { defaultBreakpoints } from './types/MediaQueries.js';

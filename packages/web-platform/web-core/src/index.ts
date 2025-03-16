@@ -4,3 +4,4 @@
 export { createLynxView } from './apis/createLynxView.js';
 export { LynxView } from './apis/LynxView.js';
 export { lynxRuntimeValue } from '@lynx-js/web-constants';
+export { createMediaQueryManager } from './utils/mediaQueries.js';

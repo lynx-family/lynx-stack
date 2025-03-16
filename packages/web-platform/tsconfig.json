@@ -3,12 +3,16 @@
   "compilerOptions": {
     "composite": true,
     "target": "ESNext",
-    "module": "ESNext",
+    "module": "Node16",
     "lib": ["DOM", "ESNext"],
-    "moduleResolution": "Bundler",
+    "moduleResolution": "Node16",
     "esModuleInterop": false,
     "exactOptionalPropertyTypes": false,
     "isolatedDeclarations": false,
+    "baseUrl": ".",
+    "paths": {
+      "@lynx-js/*": ["./*/src"],
+    },
   },
   "references": [
     /** packages-start */

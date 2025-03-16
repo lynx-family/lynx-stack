@@ -11,8 +11,18 @@
   },
   "license": "Apache-2.0",
   "type": "module",
-  "main": "dist/index.js",
-  "typings": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "typings": "./dist/index.d.ts",
   "files": [
     "dist",
     "!dist/**/*.js.map",
