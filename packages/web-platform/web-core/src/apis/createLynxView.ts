@@ -53,6 +53,7 @@ export function createLynxView(configs: LynxViewConfigs): LynxView {
       browserConfig: {
         supportAtScope,
       },
+      napiModulesMap,
     },
     rootDom,
     callbacks,
