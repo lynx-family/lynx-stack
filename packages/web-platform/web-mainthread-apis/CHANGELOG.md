@@ -1,5 +1,41 @@
 # @lynx-js/web-mainthread-apis
 
+## 0.8.0
+
+### Minor Changes
+
+- refactor: remove web-elements/lazy and loadNewTag ([#123](https://github.com/lynx-family/lynx-stack/pull/123))
+
+  - remove @lynx-js/web-elements/lazy
+  - remove loadElement
+  - remove loadNewTag callback
+
+  **This is a breaking change**
+
+  Now we removed the default lazy loading preinstalled in web-core
+
+  Please add the following statement in your web project
+
+  ```
+  import "@lynx-js/web-elements/all";
+  ```
+
+- feat: use shadowroot to isolate one lynx-view ([#198](https://github.com/lynx-family/lynx-stack/pull/198))
+
+  Before this commit, we have been detecting if current browser supports the `@scope` rule.
+  This allows us to scope one lynx-view's styles.
+
+  After this commit we always create a shadowroot to scope then.
+
+  Also for the new shadowroot pattern, we add a new **attribute** `inject-head-links`.
+  By default, we will iterate all `<link rel="stylesheet">` in the `<head>`, and use `@import url()` to import them inside the shadowroot.
+  Developers could add a `inject-head-links="false"` to disable this behavior.
+
+### Patch Changes
+
+- Updated dependencies [[`e9e8370`](https://github.com/lynx-family/lynx-stack/commit/e9e8370e070a50cbf65a4ebc46c2e37ea1e0be40), [`ec4e1ce`](https://github.com/lynx-family/lynx-stack/commit/ec4e1ce0d7612d6c0701792a46c78cd52130bad4), [`f0a717c`](https://github.com/lynx-family/lynx-stack/commit/f0a717c630700e16ab0af7f1fe370fd60ac75b30)]:
+  - @lynx-js/web-constants@0.8.0
+
 ## 0.7.1
 
 ### Patch Changes

@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/react-webpack-plugin",
-  "version": "0.6.7",
+  "version": "0.6.8",
   "description": "A webpack plugin for ReactLynx",
   "keywords": [
     "webpack",
@@ -47,7 +47,7 @@
     "@lynx-js/test-tools": "workspace:*",
     "@lynx-js/vitest-setup": "workspace:*",
     "@microsoft/api-extractor": "catalog:",
-    "@rspack/core": "catalog:",
+    "@rspack/core": "catalog:rspack",
     "css-loader": "^7.1.2",
     "swc-loader": "^0.2.6",
     "webpack": "^5.98.0"

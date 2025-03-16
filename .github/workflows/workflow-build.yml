@@ -15,16 +15,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - name: PNPM Cache
-        uses: actions/cache@v4
-        with:
-          path: .pnpm-store
-          key: ${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: ${{ runner.os }}-
-          # The reason why don't we use the actions/setup-node@v4 to cache:
-          # It doesn't support corepack
-          # See: https://github.com/actions/setup-node/issues/480
-          # See: https://github.com/actions/setup-node/issues/531
       - name: TurboCache
         uses: actions/cache@v4
         with:
@@ -39,7 +29,6 @@ jobs:
         run: |
           npm install -g corepack@latest
           corepack enable
-          pnpm config set store-dir .pnpm-store
           pnpm install --frozen-lockfile
       - name: Build
         id: build

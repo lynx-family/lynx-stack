@@ -31,5 +31,6 @@ export default defineConfig({
     chunkSplit: {
       strategy: 'all-in-one',
     },
+    profile: true,
   },
 });

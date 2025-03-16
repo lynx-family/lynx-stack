@@ -8,6 +8,7 @@ import { createNativeApp } from './createNativeApp.js';
 import { registerDisposeHandler } from './crossThreadHandlers/registerDisposeHandler.js';
 import { createMarkTimingInternal } from './crossThreadHandlers/createBackgroundMarkTimingInternal.js';
 import { BackgroundThreadStartEndpoint } from '@lynx-js/web-constants';
+import { createNapiLoader } from './createNapiLoader.js';
 
 const lynxCore = import(
   /* webpackMode: "eager" */ '@lynx-js/lynx-core/web'
@@ -38,6 +39,12 @@ export function startBackgroundThread(
         markTimingInternal,
         customNativeModules,
       });
+      (globalThis as any)['napiLoaderOnRT' + nativeApp.id] =
+        await createNapiLoader(
+          uiThreadRpc,
+          config.napiModulesMap,
+        );
+
       const nativeLynx = createBackgroundLynx(config, nativeApp, mainThreadRpc);
       lynxCore.then(
         ({ loadCard, destroyCard, callDestroyLifetimeFun }) => {

@@ -7,5 +7,3 @@ export const isWebkit = /\b(iPad|iPhone|iPod|OS X)\b/.test(UA)
   && !window.MSStream;
 
 export const supportAtScope = !!globalThis.CSSScopeRule;
-
-export const supportMediaQueries = window.matchMedia !== undefined;

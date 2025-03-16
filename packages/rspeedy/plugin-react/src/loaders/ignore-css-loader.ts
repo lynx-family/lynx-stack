@@ -13,7 +13,9 @@ export default function ignoreCssLoader(
   // It is not a CSS Modules file because exportOnlyLocals is enabled,
   // so we don't need to preserve it.
   if (source.includes('___CSS_LOADER_EXPORT___')) {
-    return ''
+    // Return an ESM to make sure the module strict.
+    // See: https://github.com/webpack/webpack/discussions/18367#discussion-6580398
+    return 'export {}'
   }
 
   // Preserve css modules export for background layer.

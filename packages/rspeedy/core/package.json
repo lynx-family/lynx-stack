@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/rspeedy",
-  "version": "0.8.3",
+  "version": "0.8.4",
   "description": "A webpack/rspack-based frontend toolchain for Lynx",
   "keywords": [
     "webpack",
@@ -57,7 +57,7 @@
     "@lynx-js/webpack-dev-transport": "workspace:^",
     "@lynx-js/websocket": "workspace:^",
     "@microsoft/api-extractor": "catalog:",
-    "@rsbuild/core": "catalog:",
+    "@rsbuild/core": "catalog:rsbuild",
     "@rsbuild/plugin-css-minimizer": "1.0.2",
     "@rsdoctor/rspack-plugin": "1.0.0-rc.0",
     "chokidar": "^4.0.3",
@@ -73,7 +73,7 @@
   "devDependencies": {
     "@lynx-js/vitest-setup": "workspace:*",
     "@rollup/plugin-typescript": "^12.1.2",
-    "@rsbuild/webpack": "1.2.3",
+    "@rsbuild/webpack": "catalog:rsbuild",
     "eventemitter3": "^5.0.1",
     "type-fest": "^4.37.0",
     "vitest": "^3.0.8",

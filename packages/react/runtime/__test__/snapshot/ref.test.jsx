@@ -7,7 +7,8 @@ import { render } from 'preact';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Component, createRef, useState } from '../../src/index';
-import { injectUpdatePatch, replaceCommitHook } from '../../src/lifecycle/patch/patchUpdate';
+import { replaceCommitHook } from '../../src/lifecycle/patch/commit';
+import { injectUpdateMainThread } from '../../src/lifecycle/patch/updateMainThread';
 import { __pendingListUpdates } from '../../src/list';
 import { __root } from '../../src/root';
 import { setupPage } from '../../src/snapshot';
@@ -18,7 +19,7 @@ beforeAll(() => {
   setupPage(__CreatePage('0', 0));
 
   replaceCommitHook();
-  injectUpdatePatch();
+  injectUpdateMainThread();
 });
 
 beforeEach(() => {

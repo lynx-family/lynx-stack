@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/webpack-dev-transport",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "A webpack dev-server transport implementation for Lynx",
   "keywords": [
     "webpack",
@@ -23,6 +23,11 @@
       "node": "./lib/client/index.js",
       "import": "./lib/client/index.js"
     },
+    "./reloadApp": {
+      "types": "./lib/client/reloadApp.d.ts",
+      "node": "./lib/client/reloadApp.js",
+      "import": "./lib/client/reloadApp.js"
+    },
     ".": {
       "types": "./lib/client/index.d.ts",
       "node": "./lib/client/index.js",
@@ -34,6 +39,9 @@
     "*": {
       "client": [
         "lib/client/index.d.ts"
+      ],
+      "reloadApp": [
+        "lib/client/reloadApp.d.ts"
       ]
     }
   },

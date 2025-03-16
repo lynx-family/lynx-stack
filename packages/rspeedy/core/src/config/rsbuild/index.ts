@@ -70,13 +70,18 @@ export function toRsbuildConfig(
       tsconfigPath: config.source?.tsconfigPath,
     },
     server: {
+      base: config.server?.base,
+
       headers: config.server?.headers,
+
       host: config.server?.host,
+
       port: config.server?.port,
     },
     plugins: config.plugins,
     performance: {
       chunkSplit: config.performance?.chunkSplit,
+
       removeConsole: toRsbuildRemoveConsole(config) as
         | ConsoleType[]
         | false

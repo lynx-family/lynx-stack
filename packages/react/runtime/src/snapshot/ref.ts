@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import type { Worklet, WorkletRef } from '@lynx-js/react/worklet-runtime/bindings';
 
-import { nextCommitTaskId } from '../lifecycle/patch/patchUpdate.js';
+import { nextCommitTaskId } from '../lifecycle/patch/commit.js';
 import { SnapshotInstance, backgroundSnapshotInstanceManager } from '../snapshot.js';
 import { workletUnRef } from './workletRef.js';
 

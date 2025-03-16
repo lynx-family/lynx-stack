@@ -4,7 +4,7 @@
 import { render } from 'preact';
 
 import { __root } from '../root.js';
-import { globalCommitTaskMap } from './patch/patchUpdate.js';
+import { globalCommitTaskMap } from './patch/commit.js';
 
 function destroyBackground(): void {
   if (__PROFILE__) {

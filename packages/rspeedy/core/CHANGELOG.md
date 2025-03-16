@@ -1,5 +1,34 @@
 # @lynx-js/rspeedy
 
+## 0.8.4
+
+### Patch Changes
+
+- Bump Rsbuild v1.2.19 with Rspack v1.2.8 ([#168](https://github.com/lynx-family/lynx-stack/pull/168))
+
+- Add `mergeRspeedyConfig` function for merging multiple Rspeedy configuration object. ([#169](https://github.com/lynx-family/lynx-stack/pull/169))
+
+- Bump Rsdoctor v1.0.0-rc.0 ([#186](https://github.com/lynx-family/lynx-stack/pull/186))
+
+- Support configure the base path of the server. ([#196](https://github.com/lynx-family/lynx-stack/pull/196))
+
+  By default, the base path of the server is `/`, and users can access lynx bundle through `http://<host>:<port>/main.lynx.bundle`
+  If you want to access lynx bundle through `http://<host>:<port>/foo/main.lynx.bundle`, you can change `server.base` to `/foo`
+
+  example:
+
+  ```js
+  import { defineConfig } from '@lynx-js/rspeedy'
+  export default defineConfig({
+    server: {
+      base: '/dist',
+    },
+  })
+  ```
+
+- Updated dependencies [[`b026c8b`](https://github.com/lynx-family/lynx-stack/commit/b026c8bdcbf7bdcda73e170477297213b447d876)]:
+  - @lynx-js/webpack-dev-transport@0.1.2
+
 ## 0.8.3
 
 ### Patch Changes

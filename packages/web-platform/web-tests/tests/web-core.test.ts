@@ -265,4 +265,59 @@ test.describe('web core tests', () => {
     });
     expect(ret).toBe('destructionObserver');
   });
+
+  test('api-onNapiModulesCall-func', async ({ page, browserName }) => {
+    // firefox dose not support this.
+    test.skip(browserName === 'firefox');
+    await goto(page);
+    const mainWorker = await getMainThreadWorker(page);
+    await mainWorker.evaluate(() => {
+      globalThis.runtime.renderPage = () => {};
+    });
+    await wait(3000);
+    const backWorker = await getBackgroundThreadWorker(page);
+    let successCallback = false;
+    await page.on('console', async (message) => {
+      if (message.text() === 'green') {
+        successCallback = true;
+      }
+    });
+    await backWorker.evaluate(() => {
+      const nativeApp = globalThis.runtime.lynx.getNativeApp();
+      const colorStarter = globalThis[`napiLoaderOnRT${nativeApp.id}`].load(
+        'color_environment',
+      );
+      colorStarter.getColor();
+    });
+    await wait(100);
+    expect(successCallback).toBeTruthy();
+  });
+
+  test('api-onNapiModulesCall-class', async ({ page, browserName }) => {
+    // firefox dose not support this.
+    test.skip(browserName === 'firefox');
+    await goto(page);
+    const mainWorker = await getMainThreadWorker(page);
+    await mainWorker.evaluate(() => {
+      globalThis.runtime.renderPage = () => {};
+    });
+    await wait(3000);
+    const backWorker = await getBackgroundThreadWorker(page);
+    let successCallback = false;
+    await page.on('console', async (message) => {
+      if (message.text() === 'green') {
+        successCallback = true;
+      }
+    });
+    await backWorker.evaluate(() => {
+      const nativeApp = globalThis.runtime.lynx.getNativeApp();
+      const colorStarter = globalThis[`napiLoaderOnRT${nativeApp.id}`].load(
+        'color_environment',
+      );
+      const engine = new colorStarter.ColorEngine();
+      engine.getColor();
+    });
+    await wait(100);
+    expect(successCallback).toBeTruthy();
+  });
 });

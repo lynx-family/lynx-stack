@@ -4,7 +4,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 
 import { BackgroundSnapshotInstance, hydrate } from '../src/backgroundSnapshot';
 import { setupBackgroundDocument, setupDocument } from '../src/document';
-import { globalBackgroundSnapshotInstancesToRemove } from '../src/lifecycle/patch/patchUpdate';
+import { globalBackgroundSnapshotInstancesToRemove } from '../src/lifecycle/patch/commit';
 import {
   deinitGlobalSnapshotPatch,
   initGlobalSnapshotPatch,
