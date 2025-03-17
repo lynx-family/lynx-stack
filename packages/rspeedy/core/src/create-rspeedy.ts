@@ -67,6 +67,7 @@ export async function createRspeedy(
   const [rspeedy, { applyDefaultPlugins }] = await Promise.all([
     createRsbuild({
       cwd,
+      loadEnv: rspeedyConfig.loadEnv ?? true,
       rsbuildConfig: toRsbuildConfig(config) as RsbuildConfig,
     }),
     import('./plugins/index.js'),
