@@ -45,6 +45,9 @@ function createElement<T extends HTMLElement & RuntimePropertyOnElement>(
   const element = createElementImpl(tag);
   element.setAttribute(lynxUniqueIdAttribute, uniqueId.toString());
   element.setAttribute(lynxTagAttribute, tag);
+  if (tag === 'page') {
+    element.setAttribute('part', tag);
+  }
   uniqueIdToElement[uniqueId] = new WeakRef(element);
   return element;
 }

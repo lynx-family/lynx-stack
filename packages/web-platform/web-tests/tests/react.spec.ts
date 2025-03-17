@@ -1014,6 +1014,26 @@ test.describe('reactlynx3 tests', () => {
   });
 
   test.describe('elements', () => {
+    test.describe('lynx-view', () => {
+      const elementName = 'lynx-view';
+      test('basic-element-lynx-view-not-auto', async ({ page }, { title }) => {
+        await goto(page, title);
+        await page.evaluate(() => {
+          document.querySelector('lynx-view')!.setAttribute('width', '100vw');
+          document.querySelector('lynx-view')!.setAttribute('height', '100vh');
+          document.querySelector('lynx-view')!.setAttribute(
+            'style',
+            'width: 100vw; height: 100vh',
+          );
+        });
+        await wait(100);
+        await diffScreenShot(
+          page,
+          elementName,
+          title,
+        );
+      });
+    });
     test.describe('view', () => {
       const elementName = 'view';
       test(
