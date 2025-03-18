@@ -7,19 +7,24 @@ import type { VNode } from 'preact';
 import { DIFF } from '../renderToOpcodes/constants.js';
 import { __globalSnapshotPatch } from '../lifecycle/patch/snapshotPatch.js';
 
-enum PerformanceTimingKeys {
-  update_set_state_trigger,
+enum MainThreadPerformanceTimingKeys {
   update_diff_vdom_start,
   update_diff_vdom_end,
+  parse_changes_start,
+  parse_changes_end,
+  patch_changes_start,
+  patch_changes_end,
+}
+
+enum BackgroundThreadPerformanceTimingKeys {
+  update_diff_vdom_start,
+  update_diff_vdom_end,
+  update_set_state_trigger,
   // update_set_state_trigger, update_diff_vdom_start and update_diff_vdom_end is deprecated
   diff_vdom_start,
   diff_vdom_end,
   pack_changes_start,
   pack_changes_end,
-  parse_changes_start,
-  parse_changes_end,
-  patch_changes_start,
-  patch_changes_end,
   hydrate_parse_snapshot_start,
   hydrate_parse_snapshot_end,
 }
@@ -37,15 +42,15 @@ let globalPipelineOptions: PipelineOptions | undefined;
 /**
  * @deprecated used by old timing api(setState timing flag)
  */
-function markTimingLegacy(key: PerformanceTimingKeys, timingFlag_?: string): void {
+function markTimingLegacy(key: BackgroundThreadPerformanceTimingKeys, timingFlag_?: string): void {
   switch (key) {
-    case PerformanceTimingKeys.update_set_state_trigger: {
+    case BackgroundThreadPerformanceTimingKeys.update_set_state_trigger: {
       shouldMarkDiffVdomStart = true;
       shouldMarkDiffVdomEnd = true;
       timingFlag = timingFlag_;
       break;
     }
-    case PerformanceTimingKeys.update_diff_vdom_start: {
+    case BackgroundThreadPerformanceTimingKeys.update_diff_vdom_start: {
       /* v8 ignore start */
       if (!shouldMarkDiffVdomStart) {
         return;
@@ -54,7 +59,7 @@ function markTimingLegacy(key: PerformanceTimingKeys, timingFlag_?: string): voi
       shouldMarkDiffVdomStart = false;
       break;
     }
-    case PerformanceTimingKeys.update_diff_vdom_end: {
+    case BackgroundThreadPerformanceTimingKeys.update_diff_vdom_end: {
       if (!shouldMarkDiffVdomEnd) {
         return;
       }
@@ -62,7 +67,7 @@ function markTimingLegacy(key: PerformanceTimingKeys, timingFlag_?: string): voi
       break;
     }
   }
-  lynx.getNativeApp().markTiming?.(timingFlag!, PerformanceTimingKeys[key]);
+  lynx.getNativeApp().markTiming?.(timingFlag!, BackgroundThreadPerformanceTimingKeys[key]);
 }
 
 function beginPipeline(needTimestamps: boolean, timingFlag?: string): void {
@@ -80,9 +85,23 @@ function setPipeline(pipeline: PipelineOptions | undefined): void {
   globalPipelineOptions = pipeline;
 }
 
-function markTiming(timestampKey: PerformanceTimingKeys, force?: boolean): void {
+function markMainThreadTiming(
+  timestampKey: MainThreadPerformanceTimingKeys,
+  force?: boolean,
+): void {
   if (globalPipelineOptions && (force || globalPipelineOptions.needTimestamps)) {
-    lynx.performance?._markTiming?.(globalPipelineOptions.pipelineID, PerformanceTimingKeys[timestampKey]);
+    lynx.performance?._markTiming?.(globalPipelineOptions.pipelineID, MainThreadPerformanceTimingKeys[timestampKey]);
+  }
+}
+function markTiming(
+  timestampKey: BackgroundThreadPerformanceTimingKeys,
+  force?: boolean,
+): void {
+  if (globalPipelineOptions && (force || globalPipelineOptions.needTimestamps)) {
+    lynx.performance?._markTiming?.(
+      globalPipelineOptions.pipelineID,
+      BackgroundThreadPerformanceTimingKeys[timestampKey],
+    );
   }
 }
 
@@ -93,10 +112,10 @@ function initTimingAPI(): void {
     if (__JS__ && __globalSnapshotPatch) {
       if (!globalPipelineOptions) {
         beginPipeline(false);
-        markTiming(PerformanceTimingKeys.diff_vdom_start, true);
+        markTiming(BackgroundThreadPerformanceTimingKeys.diff_vdom_start, true);
       }
       if (shouldMarkDiffVdomStart) {
-        markTimingLegacy(PerformanceTimingKeys.update_diff_vdom_start);
+        markTimingLegacy(BackgroundThreadPerformanceTimingKeys.update_diff_vdom_start);
       }
     }
     oldDiff?.(vnode);
@@ -107,11 +126,13 @@ function initTimingAPI(): void {
  * @internal
  */
 export {
-  PerformanceTimingKeys,
+  MainThreadPerformanceTimingKeys,
+  BackgroundThreadPerformanceTimingKeys,
   PerfSpecificKey,
   markTimingLegacy,
   initTimingAPI,
   beginPipeline,
+  markMainThreadTiming,
   markTiming,
   setPipeline,
   globalPipelineOptions,

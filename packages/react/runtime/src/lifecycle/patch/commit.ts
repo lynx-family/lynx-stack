@@ -9,7 +9,7 @@ import type { SnapshotPatch } from './snapshotPatch.js';
 import { takeGlobalSnapshotPatch } from './snapshotPatch.js';
 import { LifecycleConstant } from '../../lifecycleConstant.js';
 import {
-  PerformanceTimingKeys,
+  BackgroundThreadPerformanceTimingKeys,
   globalPipelineOptions,
   markTiming,
   markTimingLegacy,
@@ -52,9 +52,9 @@ function replaceCommitHook(): void {
       return;
     }
 
-    markTimingLegacy(PerformanceTimingKeys.update_diff_vdom_end);
-    markTiming(PerformanceTimingKeys.diff_vdom_end);
-    markTiming(PerformanceTimingKeys.pack_changes_start);
+    markTimingLegacy(BackgroundThreadPerformanceTimingKeys.update_diff_vdom_end);
+    markTiming(BackgroundThreadPerformanceTimingKeys.diff_vdom_end);
+    markTiming(BackgroundThreadPerformanceTimingKeys.pack_changes_start);
     if (__PROFILE__) {
       console.profile('commitChanges');
     }
@@ -146,7 +146,7 @@ function commitPatchUpdate(data: Patch, patchOptions: PatchOptions): Promise<voi
         reloadVersion: getReloadVersion(),
       },
     };
-    markTiming(PerformanceTimingKeys.pack_changes_end);
+    markTiming(BackgroundThreadPerformanceTimingKeys.pack_changes_end);
     if (globalPipelineOptions) {
       obj.patchOptions.pipelineOptions = globalPipelineOptions;
       setPipeline(undefined);

@@ -7,7 +7,7 @@ import { clearDelayedWorklets, updateWorkletRefInitValueChanges } from '@lynx-js
 import { snapshotPatchApply } from './snapshotPatchApply.js';
 import { LifecycleConstant } from '../../lifecycleConstant.js';
 import { __pendingListUpdates } from '../../list.js';
-import { PerformanceTimingKeys, markTiming, setPipeline } from '../../lynx/performance.js';
+import { MainThreadPerformanceTimingKeys, markMainThreadTiming, setPipeline } from '../../lynx/performance.js';
 import { takeGlobalRefPatchMap } from '../../snapshot/ref.js';
 import { __page } from '../../snapshot.js';
 import { isEmptyObject } from '../../utils.js';
@@ -25,11 +25,11 @@ function updateMainThread(
   }
 
   setPipeline(patchOptions.pipelineOptions);
-  markTiming(PerformanceTimingKeys.parse_changes_start);
+  markMainThreadTiming(MainThreadPerformanceTimingKeys.parse_changes_start);
   let { snapshotPatch, workletRefInitValuePatch, flushOptions } = JSON.parse(data) as Patch;
-  markTiming(PerformanceTimingKeys.parse_changes_end);
+  markMainThreadTiming(MainThreadPerformanceTimingKeys.parse_changes_end);
 
-  markTiming(PerformanceTimingKeys.patch_changes_start);
+  markMainThreadTiming(MainThreadPerformanceTimingKeys.patch_changes_start);
   updateWorkletRefInitValueChanges(workletRefInitValuePatch);
   __pendingListUpdates.clear();
   if (snapshotPatch) {
@@ -43,7 +43,7 @@ function updateMainThread(
   if (patchOptions.isHydration) {
     clearDelayedWorklets();
   }
-  markTiming(PerformanceTimingKeys.patch_changes_end);
+  markMainThreadTiming(MainThreadPerformanceTimingKeys.patch_changes_end);
   flushOptions ||= {};
   if (patchOptions.pipelineOptions) {
     flushOptions.pipelineOptions = patchOptions.pipelineOptions;

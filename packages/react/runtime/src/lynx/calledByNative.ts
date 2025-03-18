@@ -11,7 +11,7 @@ import { __root, setRoot } from '../root.js';
 import { reloadMainThread } from '../lifecycle/reload.js';
 import { renderMainThread } from '../lifecycle/render.js';
 import { hydrate } from '../hydrate.js';
-import { markTiming, PerformanceTimingKeys, setPipeline } from './performance.js';
+import { MainThreadPerformanceTimingKeys, markMainThreadTiming, setPipeline } from './performance.js';
 import { __pendingListUpdates } from '../list.js';
 
 function injectCalledByNative(): void {
@@ -75,7 +75,7 @@ function updatePage(data: any, options?: UpdatePageOption | undefined): void {
     __root.__jsx = oldRoot.__jsx;
 
     setPipeline(options?.pipelineOptions);
-    markTiming(PerformanceTimingKeys.update_diff_vdom_start);
+    markMainThreadTiming(MainThreadPerformanceTimingKeys.update_diff_vdom_start);
     {
       __pendingListUpdates.clear();
 
@@ -93,7 +93,7 @@ function updatePage(data: any, options?: UpdatePageOption | undefined): void {
       // always call this before `__FlushElementTree`
       __pendingListUpdates.flush();
     }
-    markTiming(PerformanceTimingKeys.update_diff_vdom_end);
+    markMainThreadTiming(MainThreadPerformanceTimingKeys.update_diff_vdom_end);
   }
 
   if (options) {

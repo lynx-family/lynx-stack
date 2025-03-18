@@ -5,7 +5,7 @@ import { options, render } from 'preact';
 import type { VNode } from 'preact';
 
 import { LifecycleConstant, NativeUpdateDataType } from '../lifecycleConstant.js';
-import { PerformanceTimingKeys, beginPipeline, markTiming } from './performance.js';
+import { BackgroundThreadPerformanceTimingKeys, beginPipeline, markTiming } from './performance.js';
 import { BackgroundSnapshotInstance, hydrate } from '../backgroundSnapshot.js';
 import { destroyBackground } from '../lifecycle/destroy.js';
 import { commitPatchUpdate, genCommitTaskId, globalCommitTaskMap } from '../lifecycle/patch/commit.js';
@@ -104,10 +104,10 @@ async function OnLifecycleEvent([type, data]: [string, any]) {
         console.profile('hydrate');
       }
       beginPipeline(true, 'react_lynx_hydrate');
-      markTiming(PerformanceTimingKeys.hydrate_parse_snapshot_start);
+      markTiming(BackgroundThreadPerformanceTimingKeys.hydrate_parse_snapshot_start);
       const before = JSON.parse(lepusSide);
-      markTiming(PerformanceTimingKeys.hydrate_parse_snapshot_end);
-      markTiming(PerformanceTimingKeys.diff_vdom_start);
+      markTiming(BackgroundThreadPerformanceTimingKeys.hydrate_parse_snapshot_end);
+      markTiming(BackgroundThreadPerformanceTimingKeys.diff_vdom_start);
       const snapshotPatch = hydrate(
         before,
         __root as BackgroundSnapshotInstance,
@@ -115,7 +115,7 @@ async function OnLifecycleEvent([type, data]: [string, any]) {
       if (__PROFILE__) {
         console.profileEnd();
       }
-      markTiming(PerformanceTimingKeys.diff_vdom_end);
+      markTiming(BackgroundThreadPerformanceTimingKeys.diff_vdom_end);
 
       if (delayedEvents) {
         delayedEvents.forEach((args) => {
@@ -143,7 +143,7 @@ async function OnLifecycleEvent([type, data]: [string, any]) {
       if (__PROFILE__) {
         console.profileEnd();
       }
-      markTiming(PerformanceTimingKeys.pack_changes_start);
+      markTiming(BackgroundThreadPerformanceTimingKeys.pack_changes_start);
       // console.debug("********** After hydration:");
       // printSnapshotInstance(__root as BackgroundSnapshotInstance);
       if (__PROFILE__) {

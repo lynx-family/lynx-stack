@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { Component } from 'preact';
 
-import { PerfSpecificKey, PerformanceTimingKeys, markTimingLegacy } from './performance.js';
+import { BackgroundThreadPerformanceTimingKeys, PerfSpecificKey, markTimingLegacy } from './performance.js';
 import { globalFlushOptions } from '../lifecycle/patch/commit.js';
 import { NEXT_STATE } from '../renderToOpcodes/constants.js';
 
@@ -109,7 +109,7 @@ if (__JS__) {
     const timingFlag = this[NEXT_STATE][PerfSpecificKey];
     if (timingFlag) {
       globalFlushOptions.__lynx_timing_flag = timingFlag;
-      markTimingLegacy(PerformanceTimingKeys.update_set_state_trigger, timingFlag);
+      markTimingLegacy(BackgroundThreadPerformanceTimingKeys.update_set_state_trigger, timingFlag);
       this[NEXT_STATE][PerfSpecificKey] = '';
     }
   };
