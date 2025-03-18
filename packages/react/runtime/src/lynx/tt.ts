@@ -1,69 +1,20 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { options, render } from 'preact';
-import type { VNode } from 'preact';
-
+import { render } from 'preact';
 import { LifecycleConstant, NativeUpdateDataType } from '../lifecycleConstant.js';
 import { PerformanceTimingKeys, beginPipeline, markTiming } from './performance.js';
 import { BackgroundSnapshotInstance, hydrate } from '../backgroundSnapshot.js';
 import { destroyBackground } from '../lifecycle/destroy.js';
 import { commitPatchUpdate, genCommitTaskId, globalCommitTaskMap } from '../lifecycle/patch/commit.js';
 import { reloadBackground } from '../lifecycle/reload.js';
-import { CHILDREN, COMPONENT, DIFF, DIFFED, FORCE } from '../renderToOpcodes/constants.js';
+import { CHILDREN } from '../renderToOpcodes/constants.js';
 import { __root } from '../root.js';
 import { globalRefsToSet, updateBackgroundRefs } from '../snapshot/ref.js';
 import { backgroundSnapshotInstanceManager } from '../snapshot.js';
 import { destroyWorklet } from '../worklet/destroy.js';
-
-export function runWithForce(cb: () => void): void {
-  // save vnode and its `_component` in WeakMap
-  const m = new WeakMap<VNode, any>();
-
-  const oldDiff = options[DIFF];
-
-  options[DIFF] = (vnode: VNode) => {
-    if (oldDiff) {
-      oldDiff(vnode);
-    }
-
-    // when `options[DIFF]` is called, a newVnode is passed in
-    // so its `vnode[COMPONENT]` should be null,
-    // but it will be set later
-    Object.defineProperty(vnode, COMPONENT, {
-      configurable: true,
-      set(c) {
-        m.set(vnode, c);
-        if (c) {
-          c[FORCE] = true;
-        }
-      },
-      get() {
-        return m.get(vnode);
-      },
-    });
-  };
-
-  const oldDiffed = options[DIFFED];
-
-  options[DIFFED] = (vnode: VNode) => {
-    if (oldDiffed) {
-      oldDiffed(vnode);
-    }
-
-    // delete is a reverse operation of previous `Object.defineProperty`
-    delete vnode[COMPONENT];
-    // restore
-    vnode[COMPONENT] = m.get(vnode);
-  };
-
-  try {
-    cb();
-  } finally {
-    options[DIFF] = oldDiff as (vnode: VNode) => void;
-    options[DIFFED] = oldDiffed as (vnode: VNode) => void;
-  }
-}
+import { runWithForce } from './runWithForce.js';
+export { runWithForce };
 
 function injectTt(): void {
   // @ts-ignore
@@ -84,7 +35,7 @@ function injectTt(): void {
 }
 
 let delayedLifecycleEvents: [type: string, data: any][];
-async function OnLifecycleEvent([type, data]: [string, any]) {
+function OnLifecycleEvent([type, data]: [string, any]) {
   const hasRootRendered = CHILDREN in __root;
   // never called `render(<App/>, __root)`
   // happens if user call `root.render()` async
@@ -150,14 +101,16 @@ async function OnLifecycleEvent([type, data]: [string, any]) {
         console.profile('commitChanges');
       }
       const commitTaskId = genCommitTaskId();
-      await commitPatchUpdate({ snapshotPatch }, { commitTaskId, isHydration: true });
-      updateBackgroundRefs(commitTaskId);
-      globalCommitTaskMap.forEach((commitTask, id) => {
-        if (id > commitTaskId) {
-          return;
-        }
-        commitTask();
-        globalCommitTaskMap.delete(id);
+      const obj = commitPatchUpdate({ snapshotPatch }, { commitTaskId, isHydration: true });
+      lynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
+        updateBackgroundRefs(commitTaskId);
+        globalCommitTaskMap.forEach((commitTask, id) => {
+          if (id > commitTaskId) {
+            return;
+          }
+          commitTask();
+          globalCommitTaskMap.delete(id);
+        });
       });
       break;
     }

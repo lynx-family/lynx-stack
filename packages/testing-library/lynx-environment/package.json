@@ -1,0 +1,40 @@
+{
+  "name": "@lynx-js/lynx-environment",
+  "version": "0.0.0",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./env/vitest": {
+      "types": "./dist/env/vitest/index.d.ts",
+      "import": "./dist/env/vitest/index.mjs",
+      "require": "./dist/env/vitest/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rslib build",
+    "dev": "rslib build --watch"
+  },
+  "dependencies": {
+    "css-what": "^6.1.0",
+    "pretty-format": "^29.7.0"
+  },
+  "devDependencies": {
+    "@rslib/core": "^0.5.4",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@types/jsdom": "^21.1.7",
+    "@types/node": "^22.13.5",
+    "@vitest/ui": "^3.0.8",
+    "jsdom": "^26.0.0",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.8"
+  }
+}
