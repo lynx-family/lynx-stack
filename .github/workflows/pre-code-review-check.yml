@@ -7,7 +7,6 @@ on:
     types: [checks_requested]
 env:
   CI: 1
-  GITHUB_BASE_REF: ${{ github.base_ref || 'main' }}
   GITHUB_HEAD_REF: ${{ github.head_ref }}
   GITHUB_REF: ${{ github.ref }}
 concurrency:
@@ -35,7 +34,7 @@ jobs:
       - name: API Check
         run: pnpm turbo api-extractor
       - name: has-changeset
-        run: pnpm changeset status --since=origin/$GITHUB_BASE_REF
+        run: pnpm changeset status --since=origin/main
   no-confusion-check:
     runs-on: lynx-ubuntu-24.04-medium
     steps:
