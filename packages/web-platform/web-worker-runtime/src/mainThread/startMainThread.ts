@@ -43,7 +43,7 @@ export function startMainThread(
         globalProps,
         template,
         browserConfig,
-        nativeModulesUrl,
+        nativeModulesMap,
         napiModulesMap,
       } = config;
       const { styleInfo, pageConfig, customSections, cardType, lepusCode } =
@@ -90,7 +90,7 @@ export function startMainThread(
                   value.type !== 'lazy'
                 ).map(([k, v]) => [k, v.content]),
               ),
-              nativeModulesUrl,
+              nativeModulesMap,
               napiModulesMap,
             });
 

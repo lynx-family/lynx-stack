@@ -522,7 +522,7 @@ class LynxTemplatePluginImpl {
                  * and source-map is generated
                  */
                 compiler.webpack.Compilation
-                  .PROCESS_ASSETS_STAGE_REPORT,
+                  .PROCESS_ASSETS_STAGE_OPTIMIZE_INLINE,
             },
             () => {
               return this.#generateTemplate(
@@ -573,7 +573,7 @@ class LynxTemplatePluginImpl {
            * and source-map is generated
            */
           compiler.webpack.Compilation
-            .PROCESS_ASSETS_STAGE_REPORT,
+            .PROCESS_ASSETS_STAGE_OPTIMIZE_INLINE,
       }, async () => {
         await this.#generateAsyncTemplate(compilation);
       });

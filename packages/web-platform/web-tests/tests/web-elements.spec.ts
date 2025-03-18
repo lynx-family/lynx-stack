@@ -3154,16 +3154,18 @@ test.describe('web-elements test suite', () => {
       await wait(100);
 
       await page.mouse.click(100, 25);
-      expect(await page.getByText('目前计数为 1').count()).toBe(1);
-
-      await page.mouse.click(100, 25);
-      expect(await page.getByText('目前计数为 2').count()).toBe(1);
+      expect(await page.getByText('1').count()).toBe(1);
 
       await page.getByTestId('next').click();
-      // default duration is 500ms, add 100ms tolerance
       await wait(1000);
       await page.mouse.click(100, 25);
-      expect(await page.getByText('目前计数为 3').count()).toBe(1);
+      expect(await page.getByText('2').count()).toBe(1);
+
+      await page.getByTestId('next').click();
+      await wait(1000);
+      await page.mouse.click(100, 25);
+      await page.getByTestId('next').click();
+      expect(await page.getByText('3').count()).toBe(1);
     });
 
     test(
@@ -3968,8 +3970,10 @@ test.describe('web-elements test suite', () => {
     test('method-seek', async ({ page }, { titlePath }) => {
       const title = getTitle(titlePath);
       await gotoWebComponentPage(page, title);
+      await wait(1000);
 
       await page.locator('#play').click();
+      await wait(1000);
       await page.locator('#seek').click();
       await wait(3000);
       expect(

@@ -11,6 +11,7 @@ import {
   type LynxJSModule,
   type LynxTemplate,
   type NativeApp,
+  type NativeModulesMap,
 } from '@lynx-js/web-constants';
 import { createInvokeUIMethod } from './crossThreadHandlers/createInvokeUIMethod.js';
 import { registerOnLifecycleEventHandler } from './crossThreadHandlers/registerOnLifecycleEventHandler.js';
@@ -27,19 +28,19 @@ import { createJSObjectDestructionObserver } from './crossThreadHandlers/createJ
 
 let nativeAppCount = 0;
 
-export function createNativeApp(config: {
+export async function createNativeApp(config: {
   template: LynxTemplate;
   uiThreadRpc: Rpc;
   mainThreadRpc: Rpc;
   markTimingInternal: (timingKey: string, pipelineId?: string) => void;
-  customNativeModules: Record<string, Record<string, any>>;
-}): NativeApp {
+  nativeModulesMap: NativeModulesMap;
+}): Promise<NativeApp> {
   const {
     mainThreadRpc,
     uiThreadRpc,
     markTimingInternal,
     template,
-    customNativeModules,
+    nativeModulesMap,
   } = config;
   const { performanceApis, pipelineIdToTimingFlags } = createPerformanceApis(
     markTimingInternal,
@@ -63,9 +64,9 @@ export function createNativeApp(config: {
     setInterval: setInterval,
     clearTimeout: clearTimeout,
     clearInterval: clearInterval,
-    nativeModuleProxy: createNativeModules(
+    nativeModuleProxy: await createNativeModules(
       uiThreadRpc,
-      customNativeModules,
+      nativeModulesMap,
     ),
     loadScriptAsync: function(
       sourceURL: string,

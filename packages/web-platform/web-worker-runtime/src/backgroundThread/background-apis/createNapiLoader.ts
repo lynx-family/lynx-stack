@@ -14,7 +14,7 @@ export const createNapiLoader = async (
   napiModulesMap: NapiModulesMap,
 ) => {
   const napiModulesCall = rpc.createCall(napiModulesCallEndpoint);
-  let napiModules: Record<string, Record<string, any>> = {};
+  const napiModules: Record<string, Record<string, any>> = {};
   await Promise.all(
     Object.entries(napiModulesMap).map((
       [moduleName, moduleStr],

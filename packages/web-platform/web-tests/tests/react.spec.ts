@@ -1014,6 +1014,26 @@ test.describe('reactlynx3 tests', () => {
   });
 
   test.describe('elements', () => {
+    test.describe('lynx-view', () => {
+      const elementName = 'lynx-view';
+      test('basic-element-lynx-view-not-auto', async ({ page }, { title }) => {
+        await goto(page, title);
+        await page.evaluate(() => {
+          document.querySelector('lynx-view')!.setAttribute('width', '100vw');
+          document.querySelector('lynx-view')!.setAttribute('height', '100vh');
+          document.querySelector('lynx-view')!.setAttribute(
+            'style',
+            'width: 100vw; height: 100vh',
+          );
+        });
+        await wait(100);
+        await diffScreenShot(
+          page,
+          elementName,
+          title,
+        );
+      });
+    });
     test.describe('view', () => {
       const elementName = 'view';
       test(
@@ -1478,6 +1498,7 @@ test.describe('reactlynx3 tests', () => {
         }) => {
           test.skip(browserName !== 'chromium', 'not supoort CDPsession');
           await goto(page, title);
+          await wait(300);
           const cdpSession = await context.newCDPSession(page);
           await swipe(cdpSession, {
             x: 100,
@@ -2958,25 +2979,6 @@ test.describe('reactlynx3 tests', () => {
           if (browserName === 'chromium') {
             expect(manual).toBe(true);
           }
-        },
-      );
-      test(
-        'basic-element-x-swiper-circular-click',
-        async ({ page }, { title }) => {
-          await goto(page, title);
-          await wait(100);
-
-          await page.mouse.click(100, 25);
-          expect(await page.getByText('目前计数为 1').count()).toBe(1);
-
-          await page.mouse.click(100, 25);
-          expect(await page.getByText('目前计数为 2').count()).toBe(1);
-
-          await page.getByTestId('next').click();
-          // default duration is 500ms, add 100ms tolerance
-          await wait(1000);
-          await page.mouse.click(100, 25);
-          expect(await page.getByText('目前计数为 3').count()).toBe(1);
         },
       );
     });

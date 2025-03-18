@@ -38,10 +38,9 @@ export function startUIThread(
     onError?: () => void;
   },
   overrideTagMap: Record<string, string> = {},
-  nativeModulesUrl: string | undefined,
 ): LynxView {
   const createLynxStartTiming = performance.now() + performance.timeOrigin;
-  const { napiModulesMap } = configs;
+  const { nativeModulesMap, napiModulesMap } = configs;
   const {
     mainThreadRpc,
     backgroundRpc,
@@ -62,7 +61,7 @@ export function startUIThread(
     mainThreadStart({
       ...configs,
       template,
-      nativeModulesUrl,
+      nativeModulesMap,
       napiModulesMap,
     });
   });

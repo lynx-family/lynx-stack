@@ -31,21 +31,25 @@ let nextCommitTaskId = 1;
 let globalBackgroundSnapshotInstancesToRemove: number[] = [];
 
 interface Patch {
+  id: number;
   snapshotPatch?: SnapshotPatch;
   workletRefInitValuePatch?: [id: number, value: unknown][];
+}
+
+interface PatchList {
+  patchList: Patch[];
   flushOptions?: FlushOptions;
 }
 
 interface PatchOptions {
-  commitTaskId: number;
   pipelineOptions?: PipelineOptions;
-  reloadVersion?: number;
+  reloadVersion: number;
   isHydration?: boolean;
 }
 
 function replaceCommitHook(): void {
   const oldCommit = options[COMMIT];
-  options[COMMIT] = async (vnode: VNode, commitQueue: any[]) => {
+  const commit = async (vnode: VNode, commitQueue: any[]) => {
     if (__LEPUS__) {
       // for testing only
       commitQueue.length = 0;
@@ -108,18 +112,23 @@ function replaceCommitHook(): void {
       return;
     }
 
-    const patch: Patch = {};
+    const patch: Patch = {
+      id: commitTaskId,
+    };
     // TODO: check all fields in `flushOptions` from runtime3
     if (snapshotPatch?.length) {
       patch.snapshotPatch = snapshotPatch;
     }
-    if (!isEmptyObject(flushOptions)) {
-      patch.flushOptions = flushOptions;
-    }
     if (workletRefInitValuePatch.length) {
       patch.workletRefInitValuePatch = workletRefInitValuePatch;
     }
-    await commitPatchUpdate(patch, { commitTaskId });
+    const patchList: PatchList = {
+      patchList: [patch],
+    };
+    if (!isEmptyObject(flushOptions)) {
+      patchList.flushOptions = flushOptions;
+    }
+    await commitPatchUpdate(patchList, {});
 
     const commitTask = globalCommitTaskMap.get(commitTaskId);
     if (commitTask) {
@@ -127,20 +136,21 @@ function replaceCommitHook(): void {
       globalCommitTaskMap.delete(commitTaskId);
     }
   };
+  options[COMMIT] = commit as ((...args: Parameters<typeof commit>) => void);
 }
 
-function commitPatchUpdate(data: Patch, patchOptions: PatchOptions): Promise<void> {
+function commitPatchUpdate(patchList: PatchList, patchOptions: Omit<PatchOptions, 'reloadVersion'>): Promise<void> {
   return new Promise(resolve => {
     // console.debug('********** JS update:');
     // printSnapshotInstance(
     //   (backgroundSnapshotInstanceManager.values.get(1) || backgroundSnapshotInstanceManager.values.get(-1))!,
     // );
-    // console.debug('commitPatchUpdate: ', JSON.stringify(data));
+    // console.debug('commitPatchUpdate: ', JSON.stringify(patchList));
     const obj: {
       data: string;
       patchOptions: PatchOptions;
     } = {
-      data: JSON.stringify(data),
+      data: JSON.stringify(patchList),
       patchOptions: {
         ...patchOptions,
         reloadVersion: getReloadVersion(),
@@ -151,10 +161,10 @@ function commitPatchUpdate(data: Patch, patchOptions: PatchOptions): Promise<voi
       obj.patchOptions.pipelineOptions = globalPipelineOptions;
       setPipeline(undefined);
     }
+    lynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, resolve);
     if (__PROFILE__) {
       console.profileEnd();
     }
-    lynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, resolve);
   });
 }
 
@@ -166,7 +176,7 @@ function replaceRequestAnimationFrame(): void {
   // to make afterPaintEffects run faster
   const resolvedPromise = Promise.resolve();
   options.requestAnimationFrame = (cb: () => void) => {
-    resolvedPromise.then(cb);
+    void resolvedPromise.then(cb);
   };
 }
 
@@ -183,5 +193,5 @@ export {
   replaceCommitHook,
   replaceRequestAnimationFrame,
   type PatchOptions,
-  type Patch,
+  type PatchList,
 };
