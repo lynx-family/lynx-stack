@@ -3968,8 +3968,10 @@ test.describe('web-elements test suite', () => {
     test('method-seek', async ({ page }, { titlePath }) => {
       const title = getTitle(titlePath);
       await gotoWebComponentPage(page, title);
+      await wait(1000);
 
       await page.locator('#play').click();
+      await wait(1000);
       await page.locator('#seek').click();
       await wait(3000);
       expect(

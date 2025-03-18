@@ -1478,6 +1478,7 @@ test.describe('reactlynx3 tests', () => {
         }) => {
           test.skip(browserName !== 'chromium', 'not supoort CDPsession');
           await goto(page, title);
+          await wait(300);
           const cdpSession = await context.newCDPSession(page);
           await swipe(cdpSession, {
             x: 100,
