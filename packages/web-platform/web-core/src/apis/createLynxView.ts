@@ -47,6 +47,7 @@ export function createLynxView(configs: LynxViewConfigs): LynxView {
     {
       initData,
       globalProps,
+      nativeModulesMap,
       napiModulesMap,
       browserConfig: {},
     },
