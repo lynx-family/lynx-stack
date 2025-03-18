@@ -883,15 +883,15 @@ importers:
       '@microsoft/api-extractor':
         specifier: 'catalog:'
         version: 7.51.1(@types/node@22.13.5)
+      '@rspack/core':
+        specifier: 1.2.8
+        version: 1.2.8(@swc/helpers@0.5.15)
       '@types/css-tree':
         specifier: ^2.3.10
         version: 2.3.10
       '@types/object.groupby':
         specifier: ^1.0.4
         version: 1.0.4
-      webpack:
-        specifier: ^5.98.0
-        version: 5.98.0
 
   packages/webpack/test-tools:
     devDependencies:
