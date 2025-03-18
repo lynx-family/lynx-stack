@@ -2024,6 +2024,40 @@ test.describe('web-elements test suite', () => {
         ).toBeTruthy();
       },
     );
+
+    test('basic-flow', async ({ page, browserName }, { titlePath }) => {
+      const title = getTitle(titlePath);
+      await gotoWebComponentPage(page, title);
+      await diffScreenShot(page, title, 'initial');
+      if (browserName === 'webkit') test.skip(); // cannot wheel
+      await page.mouse.move(100, 100);
+      await page.mouse.wheel(300, 0);
+      await diffScreenShot(page, title, 'wheel-x-not-wheelable');
+      await page.mouse.wheel(0, 300);
+      await diffScreenShot(page, title, 'wheel-y-wheelable');
+    });
+    test(
+      'scroll-orientation-flow',
+      async ({ page }, { titlePath }) => {
+        const title = getTitle(titlePath);
+        await gotoWebComponentPage(page, title);
+        await diffScreenShot(page, title, 'index');
+      },
+    );
+    test('sticky-flow', async ({ page, browserName }, { titlePath }) => {
+      const title = getTitle(titlePath);
+      await gotoWebComponentPage(page, title);
+      await diffScreenShot(page, title, 'index');
+      if (browserName === 'webkit') test.skip(); // cannot wheel
+      await page.mouse.move(200, 300);
+      await page.mouse.wheel(0, 500);
+      await diffScreenShot(page, title, 'sticky-y-scroll');
+    });
+    test('full-span', async ({ page, browserName }, { titlePath }) => {
+      const title = getTitle(titlePath);
+      await gotoWebComponentPage(page, title);
+      await diffScreenShot(page, title, 'index');
+    });
   });
   test.describe('x-input', () => {
     test('placeholder', async ({ page }, { titlePath }) => {
