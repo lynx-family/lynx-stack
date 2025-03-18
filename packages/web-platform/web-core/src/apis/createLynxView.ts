@@ -14,7 +14,6 @@ export interface LynxViewConfigs {
   templateUrl: string;
   initData: Cloneable;
   globalProps: Cloneable;
-  entryId: string;
   rootDom: HTMLElement;
   callbacks: Parameters<typeof startUIThread>[3];
   overrideLynxTagToHTMLTagMap?: Record<string, string>;
@@ -38,7 +37,6 @@ export function createLynxView(configs: LynxViewConfigs): LynxView {
     callbacks,
     templateUrl,
     globalProps,
-    entryId,
     initData,
     overrideLynxTagToHTMLTagMap,
     nativeModulesMap,
@@ -49,8 +47,6 @@ export function createLynxView(configs: LynxViewConfigs): LynxView {
     {
       initData,
       globalProps,
-      entryId,
-      nativeModulesMap,
       napiModulesMap,
       browserConfig: {},
     },

@@ -7,9 +7,7 @@ import {
   createLynxView,
 } from './createLynxView.js';
 import {
-  cardIdAttribute,
   type Cloneable,
-  lynxViewEntryIdPrefix,
   lynxViewRootDomId,
   type NapiModulesCall,
   type NapiModulesMap,
@@ -35,8 +33,6 @@ import { inShadowRootStyles } from './inShadowRootStyles.js';
  * @param {NapiModulesMap} napiModulesMap [optional] the napiModule which is called in lynx-core. key is module-name, value is esm url.
  * @param {NapiModulesCall} onNapiModulesCall [optional] the NapiModule value handler.
  * @param {"false" | "true" | null} injectHeadLinks [optional] @default true set it to "false" to disable injecting the <link href="" ref="stylesheet"> styles into shadowroot
- *
- * @property entryId the currently Lynx view entryId.
  *
  * @event error lynx card fired an error
  *
@@ -128,17 +124,6 @@ export class LynxView extends HTMLElement {
     } else {
       this.#initData = val;
     }
-  }
-
-  #entryId?: string;
-  /**
-   * @public
-   * @readonly
-   * @property
-   * The random generated entryId of current lynxview
-   */
-  get entryId() {
-    return this.#entryId;
   }
 
   #overrideLynxTagToHTMLTagMap: Record<string, string> = { 'page': 'div' };
@@ -372,16 +357,8 @@ export class LynxView extends HTMLElement {
         if (this.#url) {
           const rootDom = document.createElement('div');
           rootDom.id = lynxViewRootDomId;
-          const entryId = `${lynxViewEntryIdPrefix}-${LynxView
-            .lynxViewCount++}`;
-          this.#entryId = entryId;
-          rootDom.setAttribute(cardIdAttribute, entryId);
           rootDom.setAttribute('part', lynxViewRootDomId);
-          const commonEventDetail = {
-            entryId,
-          };
           const lynxView = createLynxView({
-            entryId,
             rootDom,
             templateUrl: this.#url,
             globalProps: this.#globalProps,
@@ -406,9 +383,7 @@ export class LynxView extends HTMLElement {
               },
               onError: () => {
                 this.dispatchEvent(
-                  new CustomEvent('error', {
-                    detail: commonEventDetail,
-                  }),
+                  new CustomEvent('error', {}),
                 );
               },
             },
