@@ -7,7 +7,7 @@ on:
     types: [checks_requested]
 env:
   CI: 1
-  GITHUB_BASE_REF: ${{ github.base_ref }}
+  GITHUB_BASE_REF: ${{ github.base_ref || 'main' }}
   GITHUB_HEAD_REF: ${{ github.head_ref }}
   GITHUB_REF: ${{ github.ref }}
 concurrency:
