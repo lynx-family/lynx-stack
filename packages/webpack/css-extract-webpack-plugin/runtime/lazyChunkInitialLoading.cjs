@@ -6,6 +6,10 @@ function updateStyle(cssId = 0) {
     throw new Error('cssHotUpdateList is not found');
   }
 
+  if (!lynxLazyChunkIds) {
+    throw new Error('lynxLazyChunkIds is not found');
+  }
+
   for (const [chunkName, cssHotUpdatePath] of cssHotUpdateList) {
     if (!lynxLazyChunkIds.includes(chunkName)) continue;
 

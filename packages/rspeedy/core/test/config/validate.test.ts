@@ -62,7 +62,6 @@ describe('Config Validation', () => {
         { lazyCompilation: true },
         { lazyCompilation: false },
         { lazyCompilation: {} },
-        { lazyCompilation: { imports: true } },
         { lazyCompilation: { entries: true } },
       ]
 
@@ -202,6 +201,14 @@ describe('Config Validation', () => {
           [Error: Invalid configuration.
 
           Unknown property: \`$input.dev.lazyCompilation.test\` in configuration
+          ]
+        `)
+
+      expect(() => validate({ dev: { lazyCompilation: { imports: true } } }))
+        .toThrowErrorMatchingInlineSnapshot(`
+          [Error: Invalid configuration.
+
+          Unknown property: \`$input.dev.lazyCompilation.imports\` in configuration
           ]
         `)
     })

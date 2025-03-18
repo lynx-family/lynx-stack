@@ -9,10 +9,6 @@
  */
 export interface LazyCompilationOptions {
   /**
-   * Enable lazy compilation for imports.
-   */
-  imports?: boolean
-  /**
    * Enable lazy compilation for entries.
    */
   entries?: boolean

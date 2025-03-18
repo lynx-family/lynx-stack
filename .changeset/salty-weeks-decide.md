@@ -20,7 +20,6 @@ export default defineConfig({
     lazyCompilation: true, // Enable with default settings
     // Or with explicit configuration:
     // lazyCompilation: {
-    //   imports: true,
     //   entries: false
     // }
   },
@@ -36,10 +35,6 @@ type definition:
 
 ```typescript
 export type LazyCompilationOptions = {
-  /**
-   * Enable lazy compilation for imports.
-   */
-  imports?: boolean;
   /**
    * Enable lazy compilation for entries.
    */

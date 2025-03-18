@@ -184,7 +184,6 @@ export interface Filename {
 // @public
 export interface LazyCompilationOptions {
     entries?: boolean;
-    imports?: boolean;
 }
 
 // @public

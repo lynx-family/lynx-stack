@@ -39,6 +39,8 @@ export function toRsbuildLazyCompilation(
         '../../../hot/lazy-compilation-fetch.js',
       ),
     },
+    // Dynaimc imports will be encoded into lynx.bundle
+    imports: false,
   }
 
   if (options === true) return defaultOptions
