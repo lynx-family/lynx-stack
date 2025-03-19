@@ -66,6 +66,14 @@ function getElementThreadElements() {
 
 function initializeMainThreadTest() {
   const runtime = new MainThreadRuntime({
+    tagMap: {
+      'page': 'div',
+      'view': 'x-view',
+      'text': 'x-text',
+      'image': 'x-image',
+      'list': 'x-list',
+      'svg': 'x-svg',
+    },
     lepusCode: { root: '' },
     customSections: {},
     browserConfig: {},
