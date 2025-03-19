@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { componentIdAttribute } from '@lynx-js/web-constants';
+import { componentIdAttribute, lynxTagAttribute } from '@lynx-js/web-constants';
 import {
   type ElementThreadElement,
   type ComponentAtIndexCallback,
@@ -71,7 +71,7 @@ export function __GetID(element: ElementThreadElement): string {
 }
 
 export function __GetTag(element: ElementThreadElement): string {
-  return element.tag;
+  return element.getAttribute(lynxTagAttribute)!;
 }
 
 export function __SetAttribute(

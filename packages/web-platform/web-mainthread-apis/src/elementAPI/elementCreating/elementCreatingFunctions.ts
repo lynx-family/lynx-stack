@@ -126,6 +126,7 @@ export function initializeElementCreatingFunction(
     info: Record<string, any> | null | undefined,
   ) {
     const page = createLynxElement('page', 0, cssID, componentID, info);
+    page.setAttribute('part', 'page');
     page.setAttribute(
       parentComponentUniqueIdAttribute,
       page.uniqueId.toString(),

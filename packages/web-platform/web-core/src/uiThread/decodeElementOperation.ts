@@ -13,6 +13,7 @@ import {
   LynxEventNameToW3cCommon,
   W3cEventNameToLynx,
   __lynx_timing_flag,
+  lynxTagAttribute,
 } from '@lynx-js/web-constants';
 
 function getElement<T extends HTMLElement & RuntimePropertyOnElement>(
@@ -43,9 +44,6 @@ function createElement<T extends HTMLElement & RuntimePropertyOnElement>(
   }
   const element = createElementImpl(tag);
   element.setAttribute(lynxUniqueIdAttribute, uniqueId.toString());
-  if (tag === 'page') {
-    element.setAttribute('part', tag);
-  }
   uniqueIdToElement[uniqueId] = new WeakRef(element);
   return element;
 }
@@ -110,7 +108,6 @@ export function decodeElementOperation<
       if (typeof op.cssId === 'number') {
         element.setAttribute(cssIdAttribute, op.cssId.toString());
       }
-      if (op.tag === 'page') pageElement = element;
     } else {
       const target = getElement(op.uid, uniqueIdToElement);
       switch (op.type) {
@@ -153,6 +150,9 @@ export function decodeElementOperation<
               target.setAttribute(op.key, op.value);
               if (op.value && op.key === __lynx_timing_flag) {
                 timingFlags.push(op.value);
+              }
+              if (op.key === lynxTagAttribute && op.value === 'page') {
+                pageElement = target;
               }
             }
           }

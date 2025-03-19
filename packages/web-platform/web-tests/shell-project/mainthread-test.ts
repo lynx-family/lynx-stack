@@ -37,7 +37,7 @@ function serializeDomElement(element: Element): CompareableElementJson {
   }
   const parentUid = element?.parentElement?.getAttribute('lynx-unique-id');
   return {
-    tag: element.getAttribute('lynx-tag')!,
+    tag: element.tagName.toLowerCase(),
     children: [...element.children].map(e => serializeDomElement(e)),
     parentUid: parentUid ? parseFloat(parentUid) : undefined,
   };
@@ -45,7 +45,7 @@ function serializeDomElement(element: Element): CompareableElementJson {
 
 function genFiberElementTree() {
   const page = ElementThreadElement.uniqueIdToElement[0]?.deref();
-  if (page?.tag === 'page') {
+  if (page?.getAttribute('lynx-tag') === 'page') {
     return serializeElementThreadElement(page);
   } else {
     return {};
@@ -95,8 +95,7 @@ function initializeMainThreadTest() {
             uniqueIdToElement,
             uniqueIdToCssInJsRule: [],
             createElementImpl: (tag: string) => {
-              const htmlTag = tag.includes('-') ? tag : `x-${tag}`;
-              const element = document.createElement(htmlTag) as
+              const element = document.createElement(tag) as
                 & HTMLDivElement
                 & RuntimePropertyOnElement;
               element[lynxRuntimeValue] = {
