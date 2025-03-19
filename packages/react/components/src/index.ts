@@ -3,4 +3,4 @@
 // LICENSE file in the root directory of this source tree.
 
 export { Page } from './Page.js';
-export { List } from './List.jsx';
+export { VirtualizedList } from './VirtualizedList.jsx';

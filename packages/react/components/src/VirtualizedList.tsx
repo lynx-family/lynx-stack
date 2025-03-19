@@ -12,6 +12,7 @@ interface ListItemComponentAtIndexEventData {
 declare module '@lynx-js/types' {
   export interface ListItemProps {
     bindComponentAtIndex?: (data: ListItemComponentAtIndexEventData) => void;
+    bindEnqueueComponent?: () => void;
   }
 }
 
@@ -19,17 +20,16 @@ type BuiltInListProps = import('@lynx-js/types').ListProps;
 type BuiltInListItemProps = import('@lynx-js/types').ListItemProps;
 
 type ListItemLayoutProps =
-  | 'reuse-identifier'
-  // | 'full-span'
+  | 'full-span'
   | 'item-key'
   | 'sticky-top'
   | 'sticky-bottom'
-  // | 'estimated-height'
+  | 'estimated-height'
   | 'estimated-height-px'
   | 'estimated-main-axis-size-px';
 
-type GetItemLayout = Omit<Pick<BuiltInListItemProps, ListItemLayoutProps>, 'key' | 'item-key'>;
-type GetItemProps = Omit<BuiltInListItemProps, 'key' | 'item-key' | ListItemLayoutProps>;
+type GetItemLayout = Omit<Pick<BuiltInListItemProps, ListItemLayoutProps>, 'key' | 'item-key' | 'reuse-identifier'>;
+type GetItemProps = Omit<BuiltInListItemProps, 'key' | 'item-key' | 'reuse-identifier' | ListItemLayoutProps>;
 
 export interface ListProps<TData = unknown> {
   /**
@@ -40,13 +40,23 @@ export interface ListProps<TData = unknown> {
   data: TData[];
   listProps?: BuiltInListProps;
   keyExtractor: (item: TData, index: number) => string;
+  reuseIdentifierExtractor: (item: TData, key: string) => string;
   renderItem: (item: TData, key: string) => ReactNode;
   getItemLayout?: (data: TData, key: string) => GetItemLayout;
   getItemProps?: (item: TData, key: string) => GetItemProps;
 }
 
-export function List<TData>(props: ListProps<TData>): ReactNode {
-  const { data, listProps, keyExtractor, renderItem, getItemProps, getItemLayout, lazy: __LAZY__ = true } = props;
+export function VirtualizedList<TData>(props: ListProps<TData>): ReactNode {
+  const {
+    data,
+    listProps,
+    keyExtractor,
+    reuseIdentifierExtractor,
+    renderItem,
+    getItemProps,
+    getItemLayout,
+    lazy: __LAZY__ = true,
+  } = props;
 
   const preLazy = useRef(__LAZY__);
   if (__LAZY__ !== preLazy.current) {
@@ -80,18 +90,29 @@ export function List<TData>(props: ListProps<TData>): ReactNode {
         });
       };
 
+      onEnqueueComponent = () => {
+        this.setState({ isReady: false });
+      };
+
       override render() {
         const { item, itemKey } = this.props;
         const { isReady } = this.state;
 
-        const props = getItemProps?.(item, itemKey);
-        if (props && ('class' in props || 'className' in props)) {
-          throw new Error(
-            '`class` and `className` props are not supported with `getItemProps`. Use `style` instead.',
-          );
+        let props: GetItemProps | undefined;
+        {
+          if (__LAZY__) {
+            props = isReady ? getItemProps?.(item, itemKey) : undefined;
+          } else {
+            props = getItemProps?.(item, itemKey);
+          }
+          if (props && ('class' in props || 'className' in props)) {
+            throw new Error(
+              '`class` and `className` props are not supported with `getItemProps`. Use `style` instead.',
+            );
+          }
         }
-
         const layout = getItemLayout?.(item, itemKey);
+        const reuseIdentifier = reuseIdentifierExtractor?.(item, itemKey);
 
         if (__LAZY__) {
           return (
@@ -99,8 +120,10 @@ export function List<TData>(props: ListProps<TData>): ReactNode {
               {...props}
               {...layout /* a.k.a. list-platform-info */}
               bindComponentAtIndex={this.onComponentAtIndex}
+              bindEnqueueComponent={this.onEnqueueComponent}
               data-isReady={isReady}
               item-key={itemKey}
+              reuse-identifier={reuseIdentifier}
             >
               {isReady && renderItem(item, itemKey)}
             </list-item>
@@ -111,6 +134,7 @@ export function List<TData>(props: ListProps<TData>): ReactNode {
               {...props}
               {...layout /* a.k.a. list-platform-info */}
               item-key={itemKey}
+              reuse-identifier={reuseIdentifier}
             >
               {renderItem(item, itemKey)}
             </list-item>
@@ -127,7 +151,7 @@ export function List<TData>(props: ListProps<TData>): ReactNode {
           || this.props.itemKey !== nextProps.itemKey;
       }
     };
-  }, [renderItem, getItemProps, getItemLayout]);
+  }, [reuseIdentifierExtractor, renderItem, getItemProps, getItemLayout]);
 
   return (
     <list
