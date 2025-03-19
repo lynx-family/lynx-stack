@@ -17,7 +17,6 @@ import {
 import type { Rpc } from '@lynx-js/web-worker-rpc';
 import type { RuntimePropertyOnElement } from '../../types/RuntimePropertyOnElement.js';
 import { decodeElementOperation } from '../decodeElementOperation.js';
-import { getElementTag } from '../getElementTag.js';
 import { createCrossThreadEvent } from '../../utils/createCrossThreadEvent.js';
 
 function applyPageAttributes(
@@ -51,7 +50,6 @@ export function registerFlushElementTreeHandler(
 ) {
   const {
     pageConfig,
-    overrideTagMap,
     backgroundRpc,
     rootDom,
   } = options;
@@ -66,8 +64,7 @@ export function registerFlushElementTreeHandler(
     rootDom.append(rootStyleElementForCssInJs);
   }
   const createElementImpl = (tag: string) => {
-    const htmlTag = getElementTag(tag, overrideTagMap);
-    const element = document.createElement(htmlTag) as
+    const element = document.createElement(tag) as
       & HTMLElement
       & RuntimePropertyOnElement;
     element[lynxRuntimeValue] = {

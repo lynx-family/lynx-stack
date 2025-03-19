@@ -15,4 +15,5 @@ export interface MainThreadStartConfigs {
   browserConfig: BrowserConfig;
   nativeModulesMap: NativeModulesMap;
   napiModulesMap: NapiModulesMap;
+  tagMap: Record<string, string>;
 }

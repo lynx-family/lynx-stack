@@ -48,6 +48,7 @@ export interface MainThreadConfig {
   customSections: LynxTemplate['customSections'];
   lepusCode: LynxTemplate['lepusCode'];
   browserConfig: BrowserConfig;
+  tagMap: Record<string, string>;
 }
 
 export class MainThreadRuntime {
@@ -78,6 +79,7 @@ export class MainThreadRuntime {
         operationsRef: this.operationsRef,
         pageConfig: config.pageConfig,
         styleInfo: cssInJs,
+        tagMap: config.tagMap,
       }),
     );
     this.__LoadLepusChunk = (path) => {

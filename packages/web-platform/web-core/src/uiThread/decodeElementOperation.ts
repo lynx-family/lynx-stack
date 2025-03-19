@@ -6,7 +6,6 @@ import type { ElementOperation } from '@lynx-js/web-constants';
 import type { RuntimePropertyOnElement } from '../types/RuntimePropertyOnElement.js';
 import {
   cssIdAttribute,
-  lynxTagAttribute,
   lynxUniqueIdAttribute,
   OperationType,
   lynxRuntimeValue,
@@ -44,7 +43,6 @@ function createElement<T extends HTMLElement & RuntimePropertyOnElement>(
   }
   const element = createElementImpl(tag);
   element.setAttribute(lynxUniqueIdAttribute, uniqueId.toString());
-  element.setAttribute(lynxTagAttribute, tag);
   if (tag === 'page') {
     element.setAttribute('part', tag);
   }

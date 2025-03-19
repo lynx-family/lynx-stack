@@ -19,6 +19,7 @@ export interface LynxViewConfigs {
   overrideLynxTagToHTMLTagMap?: Record<string, string>;
   nativeModulesMap: NativeModulesMap;
   napiModulesMap: NapiModulesMap;
+  tagMap: Record<string, string>;
 }
 
 export interface LynxView {
@@ -41,10 +42,12 @@ export function createLynxView(configs: LynxViewConfigs): LynxView {
     overrideLynxTagToHTMLTagMap,
     nativeModulesMap,
     napiModulesMap,
+    tagMap,
   } = configs;
   return startUIThread(
     templateUrl,
     {
+      tagMap,
       initData,
       globalProps,
       nativeModulesMap,

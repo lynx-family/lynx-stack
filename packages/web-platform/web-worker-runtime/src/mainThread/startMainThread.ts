@@ -45,6 +45,7 @@ export function startMainThread(
         browserConfig,
         nativeModulesMap,
         napiModulesMap,
+        tagMap,
       } = config;
       const { styleInfo, pageConfig, customSections, cardType, lepusCode } =
         template;
@@ -54,6 +55,7 @@ export function startMainThread(
       );
       const entry = (globalThis.module as LynxJSModule).exports!;
       const runtime = new MainThreadRuntime({
+        tagMap,
         browserConfig,
         customSections,
         globalProps,

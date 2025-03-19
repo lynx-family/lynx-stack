@@ -358,7 +358,17 @@ export class LynxView extends HTMLElement {
           const rootDom = document.createElement('div');
           rootDom.id = lynxViewRootDomId;
           rootDom.setAttribute('part', lynxViewRootDomId);
+          const tagMap = {
+            'page': 'div',
+            'view': 'x-view',
+            'text': 'x-text',
+            'image': 'x-image',
+            'list': 'x-list',
+            'svg': 'x-svg',
+            ...this.overrideLynxTagToHTMLTagMap,
+          };
           const lynxView = createLynxView({
+            tagMap,
             rootDom,
             templateUrl: this.#url,
             globalProps: this.#globalProps,
