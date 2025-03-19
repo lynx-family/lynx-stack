@@ -38,8 +38,10 @@ export default tseslint.config(
       // Test snapshots
       '**/expected/**',
       '**/rspack-expected/**',
-      'packages/react/transform/tests/__swc_snapshots__/**',
-      'packages/react/transform/__test__/**/__snapshots__/**',
+
+      'packages/react/transform/__test__/css/__snapshots__/**',
+      'packages/react/transform/**/tests/__swc_snapshots__/**',
+      'packages/react/transform/swc-plugin-react-lynx/__test__/**',
 
       // Configs
       'eslint.config.js',
@@ -57,8 +59,7 @@ export default tseslint.config(
       'packages/webpack/css-extract-webpack-plugin/test/js/**',
       'packages/webpack/css-extract-webpack-plugin/test/rspack-js/**',
       // Generated
-      'packages/react/transform/index.d.ts',
-      'packages/react/transform/index.cjs',
+      'packages/react/transform/**/index.d.ts',
 
       // TODO: enable eslint for react
       // react

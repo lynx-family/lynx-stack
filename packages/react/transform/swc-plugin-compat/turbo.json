@@ -1,0 +1,10 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "inputs": ["src/**/*.rs", "Cargo.toml", "build.js"],
+      "outputs": ["index.d.ts", "swc_plugin_compact.wasm"]
+    }
+  }
+}
