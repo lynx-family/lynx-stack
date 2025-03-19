@@ -7,12 +7,9 @@
     "semiColons": "prefer",
   },
   "excludes": [
-    // Generated
-    "transform/index.d.ts",
-    "transform/index.js",
-
     // Snapshot
-    "transform/tests/__swc_snapshots__/**",
-    "transform/__test__/**/__snapshots__/**",
+    "transform/__test__/css/__snapshots__/**",
+    "transform/**/tests/__swc_snapshots__/**",
+    "transform/swc-plugin-react-lynx/__test__/**/__snapshots__/**",
   ],
 }

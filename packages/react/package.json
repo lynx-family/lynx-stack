@@ -58,12 +58,13 @@
       "types": "./components/lib/index.d.ts",
       "default": "./components/lib/index.js"
     },
-    "./transform": {
-      "require": "./transform/cjs/main.cjs",
-      "import": {
-        "types": "./transform/index.d.ts",
-        "default": "./transform/main.js"
-      }
+    "./transform/swc-plugin-compat": {
+      "default": "./transform/swc-plugin-compat/swc_plugin_compat.wasm",
+      "types": "./transform/swc-plugin-compat/index.d.ts"
+    },
+    "./transform/swc-plugin-react-lynx": {
+      "default": "./transform/swc-plugin-compat/swc_plugin_react_lynx.wasm",
+      "types": "./transform/swc-plugin-compat/index.d.ts"
     },
     "./worklet-runtime": {
       "types": "./worklet-runtime/lib/index.d.ts",

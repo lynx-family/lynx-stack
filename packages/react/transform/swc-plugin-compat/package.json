@@ -1,0 +1,21 @@
+{
+  "name": "@lynx-dev/swc-plugin-compat",
+  "version": "0.1.0",
+  "description": "",
+  "keywords": [
+    "lynx",
+    "react",
+    "swc-plugin"
+  ],
+  "author": "",
+  "main": "./swc_plugin_compat.wasm",
+  "types": "./index.d.ts",
+  "files": [
+    "swc_plugin_compat.wasm",
+    "index.d.ts"
+  ],
+  "scripts": {
+    "build": "node ./build.js",
+    "test:cargo": "TS_RS_EXPORT_DIR='./' cargo test & npx dprint fmt './index.d.ts'"
+  }
+}
