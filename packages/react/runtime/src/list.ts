@@ -224,8 +224,8 @@ export const __pendingListUpdates = {
   },
 };
 
-const gSignMap: Record<number, Map<number, SnapshotInstance>> = {};
-const gRecycleMap: Record<number, Map<string, Map<number, SnapshotInstance>>> = {};
+export const gSignMap: Record<number, Map<number, SnapshotInstance>> = {};
+export const gRecycleMap: Record<number, Map<string, Map<number, SnapshotInstance>>> = {};
 const { gReadyCallbacks, saveReadyCallback } = /* @__PURE__ */ (function() {
   const gReadyCallbacks: Record<number, Map<number, () => void>> = {};
 
@@ -327,6 +327,13 @@ export function componentAtIndexFactory(ctx: SnapshotInstance[]): ComponentAtInd
       recycleSignMap.delete(sign);
       hydrate(oldCtx, childCtx);
       oldCtx.unRenderElements();
+      if (
+        oldCtx.__values?.[0]['data-isReady'] === true
+      ) {
+        __OnLifecycleEvent([LifecycleConstant.publishEvent, {
+          handlerName: `${oldCtx.__id}:0:bindEnqueueComponent`,
+        }]);
+      }
       const root = childCtx.__element_root!;
       if (enableReuseNotification) {
         __FlushElementTree(root, {

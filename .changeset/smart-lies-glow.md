@@ -2,7 +2,7 @@
 "@lynx-js/react": patch
 ---
 
-New built-in component `<List/>`, which provide a virtualized list view. Unlike the element `<list/>`, `<List/>` render each item on-demand, which is more efficient for large list.
+New built-in component `<List/>`, which provides a virtualized list view. Unlike the element `<list/>`, `<List/>` renders each item on-demand, which is more efficient for large lists.
 
 ```tsx
 import { List } from '@lynx-js/react/runtime-components';

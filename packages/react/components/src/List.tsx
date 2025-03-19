@@ -12,6 +12,7 @@ interface ListItemComponentAtIndexEventData {
 declare module '@lynx-js/types' {
   export interface ListItemProps {
     bindComponentAtIndex?: (data: ListItemComponentAtIndexEventData) => void;
+    bindEnqueueComponent?: () => void;
   }
 }
 
@@ -80,6 +81,10 @@ export function List<TData>(props: ListProps<TData>): ReactNode {
         });
       };
 
+      onEnqueueComponent = () => {
+        this.setState({ isReady: false });
+      };
+
       override render() {
         const { item, itemKey } = this.props;
         const { isReady } = this.state;
@@ -99,6 +104,7 @@ export function List<TData>(props: ListProps<TData>): ReactNode {
               {...props}
               {...layout /* a.k.a. list-platform-info */}
               bindComponentAtIndex={this.onComponentAtIndex}
+              bindEnqueueComponent={this.onEnqueueComponent}
               data-isReady={isReady}
               item-key={itemKey}
             >
