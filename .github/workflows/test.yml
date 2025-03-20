@@ -20,6 +20,30 @@ concurrency:
   group: ${{ github.event_name }}-${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
   cancel-in-progress: true
 jobs:
+  code-style-check:
+    runs-on: lynx-ubuntu-24.04-medium
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # We need full history for changeset status check
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install
+        run: |
+          npm install -g corepack@latest
+          corepack enable
+          pnpm install --frozen-lockfile
+      - name: Code Style Check
+        run: |
+          pnpm dprint check
+          pnpm biome check
+      - name: API Check
+        run: pnpm turbo api-extractor
+      - name: Changeset Check
+        run: pnpm changeset status --since=origin/main
+
   build:
     uses: ./.github/workflows/workflow-build.yml
     secrets: inherit
@@ -100,3 +124,19 @@ jobs:
   website:
     needs: build
     uses: ./.github/workflows/workflow-website.yml
+  # Copied from https://github.com/swc-project/swc/blob/b192dc82e6a84bd30f159fb12ca8a216f41e8efb/.github/workflows/CI.yml#L491
+  done:
+    needs:
+      - code-style-check
+      - playwright-linux
+      - test-plugins
+      - test-react
+      - test-rust
+      - test-rspeedy
+      - website
+    if: always()
+    runs-on: lynx-ubuntu-24.04-medium
+    name: Done
+    steps:
+      - run: exit 1
+        if: ${{ always() && (contains(needs.*.result, 'failure') || contains(needs.*.result, 'skipped') || contains(needs.*.result, 'cancelled')) }}
