@@ -8,6 +8,8 @@ x-list {
   scrollbar-width: none;
   --list-item-sticky-offset: 0;
   --list-item-span-count: 0;
+  --list-main-axis-gap: 0;
+  --list-cross-axis-gap: 0;
 }
 
 x-list > *:not(list-item) {
@@ -29,6 +31,8 @@ x-list::part(content) {
   overflow: inherit;
   position: relative;
   content-visibility: auto;
+  row-gap: inherit;
+  column-gap: inherit;
 }
 
 x-list::part(content), x-list::part(slot) {
@@ -79,28 +83,33 @@ x-list[scroll-orientation="horizontal"][enable-scroll="false"] {
   overflow-x: hidden !important;
 }
 
-list-item[sticky-top], list-item[sticky-bottom] {
+x-list[sticky="true"] list-item[sticky-top],
+x-list[sticky="true"] list-item[sticky-bottom] {
   position: sticky;
   z-index: 1;
 }
 
-x-list > list-item[sticky-top], x-list > lynx-wrapper > list-item[sticky-top] {
+x-list[sticky="true"] > list-item[sticky-top],
+x-list[sticky="true"] > lynx-wrapper > list-item[sticky-top] {
   top: var(--list-item-sticky-offset);
 }
 
-x-list > list-item[sticky-bottom],
-x-list > lynx-wrapper > list-item[sticky-bottom] {
+x-list[sticky="true"] > list-item[sticky-bottom],
+x-list[sticky="true"] > lynx-wrapper > list-item[sticky-bottom] {
   bottom: var(--list-item-sticky-offset);
 }
 
-x-list[scroll-orientation="horizontal"] > list-item[sticky-top],
-x-list[scroll-orientation="horizontal"] > lynx-wrapper > list-item[sticky-top] {
+x-list[sticky="true"][scroll-orientation="horizontal"] > list-item[sticky-top],
+x-list[sticky="true"][scroll-orientation="horizontal"]
+  > lynx-wrapper
+  > list-item[sticky-top] {
   top: unset;
   left: var(--list-item-sticky-offset);
 }
 
-x-list[scroll-orientation="horizontal"] > list-item[sticky-bottom],
-x-list[scroll-orientation="horizontal"]
+x-list[sticky="true"][scroll-orientation="horizontal"]
+  > list-item[sticky-bottom],
+x-list[sticky="true"][scroll-orientation="horizontal"]
   > lynx-wrapper
   > list-item[sticky-bottom] {
   bottom: unset;
@@ -141,10 +150,14 @@ x-list[list-type="single"] {
   display: flex;
   flex-direction: column;
   align-items: stretch;
+  row-gap: var(--list-main-axis-gap);
+  column-gap: var(--list-cross-axis-gap);
 }
 
 x-list[list-type="single"][scroll-orientation="horizontal"] {
   flex-direction: row;
+  row-gap: var(--list-cross-axis-gap);
+  column-gap: var(--list-main-axis-gap);
 }
 
 /* list-type flow */
@@ -154,6 +167,8 @@ x-list[list-type="flow"]::part(content) {
   grid-auto-rows: min-content;
   justify-items: stretch;
   align-items: start;
+  grid-row-gap: var(--list-main-axis-gap);
+  grid-column-gap: var(--list-cross-axis-gap);
 }
 
 x-list[list-type="flow"][scroll-orientation="horizontal"]::part(content) {
@@ -162,6 +177,8 @@ x-list[list-type="flow"][scroll-orientation="horizontal"]::part(content) {
   grid-auto-columns: min-content;
   justify-items: start;
   align-items: stretch;
+  grid-row-gap: var(--list-cross-axis-gap);
+  grid-column-gap: var(--list-main-axis-gap);
 }
 
 x-list[list-type="flow"] list-item[full-span]:not([full-span="false"]) {

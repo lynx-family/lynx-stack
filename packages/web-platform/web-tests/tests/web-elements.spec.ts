@@ -2053,7 +2053,17 @@ test.describe('web-elements test suite', () => {
       await page.mouse.wheel(0, 500);
       await diffScreenShot(page, title, 'sticky-y-scroll');
     });
-    test('full-span', async ({ page, browserName }, { titlePath }) => {
+    test('full-span', async ({ page }, { titlePath }) => {
+      const title = getTitle(titlePath);
+      await gotoWebComponentPage(page, title);
+      await diffScreenShot(page, title, 'index');
+    });
+    test('axis-gap', async ({ page }, { titlePath }) => {
+      const title = getTitle(titlePath);
+      await gotoWebComponentPage(page, title);
+      await diffScreenShot(page, title, 'index');
+    });
+    test('axis-gap-flow', async ({ page }, { titlePath }) => {
       const title = getTitle(titlePath);
       await gotoWebComponentPage(page, title);
       await diffScreenShot(page, title, 'index');
