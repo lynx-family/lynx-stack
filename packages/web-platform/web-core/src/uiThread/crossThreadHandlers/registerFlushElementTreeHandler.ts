@@ -33,7 +33,6 @@ export function registerFlushElementTreeHandler(
   endpoint: typeof flushElementTreeEndpoint,
   options: {
     pageConfig: PageConfig;
-    overrideTagMap: Record<string, string>;
     backgroundRpc: Rpc;
     rootDom: HTMLElement;
   },

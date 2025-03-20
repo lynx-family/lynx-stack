@@ -37,7 +37,6 @@ export function startUIThread(
     napiModulesCall: NapiModulesCall;
     onError?: () => void;
   },
-  overrideTagMap: Record<string, string> = {},
 ): LynxView {
   const createLynxStartTiming = performance.now() + performance.timeOrigin;
   const { nativeModulesMap, napiModulesMap } = configs;
@@ -78,7 +77,6 @@ export function startUIThread(
         flushElementTreeEndpoint,
         {
           pageConfig,
-          overrideTagMap,
           backgroundRpc,
           rootDom,
         },

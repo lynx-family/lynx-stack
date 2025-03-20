@@ -373,7 +373,6 @@ export class LynxView extends HTMLElement {
             templateUrl: this.#url,
             globalProps: this.#globalProps,
             initData: this.#initData,
-            overrideLynxTagToHTMLTagMap: this.#overrideLynxTagToHTMLTagMap,
             nativeModulesMap: this.#nativeModulesMap,
             napiModulesMap: this.#napiModulesMap,
             callbacks: {
