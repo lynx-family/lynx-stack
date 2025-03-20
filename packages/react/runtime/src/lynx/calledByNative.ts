@@ -38,7 +38,7 @@ function ssrEncode() {
 function ssrHydrate(info: string) {
   const nativePage = __GetPageElement();
   if (!nativePage) {
-    throw 'SSR Hydration Failed! Please check if the SSR content loaded successfully!';
+    throw new Error('SSR Hydration Failed! Please check if the SSR content loaded successfully!');
   }
 
   const refsMap = __GetTemplateParts(nativePage);
