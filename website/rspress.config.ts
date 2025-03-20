@@ -627,13 +627,15 @@ export default defineConfig({
   ssg: {
     strict: true,
   },
+  // We use GitHub Pages to host the website, so we need to set the base path to `/lynx-stack/`
+  base: '/lynx-stack/',
   globalStyles: join(__dirname, 'src', 'styles', 'global.scss'),
   builderConfig: {
     output: {
       assetPrefix: `//${CDN_HOST}/`,
     },
     server: {
-      open: 'http://localhost:<port>/',
+      open: 'http://localhost:<port>/lynx-stack/',
     },
     source: {
       alias: {
