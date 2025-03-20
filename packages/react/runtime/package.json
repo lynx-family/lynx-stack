@@ -20,7 +20,7 @@
   "devDependencies": {
     "@lynx-js/react": "workspace:*",
     "@lynx-js/react-transform": "workspace:*",
-    "@types/react": "^18.3.18",
+    "@types/react": "^18.3.19",
     "@vitejs/plugin-react": "4.3.4",
     "@vitest/coverage-v8": "^3.0.9",
     "@vitest/ui": "^3.0.9",
