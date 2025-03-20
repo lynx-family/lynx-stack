@@ -21,9 +21,8 @@ use std::vec;
 use ts_rs::TS;
 
 use swc_core::{
-  base::config::{GlobalPassOption, IsModule},
+  base::config::GlobalPassOption,
   common::{
-    comments::SingleThreadedComments,
     errors::{DiagnosticBuilder, Emitter, HANDLER},
     pass::Optional,
     sync::Lrc,
@@ -31,7 +30,6 @@ use swc_core::{
   },
   ecma::{
     ast::*,
-    parser::{Syntax, TsSyntax},
     transforms::{
       base::{
         hygiene::{hygiene_with_config, Config},
@@ -91,81 +89,6 @@ impl<'de> Deserialize<'de> for TransformMode {
   }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub struct SyntaxConfig(Syntax);
-
-impl From<SyntaxConfig> for Syntax {
-  fn from(value: SyntaxConfig) -> Self {
-    value.0
-  }
-}
-
-impl Default for SyntaxConfig {
-  fn default() -> Self {
-    // override default
-    Self(Syntax::Typescript(TsSyntax {
-      tsx: true,
-      decorators: true,
-      ..Default::default()
-    }))
-  }
-}
-
-impl<'de> Deserialize<'de> for SyntaxConfig {
-  fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-  where
-    D: Deserializer<'de>,
-  {
-    let s: Option<String> = Option::deserialize(deserializer)?;
-
-    if let Some(s) = s {
-      serde_json::from_str(&s)
-        .map(SyntaxConfig)
-        .map_err(|err| serde::de::Error::custom(format!("Failed to parse SyntaxConfig: {}", err)))
-    } else {
-      Ok(SyntaxConfig::default())
-    }
-  }
-}
-
-#[derive(Debug, PartialEq, Clone, Copy, Default)]
-pub struct IsModuleConfig(IsModule);
-
-impl From<IsModuleConfig> for IsModule {
-  fn from(value: IsModuleConfig) -> Self {
-    value.0
-  }
-}
-
-impl<'de> Deserialize<'de> for IsModuleConfig {
-  fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-  where
-    D: Deserializer<'de>,
-  {
-    let value = serde_json::Value::deserialize(deserializer)?;
-
-    let is_module = match value {
-      serde_json::Value::Bool(bool) => IsModule::Bool(bool),
-      serde_json::Value::String(s) => match s.as_str() {
-        "unknown" => IsModule::Unknown,
-        _ => {
-          return Err(serde::de::Error::custom(format!(
-            "value `{}` does not match any variant of IsModuleConfig",
-            s
-          )));
-        }
-      },
-      _ => {
-        return Err(serde::de::Error::custom(
-          "Value does not match any variant of IsModuleConfig: expected a boolean (`true` or `false`) or the string `unknown`"
-        ));
-      }
-    };
-
-    Ok(IsModuleConfig(is_module))
-  }
-}
-
 #[derive(TS, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase", default)]
 #[ts(export, export_to = "index.d.ts")]
@@ -190,14 +113,6 @@ pub struct TransformNodiffOptions {
 
   #[ts(optional)]
   pub inline_sources_content: Option<bool>,
-
-  /// @public
-  /// This is swc syntax config in JSON format
-  #[ts(optional, type = "string")]
-  pub syntax_config: Option<SyntaxConfig>,
-
-  #[ts(optional, type = "boolean | 'unknown'")]
-  pub is_module: Option<IsModuleConfig>,
 
   #[ts(inline)]
   pub css_scope: Either<bool, CSSScopeVisitorConfig>,
@@ -237,8 +152,6 @@ impl Default for TransformNodiffOptions {
       sourcemap: Either::A(false),
       source_map_columns: None,
       inline_sources_content: None,
-      syntax_config: None,
-      is_module: Default::default(),
       css_scope: Either::B(Default::default()),
       snapshot: Default::default(),
       shake: Either::A(false),
@@ -272,7 +185,7 @@ impl Emitter for MultiEmitter {
 
 #[plugin_transform]
 pub fn process_transform(program: Program, metadata: TransformPluginProgramMetadata) -> Program {
-  let comments = SingleThreadedComments::default();
+  let comments = metadata.comments.as_ref();
 
   let config_json = metadata.get_transform_plugin_config().unwrap_or_default();
   let options: TransformNodiffOptions = serde_json::from_str(&config_json).unwrap_or_default();
@@ -504,25 +417,7 @@ mod tests {
   use super::*;
   use crate::swc_plugin_css_scope::CSSScope;
   use crate::swc_plugin_inject::InjectAs;
-  use serde_json::json;
   use std::collections::HashMap;
-
-  #[test]
-  fn test_syntax_serialize_and_deserialize() {
-    use super::*;
-    use serde_json::json;
-
-    let json = json!({
-      "syntax": "typescript",
-      "tsx": true,
-    });
-    let s: Syntax = serde_json::from_value(json).unwrap();
-
-    // println!("{:?}", serde_json::to_string(&s));
-
-    assert_eq!(s.typescript(), true);
-    assert_eq!(s.decorators(), false); // default to false
-  }
 
   #[test]
   fn test_transform_mode_production() {
@@ -561,57 +456,6 @@ mod tests {
   }
 
   #[test]
-  fn test_is_module_config_unknown() {
-    let json = r#""unknown""#;
-    let is_module_config: IsModuleConfig = serde_json::from_str(json).unwrap();
-    assert_eq!(is_module_config, IsModuleConfig(IsModule::Unknown));
-  }
-
-  #[test]
-  fn test_is_module_config_boolean() {
-    let json = r#"true"#;
-    let is_module_config: IsModuleConfig = serde_json::from_str(json).unwrap();
-    assert_eq!(is_module_config, IsModuleConfig(IsModule::Bool(true)));
-  }
-
-  #[test]
-  fn test_syntax_config_with_value() {
-    let json_data_ts = json!({
-      "syntax": "typescript",
-      "tsx": true,
-      "decorators": true,
-    });
-
-    let config_ts: Syntax = serde_json::from_value(json_data_ts).unwrap();
-
-    match config_ts {
-      Syntax::Typescript(ts_syntax) => {
-        assert_eq!(ts_syntax.tsx, true);
-        assert_eq!(ts_syntax.decorators, true);
-      }
-      _ => panic!("Expected Syntax::Typescript"),
-    }
-
-    let json_data_es = json!({
-      "syntax": "ecmascript",
-      "jsx": true,
-      "functionBind": true,
-      "autoAccessors": true,
-    });
-
-    let config_es: Syntax = serde_json::from_value(json_data_es).unwrap();
-
-    match config_es {
-      Syntax::Es(es_syntax) => {
-        assert_eq!(es_syntax.jsx, true);
-        assert_eq!(es_syntax.fn_bind, true);
-        assert_eq!(es_syntax.auto_accessors, true);
-      }
-      _ => panic!("Expected Syntax::Es"),
-    }
-  }
-
-  #[test]
   fn test_optional_fields() {
     let json_data = r#"
       {
@@ -634,8 +478,6 @@ mod tests {
     assert_eq!(options.sourcemap, Either::A(true));
     assert_eq!(options.source_map_columns, None);
     assert_eq!(options.inline_sources_content, None);
-    assert_eq!(options.syntax_config, None);
-    assert_eq!(options.is_module, None);
     assert_eq!(options.css_scope, Either::A(true));
     assert_eq!(options.snapshot, None);
     assert_eq!(options.shake, Either::A(true));

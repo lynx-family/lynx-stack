@@ -3,95 +3,128 @@
 // LICENSE file in the root directory of this source tree.
 import { describe, expect, it } from 'vitest';
 
-import { transformReactLynx } from '../main.js';
+import { swcPluginReactLynx, transformReactLynx } from '../main.js';
 
 describe('TypeScript', () => {
-  it('import type {  } from "lynx-js/react-runtime"', async () => {
+  it('import type {  } from "lynx-js/react-runtime"', () => {
     const inputContent = `
 import type {  } from "lynx-js/react-runtime";
 `;
-    const { code } = await transformReactLynx(inputContent);
+    const { code } = transformReactLynx(inputContent, [[swcPluginReactLynx, {}]], {}, {
+      syntax: 'typescript',
+      tsx: false,
+    });
+
     expect(code).toMatchInlineSnapshot(`
       "export { };
       "
     `);
   });
 
-  it('import type { Foo } from "lynx-js/react-runtime"', async () => {
+  it('import type { Foo } from "lynx-js/react-runtime"', () => {
     const inputContent = `
-import type { Foo } from "lynx-js/react-runtime";
-`;
-    const { code } = await transformReactLynx(inputContent);
+  import type { Foo } from "lynx-js/react-runtime";
+  `;
+
+    const { code } = transformReactLynx(inputContent, [[swcPluginReactLynx, {}]], {}, {
+      syntax: 'typescript',
+      tsx: false,
+    });
+
     expect(code).toMatchInlineSnapshot(`
-      "export { };
-      "
-    `);
+        "export { };
+        "
+      `);
   });
 
-  it('import { type Foo } from "lynx-js/react-runtime"', async () => {
+  it('import { type Foo } from "lynx-js/react-runtime"', () => {
     const inputContent = `
-import { type Foo } from "lynx-js/react-runtime";
-`;
-    const { code } = await transformReactLynx(inputContent);
+  import { type Foo } from "lynx-js/react-runtime";
+  `;
+    const { code } = transformReactLynx(inputContent, [[swcPluginReactLynx, {}]], {}, {
+      syntax: 'typescript',
+      tsx: false,
+    });
+
     expect(code).toMatchInlineSnapshot(`
-      "export { };
-      "
-    `);
+        "export { };
+        "
+      `);
   });
 
-  it('import { type Foo, type Bar } from "lynx-js/react-runtime"', async () => {
+  it('import { type Foo, type Bar } from "lynx-js/react-runtime"', () => {
     const inputContent = `
-import { type Foo, type Bar } from "lynx-js/react-runtime";
-`;
-    const { code } = await transformReactLynx(inputContent);
+  import { type Foo, type Bar } from "lynx-js/react-runtime";
+  `;
+    const { code } = transformReactLynx(inputContent, [[swcPluginReactLynx, {}]], {}, {
+      syntax: 'typescript',
+      tsx: false,
+    });
+
     expect(code).toMatchInlineSnapshot(`
-      "export { };
-      "
-    `);
+        "export { };
+        "
+      `);
   });
 
-  it('import { type Foo(used), type Bar } from "lynx-js/react-runtime"', async () => {
+  it('import { type Foo(used), type Bar } from "lynx-js/react-runtime"', () => {
     const inputContent = `
-import { type Foo, type Bar } from "lynx-js/react-runtime";
-export const a: Foo = {};
-`;
-    const { code } = await transformReactLynx(inputContent);
+  import { type Foo, type Bar } from "lynx-js/react-runtime";
+  export const a: Foo = {};
+  `;
+    const { code } = transformReactLynx(inputContent, [[swcPluginReactLynx, {}]], {}, {
+      syntax: 'typescript',
+      tsx: false,
+    });
+
     expect(code).toMatchInlineSnapshot(`
-      "export const a = {};
-      "
-    `);
+        "export const a = {};
+        "
+      `);
   });
 
-  it('import { type Foo, Bar } from "lynx-js/react-runtime"', async () => {
+  it('import { type Foo, Bar } from "lynx-js/react-runtime"', () => {
     const inputContent = `
-import { type Foo, Bar } from "lynx-js/react-runtime";
-`;
-    const { code } = await transformReactLynx(inputContent);
+  import { type Foo, Bar } from "lynx-js/react-runtime";
+  `;
+    const { code } = transformReactLynx(inputContent, [[swcPluginReactLynx, {}]], {}, {
+      syntax: 'typescript',
+      tsx: false,
+    });
+
     expect(code).toMatchInlineSnapshot(`
-      "export { };
-      "
-    `);
+        "export { };
+        "
+      `);
   });
 
-  it('import { Foo } from "lynx-js/react-runtime"', async () => {
+  it('import { Foo } from "lynx-js/react-runtime"', () => {
     const inputContent = `
-import { Foo } from "lynx-js/react-runtime";
-`;
-    const { code } = await transformReactLynx(inputContent);
+  import { Foo } from "lynx-js/react-runtime";
+  `;
+    const { code } = transformReactLynx(inputContent, [[swcPluginReactLynx, {}]], {}, {
+      syntax: 'typescript',
+      tsx: false,
+    });
+
     expect(code).toMatchInlineSnapshot(`
-      "export { };
-      "
-    `);
+        "export { };
+        "
+      `);
   });
 
-  it('import {  } from "lynx-js/react-runtime"', async () => {
+  it('import {  } from "lynx-js/react-runtime"', () => {
     const inputContent = `
-import {  } from "lynx-js/react-runtime";
-`;
-    const { code } = await transformReactLynx(inputContent);
+  import {  } from "lynx-js/react-runtime";
+  `;
+    const { code } = transformReactLynx(inputContent, [[swcPluginReactLynx, {}]], {}, {
+      syntax: 'typescript',
+      tsx: false,
+    });
+
     expect(code).toMatchInlineSnapshot(`
-      "import "lynx-js/react-runtime";
-      "
-    `);
+        "import "lynx-js/react-runtime";
+        "
+      `);
   });
 });

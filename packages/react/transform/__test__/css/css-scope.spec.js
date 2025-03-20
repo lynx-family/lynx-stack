@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { describe, expect, it } from 'vitest';
 
-import { transformReactLynx } from '../../main.js';
+import { swcPluginReactLynx, transformReactLynx } from '../../main.js';
 
 /** @type {import('../../index.d.ts').TransformNodiffOptions} */
 const defaultOptions = {
@@ -21,14 +21,12 @@ const defaultOptions = {
   directiveDCE: false,
   defineDCE: false,
   shake: false,
-  compat: false,
   worklet: false,
-  refresh: false,
 };
 
 describe('CSS Scope', () => {
   it('should transform imports with default options', async () => {
-    const result = await transformReactLynx(
+    const result = transformReactLynx(
       `\
 import './foo.css'
 import bar from './bar.css'
@@ -36,6 +34,7 @@ import * as styles from './baz.scss'
 import { styles0, styles1 } from './foo.modules.css'
 bar, styles, styles0, styles1
 `,
+      [[swcPluginReactLynx, {}]],
     );
 
     await expect(result.code).toMatchFileSnapshot(
@@ -44,18 +43,20 @@ bar, styles, styles0, styles1
   });
 
   it('should transform jsx with default options', async () => {
-    const result = await transformReactLynx(
+    const result = transformReactLynx(
       `\
-<view />;
-const jsx = <text>foo</text>
-function Foo() {
-  return <Bar><view /></Bar>
-}
-function App() {
-  return <Baz foo={<view />} />
-}
-Foo, App
-`,
+  <view />;
+  const jsx = <text>foo</text>
+  function Foo() {
+    return <Bar><view /></Bar>
+  }
+  function App() {
+    return <Baz foo={<view />} />
+  }
+  Foo, App
+  `,
+      [[swcPluginReactLynx, {}]],
+      { runtime: 'automatic' },
     );
 
     await expect(result.code).toMatchFileSnapshot(
@@ -66,22 +67,23 @@ Foo, App
   it.each([{ mode: 'all' }, { mode: 'none' }, { mode: 'modules' }])(
     'should transform imports with cssScope: $mode',
     async ({ mode }) => {
-      const result = await transformReactLynx(
+      const result = transformReactLynx(
         `\
-import './foo.css'
-import bar from './bar.css'
-import * as styles from './baz.scss'
-import { styles0, styles1 } from './foo.modules.css'
-const jsx = <view className={\`foo \${styles.bar} \${styles2.baz} \${clsA} \${clsB}\`} />
-bar, styles, styles0, styles1
-`,
-        {
+  import './foo.css'
+  import bar from './bar.css'
+  import * as styles from './baz.scss'
+  import { styles0, styles1 } from './foo.modules.css'
+  const jsx = <view className={\`foo \${styles.bar} \${styles2.baz} \${clsA} \${clsB}\`} />
+  bar, styles, styles0, styles1
+  `,
+        [[swcPluginReactLynx, {
           ...defaultOptions,
           cssScope: {
             mode,
             filename: defaultOptions.filename,
           },
-        },
+        }]],
+        { runtime: 'automatic' },
       );
 
       await expect(result.code).toMatchFileSnapshot(
@@ -93,21 +95,22 @@ bar, styles, styles0, styles1
   it.each([{ mode: 'all' }, { mode: 'none' }, { mode: 'modules' }])(
     'should transform imports without JSX with cssScope: $mode',
     async ({ mode }) => {
-      const result = await transformReactLynx(
+      const result = transformReactLynx(
         `\
-import './foo.css'
-import bar from './bar.css'
-import * as styles from './baz.scss'
-import { styles0, styles1 } from './foo.modules.css'
-bar, styles, styles0, styles1
-`,
-        {
+  import './foo.css'
+  import bar from './bar.css'
+  import * as styles from './baz.scss'
+  import { styles0, styles1 } from './foo.modules.css'
+  bar, styles, styles0, styles1
+  `,
+        [[swcPluginReactLynx, {
           ...defaultOptions,
           cssScope: {
             mode,
             filename: defaultOptions.filename,
           },
-        },
+        }]],
+        { runtime: 'automatic' },
       );
 
       await expect(result.code).toMatchFileSnapshot(
@@ -119,25 +122,26 @@ bar, styles, styles0, styles1
   it.each([{ mode: 'all' }, { mode: 'none' }, { mode: 'modules' }])(
     'should transform jsx with cssScope: $mode',
     async ({ mode }) => {
-      const result = await transformReactLynx(
+      const result = transformReactLynx(
         `\
-<view />;
-const jsx = <text>foo</text>
-function Foo() {
-  return <Bar><view /></Bar>
-}
-function App() {
-  return <Baz foo={<view />} />
-}
-Foo, App
-`,
-        {
+  <view />;
+  const jsx = <text>foo</text>
+  function Foo() {
+    return <Bar><view /></Bar>
+  }
+  function App() {
+    return <Baz foo={<view />} />
+  }
+  Foo, App
+  `,
+        [[swcPluginReactLynx, {
           ...defaultOptions,
           cssScope: {
             mode,
             filename: defaultOptions.filename,
           },
-        },
+        }]],
+        { runtime: 'automatic' },
       );
 
       await expect(result.code).toMatchFileSnapshot(
@@ -151,27 +155,28 @@ Foo, App
     async ({ mode }) => {
       const result = await transformReactLynx(
         `\
-<view />;
-const jsx = <text>foo</text>
-function Foo() {
-  return <Bar><view /></Bar>
-}
-function App() {
-  return <Baz foo={<view />} />
-}
-Foo, App
-`,
-        {
+  <view />;
+  const jsx = <text>foo</text>
+  function Foo() {
+    return <Bar><view /></Bar>
+  }
+  function App() {
+    return <Baz foo={<view />} />
+  }
+  Foo, App
+  `,
+        [[swcPluginReactLynx, {
           ...defaultOptions,
-          jsx: {
-            ...defaultOptions.jsx,
+          snapshot: {
+            ...defaultOptions.snapshot,
             isDynamicComponent: true,
           },
           cssScope: {
             mode,
             filename: defaultOptions.filename,
           },
-        },
+        }]],
+        { runtime: 'automatic' },
       );
 
       await expect(result.code).toMatchFileSnapshot(
@@ -183,22 +188,23 @@ Foo, App
   it.each([{ mode: 'all' }, { mode: 'none' }, { mode: 'modules' }])(
     'should transform all with cssScope: $mode',
     async ({ mode }) => {
-      const result = await transformReactLynx(
+      const result = transformReactLynx(
         `\
-import './foo.css'
-import bar from './bar.css'
-function App() {
-  return <Baz foo={<view />} />
-}
-bar, App
-`,
-        {
+  import './foo.css'
+  import bar from './bar.css'
+  function App() {
+    return <Baz foo={<view />} />
+  }
+  bar, App
+  `,
+        [[swcPluginReactLynx, {
           ...defaultOptions,
           cssScope: {
             mode,
             filename: defaultOptions.filename,
           },
-        },
+        }]],
+        { runtime: 'automatic' },
       );
 
       await expect(result.code).toMatchFileSnapshot(

@@ -85,12 +85,6 @@ export type TransformNodiffOptions = {
   sourcemap: boolean | string;
   sourceMapColumns?: boolean;
   inlineSourcesContent?: boolean;
-  /**
-   * @public
-   * This is swc syntax config in JSON format
-   */
-  syntaxConfig?: string;
-  isModule?: boolean | 'unknown';
   cssScope: boolean | CSSScopeVisitorConfig;
   snapshot?: boolean | JSXTransformerConfig;
   shake: boolean | ShakeVisitorConfig;
