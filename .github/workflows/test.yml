@@ -119,3 +119,18 @@ jobs:
     secrets: inherit
     with:
       runs-on: lynx-ubuntu-24.04-medium
+  # Copied from https://github.com/swc-project/swc/blob/b192dc82e6a84bd30f159fb12ca8a216f41e8efb/.github/workflows/CI.yml#L491
+  done:
+    needs:
+      - code-style-check
+      - playwright-linux
+      - test-plugins
+      - test-react
+      - test-rust
+      - test-rspeedy
+    if: always()
+    runs-on: lynx-ubuntu-24.04-medium
+    name: Done
+    steps:
+      - run: exit 1
+        if: ${{ always() && (contains(needs.*.result, 'failure') || contains(needs.*.result, 'skipped') || contains(needs.*.result, 'cancelled')) }}
