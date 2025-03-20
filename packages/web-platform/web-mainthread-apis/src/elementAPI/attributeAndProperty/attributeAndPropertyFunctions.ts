@@ -74,14 +74,6 @@ export function __GetTag(element: ElementThreadElement): string {
   return element.getAttribute(lynxTagAttribute)!;
 }
 
-export function __SetAttribute(
-  element: ElementThreadElement,
-  key: string,
-  value: string | null | undefined,
-): void {
-  element.setAttribute(key, value ?? null);
-}
-
 export function __SetConfig(
   element: ElementThreadElement,
   config: Record<string, any>,
@@ -104,7 +96,7 @@ export function __UpdateComponentID(
   element: ElementThreadElement,
   componentID: string,
 ) {
-  __SetAttribute(element, componentIdAttribute, componentID);
+  element.setAttribute(componentIdAttribute, componentID);
 }
 
 export function __GetConfig(

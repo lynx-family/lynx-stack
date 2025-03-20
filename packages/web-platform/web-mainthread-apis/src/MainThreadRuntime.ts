@@ -27,13 +27,15 @@ import {
   genCssInJsInfo,
   transformToWebCss,
 } from './utils/processStyleInfo.js';
+import { createAttributeAndPropertyFunctionsWithContext } from './elementAPI/attributeAndProperty/createAttributeAndPropertyFunctionsWithContext.js';
 
 export interface MainThreadRuntimeCallbacks {
   mainChunkReady: () => void;
   flushElementTree: (
     operations: ElementOperation[],
     options: FlushElementTreeOptions,
-    styleContent?: string,
+    styleContent: string | undefined,
+    timingFlags: string[],
   ) => void;
   _ReportError: (error: Error, info?: unknown) => void;
   __OnLifecycleEvent: (lynxLifecycleEvents: LynxLifecycleEvent) => void;
@@ -54,6 +56,11 @@ export interface MainThreadConfig {
 export class MainThreadRuntime {
   private isFp = true;
 
+  /**
+   * @private
+   */
+  _timingFlags: string[] = [];
+
   public operationsRef: {
     operations: ElementOperation[];
   } = {
@@ -71,6 +78,7 @@ export class MainThreadRuntime {
       : genCssInJsInfo(this.config.styleInfo);
     Object.assign(
       this,
+      createAttributeAndPropertyFunctionsWithContext(this),
       attributeAndPropertyApis,
       domTreeApis,
       eventApis,
@@ -146,7 +154,9 @@ export class MainThreadRuntime {
     options: FlushElementTreeOptions,
   ) => {
     const operations = this.operationsRef.operations;
+    const timingFlags = this._timingFlags;
     this.operationsRef.operations = [];
+    this._timingFlags = [];
     this.config.callbacks.flushElementTree(
       operations,
       options,
@@ -156,6 +166,7 @@ export class MainThreadRuntime {
           this.config.pageConfig,
         )
         : undefined,
+      timingFlags,
     );
     this.isFp = false;
   };

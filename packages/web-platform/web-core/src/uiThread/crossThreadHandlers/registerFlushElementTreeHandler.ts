@@ -116,15 +116,13 @@ export function registerFlushElementTreeHandler(
   };
   mainThreadRpc.registerHandler(
     endpoint,
-    (operations, options, cardCss) => {
+    (operations, options, cardCss, timingFlags) => {
       const { pipelineOptions } = options;
       const pipelineId = pipelineOptions?.pipelineID;
-      const timingFlags: string[] = [];
       markTimingInternal('dispatch_start', pipelineId);
       markTimingInternal('layout_start', pipelineId);
       markTimingInternal('ui_operation_flush_start', pipelineId);
       const page = decodeElementOperation(operations, {
-        timingFlags,
         uniqueIdToElement,
         uniqueIdToCssInJsRule,
         createElementImpl,
