@@ -5,6 +5,9 @@ coverage:
       default:
         threshold: "1%"
 
+fixes:
+  - "((home|Users)/.*/lynx-stack::"
+
 comment:
   layout: "header, diff, flags, components" # show component info in the PR comment
   behavior: default
