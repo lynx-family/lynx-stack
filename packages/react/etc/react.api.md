@@ -25,6 +25,7 @@ import { Suspense } from 'react';
 import { useCallback } from 'react';
 import { useContext } from 'react';
 import { useDebugValue } from 'react';
+import { useErrorBoundary } from 'preact/hooks';
 import { useImperativeHandle } from 'react';
 import { useMemo } from 'react';
 import { useReducer } from 'react';
@@ -117,6 +118,8 @@ export { useDebugValue }
 
 // @public
 export function useEffect(effect: EffectCallback, deps?: DependencyList): void;
+
+export { useErrorBoundary }
 
 export { useImperativeHandle }
 
