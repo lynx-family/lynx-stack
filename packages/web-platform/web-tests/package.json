@@ -28,7 +28,7 @@
     "@lynx-js/web-mainthread-apis": "workspace:*",
     "@lynx-js/web-worker-rpc": "workspace:*",
     "@lynx-js/webpack-dev-transport": "workspace:*",
-    "@playwright/test": "^1.50.1",
+    "@playwright/test": "^1.51.1",
     "@rspack/cli": "catalog:rspack",
     "@rspack/core": "catalog:rspack",
     "nyc": "^17.1.0",
