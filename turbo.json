@@ -12,10 +12,7 @@
       "dependsOn": [
         "//#build"
       ],
-      "inputs": [
-        "api-extractor.json",
-        "lib/**"
-      ]
+      "cache": false
     },
     "build": {
       "dependsOn": [

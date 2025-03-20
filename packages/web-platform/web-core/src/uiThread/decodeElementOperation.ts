@@ -73,7 +73,6 @@ export function decodeElementOperation<
 >(
   operations: ElementOperation[],
   options: {
-    timingFlags: string[];
     uniqueIdToElement: (WeakRef<T> | undefined)[];
     uniqueIdToCssInJsRule: (WeakRef<CSSStyleRule> | undefined)[];
     createElementImpl: (tag: string) => T;
@@ -93,7 +92,6 @@ export function decodeElementOperation<
     createElementImpl,
     createStyleRuleImpl,
     eventHandler,
-    timingFlags,
   } = options;
   let pageElement: T | undefined;
 
@@ -148,9 +146,6 @@ export function decodeElementOperation<
               target.removeAttribute(op.key);
             } else {
               target.setAttribute(op.key, op.value);
-              if (op.value && op.key === __lynx_timing_flag) {
-                timingFlags.push(op.value);
-              }
               if (op.key === lynxTagAttribute && op.value === 'page') {
                 pageElement = target;
               }

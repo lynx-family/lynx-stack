@@ -34,6 +34,10 @@ export default tseslint.config(
       '.changeset/*',
       '**/CHANGELOG.md',
       '**/etc/*.md',
+      'website/docs/en/api/**',
+      'website/docs/zh/api/**',
+      'website/docs/en/changelog/**',
+      'website/docs/zh/changelog/**',
 
       // Test snapshots
       '**/expected/**',
@@ -81,6 +85,7 @@ export default tseslint.config(
     plugins: {
       headers,
     },
+    ignores: ['**/*.md/*'],
     rules: {
       'headers/header-format': [
         'error',
