@@ -14,6 +14,7 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    if: github.repository == 'lynx-family/lynx-stack'
     steps:
       - uses: actions/checkout@v4
         with:
@@ -49,12 +50,14 @@ jobs:
       group: ${{ github.workflow }}
       cancel-in-progress: true
     uses: ./.github/workflows/workflow-build.yml
+    if: github.repository == 'lynx-family/lynx-stack'
     secrets: inherit
     with:
       runs-on: lynx-ubuntu-24.04-xlarge
   coverage:
     needs: build-all
     uses: ./.github/workflows/workflow-test.yml
+    if: github.repository == 'lynx-family/lynx-stack'
     secrets: inherit
     with:
       runs-on: lynx-ubuntu-24.04-medium
@@ -71,6 +74,7 @@ jobs:
   publish:
     needs: build
     runs-on: ubuntu-latest
+    if: github.repository == 'lynx-family/lynx-stack'
     concurrency:
       group: ${{ github.workflow }}
       cancel-in-progress: false
@@ -119,6 +123,7 @@ jobs:
   canary-publish:
     needs: build
     runs-on: ubuntu-latest
+    if: github.repository == 'lynx-family/lynx-stack'
     environment: main branch
     permissions:
       contents: read
