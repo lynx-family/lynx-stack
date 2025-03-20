@@ -81,6 +81,10 @@ jobs:
         --filter @lynx-js/react-worklet-runtime
         --filter @lynx-js/react-transform
         run test
+        --reporter=github-actions
+        --reporter=dot
+        --reporter=junit
+        --outputFile=test-report.junit.xml
         --test-timeout=50000
         --no-cache
         --logHeapUsage
