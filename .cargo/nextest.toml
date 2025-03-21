@@ -130,4 +130,4 @@ store-failure-output = true
 [profile.default-miri]
 
 [profile.ci]
-test-threads = 4
+test-threads = 1
