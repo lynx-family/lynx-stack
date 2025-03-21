@@ -34,7 +34,7 @@
   "scripts": {
     "api-extractor": "api-extractor run --verbose",
     "build": "rslib build",
-    "test": "vitest"
+    "test": "pnpm -w run test --project rspeedy/react-alias"
   },
   "dependencies": {
     "enhanced-resolve": "^5.18.1"

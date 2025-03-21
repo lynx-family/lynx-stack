@@ -39,7 +39,7 @@ describe('React - Include', () => {
       [
         {
           "and": [
-            "<WORKSPACE>/packages/rspeedy/plugin-react-alias",
+            "<WORKSPACE>",
             {
               "not": /\\[\\\\\\\\/\\]node_modules\\[\\\\\\\\/\\]/,
             },
