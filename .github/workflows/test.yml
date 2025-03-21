@@ -66,6 +66,8 @@ jobs:
         --outputFile=test-report.junit.xml
         --test-timeout=50000
         --coverage
+        --coverage.reporter='clover'
+        --coverage.reporter='text'
         --no-cache
         --logHeapUsage
         --silent
@@ -85,6 +87,8 @@ jobs:
         --reporter=dot
         --reporter=junit
         --outputFile=test-report.junit.xml
+        --coverage.reporter='clover'
+        --coverage.reporter='text'
         --test-timeout=50000
         --no-cache
         --logHeapUsage
@@ -104,6 +108,8 @@ jobs:
         --reporter=junit
         --outputFile=test-report.junit.xml
         --coverage
+        --coverage.reporter='clover'
+        --coverage.reporter='text'
         --no-cache
         --logHeapUsage
         --silent
