@@ -104,7 +104,7 @@ archive.include = [
   # * the file "target/data-from-some-dependency/file.txt" will be included in the archive.
 ]
 
-[profile.default.junit]
+[profile.ci.junit]
 # Output a JUnit report into the given file inside 'store.dir/<profile-name>'.
 # If unspecified, JUnit is not written out.
 

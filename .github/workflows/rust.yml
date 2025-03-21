@@ -35,7 +35,7 @@ jobs:
         uses: codecov/test-results-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: target/nextest/**/test-report.junit.xml
+          files: target/nextest/ci/test-report.junit.xml
 
   rustfmt:
     runs-on: lynx-ubuntu-24.04-medium
