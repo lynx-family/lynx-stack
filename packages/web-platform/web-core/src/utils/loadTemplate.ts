@@ -46,6 +46,7 @@ function generateJavascriptUrl<T extends Record<string, string>>(
 const mainThreadInjectVars = [
   'lynx',
   'globalThis',
+  '_ReportError',
   '__AddConfig',
   '__AddDataset',
   '__GetAttributes',

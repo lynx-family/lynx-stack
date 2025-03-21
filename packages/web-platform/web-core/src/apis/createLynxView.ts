@@ -6,9 +6,11 @@ import type {
   Cloneable,
   NapiModulesMap,
   NativeModulesMap,
+  sendGlobalEventEndpoint,
   UpdateDataType,
 } from '@lynx-js/web-constants';
 import { startUIThread } from '../uiThread/startUIThread.js';
+import type { RpcCallType } from '@lynx-js/web-worker-rpc';
 
 export interface LynxViewConfigs {
   templateUrl: string;
@@ -28,7 +30,7 @@ export interface LynxView {
     callback?: () => void,
   ): void;
   dispose(): Promise<void>;
-  sendGlobalEvent(name: string, params?: Cloneable[]): void;
+  sendGlobalEvent: RpcCallType<typeof sendGlobalEventEndpoint>;
 }
 
 export function createLynxView(configs: LynxViewConfigs): LynxView {

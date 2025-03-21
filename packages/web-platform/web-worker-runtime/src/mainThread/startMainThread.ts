@@ -9,6 +9,7 @@ import {
   onLifecycleEventEndpoint,
   type LynxJSModule,
   flushElementTreeEndpoint,
+  reportErrorEndpoint,
 } from '@lynx-js/web-constants';
 import { Rpc } from '@lynx-js/web-worker-rpc';
 import { MainThreadRuntime } from '@lynx-js/web-mainthread-apis';
@@ -35,6 +36,7 @@ export function startMainThread(
     mainThreadChunkReadyEndpoint,
   );
   const flushElementTree = uiThreadRpc.createCall(flushElementTreeEndpoint);
+  const reportError = uiThreadRpc.createCall(reportErrorEndpoint);
   markTimingInternal('lepus_excute_start');
   uiThreadRpc.registerHandler(
     mainThreadStartEndpoint,
@@ -100,9 +102,7 @@ export function startMainThread(
             runtime.__FlushElementTree(undefined, {});
           },
           flushElementTree,
-          _ReportError: function(error: Error, info?: unknown): void {
-            console.error('main-thread:', error, info);
-          },
+          _ReportError: reportError,
           __OnLifecycleEvent,
           /**
            * Note :

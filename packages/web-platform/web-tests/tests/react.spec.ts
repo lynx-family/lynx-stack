@@ -501,6 +501,13 @@ test.describe('reactlynx3 tests', () => {
       expect(page.workers().length).toStrictEqual(1);
     });
 
+    test('api-error', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(200);
+      const target = await page.locator('lynx-view');
+      expect(target).toHaveCSS('display', 'none');
+    });
+
     test('api-preheat', async ({ page }, { title }) => {
       await goto(page, title);
       const target = page.locator('#target');

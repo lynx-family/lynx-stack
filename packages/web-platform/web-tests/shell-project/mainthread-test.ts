@@ -122,7 +122,7 @@ function initializeMainThreadTest() {
           rootDom = page;
         }
       },
-      _ReportError: function(error: Error, info?: unknown): void {
+      _ReportError: function(error: string, info?: unknown): void {
         document.body.innerHTML = '';
       },
       __OnLifecycleEvent() {

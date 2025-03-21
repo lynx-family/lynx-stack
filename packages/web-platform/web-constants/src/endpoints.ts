@@ -111,12 +111,12 @@ export const BackgroundThreadStartEndpoint = createRpcEndpoint<[
 ], void>('start', false, true);
 
 /**
- * threadLabel, Error message, info
+ * Error message, info
  */
 export const reportErrorEndpoint = createRpcEndpoint<
-  [string, string, unknown],
+  [string, unknown],
   void
->('reportError', false, true);
+>('reportError', false, false);
 
 export const flushElementTreeEndpoint = createRpcEndpoint<
   [
@@ -126,7 +126,7 @@ export const flushElementTreeEndpoint = createRpcEndpoint<
     timingFlags: string[],
   ],
   void
->('flushElementTree', false, true);
+>('flushElementTree', false, false);
 
 export const mainThreadChunkReadyEndpoint = createRpcEndpoint<
   [{
