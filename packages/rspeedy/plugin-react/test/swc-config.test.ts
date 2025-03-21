@@ -108,7 +108,6 @@ describe('SWC configuration', () => {
         },
         /\\\\\\.\\(\\?:ts\\|tsx\\|jsx\\|mts\\|cts\\)\\$/,
         /\\[\\\\\\\\/\\]@rsbuild\\[\\\\\\\\/\\]core\\[\\\\\\\\/\\]dist\\[\\\\\\\\/\\]/,
-        "<WORKSPACE>/packages/react",
         /\\\\\\.\\(\\?:js\\|mjs\\|cjs\\)\\$/,
       ]
     `)
@@ -192,7 +191,6 @@ describe('SWC configuration', () => {
         },
         /\\\\\\.\\(\\?:ts\\|tsx\\|jsx\\|mts\\|cts\\)\\$/,
         /\\[\\\\\\\\/\\]@rsbuild\\[\\\\\\\\/\\]core\\[\\\\\\\\/\\]dist\\[\\\\\\\\/\\]/,
-        "<WORKSPACE>/packages/react",
         /\\\\\\.\\(\\?:js\\|mjs\\|cjs\\)\\$/,
       ]
     `)
@@ -385,7 +383,6 @@ describe('SWC configuration', () => {
         },
         /\\\\\\.\\(\\?:ts\\|tsx\\|jsx\\|mts\\|cts\\)\\$/,
         /\\[\\\\\\\\/\\]@rsbuild\\[\\\\\\\\/\\]core\\[\\\\\\\\/\\]dist\\[\\\\\\\\/\\]/,
-        "<WORKSPACE>/packages/react",
       ]
     `)
   })

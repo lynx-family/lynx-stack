@@ -449,6 +449,9 @@ importers:
       '@lynx-js/react-webpack-plugin':
         specifier: workspace:*
         version: link:../../webpack/react-webpack-plugin
+      '@lynx-js/vitest-setup':
+        specifier: workspace:*
+        version: link:../../tools/vitest-setup
       '@microsoft/api-extractor':
         specifier: 'catalog:'
         version: 7.51.1(@types/node@22.13.5)

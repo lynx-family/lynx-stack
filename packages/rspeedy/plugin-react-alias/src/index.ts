@@ -44,6 +44,15 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
         reactLynxDir,
         lazy ? ['lazy', 'import'] : ['import'],
       )
+
+      api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
+        return mergeRsbuildConfig(config, {
+          source: {
+            include: [reactLynxDir],
+          },
+        })
+      })
+
       api.modifyBundlerChain(async chain => {
         // FIXME(colinaaa): use `Promise.all`
         const jsxRuntime = {

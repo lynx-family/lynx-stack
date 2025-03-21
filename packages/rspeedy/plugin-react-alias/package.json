@@ -42,6 +42,7 @@
   "devDependencies": {
     "@lynx-js/react": "workspace:*",
     "@lynx-js/react-webpack-plugin": "workspace:*",
+    "@lynx-js/vitest-setup": "workspace:*",
     "@microsoft/api-extractor": "catalog:",
     "@rsbuild/core": "catalog:rsbuild"
   },
