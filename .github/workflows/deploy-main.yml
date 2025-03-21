@@ -71,6 +71,13 @@ jobs:
         --no-cache
         --logHeapUsage
         --silent
+  rust-coverage:
+    uses: ./.github/workflows/rust.yml
+    if: github.repository == 'lynx-family/lynx-stack'
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    with:
+      runs-on: lynx-ubuntu-24.04-medium
   publish:
     needs: build
     runs-on: ubuntu-latest
