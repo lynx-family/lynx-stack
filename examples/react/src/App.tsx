@@ -18,7 +18,7 @@ export function App() {
   }, [alterLogo]);
 
   return (
-    <page>
+    <view>
       <view className='Background' />
       <view className='App'>
         <view className='Banner'>
@@ -40,6 +40,6 @@ export function App() {
         </view>
         <view style={{ flex: 1 }}></view>
       </view>
-    </page>
+    </view>
   );
 }
