@@ -56,8 +56,6 @@ jobs:
     with:
       runs-on: lynx-ubuntu-24.04-medium
       run: >
-        sudo apt-get update &&
-        sudo apt-get install -y iproute2 &&
         pnpm run test
         --project rspeedy
         --project upgrade-rspeedy
@@ -118,7 +116,6 @@ jobs:
       is-web: true
       run: |
         export NODE_OPTIONS="--max-old-space-size=32768"
-        pnpm --filter @lynx-js/web-tests run test:install
         pnpm --filter @lynx-js/web-tests run test
   test-rust:
     uses: ./.github/workflows/rust.yml

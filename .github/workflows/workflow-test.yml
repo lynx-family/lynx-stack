@@ -49,6 +49,10 @@ jobs:
           retention-days: 1
           overwrite: true
           include-hidden-files: true
+      - uses: ./.github/actions/setup-playwright
+        if: ${{ inputs.is-web }}
+        with:
+          working-directory: packages/web-platform/web-tests
       - name: Test
         id: test
         env:
