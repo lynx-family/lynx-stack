@@ -46,7 +46,12 @@ export const test: typeof base = base.extend({
         const coverageMapData = converter.toIstanbul();
 
         return fs.writeFile(
-          path.join(dir, `playwright_output_${testInfo.title}_${index}.json`),
+          path.join(
+            dir,
+            `playwright_output_${
+              testInfo.title.replaceAll('/', '_')
+            }_${index}.json`,
+          ),
           JSON.stringify(coverageMapData),
           { flag: 'w' },
         );
