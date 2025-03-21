@@ -324,129 +324,92 @@ export function hydrate(
     }
   };
 
-  const helper = (
-    before: SerializedSnapshotInstance,
-    after: BackgroundSnapshotInstance,
-  ) => {
-    backgroundSnapshotInstanceManager.updateId(after.__id, before.id);
-    after.__values?.forEach((value, index) => {
-      const old = before.values![index];
-
-      if (value) {
-        if (value.__spread) {
-          // `value.__spread` my contain event ids using snapshot ids before hydration. Remove it.
-          delete value.__spread;
-          value = transformSpread(after, index, value);
-          for (let key in value) {
-            if (value[key] && value[key]._wkltId) {
-              onPostWorkletCtx(value[key]);
-            } else if (value[key] && value[key].__isGesture) {
-              processGestureBackground(value[key] as GestureKind);
+    const helper = (before, after) => {
+        backgroundSnapshotInstanceManager.updateId(after.__id, before.id);
+        after.__values?.forEach((value, index) => {
+            // Added a defensive check here in case before.values is undefined or not an array
+            const old = (before.values && Array.isArray(before.values)) ? before.values[index] : undefined;
+            if (value) {
+                if (value.__spread) {
+                    // `value.__spread` may contain event ids using snapshot ids before hydration. Remove it.
+                    delete value.__spread;
+                    value = transformSpread(after, index, value);
+                    for (let key in value) {
+                        if (value[key] && value[key]._wkltId) {
+                            onPostWorkletCtx(value[key]);
+                        } else if (value[key] && value[key].__isGesture) {
+                            processGestureBackground(value[key]);
+                        }
+                    }
+                    after.__values[index].__spread = value;
+                } else if (value.__ref) {
+                    if (old) {
+                        // skip patch if we already have an existing value
+                        value = old;
+                    } else {
+                        value = value.__ref;
+                    }
+                } else if (typeof value === 'function') {
+                    value = `${after.__id}:${index}:`;
+                }
             }
-          }
-          after.__values![index]!.__spread = value;
-        } else if (value.__ref) {
-          if (old) {
-            // skip patch
-            value = old;
-          } else {
-            value = value.__ref;
-          }
-        } else if (typeof value === 'function') {
-          value = `${after.__id}:${index}:`;
+            if (value && value._wkltId) {
+                onPostWorkletCtx(value);
+            } else if (value && value.__isGesture) {
+                processGestureBackground(value);
+            }
+            if (!isDirectOrDeepEqual(value, old)) {
+                __globalSnapshotPatch.push(SnapshotOperation.SetAttribute, after.__id, index, value);
+            }
+        });
+        const { slot } = snapshotManager.values.get(after.type);
+        const beforeChildNodes = before.children || [];
+        const afterChildNodes = after.childNodes;
+        if (!slot) {
+            return;
         }
-      }
+        slot.forEach(([type], index) => {
+            switch (type) {
+                case DynamicPartType.Slot:
+                case DynamicPartType.MultiChildren: {
+                    // Note: the following null assertions are not 100% safe.
+                    const v1 = beforeChildNodes[index];
+                    const v2 = afterChildNodes[index];
+                    helper(v1, v2);
+                    break;
+                }
+                case DynamicPartType.Children:
+                case DynamicPartType.ListChildren: {
+                    const diffResult = diffArrayLepus(beforeChildNodes, afterChildNodes, (a, b) => a.type === b.type, (a, b) => {
+                        helper(a, b);
+                    });
+                    diffArrayAction(
+                        beforeChildNodes,
+                        diffResult,
+                        (node, target) => {
+                            __globalSnapshotPatch.push(SnapshotOperation.CreateElement, node.type, node.__id);
+                            helper2(node.childNodes, node.__id);
+                            const values = node.__values;
+                            if (values) {
+                                node.__values = undefined;
+                                node.setAttribute('values', values);
+                            }
+                            __globalSnapshotPatch.push(SnapshotOperation.InsertBefore, before.id, node.__id, target?.id);
+                            return undefined;
+                        },
+                        node => {
+                            __globalSnapshotPatch.push(SnapshotOperation.RemoveChild, before.id, node.id);
+                        },
+                        (node, target) => {
+                            __globalSnapshotPatch.push(SnapshotOperation.InsertBefore, before.id, node.id, target?.id);
+                        }
+                    );
+                    break;
+                }
+            }
+        });
+    };
 
-      if (value && value._wkltId) {
-        onPostWorkletCtx(value);
-      } else if (value && value.__isGesture) {
-        processGestureBackground(value);
-      }
-      if (!isDirectOrDeepEqual(value, old)) {
-        __globalSnapshotPatch!.push(
-          SnapshotOperation.SetAttribute,
-          after.__id,
-          index,
-          value,
-        );
-      }
-    });
-
-    const { slot } = snapshotManager.values.get(after.type)!;
-
-    const beforeChildNodes = before.children || [];
-    const afterChildNodes = after.childNodes;
-
-    if (!slot) {
-      return;
-    }
-
-    slot.forEach(([type], index) => {
-      switch (type) {
-        case DynamicPartType.Slot:
-        case DynamicPartType.MultiChildren: {
-          // TODO: the following null assertions are not 100% safe
-          const v1 = beforeChildNodes[index]!;
-          const v2 = afterChildNodes[index]!;
-          helper(v1, v2);
-          break;
-        }
-        case DynamicPartType.Children:
-        case DynamicPartType.ListChildren: {
-          const diffResult = diffArrayLepus(
-            beforeChildNodes,
-            afterChildNodes,
-            (a, b) => a.type === b.type,
-            (a, b) => {
-              helper(a, b);
-            },
-          );
-          diffArrayAction(
-            beforeChildNodes,
-            diffResult,
-            (node, target) => {
-              __globalSnapshotPatch!.push(
-                SnapshotOperation.CreateElement,
-                node.type,
-                node.__id,
-              );
-              helper2(node.childNodes, node.__id);
-              const values = node.__values;
-              if (values) {
-                node.__values = undefined;
-                node.setAttribute('values', values);
-              }
-              __globalSnapshotPatch!.push(
-                SnapshotOperation.InsertBefore,
-                before.id,
-                node.__id,
-                target?.id,
-              );
-              return undefined as unknown as SerializedSnapshotInstance;
-            },
-            node => {
-              __globalSnapshotPatch!.push(
-                SnapshotOperation.RemoveChild,
-                before.id,
-                node.id,
-              );
-            },
-            (node, target) => {
-              // changedList.push([SnapshotOperation.RemoveChild, before.id, node.id]);
-              __globalSnapshotPatch!.push(
-                SnapshotOperation.InsertBefore,
-                before.id,
-                node.id,
-                target?.id,
-              );
-            },
-          );
-          break;
-        }
-      }
-    });
-  };
-
-  helper(before, after);
-  return takeGlobalSnapshotPatch()!;
+    helper(before, after);
+    return takeGlobalSnapshotPatch();
 }
