@@ -76,8 +76,6 @@ jobs:
     if: github.repository == 'lynx-family/lynx-stack'
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-    with:
-      runs-on: lynx-ubuntu-24.04-medium
   playwright-linux:
     needs: build-all
     uses: ./.github/workflows/workflow-test.yml
