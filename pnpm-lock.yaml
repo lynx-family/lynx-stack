@@ -960,8 +960,8 @@ importers:
   website:
     dependencies:
       '@rstack-dev/doc-ui':
-        specifier: ^1.7.2
-        version: 1.7.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: ^1.7.3
+        version: 1.7.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -1021,11 +1021,11 @@ importers:
         specifier: 1.0.2
         version: 1.0.2(@rsbuild/core@1.2.19)
       '@rspress/plugin-client-redirects':
-        specifier: 2.0.0-alpha.4
-        version: 2.0.0-alpha.4(@rspress/runtime@2.0.0-alpha.5)
+        specifier: 2.0.0-alpha.5
+        version: 2.0.0-alpha.5(@rspress/runtime@2.0.0-alpha.5)
       '@rspress/shared':
-        specifier: 2.0.0-alpha.4
-        version: 2.0.0-alpha.4
+        specifier: 2.0.0-alpha.5
+        version: 2.0.0-alpha.5
       '@types/react':
         specifier: ^18.3.19
         version: 18.3.19
@@ -2530,11 +2530,11 @@ packages:
     resolution: {integrity: sha512-dhJNaafPOtIYUNrk/e4c2DKWUvDaXZP4f+eVMplJAXA06/XjNIm5QPDP0ubrAutlnZYBm8Df9UL0vfZTOW7wFA==}
     engines: {node: '>=14.17.6'}
 
-  '@rspress/plugin-client-redirects@2.0.0-alpha.4':
-    resolution: {integrity: sha512-eDC2JPkznF7ZS9bAclN4ZiO48IgUiJzyTuFBZtwX2AzK/87Z3u5IulifZQcc2cZhOQh/N1UU7IFXT2tzEb2k0g==}
+  '@rspress/plugin-client-redirects@2.0.0-alpha.5':
+    resolution: {integrity: sha512-RSaAhP+8gDodxBUk7tGbdQul8zqefCNQGRIGuRjl/N4JaII9ahT+097DBCzl13Qdwl1Cg+/dmVyISxWXyQ6AcQ==}
     engines: {node: '>=14.17.6'}
     peerDependencies:
-      '@rspress/runtime': ^2.0.0-alpha.4
+      '@rspress/runtime': ^2.0.0-alpha.5
 
   '@rspress/plugin-container-syntax@2.0.0-alpha.5':
     resolution: {integrity: sha512-wcSgsY7b5eZ17N0p9t0x2UVQ9a5BiicFHYzSFsUrbofnHcDdUgE1hchhqbpx3845QLLJ6CIko6zcaJ566ziXOA==}
@@ -2554,9 +2554,6 @@ packages:
     resolution: {integrity: sha512-8RNw4HV2CYAUsVT+86VaiksuGRGwVqYEwO6JMSddfjRKb6Kd7V2H3HAhHy9hop4nRIQacGbLkFxCz0+sSXdAKg==}
     engines: {node: '>=14.17.6'}
 
-  '@rspress/shared@2.0.0-alpha.4':
-    resolution: {integrity: sha512-cGUJcMXDbeLty6tkwuYvjJ3z1ugCdSl9V9sN46XVcXgejerJALJ0wduDTcRYEV+g7apFl1l8Ky29cprp7FCvZQ==}
-
   '@rspress/shared@2.0.0-alpha.5':
     resolution: {integrity: sha512-7BjBKV1m8v8izyrKoXWiuB87mG2fHpGKqG3bOf2+bmCsrYKCidt9SnM315jHMkG0G69FndhlZNMTaizsJ/R8bw==}
 
@@ -2564,8 +2561,8 @@ packages:
     resolution: {integrity: sha512-6l7yL/WRHhst74C/z3+ox3129FHiI/uFY1GfNO42bLwNWDIlOsi+HcdMpWOw7SkWwN4B3jhk75oy8i8gh3e8yA==}
     engines: {node: '>=14.17.6'}
 
-  '@rstack-dev/doc-ui@1.7.2':
-    resolution: {integrity: sha512-bGqK1OzOJpQon5va8iQI7GX8jfjoXsVJJJjRUJ6jdoWrA1BAcggBf7SDSJ9+RSWjaTp74t/dBRuoLeSrOOh0gw==}
+  '@rstack-dev/doc-ui@1.7.3':
+    resolution: {integrity: sha512-rWJgZoe2bG9dMLjRUMjifU3SyF2JR/73fkPVJfUfp34xZS8fnOYVBEvHJkKuBwKOzFwEthz0nbO5mDu+kaGpuQ==}
 
   '@rtsao/scc@1.1.0':
     resolution: {integrity: sha512-zt6OdqaDoOnJ1ZYsCYGt9YmWzDXl4vQdKTyJev62gFhRGKdx7mcT54V9KIjg+d2wi9EXsPvAPKe7i7WjfVWB8g==}
@@ -9661,10 +9658,10 @@ snapshots:
     transitivePeerDependencies:
       - '@rspack/tracing'
 
-  '@rspress/plugin-client-redirects@2.0.0-alpha.4(@rspress/runtime@2.0.0-alpha.5)':
+  '@rspress/plugin-client-redirects@2.0.0-alpha.5(@rspress/runtime@2.0.0-alpha.5)':
     dependencies:
       '@rspress/runtime': 2.0.0-alpha.5
-      '@rspress/shared': 2.0.0-alpha.4
+      '@rspress/shared': 2.0.0-alpha.5
     transitivePeerDependencies:
       - '@rspack/tracing'
 
@@ -9692,15 +9689,6 @@ snapshots:
       react-dom: 18.3.1(react@18.3.1)
       react-helmet-async: 2.0.5(react@18.3.1)
       react-router-dom: 6.30.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-    transitivePeerDependencies:
-      - '@rspack/tracing'
-
-  '@rspress/shared@2.0.0-alpha.4':
-    dependencies:
-      '@rsbuild/core': 1.2.19
-      gray-matter: 4.0.3
-      lodash-es: 4.17.21
-      unified: 10.1.2
     transitivePeerDependencies:
       - '@rspack/tracing'
 
@@ -9732,7 +9720,7 @@ snapshots:
     transitivePeerDependencies:
       - '@rspack/tracing'
 
-  '@rstack-dev/doc-ui@1.7.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@rstack-dev/doc-ui@1.7.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
       framer-motion: 12.5.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
     transitivePeerDependencies:
