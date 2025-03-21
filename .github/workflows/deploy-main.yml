@@ -80,6 +80,7 @@ jobs:
       is-web: true
       run: |
         export NODE_OPTIONS="--max-old-space-size=32768"
+        export PLAYWRIGHT_JUNIT_OUTPUT_NAME=results.xml
         pnpm --filter @lynx-js/web-tests run test --reporter='github,dot,junit'
   publish:
     needs: build
