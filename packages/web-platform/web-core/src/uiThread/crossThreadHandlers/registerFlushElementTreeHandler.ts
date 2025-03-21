@@ -2,7 +2,6 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import {
-  cardIdAttribute,
   componentIdAttribute,
   lynxDefaultDisplayLinearAttribute,
   lynxRuntimeValue,
@@ -18,15 +17,12 @@ import {
 import type { Rpc } from '@lynx-js/web-worker-rpc';
 import type { RuntimePropertyOnElement } from '../../types/RuntimePropertyOnElement.js';
 import { decodeElementOperation } from '../decodeElementOperation.js';
-import { getElementTag } from '../getElementTag.js';
 import { createCrossThreadEvent } from '../../utils/createCrossThreadEvent.js';
 
 function applyPageAttributes(
   page: HTMLElement,
   pageConfig: PageConfig,
-  entryId: string,
 ) {
-  page.setAttribute(cardIdAttribute, entryId);
   if (pageConfig.defaultDisplayLinear === false) {
     page.setAttribute(lynxDefaultDisplayLinearAttribute, 'false');
   }
@@ -37,10 +33,8 @@ export function registerFlushElementTreeHandler(
   endpoint: typeof flushElementTreeEndpoint,
   options: {
     pageConfig: PageConfig;
-    overrideTagMap: Record<string, string>;
     backgroundRpc: Rpc;
     rootDom: HTMLElement;
-    entryId: string;
   },
   onCommit: (info: {
     pipelineId: string | undefined;
@@ -55,10 +49,8 @@ export function registerFlushElementTreeHandler(
 ) {
   const {
     pageConfig,
-    overrideTagMap,
     backgroundRpc,
     rootDom,
-    entryId,
   } = options;
   const uniqueIdToElement: WeakRef<
     HTMLElement & RuntimePropertyOnElement
@@ -71,8 +63,7 @@ export function registerFlushElementTreeHandler(
     rootDom.append(rootStyleElementForCssInJs);
   }
   const createElementImpl = (tag: string) => {
-    const htmlTag = getElementTag(tag, overrideTagMap);
-    const element = document.createElement(htmlTag) as
+    const element = document.createElement(tag) as
       & HTMLElement
       & RuntimePropertyOnElement;
     element[lynxRuntimeValue] = {
@@ -124,15 +115,13 @@ export function registerFlushElementTreeHandler(
   };
   mainThreadRpc.registerHandler(
     endpoint,
-    (operations, options, cardCss) => {
+    (operations, options, cardCss, timingFlags) => {
       const { pipelineOptions } = options;
       const pipelineId = pipelineOptions?.pipelineID;
-      const timingFlags: string[] = [];
       markTimingInternal('dispatch_start', pipelineId);
       markTimingInternal('layout_start', pipelineId);
       markTimingInternal('ui_operation_flush_start', pipelineId);
       const page = decodeElementOperation(operations, {
-        timingFlags,
         uniqueIdToElement,
         uniqueIdToCssInJsRule,
         createElementImpl,
@@ -150,7 +139,7 @@ export function registerFlushElementTreeHandler(
         styleElement.innerHTML = cardCss!;
         rootDom.append(styleElement);
         rootDom.append(page);
-        applyPageAttributes(page, pageConfig, entryId);
+        applyPageAttributes(page, pageConfig);
       }
       markTimingInternal('layout_end', pipelineId);
       markTimingInternal('dispatch_end', pipelineId);

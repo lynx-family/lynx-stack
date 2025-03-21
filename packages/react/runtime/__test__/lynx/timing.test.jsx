@@ -3,11 +3,12 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 */
-import { Component, options, render } from 'preact';
+import { Component, options } from 'preact';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { replaceCommitHook } from '../../src/lifecycle/patch/commit';
 import { injectUpdateMainThread } from '../../src/lifecycle/patch/updateMainThread';
+import { renderBackground as render } from '../../src/lifecycle/render';
 import '../../src/lynx/component';
 import { initTimingAPI } from '../../src/lynx/performance';
 import { __root } from '../../src/root';
@@ -97,9 +98,8 @@ describe('setState timing api', () => {
 
     expect(mtCallbacks[0][1]).toMatchInlineSnapshot(`
       {
-        "data": "{"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_2",3,0,null,4,3,4,0,1,1,3,4,null,1,-2,3,null],"flushOptions":{"__lynx_timing_flag":"__lynx_timing_actual_fmp"}}",
+        "data": "{"patchList":[{"id":3,"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_2",3,0,null,4,3,4,0,1,1,3,4,null,1,-2,3,null]}],"flushOptions":{"__lynx_timing_flag":"__lynx_timing_actual_fmp"}}",
         "patchOptions": {
-          "commitTaskId": 3,
           "pipelineOptions": {
             "needTimestamps": false,
             "pipelineID": "pipelineID",
@@ -174,9 +174,8 @@ describe('attribute timing api', () => {
     await waitSchedule();
     expect(mtCallbacks[0][1]).toMatchInlineSnapshot(`
       {
-        "data": "{"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_4",3,4,3,[{"__ltf":"__lynx_timing_actual_fmp"}],0,null,4,3,4,0,1,1,3,4,null,1,-2,3,null]}",
+        "data": "{"patchList":[{"id":6,"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_4",3,4,3,[{"__ltf":"__lynx_timing_actual_fmp"}],0,null,4,3,4,0,1,1,3,4,null,1,-2,3,null]}]}",
         "patchOptions": {
-          "commitTaskId": 6,
           "pipelineOptions": {
             "needTimestamps": true,
             "pipelineID": "pipelineID",
@@ -337,9 +336,8 @@ describe('attribute timing api', () => {
     `);
     expect(mtCallbacks[0][1]).toMatchInlineSnapshot(`
       {
-        "data": "{"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_6",3,4,3,[{"__ltf":"__lynx_timing_actual_fmp"}],0,null,4,3,4,0,1,1,3,4,null,1,-2,3,null]}",
+        "data": "{"patchList":[{"id":9,"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_6",3,4,3,[{"__ltf":"__lynx_timing_actual_fmp"}],0,null,4,3,4,0,1,1,3,4,null,1,-2,3,null]}]}",
         "patchOptions": {
-          "commitTaskId": 9,
           "pipelineOptions": {
             "needTimestamps": true,
             "pipelineID": "pipelineID",
@@ -440,9 +438,8 @@ describe('attribute timing api', () => {
     `);
     expect(mtCallbacks[0][1]).toMatchInlineSnapshot(`
       {
-        "data": "{"snapshotPatch":[]}",
+        "data": "{"patchList":[{"snapshotPatch":[],"id":11}]}",
         "patchOptions": {
-          "commitTaskId": 11,
           "isHydration": true,
           "pipelineOptions": {
             "needTimestamps": true,
@@ -498,9 +495,8 @@ describe('attribute timing api', () => {
 
       expect(mtCallbacks[0][1]).toMatchInlineSnapshot(`
         {
-          "data": "{"snapshotPatch":[3,-2,1,444]}",
+          "data": "{"patchList":[{"id":14,"snapshotPatch":[3,-2,1,444]}]}",
           "patchOptions": {
-            "commitTaskId": 14,
             "pipelineOptions": {
               "needTimestamps": false,
               "pipelineID": "pipelineID",
@@ -655,9 +651,8 @@ describe('attribute timing api', () => {
       await waitSchedule();
       expect(mtCallbacks[0][1]).toMatchInlineSnapshot(`
         {
-          "data": "{"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_15",3,4,3,[{"xxx":333,"__lynx_timing_flag":"__lynx_timing_actual_fmp"}],0,null,4,3,4,0,1,1,3,4,null,1,-2,3,null]}",
+          "data": "{"patchList":[{"id":17,"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_15",3,4,3,[{"xxx":333,"__lynx_timing_flag":"__lynx_timing_actual_fmp"}],0,null,4,3,4,0,1,1,3,4,null,1,-2,3,null]}]}",
           "patchOptions": {
-            "commitTaskId": 17,
             "pipelineOptions": {
               "needTimestamps": true,
               "pipelineID": "pipelineID",
@@ -749,9 +744,8 @@ describe('attribute timing api', () => {
       await waitSchedule();
       expect(mtCallbacks[0][1]).toMatchInlineSnapshot(`
         {
-          "data": "{"snapshotPatch":[3,3,0,{"xxx":666,"__lynx_timing_flag":"__lynx_timing_actual_fmp"}]}",
+          "data": "{"patchList":[{"id":18,"snapshotPatch":[3,3,0,{"xxx":666,"__lynx_timing_flag":"__lynx_timing_actual_fmp"}]}]}",
           "patchOptions": {
-            "commitTaskId": 18,
             "pipelineOptions": {
               "needTimestamps": false,
               "pipelineID": "pipelineID",

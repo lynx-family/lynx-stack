@@ -1,14 +1,12 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { render } from 'preact';
-
 import { __root, setRoot } from '../root.js';
 import { SnapshotInstance, __page, snapshotInstanceManager } from '../snapshot.js';
 import { isEmptyObject } from '../utils.js';
 import { destroyBackground } from './destroy.js';
 import { increaseReloadVersion } from './pass.js';
-import { renderMainThread } from './render.js';
+import { renderBackground, renderMainThread } from './render.js';
 import { hydrate } from '../hydrate.js';
 import { LifecycleConstant } from '../lifecycleConstant.js';
 import { __pendingListUpdates } from '../list.js';
@@ -71,7 +69,7 @@ function reloadBackground(updateData: Record<string, any>): void {
   // COW when modify `lynx.__initData` to make sure Provider & Consumer works
   lynx.__initData = Object.assign({}, lynx.__initData, updateData);
 
-  render(__root.__jsx, __root as any);
+  renderBackground(__root.__jsx, __root as any);
 
   if (__PROFILE__) {
     console.profileEnd();

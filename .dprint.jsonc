@@ -39,6 +39,10 @@
     "**/dist/**",
     "**/web-tests/output/**",
     "**/etc/*.md",
+    "website/docs/en/api/**",
+    "website/docs/zh/api/**",
+    "website/docs/en/changelog/**",
+    "website/docs/zh/changelog/**",
 
     // The tsconfig.json contains comments that align with indents.
     "/tsconfig.json",

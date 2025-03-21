@@ -6,14 +6,14 @@ import {
   nativeModulesCallEndpoint,
   switchExposureService,
   type Cloneable,
-  type NativeModulesCall,
+  type NativeModulesMap,
 } from '@lynx-js/web-constants';
 import type { Rpc } from '@lynx-js/web-worker-rpc';
 
-export function createNativeModules(
+export async function createNativeModules(
   rpc: Rpc,
-  customNativeModules: Record<string, Record<string, any>>,
-): Record<string, any> {
+  nativeModulesMap: NativeModulesMap,
+): Promise<Record<string, any>> {
   const switchExposure = rpc.createCall(switchExposureService);
   const nativeModulesCall = rpc.createCall(nativeModulesCallEndpoint);
   const lynxExposureModule = {
@@ -34,50 +34,26 @@ export function createNativeModules(
     },
   };
 
-  return {
-    bridge: bridgeModule,
-    LynxExposureModule: lynxExposureModule,
-    ...recursiveFunctionCallBinder(nativeModulesCall, customNativeModules),
-  };
-}
-
-function recursiveFunctionCallBinder(
-  nativeModulesCall: NativeModulesCall,
-  customNativeModules: Record<string, Record<string, any>>,
-): Record<string, Record<string, any>> {
-  const newObj = Object.fromEntries(
-    Object.entries(customNativeModules).map(([moduleName, moduleImpl]) => {
-      if (typeof moduleImpl === 'object') {
-        for (const [property, value] of Object.entries(moduleImpl)) {
-          if (typeof value === 'function') {
-            moduleImpl[property] = bindThisContext({
-              nativeModulesCall,
-              moduleName,
-              func: value,
-            });
-          }
-        }
-      }
-      return [moduleName, moduleImpl];
-    }),
+  const nativeModules = {};
+  const customNativeModules: Record<string, Record<string, any>> = {};
+  await Promise.all(
+    Object.entries(nativeModulesMap).map((
+      [moduleName, moduleStr],
+    ) =>
+      import(/* webpackIgnore: true */ moduleStr).then(
+        module =>
+          customNativeModules[moduleName] = module?.default?.(
+            nativeModules,
+            (name: string, data: Cloneable) =>
+              nativeModulesCall(name, data, moduleName),
+          ),
+      )
+    ),
   );
 
-  return newObj;
-}
-
-function bindThisContext({ nativeModulesCall, moduleName, func }: {
-  nativeModulesCall: (
-    name: string,
-    data: Cloneable,
-    moduleName: string,
-  ) => Promise<any>;
-  moduleName: string;
-  func: Function;
-}) {
-  const context = {
-    nativeModulesCall(name: string, data: Cloneable) {
-      return nativeModulesCall(name, data, moduleName);
-    },
-  };
-  return func.bind(context);
+  return Object.assign(nativeModules, {
+    bridge: bridgeModule,
+    LynxExposureModule: lynxExposureModule,
+    ...customNativeModules,
+  });
 }

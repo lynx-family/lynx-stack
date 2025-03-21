@@ -59,6 +59,17 @@
       ],
     },
     {
+      "groupName": "API Extractor",
+      "groupSlug": "api-extractor",
+      "matchPackageNames": [
+        "@microsoft/api-documenter",
+        "@microsoft/api-extractor",
+        "@microsoft/api-extractor-model",
+        "@microsoft/tsdoc",
+      ],
+      "automerge": true,
+    },
+    {
       "matchDepTypes": [
         "peerDependencies",
       ],
@@ -72,5 +83,8 @@
   "ignoreDeps": [
     // align Node.js version minimum requirements
     "node",
+
+    // Rspress not compatible
+    "@microsoft/api-documenter",
   ],
 }

@@ -54,6 +54,7 @@ const defaultInjectVars = [
   'Behavior',
   'LynxJSBI',
   'lynx',
+  'window',
 ];
 
 /**

@@ -7,6 +7,7 @@ import {
   cssIdAttribute,
   type CssInJsInfo,
   parentComponentUniqueIdAttribute,
+  lynxTagAttribute,
 } from '@lynx-js/web-constants';
 import { __UpdateComponentID } from '../attributeAndProperty/attributeAndPropertyFunctions.js';
 import {
@@ -24,12 +25,13 @@ export interface initializeElementCreatingFunctionConfig {
   };
   pageConfig: PageConfig;
   styleInfo: CssInJsInfo;
+  tagMap: Record<string, string>;
 }
 
 export function initializeElementCreatingFunction(
   config: initializeElementCreatingFunctionConfig,
 ) {
-  const { operationsRef, pageConfig, styleInfo } = config;
+  const { operationsRef, pageConfig, styleInfo, tagMap } = config;
   const document = createOffscreenDocument({
     pageConfig,
     operationsRef,
@@ -57,7 +59,9 @@ export function initializeElementCreatingFunction(
     // @ts-expect-error
     info?: Record<string, any> | null | undefined,
   ) {
-    const element = document.createElement(tag);
+    const htmlTag = tagMap[tag] ?? tag;
+    const element = document.createElement(htmlTag);
+    element.setAttribute(lynxTagAttribute, tag);
     // element.parentComponentUniqueId = parentComponentUniqueId;
     element.setAttribute(
       parentComponentUniqueIdAttribute,
@@ -122,6 +126,7 @@ export function initializeElementCreatingFunction(
     info: Record<string, any> | null | undefined,
   ) {
     const page = createLynxElement('page', 0, cssID, componentID, info);
+    page.setAttribute('part', 'page');
     page.setAttribute(
       parentComponentUniqueIdAttribute,
       page.uniqueId.toString(),

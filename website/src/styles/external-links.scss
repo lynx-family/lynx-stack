@@ -1,0 +1,129 @@
+// Mixin for shared external link icon styles
+@mixin external-link-icon {
+  display: inline-block;
+  font-size: 0.8em;
+  transform: translate(0, -0.3em);
+  transition: transform 0.2s ease;
+
+  // Default margins (English)
+  :lang(en) & {
+    margin-left: 0.2em;
+    margin-right: 0.1em;
+  }
+
+  // Chinese-specific margins
+  :lang(zh) & {
+    margin-left: 0.2em;
+    margin-right: 0.3em;
+  }
+}
+
+// Mixin for the hover effect
+@mixin external-link-hover {
+  &:hover::after {
+    transform: translate(0.1em, -0.5em);
+  }
+}
+
+// Mixin for link prefix emoji
+@mixin link-prefix($emoji) {
+  &::before {
+    content: $emoji;
+  }
+
+  // Default margins (English)
+  :lang(en) &::before {
+    margin-right: 0.2em;
+    margin-left: 0.1em;
+  }
+
+  // Chinese-specific margins
+  :lang(zh) &::before {
+    margin: 0.3em;
+  }
+}
+
+// External link styles container
+@mixin external-links {
+  // Default external link style
+  a[target="_blank"] {
+    &::after {
+      content: "↗";
+      font-weight: 700;
+      @include external-link-icon;
+    }
+    @include external-link-hover;
+  }
+
+  // MDN documentation links
+  a[target="_blank"][href*="developer.mozilla.org"] {
+    @include link-prefix("🌐");
+    &::after {
+      content: "↗";
+      @include external-link-icon;
+    }
+    @include external-link-hover;
+  }
+
+  // React
+  a[target="_blank"][href*="react.dev"] {
+    @include link-prefix("⚛️");
+    &::after {
+      content: "↗";
+      @include external-link-icon;
+    }
+    @include external-link-hover;
+  }
+
+  // GitHub
+  a[target="_blank"][href*="github.com"] {
+    @include link-prefix("🐙");
+    &::after {
+      content: "↗";
+      @include external-link-icon;
+    }
+    @include external-link-hover;
+  }
+
+  // npm
+  // cspell:disable-next-line
+  a[target="_blank"][href*="npmjs.com"] {
+    @include link-prefix("📦");
+    &::after {
+      content: "↗";
+      @include external-link-icon;
+    }
+    @include external-link-hover;
+  }
+
+  // Rspack
+  a[target="_blank"][href*="rspack.dev"] {
+    @include link-prefix("🦀");
+    &::after {
+      content: "↗";
+      @include external-link-icon;
+    }
+    @include external-link-hover;
+  }
+  a[target="_blank"][href*="rsbuild.dev"] {
+    @include link-prefix("🦀");
+    &::after {
+      content: "↗";
+      @include external-link-icon;
+    }
+    @include external-link-hover;
+  }
+}
+
+// Internal spec link style with gradient hover effect
+@keyframes gradient-move {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}

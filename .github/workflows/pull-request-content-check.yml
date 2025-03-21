@@ -1,19 +1,54 @@
-name: pull-request-content-check
+name: Lint PR Title
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened, edited]
-env:
-  CI: 1
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  pull_request_target:
+    types:
+      - opened
+      - edited
+      - reopened
+
+permissions:
+  # Allow `amannn/action-semantic-pull-request` to read pull requests
+  pull-requests: read
+
 jobs:
   validate-pr-title:
+    name: Validate PR title
     runs-on: lynx-ubuntu-24.04-medium
     steps:
-      - name: PR Conventional Commit Validation
-        uses: ytanikin/PRConventionalCommits@1.3.0
+      # https://github.com/amannn/action-semantic-pull-request
+      - uses: amannn/action-semantic-pull-request@0723387faaf9b38adef4775cd42cfd5155ed6017 # v5.5.3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          task_types: '["feat","fix","docs","test","refactor","chore","revert","ci","perf"]'
-          add_label: "false"
+          # Configure which types are allowed (newline-delimited).
+          # Derived from https://github.com/commitizen/conventional-commit-types
+          types: |
+            fix
+            feat
+            docs
+            style
+            refactor
+            perf
+            test
+            build
+            ci
+            chore
+            revert
+            release
+            security
+          # Configure which scopes are allowed (newline-delimited).
+          # These are regex patterns auto-wrapped in `^ $`.
+          scopes: |
+            ^(?![A-Z]).+$
+          # Configure that a scope must always be provided.
+          requireScope: false
+          # Configure which scopes are disallowed in PR titles (newline-delimited).
+          # For instance by setting the value below, `chore(release): ...` (lowercase)
+          # and `ci(e2e,release): ...` (unknown scope) will be rejected.
+          # These are regex patterns auto-wrapped in `^ $`.
+          disallowScopes: |
+            [A-Z]+
+          # Configure additional validation for the subject based on a regex.
+          ignoreLabels: |
+            bot

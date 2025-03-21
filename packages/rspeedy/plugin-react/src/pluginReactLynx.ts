@@ -9,7 +9,6 @@
  */
 
 import { createRequire } from 'node:module'
-import path from 'node:path'
 
 import type { RsbuildPlugin } from '@rsbuild/core'
 
@@ -227,6 +226,15 @@ export interface PluginReactLynxOptions {
   firstScreenSyncTiming?: 'immediately' | 'jsReady'
 
   /**
+   * `enableSSR` enable Lynx SSR feature for this build.
+   *
+   * @defaultValue `false`
+   *
+   * @public
+   */
+  enableSSR?: boolean
+
+  /**
    * The `jsx` option controls how JSX is transformed.
    */
   jsx?: Partial<JsxTransformerConfig> | undefined
@@ -330,6 +338,7 @@ export function pluginReactLynx(
     enableParallelElement: true,
     enableRemoveCSSScope: true,
     firstScreenSyncTiming: 'immediately',
+    enableSSR: false,
     jsx: undefined,
     pipelineSchedulerConfig: 0x00010000,
     removeDescendantSelectorScope: true,
@@ -362,14 +371,6 @@ export function pluginReactLynx(
       applySWC(api)
 
       api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
-        config = mergeRsbuildConfig(config, {
-          source: {
-            include: [
-              path.dirname(require.resolve('@lynx-js/react/package.json')),
-            ],
-          },
-        })
-
         const userConfig = api.getRsbuildConfig('original')
         if (typeof userConfig.source?.include === 'undefined') {
           return mergeRsbuildConfig(config, {

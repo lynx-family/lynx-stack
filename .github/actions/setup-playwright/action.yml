@@ -1,0 +1,36 @@
+name: Setup Playwright
+description: Setup the playwright environment
+
+inputs:
+  working-directory:
+    description: The root directory of the playwright project
+    required: true
+    default: .
+
+runs:
+  using: composite
+  steps:
+    - name: Detect Playwright version
+      id: playwright-version
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        echo "version=$(pnpm ls @playwright/test --depth=0 --parseable | grep @playwright | sed -E 's/.*@([0-9]+\.[0-9]+\.[0-9]+).*/\1/')" >> "$GITHUB_OUTPUT"
+      shell: bash
+    - name: Cache Playwright
+      uses: actions/cache@v4
+      id: playwright-cache
+      with:
+        path: ${{ (runner.os == 'Linux' && '~/.cache/ms-playwright') || '~/Library/Caches/ms-playwright' }}
+        key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.version }}
+    - name: Install Playwright dependencies
+      if: steps.playwright-cache.outputs.cache-hit == 'true'
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        npx playwright install-deps
+      shell: bash
+    - name: Install Playwright with dependencies
+      if: steps.playwright-cache.outputs.cache-hit != 'true'
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        npx playwright install --with-deps
+      shell: bash

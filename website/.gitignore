@@ -1,0 +1,11 @@
+# auto-generated docs
+docs/en/api
+docs/zh/api
+docs/en/changelog
+docs/zh/changelog
+
+# api-extractor
+temp
+
+# rspress
+doc_build

@@ -1,7 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { options, render } from 'preact';
+import { options } from 'preact';
 import type { VNode } from 'preact';
 
 import { LifecycleConstant, NativeUpdateDataType } from '../lifecycleConstant.js';
@@ -10,6 +10,7 @@ import { BackgroundSnapshotInstance, hydrate } from '../backgroundSnapshot.js';
 import { destroyBackground } from '../lifecycle/destroy.js';
 import { commitPatchUpdate, genCommitTaskId, globalCommitTaskMap } from '../lifecycle/patch/commit.js';
 import { reloadBackground } from '../lifecycle/reload.js';
+import { renderBackground } from '../lifecycle/render.js';
 import { CHILDREN, COMPONENT, DIFF, DIFFED, FORCE } from '../renderToOpcodes/constants.js';
 import { __root } from '../root.js';
 import { globalRefsToSet, updateBackgroundRefs } from '../snapshot/ref.js';
@@ -143,14 +144,13 @@ async function OnLifecycleEvent([type, data]: [string, any]) {
       if (__PROFILE__) {
         console.profileEnd();
       }
-      markTiming(PerformanceTimingKeys.pack_changes_start);
       // console.debug("********** After hydration:");
       // printSnapshotInstance(__root as BackgroundSnapshotInstance);
       if (__PROFILE__) {
         console.profile('commitChanges');
       }
       const commitTaskId = genCommitTaskId();
-      await commitPatchUpdate({ snapshotPatch }, { commitTaskId, isHydration: true });
+      await commitPatchUpdate({ patchList: [{ snapshotPatch, id: commitTaskId }] }, { isHydration: true });
       updateBackgroundRefs(commitTaskId);
       globalCommitTaskMap.forEach((commitTask, id) => {
         if (id > commitTaskId) {
@@ -232,7 +232,7 @@ function updateGlobalProps(newData: Record<string, any>): void {
   // This is already done because updateFromRoot will consume all dirty flags marked by
   // the setState, and setState's flush will be a noop. No extra diffs will be needed.
   Promise.resolve().then(() => {
-    runWithForce(() => render(__root.__jsx, __root as any));
+    runWithForce(() => renderBackground(__root.__jsx, __root as any));
   });
   lynxCoreInject.tt.GlobalEventEmitter.emit('onGlobalPropsChanged');
 }

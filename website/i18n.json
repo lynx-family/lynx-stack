@@ -1,0 +1,10 @@
+{
+  "toolStackTitle": {
+    "en": "Rstack",
+    "zh": "Rstack"
+  },
+  "toolStackDesc": {
+    "en": "High-performance toolchain built around Rspack to boost modern web development",
+    "zh": "围绕 Rspack 打造的高性能工具链，助力现代 Web 开发"
+  }
+}

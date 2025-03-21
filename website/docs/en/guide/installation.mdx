@@ -1,0 +1,71 @@
+import { PackageManagerTabs } from "@theme";
+
+# Installation
+
+System Requirements:
+
+- [Node.js 18](https://nodejs.org/en) or later.
+  - Requires Node.js 18.19 when using TypeScript as configuration.
+
+## Creating a New Project using Create Rspeedy \{#create-rspeedy}
+
+We recommend starting a new Rspeedy app using [`create-rspeedy`](https://npmjs.org/package/create-rspeedy),
+which sets up everything automatically for you. To create a project, run:
+
+<PackageManagerTabs command="create rspeedy@latest" />
+
+After the prompts, `create-rspeedy` will create a folder with your project name and install the required dependencies.
+
+## Enable Type Checking (optional)
+
+### Using `fork-ts-checker-webpack-plugin`
+
+The [`@rsbuild/plugin-type-check`](https://github.com/rspack-contrib/rsbuild-plugin-type-check) integrates
+with [`fork-ts-checker-webpack-plugin`](https://github.com/TypeStrong/fork-ts-checker-webpack-plugin).
+It can be directly used in Rspeedy!
+
+Begin by installing the plugin using your preferred package management tool:
+
+<PackageManagerTabs command="install -D @rsbuild/plugin-type-check" />
+
+Next, incorporate the plugin into your configuration file by adding it to the relevant section:
+
+```ts title=lynx.config.ts {3,11}
+import { defineConfig } from "@lynx-js/rspeedy";
+import { pluginReactLynx } from "@lynx-js/react-rsbuild-plugin";
+import { pluginTypeCheck } from "@rsbuild/plugin-type-check";
+
+export default defineConfig({
+  source: {
+    entry: "src/index.jsx",
+  },
+  plugins: [pluginReactLynx(), pluginTypeCheck()],
+});
+```
+
+Now, both your `npm run dev` and `npm run build` will build the projects **with type checking**!
+
+:::info The behavior of the plugin differs in the development and production builds
+
+- During development builds, type errors do not block the build process. They are only logged in the terminal.
+- During production builds, type errors cause the build to fail in order to ensure the stability of the production code.
+
+For more detailed options, please refer to [`@rsbuild/plugin-type-check`](https://github.com/rspack-contrib/rsbuild-plugin-type-check).
+:::
+
+### Using `tsc`
+
+Enabling type checking in ReactLynx is also possible.
+This can be achieved by simply adding a `typecheck` script in the `package.json` file:
+
+```json title=package.json {5}
+{
+  "scripts": {
+    "dev": "rspeedy dev",
+    "build": "rspeedy build",
+    "typecheck": "tsc --build"
+  }
+}
+```
+
+Then, run `npm run typecheck` to check the TypeScript files.

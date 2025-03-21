@@ -1,13 +1,13 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { render } from 'preact';
 import { createContext, createElement } from 'preact/compat';
 import { useState } from 'preact/hooks';
 import type { Consumer, FC, ReactNode } from 'react';
 
 import { factory, withInitDataInState } from './compat/initData.js';
 import { useLynxGlobalEventListener } from './hooks/useLynxGlobalEventListener.js';
+import { renderBackground } from './lifecycle/render.js';
 import { LifecycleConstant } from './lifecycleConstant.js';
 import { flushDelayedLifecycleEvents } from './lynx/tt.js';
 import { __root } from './root.js';
@@ -86,7 +86,7 @@ export const root: Root = {
       __root.__jsx = jsx;
     } else {
       __root.__jsx = jsx;
-      render(jsx, __root as any);
+      renderBackground(jsx, __root as any);
       if (__FIRST_SCREEN_SYNC_TIMING__ === 'immediately') {}
       else {
         lynx.getNativeApp().callLepusMethod(LifecycleConstant.jsReady, {});

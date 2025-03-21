@@ -16,6 +16,7 @@ declare global {
   declare const __BACKGROUND__: boolean;
   declare const __MAIN_THREAD__: boolean;
   declare const __PROFILE__: boolean;
+  declare const __ENABLE_SSR__: boolean;
 
   declare function __CreatePage(componentId: string, cssId: number): FiberElement;
   declare function __CreateElement(
@@ -56,6 +57,7 @@ declare global {
   declare function __LastElement(parent: FiberElement): FiberElement;
   declare function __NextElement(parent: FiberElement): FiberElement;
   declare function __GetPageElement(): FiberElement | undefined;
+  declare function __GetTemplateParts(e: FiberElement): Record<string, FiberElement>;
   declare function __AddDataset(node: FiberElement, key: string, value: any): void;
   declare function __SetDataset(
     node: FiberElement,

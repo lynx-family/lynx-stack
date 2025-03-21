@@ -52,6 +52,10 @@ jobs:
           retention-days: 1
           overwrite: true
           include-hidden-files: true
+      - uses: ./.github/actions/setup-playwright
+        if: ${{ inputs.is-web }}
+        with:
+          working-directory: packages/web-platform/web-tests
       - name: Test
         id: test
         env:
@@ -59,11 +63,11 @@ jobs:
         run: ${{ inputs.run }}
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
-        if: inputs.is-web != 'true'
+        if: ${{ !inputs.is-web }}
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
       - name: Upload test results to Codecov
-        if: ${{ inputs.is-web != 'true' && !cancelled() }}
+        if: ${{ !cancelled() }}
         uses: codecov/test-results-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}

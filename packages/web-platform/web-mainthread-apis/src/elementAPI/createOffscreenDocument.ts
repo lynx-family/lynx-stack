@@ -20,7 +20,7 @@ export function createOffscreenDocument(options: {
   let incrementalUniqueId = 0;
   function createElement(tagName: string): ElementThreadElement {
     const uniqueId = incrementalUniqueId++;
-    if (tagName === 'list') {
+    if (tagName === 'x-list') {
       return new ListElement(
         tagName,
         uniqueId,

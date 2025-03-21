@@ -17,6 +17,7 @@ export default defineConfig({
         'examples/**',
         'packages/**/lib/**',
         'packages/**/test/**',
+        'website/**',
 
         'packages/react/transform/tests/__swc_snapshots__/**',
         'packages/rspeedy/create-rspeedy/template-*/**',

@@ -2024,6 +2024,50 @@ test.describe('web-elements test suite', () => {
         ).toBeTruthy();
       },
     );
+
+    test('basic-flow', async ({ page, browserName }, { titlePath }) => {
+      const title = getTitle(titlePath);
+      await gotoWebComponentPage(page, title);
+      await diffScreenShot(page, title, 'initial');
+      if (browserName === 'webkit') test.skip(); // cannot wheel
+      await page.mouse.move(100, 100);
+      await page.mouse.wheel(300, 0);
+      await diffScreenShot(page, title, 'wheel-x-not-wheelable');
+      await page.mouse.wheel(0, 300);
+      await diffScreenShot(page, title, 'wheel-y-wheelable');
+    });
+    test(
+      'scroll-orientation-flow',
+      async ({ page }, { titlePath }) => {
+        const title = getTitle(titlePath);
+        await gotoWebComponentPage(page, title);
+        await diffScreenShot(page, title, 'index');
+      },
+    );
+    test('sticky-flow', async ({ page, browserName }, { titlePath }) => {
+      const title = getTitle(titlePath);
+      await gotoWebComponentPage(page, title);
+      await diffScreenShot(page, title, 'index');
+      if (browserName === 'webkit') test.skip(); // cannot wheel
+      await page.mouse.move(200, 300);
+      await page.mouse.wheel(0, 500);
+      await diffScreenShot(page, title, 'sticky-y-scroll');
+    });
+    test('full-span', async ({ page }, { titlePath }) => {
+      const title = getTitle(titlePath);
+      await gotoWebComponentPage(page, title);
+      await diffScreenShot(page, title, 'index');
+    });
+    test('axis-gap', async ({ page }, { titlePath }) => {
+      const title = getTitle(titlePath);
+      await gotoWebComponentPage(page, title);
+      await diffScreenShot(page, title, 'index');
+    });
+    test('axis-gap-flow', async ({ page }, { titlePath }) => {
+      const title = getTitle(titlePath);
+      await gotoWebComponentPage(page, title);
+      await diffScreenShot(page, title, 'index');
+    });
   });
   test.describe('x-input', () => {
     test('placeholder', async ({ page }, { titlePath }) => {
@@ -3154,16 +3198,18 @@ test.describe('web-elements test suite', () => {
       await wait(100);
 
       await page.mouse.click(100, 25);
-      expect(await page.getByText('目前计数为 1').count()).toBe(1);
-
-      await page.mouse.click(100, 25);
-      expect(await page.getByText('目前计数为 2').count()).toBe(1);
+      expect(await page.getByText('1').count()).toBe(1);
 
       await page.getByTestId('next').click();
-      // default duration is 500ms, add 100ms tolerance
       await wait(1000);
       await page.mouse.click(100, 25);
-      expect(await page.getByText('目前计数为 3').count()).toBe(1);
+      expect(await page.getByText('2').count()).toBe(1);
+
+      await page.getByTestId('next').click();
+      await wait(1000);
+      await page.mouse.click(100, 25);
+      await page.getByTestId('next').click();
+      expect(await page.getByText('3').count()).toBe(1);
     });
 
     test(
@@ -3968,8 +4014,10 @@ test.describe('web-elements test suite', () => {
     test('method-seek', async ({ page }, { titlePath }) => {
       const title = getTitle(titlePath);
       await gotoWebComponentPage(page, title);
+      await wait(1000);
 
       await page.locator('#play').click();
+      await wait(1000);
       await page.locator('#seek').click();
       await wait(3000);
       expect(

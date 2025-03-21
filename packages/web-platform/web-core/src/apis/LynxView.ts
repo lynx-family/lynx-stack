@@ -7,13 +7,12 @@ import {
   createLynxView,
 } from './createLynxView.js';
 import {
-  cardIdAttribute,
   type Cloneable,
-  lynxViewEntryIdPrefix,
   lynxViewRootDomId,
   type NapiModulesCall,
   type NapiModulesMap,
   type NativeModulesCall,
+  type NativeModulesMap,
   type UpdateDataType,
 } from '@lynx-js/web-constants';
 import { inShadowRootStyles } from './inShadowRootStyles.js';
@@ -27,15 +26,13 @@ import { inShadowRootStyles } from './inShadowRootStyles.js';
  * @param {Cloneable} globalProps [optional] The globalProps value of this Lynx card
  * @param {Cloneable} initData [oprional] The initial data of this Lynx card
  * @param {Record<string,string>} overrideLynxTagToHTMLTagMap [optional] use this property/attribute to override the lynx tag -> html tag map
- * @param {string} nativeModulesUrl [optional] It is a esm url, use to customize NativeModules.
- * @param {INativeModulesCall} onNativeModulesCall [optional] the NativeModules value handler. Arguments will be cached before this property is assigned.
+ * @param {NativeModulesMap} nativeModulesMap [optional] use to customize NativeModules. key is module-name, value is esm url.
+ * @param {NativeModulesCall} onNativeModulesCall [optional] the NativeModules value handler. Arguments will be cached before this property is assigned.
  * @param {"auto" | null} height [optional] set it to "auto" for height auto-sizing
  * @param {"auto" | null} width [optional] set it to "auto" for width auto-sizing
  * @param {NapiModulesMap} napiModulesMap [optional] the napiModule which is called in lynx-core. key is module-name, value is esm url.
  * @param {NapiModulesCall} onNapiModulesCall [optional] the NapiModule value handler.
  * @param {"false" | "true" | null} injectHeadLinks [optional] @default true set it to "false" to disable injecting the <link href="" ref="stylesheet"> styles into shadowroot
- *
- * @property entryId the currently Lynx view entryId.
  *
  * @event error lynx card fired an error
  *
@@ -63,7 +60,7 @@ export class LynxView extends HTMLElement {
     'globalProps',
     'initData',
     'overrideLynxTagToHTMLTagMap',
-    'nativeModulesUrl',
+    'nativeModulesMap',
   ];
   private static attributeCamelCaseMap = Object.fromEntries(
     this.observedAttributeAsProperties.map((
@@ -129,17 +126,6 @@ export class LynxView extends HTMLElement {
     }
   }
 
-  #entryId?: string;
-  /**
-   * @public
-   * @readonly
-   * @property
-   * The random generated entryId of current lynxview
-   */
-  get entryId() {
-    return this.#entryId;
-  }
-
   #overrideLynxTagToHTMLTagMap: Record<string, string> = { 'page': 'div' };
   /**
    * @public
@@ -175,22 +161,24 @@ export class LynxView extends HTMLElement {
     }
   }
 
-  #nativeModulesUrl?: string;
+  #nativeModulesMap: NativeModulesMap = {};
   /**
    * @public
-   * @property nativeModules
+   * @property nativeModulesMap
+   * @default {}
    */
-  get nativeModulesUrl(): string | undefined {
-    return this.#nativeModulesUrl;
+  get nativeModulesMap(): NativeModulesMap | undefined {
+    return this.#nativeModulesMap;
   }
-  set nativeModulesUrl(val: string) {
-    this.#nativeModulesUrl = val;
+  set nativeModulesMap(map: NativeModulesMap) {
+    this.#nativeModulesMap = map;
   }
 
   #napiModulesMap: NapiModulesMap = {};
   /**
    * @param
-   * @property
+   * @property napiModulesMap
+   * @default {}
    */
   get napiModulesMap(): NapiModulesMap | undefined {
     return this.#napiModulesMap;
@@ -369,22 +357,23 @@ export class LynxView extends HTMLElement {
         if (this.#url) {
           const rootDom = document.createElement('div');
           rootDom.id = lynxViewRootDomId;
-          const entryId = `${lynxViewEntryIdPrefix}-${LynxView
-            .lynxViewCount++}`;
-          this.#entryId = entryId;
-          rootDom.setAttribute(cardIdAttribute, entryId);
           rootDom.setAttribute('part', lynxViewRootDomId);
-          const commonEventDetail = {
-            entryId,
+          const tagMap = {
+            'page': 'div',
+            'view': 'x-view',
+            'text': 'x-text',
+            'image': 'x-image',
+            'list': 'x-list',
+            'svg': 'x-svg',
+            ...this.overrideLynxTagToHTMLTagMap,
           };
           const lynxView = createLynxView({
-            entryId,
+            tagMap,
             rootDom,
             templateUrl: this.#url,
             globalProps: this.#globalProps,
             initData: this.#initData,
-            overrideLynxTagToHTMLTagMap: this.#overrideLynxTagToHTMLTagMap,
-            nativeModulesUrl: this.#nativeModulesUrl,
+            nativeModulesMap: this.#nativeModulesMap,
             napiModulesMap: this.#napiModulesMap,
             callbacks: {
               nativeModulesCall: (
@@ -403,9 +392,7 @@ export class LynxView extends HTMLElement {
               },
               onError: () => {
                 this.dispatchEvent(
-                  new CustomEvent('error', {
-                    detail: commonEventDetail,
-                  }),
+                  new CustomEvent('error', {}),
                 );
               },
             },

@@ -3,11 +3,11 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 */
-import { render } from 'preact';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { replaceCommitHook } from '../../src/lifecycle/patch/commit';
 import { injectUpdateMainThread } from '../../src/lifecycle/patch/updateMainThread';
+import { renderBackground as render } from '../../src/lifecycle/render';
 import { __root } from '../../src/root';
 import { setupPage } from '../../src/snapshot';
 import { destroyWorklet } from '../../src/worklet/destroy';
@@ -88,9 +88,8 @@ describe('WorkletRef in js', () => {
           [
             "rLynxChange",
             {
-              "data": "{"workletRefInitValuePatch":[[3,233]]}",
+              "data": "{"patchList":[{"id":1,"workletRefInitValuePatch":[[3,233]]}]}",
               "patchOptions": {
-                "commitTaskId": 1,
                 "reloadVersion": 0,
               },
             },
@@ -99,9 +98,8 @@ describe('WorkletRef in js', () => {
           [
             "rLynxChange",
             {
-              "data": "{"snapshotPatch":[]}",
+              "data": "{"patchList":[{"snapshotPatch":[],"id":2}]}",
               "patchOptions": {
-                "commitTaskId": 2,
                 "isHydration": true,
                 "pipelineOptions": {
                   "needTimestamps": true,
@@ -189,9 +187,8 @@ describe('WorkletRef in js', () => {
           [
             "rLynxChange",
             {
-              "data": "{"snapshotPatch":[]}",
+              "data": "{"patchList":[{"snapshotPatch":[],"id":4}]}",
               "patchOptions": {
-                "commitTaskId": 4,
                 "isHydration": true,
                 "pipelineOptions": {
                   "needTimestamps": true,

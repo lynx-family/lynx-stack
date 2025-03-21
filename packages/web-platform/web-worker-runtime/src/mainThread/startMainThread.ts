@@ -9,6 +9,7 @@ import {
   onLifecycleEventEndpoint,
   type LynxJSModule,
   flushElementTreeEndpoint,
+  reportErrorEndpoint,
 } from '@lynx-js/web-constants';
 import { Rpc } from '@lynx-js/web-worker-rpc';
 import { MainThreadRuntime } from '@lynx-js/web-mainthread-apis';
@@ -35,6 +36,7 @@ export function startMainThread(
     mainThreadChunkReadyEndpoint,
   );
   const flushElementTree = uiThreadRpc.createCall(flushElementTreeEndpoint);
+  const reportError = uiThreadRpc.createCall(reportErrorEndpoint);
   markTimingInternal('lepus_excute_start');
   uiThreadRpc.registerHandler(
     mainThreadStartEndpoint,
@@ -42,10 +44,10 @@ export function startMainThread(
       const {
         globalProps,
         template,
-        entryId,
         browserConfig,
-        nativeModulesUrl,
+        nativeModulesMap,
         napiModulesMap,
+        tagMap,
       } = config;
       const { styleInfo, pageConfig, customSections, cardType, lepusCode } =
         template;
@@ -55,7 +57,7 @@ export function startMainThread(
       );
       const entry = (globalThis.module as LynxJSModule).exports!;
       const runtime = new MainThreadRuntime({
-        entryId,
+        tagMap,
         browserConfig,
         customSections,
         globalProps,
@@ -92,7 +94,7 @@ export function startMainThread(
                   value.type !== 'lazy'
                 ).map(([k, v]) => [k, v.content]),
               ),
-              nativeModulesUrl,
+              nativeModulesMap,
               napiModulesMap,
             });
 
@@ -100,9 +102,7 @@ export function startMainThread(
             runtime.__FlushElementTree(undefined, {});
           },
           flushElementTree,
-          _ReportError: function(error: Error, info?: unknown): void {
-            console.error('main-thread:', error, info);
-          },
+          _ReportError: reportError,
           __OnLifecycleEvent,
           /**
            * Note :

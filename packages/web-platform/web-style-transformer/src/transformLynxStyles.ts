@@ -268,6 +268,12 @@ const renameRules: {
   'flex-basis': [
     '--flex-basis',
   ],
+  'list-main-axis-gap': [
+    '--list-main-axis-gap',
+  ],
+  'list-cross-axis-gap': [
+    '--list-cross-axis-gap',
+  ],
 };
 export function transformLynxStyles(
   hypenNameStyles: [string, string][],

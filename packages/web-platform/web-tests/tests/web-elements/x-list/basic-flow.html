@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<!-- Copyright 2024 The Lynx Authors. All rights reserved.
+ Licensed under the Apache License Version 2.0 that can be found in the
+ LICENSE file in the root directory of this source tree. -->
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>web playground</title>
+    <meta content="yes" name="apple-mobile-web-app-capable">
+    <meta content="default" name="apple-mobile-web-app-status-bar-style">
+    <meta content="telephone=no" name="format-detection">
+    <meta content="portrait" name="screen-orientation">
+    <meta
+      content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"
+      name="viewport"
+    >
+    <meta content="portrait" name="x5-orientation">
+    <link
+      href="/node_modules/@lynx-js/web-elements/index.css"
+      rel="stylesheet"
+    />
+    <link
+      href="/web-elements.css"
+      rel="stylesheet"
+    />
+
+    <style>
+    @import url("../../common.css");
+    x-list {
+      width: 100%;
+      height: 500px;
+    }
+
+    .item {
+      border-width: 5px;
+      border-color: green;
+      width: 100%;
+      height: 100%;
+      background-color: yellow;
+      margin-bottom: 10px;
+    }
+
+    .left {
+      height: 80px;
+    }
+
+    .right {
+      height: 100px;
+    }
+    </style>
+  </head>
+
+  <body>
+    <script src="/web-elements.js" defer></script>
+    <x-view class="page" style="flex-direction: column;">
+      <x-list list-type="flow" span-count="2">
+        <list-item class="left" item-key="1" id="1"><x-view class="item"
+          >1</x-view></list-item>
+        <list-item class="right" item-key="2" id="2"><x-view class="item"
+          >2</x-view></list-item>
+        <list-item class="left" item-key="3" id="3"><x-view class="item"
+          >3</x-view></list-item>
+        <list-item class="right" item-key="4" id="4"><x-view class="item"
+          >4</x-view></list-item>
+        <list-item class="left" item-key="5" id="5"><x-view class="item"
+          >5</x-view></list-item>
+        <list-item class="right" item-key="6" id="6"><x-view class="item"
+          >6</x-view></list-item>
+        <list-item class="left" item-key="7" id="7"><x-view class="item"
+          >7</x-view></list-item>
+        <list-item class="right" item-key="8" id="8"><x-view class="item"
+          >8</x-view></list-item>
+        <list-item class="left" item-key="9" id="9"><x-view class="item"
+          >9</x-view></list-item>
+        <list-item class="right" item-key="10" id="10"><x-view class="item"
+          >10</x-view></list-item>
+        <list-item class="left" item-key="11" id="11"><x-view class="item"
+          >11</x-view></list-item>
+        <list-item class="right" item-key="12" id="12"><x-view class="item"
+          >12</x-view></list-item>
+        <list-item class="left" item-key="13" id="13"><x-view class="item"
+          >13</x-view></list-item>
+        <list-item class="right" item-key="14" id="14"><x-view class="item"
+          >14</x-view></list-item>
+        <list-item class="left" item-key="15" id="15"><x-view class="item"
+          >15</x-view></list-item>
+        <list-item class="right" item-key="16" id="16"><x-view class="item"
+          >16</x-view></list-item>
+        <list-item class="left" item-key="17" id="17"><x-view class="item"
+          >17</x-view></list-item>
+        <list-item class="right" item-key="18" id="18"><x-view class="item"
+          >18</x-view></list-item>
+        <list-item class="left" item-key="19" id="19"><x-view class="item"
+          >19</x-view></list-item>
+        <list-item class="right" item-key="20" id="20"><x-view class="item"
+          >20</x-view></list-item>
+      </x-list>
+    </x-view>
+  </body>
+</html>

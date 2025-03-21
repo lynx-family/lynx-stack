@@ -48,21 +48,22 @@
     let current = 0;
 
     const text = document.querySelector('x-text');
-    text.innerHTML = `目前计数为 ${counter}`;
+    text.innerHTML = `${counter}`;
 
     const swiper = document.querySelector('x-swiper');
     swiper.setAttribute('current', current);
 
     const swiperItems = document.getElementsByTagName('x-swiper-item');
     for (const item of swiperItems) {
+      const currentIndex = ++counter;
       item.addEventListener('click', function() {
-        text.innerHTML = `目前计数为 ${++counter}`;
+        text.innerHTML = `${currentIndex}`;
       });
     }
 
     const btn = document.querySelector('.btn');
     btn.addEventListener('click', function() {
-      swiper.setAttribute('current', ++current);
+      swiper.setAttribute('current', (++current) % 3);
     });
     </script>
   </head>

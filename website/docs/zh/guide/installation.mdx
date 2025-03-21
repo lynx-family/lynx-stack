@@ -1,0 +1,68 @@
+import { PackageManagerTabs } from "@theme";
+
+# 安装
+
+系统要求：
+
+- [Node.js 18](https://nodejs.org/en) 或更高版本。
+  - 使用 TypeScript 作为配置时需要 Node.js 18.19 或更高版本。
+
+## 使用 Create Rspeedy 创建新项目 \{#create-rspeedy}
+
+我们建议使用 [`create-rspeedy`](https://npmjs.org/package/create-rspeedy) 来开始一个新的 Rspeedy 应用程序，它会为您自动设置好一切。要创建一个项目，请运行：
+
+<PackageManagerTabs command="create rspeedy@latest" />
+
+根据提示操作后，`create-rspeedy` 将创建一个以您项目名称命名的文件夹并安装所需的依赖项。
+
+## 启用类型检查（可选）
+
+### 使用 `fork-ts-checker-webpack-plugin`
+
+可以直接在 Rspeedy 中使用 [`@rsbuild/plugin-type-check`](https://github.com/rspack-contrib/rsbuild-plugin-type-check)，它集成了 [`fork-ts-checker-webpack-plugin`](https://github.com/TypeStrong/fork-ts-checker-webpack-plugin)。
+
+首先安装插件：
+
+<PackageManagerTabs command="install -D @rsbuild/plugin-type-check" />
+
+接下来，将插件添加到配置文件中：
+
+```ts title=lynx.config.ts {3,9}
+import { defineConfig } from "@lynx-js/rspeedy";
+import { pluginReactLynx } from "@lynx-js/react-rsbuild-plugin";
+import { pluginTypeCheck } from "@rsbuild/plugin-type-check";
+
+export default defineConfig({
+  source: {
+    entry: "src/index.jsx",
+  },
+  plugins: [pluginReactLynx(), pluginTypeCheck()],
+});
+```
+
+现在，`npm run dev` 和 `npm run build` 都将**带有类型检查**地构建项目！
+
+:::info 该插件在开发和生产构建中的行为不同
+
+- 在开发构建过程中，类型错误不会阻止构建过程。它们只会在终端中记录。
+- 在生产构建过程中，类型错误会导致构建失败，以确保生产代码的稳定性。
+
+有关更详细的选项，请参考 [`@rsbuild/plugin-type-check`](https://github.com/rspack-contrib/rsbuild-plugin-type-check)。
+:::
+
+### 使用 `tsc`
+
+在 Rspeedy 中也可以启用类型检查。
+这可以通过在 `package.json` 文件中添加 `typecheck` 脚本来实现：
+
+```json title=package.json {5}
+{
+  "scripts": {
+    "dev": "rspeedy dev",
+    "build": "rspeedy build",
+    "typecheck": "tsc --build --noEmit"
+  }
+}
+```
+
+然后，运行 `npm run typecheck` 检查 TypeScript 文件。

@@ -3,8 +3,10 @@ on:
   pull_request:
     branches:
       - main
+    paths-ignore:
+      - "**/*.md"
   merge_group:
-    branches: [main]
+    types: [checks_requested]
 permissions:
   repository-projects: read
   contents: read
@@ -15,9 +17,33 @@ env:
   CI: 1
   TURBO_TELEMETRY_DISABLED: 1
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.event_name }}-${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
   cancel-in-progress: true
 jobs:
+  code-style-check:
+    runs-on: lynx-ubuntu-24.04-medium
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # We need full history for changeset status check
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install
+        run: |
+          npm install -g corepack@latest
+          corepack enable
+          pnpm install --frozen-lockfile
+      - name: Code Style Check
+        run: |
+          pnpm dprint check
+          pnpm biome check
+      - name: API Check
+        run: pnpm turbo api-extractor
+      - name: Changeset Check
+        run: pnpm changeset status --since=origin/main
+
   build:
     uses: ./.github/workflows/workflow-build.yml
     with:
@@ -35,8 +61,6 @@ jobs:
     with:
       runs-on: lynx-ubuntu-24.04-medium
       run: >
-        sudo apt-get update &&
-        sudo apt-get install -y iproute2 &&
         pnpm run test
         --project rspeedy
         --project upgrade-rspeedy
@@ -47,6 +71,8 @@ jobs:
         --outputFile=test-report.junit.xml
         --test-timeout=50000
         --coverage
+        --coverage.reporter='json'
+        --coverage.reporter='text'
         --no-cache
         --logHeapUsage
         --silent
@@ -63,6 +89,12 @@ jobs:
         --filter @lynx-js/react-worklet-runtime
         --filter @lynx-js/react-transform
         run test
+        --reporter=github-actions
+        --reporter=dot
+        --reporter=junit
+        --outputFile=test-report.junit.xml
+        --coverage.reporter='json'
+        --coverage.reporter='text'
         --test-timeout=50000
         --no-cache
         --logHeapUsage
@@ -83,6 +115,28 @@ jobs:
         --reporter=junit
         --outputFile=test-report.junit.xml
         --coverage
+        --coverage.reporter='json'
+        --coverage.reporter='text'
+        --no-cache
+        --logHeapUsage
+        --silent
+  test-tools:
+    needs: build
+    uses: ./.github/workflows/workflow-test.yml
+    secrets: inherit
+    with:
+      runs-on: lynx-ubuntu-24.04-medium
+      run: >
+        pnpm run test
+        --project 'tools/*'
+        --test-timeout=50000
+        --reporter=github-actions
+        --reporter=dot
+        --reporter=junit
+        --outputFile=test-report.junit.xml
+        --coverage
+        --coverage.reporter='json'
+        --coverage.reporter='text'
         --no-cache
         --logHeapUsage
         --silent
@@ -94,9 +148,29 @@ jobs:
       is-web: true
       run: |
         export NODE_OPTIONS="--max-old-space-size=32768"
-        pnpm --filter @lynx-js/web-tests run test:install
-        pnpm --filter @lynx-js/web-tests run test
+        export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
+        pnpm --filter @lynx-js/web-tests run test --reporter='github,dot,junit,html'
   test-rust:
     uses: ./.github/workflows/rust.yml
     with:
       runs-on: lynx-ubuntu-24.04-medium
+  website:
+    needs: build
+    uses: ./.github/workflows/workflow-website.yml
+  # Copied from https://github.com/swc-project/swc/blob/b192dc82e6a84bd30f159fb12ca8a216f41e8efb/.github/workflows/CI.yml#L491
+  done:
+    needs:
+      - code-style-check
+      - playwright-linux
+      - test-plugins
+      - test-react
+      - test-rust
+      - test-rspeedy
+      - test-tools
+      - website
+    if: always()
+    runs-on: lynx-ubuntu-24.04-medium
+    name: Done
+    steps:
+      - run: exit 1
+        if: ${{ always() && (contains(needs.*.result, 'failure') || contains(needs.*.result, 'skipped') || contains(needs.*.result, 'cancelled')) }}

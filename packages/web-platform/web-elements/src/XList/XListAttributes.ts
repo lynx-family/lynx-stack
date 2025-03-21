@@ -17,6 +17,8 @@ export class XListAttributes
   static observedAttributes = [
     'sticky-offset',
     'initial-scroll-index',
+    'span-count',
+    'column-count',
   ];
 
   #dom: XList;
@@ -26,6 +28,14 @@ export class XListAttributes
     () => this.#dom,
     '--list-item-sticky-offset',
     (v) => `${parseFloat(v)}px`,
+  );
+
+  @registerAttributeHandler('span-count', true)
+  @registerAttributeHandler('column-count', true)
+  #handlerCount = bindToStyle(
+    () => this.#dom,
+    '--list-item-span-count',
+    (v) => `${parseFloat(v)}`,
   );
 
   constructor(dom: XList) {

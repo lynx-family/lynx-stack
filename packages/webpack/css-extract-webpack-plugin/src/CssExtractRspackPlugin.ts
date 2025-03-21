@@ -16,7 +16,7 @@ import {
 } from '@lynx-js/template-webpack-plugin';
 
 /**
- * The options for {@link @lynx-js/webpack/css-extract-webpack-plugin#CssExtractRspackPlugin}
+ * The options for {@link @lynx-js/css-extract-webpack-plugin#CssExtractRspackPlugin}
  *
  * @public
  */

@@ -32,24 +32,25 @@ const qrScanner = new QrScanner(video, (result) => {
   highlightCodeOutline: true,
 });
 
-const nativeModulesUrl = URL.createObjectURL(
-  new Blob(
-    [`
-export default {
-  ExplorerModule:{
-    openSchema(value) {
-      this.nativeModulesCall('openSchema', value)
-    },
-    openScan() {
-      this.nativeModulesCall('openScan')
-    }
-  }
-}
-      `],
-    { type: 'text/javascript' },
+const nativeModulesMap = {
+  ExplorerModule: URL.createObjectURL(
+    new Blob(
+      [`export default function(NativeModules, NativeModulesCall) {
+    return {
+      openSchema(value) {
+        NativeModulesCall('openSchema', value);
+      },
+      openScan() {
+        NativeModulesCall('openScan');
+      },
+    };
+  }`],
+      { type: 'text/javascript' },
+    ),
   ),
-);
+};
 
+lynxView.nativeModulesMap = nativeModulesMap;
 lynxView.onNativeModulesCall = (nm, data) => {
   if (nm === 'openScan') {
     lynxView.style.visibility = 'hidden';
@@ -58,7 +59,6 @@ lynxView.onNativeModulesCall = (nm, data) => {
     setLynxViewUrl(data);
   }
 };
-lynxView.nativeModulesUrl = nativeModulesUrl;
 lynxView.globalProps = { theme };
 setLynxViewUrl(homepage);
 window.addEventListener('message', (ev) => {

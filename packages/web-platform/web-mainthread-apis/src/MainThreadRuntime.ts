@@ -4,7 +4,6 @@
 
 import {
   type ElementOperation,
-  type LynxLifecycleEvent,
   type LynxTemplate,
   type PageConfig,
   type ProcessDataCallback,
@@ -13,6 +12,9 @@ import {
   type Cloneable,
   type CssInJsInfo,
   type BrowserConfig,
+  type onLifecycleEventEndpoint,
+  type reportErrorEndpoint,
+  type flushElementTreeEndpoint,
 } from '@lynx-js/web-constants';
 import { globalMuteableVars } from '@lynx-js/web-constants';
 import { createMainThreadLynx, type MainThreadLynx } from './MainThreadLynx.js';
@@ -27,16 +29,14 @@ import {
   genCssInJsInfo,
   transformToWebCss,
 } from './utils/processStyleInfo.js';
+import { createAttributeAndPropertyFunctionsWithContext } from './elementAPI/attributeAndProperty/createAttributeAndPropertyFunctionsWithContext.js';
+import type { RpcCallType } from '../../web-worker-rpc/src/TypeUtils.js';
 
 export interface MainThreadRuntimeCallbacks {
   mainChunkReady: () => void;
-  flushElementTree: (
-    operations: ElementOperation[],
-    options: FlushElementTreeOptions,
-    styleContent?: string,
-  ) => void;
-  _ReportError: (error: Error, info?: unknown) => void;
-  __OnLifecycleEvent: (lynxLifecycleEvents: LynxLifecycleEvent) => void;
+  flushElementTree: RpcCallType<typeof flushElementTreeEndpoint>;
+  _ReportError: RpcCallType<typeof reportErrorEndpoint>;
+  __OnLifecycleEvent: RpcCallType<typeof onLifecycleEventEndpoint>;
   markTiming: (pipelineId: string, timingKey: string) => void;
 }
 
@@ -47,12 +47,17 @@ export interface MainThreadConfig {
   styleInfo: StyleInfo;
   customSections: LynxTemplate['customSections'];
   lepusCode: LynxTemplate['lepusCode'];
-  entryId: string;
   browserConfig: BrowserConfig;
+  tagMap: Record<string, string>;
 }
 
 export class MainThreadRuntime {
   private isFp = true;
+
+  /**
+   * @private
+   */
+  _timingFlags: string[] = [];
 
   public operationsRef: {
     operations: ElementOperation[];
@@ -71,6 +76,7 @@ export class MainThreadRuntime {
       : genCssInJsInfo(this.config.styleInfo);
     Object.assign(
       this,
+      createAttributeAndPropertyFunctionsWithContext(this),
       attributeAndPropertyApis,
       domTreeApis,
       eventApis,
@@ -79,6 +85,7 @@ export class MainThreadRuntime {
         operationsRef: this.operationsRef,
         pageConfig: config.pageConfig,
         styleInfo: cssInJs,
+        tagMap: config.tagMap,
       }),
     );
     this.__LoadLepusChunk = (path) => {
@@ -134,9 +141,9 @@ export class MainThreadRuntime {
 
   declare renderPage: (data: unknown) => void;
 
-  _ReportError: (e: Error, info: unknown) => void;
+  _ReportError: RpcCallType<typeof reportErrorEndpoint>;
 
-  __OnLifecycleEvent: (lynxLifecycleEvents: LynxLifecycleEvent) => void;
+  __OnLifecycleEvent: RpcCallType<typeof onLifecycleEventEndpoint>;
 
   __LoadLepusChunk: (path: string) => boolean;
 
@@ -145,7 +152,9 @@ export class MainThreadRuntime {
     options: FlushElementTreeOptions,
   ) => {
     const operations = this.operationsRef.operations;
+    const timingFlags = this._timingFlags;
     this.operationsRef.operations = [];
+    this._timingFlags = [];
     this.config.callbacks.flushElementTree(
       operations,
       options,
@@ -155,6 +164,7 @@ export class MainThreadRuntime {
           this.config.pageConfig,
         )
         : undefined,
+      timingFlags,
     );
     this.isFp = false;
   };

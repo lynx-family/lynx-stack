@@ -2,10 +2,13 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { logger } from '@rsbuild/core'
+import { logger, mergeRsbuildConfig } from '@rsbuild/core'
 import type { RsbuildPlugin } from '@rsbuild/core'
 
-import type { Tools } from '../config/tools/index.js'
+import type {
+  RsdoctorRspackPluginOptions,
+  Tools,
+} from '../config/tools/index.js'
 import { isCI } from '../utils/is-ci.js'
 
 export function pluginRsdoctor(
@@ -38,18 +41,31 @@ export function pluginRsdoctor(
           }
 
           config.plugins ??= []
-          config.plugins.push(
-            new RsdoctorRspackPlugin({
-              // We disable client server on CI by default.
-              // But it can be overridden by `tools.rsdoctor`.
-              disableClientServer: isCI(),
 
-              ...options,
-              supports: {
-                ...options?.supports,
-                banner: true, // We must enable `supports.banner` since we have runtime wrapper enabled
+          const defaultOptions: RsdoctorRspackPluginOptions = {
+            // We disable client server on CI by default.
+            // But it can be overridden by `tools.rsdoctor`.
+            disableClientServer: isCI(),
+
+            supports: {
+              banner: true, // We must enable `supports.banner` since we have runtime wrapper enabled
+            },
+
+            linter: {
+              rules: {
+                'ecma-version-check':
+                  options?.linter?.rules?.['ecma-version-check'] ?? [
+                    'Warn',
+                    { ecmaVersion: 2019 },
+                  ],
               },
-            }),
+            },
+          }
+
+          config.plugins.push(
+            new RsdoctorRspackPlugin(
+              mergeRsbuildConfig(defaultOptions, options),
+            ),
           )
         }
         logger.info(`Rsdoctor is enabled.`)
