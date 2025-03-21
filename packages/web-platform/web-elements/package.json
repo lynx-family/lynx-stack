@@ -99,6 +99,11 @@
     "index.css",
     "**/*.css"
   ],
+  "scripts": {
+    "run-example": "bash src/examples/run-example.sh",
+    "serve-example": "node src/examples/serve-example.js",
+    "test-standalone": "node src/examples/serve-standalone.js"
+  },
   "dependencies": {
     "@lynx-js/web-elements-reactive": "workspace:*"
   },

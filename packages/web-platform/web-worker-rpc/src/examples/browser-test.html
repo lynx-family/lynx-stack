@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPC System Browser Test</title>
+    <style>
+    body {
+      font-family:
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      line-height: 1.6;
+    }
+
+    h1 {
+      color: #333;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 10px;
+    }
+
+    .test-container {
+      background: #f5f5f5;
+      border-radius: 5px;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+
+    .test-title {
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    #results {
+      white-space: pre-wrap;
+      font-family: monospace;
+      background: #333;
+      color: #fff;
+      padding: 15px;
+      border-radius: 5px;
+      max-height: 500px;
+      overflow: auto;
+    }
+
+    .success {
+      color: #4caf50;
+    }
+
+    .error {
+      color: #f44336;
+    }
+
+    button {
+      background: #2196f3;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-right: 10px;
+    }
+
+    button:hover {
+      background: #0b7dda;
+    }
+    </style>
+  </head>
+  <body>
+    <h1>RPC System Browser Test</h1>
+
+    <div class="test-container">
+      <div class="test-title">Tests for RPC System Improvements</div>
+      <p>
+        This page tests the improvements made to the RPC system, including:
+        <ul>
+          <li>Type safety with RetEndpoint handling</li>
+          <li>Transferable objects support</li>
+          <li>Error handling improvements</li>
+          <li>Environment compatibility</li>
+        </ul>
+      </p>
+      <button id="runTests">Run Tests</button>
+      <button id="clearResults">Clear Results</button>
+    </div>
+
+    <div id="results">Results will appear here...</div>
+
+    <script type="module">
+    import { Rpc, createRpcEndpoint, RpcError } from '../../dist/index.js';
+
+    // Custom logger to display in the results div
+    const resultsElement = document.getElementById('results');
+    const logToResults = (message, type = 'info') => {
+      const timestamp = new Date().toISOString().split('T')[1].slice(0, -1);
+      resultsElement.innerHTML += `[${timestamp}] ${message}\n`;
+      resultsElement.scrollTop = resultsElement.scrollHeight;
+    };
+
+    // Override console methods to log to results div
+    const originalConsole = {
+      log: console.log,
+      error: console.error,
+      warn: console.warn,
+      info: console.info,
+    };
+
+    console.log = (...args) => {
+      originalConsole.log(...args);
+      logToResults(
+        args.map(a => typeof a === 'object' ? JSON.stringify(a) : a).join(' '),
+      );
+    };
+
+    console.error = (...args) => {
+      originalConsole.error(...args);
+      logToResults(
+        `❌ ERROR: ${
+          args.map(a => typeof a === 'object' ? JSON.stringify(a) : a).join(' ')
+        }`,
+        'error',
+      );
+    };
+
+    // Function to run all the tests
+    async function runTests() {
+      resultsElement.innerHTML = '';
+      console.log('🔄 Starting Browser RPC System Tests');
+
+      // Create a message channel for communication
+      const { port1, port2 } = new MessageChannel();
+
+      // Create RPC instances
+      const client = new Rpc(port1, 'client', { debug: true });
+      const server = new Rpc(port2, 'server', { debug: true });
+
+      try {
+        // Test 1: Basic async endpoint
+        console.log('\n🧪 Test 1: Basic async endpoint');
+        const basicEndpoint = createRpcEndpoint(
+          'test.basic',
+          false, // async
+          true, // has return
+        );
+
+        server.registerHandler(basicEndpoint, (message) => {
+          console.log(`Server received: ${message}`);
+          return `Response to: ${message}`;
+        });
+
+        const result1 = await client.invoke(basicEndpoint, ['Hello from client']);
+        console.log(`Client received: ${result1}`);
+        console.log(
+          result1 === 'Response to: Hello from client'
+            ? '✅ Test 1 passed!'
+            : '❌ Test 1 failed!',
+        );
+
+        // Test 2: Transferable objects
+        console.log('\n🧪 Test 2: Transferable objects');
+        const transferEndpoint = createRpcEndpoint(
+          'test.transfer',
+          false, // async
+          true, // has return
+          true, // supports transfer
+        );
+
+        server.registerHandler(transferEndpoint, (buffer) => {
+          const view = new Uint8Array(buffer);
+          console.log(`Server received buffer with first byte: ${view[0]}`);
+
+          // Modify the buffer
+          const responseBuffer = new ArrayBuffer(4);
+          const responseView = new Uint8Array(responseBuffer);
+          responseView[0] = 255;
+
+          return {
+            data: responseBuffer,
+            transfer: [responseBuffer],
+          };
+        });
+
+        const testBuffer = new ArrayBuffer(4);
+        const testView = new Uint8Array(testBuffer);
+        testView[0] = 42;
+
+        const result2 = await client.invoke(
+          transferEndpoint,
+          [testBuffer],
+          [testBuffer], // Transfer the buffer
+        );
+
+        const resultView = new Uint8Array(result2);
+        console.log(`Client received buffer with first byte: ${resultView[0]}`);
+        console.log(
+          resultView[0] === 255
+            ? '✅ Test 2 passed!'
+            : '❌ Test 2 failed!',
+        );
+
+        // Test 3: Error handling
+        console.log('\n🧪 Test 3: Error handling');
+        const errorEndpoint = createRpcEndpoint(
+          'test.error',
+          false, // async
+          true, // has return
+        );
+
+        server.registerHandler(errorEndpoint, (shouldFail) => {
+          if (shouldFail) {
+            throw new RpcError(
+              'Intentional failure for testing',
+              'test.error',
+              false,
+              [shouldFail],
+            );
+          }
+          return 'Success!';
+        });
+
+        try {
+          await client.invoke(errorEndpoint, [true]);
+          console.log('❌ Test 3 failed: should have thrown an error');
+        } catch (error) {
+          console.log(`Client received error (expected): ${error.message}`);
+          console.log(
+            error instanceof RpcError
+              ? '✅ Test 3 passed!'
+              : '❌ Test 3 failed: error is not an RpcError',
+          );
+        }
+
+        // Test 4: Sync call (if supported)
+        console.log('\n🧪 Test 4: Sync endpoint with return');
+        try {
+          if (
+            window.crossOriginIsolated && typeof SharedArrayBuffer !== 'undefined'
+          ) {
+            const syncEndpoint = createRpcEndpoint(
+              'test.sync',
+              true, // sync
+              true, // has return
+              false, // no transfer in sync
+              100, // buffer size
+            );
+
+            server.registerHandler(syncEndpoint, (a, b) => {
+              console.log(`Server calculating: ${a} + ${b}`);
+              return a + b;
+            });
+
+            const result4 = client.invoke(syncEndpoint, [5, 7]);
+            console.log(`Client received sync result: ${result4}`);
+            console.log(
+              result4 === 12
+                ? '✅ Test 4 passed!'
+                : '❌ Test 4 failed!',
+            );
+          } else {
+            console.log(
+              '⚠️ SharedArrayBuffer not available (requires Cross-Origin Isolation), skipping sync test',
+            );
+          }
+        } catch (error) {
+          console.log(`Sync test error: ${error.message}`);
+        }
+
+        console.log('\n✅ All tests completed!');
+      } catch (error) {
+        console.error('❌ Test failed:', error);
+      } finally {
+        // Clean up
+        client.dispose();
+        server.dispose();
+      }
+    }
+
+    // Set up event listeners
+    document.getElementById('runTests').addEventListener('click', runTests);
+    document.getElementById('clearResults').addEventListener('click', () => {
+      resultsElement.innerHTML = 'Results will appear here...';
+    });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Elements Lifecycle Demo</title>
+    <style>
+    body {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      line-height: 1.6;
+      color: #333;
+      background-color: #f9f9f9;
+    }
+
+    h1 {
+      color: #333;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .card {
+      background-color: white;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .button-container {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    hr {
+      margin: 30px 0;
+      border: none;
+      border-top: 1px solid #ddd;
+    }
+
+    .log-container {
+      background-color: #f0f0f0;
+      border-radius: 8px;
+      padding: 10px;
+      max-height: 300px;
+      overflow-y: auto;
+      font-family: monospace;
+      margin-top: 20px;
+      border: 1px solid #ddd;
+    }
+
+    .log-item {
+      margin: 5px 0;
+      padding: 5px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    #properties-panel {
+      padding: 20px;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .property-group {
+      margin-bottom: 15px;
+    }
+
+    .property-label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    button {
+      background-color: #f0f0f0;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 8px 16px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    button:hover {
+      background-color: #e0e0e0;
+    }
+
+    input[type="color"] {
+      width: 50px;
+      height: 30px;
+    }
+    </style>
+  </head>
+  <body>
+    <h1>Web Elements Lifecycle Demo</h1>
+
+    <div class="container">
+      <div class="card">
+        <h2>Button Examples</h2>
+        <div class="button-container">
+          <example-button id="demo-button">Click Me</example-button>
+          <example-button color="success" size="large"
+          >Success Button</example-button>
+          <example-button color="danger">Danger Button</example-button>
+          <example-button color="warning" size="small"
+          >Warning Button</example-button>
+          <example-button disabled>Disabled Button</example-button>
+          <example-button
+            id="ripple-custom"
+            ripple-color="rgba(255, 0, 255, 0.7)"
+          >Custom Ripple</example-button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Properties Panel</h2>
+        <div id="properties-panel">
+          <div class="property-group">
+            <label class="property-label">Button Text:</label>
+            <input type="text" id="button-text" value="Click Me">
+            <button id="update-text">Update</button>
+          </div>
+
+          <div class="property-group">
+            <label class="property-label">Size:</label>
+            <select id="button-size">
+              <option value="small">Small</option>
+              <option value="medium" selected>Medium</option>
+              <option value="large">Large</option>
+            </select>
+          </div>
+
+          <div class="property-group">
+            <label class="property-label">Color:</label>
+            <select id="button-color">
+              <option value="default" selected>Default</option>
+              <option value="primary">Primary</option>
+              <option value="success">Success</option>
+              <option value="danger">Danger</option>
+              <option value="warning">Warning</option>
+            </select>
+          </div>
+
+          <div class="property-group">
+            <label class="property-label">Ripple Color:</label>
+            <input type="color" id="ripple-color" value="#ffffff">
+            <input
+              type="range"
+              id="ripple-opacity"
+              min="0"
+              max="100"
+              value="70"
+            >
+            <span id="opacity-value">70%</span>
+          </div>
+
+          <div class="property-group">
+            <label class="property-label">Disabled:</label>
+            <input type="checkbox" id="button-disabled">
+          </div>
+
+          <div class="property-group">
+            <button id="add-button">Add New Button</button>
+            <button id="remove-button">Remove Last Button</button>
+          </div>
+        </div>
+
+        <h3>Events</h3>
+        <div class="log-container" id="log-container">
+          <div class="log-item">Event log will appear here...</div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module">
+    // Import the component
+    import { ExampleButton } from './ExampleButton.js';
+
+    // Get references to elements
+    const demoButton = document.getElementById('demo-button');
+    const logContainer = document.getElementById('log-container');
+    const buttonText = document.getElementById('button-text');
+    const updateTextButton = document.getElementById('update-text');
+    const buttonSize = document.getElementById('button-size');
+    const buttonColor = document.getElementById('button-color');
+    const buttonDisabled = document.getElementById('button-disabled');
+    const rippleColor = document.getElementById('ripple-color');
+    const rippleOpacity = document.getElementById('ripple-opacity');
+    const opacityValue = document.getElementById('opacity-value');
+    const addButton = document.getElementById('add-button');
+    const removeButton = document.getElementById('remove-button');
+    const buttonContainer = document.querySelector('.button-container');
+
+    // Function to log events
+    function logEvent(message) {
+      const logItem = document.createElement('div');
+      logItem.className = 'log-item';
+      logItem.textContent = `${new Date().toLocaleTimeString()} - ${message}`;
+      logContainer.appendChild(logItem);
+      logContainer.scrollTop = logContainer.scrollHeight;
+
+      // Keep only the latest 50 logs
+      while (logContainer.children.length > 50) {
+        logContainer.removeChild(logContainer.firstChild);
+      }
+    }
+
+    // Listen for button-clicked custom event
+    document.addEventListener('button-clicked', (e) => {
+      logEvent(`Button clicked! Count: ${e.detail.count}`);
+    });
+
+    // Update button text
+    updateTextButton.addEventListener('click', () => {
+      demoButton.textContent = buttonText.value;
+      logEvent(`Updated button text to: "${buttonText.value}"`);
+    });
+
+    // Update button size
+    buttonSize.addEventListener('change', () => {
+      demoButton.size = buttonSize.value;
+      logEvent(`Changed button size to: ${buttonSize.value}`);
+    });
+
+    // Update button color
+    buttonColor.addEventListener('change', () => {
+      demoButton.color = buttonColor.value;
+      logEvent(`Changed button color to: ${buttonColor.value}`);
+    });
+
+    // Toggle disabled state
+    buttonDisabled.addEventListener('change', () => {
+      demoButton.disabled = buttonDisabled.checked;
+      logEvent(`Set disabled: ${buttonDisabled.checked}`);
+    });
+
+    // Update ripple color
+    function updateRippleColor() {
+      const opacity = rippleOpacity.value / 100;
+      const color = rippleColor.value;
+      const rgba = hexToRgba(color, opacity);
+      demoButton.setAttribute('ripple-color', rgba);
+      logEvent(`Changed ripple color to: ${rgba}`);
+    }
+
+    rippleColor.addEventListener('input', updateRippleColor);
+    rippleOpacity.addEventListener('input', () => {
+      opacityValue.textContent = `${rippleOpacity.value}%`;
+      updateRippleColor();
+    });
+
+    // Convert hex color to rgba
+    function hexToRgba(hex, opacity) {
+      hex = hex.replace('#', '');
+      const r = parseInt(hex.substring(0, 2), 16);
+      const g = parseInt(hex.substring(2, 4), 16);
+      const b = parseInt(hex.substring(4, 6), 16);
+      return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+    }
+
+    // Add new button
+    addButton.addEventListener('click', () => {
+      const newButton = document.createElement('example-button');
+      newButton.textContent = 'New Button';
+      newButton.color = buttonColor.value;
+      newButton.size = buttonSize.value;
+      buttonContainer.appendChild(newButton);
+      logEvent('Added new button to the DOM');
+    });
+
+    // Remove last button
+    removeButton.addEventListener('click', () => {
+      const buttons = buttonContainer.querySelectorAll('example-button');
+      if (buttons.length > 1) {
+        buttonContainer.removeChild(buttons[buttons.length - 1]);
+        logEvent('Removed button from the DOM');
+      } else {
+        logEvent('Cannot remove the last button');
+      }
+    });
+
+    // Log initial state
+    logEvent('Page loaded');
+    logEvent('Lifecycle demo initialized');
+    </script>
+  </body>
+</html>
