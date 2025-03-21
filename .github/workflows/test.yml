@@ -142,7 +142,8 @@ jobs:
       is-web: true
       run: |
         export NODE_OPTIONS="--max-old-space-size=32768"
-        pnpm --filter @lynx-js/web-tests run test
+        export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
+        pnpm --filter @lynx-js/web-tests run test --reporter='github,dot,junit,html'
   test-rust:
     uses: ./.github/workflows/rust.yml
     secrets: inherit
