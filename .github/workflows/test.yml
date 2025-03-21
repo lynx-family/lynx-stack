@@ -113,6 +113,24 @@ jobs:
         --no-cache
         --logHeapUsage
         --silent
+  test-tools:
+    needs: build
+    uses: ./.github/workflows/workflow-test.yml
+    secrets: inherit
+    with:
+      runs-on: lynx-ubuntu-24.04-medium
+      run: >
+        pnpm run test
+        --project 'tools/*'
+        --test-timeout=50000
+        --reporter=github-actions
+        --reporter=dot
+        --reporter=junit
+        --outputFile=test-report.junit.xml
+        --coverage
+        --no-cache
+        --logHeapUsage
+        --silent
   playwright-linux:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
@@ -140,6 +158,7 @@ jobs:
       - test-react
       - test-rust
       - test-rspeedy
+      - test-tools
       - website
     if: always()
     runs-on: lynx-ubuntu-24.04-medium
