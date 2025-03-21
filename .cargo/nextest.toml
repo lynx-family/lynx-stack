@@ -108,7 +108,7 @@ archive.include = [
 # Output a JUnit report into the given file inside 'store.dir/<profile-name>'.
 # If unspecified, JUnit is not written out.
 
-path = "junit.xml"
+path = "test-report.junit.xml"
 
 # The name of the top-level "report" element in JUnit report. If aggregating
 # reports across different test runs, it may be useful to provide separate names
