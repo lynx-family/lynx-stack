@@ -71,6 +71,16 @@ jobs:
         --no-cache
         --logHeapUsage
         --silent
+  playwright-linux:
+    needs: build-all
+    uses: ./.github/workflows/workflow-test.yml
+    secrets: inherit
+    with:
+      runs-on: lynx-ubuntu-24.04-xlarge
+      is-web: true
+      run: |
+        export NODE_OPTIONS="--max-old-space-size=32768"
+        pnpm --filter @lynx-js/web-tests run test --reporter='github,dot,junit'
   publish:
     needs: build
     runs-on: ubuntu-latest
