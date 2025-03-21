@@ -1,5 +1,14 @@
 # @lynx-js/web-webpack-plugin
 
+## 0.6.3
+
+### Patch Changes
+
+- chore: remove unused file ([#217](https://github.com/lynx-family/lynx-stack/pull/217))
+
+- Updated dependencies [[`f447811`](https://github.com/lynx-family/lynx-stack/commit/f4478112a08d3cf2d1483b87d591ea4e3b6cc2ea)]:
+  - @lynx-js/web-style-transformer@0.2.3
+
 ## 0.6.2
 
 ### Patch Changes
