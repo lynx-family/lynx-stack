@@ -39,3 +39,7 @@ component_management:
       name: Webpack
       paths:
         - packages/webpack/**
+    - component_id: web
+      name: Web Platform
+      paths:
+        - packages/web-platform/**
