@@ -22,13 +22,13 @@ jobs:
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           cache-key: test-${{ runner.os }}
-      - name: Install cargo-deny
+      - name: Install llvm-cov and nextest
         uses: taiki-e/install-action@03351cfd91ee8253b66020be1ad81991e6ba3502 # v2
         with:
           tool: cargo-llvm-cov,cargo-nextest
       - name: Test
         run: |
-          cargo llvm-cov nextest --config-file .cargo/nextest.toml --lcov --output-path lcov.info
+          cargo llvm-cov nextest --profile ci --config-file .cargo/nextest.toml --lcov --output-path lcov.info
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
         with:

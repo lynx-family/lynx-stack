@@ -128,3 +128,6 @@ store-failure-output = true
 
 # This profile is activated if MIRI_SYSROOT is set.
 [profile.default-miri]
+
+[profile.ci]
+test-threads = 4
