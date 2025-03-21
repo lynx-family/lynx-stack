@@ -128,6 +128,8 @@ jobs:
         --reporter=junit
         --outputFile=test-report.junit.xml
         --coverage
+        --coverage.reporter='clover'
+        --coverage.reporter='text'
         --no-cache
         --logHeapUsage
         --silent
