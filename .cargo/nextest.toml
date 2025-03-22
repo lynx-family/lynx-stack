@@ -104,11 +104,11 @@ archive.include = [
   # * the file "target/data-from-some-dependency/file.txt" will be included in the archive.
 ]
 
-[profile.default.junit]
+[profile.ci.junit]
 # Output a JUnit report into the given file inside 'store.dir/<profile-name>'.
 # If unspecified, JUnit is not written out.
 
-path = "junit.xml"
+path = "test-report.junit.xml"
 
 # The name of the top-level "report" element in JUnit report. If aggregating
 # reports across different test runs, it may be useful to provide separate names
@@ -128,3 +128,6 @@ store-failure-output = true
 
 # This profile is activated if MIRI_SYSROOT is set.
 [profile.default-miri]
+
+[profile.ci]
+test-threads = 1

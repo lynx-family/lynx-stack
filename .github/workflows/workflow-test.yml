@@ -11,6 +11,10 @@ on:
         required: false
         type: boolean
         default: false
+    secrets:
+      CODECOV_TOKEN:
+        required: false
+
 env:
   CI: 1
   TURBO_TELEMETRY_DISABLED: 1
