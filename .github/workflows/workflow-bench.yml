@@ -28,11 +28,11 @@ jobs:
           key: turbo-v3-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ github.sha }}
       - name: Build
         run: |
-          pnpm turbo --filter @lynx-js/benchmark build
+          pnpm turbo build
       - name: Prepare CodSpeed
         run: |
           curl -fsSL https://github.com/CodSpeedHQ/runner/releases/download/v3.5.0/codspeed-runner-installer.sh | bash -s -- --quiet
       - name: Run benchmark
         run: |
           . "$HOME/.cargo/env"
-          codspeed run --token ${{ secrets.CODSPEED_TOKEN }} -- pnpm --filter @lynx-js/benchmark run bench
+          codspeed run --token ${{ secrets.CODSPEED_TOKEN }} -- pnpm -r run bench

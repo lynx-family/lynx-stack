@@ -1,6 +1,5 @@
 packages:
   - .github/actions/eco-ci
-  - benchmark
   - examples/*
   - packages/react
   - packages/react/refresh
