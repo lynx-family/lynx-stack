@@ -29,7 +29,7 @@
     "bench": "vitest bench",
     "build:debug": "napi build --platform --js index.cjs",
     "build:wasm": "node ./scripts/build_wasm.js",
-    "test": "vitest",
+    "test": "vitest --coverage",
     "test:cargo": "cargo test"
   },
   "devDependencies": {

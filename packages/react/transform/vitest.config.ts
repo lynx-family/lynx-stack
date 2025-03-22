@@ -9,6 +9,9 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     name: 'react/transform',
+    coverage: {
+      exclude: ['./__test__/*.bench.js'],
+    },
   },
   plugins: [
     process.env['CI'] ? codspeed() : undefined,
