@@ -2,7 +2,7 @@
 "@lynx-js/rspeedy": patch
 ---
 
-Support server.strictPort
+Support `server.strictPort`
 
 When a port is occupied, Rspeedy will automatically increment the port number until an available port is found.
 
