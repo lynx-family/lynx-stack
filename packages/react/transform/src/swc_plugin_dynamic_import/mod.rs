@@ -14,6 +14,7 @@ use swc_core::{
     utils::{calc_literal_cost, prepend_stmt},
     visit::{VisitMut, VisitMutWith},
   },
+  quote,
 };
 
 use crate::utils::jsonify;
@@ -41,7 +42,8 @@ where
   C: Comments,
 {
   opts: DynamicImportVisitorConfig,
-  named_imports: HashSet<Ident>,
+  named_imports: HashSet<String>,
+  need_load_lazy_bundle: bool,
   comments: Option<C>,
 }
 
@@ -63,6 +65,7 @@ where
       opts,
       comments,
       named_imports: HashSet::new(),
+      need_load_lazy_bundle: false,
     }
   }
 }
@@ -191,16 +194,18 @@ where
         },
       );
     } else {
-      let ident: Ident = "__dynamicImport".into();
+      let ident: String = "__dynamicImport".into();
       *call_expr = CallExpr {
         ctxt: call_expr.ctxt,
         span: call_expr.span,
-        callee: Callee::Expr(Box::new(Expr::Ident(ident.clone()))),
+        callee: Callee::Expr(Box::new(Expr::Ident(ident.clone().into()))),
         args: call_expr.args.take(),
         type_args: None,
       };
       self.named_imports.insert(ident);
     }
+    self.named_imports.insert("loadLazyBundle".into());
+    self.need_load_lazy_bundle = true;
 
     call_expr.visit_mut_children_with(self);
   }
@@ -208,20 +213,31 @@ where
   fn visit_mut_module(&mut self, n: &mut Module) {
     n.visit_mut_children_with(self);
 
+    if self.need_load_lazy_bundle {
+      prepend_stmt(
+        &mut n.body,
+        ModuleItem::Stmt(quote!("lynx.loadLazyBundle = loadLazyBundle" as Stmt)),
+      );
+    }
+
     if self.named_imports.len() > 0 {
+      let mut specifiers = self.named_imports.iter().collect::<Vec<_>>();
+
+      // Sort to keep the output consistent
+      specifiers.sort();
+
       prepend_stmt(
         &mut n.body,
         ModuleItem::ModuleDecl(ModuleDecl::Import(ImportDecl {
           phase: ImportPhase::Evaluation,
           span: DUMMY_SP,
-          specifiers: self
-            .named_imports
+          specifiers: specifiers
             .iter()
             .map(|imported| {
               ImportSpecifier::Named(ImportNamedSpecifier {
                 span: DUMMY_SP,
                 is_type_only: false,
-                local: imported.clone(),
+                local: Ident::new_no_ctxt(imported.as_str().into(), DUMMY_SP),
                 imported: None,
               })
             })
