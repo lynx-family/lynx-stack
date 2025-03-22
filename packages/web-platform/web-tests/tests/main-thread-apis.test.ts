@@ -7,7 +7,8 @@ import {
   cssIdAttribute,
   parentComponentUniqueIdAttribute,
 } from '@lynx-js/web-constants';
-import { test, expect, type Page, CDPSession } from '@playwright/test';
+import { test, expect } from './coverage-fixture.js';
+import type { Page } from '@playwright/test';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import fs from 'node:fs/promises';
@@ -31,14 +32,6 @@ test.describe('main thread api tests', () => {
       waitUntil: 'load',
     });
   });
-  test.beforeEach(async ({ page, browserName }) => {
-    if (browserName === 'chromium') {
-      await page.coverage.startJSCoverage({
-        reportAnonymousScripts: true,
-        resetOnNavigation: true,
-      });
-    }
-  });
 
   test.afterEach(async ({ page }) => {
     const fiberTree = await page.evaluate(() => {
@@ -50,37 +43,6 @@ test.describe('main thread api tests', () => {
     expect(fiberTree).toStrictEqual(domTree);
   });
 
-  test.afterEach(
-    async ({ page, browserName, baseURL, browser }, { titlePath }) => {
-      if (browserName === 'chromium') {
-        const coverage = await page.coverage.stopJSCoverage();
-        const converter = v8toIstanbul(
-          path.join(__dirname, '..', 'www', 'main.js'),
-        );
-        for (const entry of coverage) {
-          await converter.load();
-          converter.applyCoverage(entry.functions);
-        }
-        const dir = path.join(__dirname, '..', '..', '.nyc_output');
-        await fs.mkdir(dir, { recursive: true });
-        const converageMapData = Object.fromEntries(
-          Object.entries(converter.toIstanbul()).map(([key, value]) => {
-            return [key, value];
-          }),
-        );
-        fs.writeFile(
-          path.join(
-            dir,
-            `playwright_output_${
-              getTitle(titlePath).replaceAll('/', '_')
-            }.json`,
-          ),
-          JSON.stringify(converageMapData),
-          { flag: 'w' },
-        );
-      }
-    },
-  );
   test('createElementView', async ({ page }, { title }) => {
     const lynxTag = await page.evaluate(() => {
       const ret = globalThis.__CreateElement('view', 0) as HTMLElement;
