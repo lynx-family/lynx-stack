@@ -39,4 +39,11 @@ describe('Config - Server', () => {
     assertType<Server>({ port: 0 })
     assertType<Server>({ port: 8000 })
   })
+
+  test('server.strictPort', () => {
+    assertType<Server>({})
+    assertType<Server>({ strictPort: undefined })
+    assertType<Server>({ strictPort: false })
+    assertType<Server>({ strictPort: true })
+  })
 })

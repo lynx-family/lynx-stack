@@ -77,6 +77,8 @@ export function toRsbuildConfig(
       host: config.server?.host,
 
       port: config.server?.port,
+
+      strictPort: config.server?.strictPort,
     },
     plugins: config.plugins,
     performance: {
