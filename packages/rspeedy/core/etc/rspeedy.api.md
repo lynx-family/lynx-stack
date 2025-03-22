@@ -261,6 +261,7 @@ export interface Server {
     headers?: Record<string, string | string[]> | undefined;
     host?: string | undefined;
     port?: number | undefined;
+    strictPort?: boolean | undefined
 }
 
 // @public
