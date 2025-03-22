@@ -130,6 +130,7 @@ export function defineConfig(config: Config): Config;
 export interface Dev {
     assetPrefix?: string | boolean | undefined;
     client?: DevClient | undefined;
+    lazyCompilation?: boolean | LazyCompilationOptions | undefined;
     watchFiles?: WatchFiles | WatchFiles[] | undefined;
     writeToDisk?: boolean | ((filename: string) => boolean) | undefined;
 }
@@ -178,6 +179,11 @@ export interface Filename {
     svg?: string | undefined;
     // @deprecated
     template?: string | undefined;
+}
+
+// @public
+export interface LazyCompilationOptions {
+    entries?: boolean;
 }
 
 // @public
