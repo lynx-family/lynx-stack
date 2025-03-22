@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { RuntimeModule } from 'webpack';
+import type { RuntimeModule } from '@rspack/core';
 
 import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
@@ -11,7 +11,7 @@ type LynxAsyncChunksRuntimeModule = new(
 ) => RuntimeModule;
 
 export function createLynxAsyncChunksRuntimeModule(
-  webpack: typeof import('webpack'),
+  webpack: typeof import('@rspack/core'),
 ): LynxAsyncChunksRuntimeModule {
   return class LynxAsyncChunksRuntimeModule extends webpack.RuntimeModule {
     constructor(

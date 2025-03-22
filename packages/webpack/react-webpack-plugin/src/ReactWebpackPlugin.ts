@@ -225,8 +225,6 @@ class ReactWebpackPlugin {
         },
       );
 
-      // TODO: replace LynxTemplatePlugin types with Rspack
-      // @ts-expect-error Rspack x Webpack compilation not match
       const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(compilation);
 
       const { RawSource, ConcatSource } = compiler.webpack.sources;

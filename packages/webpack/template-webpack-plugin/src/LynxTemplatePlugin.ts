@@ -4,20 +4,19 @@
 
 import path from 'node:path';
 
-import {
-  AsyncSeriesBailHook,
-  AsyncSeriesWaterfallHook,
-  SyncWaterfallHook,
-} from '@rspack/lite-tapable';
-import groupBy from 'object.groupby';
 import type {
   Asset,
   Chunk,
   ChunkGroup,
   Compilation,
   Compiler,
-  WebpackError,
-} from 'webpack';
+} from '@rspack/core';
+import {
+  AsyncSeriesBailHook,
+  AsyncSeriesWaterfallHook,
+  SyncWaterfallHook,
+} from '@rspack/lite-tapable';
+import groupBy from 'object.groupby';
 
 import type * as CSS from '@lynx-js/css-serializer';
 import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
@@ -645,8 +644,8 @@ class LynxTemplatePluginImpl {
       compilation.chunkGroups
         .filter(cg => !cg.isInitial()),
       (cg) =>
-        cg.origins
-          .sort((a, b) => a.request.localeCompare(b.request))
+        Array.from(cg.origins)
+          .sort((a, b) => a.request!.localeCompare(b.request!))
           .map(({ request }) => request)
           .join('|'),
     );
@@ -923,7 +922,7 @@ class LynxTemplatePluginImpl {
           new compiler.webpack.WebpackError(error.error_msg as string),
         );
       } else {
-        compilation.errors.push(error as WebpackError);
+        compilation.errors.push(error);
       }
     }
   }
