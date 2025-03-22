@@ -14,7 +14,7 @@
     "preview": "rspress preview"
   },
   "dependencies": {
-    "@rstack-dev/doc-ui": "^1.7.3",
+    "@rstack-dev/doc-ui": "1.7.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
