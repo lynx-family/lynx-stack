@@ -38,6 +38,7 @@ export interface PluginReactLynxOptions {
     // @alpha
     experimental_isLazyBundle?: boolean;
     firstScreenSyncTiming?: 'immediately' | 'jsReady';
+    injectGlobalFetch?: boolean;
     jsx?: Partial<JsxTransformerConfig> | undefined;
     pipelineSchedulerConfig?: number;
     removeDescendantSelectorScope?: boolean;
