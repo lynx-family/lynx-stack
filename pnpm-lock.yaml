@@ -1024,8 +1024,8 @@ importers:
         specifier: 1.0.2
         version: 1.0.2(@rsbuild/core@1.2.19)
       '@rspress/plugin-client-redirects':
-        specifier: 2.0.0-alpha.4
-        version: 2.0.0-alpha.4(@rspress/runtime@2.0.0-alpha.4)
+        specifier: 2.0.0-alpha.5
+        version: 2.0.0-alpha.5(@rspress/runtime@2.0.0-alpha.4)
       '@rspress/shared':
         specifier: 2.0.0-alpha.4
         version: 2.0.0-alpha.4
@@ -2533,11 +2533,11 @@ packages:
     resolution: {integrity: sha512-5+iy1ULz+2diGI5M7bPyaJpS7qOZnhljch/HsDja3whAIAdJkUi9QYNihMKFBqLEyZPYaRD5lfWehJcbB5WHWg==}
     engines: {node: '>=14.17.6'}
 
-  '@rspress/plugin-client-redirects@2.0.0-alpha.4':
-    resolution: {integrity: sha512-eDC2JPkznF7ZS9bAclN4ZiO48IgUiJzyTuFBZtwX2AzK/87Z3u5IulifZQcc2cZhOQh/N1UU7IFXT2tzEb2k0g==}
+  '@rspress/plugin-client-redirects@2.0.0-alpha.5':
+    resolution: {integrity: sha512-RSaAhP+8gDodxBUk7tGbdQul8zqefCNQGRIGuRjl/N4JaII9ahT+097DBCzl13Qdwl1Cg+/dmVyISxWXyQ6AcQ==}
     engines: {node: '>=14.17.6'}
     peerDependencies:
-      '@rspress/runtime': ^2.0.0-alpha.4
+      '@rspress/runtime': ^2.0.0-alpha.5
 
   '@rspress/plugin-container-syntax@2.0.0-alpha.4':
     resolution: {integrity: sha512-Nv0mhcSLDYmiDxeU6UtQ0D1+2BrrinA9xvOSr8FpoVQ+pWckG9yzTftunRu2gN8VV+BMSfDMJIhujIRDySr0Ug==}
@@ -2559,6 +2559,9 @@ packages:
 
   '@rspress/shared@2.0.0-alpha.4':
     resolution: {integrity: sha512-cGUJcMXDbeLty6tkwuYvjJ3z1ugCdSl9V9sN46XVcXgejerJALJ0wduDTcRYEV+g7apFl1l8Ky29cprp7FCvZQ==}
+
+  '@rspress/shared@2.0.0-alpha.5':
+    resolution: {integrity: sha512-7BjBKV1m8v8izyrKoXWiuB87mG2fHpGKqG3bOf2+bmCsrYKCidt9SnM315jHMkG0G69FndhlZNMTaizsJ/R8bw==}
 
   '@rspress/theme-default@2.0.0-alpha.4':
     resolution: {integrity: sha512-4ed/4wSOxqqrH0Hf3s+vpkTXwGO/4BvkdB6E6OPW4dkOqbxZxOyuTqgGuiF7+mAcPsrdyXQ3qWw3V5bcHvm/3A==}
@@ -9661,10 +9664,10 @@ snapshots:
     transitivePeerDependencies:
       - '@rspack/tracing'
 
-  '@rspress/plugin-client-redirects@2.0.0-alpha.4(@rspress/runtime@2.0.0-alpha.4)':
+  '@rspress/plugin-client-redirects@2.0.0-alpha.5(@rspress/runtime@2.0.0-alpha.4)':
     dependencies:
       '@rspress/runtime': 2.0.0-alpha.4
-      '@rspress/shared': 2.0.0-alpha.4
+      '@rspress/shared': 2.0.0-alpha.5
     transitivePeerDependencies:
       - '@rspack/tracing'
 
@@ -9696,6 +9699,15 @@ snapshots:
       - '@rspack/tracing'
 
   '@rspress/shared@2.0.0-alpha.4':
+    dependencies:
+      '@rsbuild/core': 1.2.19
+      gray-matter: 4.0.3
+      lodash-es: 4.17.21
+      unified: 10.1.2
+    transitivePeerDependencies:
+      - '@rspack/tracing'
+
+  '@rspress/shared@2.0.0-alpha.5':
     dependencies:
       '@rsbuild/core': 1.2.19
       gray-matter: 4.0.3
