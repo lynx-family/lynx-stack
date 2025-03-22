@@ -20,5 +20,9 @@
     "Notice.txt",
     "CHANGELOG.md",
     "README.md"
-  ]
+  ],
+  "scripts": {
+    "test:browser": "node serve-test.js",
+    "test:rpc": "node test-rpc.js"
+  }
 }

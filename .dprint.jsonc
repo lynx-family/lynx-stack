@@ -47,6 +47,9 @@
     // The tsconfig.json contains comments that align with indents.
     "/tsconfig.json",
 
+    // Standalone test files
+    "packages/web-platform/web-elements/src/examples/standalone-test.html",
+
     // Tests depend on format
     "packages/tools/css-serializer/test/__preparation__/**",
     "packages/webpack/css-extract-webpack-plugin/test/js/**",

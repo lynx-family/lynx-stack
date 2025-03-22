@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Web Elements Lifecycle Demo (Standalone)</title>
+  <style>
+    /* Base styles */
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 20px;
+      line-height: 1.6;
+      color: #333;
+      background-color: #f9f9f9;
+    }
+    
+    h1, h2 {
+      margin-bottom: 20px;
+    }
+    
+    /* Card component */
+    .card {
+      background-color: white;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+    }
+    
+    /* Button container */
+    .button-container {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    
+    /* Log container */
+    .log-container {
+      background-color: #f0f0f0;
+      border-radius: 8px;
+      padding: 10px;
+      max-height: 300px;
+      overflow-y: auto;
+      font-family: monospace;
+      margin-top: 20px;
+    }
+    
+    .log-item {
+      margin: 5px 0;
+      padding: 5px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    
+    /* Controls */
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    
+    .control-group {
+      margin-bottom: 10px;
+    }
+    
+    .control-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    
+    /* Test buttons */
+    button.test-btn {
+      background-color: #f0f0f0;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 8px 16px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    
+    button.test-btn:hover {
+      background-color: #e0e0e0;
+    }
+  </style>
+</head>
+<body>
+  <h1>Web Elements Lifecycle Demo (Standalone)</h1>
+
+  <div class="card">
+    <h2>Test Button</h2>
+    <div id="button-container" class="button-container">
+      <!-- Button will be inserted here via JavaScript -->
+    </div>
+    
+    <div class="controls">
+      <div class="control-group">
+        <label for="button-text">Button Text:</label>
+        <input type="text" id="button-text" value="Click Me">
+        <button class="test-btn" id="update-text">Update</button>
+      </div>
+      
+      <div class="control-group">
+        <label for="button-color">Color:</label>
+        <select id="button-color">
+          <option value="default">Default</option>
+          <option value="primary">Primary</option>
+          <option value="success">Success</option>
+          <option value="danger">Danger</option>
+          <option value="warning">Warning</option>
+        </select>
+      </div>
+      
+      <div class="control-group">
+        <label for="button-size">Size:</label>
+        <select id="button-size">
+          <option value="small">Small</option>
+          <option value="medium" selected>Medium</option>
+          <option value="large">Large</option>
+        </select>
+      </div>
+      
+      <div class="control-group">
+        <label for="button-disabled">Disabled:</label>
+        <input type="checkbox" id="button-disabled">
+      </div>
+    </div>
+    
+    <div class="lifecycle-test">
+      <h3>Lifecycle Testing</h3>
+      <button class="test-btn" id="create-button">Create Button</button>
+      <button class="test-btn" id="remove-button">Remove Button</button>
+      <button class="test-btn" id="modify-attr">Modify Attribute</button>
+      <button class="test-btn" id="move-to-other">Move to Other Container</button>
+    </div>
+    
+    <div id="other-container" class="button-container" style="background-color: #f0f0f0; padding: 10px; border-radius: 4px;">
+      Other container (for adoptedCallback testing)
+    </div>
+  </div>
+  
+  <div class="card">
+    <h2>Event Log</h2>
+    <div id="log-container" class="log-container">
+      <div class="log-item">Event log will appear here...</div>
+    </div>
+  </div>
+
+  <!-- Inline JavaScript implementation -->
+  <script type="module">
+    /**************************************
+     * Utility Functions
+     **************************************/
+    
+    // Logging function
+    function logEvent(message) {
+      // Queue logs until DOM is ready
+      if (!document.getElementById('log-container')) {
+        setTimeout(() => logEvent(message), 0);
+        return;
+      }
+      
+      const logContainer = document.getElementById('log-container');
+      const logItem = document.createElement('div');
+      logItem.className = 'log-item';
+      logItem.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+      logContainer.insertBefore(logItem, logContainer.firstChild);
+      
+      // Keep only last 50 logs
+      while (logContainer.children.length > 50) {
+        logContainer.removeChild(logContainer.lastChild);
+      }
+    }
+
+    // Template literal helpers
+    function html(strings, ...values) {
+      return strings.reduce((result, str, i) => {
+        return result + str + (values[i] !== undefined ? values[i] : '');
+      }, '');
+    }
+    
+    function css(strings, ...values) {
+      return strings.reduce((result, str, i) => {
+        return result + str + (values[i] !== undefined ? values[i] : '');
+      }, '');
+    }
+
+    /**************************************
+     * WebElement Base Class
+     **************************************/
+    
+    class WebElement extends HTMLElement {
+      static get observedAttributes() { return []; }
+      static notToFilterFalseAttributes = new Set();
+      
+      #initialized = false;
+      #connected = false;
+      
+      get elementIsConnected() { return this.#connected; }
+      
+      constructor() {
+        super();
+        
+        const constructor = this.constructor;
+        
+        // Create shadow DOM if enabled
+        if (constructor.shadowRootMode !== null) {
+          this.attachShadow({ 
+            mode: constructor.shadowRootMode || 'open',
+            delegatesFocus: constructor.delegatesFocus || false
+          });
+        }
+        
+        if (!this.#initialized) {
+          this.initialize();
+          this.#initialized = true;
+        }
+        
+        this.#cleanFalseAttributes();
+      }
+      
+      initialize() {
+        // Override in subclasses
+      }
+      
+      render() {
+        // Override in subclasses
+      }
+      
+      connectedCallback() {
+        this.#connected = true;
+        
+        // Render content
+        this.render();
+        
+        // Call connected lifecycle hook for subclasses
+        this.onConnected();
+        setTimeout(() => logEvent(`[${this.tagName}] connectedCallback called`), 0);
+      }
+      
+      onConnected() {
+        // Override in subclasses
+      }
+      
+      disconnectedCallback() {
+        this.#connected = false;
+        
+        // Call disconnected lifecycle hook for subclasses
+        this.onDisconnected();
+        setTimeout(() => logEvent(`[${this.tagName}] disconnectedCallback called`), 0);
+      }
+      
+      onDisconnected() {
+        // Override in subclasses
+      }
+      
+      adoptedCallback() {
+        this.onAdopted();
+        setTimeout(() => logEvent(`[${this.tagName}] adoptedCallback called`), 0);
+      }
+      
+      onAdopted() {
+        // Override in subclasses
+      }
+      
+      attributeChangedCallback(name, oldValue, newValue) {
+        const constructor = this.constructor;
+        
+        // Handle false attribute filtering
+        if (
+          !constructor.notToFilterFalseAttributes.has(name) &&
+          !name.startsWith('data-')
+        ) {
+          if (oldValue === 'false') oldValue = null;
+          if (newValue === 'false') {
+            newValue = null;
+            this.removeAttribute(name);
+          }
+        }
+        
+        // Skip if no change
+        if (oldValue === newValue) return;
+        
+        // Call attribute changed hook for subclasses
+        this.onAttributeChanged(name, oldValue, newValue);
+        setTimeout(() => logEvent(`[${this.tagName}] attributeChangedCallback: ${name} changed from "${oldValue}" to "${newValue}"`), 0);
+      }
+      
+      onAttributeChanged(name, oldValue, newValue) {
+        // Override in subclasses
+      }
+      
+      setAttribute(qualifiedName, value) {
+        const constructor = this.constructor;
+        
+        // Remove attribute if value is 'false' and not in exceptions list
+        if (
+          value === 'false' &&
+          !constructor.notToFilterFalseAttributes.has(qualifiedName) &&
+          !qualifiedName.startsWith('data-')
+        ) {
+          this.removeAttribute(qualifiedName);
+          return;
+        }
+        
+        super.setAttribute(qualifiedName, value);
+      }
+      
+      #cleanFalseAttributes() {
+        const constructor = this.constructor;
+        const attributes = this.attributes;
+        
+        for (let i = 0; i < attributes.length; i++) {
+          const attr = attributes[i];
+          
+          if (
+            attr && 
+            attr.value === 'false' &&
+            !constructor.notToFilterFalseAttributes.has(attr.name) &&
+            !attr.name.startsWith('data-')
+          ) {
+            this.removeAttributeNode(attr);
+            i--; // Adjust index since we removed an attribute
+          }
+        }
+      }
+    }
+
+    /**************************************
+     * Enhanced Component Decorator
+     **************************************/
+    
+    function EnhancedComponent(tagName, options = {}) {
+      return function(targetClass) {
+        // Create enhanced element class
+        const EnhancedElement = class extends targetClass {
+          static get observedAttributes() {
+            // Combine our observedAttributes with parent class observedAttributes
+            const parentAttrs = targetClass.observedAttributes || [];
+            
+            // Get plugin attributes if available
+            const pluginAttrs = options.plugins?.flatMap(plugin => {
+              return 'observedAttributes' in plugin ? plugin.observedAttributes || [] : [];
+            }) || [];
+            
+            return [...new Set([...parentAttrs, ...pluginAttrs])];
+          }
+          
+          // Store plugin instances
+          #plugins = [];
+          
+          constructor() {
+            super();
+            
+            // Apply mixins if provided
+            if (options.mixins) {
+              for (const mixin of options.mixins) {
+                Object.assign(this, new mixin());
+              }
+            }
+            
+            // Initialize the shadow root template if provided
+            if (this.shadowRoot && options.template) {
+              const template = document.createElement('template');
+              template.innerHTML = options.template;
+              this.shadowRoot.appendChild(template.content.cloneNode(true));
+            }
+            
+            // Add styles to shadow root if provided
+            if (this.shadowRoot && options.styles) {
+              const style = document.createElement('style');
+              style.textContent = options.styles;
+              this.shadowRoot.appendChild(style);
+            }
+            
+            // Initialize plugins
+            if (options.plugins) {
+              this.#plugins = options.plugins.map(Plugin => new Plugin(this));
+            }
+            
+            // Safe logging
+            setTimeout(() => logEvent(`[${this.tagName}] constructor called`), 0);
+          }
+          
+          // Forward lifecycle methods to plugins
+          connectedCallback() {
+            super.connectedCallback();
+            for (const plugin of this.#plugins) {
+              if ('connectedCallback' in plugin) {
+                plugin.connectedCallback();
+              }
+            }
+          }
+          
+          disconnectedCallback() {
+            for (const plugin of this.#plugins) {
+              if ('disconnectedCallback' in plugin) {
+                plugin.disconnectedCallback();
+              }
+            }
+            super.disconnectedCallback();
+          }
+          
+          adoptedCallback() {
+            super.adoptedCallback();
+            for (const plugin of this.#plugins) {
+              if ('adoptedCallback' in plugin) {
+                plugin.adoptedCallback();
+              }
+            }
+          }
+          
+          attributeChangedCallback(name, oldValue, newValue) {
+            super.attributeChangedCallback(name, oldValue, newValue);
+            for (const plugin of this.#plugins) {
+              if ('attributeChangedCallback' in plugin) {
+                plugin.attributeChangedCallback(name, oldValue, newValue);
+              }
+            }
+          }
+        };
+        
+        // Set static properties from options
+        if (options.mode !== undefined) {
+          EnhancedElement.shadowRootMode = options.mode === 'none' ? null : options.mode;
+        }
+        
+        if (options.delegatesFocus !== undefined) {
+          EnhancedElement.delegatesFocus = options.delegatesFocus;
+        }
+        
+        // Define custom element if not already defined
+        if (!customElements.get(tagName)) {
+          customElements.define(tagName, EnhancedElement);
+          // Safe logging with setTimeout
+          setTimeout(() => logEvent(`Defined custom element: ${tagName}`), 0);
+        }
+        
+        return EnhancedElement;
+      };
+    }
+
+    /**************************************
+     * RippleEffect Plugin
+     **************************************/
+    
+    class RippleEffect {
+      static get observedAttributes() {
+        return ['ripple-color'];
+      }
+      
+      constructor(element) {
+        this.element = element;
+        this.setupRipple();
+        setTimeout(() => logEvent(`[Plugin] RippleEffect initialized`), 0);
+      }
+      
+      setupRipple() {
+        this.element.addEventListener('click', this.createRipple.bind(this));
+      }
+      
+      createRipple(event) {
+        const button = this.element;
+        const ripple = document.createElement('span');
+        const rect = button.getBoundingClientRect();
+        
+        const size = Math.max(rect.width, rect.height);
+        const x = event.clientX - rect.left - size / 2;
+        const y = event.clientY - rect.top - size / 2;
+        
+        ripple.style.width = ripple.style.height = `${size}px`;
+        ripple.style.left = `${x}px`;
+        ripple.style.top = `${y}px`;
+        ripple.classList.add('ripple');
+        
+        // Use ripple color attribute if available
+        const rippleColor = button.getAttribute('ripple-color') || 'rgba(255, 255, 255, 0.7)';
+        ripple.style.backgroundColor = rippleColor;
+        
+        // Find ripple container in shadow DOM
+        const shadowRoot = button.shadowRoot;
+        if (shadowRoot) {
+          const rippleContainer = shadowRoot.querySelector('.ripple-container');
+          if (rippleContainer) {
+            rippleContainer.appendChild(ripple);
+            
+            // Remove ripple after animation
+            setTimeout(() => {
+              ripple.remove();
+            }, 600);
+          }
+        }
+      }
+      
+      attributeChangedCallback(name, oldValue, newValue) {
+        if (name === 'ripple-color' && oldValue !== newValue) {
+          setTimeout(() => logEvent(`[Plugin] Ripple color changed from ${oldValue} to ${newValue}`), 0);
+        }
+      }
+      
+      disconnectedCallback() {
+        this.element.removeEventListener('click', this.createRipple.bind(this));
+        setTimeout(() => logEvent(`[Plugin] RippleEffect disconnected`), 0);
+      }
+    }
+
+    /**************************************
+     * Example Button Component
+     **************************************/
+    
+    const ExampleButton = EnhancedComponent('example-button', {
+      template: html`
+        <button part="button">
+          <slot></slot>
+          <div class="ripple-container"></div>
+        </button>
+      `,
+      styles: css`
+        :host {
+          display: inline-block;
+          position: relative;
+          overflow: hidden;
+        }
+        
+        button {
+          background: var(--button-bg, #3498db);
+          color: var(--button-color, white);
+          border: none;
+          border-radius: 4px;
+          padding: 10px 20px;
+          font-size: 16px;
+          cursor: pointer;
+          position: relative;
+          overflow: hidden;
+          transition: background-color 0.3s, box-shadow 0.3s;
+          width: 100%;
+          height: 100%;
+          box-sizing: border-box;
+        }
+        
+        button:hover {
+          background: var(--button-hover-bg, #2980b9);
+        }
+        
+        button:focus {
+          outline: none;
+          box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.3);
+        }
+        
+        .ripple-container {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          overflow: hidden;
+          pointer-events: none;
+        }
+        
+        .ripple {
+          position: absolute;
+          border-radius: 50%;
+          transform: scale(0);
+          animation: ripple 0.6s linear;
+          pointer-events: none;
+        }
+        
+        @keyframes ripple {
+          to {
+            transform: scale(4);
+            opacity: 0;
+          }
+        }
+        
+        :host([disabled]) button {
+          background: var(--button-disabled-bg, #cccccc);
+          color: var(--button-disabled-color, #888888);
+          cursor: not-allowed;
+        }
+      `,
+      plugins: [RippleEffect],
+      delegatesFocus: true
+    })(
+      class extends WebElement {
+        static get observedAttributes() {
+          return ['disabled', 'color', 'size'];
+        }
+        
+        static notToFilterFalseAttributes = new Set(['disabled']);
+        
+        #clickCount = 0;
+        
+        initialize() {
+          this.#updateButtonStyle();
+          this.addEventListener('click', this.#handleClick);
+          setTimeout(() => logEvent(`[ExampleButton] Initialized`), 0);
+        }
+        
+        #handleClick = (event) => {
+          if (this.disabled) {
+            event.preventDefault();
+            event.stopPropagation();
+            return;
+          }
+          
+          this.#clickCount++;
+          
+          this.dispatchEvent(new CustomEvent('button-clicked', {
+            bubbles: true,
+            composed: true,
+            detail: { count: this.#clickCount }
+          }));
+          
+          setTimeout(() => logEvent(`[ExampleButton] Clicked! Count: ${this.#clickCount}`), 0);
+        };
+        
+        #updateButtonStyle() {
+          const color = this.getAttribute('color') || 'default';
+          this.style.setProperty('--button-bg', this.#getColorValue(color));
+          this.style.setProperty('--button-hover-bg', this.#getHoverColorValue(color));
+          
+          const size = this.getAttribute('size') || 'medium';
+          this.#applySize(size);
+        }
+        
+        #getColorValue(color) {
+          switch (color) {
+            case 'primary': return '#3498db';
+            case 'success': return '#2ecc71';
+            case 'danger': return '#e74c3c';
+            case 'warning': return '#f39c12';
+            default: return '#3498db';
+          }
+        }
+        
+        #getHoverColorValue(color) {
+          switch (color) {
+            case 'primary': return '#2980b9';
+            case 'success': return '#27ae60';
+            case 'danger': return '#c0392b';
+            case 'warning': return '#d35400';
+            default: return '#2980b9';
+          }
+        }
+        
+        #applySize(size) {
+          const button = this.shadowRoot?.querySelector('button');
+          if (!button) return;
+          
+          switch (size) {
+            case 'small':
+              button.style.padding = '6px 12px';
+              button.style.fontSize = '14px';
+              break;
+            case 'large':
+              button.style.padding = '12px 24px';
+              button.style.fontSize = '18px';
+              break;
+            case 'medium':
+            default:
+              button.style.padding = '10px 20px';
+              button.style.fontSize = '16px';
+              break;
+          }
+        }
+        
+        onConnected() {
+          setTimeout(() => logEvent(`[ExampleButton] Connected to DOM`), 0);
+        }
+        
+        onDisconnected() {
+          setTimeout(() => logEvent(`[ExampleButton] Disconnected from DOM`), 0);
+        }
+        
+        onAdopted() {
+          setTimeout(() => logEvent(`[ExampleButton] Adopted into new document`), 0);
+        }
+        
+        onAttributeChanged(name, oldValue, newValue) {
+          if (['color', 'size'].includes(name)) {
+            this.#updateButtonStyle();
+          }
+        }
+        
+        get disabled() {
+          return this.hasAttribute('disabled');
+        }
+        
+        set disabled(value) {
+          if (value) {
+            this.setAttribute('disabled', '');
+          } else {
+            this.removeAttribute('disabled');
+          }
+        }
+        
+        get color() {
+          return this.getAttribute('color') || 'default';
+        }
+        
+        set color(value) {
+          this.setAttribute('color', value);
+        }
+        
+        get size() {
+          return this.getAttribute('size') || 'medium';
+        }
+        
+        set size(value) {
+          this.setAttribute('size', value);
+        }
+      }
+    );
+
+    /**************************************
+     * DOM Interaction
+     **************************************/
+    
+    // DOM elements
+    const buttonContainer = document.getElementById('button-container');
+    const otherContainer = document.getElementById('other-container');
+    const logContainer = document.getElementById('log-container');
+    
+    // Button controls
+    const buttonText = document.getElementById('button-text');
+    const buttonColor = document.getElementById('button-color');
+    const buttonSize = document.getElementById('button-size');
+    const buttonDisabled = document.getElementById('button-disabled');
+    
+    // Action buttons
+    const updateTextButton = document.getElementById('update-text');
+    const createButton = document.getElementById('create-button');
+    const removeButton = document.getElementById('remove-button');
+    const modifyAttrButton = document.getElementById('modify-attr');
+    const moveToOtherButton = document.getElementById('move-to-other');
+    
+    // Create a button
+    function createExampleButton() {
+      const button = document.createElement('example-button');
+      button.textContent = buttonText.value;
+      button.id = 'test-button';
+      
+      // Apply initial attributes
+      button.color = buttonColor.value;
+      button.size = buttonSize.value;
+      button.disabled = buttonDisabled.checked;
+      
+      buttonContainer.appendChild(button);
+      return button;
+    }
+    
+    /**************************************
+     * Event Listeners
+     **************************************/
+    
+    createButton.addEventListener('click', () => {
+      // Remove existing button if any
+      const existingButton = document.getElementById('test-button');
+      if (existingButton) {
+        existingButton.remove();
+      }
+      
+      createExampleButton();
+      logEvent('Button created and added to DOM');
+    });
+    
+    removeButton.addEventListener('click', () => {
+      const button = document.getElementById('test-button');
+      if (button) {
+        button.remove();
+        logEvent('Button removed from DOM');
+      } else {
+        logEvent('No button to remove');
+      }
+    });
+    
+    updateTextButton.addEventListener('click', () => {
+      const button = document.getElementById('test-button');
+      if (button) {
+        button.textContent = buttonText.value;
+        logEvent(`Updated button text to: "${buttonText.value}"`);
+      } else {
+        logEvent('No button to update');
+      }
+    });
+    
+    buttonColor.addEventListener('change', () => {
+      const button = document.getElementById('test-button');
+      if (button) {
+        button.color = buttonColor.value;
+        logEvent(`Changed button color to: ${buttonColor.value}`);
+      }
+    });
+    
+    buttonSize.addEventListener('change', () => {
+      const button = document.getElementById('test-button');
+      if (button) {
+        button.size = buttonSize.value;
+        logEvent(`Changed button size to: ${buttonSize.value}`);
+      }
+    });
+    
+    buttonDisabled.addEventListener('change', () => {
+      const button = document.getElementById('test-button');
+      if (button) {
+        button.disabled = buttonDisabled.checked;
+        logEvent(`Set disabled: ${buttonDisabled.checked}`);
+      }
+    });
+    
+    modifyAttrButton.addEventListener('click', () => {
+      const button = document.getElementById('test-button');
+      if (button) {
+        // Toggle an attribute not covered by the controls
+        const currentRippleColor = button.getAttribute('ripple-color');
+        const newRippleColor = currentRippleColor === 'rgba(255, 0, 255, 0.7)' ? 
+          'rgba(0, 255, 255, 0.7)' : 'rgba(255, 0, 255, 0.7)';
+        
+        button.setAttribute('ripple-color', newRippleColor);
+        logEvent(`Modified ripple-color attribute to: ${newRippleColor}`);
+      } else {
+        logEvent('No button to modify');
+      }
+    });
+    
+    moveToOtherButton.addEventListener('click', () => {
+      const button = document.getElementById('test-button');
+      const isInOther = button?.parentElement === otherContainer;
+      
+      if (button) {
+        if (isInOther) {
+          buttonContainer.appendChild(button);
+          logEvent('Moved button back to main container');
+        } else {
+          otherContainer.appendChild(button);
+          logEvent('Moved button to other container (testing adoptedCallback)');
+        }
+      } else {
+        logEvent('No button to move');
+      }
+    });
+    
+    /**************************************
+     * Initialization
+     **************************************/
+    
+    // Create initial button - wrap in DOMContentLoaded
+    document.addEventListener('DOMContentLoaded', () => {
+      createExampleButton();
+      
+      // Initial log
+      logEvent('Page loaded - Lifecycle demo initialized');
+      logEvent('This test page demonstrates Web Elements lifecycle methods');
+    });
+  </script>
+</body>
+</html> 
