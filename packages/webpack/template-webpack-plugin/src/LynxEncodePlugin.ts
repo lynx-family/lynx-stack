@@ -2,7 +2,10 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { Compilation, Compiler } from 'webpack';
+import fs from 'node:fs';
+import path from 'node:path';
+
+import type { Compiler } from 'webpack';
 
 import { LynxTemplatePlugin } from './LynxTemplatePlugin.js';
 
@@ -121,6 +124,7 @@ export class LynxEncodePlugin {
 
 export class LynxEncodePluginImpl {
   name = 'LynxEncodePlugin';
+  private assets2Delete = new Set<string>();
 
   constructor(
     compiler: Compiler,
@@ -145,7 +149,7 @@ export class LynxEncodePluginImpl {
 
         if (!isDebug() && !isDev && !isRsdoctor()) {
           templateHooks.beforeEmit.tap(this.name, (args) => {
-            this.deleteDebuggingAssets(compilation, [
+            this.deleteDebuggingAssets([
               encodeData.lepusCode.root,
               ...encodeData.lepusCode.chunks,
               ...Object.keys(manifest).map(name => ({ name })),
@@ -192,6 +196,32 @@ export class LynxEncodePluginImpl {
 
         return args;
       });
+      compiler.hooks.afterEmit.tap(this.name, (compilation) => {
+        this.assets2Delete.forEach((asset) => {
+          compilation.deleteAsset(asset);
+          if (compilation.outputOptions.path) {
+            const files2Delete = [
+              asset,
+            ];
+            if (asset.endsWith('.js')) {
+              files2Delete.push(asset + '.map');
+            }
+            for (const file of files2Delete) {
+              fs.rmSync(
+                path.posix.join(
+                  compilation.outputOptions.path,
+                  file,
+                ),
+                {
+                  recursive: true,
+                  force: true,
+                },
+              );
+            }
+          }
+        });
+        this.assets2Delete.clear();
+      });
 
       templateHooks.encode.tapPromise({
         name: this.name,
@@ -216,14 +246,15 @@ export class LynxEncodePluginImpl {
    * The deleteDebuggingAssets delete all the assets that are inlined into the template.
    */
   deleteDebuggingAssets(
-    compilation: Compilation,
     assets: ({ name: string } | undefined)[],
   ): void {
+    this.assets2Delete = new Set();
+    const { assets2Delete } = this;
     assets
       .filter(asset => asset !== undefined)
       .forEach(asset => deleteAsset(asset));
     function deleteAsset({ name }: { name: string }) {
-      return compilation.deleteAsset(name);
+      return assets2Delete.add(name);
     }
   }
 
