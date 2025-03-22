@@ -963,8 +963,8 @@ importers:
   website:
     dependencies:
       '@rstack-dev/doc-ui':
-        specifier: ^1.7.2
-        version: 1.7.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: ^1.7.3
+        version: 1.7.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -2564,8 +2564,8 @@ packages:
     resolution: {integrity: sha512-4ed/4wSOxqqrH0Hf3s+vpkTXwGO/4BvkdB6E6OPW4dkOqbxZxOyuTqgGuiF7+mAcPsrdyXQ3qWw3V5bcHvm/3A==}
     engines: {node: '>=14.17.6'}
 
-  '@rstack-dev/doc-ui@1.7.2':
-    resolution: {integrity: sha512-bGqK1OzOJpQon5va8iQI7GX8jfjoXsVJJJjRUJ6jdoWrA1BAcggBf7SDSJ9+RSWjaTp74t/dBRuoLeSrOOh0gw==}
+  '@rstack-dev/doc-ui@1.7.3':
+    resolution: {integrity: sha512-rWJgZoe2bG9dMLjRUMjifU3SyF2JR/73fkPVJfUfp34xZS8fnOYVBEvHJkKuBwKOzFwEthz0nbO5mDu+kaGpuQ==}
 
   '@rtsao/scc@1.1.0':
     resolution: {integrity: sha512-zt6OdqaDoOnJ1ZYsCYGt9YmWzDXl4vQdKTyJev62gFhRGKdx7mcT54V9KIjg+d2wi9EXsPvAPKe7i7WjfVWB8g==}
@@ -9723,7 +9723,7 @@ snapshots:
     transitivePeerDependencies:
       - '@rspack/tracing'
 
-  '@rstack-dev/doc-ui@1.7.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@rstack-dev/doc-ui@1.7.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
       framer-motion: 12.5.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
     transitivePeerDependencies:
