@@ -966,7 +966,7 @@ importers:
   website:
     dependencies:
       '@rstack-dev/doc-ui':
-        specifier: ^1.7.3
+        specifier: 1.7.3
         version: 1.7.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react:
         specifier: ^18.3.1
