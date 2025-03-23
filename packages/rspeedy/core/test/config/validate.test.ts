@@ -59,6 +59,9 @@ describe('Config Validation', () => {
         { writeToDisk: false },
         { writeToDisk: () => false },
         { writeToDisk: (p) => p.includes('foo') },
+        { progressBar: false },
+        { progressBar: true },
+        { progressBar: { id: 'foo' } },
       ]
 
       cases.forEach(dev => {
@@ -170,6 +173,26 @@ describe('Config Validation', () => {
 
           Invalid config on \`$input.dev.writeToDisk\`.
             - Expect to be (boolean | undefined)
+            - Got: null
+          ]
+        `)
+
+      expect(() => validate({ dev: { progressBar: null } }))
+        .toThrowErrorMatchingInlineSnapshot(`
+          [Error: Invalid configuration.
+
+          Invalid config on \`$input.dev.progressBar\`.
+            - Expect to be (__type | boolean | undefined)
+            - Got: null
+          ]
+        `)
+
+      expect(() => validate({ dev: { progressBar: { id: null } } }))
+        .toThrowErrorMatchingInlineSnapshot(`
+          [Error: Invalid configuration.
+
+          Invalid config on \`$input.dev.progressBar.id\`.
+            - Expect to be (string | undefined)
             - Got: null
           ]
         `)

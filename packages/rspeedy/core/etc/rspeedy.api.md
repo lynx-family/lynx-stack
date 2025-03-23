@@ -130,6 +130,9 @@ export function defineConfig(config: Config): Config;
 export interface Dev {
     assetPrefix?: string | boolean | undefined;
     client?: DevClient | undefined;
+    progressBar?: boolean | {
+        id?: string;
+    } | undefined;
     watchFiles?: WatchFiles | WatchFiles[] | undefined;
     writeToDisk?: boolean | ((filename: string) => boolean) | undefined;
 }
