@@ -1,10 +1,10 @@
 # lynx-stack
 
-<p>
-  <a aria-label="License" href="https://github.com/lynx-family/lynx-stack/blob/main/LICENSE">
-    <img src="https://img.shields.io/badge/License-Apache--2.0-blue" alt="license" />
-  </a>
-</p>
+[![Apache licesed](https://img.shields.io/badge/License-Apache--2.0-cyan?logo=apache)](https://github.com/lynx-family/lynx/blob/develop/LICENSE)
+[![GitHub Repo stars](https://img.shields.io/github/stars/lynx-family/lynx-stack)](https://github.com/lynx-family/lynx-stack)
+[![codecov](https://codecov.io/gh/lynx-family/lynx-stack/graph/badge.svg?style=flat-square)](https://codecov.io/gh/lynx-family/lynx-stack)
+[![X (formerly Twitter) URL](https://img.shields.io/twitter/url?url=https%3A%2F%2Fx.com%2Flynxjs_org&style=social&label=Lynx)](https://x.com/lynxjs_org)
+[![Discord](https://img.shields.io/discord/1345754526174543964?logo=discord&style=social&label=Lynx)](https://discord.gg/mXk7jqdDXk)
 
 This repository contains the **core JavaScript stack** of Lynx, including [ReactLynx][1], [Rspeedy][2], [Lynx for Web][3], and more. For other repositories in the Lynx family, visit our [org homepage](https://github.com/lynx-family).
 

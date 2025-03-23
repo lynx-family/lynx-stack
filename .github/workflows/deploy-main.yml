@@ -51,14 +51,19 @@ jobs:
       cancel-in-progress: true
     uses: ./.github/workflows/workflow-build.yml
     if: github.repository == 'lynx-family/lynx-stack'
-    secrets: inherit
     with:
       runs-on: lynx-ubuntu-24.04-xlarge
+  benchmark:
+    needs: build-all
+    uses: ./.github/workflows/workflow-bench.yml
+    secrets:
+      CODSPEED_TOKEN: ${{ secrets.CODSPEED_TOKEN }}
   coverage:
     needs: build-all
     uses: ./.github/workflows/workflow-test.yml
     if: github.repository == 'lynx-family/lynx-stack'
-    secrets: inherit
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
       runs-on: lynx-ubuntu-24.04-medium
       run: >

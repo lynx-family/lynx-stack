@@ -1,0 +1,38 @@
+on:
+  workflow_call:
+    secrets:
+      CODSPEED_TOKEN:
+        required: true
+
+env:
+  CI: 1
+  TURBO_TELEMETRY_DISABLED: 1
+jobs:
+  nodejs-benchmark:
+    runs-on: lynx-ubuntu-24.04-xlarge
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install
+        run: |
+          npm install -g corepack@latest
+          corepack enable
+          pnpm install --frozen-lockfile
+      - name: TurboCache
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          # We have to be strict here to make sure getting the cache of build-all
+          key: turbo-v3-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ github.sha }}
+      - name: Build
+        run: |
+          pnpm turbo build
+      - name: Prepare CodSpeed
+        run: |
+          curl -fsSL https://github.com/CodSpeedHQ/runner/releases/download/v3.5.0/codspeed-runner-installer.sh | bash -s -- --quiet
+      - name: Run benchmark
+        run: |
+          . "$HOME/.cargo/env"
+          codspeed run --token ${{ secrets.CODSPEED_TOKEN }} -- pnpm -r run bench
