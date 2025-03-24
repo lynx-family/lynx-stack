@@ -56,8 +56,8 @@ importers:
         specifier: ^2.28.1
         version: 2.28.1
       '@codspeed/vitest-plugin':
-        specifier: ^4.0.0
-        version: 4.0.0(vite@5.4.2(@types/node@22.13.5)(sass-embedded@1.85.0)(terser@5.31.6))(vitest@3.0.9)
+        specifier: ^4.0.1
+        version: 4.0.1(vite@5.4.2(@types/node@22.13.5)(sass-embedded@1.85.0)(terser@5.31.6))(vitest@3.0.9)
       '@eslint/js':
         specifier: ^9.23.0
         version: 9.23.0
@@ -1440,13 +1440,13 @@ packages:
   '@clack/prompts@0.10.0':
     resolution: {integrity: sha512-H3rCl6CwW1NdQt9rE3n373t7o5cthPv7yUoxF2ytZvyvlJv89C5RYMJu83Hed8ODgys5vpBU0GKxIRG83jd8NQ==}
 
-  '@codspeed/core@4.0.0':
-    resolution: {integrity: sha512-B3zwdwLG8rcV0ORfYKX1wDP6ZCWf9C6ySidSf61q2vm9v5Lj2cWwRvj7vX+w/UyFHWKjp/zSyWTEed/r3Fv4Tg==}
+  '@codspeed/core@4.0.1':
+    resolution: {integrity: sha512-fJ53arfgtzCDZa8DuGJhpTZ3Ll9A1uW5nQ2jSJnfO4Hl5MRD2cP8P4vPvIUAGbdbjwCxR1jat6cW8OloMJkJXw==}
 
-  '@codspeed/vitest-plugin@4.0.0':
-    resolution: {integrity: sha512-L7oCOuVL2xI1/z+HLt56+7Xs/MGzbaf5aaOys6vOMDAs1PmxbmyAz6g1Y0x1TrP1+dvR9LUZQCKM/CsXHCrNxg==}
+  '@codspeed/vitest-plugin@4.0.1':
+    resolution: {integrity: sha512-aqmrPJzX9cD50UWDsOyih5L5WcEYlNQg3u84sJJ9ZuuLApA51w+LGxk6Xbyb8LJF9n/CwM94HKHV/qArfnvDoQ==}
     peerDependencies:
-      vite: ^4.2.0 || ^5.0.0
+      vite: ^4.2.0 || ^5.0.0 || ^6.0.0
       vitest: '>=1.2.2'
 
   '@csstools/color-helpers@5.0.1':
@@ -8531,7 +8531,7 @@ snapshots:
       picocolors: 1.1.1
       sisteransi: 1.0.5
 
-  '@codspeed/core@4.0.0':
+  '@codspeed/core@4.0.1':
     dependencies:
       axios: 1.8.3
       find-up: 6.3.0
@@ -8540,9 +8540,9 @@ snapshots:
     transitivePeerDependencies:
       - debug
 
-  '@codspeed/vitest-plugin@4.0.0(vite@5.4.2(@types/node@22.13.5)(sass-embedded@1.85.0)(terser@5.31.6))(vitest@3.0.9)':
+  '@codspeed/vitest-plugin@4.0.1(vite@5.4.2(@types/node@22.13.5)(sass-embedded@1.85.0)(terser@5.31.6))(vitest@3.0.9)':
     dependencies:
-      '@codspeed/core': 4.0.0
+      '@codspeed/core': 4.0.1
       vite: 5.4.2(@types/node@22.13.5)(sass-embedded@1.85.0)(terser@5.31.6)
       vitest: 3.0.9(@types/debug@4.1.12)(@types/node@22.13.5)(@vitest/ui@3.0.9)(jsdom@26.0.0)(sass-embedded@1.85.0)(terser@5.31.6)
     transitivePeerDependencies:
