@@ -1,5 +1,5 @@
 ---
-"@lynx-js/rspeedy": major
+"@lynx-js/rspeedy": patch
 ---
 
-support load .env file by default
+support load `.env` file by default

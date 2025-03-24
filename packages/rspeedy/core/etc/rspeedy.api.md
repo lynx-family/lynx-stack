@@ -4,6 +4,7 @@
 
 ```ts
 
+import type { CreateRsbuildOptions } from '@rsbuild/core';
 import { logger } from '@rsbuild/core';
 import type { RsbuildConfig } from '@rsbuild/core';
 import type { RsbuildInstance } from '@rsbuild/core';
@@ -53,7 +54,6 @@ export interface ChunkSplitCustom {
 export interface Config {
     dev?: Dev | undefined;
     environments?: RsbuildConfig['environments'] | undefined;
-    loadEnv?: boolean | undefined;
     mode?: 'development' | 'production' | 'none' | undefined;
     output?: Output | undefined;
     performance?: Performance | undefined;
@@ -69,11 +69,12 @@ export interface Config {
 export type ConsoleType = 'log' | 'warn' | 'error' | 'info' | 'debug' | 'profile' | 'profileEnd' | (string & Record<never, never>);
 
 // @public
-export function createRspeedy({ cwd, rspeedyConfig }: CreateRspeedyOptions): Promise<RspeedyInstance>;
+export function createRspeedy({ cwd, rspeedyConfig, loadEnv }: CreateRspeedyOptions): Promise<RspeedyInstance>;
 
 // @public
 export interface CreateRspeedyOptions {
     cwd?: string;
+    loadEnv?: CreateRsbuildOptions['loadEnv'];
     rspeedyConfig?: Config;
 }
 
