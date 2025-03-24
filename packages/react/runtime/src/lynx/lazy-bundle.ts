@@ -54,57 +54,63 @@ export const makeSyncThen = function<T>(result: T) {
  * @returns
  * @public
  */
-export function loadLazyBundle<
+export const loadLazyBundle: <
   T extends { default: React.ComponentType<any> },
->(source: string): Promise<T> {
-  if (__LEPUS__) {
-    const query = __QueryComponent(source);
-    let result: T;
-    try {
-      result = query.evalResult;
-    } catch (e) {
-      // Here we cannot return a rejected promise
-      // (which will eventually be an unhandled rejection and cause unnecessary redbox)
-      // But we still need a object in shape of Promise
-      // So we return a Promise which will never resolve or reject,
-      // which fit our principle "lepus run only once at first-screen" better
-      return new Promise(() => {});
-    }
-    const r: Promise<T> = Promise.resolve(result);
-    // Why we should modify the implementation of `then`?
-    // We should make it `sync` so lepus first-screen render can use result above instantly
-    // We also should keep promise shape
-    // @ts-ignore
-    r.then = makeSyncThen(result);
-    return r;
-  } else if (__JS__) {
-    return new Promise((resolve, reject) => {
-      const callback: (result: any) => void = result => {
-        const { code, detail } = result;
-        if (code === 0) {
-          const { schema } = detail;
-          const exports = lynxCoreInject.tt.getDynamicComponentExports(schema);
-          // `code === 0` means that the lazy bundle has been successfully parsed. However,
-          // its javascript files may still fail to run, which would prevent the retrieval of the exports object.
-          if (exports) {
-            resolve(exports);
-            return;
-          }
-        }
-        reject(new Error('Lazy bundle load failed: ' + JSON.stringify(result)));
-      };
-      if (typeof lynx.QueryComponent === 'function') {
-        lynx.QueryComponent(source, callback);
-      } else {
-        lynx.getNativeLynx().QueryComponent!(source, callback);
+>(source: string) => Promise<T> = /*#__PURE__*/ (() => {
+  lynx.loadLazyBundle = loadLazyBundle;
+
+  function loadLazyBundle<
+    T extends { default: React.ComponentType<any> },
+  >(source: string): Promise<T> {
+    if (__LEPUS__) {
+      const query = __QueryComponent(source);
+      let result: T;
+      try {
+        result = query.evalResult;
+      } catch (e) {
+        // Here we cannot return a rejected promise
+        // (which will eventually be an unhandled rejection and cause unnecessary redbox)
+        // But we still need a object in shape of Promise
+        // So we return a Promise which will never resolve or reject,
+        // which fit our principle "lepus run only once at first-screen" better
+        return new Promise(() => {});
       }
-    });
+      const r: Promise<T> = Promise.resolve(result);
+      // Why we should modify the implementation of `then`?
+      // We should make it `sync` so lepus first-screen render can use result above instantly
+      // We also should keep promise shape
+      // @ts-ignore
+      r.then = makeSyncThen(result);
+      return r;
+    } else if (__JS__) {
+      return new Promise((resolve, reject) => {
+        const callback: (result: any) => void = result => {
+          const { code, detail } = result;
+          if (code === 0) {
+            const { schema } = detail;
+            const exports = lynxCoreInject.tt.getDynamicComponentExports(schema);
+            // `code === 0` means that the lazy bundle has been successfully parsed. However,
+            // its javascript files may still fail to run, which would prevent the retrieval of the exports object.
+            if (exports) {
+              resolve(exports);
+              return;
+            }
+          }
+          reject(new Error('Lazy bundle load failed: ' + JSON.stringify(result)));
+        };
+        if (typeof lynx.QueryComponent === 'function') {
+          lynx.QueryComponent(source, callback);
+        } else {
+          lynx.getNativeLynx().QueryComponent!(source, callback);
+        }
+      });
+    }
+
+    throw new Error('unreachable');
   }
 
-  throw new Error('unreachable');
-}
-
-lynx.loadLazyBundle = loadLazyBundle;
+  return loadLazyBundle;
+})();
 
 /**
  * @internal
