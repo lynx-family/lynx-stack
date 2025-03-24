@@ -10,7 +10,7 @@ import {
 } from '@lynx-js/web-constants';
 import { createCrossThreadEvent } from '../../utils/createCrossThreadEvent.js';
 
-export function createExposureService(rpc: Rpc, rootDom: Element) {
+export function createExposureService(rpc: Rpc, shadowRoot: ShadowRoot) {
   let working = true;
   let exposureCache: ExposureWorkerEvent[] = [];
   let disexposureCache: ExposureWorkerEvent[] = [];
@@ -41,8 +41,10 @@ export function createExposureService(rpc: Rpc, rootDom: Element) {
       }]);
     }
   }, 1000 / 20);
-  rootDom.addEventListener('exposure', exposureEventHandler, { passive: true });
-  rootDom.addEventListener('disexposure', exposureEventHandler, {
+  shadowRoot.addEventListener('exposure', exposureEventHandler, {
+    passive: true,
+  });
+  shadowRoot.addEventListener('disexposure', exposureEventHandler, {
     passive: true,
   });
   rpc.registerHandler(switchExposureService, async (enable, sendEvent) => {
