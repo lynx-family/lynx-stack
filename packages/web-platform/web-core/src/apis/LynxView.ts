@@ -337,7 +337,6 @@ export class LynxView extends HTMLElement {
               },
             );
           }
-          this.shadowRoot!.append(shadowRoot);
         }
       });
     }
