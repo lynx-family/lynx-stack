@@ -1171,10 +1171,6 @@ test.describe('reactlynx3 tests', () => {
       test(
         'basic-element-text-maxlength',
         async ({ page, browserName }, { title }) => {
-          test.skip(
-            browserName === 'firefox',
-            'firefox ResizeObserver detection is incorrect',
-          ); // This is caused by the LynxView's auto size feature
           await goto(page, title);
           await wait(100);
           await diffScreenShot(page, 'text', 'maxlength');
