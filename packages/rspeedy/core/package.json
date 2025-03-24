@@ -75,7 +75,7 @@
     "@rollup/plugin-typescript": "^12.1.2",
     "@rsbuild/webpack": "catalog:rsbuild",
     "eventemitter3": "^5.0.1",
-    "type-fest": "^4.37.0",
+    "type-fest": "^4.38.0",
     "vitest": "^3.0.9",
     "webpack": "^5.98.0"
   },

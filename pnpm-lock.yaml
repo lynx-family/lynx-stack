@@ -320,8 +320,8 @@ importers:
         specifier: ^5.0.1
         version: 5.0.1
       type-fest:
-        specifier: ^4.37.0
-        version: 4.37.0
+        specifier: ^4.38.0
+        version: 4.38.0
       vitest:
         specifier: ^3.0.9
         version: 3.0.9(@types/debug@4.1.12)(@types/node@22.13.5)(@vitest/ui@3.0.9)(jsdom@26.0.0)(sass-embedded@1.85.0)(terser@5.31.6)
@@ -431,8 +431,8 @@ importers:
         specifier: ^3.4.17
         version: 3.4.17
       type-fest:
-        specifier: ^4.37.0
-        version: 4.37.0
+        specifier: ^4.38.0
+        version: 4.38.0
       typia:
         specifier: 7.6.4
         version: 7.6.4(@samchon/openapi@2.4.2)(typescript@5.7.3)
@@ -504,8 +504,8 @@ importers:
         specifier: ^1.2.3
         version: 1.2.3
       type-fest:
-        specifier: ^4.37.0
-        version: 4.37.0
+        specifier: ^4.38.0
+        version: 4.38.0
 
   packages/rspeedy/websocket:
     dependencies:
@@ -7535,8 +7535,8 @@ packages:
     resolution: {integrity: sha512-4dbzIzqvjtgiM5rw1k5rEHtBANKmdudhGyBEajN01fEyhaAIhsoKNy6y7+IN93IfpFtwY9iqi7kD+xwKhQsNJA==}
     engines: {node: '>=8'}
 
-  type-fest@4.37.0:
-    resolution: {integrity: sha512-S/5/0kFftkq27FPNye0XM1e2NsnoD/3FS+pBmbjmmtLT6I+i344KoOf7pvXreaFsDamWeaJX55nczA1m5PsBDg==}
+  type-fest@4.38.0:
+    resolution: {integrity: sha512-2dBz5D5ycHIoliLYLi0Q2V7KRaDlH0uWIvmk7TYlAg5slqwiPv1ezJdZm1QEM0xgk29oYWMCbIG7E6gHpvChlg==}
     engines: {node: '>=16'}
 
   type-is@1.6.18:
@@ -13945,7 +13945,7 @@ snapshots:
     dependencies:
       '@babel/code-frame': 7.26.2
       index-to-position: 0.1.2
-      type-fest: 4.37.0
+      type-fest: 4.38.0
 
   parse5@7.2.1:
     dependencies:
@@ -14371,14 +14371,14 @@ snapshots:
     dependencies:
       find-up-simple: 1.0.0
       read-pkg: 9.0.1
-      type-fest: 4.37.0
+      type-fest: 4.38.0
 
   read-pkg@9.0.1:
     dependencies:
       '@types/normalize-package-data': 2.4.4
       normalize-package-data: 6.0.2
       parse-json: 8.1.0
-      type-fest: 4.37.0
+      type-fest: 4.38.0
       unicorn-magic: 0.1.0
 
   read-yaml-file@1.1.0:
@@ -15461,7 +15461,7 @@ snapshots:
 
   type-fest@0.8.1: {}
 
-  type-fest@4.37.0: {}
+  type-fest@4.38.0: {}
 
   type-is@1.6.18:
     dependencies:
