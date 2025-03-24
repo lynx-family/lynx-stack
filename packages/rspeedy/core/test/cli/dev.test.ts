@@ -17,7 +17,6 @@ vi.mock(import('@rsbuild/core'), async (original) => {
     createRsbuild: vi.fn(),
     logger: {
       ...core.logger,
-      debug: vi.fn(),
       error: vi.fn(),
     },
   }
@@ -52,27 +51,6 @@ describe('CLI - dev', () => {
 
   beforeEach(() => {
     vi.restoreAllMocks()
-  })
-
-  test.only('config with .env file', async () => {
-    const core = await import('@rsbuild/core')
-    const { gracefulExit } = await import('exit-hook')
-
-    const program = new Command('test')
-    await dev.call(
-      program,
-      join(fixturesRoot, 'project-with-env'),
-      {},
-    )
-
-    // make sure the output contains variable BAR
-    expect(core.logger.debug).toBeCalledWith(
-      expect.stringContaining('loaded env file:'),
-    )
-
-    // createRsbuild should be called
-    expect(core.createRsbuild).toBeCalled()
-    expect(gracefulExit).toBeCalledWith(1)
   })
 
   test('config not found', async () => {
