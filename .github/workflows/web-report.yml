@@ -9,9 +9,7 @@ name: Web Platform Report
       - "packages/web-platform/**"
       - .github/workflows/web-report.yml
 permissions:
-  repository-projects: read
-  contents: read
-  actions: write
+  contents: write
   pull-requests: write
 env:
   CI: 1
@@ -38,9 +36,10 @@ jobs:
       - run: |
           pnpm install --frozen-lockfile
           pnpm turbo --filter "@lynx-js/web-explorer" build
-          mv ./packages/web-platform/web-explorer/dist/stats.json ../stats.base.json
+          mv ./packages/web-platform/web-explorer/dist/stats.json ./stats.base.json
+          mv ../stats.head.json ./stats.head.json
       - uses: github/webpack-bundlesize-compare-action@v2.1.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          current-stats-json-path: ../stats.head.json
-          base-stats-json-path: ../stats.base.json
+          current-stats-json-path: ./stats.head.json
+          base-stats-json-path: ./stats.base.json
