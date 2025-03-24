@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './coverage-fixture.js';
 
 function waitImpl(ms: number): Promise<void> {
   const { promise, resolve } = Promise.withResolvers<void>();

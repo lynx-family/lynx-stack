@@ -2,13 +2,9 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import {
-  test,
-  expect,
-  type Page,
-  CDPSession,
-  BrowserContext,
-} from '@playwright/test';
+import type { Page, BrowserContext, CDPSession } from '@playwright/test';
+
+import { test, expect } from './coverage-fixture.js';
 
 const wait = async (ms: number) => {
   await new Promise((resolve) => {
