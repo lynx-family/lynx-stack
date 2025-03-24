@@ -560,6 +560,8 @@ importers:
         specifier: ^5.98.0
         version: 5.98.0
 
+  packages/web-platform/offscreen-document: {}
+
   packages/web-platform/web-constants:
     dependencies:
       '@lynx-js/web-worker-rpc':

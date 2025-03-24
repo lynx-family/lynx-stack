@@ -1,0 +1,12 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "composite": true,
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "lib": ["ESNext", "WebWorker", "DOM"],
+    "exactOptionalPropertyTypes": true,
+  },
+  "include": ["src"],
+  "references": [],
+}
