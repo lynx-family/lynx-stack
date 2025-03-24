@@ -47,7 +47,7 @@ export interface Config {
    * Rspeedy automatically loads the .env file by default, utilizing the [Rsbuild API](https://rsbuild.dev/api/javascript-api/core#load-env-variables).
    * You can use the environment variables defined in the .env file within your code by accessing them via `import.meta.env.FOO` or `process.env.Foo`.
    * @see https://rsbuild.dev/guide/advanced/env-vars#env-file
-   * @default true
+   * @defaultValue true
    */
   loadEnv?: boolean | undefined
 

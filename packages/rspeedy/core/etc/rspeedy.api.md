@@ -53,6 +53,7 @@ export interface ChunkSplitCustom {
 export interface Config {
     dev?: Dev | undefined;
     environments?: RsbuildConfig['environments'] | undefined;
+    loadEnv?: boolean | undefined;
     mode?: 'development' | 'production' | 'none' | undefined;
     output?: Output | undefined;
     performance?: Performance | undefined;
