@@ -38,6 +38,18 @@ export function apply(program: Command): Command {
     .showSuggestionAfterError(true)
     .exitOverride() // Avoid calling `process.exit` by commander
 
+  // Add new init command for interactive configuration
+  const initCommand = program.command('init')
+  initCommand
+    .description(
+      'Initialize a new Rspeedy project with interactive configuration',
+    )
+    .action(() =>
+      import('../utils/interactive-config.js').then((
+        { startInteractiveConfig },
+      ) => startInteractiveConfig(cwd))
+    )
+
   const buildCommand = program.command('build')
   buildCommand
     .description('Build the project in production mode')
@@ -64,7 +76,7 @@ export function apply(program: Command): Command {
   inspectCommand
     .description('View the Rsbuild config and Rspack config of the project.')
     .option('--mode <mode>', 'specify the mode of Rsbuild', 'development')
-    .option('--output <output>', 'specify inspect content output path')
+    .option('--output <o>', 'specify inspect content output path')
     .option('--verbose', 'show full function definitions in output')
     .action((inspectOptions: InspectOptions) =>
       import('./inspect.js').then(({ inspect }) =>

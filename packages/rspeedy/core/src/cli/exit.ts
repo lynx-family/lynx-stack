@@ -7,6 +7,7 @@ import { asyncExitHook, gracefulExit } from 'exit-hook'
 import color from 'picocolors'
 
 import { debug } from '../debug.js'
+import { enhanceError, logEnhancedError } from '../utils/error-handler.js'
 
 const start = Date.now()
 
@@ -16,10 +17,8 @@ const unsubscribe = asyncExitHook(onExit, { wait: 1000 })
 
 // eslint-disable-next-line @typescript-eslint/no-misused-promises
 process.on('unhandledRejection', async (reason) => {
-  logger.error(
-    'Unhandled Rejection with reason:',
-    reason instanceof Error ? reason : new Error(JSON.stringify(reason)),
-  )
+  const enhancedError = enhanceError(reason)
+  logEnhancedError(enhancedError)
 
   // Here we do not directly use `gracefulExit` since it will wait until
   // the compilation finished.
