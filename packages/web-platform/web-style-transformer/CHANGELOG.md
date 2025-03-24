@@ -1,5 +1,13 @@
 # @lynx-js/web-style-transformer
 
+## 0.2.3
+
+### Patch Changes
+
+- feat: 1. list adds support for the `sticky` attribute. Now sticky-offset, sticky-top, and sticky-bottom will only take effect when `sticky` is `true`. ([#257](https://github.com/lynx-family/lynx-stack/pull/257))
+
+  2. Added support for `list-main-axis-gap`, `list-cross-axis-gap`.
+
 ## 0.2.2
 
 ### Patch Changes

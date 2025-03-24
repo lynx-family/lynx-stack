@@ -6,15 +6,17 @@ import type {
   Cloneable,
   NapiModulesMap,
   NativeModulesMap,
+  sendGlobalEventEndpoint,
   UpdateDataType,
 } from '@lynx-js/web-constants';
 import { startUIThread } from '../uiThread/startUIThread.js';
+import type { RpcCallType } from '@lynx-js/web-worker-rpc';
 
 export interface LynxViewConfigs {
   templateUrl: string;
   initData: Cloneable;
   globalProps: Cloneable;
-  rootDom: HTMLElement;
+  shadowRoot: ShadowRoot;
   callbacks: Parameters<typeof startUIThread>[3];
   nativeModulesMap: NativeModulesMap;
   napiModulesMap: NapiModulesMap;
@@ -28,12 +30,12 @@ export interface LynxView {
     callback?: () => void,
   ): void;
   dispose(): Promise<void>;
-  sendGlobalEvent(name: string, params?: Cloneable[]): void;
+  sendGlobalEvent: RpcCallType<typeof sendGlobalEventEndpoint>;
 }
 
 export function createLynxView(configs: LynxViewConfigs): LynxView {
   const {
-    rootDom,
+    shadowRoot,
     callbacks,
     templateUrl,
     globalProps,
@@ -52,7 +54,7 @@ export function createLynxView(configs: LynxViewConfigs): LynxView {
       napiModulesMap,
       browserConfig: {},
     },
-    rootDom,
+    shadowRoot,
     callbacks,
   );
 }

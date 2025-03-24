@@ -46,13 +46,18 @@ jobs:
 
   build:
     uses: ./.github/workflows/workflow-build.yml
-    secrets: inherit
     with:
       runs-on: lynx-ubuntu-24.04-xlarge
+  benchmark:
+    needs: build
+    uses: ./.github/workflows/workflow-bench.yml
+    secrets:
+      CODSPEED_TOKEN: ${{ secrets.CODSPEED_TOKEN }}
   test-rspeedy:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
-    secrets: inherit
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
       runs-on: lynx-ubuntu-24.04-medium
       run: >
@@ -66,13 +71,16 @@ jobs:
         --outputFile=test-report.junit.xml
         --test-timeout=50000
         --coverage
+        --coverage.reporter='json'
+        --coverage.reporter='text'
         --no-cache
         --logHeapUsage
         --silent
   test-react:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
-    secrets: inherit
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
       runs-on: lynx-ubuntu-24.04-medium
       run: >
@@ -85,6 +93,8 @@ jobs:
         --reporter=dot
         --reporter=junit
         --outputFile=test-report.junit.xml
+        --coverage.reporter='json'
+        --coverage.reporter='text'
         --test-timeout=50000
         --no-cache
         --logHeapUsage
@@ -92,7 +102,8 @@ jobs:
   test-plugins:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
-    secrets: inherit
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
       runs-on: lynx-ubuntu-24.04-medium
       run: >
@@ -104,6 +115,8 @@ jobs:
         --reporter=junit
         --outputFile=test-report.junit.xml
         --coverage
+        --coverage.reporter='json'
+        --coverage.reporter='text'
         --no-cache
         --logHeapUsage
         --silent
@@ -122,22 +135,25 @@ jobs:
         --reporter=junit
         --outputFile=test-report.junit.xml
         --coverage
+        --coverage.reporter='json'
+        --coverage.reporter='text'
         --no-cache
         --logHeapUsage
         --silent
   playwright-linux:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
-    secrets: inherit
     with:
       runs-on: lynx-ubuntu-24.04-xlarge
       is-web: true
+      codecov-flags: "e2e"
       run: |
         export NODE_OPTIONS="--max-old-space-size=32768"
-        pnpm --filter @lynx-js/web-tests run test
+        export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
+        pnpm --filter @lynx-js/web-tests run test --reporter='github,dot,junit,html'
+        pnpm --filter @lynx-js/web-tests run coverage:ci
   test-rust:
     uses: ./.github/workflows/rust.yml
-    secrets: inherit
     with:
       runs-on: lynx-ubuntu-24.04-medium
   website:

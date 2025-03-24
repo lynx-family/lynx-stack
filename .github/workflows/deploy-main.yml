@@ -51,14 +51,19 @@ jobs:
       cancel-in-progress: true
     uses: ./.github/workflows/workflow-build.yml
     if: github.repository == 'lynx-family/lynx-stack'
-    secrets: inherit
     with:
       runs-on: lynx-ubuntu-24.04-xlarge
+  benchmark:
+    needs: build-all
+    uses: ./.github/workflows/workflow-bench.yml
+    secrets:
+      CODSPEED_TOKEN: ${{ secrets.CODSPEED_TOKEN }}
   coverage:
     needs: build-all
     uses: ./.github/workflows/workflow-test.yml
     if: github.repository == 'lynx-family/lynx-stack'
-    secrets: inherit
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
       runs-on: lynx-ubuntu-24.04-medium
       run: >
@@ -71,6 +76,19 @@ jobs:
         --no-cache
         --logHeapUsage
         --silent
+  playwright-linux:
+    needs: build-all
+    uses: ./.github/workflows/workflow-test.yml
+    secrets: inherit
+    with:
+      runs-on: lynx-ubuntu-24.04-xlarge
+      is-web: true
+      codecov-flags: "e2e"
+      run: |
+        export NODE_OPTIONS="--max-old-space-size=32768"
+        export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
+        pnpm --filter @lynx-js/web-tests run test --reporter='github,dot,junit,html'
+        pnpm --filter @lynx-js/web-tests run coverage:ci
   publish:
     needs: build
     runs-on: ubuntu-latest

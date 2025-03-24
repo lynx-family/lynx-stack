@@ -21,6 +21,8 @@ export function toRsbuildConfig(
       watchFiles: config.dev?.watchFiles,
       // We expect to use different default writeToDisk with Rsbuild
       writeToDisk: config.dev?.writeToDisk ?? true,
+
+      progressBar: config.dev?.progressBar ?? true,
     },
     environments: config.environments ?? { lynx: {} },
     mode: config.mode,
@@ -77,6 +79,8 @@ export function toRsbuildConfig(
       host: config.server?.host,
 
       port: config.server?.port,
+
+      strictPort: config.server?.strictPort,
     },
     plugins: config.plugins,
     performance: {

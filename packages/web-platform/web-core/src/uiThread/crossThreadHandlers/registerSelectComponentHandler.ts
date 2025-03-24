@@ -11,7 +11,7 @@ import { queryNodes } from './queryNodes.js';
 
 export function registerSelectComponentHandler(
   rpc: Rpc,
-  rootDom: Element,
+  shadowRoot: ShadowRoot,
 ) {
   let element: Element | null;
   rpc.registerHandler(
@@ -22,7 +22,7 @@ export function registerSelectComponentHandler(
       single,
     ) => {
       queryNodes(
-        rootDom,
+        shadowRoot,
         IdentifierType.ID_SELECTOR,
         idSelector,
         componentId === 'card' ? '0' : componentId,

@@ -1,5 +1,67 @@
 # @lynx-js/web-constants
 
+## 0.9.0
+
+### Minor Changes
+
+- refractor: remove entryId concept ([#217](https://github.com/lynx-family/lynx-stack/pull/217))
+
+  After the PR #198
+  All contents are isolated by a shadowroot.
+  Therefore we don't need to add the entryId selector to avoid the lynx-view's style taking effect on the whole page.
+
+### Patch Changes
+
+- feat: `nativeModulesUrl` of lynx-view is changed to `nativeModulesMap`, and the usage is completely aligned with `napiModulesMap`. ([#220](https://github.com/lynx-family/lynx-stack/pull/220))
+
+  "warning: This is a breaking change."
+
+  `nativeModulesMap` will be a map: key is module-name, value should be a esm url which export default a
+  function with two parameters(you never need to use `this`):
+
+  - `NativeModules`: oriented `NativeModules`, which you can use to call
+    other Native-Modules.
+
+  - `NativeModulesCall`: trigger `onNativeModulesCall`, same as the deprecated `this.nativeModulesCall`.
+
+  example:
+
+  ```js
+  const nativeModulesMap = {
+    CustomModule: URL.createObjectURL(
+      new Blob(
+        [
+          `export default function(NativeModules, NativeModulesCall) {
+      return {
+        async getColor(data, callback) {
+          const color = await NativeModulesCall('getColor', data);
+          callback(color);
+        },
+      }
+    };`,
+        ],
+        { type: 'text/javascript' },
+      ),
+    ),
+  };
+  lynxView.nativeModulesMap = nativeModulesMap;
+  ```
+
+  In addition, we will use Promise.all to load `nativeModules`, which will optimize performance in the case of multiple modules.
+
+- refactor: clean the decodeOperations implementation ([#261](https://github.com/lynx-family/lynx-stack/pull/261))
+
+- refactor: remove customelement defined detecting logic ([#247](https://github.com/lynx-family/lynx-stack/pull/247))
+
+  Before this commit, for those element with tag without `-`, we always try to detect if the `x-${tagName}` is defined.
+
+  After this commit, we pre-define a map(could be override by the `overrideLynxTagToHTMLTagMap`) to make that transformation for tag name.
+
+  This change is a path to SSR and the MTS support.
+
+- Updated dependencies [[`53230f0`](https://github.com/lynx-family/lynx-stack/commit/53230f012216f3a627853e11d544e4be175c5b9b)]:
+  - @lynx-js/web-worker-rpc@0.9.0
+
 ## 0.8.0
 
 ### Minor Changes

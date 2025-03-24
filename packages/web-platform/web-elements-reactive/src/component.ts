@@ -68,11 +68,6 @@ export function Component<T extends WebComponentClass>(
   template?: string,
 ): (target: T, context: ClassDecoratorContext<T>) => T {
   let templateElement: HTMLTemplateElement | undefined;
-  if (template) {
-    templateElement = document.createElement('template');
-    templateElement.innerHTML = template;
-    document.body.appendChild(templateElement);
-  }
   return (target: T, { addInitializer }): T => {
     const observedStyleProperties = new Set([
       ...attributeReactiveClasses
@@ -103,6 +98,11 @@ export function Component<T extends WebComponentClass>(
       #attributeReactives: AttributeReactiveObject[] = [];
       constructor() {
         super();
+        if (template && !templateElement) {
+          templateElement = document.createElement('template');
+          templateElement.innerHTML = template;
+          document.body.appendChild(templateElement);
+        }
         if (templateElement) {
           this.attachShadow({ mode: 'open', delegatesFocus: true });
           const template = templateElement.content.cloneNode(true);

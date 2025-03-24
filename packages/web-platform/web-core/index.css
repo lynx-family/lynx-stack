@@ -9,54 +9,17 @@ lynx-view {
   display: flex;
 }
 
-lynx-view::part(lynx-view-root) {
-  display: contents;
-  width: 100%;
-  height: 100%;
-}
-
-lynx-view[height="auto"] {
-  --lynx-view-height: 100%;
-  height: var(--lynx-view-height);
-  block-size: var(--lynx-view-height);
-}
-lynx-view[height="auto"]::part(lynx-view-root) {
-  height: unset;
-}
-
 lynx-view[width="auto"] {
   --lynx-view-width: 100%;
   width: var(--lynx-view-width);
   inline-size: var(--lynx-view-width);
 }
-lynx-view[width="auto"]::part(lynx-view-root) {
-  width: unset;
-}
 
 lynx-view[height="auto"], lynx-view[width="auto"] {
-  contain-intrinsic-size: var(--lynx-view-width) var(--lynx-view-height);
-}
-lynx-view[height="auto"]::part(lynx-view-root),
-lynx-view[width="auto"]::part(lynx-view-root) {
-  display: unset;
-  position: fixed;
-  top: 0;
-  left: 0;
+  contain: content;
 }
 
-@property --lynx-view-width {
-  syntax: "<length> | <percentage>";
-  inherits: false;
-  initial-value: 100%;
-}
-
-@property --lynx-view-height {
-  syntax: "<length> | <percentage>";
-  inherits: false;
-  initial-value: 100%;
-}
-
-lynx-view:not([width="auto"]):not([height="auto"])::part(page) {
+lynx-view::part(page) {
   height: 100%;
   width: 100%;
 }

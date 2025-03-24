@@ -10,7 +10,7 @@ import {
 } from '@lynx-js/web-constants';
 
 export function queryNodes(
-  rootDom: Element,
+  shadowRoot: ShadowRoot,
   type: IdentifierType,
   identifier: string,
   component_id: string,
@@ -19,9 +19,9 @@ export function queryNodes(
   callback: (dom: Element) => void,
   error?: (code: ErrorCode) => void,
 ) {
-  let queryRoot = rootDom;
+  let queryRoot: ShadowRoot | Element = shadowRoot;
   if (root_unique_id) {
-    const root = rootDom.querySelector(
+    const root = shadowRoot.querySelector(
       `[${lynxUniqueIdAttribute}="${root_unique_id}"]`,
     );
     if (root) {
@@ -34,7 +34,7 @@ export function queryNodes(
       return;
     }
   } else if (component_id) {
-    const root = rootDom.querySelector(
+    const root = shadowRoot.querySelector(
       `[${componentIdAttribute}="${component_id}"]`,
     );
     if (root) {

@@ -8,6 +8,10 @@ coverage:
 fixes:
   - "/home/runner/_work/lynx-stack::"
 
+parsers:
+  javascript:
+    enable_partials: yes
+
 comment:
   layout: "header, diff, flags, components" # show component info in the PR comment
   behavior: default
@@ -35,3 +39,7 @@ component_management:
       name: Webpack
       paths:
         - packages/webpack/**
+    - component_id: web
+      name: Web Platform
+      paths:
+        - packages/web-platform/**

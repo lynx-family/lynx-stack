@@ -1,5 +1,11 @@
 # @lynx-js/web-worker-rpc
 
+## 0.9.0
+
+### Patch Changes
+
+- feat: add a new type function RpcCallType ([#283](https://github.com/lynx-family/lynx-stack/pull/283))
+
 ## 0.8.0
 
 ### Patch Changes

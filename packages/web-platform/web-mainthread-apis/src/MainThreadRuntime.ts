@@ -4,7 +4,6 @@
 
 import {
   type ElementOperation,
-  type LynxLifecycleEvent,
   type LynxTemplate,
   type PageConfig,
   type ProcessDataCallback,
@@ -13,6 +12,9 @@ import {
   type Cloneable,
   type CssInJsInfo,
   type BrowserConfig,
+  type onLifecycleEventEndpoint,
+  type reportErrorEndpoint,
+  type flushElementTreeEndpoint,
 } from '@lynx-js/web-constants';
 import { globalMuteableVars } from '@lynx-js/web-constants';
 import { createMainThreadLynx, type MainThreadLynx } from './MainThreadLynx.js';
@@ -28,17 +30,13 @@ import {
   transformToWebCss,
 } from './utils/processStyleInfo.js';
 import { createAttributeAndPropertyFunctionsWithContext } from './elementAPI/attributeAndProperty/createAttributeAndPropertyFunctionsWithContext.js';
+import type { RpcCallType } from '../../web-worker-rpc/src/TypeUtils.js';
 
 export interface MainThreadRuntimeCallbacks {
   mainChunkReady: () => void;
-  flushElementTree: (
-    operations: ElementOperation[],
-    options: FlushElementTreeOptions,
-    styleContent: string | undefined,
-    timingFlags: string[],
-  ) => void;
-  _ReportError: (error: Error, info?: unknown) => void;
-  __OnLifecycleEvent: (lynxLifecycleEvents: LynxLifecycleEvent) => void;
+  flushElementTree: RpcCallType<typeof flushElementTreeEndpoint>;
+  _ReportError: RpcCallType<typeof reportErrorEndpoint>;
+  __OnLifecycleEvent: RpcCallType<typeof onLifecycleEventEndpoint>;
   markTiming: (pipelineId: string, timingKey: string) => void;
 }
 
@@ -143,9 +141,9 @@ export class MainThreadRuntime {
 
   declare renderPage: (data: unknown) => void;
 
-  _ReportError: (e: Error, info: unknown) => void;
+  _ReportError: RpcCallType<typeof reportErrorEndpoint>;
 
-  __OnLifecycleEvent: (lynxLifecycleEvents: LynxLifecycleEvent) => void;
+  __OnLifecycleEvent: RpcCallType<typeof onLifecycleEventEndpoint>;
 
   __LoadLepusChunk: (path: string) => boolean;
 

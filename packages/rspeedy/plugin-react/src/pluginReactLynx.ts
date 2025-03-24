@@ -9,7 +9,6 @@
  */
 
 import { createRequire } from 'node:module'
-import path from 'node:path'
 
 import type { RsbuildPlugin } from '@rsbuild/core'
 
@@ -372,14 +371,6 @@ export function pluginReactLynx(
       applySWC(api)
 
       api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
-        config = mergeRsbuildConfig(config, {
-          source: {
-            include: [
-              path.dirname(require.resolve('@lynx-js/react/package.json')),
-            ],
-          },
-        })
-
         const userConfig = api.getRsbuildConfig('original')
         if (typeof userConfig.source?.include === 'undefined') {
           return mergeRsbuildConfig(config, {

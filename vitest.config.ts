@@ -11,6 +11,8 @@ export default defineConfig({
         '**/*.d.ts',
         '**/vitest.config.ts',
         '**/rslib.config.ts',
+        '**/*.bench.js',
+        '**/*.bench.ts',
         '**/dist/**',
         '.github/**',
         'examples/**',
