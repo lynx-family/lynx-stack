@@ -18,8 +18,6 @@ export const lynxRuntimeValue = Symbol('lynx-runtime-value');
 export const lynxDefaultDisplayLinearAttribute =
   'lynx-default-display-linear' as const;
 
-export const lynxViewRootDomId = 'lynx-view-root' as const;
-
 export const __lynx_timing_flag = '__lynx_timing_flag' as const;
 
 export const globalMuteableVars = [

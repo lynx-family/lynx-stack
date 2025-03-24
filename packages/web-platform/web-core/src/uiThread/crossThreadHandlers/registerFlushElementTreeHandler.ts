@@ -34,7 +34,7 @@ export function registerFlushElementTreeHandler(
   options: {
     pageConfig: PageConfig;
     backgroundRpc: Rpc;
-    rootDom: HTMLElement;
+    shadowRoot: ShadowRoot;
   },
   onCommit: (info: {
     pipelineId: string | undefined;
@@ -50,7 +50,7 @@ export function registerFlushElementTreeHandler(
   const {
     pageConfig,
     backgroundRpc,
-    rootDom,
+    shadowRoot,
   } = options;
   const uniqueIdToElement: WeakRef<
     HTMLElement & RuntimePropertyOnElement
@@ -60,7 +60,7 @@ export function registerFlushElementTreeHandler(
   >[] = [];
   const rootStyleElementForCssInJs = document.createElement('style');
   if (!pageConfig.enableCSSSelector) {
-    rootDom.append(rootStyleElementForCssInJs);
+    shadowRoot.append(rootStyleElementForCssInJs);
   }
   const createElementImpl = (tag: string) => {
     const element = document.createElement(tag) as
@@ -91,7 +91,7 @@ export function registerFlushElementTreeHandler(
       & RuntimePropertyOnElement;
     const parentComponentUniqueId =
       currentTarget.getAttribute(parentComponentUniqueIdAttribute) ?? '0';
-    const componentTargetDom = rootDom.querySelector(
+    const componentTargetDom = shadowRoot.querySelector(
       `[${lynxUniqueIdAttribute}="${parentComponentUniqueId}"]`,
     );
     const componentId =
@@ -137,8 +137,8 @@ export function registerFlushElementTreeHandler(
         // on FP
         const styleElement = document.createElement('style');
         styleElement.innerHTML = cardCss!;
-        rootDom.append(styleElement);
-        rootDom.append(page);
+        shadowRoot.append(styleElement);
+        shadowRoot.append(page);
         applyPageAttributes(page, pageConfig);
       }
       markTimingInternal('layout_end', pipelineId);

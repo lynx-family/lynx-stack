@@ -58,7 +58,7 @@
     "@rsbuild/plugin-webpack-swc": "catalog:rsbuild",
     "@rsbuild/webpack": "catalog:rsbuild",
     "tailwindcss": "^3.4.17",
-    "type-fest": "^4.37.0",
+    "type-fest": "^4.38.0",
     "typia": "7.6.4",
     "typia-rspack-plugin": "^1.0.2"
   },

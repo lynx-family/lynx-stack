@@ -41,7 +41,7 @@ export function createCrossThreadEvent(domEvent: Event): LynxCrossThreadEvent {
       id: currentTargetElement.id,
       dataset: currentTargetElement[lynxRuntimeValue]?.dataset ?? {},
       uniqueId: parseFloat(
-        currentTargetElement.getAttribute(lynxUniqueIdAttribute)!,
+        currentTargetElement.getAttribute?.(lynxUniqueIdAttribute)!,
       ),
     },
     // @ts-expect-error

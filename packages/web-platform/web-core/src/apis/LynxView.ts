@@ -8,7 +8,6 @@ import {
 } from './createLynxView.js';
 import {
   type Cloneable,
-  lynxViewRootDomId,
   type NapiModulesCall,
   type NapiModulesMap,
   type NativeModulesCall,
@@ -73,11 +72,7 @@ export class LynxView extends HTMLElement {
   static observedAttributes = LynxView.observedAttributeAsProperties.map(nm =>
     nm.toLowerCase()
   );
-  #instance?: {
-    lynxView: LynxViewInstance;
-    rootDom: HTMLDivElement;
-    resizeObserver?: ResizeObserver;
-  };
+  #instance?: LynxViewInstance;
 
   #url?: string;
   /**
@@ -199,72 +194,6 @@ export class LynxView extends HTMLElement {
     this.#onNapiModulesCall = handler;
   }
 
-  #autoHeight = false;
-  #autoWidth = false;
-  #currentWidth = 0;
-  #currentHeight = 0;
-  /**
-   * @public
-   * "auto" for auto calculated height
-   */
-  get height() {
-    return this.#autoHeight ? 'auto' : null;
-  }
-  /**
-   * @public
-   * "auto" for auto calculated width
-   */
-  get width() {
-    return this.#autoWidth ? 'auto' : null;
-  }
-  set height(val: string | null) {
-    this.#handleAutoSize();
-    this.#autoHeight = val === 'auto' ? true : false;
-  }
-  set width(val: string | null) {
-    this.#handleAutoSize();
-    this.#autoWidth = val === 'auto' ? true : false;
-  }
-  #handleAutoSize() {
-    if (this.#autoHeight || this.#autoWidth) {
-      if (this.#instance && !this.#instance.resizeObserver) {
-        this.#instance.resizeObserver = new ResizeObserver((sizes) => {
-          const size = sizes[0];
-          if (size) {
-            const { width, height } = size.contentRect;
-            if (this.#autoWidth) {
-              if (this.#currentWidth !== width) {
-                this.#currentWidth = width;
-                this.style.setProperty('--lynx-view-width', `${width}px`);
-              }
-            }
-            if (this.#autoHeight) {
-              if (this.#currentHeight !== height) {
-                this.#currentHeight = height;
-                this.style.setProperty('--lynx-view-height', `${height}px`);
-              }
-            }
-          }
-        });
-        this.#instance.resizeObserver.observe(this.#instance.rootDom);
-      }
-    } else {
-      if (this.#instance?.resizeObserver) {
-        this.#instance.resizeObserver.disconnect();
-      }
-    }
-    if (this.#autoHeight) {
-      this.setAttribute('height', 'auto');
-    } else {
-      this.removeAttribute('height');
-    }
-    if (this.#autoWidth) {
-      this.setAttribute('width', 'auto');
-    } else {
-      this.removeAttribute('width');
-    }
-  }
-
   /**
    * @public
    * @method
@@ -275,7 +204,7 @@ export class LynxView extends HTMLElement {
     updateDataType: UpdateDataType,
     callback?: () => void,
   ) {
-    this.#instance?.lynxView.updateData(data, updateDataType, callback);
+    this.#instance?.updateData(data, updateDataType, callback);
   }
 
   /**
@@ -284,7 +213,7 @@ export class LynxView extends HTMLElement {
    * send global events, which can be listened to using the GlobalEventEmitter
    */
   sendGlobalEvent(eventName: string, params: Cloneable[]) {
-    this.#instance?.lynxView.sendGlobalEvent(eventName, params);
+    this.#instance?.sendGlobalEvent(eventName, params);
   }
 
   /**
@@ -327,11 +256,7 @@ export class LynxView extends HTMLElement {
    * @private
    */
   disconnectedCallback() {
-    this.cleanupResizeObserver();
-    if (this.#instance) {
-      this.#instance.lynxView.dispose();
-      this.#instance.rootDom.remove();
-    }
+    this.#instance?.dispose();
     this.#instance = undefined;
     if (this.shadowRoot) {
       this.shadowRoot.innerHTML = '';
@@ -355,9 +280,6 @@ export class LynxView extends HTMLElement {
           this.disconnectedCallback();
         }
         if (this.#url) {
-          const rootDom = document.createElement('div');
-          rootDom.id = lynxViewRootDomId;
-          rootDom.setAttribute('part', lynxViewRootDomId);
           const tagMap = {
             'page': 'div',
             'view': 'x-view',
@@ -367,9 +289,12 @@ export class LynxView extends HTMLElement {
             'svg': 'x-svg',
             ...this.overrideLynxTagToHTMLTagMap,
           };
+          if (!this.shadowRoot) {
+            this.attachShadow({ mode: 'open' });
+          }
           const lynxView = createLynxView({
             tagMap,
-            rootDom,
+            shadowRoot: this.shadowRoot!,
             templateUrl: this.#url,
             globalProps: this.#globalProps,
             initData: this.#initData,
@@ -397,14 +322,7 @@ export class LynxView extends HTMLElement {
               },
             },
           });
-          this.#instance = {
-            lynxView,
-            rootDom,
-          };
-          this.#handleAutoSize();
-          if (!this.shadowRoot) {
-            this.attachShadow({ mode: 'open' });
-          }
+          this.#instance = lynxView;
           const styleElement = document.createElement('style');
           this.shadowRoot!.append(styleElement);
           const styleSheet = styleElement.sheet!;
@@ -419,7 +337,6 @@ export class LynxView extends HTMLElement {
               },
             );
           }
-          this.shadowRoot!.append(rootDom);
         }
       });
     }
@@ -429,13 +346,6 @@ export class LynxView extends HTMLElement {
    */
   connectedCallback() {
     this.#render();
-  }
-
-  private cleanupResizeObserver() {
-    if (this.#instance?.resizeObserver) {
-      this.#instance.resizeObserver.disconnect();
-      this.#instance.resizeObserver = undefined;
-    }
   }
 }
 

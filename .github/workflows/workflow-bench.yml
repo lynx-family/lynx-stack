@@ -1,14 +1,16 @@
 on:
   workflow_call:
-    secrets:
-      CODSPEED_TOKEN:
-        required: true
 
 env:
   CI: 1
   TURBO_TELEMETRY_DISABLED: 1
 jobs:
   nodejs-benchmark:
+    # CodSpeed does not support merge_group event.
+    #
+    # Error: Event merge_group is not supported by CodSpeed
+    # Error: unknown variant `merge_group`, expected one of `push`, `pull_request`, `workflow_dispatch`, `schedule`, `local` at line 1 column 13
+    if: github.event_name != 'merge_group'
     runs-on: lynx-ubuntu-24.04-xlarge
     steps:
       - uses: actions/checkout@v4
@@ -35,4 +37,4 @@ jobs:
       - name: Run benchmark
         run: |
           . "$HOME/.cargo/env"
-          codspeed run --token ${{ secrets.CODSPEED_TOKEN }} -- pnpm -r run bench
+          codspeed run -- pnpm -r run bench

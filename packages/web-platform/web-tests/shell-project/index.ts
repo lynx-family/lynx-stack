@@ -37,8 +37,8 @@ async function run() {
     const lynxView = document.createElement('lynx-view') as LynxView;
     lynxView.setAttribute('url', lepusjs);
     lynxView.initData = { mockData: 'mockData' };
+    lynxView.setAttribute('height', 'auto');
     lynxView.globalProps = { pink: 'pink' };
-    lynxView.height = 'auto';
     lynxView.addEventListener('error', () => {
       lynxView.setAttribute('style', 'display:none');
       lynxView.innerHTML = '';

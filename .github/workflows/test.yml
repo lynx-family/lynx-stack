@@ -51,8 +51,6 @@ jobs:
   benchmark:
     needs: build
     uses: ./.github/workflows/workflow-bench.yml
-    secrets:
-      CODSPEED_TOKEN: ${{ secrets.CODSPEED_TOKEN }}
   test-rspeedy:
     needs: build
     uses: ./.github/workflows/workflow-test.yml

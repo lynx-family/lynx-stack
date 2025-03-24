@@ -16,7 +16,7 @@ export interface LynxViewConfigs {
   templateUrl: string;
   initData: Cloneable;
   globalProps: Cloneable;
-  rootDom: HTMLElement;
+  shadowRoot: ShadowRoot;
   callbacks: Parameters<typeof startUIThread>[3];
   nativeModulesMap: NativeModulesMap;
   napiModulesMap: NapiModulesMap;
@@ -35,7 +35,7 @@ export interface LynxView {
 
 export function createLynxView(configs: LynxViewConfigs): LynxView {
   const {
-    rootDom,
+    shadowRoot,
     callbacks,
     templateUrl,
     globalProps,
@@ -54,7 +54,7 @@ export function createLynxView(configs: LynxViewConfigs): LynxView {
       napiModulesMap,
       browserConfig: {},
     },
-    rootDom,
+    shadowRoot,
     callbacks,
   );
 }

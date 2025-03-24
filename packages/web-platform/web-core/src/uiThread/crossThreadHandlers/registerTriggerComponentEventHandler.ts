@@ -9,7 +9,7 @@ import type { Rpc } from '@lynx-js/web-worker-rpc';
 
 export function registerTriggerComponentEventHandler(
   rpc: Rpc,
-  rootDom: Element,
+  shadowRoot: ShadowRoot,
 ) {
   rpc.registerHandler(
     triggerComponentEventEndpoint,
@@ -17,7 +17,7 @@ export function registerTriggerComponentEventHandler(
       id,
       params,
     ) => {
-      const componentDom = rootDom.querySelector(
+      const componentDom = shadowRoot.querySelector(
         `[${componentIdAttribute}="${params.componentId}"]`,
       );
       componentDom?.dispatchEvent(

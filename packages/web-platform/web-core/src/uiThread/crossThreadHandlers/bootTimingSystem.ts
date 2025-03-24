@@ -12,7 +12,7 @@ import type { Rpc } from '@lynx-js/web-worker-rpc';
 export function bootTimingSystem(
   mainThreadRpc: Rpc,
   backgroundThreadRpc: Rpc,
-  rootDom: HTMLElement,
+  shadowRoot: ShadowRoot,
 ) {
   const setupTiming: Record<string, number> = {};
   const pipelineIdToTiming: Map<string, Record<string, number>> = new Map();
@@ -48,7 +48,7 @@ export function bootTimingSystem(
       timingFlags,
       isFp ? setupTiming : undefined,
     ]);
-    rootDom.dispatchEvent(
+    shadowRoot.dispatchEvent(
       new CustomEvent('timing', {
         detail: isFp ? setupTiming : timingInfo,
         bubbles: true,

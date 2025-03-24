@@ -32,7 +32,7 @@ const methodAlias: Record<
 
 export function registerInvokeUIMethodHandler(
   rpc: Rpc,
-  rootDom: Element,
+  shadowRoot: ShadowRoot,
 ) {
   let code = ErrorCode.UNKNOWN;
   let data: any = undefined;
@@ -47,7 +47,7 @@ export function registerInvokeUIMethodHandler(
       root_unique_id,
     ) => {
       queryNodes(
-        rootDom,
+        shadowRoot,
         type,
         identifier,
         component_id,
