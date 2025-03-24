@@ -22,6 +22,8 @@ jobs:
     runs-on: lynx-ubuntu-24.04-medium
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.base_ref }}
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
@@ -29,15 +31,13 @@ jobs:
       - run: |
           pnpm install --frozen-lockfile
           pnpm turbo --filter "@lynx-js/web-explorer" build
-          mv ./packages/web-platform/web-explorer/dist/stats.json ../stats.head.json
+          mv ./packages/web-platform/web-explorer/dist/stats.json ../stats.base.json
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.base_ref }}
       - run: |
           pnpm install --frozen-lockfile
           pnpm turbo --filter "@lynx-js/web-explorer" build
-          mv ./packages/web-platform/web-explorer/dist/stats.json ./stats.base.json
-          mv ../stats.head.json ./stats.head.json
+          mv ./packages/web-platform/web-explorer/dist/stats.json ./stats.head.json
+          mv ../stats.base.json ./stats.base.json
       - uses: github/webpack-bundlesize-compare-action@v2.1.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
