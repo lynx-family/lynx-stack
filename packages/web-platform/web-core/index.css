@@ -19,7 +19,7 @@ lynx-view[height="auto"], lynx-view[width="auto"] {
   contain: content;
 }
 
-lynx-view:not([width="auto"]):not([height="auto"])::part(page) {
+lynx-view::part(page) {
   height: 100%;
   width: 100%;
 }
