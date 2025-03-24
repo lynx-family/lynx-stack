@@ -108,12 +108,12 @@ test.describe('reactlynx3 tests', () => {
     });
     test('basic-setstate-in-constructor', async ({ page }, { title }) => {
       await goto(page, title);
-      await wait(100);
+      await wait(200);
       await expectHasText(page, 'awesome');
     });
     test('basic-setsate-with-cb', async ({ page }, { title }) => {
       await goto(page, title);
-      await wait(100);
+      await wait(200);
       await expectHasText(page, 'awesome');
       await expectNoText(page, 'success');
     });
