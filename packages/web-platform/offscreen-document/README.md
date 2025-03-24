@@ -1,3 +1,3 @@
 # @lynx-js/offscreen-document
 
-Offscreen Document allows developers to use partical DOM in WebWorker
+Offscreen Document allows developers to use partial DOM in WebWorker

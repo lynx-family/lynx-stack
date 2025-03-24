@@ -58,7 +58,13 @@ export class OffscreenElement extends EventTarget {
   }
 
   get children(): OffscreenElement[] {
-    return this.children.slice();
+    const kids: OffscreenElement[] = [];
+    let child = this[_firstChild];
+    while (child) {
+      kids.push(child);
+      child = child[nextSibling];
+    }
+    return kids;
   }
 
   get parentElement(): OffscreenElement | null {

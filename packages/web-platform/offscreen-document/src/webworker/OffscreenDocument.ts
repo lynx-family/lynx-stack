@@ -9,7 +9,7 @@ import {
   propagationStopped,
 } from './OffscreenEvent.js';
 
-export const operations = Symbol('opeartions');
+export const operations = Symbol('operations');
 export const enableEvent = Symbol('enableEvent');
 export const getElementByUniqueId = Symbol('getElementByUniqueId');
 const _onEvent = Symbol('_onEvent');
