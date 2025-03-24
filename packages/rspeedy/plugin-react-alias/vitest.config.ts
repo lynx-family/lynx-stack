@@ -7,6 +7,7 @@ import type { UserWorkspaceConfig } from 'vitest/config'
 const config: UserWorkspaceConfig = defineProject({
   test: {
     name: 'rspeedy/react-alias',
+    setupFiles: ['@lynx-js/vitest-setup/setup.ts'],
   },
 })
 

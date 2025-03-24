@@ -1,5 +1,11 @@
 # @lynx-js/react-webpack-plugin
 
+## 0.6.9
+
+### Patch Changes
+
+- Support `@lynx-js/react` v0.106.0. ([#239](https://github.com/lynx-family/lynx-stack/pull/239))
+
 ## 0.6.8
 
 ### Patch Changes

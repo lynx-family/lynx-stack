@@ -53,6 +53,11 @@ jobs:
     if: github.repository == 'lynx-family/lynx-stack'
     with:
       runs-on: lynx-ubuntu-24.04-xlarge
+  benchmark:
+    needs: build-all
+    uses: ./.github/workflows/workflow-bench.yml
+    secrets:
+      CODSPEED_TOKEN: ${{ secrets.CODSPEED_TOKEN }}
   coverage:
     needs: build-all
     uses: ./.github/workflows/workflow-test.yml

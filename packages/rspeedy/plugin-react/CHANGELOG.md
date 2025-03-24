@@ -1,5 +1,22 @@
 # @lynx-js/react-rsbuild-plugin
 
+## 0.9.3
+
+### Patch Changes
+
+- Support `@lynx-js/react` v0.106.0. ([#239](https://github.com/lynx-family/lynx-stack/pull/239))
+
+- Fix the issue where the canary version of React was not included in the `rule.include` configuration. ([#275](https://github.com/lynx-family/lynx-stack/pull/275))
+
+- Updated dependencies [[`ba26a4d`](https://github.com/lynx-family/lynx-stack/commit/ba26a4db1ec3dcfd445dd834533b3bc10b091686), [`462e97b`](https://github.com/lynx-family/lynx-stack/commit/462e97b28c12b554c0c825c7df453bdf433749ae), [`aa1fbed`](https://github.com/lynx-family/lynx-stack/commit/aa1fbedec8459f8c830467a5b92033e3530dce80), [`d2d55ef`](https://github.com/lynx-family/lynx-stack/commit/d2d55ef9fe438c35921d9db0daa40d5228822ecc), [`6af0396`](https://github.com/lynx-family/lynx-stack/commit/6af039661844f22b65ad1b98db5c7b31df204ae4)]:
+  - @lynx-js/template-webpack-plugin@0.6.6
+  - @lynx-js/react-webpack-plugin@0.6.9
+  - @lynx-js/runtime-wrapper-webpack-plugin@0.0.9
+  - @lynx-js/web-webpack-plugin@0.6.3
+  - @lynx-js/react-alias-rsbuild-plugin@0.9.3
+  - @lynx-js/css-extract-webpack-plugin@0.5.2
+  - @lynx-js/react-refresh-webpack-plugin@0.3.2
+
 ## 0.9.2
 
 ### Patch Changes

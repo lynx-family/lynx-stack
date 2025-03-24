@@ -14,6 +14,7 @@ describe('Config - toRsBuildConfig', () => {
       })
       expect(rsbuildConfig.dev).toMatchInlineSnapshot(`
         {
+          "progressBar": true,
           "watchFiles": undefined,
           "writeToDisk": true,
         }

@@ -86,7 +86,7 @@ Visit [Lynx Website](https://lynxjs.org/api/rspeedy/qrcode-rsbuild-plugin.plugin
 
 ## Contributing
 
-Contributions to Rspeedy are welcome and highly appreciated. However, before you jump right into it, we would like you to review our [Contribution Guidelines](/contributing.md) to make sure you have a smooth experience contributing to this project.
+Contributions to Rspeedy are welcome and highly appreciated. However, before you jump right into it, we would like you to review our [Contribution Guidelines](/CONTRIBUTING.md) to make sure you have a smooth experience contributing to this project.
 
 ## License
 

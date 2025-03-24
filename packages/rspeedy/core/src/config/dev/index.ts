@@ -138,4 +138,43 @@ export interface Dev {
    * ```
    */
   writeToDisk?: boolean | ((filename: string) => boolean) | undefined
+
+  /**
+   * Whether to display progress bar during compilation.
+   *
+   * Defaults to `true`.
+   *
+   * @example
+   *
+   * Disable the progress bar.
+   *
+   * ```js
+   * import { defineConfig } from '@lynx-js/rspeedy'
+   *
+   * export default defineConfig({
+   *   dev: {
+   *     progressBar: false,
+   *   },
+   * })
+   * ```
+   *
+   * @example
+   *
+   * Modify the progress bar `id`
+   *
+   * To modify the text displayed on the left side of the progress bar, set the `id` option:
+   *
+   * ```js
+   * import { defineConfig } from '@lynx-js/rspeedy'
+   *
+   * export default defineConfig({
+   *   dev: {
+   *     progressBar: {
+   *       id: 'Some Text'
+   *     },
+   *   },
+   * })
+   * ```
+   */
+  progressBar?: boolean | { id?: string } | undefined
 }

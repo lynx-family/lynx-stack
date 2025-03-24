@@ -1,5 +1,11 @@
 # @lynx-js/template-webpack-plugin
 
+## 0.6.6
+
+### Patch Changes
+
+- expose main.lynx.bundle to compiler ([#231](https://github.com/lynx-family/lynx-stack/pull/231))
+
 ## 0.6.5
 
 ### Patch Changes

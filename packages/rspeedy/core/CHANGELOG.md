@@ -1,5 +1,11 @@
 # @lynx-js/rspeedy
 
+## 0.8.5
+
+### Patch Changes
+
+- Bump Rsdoctor v1.0.0. ([#250](https://github.com/lynx-family/lynx-stack/pull/250))
+
 ## 0.8.4
 
 ### Patch Changes

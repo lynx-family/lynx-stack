@@ -52,6 +52,20 @@
       "automerge": false,
     },
     {
+      "groupName": "Rspress",
+      "groupSlug": "Rspress",
+      "matchDepTypes": [
+        "devDependencies",
+        "dependencies",
+      ],
+      "matchPackageNames": [
+        "rspress",
+        "/@rspress/*/",
+        "@rstack-dev/doc-ui",
+      ],
+      "rangeStrategy": "pin",
+    },
+    {
       "groupName": "changesets",
       "groupSlug": "changesets",
       "matchPackageNames": [
