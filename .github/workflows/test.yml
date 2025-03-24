@@ -158,7 +158,6 @@ jobs:
   # Copied from https://github.com/swc-project/swc/blob/b192dc82e6a84bd30f159fb12ca8a216f41e8efb/.github/workflows/CI.yml#L491
   done:
     needs:
-      - benchmark
       - code-style-check
       - playwright-linux
       - test-plugins
