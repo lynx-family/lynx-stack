@@ -217,8 +217,8 @@ export class XListEvents
           this.#dom.children.length
           - itemCount
         ];
-      observerDom && this.#lowerObserver.observe(observerDom);
 
+      observerDom && this.#lowerObserver.observe(observerDom);
       this.#childrenObserver.observe(this.#dom, {
         childList: true,
       });

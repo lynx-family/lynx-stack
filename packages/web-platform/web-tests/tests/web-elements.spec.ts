@@ -2006,7 +2006,6 @@ test.describe('web-elements test suite', () => {
         await expect(scrolled).toBe(4);
       },
     );
-
     test(
       'get-visible-cells',
       async ({ page, browserName }, { titlePath }) => {
@@ -2024,16 +2023,9 @@ test.describe('web-elements test suite', () => {
         const data = await cells.jsonValue();
         expect(
           Array.isArray(data),
-          // Array.isArray(data) && data.length > 10
-          //   && data.every(
-          //     i => (i.bottom !== undefined && i.top !== undefined
-          //       && i.left !== undefined && i.right !== undefined
-          //       && i.index !== undefined && i.itemKey !== undefined),
-          //   ),
         ).toBeTruthy();
       },
     );
-
     test(
       'get-scroll-container-info',
       async ({ page }, { titlePath }) => {
@@ -2114,6 +2106,162 @@ test.describe('web-elements test suite', () => {
       await gotoWebComponentPage(page, title);
       await diffScreenShot(page, title, 'index');
     });
+
+    test('basic-waterfall', async ({ page, browserName }, { titlePath }) => {
+      const title = getTitle(titlePath);
+      await gotoWebComponentPage(page, title);
+      await diffScreenShot(page, title, 'initial');
+      if (browserName === 'webkit') test.skip(); // cannot wheel
+      await page.mouse.move(100, 100);
+      await page.mouse.wheel(300, 0);
+      await diffScreenShot(page, title, 'wheel-x-not-wheelable');
+      await page.mouse.wheel(0, 3000);
+      await diffScreenShot(page, title, 'wheel-y-wheelable');
+    });
+    test(
+      'scroll-orientation-waterfall',
+      async ({ page, browserName }, { titlePath }) => {
+        const title = getTitle(titlePath);
+        await gotoWebComponentPage(page, title);
+        await diffScreenShot(page, title, 'initial');
+        if (browserName === 'webkit') test.skip(); // cannot wheel
+        await page.mouse.move(100, 100);
+        await page.mouse.wheel(0, 300);
+        await diffScreenShot(page, title, 'wheel-y-not-wheelable');
+        await page.mouse.wheel(3000, 0);
+        await diffScreenShot(page, title, 'wheel-x-wheelable');
+      },
+    );
+    test(
+      'axios-gap-waterfall',
+      async ({ page }, { titlePath }) => {
+        const title = getTitle(titlePath);
+        await gotoWebComponentPage(page, title);
+        await diffScreenShot(page, title, 'index');
+      },
+    );
+    test('sticky-waterfall', async ({ page, browserName }, { titlePath }) => {
+      const title = getTitle(titlePath);
+      await gotoWebComponentPage(page, title);
+      await diffScreenShot(page, title, 'index');
+      if (browserName === 'webkit') test.skip(); // cannot wheel
+      await page.mouse.move(200, 300);
+      await page.mouse.wheel(0, 500);
+      await diffScreenShot(page, title, 'y-scroll');
+    });
+    test(
+      'full-span-waterfall',
+      async ({ page, browserName }, { titlePath }) => {
+        const title = getTitle(titlePath);
+        await gotoWebComponentPage(page, title);
+        await diffScreenShot(page, title, 'index');
+        if (browserName === 'webkit') test.skip(); // cannot wheel
+        await page.mouse.move(200, 300);
+        await page.mouse.wheel(0, 500);
+        await diffScreenShot(page, title, 'y-scroll');
+        await wait(1000);
+        await page.mouse.move(200, 600);
+        await page.mouse.wheel(500, 0);
+        await diffScreenShot(page, title, 'x-scroll');
+      },
+    );
+    test(
+      'event-scrolltoupper-waterfall',
+      async ({ page, browserName }, { titlePath }) => {
+        titlePath[titlePath.length - 1] =
+          'event-scrolltoupper-tolower-waterfall';
+        const title = getTitle(titlePath);
+        await gotoWebComponentPage(page, title);
+        await diffScreenShot(page, title, 'index');
+        if (browserName === 'webkit') test.skip(); // cannot wheel
+        let scrolltoupper = false;
+        await page.on('console', async (msg) => {
+          const event = await msg.args()[0]?.evaluate((e) => ({
+            type: e.type,
+          }));
+          if (!event) return;
+          if (event.type === 'scrolltoupper') {
+            scrolltoupper = true;
+          }
+        });
+        await page.mouse.move(200, 200);
+        await page.mouse.wheel(0, 100);
+        await page.mouse.wheel(0, -500);
+        await wait(1000);
+        expect(scrolltoupper).toBeTruthy();
+      },
+    );
+    test(
+      'event-scrolltolower-waterfall',
+      async ({ page, browserName }, { titlePath }) => {
+        if (browserName === 'webkit') test.skip(); // cannot wheel
+        let scrolltolower = false;
+        await page.on('console', async (msg) => {
+          const event = await msg.args()[0]?.evaluate((e) => ({
+            type: e.type,
+          }));
+          if (!event) return;
+          if (event.type === 'scrolltolower') {
+            scrolltolower = true;
+          }
+        });
+        titlePath[titlePath.length - 1] =
+          'event-scrolltoupper-tolower-waterfall';
+        const title = getTitle(titlePath);
+        await gotoWebComponentPage(page, title);
+        await expect(scrolltolower).toBeFalsy();
+        await page.evaluate(() => {
+          document.querySelector('x-list')?.shadowRoot?.querySelector(
+            '#content',
+          )
+            ?.scrollTo(0, 5000);
+        });
+        await wait(1000);
+        expect(scrolltolower).toBeTruthy();
+      },
+    );
+    test(
+      'waterfall-size-change',
+      async ({ page, browserName }, { titlePath }) => {
+        titlePath[titlePath.length - 1] = 'basic-waterfall';
+        const title = getTitle(titlePath);
+        await gotoWebComponentPage(page, title);
+        await diffScreenShot(page, title, 'index');
+        await page.evaluate(() => {
+          (document.querySelector('list-item[id="1"]') as HTMLElement)
+            .style
+            .setProperty(
+              'height',
+              '100px',
+            );
+        });
+        await wait(1000);
+        await diffScreenShot(page, title, 'resize');
+      },
+    );
+    test(
+      'waterfall-insert',
+      async ({ page, browserName }, { titlePath }) => {
+        titlePath[titlePath.length - 1] = 'basic-waterfall';
+        const title = getTitle(titlePath);
+        await gotoWebComponentPage(page, title);
+        await diffScreenShot(page, title, 'index');
+        await page.evaluate(() => {
+          (document.querySelector('list-item[id="2"]') as HTMLElement)
+            .insertAdjacentHTML(
+              'afterend',
+              `<list-item item-key="21" id="21">
+          <x-view class="item" part="item" style="height: 120px;">
+            21
+          </x-view>
+        </list-item>
+`,
+            );
+        });
+        await wait(1000);
+        await diffScreenShot(page, title, 'insert');
+      },
+    );
   });
   test.describe('x-input', () => {
     test('placeholder', async ({ page }, { titlePath }) => {

@@ -166,4 +166,14 @@ test.describe('performance', () => {
       ).toBeLessThan(0.9);
     },
   );
+  test(
+    'x-list-waterfall-1000',
+    async ({ page, browserName, context }, { title }) => {
+      const cdpSession = await goto({ page, browserName, context }, title);
+      const metrics = await getMetrics(cdpSession, page);
+      console.log(metrics.LayoutCount, metrics.RecalcStyleCount);
+      expect(metrics.LayoutCount, 'layout count').toBeLessThanOrEqual(7);
+      expect(metrics.RecalcStyleCount, 'recalc count').toBeLessThanOrEqual(8);
+    },
+  );
 });

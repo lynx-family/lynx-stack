@@ -8,15 +8,15 @@ x-list {
   scrollbar-width: none;
   --list-item-sticky-offset: 0;
   --list-item-span-count: 0;
-  --list-main-axis-gap: 0;
-  --list-cross-axis-gap: 0;
+  --list-main-axis-gap: 0px;
+  --list-cross-axis-gap: 0px;
 }
 
 x-list > *:not(list-item) {
   display: none;
 }
 
-x-list::part(content) {
+x-list::part(content), x-list[list-type="waterfall"]::part(waterfall-content) {
   display: flex;
   flex: 0 0 auto;
   flex-wrap: nowrap;
@@ -204,4 +204,66 @@ x-list[list-type="flow"][scroll-orientation="horizontal"][x-enable-scrolltoupper
 x-list[list-type="flow"][scroll-orientation="horizontal"][x-enable-scrolltolower-event]::part(lower-threshold-observer),
 x-list[list-type="flow"][scroll-orientation="horizontal"][x-enable-scrolltoloweredge-event]::part(lower-threshold-observer) {
   grid-row: 1 / calc(var(--list-item-span-count) + 1);
+}
+
+/* list-type waterfall */
+x-list[list-type="waterfall"] {
+  display: flex;
+  flex-direction: column;
+}
+
+x-list[list-type="waterfall"][scroll-orientation="horizontal"] {
+  flex-direction: row;
+}
+
+x-list[list-type="waterfall"]::part(slot) {
+  visibility: hidden;
+}
+
+x-list[list-type="waterfall"] list-item {
+  position: absolute;
+}
+
+x-list[list-type="waterfall"] list-item {
+  width: calc(
+    (
+      100% - var(--list-cross-axis-gap) * (var(--list-item-span-count) - 1)
+    ) /
+      var(--list-item-span-count)
+  );
+  height: fit-content;
+}
+
+x-list[list-type="waterfall"][scroll-orientation="horizontal"] list-item {
+  width: fit-content;
+  height: calc(
+    (
+      100% - var(--list-cross-axis-gap) * (var(--list-item-span-count) - 1)
+    ) /
+      var(--list-item-span-count)
+  );
+}
+
+x-list[list-type="waterfall"] list-item[full-span]:not([full-span="false"]) {
+  width: 100%;
+  height: fit-content;
+}
+
+x-list[list-type="waterfall"][scroll-orientation="horizontal"]
+  list-item[full-span]:not([full-span="false"]) {
+  width: fit-content;
+  height: 100%;
+}
+
+x-list[list-type="waterfall"]::part(upper-threshold-observer),
+x-list[list-type="waterfall"]::part(lower-threshold-observer) {
+  position: absolute;
+}
+
+x-list[list-type="waterfall"]::part(lower-threshold-observer) {
+  bottom: -999px;
+}
+
+x-list[list-type="waterfall"][scroll-orientation="horizontal"]::part(lower-threshold-observer) {
+  right: -999px;
 }
