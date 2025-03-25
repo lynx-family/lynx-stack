@@ -4,7 +4,7 @@
     "composite": true,
     "rootDir": "./src",
     "outDir": "./dist",
-    "lib": ["ESNext", "WebWorker"],
+    "lib": ["ESNext", "DOM"],
   },
   "include": ["src"],
   "references": [

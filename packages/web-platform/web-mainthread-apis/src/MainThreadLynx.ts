@@ -21,11 +21,19 @@ export function createMainThreadLynx(
     __globalProps: config.globalProps,
 
     requireModule(path: string) {
-      const mainfestUrl = config.lepusCode[`/${path}`];
-      if (mainfestUrl) path = mainfestUrl;
-      importScripts(path);
-      const entry = (globalThis.module as LynxJSModule).exports;
-      return entry?.(lepusRuntime);
+      // @ts-expect-error
+      if (self.WorkerGlobalScope) {
+        const mainfestUrl = config.lepusCode[`/${path}`];
+        if (mainfestUrl) path = mainfestUrl;
+        // @ts-expect-error
+        importScripts(path);
+        const entry = (globalThis.module as LynxJSModule).exports;
+        return entry?.(lepusRuntime);
+      } else {
+        throw new Error(
+          'importing scripts synchronously is only available for the multi-thread running mode',
+        );
+      }
     },
     requireModuleAsync(
       path: string,
