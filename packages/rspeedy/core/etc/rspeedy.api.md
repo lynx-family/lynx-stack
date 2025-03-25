@@ -232,7 +232,23 @@ export interface Output {
 // @public
 export interface Performance {
     chunkSplit?: ChunkSplit | ChunkSplitBySize | ChunkSplitCustom | undefined;
+    printFileSize?: boolean | PrintFileSize | undefined;
     removeConsole?: boolean | ConsoleType[] | undefined;
+}
+
+// @public
+export interface PrintFileSize {
+    compressed?: boolean;
+    detail?: boolean;
+    exclude?: ((asset: PrintFileSizeAsset) => boolean) | undefined;
+    include?: ((asset: PrintFileSizeAsset) => boolean) | undefined;
+    total?: boolean;
+}
+
+// @public (undocumented)
+export interface PrintFileSizeAsset {
+    name: string;
+    size: number;
 }
 
 export { RsbuildPlugin }

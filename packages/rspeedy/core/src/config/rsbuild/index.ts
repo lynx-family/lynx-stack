@@ -90,6 +90,8 @@ export function toRsbuildConfig(
         | ConsoleType[]
         | false
         | undefined,
+
+      printFileSize: config.performance?.printFileSize ?? true,
     },
     tools: {
       bundlerChain: config.tools?.bundlerChain,

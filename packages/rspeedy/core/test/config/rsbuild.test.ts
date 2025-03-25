@@ -5,6 +5,7 @@ import type { RsbuildPlugin } from '@rsbuild/core'
 import { describe, expect, test } from 'vitest'
 
 import { toRsbuildConfig } from '../../src/config/rsbuild/index.js'
+import type { PrintFileSize } from '../../src/index.js'
 
 describe('Config - toRsBuildConfig', () => {
   describe('Dev', () => {
@@ -449,6 +450,36 @@ describe('Config - toRsBuildConfig', () => {
         performance: { removeConsole: false },
       })
       expect(rsbuildConfig.performance?.removeConsole).toBe(false)
+    })
+
+    test('transform performance.printFileSize false', () => {
+      const rsbuildConfig = toRsbuildConfig({
+        performance: { printFileSize: false },
+      })
+      expect(rsbuildConfig.performance?.printFileSize).toBe(
+        false,
+      )
+    })
+
+    test('transform performance.printFileSize', () => {
+      const rsbuildConfig = toRsbuildConfig({
+        performance: {
+          printFileSize: {
+            total: false,
+            detail: false,
+            compressed: true,
+            include: () => false,
+            exclude: () => false,
+          },
+        },
+      })
+      const printFileSize = rsbuildConfig.performance
+        ?.printFileSize as PrintFileSize
+      expect(printFileSize.total).toBe(false)
+      expect(printFileSize.detail).toBe(false)
+      expect(printFileSize.compressed).toBe(true)
+      expect(printFileSize.include?.({ name: '', size: 1 })).toEqual(false)
+      expect(printFileSize.exclude?.({ name: '', size: 1 })).toEqual(false)
     })
   })
 

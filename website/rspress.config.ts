@@ -112,6 +112,8 @@ const SIDEBARS = {
         'EntryDescription',
         'RsdoctorRspackPluginOptions',
         'SourceMap',
+        'PrintFileSize',
+        'PrintFileSizeAsset',
         'TransformImport',
 
         // APIs

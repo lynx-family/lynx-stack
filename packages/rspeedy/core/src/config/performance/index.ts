@@ -6,6 +6,7 @@ import type {
   ChunkSplitBySize,
   ChunkSplitCustom,
 } from './chunk-split.js'
+import type { PrintFileSize } from './print-file-size.js'
 
 /**
  * The type of the console method.
@@ -67,4 +68,25 @@ export interface Performance {
    * ```
    */
   removeConsole?: boolean | ConsoleType[] | undefined
+
+  /**
+   * Whether to print the file sizes after production build.
+   *
+   * {@link Performance.printFileSize}
+   *
+   * @example
+   *
+   * If you don't want to print any information, you can disable it by setting printFileSize to false:
+   *
+   * ```ts
+   * import { defineConfig } from '@lynx-js/rspeedy'
+   *
+   * export default defineConfig({
+   *   performance: {
+   *     printFileSize: false
+   *   },
+   * })
+   * ```
+   */
+  printFileSize?: boolean | PrintFileSize | undefined
 }
