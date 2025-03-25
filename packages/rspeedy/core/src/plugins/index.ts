@@ -64,7 +64,7 @@ export async function applyDefaultPlugins(
     ),
 
     import('./sourcemap.plugin.js').then(({ pluginSourcemap }) =>
-      pluginSourcemap()
+      pluginSourcemap(config.output)
     ),
 
     import('./swc.plugin.js').then(({ pluginSwc }) => pluginSwc()),

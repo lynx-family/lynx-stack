@@ -335,4 +335,14 @@ export interface Output {
    * The {@link SourceMap} configures whether and how to generate source-map for outputs.
    */
   sourceMap?: boolean | SourceMap | undefined
+
+  /**
+   * The `debugIds` option controls whether to add debug IDs to the output files.
+   *
+   * @remarks
+   * When enabled, Rspeedy will add debug IDs to the output files to help with debugging.
+   * This is useful when you need to track down issues in production builds.
+   * See the {@link https://github.com/tc39/ecma426/blob/main/proposals/debug-id.md | TC39 sourcemap debug ID proposal} for more details.
+   */
+  debugIds?: boolean | undefined
 }

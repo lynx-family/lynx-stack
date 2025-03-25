@@ -9,7 +9,15 @@ import type { UndefinedOnPartialDeep } from 'type-fest'
 import { EvalSourceMapDevToolPlugin } from '../webpack/EvalSourceMapDevToolPlugin.js'
 import { SourceMapDevToolPlugin } from '../webpack/SourceMapDevToolPlugin.js'
 
-export function pluginSourcemap(): RsbuildPlugin {
+export function pluginSourcemap({
+  debugIds = false,
+}: {
+  /**
+   * Controls whether to add debug IDs to the output files to help with debugging.
+   * See the {@link https://github.com/tc39/ecma426/blob/main/proposals/debug-id.md | TC39 sourcemap debug ID proposal} for more details.
+   */
+  debugIds?: boolean | undefined
+} = {}): RsbuildPlugin {
   return {
     name: 'lynx:rsbuild:sourcemap',
     pre: ['lynx:rsbuild:dev'],
@@ -38,6 +46,7 @@ export function pluginSourcemap(): RsbuildPlugin {
             '<port>',
             String(api.context.devServer?.port ?? server?.port),
           ),
+          debugIds,
         )
 
         function getDevtoolFromSourceMap(): Rspack.DevTool {
@@ -67,6 +76,7 @@ function applySourceMapPlugin(
   chain: RspackChain,
   devtool: Rspack.DevTool,
   publicPath: string | undefined,
+  debugIds: boolean,
 ): void {
   if (devtool === false) {
     return
@@ -99,6 +109,7 @@ function applySourceMapPlugin(
       noSources,
       namespace: output?.devtoolNamespace,
       publicPath,
+      debugIds,
     } satisfies UndefinedOnPartialDeep<Rspack.SourceMapDevToolPluginOptions>
 
     chain
