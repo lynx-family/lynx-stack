@@ -163,7 +163,7 @@ export class XListWaterfall
           // Firefox cannot trigger the bottom IntersectionObserver
           `${String(listContent.scrollHeight - 1)}px`,
         );
-        // firfox need this
+        // Firefox needs this
         lower.style.setProperty(
           'right',
           'unset',
@@ -179,11 +179,9 @@ export class XListWaterfall
   #resizeObserverInit = (spanCount: number, isScrollVertical: boolean) => {
     this.#resizeObserver?.disconnect();
     this.#resizeObserver = new ResizeObserver(() => {
-      requestAnimationFrame(() =>
-        this.#layoutListItem(
-          spanCount,
-          isScrollVertical,
-        )
+      this.#layoutListItem(
+        spanCount,
+        isScrollVertical,
       );
     });
     Array.from(this.#dom.children).forEach(element => {
@@ -201,7 +199,7 @@ export class XListWaterfall
       const scrollOrientation = this.#dom.getAttribute('scroll-orientation')
         || 'vertical';
 
-      requestAnimationFrame(() => this.#createWaterfallContainer());
+      this.#createWaterfallContainer();
 
       if (!this.#resizeObserver) {
         this.#resizeObserverInit(spanCount, scrollOrientation === 'vertical');
