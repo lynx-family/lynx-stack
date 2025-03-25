@@ -15,7 +15,7 @@ export type DefineDCEVisitorConfig = {
   /**
    * @public
    */
-  define: { [key in string]?: string };
+  define: Record<string, string>;
 };
 
 export type DirectiveDCEVisitorConfig = {
@@ -79,12 +79,7 @@ export type TransformNodiffOptions = {
    * This is used internally to make sure the test output is consistent.
    */
   mode?: 'production' | 'development' | 'test';
-  pluginName: string;
   filename: string;
-  sourceFileName?: string;
-  sourcemap: boolean | string;
-  sourceMapColumns?: boolean;
-  inlineSourcesContent?: boolean;
   cssScope: boolean | CSSScopeVisitorConfig;
   snapshot?: boolean | JSXTransformerConfig;
   shake: boolean | ShakeVisitorConfig;

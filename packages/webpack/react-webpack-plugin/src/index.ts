@@ -13,4 +13,10 @@ export type { ReactWebpackPluginOptions } from './ReactWebpackPlugin.js';
 
 export { LAYERS } from './layer.js';
 
-export type { ReactLoaderOptions } from './loaders/options.js';
+export type { ReactLynxTransfromOptions } from './loaders/options.js';
+export {
+  getMainThreadCompatOptions,
+  getBackgroundCompatOptions,
+  getMainThreadTransformOptions,
+  getBackgroundTransformOptions,
+} from './loaders/options.js';

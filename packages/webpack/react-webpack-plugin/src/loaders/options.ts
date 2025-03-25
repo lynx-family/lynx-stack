@@ -1,21 +1,18 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import path from 'node:path';
-
-import type { LoaderContext } from '@rspack/core';
-
 import type {
   CompatVisitorConfig,
-  DefineDceVisitorConfig,
-  JsxTransformerConfig,
+} from '@lynx-js/react/transform/swc-plugin-compat';
+import type {
+  DefineDCEVisitorConfig,
+  JSXTransformerConfig,
   ShakeVisitorConfig,
   TransformNodiffOptions,
-} from '@lynx-js/react/transform';
+} from '@lynx-js/react/transform/swc-plugin-react-lynx';
 
 import { LAYERS } from '../layer.js';
 
-const PLUGIN_NAME = 'react:webpack';
 const JSX_IMPORT_SOURCE = {
   MAIN_THREAD: '@lynx-js/react/lepus',
   BACKGROUND: '@lynx-js/react',
@@ -29,12 +26,7 @@ const COMPONENT_PKG = '@lynx-js/react-components';
  * The options of the ReactLynx plugin.
  * @public
  */
-export interface ReactLoaderOptions {
-  /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.compat}
-   */
-  compat?: CompatVisitorConfig | undefined;
-
+export interface ReactLynxTransfromOptions {
   /**
    * {@inheritdoc @lynx-js/template-webpack-plugin#LynxTemplatePluginOptions.enableRemoveCSSScope}
    */
@@ -42,7 +34,7 @@ export interface ReactLoaderOptions {
   /**
    * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.jsx}
    */
-  jsx?: JsxTransformerConfig | undefined;
+  jsx?: Partial<JSXTransformerConfig> | undefined;
 
   /**
    * Enable the Fast Refresh for ReactLynx.
@@ -52,17 +44,12 @@ export interface ReactLoaderOptions {
   /**
    * How main-thread code will be shaken.
    */
-  shake?: ShakeVisitorConfig | undefined;
+  shake?: Partial<ShakeVisitorConfig> | undefined;
 
   /**
    * Like `define` in various bundlers, but this one happens at transform time, and a DCE pass will be performed.
    */
-  defineDCE?: DefineDceVisitorConfig | undefined;
-
-  /**
-   * Generate inline source content in source-map.
-   */
-  inlineSourcesContent?: boolean | undefined;
+  defineDCE?: DefineDCEVisitorConfig | undefined;
 
   // TODO: rename to lazy bundle.
   /**
@@ -80,59 +67,83 @@ export interface ReactLoaderOptions {
   transformPath?: string | undefined;
 }
 
-function getCommonOptions(
-  this: LoaderContext<ReactLoaderOptions>,
-) {
-  const filename = path.relative(this.rootContext, this.resourcePath);
+function getCommonCompatOptions(
+  compat: CompatVisitorConfig | boolean,
+): CompatVisitorConfig | boolean {
+  if (typeof compat !== 'object') return false;
 
+  return {
+    target: 'MIXED',
+
+    addComponentElement: compat?.addComponentElement ?? false,
+
+    additionalComponentAttributes: compat?.additionalComponentAttributes
+      ?? [],
+
+    componentsPkg: compat?.componentsPkg ?? [COMPONENT_PKG],
+
+    disableDeprecatedWarning: compat?.disableDeprecatedWarning ?? false,
+
+    newRuntimePkg: compat?.newRuntimePkg ?? PUBLIC_RUNTIME_PKG,
+
+    oldRuntimePkg: compat?.oldRuntimePkg ?? [OLD_RUNTIME_PKG],
+
+    simplifyCtorLikeReactLynx2: compat?.simplifyCtorLikeReactLynx2 ?? false,
+
+    // NOTE: never pass '' (empty string) as default value
+    ...(typeof compat?.removeComponentAttrRegex === 'string' && {
+      removeComponentAttrRegex: compat?.removeComponentAttrRegex,
+    }),
+
+    darkMode: false,
+  };
+}
+
+export function getMainThreadCompatOptions(
+  compat: CompatVisitorConfig | boolean,
+): CompatVisitorConfig | boolean {
+  const commonCompatOptions = getCommonCompatOptions(compat);
+
+  if (typeof commonCompatOptions !== 'object') return false;
+
+  return {
+    ...commonCompatOptions,
+    target: 'LEPUS',
+  };
+}
+
+export function getBackgroundCompatOptions(
+  compat: CompatVisitorConfig | boolean,
+): CompatVisitorConfig | boolean {
+  const commonCompatOptions = getCommonCompatOptions(compat);
+
+  if (typeof commonCompatOptions !== 'object') return false;
+
+  return {
+    ...commonCompatOptions,
+    target: 'JS',
+  };
+}
+
+function getCommonOptions(
+  options: ReactLynxTransfromOptions,
+  isDev: boolean,
+) {
   const {
-    compat,
     enableRemoveCSSScope,
-    inlineSourcesContent,
     isDynamicComponent,
     defineDCE = { define: {} },
-  } = this.getOptions();
+  } = options;
 
-  const syntax = (/\.[mc]?tsx?$/.exec(this.resourcePath))
-    ? 'typescript'
-    : 'ecmascript';
-  // is '.ts' (one of '.js', '.jsx', '.ts', '.tsx')
-  const isTS = /\.[mc]?ts$/.exec(this.resourcePath);
+  const filename = 'test.js';
 
   const commonOptions = {
     // We need to set `mode: 'development'` for HMR to work
-    mode: this.hot ? 'development' : 'production',
-    compat: typeof compat === 'object'
-      ? {
-        target: 'MIXED',
+    mode: isDev ? 'development' : 'production',
 
-        addComponentElement: compat?.addComponentElement ?? false,
-
-        additionalComponentAttributes: compat?.additionalComponentAttributes
-          ?? [],
-
-        componentsPkg: compat?.componentsPkg ?? [COMPONENT_PKG],
-
-        disableDeprecatedWarning: compat?.disableDeprecatedWarning ?? false,
-
-        newRuntimePkg: compat?.newRuntimePkg ?? PUBLIC_RUNTIME_PKG,
-
-        oldRuntimePkg: compat?.oldRuntimePkg ?? [OLD_RUNTIME_PKG],
-
-        simplifyCtorLikeReactLynx2: compat?.simplifyCtorLikeReactLynx2 ?? false,
-
-        // NOTE: never pass '' (empty string) as default value
-        ...(typeof compat?.removeComponentAttrRegex === 'string' && {
-          removeComponentAttrRegex: compat?.removeComponentAttrRegex,
-        }),
-
-        darkMode: false,
-      }
-      : false,
-    pluginName: PLUGIN_NAME,
     // Ensure that swc get a full absolute path so that it will generate
     // absolute path in the `source` param of `jsxDev(type, props, key, isStatic, source, self)`
-    filename: this.resourcePath,
+    filename,
     cssScope: {
       mode: getCSSScopeMode(enableRemoveCSSScope),
       filename,
@@ -142,56 +153,41 @@ function getCommonOptions(
     // modules.
     // See: https://github.com/babel/babel-loader/blob/d85f4207947b618e040fb6a70afe9be9e1fd87d7/src/index.js#L135C1-L137C16
     // See: https://github.com/swc-project/pkgs/blob/d096fdc1ac372ac045894bdda3180ef99bbcbe33/packages/swc-loader/src/index.js#L42
-    sourceFileName: this.resourcePath,
-    sourcemap: this.sourceMap,
-    sourceMapColumns: this.sourceMap && !this.hot,
-    inlineSourcesContent: inlineSourcesContent ?? !this.hot,
+
     snapshot: {
-      // TODO: config
       preserveJsx: false,
       target: 'MIXED',
       runtimePkg: RUNTIME_PKG,
       filename,
       isDynamicComponent: isDynamicComponent ?? false,
     },
-    syntaxConfig: JSON.stringify({
-      syntax,
-      decorators: true,
-      // Only '.ts' conflicts with tsx, both '.js' and '.jsx' can be handled by tsx.
-      tsx: !isTS,
-      // `.js` is not conflicts with jsx, always pass true
-      jsx: true,
-    }),
-    // TODO: config
+
     worklet: {
-      filename: filename,
+      filename,
       runtimePkg: RUNTIME_PKG,
       target: 'MIXED',
     },
+
     directiveDCE: false,
     defineDCE,
-    refresh: false,
-    isModule: 'unknown',
   } satisfies Partial<TransformNodiffOptions>;
 
   return commonOptions;
 }
 
 export function getMainThreadTransformOptions(
-  this: LoaderContext<ReactLoaderOptions>,
+  options: ReactLynxTransfromOptions,
+  compat: CompatVisitorConfig | boolean,
+  isDev: boolean,
 ): TransformNodiffOptions {
-  const commonOptions = getCommonOptions.call(this);
+  const commonOptions = getCommonOptions(options, isDev);
 
-  const { shake } = this.getOptions();
+  const commonCompatOptions = getCommonCompatOptions(compat);
+
+  const { shake } = options;
 
   return {
     ...commonOptions,
-    compat: typeof commonOptions.compat === 'object'
-      ? {
-        ...commonOptions.compat,
-        target: 'LEPUS',
-      }
-      : false,
     snapshot: {
       ...commonOptions.snapshot,
       jsxImportSource: JSX_IMPORT_SOURCE.MAIN_THREAD,
@@ -223,8 +219,8 @@ export function getMainThreadTransformOptions(
         PUBLIC_RUNTIME_PKG,
         `${PUBLIC_RUNTIME_PKG}/legacy-react-runtime`,
         RUNTIME_PKG,
-        ...typeof commonOptions.compat === 'object'
-          ? commonOptions.compat.oldRuntimePkg
+        ...typeof commonCompatOptions === 'object'
+          ? commonCompatOptions.oldRuntimePkg
           : [],
         ...(shake?.pkgName ?? []),
       ],
@@ -259,17 +255,13 @@ export function getMainThreadTransformOptions(
 }
 
 export function getBackgroundTransformOptions(
-  this: LoaderContext<ReactLoaderOptions>,
+  options: ReactLynxTransfromOptions,
+  isDev: boolean,
 ): TransformNodiffOptions {
-  const commonOptions = getCommonOptions.call(this);
+  const commonOptions = getCommonOptions(options, isDev);
+
   return {
     ...commonOptions,
-    compat: typeof commonOptions.compat === 'object'
-      ? {
-        ...commonOptions.compat,
-        target: 'JS',
-      }
-      : false,
     dynamicImport: {
       layer: LAYERS.BACKGROUND,
       runtimePkg: RUNTIME_PKG,
@@ -277,7 +269,7 @@ export function getBackgroundTransformOptions(
     snapshot: {
       ...commonOptions.snapshot,
       jsxImportSource: JSX_IMPORT_SOURCE.BACKGROUND,
-      target: this.hot
+      target: isDev
         // Using `MIX` when HMR is enabled.
         // This allows serializing the updated runtime code to Lepus using `Function.prototype.toString`.
         ? 'MIXED'

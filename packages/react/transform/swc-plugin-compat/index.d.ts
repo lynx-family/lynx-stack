@@ -36,7 +36,7 @@ export type CompatVisitorConfig = {
    * @public
    * @deprecated
    */
-  removeComponentAttrRegex: string | null;
+  removeComponentAttrRegex?: string;
   /**
    * @public
    */

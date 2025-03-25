@@ -15,10 +15,12 @@ import type { RsbuildPlugin } from '@rsbuild/core'
 
 import type {
   CompatVisitorConfig,
-  DefineDceVisitorConfig,
-  JsxTransformerConfig,
+} from '@lynx-js/react/transform/swc-plugin-compat'
+import type {
+  DefineDCEVisitorConfig,
+  JSXTransformerConfig,
   ShakeVisitorConfig,
-} from '@lynx-js/react/transform'
+} from '@lynx-js/react/transform/swc-plugin-react-lynx'
 import type { ExposedAPI } from '@lynx-js/rspeedy'
 
 import { applyAlias } from './alias.js'
@@ -229,7 +231,7 @@ export interface PluginReactLynxOptions {
   /**
    * The `jsx` option controls how JSX is transformed.
    */
-  jsx?: Partial<JsxTransformerConfig> | undefined
+  jsx?: Partial<JSXTransformerConfig> | undefined
 
   /**
    * Composite configuration representing pipeline scheduling strategies, including {@link PluginReactLynxOptions.enableParallelElement} and list batch-rendering. All newly introduced scheduling strategies will be managed by this uint64 configuration.
@@ -269,7 +271,7 @@ export interface PluginReactLynxOptions {
   /**
    * Like `define` in various bundlers, but this one happens at transform time, and a DCE pass will be performed.
    */
-  defineDCE?: Partial<DefineDceVisitorConfig> | undefined
+  defineDCE?: DefineDCEVisitorConfig | undefined
 
   /**
    * `engineVersion` specifies the minimum Lynx Engine version required for an App bundle to function properly.

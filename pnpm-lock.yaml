@@ -154,6 +154,12 @@ importers:
       '@lynx-js/react':
         specifier: workspace:*
         version: link:../../packages/react
+      '@lynx-js/swc-plugin-compat':
+        specifier: workspace:*
+        version: link:../../packages/react/transform/swc-plugin-compat
+      '@lynx-js/swc-plugin-react-lynx':
+        specifier: workspace:*
+        version: link:../../packages/react/transform/swc-plugin-react-lynx
     devDependencies:
       '@lynx-js/qrcode-rsbuild-plugin':
         specifier: workspace:*
@@ -223,11 +229,9 @@ importers:
         specifier: ^3.0.9
         version: 3.0.9(@types/debug@4.1.12)(@types/node@22.13.5)(@vitest/ui@3.0.9)(jsdom@26.0.0)(sass-embedded@1.85.0)(terser@5.31.6)
 
-  packages/react/transform:
-    dependencies:
-      '@swc/core':
-        specifier: ^1.10.4
-        version: 1.11.11(@swc/helpers@0.5.15)
+  packages/react/transform/swc-plugin-compat: {}
+
+  packages/react/transform/swc-plugin-react-lynx: {}
 
   packages/react/worklet-runtime:
     devDependencies:
@@ -794,6 +798,12 @@ importers:
       '@lynx-js/react':
         specifier: workspace:*
         version: link:../../react
+      '@lynx-js/swc-plugin-compat':
+        specifier: workspace:*
+        version: link:../../react/transform/swc-plugin-compat
+      '@lynx-js/swc-plugin-react-lynx':
+        specifier: workspace:*
+        version: link:../../react/transform/swc-plugin-react-lynx
       '@lynx-js/template-webpack-plugin':
         specifier: workspace:*
         version: link:../template-webpack-plugin

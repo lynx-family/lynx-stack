@@ -43,6 +43,8 @@
   "devDependencies": {
     "@lynx-js/css-extract-webpack-plugin": "workspace:*",
     "@lynx-js/react": "workspace:*",
+    "@lynx-js/swc-plugin-compat": "workspace:*",
+    "@lynx-js/swc-plugin-react-lynx": "workspace:*",
     "@lynx-js/template-webpack-plugin": "workspace:*",
     "@lynx-js/test-tools": "workspace:*",
     "@lynx-js/vitest-setup": "workspace:*",

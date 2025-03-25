@@ -3,7 +3,8 @@ packages:
   - packages/react
   - packages/react/refresh
   - packages/react/runtime
-  - packages/react/transform
+  - packages/react/transform/swc-plugin-react-lynx
+  - packages/react/transform/swc-plugin-compat
   - packages/react/worklet-runtime
   - packages/rspeedy/*
   - packages/tools/*

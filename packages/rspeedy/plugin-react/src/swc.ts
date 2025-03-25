@@ -22,6 +22,9 @@ export function applySWC(api: RsbuildPluginAPI): void {
             config.jsc.parser.decorators = true
           }
 
+          config.jsc.experimental ??= {}
+          config.jsc.experimental.plugins ??= []
+
           return config
         },
       },

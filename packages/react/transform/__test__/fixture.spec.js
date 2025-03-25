@@ -69,7 +69,6 @@ export class A extends Component {
         swcPluginReactLynx,
         {
           mode: 'test',
-          sourcemap: false,
           shake: true,
           directiveDCE: false,
         },
@@ -107,7 +106,6 @@ describe('jsx', () => {
         swcPluginReactLynx,
         {
           mode: 'test',
-          sourcemap: false,
           shake: true,
           worklet: true,
           directiveDCE: {
@@ -155,9 +153,7 @@ Component, View
       [
         swcPluginReactLynx,
         {
-          pluginName: '',
           filename: '',
-          sourcemap: false,
           cssScope: false,
           snapshot: {
             runtimePkg: '@lynx-js/react-runtime',
@@ -190,9 +186,7 @@ Component, View
   });
 
   const cfg = {
-    pluginName: '',
     filename: '',
-    sourcemap: false,
     cssScope: false,
     snapshot: {
       runtimePkg: '@lynx-js/react-runtime',
@@ -386,9 +380,7 @@ describe('transformBundle', () => {
       `const p = <any>Promise.all([]);`,
       [
         [swcPluginReactLynx, {
-          pluginName: 'transform',
           filename: '',
-          sourcemap: false,
           cssScope: false,
           jsx: false,
           directiveDCE: false,
@@ -413,9 +405,7 @@ describe('transformBundle', () => {
         `const p = <any>Promise.all([]);`,
         [
           [swcPluginReactLynx, {
-            pluginName: 'transform',
             filename: '',
-            sourcemap: false,
             cssScope: false,
             jsx: false,
             directiveDCE: false,
@@ -435,9 +425,7 @@ describe('transformBundle', () => {
       `const foo = <T,>(v: T) => v;foo`,
       [
         [swcPluginReactLynx, {
-          pluginName: 'transform',
           filename: '',
-          sourcemap: false,
           cssScope: false,
           jsx: false,
           directiveDCE: false,
@@ -464,9 +452,7 @@ describe('transformBundle', () => {
         `with(x) {y}`,
         [
           [swcPluginReactLynx, {
-            pluginName: '',
             filename: '',
-            sourcemap: false,
             cssScope: false,
             jsx: false,
             directiveDCE: false,
@@ -510,9 +496,6 @@ describe('transformBundle', () => {
 // }
 // `,
 //       {
-//         pluginName: '',
-//         filename: '',
-//         sourcemap: false,
 //         cssScope: false,
 //         jsx: false,
 //         directiveDCE: {
@@ -590,9 +573,7 @@ export default class App extends Component {
           disableDeprecatedWarning: false,
         }],
         [swcPluginReactLynx, {
-          pluginName: 'transform',
           filename: '',
-          sourcemap: false,
           cssScope: false,
           jsx: false,
           directiveDCE: false,
@@ -756,7 +737,6 @@ X();
     const result = transformReactLynx(inputContent, [
       [swcPluginCompat, {}],
       [swcPluginReactLynx, {
-        sourcemap: false,
         cssScope: false,
         shake: false,
         worklet: false,
@@ -1148,9 +1128,7 @@ export function getCurrentDelta(event) {
         [
           [swcPluginCompat, {}],
           [swcPluginReactLynx, {
-            pluginName: '',
             filename: '',
-            sourcemap: false,
             cssScope: false,
             directiveDCE: true,
             defineDCE: {
@@ -1308,7 +1286,6 @@ console.log(bar)
 `,
       [
         [swcPluginReactLynx, {
-          sourcemap: false,
           cssScope: false,
           directiveDCE: true,
           defineDCE: {
@@ -1369,9 +1346,7 @@ function getCurrentDelta(event) {
       [
         [swcPluginCompat, {}],
         [swcPluginReactLynx, {
-          pluginName: '',
           filename: '',
-          sourcemap: false,
           cssScope: false,
           directiveDCE: true,
           defineDCE: {

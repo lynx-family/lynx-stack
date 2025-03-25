@@ -8,9 +8,7 @@ import { swcPluginReactLynx, transformReactLynx } from '../../main.js';
 /** @type {import('../../index.d.ts').TransformNodiffOptions} */
 const defaultOptions = {
   mode: 'test',
-  pluginName: '',
   filename: 'test.js',
-  sourcemap: false,
   snapshot: {
     preserveJsx: false,
     runtimePkg: '@lynx-js/react',
@@ -153,7 +151,7 @@ bar, styles, styles0, styles1
   it.each([{ mode: 'all' }, { mode: 'none' }, { mode: 'modules' }])(
     'should transform jsx within dynamic component with cssScope: $mode',
     async ({ mode }) => {
-      const result = await transformReactLynx(
+      const result = transformReactLynx(
         `\
   <view />;
   const jsx = <text>foo</text>

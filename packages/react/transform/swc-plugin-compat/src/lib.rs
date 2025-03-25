@@ -109,6 +109,7 @@ pub struct CompatVisitorConfig {
   pub simplify_ctor_like_react_lynx_2: bool,
   /// @public
   /// @deprecated
+  #[ts(optional)]
   pub remove_component_attr_regex: Option<String>,
   /// @public
   pub disable_deprecated_warning: bool,

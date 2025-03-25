@@ -1,5 +1,5 @@
 {
-  "name": "@lynx-dev/swc-plugin-react-lynx",
+  "name": "@lynx-js/swc-plugin-react-lynx",
   "version": "0.1.0",
   "main": "./swc_plugin_react_lynx.wasm",
   "types": "./index.d.ts",

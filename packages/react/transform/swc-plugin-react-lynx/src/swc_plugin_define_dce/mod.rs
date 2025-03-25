@@ -7,6 +7,7 @@ use ts_rs::TS;
 #[ts(export, export_to = "index.d.ts")]
 pub struct DefineDCEVisitorConfig {
   /// @public
+  #[ts(type = "Record<string, string>")]
   pub define: HashMap<String, String>,
 }
 

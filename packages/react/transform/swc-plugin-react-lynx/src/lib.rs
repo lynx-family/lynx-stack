@@ -23,10 +23,8 @@ use ts_rs::TS;
 use swc_core::{
   base::config::GlobalPassOption,
   common::{
-    errors::{DiagnosticBuilder, Emitter, HANDLER},
-    pass::Optional,
-    sync::Lrc,
-    FilePathMapping, Mark, SourceMap, SourceMapper, Spanned,
+    errors::HANDLER, pass::Optional, sync::Lrc, FilePathMapping, Mark, SourceMap, SourceMapper,
+    Spanned,
   },
   ecma::{
     ast::*,
@@ -98,21 +96,7 @@ pub struct TransformNodiffOptions {
   #[ts(optional, type = "'production' | 'development' | 'test'")]
   pub mode: Option<TransformMode>,
 
-  pub plugin_name: String,
-
   pub filename: String,
-
-  #[ts(optional)]
-  pub source_file_name: Option<String>,
-
-  #[ts(inline)]
-  pub sourcemap: Either<bool, String>,
-
-  #[ts(optional)]
-  pub source_map_columns: Option<bool>,
-
-  #[ts(optional)]
-  pub inline_sources_content: Option<bool>,
 
   #[ts(inline)]
   pub css_scope: Either<bool, CSSScopeVisitorConfig>,
@@ -146,12 +130,7 @@ impl Default for TransformNodiffOptions {
   fn default() -> Self {
     Self {
       mode: Some(TransformMode::Production),
-      plugin_name: Default::default(),
       filename: Default::default(),
-      source_file_name: Default::default(),
-      sourcemap: Either::A(false),
-      source_map_columns: None,
-      inline_sources_content: None,
       css_scope: Either::B(Default::default()),
       snapshot: Default::default(),
       shake: Either::A(false),
@@ -160,25 +139,6 @@ impl Default for TransformNodiffOptions {
       worklet: Either::A(false),
       dynamic_import: Some(Either::B(Default::default())),
       inject: Some(Either::A(false)),
-    }
-  }
-}
-
-/// A multi emitter that forwards to multiple emitters.
-pub struct MultiEmitter {
-  emitters: Vec<Box<dyn Emitter>>,
-}
-
-impl MultiEmitter {
-  pub fn new(emitters: Vec<Box<dyn Emitter>>) -> Self {
-    Self { emitters }
-  }
-}
-
-impl Emitter for MultiEmitter {
-  fn emit(&mut self, db: &DiagnosticBuilder<'_>) {
-    for emitter in &mut self.emitters {
-      emitter.emit(db);
     }
   }
 }
@@ -459,10 +419,8 @@ mod tests {
   fn test_optional_fields() {
     let json_data = r#"
       {
-          "pluginName": "test-plugin",
-          "filename": "test.js",
-          "sourcemap": true,
           "shake": true,
+          "filename": "test.js",
           "cssScope":true,
           "defineDCE": true,
           "directiveDCE": true,
@@ -472,12 +430,7 @@ mod tests {
     let options: TransformNodiffOptions = serde_json::from_str(json_data).unwrap();
 
     assert_eq!(options.mode, Some(TransformMode::Production));
-    assert_eq!(options.plugin_name, "test-plugin");
     assert_eq!(options.filename, "test.js");
-    assert_eq!(options.source_file_name, None);
-    assert_eq!(options.sourcemap, Either::A(true));
-    assert_eq!(options.source_map_columns, None);
-    assert_eq!(options.inline_sources_content, None);
     assert_eq!(options.css_scope, Either::A(true));
     assert_eq!(options.snapshot, None);
     assert_eq!(options.shake, Either::A(true));

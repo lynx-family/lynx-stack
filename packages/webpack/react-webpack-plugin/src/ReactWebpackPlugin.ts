@@ -93,8 +93,7 @@ class ReactWebpackPlugin {
    *
    * @public
    */
-  static loaders: Record<keyof typeof LAYERS, string> = {
-    BACKGROUND: require.resolve('../lib/loaders/background.js'),
+  static loaders: Record<string, string> = {
     MAIN_THREAD: require.resolve('../lib/loaders/main-thread.js'),
   };
 

@@ -84,9 +84,7 @@ describe.skip('Parse Object Literal Style', () => {
   }}/>`,
       [swcPluginReactLynx, {
         mode: 'test',
-        pluginName: '',
         filename: '',
-        sourcemap: false,
         cssScope: false,
         snapshot: {
           runtimePkg: '@lynx-js/react-runtime',
@@ -145,9 +143,7 @@ describe.skip('Parse Object Literal Style', () => {
   }}/>`,
       [swcPluginReactLynx, {
         mode: 'test',
-        pluginName: '',
         filename: '',
-        sourcemap: false,
         cssScope: false,
         snapshot: {
           runtimePkg: '@lynx-js/react-runtime',
@@ -202,9 +198,7 @@ describe.skip('Parse Object Literal Style', () => {
   let jsx = <view style={{ height, width }}/>`,
       [swcPluginReactLynx, {
         mode: 'test',
-        pluginName: '',
         filename: '',
-        sourcemap: false,
         cssScope: false,
         snapshot: {
           runtimePkg: '@lynx-js/react-runtime',
