@@ -1,5 +1,11 @@
 # @lynx-js/react
 
+## 0.106.1
+
+### Patch Changes
+
+- Fix a stack underflow issue when running on PrimJS. ([#326](https://github.com/lynx-family/lynx-stack/pull/326))
+
 ## 0.106.0
 
 ### Minor Changes

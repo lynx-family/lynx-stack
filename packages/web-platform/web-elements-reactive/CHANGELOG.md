@@ -1,5 +1,11 @@
 # @lynx-js/web-elements-reactive
 
+## 0.2.1
+
+### Patch Changes
+
+- Lazy load `templateElement` ([#286](https://github.com/lynx-family/lynx-stack/pull/286))
+
 ## 0.2.0
 
 ### Minor Changes

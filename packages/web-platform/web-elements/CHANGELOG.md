@@ -1,5 +1,12 @@
 # @lynx-js/web-elements
 
+## 0.5.1
+
+### Patch Changes
+
+- Updated dependencies [[`082ad97`](https://github.com/lynx-family/lynx-stack/commit/082ad97510c212aa00a9395044bb6fc39a82940a)]:
+  - @lynx-js/web-elements-reactive@0.2.1
+
 ## 0.5.0
 
 ### Minor Changes

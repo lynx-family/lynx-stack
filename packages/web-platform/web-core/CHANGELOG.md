@@ -1,5 +1,18 @@
 # @lynx-js/web-core
 
+## 0.9.1
+
+### Patch Changes
+
+- feat: remove extra div #lynx-view-root ([#311](https://github.com/lynx-family/lynx-stack/pull/311))
+
+  In this commit we've re-implemented the lynx-view's auto-size. Now we use the `contain:content` instead of `resizeObserver`.
+
+- Updated dependencies []:
+  - @lynx-js/web-constants@0.9.1
+  - @lynx-js/web-worker-rpc@0.9.1
+  - @lynx-js/web-worker-runtime@0.9.1
+
 ## 0.9.0
 
 ### Minor Changes
