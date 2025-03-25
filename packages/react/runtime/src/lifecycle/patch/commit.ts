@@ -162,7 +162,8 @@ async function commitToMainThread(): Promise<void> {
 
   await commitPatchUpdate(patchList, {});
 
-  for (const patch of patchList.patchList) {
+  for (let i = 0; i < patchList.patchList.length; i++) {
+    const patch = patchList.patchList[i]!;
     const commitTask = globalCommitTaskMap.get(patch.id);
     if (commitTask) {
       commitTask();
