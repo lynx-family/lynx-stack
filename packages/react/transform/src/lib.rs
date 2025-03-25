@@ -36,7 +36,7 @@ use swc_core::{
   },
   common::{
     comments::SingleThreadedComments,
-    errors::{DiagnosticBuilder, Emitter, Handler},
+    errors::{DiagnosticBuilder, Emitter, Handler, HANDLER},
     pass::Optional,
     sync::Lrc,
     FileName, FilePathMapping, Mark, SourceMap, GLOBALS,
@@ -48,6 +48,7 @@ use swc_core::{
     transforms::{
       base::{
         fixer::fixer,
+        helpers,
         hygiene::{hygiene_with_config, Config},
         resolver,
       },
@@ -619,14 +620,13 @@ fn transform_react_lynx_inner(
           top_level_mark,
           ..Default::default()
         }),
+        &mut fixer(Some(&comments)),
       ),
     );
 
-    let program = c
-      .transform(&handler, program, true, pass)
-      .fold_with(&mut fixer(Some(&comments)));
-
-    // let program = program.apply(pass);
+    let program = helpers::HELPERS.set(&helpers::Helpers::new(true), || {
+      HANDLER.set(&handler, || program.apply(pass))
+    });
 
     let result = c.print(
       &program,

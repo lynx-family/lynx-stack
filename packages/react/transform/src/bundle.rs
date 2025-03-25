@@ -11,7 +11,7 @@ use swc_core::{
   },
   common::{
     comments::SingleThreadedComments,
-    errors::{DiagnosticBuilder, Emitter, Handler},
+    errors::{DiagnosticBuilder, Emitter, Handler, HANDLER},
     sync::Lrc,
     FileName, FilePathMapping, Mark, SourceMap, GLOBALS,
   },
@@ -19,7 +19,7 @@ use swc_core::{
     ast::*,
     codegen,
     parser::{EsSyntax, Syntax},
-    transforms::base::{hygiene::hygiene_with_config, resolver},
+    transforms::base::{helpers, hygiene::hygiene_with_config, resolver},
     visit::visit_mut_pass,
   },
 };
@@ -140,24 +140,28 @@ pub fn transform_bundle_result_inner(
     let mut worklet_post_process_vis = WorkletPostProcessorVisitor::default();
     let worklet_post_process_plugin = visit_mut_pass(&mut worklet_post_process_vis);
 
-    let program = c.transform(
-      &handler,
-      program,
-      true,
-      (
-        resolver(Mark::new(), Mark::new(), true),
-        (extract_str_plugin),
-        worklet_post_process_plugin,
-        hygiene_with_config(Default::default()),
-      ),
+    // let program = c.transform(
+    //   &handler,
+    //   program,
+    //   true,
+    //   (
+    //     resolver(Mark::new(), Mark::new(), true),
+    //     extract_str_plugin,
+    //     worklet_post_process_plugin,
+    //     hygiene_with_config(Default::default()),
+    //   ),
+    // );
+
+    let pass = (
+      resolver(Mark::new(), Mark::new(), true),
+      extract_str_plugin,
+      worklet_post_process_plugin,
+      hygiene_with_config(Default::default()),
     );
 
-    // let program = program.apply((
-    //   resolver(Mark::new(), Mark::new(), true),
-    //   (extract_str_plugin),
-    //   worklet_post_process_plugin,
-    //   hygiene_with_config(Default::default()),
-    // ));
+    let program = helpers::HELPERS.set(&helpers::Helpers::new(true), || {
+      HANDLER.set(&handler, || program.apply(pass))
+    });
 
     let result = c.print(
       &program,
