@@ -16,7 +16,7 @@ x-list > *:not(list-item) {
   display: none;
 }
 
-x-list::part(content) {
+x-list::part(content), x-list[list-type="waterfall"]::part(waterfall-content) {
   display: flex;
   flex: 0 0 auto;
   flex-wrap: nowrap;
@@ -204,4 +204,39 @@ x-list[list-type="flow"][scroll-orientation="horizontal"][x-enable-scrolltoupper
 x-list[list-type="flow"][scroll-orientation="horizontal"][x-enable-scrolltolower-event]::part(lower-threshold-observer),
 x-list[list-type="flow"][scroll-orientation="horizontal"][x-enable-scrolltoloweredge-event]::part(lower-threshold-observer) {
   grid-row: 1 / calc(var(--list-item-span-count) + 1);
+}
+
+/* list-type waterfall */
+x-list[list-type="waterfall"] {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+x-list[list-type="waterfall"]::part(slot) {
+  visibility: hidden;
+}
+
+x-list[list-type="waterfall"]::part(waterfall-content) {
+  display: flex;
+  flex-direction: row;
+}
+
+x-list[list-type="waterfall"][scroll-orientation="horizontal"]::part(waterfall-content) {
+  display: flex;
+  flex-direction: column;
+}
+
+x-list[list-type="waterfall"]::part(waterfall-slot-container) {
+  display: flex;
+  flex-direction: column;
+  width: calc(100% / var(--list-item-span-count));
+  flex: 1;
+}
+
+x-list[list-type="waterfall"][scroll-orientation="horizontal"]::part(waterfall-slot-container) {
+  display: flex;
+  flex-direction: row;
+  width: calc(100% / var(--list-item-span-count));
+  flex: 1;
 }
