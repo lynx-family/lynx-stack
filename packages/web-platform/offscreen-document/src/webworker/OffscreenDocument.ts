@@ -1,13 +1,17 @@
+// Copyright 2023 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
 import {
   OperationType,
   type ElementOperation,
 } from '../types/ElementOperation.js';
-import { OffscreenElement, uniqueId } from './OffscreenElement.js';
+import { OffscreenElement } from './OffscreenElement.js';
 import {
   eventPhase,
   OffscreenEvent,
   propagationStopped,
 } from './OffscreenEvent.js';
+import { uniqueId, type OffscreenNode } from './OffscreenNode.js';
 
 export const operations = Symbol('operations');
 export const enableEvent = Symbol('enableEvent');
@@ -92,8 +96,8 @@ export class OffscreenDocument extends EventTarget {
   ) => {
     const target = this[getElementByUniqueId](targetUniqueId);
     if (target) {
-      const bubblePath: OffscreenElement[] = [];
-      let tempTarget = target;
+      const bubblePath: OffscreenNode[] = [];
+      let tempTarget: OffscreenNode = target;
       while (tempTarget.parentElement) {
         bubblePath.push(tempTarget.parentElement);
         tempTarget = tempTarget.parentElement;
