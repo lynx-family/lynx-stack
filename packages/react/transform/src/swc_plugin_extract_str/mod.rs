@@ -184,14 +184,14 @@ impl VisitMut for ExtractStrVisitor {
 #[cfg(test)]
 mod tests {
   use swc_core::{
-    common::{chain, Mark},
+    common::Mark,
     ecma::{
       parser::{EsSyntax, Syntax},
       transforms::{
         base::{hygiene::hygiene_with_config, resolver},
         testing::test,
       },
-      visit::as_folder,
+      visit::visit_mut_pass,
     },
   };
 
@@ -202,9 +202,9 @@ mod tests {
     Syntax::Es(EsSyntax {
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(ExtractStrVisitor::new(ExtractStrConfig {
+      visit_mut_pass(ExtractStrVisitor::new(ExtractStrConfig {
         str_length: 1,
         extracted_str_arr: None
       })),
@@ -234,9 +234,9 @@ mod tests {
     Syntax::Es(EsSyntax {
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(ExtractStrVisitor::new(ExtractStrConfig {
+      visit_mut_pass(ExtractStrVisitor::new(ExtractStrConfig {
         str_length: 1,
         extracted_str_arr: Some(vec![
           "123".to_string(),

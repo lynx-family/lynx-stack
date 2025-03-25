@@ -290,11 +290,11 @@ impl VisitMut for RefreshVisitor {
 #[cfg(test)]
 mod tests {
   use swc_core::{
-    common::{chain, Mark},
+    common::Mark,
     ecma::{
       parser::{EsSyntax, Syntax},
       transforms::{base::resolver, testing::test},
-      visit::as_folder,
+      visit::visit_mut_pass,
     },
   };
 
@@ -306,9 +306,9 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(RefreshVisitor::new(
+      visit_mut_pass(RefreshVisitor::new(
         Default::default(),
         "__file_hash__".into()
       ))
@@ -329,9 +329,9 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(RefreshVisitor::new(
+      visit_mut_pass(RefreshVisitor::new(
         RefreshVisitorConfig {
           library: Some(vec!["@custom/react".into()])
         },
@@ -354,9 +354,9 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(RefreshVisitor::new(
+      visit_mut_pass(RefreshVisitor::new(
         Default::default(),
         "__file_hash__".into()
       ))
@@ -377,9 +377,9 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(RefreshVisitor::new(
+      visit_mut_pass(RefreshVisitor::new(
         Default::default(),
         "__file_hash__".into()
       ))
@@ -400,9 +400,9 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(RefreshVisitor::new(
+      visit_mut_pass(RefreshVisitor::new(
         Default::default(),
         "__file_hash__".into()
       ))
@@ -423,9 +423,9 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(RefreshVisitor::new(
+      visit_mut_pass(RefreshVisitor::new(
         Default::default(),
         "__file_hash__".into()
       ))
@@ -446,9 +446,9 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(RefreshVisitor::new(
+      visit_mut_pass(RefreshVisitor::new(
         Default::default(),
         "__file_hash__".into()
       ))
@@ -473,9 +473,9 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(RefreshVisitor::new(
+      visit_mut_pass(RefreshVisitor::new(
         Default::default(),
         "__file_hash__".into()
       ))
@@ -505,9 +505,9 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(RefreshVisitor::new(
+      visit_mut_pass(RefreshVisitor::new(
         Default::default(),
         "__file_hash__".into()
       ))
@@ -528,9 +528,9 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(RefreshVisitor::new(
+      visit_mut_pass(RefreshVisitor::new(
         Default::default(),
         "__file_hash__".into()
       ))

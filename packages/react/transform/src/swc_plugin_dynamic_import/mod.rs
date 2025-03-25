@@ -246,7 +246,7 @@ mod tests {
     ecma::{
       parser::{EsSyntax, Syntax},
       transforms::testing::test,
-      visit::as_folder,
+      visit::visit_mut_pass,
     },
   };
 
@@ -258,7 +258,7 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| as_folder(DynamicImportVisitor::new(
+    |_| visit_mut_pass(DynamicImportVisitor::new(
       DynamicImportVisitorConfig {
         layer: "test".into(),
         ..Default::default()

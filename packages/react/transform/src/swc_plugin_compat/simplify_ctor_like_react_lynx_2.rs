@@ -1,6 +1,7 @@
 use regex::Regex;
+use rustc_hash::FxHashSet;
 use swc_core::{
-  common::{collections::AHashSet, util::take::Take},
+  common::util::take::Take,
   ecma::{
     ast::*,
     utils::collect_decls,
@@ -11,7 +12,7 @@ use swc_core::{
 pub struct CtorSimplifyVisitor {
   in_constructor: bool,
   is_target_object: bool,
-  current_ctor_bindings: Option<AHashSet<Id>>,
+  current_ctor_bindings: Option<FxHashSet<Id>>,
 
   pub remain_props: Vec<PropOrSpread>,
   pub remain_stmts: Vec<Stmt>,
@@ -176,7 +177,7 @@ impl Visit for FuncDetectVisitor {
 
 struct LocalDeclsDetectVisitor<'a> {
   pub has: bool,
-  pub bindings: &'a Option<AHashSet<Id>>,
+  pub bindings: &'a Option<FxHashSet<Id>>,
 }
 
 impl Visit for LocalDeclsDetectVisitor<'_> {

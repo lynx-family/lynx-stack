@@ -10,7 +10,6 @@ use swc_core::{
     Compiler, PrintArgs,
   },
   common::{
-    chain,
     comments::SingleThreadedComments,
     errors::{DiagnosticBuilder, Emitter, Handler},
     sync::Lrc,
@@ -21,7 +20,7 @@ use swc_core::{
     codegen,
     parser::{EsSyntax, Syntax},
     transforms::base::{hygiene::hygiene_with_config, resolver},
-    visit::as_folder,
+    visit::visit_mut_pass,
   },
 };
 
@@ -136,20 +135,30 @@ pub fn transform_bundle_result_inner(
       Either::A(_) => ExtractStrVisitor::default(),
       Either::B(config) => ExtractStrVisitor::new(config),
     };
-    let extract_str_plugin = Optional::new(as_folder(&mut extract_str_vis), should_extract_str);
+    let extract_str_plugin =
+      Optional::new(visit_mut_pass(&mut extract_str_vis), should_extract_str);
     let mut worklet_post_process_vis = WorkletPostProcessorVisitor::default();
-    let worklet_post_process_plugin = as_folder(&mut worklet_post_process_vis);
+    let worklet_post_process_plugin = visit_mut_pass(&mut worklet_post_process_vis);
+
     let program = c.transform(
       &handler,
       program,
       true,
-      chain!(
+      (
         resolver(Mark::new(), Mark::new(), true),
-        extract_str_plugin,
+        (extract_str_plugin),
         worklet_post_process_plugin,
         hygiene_with_config(Default::default()),
       ),
     );
+
+    // let program = program.apply((
+    //   resolver(Mark::new(), Mark::new(), true),
+    //   (extract_str_plugin),
+    //   worklet_post_process_plugin,
+    //   hygiene_with_config(Default::default()),
+    // ));
+
     let result = c.print(
       &program,
       PrintArgs {

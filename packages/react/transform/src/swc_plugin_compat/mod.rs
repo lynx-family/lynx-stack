@@ -1005,14 +1005,14 @@ where
 mod tests {
   use napi::Either;
   use swc_core::{
-    common::{chain, comments::SingleThreadedComments, Mark},
+    common::{comments::SingleThreadedComments, Mark},
     ecma::{
       parser::{EsSyntax, Syntax},
       transforms::{
         base::{hygiene::hygiene_with_config, resolver},
         testing::test,
       },
-      visit::as_folder,
+      visit::visit_mut_pass,
     },
   };
 
@@ -1025,9 +1025,9 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(CompatVisitor::<&SingleThreadedComments>::default()),
+      visit_mut_pass(CompatVisitor::<&SingleThreadedComments>::default()),
       hygiene_with_config(Default::default()),
     ),
     should_rename_view,
@@ -1043,9 +1043,9 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(CompatVisitor::<&SingleThreadedComments>::default()),
+      visit_mut_pass(CompatVisitor::<&SingleThreadedComments>::default()),
       hygiene_with_config(Default::default()),
     ),
     should_not_rename_view_in_scope,
@@ -1068,9 +1068,9 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(CompatVisitor::<&SingleThreadedComments>::default()),
+      visit_mut_pass(CompatVisitor::<&SingleThreadedComments>::default()),
       hygiene_with_config(Default::default()),
     ),
     should_not_rename_view_redeclaration,
@@ -1089,9 +1089,9 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(CompatVisitor::<&SingleThreadedComments>::default()),
+      visit_mut_pass(CompatVisitor::<&SingleThreadedComments>::default()),
       hygiene_with_config(Default::default()),
     ),
     should_not_handle_jsx_member_expression,
@@ -1107,9 +1107,9 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(CompatVisitor::<&SingleThreadedComments>::default()),
+      visit_mut_pass(CompatVisitor::<&SingleThreadedComments>::default()),
       hygiene_with_config(Default::default()),
     ),
     should_transform_event_props_1,
@@ -1125,9 +1125,9 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(CompatVisitor::<&SingleThreadedComments>::default()),
+      visit_mut_pass(CompatVisitor::<&SingleThreadedComments>::default()),
       hygiene_with_config(Default::default()),
     ),
     should_transform_event_props_2,
@@ -1142,9 +1142,9 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(CompatVisitor::<&SingleThreadedComments>::default()),
+      visit_mut_pass(CompatVisitor::<&SingleThreadedComments>::default()),
       hygiene_with_config(Default::default()),
     ),
     should_handle_recursive,
@@ -1165,9 +1165,9 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(CompatVisitor::<&SingleThreadedComments>::default()),
+      visit_mut_pass(CompatVisitor::<&SingleThreadedComments>::default()),
       hygiene_with_config(Default::default()),
     ),
     should_change_runtime_pkg,
@@ -1182,9 +1182,9 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(CompatVisitor::<&SingleThreadedComments>::new(
+      visit_mut_pass(CompatVisitor::<&SingleThreadedComments>::new(
         CompatVisitorConfig {
           add_component_element: Either::A(true),
           ..Default::default()
@@ -1219,9 +1219,9 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(CompatVisitor::<&SingleThreadedComments>::new(
+      visit_mut_pass(CompatVisitor::<&SingleThreadedComments>::new(
         CompatVisitorConfig {
           add_component_element: Either::B(AddComponentElementConfig {
             compiler_only: true
@@ -1258,9 +1258,9 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(CompatVisitor::<&SingleThreadedComments>::new(
+      visit_mut_pass(CompatVisitor::<&SingleThreadedComments>::new(
         CompatVisitorConfig {
           add_component_element: Either::A(true),
           ..Default::default()
@@ -1281,9 +1281,9 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(CompatVisitor::<&SingleThreadedComments>::new(
+      visit_mut_pass(CompatVisitor::<&SingleThreadedComments>::new(
         CompatVisitorConfig {
           add_component_element: Either::B(AddComponentElementConfig {
             compiler_only: true
@@ -1306,9 +1306,9 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(CompatVisitor::<&SingleThreadedComments>::new(
+      visit_mut_pass(CompatVisitor::<&SingleThreadedComments>::new(
         CompatVisitorConfig {
           // add_component_element: Either::A(true),
           ..Default::default()
@@ -1329,9 +1329,9 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(CompatVisitor::<&SingleThreadedComments>::new(
+      visit_mut_pass(CompatVisitor::<&SingleThreadedComments>::new(
         CompatVisitorConfig {
           add_component_element: Either::A(true),
           simplify_ctor_like_react_lynx_2: true,
@@ -1367,9 +1367,9 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(CompatVisitor::<&SingleThreadedComments>::new(
+      visit_mut_pass(CompatVisitor::<&SingleThreadedComments>::new(
         CompatVisitorConfig {
           add_component_element: Either::A(true),
           simplify_ctor_like_react_lynx_2: true,
@@ -1407,9 +1407,9 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(CompatVisitor::<&SingleThreadedComments>::new(
+      visit_mut_pass(CompatVisitor::<&SingleThreadedComments>::new(
         CompatVisitorConfig {
           add_component_element: Either::A(true),
           simplify_ctor_like_react_lynx_2: true,
@@ -1445,9 +1445,9 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(CompatVisitor::<&SingleThreadedComments>::new(
+      visit_mut_pass(CompatVisitor::<&SingleThreadedComments>::new(
         CompatVisitorConfig {
           add_component_element: Either::A(true),
           simplify_ctor_like_react_lynx_2: true,
@@ -1485,9 +1485,9 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(CompatVisitor::<&SingleThreadedComments>::new(
+      visit_mut_pass(CompatVisitor::<&SingleThreadedComments>::new(
         CompatVisitorConfig {
           add_component_element: Either::A(true),
           simplify_ctor_like_react_lynx_2: true,
@@ -1537,9 +1537,9 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(CompatVisitor::<&SingleThreadedComments>::new(
+      visit_mut_pass(CompatVisitor::<&SingleThreadedComments>::new(
         CompatVisitorConfig {
           remove_component_attr_regex: Some("^(on|handle|bind)[A-Z]".into()),
           ..Default::default()

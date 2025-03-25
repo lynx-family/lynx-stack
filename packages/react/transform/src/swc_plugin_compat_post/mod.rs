@@ -74,11 +74,11 @@ impl VisitMut for CompatPostVisitor {
 #[cfg(test)]
 mod tests {
   use swc_core::{
-    common::{chain, Mark},
+    common::Mark,
     ecma::{
       parser::{EsSyntax, Syntax},
       transforms::{base::resolver, testing::test},
-      visit::as_folder,
+      visit::visit_mut_pass,
     },
   };
 
@@ -97,15 +97,15 @@ mod tests {
       let unresolved_mark = Mark::new();
       let top_level_mark = Mark::new();
 
-      chain!(
+      (
         resolver(unresolved_mark, top_level_mark, true),
-        as_folder(CompatPostVisitor::new(
+        visit_mut_pass(CompatPostVisitor::new(
           CompatVisitorConfig {
             dark_mode: Some(napi::Either::A(true)),
             ..Default::default()
           },
           unresolved_mark,
-          top_level_mark
+          top_level_mark,
         )),
       )
     },
@@ -126,9 +126,9 @@ mod tests {
       let unresolved_mark = Mark::new();
       let top_level_mark = Mark::new();
 
-      chain!(
+      (
         resolver(unresolved_mark, top_level_mark, true),
-        as_folder(CompatPostVisitor::new(
+        visit_mut_pass(CompatPostVisitor::new(
           CompatVisitorConfig {
             dark_mode: Some(napi::Either::B(DarkModeConfig {
               theme_expr: "__globalProps.xxx ?? __globalProps.yyy ?? 'zzz'".into(),
@@ -136,7 +136,7 @@ mod tests {
             ..Default::default()
           },
           unresolved_mark,
-          top_level_mark
+          top_level_mark,
         )),
       )
     },
