@@ -18,6 +18,7 @@ comment:
   require_changes: true # if true: only post the comment if coverage changes
   require_base: false # [true :: must have a base report to post]
   require_head: true # [true :: must have a head report to post]
+  require_bundle_changes: true # for web-explorer
 
 component_management:
   default_rules: # default rules that will be inherited by all components

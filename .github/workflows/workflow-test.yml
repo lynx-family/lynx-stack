@@ -64,6 +64,8 @@ jobs:
         id: test
         env:
           NODE_OPTIONS: --max-old-space-size=8192
+          GITHUB_SHA: ${{ github.event.pull_request.head.sha }}
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         run: ${{ inputs.run }}
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5

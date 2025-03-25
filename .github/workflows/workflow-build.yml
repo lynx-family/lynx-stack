@@ -1,5 +1,8 @@
 on:
   workflow_call:
+    secrets:
+      CODECOV_TOKEN:
+        required: false
     inputs:
       runs-on:
         required: true
@@ -34,6 +37,8 @@ jobs:
         id: build
         run: |
           pnpm turbo build --summarize
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         continue-on-error: true
       - name: Setup Rust and retry build if failed
         if: steps.build.outcome == 'failure'
@@ -45,3 +50,5 @@ jobs:
         if: steps.build.outcome == 'failure'
         run: |
           pnpm turbo build --summarize
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
