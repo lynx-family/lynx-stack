@@ -19,6 +19,7 @@ jobs:
         with:
           path: .turbo
           key: turbo-v3-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ github.sha }}
+          fail-on-cache-miss: true
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Install

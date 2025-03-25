@@ -38,6 +38,7 @@ jobs:
           path: .turbo
           # We have to be strict here to make sure getting the cache of build-all
           key: turbo-v3-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ github.sha }}
+          fail-on-cache-miss: true
       - name: Install
         run: |
           npm install -g corepack@latest
