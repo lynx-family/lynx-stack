@@ -110,7 +110,7 @@ export default {
   ],
 };
 
-// Tailwind unconfigured corePlugins
+// Tailwind un-configured corePlugins
 // 'container'
 
 // 'accessibility'

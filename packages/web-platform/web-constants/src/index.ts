@@ -6,3 +6,4 @@ export * from './constants.js';
 export * from './eventName.js';
 export * from './endpoints.js';
 export * from './types/index.js';
+export type * from '@lynx-js/web-worker-rpc';

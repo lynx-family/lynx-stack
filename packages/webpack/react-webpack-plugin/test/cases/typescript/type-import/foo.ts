@@ -1,3 +1,4 @@
+// cSpell:disable
 export type Foo = Record<string, string>;
 export type Fooo = Record<string, string>;
 export type Foooo = Record<string, string>;

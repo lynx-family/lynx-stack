@@ -3,7 +3,6 @@
 // LICENSE file in the root directory of this source tree.
 
 import {
-  type ElementOperation,
   type LynxTemplate,
   type PageConfig,
   type ProcessDataCallback,
@@ -12,32 +11,42 @@ import {
   type Cloneable,
   type CssInJsInfo,
   type BrowserConfig,
-  type onLifecycleEventEndpoint,
+  lynxUniqueIdAttribute,
+  type publishEventEndpoint,
+  type publicComponentEventEndpoint,
   type reportErrorEndpoint,
-  type flushElementTreeEndpoint,
+  type onLifecycleEventEndpoint,
+  type RpcCallType,
+  type postExposureEndpoint,
 } from '@lynx-js/web-constants';
 import { globalMuteableVars } from '@lynx-js/web-constants';
 import { createMainThreadLynx, type MainThreadLynx } from './MainThreadLynx.js';
 import { initializeElementCreatingFunction } from './elementAPI/elementCreating/elementCreatingFunctions.js';
-import * as attributeAndPropertyApis from './elementAPI/attributeAndProperty/attributeAndPropertyFunctions.js';
+import { createAttributeAndPropertyFunctions } from './elementAPI/attributeAndProperty/attributeAndPropertyFunctions.js';
 import * as domTreeApis from './elementAPI/domTree/domTreeFunctions.js';
-import * as eventApis from './elementAPI/event/eventFunctions.js';
-import * as styleApis from './elementAPI/style/styleFunctions.js';
+import { createEventFunctions } from './elementAPI/event/eventFunctions.js';
+import { createStyleFunctions } from './elementAPI/style/styleFunctions.js';
 import {
   flattenStyleInfo,
   genCssContent,
   genCssInJsInfo,
   transformToWebCss,
 } from './utils/processStyleInfo.js';
-import { createAttributeAndPropertyFunctionsWithContext } from './elementAPI/attributeAndProperty/createAttributeAndPropertyFunctionsWithContext.js';
-import type { RpcCallType } from '../../web-worker-rpc/src/TypeUtils.js';
+import type { LynxRuntimeInfo } from './elementAPI/ElementThreadElement.js';
+import { createExposureService } from './utils/createExposureService.js';
 
 export interface MainThreadRuntimeCallbacks {
   mainChunkReady: () => void;
-  flushElementTree: RpcCallType<typeof flushElementTreeEndpoint>;
+  flushElementTree: (
+    options: FlushElementTreeOptions,
+    timingFlags: string[],
+  ) => void;
   _ReportError: RpcCallType<typeof reportErrorEndpoint>;
   __OnLifecycleEvent: RpcCallType<typeof onLifecycleEventEndpoint>;
   markTiming: (pipelineId: string, timingKey: string) => void;
+  publishEvent: RpcCallType<typeof publishEventEndpoint>;
+  publicComponentEvent: RpcCallType<typeof publicComponentEventEndpoint>;
+  postExposure: RpcCallType<typeof postExposureEndpoint>;
 }
 
 export interface MainThreadConfig {
@@ -49,55 +58,96 @@ export interface MainThreadConfig {
   lepusCode: LynxTemplate['lepusCode'];
   browserConfig: BrowserConfig;
   tagMap: Record<string, string>;
+  docu: Pick<Document, 'append' | 'createElement' | 'addEventListener'> & {
+    commit?: () => void;
+  };
 }
 
-export class MainThreadRuntime {
-  private isFp = true;
+export const elementToRuntimeInfoMap = Symbol('elementToRuntimeInfoMap');
+export const getElementByUniqueId = Symbol('getElementByUniqueId');
+export const updateCSSInJsStyle = Symbol('updateCSSInJsStyle');
+export const lynxUniqueIdToElement = Symbol('lynxUniqueIdToElement');
+export const switchExposureService = Symbol('switchExposureService');
 
+export class MainThreadRuntime {
+  /**
+   * @private
+   */
+  [lynxUniqueIdToElement]: WeakRef<HTMLElement>[] = [];
+
+  /**
+   * @private
+   */
+  [switchExposureService]: (enable: boolean, sendEvent: boolean) => void;
+  /**
+   * @private
+   */
+  private _lynxUniqueIdToStyleSheet: WeakRef<HTMLStyleElement>[] = [];
+  /**
+   * @private the CreatePage will append it to this
+   */
+  _rootDom: Pick<Element, 'append' | 'addEventListener'>;
   /**
    * @private
    */
   _timingFlags: string[] = [];
 
-  public operationsRef: {
-    operations: ElementOperation[];
-  } = {
-    operations: [],
-  };
+  /**
+   * @private
+   */
+  [elementToRuntimeInfoMap]: WeakMap<HTMLElement, LynxRuntimeInfo> =
+    new WeakMap();
+
   constructor(
-    private config: MainThreadConfig,
+    public config: MainThreadConfig,
   ) {
     this.__globalProps = config.globalProps;
     this.lynx = createMainThreadLynx(config, this);
+    /**
+     * now create the style content
+     * 1. flatten the styleInfo
+     * 2. transform the styleInfo to web css
+     * 3. generate the css in js info
+     * 4. create the style element
+     * 5. append the style element to the root dom
+     */
     flattenStyleInfo(this.config.styleInfo);
     transformToWebCss(this.config.styleInfo);
-    const cssInJs: CssInJsInfo = this.config.pageConfig.enableCSSSelector
+    const cssInJsInfo: CssInJsInfo = this.config.pageConfig.enableCSSSelector
       ? {}
       : genCssInJsInfo(this.config.styleInfo);
+    this._rootDom = this.config.docu.createElement('div');
+    const cardStyleElement = this.config.docu.createElement('style');
+    cardStyleElement.innerHTML = genCssContent(
+      this.config.styleInfo,
+      this.config.pageConfig,
+    );
+    this._rootDom = this.config.docu;
+    this._rootDom.append(cardStyleElement);
+    /**
+     * now create Element PAPIs
+     */
     Object.assign(
       this,
-      createAttributeAndPropertyFunctionsWithContext(this),
-      attributeAndPropertyApis,
+      createAttributeAndPropertyFunctions(this),
       domTreeApis,
-      eventApis,
-      styleApis,
-      initializeElementCreatingFunction({
-        operationsRef: this.operationsRef,
-        pageConfig: config.pageConfig,
-        styleInfo: cssInJs,
-        tagMap: config.tagMap,
-      }),
+      createEventFunctions(this),
+      createStyleFunctions(
+        this,
+        cssInJsInfo,
+      ),
+      initializeElementCreatingFunction(this),
     );
-    this.__LoadLepusChunk = (path) => {
-      try {
-        this.lynx.requireModule(path);
-        return true;
-      } catch {
-      }
-      return false;
-    };
     this._ReportError = this.config.callbacks._ReportError;
     this.__OnLifecycleEvent = this.config.callbacks.__OnLifecycleEvent;
+    /**
+     * Start the exposure service
+     */
+    this[switchExposureService] =
+      createExposureService(this).switchExposureService;
+    /**
+     * to know when the main thread is ready
+     */
     Object.defineProperty(this, 'renderPage', {
       get: () => {
         return this.#renderPage;
@@ -119,6 +169,25 @@ export class MainThreadRuntime {
       });
     }
   }
+  /**
+   * @private
+   */
+  [getElementByUniqueId](uniqueId: number): HTMLElement | undefined {
+    return this[lynxUniqueIdToElement][uniqueId]?.deref();
+  }
+
+  [updateCSSInJsStyle](uniqueId: number, newStyles: string) {
+    let currentElement = this._lynxUniqueIdToStyleSheet[uniqueId]?.deref();
+    if (!currentElement) {
+      currentElement = this.config.docu.createElement(
+        'style',
+      ) as HTMLStyleElement;
+      this._lynxUniqueIdToStyleSheet[uniqueId] = new WeakRef(currentElement);
+      this._rootDom.append(currentElement);
+    }
+    currentElement.innerHTML =
+      `[${lynxUniqueIdAttribute}="${uniqueId}"]{${newStyles}}`;
+  }
 
   /**
    * @private
@@ -130,8 +199,6 @@ export class MainThreadRuntime {
   }
 
   lynx: MainThreadLynx;
-
-  NativeModules = undefined;
 
   __globalProps: unknown;
 
@@ -145,28 +212,22 @@ export class MainThreadRuntime {
 
   __OnLifecycleEvent: RpcCallType<typeof onLifecycleEventEndpoint>;
 
-  __LoadLepusChunk: (path: string) => boolean;
+  __LoadLepusChunk: (path: string) => boolean = (path) => {
+    try {
+      this.lynx.requireModule(path);
+      return true;
+    } catch {
+    }
+    return false;
+  };
 
   __FlushElementTree = (
     _subTree: unknown,
     options: FlushElementTreeOptions,
   ) => {
-    const operations = this.operationsRef.operations;
     const timingFlags = this._timingFlags;
-    this.operationsRef.operations = [];
     this._timingFlags = [];
-    this.config.callbacks.flushElementTree(
-      operations,
-      options,
-      this.isFp
-        ? genCssContent(
-          this.config.styleInfo,
-          this.config.pageConfig,
-        )
-        : undefined,
-      timingFlags,
-    );
-    this.isFp = false;
+    this.config.callbacks.flushElementTree(options, timingFlags);
   };
 
   updatePage?: (data: Cloneable, options?: Record<string, string>) => void;

@@ -96,7 +96,7 @@ function createCase(
 }
 
 export function describeCases(suite: ITestSuite): void {
-  const distPath = path.resolve(suite.casePath, '../dist');
+  const distPath = path.resolve(suite.casePath, '../dist/config');
   rimrafSync(distPath);
   describeByWalk(suite.name, (name, src, dist) => {
     createCase(name, src, dist, suite.casePath, {

@@ -2,98 +2,89 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { ElementThreadElement } from '../ElementThreadElement.js';
-
 export function __AppendElement(
-  parent: ElementThreadElement,
-  child: ElementThreadElement,
-) {
-  parent.appendChild([child]);
+  parent: HTMLElement,
+  child: HTMLElement,
+): void {
+  parent.append(child);
 }
 
 export function __ElementIsEqual(
-  left: ElementThreadElement,
-  right: ElementThreadElement,
+  left: HTMLElement,
+  right: HTMLElement,
 ): boolean {
   return left === right;
 }
 
 export function __FirstElement(
-  element: ElementThreadElement,
-): ElementThreadElement | undefined {
-  return element.firstElementChild;
+  element: HTMLElement,
+): HTMLElement | undefined {
+  return element.firstElementChild as HTMLElement || undefined;
 }
 
 export function __GetChildren(
-  element: ElementThreadElement,
-): ElementThreadElement[] {
-  return element.children;
+  element: HTMLElement,
+): HTMLElement[] {
+  return element.children as unknown as HTMLElement[];
 }
 
 export function __GetParent(
-  element: ElementThreadElement,
-): ElementThreadElement | undefined {
-  return element.parent;
+  element: HTMLElement,
+): HTMLElement | undefined {
+  return element.parentElement as HTMLElement || undefined;
 }
 
 export function __InsertElementBefore(
-  parent: ElementThreadElement,
-  child: ElementThreadElement,
-  ref: ElementThreadElement | null,
-): ElementThreadElement {
-  return parent.insertBefore(child, ref);
+  parent: HTMLElement,
+  child: HTMLElement,
+  ref: HTMLElement | null,
+): HTMLElement {
+  return parent.insertBefore(child, ref) as HTMLElement;
 }
 
 export function __LastElement(
-  element: ElementThreadElement,
-): ElementThreadElement | undefined {
-  return element.lastElementChild;
+  element: HTMLElement,
+): HTMLElement | undefined {
+  return element.lastElementChild as HTMLElement || undefined;
 }
 
 export function __NextElement(
-  element: ElementThreadElement,
-): ElementThreadElement | undefined {
-  return element.nextElementSibling;
+  element: HTMLElement,
+): HTMLElement | undefined {
+  return element.nextElementSibling as HTMLElement || undefined;
 }
 
 export function __RemoveElement(
-  parent: ElementThreadElement,
-  child: ElementThreadElement,
-): ElementThreadElement {
+  parent: HTMLElement,
+  child: HTMLElement,
+): HTMLElement {
   parent.removeChild(child);
   return child;
 }
 
 export function __ReplaceElement(
-  newElement: ElementThreadElement,
-  oldElement: ElementThreadElement,
+  newElement: HTMLElement,
+  oldElement: HTMLElement,
 ) {
-  oldElement.replaceWithElements([newElement]);
+  oldElement.replaceWith(newElement);
 }
 
 export function __ReplaceElements(
-  parent: ElementThreadElement,
-  newChildren: ElementThreadElement[] | ElementThreadElement,
-  oldChildren: ElementThreadElement[] | ElementThreadElement | null | undefined,
+  parent: HTMLElement,
+  newChildren: HTMLElement[] | HTMLElement,
+  oldChildren: HTMLElement[] | HTMLElement | null | undefined,
 ) {
   newChildren = Array.isArray(newChildren) ? newChildren : [newChildren];
   if (
     !oldChildren || (Array.isArray(oldChildren) && oldChildren?.length === 0)
   ) {
-    parent.appendChild(newChildren);
+    parent.append(...newChildren);
   } else {
     oldChildren = Array.isArray(oldChildren) ? oldChildren : [oldChildren];
     for (let ii = 1; ii < oldChildren.length; ii++) {
       __RemoveElement(parent, oldChildren[ii]!);
     }
     const firstOldChildren = oldChildren[0]!;
-    firstOldChildren.replaceWithElements(newChildren);
+    firstOldChildren.replaceWith(...newChildren);
   }
-}
-
-export function __SwapElement(
-  childA: ElementThreadElement,
-  childB: ElementThreadElement,
-): void {
-  childA.swapWith(childB);
 }

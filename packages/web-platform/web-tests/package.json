@@ -17,6 +17,7 @@
   },
   "devDependencies": {
     "@lynx-js/lynx-core": "0.1.0",
+    "@lynx-js/offscreen-document": "workspace:*",
     "@lynx-js/react": "workspace:*",
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@lynx-js/rspeedy": "workspace:*",

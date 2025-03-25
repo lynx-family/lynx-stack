@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/web-worker-runtime",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "private": false,
   "description": "",
   "keywords": [],
@@ -23,7 +23,7 @@
   ],
   "dependencies": {
     "@lynx-js/web-constants": "workspace:*",
-    "@lynx-js/web-mainthread-apis": "workspace:*",
+    "@lynx-js/web-mainthread-apis": "0.9.1",
     "@lynx-js/web-worker-rpc": "workspace:*"
   },
   "devDependencies": {

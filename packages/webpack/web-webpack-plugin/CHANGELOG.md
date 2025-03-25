@@ -66,7 +66,7 @@
 
   Now we'll add the chunk global scope wrapper on runtime, this will help us to provide a better backward compatibility.
 
-  Also we have a intergrated output file cache for one session.
+  Also we have a integrated output file cache for one session.
 
   Now your `output.filename` will work.
 
@@ -117,8 +117,8 @@
   }
   ```
 
-  After this commit, we changed the data structor of the styleinfo which bundled into the main-thread.js.
-  This allows us to add class selectors at the begining of selector and the end of plain selector(before the pseudo part).
+  After this commit, we changed the data structure of the style-info which bundled into the main-thread.js.
+  This allows us to add class selectors at the beginning of selector and the end of plain selector(before the pseudo part).
 
   **THIS IS A BREAKING CHANGE**
 
@@ -148,7 +148,7 @@
 - 47cb40c: Make `SystemInfo` defaults to `{}`.
 - 667593b: refractor: change the stage of web banner
 
-  1. We already required the react-rsbuild-plugin to make sure that the minifizer be correctly configurated for esm chunk.
+  1. We already required the react-rsbuild-plugin to make sure that the minimizer be correctly configured for esm chunk.
 
   2. use `var` to declare global identifiers
 
@@ -164,16 +164,16 @@
 
 ### Minor Changes
 
-- 06fe3cd: feat: support splitchunk and lynx.requireModuleAsync
+- 06fe3cd: feat: support splitChunk and lynx.requireModuleAsync
 
-  - support splitchunk option of rspeedy
+  - support splitChunk option of rspeedy
   - add implementation for lynx.requireModuleAsync for both main-thread and background-thread
   - mark worker `ready` after \_OnLifeCycleEvent is assigned
 
   close #96
 
 - 66ce343: feat: support config `defaultDisplayLinear`
-- 068f677: feat: suppport createSelectorQuery
+- 068f677: feat: support createSelectorQuery
 - d551d81: feat: support customSection
 
   - support lynx.getCustomSection
@@ -188,7 +188,7 @@
 
   **About enableCSSSelector:false**
 
-  This flag changes the behaviour of cascading. It provide a way to do this
+  This flag changes the behavior of cascading. It provide a way to do this
 
   ```jsx
   <view class='class-a class-b' />;
@@ -201,8 +201,8 @@
 
   - add element api `__SetCSSId`
   - add new WebpackPlugin `@lynx-js/web-webpack-plugin`
-  - add support for removeCSSSCope
-  - pass all configs via thie \*.lepus.js
+  - add support for removeCSSScope
+  - pass all configs via \*.lepus.js
   - support to scope styles of lynx card for browsers do not support `@scope` and nesting
 
 - c04669b: feat: migrate to new TemplatePlugin hooks

@@ -2,114 +2,158 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { componentIdAttribute, lynxTagAttribute } from '@lynx-js/web-constants';
 import {
-  type ElementThreadElement,
+  __lynx_timing_flag,
+  componentIdAttribute,
+  lynxTagAttribute,
+} from '@lynx-js/web-constants';
+import {
   type ComponentAtIndexCallback,
   type EnqueueComponentCallback,
-  type ListElement,
-  RefCountType,
 } from '../ElementThreadElement.js';
+import {
+  elementToRuntimeInfoMap,
+  type MainThreadRuntime,
+} from '../../MainThreadRuntime.js';
 
-export function __AddConfig(
-  element: ElementThreadElement,
-  type: string,
-  value: any,
+export function createAttributeAndPropertyFunctions(
+  runtime: MainThreadRuntime,
 ) {
-  element.property.componentConfig[type] = value;
-}
-
-export function __AddDataset(
-  element: ElementThreadElement,
-  key: string,
-  value: string | number | Record<string, any>,
-): void {
-  element.setDatasetProperty(key, value);
-}
-
-export function __GetAttributes(element: ElementThreadElement) {
-  return element.attributes;
-}
-
-export function __GetComponentID(element: ElementThreadElement) {
-  return element.attributes[componentIdAttribute];
-}
-
-export function __GetDataByKey(
-  element: ElementThreadElement,
-  key: string,
-) {
-  return element.property.dataset[key];
-}
-
-export function __GetDataset(
-  element: ElementThreadElement,
-): Record<string, any> {
-  return element.property.dataset;
-}
-
-export function __GetElementConfig(
-  element: ElementThreadElement,
-) {
-  return element.property.componentConfig;
-}
-
-export function __GetElementUniqueID(
-  element: ElementThreadElement | unknown,
-): number {
-  if (
-    element && typeof element === 'object'
-    && (element as ElementThreadElement).type === RefCountType.Element
+  function __AddConfig(
+    element: HTMLElement,
+    type: string,
+    value: any,
   ) {
-    return (element as ElementThreadElement).uniqueId;
+    runtime[elementToRuntimeInfoMap].get(element)!.componentConfig[type] =
+      value;
   }
-  return -1;
-}
 
-export function __GetID(element: ElementThreadElement): string {
-  return element.attributes.id ?? '';
-}
+  function __AddDataset(
+    element: HTMLElement,
+    key: string,
+    value: string | number | Record<string, any>,
+  ): void {
+    runtime[elementToRuntimeInfoMap].get(element)!.lynxDataset[key] = value;
+  }
 
-export function __GetTag(element: ElementThreadElement): string {
-  return element.getAttribute(lynxTagAttribute)!;
-}
+  function __GetAttributes(
+    element: HTMLElement,
+  ): Record<string, string | null> {
+    return Object.fromEntries(
+      element.getAttributeNames().map((
+        attributeName,
+      ) => [attributeName, element.getAttribute(attributeName)]),
+    );
+  }
 
-export function __SetConfig(
-  element: ElementThreadElement,
-  config: Record<string, any>,
-): void {
-  element.property.componentConfig = config;
-}
+  function __GetComponentID(element: HTMLElement): string | null {
+    return element.getAttribute(componentIdAttribute);
+  }
 
-export function __SetDataset(
-  element: ElementThreadElement,
-  dataset: Record<string, any>,
-): void {
-  element.setProperty('dataset', dataset);
-}
+  function __GetDataByKey(
+    element: HTMLElement,
+    key: string,
+  ) {
+    return runtime[elementToRuntimeInfoMap].get(element)!.lynxDataset[key];
+  }
 
-export function __SetID(element: ElementThreadElement, id: string) {
-  element.setAttribute('id', id);
-}
+  function __GetDataset(
+    element: HTMLElement,
+  ): Record<string, any> {
+    return runtime[elementToRuntimeInfoMap].get(element)!.lynxDataset;
+  }
 
-export function __UpdateComponentID(
-  element: ElementThreadElement,
-  componentID: string,
-) {
-  element.setAttribute(componentIdAttribute, componentID);
-}
+  function __GetElementConfig(
+    element: HTMLElement,
+  ) {
+    return runtime[elementToRuntimeInfoMap].get(element)!.componentConfig;
+  }
 
-export function __GetConfig(
-  element: ElementThreadElement,
-) {
-  return element.property.componentConfig;
-}
+  function __GetElementUniqueID(
+    element: HTMLElement,
+  ): number {
+    return runtime[elementToRuntimeInfoMap].get(element)?.uniqueId ?? -1;
+  }
 
-export function __UpdateListCallbacks(
-  list: ListElement,
-  componentAtIndex: ComponentAtIndexCallback,
-  enqueueComponent: EnqueueComponentCallback,
-) {
-  list.componentAtIndex = componentAtIndex;
-  list.enqueueComponent = enqueueComponent;
+  function __GetID(element: HTMLElement): string {
+    return element.id;
+  }
+
+  function __GetTag(element: HTMLElement): string {
+    return element.getAttribute(lynxTagAttribute)!;
+  }
+
+  function __SetConfig(
+    element: HTMLElement,
+    config: Record<string, any>,
+  ): void {
+    runtime[elementToRuntimeInfoMap].get(element)!.componentConfig = config;
+  }
+
+  function __SetDataset(
+    element: HTMLElement,
+    dataset: Record<string, any>,
+  ): void {
+    runtime[elementToRuntimeInfoMap].get(element)!.lynxDataset = dataset;
+  }
+
+  function __SetID(element: HTMLElement, id: string) {
+    element.id = id;
+  }
+
+  function __UpdateComponentID(
+    element: HTMLElement,
+    componentID: string,
+  ) {
+    element.setAttribute(componentIdAttribute, componentID);
+  }
+
+  function __GetConfig(
+    element: HTMLElement,
+  ) {
+    return runtime[elementToRuntimeInfoMap].get(element)!.componentConfig;
+  }
+
+  function __UpdateListCallbacks(
+    element: HTMLElement,
+    componentAtIndex: ComponentAtIndexCallback,
+    enqueueComponent: EnqueueComponentCallback,
+  ) {
+    runtime[elementToRuntimeInfoMap].get(element)!.componentAtIndex =
+      componentAtIndex;
+    runtime[elementToRuntimeInfoMap].get(element)!.enqueueComponent =
+      enqueueComponent;
+  }
+
+  function __SetAttribute(
+    element: HTMLElement,
+    key: string,
+    value: string | null | undefined,
+  ): void {
+    if (value) element.setAttribute(key, value);
+    else element.removeAttribute(key);
+    if (key === __lynx_timing_flag && value) {
+      runtime._timingFlags.push(value);
+    }
+  }
+
+  return {
+    __AddConfig,
+    __AddDataset,
+    __GetAttributes,
+    __GetComponentID,
+    __GetDataByKey,
+    __GetDataset,
+    __GetElementConfig,
+    __GetElementUniqueID,
+    __GetID,
+    __GetTag,
+    __SetConfig,
+    __SetDataset,
+    __SetID,
+    __UpdateComponentID,
+    __UpdateListCallbacks,
+    __GetConfig,
+    __SetAttribute,
+  };
 }

@@ -1,0 +1,17 @@
+# Name of the contributors
+
+Qingyu
+QingyuWang
+WangQingyu
+
+Zhiyuan
+ZhiyuanHong
+HongZhiyuan
+
+# Webpack Contributors
+Koppers
+sokra
+
+# GitHub Contributors
+colinaaa
+pupiltong

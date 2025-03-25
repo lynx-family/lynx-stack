@@ -39,6 +39,8 @@ jobs:
         run: |
           pnpm dprint check
           pnpm biome check
+      - name: Spell Check
+        run: pnpm run spell
       - name: API Check
         run: pnpm turbo api-extractor
       - name: Changeset Check
@@ -46,11 +48,23 @@ jobs:
 
   build:
     uses: ./.github/workflows/workflow-build.yml
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
       runs-on: lynx-ubuntu-24.04-xlarge
   benchmark:
     needs: build
     uses: ./.github/workflows/workflow-bench.yml
+  bundle-analysis:
+    needs: build
+    uses: ./.github/workflows/workflow-test.yml
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    with:
+      runs-on: lynx-ubuntu-24.04-medium
+      run: |
+        pnpm --filter @lynx-js/web-explorer run build
+        pnpm --filter @lynx-js/example-react run build
   test-rspeedy:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
@@ -121,7 +135,8 @@ jobs:
   test-tools:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
-    secrets: inherit
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
       runs-on: lynx-ubuntu-24.04-medium
       run: >
@@ -141,6 +156,8 @@ jobs:
   playwright-linux:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
       runs-on: lynx-ubuntu-24.04-xlarge
       is-web: true
@@ -152,8 +169,8 @@ jobs:
         pnpm --filter @lynx-js/web-tests run coverage:ci
   test-rust:
     uses: ./.github/workflows/rust.yml
-    with:
-      runs-on: lynx-ubuntu-24.04-medium
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
   website:
     needs: build
     uses: ./.github/workflows/workflow-website.yml

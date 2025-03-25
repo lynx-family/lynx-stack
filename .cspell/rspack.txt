@@ -1,0 +1,14 @@
+# Rspack-related packages
+
+rsbuild
+rsdoctor
+rsfamily
+rslib
+rslog
+rspack
+rspeedy
+rspress
+rstack
+
+# minify.mangle.keep_fnames
+fnames

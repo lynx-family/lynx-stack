@@ -40,7 +40,7 @@
 
 ### Patch Changes
 
-- 42093cb: refractor: migrate to webpack provided publicpath runtime module
+- 42093cb: refractor: migrate to webpack provided publicPath runtime module
 
 ## 0.1.1
 

@@ -23,6 +23,7 @@ export default defineConfig({
         'packages/react/transform/tests/__swc_snapshots__/**',
         'packages/rspeedy/create-rspeedy/template-*/**',
 
+        // cSpell:disable-next-line
         '.lintstagedrc.mjs',
         'eslint.config.js',
 
