@@ -84,6 +84,11 @@
       "automerge": true,
     },
     {
+      "groupName": "linting",
+      "groupSlug": "linting",
+      "matchPackageNames": ["/eslint/", "/^@cspell/*/", "cspell"],
+    },
+    {
       "matchDepTypes": [
         "peerDependencies",
       ],

@@ -2,4 +2,4 @@
 "@lynx-js/web-elements-reactive": patch
 ---
 
-lazyload templateElement
+Lazy load `templateElement`

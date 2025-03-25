@@ -311,7 +311,7 @@
   })
   ```
 
-  NOTE: This feature is deprecated and will be removed in the future. Use codemod instead.
+  NOTE: This feature is deprecated and will be removed in the future. Use CodeMod instead.
 
 - 5f8d492: **BREAKING CHANGE**: Require `@lynx-js/react` v0.103.0.
 - 5f8d492: Deprecate `compat.simplifyCtorLikeReactLynx2`
@@ -413,9 +413,9 @@
 
 ### Minor Changes
 
-- 91c267b: feat: enable auto publicpath for environment.web
+- 91c267b: feat: enable auto `publicPath` for environment.web
 
-  In many case, users cannot set a correct assertprefix configuration. Typically those chunks will be uploaded after chunk dumped. Developers may be not able to know the url before those chunks are uploaded.
+  In many case, users cannot set a correct `output.assertPrefix` configuration. Typically those chunks will be uploaded after chunk dumped. Developers may be not able to know the url before those chunks are uploaded.
 
   In this commit, we allow webpack to infer the correct public path by the import.meta.url.
 

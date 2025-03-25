@@ -39,6 +39,8 @@ jobs:
         run: |
           pnpm dprint check
           pnpm biome check
+      - name: Spell Check
+        run: pnpm run spell
       - name: API Check
         run: pnpm turbo api-extractor
       - name: Changeset Check

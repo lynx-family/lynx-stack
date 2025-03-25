@@ -1,6 +1,6 @@
 # lynx-stack
 
-[![Apache licesed](https://img.shields.io/badge/License-Apache--2.0-cyan?logo=apache)](https://github.com/lynx-family/lynx/blob/develop/LICENSE)
+[![Apache licensed](https://img.shields.io/badge/License-Apache--2.0-cyan?logo=apache)](https://github.com/lynx-family/lynx/blob/develop/LICENSE)
 [![GitHub Repo stars](https://img.shields.io/github/stars/lynx-family/lynx-stack)](https://github.com/lynx-family/lynx-stack)
 [![codecov](https://codecov.io/gh/lynx-family/lynx-stack/graph/badge.svg?style=flat-square)](https://codecov.io/gh/lynx-family/lynx-stack)
 [![X (formerly Twitter) URL](https://img.shields.io/twitter/url?url=https%3A%2F%2Fx.com%2Flynxjs_org&style=social&label=Lynx)](https://x.com/lynxjs_org)
