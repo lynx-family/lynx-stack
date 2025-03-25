@@ -128,11 +128,12 @@ export function applyLoaders(
         inlineSourcesContent,
       }
 
+      // When Passing to SWC, the swc-plugin-compat Must Be Placed Before swc-plugin-react-lynx
       if (
         layer === LAYERS.MAIN_THREAD
         && typeof mainThreadCompatOptions !== 'boolean'
       ) {
-        swcOptions.jsc.experimental.plugins.push([
+        swcOptions.jsc.experimental.plugins.unshift([
           require.resolve('@lynx-js/react/transform/swc-plugin-compat'),
           // FIXME(BitterGourd)
           // @ts-expect-error plugin type error
@@ -142,7 +143,7 @@ export function applyLoaders(
         layer === LAYERS.BACKGROUND
         && typeof backgroundCompatOptions !== 'boolean'
       ) {
-        swcOptions.jsc.experimental.plugins.push([
+        swcOptions.jsc.experimental.plugins.unshift([
           require.resolve('@lynx-js/react/transform/swc-plugin-compat'),
           // FIXME(BitterGourd)
           // @ts-expect-error plugin type error
