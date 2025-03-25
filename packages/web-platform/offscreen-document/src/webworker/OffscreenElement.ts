@@ -29,7 +29,7 @@ export class OffscreenElement extends OffscreenNode {
     parentDocument: OffscreenDocument,
     elementUniqueId: number,
   ) {
-    super(elementUniqueId);
+    super(elementUniqueId, parentDocument[enableEvent]);
     this.tagName = tagName.toUpperCase();
     this[ancestorDocument] = parentDocument;
   }
@@ -141,17 +141,5 @@ export class OffscreenElement extends OffscreenNode {
       text,
       uid: this[uniqueId],
     });
-  }
-
-  // #captureListeners:Record<string, Set<EventListener> | undefined> = {};
-  // #normalListeners:Record<string, Set<EventListener> | undefined> = {};
-
-  override addEventListener(
-    type: string,
-    callback: EventListenerOrEventListenerObject | null,
-    options?: AddEventListenerOptions | boolean,
-  ): void {
-    this[ancestorDocument][enableEvent](type);
-    super.addEventListener(type, callback, options);
   }
 }

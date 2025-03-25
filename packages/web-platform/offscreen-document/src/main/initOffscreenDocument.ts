@@ -36,6 +36,9 @@ export function initOffscreenDocument(options: {
   }
 
   function _eventHandler(ev: Event) {
+    if (ev.eventPhase !== Event.AT_TARGET) {
+      return;
+    }
     const target = ev.target as HTMLElement | null;
     if (target && elementToUniqueId.has(target)) {
       const targetUniqueId = elementToUniqueId.get(target)!;
@@ -81,10 +84,11 @@ export function initOffscreenDocument(options: {
             }
             break;
           case OperationType.EnableEvent:
-            shadowRoot.addEventListener(op.eventType, _eventHandler, {
-              capture: true,
-              passive: true,
-            });
+            target.addEventListener(
+              op.eventType,
+              _eventHandler,
+              { passive: true },
+            );
             break;
           case OperationType.RemoveChild:
             {

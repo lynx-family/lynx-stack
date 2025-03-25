@@ -24,6 +24,7 @@
     "**/*.css"
   ],
   "dependencies": {
+    "@lynx-js/offscreen-document": "workspace:*",
     "@lynx-js/web-constants": "workspace:*",
     "@lynx-js/web-worker-rpc": "workspace:*",
     "@lynx-js/web-worker-runtime": "workspace:*"

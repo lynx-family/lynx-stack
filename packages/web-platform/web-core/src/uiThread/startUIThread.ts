@@ -3,7 +3,6 @@
 // LICENSE file in the root directory of this source tree.
 
 import type { LynxView } from '../apis/createLynxView.js';
-import { createExposureService } from './crossThreadHandlers/createExposureService.js';
 import { registerInvokeUIMethodHandler } from './crossThreadHandlers/registerInvokeUIMethodHandler.js';
 import { registerNativePropsHandler } from './crossThreadHandlers/registerSetNativePropsHandler.js';
 import { registerNativeModulesCallHandler } from './crossThreadHandlers/registerNativeModulesCallHandler.js';
@@ -15,7 +14,6 @@ import { bootTimingSystem } from './crossThreadHandlers/bootTimingSystem.js';
 import { registerTriggerComponentEventHandler } from './crossThreadHandlers/registerTriggerComponentEventHandler.js';
 import { registerSelectComponentHandler } from './crossThreadHandlers/registerSelectComponentHandler.js';
 import {
-  flushElementTreeEndpoint,
   mainThreadChunkReadyEndpoint,
   mainThreadStartEndpoint,
   sendGlobalEventEndpoint,
@@ -70,14 +68,10 @@ export function startUIThread(
   );
   mainThreadRpc.registerHandler(
     mainThreadChunkReadyEndpoint,
-    (mainChunkInfo) => {
-      const { pageConfig } = mainChunkInfo;
+    () => {
       registerFlushElementTreeHandler(
         mainThreadRpc,
-        flushElementTreeEndpoint,
         {
-          pageConfig,
-          backgroundRpc,
           shadowRoot,
         },
         (info) => {
@@ -99,7 +93,6 @@ export function startUIThread(
               backgroundRpc,
               shadowRoot,
             );
-            createExposureService(backgroundRpc, shadowRoot);
             uiThreadFpReady();
           }
           sendTimingResult(pipelineId, timingFlags, isFP);

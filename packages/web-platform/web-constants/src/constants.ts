@@ -13,8 +13,6 @@ export const parentComponentUniqueIdAttribute =
 
 export const lynxTagAttribute = 'lynx-tag' as const;
 
-export const lynxRuntimeValue = Symbol('lynx-runtime-value');
-
 export const lynxDefaultDisplayLinearAttribute =
   'lynx-default-display-linear' as const;
 

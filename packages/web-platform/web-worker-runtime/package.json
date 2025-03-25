@@ -22,8 +22,9 @@
     "README.md"
   ],
   "dependencies": {
+    "@lynx-js/offscreen-document": "workspace:*",
     "@lynx-js/web-constants": "workspace:*",
-    "@lynx-js/web-mainthread-apis": "0.9.1",
+    "@lynx-js/web-mainthread-apis": "workspace:*",
     "@lynx-js/web-worker-rpc": "workspace:*"
   },
   "devDependencies": {

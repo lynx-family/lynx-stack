@@ -16,9 +16,10 @@ import { OffscreenNode, uniqueId } from './OffscreenNode.js';
 export const operations = Symbol('operations');
 export const enableEvent = Symbol('enableEvent');
 export const getElementByUniqueId = Symbol('getElementByUniqueId');
-const _onEvent = Symbol('_onEvent');
+export const _onEvent = Symbol('_onEvent');
 const _uniqueIdInc = Symbol('uniqueIdInc');
 const _uniqueIdToElement = Symbol('_uniqueIdToElement');
+const _enabledEvents = Symbol('enabledEvents');
 export class OffscreenDocument extends OffscreenNode {
   /**
    * @private
@@ -44,12 +45,27 @@ export class OffscreenDocument extends OffscreenNode {
     return this[_uniqueIdToElement][uniqueId]?.deref();
   }
 
+  [_enabledEvents] = new Set<string>();
+  [enableEvent]: (eventType: string, uid: number) => void;
   constructor(
     private _callbacks: {
       onCommit: (operations: ElementOperation[]) => void;
     },
   ) {
-    super(0);
+    const enableEventImpl: (nm: string, uid: number) => void = (
+      eventType,
+      uid,
+    ) => {
+      if (!this[_enabledEvents].has(eventType)) {
+        this[operations].push({
+          type: OperationType.EnableEvent,
+          eventType,
+          uid,
+        });
+      }
+    };
+    super(0, enableEventImpl);
+    this[enableEvent] = enableEventImpl;
   }
 
   commit(): void {
@@ -77,17 +93,6 @@ export class OffscreenDocument extends OffscreenNode {
       tag: tagName,
     });
     return element;
-  }
-
-  #enabledEvents = new Set<string>();
-  [enableEvent](eventType: string): void {
-    if (!this.#enabledEvents.has(eventType)) {
-      this[operations].push({
-        type: OperationType.EnableEvent,
-        eventType,
-        uid: 0,
-      });
-    }
   }
 
   [_onEvent] = (

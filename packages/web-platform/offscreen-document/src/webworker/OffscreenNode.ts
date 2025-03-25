@@ -14,6 +14,7 @@ export class OffscreenNode extends EventTarget {
 
   constructor(
     elementUniqueId: number,
+    private _enableEvent: (eventName: string, uid: number) => void,
   ) {
     super();
     this[uniqueId] = elementUniqueId;
@@ -108,5 +109,14 @@ export class OffscreenNode extends EventTarget {
     }
     child._remove();
     return child;
+  }
+
+  override addEventListener(
+    type: string,
+    callback: EventListenerOrEventListenerObject | null,
+    options?: AddEventListenerOptions | boolean,
+  ): void {
+    this._enableEvent(type, this[uniqueId]);
+    super.addEventListener(type, callback, options);
   }
 }

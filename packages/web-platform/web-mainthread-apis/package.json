@@ -1,7 +1,7 @@
 {
   "name": "@lynx-js/web-mainthread-apis",
   "version": "0.9.1",
-  "private": true,
+  "private": false,
   "description": "",
   "keywords": [],
   "repository": {
