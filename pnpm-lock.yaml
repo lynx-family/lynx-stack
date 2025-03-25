@@ -164,6 +164,9 @@ importers:
         specifier: workspace:*
         version: link:../../packages/react
     devDependencies:
+      '@codecov/webpack-plugin':
+        specifier: ^1.9.0
+        version: 1.9.0(webpack@5.98.0)
       '@lynx-js/qrcode-rsbuild-plugin':
         specifier: workspace:*
         version: link:../../packages/rspeedy/plugin-qrcode
