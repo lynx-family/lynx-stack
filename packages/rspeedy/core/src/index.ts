@@ -61,10 +61,6 @@ export type {
   ChunkSplitCustom,
 } from './config/performance/chunk-split.js'
 export type { ConsoleType } from './config/performance/index.js'
-export type {
-  PrintFileSize,
-  PrintFileSizeAsset,
-} from './config/performance/print-file-size.js'
 
 // RsbuildPlugin
 export type { RsbuildPlugin, RsbuildPluginAPI } from '@rsbuild/core'

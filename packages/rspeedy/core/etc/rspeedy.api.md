@@ -6,6 +6,7 @@
 
 import type { CreateRsbuildOptions } from '@rsbuild/core';
 import { logger } from '@rsbuild/core';
+import type { PerformanceConfig } from '@rsbuild/core';
 import type { RsbuildConfig } from '@rsbuild/core';
 import type { RsbuildInstance } from '@rsbuild/core';
 import { RsbuildPlugin } from '@rsbuild/core';
@@ -232,23 +233,8 @@ export interface Output {
 // @public
 export interface Performance {
     chunkSplit?: ChunkSplit | ChunkSplitBySize | ChunkSplitCustom | undefined;
-    printFileSize?: boolean | PrintFileSize | undefined;
+    printFileSize?: PerformanceConfig['printFileSize'] | undefined;
     removeConsole?: boolean | ConsoleType[] | undefined;
-}
-
-// @public
-export interface PrintFileSize {
-    compressed?: boolean;
-    detail?: boolean;
-    exclude?: ((asset: PrintFileSizeAsset) => boolean) | undefined;
-    include?: ((asset: PrintFileSizeAsset) => boolean) | undefined;
-    total?: boolean;
-}
-
-// @public (undocumented)
-export interface PrintFileSizeAsset {
-    name: string;
-    size: number;
 }
 
 export { RsbuildPlugin }
