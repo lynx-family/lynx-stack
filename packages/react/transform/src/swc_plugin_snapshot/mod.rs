@@ -276,7 +276,7 @@ where
   snapshot_creator: Option<Function>,
   dynamic_part_count: i32,
   dynamic_parts: Vec<DynamicPart>,
-  dynamic_part_folder: &'a mut V,
+  dynamic_part_visitor: &'a mut V,
   key: Option<JSXAttrValue>,
 }
 
