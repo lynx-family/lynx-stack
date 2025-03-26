@@ -62,6 +62,7 @@ export class OffscreenDocument extends OffscreenNode {
           eventType,
           uid,
         });
+        this[_enabledEvents].add(eventType);
       }
     };
     super(0, enableEventImpl);
