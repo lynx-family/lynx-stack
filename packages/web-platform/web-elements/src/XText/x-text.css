@@ -270,3 +270,8 @@ x-text > lynx-wrapper > raw-text,
 inline-text > lynx-wrapper > raw-text {
   display: contents !important;
 }
+
+raw-text[text]::before {
+  display: contents;
+  content: attr(text);
+}
