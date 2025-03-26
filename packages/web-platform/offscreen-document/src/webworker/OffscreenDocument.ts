@@ -45,7 +45,6 @@ export class OffscreenDocument extends OffscreenNode {
     return this[_uniqueIdToElement][uniqueId]?.deref();
   }
 
-  [_enabledEvents] = new Set<string>();
   [enableEvent]: (eventType: string, uid: number) => void;
   constructor(
     private _callbacks: {
@@ -56,14 +55,11 @@ export class OffscreenDocument extends OffscreenNode {
       eventType,
       uid,
     ) => {
-      if (!this[_enabledEvents].has(eventType)) {
-        this[operations].push({
-          type: OperationType.EnableEvent,
-          eventType,
-          uid,
-        });
-        this[_enabledEvents].add(eventType);
-      }
+      this[operations].push({
+        type: OperationType.EnableEvent,
+        eventType,
+        uid,
+      });
     };
     super(0, enableEventImpl);
     this[enableEvent] = enableEventImpl;

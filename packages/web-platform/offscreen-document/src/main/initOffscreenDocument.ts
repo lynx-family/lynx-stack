@@ -31,6 +31,7 @@ export function initOffscreenDocument(options: {
   ) => void;
 }) {
   const { shadowRoot, onEvent } = options;
+  const enabledEvents: Set<string> = new Set();
   const uniqueIdToElement: [
     WeakRef<ShadowRoot>,
     ...(WeakRef<HTMLElement> | undefined)[],
@@ -111,11 +112,14 @@ export function initOffscreenDocument(options: {
               emptyHandler,
               { passive: true },
             );
-            shadowRoot.addEventListener(
-              op.eventType,
-              _eventHandler,
-              { passive: true, capture: true },
-            );
+            if (!enabledEvents.has(op.eventType)) {
+              shadowRoot.addEventListener(
+                op.eventType,
+                _eventHandler,
+                { passive: true, capture: true },
+              );
+              enabledEvents.add(op.eventType);
+            }
             break;
           case OperationType.RemoveChild:
             {
