@@ -75,6 +75,8 @@ export interface Performance {
    *
    * {@link Performance.printFileSize}
    *
+   * See {@link https://rsbuild.dev/config/performance/print-file-size | Rsbuild - performance.printFileSize} for details.
+   *
    * @example
    *
    * If you don't want to print any information, you can disable it by setting printFileSize to false:
