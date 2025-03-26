@@ -148,8 +148,11 @@ export function createAttributeAndPropertyFunctions(
     key: string,
     value: string | null | undefined,
   ): void {
-    if (value) element.setAttribute(key, value);
-    else element.removeAttribute(key);
+    if (value === null || value === undefined) {
+      element.removeAttribute(key);
+    } else {
+      element.setAttribute(key, value.toString());
+    }
     if (key === __lynx_timing_flag && value) {
       runtime._timingFlags.push(value);
     }
