@@ -284,7 +284,7 @@ impl<'a, V> DynamicPartExtractor<'a, V>
 where
   V: VisitMut,
 {
-  fn new(runtime_id: Expr, dynamic_part_count: i32, dynamic_part_folder: &'a mut V) -> Self {
+  fn new(runtime_id: Expr, dynamic_part_count: i32, dynamic_part_visitor: &'a mut V) -> Self {
     DynamicPartExtractor {
       page_id: Lazy::new(|| private_ident!("pageId")),
       runtime_id,
@@ -296,7 +296,7 @@ where
       snapshot_creator: None,
       dynamic_part_count,
       dynamic_parts: vec![],
-      dynamic_part_folder,
+      dynamic_part_visitor,
       key: None,
     }
   }
@@ -388,7 +388,7 @@ where
   fn visit_mut_jsx_element(&mut self, n: &mut JSXElement) {
     if jsx_is_internal_slot(&n) {
       if self.dynamic_part_count > 1 {
-        n.visit_mut_children_with(self.dynamic_part_folder);
+        n.visit_mut_children_with(self.dynamic_part_visitor);
         self.dynamic_parts.push(DynamicPart::Slot(
           jsx_unwrap_internal_slot(n.take()),
           self.element_index,
@@ -589,7 +589,7 @@ where
                           ..
                         })) => {
                           // expr.map_with_mut(|value| {
-                          //     value.fold_with(self.dynamic_part_folder)
+                          //     value.fold_with(self.dynamic_part_visitor)
                           // });
                           match &**expr {
                             Expr::Lit(value) => {
@@ -947,7 +947,7 @@ where
         self.parent_element = pre_parent_element;
       } else {
         if self.dynamic_part_count <= 1 {
-          n.visit_mut_children_with(self.dynamic_part_folder);
+          n.visit_mut_children_with(self.dynamic_part_visitor);
           let children_expr = jsx_children_to_expr(n.children.take());
           if is_list {
             self
@@ -966,7 +966,7 @@ where
           //     static_stmt
           // });
 
-          // n.map_with_mut(|value| value.fold_with(self.dynamic_part_folder));
+          // n.map_with_mut(|value| value.fold_with(self.dynamic_part_visitor));
           // if is_list {
           //     // unreachable!()
           //     self.dynamic_parts
@@ -1037,7 +1037,7 @@ where
         _ => {}
       };
     } else {
-      n.visit_mut_children_with(self.dynamic_part_folder);
+      n.visit_mut_children_with(self.dynamic_part_visitor);
 
       if self.parent_element.is_some() {
         self.dynamic_parts.push(DynamicPart::Children(
