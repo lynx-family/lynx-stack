@@ -8,4 +8,7 @@ export type NapiModulesCall = (
   name: string,
   data: any,
   moduleName: string,
-) => Promise<any> | any;
+) => Promise<{ data: unknown; transfer?: unknown[] }> | {
+  data: unknown;
+  transfer?: unknown[];
+} | undefined;

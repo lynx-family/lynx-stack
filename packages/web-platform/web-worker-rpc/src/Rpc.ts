@@ -56,11 +56,11 @@ export class Rpc {
     ) =>
       | {
         data: unknown;
-        transfer: Transferable[];
+        transfer?: Transferable[];
       }
       | Promise<{
         data: unknown;
-        transfer: Transferable[];
+        transfer?: Transferable[];
       }>)
   >();
 
@@ -205,10 +205,10 @@ export class Rpc {
     handler:
       | ((
         ...args: T['_TypeParameters']
-      ) => { data: T['_TypeReturn']; transfer: Transferable[] })
+      ) => { data: T['_TypeReturn']; transfer?: Transferable[] })
       | ((
         ...args: T['_TypeParameters']
-      ) => Promise<{ data: T['_TypeReturn']; transfer: Transferable[] }>),
+      ) => Promise<{ data: T['_TypeReturn']; transfer?: Transferable[] }>),
   ): void;
   registerHandler<T extends RpcEndpoint<any[], any>>(
     endpoint: T,
@@ -216,8 +216,8 @@ export class Rpc {
       ...args: T['_TypeParameters']
     ) => void | T['_TypeReturn'] | {
       data: T['_TypeReturn'];
-      transfer: Transferable[];
-    } | Promise<{ data: T['_TypeReturn']; transfer: Transferable[] }>,
+      transfer?: Transferable[];
+    } | Promise<{ data: T['_TypeReturn']; transfer?: Transferable[] }>,
   ): void {
     this.#handlerMap.set(endpoint.name, handler);
     const currentCache = this.#messageCache[endpoint.name];

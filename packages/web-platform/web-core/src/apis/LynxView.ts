@@ -16,6 +16,16 @@ import {
 } from '@lynx-js/web-constants';
 import { inShadowRootStyles } from './inShadowRootStyles.js';
 
+export type INapiModulesCall = (
+  name: string,
+  data: any,
+  moduleName: string,
+  lynxView: LynxView,
+) => Promise<{ data: unknown; transfer?: Transferable[] }> | {
+  data: unknown;
+  transfer?: Transferable[];
+} | undefined;
+
 /**
  * Based on our experiences, these elements are almost used in all lynx cards.
  */
@@ -30,7 +40,7 @@ import { inShadowRootStyles } from './inShadowRootStyles.js';
  * @param {"auto" | null} height [optional] set it to "auto" for height auto-sizing
  * @param {"auto" | null} width [optional] set it to "auto" for width auto-sizing
  * @param {NapiModulesMap} napiModulesMap [optional] the napiModule which is called in lynx-core. key is module-name, value is esm url.
- * @param {NapiModulesCall} onNapiModulesCall [optional] the NapiModule value handler.
+ * @param {INapiModulesCall} onNapiModulesCall [optional] the NapiModule value handler.
  * @param {"false" | "true" | null} injectHeadLinks [optional] @default true set it to "false" to disable injecting the <link href="" ref="stylesheet"> styles into shadowroot
  *
  * @event error lynx card fired an error
@@ -190,8 +200,10 @@ export class LynxView extends HTMLElement {
   get onNapiModulesCall(): NapiModulesCall | undefined {
     return this.#onNapiModulesCall;
   }
-  set onNapiModulesCall(handler: NapiModulesCall) {
-    this.#onNapiModulesCall = handler;
+  set onNapiModulesCall(handler: INapiModulesCall) {
+    this.#onNapiModulesCall = (name, data, moduleName) => {
+      return handler(name, data, moduleName, this);
+    };
   }
 
   /**
