@@ -18,6 +18,7 @@ export function createExposureService(runtime: MainThreadRuntime) {
     const exposureEvent = createCrossThreadEvent(
       runtime,
       ev,
+      ev.type,
     ) as ExposureWorkerEvent;
     exposureEvent.detail['unique-id'] = parseFloat(
       (ev.target as Element).getAttribute(lynxUniqueIdAttribute)!,

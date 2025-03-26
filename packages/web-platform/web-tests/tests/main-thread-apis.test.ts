@@ -2,11 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 // @ts-nocheck
-import {
-  componentIdAttribute,
-  cssIdAttribute,
-  parentComponentUniqueIdAttribute,
-} from '@lynx-js/web-constants';
+import { componentIdAttribute, cssIdAttribute } from '@lynx-js/web-constants';
 import { test, expect } from './coverage-fixture.js';
 import type { Page } from '@playwright/test';
 import path from 'node:path';
@@ -483,7 +479,6 @@ test.describe('main thread api tests', () => {
       return;
     });
     const e1 = page.locator(`[${componentIdAttribute}="id1"]`);
-    expect(await e1?.getAttribute(parentComponentUniqueIdAttribute)).toBe('0');
   });
 
   test('__SetInlineStyles', async ({ page }, { title }) => {

@@ -6,7 +6,6 @@ import {
   LynxEventNameToW3cByTagName,
   LynxEventNameToW3cCommon,
   lynxTagAttribute,
-  parentComponentUniqueIdAttribute,
   W3cEventNameToLynx,
   type LynxCrossThreadEvent,
   type LynxEventType,
@@ -33,10 +32,12 @@ export function createEventFunctions(runtime: MainThreadRuntime) {
       : runtimeInfo.eventHandlerMap[lynxEventName]?.bind
         ?.handler;
     if (hname) {
-      const crossThreadEvent = createCrossThreadEvent(runtime, event);
-      const parentComponentUniqueId = currentTarget.getAttribute(
-        parentComponentUniqueIdAttribute,
-      )!;
+      const crossThreadEvent = createCrossThreadEvent(
+        runtime,
+        event,
+        lynxEventName,
+      );
+      const parentComponentUniqueId = runtimeInfo.parentComponentUniqueId;
       const parentComponent = runtime[getElementByUniqueId](
         Number(parentComponentUniqueId),
       )!;

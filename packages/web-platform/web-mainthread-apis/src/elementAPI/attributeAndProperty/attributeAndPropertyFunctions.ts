@@ -16,6 +16,20 @@ import {
   type MainThreadRuntime,
 } from '../../MainThreadRuntime.js';
 
+function setDatasetAttribute(
+  element: HTMLElement,
+  key: string,
+  value: string | number | Record<string, any>,
+): void {
+  if (value) {
+    if (typeof value === 'object') {
+      element.setAttribute('data-' + key, JSON.stringify(value));
+    } else {
+      element.setAttribute('data-' + key, value.toString());
+    }
+  }
+}
+
 export function createAttributeAndPropertyFunctions(
   runtime: MainThreadRuntime,
 ) {
@@ -34,6 +48,7 @@ export function createAttributeAndPropertyFunctions(
     value: string | number | Record<string, any>,
   ): void {
     runtime[elementToRuntimeInfoMap].get(element)!.lynxDataset[key] = value;
+    setDatasetAttribute(element, key, value);
   }
 
   function __GetAttributes(
@@ -95,6 +110,9 @@ export function createAttributeAndPropertyFunctions(
     dataset: Record<string, any>,
   ): void {
     runtime[elementToRuntimeInfoMap].get(element)!.lynxDataset = dataset;
+    for (const [key, value] of Object.entries(dataset)) {
+      setDatasetAttribute(element, key, value);
+    }
   }
 
   function __SetID(element: HTMLElement, id: string) {

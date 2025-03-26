@@ -8,9 +8,6 @@ export const cssIdAttribute = 'lynx-css-id' as const;
 
 export const componentIdAttribute = 'lynx-component-id' as const;
 
-export const parentComponentUniqueIdAttribute =
-  'lynx-parent-component-uid' as const;
-
 export const lynxTagAttribute = 'lynx-tag' as const;
 
 export const lynxDefaultDisplayLinearAttribute =

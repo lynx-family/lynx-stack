@@ -10,6 +10,7 @@ import {
 export function createCrossThreadEvent(
   runtime: MainThreadRuntime,
   domEvent: Event,
+  eventName: string,
 ): LynxCrossThreadEvent {
   const targetElement = domEvent.target as HTMLElement;
   const currentTargetElement = domEvent
@@ -36,7 +37,7 @@ export function createCrossThreadEvent(
     targetElement,
   )!;
   return {
-    type,
+    type: eventName,
     timestamp: domEvent.timeStamp,
     target: {
       id: targetElement.id,
