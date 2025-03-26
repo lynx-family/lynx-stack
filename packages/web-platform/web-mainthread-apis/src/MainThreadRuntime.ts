@@ -58,9 +58,7 @@ export interface MainThreadConfig {
   lepusCode: LynxTemplate['lepusCode'];
   browserConfig: BrowserConfig;
   tagMap: Record<string, string>;
-  docu: Pick<Document, 'append' | 'createElement' | 'addEventListener'> & {
-    commit?: () => void;
-  };
+  docu: Pick<Document, 'append' | 'createElement' | 'addEventListener'>;
 }
 
 export const elementToRuntimeInfoMap = Symbol('elementToRuntimeInfoMap');
@@ -83,6 +81,11 @@ export class MainThreadRuntime {
    * @private
    */
   private _lynxUniqueIdToStyleSheet: WeakRef<HTMLStyleElement>[] = [];
+
+  /**
+   * @private
+   */
+  _page?: HTMLElement;
   /**
    * @private the CreatePage will append it to this
    */
@@ -227,6 +230,9 @@ export class MainThreadRuntime {
   ) => {
     const timingFlags = this._timingFlags;
     this._timingFlags = [];
+    if (this._page && !this._page.parentElement) {
+      this._rootDom.append(this._page);
+    }
     this.config.callbacks.flushElementTree(options, timingFlags);
   };
 

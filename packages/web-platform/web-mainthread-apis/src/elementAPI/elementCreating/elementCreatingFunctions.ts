@@ -118,7 +118,7 @@ export function initializeElementCreatingFunction(
     if (runtime.config.pageConfig.defaultDisplayLinear === false) {
       page.setAttribute(lynxDefaultDisplayLinearAttribute, 'false');
     }
-    runtime._rootDom.append(page);
+    runtime._page = page;
     return page;
   }
 
