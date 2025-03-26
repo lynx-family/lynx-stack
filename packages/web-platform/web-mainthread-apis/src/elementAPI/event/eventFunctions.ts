@@ -57,11 +57,13 @@ export function createEventFunctions(runtime: MainThreadRuntime) {
           crossThreadEvent,
         );
       }
+      return true;
     }
+    return false;
   };
   const btsCatchHandler = (event: Event) => {
-    btsHandler(event);
-    event.stopPropagation();
+    const handlerTriggered = btsHandler(event);
+    if (handlerTriggered) event.stopPropagation();
   };
   function __AddEvent(
     element: HTMLElement,

@@ -21,7 +21,7 @@ function setDatasetAttribute(
   key: string,
   value: string | number | Record<string, any>,
 ): void {
-  if (value) {
+  if (value !== null && value !== undefined) {
     if (typeof value === 'object') {
       element.setAttribute('data-' + key, JSON.stringify(value));
     } else {

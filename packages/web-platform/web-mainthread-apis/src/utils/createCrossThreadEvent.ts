@@ -34,7 +34,7 @@ export function createCrossThreadEvent(
     targetElement,
   )!;
   const currentTargetElementRuntimeInfo = runtime[elementToRuntimeInfoMap].get(
-    targetElement,
+    currentTargetElement,
   )!;
   return {
     type: eventName,
