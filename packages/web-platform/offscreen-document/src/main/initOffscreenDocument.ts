@@ -60,13 +60,13 @@ export function initOffscreenDocument(options: {
     if (target && elementToUniqueId.has(target)) {
       const targetUniqueId = elementToUniqueId.get(target)!;
       const eventType = ev.type;
-      const otherPropertyes: Record<string, unknown> = {};
+      const otherProperties: Record<string, unknown> = {};
       for (const propertyName of otherPropertyNames) {
         if (propertyName in ev) {
-          otherPropertyes[propertyName] = (ev as any)[propertyName];
+          otherProperties[propertyName] = (ev as any)[propertyName];
         }
       }
-      onEvent(eventType, targetUniqueId, ev.bubbles, otherPropertyes);
+      onEvent(eventType, targetUniqueId, ev.bubbles, otherProperties);
     }
   }
 
