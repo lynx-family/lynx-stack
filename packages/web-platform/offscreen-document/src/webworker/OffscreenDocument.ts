@@ -19,7 +19,6 @@ export const getElementByUniqueId = Symbol('getElementByUniqueId');
 export const _onEvent = Symbol('_onEvent');
 const _uniqueIdInc = Symbol('uniqueIdInc');
 const _uniqueIdToElement = Symbol('_uniqueIdToElement');
-const _enabledEvents = Symbol('enabledEvents');
 export class OffscreenDocument extends OffscreenNode {
   /**
    * @private
