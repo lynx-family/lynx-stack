@@ -6,13 +6,25 @@ import type { RsbuildPlugin } from '@rsbuild/core'
 
 import { ChunkLoadingWebpackPlugin } from '@lynx-js/chunk-loading-webpack-plugin'
 
+import { isLynx } from '../utils/is-lynx.js'
+import { isWeb } from '../utils/is-web.js'
+
 export function pluginChunkLoading(): RsbuildPlugin {
   return {
     name: 'lynx:rsbuild:chunk-loading',
     setup(api) {
-      api.modifyBundlerChain(chain => {
-        // dprint-ignore
-        chain
+      api.modifyBundlerChain((chain, { environment }) => {
+        if (isWeb(environment)) {
+          chain
+            .output
+            .chunkLoading('import-scripts')
+            .end()
+          return
+        }
+
+        if (isLynx(environment)) {
+          // dprint-ignore
+          chain
           .plugin('lynx:chunk-loading')
             .use(ChunkLoadingWebpackPlugin)
           .end()
@@ -23,14 +35,17 @@ export function pluginChunkLoading(): RsbuildPlugin {
             .chunkFormat('commonjs')
             .iife(false)
           .end()
+        }
       })
 
-      api.modifyWebpackChain(chain => {
-        chain
-          .output
-          // For webpack, we directly use `chunkLoading: 'lynx'`.
-          .chunkLoading('lynx')
-          .end()
+      api.modifyWebpackChain((chain, { environment }) => {
+        if (isLynx(environment)) {
+          chain
+            .output
+            // For webpack, we directly use `chunkLoading: 'lynx'`.
+            .chunkLoading('lynx')
+            .end()
+        }
       })
     },
   }
