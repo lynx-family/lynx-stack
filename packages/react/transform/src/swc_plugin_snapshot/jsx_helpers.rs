@@ -6,7 +6,7 @@ use swc_core::{
   common::{errors::HANDLER, iter::IdentifyLast, Spanned, DUMMY_SP},
   ecma::{
     ast::{JSXExpr, *},
-    atoms::Atom,
+    atoms::{atom, Atom},
   },
 };
 
@@ -14,7 +14,7 @@ pub fn jsx_name(name: JSXElementName) -> Box<Expr> {
   let span = name.span();
   match name {
     JSXElementName::Ident(i) => {
-      if i.sym == Atom::new("this") {
+      if i.sym == atom!("this") {
         return Box::new(Expr::This(ThisExpr { span }));
       }
       // If it starts with lowercase
@@ -50,7 +50,7 @@ pub fn jsx_name(name: JSXElementName) -> Box<Expr> {
 
         (match obj {
           JSXObject::Ident(i) => {
-            if i.sym == Atom::new("this") {
+            if i.sym == atom!("this") {
               Expr::This(ThisExpr { span })
             } else {
               Expr::Ident(i)
