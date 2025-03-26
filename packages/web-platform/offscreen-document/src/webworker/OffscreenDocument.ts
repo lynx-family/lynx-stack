@@ -99,6 +99,7 @@ export class OffscreenDocument extends OffscreenNode {
     eventType: string,
     targetUniqueId: number,
     bubbles: boolean,
+    otherProperties: Parameters<typeof structuredClone>[0],
   ) => {
     const target = this[getElementByUniqueId](targetUniqueId);
     if (target) {
@@ -109,6 +110,7 @@ export class OffscreenDocument extends OffscreenNode {
         tempTarget = tempTarget.parentElement;
       }
       const event = new OffscreenEvent(eventType, target);
+      Object.assign(event, otherProperties);
       // capture phase
       event[eventPhase] = Event.CAPTURING_PHASE;
       for (let ii = bubblePath.length - 1; ii >= 0; ii--) {

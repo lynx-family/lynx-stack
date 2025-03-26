@@ -7,12 +7,27 @@ import {
   type ElementOperation,
 } from '../types/ElementOperation.js';
 
+function emptyHandler() {
+  // no-op
+}
+
+const otherPropertyNames = [
+  'detail',
+  'keyCode',
+  'charCode',
+  'elapsedTime',
+  'propertyName',
+  'pseudoElement',
+  'animationName',
+];
+
 export function initOffscreenDocument(options: {
   shadowRoot: ShadowRoot;
   onEvent: (
     eventType: string,
     targetUniqueId: number,
     bubbles: boolean,
+    otherProperties: Parameters<typeof structuredClone>[0],
   ) => void;
 }) {
   const { shadowRoot, onEvent } = options;
@@ -36,15 +51,22 @@ export function initOffscreenDocument(options: {
   }
 
   function _eventHandler(ev: Event) {
-    if (ev.eventPhase !== Event.AT_TARGET) {
+    if (
+      ev.eventPhase !== Event.CAPTURING_PHASE && ev.currentTarget !== shadowRoot
+    ) {
       return;
     }
     const target = ev.target as HTMLElement | null;
     if (target && elementToUniqueId.has(target)) {
       const targetUniqueId = elementToUniqueId.get(target)!;
       const eventType = ev.type;
-      const bubble = ev.bubbles;
-      onEvent(eventType, targetUniqueId, bubble);
+      const otherPropertyes: Record<string, unknown> = {};
+      for (const propertyName of otherPropertyNames) {
+        if (propertyName in ev) {
+          otherPropertyes[propertyName] = (ev as any)[propertyName];
+        }
+      }
+      onEvent(eventType, targetUniqueId, ev.bubbles, otherPropertyes);
     }
   }
 
@@ -86,8 +108,13 @@ export function initOffscreenDocument(options: {
           case OperationType.EnableEvent:
             target.addEventListener(
               op.eventType,
-              _eventHandler,
+              emptyHandler,
               { passive: true },
+            );
+            shadowRoot.addEventListener(
+              op.eventType,
+              _eventHandler,
+              { passive: true, capture: true },
             );
             break;
           case OperationType.RemoveChild:

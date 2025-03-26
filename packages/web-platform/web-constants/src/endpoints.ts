@@ -41,15 +41,16 @@ export const postOffscreenEventEndpoint = createRpcEndpoint<
     eventType: string,
     targetUniqueId: number,
     bubbles: boolean,
+    Parameters<typeof structuredClone>[0],
   ],
   void
 >('postOffscreenEventEndpoint', false, false);
 
-export const switchExposureService = createRpcEndpoint<
+export const switchExposureServiceEndpoint = createRpcEndpoint<
   [boolean, boolean],
   void
 >(
-  '__switchExposureService',
+  'switchExposureServiceEndpoint',
   false,
   false,
 );

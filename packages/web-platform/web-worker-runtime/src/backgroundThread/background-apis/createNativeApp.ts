@@ -66,6 +66,7 @@ export async function createNativeApp(config: {
     clearInterval: clearInterval,
     nativeModuleProxy: await createNativeModules(
       uiThreadRpc,
+      mainThreadRpc,
       nativeModulesMap,
     ),
     loadScriptAsync: function(

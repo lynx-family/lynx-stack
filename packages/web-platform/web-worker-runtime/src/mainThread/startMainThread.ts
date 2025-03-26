@@ -14,9 +14,13 @@ import {
   publicComponentEventEndpoint,
   postExposureEndpoint,
   postOffscreenEventEndpoint,
+  switchExposureServiceEndpoint,
 } from '@lynx-js/web-constants';
 import { Rpc } from '@lynx-js/web-worker-rpc';
-import { MainThreadRuntime } from '@lynx-js/web-mainthread-apis';
+import {
+  MainThreadRuntime,
+  switchExposureService,
+} from '@lynx-js/web-mainthread-apis';
 import { registerCallLepusMethodHandler } from './crossThreadHandlers/registerCallLepusMethodHandler.js';
 import { registerGetCustomSectionHandler } from './crossThreadHandlers/registerGetCustomSectionHandler.js';
 import { createMarkTimingInternal } from './crossThreadHandlers/createMainthreadMarkTimingInternal.js';
@@ -104,6 +108,10 @@ export function startMainThread(
               customSections,
             );
             registerUpdateDataHandler(uiThreadRpc, runtime);
+            backgroundThreadRpc.registerHandler(
+              switchExposureServiceEndpoint,
+              runtime[switchExposureService],
+            );
             backgroundStart({
               initData,
               globalProps,
@@ -138,6 +146,7 @@ export function startMainThread(
           postExposure,
         },
       }).globalThis;
+
       markTimingInternal('decode_end');
       entry!(runtime);
     },
