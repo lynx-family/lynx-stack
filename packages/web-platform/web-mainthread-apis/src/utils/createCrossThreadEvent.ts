@@ -35,7 +35,7 @@ export function createCrossThreadEvent(
   )!;
   const currentTargetElementRuntimeInfo = runtime[elementToRuntimeInfoMap].get(
     currentTargetElement,
-  )!;
+  );
   return {
     type: eventName,
     timestamp: domEvent.timeStamp,
@@ -44,11 +44,13 @@ export function createCrossThreadEvent(
       dataset: targetElementRuntimeInfo.lynxDataset,
       uniqueId: targetElementRuntimeInfo.uniqueId,
     },
-    currentTarget: {
-      id: currentTargetElement.id,
-      dataset: currentTargetElementRuntimeInfo.lynxDataset,
-      uniqueId: currentTargetElementRuntimeInfo.uniqueId,
-    },
+    currentTarget: currentTargetElementRuntimeInfo
+      ? {
+        id: currentTargetElement.id,
+        dataset: currentTargetElementRuntimeInfo.lynxDataset,
+        uniqueId: currentTargetElementRuntimeInfo.uniqueId,
+      }
+      : null,
     // @ts-expect-error
     detail: domEvent.detail ?? {},
     params,
