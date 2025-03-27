@@ -25,6 +25,7 @@ function updateMainThread(
   }
 
   setPipeline(patchOptions.pipelineOptions);
+  markTiming(PerformanceTimingKeys.mtsRenderStart);
   markTiming(PerformanceTimingKeys.parse_changes_start);
   const { patchList, flushOptions = {} } = JSON.parse(data) as PatchList;
 
@@ -44,6 +45,7 @@ function updateMainThread(
     commitMainThreadPatchUpdate(id);
   }
   markTiming(PerformanceTimingKeys.patch_changes_end);
+  markTiming(PerformanceTimingKeys.mtsRenderEnd);
   if (patchOptions.isHydration) {
     clearDelayedWorklets();
   }

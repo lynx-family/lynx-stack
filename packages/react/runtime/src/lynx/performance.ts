@@ -22,7 +22,18 @@ enum PerformanceTimingKeys {
   patch_changes_end,
   hydrate_parse_snapshot_start,
   hydrate_parse_snapshot_end,
+  mtsRenderStart,
+  mtsRenderEnd,
 }
+
+const PerformanceTimingFlags = {
+  reactLynxHydrate: 'react_lynx_hydrate',
+};
+
+const PipelineOrigins = {
+  reactLynxHydrate: 'reactLynxHydrate',
+  updateTriggeredByBts: 'updateTriggeredByBts',
+};
 
 /**
  * @deprecated used by old timing api(setState timing flag)
@@ -65,11 +76,12 @@ function markTimingLegacy(key: PerformanceTimingKeys, timingFlag_?: string): voi
   lynx.getNativeApp().markTiming?.(timingFlag!, PerformanceTimingKeys[key]);
 }
 
-function beginPipeline(needTimestamps: boolean, timingFlag?: string): void {
+function beginPipeline(needTimestamps: boolean, pipelineOrigin: string, timingFlag?: string): void {
   globalPipelineOptions = lynx.performance?._generatePipelineOptions?.();
   if (globalPipelineOptions) {
     globalPipelineOptions.needTimestamps = needTimestamps;
-    lynx.performance?._onPipelineStart?.(globalPipelineOptions.pipelineID);
+    globalPipelineOptions.pipelineOrigin = pipelineOrigin;
+    lynx.performance?._onPipelineStart?.(globalPipelineOptions.pipelineID, pipelineOrigin);
     if (timingFlag) {
       lynx.performance?._bindPipelineIdWithTimingFlag?.(globalPipelineOptions.pipelineID, timingFlag);
     }
@@ -92,7 +104,7 @@ function initTimingAPI(): void {
     // check `__globalSnapshotPatch` to make sure this only runs after hydrate
     if (__JS__ && __globalSnapshotPatch) {
       if (!globalPipelineOptions) {
-        beginPipeline(false);
+        beginPipeline(false, PipelineOrigins.updateTriggeredByBts);
         markTiming(PerformanceTimingKeys.diff_vdom_start, true);
       }
       if (shouldMarkDiffVdomStart) {
@@ -108,6 +120,8 @@ function initTimingAPI(): void {
  */
 export {
   PerformanceTimingKeys,
+  PerformanceTimingFlags,
+  PipelineOrigins,
   PerfSpecificKey,
   markTimingLegacy,
   initTimingAPI,

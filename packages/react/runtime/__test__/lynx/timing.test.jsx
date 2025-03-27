@@ -211,6 +211,7 @@ describe('attribute timing api', () => {
         [
           "_onPipelineStart",
           "pipelineID",
+          "updateTriggeredByBts",
         ],
         [
           "_markTiming",
@@ -235,6 +236,11 @@ describe('attribute timing api', () => {
         [
           "_markTiming",
           "pipelineID",
+          "mtsRenderStart",
+        ],
+        [
+          "_markTiming",
+          "pipelineID",
           "parse_changes_start",
         ],
         [
@@ -251,6 +257,11 @@ describe('attribute timing api', () => {
           "_markTiming",
           "pipelineID",
           "patch_changes_end",
+        ],
+        [
+          "_markTiming",
+          "pipelineID",
+          "mtsRenderEnd",
         ],
       ]
     `);
@@ -311,6 +322,7 @@ describe('attribute timing api', () => {
         [
           "_onPipelineStart",
           "pipelineID",
+          "updateTriggeredByBts",
         ],
         [
           "_markTiming",
@@ -398,6 +410,7 @@ describe('attribute timing api', () => {
         [
           "_onPipelineStart",
           "pipelineID",
+          "reactLynxHydrate",
         ],
         [
           "_bindPipelineIdWithTimingFlag",
@@ -514,6 +527,7 @@ describe('attribute timing api', () => {
           [
             "_onPipelineStart",
             "pipelineID",
+            "updateTriggeredByBts",
           ],
           [
             "_markTiming",
@@ -689,6 +703,7 @@ describe('attribute timing api', () => {
         [
           "_onPipelineStart",
           "pipelineID",
+          "updateTriggeredByBts",
         ],
         [
           "_markTiming",
@@ -713,6 +728,11 @@ describe('attribute timing api', () => {
         [
           "_markTiming",
           "pipelineID",
+          "mtsRenderStart",  
+        ],
+        [
+          "_markTiming",
+          "pipelineID",
           "parse_changes_start",
         ],
         [
@@ -729,6 +749,11 @@ describe('attribute timing api', () => {
           "_markTiming",
           "pipelineID",
           "patch_changes_end",
+        ],
+        [
+          "_markTiming",
+          "pipelineID",
+          "mtsRenderEnd",
         ],
       ]
     `);
@@ -782,6 +807,7 @@ describe('attribute timing api', () => {
           [
             "_onPipelineStart",
             "pipelineID",
+            "updateTriggeredByBts",
           ],
           [
             "_markTiming",

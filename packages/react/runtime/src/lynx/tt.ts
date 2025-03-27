@@ -5,7 +5,13 @@ import { options } from 'preact';
 import type { VNode } from 'preact';
 
 import { LifecycleConstant, NativeUpdateDataType } from '../lifecycleConstant.js';
-import { PerformanceTimingKeys, beginPipeline, markTiming } from './performance.js';
+import {
+  PerformanceTimingKeys,
+  PerformanceTimingFlags,
+  PipelineOrigins,
+  beginPipeline,
+  markTiming,
+} from './performance.js';
 import { BackgroundSnapshotInstance, hydrate } from '../backgroundSnapshot.js';
 import { destroyBackground } from '../lifecycle/destroy.js';
 import { commitPatchUpdate, genCommitTaskId, globalCommitTaskMap } from '../lifecycle/patch/commit.js';
@@ -104,7 +110,7 @@ async function OnLifecycleEvent([type, data]: [string, any]) {
       if (__PROFILE__) {
         console.profile('hydrate');
       }
-      beginPipeline(true, 'react_lynx_hydrate');
+      beginPipeline(true, PipelineOrigins.reactLynxHydrate, PerformanceTimingFlags.reactLynxHydrate);
       markTiming(PerformanceTimingKeys.hydrate_parse_snapshot_start);
       const before = JSON.parse(lepusSide);
       markTiming(PerformanceTimingKeys.hydrate_parse_snapshot_end);
