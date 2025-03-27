@@ -1,13 +1,8 @@
 // Copyright 2023 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type { LynxView } from '@lynx-js/web-core';
-import '@lynx-js/web-core';
-import '@lynx-js/web-elements/all';
-import '@lynx-js/web-elements/index.css';
-import '@lynx-js/web-elements-compat/LinearContainer';
-import '@lynx-js/web-core/index.css';
-import './index.css';
+
+import { lynxViewTests } from './lynx-view.ts';
 
 const nativeModulesMap = {
   CustomModule: URL.createObjectURL(
@@ -27,26 +22,15 @@ const nativeModulesMap = {
   ),
 };
 
-async function run() {
-  const searchParams = new URLSearchParams(document.location.search);
-  const casename = searchParams.get('casename');
-  const hasdir = searchParams.get('hasdir') === 'true';
-  if (casename) {
-    const dir = `/dist/${casename}${hasdir ? `/${casename}` : ''}`;
-    const lepusjs = `${dir}/index.web.json`;
-    const lynxView = document.createElement('lynx-view') as LynxView;
+const searchParams = new URLSearchParams(document.location.search);
+const casename = searchParams.get('casename');
+const hasdir = searchParams.get('hasdir') === 'true';
+
+if (casename) {
+  const dir = `/dist/${casename}${hasdir ? `/${casename}` : ''}`;
+  const lepusjs = `${dir}/index.web.json`;
+  lynxViewTests(lynxView => {
     lynxView.setAttribute('url', lepusjs);
-    lynxView.initData = { mockData: 'mockData' };
-    lynxView.setAttribute('height', 'auto');
-    lynxView.globalProps = { pink: 'pink' };
-    lynxView.addEventListener('error', () => {
-      lynxView.setAttribute('style', 'display:none');
-      lynxView.innerHTML = '';
-    });
-    lynxView.addEventListener('timing', (ev) => {
-      // @ts-expect-error
-      globalThis.timing = Object.assign(globalThis.timing ?? {}, ev.detail);
-    });
     lynxView.nativeModulesMap = nativeModulesMap;
     lynxView.onNativeModulesCall = (name, data, moduleName) => {
       if (name === 'getColor' && moduleName === 'CustomModule') {
@@ -56,11 +40,7 @@ async function run() {
         return data.color;
       }
     };
-    document.body.append(lynxView);
-
-    Object.assign(globalThis, { lynxView });
-  } else {
-    console.warn('cannot find casename');
-  }
+  });
+} else {
+  console.warn('cannot find casename');
 }
-run();

@@ -4,6 +4,11 @@
   "private": true,
   "license": "Apache-2.0",
   "type": "module",
+  "exports": {
+    ".": {
+      "default": "./shell-project/lynx-view.ts"
+    }
+  },
   "scripts": {
     "build": "if [ \"$CI\" = \"1\" ]; then pnpm build:cases; fi",
     "build:cases": "rm -rf dist && node  ./scripts/generate-build-command.js",
