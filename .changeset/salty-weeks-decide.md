@@ -6,7 +6,7 @@
 "@lynx-js/rspeedy": patch
 ---
 
-feat: support lazyCompilation
+Support lazyCompilation
 
 Lazy compilation is an excellent way to improve dev startup performance.It compiles modules on demand rather than compiling all modules at startup.
 
