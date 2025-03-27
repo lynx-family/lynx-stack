@@ -153,6 +153,14 @@ jobs:
         --no-cache
         --logHeapUsage
         --silent
+  test-type:
+    needs: build
+    uses: ./.github/workflows/workflow-test.yml
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    with:
+      runs-on: lynx-ubuntu-24.04-medium
+      run: pnpm -r run test:type
   playwright-linux:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
