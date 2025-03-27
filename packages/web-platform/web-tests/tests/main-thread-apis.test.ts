@@ -1114,4 +1114,22 @@ test.describe('main thread api tests', () => {
       expect(randomObject).toBe(-1);
     },
   );
+
+  test(
+    '__AddInlineStyle_value_number_0',
+    async ({ page }, { title }) => {
+      await page.evaluate(() => {
+        const root = globalThis.__CreatePage('page', 0);
+        const view = globalThis.__CreateView(0);
+        globalThis.__AddInlineStyle(root, 24, 'flex'); // display: flex
+        globalThis.__AddInlineStyle(view, 51, 0); // flex-shrink:0;
+        globalThis.__SetID(view, 'target');
+        globalThis.__AppendElement(root, view);
+        globalThis.__FlushElementTree();
+        return {};
+      });
+      const inlineStyle = await page.locator('#target').getAttribute('style');
+      expect(inlineStyle).toContain('flex-shrink');
+    },
+  );
 });

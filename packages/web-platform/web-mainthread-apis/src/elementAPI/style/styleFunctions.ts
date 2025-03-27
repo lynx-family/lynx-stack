@@ -64,19 +64,20 @@ export function createStyleFunctions(
   function __AddInlineStyle(
     element: HTMLElement,
     key: number | string,
-    value: string | undefined,
+    value: string | number | null | undefined,
   ): void {
     const lynxStyleInfo = queryCSSProperty(Number(key));
-    if (!value) {
-      element.style.setProperty(lynxStyleInfo.dashName, null);
-      return;
-    }
-    const { transformedStyle } = transfromParsedStyles([[
-      lynxStyleInfo.dashName,
-      value,
-    ]]);
-    for (const [property, value] of transformedStyle) {
-      element.style.setProperty(property, value);
+    const valueStr = typeof value === 'number' ? value.toString() : value;
+    if (!valueStr) { // null or undefined
+      element.style.removeProperty(lynxStyleInfo.dashName);
+    } else {
+      const { transformedStyle } = transfromParsedStyles([[
+        lynxStyleInfo.dashName,
+        valueStr,
+      ]]);
+      for (const [property, value] of transformedStyle) {
+        element.style.setProperty(property, value);
+      }
     }
   }
 
