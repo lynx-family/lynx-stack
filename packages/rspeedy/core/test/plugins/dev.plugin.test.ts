@@ -51,9 +51,41 @@ describe('Plugins - Dev', () => {
     expect(vi.isMockFunction(ProvidePlugin)).toBe(true)
     expect(vi.mocked(ProvidePlugin)).toBeCalled()
     expect(ProvidePlugin).toBeCalledWith({
-      WebSocket: [require.resolve('@lynx-js/websocket'), 'default'],
       __webpack_dev_server_client__: [
         require.resolve('../../client/hmr/WebSocketClient.js'),
+        'default',
+      ],
+    })
+    expect(ProvidePlugin).toBeCalledWith({
+      WebSocket: [
+        require.resolve('@lynx-js/websocket'),
+        'default',
+      ],
+    })
+  })
+
+  test('not provide WebSocket for Web', async () => {
+    const rsbuild = await createStubRspeedy({
+      environments: {
+        web: {},
+      },
+    })
+
+    await rsbuild.unwrapConfig()
+
+    const { ProvidePlugin } = await import('../../src/webpack/ProvidePlugin.js')
+
+    expect(vi.isMockFunction(ProvidePlugin)).toBe(true)
+    expect(vi.mocked(ProvidePlugin)).toBeCalled()
+    expect(ProvidePlugin).toBeCalledWith({
+      __webpack_dev_server_client__: [
+        require.resolve('../../client/hmr/WebSocketClient.js'),
+        'default',
+      ],
+    })
+    expect(ProvidePlugin).not.toBeCalledWith({
+      WebSocket: [
+        require.resolve('@lynx-js/websocket'),
         'default',
       ],
     })
@@ -368,11 +400,14 @@ describe('Plugins - Dev', () => {
     const { ProvidePlugin } = await import('../../src/webpack/ProvidePlugin.js')
 
     expect(ProvidePlugin).toBeCalledWith({
-      WebSocket: ['/foo', 'default'],
       __webpack_dev_server_client__: [
         require.resolve('../../client/hmr/WebSocketClient.js'),
         'default',
       ],
+    })
+
+    expect(ProvidePlugin).toBeCalledWith({
+      WebSocket: ['/foo', 'default'],
     })
   })
 

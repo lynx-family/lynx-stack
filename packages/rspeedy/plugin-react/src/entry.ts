@@ -130,7 +130,7 @@ export function applyEntry(
           import: imports,
           filename: backgroundName,
         })
-        .when(isDev && !isWeb, entry => {
+        .when(isDev, entry => {
           entry
             // This is aliased in `@lynx-js/rspeedy`
             .add({
