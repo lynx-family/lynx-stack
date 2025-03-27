@@ -59,7 +59,7 @@
     "@microsoft/api-extractor": "catalog:",
     "@rsbuild/core": "catalog:rsbuild",
     "@rsbuild/plugin-css-minimizer": "1.0.2",
-    "@rsdoctor/rspack-plugin": "1.0.0",
+    "@rsdoctor/rspack-plugin": "1.0.1",
     "chokidar": "^4.0.3",
     "commander": "^13.1.0",
     "exit-hook": "^4.0.0",
