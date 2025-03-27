@@ -109,7 +109,7 @@
     "worklet",
     "xlarge",
     "PAPI", // Lynx's Element PAPI,
-    "parseable" // https://pnpm.io/cli/list
+    "parseable", // https://pnpm.io/cli/list
   ],
   // Glob
   "ignorePaths": [
