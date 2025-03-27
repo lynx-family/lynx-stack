@@ -12,6 +12,9 @@ parsers:
   javascript:
     enable_partials: yes
 
+github_checks:
+  annotations: false
+
 comment:
   layout: "header, diff, flags, components" # show component info in the PR comment
   behavior: default
