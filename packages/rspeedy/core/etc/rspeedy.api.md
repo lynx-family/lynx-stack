@@ -5,6 +5,7 @@
 ```ts
 
 import type { CreateRsbuildOptions } from '@rsbuild/core';
+import type { DistPathConfig } from '@rsbuild/core';
 import { logger } from '@rsbuild/core';
 import type { PerformanceConfig } from '@rsbuild/core';
 import type { RsbuildConfig } from '@rsbuild/core';
@@ -146,13 +147,8 @@ export interface DevClient {
 }
 
 // @public
-export interface DistPath {
-    css?: string | undefined;
-    cssAsync?: string | undefined;
+export interface DistPath extends DistPathConfig {
     intermediate?: string | undefined;
-    js?: string | undefined;
-    jsAsync?: string | undefined;
-    root?: string | undefined;
 }
 
 // @public

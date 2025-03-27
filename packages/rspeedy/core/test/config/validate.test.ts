@@ -827,6 +827,12 @@ describe('Config Validation', () => {
         { cleanDistPath: false },
         { distPath: {} },
         { distPath: { root: 'root' } },
+        { distPath: { css: 'css' } },
+        { distPath: { cssAsync: 'cssAsync' } },
+        { distPath: { assets: 'assets' } },
+        { distPath: { image: 'image' } },
+        { distPath: { font: 'font' } },
+        { distPath: { svg: 'svg' } },
         { legalComments: 'inline' },
         { legalComments: 'none' },
         { legalComments: 'linked' },
@@ -1078,6 +1084,16 @@ describe('Config Validation', () => {
           Invalid config on \`$input.output.distPath.root\`.
             - Expect to be (string | undefined)
             - Got: number
+          ]
+        `)
+
+      expect(() =>
+        validate({ output: { distPath: { nonExistent: 'nonExistent' } } })
+      )
+        .toThrowErrorMatchingInlineSnapshot(`
+          [Error: Invalid configuration.
+
+          Unknown property: \`$input.output.distPath.nonExistent\` in configuration
           ]
         `)
 
