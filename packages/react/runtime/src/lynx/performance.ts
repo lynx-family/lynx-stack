@@ -22,7 +22,20 @@ enum PerformanceTimingKeys {
   patch_changes_end,
   hydrate_parse_snapshot_start,
   hydrate_parse_snapshot_end,
+  mtsRenderStart,
+  mtsRenderEnd,
 }
+
+const PerformanceTimingFlags = {
+  reactLynxHydrate: 'react_lynx_hydrate',
+} as const;
+
+const PipelineOrigins = {
+  reactLynxHydrate: 'reactLynxHydrate',
+  updateTriggeredByBts: 'updateTriggeredByBts',
+} as const;
+
+type PipelineOrigin = typeof PipelineOrigins[keyof typeof PipelineOrigins];
 
 /**
  * @deprecated used by old timing api(setState timing flag)
@@ -65,11 +78,22 @@ function markTimingLegacy(key: PerformanceTimingKeys, timingFlag_?: string): voi
   lynx.getNativeApp().markTiming?.(timingFlag!, PerformanceTimingKeys[key]);
 }
 
-function beginPipeline(needTimestamps: boolean, timingFlag?: string): void {
+function beginPipeline(needTimestamps: boolean, pipelineOrigin: PipelineOrigin, timingFlag?: string): void {
   globalPipelineOptions = lynx.performance?._generatePipelineOptions?.();
   if (globalPipelineOptions) {
     globalPipelineOptions.needTimestamps = needTimestamps;
-    lynx.performance?._onPipelineStart?.(globalPipelineOptions.pipelineID);
+    globalPipelineOptions.pipelineOrigin = pipelineOrigin;
+    globalPipelineOptions.dsl = 'reactLynx';
+    switch (pipelineOrigin) {
+      case PipelineOrigins.reactLynxHydrate:
+        globalPipelineOptions.stage = 'hydrate';
+        break;
+      case PipelineOrigins.updateTriggeredByBts:
+        globalPipelineOptions.stage = 'update';
+        break;
+    }
+
+    lynx.performance?._onPipelineStart?.(globalPipelineOptions.pipelineID, globalPipelineOptions);
     if (timingFlag) {
       lynx.performance?._bindPipelineIdWithTimingFlag?.(globalPipelineOptions.pipelineID, timingFlag);
     }
@@ -92,7 +116,7 @@ function initTimingAPI(): void {
     // check `__globalSnapshotPatch` to make sure this only runs after hydrate
     if (__JS__ && __globalSnapshotPatch) {
       if (!globalPipelineOptions) {
-        beginPipeline(false);
+        beginPipeline(false, PipelineOrigins.updateTriggeredByBts);
         markTiming(PerformanceTimingKeys.diff_vdom_start, true);
       }
       if (shouldMarkDiffVdomStart) {
@@ -108,6 +132,8 @@ function initTimingAPI(): void {
  */
 export {
   PerformanceTimingKeys,
+  PerformanceTimingFlags,
+  PipelineOrigins,
   PerfSpecificKey,
   markTimingLegacy,
   initTimingAPI,
