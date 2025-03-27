@@ -144,4 +144,33 @@ declare module '@lynx-js/types' {
      */
     'reuse-identifier'?: Key;
   }
+
+  export interface FrameworkRenderingTiming {
+    reactLynxHydrate: {
+      dsl: 'reactLynx';
+      stage: 'hydrate';
+      diff_vdom_start: number;
+      diff_vdom_end: number;
+      pack_changes_start: number;
+      pack_changes_end: number;
+      parse_changes_start: number;
+      parse_changes_end: number;
+      patch_changes_start: number;
+      patch_changes_end: number;
+      hydrate_parse_snapshot_start: number;
+      hydrate_parse_snapshot_end: number;
+    };
+    reactLynxUpdate: {
+      dsl: 'reactLynx';
+      stage: 'update';
+      diff_vdom_start: number;
+      diff_vdom_end: number;
+      pack_changes_start: number;
+      pack_changes_end: number;
+      parse_changes_start: number;
+      parse_changes_end: number;
+      patch_changes_start: number;
+      patch_changes_end: number;
+    };
+  }
 }
