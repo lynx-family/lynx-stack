@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { isIP, isIPv4 } from 'node:net'
-import type { AddressInfo, ListenOptions } from 'node:net'
+import type { AddressInfo } from 'node:net'
 import path from 'node:path'
 
 import type { Rspack } from '@rsbuild/core'
@@ -295,8 +295,8 @@ describe('Plugins - Dev', () => {
     const config = await rsbuild.unwrapConfig()
 
     const backendHost =
-      ((config.experiments?.lazyCompilation as Rspack.LazyCompilationOptions)
-        ?.backend?.listen as ListenOptions)?.host
+      (config.experiments?.lazyCompilation as Rspack.LazyCompilationOptions)
+        .serverUrl
 
     const serverHosts = server.urls.map(url => new URL(url).hostname)
 

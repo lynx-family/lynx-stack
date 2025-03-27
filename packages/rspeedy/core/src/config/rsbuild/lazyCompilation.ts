@@ -34,11 +34,9 @@ export function toRsbuildLazyCompilation(
 
       return isBackground && !isHMRImports
     },
-    backend: {
-      client: require.resolve(
-        '../../../hot/lazy-compilation-fetch.js',
-      ),
-    },
+    client: require.resolve(
+      '../../../hot/lazy-compilation-fetch.js',
+    ),
     // Dynamic imports will be encoded into lynx.bundle
     imports: false,
   } as Rspack.LazyCompilationOptions

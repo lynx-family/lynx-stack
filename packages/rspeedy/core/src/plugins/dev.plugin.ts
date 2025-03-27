@@ -75,11 +75,7 @@ export function pluginDev(
           ? {
             dev: {
               lazyCompilation: {
-                backend: {
-                  listen: {
-                    host: hostname,
-                  },
-                },
+                serverUrl: hostname,
               },
             },
           }

@@ -74,10 +74,8 @@ describe('Config - toRsBuildConfig', () => {
       expect(typeof lazyCompilation).toBe('object')
       expect(typeof lazyCompilation.test).toBe('function')
 
-      expect(lazyCompilation.backend).toBeDefined()
-      expect(typeof lazyCompilation.backend).toBe('object')
-      expect(typeof lazyCompilation.backend?.client).toBe('string')
-      expect(lazyCompilation.backend?.client).toContain(
+      expect(typeof lazyCompilation.client).toBe('string')
+      expect(lazyCompilation.client).toContain(
         'lazy-compilation-fetch.js',
       )
     })
@@ -94,10 +92,8 @@ describe('Config - toRsBuildConfig', () => {
       expect(typeof lazyCompilation).toBe('object')
       expect(typeof lazyCompilation.test).toBe('function')
 
-      expect(lazyCompilation.backend).toBeDefined()
-      expect(typeof lazyCompilation.backend).toBe('object')
-      expect(typeof lazyCompilation.backend?.client).toBe('string')
-      expect(lazyCompilation.backend?.client).toContain(
+      expect(typeof lazyCompilation.client).toBe('string')
+      expect(lazyCompilation.client).toContain(
         'lazy-compilation-fetch.js',
       )
     })
