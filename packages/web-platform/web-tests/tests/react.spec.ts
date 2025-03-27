@@ -1923,8 +1923,9 @@ test.describe('reactlynx3 tests', () => {
       test('basic-element-x-input-bindinput', async ({ page }, { title }) => {
         await goto(page, title);
         await page.locator('input').press('Enter');
-        await wait(100);
+        await wait(200);
         await page.locator('input').fill('foobar');
+        await wait(200);
         const result = await page.locator('.result').first().innerText();
         expect(result).toBe('foobar');
       });
