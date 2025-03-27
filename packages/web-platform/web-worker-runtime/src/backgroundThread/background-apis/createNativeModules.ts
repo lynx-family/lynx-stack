@@ -4,18 +4,21 @@
 
 import {
   nativeModulesCallEndpoint,
-  switchExposureService,
+  switchExposureServiceEndpoint,
   type Cloneable,
   type NativeModulesMap,
 } from '@lynx-js/web-constants';
 import type { Rpc } from '@lynx-js/web-worker-rpc';
 
 export async function createNativeModules(
-  rpc: Rpc,
+  uiThreadRpc: Rpc,
+  mainThreadRpc: Rpc,
   nativeModulesMap: NativeModulesMap,
 ): Promise<Record<string, any>> {
-  const switchExposure = rpc.createCall(switchExposureService);
-  const nativeModulesCall = rpc.createCall(nativeModulesCallEndpoint);
+  const switchExposure = mainThreadRpc.createCall(
+    switchExposureServiceEndpoint,
+  );
+  const nativeModulesCall = uiThreadRpc.createCall(nativeModulesCallEndpoint);
   const lynxExposureModule = {
     resumeExposure() {
       switchExposure(true, true);

@@ -16,6 +16,28 @@ import {
   type MainThreadRuntime,
 } from '../../MainThreadRuntime.js';
 
+function setDatasetAttribute(
+  element: HTMLElement,
+  key: string,
+  value: string | number | Record<string, any>,
+): void {
+  if (value !== null && value !== undefined) {
+    if (typeof value === 'object') {
+      element.setAttribute('data-' + key, JSON.stringify(value));
+    } else {
+      element.setAttribute('data-' + key, value.toString());
+    }
+  }
+}
+type UpdateListInfoAttributeValue = {
+  insertAction: {
+    position: number;
+  }[];
+  removeAction: {
+    position: number;
+  }[];
+};
+
 export function createAttributeAndPropertyFunctions(
   runtime: MainThreadRuntime,
 ) {
@@ -34,6 +56,7 @@ export function createAttributeAndPropertyFunctions(
     value: string | number | Record<string, any>,
   ): void {
     runtime[elementToRuntimeInfoMap].get(element)!.lynxDataset[key] = value;
+    setDatasetAttribute(element, key, value);
   }
 
   function __GetAttributes(
@@ -95,6 +118,9 @@ export function createAttributeAndPropertyFunctions(
     dataset: Record<string, any>,
   ): void {
     runtime[elementToRuntimeInfoMap].get(element)!.lynxDataset = dataset;
+    for (const [key, value] of Object.entries(dataset)) {
+      setDatasetAttribute(element, key, value);
+    }
   }
 
   function __SetID(element: HTMLElement, id: string) {
@@ -128,12 +154,37 @@ export function createAttributeAndPropertyFunctions(
   function __SetAttribute(
     element: HTMLElement,
     key: string,
-    value: string | null | undefined,
+    value: string | null | undefined | UpdateListInfoAttributeValue,
   ): void {
-    if (value) element.setAttribute(key, value);
-    else element.removeAttribute(key);
+    if (value === null || value === undefined) {
+      element.removeAttribute(key);
+    } else {
+      if (__GetTag(element) === 'list' && key === 'update-list-info') {
+        const listInfo = value as UpdateListInfoAttributeValue;
+        const { insertAction, removeAction } = listInfo;
+        queueMicrotask(() => {
+          const runtimeInfo = runtime[elementToRuntimeInfoMap].get(element)!;
+          const componentAtIndex = runtimeInfo.componentAtIndex;
+          const enqueueComponent = runtimeInfo.enqueueComponent;
+          for (const action of insertAction) {
+            componentAtIndex?.(
+              element,
+              runtimeInfo.uniqueId,
+              action.position,
+              0,
+              false,
+            );
+          }
+          for (const action of removeAction) {
+            enqueueComponent?.(element, runtimeInfo.uniqueId, action.position);
+          }
+        });
+      } else {
+        element.setAttribute(key, value.toString());
+      }
+    }
     if (key === __lynx_timing_flag && value) {
-      runtime._timingFlags.push(value);
+      runtime._timingFlags.push(value as string);
     }
   }
 

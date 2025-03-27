@@ -475,13 +475,13 @@ impl WorkletVisitor {
 mod tests {
   use crate::swc_plugin_worklet::{TransformTarget, WorkletVisitor, WorkletVisitorConfig};
   use crate::TransformMode;
-  use swc_core::common::{chain, Mark};
+  use swc_core::common::Mark;
   use swc_core::ecma::parser::TsSyntax;
   use swc_core::ecma::transforms::base::hygiene::hygiene;
   use swc_core::ecma::transforms::base::resolver;
   use swc_core::{
     ecma::parser::Syntax,
-    ecma::visit::as_folder,
+    ecma::visit::visit_mut_pass,
     ecma::{parser::EsSyntax, transforms::testing::test},
   };
 
@@ -490,9 +490,9 @@ mod tests {
     Syntax::Typescript(TsSyntax {
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(WorkletVisitor::new(
+      visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
         WorkletVisitorConfig {
           filename: "index.js".into(),
@@ -519,9 +519,9 @@ function worklet(event: Event) {
     Syntax::Typescript(TsSyntax {
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(WorkletVisitor::new(
+      visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
         WorkletVisitorConfig {
           filename: "index.js".into(),
@@ -548,9 +548,9 @@ function worklet(event: Event) {
     Syntax::Typescript(TsSyntax {
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(WorkletVisitor::new(
+      visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
         WorkletVisitorConfig {
           filename: "index.js".into(),
@@ -577,9 +577,9 @@ function worklet(event: Event) {
     Syntax::Es(EsSyntax {
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(WorkletVisitor::new(
+      visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
         WorkletVisitorConfig {
           filename: "index.js".into(),
@@ -616,9 +616,9 @@ function X(event) {
     Syntax::Es(EsSyntax {
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(WorkletVisitor::new(
+      visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
         WorkletVisitorConfig {
           filename: "index.js".into(),
@@ -655,9 +655,9 @@ function X(event) {
     Syntax::Es(EsSyntax {
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(WorkletVisitor::new(
+      visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
         WorkletVisitorConfig {
           filename: "index.js".into(),
@@ -686,9 +686,9 @@ function Y(event) {
     Syntax::Es(EsSyntax {
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(WorkletVisitor::new(
+      visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
         WorkletVisitorConfig {
           filename: "index.js".into(),
@@ -719,9 +719,9 @@ function App() {
     Syntax::Es(EsSyntax {
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(WorkletVisitor::new(
+      visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
         WorkletVisitorConfig {
           filename: "index.js".into(),
@@ -746,9 +746,9 @@ let X = (event) => {
     Syntax::Es(EsSyntax {
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(WorkletVisitor::new(
+      visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
         WorkletVisitorConfig {
           filename: "index.js".into(),
@@ -773,9 +773,9 @@ let X = function (event) {
     Syntax::Es(EsSyntax {
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(WorkletVisitor::new(
+      visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
         WorkletVisitorConfig {
           filename: "index.js".into(),
@@ -804,9 +804,9 @@ class App extends Component {
     Syntax::Es(EsSyntax {
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(WorkletVisitor::new(
+      visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
         WorkletVisitorConfig {
           filename: "index.js".into(),
@@ -835,9 +835,9 @@ class App extends Component {
     Syntax::Es(EsSyntax {
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(WorkletVisitor::new(
+      visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
         WorkletVisitorConfig {
           filename: "index.js".into(),
@@ -865,9 +865,9 @@ class App extends Component {
     Syntax::Es(EsSyntax {
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(WorkletVisitor::new(
+      visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
         WorkletVisitorConfig {
           filename: "index.js".into(),
@@ -895,9 +895,9 @@ class App extends Component {
     Syntax::Es(EsSyntax {
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(WorkletVisitor::new(
+      visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
         WorkletVisitorConfig {
           filename: "index.js".into(),
@@ -926,9 +926,9 @@ class App extends Component {
     Syntax::Es(EsSyntax {
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(WorkletVisitor::new(
+      visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
         WorkletVisitorConfig {
           filename: "index.js".into(),
@@ -957,9 +957,9 @@ class App extends Component {
     Syntax::Es(EsSyntax {
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(WorkletVisitor::new(
+      visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
         WorkletVisitorConfig {
           filename: "index.js".into(),
@@ -987,9 +987,9 @@ class App extends Component {
     Syntax::Es(EsSyntax {
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(WorkletVisitor::new(
+      visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
         WorkletVisitorConfig {
           filename: "index.js".into(),
@@ -1017,9 +1017,9 @@ class App extends Component {
     Syntax::Es(EsSyntax {
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(WorkletVisitor::new(
+      visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
         WorkletVisitorConfig {
           filename: "index.js".into(),
@@ -1049,9 +1049,9 @@ function X() {
     Syntax::Es(EsSyntax {
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(WorkletVisitor::new(
+      visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
         WorkletVisitorConfig {
           filename: "index.js".into(),
@@ -1086,9 +1086,9 @@ function A() {
     Syntax::Es(EsSyntax {
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(WorkletVisitor::new(
+      visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
         WorkletVisitorConfig {
           filename: "index.js".into(),
@@ -1122,9 +1122,9 @@ class Bpp extends Component {
     Syntax::Es(EsSyntax {
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(WorkletVisitor::new(
+      visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
         WorkletVisitorConfig {
           filename: "index.js".into(),
@@ -1152,9 +1152,9 @@ class App extends Component {
     Syntax::Es(EsSyntax {
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(WorkletVisitor::new(
+      visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
         WorkletVisitorConfig {
           filename: "index.js".into(),
@@ -1180,9 +1180,9 @@ class App extends Component {
     Syntax::Es(EsSyntax {
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(WorkletVisitor::new(
+      visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
         WorkletVisitorConfig {
           filename: "index.js".into(),
@@ -1210,9 +1210,9 @@ class App extends Component {
     Syntax::Es(EsSyntax {
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(WorkletVisitor::new(
+      visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
         WorkletVisitorConfig {
           filename: "index.js".into(),
@@ -1240,9 +1240,9 @@ class App extends Component {
     Syntax::Es(EsSyntax {
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(WorkletVisitor::new(
+      visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
         WorkletVisitorConfig {
           filename: "index.js".into(),
@@ -1271,9 +1271,9 @@ class App extends Component {
     Syntax::Typescript(TsSyntax {
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(WorkletVisitor::new(
+      visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
         WorkletVisitorConfig {
           filename: "index.ts".into(),
@@ -1303,9 +1303,9 @@ class App extends Component {
     Syntax::Typescript(TsSyntax {
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(WorkletVisitor::new(
+      visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
         WorkletVisitorConfig {
           filename: "index.ts".into(),
@@ -1332,9 +1332,9 @@ class App extends Component {
     Syntax::Typescript(TsSyntax {
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(WorkletVisitor::new(
+      visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
         WorkletVisitorConfig {
           filename: "index.ts".into(),
@@ -1361,9 +1361,9 @@ class App extends Component {
     Syntax::Typescript(TsSyntax {
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(WorkletVisitor::new(
+      visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
         WorkletVisitorConfig {
           filename: "index.ts".into(),
@@ -1401,9 +1401,9 @@ class App extends Component {
     Syntax::Typescript(TsSyntax {
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(WorkletVisitor::new(
+      visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
         WorkletVisitorConfig {
           filename: "index.ts".into(),
@@ -1441,9 +1441,9 @@ class App extends Component {
     Syntax::Typescript(TsSyntax {
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(WorkletVisitor::new(
+      visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
         WorkletVisitorConfig {
           filename: "index.ts".into(),
@@ -1470,9 +1470,9 @@ class App extends Component {
     Syntax::Typescript(TsSyntax {
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(WorkletVisitor::new(
+      visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
         WorkletVisitorConfig {
           filename: "index.ts".into(),
@@ -1498,9 +1498,9 @@ class App extends Component {
     Syntax::Typescript(TsSyntax {
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(WorkletVisitor::new(
+      visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
         WorkletVisitorConfig {
           filename: "index.ts".into(),
@@ -1526,9 +1526,9 @@ class App extends Component {
     Syntax::Typescript(TsSyntax {
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(WorkletVisitor::new(
+      visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
         WorkletVisitorConfig {
           filename: "index.ts".into(),
@@ -1578,9 +1578,9 @@ class App extends Component {
     Syntax::Typescript(TsSyntax {
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(WorkletVisitor::new(
+      visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
         WorkletVisitorConfig {
           filename: "index.ts".into(),
@@ -1605,9 +1605,9 @@ class App extends Component {
     Syntax::Typescript(TsSyntax {
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(WorkletVisitor::new(
+      visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
         WorkletVisitorConfig {
           filename: "index.ts".into(),
@@ -1632,9 +1632,9 @@ class App extends Component {
     Syntax::Typescript(TsSyntax {
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(WorkletVisitor::new(
+      visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
         WorkletVisitorConfig {
           filename: "index.ts".into(),
@@ -1670,9 +1670,9 @@ class App extends Component {
     Syntax::Typescript(TsSyntax {
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(WorkletVisitor::new(
+      visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
         WorkletVisitorConfig {
           filename: "index.ts".into(),
@@ -1711,9 +1711,9 @@ class App extends Component {
     Syntax::Typescript(TsSyntax {
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(WorkletVisitor::new(
+      visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
         WorkletVisitorConfig {
           filename: "index.ts".into(),
@@ -1752,9 +1752,9 @@ class App extends Component {
     Syntax::Typescript(TsSyntax {
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(WorkletVisitor::new(
+      visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
         WorkletVisitorConfig {
           filename: "index.ts".into(),
@@ -1795,9 +1795,9 @@ class App extends Component {
     Syntax::Typescript(TsSyntax {
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(WorkletVisitor::new(
+      visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
         WorkletVisitorConfig {
           filename: "index.ts".into(),
@@ -1838,9 +1838,9 @@ class App extends Component {
     Syntax::Typescript(TsSyntax {
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(WorkletVisitor::new(
+      visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
         WorkletVisitorConfig {
           filename: "index.ts".into(),
@@ -1944,9 +1944,9 @@ class App extends Component {
     Syntax::Typescript(TsSyntax {
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(WorkletVisitor::new(
+      visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
         WorkletVisitorConfig {
           filename: "index.ts".into(),
@@ -2050,9 +2050,9 @@ class App extends Component {
     Syntax::Typescript(TsSyntax {
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(WorkletVisitor::new(
+      visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
         WorkletVisitorConfig {
           filename: "index.ts".into(),
@@ -2080,9 +2080,9 @@ class App extends Component {
     Syntax::Typescript(TsSyntax {
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(WorkletVisitor::new(
+      visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
         WorkletVisitorConfig {
           filename: "index.ts".into(),
@@ -2109,9 +2109,9 @@ class App extends Component {
     Syntax::Typescript(TsSyntax {
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(WorkletVisitor::new(
+      visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
         WorkletVisitorConfig {
           filename: "index.ts".into(),
@@ -2138,9 +2138,9 @@ class App extends Component {
     Syntax::Typescript(TsSyntax {
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(WorkletVisitor::new(
+      visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
         WorkletVisitorConfig {
           filename: "index.ts".into(),

@@ -1,7 +1,7 @@
 {
   "name": "@lynx-js/offscreen-document",
   "version": "0.0.0",
-  "private": true,
+  "private": false,
   "description": "Offscreen Document allows developers to use partical DOM in WebWorker",
   "keywords": [
     "WebWorker",

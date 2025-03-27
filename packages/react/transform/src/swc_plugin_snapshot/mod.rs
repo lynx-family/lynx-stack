@@ -15,7 +15,7 @@ use swc_core::{
   ecma::{
     ast::{JSXExpr, *},
     utils::{is_literal, prepend_stmt, private_ident},
-    visit::{Fold, FoldWith, VisitMut, VisitMutWith},
+    visit::{VisitMut, VisitMutWith},
   },
   quote, quote_expr,
 };
@@ -262,9 +262,9 @@ impl DynamicPart {
   }
 }
 
-pub struct DynamicPartExtractor<'a, F>
+pub struct DynamicPartExtractor<'a, V>
 where
-  F: Fold,
+  V: VisitMut,
 {
   page_id: Lazy<Ident>,
   runtime_id: Expr,
@@ -276,15 +276,15 @@ where
   snapshot_creator: Option<Function>,
   dynamic_part_count: i32,
   dynamic_parts: Vec<DynamicPart>,
-  dynamic_part_folder: &'a mut F,
+  dynamic_part_visitor: &'a mut V,
   key: Option<JSXAttrValue>,
 }
 
-impl<'a, F> DynamicPartExtractor<'a, F>
+impl<'a, V> DynamicPartExtractor<'a, V>
 where
-  F: Fold,
+  V: VisitMut,
 {
-  fn new(runtime_id: Expr, dynamic_part_count: i32, dynamic_part_folder: &'a mut F) -> Self {
+  fn new(runtime_id: Expr, dynamic_part_count: i32, dynamic_part_visitor: &'a mut V) -> Self {
     DynamicPartExtractor {
       page_id: Lazy::new(|| private_ident!("pageId")),
       runtime_id,
@@ -296,7 +296,7 @@ where
       snapshot_creator: None,
       dynamic_part_count,
       dynamic_parts: vec![],
-      dynamic_part_folder,
+      dynamic_part_visitor,
       key: None,
     }
   }
@@ -381,14 +381,14 @@ where
   }
 }
 
-impl<'a, F> VisitMut for DynamicPartExtractor<'a, F>
+impl<'a, V> VisitMut for DynamicPartExtractor<'a, V>
 where
-  F: Fold,
+  V: VisitMut,
 {
   fn visit_mut_jsx_element(&mut self, n: &mut JSXElement) {
     if jsx_is_internal_slot(&n) {
       if self.dynamic_part_count > 1 {
-        n.map_with_mut(|value| value.fold_children_with(self.dynamic_part_folder));
+        n.visit_mut_children_with(self.dynamic_part_visitor);
         self.dynamic_parts.push(DynamicPart::Slot(
           jsx_unwrap_internal_slot(n.take()),
           self.element_index,
@@ -589,7 +589,7 @@ where
                           ..
                         })) => {
                           // expr.map_with_mut(|value| {
-                          //     value.fold_with(self.dynamic_part_folder)
+                          //     value.fold_with(self.dynamic_part_visitor)
                           // });
                           match &**expr {
                             Expr::Lit(value) => {
@@ -947,7 +947,7 @@ where
         self.parent_element = pre_parent_element;
       } else {
         if self.dynamic_part_count <= 1 {
-          n.map_with_mut(|value| value.fold_children_with(self.dynamic_part_folder));
+          n.visit_mut_children_with(self.dynamic_part_visitor);
           let children_expr = jsx_children_to_expr(n.children.take());
           if is_list {
             self
@@ -966,7 +966,7 @@ where
           //     static_stmt
           // });
 
-          // n.map_with_mut(|value| value.fold_with(self.dynamic_part_folder));
+          // n.map_with_mut(|value| value.fold_with(self.dynamic_part_visitor));
           // if is_list {
           //     // unreachable!()
           //     self.dynamic_parts
@@ -1037,7 +1037,7 @@ where
         _ => {}
       };
     } else {
-      n.map_with_mut(|value| value.fold_children_with(self.dynamic_part_folder));
+      n.visit_mut_children_with(self.dynamic_part_visitor);
 
       if self.parent_element.is_some() {
         self.dynamic_parts.push(DynamicPart::Children(
@@ -1216,16 +1216,16 @@ where
   }
 }
 
-impl<C> Fold for JSXTransformer<C>
+impl<C> VisitMut for JSXTransformer<C>
 where
   C: Comments + Clone,
 {
-  fn fold_jsx_element(&mut self, mut node: JSXElement) -> JSXElement {
+  fn visit_mut_jsx_element(&mut self, node: &mut JSXElement) {
     match *jsx_name(node.opening.name.clone()) {
       Expr::Lit(lit) => {
         if let Lit::Str(s) = &lit {
           if s.value.as_ref() == "wrapper" {
-            return node.fold_children_with(self);
+            return node.visit_mut_children_with(self);
           }
           if s.value.as_ref() == "page" {
             if self.runtime_components_module_item.is_none() {
@@ -1256,7 +1256,7 @@ where
               }
               _ => {}
             }
-            return node.fold_children_with(self);
+            return node.visit_mut_children_with(self);
           }
 
           if s.value.as_ref() == "component" {
@@ -1269,7 +1269,7 @@ where
         }
       }
       _ => {
-        return node.fold_children_with(self);
+        return node.visit_mut_children_with(self);
       }
     }
 
@@ -1576,7 +1576,7 @@ where
     self.current_snapshot_id = Some(snapshot_id.clone());
     self.current_snapshot_defs.push(snapshot_def);
 
-    return JSXElement {
+    *node = JSXElement {
       span: node.span(),
       opening: JSXOpeningElement {
         name: JSXElementName::Ident(snapshot_id.clone()),
@@ -1612,10 +1612,10 @@ where
     };
   }
 
-  fn fold_module_items(&mut self, mut n: Vec<ModuleItem>) -> Vec<ModuleItem> {
+  fn visit_mut_module_items(&mut self, n: &mut Vec<ModuleItem>) {
     let mut new_items: Vec<ModuleItem> = vec![];
     for (_i, item) in n.iter_mut().enumerate() {
-      item.map_with_mut(|item| item.fold_with(self));
+      item.visit_mut_with(self);
       new_items.extend(self.current_snapshot_defs.take());
       new_items.push(item.take());
     }
@@ -1627,10 +1627,10 @@ where
       None => {}
     }
 
-    return new_items;
+    *n = new_items;
   }
 
-  fn fold_module(&mut self, mut n: Module) -> Module {
+  fn visit_mut_module(&mut self, n: &mut Module) {
     self.parse_directives(n.span);
     for item in &n.body {
       let span = item.span();
@@ -1641,7 +1641,7 @@ where
       self.css_id_value = Some(Expr::Lit(Lit::Num(0.into())));
     }
 
-    n = n.fold_children_with(self);
+    n.visit_mut_children_with(self);
     match Lazy::<Expr>::get(&self.runtime_id) {
       Some(runtime_id) => {
         match runtime_id {
@@ -1671,12 +1671,11 @@ where
       }
       None => {}
     }
-    n
   }
 
-  fn fold_expr(&mut self, mut n: Expr) -> Expr {
-    if n.is_call() {
-      let n = n.as_mut_call().unwrap();
+  fn visit_mut_expr(&mut self, node: &mut Expr) {
+    if node.is_call() {
+      let n = node.as_mut_call().unwrap();
       if n.callee.is_expr() {
         let callee_expr = n.callee.as_expr().unwrap();
         if callee_expr.is_ident_ref_to("__SNAPSHOT__") {
@@ -1687,9 +1686,9 @@ where
               if arg.expr.is_jsx_element() {
                 let jsx = arg.expr.as_mut_jsx_element().unwrap();
                 self.current_snapshot_id = None;
-                self.fold_jsx_element(*jsx.take());
+                self.visit_mut_jsx_element(jsx);
                 if self.current_snapshot_id.is_some() {
-                  return Expr::Ident(self.current_snapshot_id.take().unwrap());
+                  *node = Expr::Ident(self.current_snapshot_id.take().unwrap());
                 }
               }
             }
@@ -1698,7 +1697,7 @@ where
       }
     }
 
-    n.fold_children_with(self)
+    node.visit_mut_children_with(self)
   }
 }
 
@@ -1719,10 +1718,11 @@ where
 #[cfg(test)]
 mod tests {
   use swc_core::{
-    common::{chain, comments::SingleThreadedComments, Mark},
+    common::{comments::SingleThreadedComments, Mark},
     ecma::{
       parser::{EsSyntax, Syntax},
       transforms::{base::resolver, react, testing::test},
+      visit::visit_mut_pass,
     },
   };
 
@@ -1739,9 +1739,9 @@ mod tests {
       let unresolved_mark = Mark::new();
       let top_level_mark = Mark::new();
 
-      chain!(
+      (
         resolver(unresolved_mark, top_level_mark, true),
-        JSXTransformer::<&SingleThreadedComments>::new(
+        visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
           super::JSXTransformerConfig {
             preserve_jsx: true,
             ..Default::default()
@@ -1750,8 +1750,8 @@ mod tests {
           None,
           top_level_mark,
           unresolved_mark,
-          TransformMode::Test
-        )
+          TransformMode::Test,
+        )),
       )
     },
     basic_full_static,
@@ -1773,9 +1773,9 @@ mod tests {
       let unresolved_mark = Mark::new();
       let top_level_mark = Mark::new();
 
-      chain!(
+      (
         resolver(unresolved_mark, top_level_mark, true),
-        JSXTransformer::<&SingleThreadedComments>::new(
+        visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
           super::JSXTransformerConfig {
             preserve_jsx: true,
             ..Default::default()
@@ -1784,8 +1784,8 @@ mod tests {
           None,
           top_level_mark,
           unresolved_mark,
-          TransformMode::Test
-        )
+          TransformMode::Test,
+        )),
       )
     },
     basic_full_static_snapshot_extract,
@@ -1803,9 +1803,9 @@ mod tests {
       let unresolved_mark = Mark::new();
       let top_level_mark = Mark::new();
 
-      chain!(
+      (
         resolver(unresolved_mark, top_level_mark, true),
-        JSXTransformer::<&SingleThreadedComments>::new(
+        visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
           super::JSXTransformerConfig {
             preserve_jsx: true,
             ..Default::default()
@@ -1814,8 +1814,8 @@ mod tests {
           None,
           top_level_mark,
           unresolved_mark,
-          TransformMode::Test
-        )
+          TransformMode::Test,
+        )),
       )
     },
     basic_full_static_snapshot_extract_it,
@@ -1836,7 +1836,7 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |t| JSXTransformer::<&SingleThreadedComments>::new(
+    |t| visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
       super::JSXTransformerConfig {
         preserve_jsx: true,
         ..Default::default()
@@ -1846,7 +1846,7 @@ mod tests {
       Mark::new(),
       Mark::new(),
       TransformMode::Test,
-    ),
+    )),
     basic_component,
     // Input codes
     r#"
@@ -1862,7 +1862,7 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |t| JSXTransformer::<&SingleThreadedComments>::new(
+    |t| visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
       super::JSXTransformerConfig {
         preserve_jsx: true,
         ..Default::default()
@@ -1872,7 +1872,7 @@ mod tests {
       Mark::new(),
       Mark::new(),
       TransformMode::Test,
-    ),
+    )),
     page_component,
     // Input codes
     r#"
@@ -1891,7 +1891,7 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |t| JSXTransformer::<&SingleThreadedComments>::new(
+    |t| visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
       super::JSXTransformerConfig {
         preserve_jsx: true,
         ..Default::default()
@@ -1901,7 +1901,7 @@ mod tests {
       Mark::new(),
       Mark::new(),
       TransformMode::Development,
-    ),
+    )),
     page_element_dev,
     // Input codes
     r#"
@@ -1920,7 +1920,7 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |t| JSXTransformer::<&SingleThreadedComments>::new(
+    |t| visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
       super::JSXTransformerConfig {
         preserve_jsx: true,
         ..Default::default()
@@ -1930,7 +1930,7 @@ mod tests {
       Mark::new(),
       Mark::new(),
       TransformMode::Test,
-    ),
+    )),
     page_element,
     // Input codes
     r#"
@@ -1949,7 +1949,7 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |t| JSXTransformer::<&SingleThreadedComments>::new(
+    |t| visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
       super::JSXTransformerConfig {
         preserve_jsx: true,
         ..Default::default()
@@ -1959,7 +1959,7 @@ mod tests {
       Mark::new(),
       Mark::new(),
       TransformMode::Test
-    ),
+    )),
     basic_component_with_static_sibling,
     // Input codes
     r#"
@@ -1979,8 +1979,8 @@ mod tests {
     |t| {
       let top_level_mark = Mark::new();
       let unresolved_mark = Mark::new();
-      chain!(
-        JSXTransformer::<&SingleThreadedComments>::new(
+      (
+        visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
           super::JSXTransformerConfig {
             preserve_jsx: false,
             ..Default::default()
@@ -1989,8 +1989,8 @@ mod tests {
           None,
           top_level_mark,
           unresolved_mark,
-          TransformMode::Test
-        ),
+          TransformMode::Test,
+        )),
         react::react::<&SingleThreadedComments>(
           t.cm.clone(),
           None,
@@ -2006,7 +2006,7 @@ mod tests {
             ..Default::default()
           },
           top_level_mark,
-          unresolved_mark
+          unresolved_mark,
         ),
       )
     },
@@ -2029,8 +2029,8 @@ mod tests {
     |t| {
       let top_level_mark = Mark::new();
       let unresolved_mark = Mark::new();
-      chain!(
-        JSXTransformer::<&SingleThreadedComments>::new(
+      (
+        visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
           super::JSXTransformerConfig {
             preserve_jsx: false,
             ..Default::default()
@@ -2039,8 +2039,8 @@ mod tests {
           None,
           top_level_mark,
           unresolved_mark,
-          TransformMode::Test
-        ),
+          TransformMode::Test,
+        )),
         react::react::<&SingleThreadedComments>(
           t.cm.clone(),
           None,
@@ -2056,7 +2056,7 @@ mod tests {
             ..Default::default()
           },
           top_level_mark,
-          unresolved_mark
+          unresolved_mark,
         ),
       )
     },
@@ -2076,7 +2076,7 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |t| JSXTransformer::<&SingleThreadedComments>::new(
+    |t| visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
       super::JSXTransformerConfig {
         preserve_jsx: true,
         ..Default::default()
@@ -2086,7 +2086,7 @@ mod tests {
       Mark::new(),
       Mark::new(),
       TransformMode::Test
-    ),
+    )),
     basic_expr_container,
     // Input codes
     r#"
@@ -2102,7 +2102,7 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |t| JSXTransformer::<&SingleThreadedComments>::new(
+    |t| visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
       super::JSXTransformerConfig {
         preserve_jsx: true,
         ..Default::default()
@@ -2112,7 +2112,7 @@ mod tests {
       Mark::new(),
       Mark::new(),
       TransformMode::Test
-    ),
+    )),
     basic_expr_container_with_static_sibling,
     // Input codes
     r#"
@@ -2129,7 +2129,7 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |t| JSXTransformer::<&SingleThreadedComments>::new(
+    |t| visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
       super::JSXTransformerConfig {
         preserve_jsx: true,
         ..Default::default()
@@ -2139,7 +2139,7 @@ mod tests {
       Mark::new(),
       Mark::new(),
       TransformMode::Test
-    ),
+    )),
     should_inject_implicit_flatten,
     // Input codes
     r#"
@@ -2166,7 +2166,7 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |t| JSXTransformer::<&SingleThreadedComments>::new(
+    |t| visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
       super::JSXTransformerConfig {
         preserve_jsx: true,
         ..Default::default()
@@ -2176,7 +2176,7 @@ mod tests {
       Mark::new(),
       Mark::new(),
       TransformMode::Test
-    ),
+    )),
     basic_list,
     // Input codes
     r#"
@@ -2195,7 +2195,7 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |t| JSXTransformer::<&SingleThreadedComments>::new(
+    |t| visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
       super::JSXTransformerConfig {
         preserve_jsx: true,
         ..Default::default()
@@ -2205,7 +2205,7 @@ mod tests {
       Mark::new(),
       Mark::new(),
       TransformMode::Test
-    ),
+    )),
     basic_list_with_fragment,
     // Input codes
     r#"
@@ -2231,9 +2231,9 @@ mod tests {
       let unresolved_mark = Mark::new();
       let top_level_mark = Mark::new();
 
-      chain!(
+      (
         resolver(unresolved_mark, top_level_mark, true),
-        JSXTransformer::<&SingleThreadedComments>::new(
+        visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
           super::JSXTransformerConfig {
             preserve_jsx: true,
             ..Default::default()
@@ -2242,8 +2242,8 @@ mod tests {
           None,
           top_level_mark,
           unresolved_mark,
-          TransformMode::Test
-        )
+          TransformMode::Test,
+        )),
       )
     },
     basic_list_toplevel,
@@ -2267,7 +2267,7 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |t| JSXTransformer::<&SingleThreadedComments>::new(
+    |t| visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
       super::JSXTransformerConfig {
         preserve_jsx: true,
         ..Default::default()
@@ -2277,7 +2277,7 @@ mod tests {
       Mark::new(),
       Mark::new(),
       TransformMode::Test
-    ),
+    )),
     should_static_extract_inline_style,
     // Input codes
     r#"
@@ -2301,7 +2301,7 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |t| JSXTransformer::<&SingleThreadedComments>::new(
+    |t| visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
       super::JSXTransformerConfig {
         preserve_jsx: true,
         ..Default::default()
@@ -2311,7 +2311,7 @@ mod tests {
       Mark::new(),
       Mark::new(),
       TransformMode::Test
-    ),
+    )),
     should_static_extract_dynamic_inline_style,
     // Input codes
     r#"
@@ -2328,7 +2328,7 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |t| JSXTransformer::new(
+    |t| visit_mut_pass(JSXTransformer::new(
       super::JSXTransformerConfig {
         preserve_jsx: true,
         ..Default::default()
@@ -2338,7 +2338,7 @@ mod tests {
       Mark::new(),
       Mark::new(),
       TransformMode::Test
-    ),
+    )),
     should_extract_css_id_without_css_id,
     // Input codes
     r#"
@@ -2355,7 +2355,7 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |t| JSXTransformer::new(
+    |t| visit_mut_pass(JSXTransformer::new(
       super::JSXTransformerConfig {
         preserve_jsx: true,
         ..Default::default()
@@ -2365,7 +2365,7 @@ mod tests {
       Mark::new(),
       Mark::new(),
       TransformMode::Test
-    ),
+    )),
     should_extract_css_id,
     // Input codes
     r#"
@@ -2385,7 +2385,7 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |t| JSXTransformer::new(
+    |t| visit_mut_pass(JSXTransformer::new(
       super::JSXTransformerConfig {
         preserve_jsx: true,
         is_dynamic_component: Some(true),
@@ -2396,7 +2396,7 @@ mod tests {
       Mark::new(),
       Mark::new(),
       TransformMode::Test
-    ),
+    )),
     should_extract_css_id_dynamic_component,
     // Input codes
     r#"
@@ -2416,7 +2416,7 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |t| JSXTransformer::new(
+    |t| visit_mut_pass(JSXTransformer::new(
       super::JSXTransformerConfig {
         preserve_jsx: true,
         is_dynamic_component: Some(true),
@@ -2427,7 +2427,7 @@ mod tests {
       Mark::new(),
       Mark::new(),
       TransformMode::Test
-    ),
+    )),
     should_extract_css_id_dynamic_component_without_css_id,
     // Input codes
     r#"
@@ -2447,8 +2447,8 @@ mod tests {
     |t| {
       let top_level_mark = Mark::new();
       let unresolved_mark = Mark::new();
-      chain!(
-        JSXTransformer::<&SingleThreadedComments>::new(
+      (
+        visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
           super::JSXTransformerConfig {
             preserve_jsx: false,
             ..Default::default()
@@ -2457,8 +2457,8 @@ mod tests {
           None,
           top_level_mark,
           unresolved_mark,
-          TransformMode::Test
-        ),
+          TransformMode::Test,
+        )),
         react::react::<&SingleThreadedComments>(
           t.cm.clone(),
           None,
@@ -2474,7 +2474,7 @@ mod tests {
             ..Default::default()
           },
           top_level_mark,
-          unresolved_mark
+          unresolved_mark,
         ),
       )
     },
@@ -2496,7 +2496,7 @@ mod tests {
     |t| {
       let top_level_mark = Mark::new();
       let unresolved_mark = Mark::new();
-      JSXTransformer::<&SingleThreadedComments>::new(
+      visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
         super::JSXTransformerConfig {
           preserve_jsx: false,
           ..Default::default()
@@ -2506,7 +2506,7 @@ mod tests {
         top_level_mark,
         unresolved_mark,
         TransformMode::Test,
-      )
+      ))
     },
     inline_style_literal,
     // Input codes
@@ -2525,7 +2525,7 @@ mod tests {
     |t| {
       let top_level_mark = Mark::new();
       let unresolved_mark = Mark::new();
-      JSXTransformer::<&SingleThreadedComments>::new(
+      visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
         super::JSXTransformerConfig {
           preserve_jsx: false,
           ..Default::default()
@@ -2535,7 +2535,7 @@ mod tests {
         top_level_mark,
         unresolved_mark,
         TransformMode::Test,
-      )
+      ))
     },
     inline_style_literal_unknown_property,
     // Input codes
@@ -2554,7 +2554,7 @@ mod tests {
     |t| {
       let top_level_mark = Mark::new();
       let unresolved_mark = Mark::new();
-      JSXTransformer::<&SingleThreadedComments>::new(
+      visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
         super::JSXTransformerConfig {
           preserve_jsx: false,
           ..Default::default()
@@ -2564,7 +2564,7 @@ mod tests {
         top_level_mark,
         unresolved_mark,
         TransformMode::Test,
-      )
+      ))
     },
     empty_module,
     // Input codes
@@ -2582,7 +2582,7 @@ mod tests {
     |t| {
       let top_level_mark = Mark::new();
       let unresolved_mark = Mark::new();
-      JSXTransformer::<&SingleThreadedComments>::new(
+      visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
         super::JSXTransformerConfig {
           preserve_jsx: false,
           runtime_pkg: "@lynx-js/react/internal".into(),
@@ -2593,7 +2593,7 @@ mod tests {
         top_level_mark,
         unresolved_mark,
         TransformMode::Development,
-      )
+      ))
     },
     mode_development_spread,
     // Input codes
@@ -2612,8 +2612,8 @@ mod tests {
     |t| {
       let top_level_mark = Mark::new();
       let unresolved_mark = Mark::new();
-      chain!(
-        JSXTransformer::<&SingleThreadedComments>::new(
+      (
+        visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
           super::JSXTransformerConfig {
             preserve_jsx: false,
             target: TransformTarget::MIXED,
@@ -2624,7 +2624,7 @@ mod tests {
           top_level_mark,
           unresolved_mark,
           TransformMode::Development,
-        ),
+        )),
         react::react::<&SingleThreadedComments>(
           t.cm.clone(),
           None,
@@ -2667,8 +2667,8 @@ mod tests {
     |t| {
       let top_level_mark = Mark::new();
       let unresolved_mark = Mark::new();
-      chain!(
-        JSXTransformer::<&SingleThreadedComments>::new(
+      (
+        visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
           super::JSXTransformerConfig {
             preserve_jsx: false,
             target: TransformTarget::MIXED,
@@ -2679,7 +2679,7 @@ mod tests {
           top_level_mark,
           unresolved_mark,
           TransformMode::Development,
-        ),
+        )),
         react::react::<&SingleThreadedComments>(
           t.cm.clone(),
           None,
@@ -2722,8 +2722,8 @@ mod tests {
     |t| {
       let top_level_mark = Mark::new();
       let unresolved_mark = Mark::new();
-      chain!(
-        JSXTransformer::<&SingleThreadedComments>::new(
+      (
+        visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
           super::JSXTransformerConfig {
             preserve_jsx: false,
             target: TransformTarget::MIXED,
@@ -2734,7 +2734,7 @@ mod tests {
           top_level_mark,
           unresolved_mark,
           TransformMode::Development,
-        ),
+        )),
         react::react::<&SingleThreadedComments>(
           t.cm.clone(),
           None,
@@ -2779,8 +2779,8 @@ mod tests {
     |t| {
       let top_level_mark = Mark::new();
       let unresolved_mark = Mark::new();
-      chain!(
-        JSXTransformer::<&SingleThreadedComments>::new(
+      (
+        visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
           super::JSXTransformerConfig {
             preserve_jsx: false,
             target: TransformTarget::MIXED,
@@ -2791,7 +2791,7 @@ mod tests {
           top_level_mark,
           unresolved_mark,
           TransformMode::Development,
-        ),
+        )),
         react::react::<&SingleThreadedComments>(
           t.cm.clone(),
           None,
@@ -2834,8 +2834,8 @@ mod tests {
     |t| {
       let top_level_mark = Mark::new();
       let unresolved_mark = Mark::new();
-      chain!(
-        JSXTransformer::<&SingleThreadedComments>::new(
+      (
+        visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
           super::JSXTransformerConfig {
             preserve_jsx: false,
             target: TransformTarget::MIXED,
@@ -2846,7 +2846,7 @@ mod tests {
           top_level_mark,
           unresolved_mark,
           TransformMode::Development,
-        ),
+        )),
         react::react::<&SingleThreadedComments>(
           t.cm.clone(),
           None,
@@ -2885,7 +2885,7 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |t| JSXTransformer::<&SingleThreadedComments>::new(
+    |t| visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
       super::JSXTransformerConfig {
         preserve_jsx: true,
         ..Default::default()
@@ -2895,7 +2895,7 @@ mod tests {
       Mark::new(),
       Mark::new(),
       TransformMode::Test,
-    ),
+    )),
     should_excape_newline_character,
     // Input codes
     r#"

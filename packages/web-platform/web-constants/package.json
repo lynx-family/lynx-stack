@@ -24,5 +24,8 @@
   ],
   "dependencies": {
     "@lynx-js/web-worker-rpc": "workspace:*"
+  },
+  "devDependencies": {
+    "@lynx-js/offscreen-document": "workspace:*"
   }
 }

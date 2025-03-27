@@ -15,5 +15,6 @@
     { "path": "../web-elements/tsconfig.json" },
     { "path": "../web-worker-rpc/tsconfig.json" },
     { "path": "../web-worker-runtime/tsconfig.json" },
+    { "path": "../offscreen-document/tsconfig.json" },
   ],
 }

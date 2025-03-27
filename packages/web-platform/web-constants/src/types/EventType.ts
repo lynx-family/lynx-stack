@@ -26,7 +26,7 @@ export interface LynxCrossThreadEvent<
   type: string;
   timestamp: number;
   target: LynxCrossThreadEventTarget;
-  currentTarget: LynxCrossThreadEventTarget;
+  currentTarget: LynxCrossThreadEventTarget | null;
   detail: T;
   [key: string]: string | number | undefined | null | {};
 }

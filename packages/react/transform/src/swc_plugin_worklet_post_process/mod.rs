@@ -51,14 +51,16 @@ impl VisitMut for WorkletPostProcessorVisitor {
 mod tests {
   use crate::swc_plugin_worklet_post_process::WorkletPostProcessorVisitor;
   use swc_core::ecma::parser::TsSyntax;
-  use swc_core::{ecma::parser::Syntax, ecma::transforms::testing::test, ecma::visit::as_folder};
+  use swc_core::{
+    ecma::parser::Syntax, ecma::transforms::testing::test, ecma::visit::visit_mut_pass,
+  };
 
   test!(
     module,
     Syntax::Typescript(TsSyntax {
       ..Default::default()
     }),
-    |_| as_folder(WorkletPostProcessorVisitor::default()),
+    |_| visit_mut_pass(WorkletPostProcessorVisitor::default()),
     should_transform_worklet,
     r#"
 registerWorklet("57ba11b1", function(event) {
@@ -81,7 +83,7 @@ registerWorklet("57ba11b2", function(event) {
     Syntax::Typescript(TsSyntax {
       ..Default::default()
     }),
-    |_| as_folder(WorkletPostProcessorVisitor::default()),
+    |_| visit_mut_pass(WorkletPostProcessorVisitor::default()),
     should_transform_worklet_2,
     r#"
 function f() {

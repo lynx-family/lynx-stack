@@ -72,6 +72,7 @@ function genFiberElementTree() {
   } else {
     return {};
   }
+  return serializeElementThreadElement(page);
 }
 
 function genDomElementTree() {

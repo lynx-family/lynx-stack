@@ -177,10 +177,10 @@ impl VisitMut for WrapperMarker {
 #[cfg(test)]
 mod tests {
   use swc_core::{
-    common::{chain, Mark},
+    common::Mark,
     ecma::parser::Syntax,
     ecma::{parser::EsSyntax, transforms::testing::test},
-    ecma::{transforms::base::resolver, visit::as_folder},
+    ecma::{transforms::base::resolver, visit::visit_mut_pass},
   };
 
   test!(
@@ -193,9 +193,9 @@ mod tests {
       let unresolved_mark = Mark::new();
       let top_level_mark = Mark::new();
 
-      chain!(
+      (
         resolver(unresolved_mark, top_level_mark, true),
-        as_folder(super::WrapperMarker {
+        visit_mut_pass(super::WrapperMarker {
           current_is_children_full_dynamic: false,
           dynamic_part_count: 0,
         }),

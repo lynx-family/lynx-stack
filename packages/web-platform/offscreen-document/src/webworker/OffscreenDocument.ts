@@ -16,7 +16,7 @@ import { OffscreenNode, uniqueId } from './OffscreenNode.js';
 export const operations = Symbol('operations');
 export const enableEvent = Symbol('enableEvent');
 export const getElementByUniqueId = Symbol('getElementByUniqueId');
-const _onEvent = Symbol('_onEvent');
+export const _onEvent = Symbol('_onEvent');
 const _uniqueIdInc = Symbol('uniqueIdInc');
 const _uniqueIdToElement = Symbol('_uniqueIdToElement');
 export class OffscreenDocument extends OffscreenNode {
@@ -44,12 +44,24 @@ export class OffscreenDocument extends OffscreenNode {
     return this[_uniqueIdToElement][uniqueId]?.deref();
   }
 
+  [enableEvent]: (eventType: string, uid: number) => void;
   constructor(
     private _callbacks: {
       onCommit: (operations: ElementOperation[]) => void;
     },
   ) {
-    super(0);
+    const enableEventImpl: (nm: string, uid: number) => void = (
+      eventType,
+      uid,
+    ) => {
+      this[operations].push({
+        type: OperationType.EnableEvent,
+        eventType,
+        uid,
+      });
+    };
+    super(0, enableEventImpl);
+    this[enableEvent] = enableEventImpl;
   }
 
   commit(): void {
@@ -79,21 +91,11 @@ export class OffscreenDocument extends OffscreenNode {
     return element;
   }
 
-  #enabledEvents = new Set<string>();
-  [enableEvent](eventType: string): void {
-    if (!this.#enabledEvents.has(eventType)) {
-      this[operations].push({
-        type: OperationType.EnableEvent,
-        eventType,
-        uid: 0,
-      });
-    }
-  }
-
   [_onEvent] = (
     eventType: string,
     targetUniqueId: number,
     bubbles: boolean,
+    otherProperties: Parameters<typeof structuredClone>[0],
   ) => {
     const target = this[getElementByUniqueId](targetUniqueId);
     if (target) {
@@ -104,6 +106,7 @@ export class OffscreenDocument extends OffscreenNode {
         tempTarget = tempTarget.parentElement;
       }
       const event = new OffscreenEvent(eventType, target);
+      Object.assign(event, otherProperties);
       // capture phase
       event[eventPhase] = Event.CAPTURING_PHASE;
       for (let ii = bubblePath.length - 1; ii >= 0; ii--) {

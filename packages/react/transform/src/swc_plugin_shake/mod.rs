@@ -202,10 +202,10 @@ fn get_class_member_name(c: &ClassMember) -> Option<String> {
 #[cfg(test)]
 mod tests {
   use swc_core::{
-    common::{chain, Mark},
+    common::Mark,
     ecma::parser::Syntax,
     ecma::{parser::EsSyntax, transforms::testing::test},
-    ecma::{transforms::base::resolver, visit::as_folder},
+    ecma::{transforms::base::resolver, visit::visit_mut_pass},
   };
 
   use crate::ShakeVisitor;
@@ -216,7 +216,7 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| as_folder(ShakeVisitor::default()),
+    |_| visit_mut_pass(ShakeVisitor::default()),
     should_remove_test,
     r#"
     export class A extends Component {
@@ -234,7 +234,7 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| as_folder(ShakeVisitor::default()),
+    |_| visit_mut_pass(ShakeVisitor::default()),
     should_not_remove_test_with_other_runtime,
     r#"
     export class A extends Component {
@@ -249,7 +249,7 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| as_folder(ShakeVisitor::default()),
+    |_| visit_mut_pass(ShakeVisitor::default()),
     should_keep_state_and_remove_other,
     r#"
     export class A extends Component {
@@ -272,7 +272,7 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| as_folder(ShakeVisitor::default()),
+    |_| visit_mut_pass(ShakeVisitor::default()),
     should_keep_constructor_and_used,
     r#"
     export class A extends Component {
@@ -298,7 +298,7 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| as_folder(ShakeVisitor::default()),
+    |_| visit_mut_pass(ShakeVisitor::default()),
     should_keep_with_nested_class,
     r#"
     export class A extends Component {
@@ -319,7 +319,7 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| as_folder(ShakeVisitor::default()),
+    |_| visit_mut_pass(ShakeVisitor::default()),
     should_keep_render_and_used,
     r#"
     import { Component } from "@lynx-js/react-runtime";
@@ -343,7 +343,7 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| as_folder(ShakeVisitor::default()),
+    |_| visit_mut_pass(ShakeVisitor::default()),
     should_keep_indirect,
     r#"
     export class A extends Component {
@@ -369,7 +369,7 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| as_folder(ShakeVisitor::default()),
+    |_| visit_mut_pass(ShakeVisitor::default()),
     should_remove_unused_indirect,
     r#"
     export class A extends Component {
@@ -390,7 +390,7 @@ mod tests {
 
   test!(
     Default::default(),
-    |_| as_folder(ShakeVisitor::default()),
+    |_| visit_mut_pass(ShakeVisitor::default()),
     should_remove_use_effect_param,
     r#"
     import { useEffect } from "@lynx-js/react-runtime";
@@ -408,9 +408,9 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(ShakeVisitor::new(Default::default())),
+      visit_mut_pass(ShakeVisitor::new(Default::default())),
     ),
     should_not_remove_in_scope_id,
     r#"
@@ -429,9 +429,9 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(ShakeVisitor::new(Default::default())),
+      visit_mut_pass(ShakeVisitor::new(Default::default())),
     ),
     only_shake_class_like_react_component_class,
     r#"
@@ -463,9 +463,9 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| chain!(
+    |_| (
       resolver(Mark::new(), Mark::new(), true),
-      as_folder(ShakeVisitor::new(Default::default())),
+      visit_mut_pass(ShakeVisitor::new(Default::default())),
     ),
     should_keep_access_inside_class_property_iife,
     r#"

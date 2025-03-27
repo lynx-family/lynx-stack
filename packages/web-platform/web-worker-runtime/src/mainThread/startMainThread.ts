@@ -10,14 +10,26 @@ import {
   type LynxJSModule,
   flushElementTreeEndpoint,
   reportErrorEndpoint,
+  publishEventEndpoint,
+  publicComponentEventEndpoint,
+  postExposureEndpoint,
+  postOffscreenEventEndpoint,
+  switchExposureServiceEndpoint,
 } from '@lynx-js/web-constants';
 import { Rpc } from '@lynx-js/web-worker-rpc';
-import { MainThreadRuntime } from '@lynx-js/web-mainthread-apis';
+import {
+  MainThreadRuntime,
+  switchExposureService,
+} from '@lynx-js/web-mainthread-apis';
 import { registerCallLepusMethodHandler } from './crossThreadHandlers/registerCallLepusMethodHandler.js';
-import { registerPostMainThreadEventHandler } from './crossThreadHandlers/registerPostMainThreadEventHandler.js';
 import { registerGetCustomSectionHandler } from './crossThreadHandlers/registerGetCustomSectionHandler.js';
 import { createMarkTimingInternal } from './crossThreadHandlers/createMainthreadMarkTimingInternal.js';
 import { registerUpdateDataHandler } from './crossThreadHandlers/registerUpdateDataHandler.js';
+import { OffscreenDocument } from '@lynx-js/offscreen-document/webworker';
+import {
+  type ElementOperation,
+  _onEvent,
+} from '@lynx-js/offscreen-document/webworker';
 
 export function startMainThread(
   uiThreadPort: MessagePort,
@@ -32,9 +44,17 @@ export function startMainThread(
   const __OnLifecycleEvent = backgroundThreadRpc.createCall(
     onLifecycleEventEndpoint,
   );
+  const publishEvent = backgroundThreadRpc.createCall(
+    publishEventEndpoint,
+  );
+  const publicComponentEvent = backgroundThreadRpc.createCall(
+    publicComponentEventEndpoint,
+  );
+  const postExposure = backgroundThreadRpc.createCall(postExposureEndpoint);
   const mainThreadChunkReady = uiThreadRpc.createCall(
     mainThreadChunkReadyEndpoint,
   );
+  let operations: ElementOperation[] = [];
   const flushElementTree = uiThreadRpc.createCall(flushElementTreeEndpoint);
   const reportError = uiThreadRpc.createCall(reportErrorEndpoint);
   markTimingInternal('lepus_excute_start');
@@ -56,6 +76,12 @@ export function startMainThread(
         /* webpackIgnore: true */ template.lepusCode.root
       );
       const entry = (globalThis.module as LynxJSModule).exports!;
+      const docu = new OffscreenDocument({
+        onCommit: (currentOperations) => {
+          operations = currentOperations;
+        },
+      });
+      uiThreadRpc.registerHandler(postOffscreenEventEndpoint, docu[_onEvent]);
       const runtime = new MainThreadRuntime({
         tagMap,
         browserConfig,
@@ -64,9 +90,10 @@ export function startMainThread(
         pageConfig,
         styleInfo,
         lepusCode,
+        docu,
         callbacks: {
           mainChunkReady: function(): void {
-            mainThreadChunkReady({ pageConfig });
+            mainThreadChunkReady();
             markTimingInternal('data_processor_start');
             const initData = runtime.processData
               ? runtime.processData(config.initData)
@@ -76,14 +103,15 @@ export function startMainThread(
               backgroundThreadRpc,
               runtime,
             );
-            registerPostMainThreadEventHandler(
-              uiThreadRpc,
-            );
             registerGetCustomSectionHandler(
               backgroundThreadRpc,
               customSections,
             );
             registerUpdateDataHandler(uiThreadRpc, runtime);
+            backgroundThreadRpc.registerHandler(
+              switchExposureServiceEndpoint,
+              runtime[switchExposureService],
+            );
             backgroundStart({
               initData,
               globalProps,
@@ -101,7 +129,10 @@ export function startMainThread(
             runtime.renderPage!(initData);
             runtime.__FlushElementTree(undefined, {});
           },
-          flushElementTree,
+          flushElementTree: (options, timingFlags) => {
+            docu.commit();
+            flushElementTree(operations, options, timingFlags);
+          },
           _ReportError: reportError,
           __OnLifecycleEvent,
           /**
@@ -110,8 +141,12 @@ export function startMainThread(
            * But our markTimingInternal is (timingFlag:string, pipelineId?:string, timeStamp?:number) => void
            */
           markTiming: (a, b) => markTimingInternal(b, a),
+          publishEvent,
+          publicComponentEvent,
+          postExposure,
         },
       }).globalThis;
+
       markTimingInternal('decode_end');
       entry!(runtime);
     },

@@ -1,11 +1,11 @@
-use swc_core::common::collections::AHashSet;
+use rustc_hash::FxHashSet;
 use swc_core::common::SyntaxContext;
 use swc_core::ecma::ast::*;
 use swc_core::ecma::utils::ident::IdentLike;
 use swc_core::ecma::visit::{noop_visit_type, Visit, VisitWith};
 
 pub struct BindingCollector {
-  decls: AHashSet<Id>,
+  decls: FxHashSet<Id>,
   is_pat_decl: bool,
   should_enter_ctx: bool,
   add_var_only: bool,
@@ -180,7 +180,7 @@ impl Visit for BindingCollector {
  * }
  * ```
  */
-pub fn collect_inner_scope_decls<N>(n: &N) -> AHashSet<Id>
+pub fn collect_inner_scope_decls<N>(n: &N) -> FxHashSet<Id>
 where
   N: VisitWith<BindingCollector>,
 {
@@ -210,7 +210,7 @@ where
  * }
  * ```
  */
-pub fn collect_current_scope_decls<N>(n: &N) -> AHashSet<Id>
+pub fn collect_current_scope_decls<N>(n: &N) -> FxHashSet<Id>
 where
   N: VisitWith<BindingCollector>,
 {

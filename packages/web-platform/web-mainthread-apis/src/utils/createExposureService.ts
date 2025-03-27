@@ -18,11 +18,12 @@ export function createExposureService(runtime: MainThreadRuntime) {
     const exposureEvent = createCrossThreadEvent(
       runtime,
       ev,
+      ev.type,
     ) as ExposureWorkerEvent;
     exposureEvent.detail['unique-id'] = parseFloat(
       (ev.target as Element).getAttribute(lynxUniqueIdAttribute)!,
     );
-    const exposureID = exposureEvent.exposureID;
+    const exposureID = exposureEvent.detail.exposureID;
     if (ev.type === 'exposure') {
       exposureCache.push(exposureEvent);
       onScreen.set(exposureID, exposureEvent);

@@ -119,6 +119,36 @@ describe('Config - Output', () => {
         root: 'foo',
       },
     })
+
+    assertType<Output>({
+      distPath: {
+        intermediate: 'foo',
+      },
+    })
+
+    assertType<Output>({
+      distPath: {
+        css: 'foo',
+      },
+    })
+
+    assertType<Output>({
+      distPath: {
+        cssAsync: 'foo',
+      },
+    })
+
+    assertType<Output>({
+      distPath: {
+        image: 'foo',
+      },
+    })
+
+    assertType<Output>({
+      distPath: {
+        font: 'foo',
+      },
+    })
   })
 
   test('output.filename', () => {

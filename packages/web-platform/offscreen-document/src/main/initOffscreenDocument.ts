@@ -7,15 +7,31 @@ import {
   type ElementOperation,
 } from '../types/ElementOperation.js';
 
+function emptyHandler() {
+  // no-op
+}
+
+const otherPropertyNames = [
+  'detail',
+  'keyCode',
+  'charCode',
+  'elapsedTime',
+  'propertyName',
+  'pseudoElement',
+  'animationName',
+];
+
 export function initOffscreenDocument(options: {
   shadowRoot: ShadowRoot;
   onEvent: (
     eventType: string,
     targetUniqueId: number,
     bubbles: boolean,
+    otherProperties: Parameters<typeof structuredClone>[0],
   ) => void;
 }) {
   const { shadowRoot, onEvent } = options;
+  const enabledEvents: Set<string> = new Set();
   const uniqueIdToElement: [
     WeakRef<ShadowRoot>,
     ...(WeakRef<HTMLElement> | undefined)[],
@@ -36,12 +52,22 @@ export function initOffscreenDocument(options: {
   }
 
   function _eventHandler(ev: Event) {
+    if (
+      ev.eventPhase !== Event.CAPTURING_PHASE && ev.currentTarget !== shadowRoot
+    ) {
+      return;
+    }
     const target = ev.target as HTMLElement | null;
     if (target && elementToUniqueId.has(target)) {
       const targetUniqueId = elementToUniqueId.get(target)!;
       const eventType = ev.type;
-      const bubble = ev.bubbles;
-      onEvent(eventType, targetUniqueId, bubble);
+      const otherProperties: Record<string, unknown> = {};
+      for (const propertyName of otherPropertyNames) {
+        if (propertyName in ev) {
+          otherProperties[propertyName] = (ev as any)[propertyName];
+        }
+      }
+      onEvent(eventType, targetUniqueId, ev.bubbles, otherProperties);
     }
   }
 
@@ -81,10 +107,19 @@ export function initOffscreenDocument(options: {
             }
             break;
           case OperationType.EnableEvent:
-            shadowRoot.addEventListener(op.eventType, _eventHandler, {
-              capture: true,
-              passive: true,
-            });
+            target.addEventListener(
+              op.eventType,
+              emptyHandler,
+              { passive: true },
+            );
+            if (!enabledEvents.has(op.eventType)) {
+              shadowRoot.addEventListener(
+                op.eventType,
+                _eventHandler,
+                { passive: true, capture: true },
+              );
+              enabledEvents.add(op.eventType);
+            }
             break;
           case OperationType.RemoveChild:
             {

@@ -9,5 +9,6 @@
   "include": ["src"],
   "references": [
     { "path": "../web-worker-rpc/tsconfig.json" },
+    { "path": "../offscreen-document/tsconfig.json" },
   ],
 }

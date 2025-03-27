@@ -2,28 +2,14 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 // @ts-nocheck
-import {
-  componentIdAttribute,
-  cssIdAttribute,
-  parentComponentUniqueIdAttribute,
-} from '@lynx-js/web-constants';
+import { componentIdAttribute, cssIdAttribute } from '@lynx-js/web-constants';
 import { test, expect } from './coverage-fixture.js';
 import type { Page } from '@playwright/test';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import fs from 'node:fs/promises';
-import v8toIstanbul from 'v8-to-istanbul';
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const wait = async (ms: number) => {
   await new Promise((resolve) => {
     setTimeout(resolve, ms);
   });
-};
-
-const getTitle = (titlePath: string[]) => {
-  return path.join(...[titlePath.pop()!, titlePath.pop()!].reverse());
 };
 
 test.describe('main thread api tests', () => {
@@ -483,7 +469,6 @@ test.describe('main thread api tests', () => {
       return;
     });
     const e1 = page.locator(`[${componentIdAttribute}="id1"]`);
-    expect(await e1?.getAttribute(parentComponentUniqueIdAttribute)).toBe('0');
   });
 
   test('__SetInlineStyles', async ({ page }, { title }) => {
@@ -1127,6 +1112,24 @@ test.describe('main thread api tests', () => {
       expect(nul).toBe(-1);
       expect(undef).toBe(-1);
       expect(randomObject).toBe(-1);
+    },
+  );
+
+  test(
+    '__AddInlineStyle_value_number_0',
+    async ({ page }, { title }) => {
+      await page.evaluate(() => {
+        const root = globalThis.__CreatePage('page', 0);
+        const view = globalThis.__CreateView(0);
+        globalThis.__AddInlineStyle(root, 24, 'flex'); // display: flex
+        globalThis.__AddInlineStyle(view, 51, 0); // flex-shrink:0;
+        globalThis.__SetID(view, 'target');
+        globalThis.__AppendElement(root, view);
+        globalThis.__FlushElementTree();
+        return {};
+      });
+      const inlineStyle = await page.locator('#target').getAttribute('style');
+      expect(inlineStyle).toContain('flex-shrink');
     },
   );
 });

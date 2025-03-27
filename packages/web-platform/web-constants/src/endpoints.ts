@@ -10,15 +10,12 @@ import type {
 import type { Cloneable, CloneableObject } from './types/Cloneable.js';
 import type { MainThreadStartConfigs } from './types/MainThreadStartConfigs.js';
 import type { LynxLifecycleEvent } from './types/LynxLifecycleEvent.js';
-import type {
-  ElementOperation,
-  FlushElementTreeOptions,
-} from './types/ElementOperation.js';
-import type { PageConfig } from './types/PageConfig.js';
 import type { IdentifierType, InvokeCallbackRes } from './types/NativeApp.js';
 import type { LynxTemplate } from './types/LynxModule.js';
 import type { NapiModulesMap } from './types/NapiModules.js';
 import type { NativeModulesMap } from './types/NativeModules.js';
+import type { ElementOperation } from '@lynx-js/offscreen-document';
+import type { FlushElementTreeOptions } from './types/FlushElementTreeOptions.js';
 
 export const postExposureEndpoint = createRpcEndpoint<
   [{ exposures: ExposureWorkerEvent[]; disExposures: ExposureWorkerEvent[] }],
@@ -39,16 +36,21 @@ export const publishEventEndpoint = createRpcEndpoint<
   void
 >('publishEvent', false, false);
 
-export const postMainThreadEvent = createRpcEndpoint<
-  [LynxCrossThreadEvent],
+export const postOffscreenEventEndpoint = createRpcEndpoint<
+  [
+    eventType: string,
+    targetUniqueId: number,
+    bubbles: boolean,
+    Parameters<typeof structuredClone>[0],
+  ],
   void
->('postMainThreadEvent', false, false);
+>('postOffscreenEventEndpoint', false, false);
 
-export const switchExposureService = createRpcEndpoint<
+export const switchExposureServiceEndpoint = createRpcEndpoint<
   [boolean, boolean],
   void
 >(
-  '__switchExposureService',
+  'switchExposureServiceEndpoint',
   false,
   false,
 );
@@ -122,16 +124,13 @@ export const flushElementTreeEndpoint = createRpcEndpoint<
   [
     operations: ElementOperation[],
     FlushElementTreeOptions,
-    styleContent: string | undefined,
     timingFlags: string[],
   ],
   void
 >('flushElementTree', false, false);
 
 export const mainThreadChunkReadyEndpoint = createRpcEndpoint<
-  [{
-    pageConfig: PageConfig;
-  }],
+  [],
   void
 >('mainThreadChunkReady', false, false);
 

@@ -48,7 +48,7 @@ export interface Output {
    *
    * By default, if the output directory is a subdirectory of the project root path, Rspeedy will automatically clean all files in the build directory.
    *
-   * When {@link DistPath.root | output.distPath.root} is an external directory or the same as the project root directory, `cleanDistPath` is not enabled by default to prevent accidental deletion of files from other directories.
+   * When {@link https://rsbuild.dev/config/output/dist-path#root-directory | output.distPath.root} is an external directory or the same as the project root directory, `cleanDistPath` is not enabled by default to prevent accidental deletion of files from other directories.
    *
    * @example
    *
@@ -212,6 +212,10 @@ export interface Output {
 
   /**
    * Set the directory of the dist files.
+   *
+   * @remarks
+   *
+   * More options can be found at {@link https://rsbuild.dev/config/output/dist-path | Rsbuild - distPath}.
    *
    * @example
    *

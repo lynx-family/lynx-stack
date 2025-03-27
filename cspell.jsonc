@@ -109,6 +109,7 @@
     "worklet",
     "xlarge",
     "PAPI", // Lynx's Element PAPI
+    "parseable", // https://pnpm.io/cli/list
     "debugids", // https://getsentry.github.io/debugids/
   ],
   // Glob

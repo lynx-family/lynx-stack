@@ -33,13 +33,7 @@ export function bootWorkers(): LynxViewRpc {
 function createMainWorker() {
   const channelToMainThread = new MessageChannel();
   const channelMainThreadWithBackground = new MessageChannel();
-  const mainThreadWorker = new Worker(
-    new URL('@lynx-js/web-worker-runtime', import.meta.url),
-    {
-      type: 'module',
-      name: `lynx-main`,
-    },
-  );
+  const mainThreadWorker = createWebWorker();
   const mainThreadMessage: WorkerStartMessage = {
     mode: 'main',
     toUIThread: channelToMainThread.port2,
@@ -63,13 +57,7 @@ function createBackgroundWorker(
   channelMainThreadWithBackground: MessageChannel,
 ) {
   const channelToBackground = new MessageChannel();
-  const backgroundThreadWorker = new Worker(
-    new URL('@lynx-js/web-worker-runtime', import.meta.url),
-    {
-      type: 'module',
-      name: `lynx-bg`,
-    },
-  );
+  const backgroundThreadWorker = createWebWorker();
   const backgroundThreadMessage: WorkerStartMessage = {
     mode: 'background',
     toUIThread: channelToBackground.port2,
@@ -82,4 +70,14 @@ function createBackgroundWorker(
   ]);
   const backgroundRpc = new Rpc(channelToBackground.port1, 'ui-to-bg');
   return { backgroundRpc, backgroundThreadWorker };
+}
+
+function createWebWorker(): Worker {
+  return new Worker(
+    new URL('@lynx-js/web-worker-runtime', import.meta.url),
+    {
+      type: 'module',
+      name: `lynx-web`,
+    },
+  );
 }
