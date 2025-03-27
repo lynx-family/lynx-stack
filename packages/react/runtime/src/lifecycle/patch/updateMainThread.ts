@@ -12,6 +12,7 @@ import { PerformanceTimingKeys, markTiming, setPipeline } from '../../lynx/perfo
 import { takeGlobalRefPatchMap } from '../../snapshot/ref.js';
 import { __page } from '../../snapshot.js';
 import { isEmptyObject } from '../../utils.js';
+import { triggerBackgroundLifecycle } from '../event/triggerBackgroundLifecycle.js';
 import { getReloadVersion } from '../pass.js';
 
 function updateMainThread(
@@ -61,7 +62,7 @@ function injectUpdateMainThread(): void {
 function commitMainThreadPatchUpdate(commitTaskId?: number): void {
   const refPatch = takeGlobalRefPatchMap();
   if (!isEmptyObject(refPatch)) {
-    __OnLifecycleEvent([LifecycleConstant.ref, { commitTaskId, refPatch: JSON.stringify(refPatch) }]);
+    triggerBackgroundLifecycle(LifecycleConstant.ref, { commitTaskId, refPatch: JSON.stringify(refPatch) });
   }
 }
 

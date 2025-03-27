@@ -1,19 +1,18 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { __page, setupPage, SnapshotInstance } from '../snapshot.js';
-// @ts-ignore
-import { render as renderToString } from '../renderToOpcodes/index.js';
-import { LifecycleConstant } from '../lifecycleConstant.js';
-import { takeGlobalRefPatchMap } from '../snapshot/ref.js';
-import { isEmptyObject } from '../utils.js';
-import { __root, setRoot } from '../root.js';
+import { hydrate } from '../hydrate.js';
+import { isJSReady, jsReady, jsReadyEventIdSwap, resetJSReady } from '../lifecycle/event/jsReady.js';
 import { reloadMainThread } from '../lifecycle/reload.js';
 import { renderMainThread } from '../lifecycle/render.js';
-import { hydrate } from '../hydrate.js';
-import { markTiming, PerformanceTimingKeys, setPipeline } from './performance.js';
+import { LifecycleConstant } from '../lifecycleConstant.js';
 import { __pendingListUpdates } from '../list.js';
 import { ssrHydrateByOpcodes } from '../opcodes.js';
+import { __root, setRoot } from '../root.js';
+import { takeGlobalRefPatchMap } from '../snapshot/ref.js';
+import { SnapshotInstance, __page, setupPage } from '../snapshot.js';
+import { isEmptyObject } from '../utils.js';
+import { PerformanceTimingKeys, markTiming, setPipeline } from './performance.js';
 
 function ssrEncode() {
   const { __opcodes } = __root;
@@ -52,10 +51,8 @@ function ssrHydrate(info: string) {
 }
 
 function injectCalledByNative(): void {
-  if (process.env['NODE_ENV'] !== 'test') {
-    if (__FIRST_SCREEN_SYNC_TIMING__ !== 'jsReady' && __ENABLE_SSR__) {
-      throw new Error('`firstScreenSyncTiming` must be `jsReady` when SSR is enabled');
-    }
+  if (process.env['NODE_ENV'] !== 'test' && __FIRST_SCREEN_SYNC_TIMING__ !== 'jsReady' && __ENABLE_SSR__) {
+    throw new Error('`firstScreenSyncTiming` must be `jsReady` when SSR is enabled');
   }
 
   const calledByNative: LynxCallByNative = {
@@ -77,8 +74,7 @@ function injectCalledByNative(): void {
 
 function renderPage(data: any): void {
   // reset `jsReady` state
-  isJSReady = false;
-  jsReadyEventIdSwap = {};
+  resetJSReady();
 
   lynx.__initData = data || {};
 
@@ -96,14 +92,13 @@ function renderPage(data: any): void {
   }
 }
 
-function updatePage(data: any, options?: UpdatePageOption | undefined): void {
+function updatePage(data: any, options?: UpdatePageOption): void {
   if (options?.reloadTemplate) {
     reloadMainThread(data, options);
     return;
   }
 
   if (options?.resetPageData) {
-    // @ts-ignore
     lynx.__initData = {};
   }
 
@@ -146,27 +141,12 @@ function updatePage(data: any, options?: UpdatePageOption | undefined): void {
   }
 }
 
-function updateGlobalProps(_data: any, options?: UpdatePageOption | undefined): void {
+function updateGlobalProps(_data: any, options?: UpdatePageOption): void {
   if (options) {
     __FlushElementTree(__page, options);
   } else {
     __FlushElementTree();
   }
-}
-
-let isJSReady: boolean;
-let jsReadyEventIdSwap: Record<number, number>;
-function jsReady() {
-  __OnLifecycleEvent([
-    LifecycleConstant.firstScreen, /* FIRST_SCREEN */
-    {
-      root: JSON.stringify(__root),
-      refPatch: JSON.stringify(takeGlobalRefPatchMap()),
-      jsReadyEventIdSwap,
-    },
-  ]);
-  isJSReady = true;
-  jsReadyEventIdSwap = {};
 }
 
 /**

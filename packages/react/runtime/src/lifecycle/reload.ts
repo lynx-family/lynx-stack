@@ -1,18 +1,20 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { __root, setRoot } from '../root.js';
-import { SnapshotInstance, __page, snapshotInstanceManager } from '../snapshot.js';
-import { isEmptyObject } from '../utils.js';
-import { destroyBackground } from './destroy.js';
-import { increaseReloadVersion } from './pass.js';
-import { renderBackground, renderMainThread } from './render.js';
 import { hydrate } from '../hydrate.js';
 import { LifecycleConstant } from '../lifecycleConstant.js';
 import { __pendingListUpdates } from '../list.js';
+import { __root, setRoot } from '../root.js';
 import { takeGlobalRefPatchMap } from '../snapshot/ref.js';
-import { deinitGlobalSnapshotPatch } from './patch/snapshotPatch.js';
+import { SnapshotInstance, __page, snapshotInstanceManager } from '../snapshot.js';
+import { isEmptyObject } from '../utils.js';
+import { destroyBackground } from './destroy.js';
 import { destroyWorklet } from '../worklet/destroy.js';
+import { clearJSReadyEventIdSwap, isJSReady } from './event/jsReady.js';
+import { triggerBackgroundLifecycle } from './event/triggerBackgroundLifecycle.js';
+import { increaseReloadVersion } from './pass.js';
+import { deinitGlobalSnapshotPatch } from './patch/snapshotPatch.js';
+import { renderBackground, renderMainThread } from './render.js';
 
 function reloadMainThread(data: any, options: UpdatePageOption): void {
   if (__PROFILE__) {
@@ -28,6 +30,7 @@ function reloadMainThread(data: any, options: UpdatePageOption): void {
   destroyWorklet();
   snapshotInstanceManager.clear();
   __pendingListUpdates.clear();
+  clearJSReadyEventIdSwap();
 
   const oldRoot = __root;
   setRoot(new SnapshotInstance('root'));
@@ -41,13 +44,15 @@ function reloadMainThread(data: any, options: UpdatePageOption): void {
   __pendingListUpdates.flush();
   __FlushElementTree(__page, options);
 
-  __OnLifecycleEvent([
-    LifecycleConstant.firstScreen, /* FIRST_SCREEN */
-    {
-      root: JSON.stringify(__root),
-      refPatch: JSON.stringify(takeGlobalRefPatchMap()),
-    },
-  ]);
+  if (isJSReady) {
+    triggerBackgroundLifecycle(
+      LifecycleConstant.firstScreen, /* FIRST_SCREEN */
+      {
+        root: JSON.stringify(__root),
+        refPatch: JSON.stringify(takeGlobalRefPatchMap()),
+      },
+    );
+  }
 
   if (__PROFILE__) {
     console.profileEnd();
@@ -76,4 +81,4 @@ function reloadBackground(updateData: Record<string, any>): void {
   }
 }
 
-export { reloadMainThread, reloadBackground };
+export { reloadBackground, reloadMainThread };
