@@ -1,6 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { triggerBackgroundLifecycle } from '../lifecycle/event/triggerBackgroundLifecycle.js';
 import type { DataProcessorDefinition } from '../lynx-api.js';
 
 export function setupLynxEnv(): void {
@@ -29,7 +30,7 @@ export function setupLynxEnv(): void {
       eventName: string,
       params: any,
     ) {
-      __OnLifecycleEvent(['globalEventFromLepus', [eventName, params]]);
+      triggerBackgroundLifecycle('globalEventFromLepus', [eventName, params]);
     };
 
     {
