@@ -78,7 +78,7 @@ describe('sourcemap.plugin', () => {
       )
     })
 
-    test('with output.assetPrefix with output.sourceMap.js: "source-map-debugids"', async () => { // cSpell:disable-line
+    test('with output.assetPrefix with output.sourceMap.js: "source-map-debugids"', async () => {
       vi.stubEnv('NODE_ENV', 'production')
       const { SourceMapDevToolPlugin } = await import(
         '../../src/webpack/SourceMapDevToolPlugin.js'
@@ -88,7 +88,7 @@ describe('sourcemap.plugin', () => {
         output: {
           assetPrefix: 'https://example.com/',
           sourceMap: {
-            js: 'source-map-debugids', // cSpell:disable-line
+            js: 'source-map-debugids',
           },
         },
       })
@@ -103,7 +103,7 @@ describe('sourcemap.plugin', () => {
           columns: true, // non cheap
           module: true, // module
           noSources: false,
-          debugIds: true, // debugids // cSpell:disable-line
+          debugIds: true, // debugids
         }),
       )
     })
@@ -133,7 +133,7 @@ describe('sourcemap.plugin', () => {
           columns: false, // cheap
           module: true, // module
           noSources: false,
-          debugIds: false, // cSpell:disable-line
+          debugIds: false,
         }),
       )
     })
@@ -356,7 +356,7 @@ describe('sourcemap.plugin', () => {
       )
     })
 
-    test('with output.sourceMap.js: "source-map-debugids"', async () => { // cSpell:disable-line
+    test('with output.sourceMap.js: "source-map-debugids"', async () => {
       vi.stubEnv('NODE_ENV', 'development')
       const { SourceMapDevToolPlugin } = await import(
         '../../src/webpack/SourceMapDevToolPlugin.js'
@@ -367,7 +367,7 @@ describe('sourcemap.plugin', () => {
       const rspeedy = await createStubRspeedy({
         output: {
           sourceMap: {
-            js: 'source-map-debugids', // cSpell:disable-line
+            js: 'source-map-debugids',
           },
         },
       })
@@ -376,7 +376,7 @@ describe('sourcemap.plugin', () => {
       expect(config.devtool).toBe(false)
       expect(SourceMapDevToolPlugin).toBeCalled()
       expect(EvalSourceMapDevToolPlugin).not.toBeCalled()
-      // source-map-debugids applied // cSpell:disable-line
+      // source-map-debugids applied
       expect(SourceMapDevToolPlugin).toBeCalledWith(
         expect.objectContaining({
           filename: '[file].map[query]',

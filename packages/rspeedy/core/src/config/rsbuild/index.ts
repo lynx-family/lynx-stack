@@ -50,7 +50,7 @@ export function toRsbuildConfig(
 
       polyfill: 'off',
 
-      // TODO: update the Rsbuild type to allow `sourceMap.js` to be `*-debugids` // cSpell:disable-line
+      // TODO: update the Rsbuild type to allow `sourceMap.js` to be `*-debugids`
       sourceMap: config.output?.sourceMap as SourceMap,
     },
     source: {

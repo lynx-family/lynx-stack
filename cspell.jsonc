@@ -109,6 +109,7 @@
     "worklet",
     "xlarge",
     "PAPI", // Lynx's Element PAPI
+    "debugids", // https://getsentry.github.io/debugids/
   ],
   // Glob
   "ignorePaths": [

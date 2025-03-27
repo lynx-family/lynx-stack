@@ -83,7 +83,7 @@ function applySourceMapPlugin(
     const cheap = devtool.includes('cheap')
     const moduleMaps = devtool.includes('module')
     const noSources = devtool.includes('nosources') // cSpell:disable-line
-    const debugIds = devtool.includes('debugids') // cSpell:disable-line
+    const debugIds = devtool.includes('debugids')
 
     const options = {
       filename: inline
