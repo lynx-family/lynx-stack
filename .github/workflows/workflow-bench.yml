@@ -23,7 +23,7 @@ jobs:
           corepack enable
           pnpm install --frozen-lockfile
       - name: TurboCache
-        uses: actions/cache@v4
+        uses: lynx-infra/cache@ad9f115f5b15348eb208a52ec6f7ffa82e8108df
         with:
           path: .turbo
           # We have to be strict here to make sure getting the cache of build-all
