@@ -9,21 +9,11 @@ import {
 } from '@lynx-js/web-constants';
 import { test, expect } from './coverage-fixture.js';
 import type { Page } from '@playwright/test';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import fs from 'node:fs/promises';
-import v8toIstanbul from 'v8-to-istanbul';
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const wait = async (ms: number) => {
   await new Promise((resolve) => {
     setTimeout(resolve, ms);
   });
-};
-
-const getTitle = (titlePath: string[]) => {
-  return path.join(...[titlePath.pop()!, titlePath.pop()!].reverse());
 };
 
 test.describe('main thread api tests', () => {

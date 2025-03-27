@@ -22,8 +22,11 @@ export default defineConfig({
   },
   performance: {
     chunkSplit: {
-      // Rspack 1.2.8 introduced a bug that causes the split-by-experience strategy to fail.
-      // strategy: 'split-by-experience',
+      strategy: 'split-by-experience',
+      override: {
+        // See: https://github.com/web-infra-dev/rspack/issues/9812
+        filename: '[name].[contenthash:8].js',
+      },
     },
   },
 });

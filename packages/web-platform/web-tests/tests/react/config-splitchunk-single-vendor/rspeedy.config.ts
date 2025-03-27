@@ -22,8 +22,11 @@ export default defineConfig({
   },
   performance: {
     chunkSplit: {
-      // Rspack 1.2.8 introduced a bug that causes the single-vendor strategy to fail.
-      // strategy: 'single-vendor',
+      strategy: 'single-vendor',
+      override: {
+        // See: https://github.com/web-infra-dev/rspack/issues/9812
+        filename: '[name].[contenthash:8].js',
+      },
     },
   },
 });

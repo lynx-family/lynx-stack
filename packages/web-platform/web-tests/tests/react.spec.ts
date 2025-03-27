@@ -4,12 +4,6 @@
 import { swipe, dragAndHold } from './utils.js';
 import { test, expect } from './coverage-fixture.js';
 import type { Page } from '@playwright/test';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import fs from 'node:fs/promises';
-import v8toIstanbul from 'v8-to-istanbul';
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const wait = async (ms: number) => {
   await new Promise((resolve) => {
@@ -964,7 +958,7 @@ test.describe('reactlynx3 tests', () => {
         await expect(target).toHaveCSS('height', '100px');
       },
     );
-    test.fixme( // TODO(@colinaaa): update the template plugin
+    test(
       'config-splitchunk-single-vendor',
       async ({ page }, { title }) => {
         await goto(page, title, true);
@@ -973,7 +967,7 @@ test.describe('reactlynx3 tests', () => {
         await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
       },
     );
-    test.fixme( // TODO(@colinaaa): update the template plugin
+    test(
       'config-splitchunk-split-by-experience',
       async ({ page }, { title }) => {
         await goto(page, title, true);
@@ -982,18 +976,8 @@ test.describe('reactlynx3 tests', () => {
         await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
       },
     );
-    test.fixme( // TODO(@colinaaa): update the template plugin
+    test(
       'config-splitchunk-split-by-module',
-      async ({ page }, { title }) => {
-        await goto(page, title, true);
-        await wait(1500);
-        const target = page.locator('#target');
-        await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
-      },
-    );
-
-    test.fixme( // TODO(@colinaaa): update the template plugin
-      'config-splitchunk-error-assertPrefix',
       async ({ page }, { title }) => {
         await goto(page, title, true);
         await wait(1500);
