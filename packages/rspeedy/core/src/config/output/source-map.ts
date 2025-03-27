@@ -68,7 +68,8 @@ export interface SourceMap {
    * })
    * ```
    */
-  js?: Rspack.DevTool
+  js?:
+    | Rspack.DevTool
     | undefined
     | `${Exclude<Rspack.DevTool, false | 'eval'>}-debugids` // cSpell:disable-line
 }
