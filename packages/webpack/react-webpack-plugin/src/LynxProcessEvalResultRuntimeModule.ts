@@ -27,8 +27,8 @@ export function createLynxProcessEvalResultRuntimeModule(
 
       return `
 ${LynxRuntimeGlobals.lynxProcessEvalResult} = function (result, schema) {
-  var chunk = result(schema);
-  if (chunk.ids && chunk.modules) {
+  var chunk = result && result(schema);
+  if (chunk && chunk.ids && chunk.modules) {
     // We only deal with webpack chunk
     ${webpack.RuntimeGlobals.externalInstallChunk}(chunk);
     // TODO: sort with preOrderIndex. See: https://github.com/web-infra-dev/rspack/pull/8588
@@ -37,6 +37,7 @@ ${LynxRuntimeGlobals.lynxProcessEvalResult} = function (result, schema) {
     }
     return chunk;
   }
+  return chunk
 }
 `;
     }
