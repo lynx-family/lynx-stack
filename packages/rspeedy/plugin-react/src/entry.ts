@@ -54,6 +54,7 @@ export function applyEntry(
     pipelineSchedulerConfig,
     removeDescendantSelectorScope,
     targetSdkVersion,
+    extractStr,
 
     experimental_isLazyBundle,
   } = options
@@ -223,6 +224,7 @@ export function applyEntry(
         firstScreenSyncTiming,
         enableSSR,
         mainThreadChunks,
+        extractStr,
         experimental_isLazyBundle,
       }])
   })

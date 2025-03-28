@@ -10,6 +10,11 @@ import type { DefineDceVisitorConfig } from '@lynx-js/react/transform';
 import type { JsxTransformerConfig } from '@lynx-js/react/transform';
 import type { ShakeVisitorConfig } from '@lynx-js/react/transform';
 
+// @public
+export interface ExtractStrConfig {
+    strLength: number;
+}
+
 // Warning: (ae-missing-release-tag) "LAYERS" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -43,6 +48,7 @@ export interface ReactWebpackPluginOptions {
     enableSSR?: boolean;
     // @alpha
     experimental_isLazyBundle?: boolean;
+    extractStr?: Partial<ExtractStrConfig> | boolean;
     firstScreenSyncTiming?: 'immediately' | 'jsReady';
     mainThreadChunks?: string[] | undefined;
 }

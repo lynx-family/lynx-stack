@@ -6,6 +6,7 @@
 
 import type { CompatVisitorConfig } from '@lynx-js/react/transform';
 import type { DefineDceVisitorConfig } from '@lynx-js/react/transform';
+import type { ExtractStrConfig } from '@lynx-js/react-webpack-plugin';
 import type { JsxTransformerConfig } from '@lynx-js/react/transform';
 import { LAYERS } from '@lynx-js/react-webpack-plugin';
 import type { RsbuildPlugin } from '@rsbuild/core';
@@ -37,6 +38,7 @@ export interface PluginReactLynxOptions {
     engineVersion?: string;
     // @alpha
     experimental_isLazyBundle?: boolean;
+    extractStr?: Partial<ExtractStrConfig> | boolean;
     firstScreenSyncTiming?: 'immediately' | 'jsReady';
     jsx?: Partial<JsxTransformerConfig> | undefined;
     pipelineSchedulerConfig?: number;
