@@ -15,8 +15,9 @@ export function pluginTarget(): RsbuildPlugin {
         if (isWeb(environment)) {
           options.target([
             getESVersionTarget(),
-            // Add `target: 'web'` to make Rsbuild inject HMR related code.
-            'web',
+            // Currently, Rsbuild won't inject HMR related code for `webworker`.
+            // See: https://github.com/web-infra-dev/rsbuild/blob/9c1652819e00ee12a213df30d81b6c23f9e4c0d2/packages/core/src/server/compilationMiddleware.ts#L16
+            'webworker',
           ])
         } else {
           options.target([getESVersionTarget()])

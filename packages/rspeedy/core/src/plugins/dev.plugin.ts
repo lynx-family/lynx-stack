@@ -11,6 +11,7 @@ import color from 'picocolors'
 import type { Dev } from '../config/dev/index.js'
 import type { Server } from '../config/server/index.js'
 import { debug } from '../debug.js'
+import { isLynx } from '../utils/is-lynx.js'
 import { CompilationIdPlugin } from '../webpack/CompilationIdPlugin.js'
 import { ProvidePlugin } from '../webpack/ProvidePlugin.js'
 
@@ -84,7 +85,7 @@ export function pluginDev(
 
       const require = createRequire(import.meta.url)
 
-      api.modifyBundlerChain((chain, { isProd }) => {
+      api.modifyBundlerChain((chain, { environment, isProd }) => {
         if (isProd) {
           return
         }
@@ -124,14 +125,22 @@ export function pluginDev(
           .plugin('lynx.hmr.provide')
             .use(ProvidePlugin, [
               {
-                WebSocket: [
-                  options?.client?.websocketTransport ?? require.resolve('@lynx-js/websocket'),
-                  'default',
-                ],
                 __webpack_dev_server_client__: [require.resolve('../../client/hmr/WebSocketClient.js'), 'default'],
               }
             ])
           .end()
+          .when(isLynx(environment), (chain) => {
+            chain
+              .plugin('lynx.hmr.websocket')
+              .use(ProvidePlugin, [
+                {
+                  WebSocket: [
+                    options?.client?.websocketTransport ?? require.resolve('@lynx-js/websocket'),
+                    'default',
+                  ],
+                }
+              ])
+          })
           .plugin('lynx.hmr.compilation-id')
             .use(CompilationIdPlugin, [])
           .end()

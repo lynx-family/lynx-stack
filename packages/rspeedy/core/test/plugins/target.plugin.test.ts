@@ -38,7 +38,7 @@ describe('target.plugin', () => {
 
     const config = await rspeedy.unwrapConfig()
 
-    expect(config.target).toEqual(['es2019', 'web'])
+    expect(config.target).toEqual(['es2019', 'webworker'])
   })
 
   test('multiple environments', async () => {
@@ -51,7 +51,7 @@ describe('target.plugin', () => {
 
     const [webConfig, lynxConfig] = await rspeedy.initConfigs()
 
-    expect(webConfig?.target).toEqual(['es2019', 'web'])
+    expect(webConfig?.target).toEqual(['es2019', 'webworker'])
     expect(lynxConfig?.target).toEqual(['es2019'])
   })
 })
