@@ -11,6 +11,8 @@ import {
 } from '@lynx-js/web-elements-reactive';
 import type { XList } from './XList.js';
 
+const WATERFALL_SLOT = 'waterfall-slot';
+
 export class XListAttributes
   implements InstanceType<AttributeReactiveClass<typeof HTMLElement>>
 {
@@ -19,6 +21,7 @@ export class XListAttributes
     'initial-scroll-index',
     'span-count',
     'column-count',
+    'list-type',
   ];
 
   #dom: XList;
@@ -37,6 +40,73 @@ export class XListAttributes
     '--list-item-span-count',
     (v) => `${parseFloat(v)}`,
   );
+
+  #createWaterfallContainer = (spanCount: number) => {
+    const slotContainer = new Array(spanCount).fill(0).map((_, i) => {
+      const slotContainer = document.createElement('div');
+      slotContainer.setAttribute(
+        'part',
+        `${WATERFALL_SLOT}-container`,
+      );
+      slotContainer.setAttribute('id', `${WATERFALL_SLOT}-${i}-container`);
+      const slot = document.createElement('slot');
+      slot.setAttribute('name', `${WATERFALL_SLOT}-${i}`);
+      slot.setAttribute('style', `contain: strict;`);
+      slotContainer.appendChild(slot);
+      return slotContainer;
+    });
+
+    const waterfallContainer = document.createElement('div');
+    waterfallContainer.setAttribute(
+      'part',
+      'waterfall-content',
+    );
+    waterfallContainer.append(...slotContainer);
+    this.#dom.shadowRoot?.querySelector('[part=upper-threshold-observer]')
+      ?.insertAdjacentElement('afterend', waterfallContainer);
+  };
+
+  @registerAttributeHandler('list-type', false)
+  #handlerListType(newVal: string | null) {
+    // return;
+    if (newVal === 'waterfall') {
+      const spanCount = parseFloat(
+        this.#dom.getAttribute('span-count')
+          || this.#dom.getAttribute('column-count')
+          || '',
+      ) || 1;
+      this.#createWaterfallContainer(spanCount);
+
+      // First, layout each track
+      const heights = new Array(spanCount).fill(0);
+      const listHeight = this.#dom.getBoundingClientRect().height;
+      for (let i = 0; i < this.#dom.children.length; i++) {
+        const listItem = this.#dom.children[i];
+        // Find the shortest column
+        let shortestColumnIndex = 0;
+        for (let j = 1; j < spanCount; j++) {
+          if (heights[j] < heights[shortestColumnIndex]) {
+            shortestColumnIndex = j;
+          }
+        }
+        // Add item to the shortest column and update its height
+        heights[shortestColumnIndex] += listItem?.getBoundingClientRect()
+          .height || listItem?.getAttribute('estimated-height') || listHeight;
+        listItem?.setAttribute(
+          WATERFALL_SLOT,
+          `${WATERFALL_SLOT}-${shortestColumnIndex}`,
+        );
+      }
+      // Second, move the item to the corresponding slot
+      for (let i = 0; i < this.#dom.children.length; i++) {
+        const listItem = this.#dom.children[i];
+        listItem?.setAttribute(
+          'slot',
+          listItem?.getAttribute(WATERFALL_SLOT)!,
+        );
+      }
+    }
+  }
 
   constructor(dom: XList) {
     this.#dom = dom;
