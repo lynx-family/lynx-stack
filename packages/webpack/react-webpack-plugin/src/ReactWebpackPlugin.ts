@@ -282,8 +282,8 @@ class ReactWebpackPlugin {
   const exports = module.exports
 `,
               old,
-              `\
-  return module.exports
+              `
+  ;return module.exports
 })`,
             ),
         );
