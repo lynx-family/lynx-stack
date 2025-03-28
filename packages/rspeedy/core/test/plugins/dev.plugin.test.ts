@@ -5,6 +5,7 @@ import { isIP, isIPv4 } from 'node:net'
 import type { AddressInfo } from 'node:net'
 import path from 'node:path'
 
+import type { Rspack } from '@rsbuild/core'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { createStubRspeedy } from '../createStubRspeedy.js'
@@ -277,6 +278,29 @@ describe('Plugins - Dev', () => {
     expect(config.output?.publicPath).toBe(
       `http://example.com:${server.port}/`,
     )
+  })
+
+  test('dev.lazyCompilation: true', async () => {
+    const rsbuild = await createStubRspeedy({
+      source: {
+        entry: path.resolve(__dirname, './fixtures/hello-world/index.js'),
+      },
+      dev: {
+        lazyCompilation: true,
+      },
+    })
+
+    await using server = await rsbuild.usingDevServer()
+    await server.waitDevCompileDone()
+    const config = await rsbuild.unwrapConfig()
+
+    const backendHost =
+      (config.experiments?.lazyCompilation as Rspack.LazyCompilationOptions)
+        .serverUrl
+
+    const serverHosts = server.urls.map(url => new URL(url).hostname)
+
+    expect(serverHosts).toContain(backendHost)
   })
 
   test('dev.assetPrefix: false', async () => {
