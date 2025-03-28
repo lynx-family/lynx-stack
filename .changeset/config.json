@@ -12,7 +12,6 @@
       "@lynx-js/web-core",
       "@lynx-js/web-constants",
       "@lynx-js/web-mainthread-apis",
-      "@lynx-js/web-worker-rpc",
       "@lynx-js/web-worker-runtime"
     ],
     [
