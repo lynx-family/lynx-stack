@@ -1,5 +1,11 @@
 # @lynx-js/web-worker-rpc
 
+## 0.10.0
+
+### Patch Changes
+
+- feat: The onNapiModulesCall function of lynx-view provides the fourth parameter: `lynxView`, which is the actual lynx-view DOM. ([#350](https://github.com/lynx-family/lynx-stack/pull/350))
+
 ## 0.9.1
 
 ## 0.9.0
