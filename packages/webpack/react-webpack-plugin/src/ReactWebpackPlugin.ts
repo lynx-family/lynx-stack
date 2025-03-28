@@ -17,6 +17,23 @@ import { createLynxProcessEvalResultRuntimeModule } from './LynxProcessEvalResul
 const require = createRequire(import.meta.url);
 
 /**
+ * The options for extractStr.
+ *
+ * @public
+ */
+export interface ExtractStrConfig {
+  /**
+   * The minimum length of string literals to be extracted.
+   *
+   * @defaultValue `20`
+   *
+   * @public
+   */
+  strLength: number;
+  /** @internal */
+  extractedStrArr?: string[];
+}
+/**
  * The options for ReactWebpackPlugin
  *
  * @public
@@ -41,6 +58,14 @@ interface ReactWebpackPluginOptions {
    * The chunk names to be considered as main thread chunks.
    */
   mainThreadChunks?: string[] | undefined;
+
+  /**
+   * Merge same string literals in JS and Lepus to reduce output bundle size.
+   * Set to `false` to disable.
+   *
+   * @defaultValue false
+   */
+  extractStr?: Partial<ExtractStrConfig> | boolean;
 
   /**
    * Whether to enable lazy bundle.
@@ -118,6 +143,7 @@ class ReactWebpackPlugin {
       firstScreenSyncTiming: 'immediately',
       enableSSR: false,
       mainThreadChunks: [],
+      extractStr: false,
       experimental_isLazyBundle: false,
     });
 
@@ -157,8 +183,7 @@ class ReactWebpackPlugin {
       __PROFILE__: JSON.stringify(
         process.env['REACT_PROFILE'] ?? compiler.options.mode === 'development',
       ),
-      // TODO: config
-      __EXTRACT_STR__: JSON.stringify(false),
+      __EXTRACT_STR__: JSON.stringify(Boolean(options.extractStr)),
       __FIRST_SCREEN_SYNC_TIMING__: JSON.stringify(
         options.firstScreenSyncTiming,
       ),
