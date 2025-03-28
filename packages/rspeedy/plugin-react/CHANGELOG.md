@@ -1,5 +1,19 @@
 # @lynx-js/react-rsbuild-plugin
 
+## 0.9.4
+
+### Patch Changes
+
+- Convert background-only files from js to ts ([#346](https://github.com/lynx-family/lynx-stack/pull/346))
+
+- Updated dependencies [[`d730101`](https://github.com/lynx-family/lynx-stack/commit/d7301017a383b8825cdc813a649ef26ce1c37641), [`42217c2`](https://github.com/lynx-family/lynx-stack/commit/42217c2c77a33e729977fc7108b218a1cb868e6a), [`f03bd4a`](https://github.com/lynx-family/lynx-stack/commit/f03bd4a62f81902ba55caf10df56447c89743e62)]:
+  - @lynx-js/react-webpack-plugin@0.6.10
+  - @lynx-js/template-webpack-plugin@0.6.7
+  - @lynx-js/react-alias-rsbuild-plugin@0.9.4
+  - @lynx-js/react-refresh-webpack-plugin@0.3.2
+  - @lynx-js/css-extract-webpack-plugin@0.5.2
+  - @lynx-js/web-webpack-plugin@0.6.3
+
 ## 0.9.3
 
 ### Patch Changes

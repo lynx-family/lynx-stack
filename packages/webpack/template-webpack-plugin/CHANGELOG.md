@@ -1,5 +1,11 @@
 # @lynx-js/template-webpack-plugin
 
+## 0.6.7
+
+### Patch Changes
+
+- fix: merge different chunk groups for same output filename ([#371](https://github.com/lynx-family/lynx-stack/pull/371))
+
 ## 0.6.6
 
 ### Patch Changes
