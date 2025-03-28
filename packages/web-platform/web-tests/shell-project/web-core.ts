@@ -13,14 +13,16 @@ const color_environment = URL.createObjectURL(
     [`export default function(NapiModules, NapiModulesCall) {
   return {
     getColor() {
-      NapiModules.color_methods.getColor({ color: 'green' }, color => {
-        console.log(color);
+      NapiModules.color_methods.getColor({ color: 'green' }, data => {
+        console.log(data.color);
+        console.log(data.tagName);
       });
     },
     ColorEngine: class ColorEngine {
       getColor(name) {
-        NapiModules.color_methods.getColor({ color: 'green' }, color => {
-          console.log(color);
+        NapiModules.color_methods.getColor({ color: 'green' }, data => {
+          console.log(data.color);
+        console.log(data.tagName);
         });
       }
     },
@@ -35,8 +37,8 @@ const color_methods = URL.createObjectURL(
     [`export default function(NapiModules, NapiModulesCall) {
   return {
     async getColor(data, callback) {
-      const color = await NapiModulesCall('getColor', data);
-      callback(color);
+      const handledData = await NapiModulesCall('getColor', data);
+      callback(handledData);
     },
   };
 };`],
@@ -55,9 +57,11 @@ async function run() {
     'color_environment': color_environment,
     'color_methods': color_methods,
   };
-  lynxView.onNapiModulesCall = (name, data, moduleName) => {
+  lynxView.onNapiModulesCall = (name, data, moduleName, lynxView) => {
     if (name === 'getColor' && moduleName === 'color_methods') {
-      return { data: data.color };
+      return {
+        data: { color: data.color, tagName: lynxView.tagName },
+      };
     }
   };
   lynxView.addEventListener('error', () => {

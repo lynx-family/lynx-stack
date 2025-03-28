@@ -278,9 +278,13 @@ test.describe('web core tests', () => {
     await wait(3000);
     const backWorker = await getBackgroundThreadWorker(page);
     let successCallback = false;
+    let successCallback2 = false;
     await page.on('console', async (message) => {
       if (message.text() === 'green') {
         successCallback = true;
+      }
+      if (message.text() === 'LYNX-VIEW') {
+        successCallback2 = true;
       }
     });
     await backWorker.evaluate(() => {
@@ -292,6 +296,7 @@ test.describe('web core tests', () => {
     });
     await wait(100);
     expect(successCallback).toBeTruthy();
+    expect(successCallback2).toBeTruthy();
   });
 
   test('api-onNapiModulesCall-class', async ({ page, browserName }) => {
@@ -305,9 +310,13 @@ test.describe('web core tests', () => {
     await wait(3000);
     const backWorker = await getBackgroundThreadWorker(page);
     let successCallback = false;
+    let successCallback2 = false;
     await page.on('console', async (message) => {
       if (message.text() === 'green') {
         successCallback = true;
+      }
+      if (message.text() === 'LYNX-VIEW') {
+        successCallback2 = true;
       }
     });
     await backWorker.evaluate(() => {
@@ -320,5 +329,6 @@ test.describe('web core tests', () => {
     });
     await wait(100);
     expect(successCallback).toBeTruthy();
+    expect(successCallback2).toBeTruthy();
   });
 });

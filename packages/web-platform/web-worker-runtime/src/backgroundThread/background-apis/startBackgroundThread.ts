@@ -6,9 +6,9 @@ import { Rpc } from '@lynx-js/web-worker-rpc';
 import { createBackgroundLynx } from './createBackgroundLynx.js';
 import { createNativeApp } from './createNativeApp.js';
 import { registerDisposeHandler } from './crossThreadHandlers/registerDisposeHandler.js';
-import { createMarkTimingInternal } from './crossThreadHandlers/createBackgroundMarkTimingInternal.js';
 import { BackgroundThreadStartEndpoint } from '@lynx-js/web-constants';
 import { createNapiLoader } from './createNapiLoader.js';
+import { createTimingSystem } from './createTimingSystem.js';
 
 const lynxCore = import(
   /* webpackMode: "eager" */ '@lynx-js/lynx-core/web'
@@ -20,17 +20,17 @@ export function startBackgroundThread(
 ): void {
   const uiThreadRpc = new Rpc(uiThreadPort, 'bg-to-ui');
   const mainThreadRpc = new Rpc(mainThreadPort, 'bg-to-main');
-  const markTimingInternal = createMarkTimingInternal(uiThreadRpc);
-  markTimingInternal('load_core_start');
+  const timingSystem = createTimingSystem(mainThreadRpc, uiThreadRpc);
+  timingSystem.markTimingInternal('load_core_start');
   mainThreadRpc.registerHandler(
     BackgroundThreadStartEndpoint,
     async (config) => {
-      markTimingInternal('load_core_end');
+      timingSystem.markTimingInternal('load_core_end');
       const nativeApp = await createNativeApp({
         ...config,
         uiThreadRpc,
         mainThreadRpc,
-        markTimingInternal,
+        timingSystem,
       });
       (globalThis as any)['napiLoaderOnRT' + nativeApp.id] =
         await createNapiLoader(

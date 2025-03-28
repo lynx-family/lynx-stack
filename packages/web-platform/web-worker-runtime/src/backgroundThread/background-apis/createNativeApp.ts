@@ -21,10 +21,10 @@ import { createNativeModules } from './createNativeModules.js';
 import { registerUpdateDataHandler } from './crossThreadHandlers/registerUpdateDataHandler.js';
 import { registerPublishEventHandler } from './crossThreadHandlers/registerPublishEventHandler.js';
 import { createPerformanceApis } from './createPerformanceApis.js';
-import { registerPostTimingResultHandler } from './crossThreadHandlers/registerPostTimingResultHandler.js';
 import { registerOnNativeAppReadyHandler } from './crossThreadHandlers/registerOnNativeAppReadyHandler.js';
 import { registerSendGlobalEventHandler } from './crossThreadHandlers/registerSendGlobalEvent.js';
 import { createJSObjectDestructionObserver } from './crossThreadHandlers/createJSObjectDestructionObserver.js';
+import type { TimingSystem } from './createTimingSystem.js';
 
 let nativeAppCount = 0;
 
@@ -32,18 +32,18 @@ export async function createNativeApp(config: {
   template: LynxTemplate;
   uiThreadRpc: Rpc;
   mainThreadRpc: Rpc;
-  markTimingInternal: (timingKey: string, pipelineId?: string) => void;
   nativeModulesMap: NativeModulesMap;
+  timingSystem: TimingSystem;
 }): Promise<NativeApp> {
   const {
     mainThreadRpc,
     uiThreadRpc,
-    markTimingInternal,
     template,
     nativeModulesMap,
+    timingSystem,
   } = config;
-  const { performanceApis, pipelineIdToTimingFlags } = createPerformanceApis(
-    markTimingInternal,
+  const performanceApis = createPerformanceApis(
+    timingSystem,
   );
   const callLepusMethod = mainThreadRpc.createCallbackify(
     callLepusMethodEndpoint,
@@ -131,11 +131,6 @@ export async function createNativeApp(config: {
         uiThreadRpc,
         tt,
       );
-      registerPostTimingResultHandler(
-        uiThreadRpc,
-        tt,
-        pipelineIdToTimingFlags,
-      );
       registerOnNativeAppReadyHandler(
         uiThreadRpc,
         tt,
@@ -144,6 +139,7 @@ export async function createNativeApp(config: {
         uiThreadRpc,
         tt,
       );
+      timingSystem.registerGlobalEmitter(tt.GlobalEventEmitter);
     },
     triggerComponentEvent,
     selectComponent,
