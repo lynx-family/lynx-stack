@@ -12,6 +12,7 @@ import { loadConfig } from '../config/loadConfig.js'
 import { createRspeedy } from '../create-rspeedy.js'
 
 export interface InspectOptions extends CommonOptions {
+  base?: string | undefined
   mode?: 'production' | 'development' | undefined
   verbose?: boolean | undefined
   output?: string | undefined
@@ -27,6 +28,11 @@ export async function inspect(
       cwd,
       configPath: inspectOptions.config,
     })
+
+    if (inspectOptions.base) {
+      rspeedyConfig.server ??= {}
+      rspeedyConfig.server.base = inspectOptions.base
+    }
 
     const rspeedy = await createRspeedy({ cwd, rspeedyConfig })
 

@@ -63,6 +63,7 @@ export function apply(program: Command): Command {
   const inspectCommand = program.command('inspect')
   inspectCommand
     .description('View the Rsbuild config and Rspack config of the project.')
+    .option('--base <base>', 'specify the base path of the server')
     .option('--mode <mode>', 'specify the mode of Rsbuild', 'development')
     .option('--output <output>', 'specify inspect content output path')
     .option('--verbose', 'show full function definitions in output')
