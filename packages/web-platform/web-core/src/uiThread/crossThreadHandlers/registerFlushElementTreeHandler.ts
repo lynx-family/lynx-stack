@@ -14,15 +14,8 @@ export function registerFlushElementTreeHandler(
     shadowRoot: ShadowRoot;
   },
   onCommit: (info: {
-    pipelineId: string | undefined;
-    timingFlags: string[];
     isFP: boolean;
   }) => void,
-  markTimingInternal: (
-    timingKey: string,
-    pipelineId?: string,
-    timeStamp?: number,
-  ) => void,
 ) {
   const {
     shadowRoot,
@@ -35,19 +28,9 @@ export function registerFlushElementTreeHandler(
   let isFP = true;
   mainThreadRpc.registerHandler(
     flushElementTreeEndpoint,
-    (operations, options, timingFlags) => {
-      const { pipelineOptions } = options;
-      const pipelineId = pipelineOptions?.pipelineID;
-      markTimingInternal('dispatch_start', pipelineId);
-      markTimingInternal('layout_start', pipelineId);
-      markTimingInternal('ui_operation_flush_start', pipelineId);
+    (operations) => {
       decodeOperation(operations);
-      markTimingInternal('ui_operation_flush_end', pipelineId);
-      markTimingInternal('layout_end', pipelineId);
-      markTimingInternal('dispatch_end', pipelineId);
       onCommit({
-        pipelineId,
-        timingFlags,
         isFP,
       });
       if (isFP) {

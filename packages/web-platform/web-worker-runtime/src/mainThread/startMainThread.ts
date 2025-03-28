@@ -15,6 +15,7 @@ import {
   postExposureEndpoint,
   postOffscreenEventEndpoint,
   switchExposureServiceEndpoint,
+  postTimingFlagsEndpoint,
 } from '@lynx-js/web-constants';
 import { Rpc } from '@lynx-js/web-worker-rpc';
 import {
@@ -37,7 +38,10 @@ export function startMainThread(
 ): void {
   const uiThreadRpc = new Rpc(uiThreadPort, 'main-to-ui');
   const backgroundThreadRpc = new Rpc(backgroundThreadPort, 'main-to-bg');
-  const markTimingInternal = createMarkTimingInternal(uiThreadRpc);
+  const markTimingInternal = createMarkTimingInternal(backgroundThreadRpc);
+  const postTimingFlags = backgroundThreadRpc.createCall(
+    postTimingFlagsEndpoint,
+  );
   const backgroundStart = backgroundThreadRpc.createCall(
     BackgroundThreadStartEndpoint,
   );
@@ -129,9 +133,17 @@ export function startMainThread(
             runtime.renderPage!(initData);
             runtime.__FlushElementTree(undefined, {});
           },
-          flushElementTree: (options, timingFlags) => {
+          flushElementTree: async (options, timingFlags) => {
+            const pipelineId = options?.pipelineOptions?.pipelineID;
+            markTimingInternal('dispatch_start', pipelineId);
             docu.commit();
-            flushElementTree(operations, options, timingFlags);
+            markTimingInternal('layout_start', pipelineId);
+            markTimingInternal('ui_operation_flush_start', pipelineId);
+            await flushElementTree(operations);
+            markTimingInternal('ui_operation_flush_end', pipelineId);
+            markTimingInternal('layout_end', pipelineId);
+            markTimingInternal('dispatch_end', pipelineId);
+            postTimingFlags(timingFlags, pipelineId);
           },
           _ReportError: reportError,
           __OnLifecycleEvent,
