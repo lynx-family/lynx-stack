@@ -191,3 +191,17 @@ x-list[list-type="flow"][scroll-orientation="horizontal"]
   grid-row-start: 1;
   grid-row-end: calc(var(--list-item-span-count) + 1);
 }
+
+x-list[list-type="flow"][x-enable-scrolltoupper-event]::part(upper-threshold-observer),
+x-list[list-type="flow"][x-enable-scrolltoupperedge-event]::part(upper-threshold-observer),
+x-list[list-type="flow"][x-enable-scrolltolower-event]::part(lower-threshold-observer),
+x-list[list-type="flow"][x-enable-scrolltoloweredge-event]::part(lower-threshold-observer) {
+  grid-column: 1 / calc(var(--list-item-span-count) + 1);
+}
+
+x-list[list-type="flow"][scroll-orientation="horizontal"][x-enable-scrolltoupper-event]::part(upper-threshold-observer),
+x-list[list-type="flow"][scroll-orientation="horizontal"][x-enable-scrolltoupperedge-event]::part(upper-threshold-observer),
+x-list[list-type="flow"][scroll-orientation="horizontal"][x-enable-scrolltolower-event]::part(lower-threshold-observer),
+x-list[list-type="flow"][scroll-orientation="horizontal"][x-enable-scrolltoloweredge-event]::part(lower-threshold-observer) {
+  grid-row: 1 / calc(var(--list-item-span-count) + 1);
+}

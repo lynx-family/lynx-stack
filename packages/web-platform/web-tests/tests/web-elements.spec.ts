@@ -1740,6 +1740,59 @@ test.describe('web-elements test suite', () => {
     );
 
     test(
+      'event-scrolltoupper-flow',
+      async ({ page, browserName }, { titlePath }) => {
+        titlePath[titlePath.length - 1] = 'event-scrolltoupper-tolower-flow';
+        const title = getTitle(titlePath);
+        await gotoWebComponentPage(page, title);
+        await diffScreenShot(page, title, 'index');
+        if (browserName === 'webkit') test.skip(); // cannot wheel
+        let scrolltoupper = false;
+        await page.on('console', async (msg) => {
+          const event = await msg.args()[0]?.evaluate((e) => ({
+            type: e.type,
+          }));
+          if (!event) return;
+          if (event.type === 'scrolltoupper') {
+            scrolltoupper = true;
+          }
+        });
+        await page.mouse.move(200, 200);
+        await page.mouse.wheel(0, 100);
+        await page.mouse.wheel(0, -500);
+        await wait(1000);
+        expect(scrolltoupper).toBeTruthy();
+      },
+    );
+    test(
+      'event-scrolltolower-flow',
+      async ({ page, browserName }, { titlePath }) => {
+        titlePath[titlePath.length - 1] = 'event-scrolltoupper-tolower-flow';
+        const title = getTitle(titlePath);
+        await gotoWebComponentPage(page, title);
+        if (browserName === 'webkit') test.skip(); // cannot wheel
+        let scrolltolower = false;
+        await page.on('console', async (msg) => {
+          const event = await msg.args()[0]?.evaluate((e) => ({
+            type: e.type,
+          }));
+          if (!event) return;
+          if (event.type === 'scrolltolower') {
+            scrolltolower = true;
+          }
+        });
+        await page.evaluate(() => {
+          document.querySelector('x-list')?.shadowRoot?.querySelector(
+            '#content',
+          )
+            ?.scrollTo(0, 5000);
+        });
+        await wait(1000);
+        expect(scrolltolower).toBeTruthy();
+      },
+    );
+
+    test(
       'event-lower-threshold-item-count',
       async ({ page, browserName }, { titlePath }) => {
         if (browserName === 'webkit') test.skip(); // cannot wheel
