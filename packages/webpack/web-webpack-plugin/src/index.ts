@@ -1,8 +1,10 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import fs from 'node:fs';
+import path from 'node:path';
 
-import type { Compilation, Compiler } from 'webpack';
+import type { Compiler } from 'webpack';
 
 import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin';
 
@@ -12,6 +14,7 @@ export class WebWebpackPlugin {
   static name = 'lynx-for-web-plugin';
   static BEFORE_ENCODE_HOOK_STAGE = 100;
   static ENCODE_HOOK_STAGE = 100;
+  private assets2Delete = new Set<string>();
 
   apply(compiler: Compiler): void {
     const isDev = process.env['NODE_ENV'] === 'development'
@@ -35,7 +38,7 @@ export class WebWebpackPlugin {
 
           if (!isDebug() && !isDev && !isRsdoctor()) {
             hooks.beforeEmit.tap({ name: WebWebpackPlugin.name }, (args) => {
-              this.deleteDebuggingAssets(compilation, [
+              this.deleteDebuggingAssets([
                 { name },
                 encodeData.lepusCode.root,
                 ...encodeData.lepusCode.chunks,
@@ -56,6 +59,32 @@ export class WebWebpackPlugin {
             pageConfig: encodeData.compilerOptions,
           });
           return encodeOptions;
+        });
+        compiler.hooks.afterEmit.tap(WebWebpackPlugin.name, (compilation) => {
+          this.assets2Delete.forEach((asset) => {
+            compilation.deleteAsset(asset);
+            if (compilation.outputOptions.path) {
+              const files2Delete = [
+                asset,
+              ];
+              if (asset.endsWith('.js')) {
+                files2Delete.push(asset + '.map');
+              }
+              for (const file of files2Delete) {
+                fs.rmSync(
+                  path.posix.join(
+                    compilation.outputOptions.path,
+                    file,
+                  ),
+                  {
+                    recursive: true,
+                    force: true,
+                  },
+                );
+              }
+            }
+          });
+          this.assets2Delete.clear();
         });
 
         hooks.encode.tap({
@@ -82,14 +111,15 @@ export class WebWebpackPlugin {
    * The deleteDebuggingAssets delete all the assets that are inlined into the template.
    */
   deleteDebuggingAssets(
-    compilation: Compilation,
     assets: ({ name: string } | undefined)[],
   ): void {
+    this.assets2Delete = new Set();
+    const { assets2Delete } = this;
     assets
       .filter(asset => asset !== undefined)
       .forEach(asset => deleteAsset(asset));
     function deleteAsset({ name }: { name: string }) {
-      return compilation.deleteAsset(name);
+      return assets2Delete.add(name);
     }
   }
 }
