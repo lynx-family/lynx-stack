@@ -176,6 +176,11 @@ async function OnLifecycleEvent([type, data]: [string, any]) {
       }
       break;
     }
+    case LifecycleConstant.publishEvent: {
+      const { handlerName, data: data2 } = data;
+      publishEvent(handlerName, data2);
+      break;
+    }
   }
   if (__PROFILE__) {
     console.profileEnd();
