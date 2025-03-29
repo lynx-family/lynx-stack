@@ -338,6 +338,84 @@ describe('CLI - Inspect', () => {
     )
   })
 
+  test('inspect with base', async () => {
+    const { loadConfig } = await import('../../src/config/loadConfig.js')
+
+    await vi.mocked(loadConfig).withImplementation(
+      () => Promise.resolve({ content: {}, configPath: '' }),
+      async () => {
+        vi.stubEnv('NODE_ENV', 'development')
+        const { createRspeedy } = await import('../../src/create-rspeedy.js')
+        const { inspect } = await import('../../src/cli/inspect.js')
+
+        const tmp = await mkdtemp(path.join(tmpdir(), 'rspeedy-test'))
+
+        const program = new Command('test')
+
+        await inspect.call(
+          program,
+          tmp,
+          {
+            base: '/foo',
+          },
+        )
+
+        expect(createRspeedy).toBeCalledTimes(1)
+
+        const [rsbuild] = await Promise.all(
+          vi.mocked(createRspeedy).mock.results
+            .filter(i => i.type === 'return')
+            .map(i => i.value),
+        )
+
+        expect(
+          existsSync(path.join(tmp, 'dist', '.rsbuild', 'rspeedy.config.js')),
+        )
+          .toBeTruthy()
+        await expect(
+          import(path.join(tmp, 'dist', '.rsbuild', 'rspeedy.config.js')),
+        )
+          .resolves.toStrictEqual(
+            expect.objectContaining({
+              default: { server: { base: '/foo' } },
+            }),
+          )
+
+        expect(existsSync(path.join(
+          tmp,
+          'dist',
+          '.rsbuild',
+          'rsbuild.config.mjs',
+        ))).toBeTruthy()
+
+        expect(existsSync(path.join(
+          tmp,
+          'dist',
+          '.rsbuild',
+          'rspack.config.lynx.mjs',
+        ))).toBeTruthy()
+
+        expect(rsbuild).not.toBeUndefined()
+        expect(rsbuild!.inspectConfig).toBeCalledTimes(1)
+
+        const [inspectResult] = await Promise.all(
+          vi.mocked(rsbuild!.inspectConfig).mock.results
+            .filter(i => i.type === 'return')
+            .map(i => i.value as Promise<InspectConfigResult>),
+        )
+
+        expect(inspectResult).not.toBeUndefined()
+
+        expect(inspectResult).toHaveProperty(
+          'rsbuildConfig',
+          expect.any(String),
+        )
+
+        expect(inspectResult!.bundlerConfigs).toHaveLength(1)
+      },
+    )
+  })
+
   test('inspect rspeedy config', async () => {
     const { loadConfig } = await import('../../src/config/loadConfig.js')
 
