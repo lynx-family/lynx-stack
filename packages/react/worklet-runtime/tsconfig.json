@@ -11,6 +11,7 @@
     "moduleResolution": "Node16",
     "resolveJsonModule": true,
     "composite": true,
+    "emitDeclarationOnly": true,
   },
   "include": ["src"],
 }

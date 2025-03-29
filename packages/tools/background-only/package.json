@@ -1,0 +1,6 @@
+{
+  "name": "background-only",
+  "version": "0.0.0",
+  "private": true,
+  "main": "index.js"
+}

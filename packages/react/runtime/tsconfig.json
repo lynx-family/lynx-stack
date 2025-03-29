@@ -6,6 +6,7 @@
     "baseUrl": "./",
     "rootDir": "./src",
     "jsx": "preserve",
+    "emitDeclarationOnly": true,
   },
   "references": [{
     "path": "../worklet-runtime/tsconfig.json",

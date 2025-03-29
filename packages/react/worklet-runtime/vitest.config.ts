@@ -17,6 +17,7 @@ const config: UserConfig = defineConfig({
         'src/listeners.ts',
         'src/types/**',
         'vitest.config.ts',
+        'rslib.config.ts',
       ],
       thresholds: {
         lines: 100,
