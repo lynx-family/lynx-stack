@@ -40,6 +40,7 @@ function injectGlobals() {
   globalThis.__MAIN_THREAD__ = true;
   globalThis.__REF_FIRE_IMMEDIATELY__ = false;
   globalThis.__ENABLE_SSR__ = true;
+  globalThis.__DISABLE_MTS_AND_GESTURE__ = false;
   globalThis.__FIRST_SCREEN_SYNC_TIMING__ = 'immediately';
   globalThis.__TESTING_FORCE_RENDER_TO_OPCODE__ = false;
   globalThis.globDynamicComponentEntry = '__Card__';
