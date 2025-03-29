@@ -1274,6 +1274,7 @@ describe('firstScreenSyncTiming - jsReady', () => {
     {
       // LifecycleConstant.firstScreen
       globalEnvManager.switchToBackground();
+      expect(globalThis.__OnLifecycleEvent).toHaveBeenCalledTimes(1);
       const rLynxFirstScreen = globalThis.__OnLifecycleEvent.mock.calls[0];
       lynxCoreInject.tt.OnLifecycleEvent(...rLynxFirstScreen);
       expect(rLynxFirstScreen).toMatchInlineSnapshot(`
@@ -1679,6 +1680,197 @@ describe('firstScreenSyncTiming - jsReady', () => {
               "pipelineID": "pipelineID",
             },
             "reloadVersion": 5,
+          },
+        }
+      `);
+
+      // rLynxChange
+      globalEnvManager.switchToMainThread();
+      const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
+      globalThis[rLynxChange[0]](rLynxChange[1]);
+      lynx.getNativeApp().callLepusMethod.mockClear();
+    }
+  });
+
+  it('reload template before js ready', async function() {
+    // main thread render
+    {
+      __root.__jsx = BasicMT;
+      renderPage({
+        text: 'Hello',
+      });
+      expect(__root.__element_root).toMatchInlineSnapshot(`
+        <page
+          cssId="default-entry-from-native:0"
+        >
+          <view>
+            <text>
+              <raw-text
+                text="Hello"
+              />
+            </text>
+            <text>
+              <raw-text
+                text="World"
+              />
+            </text>
+            <view
+              attr={
+                {
+                  "dataX": "WorldX",
+                }
+              }
+            />
+            <wrapper>
+              <view
+                attr={
+                  {
+                    "attr": {
+                      "dataX": "WorldX",
+                    },
+                  }
+                }
+              />
+            </wrapper>
+          </view>
+        </page>
+      `);
+    }
+
+    // main thread update 1
+    {
+      updatePage({
+        text: 'Hello 1',
+      }, { reloadTemplate: true });
+      expect(__root.__element_root).toMatchInlineSnapshot(`
+        <page
+          cssId="default-entry-from-native:0"
+        >
+          <view>
+            <text>
+              <raw-text
+                text="Hello 1"
+              />
+            </text>
+            <text>
+              <raw-text
+                text="World"
+              />
+            </text>
+            <view
+              attr={
+                {
+                  "dataX": "WorldX",
+                }
+              }
+            />
+            <wrapper>
+              <view
+                attr={
+                  {
+                    "attr": {
+                      "dataX": "WorldX",
+                    },
+                  }
+                }
+              />
+            </wrapper>
+          </view>
+        </page>
+      `);
+    }
+
+    // main thread update 2
+    {
+      updatePage({
+        text: 'Hello 2',
+      }, { reloadTemplate: true });
+      expect(__root.__element_root).toMatchInlineSnapshot(`
+        <page
+          cssId="default-entry-from-native:0"
+        >
+          <view>
+            <text>
+              <raw-text
+                text="Hello 2"
+              />
+            </text>
+            <text>
+              <raw-text
+                text="World"
+              />
+            </text>
+            <view
+              attr={
+                {
+                  "dataX": "WorldX",
+                }
+              }
+            />
+            <wrapper>
+              <view
+                attr={
+                  {
+                    "attr": {
+                      "dataX": "WorldX",
+                    },
+                  }
+                }
+              />
+            </wrapper>
+          </view>
+        </page>
+      `);
+    }
+
+    // background render
+    {
+      globalEnvManager.switchToBackground();
+      root.render(ViewBG, __root);
+
+      expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
+      expect(lynx.getNativeApp().callLepusMethod.mock.calls[0]).toMatchInlineSnapshot(`
+        [
+          "rLynxJSReady",
+          {},
+        ]
+      `);
+      globalEnvManager.switchToMainThread();
+      const rLynxJSReady = lynx.getNativeApp().callLepusMethod.mock.calls[0];
+      globalThis[rLynxJSReady[0]](rLynxJSReady[1]);
+      lynx.getNativeApp().callLepusMethod.mockClear();
+    }
+
+    // hydrate
+    {
+      // LifecycleConstant.firstScreen
+      globalEnvManager.switchToBackground();
+      expect(globalThis.__OnLifecycleEvent).toHaveBeenCalledTimes(1);
+      const rLynxFirstScreen = globalThis.__OnLifecycleEvent.mock.calls[0];
+      lynxCoreInject.tt.OnLifecycleEvent(...rLynxFirstScreen);
+      expect(rLynxFirstScreen).toMatchInlineSnapshot(`
+        [
+          [
+            "rLynxFirstScreen",
+            {
+              "jsReadyEventIdSwap": {},
+              "refPatch": "{}",
+              "root": "{"id":-17,"type":"root","children":[{"id":-21,"type":"__Card__:__snapshot_a94a8_test_2","values":[{"dataX":"WorldX"}],"children":[{"id":-18,"type":"__Card__:__snapshot_a94a8_test_3","children":[{"id":-23,"type":null,"values":["Hello 2"]}]},{"id":-19,"type":"__Card__:__snapshot_a94a8_test_4","children":[{"id":-24,"type":null,"values":["World"]}]},{"id":-20,"type":"wrapper","children":[{"id":-22,"type":"__Card__:__snapshot_a94a8_test_1","values":[{"attr":{"dataX":"WorldX"}}]}]}]}]}",
+            },
+          ],
+        ]
+      `);
+      expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
+      expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1]).toMatchInlineSnapshot(`
+        {
+          "data": "{"patchList":[{"snapshotPatch":[2,-17,-21,0,"__Card__:__snapshot_a94a8_test_5",2,0,"__Card__:__snapshot_a94a8_test_2",3,4,3,[{"dataX":"WorldX"}],0,"__Card__:__snapshot_a94a8_test_3",4,0,null,5,4,5,["Hello 2"],1,4,5,null,1,3,4,null,0,"__Card__:__snapshot_a94a8_test_4",6,0,null,7,4,7,["World"],1,6,7,null,1,3,6,null,0,"wrapper",8,0,"__Card__:__snapshot_a94a8_test_1",9,4,9,[{"attr":{"dataX":"WorldX"}}],1,8,9,null,1,3,8,null,1,2,3,null,1,-17,2,null],"id":27}]}",
+          "patchOptions": {
+            "isHydration": true,
+            "pipelineOptions": {
+              "needTimestamps": true,
+              "pipelineID": "pipelineID",
+            },
+            "reloadVersion": 7,
           },
         }
       `);
