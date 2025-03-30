@@ -40,8 +40,7 @@
   "files": [
     "bin",
     "client",
-    "lib",
-    "!lib/**/*.js.map",
+    "dist",
     "register",
     "client.d.ts",
     "CHANGELOG.md",
@@ -49,6 +48,7 @@
   ],
   "scripts": {
     "api-extractor": "api-extractor run --verbose",
+    "build": "rslib build",
     "test": "pnpm -w run test --project rspeedy",
     "test:type": "vitest --typecheck.only"
   },
@@ -75,12 +75,32 @@
     "@rollup/plugin-typescript": "^12.1.2",
     "@rsbuild/webpack": "catalog:rsbuild",
     "eventemitter3": "^5.0.1",
+    "rsbuild-plugin-publint": "^0.3.0",
     "type-fest": "^4.38.0",
+    "typia-rspack-plugin": "^1.0.2",
     "vitest": "^3.0.9",
     "webpack": "^5.98.0"
   },
   "engines": {
     "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js"
+      },
+      "./client": {
+        "types": "./client.d.ts"
+      },
+      "./register": {
+        "types": "./register/index.d.ts",
+        "import": "./register/index.js"
+      },
+      "./package.json": "./package.json"
+    },
+    "types": "./dist/index.d.ts"
   },
   "tsdocMetadata": "./lib/tsdoc-metadata.json"
 }
