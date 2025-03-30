@@ -59,7 +59,7 @@
     "@rsbuild/webpack": "catalog:rsbuild",
     "tailwindcss": "^3.4.17",
     "type-fest": "^4.38.0",
-    "typia": "7.6.4",
+    "typia": "8.1.1",
     "typia-rspack-plugin": "^1.0.2"
   },
   "peerDependencies": {
