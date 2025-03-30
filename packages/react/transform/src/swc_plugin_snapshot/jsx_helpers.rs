@@ -234,6 +234,13 @@ pub fn jsx_is_list_item(jsx: &JSXElement) -> bool {
   }
 }
 
+pub fn has_list_in_children(jsx: &JSXElement) -> bool {
+  jsx.children.iter().any(|child| match child {
+    JSXElementChild::JSXElement(element) => jsx_is_list(element) || has_list_in_children(element),
+    _ => false,
+  })
+}
+
 pub fn jsx_is_children_full_dynamic(n: &JSXElement) -> bool {
   n.children.len() > 0
     && n

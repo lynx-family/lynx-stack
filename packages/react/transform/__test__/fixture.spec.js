@@ -174,6 +174,68 @@ describe('errors and warnings', () => {
     `);
   });
 
+  it('should handle error of using <list/> as direct child of <list-item>', async () => {
+    const { formatMessages } = await import('esbuild');
+
+    const result = await transformReactLynx(`
+      <list>
+        <list-item>
+          <list>
+          </list>
+        </list-item>
+      </list>
+      `);
+
+    expect(
+      await formatMessages(result.errors, {
+        kind: 'error',
+        color: false,
+      }),
+    ).toMatchInlineSnapshot(`
+      [
+        "✘ [ERROR] <list-item/> cannot contain <list/>
+
+          :3:8:
+            3 │         <list-item>
+              ╵         ~~~~~~~~~~~
+
+      ",
+      ]
+    `);
+  });
+
+  it('should handle error of using <list/> anywhere inside <list-item/>', async () => {
+    const { formatMessages } = await import('esbuild');
+
+    const result = await transformReactLynx(`
+      <list>
+        <list-item>
+          <view>
+            <list>
+            </list>
+          </view>
+        </list-item>
+      </list>
+      `);
+
+    expect(
+      await formatMessages(result.errors, {
+        kind: 'error',
+        color: false,
+      }),
+    ).toMatchInlineSnapshot(`
+      [
+        "✘ [ERROR] <list-item/> cannot contain <list/>
+
+          :3:8:
+            3 │         <list-item>
+              ╵         ~~~~~~~~~~~
+
+      ",
+      ]
+    `);
+  });
+
   it('should nodiff compat', async () => {
     const result = await transformReactLynx(
       `

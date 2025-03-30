@@ -34,7 +34,7 @@ use crate::{
 use self::{
   attr_name::AttrName,
   jsx_helpers::{
-    jsx_attr_name, jsx_attr_to_prop, jsx_attr_value, jsx_children_to_expr,
+    has_list_in_children, jsx_attr_name, jsx_attr_to_prop, jsx_attr_value, jsx_children_to_expr,
     jsx_is_children_full_dynamic, jsx_is_custom, jsx_is_list, jsx_is_list_item, jsx_name,
     jsx_props_to_obj, jsx_text_to_str, transform_jsx_attr_str,
   },
@@ -461,6 +461,14 @@ where
         });
 
       if jsx_is_list_item(&n) {
+        if has_list_in_children(&n) {
+          HANDLER.with(|handler| {
+            handler
+              .struct_span_err(n.span, "<list-item/> cannot contain <list/>")
+              .emit();
+          });
+        }
+
         if has_spread_element {
         } else {
           let mut list_item_platform_info: Vec<JSXAttr> = vec![];
