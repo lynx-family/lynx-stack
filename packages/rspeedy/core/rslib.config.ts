@@ -17,10 +17,15 @@ export default defineConfig({
       dts: false,
     },
   ],
+  output: {
+    externals: [
+      '@lynx-js/rspeedy/register',
+    ],
+  },
+  plugins: [pluginPublint()],
   source: {
     tsconfigPath: './tsconfig.build.json',
   },
-  plugins: [pluginPublint()],
   tools: {
     rspack: {
       optimization: {
