@@ -4,7 +4,7 @@ import { ChunkLoadingRspackPlugin } from '../../../../src/index';
 export default {
   mode: 'development',
   output: {
-    chunkLoading: 'require',
+    chunkLoading: 'lynx',
     chunkFormat: 'commonjs',
     chunkFilename: '[id].rspack.bundle.cjs',
   },
