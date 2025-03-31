@@ -6,8 +6,9 @@
 import { Component } from '@lynx-js/web-elements-reactive';
 import { ScrollIntoView } from '../ScrollView/ScrollIntoView.js';
 import { LynxExposure } from '../common/Exposure.js';
+import { CommonEventsAndMethods } from '../common/CommonEventsAndMethods.js';
 
-@Component<typeof XView>('x-view', [LynxExposure])
+@Component<typeof XView>('x-view', [LynxExposure, CommonEventsAndMethods])
 export class XView extends HTMLElement {
   superScrollIntoView(arg?: boolean | ScrollIntoViewOptions | undefined): void {
     super.scrollIntoView(arg);
