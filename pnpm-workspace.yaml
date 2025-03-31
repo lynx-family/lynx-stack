@@ -24,7 +24,7 @@ catalogs:
     "@rsbuild/webpack": "1.2.3"
     "@rsbuild/plugin-less": "1.2.1"
     "@rsbuild/plugin-sass": "1.3.1"
-    "@rsbuild/plugin-webpack-swc": "1.0.12"
+    "@rsbuild/plugin-webpack-swc": "1.1.0"
 
   # Rspack monorepo packages
   rspack:
