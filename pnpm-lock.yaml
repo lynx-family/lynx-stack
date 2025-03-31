@@ -65,8 +65,8 @@ importers:
         specifier: 'catalog:'
         version: 7.51.1(@types/node@22.13.5)
       '@rslib/core':
-        specifier: ^0.6.0
-        version: 0.6.0(@microsoft/api-extractor@7.51.1(@types/node@22.13.5))(typescript@5.7.3)
+        specifier: ^0.6.1
+        version: 0.6.1(@microsoft/api-extractor@7.51.1(@types/node@22.13.5))(typescript@5.7.3)
       '@rspack/core':
         specifier: 1.3.0-beta.1
         version: 1.3.0-beta.1(@swc/helpers@0.5.15)
@@ -499,10 +499,10 @@ importers:
         version: link:../../web-platform/web-elements
       '@rsbuild/plugin-less':
         specifier: catalog:rsbuild
-        version: 1.1.1(@rsbuild/core@1.3.0-beta.3)
+        version: 1.1.1(@rsbuild/core@1.3.1)
       '@rsbuild/plugin-sass':
         specifier: catalog:rsbuild
-        version: 1.3.1(@rsbuild/core@1.3.0-beta.3)
+        version: 1.3.1(@rsbuild/core@1.3.1)
       commander:
         specifier: ^13.1.0
         version: 13.1.0
@@ -517,7 +517,7 @@ importers:
         version: 1.1.1
       rsbuild-plugin-tailwindcss:
         specifier: 0.2.0
-        version: 0.2.0(@rsbuild/core@1.3.0-beta.3)(tailwindcss@3.4.17)
+        version: 0.2.0(@rsbuild/core@1.3.1)(tailwindcss@3.4.17)
       rslog:
         specifier: ^1.2.3
         version: 1.2.3
@@ -2562,8 +2562,8 @@ packages:
     engines: {node: '>=16.7.0'}
     hasBin: true
 
-  '@rsbuild/core@1.3.0-beta.3':
-    resolution: {integrity: sha512-BlW8fXLqDdVatNz8Fz90gCnPTDkF+kDSCyrAP644W1DyrUMwoVbbAHvQz1HCXJB6v9wntsZJutBVBsRTSXwmWg==}
+  '@rsbuild/core@1.3.1':
+    resolution: {integrity: sha512-9Sk2anWUI2qVx11saDdmiG4k3lm+jnakCTOw6JIz+4/Rb0dvt9yWiEhJN7k9o2eRhS8+rthqXpnOe62tAilVwQ==}
     engines: {node: '>=16.7.0'}
     hasBin: true
 
@@ -2658,8 +2658,8 @@ packages:
   '@rsdoctor/utils@1.0.1':
     resolution: {integrity: sha512-gqC0eeY1zD/BZIZ31WOaiua9r9L4kDBUYO691fCPPF7vvT17BZs1PmL8KpsHKYrXV32mwZDlMSinqUox3zy1qg==}
 
-  '@rslib/core@0.6.0':
-    resolution: {integrity: sha512-srEfQB4FWWOV2DBfLCzGdPNl5geIBb/KWaaSU+lCQArDtcZ9DkcswEkG8mHE00BDfGpT8/4EmrNIpL7hEY5jJg==}
+  '@rslib/core@0.6.1':
+    resolution: {integrity: sha512-bO1zsGtC+elncvenqWq8XjPPR1Z83oVSQHSaP19WZENugN7HNFqQ/jrTWJ0CfuAo88bdEKXUhDymb9DlAnm0zw==}
     engines: {node: '>=16.7.0'}
     hasBin: true
     peerDependencies:
@@ -7107,8 +7107,8 @@ packages:
   rrweb-cssom@0.8.0:
     resolution: {integrity: sha512-guoltQEx+9aMf2gDZ0s62EcV8lsXR+0w8915TC3ITdn2YueuNjdAYh/levpU9nFaoChh9RUS5ZdQMrKfVEN9tw==}
 
-  rsbuild-plugin-dts@0.6.0:
-    resolution: {integrity: sha512-u9g5E9uHfIIxJBvAFdS7DQGZUrs3PerzA8Pu6k335093yJSfWhJNKPfen6edkSO2IQavgbkLjot2QnSwRTd/Cw==}
+  rsbuild-plugin-dts@0.6.1:
+    resolution: {integrity: sha512-IG3nslr39QC2p7PvjhvLgb2Xr1stctYikdKwtU/cksKp0r7rs0oKGdYxqSrqIWgHU+t+jFzUkkT6cghJOOIZ9Q==}
     engines: {node: '>=16.7.0'}
     peerDependencies:
       '@microsoft/api-extractor': ^7
@@ -9921,7 +9921,7 @@ snapshots:
     transitivePeerDependencies:
       - '@rspack/tracing'
 
-  '@rsbuild/core@1.3.0-beta.3':
+  '@rsbuild/core@1.3.1':
     dependencies:
       '@rspack/core': 1.3.0-beta.1(@swc/helpers@0.5.15)
       '@rspack/lite-tapable': 1.0.1
@@ -9956,9 +9956,9 @@ snapshots:
       - lightningcss
       - webpack
 
-  '@rsbuild/plugin-less@1.1.1(@rsbuild/core@1.3.0-beta.3)':
+  '@rsbuild/plugin-less@1.1.1(@rsbuild/core@1.3.1)':
     dependencies:
-      '@rsbuild/core': 1.3.0-beta.3
+      '@rsbuild/core': 1.3.1
       deepmerge: 4.3.1
       reduce-configs: 1.1.0
 
@@ -9986,9 +9986,9 @@ snapshots:
       reduce-configs: 1.1.0
       sass-embedded: 1.86.0
 
-  '@rsbuild/plugin-sass@1.3.1(@rsbuild/core@1.3.0-beta.3)':
+  '@rsbuild/plugin-sass@1.3.1(@rsbuild/core@1.3.1)':
     dependencies:
-      '@rsbuild/core': 1.3.0-beta.3
+      '@rsbuild/core': 1.3.1
       deepmerge: 4.3.1
       loader-utils: 2.0.4
       postcss: 8.5.3
@@ -10157,10 +10157,10 @@ snapshots:
       - supports-color
       - webpack
 
-  '@rslib/core@0.6.0(@microsoft/api-extractor@7.51.1(@types/node@22.13.5))(typescript@5.7.3)':
+  '@rslib/core@0.6.1(@microsoft/api-extractor@7.51.1(@types/node@22.13.5))(typescript@5.7.3)':
     dependencies:
-      '@rsbuild/core': 1.3.0-beta.3
-      rsbuild-plugin-dts: 0.6.0(@microsoft/api-extractor@7.51.1(@types/node@22.13.5))(@rsbuild/core@1.3.0-beta.3)(typescript@5.7.3)
+      '@rsbuild/core': 1.3.1
+      rsbuild-plugin-dts: 0.6.1(@microsoft/api-extractor@7.51.1(@types/node@22.13.5))(@rsbuild/core@1.3.1)(typescript@5.7.3)
       tinyglobby: 0.2.12
     optionalDependencies:
       '@microsoft/api-extractor': 7.51.1(@types/node@22.13.5)
@@ -15410,10 +15410,10 @@ snapshots:
 
   rrweb-cssom@0.8.0: {}
 
-  rsbuild-plugin-dts@0.6.0(@microsoft/api-extractor@7.51.1(@types/node@22.13.5))(@rsbuild/core@1.3.0-beta.3)(typescript@5.7.3):
+  rsbuild-plugin-dts@0.6.1(@microsoft/api-extractor@7.51.1(@types/node@22.13.5))(@rsbuild/core@1.3.1)(typescript@5.7.3):
     dependencies:
       '@ast-grep/napi': 0.36.2
-      '@rsbuild/core': 1.3.0-beta.3
+      '@rsbuild/core': 1.3.1
       magic-string: 0.30.17
       picocolors: 1.1.1
       tinyglobby: 0.2.12
@@ -15429,11 +15429,11 @@ snapshots:
     optionalDependencies:
       '@rsbuild/core': 1.2.19
 
-  rsbuild-plugin-tailwindcss@0.2.0(@rsbuild/core@1.3.0-beta.3)(tailwindcss@3.4.17):
+  rsbuild-plugin-tailwindcss@0.2.0(@rsbuild/core@1.3.1)(tailwindcss@3.4.17):
     dependencies:
       tailwindcss: 3.4.17
     optionalDependencies:
-      '@rsbuild/core': 1.3.0-beta.3
+      '@rsbuild/core': 1.3.1
 
   rslog@1.2.3: {}
 
