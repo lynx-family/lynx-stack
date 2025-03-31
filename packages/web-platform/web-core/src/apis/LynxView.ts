@@ -31,17 +31,17 @@ export type INapiModulesCall = (
  */
 
 /**
- * @param {string} url [required] The url of the entry of your Lynx card
- * @param {Cloneable} globalProps [optional] The globalProps value of this Lynx card
- * @param {Cloneable} initData [oprional] The initial data of this Lynx card
- * @param {Record<string,string>} overrideLynxTagToHTMLTagMap [optional] use this property/attribute to override the lynx tag -> html tag map
- * @param {NativeModulesMap} nativeModulesMap [optional] use to customize NativeModules. key is module-name, value is esm url.
- * @param {NativeModulesCall} onNativeModulesCall [optional] the NativeModules value handler. Arguments will be cached before this property is assigned.
- * @param {"auto" | null} height [optional] set it to "auto" for height auto-sizing
- * @param {"auto" | null} width [optional] set it to "auto" for width auto-sizing
- * @param {NapiModulesMap} napiModulesMap [optional] the napiModule which is called in lynx-core. key is module-name, value is esm url.
- * @param {INapiModulesCall} onNapiModulesCall [optional] the NapiModule value handler.
- * @param {"false" | "true" | null} injectHeadLinks [optional] @default true set it to "false" to disable injecting the <link href="" ref="stylesheet"> styles into shadowroot
+ * @property {string} url [required] (attribute: "url") The url of the entry of your Lynx card
+ * @property {Cloneable} globalProps [optional] (attribute: "global-props") The globalProps value of this Lynx card
+ * @property {Cloneable} initData [oprional] (attribute: "init-data") The initial data of this Lynx card
+ * @property {Record<string,string>} overrideLynxTagToHTMLTagMap [optional] use this property/attribute to override the lynx tag -> html tag map
+ * @property {NativeModulesMap} nativeModulesMap [optional] use to customize NativeModules. key is module-name, value is esm url.
+ * @property {NativeModulesCall} onNativeModulesCall [optional] the NativeModules value handler. Arguments will be cached before this property is assigned.
+ * @property {"auto" | null} height [optional] (attribute: "height") set it to "auto" for height auto-sizing
+ * @property {"auto" | null} width [optional] (attribute: "width") set it to "auto" for width auto-sizing
+ * @property {NapiModulesMap} napiModulesMap [optional] the napiModule which is called in lynx-core. key is module-name, value is esm url.
+ * @property {INapiModulesCall} onNapiModulesCall [optional] the NapiModule value handler.
+ * @property {"false" | "true" | null} injectHeadLinks [optional] @default true set it to "false" to disable injecting the <link href="" ref="stylesheet"> styles into shadowroot
  *
  * @event error lynx card fired an error
  *
@@ -51,7 +51,7 @@ export type INapiModulesCall = (
  * Note that you should declarae the size of lynx-view
  *
  * ```html
- * <lynx-view url="https://path/to/main-thread.js" rawData="{}" globalProps="{}" style="height:300px;width:300px">
+ * <lynx-view url="https://path/to/main-thread.js" raw-data="{}" global-props="{}" style="height:300px;width:300px">
  * </lynx-view>
  * ```
  *
@@ -66,16 +66,9 @@ export class LynxView extends HTMLElement {
   static tag = 'lynx-view' as const;
   private static observedAttributeAsProperties = [
     'url',
-    'globalProps',
-    'initData',
-    'overrideLynxTagToHTMLTagMap',
-    'nativeModulesMap',
+    'global-props',
+    'init-data',
   ];
-  private static attributeCamelCaseMap = Object.fromEntries(
-    this.observedAttributeAsProperties.map((
-      nm,
-    ) => [nm.toLocaleLowerCase(), nm]),
-  );
   /**
    * @private
    */
@@ -256,10 +249,16 @@ export class LynxView extends HTMLElement {
    */
   attributeChangedCallback(name: string, oldValue: string, newValue: string) {
     if (oldValue !== newValue) {
-      name = LynxView.attributeCamelCaseMap[name] ?? name;
-      if (name in this) {
-        // @ts-expect-error
-        this[name] = newValue;
+      switch (name) {
+        case 'url':
+          this.#url = newValue;
+          break;
+        case 'global-props':
+          this.#globalProps = JSON.parse(newValue);
+          break;
+        case 'init-data':
+          this.#initData = JSON.parse(newValue);
+          break;
       }
     }
   }
