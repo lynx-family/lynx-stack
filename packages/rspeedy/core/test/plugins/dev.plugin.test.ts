@@ -5,7 +5,7 @@ import { isIP, isIPv4 } from 'node:net'
 import type { AddressInfo } from 'node:net'
 import path from 'node:path'
 
-import { assert, beforeEach, describe, expect, test, vi } from 'vitest'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { createStubRspeedy } from '../createStubRspeedy.js'
 
@@ -36,9 +36,7 @@ describe('Plugins - Dev', () => {
 
     expect(isIPv4(rsbuild.getRsbuildConfig().dev!.client!.host!)).toBe(true)
 
-    assert(config.resolve?.alias)
-
-    expect(config.resolve.alias['webpack/hot/emitter.js']).toStrictEqual(
+    expect(config.resolve?.alias?.['webpack/hot/emitter.js']).toStrictEqual(
       expect.stringContaining('@rspack/core/hot/emitter.js'),
     )
   })
