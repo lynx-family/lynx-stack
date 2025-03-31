@@ -43,9 +43,9 @@ export class CommonEventsAndMethods {
             );
           }
         });
-        if (!this.#observering) {
+        if (!this.#observing) {
           this.#resizeObserver.observe(this.#dom);
-          this.#observering = true;
+          this.#observing = true;
         }
       }
     } else {
