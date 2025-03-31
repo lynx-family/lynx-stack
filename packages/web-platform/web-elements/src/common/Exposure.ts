@@ -41,51 +41,51 @@ export class LynxExposure {
     'exposure-ui-margin-left',
   ];
 
-  #uiAppearEnabled = false;
-  #uiDisappearEnabled = false;
+  __uiAppearEnabled = false;
+  __uiDisappearEnabled = false;
 
-  readonly #currentElement: HTMLElement;
+  readonly __currentElement: HTMLElement;
 
   /**
    * Stores a promise. We will handler the exposure attribute change after all related life-cycle events has been fired by browser.
    */
-  #afterAttributeChanged?: Promise<void>;
+  __afterAttributeChanged?: Promise<void>;
 
   /**
    * If this dom is already exposured
    */
-  #exposureTriggerd = false;
+  __exposureTriggerd = false;
 
   /**
    * keeps the observer of current dom
    */
-  #exposureObserver?: IntersectionObserver;
+  __exposureObserver?: IntersectionObserver;
 
-  get #exposureEnabled() {
+  get __exposureEnabled() {
     return (
-      this.#uiAppearEnabled
-      || this.#uiDisappearEnabled
-      || this.#currentElement.getAttribute('exposure-id') !== null
+      this.__uiAppearEnabled
+      || this.__uiDisappearEnabled
+      || this.__currentElement.getAttribute('exposure-id') !== null
     );
   }
 
   constructor(currentElement: HTMLElement) {
-    this.#currentElement = currentElement;
+    this.__currentElement = currentElement;
   }
 
   onExposureParamsChanged = () => {
-    if (!this.#afterAttributeChanged) {
-      this.#afterAttributeChanged = Promise.resolve().then(() => {
-        this.#updateExposure();
-        this.#afterAttributeChanged = undefined;
+    if (!this.__afterAttributeChanged) {
+      this.__afterAttributeChanged = Promise.resolve().then(() => {
+        this.__updateExposure();
+        this.__afterAttributeChanged = undefined;
       });
     }
   };
 
   onExposureIdChanged(_: string | null, oldValue: string | null) {
     if (oldValue) {
-      if (this.#exposureEnabled) {
-        this.#sendOneExposureEvent({ isIntersecting: false }, oldValue);
+      if (this.__exposureEnabled) {
+        this.__sendOneExposureEvent({ isIntersecting: false }, oldValue);
       }
     }
     this.onExposureParamsChanged();
@@ -108,83 +108,83 @@ export class LynxExposure {
 
   eventStatusChangedHandler = {
     'uiappear': (status: boolean) => {
-      this.#uiAppearEnabled = status;
+      this.__uiAppearEnabled = status;
       this.onExposureParamsChanged();
     },
     'uidisappear': (status: boolean) => {
-      this.#uiDisappearEnabled = status;
+      this.__uiDisappearEnabled = status;
       this.onExposureParamsChanged();
     },
   };
 
-  #updateExposure() {
+  __updateExposure() {
     const newParams: ExposureParameters = {
-      exposureID: this.#currentElement.getAttribute('exposure-id'),
-      exposureArea: this.#currentElement.getAttribute('exposure-area'),
-      exposureScene: this.#currentElement.getAttribute('exposure-scene'),
-      exposureScreenMarginTop: this.#currentElement.getAttribute(
+      exposureID: this.__currentElement.getAttribute('exposure-id'),
+      exposureArea: this.__currentElement.getAttribute('exposure-area'),
+      exposureScene: this.__currentElement.getAttribute('exposure-scene'),
+      exposureScreenMarginTop: this.__currentElement.getAttribute(
         'exposure-screen-margin-top',
       ),
-      exposureScreenMarginRight: this.#currentElement.getAttribute(
+      exposureScreenMarginRight: this.__currentElement.getAttribute(
         'exposure-screen-margin-right',
       ),
-      exposureScreenMarginBottom: this.#currentElement.getAttribute(
+      exposureScreenMarginBottom: this.__currentElement.getAttribute(
         'exposure-screen-margin-bottom',
       ),
-      exposureScreenMarginLeft: this.#currentElement.getAttribute(
+      exposureScreenMarginLeft: this.__currentElement.getAttribute(
         'exposure-screen-margin-left',
       ),
-      exposureUIMarginTop: this.#currentElement.getAttribute(
+      exposureUIMarginTop: this.__currentElement.getAttribute(
         'exposure-ui-margin-top',
       ),
-      exposureUIMarginRight: this.#currentElement.getAttribute(
+      exposureUIMarginRight: this.__currentElement.getAttribute(
         'exposure-ui-margin-right',
       ),
-      exposureUIMarginBottom: this.#currentElement.getAttribute(
+      exposureUIMarginBottom: this.__currentElement.getAttribute(
         'exposure-ui-margin-bottom',
       ),
-      exposureUIMarginLeft: this.#currentElement.getAttribute(
+      exposureUIMarginLeft: this.__currentElement.getAttribute(
         'exposure-ui-margin-left',
       ),
     };
-    if (this.#exposureEnabled) {
+    if (this.__exposureEnabled) {
       if (IntersectionObserver) {
         const uiMargin = {
           top: convertLengthToPx(
-            this.#currentElement,
+            this.__currentElement,
             newParams.exposureUIMarginTop,
           ),
           right: convertLengthToPx(
-            this.#currentElement,
+            this.__currentElement,
             newParams.exposureUIMarginRight,
             true,
           ),
           bottom: convertLengthToPx(
-            this.#currentElement,
+            this.__currentElement,
             newParams.exposureUIMarginBottom,
           ),
           left: convertLengthToPx(
-            this.#currentElement,
+            this.__currentElement,
             newParams.exposureUIMarginLeft,
             true,
           ),
         };
         const screenMargin = {
           top: convertLengthToPx(
-            this.#currentElement,
+            this.__currentElement,
             newParams.exposureScreenMarginTop,
           ),
           right: convertLengthToPx(
-            this.#currentElement,
+            this.__currentElement,
             newParams.exposureScreenMarginRight,
             true,
           ),
           bottom: convertLengthToPx(
-            this.#currentElement,
+            this.__currentElement,
             newParams.exposureScreenMarginBottom,
           ),
           left: convertLengthToPx(
-            this.#currentElement,
+            this.__currentElement,
             newParams.exposureScreenMarginLeft,
             true,
           ),
@@ -202,18 +202,20 @@ export class LynxExposure {
           left: (uiMargin.right ? -1 : 1)
             * (screenMargin.left - uiMargin.right),
         };
-        const exposureArea = this.#currentElement.getAttribute('exposure-area');
+        const exposureArea = this.__currentElement.getAttribute(
+          'exposure-area',
+        );
         const rootMargin =
           `${calcedRootMargin.top}px ${calcedRootMargin.right}px ${calcedRootMargin.bottom}px ${calcedRootMargin.left}px`;
         const threshold = exposureArea ? parseFloat(exposureArea) / 100 : 0;
-        if (this.#exposureObserver) {
-          this.#exposureObserver.disconnect();
+        if (this.__exposureObserver) {
+          this.__exposureObserver.disconnect();
         }
 
         /**
          * Get the closest scrollable ancestor
          */
-        let root: HTMLElement | null = this.#currentElement.parentElement;
+        let root: HTMLElement | null = this.__currentElement.parentElement;
         while (root) {
           // @ts-expect-error
           if (root[scrollContainerDom]) {
@@ -224,14 +226,14 @@ export class LynxExposure {
             root = root.parentElement;
           }
         }
-        this.#exposureTriggerd = false;
-        this.#exposureObserver = new IntersectionObserver(
+        this.__exposureTriggerd = false;
+        this.__exposureObserver = new IntersectionObserver(
           ([entry]) => {
             if (entry) {
               if (entry.isIntersecting) {
-                this.#exposureTriggerd = true;
+                this.__exposureTriggerd = true;
               }
-              this.#sendOneExposureEvent(entry);
+              this.__sendOneExposureEvent(entry);
             }
           },
           {
@@ -240,23 +242,23 @@ export class LynxExposure {
             root,
           },
         );
-        this.#exposureObserver.observe(this.#currentElement);
+        this.__exposureObserver.observe(this.__currentElement);
       }
     } else {
       this.disableExposure();
     }
   }
 
-  #sendOneExposureEvent(
+  __sendOneExposureEvent(
     entry: IntersectionObserverEntry | { isIntersecting: boolean },
     overrideExposureId?: string,
   ) {
-    if (!this.#exposureTriggerd) {
+    if (!this.__exposureTriggerd) {
       return;
     }
     const exposureID = overrideExposureId
-      ?? this.#currentElement.getAttribute('exposure-id') ?? '';
-    const exposureScene = this.#currentElement.getAttribute('exposure-scene')
+      ?? this.__currentElement.getAttribute('exposure-id') ?? '';
+    const exposureScene = this.__currentElement.getAttribute('exposure-scene')
       ?? '';
     const detail = {
       'exposure-id': exposureID,
@@ -281,14 +283,14 @@ export class LynxExposure {
       },
     );
     Object.assign(appearEvent, detail);
-    this.#currentElement.dispatchEvent(appearEvent);
-    this.#currentElement.dispatchEvent(exposureEvent);
+    this.__currentElement.dispatchEvent(appearEvent);
+    this.__currentElement.dispatchEvent(exposureEvent);
   }
 
   public disableExposure() {
-    if (this.#exposureObserver) {
-      this.#exposureObserver.disconnect();
-      this.#exposureObserver = undefined;
+    if (this.__exposureObserver) {
+      this.__exposureObserver.disconnect();
+      this.__exposureObserver = undefined;
     }
   }
 }

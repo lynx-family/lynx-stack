@@ -150,7 +150,7 @@ x-swiper::part(indicator-container) {
   height: var(--indicator-size);
   contain: strict;
   margin-bottom: var(--indicator-container-margin);
-  --indicator-color: #ffffff4d;
+  --indicator-color: __ffffff4d;
   --indicator-active-color: white;
 }
 

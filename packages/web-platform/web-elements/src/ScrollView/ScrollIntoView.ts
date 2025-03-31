@@ -11,8 +11,8 @@ export class ScrollIntoView
 {
   static eventName = '__scrollIntoView' as const;
   static observedAttributes = [];
-  #dom: ScrollView;
-  #handleScrollIntoView = ((
+  __dom: ScrollView;
+  __handleScrollIntoView = ((
     event: CustomEvent<{
       block?: 'center' | 'start' | 'end';
       inline?: 'start' | 'center' | 'end';
@@ -24,16 +24,16 @@ export class ScrollIntoView
       .composedPath()
       .filter((e) => e instanceof HTMLElement) as HTMLElement[];
     const eventPath: HTMLElement[] = [];
-    const scrollContainer = this.#dom;
+    const scrollContainer = this.__dom;
     for (const target of compusedPath) {
       if (target === scrollContainer) break;
       eventPath.push(target);
     }
-    const scrollOrientation = this.#dom.getAttribute('scroll-orientation');
-    const scrollX = this.#dom.getAttribute('scroll-x') !== null
+    const scrollOrientation = this.__dom.getAttribute('scroll-orientation');
+    const scrollX = this.__dom.getAttribute('scroll-x') !== null
       || scrollOrientation === 'both'
       || scrollOrientation === 'horizontal';
-    const scrollY = this.#dom.getAttribute('scroll-y') !== null
+    const scrollY = this.__dom.getAttribute('scroll-y') !== null
       || scrollOrientation === 'both'
       || scrollOrientation === 'vertical';
     let top = 0,
@@ -46,12 +46,12 @@ export class ScrollIntoView
       switch (event.detail.inline) {
         case 'center':
           left += ((event.target as HTMLElement).clientWidth
-            - this.#dom.clientWidth)
+            - this.__dom.clientWidth)
             / 2;
           break;
         case 'end':
           left += (event.target as HTMLElement).clientWidth
-            - this.#dom.clientWidth;
+            - this.__dom.clientWidth;
           break;
       }
     }
@@ -59,12 +59,12 @@ export class ScrollIntoView
       switch (event.detail.block) {
         case 'center':
           top += ((event.target as HTMLElement).clientHeight
-            - this.#dom.clientHeight)
+            - this.__dom.clientHeight)
             / 2;
           break;
         case 'end':
           top += (event.target as HTMLElement).clientHeight
-            - this.#dom.clientHeight;
+            - this.__dom.clientHeight;
           break;
       }
     }
@@ -76,17 +76,17 @@ export class ScrollIntoView
   }) as EventListener;
 
   constructor(dom: ScrollView) {
-    this.#dom = dom;
-    this.#dom.addEventListener(
+    this.__dom = dom;
+    this.__dom.addEventListener(
       ScrollIntoView.eventName,
-      this.#handleScrollIntoView,
+      this.__handleScrollIntoView,
       { passive: false },
     );
   }
   dispose(): void {
-    this.#dom.removeEventListener(
+    this.__dom.removeEventListener(
       ScrollIntoView.eventName,
-      this.#handleScrollIntoView,
+      this.__handleScrollIntoView,
     );
   }
 }

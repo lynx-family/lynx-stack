@@ -10,17 +10,17 @@ import {
 
 export class RawTextAttributes {
   static observedAttributes = ['text'];
-  readonly #dom: HTMLElement;
+  readonly __dom: HTMLElement;
 
   constructor(currentElement: HTMLElement) {
-    this.#dom = currentElement;
+    this.__dom = currentElement;
   }
   @registerAttributeHandler('text', true)
-  #handleText(newVal: string | null) {
+  __handleText(newVal: string | null) {
     if (newVal) {
-      this.#dom.innerHTML = newVal;
+      this.__dom.innerHTML = newVal;
     } else {
-      this.#dom.innerHTML = '';
+      this.__dom.innerHTML = '';
     }
   }
 }

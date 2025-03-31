@@ -10,31 +10,31 @@ import { isChromium } from '../common/constants.js';
 export class XFoldviewSlotNgTouchEventsHandler
   implements InstanceType<AttributeReactiveClass<typeof XFoldviewSlotNg>>
 {
-  #parentScrollTop: number = 0;
-  #childrenElemsntsScrollTop: WeakMap<Element, number> = new WeakMap();
-  #childrenElemsntsScrollLeft: WeakMap<Element, number> = new WeakMap();
-  #elements?: Element[];
-  #previousPageY: number = 0;
-  #previousPageX: number = 0;
-  #dom: XFoldviewSlotNg;
+  __parentScrollTop: number = 0;
+  __childrenElemsntsScrollTop: WeakMap<Element, number> = new WeakMap();
+  __childrenElemsntsScrollLeft: WeakMap<Element, number> = new WeakMap();
+  __elements?: Element[];
+  __previousPageY: number = 0;
+  __previousPageX: number = 0;
+  __dom: XFoldviewSlotNg;
   static observedAttributes = [];
   constructor(dom: XFoldviewSlotNg) {
-    this.#dom = dom;
+    this.__dom = dom;
 
-    this.#dom.addEventListener('touchmove', this.#scroller, {
+    this.__dom.addEventListener('touchmove', this.__scroller, {
       passive: false,
     });
 
-    this.#dom.addEventListener('touchstart', this.#initPreviousScreen, {
+    this.__dom.addEventListener('touchstart', this.__initPreviousScreen, {
       passive: true,
     });
-    this.#dom.addEventListener('touchcancel', this.#initPreviousScreen, {
+    this.__dom.addEventListener('touchcancel', this.__initPreviousScreen, {
       passive: true,
     });
   }
 
-  #getTheMostScrollableKid(delta: number, isVertical: boolean) {
-    const scrollableKid = this.#elements?.find((element) => {
+  __getTheMostScrollableKid(delta: number, isVertical: boolean) {
+    const scrollableKid = this.__elements?.find((element) => {
       if (
         (isVertical && element.scrollHeight > element.clientHeight)
         || (!isVertical && element.scrollWidth > element.clientWidth)
@@ -56,26 +56,29 @@ export class XFoldviewSlotNgTouchEventsHandler
     return scrollableKid;
   }
 
-  #scrollKid(scrollableKid: Element, delta: number, isVertical: boolean) {
+  __scrollKid(scrollableKid: Element, delta: number, isVertical: boolean) {
     let targetKidScrollDistance = (isVertical
-      ? this.#childrenElemsntsScrollTop
-      : this.#childrenElemsntsScrollLeft)
+      ? this.__childrenElemsntsScrollTop
+      : this.__childrenElemsntsScrollLeft)
       .get(scrollableKid) ?? 0;
     targetKidScrollDistance += delta;
-    this.#childrenElemsntsScrollTop.set(scrollableKid, targetKidScrollDistance);
+    this.__childrenElemsntsScrollTop.set(
+      scrollableKid,
+      targetKidScrollDistance,
+    );
     isVertical
       ? (scrollableKid.scrollTop = targetKidScrollDistance)
       : (scrollableKid.scrollLeft = targetKidScrollDistance);
   }
 
-  #scroller = (event: TouchEvent) => {
-    const parentElement = this.#getParentElement();
+  __scroller = (event: TouchEvent) => {
+    const parentElement = this.__getParentElement();
     const touch = event.touches.item(0)!;
     const { pageY, pageX } = touch;
-    const deltaY = this.#previousPageY! - pageY;
-    const deltaX = this.#previousPageX! - pageX;
-    const scrollableKidY = this.#getTheMostScrollableKid(deltaY, true);
-    const scrollableKidX = this.#getTheMostScrollableKid(deltaX, false);
+    const deltaY = this.__previousPageY! - pageY;
+    const deltaX = this.__previousPageX! - pageX;
+    const scrollableKidY = this.__getTheMostScrollableKid(deltaY, true);
+    const scrollableKidX = this.__getTheMostScrollableKid(deltaX, false);
     /**
      * on chromium browsers, the y-axis js scrolling won't interrupt the pan-x gestures
      * we make sure the x-axis scrolling will block the y-axis scrolling
@@ -86,7 +89,7 @@ export class XFoldviewSlotNgTouchEventsHandler
       if (event.cancelable && !isChromium) {
         event.preventDefault();
         if (scrollableKidX) {
-          this.#scrollKid(scrollableKidX, deltaX, false);
+          this.__scrollKid(scrollableKidX, deltaX, false);
         }
       }
       if (
@@ -97,33 +100,33 @@ export class XFoldviewSlotNgTouchEventsHandler
         || (!parentElement.__headershowing && !scrollableKidY)
         // all sub doms are scrolled
       ) {
-        this.#parentScrollTop += deltaY;
-        parentElement.scrollTop = this.#parentScrollTop;
+        this.__parentScrollTop += deltaY;
+        parentElement.scrollTop = this.__parentScrollTop;
       } else if (scrollableKidY) {
-        this.#scrollKid(scrollableKidY, deltaY, true);
+        this.__scrollKid(scrollableKidY, deltaY, true);
       }
     }
-    this.#previousPageY = pageY;
+    this.__previousPageY = pageY;
   };
 
-  #getParentElement(): XFoldviewNg | void {
-    const parentElement = this.#dom.parentElement;
+  __getParentElement(): XFoldviewNg | void {
+    const parentElement = this.__dom.parentElement;
     if (parentElement && parentElement.tagName === 'X-FOLDVIEW-NG') {
       return parentElement as XFoldviewNg;
     }
   }
 
-  #initPreviousScreen = (event: TouchEvent) => {
+  __initPreviousScreen = (event: TouchEvent) => {
     const { pageX, pageY } = event.touches.item(0)!;
-    this.#elements = document.elementsFromPoint(pageX, pageY).filter(e =>
-      this.#dom.contains(e)
+    this.__elements = document.elementsFromPoint(pageX, pageY).filter(e =>
+      this.__dom.contains(e)
     );
-    this.#previousPageY = pageY;
-    this.#previousPageX = pageX;
-    this.#parentScrollTop = this.#getParentElement()?.scrollTop ?? 0;
-    for (const element of this.#elements) {
-      this.#childrenElemsntsScrollTop.set(element, element.scrollTop);
-      this.#childrenElemsntsScrollLeft.set(element, element.scrollLeft);
+    this.__previousPageY = pageY;
+    this.__previousPageX = pageX;
+    this.__parentScrollTop = this.__getParentElement()?.scrollTop ?? 0;
+    for (const element of this.__elements) {
+      this.__childrenElemsntsScrollTop.set(element, element.scrollTop);
+      this.__childrenElemsntsScrollLeft.set(element, element.scrollLeft);
     }
   };
 }

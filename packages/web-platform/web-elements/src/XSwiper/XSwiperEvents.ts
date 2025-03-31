@@ -17,50 +17,50 @@ export class XSwipeEvents
   implements InstanceType<AttributeReactiveClass<typeof XSwiper>>
 {
   static observedAttributes = [];
-  readonly #dom: XSwiper;
-  #current: number = 0;
-  #pervScrollPosition: number = 0;
-  #dragging = false;
-  #debounceScrollForMockingScrollEnd?: ReturnType<typeof setTimeout>;
-  #scrollStarted = false;
+  readonly __dom: XSwiper;
+  __current: number = 0;
+  __pervScrollPosition: number = 0;
+  __dragging = false;
+  __debounceScrollForMockingScrollEnd?: ReturnType<typeof setTimeout>;
+  __scrollStarted = false;
   constructor(dom: XSwiper) {
-    this.#dom = dom;
+    this.__dom = dom;
   }
-  #getContentContainer = genDomGetter(
-    () => this.#dom.shadowRoot!,
-    '#content',
+  __getContentContainer = genDomGetter(
+    () => this.__dom.shadowRoot!,
+    '__content',
   ).bind(this);
 
   @registerEventEnableStatusChangeHandler('transition')
-  #handleEnableTransitionEvent = bindSwitchToEventListener(
-    this.#getContentContainer,
+  __handleEnableTransitionEvent = bindSwitchToEventListener(
+    this.__getContentContainer,
     'scroll',
-    this.#scrollEventListenerForTransition,
+    this.__scrollEventListenerForTransition,
     { passive: true },
   );
 
-  #handleScroll() {
+  __handleScroll() {
     if (!useScrollEnd) {
       // debounce
-      clearTimeout(this.#debounceScrollForMockingScrollEnd);
-      this.#debounceScrollForMockingScrollEnd = setTimeout(() => {
-        this.#handleScrollEnd();
+      clearTimeout(this.__debounceScrollForMockingScrollEnd);
+      this.__debounceScrollForMockingScrollEnd = setTimeout(() => {
+        this.__handleScrollEnd();
       }, 100);
     }
-    if (!this.#scrollStarted) {
-      this.#dom.dispatchEvent(
+    if (!this.__scrollStarted) {
+      this.__dom.dispatchEvent(
         new CustomEvent('scrollstart', {
           ...commonComponentEventSetting,
           detail: {
-            current: this.#current,
-            isDragged: this.#dragging,
+            current: this.__current,
+            isDragged: this.__dragging,
           },
         }),
       );
-      this.#scrollStarted = true;
+      this.__scrollStarted = true;
     }
-    const contentContainer = this.#getContentContainer();
-    const isVertical = this.#dom.isVertical;
+    const contentContainer = this.__getContentContainer();
+    const isVertical = this.__dom.isVertical;
     /* already scrolled distance */
     const currentScrollDistance = isVertical
       ? contentContainer.scrollTop
@@ -72,94 +72,94 @@ export class XSwipeEvents
       ? contentContainer.scrollHeight
       : contentContainer.scrollWidth;
     if (
-      Math.abs(this.#pervScrollPosition - currentScrollDistance)
+      Math.abs(this.__pervScrollPosition - currentScrollDistance)
         > pageLength / 4
       || currentScrollDistance < 10
       || Math.abs(currentScrollDistance - totalScrollDistance) <= pageLength
     ) {
-      const current = this.#dom.current;
-      if (current !== this.#current) {
-        this.#dom.dispatchEvent(
+      const current = this.__dom.current;
+      if (current !== this.__current) {
+        this.__dom.dispatchEvent(
           new CustomEvent('change', {
             ...commonComponentEventSetting,
             detail: {
               current,
-              isDragged: this.#dragging,
+              isDragged: this.__dragging,
             },
           }),
         );
-        this.#current = current;
+        this.__current = current;
       }
-      this.#pervScrollPosition = currentScrollDistance;
+      this.__pervScrollPosition = currentScrollDistance;
     }
   }
 
-  #handleScrollEnd() {
-    this.#dom.dispatchEvent(
+  __handleScrollEnd() {
+    this.__dom.dispatchEvent(
       new CustomEvent('lynxscrollend', {
         ...commonComponentEventSetting,
         detail: {
-          current: this.#current,
+          current: this.__current,
         },
       }),
     );
-    this.#scrollStarted = false;
+    this.__scrollStarted = false;
   }
 
-  #handleTouchStart() {
-    this.#dragging = true;
+  __handleTouchStart() {
+    this.__dragging = true;
   }
 
-  #handleTouchEndAndCancel() {
-    this.#dragging = false;
+  __handleTouchEndAndCancel() {
+    this.__dragging = false;
   }
 
-  #scrollEventListenerForTransition() {
-    this.#dom.dispatchEvent(
+  __scrollEventListenerForTransition() {
+    this.__dom.dispatchEvent(
       new CustomEvent('transition', {
         ...commonComponentEventSetting,
         detail: {
-          dx: this.#getContentContainer().scrollLeft,
-          dy: this.#getContentContainer().scrollTop,
+          dx: this.__getContentContainer().scrollLeft,
+          dy: this.__getContentContainer().scrollTop,
         },
       }),
     );
   }
 
-  #listeners = [
+  __listeners = [
     bindSwitchToEventListener(
-      this.#getContentContainer,
+      this.__getContentContainer,
       'scroll',
-      this.#handleScroll.bind(this),
+      this.__handleScroll.bind(this),
       { passive: true },
     ),
     bindSwitchToEventListener(
-      this.#getContentContainer,
+      this.__getContentContainer,
       'touchstart',
-      this.#handleTouchStart.bind(this),
+      this.__handleTouchStart.bind(this),
       { passive: true },
     ),
     bindSwitchToEventListener(
-      this.#getContentContainer,
+      this.__getContentContainer,
       'touchend',
-      this.#handleTouchEndAndCancel.bind(this),
+      this.__handleTouchEndAndCancel.bind(this),
       { passive: true },
     ),
     bindSwitchToEventListener(
-      this.#getContentContainer,
+      this.__getContentContainer,
       'touchcancel',
-      this.#handleTouchEndAndCancel.bind(this),
+      this.__handleTouchEndAndCancel.bind(this),
       { passive: true },
     ),
     bindSwitchToEventListener(
-      this.#getContentContainer,
+      this.__getContentContainer,
       'scrollend',
-      this.#handleScrollEnd.bind(this),
+      this.__handleScrollEnd.bind(this),
       { passive: true },
     ),
   ];
 
-  #eventSwitches = {
+  __eventSwitches = {
     scrollstart: false,
     lynxscrollend: false,
     change: false,
@@ -170,26 +170,26 @@ export class XSwipeEvents
   @registerEventEnableStatusChangeHandler('lynxscrollend')
   @registerEventEnableStatusChangeHandler('change')
   @registerEventEnableStatusChangeHandler('change-event-for-indicator')
-  #enableScrollEventProcessor(value: boolean, eventName: string) {
+  __enableScrollEventProcessor(value: boolean, eventName: string) {
     this
-      .#eventSwitches[
+      .__eventSwitches[
         eventName as
           | 'scrollstart'
           | 'lynxscrollend'
           | 'change'
           | 'change-event-for-indicator'
       ] = value;
-    const { lynxscrollend, scrollstart, change } = this.#eventSwitches;
+    const { lynxscrollend, scrollstart, change } = this.__eventSwitches;
     const changeEventEnabled = change || lynxscrollend || scrollstart
-      || this.#eventSwitches['change-event-for-indicator'];
-    this.#listeners.forEach((l) => l(changeEventEnabled));
+      || this.__eventSwitches['change-event-for-indicator'];
+    this.__listeners.forEach((l) => l(changeEventEnabled));
   }
 
   connectedCallback(): void {
-    this.#current = parseFloat(this.#dom.getAttribute('current') ?? '0');
-    const isVertical = this.#dom.isVertical;
-    this.#pervScrollPosition = isVertical
-      ? this.#getContentContainer().scrollTop
-      : this.#getContentContainer().scrollLeft;
+    this.__current = parseFloat(this.__dom.getAttribute('current') ?? '0');
+    const isVertical = this.__dom.isVertical;
+    this.__pervScrollPosition = isVertical
+      ? this.__getContentContainer().scrollTop
+      : this.__getContentContainer().scrollLeft;
   }
 }

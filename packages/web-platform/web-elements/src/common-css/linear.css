@@ -207,18 +207,18 @@ x-viewpager-ng {
  * when the chromuim version is less than 116.0.5806.0, the following code will crash:
  * ```
  *  <style>
-      #container {
+      __container {
         --lynx-display: flex;
       }
 
-      #target {
+      __target {
         background-color: red;
         width: 400px;
         height: 400px;
       }
 
       @container style(--lynx-display: flex) {
-        #target {
+        __target {
           background-color: green;
         }
       }

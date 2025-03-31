@@ -16,68 +16,68 @@ export class XTextareaEvents
   implements InstanceType<AttributeReactiveClass<typeof HTMLElement>>
 {
   static observedAttributes = ['send-composing-input'];
-  #dom: HTMLElement;
+  __dom: HTMLElement;
 
-  #sendComposingInput = false;
+  __sendComposingInput = false;
 
-  #getTextareaElement = genDomGetter<HTMLInputElement>(
-    () => this.#dom.shadowRoot!,
-    '#textarea',
+  __getTextareaElement = genDomGetter<HTMLInputElement>(
+    () => this.__dom.shadowRoot!,
+    '__textarea',
   );
-  #getFormElement = genDomGetter<HTMLInputElement>(
-    () => this.#dom.shadowRoot!,
-    '#form',
+  __getFormElement = genDomGetter<HTMLInputElement>(
+    () => this.__dom.shadowRoot!,
+    '__form',
   );
 
   @registerEventEnableStatusChangeHandler('input')
-  #handleEnableConfirmEvent(status: boolean) {
-    const textareaElement = this.#getTextareaElement();
+  __handleEnableConfirmEvent(status: boolean) {
+    const textareaElement = this.__getTextareaElement();
     if (status) {
       textareaElement.addEventListener(
         'input',
-        this.#teleportInput as (ev: Event) => void,
+        this.__teleportInput as (ev: Event) => void,
         { passive: true },
       );
       textareaElement.addEventListener(
         'compositionend',
-        this.#teleportCompositionendInput as (ev: Event) => void,
+        this.__teleportCompositionendInput as (ev: Event) => void,
         { passive: true },
       );
     } else {
       textareaElement.removeEventListener(
         'input',
-        this.#teleportInput as (ev: Event) => void,
+        this.__teleportInput as (ev: Event) => void,
       );
       textareaElement.removeEventListener(
         'compositionend',
-        this.#teleportCompositionendInput as (ev: Event) => void,
+        this.__teleportCompositionendInput as (ev: Event) => void,
       );
     }
   }
 
   @registerAttributeHandler('send-composing-input', true)
-  #handleSendComposingInput(newVal: string | null) {
-    this.#sendComposingInput = newVal !== null;
+  __handleSendComposingInput(newVal: string | null) {
+    this.__sendComposingInput = newVal !== null;
   }
 
-  #teleportEvent = (event: FocusEvent | SubmitEvent) => {
+  __teleportEvent = (event: FocusEvent | SubmitEvent) => {
     const eventType = renameEvent[event.type] ?? event.type;
-    this.#dom.dispatchEvent(
+    this.__dom.dispatchEvent(
       new CustomEvent(eventType, {
         ...commonComponentEventSetting,
         detail: {
-          value: this.#getTextareaElement().value,
+          value: this.__getTextareaElement().value,
         },
       }),
     );
   };
 
-  #teleportInput = (event: InputEvent) => {
-    const input = this.#getTextareaElement();
+  __teleportInput = (event: InputEvent) => {
+    const input = this.__getTextareaElement();
     const value = input.value;
     const isComposing = event.isComposing;
-    if (isComposing && !this.#sendComposingInput) return;
-    this.#dom.dispatchEvent(
+    if (isComposing && !this.__sendComposingInput) return;
+    this.__dom.dispatchEvent(
       new CustomEvent('input', {
         ...commonComponentEventSetting,
         detail: {
@@ -90,12 +90,12 @@ export class XTextareaEvents
     );
   };
 
-  #teleportCompositionendInput = () => {
-    const input = this.#getTextareaElement();
+  __teleportCompositionendInput = () => {
+    const input = this.__getTextareaElement();
     const value = input.value;
-    // if #sendComposingInput set true, #teleportInput will send detail
-    if (!this.#sendComposingInput) {
-      this.#dom.dispatchEvent(
+    // if __sendComposingInput set true, __teleportInput will send detail
+    if (!this.__sendComposingInput) {
+      this.__dom.dispatchEvent(
         new CustomEvent('input', {
           ...commonComponentEventSetting,
           detail: {
@@ -108,9 +108,9 @@ export class XTextareaEvents
     }
   };
 
-  #blockHtmlEvent = (event: FocusEvent | InputEvent) => {
+  __blockHtmlEvent = (event: FocusEvent | InputEvent) => {
     if (
-      event.target === this.#getTextareaElement()
+      event.target === this.__getTextareaElement()
       && typeof event.detail === 'number'
     ) {
       event.stopImmediatePropagation();
@@ -118,20 +118,20 @@ export class XTextareaEvents
   };
 
   constructor(dom: HTMLElement) {
-    this.#dom = dom;
-    const textareaElement = this.#getTextareaElement();
-    const formElement = this.#getFormElement();
-    textareaElement.addEventListener('blur', this.#teleportEvent, {
+    this.__dom = dom;
+    const textareaElement = this.__getTextareaElement();
+    const formElement = this.__getFormElement();
+    textareaElement.addEventListener('blur', this.__teleportEvent, {
       passive: true,
     });
-    textareaElement.addEventListener('focus', this.#teleportEvent, {
+    textareaElement.addEventListener('focus', this.__teleportEvent, {
       passive: true,
     });
-    formElement.addEventListener('submit', this.#teleportEvent, {
+    formElement.addEventListener('submit', this.__teleportEvent, {
       passive: true,
     });
     // use form to stop propagation
-    formElement.addEventListener('input', this.#blockHtmlEvent as any, {
+    formElement.addEventListener('input', this.__blockHtmlEvent as any, {
       passive: true,
     });
   }

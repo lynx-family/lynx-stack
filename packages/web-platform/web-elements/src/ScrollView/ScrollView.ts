@@ -107,7 +107,7 @@ import { scrollContainerDom } from '../common/constants.js';
 export class ScrollView extends HTMLElement {
   static readonly notToFilterFalseAttributes = new Set(['enable-scroll']);
   static readonly scrollInterval = 100;
-  #autoScrollTimer?: NodeJS.Timeout;
+  __autoScrollTimer?: NodeJS.Timeout;
   override scrollTo(options: {
     /**
      * @description The offset of the content
@@ -170,13 +170,13 @@ export class ScrollView extends HTMLElement {
      */
     start: boolean;
   }) {
-    clearInterval(this.#autoScrollTimer);
+    clearInterval(this.__autoScrollTimer);
     if (options.start) {
       const rate = typeof options.rate === 'number'
         ? options.rate
         : parseFloat(options.rate);
       const tickDistance = (rate * ScrollView.scrollInterval) / 1000;
-      this.#autoScrollTimer = setInterval(
+      this.__autoScrollTimer = setInterval(
         (dom) => {
           dom.scrollBy({
             left: tickDistance,

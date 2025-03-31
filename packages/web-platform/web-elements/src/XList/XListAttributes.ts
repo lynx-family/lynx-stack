@@ -21,39 +21,39 @@ export class XListAttributes
     'column-count',
   ];
 
-  #dom: XList;
+  __dom: XList;
 
   @registerAttributeHandler('sticky-offset', true)
-  #handlerStickyOffset = bindToStyle(
-    () => this.#dom,
+  __handlerStickyOffset = bindToStyle(
+    () => this.__dom,
     '--list-item-sticky-offset',
     (v) => `${parseFloat(v)}px`,
   );
 
   @registerAttributeHandler('span-count', true)
   @registerAttributeHandler('column-count', true)
-  #handlerCount = bindToStyle(
-    () => this.#dom,
+  __handlerCount = bindToStyle(
+    () => this.__dom,
     '--list-item-span-count',
     (v) => `${parseFloat(v)}`,
   );
 
   constructor(dom: XList) {
-    this.#dom = dom;
+    this.__dom = dom;
   }
 
   connectedCallback() {
-    const initialScrollIndex = this.#dom.getAttribute('initial-scroll-index');
+    const initialScrollIndex = this.__dom.getAttribute('initial-scroll-index');
 
     if (initialScrollIndex !== null) {
       const index = parseFloat(initialScrollIndex);
       const scrollToInitialIndex = () => {
-        if (this.#dom.clientHeight === 0) {
+        if (this.__dom.clientHeight === 0) {
           // In Safari, there is the potential race condition between the browser's layout and clientWidth calculate.
           // So, we have to use requestAnimationFrame to ensure that the code runs after the browser's layout.
           requestAnimationFrame(scrollToInitialIndex);
         } else {
-          this.#dom.scrollToPosition({ index });
+          this.__dom.scrollToPosition({ index });
         }
       };
 

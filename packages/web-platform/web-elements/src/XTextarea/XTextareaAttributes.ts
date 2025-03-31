@@ -21,56 +21,59 @@ export class XTextareaAttributes
     'min-height',
     'value',
   ];
-  #dom: HTMLElement;
+  __dom: HTMLElement;
 
-  #getTextareaElement = genDomGetter<HTMLTextAreaElement>(
-    () => this.#dom.shadowRoot!,
-    '#textarea',
+  __getTextareaElement = genDomGetter<HTMLTextAreaElement>(
+    () => this.__dom.shadowRoot!,
+    '__textarea',
   );
-  #getFormElement = genDomGetter(() => this.#dom.shadowRoot!, '#form');
+  __getFormElement = genDomGetter(() => this.__dom.shadowRoot!, '__form');
 
-  #confirmEnter = false;
+  __confirmEnter = false;
   @registerAttributeHandler('confirm-enter', true)
-  #handleConfirmEnter(newVal: string | null) {
-    this.#confirmEnter = newVal !== null;
+  __handleConfirmEnter(newVal: string | null) {
+    this.__confirmEnter = newVal !== null;
   }
 
   @registerAttributeHandler('disabled', true)
-  #handleDisabled = bindToAttribute(
-    this.#getTextareaElement,
+  __handleDisabled = bindToAttribute(
+    this.__getTextareaElement,
     'disabled',
     (value) => (value !== null ? '' : null),
   );
 
   @registerAttributeHandler('max-height', true)
-  #handleMaxHeight = bindToStyle(this.#getTextareaElement, 'max-height');
+  __handleMaxHeight = bindToStyle(this.__getTextareaElement, 'max-height');
 
   @registerAttributeHandler('min-height', true)
-  #handleMinHeight = bindToStyle(this.#getTextareaElement, 'min-height');
+  __handleMinHeight = bindToStyle(this.__getTextareaElement, 'min-height');
 
   @registerAttributeHandler('value', false)
   // delay value to connectedCallback to wait the maxlength value.
-  #handleValue(newValue: string | null) {
+  __handleValue(newValue: string | null) {
     if (newValue) {
-      const maxlength = parseFloat(this.#dom.getAttribute('maxlength') ?? '');
+      const maxlength = parseFloat(this.__dom.getAttribute('maxlength') ?? '');
       if (!isNaN(maxlength)) newValue = newValue.substring(0, maxlength);
     } else {
       newValue = '';
     }
-    const textarea = this.#getTextareaElement();
+    const textarea = this.__getTextareaElement();
     if (textarea.value !== newValue) {
       textarea.value = newValue;
     }
   }
 
-  #handleKeyEvent = (event: KeyboardEvent) => {
-    if (this.#confirmEnter && event.key === 'Enter') {
-      this.#getFormElement().dispatchEvent(new SubmitEvent('submit'));
+  __handleKeyEvent = (event: KeyboardEvent) => {
+    if (this.__confirmEnter && event.key === 'Enter') {
+      this.__getFormElement().dispatchEvent(new SubmitEvent('submit'));
     }
   };
 
   constructor(dom: HTMLElement) {
-    this.#dom = dom;
-    this.#getTextareaElement().addEventListener('keyup', this.#handleKeyEvent);
+    this.__dom = dom;
+    this.__getTextareaElement().addEventListener(
+      'keyup',
+      this.__handleKeyEvent,
+    );
   }
 }

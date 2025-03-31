@@ -25,14 +25,14 @@ export class InputBaseAttributes
     'ios-spell-check',
     'spell-check',
   ];
-  #dom: HTMLElement;
-  #inputType: InputType = 'text';
+  __dom: HTMLElement;
+  __inputType: InputType = 'text';
 
-  #getInputElement = genDomGetter(() => this.#dom.shadowRoot!, '#input');
+  __getInputElement = genDomGetter(() => this.__dom.shadowRoot!, '__input');
 
   @registerAttributeHandler('confirm-type', true)
-  #handlerConfirmType = bindToAttribute(
-    this.#getInputElement,
+  __handlerConfirmType = bindToAttribute(
+    this.__getInputElement,
     'enterkeyhint',
     (val) => {
       if (val === null) return 'send';
@@ -41,8 +41,8 @@ export class InputBaseAttributes
   );
 
   @registerAttributeHandler('maxlength', true)
-  #handlerMaxlength = bindToAttribute(
-    this.#getInputElement,
+  __handlerMaxlength = bindToAttribute(
+    this.__getInputElement,
     'maxlength',
     (val) => {
       if (val === null) return '140';
@@ -51,17 +51,17 @@ export class InputBaseAttributes
   );
 
   @registerAttributeHandler('readonly', true)
-  #handleReadonly = bindToAttribute(
-    this.#getInputElement,
+  __handleReadonly = bindToAttribute(
+    this.__getInputElement,
     'readonly',
     (value) => (value !== null ? '' : null),
   );
 
-  #setType = bindToAttribute(this.#getInputElement, 'type');
-  #setInputmode = bindToAttribute(this.#getInputElement, 'inputmode');
+  __setType = bindToAttribute(this.__getInputElement, 'type');
+  __setInputmode = bindToAttribute(this.__getInputElement, 'inputmode');
 
   @registerAttributeHandler('type', true)
-  #handleType(value: string | null) {
+  __handleType(value: string | null) {
     const attributeValue = value as InputType;
     // @see https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/inputmode
     let inputMode:
@@ -86,19 +86,19 @@ export class InputBaseAttributes
     } else {
       inputType = attributeValue;
     }
-    this.#setInputmode(inputMode);
-    this.#setType(inputType);
+    this.__setInputmode(inputMode);
+    this.__setType(inputType);
   }
 
   @registerAttributeHandler('ios-spell-check', true)
   @registerAttributeHandler('spell-check', true)
-  #handleSpellCheck = bindToAttribute(
-    this.#getInputElement,
+  __handleSpellCheck = bindToAttribute(
+    this.__getInputElement,
     'spellcheck',
     (value) => (value === null ? 'false' : 'true'),
   );
 
   constructor(dom: HTMLElement) {
-    this.#dom = dom;
+    this.__dom = dom;
   }
 }

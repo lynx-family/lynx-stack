@@ -14,46 +14,49 @@ export class ImageEvents
   implements InstanceType<AttributeReactiveClass<typeof HTMLElement>>
 {
   static observedAttributes = [];
-  #dom: HTMLElement;
+  __dom: HTMLElement;
 
-  #getImg = genDomGetter<HTMLImageElement>(() => this.#dom.shadowRoot!, '#img');
+  __getImg = genDomGetter<HTMLImageElement>(
+    () => this.__dom.shadowRoot!,
+    '__img',
+  );
 
   @registerEventEnableStatusChangeHandler('load')
-  #enableLoadEvent(status: boolean) {
+  __enableLoadEvent(status: boolean) {
     if (status) {
-      this.#getImg().addEventListener('load', this.#teleportLoadEvent, {
+      this.__getImg().addEventListener('load', this.__teleportLoadEvent, {
         passive: true,
       });
     } else {
-      this.#getImg().removeEventListener('load', this.#teleportLoadEvent);
+      this.__getImg().removeEventListener('load', this.__teleportLoadEvent);
     }
   }
 
   @registerEventEnableStatusChangeHandler('error')
-  #enableErrorEvent(status: boolean) {
+  __enableErrorEvent(status: boolean) {
     if (status) {
-      this.#getImg().addEventListener('error', this.#teleportErrorEvent, {
+      this.__getImg().addEventListener('error', this.__teleportErrorEvent, {
         passive: true,
       });
     } else {
-      this.#getImg().removeEventListener('error', this.#teleportErrorEvent);
+      this.__getImg().removeEventListener('error', this.__teleportErrorEvent);
     }
   }
 
-  #teleportLoadEvent = () => {
-    this.#dom.dispatchEvent(
+  __teleportLoadEvent = () => {
+    this.__dom.dispatchEvent(
       new CustomEvent('load', {
         ...commonComponentEventSetting,
         detail: {
-          width: this.#getImg().naturalWidth,
-          height: this.#getImg().naturalHeight,
+          width: this.__getImg().naturalWidth,
+          height: this.__getImg().naturalHeight,
         },
       }),
     );
   };
 
-  #teleportErrorEvent = () => {
-    this.#dom.dispatchEvent(
+  __teleportErrorEvent = () => {
+    this.__dom.dispatchEvent(
       new CustomEvent('error', {
         ...commonComponentEventSetting,
         detail: {},
@@ -62,6 +65,6 @@ export class ImageEvents
   };
 
   constructor(dom: HTMLElement) {
-    this.#dom = dom;
+    this.__dom = dom;
   }
 }

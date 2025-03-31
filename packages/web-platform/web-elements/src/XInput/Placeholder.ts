@@ -21,46 +21,46 @@ export class Placeholder
     'placeholder-font-size',
     'placeholder-font-weight',
   ];
-  #dom: HTMLElement;
+  __dom: HTMLElement;
 
-  #getInputElement = genDomGetter(() => this.#dom.shadowRoot!, '#input');
+  __getInputElement = genDomGetter(() => this.__dom.shadowRoot!, '__input');
 
   @registerAttributeHandler('placeholder', true)
-  #handlerPlaceholder = bindToAttribute(this.#getInputElement, 'placeholder');
+  __handlerPlaceholder = bindToAttribute(this.__getInputElement, 'placeholder');
 
   @registerAttributeHandler('placeholder-color', true)
-  #handlerPlaceholderColor = bindToStyle(
-    this.#getInputElement,
+  __handlerPlaceholderColor = bindToStyle(
+    this.__getInputElement,
     '--placeholder-color',
     undefined,
     true,
   );
 
   @registerAttributeHandler('placeholder-font-family', true)
-  #handlerPlaceholderFontFamily = bindToStyle(
-    this.#getInputElement,
+  __handlerPlaceholderFontFamily = bindToStyle(
+    this.__getInputElement,
     '--placeholder-font-family',
     undefined,
     true,
   );
 
   @registerAttributeHandler('placeholder-font-size', true)
-  #handlerPlaceholderFontSize = bindToStyle(
-    this.#getInputElement,
+  __handlerPlaceholderFontSize = bindToStyle(
+    this.__getInputElement,
     '--placeholder-font-size',
     undefined,
     true,
   );
 
   @registerAttributeHandler('placeholder-font-weight', true)
-  #handlerPlaceholderFontWeight = bindToStyle(
-    this.#getInputElement,
+  __handlerPlaceholderFontWeight = bindToStyle(
+    this.__getInputElement,
     '--placeholder-font-weight',
     undefined,
     true,
   );
 
   constructor(dom: HTMLElement) {
-    this.#dom = dom;
+    this.__dom = dom;
   }
 }

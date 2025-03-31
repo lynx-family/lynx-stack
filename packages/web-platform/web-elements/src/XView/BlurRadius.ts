@@ -14,23 +14,23 @@ export class BlurRadius
   implements InstanceType<AttributeReactiveClass<typeof XBlurView>>
 {
   static observedAttributes = ['blur-radius'];
-  #dom: XBlurView;
-  #getDynamicStyle = genDomGetter(
-    () => this.#dom.shadowRoot!,
-    '#dynamic-style',
+  __dom: XBlurView;
+  __getDynamicStyle = genDomGetter(
+    () => this.__dom.shadowRoot!,
+    '__dynamic-style',
   );
 
   @registerAttributeHandler('blur-radius', true)
-  #handleBlurRadius(newVal: string | null) {
+  __handleBlurRadius(newVal: string | null) {
     if (newVal) {
       newVal = `blur(${parseFloat(newVal)}px)`;
-      this.#getDynamicStyle().innerHTML =
+      this.__getDynamicStyle().innerHTML =
         `:host { backdrop-filter: ${newVal}; -webkit-backdrop-filter: ${newVal}}`;
     } else {
-      this.#getDynamicStyle().innerHTML = '';
+      this.__getDynamicStyle().innerHTML = '';
     }
   }
   constructor(dom: HTMLElement) {
-    this.#dom = dom as XBlurView;
+    this.__dom = dom as XBlurView;
   }
 }

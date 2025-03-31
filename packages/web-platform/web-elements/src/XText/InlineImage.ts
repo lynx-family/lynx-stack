@@ -15,16 +15,16 @@ export class InlineImageAttributes
   implements InstanceType<AttributeReactiveClass<typeof InlineImage>>
 {
   static observedAttributes = ['src'];
-  #dom: InlineImage;
+  __dom: InlineImage;
   constructor(dom: InlineImage) {
-    this.#dom = dom;
+    this.__dom = dom;
   }
-  #getImage = genDomGetter(() => this.#dom.shadowRoot!, '#img');
+  __getImage = genDomGetter(() => this.__dom.shadowRoot!, '__img');
 
   @registerAttributeHandler('src', true)
-  #handleSrc(newVal: string | null) {
-    if (newVal) this.#getImage().setAttribute('src', newVal);
-    else this.#getImage().removeAttribute('src');
+  __handleSrc(newVal: string | null) {
+    if (newVal) this.__getImage().setAttribute('src', newVal);
+    else this.__getImage().removeAttribute('src');
   }
 }
 

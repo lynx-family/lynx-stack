@@ -18,42 +18,42 @@ import { registerEventEnableStatusChangeHandler } from '@lynx-js/web-elements-re
 export class ScrollViewEvents
   implements InstanceType<AttributeReactiveClass<typeof ScrollView>>
 {
-  readonly #dom: ScrollView;
-  #debounceScrollForMockingScrollEnd?: NodeJS.Timeout;
-  #prevX: number = 0;
-  #prevY: number = 0;
+  readonly __dom: ScrollView;
+  __debounceScrollForMockingScrollEnd?: NodeJS.Timeout;
+  __prevX: number = 0;
+  __prevY: number = 0;
   constructor(dom: ScrollView) {
-    this.#dom = dom;
+    this.__dom = dom;
   }
 
-  #getScrollContainer = () => this.#dom;
+  __getScrollContainer = () => this.__dom;
 
-  #getUpperThresholdObserverDom = genDomGetter(
-    () => this.#dom.shadowRoot!,
-    '#upper-threshold-observer',
+  __getUpperThresholdObserverDom = genDomGetter(
+    () => this.__dom.shadowRoot!,
+    '__upper-threshold-observer',
   );
 
-  #getLowerThresholdObserverDom = genDomGetter(
-    () => this.#dom.shadowRoot!,
-    '#lower-threshold-observer',
+  __getLowerThresholdObserverDom = genDomGetter(
+    () => this.__dom.shadowRoot!,
+    '__lower-threshold-observer',
   );
 
-  #handleObserver = (entries: IntersectionObserverEntry[]) => {
+  __handleObserver = (entries: IntersectionObserverEntry[]) => {
     const { isIntersecting, target } = entries[0]!;
     const id = target.id;
     if (isIntersecting) {
       if (id === 'upper-threshold-observer') {
-        this.#dom.dispatchEvent(
+        this.__dom.dispatchEvent(
           new CustomEvent('scrolltoupper', {
             ...commonComponentEventSetting,
-            detail: this.#getScrollDetail(),
+            detail: this.__getScrollDetail(),
           }),
         );
       } else if (id === 'lower-threshold-observer') {
-        this.#dom.dispatchEvent(
+        this.__dom.dispatchEvent(
           new CustomEvent('scrolltolower', {
             ...commonComponentEventSetting,
-            detail: this.#getScrollDetail(),
+            detail: this.__getScrollDetail(),
           }),
         );
       }
@@ -66,55 +66,55 @@ export class ScrollViewEvents
   ];
 
   @registerEventEnableStatusChangeHandler('scrolltoupper')
-  #handleScrollUpperThresholdEventEnabled = (enabled: boolean) => {
+  __handleScrollUpperThresholdEventEnabled = (enabled: boolean) => {
     enabled
-      ? this.#dom.setAttribute('x-enable-scrolltoupper-event', '')
-      : this.#dom.removeAttribute('x-enable-scrolltoupper-event'); // css needs this;
-    this.#updateUpperIntersectionObserver(enabled);
+      ? this.__dom.setAttribute('x-enable-scrolltoupper-event', '')
+      : this.__dom.removeAttribute('x-enable-scrolltoupper-event'); // css needs this;
+    this.__updateUpperIntersectionObserver(enabled);
   };
 
-  #updateUpperIntersectionObserver = bindToIntersectionObserver(
-    this.#getScrollContainer,
-    this.#getUpperThresholdObserverDom,
-    this.#handleObserver,
+  __updateUpperIntersectionObserver = bindToIntersectionObserver(
+    this.__getScrollContainer,
+    this.__getUpperThresholdObserverDom,
+    this.__handleObserver,
   );
 
   @registerEventEnableStatusChangeHandler('scrolltolower')
-  #handleScrollLowerThresholdEventEnabled = (enabled: boolean) => {
+  __handleScrollLowerThresholdEventEnabled = (enabled: boolean) => {
     enabled
-      ? this.#dom.setAttribute('x-enable-scrolltolower-event', '')
-      : this.#dom.removeAttribute('x-enable-scrolltolower-event'); // css needs this;
-    this.#updateLowerIntersectionObserver(enabled);
+      ? this.__dom.setAttribute('x-enable-scrolltolower-event', '')
+      : this.__dom.removeAttribute('x-enable-scrolltolower-event'); // css needs this;
+    this.__updateLowerIntersectionObserver(enabled);
   };
 
-  #updateLowerIntersectionObserver = bindToIntersectionObserver(
-    this.#getScrollContainer,
-    this.#getLowerThresholdObserverDom,
-    this.#handleObserver,
+  __updateLowerIntersectionObserver = bindToIntersectionObserver(
+    this.__getScrollContainer,
+    this.__getLowerThresholdObserverDom,
+    this.__handleObserver,
   );
 
   @registerAttributeHandler('upper-threshold', true)
-  #updateUpperThreshold = bindToStyle(
-    this.#getUpperThresholdObserverDom,
+  __updateUpperThreshold = bindToStyle(
+    this.__getUpperThresholdObserverDom,
     'flex-basis',
     (v) => `${parseInt(v)}px`,
   );
 
   @registerAttributeHandler('lower-threshold', true)
-  #updateLowerThreshold = bindToStyle(
-    this.#getLowerThresholdObserverDom,
+  __updateLowerThreshold = bindToStyle(
+    this.__getLowerThresholdObserverDom,
     'flex-basis',
     (v) => `${parseInt(v)}px`,
   );
 
-  #getScrollDetail() {
+  __getScrollDetail() {
     let { scrollTop, scrollLeft, scrollHeight, scrollWidth } = this
-      .#getScrollContainer();
+      .__getScrollContainer();
     if (scrollTop === 0) {
-      scrollTop -= this.#dom.scrollHeight / 2 - this.#dom.scrollTop;
+      scrollTop -= this.__dom.scrollHeight / 2 - this.__dom.scrollTop;
     }
     if (scrollLeft === 0) {
-      scrollLeft -= this.#dom.scrollWidth / 2 - this.#dom.scrollLeft;
+      scrollLeft -= this.__dom.scrollWidth / 2 - this.__dom.scrollLeft;
     }
     const detail = {
       scrollTop,
@@ -122,67 +122,70 @@ export class ScrollViewEvents
       scrollHeight,
       scrollWidth,
       isDragging: false,
-      deltaX: scrollLeft - this.#prevX,
-      deltaY: scrollTop - this.#prevY,
+      deltaX: scrollLeft - this.__prevX,
+      deltaY: scrollTop - this.__prevY,
     };
-    this.#prevX = scrollLeft;
-    this.#prevY = scrollTop;
+    this.__prevX = scrollLeft;
+    this.__prevY = scrollTop;
     return detail;
   }
 
-  #handleScroll = () => {
-    if (this.#scrollEndEventEnabled && !useScrollEnd) {
+  __handleScroll = () => {
+    if (this.__scrollEndEventEnabled && !useScrollEnd) {
       // debounce
-      clearTimeout(this.#debounceScrollForMockingScrollEnd);
-      this.#debounceScrollForMockingScrollEnd = setTimeout(() => {
-        this.#handleScrollEnd();
+      clearTimeout(this.__debounceScrollForMockingScrollEnd);
+      this.__debounceScrollForMockingScrollEnd = setTimeout(() => {
+        this.__handleScrollEnd();
       }, 100);
     }
-    this.#dom.dispatchEvent(
+    this.__dom.dispatchEvent(
       new CustomEvent('lynxscroll', {
         ...commonComponentEventSetting,
-        detail: this.#getScrollDetail(),
+        detail: this.__getScrollDetail(),
       }),
     );
   };
 
-  #handleScrollEnd = () => {
-    this.#dom.dispatchEvent(
+  __handleScrollEnd = () => {
+    this.__dom.dispatchEvent(
       new CustomEvent('lynxscrollend', {
         ...commonComponentEventSetting,
-        detail: this.#getScrollDetail(),
+        detail: this.__getScrollDetail(),
       }),
     );
   };
 
-  #scrollEventEnabled = false;
+  __scrollEventEnabled = false;
   @registerEventEnableStatusChangeHandler('lynxscroll')
-  #handleScrollEventEnabled = (enabled: boolean) => {
-    this.#scrollEventEnabled = enabled;
-    this.#handleScrollEventsSwitches();
+  __handleScrollEventEnabled = (enabled: boolean) => {
+    this.__scrollEventEnabled = enabled;
+    this.__handleScrollEventsSwitches();
   };
 
-  #scrollEndEventEnabled = false;
+  __scrollEndEventEnabled = false;
   @registerEventEnableStatusChangeHandler('lynxscrollend')
-  #handleScrollEndEventEnabled = (enabled: boolean) => {
-    this.#scrollEndEventEnabled = enabled;
-    this.#handleScrollEventsSwitches();
+  __handleScrollEndEventEnabled = (enabled: boolean) => {
+    this.__scrollEndEventEnabled = enabled;
+    this.__handleScrollEventsSwitches();
   };
 
-  #handleScrollEventsSwitches() {
-    if (this.#scrollEventEnabled || this.#scrollEndEventEnabled) {
-      this.#getScrollContainer().addEventListener('scroll', this.#handleScroll);
-      this.#getScrollContainer().addEventListener(
-        'scrollend',
-        this.#handleScrollEnd,
+  __handleScrollEventsSwitches() {
+    if (this.__scrollEventEnabled || this.__scrollEndEventEnabled) {
+      this.__getScrollContainer().addEventListener(
+        'scroll',
+        this.__handleScroll,
       );
-      this.#dom.addEventListener('scroll', this.#handleScroll);
-      this.#dom.addEventListener('scrollend', this.#handleScrollEnd);
-      this.#prevX = 0;
-      this.#prevY = 0;
+      this.__getScrollContainer().addEventListener(
+        'scrollend',
+        this.__handleScrollEnd,
+      );
+      this.__dom.addEventListener('scroll', this.__handleScroll);
+      this.__dom.addEventListener('scrollend', this.__handleScrollEnd);
+      this.__prevX = 0;
+      this.__prevY = 0;
     } else {
-      this.#dom.removeEventListener('scroll', this.#handleScroll);
-      this.#dom.removeEventListener('scrollend', this.#handleScrollEnd);
+      this.__dom.removeEventListener('scroll', this.__handleScroll);
+      this.__dom.removeEventListener('scrollend', this.__handleScrollEnd);
     }
   }
 

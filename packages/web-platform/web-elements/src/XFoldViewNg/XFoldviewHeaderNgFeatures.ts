@@ -10,15 +10,15 @@ import type { XFoldviewNg } from './XFoldviewNg.js';
 export class XFoldviewHeaderNgFeatures
   implements InstanceType<AttributeReactiveClass<typeof XFoldviewHeaderNg>>
 {
-  #dom: XFoldviewHeaderNg;
-  #resizeObserver?: ResizeObserver;
+  __dom: XFoldviewHeaderNg;
+  __resizeObserver?: ResizeObserver;
   static observedAttributes = [];
   constructor(dom: XFoldviewHeaderNg) {
-    this.#dom = dom;
+    this.__dom = dom;
   }
   connectedCallback() {
-    this.#resizeObserver = new ResizeObserver(([resize]) => {
-      const parentElement = this.#dom.parentElement as XFoldviewNg | null;
+    this.__resizeObserver = new ResizeObserver(([resize]) => {
+      const parentElement = this.__dom.parentElement as XFoldviewNg | null;
       if (parentElement?.tagName === 'X-FOLDVIEW-NG') {
         const slot = parentElement.querySelector(
           'x-foldview-slot-ng',
@@ -33,13 +33,13 @@ export class XFoldviewHeaderNgFeatures
         }
       }
     });
-    this.#resizeObserver.observe(this.#dom);
+    this.__resizeObserver.observe(this.__dom);
   }
 
   dispose() {
-    if (this.#resizeObserver) {
-      this.#resizeObserver.disconnect();
-      this.#resizeObserver = undefined;
+    if (this.__resizeObserver) {
+      this.__resizeObserver.disconnect();
+      this.__resizeObserver = undefined;
     }
   }
 }

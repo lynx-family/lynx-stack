@@ -58,31 +58,31 @@ import { commonComponentEventSetting } from '../common/commonEventInitConfigurat
 export class XList extends HTMLElement {
   static readonly notToFilterFalseAttributes = new Set(['enable-scroll']);
 
-  #getListContainer = genDomGetter(() => this.shadowRoot!, '#content');
+  __getListContainer = genDomGetter(() => this.shadowRoot!, '__content');
 
-  #autoScrollOptions = {
+  __autoScrollOptions = {
     rate: 0,
     lastTimestamp: 0,
     autoStop: true,
     isScrolling: false,
   };
 
-  #cellsMap: Record<string, Element> = {};
+  __cellsMap: Record<string, Element> = {};
 
   override get scrollTop() {
-    return this.#getListContainer().scrollTop;
+    return this.__getListContainer().scrollTop;
   }
 
   override set scrollTop(val: number) {
-    this.#getListContainer().scrollTop = val;
+    this.__getListContainer().scrollTop = val;
   }
 
   override get scrollLeft() {
-    return this.#getListContainer().scrollTop;
+    return this.__getListContainer().scrollTop;
   }
 
   override set scrollLeft(val: number) {
-    this.#getListContainer().scrollLeft = val;
+    this.__getListContainer().scrollLeft = val;
   }
 
   get __scrollTop() {
@@ -114,8 +114,8 @@ export class XList extends HTMLElement {
 
     if (typeof params.index === 'number') {
       if (params.index === 0) {
-        this.#getListContainer().scrollTop = 0;
-        this.#getListContainer().scrollLeft = 0;
+        this.__getListContainer().scrollTop = 0;
+        this.__getListContainer().scrollLeft = 0;
       } else if (params.index > 0 && params.index < this.childElementCount) {
         const targetKid = this.children.item(params.index);
         if (targetKid instanceof HTMLElement) {
@@ -132,25 +132,25 @@ export class XList extends HTMLElement {
     }
 
     if (offset) {
-      this.#getListContainer().scrollTo({
+      this.__getListContainer().scrollTo({
         ...offset,
         behavior: params.smooth ? 'smooth' : 'auto',
       });
     }
   }
 
-  #autoScroll = (timestamp: number) => {
-    if (!this.#autoScrollOptions.isScrolling) {
+  __autoScroll = (timestamp: number) => {
+    if (!this.__autoScrollOptions.isScrolling) {
       return;
     }
 
-    if (!this.#autoScrollOptions.lastTimestamp) {
-      this.#autoScrollOptions.lastTimestamp = timestamp;
+    if (!this.__autoScrollOptions.lastTimestamp) {
+      this.__autoScrollOptions.lastTimestamp = timestamp;
     }
 
-    const scrollContainer = this.#getListContainer();
-    const deltaTime = timestamp - this.#autoScrollOptions.lastTimestamp;
-    const tickDistance = (deltaTime / 1000) * this.#autoScrollOptions.rate;
+    const scrollContainer = this.__getListContainer();
+    const deltaTime = timestamp - this.__autoScrollOptions.lastTimestamp;
+    const tickDistance = (deltaTime / 1000) * this.__autoScrollOptions.rate;
 
     scrollContainer.scrollBy({
       left: tickDistance,
@@ -158,16 +158,16 @@ export class XList extends HTMLElement {
       behavior: 'smooth',
     });
 
-    this.#autoScrollOptions.lastTimestamp = timestamp;
+    this.__autoScrollOptions.lastTimestamp = timestamp;
     if (
       scrollContainer.scrollTop + scrollContainer.clientHeight
-        >= scrollContainer.scrollHeight && this.#autoScrollOptions.autoStop
+        >= scrollContainer.scrollHeight && this.__autoScrollOptions.autoStop
     ) {
       scrollContainer.scrollTop = scrollContainer.scrollHeight
         - scrollContainer.clientHeight;
-      this.#autoScrollOptions.isScrolling = false;
+      this.__autoScrollOptions.isScrolling = false;
     } else {
-      requestAnimationFrame(this.#autoScroll);
+      requestAnimationFrame(this.__autoScroll);
     }
   };
 
@@ -195,15 +195,15 @@ export class XList extends HTMLElement {
         ? params.rate
         : parseFloat(params.rate);
 
-      this.#autoScrollOptions = {
+      this.__autoScrollOptions = {
         rate,
         lastTimestamp: 0,
         isScrolling: true,
         autoStop: params.autoStop !== false ? true : false,
       };
-      requestAnimationFrame(this.#autoScroll);
+      requestAnimationFrame(this.__autoScroll);
     } else {
-      this.#autoScrollOptions.isScrolling = false;
+      this.__autoScrollOptions.isScrolling = false;
     }
   }
 
@@ -217,7 +217,7 @@ export class XList extends HTMLElement {
   }
 
   getVisibleCells = () => {
-    const cells = Object.values(this.#cellsMap);
+    const cells = Object.values(this.__cellsMap);
     const children = Array.from(this.children).filter(node => {
       return node.tagName === 'LIST-ITEM';
     });
@@ -237,8 +237,8 @@ export class XList extends HTMLElement {
     });
   };
 
-  #getListItemInfo = () => {
-    const cells = Object.values(this.#cellsMap);
+  __getListItemInfo = () => {
+    const cells = Object.values(this.__cellsMap);
 
     return cells.map(cell => {
       const rect = cell.getBoundingClientRect();
@@ -253,7 +253,7 @@ export class XList extends HTMLElement {
     });
   };
 
-  #contentVisibilityChange = (event: Event) => {
+  __contentVisibilityChange = (event: Event) => {
     if (!event.target || !(event.target instanceof HTMLElement)) {
       return;
     }
@@ -266,7 +266,7 @@ export class XList extends HTMLElement {
     const isListItem = (event.target as Element).tagName === 'LIST-ITEM';
 
     if (isContent && !skipped) {
-      const visibleItemBeforeUpdate = this.#getListItemInfo();
+      const visibleItemBeforeUpdate = this.__getListItemInfo();
 
       setTimeout(() => {
         this.dispatchEvent(
@@ -274,11 +274,11 @@ export class XList extends HTMLElement {
             ...commonComponentEventSetting,
             detail: {
               visibleItemBeforeUpdate,
-              visibleItemAfterUpdate: this.#getListItemInfo(),
+              visibleItemAfterUpdate: this.__getListItemInfo(),
             },
           }),
         );
-        // Set 100 is because #content is the parent container of list-item, and content is always visible before list-item.
+        // Set 100 is because __content is the parent container of list-item, and content is always visible before list-item.
         // We cannot obtain the timing of all the successfully visible list-items on the screen, so 100ms is used to delay this behavior.
       }, 100);
       return;
@@ -292,20 +292,20 @@ export class XList extends HTMLElement {
       }
 
       if (skipped) {
-        this.#cellsMap[itemKey] && delete this.#cellsMap[itemKey];
+        this.__cellsMap[itemKey] && delete this.__cellsMap[itemKey];
       } else {
-        this.#cellsMap[itemKey] = event.target as Element;
+        this.__cellsMap[itemKey] = event.target as Element;
       }
       return;
     }
   };
 
   connectedCallback() {
-    const listContainer = this.#getListContainer();
+    const listContainer = this.__getListContainer();
 
     listContainer.addEventListener(
       'contentvisibilityautostatechange',
-      this.#contentVisibilityChange,
+      this.__contentVisibilityChange,
       {
         passive: true,
       },

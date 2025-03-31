@@ -13,40 +13,41 @@ import type { XFoldviewNg } from './XFoldviewNg.js';
 export class XFoldviewNgEvents
   implements InstanceType<AttributeReactiveClass<typeof XFoldviewNg>>
 {
-  #dom: XFoldviewNg;
-  #granularity = 0.01;
-  #pervScroll = 0;
+  __dom: XFoldviewNg;
+  __granularity = 0.01;
+  __pervScroll = 0;
   constructor(dom: XFoldviewNg) {
-    this.#dom = dom;
-    this.#dom.addEventListener('scroll', this.#handleScroll, {
+    this.__dom = dom;
+    this.__dom.addEventListener('scroll', this.__handleScroll, {
       passive: true,
     });
   }
   static observedAttributes = ['granularity'];
 
   @registerAttributeHandler('granularity', true)
-  #handleGranularity(newVal: string | null) {
-    if (newVal && newVal !== '') this.#granularity = parseFloat(newVal);
-    else this.#granularity = 0.01;
+  __handleGranularity(newVal: string | null) {
+    if (newVal && newVal !== '') this.__granularity = parseFloat(newVal);
+    else this.__granularity = 0.01;
   }
 
-  #handleScroll = () => {
-    const curentScrollTop = this.#dom.scrollTop;
-    const scrollLength = Math.abs(this.#pervScroll - curentScrollTop);
+  __handleScroll = () => {
+    const curentScrollTop = this.__dom.scrollTop;
+    const scrollLength = Math.abs(this.__pervScroll - curentScrollTop);
     if (
-      scrollLength > this.#granularity
-      || this.#dom.scrollTop === 0
+      scrollLength > this.__granularity
+      || this.__dom.scrollTop === 0
       || Math.abs(
-          this.#dom.scrollHeight - this.#dom.clientHeight - this.#dom.scrollTop,
+          this.__dom.scrollHeight - this.__dom.clientHeight
+            - this.__dom.scrollTop,
         ) <= 1
     ) {
-      this.#pervScroll = curentScrollTop;
-      this.#dom.dispatchEvent(
+      this.__pervScroll = curentScrollTop;
+      this.__dom.dispatchEvent(
         new CustomEvent('offset', {
           ...commonComponentEventSetting,
           detail: {
             offset: curentScrollTop,
-            height: this.#dom.__scrollableLength,
+            height: this.__dom.__scrollableLength,
           },
         }),
       );

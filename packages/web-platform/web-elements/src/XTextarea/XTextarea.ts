@@ -21,8 +21,8 @@ import { LynxExposure } from '../common/Exposure.js';
     XTextareaEvents,
   ],
   html`<style>
-      #textarea:focus,
-      #textarea:focus-visible {
+      __textarea:focus,
+      __textarea:focus-visible {
         border: inherit;
         outline: inherit;
       }
@@ -32,19 +32,19 @@ import { LynxExposure } from '../common/Exposure.js';
     </form> `,
 )
 export class XTextarea extends HTMLElement {
-  #getTextarea = genDomGetter<HTMLTextAreaElement>(
+  __getTextarea = genDomGetter<HTMLTextAreaElement>(
     () => this.shadowRoot!,
-    '#textarea',
+    '__textarea',
   );
   get value() {
-    return this.#getTextarea().value;
+    return this.__getTextarea().value;
   }
   set value(val: string) {
-    this.#getTextarea().value = val;
+    this.__getTextarea().value = val;
   }
   addText(params: { text: string }) {
     const { text } = params;
-    const input = this.#getTextarea();
+    const input = this.__getTextarea();
     const selectionStart = input.selectionStart;
     if (selectionStart === null) {
       input.value = text;
@@ -57,7 +57,7 @@ export class XTextarea extends HTMLElement {
   }
 
   setValue(params: { value: string; index: number }) {
-    const input = this.#getTextarea();
+    const input = this.__getTextarea();
     input.value = params.value;
     let cursorIndex;
     if ((cursorIndex = params.index)) {
@@ -67,7 +67,7 @@ export class XTextarea extends HTMLElement {
 
   sendDelEvent(params: { action: number; length: number }) {
     let { action, length } = params;
-    const input = this.#getTextarea();
+    const input = this.__getTextarea();
     if (action === 1) {
       length = 1;
     }
@@ -83,12 +83,12 @@ export class XTextarea extends HTMLElement {
   }
 
   select() {
-    const input = this.#getTextarea();
+    const input = this.__getTextarea();
     input.setSelectionRange(0, input.value.length);
   }
 
   setSelectionRange(params: { selectionStart: number; selectionEnd: number }) {
-    this.#getTextarea().setSelectionRange(
+    this.__getTextarea().setSelectionRange(
       params.selectionStart,
       params.selectionEnd,
     );

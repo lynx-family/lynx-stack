@@ -17,36 +17,36 @@ export class XInputAttribute
   implements InstanceType<AttributeReactiveClass<typeof HTMLElement>>
 {
   static observedAttributes = ['value', 'disabled'];
-  #dom: HTMLElement;
+  __dom: HTMLElement;
 
-  #getInputElement = genDomGetter<HTMLInputElement>(
-    () => this.#dom.shadowRoot!,
-    '#input',
+  __getInputElement = genDomGetter<HTMLInputElement>(
+    () => this.__dom.shadowRoot!,
+    '__input',
   );
 
   @registerAttributeHandler('value', false)
   // delay value to connectedCallback to wait the maxlength value.
-  #handleValue(newValue: string | null) {
+  __handleValue(newValue: string | null) {
     if (newValue) {
-      const maxlength = parseFloat(this.#dom.getAttribute('maxlength') ?? '');
+      const maxlength = parseFloat(this.__dom.getAttribute('maxlength') ?? '');
       if (!isNaN(maxlength)) newValue = newValue.substring(0, maxlength);
     } else {
       newValue = '';
     }
-    const input = this.#getInputElement();
+    const input = this.__getInputElement();
     if (input.value !== newValue) {
       input.value = newValue;
     }
   }
 
   @registerAttributeHandler('disabled', true)
-  #handleDisabled = bindToAttribute(
-    this.#getInputElement,
+  __handleDisabled = bindToAttribute(
+    this.__getInputElement,
     'disabled',
     (value) => (value !== null ? '' : null),
   );
 
   constructor(dom: HTMLElement) {
-    this.#dom = dom;
+    this.__dom = dom;
   }
 }

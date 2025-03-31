@@ -15,31 +15,37 @@ import type { ScrollView } from './ScrollView.js';
 export class FadeEdgeLengthAttribute
   implements InstanceType<AttributeReactiveClass<typeof ScrollView>>
 {
-  #dom: ScrollView;
-  #getTopFadeMask = genDomGetter(() => this.#dom.shadowRoot!, '#top-fade-mask');
-  #getBotFadeMask = genDomGetter(() => this.#dom.shadowRoot!, '#bot-fade-mask');
+  __dom: ScrollView;
+  __getTopFadeMask = genDomGetter(
+    () => this.__dom.shadowRoot!,
+    '__top-fade-mask',
+  );
+  __getBotFadeMask = genDomGetter(
+    () => this.__dom.shadowRoot!,
+    '__bot-fade-mask',
+  );
   static observedAttributes = ['fading-edge-length'];
   static observedCSSProperties = ['background', 'background-color'];
 
   constructor(dom: ScrollView) {
-    this.#dom = dom;
+    this.__dom = dom;
   }
 
   @registerAttributeHandler('fading-edge-length', true)
-  #handleFadingEdgeLength = bindToStyle(
-    () => this.#dom,
+  __handleFadingEdgeLength = bindToStyle(
+    () => this.__dom,
     '--scroll-view-fading-edge-length',
     (v) => `${parseFloat(v)}px`,
   );
 
   @registerStyleChangeHandler('background')
   @registerStyleChangeHandler('background-color')
-  #backgroundColorToVariable(backGroundColor: string | null) {
-    this.#getTopFadeMask().style.setProperty(
+  __backgroundColorToVariable(backGroundColor: string | null) {
+    this.__getTopFadeMask().style.setProperty(
       '--scroll-view-bg-color',
       backGroundColor,
     );
-    this.#getBotFadeMask().style.setProperty(
+    this.__getBotFadeMask().style.setProperty(
       '--scroll-view-bg-color',
       backGroundColor,
     );

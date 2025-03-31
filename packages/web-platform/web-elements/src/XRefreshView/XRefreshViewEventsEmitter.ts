@@ -16,25 +16,25 @@ import { registerEventEnableStatusChangeHandler } from '@lynx-js/web-elements-re
 export class XRefreshViewEventsEmitter
   implements InstanceType<AttributeReactiveClass<typeof XRefreshView>>
 {
-  #dom: XRefreshView;
+  __dom: XRefreshView;
   static observedAttributes = [];
-  #getXRefreshHeader = genDomGetter<XRefreshHeader>(
-    () => this.#dom,
+  __getXRefreshHeader = genDomGetter<XRefreshHeader>(
+    () => this.__dom,
     'x-refresh-view > x-refresh-header:first-of-type',
   );
-  #getXRefreshFooter = genDomGetter<XRefreshHeader>(
-    () => this.#dom,
+  __getXRefreshFooter = genDomGetter<XRefreshHeader>(
+    () => this.__dom,
     'x-refresh-view > x-refresh-footer:first-of-type',
   );
   constructor(dom: XRefreshView) {
-    this.#dom = dom;
-    this.#dom.addEventListener(
+    this.__dom = dom;
+    this.__dom.addEventListener(
       XRefreshIntersectionObserverEvent.EventName,
-      this.#handleSubElementObserverEvent as EventListener,
+      this.__handleSubElementObserverEvent as EventListener,
     );
   }
 
-  #eventSwitches = {
+  __eventSwitches = {
     headeroffset: false,
     headerreleased: false,
     startrefresh: false,
@@ -48,20 +48,20 @@ export class XRefreshViewEventsEmitter
   @registerEventEnableStatusChangeHandler('headeroffset')
   @registerEventEnableStatusChangeHandler('headershow')
   @registerEventEnableStatusChangeHandler('footeroffset')
-  #handleComplexEventEnableAttributes(status: boolean, eventName: string) {
+  __handleComplexEventEnableAttributes(status: boolean, eventName: string) {
     this
-      .#eventSwitches[
+      .__eventSwitches[
         eventName as 'headeroffset' | 'headershow' | 'footeroffset'
       ] = status;
-    const { headeroffset, headershow, footeroffset } = this.#eventSwitches;
+    const { headeroffset, headershow, footeroffset } = this.__eventSwitches;
     if (
       headeroffset
       || headershow
       || footeroffset
     ) {
-      this.#enableComplexRefreshViewEvents();
+      this.__enableComplexRefreshViewEvents();
     } else {
-      this.#disableComplexRefreshViewEvents();
+      this.__disableComplexRefreshViewEvents();
     }
   }
 
@@ -69,9 +69,9 @@ export class XRefreshViewEventsEmitter
   @registerEventEnableStatusChangeHandler('headerreleased')
   @registerEventEnableStatusChangeHandler('startloadmore')
   @registerEventEnableStatusChangeHandler('footerreleased')
-  #handleXEnableHeaderOffsetEvent(status: boolean, eventName: string) {
+  __handleXEnableHeaderOffsetEvent(status: boolean, eventName: string) {
     this
-      .#eventSwitches[
+      .__eventSwitches[
         eventName as
           | 'startrefresh'
           | 'headerreleased'
@@ -79,147 +79,147 @@ export class XRefreshViewEventsEmitter
           | 'footerreleased'
       ] = status;
     const { startrefresh, headerreleased, startloadmore, footerreleased } =
-      this.#eventSwitches;
+      this.__eventSwitches;
     if (
       headerreleased
       || footerreleased
       || startloadmore
       || startrefresh
     ) {
-      this.#enableSimpleRefreshViewEvents();
+      this.__enableSimpleRefreshViewEvents();
     } else {
-      this.#disableSimpleRefreshViewEvents();
+      this.__disableSimpleRefreshViewEvents();
     }
   }
   /**
    * handle header/footer showing events
    */
-  #headerShowing: boolean = false;
-  #headerFullyShown: boolean = false;
-  #footerShowing: boolean = false;
-  #footerFullyShown: boolean = false;
-  #handleSubElementObserverEvent = (e: XRefreshIntersectionObserverEvent) => {
+  __headerShowing: boolean = false;
+  __headerFullyShown: boolean = false;
+  __footerShowing: boolean = false;
+  __footerFullyShown: boolean = false;
+  __handleSubElementObserverEvent = (e: XRefreshIntersectionObserverEvent) => {
     e.stopPropagation();
     if ((e.target as HTMLElement).tagName === 'X-REFRESH-HEADER') {
-      this.#headerShowing = e.startShowing;
-      this.#headerFullyShown = e.fullyShowing;
+      this.__headerShowing = e.startShowing;
+      this.__headerFullyShown = e.fullyShowing;
     } else {
-      this.#footerShowing = e.startShowing;
-      this.#footerFullyShown = e.fullyShowing;
+      this.__footerShowing = e.startShowing;
+      this.__footerFullyShown = e.fullyShowing;
     }
   };
 
   /**
    * Event without dragging info;
    */
-  #simpleRefreshViewEventsEnabled: boolean = false;
-  #enableSimpleRefreshViewEvents() {
-    if (this.#simpleRefreshViewEventsEnabled) return;
-    this.#dom.addEventListener('touchend', this.#handleTouchEndForEvent);
-    this.#simpleRefreshViewEventsEnabled = true;
+  __simpleRefreshViewEventsEnabled: boolean = false;
+  __enableSimpleRefreshViewEvents() {
+    if (this.__simpleRefreshViewEventsEnabled) return;
+    this.__dom.addEventListener('touchend', this.__handleTouchEndForEvent);
+    this.__simpleRefreshViewEventsEnabled = true;
   }
-  #handleTouchEndForEvent = () => {
-    if (this.#headerFullyShown) {
-      this.#dom.dispatchEvent(
+  __handleTouchEndForEvent = () => {
+    if (this.__headerFullyShown) {
+      this.__dom.dispatchEvent(
         new CustomEvent('headerreleased', commonComponentEventSetting),
       );
-      this.#dom.dispatchEvent(
+      this.__dom.dispatchEvent(
         new CustomEvent('startrefresh', {
           ...commonComponentEventSetting,
-          detail: { isManual: this.#dom._nextRefreshIsManual },
+          detail: { isManual: this.__dom._nextRefreshIsManual },
         }),
       );
-      this.#dom._nextRefreshIsManual = true;
+      this.__dom._nextRefreshIsManual = true;
     } else if (
-      (this.#dom.getAttribute('enable-auto-loadmore') === 'true'
-        && this.#footerShowing)
-      || this.#footerFullyShown
+      (this.__dom.getAttribute('enable-auto-loadmore') === 'true'
+        && this.__footerShowing)
+      || this.__footerFullyShown
     ) {
-      this.#dom.dispatchEvent(
+      this.__dom.dispatchEvent(
         new CustomEvent('footerreleased', commonComponentEventSetting),
       );
-      this.#dom.dispatchEvent(
+      this.__dom.dispatchEvent(
         new CustomEvent('startloadmore', commonComponentEventSetting),
       );
     }
   };
 
-  #disableSimpleRefreshViewEvents() {
-    if (this.#simpleRefreshViewEventsEnabled) {
-      this.#dom.removeEventListener('touchend', this.#handleTouchEndForEvent);
+  __disableSimpleRefreshViewEvents() {
+    if (this.__simpleRefreshViewEventsEnabled) {
+      this.__dom.removeEventListener('touchend', this.__handleTouchEndForEvent);
     }
   }
 
   /**
    * Event with dragging info
    */
-  #dragging: boolean = false;
-  #complexRefreshViewEventEnabled: boolean = false;
-  #enableComplexRefreshViewEvents() {
-    if (this.#complexRefreshViewEventEnabled) return;
-    this.#dom.addEventListener(
+  __dragging: boolean = false;
+  __complexRefreshViewEventEnabled: boolean = false;
+  __enableComplexRefreshViewEvents() {
+    if (this.__complexRefreshViewEventEnabled) return;
+    this.__dom.addEventListener(
       'touchstart',
-      this.#handleTouchStartForDraggingStatus,
+      this.__handleTouchStartForDraggingStatus,
     );
-    this.#dom.addEventListener(
+    this.__dom.addEventListener(
       'touchend',
-      this.#handleTouchEndForDraggingStatus,
+      this.__handleTouchEndForDraggingStatus,
     );
-    this.#dom.addEventListener(
+    this.__dom.addEventListener(
       'touchcancel',
-      this.#handleTouchEndForDraggingStatus,
+      this.__handleTouchEndForDraggingStatus,
     );
-    this.#dom
-      .shadowRoot!.querySelector('#container')!
-      .addEventListener('scroll', this.#handleScroll);
+    this.__dom
+      .shadowRoot!.querySelector('__container')!
+      .addEventListener('scroll', this.__handleScroll);
   }
-  #handleTouchEndForDraggingStatus = () => {
-    this.#dragging = false;
+  __handleTouchEndForDraggingStatus = () => {
+    this.__dragging = false;
   };
-  #handleTouchStartForDraggingStatus = () => {
-    this.#dragging = true;
+  __handleTouchStartForDraggingStatus = () => {
+    this.__dragging = true;
   };
-  #handleScroll = () => {
+  __handleScroll = () => {
     if (
-      this.#headerShowing
-      && (this.#eventSwitches.headershow || this.#eventSwitches.headeroffset)
+      this.__headerShowing
+      && (this.__eventSwitches.headershow || this.__eventSwitches.headeroffset)
     ) {
-      const header = this.#getXRefreshHeader();
+      const header = this.__getXRefreshHeader();
       if (header) {
         const height = parseFloat(getComputedStyle(header).height);
         const scrollTop =
-          this.#dom.shadowRoot!.querySelector('#container')!.scrollTop;
-        this.#dom.dispatchEvent(
+          this.__dom.shadowRoot!.querySelector('__container')!.scrollTop;
+        this.__dom.dispatchEvent(
           new CustomEvent('headershow', {
             ...commonComponentEventSetting,
             detail: {
-              isDragging: this.#dragging,
+              isDragging: this.__dragging,
               offsetPercent: 1 - scrollTop / height,
             },
           }),
         );
-        this.#dom.dispatchEvent(
+        this.__dom.dispatchEvent(
           new CustomEvent('headeroffset', {
             ...commonComponentEventSetting,
             detail: {
-              isDragging: this.#dragging,
+              isDragging: this.__dragging,
               offsetPercent: 1 - scrollTop / height,
             },
           }),
         );
       }
-    } else if (this.#footerShowing && this.#eventSwitches.footeroffset) {
-      const footer = this.#getXRefreshFooter();
+    } else if (this.__footerShowing && this.__eventSwitches.footeroffset) {
+      const footer = this.__getXRefreshFooter();
       if (footer) {
-        const contentDom = this.#dom.shadowRoot!.querySelector('#container')!;
+        const contentDom = this.__dom.shadowRoot!.querySelector('__container')!;
         const scrollTop = contentDom.scrollTop;
         const scrollHeight = contentDom.scrollHeight;
         const height = parseFloat(getComputedStyle(footer).height);
-        this.#dom.dispatchEvent(
+        this.__dom.dispatchEvent(
           new CustomEvent('footeroffset', {
             ...commonComponentEventSetting,
             detail: {
-              isDragging: this.#dragging,
+              isDragging: this.__dragging,
               offsetPercent: 1 - scrollTop / height,
             },
           }),
@@ -227,27 +227,27 @@ export class XRefreshViewEventsEmitter
       }
     }
   };
-  #disableComplexRefreshViewEvents() {
-    if (this.#complexRefreshViewEventEnabled) {
-      this.#dom.removeEventListener(
+  __disableComplexRefreshViewEvents() {
+    if (this.__complexRefreshViewEventEnabled) {
+      this.__dom.removeEventListener(
         'touchstart',
-        this.#handleTouchStartForDraggingStatus,
+        this.__handleTouchStartForDraggingStatus,
       );
-      this.#dom.removeEventListener(
+      this.__dom.removeEventListener(
         'touchend',
-        this.#handleTouchEndForDraggingStatus,
+        this.__handleTouchEndForDraggingStatus,
       );
-      this.#dom.removeEventListener(
+      this.__dom.removeEventListener(
         'touchcancel',
-        this.#handleTouchEndForDraggingStatus,
+        this.__handleTouchEndForDraggingStatus,
       );
-      this.#dom
-        .shadowRoot!.querySelector('#container')!
-        .removeEventListener('scroll', this.#handleScroll);
+      this.__dom
+        .shadowRoot!.querySelector('__container')!
+        .removeEventListener('scroll', this.__handleScroll);
     }
   }
   dispose(): void {
-    this.#disableSimpleRefreshViewEvents();
-    this.#disableComplexRefreshViewEvents();
+    this.__disableSimpleRefreshViewEvents();
+    this.__disableComplexRefreshViewEvents();
   }
 }

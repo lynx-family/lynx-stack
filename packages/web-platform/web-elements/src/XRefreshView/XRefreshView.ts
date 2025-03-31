@@ -37,7 +37,7 @@ import { scrollContainerDom } from '../common/constants.js';
         display: flex;
         flex-direction: column;
       }
-      #content {
+      __content {
         scroll-snap-align: center;
       }
     </style>
@@ -79,7 +79,7 @@ export class XRefreshView extends HTMLElement {
     )?.removeAttribute('x-magnet-enable');
   }
   public autoStartRefresh() {
-    const content = this.shadowRoot!.querySelector('#container')!;
+    const content = this.shadowRoot!.querySelector('__container')!;
     this.querySelector(
       'x-refresh-view > x-refresh-header:first-of-type',
     )?.setAttribute('x-magnet-enable', '');
@@ -90,17 +90,20 @@ export class XRefreshView extends HTMLElement {
     });
   }
 
-  #getOverScrollContainer = genDomGetter(() => this.shadowRoot!, '#container');
-  #getContentContainer = genDomGetter(() => this.shadowRoot!, '#content');
+  __getOverScrollContainer = genDomGetter(
+    () => this.shadowRoot!,
+    '__container',
+  );
+  __getContentContainer = genDomGetter(() => this.shadowRoot!, '__content');
   override get scrollTop() {
-    const outer = this.#getOverScrollContainer();
-    const inner = this.#getContentContainer();
+    const outer = this.__getOverScrollContainer();
+    const inner = this.__getContentContainer();
     return inner.scrollTop + inner.offsetTop - outer.scrollTop;
   }
   override set scrollTop(val: number) {
     console.log(val);
-    const outer = this.#getOverScrollContainer();
-    const inner = this.#getContentContainer();
+    const outer = this.__getOverScrollContainer();
+    const inner = this.__getContentContainer();
     if (val > 0) {
       inner.scrollTop = val;
     } else {
@@ -108,7 +111,7 @@ export class XRefreshView extends HTMLElement {
     }
   }
   override get scrollHeight() {
-    const inner = this.#getContentContainer();
+    const inner = this.__getContentContainer();
     return inner.scrollHeight;
   }
 

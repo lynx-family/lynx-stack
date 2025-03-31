@@ -31,54 +31,54 @@ export class XTextTruncation
     'text-maxline',
     'tail-color-convert',
   ];
-  #scheduledTextLayout = false;
-  #componentConnected: boolean = false;
-  #originalTextMap = new Map<Node, string>();
-  #mutationObserver?: MutationObserver;
-  #resizeObserver?: ResizeObserver;
-  #inplaceEllipsisNode?: Node;
-  #textMeasure?: TextRenderingMeasureTool;
-  #firstResizeObserverCallback = false;
+  __scheduledTextLayout = false;
+  __componentConnected: boolean = false;
+  __originalTextMap = new Map<Node, string>();
+  __mutationObserver?: MutationObserver;
+  __resizeObserver?: ResizeObserver;
+  __inplaceEllipsisNode?: Node;
+  __textMeasure?: TextRenderingMeasureTool;
+  __firstResizeObserverCallback = false;
   // attribute status
-  #maxLength = NaN;
-  #maxLine = NaN;
-  #tailColorConvert = true;
-  #enableLayoutEvent = false;
-  get #ellipsisInPlace() {
-    return !this.#hasInlineTruncation && !this.#tailColorConvert;
+  __maxLength = NaN;
+  __maxLine = NaN;
+  __tailColorConvert = true;
+  __enableLayoutEvent = false;
+  get __ellipsisInPlace() {
+    return !this.__hasInlineTruncation && !this.__tailColorConvert;
   }
-  get #hasInlineTruncation() {
+  get __hasInlineTruncation() {
     if (CSS.supports('selector(:has(inline-truncation))')) {
-      return this.#dom.matches(':has(inline-truncation)');
+      return this.__dom.matches(':has(inline-truncation)');
     } else {
-      const candidateElement = this.#dom.querySelector('inline-truncation');
-      if (candidateElement?.parentElement === this.#dom) {
+      const candidateElement = this.__dom.querySelector('inline-truncation');
+      if (candidateElement?.parentElement === this.__dom) {
         return true;
       }
     }
     return false;
   }
-  get #doExpensiveLineLayoutCalculation() {
+  get __doExpensiveLineLayoutCalculation() {
     return (
-      !isNaN(this.#maxLine)
-      && (this.#hasInlineTruncation || !this.#tailColorConvert)
+      !isNaN(this.__maxLine)
+      && (this.__hasInlineTruncation || !this.__tailColorConvert)
     );
   }
-  #dom: XText;
+  __dom: XText;
   constructor(dom: XText) {
-    this.#dom = dom;
+    this.__dom = dom;
   }
-  #getInnerBox = genDomGetter(() => this.#dom.shadowRoot!, '#inner-box');
-  #updateOriginalText(mutationRecords: MutationRecord[]) {
+  __getInnerBox = genDomGetter(() => this.__dom.shadowRoot!, '__inner-box');
+  __updateOriginalText(mutationRecords: MutationRecord[]) {
     mutationRecords.forEach((oneRecord) => {
       oneRecord.removedNodes.forEach((node) => {
-        this.#originalTextMap.delete(node);
+        this.__originalTextMap.delete(node);
       });
       if (
         oneRecord.type === 'characterData'
-        && this.#originalTextMap.get(oneRecord.target) !== undefined
+        && this.__originalTextMap.get(oneRecord.target) !== undefined
       ) {
-        this.#originalTextMap.set(
+        this.__originalTextMap.set(
           oneRecord.target,
           (oneRecord.target as Text).data,
         );
@@ -86,8 +86,8 @@ export class XTextTruncation
     });
   }
 
-  #revertTruncatedTextNodes() {
-    for (const [node, originalText] of this.#originalTextMap) {
+  __revertTruncatedTextNodes() {
+    for (const [node, originalText] of this.__originalTextMap) {
       if (node.nodeType === Node.TEXT_NODE) {
         if (originalText !== undefined) {
           (node as Text).data = originalText;
@@ -98,11 +98,11 @@ export class XTextTruncation
         );
       }
     }
-    this.#dom.removeAttribute(XTextTruncation.exceedMathLengthAttribute);
-    this.#dom.removeAttribute(XTextTruncation.showInlineTruncation);
+    this.__dom.removeAttribute(XTextTruncation.exceedMathLengthAttribute);
+    this.__dom.removeAttribute(XTextTruncation.showInlineTruncation);
   }
 
-  #getAllSibilings(targetNode: Node) {
+  __getAllSibilings(targetNode: Node) {
     const sibilingNodes: (Text | Element)[] = [];
     let targetNodeSibiling: Node | null = targetNode;
     while ((targetNodeSibiling = targetNodeSibiling.nextSibling)) {
@@ -115,40 +115,42 @@ export class XTextTruncation
     }
     return sibilingNodes;
   }
-  #layoutText() {
-    if (!this.#componentConnected || this.#dom.matches('x-text>x-text')) return;
-    if (this.#scheduledTextLayout) return;
-    this.#scheduledTextLayout = true;
+  __layoutText() {
+    if (!this.__componentConnected || this.__dom.matches('x-text>x-text')) {
+      return;
+    }
+    if (this.__scheduledTextLayout) return;
+    this.__scheduledTextLayout = true;
     boostedQueueMicrotask(() => {
-      this.#layoutTextInner();
-      this.#startObservers();
+      this.__layoutTextInner();
+      this.__startObservers();
       queueMicrotask(() => {
-        this.#scheduledTextLayout = false;
+        this.__scheduledTextLayout = false;
       });
     });
   }
-  #layoutTextInner() {
-    this.#inplaceEllipsisNode?.parentElement?.removeChild(
-      this.#inplaceEllipsisNode,
+  __layoutTextInner() {
+    this.__inplaceEllipsisNode?.parentElement?.removeChild(
+      this.__inplaceEllipsisNode,
     );
 
-    this.#revertTruncatedTextNodes();
-    if (!this.#doExpensiveLineLayoutCalculation && isNaN(this.#maxLength)) {
+    this.__revertTruncatedTextNodes();
+    if (!this.__doExpensiveLineLayoutCalculation && isNaN(this.__maxLength)) {
       return;
     }
-    const parentBondingRect = this.#getInnerBox().getBoundingClientRect();
-    this.#textMeasure = new TextRenderingMeasureTool(
-      this.#dom,
+    const parentBondingRect = this.__getInnerBox().getBoundingClientRect();
+    this.__textMeasure = new TextRenderingMeasureTool(
+      this.__dom,
       parentBondingRect,
     );
-    const measure = this.#textMeasure!;
-    const maxLengthMeasureResult = !isNaN(this.#maxLength)
-      ? measure.getNodeInfoByCharIndex(this.#maxLength)
+    const measure = this.__textMeasure!;
+    const maxLengthMeasureResult = !isNaN(this.__maxLength)
+      ? measure.getNodeInfoByCharIndex(this.__maxLength)
       : undefined;
-    const maxLengthEndAt = maxLengthMeasureResult ? this.#maxLength : Infinity;
-    const maxLineMeasureResult = this.#doExpensiveLineLayoutCalculation
-      ? measure.getLineInfo(this.#maxLine)
-        ? measure.getLineInfo(this.#maxLine - 1)
+    const maxLengthEndAt = maxLengthMeasureResult ? this.__maxLength : Infinity;
+    const maxLineMeasureResult = this.__doExpensiveLineLayoutCalculation
+      ? measure.getLineInfo(this.__maxLine)
+        ? measure.getLineInfo(this.__maxLine - 1)
         : undefined
       : undefined;
     let maxLineEndAt = Infinity;
@@ -156,9 +158,9 @@ export class XTextTruncation
     if (maxLineMeasureResult) {
       const { start, end } = maxLineMeasureResult;
       const currentLineText = end - start;
-      if (this.#hasInlineTruncation) {
-        this.#dom.setAttribute(XTextTruncation.showInlineTruncation, '');
-        const inlineTruncation = this.#dom.querySelector('inline-truncation')!;
+      if (this.__hasInlineTruncation) {
+        this.__dom.setAttribute(XTextTruncation.showInlineTruncation, '');
+        const inlineTruncation = this.__dom.querySelector('inline-truncation')!;
         const inlineTruncationBoundingRect = inlineTruncation
           .getBoundingClientRect();
         const parentWidth = parentBondingRect!.width;
@@ -183,7 +185,7 @@ export class XTextTruncation
           }
         } else {
           maxLineEndAt = start;
-          this.#dom.removeAttribute(XTextTruncation.showInlineTruncation);
+          this.__dom.removeAttribute(XTextTruncation.showInlineTruncation);
         }
       } else {
         if (currentLineText < 3) {
@@ -203,16 +205,18 @@ export class XTextTruncation
         let toBeHideNodes: (Text | Element)[] = [];
         if (targetNode.nodeType === Node.TEXT_NODE) {
           const textNode = targetNode as Text;
-          this.#originalTextMap.set(targetNode, textNode.data);
+          this.__originalTextMap.set(targetNode, textNode.data);
           textNode.data = textNode.data.substring(0, truncatePositionInNode);
         } else {
           toBeHideNodes.push(targetNode);
         }
-        toBeHideNodes = toBeHideNodes.concat(this.#getAllSibilings(targetNode));
+        toBeHideNodes = toBeHideNodes.concat(
+          this.__getAllSibilings(targetNode),
+        );
         let targetNodeParentElement = targetNode.parentElement!;
-        while (targetNodeParentElement !== this.#dom) {
+        while (targetNodeParentElement !== this.__dom) {
           toBeHideNodes = toBeHideNodes.concat(
-            this.#getAllSibilings(targetNodeParentElement),
+            this.__getAllSibilings(targetNodeParentElement),
           );
           targetNodeParentElement = targetNodeParentElement.parentElement!;
         }
@@ -222,10 +226,10 @@ export class XTextTruncation
             node.nodeType === Node.TEXT_NODE
             && (node as Text).data.length !== 0
           ) {
-            this.#originalTextMap.set(node, (node as Text).data);
+            this.__originalTextMap.set(node, (node as Text).data);
             (node as Text).data = '';
           } else if (node.nodeType === Node.ELEMENT_NODE) {
-            this.#originalTextMap.set(node, '');
+            this.__originalTextMap.set(node, '');
             (node as Element).setAttribute(
               XTextTruncation.exceedMathLengthAttribute,
               '',
@@ -233,45 +237,45 @@ export class XTextTruncation
           }
         });
 
-        if (this.#ellipsisInPlace) {
+        if (this.__ellipsisInPlace) {
           const closestParent = (truncatePositionInNode === 0
             ? measure.nodelist.at(targetNodeInfo.nodeIndex - 1)
               ?.parentElement!
             : targetNode.parentElement!) ?? targetNode.parentElement!;
-          this.#inplaceEllipsisNode = new Text(
+          this.__inplaceEllipsisNode = new Text(
             new Array(ellipsisLength).fill('.').join(''),
           );
-          closestParent.append(this.#inplaceEllipsisNode);
+          closestParent.append(this.__inplaceEllipsisNode);
         }
-        this.#dom.setAttribute(XTextTruncation.exceedMathLengthAttribute, '');
+        this.__dom.setAttribute(XTextTruncation.exceedMathLengthAttribute, '');
       }
-      this.#sendLayoutEvent(truncateAt);
+      this.__sendLayoutEvent(truncateAt);
     }
   }
 
-  #handleMutationObserver: MutationCallback = (records: MutationRecord[]) => {
-    this.#updateOriginalText(records);
-    this.#layoutText();
+  __handleMutationObserver: MutationCallback = (records: MutationRecord[]) => {
+    this.__updateOriginalText(records);
+    this.__layoutText();
   };
 
-  #handleRezieObserver: ResizeObserverCallback = () => {
-    if (this.#firstResizeObserverCallback) {
-      this.#firstResizeObserverCallback = false;
+  __handleRezieObserver: ResizeObserverCallback = () => {
+    if (this.__firstResizeObserverCallback) {
+      this.__firstResizeObserverCallback = false;
       return;
     }
-    this.#layoutText();
+    this.__layoutText();
   };
 
-  #startObservers() {
-    if (!this.#componentConnected) {
+  __startObservers() {
+    if (!this.__componentConnected) {
       return;
     }
-    if (this.#maxLength || this.#maxLine) {
-      if (!this.#mutationObserver) {
-        this.#mutationObserver = new MutationObserver(
-          this.#handleMutationObserver,
+    if (this.__maxLength || this.__maxLine) {
+      if (!this.__mutationObserver) {
+        this.__mutationObserver = new MutationObserver(
+          this.__handleMutationObserver,
         );
-        this.#mutationObserver!.observe(this.#dom, {
+        this.__mutationObserver!.observe(this.__dom, {
           subtree: true,
           childList: true,
           attributes: false,
@@ -279,61 +283,61 @@ export class XTextTruncation
         });
       }
     }
-    if (this.#maxLine) {
-      if (!this.#resizeObserver) {
-        this.#resizeObserver = new ResizeObserver(this.#handleRezieObserver);
-        this.#firstResizeObserverCallback = true;
-        this.#resizeObserver!.observe(this.#getInnerBox(), {
+    if (this.__maxLine) {
+      if (!this.__resizeObserver) {
+        this.__resizeObserver = new ResizeObserver(this.__handleRezieObserver);
+        this.__firstResizeObserverCallback = true;
+        this.__resizeObserver!.observe(this.__getInnerBox(), {
           box: 'content-box',
         });
       }
     }
   }
 
-  #stopObservers() {
-    this.#mutationObserver?.disconnect();
-    this.#mutationObserver = undefined;
-    this.#resizeObserver?.disconnect();
-    this.#resizeObserver = undefined;
+  __stopObservers() {
+    this.__mutationObserver?.disconnect();
+    this.__mutationObserver = undefined;
+    this.__resizeObserver?.disconnect();
+    this.__resizeObserver = undefined;
   }
 
   @registerAttributeHandler('text-maxlength', true)
   @registerAttributeHandler('text-maxline', true)
   @registerAttributeHandler('tail-color-convert', true)
-  #handleAttributeChange() {
-    this.#maxLength = parseFloat(
-      this.#dom.getAttribute('text-maxlength') ?? '',
+  __handleAttributeChange() {
+    this.__maxLength = parseFloat(
+      this.__dom.getAttribute('text-maxlength') ?? '',
     );
-    this.#maxLine = parseFloat(this.#dom.getAttribute('text-maxline') ?? '');
-    this.#tailColorConvert =
-      this.#dom.getAttribute('tail-color-convert') !== 'false';
-    if (this.#maxLength < 0) this.#maxLength = NaN;
-    if (this.#maxLine < 1) this.#maxLine = NaN;
-    if (!isNaN(this.#maxLine)) {
-      this.#getInnerBox().style.webkitLineClamp = this.#maxLine.toString();
+    this.__maxLine = parseFloat(this.__dom.getAttribute('text-maxline') ?? '');
+    this.__tailColorConvert =
+      this.__dom.getAttribute('tail-color-convert') !== 'false';
+    if (this.__maxLength < 0) this.__maxLength = NaN;
+    if (this.__maxLine < 1) this.__maxLine = NaN;
+    if (!isNaN(this.__maxLine)) {
+      this.__getInnerBox().style.webkitLineClamp = this.__maxLine.toString();
     } else {
-      this.#getInnerBox().style.removeProperty('-webkit-line-clamp');
+      this.__getInnerBox().style.removeProperty('-webkit-line-clamp');
     }
-    this.#layoutText();
+    this.__layoutText();
   }
 
   @registerEventEnableStatusChangeHandler('layout')
-  #handleEnableLayoutEvent(status: boolean) {
-    this.#enableLayoutEvent = status;
+  __handleEnableLayoutEvent(status: boolean) {
+    this.__enableLayoutEvent = status;
   }
 
-  #sendLayoutEvent(truncateAt?: number) {
-    if (!this.#enableLayoutEvent) return;
+  __sendLayoutEvent(truncateAt?: number) {
+    if (!this.__enableLayoutEvent) return;
     const detail = new Proxy(this, {
       get(that, property): any {
         if (property === 'lineCount') {
-          if (!that.#textMeasure) {
-            that.#textMeasure = new TextRenderingMeasureTool(
-              that.#dom,
-              that.#dom.getBoundingClientRect(),
+          if (!that.__textMeasure) {
+            that.__textMeasure = new TextRenderingMeasureTool(
+              that.__dom,
+              that.__dom.getBoundingClientRect(),
             );
           }
-          return that.#textMeasure.getLineCount();
+          return that.__textMeasure.getLineCount();
         } else if (property === 'lines') {
           // event.detail.lines
           return new Proxy(that, {
@@ -341,13 +345,13 @@ export class XTextTruncation
               // event.detail.lines[num]
               const lineIndexNum = parseFloat(lineIndex.toString());
               if (!isNaN(lineIndexNum)) {
-                if (!that.#textMeasure) {
-                  that.#textMeasure = new TextRenderingMeasureTool(
-                    that.#dom,
-                    that.#dom.getBoundingClientRect(),
+                if (!that.__textMeasure) {
+                  that.__textMeasure = new TextRenderingMeasureTool(
+                    that.__dom,
+                    that.__dom.getBoundingClientRect(),
                   );
                 }
-                const lineInfo = that.#textMeasure.getLineInfo(lineIndexNum);
+                const lineInfo = that.__textMeasure.getLineInfo(lineIndexNum);
                 if (lineInfo) {
                   return new Proxy(lineInfo, {
                     get(lineInfo, property): any {
@@ -375,42 +379,42 @@ export class XTextTruncation
         }
       },
     });
-    this.#dom.dispatchEvent(
+    this.__dom.dispatchEvent(
       new CustomEvent('layout', { ...commonComponentEventSetting, detail }),
     );
   }
 
   dispose(): void {
-    this.#stopObservers();
+    this.__stopObservers();
   }
 
   connectedCallback(): void {
-    this.#componentConnected = true;
-    this.#handleEnableLayoutEvent(
-      this.#enableLayoutEvent,
+    this.__componentConnected = true;
+    this.__handleEnableLayoutEvent(
+      this.__enableLayoutEvent,
     );
     document.fonts.ready.then(() => {
-      this.#handleAttributeChange();
+      this.__handleAttributeChange();
     });
     boostedQueueMicrotask(() => {
-      this.#sendLayoutEvent();
+      this.__sendLayoutEvent();
     });
   }
 }
 
 class TextRenderingMeasureTool {
-  #cachedLineInfo: (Partial<LynxLineInfo> | undefined)[] = [{ start: 0 }];
-  #lazyLinesInfo: (RawLineInfo | undefined)[] = [];
-  #lazyNodesInfo: (NodeInfo | undefined)[] = [];
-  #dom: HTMLElement;
-  #domRect: DOMRect;
+  __cachedLineInfo: (Partial<LynxLineInfo> | undefined)[] = [{ start: 0 }];
+  __lazyLinesInfo: (RawLineInfo | undefined)[] = [];
+  __lazyNodesInfo: (NodeInfo | undefined)[] = [];
+  __dom: HTMLElement;
+  __domRect: DOMRect;
   public nodelist: LazyNodesList;
   constructor(containerDom: HTMLElement, parentRect: DOMRect) {
-    this.#dom = containerDom;
-    this.nodelist = new LazyNodesList(this.#dom);
-    this.#domRect = parentRect;
+    this.__dom = containerDom;
+    this.nodelist = new LazyNodesList(this.__dom);
+    this.__domRect = parentRect;
   }
-  #findWrapIndexInTargetTextNode(lastRectInfo: RectInfo) {
+  __findWrapIndexInTargetTextNode(lastRectInfo: RectInfo) {
     if (lastRectInfo.node.nodeType === Node.TEXT_NODE) {
       const { rect, rectIndex } = lastRectInfo;
       const textNode = lastRectInfo.node as Text;
@@ -428,10 +432,10 @@ class TextRenderingMeasureTool {
       return 1;
     }
   }
-  #genLinesInfoUntil(lineIndex: number) {
-    if (this.#lazyLinesInfo[lineIndex]) return;
-    const { left: containerLeft } = this.#domRect;
-    const lastLineInfo = this.#lazyLinesInfo[this.#lazyLinesInfo.length - 1];
+  __genLinesInfoUntil(lineIndex: number) {
+    if (this.__lazyLinesInfo[lineIndex]) return;
+    const { left: containerLeft } = this.__domRect;
+    const lastLineInfo = this.__lazyLinesInfo[this.__lazyLinesInfo.length - 1];
     const lastNodeInfo = lastLineInfo?.[lastLineInfo.length - 1];
     const nextNodeIndex = lastNodeInfo?.nodeIndex
       ? lastNodeInfo?.nodeIndex + 1
@@ -439,8 +443,8 @@ class TextRenderingMeasureTool {
     for (
       let nodeIndex: number = nextNodeIndex,
         currentNodeInfo: NodeInfo | undefined;
-      (currentNodeInfo = this.#getNodeInfoByIndex(nodeIndex))
-      && lineIndex >= this.#lazyLinesInfo.length;
+      (currentNodeInfo = this.__getNodeInfoByIndex(nodeIndex))
+      && lineIndex >= this.__lazyLinesInfo.length;
       nodeIndex++
     ) {
       const { node } = currentNodeInfo;
@@ -454,10 +458,10 @@ class TextRenderingMeasureTool {
       }
       if (rects.length > 0) {
         const currentLine = this
-          .#lazyLinesInfo[this.#lazyLinesInfo.length - 1]!;
+          .__lazyLinesInfo[this.__lazyLinesInfo.length - 1]!;
         const firstRect = rects[0]!;
         if (Math.abs(firstRect!.left - containerLeft) < 0.2 || !currentLine) {
-          this.#lazyLinesInfo.push([
+          this.__lazyLinesInfo.push([
             { ...currentNodeInfo, rect: firstRect, rectIndex: 0 },
           ]);
         } else {
@@ -476,12 +480,12 @@ class TextRenderingMeasureTool {
             ) {
               if (Math.abs(rect!.left - containerLeft) < 0.2) {
                 // is a new line
-                this.#lazyLinesInfo.push([
+                this.__lazyLinesInfo.push([
                   { ...currentNodeInfo, rect, rectIndex: ii },
                 ]);
               } else {
                 const currentLine = this
-                  .#lazyLinesInfo[this.#lazyLinesInfo.length - 1]!;
+                  .__lazyLinesInfo[this.__lazyLinesInfo.length - 1]!;
                 currentLine.push({
                   ...currentNodeInfo,
                   rect,
@@ -499,25 +503,25 @@ class TextRenderingMeasureTool {
    * @returns
    */
   getLineCount() {
-    this.#genLinesInfoUntil(Infinity);
-    return this.#lazyLinesInfo.length;
+    this.__genLinesInfoUntil(Infinity);
+    return this.__lazyLinesInfo.length;
   }
   getLineInfo(lineIndex: number): LynxLineInfo | void {
-    this.#genLinesInfoUntil(lineIndex + 1);
-    if (lineIndex < this.#lazyLinesInfo.length) {
+    this.__genLinesInfoUntil(lineIndex + 1);
+    if (lineIndex < this.__lazyLinesInfo.length) {
       // get catched info first
       const pervLineInfo = lineIndex > 0
-        ? this.#cachedLineInfo[lineIndex - 1] ?? {}
+        ? this.__cachedLineInfo[lineIndex - 1] ?? {}
         : undefined;
-      const currentLineInfo = this.#cachedLineInfo[lineIndex] ?? {};
-      const nextLineInfo = lineIndex < this.#lazyLinesInfo.length - 1
-        ? this.#cachedLineInfo[lineIndex + 1] ?? {}
+      const currentLineInfo = this.__cachedLineInfo[lineIndex] ?? {};
+      const nextLineInfo = lineIndex < this.__lazyLinesInfo.length - 1
+        ? this.__cachedLineInfo[lineIndex + 1] ?? {}
         : undefined;
       if (currentLineInfo.start === undefined) {
         // can't be firstline since the first line's start is already initialized at the constructor.
-        const pervLineRects = this.#lazyLinesInfo[lineIndex - 1]!;
+        const pervLineRects = this.__lazyLinesInfo[lineIndex - 1]!;
         const pervLineLastRectInfo = pervLineRects[pervLineRects.length - 1]!;
-        const wrapPosition = this.#findWrapIndexInTargetTextNode(
+        const wrapPosition = this.__findWrapIndexInTargetTextNode(
           pervLineLastRectInfo,
         );
         const end = pervLineLastRectInfo.start + wrapPosition;
@@ -525,10 +529,10 @@ class TextRenderingMeasureTool {
         currentLineInfo.start = end + 1;
       }
       if (currentLineInfo.end === undefined) {
-        const currentLineRects = this.#lazyLinesInfo[lineIndex]!;
+        const currentLineRects = this.__lazyLinesInfo[lineIndex]!;
         const currentLineLastRectInfo =
           currentLineRects[currentLineRects.length - 1]!;
-        if (lineIndex === this.#lazyLinesInfo.length - 1) {
+        if (lineIndex === this.__lazyLinesInfo.length - 1) {
           // the last line
           const currentNodeLength =
             currentLineLastRectInfo.node.nodeType === Node.TEXT_NODE
@@ -537,7 +541,7 @@ class TextRenderingMeasureTool {
           currentLineInfo.end = currentLineLastRectInfo.start
             + currentNodeLength;
         } else {
-          const wrapPosition = this.#findWrapIndexInTargetTextNode(
+          const wrapPosition = this.__findWrapIndexInTargetTextNode(
             currentLineLastRectInfo,
           );
           currentLineInfo.end = currentLineLastRectInfo.start + wrapPosition;
@@ -547,15 +551,15 @@ class TextRenderingMeasureTool {
       return currentLineInfo as LynxLineInfo;
     }
   }
-  #getNodeInfoByIndex(nodeIndex: number) {
-    const lastIndex = this.#lazyNodesInfo.length - 1;
-    const lastNode = this.#lazyNodesInfo[lastIndex];
+  __getNodeInfoByIndex(nodeIndex: number) {
+    const lastIndex = this.__lazyNodesInfo.length - 1;
+    const lastNode = this.__lazyNodesInfo[lastIndex];
     let currentLength = lastNode ? lastNode.start + lastNode.length : 0;
     for (
-      let currentIndex = this.#lazyNodesInfo.length,
+      let currentIndex = this.__lazyNodesInfo.length,
         nextNode: Text | Element | undefined;
       (nextNode = this.nodelist.at(currentIndex))
-      && nodeIndex >= this.#lazyNodesInfo.length;
+      && nodeIndex >= this.__lazyNodesInfo.length;
       currentIndex++
     ) {
       const nodeLength = nextNode.nodeType === Node.ELEMENT_NODE
@@ -567,19 +571,19 @@ class TextRenderingMeasureTool {
         start: currentLength,
         nodeIndex: currentIndex,
       };
-      this.#lazyNodesInfo.push(currentNodeInfo);
+      this.__lazyNodesInfo.push(currentNodeInfo);
     }
-    return this.#lazyNodesInfo[nodeIndex];
+    return this.__lazyNodesInfo[nodeIndex];
   }
   getNodeInfoByCharIndex(searchTarget: number) {
     // binary search
     let left = 0;
-    let right = this.#lazyNodesInfo.length - 1;
+    let right = this.__lazyNodesInfo.length - 1;
     let result;
 
     while (left <= right) {
       const mid = Math.floor((left + right) / 2);
-      const midNodeInfo = this.#lazyNodesInfo[mid]!;
+      const midNodeInfo = this.__lazyNodesInfo[mid]!;
       const midNode = midNodeInfo.node;
       const mindNodeLength = midNode.nodeType === Node.TEXT_NODE
         ? (midNode as Text).data.length
@@ -604,9 +608,9 @@ class TextRenderingMeasureTool {
       return result;
     } else {
       for (
-        let currentIndex = this.#lazyNodesInfo.length,
+        let currentIndex = this.__lazyNodesInfo.length,
           nextNode: NodeInfo | undefined;
-        (nextNode = this.#getNodeInfoByIndex(currentIndex));
+        (nextNode = this.__getNodeInfoByIndex(currentIndex));
         currentIndex++
       ) {
         if (searchTarget < nextNode.start + nextNode.length) {
@@ -619,10 +623,10 @@ class TextRenderingMeasureTool {
   }
 }
 class LazyNodesList {
-  #nodeCache: (Text | Element)[] = [];
-  #treeWalker: TreeWalker;
+  __nodeCache: (Text | Element)[] = [];
+  __treeWalker: TreeWalker;
   constructor(dom: HTMLElement) {
-    this.#treeWalker = document.createTreeWalker(
+    this.__treeWalker = document.createTreeWalker(
       dom,
       NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT,
       (node: Node) => {
@@ -642,19 +646,19 @@ class LazyNodesList {
     );
   }
   at(index: number) {
-    if (this.#nodeCache[index]) {
-      return this.#nodeCache[index];
+    if (this.__nodeCache[index]) {
+      return this.__nodeCache[index];
     }
-    this.#fillCacheTo(index);
-    return this.#nodeCache[index];
+    this.__fillCacheTo(index);
+    return this.__nodeCache[index];
   }
-  #fillCacheTo(index: number) {
+  __fillCacheTo(index: number) {
     let currentNode: Node | null = null;
     while (
-      index >= this.#nodeCache.length
-      && (currentNode = this.#treeWalker.nextNode())
+      index >= this.__nodeCache.length
+      && (currentNode = this.__treeWalker.nextNode())
     ) {
-      this.#nodeCache.push(currentNode as Text | Element);
+      this.__nodeCache.push(currentNode as Text | Element);
       break;
     }
   }

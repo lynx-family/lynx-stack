@@ -22,75 +22,75 @@ export class XSwiperIndicator
     'previous-margin',
     'next-margin',
   ];
-  #dom: XSwiper;
-  #numOfChildElement = 0;
-  #getIndicatorContainer = genDomGetter(
-    () => this.#dom.shadowRoot!,
-    '#indicator-container',
+  __dom: XSwiper;
+  __numOfChildElement = 0;
+  __getIndicatorContainer = genDomGetter(
+    () => this.__dom.shadowRoot!,
+    '__indicator-container',
   );
-  #getIndicatorDynamicStyleContainer = genDomGetter(
-    () => this.#dom.shadowRoot!,
-    '#indicator-style',
+  __getIndicatorDynamicStyleContainer = genDomGetter(
+    () => this.__dom.shadowRoot!,
+    '__indicator-style',
   );
-  #childrenElementMutationObserver?: MutationObserver;
+  __childrenElementMutationObserver?: MutationObserver;
 
   constructor(dom: XSwiper) {
-    this.#dom = dom;
+    this.__dom = dom;
   }
 
   @registerAttributeHandler('indicator-color', true)
-  #handleIndicatorColor = bindToStyle(
-    this.#getIndicatorContainer,
+  __handleIndicatorColor = bindToStyle(
+    this.__getIndicatorContainer,
     '--indicator-color',
     undefined,
     true,
   );
   @registerAttributeHandler('indicator-active-color', true)
-  #handleIndicatorActiveColor = bindToStyle(
-    this.#getIndicatorContainer,
+  __handleIndicatorActiveColor = bindToStyle(
+    this.__getIndicatorContainer,
     '--indicator-active-color',
     undefined,
     true,
   );
   @registerAttributeHandler('page-margin', true)
-  #handlePageMargin = bindToStyle(
-    this.#getIndicatorContainer,
+  __handlePageMargin = bindToStyle(
+    this.__getIndicatorContainer,
     '--page-margin',
     undefined,
     true,
   );
   @registerAttributeHandler('previous-margin', true)
-  #handlePreviousMargin = bindToStyle(
-    this.#getIndicatorContainer,
+  __handlePreviousMargin = bindToStyle(
+    this.__getIndicatorContainer,
     '--previous-margin',
     undefined,
     true,
   );
   @registerAttributeHandler('next-margin', true)
-  #handleNextMargin = bindToStyle(
-    this.#getIndicatorContainer,
+  __handleNextMargin = bindToStyle(
+    this.__getIndicatorContainer,
     '--next-margin',
     undefined,
     true,
   );
 
-  #updateIndicatorDoms() {
-    const currentNumber = this.#dom.childElementCount;
-    if (currentNumber !== this.#numOfChildElement) {
+  __updateIndicatorDoms() {
+    const currentNumber = this.__dom.childElementCount;
+    if (currentNumber !== this.__numOfChildElement) {
       let nextInnerHtml = '';
       for (let ii = 0; ii < currentNumber; ii++) {
         nextInnerHtml +=
           `<div style="animation-timeline:--x-swiper-item-${ii};" part="indicator-item"></div>`;
       }
-      this.#getIndicatorContainer().innerHTML = nextInnerHtml;
+      this.__getIndicatorContainer().innerHTML = nextInnerHtml;
       if (currentNumber > 5) {
         for (let ii = 0; ii < currentNumber; ii++) {
-          (this.#dom.children.item(ii) as HTMLElement)?.style.setProperty(
+          (this.__dom.children.item(ii) as HTMLElement)?.style.setProperty(
             'view-timeline-name',
             `--x-swiper-item-${ii}`,
           );
         }
-        this.#getIndicatorDynamicStyleContainer().innerHTML =
+        this.__getIndicatorDynamicStyleContainer().innerHTML =
           `:host { timeline-scope: ${
             Array.from(
               { length: currentNumber },
@@ -99,27 +99,27 @@ export class XSwiperIndicator
           } !important; }`;
       }
     }
-    this.#numOfChildElement = currentNumber;
+    this.__numOfChildElement = currentNumber;
   }
 
   connectedCallback(): void {
-    this.#updateIndicatorDoms();
-    this.#childrenElementMutationObserver = new MutationObserver(
-      this.#updateIndicatorDoms.bind(this),
+    this.__updateIndicatorDoms();
+    this.__childrenElementMutationObserver = new MutationObserver(
+      this.__updateIndicatorDoms.bind(this),
     );
-    this.#childrenElementMutationObserver.observe(this.#dom, {
+    this.__childrenElementMutationObserver.observe(this.__dom, {
       attributes: false,
       characterData: false,
       childList: true,
       subtree: false,
     });
     if (!CSS.supports('timeline-scope', '--a, --b')) {
-      this.#dom.addEventListener(
+      this.__dom.addEventListener(
         'change',
         (({ detail }: CustomEvent<{ current: number }>) => {
           const currentPage = detail.current;
-          const numberOfChildren = this.#dom.childElementCount;
-          const indicatorContainer = this.#getIndicatorContainer();
+          const numberOfChildren = this.__dom.childElementCount;
+          const indicatorContainer = this.__getIndicatorContainer();
           for (let ii = 0; ii < numberOfChildren; ii++) {
             const indicator = indicatorContainer.children[ii] as HTMLElement;
             if (indicator) {
@@ -138,8 +138,8 @@ export class XSwiperIndicator
       );
       boostedQueueMicrotask(() => {
         (
-          this.#getIndicatorContainer().children[
-            this.#dom.current
+          this.__getIndicatorContainer().children[
+            this.__dom.current
           ] as HTMLElement
         )?.style.setProperty(
           'background-color',
@@ -150,7 +150,7 @@ export class XSwiperIndicator
     }
   }
   dispose(): void {
-    this.#childrenElementMutationObserver?.disconnect();
-    this.#childrenElementMutationObserver = undefined;
+    this.__childrenElementMutationObserver?.disconnect();
+    this.__childrenElementMutationObserver = undefined;
   }
 }

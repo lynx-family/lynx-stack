@@ -17,14 +17,14 @@ import { scrollContainerDom } from '../common/constants.js';
   [LynxExposure, XViewpagerNgEvents],
   html`
     <style>
-      #bounce-padding {
+      __bounce-padding {
         display: none;
         flex: 0 0 0;
         align-self: stretch;
         scroll-snap-align: none;
         flex-basis: 100%;
       }
-      #content {
+      __content {
         flex: 0 0 100%;
         flex-direction: row;
         align-self: stretch;
@@ -35,7 +35,7 @@ import { scrollContainerDom } from '../common/constants.js';
         scrollbar-width: none;
         scroll-snap-type: inherit;
       }
-      #content::-webkit-scrollbar {
+      __content::-webkit-scrollbar {
         display: none;
       }
     </style>

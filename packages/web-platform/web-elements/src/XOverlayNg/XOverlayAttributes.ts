@@ -15,61 +15,61 @@ export class XOverlayAttributes
   implements InstanceType<AttributeReactiveClass<typeof XOverlayNg>>
 {
   static observedAttributes = ['visible', 'events-pass-through'];
-  #dom: XOverlayNg;
-  #useModernDialog = !!window.HTMLDialogElement;
-  #visible = false;
+  __dom: XOverlayNg;
+  __useModernDialog = !!window.HTMLDialogElement;
+  __visible = false;
 
   constructor(dom: XOverlayNg) {
-    this.#dom = dom;
+    this.__dom = dom;
   }
 
-  #getDialogDom = genDomGetter<HTMLDialogElement>(
-    () => this.#dom.shadowRoot!,
-    '#dialog',
+  __getDialogDom = genDomGetter<HTMLDialogElement>(
+    () => this.__dom.shadowRoot!,
+    '__dialog',
   );
 
   @registerAttributeHandler('events-pass-through', true)
-  #handleEventsPassThrough(newVal: string | null) {
+  __handleEventsPassThrough(newVal: string | null) {
     if (newVal !== null) {
-      this.#getDialogDom().addEventListener(
+      this.__getDialogDom().addEventListener(
         'click',
-        this.#portalEventToMainDocument,
+        this.__portalEventToMainDocument,
         { passive: false },
       );
-      this.#dom.addEventListener('click', this.#portalEventToMainDocument, {
+      this.__dom.addEventListener('click', this.__portalEventToMainDocument, {
         passive: false,
       });
     } else {
-      this.#getDialogDom().removeEventListener(
+      this.__getDialogDom().removeEventListener(
         'click',
-        this.#portalEventToMainDocument,
+        this.__portalEventToMainDocument,
       );
-      this.#dom.removeEventListener('click', this.#portalEventToMainDocument);
+      this.__dom.removeEventListener('click', this.__portalEventToMainDocument);
     }
   }
 
   @registerAttributeHandler('visible', false)
-  #handleVisible(newVal: string | null) {
-    this.#visible = newVal !== null;
-    if (this.#useModernDialog) {
-      if (this.#visible) {
-        this.#getDialogDom().showModal();
-        this.#dom.dispatchEvent(
+  __handleVisible(newVal: string | null) {
+    this.__visible = newVal !== null;
+    if (this.__useModernDialog) {
+      if (this.__visible) {
+        this.__getDialogDom().showModal();
+        this.__dom.dispatchEvent(
           new CustomEvent('showoverlay', commonComponentEventSetting),
         );
       } else {
-        this.#getDialogDom().close();
-        this.#dom.dispatchEvent(
+        this.__getDialogDom().close();
+        this.__dom.dispatchEvent(
           new CustomEvent('dismissoverlay', commonComponentEventSetting),
         );
       }
     }
   }
 
-  #portalEventToMainDocument = (e: MouseEvent) => {
+  __portalEventToMainDocument = (e: MouseEvent) => {
     e.stopPropagation();
-    const diaglogDom = this.#getDialogDom();
-    if (e.target === this.#dom || e.target === diaglogDom) {
+    const diaglogDom = this.__getDialogDom();
+    if (e.target === this.__dom || e.target === diaglogDom) {
       diaglogDom.close();
       const { clientX, clientY } = e;
       let targetElement = document.elementFromPoint(clientX, clientY);
@@ -80,7 +80,7 @@ export class XOverlayAttributes
       }
       targetElement?.dispatchEvent(new MouseEvent('click', e));
       requestAnimationFrame(() => {
-        if (this.#visible && diaglogDom.isConnected) {
+        if (this.__visible && diaglogDom.isConnected) {
           diaglogDom.showModal();
         }
       });
@@ -88,8 +88,8 @@ export class XOverlayAttributes
   };
 
   connectedCallback(): void {
-    if (!this.#useModernDialog) {
-      this.#getDialogDom().style.display = 'none';
+    if (!this.__useModernDialog) {
+      this.__getDialogDom().style.display = 'none';
     }
   }
 }

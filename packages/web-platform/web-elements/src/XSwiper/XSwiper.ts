@@ -22,14 +22,14 @@ import { scrollContainerDom } from '../common/constants.js';
     XSwiperAutoScroll,
   ],
   html` <style>
-      #bounce-padding {
+      __bounce-padding {
         display: none;
         flex: 0 0 0;
         align-self: stretch;
         scroll-snap-align: none;
         flex-basis: 100%;
       }
-      #content {
+      __content {
         position: relative;
         display: flex;
         flex: 0 0 100%;
@@ -46,7 +46,7 @@ import { scrollContainerDom } from '../common/constants.js';
       div::-webkit-scrollbar {
         display: none;
       }
-      #indicator-container {
+      __indicator-container {
         display: none;
       }
       @keyframes indicator-dot {
@@ -75,16 +75,17 @@ export class XSwiper extends HTMLElement {
     'indicator-dots',
   ]);
 
-  #getContentContainer = genDomGetter(() => this.shadowRoot!, '#content').bind(
-    this,
-  );
+  __getContentContainer = genDomGetter(() => this.shadowRoot!, '__content')
+    .bind(
+      this,
+    );
 
-  #getNeatestElementIndexAndDistanceToMid() {
+  __getNeatestElementIndexAndDistanceToMid() {
     let current = 0;
     let minDistanceToMid = Number.MAX_SAFE_INTEGER;
     let minOffsetToMid = 0;
     if (this.childElementCount > 0) {
-      const contentContainer = this.#getContentContainer();
+      const contentContainer = this.__getContentContainer();
       const isVertical = this.isVertical;
       const numberOfChildren = this.childElementCount;
       /* already scrolled distance */
@@ -135,7 +136,7 @@ export class XSwiper extends HTMLElement {
     };
   }
   get current() {
-    return this.#getNeatestElementIndexAndDistanceToMid().current;
+    return this.__getNeatestElementIndexAndDistanceToMid().current;
   }
   set current(newval: number) {
     // When current is specified and current is updated in bindchange, there is no need to respond to the update of current
@@ -144,9 +145,9 @@ export class XSwiper extends HTMLElement {
     }
 
     const smooth = this.getAttribute('smooth-scroll') === null; // smooth-scroll default true, it is set to be false
-    this.#scrollToIndex(newval, smooth ? 'smooth' : 'instant');
+    this.__scrollToIndex(newval, smooth ? 'smooth' : 'instant');
   }
-  #scrollToIndex(index: number, behavior: ScrollBehavior) {
+  __scrollToIndex(index: number, behavior: ScrollBehavior) {
     const target = this.children.item(index) as HTMLElement;
     if (target) {
       const isVertical = this.isVertical;
@@ -165,7 +166,7 @@ export class XSwiper extends HTMLElement {
           offset = target.offsetLeft;
         }
       }
-      this.#getContentContainer().scrollTo({
+      this.__getContentContainer().scrollTo({
         left: isVertical ? 0 : offset,
         top: isVertical ? offset : 0,
         behavior,
@@ -173,7 +174,7 @@ export class XSwiper extends HTMLElement {
     }
   }
   get snapDistance() {
-    return this.#getNeatestElementIndexAndDistanceToMid().minOffsetToMid;
+    return this.__getNeatestElementIndexAndDistanceToMid().minOffsetToMid;
   }
 
   get isVertical() {
@@ -214,7 +215,7 @@ export class XSwiper extends HTMLElement {
     const current = this.getAttribute('current');
     if (current !== null) {
       // first layout should always scroll instant
-      this.#scrollToIndex(Number(current), 'instant');
+      this.__scrollToIndex(Number(current), 'instant');
     }
   }
   get [scrollContainerDom]() {

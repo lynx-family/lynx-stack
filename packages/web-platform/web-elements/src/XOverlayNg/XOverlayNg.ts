@@ -13,14 +13,14 @@ import { Component, html } from '@lynx-js/web-elements-reactive';
   [LynxExposure, XOverlayAttributes],
   html`
     <style>
-      #dialog[open] {
+      __dialog[open] {
         top: 0;
         left: 0;
         right: 0;
         bottom: 0;
         position: fixed;
       }
-      #dialog::backdrop {
+      __dialog::backdrop {
         background-color: transparent;
       }
     </style>

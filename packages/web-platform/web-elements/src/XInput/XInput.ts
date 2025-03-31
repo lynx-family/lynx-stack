@@ -21,10 +21,10 @@ import { LynxExposure } from '../common/Exposure.js';
     XInputEvents,
   ],
   html` <style>
-      #input:focus {
+      __input:focus {
         outline: none;
       }
-      #form {
+      __form {
         display: none;
       }
     </style>
@@ -40,11 +40,14 @@ import { LynxExposure } from '../common/Exposure.js';
     </form>`,
 )
 export class XInput extends HTMLElement {
-  #getInput = genDomGetter<HTMLInputElement>(() => this.shadowRoot!, '#input');
+  __getInput = genDomGetter<HTMLInputElement>(
+    () => this.shadowRoot!,
+    '__input',
+  );
 
   addText(params: { text: string }) {
     const { text } = params;
-    const input = this.#getInput();
+    const input = this.__getInput();
     const selectionStart = input.selectionStart;
     if (selectionStart === null) {
       input.value = text;
@@ -66,7 +69,7 @@ export class XInput extends HTMLElement {
   }
 
   setValue(params: { value: string; index: number }) {
-    const input = this.#getInput();
+    const input = this.__getInput();
     input.value = params.value;
     let cursorIndex;
     if ((cursorIndex = params.index)) {
@@ -76,7 +79,7 @@ export class XInput extends HTMLElement {
 
   sendDelEvent(params: { action: number; length: number }) {
     let { action, length } = params;
-    const input = this.#getInput();
+    const input = this.__getInput();
     if (action === 1) {
       length = 1;
     }
@@ -92,31 +95,31 @@ export class XInput extends HTMLElement {
   }
 
   setInputFilter(params: { pattern: string }) {
-    this.#getInput().setAttribute('pattern', params.pattern);
+    this.__getInput().setAttribute('pattern', params.pattern);
   }
 
   select() {
-    const input = this.#getInput();
+    const input = this.__getInput();
     input.setSelectionRange(0, input.value.length);
   }
 
   setSelectionRange(params: { selectionStart: number; selectionEnd: number }) {
-    this.#getInput().setSelectionRange(
+    this.__getInput().setSelectionRange(
       params.selectionStart,
       params.selectionEnd,
     );
   }
 
   override focus(options?: FocusOptions): void {
-    this.#getInput().focus(options);
+    this.__getInput().focus(options);
   }
 
   override blur(): void {
-    this.#getInput().blur();
+    this.__getInput().blur();
   }
 
   connectedCallback() {
-    const input = this.#getInput();
+    const input = this.__getInput();
     if (this.getAttribute('confirm-type') === null) {
       input.setAttribute('confirm-type', 'send');
     }

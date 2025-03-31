@@ -27,15 +27,18 @@ import {
   html`<audio id="audio"></audio>`,
 )
 export class XAudioTT extends HTMLElement {
-  #getAudio = genDomGetter<HTMLAudioElement>(() => this.shadowRoot!, '#audio');
-  #getAudioElement = genDomGetter(() => this.shadowRoot!, '#audio');
+  __getAudio = genDomGetter<HTMLAudioElement>(
+    () => this.shadowRoot!,
+    '__audio',
+  );
+  __getAudioElement = genDomGetter(() => this.shadowRoot!, '__audio');
 
-  #setAudioSrc = bindToAttribute(this.#getAudioElement, 'src');
+  __setAudioSrc = bindToAttribute(this.__getAudioElement, 'src');
 
   [xAudioSrc]?: { id: string; play_url: string };
   [xAudioBlob]?: Promise<void>;
 
-  #fetchAudio = () => {
+  __fetchAudio = () => {
     const parsedSrc = this[xAudioSrc];
 
     if (!parsedSrc || !parsedSrc.id || !parsedSrc.play_url) {
@@ -96,7 +99,7 @@ export class XAudioTT extends HTMLElement {
       const blob = await response.blob();
       const blobUrl = URL.createObjectURL(blob);
 
-      this.#setAudioSrc(blobUrl);
+      this.__setAudioSrc(blobUrl);
       resolve();
     });
   };
@@ -104,11 +107,11 @@ export class XAudioTT extends HTMLElement {
   play() {
     // If prepare method is not called, needs to fetch first
     if (!this[xAudioBlob]) {
-      this.#fetchAudio();
+      this.__fetchAudio();
     }
 
     this[xAudioBlob]?.then(() => {
-      const audio = this.#getAudio();
+      const audio = this.__getAudio();
 
       audio.currentTime = 0;
       audio.play();
@@ -121,7 +124,7 @@ export class XAudioTT extends HTMLElement {
   }
 
   stop() {
-    const audio = this.#getAudio();
+    const audio = this.__getAudio();
 
     const playbackState = audioPlaybackStateMap['stop'];
     this.dispatchEvent(
@@ -142,7 +145,7 @@ export class XAudioTT extends HTMLElement {
   }
 
   pause() {
-    const audio = this.#getAudio();
+    const audio = this.__getAudio();
 
     audio.pause();
     return {
@@ -151,7 +154,7 @@ export class XAudioTT extends HTMLElement {
   }
 
   resume() {
-    const audio = this.#getAudio();
+    const audio = this.__getAudio();
 
     audio.play();
     return {
@@ -161,7 +164,7 @@ export class XAudioTT extends HTMLElement {
   }
 
   seek(params: { currentTime: number }) {
-    const audio = this.#getAudio();
+    const audio = this.__getAudio();
 
     audio.currentTime = (params.currentTime || 0) / 1000;
     this.dispatchEvent(
@@ -180,7 +183,7 @@ export class XAudioTT extends HTMLElement {
   }
 
   mute(params: { mute: boolean }) {
-    const audio = this.#getAudio();
+    const audio = this.__getAudio();
 
     audio.muted = params.mute;
     return {
@@ -189,7 +192,7 @@ export class XAudioTT extends HTMLElement {
   }
 
   playerInfo() {
-    const audioElement = this.#getAudio();
+    const audioElement = this.__getAudio();
     const buffered = audioElement.buffered;
     const cacheTime = buffered.end(buffered.length - 1);
 
@@ -206,12 +209,12 @@ export class XAudioTT extends HTMLElement {
   prepare() {
     // if has fetched, no need to fetch again
     if (!this[xAudioBlob]) {
-      this.#fetchAudio();
+      this.__fetchAudio();
     }
   }
 
   setVolume(params: { volume: number }) {
-    const audio = this.#getAudio();
+    const audio = this.__getAudio();
 
     audio.volume = params.volume;
     return {

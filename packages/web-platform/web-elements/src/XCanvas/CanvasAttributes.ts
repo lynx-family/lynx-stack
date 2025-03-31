@@ -16,30 +16,33 @@ export class CanvasAttributes
   implements InstanceType<AttributeReactiveClass<typeof XCanvas>>
 {
   static observedAttributes = ['name', 'height', 'width'];
-  #dom: XCanvas;
-  #resizeObserver?: ResizeObserver;
+  __dom: XCanvas;
+  __resizeObserver?: ResizeObserver;
 
-  #getCanvas = genDomGetter<HTMLCanvasElement>(
-    () => this.#dom.shadowRoot!,
-    '#canvas',
+  __getCanvas = genDomGetter<HTMLCanvasElement>(
+    () => this.__dom.shadowRoot!,
+    '__canvas',
   );
 
   constructor(dom: XCanvas) {
-    this.#dom = dom as XCanvas;
+    this.__dom = dom as XCanvas;
   }
 
   @registerAttributeHandler('name', true)
-  handleName = bindToAttribute(this.#getCanvas, 'name');
+  handleName = bindToAttribute(this.__getCanvas, 'name');
 
   @registerAttributeHandler('height', true)
-  handleHeight = bindToAttribute(this.#getCanvas, 'height');
+  handleHeight = bindToAttribute(this.__getCanvas, 'height');
 
   @registerAttributeHandler('height', true)
-  handleWidth = bindToAttribute(this.#getCanvas, 'width');
+  handleWidth = bindToAttribute(this.__getCanvas, 'width');
 
-  #resizeHandler: ResizeObserverCallback = (entries: ResizeObserverEntry[]) => {
+  __resizeHandler: ResizeObserverCallback = (
+    entries: ResizeObserverEntry[],
+  ) => {
     const { contentRect } = entries[0]!;
-    const canvas = this.#dom.shadowRoot!.firstElementChild as HTMLCanvasElement;
+    const canvas = this.__dom.shadowRoot!
+      .firstElementChild as HTMLCanvasElement;
     if (canvas) {
       let { height, width } = contentRect;
       height = height * window.devicePixelRatio;
@@ -57,23 +60,23 @@ export class CanvasAttributes
     }
   };
 
-  #startResizeObserver() {
-    if (!this.#resizeObserver) {
-      this.#resizeObserver = new ResizeObserver(this.#resizeHandler);
-      this.#resizeObserver.observe(this.#dom);
+  __startResizeObserver() {
+    if (!this.__resizeObserver) {
+      this.__resizeObserver = new ResizeObserver(this.__resizeHandler);
+      this.__resizeObserver.observe(this.__dom);
     }
   }
 
-  #stopResizeObserver() {
-    this.#resizeObserver?.disconnect();
-    this.#resizeObserver = undefined;
+  __stopResizeObserver() {
+    this.__resizeObserver?.disconnect();
+    this.__resizeObserver = undefined;
   }
 
   connectedCallback(): void {
-    this.#startResizeObserver();
+    this.__startResizeObserver();
   }
 
   dispose(): void {
-    this.#stopResizeObserver();
+    this.__stopResizeObserver();
   }
 }

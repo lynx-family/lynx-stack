@@ -95,7 +95,7 @@ export function Component<T extends WebComponentClass>(
           .reduce((p, r) => p.concat(r), []),
         'class',
       ];
-      #attributeReactives: AttributeReactiveObject[] = [];
+      __attributeReactives: AttributeReactiveObject[] = [];
       constructor() {
         super();
         if (template && !templateElement) {
@@ -108,25 +108,25 @@ export function Component<T extends WebComponentClass>(
           const template = templateElement.content.cloneNode(true);
           this.shadowRoot?.append(template);
         }
-        this.#attributeReactives = attributeReactiveClasses.map((oneClass) => {
+        this.__attributeReactives = attributeReactiveClasses.map((oneClass) => {
           const oneAttributeReactive = new oneClass(this as InstanceType<T>);
           return oneAttributeReactive;
         });
-        this.#cleanFalseAttributes();
+        this.__cleanFalseAttributes();
       }
 
       /** handle observing styles */
-      #checking = false;
-      #previousStyle: Map<string, string> = new Map();
+      __checking = false;
+      __previousStyle: Map<string, string> = new Map();
 
-      #responseStyleChange() {
-        if (!this.#checking && observedStyleProperties.size) {
-          this.#checking = true;
-          boostedQueueMicrotask(this.#invokeStyleHandler, this);
+      __responseStyleChange() {
+        if (!this.__checking && observedStyleProperties.size) {
+          this.__checking = true;
+          boostedQueueMicrotask(this.__invokeStyleHandler, this);
         }
       }
 
-      #invokeStyleHandler() {
+      __invokeStyleHandler() {
         const computedStyle = getComputedStyle(this);
         for (const propertyName of observedStyleProperties) {
           const value = computedStyle.getPropertyValue(propertyName);
@@ -135,8 +135,8 @@ export function Component<T extends WebComponentClass>(
             value.trim(),
             priority,
           );
-          if (this.#previousStyle.get(propertyName) !== propertyValue) {
-            for (const oneReactive of this.#attributeReactives) {
+          if (this.__previousStyle.get(propertyName) !== propertyValue) {
+            for (const oneReactive of this.__attributeReactives) {
               oneReactive.cssPropertyChangedHandler?.[propertyName]?.call(
                 oneReactive,
                 propertyValue,
@@ -145,7 +145,7 @@ export function Component<T extends WebComponentClass>(
             }
           }
         }
-        this.#checking = false;
+        this.__checking = false;
       }
 
       /** handle attribute='false' */
@@ -161,7 +161,7 @@ export function Component<T extends WebComponentClass>(
         super.setAttribute(qualifiedName, value);
       }
 
-      #cleanFalseAttributes() {
+      __cleanFalseAttributes() {
         const attributes = this.attributes;
         for (
           let index = 0, attr: Attr | null;
@@ -178,7 +178,7 @@ export function Component<T extends WebComponentClass>(
         }
       }
 
-      #connected = false;
+      __connected = false;
       /** handel custom element life-cycles */
       override attributeChangedCallback(
         name: string,
@@ -198,16 +198,16 @@ export function Component<T extends WebComponentClass>(
           }
         }
         if (oldValue !== newValue) {
-          if (this.#connected && (name === 'class' || name === 'style')) {
-            this.#responseStyleChange();
+          if (this.__connected && (name === 'class' || name === 'style')) {
+            this.__responseStyleChange();
           }
-          for (const oneReactive of this.#attributeReactives) {
+          for (const oneReactive of this.__attributeReactives) {
             if (oneReactive.attributeChangedHandler?.[name]) {
               const { handler, noDomMeasure } =
                 oneReactive.attributeChangedHandler![name];
               if (noDomMeasure) {
                 handler.call(oneReactive, newValue, oldValue, name);
-              } else if (this.#connected) {
+              } else if (this.__connected) {
                 boostedQueueMicrotask(() =>
                   handler.call(oneReactive, newValue, oldValue, name)
                 );
@@ -217,9 +217,9 @@ export function Component<T extends WebComponentClass>(
         }
       }
 
-      #invokeAfterConnectedAttributeChangedHandler() {
+      __invokeAfterConnectedAttributeChangedHandler() {
         this.getAttributeNames().forEach((attributeName) => {
-          for (const oneReactive of this.#attributeReactives) {
+          for (const oneReactive of this.__attributeReactives) {
             if (oneReactive.attributeChangedHandler?.[attributeName]) {
               const { handler, noDomMeasure } =
                 oneReactive.attributeChangedHandler![attributeName];
@@ -240,24 +240,24 @@ export function Component<T extends WebComponentClass>(
 
       override connectedCallback() {
         super.connectedCallback?.();
-        this.#attributeReactives.forEach((oneAttributeReactive) => {
+        this.__attributeReactives.forEach((oneAttributeReactive) => {
           oneAttributeReactive.connectedCallback?.();
         });
-        this.#responseStyleChange();
+        this.__responseStyleChange();
         boostedQueueMicrotask(
-          this.#invokeAfterConnectedAttributeChangedHandler,
+          this.__invokeAfterConnectedAttributeChangedHandler,
           this,
         );
-        this.#connected = true;
+        this.__connected = true;
       }
       override disconnectedCallback() {
         super.disconnectedCallback?.();
-        this.#attributeReactives.forEach((oneAttributeReactive) => {
+        this.__attributeReactives.forEach((oneAttributeReactive) => {
           oneAttributeReactive.dispose?.();
         });
       }
 
-      #eventListenerMap: Record<
+      __eventListenerMap: Record<
         string,
         {
           count: number;
@@ -272,12 +272,12 @@ export function Component<T extends WebComponentClass>(
         options?: AddEventListenerOptions | boolean,
       ): void {
         super.addEventListener(type, listener, options);
-        this.#eventListenerMap[type] ??= {
+        this.__eventListenerMap[type] ??= {
           count: 0,
           listenerCount: new WeakMap(),
           captureListenerCount: new WeakMap(),
         };
-        const targetEventInfo = this.#eventListenerMap[type];
+        const targetEventInfo = this.__eventListenerMap[type];
         const capture = typeof options === 'object' ? options.capture : options;
         const targetMap = capture
           ? targetEventInfo.captureListenerCount
@@ -286,7 +286,7 @@ export function Component<T extends WebComponentClass>(
         targetMap.set(listener, currentListenerCount + 1);
         if (targetEventInfo.count === 0) {
           // trigger eventStatusChangeHandler
-          for (const oneReactive of this.#attributeReactives) {
+          for (const oneReactive of this.__attributeReactives) {
             const handler = oneReactive.eventStatusChangedHandler?.[type];
             if (handler) {
               handler.call(oneReactive, true, type);
@@ -303,7 +303,7 @@ export function Component<T extends WebComponentClass>(
       ): void {
         super.removeEventListener(type, listener, options);
         const capture = typeof options === 'object' ? options.capture : options;
-        const targetEventInfo = this.#eventListenerMap[type];
+        const targetEventInfo = this.__eventListenerMap[type];
         if (targetEventInfo && targetEventInfo.count > 0) {
           const targetMap = capture
             ? targetEventInfo?.captureListenerCount
@@ -314,7 +314,7 @@ export function Component<T extends WebComponentClass>(
             targetEventInfo.count--;
             if (targetEventInfo.count === 0) {
               // trigger eventStatusChangeHandler
-              for (const oneReactive of this.#attributeReactives) {
+              for (const oneReactive of this.__attributeReactives) {
                 const handler = oneReactive.eventStatusChangedHandler?.[type];
                 if (handler) {
                   handler.call(oneReactive, false, type);

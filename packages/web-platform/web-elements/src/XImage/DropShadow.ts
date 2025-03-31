@@ -14,19 +14,22 @@ export class DropShadow
   implements InstanceType<AttributeReactiveClass<typeof HTMLElement>>
 {
   static observedAttributes = ['drop-shadow'];
-  #dom: HTMLElement;
+  __dom: HTMLElement;
 
-  #getImg = genDomGetter<HTMLImageElement>(() => this.#dom.shadowRoot!, '#img');
+  __getImg = genDomGetter<HTMLImageElement>(
+    () => this.__dom.shadowRoot!,
+    '__img',
+  );
 
   @registerAttributeHandler('drop-shadow', true)
-  #handleBlurRadius = bindToStyle(
-    this.#getImg,
+  __handleBlurRadius = bindToStyle(
+    this.__getImg,
     '--drop-shadow',
     undefined,
     true,
   );
 
   constructor(dom: HTMLElement) {
-    this.#dom = dom;
+    this.__dom = dom;
   }
 }

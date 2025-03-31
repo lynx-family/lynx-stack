@@ -13,50 +13,50 @@ export class XSwiperAutoScroll
   implements InstanceType<AttributeReactiveClass<typeof XSwiper>>
 {
   static observedAttributes = ['current', 'interval', 'autoplay'];
-  #dom: XSwiper;
+  __dom: XSwiper;
 
   constructor(dom: XSwiper) {
-    this.#dom = dom;
+    this.__dom = dom;
   }
 
   @registerAttributeHandler('current', false)
-  #handleCurrentChange(newVal: string | null) {
+  __handleCurrentChange(newVal: string | null) {
     const newval = Number(newVal);
     if (!Number.isNaN(newval)) {
-      this.#dom.current = newval;
+      this.__dom.current = newval;
     }
   }
 
-  #autoPlayTimer?: ReturnType<typeof setInterval>;
+  __autoPlayTimer?: ReturnType<typeof setInterval>;
 
-  #autoPlayTick = (() => {
-    this.#dom.scrollToNext();
+  __autoPlayTick = (() => {
+    this.__dom.scrollToNext();
   }).bind(this);
 
-  #startAutoplay(interval: number) {
-    this.#stopAutoplay();
-    this.#autoPlayTimer = setInterval(this.#autoPlayTick, interval);
+  __startAutoplay(interval: number) {
+    this.__stopAutoplay();
+    this.__autoPlayTimer = setInterval(this.__autoPlayTick, interval);
   }
 
-  #stopAutoplay() {
-    if (this.#autoPlayTimer) {
-      clearInterval(this.#autoPlayTimer);
+  __stopAutoplay() {
+    if (this.__autoPlayTimer) {
+      clearInterval(this.__autoPlayTimer);
     }
   }
 
   @registerAttributeHandler('interval', false)
   @registerAttributeHandler('autoplay', false)
-  #handleAutoplay() {
-    const enableAutoPlay = this.#dom.getAttribute('autoplay') !== null;
+  __handleAutoplay() {
+    const enableAutoPlay = this.__dom.getAttribute('autoplay') !== null;
     if (enableAutoPlay) {
-      const interval = this.#dom.getAttribute('interval');
+      const interval = this.__dom.getAttribute('interval');
       let intervalValue = interval ? parseFloat(interval) : 5000;
       if (Number.isNaN(intervalValue)) intervalValue = 5000;
-      this.#startAutoplay(intervalValue);
+      this.__startAutoplay(intervalValue);
     }
   }
 
   dispose(): void {
-    this.#stopAutoplay();
+    this.__stopAutoplay();
   }
 }

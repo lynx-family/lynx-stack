@@ -23,14 +23,14 @@ export class XAudioAttribute
     'pause-on-hide',
   ];
 
-  #dom: XAudioTT;
+  __dom: XAudioTT;
 
-  #getAudioElement = genDomGetter(() => this.#dom.shadowRoot!, '#audio');
+  __getAudioElement = genDomGetter(() => this.__dom.shadowRoot!, '__audio');
 
-  #setAudioSrc = bindToAttribute(this.#getAudioElement, 'src');
+  __setAudioSrc = bindToAttribute(this.__getAudioElement, 'src');
 
   @registerAttributeHandler('src', true)
-  #handleSrc(newValue: string | null) {
+  __handleSrc(newValue: string | null) {
     let parsedSrc;
     try {
       parsedSrc = JSON.parse(newValue || '') || {};
@@ -40,64 +40,64 @@ export class XAudioAttribute
     }
 
     if (newValue === null) {
-      this.#dom.dispatchEvent(
+      this.__dom.dispatchEvent(
         new CustomEvent('error', {
           ...commonComponentEventSetting,
           detail: {
             code: XAudioErrorCode.SrcError,
             msg: '',
             from: 'res loader',
-            currentSrcID: this.#dom[xAudioSrc]?.id,
+            currentSrcID: this.__dom[xAudioSrc]?.id,
           },
         }),
       );
     } else if (
       parsedSrc?.id === undefined || parsedSrc?.play_url === undefined
     ) {
-      this.#dom.dispatchEvent(
+      this.__dom.dispatchEvent(
         new CustomEvent('error', {
           ...commonComponentEventSetting,
           detail: {
             code: XAudioErrorCode.SrcJsonError,
             msg: '',
             from: 'res loader',
-            currentSrcID: this.#dom[xAudioSrc]?.id,
+            currentSrcID: this.__dom[xAudioSrc]?.id,
           },
         }),
       );
     }
 
-    this.#dom[xAudioSrc] = parsedSrc;
-    this.#dom[xAudioBlob] = undefined;
-    this.#dom.stop();
+    this.__dom[xAudioSrc] = parsedSrc;
+    this.__dom[xAudioBlob] = undefined;
+    this.__dom.stop();
   }
 
   @registerAttributeHandler('loop', true)
-  #handleLoop = bindToAttribute(this.#getAudioElement, 'loop');
+  __handleLoop = bindToAttribute(this.__getAudioElement, 'loop');
 
-  #documentVisibilitychange = () => {
+  __documentVisibilitychange = () => {
     if (document.visibilityState === 'hidden') {
-      this.#dom.pause();
+      this.__dom.pause();
     }
   };
 
   @registerAttributeHandler('pause-on-hide', true)
-  #handlePauseOnHide(newValue: string | null) {
+  __handlePauseOnHide(newValue: string | null) {
     if (newValue !== null) {
       document.addEventListener(
         'visibilitychange',
-        this.#documentVisibilitychange,
+        this.__documentVisibilitychange,
         { passive: true },
       );
     } else {
       document.removeEventListener(
         'visibilitychange',
-        this.#documentVisibilitychange,
+        this.__documentVisibilitychange,
       );
     }
   }
 
   constructor(dom: XAudioTT) {
-    this.#dom = dom;
+    this.__dom = dom;
   }
 }

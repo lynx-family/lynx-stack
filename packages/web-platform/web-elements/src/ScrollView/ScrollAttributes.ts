@@ -12,7 +12,7 @@ import type { ScrollView } from './ScrollView.js';
 export class ScrollAttributes
   implements InstanceType<AttributeReactiveClass<typeof ScrollView>>
 {
-  #dom: ScrollView;
+  __dom: ScrollView;
   static observedAttributes = [
     'scroll-top',
     'scroll-left',
@@ -22,22 +22,22 @@ export class ScrollAttributes
   ];
 
   constructor(dom: ScrollView) {
-    this.#dom = dom;
+    this.__dom = dom;
   }
 
   @registerAttributeHandler('scroll-top', false)
   @registerAttributeHandler('scroll-left', false)
   @registerAttributeHandler('nitial-scroll-offset', false)
-  #handleInitialScrollOffset(
+  __handleInitialScrollOffset(
     newVal: string | null,
     _: string | null,
     attributeName: string,
   ) {
     if (newVal) {
       const scrollValue = parseFloat(newVal);
-      const scrollOrientation = this.#dom.getAttribute('scroll-orientation');
-      const scrollY = this.#dom.getAttribute('scroll-y');
-      const scrollX = this.#dom.getAttribute('scroll-x');
+      const scrollOrientation = this.__dom.getAttribute('scroll-orientation');
+      const scrollY = this.__dom.getAttribute('scroll-y');
+      const scrollX = this.__dom.getAttribute('scroll-x');
       const topScrollDistance = (attributeName === 'scroll-top'
         || attributeName === 'initial-scroll-offset')
         && (scrollY === ''
@@ -52,10 +52,10 @@ export class ScrollAttributes
           || scrollOrientation === 'both');
       requestAnimationFrame(() => {
         if (topScrollDistance) {
-          this.#dom.scrollTo(0, scrollValue);
+          this.__dom.scrollTo(0, scrollValue);
         }
         if (leftScrollDistance) {
-          this.#dom.scrollLeft = scrollValue;
+          this.__dom.scrollLeft = scrollValue;
         }
       });
     }
@@ -63,17 +63,17 @@ export class ScrollAttributes
 
   @registerAttributeHandler('scroll-to-index', false)
   @registerAttributeHandler('initial-scroll-index', false)
-  #handleInitialScrollIndex(newVal: string | null) {
+  __handleInitialScrollIndex(newVal: string | null) {
     if (newVal) {
       const scrollValue = parseFloat(newVal);
-      const childrenElement = this.#dom.children.item(scrollValue);
+      const childrenElement = this.__dom.children.item(scrollValue);
       if (childrenElement && childrenElement instanceof HTMLElement) {
-        const scrollX = !!this.#dom.getAttribute('scroll-x');
+        const scrollX = !!this.__dom.getAttribute('scroll-x');
         requestAnimationFrame(() => {
           if (scrollX) {
-            this.#dom.scrollLeft = childrenElement.offsetLeft;
+            this.__dom.scrollLeft = childrenElement.offsetLeft;
           } else {
-            this.#dom.scrollTop = childrenElement.offsetTop;
+            this.__dom.scrollTop = childrenElement.offsetTop;
           }
         });
       }

@@ -26,17 +26,17 @@ export class XRefreshSubElementIntersectionObserver implements
     AttributeReactiveClass<typeof XRefreshHeader | typeof XRefreshFooter>
   >
 {
-  #dom: XRefreshHeader;
+  __dom: XRefreshHeader;
   static observedAttributes = [];
-  #intersectionObserver?: IntersectionObserver;
+  __intersectionObserver?: IntersectionObserver;
   constructor(dom: XRefreshHeader) {
-    this.#dom = dom;
+    this.__dom = dom;
   }
   connectedCallback?(): void {
-    if (IntersectionObserver && !this.#intersectionObserver) {
-      const parent = this.#dom.parentElement;
+    if (IntersectionObserver && !this.__intersectionObserver) {
+      const parent = this.__dom.parentElement;
       if (parent) {
-        this.#intersectionObserver = new IntersectionObserver(
+        this.__intersectionObserver = new IntersectionObserver(
           (intersectionEntries) => {
             let isStartShowing = false;
             let isFullyShowing = false;
@@ -44,14 +44,14 @@ export class XRefreshSubElementIntersectionObserver implements
               isStartShowing = e.intersectionRatio > 0;
               isFullyShowing = e.intersectionRatio > 0.9;
             });
-            this.#dom.dispatchEvent(
+            this.__dom.dispatchEvent(
               new XRefreshIntersectionObserverEvent(
                 isStartShowing,
                 isFullyShowing,
               ),
             );
             if (isFullyShowing) {
-              this.#dom.setAttribute('x-magnet-enable', '');
+              this.__dom.setAttribute('x-magnet-enable', '');
             }
           },
           {
@@ -59,14 +59,14 @@ export class XRefreshSubElementIntersectionObserver implements
             threshold: [0.1, 0.9], // set to 0.9 to get better user-experience
           },
         );
-        this.#intersectionObserver.observe(this.#dom);
+        this.__intersectionObserver.observe(this.__dom);
       }
     }
   }
   dispose(): void {
-    if (this.#intersectionObserver) {
-      this.#intersectionObserver.disconnect();
-      this.#intersectionObserver = undefined;
+    if (this.__intersectionObserver) {
+      this.__intersectionObserver.disconnect();
+      this.__intersectionObserver = undefined;
     }
   }
 }

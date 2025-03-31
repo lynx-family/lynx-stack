@@ -16,35 +16,38 @@ export class XViewpagerNgEvents
   implements InstanceType<AttributeReactiveClass<typeof XViewpagerNg>>
 {
   static observedAttributes = [];
-  readonly #dom: XViewpagerNg;
-  #isDragging: boolean = false;
-  #connected = false;
-  #currentIndex = 0;
-  #debounceScrollForMockingScrollEnd?: ReturnType<typeof setTimeout>;
+  readonly __dom: XViewpagerNg;
+  __isDragging: boolean = false;
+  __connected = false;
+  __currentIndex = 0;
+  __debounceScrollForMockingScrollEnd?: ReturnType<typeof setTimeout>;
 
   constructor(dom: XViewpagerNg) {
-    this.#dom = dom;
+    this.__dom = dom;
   }
 
-  #getScrollContainer = genDomGetter(() => this.#dom.shadowRoot!, '#content');
+  __getScrollContainer = genDomGetter(
+    () => this.__dom.shadowRoot!,
+    '__content',
+  );
 
-  #scrollHandler = () => {
-    if (!this.#connected) return;
+  __scrollHandler = () => {
+    if (!this.__connected) return;
 
-    const scrollContainer = this.#getScrollContainer();
-    const oneItemWidth = this.#dom.clientWidth;
+    const scrollContainer = this.__getScrollContainer();
+    const oneItemWidth = this.__dom.clientWidth;
     const scrollLeft = scrollContainer.scrollLeft;
     const innerOffset = scrollLeft / oneItemWidth;
 
-    if (this.#enableChange && !useScrollEnd) {
+    if (this.__enableChange && !useScrollEnd) {
       // debounce
-      clearTimeout(this.#debounceScrollForMockingScrollEnd);
-      this.#debounceScrollForMockingScrollEnd = setTimeout(() => {
-        this.#scrollEndHandler();
+      clearTimeout(this.__debounceScrollForMockingScrollEnd);
+      this.__debounceScrollForMockingScrollEnd = setTimeout(() => {
+        this.__scrollEndHandler();
       }, 100);
     }
 
-    this.#dom.dispatchEvent(
+    this.__dom.dispatchEvent(
       new CustomEvent('offsetchange', {
         ...commonComponentEventSetting,
         detail: { offset: innerOffset },
@@ -52,50 +55,50 @@ export class XViewpagerNgEvents
     );
   };
 
-  #scrollEndHandler = () => {
-    if (this.#connected) {
-      const scrollContainer = this.#getScrollContainer();
-      const oneItemWidth = this.#dom.clientWidth;
+  __scrollEndHandler = () => {
+    if (this.__connected) {
+      const scrollContainer = this.__getScrollContainer();
+      const oneItemWidth = this.__dom.clientWidth;
       const scrollLeft = scrollContainer.scrollLeft;
       const currentIndex = Math.floor(scrollLeft / oneItemWidth);
-      if (currentIndex !== this.#currentIndex) {
-        this.#dom.dispatchEvent(
+      if (currentIndex !== this.__currentIndex) {
+        this.__dom.dispatchEvent(
           new CustomEvent('change', {
             ...commonComponentEventSetting,
-            detail: { index: currentIndex, isDragged: this.#isDragging },
+            detail: { index: currentIndex, isDragged: this.__isDragging },
           }),
         );
-        this.#currentIndex = currentIndex;
+        this.__currentIndex = currentIndex;
       }
     }
   };
 
-  #touchStartHandler = () => {
-    this.#isDragging = true;
+  __touchStartHandler = () => {
+    this.__isDragging = true;
   };
-  #touchEndHandler = () => {
-    this.#isDragging = false;
+  __touchEndHandler = () => {
+    this.__isDragging = false;
   };
 
-  #enableChange = false;
+  __enableChange = false;
   @registerEventEnableStatusChangeHandler('change')
-  #enableChangeEvent(status: boolean) {
-    this.#enableChange = status;
-    this.#enableScrollEventListener();
+  __enableChangeEvent(status: boolean) {
+    this.__enableChange = status;
+    this.__enableScrollEventListener();
   }
 
-  #enableOffsetChange: boolean = false;
+  __enableOffsetChange: boolean = false;
   @registerEventEnableStatusChangeHandler('offsetchange')
-  #enableOffsetChangeEvent(status: boolean) {
-    this.#enableChange = status;
-    this.#enableScrollEventListener();
+  __enableOffsetChangeEvent(status: boolean) {
+    this.__enableChange = status;
+    this.__enableScrollEventListener();
   }
-  #enableScrollEventListener() {
-    const scrollContainer = this.#getScrollContainer();
-    if (this.#enableOffsetChange || this.#enableChange) {
+  __enableScrollEventListener() {
+    const scrollContainer = this.__getScrollContainer();
+    if (this.__enableOffsetChange || this.__enableChange) {
       scrollContainer.addEventListener(
         'scroll',
-        this.#scrollHandler,
+        this.__scrollHandler,
         {
           passive: true,
         },
@@ -103,14 +106,14 @@ export class XViewpagerNgEvents
     } else {
       scrollContainer.removeEventListener(
         'scroll',
-        this.#scrollHandler,
+        this.__scrollHandler,
       );
     }
 
-    if (useScrollEnd && this.#enableChange) {
+    if (useScrollEnd && this.__enableChange) {
       scrollContainer.addEventListener(
         'scrollend',
-        this.#scrollEndHandler,
+        this.__scrollEndHandler,
         {
           passive: true,
         },
@@ -118,28 +121,28 @@ export class XViewpagerNgEvents
     } else {
       scrollContainer.removeEventListener(
         'scrollend',
-        this.#scrollEndHandler,
+        this.__scrollEndHandler,
       );
     }
   }
 
   connectedCallback(): void {
-    this.#connected = true;
-    const scrollContainer = this.#getScrollContainer();
-    this.#dom.addEventListener('touchstart', this.#touchStartHandler, {
+    this.__connected = true;
+    const scrollContainer = this.__getScrollContainer();
+    this.__dom.addEventListener('touchstart', this.__touchStartHandler, {
       passive: true,
     });
-    scrollContainer.addEventListener('touchend', this.#touchEndHandler, {
+    scrollContainer.addEventListener('touchend', this.__touchEndHandler, {
       passive: true,
     });
-    scrollContainer.addEventListener('touchcancel', this.#touchEndHandler, {
+    scrollContainer.addEventListener('touchcancel', this.__touchEndHandler, {
       passive: true,
     });
   }
 
   dispose(): void {
-    const scrollContainer = this.#getScrollContainer();
-    scrollContainer.removeEventListener('scroll', this.#scrollHandler);
-    scrollContainer.removeEventListener('scrollend', this.#scrollEndHandler);
+    const scrollContainer = this.__getScrollContainer();
+    scrollContainer.removeEventListener('scroll', this.__scrollHandler);
+    scrollContainer.removeEventListener('scrollend', this.__scrollEndHandler);
   }
 }

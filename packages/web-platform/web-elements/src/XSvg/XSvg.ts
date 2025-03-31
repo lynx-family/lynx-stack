@@ -16,36 +16,36 @@ export class XSvgFeatures
   implements InstanceType<AttributeReactiveClass<typeof XSvg>>
 {
   static observedAttributes = ['src', 'content'];
-  #dom: XSvg;
-  #loadEventInvoker = new Image();
+  __dom: XSvg;
+  __loadEventInvoker = new Image();
 
   @registerAttributeHandler('src', true)
-  #handleSrc = bindToStyle(
-    () => this.#dom,
+  __handleSrc = bindToStyle(
+    () => this.__dom,
     'background-image',
     (src) => {
-      this.#loadEventInvoker.src = src;
+      this.__loadEventInvoker.src = src;
       return `url(${src})`;
     },
   );
 
   @registerAttributeHandler('content', true)
-  #handleContent = bindToStyle(
-    () => this.#dom,
+  __handleContent = bindToStyle(
+    () => this.__dom,
     'background-image',
     (content) => {
       if (!content) return '';
       // https://stackoverflow.com/questions/23223718/failed-to-execute-btoa-on-window-the-string-to-be-encoded-contains-characte
       const src = 'data:image/svg+xml;base64,'
         + btoa(unescape(encodeURIComponent(content)));
-      this.#loadEventInvoker.src = src;
+      this.__loadEventInvoker.src = src;
       return `url("${src}")`;
     },
   );
 
-  #fireLoadEvent = () => {
-    const { width, height } = this.#loadEventInvoker;
-    this.#dom.dispatchEvent(
+  __fireLoadEvent = () => {
+    const { width, height } = this.__loadEventInvoker;
+    this.__dom.dispatchEvent(
       new CustomEvent('load', {
         ...commonComponentEventSetting,
         detail: {
@@ -57,8 +57,8 @@ export class XSvgFeatures
   };
 
   constructor(dom: HTMLElement) {
-    this.#dom = dom as XSvg;
-    this.#loadEventInvoker.addEventListener('load', this.#fireLoadEvent);
+    this.__dom = dom as XSvg;
+    this.__loadEventInvoker.addEventListener('load', this.__fireLoadEvent);
   }
 }
 

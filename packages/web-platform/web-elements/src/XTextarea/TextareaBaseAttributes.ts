@@ -22,13 +22,16 @@ export class TextareaBaseAttributes
     'spell-check',
     'show-soft-input-onfocus',
   ];
-  #dom: HTMLElement;
+  __dom: HTMLElement;
 
-  #getTextareaElement = genDomGetter(() => this.#dom.shadowRoot!, '#textarea');
+  __getTextareaElement = genDomGetter(
+    () => this.__dom.shadowRoot!,
+    '__textarea',
+  );
 
   @registerAttributeHandler('confirm-type', true)
-  #handlerConfirmType = bindToAttribute(
-    this.#getTextareaElement,
+  __handlerConfirmType = bindToAttribute(
+    this.__getTextareaElement,
     'enterkeyhint',
     (val) => {
       if (val === null) return 'send';
@@ -37,8 +40,8 @@ export class TextareaBaseAttributes
   );
 
   @registerAttributeHandler('maxlength', true)
-  #handlerMaxlength = bindToAttribute(
-    this.#getTextareaElement,
+  __handlerMaxlength = bindToAttribute(
+    this.__getTextareaElement,
     'maxlength',
     (val) => {
       if (val === null) return '140';
@@ -47,27 +50,27 @@ export class TextareaBaseAttributes
   );
 
   @registerAttributeHandler('readonly', true)
-  #handleReadonly = bindToAttribute(
-    this.#getTextareaElement,
+  __handleReadonly = bindToAttribute(
+    this.__getTextareaElement,
     'readonly',
     (value) => (value !== null ? '' : null),
   );
 
   @registerAttributeHandler('ios-spell-check', true)
-  #handleSpellCheck = bindToAttribute(
-    this.#getTextareaElement,
+  __handleSpellCheck = bindToAttribute(
+    this.__getTextareaElement,
     'spellcheck',
     (value) => (value === null ? 'false' : 'true'),
   );
 
   @registerAttributeHandler('show-soft-input-onfocus', true)
-  #handleShowSoftInputOnfocus = bindToAttribute(
-    this.#getTextareaElement,
+  __handleShowSoftInputOnfocus = bindToAttribute(
+    this.__getTextareaElement,
     'virtualkeyboardpolicy',
     (value) => (value === null ? 'manual' : 'auto'),
   );
 
   constructor(dom: HTMLElement) {
-    this.#dom = dom;
+    this.__dom = dom;
   }
 }

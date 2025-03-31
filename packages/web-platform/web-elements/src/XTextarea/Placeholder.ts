@@ -23,48 +23,48 @@ export class Placeholder
     'placeholder-font-family',
   ] as const;
 
-  #getTextarea = genDomGetter<HTMLTextAreaElement>(
-    () => this.#dom.shadowRoot!,
-    '#textarea',
+  __getTextarea = genDomGetter<HTMLTextAreaElement>(
+    () => this.__dom.shadowRoot!,
+    '__textarea',
   );
 
   @registerAttributeHandler('placeholder-color', true)
-  #updatePlaceholderColor = bindToStyle(
-    this.#getTextarea,
+  __updatePlaceholderColor = bindToStyle(
+    this.__getTextarea,
     '--placeholder-color',
     undefined,
     true,
   );
 
   @registerAttributeHandler('placeholder-font-size', true)
-  #updatePlaceholderFontSize = bindToStyle(
-    this.#getTextarea,
+  __updatePlaceholderFontSize = bindToStyle(
+    this.__getTextarea,
     '--placeholder-font-size',
     undefined,
     true,
   );
 
   @registerAttributeHandler('placeholder-font-weight', true)
-  #updatePlaceholderFontWeight = bindToStyle(
-    this.#getTextarea,
+  __updatePlaceholderFontWeight = bindToStyle(
+    this.__getTextarea,
     '--placeholder-font-weight',
     undefined,
     true,
   );
 
   @registerAttributeHandler('placeholder-font-family', true)
-  #updatePlaceholderFontFamily = bindToStyle(
-    this.#getTextarea,
+  __updatePlaceholderFontFamily = bindToStyle(
+    this.__getTextarea,
     '--placeholder-font-family',
     undefined,
     true,
   );
 
   @registerAttributeHandler('placeholder', true)
-  #handlePlaceholder = bindToAttribute(this.#getTextarea, 'placeholder');
+  __handlePlaceholder = bindToAttribute(this.__getTextarea, 'placeholder');
 
-  #dom: HTMLElement;
+  __dom: HTMLElement;
   constructor(dom: HTMLElement) {
-    this.#dom = dom;
+    this.__dom = dom;
   }
 }

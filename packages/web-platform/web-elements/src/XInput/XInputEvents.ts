@@ -16,69 +16,69 @@ export class XInputEvents
   implements InstanceType<AttributeReactiveClass<typeof HTMLElement>>
 {
   static observedAttributes = ['send-composing-input'];
-  #dom: HTMLElement;
+  __dom: HTMLElement;
 
-  #sendComposingInput = false;
+  __sendComposingInput = false;
 
-  #getInputElement = genDomGetter<HTMLInputElement>(
-    () => this.#dom.shadowRoot!,
-    '#input',
+  __getInputElement = genDomGetter<HTMLInputElement>(
+    () => this.__dom.shadowRoot!,
+    '__input',
   );
-  #getFormElement = genDomGetter<HTMLInputElement>(
-    () => this.#dom.shadowRoot!,
-    '#form',
+  __getFormElement = genDomGetter<HTMLInputElement>(
+    () => this.__dom.shadowRoot!,
+    '__form',
   );
 
   @registerEventEnableStatusChangeHandler('input')
-  #handleEnableConfirmEvent(status: boolean) {
-    const input = this.#getInputElement();
+  __handleEnableConfirmEvent(status: boolean) {
+    const input = this.__getInputElement();
     if (status) {
       input.addEventListener(
         'input',
-        this.#teleportInput as (ev: Event) => void,
+        this.__teleportInput as (ev: Event) => void,
         { passive: true },
       );
       input.addEventListener(
         'compositionend',
-        this.#teleportCompositionendInput as (ev: Event) => void,
+        this.__teleportCompositionendInput as (ev: Event) => void,
         { passive: true },
       );
     } else {
       input.addEventListener(
         'input',
-        this.#teleportInput as (ev: Event) => void,
+        this.__teleportInput as (ev: Event) => void,
         { passive: true },
       );
       input.removeEventListener(
         'compositionend',
-        this.#teleportCompositionendInput as (ev: Event) => void,
+        this.__teleportCompositionendInput as (ev: Event) => void,
       );
     }
   }
 
   @registerAttributeHandler('send-composing-input', true)
-  #handleSendComposingInput(newVal: string | null) {
-    this.#sendComposingInput = newVal !== null;
+  __handleSendComposingInput(newVal: string | null) {
+    this.__sendComposingInput = newVal !== null;
   }
 
-  #teleportEvent = (event: FocusEvent | SubmitEvent) => {
+  __teleportEvent = (event: FocusEvent | SubmitEvent) => {
     const eventType = renameEvent[event.type] ?? event.type;
-    this.#dom.dispatchEvent(
+    this.__dom.dispatchEvent(
       new CustomEvent(eventType, {
         ...commonComponentEventSetting,
         detail: {
-          value: this.#getInputElement().value,
+          value: this.__getInputElement().value,
         },
       }),
     );
   };
 
-  #teleportInput = (event: InputEvent) => {
-    const input = this.#getInputElement();
+  __teleportInput = (event: InputEvent) => {
+    const input = this.__getInputElement();
     const value = input.value;
     const isComposing = event.isComposing;
-    if (isComposing && !this.#sendComposingInput) return;
-    this.#dom.dispatchEvent(
+    if (isComposing && !this.__sendComposingInput) return;
+    this.__dom.dispatchEvent(
       new CustomEvent('input', {
         ...commonComponentEventSetting,
         detail: {
@@ -91,12 +91,12 @@ export class XInputEvents
     );
   };
 
-  #teleportCompositionendInput = () => {
-    const input = this.#getInputElement();
+  __teleportCompositionendInput = () => {
+    const input = this.__getInputElement();
     const value = input.value;
-    // if #sendComposingInput set true, #teleportInput will send detail
-    if (!this.#sendComposingInput) {
-      this.#dom.dispatchEvent(
+    // if __sendComposingInput set true, __teleportInput will send detail
+    if (!this.__sendComposingInput) {
+      this.__dom.dispatchEvent(
         new CustomEvent('input', {
           ...commonComponentEventSetting,
           detail: {
@@ -109,9 +109,9 @@ export class XInputEvents
     }
   };
 
-  #blockHtmlEvent = (event: InputEvent) => {
+  __blockHtmlEvent = (event: InputEvent) => {
     if (
-      event.target === this.#getInputElement()
+      event.target === this.__getInputElement()
       && typeof event.detail === 'number'
     ) {
       event.stopImmediatePropagation();
@@ -119,20 +119,20 @@ export class XInputEvents
   };
 
   constructor(dom: HTMLElement) {
-    this.#dom = dom;
-    const inputElement = this.#getInputElement();
-    const formElement = this.#getFormElement();
-    inputElement.addEventListener('blur', this.#teleportEvent, {
+    this.__dom = dom;
+    const inputElement = this.__getInputElement();
+    const formElement = this.__getFormElement();
+    inputElement.addEventListener('blur', this.__teleportEvent, {
       passive: true,
     });
-    inputElement.addEventListener('focus', this.#teleportEvent, {
+    inputElement.addEventListener('focus', this.__teleportEvent, {
       passive: true,
     });
-    formElement.addEventListener('submit', this.#teleportEvent, {
+    formElement.addEventListener('submit', this.__teleportEvent, {
       passive: true,
     });
     // use form to stop propagation
-    formElement.addEventListener('input', this.#blockHtmlEvent as any, {
+    formElement.addEventListener('input', this.__blockHtmlEvent as any, {
       passive: true,
     });
   }
