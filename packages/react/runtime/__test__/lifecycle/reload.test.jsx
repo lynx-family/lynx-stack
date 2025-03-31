@@ -9,8 +9,10 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import { BasicBG, ListBG, ListConditionalBG, ViewBG, setObj, setStr } from './reloadBG';
 import { BasicMT, ListConditionalMT, ListMT, ViewMT } from './reloadMT';
 import { root } from '../../src/index';
+import { delayedEvents, delayedPublishEvent } from '../../src/lifecycle/event/delayEvents';
 import { replaceCommitHook } from '../../src/lifecycle/patch/commit';
 import { injectUpdateMainThread } from '../../src/lifecycle/patch/updateMainThread';
+import { reloadBackground } from '../../src/lifecycle/reload';
 import { __root } from '../../src/root';
 import { setupPage } from '../../src/snapshot';
 import { globalEnvManager } from '../utils/envManager';
@@ -1881,5 +1883,12 @@ describe('firstScreenSyncTiming - jsReady', () => {
       globalThis[rLynxChange[0]](rLynxChange[1]);
       lynx.getNativeApp().callLepusMethod.mockClear();
     }
+  });
+
+  it('should clear cached events before reload when js not ready', async function() {
+    delayedPublishEvent('bindEvent:tap', 'test');
+    expect(delayedEvents.length).toBe(1);
+    reloadBackground({});
+    expect(delayedEvents.length).toBe(0);
   });
 });

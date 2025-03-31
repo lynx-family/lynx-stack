@@ -131,6 +131,8 @@ async function onLifecycleEventImpl(type: string, data: any): Promise<void> {
       }
       markTiming(PerformanceTimingKeys.diff_vdom_end);
 
+      // TODO: It seems `delayedEvents` and `delayedLifecycleEvents` should be merged into one array to ensure the proper order of events.
+      flushDelayedLifecycleEvents();
       if (delayedEvents) {
         delayedEvents.forEach((args) => {
           const [handlerName, data] = args;
@@ -144,6 +146,7 @@ async function onLifecycleEventImpl(type: string, data: any): Promise<void> {
         });
         delayedEvents.length = 0;
       }
+
       lynxCoreInject.tt.publishEvent = publishEvent;
       lynxCoreInject.tt.publicComponentEvent = publicComponentEvent;
 

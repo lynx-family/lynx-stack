@@ -87,12 +87,13 @@ export const root: Root = {
     } else {
       __root.__jsx = jsx;
       renderBackground(jsx, __root as any);
-      if (__FIRST_SCREEN_SYNC_TIMING__ === 'immediately') {}
-      else {
+      if (__FIRST_SCREEN_SYNC_TIMING__ === 'immediately') {
+        // This is for cases where `root.render()` is called asynchronously,
+        // `firstScreen` message might have been reached.
+        flushDelayedLifecycleEvents();
+      } else {
         lynx.getNativeApp().callLepusMethod(LifecycleConstant.jsReady, {});
       }
-
-      flushDelayedLifecycleEvents();
     }
   },
   registerDataProcessors: (dataProcessorDefinition: DataProcessorDefinition): void => {

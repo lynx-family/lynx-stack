@@ -5,7 +5,8 @@
 */
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { Component, createRef, useState } from '../../src/index';
+import { Component, createRef, root, useState } from '../../src/index';
+import { delayedLifecycleEvents } from '../../src/lifecycle/event/delayLifecycleEvents';
 import { replaceCommitHook } from '../../src/lifecycle/patch/commit';
 import { injectUpdateMainThread } from '../../src/lifecycle/patch/updateMainThread';
 import { renderBackground as render } from '../../src/lifecycle/render';
@@ -1649,5 +1650,106 @@ describe('element ref in list', () => {
         }
       `);
     }
+  });
+
+  it('when __FIRST_SCREEN_SYNC_TIMING__ is jsReady', async function() {
+    globalThis.__FIRST_SCREEN_SYNC_TIMING__ = 'jsReady';
+    const refs = [createRef(), createRef(), createRef()];
+    const signs = [0, 0, 0];
+
+    class ListItem extends Component {
+      render() {
+        return <view ref={this.props._ref}></view>;
+      }
+    }
+
+    class Comp extends Component {
+      render() {
+        return (
+          <list>
+            {[0, 1, 2].map((index) => {
+              return (
+                <list-item item-key={index}>
+                  <ListItem _ref={refs[index]}></ListItem>
+                </list-item>
+              );
+            })}
+          </list>
+        );
+      }
+    }
+
+    // main thread render
+    {
+      __root.__jsx = <Comp />;
+      renderPage();
+    }
+
+    // list render item 1 & 2
+    {
+      signs[0] = elementTree.triggerComponentAtIndex(__root.childNodes[0].__elements[0], 0);
+      expect(globalThis.__OnLifecycleEvent).toHaveBeenCalledTimes(1);
+
+      globalEnvManager.switchToBackground();
+      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      globalThis.__OnLifecycleEvent.mockClear();
+      expect(delayedLifecycleEvents).toMatchInlineSnapshot(`
+        [
+          [
+            "rLynxRef",
+            {
+              "commitTaskId": undefined,
+              "refPatch": "{"-4:0:":62}",
+            },
+          ],
+        ]
+      `);
+    }
+
+    // background render
+    {
+      globalEnvManager.switchToBackground();
+      root.render(<Comp />, __root);
+      expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
+      expect(lynx.getNativeApp().callLepusMethod.mock.calls[0]).toMatchInlineSnapshot(`
+        [
+          "rLynxJSReady",
+          {},
+        ]
+      `);
+      globalEnvManager.switchToMainThread();
+      const rLynxJSReady = lynx.getNativeApp().callLepusMethod.mock.calls[0];
+      globalThis[rLynxJSReady[0]](rLynxJSReady[1]);
+      lynx.getNativeApp().callLepusMethod.mockClear();
+      expect(globalThis.__OnLifecycleEvent).toHaveBeenCalledTimes(1);
+      expect(globalThis.__OnLifecycleEvent.mock.calls).toMatchInlineSnapshot(`
+        [
+          [
+            [
+              "rLynxFirstScreen",
+              {
+                "jsReadyEventIdSwap": {},
+                "refPatch": "{}",
+                "root": "{"id":-1,"type":"root","children":[{"id":-2,"type":"__Card__:__snapshot_a94a8_test_24","children":[{"id":-3,"type":"__Card__:__snapshot_a94a8_test_25","values":[{"item-key":0}],"children":[{"id":-4,"type":"__Card__:__snapshot_a94a8_test_23","values":["-4:0:"]}]},{"id":-5,"type":"__Card__:__snapshot_a94a8_test_25","values":[{"item-key":1}],"children":[{"id":-6,"type":"__Card__:__snapshot_a94a8_test_23","values":["-6:0:"]}]},{"id":-7,"type":"__Card__:__snapshot_a94a8_test_25","values":[{"item-key":2}],"children":[{"id":-8,"type":"__Card__:__snapshot_a94a8_test_23","values":["-8:0:"]}]}]}]}",
+              },
+            ],
+          ],
+        ]
+      `);
+    }
+
+    {
+      globalEnvManager.switchToBackground();
+      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      globalThis.__OnLifecycleEvent.mockClear();
+
+      expect(refs[0].current).toMatchInlineSnapshot(`
+        {
+          "selectUniqueID": [Function],
+          "uid": 62,
+        }
+      `);
+    }
+    globalThis.__FIRST_SCREEN_SYNC_TIMING__ = 'immediately';
   });
 });
