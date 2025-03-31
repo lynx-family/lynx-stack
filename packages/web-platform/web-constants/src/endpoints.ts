@@ -26,7 +26,7 @@ export const postExposureEndpoint = createRpcEndpoint<
 );
 
 export const publicComponentEventEndpoint = createRpcEndpoint<
-  [componentId: string, hanme: string, LynxCrossThreadEvent],
+  [componentId: string, hname: string, LynxCrossThreadEvent],
   void
 >('publicComponentEvent', false, false);
 
