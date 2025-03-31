@@ -10,7 +10,7 @@ export class CommonEventsAndMethods {
 
   readonly #dom: HTMLElement;
 
-  #observering = false;
+  #observing = false;
   #resizeObserver?: ResizeObserver;
 
   constructor(currentElement: HTMLElement) {
