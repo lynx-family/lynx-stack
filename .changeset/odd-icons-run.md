@@ -1,7 +1,6 @@
 ---
 "@lynx-js/web-mainthread-apis": minor
 "@lynx-js/web-worker-runtime": minor
-"@lynx-js/tailwind-preset": minor
 "@lynx-js/web-constants": minor
 "@lynx-js/web-core": minor
 ---
