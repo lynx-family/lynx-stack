@@ -338,7 +338,9 @@ export class LynxView extends HTMLElement {
           const styleElement = document.createElement('style');
           this.shadowRoot!.append(styleElement);
           const styleSheet = styleElement.sheet!;
-          styleSheet.insertRule(inShadowRootStyles);
+          for (const rule of inShadowRootStyles) {
+            styleSheet.insertRule(rule);
+          }
           const injectHeadLinks =
             this.getAttribute('inject-head-links') !== 'false';
           if (injectHeadLinks) {
