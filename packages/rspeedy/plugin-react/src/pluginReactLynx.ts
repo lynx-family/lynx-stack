@@ -24,6 +24,7 @@ import { applyAlias } from './alias.js'
 import { applyBackgroundOnly } from './backgroundOnly.js'
 import { applyCSS } from './css.js'
 import { applyEntry } from './entry.js'
+import { applyGenerator } from './generator.js'
 import { applyLazy } from './lazy.js'
 import { applyLoaders } from './loaders.js'
 import { applyRefresh } from './refresh.js'
@@ -365,6 +366,7 @@ export function pluginReactLynx(
       applyCSS(api, resolvedOptions)
       applyEntry(api, resolvedOptions)
       applyBackgroundOnly(api)
+      applyGenerator(api)
       applyLoaders(api, resolvedOptions)
       applyRefresh(api)
       applySplitChunksRule(api)
