@@ -3,7 +3,9 @@
 // LICENSE file in the root directory of this source tree.
 import type { Rpc } from '@lynx-js/web-worker-rpc';
 import {
+  dispatchNapiModuleEndpoint,
   napiModulesCallEndpoint,
+  type Cloneable,
   type NapiModulesCall,
 } from '@lynx-js/web-constants';
 
@@ -11,8 +13,20 @@ export function registerNapiModulesCallHandler(
   rpc: Rpc,
   napiModulesCall: NapiModulesCall,
 ) {
+  const dispatchNapiModules = rpc.createCall(dispatchNapiModuleEndpoint);
   rpc.registerHandler(
     napiModulesCallEndpoint,
-    napiModulesCall,
+    (
+      name: string,
+      data: Cloneable,
+      moduleName: string,
+    ) => {
+      return napiModulesCall(
+        name,
+        data,
+        moduleName,
+        dispatchNapiModules,
+      );
+    },
   );
 }

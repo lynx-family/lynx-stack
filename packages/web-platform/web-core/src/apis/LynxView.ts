@@ -21,6 +21,7 @@ export type INapiModulesCall = (
   data: any,
   moduleName: string,
   lynxView: LynxView,
+  dispatchNapiModules: (data: Cloneable) => void,
 ) => Promise<{ data: unknown; transfer?: Transferable[] }> | {
   data: unknown;
   transfer?: Transferable[];
@@ -194,8 +195,8 @@ export class LynxView extends HTMLElement {
     return this.#onNapiModulesCall;
   }
   set onNapiModulesCall(handler: INapiModulesCall) {
-    this.#onNapiModulesCall = (name, data, moduleName) => {
-      return handler(name, data, moduleName, this);
+    this.#onNapiModulesCall = (name, data, moduleName, dispatchNapiModules) => {
+      return handler(name, data, moduleName, this, dispatchNapiModules);
     };
   }
 
