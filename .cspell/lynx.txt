@@ -37,3 +37,5 @@ lynxjs
 nodiff
 disexposure
 viewpager
+scrolltoupper
+scrolltolower

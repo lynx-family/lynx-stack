@@ -7,7 +7,10 @@ import {
   MainThreadRuntime,
 } from '@lynx-js/web-mainthread-apis';
 import { initOffscreenDocument } from '@lynx-js/offscreen-document/main';
-import { OffscreenDocument } from '@lynx-js/offscreen-document/webworker';
+import {
+  _onEvent,
+  OffscreenDocument,
+} from '@lynx-js/offscreen-document/webworker';
 import type {
   ElementOperation,
   OffscreenElement,
@@ -25,11 +28,14 @@ const div: HTMLElement = document.createElement('div');
 div.id = 'root';
 const shadowRoot = div.attachShadow({ mode: 'open' });
 document.body.appendChild(div);
+const docu = new OffscreenDocument({
+  onCommit(operations) {
+    elementOperations = operations;
+  },
+});
 const { decodeOperation } = initOffscreenDocument({
   shadowRoot,
-  onEvent(eventType, targetUniqueId, bubbles) {
-    // nyi
-  },
+  onEvent: docu[_onEvent],
 });
 
 function serializeElementThreadElement(
@@ -85,11 +91,6 @@ function genDomElementTree() {
 }
 
 function initializeMainThreadTest() {
-  const docu = new OffscreenDocument({
-    onCommit(operations) {
-      elementOperations = operations;
-    },
-  });
   runtime = new MainThreadRuntime({
     tagMap: {
       'page': 'div',
@@ -124,8 +125,14 @@ function initializeMainThreadTest() {
       },
       markTiming: function(pipelineId: string, timingKey: string): void {
       },
-      publishEvent: () => {},
-      publicComponentEvent: () => {},
+      publishEvent: (hname, ev) => {
+        Object.assign(globalThis, { publishEvent: { hname, ev } });
+      },
+      publicComponentEvent: (componentId, hname, ev) => {
+        Object.assign(globalThis, {
+          publicComponentEvent: { componentId, hname, ev },
+        });
+      },
       postExposure: () => {},
     },
   });
