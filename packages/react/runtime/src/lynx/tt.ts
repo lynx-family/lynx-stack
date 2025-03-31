@@ -5,7 +5,11 @@ import { options } from 'preact';
 import type { VNode } from 'preact';
 
 import { LifecycleConstant, NativeUpdateDataType } from '../lifecycleConstant.js';
-import { PerformanceTimingKeys, beginPipeline, markTiming } from './performance.js';
+import {
+  BackgroundThreadPerformanceTimingKeys,
+  beginPipeline,
+  markBackgroundThreadTiming,
+} from './performance/background.js';
 import { BackgroundSnapshotInstance, hydrate } from '../backgroundSnapshot.js';
 import { destroyBackground } from '../lifecycle/destroy.js';
 import { commitPatchUpdate, genCommitTaskId, globalCommitTaskMap } from '../lifecycle/patch/commit.js';
@@ -105,10 +109,10 @@ async function OnLifecycleEvent([type, data]: [string, any]) {
         console.profile('hydrate');
       }
       beginPipeline(true, 'react_lynx_hydrate');
-      markTiming(PerformanceTimingKeys.hydrate_parse_snapshot_start);
+      markBackgroundThreadTiming(BackgroundThreadPerformanceTimingKeys.hydrate_parse_snapshot_start);
       const before = JSON.parse(lepusSide);
-      markTiming(PerformanceTimingKeys.hydrate_parse_snapshot_end);
-      markTiming(PerformanceTimingKeys.diff_vdom_start);
+      markBackgroundThreadTiming(BackgroundThreadPerformanceTimingKeys.hydrate_parse_snapshot_end);
+      markBackgroundThreadTiming(BackgroundThreadPerformanceTimingKeys.diff_vdom_start);
       const snapshotPatch = hydrate(
         before,
         __root as BackgroundSnapshotInstance,
@@ -116,7 +120,7 @@ async function OnLifecycleEvent([type, data]: [string, any]) {
       if (__PROFILE__) {
         console.profileEnd();
       }
-      markTiming(PerformanceTimingKeys.diff_vdom_end);
+      markBackgroundThreadTiming(BackgroundThreadPerformanceTimingKeys.diff_vdom_end);
 
       if (delayedEvents) {
         delayedEvents.forEach((args) => {

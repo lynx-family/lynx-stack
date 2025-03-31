@@ -44,6 +44,10 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
         reactLynxDir,
         lazy ? ['lazy', 'import'] : ['import'],
       )
+      const lepusResolve = createLazyResolver(
+        reactLynxDir,
+        ['lepus'],
+      )
 
       api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
         return mergeRsbuildConfig(config, {
@@ -67,6 +71,12 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
           background: await resolve('@lynx-js/react'),
           mainThread: await resolve('@lynx-js/react/lepus'),
         }
+        // `background-only` aliases, just like react `server-only`:
+        // https://github.com/vercel/next.js/blob/34aae512b04a4e41fcfc278f021fd04825add75a/packages/next/src/build/create-compiler-aliases.ts#L204
+        const backgroundOnly = {
+          background: await resolve('background-only'),
+          mainThread: await lepusResolve('background-only'),
+        }
 
         // dprint-ignore
         chain
@@ -82,6 +92,7 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
                   .set('@lynx-js/react/lepus$', reactLepus.mainThread)
                   .set('@lynx-js/react/lepus/jsx-runtime', jsxRuntime.mainThread)
                   .set('@lynx-js/react/lepus/jsx-dev-runtime', jsxDevRuntime.mainThread)
+                 .set('background-only$', backgroundOnly.mainThread)
                 .end()
               .end()
             .end()
@@ -94,6 +105,7 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
                   .set('@lynx-js/react/jsx-runtime', jsxRuntime.background)
                   .set('@lynx-js/react/jsx-dev-runtime', jsxDevRuntime.background)
                   .set('@lynx-js/react/lepus$', reactLepus.background)
+                  .set('background-only$', backgroundOnly.background)
                 .end()
               .end()
             .end()

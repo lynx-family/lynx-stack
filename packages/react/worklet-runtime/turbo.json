@@ -9,7 +9,8 @@
         "src"
       ],
       "outputs": [
-        "dist"
+        "dist",
+        "lib"
       ]
     }
   }
