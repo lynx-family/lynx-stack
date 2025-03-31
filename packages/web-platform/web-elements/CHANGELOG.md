@@ -1,5 +1,13 @@
 # @lynx-js/web-elements
 
+## 0.5.2
+
+### Patch Changes
+
+- fix: When list with list-type: flow, scrolltoupper, scrolltolower were specified, there was a blank block. ([#379](https://github.com/lynx-family/lynx-stack/pull/379))
+
+- fix: do not show scroll bar ([#406](https://github.com/lynx-family/lynx-stack/pull/406))
+
 ## 0.5.1
 
 ### Patch Changes

@@ -1,5 +1,25 @@
 # @lynx-js/web-worker-runtime
 
+## 0.10.0
+
+### Minor Changes
+
+- feat: rewrite the main thread Element PAPIs ([#343](https://github.com/lynx-family/lynx-stack/pull/343))
+
+  In this commit we've rewritten the main thread apis.
+
+  The most highlighted change is that
+
+  - Before this commit we send events directly to bts
+  - After this change, we send events to mts then send them to bts with some data combined.
+
+### Patch Changes
+
+- Updated dependencies [[`2a8ddf3`](https://github.com/lynx-family/lynx-stack/commit/2a8ddf3fb2a2fc5ed9b44184e30847aaf74fd1f4), [`3a8dabd`](https://github.com/lynx-family/lynx-stack/commit/3a8dabd877084c15db1404c912dd8a19c7a0fc59), [`878050a`](https://github.com/lynx-family/lynx-stack/commit/878050aaa3d9eb534848cab1dd0d4a2096a0a940), [`a521759`](https://github.com/lynx-family/lynx-stack/commit/a5217592f5aebea4b17860e729d523ecabb5f691), [`890c6c5`](https://github.com/lynx-family/lynx-stack/commit/890c6c51470c82104abb1049681f55e5d97cf9d6)]:
+  - @lynx-js/web-mainthread-apis@0.10.0
+  - @lynx-js/web-constants@0.10.0
+  - @lynx-js/web-worker-rpc@0.10.0
+
 ## 0.9.1
 
 ### Patch Changes
