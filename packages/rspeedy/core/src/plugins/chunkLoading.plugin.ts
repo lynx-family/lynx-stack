@@ -29,22 +29,10 @@ export function pluginChunkLoading(): RsbuildPlugin {
             .use(ChunkLoadingWebpackPlugin)
           .end()
           .output
-            // Rspack needs `chunkLoading: 'require'` since we use runtimeModule hook
-            // to override the chunk loading runtime.
-            .chunkLoading('require')
+            .chunkLoading('lynx')
             .chunkFormat('commonjs')
             .iife(false)
           .end()
-        }
-      })
-
-      api.modifyWebpackChain((chain, { environment }) => {
-        if (isLynx(environment)) {
-          chain
-            .output
-            // For webpack, we directly use `chunkLoading: 'lynx'`.
-            .chunkLoading('lynx')
-            .end()
         }
       })
     },

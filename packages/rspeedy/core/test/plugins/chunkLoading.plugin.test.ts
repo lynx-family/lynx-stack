@@ -11,7 +11,7 @@ describe('Plugins - chunkLoading', () => {
 
     const config = await rspeedy.unwrapConfig()
 
-    expect(config.output?.chunkLoading).toBe('require')
+    expect(config.output?.chunkLoading).toBe('lynx')
     expect(config.output?.chunkFormat).toBe('commonjs')
     expect(
       config.plugins?.some(plugin =>
@@ -82,7 +82,7 @@ describe('Plugins - chunkLoading', () => {
       expect(webConfig?.output?.chunkFormat).not.toBe('commonjs')
       expect(webConfig?.output?.iife).not.toBe(false)
 
-      expect(lynxConfig?.output?.chunkLoading).toBe('require')
+      expect(lynxConfig?.output?.chunkLoading).toBe('lynx')
       expect(lynxConfig?.output?.chunkFormat).toBe('commonjs')
       expect(lynxConfig?.output?.iife).toBe(false)
     })

@@ -85,6 +85,3 @@ export class ChunkLoadingWebpackPlugin {
     );
   }
 }
-
-export { ChunkLoadingWebpackPlugin as ChunkLoadingRspackPlugin };
-export type { ChunkLoadingWebpackPluginOptions as ChunkLoadingRspackPluginOptions };
