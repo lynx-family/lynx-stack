@@ -71,15 +71,31 @@ export function pluginDev(
       debug(`dev.assetPrefix is normalized to ${assetPrefix}`)
 
       api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
-        return mergeRsbuildConfig(config, {
+        const lazyCompilationConfig = (config.dev?.lazyCompilation
+          ? {
+            dev: {
+              lazyCompilation: {
+                serverUrl: hostname,
+              },
+            },
+          }
+          : {}) as RsbuildConfig
+
+        const baseConfig = {
           dev: {
             assetPrefix,
             client: {
-              // Lynx cannot use `location.hostname`.
+              // Lynx cannot use `location.hostname`
               host: hostname,
             },
           },
-        } as RsbuildConfig)
+        } as RsbuildConfig
+
+        return mergeRsbuildConfig(
+          config,
+          baseConfig,
+          lazyCompilationConfig,
+        )
       })
 
       const require = createRequire(import.meta.url)
