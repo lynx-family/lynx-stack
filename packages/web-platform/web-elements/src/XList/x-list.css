@@ -218,12 +218,10 @@ x-list[list-type="waterfall"]::part(slot) {
 }
 
 x-list[list-type="waterfall"]::part(waterfall-content) {
-  display: flex;
   flex-direction: row;
 }
 
 x-list[list-type="waterfall"][scroll-orientation="horizontal"]::part(waterfall-content) {
-  display: flex;
   flex-direction: column;
 }
 

@@ -10,6 +10,7 @@ import {
 } from '@lynx-js/web-elements-reactive';
 import type { XList } from './XList.js';
 
+const WATERFALL_CONTENT = 'waterfall-content';
 const WATERFALL_SLOT = 'waterfall-slot';
 
 export class XListWaterfall
@@ -20,8 +21,13 @@ export class XListWaterfall
   ];
 
   #dom: XList;
-
   #childrenObserver: MutationObserver | undefined;
+
+  #getListContainer = genDomGetter(() => this.#dom.shadowRoot!, '#content');
+  #getWaterfallCOntent = genDomGetter(
+    () => this.#dom.shadowRoot!,
+    `#${WATERFALL_CONTENT}`,
+  );
 
   /**  *
    * @param spanCount
@@ -44,12 +50,19 @@ export class XListWaterfall
 
     const waterfallContainer = document.createElement('div');
     waterfallContainer.setAttribute(
+      'id',
+      WATERFALL_CONTENT,
+    );
+    waterfallContainer.setAttribute(
       'part',
-      'waterfall-content',
+      WATERFALL_CONTENT,
     );
     waterfallContainer.append(...slotContainer);
     this.#dom.shadowRoot?.querySelector('[part=upper-threshold-observer]')
       ?.insertAdjacentElement('afterend', waterfallContainer);
+  };
+  #removeWaterfallContainer = () => {
+    this.#getListContainer().removeChild(this.#getWaterfallCOntent());
   };
 
   #layoutListItem = (spanCount: number) => {
@@ -113,6 +126,7 @@ export class XListWaterfall
         });
       });
     } else {
+      this.#removeWaterfallContainer();
       this.#childrenObserver?.disconnect();
       this.#childrenObserver = undefined;
     }
