@@ -309,7 +309,7 @@ class CssExtractRspackPluginImpl {
   ) {
     const { RuntimeGlobals } = compiler.webpack;
     runtimeModule.source!.source = Buffer.concat([
-      Buffer.from(runtimeModule.source!.source),
+      Buffer.from(runtimeModule.source!.source as Buffer),
       // cssHotUpdateList
       Buffer.from(`
       ${RuntimeGlobals.require}.cssHotUpdateList = ${

@@ -125,7 +125,7 @@ export class ChunkLoadingRspackPluginImpl {
     runtimeModule: RuntimeModule,
   ) {
     runtimeModule.source!.source = Buffer.concat([
-      Buffer.from(runtimeModule.source!.source),
+      Buffer.from(runtimeModule.source!.source as Buffer),
 
       Buffer.from('\n'),
 
@@ -143,7 +143,7 @@ export class ChunkLoadingRspackPluginImpl {
     runtimeModule: RuntimeModule,
   ) {
     runtimeModule.source!.source = Buffer.concat([
-      Buffer.from(runtimeModule.source!.source),
+      Buffer.from(runtimeModule.source!.source as Buffer),
 
       // withHmr
       Buffer.from(
