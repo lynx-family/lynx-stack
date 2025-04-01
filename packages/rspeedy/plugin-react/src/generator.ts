@@ -6,16 +6,19 @@ import type { RsbuildPluginAPI } from '@rsbuild/core'
 import { LAYERS } from '@lynx-js/react-webpack-plugin'
 
 export function applyGenerator(api: RsbuildPluginAPI): void {
-  api.modifyBundlerChain(chain => {
-    // Avoid generating `JSON.parse()` for a JSON file which has more than 20 characters as it increases the bundle size of `main-thread.js`.
-    // For more detail, see https://github.com/webpack/webpack/issues/19319
-    chain.module
-      .rule(`json-parse:${LAYERS.MAIN_THREAD}`)
-      .issuerLayer(LAYERS.MAIN_THREAD)
-      .test(/\.json$/)
-      .type('json')
-      .generator({
-        JSONParse: false,
-      })
+  api.modifyBundlerChain({
+    order: 'pre',
+    handler: chain => {
+      // Avoid generating `JSON.parse()` for a JSON file which has more than 20 characters as it increases the bundle size of `main-thread.js`.
+      // For more detail, see https://github.com/webpack/webpack/issues/19319
+      chain.module
+        .rule(`json-parse:${LAYERS.MAIN_THREAD}`)
+        .issuerLayer(LAYERS.MAIN_THREAD)
+        .test(/\.json$/)
+        .type('json')
+        .generator({
+          JSONParse: false,
+        })
+    },
   })
 }
