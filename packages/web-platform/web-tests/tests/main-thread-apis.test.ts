@@ -1132,4 +1132,41 @@ test.describe('main thread api tests', () => {
       expect(inlineStyle).toContain('flex-shrink');
     },
   );
+
+  test('publicComponentEvent', async ({ page }, { title }) => {
+    const ret = await page.evaluate(() => {
+      let page = globalThis.__CreatePage('0', 0);
+      let parent = globalThis.__CreateComponent(
+        0,
+        'id1',
+        0,
+        'test_entry',
+        'name',
+        'path',
+        {},
+      );
+      let parentUid = globalThis.__GetElementUniqueID(parent);
+      let child = globalThis.__CreateView(parentUid);
+      globalThis.__AppendElement(page, parent);
+      globalThis.__AppendElement(parent, child);
+      globalThis.__SetID(parent, 'parent_id');
+      globalThis.__SetID(child, 'child_id');
+      globalThis.__AddEvent(child, 'bindEvent', 'tap', 'hname');
+      globalThis.__SetInlineStyles(parent, {
+        'display': 'flex',
+      });
+      globalThis.__SetInlineStyles(child, {
+        'width': '100px',
+        'height': '100px',
+      });
+      globalThis.__FlushElementTree();
+    });
+    await page.locator('#child_id').click({ force: true });
+    await wait(100);
+    const publicComponentEventArgs = await page.evaluate(() => {
+      return globalThis.publicComponentEvent;
+    });
+    await expect(publicComponentEventArgs.hname).toBe('hname');
+    await expect(publicComponentEventArgs.componentId).toBe('id1');
+  });
 });

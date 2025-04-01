@@ -47,8 +47,8 @@ export function createEventFunctions(runtime: MainThreadRuntime) {
           : undefined;
       if (componentId) {
         runtime.config.callbacks.publicComponentEvent(
-          hname,
           componentId,
+          hname,
           crossThreadEvent,
         );
       } else {

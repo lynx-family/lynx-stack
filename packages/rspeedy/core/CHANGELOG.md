@@ -1,5 +1,23 @@
 # @lynx-js/rspeedy
 
+## 0.8.7
+
+### Patch Changes
+
+- Support using `-debugids` in `output.sourceMap.js`. ([#342](https://github.com/lynx-family/lynx-stack/pull/342))
+
+  See [Source Map Debug ID Proposal](https://github.com/tc39/ecma426/blob/main/proposals/debug-id.md) for more details.
+
+- Use `chunkLoading: 'import-scripts'` for Web platform ([#352](https://github.com/lynx-family/lynx-stack/pull/352))
+
+- Support `output.distPath.*`. ([#366](https://github.com/lynx-family/lynx-stack/pull/366))
+
+  See [Rsbuild - distPath](https://rsbuild.dev/config/output/dist-path) for all available options.
+
+- Support `performance.printFileSize` ([#336](https://github.com/lynx-family/lynx-stack/pull/336))
+
+  Whether to print the file sizes after production build.
+
 ## 0.8.6
 
 ### Patch Changes

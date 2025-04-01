@@ -112,12 +112,21 @@ export function tryStartLocalRspeedy(
         ...Constants.rspeedyPackageName.split('/'),
       )
 
-      rspeedyEntryPoint = path.join(rspeedyFolder, 'lib', 'cli', 'main.js')
+      rspeedyEntryPoint = path.join(rspeedyFolder, 'dist', 'cli', 'main.js')
       if (!fs.existsSync(rspeedyEntryPoint)) {
         debug(
-          `Unable to find rspeedy entry point: ${rspeedyEntryPoint}, using the unmanaged version.`,
+          `Unable to find rspeedy entry point: ${rspeedyEntryPoint}, trying the legacy location.`,
         )
-        return false
+
+        // `lib/cli/main.js` is the legacy location where `tsc` outputs.
+        rspeedyEntryPoint = path.join(rspeedyFolder, 'lib', 'cli', 'main.js')
+
+        if (!fs.existsSync(rspeedyEntryPoint)) {
+          debug(
+            `Unable to find rspeedy entry point: ${rspeedyEntryPoint}, using the unmanaged version.`,
+          )
+          return false
+        }
       }
     } catch (error) {
       throw new Error(

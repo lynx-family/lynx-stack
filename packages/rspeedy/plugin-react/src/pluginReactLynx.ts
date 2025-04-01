@@ -18,12 +18,14 @@ import type {
   JsxTransformerConfig,
   ShakeVisitorConfig,
 } from '@lynx-js/react/transform'
+import type { ExtractStrConfig } from '@lynx-js/react-webpack-plugin'
 import type { ExposedAPI } from '@lynx-js/rspeedy'
 
 import { applyAlias } from './alias.js'
 import { applyBackgroundOnly } from './backgroundOnly.js'
 import { applyCSS } from './css.js'
 import { applyEntry } from './entry.js'
+import { applyGenerator } from './generator.js'
 import { applyLazy } from './lazy.js'
 import { applyLoaders } from './loaders.js'
 import { applyRefresh } from './refresh.js'
@@ -295,6 +297,14 @@ export interface PluginReactLynxOptions {
   targetSdkVersion?: string
 
   /**
+   * Merge same string literals in JS and Lepus to reduce output bundle size.
+   * Set to `false` to disable.
+   *
+   * @defaultValue false
+   */
+  extractStr?: Partial<ExtractStrConfig> | boolean
+
+  /**
    * Generate standalone lazy bundle.
    *
    * @alpha
@@ -348,6 +358,7 @@ export function pluginReactLynx(
     // The following two default values are useless, since they will be overridden by `engineVersion`
     targetSdkVersion: '',
     engineVersion: '',
+    extractStr: false,
 
     experimental_isLazyBundle: false,
   }
@@ -365,6 +376,7 @@ export function pluginReactLynx(
       applyCSS(api, resolvedOptions)
       applyEntry(api, resolvedOptions)
       applyBackgroundOnly(api)
+      applyGenerator(api)
       applyLoaders(api, resolvedOptions)
       applyRefresh(api)
       applySplitChunksRule(api)

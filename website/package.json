@@ -33,7 +33,7 @@
     "@lynx-js/webpack-runtime-globals": "workspace:*",
     "@microsoft/api-documenter": "~7.23.38",
     "@microsoft/api-extractor-model": "^7.30.4",
-    "@rsbuild/plugin-sass": "1.2.2",
+    "@rsbuild/plugin-sass": "1.3.1",
     "@rsbuild/plugin-type-check": "1.2.1",
     "@rsbuild/plugin-typed-css-modules": "1.0.2",
     "@rspress/plugin-client-redirects": "2.0.0-alpha.7",

@@ -1,6 +1,6 @@
 {
   "name": "upgrade-rspeedy",
-  "version": "0.8.6",
+  "version": "0.8.7",
   "description": "Upgrade Rspeedy-related packages",
   "keywords": [
     "webpack",
@@ -47,7 +47,7 @@
     "detect-indent": "^7.0.1",
     "memfs": "^4.17.0",
     "picocolors": "^1.1.1",
-    "rsbuild-plugin-tailwindcss": "0.2.0",
+    "rsbuild-plugin-tailwindcss": "0.2.1",
     "rslog": "^1.2.3",
     "type-fest": "^4.38.0"
   },

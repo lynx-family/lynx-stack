@@ -53,6 +53,7 @@ export function apply(program: Command): Command {
     .description(
       'Run the dev server and watch for source file changes while serving.',
     )
+    .option('--base <base>', 'specify the base path of the server')
     .action(
       (devOptions: DevOptions) =>
         import('./dev.js').then(({ dev }) =>
@@ -75,6 +76,7 @@ export function apply(program: Command): Command {
   const previewCommand = program.command('preview')
   previewCommand
     .description('Preview the production build outputs locally.')
+    .option('--base <base>', 'specify the base path of the server')
     .action((previewOptions: PreviewOptions) =>
       import('./preview.js').then(({ preview }) =>
         preview.call(previewCommand, cwd, previewOptions)

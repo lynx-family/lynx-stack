@@ -118,6 +118,9 @@ export function initializeElementCreatingFunction(
     if (runtime.config.pageConfig.defaultDisplayLinear === false) {
       page.setAttribute(lynxDefaultDisplayLinearAttribute, 'false');
     }
+    if (runtime.config.pageConfig.defaultOverflowVisible === true) {
+      page.setAttribute('lynx-default-overflow-visible', 'true');
+    }
     runtime._page = page;
     return page;
   }

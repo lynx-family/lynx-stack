@@ -7,10 +7,11 @@ import { Component, html } from '@lynx-js/web-elements-reactive';
 import { LynxExposure } from '../common/Exposure.js';
 import { XTextTruncation } from './XTextTruncation.js';
 import { ScrollIntoView } from '../ScrollView/ScrollIntoView.js';
+import { CommonEventsAndMethods } from '../common/CommonEventsAndMethods.js';
 
 @Component<typeof XText>(
   'x-text',
-  [LynxExposure, XTextTruncation],
+  [LynxExposure, CommonEventsAndMethods, XTextTruncation],
   html`<div id="inner-box" part="inner-box"><slot></slot><slot name="inline-truncation"></slot></div>`,
 )
 export class XText extends HTMLElement {

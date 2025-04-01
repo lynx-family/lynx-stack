@@ -1,5 +1,36 @@
 # @lynx-js/web-mainthread-apis
 
+## 0.10.0
+
+### Minor Changes
+
+- feat: rewrite the main thread Element PAPIs ([#343](https://github.com/lynx-family/lynx-stack/pull/343))
+
+  In this commit we've rewritten the main thread apis.
+
+  The most highlighted change is that
+
+  - Before this commit we send events directly to bts
+  - After this change, we send events to mts then send them to bts with some data combined.
+
+### Patch Changes
+
+- feat(web): use pure DOM API to implement Element PAPIs ([#334](https://github.com/lynx-family/lynx-stack/pull/334))
+
+  1. rewrite all element PAPIs impl. Now we use DOM.
+  2. use our new package `@lynx-js/offscreen-document` to support the new Element PAPI implementation in a worker
+
+- fix: inline style will be removed for value number `0` ([#368](https://github.com/lynx-family/lynx-stack/pull/368))
+
+  the inline style value could be incorrectly removed for number value `0`;
+
+  For example, `flex-shrink:0` may be ignored.
+
+- fix: publicComponentEvent args order ([#401](https://github.com/lynx-family/lynx-stack/pull/401))
+
+- Updated dependencies [[`3a8dabd`](https://github.com/lynx-family/lynx-stack/commit/3a8dabd877084c15db1404c912dd8a19c7a0fc59), [`a521759`](https://github.com/lynx-family/lynx-stack/commit/a5217592f5aebea4b17860e729d523ecabb5f691), [`890c6c5`](https://github.com/lynx-family/lynx-stack/commit/890c6c51470c82104abb1049681f55e5d97cf9d6)]:
+  - @lynx-js/web-constants@0.10.0
+
 ## 0.9.1
 
 ### Patch Changes

@@ -104,6 +104,24 @@ test.describe('web-elements test suite', () => {
         'rgb(0, 128, 0)',
       );
     });
+    test('event-layoutchange', async ({ page }, { titlePath }) => {
+      const title = getTitle(titlePath);
+      await gotoWebComponentPage(page, title);
+      await page.locator('#target').click();
+      await wait(100);
+      const detail = await page.evaluate(() => {
+        // @ts-expect-error
+        return globalThis.detail;
+      });
+      expect(detail).toBeTruthy();
+      expect(typeof detail.width).toBe('number');
+      expect(typeof detail.height).toBe('number');
+      expect(typeof detail.left).toBe('number');
+      expect(typeof detail.right).toBe('number');
+      expect(typeof detail.top).toBe('number');
+      expect(typeof detail.bottom).toBe('number');
+      expect(detail.id).toBe('target');
+    });
   });
   test.describe('x-text', () => {
     test('x-text/view-in-text', async ({ page }, { title }) => {
@@ -335,6 +353,24 @@ test.describe('web-elements test suite', () => {
       await gotoWebComponentPage(page, title);
       await wait(500);
       await diffScreenShot(page, title, title);
+    });
+    test('event-layoutchange', async ({ page }, { titlePath }) => {
+      const title = getTitle(titlePath);
+      await gotoWebComponentPage(page, title);
+      await page.locator('#target').click();
+      await wait(100);
+      const detail = await page.evaluate(() => {
+        // @ts-expect-error
+        return globalThis.detail;
+      });
+      expect(detail).toBeTruthy();
+      expect(typeof detail.width).toBe('number');
+      expect(typeof detail.height).toBe('number');
+      expect(typeof detail.left).toBe('number');
+      expect(typeof detail.right).toBe('number');
+      expect(typeof detail.top).toBe('number');
+      expect(typeof detail.bottom).toBe('number');
+      expect(detail.id).toBe('target');
     });
   });
   test.describe('x-blur-view', () => {
@@ -1736,6 +1772,59 @@ test.describe('web-elements test suite', () => {
         await page.mouse.wheel(0, -500);
         await wait(100);
         expect(scrolltoupper).toBeTruthy();
+      },
+    );
+
+    test(
+      'event-scrolltoupper-flow',
+      async ({ page, browserName }, { titlePath }) => {
+        titlePath[titlePath.length - 1] = 'event-scrolltoupper-tolower-flow';
+        const title = getTitle(titlePath);
+        await gotoWebComponentPage(page, title);
+        await diffScreenShot(page, title, 'index');
+        if (browserName === 'webkit') test.skip(); // cannot wheel
+        let scrolltoupper = false;
+        await page.on('console', async (msg) => {
+          const event = await msg.args()[0]?.evaluate((e) => ({
+            type: e.type,
+          }));
+          if (!event) return;
+          if (event.type === 'scrolltoupper') {
+            scrolltoupper = true;
+          }
+        });
+        await page.mouse.move(200, 200);
+        await page.mouse.wheel(0, 100);
+        await page.mouse.wheel(0, -500);
+        await wait(1000);
+        expect(scrolltoupper).toBeTruthy();
+      },
+    );
+    test(
+      'event-scrolltolower-flow',
+      async ({ page, browserName }, { titlePath }) => {
+        titlePath[titlePath.length - 1] = 'event-scrolltoupper-tolower-flow';
+        const title = getTitle(titlePath);
+        await gotoWebComponentPage(page, title);
+        if (browserName === 'webkit') test.skip(); // cannot wheel
+        let scrolltolower = false;
+        await page.on('console', async (msg) => {
+          const event = await msg.args()[0]?.evaluate((e) => ({
+            type: e.type,
+          }));
+          if (!event) return;
+          if (event.type === 'scrolltolower') {
+            scrolltolower = true;
+          }
+        });
+        await page.evaluate(() => {
+          document.querySelector('x-list')?.shadowRoot?.querySelector(
+            '#content',
+          )
+            ?.scrollTo(0, 5000);
+        });
+        await wait(1000);
+        expect(scrolltolower).toBeTruthy();
       },
     );
 
