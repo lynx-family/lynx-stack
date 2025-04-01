@@ -332,8 +332,8 @@ importers:
         specifier: ^4.38.0
         version: 4.38.0
       typia-rspack-plugin:
-        specifier: ^1.0.2
-        version: 1.0.2(typescript@5.7.3)(typia@7.6.4(@samchon/openapi@2.4.2)(typescript@5.7.3))
+        specifier: ^2.0.0
+        version: 2.0.0(typescript@5.7.3)(typia@7.6.4(@samchon/openapi@2.4.2)(typescript@5.7.3))
       vitest:
         specifier: ^3.1.1
         version: 3.1.1(@types/debug@4.1.12)(@types/node@22.13.5)(@vitest/ui@3.1.1)(jsdom@26.0.0)(sass-embedded@1.86.0)(terser@5.31.6)
@@ -449,8 +449,8 @@ importers:
         specifier: 7.6.4
         version: 7.6.4(@samchon/openapi@2.4.2)(typescript@5.7.3)
       typia-rspack-plugin:
-        specifier: ^1.0.2
-        version: 1.0.2(typescript@5.7.3)(typia@7.6.4(@samchon/openapi@2.4.2)(typescript@5.7.3))
+        specifier: ^2.0.0
+        version: 2.0.0(typescript@5.7.3)(typia@7.6.4(@samchon/openapi@2.4.2)(typescript@5.7.3))
 
   packages/rspeedy/plugin-react-alias:
     dependencies:
@@ -3456,8 +3456,8 @@ packages:
     resolution: {integrity: sha512-ueEepnujpqee2o5aIYnvHU6C0A42MNdsIDeqy5BydrkuC5R1ZuUFnm27EeFJGoEHJQgn3uleRvmTXaJgfXbt4g==}
     engines: {node: '>=0.4.0'}
 
-  acorn@8.14.0:
-    resolution: {integrity: sha512-cl669nCJTZBsL97OF4kUQm5g5hC2uihk0NxY3WENAC0TYdILVkAyHymAntgxGkl7K+t0cXIrH5siy5S4XkFycA==}
+  acorn@8.14.1:
+    resolution: {integrity: sha512-OvQ/2pUDKmgfCg++xsTX1wGxfTaszcHVcTctW4UJB4hibJx2HXxxO5UmVgyjMa+ZDsiaf5wWLXYpRWMmBI0QHg==}
     engines: {node: '>=0.4.0'}
     hasBin: true
 
@@ -7958,8 +7958,8 @@ packages:
     engines: {node: '>=14.17'}
     hasBin: true
 
-  typia-rspack-plugin@1.0.2:
-    resolution: {integrity: sha512-5vCunp+l8A985K0An7yjgTKCU+SUA4iC9OGbaa8+OifaqDECQKBVH61wZy927dkcnzK8z/aFgJc18GiSTCvuiw==}
+  typia-rspack-plugin@2.0.0:
+    resolution: {integrity: sha512-3csV7TwMVaPD4gWVgFz0o7MIdX2HdkNRBOuN1zwtfpvly46KqUS3qNHCSPQM2jsiZywwFKVrBfhWuZObXrPPCA==}
     engines: {node: '>=18'}
     peerDependencies:
       typescript: '*'
@@ -8050,8 +8050,8 @@ packages:
     resolution: {integrity: sha512-4/u/j4FrCKdi17jaxuJA0jClGxB1AvU2hw/IuayPc4ay1XGaJs/rbb4v5WKwAjNifjmXK9PIFyuPiaK8azyR9w==}
     engines: {node: '>=14.0.0'}
 
-  unplugin@2.2.0:
-    resolution: {integrity: sha512-m1ekpSwuOT5hxkJeZGRxO7gXbXT3gF26NjQ7GdVHoLoF8/nopLcd/QfPigpCy7i51oFHiRJg/CyHhj4vs2+KGw==}
+  unplugin@2.2.2:
+    resolution: {integrity: sha512-Qp+iiD+qCRnUek+nDoYvtWX7tfnYyXsrOnJ452FRTgOyKmTM7TUJ3l+PLPJOOWPTUyKISKp4isC5JJPSXUjGgw==}
     engines: {node: '>=18.12.0'}
 
   unrs-resolver@1.3.3:
@@ -9928,7 +9928,7 @@ snapshots:
 
   '@rsbuild/plugin-check-syntax@1.3.0(@rsbuild/core@1.2.19)':
     dependencies:
-      acorn: 8.14.0
+      acorn: 8.14.1
       browserslist-to-es-version: 1.0.0
       htmlparser2: 10.0.0
       picocolors: 1.1.1
@@ -10124,8 +10124,8 @@ snapshots:
       '@babel/code-frame': 7.26.2
       '@rsdoctor/types': 1.0.1(@rspack/core@1.3.0(@swc/helpers@0.5.15))(webpack@5.98.0)
       '@types/estree': 1.0.5
-      acorn: 8.14.0
-      acorn-import-attributes: 1.9.5(acorn@8.14.0)
+      acorn: 8.14.1
+      acorn-import-attributes: 1.9.5(acorn@8.14.1)
       acorn-walk: 8.3.4
       chalk: 4.1.2
       connect: 3.7.0
@@ -11119,19 +11119,19 @@ snapshots:
       mime-types: 2.1.35
       negotiator: 0.6.3
 
-  acorn-import-attributes@1.9.5(acorn@8.14.0):
+  acorn-import-attributes@1.9.5(acorn@8.14.1):
     dependencies:
-      acorn: 8.14.0
+      acorn: 8.14.1
 
-  acorn-jsx@5.3.2(acorn@8.14.0):
+  acorn-jsx@5.3.2(acorn@8.14.1):
     dependencies:
-      acorn: 8.14.0
+      acorn: 8.14.1
 
   acorn-walk@8.3.4:
     dependencies:
-      acorn: 8.14.0
+      acorn: 8.14.1
 
-  acorn@8.14.0: {}
+  acorn@8.14.1: {}
 
   agent-base@7.1.3: {}
 
@@ -12536,8 +12536,8 @@ snapshots:
 
   espree@10.3.0:
     dependencies:
-      acorn: 8.14.0
-      acorn-jsx: 5.3.2(acorn@8.14.0)
+      acorn: 8.14.1
+      acorn-jsx: 5.3.2(acorn@8.14.1)
       eslint-visitor-keys: 4.2.0
 
   esprima@4.0.1: {}
@@ -14231,8 +14231,8 @@ snapshots:
 
   micromark-extension-mdxjs@1.0.1:
     dependencies:
-      acorn: 8.14.0
-      acorn-jsx: 5.3.2(acorn@8.14.0)
+      acorn: 8.14.1
+      acorn-jsx: 5.3.2(acorn@8.14.1)
       micromark-extension-mdx-expression: 1.0.8
       micromark-extension-mdx-jsx: 1.0.5
       micromark-extension-mdx-md: 1.0.1
@@ -16063,7 +16063,7 @@ snapshots:
   terser@5.31.6:
     dependencies:
       '@jridgewell/source-map': 0.3.6
-      acorn: 8.14.0
+      acorn: 8.14.1
       commander: 2.20.3
       source-map-support: 0.5.21
 
@@ -16308,11 +16308,11 @@ snapshots:
 
   typescript@5.7.3: {}
 
-  typia-rspack-plugin@1.0.2(typescript@5.7.3)(typia@7.6.4(@samchon/openapi@2.4.2)(typescript@5.7.3)):
+  typia-rspack-plugin@2.0.0(typescript@5.7.3)(typia@7.6.4(@samchon/openapi@2.4.2)(typescript@5.7.3)):
     dependencies:
       typescript: 5.7.3
       typia: 7.6.4(@samchon/openapi@2.4.2)(typescript@5.7.3)
-      unplugin: 2.2.0
+      unplugin: 2.2.2
 
   typia@7.6.4(@samchon/openapi@2.4.2)(typescript@5.7.3):
     dependencies:
@@ -16420,12 +16420,12 @@ snapshots:
 
   unplugin@1.16.1:
     dependencies:
-      acorn: 8.14.0
+      acorn: 8.14.1
       webpack-virtual-modules: 0.6.2
 
-  unplugin@2.2.0:
+  unplugin@2.2.2:
     dependencies:
-      acorn: 8.14.0
+      acorn: 8.14.1
       webpack-virtual-modules: 0.6.2
 
   unrs-resolver@1.3.3:
@@ -16616,7 +16616,7 @@ snapshots:
   webpack-bundle-analyzer@4.10.2:
     dependencies:
       '@discoveryjs/json-ext': 0.5.7
-      acorn: 8.14.0
+      acorn: 8.14.1
       acorn-walk: 8.3.4
       commander: 7.2.0
       debounce: 1.2.1
@@ -16702,7 +16702,7 @@ snapshots:
       '@webassemblyjs/ast': 1.14.1
       '@webassemblyjs/wasm-edit': 1.14.1
       '@webassemblyjs/wasm-parser': 1.14.1
-      acorn: 8.14.0
+      acorn: 8.14.1
       browserslist: 4.24.4
       chrome-trace-event: 1.0.4
       enhanced-resolve: 5.18.1
@@ -16732,7 +16732,7 @@ snapshots:
       '@webassemblyjs/ast': 1.14.1
       '@webassemblyjs/wasm-edit': 1.14.1
       '@webassemblyjs/wasm-parser': 1.14.1
-      acorn: 8.14.0
+      acorn: 8.14.1
       browserslist: 4.24.4
       chrome-trace-event: 1.0.4
       enhanced-resolve: 5.18.1
