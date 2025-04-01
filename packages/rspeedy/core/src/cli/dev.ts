@@ -13,7 +13,9 @@ import { loadConfig, resolveConfigPath } from '../config/loadConfig.js'
 import { createRspeedy } from '../create-rspeedy.js'
 import { exit } from './exit.js'
 
-export type DevOptions = CommonOptions
+export interface DevOptions extends CommonOptions {
+  base?: string | undefined
+}
 
 export async function dev(
   this: Command,
@@ -28,6 +30,11 @@ export async function dev(
       cwd,
       configPath,
     })
+
+    if (devOptions.base) {
+      rspeedyConfig.server ??= {}
+      rspeedyConfig.server.base = devOptions.base
+    }
 
     const watchedFiles = [configPath]
 

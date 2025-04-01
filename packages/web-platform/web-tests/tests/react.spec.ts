@@ -996,6 +996,18 @@ test.describe('reactlynx3 tests', () => {
       await target.click();
       await expect(await target.getAttribute('style')).toContain('pink');
     });
+
+    test(
+      'config-css-default-overflow-visible-unset',
+      async ({ page }, { title }) => {
+        await goto(page, title);
+        await diffScreenShot(
+          page,
+          title,
+          'index',
+        );
+      },
+    );
   });
 
   test.describe('elements', () => {

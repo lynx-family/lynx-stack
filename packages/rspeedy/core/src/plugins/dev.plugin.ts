@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { createRequire } from 'node:module'
+import path from 'node:path'
 
 import { logger } from '@rsbuild/core'
 import type { RsbuildConfig, RsbuildPlugin } from '@rsbuild/core'
@@ -89,6 +90,10 @@ export function pluginDev(
           return
         }
         const rsbuildPath = require.resolve('@rsbuild/core')
+        const rspeedyDir = path.dirname(
+          require.resolve('@lynx-js/rspeedy/package.json'),
+        )
+
         // dprint-ignore
         chain
           .resolve
@@ -128,7 +133,15 @@ export function pluginDev(
                   options?.client?.websocketTransport ?? require.resolve('@lynx-js/websocket'),
                   'default',
                 ],
-                __webpack_dev_server_client__: [require.resolve('../../client/hmr/WebSocketClient.js'), 'default'],
+                __webpack_dev_server_client__: [
+                  require.resolve(
+                    './client/hmr/WebSocketClient.js',
+                    {
+                      paths: [rspeedyDir],
+                    },
+                  ),
+                  'default'
+                ],
               }
             ])
           .end()

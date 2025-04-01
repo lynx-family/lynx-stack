@@ -64,6 +64,7 @@ The `rspeedy dev` command is used to start a local dev server and compile the so
 Usage: rspeedy dev [options]
 
 Options:
+  -b --base <base>      specify the base path of the server
   -c --config <config>  specify the configuration file, can be a relative or absolute path
   -h, --help            display help for command
 ```
@@ -94,6 +95,7 @@ The `rspeedy preview` command is used to preview the production build outputs lo
 Usage: rspeedy preview [options]
 
 Options:
+  -b --base <base>      specify the base path of the server
   -c --config <config>  specify the configuration file, can be a relative or absolute path
   -h, --help            display help for command
 ```

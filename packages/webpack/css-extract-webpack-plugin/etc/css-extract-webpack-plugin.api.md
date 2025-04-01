@@ -21,6 +21,7 @@ export class CssExtractRspackPlugin {
 // @public
 export interface CssExtractRspackPluginOptions extends CssExtractRspackPluginOptions_2 {
     cssPlugins: Parameters<typeof LynxTemplatePlugin.convertCSSChunksToMap>[1];
+    enableCSSInvalidation: boolean;
     enableCSSSelector: boolean;
     enableRemoveCSSScope: boolean;
     targetSdkVersion: string;

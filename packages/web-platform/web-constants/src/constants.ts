@@ -13,6 +13,9 @@ export const lynxTagAttribute = 'lynx-tag' as const;
 export const lynxDefaultDisplayLinearAttribute =
   'lynx-default-display-linear' as const;
 
+export const lynxDefaultOverflowVisibleAttribute =
+  'lynx-default-overflow-visible' as const;
+
 export const __lynx_timing_flag = '__lynx_timing_flag' as const;
 
 export const globalMuteableVars = [

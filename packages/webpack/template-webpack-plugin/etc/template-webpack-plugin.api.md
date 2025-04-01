@@ -54,6 +54,14 @@ declare namespace CSSPlugins {
 }
 
 // @public
+export interface EncodeCSSOptions {
+    enableCSSInvalidation: boolean;
+    enableCSSSelector: boolean;
+    enableRemoveCSSScope: boolean;
+    targetSdkVersion: string;
+}
+
+// @public
 export class LynxEncodePlugin {
     constructor(options?: LynxEncodePluginOptions | undefined);
     apply(compiler: Compiler): void;
@@ -61,11 +69,7 @@ export class LynxEncodePlugin {
     static BEFORE_ENCODE_STAGE: number;
     static defaultOptions: Readonly<Required<LynxEncodePluginOptions>>;
     static ENCODE_STAGE: number;
-    static encodeCSS(cssChunks: string[], options: {
-        enableCSSSelector: boolean;
-        enableRemoveCSSScope: boolean;
-        targetSdkVersion: string;
-    }, plugins?: CSS.Plugin[], encode?: (options: any) => Promise<{
+    static encodeCSS(cssChunks: string[], options: EncodeCSSOptions, plugins?: CSS.Plugin[], encode?: (options: any) => Promise<{
         buffer: Buffer;
     }>): Promise<Buffer>;
     // (undocumented)

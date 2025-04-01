@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/rspeedy",
-  "version": "0.8.6",
+  "version": "0.8.7",
   "description": "A webpack/rspack-based frontend toolchain for Lynx",
   "keywords": [
     "webpack",
@@ -40,8 +40,7 @@
   "files": [
     "bin",
     "client",
-    "lib",
-    "!lib/**/*.js.map",
+    "dist",
     "register",
     "client.d.ts",
     "CHANGELOG.md",
@@ -49,6 +48,7 @@
   ],
   "scripts": {
     "api-extractor": "api-extractor run --verbose",
+    "build": "rslib build",
     "test": "pnpm -w run test --project rspeedy",
     "test:type": "vitest --typecheck.only"
   },
@@ -67,20 +67,41 @@
     "javascript-stringify": "^2.1.0",
     "picocolors": "^1.1.1",
     "tiny-invariant": "^1.3.3",
-    "ts-blank-space": "^0.6.1",
-    "typia": "7.6.4"
+    "ts-blank-space": "^0.6.1"
   },
   "devDependencies": {
     "@lynx-js/vitest-setup": "workspace:*",
     "@rollup/plugin-typescript": "^12.1.2",
     "@rsbuild/webpack": "catalog:rsbuild",
+    "@samchon/openapi": "3.2.3",
     "eventemitter3": "^5.0.1",
+    "rsbuild-plugin-publint": "0.3.0",
     "type-fest": "^4.38.0",
-    "vitest": "^3.0.9",
+    "typia": "8.1.1",
+    "typia-rspack-plugin": "2.0.0",
+    "vitest": "^3.1.1",
     "webpack": "^5.98.0"
   },
   "engines": {
     "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js"
+      },
+      "./client": {
+        "types": "./client.d.ts"
+      },
+      "./register": {
+        "types": "./register/index.d.ts",
+        "import": "./register/index.js"
+      },
+      "./package.json": "./package.json"
+    },
+    "types": "./dist/index.d.ts"
   },
   "tsdocMetadata": "./lib/tsdoc-metadata.json"
 }

@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import {
+  dispatchNapiModuleEndpoint,
   napiModulesCallEndpoint,
   type Cloneable,
   type NapiModulesMap,
@@ -25,6 +26,10 @@ export const createNapiLoader = async (
             napiModules,
             (name: string, data: Cloneable) =>
               napiModulesCall(name, data, moduleName),
+            (func: (data: unknown) => void) => {
+              rpc.registerHandler(dispatchNapiModuleEndpoint, (data) =>
+                func(data));
+            },
           ),
       )
     ),

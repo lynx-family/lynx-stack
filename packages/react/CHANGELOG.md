@@ -1,5 +1,13 @@
 # @lynx-js/react
 
+## 0.106.2
+
+### Patch Changes
+
+- fix: prevent multiple firstScreen events when reloading before `jsReady` ([#377](https://github.com/lynx-family/lynx-stack/pull/377))
+
+- Optimize the bundle size by eliminating unnecessary code when the lazy bundle is not utilized. ([#284](https://github.com/lynx-family/lynx-stack/pull/284))
+
 ## 0.106.1
 
 ### Patch Changes

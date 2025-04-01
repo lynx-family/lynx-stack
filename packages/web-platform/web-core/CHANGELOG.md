@@ -1,5 +1,45 @@
 # @lynx-js/web-core
 
+## 0.10.0
+
+### Minor Changes
+
+- feat: rewrite the main thread Element PAPIs ([#343](https://github.com/lynx-family/lynx-stack/pull/343))
+
+  In this commit we've rewritten the main thread apis.
+
+  The most highlighted change is that
+
+  - Before this commit we send events directly to bts
+  - After this change, we send events to mts then send them to bts with some data combined.
+
+### Patch Changes
+
+- refactor: timing system ([#378](https://github.com/lynx-family/lynx-stack/pull/378))
+
+  Now we moved the timing system to the background thread.
+
+- feat: support `defaultOverflowVisible` config ([#406](https://github.com/lynx-family/lynx-stack/pull/406))
+
+- fix(web): rsbuild will bundle 2 exactly same chunk for two same `new Worker` stmt ([#372](https://github.com/lynx-family/lynx-stack/pull/372))
+
+  the bundle size will be optimized about 28.2KB
+
+- fix: inline style will be removed for value number `0` ([#368](https://github.com/lynx-family/lynx-stack/pull/368))
+
+  the inline style value could be incorrectly removed for number value `0`;
+
+  For example, `flex-shrink:0` may be ignored.
+
+- feat: The onNapiModulesCall function of lynx-view provides the fourth parameter: `lynxView`, which is the actual lynx-view DOM. ([#350](https://github.com/lynx-family/lynx-stack/pull/350))
+
+- fix: publicComponentEvent args order ([#401](https://github.com/lynx-family/lynx-stack/pull/401))
+
+- Updated dependencies [[`3a8dabd`](https://github.com/lynx-family/lynx-stack/commit/3a8dabd877084c15db1404c912dd8a19c7a0fc59), [`a521759`](https://github.com/lynx-family/lynx-stack/commit/a5217592f5aebea4b17860e729d523ecabb5f691), [`890c6c5`](https://github.com/lynx-family/lynx-stack/commit/890c6c51470c82104abb1049681f55e5d97cf9d6)]:
+  - @lynx-js/web-worker-runtime@0.10.0
+  - @lynx-js/web-constants@0.10.0
+  - @lynx-js/web-worker-rpc@0.10.0
+
 ## 0.9.1
 
 ### Patch Changes

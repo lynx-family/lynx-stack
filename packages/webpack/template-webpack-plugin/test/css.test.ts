@@ -28,6 +28,7 @@ describe('CSS', () => {
       enableCSSSelector: false,
       targetSdkVersion: '3.2',
       enableRemoveCSSScope: true,
+      enableCSSInvalidation: true,
     });
 
     expect(encode).toBeCalledTimes(1);

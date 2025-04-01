@@ -64,6 +64,7 @@ Commands:
 Usage: rspeedy dev [options]
 
 Options:
+  -b --base <base>      specify the base path of the server
   -c --config <config>  specify the configuration file, can be a relative or absolute path
   -h, --help            display help for command
 ```
@@ -94,6 +95,7 @@ Options:
 Usage: rspeedy preview [options]
 
 Options:
+  -b --base <base>      specify the base path of the server
   -c --config <config>  specify the configuration file, can be a relative or absolute path
   -h, --help            display help for command
 ```

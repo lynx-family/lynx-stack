@@ -34,6 +34,11 @@ interface CssExtractRspackPluginOptions
   enableCSSSelector: boolean;
 
   /**
+   * {@inheritdoc @lynx-js/template-webpack-plugin#LynxTemplatePluginOptions.enableCSSInvalidation}
+   */
+  enableCSSInvalidation: boolean;
+
+  /**
    * {@inheritdoc @lynx-js/template-webpack-plugin#LynxTemplatePluginOptions.targetSdkVersion}
    */
   targetSdkVersion: string;
@@ -110,7 +115,7 @@ class CssExtractRspackPlugin {
     .freeze<CssExtractRspackPluginOptions>({
       enableRemoveCSSScope: false,
       enableCSSSelector: true,
-      // TODO: version
+      enableCSSInvalidation: true,
       targetSdkVersion: '3.2',
       filename: '[name].css',
       cssPlugins: [],
@@ -245,6 +250,7 @@ class CssExtractRspackPluginImpl {
                     targetSdkVersion: options.targetSdkVersion,
                     enableCSSSelector: options.enableCSSSelector,
                     enableRemoveCSSScope: options.enableRemoveCSSScope,
+                    enableCSSInvalidation: options.enableCSSInvalidation,
                   },
                   options.cssPlugins,
                   hooks.encode.taps.length > 0
@@ -303,7 +309,7 @@ class CssExtractRspackPluginImpl {
   ) {
     const { RuntimeGlobals } = compiler.webpack;
     runtimeModule.source!.source = Buffer.concat([
-      Buffer.from(runtimeModule.source!.source),
+      Buffer.from(runtimeModule.source!.source as Buffer),
       // cssHotUpdateList
       Buffer.from(`
       ${RuntimeGlobals.require}.cssHotUpdateList = ${

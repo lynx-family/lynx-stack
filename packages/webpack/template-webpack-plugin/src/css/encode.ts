@@ -6,28 +6,41 @@ import { removeFunctionWhiteSpace } from '@lynx-js/css-serializer/dist/plugins/r
 import { cssChunksToMap } from './cssChunksToMap.js';
 import type { CSS } from '../index.js';
 
+/**
+ * The options for encoding CSS.
+ *
+ * @public
+ */
+export interface EncodeCSSOptions {
+  /**
+   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableCSSSelector}
+   */
+  enableCSSSelector: boolean;
+
+  /**
+   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableRemoveCSSScope}
+   */
+  enableRemoveCSSScope: boolean;
+
+  /**
+   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableCSSInvalidation}
+   */
+  enableCSSInvalidation: boolean;
+
+  /**
+   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableRemoveCSSScope}
+   */
+  targetSdkVersion: string;
+}
+
 export async function encodeCSS(
   cssChunks: string[],
   {
     enableCSSSelector,
     enableRemoveCSSScope,
+    enableCSSInvalidation,
     targetSdkVersion,
-  }: {
-    /**
-     * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableCSSSelector}
-     */
-    enableCSSSelector: boolean;
-
-    /**
-     * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableRemoveCSSScope}
-     */
-    enableRemoveCSSScope: boolean;
-
-    /**
-     * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableRemoveCSSScope}
-     */
-    targetSdkVersion: string;
-  },
+  }: EncodeCSSOptions,
   plugins: CSS.Plugin[] = [removeFunctionWhiteSpace()],
   // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   encode: (options: any) => Promise<{
@@ -49,6 +62,7 @@ export async function encodeCSS(
       bundleModuleMode: 'ReturnByFunction',
 
       enableCSSSelector,
+      enableCSSInvalidation,
       targetSdkVersion,
     },
     sourceContent: {

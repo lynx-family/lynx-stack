@@ -149,7 +149,7 @@ export class ReactRefreshRspackPlugin {
     runtimeModule: RuntimeModule,
   ) {
     runtimeModule.source!.source = Buffer.concat([
-      Buffer.from(runtimeModule.source!.source),
+      Buffer.from(runtimeModule.source!.source as Buffer),
 
       Buffer.from(
         fs.readFileSync(

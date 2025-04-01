@@ -8,8 +8,9 @@ import { pathToFileURL } from 'node:url'
 
 import color from 'picocolors'
 
+import { register } from '@lynx-js/rspeedy/register'
+
 import { validate } from './validate.js'
-import { register } from '../../register/index.js'
 import { debug } from '../debug.js'
 
 import type { Config } from './index.js'

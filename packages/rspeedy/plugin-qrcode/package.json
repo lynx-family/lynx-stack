@@ -33,26 +33,26 @@
   "typesVersions": {
     "*": {
       "shortcuts": [
-        "lib/shortcuts.d.ts"
+        "dist/shortcuts.d.ts"
       ]
     }
   },
   "files": [
-    "lib",
-    "!lib/**/*.js.map",
+    "dist",
     "CHANGELOG.md",
     "README.md"
   ],
   "scripts": {
     "api-extractor": "api-extractor run --verbose",
+    "build": "rslib build",
     "test": "pnpm -w run test --project rspeedy/qrcode"
   },
   "dependencies": {
-    "@clack/prompts": "^0.10.0",
     "picocolors": "^1.1.1",
     "qrcode-terminal": "^0.12.0"
   },
   "devDependencies": {
+    "@clack/prompts": "^0.10.0",
     "@lynx-js/rspeedy": "workspace:*",
     "@microsoft/api-extractor": "catalog:",
     "@rsbuild/core": "catalog:rsbuild",
@@ -60,5 +60,20 @@
   },
   "engines": {
     "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "./shortcuts": {
+        "types": "./dist/shortcuts.d.ts",
+        "default": "./dist/shortcuts.js"
+      },
+      "./package.json": "./package.json"
+    },
+    "types": "./dist/index.d.ts"
   }
 }

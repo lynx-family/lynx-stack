@@ -31,7 +31,6 @@ const color_environment = URL.createObjectURL(
     { type: 'text/javascript' },
   ),
 );
-
 const color_methods = URL.createObjectURL(
   new Blob(
     [`export default function(NapiModules, NapiModulesCall) {
@@ -39,6 +38,19 @@ const color_methods = URL.createObjectURL(
     async getColor(data, callback) {
       const handledData = await NapiModulesCall('getColor', data);
       callback(handledData);
+    },
+  };
+};`],
+    { type: 'text/javascript' },
+  ),
+);
+const event_method = URL.createObjectURL(
+  new Blob(
+    [`export default function(NapiModules, NapiModulesCall, handleDispatch) {
+  return {
+    async bindEvent() {
+      await NapiModulesCall('bindEvent');
+      handleDispatch((data) => console.log(\`bts:\${data}\`))
     },
   };
 };`],
@@ -56,12 +68,25 @@ async function run() {
   lynxView.napiModulesMap = {
     'color_environment': color_environment,
     'color_methods': color_methods,
+    'event_method': event_method,
   };
-  lynxView.onNapiModulesCall = (name, data, moduleName, lynxView) => {
+  lynxView.onNapiModulesCall = (
+    name,
+    data,
+    moduleName,
+    lynxView,
+    dispatchNapiModules,
+  ) => {
     if (name === 'getColor' && moduleName === 'color_methods') {
       return {
         data: { color: data.color, tagName: lynxView.tagName },
       };
+    }
+    if (name === 'bindEvent' && moduleName === 'event_method') {
+      document.querySelector('lynx-view')?.addEventListener('click', () => {
+        dispatchNapiModules('lynx-view');
+      });
+      return;
     }
   };
   lynxView.addEventListener('error', () => {

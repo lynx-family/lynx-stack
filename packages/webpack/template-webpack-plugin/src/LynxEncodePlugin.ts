@@ -4,6 +4,7 @@
 
 import type { Compilation, Compiler } from 'webpack';
 
+import type { EncodeCSSOptions } from './css/encode.js';
 import { LynxTemplatePlugin } from './LynxTemplatePlugin.js';
 
 import type { CSS } from './index.js';
@@ -56,22 +57,7 @@ export class LynxEncodePlugin {
    */
   static async encodeCSS(
     cssChunks: string[],
-    options: {
-      /**
-       * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableCSSSelector}
-       */
-      enableCSSSelector: boolean;
-
-      /**
-       * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableRemoveCSSScope}
-       */
-      enableRemoveCSSScope: boolean;
-
-      /**
-       * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableRemoveCSSScope}
-       */
-      targetSdkVersion: string;
-    },
+    options: EncodeCSSOptions,
     plugins?: CSS.Plugin[],
     // biome-ignore lint/suspicious/noExplicitAny: <explanation>
     encode?: (options: any) => Promise<{
@@ -267,3 +253,5 @@ export function isDebug(): boolean {
 export function isRsdoctor(): boolean {
   return process.env['RSDOCTOR'] === 'true';
 }
+
+export type { EncodeCSSOptions } from './css/encode.js';

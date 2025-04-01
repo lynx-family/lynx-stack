@@ -23,6 +23,7 @@ export function applyCSS(
   const {
     enableRemoveCSSScope,
     enableCSSSelector,
+    enableCSSInvalidation,
     targetSdkVersion,
   } = options
 
@@ -131,6 +132,7 @@ export function applyCSS(
               ...options,
               enableRemoveCSSScope: enableRemoveCSSScope ?? true,
               enableCSSSelector,
+              enableCSSInvalidation,
               targetSdkVersion,
               cssPlugins: [
                 CSSPlugins.parserPlugins.removeFunctionWhiteSpace(),
