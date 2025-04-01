@@ -35,10 +35,10 @@
   },
   "types": "./lib/index.d.ts",
   "bin": {
-    "rspeedy": "./bin/rspeedy.js"
+    "rspeedy": "./bin/rspeedy-for-dev.js"
   },
   "files": [
-    "bin",
+    "bin/rspeedy.js",
     "client",
     "dist",
     "register",
@@ -87,6 +87,9 @@
   },
   "publishConfig": {
     "access": "public",
+    "bin": {
+      "rspeedy": "./bin/rspeedy.js"
+    },
     "exports": {
       ".": {
         "types": "./dist/index.d.ts",
