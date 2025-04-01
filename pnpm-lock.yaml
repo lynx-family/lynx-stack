@@ -309,9 +309,6 @@ importers:
       ts-blank-space:
         specifier: ^0.6.1
         version: 0.6.1
-      typia:
-        specifier: 7.6.4
-        version: 7.6.4(@samchon/openapi@2.4.2)(typescript@5.7.3)
     devDependencies:
       '@lynx-js/vitest-setup':
         specifier: workspace:*
@@ -322,12 +319,21 @@ importers:
       '@rsbuild/webpack':
         specifier: catalog:rsbuild
         version: 1.2.3(@rsbuild/core@1.2.19)(@rspack/core@1.3.0(@swc/helpers@0.5.15))
+      '@samchon/openapi':
+        specifier: 3.2.3
+        version: 3.2.3
       eventemitter3:
         specifier: ^5.0.1
         version: 5.0.1
       type-fest:
         specifier: ^4.38.0
         version: 4.38.0
+      typia:
+        specifier: 8.1.1
+        version: 8.1.1(@samchon/openapi@3.2.3)(typescript@5.7.3)
+      typia-rspack-plugin:
+        specifier: 2.0.0
+        version: 2.0.0(typescript@5.7.3)(typia@8.1.1(@samchon/openapi@3.2.3)(typescript@5.7.3))
       vitest:
         specifier: ^3.0.9
         version: 3.0.9(@types/debug@4.1.12)(@types/node@22.13.5)(@vitest/ui@3.0.9)(jsdom@26.0.0)(sass-embedded@1.85.0)(terser@5.31.6)
@@ -433,6 +439,9 @@ importers:
       '@rsbuild/webpack':
         specifier: catalog:rsbuild
         version: 1.2.3(@rsbuild/core@1.2.19)(@rspack/core@1.3.0(@swc/helpers@0.5.15))
+      '@samchon/openapi':
+        specifier: 3.2.3
+        version: 3.2.3
       tailwindcss:
         specifier: ^3.4.17
         version: 3.4.17
@@ -440,11 +449,11 @@ importers:
         specifier: ^4.38.0
         version: 4.38.0
       typia:
-        specifier: 7.6.4
-        version: 7.6.4(@samchon/openapi@2.4.2)(typescript@5.7.3)
+        specifier: 8.1.1
+        version: 8.1.1(@samchon/openapi@3.2.3)(typescript@5.7.3)
       typia-rspack-plugin:
-        specifier: ^1.0.2
-        version: 1.0.2(typescript@5.7.3)(typia@7.6.4(@samchon/openapi@2.4.2)(typescript@5.7.3))
+        specifier: 2.0.0
+        version: 2.0.0(typescript@5.7.3)(typia@8.1.1(@samchon/openapi@3.2.3)(typescript@5.7.3))
 
   packages/rspeedy/plugin-react-alias:
     dependencies:
@@ -2895,8 +2904,8 @@ packages:
   '@rushstack/ts-command-line@4.23.5':
     resolution: {integrity: sha512-jg70HfoK44KfSP3MTiL5rxsZH7X1ktX3cZs9Sl8eDu1/LxJSbPsh0MOFRC710lIuYYSgxWjI5AjbCBAl7u3RxA==}
 
-  '@samchon/openapi@2.4.2':
-    resolution: {integrity: sha512-uKoIzW7gHGTK1P4BQ+JSoHzSvLSPZs/J08KfEmci9cfVoNDb+5kmuDnoQwPGZW+dLCNoCSocgDDzLWApMgmaxw==}
+  '@samchon/openapi@3.2.3':
+    resolution: {integrity: sha512-CQVa92i3hvfZftd6mULs13/WRib5a5/5qfEH/L6e5gjSSHIXrKMmwVPawi447F/bQiEd4EPE+dPmGU3lvEsVqw==}
 
   '@selderee/plugin-htmlparser2@0.11.0':
     resolution: {integrity: sha512-P33hHGdldxGabLFjPPpaTxVolMrzrcegejx+0GxjrIb9Zv48D8yAIA/QTDR2dFl7Uz7urX8aX6+5bCZslr+gWQ==}
@@ -3448,6 +3457,11 @@ packages:
 
   acorn@8.14.0:
     resolution: {integrity: sha512-cl669nCJTZBsL97OF4kUQm5g5hC2uihk0NxY3WENAC0TYdILVkAyHymAntgxGkl7K+t0cXIrH5siy5S4XkFycA==}
+    engines: {node: '>=0.4.0'}
+    hasBin: true
+
+  acorn@8.14.1:
+    resolution: {integrity: sha512-OvQ/2pUDKmgfCg++xsTX1wGxfTaszcHVcTctW4UJB4hibJx2HXxxO5UmVgyjMa+ZDsiaf5wWLXYpRWMmBI0QHg==}
     engines: {node: '>=0.4.0'}
     hasBin: true
 
@@ -7932,19 +7946,19 @@ packages:
     engines: {node: '>=14.17'}
     hasBin: true
 
-  typia-rspack-plugin@1.0.2:
-    resolution: {integrity: sha512-5vCunp+l8A985K0An7yjgTKCU+SUA4iC9OGbaa8+OifaqDECQKBVH61wZy927dkcnzK8z/aFgJc18GiSTCvuiw==}
+  typia-rspack-plugin@2.0.0:
+    resolution: {integrity: sha512-3csV7TwMVaPD4gWVgFz0o7MIdX2HdkNRBOuN1zwtfpvly46KqUS3qNHCSPQM2jsiZywwFKVrBfhWuZObXrPPCA==}
     engines: {node: '>=18'}
     peerDependencies:
       typescript: '*'
       typia: '*'
 
-  typia@7.6.4:
-    resolution: {integrity: sha512-Z3AcvGBjS7Dc7+iAG2VhsT0NIv3HMoXVTJ3F7Pgth8z7rhQu1JnyS8GGqqWdKk5ROvOgALEVEWmWv3Lym2eBIg==}
+  typia@8.1.1:
+    resolution: {integrity: sha512-R8iLPX52/tY/C/Ff7RhSsiV56JR21jLKbt1CShlrhKIJ6xoGejbXq8+y9RR/vLOo5WmZXi88yb2/zDHWyms2BQ==}
     hasBin: true
     peerDependencies:
-      '@samchon/openapi': '>=2.4.2 <3.0.0'
-      typescript: '>=4.8.0 <5.8.0'
+      '@samchon/openapi': '>=3.2.2 <4.0.0'
+      typescript: '>=4.8.0 <5.9.0'
 
   unbox-primitive@1.0.2:
     resolution: {integrity: sha512-61pPlCD9h51VoreyJ0BReideM3MDKMKnh6+V9L08331ipq6Q8OFXZYiqP6n/tbHx4s5I9uRhcye6BrbkizkBDw==}
@@ -8024,8 +8038,8 @@ packages:
     resolution: {integrity: sha512-4/u/j4FrCKdi17jaxuJA0jClGxB1AvU2hw/IuayPc4ay1XGaJs/rbb4v5WKwAjNifjmXK9PIFyuPiaK8azyR9w==}
     engines: {node: '>=14.0.0'}
 
-  unplugin@2.2.0:
-    resolution: {integrity: sha512-m1ekpSwuOT5hxkJeZGRxO7gXbXT3gF26NjQ7GdVHoLoF8/nopLcd/QfPigpCy7i51oFHiRJg/CyHhj4vs2+KGw==}
+  unplugin@2.2.2:
+    resolution: {integrity: sha512-Qp+iiD+qCRnUek+nDoYvtWX7tfnYyXsrOnJ452FRTgOyKmTM7TUJ3l+PLPJOOWPTUyKISKp4isC5JJPSXUjGgw==}
     engines: {node: '>=18.12.0'}
 
   unrs-resolver@1.3.2:
@@ -10490,7 +10504,7 @@ snapshots:
     transitivePeerDependencies:
       - '@types/node'
 
-  '@samchon/openapi@2.4.2': {}
+  '@samchon/openapi@3.2.3': {}
 
   '@selderee/plugin-htmlparser2@0.11.0':
     dependencies:
@@ -11104,6 +11118,8 @@ snapshots:
       acorn: 8.14.0
 
   acorn@8.14.0: {}
+
+  acorn@8.14.1: {}
 
   agent-base@7.1.3: {}
 
@@ -16262,15 +16278,15 @@ snapshots:
 
   typescript@5.7.3: {}
 
-  typia-rspack-plugin@1.0.2(typescript@5.7.3)(typia@7.6.4(@samchon/openapi@2.4.2)(typescript@5.7.3)):
+  typia-rspack-plugin@2.0.0(typescript@5.7.3)(typia@8.1.1(@samchon/openapi@3.2.3)(typescript@5.7.3)):
     dependencies:
       typescript: 5.7.3
-      typia: 7.6.4(@samchon/openapi@2.4.2)(typescript@5.7.3)
-      unplugin: 2.2.0
+      typia: 8.1.1(@samchon/openapi@3.2.3)(typescript@5.7.3)
+      unplugin: 2.2.2
 
-  typia@7.6.4(@samchon/openapi@2.4.2)(typescript@5.7.3):
+  typia@8.1.1(@samchon/openapi@3.2.3)(typescript@5.7.3):
     dependencies:
-      '@samchon/openapi': 2.4.2
+      '@samchon/openapi': 3.2.3
       commander: 10.0.1
       comment-json: 4.2.5
       inquirer: 8.2.6
@@ -16377,9 +16393,9 @@ snapshots:
       acorn: 8.14.0
       webpack-virtual-modules: 0.6.2
 
-  unplugin@2.2.0:
+  unplugin@2.2.2:
     dependencies:
-      acorn: 8.14.0
+      acorn: 8.14.1
       webpack-virtual-modules: 0.6.2
 
   unrs-resolver@1.3.2:

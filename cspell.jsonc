@@ -96,6 +96,7 @@
     "tseslint", // https://github.com/typescript-eslint/typescript-eslint
     "publint", // https://github.com/bluwy/publint
     "rustc",
+    "samchon", // https://github.com/samchon/openapi
     "serde", // https://github.com/serde-rs/serde
     "turborepo", // https://github.com/vercel/turbo
     "typecheck", // vitest uses `--typecheck`

@@ -89,6 +89,17 @@
       "matchPackageNames": ["/eslint/", "/^@cspell/*/", "cspell"],
     },
     {
+      "groupName": "Typia",
+      "groupSlug": "typia",
+      "matchPackageNames": [
+        "typia",
+        "rspack-plugin-typia",
+        "@samchon/openapi",
+      ],
+      "automerge": false,
+      "rangeStrategy": "pin",
+    },
+    {
       "matchDepTypes": [
         "peerDependencies",
       ],
