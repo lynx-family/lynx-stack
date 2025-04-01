@@ -33,7 +33,7 @@ export default defineConfig({
       },
       plugins: [
         new TypiaRspackPlugin({
-          cache: true,
+          cache: false,
           include: './src/config/validate.ts',
           tsconfig: './tsconfig.build.json',
         }),
