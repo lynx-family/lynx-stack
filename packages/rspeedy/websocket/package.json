@@ -48,7 +48,7 @@
   },
   "devDependencies": {
     "@microsoft/api-extractor": "catalog:",
-    "@types/ws": "^8.18.0",
+    "@types/ws": "^8.18.1",
     "ws": "^8.18.1"
   },
   "engines": {
