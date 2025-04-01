@@ -44,6 +44,9 @@ patchedDependencies:
   '@rollup/plugin-typescript':
     hash: 926ba262ec682d27369f1a8648a0dfb657fb5f1b28539ca3628d292276c91c3d
     path: patches/@rollup__plugin-typescript.patch
+  qrcode-terminal:
+    hash: 68024eba5b12e002fd49ff4978670cfa0f4fea3db213c0f3d6ccd3cadf8d6d4e
+    path: patches/qrcode-terminal.patch
 
 importers:
 
@@ -361,13 +364,6 @@ importers:
         version: link:../core
 
   packages/rspeedy/plugin-qrcode:
-    dependencies:
-      picocolors:
-        specifier: ^1.1.1
-        version: 1.1.1
-      qrcode-terminal:
-        specifier: ^0.12.0
-        version: 0.12.0
     devDependencies:
       '@clack/prompts':
         specifier: ^0.10.0
@@ -384,6 +380,12 @@ importers:
       '@types/qrcode-terminal':
         specifier: ^0.12.2
         version: 0.12.2
+      picocolors:
+        specifier: ^1.1.1
+        version: 1.1.1
+      qrcode-terminal:
+        specifier: ^0.12.0
+        version: 0.12.0(patch_hash=68024eba5b12e002fd49ff4978670cfa0f4fea3db213c0f3d6ccd3cadf8d6d4e)
 
   packages/rspeedy/plugin-react:
     dependencies:
@@ -15085,7 +15087,7 @@ snapshots:
     dependencies:
       '@types/offscreencanvas': 2019.7.3
 
-  qrcode-terminal@0.12.0: {}
+  qrcode-terminal@0.12.0(patch_hash=68024eba5b12e002fd49ff4978670cfa0f4fea3db213c0f3d6ccd3cadf8d6d4e): {}
 
   qs@6.13.0:
     dependencies:
