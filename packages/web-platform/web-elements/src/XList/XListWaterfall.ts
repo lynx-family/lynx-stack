@@ -40,10 +40,10 @@ export class XListWaterfall
         'part',
         `${WATERFALL_SLOT}-container`,
       );
-      slotContainer.setAttribute('id', `${WATERFALL_SLOT}-${i}-container`);
+      slotContainer.setAttribute('style', `contain: layout;`);
+
       const slot = document.createElement('slot');
       slot.setAttribute('name', `${WATERFALL_SLOT}-${i}`);
-      slot.setAttribute('style', `contain: strict;`);
       slotContainer.appendChild(slot);
       return slotContainer;
     });
@@ -65,24 +65,30 @@ export class XListWaterfall
     this.#getListContainer().removeChild(this.#getWaterfallCOntent());
   };
 
-  #layoutListItem = (spanCount: number) => {
+  #layoutListItem = (spanCount: number, isScrollVertical: boolean) => {
     // First, layout each track
-    const heights = new Array(spanCount).fill(0);
-    const listHeight = this.#dom.getBoundingClientRect().height;
+    const listMeasurement = isScrollVertical
+      ? this.#dom.getBoundingClientRect().height
+      : this.#dom.getBoundingClientRect().width;
+    const measurements = new Array(spanCount).fill(0);
+
     for (let i = 0; i < this.#dom.children.length; i++) {
       const listItem = this.#dom.children[i];
       // Find the shortest column
       let shortestColumnIndex = 0;
       for (let j = 1; j < spanCount; j++) {
-        if (heights[j] < heights[shortestColumnIndex]) {
+        if (measurements[j] < measurements[shortestColumnIndex]) {
           shortestColumnIndex = j;
         }
       }
-      // Add item to the shortest column and update its height
-      heights[shortestColumnIndex] += listItem?.getBoundingClientRect()
-        .height
+      // Add item to the shortest column and update its measurement
+      measurements[shortestColumnIndex] += (isScrollVertical
+        ? listItem?.getBoundingClientRect()
+          .height
+        : listItem?.getBoundingClientRect()
+          .width)
         || listItem?.getAttribute('estimated-main-axis-size-px')
-        || listHeight;
+        || listMeasurement;
       listItem?.setAttribute(
         WATERFALL_SLOT,
         `${WATERFALL_SLOT}-${shortestColumnIndex}`,
@@ -101,14 +107,17 @@ export class XListWaterfall
   @registerAttributeHandler('list-type', false)
   #handlerListType(newVal: string | null) {
     if (newVal === 'waterfall') {
+      const spanCount = parseFloat(
+        this.#dom.getAttribute('span-count')
+          || this.#dom.getAttribute('column-count')
+          || '',
+      ) || 1;
+      const scrollOrientation = this.#dom.getAttribute('scroll-orientation')
+        || 'vertical';
+
       requestAnimationFrame(() => {
-        const spanCount = parseFloat(
-          this.#dom.getAttribute('span-count')
-            || this.#dom.getAttribute('column-count')
-            || '',
-        ) || 1;
         this.#createWaterfallContainer(spanCount);
-        this.#layoutListItem(spanCount);
+        this.#layoutListItem(spanCount, scrollOrientation === 'vertical');
 
         this.#childrenObserver = new MutationObserver((mutationList) => {
           const mutation = mutationList?.[0]!;
@@ -117,7 +126,7 @@ export class XListWaterfall
             // let the inserted list-item rendered, otherwise its width and height are not determined yet.
             // requestAnimationFrame is called before inserted list-item is rendered, so setTimeout is used here
             setTimeout(() => {
-              this.#layoutListItem(spanCount);
+              this.#layoutListItem(spanCount, scrollOrientation === 'vertical');
             });
           }
         });

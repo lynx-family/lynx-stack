@@ -43,13 +43,13 @@
   <body>
     <script src="/web-elements.js" defer></script>
     <x-view class="page" style="flex-direction: column;">
-      <x-list list-type="waterfall" span-count="2">
+      <x-list list-type="waterfall" span-count="2" sticky="true">
         <list-item item-key="1" id="1">
           <x-view class="item" part="item" style="height: 400px;">
             1
           </x-view>
         </list-item>
-        <list-item item-key="2" id="2">
+        <list-item item-key="2" id="2" sticky-top>
           <x-view class="item" part="item" style="height: 185px;">
             2
           </x-view>

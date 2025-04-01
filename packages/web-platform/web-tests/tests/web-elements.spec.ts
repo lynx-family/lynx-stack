@@ -2115,7 +2115,7 @@ test.describe('web-elements test suite', () => {
       await page.mouse.move(100, 100);
       await page.mouse.wheel(300, 0);
       await diffScreenShot(page, title, 'wheel-x-not-wheelable');
-      await page.mouse.wheel(0, 300);
+      await page.mouse.wheel(0, 3000);
       await diffScreenShot(page, title, 'wheel-y-wheelable');
     });
     test(
@@ -2141,6 +2141,28 @@ test.describe('web-elements test suite', () => {
         });
         await wait(1000);
         await diffScreenShot(page, title, 'insert');
+      },
+    );
+    test(
+      'scroll-orientation-waterfall',
+      async ({ page, browserName }, { titlePath }) => {
+        const title = getTitle(titlePath);
+        await gotoWebComponentPage(page, title);
+        await diffScreenShot(page, title, 'initial');
+        if (browserName === 'webkit') test.skip(); // cannot wheel
+        await page.mouse.move(100, 100);
+        await page.mouse.wheel(0, 300);
+        await diffScreenShot(page, title, 'wheel-y-not-wheelable');
+        await page.mouse.wheel(3000, 0);
+        await diffScreenShot(page, title, 'wheel-x-wheelable');
+      },
+    );
+    test(
+      'axios-gap-waterfall',
+      async ({ page }, { titlePath }) => {
+        const title = getTitle(titlePath);
+        await gotoWebComponentPage(page, title);
+        await diffScreenShot(page, title, 'index');
       },
     );
   });
