@@ -53,14 +53,17 @@ it("should hot update style sheet when enable css selector", () => new Promise((
         /** content */ expect.toBeBase64EncodedMatching(
           '"enableRemoveCSSScope":true',
         ),
+        /** entry */ undefined,
       )
       expect(replaceStyleSheetByIdWithBase64).toBeCalledWith(
         /** cssId */ 0,
         /** content */ expect.toBeBase64EncodedMatching('foo'),
+        /** entry */ undefined,
       )
       expect(replaceStyleSheetByIdWithBase64).toBeCalledWith(
         /** cssId */ 0,
         /** content */ expect.toBeBase64EncodedMatching('blue'),
+        /** entry */ undefined,
       )
       expect(replaceStyleSheetByIdWithBase64).toBeCalledTimes(1)
       NEXT(
@@ -72,14 +75,17 @@ it("should hot update style sheet when enable css selector", () => new Promise((
             /** content */ expect.toBeBase64EncodedMatching(
               '"enableRemoveCSSScope":true',
             ),
+            /** entry */ undefined,
           )
           expect(replaceStyleSheetByIdWithBase64).toBeCalledWith(
             /** cssId */ 0,
             /** content */ expect.toBeBase64EncodedMatching('bar'),
+            /** entry */ undefined,
           )
           expect(replaceStyleSheetByIdWithBase64).toBeCalledWith(
             /** cssId */ 0,
             /** content */ expect.toBeBase64EncodedMatching('blue'),
+            /** entry */ undefined,
           )
           done()
         }),

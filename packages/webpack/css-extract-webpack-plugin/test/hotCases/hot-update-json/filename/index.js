@@ -56,15 +56,17 @@ it('should generate css.hot-update.json', () =>
         resolve()
       }
     }
+    let prevHash = __webpack_hash__
+    
     NEXT(
       update(done, true, async () => {
         const { default: styles } = await import('./entry.js')
         expect(styles).toHaveProperty('foo')
         expect(styles.foo).toStrictEqual(expect.any(String))
 
-        const jsonPath = path.join(__dirname, 'main', 'main.css.hot-update.json')
+        const jsonPath = path.join(__dirname, 'main', `main.${prevHash}.css.hot-update.json`)
         expect(fs.existsSync(jsonPath)).toBeTruthy()
-        const { content } = __non_webpack_require__('./main/main.css.hot-update.json')
+        const { content } = __non_webpack_require__(`./main/main.${prevHash}.css.hot-update.json`)
 
         expect(content).toBeBase64EncodedMatching(styles.foo)
         expect(content).toBeBase64EncodedMatching(
@@ -72,15 +74,17 @@ it('should generate css.hot-update.json', () =>
         )
         expect(content).toBeBase64EncodedMatching('blue')
 
+        prevHash = __webpack_hash__
+
         NEXT(
           update(done, true, async () => {
             const { default: styles } = await import('./entry.js')
             expect(styles).toHaveProperty('bar')
             expect(styles['bar']).toStrictEqual(expect.any(String))
 
-            const jsonPath = path.join(__dirname, 'main', 'main.css.hot-update.json')
+            const jsonPath = path.join(__dirname, 'main', `main.${prevHash}.css.hot-update.json`)
             expect(fs.existsSync(jsonPath)).toBeTruthy()
-            const { content } = __non_webpack_require__('./main/main.css.hot-update.json')
+            const { content } = __non_webpack_require__(`./main/main.${prevHash}.css.hot-update.json`)
 
             expect(content).toBeBase64EncodedMatching(styles.bar)
             expect(content).toBeBase64EncodedMatching(

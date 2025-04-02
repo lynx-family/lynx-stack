@@ -66,16 +66,19 @@ it('should hot update style sheet with default options', () =>
           /** content */ expect.toBeBase64EncodedMatching(
             styles.foo,
           ),
+          /** entry */ undefined,
         )
         expect(replaceStyleSheetByIdWithBase64).toBeCalledWith(
           /** cssId */ 0,
           /** content */ expect.toBeBase64EncodedMatching(
             '"enableRemoveCSSScope":false',
           ),
+          /** entry */ undefined,
         )
         expect(replaceStyleSheetByIdWithBase64).toBeCalledWith(
           /** cssId */ 0,
           /** content */ expect.toBeBase64EncodedMatching('blue'),
+          /** entry */ undefined,
         )
         expect(replaceStyleSheetByIdWithBase64).toBeCalledTimes(1)
         replaceStyleSheetByIdWithBase64.mockClear()
@@ -91,6 +94,7 @@ it('should hot update style sheet with default options', () =>
               /** content */ expect.toBeBase64EncodedMatching(
                 styles.bar,
               ),
+              /** entry */ undefined,
             )
             expect(replaceStyleSheetByIdWithBase64).toBeCalledTimes(2)
             expect(replaceStyleSheetByIdWithBase64).toBeCalledWith(
@@ -98,10 +102,12 @@ it('should hot update style sheet with default options', () =>
               /** content */ expect.toBeBase64EncodedMatching(
                 '"enableRemoveCSSScope":false',
               ),
+              /** entry */ undefined,
             )
             expect(replaceStyleSheetByIdWithBase64).toBeCalledWith(
               /** cssId */ 0,
               /** content */ expect.toBeBase64EncodedMatching('blue'),
+              /** entry */ undefined,
             )
             done()
           }),

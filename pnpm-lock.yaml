@@ -810,6 +810,9 @@ importers:
       '@lynx-js/test-tools':
         specifier: workspace:*
         version: link:../test-tools
+      '@lynx-js/vitest-setup':
+        specifier: workspace:*
+        version: link:../../tools/vitest-setup
       '@microsoft/api-extractor':
         specifier: 'catalog:'
         version: 7.51.1(@types/node@22.13.16)
