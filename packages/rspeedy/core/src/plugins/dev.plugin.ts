@@ -167,7 +167,7 @@ export async function findIp(
 
   let host: string | undefined
 
-  Object.values(os.networkInterfaces())
+  const networks = Object.values(os.networkInterfaces())
     .flatMap((networks) => networks ?? [])
     .filter((network) => {
       if (!network || !network.address) {
@@ -192,12 +192,16 @@ export async function findIp(
 
       return network.address
     })
-    .forEach((network) => {
-      host = network.address
-      if (host.includes(':')) {
-        host = `[${host}]`
-      }
-    })
+
+  if (networks.length > 0) {
+    // Take the first network found
+    // See: https://github.com/webpack/webpack-dev-server/pull/5411/
+    host = networks[0]!.address
+
+    if (host.includes(':')) {
+      host = `[${host}]`
+    }
+  }
 
   if (!host) {
     throw new Error(`No valid IP found`)
