@@ -18,6 +18,8 @@ beforeAll(() => {
   setupPage(__CreatePage('0', 0));
   injectUpdateMainThread();
   replaceCommitHook();
+
+  globalThis.__TESTING_FORCE_RENDER_TO_OPCODE__ = true;
 });
 
 beforeEach(() => {
@@ -864,33 +866,7 @@ describe('WorkletEvent in list', () => {
         <page
           cssId="default-entry-from-native:0"
         >
-          <list
-            update-list-info={
-              [
-                {
-                  "insertAction": [
-                    {
-                      "item-key": 0,
-                      "position": 0,
-                      "type": "__Card__:__snapshot_a94a8_test_13",
-                    },
-                    {
-                      "item-key": 1,
-                      "position": 1,
-                      "type": "__Card__:__snapshot_a94a8_test_13",
-                    },
-                    {
-                      "item-key": 2,
-                      "position": 2,
-                      "type": "__Card__:__snapshot_a94a8_test_13",
-                    },
-                  ],
-                  "removeAction": [],
-                  "updateAction": [],
-                },
-              ]
-            }
-          />
+          <list />
         </page>
       `);
     }
