@@ -134,6 +134,8 @@ export function defineConfig(config: Config): Config;
 export interface Dev {
     assetPrefix?: string | boolean | undefined;
     client?: DevClient | undefined;
+    hmr?: boolean | undefined;
+    liveReload?: boolean | undefined;
     progressBar?: boolean | {
         id?: string;
     } | undefined;

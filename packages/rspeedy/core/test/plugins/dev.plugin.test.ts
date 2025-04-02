@@ -356,6 +356,88 @@ describe('Plugins - Dev', () => {
     expect(config.output?.publicPath).not.toBe(`http://example.com:${port}`)
   })
 
+  test('dev.hmr default', async () => {
+    const rsbuild = await createStubRspeedy({})
+
+    const config = await rsbuild.unwrapConfig()
+
+    expect(config.resolve?.alias).toHaveProperty(
+      '@lynx-js/webpack-dev-transport/client',
+      expect.stringContaining('hot=true'),
+    )
+  })
+
+  test('dev.hmr: false', async () => {
+    const rsbuild = await createStubRspeedy({
+      dev: {
+        hmr: false,
+      },
+    })
+
+    const config = await rsbuild.unwrapConfig()
+
+    expect(config.resolve?.alias).toHaveProperty(
+      '@lynx-js/webpack-dev-transport/client',
+      expect.stringContaining('hot=false'),
+    )
+  })
+
+  test('dev.hmr: true', async () => {
+    const rsbuild = await createStubRspeedy({
+      dev: {
+        hmr: true,
+      },
+    })
+
+    const config = await rsbuild.unwrapConfig()
+
+    expect(config.resolve?.alias).toHaveProperty(
+      '@lynx-js/webpack-dev-transport/client',
+      expect.stringContaining('hot=true'),
+    )
+  })
+
+  test('dev.liveReload default', async () => {
+    const rsbuild = await createStubRspeedy({})
+
+    const config = await rsbuild.unwrapConfig()
+
+    expect(config.resolve?.alias).toHaveProperty(
+      '@lynx-js/webpack-dev-transport/client',
+      expect.stringContaining('live-reload=true'),
+    )
+  })
+
+  test('dev.liveReload: false', async () => {
+    const rsbuild = await createStubRspeedy({
+      dev: {
+        liveReload: false,
+      },
+    })
+
+    const config = await rsbuild.unwrapConfig()
+
+    expect(config.resolve?.alias).toHaveProperty(
+      '@lynx-js/webpack-dev-transport/client',
+      expect.stringContaining('live-reload=false'),
+    )
+  })
+
+  test('dev.liveReload: true', async () => {
+    const rsbuild = await createStubRspeedy({
+      dev: {
+        liveReload: true,
+      },
+    })
+
+    const config = await rsbuild.unwrapConfig()
+
+    expect(config.resolve?.alias).toHaveProperty(
+      '@lynx-js/webpack-dev-transport/client',
+      expect.stringContaining('live-reload=true'),
+    )
+  })
+
   test('websocketTransport', async () => {
     const rsbuild = await createStubRspeedy({
       dev: {

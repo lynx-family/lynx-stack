@@ -34,6 +34,16 @@ describe('Config - Dev', () => {
     })
   })
 
+  test('hmr', () => {
+    assertType<Dev>({ hmr: true })
+    assertType<Dev>({ hmr: false })
+  })
+
+  test('liveReload', () => {
+    assertType<Dev>({ liveReload: true })
+    assertType<Dev>({ liveReload: false })
+  })
+
   test('watchFiles', () => {
     assertType<Dev>({ watchFiles: { paths: '' } })
     assertType<Dev>({ watchFiles: { paths: [] } })

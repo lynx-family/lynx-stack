@@ -116,7 +116,7 @@ export function pluginDev(
                   hostname
                 }&port=${
                   api.context.devServer?.port
-                }&pathname=/rsbuild-hmr&hot=true&live-reload=true&protocol=ws`
+                }&pathname=/rsbuild-hmr&hot=${options?.hmr ?? true}&live-reload=${options?.liveReload ?? true}&protocol=ws`
               )
               .set(
                 '@rspack/core/hot/dev-server',
