@@ -172,7 +172,6 @@ class ReactWebpackPlugin {
     new EnvironmentPlugin({
       // Default values of null and undefined behave differently.
       // Use undefined for variables that must be provided during bundling, or null if they are optional.
-      NODE_ENV: null,
       DEBUG: null,
     }).apply(compiler);
 

@@ -7,6 +7,7 @@ at runSyncOrAsync2 (<PROJECT_ROOT>/node_modules/<PNPM_INNER>/@rspack/core/dist/i
 at node:internal/util:<LINE:COLUMN>
 at new Promise (<anonymous>)
 at runSyncOrAsync2 (node:internal/util:<LINE:COLUMN>)
+at isomorphoicRun (<PROJECT_ROOT>/node_modules/<PNPM_INNER>/@rspack/core/dist/index.js:<LINE:COLUMN>)
 at runLoaders (<PROJECT_ROOT>/node_modules/<PNPM_INNER>/@rspack/core/dist/index.js:<LINE:COLUMN>)
 
 ERROR in ./jsx/namespace-name/index.jsx <LINE:COLUMN>-25
