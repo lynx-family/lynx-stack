@@ -5,6 +5,7 @@
 import { createRequire } from 'node:module';
 
 import type {
+  Chunk,
   Compiler,
   CssExtractRspackPluginOptions as ExternalCssExtractRspackPluginOptions,
 } from '@rspack/core';
@@ -205,17 +206,35 @@ ${RuntimeGlobals.require}.cssHotUpdateList = ${
           }
         }
 
-        compilation.hooks.runtimeRequirementInTree.for(
-          RuntimeGlobals.hmrDownloadManifest,
-        )
-          .tap(this.name, (chunk, runtimeRequirements) => {
-            // We require publicPath to get css.hot-update.json
-            runtimeRequirements.add(RuntimeGlobals.publicPath);
-            compilation.addRuntimeModule(
-              chunk,
-              new CSSHotUpdateRuntimeModule(this.hash),
-            );
-          });
+        const onceForChunkSet = new WeakSet<Chunk>();
+        const handler = (chunk: Chunk, runtimeRequirements: Set<string>) => {
+          if (onceForChunkSet.has(chunk)) return;
+          onceForChunkSet.add(chunk);
+          runtimeRequirements.add(RuntimeGlobals.publicPath);
+          compilation.addRuntimeModule(
+            chunk,
+            new CSSHotUpdateRuntimeModule(this.hash),
+          );
+        };
+
+        compilation.hooks.runtimeRequirementInTree
+          .for(RuntimeGlobals.ensureChunkHandlers)
+          .tap(this.name, handler);
+        compilation.hooks.runtimeRequirementInTree
+          .for(RuntimeGlobals.hmrDownloadUpdateHandlers)
+          .tap(this.name, handler);
+        compilation.hooks.runtimeRequirementInTree
+          .for(RuntimeGlobals.hmrDownloadManifest)
+          .tap(this.name, handler);
+        compilation.hooks.runtimeRequirementInTree
+          .for(RuntimeGlobals.baseURI)
+          .tap(this.name, handler);
+        compilation.hooks.runtimeRequirementInTree
+          .for(RuntimeGlobals.externalInstallChunk)
+          .tap(this.name, handler);
+        compilation.hooks.runtimeRequirementInTree
+          .for(RuntimeGlobals.onChunksLoaded)
+          .tap(this.name, handler);
 
         compilation.hooks.processAssets.tapPromise(
           {
