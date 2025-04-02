@@ -38,12 +38,16 @@ function updateSpread(snapshot: SnapshotInstance, index: number, oldValue: any, 
     const oldPlatformInfo = pick(oldValue, platformInfoAttributes);
     const platformInfo = pick(newValue, platformInfoAttributes);
     if (!isDirectOrDeepEqual(oldPlatformInfo, platformInfo)) {
-      (__pendingListUpdates.values[list.__id] ??= new ListUpdateInfoRecording(list)).onSetAttribute(
+      (list.__ListUpdateInfo ??= new ListUpdateInfoRecording(list)).onSetAttribute(
         snapshot,
         platformInfo,
         oldPlatformInfo,
       );
       snapshot.__listItemPlatformInfo = platformInfo;
+
+      if (list.__element_root) {
+        __pendingListUpdates.values[list.__id] ??= list.__ListUpdateInfo;
+      }
 
       // The fakeSnapshot is missing `__parent`, so no `ListUpdateInfoRecording#onSetAttribute` will be called
       const fakeSnapshot = {

@@ -858,6 +858,33 @@ describe('reload', () => {
                       "position": 0,
                       "type": "__Card__:__snapshot_a94a8_test_8",
                     },
+                  ],
+                  "removeAction": [],
+                  "updateAction": [],
+                },
+                {
+                  "insertAction": [
+                    {
+                      "item-key": 0,
+                      "position": 0,
+                      "type": "__Card__:__snapshot_a94a8_test_8",
+                    },
+                    {
+                      "item-key": 1,
+                      "position": 1,
+                      "type": "__Card__:__snapshot_a94a8_test_8",
+                    },
+                  ],
+                  "removeAction": [],
+                  "updateAction": [],
+                },
+                {
+                  "insertAction": [
+                    {
+                      "item-key": 0,
+                      "position": 0,
+                      "type": "__Card__:__snapshot_a94a8_test_8",
+                    },
                     {
                       "item-key": 1,
                       "position": 1,
@@ -910,6 +937,33 @@ describe('reload', () => {
           <list
             update-list-info={
               [
+                {
+                  "insertAction": [
+                    {
+                      "item-key": 0,
+                      "position": 0,
+                      "type": "__Card__:__snapshot_a94a8_test_8",
+                    },
+                  ],
+                  "removeAction": [],
+                  "updateAction": [],
+                },
+                {
+                  "insertAction": [
+                    {
+                      "item-key": 0,
+                      "position": 0,
+                      "type": "__Card__:__snapshot_a94a8_test_8",
+                    },
+                    {
+                      "item-key": 1,
+                      "position": 1,
+                      "type": "__Card__:__snapshot_a94a8_test_8",
+                    },
+                  ],
+                  "removeAction": [],
+                  "updateAction": [],
+                },
                 {
                   "insertAction": [
                     {
@@ -993,6 +1047,33 @@ describe('reload', () => {
                       "position": 0,
                       "type": "__Card__:__snapshot_a94a8_test_8",
                     },
+                  ],
+                  "removeAction": [],
+                  "updateAction": [],
+                },
+                {
+                  "insertAction": [
+                    {
+                      "item-key": 0,
+                      "position": 0,
+                      "type": "__Card__:__snapshot_a94a8_test_8",
+                    },
+                    {
+                      "item-key": 1,
+                      "position": 1,
+                      "type": "__Card__:__snapshot_a94a8_test_8",
+                    },
+                  ],
+                  "removeAction": [],
+                  "updateAction": [],
+                },
+                {
+                  "insertAction": [
+                    {
+                      "item-key": 0,
+                      "position": 0,
+                      "type": "__Card__:__snapshot_a94a8_test_8",
+                    },
                     {
                       "item-key": 1,
                       "position": 1,
@@ -1048,6 +1129,33 @@ describe('reload', () => {
           <list
             update-list-info={
               [
+                {
+                  "insertAction": [
+                    {
+                      "item-key": 0,
+                      "position": 0,
+                      "type": "__Card__:__snapshot_a94a8_test_8",
+                    },
+                  ],
+                  "removeAction": [],
+                  "updateAction": [],
+                },
+                {
+                  "insertAction": [
+                    {
+                      "item-key": 0,
+                      "position": 0,
+                      "type": "__Card__:__snapshot_a94a8_test_8",
+                    },
+                    {
+                      "item-key": 1,
+                      "position": 1,
+                      "type": "__Card__:__snapshot_a94a8_test_8",
+                    },
+                  ],
+                  "removeAction": [],
+                  "updateAction": [],
+                },
                 {
                   "insertAction": [
                     {
@@ -1350,6 +1458,33 @@ describe('firstScreenSyncTiming - jsReady', () => {
                       "position": 0,
                       "type": "__Card__:__snapshot_a94a8_test_8",
                     },
+                  ],
+                  "removeAction": [],
+                  "updateAction": [],
+                },
+                {
+                  "insertAction": [
+                    {
+                      "item-key": 0,
+                      "position": 0,
+                      "type": "__Card__:__snapshot_a94a8_test_8",
+                    },
+                    {
+                      "item-key": 1,
+                      "position": 1,
+                      "type": "__Card__:__snapshot_a94a8_test_8",
+                    },
+                  ],
+                  "removeAction": [],
+                  "updateAction": [],
+                },
+                {
+                  "insertAction": [
+                    {
+                      "item-key": 0,
+                      "position": 0,
+                      "type": "__Card__:__snapshot_a94a8_test_8",
+                    },
                     {
                       "item-key": 1,
                       "position": 1,
@@ -1383,6 +1518,33 @@ describe('firstScreenSyncTiming - jsReady', () => {
           <list
             update-list-info={
               [
+                {
+                  "insertAction": [
+                    {
+                      "item-key": 0,
+                      "position": 0,
+                      "type": "__Card__:__snapshot_a94a8_test_8",
+                    },
+                  ],
+                  "removeAction": [],
+                  "updateAction": [],
+                },
+                {
+                  "insertAction": [
+                    {
+                      "item-key": 0,
+                      "position": 0,
+                      "type": "__Card__:__snapshot_a94a8_test_8",
+                    },
+                    {
+                      "item-key": 1,
+                      "position": 1,
+                      "type": "__Card__:__snapshot_a94a8_test_8",
+                    },
+                  ],
+                  "removeAction": [],
+                  "updateAction": [],
+                },
                 {
                   "insertAction": [
                     {
@@ -1428,6 +1590,33 @@ describe('firstScreenSyncTiming - jsReady', () => {
           <list
             update-list-info={
               [
+                {
+                  "insertAction": [
+                    {
+                      "item-key": 0,
+                      "position": 0,
+                      "type": "__Card__:__snapshot_a94a8_test_8",
+                    },
+                  ],
+                  "removeAction": [],
+                  "updateAction": [],
+                },
+                {
+                  "insertAction": [
+                    {
+                      "item-key": 0,
+                      "position": 0,
+                      "type": "__Card__:__snapshot_a94a8_test_8",
+                    },
+                    {
+                      "item-key": 1,
+                      "position": 1,
+                      "type": "__Card__:__snapshot_a94a8_test_8",
+                    },
+                  ],
+                  "removeAction": [],
+                  "updateAction": [],
+                },
                 {
                   "insertAction": [
                     {
@@ -1553,33 +1742,7 @@ describe('firstScreenSyncTiming - jsReady', () => {
         <page
           cssId="default-entry-from-native:0"
         >
-          <list
-            update-list-info={
-              [
-                {
-                  "insertAction": [
-                    {
-                      "item-key": 0,
-                      "position": 0,
-                      "type": "__Card__:__snapshot_a94a8_test_10",
-                    },
-                    {
-                      "item-key": 1,
-                      "position": 1,
-                      "type": "__Card__:__snapshot_a94a8_test_10",
-                    },
-                    {
-                      "item-key": 2,
-                      "position": 2,
-                      "type": "__Card__:__snapshot_a94a8_test_10",
-                    },
-                  ],
-                  "removeAction": [],
-                  "updateAction": [],
-                },
-              ]
-            }
-          />
+          <list />
         </page>
       `);
     }
@@ -1596,27 +1759,6 @@ describe('firstScreenSyncTiming - jsReady', () => {
           <list
             update-list-info={
               [
-                {
-                  "insertAction": [
-                    {
-                      "item-key": 0,
-                      "position": 0,
-                      "type": "__Card__:__snapshot_a94a8_test_10",
-                    },
-                    {
-                      "item-key": 1,
-                      "position": 1,
-                      "type": "__Card__:__snapshot_a94a8_test_10",
-                    },
-                    {
-                      "item-key": 2,
-                      "position": 2,
-                      "type": "__Card__:__snapshot_a94a8_test_10",
-                    },
-                  ],
-                  "removeAction": [],
-                  "updateAction": [],
-                },
                 {
                   "insertAction": [],
                   "removeAction": [],

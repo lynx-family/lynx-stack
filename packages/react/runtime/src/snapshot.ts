@@ -4,6 +4,8 @@
 import type { Worklet, WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bindings';
 
 import type { BackgroundSnapshotInstance } from './backgroundSnapshot.js';
+import type { ListUpdateInfo } from './list.js';
+
 import { ListUpdateInfoRecording, __pendingListUpdates, snapshotDestroyList } from './list.js';
 import { unref } from './snapshot/ref.js';
 import { SnapshotOperation, __globalSnapshotPatch } from './lifecycle/patch/snapshotPatch.js';
@@ -239,6 +241,7 @@ export class SnapshotInstance {
   __ref_set?: Set<string>;
   __worklet_ref_set?: Set<WorkletRefImpl<any> | Worklet>;
   __listItemPlatformInfo?: any;
+  __ListUpdateInfo?: ListUpdateInfo | undefined;
 
   constructor(public type: string, id?: number) {
     this.__snapshot_def = snapshotManager.values.get(type)!;
@@ -451,10 +454,15 @@ export class SnapshotInstance {
 
   insertBefore(newNode: SnapshotInstance, existingNode?: SnapshotInstance): void {
     const __snapshot_def = this.__snapshot_def;
+    console.log('[gcc] insertBefore', this.type, newNode.type);
     if (__snapshot_def.isListHolder) {
-      (__pendingListUpdates.values[this.__id] ??= new ListUpdateInfoRecording(
+      (this.__ListUpdateInfo ??= new ListUpdateInfoRecording(
         this,
       )).onInsertBefore(newNode, existingNode);
+
+      if (this.__element_root) {
+        __pendingListUpdates.values[this.__id] ??= this.__ListUpdateInfo;
+      }
       this.__insertBefore(newNode, existingNode);
       return;
     }
@@ -517,9 +525,14 @@ export class SnapshotInstance {
 
     const __snapshot_def = this.__snapshot_def;
     if (__snapshot_def.isListHolder) {
-      (__pendingListUpdates.values[this.__id] ??= new ListUpdateInfoRecording(
+      (this.__ListUpdateInfo ??= new ListUpdateInfoRecording(
         this,
       )).onRemoveChild(child);
+
+      if (this.__element_root) {
+        __pendingListUpdates.values[this.__id] ??= this.__ListUpdateInfo;
+      }
+
       r();
       return;
     }
