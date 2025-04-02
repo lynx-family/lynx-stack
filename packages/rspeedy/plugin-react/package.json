@@ -34,7 +34,6 @@
   "scripts": {
     "api-extractor": "api-extractor run --verbose",
     "build": "rslib build",
-    "prepublishOnly": "turbo build",
     "test": "pnpm -w run test --project rspeedy/react"
   },
   "dependencies": {

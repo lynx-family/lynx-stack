@@ -5,8 +5,15 @@
 
 ## Asset Files
 - Bundle: rspack-bundle.js
+- Manifest: main.css.hot-update.json, size: 989
 
 ## Manifest
+
+### main.css.hot-update.json
+
+```json
+{"content":"eyJjb21waWxlck9wdGlvbnMiOnsiZW5hYmxlRmliZXJBcmNoIjp0cnVlLCJ1c2VMZXB1c05HIjp0cnVlLCJidW5kbGVNb2R1bGVNb2RlIjoiUmV0dXJuQnlGdW5jdGlvbiIsImVuYWJsZUNTU1NlbGVjdG9yIjp0cnVlLCJlbmFibGVDU1NJbnZhbGlkYXRpb24iOnRydWUsInRhcmdldFNka1ZlcnNpb24iOiIzLjIifSwic291cmNlQ29udGVudCI6eyJhcHBUeXBlIjoiY2FyZCIsImNvbmZpZyI6eyJsZXB1c1N0cmljdCI6dHJ1ZSwiZW5hYmxlUmVtb3ZlQ1NTU2NvcGUiOmZhbHNlfXXsImNzcyI6eyJjc3NNYXAiOnsiMCI6WXsIjEiOlt7InR5cGUiOiJTdHlsZVJ1bGUiLCJzdHlsZSI6WXsibmFtZSI6ImNvbG9yIiwidmFsdWUiOiJcInJlZFwiIiwia2V5TG9jIjp7ImxpbmUiOjEsImNvbHVtbiI6MTF9LCJ2YWxMb2MiOnsibGluZSI6MSwiYXsdW1uIjoxOH19XSwic2VsZWN0b3JUZXh0Ijp7InZhbHVlIjoiLmZvbyIsImxvYyI6eyJsaW5lIjoxLCJjb2x1bW4iOjV9fSwidmFyaWFibGVzIjp7fX1dLCIxMDAiOlt7InR5cGUiOiJJbXBvcnRSdWxlIiwib3JpZ2luIjoiMCIsImhyZWYiOiIwInXseyJ0eXBlIjoiSW1wb3J0UnVsZSIsIm9yaWdpbiI6IjEiLCJocmVmIjoiMSJ9XXXsImNzc1NvdXJjZSI6eyIwIjoiL2Nzc0lkLzAuY3NzIiwiMSI6Ii9jc3NJZC8xLmNzcyIsIjEwMCI6Ii9jc3NJZC8xMDAuY3NzInXsImNvbnRlbnRNYXAiOnt9fX0=","deps":{"0":[],"1":[],"100":["0","1"]}}
+```
 
 
 ## Update

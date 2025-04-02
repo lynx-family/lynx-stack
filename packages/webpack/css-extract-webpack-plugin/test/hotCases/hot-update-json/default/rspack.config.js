@@ -4,7 +4,7 @@
 // LICENSE file in the root directory of this source tree.
 */
 import rspack from '@rspack/core'
-import { CssExtractRspackPlugin } from '../../../../src/index.js'
+import { CssExtractRspackPlugin } from '../../../../src/index'
 import path from 'node:path'
 
 /** @type {import('webpack').Configuration} */
