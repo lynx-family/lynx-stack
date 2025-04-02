@@ -63,7 +63,13 @@ export async function dev(
       },
     )
 
-    const rspeedy = await createRspeedy({ cwd, rspeedyConfig })
+    const rspeedy = await createRspeedy({
+      cwd,
+      rspeedyConfig,
+      ...(devOptions.envMode
+        ? { loadEnv: { mode: devOptions.envMode } }
+        : {}),
+    })
 
     const server = await rspeedy.createDevServer()
 

@@ -28,7 +28,13 @@ export async function inspect(
       configPath: inspectOptions.config,
     })
 
-    const rspeedy = await createRspeedy({ cwd, rspeedyConfig })
+    const rspeedy = await createRspeedy({
+      cwd,
+      rspeedyConfig,
+      ...(inspectOptions.envMode
+        ? { loadEnv: { mode: inspectOptions.envMode } }
+        : {}),
+    })
 
     await rspeedy.inspectConfig({
       mode: inspectOptions.mode

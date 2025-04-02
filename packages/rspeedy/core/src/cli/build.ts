@@ -28,7 +28,13 @@ export async function build(
       configPath: buildOptions.config,
     })
 
-    const rspeedy = await createRspeedy({ cwd, rspeedyConfig })
+    const rspeedy = await createRspeedy({
+      cwd,
+      rspeedyConfig,
+      ...(buildOptions.envMode
+        ? { loadEnv: { mode: buildOptions.envMode } }
+        : {}),
+    })
 
     await rspeedy.build()
   } catch (error) {
