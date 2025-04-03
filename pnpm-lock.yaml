@@ -44,9 +44,6 @@ patchedDependencies:
   '@rollup/plugin-typescript':
     hash: 926ba262ec682d27369f1a8648a0dfb657fb5f1b28539ca3628d292276c91c3d
     path: patches/@rollup__plugin-typescript.patch
-  qrcode-terminal:
-    hash: 68024eba5b12e002fd49ff4978670cfa0f4fea3db213c0f3d6ccd3cadf8d6d4e
-    path: patches/qrcode-terminal.patch
 
 importers:
 
@@ -380,15 +377,12 @@ importers:
       '@rsbuild/core':
         specifier: catalog:rsbuild
         version: 1.3.2
-      '@types/qrcode-terminal':
-        specifier: ^0.12.2
-        version: 0.12.2
       picocolors:
         specifier: ^1.1.1
         version: 1.1.1
-      qrcode-terminal:
-        specifier: ^0.12.0
-        version: 0.12.0(patch_hash=68024eba5b12e002fd49ff4978670cfa0f4fea3db213c0f3d6ccd3cadf8d6d4e)
+      uqr:
+        specifier: 0.1.2
+        version: 0.1.2
 
   packages/rspeedy/plugin-react:
     dependencies:
@@ -3154,9 +3148,6 @@ packages:
 
   '@types/prop-types@15.7.13':
     resolution: {integrity: sha512-hCZTSvwbzWGvhqxp/RqVqwU999pBf2vp7hzIjiYOsl8wqOmUxkQ6ddw1cV3l8811+kdUFus/q4d1Y3E3SyEifA==}
-
-  '@types/qrcode-terminal@0.12.2':
-    resolution: {integrity: sha512-v+RcIEJ+Uhd6ygSQ0u5YYY7ZM+la7GgPbs0V/7l/kFs2uO4S8BcIUEMoP7za4DNIqNnUD5npf0A/7kBhrCKG5Q==}
 
   '@types/qs@6.9.15':
     resolution: {integrity: sha512-uXHQKES6DQKKCLh441Xv/dwxOq1TVS3JPUMlEqoEglvlhR6Mxnlew/Xq/LRVHpLyk7iK3zODe1qYHIMltO7XGg==}
@@ -6856,10 +6847,6 @@ packages:
   qr-scanner@1.4.2:
     resolution: {integrity: sha512-kV1yQUe2FENvn59tMZW6mOVfpq9mGxGf8l6+EGaXUOd4RBOLg7tRC83OrirM5AtDvZRpdjdlXURsHreAOSPOUw==}
 
-  qrcode-terminal@0.12.0:
-    resolution: {integrity: sha512-EXtzRZmC+YGmGlDFbXKxQiMZNwCLEO6BANKXG4iCtSIM0yqc/pappSx3RIKr4r0uh5JsBckOXeKrB3Iz7mdQpQ==}
-    hasBin: true
-
   qs@6.13.0:
     resolution: {integrity: sha512-+38qI9SOr8tfZ4QmJNplMUxqjbe7LKvvZgWdExBOmd+egZTtjLB67Gu0HRX3u/XOq7UU2Nx6nsjvS16Z9uwfpg==}
     engines: {node: '>=0.6'}
@@ -8070,6 +8057,9 @@ packages:
     hasBin: true
     peerDependencies:
       browserslist: '>= 4.21.0'
+
+  uqr@0.1.2:
+    resolution: {integrity: sha512-MJu7ypHq6QasgF5YRTjqscSzQp/W11zoUk6kvmlH+fmWEs63Y0Eib13hYFwAzagRJcVY8WVnlV+eBDUGMJ5IbA==}
 
   uri-js@4.4.1:
     resolution: {integrity: sha512-7rKUyy33Q1yc98pQ1DAmLtwX109F7TIfWlW1Ydo8Wl1ii1SeHieeh0HHfPeL2fMXK6z0s8ecKs9frCuLJvndBg==}
@@ -10765,8 +10755,6 @@ snapshots:
   '@types/offscreencanvas@2019.7.3': {}
 
   '@types/prop-types@15.7.13': {}
-
-  '@types/qrcode-terminal@0.12.2': {}
 
   '@types/qs@6.9.15': {}
 
@@ -15087,8 +15075,6 @@ snapshots:
     dependencies:
       '@types/offscreencanvas': 2019.7.3
 
-  qrcode-terminal@0.12.0(patch_hash=68024eba5b12e002fd49ff4978670cfa0f4fea3db213c0f3d6ccd3cadf8d6d4e): {}
-
   qs@6.13.0:
     dependencies:
       side-channel: 1.0.6
@@ -16453,6 +16439,8 @@ snapshots:
       browserslist: 4.24.4
       escalade: 3.2.0
       picocolors: 1.1.1
+
+  uqr@0.1.2: {}
 
   uri-js@4.4.1:
     dependencies:

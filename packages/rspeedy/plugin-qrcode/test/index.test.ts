@@ -86,16 +86,15 @@ describe('Plugins - Terminal', () => {
   })
 
   describe('schema', () => {
+    vi.mock('uqr')
     test('custom schema', async () => {
       vi.stubEnv('NODE_ENV', 'development')
       const { selectKey, isCancel } = await import('@clack/prompts')
       vi.mocked(selectKey).mockResolvedValue('foo')
       vi.mocked(isCancel).mockReturnValueOnce(false)
 
-      const { default: { generate } } = await import('qrcode-terminal')
-      vi.mocked(generate).mockImplementationOnce((_, __, callback) => {
-        callback?.('')
-      })
+      const { renderUnicodeCompact } = await import('uqr')
+      vi.mocked(renderUnicodeCompact).mockReturnValueOnce('<data>')
       const rsbuild = await createRsbuild(
         {
           rsbuildConfig: {
@@ -133,21 +132,24 @@ describe('Plugins - Terminal', () => {
 
       await server.waitDevCompileDone()
 
-      expect(generate).toBeCalledTimes(1)
+      expect(renderUnicodeCompact).toBeCalledTimes(1)
 
-      expect(generate).toBeCalledWith(
+      expect(renderUnicodeCompact).toBeCalledWith(
         `--http://example.com/foo/main.lynx.bundle--`,
-        {
-          small: true,
-        },
-        expect.any(Function),
       )
     })
 
     test('custom schema object', async () => {
       vi.stubEnv('NODE_ENV', 'development')
       const { select, selectKey, isCancel } = await import('@clack/prompts')
-      vi.mocked(selectKey).mockResolvedValue('a')
+      let i = 1
+      vi.mocked(selectKey).mockImplementation(() => {
+        if (i === 1) {
+          i++
+          return Promise.resolve('a')
+        }
+        return Promise.resolve('q')
+      })
       vi.mocked(isCancel).mockReturnValue(false)
 
       let resolve: (v: string) => void
@@ -156,10 +158,8 @@ describe('Plugins - Terminal', () => {
       })
       vi.mocked(select).mockReturnValue(promise)
 
-      const { default: { generate } } = await import('qrcode-terminal')
-      vi.mocked(generate).mockImplementationOnce((_, __, callback) => {
-        callback?.('')
-      })
+      const { renderUnicodeCompact } = await import('uqr')
+      vi.mocked(renderUnicodeCompact).mockReturnValueOnce('<data>')
       const rsbuild = await createRsbuild(
         {
           rsbuildConfig: {
@@ -200,32 +200,31 @@ describe('Plugins - Terminal', () => {
 
       await server.waitDevCompileDone()
 
-      expect(generate).toBeCalledTimes(1)
-      expect(generate).toBeCalledWith(
+      expect(renderUnicodeCompact).toBeCalledTimes(1)
+      expect(renderUnicodeCompact).toBeCalledWith(
         `==http://example.com/foo/main.lynx.bundle==`,
-        {
-          small: true,
-        },
-        expect.any(Function),
       )
 
       // @ts-expect-error xxx
       resolve('bar')
 
-      await expect.poll(() => generate).toBeCalledTimes(2)
-      expect(generate).toBeCalledWith(
+      await expect.poll(() => renderUnicodeCompact).toBeCalledTimes(2)
+      expect(renderUnicodeCompact).toBeCalledWith(
         `$$http://example.com/foo/main.lynx.bundle$$`,
-        {
-          small: true,
-        },
-        expect.any(Function),
       )
     })
 
     test('select between entries', async () => {
       vi.stubEnv('NODE_ENV', 'development')
       const { select, selectKey, isCancel } = await import('@clack/prompts')
-      vi.mocked(selectKey).mockResolvedValue('r')
+      let i = 1
+      vi.mocked(selectKey).mockImplementation(() => {
+        if (i === 1) {
+          i++
+          return Promise.resolve('r')
+        }
+        return Promise.resolve('q')
+      })
       vi.mocked(isCancel).mockReturnValue(false)
 
       let resolve: (v: string) => void
@@ -234,10 +233,8 @@ describe('Plugins - Terminal', () => {
       })
       vi.mocked(select).mockReturnValue(promise)
 
-      const { default: { generate } } = await import('qrcode-terminal')
-      vi.mocked(generate).mockImplementationOnce((_, __, callback) => {
-        callback?.('')
-      })
+      const { renderUnicodeCompact } = await import('uqr')
+      vi.mocked(renderUnicodeCompact).mockReturnValueOnce('<data>')
       const rsbuild = await createRsbuild(
         {
           rsbuildConfig: {
@@ -280,32 +277,28 @@ describe('Plugins - Terminal', () => {
 
       await server.waitDevCompileDone()
 
-      expect(generate).toBeCalledTimes(1)
-      expect(generate).toBeCalledWith(
+      expect(renderUnicodeCompact).toBeCalledTimes(1)
+      expect(renderUnicodeCompact).toBeCalledWith(
         `==http://example.com/foo/main.lynx.bundle==`,
-        {
-          small: true,
-        },
-        expect.any(Function),
       )
 
       // @ts-expect-error xxx
       resolve('main2')
 
-      await expect.poll(() => generate).toBeCalledTimes(2)
-      expect(generate).toBeCalledWith(
+      await expect.poll(() => renderUnicodeCompact).toBeCalledTimes(2)
+      expect(renderUnicodeCompact).toBeCalledWith(
         `==http://example.com/foo/main2.lynx.bundle==`,
-        {
-          small: true,
-        },
-        expect.any(Function),
       )
     })
   })
 
   describe('QRCode', () => {
-    vi.mock('qrcode-terminal')
+    vi.mock('uqr')
     test('not print qrcode when build', async () => {
+      const { renderUnicodeCompact } = await import('uqr')
+
+      vi.mocked(renderUnicodeCompact).mockClear()
+
       const rsbuild = await createRsbuild(
         {
           rsbuildConfig: {
@@ -326,9 +319,8 @@ describe('Plugins - Terminal', () => {
         },
       )
       await rsbuild.build()
-      const QRCode = await import('qrcode-terminal')
 
-      expect(QRCode.default.generate).not.toBeCalled()
+      expect(renderUnicodeCompact).not.toBeCalled()
     })
 
     test('print qrcode when dev', async () => {
@@ -336,10 +328,8 @@ describe('Plugins - Terminal', () => {
       const { selectKey, isCancel } = await import('@clack/prompts')
       vi.mocked(selectKey).mockResolvedValue('foo')
       vi.mocked(isCancel).mockReturnValueOnce(false)
-      const { default: { generate } } = await import('qrcode-terminal')
-      vi.mocked(generate).mockImplementationOnce((_, __, callback) => {
-        callback?.('')
-      })
+      const { renderUnicodeCompact } = await import('uqr')
+      vi.mocked(renderUnicodeCompact).mockReturnValueOnce('<data>')
       const rsbuild = await createRsbuild(
         {
           rsbuildConfig: {
@@ -373,13 +363,13 @@ describe('Plugins - Terminal', () => {
 
       await server.waitDevCompileDone()
 
-      expect(generate).toBeCalledTimes(1)
+      expect(renderUnicodeCompact).toBeCalledTimes(1)
     })
 
     test('print qrcode when dev with host specified', async () => {
       vi.stubEnv('NODE_ENV', 'development')
       vi.mock('qrcode', () => ({
-        generate: vi.fn(),
+        renderUnicodeCompact: vi.fn(),
       }))
       const { selectKey, isCancel } = await import('@clack/prompts')
       vi.mocked(selectKey).mockResolvedValue('foo')
@@ -413,22 +403,16 @@ describe('Plugins - Terminal', () => {
         },
       )
 
-      const { default: { generate } } = await import('qrcode-terminal')
-      vi.mocked(generate).mockImplementationOnce((_, __, callback) => {
-        callback?.('')
-      })
+      const { renderUnicodeCompact } = await import('uqr')
+      vi.mocked(renderUnicodeCompact).mockReturnValueOnce('<data>')
 
       await using server = await usingDevServer(rsbuild)
 
       await server.waitDevCompileDone()
 
-      expect(generate).toBeCalledTimes(1)
-      expect(generate).toBeCalledWith(
+      expect(renderUnicodeCompact).toBeCalledTimes(1)
+      expect(renderUnicodeCompact).toBeCalledWith(
         expect.stringContaining('example.com/foo'),
-        {
-          small: true,
-        },
-        expect.anything(),
       )
     })
   })
