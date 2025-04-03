@@ -23,8 +23,8 @@ function updateListItemPlatformInfo(
 
   // @ts-ignore
   const list = ctx.__parent;
-  if (list?.__snapshot_def.isListHolder) {
-    (__pendingListUpdates.values[list.__id] ??= new ListUpdateInfoRecording(list)).onSetAttribute(
+  if (list?.__snapshot_def.isListHolder && list?.__element_root) {
+    (list.__ListUpdateInfo ??= new ListUpdateInfoRecording(list)).onSetAttribute(
       ctx,
       newValue,
       oldValue,
@@ -43,6 +43,13 @@ function updateListItemPlatformInfo(
       __SetAttribute(e, k, value[k]);
     }
   }
+
+  if (ctx?.__snapshot_def?.isListHolder && ctx?.__element_root) {
+    // @ts-ignore
+    __pendingListUpdates.values[ctx.__id] ??= ctx.__ListUpdateInfo;
+  }
+
+  __pendingListUpdates.flush();
 }
 
 export { updateListItemPlatformInfo, platformInfoAttributes };

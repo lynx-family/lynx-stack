@@ -556,6 +556,33 @@ describe('WorkletRef in list', () => {
                       "position": 0,
                       "type": "__Card__:__snapshot_a94a8_test_4",
                     },
+                  ],
+                  "removeAction": [],
+                  "updateAction": [],
+                },
+                {
+                  "insertAction": [
+                    {
+                      "item-key": 0,
+                      "position": 0,
+                      "type": "__Card__:__snapshot_a94a8_test_4",
+                    },
+                    {
+                      "item-key": 1,
+                      "position": 1,
+                      "type": "__Card__:__snapshot_a94a8_test_4",
+                    },
+                  ],
+                  "removeAction": [],
+                  "updateAction": [],
+                },
+                {
+                  "insertAction": [
+                    {
+                      "item-key": 0,
+                      "position": 0,
+                      "type": "__Card__:__snapshot_a94a8_test_4",
+                    },
                     {
                       "item-key": 1,
                       "position": 1,
