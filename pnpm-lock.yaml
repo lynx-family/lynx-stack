@@ -276,9 +276,6 @@ importers:
       '@lynx-js/websocket':
         specifier: workspace:^
         version: link:../websocket
-      '@microsoft/api-extractor':
-        specifier: 'catalog:'
-        version: 7.52.2(@types/node@22.13.16)
       '@rsbuild/core':
         specifier: catalog:rsbuild
         version: 1.3.2
@@ -288,12 +285,31 @@ importers:
       '@rsdoctor/rspack-plugin':
         specifier: 1.0.1
         version: 1.0.1(@rsbuild/core@1.3.2)(@rspack/core@1.3.1(@swc/helpers@0.5.15))(webpack@5.98.0)
+    devDependencies:
+      '@lynx-js/vitest-setup':
+        specifier: workspace:*
+        version: link:../../tools/vitest-setup
+      '@microsoft/api-extractor':
+        specifier: 'catalog:'
+        version: 7.52.2(@types/node@22.13.16)
+      '@rollup/plugin-typescript':
+        specifier: ^12.1.2
+        version: 12.1.2(patch_hash=926ba262ec682d27369f1a8648a0dfb657fb5f1b28539ca3628d292276c91c3d)(rollup@4.21.1)(tslib@2.8.1)(typescript@5.8.2)
+      '@rsbuild/webpack':
+        specifier: catalog:rsbuild
+        version: 1.3.0(@rsbuild/core@1.3.2)(@rspack/core@1.3.1(@swc/helpers@0.5.15))
+      '@samchon/openapi':
+        specifier: 3.2.3
+        version: 3.2.3
       chokidar:
         specifier: ^4.0.3
         version: 4.0.3
       commander:
         specifier: ^13.1.0
         version: 13.1.0
+      eventemitter3:
+        specifier: ^5.0.1
+        version: 5.0.1
       exit-hook:
         specifier: ^4.0.0
         version: 4.0.0
@@ -306,31 +322,15 @@ importers:
       picocolors:
         specifier: ^1.1.1
         version: 1.1.1
+      rsbuild-plugin-publint:
+        specifier: 0.3.0
+        version: 0.3.0(@rsbuild/core@1.3.2)
       tiny-invariant:
         specifier: ^1.3.3
         version: 1.3.3
       ts-blank-space:
         specifier: ^0.6.1
         version: 0.6.1
-    devDependencies:
-      '@lynx-js/vitest-setup':
-        specifier: workspace:*
-        version: link:../../tools/vitest-setup
-      '@rollup/plugin-typescript':
-        specifier: ^12.1.2
-        version: 12.1.2(patch_hash=926ba262ec682d27369f1a8648a0dfb657fb5f1b28539ca3628d292276c91c3d)(rollup@4.21.1)(tslib@2.8.1)(typescript@5.8.2)
-      '@rsbuild/webpack':
-        specifier: catalog:rsbuild
-        version: 1.3.0(@rsbuild/core@1.3.2)(@rspack/core@1.3.1(@swc/helpers@0.5.15))
-      '@samchon/openapi':
-        specifier: 3.2.3
-        version: 3.2.3
-      eventemitter3:
-        specifier: ^5.0.1
-        version: 5.0.1
-      rsbuild-plugin-publint:
-        specifier: 0.3.0
-        version: 0.3.0(@rsbuild/core@1.3.2)
       type-fest:
         specifier: ^4.39.0
         version: 4.39.0
