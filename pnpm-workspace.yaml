@@ -11,6 +11,10 @@ packages:
   - packages/web-platform/*
   - packages/webpack/*
   - packages/third-party/*
+  - packages/testing-library/*
+  - packages/testing-library/examples/*
+  - "!packages/testing-library/examples"
+  - .github/actions/eco-ci
   - website
 
 # Default catalogs
