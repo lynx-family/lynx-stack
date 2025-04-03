@@ -9,7 +9,7 @@ import type { Config, ExposedAPI, RsbuildPlugin } from '@lynx-js/rspeedy'
 import { getRandomNumberInRange } from './port.js'
 import { pluginQRCode } from '../src/index.js'
 
-vi.mock('qrcode-terminal')
+vi.mock('uqr')
 vi.mock('@clack/prompts')
 
 const exit = vi.fn()
@@ -34,14 +34,12 @@ describe('Preview', () => {
 
   test('preview with NODE_ENV=development', async () => {
     vi.stubEnv('NODE_ENV', 'development')
-    const { default: { generate } } = await import('qrcode-terminal')
+    const { renderUnicodeCompact } = await import('uqr')
 
     const { selectKey, isCancel } = await import('@clack/prompts')
     vi.mocked(selectKey).mockResolvedValue('foo')
     vi.mocked(isCancel).mockReturnValue(true)
-    vi.mocked(generate).mockImplementation((input, _, callback) => {
-      callback?.(input)
-    })
+    vi.mocked(renderUnicodeCompact).mockReturnValueOnce('<data>')
 
     const rsbuild = await createRsbuild({
       rsbuildConfig: {
@@ -68,11 +66,9 @@ describe('Preview', () => {
 
     const { server } = await rsbuild.preview({ checkDistDir: false })
 
-    expect(generate).toBeCalled()
-    expect(generate).toBeCalledWith(
+    expect(renderUnicodeCompact).toBeCalled()
+    expect(renderUnicodeCompact).toBeCalledWith(
       'http://example.com/main.lynx.bundle',
-      { small: true },
-      expect.any(Function),
     )
 
     await server.close()
@@ -83,15 +79,13 @@ describe('Preview', () => {
 
   test('preview with port', async () => {
     vi.stubEnv('NODE_ENV', 'development')
-    const { default: { generate } } = await import('qrcode-terminal')
+    const { renderUnicodeCompact } = await import('uqr')
 
     const { selectKey, isCancel } = await import('@clack/prompts')
     vi.mocked(selectKey).mockResolvedValue('foo')
     vi.mocked(isCancel).mockReturnValue(true)
 
-    vi.mocked(generate).mockImplementation((input, _, callback) => {
-      callback?.(input)
-    })
+    vi.mocked(renderUnicodeCompact).mockReturnValueOnce('<data>')
 
     const port = getRandomNumberInRange(3000, 60000)
 
@@ -120,11 +114,9 @@ describe('Preview', () => {
 
     const { server } = await rsbuild.preview({ checkDistDir: false })
 
-    expect(generate).toBeCalled()
-    expect(generate).toBeCalledWith(
+    expect(renderUnicodeCompact).toBeCalled()
+    expect(renderUnicodeCompact).toBeCalledWith(
       `http://example.com:${port}/main.lynx.bundle`,
-      { small: true },
-      expect.any(Function),
     )
 
     await server.close()
@@ -135,15 +127,13 @@ describe('Preview', () => {
 
   test('preview with custom schema', async () => {
     vi.stubEnv('NODE_ENV', 'development')
-    const { default: { generate } } = await import('qrcode-terminal')
+    const { renderUnicodeCompact } = await import('uqr')
 
     const { selectKey, isCancel } = await import('@clack/prompts')
     vi.mocked(selectKey).mockResolvedValue('foo')
     vi.mocked(isCancel).mockReturnValue(true)
 
-    vi.mocked(generate).mockImplementation((input, _, callback) => {
-      callback?.(input)
-    })
+    vi.mocked(renderUnicodeCompact).mockReturnValueOnce('<data>')
 
     const port = getRandomNumberInRange(3000, 60000)
 
@@ -176,11 +166,9 @@ describe('Preview', () => {
 
     const { server } = await rsbuild.preview({ checkDistDir: false })
 
-    expect(generate).toBeCalled()
-    expect(generate).toBeCalledWith(
+    expect(renderUnicodeCompact).toBeCalled()
+    expect(renderUnicodeCompact).toBeCalledWith(
       `--http://example.com:${port}/main.lynx.bundle--`,
-      { small: true },
-      expect.any(Function),
     )
 
     await server.close()
@@ -191,15 +179,13 @@ describe('Preview', () => {
 
   test('preview without environment lynx', async () => {
     vi.stubEnv('NODE_ENV', 'development')
-    const { default: { generate } } = await import('qrcode-terminal')
+    const { renderUnicodeCompact } = await import('uqr')
 
     const { selectKey, isCancel } = await import('@clack/prompts')
     vi.mocked(selectKey).mockResolvedValue('foo')
     vi.mocked(isCancel).mockReturnValue(true)
 
-    vi.mocked(generate).mockImplementation((input, _, callback) => {
-      callback?.(input)
-    })
+    vi.mocked(renderUnicodeCompact).mockReturnValueOnce('<data>')
 
     const rsbuild = await createRsbuild({
       rsbuildConfig: {
@@ -220,7 +206,7 @@ describe('Preview', () => {
 
     const { server } = await rsbuild.preview({ checkDistDir: false })
 
-    expect(generate).not.toBeCalled()
+    expect(renderUnicodeCompact).not.toBeCalled()
 
     await server.close()
     expect(exit).not.toBeCalled()
@@ -228,15 +214,13 @@ describe('Preview', () => {
 
   test('preview without entry', async () => {
     vi.stubEnv('NODE_ENV', 'development')
-    const { default: { generate } } = await import('qrcode-terminal')
+    const { renderUnicodeCompact } = await import('uqr')
 
     const { selectKey, isCancel } = await import('@clack/prompts')
     vi.mocked(selectKey).mockResolvedValue('foo')
     vi.mocked(isCancel).mockReturnValue(true)
 
-    vi.mocked(generate).mockImplementation((input, _, callback) => {
-      callback?.(input)
-    })
+    vi.mocked(renderUnicodeCompact).mockReturnValueOnce('<data>')
 
     const rsbuild = await createRsbuild({
       rsbuildConfig: {
@@ -258,7 +242,7 @@ describe('Preview', () => {
 
     const { server } = await rsbuild.preview({ checkDistDir: false })
 
-    expect(generate).not.toBeCalled()
+    expect(renderUnicodeCompact).not.toBeCalled()
 
     await server.close()
   })

@@ -42,7 +42,7 @@ export async function registerConsoleShortcuts(
 
   const value: string | symbol = Object.values(devUrls)[0]!
   await options.onPrint?.(value)
-  await showQRCode(value)
+  showQRCode(value)
 
   gExistingShortcuts.add(options)
 
@@ -137,7 +137,7 @@ async function loop(
       await options.customShortcuts[name].action?.()
     }
     await options.onPrint?.(value)
-    await showQRCode(value)
+    showQRCode(value)
   }
 
   // If the `options` is not deleted from `gExistingShortcuts`, means that this is an explicitly
