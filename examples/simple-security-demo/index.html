@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lynx Security Features Demo</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    header {
+      background-color: #0070f3;
+      color: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+    h2 {
+      color: #0070f3;
+      margin-top: 30px;
+    }
+    section {
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    pre {
+      background-color: #f0f0f0;
+      padding: 10px;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+    code {
+      font-family: monospace;
+    }
+    button {
+      background-color: #0070f3;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 500;
+      margin-right: 10px;
+      margin-bottom: 10px;
+    }
+    button:hover {
+      background-color: #0051a2;
+    }
+    textarea {
+      width: 100%;
+      min-height: 100px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      margin-bottom: 10px;
+      font-family: inherit;
+    }
+    .result {
+      background-color: #f9f9f9;
+      padding: 15px;
+      border-radius: 4px;
+      border-left: 4px solid #0070f3;
+      margin-top: 15px;
+    }
+    .token-display {
+      font-family: monospace;
+      background-color: #f0f0f0;
+      padding: 8px;
+      border-radius: 4px;
+      word-break: break-all;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Lynx Security Features Demo</h1>
+    <p>Showcasing CSP, CSRF protection, and input sanitization</p>
+  </header>
+
+  <main>
+    <section id="overview">
+      <h2>Overview</h2>
+      <p>This page demonstrates the security features implemented in the Lynx framework:</p>
+      <ul>
+        <li><strong>Content Security Policy (CSP)</strong>: Prevents XSS attacks by controlling which scripts can execute</li>
+        <li><strong>CSRF Protection</strong>: Prevents cross-site request forgery by validating tokens</li>
+        <li><strong>Input Sanitization</strong>: Prevents XSS attacks by cleaning user input</li>
+      </ul>
+    </section>
+
+    <section id="csp-demo">
+      <h2>Content Security Policy</h2>
+      <p>CSP helps prevent XSS attacks by controlling what scripts can execute on your page.</p>
+      <div>
+        <p>Current nonce: <span id="nonce-display" class="token-display">Loading...</span></p>
+        <button id="csp-safe-btn">Execute Safe Script (with nonce)</button>
+        <button id="csp-unsafe-btn">Execute Unsafe Script (no nonce)</button>
+      </div>
+      <div id="csp-result" class="result" style="display: none;"></div>
+    </section>
+
+    <section id="csrf-demo">
+      <h2>CSRF Protection</h2>
+      <p>CSRF tokens protect your forms and API requests from cross-site request forgery attacks.</p>
+      <div>
+        <p>Current CSRF token: <span id="csrf-token-display" class="token-display">Loading...</span></p>
+        <button id="csrf-valid-btn">Make Valid Request</button>
+        <button id="csrf-invalid-btn">Make Invalid Request</button>
+      </div>
+      <div id="csrf-result" class="result" style="display: none;"></div>
+    </section>
+
+    <section id="sanitize-demo">
+      <h2>Input Sanitization</h2>
+      <p>Sanitizing user input is crucial to prevent XSS attacks. Try entering HTML with potentially malicious script tags below.</p>
+      <div>
+        <textarea id="html-input" placeholder="Try entering HTML with XSS (e.g. <script>alert('xss')</script>)"></textarea>
+        <button id="sanitize-btn">Sanitize Input</button>
+      </div>
+      <div id="sanitize-results" style="display: none;">
+        <h3>Original Input:</h3>
+        <pre id="original-output"></pre>
+        <h3>Sanitized Output:</h3>
+        <pre id="sanitized-output"></pre>
+        <h3>Rendered Result (Safe):</h3>
+        <div id="rendered-output" class="result"></div>
+      </div>
+    </section>
+
+    <section id="code-examples">
+      <h2>Implementation Code Examples</h2>
+      
+      <h3>Content Security Policy</h3>
+      <pre><code>// Generate a nonce for inline scripts
+function generateNonce() {
+  const array = new Uint8Array(16);
+  crypto.getRandomValues(array);
+  return Array.from(array, byte => 
+    byte.toString(16).padStart(2, '0')).join('');
+}
+
+// Add a script element with proper nonce
+const nonce = generateNonce();
+const script = document.createElement('script');
+script.nonce = nonce;
+script.textContent = 'console.log("Secure script")';
+document.head.appendChild(script);</code></pre>
+      
+      <h3>CSRF Protection</h3>
+      <pre><code>// Generate a CSRF token
+function generateCsrfToken() {
+  const array = new Uint8Array(32);
+  crypto.getRandomValues(array);
+  return Array.from(array, byte => 
+    byte.toString(16).padStart(2, '0')).join('');
+}
+
+// Add CSRF token to a fetch request
+fetch('/api/data', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-CSRF-Token': csrfToken
+  },
+  body: JSON.stringify(data)
+});</code></pre>
+      
+      <h3>Input Sanitization</h3>
+      <pre><code>// Sanitize HTML content
+function sanitizeHtml(input) {
+  const doc = new DOMParser().parseFromString(
+    `&lt;div>${input}&lt;/div>`, 'text/html'
+  );
+  
+  // Remove script tags
+  doc.querySelectorAll('script').forEach(el => el.remove());
+  
+  // Remove dangerous attributes
+  doc.querySelectorAll('[onerror],[onclick],[onload]').forEach(el => {
+    el.removeAttribute('onerror');
+    el.removeAttribute('onclick');
+    el.removeAttribute('onload');
+  });
+  
+  return doc.body.firstChild.innerHTML;
+}</code></pre>
+    </section>
+  </main>
+
+  <script type="module">
+    // Security utilities
+    const security = {
+      nonces: new Set(),
+      csrfToken: null,
+
+      // CSP functions
+      generateNonce() {
+        const array = new Uint8Array(16);
+        crypto.getRandomValues(array);
+        const nonce = Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+        this.nonces.add(nonce);
+        return nonce;
+      },
+
+      isValidNonce(nonce) {
+        return this.nonces.has(nonce);
+      },
+
+      // CSRF functions
+      generateCsrfToken() {
+        const array = new Uint8Array(32);
+        crypto.getRandomValues(array);
+        this.csrfToken = Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+        return this.csrfToken;
+      },
+
+      validateCsrfToken(token) {
+        return token === this.csrfToken;
+      },
+
+      // Sanitization functions
+      sanitizeHtml(input) {
+        if (!input) return '';
+        
+        try {
+          const doc = new DOMParser().parseFromString(
+            `<div>${input}</div>`, 'text/html'
+          );
+          
+          // Remove script tags
+          doc.querySelectorAll('script').forEach(el => el.remove());
+          
+          // Remove dangerous attributes
+          const dangerousAttrs = ['onerror', 'onclick', 'onload', 'onmouseover', 'onmouseout', 'onmousedown', 'onmouseup'];
+          dangerousAttrs.forEach(attr => {
+            doc.querySelectorAll(`[${attr}]`).forEach(el => {
+              el.removeAttribute(attr);
+            });
+          });
+          
+          // Remove javascript: URLs
+          doc.querySelectorAll('a[href]').forEach(a => {
+            if (a.href.toLowerCase().startsWith('javascript:')) {
+              a.href = '#';
+            }
+          });
+          
+          return doc.body.firstChild.innerHTML;
+        } catch (e) {
+          console.error('Error sanitizing HTML:', e);
+          return '';
+        }
+      }
+    };
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      // Generate and display nonce
+      const nonce = security.generateNonce();
+      document.getElementById('nonce-display').textContent = nonce;
+      
+      // Generate and display CSRF token
+      const csrfToken = security.generateCsrfToken();
+      document.getElementById('csrf-token-display').textContent = csrfToken;
+      
+      // CSP demo handlers
+      document.getElementById('csp-safe-btn').addEventListener('click', () => {
+        const safeResult = document.getElementById('csp-result');
+        safeResult.style.display = 'block';
+        
+        try {
+          // First show that we're attempting to run a script
+          safeResult.innerHTML = '<strong>Attempting to run script with nonce...</strong>';
+          
+          // Create a script with valid nonce - the nonce is set by the server
+          const script = document.createElement('script');
+          // script.nonce = nonce; - nonce is replaced by server
+          script.textContent = `
+            document.getElementById('csp-result').innerHTML = 
+              '<strong style="color: green;">Success:</strong> Script executed with valid nonce!';
+            console.log('CSP test: Script with nonce executed successfully');
+          `;
+          document.body.appendChild(script);
+          
+          // Add a fallback in case script doesn't execute
+          setTimeout(() => {
+            if (safeResult.innerHTML.includes('Attempting')) {
+              safeResult.innerHTML = '<strong style="color: red;">Failed:</strong> Script with nonce did not execute. Check browser console for CSP violations.';
+            }
+          }, 500);
+        } catch (e) {
+          safeResult.innerHTML = `<strong style="color: red;">Error:</strong> ${e.message}`;
+        }
+      });
+      
+      document.getElementById('csp-unsafe-btn').addEventListener('click', () => {
+        const safeResult = document.getElementById('csp-result');
+        safeResult.style.display = 'block';
+        
+        try {
+          // First show that we're attempting to run a script
+          safeResult.innerHTML = '<strong>Attempting to run script without nonce...</strong>';
+          
+          // Create a script without nonce
+          const script = document.createElement('script');
+          script.textContent = `
+            document.getElementById('csp-result').innerHTML = 
+              '<strong style="color: red;">Warning:</strong> This script executed without a nonce. CSP did not block it!';
+            console.log('CSP test: Script without nonce executed - this should not happen with proper CSP');
+          `;
+          document.body.appendChild(script);
+          
+          // Add a fallback in case script doesn't execute (expected with CSP)
+          setTimeout(() => {
+            if (safeResult.innerHTML.includes('Attempting')) {
+              safeResult.innerHTML = '<strong style="color: green;">Success:</strong> Script without nonce was blocked by CSP as expected!';
+            }
+          }, 500);
+        } catch (e) {
+          safeResult.innerHTML = `<strong style="color: red;">Error:</strong> ${e.message}`;
+        }
+      });
+      
+      // CSRF demo handlers
+      document.getElementById('csrf-valid-btn').addEventListener('click', async () => {
+        const csrfResult = document.getElementById('csrf-result');
+        csrfResult.style.display = 'block';
+        
+        // Simulate a valid request with the correct token
+        const result = await mockApiRequest('/api/data', csrfToken);
+        csrfResult.innerHTML = `<strong>Response:</strong> ${JSON.stringify(result, null, 2)}`;
+      });
+      
+      document.getElementById('csrf-invalid-btn').addEventListener('click', async () => {
+        const csrfResult = document.getElementById('csrf-result');
+        csrfResult.style.display = 'block';
+        
+        // Simulate an invalid request with an incorrect token
+        const invalidToken = 'invalid-token-123456';
+        const result = await mockApiRequest('/api/data', invalidToken);
+        csrfResult.innerHTML = `<strong>Response:</strong> ${JSON.stringify(result, null, 2)}`;
+      });
+      
+      // Input sanitization demo
+      document.getElementById('sanitize-btn').addEventListener('click', () => {
+        const input = document.getElementById('html-input').value;
+        const sanitized = security.sanitizeHtml(input);
+        
+        document.getElementById('sanitize-results').style.display = 'block';
+        document.getElementById('original-output').textContent = input;
+        document.getElementById('sanitized-output').textContent = sanitized;
+        document.getElementById('rendered-output').innerHTML = sanitized;
+      });
+      
+      // Mock API request function for CSRF demo
+      async function mockApiRequest(endpoint, token) {
+        // Simulate network delay
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Check if token is valid
+        if (!security.validateCsrfToken(token)) {
+          return {
+            success: false,
+            message: 'CSRF token validation failed',
+          };
+        }
+        
+        // Return a successful response
+        return {
+          success: true,
+          message: 'Data fetched successfully',
+          data: {
+            id: 1,
+            name: 'Secure Data',
+            timestamp: new Date().toISOString(),
+          },
+        };
+      }
+    });
+  </script>
+</body>
+</html> 

@@ -1,0 +1,131 @@
+/* 
+ * Security Demo Styles - Lynx Compatible Version
+ * 
+ * These styles are specifically optimized for the Lynx runtime environment.
+ * Key considerations:
+ * - Larger touch targets for better mobile interaction
+ * - Simple styling to ensure compatibility
+ * - Clear visual hierarchy for demo features
+ */
+
+.App {
+  padding: 10px;
+  background-color: #f0f0f0;
+}
+
+/* Header section */
+.Header {
+  padding: 10px;
+  margin-bottom: 15px;
+  background-color: #007bff;
+}
+
+.Title {
+  font-size: 20px;
+  color: white;
+  margin-bottom: 5px;
+  text-align: center;
+}
+
+.Subtitle {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  text-align: center;
+}
+
+/* Content sections */
+.Section {
+  margin-bottom: 15px;
+  padding: 10px;
+  background-color: white;
+  border-radius: 5px;
+}
+
+.SectionTitle {
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.Description {
+  font-size: 14px;
+  margin-bottom: 10px;
+  color: #666;
+}
+
+/* Button styling - optimized for touch */
+.ButtonContainer {
+  margin: 10px 0;
+}
+
+.Button {
+  background-color: #007bff;
+  padding: 12px; /* Large padding for better touch targets */
+  margin-bottom: 10px;
+  border-radius: 5px;
+  /* Minimum height ensures good touch target size */
+  min-height: 44px;
+}
+
+.Button text {
+  color: white;
+  font-size: 14px;
+  text-align: center;
+}
+
+/* Results display */
+.ResultContainer {
+  margin-top: 10px;
+  padding: 10px;
+  background-color: #f5f5f5;
+  border-radius: 5px;
+}
+
+.ResultCode {
+  font-family: monospace;
+  font-size: 14px;
+}
+
+/* For larger screens */
+@media (min-width: 768px) {
+  .App {
+    padding: 20px;
+    max-width: 800px;
+  }
+
+  .ButtonContainer {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .Button {
+    flex: 1;
+    min-width: 140px;
+  }
+
+  .Title {
+    font-size: 28px;
+  }
+
+  .Subtitle {
+    font-size: 18px;
+  }
+
+  .SectionTitle {
+    font-size: 20px;
+  }
+
+  .Description {
+    font-size: 16px;
+  }
+
+  .Button text {
+    font-size: 16px;
+  }
+
+  .Section {
+    padding: 20px;
+  }
+}

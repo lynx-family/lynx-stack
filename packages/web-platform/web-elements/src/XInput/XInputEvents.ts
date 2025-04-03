@@ -5,123 +5,153 @@
 */
 import {
   type AttributeReactiveClass,
+  boostedQueueMicrotask,
   genDomGetter,
   registerAttributeHandler,
+  registerEventEnableStatusChangeHandler,
 } from '@lynx-js/web-elements-reactive';
+
+// Import the sanitizeInput function from our new security module
+import { sanitizeInput } from '@lynx-js/web-security';
+
 import { commonComponentEventSetting } from '../common/commonEventInitConfiguration.js';
 import { renameEvent } from '../common/renameEvent.js';
-import { registerEventEnableStatusChangeHandler } from '@lynx-js/web-elements-reactive';
 
 export class XInputEvents
   implements InstanceType<AttributeReactiveClass<typeof HTMLElement>>
 {
   static observedAttributes = ['send-composing-input'];
   #dom: HTMLElement;
-
-  #sendComposingInput = false;
-
   #getInputElement = genDomGetter<HTMLInputElement>(
     () => this.#dom.shadowRoot!,
     '#input',
   );
-  #getFormElement = genDomGetter<HTMLInputElement>(
+  #getFormElement = genDomGetter<HTMLFormElement>(
     () => this.#dom.shadowRoot!,
     '#form',
   );
+  #enableComposingInput = false;
+  #composingInputInterval = 500;
+  #isComposingInput = false;
+  #scheduledComposingTimer = 0;
+  #prevBlockDomEnv: { value: string; selectionStart: number | null } = {
+    value: '',
+    selectionStart: 0,
+  };
 
-  @registerEventEnableStatusChangeHandler('input')
-  #handleEnableConfirmEvent(status: boolean) {
-    const input = this.#getInputElement();
-    if (status) {
-      input.addEventListener(
-        'input',
-        this.#teleportInput as (ev: Event) => void,
-        { passive: true },
-      );
-      input.addEventListener(
-        'compositionend',
-        this.#teleportCompositionendInput as (ev: Event) => void,
-        { passive: true },
-      );
-    } else {
-      input.addEventListener(
-        'input',
-        this.#teleportInput as (ev: Event) => void,
-        { passive: true },
-      );
-      input.removeEventListener(
-        'compositionend',
-        this.#teleportCompositionendInput as (ev: Event) => void,
-      );
+  @registerAttributeHandler('send-composing-input', true)
+  #handleEnableSendComposingInput(newValue: string | null) {
+    this.#enableComposingInput = newValue !== null;
+    if (newValue !== null) {
+      this.#composingInputInterval = Number.parseInt(newValue) || 500;
     }
   }
 
-  @registerAttributeHandler('send-composing-input', true)
-  #handleSendComposingInput(newVal: string | null) {
-    this.#sendComposingInput = newVal !== null;
+  @registerEventEnableStatusChangeHandler('input')
+  #handleInputEventEnable(enabled: boolean) {
+    const formElement = this.#getFormElement();
+    if (enabled) {
+      formElement.addEventListener('input', this.#blockHtmlEvent as any, {
+        passive: true,
+      });
+    } else {
+      formElement.removeEventListener('input', this.#blockHtmlEvent as any);
+    }
   }
 
-  #teleportEvent = (event: FocusEvent | SubmitEvent) => {
-    const eventType = renameEvent[event.type] ?? event.type;
-    this.#dom.dispatchEvent(
-      new CustomEvent(eventType, {
-        ...commonComponentEventSetting,
-        detail: {
-          value: this.#getInputElement().value,
-        },
-      }),
-    );
+  #blockHtmlEvent = (e: InputEvent) => {
+    e.stopPropagation();
+    this.#prevBlockDomEnv.value = this.#getInputElement().value;
+    this.#prevBlockDomEnv.selectionStart =
+      this.#getInputElement().selectionStart;
+    const inputEvent = new CustomEvent('input', {
+      ...commonComponentEventSetting,
+      detail: {
+        value: sanitizeInput(this.#prevBlockDomEnv.value), // Sanitize input value
+        selectionStart: this.#prevBlockDomEnv.selectionStart,
+      },
+    });
+    this.#dom.dispatchEvent(inputEvent);
+    this.#tryToShootComposingEvent();
   };
 
-  #teleportInput = (event: InputEvent) => {
-    const input = this.#getInputElement();
-    const value = input.value;
-    const isComposing = event.isComposing;
-    if (isComposing && !this.#sendComposingInput) return;
-    this.#dom.dispatchEvent(
-      new CustomEvent('input', {
+  #teleportEvent = (e: Event) => {
+    if (e.type === 'input') {
+      this.#blockHtmlEvent(e as InputEvent);
+      return;
+    }
+
+    const detail = e.type === 'submit'
+      ? { value: (e as unknown as { submitter: unknown }).submitter }
+      : {};
+    const value = this.#getInputElement().value;
+
+    // Use renameEvent to convert standard event names to Lynx event names
+    const eventType = renameEvent[e.type] || e.type;
+
+    const newEvent = new CustomEvent(eventType, {
+      ...commonComponentEventSetting,
+      detail: {
+        ...detail,
+        value: sanitizeInput(value), // Sanitize input value
+      },
+    });
+    this.#dom.dispatchEvent(newEvent);
+    if (e.type === 'submit') {
+      e.preventDefault();
+    }
+  };
+
+  #tryToShootComposingEvent() {
+    if (!this.#enableComposingInput) {
+      return;
+    }
+    if (this.#isComposingInput) {
+      return;
+    }
+    this.#isComposingInput = true;
+    this.#shootComposingEvent();
+
+    // Clear any existing timer before setting a new one
+    if (this.#scheduledComposingTimer) {
+      clearTimeout(this.#scheduledComposingTimer);
+    }
+
+    this.#scheduledComposingTimer = self.setTimeout(() => {
+      this.#isComposingInput = false;
+    }, this.#composingInputInterval);
+  }
+
+  #shootComposingEvent() {
+    // Ensure the input value is sanitized before sending in the event
+    const value = sanitizeInput(this.#getInputElement().value);
+    const selectionStart = this.#getInputElement().selectionStart;
+
+    // Use boostedQueueMicrotask for better performance
+    boostedQueueMicrotask(() => {
+      const inputEvent = new CustomEvent('composing-input', {
         ...commonComponentEventSetting,
         detail: {
           value,
-          textLength: value.length,
-          cursor: input.selectionStart,
-          isComposing,
+          selectionStart,
         },
-      }),
-    );
-  };
-
-  #teleportCompositionendInput = () => {
-    const input = this.#getInputElement();
-    const value = input.value;
-    // if #sendComposingInput set true, #teleportInput will send detail
-    if (!this.#sendComposingInput) {
-      this.#dom.dispatchEvent(
-        new CustomEvent('input', {
-          ...commonComponentEventSetting,
-          detail: {
-            value,
-            textLength: value.length,
-            cursor: input.selectionStart,
-          },
-        }),
-      );
-    }
-  };
-
-  #blockHtmlEvent = (event: InputEvent) => {
-    if (
-      event.target === this.#getInputElement()
-      && typeof event.detail === 'number'
-    ) {
-      event.stopImmediatePropagation();
-    }
-  };
+      });
+      this.#dom.dispatchEvent(inputEvent);
+    });
+  }
 
   constructor(dom: HTMLElement) {
     this.#dom = dom;
-    const inputElement = this.#getInputElement();
-    const formElement = this.#getFormElement();
+    const inputElement = this.#getInputElement() as HTMLInputElement;
+    const formElement = this.#getFormElement() as HTMLFormElement;
+
+    // Initialize composing input settings
+    const attrValue = this.#dom.getAttribute('send-composing-input');
+    this.#handleEnableSendComposingInput(attrValue);
+
+    // Enable input event handling
+    this.#handleInputEventEnable(true);
+
     inputElement.addEventListener('blur', this.#teleportEvent, {
       passive: true,
     });
@@ -131,9 +161,6 @@ export class XInputEvents
     formElement.addEventListener('submit', this.#teleportEvent, {
       passive: true,
     });
-    // use form to stop propagation
-    formElement.addEventListener('input', this.#blockHtmlEvent as any, {
-      passive: true,
-    });
+    // Don't add input listener here since it's handled by #handleInputEventEnable
   }
 }
