@@ -1,0 +1,140 @@
+# Case nested - rspack: Step 2
+
+## Changed Files
+- file.module.css
+
+## Asset Files
+- Bundle: rspack-bundle.js
+- Manifest: pages/main.LAST_HASH.hot-update.json, size: 34
+- Manifest: pages/main/pages/main.LAST_HASH.css.hot-update.json, size: 1098
+- Update: pages/main.LAST_HASH.hot-update.js, size: 1394
+
+## Manifest
+
+### pages/main.LAST_HASH.hot-update.json
+
+```json
+{"c":["pages/main"],"r":[],"m":[]}
+```
+
+
+
+### pages/main/pages/main.LAST_HASH.css.hot-update.json
+
+```json
+{"content":"eyJjb21waWxlck9wdGlvbnMiOnsiZW5hYmxlRmliZXJBcmNoIjp0cnVlLCJ1c2VMZXB1c05HIjp0cnVlLCJidW5kbGVNb2R1bGVNb2RlIjoiUmV0dXJuQnlGdW5jdGlvbiIsImVuYWJsZUNTU1NlbGVjdG9yIjp0cnVlLCJlbmFibGVDU1NJbnZhbGlkYXRpb24iOnRydWUsInRhcmdldFNka1ZlcnNpb24iOiIzLjIifSwic291cmNlQ29udGVudCI6eyJhcHBUeXBlIjoiY2FyZCIsImNvbmZpZyI6eyJsZXB1c1N0cmljdCI6dHJ1ZSwiZW5hYmxlUmVtb3ZlQ1NTU2NvcGUiOmZhbHNlfXXsImNzcyI6eyJjc3NNYXAiOnsiMCI6WXsidHlwZSI6IlN0eWxlUnVsZSIsInN0eWxlIjpbeyJuYW1lIjoiYXsb3IiLCJ2YWx1ZSI6IlwiYmx1ZVwiIiwia2V5TG9jIjp7ImxpbmUiOjMsImNvbHVtbiI6NDM5fSwidmFsTG9jIjp7ImxpbmUiOjMsImNvbHVtbiI6NDQ3fX1dLCJzZWxlY3RvclRleHQiOnsidmFsdWUiOiIudmprSEs4ZzlnTHk5MWN0RCIsImxvYyI6eyJsaW5lIjozLCJjb2x1bW4iOjQzM319LCJ2YXJpYWJsZXMiOnt9fSx7InR5cGUiOiJTdHlsZVJ1bGUiLCJzdHlsZSI6WXsibmFtZSI6ImJhY2tncm91bmQtYXsb3IiLCJ2YWx1ZSI6ImJsYWNrIiwia2V5TG9jIjp7ImxpbmUiOjUsImNvbHVtbiI6NDQ5fSwidmFsTG9jIjp7ImxpbmUiOjUsImNvbHVtbiI6NDU2fX1dLCJzZWxlY3RvclRleHQiOnsidmFsdWUiOiIuRWFBR2JDODdMQTBOQ0lJUiIsImxvYyI6eyJsaW5lIjo1LCJjb2x1bW4iOjQzMn19LCJ2YXJpYWJsZXMiOnt9fV19LCJjc3NTb3VyY2UiOnsiMCI6Ii9jc3NJZC8wLmNzcyJ9LCJjb250ZW50TWFwIjp7fX19","deps":{"0":[]}}
+```
+
+
+## Update
+
+
+### pages/main.LAST_HASH.hot-update.js
+
+#### Changed Modules
+- ./file.module.css
+
+#### Changed Runtime Modules
+- webpack/runtime/get_full_hash
+
+#### Changed Content
+```js
+"use strict";
+exports.ids = ['pages/main'];
+exports.modules = {
+"./file.module.css": 
+/*!*************************!*\
+  !*** ./file.module.css ***!
+  \*************************/
+(function (module, __webpack_exports__, __webpack_require__) {
+__webpack_require__.r(__webpack_exports__);
+__webpack_require__.d(__webpack_exports__, {
+  bar: () => (_1)
+});
+// extracted by mini-css-extract-plugin
+var _1 = "vjkHK8g9gLy91ctD";
+
+
+  if (true) {
+    (function() {
+      var localsJsonString = "{\"bar\":\"vjkHK8g9gLy91ctD\"}";
+      var cssReload = __webpack_require__(/*! ../../../../runtime/hotModuleReplacement.cjs */ "../../../../runtime/hotModuleReplacement.cjs")(module.id, {}, "");
+      // only invalidate when locals change
+      if (
+        module.hot.data &&
+        module.hot.data.value &&
+        module.hot.data.value !== localsJsonString
+      ) {
+        module.hot.invalidate();
+      } else {
+        module.hot.accept();
+      }
+      module.hot.dispose(function(data) {
+        data.value = localsJsonString;
+        cssReload();
+      });
+    })();
+  }
+
+}),
+
+};
+exports.runtime = function(__webpack_require__) {
+// webpack/runtime/get_full_hash
+(() => {
+__webpack_require__.h = () => ("CURRENT_HASH")
+})();
+// webpack/runtime/lynx css hot update
+(() => {
+
+__webpack_require__.cssHotUpdateList = [["pages/main","pages/main/pages/main.LAST_HASH.css.hot-update.json"]];
+
+})();
+
+}
+;
+;
+```
+
+
+
+
+## Runtime
+### Status
+
+```txt
+check => prepare => dispose => apply => idle
+```
+
+
+
+### JavaScript
+
+#### Outdated
+
+Outdated Modules:
+- ./file.module.css
+
+
+Outdated Dependencies:
+```json
+{}
+```
+
+#### Updated
+
+Updated Modules:
+- ./file.module.css
+
+Updated Runtime:
+- `__webpack_require__.cssHotUpdateList`
+- `__webpack_require__.h`
+
+
+#### Callback
+
+Accepted Callback:
+
+
+Disposed Callback:
+- ./file.module.css

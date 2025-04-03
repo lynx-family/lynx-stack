@@ -66,6 +66,7 @@ Usage: rspeedy dev [options]
 Options:
   -b --base <base>      specify the base path of the server
   -c --config <config>  specify the configuration file, can be a relative or absolute path
+  --env-mode <mode>     specify the env mode to load the .env.[mode] file
   -h, --help            display help for command
 ```
 
@@ -82,6 +83,7 @@ Usage: rspeedy build [options]
 
 Options:
   -c --config <config>  specify the configuration file, can be a relative or absolute path
+  --env-mode <mode>     specify the env mode to load the .env.[mode] file
   -h, --help            display help for command
 ```
 
@@ -97,6 +99,7 @@ Usage: rspeedy preview [options]
 Options:
   -b --base <base>      specify the base path of the server
   -c --config <config>  specify the configuration file, can be a relative or absolute path
+  --env-mode <mode>     specify the env mode to load the .env.[mode] file
   -h, --help            display help for command
 ```
 
@@ -120,6 +123,7 @@ Options:
   --output <output>     specify inspect content output path
   --verbose             show full function definitions in output
   -c --config <config>  specify the configuration file, can be a relative or absolute path
+  --env-mode <mode>     specify the env mode to load the .env.[mode] file
   -h, --help            display help for command
 ```
 

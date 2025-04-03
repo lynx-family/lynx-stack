@@ -5,7 +5,7 @@
 import { createRequire } from 'node:module';
 
 import type {
-  Compilation,
+  Chunk,
   Compiler,
   CssExtractRspackPluginOptions as ExternalCssExtractRspackPluginOptions,
 } from '@rspack/core';
@@ -136,10 +136,6 @@ class CssExtractRspackPlugin {
 export { CssExtractRspackPlugin };
 export type { CssExtractRspackPluginOptions };
 
-type RuntimeModule = Parameters<
-  Compilation['hooks']['runtimeModule']['call']
->[0];
-
 class CssExtractRspackPluginImpl {
   name = 'CssExtractRspackPlugin';
   private hash: string | null = null;
@@ -163,54 +159,82 @@ class CssExtractRspackPluginImpl {
         compiler.options.mode === 'development'
         || process.env['NODE_ENV'] === 'development'
       ) {
-        // We require publicPath to get css.hot-update.json
-        compilation.hooks.additionalTreeRuntimeRequirements.tap(
-          this.name,
-          (_, set) => {
-            set.add(compiler.webpack.RuntimeGlobals.publicPath);
-          },
-        );
+        const { RuntimeGlobals, RuntimeModule } = compiler.webpack;
 
-        compilation.hooks.runtimeModule.tap(
-          this.name,
-          (runtimeModule, chunk) => {
-            if (runtimeModule.name === 'require_chunk_loading') {
-              const asyncChunks = Array.from(chunk.getAllAsyncChunks())
-                .map(c => {
-                  const { path } = compilation.getAssetPathWithInfo(
-                    options.chunkFilename ?? '.rspeedy/async/[name]/[name].css',
-                    { chunk: c },
-                  );
-                  return [c.name!, path];
-                });
+        class CSSHotUpdateRuntimeModule extends RuntimeModule {
+          hash: string | null;
 
-              const { path } = compilation.getPathWithInfo(
-                options.filename ?? '[name].css',
-                // Rspack does not pass JsChunk to Rust.
-                // See: https://github.com/web-infra-dev/rspack/blob/73c31abcb78472eb5a3d93e4ece19d9f106727a6/crates/rspack_binding_values/src/path_data.rs#L62
-                { filename: chunk.name! },
-              );
+          constructor(hash: string | null) {
+            super('lynx css hot update');
+            this.hash = hash;
+          }
 
-              const initialChunk = [chunk.name!, path];
+          override generate(): string {
+            const chunk = this.chunk!;
 
-              const cssHotUpdateList = [...asyncChunks, initialChunk].map((
-                [chunkName, cssHotUpdatePath],
-              ) => [
-                chunkName!,
-                cssHotUpdatePath!.replace(
-                  '.css',
-                  `${this.hash ? `.${this.hash}` : ''}.css.hot-update.json`,
-                ),
-              ]);
+            const asyncChunks = Array.from(chunk.getAllAsyncChunks())
+              .map(c => {
+                const { path } = compilation.getAssetPathWithInfo(
+                  options.chunkFilename ?? '.rspeedy/async/[name]/[name].css',
+                  { chunk: c },
+                );
+                return [c.name!, path];
+              });
 
-              this.#overrideChunkLoadingRuntimeModule(
-                compiler,
-                runtimeModule,
-                cssHotUpdateList,
-              );
-            }
-          },
-        );
+            const { path } = compilation.getPathWithInfo(
+              options.filename ?? '[name].css',
+              { chunk },
+            );
+
+            const initialChunk = [chunk.name!, path];
+
+            const cssHotUpdateList = [...asyncChunks, initialChunk].map((
+              [chunkName, cssHotUpdatePath],
+            ) => [
+              chunkName!,
+              cssHotUpdatePath!.replace(
+                '.css',
+                `${this.hash ? `.${this.hash}` : ''}.css.hot-update.json`,
+              ),
+            ]);
+
+            return `
+${RuntimeGlobals.require}.cssHotUpdateList = ${
+              cssHotUpdateList ? JSON.stringify(cssHotUpdateList) : 'null'
+            };
+`;
+          }
+        }
+
+        const onceForChunkSet = new WeakSet<Chunk>();
+        const handler = (chunk: Chunk, runtimeRequirements: Set<string>) => {
+          if (onceForChunkSet.has(chunk)) return;
+          onceForChunkSet.add(chunk);
+          runtimeRequirements.add(RuntimeGlobals.publicPath);
+          compilation.addRuntimeModule(
+            chunk,
+            new CSSHotUpdateRuntimeModule(this.hash),
+          );
+        };
+
+        compilation.hooks.runtimeRequirementInTree
+          .for(RuntimeGlobals.ensureChunkHandlers)
+          .tap(this.name, handler);
+        compilation.hooks.runtimeRequirementInTree
+          .for(RuntimeGlobals.hmrDownloadUpdateHandlers)
+          .tap(this.name, handler);
+        compilation.hooks.runtimeRequirementInTree
+          .for(RuntimeGlobals.hmrDownloadManifest)
+          .tap(this.name, handler);
+        compilation.hooks.runtimeRequirementInTree
+          .for(RuntimeGlobals.baseURI)
+          .tap(this.name, handler);
+        compilation.hooks.runtimeRequirementInTree
+          .for(RuntimeGlobals.externalInstallChunk)
+          .tap(this.name, handler);
+        compilation.hooks.runtimeRequirementInTree
+          .for(RuntimeGlobals.onChunksLoaded)
+          .tap(this.name, handler);
 
         compilation.hooks.processAssets.tapPromise(
           {
@@ -300,22 +324,5 @@ class CssExtractRspackPluginImpl {
         );
       }
     });
-  }
-
-  #overrideChunkLoadingRuntimeModule(
-    compiler: Compiler,
-    runtimeModule: RuntimeModule,
-    cssHotUpdateList: string[][],
-  ) {
-    const { RuntimeGlobals } = compiler.webpack;
-    runtimeModule.source!.source = Buffer.concat([
-      Buffer.from(runtimeModule.source!.source as Buffer),
-      // cssHotUpdateList
-      Buffer.from(`
-      ${RuntimeGlobals.require}.cssHotUpdateList = ${
-        cssHotUpdateList ? JSON.stringify(cssHotUpdateList) : 'null'
-      };
-    `),
-    ]);
   }
 }

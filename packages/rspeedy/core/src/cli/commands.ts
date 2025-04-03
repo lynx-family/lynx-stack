@@ -12,6 +12,7 @@ import { version } from '../version.js'
 
 export interface CommonOptions {
   config?: string
+  envMode?: string
 }
 
 function applyCommonOptions(command: Command) {
@@ -19,6 +20,10 @@ function applyCommonOptions(command: Command) {
     .option(
       '-c --config <config>',
       'specify the configuration file, can be a relative or absolute path',
+    )
+    .option(
+      '--env-mode <mode>',
+      'specify the env mode to load the .env.[mode] file"',
     )
 }
 

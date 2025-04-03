@@ -34,7 +34,13 @@ export async function preview(
       rspeedyConfig.server.base = previewOptions.base
     }
 
-    const rspeedy = await createRspeedy({ cwd, rspeedyConfig })
+    const rspeedy = await createRspeedy({
+      cwd,
+      rspeedyConfig,
+      ...(previewOptions.envMode
+        ? { loadEnv: { mode: previewOptions.envMode } }
+        : {}),
+    })
 
     await rspeedy.initConfigs()
 
