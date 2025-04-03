@@ -13,11 +13,9 @@ import { createDispose } from './crossThreadHandlers/createDispose.js';
 import { registerTriggerComponentEventHandler } from './crossThreadHandlers/registerTriggerComponentEventHandler.js';
 import { registerSelectComponentHandler } from './crossThreadHandlers/registerSelectComponentHandler.js';
 import {
-  mainThreadChunkReadyEndpoint,
   mainThreadStartEndpoint,
   markTimingEndpoint,
   sendGlobalEventEndpoint,
-  uiThreadFpReadyEndpoint,
   type MainThreadStartConfigs,
   type NapiModulesCall,
   type NativeModulesCall,
@@ -45,7 +43,6 @@ export function startUIThread(
     terminateWorkers,
   } = bootWorkers();
   const sendGlobalEvent = backgroundRpc.createCall(sendGlobalEventEndpoint);
-  const uiThreadFpReady = backgroundRpc.createCall(uiThreadFpReadyEndpoint);
   const mainThreadStart = mainThreadRpc.createCall(mainThreadStartEndpoint);
   const markTiming = backgroundRpc.createCall(markTimingEndpoint);
   const markTimingInternal = (
@@ -72,38 +69,27 @@ export function startUIThread(
     callbacks.onError,
   );
   registerDispatchLynxViewEventHandler(backgroundRpc, shadowRoot);
-  mainThreadRpc.registerHandler(
-    mainThreadChunkReadyEndpoint,
-    () => {
-      registerFlushElementTreeHandler(
-        mainThreadRpc,
-        {
-          shadowRoot,
-        },
-        (info) => {
-          const { isFP } = info;
-          if (isFP) {
-            registerInvokeUIMethodHandler(
-              backgroundRpc,
-              shadowRoot,
-            );
-            registerNativePropsHandler(
-              backgroundRpc,
-              shadowRoot,
-            );
-            registerTriggerComponentEventHandler(
-              backgroundRpc,
-              shadowRoot,
-            );
-            registerSelectComponentHandler(
-              backgroundRpc,
-              shadowRoot,
-            );
-            uiThreadFpReady();
-          }
-        },
-      );
+  registerFlushElementTreeHandler(
+    mainThreadRpc,
+    {
+      shadowRoot,
     },
+  );
+  registerInvokeUIMethodHandler(
+    backgroundRpc,
+    shadowRoot,
+  );
+  registerNativePropsHandler(
+    backgroundRpc,
+    shadowRoot,
+  );
+  registerTriggerComponentEventHandler(
+    backgroundRpc,
+    shadowRoot,
+  );
+  registerSelectComponentHandler(
+    backgroundRpc,
+    shadowRoot,
   );
   registerNativeModulesCallHandler(
     backgroundRpc,
