@@ -455,18 +455,6 @@ test.describe('reactlynx3 tests', () => {
       await expect(successCallback).toBe(true);
     });
 
-    test('api-onNativeAppReady', async ({ page }, { title }) => {
-      const messages: string[] = [];
-      await page.on('console', async (message) => {
-        for (const arg of message.args()) {
-          messages.push(JSON.stringify(await arg.jsonValue()));
-        }
-      });
-      await goto(page, title);
-      await wait(500);
-      expect(messages.join(',')).toContain('uiThreadFpReady');
-    });
-
     test('basic-at-rule-animation', async ({ page }, { title }) => {
       await goto(page, title);
       const target = page.locator('#target');

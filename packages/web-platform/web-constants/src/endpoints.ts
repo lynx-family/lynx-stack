@@ -9,7 +9,6 @@ import type {
 } from './types/EventType.js';
 import type { Cloneable, CloneableObject } from './types/Cloneable.js';
 import type { MainThreadStartConfigs } from './types/MainThreadStartConfigs.js';
-import type { LynxLifecycleEvent } from './types/LynxLifecycleEvent.js';
 import type { IdentifierType, InvokeCallbackRes } from './types/NativeApp.js';
 import type { LynxTemplate } from './types/LynxModule.js';
 import type { NapiModulesMap } from './types/NapiModules.js';
@@ -74,21 +73,6 @@ export const disposeEndpoint = createRpcEndpoint<
   void
 >('dispose', false, true);
 
-export const uiThreadFpReadyEndpoint = createRpcEndpoint<[], void>(
-  'uiThreadFpReady',
-  false,
-  false,
-);
-
-export const onLifecycleEventEndpoint = createRpcEndpoint<
-  [LynxLifecycleEvent],
-  void
->(
-  '__OnLifecycleEvent',
-  false,
-  false,
-);
-
 export const BackgroundThreadStartEndpoint = createRpcEndpoint<[
   {
     initData: unknown;
@@ -115,11 +99,6 @@ export const flushElementTreeEndpoint = createRpcEndpoint<
   ],
   void
 >('flushElementTree', false, true);
-
-export const mainThreadChunkReadyEndpoint = createRpcEndpoint<
-  [],
-  void
->('mainThreadChunkReady', false, false);
 
 export const callLepusMethodEndpoint = createRpcEndpoint<
   [name: string, data: unknown],
@@ -215,3 +194,10 @@ export const dispatchNapiModuleEndpoint = createRpcEndpoint<
   [data: Cloneable],
   void
 >('dispatchNapiModule', false, false);
+export const dispatchCoreContextEventEndpoint = createRpcEndpoint<
+  [
+    eventType: string,
+    data: Cloneable | undefined | null,
+  ],
+  void
+>('dispatchCoreContextEventEndpoint', false, false);

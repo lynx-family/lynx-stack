@@ -15,7 +15,6 @@ import {
   type publishEventEndpoint,
   type publicComponentEventEndpoint,
   type reportErrorEndpoint,
-  type onLifecycleEventEndpoint,
   type RpcCallType,
   type postExposureEndpoint,
 } from '@lynx-js/web-constants';
@@ -42,7 +41,7 @@ export interface MainThreadRuntimeCallbacks {
     timingFlags: string[],
   ) => void;
   _ReportError: RpcCallType<typeof reportErrorEndpoint>;
-  __OnLifecycleEvent: RpcCallType<typeof onLifecycleEventEndpoint>;
+  __OnLifecycleEvent: (lifeCycleEvent: Cloneable) => void;
   markTiming: (pipelineId: string, timingKey: string) => void;
   publishEvent: RpcCallType<typeof publishEventEndpoint>;
   publicComponentEvent: RpcCallType<typeof publicComponentEventEndpoint>;
@@ -215,7 +214,7 @@ export class MainThreadRuntime {
 
   _ReportError: RpcCallType<typeof reportErrorEndpoint>;
 
-  __OnLifecycleEvent: RpcCallType<typeof onLifecycleEventEndpoint>;
+  __OnLifecycleEvent: (lifeCycleEvent: Cloneable) => void;
 
   __LoadLepusChunk: (path: string) => boolean = (path) => {
     try {
