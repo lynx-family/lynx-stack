@@ -1,6 +1,25 @@
 coverage:
   status:
-    project: off
+    project:
+      default:
+        threshold: "0%"
+        informational: true
+      react:
+        threshold: "0%"
+        paths:
+          - packages/react
+      rspeedy:
+        threshold: "0%"
+        paths:
+          - packages/rspeedy
+      webpack:
+        threshold: "0%"
+        paths:
+          - packages/webpack
+      web-platform:
+        threshold: "0%"
+        paths:
+          - packages/web-platform
     patch:
       default:
         threshold: "1%"
