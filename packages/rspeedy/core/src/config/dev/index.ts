@@ -84,7 +84,7 @@ export interface Dev {
    *
    * By default, Rspeedy uses HMR as the preferred method to update modules. If HMR is disabled or cannot be used in certain scenarios, it will automatically fallback to {@link Dev.liveReload}.
    *
-   * To completely disable both HMR and live reload, set both `dev.hmr` and `dev.liveReload` to `false`. Then, no WebSocket requests will be made to the dev server on the page, and the page will not automatically refresh when file change.
+   * To completely disable both HMR and live reload, set both `dev.hmr` and `dev.liveReload` to `false`. Then, no WebSocket requests will be made to the dev server on the page, and the page will not automatically refresh when file changes.
    *
    * @example
    *
@@ -124,7 +124,7 @@ export interface Dev {
    *
    * Live reload is used as a fallback when {@link Dev.hmr} is disabled or cannot be used in certain scenarios. When enabled, the page will automatically refresh when source files are changed.
    *
-   * To completely disable both HMR and live reload, set both `dev.hmr` and `dev.liveReload` to `false`. Then, no WebSocket requests will be made to the dev server on the page, and the page will not automatically refresh when file change.
+   * To completely disable both HMR and live reload, set both `dev.hmr` and `dev.liveReload` to `false`. Then, no WebSocket requests will be made to the dev server on the page, and the page will not automatically refresh when file changes.
    *
    * @example
    *
