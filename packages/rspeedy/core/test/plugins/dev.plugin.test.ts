@@ -9,10 +9,27 @@ import { assert, beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { createStubRspeedy } from '../createStubRspeedy.js'
 
+vi.mock('node:os')
+
 describe('Plugins - Dev', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.stubEnv('NODE_ENV', 'development')
     vi.mock('../../src/webpack/ProvidePlugin.js')
+
+    const { default: os } = await import('node:os')
+
+    vi.mocked(os.networkInterfaces).mockReturnValue({
+      eth0: [
+        {
+          address: '192.168.1.1',
+          family: 'IPv4',
+          internal: false,
+          netmask: '255.255.255.0',
+          mac: '00:00:00:00:00:00',
+          cidr: '192.168.1.1/24',
+        },
+      ],
+    })
 
     return () => {
       vi.unstubAllEnvs()
