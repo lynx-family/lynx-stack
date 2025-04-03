@@ -40,6 +40,8 @@ function ssrHydrate(info: string) {
     throw new Error('SSR Hydration Failed! Please check if the SSR content loaded successfully!');
   }
 
+  resetJSReady();
+  setupPage(nativePage);
   const refsMap = __GetTemplateParts(nativePage);
 
   const { __opcodes, __root_values } = JSON.parse(info);
