@@ -71,11 +71,12 @@ export interface Config {
 export type ConsoleType = 'log' | 'warn' | 'error' | 'info' | 'debug' | 'profile' | 'profileEnd' | (string & Record<never, never>);
 
 // @public
-export function createRspeedy({ cwd, rspeedyConfig, loadEnv }: CreateRspeedyOptions): Promise<RspeedyInstance>;
+export function createRspeedy({ cwd, rspeedyConfig, loadEnv, environment }: CreateRspeedyOptions): Promise<RspeedyInstance>;
 
 // @public
 export interface CreateRspeedyOptions {
     cwd?: string;
+    environment?: CreateRsbuildOptions['environment'];
     loadEnv?: CreateRsbuildOptions['loadEnv'];
     rspeedyConfig?: Config;
 }
