@@ -64,10 +64,11 @@ Commands:
 Usage: rspeedy dev [options]
 
 Options:
-  -b --base <base>      specify the base path of the server
-  -c --config <config>  specify the configuration file, can be a relative or absolute path
-  --env-mode <mode>     specify the env mode to load the .env.[mode] file
-  -h, --help            display help for command
+  -b --base <base>          specify the base path of the server
+  -c --config <config>      specify the configuration file, can be a relative or absolute path
+  --env-mode <mode>         specify the env mode to load the .env.[mode] file
+  --environment <name...>   specify the name of environment to build
+  -h, --help                display help for command
 ```
 
 当配置文件内容发生修改时，开发服务器会自动重启。
@@ -82,9 +83,10 @@ Options:
 Usage: rspeedy build [options]
 
 Options:
-  -c --config <config>  specify the configuration file, can be a relative or absolute path
-  --env-mode <mode>     specify the env mode to load the .env.[mode] file
-  -h, --help            display help for command
+  -c --config <config>      specify the configuration file, can be a relative or absolute path
+  --env-mode <mode>         specify the env mode to load the .env.[mode] file
+  --environment <name...>   specify the name of environment to build
+  -h, --help                display help for command
 ```
 
 ## rspeedy preview

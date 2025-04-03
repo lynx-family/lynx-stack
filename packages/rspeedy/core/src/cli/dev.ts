@@ -11,10 +11,12 @@ import color from 'picocolors'
 import type { CommonOptions } from './commands.js'
 import { loadConfig, resolveConfigPath } from '../config/loadConfig.js'
 import { createRspeedy } from '../create-rspeedy.js'
+import type { CreateRspeedyOptions } from '../create-rspeedy.js'
 import { exit } from './exit.js'
 
 export interface DevOptions extends CommonOptions {
   base?: string | undefined
+  environment?: string[] | undefined
 }
 
 export async function dev(
@@ -63,13 +65,20 @@ export async function dev(
       },
     )
 
-    const rspeedy = await createRspeedy({
+    const options: CreateRspeedyOptions = {
       cwd,
       rspeedyConfig,
-      ...(devOptions.envMode
-        ? { loadEnv: { mode: devOptions.envMode } }
-        : {}),
-    })
+    }
+
+    if (devOptions.envMode) {
+      options.loadEnv = { mode: devOptions.envMode }
+    }
+
+    if (devOptions.environment) {
+      options.environment = devOptions.environment
+    }
+
+    const rspeedy = await createRspeedy(options)
 
     const server = await rspeedy.createDevServer()
 

@@ -47,6 +47,14 @@ export interface CreateRspeedyOptions {
    * @defaultValue true
    */
   loadEnv?: CreateRsbuildOptions['loadEnv']
+  /**
+   * Only build specified environments.
+   * For example, passing `['lynx']` will only build the `lynx` environment.
+   * If not specified or passing an empty array, all environments will be built.
+   * @see https://rsbuild.dev/guide/advanced/environments#build-specified-environment
+   * @defaultValue []
+   */
+  environment?: CreateRsbuildOptions['environment']
 }
 /**
  * The `createRspeedy` method can let you create a Rspeedy instance and you can customize the build or development process in Node.js Runtime.
@@ -68,7 +76,7 @@ export interface CreateRspeedyOptions {
  * @public
  */
 export async function createRspeedy(
-  { cwd = process.cwd(), rspeedyConfig = {}, loadEnv = true }:
+  { cwd = process.cwd(), rspeedyConfig = {}, loadEnv = true, environment = [] }:
     CreateRspeedyOptions,
 ): Promise<RspeedyInstance> {
   const config = applyDefaultRspeedyConfig(rspeedyConfig)
@@ -78,6 +86,7 @@ export async function createRspeedy(
       cwd,
       loadEnv,
       rsbuildConfig: toRsbuildConfig(config) as RsbuildConfig,
+      environment,
     }),
     import('./plugins/index.js'),
   ])

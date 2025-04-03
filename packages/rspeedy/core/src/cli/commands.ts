@@ -46,6 +46,10 @@ export function apply(program: Command): Command {
   const buildCommand = program.command('build')
   buildCommand
     .description('Build the project in production mode')
+    .option(
+      '--environment <name...>',
+      'specify the name of environment to build',
+    )
     .action(
       (buildOptions: BuildOptions) =>
         import('./build.js').then(({ build }) =>
@@ -59,6 +63,10 @@ export function apply(program: Command): Command {
       'Run the dev server and watch for source file changes while serving.',
     )
     .option('--base <base>', 'specify the base path of the server')
+    .option(
+      '--environment <name...>',
+      'specify the name of environment to build',
+    )
     .action(
       (devOptions: DevOptions) =>
         import('./dev.js').then(({ dev }) =>

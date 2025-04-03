@@ -69,3 +69,39 @@ describe('rspeedy config test', () => {
     )
   })
 })
+
+describe('rspeedy environment test', () => {
+  const fixturesRoot = join(
+    dirname(fileURLToPath(import.meta.url)),
+    'fixtures',
+  )
+
+  test.each([
+    { name: 'web only', environment: ['web'], expected: ['web'] },
+    { name: 'lynx only', environment: ['lynx'], expected: ['lynx'] },
+    {
+      name: 'web + lynx',
+      environment: ['web', 'lynx'],
+      expected: ['web', 'lynx'],
+    },
+    { name: 'empty array', environment: [], expected: ['web', 'lynx'] },
+  ])(
+    'test environment combinations - $name',
+    async ({ environment, expected }) => {
+      const root = join(fixturesRoot, 'environment')
+      const rsbuild = await createRspeedy({
+        cwd: root,
+        rspeedyConfig: {
+          environments: {
+            web: {},
+            lynx: {},
+          },
+        },
+        environment,
+      })
+      const configs = await rsbuild.initConfigs()
+      expect(configs).toHaveLength(expected.length)
+      expect(configs.map(c => c.name)).toEqual(expected)
+    },
+  )
+})
