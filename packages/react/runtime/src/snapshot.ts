@@ -38,6 +38,11 @@ export function setupPage(page: FiberElement): void {
   __pageId = __GetElementUniqueID(page);
 }
 
+export function clearPage(): void {
+  __page = undefined as unknown as FiberElement;
+  __pageId = 0;
+}
+
 export const snapshotManager: {
   values: Map<string, Snapshot>;
 } = {

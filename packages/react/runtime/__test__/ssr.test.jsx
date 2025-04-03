@@ -4,6 +4,9 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import { elementTree, options } from './utils/nativeMethod';
 import { globalEnvManager } from './utils/envManager';
 import { __root } from '../src/root';
+import { __page as __internalPage } from '../src/internal';
+import { clearPage } from '../src/snapshot';
+import { jsReadyEventIdSwap } from '../src/lifecycle/event/jsReady';
 
 const ssrIDMap = new Map();
 
@@ -448,6 +451,7 @@ describe('ssr', () => {
     const uiSign3 = elementTree.triggerComponentAtIndex(listRef, 2);
 
     const info = ssrEncode();
+    clearPage();
 
     const __page = __root.__element_root;
 
@@ -462,6 +466,8 @@ describe('ssr', () => {
     vi.stubGlobal('__GetTemplateParts', __GetTemplateParts);
 
     ssrHydrate(info);
+    expect(__internalPage).toBe(__page);
+    expect(jsReadyEventIdSwap).toEqual({});
     {
       const listRef = elementTree.getElementById('ssr-list');
       expect(elementTree.triggerComponentAtIndex(listRef, 0)).toEqual(uiSign1);
