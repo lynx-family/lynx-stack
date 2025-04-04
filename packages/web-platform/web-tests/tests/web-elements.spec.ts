@@ -2006,7 +2006,6 @@ test.describe('web-elements test suite', () => {
         await expect(scrolled).toBe(4);
       },
     );
-
     test(
       'get-visible-cells',
       async ({ page, browserName }, { titlePath }) => {
@@ -2024,16 +2023,9 @@ test.describe('web-elements test suite', () => {
         const data = await cells.jsonValue();
         expect(
           Array.isArray(data),
-          // Array.isArray(data) && data.length > 10
-          //   && data.every(
-          //     i => (i.bottom !== undefined && i.top !== undefined
-          //       && i.left !== undefined && i.right !== undefined
-          //       && i.index !== undefined && i.itemKey !== undefined),
-          //   ),
         ).toBeTruthy();
       },
     );
-
     test(
       'get-scroll-container-info',
       async ({ page }, { titlePath }) => {
@@ -2114,6 +2106,65 @@ test.describe('web-elements test suite', () => {
       await gotoWebComponentPage(page, title);
       await diffScreenShot(page, title, 'index');
     });
+
+    test('basic-waterfall', async ({ page, browserName }, { titlePath }) => {
+      const title = getTitle(titlePath);
+      await gotoWebComponentPage(page, title);
+      await diffScreenShot(page, title, 'initial');
+      if (browserName === 'webkit') test.skip(); // cannot wheel
+      await page.mouse.move(100, 100);
+      await page.mouse.wheel(300, 0);
+      await diffScreenShot(page, title, 'wheel-x-not-wheelable');
+      await page.mouse.wheel(0, 3000);
+      await diffScreenShot(page, title, 'wheel-y-wheelable');
+    });
+    test(
+      'basic-waterfall-insert',
+      async ({ page }, { titlePath }) => {
+        const title = getTitle(titlePath);
+        await gotoWebComponentPage(page, title);
+        await diffScreenShot(page, title, 'initial');
+        await page.evaluate(() => {
+          const listItem = document.createElement('list-item');
+          listItem.setAttribute('item-key', '21');
+          listItem.id = '21';
+
+          const xView = document.createElement('x-view');
+          xView.className = 'item';
+          xView.setAttribute('part', 'item');
+          xView.style.height = '180px';
+          xView.textContent = '21';
+          listItem.appendChild(xView);
+
+          const targetElement = document.querySelector('x-list')!.children[2]!;
+          targetElement.parentNode!.insertBefore(listItem, targetElement);
+        });
+        await wait(1000);
+        await diffScreenShot(page, title, 'insert');
+      },
+    );
+    test(
+      'scroll-orientation-waterfall',
+      async ({ page, browserName }, { titlePath }) => {
+        const title = getTitle(titlePath);
+        await gotoWebComponentPage(page, title);
+        await diffScreenShot(page, title, 'initial');
+        if (browserName === 'webkit') test.skip(); // cannot wheel
+        await page.mouse.move(100, 100);
+        await page.mouse.wheel(0, 300);
+        await diffScreenShot(page, title, 'wheel-y-not-wheelable');
+        await page.mouse.wheel(3000, 0);
+        await diffScreenShot(page, title, 'wheel-x-wheelable');
+      },
+    );
+    test(
+      'axios-gap-waterfall',
+      async ({ page }, { titlePath }) => {
+        const title = getTitle(titlePath);
+        await gotoWebComponentPage(page, title);
+        await diffScreenShot(page, title, 'index');
+      },
+    );
   });
   test.describe('x-input', () => {
     test('placeholder', async ({ page }, { titlePath }) => {
