@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lynx Security Demo</title>
+    <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100vh;
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+      overflow: hidden;
+    }
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+    .hidden-iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 10;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 {
+      color: #007bff;
+      text-align: center;
+    }
+    h2 {
+      color: #444;
+      margin-top: 20px;
+    }
+    .feature-list {
+      background-color: white;
+      border-radius: 8px;
+      padding: 15px;
+      margin: 20px 0;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .feature-list h3 {
+      margin-top: 0;
+      color: #007bff;
+    }
+    code {
+      background-color: #eee;
+      padding: 2px 4px;
+      border-radius: 3px;
+      font-family: monospace;
+    }
+    .instructions {
+      background-color: white;
+      border-radius: 8px;
+      padding: 15px;
+      margin: 20px 0;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    ol {
+      padding-left: 20px;
+    }
+    .note {
+      margin-top: 20px;
+      padding: 10px;
+      background-color: #e8f4ff;
+      border-left: 4px solid #007bff;
+      border-radius: 4px;
+    }
+    </style>
+  </head>
+  <body>
+    <!-- Create an iframe that loads the bundle directly -->
+    <iframe
+      src="/main.lynx.bundle?fullscreen=true"
+      allow="fullscreen"
+      id="lynx-frame"
+      class="hidden-iframe"
+    >
+    </iframe>
+
+    <!-- Fallback content in case the iframe doesn't work -->
+    <div id="fallback-container" class="container">
+      <h1>Lynx Security Demo</h1>
+      <p>
+        This interactive demo showcases three fundamental web security features
+        implemented for the Lynx platform.
+      </p>
+
+      <div class="feature-list">
+        <h3>Security Features Demonstrated:</h3>
+        <ul>
+          <li>
+            <strong>Content Security Policy (CSP)</strong> - Controls which
+            scripts can execute
+          </li>
+          <li>
+            <strong>CSRF Protection</strong> - Prevents cross-site request
+            forgery attacks
+          </li>
+          <li>
+            <strong>Input Sanitization</strong> - Cleans potentially dangerous
+            HTML input
+          </li>
+        </ul>
+      </div>
+
+      <div class="instructions">
+        <h2>How to View This Demo</h2>
+        <p>
+          This demo requires the Lynx runtime to display properly. To view it:
+        </p>
+        <ol>
+          <li>
+            Make sure you have the <strong>Lynx Explorer app</strong> installed
+            on your mobile device
+          </li>
+          <li>Open your terminal where you ran <code>pnpm dev</code></li>
+          <li>
+            Scan the QR code displayed in the terminal with your mobile device's
+            camera
+          </li>
+          <li>The demo will open automatically in the Lynx Explorer app</li>
+        </ol>
+      </div>
+
+      <div class="note">
+        <p>
+          <strong>Note:</strong> For the best experience, view this demo on a
+          mobile device using the Lynx Explorer app. The demo has been
+          specifically optimized for the Lynx runtime environment with
+          mobile-friendly UI elements.
+        </p>
+      </div>
+    </div>
+
+    <script>
+    // Hide the fallback content if the iframe loads successfully
+    document.getElementById('lynx-frame').addEventListener('load', function() {
+      document.getElementById('fallback-container').style.display = 'none';
+    });
+    </script>
+  </body>
+</html>

@@ -74,6 +74,7 @@
     "lightningcss", // https://lightningcss.dev/
     "mainthread", // @lynx-js/web-mainthread-apis
     "manypkg", // https://github.com/Thinkmill/manypkg
+    "malva", // dprint plugin
     "messageformat", // https://formatjs.github.io/docs/intl-messageformat
     "memfs",
     "mktemp",
@@ -114,6 +115,7 @@
     "parseable", // https://pnpm.io/cli/list
     "debugids", // https://getsentry.github.io/debugids/
     "layoutchange", // the "layoutchange" event of Lynx
+    "nosniff"
   ],
   // Glob
   "ignorePaths": [
@@ -149,5 +151,5 @@
   ],
   "enableFiletypes": [
     "mdx",
-  ],
+  ]
 }

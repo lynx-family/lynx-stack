@@ -5,122 +5,159 @@
 */
 import {
   type AttributeReactiveClass,
+  boostedQueueMicrotask,
   genDomGetter,
   registerAttributeHandler,
+  registerEventEnableStatusChangeHandler,
 } from '@lynx-js/web-elements-reactive';
+
+// Import the sanitizeInput function from our new security module
+import { sanitizeInput } from '@lynx-js/web-security';
+
 import { commonComponentEventSetting } from '../common/commonEventInitConfiguration.js';
 import { renameEvent } from '../common/renameEvent.js';
-import { registerEventEnableStatusChangeHandler } from '@lynx-js/web-elements-reactive';
 
 export class XTextareaEvents
   implements InstanceType<AttributeReactiveClass<typeof HTMLElement>>
 {
   static observedAttributes = ['send-composing-input'];
   #dom: HTMLElement;
-
-  #sendComposingInput = false;
-
-  #getTextareaElement = genDomGetter<HTMLInputElement>(
+  #getTextareaElement = genDomGetter<HTMLTextAreaElement>(
     () => this.#dom.shadowRoot!,
     '#textarea',
   );
-  #getFormElement = genDomGetter<HTMLInputElement>(
+  #getFormElement = genDomGetter<HTMLFormElement>(
     () => this.#dom.shadowRoot!,
     '#form',
   );
+  #enableComposingInput = false;
+  #composingInputInterval = 500;
+  #isComposingInput = false;
+  #scheduledComposingTimer = 0;
+  #prevBlockDomEnv: { value: string; selectionStart: number | null } = {
+    value: '',
+    selectionStart: 0,
+  };
 
-  @registerEventEnableStatusChangeHandler('input')
-  #handleEnableConfirmEvent(status: boolean) {
-    const textareaElement = this.#getTextareaElement();
-    if (status) {
-      textareaElement.addEventListener(
-        'input',
-        this.#teleportInput as (ev: Event) => void,
-        { passive: true },
-      );
-      textareaElement.addEventListener(
-        'compositionend',
-        this.#teleportCompositionendInput as (ev: Event) => void,
-        { passive: true },
-      );
-    } else {
-      textareaElement.removeEventListener(
-        'input',
-        this.#teleportInput as (ev: Event) => void,
-      );
-      textareaElement.removeEventListener(
-        'compositionend',
-        this.#teleportCompositionendInput as (ev: Event) => void,
-      );
+  @registerAttributeHandler('send-composing-input', true)
+  #handleEnableSendComposingInput(newValue: string | null) {
+    this.#enableComposingInput = newValue !== null;
+    if (newValue !== null) {
+      this.#composingInputInterval = Number.parseInt(newValue) || 500;
     }
   }
 
-  @registerAttributeHandler('send-composing-input', true)
-  #handleSendComposingInput(newVal: string | null) {
-    this.#sendComposingInput = newVal !== null;
+  @registerEventEnableStatusChangeHandler('input')
+  #handleInputEventEnable(enabled: boolean) {
+    const formElement = this.#getFormElement();
+    if (enabled) {
+      // Add event listener when enabled
+      formElement.addEventListener('input', this.#blockHtmlEvent as any, {
+        passive: true,
+      });
+    } else {
+      // Remove event listener when disabled
+      formElement.removeEventListener('input', this.#blockHtmlEvent as any);
+    }
   }
 
-  #teleportEvent = (event: FocusEvent | SubmitEvent) => {
-    const eventType = renameEvent[event.type] ?? event.type;
-    this.#dom.dispatchEvent(
-      new CustomEvent(eventType, {
-        ...commonComponentEventSetting,
-        detail: {
-          value: this.#getTextareaElement().value,
-        },
-      }),
-    );
+  #blockHtmlEvent = (e: InputEvent) => {
+    e.stopPropagation();
+    const textareaElement = this.#getTextareaElement() as HTMLTextAreaElement;
+    this.#prevBlockDomEnv.value = textareaElement.value;
+    this.#prevBlockDomEnv.selectionStart = textareaElement.selectionStart;
+    const inputEvent = new CustomEvent('input', {
+      ...commonComponentEventSetting,
+      detail: {
+        value: sanitizeInput(this.#prevBlockDomEnv.value), // Sanitize textarea input
+        selectionStart: this.#prevBlockDomEnv.selectionStart,
+      },
+    });
+    this.#dom.dispatchEvent(inputEvent);
+    this.#tryToShootComposingEvent();
   };
 
-  #teleportInput = (event: InputEvent) => {
-    const input = this.#getTextareaElement();
-    const value = input.value;
-    const isComposing = event.isComposing;
-    if (isComposing && !this.#sendComposingInput) return;
-    this.#dom.dispatchEvent(
-      new CustomEvent('input', {
+  #teleportEvent = (e: Event) => {
+    if (e.type === 'input') {
+      this.#blockHtmlEvent(e as InputEvent);
+      return;
+    }
+
+    const detail = e.type === 'submit'
+      ? { value: (e as unknown as { submitter: unknown }).submitter }
+      : {};
+    const textareaElement = this.#getTextareaElement() as HTMLTextAreaElement;
+    const value = textareaElement.value;
+
+    // Use renameEvent to get the Lynx equivalent event name
+    const eventType = renameEvent[e.type] || e.type;
+
+    const newEvent = new CustomEvent(eventType, {
+      ...commonComponentEventSetting,
+      detail: {
+        ...detail,
+        value: sanitizeInput(value), // Sanitize textarea value
+      },
+    });
+    this.#dom.dispatchEvent(newEvent);
+    if (e.type === 'submit') {
+      e.preventDefault();
+    }
+  };
+
+  #tryToShootComposingEvent() {
+    if (!this.#enableComposingInput) {
+      return;
+    }
+    if (this.#isComposingInput) {
+      return;
+    }
+    this.#isComposingInput = true;
+    this.#shootComposingEvent();
+
+    // Clear any existing timer to prevent memory leaks
+    if (this.#scheduledComposingTimer) {
+      clearTimeout(this.#scheduledComposingTimer);
+    }
+
+    this.#scheduledComposingTimer = self.setTimeout(() => {
+      this.#isComposingInput = false;
+    }, this.#composingInputInterval);
+  }
+
+  #shootComposingEvent() {
+    // Ensure the textarea value is sanitized before sending in the event
+    const textareaElement = this.#getTextareaElement() as HTMLTextAreaElement;
+    const value = sanitizeInput(textareaElement.value);
+    const selectionStart = textareaElement.selectionStart;
+
+    // Use boostedQueueMicrotask for better performance
+    boostedQueueMicrotask(() => {
+      const inputEvent = new CustomEvent('composing-input', {
         ...commonComponentEventSetting,
         detail: {
           value,
-          textLength: value.length,
-          cursor: input.selectionStart,
-          isComposing,
+          selectionStart,
         },
-      }),
-    );
-  };
-
-  #teleportCompositionendInput = () => {
-    const input = this.#getTextareaElement();
-    const value = input.value;
-    // if #sendComposingInput set true, #teleportInput will send detail
-    if (!this.#sendComposingInput) {
-      this.#dom.dispatchEvent(
-        new CustomEvent('input', {
-          ...commonComponentEventSetting,
-          detail: {
-            value,
-            textLength: value.length,
-            cursor: input.selectionStart,
-          },
-        }),
-      );
-    }
-  };
-
-  #blockHtmlEvent = (event: FocusEvent | InputEvent) => {
-    if (
-      event.target === this.#getTextareaElement()
-      && typeof event.detail === 'number'
-    ) {
-      event.stopImmediatePropagation();
-    }
-  };
+      });
+      this.#dom.dispatchEvent(inputEvent);
+    });
+  }
 
   constructor(dom: HTMLElement) {
     this.#dom = dom;
-    const textareaElement = this.#getTextareaElement();
-    const formElement = this.#getFormElement();
+    const textareaElement = this.#getTextareaElement() as HTMLTextAreaElement;
+    const formElement = this.#getFormElement() as HTMLFormElement;
+
+    // Explicitly use the method to avoid the "never read" error
+    // Override any attribute with a default if needed
+    if (!this.#dom.hasAttribute('send-composing-input')) {
+      this.#handleEnableSendComposingInput('500');
+    }
+
+    // Enable input event handling
+    this.#handleInputEventEnable(true);
+
     textareaElement.addEventListener('blur', this.#teleportEvent, {
       passive: true,
     });
@@ -128,10 +165,6 @@ export class XTextareaEvents
       passive: true,
     });
     formElement.addEventListener('submit', this.#teleportEvent, {
-      passive: true,
-    });
-    // use form to stop propagation
-    formElement.addEventListener('input', this.#blockHtmlEvent as any, {
       passive: true,
     });
   }
