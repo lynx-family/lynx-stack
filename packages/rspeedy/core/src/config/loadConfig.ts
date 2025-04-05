@@ -178,3 +178,7 @@ function isJavaScriptPath(configPath: string): boolean {
   const ext = extname(configPath)
   return ['.js', '.mjs', '.cjs'].includes(ext)
 }
+
+export function TEST_ONLY_hasNativeTSSupport(): boolean {
+  return hasNativeTSSupport()
+}
