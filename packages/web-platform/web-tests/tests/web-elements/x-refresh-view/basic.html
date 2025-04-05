@@ -31,7 +31,9 @@
       background-color: green;
       --lynx-display: linear;
       --lynx-linear-orientation: vertical;
-      --lynx-linear-orientation-toggle: var(--lynx-linear-orientation-vertical);
+      --lynx-linear-orientation-toggle: var(
+        --lynx-linear-orientation-vertical
+      );
     }
 
     .refresh-header {
@@ -48,7 +50,9 @@
       height: 100%;
       display: linear;
       --lynx-linear-orientation: vertical;
-      --lynx-linear-orientation-toggle: var(--lynx-linear-orientation-vertical);
+      --lynx-linear-orientation-toggle: var(
+        --lynx-linear-orientation-vertical
+      );
       background-color: yellow;
     }
 
@@ -74,7 +78,8 @@
     <x-refresh-view class="refresh-view" id="refresh-view">
       <x-refresh-header class="refresh-header"> </x-refresh-header>
 
-      <x-view style="height:500px; width:100%;background-color:pink"> </x-view>
+      <x-view style="height: 500px; width: 100%; background-color: pink">
+      </x-view>
 
       <x-refresh-footer class="refresh-footer"> </x-refresh-footer>
     </x-refresh-view>

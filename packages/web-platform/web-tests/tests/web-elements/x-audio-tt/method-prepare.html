@@ -40,16 +40,24 @@
   <body>
     <script src="/web-elements.js" defer></script>
     <script type="module">
-    document.querySelector('#play').addEventListener('click', function() {
-      document.querySelector('x-audio-tt').play();
-    });
-    document.querySelector('#prepare').addEventListener('click', function() {
-      document.querySelector('x-audio-tt').prepare();
-    });
-    document.querySelector('x-audio-tt').shadowRoot.querySelector('audio')
-      .addEventListener('canplaythrough', function() {
-        document.querySelector('#text').innerHTML = 'audio can play';
-      });
+    document.querySelector('#play').addEventListener(
+        'click',
+        function() {
+          document.querySelector('x-audio-tt').play();
+        },
+      );
+      document.querySelector('#prepare').addEventListener(
+        'click',
+        function() {
+          document.querySelector('x-audio-tt').prepare();
+        },
+      );
+      document.querySelector('x-audio-tt').shadowRoot.querySelector(
+        'audio',
+      )
+        .addEventListener('canplaythrough', function() {
+          document.querySelector('#text').innerHTML = 'audio can play';
+        });
     </script>
     <x-view class="page column">
       <x-audio-tt

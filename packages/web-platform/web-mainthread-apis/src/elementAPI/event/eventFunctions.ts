@@ -69,8 +69,7 @@ export function createEventFunctions(runtime: MainThreadRuntime) {
     element: HTMLElement,
     eventType: LynxEventType,
     eventName: string,
-    newEventHandler: string | undefined // | ((ev: LynxCrossThreadEvent) => void) | undefined,
-    ,
+    newEventHandler: string | undefined, // | ((ev: LynxCrossThreadEvent) => void) | undefined,
   ) {
     eventName = eventName.toLowerCase();
     const isCatch = eventType === 'catchEvent' || eventType === 'capture-catch';

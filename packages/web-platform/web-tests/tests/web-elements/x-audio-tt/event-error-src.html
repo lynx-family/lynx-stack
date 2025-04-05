@@ -26,12 +26,15 @@
     />
     <script type="module">
     document.querySelector('x-audio-tt').addEventListener(
-      'error',
-      event => console.log(event, 'error'),
-    );
-    document.querySelector('#change').addEventListener('click', function() {
-      document.querySelector('x-audio-tt').removeAttribute('src');
-    });
+        'error',
+        event => console.log(event, 'error'),
+      );
+      document.querySelector('#change').addEventListener(
+        'click',
+        function() {
+          document.querySelector('x-audio-tt').removeAttribute('src');
+        },
+      );
     </script>
     <style>
     @import url("../../common.css");

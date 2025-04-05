@@ -28,31 +28,40 @@ LICENSE file in the root directory of this source tree. -->
     <script src="./react-dom.production.min.js"></script>
     <script type="module">
     const top = document.createElement('div');
-    document.body.append(top);
-    queueMicrotask(() => {
-      const reactComp = () => {
-        const ref = React.useRef();
-        const [s, set] = React.useState();
-        React.useLayoutEffect(() => {
-          let val = getComputedStyle(ref.current).getPropertyValue(
-            '--lynx-display',
-          );
-          val = getComputedStyle(ref.current).getPropertyValue('--lynx-display1');
-          val = getComputedStyle(ref.current).getPropertyValue('--lynx-display2');
-          val = getComputedStyle(ref.current).getPropertyValue('--lynx-display3');
-          set('linear');
-        });
-        return React.createElement('div', { ref, 'computed-display': s });
-      };
-      const reactRoot = ReactDOM.createRoot(top);
-      reactRoot.render(React.createElement(() => {
-        const reactElements = [];
-        for (let ii = 0; ii < 10000; ii++) {
-          reactElements.push(React.createElement(reactComp));
-        }
-        return reactElements;
-      }));
-    });
+      document.body.append(top);
+      queueMicrotask(() => {
+        const reactComp = () => {
+          const ref = React.useRef();
+          const [s, set] = React.useState();
+          React.useLayoutEffect(() => {
+            let val = getComputedStyle(ref.current).getPropertyValue(
+              '--lynx-display',
+            );
+            val = getComputedStyle(ref.current).getPropertyValue(
+              '--lynx-display1',
+            );
+            val = getComputedStyle(ref.current).getPropertyValue(
+              '--lynx-display2',
+            );
+            val = getComputedStyle(ref.current).getPropertyValue(
+              '--lynx-display3',
+            );
+            set('linear');
+          });
+          return React.createElement('div', {
+            ref,
+            'computed-display': s,
+          });
+        };
+        const reactRoot = ReactDOM.createRoot(top);
+        reactRoot.render(React.createElement(() => {
+          const reactElements = [];
+          for (let ii = 0; ii < 10000; ii++) {
+            reactElements.push(React.createElement(reactComp));
+          }
+          return reactElements;
+        }));
+      });
     </script>
     <style>
     div > div {

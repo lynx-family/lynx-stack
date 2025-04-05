@@ -25,21 +25,30 @@
       rel="stylesheet"
     />
     <script type="module">
-    document.querySelector('#play').addEventListener('click', function() {
-      document.querySelector('x-audio-tt').play();
-    });
-    document.querySelector('#fail').addEventListener('click', function() {
-      document.querySelector('x-audio-tt').setAttribute(
-        'src',
-        '{"id":"1","play_url":"./fail.mp3"}',
+    document.querySelector('#play').addEventListener(
+        'click',
+        function() {
+          document.querySelector('x-audio-tt').play();
+        },
       );
-    });
-    document.querySelector('#success').addEventListener('click', function() {
-      document.querySelector('x-audio-tt').setAttribute(
-        'src',
-        '{"id":"1","play_url":"./source-horse.mp3"}',
+      document.querySelector('#fail').addEventListener(
+        'click',
+        function() {
+          document.querySelector('x-audio-tt').setAttribute(
+            'src',
+            '{"id":"1","play_url":"./fail.mp3"}',
+          );
+        },
       );
-    });
+      document.querySelector('#success').addEventListener(
+        'click',
+        function() {
+          document.querySelector('x-audio-tt').setAttribute(
+            'src',
+            '{"id":"1","play_url":"./source-horse.mp3"}',
+          );
+        },
+      );
     </script>
     <style>
     @import url("../../common.css");

@@ -116,6 +116,8 @@
   ],
   // Glob
   "ignorePaths": [
+    // cSpell:disable-next-line
+    ".cargo/nextest.toml",
     ".gitignore",
     // Tests
     "coverage",

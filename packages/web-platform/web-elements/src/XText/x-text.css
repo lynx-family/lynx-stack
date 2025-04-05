@@ -48,24 +48,28 @@ x-text, inline-text {
 /* autoprefixer: ignore next */
 @supports (text-emphasis: none) {
   x-text::part(inner-box), inline-text {
-    background: var(--lynx-color-gradient, var(--lynx-color)) var(
-      --lynx-color-normal,
-      initial
-    );
-    -webkit-text-fill-color: var(--lynx-color-gradient, transparent) var(
-      --lynx-color-normal,
-      initial
-    );
-    background-clip: var(--lynx-color-gradient, text) var(
-      --lynx-color-normal,
-      initial
-    );
+    background: var(--lynx-color-gradient, var(--lynx-color))
+      var(
+        --lynx-color-normal,
+        initial
+      );
+    -webkit-text-fill-color: var(--lynx-color-gradient, transparent)
+      var(
+        --lynx-color-normal,
+        initial
+      );
+    background-clip: var(--lynx-color-gradient, text)
+      var(
+        --lynx-color-normal,
+        initial
+      );
     /* exist issue: https://github.com/facebook/react/issues/14200 */
     /* import flag is essential on chromium */
-    -webkit-background-clip: var(--lynx-color-gradient, text) var(
-      --lynx-color-normal,
-      initial
-    );
+    -webkit-background-clip: var(--lynx-color-gradient, text)
+      var(
+        --lynx-color-normal,
+        initial
+      );
   }
 }
 inline-text, inline-image, inline-truncation {
