@@ -48,7 +48,6 @@
   "scripts": {
     "api-extractor": "api-extractor run --verbose",
     "build": "rslib build",
-    "prepublishOnly": "rslib build",
     "test": "pnpm -w run test --project rspeedy",
     "test:type": "vitest --typecheck.only"
   },
