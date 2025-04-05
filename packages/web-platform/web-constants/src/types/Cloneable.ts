@@ -3,7 +3,8 @@
 // LICENSE file in the root directory of this source tree.
 export type Cloneable<T = string | number | null | undefined> =
   | T
-  | Record<string, T>;
+  | Record<string, T>
+  | T[];
 
 export type CloneableObject<T = string | number | null | undefined> = Record<
   string,

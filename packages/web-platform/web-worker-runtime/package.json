@@ -28,9 +28,9 @@
     "@lynx-js/web-worker-rpc": "workspace:*"
   },
   "devDependencies": {
-    "@lynx-js/lynx-core": "0.1.0"
+    "@lynx-js/lynx-core": "0.1.2"
   },
   "peerDependencies": {
-    "@lynx-js/lynx-core": "0.1.0"
+    "@lynx-js/lynx-core": "0.1.2"
   }
 }
