@@ -4,7 +4,6 @@
 
 ```ts
 
-import type { Compilation } from 'webpack';
 import type { Compiler } from 'webpack';
 
 // Warning: (ae-missing-release-tag) "isDebug" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -25,7 +24,7 @@ export class WebWebpackPlugin {
     apply(compiler: Compiler): void;
     // (undocumented)
     static BEFORE_ENCODE_HOOK_STAGE: number;
-    deleteDebuggingAssets(compilation: Compilation, assets: ({
+    deleteDebuggingAssets(assets: ({
         name: string;
     } | undefined)[]): void;
     // (undocumented)
