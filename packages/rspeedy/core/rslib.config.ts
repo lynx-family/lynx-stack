@@ -4,7 +4,22 @@ import { TypiaRspackPlugin } from 'typia-rspack-plugin'
 
 export default defineConfig({
   lib: [
-    { format: 'esm', syntax: 'es2022', dts: { bundle: true } },
+    {
+      format: 'esm',
+      syntax: 'es2022',
+      dts: { bundle: true },
+      tools: {
+        rspack: {
+          plugins: [
+            new TypiaRspackPlugin({
+              cache: false,
+              include: './src/config/validate.ts',
+              tsconfig: './tsconfig.build.json',
+            }),
+          ],
+        },
+      },
+    },
     {
       format: 'esm',
       syntax: 'es2022',
@@ -15,6 +30,30 @@ export default defineConfig({
         },
       },
       dts: false,
+    },
+    {
+      format: 'esm',
+      syntax: 'es2022',
+      source: {
+        entry: {
+          'register/index': './register/index.js',
+          'register/hooks': './register/hooks.js',
+        },
+      },
+      dts: false,
+      output: {
+        copy: {
+          patterns: [
+            {
+              from: './register/index.d.ts',
+              to: './register/index.d.ts',
+            },
+          ],
+        },
+        externals: [
+          'typescript',
+        ],
+      },
     },
   ],
   output: {
@@ -31,13 +70,6 @@ export default defineConfig({
       optimization: {
         chunkIds: 'named',
       },
-      plugins: [
-        new TypiaRspackPlugin({
-          cache: false,
-          include: './src/config/validate.ts',
-          tsconfig: './tsconfig.build.json',
-        }),
-      ],
     },
   },
 })

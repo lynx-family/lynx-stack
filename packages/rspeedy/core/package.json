@@ -99,8 +99,8 @@
         "types": "./client.d.ts"
       },
       "./register": {
-        "types": "./register/index.d.ts",
-        "import": "./register/index.js"
+        "types": "./dist/register/index.d.ts",
+        "import": "./dist/register/index.js"
       },
       "./package.json": "./package.json"
     },
