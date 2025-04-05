@@ -3,6 +3,8 @@ on:
     secrets:
       CODECOV_TOKEN:
         required: false
+      GITHUB_TOKEN:
+        required: false
     inputs:
       runs-on:
         required: true
@@ -68,6 +70,7 @@ jobs:
           NODE_OPTIONS: --max-old-space-size=8192
           GITHUB_SHA: ${{ github.event.pull_request.head.sha }}
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ${{ inputs.run }}
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
