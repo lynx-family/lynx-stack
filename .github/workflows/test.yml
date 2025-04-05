@@ -209,6 +209,7 @@ jobs:
       - code-style-check
       - playwright-linux
       - test-plugins
+      - test-publish
       - test-react
       - test-rust
       - test-rspeedy
