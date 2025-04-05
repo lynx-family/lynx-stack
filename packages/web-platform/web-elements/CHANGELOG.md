@@ -1,5 +1,11 @@
 # @lynx-js/web-elements
 
+## 0.5.3
+
+### Patch Changes
+
+- feat: add `layoutchange` event support for x-view and x-text ([#408](https://github.com/lynx-family/lynx-stack/pull/408))
+
 ## 0.5.2
 
 ### Patch Changes

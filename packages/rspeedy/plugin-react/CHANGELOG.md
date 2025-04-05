@@ -1,5 +1,21 @@
 # @lynx-js/react-rsbuild-plugin
 
+## 0.9.5
+
+### Patch Changes
+
+- fix: add enableCSSInvalidation for encodeCSS of css HMR, this will fix pseudo-class (such as `:active`) not working in HMR. ([#435](https://github.com/lynx-family/lynx-stack/pull/435))
+
+- Disable `module.generator.json.JSONParse` option as it increases the bundle size of `main-thread.js`. For more detail, please see this [issue](https://github.com/webpack/webpack/issues/19319). ([#402](https://github.com/lynx-family/lynx-stack/pull/402))
+
+- Updated dependencies [[`3e7988f`](https://github.com/lynx-family/lynx-stack/commit/3e7988f3af4b4f460eaf5add29cca19537dc1a6b), [`7243242`](https://github.com/lynx-family/lynx-stack/commit/7243242801e3a8ca0213c0ef642f69a22c39960e)]:
+  - @lynx-js/css-extract-webpack-plugin@0.5.3
+  - @lynx-js/template-webpack-plugin@0.6.8
+  - @lynx-js/react-alias-rsbuild-plugin@0.9.5
+  - @lynx-js/react-refresh-webpack-plugin@0.3.2
+  - @lynx-js/react-webpack-plugin@0.6.10
+  - @lynx-js/web-webpack-plugin@0.6.3
+
 ## 0.9.4
 
 ### Patch Changes

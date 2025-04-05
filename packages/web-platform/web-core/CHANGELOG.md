@@ -1,5 +1,24 @@
 # @lynx-js/web-core
 
+## 0.10.1
+
+### Patch Changes
+
+- docs: fix documents about lynx-view's properties ([#412](https://github.com/lynx-family/lynx-stack/pull/412))
+
+  Attributes should be hyphen-name: 'init-data', 'global-props'.
+
+  now all properties has corresponding attributes.
+
+- feat: onNapiModulesCall function add new param: `dispatchNapiModules`, napiModulesMap val add new param: `handleDispatch`. ([#414](https://github.com/lynx-family/lynx-stack/pull/414))
+
+  Now you can use them to actively communicate to napiModules (background thread) in onNapiModulesCall (ui thread).
+
+- Updated dependencies [[`1af3b60`](https://github.com/lynx-family/lynx-stack/commit/1af3b6052ab27f98bf0e4d1b0ec9f7d9e88e0afc)]:
+  - @lynx-js/web-constants@0.10.1
+  - @lynx-js/web-worker-runtime@0.10.1
+  - @lynx-js/web-worker-rpc@0.10.1
+
 ## 0.10.0
 
 ### Minor Changes
