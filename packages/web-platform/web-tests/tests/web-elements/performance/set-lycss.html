@@ -25,11 +25,11 @@ LICENSE file in the root directory of this source tree. -->
     />
     <script type="module">
     const target = document.createElement('x-view');
-    queueMicrotask(() => {
-      target.lycss = 'background-color:red';
-      document.body.append(target);
-      document.body.append(document.createElement('x-view'));
-    });
+      queueMicrotask(() => {
+        target.lycss = 'background-color:red';
+        document.body.append(target);
+        document.body.append(document.createElement('x-view'));
+      });
     </script>
   </head>
 

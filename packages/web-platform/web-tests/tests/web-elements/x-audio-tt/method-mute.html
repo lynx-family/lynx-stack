@@ -25,9 +25,12 @@
       rel="stylesheet"
     />
     <script type="module">
-    document.querySelector('#mute').addEventListener('click', function() {
-      document.querySelector('x-audio-tt').mute({ mute: true });
-    });
+    document.querySelector('#mute').addEventListener(
+        'click',
+        function() {
+          document.querySelector('x-audio-tt').mute({ mute: true });
+        },
+      );
     </script>
     <style>
     @import url("../../common.css");

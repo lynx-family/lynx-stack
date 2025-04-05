@@ -33,19 +33,19 @@
     <script src="/web-elements.js" defer></script>
     <script type="module">
     document.querySelector('#target').addEventListener('load', (ev) => {
-      if (ev.detail.height === 984 && ev.detail.width === 953) {
-        ev.target.style.setProperty('background-color', 'green');
-      }
-    });
-    document.querySelector('#target').setAttribute(
-      'src',
-      '../../resources/firefox-logo.png',
-    );
+        if (ev.detail.height === 984 && ev.detail.width === 953) {
+          ev.target.style.setProperty('background-color', 'green');
+        }
+      });
+      document.querySelector('#target').setAttribute(
+        'src',
+        '../../resources/firefox-logo.png',
+      );
     </script>
     <x-view class="page">
       <filter-image
         id="target"
-        style="width:100px; height:400px; background-color: aquamarine;"
+        style="width: 100px; height: 400px; background-color: aquamarine"
       >
       </filter-image>
     </x-view>

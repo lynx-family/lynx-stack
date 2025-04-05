@@ -26,15 +26,23 @@
     />
     <script type="module">
     document.querySelector('x-audio-tt').addEventListener(
-      'seek',
-      event => console.log(event),
-    );
-    document.querySelector('#play').addEventListener('click', function() {
-      document.querySelector('x-audio-tt').play();
-    });
-    document.querySelector('#seek').addEventListener('click', function() {
-      document.querySelector('x-audio-tt').seek({ currentTime: 30000 });
-    });
+        'seek',
+        event => console.log(event),
+      );
+      document.querySelector('#play').addEventListener(
+        'click',
+        function() {
+          document.querySelector('x-audio-tt').play();
+        },
+      );
+      document.querySelector('#seek').addEventListener(
+        'click',
+        function() {
+          document.querySelector('x-audio-tt').seek({
+            currentTime: 30000,
+          });
+        },
+      );
     </script>
     <style>
     @import url("../../common.css");

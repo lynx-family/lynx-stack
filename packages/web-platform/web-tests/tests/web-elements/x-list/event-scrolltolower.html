@@ -43,9 +43,12 @@
   <body>
     <script src="/web-elements.js" defer></script>
     <script type="module">
-    document.querySelector('x-list').addEventListener('scrolltolower', (e) => {
-      console.log(e);
-    });
+    document.querySelector('x-list').addEventListener(
+        'scrolltolower',
+        (e) => {
+          console.log(e);
+        },
+      );
     </script>
     <x-view class="page">
       <x-list list-type="single">

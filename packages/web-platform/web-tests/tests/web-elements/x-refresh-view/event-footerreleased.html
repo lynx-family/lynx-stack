@@ -30,7 +30,9 @@
       background-color: green;
       --lynx-display: linear;
       --lynx-linear-orientation: vertical;
-      --lynx-linear-orientation-toggle: var(--lynx-linear-orientation-vertical);
+      --lynx-linear-orientation-toggle: var(
+        --lynx-linear-orientation-vertical
+      );
     }
 
     .refresh-header {
@@ -47,7 +49,9 @@
       height: 100%;
       display: linear;
       --lynx-linear-orientation: vertical;
-      --lynx-linear-orientation-toggle: var(--lynx-linear-orientation-vertical);
+      --lynx-linear-orientation-toggle: var(
+        --lynx-linear-orientation-vertical
+      );
       background-color: yellow;
     }
 
@@ -72,11 +76,11 @@
     <script src="/web-elements.js" defer></script>
     <script type="module">
     const content = document.getElementById('content');
-    const refreshView = document.querySelector('x-refresh-view');
-    const refreshFooter = document.querySelector('x-refresh-footer');
-    refreshView.addEventListener('footerreleased', () => {
-      content.style.backgroundColor = 'chartreuse';
-    });
+      const refreshView = document.querySelector('x-refresh-view');
+      const refreshFooter = document.querySelector('x-refresh-footer');
+      refreshView.addEventListener('footerreleased', () => {
+        content.style.backgroundColor = 'chartreuse';
+      });
     </script>
     <x-refresh-view
       class="refresh-view"
@@ -85,7 +89,7 @@
       <x-refresh-header class="refresh-header"> </x-refresh-header>
 
       <x-view
-        style="height:500px; width:100%;background-color:pink"
+        style="height: 500px; width: 100%; background-color: pink"
         id="content"
       >
       </x-view>

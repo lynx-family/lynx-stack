@@ -25,17 +25,17 @@
     />
     <script type="module">
     const content = document.getElementById('content');
-    const refreshView = document.querySelector('x-refresh-view');
-    const refreshFooter = document.querySelector('x-refresh-footer');
-    const observer = new IntersectionObserver((e) => {
-      if (e[0].isIntersecting) {
-        content.style.backgroundColor = 'chartreuse';
-      }
-    }, {
-      root: refreshView,
-      threshold: 1,
-    });
-    observer.observe(refreshFooter);
+      const refreshView = document.querySelector('x-refresh-view');
+      const refreshFooter = document.querySelector('x-refresh-footer');
+      const observer = new IntersectionObserver((e) => {
+        if (e[0].isIntersecting) {
+          content.style.backgroundColor = 'chartreuse';
+        }
+      }, {
+        root: refreshView,
+        threshold: 1,
+      });
+      observer.observe(refreshFooter);
     </script>
     <style>
     .refresh-view {
@@ -44,7 +44,9 @@
       background-color: green;
       --lynx-display: linear;
       --lynx-linear-orientation: vertical;
-      --lynx-linear-orientation-toggle: var(--lynx-linear-orientation-vertical);
+      --lynx-linear-orientation-toggle: var(
+        --lynx-linear-orientation-vertical
+      );
     }
 
     .refresh-header {
@@ -61,7 +63,9 @@
       height: 100%;
       display: linear;
       --lynx-linear-orientation: vertical;
-      --lynx-linear-orientation-toggle: var(--lynx-linear-orientation-vertical);
+      --lynx-linear-orientation-toggle: var(
+        --lynx-linear-orientation-vertical
+      );
       background-color: yellow;
     }
 
@@ -92,7 +96,7 @@
       <x-refresh-header class="refresh-header"> </x-refresh-header>
 
       <x-view
-        style="height:500px; width:100%;background-color:pink"
+        style="height: 500px; width: 100%; background-color: pink"
         id="content"
       >
       </x-view>

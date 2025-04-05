@@ -41,17 +41,19 @@ LICENSE file in the root directory of this source tree. -->
 
   <body>
     <script src="/web-elements.js" defer></script>
-    <x-view style="--flex-direction:column">
+    <x-view style="--flex-direction: column">
       <x-view
         lynx-computed-display="flex"
-        style="display:flex;--lynx-display:flex;--lynx-display-toggle:var(--lynx-display-flex);width:100vw;height: 100vh;"
+        style="display: flex; --lynx-display: flex; --lynx-display-toggle: var(--lynx-display-flex); width: 100vw; height: 100vh"
       >
-        <x-view style="width:100px;height:100px;background-color:red;"></x-view>
         <x-view
-          style="width:100px;height:100px;background-color:green;"
+          style="width: 100px; height: 100px; background-color: red"
         ></x-view>
         <x-view
-          style="width:100px;height:100px;background-color:yellow;"
+          style="width: 100px; height: 100px; background-color: green"
+        ></x-view>
+        <x-view
+          style="width: 100px; height: 100px; background-color: yellow"
         ></x-view>
       </x-view>
     </x-view>

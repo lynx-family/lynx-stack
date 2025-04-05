@@ -25,9 +25,14 @@
     />
 
     <script type="module">
-    document.querySelector('#scrollToPosition').addEventListener('click', () => {
-      document.querySelector('x-list').scrollToPosition({ index: 10 });
-    });
+    document.querySelector('#scrollToPosition').addEventListener(
+        'click',
+        () => {
+          document.querySelector('x-list').scrollToPosition({
+            index: 10,
+          });
+        },
+      );
     </script>
     <style>
     @import url("../../common.css");

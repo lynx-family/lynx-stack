@@ -34,22 +34,28 @@ LICENSE file in the root directory of this source tree. -->
   <body>
     <script src="/web-elements.js" defer></script>
     <script type="module">
-    document.querySelector('scroll-view').addEventListener('scrolltolower', () => {
-      document.querySelector('div').style.setProperty('background-color', 'green');
-    });
+    document.querySelector('scroll-view').addEventListener(
+        'scrolltolower',
+        () => {
+          document.querySelector('div').style.setProperty(
+            'background-color',
+            'green',
+          );
+        },
+      );
     </script>
     <x-view
-      style="height:100vh;width: 100vw; display:flex; --lynx-display:flex;--lynx-display-toggle:var(--lynx-display-flex); flex-direction: column;"
+      style="height: 100vh; width: 100vw; display: flex; --lynx-display: flex; --lynx-display-toggle: var(--lynx-display-flex); flex-direction: column"
     >
       <scroll-view
-        style="width:300px; height:400px; background-color: wheat;"
+        style="width: 300px; height: 400px; background-color: wheat"
         scroll-y
         lower-threshold="100"
       >
-        <x-view style="background-color:aqua;"> </x-view>
-        <x-view style="background-color:orange;"> </x-view>
+        <x-view style="background-color: aqua"> </x-view>
+        <x-view style="background-color: orange"> </x-view>
       </scroll-view>
-      <div style="height:100px; width:100px; background-color: yellow;"></div>
+      <div style="height: 100px; width: 100px; background-color: yellow"></div>
     </x-view>
   </body>
 </html>

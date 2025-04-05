@@ -36,18 +36,19 @@
   <body>
     <script src="/web-elements.js" defer></script>
     <x-view
-      style="--lynx-display:flex;--lynx-display-toggle:var(--lynx-display-flex); display:flex;flex-direction: column; align-items: center; width:100%; height:100%;"
+      style="--lynx-display: flex; --lynx-display-toggle: var(--lynx-display-flex); display: flex; flex-direction: column; align-items: center; width: 100%; height: 100%"
     >
-      <x-view class="btn" style="z-index:100;"></x-view>
-      <x-view style="z-index:1;">
+      <x-view class="btn" style="z-index: 100"></x-view>
+      <x-view style="z-index: 1">
         <x-overlay-ng
           visible="true"
           events-pass-through="{true}"
           android-lazy-init-context="{false}"
           custom-layout="{true}"
-          style="overflow:visible"
+          style="overflow: visible"
         >
-          <x-view style="background:red; height:400px;width:200px;"> </x-view>
+          <x-view style="background: red; height: 400px; width: 200px">
+          </x-view>
         </x-overlay-ng>
       </x-view>
     </x-view>

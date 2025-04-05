@@ -35,27 +35,27 @@ LICENSE file in the root directory of this source tree. -->
   <body>
     <script src="/web-elements.js" defer></script>
     <x-view
-      style="height:100vh;width: 100vw; display:flex; --lynx-display:flex;--lynx-display-toggle:var(--lynx-display-flex); flex-direction: row;"
+      style="height: 100vh; width: 100vw; display: flex; --lynx-display: flex; --lynx-display-toggle: var(--lynx-display-flex); flex-direction: row"
     >
       <x-foldview-ng
-        style="width:80%; height:400px; background-color: wheat;display:flex; --lynx-display:flex;--lynx-display-toggle:var(--lynx-display-flex); flex-direction: column;"
+        style="width: 80%; height: 400px; background-color: wheat; display: flex; --lynx-display: flex; --lynx-display-toggle: var(--lynx-display-flex); flex-direction: column"
       >
         <x-foldview-header-ng
-          style="position:absolute; width:100%; height:200px;"
+          style="position: absolute; width: 100%; height: 200px"
         >
           <x-view
-            style="background-color: aqua; width:100%; height:300px"
+            style="background-color: aqua; width: 100%; height: 300px"
           ></x-view>
         </x-foldview-header-ng>
-        <x-foldview-slot-ng style="width:100%; height:400px;">
-          <scroll-view style="width:80%; height:100%; " scroll-x>
-            <x-view style="background-color:orange;"> </x-view>
-            <x-view style="background-color:tomato;"> </x-view>
-            <x-view style="background-color:thistle;"> </x-view>
-            <x-view style="background-color:forestgreen;"> </x-view>
-            <x-view style="background-color:firebrick;"> </x-view>
-            <x-view style="background-color:silver;"> </x-view>
-            <x-view style="background-color:seashell;"> </x-view>
+        <x-foldview-slot-ng style="width: 100%; height: 400px">
+          <scroll-view style="width: 80%; height: 100%" scroll-x>
+            <x-view style="background-color: orange"> </x-view>
+            <x-view style="background-color: tomato"> </x-view>
+            <x-view style="background-color: thistle"> </x-view>
+            <x-view style="background-color: forestgreen"> </x-view>
+            <x-view style="background-color: firebrick"> </x-view>
+            <x-view style="background-color: silver"> </x-view>
+            <x-view style="background-color: seashell"> </x-view>
           </scroll-view>
         </x-foldview-slot-ng>
       </x-foldview-ng>

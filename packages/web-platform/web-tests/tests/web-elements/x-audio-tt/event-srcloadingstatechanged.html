@@ -26,12 +26,12 @@
     />
     <script type="module">
     document.querySelector('x-audio-tt').addEventListener(
-      'srcloadingstatechanged',
-      event => console.log(event),
-    );
-    document.querySelector('#play').addEventListener('click', () => {
-      document.querySelector('x-audio-tt').play();
-    });
+        'srcloadingstatechanged',
+        event => console.log(event),
+      );
+      document.querySelector('#play').addEventListener('click', () => {
+        document.querySelector('x-audio-tt').play();
+      });
     </script>
     <style>
     @import url("../../common.css");

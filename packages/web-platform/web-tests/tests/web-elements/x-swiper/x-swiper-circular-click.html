@@ -45,36 +45,36 @@
     </style>
     <script type="module">
     let counter = 0;
-    let current = 0;
+      let current = 0;
 
-    const text = document.querySelector('x-text');
-    text.innerHTML = `${counter}`;
+      const text = document.querySelector('x-text');
+      text.innerHTML = `${counter}`;
 
-    const swiper = document.querySelector('x-swiper');
-    swiper.setAttribute('current', current);
+      const swiper = document.querySelector('x-swiper');
+      swiper.setAttribute('current', current);
 
-    const swiperItems = document.getElementsByTagName('x-swiper-item');
-    for (const item of swiperItems) {
-      const currentIndex = ++counter;
-      item.addEventListener('click', function() {
-        text.innerHTML = `${currentIndex}`;
+      const swiperItems = document.getElementsByTagName('x-swiper-item');
+      for (const item of swiperItems) {
+        const currentIndex = ++counter;
+        item.addEventListener('click', function() {
+          text.innerHTML = `${currentIndex}`;
+        });
+      }
+
+      const btn = document.querySelector('.btn');
+      btn.addEventListener('click', function() {
+        swiper.setAttribute('current', (++current) % 3);
       });
-    }
-
-    const btn = document.querySelector('.btn');
-    btn.addEventListener('click', function() {
-      swiper.setAttribute('current', (++current) % 3);
-    });
     </script>
   </head>
 
   <body>
     <script src="/web-elements.js" defer></script>
     <x-view class="page column">
-      <x-swiper style="display:flex; --lynx-display:linear;" circular>
-        <x-swiper-item style="background-color:red;"> </x-swiper-item>
-        <x-swiper-item style="background-color:green;"> </x-swiper-item>
-        <x-swiper-item style="background-color:blue;"> </x-swiper-item>
+      <x-swiper style="display: flex; --lynx-display: linear" circular>
+        <x-swiper-item style="background-color: red"> </x-swiper-item>
+        <x-swiper-item style="background-color: green"> </x-swiper-item>
+        <x-swiper-item style="background-color: blue"> </x-swiper-item>
       </x-swiper>
 
       <x-text></x-text>
