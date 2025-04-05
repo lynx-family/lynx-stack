@@ -150,6 +150,20 @@ function shouldUseNativeImport(configPath: string): boolean {
 }
 
 function hasNativeTSSupport(): boolean {
+  // eslint-disable-next-line n/no-unsupported-features/node-builtins
+  if (process.features.typescript) {
+    // This is added in Node.js v22.10.
+    // 1. Node.js v22.10+ with --experimental-transform-types or --experimental-strip-types
+    // 2. Node.js v23.6+
+    return true
+    // eslint-disable-next-line n/no-unsupported-features/node-builtins
+  } else if (process.features.typescript === false) {
+    // 1. Node.js v22.10+ without --experimental-transform-types or --experimental-strip-types
+    // 2. Node.js v23.6+ with --no-experimental-strip-types
+    return false
+  }
+
+  // Node.js < v22.10
   const { NODE_OPTIONS } = process.env
 
   if (!NODE_OPTIONS) {

@@ -18,13 +18,21 @@ Just like [Rush](https://rushstack.io/), Rspeedy implements a "version selector"
 
 ## Using Node.js TypeScript support
 
-If the version of Node.js you are using supports the [--experimental-transform-types](https://nodejs.org/api/cli.html#--experimental-transform-types)(v22.7.0) or [--experimental-strip-types](https://nodejs.org/api/cli.html#--experimental-strip-types)(v22.6.0) flag, you can use the built-in TS transformation of Node.js.
+If the version of Node.js you are using supports TypeScript:
+
+1. Node.js >= v23.6
+1. Node.js >= v22.6 with [--experimental-strip-types](https://nodejs.org/api/cli.html#--experimental-strip-types)
+1. Node.js >= v22.7 with [--experimental-transform-types](https://nodejs.org/api/cli.html#--experimental-transform-types)
+
+you can use the built-in TS transformation of Node.js.
 
 ```json title="package.json"
 {
   "build": "NODE_OPTIONS=--experimental-transform-types rspeedy build"
 }
 ```
+
+See [Node.js - TypeScript](https://nodejs.org/api/typescript.html) for more details.
 
 ## rspeedy -h
 

@@ -18,7 +18,13 @@ npm install --global @lynx-js/rspeedy
 
 ## 使用 Node.js 的 TypeScript 支持
 
-如果你使用的 Node.js 版本支持 [--experimental-transform-types](https://nodejs.org/api/cli.html#--experimental-transform-types)（v22.7.0）或 [--experimental-strip-types](https://nodejs.org/api/cli.html#--experimental-strip-types)（v22.6.0）标志，可以使用 Node.js 内置的 TS 转换功能。
+如果你使用的 Node.js 版本支持 TypeScript：
+
+1. Node.js >= v23.6
+1. Node.js >= v22.6 使用 [--experimental-strip-types](https://nodejs.org/api/cli.html#--experimental-strip-types)
+1. Node.js >= v22.7 使用 [--experimental-transform-types](https://nodejs.org/api/cli.html#--experimental-transform-types)
+
+可以使用 Node.js 内置的 TypeScript 转换功能。
 
 ```json title="package.json"
 {
