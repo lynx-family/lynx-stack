@@ -76,6 +76,7 @@
     "manypkg", // https://github.com/Thinkmill/manypkg
     "messageformat", // https://formatjs.github.io/docs/intl-messageformat
     "memfs",
+    "mktemp",
     "napi",
     "nocheck", // @ts-nocheck :)
     "pathinfo", // webpack config output.pathinfo

@@ -132,6 +132,22 @@ jobs:
         --no-cache
         --logHeapUsage
         --silent
+  test-publish:
+    needs: build
+    uses: ./.github/workflows/workflow-test.yml
+    with:
+      runs-on: lynx-ubuntu-24.04-medium
+      run: |
+        pnpm dlx @pnpm/registry-mock prepare
+        pnpm dlx @pnpm/registry-mock &
+        pnpm changeset version --snapshot regression
+        node packages/tools/canary-release/snapshot.js
+        pnpm --recursive publish --no-git-checks --access public --registry=http://localhost:4873
+        cd `mktemp -d`
+        npx --registry http://localhost:4873 create-rspeedy-canary@latest --template react --dir create-rspeedy-regression
+        cd create-rspeedy-regression
+        pnpm install --registry=http://localhost:4873
+        pnpm run build
   test-tools:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
@@ -176,6 +192,7 @@ jobs:
         pnpm --filter @lynx-js/web-tests run test --reporter='github,dot,junit,html'
         pnpm --filter @lynx-js/web-tests run coverage:ci
   test-rust:
+    needs: build
     uses: ./.github/workflows/rust.yml
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
