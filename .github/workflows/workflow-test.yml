@@ -3,8 +3,6 @@ on:
     secrets:
       CODECOV_TOKEN:
         required: false
-      GITHUB_TOKEN:
-        required: false
     inputs:
       runs-on:
         required: true

@@ -139,8 +139,6 @@ jobs:
       contents: read
       pull-requests: read
       statuses: read
-    secrets:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     with:
       runs-on: lynx-ubuntu-24.04-medium
       run: |
