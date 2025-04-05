@@ -99,7 +99,7 @@ function updateSpread(snapshot: SnapshotInstance, index: number, oldValue: any, 
           __ref_set: snapshot.__ref_set,
         } as SnapshotInstance;
         updateRef(fakeSnapshot, index, oldValue[key], elementIndex, key);
-      } else if (key.endsWith(':ref')) {
+      } else if (!__DISABLE_MTS_AND_GESTURE__ && key.endsWith(':ref')) {
         snapshot.__worklet_ref_set ??= new Set();
         const fakeSnapshot = {
           __values: {
@@ -112,7 +112,7 @@ function updateSpread(snapshot: SnapshotInstance, index: number, oldValue: any, 
           __worklet_ref_set: snapshot.__worklet_ref_set,
         } as SnapshotInstance;
         updateWorkletRef(fakeSnapshot, index, oldValue[key], elementIndex, key.slice(0, -4));
-      } else if (key.endsWith(':gesture')) {
+      } else if (!__DISABLE_MTS_AND_GESTURE__ && key.endsWith(':gesture')) {
         const workletType = key.slice(0, -8);
         const fakeSnapshot = {
           __values: {
@@ -141,7 +141,7 @@ function updateSpread(snapshot: SnapshotInstance, index: number, oldValue: any, 
           __id: snapshot.__id,
           __elements: snapshot.__elements,
         } as SnapshotInstance;
-        if (workletType) {
+        if (!__DISABLE_MTS_AND_GESTURE__ && workletType) {
           updateWorkletEvent(fakeSnapshot, index, oldValue[key], elementIndex, workletType, eventType, eventName);
         } else {
           updateEvent(fakeSnapshot, index, oldValue[key], elementIndex, eventType, eventName, key);
@@ -187,7 +187,7 @@ function updateSpread(snapshot: SnapshotInstance, index: number, oldValue: any, 
           __ref_set: snapshot.__ref_set,
         } as SnapshotInstance;
         updateRef(fakeSnapshot, index, oldValue[key], elementIndex, key);
-      } else if (key.endsWith(':ref')) {
+      } else if (!__DISABLE_MTS_AND_GESTURE__ && key.endsWith(':ref')) {
         snapshot.__worklet_ref_set ??= new Set();
         const fakeSnapshot = {
           __values: {
@@ -200,7 +200,7 @@ function updateSpread(snapshot: SnapshotInstance, index: number, oldValue: any, 
           __worklet_ref_set: snapshot.__worklet_ref_set,
         } as SnapshotInstance;
         updateWorkletRef(fakeSnapshot, index, oldValue[key], elementIndex, key.slice(0, -4));
-      } else if (key.endsWith(':gesture')) {
+      } else if (!__DISABLE_MTS_AND_GESTURE__ && key.endsWith(':gesture')) {
         const workletType = key.slice(0, -8);
         const fakeSnapshot = {
           __values: {
@@ -228,7 +228,7 @@ function updateSpread(snapshot: SnapshotInstance, index: number, oldValue: any, 
           __id: snapshot.__id,
           __elements: snapshot.__elements,
         } as SnapshotInstance;
-        if (workletType) {
+        if (!__DISABLE_MTS_AND_GESTURE__ && workletType) {
           updateWorkletEvent(fakeSnapshot, index, oldValue[key], elementIndex, workletType, eventType, eventName);
         } else {
           updateEvent(fakeSnapshot, index, oldValue[key], elementIndex, eventType, eventName, key);

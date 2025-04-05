@@ -310,6 +310,11 @@ export interface PluginReactLynxOptions {
    * @alpha
    */
   experimental_isLazyBundle?: boolean
+
+  /**
+   * Whether to disable MTS and gesture API
+   */
+  disableMTSAndGesture?: boolean
 }
 
 /**
@@ -361,6 +366,7 @@ export function pluginReactLynx(
     extractStr: false,
 
     experimental_isLazyBundle: false,
+    disableMTSAndGesture: false,
   }
   const resolvedOptions = Object.assign(defaultOptions, userOptions, {
     // Use `engineVersion` to override the default values
