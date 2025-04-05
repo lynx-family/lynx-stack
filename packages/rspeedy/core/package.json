@@ -41,7 +41,6 @@
     "bin/rspeedy.js",
     "client",
     "dist",
-    "register",
     "client.d.ts",
     "CHANGELOG.md",
     "README.md"
