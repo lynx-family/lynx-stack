@@ -185,10 +185,14 @@ export class LynxEncodePluginImpl {
             this.#appServiceFooter(),
           ].join(''),
           ...(Object.fromEntries(
-            Object.entries(manifest).map(([name, source]) => [
-              this.#formatJSName(name),
-              source,
-            ]),
+            Object.entries(manifest)
+              .filter(([name]) =>
+                /.rspeedy\/[^/]+\/background(?:\.[a-f0-9]+)?\.js$/.test(name)
+              )
+              .map(([name, source]) => [
+                this.#formatJSName(name),
+                source,
+              ]),
           )),
         };
 
