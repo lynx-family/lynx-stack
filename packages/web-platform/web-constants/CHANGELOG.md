@@ -1,5 +1,16 @@
 # @lynx-js/web-constants
 
+## 0.10.1
+
+### Patch Changes
+
+- feat: onNapiModulesCall function add new param: `dispatchNapiModules`, napiModulesMap val add new param: `handleDispatch`. ([#414](https://github.com/lynx-family/lynx-stack/pull/414))
+
+  Now you can use them to actively communicate to napiModules (background thread) in onNapiModulesCall (ui thread).
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.10.1
+
 ## 0.10.0
 
 ### Minor Changes

@@ -1,6 +1,6 @@
 {
   "name": "upgrade-rspeedy",
-  "version": "0.8.7",
+  "version": "0.9.0",
   "description": "Upgrade Rspeedy-related packages",
   "keywords": [
     "webpack",
@@ -49,7 +49,7 @@
     "picocolors": "^1.1.1",
     "rsbuild-plugin-tailwindcss": "0.2.1",
     "rslog": "^1.2.3",
-    "type-fest": "^4.39.0"
+    "type-fest": "^4.39.1"
   },
   "engines": {
     "node": ">=18"

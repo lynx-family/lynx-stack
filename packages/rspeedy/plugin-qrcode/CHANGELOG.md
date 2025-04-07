@@ -1,5 +1,11 @@
 # @lynx-js/qrcode-rsbuild-plugin
 
+## 0.3.5
+
+### Patch Changes
+
+- Build with Rslib ([#396](https://github.com/lynx-family/lynx-stack/pull/396))
+
 ## 0.3.4
 
 ### Patch Changes
