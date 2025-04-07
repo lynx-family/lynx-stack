@@ -27,8 +27,8 @@ export function createMainThreadLynx(
     requireModule(path: string) {
       // @ts-expect-error
       if (self.WorkerGlobalScope) {
-        const mainfestUrl = config.lepusCode[`${path}`];
-        if (mainfestUrl) path = mainfestUrl;
+        const lepusChunkUrl = config.lepusCode[`${path}`];
+        if (lepusChunkUrl) path = lepusChunkUrl;
         // @ts-expect-error
         importScripts(path);
         const entry = (globalThis.module as LynxJSModule).exports;
