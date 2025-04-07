@@ -43,8 +43,8 @@ export function createMainThreadLynx(
       path: string,
       callback: (error: Error | null, exports?: unknown) => void,
     ) {
-      const mainfestUrl = config.lepusCode[`/${path}`];
-      if (mainfestUrl) path = mainfestUrl;
+      const lepusChunkUrl = config.lepusCode[`${path}`];
+      if (lepusChunkUrl) path = lepusChunkUrl;
       import(
         /* webpackIgnore: true */
         path
