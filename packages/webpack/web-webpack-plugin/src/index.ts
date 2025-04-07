@@ -68,7 +68,11 @@ export class WebWebpackPlugin {
               manifest: encodeOptions.manifest,
               cardType: encodeOptions['cardType'],
               pageConfig: encodeOptions.compilerOptions,
-              lepusCode: encodeOptions.lepusCode,
+              lepusCode: {
+                // flatten the lepusCode to a single object
+                ...encodeOptions.lepusCode.lepusChunk,
+                root: encodeOptions.lepusCode.root,
+              },
               customSections: encodeOptions.customSections,
             })),
             debugInfo: '',

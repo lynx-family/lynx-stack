@@ -11,11 +11,11 @@ export interface LynxRuntimeInfo {
   eventHandlerMap: Record<string, {
     capture: {
       type: LynxEventType;
-      handler: string;
+      handler: string | { type: 'worklet'; value: unknown };
     } | undefined;
     bind: {
       type: LynxEventType;
-      handler: string;
+      handler: string | { type: 'worklet'; value: unknown };
     } | undefined;
   }>;
   componentAtIndex?: ComponentAtIndexCallback;

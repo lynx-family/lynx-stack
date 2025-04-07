@@ -23,6 +23,6 @@ self.onmessage = (ev) => {
   }
 };
 Object.assign(globalThis, {
-  SystemInfo: { platform: 'web' },
+  SystemInfo: { platform: 'web', lynxSdkVersion: '2.14' },
   module: { exports: null },
 });

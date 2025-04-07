@@ -255,6 +255,20 @@ test.describe('reactlynx3 tests', () => {
       await expect(target).toHaveCSS('width', '100px');
       await expect(target).toHaveCSS('background-color', 'rgb(255, 192, 203)');
     });
+    test('basic-mts-bindtap', async ({ page }, { title }) => {
+      let eventHandlerTriggered = false;
+      page.on('console', (message) => {
+        if (message.text() === 'hello world') {
+          eventHandlerTriggered = true;
+        }
+      });
+      await goto(page, title);
+      await wait(100);
+      const target = page.locator('#target');
+      await target.click();
+      await wait(100);
+      expect(eventHandlerTriggered).toBe(true);
+    });
   });
   test.describe('basic-css', () => {
     test('basic-css-asset-in-css', async ({ page }, { title }) => {
