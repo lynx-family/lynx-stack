@@ -169,9 +169,7 @@ export class LynxEncodePluginImpl {
           ].join(''),
           ...(Object.fromEntries(
             Object.entries(manifest)
-              .filter(([name]) =>
-                /.rspeedy\/[^/]+\/background(?:\.[a-f0-9]+)?\.js$/.test(name)
-              )
+              // .filter(([name]) => this.#isBackground(name))
               .map(([name, source]) => [
                 this.#formatJSName(name),
                 source,
@@ -233,7 +231,14 @@ export class LynxEncodePluginImpl {
   }
 
   #formatJSName(name: string): string {
-    return `/${name}`;
+    if (this.#isBackground(name)) {
+      return `/${name}`;
+    }
+    return `<SERVER>/${name}`;
+  }
+
+  #isBackground(name: string): boolean {
+    return /\.rspeedy\/[^/]+\/background(?:\.[a-f0-9]+)?\.js$/.test(name);
   }
 
   protected options: Required<LynxEncodePluginOptions>;
