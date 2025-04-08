@@ -13,7 +13,7 @@ export function createMainThreadLynx(
 ) {
   return {
     getJSContext() {
-      // TODO: implment this
+      // TODO: implement this
       return new EventTarget();
     },
     requestAnimationFrame(cb: FrameRequestCallback) {
