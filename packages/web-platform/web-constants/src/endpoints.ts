@@ -209,7 +209,7 @@ export const dispatchLynxViewEventEndpoint = createRpcEndpoint<
     detail: CloneableObject,
   ],
   void
->('dispatchLynxViewEvent', false, true);
+>('dispatchLynxViewEvent', false, false);
 
 export const dispatchNapiModuleEndpoint = createRpcEndpoint<
   [data: Cloneable],
