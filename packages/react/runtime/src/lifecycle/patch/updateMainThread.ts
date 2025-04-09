@@ -35,7 +35,7 @@ function updateMainThread(
 
   for (const { snapshotPatch, workletRefInitValuePatch, id } of patchList) {
     updateWorkletRefInitValueChanges(workletRefInitValuePatch);
-    __pendingListUpdates.clear();
+    __pendingListUpdates.clearAttachedLists();
     if (snapshotPatch) {
       snapshotPatchApply(snapshotPatch);
     }
