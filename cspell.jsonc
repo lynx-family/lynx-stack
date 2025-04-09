@@ -114,6 +114,7 @@
     "parseable", // https://pnpm.io/cli/list
     "debugids", // https://getsentry.github.io/debugids/
     "layoutchange", // the "layoutchange" event of Lynx
+    "foldview", // foldview is a element of Lynx
   ],
   // Glob
   "ignorePaths": [
