@@ -33,7 +33,7 @@ afterEach(() => {
 
   globalEnvManager.resetEnv();
   elementTree.clear();
-  __pendingListUpdates.clear();
+  __pendingListUpdates.clearAttachedLists();
 });
 
 describe('component ref', () => {

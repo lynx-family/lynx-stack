@@ -296,19 +296,18 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
           beforeChildNodes,
           afterChildNodes,
           (a, b) => a.type === b.type,
-          (a, b, oldIndex, newIndex) => {
-            if (
-              JSON.stringify(a.__listItemPlatformInfo)
-                !== JSON.stringify(b.__listItemPlatformInfo)
-            ) {
-              updateAction.push({
-                ...b.__listItemPlatformInfo,
-                from: newIndex,
-                to: newIndex,
-                // no flush
-                flush: false,
-              });
-            }
+          (a, b, _oldIndex, newIndex) => {
+            // if (
+            //   JSON.stringify(a.__listItemPlatformInfo)
+            //     !== JSON.stringify(b.__listItemPlatformInfo)
+            // ) {
+            updateAction.push({
+              ...b.__listItemPlatformInfo,
+              from: newIndex,
+              to: newIndex,
+              flush: true,
+            });
+            // }
 
             // Mark list-item which is rendered (has `__elements`) as DELETE
             // so list platform will call `enqueueComponent` on it
@@ -318,8 +317,12 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
             //  2. we avoid hydrate so modifying recycleMap can be avoid
             //  3. the delete list-item is recycled for later use, so no waste
             if (a.__elements) {
-              removals.push(oldIndex);
-              insertions.push(newIndex);
+              const enqueueComponent = enqueueComponentFactory();
+              const elementIndex = before.__snapshot_def.slot[0]![1];
+              const listElement = before.__elements![elementIndex]!;
+              const listID = __GetElementUniqueID(listElement!);
+              const sign = __GetElementUniqueID(a.__element_root!);
+              enqueueComponent(listElement, listID, sign);
             }
           },
         );

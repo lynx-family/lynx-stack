@@ -9,7 +9,7 @@ const HOLE = null;
 
 beforeEach(() => {
   // snapshotManager.values.clear();
-  __pendingListUpdates.clear();
+  __pendingListUpdates.clearAttachedLists();
   snapshotInstanceManager.clear();
   snapshotInstanceManager.nextId = 0;
 });
@@ -253,7 +253,7 @@ describe(`list "update-list-info"`, () => {
     `);
 
     {
-      __pendingListUpdates.clear();
+      __pendingListUpdates.clearAttachedLists();
       const d4 = new SnapshotInstance(s3);
       const d5 = new SnapshotInstance(s3);
       const d6 = new SnapshotInstance(s4);
@@ -296,7 +296,7 @@ describe(`list "update-list-info"`, () => {
     }
 
     {
-      __pendingListUpdates.clear();
+      __pendingListUpdates.clearAttachedLists();
       b.insertBefore(d3); // move
       expect(__pendingListUpdates.values).toMatchInlineSnapshot(`
         {
@@ -342,7 +342,7 @@ describe(`list "update-list-info"`, () => {
     b.insertBefore(d1);
     b.insertBefore(d2);
     b.insertBefore(d3);
-    __pendingListUpdates.clear();
+    __pendingListUpdates.clearAttachedLists();
 
     d1.setAttribute('__0', { 'item-key': 1 });
     d3.setAttribute('__0', { 'item-key': 3 });
@@ -550,6 +550,84 @@ describe(`list componentAtIndex`, () => {
               ],
               "removeAction": [],
               "updateAction": [],
+            },
+            {
+              "insertAction": [],
+              "removeAction": [],
+              "updateAction": [
+                {
+                  "flush": false,
+                  "from": 0,
+                  "item-key": "key-0",
+                  "to": 0,
+                  "type": "__Card__:__snapshot_a94a8_test_21",
+                },
+              ],
+            },
+            {
+              "insertAction": [],
+              "removeAction": [],
+              "updateAction": [
+                {
+                  "flush": false,
+                  "from": 1,
+                  "item-key": "key-1",
+                  "to": 1,
+                  "type": "__Card__:__snapshot_a94a8_test_21",
+                },
+              ],
+            },
+            {
+              "insertAction": [],
+              "removeAction": [],
+              "updateAction": [
+                {
+                  "flush": false,
+                  "from": 2,
+                  "item-key": "key-2",
+                  "to": 2,
+                  "type": "__Card__:__snapshot_a94a8_test_21",
+                },
+              ],
+            },
+            {
+              "insertAction": [],
+              "removeAction": [],
+              "updateAction": [
+                {
+                  "flush": false,
+                  "from": 3,
+                  "item-key": "key-3",
+                  "to": 3,
+                  "type": "__Card__:__snapshot_a94a8_test_21",
+                },
+              ],
+            },
+            {
+              "insertAction": [],
+              "removeAction": [],
+              "updateAction": [
+                {
+                  "flush": false,
+                  "from": 4,
+                  "item-key": "key-4",
+                  "to": 4,
+                  "type": "__Card__:__snapshot_a94a8_test_21",
+                },
+              ],
+            },
+            {
+              "insertAction": [],
+              "removeAction": [],
+              "updateAction": [
+                {
+                  "flush": false,
+                  "from": 5,
+                  "item-key": "key-5",
+                  "to": 5,
+                  "type": "__Card__:__snapshot_a94a8_test_21",
+                },
+              ],
             },
           ]
         }
@@ -1228,7 +1306,18 @@ describe('list reload', () => {
                 "removeAction": [
                   2,
                 ],
-                "updateAction": [],
+                "updateAction": [
+                  {
+                    "flush": true,
+                    "from": 0,
+                    "to": 0,
+                  },
+                  {
+                    "flush": true,
+                    "from": 1,
+                    "to": 1,
+                  },
+                ],
               },
             ]
           }
@@ -1273,7 +1362,18 @@ describe('list reload', () => {
                 "removeAction": [
                   2,
                 ],
-                "updateAction": [],
+                "updateAction": [
+                  {
+                    "flush": true,
+                    "from": 0,
+                    "to": 0,
+                  },
+                  {
+                    "flush": true,
+                    "from": 1,
+                    "to": 1,
+                  },
+                ],
               },
               {
                 "insertAction": [
@@ -1283,7 +1383,18 @@ describe('list reload', () => {
                   },
                 ],
                 "removeAction": [],
-                "updateAction": [],
+                "updateAction": [
+                  {
+                    "flush": true,
+                    "from": 0,
+                    "to": 0,
+                  },
+                  {
+                    "flush": true,
+                    "from": 1,
+                    "to": 1,
+                  },
+                ],
               },
             ]
           }
@@ -1378,7 +1489,28 @@ describe('list reload', () => {
                 "removeAction": [
                   1,
                 ],
-                "updateAction": [],
+                "updateAction": [
+                  {
+                    "flush": true,
+                    "from": 0,
+                    "to": 0,
+                  },
+                  {
+                    "flush": true,
+                    "from": 1,
+                    "to": 1,
+                  },
+                  {
+                    "flush": true,
+                    "from": 2,
+                    "to": 2,
+                  },
+                  {
+                    "flush": true,
+                    "from": 3,
+                    "to": 3,
+                  },
+                ],
               },
             ]
           }
@@ -1453,16 +1585,25 @@ describe('list reload', () => {
                 "updateAction": [],
               },
               {
-                "insertAction": [
+                "insertAction": [],
+                "removeAction": [],
+                "updateAction": [
                   {
-                    "position": 0,
-                    "type": "__Card__:__snapshot_a94a8_test_38",
+                    "flush": true,
+                    "from": 0,
+                    "to": 0,
+                  },
+                  {
+                    "flush": true,
+                    "from": 1,
+                    "to": 1,
+                  },
+                  {
+                    "flush": true,
+                    "from": 2,
+                    "to": 2,
                   },
                 ],
-                "removeAction": [
-                  0,
-                ],
-                "updateAction": [],
               },
             ]
           }
@@ -1559,11 +1700,25 @@ describe('list reload', () => {
                 "removeAction": [],
                 "updateAction": [
                   {
-                    "flush": false,
+                    "flush": true,
+                    "from": 0,
+                    "full-span": true,
+                    "item-key": "1",
+                    "to": 0,
+                  },
+                  {
+                    "flush": true,
                     "from": 1,
                     "full-span": false,
                     "item-key": "2",
                     "to": 1,
+                  },
+                  {
+                    "flush": true,
+                    "from": 2,
+                    "full-span": true,
+                    "item-key": "3",
+                    "to": 2,
                   },
                 ],
               },
@@ -1698,7 +1853,7 @@ describe('list bug', () => {
     `);
 
     {
-      __pendingListUpdates.clear();
+      __pendingListUpdates.clearAttachedLists();
       b.insertBefore(d3); // move
       expect(__pendingListUpdates.values).toMatchInlineSnapshot(`
         {
@@ -1740,7 +1895,7 @@ describe('list bug', () => {
     }
 
     {
-      __pendingListUpdates.clear();
+      __pendingListUpdates.clearAttachedLists();
       b.removeChild(d3); // move
       expect(__pendingListUpdates.values).toMatchInlineSnapshot(`
         {
@@ -1865,11 +2020,25 @@ describe('list-item JSXSpread', () => {
                 "removeAction": [],
                 "updateAction": [
                   {
-                    "flush": false,
+                    "flush": true,
+                    "from": 0,
+                    "full-span": true,
+                    "item-key": "1",
+                    "to": 0,
+                  },
+                  {
+                    "flush": true,
                     "from": 1,
                     "full-span": false,
                     "item-key": "2",
                     "to": 1,
+                  },
+                  {
+                    "flush": true,
+                    "from": 2,
+                    "full-span": true,
+                    "item-key": "3",
+                    "to": 2,
                   },
                 ],
               },
@@ -1921,11 +2090,39 @@ describe('list-item JSXSpread', () => {
                 "removeAction": [],
                 "updateAction": [
                   {
-                    "flush": false,
+                    "flush": true,
+                    "from": 0,
+                    "full-span": true,
+                    "item-key": "1",
+                    "to": 0,
+                  },
+                  {
+                    "flush": true,
                     "from": 1,
                     "full-span": false,
                     "item-key": "2",
                     "to": 1,
+                  },
+                  {
+                    "flush": true,
+                    "from": 2,
+                    "full-span": true,
+                    "item-key": "3",
+                    "to": 2,
+                  },
+                ],
+              },
+              {
+                "insertAction": [],
+                "removeAction": [],
+                "updateAction": [
+                  {
+                    "flush": false,
+                    "from": 0,
+                    "full-span": true,
+                    "item-key": "1",
+                    "to": 0,
+                    "type": "__Card__:__snapshot_a94a8_test_46",
                   },
                 ],
               },
@@ -1988,11 +2185,39 @@ describe('list-item JSXSpread', () => {
                 "removeAction": [],
                 "updateAction": [
                   {
-                    "flush": false,
+                    "flush": true,
+                    "from": 0,
+                    "full-span": true,
+                    "item-key": "1",
+                    "to": 0,
+                  },
+                  {
+                    "flush": true,
                     "from": 1,
                     "full-span": false,
                     "item-key": "2",
                     "to": 1,
+                  },
+                  {
+                    "flush": true,
+                    "from": 2,
+                    "full-span": true,
+                    "item-key": "3",
+                    "to": 2,
+                  },
+                ],
+              },
+              {
+                "insertAction": [],
+                "removeAction": [],
+                "updateAction": [
+                  {
+                    "flush": false,
+                    "from": 0,
+                    "full-span": true,
+                    "item-key": "1",
+                    "to": 0,
+                    "type": "__Card__:__snapshot_a94a8_test_46",
                   },
                 ],
               },
