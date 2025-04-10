@@ -2409,6 +2409,19 @@ test.describe('web-elements test suite', () => {
     );
 
     test(
+      'event-input-number-dot',
+      async ({ page }, { titlePath }) => {
+        const title = getTitle(titlePath);
+        await gotoWebComponentPage(page, title);
+        await page.locator('x-input').click();
+        await page.keyboard.type('2.');
+        await wait(100);
+        const result = await page.locator('.result').first().innerText();
+        expect(result).toBe('2.');
+      },
+    );
+
+    test(
       'method-addText',
       async ({ page }, { titlePath, title: simpleTitle }) => {
         const title = getTitle(titlePath);
