@@ -3,6 +3,10 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 */
+import {
+  CommonEventsAndMethods,
+  layoutChangeTarget,
+} from '../common/CommonEventsAndMethods.js';
 import { LynxExposure } from '../common/Exposure.js';
 import { XOverlayAttributes } from './XOverlayAttributes.js';
 
@@ -10,7 +14,7 @@ import { Component, html } from '@lynx-js/web-elements-reactive';
 
 @Component<typeof XOverlayNg>(
   'x-overlay-ng',
-  [LynxExposure, XOverlayAttributes],
+  [LynxExposure, XOverlayAttributes, CommonEventsAndMethods],
   html`
     <style>
       #dialog[open] {
@@ -29,4 +33,6 @@ import { Component, html } from '@lynx-js/web-elements-reactive';
     </dialog>
   `,
 )
-export class XOverlayNg extends HTMLElement {}
+export class XOverlayNg extends HTMLElement {
+  [layoutChangeTarget] = this.shadowRoot!.firstElementChild as HTMLElement;
+}

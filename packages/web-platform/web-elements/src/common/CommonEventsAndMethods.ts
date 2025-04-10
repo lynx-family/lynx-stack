@@ -5,21 +5,24 @@
 import { commonComponentEventSetting } from './commonEventInitConfiguration.js';
 import { registerEventEnableStatusChangeHandler } from '@lynx-js/web-elements-reactive';
 
+export const layoutChangeTarget = Symbol('layoutChangeTarget');
 export class CommonEventsAndMethods {
   static readonly observedAttributes = [];
 
-  readonly #dom: HTMLElement;
+  readonly #dom: HTMLElement & { [layoutChangeTarget]?: HTMLElement };
 
   #observing = false;
   #resizeObserver?: ResizeObserver;
 
-  constructor(currentElement: HTMLElement) {
+  constructor(
+    currentElement: HTMLElement & { [layoutChangeTarget]?: HTMLElement },
+  ) {
     this.#dom = currentElement;
   }
 
   @registerEventEnableStatusChangeHandler('layoutchange')
   __handleScrollUpperThresholdEventEnabled = (enabled: boolean) => {
-    if (enabled) {
+    if (enabled && this.#dom[layoutChangeTarget]) {
       if (!this.#resizeObserver) {
         this.#resizeObserver = new ResizeObserver(([entry]) => {
           if (entry) {
@@ -44,7 +47,7 @@ export class CommonEventsAndMethods {
           }
         });
         if (!this.#observing) {
-          this.#resizeObserver.observe(this.#dom);
+          this.#resizeObserver.observe(this.#dom[layoutChangeTarget]);
           this.#observing = true;
         }
       }
