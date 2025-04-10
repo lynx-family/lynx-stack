@@ -3,7 +3,7 @@
   "compilerOptions": {
     "composite": true,
     "outDir": "./dist",
-    "target": "ES2022",
+    "target": "ES2024",
     "rootDir": "./src",
     "importHelpers": true,
     "noUnusedLocals": false,
