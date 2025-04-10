@@ -11,21 +11,40 @@ interface LynxViewRpc {
   terminateWorkers: () => void;
 }
 
+const backgroundWorkerContextCount: number[] = [];
+const contextIdToBackgroundWorker: (Worker | undefined)[] = [];
+
 let preHeatedMainWorker = createMainWorker();
 
-export function bootWorkers(): LynxViewRpc {
+export function bootWorkers(
+  backgroundContextId: number | undefined,
+): LynxViewRpc {
   const curMainWorker = preHeatedMainWorker;
+  preHeatedMainWorker = createMainWorker();
   const curBackgroundWorker = createBackgroundWorker(
+    backgroundContextId,
     curMainWorker.channelMainThreadWithBackground,
   );
+  if (backgroundContextId) {
+    if (backgroundWorkerContextCount[backgroundContextId]) {
+      backgroundWorkerContextCount[backgroundContextId]++;
+    } else {
+      backgroundWorkerContextCount[backgroundContextId] = 1;
+    }
+  }
 
-  preHeatedMainWorker = createMainWorker();
   return {
     mainThreadRpc: curMainWorker.mainThreadRpc,
     backgroundRpc: curBackgroundWorker.backgroundRpc,
     terminateWorkers: () => {
       curMainWorker.mainThreadWorker.terminate();
-      curBackgroundWorker.backgroundThreadWorker.terminate();
+      if (!backgroundContextId) {
+        curBackgroundWorker.backgroundThreadWorker.terminate();
+      } else if (backgroundWorkerContextCount[backgroundContextId] === 1) {
+        curBackgroundWorker.backgroundThreadWorker.terminate();
+        backgroundWorkerContextCount[backgroundContextId] = 0;
+        contextIdToBackgroundWorker[backgroundContextId] = undefined;
+      }
     },
   };
 }
@@ -33,7 +52,7 @@ export function bootWorkers(): LynxViewRpc {
 function createMainWorker() {
   const channelToMainThread = new MessageChannel();
   const channelMainThreadWithBackground = new MessageChannel();
-  const mainThreadWorker = createWebWorker();
+  const mainThreadWorker = createWebWorker('lynx-main');
   const mainThreadMessage: WorkerStartMessage = {
     mode: 'main',
     toUIThread: channelToMainThread.port2,
@@ -54,10 +73,18 @@ function createMainWorker() {
 }
 
 function createBackgroundWorker(
+  backgroundContextId: number | undefined,
   channelMainThreadWithBackground: MessageChannel,
 ) {
   const channelToBackground = new MessageChannel();
-  const backgroundThreadWorker = createWebWorker();
+  let backgroundThreadWorker: Worker;
+  if (backgroundContextId) {
+    backgroundThreadWorker = contextIdToBackgroundWorker[backgroundContextId]
+      ?? createWebWorker('lynx-bg');
+    contextIdToBackgroundWorker[backgroundContextId] = backgroundThreadWorker;
+  } else {
+    backgroundThreadWorker = createWebWorker('lynx-bg');
+  }
   const backgroundThreadMessage: WorkerStartMessage = {
     mode: 'background',
     toUIThread: channelToBackground.port2,
@@ -72,12 +99,12 @@ function createBackgroundWorker(
   return { backgroundRpc, backgroundThreadWorker };
 }
 
-function createWebWorker(): Worker {
+function createWebWorker(name: string): Worker {
   return new Worker(
     new URL('@lynx-js/web-worker-runtime', import.meta.url),
     {
       type: 'module',
-      name: `lynx-web`,
+      name,
     },
   );
 }

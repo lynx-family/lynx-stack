@@ -43,6 +43,7 @@ export type INapiModulesCall = (
  * @property {NapiModulesMap} napiModulesMap [optional] the napiModule which is called in lynx-core. key is module-name, value is esm url.
  * @property {INapiModulesCall} onNapiModulesCall [optional] the NapiModule value handler.
  * @property {"false" | "true" | null} injectHeadLinks [optional] @default true set it to "false" to disable injecting the <link href="" ref="stylesheet"> styles into shadowroot
+ * @property {number} backgroundContextId [optional] (attribute: "background-context-id") the background shared context id, which is used to share webworker between different lynx cards
  *
  * @event error lynx card fired an error
  *
@@ -201,6 +202,23 @@ export class LynxView extends HTMLElement {
   }
 
   /**
+   * @param
+   * @property
+   */
+  get backgroundContextId(): number | undefined {
+    return this.getAttribute('background-context-id')
+      ? Number(this.getAttribute('background-context-id')!)
+      : undefined;
+  }
+  set backgroundContextId(val: number | undefined) {
+    if (val) {
+      this.setAttribute('background-context-id', val.toString());
+    } else {
+      this.removeAttribute('background-context-id');
+    }
+  }
+
+  /**
    * @public
    * @method
    * update the `__initData` and trigger essential flow
@@ -304,6 +322,7 @@ export class LynxView extends HTMLElement {
           if (!this.shadowRoot) {
             this.attachShadow({ mode: 'open' });
           }
+          const backgroundContextId = this.backgroundContextId;
           const lynxView = createLynxView({
             tagMap,
             shadowRoot: this.shadowRoot!,
@@ -312,6 +331,7 @@ export class LynxView extends HTMLElement {
             initData: this.#initData,
             nativeModulesMap: this.#nativeModulesMap,
             napiModulesMap: this.#napiModulesMap,
+            backgroundContextId,
             callbacks: {
               nativeModulesCall: (
                 ...args: [name: string, data: any, moduleName: string]

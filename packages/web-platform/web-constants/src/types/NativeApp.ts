@@ -185,4 +185,7 @@ export interface NativeApp {
   createJSObjectDestructionObserver(
     callback: (...args: unknown[]) => unknown,
   ): {};
+
+  setSharedData<T>(dataKey: string, dataVal: T): void;
+  getSharedData<T = unknown>(dataKey: string): T | undefined;
 }

@@ -26,6 +26,7 @@ import type { TimingSystem } from './createTimingSystem.js';
 import type { LynxCrossThreadContext } from './createBackgroundLynx.js';
 
 let nativeAppCount = 0;
+const sharedData: Record<string, unknown> = {};
 
 export async function createNativeApp(config: {
   template: LynxTemplate;
@@ -138,6 +139,12 @@ export async function createNativeApp(config: {
     triggerComponentEvent,
     selectComponent,
     createJSObjectDestructionObserver: createJSObjectDestructionObserver(),
+    setSharedData<T>(dataKey: string, dataVal: T) {
+      sharedData[dataKey] = dataVal;
+    },
+    getSharedData<T>(dataKey: string): T | undefined {
+      return sharedData[dataKey] as T | undefined;
+    },
   };
   return nativeApp;
 }
