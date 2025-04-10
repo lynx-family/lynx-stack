@@ -74,7 +74,7 @@ export class InputBaseAttributes
       | 'url' = 'text';
     let inputType: 'text' | 'number' | 'password' = 'text';
     /**
-     * For number / digit type, if user is typing "2.", the event is expected to has a raw value "2.1" rather than "2"
+     * For number / digit type, if the user is typing "2.", the raw value is expected to remain "2." rather than being altered.
      */
     if (attributeValue === 'digit') {
       inputMode = 'numeric';
