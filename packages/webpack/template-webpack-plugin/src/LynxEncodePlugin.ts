@@ -174,7 +174,7 @@ export class LynxEncodePluginImpl {
           ].join(''),
           ...(Object.fromEntries(
             Object.entries(manifest)
-              // .filter(([name]) => this.#isBackground(name))
+              .filter(([name]) => this.#isBackground(name))
               .map(([name, source]) => [
                 this.#formatJSName(name, publicPath),
                 source,
