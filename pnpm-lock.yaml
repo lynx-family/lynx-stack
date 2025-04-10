@@ -335,11 +335,11 @@ importers:
         specifier: ^4.39.1
         version: 4.39.1
       typia:
-        specifier: 9.0.1
-        version: 9.0.1(@samchon/openapi@4.0.0)(typescript@5.8.3)
+        specifier: 9.1.1
+        version: 9.1.1(@samchon/openapi@4.0.0)(typescript@5.8.3)
       typia-rspack-plugin:
         specifier: 2.0.0
-        version: 2.0.0(typescript@5.8.3)(typia@9.0.1(@samchon/openapi@4.0.0)(typescript@5.8.3))
+        version: 2.0.0(typescript@5.8.3)(typia@9.1.1(@samchon/openapi@4.0.0)(typescript@5.8.3))
       vitest:
         specifier: ^3.1.1
         version: 3.1.1(@types/debug@4.1.12)(@types/node@22.14.0)(@vitest/ui@3.1.1)(jsdom@26.0.0)(sass-embedded@1.86.0)(terser@5.31.6)
@@ -451,11 +451,11 @@ importers:
         specifier: ^4.39.1
         version: 4.39.1
       typia:
-        specifier: 9.0.1
-        version: 9.0.1(@samchon/openapi@4.0.0)(typescript@5.8.3)
+        specifier: 9.1.1
+        version: 9.1.1(@samchon/openapi@4.0.0)(typescript@5.8.3)
       typia-rspack-plugin:
         specifier: 2.0.0
-        version: 2.0.0(typescript@5.8.3)(typia@9.0.1(@samchon/openapi@4.0.0)(typescript@5.8.3))
+        version: 2.0.0(typescript@5.8.3)(typia@9.1.1(@samchon/openapi@4.0.0)(typescript@5.8.3))
 
   packages/rspeedy/plugin-react-alias:
     dependencies:
@@ -7968,8 +7968,8 @@ packages:
       typescript: '*'
       typia: '*'
 
-  typia@9.0.1:
-    resolution: {integrity: sha512-ubx0/jugX1PbNT07jpKI/7+eW4RSe3t9QueIqFDza2Dpmfgb3Epa/YY0IDkLWshzXV1/OjBQh8cADM617xDUnw==}
+  typia@9.1.1:
+    resolution: {integrity: sha512-fMgrd2VLGZoDjZZwWlgriotUiG38UEzcMD0ToJOhQ0bPr966mit0ZEy5TnDhm2RidXfejZOqHb7iOoTG3VHd4w==}
     hasBin: true
     peerDependencies:
       '@samchon/openapi': '>=4.0.0 <5.0.0'
@@ -16305,13 +16305,13 @@ snapshots:
 
   typescript@5.8.3: {}
 
-  typia-rspack-plugin@2.0.0(typescript@5.8.3)(typia@9.0.1(@samchon/openapi@4.0.0)(typescript@5.8.3)):
+  typia-rspack-plugin@2.0.0(typescript@5.8.3)(typia@9.1.1(@samchon/openapi@4.0.0)(typescript@5.8.3)):
     dependencies:
       typescript: 5.8.3
-      typia: 9.0.1(@samchon/openapi@4.0.0)(typescript@5.8.3)
+      typia: 9.1.1(@samchon/openapi@4.0.0)(typescript@5.8.3)
       unplugin: 2.2.2
 
-  typia@9.0.1(@samchon/openapi@4.0.0)(typescript@5.8.3):
+  typia@9.1.1(@samchon/openapi@4.0.0)(typescript@5.8.3):
     dependencies:
       '@samchon/openapi': 4.0.0
       commander: 10.0.1
