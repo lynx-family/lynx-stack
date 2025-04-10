@@ -146,6 +146,11 @@ export class LynxEncodePluginImpl {
         const { encodeData } = args;
         const { manifest } = encodeData;
 
+        const publicPath =
+          typeof compilation?.outputOptions.publicPath === 'function'
+            ? compilation.outputOptions.publicPath({})
+            : compilation?.outputOptions.publicPath ?? '';
+
         if (!isDebug() && !isDev && !isRsdoctor()) {
           [
             encodeData.lepusCode.root,
@@ -178,7 +183,7 @@ export class LynxEncodePluginImpl {
             Object.keys(manifest)
               .map((name) =>
                 `module.exports=lynx.requireModule('${
-                  this.#formatJSName(name)
+                  this.#formatJSName(name, publicPath)
                 }',globDynamicComponentEntry?globDynamicComponentEntry:'__Card__')`
               )
               .join(','),
@@ -188,7 +193,7 @@ export class LynxEncodePluginImpl {
             Object.entries(manifest)
               // .filter(([name]) => this.#isBackground(name))
               .map(([name, source]) => [
-                this.#formatJSName(name),
+                this.#formatJSName(name, publicPath),
                 source,
               ]),
           )),
@@ -232,11 +237,11 @@ export class LynxEncodePluginImpl {
     return amdFooter + loadScriptFooter;
   }
 
-  #formatJSName(name: string): string {
+  #formatJSName(name: string, publicPath: string): string {
     if (this.#isBackground(name)) {
       return `/${name}`;
     }
-    return `<SERVER>/${name}`;
+    return new URL(name, publicPath).toString();
   }
 
   #isBackground(name: string): boolean {
