@@ -7,7 +7,10 @@ import { Component, html } from '@lynx-js/web-elements-reactive';
 import { LynxExposure } from '../common/Exposure.js';
 import { XTextTruncation } from './XTextTruncation.js';
 import { ScrollIntoView } from '../ScrollView/ScrollIntoView.js';
-import { CommonEventsAndMethods } from '../common/CommonEventsAndMethods.js';
+import {
+  CommonEventsAndMethods,
+  layoutChangeTarget,
+} from '../common/CommonEventsAndMethods.js';
 
 @Component<typeof XText>(
   'x-text',
@@ -36,4 +39,6 @@ export class XText extends HTMLElement {
       super.scrollIntoView(arg);
     }
   }
+
+  [layoutChangeTarget] = this;
 }
