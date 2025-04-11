@@ -32,11 +32,13 @@ function updateMainThread(
   markTiming(PerformanceTimingKeys.patch_changes_start);
 
   for (const { snapshotPatch, workletRefInitValuePatch, id } of patchList) {
+    console.log('updateMainThread', id);
     updateWorkletRefInitValueChanges(workletRefInitValuePatch);
-    __pendingListUpdates.clear();
+    // __pendingListUpdates.clearAll();
     if (snapshotPatch) {
       snapshotPatchApply(snapshotPatch);
     }
+    console.log('updateMainThread');
     __pendingListUpdates.flush();
     // console.debug('********** Lepus updatePatch:');
     // printSnapshotInstance(snapshotInstanceManager.values.get(-1)!);

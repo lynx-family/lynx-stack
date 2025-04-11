@@ -23,6 +23,8 @@ import { takeWorkletRefInitValuePatch } from '../../worklet/workletRefPool.js';
 import { runDelayedUnmounts, takeDelayedUnmounts } from '../delayUnmount.js';
 import { getReloadVersion } from '../pass.js';
 
+import { printSnapshotInstance } from '../../debug/printSnapshot.js';
+
 let globalFlushOptions: FlushOptions = {};
 
 const globalCommitTaskMap: Map<number, () => void> = /*@__PURE__*/ new Map();
@@ -174,11 +176,11 @@ async function commitToMainThread(): Promise<void> {
 
 function commitPatchUpdate(patchList: PatchList, patchOptions: Omit<PatchOptions, 'reloadVersion'>): Promise<void> {
   return new Promise(resolve => {
-    // console.debug('********** JS update:');
-    // printSnapshotInstance(
-    //   (backgroundSnapshotInstanceManager.values.get(1) || backgroundSnapshotInstanceManager.values.get(-1))!,
-    // );
-    // console.debug('commitPatchUpdate: ', JSON.stringify(patchList));
+    console.debug('********** JS update:');
+    printSnapshotInstance(
+      (backgroundSnapshotInstanceManager.values.get(1) || backgroundSnapshotInstanceManager.values.get(-1))!,
+    );
+    console.debug('commitPatchUpdate: ', JSON.stringify(patchList));
     if (__PROFILE__) {
       console.profile('commitChanges');
     }

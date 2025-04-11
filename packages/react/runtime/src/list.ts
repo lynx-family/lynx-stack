@@ -6,7 +6,7 @@ import { commitMainThreadPatchUpdate } from './lifecycle/patch/updateMainThread.
 import type { SnapshotInstance } from './snapshot.js';
 
 export interface ListUpdateInfo {
-  flush(): void;
+  flush(): number | undefined;
   onInsertBefore(
     newNode: SnapshotInstance,
     existingNode?: SnapshotInstance,
@@ -62,19 +62,27 @@ export class ListUpdateInfoRecording implements ListUpdateInfo {
   //   this.platformInfoUpdate.clear();
   // }
 
-  flush(): void {
+  flush(): undefined | number {
+    if (!this.list.__elements) {
+      return undefined;
+    }
     const elementIndex = this.list.__snapshot_def.slot[0]![1];
     const listElement = this.list.__elements![elementIndex]!;
     // this.__pendingAttributes?.forEach(pendingAttribute => {
     //   __SetAttribute(listElement, "update-list-info", pendingAttribute);
     //   __FlushElementTree(listElement);
     // });
+    console.log('update-list-info', this.__toAttribute());
+    // const attr = __GetAttributes(listElement);
+    // console.log('__GetAttributeso', attr);
     __SetAttribute(listElement, 'update-list-info', this.__toAttribute());
+
     __UpdateListCallbacks(
       listElement,
       componentAtIndexFactory(this.list.childNodes),
       enqueueComponentFactory(),
     );
+    return this.list.__id;
   }
 
   private oldChildNodes: SnapshotInstance[];
@@ -212,14 +220,18 @@ export class ListUpdateInfoRecording implements ListUpdateInfo {
 
 export const __pendingListUpdates = {
   values: {} as Record<number, ListUpdateInfo>,
-  clear(): void {
+  clear(id: number): void {
+    delete this.values[id];
+  },
+  clearAll(): void {
     this.values = {};
   },
   flush(): void {
-    Object.values(this.values).forEach(update => {
-      update.flush();
-    });
-    this.clear();
+    console.log('flush',Object.values(this.values).length);
+    Object.values(this.values)
+      .map(update => update.flush())
+      .filter(id => id !== undefined)
+      .forEach(id => this.clear(id));
   },
 };
 

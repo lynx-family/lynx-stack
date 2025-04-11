@@ -23,12 +23,26 @@ function updateListItemPlatformInfo(
 
   // @ts-ignore
   const list = ctx.__parent;
+  console.log(
+    'updateListItemPlatformInfo',
+    ctx.__snapshot_def.isListHolder,
+    list?.__snapshot_def.isListHolder,
+    ctx.__id,
+    list?.__id,
+    list?.__snapshot_def.isListHolder,
+    newValue,
+    oldValue,
+  );
   if (list?.__snapshot_def.isListHolder) {
     (__pendingListUpdates.values[list.__id] ??= new ListUpdateInfoRecording(list)).onSetAttribute(
       ctx,
       newValue,
       oldValue,
     );
+  }
+
+  if (ctx.__elements && ctx.__snapshot_def.isListHolder) {
+    __pendingListUpdates.values[ctx.__id]?.flush();
   }
 
   // In this updater, unlike `updateSpread`, the shape of the value is guaranteed to be an fixed object.

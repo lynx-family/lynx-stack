@@ -117,7 +117,7 @@ function updatePage(data: any, options?: UpdatePageOption): void {
     setPipeline(options?.pipelineOptions);
     markTiming(PerformanceTimingKeys.update_diff_vdom_start);
     {
-      __pendingListUpdates.clear();
+      __pendingListUpdates.clearAll();
 
       // ignore ref & unref before jsReady
       takeGlobalRefPatchMap();

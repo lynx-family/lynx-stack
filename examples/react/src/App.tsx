@@ -18,28 +18,55 @@ export function App() {
   }, [alterLogo]);
 
   return (
-    <view>
-      <view className='Background' />
-      <view className='App'>
-        <view className='Banner'>
-          <view className='Logo' bindtap={onTap}>
-            {alterLogo
-              ? <image src={reactLynxLogo} className='Logo--react' />
-              : <image src={lynxLogo} className='Logo--lynx' />}
-          </view>
-          <text className='Title'>React</text>
-          <text className='Subtitle'>on Lynx</text>
-        </view>
-        <view className='Content'>
-          <image src={arrow} className='Arrow' />
-          <text className='Description'>Tap the logo and have fun!</text>
-          <text className='Hint'>
-            Edit<text style={{ fontStyle: 'italic' }}>{' src/App.tsx '}</text>
-            to see updates!
-          </text>
-        </view>
-        <view style={{ flex: 1 }}></view>
-      </view>
-    </view>
+    <list
+      scroll-orientation='vertical'
+      style={{
+        width: '100%',
+        height: '100vh',
+        listMainAxisGap: '5px',
+        padding: '10px',
+      }}
+      custom-list-name={'list-container'}
+    >
+      {Array.from({ length: 5 }).map((_, index) => {
+        return (
+          <list-item
+            item-key={`list-item-${index}`}
+            key={`list-item-${index}`}
+            style={{
+              width: '100%',
+              height: '30vh',
+            }}
+          >
+            <list
+              scroll-orientation='horizontal'
+              style={{
+                width: '100%',
+                height: '100%',
+                backgroundColor: 'rgb(60, 179, 113)',
+              }}
+              custom-list-name={'list-container'}
+            >
+              {Array.from({ length: 5 }).map((_, index2) => {
+                return (
+                  <list-item
+                    item-key={`list-item2-${index}-${index2}`}
+                    key={`list-item2-${index}-${index2}`}
+                    style={{
+                      width: '30vw',
+                      height: '50%',
+                      backgroundColor: 'rgb(43, 141, 240)',
+                      border: 'solid 2px rgb(255, 255, 255)',
+                    }}
+                  >
+                    <text>Hello, Lynx</text>
+                  </list-item>
+                );
+              })}
+            </list>
+          </list-item>
+        );
+      })}
+    </list>
   );
 }

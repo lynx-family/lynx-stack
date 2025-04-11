@@ -9,7 +9,7 @@ const HOLE = null;
 
 beforeEach(() => {
   // snapshotManager.values.clear();
-  __pendingListUpdates.clear();
+  __pendingListUpdates.clearAll();
   snapshotInstanceManager.clear();
   snapshotInstanceManager.nextId = 0;
 });
@@ -253,7 +253,7 @@ describe(`list "update-list-info"`, () => {
     `);
 
     {
-      __pendingListUpdates.clear();
+      __pendingListUpdates.clearAll();
       const d4 = new SnapshotInstance(s3);
       const d5 = new SnapshotInstance(s3);
       const d6 = new SnapshotInstance(s4);
@@ -296,7 +296,7 @@ describe(`list "update-list-info"`, () => {
     }
 
     {
-      __pendingListUpdates.clear();
+      __pendingListUpdates.clearAll();
       b.insertBefore(d3); // move
       expect(__pendingListUpdates.values).toMatchInlineSnapshot(`
         {
@@ -342,7 +342,7 @@ describe(`list "update-list-info"`, () => {
     b.insertBefore(d1);
     b.insertBefore(d2);
     b.insertBefore(d3);
-    __pendingListUpdates.clear();
+    __pendingListUpdates.clearAll();
 
     d1.setAttribute('__0', { 'item-key': 1 });
     d3.setAttribute('__0', { 'item-key': 3 });
@@ -1698,7 +1698,7 @@ describe('list bug', () => {
     `);
 
     {
-      __pendingListUpdates.clear();
+      __pendingListUpdates.clearAll();
       b.insertBefore(d3); // move
       expect(__pendingListUpdates.values).toMatchInlineSnapshot(`
         {
@@ -1740,7 +1740,7 @@ describe('list bug', () => {
     }
 
     {
-      __pendingListUpdates.clear();
+      __pendingListUpdates.clearAll();
       b.removeChild(d3); // move
       expect(__pendingListUpdates.values).toMatchInlineSnapshot(`
         {

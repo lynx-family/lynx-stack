@@ -28,7 +28,7 @@ function reloadMainThread(data: any, options: UpdatePageOption): void {
 
   destroyWorklet();
   snapshotInstanceManager.clear();
-  __pendingListUpdates.clear();
+  __pendingListUpdates.clearAll();
   clearJSReadyEventIdSwap();
 
   const oldRoot = __root;
