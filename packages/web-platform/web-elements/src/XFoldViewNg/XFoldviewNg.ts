@@ -17,7 +17,7 @@ export class XFoldviewNg extends HTMLElement {
   __scrollableLength: number = 0;
   get __headershowing() {
     // This behavior cannot be reproduced in the current test, but can be reproduced in Android WebView
-    return Math.abs(this.scrollTop - this.__scrollableLength) > 1;
+    return this.scrollTop - this.__scrollableLength < 1;
   }
 
   setFoldExpanded(params: { offset: string; smooth: boolean }) {
