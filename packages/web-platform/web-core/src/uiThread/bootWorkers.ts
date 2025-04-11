@@ -25,7 +25,7 @@ export function bootWorkers(
     backgroundContextId,
     curMainWorker.channelMainThreadWithBackground,
   );
-  if (backgroundContextId) {
+  if (backgroundContextId !== undefined) {
     if (backgroundWorkerContextCount[backgroundContextId]) {
       backgroundWorkerContextCount[backgroundContextId]++;
     } else {
