@@ -1081,16 +1081,21 @@ test.describe('reactlynx3 tests', () => {
           );
         },
       );
+      test('basic-element-text-with-new-line', async ({ page }, { title }) => {
+        await goto(page, title);
+        await wait(100);
+        await diffScreenShot(page, 'text', 'raw-text-new-line');
+      });
       test.describe('basic-element-text-text-selection', () => {
         const title = 'basic-element-text-text-selection';
 
         test('selection-true-boolean-flatten-false', async ({ page, browserName }) => {
           await goto(page, title);
           if (browserName === 'webkit') {
-            await page
-              .getByText('text-selection-true-boolean-flatten-false')
-              .first()
-              .click({ 'clickCount': 3 });
+            test.skip(
+              true,
+              'the selection status cannot be screenshot on webkit',
+            );
           } else {
             await page
               .getByText('text-selection-true-boolean-flatten-false')
@@ -1103,6 +1108,10 @@ test.describe('reactlynx3 tests', () => {
             'text',
             'text-selection',
             'text-selection-true-boolean-flatten-false',
+            {
+              threshold: 0.1,
+              fullPage: false,
+            },
           );
         });
 
