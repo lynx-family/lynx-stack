@@ -38,7 +38,7 @@ export function bootWorkers(
     backgroundRpc: curBackgroundWorker.backgroundRpc,
     terminateWorkers: () => {
       curMainWorker.mainThreadWorker.terminate();
-      if (!backgroundContextId) {
+      if (backgroundContextId === undefined) {
         curBackgroundWorker.backgroundThreadWorker.terminate();
       } else if (backgroundWorkerContextCount[backgroundContextId] === 1) {
         curBackgroundWorker.backgroundThreadWorker.terminate();
