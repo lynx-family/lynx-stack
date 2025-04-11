@@ -2413,11 +2413,19 @@ test.describe('web-elements test suite', () => {
       async ({ page }, { titlePath }) => {
         const title = getTitle(titlePath);
         await gotoWebComponentPage(page, title);
-        await page.locator('x-input').click();
+        const confirmValue = await page
+          .locator('#target')
+          .evaluateHandle((target) => {
+            let detail = { value: undefined };
+            target.addEventListener('input', (e) => {
+              detail.value = (e as any).detail.value;
+            });
+            return detail;
+          });
+        await page.mouse.click(100, 25);
         await page.keyboard.type('2.');
-        await wait(100);
-        const result = await page.locator('.result').first().innerText();
-        expect(result).toBe('2.');
+        await wait(200);
+        expect((await confirmValue.jsonValue()).value).toBe('2.');
       },
     );
 
