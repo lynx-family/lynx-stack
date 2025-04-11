@@ -130,7 +130,7 @@ export class LynxEncodePluginImpl {
         const { manifest } = encodeData;
 
         if (!isDebug() && !isDev && !isRsdoctor()) {
-          compiler.hooks.afterEmit.tap(this.name, () => {
+          compiler.hooks.emit.tap(this.name, () => {
             this.deleteDebuggingAssets(compilation, [
               encodeData.lepusCode.root,
               ...encodeData.lepusCode.chunks,
