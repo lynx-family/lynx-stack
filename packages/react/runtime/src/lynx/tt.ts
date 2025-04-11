@@ -5,7 +5,11 @@ import { options } from 'preact';
 import type { VNode } from 'preact';
 
 import { LifecycleConstant, NativeUpdateDataType } from '../lifecycleConstant.js';
-import { PerformanceTimingKeys, beginPipeline, markTiming } from './performance.js';
+import {
+  BackgroundThreadPerformanceTimingKeys,
+  beginPipeline,
+  markBackgroundThreadTiming,
+} from './performance/background.js';
 import { BackgroundSnapshotInstance, hydrate } from '../backgroundSnapshot.js';
 import { destroyBackground } from '../lifecycle/destroy.js';
 import { delayedEvents, delayedPublishEvent } from '../lifecycle/event/delayEvents.js';
@@ -118,10 +122,10 @@ async function onLifecycleEventImpl(type: string, data: any): Promise<void> {
         console.profile('hydrate');
       }
       beginPipeline(true, 'react_lynx_hydrate');
-      markTiming(PerformanceTimingKeys.hydrate_parse_snapshot_start);
+      markBackgroundThreadTiming(BackgroundThreadPerformanceTimingKeys.hydrate_parse_snapshot_start);
       const before = JSON.parse(lepusSide);
-      markTiming(PerformanceTimingKeys.hydrate_parse_snapshot_end);
-      markTiming(PerformanceTimingKeys.diff_vdom_start);
+      markBackgroundThreadTiming(BackgroundThreadPerformanceTimingKeys.hydrate_parse_snapshot_end);
+      markBackgroundThreadTiming(BackgroundThreadPerformanceTimingKeys.diff_vdom_start);
       const snapshotPatch = hydrate(
         before,
         __root as BackgroundSnapshotInstance,
@@ -129,7 +133,7 @@ async function onLifecycleEventImpl(type: string, data: any): Promise<void> {
       if (__PROFILE__) {
         console.profileEnd();
       }
-      markTiming(PerformanceTimingKeys.diff_vdom_end);
+      markBackgroundThreadTiming(BackgroundThreadPerformanceTimingKeys.diff_vdom_end);
 
       // TODO: It seems `delayedEvents` and `delayedLifecycleEvents` should be merged into one array to ensure the proper order of events.
       flushDelayedLifecycleEvents();

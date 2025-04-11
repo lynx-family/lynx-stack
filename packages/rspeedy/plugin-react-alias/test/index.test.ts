@@ -107,6 +107,106 @@ describe('React - alias', () => {
       'preact/compat/scheduler$',
       expect.stringContaining('/preact/compat/scheduler.mjs'),
     )
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const mainThreadAlias = config.module?.rules?.find(
+      // @ts-expect-error field exists
+      x => x.issuerLayer === LAYERS.MAIN_THREAD,
+      // @ts-expect-error field exists
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    )?.resolve?.alias
+    expect(mainThreadAlias).toHaveProperty(
+      '@lynx-js/react/jsx-dev-runtime',
+      expect.stringContaining(
+        '/packages/react/runtime/lepus/jsx-runtime/index.js',
+      ),
+    )
+    expect(mainThreadAlias).toHaveProperty(
+      '@lynx-js/react/jsx-runtime',
+      expect.stringContaining(
+        '/packages/react/runtime/lepus/jsx-runtime/index.js',
+      ),
+    )
+    expect(mainThreadAlias).toHaveProperty(
+      '@lynx-js/react/lepus$',
+      expect.stringContaining(
+        '/packages/react/runtime/lepus/index.js',
+      ),
+    )
+    expect(mainThreadAlias).toHaveProperty(
+      '@lynx-js/react/lepus/jsx-dev-runtime',
+      expect.stringContaining(
+        '/packages/react/runtime/lepus/jsx-runtime/index.js',
+      ),
+    )
+    expect(mainThreadAlias).toHaveProperty(
+      '@lynx-js/react/lepus/jsx-runtime',
+      expect.stringContaining(
+        '/packages/react/runtime/lepus/jsx-runtime/index.js',
+      ),
+    )
+    expect(mainThreadAlias).toHaveProperty(
+      'background-only$',
+      expect.stringContaining(
+        '/background-only/error.js',
+      ),
+    )
+    expect(mainThreadAlias).toHaveProperty(
+      'react/jsx-dev-runtime',
+      expect.stringContaining(
+        '/packages/react/runtime/lepus/jsx-runtime/index.js',
+      ),
+    )
+    expect(mainThreadAlias).toHaveProperty(
+      'react/jsx-runtime',
+      expect.stringContaining(
+        '/packages/react/runtime/lepus/jsx-runtime/index.js',
+      ),
+    )
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const backgroundAlias = config.module?.rules?.find(
+      // @ts-expect-error field exists
+      x => x.issuerLayer === LAYERS.BACKGROUND,
+      // @ts-expect-error field exists
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    )?.resolve?.alias
+    expect(backgroundAlias).toHaveProperty(
+      '@lynx-js/react/jsx-dev-runtime',
+      expect.stringContaining(
+        '/packages/react/runtime/jsx-dev-runtime/index.js',
+      ),
+    )
+    expect(backgroundAlias).toHaveProperty(
+      '@lynx-js/react/jsx-runtime',
+      expect.stringContaining(
+        '/packages/react/runtime/jsx-runtime/index.js',
+      ),
+    )
+    expect(backgroundAlias).toHaveProperty(
+      '@lynx-js/react/lepus$',
+      expect.stringContaining(
+        '/packages/react/runtime/lib/index.js',
+      ),
+    )
+    expect(backgroundAlias).toHaveProperty(
+      'background-only$',
+      expect.stringContaining(
+        '/background-only/empty.js',
+      ),
+    )
+    expect(backgroundAlias).toHaveProperty(
+      'react/jsx-dev-runtime',
+      expect.stringContaining(
+        '/packages/react/runtime/jsx-dev-runtime/index.js',
+      ),
+    )
+    expect(backgroundAlias).toHaveProperty(
+      'react/jsx-runtime',
+      expect.stringContaining(
+        '/packages/react/runtime/jsx-runtime/index.js',
+      ),
+    )
   })
 
   test('alias with production', async () => {
