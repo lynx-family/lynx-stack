@@ -82,6 +82,18 @@
       "lazy": "./runtime/lazy/legacy-react-runtime.js",
       "default": "./runtime/lib/legacy-react-runtime/index.js"
     },
+    "./testing-library": {
+      "types": "./testing-library/types/index.d.ts",
+      "default": "./testing-library/src/index.jsx"
+    },
+    "./testing-library/pure": {
+      "types": "./testing-library/types/pure.d.ts",
+      "default": "./testing-library/src/pure.jsx"
+    },
+    "./testing-library/vitest-config": {
+      "types": "./testing-library/types/vitest-config.d.ts",
+      "default": "./testing-library/src/vitest.config.js"
+    },
     "./package.json": "./package.json"
   },
   "types": "./types/react.d.ts",
@@ -139,6 +151,7 @@
     "types",
     "docs",
     "worklet-runtime",
+    "testing-library",
     "CHANGELOG.md",
     "internal.js",
     "README.md",
@@ -151,16 +164,32 @@
     "preact": "npm:@hongzhiyuan/preact@10.24.0-319c684e"
   },
   "devDependencies": {
+    "@lynx-js/lynx-environment": "workspace:*",
     "@lynx-js/types": "^3.2.1",
     "@microsoft/api-extractor": "catalog:",
-    "@types/react": "^18.3.20"
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@types/react": "^18.3.20",
+    "@vitejs/plugin-react": "4.3.4"
   },
   "peerDependencies": {
+    "@lynx-js/lynx-environment": "*",
     "@lynx-js/types": "*",
-    "@types/react": "^18"
+    "@testing-library/dom": "^10",
+    "@types/react": "^18",
+    "@vitejs/plugin-react": "^4"
   },
   "peerDependenciesMeta": {
+    "@lynx-js/lynx-environment": {
+      "optional": true
+    },
     "@lynx-js/types": {
+      "optional": true
+    },
+    "@testing-library/dom": {
+      "optional": true
+    },
+    "@vitejs/plugin-react": {
       "optional": true
     }
   }
