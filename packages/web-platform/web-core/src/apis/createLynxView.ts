@@ -21,7 +21,7 @@ export interface LynxViewConfigs {
   nativeModulesMap: NativeModulesMap;
   napiModulesMap: NapiModulesMap;
   tagMap: Record<string, string>;
-  backgroundContextId: number | undefined;
+  lynxGroupId: number | undefined;
 }
 
 export interface LynxView {
@@ -44,7 +44,7 @@ export function createLynxView(configs: LynxViewConfigs): LynxView {
     nativeModulesMap,
     napiModulesMap,
     tagMap,
-    backgroundContextId,
+    lynxGroupId,
   } = configs;
   return startUIThread(
     templateUrl,
@@ -57,7 +57,7 @@ export function createLynxView(configs: LynxViewConfigs): LynxView {
       browserConfig: {},
     },
     shadowRoot,
-    backgroundContextId,
+    lynxGroupId,
     callbacks,
   );
 }

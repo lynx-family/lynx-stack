@@ -17,19 +17,19 @@ const contextIdToBackgroundWorker: (Worker | undefined)[] = [];
 let preHeatedMainWorker = createMainWorker();
 
 export function bootWorkers(
-  backgroundContextId: number | undefined,
+  lynxGroupId: number | undefined,
 ): LynxViewRpc {
   const curMainWorker = preHeatedMainWorker;
   preHeatedMainWorker = createMainWorker();
   const curBackgroundWorker = createBackgroundWorker(
-    backgroundContextId,
+    lynxGroupId,
     curMainWorker.channelMainThreadWithBackground,
   );
-  if (backgroundContextId !== undefined) {
-    if (backgroundWorkerContextCount[backgroundContextId]) {
-      backgroundWorkerContextCount[backgroundContextId]++;
+  if (lynxGroupId !== undefined) {
+    if (backgroundWorkerContextCount[lynxGroupId]) {
+      backgroundWorkerContextCount[lynxGroupId]++;
     } else {
-      backgroundWorkerContextCount[backgroundContextId] = 1;
+      backgroundWorkerContextCount[lynxGroupId] = 1;
     }
   }
 
@@ -38,12 +38,12 @@ export function bootWorkers(
     backgroundRpc: curBackgroundWorker.backgroundRpc,
     terminateWorkers: () => {
       curMainWorker.mainThreadWorker.terminate();
-      if (backgroundContextId === undefined) {
+      if (lynxGroupId === undefined) {
         curBackgroundWorker.backgroundThreadWorker.terminate();
-      } else if (backgroundWorkerContextCount[backgroundContextId] === 1) {
+      } else if (backgroundWorkerContextCount[lynxGroupId] === 1) {
         curBackgroundWorker.backgroundThreadWorker.terminate();
-        backgroundWorkerContextCount[backgroundContextId] = 0;
-        contextIdToBackgroundWorker[backgroundContextId] = undefined;
+        backgroundWorkerContextCount[lynxGroupId] = 0;
+        contextIdToBackgroundWorker[lynxGroupId] = undefined;
       }
     },
   };
@@ -73,15 +73,15 @@ function createMainWorker() {
 }
 
 function createBackgroundWorker(
-  backgroundContextId: number | undefined,
+  lynxGroupId: number | undefined,
   channelMainThreadWithBackground: MessageChannel,
 ) {
   const channelToBackground = new MessageChannel();
   let backgroundThreadWorker: Worker;
-  if (backgroundContextId) {
-    backgroundThreadWorker = contextIdToBackgroundWorker[backgroundContextId]
+  if (lynxGroupId) {
+    backgroundThreadWorker = contextIdToBackgroundWorker[lynxGroupId]
       ?? createWebWorker('lynx-bg');
-    contextIdToBackgroundWorker[backgroundContextId] = backgroundThreadWorker;
+    contextIdToBackgroundWorker[lynxGroupId] = backgroundThreadWorker;
   } else {
     backgroundThreadWorker = createWebWorker('lynx-bg');
   }

@@ -12,4 +12,4 @@ Similar to the same feature for Lynx iOS/Android, this feature let multi lynx ca
 
 The `lynx.getSharedData` and `lynx.setSharedData` are also supported in this commit.
 
-To enable this feature, set property `backgroundContextId` or attribute `background-context-id` before a lynx-view starts rendering. Those card with same context id will share one web worker for the bts scripts.
+To enable this feature, set property `lynxGroupId` or attribute `lynx-group-id` before a lynx-view starts rendering. Those card with same context id will share one web worker for the bts scripts.

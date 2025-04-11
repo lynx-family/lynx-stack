@@ -29,7 +29,7 @@ export function startUIThread(
   templateUrl: string,
   configs: Omit<MainThreadStartConfigs, 'template'>,
   shadowRoot: ShadowRoot,
-  backgroundContextId: number | undefined,
+  lynxGroupId: number | undefined,
   callbacks: {
     nativeModulesCall: NativeModulesCall;
     napiModulesCall: NapiModulesCall;
@@ -42,7 +42,7 @@ export function startUIThread(
     mainThreadRpc,
     backgroundRpc,
     terminateWorkers,
-  } = bootWorkers(backgroundContextId);
+  } = bootWorkers(lynxGroupId);
   const sendGlobalEvent = backgroundRpc.createCall(sendGlobalEventEndpoint);
   const mainThreadStart = mainThreadRpc.createCall(mainThreadStartEndpoint);
   const markTiming = backgroundRpc.createCall(markTimingEndpoint);

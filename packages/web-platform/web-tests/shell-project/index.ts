@@ -35,7 +35,7 @@ if (casename) {
     lynxView.nativeModulesMap = nativeModulesMap;
     lynxView.id = 'lynxview1';
     if (casename2) {
-      lynxView.setAttribute('background-context-id', '2');
+      lynxView.setAttribute('lynx-group-id', '2');
     }
     lynxView.onNativeModulesCall = (name, data, moduleName) => {
       if (name === 'getColor' && moduleName === 'CustomModule') {
@@ -51,7 +51,7 @@ if (casename) {
       lynxView2.id = 'lynxview2';
       lynxView2.setAttribute('url', `${dir2}/index.web.json`);
       lynxView2.nativeModulesMap = nativeModulesMap;
-      lynxView2.setAttribute('background-context-id', '2');
+      lynxView2.setAttribute('lynx-group-id', '2');
     });
   }
 } else {
