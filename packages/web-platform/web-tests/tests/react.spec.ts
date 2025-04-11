@@ -543,6 +543,31 @@ test.describe('reactlynx3 tests', () => {
       expect(page.workers().length).toBe(5);
     });
 
+    test('api-setSharedData', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(100);
+      await expect(page.locator('#target')).toHaveCSS(
+        'background-color',
+        'rgb(0, 128, 0)',
+      ); // green
+    });
+
+    test('api-shared-context', async ({ page }) => {
+      await goto(page, 'api-setSharedData', 'api-getSharedData');
+      await wait(100);
+      await page.locator('#lynxview2').locator('#target').click();
+      await expect(page.locator('#lynxview2').locator('#target')).toHaveCSS(
+        'background-color',
+        'rgb(0, 128, 0)',
+      ); // green
+    });
+
+    test('api-shared-context-worker-count', async ({ page }) => {
+      await goto(page, 'api-setSharedData', 'api-getSharedData');
+      await wait(100);
+      expect(page.workers().length).toBeLessThanOrEqual(4);
+    });
+
     test.describe('api-exposure', () => {
       const module = 'exposure';
       test(
@@ -660,24 +685,6 @@ test.describe('reactlynx3 tests', () => {
         await diffScreenShot(page, module, title, 'all-green', {
           fullPage: true,
         });
-      });
-
-      test('api-setSharedData', async ({ page }, { title }) => {
-        await goto(page, title);
-        await wait(100);
-        await expect(page.locator('#target')).toHaveCSS(
-          'background-color',
-          'rgb(0, 128, 0)',
-        ); // green
-      });
-
-      test('api-shared-context', async ({ page }, { title }) => {
-        await goto(page, 'api-setSharedData', 'api-getSharedData');
-        await wait(1000);
-        await expect(page.locator('#lynxview2').locator('#target')).toHaveCSS(
-          'background-color',
-          'rgb(0, 128, 0)',
-        ); // green
       });
 
       test(
