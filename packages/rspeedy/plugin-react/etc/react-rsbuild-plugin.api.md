@@ -26,6 +26,7 @@ export interface PluginReactLynxOptions {
     debugInfoOutside?: boolean;
     defaultDisplayLinear?: boolean;
     defineDCE?: Partial<DefineDceVisitorConfig> | undefined;
+    disableMTSAndGesture?: boolean;
     enableAccessibilityElement?: boolean;
     enableCSSInheritance?: boolean;
     enableCSSInvalidation?: boolean;
