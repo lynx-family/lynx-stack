@@ -68,6 +68,36 @@ describe('rspeedy config test', () => {
       }),
     )
   })
+
+  test('createRspeedy with no-env ', async () => {
+    const root = join(fixturesRoot, 'project-with-env')
+    const rsbuild = await createRspeedy({
+      cwd: root,
+      loadEnv: false,
+    })
+    const configs = await rsbuild.initConfigs()
+    const maybeDefinePluginInstance = configs[0]?.plugins?.filter((plugin) => {
+      if (plugin) {
+        return plugin.name === 'DefinePlugin'
+      } else {
+        return false
+      }
+    })
+
+    expect(maybeDefinePluginInstance).toHaveLength(1)
+    const defineInstance = maybeDefinePluginInstance![0]
+
+    expect(defineInstance!).toMatchObject(
+      expect.objectContaining({
+        _args: [
+          expect.not.objectContaining({
+            'process.env.PUBLIC_FOO': '"BAR"',
+            'process.env.PUBLIC_TEST': '"TEST"',
+          }),
+        ],
+      }),
+    )
+  })
 })
 
 describe('rspeedy environment test', () => {

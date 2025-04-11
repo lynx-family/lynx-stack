@@ -76,6 +76,7 @@ Options:
   -c --config <config>      specify the configuration file, can be a relative or absolute path
   --env-mode <mode>         specify the env mode to load the .env.[mode] file
   --environment <name...>   specify the name of environment to build
+  --no-env                  disable loading `.env` files"
   -h, --help                display help for command
 ```
 
@@ -94,6 +95,7 @@ Options:
   -c --config <config>      specify the configuration file, can be a relative or absolute path
   --env-mode <mode>         specify the env mode to load the .env.[mode] file
   --environment <name...>   specify the name of environment to build
+  --no-env                  disable loading `.env` files"
   -h, --help                display help for command
 ```
 
@@ -110,6 +112,7 @@ Options:
   -b --base <base>      specify the base path of the server
   -c --config <config>  specify the configuration file, can be a relative or absolute path
   --env-mode <mode>     specify the env mode to load the .env.[mode] file
+  --no-env              disable loading `.env` files"
   -h, --help            display help for command
 ```
 
@@ -134,6 +137,7 @@ Options:
   --verbose             show full function definitions in output
   -c --config <config>  specify the configuration file, can be a relative or absolute path
   --env-mode <mode>     specify the env mode to load the .env.[mode] file
+  --no-env              disable loading `.env` files"
   -h, --help            display help for command
 ```
 

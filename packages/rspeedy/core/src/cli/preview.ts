@@ -11,6 +11,7 @@ import type { CommonOptions } from './commands.js'
 import { exit } from './exit.js'
 import { loadConfig, resolveConfigPath } from '../config/loadConfig.js'
 import { createRspeedy } from '../create-rspeedy.js'
+import type { CreateRspeedyOptions } from '../create-rspeedy.js'
 
 export interface PreviewOptions extends CommonOptions {
   base?: string | undefined
@@ -34,13 +35,18 @@ export async function preview(
       rspeedyConfig.server.base = previewOptions.base
     }
 
-    const rspeedy = await createRspeedy({
+    const options: CreateRspeedyOptions = {
       cwd,
       rspeedyConfig,
-      ...(previewOptions.envMode
-        ? { loadEnv: { mode: previewOptions.envMode } }
-        : {}),
-    })
+    }
+
+    if (previewOptions.noEnv) {
+      options.loadEnv = false
+    } else if (previewOptions.envMode) {
+      options.loadEnv = { mode: previewOptions.envMode }
+    }
+
+    const rspeedy = await createRspeedy(options)
 
     await rspeedy.initConfigs()
 

@@ -36,7 +36,9 @@ export async function build(
       rspeedyConfig,
     }
 
-    if (buildOptions.envMode) {
+    if (buildOptions.noEnv) {
+      options.loadEnv = false
+    } else if (buildOptions.envMode) {
       options.loadEnv = { mode: buildOptions.envMode }
     }
 
