@@ -29,10 +29,15 @@ it('should have correct tasm.json', async () => {
 
   const content = await fs.promises.readFile(target, 'utf-8');
 
+  const output = path.resolve(__dirname, 'a.js');
+  expect(fs.existsSync(output));
+
+  const outputContent = await fs.promises.readFile(output, 'utf-8');
+
   const { lepusCode, manifest } = JSON.parse(content);
 
-  expect(lepusCode).toHaveProperty('root', manifest['/a/a.js']);
-  expect(manifest['/a/a.js']).toContain(['**', 'aaa', '**'].join(''));
+  expect(lepusCode).toHaveProperty('root', outputContent);
+  expect(outputContent).toContain(['**', 'aaa', '**'].join(''));
   expect(manifest['/app-service.js']).toContain(
     `lynx.requireModule('/a/a.js',globDynamicComponentEntry?globDynamicComponentEntry:'__Card__')`,
   );
