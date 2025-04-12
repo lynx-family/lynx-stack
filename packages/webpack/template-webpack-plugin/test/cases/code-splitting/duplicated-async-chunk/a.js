@@ -23,11 +23,17 @@ it('should have correct tasm.json', async () => {
   );
   expect(fs.existsSync(target));
 
-  const content = await fs.promises.readFile(target, 'utf-8');
+  const output = path.resolve(__dirname, 'a.js');
+  expect(fs.existsSync(output));
+  const outputContent = await fs.promises.readFile(output, 'utf-8');
+  expect(outputContent).toContain(['**', 'aaa', '**'].join(''));
 
+  const content = await fs.promises.readFile(target, 'utf-8');
   const { manifest } = JSON.parse(content);
 
-  expect(manifest['/a/a.js']).toContain(['**', 'aaa', '**'].join(''));
+  expect(manifest['/app-service.js']).toContain(
+    `lynx.requireModule('/a/a.js',globDynamicComponentEntry?globDynamicComponentEntry:'__Card__')`,
+  );
 });
 
 it('should generate correct bundle', async () => {
@@ -47,11 +53,22 @@ it('should generate correct bundle', async () => {
   expect([foo, bar, baz].every(p => fs.existsSync(p))).toBeTruthy();
 
   const fooContent = await fs.promises.readFile(foo, 'utf-8');
-  expect(fooContent).toContain('function foo()');
+  expect(fooContent).toContain(
+    `lynx.requireModule('/foo/foo.js',globDynamicComponentEntry?globDynamicComponentEntry:'__Card__')`,
+  );
 
   const barContent = await fs.promises.readFile(bar, 'utf-8');
-  expect(barContent).toContain('function bar()');
+  expect(barContent).toContain(
+    `lynx.requireModule('/bar/bar.js',globDynamicComponentEntry?globDynamicComponentEntry:'__Card__')`,
+  );
 
   const bazContent = await fs.promises.readFile(baz, 'utf-8');
-  expect(bazContent).toContain('function baz()');
+  expect(bazContent).toContain(
+    `lynx.requireModule('/baz/baz.js',globDynamicComponentEntry?globDynamicComponentEntry:'__Card__')`,
+  );
+
+  const asyncTemplates = await fs.promises.readdir(
+    path.resolve(__dirname, '../async'),
+  );
+  expect(asyncTemplates).toHaveLength(3); // foo, bar, baz
 });

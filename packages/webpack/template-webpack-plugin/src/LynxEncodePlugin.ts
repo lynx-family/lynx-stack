@@ -241,7 +241,7 @@ export class LynxEncodePluginImpl {
     if (this.#isBackground(name)) {
       return `/${name}`;
     }
-    return new URL(name, publicPath).toString();
+    return publicPath + name;
   }
 
   #isBackground(name: string): boolean {
