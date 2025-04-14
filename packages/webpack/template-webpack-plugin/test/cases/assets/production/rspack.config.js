@@ -1,3 +1,5 @@
+import fs from 'node:fs';
+
 import { LynxEncodePlugin, LynxTemplatePlugin } from '../../../../src';
 
 /** @type {import('webpack').Configuration} */
@@ -27,20 +29,26 @@ export default {
       filename: 'template.js',
       intermediate: '.rspeedy/main',
     }),
-    (compiler) => {
+
+    compiler => {
       const { DEBUG, NODE_ENV } = process.env;
+      compiler.hooks.beforeCompile.tap('test', () => {
+        process.env['DEBUG'] = '';
+        process.env['NODE_ENV'] = 'production';
+      });
+
+      // Reset
+      compiler.hooks.emit.tap('test', () => {
+        process.env['DEBUG'] = DEBUG;
+        process.env['NODE_ENV'] = NODE_ENV;
+      });
+    },
+
+    (compiler) => {
       compiler.hooks.thisCompilation.tap('test', (compilation) => {
         const encodeHooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(
           compilation,
         );
-        compilation.hooks.processAssets.tap(
-          { stage: -1000, name: 'test' },
-          () => {
-            process.env['DEBUG'] = '';
-            process.env['NODE_ENV'] = 'production';
-          },
-        );
-
         let appService;
         encodeHooks.beforeEmit.tap('test', (args) => {
           appService = args.finalEncodeOptions.manifest['/app-service.js'];
@@ -56,10 +64,26 @@ export default {
           { stage: 10000, name: 'test' },
           () => {
             expect(appService).not.toBeFalsy();
-            process.env['DEBUG'] = DEBUG;
-            process.env['NODE_ENV'] = NODE_ENV;
           },
         );
+      });
+    },
+
+    compiler => {
+      compiler.hooks.afterEmit.tap({
+        name: 'test',
+        stage: -128,
+      }, () => {
+        const files = fs.readdirSync(compiler.outputPath);
+        expect(files).not.toContain('main.bundle.js');
+      });
+
+      compiler.hooks.thisCompilation.tap('test', (compilation) => {
+        compiler.hooks.done.tap('test', () => {
+          expect(Object.keys(compilation.assets)).not.toContain(
+            'main.bundle.js',
+          );
+        });
       });
     },
   ],

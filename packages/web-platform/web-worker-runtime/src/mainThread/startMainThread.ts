@@ -4,9 +4,7 @@
 
 import {
   BackgroundThreadStartEndpoint,
-  mainThreadChunkReadyEndpoint,
   mainThreadStartEndpoint,
-  onLifecycleEventEndpoint,
   type LynxJSModule,
   flushElementTreeEndpoint,
   reportErrorEndpoint,
@@ -16,6 +14,7 @@ import {
   postOffscreenEventEndpoint,
   switchExposureServiceEndpoint,
   postTimingFlagsEndpoint,
+  dispatchCoreContextEventEndpoint,
 } from '@lynx-js/web-constants';
 import { Rpc } from '@lynx-js/web-worker-rpc';
 import {
@@ -45,8 +44,8 @@ export function startMainThread(
   const backgroundStart = backgroundThreadRpc.createCall(
     BackgroundThreadStartEndpoint,
   );
-  const __OnLifecycleEvent = backgroundThreadRpc.createCall(
-    onLifecycleEventEndpoint,
+  const dispatchCoreContextEvent = backgroundThreadRpc.createCall(
+    dispatchCoreContextEventEndpoint,
   );
   const publishEvent = backgroundThreadRpc.createCall(
     publishEventEndpoint,
@@ -55,9 +54,6 @@ export function startMainThread(
     publicComponentEventEndpoint,
   );
   const postExposure = backgroundThreadRpc.createCall(postExposureEndpoint);
-  const mainThreadChunkReady = uiThreadRpc.createCall(
-    mainThreadChunkReadyEndpoint,
-  );
   let operations: ElementOperation[] = [];
   const flushElementTree = uiThreadRpc.createCall(flushElementTreeEndpoint);
   const reportError = uiThreadRpc.createCall(reportErrorEndpoint);
@@ -65,6 +61,7 @@ export function startMainThread(
   uiThreadRpc.registerHandler(
     mainThreadStartEndpoint,
     async (config) => {
+      let isFp = true;
       const {
         globalProps,
         template,
@@ -96,8 +93,7 @@ export function startMainThread(
         lepusCode,
         docu,
         callbacks: {
-          mainChunkReady: function(): void {
-            mainThreadChunkReady();
+          mainChunkReady: () => {
             markTimingInternal('data_processor_start');
             const initData = runtime.processData
               ? runtime.processData(config.initData)
@@ -137,6 +133,10 @@ export function startMainThread(
             const pipelineId = options?.pipelineOptions?.pipelineID;
             markTimingInternal('dispatch_start', pipelineId);
             docu.commit();
+            if (isFp) {
+              isFp = false;
+              dispatchCoreContextEvent('__OnNativeAppReady', undefined);
+            }
             markTimingInternal('layout_start', pipelineId);
             markTimingInternal('ui_operation_flush_start', pipelineId);
             await flushElementTree(operations);
@@ -146,7 +146,9 @@ export function startMainThread(
             postTimingFlags(timingFlags, pipelineId);
           },
           _ReportError: reportError,
-          __OnLifecycleEvent,
+          __OnLifecycleEvent: (data) => {
+            dispatchCoreContextEvent('__OnLifecycleEvent', data);
+          },
           /**
            * Note :
            * The parameter of lynx.performance.markTiming is (pipelineId:string, timingFlag:string)=>void

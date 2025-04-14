@@ -12,6 +12,10 @@ export function createMainThreadLynx(
   lepusRuntime: MainThreadRuntime,
 ) {
   return {
+    getJSContext() {
+      // TODO: implement this
+      return new EventTarget();
+    },
     requestAnimationFrame(cb: FrameRequestCallback) {
       return requestAnimationFrame(cb);
     },
@@ -23,8 +27,8 @@ export function createMainThreadLynx(
     requireModule(path: string) {
       // @ts-expect-error
       if (self.WorkerGlobalScope) {
-        const mainfestUrl = config.lepusCode[`/${path}`];
-        if (mainfestUrl) path = mainfestUrl;
+        const lepusChunkUrl = config.lepusCode[`${path}`];
+        if (lepusChunkUrl) path = lepusChunkUrl;
         // @ts-expect-error
         importScripts(path);
         const entry = (globalThis.module as LynxJSModule).exports;
@@ -39,8 +43,8 @@ export function createMainThreadLynx(
       path: string,
       callback: (error: Error | null, exports?: unknown) => void,
     ) {
-      const mainfestUrl = config.lepusCode[`/${path}`];
-      if (mainfestUrl) path = mainfestUrl;
+      const lepusChunkUrl = config.lepusCode[`${path}`];
+      if (lepusChunkUrl) path = lepusChunkUrl;
       import(
         /* webpackIgnore: true */
         path

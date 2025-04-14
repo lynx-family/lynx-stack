@@ -44,10 +44,9 @@ export class XInputEvents
         { passive: true },
       );
     } else {
-      input.addEventListener(
+      input.removeEventListener(
         'input',
         this.#teleportInput as (ev: Event) => void,
-        { passive: true },
       );
       input.removeEventListener(
         'compositionend',

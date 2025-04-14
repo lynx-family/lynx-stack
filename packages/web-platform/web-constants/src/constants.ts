@@ -20,4 +20,6 @@ export const __lynx_timing_flag = '__lynx_timing_flag' as const;
 
 export const globalMuteableVars = [
   'registerDataProcessor',
+  'registerWorkletInternal',
+  'lynxWorkletImpl',
 ] as const;

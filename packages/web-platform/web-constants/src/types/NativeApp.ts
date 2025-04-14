@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 
 import type { CloneableObject } from './Cloneable.js';
+import type { LynxContextEventTarget } from './LynxContextEventTarget.js';
 import type { PerformancePipelineOptions } from './Performance.js';
 
 // LICENSE file in the root directory of this source tree.
@@ -39,8 +40,17 @@ export interface EventEmitter {
   toggle(eventName: string, ...data: unknown[]): void;
 }
 
+export type NativeLynx = {
+  __globalProps: CloneableObject;
+  getJSModule(_moduleName: string): unknown;
+  getNativeApp(): NativeApp;
+  getCoreContext(): LynxContextEventTarget;
+  getCustomSectionSync(key: string): CloneableObject;
+  getCustomSection(key: string): Promise<CloneableObject>;
+};
+
 export type NativeTTObject = {
-  lynx: unknown;
+  lynx: NativeLynx;
   OnLifecycleEvent: (...args: unknown[]) => void;
   publicComponentEvent(
     componentId: string,
@@ -90,35 +100,6 @@ export interface InvokeCallbackRes {
   data?: string;
 }
 
-export enum DispatchEventResult {
-  // Event was not canceled by event handler or default event handler.
-  NotCanceled = 0,
-  // Event was canceled by event handler; i.e. a script handler calling
-  // preventDefault.
-  CanceledByEventHandler,
-  // Event was canceled by the default event handler; i.e. executing the default
-  // action.  This result should be used sparingly as it deviates from the DOM
-  // Event Dispatch model. Default event handlers really shouldn't be invoked
-  // inside of dispatch.
-  CanceledByDefaultEventHandler,
-  // Event was canceled but suppressed before dispatched to event handler.  This
-  // result should be used sparingly; and its usage likely indicates there is
-  // potential for a bug. Trusted events may return this code; but untrusted
-  // events likely should always execute the event handler the developer intends
-  // to execute.
-  CanceledBeforeDispatch,
-}
-export interface ContextProxy {
-  onTriggerEvent?: (event: MessageEvent) => void;
-
-  postMessage(message: any): void;
-  dispatchEvent(event: MessageEvent): DispatchEventResult;
-  addEventListener(type: string, listener: (event: MessageEvent) => void): void;
-  removeEventListener(
-    type: string,
-    listener: (event: MessageEvent) => void,
-  ): void;
-}
 export interface NativeApp {
   id: string;
 
@@ -178,6 +159,16 @@ export interface NativeApp {
     timing_flag: string,
   ) => void;
 
+  /**
+   * Support from Lynx 3.0
+   */
+  profileStart: (traceName: string, option?: unknown) => void;
+
+  /**
+   * Support from Lynx 3.0
+   */
+  profileEnd: () => void;
+
   triggerComponentEvent(id: string, params: {
     eventDetail: CloneableObject;
     eventOption: CloneableObject;
@@ -194,4 +185,7 @@ export interface NativeApp {
   createJSObjectDestructionObserver(
     callback: (...args: unknown[]) => unknown,
   ): {};
+
+  setSharedData<T>(dataKey: string, dataVal: T): void;
+  getSharedData<T = unknown>(dataKey: string): T | undefined;
 }

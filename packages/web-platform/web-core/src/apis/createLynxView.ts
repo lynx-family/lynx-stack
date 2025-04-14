@@ -17,10 +17,11 @@ export interface LynxViewConfigs {
   initData: Cloneable;
   globalProps: Cloneable;
   shadowRoot: ShadowRoot;
-  callbacks: Parameters<typeof startUIThread>[3];
+  callbacks: Parameters<typeof startUIThread>[4];
   nativeModulesMap: NativeModulesMap;
   napiModulesMap: NapiModulesMap;
   tagMap: Record<string, string>;
+  lynxGroupId: number | undefined;
 }
 
 export interface LynxView {
@@ -43,6 +44,7 @@ export function createLynxView(configs: LynxViewConfigs): LynxView {
     nativeModulesMap,
     napiModulesMap,
     tagMap,
+    lynxGroupId,
   } = configs;
   return startUIThread(
     templateUrl,
@@ -55,6 +57,7 @@ export function createLynxView(configs: LynxViewConfigs): LynxView {
       browserConfig: {},
     },
     shadowRoot,
+    lynxGroupId,
     callbacks,
   );
 }

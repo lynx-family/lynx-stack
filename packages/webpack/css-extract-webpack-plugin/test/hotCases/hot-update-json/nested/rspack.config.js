@@ -15,6 +15,7 @@ export default {
   },
   output: {
     publicPath: './',
+    pathinfo: false,
   },
   module: {
     parser: {

@@ -98,6 +98,7 @@ const mainThreadInjectVars = [
   '__SetCSSId',
   '__OnLifecycleEvent',
   '__FlushElementTree',
+  '__LoadLepusChunk',
 ];
 
 const backgroundInjectVars = [

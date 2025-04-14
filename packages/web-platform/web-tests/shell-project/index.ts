@@ -24,14 +24,19 @@ const nativeModulesMap = {
 
 const searchParams = new URLSearchParams(document.location.search);
 const casename = searchParams.get('casename');
+const casename2 = searchParams.get('casename2');
 const hasdir = searchParams.get('hasdir') === 'true';
 
 if (casename) {
   const dir = `/dist/${casename}${hasdir ? `/${casename}` : ''}`;
-  const lepusjs = `${dir}/index.web.json`;
+  const dir2 = `/dist/${casename2}${hasdir ? `/${casename2}` : ''}`;
   lynxViewTests(lynxView => {
-    lynxView.setAttribute('url', lepusjs);
+    lynxView.setAttribute('url', `${dir}/index.web.json`);
     lynxView.nativeModulesMap = nativeModulesMap;
+    lynxView.id = 'lynxview1';
+    if (casename2) {
+      lynxView.setAttribute('lynx-group-id', '2');
+    }
     lynxView.onNativeModulesCall = (name, data, moduleName) => {
       if (name === 'getColor' && moduleName === 'CustomModule') {
         return data.color;
@@ -41,6 +46,14 @@ if (casename) {
       }
     };
   });
+  if (casename2) {
+    lynxViewTests(lynxView2 => {
+      lynxView2.id = 'lynxview2';
+      lynxView2.setAttribute('url', `${dir2}/index.web.json`);
+      lynxView2.nativeModulesMap = nativeModulesMap;
+      lynxView2.setAttribute('lynx-group-id', '2');
+    });
+  }
 } else {
   console.warn('cannot find casename');
 }

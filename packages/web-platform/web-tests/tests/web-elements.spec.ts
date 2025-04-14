@@ -2409,6 +2409,27 @@ test.describe('web-elements test suite', () => {
     );
 
     test(
+      'event-input-number-dot',
+      async ({ page }, { titlePath }) => {
+        const title = getTitle(titlePath);
+        await gotoWebComponentPage(page, title);
+        const confirmValue = await page
+          .locator('#target')
+          .evaluateHandle((target) => {
+            let detail = { value: undefined };
+            target.addEventListener('input', (e) => {
+              detail.value = (e as any).detail.value;
+            });
+            return detail;
+          });
+        await page.mouse.click(100, 25);
+        await page.keyboard.type('2.');
+        await wait(200);
+        expect((await confirmValue.jsonValue()).value).toBe('2.');
+      },
+    );
+
+    test(
       'method-addText',
       async ({ page }, { titlePath, title: simpleTitle }) => {
         const title = getTitle(titlePath);

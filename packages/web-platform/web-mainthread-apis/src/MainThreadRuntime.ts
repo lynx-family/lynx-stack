@@ -15,7 +15,6 @@ import {
   type publishEventEndpoint,
   type publicComponentEventEndpoint,
   type reportErrorEndpoint,
-  type onLifecycleEventEndpoint,
   type RpcCallType,
   type postExposureEndpoint,
 } from '@lynx-js/web-constants';
@@ -42,7 +41,7 @@ export interface MainThreadRuntimeCallbacks {
     timingFlags: string[],
   ) => void;
   _ReportError: RpcCallType<typeof reportErrorEndpoint>;
-  __OnLifecycleEvent: RpcCallType<typeof onLifecycleEventEndpoint>;
+  __OnLifecycleEvent: (lifeCycleEvent: Cloneable) => void;
   markTiming: (pipelineId: string, timingKey: string) => void;
   publishEvent: RpcCallType<typeof publishEventEndpoint>;
   publicComponentEvent: RpcCallType<typeof publicComponentEventEndpoint>;
@@ -167,7 +166,9 @@ export class MainThreadRuntime {
         },
         set: (v: any) => {
           this.__lynxGlobalBindingValues[nm] = v;
-          this._updateVars?.();
+          for (const handler of this.__varsUpdateHandlers) {
+            handler();
+          }
         },
       });
     }
@@ -213,7 +214,7 @@ export class MainThreadRuntime {
 
   _ReportError: RpcCallType<typeof reportErrorEndpoint>;
 
-  __OnLifecycleEvent: RpcCallType<typeof onLifecycleEventEndpoint>;
+  __OnLifecycleEvent: (lifeCycleEvent: Cloneable) => void;
 
   __LoadLepusChunk: (path: string) => boolean = (path) => {
     try {
@@ -237,6 +238,10 @@ export class MainThreadRuntime {
   };
 
   updatePage?: (data: Cloneable, options?: Record<string, string>) => void;
+  runWorklet?: (obj: unknown, event: unknown) => void;
 
-  _updateVars?: () => void;
+  private __varsUpdateHandlers: (() => void)[] = [];
+  set _updateVars(handler: () => void) {
+    this.__varsUpdateHandlers.push(handler);
+  }
 }
