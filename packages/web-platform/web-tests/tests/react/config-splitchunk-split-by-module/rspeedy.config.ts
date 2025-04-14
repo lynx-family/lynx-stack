@@ -10,7 +10,7 @@ const __dirname = path.dirname(__filename);
 const caseName = path.basename(__dirname);
 
 const root = path.join(__dirname, '..', '..', '..', 'dist', caseName);
-const commonConfigResult = commonConfig();
+const commonConfigResult = commonConfig({ firstScreenSyncTiming: 'jsReady' });
 commonConfigResult.output!.distPath = { root };
 commonConfigResult.output!.assetPrefix += `/${caseName}`;
 export default defineConfig({

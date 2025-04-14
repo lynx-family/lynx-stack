@@ -1,5 +1,16 @@
 # @lynx-js/web-mainthread-apis
 
+## 0.11.0
+
+### Patch Changes
+
+- feat: support mts event handler (1/n) ([#495](https://github.com/lynx-family/lynx-stack/pull/495))
+
+  now the main-thread:bind handler could be invoked. The params of the handler will be implemented later.
+
+- Updated dependencies [[`ea42e62`](https://github.com/lynx-family/lynx-stack/commit/ea42e62fbcd5c743132c3e6e7c4851770742d544), [`a0f5ca4`](https://github.com/lynx-family/lynx-stack/commit/a0f5ca4ea0895ccbaa6aa63f449f53a677a1cf73)]:
+  - @lynx-js/web-constants@0.11.0
+
 ## 0.10.1
 
 ### Patch Changes

@@ -26,9 +26,6 @@
     "CHANGELOG.md",
     "README.md"
   ],
-  "scripts": {
-    "build": "tsc --build tsconfig.build.json"
-  },
   "devDependencies": {
     "tailwindcss": "^3.4.17"
   }

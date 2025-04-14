@@ -73,12 +73,13 @@ export class InputBaseAttributes
       | 'email'
       | 'url' = 'text';
     let inputType: 'text' | 'number' | 'password' = 'text';
+    /**
+     * For number / digit type, if the user is typing "2.", the raw value is expected to remain "2." rather than being altered.
+     */
     if (attributeValue === 'digit') {
       inputMode = 'numeric';
-      inputType = 'number';
     } else if (attributeValue === 'number') {
       inputMode = 'decimal';
-      inputType = 'number';
     } else if (attributeValue === 'email') {
       inputMode = 'email';
     } else if (attributeValue === 'tel') {

@@ -38,7 +38,7 @@ export default {
       });
 
       // Reset
-      compiler.hooks.done.tap('test', () => {
+      compiler.hooks.emit.tap('test', () => {
         process.env['DEBUG'] = DEBUG;
         process.env['NODE_ENV'] = NODE_ENV;
       });
@@ -75,7 +75,7 @@ export default {
         stage: -128,
       }, () => {
         const files = fs.readdirSync(compiler.outputPath);
-        expect(files).toContain('main.bundle.js');
+        expect(files).not.toContain('main.bundle.js');
       });
 
       compiler.hooks.thisCompilation.tap('test', (compilation) => {

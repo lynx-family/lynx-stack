@@ -135,7 +135,7 @@ export class LynxEncodePluginImpl {
             : compilation?.outputOptions.publicPath ?? '';
 
         if (!isDebug() && !isDev && !isRsdoctor()) {
-          compiler.hooks.afterEmit.tap(this.name, () => {
+          compiler.hooks.emit.tap(this.name, () => {
             this.deleteDebuggingAssets(compilation, [
               encodeData.lepusCode.root,
               ...encodeData.lepusCode.chunks,

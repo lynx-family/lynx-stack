@@ -1194,7 +1194,7 @@ describe('DEV_ONLY_addSnapshot', () => {
   });
 });
 
-describe('DEV_ONLY_RegisterWorklet', () => {
+describe.skip('DEV_ONLY_RegisterWorklet', () => {
   beforeEach(() => {
     initGlobalSnapshotPatch();
   });

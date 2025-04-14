@@ -263,6 +263,7 @@ x-text[text-maxline][tail-color-convert="false"]::part(inner-box) {
 
 raw-text {
   display: none;
+  white-space-collapse: preserve-breaks;
 }
 x-text > raw-text,
 inline-text > raw-text,

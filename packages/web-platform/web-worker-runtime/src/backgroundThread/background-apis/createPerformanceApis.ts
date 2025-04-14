@@ -11,6 +11,8 @@ export function createPerformanceApis(timingSystem: TimingSystem): Pick<
   | 'onPipelineStart'
   | 'markPipelineTiming'
   | 'bindPipelineIdWithTimingFlag'
+  | 'profileStart'
+  | 'profileEnd'
 > {
   let inc = 0;
   const performanceApis = {
@@ -39,6 +41,12 @@ export function createPerformanceApis(timingSystem: TimingSystem): Pick<
       }
       const timingFlags = timingSystem.pipelineIdToTimingFlags.get(pipelineId)!;
       timingFlags.push(timingFlag);
+    },
+    profileStart: () => {
+      console.error('NYI: profileStart. This is an issue of lynx-core.');
+    },
+    profileEnd: () => {
+      console.error('NYI: profileEnd. This is an issue of lynx-core.');
     },
   };
   return performanceApis;

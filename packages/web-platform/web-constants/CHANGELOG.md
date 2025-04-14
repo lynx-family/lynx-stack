@@ -1,5 +1,26 @@
 # @lynx-js/web-constants
 
+## 0.11.0
+
+### Patch Changes
+
+- feat: support mts event handler (1/n) ([#495](https://github.com/lynx-family/lynx-stack/pull/495))
+
+  now the main-thread:bind handler could be invoked. The params of the handler will be implemented later.
+
+- feat: allow multi lynx-view to share bts worker ([#520](https://github.com/lynx-family/lynx-stack/pull/520))
+
+  Now we allow users to enable so-called "shared-context" feature on the Web Platform.
+
+  Similar to the same feature for Lynx iOS/Android, this feature let multi lynx cards to share one js context.
+
+  The `lynx.getSharedData` and `lynx.setSharedData` are also supported in this commit.
+
+  To enable this feature, set property `lynxGroupId` or attribute `lynx-group-id` before a lynx-view starts rendering. Those card with same context id will share one web worker for the bts scripts.
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.11.0
+
 ## 0.10.1
 
 ### Patch Changes

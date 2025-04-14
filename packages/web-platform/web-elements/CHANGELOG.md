@@ -1,5 +1,23 @@
 # @lynx-js/web-elements
 
+## 0.5.4
+
+### Patch Changes
+
+- chore: bump the output target to es2024 ([#518](https://github.com/lynx-family/lynx-stack/pull/518))
+
+- fix: the `\n` character should create a new line ([#522](https://github.com/lynx-family/lynx-stack/pull/522))
+
+  add `white-space-collapse: preserve-breaks` to raw-text
+
+- fix: the `input` event of x-input with number type should have raw value ([#517](https://github.com/lynx-family/lynx-stack/pull/517))
+
+  For `type:=number` x-input with typed value "2."
+
+  Before this commit: the value is "2"
+
+  After this commit the value is "2."
+
 ## 0.5.3
 
 ### Patch Changes

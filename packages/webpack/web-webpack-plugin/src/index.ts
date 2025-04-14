@@ -34,14 +34,13 @@ export class WebWebpackPlugin {
           const [name, content] = last(Object.entries(encodeData.manifest))!;
 
           if (!isDebug() && !isDev && !isRsdoctor()) {
-            hooks.beforeEmit.tap({ name: WebWebpackPlugin.name }, (args) => {
+            compiler.hooks.emit.tap({ name: WebWebpackPlugin.name }, () => {
               this.deleteDebuggingAssets(compilation, [
                 { name },
                 encodeData.lepusCode.root,
                 ...encodeData.lepusCode.chunks,
                 ...encodeData.css.chunks,
               ]);
-              return args;
             });
           }
 
@@ -68,7 +67,11 @@ export class WebWebpackPlugin {
               manifest: encodeOptions.manifest,
               cardType: encodeOptions['cardType'],
               pageConfig: encodeOptions.compilerOptions,
-              lepusCode: encodeOptions.lepusCode,
+              lepusCode: {
+                // flatten the lepusCode to a single object
+                ...encodeOptions.lepusCode.lepusChunk,
+                root: encodeOptions.lepusCode.root,
+              },
               customSections: encodeOptions.customSections,
             })),
             debugInfo: '',
