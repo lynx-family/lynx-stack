@@ -65,8 +65,8 @@ importers:
         specifier: 'catalog:'
         version: 7.52.3(@types/node@22.14.1)
       '@rslib/core':
-        specifier: ^0.6.2
-        version: 0.6.2(@microsoft/api-extractor@7.52.3(@types/node@22.14.1))(typescript@5.8.3)
+        specifier: ^0.6.3
+        version: 0.6.3(@microsoft/api-extractor@7.52.3(@types/node@22.14.1))(typescript@5.8.3)
       '@rspack/core':
         specifier: 1.3.4
         version: 1.3.4(@swc/helpers@0.5.15)
@@ -2667,8 +2667,8 @@ packages:
   '@rsdoctor/utils@1.0.1':
     resolution: {integrity: sha512-gqC0eeY1zD/BZIZ31WOaiua9r9L4kDBUYO691fCPPF7vvT17BZs1PmL8KpsHKYrXV32mwZDlMSinqUox3zy1qg==}
 
-  '@rslib/core@0.6.2':
-    resolution: {integrity: sha512-c1lqXy+iIrhUMpf5i2YXwWksMKhmZy8wtN9Sj6ySPibQsGoF/67pLvwbHj5vNTuMM7hA6STKL9QzFNS5+EkoYw==}
+  '@rslib/core@0.6.3':
+    resolution: {integrity: sha512-9XoDXKjsl7jN0um+9R6XTXUaUZNoobQuEnQ56iFDTEZ1xG2ksKB7PDkTmI1izfcjOaF9zdPoeo2INFyzL0w7hA==}
     engines: {node: '>=16.7.0'}
     hasBin: true
     peerDependencies:
@@ -7100,8 +7100,8 @@ packages:
   rrweb-cssom@0.8.0:
     resolution: {integrity: sha512-guoltQEx+9aMf2gDZ0s62EcV8lsXR+0w8915TC3ITdn2YueuNjdAYh/levpU9nFaoChh9RUS5ZdQMrKfVEN9tw==}
 
-  rsbuild-plugin-dts@0.6.2:
-    resolution: {integrity: sha512-H5Ymn2ixTBcC9mBIKo4cXD04UVa4WXH7ZQ4UwWRGOWGTJEroWgSb+OadVxFEgP3hgWhigaP2hEVRRe8eWJhH6Q==}
+  rsbuild-plugin-dts@0.6.3:
+    resolution: {integrity: sha512-FYZqdR1mVsBtPFqt6GbNxyDnf1nssS4YCNKP/kBqNA6o4+dGi7qcxO4Bod8EvJaEltKyKh05DZD91oKh99PEXA==}
     engines: {node: '>=16.7.0'}
     peerDependencies:
       '@microsoft/api-extractor': ^7
@@ -10156,10 +10156,10 @@ snapshots:
       - supports-color
       - webpack
 
-  '@rslib/core@0.6.2(@microsoft/api-extractor@7.52.3(@types/node@22.14.1))(typescript@5.8.3)':
+  '@rslib/core@0.6.3(@microsoft/api-extractor@7.52.3(@types/node@22.14.1))(typescript@5.8.3)':
     dependencies:
       '@rsbuild/core': 1.3.5
-      rsbuild-plugin-dts: 0.6.2(@microsoft/api-extractor@7.52.3(@types/node@22.14.1))(@rsbuild/core@1.3.5)(typescript@5.8.3)
+      rsbuild-plugin-dts: 0.6.3(@microsoft/api-extractor@7.52.3(@types/node@22.14.1))(@rsbuild/core@1.3.5)(typescript@5.8.3)
       tinyglobby: 0.2.12
     optionalDependencies:
       '@microsoft/api-extractor': 7.52.3(@types/node@22.14.1)
@@ -15391,7 +15391,7 @@ snapshots:
 
   rrweb-cssom@0.8.0: {}
 
-  rsbuild-plugin-dts@0.6.2(@microsoft/api-extractor@7.52.3(@types/node@22.14.1))(@rsbuild/core@1.3.5)(typescript@5.8.3):
+  rsbuild-plugin-dts@0.6.3(@microsoft/api-extractor@7.52.3(@types/node@22.14.1))(@rsbuild/core@1.3.5)(typescript@5.8.3):
     dependencies:
       '@ast-grep/napi': 0.36.2
       '@rsbuild/core': 1.3.5
