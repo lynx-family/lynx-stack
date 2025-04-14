@@ -146,7 +146,7 @@ x-list[vertical-orientation="false"]::part(lower-threshold-observer) {
 }
 
 /* list-type single */
-x-list[list-type="single"] {
+x-list {
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -154,7 +154,7 @@ x-list[list-type="single"] {
   column-gap: var(--list-cross-axis-gap);
 }
 
-x-list[list-type="single"][scroll-orientation="horizontal"] {
+x-list[scroll-orientation="horizontal"] {
   flex-direction: row;
   row-gap: var(--list-cross-axis-gap);
   column-gap: var(--list-main-axis-gap);
