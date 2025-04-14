@@ -4,6 +4,7 @@
 // LICENSE file in the root directory of this source tree.
 */
 import {
+  boostedQueueMicrotask,
   genDomGetter,
   type AttributeReactiveClass,
 } from '@lynx-js/web-elements-reactive';
@@ -179,10 +180,14 @@ export class XListWaterfall
   #resizeObserverInit = (spanCount: number, isScrollVertical: boolean) => {
     this.#resizeObserver?.disconnect();
     this.#resizeObserver = new ResizeObserver(() => {
-      this.#layoutListItem(
-        spanCount,
-        isScrollVertical,
-      );
+      // may cause: Resizeobserver loop completed with undelivered notifications
+      // https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver#observation_errors
+      boostedQueueMicrotask(() => {
+        this.#layoutListItem(
+          spanCount,
+          isScrollVertical,
+        );
+      });
     });
     Array.from(this.#dom.children).forEach(element => {
       this.#resizeObserver?.observe(element);

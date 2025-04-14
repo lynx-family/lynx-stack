@@ -2228,7 +2228,7 @@ test.describe('web-elements test suite', () => {
         await gotoWebComponentPage(page, title);
         await diffScreenShot(page, title, 'index');
         await page.evaluate(() => {
-          (document.querySelector('list-item[id="1"]') as HTMLElement)
+          (document.querySelector('list-item[item-key="1"]') as HTMLElement)
             .style
             .setProperty(
               'height',
@@ -2247,14 +2247,12 @@ test.describe('web-elements test suite', () => {
         await gotoWebComponentPage(page, title);
         await diffScreenShot(page, title, 'index');
         await page.evaluate(() => {
-          (document.querySelector('list-item[id="2"]') as HTMLElement)
+          (document.querySelector('list-item[item-key="1"]') as Element)
             .insertAdjacentHTML(
               'afterend',
-              `<list-item item-key="21" id="21">
-          <x-view class="item" part="item" style="height: 120px;">
-            21
-          </x-view>
-        </list-item>
+              `<list-item class="item" item-key="30" style="--item-index: 30; height: 120px;">
+  <x-view></x-view>
+</list-item>
 `,
             );
         });

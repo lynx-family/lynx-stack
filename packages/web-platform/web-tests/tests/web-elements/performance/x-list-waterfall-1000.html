@@ -37,10 +37,12 @@
       for (let ii = 0; ii < 1000; ii++) {
         const listItem = document.createElement('list-item');
         listItem.setAttribute('item-key', ii);
-        listItem.setAttribute('id', ii);
+        listItem.setAttribute(
+          'style',
+          `--item-index: ${ii}; height: ${getRandomHeight()}px;`,
+        );
+        listItem.setAttribute('class', 'item');
         const xview = document.createElement('x-view');
-        xview.setAttribute('style', `height: ${getRandomHeight()}px;`);
-        xview.setAttribute('class', 'item');
         xview.innerHTML = ii;
         listItem.append(xview);
         list.append(listItem);
@@ -58,8 +60,7 @@
     .item {
       border-width: 5px;
       border-color: green;
-      width: 100%;
-      background-color: yellow;
+      background-color: hsl(calc(15 * var(--item-index)), 100%, 50%);
     }
     </style>
   </head>
