@@ -2750,8 +2750,9 @@ test.describe('web-elements test suite', () => {
     );
   });
 
-  test.describe('x-overlay', () => {
-    test('x-overlay-ng/basic-z-index', async ({ page }, { title }) => {
+  test.describe('x-overlay-ng', () => {
+    test('basic-z-index', async ({ page }, { titlePath }) => {
+      const title = getTitle(titlePath);
       await gotoWebComponentPage(page, title);
       await diffScreenShot(page, title, 'red-cover-next-z-staking-rect');
     });
@@ -2759,7 +2760,9 @@ test.describe('web-elements test suite', () => {
     test('event-layoutchange', async ({ page }, { titlePath }) => {
       const title = getTitle(titlePath);
       await gotoWebComponentPage(page, title);
-      await page.locator('#target').click();
+      await page.evaluate(() => {
+        document.getElementById('target')?.setAttribute('open', '');
+      });
       await wait(100);
       const detail = await page.evaluate(() => {
         // @ts-expect-error

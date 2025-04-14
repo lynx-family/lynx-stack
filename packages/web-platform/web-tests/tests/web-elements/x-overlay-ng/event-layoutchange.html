@@ -36,9 +36,6 @@
       console.log('layoutchange', ev.detail);
       Object.assign(globalThis, { detail: ev.detail });
     });
-    document.querySelector('#target').addEventListener('click', () => {
-      document.querySelector('#target').style.width = '200px';
-    });
     </script>
     <x-view class="page">
       <x-overlay-ng

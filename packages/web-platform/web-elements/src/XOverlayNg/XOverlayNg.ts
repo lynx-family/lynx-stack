@@ -34,5 +34,7 @@ import { Component, html } from '@lynx-js/web-elements-reactive';
   `,
 )
 export class XOverlayNg extends HTMLElement {
-  [layoutChangeTarget] = this.shadowRoot!.firstElementChild as HTMLElement;
+  get [layoutChangeTarget](): HTMLElement {
+    return this.shadowRoot!.firstElementChild as HTMLElement;
+  }
 }
