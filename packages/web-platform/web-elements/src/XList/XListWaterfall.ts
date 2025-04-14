@@ -151,7 +151,7 @@ export class XListWaterfall
           `${String(listContent.scrollHeight - 1)}px`,
           'important',
         );
-        // firfox need this
+        // Firefox needs this
         lower.style.setProperty(
           'bottom',
           'unset',
