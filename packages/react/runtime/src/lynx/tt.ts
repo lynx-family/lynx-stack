@@ -195,13 +195,18 @@ async function onLifecycleEventImpl(type: string, data: any): Promise<void> {
   }
 }
 
+let flushingDelayedLifecycleEvents = false;
 function flushDelayedLifecycleEvents(): void {
+  // avoid stackoverflow
+  if (flushingDelayedLifecycleEvents) return;
+  flushingDelayedLifecycleEvents = true;
   if (delayedLifecycleEvents) {
     delayedLifecycleEvents.forEach((e) => {
       onLifecycleEvent(e);
     });
     delayedLifecycleEvents.length = 0;
   }
+  flushingDelayedLifecycleEvents = false;
 }
 
 function publishEvent(handlerName: string, data: unknown) {
