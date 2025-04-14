@@ -2,4 +2,4 @@
 "@lynx-js/react": patch
 ---
 
-fix: flushDelayedLifecycleEvents stackOverflow error
+fix: flushDelayedLifecycleEvents stack overflow error
