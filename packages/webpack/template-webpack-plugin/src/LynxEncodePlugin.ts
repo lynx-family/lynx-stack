@@ -243,7 +243,7 @@ export class LynxEncodePluginImpl {
   }
 
   #isBackground(name: string): boolean {
-    return /\.rspeedy\/[^/]+\/background(?:\.[a-f0-9]+)?\.js$/.test(name);
+    return /\/background(?:\.[a-f0-9]+)?\.js$/.test(name);
   }
 
   protected options: Required<LynxEncodePluginOptions>;
