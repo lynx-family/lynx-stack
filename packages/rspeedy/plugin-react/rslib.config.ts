@@ -10,6 +10,8 @@ export default defineConfig({
       'loaders/ignore-css-loader': './src/loaders/ignore-css-loader.ts',
       'loaders/invalid-import-error-loader':
         './src/loaders/invalid-import-error-loader.ts',
+      'background-only/error': './src/background-only/error.ts',
+      'background-only/empty': './src/background-only/empty.ts',
       index: './src/index.ts',
     },
     tsconfigPath: './tsconfig.build.json',
