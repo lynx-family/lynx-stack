@@ -52,7 +52,7 @@ export class XListWaterfall
 
       if (listItem.getAttribute('full-span') !== null) {
         let longestMeasurement = measurements[0];
-        // Find the lognest track.
+        // Find the longest track.
         for (let j = 1; j < spanCount; j++) {
           if (measurements[j] > longestMeasurement) {
             longestMeasurement = measurements[j];
