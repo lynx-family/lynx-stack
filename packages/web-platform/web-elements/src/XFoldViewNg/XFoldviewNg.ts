@@ -4,7 +4,7 @@
 // LICENSE file in the root directory of this source tree.
 */
 import { Component } from '@lynx-js/web-elements-reactive';
-import { LynxExposure } from '../common/Exposure.js';
+import { CommonEventsAndMethods } from '../common/CommonEventsAndMethods.js';
 import { XFoldviewNgEvents } from './XFoldviewNgEvents.js';
 import { scrollContainerDom } from '../common/constants.js';
 
@@ -12,7 +12,7 @@ export const scrollableLength = Symbol('scrollableLength');
 export const isHeaderShowing = Symbol('isHeaderShowing');
 
 @Component<typeof XFoldviewNg>('x-foldview-ng', [
-  LynxExposure,
+  CommonEventsAndMethods,
   XFoldviewNgEvents,
 ])
 export class XFoldviewNg extends HTMLElement {

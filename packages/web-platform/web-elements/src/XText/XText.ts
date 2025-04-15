@@ -4,7 +4,6 @@
 // LICENSE file in the root directory of this source tree.
 */
 import { Component, html } from '@lynx-js/web-elements-reactive';
-import { LynxExposure } from '../common/Exposure.js';
 import { XTextTruncation } from './XTextTruncation.js';
 import { ScrollIntoView } from '../ScrollView/ScrollIntoView.js';
 import {
@@ -14,7 +13,7 @@ import {
 
 @Component<typeof XText>(
   'x-text',
-  [LynxExposure, CommonEventsAndMethods, XTextTruncation],
+  [CommonEventsAndMethods, CommonEventsAndMethods, XTextTruncation],
   html`<div id="inner-box" part="inner-box"><slot></slot><slot name="inline-truncation"></slot></div>`,
 )
 export class XText extends HTMLElement {

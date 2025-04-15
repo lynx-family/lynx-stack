@@ -11,7 +11,7 @@ import {
 } from '@lynx-js/web-elements-reactive';
 import { XAudioAttribute } from './XAudioAttribute.js';
 import { XAudioEvents } from './XAudioEvents.js';
-import { LynxExposure } from '../common/Exposure.js';
+import { CommonEventsAndMethods } from '../common/CommonEventsAndMethods.js';
 import { commonComponentEventSetting } from '../common/commonEventInitConfiguration.js';
 import {
   XAudioErrorCode,
@@ -23,7 +23,7 @@ import {
 
 @Component<typeof XAudioTT>(
   'x-audio-tt',
-  [LynxExposure, XAudioAttribute, XAudioEvents],
+  [CommonEventsAndMethods, XAudioAttribute, XAudioEvents],
   html`<audio id="audio"></audio>`,
 )
 export class XAudioTT extends HTMLElement {

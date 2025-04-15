@@ -9,7 +9,7 @@ import {
   bindToStyle,
   registerAttributeHandler,
 } from '@lynx-js/web-elements-reactive';
-import { LynxExposure } from '../common/Exposure.js';
+import { CommonEventsAndMethods } from '../common/CommonEventsAndMethods.js';
 import { commonComponentEventSetting } from '../common/commonEventInitConfiguration.js';
 
 export class XSvgFeatures
@@ -62,5 +62,5 @@ export class XSvgFeatures
   }
 }
 
-@Component<typeof XSvg>('x-svg', [LynxExposure, XSvgFeatures])
+@Component<typeof XSvg>('x-svg', [CommonEventsAndMethods, XSvgFeatures])
 export class XSvg extends HTMLElement {}

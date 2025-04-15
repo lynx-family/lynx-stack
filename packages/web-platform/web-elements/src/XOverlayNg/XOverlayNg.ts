@@ -4,17 +4,16 @@
 // LICENSE file in the root directory of this source tree.
 */
 import {
-  CommonEventsAndMethods,
   layoutChangeTarget,
+  CommonEventsAndMethods,
 } from '../common/CommonEventsAndMethods.js';
-import { LynxExposure } from '../common/Exposure.js';
 import { XOverlayAttributes } from './XOverlayAttributes.js';
 
 import { Component, html } from '@lynx-js/web-elements-reactive';
 
 @Component<typeof XOverlayNg>(
   'x-overlay-ng',
-  [LynxExposure, XOverlayAttributes, CommonEventsAndMethods],
+  [CommonEventsAndMethods, XOverlayAttributes],
   html`
     <style>
       #dialog[open] {
