@@ -14,7 +14,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
-    "@changesets/cli": "^2.28.1",
+    "@changesets/cli": "^2.29.0",
     "@codspeed/vitest-plugin": "^4.0.1",
     "@eslint/js": "^9.24.0",
     "@microsoft/api-extractor": "catalog:",
