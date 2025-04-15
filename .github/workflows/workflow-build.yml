@@ -25,7 +25,7 @@ jobs:
           HEAD_SHA: ${{ github.sha }}
         run: |
           git fetch origin ${{ env.BASE_REF }}
-          echo "merge-base=$(git merge-base --fork-point ${{ env.HEAD_SHA }} origin/${{ env.BASE_REF }} || '')" >> $GITHUB_OUTPUT
+          echo "merge-base=$(git merge-base --fork-point origin/${{ env.BASE_REF }} ${{ env.HEAD_SHA }} || '')" >> $GITHUB_OUTPUT
       - name: TurboCache
         uses: lynx-infra/cache@558d7c999f9f97ac02ed7e711503bb81d82ff8ee
         with:
