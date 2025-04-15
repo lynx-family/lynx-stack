@@ -54,7 +54,8 @@ jobs:
           #     2.2 Use the base SHA
           #   3. Any cache
           restore-keys: |
-            turbo-pull-request-${{ github.event.pull_request.number || 'non-exists' }}
+            turbo-pull-request-${{ github.event.pull_request.number || 'non-exists' }}-${{ github.run_number }}
+            turbo-pull-request-${{ github.event.pull_request.number || 'non-exists' }}-
             turbo-v3-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ needs.get-merge-base.outputs.merge-base }}
             turbo-v3-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.push.before }}
             turbo-v3-${{ hashFiles('**/packages/**/src/**/*.rs') }}-
@@ -87,4 +88,4 @@ jobs:
         uses: lynx-infra/cache/save@558d7c999f9f97ac02ed7e711503bb81d82ff8ee
         with:
           path: .turbo
-          key: turbo-pull-request-${{ github.event.pull_request.number }}
+          key: turbo-pull-request-${{ github.event.pull_request.number }}-${{ github.run_number }}-${{ github.run_attempt }}
