@@ -87,3 +87,12 @@ jobs:
           pnpm turbo build --summarize
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      - name: Upload turbo summary
+        if: steps.build.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: turbo-summary-retry-${{ github.sha }}
+          path: .turbo/runs/*.json
+          retention-days: 1
+          overwrite: true
+          include-hidden-files: true
