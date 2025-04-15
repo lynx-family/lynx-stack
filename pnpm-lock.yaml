@@ -338,8 +338,8 @@ importers:
         specifier: 9.0.1
         version: 9.0.1(@samchon/openapi@4.0.0)(typescript@5.8.3)
       typia-rspack-plugin:
-        specifier: 2.0.0
-        version: 2.0.0(typescript@5.8.3)(typia@9.0.1(@samchon/openapi@4.0.0)(typescript@5.8.3))
+        specifier: 2.0.1
+        version: 2.0.1(typescript@5.8.3)(typia@9.0.1(@samchon/openapi@4.0.0)(typescript@5.8.3))
       vitest:
         specifier: ^3.1.1
         version: 3.1.1(@types/debug@4.1.12)(@types/node@22.14.1)(@vitest/ui@3.1.1)(jsdom@26.0.0)(sass-embedded@1.86.0)(terser@5.31.6)
@@ -454,8 +454,8 @@ importers:
         specifier: 9.0.1
         version: 9.0.1(@samchon/openapi@4.0.0)(typescript@5.8.3)
       typia-rspack-plugin:
-        specifier: 2.0.0
-        version: 2.0.0(typescript@5.8.3)(typia@9.0.1(@samchon/openapi@4.0.0)(typescript@5.8.3))
+        specifier: 2.0.1
+        version: 2.0.1(typescript@5.8.3)(typia@9.0.1(@samchon/openapi@4.0.0)(typescript@5.8.3))
 
   packages/rspeedy/plugin-react-alias:
     dependencies:
@@ -7966,8 +7966,8 @@ packages:
     engines: {node: '>=14.17'}
     hasBin: true
 
-  typia-rspack-plugin@2.0.0:
-    resolution: {integrity: sha512-3csV7TwMVaPD4gWVgFz0o7MIdX2HdkNRBOuN1zwtfpvly46KqUS3qNHCSPQM2jsiZywwFKVrBfhWuZObXrPPCA==}
+  typia-rspack-plugin@2.0.1:
+    resolution: {integrity: sha512-wyFdtZUqnYzZ85CrQ2L7Ws8CNOkms4EkrvuhqtjnhBZ/IuYIryMQ9devN544QlOq4ZrO62KC0IXpYQpyGkoCLA==}
     engines: {node: '>=18'}
     peerDependencies:
       typescript: '*'
@@ -8058,8 +8058,8 @@ packages:
     resolution: {integrity: sha512-4/u/j4FrCKdi17jaxuJA0jClGxB1AvU2hw/IuayPc4ay1XGaJs/rbb4v5WKwAjNifjmXK9PIFyuPiaK8azyR9w==}
     engines: {node: '>=14.0.0'}
 
-  unplugin@2.2.2:
-    resolution: {integrity: sha512-Qp+iiD+qCRnUek+nDoYvtWX7tfnYyXsrOnJ452FRTgOyKmTM7TUJ3l+PLPJOOWPTUyKISKp4isC5JJPSXUjGgw==}
+  unplugin@2.3.2:
+    resolution: {integrity: sha512-3n7YA46rROb3zSj8fFxtxC/PqoyvYQ0llwz9wtUPUutr9ig09C8gGo5CWCwHrUzlqC1LLR43kxp5vEIyH1ac1w==}
     engines: {node: '>=18.12.0'}
 
   unrs-resolver@1.4.1:
@@ -16320,11 +16320,11 @@ snapshots:
 
   typescript@5.8.3: {}
 
-  typia-rspack-plugin@2.0.0(typescript@5.8.3)(typia@9.0.1(@samchon/openapi@4.0.0)(typescript@5.8.3)):
+  typia-rspack-plugin@2.0.1(typescript@5.8.3)(typia@9.0.1(@samchon/openapi@4.0.0)(typescript@5.8.3)):
     dependencies:
       typescript: 5.8.3
       typia: 9.0.1(@samchon/openapi@4.0.0)(typescript@5.8.3)
-      unplugin: 2.2.2
+      unplugin: 2.3.2
 
   typia@9.0.1(@samchon/openapi@4.0.0)(typescript@5.8.3):
     dependencies:
@@ -16435,9 +16435,10 @@ snapshots:
       acorn: 8.14.1
       webpack-virtual-modules: 0.6.2
 
-  unplugin@2.2.2:
+  unplugin@2.3.2:
     dependencies:
       acorn: 8.14.1
+      picomatch: 4.0.2
       webpack-virtual-modules: 0.6.2
 
   unrs-resolver@1.4.1:
