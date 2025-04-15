@@ -17,7 +17,7 @@ runs:
         echo "version=$(pnpm ls @playwright/test --depth=0 --parseable | grep @playwright | sed -E 's/.*@([0-9]+\.[0-9]+\.[0-9]+).*/\1/')" >> "$GITHUB_OUTPUT"
       shell: bash
     - name: Cache Playwright
-      uses: lynx-infra/cache@ad9f115f5b15348eb208a52ec6f7ffa82e8108df
+      uses: lynx-infra/cache@558d7c999f9f97ac02ed7e711503bb81d82ff8ee
       id: playwright-cache
       with:
         path: ${{ (runner.os == 'Linux' && '~/.cache/ms-playwright') || '~/Library/Caches/ms-playwright' }}
