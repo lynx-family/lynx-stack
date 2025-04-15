@@ -21,7 +21,7 @@ jobs:
       - name: Get merge base
         id: merge-base
         env:
-          BASE_REF: ${{ github.event.pull_request.base_sha || github.event.merge_group.base_sha }}
+          BASE_REF: ${{ github.event.pull_request.base.ref || github.event.merge_group.base_sha }}
           HEAD_REF: ${{ github.event.pull_request.head_sha || github.event.merge_group.head_sha }}
         run: |
           git fetch origin ${{ env.BASE_REF }}
