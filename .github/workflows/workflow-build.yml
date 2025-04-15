@@ -22,7 +22,7 @@ jobs:
         id: merge-base
         env:
           BASE_REF: ${{ github.event.pull_request.base.ref || github.event.merge_group.base_sha }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.event.merge_group.head_sha }}
+          HEAD_SHA: ${{ github.sha }}
         run: |
           git fetch origin ${{ env.BASE_REF }}
           echo "merge-base=$(git merge-base --fork-point ${{ env.HEAD_SHA }} origin/${{ env.BASE_REF }} || '')" >> $GITHUB_OUTPUT
