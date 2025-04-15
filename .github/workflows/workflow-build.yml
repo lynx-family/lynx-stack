@@ -18,6 +18,16 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
+      - name: Get merge base
+        id: merge-base
+        run: |
+          if [ "${{ github.event_name }}" = "merge_group" ]; then
+            # For merge queue, use the parent of GITHUB_SHA as merge base
+            echo "merge-base=$(git rev-parse ${{ github.sha }}^ || '')" >> $GITHUB_OUTPUT
+          else
+            # For PRs, use fork-point between head and base
+            echo "merge-base=$(git merge-base --fork-point ${{ github.head_ref }} ${{ github.base_ref }} || '')" >> $GITHUB_OUTPUT
+          fi
       - name: TurboCache
         uses: lynx-infra/cache@558d7c999f9f97ac02ed7e711503bb81d82ff8ee
         with:
@@ -27,6 +37,7 @@ jobs:
           #   1. Runs in the same PR
           #   2. Previous PRs
           restore-keys: |
+            turbo-v3-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ steps.merge-base.outputs.merge-base }}
             turbo-v3-${{ hashFiles('**/packages/**/src/**/*.rs') }}-
       - name: Install
         run: |
