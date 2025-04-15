@@ -37,14 +37,14 @@ jobs:
         id: merge-base
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
-          BASE_REF: origin/${{ github.event.pull_request.base.ref || github.event.merge_group.base_ref }}
+          BASE_REF: ${{ github.event.pull_request.base.ref || github.event.merge_group.base_ref }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha || steps.head-sha.outputs.result || github.event.merge_group.head_sha }}
         run: |
           git fetch origin ${{ env.BASE_REF }}
           git rev-parse --verify ${{ env.HEAD_SHA }}
-          git rev-parse --verify ${{ env.BASE_REF }}
-          git merge-base --fork-point ${{ env.BASE_REF }} ${{ env.HEAD_SHA }}
-          echo "merge-base=$(git merge-base --fork-point ${{ env.BASE_REF }} ${{ env.HEAD_SHA }} || echo ${{ env.BASE_SHA }})" >> $GITHUB_OUTPUT
+          git rev-parse --verify origin/${{ env.BASE_REF }}
+          git merge-base --fork-point origin/${{ env.BASE_REF }} ${{ env.HEAD_SHA }}
+          echo "merge-base=$(git merge-base --fork-point origin/${{ env.BASE_REF }} ${{ env.HEAD_SHA }} || echo ${{ env.BASE_SHA }})" >> $GITHUB_OUTPUT
       - name: TurboCache
         uses: lynx-infra/cache@558d7c999f9f97ac02ed7e711503bb81d82ff8ee
         with:
