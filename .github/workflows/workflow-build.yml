@@ -11,22 +11,40 @@ env:
   CI: 1
   TURBO_TELEMETRY_DISABLED: 1
 jobs:
+  get-merge-base:
+    runs-on: ${{ inputs.runs-on }}
+    env:
+      # We have 3 cases:
+      #   1. Pull request
+      #   2. Merge group
+      #   3. Push (deploy on main branch)
+      BASE_REF: ${{ github.base_ref || github.event.merge_group.base_ref || github.event.push.base_ref }}
+      HEAD_REF: ${{ github.head_ref || github.event.merge_group.head_ref || github.ref }}
+    outputs:
+      merge-base: ${{ steps.merge-base.outputs.merge-base }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.HEAD_REF }}
+      # Modified from https://github.com/rmacklin/fetch-through-merge-base
+      - name: Fetch
+        run: |
+          git fetch --progress --depth=1 origin "+refs/heads/$BASE_REF:refs/heads/$BASE_REF"
+          while [ -z "$( git merge-base "$BASE_REF" "$HEAD_REF" )" ]; do
+            git fetch -q --deepen=10 origin "$BASE_REF" "$HEAD_REF";
+          done
+      - name: Get merge base
+        id: merge-base
+        run: |
+          echo "merge-base=$(git merge-base origin/${{ env.BASE_REF }} ${{ env.HEAD_REF }} || git rev-parse ${{ env.BASE_REF }})" >> $GITHUB_OUTPUT
   build-all:
     runs-on: ${{ inputs.runs-on }}
+    needs: get-merge-base
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - name: Get merge base
-        id: merge-base
-        env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
-          BASE_REF: ${{ github.event.pull_request.base.ref || github.event.merge_group.base_ref }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.event.merge_group.head_sha }}
-        run: |
-          git fetch origin ${{ env.BASE_REF }}
-          echo "merge-base=$(git merge-base origin/${{ env.BASE_REF }} ${{ env.HEAD_SHA }} || echo ${{ env.BASE_SHA }})" >> $GITHUB_OUTPUT
       - name: TurboCache
         uses: lynx-infra/cache@558d7c999f9f97ac02ed7e711503bb81d82ff8ee
         with:
@@ -36,8 +54,8 @@ jobs:
           #   1. Runs in the same PR
           #   2. Previous PRs
           restore-keys: |
-            turbo-v3-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ steps.merge-base.outputs.merge-base }}
-            turbo-v3-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
+            turbo-v3-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ needs.get-merge-base.outputs.merge-base }}
+            turbo-v3-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.push.before }}
             turbo-v3-${{ hashFiles('**/packages/**/src/**/*.rs') }}-
       - name: Install
         run: |
