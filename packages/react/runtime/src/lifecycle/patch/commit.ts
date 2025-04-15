@@ -145,8 +145,8 @@ async function commitToMainThread(): Promise<void> {
     return;
   }
 
-  markTimingLegacy(PerformanceTimingKeys.update_diff_vdom_end);
-  markTiming(PerformanceTimingKeys.diff_vdom_end);
+  markTimingLegacy(PerformanceTimingKeys.updateDiffVdomEnd);
+  markTiming(PerformanceTimingKeys.diffVdomEnd);
 
   const flushOptions = globalFlushOptions;
   globalFlushOptions = {};
@@ -182,7 +182,7 @@ function commitPatchUpdate(patchList: PatchList, patchOptions: Omit<PatchOptions
     if (__PROFILE__) {
       console.profile('commitChanges');
     }
-    markTiming(PerformanceTimingKeys.pack_changes_start);
+    markTiming(PerformanceTimingKeys.packChangesStart);
     const obj: {
       data: string;
       patchOptions: PatchOptions;
@@ -193,7 +193,7 @@ function commitPatchUpdate(patchList: PatchList, patchOptions: Omit<PatchOptions
         reloadVersion: getReloadVersion(),
       },
     };
-    markTiming(PerformanceTimingKeys.pack_changes_end);
+    markTiming(PerformanceTimingKeys.packChangesEnd);
     if (globalPipelineOptions) {
       obj.patchOptions.pipelineOptions = globalPipelineOptions;
       setPipeline(undefined);

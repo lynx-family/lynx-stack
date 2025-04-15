@@ -109,7 +109,7 @@ if (__JS__) {
     const timingFlag = this[NEXT_STATE][PerfSpecificKey];
     if (timingFlag) {
       globalFlushOptions.__lynx_timing_flag = timingFlag;
-      markTimingLegacy(PerformanceTimingKeys.update_set_state_trigger, timingFlag);
+      markTimingLegacy(PerformanceTimingKeys.updateSetStateTrigger, timingFlag);
       this[NEXT_STATE][PerfSpecificKey] = '';
     }
   };

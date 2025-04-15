@@ -25,11 +25,12 @@ function updateMainThread(
   }
 
   setPipeline(patchOptions.pipelineOptions);
-  markTiming(PerformanceTimingKeys.parse_changes_start);
+  markTiming(PerformanceTimingKeys.mtsRenderStart);
+  markTiming(PerformanceTimingKeys.parseChangesStart);
   const { patchList, flushOptions = {} } = JSON.parse(data) as PatchList;
 
-  markTiming(PerformanceTimingKeys.parse_changes_end);
-  markTiming(PerformanceTimingKeys.patch_changes_start);
+  markTiming(PerformanceTimingKeys.parseChangesEnd);
+  markTiming(PerformanceTimingKeys.patchChangesStart);
 
   for (const { snapshotPatch, workletRefInitValuePatch, id } of patchList) {
     updateWorkletRefInitValueChanges(workletRefInitValuePatch);
@@ -43,7 +44,8 @@ function updateMainThread(
 
     commitMainThreadPatchUpdate(id);
   }
-  markTiming(PerformanceTimingKeys.patch_changes_end);
+  markTiming(PerformanceTimingKeys.patchChangesEnd);
+  markTiming(PerformanceTimingKeys.mtsRenderEnd);
   if (patchOptions.isHydration) {
     clearDelayedWorklets();
   }
