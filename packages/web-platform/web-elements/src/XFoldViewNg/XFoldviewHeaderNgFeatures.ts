@@ -5,7 +5,7 @@
 */
 import type { AttributeReactiveClass } from '@lynx-js/web-elements-reactive';
 import type { XFoldviewHeaderNg } from './XFoldviewHeaderNg.js';
-import type { XFoldviewNg } from './XFoldviewNg.js';
+import { scrollableLength, type XFoldviewNg } from './XFoldviewNg.js';
 
 export class XFoldviewHeaderNgFeatures
   implements InstanceType<AttributeReactiveClass<typeof XFoldviewHeaderNg>>
@@ -28,7 +28,7 @@ export class XFoldviewHeaderNgFeatures
           const headerHeight = resize!.contentRect.height;
           if (offsetTop < headerHeight) {
             slot.style.top = headerHeight - offsetTop + 'px';
-            parentElement.__scrollableLength = headerHeight - offsetTop;
+            parentElement[scrollableLength] = headerHeight - offsetTop;
           }
         }
       }

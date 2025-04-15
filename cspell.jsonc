@@ -113,7 +113,6 @@
     "PAPI", // Lynx's Element PAPI
     "parseable", // https://pnpm.io/cli/list
     "debugids", // https://getsentry.github.io/debugids/
-    "layoutchange", // the "layoutchange" event of Lynx
   ],
   // Glob
   "ignorePaths": [
