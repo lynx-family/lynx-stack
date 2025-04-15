@@ -115,6 +115,7 @@
     "parseable", // https://pnpm.io/cli/list
     "debugids", // https://getsentry.github.io/debugids/
     "zizmor", // https://github.com/woodruffw/zizmor
+    "Vdom",
     "wvid",
     "bindscroll",
     "deinit",

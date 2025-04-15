@@ -102,8 +102,11 @@ describe('reload', () => {
           "patchOptions": {
             "isHydration": true,
             "pipelineOptions": {
+              "dsl": "reactLynx",
               "needTimestamps": true,
               "pipelineID": "pipelineID",
+              "pipelineOrigin": "reactLynxHydrate",
+              "stage": "hydrate",
             },
             "reloadVersion": 0,
           },
@@ -314,8 +317,11 @@ describe('reload', () => {
           "patchOptions": {
             "isHydration": true,
             "pipelineOptions": {
+              "dsl": "reactLynx",
               "needTimestamps": true,
               "pipelineID": "pipelineID",
+              "pipelineOrigin": "reactLynxHydrate",
+              "stage": "hydrate",
             },
             "reloadVersion": 2,
           },
@@ -496,8 +502,11 @@ describe('reload', () => {
           "patchOptions": {
             "isHydration": true,
             "pipelineOptions": {
+              "dsl": "reactLynx",
               "needTimestamps": true,
               "pipelineID": "pipelineID",
+              "pipelineOrigin": "reactLynxHydrate",
+              "stage": "hydrate",
             },
             "reloadVersion": 2,
           },
@@ -718,8 +727,11 @@ describe('reload', () => {
           "patchOptions": {
             "isHydration": true,
             "pipelineOptions": {
+              "dsl": "reactLynx",
               "needTimestamps": true,
               "pipelineID": "pipelineID",
+              "pipelineOrigin": "reactLynxHydrate",
+              "stage": "hydrate",
             },
             "reloadVersion": 4,
           },
@@ -1315,8 +1327,11 @@ describe('firstScreenSyncTiming - jsReady', () => {
           "patchOptions": {
             "isHydration": true,
             "pipelineOptions": {
+              "dsl": "reactLynx",
               "needTimestamps": true,
               "pipelineID": "pipelineID",
+              "pipelineOrigin": "reactLynxHydrate",
+              "stage": "hydrate",
             },
             "reloadVersion": 5,
           },
@@ -1516,8 +1531,11 @@ describe('firstScreenSyncTiming - jsReady', () => {
           "patchOptions": {
             "isHydration": true,
             "pipelineOptions": {
+              "dsl": "reactLynx",
               "needTimestamps": true,
               "pipelineID": "pipelineID",
+              "pipelineOrigin": "reactLynxHydrate",
+              "stage": "hydrate",
             },
             "reloadVersion": 5,
           },
@@ -1678,8 +1696,11 @@ describe('firstScreenSyncTiming - jsReady', () => {
           "patchOptions": {
             "isHydration": true,
             "pipelineOptions": {
+              "dsl": "reactLynx",
               "needTimestamps": true,
               "pipelineID": "pipelineID",
+              "pipelineOrigin": "reactLynxHydrate",
+              "stage": "hydrate",
             },
             "reloadVersion": 5,
           },
@@ -1869,8 +1890,11 @@ describe('firstScreenSyncTiming - jsReady', () => {
           "patchOptions": {
             "isHydration": true,
             "pipelineOptions": {
+              "dsl": "reactLynx",
               "needTimestamps": true,
               "pipelineID": "pipelineID",
+              "pipelineOrigin": "reactLynxHydrate",
+              "stage": "hydrate",
             },
             "reloadVersion": 7,
           },

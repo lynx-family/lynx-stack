@@ -161,8 +161,11 @@ test('fireEvent triggers useEffect calls', async () => {
           "patchOptions": {
             "isHydration": true,
             "pipelineOptions": {
+              "dsl": "reactLynx",
               "needTimestamps": true,
               "pipelineID": "pipelineID",
+              "pipelineOrigin": "reactLynxHydrate",
+              "stage": "hydrate",
             },
             "reloadVersion": 0,
           },
@@ -236,8 +239,11 @@ test('fireEvent triggers useEffect calls', async () => {
           "patchOptions": {
             "isHydration": true,
             "pipelineOptions": {
+              "dsl": "reactLynx",
               "needTimestamps": true,
               "pipelineID": "pipelineID",
+              "pipelineOrigin": "reactLynxHydrate",
+              "stage": "hydrate",
             },
             "reloadVersion": 0,
           },
@@ -250,8 +256,11 @@ test('fireEvent triggers useEffect calls', async () => {
           "data": "{"patchList":[{"id":3,"snapshotPatch":[3,3,0,1]}]}",
           "patchOptions": {
             "pipelineOptions": {
+              "dsl": "reactLynx",
               "needTimestamps": true,
               "pipelineID": "pipelineID",
+              "pipelineOrigin": "reactLynxHydrate",
+              "stage": "hydrate",
             },
             "reloadVersion": 0,
           },

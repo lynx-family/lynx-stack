@@ -2,7 +2,13 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { LifecycleConstant, NativeUpdateDataType } from '../lifecycleConstant.js';
-import { PerformanceTimingKeys, beginPipeline, markTiming } from './performance.js';
+import {
+  PerformanceTimingKeys,
+  PerformanceTimingFlags,
+  PipelineOrigins,
+  beginPipeline,
+  markTiming,
+} from './performance.js';
 import { BackgroundSnapshotInstance, hydrate } from '../backgroundSnapshot.js';
 import { destroyBackground } from '../lifecycle/destroy.js';
 import { delayedEvents, delayedPublishEvent } from '../lifecycle/event/delayEvents.js';
@@ -74,11 +80,11 @@ function onLifecycleEventImpl(type: string, data: any): void {
       if (__PROFILE__) {
         console.profile('hydrate');
       }
-      beginPipeline(true, 'react_lynx_hydrate');
-      markTiming(PerformanceTimingKeys.hydrate_parse_snapshot_start);
+      beginPipeline(true, PipelineOrigins.reactLynxHydrate, PerformanceTimingFlags.reactLynxHydrate);
+      markTiming(PerformanceTimingKeys.hydrateParseSnapshotStart);
       const before = JSON.parse(lepusSide);
-      markTiming(PerformanceTimingKeys.hydrate_parse_snapshot_end);
-      markTiming(PerformanceTimingKeys.diff_vdom_start);
+      markTiming(PerformanceTimingKeys.hydrateParseSnapshotEnd);
+      markTiming(PerformanceTimingKeys.diffVdomStart);
       const snapshotPatch = hydrate(
         before,
         __root as BackgroundSnapshotInstance,
@@ -86,7 +92,7 @@ function onLifecycleEventImpl(type: string, data: any): void {
       if (__PROFILE__) {
         console.profileEnd();
       }
-      markTiming(PerformanceTimingKeys.diff_vdom_end);
+      markTiming(PerformanceTimingKeys.diffVdomEnd);
 
       // TODO: It seems `delayedEvents` and `delayedLifecycleEvents` should be merged into one array to ensure the proper order of events.
       flushDelayedLifecycleEvents();
