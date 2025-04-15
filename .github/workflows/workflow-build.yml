@@ -3,16 +3,12 @@ on:
     secrets:
       CODECOV_TOKEN:
         required: false
-    inputs:
-      runs-on:
-        required: true
-        type: string
 env:
   CI: 1
   TURBO_TELEMETRY_DISABLED: 1
 jobs:
   get-merge-base:
-    runs-on: ${{ inputs.runs-on }}
+    runs-on: lynx-ubuntu-24.04-medium
     env:
       # We have 3 cases:
       #   1. Pull request
@@ -38,7 +34,7 @@ jobs:
         run: |
           echo "merge-base=$(git merge-base origin/${{ env.BASE_REF }} ${{ env.HEAD_REF }} || git rev-parse ${{ env.BASE_REF }})" >> $GITHUB_OUTPUT
   build-all:
-    runs-on: ${{ inputs.runs-on }}
+    runs-on: lynx-ubuntu-24.04-xlarge
     needs: get-merge-base
     steps:
       - uses: actions/checkout@v4

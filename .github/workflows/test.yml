@@ -50,8 +50,6 @@ jobs:
     uses: ./.github/workflows/workflow-build.yml
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-    with:
-      runs-on: lynx-ubuntu-24.04-xlarge
   benchmark:
     needs: build
     uses: ./.github/workflows/workflow-bench.yml
