@@ -20,14 +20,12 @@ jobs:
           node-version: "22"
       - name: Get merge base
         id: merge-base
+        env:
+          BASE_REF: ${{ github.base_ref || github.event.merge_group.base_sha }}
+          HEAD_REF: ${{ github.head_ref || github.event.merge_group.head_sha }}
         run: |
-          if [ "${{ github.event_name }}" = "merge_group" ]; then
-            # For merge queue, use the parent of GITHUB_SHA as merge base
-            echo "merge-base=$(git rev-parse ${{ github.sha }}^ || '')" >> $GITHUB_OUTPUT
-          else
-            # For PRs, use fork-point between head and base
-            echo "merge-base=$(git merge-base --fork-point ${{ github.head_ref }} ${{ github.base_ref }} || '')" >> $GITHUB_OUTPUT
-          fi
+          git fetch origin ${{ env.BASE_REF }}
+          echo "merge-base=$(git merge-base --fork-point ${{ env.HEAD_REF }} ${{ env.BASE_REF }} || '')" >> $GITHUB_OUTPUT
       - name: TurboCache
         uses: lynx-infra/cache@558d7c999f9f97ac02ed7e711503bb81d82ff8ee
         with:
