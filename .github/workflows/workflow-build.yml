@@ -70,7 +70,7 @@ jobs:
         if: steps.build.outcome == 'failure'
         uses: actions/upload-artifact@v4
         with:
-          name: turbo-summary-${{ github.ref }}
+          name: turbo-summary-${{ github.sha }}
           path: .turbo/runs/*.json
           retention-days: 1
           overwrite: true
