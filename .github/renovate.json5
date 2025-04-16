@@ -93,7 +93,7 @@
       "groupSlug": "typia",
       "matchPackageNames": [
         "typia",
-        "rspack-plugin-typia",
+        "typia-rspack-plugin",
         "@samchon/openapi",
       ],
       "automerge": false,

@@ -2750,10 +2750,32 @@ test.describe('web-elements test suite', () => {
     );
   });
 
-  test.describe('x-overlay', () => {
-    test('x-overlay-ng/basic-z-index', async ({ page }, { title }) => {
+  test.describe('x-overlay-ng', () => {
+    test('basic-z-index', async ({ page }, { titlePath }) => {
+      const title = getTitle(titlePath);
       await gotoWebComponentPage(page, title);
       await diffScreenShot(page, title, 'red-cover-next-z-staking-rect');
+    });
+
+    test('event-layoutchange', async ({ page }, { titlePath }) => {
+      const title = getTitle(titlePath);
+      await gotoWebComponentPage(page, title);
+      await page.evaluate(() => {
+        document.getElementById('target')?.setAttribute('open', '');
+      });
+      await wait(100);
+      const detail = await page.evaluate(() => {
+        // @ts-expect-error
+        return globalThis.detail;
+      });
+      expect(detail).toBeTruthy();
+      expect(typeof detail.width).toBe('number');
+      expect(typeof detail.height).toBe('number');
+      expect(typeof detail.left).toBe('number');
+      expect(typeof detail.right).toBe('number');
+      expect(typeof detail.top).toBe('number');
+      expect(typeof detail.bottom).toBe('number');
+      expect(detail.id).toBe('target');
     });
   });
 

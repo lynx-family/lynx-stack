@@ -4,7 +4,7 @@
 // LICENSE file in the root directory of this source tree.
 */
 import { Component } from '@lynx-js/web-elements-reactive';
-import { LynxExposure } from '../common/Exposure.js';
+import { CommonEventsAndMethods } from '../common/CommonEventsAndMethods.js';
 
-@Component<typeof ListItem>('list-item', [LynxExposure])
+@Component<typeof ListItem>('list-item', [CommonEventsAndMethods])
 export class ListItem extends HTMLElement {}

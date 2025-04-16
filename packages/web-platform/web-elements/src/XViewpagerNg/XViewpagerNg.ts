@@ -8,13 +8,13 @@ import {
   Component,
   html,
 } from '@lynx-js/web-elements-reactive';
-import { LynxExposure } from '../common/Exposure.js';
+import { CommonEventsAndMethods } from '../common/CommonEventsAndMethods.js';
 import { XViewpagerNgEvents } from './XViewpagerNgEvents.js';
 import { scrollContainerDom } from '../common/constants.js';
 
 @Component<typeof XViewpagerNg>(
   'x-viewpager-ng',
-  [LynxExposure, XViewpagerNgEvents],
+  [CommonEventsAndMethods, XViewpagerNgEvents],
   html`
     <style>
       #bounce-padding {

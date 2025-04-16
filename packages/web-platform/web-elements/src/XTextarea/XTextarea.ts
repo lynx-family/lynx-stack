@@ -8,13 +8,13 @@ import { Placeholder } from './Placeholder.js';
 import { TextareaBaseAttributes } from './TextareaBaseAttributes.js';
 import { XTextareaAttributes } from './XTextareaAttributes.js';
 import { XTextareaEvents } from './XTextareaEvents.js';
-import { LynxExposure } from '../common/Exposure.js';
+import { CommonEventsAndMethods } from '../common/CommonEventsAndMethods.js';
 
 // x-textarea
 @Component(
   'x-textarea',
   [
-    LynxExposure,
+    CommonEventsAndMethods,
     Placeholder,
     TextareaBaseAttributes,
     XTextareaAttributes,
