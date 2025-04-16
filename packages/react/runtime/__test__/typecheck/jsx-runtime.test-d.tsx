@@ -19,7 +19,7 @@ describe('JSX Runtime Types', () => {
     assertType<JSX.Element>(rawTextELe);
   });
 
-  test('should support JSX element with children', () => {
+  test('should support JSX.Elements', () => {
     function App() {
       function renderFoo(): JSX.Element {
         return <text></text>;
