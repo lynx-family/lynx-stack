@@ -16,7 +16,6 @@ import {
   setPipeline,
 } from '../../lynx/performance.js';
 import { CATCH_ERROR, COMMIT, RENDER_CALLBACKS, VNODE } from '../../renderToOpcodes/constants.js';
-import { updateBackgroundRefs } from '../../snapshot/ref.js';
 import { backgroundSnapshotInstanceManager } from '../../snapshot.js';
 import { isEmptyObject } from '../../utils.js';
 import { takeWorkletRefInitValuePatch } from '../../worklet/workletRefPool.js';
@@ -36,6 +35,7 @@ function clearPatchesToCommit(): void {
 }
 
 interface Patch {
+  // TODO: ref: do we need `id`?
   id: number;
   snapshotPatch?: SnapshotPatch;
   workletRefInitValuePatch?: [id: number, value: unknown][];
@@ -99,7 +99,6 @@ function replaceCommitHook(): void {
 
     const commitTaskId = genCommitTaskId();
     globalCommitTaskMap.set(commitTaskId, () => {
-      updateBackgroundRefs(commitTaskId);
       runDelayedUnmounts(delayedUnmounts);
       oldCommit?.(vnode, renderCallbacks);
       renderCallbacks.some(wrapper => {
@@ -238,7 +237,6 @@ export {
   globalBackgroundSnapshotInstancesToRemove,
   globalCommitTaskMap,
   globalFlushOptions,
-  nextCommitTaskId,
   patchesToCommit,
   clearPatchesToCommit,
   replaceCommitHook,

@@ -5,7 +5,6 @@ import { hydrate } from '../hydrate.js';
 import { LifecycleConstant } from '../lifecycleConstant.js';
 import { __pendingListUpdates } from '../list.js';
 import { __root, setRoot } from '../root.js';
-import { takeGlobalRefPatchMap } from '../snapshot/ref.js';
 import { SnapshotInstance, __page, snapshotInstanceManager } from '../snapshot.js';
 import { isEmptyObject } from '../utils.js';
 import { destroyBackground } from './destroy.js';
@@ -47,7 +46,6 @@ function reloadMainThread(data: any, options: UpdatePageOption): void {
       LifecycleConstant.firstScreen, /* FIRST_SCREEN */
       {
         root: JSON.stringify(__root),
-        refPatch: JSON.stringify(takeGlobalRefPatchMap()),
       },
     ]);
   }

@@ -4,9 +4,9 @@
 import type { Worklet, WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bindings';
 
 import type { BackgroundSnapshotInstance } from './backgroundSnapshot.js';
+import { SnapshotOperation, __globalSnapshotPatch } from './lifecycle/patch/snapshotPatch.js';
 import { ListUpdateInfoRecording, __pendingListUpdates, snapshotDestroyList } from './list.js';
 import { unref } from './snapshot/ref.js';
-import { SnapshotOperation, __globalSnapshotPatch } from './lifecycle/patch/snapshotPatch.js';
 import { isDirectOrDeepEqual } from './utils.js';
 
 export const enum DynamicPartType {
@@ -148,7 +148,7 @@ export const backgroundSnapshotInstanceManager: {
     if (!res || (res.length != 2 && res.length != 3)) {
       throw new Error('Invalid ctx format: ' + str);
     }
-    let id = Number(res[0]);
+    const id = Number(res[0]);
     const expIndex = Number(res[1]);
     const ctx = this.values.get(id);
     if (!ctx) {
@@ -241,7 +241,6 @@ export class SnapshotInstance {
   __element_root?: FiberElement | undefined;
   __values?: any[] | undefined;
   __current_slot_index = 0;
-  __ref_set?: Set<string>;
   __worklet_ref_set?: Set<WorkletRefImpl<any> | Worklet>;
   __listItemPlatformInfo?: any;
 
@@ -264,15 +263,15 @@ export class SnapshotInstance {
       //   CSS Scope is removed(We only need to call `__SetCSSId` when there is `entryName`)
       //   Or an old bundle(`__SetCSSId` is called in `create`), we skip calling `__SetCSSId`
       if (entryName !== DEFAULT_ENTRY_NAME && entryName !== undefined) {
-        __SetCSSId(this.__elements!, DEFAULT_CSS_ID, entryName);
+        __SetCSSId(this.__elements, DEFAULT_CSS_ID, entryName);
       }
     } else {
       // cssId !== undefined
       if (entryName !== DEFAULT_ENTRY_NAME && entryName !== undefined) {
         // For lazy bundle, we need add `entryName` to the third params
-        __SetCSSId(this.__elements!, cssId, entryName);
+        __SetCSSId(this.__elements, cssId, entryName);
       } else {
-        __SetCSSId(this.__elements!, cssId);
+        __SetCSSId(this.__elements, cssId);
       }
     }
 

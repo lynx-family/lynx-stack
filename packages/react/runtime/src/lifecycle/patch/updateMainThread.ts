@@ -4,15 +4,13 @@
 
 import { clearDelayedWorklets, updateWorkletRefInitValueChanges } from '@lynx-js/react/worklet-runtime/bindings';
 
-import type { PatchList, PatchOptions } from './commit.js';
-import { snapshotPatchApply } from './snapshotPatchApply.js';
 import { LifecycleConstant } from '../../lifecycleConstant.js';
 import { __pendingListUpdates } from '../../list.js';
 import { PerformanceTimingKeys, markTiming, setPipeline } from '../../lynx/performance.js';
-import { takeGlobalRefPatchMap } from '../../snapshot/ref.js';
 import { __page } from '../../snapshot.js';
-import { isEmptyObject } from '../../utils.js';
 import { getReloadVersion } from '../pass.js';
+import type { PatchList, PatchOptions } from './commit.js';
+import { snapshotPatchApply } from './snapshotPatchApply.js';
 
 function updateMainThread(
   { data, patchOptions }: {
@@ -31,7 +29,7 @@ function updateMainThread(
   markTiming(PerformanceTimingKeys.parse_changes_end);
   markTiming(PerformanceTimingKeys.patch_changes_start);
 
-  for (const { snapshotPatch, workletRefInitValuePatch, id } of patchList) {
+  for (const { snapshotPatch, workletRefInitValuePatch } of patchList) {
     updateWorkletRefInitValueChanges(workletRefInitValuePatch);
     __pendingListUpdates.clear();
     if (snapshotPatch) {
@@ -40,8 +38,6 @@ function updateMainThread(
     __pendingListUpdates.flush();
     // console.debug('********** Lepus updatePatch:');
     // printSnapshotInstance(snapshotInstanceManager.values.get(-1)!);
-
-    commitMainThreadPatchUpdate(id);
   }
   markTiming(PerformanceTimingKeys.patch_changes_end);
   if (patchOptions.isHydration) {
@@ -58,14 +54,7 @@ function injectUpdateMainThread(): void {
   Object.assign(globalThis, { [LifecycleConstant.patchUpdate]: updateMainThread });
 }
 
-function commitMainThreadPatchUpdate(commitTaskId?: number): void {
-  const refPatch = takeGlobalRefPatchMap();
-  if (!isEmptyObject(refPatch)) {
-    __OnLifecycleEvent([LifecycleConstant.ref, { commitTaskId, refPatch: JSON.stringify(refPatch) }]);
-  }
-}
-
 /**
  * @internal
  */
-export { commitMainThreadPatchUpdate, injectUpdateMainThread };
+export { injectUpdateMainThread };

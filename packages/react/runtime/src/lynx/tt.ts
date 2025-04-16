@@ -19,7 +19,6 @@ import { reloadBackground } from '../lifecycle/reload.js';
 import { renderBackground } from '../lifecycle/render.js';
 import { CHILDREN } from '../renderToOpcodes/constants.js';
 import { __root } from '../root.js';
-import { globalRefsToSet, updateBackgroundRefs } from '../snapshot/ref.js';
 import { backgroundSnapshotInstanceManager } from '../snapshot.js';
 import { destroyWorklet } from '../worklet/destroy.js';
 import { runWithForce } from './runWithForce.js';
@@ -70,7 +69,7 @@ function onLifecycleEvent([type, data]: [string, any]) {
 function onLifecycleEventImpl(type: string, data: any): void {
   switch (type) {
     case LifecycleConstant.firstScreen: {
-      const { root: lepusSide, refPatch, jsReadyEventIdSwap } = data;
+      const { root: lepusSide, jsReadyEventIdSwap } = data;
       if (__PROFILE__) {
         console.profile('hydrate');
       }
@@ -107,16 +106,6 @@ function onLifecycleEventImpl(type: string, data: any): void {
       lynxCoreInject.tt.publishEvent = publishEvent;
       lynxCoreInject.tt.publicComponentEvent = publicComponentEvent;
 
-      if (__PROFILE__) {
-        console.profile('patchRef');
-      }
-      if (refPatch) {
-        globalRefsToSet.set(0, JSON.parse(refPatch));
-        updateBackgroundRefs(0);
-      }
-      if (__PROFILE__) {
-        console.profileEnd();
-      }
       // console.debug("********** After hydration:");
       // printSnapshotInstance(__root as BackgroundSnapshotInstance);
       if (__PROFILE__) {
@@ -132,8 +121,7 @@ function onLifecycleEventImpl(type: string, data: any): void {
       clearPatchesToCommit();
       const obj = commitPatchUpdate(patchList, { isHydration: true });
       lynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
-        updateBackgroundRefs(commitTaskId);
-        globalCommitTaskMap.forEach((commitTask, id) => {
+          globalCommitTaskMap.forEach((commitTask, id) => {
           if (id > commitTaskId) {
             return;
           }
@@ -146,16 +134,6 @@ function onLifecycleEventImpl(type: string, data: any): void {
     case LifecycleConstant.globalEventFromLepus: {
       const [eventName, params] = data;
       lynx.getJSModule('GlobalEventEmitter').trigger(eventName, params);
-      break;
-    }
-    case LifecycleConstant.ref: {
-      const { refPatch, commitTaskId } = data;
-      if (commitTaskId) {
-        globalRefsToSet.set(commitTaskId, JSON.parse(refPatch));
-      } else {
-        globalRefsToSet.set(0, JSON.parse(refPatch));
-        updateBackgroundRefs(0);
-      }
       break;
     }
   }

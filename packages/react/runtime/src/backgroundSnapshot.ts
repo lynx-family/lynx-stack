@@ -3,9 +3,19 @@
 // LICENSE file in the root directory of this source tree.
 import type { Worklet } from '@lynx-js/react/worklet-runtime/bindings';
 
+import { processGestureBackground } from './gesture/processGestureBagkround.js';
+import type { GestureKind } from './gesture/types.js';
 import { diffArrayAction, diffArrayLepus } from './hydrate.js';
 import { globalBackgroundSnapshotInstancesToRemove } from './lifecycle/patch/commit.js';
-import { markRefToRemove } from './snapshot/ref.js';
+import {
+  SnapshotOperation,
+  __globalSnapshotPatch,
+  initGlobalSnapshotPatch,
+  takeGlobalSnapshotPatch,
+} from './lifecycle/patch/snapshotPatch.js';
+import type { SnapshotPatch } from './lifecycle/patch/snapshotPatch.js';
+import { globalPipelineOptions } from './lynx/performance.js';
+import { applyRef } from './snapshot/ref.js';
 import { transformSpread } from './snapshot/spread.js';
 import {
   DynamicPartType,
@@ -14,18 +24,8 @@ import {
   traverseSnapshotInstance,
 } from './snapshot.js';
 import type { SerializedSnapshotInstance } from './snapshot.js';
-import {
-  SnapshotOperation,
-  __globalSnapshotPatch,
-  initGlobalSnapshotPatch,
-  takeGlobalSnapshotPatch,
-} from './lifecycle/patch/snapshotPatch.js';
-import type { SnapshotPatch } from './lifecycle/patch/snapshotPatch.js';
 import { isDirectOrDeepEqual } from './utils.js';
 import { onPostWorkletCtx } from './worklet/ctx.js';
-import { processGestureBackground } from './gesture/processGestureBagkround.js';
-import type { GestureKind } from './gesture/types.js';
-import { globalPipelineOptions } from './lynx/performance.js';
 
 export class BackgroundSnapshotInstance {
   constructor(public type: string) {
@@ -232,7 +232,7 @@ export class BackgroundSnapshotInstance {
   } {
     if (!newValue) {
       if (oldValue && oldValue.__ref) {
-        markRefToRemove(`${this.__id}:${index}:`, oldValue);
+        applyRef(oldValue, null);
       }
       return { needUpdate: oldValue !== newValue, valueToCommit: newValue };
     }
@@ -247,9 +247,9 @@ export class BackgroundSnapshotInstance {
         newValue.__spread = newSpread;
         if (needUpdate) {
           if (oldSpread && oldSpread.ref) {
-            markRefToRemove(`${this.__id}:${index}:ref`, oldValue.ref);
+            applyRef(oldValue.ref, null);
           }
-          for (let key in newSpread) {
+          for (const key in newSpread) {
             const newSpreadValue = newSpread[key];
             if (!newSpreadValue) {
               continue;
@@ -258,10 +258,8 @@ export class BackgroundSnapshotInstance {
               newSpread[key] = onPostWorkletCtx(newSpreadValue as Worklet);
             } else if ((newSpreadValue as any).__isGesture) {
               processGestureBackground(newSpreadValue as GestureKind);
-            } else if (key == '__lynx_timing_flag' && oldSpread?.[key] != newSpreadValue) {
-              if (globalPipelineOptions) {
-                globalPipelineOptions.needTimestamps = true;
-              }
+            } else if (key == '__lynx_timing_flag' && oldSpread?.[key] != newSpreadValue && globalPipelineOptions) {
+              globalPipelineOptions.needTimestamps = true;
             }
           }
         }
@@ -271,7 +269,7 @@ export class BackgroundSnapshotInstance {
         // force update to update ref value
         // TODO: ref: optimize this. The ref update maybe can be done on the background thread to reduce updating.
         // The old ref must have a place to be stored because it needs to be cleared when the main thread returns.
-        markRefToRemove(`${this.__id}:${index}:`, oldValue);
+        applyRef(oldValue, null);
         // update ref. On the main thread, the ref id will be replaced with value's sign when updating.
         return { needUpdate: true, valueToCommit: newValue.__ref };
       }
@@ -294,7 +292,7 @@ export class BackgroundSnapshotInstance {
     }
     if (newType === 'function') {
       if (newValue.__ref) {
-        markRefToRemove(`${this.__id}:${index}:`, oldValue);
+        applyRef(oldValue, null);
         return { needUpdate: true, valueToCommit: newValue.__ref };
       }
       /* event */
@@ -337,7 +335,7 @@ export function hydrate(
           // `value.__spread` my contain event ids using snapshot ids before hydration. Remove it.
           delete value.__spread;
           value = transformSpread(after, index, value);
-          for (let key in value) {
+          for (const key in value) {
             if (value[key] && value[key]._wkltId) {
               onPostWorkletCtx(value[key]);
             } else if (value[key] && value[key].__isGesture) {
