@@ -2,16 +2,13 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 export { jsx, jsxs, Fragment } from 'react/jsx-runtime';
-import { IntrinsicElements as _IntrinsicElements } from '@lynx-js/types';
-import { JSX as _JSX } from 'react';
+import { IntrinsicElements as _IntrinsicElements, type NodesRef } from '@lynx-js/types';
+import { JSX as _JSX, type Ref } from 'react';
 
 export namespace JSX {
-  interface IntrinsicElements extends _IntrinsicElements {
-  }
+  interface IntrinsicElements extends _IntrinsicElements {}
 
-  interface IntrinsicAttributes {
-    ref?: unknown | ((e: unknown) => void) | undefined;
-  }
+  interface IntrinsicAttributes {}
 
   type Element = _JSX.Element;
 }

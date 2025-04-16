@@ -3,16 +3,13 @@
 // LICENSE file in the root directory of this source tree.
 export { jsxDEV, Fragment } from 'react/jsx-dev-runtime';
 export { jsx, jsxs } from 'react/jsx-runtime';
-import { IntrinsicElements as _IntrinsicElements } from '@lynx-js/types';
-import { JSX as _JSX } from 'react';
+import { IntrinsicElements as _IntrinsicElements, type NodesRef } from '@lynx-js/types';
+import { JSX as _JSX, type Ref } from 'react';
 
 export namespace JSX {
-  interface IntrinsicElements extends _IntrinsicElements {
-  }
+  interface IntrinsicElements extends _IntrinsicElements {}
 
-  interface IntrinsicAttributes {
-    ref?: unknown | ((e: unknown) => void) | undefined;
-  }
+  interface IntrinsicAttributes {}
 
   type Element = _JSX.Element;
 }
