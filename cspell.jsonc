@@ -99,6 +99,7 @@
     "rustc",
     "samchon", // https://github.com/samchon/openapi
     "serde", // https://github.com/serde-rs/serde
+    "SARIF", // https://sarifweb.azurewebsites.net/
     "turborepo", // https://github.com/vercel/turbo
     "typecheck", // vitest uses `--typecheck`
     "typeof",
@@ -113,6 +114,7 @@
     "PAPI", // Lynx's Element PAPI
     "parseable", // https://pnpm.io/cli/list
     "debugids", // https://getsentry.github.io/debugids/
+    "zizmor", // https://github.com/woodruffw/zizmor
   ],
   // Glob
   "ignorePaths": [

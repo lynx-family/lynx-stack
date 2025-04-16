@@ -7,7 +7,7 @@ import type { RuntimeModule } from 'webpack';
 import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
 type LynxAsyncChunksRuntimeModule = new(
-  getChunkName: (chunkName: string | undefined) => string,
+  getChunkName: (chunkName: string | null | undefined) => string,
 ) => RuntimeModule;
 
 export function createLynxAsyncChunksRuntimeModule(
@@ -15,7 +15,7 @@ export function createLynxAsyncChunksRuntimeModule(
 ): LynxAsyncChunksRuntimeModule {
   return class LynxAsyncChunksRuntimeModule extends webpack.RuntimeModule {
     constructor(
-      public getChunkName: (chunkName: string | undefined) => string,
+      public getChunkName: (chunkName: string | null | undefined) => string,
     ) {
       super('Lynx async chunks', webpack.RuntimeModule.STAGE_ATTACH);
     }
