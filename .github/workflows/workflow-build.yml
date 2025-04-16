@@ -26,11 +26,15 @@ jobs:
       # Modified from https://github.com/rmacklin/fetch-through-merge-base
       - name: Fetch
         run: |
-          git fetch --progress --depth=1 origin "+refs/heads/$BASE_REF:refs/heads/$BASE_REF"
+          # Strip refs/heads/ prefix if it exists
+          BASE_REF_CLEAN=${BASE_REF#refs/heads/}
+          HEAD_REF_CLEAN=${HEAD_REF#refs/heads/}
+
+          git fetch --progress --depth=1 origin "+refs/heads/$BASE_REF_CLEAN:refs/heads/$BASE_REF_CLEAN"
           MAX_ATTEMPTS=10
           ATTEMPT=0
-          while [ -z "$( git merge-base "$BASE_REF" "$HEAD_REF" )" ] && [ "$ATTEMPT" -lt "$MAX_ATTEMPTS" ]; do
-            git fetch -q --deepen=10 origin "$BASE_REF" "$HEAD_REF"
+          while [ -z "$( git merge-base "refs/heads/$BASE_REF_CLEAN" "$HEAD_REF" )" ] && [ "$ATTEMPT" -lt "$MAX_ATTEMPTS" ]; do
+            git fetch -q --deepen=10 origin "refs/heads/$BASE_REF_CLEAN" "$HEAD_REF"
             ATTEMPT=$((ATTEMPT + 1))
           done
           if [ "$ATTEMPT" -ge "$MAX_ATTEMPTS" ]; then
