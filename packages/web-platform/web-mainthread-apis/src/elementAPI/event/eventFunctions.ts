@@ -8,6 +8,7 @@ import {
   lynxTagAttribute,
   W3cEventNameToLynx,
   type LynxEventType,
+  type MainThreadScriptEvent,
 } from '@lynx-js/web-constants';
 import {
   elementToRuntimeInfoMap,
@@ -30,12 +31,12 @@ export function createEventFunctions(runtime: MainThreadRuntime) {
         ?.handler
       : runtimeInfo.eventHandlerMap[lynxEventName]?.bind
         ?.handler;
+    const crossThreadEvent = createCrossThreadEvent(
+      runtime,
+      event,
+      lynxEventName,
+    );
     if (typeof hname === 'string') {
-      const crossThreadEvent = createCrossThreadEvent(
-        runtime,
-        event,
-        lynxEventName,
-      );
       const parentComponentUniqueId = runtimeInfo.parentComponentUniqueId;
       const parentComponent = runtime[getElementByUniqueId](
         Number(parentComponentUniqueId),
@@ -58,7 +59,13 @@ export function createEventFunctions(runtime: MainThreadRuntime) {
       }
       return true;
     } else if (hname) {
-      runtime.runWorklet?.(hname.value, []);
+      (crossThreadEvent as MainThreadScriptEvent).target.elementRefptr =
+        event.target;
+      if (crossThreadEvent.currentTarget) {
+        (crossThreadEvent as MainThreadScriptEvent).currentTarget!
+          .elementRefptr = event.currentTarget;
+      }
+      runtime.runWorklet?.(hname.value, [crossThreadEvent]);
     }
     return false;
   };
