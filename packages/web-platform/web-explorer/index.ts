@@ -66,7 +66,9 @@ window.addEventListener('message', (ev) => {
     setLynxViewUrl(ev.data.url);
   }
 });
-window.parent?.postMessage('webExplorerReady');
+setTimeout(() => {
+  window.parent?.postMessage('webExplorerReady');
+}, 500);
 
 function setLynxViewUrl(url: string) {
   if (url === homepage) {

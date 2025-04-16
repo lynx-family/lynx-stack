@@ -66,13 +66,18 @@ export function createStyleFunctions(
     key: number | string,
     value: string | number | null | undefined,
   ): void {
-    const lynxStyleInfo = queryCSSProperty(Number(key));
+    let dashName: string | undefined;
+    if (typeof key === 'number') {
+      dashName = queryCSSProperty(key).dashName;
+    } else {
+      dashName = key;
+    }
     const valueStr = typeof value === 'number' ? value.toString() : value;
     if (!valueStr) { // null or undefined
-      element.style.removeProperty(lynxStyleInfo.dashName);
+      element.style.removeProperty(dashName);
     } else {
       const { transformedStyle } = transfromParsedStyles([[
-        lynxStyleInfo.dashName,
+        dashName,
         valueStr,
       ]]);
       for (const [property, value] of transformedStyle) {

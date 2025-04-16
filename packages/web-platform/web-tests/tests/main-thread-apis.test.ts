@@ -518,6 +518,16 @@ test.describe('main thread api tests', () => {
     await expect(pageElement).toHaveCSS('height', '80px');
   });
 
+  test('__AddInlineStyle_key_is_name', async ({ page }, { title }) => {
+    await page.evaluate(() => {
+      let root = globalThis.__CreatePage('page', 0);
+      globalThis.__AddInlineStyle(root, 'height', '80px');
+      globalThis.__FlushElementTree();
+    });
+    const pageElement = page.locator(`[lynx-tag='page']`);
+    await expect(pageElement).toHaveCSS('height', '80px');
+  });
+
   test('__AddInlineStyle_raw_string', async ({ page }, { title }) => {
     await page.evaluate(() => {
       let root = globalThis.__CreatePage('page', 0);

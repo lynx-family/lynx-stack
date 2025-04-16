@@ -48,16 +48,6 @@ jobs:
       - name: Build
         run: |
           pnpm turbo build --summarize
-      - name: Upload Turbo Summary
-        if: ${{ failure() }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: turbo-summary-${{ github.ref }}
-          path: .turbo/runs
-          if-no-files-found: error
-          retention-days: 1
-          overwrite: true
-          include-hidden-files: true
       - uses: ./.github/actions/setup-playwright
         if: ${{ inputs.is-web }}
         with:
