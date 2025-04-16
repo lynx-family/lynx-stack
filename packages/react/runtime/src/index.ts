@@ -87,3 +87,4 @@ export {
 };
 
 export * from './lynx-api.js';
+export type { JSX } from '../jsx-runtime/index.d.ts';
