@@ -129,7 +129,7 @@ export class LynxEncodePluginImpl {
         const { encodeData } = args;
         const { manifest } = encodeData;
 
-        let publicPath = '';
+        let publicPath = '/';
         if (typeof compilation?.outputOptions.publicPath === 'function') {
           compilation.errors.push(
             new compiler.webpack.WebpackError(
@@ -137,7 +137,7 @@ export class LynxEncodePluginImpl {
             ),
           );
         } else {
-          publicPath = compilation?.outputOptions.publicPath ?? '';
+          publicPath = compilation?.outputOptions.publicPath ?? '/';
         }
 
         if (!isDebug() && !isDev && !isRsdoctor()) {
