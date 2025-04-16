@@ -15,7 +15,8 @@
     "src"
   ],
   "scripts": {
-    "test": "vitest run --coverage"
+    "test": "vitest run --coverage",
+    "test:type": "vitest --typecheck.only"
   },
   "devDependencies": {
     "@lynx-js/react": "workspace:*",
