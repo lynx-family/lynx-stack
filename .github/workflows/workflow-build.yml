@@ -33,7 +33,7 @@ jobs:
       - name: Get merge base
         id: merge-base
         run: |
-          echo "merge-base=$(git merge-base origin/${{ env.BASE_REF }} ${{ env.HEAD_REF }} || git rev-parse ${{ env.BASE_REF }})" >> $GITHUB_OUTPUT
+          echo "merge-base=$(git merge-base origin/$BASE_REF $HEAD_REF || git rev-parse $BASE_REF)" >> $GITHUB_OUTPUT
   build-all:
     runs-on: lynx-ubuntu-24.04-xlarge
     needs: get-merge-base
@@ -71,6 +71,15 @@ jobs:
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         continue-on-error: true
+      - name: Upload turbo summary
+        if: runner.debug == '1'
+        uses: actions/upload-artifact@v4
+        with:
+          name: turbo-summary-${{ github.sha }}
+          path: .turbo/runs/*.json
+          retention-days: 1
+          overwrite: true
+          include-hidden-files: true
       - name: Setup Rust and retry build if failed
         if: steps.build.outcome == 'failure'
         uses: actions-rust-lang/setup-rust-toolchain@v1
