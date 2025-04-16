@@ -3,21 +3,12 @@
 // LICENSE file in the root directory of this source tree.
 import type { Element, Worklet, WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bindings';
 
-import { nextCommitTaskId } from '../lifecycle/patch/commit.js';
-import { SnapshotInstance, backgroundSnapshotInstanceManager } from '../snapshot.js';
+import { SnapshotInstance } from '../snapshot.js';
 import { workletUnRef } from './workletRef.js';
 
-let globalRefPatch: Record<string, number | null> = {};
-const globalRefsToRemove: Map</* commitId */ number, Map</* sign */ string, /* ref */ any>> = /* @__PURE__ */ new Map();
-const globalRefsToSet: Map</* commitId */ number, Record<string, number>> = /* @__PURE__ */ new Map();
 let nextRefId = 1;
 
 function unref(snapshot: SnapshotInstance, recursive: boolean): void {
-  snapshot.__ref_set?.forEach(v => {
-    globalRefPatch[v] = null;
-  });
-  snapshot.__ref_set?.clear();
-
   snapshot.__worklet_ref_set?.forEach(v => {
     if (v) {
       workletUnRef(v as Worklet | WorkletRefImpl<Element>);
@@ -32,7 +23,7 @@ function unref(snapshot: SnapshotInstance, recursive: boolean): void {
   }
 }
 
-function applyRef(ref: any, value: any) {
+function applyRef(ref: any, value: any): void {
   // TODO: ref: exceptions thrown in user functions should be able to be caught by an Error Boundary
   if (typeof ref == 'function') {
     const hasRefUnmount = typeof ref._unmount == 'function';
@@ -50,32 +41,10 @@ function applyRef(ref: any, value: any) {
   } else ref.current = value;
 }
 
-function updateBackgroundRefs(commitId: number): void {
-  const oldRefMap = globalRefsToRemove.get(commitId);
-  if (oldRefMap) {
-    globalRefsToRemove.delete(commitId);
-    for (const ref of oldRefMap.values()) {
-      applyRef(ref, null);
-    }
-  }
-  const newRefMap = globalRefsToSet.get(commitId);
-  if (newRefMap) {
-    globalRefsToSet.delete(commitId);
-    for (const sign in newRefMap) {
-      const ref = backgroundSnapshotInstanceManager.getValueBySign(sign);
-      if (ref) {
-        // TODO: ref: support __REF_FIRE_IMMEDIATELY__
-        const v = newRefMap[sign] && lynx.createSelectorQuery().selectUniqueID(newRefMap[sign]);
-        applyRef(ref, v);
-      }
-    }
-  }
-}
-
 function updateRef(
   snapshot: SnapshotInstance,
   expIndex: number,
-  oldValue: any,
+  _oldValue: any,
   elementIndex: number,
   spreadKey: string,
 ): void {
@@ -92,20 +61,8 @@ function updateRef(
   snapshot.__values![expIndex] = ref;
   if (snapshot.__elements && ref) {
     __SetAttribute(snapshot.__elements[elementIndex]!, 'has-react-ref', true);
-    const uid = __GetElementUniqueID(snapshot.__elements[elementIndex]!);
-    globalRefPatch[ref] = uid;
-    snapshot.__ref_set ??= new Set();
-    snapshot.__ref_set.add(ref);
+    // const uid = __GetElementUniqueID(snapshot.__elements[elementIndex]!);
   }
-  if (oldValue !== ref) {
-    snapshot.__ref_set?.delete(oldValue);
-  }
-}
-
-function takeGlobalRefPatchMap(): Record<string, number | null> {
-  const patch = globalRefPatch;
-  globalRefPatch = {};
-  return patch;
 }
 
 function transformRef(ref: unknown): Function | (object & Record<'current', unknown>) | null | undefined {
@@ -124,25 +81,7 @@ function transformRef(ref: unknown): Function | (object & Record<'current', unkn
   );
 }
 
-function markRefToRemove(sign: string, ref: unknown): void {
-  if (!ref) {
-    return;
-  }
-  let oldRefs = globalRefsToRemove.get(nextCommitTaskId);
-  if (!oldRefs) {
-    oldRefs = new Map();
-    globalRefsToRemove.set(nextCommitTaskId, oldRefs);
-  }
-  oldRefs.set(sign, ref);
-}
-
-export {
-  globalRefsToRemove,
-  globalRefsToSet,
-  markRefToRemove,
-  takeGlobalRefPatchMap,
-  transformRef,
-  unref,
-  updateBackgroundRefs,
-  updateRef,
-};
+/**
+ * @internal
+ */
+export { updateRef, unref, transformRef, applyRef };

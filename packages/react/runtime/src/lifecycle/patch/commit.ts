@@ -52,6 +52,7 @@ let globalBackgroundSnapshotInstancesToRemove: number[] = [];
  * A single patch operation.
  */
 interface Patch {
+  // TODO: ref: do we need `id`?
   id: number;
   snapshotPatch?: SnapshotPatch;
   workletRefInitValuePatch?: [id: number, value: unknown][];
@@ -112,7 +113,6 @@ function replaceCommitHook(): void {
 
     // Register the commit task
     globalCommitTaskMap.set(commitTaskId, () => {
-      updateBackgroundRefs(commitTaskId);
       runDelayedUnmounts(delayedUnmounts);
       originalPreactCommit?.(vnode, renderCallbacks);
       renderCallbacks.some(wrapper => {
@@ -243,7 +243,6 @@ export {
   globalBackgroundSnapshotInstancesToRemove,
   globalCommitTaskMap,
   globalFlushOptions,
-  nextCommitTaskId,
   replaceCommitHook,
   replaceRequestAnimationFrame,
   type PatchList,
