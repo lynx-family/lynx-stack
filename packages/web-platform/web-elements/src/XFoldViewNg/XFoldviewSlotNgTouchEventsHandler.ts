@@ -78,19 +78,11 @@ export class XFoldviewSlotNgTouchEventsHandler
     if (this.#scrollingVertically === false) {
       return;
     }
-    /**
-     * on chromium browsers, the y-axis js scrolling won't interrupt the pan-x gestures
-     * we make sure the x-axis scrolling will block the y-axis scrolling
-     */
     const scrollableKidY = this.#getTheMostScrollableKid(deltaY);
-    /**
-     * on chromium browsers, the y-axis js scrolling won't interrupt the pan-x gestures
-     * we make sure the x-axis scrolling will block the y-axis scrolling
-     */
     if (
       parentElement
     ) {
-      if (event.cancelable && !isChromium) {
+      if (event.cancelable) {
         event.preventDefault();
       }
       if (

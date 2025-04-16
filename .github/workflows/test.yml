@@ -204,6 +204,26 @@ jobs:
   website:
     needs: build
     uses: ./.github/workflows/workflow-website.yml
+  zizmor:
+    runs-on: lynx-ubuntu-24.04-medium
+    permissions:
+      security-events: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install the latest version of uv
+        uses: astral-sh/setup-uv@v5
+      - name: Run zizmor 🌈
+        run: uvx zizmor --format=sarif . > results.sarif
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload SARIF file
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: results.sarif
+          category: zizmor
   # Copied from https://github.com/swc-project/swc/blob/b192dc82e6a84bd30f159fb12ca8a216f41e8efb/.github/workflows/CI.yml#L491
   done:
     needs:
@@ -217,6 +237,7 @@ jobs:
       - test-tools
       - test-type
       - website
+      - zizmor
     if: always()
     runs-on: lynx-ubuntu-24.04-medium
     name: Done
