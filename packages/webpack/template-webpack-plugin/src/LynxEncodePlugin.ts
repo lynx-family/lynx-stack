@@ -129,10 +129,16 @@ export class LynxEncodePluginImpl {
         const { encodeData } = args;
         const { manifest } = encodeData;
 
-        const publicPath =
-          typeof compilation?.outputOptions.publicPath === 'function'
-            ? compilation.outputOptions.publicPath({})
-            : compilation?.outputOptions.publicPath ?? '';
+        let publicPath = '';
+        if (typeof compilation?.outputOptions.publicPath === 'function') {
+          compilation.errors.push(
+            new compiler.webpack.WebpackError(
+              '`publicPath` as a function is not supported yet.',
+            ),
+          );
+        } else {
+          publicPath = compilation?.outputOptions.publicPath ?? '';
+        }
 
         if (!isDebug() && !isDev && !isRsdoctor()) {
           compiler.hooks.emit.tap(this.name, () => {
@@ -157,8 +163,6 @@ export class LynxEncodePluginImpl {
           //     lynx.requireModule('initial-chunk1')
           //     lynx.requireModule('initial-chunk2')
           //   `,
-          //   'initial-chunk1': `<content-of-initial-chunk>`,
-          //   'initial-chunk2': `<content-of-initial-chunk>`,
           // },
           // ```
           '/app-service.js': [
@@ -172,14 +176,6 @@ export class LynxEncodePluginImpl {
               .join(','),
             this.#appServiceFooter(),
           ].join(''),
-          ...(Object.fromEntries(
-            Object.entries(manifest)
-              .filter(([name]) => this.#isBackground(name))
-              .map(([name, source]) => [
-                this.#formatJSName(name, publicPath),
-                source,
-              ]),
-          )),
         };
 
         return args;
@@ -236,14 +232,7 @@ export class LynxEncodePluginImpl {
   }
 
   #formatJSName(name: string, publicPath: string): string {
-    if (this.#isBackground(name)) {
-      return `/${name}`;
-    }
     return publicPath + name;
-  }
-
-  #isBackground(name: string): boolean {
-    return /\/background(?:\.[a-f0-9]+)?\.js$/.test(name);
   }
 
   protected options: Required<LynxEncodePluginOptions>;
