@@ -69,7 +69,8 @@ jobs:
           GITHUB_SHA: ${{ github.event.pull_request.head.sha }}
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ${{ inputs.run }}
+          RUN_COMMAND: ${{ inputs.run }}
+        run: $RUN_COMMAND
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
         with:
