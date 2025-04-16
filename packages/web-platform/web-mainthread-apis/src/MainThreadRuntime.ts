@@ -17,6 +17,7 @@ import {
   type reportErrorEndpoint,
   type RpcCallType,
   type postExposureEndpoint,
+  type LynxJSModule,
 } from '@lynx-js/web-constants';
 import { globalMuteableVars } from '@lynx-js/web-constants';
 import { createMainThreadLynx, type MainThreadLynx } from './MainThreadLynx.js';
@@ -104,7 +105,7 @@ export class MainThreadRuntime {
     public config: MainThreadConfig,
   ) {
     this.__globalProps = config.globalProps;
-    this.lynx = createMainThreadLynx(config, this);
+    this.lynx = createMainThreadLynx(config);
     /**
      * now create the style content
      * 1. flatten the styleInfo
@@ -218,7 +219,19 @@ export class MainThreadRuntime {
 
   __LoadLepusChunk: (path: string) => boolean = (path) => {
     try {
-      this.lynx.requireModule(path);
+      // @ts-expect-error
+      if (self.WorkerGlobalScope) {
+        const lepusChunkUrl = this.config.lepusCode[`${path}`];
+        if (lepusChunkUrl) path = lepusChunkUrl;
+        // @ts-expect-error
+        importScripts(path);
+        const entry = (globalThis.module as LynxJSModule).exports;
+        entry?.(this);
+      } else {
+        throw new Error(
+          'importing scripts synchronously is only available for the multi-thread running mode',
+        );
+      }
       return true;
     } catch {
     }

@@ -167,31 +167,6 @@ test.describe('web core tests', () => {
     expect(hello).toBe('hello');
     expect(world).toBe('world');
   });
-  test('lynx.requireModule+sync-main.thread', async ({ page, browserName }) => {
-    // firefox dose not support this.
-    test.skip(browserName === 'firefox');
-    await goto(page);
-    const mainWorker = await getMainThreadWorker(page);
-    await mainWorker.evaluate(() => {
-      globalThis.runtime.renderPage = () => {};
-    });
-    const [hello, world] = await mainWorker!.evaluate(async () => {
-      const chunk1 = Promise.withResolvers<string>();
-      const chunk2 = Promise.withResolvers<string>();
-      globalThis.runtime.lynx.requireModuleAsync(
-        'manifest-chunk.js',
-        (_, exports) => {
-          chunk1.resolve(exports);
-        },
-      );
-      chunk2.resolve(
-        globalThis.runtime.lynx.requireModule('manifest-chunk2.js'),
-      );
-      return Promise.all([chunk1.promise, chunk2.promise]);
-    });
-    expect(hello).toBe('hello');
-    expect(world).toBe('world');
-  });
 
   test('loadLepusChunk', async ({ page, browserName }) => {
     // firefox dose not support this.
