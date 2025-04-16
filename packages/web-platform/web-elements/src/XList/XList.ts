@@ -7,12 +7,12 @@ import { Component, genDomGetter, html } from '@lynx-js/web-elements-reactive';
 import { XListAttributes } from './XListAttributes.js';
 import { XListEvents } from './XListEvents.js';
 import { XListWaterfall } from './XListWaterfall.js';
-import { LynxExposure } from '../common/Exposure.js';
+import { CommonEventsAndMethods } from '../common/CommonEventsAndMethods.js';
 import { commonComponentEventSetting } from '../common/commonEventInitConfiguration.js';
 
 @Component<typeof XList>(
   'x-list',
-  [LynxExposure, XListAttributes, XListEvents, XListWaterfall],
+  [CommonEventsAndMethods, XListAttributes, XListEvents, XListWaterfall],
   html`<style>
   .placeholder-dom {
     display: none;

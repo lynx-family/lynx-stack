@@ -4,9 +4,9 @@
 // LICENSE file in the root directory of this source tree.
 */
 import { Component } from '@lynx-js/web-elements-reactive';
-import { LynxExposure } from '../common/Exposure.js';
+import { CommonEventsAndMethods } from '../common/CommonEventsAndMethods.js';
 
 @Component<typeof XFoldviewSlotDragNg>('x-foldivew-slot-drag-ng', [
-  LynxExposure,
+  CommonEventsAndMethods,
 ])
 export class XFoldviewSlotDragNg extends HTMLElement {}

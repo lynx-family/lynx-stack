@@ -9,12 +9,12 @@ import { InputBaseAttributes } from './InputBaseAttributes.js';
 import { Placeholder } from './Placeholder.js';
 import { XInputAttribute } from './XInputAttribute.js';
 import { XInputEvents } from './XInputEvents.js';
-import { LynxExposure } from '../common/Exposure.js';
+import { CommonEventsAndMethods } from '../common/CommonEventsAndMethods.js';
 
 @Component<typeof XInput>(
   'x-input',
   [
-    LynxExposure,
+    CommonEventsAndMethods,
     Placeholder,
     XInputAttribute,
     InputBaseAttributes,

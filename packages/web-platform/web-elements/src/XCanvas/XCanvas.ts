@@ -4,7 +4,7 @@
 // LICENSE file in the root directory of this source tree.
 */
 import { Component, html } from '@lynx-js/web-elements-reactive';
-import { LynxExposure } from '../common/Exposure.js';
+import { CommonEventsAndMethods } from '../common/CommonEventsAndMethods.js';
 import { CanvasAttributes } from './CanvasAttributes.js';
 
 /**
@@ -12,7 +12,7 @@ import { CanvasAttributes } from './CanvasAttributes.js';
  */
 @Component<typeof XCanvas>(
   'x-canvas',
-  [LynxExposure, CanvasAttributes],
+  [CommonEventsAndMethods, CanvasAttributes],
   html`<canvas id="canvas" part="canvas"></canvas>`,
 )
 export class XCanvas extends HTMLElement {}

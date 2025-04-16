@@ -5,12 +5,12 @@
 */
 import { Component, genDomGetter, html } from '@lynx-js/web-elements-reactive';
 import { XRefreshViewEventsEmitter } from './XRefreshViewEventsEmitter.js';
-import { LynxExposure } from '../common/Exposure.js';
+import { CommonEventsAndMethods } from '../common/CommonEventsAndMethods.js';
 import { scrollContainerDom } from '../common/constants.js';
 
 @Component(
   'x-refresh-view',
-  [LynxExposure, XRefreshViewEventsEmitter],
+  [CommonEventsAndMethods, XRefreshViewEventsEmitter],
   html`
     <style>
       .bounce-container {
