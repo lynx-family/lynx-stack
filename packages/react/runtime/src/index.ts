@@ -32,15 +32,18 @@ import {
   useRef,
   useState,
 } from './hooks/react.js';
-import { mainThreadLazy } from './lynx/lazy-bundle.js';
+import { loadLazyBundle, mainThreadLazy } from './lynx/lazy-bundle.js';
 
 export { Component, createContext } from 'preact';
 export { PureComponent } from 'preact/compat';
 export * from './hooks/react.js';
 
-const lazy: typeof import('preact/compat').lazy = __LEPUS__
-  ? mainThreadLazy
-  : backgroundLazy;
+const lazy: typeof import('preact/compat').lazy = /*#__PURE__*/ (() => {
+  lynx.loadLazyBundle = loadLazyBundle;
+  return __LEPUS__
+    ? mainThreadLazy
+    : backgroundLazy;
+})();
 
 /**
  * @internal
