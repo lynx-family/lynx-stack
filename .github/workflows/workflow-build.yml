@@ -52,7 +52,7 @@ jobs:
       - name: Get merge base
         id: merge-base
         env:
-          CLEAN_BASE_REF: ${{ join('origin/', steps.git-refs.outputs.base-ref) || github.event.base }}
+          CLEAN_BASE_REF: ${{ format('origin/{0}', steps.git-refs.outputs.base-ref) || github.event.base }}
           CLEAN_HEAD_REF: ${{ steps.git-refs.outputs.head-ref }}
         run: |
           echo "merge-base=$(git merge-base "$CLEAN_BASE_REF" "$CLEAN_HEAD_REF" || git rev-parse "$CLEAN_BASE_REF")" >> $GITHUB_OUTPUT
