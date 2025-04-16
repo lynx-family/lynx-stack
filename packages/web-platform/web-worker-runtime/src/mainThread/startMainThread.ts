@@ -14,7 +14,8 @@ import {
   postOffscreenEventEndpoint,
   switchExposureServiceEndpoint,
   postTimingFlagsEndpoint,
-  dispatchCoreContextEventEndpoint,
+  dispatchCoreContextOnBackgroundEndpoint,
+  dispatchJSContextOnMainThreadEndpoint,
 } from '@lynx-js/web-constants';
 import { Rpc } from '@lynx-js/web-worker-rpc';
 import {
@@ -30,6 +31,7 @@ import {
   type ElementOperation,
   _onEvent,
 } from '@lynx-js/offscreen-document/webworker';
+import { LynxCrossThreadContext } from '../common/LynxCrossThreadContext.js';
 
 export function startMainThread(
   uiThreadPort: MessagePort,
@@ -43,9 +45,6 @@ export function startMainThread(
   );
   const backgroundStart = backgroundThreadRpc.createCall(
     BackgroundThreadStartEndpoint,
-  );
-  const dispatchCoreContextEvent = backgroundThreadRpc.createCall(
-    dispatchCoreContextEventEndpoint,
   );
   const publishEvent = backgroundThreadRpc.createCall(
     publishEventEndpoint,
@@ -83,7 +82,13 @@ export function startMainThread(
         },
       });
       uiThreadRpc.registerHandler(postOffscreenEventEndpoint, docu[_onEvent]);
+      const jsContext = new LynxCrossThreadContext({
+        rpc: backgroundThreadRpc,
+        receiveEventEndpoint: dispatchJSContextOnMainThreadEndpoint,
+        sendEventEndpoint: dispatchCoreContextOnBackgroundEndpoint,
+      });
       const runtime = new MainThreadRuntime({
+        jsContext,
         tagMap,
         browserConfig,
         customSections,
@@ -135,7 +140,10 @@ export function startMainThread(
             docu.commit();
             if (isFp) {
               isFp = false;
-              dispatchCoreContextEvent('__OnNativeAppReady', undefined);
+              jsContext.dispatchEvent({
+                type: '__OnNativeAppReady',
+                data: undefined,
+              });
             }
             markTimingInternal('layout_start', pipelineId);
             markTimingInternal('ui_operation_flush_start', pipelineId);
@@ -147,7 +155,10 @@ export function startMainThread(
           },
           _ReportError: reportError,
           __OnLifecycleEvent: (data) => {
-            dispatchCoreContextEvent('__OnLifecycleEvent', data);
+            jsContext.dispatchEvent({
+              type: '__OnLifecycleEvent',
+              data,
+            });
           },
           /**
            * Note :
@@ -160,9 +171,9 @@ export function startMainThread(
           postExposure,
         },
       }).globalThis;
-
       markTimingInternal('decode_end');
       entry!(runtime);
+      jsContext.__start(); // start the jsContext after the runtime is created
     },
   );
 }

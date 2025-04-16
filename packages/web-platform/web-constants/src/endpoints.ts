@@ -194,10 +194,18 @@ export const dispatchNapiModuleEndpoint = createRpcEndpoint<
   [data: Cloneable],
   void
 >('dispatchNapiModule', false, false);
-export const dispatchCoreContextEventEndpoint = createRpcEndpoint<
-  [
-    eventType: string,
-    data: Cloneable | undefined | null,
-  ],
+export const dispatchCoreContextOnBackgroundEndpoint = createRpcEndpoint<
+  [{
+    type: string;
+    data: Cloneable;
+  }],
   void
->('dispatchCoreContextEventEndpoint', false, false);
+>('dispatchCoreContextOnBackground', false, false);
+
+export const dispatchJSContextOnMainThreadEndpoint = createRpcEndpoint<
+  [{
+    type: string;
+    data: Cloneable;
+  }],
+  void
+>('dispatchJSContextOnMainThread', false, false);
