@@ -93,7 +93,6 @@ function updateSpread(snapshot: SnapshotInstance, index: number, oldValue: any, 
       } else if (key.startsWith('data-')) {
         // collected below
       } else if (key === 'ref') {
-        snapshot.__ref_set ??= new Set();
         const fakeSnapshot = {
           __values: {
             get [index]() {
@@ -106,7 +105,6 @@ function updateSpread(snapshot: SnapshotInstance, index: number, oldValue: any, 
           },
           __id: snapshot.__id,
           __elements: snapshot.__elements,
-          __ref_set: snapshot.__ref_set,
         } as SnapshotInstance;
         updateRef(fakeSnapshot, index, oldValue[key], elementIndex, key);
       } else if (key.endsWith(':ref')) {
@@ -189,7 +187,6 @@ function updateSpread(snapshot: SnapshotInstance, index: number, oldValue: any, 
       } else if (key.startsWith('data-')) {
         // collected below
       } else if (key === 'ref') {
-        snapshot.__ref_set ??= new Set();
         const fakeSnapshot = {
           __values: {
             get [index]() {
@@ -202,7 +199,6 @@ function updateSpread(snapshot: SnapshotInstance, index: number, oldValue: any, 
           },
           __id: snapshot.__id,
           __elements: snapshot.__elements,
-          __ref_set: snapshot.__ref_set,
         } as SnapshotInstance;
         updateRef(fakeSnapshot, index, oldValue[key], elementIndex, key);
       } else if (key.endsWith(':ref')) {

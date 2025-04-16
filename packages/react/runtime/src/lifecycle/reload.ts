@@ -57,7 +57,6 @@ function reloadMainThread(data: any, options: UpdatePageOption): void {
       LifecycleConstant.firstScreen, /* FIRST_SCREEN */
       {
         root: JSON.stringify(__root),
-        refPatch: JSON.stringify(takeGlobalRefPatchMap()),
       },
     ]);
   }
