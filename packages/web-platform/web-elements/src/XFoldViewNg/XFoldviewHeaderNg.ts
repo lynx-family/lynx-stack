@@ -5,13 +5,22 @@
 */
 import { Component } from '@lynx-js/web-elements-reactive';
 import { CommonEventsAndMethods } from '../common/CommonEventsAndMethods.js';
-import { XFoldviewHeaderNgFeatures } from './XFoldviewHeaderNgFeatures.js';
+import { resizeObserver, type XFoldviewNg } from './XFoldviewNg.js';
 
 @Component<typeof XFoldviewHeaderNg>(
   'x-foldview-header-ng',
   [
     CommonEventsAndMethods,
-    XFoldviewHeaderNgFeatures,
   ],
 )
-export class XFoldviewHeaderNg extends HTMLElement {}
+export class XFoldviewHeaderNg extends HTMLElement {
+  connectedCallback() {
+    (this.parentElement as XFoldviewNg | null)?.[resizeObserver]?.observe(this);
+  }
+
+  dispose() {
+    (this.parentElement as XFoldviewNg | null)?.[resizeObserver]?.unobserve(
+      this,
+    );
+  }
+}

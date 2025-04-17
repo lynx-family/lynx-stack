@@ -4,7 +4,6 @@
 // LICENSE file in the root directory of this source tree.
 */
 scroll-view {
-  contain: content;
   display: flex !important;
   --lynx-display: linear !important;
   --lynx-display-toggle: var(--lynx-display-linear);
