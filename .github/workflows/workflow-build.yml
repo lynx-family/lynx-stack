@@ -44,7 +44,7 @@ jobs:
           MAX_ATTEMPTS=10
           ATTEMPT=0
           while [ -z "$( git merge-base "refs/heads/$CLEAN_BASE_REF" "$CLEAN_HEAD_REF" )" ] && [ "$ATTEMPT" -lt "$MAX_ATTEMPTS" ]; do
-            git fetch -q --deepen=10 origin "refs/heads/$CLEAN_BASE_REF" "$CLEAN_HEAD_REF"
+            git fetch -q --deepen=10 upstream "refs/heads/$CLEAN_BASE_REF" "$CLEAN_HEAD_REF"
             ATTEMPT=$((ATTEMPT + 1))
           done
           if [ "$ATTEMPT" -ge "$MAX_ATTEMPTS" ]; then
@@ -54,7 +54,7 @@ jobs:
       - name: Get merge base
         id: merge-base
         env:
-          CLEAN_BASE_REF: ${{ format('origin/{0}', steps.git-refs.outputs.base-ref) || github.event.base }}
+          CLEAN_BASE_REF: ${{ format('upstream/{0}', steps.git-refs.outputs.base-ref) || github.event.base }}
           CLEAN_HEAD_REF: ${{ steps.git-refs.outputs.head-ref }}
         run: |
           echo "merge-base=$(git merge-base "$CLEAN_BASE_REF" "$CLEAN_HEAD_REF" || git rev-parse "$CLEAN_BASE_REF")" >> $GITHUB_OUTPUT
