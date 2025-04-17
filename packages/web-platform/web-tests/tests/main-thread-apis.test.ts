@@ -87,6 +87,39 @@ test.describe('main thread api tests', () => {
       expect(page.locator('scroll-view')).toHaveAttribute('scroll-x', 'true');
     },
   );
+  test(
+    '__SetID',
+    async ({ page, browserName }, { title }) => {
+      const ret = await page.evaluate(() => {
+        let root = globalThis.__CreatePage('page', 0);
+        let ret = globalThis.__CreateView(0);
+        globalThis.__SetID(ret, 'target');
+        globalThis.__AppendElement(root, ret);
+        globalThis.__FlushElementTree();
+      });
+      expect(await page.locator('#target').count()).toBe(1);
+    },
+  );
+  test(
+    '__SetID to remove id',
+    async ({ page, browserName }, { title }) => {
+      const ret = await page.evaluate(() => {
+        let root = globalThis.__CreatePage('page', 0);
+        let ret = globalThis.__CreateView(0);
+        globalThis.__SetID(ret, 'target');
+        globalThis.__AppendElement(root, ret);
+        globalThis.__FlushElementTree();
+        globalThis.view = ret;
+      });
+      expect(await page.locator('#target').count()).toBe(1);
+      await page.evaluate(() => {
+        let ret = globalThis.view;
+        globalThis.__SetID(ret, null);
+        globalThis.__FlushElementTree();
+      });
+      expect(await page.locator('#target').count()).toBe(0);
+    },
+  );
 
   test('__CreateText', async ({ page }, { title }) => {
     const lynxTag = await page.evaluate(() => {

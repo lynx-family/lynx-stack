@@ -123,8 +123,12 @@ export function createAttributeAndPropertyFunctions(
     }
   }
 
-  function __SetID(element: HTMLElement, id: string) {
-    element.id = id;
+  function __SetID(element: HTMLElement, id: string | null) {
+    if (typeof id === 'string') {
+      element.id = id;
+    } else {
+      element.removeAttribute('id');
+    }
   }
 
   function __UpdateComponentID(
