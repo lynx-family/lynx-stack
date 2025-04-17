@@ -2,8 +2,10 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { assertType, describe, test } from 'vitest';
-import { JSX } from '../../jsx-runtime/index';
-import React from 'react';
+import type { JSX } from '../../jsx-runtime/index.js';
+import type { MainThread, NodesRef, TouchEvent } from '@lynx-js/types';
+import { useMainThreadRef } from '../../lib/lynx-api.js';
+import { useRef } from '../../lib/hooks/react.js';
 
 describe('JSX Runtime Types', () => {
   test('should support basic JSX element', () => {
@@ -27,5 +29,68 @@ describe('JSX Runtime Types', () => {
       return renderFoo();
     }
     assertType<JSX.Element>(App());
+  });
+
+  test('should error on unsupported tags', () => {
+    // @ts-expect-error: Unsupported tag
+    const divElement = <div></div>;
+  });
+
+  test('should support event handlers', () => {
+    const viewWithBind = (
+      <view
+        bindtap={(e: TouchEvent) => {
+          e.currentTarget;
+        }}
+      >
+      </view>
+    );
+    const viewWithCatch = (
+      <view
+        catchtap={(e: TouchEvent) => {
+          e.currentTarget;
+        }}
+      >
+      </view>
+    );
+    assertType<JSX.Element>(viewWithBind);
+    assertType<JSX.Element>(viewWithCatch);
+  });
+
+  test('should support main-thread event handlers', () => {
+    const viewWithMainThreadEvent = (
+      <view
+        main-thread:bindtap={(e: MainThread.TouchEvent) => {
+          e.currentTarget;
+        }}
+      >
+      </view>
+    );
+    assertType<JSX.Element>(viewWithMainThreadEvent);
+  });
+
+  test('should support ref prop with ref object', () => {
+    const ref = useRef<NodesRef>(null);
+    const viewWithRefObject = <view ref={ref}></view>;
+    assertType<JSX.Element>(viewWithRefObject);
+  });
+
+  test('should support ref prop with function', () => {
+    const ref = useRef<NodesRef>(null);
+    const viewWithRefCallback = (
+      <view
+        ref={(n) => {
+          ref.current = n;
+        }}
+      >
+      </view>
+    );
+    assertType<JSX.Element>(viewWithRefCallback);
+  });
+
+  test('should support main-thread ref', () => {
+    const mtRef = useMainThreadRef<MainThread.Element>(null);
+    const viewWithMainThreadRef = <view main-thread:ref={mtRef}></view>;
+    assertType<JSX.Element>(viewWithMainThreadRef);
   });
 });
