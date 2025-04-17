@@ -40,11 +40,11 @@ jobs:
           UPSTREAM_REMOTE: ${{ github.server_url }}/${{ github.repository }}
         run: |
           git remote add upstream $UPSTREAM_REMOTE
-          git fetch --progress --depth=1 upstream "+refs/heads/$CLEAN_BASE_REF:refs/heads/$CLEAN_BASE_REF"
+          git fetch --progress --depth=1 upstream "+refs/heads/$CLEAN_BASE_REF:refs/remotes/upstream/$CLEAN_BASE_REF"
           MAX_ATTEMPTS=10
           ATTEMPT=0
-          while [ -z "$( git merge-base "refs/heads/$CLEAN_BASE_REF" "$CLEAN_HEAD_REF" )" ] && [ "$ATTEMPT" -lt "$MAX_ATTEMPTS" ]; do
-            git fetch -q --deepen=10 upstream "refs/heads/$CLEAN_BASE_REF"
+          while [ -z "$( git merge-base "refs/remotes/upstream/$CLEAN_BASE_REF" "$CLEAN_HEAD_REF" )" ] && [ "$ATTEMPT" -lt "$MAX_ATTEMPTS" ]; do
+            git fetch -q --deepen=10 upstream "refs/heads/$CLEAN_BASE_REF:refs/remotes/upstream/$CLEAN_BASE_REF"
             git fetch -q --deepen=10 origin "$CLEAN_HEAD_REF"
             ATTEMPT=$((ATTEMPT + 1))
           done
