@@ -10,8 +10,6 @@ on:
 permissions:
   repository-projects: read
   contents: read
-  actions: write
-  pull-requests: write
   statuses: read
 env:
   CI: 1
