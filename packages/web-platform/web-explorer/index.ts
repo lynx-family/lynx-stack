@@ -7,7 +7,7 @@ import '@lynx-js/web-elements/all';
 import QrScanner from 'qr-scanner';
 
 const video = document.getElementById('qr-scanner') as HTMLVideoElement;
-const lynxView = document.getElementById('lynx-view') as LynxView;
+let lynxView = document.getElementById('lynx-view') as LynxView;
 const backButton = document.getElementById('back-button') as HTMLDivElement;
 const nav = document.getElementById('nav') as HTMLDivElement;
 
@@ -63,12 +63,14 @@ lynxView.globalProps = { theme };
 setLynxViewUrl(homepage);
 window.addEventListener('message', (ev) => {
   if (ev.data && ev.data.method === 'setLynxViewUrl' && ev.data.url) {
+    const parent = lynxView.parentElement!;
+    lynxView.remove();
+    lynxView = document.createElement('lynx-view') as LynxView;
+    lynxView.setAttribute('style', 'flex: 0 1 100vh; height:100vh;');
+    parent.append(lynxView);
     setLynxViewUrl(ev.data.url);
   }
 });
-setTimeout(() => {
-  window.parent?.postMessage('webExplorerReady');
-}, 500);
 
 function setLynxViewUrl(url: string) {
   if (url === homepage) {
