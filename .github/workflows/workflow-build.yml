@@ -38,7 +38,7 @@ jobs:
           CLEAN_BASE_REF: ${{ steps.git-refs.outputs.base-ref }}
           CLEAN_HEAD_REF: ${{ steps.git-refs.outputs.head-ref }}
           # We are not using
-          UPSTREAM_REMOTE: ${{ github.server_url }}/${{ github.repositoryUrl }}
+          UPSTREAM_REMOTE: ${{ github.server_url }}/${{ github.repository }}
         run: |
           git remote add upstream $UPSTREAM_REMOTE
           git fetch --progress --depth=1 upstream "+refs/heads/$CLEAN_BASE_REF:refs/heads/$CLEAN_BASE_REF"
