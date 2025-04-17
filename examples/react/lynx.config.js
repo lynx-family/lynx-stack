@@ -7,8 +7,13 @@ import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin';
 const enableBundleAnalysis = !!process.env['CI'];
 
 export default defineConfig({
+  dev: {
+    lazyCompilation: {},
+  },
   plugins: [
-    pluginReactLynx(),
+    pluginReactLynx({
+      firstScreenSyncTiming: 'jsReady',
+    }),
     pluginQRCode({
       schema(url) {
         // We use `?fullscreen=true` to open the page in LynxExplorer in full screen mode

@@ -22,6 +22,7 @@ export default defineConfig({
 
         'packages/react/transform/tests/__swc_snapshots__/**',
         'packages/rspeedy/create-rspeedy/template-*/**',
+        'packages/rspeedy/core/hot/lazy-compilation-fetch.js',
 
         // cSpell:disable-next-line
         '.lintstagedrc.mjs',

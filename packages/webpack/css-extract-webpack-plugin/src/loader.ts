@@ -134,9 +134,7 @@ export async function load(
   if (isNamedExports(moduleExports)) {
     Object.keys(moduleExports).forEach((key) => {
       if (key !== 'default') {
-        if (!locals) {
-          locals = {};
-        }
+        locals ??= {};
         locals[key] = moduleExports[key]!;
       }
     });
@@ -410,6 +408,18 @@ function hotLoader(
       path.resolve(__dirname, '../runtime/hotModuleReplacement.cjs'),
     )
   })(module.id, ${JSON.stringify(context.options)}, "${context.cssId ?? '0'}");
+
+      var lazyChunkInitialLoading = require(${
+    stringifyRequest(
+      context.loaderContext,
+      path.resolve(__dirname, '../runtime/lazyChunkInitialLoading.cjs'),
+    )
+  })(module.id, ${JSON.stringify(context.options)}, "${context.cssId ?? '0'}");
+
+      if(__webpack_require__.lynxLazyChunkIds?.length > 0) {
+        lazyChunkInitialLoading();
+      }
+
       // only invalidate when locals change
       if (
         module.hot.data &&

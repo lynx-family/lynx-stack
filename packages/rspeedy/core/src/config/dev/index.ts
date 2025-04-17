@@ -4,6 +4,7 @@
 import type { WatchFiles } from '@rsbuild/core'
 
 import type { Client } from './client.js'
+import type { LazyCompilationOptions } from './lazyCompilation.js'
 
 /**
  * {@inheritdoc Config.dev}
@@ -220,6 +221,38 @@ export interface Dev {
    * ```
    */
   writeToDisk?: boolean | ((filename: string) => boolean) | undefined
+
+  /**
+   * Used to enable lazy compilation (compilation on demand), implemented based on Rspack's {@link https://rspack.dev/config/experiments#experimentslazycompilation | `experiments.lazyCompilation` }
+   *
+   * @remarks
+   *
+   * Lazy compilation is an excellent way to improve dev startup performance. It compiles modules on demand rather than compiling all modules at startup.
+   *
+   * This means developers can quickly see the application running when they start the dev server and build the necessary modules in stages.
+   *
+   * Due to Lynx's unique dual-thread architecture, it is recommended to configure the `firstScreenSyncTiming` parameter in the `pluginReactLynx` to `'jsReady'`.
+   *
+   * @example
+   * ```js
+   * // lynx.config.ts
+   * import { defineConfig } from '@lynx-js/rspeedy'
+   * export default defineConfig({
+   *   dev: {
+   *     lazyCompilation: true,
+   *   },
+   *   plugins: [
+   *     pluginReactLynx({
+   *        firstScreenSyncTiming: 'jsReady',
+   *     }),
+   *   ],
+   * })
+   * ```
+   */
+  lazyCompilation?:
+    | boolean
+    | LazyCompilationOptions
+    | undefined
 
   /**
    * Whether to display progress bar during compilation.

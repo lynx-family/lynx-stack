@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { createStubLynx } from './helper/stubLynx.js';
 import update from '../runtime/hotModuleReplacement.cjs';
+import lazyChunkInitialLoading from '../runtime/lazyChunkInitialLoading.cjs';
 
 describe('HMR Runtime', () => {
   const replaceStyleSheetByIdWithBase64 = vi.fn();
@@ -191,6 +192,43 @@ describe('HMR Runtime', () => {
       0,
       expect.stringContaining('foo.css'),
       'entry',
+    );
+
+    expect(__FlushElementTree).toBeCalled();
+  });
+
+  test('lazy chunk initial loading', async () => {
+    await import('../runtime/lazyChunkInitialLoading.cjs');
+    vi.stubGlobal('__webpack_require__', {
+      p: '/',
+      cssHotUpdateList: [['asyncChunkName', 'async.bar.css'], [
+        'chunkName',
+        'foo.css',
+      ]],
+      lynxLazyChunkIds: ['asyncChunkName'],
+    });
+    const __FlushElementTree = vi.fn();
+    vi.stubGlobal('__FlushElementTree', __FlushElementTree);
+    vi.useFakeTimers();
+
+    const cssReload = lazyChunkInitialLoading('', null);
+
+    cssReload();
+
+    // debounce
+    vi.runAllTimers();
+
+    // requireModuleAsync
+    await vi.runAllTimersAsync();
+
+    // foo.css should not be loaded
+    expect(replaceStyleSheetByIdWithBase64).toBeCalledTimes(1);
+
+    expect(replaceStyleSheetByIdWithBase64).toHaveBeenNthCalledWith(
+      1,
+      0,
+      expect.stringContaining('async.bar.css'),
+      'asyncEntry',
     );
 
     expect(__FlushElementTree).toBeCalled();
