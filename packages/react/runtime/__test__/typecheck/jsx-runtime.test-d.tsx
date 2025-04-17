@@ -1,15 +1,19 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { assertType, describe, test } from 'vitest';
 import type { JSX } from '../../jsx-runtime/index.js';
 import type { MainThread, NodesRef, TouchEvent } from '@lynx-js/types';
+import { assertType, describe, test } from 'vitest';
 import { useMainThreadRef } from '../../lib/lynx-api.js';
 import { useRef } from '../../lib/hooks/react.js';
 
 describe('JSX Runtime Types', () => {
   test('should support basic JSX element', () => {
-    const viewEle = <view></view>;
+    const viewEle = (
+      <view>
+        <text>child node</text>
+      </view>
+    );
     assertType<JSX.Element>(viewEle);
   });
 
