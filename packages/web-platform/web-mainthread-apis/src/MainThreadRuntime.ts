@@ -17,6 +17,7 @@ import {
   type reportErrorEndpoint,
   type RpcCallType,
   type postExposureEndpoint,
+  type LynxContextEventTarget,
 } from '@lynx-js/web-constants';
 import { globalMuteableVars } from '@lynx-js/web-constants';
 import { createMainThreadLynx, type MainThreadLynx } from './MainThreadLynx.js';
@@ -58,6 +59,7 @@ export interface MainThreadConfig {
   browserConfig: BrowserConfig;
   tagMap: Record<string, string>;
   docu: Pick<Document, 'append' | 'createElement' | 'addEventListener'>;
+  jsContext: LynxContextEventTarget;
 }
 
 export const elementToRuntimeInfoMap = Symbol('elementToRuntimeInfoMap');

@@ -23,7 +23,7 @@ import { createPerformanceApis } from './createPerformanceApis.js';
 import { registerSendGlobalEventHandler } from './crossThreadHandlers/registerSendGlobalEvent.js';
 import { createJSObjectDestructionObserver } from './crossThreadHandlers/createJSObjectDestructionObserver.js';
 import type { TimingSystem } from './createTimingSystem.js';
-import type { LynxCrossThreadContext } from './createBackgroundLynx.js';
+import type { LynxCrossThreadContext } from '../../common/LynxCrossThreadContext.js';
 
 let nativeAppCount = 0;
 const sharedData: Record<string, unknown> = {};

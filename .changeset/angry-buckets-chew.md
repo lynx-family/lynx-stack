@@ -2,4 +2,4 @@
 "@lynx-js/web-explorer": patch
 ---
 
-fix: delay 500ms to send the `webExplorerReady`
+fix: create a new lynx-view for lynxjs.org
