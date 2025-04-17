@@ -2,10 +2,10 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import type { JSX } from '../../jsx-runtime/index.js';
-import type { MainThread, NodesRef, TouchEvent } from '@lynx-js/types';
+import type { MainThread, NodesRef, Target, TouchEvent } from '@lynx-js/types';
 import { assertType, describe, test } from 'vitest';
-import { useMainThreadRef } from '../../lib/lynx-api.js';
-import { useRef } from '../../lib/hooks/react.js';
+import { useMainThreadRef } from '../../src/lynx-api.js';
+import { useRef } from '../../src/hooks/react.js';
 
 describe('JSX Runtime Types', () => {
   test('should support basic JSX element', () => {
@@ -43,16 +43,18 @@ describe('JSX Runtime Types', () => {
   test('should support event handlers', () => {
     const viewWithBind = (
       <view
-        bindtap={(e: TouchEvent) => {
-          e.currentTarget;
+        bindtap={(e) => {
+          assertType<number>(e.detail.x);
+          assertType<TouchEvent>(e);
         }}
       >
       </view>
     );
     const viewWithCatch = (
       <view
-        catchtap={(e: TouchEvent) => {
-          e.currentTarget;
+        catchtap={(e) => {
+          assertType<Target>(e.currentTarget);
+          assertType<TouchEvent>(e);
         }}
       >
       </view>
@@ -64,8 +66,9 @@ describe('JSX Runtime Types', () => {
   test('should support main-thread event handlers', () => {
     const viewWithMainThreadEvent = (
       <view
-        main-thread:bindtap={(e: MainThread.TouchEvent) => {
-          e.currentTarget;
+        main-thread:bindtap={(e) => {
+          assertType<number>(e.detail.x);
+          assertType<MainThread.Element>(e.currentTarget);
         }}
       >
       </view>
