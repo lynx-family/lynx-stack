@@ -317,7 +317,7 @@ describe('Plugins - Dev', () => {
     const lazyCompilationConfig = config.dev
       ?.lazyCompilation as Rspack.LazyCompilationOptions
 
-    expect(lazyCompilationConfig.serverUrl).toBe('http://example.com:<port>/')
+    expect(lazyCompilationConfig.serverUrl).toBe('http://example.com:<port>')
   })
 
   test('dev.assetPrefix: false', async () => {

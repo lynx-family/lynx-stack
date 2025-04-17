@@ -71,9 +71,12 @@ export function pluginDev(
 
       debug(`dev.assetPrefix is normalized to ${assetPrefix}`)
 
-      let serverUrl = assetPrefix as string
-      if (serverUrl.endsWith('/')) {
-        serverUrl = serverUrl.slice(0, -1)
+      let serverUrl = `http://${hostname}:<port>`
+      if (typeof assetPrefix === 'string') {
+        serverUrl = assetPrefix
+        if (serverUrl.endsWith('/')) {
+          serverUrl = serverUrl.slice(0, -1)
+        }
       }
 
       api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
