@@ -1528,6 +1528,17 @@ test.describe('reactlynx3 tests', () => {
       });
     });
     test.describe('scroll-view', () => {
+      const elementName = 'scroll-view';
+      test('basic-element-scroll-view-fixed', async ({ page }, { title }) => {
+        await goto(page, title);
+        await diffScreenShot(
+          page,
+          elementName,
+          title,
+          'initial',
+        );
+      });
+
       test(
         'basic-element-scroll-view-scrollable',
         async ({ page }, { title }) => {
