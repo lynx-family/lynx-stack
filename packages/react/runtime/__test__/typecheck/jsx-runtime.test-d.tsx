@@ -87,6 +87,7 @@ describe('JSX Runtime Types', () => {
     const viewWithRefCallback = (
       <view
         ref={(n) => {
+          assertType<NodesRef | null>(n);
           ref.current = n;
         }}
       >
