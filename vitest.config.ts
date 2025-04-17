@@ -9,6 +9,7 @@ export default defineConfig({
     coverage: {
       exclude: [
         '**/*.d.ts',
+        '**/*.test-d.ts',
         '**/vitest.config.ts',
         '**/rslib.config.ts',
         '**/*.bench.js',
