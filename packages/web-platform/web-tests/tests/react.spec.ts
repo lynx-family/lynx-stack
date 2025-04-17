@@ -291,6 +291,36 @@ test.describe('reactlynx3 tests', () => {
         await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
       },
     );
+    test(
+      'basic-mts-mainthread-ref',
+      async ({ page }, { title }) => {
+        await goto(page, title);
+        await wait(100);
+        const target = page.locator('#target');
+        await target.click();
+        await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
+      },
+    );
+    test(
+      'basic-mts-run-on-background',
+      async ({ page }, { title }) => {
+        await goto(page, title);
+        await wait(100);
+        const target = page.locator('#target');
+        await target.click();
+        await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
+      },
+    );
+    test(
+      'basic-mts-run-on-main-thread',
+      async ({ page }, { title }) => {
+        await goto(page, title);
+        await wait(100);
+        const target = page.locator('#target');
+        await target.click();
+        await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
+      },
+    );
   });
   test.describe('basic-css', () => {
     test('basic-css-asset-in-css', async ({ page }, { title }) => {
@@ -1498,6 +1528,17 @@ test.describe('reactlynx3 tests', () => {
       });
     });
     test.describe('scroll-view', () => {
+      const elementName = 'scroll-view';
+      test('basic-element-scroll-view-fixed', async ({ page }, { title }) => {
+        await goto(page, title);
+        await diffScreenShot(
+          page,
+          elementName,
+          title,
+          'initial',
+        );
+      });
+
       test(
         'basic-element-scroll-view-scrollable',
         async ({ page }, { title }) => {

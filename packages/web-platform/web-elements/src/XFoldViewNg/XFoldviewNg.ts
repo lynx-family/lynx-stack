@@ -7,9 +7,12 @@ import { Component } from '@lynx-js/web-elements-reactive';
 import { CommonEventsAndMethods } from '../common/CommonEventsAndMethods.js';
 import { XFoldviewNgEvents } from './XFoldviewNgEvents.js';
 import { scrollContainerDom } from '../common/constants.js';
+import type { XFoldviewSlotNg } from './XFoldviewSlotNg.js';
 
 export const scrollableLength = Symbol('scrollableLength');
 export const isHeaderShowing = Symbol('isHeaderShowing');
+export const resizeObserver = Symbol('resizeObserver');
+export const slotKid = Symbol('slotKid');
 
 @Component<typeof XFoldviewNg>('x-foldview-ng', [
   CommonEventsAndMethods,
@@ -17,8 +20,26 @@ export const isHeaderShowing = Symbol('isHeaderShowing');
 ])
 export class XFoldviewNg extends HTMLElement {
   static readonly notToFilterFalseAttributes = new Set(['scroll-enable']);
-  [scrollableLength]: number = 0;
-  get [isHeaderShowing]() {
+  [slotKid]?: XFoldviewSlotNg;
+  [resizeObserver]?: ResizeObserver = new ResizeObserver((resizeEntries) => {
+    for (const resize of resizeEntries) {
+      if (resize.target.tagName === 'X-FOLDVIEW-HEADER-NG') {
+        this.#headerHeight = resize.contentRect.height;
+      } else if (resize.target.tagName === 'X-FOLDVIEW-TOOLBAR-NG') {
+        this.#toolbarHeight = resize.contentRect.height;
+      }
+    }
+    if (this[slotKid]) {
+      this[slotKid].style.top = `${this.#headerHeight - this.#toolbarHeight}px`;
+    }
+  });
+  #headerHeight: number = 0;
+  #toolbarHeight: number = 0;
+
+  get [scrollableLength](): number {
+    return this.#headerHeight - this.#toolbarHeight;
+  }
+  get [isHeaderShowing](): boolean {
     // This behavior cannot be reproduced in the current test, but can be reproduced in Android WebView
     return this[scrollableLength] - this.scrollTop >= 1;
   }
@@ -47,5 +68,10 @@ export class XFoldviewNg extends HTMLElement {
 
   get [scrollContainerDom]() {
     return this;
+  }
+
+  disconnectedCallback() {
+    this[resizeObserver]?.disconnect();
+    this[resizeObserver] = undefined;
   }
 }
