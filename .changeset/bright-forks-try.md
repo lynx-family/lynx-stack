@@ -4,7 +4,6 @@
 "@lynx-js/react-webpack-plugin": patch
 "@lynx-js/web-constants": patch
 "@lynx-js/web-elements": patch
-"@lynx-js/react-rsbuild-plugin": patch
 ---
 
 feat: fully support MTS
