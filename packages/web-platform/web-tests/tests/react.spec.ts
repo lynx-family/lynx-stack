@@ -342,6 +342,12 @@ test.describe('reactlynx3 tests', () => {
     });
   });
   test.describe('apis', () => {
+    test('api-custom-template-loader', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(100);
+      const target = page.locator('#target');
+      await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
+    });
     test('api-animation-event', async ({ page }, { title }) => {
       await goto(page, title);
       await page.locator('#tap1').click();
