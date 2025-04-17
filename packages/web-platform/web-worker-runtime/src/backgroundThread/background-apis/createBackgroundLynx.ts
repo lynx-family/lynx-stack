@@ -3,44 +3,17 @@
 // LICENSE file in the root directory of this source tree.
 
 import {
-  dispatchCoreContextEventEndpoint,
-  DispatchEventResult,
+  dispatchCoreContextOnBackgroundEndpoint,
+  dispatchJSContextOnMainThreadEndpoint,
   type Cloneable,
-  type LynxContextEventTarget,
   type NativeApp,
 } from '@lynx-js/web-constants';
 import type { Rpc } from '@lynx-js/web-worker-rpc';
 import { createGetCustomSection } from './crossThreadHandlers/createGetCustomSection.js';
+import { LynxCrossThreadContext } from '../../common/LynxCrossThreadContext.js';
 export interface CreateLynxConfig {
   globalProps: unknown;
   customSections: Record<string, Cloneable>;
-}
-
-export class LynxCrossThreadContext extends EventTarget
-  implements LynxContextEventTarget
-{
-  constructor(
-    private _config: {
-      mainThreadRpc: Rpc;
-      dispatchEventEndpoint: typeof dispatchCoreContextEventEndpoint;
-    },
-  ) {
-    super();
-  }
-  postMessage(...args: any[]) {
-    console.error('[lynx-web] postMessage not implemented, args:', ...args);
-  }
-  // @ts-expect-error
-  override dispatchEvent(event: Event): number {
-    super.dispatchEvent(event);
-    return DispatchEventResult.CanceledBeforeDispatch;
-  }
-  __start() {
-    const { mainThreadRpc, dispatchEventEndpoint } = this._config;
-    mainThreadRpc.registerHandler(dispatchEventEndpoint, (eventType, data) => {
-      this.dispatchEvent(new MessageEvent(eventType, { data: data ?? {} }));
-    });
-  }
 }
 
 export function createBackgroundLynx(
@@ -49,8 +22,9 @@ export function createBackgroundLynx(
   mainThreadRpc: Rpc,
 ) {
   const coreContext = new LynxCrossThreadContext({
-    mainThreadRpc,
-    dispatchEventEndpoint: dispatchCoreContextEventEndpoint,
+    rpc: mainThreadRpc,
+    receiveEventEndpoint: dispatchCoreContextOnBackgroundEndpoint,
+    sendEventEndpoint: dispatchJSContextOnMainThreadEndpoint,
   });
   return {
     __globalProps: config.globalProps,

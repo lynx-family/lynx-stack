@@ -1,3 +1,5 @@
+import type { Cloneable } from './Cloneable.js';
+
 export const DispatchEventResult = {
   // Event was not canceled by event handler or default event handler.
   NotCanceled: 0,
@@ -16,16 +18,21 @@ export const DispatchEventResult = {
   // to execute.
   CanceledBeforeDispatch: 3,
 } as const;
+
+export type ContextCrossThreadEvent = {
+  type: string;
+  data: Cloneable;
+};
 export interface LynxContextEventTarget {
-  onTriggerEvent?: (event: MessageEvent) => void;
+  onTriggerEvent?: (event: ContextCrossThreadEvent) => void;
 
   postMessage(message: any): void;
   dispatchEvent(
-    event: MessageEvent,
+    event: ContextCrossThreadEvent,
   ): typeof DispatchEventResult[keyof typeof DispatchEventResult];
-  addEventListener(type: string, listener: (event: MessageEvent) => void): void;
+  addEventListener(type: string, listener: (event: Event) => void): void;
   removeEventListener(
     type: string,
-    listener: (event: MessageEvent) => void,
+    listener: (event: Event) => void,
   ): void;
 }
