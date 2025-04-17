@@ -37,7 +37,6 @@ jobs:
         env:
           CLEAN_BASE_REF: ${{ steps.git-refs.outputs.base-ref }}
           CLEAN_HEAD_REF: ${{ steps.git-refs.outputs.head-ref }}
-          # We are not using
           UPSTREAM_REMOTE: ${{ github.server_url }}/${{ github.repository }}
         run: |
           git remote add upstream $UPSTREAM_REMOTE
