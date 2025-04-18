@@ -35,6 +35,6 @@
   },
   "peerDependencies": {
     "@lynx-js/lynx-core": "0.1.2",
-    "@lynx-js/web-elements": ">=0.3.1"
+    "@lynx-js/web-elements": ">=0.6.0"
   }
 }
