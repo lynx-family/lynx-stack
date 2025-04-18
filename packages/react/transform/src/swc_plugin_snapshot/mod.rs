@@ -2938,6 +2938,7 @@ mod tests {
     <view>
       <text>Hello, ReactLynx, {hello}</text>
       <text key={hello}>{hello}</text>
+      <text key="hello">{hello}</text>
     </view>
     "#
   );
