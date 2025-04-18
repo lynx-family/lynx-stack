@@ -4,7 +4,7 @@
 "@lynx-js/web-core": minor
 ---
 
-feat: improve compatibility for chrome 108
+feat: improve compatibility for chrome 108 & support linear-gradient for nested x-text
 
 **This is a breaking change**
 
@@ -15,3 +15,12 @@ feat: improve compatibility for chrome 108
 On chrome 108, the `-webkit-background-clip:text` cannot be computed by a `var(--css-var-value-text)`
 
 Therefore we move the logic into style transformation logic.
+
+Now the following status is supported
+
+```
+<text style="color:linear-gradient()">
+  <text>
+  <text>
+</text>
+```
