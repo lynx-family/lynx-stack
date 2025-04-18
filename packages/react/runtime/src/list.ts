@@ -15,14 +15,22 @@ export interface ListUpdateInfo {
   onSetAttribute(child: SnapshotInstance, attr: any, oldAttr: any): void;
 }
 
+interface InsertAction {
+  position: number;
+  type: string;
+}
+
 interface UpdateAction {
-  insertAction: {
-    position: number;
-    type: string;
-  }[];
+  from: number;
+  to: number;
+  type: string;
+  flush: boolean;
+}
+
+interface ListOperations {
+  insertAction: InsertAction[];
   removeAction: number[];
-  // TODO: type `updateAction`
-  updateAction: any[];
+  updateAction: UpdateAction[];
 }
 
 // class ListUpdateInfoDiffing implements ListUpdateInfo {
@@ -115,12 +123,12 @@ export class ListUpdateInfoRecording implements ListUpdateInfo {
     this.platformInfoUpdate.set(child, attr);
   }
 
-  private __toAttribute(): UpdateAction {
+  private __toAttribute(): ListOperations {
     const { removeChild, insertBefore, appendChild, platformInfoUpdate } = this;
 
     const removals: number[] = [];
-    const insertions: { position: number; type: string }[] = [];
-    const updates: any[] = [];
+    const insertions: InsertAction[] = [];
+    const updates: UpdateAction[] = [];
 
     let j = 0;
     for (let i = 0; i < this.oldChildNodes.length; i++, j++) {
@@ -199,7 +207,7 @@ export class ListUpdateInfoRecording implements ListUpdateInfo {
     };
   }
 
-  toJSON(): [UpdateAction] {
+  toJSON(): [ListOperations] {
     // if (this.__pendingAttributes) {
     //   return [...this.__pendingAttributes, this.__toAttribute()];
     // } else {
