@@ -82,6 +82,18 @@
       "lazy": "./runtime/lazy/legacy-react-runtime.js",
       "default": "./runtime/lib/legacy-react-runtime/index.js"
     },
+    "./testing-library": {
+      "types": "./testing-library/types/index.d.ts",
+      "default": "./testing-library/dist/index.js"
+    },
+    "./testing-library/pure": {
+      "types": "./testing-library/types/pure.d.ts",
+      "default": "./testing-library/dist/pure.js"
+    },
+    "./testing-library/vitest-config": {
+      "types": "./testing-library/types/vitest-config.d.ts",
+      "default": "./testing-library/dist/vitest.config.js"
+    },
     "./package.json": "./package.json"
   },
   "types": "./types/react.d.ts",
@@ -139,6 +151,7 @@
     "types",
     "docs",
     "worklet-runtime",
+    "testing-library",
     "CHANGELOG.md",
     "internal.js",
     "README.md",
@@ -151,8 +164,11 @@
     "preact": "npm:@hongzhiyuan/preact@10.24.0-319c684e"
   },
   "devDependencies": {
+    "@lynx-js/test-environment": "workspace:*",
     "@lynx-js/types": "^3.2.1",
     "@microsoft/api-extractor": "catalog:",
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/jest-dom": "^6.6.3",
     "@types/react": "^18.3.20"
   },
   "peerDependencies": {

@@ -1,72 +1,29 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { options } from 'preact';
-import type { VNode } from 'preact';
-
 import { LifecycleConstant, NativeUpdateDataType } from '../lifecycleConstant.js';
 import { PerformanceTimingKeys, beginPipeline, markTiming } from './performance.js';
 import { BackgroundSnapshotInstance, hydrate } from '../backgroundSnapshot.js';
 import { destroyBackground } from '../lifecycle/destroy.js';
 import { delayedEvents, delayedPublishEvent } from '../lifecycle/event/delayEvents.js';
 import { delayLifecycleEvent, delayedLifecycleEvents } from '../lifecycle/event/delayLifecycleEvents.js';
-import { commitPatchUpdate, genCommitTaskId, globalCommitTaskMap } from '../lifecycle/patch/commit.js';
+import {
+  clearPatchesToCommit,
+  commitPatchUpdate,
+  genCommitTaskId,
+  globalCommitTaskMap,
+  patchesToCommit,
+  type PatchList,
+} from '../lifecycle/patch/commit.js';
 import { reloadBackground } from '../lifecycle/reload.js';
 import { renderBackground } from '../lifecycle/render.js';
-import { CHILDREN, COMPONENT, DIFF, DIFFED, FORCE } from '../renderToOpcodes/constants.js';
+import { CHILDREN } from '../renderToOpcodes/constants.js';
 import { __root } from '../root.js';
 import { globalRefsToSet, updateBackgroundRefs } from '../snapshot/ref.js';
 import { backgroundSnapshotInstanceManager } from '../snapshot.js';
 import { destroyWorklet } from '../worklet/destroy.js';
-
-export function runWithForce(cb: () => void): void {
-  // save vnode and its `_component` in WeakMap
-  const m = new WeakMap<VNode, any>();
-
-  const oldDiff = options[DIFF];
-
-  options[DIFF] = (vnode: VNode) => {
-    if (oldDiff) {
-      oldDiff(vnode);
-    }
-
-    // when `options[DIFF]` is called, a newVnode is passed in
-    // so its `vnode[COMPONENT]` should be null,
-    // but it will be set later
-    Object.defineProperty(vnode, COMPONENT, {
-      configurable: true,
-      set(c) {
-        m.set(vnode, c);
-        if (c) {
-          c[FORCE] = true;
-        }
-      },
-      get() {
-        return m.get(vnode);
-      },
-    });
-  };
-
-  const oldDiffed = options[DIFFED];
-
-  options[DIFFED] = (vnode: VNode) => {
-    if (oldDiffed) {
-      oldDiffed(vnode);
-    }
-
-    // delete is a reverse operation of previous `Object.defineProperty`
-    delete vnode[COMPONENT];
-    // restore
-    vnode[COMPONENT] = m.get(vnode);
-  };
-
-  try {
-    cb();
-  } finally {
-    options[DIFF] = oldDiff as (vnode: VNode) => void;
-    options[DIFFED] = oldDiffed as (vnode: VNode) => void;
-  }
-}
+import { runWithForce } from './runWithForce.js';
+export { runWithForce };
 
 function injectTt(): void {
   // @ts-ignore
@@ -100,7 +57,7 @@ function onLifecycleEvent([type, data]: [string, any]) {
   }
 
   try {
-    void onLifecycleEventImpl(type, data);
+    onLifecycleEventImpl(type, data);
   } catch (e) {
     lynx.reportError(e as Error);
   }
@@ -110,7 +67,7 @@ function onLifecycleEvent([type, data]: [string, any]) {
   }
 }
 
-async function onLifecycleEventImpl(type: string, data: any): Promise<void> {
+function onLifecycleEventImpl(type: string, data: any): void {
   switch (type) {
     case LifecycleConstant.firstScreen: {
       const { root: lepusSide, refPatch, jsReadyEventIdSwap } = data;
@@ -166,14 +123,23 @@ async function onLifecycleEventImpl(type: string, data: any): Promise<void> {
         console.profile('commitChanges');
       }
       const commitTaskId = genCommitTaskId();
-      await commitPatchUpdate({ patchList: [{ snapshotPatch, id: commitTaskId }] }, { isHydration: true });
-      updateBackgroundRefs(commitTaskId);
-      globalCommitTaskMap.forEach((commitTask, id) => {
-        if (id > commitTaskId) {
-          return;
-        }
-        commitTask();
-        globalCommitTaskMap.delete(id);
+      patchesToCommit.push(
+        { snapshotPatch, id: commitTaskId },
+      );
+      const patchList: PatchList = {
+        patchList: patchesToCommit,
+      };
+      clearPatchesToCommit();
+      const obj = commitPatchUpdate(patchList, { isHydration: true });
+      lynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
+        updateBackgroundRefs(commitTaskId);
+        globalCommitTaskMap.forEach((commitTask, id) => {
+          if (id > commitTaskId) {
+            return;
+          }
+          commitTask();
+          globalCommitTaskMap.delete(id);
+        });
       });
       break;
     }

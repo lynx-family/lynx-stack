@@ -6,11 +6,15 @@ packages:
   - packages/react/runtime
   - packages/react/transform
   - packages/react/worklet-runtime
+  - packages/react/testing-library
   - packages/rspeedy/*
   - packages/tools/*
   - packages/web-platform/*
   - packages/webpack/*
   - packages/third-party/*
+  - packages/testing-library/*
+  - packages/testing-library/examples/*
+  - "!packages/testing-library/examples"
   - website
 
 # Default catalogs

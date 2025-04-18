@@ -149,6 +149,11 @@ jobs:
         cd create-rspeedy-regression
         pnpm install --registry=http://localhost:4873
         pnpm run build
+        npx --registry http://localhost:4873 create-rspeedy-canary@latest --template react-vitest-rltl --dir create-rspeedy-regression-vitest-rltl
+        cd create-rspeedy-regression-vitest-rltl
+        pnpm install --registry=http://localhost:4873
+        pnpm run build
+        pnpm run test
   test-tools:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
@@ -167,6 +172,26 @@ jobs:
         --coverage
         --coverage.reporter='json'
         --coverage.reporter='text'
+        --no-cache
+        --logHeapUsage
+        --silent
+  test-testing-library:
+    needs: build
+    uses: ./.github/workflows/workflow-test.yml
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    with:
+      runs-on: lynx-ubuntu-24.04-medium
+      run: >
+        pnpm run test
+        --project 'react/testing-library'
+        --project 'testing-library/*'
+        --test-timeout=50000
+        --reporter=github-actions
+        --reporter=dot
+        --reporter=junit
+        --outputFile=test-report.junit.xml
+        --coverage
         --no-cache
         --logHeapUsage
         --silent
@@ -231,6 +256,7 @@ jobs:
       - test-rust
       - test-rspeedy
       - test-tools
+      - test-testing-library
       - test-type
       - website
       - zizmor

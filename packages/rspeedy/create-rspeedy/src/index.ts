@@ -8,7 +8,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import type { Argv } from 'create-rstack'
-import { checkCancel, create, select } from 'create-rstack'
+import { checkCancel, create, multiselect, select } from 'create-rstack'
 
 type LANG = 'js' | 'ts'
 
@@ -29,13 +29,16 @@ interface Template {
 
 const composeTemplateName = ({
   template,
+  tools,
   lang,
 }: {
   template: string
   tools?: Record<string, string> | undefined
   lang: LANG
 }) => {
-  return `${template}-${lang}`
+  const toolsKeys = (tools ? Object.keys(tools) : []).sort()
+  const toolsStr = toolsKeys.length > 0 ? `-${toolsKeys.join('-')}` : ''
+  return `${template}${toolsStr}-${lang}`
 }
 
 const TEMPLATES: Template[] = [
@@ -64,10 +67,29 @@ async function getTemplateName({ template }: Argv) {
     }),
   )
 
-  // TODO: support tools
+  const tools = checkCancel<string[]>(
+    await multiselect({
+      message:
+        'Select development tools (Use <space> to select, <enter> to continue)',
+      required: false,
+      options: [
+        {
+          value: 'vitest-rltl',
+          label: 'Add ReactLynx Testing Library for unit testing',
+        },
+      ],
+      initialValues: [
+        'vitest-rltl',
+      ],
+    }),
+  )
+
   return composeTemplateName({
     template: 'react',
     lang: language,
+    tools: Object.fromEntries(
+      tools.map((tool) => [tool, tool]),
+    ),
   })
 }
 
