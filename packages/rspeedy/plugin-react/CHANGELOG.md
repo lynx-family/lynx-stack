@@ -1,5 +1,35 @@
 # @lynx-js/react-rsbuild-plugin
 
+## 0.9.7
+
+### Patch Changes
+
+- Support overriding SWC configuration. ([#563](https://github.com/lynx-family/lynx-stack/pull/563))
+
+  Now you can override configuration like `useDefineForClassFields` using `tools.swc`.
+
+  ```js
+  import { defineConfig } from '@lynx-js/rspeedy'
+
+  export default defineConfig({
+    tools: {
+      swc: {
+        jsc: {
+          transform: {
+            useDefineForClassFields: true,
+          },
+        },
+      },
+    },
+  })
+  ```
+
+- Updated dependencies [[`f1ca29b`](https://github.com/lynx-family/lynx-stack/commit/f1ca29bd766377dd46583f15e1e75bca447699cd)]:
+  - @lynx-js/react-webpack-plugin@0.6.11
+  - @lynx-js/react-alias-rsbuild-plugin@0.9.7
+  - @lynx-js/react-refresh-webpack-plugin@0.3.2
+  - @lynx-js/web-webpack-plugin@0.6.5
+
 ## 0.9.6
 
 ### Patch Changes

@@ -1,5 +1,23 @@
 # @lynx-js/web-worker-runtime
 
+## 0.12.0
+
+### Patch Changes
+
+- feat: fully support MTS ([#569](https://github.com/lynx-family/lynx-stack/pull/569))
+
+  Now use support the following usage
+
+  - mainthread event
+  - mainthread ref
+  - runOnMainThread/runOnBackground
+  - ref.current.xx
+
+- Updated dependencies [[`f1ca29b`](https://github.com/lynx-family/lynx-stack/commit/f1ca29bd766377dd46583f15e1e75bca447699cd), [`8ca9fcb`](https://github.com/lynx-family/lynx-stack/commit/8ca9fcbbc86b0f0ac05ee4319876cdd5dd08d668), [`efe6fd7`](https://github.com/lynx-family/lynx-stack/commit/efe6fd7de8a3d8119ea550f4d4e939d1fbfee4f0)]:
+  - @lynx-js/web-mainthread-apis@0.12.0
+  - @lynx-js/web-constants@0.12.0
+  - @lynx-js/web-worker-rpc@0.12.0
+
 ## 0.11.0
 
 ### Patch Changes

@@ -1,5 +1,59 @@
 # @lynx-js/web-elements
 
+## 0.6.0
+
+### Minor Changes
+
+- fix: When list-type is not specified, it is treated as single formatting. ([#535](https://github.com/lynx-family/lynx-stack/pull/535))
+
+- feat: improve compatibility for chrome 108 & support linear-gradient for nested x-text ([#590](https://github.com/lynx-family/lynx-stack/pull/590))
+
+  **This is a breaking change**
+
+  - Please upgrade your `@lynx-js/web-elements` to >=0.6.0
+  - Please upgrade your `@lynx-js/web-core` to >=0.12.0
+  - The compiled lynx template json won't be impacted.
+
+  On chrome 108, the `-webkit-background-clip:text` cannot be computed by a `var(--css-var-value-text)`
+
+  Therefore we move the logic into style transformation logic.
+
+  Now the following status is supported
+
+  ```
+  <text style="color:linear-gradient()">
+    <text>
+    <text>
+  </text>
+  ```
+
+### Patch Changes
+
+- feat: fully support MTS ([#569](https://github.com/lynx-family/lynx-stack/pull/569))
+
+  Now use support the following usage
+
+  - mainthread event
+  - mainthread ref
+  - runOnMainThread/runOnBackground
+  - ref.current.xx
+
+- feat: support `layoutchange` event for x-overlay-ng ([#519](https://github.com/lynx-family/lynx-stack/pull/519))
+
+- fix: position:fixed not work in scroll-view ([#580](https://github.com/lynx-family/lynx-stack/pull/580))
+
+- fix: x-list may cause error: 'Resizeobserver loop completed with undelivered notifications'. ([#541](https://github.com/lynx-family/lynx-stack/pull/541))
+
+- fix: refactor foldview slot offset logic ([#575](https://github.com/lynx-family/lynx-stack/pull/575))
+
+- fix: improve x-foldview-ng ([#513](https://github.com/lynx-family/lynx-stack/pull/513))
+
+  - support fling for touch event driven scrolling
+  - allow the height of `x-foldview-slot-ng` + `x-foldview-toolbar-ng` > `x-foldview-ng`
+  - do not prevent horizontal gesture. After this commit we only allow one direction gesture for one touch (start -> end)
+
+- feat: add list with waterfall ([#331](https://github.com/lynx-family/lynx-stack/pull/331))
+
 ## 0.5.4
 
 ### Patch Changes

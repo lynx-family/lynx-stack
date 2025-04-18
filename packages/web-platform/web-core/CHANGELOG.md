@@ -1,5 +1,53 @@
 # @lynx-js/web-core
 
+## 0.12.0
+
+### Minor Changes
+
+- feat: improve compatibility for chrome 108 & support linear-gradient for nested x-text ([#590](https://github.com/lynx-family/lynx-stack/pull/590))
+
+  **This is a breaking change**
+
+  - Please upgrade your `@lynx-js/web-elements` to >=0.6.0
+  - Please upgrade your `@lynx-js/web-core` to >=0.12.0
+  - The compiled lynx template json won't be impacted.
+
+  On chrome 108, the `-webkit-background-clip:text` cannot be computed by a `var(--css-var-value-text)`
+
+  Therefore we move the logic into style transformation logic.
+
+  Now the following status is supported
+
+  ```
+  <text style="color:linear-gradient()">
+    <text>
+    <text>
+  </text>
+  ```
+
+### Patch Changes
+
+- feat: allow user to implement custom template load function ([#587](https://github.com/lynx-family/lynx-stack/pull/587))
+
+  ```js
+  lynxView.customTemplateLoader = (url) => {
+    return (await (await fetch(url, {
+      method: 'GET',
+    })).json());
+  };
+  ```
+
+- feat: support mts event with target methods ([#564](https://github.com/lynx-family/lynx-stack/pull/564))
+
+  After this commit, developers are allowed to invoke `event.target.setStyleProperty` in mts handler
+
+- fix: crash on removing a id attribute ([#582](https://github.com/lynx-family/lynx-stack/pull/582))
+
+- Updated dependencies [[`f1ca29b`](https://github.com/lynx-family/lynx-stack/commit/f1ca29bd766377dd46583f15e1e75bca447699cd)]:
+  - @lynx-js/web-worker-runtime@0.12.0
+  - @lynx-js/web-constants@0.12.0
+  - @lynx-js/web-worker-rpc@0.12.0
+
 ## 0.11.0
 
 ### Minor Changes

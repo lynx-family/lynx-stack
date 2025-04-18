@@ -1,5 +1,18 @@
 # @lynx-js/react-webpack-plugin
 
+## 0.6.11
+
+### Patch Changes
+
+- feat: fully support MTS ([#569](https://github.com/lynx-family/lynx-stack/pull/569))
+
+  Now use support the following usage
+
+  - mainthread event
+  - mainthread ref
+  - runOnMainThread/runOnBackground
+  - ref.current.xx
+
 ## 0.6.10
 
 ### Patch Changes
