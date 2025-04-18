@@ -145,3 +145,5 @@ declare module '@lynx-js/types' {
     'reuse-identifier'?: Key;
   }
 }
+
+export type { JSX } from '../runtime/jsx-runtime/index.d.ts';
