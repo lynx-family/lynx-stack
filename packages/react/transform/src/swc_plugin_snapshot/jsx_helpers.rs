@@ -220,6 +220,25 @@ pub fn jsx_is_custom(jsx: &JSXElement) -> bool {
   }
 }
 
+pub fn jsx_has_dynamic_key(jsx: &JSXElement) -> bool {
+  jsx.opening.attrs.iter().any(|attr| {
+    if let JSXAttrOrSpread::JSXAttr(JSXAttr { name, value, .. }) = attr {
+      if let JSXAttrName::Ident(ident) = name {
+        if ident.sym == atom!("key") {
+          if let Some(JSXAttrValue::JSXExprContainer(JSXExprContainer {
+            expr: JSXExpr::Expr(_),
+            ..
+          })) = value
+          {
+            return true;
+          }
+        }
+      }
+    }
+    false
+  })
+}
+
 pub fn jsx_is_list(jsx: &JSXElement) -> bool {
   match *jsx_name(jsx.opening.name.clone()) {
     Expr::Lit(Lit::Str(s)) => s.value.as_ref() == "list",

@@ -8,8 +8,8 @@ use swc_core::{
 
 use super::{
   jsx_helpers::{
-    jsx_children_to_expr, jsx_is_children_full_dynamic, jsx_is_custom, jsx_is_list, jsx_name,
-    jsx_text_to_str,
+    jsx_children_to_expr, jsx_has_dynamic_key, jsx_is_children_full_dynamic, jsx_is_custom,
+    jsx_is_list, jsx_name, jsx_text_to_str,
   },
   WRAPPER_NODE_2,
 };
@@ -86,7 +86,7 @@ impl VisitMut for WrapperMarker {
           }
         }
         JSXElementChild::JSXElement(ref element) => {
-          if jsx_is_custom(element) {
+          if jsx_is_custom(element) || jsx_has_dynamic_key(element) {
             should_merge = false;
           } else {
             should_merge = true;
@@ -216,6 +216,10 @@ mod tests {
         <list><list-item><A/>A</list-item><list-item/></list>;
         <view>{<view><A/><text/><A/></view>}</view>;
         <view><list><list-item/><list-item/></list>a<view><A/></view></view>;
+        <view key={hello}>hello</view>;
+        <view key={hello}>{hello}</view>;
+        <view><text key={hello}>{hello}</text></view>;
+        <view><text>Hello, ReactLynx, {hello}</text><text key={hello}>{hello}</text></view>;
         "#
   );
 }

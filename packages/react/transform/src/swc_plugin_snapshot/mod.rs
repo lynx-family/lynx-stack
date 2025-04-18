@@ -2914,4 +2914,32 @@ mod tests {
     </view>
     "#
   );
+
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    |t| visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
+      super::JSXTransformerConfig {
+        preserve_jsx: true,
+        ..Default::default()
+      },
+      t.cm.clone(),
+      None,
+      Mark::new(),
+      Mark::new(),
+      TransformMode::Test,
+    )),
+    should_wrap_dynamic_key,
+    // Input codes
+    r#"
+    <view>
+      <text>Hello, ReactLynx, {hello}</text>
+      <text key={hello}>{hello}</text>
+      <text key="hello">{hello}</text>
+    </view>
+    "#
+  );
 }
