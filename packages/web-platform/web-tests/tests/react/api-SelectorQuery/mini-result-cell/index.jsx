@@ -14,14 +14,22 @@ export default function(props) {
         {props.result
           ? (
             <view class='succ' flatten='false'>
-              <text lynx-test-tag={'result' + props.idx} flatten='false'>
+              <text
+                style='color:#fff'
+                lynx-test-tag={'result' + props.idx}
+                flatten='false'
+              >
                 {props.text ? props.text : '通过'}
               </text>
             </view>
           )
           : (
             <view class='err' flatten='false'>
-              <text lynx-test-tag={'result' + props.idx} flatten='false'>
+              <text
+                style='color:#fff'
+                lynx-test-tag={'result' + props.idx}
+                flatten='false'
+              >
                 {props.text ? props.text : '失败'}
               </text>
             </view>
