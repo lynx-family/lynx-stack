@@ -6,7 +6,8 @@ import { commitMainThreadPatchUpdate } from './lifecycle/patch/updateMainThread.
 import type { SnapshotInstance } from './snapshot.js';
 
 export interface ListUpdateInfo {
-  flush(): void;
+  flush(): number | undefined;
+  getAttachedListId(): number | undefined;
   onInsertBefore(
     newNode: SnapshotInstance,
     existingNode?: SnapshotInstance,
@@ -62,19 +63,32 @@ export class ListUpdateInfoRecording implements ListUpdateInfo {
   //   this.platformInfoUpdate.clear();
   // }
 
-  flush(): void {
+  flush(): undefined | number {
+    if (!this.list.__elements) {
+      return undefined;
+    }
     const elementIndex = this.list.__snapshot_def.slot[0]![1];
     const listElement = this.list.__elements![elementIndex]!;
     // this.__pendingAttributes?.forEach(pendingAttribute => {
     //   __SetAttribute(listElement, "update-list-info", pendingAttribute);
     //   __FlushElementTree(listElement);
     // });
+
     __SetAttribute(listElement, 'update-list-info', this.__toAttribute());
+
     __UpdateListCallbacks(
       listElement,
       componentAtIndexFactory(this.list.childNodes),
       enqueueComponentFactory(),
     );
+    return this.list.__id;
+  }
+
+  getAttachedListId(): undefined | number {
+    if (!this.list.__elements) {
+      return undefined;
+    }
+    return this.list.__id;
   }
 
   private oldChildNodes: SnapshotInstance[];
@@ -212,14 +226,20 @@ export class ListUpdateInfoRecording implements ListUpdateInfo {
 
 export const __pendingListUpdates = {
   values: {} as Record<number, ListUpdateInfo>,
-  clear(): void {
-    this.values = {};
+  clear(id: number): void {
+    delete this.values[id];
+  },
+  clearAttachedLists(): void {
+    Object.values(this.values)
+      .map(update => update.getAttachedListId())
+      .filter(id => id !== undefined)
+      .forEach(id => this.clear(id));
   },
   flush(): void {
-    Object.values(this.values).forEach(update => {
-      update.flush();
-    });
-    this.clear();
+    Object.values(this.values)
+      .map(update => update.flush())
+      .filter(id => id !== undefined)
+      .forEach(id => this.clear(id));
   },
 };
 
