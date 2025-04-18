@@ -12,7 +12,6 @@ import {
 
 @Component<typeof XView>('x-view', [
   CommonEventsAndMethods,
-  CommonEventsAndMethods,
 ])
 export class XView extends HTMLElement {
   superScrollIntoView(arg?: boolean | ScrollIntoViewOptions | undefined): void {

@@ -13,7 +13,7 @@ import {
 
 @Component<typeof XText>(
   'x-text',
-  [CommonEventsAndMethods, CommonEventsAndMethods, XTextTruncation],
+  [CommonEventsAndMethods, XTextTruncation],
   html`<div id="inner-box" part="inner-box"><slot part="slot"></slot><slot name="inline-truncation"></slot></div>`,
 )
 export class XText extends HTMLElement {

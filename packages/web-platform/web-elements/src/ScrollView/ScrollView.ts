@@ -8,7 +8,7 @@ import { FadeEdgeLengthAttribute } from './FadeEdgeLengthAttribute.js';
 import { ScrollAttributes } from './ScrollAttributes.js';
 import { ScrollViewEvents } from './ScrollViewEvents.js';
 import { ScrollIntoView } from './ScrollIntoView.js';
-import { Component, genDomGetter, html } from '@lynx-js/web-elements-reactive';
+import { Component, html } from '@lynx-js/web-elements-reactive';
 import { scrollContainerDom } from '../common/constants.js';
 
 @Component<typeof ScrollView>(

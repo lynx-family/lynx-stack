@@ -66,7 +66,10 @@ window.addEventListener('message', (ev) => {
     const parent = lynxView.parentElement!;
     lynxView.remove();
     lynxView = document.createElement('lynx-view') as LynxView;
-    lynxView.setAttribute('style', 'flex: 0 1 100vh; height:100vh;');
+    lynxView.setAttribute(
+      'style',
+      'flex: 0 1 100vh; height:100vh;width:100vw;',
+    );
     parent.append(lynxView);
     setLynxViewUrl(ev.data.url);
   }
