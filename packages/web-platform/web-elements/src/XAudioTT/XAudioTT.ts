@@ -64,7 +64,6 @@ export class XAudioTT extends HTMLElement {
       );
 
       const response = await fetch(parsedSrc.play_url, {
-        mode: 'no-cors',
         headers: parsedHeaders,
       });
 
