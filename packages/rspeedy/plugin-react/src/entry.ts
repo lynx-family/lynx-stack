@@ -57,6 +57,7 @@ export function applyEntry(
     extractStr,
 
     experimental_isLazyBundle,
+    disableMTSAndGesture,
   } = options
 
   const { config } = api.useExposed<ExposedAPI>(
@@ -226,6 +227,7 @@ export function applyEntry(
         mainThreadChunks,
         extractStr,
         experimental_isLazyBundle,
+        disableMTSAndGesture,
       }])
   })
 }

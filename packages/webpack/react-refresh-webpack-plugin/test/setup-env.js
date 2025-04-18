@@ -7,6 +7,7 @@ function __injectGlobals(target) {
   target.__DEV__ = false;
   target.__LEPUS__ = false;
   target.__REF_FIRE_IMMEDIATELY__ = false;
+  target.__DISABLE_MTS_AND_GESTURE__ = false;
   target.__FIRST_SCREEN_SYNC_TIMING__ = 'immediately';
   target.lynx = {};
   target.lynxCoreInject = {};
