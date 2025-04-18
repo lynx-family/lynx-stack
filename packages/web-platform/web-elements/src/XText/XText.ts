@@ -14,7 +14,7 @@ import {
 @Component<typeof XText>(
   'x-text',
   [CommonEventsAndMethods, CommonEventsAndMethods, XTextTruncation],
-  html`<div id="inner-box" part="inner-box"><slot></slot><slot name="inline-truncation"></slot></div>`,
+  html`<div id="inner-box" part="inner-box"><slot part="slot"></slot><slot name="inline-truncation"></slot></div>`,
 )
 export class XText extends HTMLElement {
   static readonly notToFilterFalseAttributes = new Set(['tail-color-convert']);

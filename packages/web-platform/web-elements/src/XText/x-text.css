@@ -32,7 +32,7 @@ x-text > x-text::part(inner-box),
 x-text > lynx-wrapper > x-text::part(inner-box) {
   display: contents !important;
 }
-x-text::part(inner-box), inline-text {
+x-text::part(inner-box), inline-text, x-text::part(slot) {
   background-clip: inherit;
   -webkit-background-clip: inherit;
 }
@@ -56,6 +56,7 @@ inline-truncation > lynx-wrapper > inline-text:defined,
 inline-truncation > lynx-wrapper > x-text:defined {
   display: inline;
   background-clip: inherit;
+  -webkit-background-clip: inherit;
 }
 
 x-text > inline-image:defined,
