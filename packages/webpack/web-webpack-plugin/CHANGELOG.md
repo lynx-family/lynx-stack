@@ -1,5 +1,12 @@
 # @lynx-js/web-webpack-plugin
 
+## 0.6.5
+
+### Patch Changes
+
+- Updated dependencies [[`7edf478`](https://github.com/lynx-family/lynx-stack/commit/7edf478410cb57eeedc18aac6f5d3950b16c7fa8)]:
+  - @lynx-js/web-style-transformer@0.3.0
+
 ## 0.6.4
 
 ### Patch Changes

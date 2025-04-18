@@ -1,5 +1,21 @@
 # @lynx-js/web-constants
 
+## 0.12.0
+
+### Patch Changes
+
+- feat: fully support MTS ([#569](https://github.com/lynx-family/lynx-stack/pull/569))
+
+  Now use support the following usage
+
+  - mainthread event
+  - mainthread ref
+  - runOnMainThread/runOnBackground
+  - ref.current.xx
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.12.0
+
 ## 0.11.0
 
 ### Patch Changes
