@@ -6,6 +6,8 @@ import type { RuntimeModule } from 'webpack';
 
 import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
+import { LAZY_CHUNK, REACT_REFRESH } from './LazyChunk.js';
+
 type LynxAsyncChunksRuntimeModule = new(
   getChunkName: (chunkName: string | null | undefined) => string,
 ) => RuntimeModule;
@@ -24,25 +26,39 @@ export function createLynxAsyncChunksRuntimeModule(
       const chunk = this.chunk!;
       const compilation = this.compilation!;
 
-      return `// lynx async chunks ids
+      return `
+// lynx lazy chunk ids
+${RuntimeGlobals.lynxLazyChunkIds} = [${
+        Array.from(chunk.getAllAsyncChunks())
+          .filter(c =>
+            this.getChunkName(c.name) === LAZY_CHUNK
+            && c.id !== REACT_REFRESH
+          )
+          .map(c => JSON.stringify(c.id))
+          .join(', ')
+      }];
+
+// lynx async chunk ids
 ${RuntimeGlobals.lynxAsyncChunkIds} = {${
-        Array.from(chunk.getAllAsyncChunks()).map(
-          c => {
-            const filename = this.getChunkName(c.name);
+        Array.from(chunk.getAllAsyncChunks())
+          .filter(c => this.getChunkName(c.name) !== LAZY_CHUNK)
+          .map(
+            c => {
+              const filename = this.getChunkName(c.name);
 
-            // Modified from https://github.com/webpack/webpack/blob/11449f02175f055a4540d76aa4478958c4cb297e/lib/runtime/GetChunkFilenameRuntimeModule.js#L154-L157
-            const chunkPath = compilation.getPath(filename, {
-              hash: `" + ${webpack.RuntimeGlobals.getFullHash}() + "`,
-              // Rspack does not support `hashWithLength` for now.
-              hashWithLength: length =>
-                `" + ${webpack.RuntimeGlobals.getFullHash}().slice(0, ${length}) + "`,
-              // TODO: support [contenthash]
-            });
+              // Modified from https://github.com/webpack/webpack/blob/11449f02175f055a4540d76aa4478958c4cb297e/lib/runtime/GetChunkFilenameRuntimeModule.js#L154-L157
+              const chunkPath = compilation.getPath(filename, {
+                hash: `" + ${webpack.RuntimeGlobals.getFullHash}() + "`,
+                // Rspack does not support `hashWithLength` for now.
+                hashWithLength: length =>
+                  `" + ${webpack.RuntimeGlobals.getFullHash}().slice(0, ${length}) + "`,
+                // TODO: support [contenthash]
+              });
 
-            return [c.id, chunkPath];
-          },
-          // Do not use `JSON.stringify` on `chunkPath`, it may contains `+` which will be treated as string concatenation.
-        ).map(([id, path]) => `${JSON.stringify(id)}: "${path}"`).join(',\n')
+              return [c.id, chunkPath];
+            },
+            // Do not use `JSON.stringify` on `chunkPath`, it may contains `+` which will be treated as string concatenation.
+          ).map(([id, path]) => `${JSON.stringify(id)}: "${path}"`).join(',\n')
       }}`;
     }
   };

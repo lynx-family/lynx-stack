@@ -76,6 +76,13 @@ describe('Config - Dev', () => {
     assertType<Dev>({ writeToDisk: (path) => path.includes('foo') })
   })
 
+  test('lazyCompilation', () => {
+    assertType<Dev>({ lazyCompilation: undefined })
+    assertType<Dev>({ lazyCompilation: true })
+    assertType<Dev>({ lazyCompilation: false })
+    assertType<Dev>({ lazyCompilation: {} })
+  })
+
   test('progressBar', () => {
     assertType<Dev>({ progressBar: undefined })
     assertType<Dev>({ progressBar: false })

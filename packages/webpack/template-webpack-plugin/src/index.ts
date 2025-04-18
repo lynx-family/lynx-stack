@@ -20,3 +20,4 @@ export type {
 } from './LynxEncodePlugin.js';
 export * as CSSPlugins from './css/plugins/index.js';
 export * as CSS from './css/index.js';
+export { LAZY_CHUNK, REACT_REFRESH } from './LazyChunk.js';
