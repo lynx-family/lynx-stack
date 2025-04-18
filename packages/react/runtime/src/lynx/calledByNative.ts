@@ -115,7 +115,7 @@ function updatePage(data: any, options?: UpdatePageOption): void {
     __root.__jsx = oldRoot.__jsx;
 
     setPipeline(options?.pipelineOptions);
-    markTiming(PerformanceTimingKeys.update_diff_vdom_start);
+    markTiming(PerformanceTimingKeys.updateDiffVdomStart);
     {
       __pendingListUpdates.clear();
 
@@ -133,7 +133,7 @@ function updatePage(data: any, options?: UpdatePageOption): void {
       // always call this before `__FlushElementTree`
       __pendingListUpdates.flush();
     }
-    markTiming(PerformanceTimingKeys.update_diff_vdom_end);
+    markTiming(PerformanceTimingKeys.updateDiffVdomEnd);
   }
 
   if (options) {
