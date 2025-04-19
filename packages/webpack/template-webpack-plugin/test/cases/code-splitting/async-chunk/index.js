@@ -29,9 +29,16 @@ it('should generate correct foo template', async () => {
 
   const content = await readFile(tasmJSONPath, 'utf-8');
   const { sourceContent, manifest } = JSON.parse(content);
+
+  const output = resolve(__dirname, 'foo:background.rspack.bundle.js');
+  expect(existsSync(output));
+
+  const outputContent = await readFile(output, 'utf-8');
+  expect(outputContent).toContain(['function', 'foo()'].join(' '));
+
   expect(sourceContent).toHaveProperty('appType', 'DynamicComponent');
-  expect(manifest).toHaveProperty(
-    '/foo:background.rspack.bundle.js',
-    expect.stringContaining('function foo()'),
+
+  expect(manifest['/app-service.js']).toContain(
+    `lynx.requireModule('/foo:background.rspack.bundle.js',globDynamicComponentEntry?globDynamicComponentEntry:'__Card__')`,
   );
 });
