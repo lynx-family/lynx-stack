@@ -42,5 +42,9 @@ export async function init(
     createRspeedyOptions.environment = options.environment
   }
 
+  if (options.mode) {
+    rspeedyConfig.mode = options.mode
+  }
+
   return { createRspeedyOptions, configPath, rspeedyConfig }
 }
