@@ -9,10 +9,9 @@ import type { Command } from 'commander'
 import color from 'picocolors'
 
 import type { CommonOptions } from './commands.js'
-import { loadConfig, resolveConfigPath } from '../config/loadConfig.js'
 import { createRspeedy } from '../create-rspeedy.js'
-import type { CreateRspeedyOptions } from '../create-rspeedy.js'
 import { exit } from './exit.js'
+import { init } from './init.js'
 
 export interface DevOptions extends CommonOptions {
   base?: string | undefined
@@ -26,17 +25,10 @@ export async function dev(
 ): Promise<void> {
   let onBeforeRestart: (() => Promise<void>)[] = []
   try {
-    const configPath = resolveConfigPath(cwd, devOptions.config)
-
-    const { content: rspeedyConfig } = await loadConfig({
+    const { rspeedyConfig, configPath, createRspeedyOptions } = await init(
       cwd,
-      configPath,
-    })
-
-    if (devOptions.base) {
-      rspeedyConfig.server ??= {}
-      rspeedyConfig.server.base = devOptions.base
-    }
+      devOptions,
+    )
 
     const watchedFiles = [configPath]
 
@@ -65,22 +57,7 @@ export async function dev(
       },
     )
 
-    const options: CreateRspeedyOptions = {
-      cwd,
-      rspeedyConfig,
-    }
-
-    if (devOptions.noEnv) {
-      options.loadEnv = false
-    } else if (devOptions.envMode) {
-      options.loadEnv = { mode: devOptions.envMode }
-    }
-
-    if (devOptions.environment) {
-      options.environment = devOptions.environment
-    }
-
-    const rspeedy = await createRspeedy(options)
+    const rspeedy = await createRspeedy(createRspeedyOptions)
 
     const server = await rspeedy.createDevServer()
 
