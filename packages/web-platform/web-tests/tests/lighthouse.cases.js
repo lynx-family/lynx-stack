@@ -1,6 +1,6 @@
 export default [
   {
-    'matchingUrlPattern': '/web-element-tests/performance/x-text-10000.html',
+    'matchingUrlPattern': '/web-element-tests/performance/x-text-large.html',
     'assertions': {
       'categories:performance': [
         'error',
@@ -23,7 +23,7 @@ export default [
     },
   },
   {
-    'matchingUrlPattern': '/web-element-tests/performance/raw-text-3000.html',
+    'matchingUrlPattern': '/web-element-tests/performance/raw-text-large.html',
     'assertions': {
       'categories:performance': [
         'error',
