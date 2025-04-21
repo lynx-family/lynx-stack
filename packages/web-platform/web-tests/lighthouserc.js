@@ -47,10 +47,10 @@ const config = {
         'matchingUrlPattern': `.*${e.matchingUrlPattern}`,
       })),
     },
-  },
-  upload: {
-    target: 'temporary-public-storage',
-    githubAppToken: process.env['LHCI_GITHUB_APP_TOKEN'],
+    upload: {
+      target: 'temporary-public-storage',
+      githubAppToken: process.env['LHCI_GITHUB_APP_TOKEN'],
+    },
   },
 };
 
