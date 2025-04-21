@@ -1,5 +1,13 @@
 # @lynx-js/rspeedy
 
+## 0.9.2
+
+### Patch Changes
+
+- Support cli option `--no-env` to disable loading of .env files ([#483](https://github.com/lynx-family/lynx-stack/pull/483))
+
+- Bump Rsbuild v1.3.8 with Rspack v1.3.5. ([#579](https://github.com/lynx-family/lynx-stack/pull/579))
+
 ## 0.9.1
 
 ### Patch Changes

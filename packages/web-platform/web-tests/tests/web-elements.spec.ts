@@ -2299,6 +2299,53 @@ test.describe('web-elements test suite', () => {
         await diffScreenShot(page, title, 'insert');
       },
     );
+
+    test(
+      'need-visible-item-info',
+      async ({ page, browserName }, { titlePath }) => {
+        let scroll = false;
+        let scrolltoupper = false;
+        let scrolltolower = false;
+        await page.on('console', async (msg) => {
+          const event = await msg.args()[0]?.evaluate((e) => ({
+            type: e.type,
+            detail: e.detail,
+          }));
+          if (!event) return;
+          if (
+            event.type === 'lynxscroll'
+            && Array.isArray(event.detail.attachedCells)
+          ) {
+            scroll = true;
+          }
+          if (
+            event.type === 'scrolltoupper'
+            && Array.isArray(event.detail.attachedCells)
+          ) {
+            scrolltoupper = true;
+          }
+          if (
+            event.type === 'scrolltolower'
+            && Array.isArray(event.detail.attachedCells)
+          ) {
+            scrolltolower = true;
+          }
+        });
+
+        const title = getTitle(titlePath);
+        await gotoWebComponentPage(page, title);
+        await page.evaluate(() => {
+          document.querySelector('x-list')?.shadowRoot?.querySelector(
+            '#content',
+          )
+            ?.scrollTo(0, 5000);
+        });
+        await wait(1000);
+        expect(scroll).toBeTruthy();
+        expect(scrolltoupper).toBeTruthy();
+        expect(scrolltolower).toBeTruthy();
+      },
+    );
   });
   test.describe('x-input', () => {
     test('placeholder', async ({ page }, { titlePath }) => {
@@ -2750,10 +2797,32 @@ test.describe('web-elements test suite', () => {
     );
   });
 
-  test.describe('x-overlay', () => {
-    test('x-overlay-ng/basic-z-index', async ({ page }, { title }) => {
+  test.describe('x-overlay-ng', () => {
+    test('basic-z-index', async ({ page }, { titlePath }) => {
+      const title = getTitle(titlePath);
       await gotoWebComponentPage(page, title);
       await diffScreenShot(page, title, 'red-cover-next-z-staking-rect');
+    });
+
+    test('event-layoutchange', async ({ page }, { titlePath }) => {
+      const title = getTitle(titlePath);
+      await gotoWebComponentPage(page, title);
+      await page.evaluate(() => {
+        document.getElementById('target')?.setAttribute('open', '');
+      });
+      await wait(100);
+      const detail = await page.evaluate(() => {
+        // @ts-expect-error
+        return globalThis.detail;
+      });
+      expect(detail).toBeTruthy();
+      expect(typeof detail.width).toBe('number');
+      expect(typeof detail.height).toBe('number');
+      expect(typeof detail.left).toBe('number');
+      expect(typeof detail.right).toBe('number');
+      expect(typeof detail.top).toBe('number');
+      expect(typeof detail.bottom).toBe('number');
+      expect(detail.id).toBe('target');
     });
   });
 

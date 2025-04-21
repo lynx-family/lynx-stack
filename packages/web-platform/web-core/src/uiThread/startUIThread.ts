@@ -16,6 +16,7 @@ import {
   mainThreadStartEndpoint,
   markTimingEndpoint,
   sendGlobalEventEndpoint,
+  type LynxTemplate,
   type MainThreadStartConfigs,
   type NapiModulesCall,
   type NativeModulesCall,
@@ -34,10 +35,10 @@ export function startUIThread(
     nativeModulesCall: NativeModulesCall;
     napiModulesCall: NapiModulesCall;
     onError?: () => void;
+    customTemplateLoader?: (url: string) => Promise<LynxTemplate>;
   },
 ): LynxView {
   const createLynxStartTiming = performance.now() + performance.timeOrigin;
-  const { nativeModulesMap, napiModulesMap } = configs;
   const {
     mainThreadRpc,
     backgroundRpc,
@@ -56,13 +57,11 @@ export function startUIThread(
   };
   markTimingInternal('create_lynx_start', undefined, createLynxStartTiming);
   markTimingInternal('load_template_start');
-  loadTemplate(templateUrl).then((template) => {
+  loadTemplate(templateUrl, callbacks.customTemplateLoader).then((template) => {
     markTimingInternal('load_template_end');
     mainThreadStart({
       ...configs,
       template,
-      nativeModulesMap,
-      napiModulesMap,
     });
   });
   registerReportErrorHandler(

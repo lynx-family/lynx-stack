@@ -50,7 +50,7 @@ interface ReactWebpackPluginOptions {
   firstScreenSyncTiming?: 'immediately' | 'jsReady';
 
   /**
-   * {@inheritdoc @lynx-dev/react-rsbuild-plugin#PluginReactLynxOptions.enableSSR}
+   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableSSR}
    */
   enableSSR?: boolean;
 

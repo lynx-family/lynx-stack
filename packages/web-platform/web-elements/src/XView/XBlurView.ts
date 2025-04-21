@@ -4,12 +4,12 @@
 // LICENSE file in the root directory of this source tree.
 */
 import { Component } from '@lynx-js/web-elements-reactive';
-import { LynxExposure } from '../common/Exposure.js';
+import { CommonEventsAndMethods } from '../common/CommonEventsAndMethods.js';
 import { BlurRadius } from './BlurRadius.js';
 
 @Component<typeof XBlurView>(
   'x-blur-view',
-  [LynxExposure, BlurRadius],
+  [CommonEventsAndMethods, BlurRadius],
   `<style id="dynamic-style"></style><slot></slot>`,
 )
 export class XBlurView extends HTMLElement {}

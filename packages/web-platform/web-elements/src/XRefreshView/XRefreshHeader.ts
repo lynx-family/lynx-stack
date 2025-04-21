@@ -5,12 +5,12 @@
 */
 import { Component } from '@lynx-js/web-elements-reactive';
 import { XRefreshSubElementIntersectionObserver } from './XRefreshSubElementIntersectionObserver.js';
-import { LynxExposure } from '../common/Exposure.js';
+import { CommonEventsAndMethods } from '../common/CommonEventsAndMethods.js';
 
 @Component(
   'x-refresh-header',
   [
-    LynxExposure,
+    CommonEventsAndMethods,
     XRefreshSubElementIntersectionObserver,
   ],
 )

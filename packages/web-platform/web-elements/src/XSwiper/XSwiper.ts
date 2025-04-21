@@ -9,13 +9,13 @@ import { XSwipeEvents } from './XSwiperEvents.js';
 import { XSwiperAutoScroll } from './XSwiperAutoScroll.js';
 import { XSwiperCircular } from './XSwiperCircular.js';
 import { XSwiperIndicator } from './XSwiperIndicator.js';
-import { LynxExposure } from '../common/Exposure.js';
+import { CommonEventsAndMethods } from '../common/CommonEventsAndMethods.js';
 import { scrollContainerDom } from '../common/constants.js';
 
 @Component<typeof XSwiper>(
   'x-swiper',
   [
-    LynxExposure,
+    CommonEventsAndMethods,
     XSwiperIndicator,
     XSwipeEvents,
     XSwiperCircular,

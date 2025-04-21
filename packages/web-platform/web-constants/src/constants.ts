@@ -22,4 +22,5 @@ export const globalMuteableVars = [
   'registerDataProcessor',
   'registerWorkletInternal',
   'lynxWorkletImpl',
+  'runWorklet',
 ] as const;

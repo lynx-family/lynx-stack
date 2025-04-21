@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import type { LynxTemplate } from '@lynx-js/web-core';
 import { lynxViewTests } from './lynx-view.ts';
 
 const nativeModulesMap = {
@@ -45,6 +46,35 @@ if (casename) {
         return data.color;
       }
     };
+    if (casename.includes('custom-template-loader')) {
+      lynxView.customTemplateLoader = async () => {
+        const template: LynxTemplate = {
+          styleInfo: {},
+          pageConfig: {
+            enableCSSSelector: true,
+            enableRemoveCSSScope: true,
+            defaultDisplayLinear: true,
+            defaultOverflowVisible: true,
+          },
+          customSections: {},
+          lepusCode: {
+            root: `
+            
+              let root = __CreatePage('page', 0);
+              __AddInlineStyle(root, 'min-height', '80px');
+              __AddInlineStyle(root, 'width', '80px');
+              __AddInlineStyle(root, 'background', 'green');
+              __SetID(root, 'target');
+              __FlushElementTree();
+            `,
+          },
+          manifest: {
+            '/app-service.js': '',
+          },
+        };
+        return template;
+      };
+    }
   });
   if (casename2) {
     lynxViewTests(lynxView2 => {

@@ -1,5 +1,28 @@
 # @lynx-js/web-mainthread-apis
 
+## 0.12.0
+
+### Patch Changes
+
+- feat: fully support MTS ([#569](https://github.com/lynx-family/lynx-stack/pull/569))
+
+  Now use support the following usage
+
+  - mainthread event
+  - mainthread ref
+  - runOnMainThread/runOnBackground
+  - ref.current.xx
+
+- feat: support mts event with target methods ([#564](https://github.com/lynx-family/lynx-stack/pull/564))
+
+  After this commit, developers are allowed to invoke `event.target.setStyleProperty` in mts handler
+
+- fix: crash on removing a id attribute ([#582](https://github.com/lynx-family/lynx-stack/pull/582))
+
+- Updated dependencies [[`f1ca29b`](https://github.com/lynx-family/lynx-stack/commit/f1ca29bd766377dd46583f15e1e75bca447699cd), [`7edf478`](https://github.com/lynx-family/lynx-stack/commit/7edf478410cb57eeedc18aac6f5d3950b16c7fa8)]:
+  - @lynx-js/web-constants@0.12.0
+  - @lynx-js/web-style-transformer@0.3.0
+
 ## 0.11.0
 
 ### Patch Changes

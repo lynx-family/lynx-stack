@@ -31,6 +31,17 @@ export interface LynxCrossThreadEvent<
   [key: string]: string | number | undefined | null | {};
 }
 
+export interface MainThreadScriptEvent<
+  T = {
+    [key: string]: string | number | undefined | null;
+  },
+> extends LynxCrossThreadEvent<T> {
+  target: LynxCrossThreadEventTarget & { elementRefptr: unknown };
+  currentTarget:
+    | (LynxCrossThreadEventTarget & { elementRefptr: unknown })
+    | null;
+}
+
 export type ExposureEventDetail = {
   'exposure-id': string;
   'exposure-scene': string;

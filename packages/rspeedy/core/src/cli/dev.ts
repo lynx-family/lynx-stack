@@ -70,7 +70,9 @@ export async function dev(
       rspeedyConfig,
     }
 
-    if (devOptions.envMode) {
+    if (devOptions.noEnv) {
+      options.loadEnv = false
+    } else if (devOptions.envMode) {
       options.loadEnv = { mode: devOptions.envMode }
     }
 

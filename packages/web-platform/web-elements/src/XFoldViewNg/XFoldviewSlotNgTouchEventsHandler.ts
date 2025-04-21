@@ -4,11 +4,7 @@
 // LICENSE file in the root directory of this source tree.
 */
 import type { AttributeReactiveClass } from '@lynx-js/web-elements-reactive';
-import {
-  isHeaderShowing,
-  scrollableLength,
-  type XFoldviewNg,
-} from './XFoldviewNg.js';
+import { isHeaderShowing, type XFoldviewNg } from './XFoldviewNg.js';
 import type { XFoldviewSlotNg } from './XFoldviewSlotNg.js';
 import { isChromium } from '../common/constants.js';
 export class XFoldviewSlotNgTouchEventsHandler
@@ -78,19 +74,11 @@ export class XFoldviewSlotNgTouchEventsHandler
     if (this.#scrollingVertically === false) {
       return;
     }
-    /**
-     * on chromium browsers, the y-axis js scrolling won't interrupt the pan-x gestures
-     * we make sure the x-axis scrolling will block the y-axis scrolling
-     */
     const scrollableKidY = this.#getTheMostScrollableKid(deltaY);
-    /**
-     * on chromium browsers, the y-axis js scrolling won't interrupt the pan-x gestures
-     * we make sure the x-axis scrolling will block the y-axis scrolling
-     */
     if (
       parentElement
     ) {
-      if (event.cancelable && !isChromium) {
+      if (event.cancelable) {
         event.preventDefault();
       }
       if (

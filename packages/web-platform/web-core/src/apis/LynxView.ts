@@ -8,6 +8,7 @@ import {
 } from './createLynxView.js';
 import {
   type Cloneable,
+  type LynxTemplate,
   type NapiModulesCall,
   type NapiModulesMap,
   type NativeModulesCall,
@@ -44,6 +45,7 @@ export type INapiModulesCall = (
  * @property {INapiModulesCall} onNapiModulesCall [optional] the NapiModule value handler.
  * @property {"false" | "true" | null} injectHeadLinks [optional] @default true set it to "false" to disable injecting the <link href="" ref="stylesheet"> styles into shadowroot
  * @property {number} lynxGroupId [optional] (attribute: "lynx-group-id") the background shared context id, which is used to share webworker between different lynx cards
+ * @property {(string)=>Promise<LynxTemplate>} customTemplateLoader [optional] the custom template loader, which is used to load the template
  *
  * @event error lynx card fired an error
  *
@@ -294,6 +296,13 @@ export class LynxView extends HTMLElement {
   }
 
   /**
+   * @public
+   * allow user to customize the template loader
+   * @param url the url of the template
+   */
+  customTemplateLoader?: (url: string) => Promise<LynxTemplate>;
+
+  /**
    * @private the flag to group all changes into one render operation
    */
   #rendering = false;
@@ -352,6 +361,7 @@ export class LynxView extends HTMLElement {
                   new CustomEvent('error', {}),
                 );
               },
+              customTemplateLoader: this.customTemplateLoader,
             },
           });
           this.#instance = lynxView;

@@ -4,13 +4,13 @@
 // LICENSE file in the root directory of this source tree.
 */
 import { Component, html } from '@lynx-js/web-elements-reactive';
-import { LynxExposure } from '../common/Exposure.js';
+import { CommonEventsAndMethods } from '../common/CommonEventsAndMethods.js';
 import { ImageSrc } from './ImageSrc.js';
 import { ImageEvents } from './ImageEvents.js';
 
 @Component<typeof XImage>(
   'x-image',
-  [LynxExposure, ImageSrc, ImageEvents],
+  [CommonEventsAndMethods, ImageSrc, ImageEvents],
   html` <img part="img" alt="" id="img" /> `,
 )
 export class XImage extends HTMLElement {}
