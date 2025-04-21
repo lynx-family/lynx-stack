@@ -10,7 +10,12 @@ const config = {
     collect: {
       // Configure Lighthouse collection settings
       settings: {
-        chromeFlags: ['--no-sandbox', '--headless=new', '--disable-gpu'],
+        chromeFlags: [
+          '--no-sandbox',
+          '--headless=new',
+          '--disable-gpu',
+          '--disable-dev-shm-usage',
+        ],
         onlyCategories: ['performance'],
         formFactor: 'mobile',
         throttlingMethod: 'simulate',
