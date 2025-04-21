@@ -14,7 +14,7 @@
     "build:cases": "rm -rf dist && node  ./scripts/generate-build-command.js",
     "coverage": "nyc report --cwd=$(realpath ../)",
     "coverage:ci": "nyc report --cwd=$(realpath ../) --reporter=lcov",
-    "lh": "lhci healthcheck",
+    "lh": "lhci autorun",
     "serve": "rspack serve",
     "test": "playwright test",
     "test:debug": "playwright test --ui",
