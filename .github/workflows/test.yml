@@ -197,7 +197,6 @@ jobs:
     uses: ./.github/workflows/workflow-test.yml
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-    env:
       LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
     with:
       runs-on: lynx-ubuntu-24.04-xlarge

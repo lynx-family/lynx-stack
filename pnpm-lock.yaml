@@ -8213,9 +8213,6 @@ packages:
     resolution: {integrity: sha512-n1cw8k1k0x4pgA2+9XrOkFydTerNcJ1zWCO5Nn9scWHTD+5tp8dghT2x1uduQePZTZgd3Tupf+x9BxJjeJi77Q==}
     engines: {node: '>=14.0.0'}
 
-  tldts-core@6.1.61:
-    resolution: {integrity: sha512-In7VffkDWUPgwa+c9picLUxvb0RltVwTkSgMNFgvlGSWveCzGBemBqTsgJCL4EDFWZ6WH0fKTsot6yNhzy3ZzQ==}
-
   tldts-core@6.1.86:
     resolution: {integrity: sha512-Je6p7pkk+KMzMv2XXKmAE3McmolOQFdxkKw0R8EYNr7sELW46JqnNeTX8ybPiQgvg1ymCoF8LXs5fzFaZvJPTA==}
 
@@ -17287,8 +17284,6 @@ snapshots:
 
   tinyspy@3.0.2: {}
 
-  tldts-core@6.1.61: {}
-
   tldts-core@6.1.86: {}
 
   tldts-icann@6.1.86:
@@ -17297,7 +17292,7 @@ snapshots:
 
   tldts@6.1.61:
     dependencies:
-      tldts-core: 6.1.61
+      tldts-core: 6.1.86
 
   tmp@0.0.33:
     dependencies:
