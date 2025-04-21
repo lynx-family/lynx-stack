@@ -43,6 +43,9 @@ const config = {
       })),
     },
   },
+  upload: {
+    githubAppToken: process.env['LHCI_GITHUB_APP_TOKEN'],
+  },
 };
 
 // https://nodejs.org/api/modules.html#loading-ecmascript-modules-using-require
