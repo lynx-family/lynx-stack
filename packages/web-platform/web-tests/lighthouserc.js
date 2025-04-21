@@ -11,7 +11,20 @@ const config = {
       // Configure Lighthouse collection settings
       settings: {
         // this test causes a crash
-        skipAudits: ['bf-cache'],
+        skipAudits: [
+          // do not run these audit related to network io
+          'bf-cache',
+          'uses-http2',
+          'uses-text-compression',
+          'uses-optimized-images',
+          'modern-image-formats',
+          'unused-javascript',
+          'unused-css-rules',
+          'unminified-css',
+          'render-blocking-resources',
+          'total-byte-weight',
+          'uses-long-cache-ttl',
+        ],
         chromeFlags: [
           '--no-sandbox',
           '--headless=new',
@@ -24,7 +37,7 @@ const config = {
         // Configure throttling settings
         throttling: {
           rttMs: 0,
-          cpuSlowdownMultiplier: 2,
+          cpuSlowdownMultiplier: 4,
           requestLatencyMs: 0,
           downloadThroughputKbps: 99999,
           uploadThroughputKbps: 99999,
