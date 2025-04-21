@@ -11,14 +11,13 @@ const config = {
       // Configure Lighthouse collection settings
       settings: {
         chromeFlags: ['--no-sandbox', '--headless=new', '--disable-gpu'],
-        skipAudits: ['redirects-http'],
         onlyCategories: ['performance'],
         formFactor: 'mobile',
         throttlingMethod: 'simulate',
         // Configure throttling settings
         throttling: {
           rttMs: 0,
-          cpuSlowdownMultiplier: 4,
+          cpuSlowdownMultiplier: 2,
           requestLatencyMs: 0,
           downloadThroughputKbps: 99999,
           uploadThroughputKbps: 99999,

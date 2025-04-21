@@ -199,7 +199,7 @@ jobs:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
     with:
-      runs-on: lynx-ubuntu-24.04-xlarge
+      runs-on: lynx-ubuntu-24.04-medium
       is-web: true
       run: |
         pnpm --filter @lynx-js/web-tests run lh
