@@ -10,6 +10,8 @@ const config = {
     collect: {
       // Configure Lighthouse collection settings
       settings: {
+        // this test causes a crash
+        skipAudits: ['bf-cache'],
         chromeFlags: [
           '--no-sandbox',
           '--headless=new',
