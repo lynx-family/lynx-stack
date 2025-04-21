@@ -49,7 +49,10 @@ const config = {
     },
     upload: {
       target: 'temporary-public-storage',
-      githubAppToken: process.env['CODECOV_TOKEN'],
+      githubAppToken: process.env['LHCI_GITHUB_APP_TOKEN'],
+      githubToken: process.env['LHCI_GITHUB_APP_TOKEN']
+        ? undefined
+        : process.env['GITHUB_TOKEN'],
     },
   },
 };
