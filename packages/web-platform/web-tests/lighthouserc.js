@@ -49,6 +49,7 @@ const config = {
     },
   },
   upload: {
+    target: 'temporary-public-storage',
     githubAppToken: process.env['LHCI_GITHUB_APP_TOKEN'],
   },
 };
