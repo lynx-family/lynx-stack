@@ -24,6 +24,8 @@ const config = {
           'render-blocking-resources',
           'total-byte-weight',
           'uses-long-cache-ttl',
+          // avoid crash
+          'screenshot-thumbnails',
         ],
         chromeFlags: [
           '--no-sandbox',
