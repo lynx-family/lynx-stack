@@ -115,6 +115,9 @@
     "parseable", // https://pnpm.io/cli/list
     "debugids", // https://getsentry.github.io/debugids/
     "zizmor", // https://github.com/woodruffw/zizmor
+    // lighthouse CI
+    "lhci",
+    "lh",
   ],
   // Glob
   "ignorePaths": [

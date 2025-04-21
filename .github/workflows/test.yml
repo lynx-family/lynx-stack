@@ -192,6 +192,17 @@ jobs:
         export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
         pnpm --filter @lynx-js/web-tests run test --reporter='github,dot,junit,html'
         pnpm --filter @lynx-js/web-tests run coverage:ci
+  lighthouse:
+    needs: build
+    uses: ./.github/workflows/workflow-test.yml
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+    with:
+      runs-on: lynx-ubuntu-24.04-xlarge
+      is-web: true
+      run: |
+        pnpm --filter @lynx-js/web-tests run lh
   test-rust:
     needs: build
     uses: ./.github/workflows/rust.yml
