@@ -5,6 +5,14 @@ on:
         required: false
       LHCI_GITHUB_APP_TOKEN:
         required: false
+      TOS_AP_ACCESS_KEY:
+        required: false
+      TOS_AP_SECRET_KEY:
+        required: false
+      TOS_AP_ENDPOINT:
+        required: false
+      TOS_AP_REGION:
+        required: false
     inputs:
       runs-on:
         required: true
@@ -33,6 +41,16 @@ jobs:
     timeout-minutes: 30
     runs-on: ${{ inputs.runs-on }}
     permissions: {}
+    container:
+      image: ${{ inputs.is-web && 'mcr.microsoft.com/playwright:v1.54.1-noble' || null }}
+      env:
+        ACCESS_KEY: ${{ secrets.TOS_AP_ACCESS_KEY }}
+        SECRET_KEY: ${{ secrets.TOS_AP_SECRET_KEY }}
+        ENDPOINT: ${{ secrets.TOS_AP_ENDPOINT }}
+        BUCKET_NAME: actions
+        REGION: ${{ secrets.TOS_AP_REGION }}
+        CI: 1
+        TURBO_TELEMETRY_DISABLED: 1
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:
@@ -57,10 +75,10 @@ jobs:
       - name: Build
         run: |
           pnpm turbo build --summarize
-      - uses: ./.github/actions/setup-playwright
-        if: ${{ inputs.is-web }}
-        with:
-          working-directory: packages/web-platform/web-tests
+      # - uses: ./.github/actions/setup-playwright
+      #   if: ${{ inputs.is-web }}
+      #   with:
+      #     working-directory: packages/web-platform/web-tests
       - name: Test # zizmor: ignore[template-injection] The inputs.run is provided by us.
         id: test
         env:
@@ -88,7 +106,7 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: playwright-report
-          path: packages/web-platform/web-tests/playwright-report
+          path: .turbo #temporary
           if-no-files-found: error
           retention-days: 1
           overwrite: true
