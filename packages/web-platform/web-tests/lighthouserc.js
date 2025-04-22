@@ -3,6 +3,7 @@ import { chromium } from '@playwright/test';
 import cases from './tests/lighthouse.cases.js';
 
 const port = process.env.PORT ?? 3080;
+const isCI = !!process.env['CI'];
 const config = {
   ci: {
     // Use the recommended Lighthouse CI preset
@@ -42,7 +43,7 @@ const config = {
         // Configure throttling settings
         throttling: {
           rttMs: 0,
-          cpuSlowdownMultiplier: 2.5,
+          cpuSlowdownMultiplier: isCI ? 2.5 : 4,
           requestLatencyMs: 0,
           downloadThroughputKbps: 99999,
           uploadThroughputKbps: 99999,

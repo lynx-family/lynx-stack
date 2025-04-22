@@ -19,10 +19,14 @@ LICENSE file in the root directory of this source tree. -->
       href="/web-elements.css"
       rel="stylesheet"
     />
+    <link
+      href="/resources/font.css"
+      rel="stylesheet"
+    />
     <script type="module">
     const htmlTokens = [];
     for (let ii = 0; ii < 3000; ii++) {
-      htmlTokens.push('<x-text><raw-text text="hello lynx"></raw-text></x-text>');
+      htmlTokens.push('<x-text>hello lynx</x-text>');
     }
     document.body.innerHTML = htmlTokens.join('');
     </script>
@@ -33,6 +37,9 @@ LICENSE file in the root directory of this source tree. -->
     }
     x-view:nth-child(even) {
       background-color: aqua;
+    }
+    x-text {
+      font-family: "Noto Sans SC";
     }
     </style>
   </head>
