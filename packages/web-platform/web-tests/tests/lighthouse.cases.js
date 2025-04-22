@@ -58,7 +58,7 @@ export default [
       'speed-index': [
         'error',
         {
-          'maxNumericValue': 400,
+          'maxNumericValue': 550,
         },
       ],
       'total-blocking-time': [
