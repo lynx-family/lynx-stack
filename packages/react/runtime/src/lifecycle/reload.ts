@@ -21,6 +21,7 @@ import { destroyBackground } from './destroy.js';
 import { clearJSReadyEventIdSwap, isJSReady } from './event/jsReady.js';
 import { increaseReloadVersion } from './pass.js';
 import { deinitGlobalSnapshotPatch } from './patch/snapshotPatch.js';
+import { shouldDelayUiOps } from './ref/delay.js';
 import { renderMainThread } from './render.js';
 import { setMainThreadHydrationFinished } from './patch/isMainThreadHydrationFinished.js';
 
@@ -83,6 +84,7 @@ function reloadBackground(updateData: Record<string, any>): void {
   // COW when modify `lynx.__initData` to make sure Provider & Consumer works
   lynx.__initData = Object.assign({}, lynx.__initData, updateData);
 
+  shouldDelayUiOps.value = true;
   render(__root.__jsx, __root as any);
 
   if (__PROFILE__) {
