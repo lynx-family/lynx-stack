@@ -24,6 +24,11 @@ const config = {
           'render-blocking-resources',
           'total-byte-weight',
           'uses-long-cache-ttl',
+          'redirects',
+          'network-server-latency',
+          'network-rtt',
+          'network-requests',
+          'full-page-screenshot',
         ],
         chromeFlags: [
           '--no-sandbox',
