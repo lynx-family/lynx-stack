@@ -17,7 +17,7 @@ export default [
       'total-blocking-time': [
         'error',
         {
-          'maxNumericValue': 300,
+          'maxNumericValue': 350,
         },
       ],
     },

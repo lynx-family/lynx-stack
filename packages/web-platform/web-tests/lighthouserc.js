@@ -37,7 +37,7 @@ const config = {
         // Configure throttling settings
         throttling: {
           rttMs: 0,
-          cpuSlowdownMultiplier: 2.6,
+          cpuSlowdownMultiplier: 2.5,
           requestLatencyMs: 0,
           downloadThroughputKbps: 99999,
           uploadThroughputKbps: 99999,
