@@ -26,7 +26,7 @@ export const __DynamicPartChildren_0: [DynamicPartType, number][] = [[DynamicPar
 
 export { updateSpread } from './snapshot/spread.js';
 export { updateEvent } from './snapshot/event.js';
-export { updateRef, transformRef } from './snapshot/ref.js';
+export { updateRef, transformRef, applyRefs } from './snapshot/ref.js';
 export { updateWorkletEvent } from './snapshot/workletEvent.js';
 export { updateWorkletRef } from './snapshot/workletRef.js';
 export { updateGesture } from './snapshot/gesture.js';

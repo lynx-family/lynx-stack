@@ -16,6 +16,7 @@ const __snapshot_da39a_test_1 = ReactLynx.createSnapshot("__snapshot_da39a_test_
     (snapshot, index, oldValue)=>ReactLynx.updateSpread(snapshot, index, oldValue, 1)
 ], null, undefined, globDynamicComponentEntry);
 _jsx(__snapshot_da39a_test_1, {
+    ref: ReactLynx.applyRefs.bind([]),
     values: [
         {
             "before": "bbb",
