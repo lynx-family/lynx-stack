@@ -33,6 +33,7 @@ jobs:
     timeout-minutes: 30
     runs-on: ${{ inputs.runs-on }}
     permissions: {}
+    container: ${{ inputs.is-web && 'mcr.microsoft.com/playwright:v1.50.1-noble' || null }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:
@@ -57,10 +58,10 @@ jobs:
       - name: Build
         run: |
           pnpm turbo build --summarize
-      - uses: ./.github/actions/setup-playwright
-        if: ${{ inputs.is-web }}
-        with:
-          working-directory: packages/web-platform/web-tests
+      # - uses: ./.github/actions/setup-playwright
+      #   if: ${{ inputs.is-web }}
+      #   with:
+      #     working-directory: packages/web-platform/web-tests
       - name: Test # zizmor: ignore[template-injection] The inputs.run is provided by us.
         id: test
         env:
