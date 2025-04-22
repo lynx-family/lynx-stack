@@ -212,6 +212,12 @@ test.describe('reactlynx3 tests', () => {
       await target.click();
       await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
     });
+    test('basic-style-root-selector', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(100);
+      const target = page.locator('#target');
+      await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
+    });
     test('basic-useeffect-hydrate', async ({ page }, { title }) => {
       await goto(page, title);
       await wait(100);

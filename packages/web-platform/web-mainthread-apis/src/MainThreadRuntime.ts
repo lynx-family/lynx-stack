@@ -121,7 +121,6 @@ export class MainThreadRuntime {
     const cssInJsInfo: CssInJsInfo = this.config.pageConfig.enableCSSSelector
       ? {}
       : genCssInJsInfo(this.config.styleInfo);
-    this._rootDom = this.config.docu.createElement('div');
     const cardStyleElement = this.config.docu.createElement('style');
     cardStyleElement.innerHTML = genCssContent(
       this.config.styleInfo,

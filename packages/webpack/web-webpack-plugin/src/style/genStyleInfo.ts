@@ -65,10 +65,10 @@ export function genStyleInfo(
                  * [aa]:root {
                  * }
                  * ===>
-                 * [aa][lynx-card-id] {
+                 * [aa][lynx-tag="page"] {
                  * }
                  */
-                plainSelectors.push('[lynx-card-id]');
+                plainSelectors.push('[lynx-tag="page"]');
               } else if (selector.type === 'PseudoClassSelector') {
                 pseudoClassSelectors.push(CSS.csstree.generate(selector));
               } else if (selector.type === 'PseudoElementSelector') {
