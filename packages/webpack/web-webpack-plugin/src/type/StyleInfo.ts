@@ -4,11 +4,7 @@
 
 // LICENSE file in the root directory of this source tree.
 export interface CSSRule {
-  sel: [
-    plainSelectors: string[],
-    pseudoClassSelectors: string[],
-    pseudoElementSelectors: string[],
-  ][];
+  sel: string[][][];
   decl: [string, string][];
 }
 export interface OneInfo {

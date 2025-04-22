@@ -53,9 +53,10 @@ export function genStyleInfo(
             .toArray() as CSS.csstree.Selector[];
           const groupedSelectors: CSSRule['sel'] = [];
           for (const selectorList of selectors) {
-            const plainSelectors: string[] = [];
-            const pseudoClassSelectors: string[] = [];
-            const pseudoElementSelectors: string[] = [];
+            let plainSelectors: string[] = [];
+            let pseudoClassSelectors: string[] = [];
+            let pseudoElementSelectors: string[] = [];
+            const currentSplittedSelectorInfo: string[][] = [];
             for (const selector of selectorList.children.toArray()) {
               if (
                 selector.type === 'PseudoClassSelector'
@@ -75,15 +76,27 @@ export function genStyleInfo(
                 pseudoElementSelectors.push(CSS.csstree.generate(selector));
               } else if (selector.type === 'TypeSelector') {
                 plainSelectors.push(`[lynx-tag="${selector.name}"]`);
+              } else if (selector.type === 'Combinator') {
+                currentSplittedSelectorInfo.push(
+                  plainSelectors,
+                  pseudoClassSelectors,
+                  pseudoElementSelectors,
+                  [CSS.csstree.generate(selector)],
+                );
+                plainSelectors = [];
+                pseudoClassSelectors = [];
+                pseudoElementSelectors = [];
               } else {
                 plainSelectors.push(CSS.csstree.generate(selector));
               }
             }
-            groupedSelectors.push([
+            currentSplittedSelectorInfo.push(
               plainSelectors,
               pseudoClassSelectors,
               pseudoElementSelectors,
-            ]);
+              [],
+            );
+            groupedSelectors.push(currentSplittedSelectorInfo);
           }
           const decl = node.style.map<[string, string]>((
             declaration,
