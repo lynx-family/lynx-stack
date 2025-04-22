@@ -6,7 +6,6 @@ import './index.css';
 function App() {
   return (
     <view
-      id='target'
       class='basic'
       style={{ height: '100px', width: '100px' }}
     />
