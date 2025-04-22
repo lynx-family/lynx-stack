@@ -24,14 +24,12 @@ const config = {
           'render-blocking-resources',
           'total-byte-weight',
           'uses-long-cache-ttl',
-          // avoid crash
-          'screenshot-thumbnails',
         ],
         chromeFlags: [
           '--no-sandbox',
-          '--headless=new',
           '--disable-gpu',
           '--disable-dev-shm-usage',
+          '--browser-test',
         ],
         onlyCategories: ['performance'],
         formFactor: 'mobile',
