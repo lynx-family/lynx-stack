@@ -27,6 +27,7 @@ env:
 jobs:
   check:
     runs-on: ${{ inputs.runs-on }}
+    container: ${{ inputs.is-web && 'mcr.microsoft.com/playwright:v1.50.1-noble' || null }}
     steps:
       - uses: actions/checkout@v4
         with:
