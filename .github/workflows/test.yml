@@ -10,7 +10,7 @@ on:
 permissions:
   repository-projects: read
   contents: read
-  statuses: read
+  statuses: write
 env:
   CI: 1
   TURBO_TELEMETRY_DISABLED: 1
