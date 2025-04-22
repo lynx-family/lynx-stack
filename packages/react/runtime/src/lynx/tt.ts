@@ -18,6 +18,7 @@ import { delayedEvents, delayedPublishEvent } from '../lifecycle/event/delayEven
 import { delayLifecycleEvent, delayedLifecycleEvents } from '../lifecycle/event/delayLifecycleEvents.js';
 import { commitPatchUpdate, genCommitTaskId, globalCommitTaskMap } from '../lifecycle/patch/commit.js';
 import type { PatchList } from '../lifecycle/patch/commit.js';
+import { runDelayedUiOps } from '../lifecycle/ref/delay.js';
 import { reloadBackground } from '../lifecycle/reload.js';
 import { CHILDREN } from '../renderToOpcodes/constants.js';
 import { __root } from '../root.js';
@@ -128,6 +129,7 @@ function onLifecycleEventImpl(type: string, data: any): void {
           globalCommitTaskMap.delete(id);
         });
       });
+      runDelayedUiOps();
       break;
     }
     case LifecycleConstant.globalEventFromLepus: {
