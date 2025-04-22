@@ -340,6 +340,7 @@ Component, View
             (snapshot, index, oldValue)=>ReactLynx.updateSpread(snapshot, index, oldValue, 0)
         ], ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry);
         /*#__PURE__*/ ReactLynx1.wrapWithLynxComponent((__c, __spread)=>/*#__PURE__*/ _jsx(__snapshot_da39a_89b7f_1, {
+                ref: ReactLynx.applyRefs.bind([]),
                 values: [
                     {
                         ...__spread,

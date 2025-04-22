@@ -21,6 +21,7 @@ import { isEmptyObject } from '../../utils.js';
 import { takeWorkletRefInitValuePatch } from '../../worklet/workletRefPool.js';
 import { runDelayedUnmounts, takeDelayedUnmounts } from '../delayUnmount.js';
 import { getReloadVersion } from '../pass.js';
+import { runDelayedUiOps, shouldDelayUiOps } from '../ref/delay.js';
 
 let globalFlushOptions: FlushOptions = {};
 
@@ -58,6 +59,7 @@ function replaceCommitHook(): void {
   const injectDebounceRendering = (debounceRendering: DebounceRendering): DebounceRendering => {
     return (f: () => void) => {
       debounceRendering(() => {
+        shouldDelayUiOps.value = true;
         f();
         void commitToMainThread();
       });
@@ -174,6 +176,7 @@ async function commitToMainThread(): Promise<void> {
       }
     }
   });
+  runDelayedUiOps();
 }
 
 function commitPatchUpdate(patchList: PatchList, patchOptions: Omit<PatchOptions, 'reloadVersion'>): {

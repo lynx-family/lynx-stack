@@ -8,6 +8,7 @@ import { renderOpcodesInto } from '../opcodes.js';
 import { render as renderToString } from '../renderToOpcodes/index.js';
 import { __root } from '../root.js';
 import { commitToMainThread } from './patch/commit.js';
+import { shouldDelayUiOps } from './ref/delay.js';
 
 function renderMainThread(): void {
   /* v8 ignore start */
@@ -48,6 +49,7 @@ function renderMainThread(): void {
 }
 
 function renderBackground(vnode: ComponentChild, parent: ContainerNode): void {
+  shouldDelayUiOps.value = true;
   render(vnode, parent);
   void commitToMainThread();
 }

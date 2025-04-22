@@ -96,7 +96,7 @@ function updateSpread(snapshot: SnapshotInstance, index: number, oldValue: any, 
           __id: snapshot.__id,
           __elements: snapshot.__elements,
         } as SnapshotInstance;
-        updateRef(fakeSnapshot, index, oldValue[key], elementIndex, key);
+        updateRef(fakeSnapshot, index, oldValue[key], elementIndex);
       } else if (key.endsWith(':ref')) {
         snapshot.__worklet_ref_set ??= new Set();
         const fakeSnapshot = {
@@ -182,7 +182,7 @@ function updateSpread(snapshot: SnapshotInstance, index: number, oldValue: any, 
           __id: snapshot.__id,
           __elements: snapshot.__elements,
         } as SnapshotInstance;
-        updateRef(fakeSnapshot, index, oldValue[key], elementIndex, key);
+        updateRef(fakeSnapshot, index, oldValue[key], elementIndex);
       } else if (key.endsWith(':ref')) {
         snapshot.__worklet_ref_set ??= new Set();
         const fakeSnapshot = {

@@ -4,6 +4,7 @@
 import { LifecycleConstant, NativeUpdateDataType } from '../lifecycleConstant.js';
 import { PerformanceTimingKeys, beginPipeline, markTiming } from './performance.js';
 import { BackgroundSnapshotInstance, hydrate } from '../backgroundSnapshot.js';
+import { runWithForce } from './runWithForce.js';
 import { destroyBackground } from '../lifecycle/destroy.js';
 import { delayedEvents, delayedPublishEvent } from '../lifecycle/event/delayEvents.js';
 import { delayLifecycleEvent, delayedLifecycleEvents } from '../lifecycle/event/delayLifecycleEvents.js';
@@ -13,15 +14,16 @@ import {
   genCommitTaskId,
   globalCommitTaskMap,
   patchesToCommit,
-  type PatchList,
 } from '../lifecycle/patch/commit.js';
+import type { PatchList } from '../lifecycle/patch/commit.js';
+import { runDelayedUiOps } from '../lifecycle/ref/delay.js';
 import { reloadBackground } from '../lifecycle/reload.js';
 import { renderBackground } from '../lifecycle/render.js';
 import { CHILDREN } from '../renderToOpcodes/constants.js';
 import { __root } from '../root.js';
 import { backgroundSnapshotInstanceManager } from '../snapshot.js';
 import { destroyWorklet } from '../worklet/destroy.js';
-import { runWithForce } from './runWithForce.js';
+
 export { runWithForce };
 
 function injectTt(): void {
@@ -121,7 +123,7 @@ function onLifecycleEventImpl(type: string, data: any): void {
       clearPatchesToCommit();
       const obj = commitPatchUpdate(patchList, { isHydration: true });
       lynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
-          globalCommitTaskMap.forEach((commitTask, id) => {
+        globalCommitTaskMap.forEach((commitTask, id) => {
           if (id > commitTaskId) {
             return;
           }
@@ -129,6 +131,7 @@ function onLifecycleEventImpl(type: string, data: any): void {
           globalCommitTaskMap.delete(id);
         });
       });
+      runDelayedUiOps();
       break;
     }
     case LifecycleConstant.globalEventFromLepus: {

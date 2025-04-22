@@ -10,6 +10,7 @@ import { backgroundSnapshotInstanceManager, SnapshotInstance, snapshotInstanceMa
 import { deinitGlobalSnapshotPatch } from '../../src/lifecycle/patch/snapshotPatch.js';
 import { globalPipelineOptions, setPipeline } from '../../src/lynx/performance.js';
 import { clearListGlobal } from '../../src/list.js';
+import { hydrationMap } from '../../src/snapshotInstanceHydrationMap.js';
 
 export class EnvManager {
   root: typeof __root | undefined;
@@ -70,6 +71,7 @@ export class EnvManager {
     backgroundSnapshotInstanceManager.nextId = 0;
     snapshotInstanceManager.clear();
     snapshotInstanceManager.nextId = 0;
+    hydrationMap.clear();
     clearListGlobal();
     deinitGlobalSnapshotPatch();
     this.switchToBackground();
