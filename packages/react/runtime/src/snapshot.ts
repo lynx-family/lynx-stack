@@ -555,7 +555,6 @@ export class SnapshotInstance {
       return;
     }
 
-    // TODO: ref: can this be done on the background thread?
     unref(child, true);
     r();
     if (this.__elements) {

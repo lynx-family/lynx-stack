@@ -7,7 +7,7 @@ const __snapshot_da39a_test_1 = require('@lynx-js/react/internal').createSnapsho
 }, [
     (snapshot, index, oldValue)=>require('@lynx-js/react/internal').updateSpread(snapshot, index, oldValue, 0)
 ], require('@lynx-js/react/internal').__DynamicPartChildren_0, undefined, globDynamicComponentEntry);
-<__snapshot_da39a_test_1 values={[
+<__snapshot_da39a_test_1 ref={require('@lynx-js/react/internal').applyRefs.bind([])} values={[
     {
         ...{
             style: {
