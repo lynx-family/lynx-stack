@@ -28,7 +28,7 @@ export default [
       'categories:performance': [
         'error',
         {
-          'minScore': 0.81,
+          'minScore': 0.87,
         },
       ],
       'first-contentful-paint': [
@@ -40,7 +40,7 @@ export default [
       'total-blocking-time': [
         'error',
         {
-          'maxNumericValue': 750,
+          'maxNumericValue': 500,
         },
       ],
     },

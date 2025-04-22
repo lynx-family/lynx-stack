@@ -11,16 +11,17 @@ import {
 export class RawTextAttributes {
   static observedAttributes = ['text'];
   readonly #dom: HTMLElement;
+  #text?: Text;
 
   constructor(currentElement: HTMLElement) {
     this.#dom = currentElement;
   }
   @registerAttributeHandler('text', true)
   #handleText(newVal: string | null) {
+    this.#text?.remove();
     if (newVal) {
-      this.#dom.innerHTML = newVal;
-    } else {
-      this.#dom.innerHTML = '';
+      this.#text = new Text(newVal);
+      this.#dom.append(this.#text);
     }
   }
 }
