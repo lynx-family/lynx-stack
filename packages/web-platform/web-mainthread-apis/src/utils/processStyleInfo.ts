@@ -7,6 +7,7 @@ import {
   type StyleInfo,
   type CssInJsInfo,
   type PageConfig,
+  type CSSRule,
   cssIdAttribute,
   lynxTagAttribute,
 } from '@lynx-js/web-constants';
@@ -48,17 +49,18 @@ export function transformToWebCss(styleInfo: StyleInfo) {
       rule.decl = transformedStyle;
       if (childStyle.length > 0) {
         cssInfos.rules.push({
-          sel: selectors.toSpliced(
-            -2,
-            1,
-            /* replace the last combinator and insert at the end */ [
+          sel: selectors.map(selector =>
+            selector.toSpliced(
+              -2,
+              1,
+              /* replace the last combinator and insert at the end */
               ['>'],
               ['*'],
               [],
               [],
               [],
-            ],
-          ),
+            )
+          ) as CSSRule['sel'],
           decl: childStyle,
         });
       }
