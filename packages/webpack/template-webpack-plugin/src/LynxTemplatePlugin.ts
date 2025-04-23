@@ -435,11 +435,12 @@ export class LynxTemplatePlugin {
   static convertCSSChunksToMap(
     cssChunks: string[],
     plugins: CSS.Plugin[],
+    enableCSSSelector: boolean,
   ): {
     cssMap: Record<string, CSS.LynxStyleNode[]>;
     cssSource: Record<string, string>;
   } {
-    return cssChunksToMap(cssChunks, plugins);
+    return cssChunksToMap(cssChunks, plugins, enableCSSSelector);
   }
 
   /**
@@ -761,6 +762,7 @@ class LynxTemplatePluginImpl {
         .filter((v): v is Asset => !!v)
         .map(asset => asset.source.source().toString()),
       cssPlugins,
+      enableCSSSelector,
     );
     const encodeRawData: EncodeRawData = {
       compilerOptions: {
