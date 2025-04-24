@@ -164,11 +164,8 @@
     "preact": "npm:@hongzhiyuan/preact@10.24.0-319c684e"
   },
   "devDependencies": {
-    "@lynx-js/test-environment": "workspace:*",
     "@lynx-js/types": "^3.2.1",
     "@microsoft/api-extractor": "catalog:",
-    "@testing-library/dom": "^10.4.0",
-    "@testing-library/jest-dom": "^6.6.3",
     "@types/react": "^18.3.20"
   },
   "peerDependencies": {

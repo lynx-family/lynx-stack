@@ -12,13 +12,4 @@
       },
     },
   },
-  "bundledPackages": [
-    "@testing-library/dom",
-    "@lynx-js/test-environment",
-  ],
-  "dtsRollup": {
-    "enabled": true,
-    "untrimmedFilePath": "",
-    "publicTrimmedFilePath": "<projectFolder>/dist/index.d.ts",
-  },
 }

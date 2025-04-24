@@ -41,6 +41,17 @@ export default defineConfig({
         ],
       },
     },
+    {
+      format: 'esm',
+      dts: {
+        bundle: true,
+      },
+      source: {
+        entry: {
+          'index': './src/entry.ts',
+        },
+      },
+    },
   ],
   tools: {
     rspack(config) {

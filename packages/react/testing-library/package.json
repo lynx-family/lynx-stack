@@ -11,6 +11,9 @@
     "test:ui": "vitest --ui"
   },
   "devDependencies": {
-    "@lynx-js/react": "workspace:*"
+    "@lynx-js/react": "workspace:*",
+    "@lynx-js/test-environment": "workspace:*",
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/jest-dom": "^6.6.3"
   }
 }
