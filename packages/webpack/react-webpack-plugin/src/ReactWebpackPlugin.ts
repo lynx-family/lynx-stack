@@ -73,6 +73,11 @@ interface ReactWebpackPluginOptions {
    * @alpha
    */
   experimental_isLazyBundle?: boolean;
+
+  /**
+   * Whether to disable MTS and gesture API
+   */
+  disableMTSAndGesture?: boolean;
 }
 
 /**
@@ -145,6 +150,7 @@ class ReactWebpackPlugin {
       mainThreadChunks: [],
       extractStr: false,
       experimental_isLazyBundle: false,
+      disableMTSAndGesture: false,
     });
 
   /**
@@ -187,6 +193,9 @@ class ReactWebpackPlugin {
         options.firstScreenSyncTiming,
       ),
       __ENABLE_SSR__: JSON.stringify(options.enableSSR),
+      __DISABLE_MTS_AND_GESTURE__: JSON.stringify(
+        options.disableMTSAndGesture,
+      ),
       __DISABLE_CREATE_SELECTOR_QUERY_INCOMPATIBLE_WARNING__: JSON.stringify(
         options.disableCreateSelectorQueryIncompatibleWarning,
       ),

@@ -254,9 +254,9 @@ export class BackgroundSnapshotInstance {
             if (!newSpreadValue) {
               continue;
             }
-            if ((newSpreadValue as any)._wkltId) {
+            if (!__DISABLE_MTS_AND_GESTURE__ && (newSpreadValue as any)._wkltId) {
               newSpread[key] = onPostWorkletCtx(newSpreadValue as Worklet);
-            } else if ((newSpreadValue as any).__isGesture) {
+            } else if (!__DISABLE_MTS_AND_GESTURE__ && (newSpreadValue as any).__isGesture) {
               processGestureBackground(newSpreadValue as GestureKind);
             } else if (key == '__lynx_timing_flag' && oldSpread?.[key] != newSpreadValue) {
               if (globalPipelineOptions) {
@@ -275,10 +275,10 @@ export class BackgroundSnapshotInstance {
         // update ref. On the main thread, the ref id will be replaced with value's sign when updating.
         return { needUpdate: true, valueToCommit: newValue.__ref };
       }
-      if (newValue._wkltId) {
+      if (!__DISABLE_MTS_AND_GESTURE__ && newValue._wkltId) {
         return { needUpdate: true, valueToCommit: onPostWorkletCtx(newValue) };
       }
-      if (newValue.__isGesture) {
+      if (!__DISABLE_MTS_AND_GESTURE__ && newValue.__isGesture) {
         processGestureBackground(newValue);
         return { needUpdate: true, valueToCommit: newValue };
       }
@@ -333,7 +333,7 @@ export function hydrate(
       const old = before.values![index];
 
       if (value) {
-        if (value.__spread) {
+        if (!__DISABLE_MTS_AND_GESTURE__ && value.__spread) {
           // `value.__spread` my contain event ids using snapshot ids before hydration. Remove it.
           delete value.__spread;
           value = transformSpread(after, index, value);

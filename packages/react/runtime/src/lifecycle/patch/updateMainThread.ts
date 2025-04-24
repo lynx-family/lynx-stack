@@ -32,7 +32,9 @@ function updateMainThread(
   markTiming(PerformanceTimingKeys.patch_changes_start);
 
   for (const { snapshotPatch, workletRefInitValuePatch, id } of patchList) {
-    updateWorkletRefInitValueChanges(workletRefInitValuePatch);
+    if (!__DISABLE_MTS_AND_GESTURE__) {
+      updateWorkletRefInitValueChanges(workletRefInitValuePatch);
+    }
     __pendingListUpdates.clear();
     if (snapshotPatch) {
       snapshotPatchApply(snapshotPatch);
@@ -44,7 +46,7 @@ function updateMainThread(
     commitMainThreadPatchUpdate(id);
   }
   markTiming(PerformanceTimingKeys.patch_changes_end);
-  if (patchOptions.isHydration) {
+  if (!__DISABLE_MTS_AND_GESTURE__ && patchOptions.isHydration) {
     clearDelayedWorklets();
   }
   if (patchOptions.pipelineOptions) {

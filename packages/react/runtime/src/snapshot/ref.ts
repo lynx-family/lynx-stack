@@ -18,12 +18,14 @@ function unref(snapshot: SnapshotInstance, recursive: boolean): void {
   });
   snapshot.__ref_set?.clear();
 
-  snapshot.__worklet_ref_set?.forEach(v => {
-    if (v) {
-      workletUnRef(v as Worklet | WorkletRef<unknown>);
-    }
-  });
-  snapshot.__worklet_ref_set?.clear();
+  if (!__DISABLE_MTS_AND_GESTURE__) {
+    snapshot.__worklet_ref_set?.forEach(v => {
+      if (v) {
+        workletUnRef(v as Worklet | WorkletRef<unknown>);
+      }
+    });
+    snapshot.__worklet_ref_set?.clear();
+  }
 
   if (recursive) {
     snapshot.childNodes.forEach(it => {
