@@ -152,6 +152,7 @@
     "packages/react/types/*.d.ts",
     "packages/tools/css-serializer/**",
     "packages/web-platform/**",
+    "packages/react/testing-library/etc/react-lynx-testing-library.api.md",
     // Output
     "dist",
     "lib",

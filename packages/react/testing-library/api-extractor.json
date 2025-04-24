@@ -4,12 +4,21 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/api-extractor/v7/api-extractor.schema.json",
   "extends": "../../../api-extractor.json",
-  "mainEntryPointFilePath": "<projectFolder>/types/index.d.ts",
+  "mainEntryPointFilePath": "<projectFolder>/types/entry.d.ts",
   "compiler": {
     "overrideTsconfig": {
       "compilerOptions": {
         "skipLibCheck": true,
       },
     },
+  },
+  "bundledPackages": [
+    "@testing-library/dom",
+    "@lynx-js/test-environment",
+  ],
+  "dtsRollup": {
+    "enabled": true,
+    "untrimmedFilePath": "",
+    "publicTrimmedFilePath": "<projectFolder>/dist/index.d.ts",
   },
 }

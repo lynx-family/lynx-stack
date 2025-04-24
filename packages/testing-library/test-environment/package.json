@@ -1,6 +1,22 @@
 {
   "name": "@lynx-js/test-environment",
   "version": "0.0.0",
+  "description": "A subset of a Lynx environment to be useful for testing",
+  "keywords": [
+    "Lynx",
+    "ReactLynx",
+    "testing"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/testing-library/test-environment"
+  },
+  "license": "Apache-2.0",
+  "author": {
+    "name": "Yiming Li",
+    "email": "yimingli.cs@gmail.com"
+  },
   "exports": {
     ".": {
       "default": "./dist/index.mjs",
