@@ -255,6 +255,14 @@ export const elementTree = new (class {
       enable_reuse_notification: boolean,
     ) => void,
     enqueueComponent: (list: Element, listID: number, sign: number) => void,
+    componentAtIndexes: (
+      list: Element,
+      listID: number,
+      cellIndexes: number[],
+      operationIDs: number[],
+      enableReuseNotification: boolean,
+      asyncFlush: boolean,
+    ) => void,
   ): void {
     Object.defineProperties(list, {
       componentAtIndex: {
@@ -267,6 +275,11 @@ export const elementTree = new (class {
         configurable: true,
         value: enqueueComponent,
       },
+      componentAtIndexes: {
+        enumerable: false,
+        configurable: true,
+        value: componentAtIndexes,
+      },
     });
   }
 
@@ -274,6 +287,7 @@ export const elementTree = new (class {
     parentComponentUniqueId: number,
     componentAtIndex: any,
     enqueueComponent: any,
+    componentAtIndexes: any,
   ) {
     const e = this.__CreateElement('list', parentComponentUniqueId);
 
@@ -287,6 +301,11 @@ export const elementTree = new (class {
         enumerable: false,
         configurable: true,
         value: enqueueComponent,
+      },
+      componentAtIndexes: {
+        enumerable: false,
+        configurable: true,
+        value: componentAtIndexes,
       },
     });
 
@@ -340,6 +359,18 @@ export const elementTree = new (class {
     // @ts-ignore
     const { componentAtIndex, $$uiSign } = e;
     return componentAtIndex(e, $$uiSign, index, ...args);
+  }
+
+  triggerComponentAtIndexes(
+    e: Element,
+    indexes: number[],
+    operationIDs: number[],
+    enableReuseNotification: boolean,
+    asyncFlush: boolean,
+  ) {
+    // @ts-ignore
+    const { componentAtIndexes, $$uiSign } = e;
+    return componentAtIndexes(e, $$uiSign, indexes, operationIDs, enableReuseNotification, asyncFlush);
   }
 
   triggerEnqueueComponent(e: Element, uiSign: number) {

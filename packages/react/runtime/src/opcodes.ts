@@ -52,7 +52,7 @@ export function ssrHydrateByOpcodes(
           const signMap = gSignMap[listElementUniqueID] = new Map();
           gRecycleMap[listElementUniqueID] = new Map();
           const enqueueFunc = enqueueComponentFactory();
-          const componentAtIndex = componentAtIndexFactory(top.childNodes);
+          const [componentAtIndex, componentAtIndexes] = componentAtIndexFactory(top.childNodes);
           for (const child of top.childNodes) {
             if (child.__element_root) {
               const childElementUniqueID = __GetElementUniqueID(child.__element_root);
@@ -64,7 +64,7 @@ export function ssrHydrateByOpcodes(
               );
             }
           }
-          __UpdateListCallbacks(listElement, componentAtIndex, enqueueFunc);
+          __UpdateListCallbacks(listElement, componentAtIndex, enqueueFunc, componentAtIndexes);
         }
 
         stack.pop();

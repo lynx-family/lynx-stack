@@ -349,10 +349,12 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
 
         const listElement = before.__elements![elementIndex]!;
         __SetAttribute(listElement, 'update-list-info', info);
+        const [componentAtIndex, componentAtIndexes] = componentAtIndexFactory(afterChildNodes);
         __UpdateListCallbacks(
           listElement,
-          componentAtIndexFactory(afterChildNodes),
+          componentAtIndex,
           enqueueComponentFactory(),
+          componentAtIndexes,
         );
 
         // The `before` & `after` target to the same list element, so we need to
