@@ -488,7 +488,7 @@ test.describe('reactlynx3 tests', () => {
       expect(timingKeys).toContain('ui_operation_flush_start');
       expect(timingKeys).toContain('decode_start');
       expect(timingKeys).toContain('decode_end');
-      expect(timingKeys).toContain('lepus_excute_start');
+      expect(timingKeys).toContain('lepus_execute_start');
       expect(timingKeys).toContain('load_template_start');
       expect(timingKeys).toContain('data_processor_start');
       expect(timingKeys).toContain('data_processor_end');

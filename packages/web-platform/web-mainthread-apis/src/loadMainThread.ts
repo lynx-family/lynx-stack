@@ -45,7 +45,7 @@ export function loadMainThread(
     publicComponentEventEndpoint,
   );
   const postExposure = backgroundThreadRpc.createCall(postExposureEndpoint);
-  markTimingInternal('lepus_excute_start');
+  markTimingInternal('lepus_execute_start');
   async function startMainThread(
     config: MainThreadStartConfigs,
   ): Promise<MainThreadRuntime> {
