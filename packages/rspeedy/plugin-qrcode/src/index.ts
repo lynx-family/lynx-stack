@@ -105,18 +105,22 @@ export function pluginQRCode(
         await main(environments['lynx'], port)
       })
 
-      api.onDevCompileDone(async ({ isFirstCompile, stats, environments }) => {
-        if (!api.context.devServer) {
-          return
-        }
+      let printedQRCode = false
 
-        if (!isFirstCompile) {
+      api.onDevCompileDone(async ({ stats, environments }) => {
+        if (!api.context.devServer) {
           return
         }
 
         if (stats.hasErrors()) {
           return
         }
+
+        if (printedQRCode) {
+          return
+        }
+
+        printedQRCode = true
 
         await main(environments['lynx'], api.context.devServer.port)
       })

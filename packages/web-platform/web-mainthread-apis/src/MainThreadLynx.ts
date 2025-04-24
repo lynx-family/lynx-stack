@@ -1,15 +1,10 @@
 // Copyright 2023 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type { LynxJSModule } from '@lynx-js/web-constants';
-import {
-  type MainThreadConfig,
-  MainThreadRuntime,
-} from './MainThreadRuntime.js';
+import { type MainThreadConfig } from './MainThreadRuntime.js';
 
 export function createMainThreadLynx(
   config: MainThreadConfig,
-  lepusRuntime: MainThreadRuntime,
 ) {
   return {
     getJSContext() {
@@ -22,37 +17,6 @@ export function createMainThreadLynx(
       return cancelAnimationFrame(handler);
     },
     __globalProps: config.globalProps,
-
-    requireModule(path: string) {
-      // @ts-expect-error
-      if (self.WorkerGlobalScope) {
-        const lepusChunkUrl = config.lepusCode[`${path}`];
-        if (lepusChunkUrl) path = lepusChunkUrl;
-        // @ts-expect-error
-        importScripts(path);
-        const entry = (globalThis.module as LynxJSModule).exports;
-        return entry?.(lepusRuntime);
-      } else {
-        throw new Error(
-          'importing scripts synchronously is only available for the multi-thread running mode',
-        );
-      }
-    },
-    requireModuleAsync(
-      path: string,
-      callback: (error: Error | null, exports?: unknown) => void,
-    ) {
-      const lepusChunkUrl = config.lepusCode[`${path}`];
-      if (lepusChunkUrl) path = lepusChunkUrl;
-      import(
-        /* webpackIgnore: true */
-        path
-      ).catch(callback).then(() => {
-        const entry = (globalThis.module as LynxJSModule).exports;
-        const ret = entry?.(lepusRuntime);
-        callback(null, ret);
-      });
-    },
     getCustomSectionSync(key: string) {
       return config.customSections[key]?.content;
     },

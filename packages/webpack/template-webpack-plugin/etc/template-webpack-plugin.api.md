@@ -41,7 +41,7 @@ declare namespace CSS {
 // Warning: (ae-missing-release-tag) "cssChunksToMap" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-function cssChunksToMap(cssChunks: string[], plugins: CSS_2.Plugin[]): {
+function cssChunksToMap(cssChunks: string[], plugins: CSS_2.Plugin[], enableCSSSelector: boolean): {
     cssMap: Record<string, CSS_2.LynxStyleNode[]>;
     cssSource: Record<string, string>;
     contentMap: Map<number, string[]>;
@@ -84,7 +84,7 @@ export interface LynxEncodePluginOptions {
 export class LynxTemplatePlugin {
     constructor(options?: LynxTemplatePluginOptions | undefined);
     apply(compiler: Compiler): void;
-    static convertCSSChunksToMap(cssChunks: string[], plugins: CSS_2.Plugin[]): {
+    static convertCSSChunksToMap(cssChunks: string[], plugins: CSS_2.Plugin[], enableCSSSelector: boolean): {
         cssMap: Record<string, CSS_2.LynxStyleNode[]>;
         cssSource: Record<string, string>;
     };

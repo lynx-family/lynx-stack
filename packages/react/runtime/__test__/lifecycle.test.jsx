@@ -52,10 +52,11 @@ describe('useEffect', () => {
     expect(callback).toHaveBeenCalledTimes(0);
     expect(cleanUp).toHaveBeenCalledTimes(0);
 
+    expect(callback).toHaveBeenCalledTimes(0);
     expect(mtCallbacks.mock.calls.length).toBe(1);
     mtCallbacks.mock.calls[0][2]();
     lynx.getNativeApp().callLepusMethod.mockClear();
-    expect(callback).toHaveBeenCalledTimes(0);
+    expect(callback).toHaveBeenCalledTimes(1);
     expect(cleanUp).toHaveBeenCalledTimes(0);
 
     await waitSchedule();

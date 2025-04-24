@@ -31,6 +31,9 @@ let nextCommitTaskId = 1;
 let globalBackgroundSnapshotInstancesToRemove: number[] = [];
 
 let patchesToCommit: Patch[] = [];
+function clearPatchesToCommit(): void {
+  patchesToCommit = [];
+}
 
 interface Patch {
   id: number;
@@ -160,53 +163,60 @@ async function commitToMainThread(): Promise<void> {
     patchList.flushOptions = flushOptions;
   }
 
-  await commitPatchUpdate(patchList, {});
+  const obj = commitPatchUpdate(patchList, {});
 
-  for (let i = 0; i < patchList.patchList.length; i++) {
-    const patch = patchList.patchList[i]!;
-    const commitTask = globalCommitTaskMap.get(patch.id);
-    if (commitTask) {
-      commitTask();
-      globalCommitTaskMap.delete(patch.id);
-    }
-  }
-}
-
-function commitPatchUpdate(patchList: PatchList, patchOptions: Omit<PatchOptions, 'reloadVersion'>): Promise<void> {
-  return new Promise(resolve => {
-    // console.debug('********** JS update:');
-    // printSnapshotInstance(
-    //   (backgroundSnapshotInstanceManager.values.get(1) || backgroundSnapshotInstanceManager.values.get(-1))!,
-    // );
-    // console.debug('commitPatchUpdate: ', JSON.stringify(patchList));
-    if (__PROFILE__) {
-      console.profile('commitChanges');
-    }
-    markTiming(PerformanceTimingKeys.pack_changes_start);
-    const obj: {
-      data: string;
-      patchOptions: PatchOptions;
-    } = {
-      data: JSON.stringify(patchList),
-      patchOptions: {
-        ...patchOptions,
-        reloadVersion: getReloadVersion(),
-      },
-    };
-    markTiming(PerformanceTimingKeys.pack_changes_end);
-    if (globalPipelineOptions) {
-      obj.patchOptions.pipelineOptions = globalPipelineOptions;
-      setPipeline(undefined);
-    }
-    lynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, resolve);
-    if (__PROFILE__) {
-      console.profileEnd();
+  lynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
+    for (let i = 0; i < patchList.patchList.length; i++) {
+      const patch = patchList.patchList[i]!;
+      const commitTask = globalCommitTaskMap.get(patch.id);
+      if (commitTask) {
+        commitTask();
+        globalCommitTaskMap.delete(patch.id);
+      }
     }
   });
 }
 
+function commitPatchUpdate(patchList: PatchList, patchOptions: Omit<PatchOptions, 'reloadVersion'>): {
+  data: string;
+  patchOptions: PatchOptions;
+} {
+  // console.debug('********** JS update:');
+  // printSnapshotInstance(
+  //   (backgroundSnapshotInstanceManager.values.get(1) || backgroundSnapshotInstanceManager.values.get(-1))!,
+  // );
+  // console.debug('commitPatchUpdate: ', JSON.stringify(patchList));
+  if (__PROFILE__) {
+    console.profile('commitChanges');
+  }
+  markTiming(PerformanceTimingKeys.pack_changes_start);
+  const obj: {
+    data: string;
+    patchOptions: PatchOptions;
+  } = {
+    data: JSON.stringify(patchList),
+    patchOptions: {
+      ...patchOptions,
+      reloadVersion: getReloadVersion(),
+    },
+  };
+  markTiming(PerformanceTimingKeys.pack_changes_end);
+  if (globalPipelineOptions) {
+    obj.patchOptions.pipelineOptions = globalPipelineOptions;
+    setPipeline(undefined);
+  }
+  if (__PROFILE__) {
+    console.profileEnd();
+  }
+
+  return obj;
+}
+
 function genCommitTaskId(): number {
   return nextCommitTaskId++;
+}
+function clearCommitTaskId(): void {
+  nextCommitTaskId = 1;
 }
 
 function replaceRequestAnimationFrame(): void {
@@ -224,10 +234,13 @@ export {
   commitPatchUpdate,
   commitToMainThread,
   genCommitTaskId,
+  clearCommitTaskId,
   globalBackgroundSnapshotInstancesToRemove,
   globalCommitTaskMap,
   globalFlushOptions,
   nextCommitTaskId,
+  patchesToCommit,
+  clearPatchesToCommit,
   replaceCommitHook,
   replaceRequestAnimationFrame,
   type PatchOptions,

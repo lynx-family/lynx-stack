@@ -17,10 +17,6 @@ backButton.addEventListener('click', () => {
   setLynxViewUrl(homepage);
 });
 
-const theme = window.matchMedia('(prefers-color-scheme: dark)').matches
-  ? 'Dark'
-  : 'Light';
-
 const qrScanner = new QrScanner(video, (result) => {
   console.log('qr', result);
   lynxView.style.visibility = 'visible';
@@ -50,29 +46,35 @@ const nativeModulesMap = {
   ),
 };
 
-lynxView.nativeModulesMap = nativeModulesMap;
-lynxView.onNativeModulesCall = (nm, data) => {
-  if (nm === 'openScan') {
-    lynxView.style.visibility = 'hidden';
-    qrScanner.start();
-  } else if (nm === 'openSchema') {
-    setLynxViewUrl(data);
-  }
-};
-lynxView.globalProps = { theme };
 setLynxViewUrl(homepage);
 window.addEventListener('message', (ev) => {
   if (ev.data && ev.data.method === 'setLynxViewUrl' && ev.data.url) {
     const parent = lynxView.parentElement!;
     lynxView.remove();
     lynxView = document.createElement('lynx-view') as LynxView;
-    lynxView.setAttribute('style', 'flex: 0 1 100vh; height:100vh;');
+    lynxView.setAttribute(
+      'style',
+      'flex: 0 1 100vh; height:100vh;width:100vw;',
+    );
     parent.append(lynxView);
     setLynxViewUrl(ev.data.url);
   }
 });
 
 function setLynxViewUrl(url: string) {
+  const theme = window.matchMedia('(prefers-color-scheme: dark)').matches
+    ? 'Dark'
+    : 'Light';
+  lynxView.nativeModulesMap = nativeModulesMap;
+  lynxView.onNativeModulesCall = (nm, data) => {
+    if (nm === 'openScan') {
+      lynxView.style.visibility = 'hidden';
+      qrScanner.start();
+    } else if (nm === 'openSchema') {
+      setLynxViewUrl(data);
+    }
+  };
+  lynxView.globalProps = { theme };
   if (url === homepage) {
     nav.style.display = 'none';
     lynxView.url = url;

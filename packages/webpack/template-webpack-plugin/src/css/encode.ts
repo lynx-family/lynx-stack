@@ -52,7 +52,7 @@ export async function encodeCSS(
     });
   },
 ): Promise<Buffer> {
-  const css = cssChunksToMap(cssChunks, plugins);
+  const css = cssChunksToMap(cssChunks, plugins, enableCSSSelector);
 
   const encodeOptions = {
     compilerOptions: {

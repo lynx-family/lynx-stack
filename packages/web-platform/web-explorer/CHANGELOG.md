@@ -1,5 +1,13 @@
 # @lynx-js/web-explorer
 
+## 0.0.5
+
+### Patch Changes
+
+- fix: create a new lynx-view for lynxjs.org ([#566](https://github.com/lynx-family/lynx-stack/pull/566))
+
+- fix: blank screen issue for 0.0.4 ([#543](https://github.com/lynx-family/lynx-stack/pull/543))
+
 ## 0.0.4
 
 ### Patch Changes

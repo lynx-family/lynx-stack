@@ -1,0 +1,33 @@
+{
+  "name": "@lynx-js/test-environment",
+  "version": "0.0.0",
+  "exports": {
+    ".": {
+      "default": "./dist/index.mjs",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./env/vitest": {
+      "default": "./dist/env/vitest/index.mjs",
+      "types": "./dist/env/vitest/index.d.ts",
+      "import": "./dist/env/vitest/index.mjs",
+      "require": "./dist/env/vitest/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "api-extractor": "api-extractor run --verbose",
+    "build": "rslib build",
+    "dev": "rslib build --watch"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.3",
+    "@types/jsdom": "^21.1.7"
+  }
+}

@@ -9,7 +9,11 @@ import * as cssTree from 'css-tree';
 const COMMON_CSS = '/common.css';
 const COMMON_CSS_ID = 0;
 
-export function debundleCSS(code: string, css: Map<number, string[]>): void {
+export function debundleCSS(
+  code: string,
+  css: Map<number, string[]>,
+  enableCSSSelector: boolean,
+): void {
   const ast = cssTree.parse(code);
 
   const fileKeyToCSSContent = new Map<string, string>();
@@ -91,7 +95,13 @@ export function debundleCSS(code: string, css: Map<number, string[]>): void {
 
   // For each scoped CSSStyleSheet, we should import the real CSSStyleSheet.
   // So that the styles can be resolved with the scoped cssId.
-  cssIdToFileKeys.forEach((fileKeys, cssId) => {
+  cssIdToFileKeys.forEach((rawFileKeys, cssId) => {
+    let fileKeys = Array.from(rawFileKeys);
+    if (enableCSSSelector === false) {
+      // When enableCSSSelector is false, style rule priority is inversely related to @import order,
+      // requiring reversed imports to maintain correct priority.
+      fileKeys = fileKeys.reverse();
+    }
     emplaceCSSStyleSheet(
       css,
       cssId,

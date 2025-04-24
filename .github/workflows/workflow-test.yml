@@ -3,6 +3,8 @@ on:
     secrets:
       CODECOV_TOKEN:
         required: false
+      LHCI_GITHUB_APP_TOKEN:
+        required: false
     inputs:
       runs-on:
         required: true
@@ -59,6 +61,7 @@ jobs:
           GITHUB_SHA: ${{ github.event.pull_request.head.sha }}
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
         run: ${{ inputs.run }}
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5

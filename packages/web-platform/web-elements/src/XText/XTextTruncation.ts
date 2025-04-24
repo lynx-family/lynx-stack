@@ -119,15 +119,13 @@ export class XTextTruncation
     if (!this.#componentConnected || this.#dom.matches('x-text>x-text')) return;
     if (this.#scheduledTextLayout) return;
     this.#scheduledTextLayout = true;
-    boostedQueueMicrotask(() => {
-      this.#layoutTextInner();
+    boostedQueueMicrotask(async () => {
+      await this.#layoutTextInner();
       this.#startObservers();
-      queueMicrotask(() => {
-        this.#scheduledTextLayout = false;
-      });
+      this.#scheduledTextLayout = false;
     });
   }
-  #layoutTextInner() {
+  async #layoutTextInner() {
     this.#inplaceEllipsisNode?.parentElement?.removeChild(
       this.#inplaceEllipsisNode,
     );
@@ -136,6 +134,7 @@ export class XTextTruncation
     if (!this.#doExpensiveLineLayoutCalculation && isNaN(this.#maxLength)) {
       return;
     }
+    await document.fonts.ready;
     const parentBondingRect = this.#getInnerBox().getBoundingClientRect();
     this.#textMeasure = new TextRenderingMeasureTool(
       this.#dom,
@@ -389,9 +388,7 @@ export class XTextTruncation
     this.#handleEnableLayoutEvent(
       this.#enableLayoutEvent,
     );
-    document.fonts.ready.then(() => {
-      this.#handleAttributeChange();
-    });
+    this.#handleAttributeChange();
     boostedQueueMicrotask(() => {
       this.#sendLayoutEvent();
     });

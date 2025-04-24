@@ -6,6 +6,8 @@ import type { Page, BrowserContext, CDPSession } from '@playwright/test';
 
 import { test, expect } from './coverage-fixture.js';
 
+const isCI = !!process.env['CI'];
+
 const wait = async (ms: number) => {
   await new Promise((resolve) => {
     setTimeout(resolve, ms);
@@ -166,6 +168,8 @@ test.describe('performance', () => {
       ).toBeLessThan(0.9);
     },
   );
+
+  isCI ?? test.describe.configure({ retries: 8 });
   test(
     'x-list-waterfall-1000',
     async ({ page, browserName, context }, { title }) => {

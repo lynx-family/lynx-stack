@@ -14,6 +14,7 @@
     "build:cases": "rm -rf dist && node  ./scripts/generate-build-command.js",
     "coverage": "nyc report --cwd=$(realpath ../)",
     "coverage:ci": "nyc report --cwd=$(realpath ../) --reporter=lcov",
+    "lh": "lhci autorun",
     "serve": "rspack serve",
     "test": "playwright test",
     "test:debug": "playwright test --ui",
@@ -21,6 +22,7 @@
     "test:update": "playwright test --ui --update-snapshots"
   },
   "devDependencies": {
+    "@lhci/cli": "^0.14.0",
     "@lynx-js/lynx-core": "0.1.2",
     "@lynx-js/offscreen-document": "workspace:*",
     "@lynx-js/react": "workspace:*",

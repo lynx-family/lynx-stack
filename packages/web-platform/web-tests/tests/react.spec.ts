@@ -192,6 +192,12 @@ test.describe('reactlynx3 tests', () => {
         ).toHaveCSS('width', '60px');
       },
     );
+    test('basic-style-combinator', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(100);
+      const target = page.locator('#target');
+      await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
+    });
     test('basic-style-remove', async ({ page }, { title }) => {
       await goto(page, title);
       await wait(100);
@@ -210,6 +216,12 @@ test.describe('reactlynx3 tests', () => {
       await target.click();
       await expect(target).toHaveCSS('background-color', 'rgb(255, 192, 203)'); // pink
       await target.click();
+      await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
+    });
+    test('basic-style-root-selector', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(100);
+      const target = page.locator('#target');
       await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
     });
     test('basic-useeffect-hydrate', async ({ page }, { title }) => {
@@ -340,8 +352,19 @@ test.describe('reactlynx3 tests', () => {
       });
       expect(computedStyle.backgroundColor).toBe('rgb(255, 192, 203)');
     });
+    test('basic-color-not-inherit', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(100);
+      await expect(page.locator('#target')).toHaveCSS('color', 'rgb(0, 0, 0)');
+    });
   });
   test.describe('apis', () => {
+    test('api-custom-template-loader', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(100);
+      const target = page.locator('#target');
+      await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
+    });
     test('api-animation-event', async ({ page }, { title }) => {
       await goto(page, title);
       await page.locator('#tap1').click();

@@ -7,6 +7,7 @@ import {
   type StyleInfo,
   type CssInJsInfo,
   type PageConfig,
+  type CSSRule,
   cssIdAttribute,
   lynxTagAttribute,
 } from '@lynx-js/web-constants';
@@ -48,13 +49,18 @@ export function transformToWebCss(styleInfo: StyleInfo) {
       rule.decl = transformedStyle;
       if (childStyle.length > 0) {
         cssInfos.rules.push({
-          sel: selectors.map(
-            selector => [
-              selector[0].concat(['>', '*']),
-              selector[1],
-              selector[2],
-            ],
-          ),
+          sel: selectors.map(selector =>
+            selector.toSpliced(
+              -2,
+              1,
+              /* replace the last combinator and insert at the end */
+              ['>'],
+              ['*'],
+              [],
+              [],
+              [],
+            )
+          ) as CSSRule['sel'],
           decl: childStyle,
         });
       }
@@ -72,7 +78,7 @@ export function genCssContent(
   function getExtraSelectors(
     cssId?: string,
   ) {
-    let prepend = '', suffix = '';
+    let suffix = '';
     if (!pageConfig.enableRemoveCSSScope) {
       if (cssId !== undefined) {
         suffix += `[${cssIdAttribute}="${cssId}"]`;
@@ -83,22 +89,17 @@ export function genCssContent(
     } else {
       suffix += `[${lynxTagAttribute}]`;
     }
-    return { prepend, suffix };
+    return suffix;
   }
   const finalCssContent: string[] = [];
   for (const [cssId, cssInfos] of Object.entries(styleInfo)) {
-    const { prepend, suffix } = getExtraSelectors(cssId);
+    const suffix = getExtraSelectors(cssId);
     const declarationContent = cssInfos.rules.map((rule) => {
-      const { sel: selectors, decl: declarations } = rule;
-      const selectorString = selectors.map(
-        ([plainSelectors, pseudoClassSelectors, pseudoElementSelectors]) => {
-          return [
-            prepend,
-            plainSelectors.join(''),
-            suffix,
-            pseudoClassSelectors.join(''),
-            pseudoElementSelectors.join(''),
-          ].join('');
+      const { sel: selectorList, decl: declarations } = rule;
+      // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/splice
+      const selectorString = selectorList.map(
+        (selectors) => {
+          return selectors.toSpliced(-4, 0, [suffix]).join('');
         },
       ).join(',');
       const declarationString = declarations.map(([k, v]) => `${k}:${v};`).join(
@@ -120,12 +121,18 @@ export function genCssInJsInfo(styleInfo: StyleInfo): CssInJsInfo {
       const oneCssInJsInfo: Record<string, [string, string][]> = {};
       cssInfos.rules = cssInfos.rules.filter(oneCssInfo => {
         oneCssInfo.sel = oneCssInfo.sel.filter(selectorList => {
-          const [classSelectors, pseudoClassSelectors, pseudoElementSelectors] =
-            selectorList;
+          const [
+            classSelectors,
+            pseudoClassSelectors,
+            pseudoElementSelectors,
+            combinator,
+          ] = selectorList;
           if (
+            // only one class selector
             classSelectors.length === 1 && classSelectors[0]![0] === '.'
             && pseudoClassSelectors.length === 0
             && pseudoElementSelectors.length === 0
+            && combinator.length === 0
           ) {
             const selectorName = classSelectors[0]!.substring(1);
             const currentDeclarations = oneCssInJsInfo[selectorName];

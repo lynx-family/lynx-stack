@@ -6,6 +6,11 @@
 
 import type { RsbuildPlugin } from '@rsbuild/core';
 
+// Warning: (ae-missing-release-tag) "createLazyResolver" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export function createLazyResolver(context: string, conditionNames: string[]): (request: string) => Promise<string>;
+
 // Warning: (ae-missing-release-tag) "Options" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
