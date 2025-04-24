@@ -236,6 +236,27 @@ jobs:
         export ALL_ON_UI=true
         pnpm --filter @lynx-js/web-tests run test --reporter='github,dot,junit,html'
         pnpm --filter @lynx-js/web-tests run coverage:ci
+  test-web-platform:
+    needs: build
+    uses: ./.github/workflows/workflow-test.yml
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    with:
+      runs-on: lynx-ubuntu-24.04-medium
+      run: >
+        pnpm
+        --filter @lynx-js/web-platform-rsbuild-plugin
+        run test
+        --reporter=github-actions
+        --reporter=dot
+        --reporter=junit
+        --outputFile=test-report.junit.xml
+        --coverage.reporter='json'
+        --coverage.reporter='text'
+        --test-timeout=50000
+        --no-cache
+        --logHeapUsage
+        --silent
   lighthouse:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
@@ -286,6 +307,7 @@ jobs:
       - code-style-check
       - playwright-linux
       - playwright-linux-all-on-ui
+      - test-web-platform
       - test-plugins
       - test-publish
       - test-react

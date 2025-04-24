@@ -1,0 +1,40 @@
+{
+  "name": "@lynx-js/web-platform-rsbuild-plugin",
+  "version": "0.0.0",
+  "private": false,
+  "description": "A rsbuild plugin for Web projects in Lynx Web Platform",
+  "keywords": [
+    "rsbuild",
+    "Lynx",
+    "Web Platform"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/web-platform/web-rsbuild-plugin"
+  },
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "CHANGELOG.md",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "rslib build",
+    "dev": "rslib build --watch",
+    "test": "vitest"
+  },
+  "devDependencies": {
+    "@microsoft/api-extractor": "catalog:",
+    "@rsbuild/core": "catalog:rsbuild",
+    "@rslib/core": "^0.6.7",
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.2"
+  },
+  "peerDependencies": {
+    "@rsbuild/core": "*"
+  }
+}
