@@ -5,12 +5,12 @@
 import {
   dispatchCoreContextOnBackgroundEndpoint,
   dispatchJSContextOnMainThreadEndpoint,
+  LynxCrossThreadContext,
   type Cloneable,
   type NativeApp,
 } from '@lynx-js/web-constants';
 import type { Rpc } from '@lynx-js/web-worker-rpc';
 import { createGetCustomSection } from './crossThreadHandlers/createGetCustomSection.js';
-import { LynxCrossThreadContext } from '../../common/LynxCrossThreadContext.js';
 export interface CreateLynxConfig {
   globalProps: unknown;
   customSections: Record<string, Cloneable>;

@@ -1,9 +1,8 @@
+import type { dispatchCoreContextOnBackgroundEndpoint, Rpc } from '../index.js';
 import {
   DispatchEventResult,
-  type dispatchCoreContextOnBackgroundEndpoint,
   type LynxContextEventTarget,
-  type Rpc,
-} from '@lynx-js/web-constants';
+} from '../types/LynxContextEventTarget.js';
 
 export class LynxCrossThreadContext extends EventTarget
   implements LynxContextEventTarget
