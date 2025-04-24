@@ -7,6 +7,7 @@
 import { ARIARole } from 'aria-query';
 import { ComponentChild } from 'preact';
 import { ComponentType } from 'preact';
+import { JSDOM } from 'jsdom';
 import { OptionsReceived } from 'pretty-format';
 import * as prettyFormat from 'pretty-format';
 
@@ -353,6 +354,11 @@ export interface DefaultNormalizerOptions {
     // (undocumented)
     trim?: boolean
 }
+
+// Warning: (ae-forgotten-export) The symbol "initElementTree" needs to be exported by the entry point entry.d.ts
+//
+// @public
+export type ElementTree = ReturnType<typeof initElementTree>;
 
 // Warning: (ae-missing-release-tag) "EventType" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -901,6 +907,27 @@ export interface LogRolesOptions {
     hidden?: boolean
 }
 
+// @public
+export class LynxEnv {
+    constructor();
+    // Warning: (ae-forgotten-export) The symbol "LynxGlobalThis" needs to be exported by the entry point entry.d.ts
+    backgroundThread: LynxGlobalThis;
+    // (undocumented)
+    clearGlobal(): void;
+    // (undocumented)
+    injectGlobals(): void;
+    // (undocumented)
+    jsdom: JSDOM;
+    // Warning: (ae-forgotten-export) The symbol "ElementTreeGlobals" needs to be exported by the entry point entry.d.ts
+    mainThread: LynxGlobalThis & ElementTreeGlobals;
+    // (undocumented)
+    resetLynxEnv(): void;
+    // (undocumented)
+    switchToBackgroundThread(): void;
+    // (undocumented)
+    switchToMainThread(): void;
+}
+
 // Warning: (ae-missing-release-tag) "Match" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -1438,6 +1465,6 @@ export type WithSuggest = {suggest?: boolean}
 
 // Warnings were encountered during analysis:
 //
-// types/entry.d.ts:214:29 - (ae-forgotten-export) The symbol "LynxElement" needs to be exported by the entry point entry.d.ts
+// types/entry.d.ts:215:29 - (ae-forgotten-export) The symbol "LynxElement" needs to be exported by the entry point entry.d.ts
 
 ```
