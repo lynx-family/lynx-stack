@@ -338,8 +338,8 @@ importers:
         specifier: ^1.1.1
         version: 1.1.1
       rsbuild-plugin-publint:
-        specifier: 0.3.0
-        version: 0.3.0(@rsbuild/core@1.3.8)
+        specifier: 0.3.1
+        version: 0.3.1(@rsbuild/core@1.3.8)
       tiny-invariant:
         specifier: ^1.3.3
         version: 1.3.3
@@ -7611,8 +7611,8 @@ packages:
       typescript:
         optional: true
 
-  rsbuild-plugin-publint@0.3.0:
-    resolution: {integrity: sha512-7EV68plBBXiTF4FB5HiyK9TfYOVG8OUckEZKsu6YJqZDojpDU1WSf8HMbJa225xP4JeOtwchPC8SQPwSFSCvBg==}
+  rsbuild-plugin-publint@0.3.1:
+    resolution: {integrity: sha512-oBeem58KQa9LDWjRAsUZjoOzmw53X/EeIOKE+swG8pudVRSR0a9FSGNvLMJdZCmB3iw1d+brmGeJlnDi81mthQ==}
     peerDependencies:
       '@rsbuild/core': 1.x
     peerDependenciesMeta:
@@ -16687,7 +16687,7 @@ snapshots:
       '@microsoft/api-extractor': 7.52.3(@types/node@22.14.1)
       typescript: 5.8.3
 
-  rsbuild-plugin-publint@0.3.0(@rsbuild/core@1.3.8):
+  rsbuild-plugin-publint@0.3.1(@rsbuild/core@1.3.8):
     dependencies:
       picocolors: 1.1.1
       publint: 0.3.9
