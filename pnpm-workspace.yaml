@@ -19,7 +19,7 @@ packages:
 
 # Default catalogs
 catalog:
-  "@microsoft/api-extractor": "7.52.3"
+  "@microsoft/api-extractor": "7.52.5"
 
 catalogs:
   # Rsbuild monorepo packages
