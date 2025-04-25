@@ -44,7 +44,9 @@ describe('Plugins - Dev', () => {
 
     expect(typeof config.output?.publicPath).toBe('string')
 
-    const { port, hostname, pathname } = new URL(config.output!.publicPath!)
+    const { port, hostname, pathname } = new URL(
+      config.output!.publicPath! as string,
+    )
     expect(port).toBe('3000')
     // Returns 6 if input is an IPv6 address. Returns 4 if input is an IPv4 address in dot-decimal notation with no leading zeroes. Otherwise, returns 0.
     expect(isIP(hostname)).not.toBe(0)
@@ -157,7 +159,9 @@ describe('Plugins - Dev', () => {
 
     expect(typeof config.output?.publicPath).toBe('string')
 
-    const { port, hostname, pathname } = new URL(config.output!.publicPath!)
+    const { port, hostname, pathname } = new URL(
+      config.output!.publicPath! as string,
+    )
     expect(port).toBe('')
     // Returns 6 if input is an IPv6 address. Returns 4 if input is an IPv4 address in dot-decimal notation with no leading zeroes. Otherwise, returns 0.
     expect(isIP(hostname)).toBe(0)
@@ -192,7 +196,9 @@ describe('Plugins - Dev', () => {
 
     expect(typeof config.output?.publicPath).toBe('string')
 
-    const { port, hostname, pathname } = new URL(config.output!.publicPath!)
+    const { port, hostname, pathname } = new URL(
+      config.output!.publicPath! as string,
+    )
     expect(port).toBe('8000')
     // Returns 6 if input is an IPv6 address. Returns 4 if input is an IPv4 address in dot-decimal notation with no leading zeroes. Otherwise, returns 0.
     expect(isIP(hostname)).toBe(0)
@@ -214,7 +220,9 @@ describe('Plugins - Dev', () => {
 
     expect(typeof config.output?.publicPath).toBe('string')
 
-    const { port, hostname, pathname } = new URL(config.output!.publicPath!)
+    const { port, hostname, pathname } = new URL(
+      config.output!.publicPath! as string,
+    )
     expect(port).toBe('8080')
     // Returns 6 if input is an IPv6 address. Returns 4 if input is an IPv4 address in dot-decimal notation with no leading zeroes. Otherwise, returns 0.
     expect(isIP(hostname)).toBe(0)
@@ -236,7 +244,9 @@ describe('Plugins - Dev', () => {
 
     expect(typeof config.output?.publicPath).toBe('string')
 
-    const { port, hostname, pathname } = new URL(config.output!.publicPath!)
+    const { port, hostname, pathname } = new URL(
+      config.output!.publicPath! as string,
+    )
     expect(port).toBe('3000')
     // Returns 6 if input is an IPv6 address. Returns 4 if input is an IPv4 address in dot-decimal notation with no leading zeroes. Otherwise, returns 0.
     expect(isIP(hostname)).toBe(0)
@@ -510,7 +520,9 @@ describe('Plugins - Dev', () => {
     expect(config.output?.publicPath).toContain('http://example.com/')
     expect(config.output?.publicPath).toContain('/dist/')
 
-    const { port, hostname, pathname } = new URL(config.output!.publicPath!)
+    const { port, hostname, pathname } = new URL(
+      config.output!.publicPath! as string,
+    )
 
     expect(port).toBe('')
     expect(isIP(hostname)).toBe(0)
