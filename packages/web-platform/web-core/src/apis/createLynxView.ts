@@ -9,7 +9,10 @@ import type {
   sendGlobalEventEndpoint,
   UpdateDataType,
 } from '@lynx-js/web-constants';
-import { startUIThread } from '../uiThread/startUIThread.js';
+import {
+  startUIThread,
+  type StartUIThreadCallbacks,
+} from '../uiThread/startUIThread.js';
 import type { RpcCallType } from '@lynx-js/web-worker-rpc';
 
 export interface LynxViewConfigs {
@@ -17,11 +20,12 @@ export interface LynxViewConfigs {
   initData: Cloneable;
   globalProps: Cloneable;
   shadowRoot: ShadowRoot;
-  callbacks: Parameters<typeof startUIThread>[4];
+  callbacks: StartUIThreadCallbacks;
   nativeModulesMap: NativeModulesMap;
   napiModulesMap: NapiModulesMap;
   tagMap: Record<string, string>;
   lynxGroupId: number | undefined;
+  threadStrategy: 'all-on-ui' | 'multi-thread';
 }
 
 export interface LynxView {
@@ -45,6 +49,7 @@ export function createLynxView(configs: LynxViewConfigs): LynxView {
     napiModulesMap,
     tagMap,
     lynxGroupId,
+    threadStrategy = 'multi-thread',
   } = configs;
   return startUIThread(
     templateUrl,
@@ -60,6 +65,7 @@ export function createLynxView(configs: LynxViewConfigs): LynxView {
     },
     shadowRoot,
     lynxGroupId,
+    threadStrategy,
     callbacks,
   );
 }

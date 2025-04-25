@@ -15,12 +15,21 @@ const backgroundWorkerContextCount: number[] = [];
 const contextIdToBackgroundWorker: (Worker | undefined)[] = [];
 
 let preHeatedMainWorker = createMainWorker();
-
 export function bootWorkers(
   lynxGroupId: number | undefined,
+  allOnUI?: boolean,
 ): LynxViewRpc {
-  const curMainWorker = preHeatedMainWorker;
-  preHeatedMainWorker = createMainWorker();
+  let curMainWorker: {
+    mainThreadRpc: Rpc;
+    mainThreadWorker?: Worker;
+    channelMainThreadWithBackground: MessageChannel;
+  };
+  if (allOnUI) {
+    curMainWorker = createUIChannel();
+  } else {
+    curMainWorker = preHeatedMainWorker;
+    preHeatedMainWorker = createMainWorker();
+  }
   const curBackgroundWorker = createBackgroundWorker(
     lynxGroupId,
     curMainWorker.channelMainThreadWithBackground,
@@ -32,12 +41,11 @@ export function bootWorkers(
       backgroundWorkerContextCount[lynxGroupId] = 1;
     }
   }
-
   return {
     mainThreadRpc: curMainWorker.mainThreadRpc,
     backgroundRpc: curBackgroundWorker.backgroundRpc,
     terminateWorkers: () => {
-      curMainWorker.mainThreadWorker.terminate();
+      curMainWorker.mainThreadWorker?.terminate();
       if (lynxGroupId === undefined) {
         curBackgroundWorker.backgroundThreadWorker.terminate();
       } else if (backgroundWorkerContextCount[lynxGroupId] === 1) {
@@ -46,6 +54,18 @@ export function bootWorkers(
         contextIdToBackgroundWorker[lynxGroupId] = undefined;
       }
     },
+  };
+}
+
+function createUIChannel() {
+  const channelMainThreadWithBackground = new MessageChannel();
+  const mainThreadRpc = new Rpc(
+    channelMainThreadWithBackground.port1,
+    'main-to-bg',
+  );
+  return {
+    mainThreadRpc,
+    channelMainThreadWithBackground,
   };
 }
 

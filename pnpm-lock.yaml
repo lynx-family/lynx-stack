@@ -646,6 +646,9 @@ importers:
       '@lynx-js/web-constants':
         specifier: workspace:*
         version: link:../web-constants
+      '@lynx-js/web-mainthread-apis':
+        specifier: workspace:*
+        version: link:../web-mainthread-apis
       '@lynx-js/web-worker-rpc':
         specifier: workspace:*
         version: link:../web-worker-rpc

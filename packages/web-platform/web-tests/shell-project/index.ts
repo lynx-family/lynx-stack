@@ -5,6 +5,7 @@
 import type { LynxTemplate } from '@lynx-js/web-core';
 import { lynxViewTests } from './lynx-view.ts';
 
+const ALL_ON_UI = !!process.env.ALL_ON_UI;
 const nativeModulesMap = {
   CustomModule: URL.createObjectURL(
     new Blob(
@@ -33,6 +34,7 @@ if (casename) {
   const dir2 = `/dist/${casename2}${hasdir ? `/${casename2}` : ''}`;
   lynxViewTests(lynxView => {
     lynxView.setAttribute('url', `${dir}/index.web.json`);
+    if (ALL_ON_UI) lynxView.setAttribute('thread-strategy', `all-on-ui`);
     lynxView.nativeModulesMap = nativeModulesMap;
     lynxView.id = 'lynxview1';
     if (casename2) {

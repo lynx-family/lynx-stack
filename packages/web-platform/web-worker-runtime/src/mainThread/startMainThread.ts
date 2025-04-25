@@ -9,11 +9,11 @@ import {
   reportErrorEndpoint,
 } from '@lynx-js/web-constants';
 import { Rpc } from '@lynx-js/web-worker-rpc';
-import { loadMainThread } from '@lynx-js/web-mainthread-apis';
 import { createMarkTimingInternal } from './crossThreadHandlers/createMainthreadMarkTimingInternal.js';
 import { OffscreenDocument } from '@lynx-js/offscreen-document/webworker';
 import { _onEvent } from '@lynx-js/offscreen-document/webworker';
 import { registerUpdateDataHandler } from './crossThreadHandlers/registerUpdateDataHandler.js';
+const { loadMainThread } = await import('@lynx-js/web-mainthread-apis');
 
 export function startMainThread(
   uiThreadPort: MessagePort,

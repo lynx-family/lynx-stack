@@ -57,7 +57,7 @@ export interface MainThreadConfig {
   callbacks: MainThreadRuntimeCallbacks;
   styleInfo: StyleInfo;
   customSections: LynxTemplate['customSections'];
-  lepusCode: LynxTemplate['lepusCode'];
+  lepusCode: Record<string, LynxJSModule>;
   browserConfig: BrowserConfig;
   tagMap: Record<string, string>;
   docu: Pick<Document, 'append' | 'createElement' | 'addEventListener'>;
@@ -226,24 +226,14 @@ export class MainThreadRuntime {
   __OnLifecycleEvent: (lifeCycleEvent: Cloneable) => void;
 
   __LoadLepusChunk: (path: string) => boolean = (path) => {
-    try {
-      // @ts-expect-error
-      if (self.WorkerGlobalScope) {
-        const lepusChunkUrl = this.config.lepusCode[`${path}`];
-        if (lepusChunkUrl) path = lepusChunkUrl;
-        // @ts-expect-error
-        importScripts(path);
-        const entry = (globalThis.module as LynxJSModule).exports;
-        entry?.(this);
-      } else {
-        throw new Error(
-          'importing scripts synchronously is only available for the multi-thread running mode',
-        );
-      }
+    const lepusModule = this.config.lepusCode[`${path}`];
+    if (lepusModule) {
+      const entry = lepusModule.exports;
+      entry?.(this);
       return true;
-    } catch {
+    } else {
+      return false;
     }
-    return false;
   };
 
   __FlushElementTree = (
