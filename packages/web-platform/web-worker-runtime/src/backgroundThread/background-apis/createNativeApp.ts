@@ -13,6 +13,8 @@ import {
   type NativeApp,
   type NativeModulesMap,
   type LynxCrossThreadContext,
+  type BrowserConfig,
+  systemInfo,
 } from '@lynx-js/web-constants';
 import { createInvokeUIMethod } from './crossThreadHandlers/createInvokeUIMethod.js';
 import { registerPublicComponentEventHandler } from './crossThreadHandlers/registerPublicComponentEventHandler.js';
@@ -34,6 +36,7 @@ export async function createNativeApp(config: {
   mainThreadRpc: Rpc;
   nativeModulesMap: NativeModulesMap;
   timingSystem: TimingSystem;
+  browserConfig: BrowserConfig;
 }): Promise<NativeApp> {
   const {
     mainThreadRpc,
@@ -41,6 +44,7 @@ export async function createNativeApp(config: {
     template,
     nativeModulesMap,
     timingSystem,
+    browserConfig,
   } = config;
   const performanceApis = createPerformanceApis(
     timingSystem,
@@ -57,6 +61,20 @@ export async function createNativeApp(config: {
     selectComponentEndpoint,
     3,
   );
+  const createBundleInitReturnObj = (): BundleInitReturnObj => {
+    const entry = (globalThis.module as LynxJSModule).exports;
+    return {
+      init: (lynxCoreInject) => {
+        lynxCoreInject.tt.lynxCoreInject = lynxCoreInject;
+        lynxCoreInject.tt.globalThis ??= lynxCoreInject;
+        Object.assign(lynxCoreInject.tt, {
+          SystemInfo: { ...systemInfo, pixelRatio: browserConfig.pixelRatio },
+        });
+        const ret = entry?.(lynxCoreInject.tt);
+        return ret;
+      },
+    };
+  };
   const nativeApp: NativeApp = {
     id: (nativeAppCount++).toString(),
     ...performanceApis,
@@ -79,29 +97,14 @@ export async function createNativeApp(config: {
         /* webpackIgnore: true */
         sourceURL
       ).catch(callback).then(async () => {
-        callback(null, {
-          init: (lynxCoreInject) => {
-            lynxCoreInject.tt.lynxCoreInject = lynxCoreInject;
-            lynxCoreInject.tt.globalThis ??= lynxCoreInject;
-            const entry = (globalThis.module as LynxJSModule).exports;
-            const ret = entry?.(lynxCoreInject.tt);
-            return ret;
-          },
-        });
+        callback(null, createBundleInitReturnObj());
       });
     },
     loadScript: (sourceURL: string) => {
       const mainfestUrl = template.manifest[`/${sourceURL}`];
       if (mainfestUrl) sourceURL = mainfestUrl;
       importScripts(sourceURL);
-      const entry = (globalThis.module as LynxJSModule).exports;
-      return {
-        init: (lynxCoreInject) => {
-          lynxCoreInject.tt.lynxCoreInject = lynxCoreInject;
-          lynxCoreInject.tt.globalThis ??= lynxCoreInject;
-          return entry?.(lynxCoreInject.tt);
-        },
-      };
+      return createBundleInitReturnObj();
     },
     requestAnimationFrame(cb: FrameRequestCallback) {
       return requestAnimationFrame(cb);

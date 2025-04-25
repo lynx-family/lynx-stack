@@ -99,6 +99,7 @@ const mainThreadInjectVars = [
   '__OnLifecycleEvent',
   '__FlushElementTree',
   '__LoadLepusChunk',
+  'SystemInfo',
 ];
 
 const backgroundInjectVars = [
@@ -106,6 +107,7 @@ const backgroundInjectVars = [
   'globalThis',
   'lynx',
   'lynxCoreInject',
+  'SystemInfo',
 ];
 
 const backgroundInjectWithBind = [

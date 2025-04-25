@@ -54,7 +54,9 @@ export function createLynxView(configs: LynxViewConfigs): LynxView {
       globalProps,
       nativeModulesMap,
       napiModulesMap,
-      browserConfig: {},
+      browserConfig: {
+        pixelRatio: window.devicePixelRatio,
+      },
     },
     shadowRoot,
     lynxGroupId,

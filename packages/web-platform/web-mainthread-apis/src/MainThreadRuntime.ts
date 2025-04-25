@@ -19,6 +19,7 @@ import {
   type postExposureEndpoint,
   type LynxContextEventTarget,
   type LynxJSModule,
+  systemInfo,
 } from '@lynx-js/web-constants';
 import { globalMuteableVars } from '@lynx-js/web-constants';
 import { createMainThreadLynx, type MainThreadLynx } from './MainThreadLynx.js';
@@ -144,6 +145,9 @@ export class MainThreadRuntime {
     );
     this._ReportError = this.config.callbacks._ReportError;
     this.__OnLifecycleEvent = this.config.callbacks.__OnLifecycleEvent;
+    this.SystemInfo = Object.assign(systemInfo, {
+      pixelRatio: config.browserConfig.pixelRatio,
+    });
     /**
      * Start the exposure service
      */
@@ -203,6 +207,8 @@ export class MainThreadRuntime {
   get globalThis() {
     return this;
   }
+
+  SystemInfo: typeof systemInfo;
 
   lynx: MainThreadLynx;
 

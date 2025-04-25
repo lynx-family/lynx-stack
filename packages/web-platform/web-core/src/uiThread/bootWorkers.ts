@@ -57,7 +57,6 @@ function createMainWorker() {
     mode: 'main',
     toUIThread: channelToMainThread.port2,
     toPeerThread: channelMainThreadWithBackground.port1,
-    pixelRatio: window.devicePixelRatio,
   };
 
   mainThreadWorker.postMessage(mainThreadMessage, [
@@ -89,7 +88,6 @@ function createBackgroundWorker(
     mode: 'background',
     toUIThread: channelToBackground.port2,
     toPeerThread: channelMainThreadWithBackground.port2,
-    pixelRatio: window.devicePixelRatio,
   };
   backgroundThreadWorker.postMessage(backgroundThreadMessage, [
     channelToBackground.port2,

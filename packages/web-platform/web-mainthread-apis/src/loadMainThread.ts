@@ -111,6 +111,7 @@ export function loadMainThread(
             ),
             nativeModulesMap,
             napiModulesMap,
+            browserConfig,
           });
 
           runtime.renderPage!(initData);
