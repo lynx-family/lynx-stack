@@ -11,3 +11,5 @@ feat: support thread strategy `all-on-ui`
 ```
 
 This will make the lynx's main-thread run on the UA's main thread.
+
+Note that the `all-on-ui` dose not support the HMR & chunk splitting yet.
