@@ -1065,6 +1065,7 @@ test.describe('reactlynx3 tests', () => {
     test(
       'config-splitchunk-single-vendor',
       async ({ page }, { title }) => {
+        test.skip(ALL_ON_UI, 'main thread do not support importScript');
         await goto(page, title, undefined, true);
         await wait(1500);
         const target = page.locator('#target');
@@ -1074,6 +1075,7 @@ test.describe('reactlynx3 tests', () => {
     test(
       'config-splitchunk-split-by-experience',
       async ({ page }, { title }) => {
+        test.skip(ALL_ON_UI, 'main thread do not support importScript');
         await goto(page, title, undefined, true);
         await wait(1500);
         const target = page.locator('#target');
@@ -1083,6 +1085,7 @@ test.describe('reactlynx3 tests', () => {
     test(
       'config-splitchunk-split-by-module',
       async ({ page }, { title }) => {
+        test.skip(ALL_ON_UI, 'main thread do not support importScript');
         await goto(page, title, undefined, true);
         await wait(1500);
         const target = page.locator('#target');

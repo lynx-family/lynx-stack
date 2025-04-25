@@ -33,7 +33,9 @@ export function createRenderAllOnUI(
     docu,
     () => {},
     markTimingInternal,
-    reportError,
+    () => {
+      callbacks.onError?.();
+    },
   );
   let runtime!: MainThreadRuntime;
   const start = async (configs: MainThreadStartConfigs) => {

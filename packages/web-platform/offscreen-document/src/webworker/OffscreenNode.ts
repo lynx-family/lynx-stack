@@ -28,6 +28,10 @@ export class OffscreenNode extends EventTarget {
     return this._parentElement;
   }
 
+  get parentNode(): OffscreenNode | null {
+    return this._parentElement;
+  }
+
   get firstElementChild(): OffscreenNode | null {
     return this._children[0] ?? null;
   }

@@ -25,6 +25,8 @@ import {
   switchExposureService,
 } from './MainThreadRuntime.js';
 
+const moduleCache: Record<string, LynxJSModule> = {};
+
 export function loadMainThread(
   backgroundThreadRpc: Rpc,
   docu: Pick<Document, 'append' | 'createElement' | 'addEventListener'>,
@@ -63,11 +65,17 @@ export function loadMainThread(
     markTimingInternal('decode_start');
     const lepusCodeEntries = await Promise.all(
       Object.entries(lepusCode).map(async ([name, url]) => {
-        Object.assign(globalThis, { module: {} });
-        await import(/* webpackIgnore: true */ url);
-        const module = globalThis.module as LynxJSModule;
-        Object.assign(globalThis, { module: {} });
-        return [name, module] as [string, LynxJSModule];
+        const cachedModule = moduleCache[name];
+        if (cachedModule) {
+          return [name, cachedModule] as [string, LynxJSModule];
+        } else {
+          Object.assign(globalThis, { module: {} });
+          await import(/* webpackIgnore: true */ url);
+          const module = globalThis.module as LynxJSModule;
+          Object.assign(globalThis, { module: {} });
+          moduleCache[name] = module;
+          return [name, module] as [string, LynxJSModule];
+        }
       }),
     );
     const lepusCodeLoaded = Object.fromEntries(lepusCodeEntries);

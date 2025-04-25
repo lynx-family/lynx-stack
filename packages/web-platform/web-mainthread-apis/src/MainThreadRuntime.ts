@@ -242,7 +242,7 @@ export class MainThreadRuntime {
   ) => {
     const timingFlags = this._timingFlags;
     this._timingFlags = [];
-    if (this._page && !this._page.parentElement) {
+    if (this._page && !this._page.parentNode) {
       this._rootDom.append(this._page);
     }
     this.config.callbacks.flushElementTree(options, timingFlags);
