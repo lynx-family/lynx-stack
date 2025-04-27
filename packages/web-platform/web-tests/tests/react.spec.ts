@@ -298,7 +298,7 @@ test.describe('reactlynx3 tests', () => {
     test(
       'basic-mts-bindtouchstart',
       async ({ page, browserName, context }, { title }) => {
-        test.skip(browserName !== 'chromium', 'not supoort CDPsession');
+        test.skip(browserName !== 'chromium', 'not support CDPsession');
         await goto(page, title);
         await wait(300);
         const cdpSession = await context.newCDPSession(page);
