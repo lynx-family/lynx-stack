@@ -68,7 +68,7 @@ export async function createNativeApp(config: {
         lynxCoreInject.tt.lynxCoreInject = lynxCoreInject;
         lynxCoreInject.tt.globalThis ??= lynxCoreInject;
         Object.assign(lynxCoreInject.tt, {
-          SystemInfo: { ...systemInfo, pixelRatio: browserConfig.pixelRatio },
+          SystemInfo: { ...systemInfo, ...browserConfig },
         });
         const ret = entry?.(lynxCoreInject.tt);
         return ret;

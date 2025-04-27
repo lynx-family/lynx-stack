@@ -14,6 +14,9 @@ import {
   type StartUIThreadCallbacks,
 } from '../uiThread/startUIThread.js';
 import type { RpcCallType } from '@lynx-js/web-worker-rpc';
+const pixelRatio = window.devicePixelRatio;
+const screenWidth = window.screen.availWidth * pixelRatio;
+const screenHeight = window.screen.availHeight * pixelRatio;
 
 export interface LynxViewConfigs {
   templateUrl: string;
@@ -61,6 +64,8 @@ export function createLynxView(configs: LynxViewConfigs): LynxView {
       napiModulesMap,
       browserConfig: {
         pixelRatio: window.devicePixelRatio,
+        pixelWidth: screenWidth,
+        pixelHeight: screenHeight,
       },
     },
     shadowRoot,

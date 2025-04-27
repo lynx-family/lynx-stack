@@ -147,7 +147,7 @@ export class MainThreadRuntime {
     this.__OnLifecycleEvent = this.config.callbacks.__OnLifecycleEvent;
     this.SystemInfo = {
       ...systemInfo,
-      pixelRatio: config.browserConfig.pixelRatio,
+      ...config.browserConfig,
     };
     /**
      * Start the exposure service

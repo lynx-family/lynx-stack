@@ -294,6 +294,35 @@ test.describe('reactlynx3 tests', () => {
       await wait(100);
       expect(eventHandlerTriggered).toBe(true);
     });
+
+    test(
+      'basic-mts-bindtouchstart',
+      async ({ page, browserName, context }, { title }) => {
+        test.skip(browserName !== 'chromium', 'not supoort CDPsession');
+        await goto(page, title);
+        await wait(300);
+        const cdpSession = await context.newCDPSession(page);
+        await swipe(cdpSession, {
+          x: 20,
+          y: 20,
+          xDistance: 10,
+          yDistance: 0,
+        });
+        expect(page.locator('#target1'), 'has touches').toHaveCSS(
+          'background-color',
+          'rgb(0, 128, 0)',
+        ); // green
+        expect(page.locator('#target2'), 'has target touches').toHaveCSS(
+          'background-color',
+          'rgb(0, 128, 0)',
+        ); // green
+        expect(page.locator('#target3'), 'has changed touches').toHaveCSS(
+          'background-color',
+          'rgb(0, 128, 0)',
+        ); // green
+      },
+    );
+
     test(
       'basic-mts-bindtap-change-element-background',
       async ({ page }, { title }) => {
@@ -450,6 +479,16 @@ test.describe('reactlynx3 tests', () => {
 
     test(
       'api-SystemInfo',
+      async ({ page }, { title }) => {
+        await goto(page, title);
+        await wait(200);
+        const target = page.locator('#target');
+        await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
+      },
+    );
+
+    test(
+      'api-SystemInfo-height-width',
       async ({ page }, { title }) => {
         await goto(page, title);
         await wait(200);

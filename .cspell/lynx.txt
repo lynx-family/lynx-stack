@@ -6,6 +6,9 @@ bindinput
 bindload
 bindtap
 bindtapuser
+bindtouchstart
+bindtouchend
+bindtouchcancel
 bindtouchmove
 catchlongpress
 catchtap
