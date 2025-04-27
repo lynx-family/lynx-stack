@@ -1,5 +1,19 @@
 # @lynx-js/web-webpack-plugin
 
+## 0.6.6
+
+### Patch Changes
+
+- fix(web): `:root` not work on web platform ([#607](https://github.com/lynx-family/lynx-stack/pull/607))
+
+  Note: To solve this issue, you need to upgrade your `react-rsbuild-plugin`
+
+- fix(web): css selector not work for selectors with combinator and pseudo-class on WEB ([#608](https://github.com/lynx-family/lynx-stack/pull/608))
+
+  like `.parent > :not([hidden]) ~ :not([hidden])`
+
+  you will need to upgrade your `react-rsbuild-plugin` to fix this issue
+
 ## 0.6.5
 
 ### Patch Changes

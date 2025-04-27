@@ -1,5 +1,49 @@
 # @lynx-js/react
 
+## 0.107.0
+
+### Minor Changes
+
+- Some of the timing keys are renamed to match the naming convention of the Lynx Engine. ([#438](https://github.com/lynx-family/lynx-stack/pull/438))
+
+  - `update_set_state_trigger` -> `updateSetStateTrigger`
+  - `update_diff_vdom_start` -> `updateDiffVdomStart`
+  - `update_diff_vdom_end` -> `updateDiffVdomEnd`
+  - `diff_vdom_start` -> `diffVdomStart`
+  - `diff_vdom_end` -> `diffVdomEnd`
+  - `pack_changes_start` -> `packChangesStart`
+  - `pack_changes_end` -> `packChangesEnd`
+  - `parse_changes_start` -> `parseChangesStart`
+  - `parse_changes_end` -> `parseChangesEnd`
+  - `patch_changes_start` -> `patchChangesStart`
+  - `patch_changes_end` -> `patchChangesEnd`
+  - `hydrate_parse_snapshot_start` -> `hydrateParseSnapshotStart`
+  - `hydrate_parse_snapshot_end` -> `hydrateParseSnapshotEnd`
+  - `mts_render_start` -> `mtsRenderStart`
+  - `mts_render_end` -> `mtsRenderEnd`
+
+### Patch Changes
+
+- Add testing library for ReactLynx ([#74](https://github.com/lynx-family/lynx-stack/pull/74))
+
+- Refactor: Improved naming for list operation related types. Renamed `UpdateAction` interface to `ListOperations`. ([#592](https://github.com/lynx-family/lynx-stack/pull/592))
+
+- Support using `"jsx": "react-jsx"` along with `"jsxImportSource": "@lynx-js/react"` in `tsconfig.json`. ([#545](https://github.com/lynx-family/lynx-stack/pull/545))
+
+  ```json
+  {
+    "compilerOptions": {
+      "jsx": "react-jsx",
+      "jsxImportSource": "@lynx-js/react"
+    }
+  }
+  ```
+
+  This configuration enhances TypeScript definitions for standard JSX elements,
+  providing type errors for unsupported elements like `<div>` or `<button>`.
+
+- fix: JSX elements with dynamic `key={expr}` now wrapped in `wrapper` element to prevent merging. ([#547](https://github.com/lynx-family/lynx-stack/pull/547))
+
 ## 0.106.5
 
 ### Patch Changes

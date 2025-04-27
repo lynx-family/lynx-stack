@@ -1,5 +1,25 @@
 # @lynx-js/template-webpack-plugin
 
+## 0.6.10
+
+### Patch Changes
+
+- Fix CSS import order when `enableCSSSelector` is false. ([#609](https://github.com/lynx-family/lynx-stack/pull/609))
+
+  When the `enableCSSSelector` option is set to false, style rule priority is inversely related to `@import` order(Lynx CSS engine has the incorrect behavior). Reversing the import order to maintain correct priority is required. For example:
+
+  ```css
+  @import "0.css";
+  @import "1.css";
+  ```
+
+  will convert to:
+
+  ```css
+  @import "1.css";
+  @import "0.css";
+  ```
+
 ## 0.6.9
 
 ### Patch Changes

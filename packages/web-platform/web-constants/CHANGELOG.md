@@ -1,5 +1,24 @@
 # @lynx-js/web-constants
 
+## 0.13.0
+
+### Patch Changes
+
+- refactor: isolate SystemInfo ([#628](https://github.com/lynx-family/lynx-stack/pull/628))
+
+  Never assign `SystemInfo` on worker's self object.
+
+- refactor: move mainthread impl into mainthread-api packages ([#622](https://github.com/lynx-family/lynx-stack/pull/622))
+
+- fix(web): css selector not work for selectors with combinator and pseudo-class on WEB ([#608](https://github.com/lynx-family/lynx-stack/pull/608))
+
+  like `.parent > :not([hidden]) ~ :not([hidden])`
+
+  you will need to upgrade your `react-rsbuild-plugin` to fix this issue
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.13.0
+
 ## 0.12.0
 
 ### Patch Changes
