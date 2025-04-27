@@ -6,9 +6,10 @@
 import {
   type AttributeReactiveClass,
   registerAttributeHandler,
+  registerEventEnableStatusChangeHandler,
 } from '@lynx-js/web-elements-reactive';
 import { commonComponentEventSetting } from '../common/commonEventInitConfiguration.js';
-import type { XFoldviewNg } from './XFoldviewNg.js';
+import { scrollableLength, type XFoldviewNg } from './XFoldviewNg.js';
 
 export class XFoldviewNgEvents
   implements InstanceType<AttributeReactiveClass<typeof XFoldviewNg>>
@@ -18,9 +19,6 @@ export class XFoldviewNgEvents
   #pervScroll = 0;
   constructor(dom: XFoldviewNg) {
     this.#dom = dom;
-    this.#dom.addEventListener('scroll', this.#handleScroll, {
-      passive: true,
-    });
   }
   static observedAttributes = ['granularity'];
 
@@ -28,6 +26,17 @@ export class XFoldviewNgEvents
   #handleGranularity(newVal: string | null) {
     if (newVal && newVal !== '') this.#granularity = parseFloat(newVal);
     else this.#granularity = 0.01;
+  }
+
+  @registerEventEnableStatusChangeHandler('offset')
+  #enableOffsetEvent(enable: boolean) {
+    if (enable) {
+      this.#dom.addEventListener('scroll', this.#handleScroll, {
+        passive: true,
+      });
+    } else {
+      this.#dom.removeEventListener('scroll', this.#handleScroll);
+    }
   }
 
   #handleScroll = () => {
@@ -46,7 +55,7 @@ export class XFoldviewNgEvents
           ...commonComponentEventSetting,
           detail: {
             offset: curentScrollTop,
-            height: this.#dom.__scrollableLength,
+            height: this.#dom[scrollableLength],
           },
         }),
       );

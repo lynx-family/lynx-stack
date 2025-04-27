@@ -98,6 +98,8 @@ const mainThreadInjectVars = [
   '__SetCSSId',
   '__OnLifecycleEvent',
   '__FlushElementTree',
+  '__LoadLepusChunk',
+  'SystemInfo',
 ];
 
 const backgroundInjectVars = [
@@ -105,6 +107,7 @@ const backgroundInjectVars = [
   'globalThis',
   'lynx',
   'lynxCoreInject',
+  'SystemInfo',
 ];
 
 const backgroundInjectWithBind = [
@@ -112,12 +115,17 @@ const backgroundInjectWithBind = [
   'Component',
 ];
 
-export async function loadTemplate(url: string): Promise<LynxTemplate> {
+export async function loadTemplate(
+  url: string,
+  customTemplateLoader?: (url: string) => Promise<LynxTemplate>,
+): Promise<LynxTemplate> {
   const cachedTemplate = TemplateCache[url];
   if (cachedTemplate) return cachedTemplate;
-  const template = (await (await fetch(url, {
-    method: 'GET',
-  })).json()) as LynxTemplate;
+  const template = customTemplateLoader
+    ? await customTemplateLoader(url)
+    : (await (await fetch(url, {
+      method: 'GET',
+    })).json()) as LynxTemplate;
   const decodedTemplate: LynxTemplate = {
     ...template,
     lepusCode: generateJavascriptUrl(

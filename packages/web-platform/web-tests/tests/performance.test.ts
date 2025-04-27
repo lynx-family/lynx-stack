@@ -6,6 +6,8 @@ import type { Page, BrowserContext, CDPSession } from '@playwright/test';
 
 import { test, expect } from './coverage-fixture.js';
 
+const isCI = !!process.env['CI'];
+
 const wait = async (ms: number) => {
   await new Promise((resolve) => {
     setTimeout(resolve, ms);
@@ -164,6 +166,18 @@ test.describe('performance', () => {
         webcomponentsMetrics.firstPaint / react18Metrics.firstPaint,
         '-10%',
       ).toBeLessThan(0.9);
+    },
+  );
+
+  isCI ?? test.describe.configure({ retries: 8 });
+  test(
+    'x-list-waterfall-1000',
+    async ({ page, browserName, context }, { title }) => {
+      const cdpSession = await goto({ page, browserName, context }, title);
+      const metrics = await getMetrics(cdpSession, page);
+      console.log(metrics.LayoutCount, metrics.RecalcStyleCount);
+      expect(metrics.LayoutCount, 'layout count').toBeLessThanOrEqual(7);
+      expect(metrics.RecalcStyleCount, 'recalc count').toBeLessThanOrEqual(8);
     },
   );
 });

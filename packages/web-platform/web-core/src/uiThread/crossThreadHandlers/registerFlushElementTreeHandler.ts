@@ -13,9 +13,6 @@ export function registerFlushElementTreeHandler(
   options: {
     shadowRoot: ShadowRoot;
   },
-  onCommit: (info: {
-    isFP: boolean;
-  }) => void,
 ) {
   const {
     shadowRoot,
@@ -25,17 +22,10 @@ export function registerFlushElementTreeHandler(
     shadowRoot,
     onEvent,
   });
-  let isFP = true;
   mainThreadRpc.registerHandler(
     flushElementTreeEndpoint,
     (operations) => {
       decodeOperation(operations);
-      onCommit({
-        isFP,
-      });
-      if (isFP) {
-        isFP = false;
-      }
     },
   );
 }

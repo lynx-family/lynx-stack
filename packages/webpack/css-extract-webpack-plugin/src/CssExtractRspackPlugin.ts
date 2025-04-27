@@ -251,6 +251,7 @@ ${RuntimeGlobals.require}.cssHotUpdateList = ${
               const { cssMap } = LynxTemplatePlugin.convertCSSChunksToMap(
                 [content],
                 options.cssPlugins,
+                options.enableCSSSelector,
               );
               const cssDeps = Object.entries(cssMap).reduce<
                 Record<string, string[]>

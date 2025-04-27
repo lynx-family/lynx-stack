@@ -9,4 +9,5 @@ export interface PageConfig {
 }
 
 export interface BrowserConfig {
+  pixelRatio: number;
 }

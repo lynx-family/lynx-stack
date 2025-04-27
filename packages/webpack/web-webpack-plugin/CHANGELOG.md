@@ -1,5 +1,20 @@
 # @lynx-js/web-webpack-plugin
 
+## 0.6.5
+
+### Patch Changes
+
+- Updated dependencies [[`7edf478`](https://github.com/lynx-family/lynx-stack/commit/7edf478410cb57eeedc18aac6f5d3950b16c7fa8)]:
+  - @lynx-js/web-style-transformer@0.3.0
+
+## 0.6.4
+
+### Patch Changes
+
+- feat: support mts event handler (1/n) ([#495](https://github.com/lynx-family/lynx-stack/pull/495))
+
+  now the main-thread:bind handler could be invoked. The params of the handler will be implemented later.
+
 ## 0.6.3
 
 ### Patch Changes

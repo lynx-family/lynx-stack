@@ -624,9 +624,7 @@ export default defineConfig({
     ],
     enableScrollToTop: true,
   },
-  ssg: {
-    strict: true,
-  },
+  ssg: true,
   // We use GitHub Pages to host the website, so we need to set the base path to `/lynx-stack/`
   base: '/lynx-stack/',
   globalStyles: join(__dirname, 'src', 'styles', 'global.scss'),

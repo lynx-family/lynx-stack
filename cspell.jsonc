@@ -76,6 +76,7 @@
     "manypkg", // https://github.com/Thinkmill/manypkg
     "messageformat", // https://formatjs.github.io/docs/intl-messageformat
     "memfs",
+    "mktemp",
     "napi",
     "nocheck", // @ts-nocheck :)
     "pathinfo", // webpack config output.pathinfo
@@ -98,6 +99,7 @@
     "rustc",
     "samchon", // https://github.com/samchon/openapi
     "serde", // https://github.com/serde-rs/serde
+    "SARIF", // https://sarifweb.azurewebsites.net/
     "turborepo", // https://github.com/vercel/turbo
     "typecheck", // vitest uses `--typecheck`
     "typeof",
@@ -112,7 +114,27 @@
     "PAPI", // Lynx's Element PAPI
     "parseable", // https://pnpm.io/cli/list
     "debugids", // https://getsentry.github.io/debugids/
+    "zizmor", // https://github.com/woodruffw/zizmor
+    "Vdom",
+    "wvid",
+    "bindscroll",
+    "deinit",
     "layoutchange", // the "layoutchange" event of Lynx
+    "longtap",
+    "bgload",
+    "bgerror",
+    "mouseclick",
+    "mousedblclick",
+    "mouselongpress",
+    "mouselongpress",
+    "contentsizechanged",
+    "scrolltoupperedge",
+    "scrolltoloweredge",
+    "scrolltonormalstate",
+    "rltl", // ReactLynx Testing Library
+    // lighthouse CI
+    "lhci",
+    "lh",
   ],
   // Glob
   "ignorePaths": [

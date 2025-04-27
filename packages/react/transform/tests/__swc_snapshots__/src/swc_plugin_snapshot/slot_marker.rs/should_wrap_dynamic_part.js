@@ -20,3 +20,7 @@
     <list-item/>,
     <list-item/>
 ]}</list></internal-slot>a<internal-slot><view><A/></view></internal-slot></view>;
+<view key={hello}>hello</view>;
+<internal-slot><view key={hello}>{hello}</view></internal-slot>;
+<view><internal-slot><wrapper><text key={hello}>{hello}</text></wrapper></internal-slot></view>;
+<view><text>Hello, ReactLynx, <internal-slot><wrapper>{hello}</wrapper></internal-slot></text><internal-slot><wrapper><text key={hello}>{hello}</text></wrapper></internal-slot></view>;

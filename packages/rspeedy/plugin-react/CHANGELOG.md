@@ -1,5 +1,63 @@
 # @lynx-js/react-rsbuild-plugin
 
+## 0.9.7
+
+### Patch Changes
+
+- Support overriding SWC configuration. ([#563](https://github.com/lynx-family/lynx-stack/pull/563))
+
+  Now you can override configuration like `useDefineForClassFields` using `tools.swc`.
+
+  ```js
+  import { defineConfig } from '@lynx-js/rspeedy'
+
+  export default defineConfig({
+    tools: {
+      swc: {
+        jsc: {
+          transform: {
+            useDefineForClassFields: true,
+          },
+        },
+      },
+    },
+  })
+  ```
+
+- Updated dependencies [[`f1ca29b`](https://github.com/lynx-family/lynx-stack/commit/f1ca29bd766377dd46583f15e1e75bca447699cd)]:
+  - @lynx-js/react-webpack-plugin@0.6.11
+  - @lynx-js/react-alias-rsbuild-plugin@0.9.7
+  - @lynx-js/react-refresh-webpack-plugin@0.3.2
+  - @lynx-js/web-webpack-plugin@0.6.5
+
+## 0.9.6
+
+### Patch Changes
+
+- Updated dependencies [[`ea42e62`](https://github.com/lynx-family/lynx-stack/commit/ea42e62fbcd5c743132c3e6e7c4851770742d544), [`12e3afe`](https://github.com/lynx-family/lynx-stack/commit/12e3afe14fa46bbec817bed48b730798f777543c)]:
+  - @lynx-js/web-webpack-plugin@0.6.4
+  - @lynx-js/template-webpack-plugin@0.6.9
+  - @lynx-js/react-alias-rsbuild-plugin@0.9.6
+  - @lynx-js/react-refresh-webpack-plugin@0.3.2
+  - @lynx-js/react-webpack-plugin@0.6.10
+  - @lynx-js/css-extract-webpack-plugin@0.5.3
+
+## 0.9.5
+
+### Patch Changes
+
+- fix: add enableCSSInvalidation for encodeCSS of css HMR, this will fix pseudo-class (such as `:active`) not working in HMR. ([#435](https://github.com/lynx-family/lynx-stack/pull/435))
+
+- Disable `module.generator.json.JSONParse` option as it increases the bundle size of `main-thread.js`. For more detail, please see this [issue](https://github.com/webpack/webpack/issues/19319). ([#402](https://github.com/lynx-family/lynx-stack/pull/402))
+
+- Updated dependencies [[`3e7988f`](https://github.com/lynx-family/lynx-stack/commit/3e7988f3af4b4f460eaf5add29cca19537dc1a6b), [`7243242`](https://github.com/lynx-family/lynx-stack/commit/7243242801e3a8ca0213c0ef642f69a22c39960e)]:
+  - @lynx-js/css-extract-webpack-plugin@0.5.3
+  - @lynx-js/template-webpack-plugin@0.6.8
+  - @lynx-js/react-alias-rsbuild-plugin@0.9.5
+  - @lynx-js/react-refresh-webpack-plugin@0.3.2
+  - @lynx-js/react-webpack-plugin@0.6.10
+  - @lynx-js/web-webpack-plugin@0.6.3
+
 ## 0.9.4
 
 ### Patch Changes

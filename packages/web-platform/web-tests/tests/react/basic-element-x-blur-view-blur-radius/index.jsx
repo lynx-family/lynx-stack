@@ -15,9 +15,8 @@ function App() {
       <x-blur-view
         style='width: 100%; height: 100px; margin-top: 50px; border: 1px solid red; padding: 10px;'
         blur-radius='25px'
-        class='blur-view'
       >
-        <text>
+        <text class='text'>
           blur-radius 25
         </text>
       </x-blur-view>

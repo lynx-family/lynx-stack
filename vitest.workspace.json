@@ -2,5 +2,7 @@
   "packages/react/*/vitest.config.ts",
   "packages/rspeedy/*/vitest.config.ts",
   "packages/tools/*/vitest.config.ts",
-  "packages/webpack/*/vitest.config.ts"
+  "packages/webpack/*/vitest.config.ts",
+  "packages/testing-library/*/vitest.config.mts",
+  "packages/testing-library/examples/*/vitest.config.ts"
 ]

@@ -15,9 +15,11 @@ import {
   type publishEventEndpoint,
   type publicComponentEventEndpoint,
   type reportErrorEndpoint,
-  type onLifecycleEventEndpoint,
   type RpcCallType,
   type postExposureEndpoint,
+  type LynxContextEventTarget,
+  type LynxJSModule,
+  systemInfo,
 } from '@lynx-js/web-constants';
 import { globalMuteableVars } from '@lynx-js/web-constants';
 import { createMainThreadLynx, type MainThreadLynx } from './MainThreadLynx.js';
@@ -42,7 +44,7 @@ export interface MainThreadRuntimeCallbacks {
     timingFlags: string[],
   ) => void;
   _ReportError: RpcCallType<typeof reportErrorEndpoint>;
-  __OnLifecycleEvent: RpcCallType<typeof onLifecycleEventEndpoint>;
+  __OnLifecycleEvent: (lifeCycleEvent: Cloneable) => void;
   markTiming: (pipelineId: string, timingKey: string) => void;
   publishEvent: RpcCallType<typeof publishEventEndpoint>;
   publicComponentEvent: RpcCallType<typeof publicComponentEventEndpoint>;
@@ -55,10 +57,11 @@ export interface MainThreadConfig {
   callbacks: MainThreadRuntimeCallbacks;
   styleInfo: StyleInfo;
   customSections: LynxTemplate['customSections'];
-  lepusCode: LynxTemplate['lepusCode'];
+  lepusCode: Record<string, LynxJSModule>;
   browserConfig: BrowserConfig;
   tagMap: Record<string, string>;
   docu: Pick<Document, 'append' | 'createElement' | 'addEventListener'>;
+  jsContext: LynxContextEventTarget;
 }
 
 export const elementToRuntimeInfoMap = Symbol('elementToRuntimeInfoMap');
@@ -105,7 +108,7 @@ export class MainThreadRuntime {
     public config: MainThreadConfig,
   ) {
     this.__globalProps = config.globalProps;
-    this.lynx = createMainThreadLynx(config, this);
+    this.lynx = createMainThreadLynx(config);
     /**
      * now create the style content
      * 1. flatten the styleInfo
@@ -119,7 +122,6 @@ export class MainThreadRuntime {
     const cssInJsInfo: CssInJsInfo = this.config.pageConfig.enableCSSSelector
       ? {}
       : genCssInJsInfo(this.config.styleInfo);
-    this._rootDom = this.config.docu.createElement('div');
     const cardStyleElement = this.config.docu.createElement('style');
     cardStyleElement.innerHTML = genCssContent(
       this.config.styleInfo,
@@ -143,6 +145,10 @@ export class MainThreadRuntime {
     );
     this._ReportError = this.config.callbacks._ReportError;
     this.__OnLifecycleEvent = this.config.callbacks.__OnLifecycleEvent;
+    this.SystemInfo = {
+      ...systemInfo,
+      pixelRatio: config.browserConfig.pixelRatio,
+    };
     /**
      * Start the exposure service
      */
@@ -167,7 +173,9 @@ export class MainThreadRuntime {
         },
         set: (v: any) => {
           this.__lynxGlobalBindingValues[nm] = v;
-          this._updateVars?.();
+          for (const handler of this.__varsUpdateHandlers) {
+            handler();
+          }
         },
       });
     }
@@ -201,6 +209,8 @@ export class MainThreadRuntime {
     return this;
   }
 
+  SystemInfo: typeof systemInfo;
+
   lynx: MainThreadLynx;
 
   __globalProps: unknown;
@@ -213,15 +223,17 @@ export class MainThreadRuntime {
 
   _ReportError: RpcCallType<typeof reportErrorEndpoint>;
 
-  __OnLifecycleEvent: RpcCallType<typeof onLifecycleEventEndpoint>;
+  __OnLifecycleEvent: (lifeCycleEvent: Cloneable) => void;
 
   __LoadLepusChunk: (path: string) => boolean = (path) => {
-    try {
-      this.lynx.requireModule(path);
+    const lepusModule = this.config.lepusCode[`${path}`];
+    if (lepusModule) {
+      const entry = lepusModule.exports;
+      entry?.(this);
       return true;
-    } catch {
+    } else {
+      return false;
     }
-    return false;
   };
 
   __FlushElementTree = (
@@ -230,13 +242,17 @@ export class MainThreadRuntime {
   ) => {
     const timingFlags = this._timingFlags;
     this._timingFlags = [];
-    if (this._page && !this._page.parentElement) {
+    if (this._page && !this._page.parentNode) {
       this._rootDom.append(this._page);
     }
     this.config.callbacks.flushElementTree(options, timingFlags);
   };
 
   updatePage?: (data: Cloneable, options?: Record<string, string>) => void;
+  runWorklet?: (obj: unknown, event: unknown) => void;
 
-  _updateVars?: () => void;
+  private __varsUpdateHandlers: (() => void)[] = [];
+  set _updateVars(handler: () => void) {
+    this.__varsUpdateHandlers.push(handler);
+  }
 }

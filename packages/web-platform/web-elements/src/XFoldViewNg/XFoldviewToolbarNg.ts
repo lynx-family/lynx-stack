@@ -4,9 +4,19 @@
 // LICENSE file in the root directory of this source tree.
 */
 import { Component } from '@lynx-js/web-elements-reactive';
-import { LynxExposure } from '../common/Exposure.js';
+import { CommonEventsAndMethods } from '../common/CommonEventsAndMethods.js';
+import { resizeObserver, type XFoldviewNg } from './XFoldviewNg.js';
 
 @Component<typeof XFoldviewToolbarNg>('x-foldview-toolbar-ng', [
-  LynxExposure,
+  CommonEventsAndMethods,
 ])
-export class XFoldviewToolbarNg extends HTMLElement {}
+export class XFoldviewToolbarNg extends HTMLElement {
+  connectedCallback() {
+    (this.parentElement as XFoldviewNg | null)?.[resizeObserver]?.observe(this);
+  }
+  dispose() {
+    (this.parentElement as XFoldviewNg | null)?.[resizeObserver]?.unobserve(
+      this,
+    );
+  }
+}

@@ -435,11 +435,12 @@ export class LynxTemplatePlugin {
   static convertCSSChunksToMap(
     cssChunks: string[],
     plugins: CSS.Plugin[],
+    enableCSSSelector: boolean,
   ): {
     cssMap: Record<string, CSS.LynxStyleNode[]>;
     cssSource: Record<string, string>;
   } {
-    return cssChunksToMap(cssChunks, plugins);
+    return cssChunksToMap(cssChunks, plugins, enableCSSSelector);
   }
 
   /**
@@ -522,7 +523,7 @@ class LynxTemplatePluginImpl {
                  * and source-map is generated
                  */
                 compiler.webpack.Compilation
-                  .PROCESS_ASSETS_STAGE_OPTIMIZE_INLINE,
+                  .PROCESS_ASSETS_STAGE_OPTIMIZE_HASH,
             },
             () => {
               return this.#generateTemplate(
@@ -571,9 +572,10 @@ class LynxTemplatePluginImpl {
           /**
            * Generate the html after minification and dev tooling is done
            * and source-map is generated
+           * and real content hash is generated
            */
           compiler.webpack.Compilation
-            .PROCESS_ASSETS_STAGE_OPTIMIZE_INLINE,
+            .PROCESS_ASSETS_STAGE_OPTIMIZE_HASH,
       }, async () => {
         await this.#generateAsyncTemplate(compilation);
       });
@@ -760,6 +762,7 @@ class LynxTemplatePluginImpl {
         .filter((v): v is Asset => !!v)
         .map(asset => asset.source.source().toString()),
       cssPlugins,
+      enableCSSSelector,
     );
     const encodeRawData: EncodeRawData = {
       compilerOptions: {

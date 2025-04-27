@@ -9,12 +9,12 @@ import type {
 } from './types/EventType.js';
 import type { Cloneable, CloneableObject } from './types/Cloneable.js';
 import type { MainThreadStartConfigs } from './types/MainThreadStartConfigs.js';
-import type { LynxLifecycleEvent } from './types/LynxLifecycleEvent.js';
 import type { IdentifierType, InvokeCallbackRes } from './types/NativeApp.js';
 import type { LynxTemplate } from './types/LynxModule.js';
 import type { NapiModulesMap } from './types/NapiModules.js';
 import type { NativeModulesMap } from './types/NativeModules.js';
 import type { ElementOperation } from '@lynx-js/offscreen-document';
+import type { BrowserConfig } from './types/PageConfig.js';
 
 export const postExposureEndpoint = createRpcEndpoint<
   [{ exposures: ExposureWorkerEvent[]; disExposures: ExposureWorkerEvent[] }],
@@ -74,21 +74,6 @@ export const disposeEndpoint = createRpcEndpoint<
   void
 >('dispose', false, true);
 
-export const uiThreadFpReadyEndpoint = createRpcEndpoint<[], void>(
-  'uiThreadFpReady',
-  false,
-  false,
-);
-
-export const onLifecycleEventEndpoint = createRpcEndpoint<
-  [LynxLifecycleEvent],
-  void
->(
-  '__OnLifecycleEvent',
-  false,
-  false,
-);
-
 export const BackgroundThreadStartEndpoint = createRpcEndpoint<[
   {
     initData: unknown;
@@ -98,6 +83,7 @@ export const BackgroundThreadStartEndpoint = createRpcEndpoint<[
     customSections: Record<string, Cloneable>;
     nativeModulesMap: NativeModulesMap;
     napiModulesMap: NapiModulesMap;
+    browserConfig: BrowserConfig;
   },
 ], void>('start', false, true);
 
@@ -115,11 +101,6 @@ export const flushElementTreeEndpoint = createRpcEndpoint<
   ],
   void
 >('flushElementTree', false, true);
-
-export const mainThreadChunkReadyEndpoint = createRpcEndpoint<
-  [],
-  void
->('mainThreadChunkReady', false, false);
 
 export const callLepusMethodEndpoint = createRpcEndpoint<
   [name: string, data: unknown],
@@ -209,9 +190,24 @@ export const dispatchLynxViewEventEndpoint = createRpcEndpoint<
     detail: CloneableObject,
   ],
   void
->('dispatchLynxViewEvent', false, true);
+>('dispatchLynxViewEvent', false, false);
 
 export const dispatchNapiModuleEndpoint = createRpcEndpoint<
   [data: Cloneable],
   void
 >('dispatchNapiModule', false, false);
+export const dispatchCoreContextOnBackgroundEndpoint = createRpcEndpoint<
+  [{
+    type: string;
+    data: Cloneable;
+  }],
+  void
+>('dispatchCoreContextOnBackground', false, false);
+
+export const dispatchJSContextOnMainThreadEndpoint = createRpcEndpoint<
+  [{
+    type: string;
+    data: Cloneable;
+  }],
+  void
+>('dispatchJSContextOnMainThread', false, false);

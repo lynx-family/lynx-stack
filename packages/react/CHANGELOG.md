@@ -1,5 +1,29 @@
 # @lynx-js/react
 
+## 0.106.5
+
+### Patch Changes
+
+- Fix `lynx.loadLazyBundle` is not a function ([#568](https://github.com/lynx-family/lynx-stack/pull/568))
+
+- fix: flushDelayedLifecycleEvents stack overflow error ([#540](https://github.com/lynx-family/lynx-stack/pull/540))
+
+## 0.106.4
+
+### Patch Changes
+
+- Disable MTS HMR functionality temporarily to address stability issues. This is a temporary fix while we work on a more robust solution. ([#512](https://github.com/lynx-family/lynx-stack/pull/512))
+
+## 0.106.3
+
+### Patch Changes
+
+- Do some global var initialize in hydrate, which fixes error like `cannot read property '-21' of undefined` and some style issue. ([#461](https://github.com/lynx-family/lynx-stack/pull/461))
+
+- fix: ensure ref lifecycle events run after firstScreen in the background thread ([#434](https://github.com/lynx-family/lynx-stack/pull/434))
+
+  This patch fixes an issue where ref lifecycle events were running before firstScreen events in the background thread async render mode, which could cause refs to be undefined when components try to access them.
+
 ## 0.106.2
 
 ### Patch Changes

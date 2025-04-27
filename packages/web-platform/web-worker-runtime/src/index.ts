@@ -9,13 +9,11 @@ export interface WorkerStartMessage {
   mode: 'main' | 'background';
   toPeerThread: MessagePort;
   toUIThread: MessagePort;
-  pixelRatio: number;
 }
 
 self.onmessage = (ev) => {
-  const { mode, toPeerThread, toUIThread, pixelRatio } = ev
+  const { mode, toPeerThread, toUIThread } = ev
     .data as WorkerStartMessage;
-  (globalThis as any).SystemInfo.pixelRatio = pixelRatio;
   if (mode === 'main') {
     startMainThread(toUIThread, toPeerThread);
   } else {
@@ -23,6 +21,5 @@ self.onmessage = (ev) => {
   }
 };
 Object.assign(globalThis, {
-  SystemInfo: { platform: 'web' },
   module: { exports: null },
 });

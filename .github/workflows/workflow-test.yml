@@ -3,6 +3,8 @@ on:
     secrets:
       CODECOV_TOKEN:
         required: false
+      LHCI_GITHUB_APP_TOKEN:
+        required: false
     inputs:
       runs-on:
         required: true
@@ -34,7 +36,7 @@ jobs:
         with:
           node-version: "22"
       - name: TurboCache
-        uses: lynx-infra/cache@ad9f115f5b15348eb208a52ec6f7ffa82e8108df
+        uses: lynx-infra/cache@558d7c999f9f97ac02ed7e711503bb81d82ff8ee
         with:
           path: .turbo
           # We have to be strict here to make sure getting the cache of build-all
@@ -48,16 +50,6 @@ jobs:
       - name: Build
         run: |
           pnpm turbo build --summarize
-      - name: Upload Turbo Summary
-        if: ${{ failure() }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: turbo-summary-${{ github.ref }}
-          path: .turbo/runs
-          if-no-files-found: error
-          retention-days: 1
-          overwrite: true
-          include-hidden-files: true
       - uses: ./.github/actions/setup-playwright
         if: ${{ inputs.is-web }}
         with:
@@ -68,6 +60,8 @@ jobs:
           NODE_OPTIONS: --max-old-space-size=8192
           GITHUB_SHA: ${{ github.event.pull_request.head.sha }}
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
         run: ${{ inputs.run }}
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5

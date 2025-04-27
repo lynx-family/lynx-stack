@@ -4,14 +4,14 @@
 // LICENSE file in the root directory of this source tree.
 */
 import { Component, html } from '@lynx-js/web-elements-reactive';
-import { LynxExposure } from '../common/Exposure.js';
+import { CommonEventsAndMethods } from '../common/CommonEventsAndMethods.js';
 import { DropShadow } from './DropShadow.js';
 import { ImageSrc } from './ImageSrc.js';
 import { ImageEvents } from './ImageEvents.js';
 
 @Component<typeof FilterImage>(
   'filter-image',
-  [LynxExposure, ImageSrc, DropShadow, ImageEvents],
+  [CommonEventsAndMethods, ImageSrc, DropShadow, ImageEvents],
   html` <img part="img" alt="" id="img" /> `,
 )
 export class FilterImage extends HTMLElement {}

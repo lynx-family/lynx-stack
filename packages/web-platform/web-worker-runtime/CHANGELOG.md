@@ -1,5 +1,59 @@
 # @lynx-js/web-worker-runtime
 
+## 0.12.0
+
+### Patch Changes
+
+- feat: fully support MTS ([#569](https://github.com/lynx-family/lynx-stack/pull/569))
+
+  Now use support the following usage
+
+  - mainthread event
+  - mainthread ref
+  - runOnMainThread/runOnBackground
+  - ref.current.xx
+
+- Updated dependencies [[`f1ca29b`](https://github.com/lynx-family/lynx-stack/commit/f1ca29bd766377dd46583f15e1e75bca447699cd), [`8ca9fcb`](https://github.com/lynx-family/lynx-stack/commit/8ca9fcbbc86b0f0ac05ee4319876cdd5dd08d668), [`efe6fd7`](https://github.com/lynx-family/lynx-stack/commit/efe6fd7de8a3d8119ea550f4d4e939d1fbfee4f0)]:
+  - @lynx-js/web-mainthread-apis@0.12.0
+  - @lynx-js/web-constants@0.12.0
+  - @lynx-js/web-worker-rpc@0.12.0
+
+## 0.11.0
+
+### Patch Changes
+
+- feat: support mts event handler (1/n) ([#495](https://github.com/lynx-family/lynx-stack/pull/495))
+
+  now the main-thread:bind handler could be invoked. The params of the handler will be implemented later.
+
+- feat: allow multi lynx-view to share bts worker ([#520](https://github.com/lynx-family/lynx-stack/pull/520))
+
+  Now we allow users to enable so-called "shared-context" feature on the Web Platform.
+
+  Similar to the same feature for Lynx iOS/Android, this feature let multi lynx cards to share one js context.
+
+  The `lynx.getSharedData` and `lynx.setSharedData` are also supported in this commit.
+
+  To enable this feature, set property `lynxGroupId` or attribute `lynx-group-id` before a lynx-view starts rendering. Those card with same context id will share one web worker for the bts scripts.
+
+- Updated dependencies [[`ea42e62`](https://github.com/lynx-family/lynx-stack/commit/ea42e62fbcd5c743132c3e6e7c4851770742d544), [`a0f5ca4`](https://github.com/lynx-family/lynx-stack/commit/a0f5ca4ea0895ccbaa6aa63f449f53a677a1cf73)]:
+  - @lynx-js/web-mainthread-apis@0.11.0
+  - @lynx-js/web-constants@0.11.0
+  - @lynx-js/web-worker-rpc@0.11.0
+
+## 0.10.1
+
+### Patch Changes
+
+- feat: onNapiModulesCall function add new param: `dispatchNapiModules`, napiModulesMap val add new param: `handleDispatch`. ([#414](https://github.com/lynx-family/lynx-stack/pull/414))
+
+  Now you can use them to actively communicate to napiModules (background thread) in onNapiModulesCall (ui thread).
+
+- Updated dependencies [[`1af3b60`](https://github.com/lynx-family/lynx-stack/commit/1af3b6052ab27f98bf0e4d1b0ec9f7d9e88e0afc)]:
+  - @lynx-js/web-constants@0.10.1
+  - @lynx-js/web-mainthread-apis@0.10.1
+  - @lynx-js/web-worker-rpc@0.10.1
+
 ## 0.10.0
 
 ### Minor Changes

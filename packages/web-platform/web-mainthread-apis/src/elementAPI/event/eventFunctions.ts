@@ -7,8 +7,8 @@ import {
   LynxEventNameToW3cCommon,
   lynxTagAttribute,
   W3cEventNameToLynx,
-  type LynxCrossThreadEvent,
   type LynxEventType,
+  type MainThreadScriptEvent,
 } from '@lynx-js/web-constants';
 import {
   elementToRuntimeInfoMap,
@@ -31,12 +31,12 @@ export function createEventFunctions(runtime: MainThreadRuntime) {
         ?.handler
       : runtimeInfo.eventHandlerMap[lynxEventName]?.bind
         ?.handler;
-    if (hname) {
-      const crossThreadEvent = createCrossThreadEvent(
-        runtime,
-        event,
-        lynxEventName,
-      );
+    const crossThreadEvent = createCrossThreadEvent(
+      runtime,
+      event,
+      lynxEventName,
+    );
+    if (typeof hname === 'string') {
       const parentComponentUniqueId = runtimeInfo.parentComponentUniqueId;
       const parentComponent = runtime[getElementByUniqueId](
         Number(parentComponentUniqueId),
@@ -58,6 +58,14 @@ export function createEventFunctions(runtime: MainThreadRuntime) {
         );
       }
       return true;
+    } else if (hname) {
+      (crossThreadEvent as MainThreadScriptEvent).target.elementRefptr =
+        event.target;
+      if (crossThreadEvent.currentTarget) {
+        (crossThreadEvent as MainThreadScriptEvent).currentTarget!
+          .elementRefptr = event.currentTarget;
+      }
+      runtime.runWorklet?.(hname.value, [crossThreadEvent]);
     }
     return false;
   };
@@ -69,7 +77,7 @@ export function createEventFunctions(runtime: MainThreadRuntime) {
     element: HTMLElement,
     eventType: LynxEventType,
     eventName: string,
-    newEventHandler: string | undefined, // | ((ev: LynxCrossThreadEvent) => void) | undefined,
+    newEventHandler: string | { type: 'worklet'; value: unknown } | undefined,
   ) {
     eventName = eventName.toLowerCase();
     const isCatch = eventType === 'catchEvent' || eventType === 'capture-catch';
@@ -124,7 +132,7 @@ export function createEventFunctions(runtime: MainThreadRuntime) {
     element: HTMLElement,
     eventName: string,
     eventType: LynxEventType,
-  ): string | ((ev: LynxCrossThreadEvent) => void) | undefined {
+  ): string | { type: 'worklet'; value: unknown } | undefined {
     const runtimeInfo = runtime[elementToRuntimeInfoMap].get(element)!;
     eventName = eventName.toLowerCase();
     const isCapture = eventType.startsWith('capture');
@@ -137,26 +145,25 @@ export function createEventFunctions(runtime: MainThreadRuntime) {
   function __GetEvents(element: HTMLElement): {
     type: LynxEventType;
     name: string;
-    function: string | ((ev: Event) => void) | undefined;
+    function: string | { type: 'worklet'; value: unknown } | undefined;
   }[] {
     const eventHandlerMap =
       runtime[elementToRuntimeInfoMap].get(element)!.eventHandlerMap;
     const eventInfos: {
       type: LynxEventType;
       name: string;
-      function: string | ((ev: Event) => void) | undefined;
+      function: string | { type: 'worklet'; value: unknown } | undefined;
     }[] = [];
     for (const [lynxEventName, info] of Object.entries(eventHandlerMap)) {
       for (const atomInfo of [info.bind, info.capture]) {
         if (atomInfo) {
-          for (const [type, handler] of Object.values(atomInfo)) {
-            if (handler) {
-              eventInfos.push({
-                type: type as LynxEventType,
-                name: lynxEventName,
-                function: handler,
-              });
-            }
+          const { type, handler } = atomInfo;
+          if (handler) {
+            eventInfos.push({
+              type: type as LynxEventType,
+              name: lynxEventName,
+              function: handler,
+            });
           }
         }
       }

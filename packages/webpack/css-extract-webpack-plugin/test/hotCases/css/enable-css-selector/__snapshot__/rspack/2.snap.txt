@@ -5,16 +5,16 @@
 
 ## Asset Files
 - Bundle: rspack-bundle.js
-- Manifest: main.LAST_HASH.css.hot-update.json, size: 1054
+- Manifest: main.LAST_HASH.css.hot-update.json, size: 1042
 - Manifest: main.LAST_HASH.hot-update.json, size: 28
-- Update: main.LAST_HASH.hot-update.js, size: 1307
+- Update: main.LAST_HASH.hot-update.js, size: 1111
 
 ## Manifest
 
 ### main.LAST_HASH.css.hot-update.json
 
 ```json
-{"content":"eyJjb21waWxlck9wdGlvbnMiOnsiZW5hYmxlRmliZXJBcmNoIjp0cnVlLCJ1c2VMZXB1c05HIjp0cnVlLCJidW5kbGVNb2R1bGVNb2RlIjoiUmV0dXJuQnlGdW5jdGlvbiIsImVuYWJsZUNTU1NlbGVjdG9yIjp0cnVlLCJlbmFibGVDU1NJbnZhbGlkYXRpb24iOnRydWUsInRhcmdldFNka1ZlcnNpb24iOiIzLjIifSwic291cmNlQ29udGVudCI6eyJhcHBUeXBlIjoiY2FyZCIsImNvbmZpZyI6eyJsZXB1c1N0cmljdCI6dHJ1ZSwiZW5hYmxlUmVtb3ZlQ1NTU2NvcGUiOnRydWV9fSwiY3NzIjp7ImNzc01hcCI6eyIwIjpbeyJ0eXBlIjoiU3R5bGVSdWxlIiwic3R5bGUiOlt7Im5hbWUiOiJjb2xvciIsInZhbHVlIjoiXCJibHVlXCIiLCJrZXlMb2MiOnsibGluZSI6MywiYXsdW1uIjo0MDN9LCJ2YWxMb2MiOnsibGluZSI6MywiYXsdW1uIjo0MTF9fVXsInNlbGVjdG9yVGV4dCI6eyJ2YWx1ZSI6Ii5iYXoiLCJsb2MiOnsibGluZSI6MywiYXsdW1uIjozOTd9fSwidmFyaWFibGVzIjp7fXXseyJ0eXBlIjoiU3R5bGVSdWxlIiwic3R5bGUiOlt7Im5hbWUiOiJjb2xvciIsInZhbHVlIjoiXCJibHVlXCIiLCJrZXlMb2MiOnsibGluZSI6MywiYXsdW1uIjo0MjF9LCJ2YWxMb2MiOnsibGluZSI6MywiYXsdW1uIjo0Mjl9fVXsInNlbGVjdG9yVGV4dCI6eyJ2YWx1ZSI6Ii5iYXIiLCJsb2MiOnsibGluZSI6MywiYXsdW1uIjo0MTV9fSwidmFyaWFibGVzIjp7fX1dfSwiY3NzU291cmNlIjp7IjAiOiIvY3NzSWQvMC5jc3MifSwiY29udGVudE1hcCI6e319fQ==","deps":{"0":[]}}
+{"content":"eyJjb21waWxlck9wdGlvbnMiOnsiZW5hYmxlRmliZXJBcmNoIjp0cnVlLCJ1c2VMZXB1c05HIjp0cnVlLCJidW5kbGVNb2R1bGVNb2RlIjoiUmV0dXJuQnlGdW5jdGlvbiIsImVuYWJsZUNTU1NlbGVjdG9yIjp0cnVlLCJlbmFibGVDU1NJbnZhbGlkYXRpb24iOnRydWUsInRhcmdldFNka1ZlcnNpb24iOiIzLjIifSwic291cmNlQ29udGVudCI6eyJhcHBUeXBlIjoiY2FyZCIsImNvbmZpZyI6eyJsZXB1c1N0cmljdCI6dHJ1ZSwiZW5hYmxlUmVtb3ZlQ1NTU2NvcGUiOnRydWV9fSwiY3NzIjp7ImNzc01hcCI6eyIwIjpbeyJ0eXBlIjoiU3R5bGVSdWxlIiwic3R5bGUiOlt7Im5hbWUiOiJjb2xvciIsInZhbHVlIjoiXCJibHVlXCIiLCJrZXlMb2MiOnsibGluZSI6MSwiYXsdW1uIjoxMXXsInZhbExvYyI6eyJsaW5lIjoxLCJjb2x1bW4iOjE5fX1dLCJzZWxlY3RvclRleHQiOnsidmFsdWUiOiIuYmF6IiwibG9jIjp7ImxpbmUiOjEsImNvbHVtbiI6NX19LCJ2YXJpYWJsZXMiOnt9fSx7InR5cGUiOiJTdHlsZVJ1bGUiLCJzdHlsZSI6WXsibmFtZSI6ImNvbG9yIiwidmFsdWUiOiJcImJsdWVcIiIsImtleUxvYyI6eyJsaW5lIjoxLCJjb2x1bW4iOjI5fSwidmFsTG9jIjp7ImxpbmUiOjEsImNvbHVtbiI6Mzd9fVXsInNlbGVjdG9yVGV4dCI6eyJ2YWx1ZSI6Ii5iYXIiLCJsb2MiOnsibGluZSI6MSwiYXsdW1uIjoyM319LCJ2YXJpYWJsZXMiOnt9fV19LCJjc3NTb3VyY2UiOnsiMCI6Ii9jc3NJZC8wLmNzcyJ9LCJjb250ZW50TWFwIjp7fX19","deps":{"0":[]}}
 ```
 
 
@@ -42,18 +42,14 @@
 "use strict";
 exports.ids = ['main'];
 exports.modules = {
-"./css/enable-css-selector/file.css": 
-/*!******************************************!*\
-  !*** ./css/enable-css-selector/file.css ***!
-  \******************************************/
-(function (module, __webpack_exports__, __webpack_require__) {
+"./css/enable-css-selector/file.css": (function (module, __webpack_exports__, __webpack_require__) {
 __webpack_require__.r(__webpack_exports__);
 // extracted by mini-css-extract-plugin
 
   if (true) {
     (function() {
       var localsJsonString = undefined;
-      var cssReload = __webpack_require__(/*! ../../../../runtime/hotModuleReplacement.cjs */ "../../runtime/hotModuleReplacement.cjs")(module.id, {}, "");
+      var cssReload = __webpack_require__("../../runtime/hotModuleReplacement.cjs")(module.id, {}, "");
       // only invalidate when locals change
       if (
         module.hot.data &&

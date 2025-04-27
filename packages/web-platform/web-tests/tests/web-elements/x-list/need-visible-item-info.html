@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<!-- Copyright 2024 The Lynx Authors. All rights reserved.
+ Licensed under the Apache License Version 2.0 that can be found in the
+ LICENSE file in the root directory of this source tree. -->
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>web playground</title>
+    <meta content="yes" name="apple-mobile-web-app-capable">
+    <meta content="default" name="apple-mobile-web-app-status-bar-style">
+    <meta content="telephone=no" name="format-detection">
+    <meta content="portrait" name="screen-orientation">
+    <meta
+      content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"
+      name="viewport"
+    >
+    <meta content="portrait" name="x5-orientation">
+    <link
+      href="/node_modules/@lynx-js/web-elements/index.css"
+      rel="stylesheet"
+    />
+    <link
+      href="/web-elements.css"
+      rel="stylesheet"
+    />
+
+    <style>
+    @import url("../../common.css");
+    x-list {
+      width: 100%;
+      height: 500px;
+    }
+
+    .item {
+      border-width: 5px;
+      border-color: green;
+      height: 100px;
+      background-color: hsl(calc(20 * var(--item-index)), 100%, 50%);
+    }
+    </style>
+  </head>
+
+  <body>
+    <script src="/web-elements.js" defer></script>
+    <script type="module">
+    document.querySelector('x-list').addEventListener(
+        'lynxscroll',
+        (e) => {
+          console.log(e);
+        },
+      );
+      document.querySelector('x-list').addEventListener(
+        'scrolltoupper',
+        (e) => {
+          console.log(e);
+        },
+      );
+      document.querySelector('x-list').addEventListener(
+        'scrolltolower',
+        (e) => {
+          console.log(e);
+        },
+      );
+    </script>
+    <x-view class="page">
+      <x-list need-visible-item-info>
+        <list-item class="item" style="--item-index: 0" item-key="0"><x-view
+          ></x-view></list-item>
+        <list-item class="item" style="--item-index: 1" item-key="1"><x-view
+          ></x-view></list-item>
+        <list-item class="item" style="--item-index: 2" item-key="2"><x-view
+          ></x-view></list-item>
+        <list-item class="item" style="--item-index: 3" item-key="3"><x-view
+          ></x-view></list-item>
+        <list-item class="item" style="--item-index: 4" item-key="4"><x-view
+          ></x-view></list-item>
+        <list-item class="item" style="--item-index: 5" item-key="5"><x-view
+          ></x-view></list-item>
+        <list-item class="item" style="--item-index: 6" item-key="6"><x-view
+          ></x-view></list-item>
+        <list-item class="item" style="--item-index: 7" item-key="7"><x-view
+          ></x-view></list-item>
+        <list-item class="item" style="--item-index: 8" item-key="8"><x-view
+          ></x-view></list-item>
+        <list-item class="item" style="--item-index: 9" item-key="9"><x-view
+          ></x-view></list-item>
+        <list-item class="item" style="--item-index: 10" item-key="10"><x-view
+          ></x-view></list-item>
+        <list-item class="item" style="--item-index: 11" item-key="11"><x-view
+          ></x-view></list-item>
+        <list-item class="item" style="--item-index: 12" item-key="12"><x-view
+          ></x-view></list-item>
+        <list-item class="item" style="--item-index: 13" item-key="13"><x-view
+          ></x-view></list-item>
+        <list-item class="item" style="--item-index: 14" item-key="14"><x-view
+          ></x-view></list-item>
+        <list-item class="item" style="--item-index: 15" item-key="15"><x-view
+          ></x-view></list-item>
+        <list-item class="item" style="--item-index: 16" item-key="16"><x-view
+          ></x-view></list-item>
+        <list-item class="item" style="--item-index: 17" item-key="17"><x-view
+          ></x-view></list-item>
+        <list-item class="item" style="--item-index: 18" item-key="18"><x-view
+          ></x-view></list-item>
+        <list-item class="item" style="--item-index: 19" item-key="19"><x-view
+          ></x-view></list-item>
+      </x-list>
+    </x-view>
+  </body>
+</html>

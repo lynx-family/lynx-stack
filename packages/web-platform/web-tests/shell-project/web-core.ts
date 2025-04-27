@@ -8,6 +8,7 @@ import '@lynx-js/web-elements-compat/LinearContainer';
 import '@lynx-js/web-core/index.css';
 import './index.css';
 
+const ALL_ON_UI = !!process.env.ALL_ON_UI;
 const color_environment = URL.createObjectURL(
   new Blob(
     [`export default function(NapiModules, NapiModulesCall) {
@@ -62,6 +63,7 @@ async function run() {
   const lepusjs = '/resources/web-core.main-thread.json';
   const lynxView = document.createElement('lynx-view') as LynxView;
   lynxView.setAttribute('url', lepusjs);
+  if (ALL_ON_UI) lynxView.setAttribute('thread-strategy', `all-on-ui`);
   lynxView.initData = { mockData: 'mockData' };
   lynxView.globalProps = { pink: 'pink' };
   lynxView.height = 'auto';

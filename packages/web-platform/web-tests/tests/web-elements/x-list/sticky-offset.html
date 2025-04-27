@@ -34,9 +34,15 @@
     .item {
       border-width: 5px;
       border-color: green;
-      width: 100%;
+      background-color: hsl(calc(20 * var(--item-index)), 100%, 50%);
+    }
+
+    .left {
+      height: 80px;
+    }
+
+    .right {
       height: 100px;
-      background-color: yellow;
     }
     </style>
   </head>
@@ -45,46 +51,118 @@
     <script src="/web-elements.js" defer></script>
     <x-view class="page">
       <x-list list-type="single" sticky="true" sticky-offset="50">
-        <list-item item-key="1" id="1" sticky-top><x-view class="item"
-          >1</x-view></list-item>
-        <list-item item-key="2" id="2"><x-view class="item"
-          >2</x-view></list-item>
-        <list-item item-key="3" id="3"><x-view class="item"
-          >3</x-view></list-item>
-        <list-item item-key="4" id="4"><x-view class="item"
-          >4</x-view></list-item>
-        <list-item item-key="5" id="5"><x-view class="item"
-          >5</x-view></list-item>
-        <list-item item-key="6" id="6"><x-view class="item"
-          >6</x-view></list-item>
-        <list-item item-key="7" id="7"><x-view class="item"
-          >7</x-view></list-item>
-        <list-item item-key="8" id="8"><x-view class="item"
-          >8</x-view></list-item>
-        <list-item item-key="9" id="9"><x-view class="item"
-          >9</x-view></list-item>
-        <list-item item-key="10" id="10"><x-view class="item"
-          >10</x-view></list-item>
-        <list-item item-key="11" id="11"><x-view class="item"
-          >11</x-view></list-item>
-        <list-item item-key="12" id="12"><x-view class="item"
-          >12</x-view></list-item>
-        <list-item item-key="13" id="13"><x-view class="item"
-          >13</x-view></list-item>
-        <list-item item-key="14" id="14"><x-view class="item"
-          >14</x-view></list-item>
-        <list-item item-key="15" id="15"><x-view class="item"
-          >15</x-view></list-item>
-        <list-item item-key="16" id="16"><x-view class="item"
-          >16</x-view></list-item>
-        <list-item item-key="17" id="17"><x-view class="item"
-          >17</x-view></list-item>
-        <list-item item-key="18" id="18"><x-view class="item"
-          >18</x-view></list-item>
-        <list-item item-key="19" id="19"><x-view class="item"
-          >19</x-view></list-item>
-        <list-item item-key="20" id="20" sticky-bottom><x-view class="item"
-          >20</x-view></list-item>
+        <list-item
+          class="left item"
+          item-key="0"
+          style="--item-index: 0"
+          sticky-top
+        ><x-view></x-view></list-item>
+        <list-item
+          class="right item"
+          item-key="1"
+          style="--item-index: 1"
+        ><x-view></x-view></list-item>
+        <list-item
+          class="left item"
+          item-key="2"
+          style="--item-index: 2"
+        ><x-view></x-view></list-item>
+        <list-item
+          class="right item"
+          item-key="3"
+          style="--item-index: 3"
+        ><x-view></x-view></list-item>
+        <list-item
+          class="left item"
+          item-key="4"
+          style="--item-index: 4"
+        ><x-view></x-view></list-item>
+        <list-item
+          class="right item"
+          item-key="5"
+          style="--item-index: 5"
+        ><x-view></x-view></list-item>
+        <list-item
+          class="left item"
+          item-key="6"
+          style="--item-index: 6"
+        ><x-view></x-view></list-item>
+        <list-item
+          class="right item"
+          item-key="7"
+          style="--item-index: 7"
+        ><x-view></x-view></list-item>
+        <list-item
+          class="left item"
+          item-key="8"
+          style="--item-index: 8"
+        ><x-view></x-view></list-item>
+        <list-item
+          class="right item"
+          item-key="9"
+          style="--item-index: 9"
+        ><x-view></x-view></list-item>
+        <list-item
+          class="left item"
+          item-key="10"
+          style="--item-index: 10"
+        ><x-view></x-view></list-item>
+        <list-item
+          class="right item"
+          item-key="11"
+          style="--item-index: 11"
+        ><x-view></x-view></list-item>
+        <list-item
+          class="left item"
+          item-key="12"
+          style="--item-index: 12"
+        ><x-view></x-view></list-item>
+        <list-item
+          class="right item"
+          item-key="13"
+          style="--item-index: 13"
+        ><x-view></x-view></list-item>
+        <list-item
+          class="left item"
+          item-key="14"
+          style="--item-index: 14"
+        ><x-view></x-view></list-item>
+        <list-item
+          class="right item"
+          item-key="14"
+          style="--item-index: 14"
+        ><x-view></x-view></list-item>
+        <list-item
+          class="left item"
+          item-key="15"
+          style="--item-index: 15"
+        ><x-view></x-view></list-item>
+        <list-item
+          class="right item"
+          item-key="15"
+          style="--item-index: 15"
+        ><x-view></x-view></list-item>
+        <list-item
+          class="left item"
+          item-key="16"
+          style="--item-index: 16"
+        ><x-view></x-view></list-item>
+        <list-item
+          class="right item"
+          item-key="17"
+          style="--item-index: 17"
+        ><x-view></x-view></list-item>
+        <list-item
+          class="left item"
+          item-key="18"
+          style="--item-index: 18"
+        ><x-view></x-view></list-item>
+        <list-item
+          class="right item"
+          item-key="19"
+          style="--item-index: 19"
+          sticky-bottom
+        ><x-view></x-view></list-item>
       </x-list>
     </x-view>
   </body>

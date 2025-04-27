@@ -51,8 +51,6 @@ jobs:
       cancel-in-progress: true
     uses: ./.github/workflows/workflow-build.yml
     if: github.repository == 'lynx-family/lynx-stack'
-    with:
-      runs-on: lynx-ubuntu-24.04-xlarge
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
   benchmark:

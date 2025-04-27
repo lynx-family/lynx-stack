@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { createRsbuild } from '@rsbuild/core'
 import type { RsbuildPluginAPI, Rspack } from '@rsbuild/core'
-import { describe, expect, test, vi } from 'vitest'
+import { assert, describe, expect, test, vi } from 'vitest'
 
 import { LAYERS, ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'
 
@@ -70,6 +70,41 @@ describe('SWC configuration', () => {
           },
         }
       `)
+  })
+
+  test('with tools.swc', async () => {
+    vi.stubEnv('NODE_ENV', 'production')
+    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+    const rsbuild = await createRsbuild({
+      rsbuildConfig: {
+        tools: {
+          swc: {
+            jsc: {
+              transform: {
+                useDefineForClassFields: true,
+                verbatimModuleSyntax: true,
+              },
+            },
+          },
+        },
+        plugins: [
+          pluginStubRspeedyAPI(),
+          pluginReactLynx(),
+        ],
+      },
+    })
+
+    const [config] = await rsbuild.initConfigs()
+
+    assert(config)
+
+    const swcOptions = getLoaderOptions<Rspack.SwcLoaderOptions>(
+      config,
+      'builtin:swc-loader',
+    )
+
+    expect(swcOptions?.jsc?.transform?.useDefineForClassFields).toBe(true)
+    expect(swcOptions?.jsc?.transform?.verbatimModuleSyntax).toBe(true)
   })
 
   test('layers', async () => {

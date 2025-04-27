@@ -5,6 +5,7 @@
 import { test, expect } from './coverage-fixture.js';
 import type { Page, Worker } from '@playwright/test';
 
+const ALL_ON_UI = !!process.env.ALL_ON_UI;
 const wait = async (ms: number) => {
   await new Promise((resolve) => {
     setTimeout(resolve, ms);
@@ -18,16 +19,22 @@ const goto = async (page: Page) => {
   await wait(500);
 };
 
-async function getMainThreadWorker(page: Page): Promise<Worker | undefined> {
+async function getMainThreadWorker(
+  page: Page,
+): Promise<Worker | Page | undefined> {
   await wait(100);
-  for (const i of page.workers()) {
-    const isActive = await i.evaluate(() => {
-      return globalThis.runtime !== undefined
-        && globalThis.__lynx_worker_type === 'main';
-    });
+  if (ALL_ON_UI) {
+    return page;
+  } else {
+    for (const i of page.workers()) {
+      const isActive = await i.evaluate(() => {
+        return globalThis.runtime !== undefined
+          && globalThis.__lynx_worker_type === 'main';
+      });
 
-    if (isActive) {
-      return i;
+      if (isActive) {
+        return i;
+      }
     }
   }
 }
@@ -151,31 +158,6 @@ test.describe('web core tests', () => {
     });
     const worker = await getBackgroundThreadWorker(page);
     const [hello, world] = await worker!.evaluate(async () => {
-      const chunk1 = Promise.withResolvers<string>();
-      const chunk2 = Promise.withResolvers<string>();
-      globalThis.runtime.lynx.requireModuleAsync(
-        'manifest-chunk.js',
-        (_, exports) => {
-          chunk1.resolve(exports);
-        },
-      );
-      chunk2.resolve(
-        globalThis.runtime.lynx.requireModule('manifest-chunk2.js'),
-      );
-      return Promise.all([chunk1.promise, chunk2.promise]);
-    });
-    expect(hello).toBe('hello');
-    expect(world).toBe('world');
-  });
-  test('lynx.requireModule+sync-main.thread', async ({ page, browserName }) => {
-    // firefox dose not support this.
-    test.skip(browserName === 'firefox');
-    await goto(page);
-    const mainWorker = await getMainThreadWorker(page);
-    await mainWorker.evaluate(() => {
-      globalThis.runtime.renderPage = () => {};
-    });
-    const [hello, world] = await mainWorker!.evaluate(async () => {
       const chunk1 = Promise.withResolvers<string>();
       const chunk2 = Promise.withResolvers<string>();
       globalThis.runtime.lynx.requireModuleAsync(

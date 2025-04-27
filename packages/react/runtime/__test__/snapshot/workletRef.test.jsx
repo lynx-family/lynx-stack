@@ -237,8 +237,11 @@ describe('WorkletRef', () => {
               "patchOptions": {
                 "isHydration": true,
                 "pipelineOptions": {
+                  "dsl": "reactLynx",
                   "needTimestamps": true,
                   "pipelineID": "pipelineID",
+                  "pipelineOrigin": "reactLynxHydrate",
+                  "stage": "hydrate",
                 },
                 "reloadVersion": 0,
               },

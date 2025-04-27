@@ -8,6 +8,10 @@ Zhiyuan
 ZhiyuanHong
 HongZhiyuan
 
+Yiming
+YimingLi
+LiYiming
+
 # Webpack Contributors
 Koppers
 sokra

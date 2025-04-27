@@ -1,5 +1,17 @@
 # @lynx-js/template-webpack-plugin
 
+## 0.6.9
+
+### Patch Changes
+
+- Fix incorrect hash of `background.[contenthash].js` in `.lynx.bundle` files. ([#498](https://github.com/lynx-family/lynx-stack/pull/498))
+
+## 0.6.8
+
+### Patch Changes
+
+- fix: add enableCSSInvalidation for encodeCSS of css HMR, this will fix pseudo-class (such as `:active`) not working in HMR. ([#435](https://github.com/lynx-family/lynx-stack/pull/435))
+
 ## 0.6.7
 
 ### Patch Changes

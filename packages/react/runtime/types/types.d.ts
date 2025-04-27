@@ -163,7 +163,10 @@ declare global {
 
   declare interface PipelineOptions {
     pipelineID: string; // Returned by native when calling `onPipelineStart()`
+    pipelineOrigin: string; // The origin of the pipeline
     needTimestamps: boolean; // Whether timing points should be reported
+    dsl: string;
+    stage: string;
   }
   declare let lynxCoreInject: any;
 
@@ -243,7 +246,7 @@ declare module '@lynx-js/types/background' {
 
   interface Performance {
     _generatePipelineOptions?(): PipelineOptions;
-    _onPipelineStart?(pipelineID: string): void;
+    _onPipelineStart?(pipelineID: string, options: PipelineOptions): void;
     _bindPipelineIdWithTimingFlag?(pipelineID: string, timingFlag: string): void;
     _markTiming?(pipelineID: string, key: string): void;
   }

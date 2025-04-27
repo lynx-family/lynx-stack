@@ -1,10 +1,15 @@
-import { defineConfig } from '@rslib/core'
+import { defineConfig, type rsbuild } from '@rslib/core'
 import { pluginPublint } from 'rsbuild-plugin-publint'
 import { TypiaRspackPlugin } from 'typia-rspack-plugin'
 
 export default defineConfig({
   lib: [
-    { format: 'esm', syntax: 'es2022', dts: { bundle: true } },
+    {
+      format: 'esm',
+      syntax: 'es2022',
+      dts: { bundle: true },
+      plugins: [pluginTypia()],
+    },
     {
       format: 'esm',
       syntax: 'es2022',
@@ -15,6 +20,31 @@ export default defineConfig({
         },
       },
       dts: false,
+      plugins: [pluginTypia()],
+    },
+    {
+      format: 'esm',
+      syntax: 'es2022',
+      source: {
+        entry: {
+          'register/index': './register/index.js',
+          'register/hooks': './register/hooks.js',
+        },
+      },
+      dts: false,
+      output: {
+        copy: {
+          patterns: [
+            {
+              from: './register/index.d.ts',
+              to: './register/index.d.ts',
+            },
+          ],
+        },
+        externals: [
+          'typescript',
+        ],
+      },
     },
   ],
   output: {
@@ -31,13 +61,28 @@ export default defineConfig({
       optimization: {
         chunkIds: 'named',
       },
-      plugins: [
-        new TypiaRspackPlugin({
-          cache: false,
-          include: './src/config/validate.ts',
-          tsconfig: './tsconfig.build.json',
-        }),
-      ],
     },
   },
 })
+
+function pluginTypia(): rsbuild.RsbuildPlugin {
+  return {
+    name: 'rspeedy-plugin-typia',
+    setup(api) {
+      api.modifyBundlerChain(chain => {
+        const { source } = api.getRsbuildConfig()
+
+        chain
+          .plugin('typia')
+          .use(TypiaRspackPlugin, [
+            {
+              cache: false,
+              include: './src/config/validate.ts',
+              tsconfig: source?.tsconfigPath,
+              log: false,
+            },
+          ])
+      })
+    },
+  }
+}

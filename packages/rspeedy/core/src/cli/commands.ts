@@ -13,6 +13,7 @@ import { version } from '../version.js'
 export interface CommonOptions {
   config?: string
   envMode?: string
+  noEnv?: boolean
 }
 
 function applyCommonOptions(command: Command) {
@@ -23,7 +24,11 @@ function applyCommonOptions(command: Command) {
     )
     .option(
       '--env-mode <mode>',
-      'specify the env mode to load the .env.[mode] file"',
+      'specify the env mode to load the .env.[mode] file',
+    )
+    .option(
+      '--no-env',
+      'disable loading `.env` files"',
     )
 }
 

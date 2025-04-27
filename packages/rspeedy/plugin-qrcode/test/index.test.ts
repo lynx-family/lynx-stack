@@ -1,6 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { readFile, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -11,7 +12,7 @@ import type {
   RsbuildPlugin,
   RsbuildPluginAPI,
 } from '@rsbuild/core'
-import { beforeEach, describe, expect, test, vi } from 'vitest'
+import { beforeEach, describe, expect, onTestFinished, test, vi } from 'vitest'
 
 import type { Config, ExposedAPI } from '@lynx-js/rspeedy'
 
@@ -415,13 +416,76 @@ describe('Plugins - Terminal', () => {
         expect.stringContaining('example.com/foo'),
       )
     })
+
+    test('print qrcode when errors are fixed', async () => {
+      vi.stubEnv('NODE_ENV', 'development')
+
+      const entry = join(
+        dirname(fileURLToPath(import.meta.url)),
+        'fixtures',
+        'error',
+        'index.js',
+      )
+      const source = await readFile(entry, 'utf-8')
+      onTestFinished(async () => {
+        // ensure rewrite when exit test
+        await writeFile(entry, source, 'utf-8')
+      })
+
+      const { selectKey, isCancel } = await import('@clack/prompts')
+      vi.mocked(selectKey).mockResolvedValue('foo')
+      vi.mocked(isCancel).mockReturnValueOnce(false)
+      const { renderUnicodeCompact } = await import('uqr')
+      vi.mocked(renderUnicodeCompact).mockReturnValueOnce('<data>')
+      // write content which has a syntax error
+      await writeFile(entry, source.slice(0, source.length - 2), 'utf-8')
+
+      const rsbuild = await createRsbuild(
+        {
+          rsbuildConfig: {
+            dev: {
+              assetPrefix: 'http://example.com/foo/',
+            },
+            environments: {
+              lynx: {},
+            },
+            server: {
+              port: getRandomNumberInRange(3000, 60000),
+            },
+            source: {
+              entry: {
+                main: entry,
+              },
+            },
+            plugins: [
+              pluginStubRspeedyAPI(),
+              pluginQRCode(),
+            ],
+          },
+        },
+      )
+
+      await using server = await usingDevServer(rsbuild)
+
+      await server.waitDevCompileDone()
+
+      expect(renderUnicodeCompact).toBeCalledTimes(0)
+      // fix syntax error
+      await writeFile(entry, source, 'utf-8')
+
+      await server.waitDevCompileSuccess()
+
+      expect(renderUnicodeCompact).toBeCalledTimes(1)
+    })
   })
 })
 
 async function usingDevServer(rsbuild: RsbuildInstance) {
   let done = false
+  let hasErrors = false
   rsbuild.onDevCompileDone({
-    handler: () => {
+    handler: ({ stats }) => {
+      hasErrors = stats.hasErrors()
       done = true
     },
     // We make sure this is run at the last
@@ -439,6 +503,10 @@ async function usingDevServer(rsbuild: RsbuildInstance) {
     async waitDevCompileDone(timeout?: number) {
       await vi.waitUntil(() => done, { timeout: timeout ?? 5000 })
     },
+    async waitDevCompileSuccess(timeout?: number) {
+      await vi.waitUntil(() => !hasErrors, { timeout: timeout ?? 1000 })
+    },
+    hasErrors,
     async [Symbol.asyncDispose]() {
       return await server.close()
     },

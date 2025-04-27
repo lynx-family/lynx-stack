@@ -6,6 +6,8 @@ export interface CSSRule {
     plainSelectors: string[],
     pseudoClassSelectors: string[],
     pseudoElementSelectors: string[],
+    combinator: string[],
+    ...string[][],
   ][];
   decl: [string, string][];
 }

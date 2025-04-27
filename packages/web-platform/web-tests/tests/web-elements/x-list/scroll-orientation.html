@@ -34,70 +34,109 @@
     list-item {
       border-width: 5px;
       border-color: green;
+      background-color: hsl(calc(20 * var(--item-index)), 100%, 50%);
+    }
+
+    .item {
       height: 100px;
-      background-color: yellow;
     }
 
-    #vertical list-item {
-      width: 100%;
-    }
-
-    #horizontal list-item {
-      width: 30%;
+    #horizontal .item {
+      width: 120px;
     }
     </style>
   </head>
 
   <body>
     <script src="/web-elements.js" defer></script>
-    <x-view class="page">
+    <x-view class="page" style="flex-direction: column">
       <x-list list-type="single" id="vertical">
-        <list-item item-key="1" id="1"><x-text>1</x-text></list-item>
-        <list-item item-key="2" id="2"><x-text>2</x-text></list-item>
-        <list-item item-key="3" id="3"><x-text>3</x-text></list-item>
-        <list-item item-key="4" id="4"><x-text>4</x-text></list-item>
-        <list-item item-key="5" id="5"><x-text>5</x-text></list-item>
-        <list-item item-key="6" id="6"><x-text>6</x-text></list-item>
-        <list-item item-key="7" id="7"><x-text>7</x-text></list-item>
-        <list-item item-key="8" id="8"><x-text>8</x-text></list-item>
-        <list-item item-key="9" id="9"><x-text>9</x-text></list-item>
-        <list-item item-key="10" id="10"><x-text>10</x-text></list-item>
-        <list-item item-key="11" id="11"><x-text>11</x-text></list-item>
-        <list-item item-key="12" id="12"><x-text>12</x-text></list-item>
-        <list-item item-key="13" id="13"><x-text>13</x-text></list-item>
-        <list-item item-key="14" id="14"><x-text>14</x-text></list-item>
-        <list-item item-key="15" id="15"><x-text>15</x-text></list-item>
-        <list-item item-key="16" id="16"><x-text>16</x-text></list-item>
-        <list-item item-key="17" id="17"><x-text>17</x-text></list-item>
-        <list-item item-key="18" id="18"><x-text>18</x-text></list-item>
-        <list-item item-key="19" id="19"><x-text>19</x-text></list-item>
-        <list-item item-key="20" id="20"><x-text>20</x-text></list-item>
+        <list-item class="item" style="--item-index: 0" item-key="0"><x-view
+          ></x-view></list-item>
+        <list-item class="item" style="--item-index: 1" item-key="1"><x-view
+          ></x-view></list-item>
+        <list-item class="item" style="--item-index: 2" item-key="2"><x-view
+          ></x-view></list-item>
+        <list-item class="item" style="--item-index: 3" item-key="3"><x-view
+          ></x-view></list-item>
+        <list-item class="item" style="--item-index: 4" item-key="4"><x-view
+          ></x-view></list-item>
+        <list-item class="item" style="--item-index: 5" item-key="5"><x-view
+          ></x-view></list-item>
+        <list-item class="item" style="--item-index: 6" item-key="6"><x-view
+          ></x-view></list-item>
+        <list-item class="item" style="--item-index: 7" item-key="7"><x-view
+          ></x-view></list-item>
+        <list-item class="item" style="--item-index: 8" item-key="8"><x-view
+          ></x-view></list-item>
+        <list-item class="item" style="--item-index: 9" item-key="9"><x-view
+          ></x-view></list-item>
+        <list-item class="item" style="--item-index: 10" item-key="10"><x-view
+          ></x-view></list-item>
+        <list-item class="item" style="--item-index: 11" item-key="11"><x-view
+          ></x-view></list-item>
+        <list-item class="item" style="--item-index: 12" item-key="12"><x-view
+          ></x-view></list-item>
+        <list-item class="item" style="--item-index: 13" item-key="13"><x-view
+          ></x-view></list-item>
+        <list-item class="item" style="--item-index: 14" item-key="14"><x-view
+          ></x-view></list-item>
+        <list-item class="item" style="--item-index: 15" item-key="15"><x-view
+          ></x-view></list-item>
+        <list-item class="item" style="--item-index: 16" item-key="16"><x-view
+          ></x-view></list-item>
+        <list-item class="item" style="--item-index: 17" item-key="17"><x-view
+          ></x-view></list-item>
+        <list-item class="item" style="--item-index: 18" item-key="18"><x-view
+          ></x-view></list-item>
+        <list-item class="item" style="--item-index: 19" item-key="19"><x-view
+          ></x-view></list-item>
       </x-list>
       <x-list
         list-type="single"
         scroll-orientation="horizontal"
         id="horizontal"
       >
-        <list-item item-key="1" id="1"><x-text>1</x-text></list-item>
-        <list-item item-key="2" id="2"><x-text>2</x-text></list-item>
-        <list-item item-key="3" id="3"><x-text>3</x-text></list-item>
-        <list-item item-key="4" id="4"><x-text>4</x-text></list-item>
-        <list-item item-key="5" id="5"><x-text>5</x-text></list-item>
-        <list-item item-key="6" id="6"><x-text>6</x-text></list-item>
-        <list-item item-key="7" id="7"><x-text>7</x-text></list-item>
-        <list-item item-key="8" id="8"><x-text>8</x-text></list-item>
-        <list-item item-key="9" id="9"><x-text>9</x-text></list-item>
-        <list-item item-key="10" id="10"><x-text>10</x-text></list-item>
-        <list-item item-key="11" id="11"><x-text>11</x-text></list-item>
-        <list-item item-key="12" id="12"><x-text>12</x-text></list-item>
-        <list-item item-key="13" id="13"><x-text>13</x-text></list-item>
-        <list-item item-key="14" id="14"><x-text>14</x-text></list-item>
-        <list-item item-key="15" id="15"><x-text>15</x-text></list-item>
-        <list-item item-key="16" id="16"><x-text>16</x-text></list-item>
-        <list-item item-key="17" id="17"><x-text>17</x-text></list-item>
-        <list-item item-key="18" id="18"><x-text>18</x-text></list-item>
-        <list-item item-key="19" id="19"><x-text>19</x-text></list-item>
-        <list-item item-key="20" id="20"><x-text>20</x-text></list-item>
+        <list-item class="item" style="--item-index: 0" item-key="0"><x-view
+          ></x-view></list-item>
+        <list-item class="item" style="--item-index: 1" item-key="1"><x-view
+          ></x-view></list-item>
+        <list-item class="item" style="--item-index: 2" item-key="2"><x-view
+          ></x-view></list-item>
+        <list-item class="item" style="--item-index: 3" item-key="3"><x-view
+          ></x-view></list-item>
+        <list-item class="item" style="--item-index: 4" item-key="4"><x-view
+          ></x-view></list-item>
+        <list-item class="item" style="--item-index: 5" item-key="5"><x-view
+          ></x-view></list-item>
+        <list-item class="item" style="--item-index: 6" item-key="6"><x-view
+          ></x-view></list-item>
+        <list-item class="item" style="--item-index: 7" item-key="7"><x-view
+          ></x-view></list-item>
+        <list-item class="item" style="--item-index: 8" item-key="8"><x-view
+          ></x-view></list-item>
+        <list-item class="item" style="--item-index: 9" item-key="9"><x-view
+          ></x-view></list-item>
+        <list-item class="item" style="--item-index: 10" item-key="10"><x-view
+          ></x-view></list-item>
+        <list-item class="item" style="--item-index: 11" item-key="11"><x-view
+          ></x-view></list-item>
+        <list-item class="item" style="--item-index: 12" item-key="12"><x-view
+          ></x-view></list-item>
+        <list-item class="item" style="--item-index: 13" item-key="13"><x-view
+          ></x-view></list-item>
+        <list-item class="item" style="--item-index: 14" item-key="14"><x-view
+          ></x-view></list-item>
+        <list-item class="item" style="--item-index: 15" item-key="15"><x-view
+          ></x-view></list-item>
+        <list-item class="item" style="--item-index: 16" item-key="16"><x-view
+          ></x-view></list-item>
+        <list-item class="item" style="--item-index: 17" item-key="17"><x-view
+          ></x-view></list-item>
+        <list-item class="item" style="--item-index: 18" item-key="18"><x-view
+          ></x-view></list-item>
+        <list-item class="item" style="--item-index: 19" item-key="19"><x-view
+          ></x-view></list-item>
       </x-list>
     </x-view>
   </body>

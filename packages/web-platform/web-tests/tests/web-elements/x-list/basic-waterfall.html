@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<!-- Copyright 2024 The Lynx Authors. All rights reserved.
+ Licensed under the Apache License Version 2.0 that can be found in the
+ LICENSE file in the root directory of this source tree. -->
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>web playground</title>
+    <meta content="yes" name="apple-mobile-web-app-capable">
+    <meta content="default" name="apple-mobile-web-app-status-bar-style">
+    <meta content="telephone=no" name="format-detection">
+    <meta content="portrait" name="screen-orientation">
+    <meta
+      content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"
+      name="viewport"
+    >
+    <meta content="portrait" name="x5-orientation">
+    <link
+      href="/node_modules/@lynx-js/web-elements/index.css"
+      rel="stylesheet"
+    />
+    <link
+      href="/web-elements.css"
+      rel="stylesheet"
+    />
+
+    <style>
+    @import url("../../common.css");
+    x-list {
+      width: 100%;
+      height: 500px;
+    }
+
+    .item {
+      border-width: 5px;
+      border-color: green;
+      background-color: hsl(calc(15 * var(--item-index)), 100%, 50%);
+    }
+    </style>
+  </head>
+
+  <body>
+    <script src="/web-elements.js" defer></script>
+    <x-view class="page" style="flex-direction: column">
+      <x-list list-type="waterfall" span-count="2">
+        <list-item
+          item-key="0"
+          class="item"
+          style="--item-index: 0; height: 200px"
+        >
+          <x-view></x-view>
+        </list-item>
+        <list-item
+          item-key="1"
+          class="item"
+          style="--item-index: 1; height: 185px"
+        >
+          <x-view></x-view>
+        </list-item>
+        <list-item
+          item-key="2"
+          class="item"
+          style="--item-index: 2; height: 295px"
+        >
+          <x-view></x-view>
+        </list-item>
+        <list-item
+          item-key="3"
+          class="item"
+          style="--item-index: 3; height: 172px"
+        >
+          <x-view></x-view>
+        </list-item>
+        <list-item
+          item-key="4"
+          class="item"
+          style="--item-index: 4; height: 335px"
+        >
+          <x-view></x-view>
+        </list-item>
+        <list-item
+          item-key="5"
+          class="item"
+          style="--item-index: 5; height: 277px"
+        >
+          <x-view></x-view>
+        </list-item>
+        <list-item
+          item-key="6"
+          class="item"
+          style="--item-index: 6; height: 270px"
+        >
+          <x-view></x-view>
+        </list-item>
+        <list-item
+          item-key="7"
+          class="item"
+          style="--item-index: 7; height: 203px"
+        >
+          <x-view></x-view>
+        </list-item>
+        <list-item
+          item-key="8"
+          class="item"
+          style="--item-index: 8; height: 203px"
+        >
+          <x-view> </x-view>
+        </list-item>
+        <list-item
+          item-key="9"
+          class="item"
+          style="--item-index: 9; height: 339px"
+        >
+          <x-view> </x-view>
+        </list-item>
+        <list-item
+          item-key="10"
+          class="item"
+          style="--item-index: 10; height: 291px"
+        >
+          <x-view> </x-view>
+        </list-item>
+        <list-item
+          item-key="11"
+          class="item"
+          style="--item-index: 11; height: 165px"
+        >
+          <x-view> </x-view>
+        </list-item>
+        <list-item
+          item-key="12"
+          class="item"
+          style="--item-index: 12; height: 267px"
+        >
+          <x-view> </x-view>
+        </list-item>
+        <list-item
+          item-key="13"
+          class="item"
+          style="--item-index: 13; height: 281px"
+        >
+          <x-view> </x-view>
+        </list-item>
+        <list-item
+          item-key="14"
+          class="item"
+          style="--item-index: 14; height: 294px"
+        >
+          <x-view> </x-view>
+        </list-item>
+        <list-item
+          item-key="15"
+          class="item"
+          style="--item-index: 15; height: 239px"
+        >
+          <x-view> </x-view>
+        </list-item>
+        <list-item
+          item-key="16"
+          class="item"
+          style="--item-index: 16; height: 173px"
+        >
+          <x-view> </x-view>
+        </list-item>
+        <list-item
+          item-key="17"
+          class="item"
+          style="--item-index: 17; height: 185px"
+        >
+          <x-view> </x-view>
+        </list-item>
+        <list-item
+          item-key="18"
+          class="item"
+          style="--item-index: 18; height: 220px"
+        >
+          <x-view> </x-view>
+        </list-item>
+        <list-item
+          item-key="19"
+          class="item"
+          style="--item-index: 19; height: 180px"
+        >
+          <x-view> </x-view>
+        </list-item>
+      </x-list>
+    </x-view>
+  </body>
+</html>
