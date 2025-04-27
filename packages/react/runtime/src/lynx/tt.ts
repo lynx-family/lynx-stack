@@ -1,34 +1,30 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { render } from 'preact';
+
 import { LifecycleConstant, NativeUpdateDataType } from '../lifecycleConstant.js';
 import {
-  PerformanceTimingKeys,
   PerformanceTimingFlags,
+  PerformanceTimingKeys,
   PipelineOrigins,
   beginPipeline,
   markTiming,
 } from './performance.js';
 import { BackgroundSnapshotInstance, hydrate } from '../backgroundSnapshot.js';
+import { runWithForce } from './runWithForce.js';
 import { destroyBackground } from '../lifecycle/destroy.js';
 import { delayedEvents, delayedPublishEvent } from '../lifecycle/event/delayEvents.js';
 import { delayLifecycleEvent, delayedLifecycleEvents } from '../lifecycle/event/delayLifecycleEvents.js';
-import {
-  clearPatchesToCommit,
-  commitPatchUpdate,
-  genCommitTaskId,
-  globalCommitTaskMap,
-  patchesToCommit,
-  type PatchList,
-} from '../lifecycle/patch/commit.js';
+import { commitPatchUpdate, genCommitTaskId, globalCommitTaskMap } from '../lifecycle/patch/commit.js';
+import type { PatchList } from '../lifecycle/patch/commit.js';
 import { reloadBackground } from '../lifecycle/reload.js';
-import { renderBackground } from '../lifecycle/render.js';
 import { CHILDREN } from '../renderToOpcodes/constants.js';
 import { __root } from '../root.js';
 import { globalRefsToSet, updateBackgroundRefs } from '../snapshot/ref.js';
 import { backgroundSnapshotInstanceManager } from '../snapshot.js';
 import { destroyWorklet } from '../worklet/destroy.js';
-import { runWithForce } from './runWithForce.js';
+
 export { runWithForce };
 
 function injectTt(): void {
@@ -129,14 +125,11 @@ function onLifecycleEventImpl(type: string, data: any): void {
         console.profile('commitChanges');
       }
       const commitTaskId = genCommitTaskId();
-      patchesToCommit.push(
-        { snapshotPatch, id: commitTaskId },
-      );
       const patchList: PatchList = {
-        patchList: patchesToCommit,
+        patchList: [{ snapshotPatch, id: commitTaskId }],
       };
-      clearPatchesToCommit();
       const obj = commitPatchUpdate(patchList, { isHydration: true });
+
       lynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
         updateBackgroundRefs(commitTaskId);
         globalCommitTaskMap.forEach((commitTask, id) => {
@@ -212,7 +205,7 @@ function updateGlobalProps(newData: Record<string, any>): void {
   // This is already done because updateFromRoot will consume all dirty flags marked by
   // the setState, and setState's flush will be a noop. No extra diffs will be needed.
   Promise.resolve().then(() => {
-    runWithForce(() => renderBackground(__root.__jsx, __root as any));
+    runWithForce(() => render(__root.__jsx, __root as any));
   });
   lynxCoreInject.tt.GlobalEventEmitter.emit('onGlobalPropsChanged');
 }
