@@ -8,9 +8,9 @@ import { act } from 'preact/test-utils';
 
 import { __root } from '@lynx-js/react/internal';
 
+import { commitToMainThread } from '../../runtime/lib/lifecycle/patch/commit.js';
 import { flushDelayedLifecycleEvents } from '../../runtime/lib/lynx/tt.js';
 import { clearPage } from '../../runtime/lib/snapshot.js';
-import { commitToMainThread } from '../../runtime/lib/lifecycle/patch/commit.js';
 
 export function waitSchedule() {
   return new Promise(resolve => {
@@ -93,8 +93,6 @@ export function cleanup() {
   globalThis.lynxEnv.switchToBackgroundThread();
   act(() => {
     preactRender(null, __root);
-    // This is needed to ensure that the ui updates are sent to the main thread
-    commitToMainThread();
   });
 
   lynxEnv.mainThread.elementTree.root = undefined;
