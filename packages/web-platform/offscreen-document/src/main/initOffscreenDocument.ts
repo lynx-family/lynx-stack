@@ -38,7 +38,7 @@ const blockList = new Set([
 function transferToCloneable(value: any): any {
   if (
     typeof value === 'string' || typeof value === 'number'
-    || typeof value === 'boolean' || typeof value === null
+    || typeof value === 'boolean' || value === null
   ) {
     return value;
   } else if (value[Symbol.iterator]) {
