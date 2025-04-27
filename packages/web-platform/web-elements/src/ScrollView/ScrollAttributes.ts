@@ -68,7 +68,7 @@ export class ScrollAttributes
       const scrollValue = parseFloat(newVal);
       const childrenElement = this.#dom.children.item(scrollValue);
       if (childrenElement && childrenElement instanceof HTMLElement) {
-        const scrollX = !!this.#dom.getAttribute('scroll-x');
+        const scrollX = this.#dom.getAttribute('scroll-x') !== null;
         requestAnimationFrame(() => {
           if (scrollX) {
             this.#dom.scrollLeft = childrenElement.offsetLeft;
