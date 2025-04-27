@@ -1,21 +1,23 @@
 import { options } from 'preact';
-
+import { SnapshotInstance } from '../../runtime/lib/snapshot.js';
+import { snapshotInstanceManager } from '../../runtime/lib/snapshot.js';
 import { BackgroundSnapshotInstance } from '../../runtime/lib/backgroundSnapshot.js';
-import { clearCommitTaskId, replaceCommitHook } from '../../runtime/lib/lifecycle/patch/commit.js';
-import { deinitGlobalSnapshotPatch } from '../../runtime/lib/lifecycle/patch/snapshotPatch.js';
-import { injectUpdateMainThread } from '../../runtime/lib/lifecycle/patch/updateMainThread.js';
+import { backgroundSnapshotInstanceManager } from '../../runtime/lib/snapshot.js';
 import { injectCalledByNative } from '../../runtime/lib/lynx/calledByNative.js';
-import { flushDelayedLifecycleEvents, injectTt } from '../../runtime/lib/lynx/tt.js';
-import { setRoot } from '../../runtime/lib/root.js';
+import { injectUpdateMainThread } from '../../runtime/lib/lifecycle/patch/updateMainThread.js';
 import {
-  SnapshotInstance,
-  backgroundSnapshotInstanceManager,
-  snapshotInstanceManager,
-} from '../../runtime/lib/snapshot.js';
-import { destroyWorklet } from '../../runtime/lib/worklet/destroy.js';
+  replaceCommitHook,
+  clearPatchesToCommit,
+  clearCommitTaskId,
+} from '../../runtime/lib/lifecycle/patch/commit.js';
+import { injectTt } from '../../runtime/lib/lynx/tt.js';
+import { setRoot } from '../../runtime/lib/root.js';
+import { deinitGlobalSnapshotPatch } from '../../runtime/lib/lifecycle/patch/snapshotPatch.js';
 import { initApiEnv } from '../../worklet-runtime/lib/api/lynxApi.js';
 import { initEventListeners } from '../../worklet-runtime/lib/listeners.js';
 import { initWorklet } from '../../worklet-runtime/lib/workletRuntime.js';
+import { destroyWorklet } from '../../runtime/lib/worklet/destroy.js';
+import { flushDelayedLifecycleEvents } from '../../runtime/lib/lynx/tt.js';
 
 const {
   onInjectMainThreadGlobals,
@@ -131,6 +133,7 @@ globalThis.onInjectBackgroundThreadGlobals = (target) => {
 
   // re-init global snapshot patch to undefined
   deinitGlobalSnapshotPatch();
+  clearPatchesToCommit();
   clearCommitTaskId();
 };
 globalThis.onResetLynxEnv = () => {

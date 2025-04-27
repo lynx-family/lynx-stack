@@ -3,13 +3,13 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 */
-import { render } from 'preact';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Component, createRef, root, useState } from '../../src/index';
 import { delayedLifecycleEvents } from '../../src/lifecycle/event/delayLifecycleEvents';
 import { clearCommitTaskId, replaceCommitHook } from '../../src/lifecycle/patch/commit';
 import { injectUpdateMainThread } from '../../src/lifecycle/patch/updateMainThread';
+import { renderBackground as render } from '../../src/lifecycle/render';
 import { __pendingListUpdates } from '../../src/list';
 import { __root } from '../../src/root';
 import { setupPage } from '../../src/snapshot';
