@@ -11,6 +11,7 @@
     "@lynx-js/react": "workspace:*"
   },
   "devDependencies": {
+    "@codecov/webpack-plugin": "^1.9.0",
     "@lynx-js/qrcode-rsbuild-plugin": "workspace:*",
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@lynx-js/rspeedy": "workspace:*"

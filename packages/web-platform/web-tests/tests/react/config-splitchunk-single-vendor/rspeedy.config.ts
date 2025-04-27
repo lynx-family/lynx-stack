@@ -10,7 +10,7 @@ const __dirname = path.dirname(__filename);
 const caseName = path.basename(__dirname);
 
 const root = path.join(__dirname, '..', '..', '..', 'dist', caseName);
-const commonConfigResult = commonConfig();
+const commonConfigResult = commonConfig({ firstScreenSyncTiming: 'jsReady' });
 commonConfigResult.output!.distPath = { root };
 commonConfigResult.output!.assetPrefix += `/${caseName}`;
 export default defineConfig({
@@ -22,8 +22,11 @@ export default defineConfig({
   },
   performance: {
     chunkSplit: {
-      // Rspack 1.2.8 introduced a bug that causes the single-vendor strategy to fail.
-      // strategy: 'single-vendor',
+      strategy: 'single-vendor',
+      override: {
+        // See: https://github.com/web-infra-dev/rspack/issues/9812
+        filename: '[name].[contenthash:8].js',
+      },
     },
   },
 });

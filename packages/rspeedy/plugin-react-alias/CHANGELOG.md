@@ -1,5 +1,19 @@
 # @lynx-js/react-alias-rsbuild-plugin
 
+## 0.9.7
+
+## 0.9.6
+
+## 0.9.5
+
+## 0.9.4
+
+## 0.9.3
+
+### Patch Changes
+
+- Fix the issue where the canary version of React was not included in the `rule.include` configuration. ([#275](https://github.com/lynx-family/lynx-stack/pull/275))
+
 ## 0.9.2
 
 ## 0.9.1

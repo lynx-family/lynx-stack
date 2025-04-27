@@ -12,6 +12,8 @@ import { version } from '../version.js'
 
 export interface CommonOptions {
   config?: string
+  envMode?: string
+  noEnv?: boolean
 }
 
 function applyCommonOptions(command: Command) {
@@ -19,6 +21,14 @@ function applyCommonOptions(command: Command) {
     .option(
       '-c --config <config>',
       'specify the configuration file, can be a relative or absolute path',
+    )
+    .option(
+      '--env-mode <mode>',
+      'specify the env mode to load the .env.[mode] file',
+    )
+    .option(
+      '--no-env',
+      'disable loading `.env` files"',
     )
 }
 
@@ -41,6 +51,10 @@ export function apply(program: Command): Command {
   const buildCommand = program.command('build')
   buildCommand
     .description('Build the project in production mode')
+    .option(
+      '--environment <name...>',
+      'specify the name of environment to build',
+    )
     .action(
       (buildOptions: BuildOptions) =>
         import('./build.js').then(({ build }) =>
@@ -52,6 +66,11 @@ export function apply(program: Command): Command {
   devCommand
     .description(
       'Run the dev server and watch for source file changes while serving.',
+    )
+    .option('--base <base>', 'specify the base path of the server')
+    .option(
+      '--environment <name...>',
+      'specify the name of environment to build',
     )
     .action(
       (devOptions: DevOptions) =>
@@ -75,6 +94,7 @@ export function apply(program: Command): Command {
   const previewCommand = program.command('preview')
   previewCommand
     .description('Preview the production build outputs locally.')
+    .option('--base <base>', 'specify the base path of the server')
     .action((previewOptions: PreviewOptions) =>
       import('./preview.js').then(({ preview }) =>
         preview.call(previewCommand, cwd, previewOptions)

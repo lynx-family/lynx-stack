@@ -2,53 +2,28 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import {
-  type PageConfig,
-  type ElementOperation,
   cssIdAttribute,
-  type CssInJsInfo,
-  parentComponentUniqueIdAttribute,
+  lynxUniqueIdAttribute,
+  lynxTagAttribute,
+  lynxDefaultDisplayLinearAttribute,
 } from '@lynx-js/web-constants';
-import { __UpdateComponentID } from '../attributeAndProperty/attributeAndPropertyFunctions.js';
 import {
   type ComponentAtIndexCallback,
   type EnqueueComponentCallback,
-  ListElement,
-  ElementThreadElement,
+  type LynxRuntimeInfo,
 } from '../ElementThreadElement.js';
-import { __SetCSSId } from '../style/styleFunctions.js';
-import { createOffscreenDocument } from '../createOffscreenDocument.js';
-
-export interface initializeElementCreatingFunctionConfig {
-  operationsRef: {
-    operations: ElementOperation[];
-  };
-  pageConfig: PageConfig;
-  styleInfo: CssInJsInfo;
-}
+import {
+  elementToRuntimeInfoMap,
+  getElementByUniqueId,
+  lynxUniqueIdToElement,
+  type MainThreadRuntime,
+} from '../../MainThreadRuntime.js';
+import type { createStyleFunctions } from '../style/styleFunctions.js';
 
 export function initializeElementCreatingFunction(
-  config: initializeElementCreatingFunctionConfig,
+  runtime: MainThreadRuntime,
 ) {
-  const { operationsRef, pageConfig, styleInfo } = config;
-  const document = createOffscreenDocument({
-    pageConfig,
-    operationsRef,
-    styleInfo,
-  });
-  function createLynxElement(
-    tag: Exclude<string, 'list'>,
-    parentComponentUniqueId: number,
-    cssId?: number,
-    componentId?: string,
-    info?: Record<string, any> | null | undefined,
-  ): ElementThreadElement;
-  function createLynxElement(
-    tag: 'list',
-    parentComponentUniqueId: number,
-    cssId?: number,
-    componentId?: string,
-    info?: Record<string, any> | null | undefined,
-  ): ListElement;
+  let uniqueIdInc = 1;
   function createLynxElement(
     tag: string,
     parentComponentUniqueId: number,
@@ -57,15 +32,29 @@ export function initializeElementCreatingFunction(
     // @ts-expect-error
     info?: Record<string, any> | null | undefined,
   ) {
-    const element = document.createElement(tag);
-    // element.parentComponentUniqueId = parentComponentUniqueId;
-    element.setAttribute(
-      parentComponentUniqueIdAttribute,
-      parentComponentUniqueId.toString(),
-    );
+    // @ts-expect-error
+    const __SetCSSId = runtime.__SetCSSId as ReturnType<
+      typeof createStyleFunctions
+    >['__SetCSSId'];
+    const htmlTag = runtime.config.tagMap[tag] ?? tag;
+    const element = runtime.config.docu.createElement(
+      htmlTag,
+    ) as HTMLElement;
+    element.setAttribute(lynxTagAttribute, tag);
+    const uniqueId = uniqueIdInc++;
+    const runtimeInfo: LynxRuntimeInfo = {
+      uniqueId,
+      componentConfig: {},
+      lynxDataset: {},
+      eventHandlerMap: {},
+      parentComponentUniqueId,
+    };
+    runtime[elementToRuntimeInfoMap].set(element, runtimeInfo);
+    runtime[lynxUniqueIdToElement][uniqueId] = new WeakRef(element);
+    element.setAttribute(lynxUniqueIdAttribute, uniqueId.toString());
     if (cssId !== undefined) __SetCSSId([element], cssId);
     else if (parentComponentUniqueId >= 0) { // don't infer for uniqueid === -1
-      const parentComponent = ElementThreadElement.getElementByUniqueId(
+      const parentComponent = runtime[getElementByUniqueId](
         parentComponentUniqueId,
       );
       const parentCssId = parentComponent?.getAttribute(cssIdAttribute);
@@ -74,7 +63,8 @@ export function initializeElementCreatingFunction(
       }
     }
     if (componentId !== undefined) {
-      __UpdateComponentID(element, componentId);
+      // @ts-expect-error
+      runtime.__UpdateComponentID(element, componentId);
     }
     return element;
   }
@@ -106,7 +96,7 @@ export function initializeElementCreatingFunction(
     tagName: string,
     parentComponentUniqueId: number,
     info?: object,
-  ): ElementThreadElement {
+  ): HTMLElement {
     return createLynxElement(
       tagName,
       parentComponentUniqueId,
@@ -122,10 +112,16 @@ export function initializeElementCreatingFunction(
     info: Record<string, any> | null | undefined,
   ) {
     const page = createLynxElement('page', 0, cssID, componentID, info);
-    page.setAttribute(
-      parentComponentUniqueIdAttribute,
-      page.uniqueId.toString(),
-    );
+    page.setAttribute('part', 'page');
+    const runtimeInfo = runtime[elementToRuntimeInfoMap].get(page)!;
+    runtimeInfo.parentComponentUniqueId = runtimeInfo.uniqueId;
+    if (runtime.config.pageConfig.defaultDisplayLinear === false) {
+      page.setAttribute(lynxDefaultDisplayLinearAttribute, 'false');
+    }
+    if (runtime.config.pageConfig.defaultOverflowVisible === true) {
+      page.setAttribute('lynx-default-overflow-visible', 'true');
+    }
+    runtime._page = page;
     return page;
   }
 
@@ -164,17 +160,27 @@ export function initializeElementCreatingFunction(
     componentAtIndex: ComponentAtIndexCallback,
     enqueueComponent: EnqueueComponentCallback,
     info?: any,
-  ): ListElement {
+  ): HTMLElement {
     const element = createLynxElement(
       'list',
       parentComponentUniqueId,
       undefined,
       undefined,
       info,
-    ) as ListElement;
-    element.componentAtIndex = componentAtIndex;
-    element.enqueueComponent = enqueueComponent;
+    ) as HTMLElement;
+    const runtimeInfo = runtime[elementToRuntimeInfoMap].get(element)!;
+    runtimeInfo.componentAtIndex = componentAtIndex;
+    runtimeInfo.enqueueComponent = enqueueComponent;
     return element;
+  }
+  function __SwapElement(
+    childA: HTMLElement,
+    childB: HTMLElement,
+  ): void {
+    const temp = runtime.config.docu.createElement('div');
+    childA.replaceWith(temp);
+    childB.replaceWith(childA);
+    temp.replaceWith(childB);
   }
 
   return {
@@ -188,5 +194,6 @@ export function initializeElementCreatingFunction(
     __CreateElement,
     __CreateWrapperElement,
     __CreateList,
+    __SwapElement,
   };
 }

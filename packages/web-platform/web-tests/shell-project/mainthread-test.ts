@@ -2,29 +2,57 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { MainThreadRuntime } from '@lynx-js/web-mainthread-apis';
-import { ElementThreadElement } from '@lynx-js/web-mainthread-apis/dist/elementAPI/ElementThreadElement.js';
-import { decodeElementOperation } from '@lynx-js/web-core/dist/uiThread/decodeElementOperation';
-import type { RuntimePropertyOnElement } from '@lynx-js/web-core/dist/types/RuntimePropertyOnElement';
-import { lynxRuntimeValue } from '@lynx-js/web-core';
+import {
+  getElementByUniqueId,
+  MainThreadRuntime,
+} from '@lynx-js/web-mainthread-apis';
+import { initOffscreenDocument } from '@lynx-js/offscreen-document/main';
+import {
+  _onEvent,
+  OffscreenDocument,
+} from '@lynx-js/offscreen-document/webworker';
+import type {
+  ElementOperation,
+  OffscreenElement,
+} from '@lynx-js/offscreen-document';
 
 type CompareableElementJson = {
   tag: string;
   children: CompareableElementJson[];
   parentUid?: number;
 };
+let runtime: any;
+let elementOperations: ElementOperation[] = [];
 
-const uniqueIdToElement: WeakRef<HTMLElement & RuntimePropertyOnElement>[] = [];
-
-let rootDom: HTMLElement;
+const div: HTMLElement = document.createElement('div');
+div.id = 'root';
+const shadowRoot = div.attachShadow({ mode: 'open' });
+document.body.appendChild(div);
+const docu = new OffscreenDocument({
+  onCommit(operations) {
+    elementOperations = operations;
+  },
+});
+const { decodeOperation } = initOffscreenDocument({
+  shadowRoot,
+  onEvent: docu[_onEvent],
+});
 
 function serializeElementThreadElement(
-  element: ElementThreadElement,
+  element: OffscreenElement,
 ): CompareableElementJson {
+  const parent = runtime.__GetParent(element);
+  const tag = runtime.__GetTag(element);
+  const parentUid = parent && runtime.__GetTag(element) !== 'page'
+    ? runtime.__GetElementUniqueID(parent)
+    : undefined;
+  const children = runtime.__GetChildren(element).map(e =>
+    serializeElementThreadElement(e)
+  );
   return {
-    tag: element.tag,
-    children: element.children.map(e => serializeElementThreadElement(e)),
-    parentUid: element.parent?.uniqueId,
+    tag,
+    children,
+    parentUid,
   };
 }
 
@@ -44,15 +72,17 @@ function serializeDomElement(element: Element): CompareableElementJson {
 }
 
 function genFiberElementTree() {
-  const page = ElementThreadElement.uniqueIdToElement[0]?.deref();
-  if (page?.tag === 'page') {
+  const page = runtime[getElementByUniqueId](1) as unknown as OffscreenElement;
+  if (runtime.__GetTag(page) === 'page') {
     return serializeElementThreadElement(page);
   } else {
     return {};
   }
+  return serializeElementThreadElement(page);
 }
 
 function genDomElementTree() {
+  const rootDom = shadowRoot.querySelector('[lynx-tag=\'page\']');
   if (rootDom) {
     return serializeDomElement(rootDom);
   } else {
@@ -60,12 +90,16 @@ function genDomElementTree() {
   }
 }
 
-function getElementThreadElements() {
-  return ElementThreadElement.uniqueIdToElement;
-}
-
 function initializeMainThreadTest() {
-  const runtime = new MainThreadRuntime({
+  runtime = new MainThreadRuntime({
+    tagMap: {
+      'page': 'div',
+      'view': 'x-view',
+      'text': 'x-text',
+      'image': 'x-image',
+      'list': 'x-list',
+      'svg': 'x-svg',
+    },
     lepusCode: { root: '' },
     customSections: {},
     browserConfig: {},
@@ -74,62 +108,38 @@ function initializeMainThreadTest() {
       enableRemoveCSSScope: true,
       defaultDisplayLinear: true,
     },
+    docu,
     styleInfo: {},
     globalProps: {},
     callbacks: {
       mainChunkReady: function(): void {
       },
-      flushElementTree: (operations) => {
-        console.log(operations);
-        const page = decodeElementOperation(
-          operations,
-          {
-            uniqueIdToElement,
-            uniqueIdToCssInJsRule: [],
-            createElementImpl: (tag: string) => {
-              const htmlTag = tag.includes('-') ? tag : `x-${tag}`;
-              const element = document.createElement(htmlTag) as
-                & HTMLDivElement
-                & RuntimePropertyOnElement;
-              element[lynxRuntimeValue] = {
-                dataset: {},
-                eventHandler: {},
-              };
-              return element;
-            },
-            createStyleRuleImpl: function(
-              uniqueId: number,
-              initialStyle: string,
-            ): CSSStyleRule {
-              throw new Error('Function not implemented.');
-            },
-            eventHandler: {
-              mtsHandler: () => {},
-              btsHandler: () => {},
-            },
-            timingFlags: [],
-          },
-        );
-        if (page) {
-          document.body.append(page as HTMLElement);
-          rootDom = page;
-        }
+      flushElementTree: () => {
+        docu.commit();
+        decodeOperation(elementOperations);
       },
-      _ReportError: function(error: Error, info?: unknown): void {
+      _ReportError: function(error: string, info?: unknown): void {
         document.body.innerHTML = '';
       },
       __OnLifecycleEvent() {
       },
       markTiming: function(pipelineId: string, timingKey: string): void {
-        throw new Error('Function not implemented.');
       },
+      publishEvent: (hname, ev) => {
+        Object.assign(globalThis, { publishEvent: { hname, ev } });
+      },
+      publicComponentEvent: (componentId, hname, ev) => {
+        Object.assign(globalThis, {
+          publicComponentEvent: { componentId, hname, ev },
+        });
+      },
+      postExposure: () => {},
     },
   });
   Object.assign(globalThis, runtime);
   Object.assign(globalThis, {
     genFiberElementTree,
     genDomElementTree,
-    getElementThreadElements,
   });
 }
 

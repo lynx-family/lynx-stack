@@ -7,6 +7,7 @@ import { defineConfig, devices } from '@playwright/test';
 process.env['LIBGL_ALWAYS_SOFTWARE'] = 'true'; // https://github.com/microsoft/playwright/issues/32151
 process.env['GALLIUM_HUD_SCALE'] = '1';
 const isCI = !!process.env.CI;
+const ALL_ON_UI = !!process.env.ALL_ON_UI;
 const port = process.env.PORT ?? 3080;
 const workerLimit = process.env['cpu_limit']
   ? Math.floor(parseFloat(process.env['cpu_limit']) / 2)
@@ -25,6 +26,7 @@ export default defineConfig({
   /** global timeout https://playwright.dev/docs/test-timeouts#global-timeout */
   globalTimeout: 20 * 60 * 1000,
   testDir: './tests',
+  testMatch: ALL_ON_UI ? '**/{react,web-core}.{test,spec}.ts' : undefined,
   /* Run tests in files in parallel */
   fullyParallel: true,
   workers: isCI ? workerLimit : undefined,

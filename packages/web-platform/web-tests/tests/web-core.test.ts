@@ -2,8 +2,10 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 // @ts-nocheck
-import { test, expect, type Page, type Worker } from '@playwright/test';
+import { test, expect } from './coverage-fixture.js';
+import type { Page, Worker } from '@playwright/test';
 
+const ALL_ON_UI = !!process.env.ALL_ON_UI;
 const wait = async (ms: number) => {
   await new Promise((resolve) => {
     setTimeout(resolve, ms);
@@ -17,16 +19,22 @@ const goto = async (page: Page) => {
   await wait(500);
 };
 
-async function getMainThreadWorker(page: Page): Promise<Worker | undefined> {
+async function getMainThreadWorker(
+  page: Page,
+): Promise<Worker | Page | undefined> {
   await wait(100);
-  for (const i of page.workers()) {
-    const isActive = await i.evaluate(() => {
-      return globalThis.runtime !== undefined
-        && globalThis.__lynx_worker_type === 'main';
-    });
+  if (ALL_ON_UI) {
+    return page;
+  } else {
+    for (const i of page.workers()) {
+      const isActive = await i.evaluate(() => {
+        return globalThis.runtime !== undefined
+          && globalThis.__lynx_worker_type === 'main';
+      });
 
-    if (isActive) {
-      return i;
+      if (isActive) {
+        return i;
+      }
     }
   }
 }
@@ -166,31 +174,6 @@ test.describe('web core tests', () => {
     expect(hello).toBe('hello');
     expect(world).toBe('world');
   });
-  test('lynx.requireModule+sync-main.thread', async ({ page, browserName }) => {
-    // firefox dose not support this.
-    test.skip(browserName === 'firefox');
-    await goto(page);
-    const mainWorker = await getMainThreadWorker(page);
-    await mainWorker.evaluate(() => {
-      globalThis.runtime.renderPage = () => {};
-    });
-    const [hello, world] = await mainWorker!.evaluate(async () => {
-      const chunk1 = Promise.withResolvers<string>();
-      const chunk2 = Promise.withResolvers<string>();
-      globalThis.runtime.lynx.requireModuleAsync(
-        'manifest-chunk.js',
-        (_, exports) => {
-          chunk1.resolve(exports);
-        },
-      );
-      chunk2.resolve(
-        globalThis.runtime.lynx.requireModule('manifest-chunk2.js'),
-      );
-      return Promise.all([chunk1.promise, chunk2.promise]);
-    });
-    expect(hello).toBe('hello');
-    expect(world).toBe('world');
-  });
 
   test('loadLepusChunk', async ({ page, browserName }) => {
     // firefox dose not support this.
@@ -277,9 +260,13 @@ test.describe('web core tests', () => {
     await wait(3000);
     const backWorker = await getBackgroundThreadWorker(page);
     let successCallback = false;
+    let successCallback2 = false;
     await page.on('console', async (message) => {
       if (message.text() === 'green') {
         successCallback = true;
+      }
+      if (message.text() === 'LYNX-VIEW') {
+        successCallback2 = true;
       }
     });
     await backWorker.evaluate(() => {
@@ -291,8 +278,8 @@ test.describe('web core tests', () => {
     });
     await wait(100);
     expect(successCallback).toBeTruthy();
+    expect(successCallback2).toBeTruthy();
   });
-
   test('api-onNapiModulesCall-class', async ({ page, browserName }) => {
     // firefox dose not support this.
     test.skip(browserName === 'firefox');
@@ -304,9 +291,13 @@ test.describe('web core tests', () => {
     await wait(3000);
     const backWorker = await getBackgroundThreadWorker(page);
     let successCallback = false;
+    let successCallback2 = false;
     await page.on('console', async (message) => {
       if (message.text() === 'green') {
         successCallback = true;
+      }
+      if (message.text() === 'LYNX-VIEW') {
+        successCallback2 = true;
       }
     });
     await backWorker.evaluate(() => {
@@ -319,5 +310,36 @@ test.describe('web core tests', () => {
     });
     await wait(100);
     expect(successCallback).toBeTruthy();
+    expect(successCallback2).toBeTruthy();
+  });
+  test('api-onNapiModulesCall-dispatchNapiModules', async ({ page, browserName }) => {
+    // firefox dose not support this.
+    test.skip(browserName === 'firefox');
+    await goto(page);
+    const mainWorker = await getMainThreadWorker(page);
+    await mainWorker.evaluate(() => {
+      globalThis.runtime.renderPage = () => {};
+    });
+    await wait(3000);
+    const backWorker = await getBackgroundThreadWorker(page);
+    let successDispatchNapiModule = false;
+    await page.on('console', async (message) => {
+      if (message.text() === 'bts:lynx-view') {
+        successDispatchNapiModule = true;
+      }
+    });
+    await backWorker.evaluate(() => {
+      const nativeApp = globalThis.runtime.lynx.getNativeApp();
+      const eventMethod = globalThis[`napiLoaderOnRT${nativeApp.id}`].load(
+        'event_method',
+      );
+      eventMethod.bindEvent();
+    });
+    await wait(1000);
+    await page.evaluate(() => {
+      document.querySelector('lynx-view')?.click();
+    });
+    await wait(1000);
+    expect(successDispatchNapiModule).toBeTruthy();
   });
 });

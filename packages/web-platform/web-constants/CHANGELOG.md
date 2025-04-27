@@ -1,5 +1,144 @@
 # @lynx-js/web-constants
 
+## 0.12.0
+
+### Patch Changes
+
+- feat: fully support MTS ([#569](https://github.com/lynx-family/lynx-stack/pull/569))
+
+  Now use support the following usage
+
+  - mainthread event
+  - mainthread ref
+  - runOnMainThread/runOnBackground
+  - ref.current.xx
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.12.0
+
+## 0.11.0
+
+### Patch Changes
+
+- feat: support mts event handler (1/n) ([#495](https://github.com/lynx-family/lynx-stack/pull/495))
+
+  now the main-thread:bind handler could be invoked. The params of the handler will be implemented later.
+
+- feat: allow multi lynx-view to share bts worker ([#520](https://github.com/lynx-family/lynx-stack/pull/520))
+
+  Now we allow users to enable so-called "shared-context" feature on the Web Platform.
+
+  Similar to the same feature for Lynx iOS/Android, this feature let multi lynx cards to share one js context.
+
+  The `lynx.getSharedData` and `lynx.setSharedData` are also supported in this commit.
+
+  To enable this feature, set property `lynxGroupId` or attribute `lynx-group-id` before a lynx-view starts rendering. Those card with same context id will share one web worker for the bts scripts.
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.11.0
+
+## 0.10.1
+
+### Patch Changes
+
+- feat: onNapiModulesCall function add new param: `dispatchNapiModules`, napiModulesMap val add new param: `handleDispatch`. ([#414](https://github.com/lynx-family/lynx-stack/pull/414))
+
+  Now you can use them to actively communicate to napiModules (background thread) in onNapiModulesCall (ui thread).
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.10.1
+
+## 0.10.0
+
+### Minor Changes
+
+- feat: rewrite the main thread Element PAPIs ([#343](https://github.com/lynx-family/lynx-stack/pull/343))
+
+  In this commit we've rewritten the main thread apis.
+
+  The most highlighted change is that
+
+  - Before this commit we send events directly to bts
+  - After this change, we send events to mts then send them to bts with some data combined.
+
+### Patch Changes
+
+- feat: The onNapiModulesCall function of lynx-view provides the fourth parameter: `lynxView`, which is the actual lynx-view DOM. ([#350](https://github.com/lynx-family/lynx-stack/pull/350))
+
+- fix: publicComponentEvent args order ([#401](https://github.com/lynx-family/lynx-stack/pull/401))
+
+- Updated dependencies [[`a521759`](https://github.com/lynx-family/lynx-stack/commit/a5217592f5aebea4b17860e729d523ecabb5f691)]:
+  - @lynx-js/web-worker-rpc@0.10.0
+
+## 0.9.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.9.1
+
+## 0.9.0
+
+### Minor Changes
+
+- refractor: remove entryId concept ([#217](https://github.com/lynx-family/lynx-stack/pull/217))
+
+  After the PR #198
+  All contents are isolated by a shadowroot.
+  Therefore we don't need to add the entryId selector to avoid the lynx-view's style taking effect on the whole page.
+
+### Patch Changes
+
+- feat: `nativeModulesUrl` of lynx-view is changed to `nativeModulesMap`, and the usage is completely aligned with `napiModulesMap`. ([#220](https://github.com/lynx-family/lynx-stack/pull/220))
+
+  "warning: This is a breaking change."
+
+  `nativeModulesMap` will be a map: key is module-name, value should be a esm url which export default a
+  function with two parameters(you never need to use `this`):
+
+  - `NativeModules`: oriented `NativeModules`, which you can use to call
+    other Native-Modules.
+
+  - `NativeModulesCall`: trigger `onNativeModulesCall`, same as the deprecated `this.nativeModulesCall`.
+
+  example:
+
+  ```js
+  const nativeModulesMap = {
+    CustomModule: URL.createObjectURL(
+      new Blob(
+        [
+          `export default function(NativeModules, NativeModulesCall) {
+      return {
+        async getColor(data, callback) {
+          const color = await NativeModulesCall('getColor', data);
+          callback(color);
+        },
+      }
+    };`,
+        ],
+        { type: 'text/javascript' },
+      ),
+    ),
+  };
+  lynxView.nativeModulesMap = nativeModulesMap;
+  ```
+
+  In addition, we will use Promise.all to load `nativeModules`, which will optimize performance in the case of multiple modules.
+
+- refactor: clean the decodeOperations implementation ([#261](https://github.com/lynx-family/lynx-stack/pull/261))
+
+- refactor: remove customelement defined detecting logic ([#247](https://github.com/lynx-family/lynx-stack/pull/247))
+
+  Before this commit, for those element with tag without `-`, we always try to detect if the `x-${tagName}` is defined.
+
+  After this commit, we pre-define a map(could be override by the `overrideLynxTagToHTMLTagMap`) to make that transformation for tag name.
+
+  This change is a path to SSR and the MTS support.
+
+- Updated dependencies [[`53230f0`](https://github.com/lynx-family/lynx-stack/commit/53230f012216f3a627853e11d544e4be175c5b9b)]:
+  - @lynx-js/web-worker-rpc@0.9.0
+
 ## 0.8.0
 
 ### Minor Changes

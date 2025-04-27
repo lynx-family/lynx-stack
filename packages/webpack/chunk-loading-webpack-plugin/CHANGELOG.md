@@ -1,5 +1,24 @@
 # @lynx-js/chunk-loading-webpack-plugin
 
+## 0.2.0
+
+### Minor Changes
+
+- **BREAKING CHANGE**: Requires `@rspack/core` v1.3.0. ([#400](https://github.com/lynx-family/lynx-stack/pull/400))
+
+- **BREAKING CHANGE**: Remove the deprecated `ChunkLoadingRspackPlugin`, use `ChunkLoadingWebpackPlugin` with `output.chunkLoading: 'lynx'` instead. ([#400](https://github.com/lynx-family/lynx-stack/pull/400))
+
+  ```js
+  import { ChunkLoadingWebpackPlugin } from '@lynx-js/chunk-loading-webpack-plugin';
+
+  export default {
+    output: {
+      chunkLoading: 'lynx',
+    },
+    plugins: [new ChunkLoadingWebpackPlugin()],
+  };
+  ```
+
 ## 0.1.7
 
 ### Patch Changes
@@ -40,7 +59,7 @@
 
 ### Patch Changes
 
-- 42093cb: refractor: migrate to webpack provided publicpath runtime module
+- 42093cb: refractor: migrate to webpack provided publicPath runtime module
 
 ## 0.1.1
 

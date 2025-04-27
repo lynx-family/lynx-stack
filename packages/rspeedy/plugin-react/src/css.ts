@@ -23,6 +23,7 @@ export function applyCSS(
   const {
     enableRemoveCSSScope,
     enableCSSSelector,
+    enableCSSInvalidation,
     targetSdkVersion,
   } = options
 
@@ -60,14 +61,7 @@ export function applyCSS(
         .forEach(ruleName => {
           const rule = chain.module.rule(ruleName)
 
-          if (
-            // Webpack does not have lightningcss-loader
-            rule.uses.has(CHAIN_ID.USE.LIGHTNINGCSS)
-            // We only disable lightningcss for Lynx
-            && environment.name === 'lynx'
-          ) {
-            rule.uses.delete(CHAIN_ID.USE.LIGHTNINGCSS)
-          }
+          removeLightningCSS(rule)
 
           // Replace the CssExtractRspackPlugin.loader with ours.
           // This is for scoped CSS.
@@ -123,6 +117,33 @@ export function applyCSS(
               .end()
         })
 
+      const inlineCSSRules = [
+        CHAIN_ID.RULE.CSS_INLINE,
+        CHAIN_ID.RULE.SASS_INLINE,
+        CHAIN_ID.RULE.LESS_INLINE,
+        CHAIN_ID.RULE.STYLUS_INLINE,
+      ] as const
+
+      inlineCSSRules
+        // Rsbuild 0.7.0 removed sass and less from builtin plugins
+        // Rsbuild 1.3.0 add *_INLINE rules
+        .filter(rule => rule && chain.module.rules.has(rule))
+        .forEach(ruleName => {
+          const rule = chain.module.rule(ruleName)
+          removeLightningCSS(rule)
+        })
+
+      function removeLightningCSS(rule: ReturnType<typeof chain.module.rule>) {
+        if (
+          // Webpack does not have lightningcss-loader
+          rule.uses.has(CHAIN_ID.USE.LIGHTNINGCSS)
+          // We only disable lightningcss for Lynx
+          && environment.name === 'lynx'
+        ) {
+          rule.uses.delete(CHAIN_ID.USE.LIGHTNINGCSS)
+        }
+      }
+
       chain
         .plugin(CHAIN_ID.PLUGIN.MINI_CSS_EXTRACT)
         .tap(([options]) => {
@@ -131,6 +152,7 @@ export function applyCSS(
               ...options,
               enableRemoveCSSScope: enableRemoveCSSScope ?? true,
               enableCSSSelector,
+              enableCSSInvalidation,
               targetSdkVersion,
               cssPlugins: [
                 CSSPlugins.parserPlugins.removeFunctionWhiteSpace(),

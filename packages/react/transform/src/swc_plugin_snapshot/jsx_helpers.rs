@@ -6,7 +6,7 @@ use swc_core::{
   common::{errors::HANDLER, iter::IdentifyLast, Spanned, DUMMY_SP},
   ecma::{
     ast::{JSXExpr, *},
-    atoms::{js_word, Atom, JsWord},
+    atoms::{atom, Atom},
   },
 };
 
@@ -14,7 +14,7 @@ pub fn jsx_name(name: JSXElementName) -> Box<Expr> {
   let span = name.span();
   match name {
     JSXElementName::Ident(i) => {
-      if i.sym == js_word!("this") {
+      if i.sym == atom!("this") {
         return Box::new(Expr::This(ThisExpr { span }));
       }
       // If it starts with lowercase
@@ -50,7 +50,7 @@ pub fn jsx_name(name: JSXElementName) -> Box<Expr> {
 
         (match obj {
           JSXObject::Ident(i) => {
-            if i.sym == js_word!("this") {
+            if i.sym == atom!("this") {
               Expr::This(ThisExpr { span })
             } else {
               Expr::Ident(i)
@@ -73,7 +73,7 @@ pub fn jsx_name(name: JSXElementName) -> Box<Expr> {
   }
 }
 
-pub fn jsx_attr_name(name: &JSXAttrName) -> JsWord {
+pub fn jsx_attr_name(name: &JSXAttrName) -> Atom {
   match name {
     JSXAttrName::Ident(ref id) => id.sym.clone(),
     JSXAttrName::JSXNamespacedName(ref name) => format!("{}:{}", name.ns.sym, name.name.sym).into(),
@@ -128,7 +128,7 @@ pub fn jsx_props_to_obj(jsx: &JSXElement) -> Option<ObjectLit> {
   Some(obj)
 }
 
-pub fn jsx_text_to_str(t: &Atom) -> JsWord {
+pub fn jsx_text_to_str(t: &Atom) -> Atom {
   static SPACE_START: Lazy<Regex> = Lazy::new(|| Regex::new("^[ ]+").unwrap());
   static SPACE_END: Lazy<Regex> = Lazy::new(|| Regex::new("[ ]+$").unwrap());
   let mut buf = String::new();
@@ -218,6 +218,25 @@ pub fn jsx_is_custom(jsx: &JSXElement) -> bool {
     }
     _ => true,
   }
+}
+
+pub fn jsx_has_dynamic_key(jsx: &JSXElement) -> bool {
+  jsx.opening.attrs.iter().any(|attr| {
+    if let JSXAttrOrSpread::JSXAttr(JSXAttr { name, value, .. }) = attr {
+      if let JSXAttrName::Ident(ident) = name {
+        if ident.sym == atom!("key") {
+          if let Some(JSXAttrValue::JSXExprContainer(JSXExprContainer {
+            expr: JSXExpr::Expr(_),
+            ..
+          })) = value
+          {
+            return true;
+          }
+        }
+      }
+    }
+    false
+  })
 }
 
 pub fn jsx_is_list(jsx: &JSXElement) -> bool {

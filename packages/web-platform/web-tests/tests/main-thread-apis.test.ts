@@ -2,18 +2,9 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 // @ts-nocheck
-import {
-  componentIdAttribute,
-  cssIdAttribute,
-  parentComponentUniqueIdAttribute,
-} from '@lynx-js/web-constants';
-import { test, expect, type Page, CDPSession } from '@playwright/test';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import fs from 'node:fs/promises';
-import v8toIstanbul from 'v8-to-istanbul';
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import { componentIdAttribute, cssIdAttribute } from '@lynx-js/web-constants';
+import { test, expect } from './coverage-fixture.js';
+import type { Page } from '@playwright/test';
 
 const wait = async (ms: number) => {
   await new Promise((resolve) => {
@@ -21,23 +12,11 @@ const wait = async (ms: number) => {
   });
 };
 
-const getTitle = (titlePath: string[]) => {
-  return path.join(...[titlePath.pop()!, titlePath.pop()!].reverse());
-};
-
 test.describe('main thread api tests', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto(`/main-thread-test.html`, {
       waitUntil: 'load',
     });
-  });
-  test.beforeEach(async ({ page, browserName }) => {
-    if (browserName === 'chromium') {
-      await page.coverage.startJSCoverage({
-        reportAnonymousScripts: true,
-        resetOnNavigation: true,
-      });
-    }
   });
 
   test.afterEach(async ({ page }) => {
@@ -50,37 +29,6 @@ test.describe('main thread api tests', () => {
     expect(fiberTree).toStrictEqual(domTree);
   });
 
-  test.afterEach(
-    async ({ page, browserName, baseURL, browser }, { titlePath }) => {
-      if (browserName === 'chromium') {
-        const coverage = await page.coverage.stopJSCoverage();
-        const converter = v8toIstanbul(
-          path.join(__dirname, '..', 'www', 'main.js'),
-        );
-        for (const entry of coverage) {
-          await converter.load();
-          converter.applyCoverage(entry.functions);
-        }
-        const dir = path.join(__dirname, '..', '..', '.nyc_output');
-        await fs.mkdir(dir, { recursive: true });
-        const converageMapData = Object.fromEntries(
-          Object.entries(converter.toIstanbul()).map(([key, value]) => {
-            return [key, value];
-          }),
-        );
-        fs.writeFile(
-          path.join(
-            dir,
-            `playwright_output_${
-              getTitle(titlePath).replaceAll('/', '_')
-            }.json`,
-          ),
-          JSON.stringify(converageMapData),
-          { flag: 'w' },
-        );
-      }
-    },
-  );
   test('createElementView', async ({ page }, { title }) => {
     const lynxTag = await page.evaluate(() => {
       const ret = globalThis.__CreateElement('view', 0) as HTMLElement;
@@ -129,7 +77,6 @@ test.describe('main thread api tests', () => {
   test(
     'create-scroll-view-with-set-attribute',
     async ({ page, browserName }, { title }) => {
-      test.skip(browserName !== 'chromium', 'flaky');
       const ret = await page.evaluate(() => {
         let root = globalThis.__CreatePage('page', 0);
         let ret = globalThis.__CreateScrollView(0);
@@ -138,6 +85,39 @@ test.describe('main thread api tests', () => {
         globalThis.__FlushElementTree();
       });
       expect(page.locator('scroll-view')).toHaveAttribute('scroll-x', 'true');
+    },
+  );
+  test(
+    '__SetID',
+    async ({ page, browserName }, { title }) => {
+      const ret = await page.evaluate(() => {
+        let root = globalThis.__CreatePage('page', 0);
+        let ret = globalThis.__CreateView(0);
+        globalThis.__SetID(ret, 'target');
+        globalThis.__AppendElement(root, ret);
+        globalThis.__FlushElementTree();
+      });
+      expect(await page.locator('#target').count()).toBe(1);
+    },
+  );
+  test(
+    '__SetID to remove id',
+    async ({ page, browserName }, { title }) => {
+      const ret = await page.evaluate(() => {
+        let root = globalThis.__CreatePage('page', 0);
+        let ret = globalThis.__CreateView(0);
+        globalThis.__SetID(ret, 'target');
+        globalThis.__AppendElement(root, ret);
+        globalThis.__FlushElementTree();
+        globalThis.view = ret;
+      });
+      expect(await page.locator('#target').count()).toBe(1);
+      await page.evaluate(() => {
+        let ret = globalThis.view;
+        globalThis.__SetID(ret, null);
+        globalThis.__FlushElementTree();
+      });
+      expect(await page.locator('#target').count()).toBe(0);
     },
   );
 
@@ -245,7 +225,7 @@ test.describe('main thread api tests', () => {
         ret1: globalThis.__GetTag(ret1),
       };
     });
-    expect(ret.ret0).toBe(undefined);
+    expect(ret.ret0).toBeFalsy();
     expect(ret.ret_u).toBe(undefined);
     expect(ret.ret1).toBe('text');
   });
@@ -522,7 +502,6 @@ test.describe('main thread api tests', () => {
       return;
     });
     const e1 = page.locator(`[${componentIdAttribute}="id1"]`);
-    expect(await e1?.getAttribute(parentComponentUniqueIdAttribute)).toBe('0');
   });
 
   test('__SetInlineStyles', async ({ page }, { title }) => {
@@ -568,12 +547,18 @@ test.describe('main thread api tests', () => {
       globalThis.__AddInlineStyle(root, 26, '80px');
       globalThis.__FlushElementTree();
     });
-    const style = await page.evaluate(() => {
-      const elements = globalThis.getElementThreadElements();
-      return elements[0].deref().attributes.style;
+    const pageElement = page.locator(`[lynx-tag='page']`);
+    await expect(pageElement).toHaveCSS('height', '80px');
+  });
+
+  test('__AddInlineStyle_key_is_name', async ({ page }, { title }) => {
+    await page.evaluate(() => {
+      let root = globalThis.__CreatePage('page', 0);
+      globalThis.__AddInlineStyle(root, 'height', '80px');
+      globalThis.__FlushElementTree();
     });
-    await expect(style).toBe('height:80px;');
-    await expect(page.locator(`[lynx-tag='page']`)).toHaveCSS('height', '80px');
+    const pageElement = page.locator(`[lynx-tag='page']`);
+    await expect(pageElement).toHaveCSS('height', '80px');
   });
 
   test('__AddInlineStyle_raw_string', async ({ page }, { title }) => {
@@ -996,12 +981,18 @@ test.describe('main thread api tests', () => {
       globalThis.__SetID(child_2, 'node_id_2');
 
       globalThis.__FlushElementTree();
-      let ret_node = document.querySelector('#node_id');
+      let ret_node = document.getElementById('root').shadowRoot.querySelector(
+        '#node_id',
+      );
       let ret_id = ret_node?.getAttribute('id');
 
-      let ret_u = document.querySelector('#node_id_u');
+      let ret_u = document.getElementById('root').shadowRoot.querySelector(
+        '#node_id_u',
+      );
 
-      let ret_child = document.querySelector('#node_id_2');
+      let ret_child = document.getElementById('root').shadowRoot.querySelector(
+        '#node_id_2',
+      );
       let ret_child_id = ret_child?.getAttribute('id');
 
       // let ret_child_u = parent.querySelector('#node_id_2');
@@ -1020,7 +1011,7 @@ test.describe('main thread api tests', () => {
 
   test('__setAttribute_null_value', async ({ page }, { title }) => {
     await page.evaluate(() => {
-      const ret = globalThis.__CreateElement('page', 0) as HTMLElement;
+      const ret = globalThis.__CreatePage('page', 0);
       globalThis.__SetAttribute(ret, 'test-attr', 'val');
       globalThis.__SetAttribute(ret, 'test-attr', null);
       globalThis.__FlushElementTree();
@@ -1166,4 +1157,59 @@ test.describe('main thread api tests', () => {
       expect(randomObject).toBe(-1);
     },
   );
+
+  test(
+    '__AddInlineStyle_value_number_0',
+    async ({ page }, { title }) => {
+      await page.evaluate(() => {
+        const root = globalThis.__CreatePage('page', 0);
+        const view = globalThis.__CreateView(0);
+        globalThis.__AddInlineStyle(root, 24, 'flex'); // display: flex
+        globalThis.__AddInlineStyle(view, 51, 0); // flex-shrink:0;
+        globalThis.__SetID(view, 'target');
+        globalThis.__AppendElement(root, view);
+        globalThis.__FlushElementTree();
+        return {};
+      });
+      const inlineStyle = await page.locator('#target').getAttribute('style');
+      expect(inlineStyle).toContain('flex-shrink');
+    },
+  );
+
+  test('publicComponentEvent', async ({ page }, { title }) => {
+    const ret = await page.evaluate(() => {
+      let page = globalThis.__CreatePage('0', 0);
+      let parent = globalThis.__CreateComponent(
+        0,
+        'id1',
+        0,
+        'test_entry',
+        'name',
+        'path',
+        {},
+      );
+      let parentUid = globalThis.__GetElementUniqueID(parent);
+      let child = globalThis.__CreateView(parentUid);
+      globalThis.__AppendElement(page, parent);
+      globalThis.__AppendElement(parent, child);
+      globalThis.__SetID(parent, 'parent_id');
+      globalThis.__SetID(child, 'child_id');
+      globalThis.__AddEvent(child, 'bindEvent', 'tap', 'hname');
+      globalThis.__SetInlineStyles(parent, {
+        'display': 'flex',
+      });
+      globalThis.__SetInlineStyles(child, {
+        'width': '100px',
+        'height': '100px',
+      });
+      globalThis.__FlushElementTree();
+    });
+    await page.locator('#child_id').click({ force: true });
+    await wait(100);
+    const publicComponentEventArgs = await page.evaluate(() => {
+      return globalThis.publicComponentEvent;
+    });
+    await expect(publicComponentEventArgs.hname).toBe('hname');
+    await expect(publicComponentEventArgs.componentId).toBe('id1');
+  });
 });

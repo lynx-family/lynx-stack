@@ -6,7 +6,7 @@
 // @ts-check
 import nodeModule from 'node:module'
 
-import { tryStartLocalRspeedy } from '../lib/cli/start.js'
+import { tryStartLocalRspeedy } from '../dist/cli/start.js'
 
 // See: https://nodejs.org/id/blog/release/v22.8.0
 // eslint-disable-next-line n/no-unsupported-features/node-builtins
@@ -27,7 +27,7 @@ try {
 
 if (tryStartLocalRspeedy() === false) {
   // A project rspeedy dependency was not found, so launch the unmanaged version.
-  const { main } = await import('../lib/cli/main.js')
+  const { main } = await import('../dist/cli/main.js')
 
   await main(process.argv)
 }

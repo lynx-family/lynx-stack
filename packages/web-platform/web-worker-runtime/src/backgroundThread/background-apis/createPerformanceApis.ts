@@ -1,24 +1,20 @@
 // Copyright 2023 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
 
 import type { NativeApp } from '@lynx-js/web-constants';
+import type { TimingSystem } from './createTimingSystem.js';
 
-// LICENSE file in the root directory of this source tree.
-export function createPerformanceApis(
-  markTimingInternal: (timingKey: string, pipelineId: string) => void,
-): {
-  performanceApis: Pick<
-    NativeApp,
-    | 'generatePipelineOptions'
-    | 'onPipelineStart'
-    | 'markPipelineTiming'
-    | 'bindPipelineIdWithTimingFlag'
-  >;
-  pipelineIdToTimingFlags: Map<string, string[]>;
-} {
+export function createPerformanceApis(timingSystem: TimingSystem): Pick<
+  NativeApp,
+  | 'generatePipelineOptions'
+  | 'onPipelineStart'
+  | 'markPipelineTiming'
+  | 'bindPipelineIdWithTimingFlag'
+  | 'profileStart'
+  | 'profileEnd'
+> {
   let inc = 0;
-  const pipelineIdToTimingFlags: Map<string, string[]> = new Map();
-
   const performanceApis = {
     generatePipelineOptions: () => {
       const newPipelineId = `_pipeline_` + (inc++);
@@ -34,21 +30,24 @@ export function createPerformanceApis(
       pipelineId: string,
       timingKey: string,
     ): void {
-      markTimingInternal(timingKey, pipelineId);
+      timingSystem.markTimingInternal(timingKey, pipelineId);
     },
     bindPipelineIdWithTimingFlag: function(
       pipelineId: string,
       timingFlag: string,
     ): void {
-      if (!pipelineIdToTimingFlags.has(pipelineId)) {
-        pipelineIdToTimingFlags.set(pipelineId, []);
+      if (!timingSystem.pipelineIdToTimingFlags.has(pipelineId)) {
+        timingSystem.pipelineIdToTimingFlags.set(pipelineId, []);
       }
-      const timingFlags = pipelineIdToTimingFlags.get(pipelineId)!;
+      const timingFlags = timingSystem.pipelineIdToTimingFlags.get(pipelineId)!;
       timingFlags.push(timingFlag);
     },
+    profileStart: () => {
+      console.error('NYI: profileStart. This is an issue of lynx-core.');
+    },
+    profileEnd: () => {
+      console.error('NYI: profileEnd. This is an issue of lynx-core.');
+    },
   };
-  return {
-    performanceApis,
-    pipelineIdToTimingFlags,
-  };
+  return performanceApis;
 }

@@ -4,14 +4,23 @@
 // LICENSE file in the root directory of this source tree.
 */
 import { Component } from '@lynx-js/web-elements-reactive';
-import { LynxExposure } from '../common/Exposure.js';
-import { XFoldviewHeaderNgFeatures } from './XFoldviewHeaderNgFeatures.js';
+import { CommonEventsAndMethods } from '../common/CommonEventsAndMethods.js';
+import { resizeObserver, type XFoldviewNg } from './XFoldviewNg.js';
 
 @Component<typeof XFoldviewHeaderNg>(
   'x-foldview-header-ng',
   [
-    LynxExposure,
-    XFoldviewHeaderNgFeatures,
+    CommonEventsAndMethods,
   ],
 )
-export class XFoldviewHeaderNg extends HTMLElement {}
+export class XFoldviewHeaderNg extends HTMLElement {
+  connectedCallback() {
+    (this.parentElement as XFoldviewNg | null)?.[resizeObserver]?.observe(this);
+  }
+
+  dispose() {
+    (this.parentElement as XFoldviewNg | null)?.[resizeObserver]?.unobserve(
+      this,
+    );
+  }
+}

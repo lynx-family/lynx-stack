@@ -2,18 +2,14 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { test } from 'vitest';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-// import path from 'node:path';
-// import { fileURLToPath } from 'node:url';
+import { hotCases } from '@lynx-js/test-tools';
 
-// import { hotCases } from '@lynx-js/test-tools';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-// hotCases({
-//   name: 'css-extract',
-//   casePath: path.join(__dirname, 'hotCases'),
-// });
-
-test.todo('Enable Hot Test');
+hotCases({
+  name: 'css-extract',
+  casePath: path.join(__dirname, 'hotCases'),
+});

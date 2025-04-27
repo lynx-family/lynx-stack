@@ -15,6 +15,7 @@ import type {
   TCompilerOptions,
 } from '@rspack/test-tools';
 import fs from 'fs-extra';
+import { rimrafSync } from 'rimraf';
 import { describe, expect, it } from 'vitest';
 
 import { createVitestEnv, getOptions } from './suite.js';
@@ -126,8 +127,8 @@ function createCase(name: string, src: string, dist: string, cwd: string) {
 }
 
 export function diagnosticCases(suite: ITestSuite): void {
-  const distPath = path.resolve(suite.casePath, '../dist');
-  fs.rmSync(distPath, { recursive: true, force: true });
+  const distPath = path.resolve(suite.casePath, '../dist/diagnostic');
+  rimrafSync(distPath);
   describeByWalk(suite.name, (name, src, dist) => {
     createCase(name, src, dist, suite.casePath);
   }, {

@@ -1,0 +1,41 @@
+on:
+  workflow_call:
+
+env:
+  CI: 1
+  TURBO_TELEMETRY_DISABLED: 1
+jobs:
+  nodejs-benchmark:
+    # CodSpeed does not support merge_group event.
+    #
+    # Error: Event merge_group is not supported by CodSpeed
+    # Error: unknown variant `merge_group`, expected one of `push`, `pull_request`, `workflow_dispatch`, `schedule`, `local` at line 1 column 13
+    if: github.event_name != 'merge_group'
+    runs-on: lynx-ubuntu-24.04-xlarge
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install
+        run: |
+          npm install -g corepack@latest
+          corepack enable
+          pnpm install --frozen-lockfile
+      - name: TurboCache
+        uses: lynx-infra/cache@558d7c999f9f97ac02ed7e711503bb81d82ff8ee
+        with:
+          path: .turbo
+          # We have to be strict here to make sure getting the cache of build-all
+          key: turbo-v3-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ github.sha }}
+          fail-on-cache-miss: true
+      - name: Build
+        run: |
+          pnpm turbo build
+      - name: Prepare CodSpeed
+        run: |
+          curl -fsSL https://github.com/CodSpeedHQ/runner/releases/download/v3.5.0/codspeed-runner-installer.sh | bash -s -- --quiet
+      - name: Run benchmark
+        run: |
+          . "$HOME/.cargo/env"
+          codspeed run -- pnpm -r run bench

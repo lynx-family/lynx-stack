@@ -11,7 +11,7 @@ describe('Plugins - chunkLoading', () => {
 
     const config = await rspeedy.unwrapConfig()
 
-    expect(config.output?.chunkLoading).toBe('require')
+    expect(config.output?.chunkLoading).toBe('lynx')
     expect(config.output?.chunkFormat).toBe('commonjs')
     expect(
       config.plugins?.some(plugin =>
@@ -35,5 +35,72 @@ describe('Plugins - chunkLoading', () => {
         plugin && plugin.constructor.name === 'ChunkLoadingWebpackPlugin'
       ),
     ).toBeTruthy()
+  })
+
+  describe('Web', () => {
+    test('Rspack', async () => {
+      const rspeedy = await createStubRspeedy({
+        environments: {
+          web: {},
+        },
+      })
+
+      const config = await rspeedy.unwrapConfig()
+
+      expect(config.output?.chunkLoading).toBe('import-scripts')
+      expect(config.output?.chunkFormat).not.toBe('commonjs')
+      expect(config.output?.iife).not.toBe(false)
+    })
+
+    test('Webpack', async () => {
+      const { webpackProvider } = await import('@rsbuild/webpack')
+      const rspeedy = await createStubRspeedy({
+        provider: webpackProvider,
+        environments: {
+          web: {},
+        },
+      })
+
+      const config = await rspeedy.unwrapConfig()
+
+      expect(config.output?.chunkLoading).toBe('import-scripts')
+      expect(config.output?.chunkFormat).not.toBe('commonjs')
+      expect(config.output?.iife).not.toBe(false)
+    })
+
+    test('multiple environments', async () => {
+      const rspeedy = await createStubRspeedy({
+        environments: {
+          web: {},
+          lynx: {},
+        },
+      })
+
+      const [webConfig, lynxConfig] = await rspeedy.initConfigs()
+
+      expect(webConfig?.output?.chunkLoading).toBe('import-scripts')
+      expect(webConfig?.output?.chunkFormat).not.toBe('commonjs')
+      expect(webConfig?.output?.iife).not.toBe(false)
+
+      expect(lynxConfig?.output?.chunkLoading).toBe('lynx')
+      expect(lynxConfig?.output?.chunkFormat).toBe('commonjs')
+      expect(lynxConfig?.output?.iife).toBe(false)
+    })
+
+    test('override with tools.rspack.output.chunkLoading', async () => {
+      const rspeedy = await createStubRspeedy({
+        environments: {
+          web: {
+            tools: {
+              rspack: { output: { chunkLoading: 'import' } },
+            },
+          },
+        },
+      })
+
+      const config = await rspeedy.unwrapConfig()
+
+      expect(config.output?.chunkLoading).toBe('import')
+    })
   })
 })

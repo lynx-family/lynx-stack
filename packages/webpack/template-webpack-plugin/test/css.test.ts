@@ -28,6 +28,7 @@ describe('CSS', () => {
       enableCSSSelector: false,
       targetSdkVersion: '3.2',
       enableRemoveCSSScope: true,
+      enableCSSInvalidation: true,
     });
 
     expect(encode).toBeCalledTimes(1);
@@ -50,11 +51,15 @@ describe('CSS', () => {
 
   describe('cssChunksToMap', () => {
     test('global styles only', () => {
-      const { cssMap, cssSource } = cssChunksToMap([
-        `\
+      const { cssMap, cssSource } = cssChunksToMap(
+        [
+          `\
 .foo { color: red; }
 .bar { color: blue; }`,
-      ], [CSSPlugins.parserPlugins.removeFunctionWhiteSpace()]);
+        ],
+        [CSSPlugins.parserPlugins.removeFunctionWhiteSpace()],
+        true,
+      );
 
       expect(Object.keys(cssMap)).toMatchInlineSnapshot(`
         [
@@ -78,12 +83,16 @@ describe('CSS', () => {
     });
 
     test('scoped styles only', () => {
-      const { cssSource, cssMap } = cssChunksToMap([
-        `\
+      const { cssSource, cssMap } = cssChunksToMap(
+        [
+          `\
 @cssId "1000" "foo.css" { .foo { color: red; } }
 @cssId "1001" "bar.css" { .bar { color: blue; } }
 @cssId "1000" "baz.css" { .baz { color: yellow; } }`,
-      ], [CSSPlugins.parserPlugins.removeFunctionWhiteSpace()]);
+        ],
+        [CSSPlugins.parserPlugins.removeFunctionWhiteSpace()],
+        true,
+      );
 
       // 1000 has 3 ImportRules
       // 0 -> common.css(global styles)
@@ -166,8 +175,9 @@ describe('CSS', () => {
     });
 
     test('mixed global styles with scoped styles', () => {
-      const { cssSource, cssMap } = cssChunksToMap([
-        `\
+      const { cssSource, cssMap } = cssChunksToMap(
+        [
+          `\
 .root { background-color: black; }
 
 @cssId "1000" "foo.css" { .foo { color: red; }  }
@@ -176,7 +186,10 @@ describe('CSS', () => {
 
 .wrapper { display: flex; }
 `,
-      ], [CSSPlugins.parserPlugins.removeFunctionWhiteSpace()]);
+        ],
+        [CSSPlugins.parserPlugins.removeFunctionWhiteSpace()],
+        true,
+      );
 
       expect(Object.keys(cssMap)).toMatchInlineSnapshot(`
         [
@@ -271,38 +284,160 @@ describe('CSS', () => {
       `);
     });
 
+    test('mixed global styles with scoped styles when enableCSSSelector is false', () => {
+      const { cssSource, cssMap } = cssChunksToMap(
+        [
+          `\
+.root { background-color: black; }
+
+@cssId "1000" "foo.css" { .foo { color: red; }  }
+@cssId "1001" "bar.css" { .bar { color: blue; } }
+@cssId "1000" "baz.css" { .baz { color: yellow; } }
+
+.wrapper { display: flex; }
+`,
+        ],
+        [CSSPlugins.parserPlugins.removeFunctionWhiteSpace()],
+        false,
+      );
+
+      expect(Object.keys(cssMap)).toMatchInlineSnapshot(`
+        [
+          "0",
+          "1",
+          "2",
+          "3",
+          "1000",
+          "1001",
+        ]
+      `);
+
+      // 1000 has 3 ImportRules
+      // 0 -> common.css(global styles)
+      expect(cssMap[0]).not.toBeUndefined();
+      expect(getAllSelectors(cssMap[0])).toMatchInlineSnapshot(`
+        [
+          ".root",
+          ".wrapper",
+        ]
+      `);
+      // 1 -> foo.css
+      expect(getAllSelectors(cssMap[1])).toMatchInlineSnapshot(`
+        [
+          ".foo",
+        ]
+      `);
+      // 3 -> baz.css
+      expect(getAllSelectors(cssMap[3])).toMatchInlineSnapshot(`
+        [
+          ".baz",
+        ]
+      `);
+      expect(cssMap[1000]).toMatchInlineSnapshot(`
+        [
+          {
+            "href": "3",
+            "origin": "3",
+            "type": "ImportRule",
+          },
+          {
+            "href": "1",
+            "origin": "1",
+            "type": "ImportRule",
+          },
+          {
+            "href": "0",
+            "origin": "0",
+            "type": "ImportRule",
+          },
+        ]
+      `);
+
+      // 1001 has 2 ImportRules
+      // 0 -> common.css(global styles)
+      expect(getAllSelectors(cssMap[0])).toMatchInlineSnapshot(`
+        [
+          ".root",
+          ".wrapper",
+        ]
+      `);
+      // 2 -> bar.css
+      expect(getAllSelectors(cssMap[2])).toMatchInlineSnapshot(`
+        [
+          ".bar",
+        ]
+      `);
+      expect(cssMap[1001]).toMatchInlineSnapshot(`
+        [
+          {
+            "href": "2",
+            "origin": "2",
+            "type": "ImportRule",
+          },
+          {
+            "href": "0",
+            "origin": "0",
+            "type": "ImportRule",
+          },
+        ]
+      `);
+
+      expect(cssSource).toMatchInlineSnapshot(`
+        {
+          "0": "/cssId/0.css",
+          "1": "/cssId/1.css",
+          "1000": "/cssId/1000.css",
+          "1001": "/cssId/1001.css",
+          "2": "/cssId/2.css",
+          "3": "/cssId/3.css",
+        }
+      `);
+    });
+
     test('remove css without data', () => {
-      const { cssMap } = cssChunksToMap([
-        `\
+      const { cssMap } = cssChunksToMap(
+        [
+          `\
 .root { -webkit-appearance: black; }
 `,
-      ], [CSSPlugins.parserPlugins.removeFunctionWhiteSpace()]);
+        ],
+        [CSSPlugins.parserPlugins.removeFunctionWhiteSpace()],
+        true,
+      );
 
       expect(cssMap[0]).toHaveLength(1);
       expect(cssMap[0]?.[0]).toHaveProperty('type', 'StyleRule');
     });
 
     test('remove css with non-compatible', () => {
-      const { cssMap } = cssChunksToMap([
-        `\
+      const { cssMap } = cssChunksToMap(
+        [
+          `\
 .root { z-index: 10 }
 `,
-      ], [CSSPlugins.parserPlugins.removeFunctionWhiteSpace()]);
+        ],
+        [CSSPlugins.parserPlugins.removeFunctionWhiteSpace()],
+        true,
+      );
 
       expect(cssMap[0]).toHaveLength(1);
       expect(cssMap[0]?.[0]).toHaveProperty('type', 'StyleRule');
     });
 
     test('not remove css variables', () => {
-      const { cssMap } = cssChunksToMap([
-        `\
+      const { cssMap } = cssChunksToMap(
+        [
+          `\
 :root {
   --foo: red;
   --bar: blue;
   color: var(--red);
 }
 `,
-      ], [CSSPlugins.parserPlugins.removeFunctionWhiteSpace()]);
+        ],
+        [CSSPlugins.parserPlugins.removeFunctionWhiteSpace()],
+        true,
+      );
 
       expect(cssMap[0]).toHaveLength(1);
       expect(cssMap[0]?.[0]).toHaveProperty('type', 'StyleRule');
@@ -333,6 +468,7 @@ describe('CSS', () => {
 }
 `,
         css,
+        true,
       );
 
       expect(css).toMatchInlineSnapshot(`
@@ -343,6 +479,36 @@ describe('CSS', () => {
           400004 => [
             "@import "0";
         @import "1";",
+          ],
+        }
+      `);
+    });
+
+    test('debundle cssId when enableCSSSelector is false', () => {
+      const css = new Map<number, string[]>();
+      debundleCSS(
+        `\
+@cssId "400004" "foo.css" {
+  .split-line-wrapper .split-line__dark {
+    background-color: rgba(255, 255, 255, 0.12);
+  }
+  .split-line-wrapper .split-line__light {
+    background-color: rgba(22, 24, 35, 0.12);
+  }
+}
+`,
+        css,
+        false,
+      );
+
+      expect(css).toMatchInlineSnapshot(`
+        Map {
+          1 => [
+            ".split-line-wrapper .split-line__dark{background-color:rgba(255,255,255,0.12)}.split-line-wrapper .split-line__light{background-color:rgba(22,24,35,0.12)}",
+          ],
+          400004 => [
+            "@import "1";
+        @import "0";",
           ],
         }
       `);
@@ -368,6 +534,7 @@ describe('CSS', () => {
 }
 `,
         css,
+        true,
       );
 
       expect(css).toMatchInlineSnapshot(`
@@ -385,6 +552,49 @@ describe('CSS', () => {
           1000 => [
             "@import "0";
         @import "2";",
+          ],
+        }
+      `);
+    });
+
+    test('debundle multiple cssId when enableCSSSelector is false', () => {
+      const css = new Map<number, string[]>();
+      debundleCSS(
+        `\
+@cssId "400004" "foo.css" {
+  .split-line-wrapper .split-line__dark {
+    background-color: rgba(255, 255, 255, 0.12);
+  }
+  .split-line-wrapper .split-line__light {
+    background-color: rgba(22, 24, 35, 0.12);
+  }
+}
+
+@cssId "1000" "bar.css" {
+  .foo {
+    color: red;
+  }
+}
+`,
+        css,
+        false,
+      );
+
+      expect(css).toMatchInlineSnapshot(`
+        Map {
+          1 => [
+            ".split-line-wrapper .split-line__dark{background-color:rgba(255,255,255,0.12)}.split-line-wrapper .split-line__light{background-color:rgba(22,24,35,0.12)}",
+          ],
+          2 => [
+            ".foo{color:red}",
+          ],
+          400004 => [
+            "@import "1";
+        @import "0";",
+          ],
+          1000 => [
+            "@import "2";
+        @import "0";",
           ],
         }
       `);
@@ -410,6 +620,7 @@ describe('CSS', () => {
 }
 `,
         css,
+        true,
       );
 
       expect(css).toMatchInlineSnapshot(`
@@ -453,6 +664,7 @@ describe('CSS', () => {
 }
 `,
         css,
+        true,
       );
 
       expect(css).toMatchInlineSnapshot(`
@@ -476,6 +688,54 @@ describe('CSS', () => {
       `);
     });
 
+    test('debundle with blocks without cssId and cssId: 0 when enableCSSSelector is false', () => {
+      const css = new Map<number, string[]>();
+      debundleCSS(
+        `\
+@cssId "400004" "foo.css" {
+  .split-line-wrapper .split-line__dark {
+    background-color: rgba(255, 255, 255, 0.12);
+  }
+  .split-line-wrapper .split-line__light {
+    background-color: rgba(22, 24, 35, 0.12);
+  }
+}
+
+@cssId "0" "common.css" {
+  .bar {
+    color: blue;
+  }
+}
+
+.foo {
+  color: red;
+}
+`,
+        css,
+        false,
+      );
+
+      expect(css).toMatchInlineSnapshot(`
+        Map {
+          0 => [
+            ".foo{color:red}",
+            "@import "2";
+        @import "0";",
+          ],
+          1 => [
+            ".split-line-wrapper .split-line__dark{background-color:rgba(255,255,255,0.12)}.split-line-wrapper .split-line__light{background-color:rgba(22,24,35,0.12)}",
+          ],
+          2 => [
+            ".bar{color:blue}",
+          ],
+          400004 => [
+            "@import "1";
+        @import "0";",
+          ],
+        }
+      `);
+    });
+
     test('debundle with blocks without cssId', () => {
       const css = new Map<number, string[]>();
       debundleCSS(
@@ -494,6 +754,7 @@ describe('CSS', () => {
 }
 `,
         css,
+        true,
       );
 
       expect(css).toMatchInlineSnapshot(`
@@ -507,6 +768,43 @@ describe('CSS', () => {
           400004 => [
             "@import "0";
         @import "1";",
+          ],
+        }
+      `);
+    });
+
+    test('debundle with blocks without cssId when enableCSSSelector is false', () => {
+      const css = new Map<number, string[]>();
+      debundleCSS(
+        `\
+@cssId "400004" "foo.css" {
+  .split-line-wrapper .split-line__dark {
+    background-color: rgba(255, 255, 255, 0.12);
+  }
+  .split-line-wrapper .split-line__light {
+    background-color: rgba(22, 24, 35, 0.12);
+  }
+}
+
+.foo {
+  color: red;
+}
+`,
+        css,
+        false,
+      );
+
+      expect(css).toMatchInlineSnapshot(`
+        Map {
+          0 => [
+            ".foo{color:red}",
+          ],
+          1 => [
+            ".split-line-wrapper .split-line__dark{background-color:rgba(255,255,255,0.12)}.split-line-wrapper .split-line__light{background-color:rgba(22,24,35,0.12)}",
+          ],
+          400004 => [
+            "@import "1";
+        @import "0";",
           ],
         }
       `);
@@ -532,6 +830,7 @@ describe('CSS', () => {
 }
 `,
         css,
+        true,
       );
 
       expect(css).toMatchInlineSnapshot(`
@@ -563,6 +862,7 @@ describe('CSS', () => {
 }
 `,
         css,
+        true,
       );
 
       expect(css).toMatchInlineSnapshot(`
@@ -598,6 +898,7 @@ describe('CSS', () => {
 }
 `,
           css,
+          true,
         )
       ).toThrowErrorMatchingInlineSnapshot(
         `[Error: Invalid cssId: @cssId "foo" "bar.css"]`,

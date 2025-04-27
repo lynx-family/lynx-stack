@@ -59,6 +59,9 @@ describe('Config Validation', () => {
         { writeToDisk: false },
         { writeToDisk: () => false },
         { writeToDisk: (p) => p.includes('foo') },
+        { progressBar: false },
+        { progressBar: true },
+        { progressBar: { id: 'foo' } },
       ]
 
       cases.forEach(dev => {
@@ -170,6 +173,26 @@ describe('Config Validation', () => {
 
           Invalid config on \`$input.dev.writeToDisk\`.
             - Expect to be (boolean | undefined)
+            - Got: null
+          ]
+        `)
+
+      expect(() => validate({ dev: { progressBar: null } }))
+        .toThrowErrorMatchingInlineSnapshot(`
+          [Error: Invalid configuration.
+
+          Invalid config on \`$input.dev.progressBar\`.
+            - Expect to be (__type | boolean | undefined)
+            - Got: null
+          ]
+        `)
+
+      expect(() => validate({ dev: { progressBar: { id: null } } }))
+        .toThrowErrorMatchingInlineSnapshot(`
+          [Error: Invalid configuration.
+
+          Invalid config on \`$input.dev.progressBar.id\`.
+            - Expect to be (string | undefined)
             - Got: null
           ]
         `)
@@ -804,6 +827,12 @@ describe('Config Validation', () => {
         { cleanDistPath: false },
         { distPath: {} },
         { distPath: { root: 'root' } },
+        { distPath: { css: 'css' } },
+        { distPath: { cssAsync: 'cssAsync' } },
+        { distPath: { assets: 'assets' } },
+        { distPath: { image: 'image' } },
+        { distPath: { font: 'font' } },
+        { distPath: { svg: 'svg' } },
         { legalComments: 'inline' },
         { legalComments: 'none' },
         { legalComments: 'linked' },
@@ -1058,6 +1087,16 @@ describe('Config Validation', () => {
           ]
         `)
 
+      expect(() =>
+        validate({ output: { distPath: { nonExistent: 'nonExistent' } } })
+      )
+        .toThrowErrorMatchingInlineSnapshot(`
+          [Error: Invalid configuration.
+
+          Unknown property: \`$input.output.distPath.nonExistent\` in configuration
+          ]
+        `)
+
       expect(() => validate({ output: { legalComments: [null] } }))
         .toThrowErrorMatchingInlineSnapshot(`
           [Error: Invalid configuration.
@@ -1257,6 +1296,49 @@ describe('Config Validation', () => {
         {
           removeConsole: ['log', 'foo', 'bar'],
         },
+        {
+          printFileSize: true,
+        },
+        {
+          printFileSize: false,
+        },
+        {
+          printFileSize: {},
+        },
+        {
+          printFileSize: {
+            total: false,
+          },
+        },
+        {
+          printFileSize: {
+            detail: false,
+          },
+        },
+        {
+          printFileSize: {
+            compressed: true,
+          },
+        },
+        {
+          printFileSize: {
+            include: () => false,
+          },
+        },
+        {
+          printFileSize: {
+            exclude: () => false,
+          },
+        },
+        {
+          printFileSize: {
+            total: false,
+            detail: false,
+            compressed: true,
+            include: () => false,
+            exclude: () => false,
+          },
+        },
       ]
 
       cases.forEach(performance => {
@@ -1417,6 +1499,57 @@ describe('Config Validation', () => {
         Invalid config on \`$input.performance.removeConsole\`.
           - Expect to be (Array<ConsoleType>.o1 | boolean | undefined)
           - Got: string
+        ]
+      `)
+
+      expect(() =>
+        validate({
+          performance: {
+            printFileSize: {
+              detail: 0,
+            },
+          },
+        })
+      ).toThrowErrorMatchingInlineSnapshot(`
+        [Error: Invalid configuration.
+
+        Invalid config on \`$input.performance.printFileSize.detail\`.
+          - Expect to be (boolean | undefined)
+          - Got: number
+        ]
+      `)
+
+      expect(() =>
+        validate({
+          performance: {
+            printFileSize: {
+              total: 0,
+            },
+          },
+        })
+      ).toThrowErrorMatchingInlineSnapshot(`
+        [Error: Invalid configuration.
+
+        Invalid config on \`$input.performance.printFileSize.total\`.
+          - Expect to be (boolean | undefined)
+          - Got: number
+        ]
+      `)
+
+      expect(() =>
+        validate({
+          performance: {
+            printFileSize: {
+              compressed: 0,
+            },
+          },
+        })
+      ).toThrowErrorMatchingInlineSnapshot(`
+        [Error: Invalid configuration.
+
+        Invalid config on \`$input.performance.printFileSize.compressed\`.
+          - Expect to be (boolean | undefined)
+          - Got: number
         ]
       `)
     })

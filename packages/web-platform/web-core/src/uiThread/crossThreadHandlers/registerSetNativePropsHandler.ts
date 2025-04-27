@@ -29,7 +29,7 @@ function applyNativeProps(element: Element, nativeProps: Record<string, any>) {
 
 export function registerNativePropsHandler(
   rpc: Rpc,
-  rootDom: Element,
+  shadowRoot: ShadowRoot,
 ) {
   rpc.registerHandler(
     setNativePropsEndpoint,
@@ -42,7 +42,7 @@ export function registerNativePropsHandler(
       root_unique_id,
     ) => {
       queryNodes(
-        rootDom,
+        shadowRoot,
         type,
         identifier,
         component_id,

@@ -41,7 +41,7 @@ declare namespace CSS {
 // Warning: (ae-missing-release-tag) "cssChunksToMap" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-function cssChunksToMap(cssChunks: string[], plugins: CSS_2.Plugin[]): {
+function cssChunksToMap(cssChunks: string[], plugins: CSS_2.Plugin[], enableCSSSelector: boolean): {
     cssMap: Record<string, CSS_2.LynxStyleNode[]>;
     cssSource: Record<string, string>;
     contentMap: Map<number, string[]>;
@@ -54,6 +54,14 @@ declare namespace CSSPlugins {
 }
 
 // @public
+export interface EncodeCSSOptions {
+    enableCSSInvalidation: boolean;
+    enableCSSSelector: boolean;
+    enableRemoveCSSScope: boolean;
+    targetSdkVersion: string;
+}
+
+// @public
 export class LynxEncodePlugin {
     constructor(options?: LynxEncodePluginOptions | undefined);
     apply(compiler: Compiler): void;
@@ -61,11 +69,7 @@ export class LynxEncodePlugin {
     static BEFORE_ENCODE_STAGE: number;
     static defaultOptions: Readonly<Required<LynxEncodePluginOptions>>;
     static ENCODE_STAGE: number;
-    static encodeCSS(cssChunks: string[], options: {
-        enableCSSSelector: boolean;
-        enableRemoveCSSScope: boolean;
-        targetSdkVersion: string;
-    }, plugins?: CSS.Plugin[], encode?: (options: any) => Promise<{
+    static encodeCSS(cssChunks: string[], options: EncodeCSSOptions, plugins?: CSS.Plugin[], encode?: (options: any) => Promise<{
         buffer: Buffer;
     }>): Promise<Buffer>;
     // (undocumented)
@@ -80,7 +84,7 @@ export interface LynxEncodePluginOptions {
 export class LynxTemplatePlugin {
     constructor(options?: LynxTemplatePluginOptions | undefined);
     apply(compiler: Compiler): void;
-    static convertCSSChunksToMap(cssChunks: string[], plugins: CSS_2.Plugin[]): {
+    static convertCSSChunksToMap(cssChunks: string[], plugins: CSS_2.Plugin[], enableCSSSelector: boolean): {
         cssMap: Record<string, CSS_2.LynxStyleNode[]>;
         cssSource: Record<string, string>;
     };

@@ -1,20 +1,62 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { __page, setupPage, SnapshotInstance } from '../snapshot.js';
-// @ts-ignore
-import { render as renderToString } from '../renderToOpcodes/index.js';
-import { LifecycleConstant } from '../lifecycleConstant.js';
-import { takeGlobalRefPatchMap } from '../snapshot/ref.js';
-import { isEmptyObject } from '../utils.js';
-import { __root, setRoot } from '../root.js';
+import { hydrate } from '../hydrate.js';
+import { isJSReady, jsReady, jsReadyEventIdSwap, resetJSReady } from '../lifecycle/event/jsReady.js';
 import { reloadMainThread } from '../lifecycle/reload.js';
 import { renderMainThread } from '../lifecycle/render.js';
-import { hydrate } from '../hydrate.js';
-import { markTiming, PerformanceTimingKeys, setPipeline } from './performance.js';
+import { LifecycleConstant } from '../lifecycleConstant.js';
 import { __pendingListUpdates } from '../list.js';
+import { ssrHydrateByOpcodes } from '../opcodes.js';
+import { __root, setRoot } from '../root.js';
+import { takeGlobalRefPatchMap } from '../snapshot/ref.js';
+import { SnapshotInstance, __page, setupPage } from '../snapshot.js';
+import { isEmptyObject } from '../utils.js';
+import { PerformanceTimingKeys, markTiming, setPipeline } from './performance.js';
+
+function ssrEncode() {
+  const { __opcodes } = __root;
+  delete __root.__opcodes;
+
+  const oldToJSON = SnapshotInstance.prototype.toJSON;
+  SnapshotInstance.prototype.toJSON = function(this: SnapshotInstance): any {
+    return [
+      this.type,
+      this.__id,
+      this.__elements,
+    ];
+  };
+
+  try {
+    return JSON.stringify({ __opcodes, __root_values: __root.__values });
+  } finally {
+    SnapshotInstance.prototype.toJSON = oldToJSON;
+  }
+}
+
+function ssrHydrate(info: string) {
+  const nativePage = __GetPageElement();
+  if (!nativePage) {
+    throw new Error('SSR Hydration Failed! Please check if the SSR content loaded successfully!');
+  }
+
+  resetJSReady();
+  setupPage(nativePage);
+  const refsMap = __GetTemplateParts(nativePage);
+
+  const { __opcodes, __root_values } = JSON.parse(info);
+  __root_values && __root.setAttribute('values', __root_values);
+  ssrHydrateByOpcodes(__opcodes, __root as SnapshotInstance, refsMap);
+
+  (__root as SnapshotInstance).__elements = [nativePage];
+  (__root as SnapshotInstance).__element_root = nativePage;
+}
 
 function injectCalledByNative(): void {
+  if (process.env['NODE_ENV'] !== 'test' && __FIRST_SCREEN_SYNC_TIMING__ !== 'jsReady' && __ENABLE_SSR__) {
+    throw new Error('`firstScreenSyncTiming` must be `jsReady` when SSR is enabled');
+  }
+
   const calledByNative: LynxCallByNative = {
     renderPage,
     updatePage,
@@ -23,15 +65,18 @@ function injectCalledByNative(): void {
       return null;
     },
     removeComponents: function(): void {},
+    ...(__ENABLE_SSR__ ? { ssrEncode, ssrHydrate } : {}),
   };
 
   Object.assign(globalThis, calledByNative);
+  Object.assign(globalThis, {
+    [LifecycleConstant.jsReady]: jsReady,
+  });
 }
 
 function renderPage(data: any): void {
   // reset `jsReady` state
-  isJSReady = false;
-  jsReadyEventIdSwap = {};
+  resetJSReady();
 
   lynx.__initData = data || {};
 
@@ -46,21 +91,16 @@ function renderPage(data: any): void {
 
   if (__FIRST_SCREEN_SYNC_TIMING__ === 'immediately') {
     jsReady();
-  } else {
-    Object.assign(globalThis, {
-      [LifecycleConstant.jsReady]: jsReady,
-    });
   }
 }
 
-function updatePage(data: any, options?: UpdatePageOption | undefined): void {
+function updatePage(data: any, options?: UpdatePageOption): void {
   if (options?.reloadTemplate) {
     reloadMainThread(data, options);
     return;
   }
 
   if (options?.resetPageData) {
-    // @ts-ignore
     lynx.__initData = {};
   }
 
@@ -75,7 +115,7 @@ function updatePage(data: any, options?: UpdatePageOption | undefined): void {
     __root.__jsx = oldRoot.__jsx;
 
     setPipeline(options?.pipelineOptions);
-    markTiming(PerformanceTimingKeys.update_diff_vdom_start);
+    markTiming(PerformanceTimingKeys.updateDiffVdomStart);
     {
       __pendingListUpdates.clear();
 
@@ -93,7 +133,7 @@ function updatePage(data: any, options?: UpdatePageOption | undefined): void {
       // always call this before `__FlushElementTree`
       __pendingListUpdates.flush();
     }
-    markTiming(PerformanceTimingKeys.update_diff_vdom_end);
+    markTiming(PerformanceTimingKeys.updateDiffVdomEnd);
   }
 
   if (options) {
@@ -103,27 +143,12 @@ function updatePage(data: any, options?: UpdatePageOption | undefined): void {
   }
 }
 
-function updateGlobalProps(_data: any, options?: UpdatePageOption | undefined): void {
+function updateGlobalProps(_data: any, options?: UpdatePageOption): void {
   if (options) {
     __FlushElementTree(__page, options);
   } else {
     __FlushElementTree();
   }
-}
-
-let isJSReady: boolean;
-let jsReadyEventIdSwap: Record<number, number>;
-function jsReady() {
-  __OnLifecycleEvent([
-    LifecycleConstant.firstScreen, /* FIRST_SCREEN */
-    {
-      root: JSON.stringify(__root),
-      refPatch: JSON.stringify(takeGlobalRefPatchMap()),
-      jsReadyEventIdSwap,
-    },
-  ]);
-  isJSReady = true;
-  jsReadyEventIdSwap = {};
 }
 
 /**

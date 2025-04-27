@@ -6,10 +6,11 @@
 import { render } from 'preact';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { delayedLifecycleEvents } from '../../src/lifecycle/event/delayLifecycleEvents';
 import { takeGlobalSnapshotPatch } from '../../src/lifecycle/patch/snapshotPatch';
 import { snapshotPatchApply } from '../../src/lifecycle/patch/snapshotPatchApply';
 import { injectUpdateMainThread } from '../../src/lifecycle/patch/updateMainThread';
-import { delayedLifecycleEvents, injectTt } from '../../src/lynx/tt';
+import { injectTt } from '../../src/lynx/tt';
 import { root } from '../../src/lynx-api';
 import { CHILDREN } from '../../src/renderToOpcodes/constants';
 import { __root } from '../../src/root';
@@ -94,8 +95,11 @@ describe('eventUpdate', () => {
               "patchOptions": {
                 "isHydration": true,
                 "pipelineOptions": {
+                  "dsl": "reactLynx",
                   "needTimestamps": true,
                   "pipelineID": "pipelineID",
+                  "pipelineOrigin": "reactLynxHydrate",
+                  "stage": "hydrate",
                 },
                 "reloadVersion": 0,
               },
@@ -1192,7 +1196,7 @@ describe('call `root.render()` async', () => {
     // globalThis.__FIRST_SCREEN_SYNC_TIMING__ = 'immediately';
   });
 
-  it('event should works', async function() {
+  it('event should work', async function() {
     // resetup
     injectTt();
 

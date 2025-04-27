@@ -1,6 +1,6 @@
 import rspack from '@rspack/core';
 
-import { ChunkLoadingRspackPlugin } from '../../../../src/index';
+import { ChunkLoadingWebpackPlugin } from '../../../../src/index';
 
 /** @type {import('@rspack/core').Configuration} */
 export default {
@@ -25,7 +25,7 @@ export default {
     css: false,
   },
   plugins: [
-    new ChunkLoadingRspackPlugin(),
+    new ChunkLoadingWebpackPlugin(),
     compiler => {
       new compiler.webpack.HotModuleReplacementPlugin().apply(compiler);
       new rspack.CssExtractRspackPlugin({

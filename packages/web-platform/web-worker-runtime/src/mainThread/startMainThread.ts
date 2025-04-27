@@ -3,20 +3,17 @@
 // LICENSE file in the root directory of this source tree.
 
 import {
-  BackgroundThreadStartEndpoint,
-  mainThreadChunkReadyEndpoint,
-  mainThreadStartEndpoint,
-  onLifecycleEventEndpoint,
-  type LynxJSModule,
   flushElementTreeEndpoint,
+  mainThreadStartEndpoint,
+  postOffscreenEventEndpoint,
+  reportErrorEndpoint,
 } from '@lynx-js/web-constants';
 import { Rpc } from '@lynx-js/web-worker-rpc';
-import { MainThreadRuntime } from '@lynx-js/web-mainthread-apis';
-import { registerCallLepusMethodHandler } from './crossThreadHandlers/registerCallLepusMethodHandler.js';
-import { registerPostMainThreadEventHandler } from './crossThreadHandlers/registerPostMainThreadEventHandler.js';
-import { registerGetCustomSectionHandler } from './crossThreadHandlers/registerGetCustomSectionHandler.js';
 import { createMarkTimingInternal } from './crossThreadHandlers/createMainthreadMarkTimingInternal.js';
+import { OffscreenDocument } from '@lynx-js/offscreen-document/webworker';
+import { _onEvent } from '@lynx-js/offscreen-document/webworker';
 import { registerUpdateDataHandler } from './crossThreadHandlers/registerUpdateDataHandler.js';
+const { loadMainThread } = await import('@lynx-js/web-mainthread-apis');
 
 export function startMainThread(
   uiThreadPort: MessagePort,
@@ -24,94 +21,26 @@ export function startMainThread(
 ): void {
   const uiThreadRpc = new Rpc(uiThreadPort, 'main-to-ui');
   const backgroundThreadRpc = new Rpc(backgroundThreadPort, 'main-to-bg');
-  const markTimingInternal = createMarkTimingInternal(uiThreadRpc);
-  const backgroundStart = backgroundThreadRpc.createCall(
-    BackgroundThreadStartEndpoint,
+  const markTimingInternal = createMarkTimingInternal(backgroundThreadRpc);
+  const uiFlush = uiThreadRpc.createCall(flushElementTreeEndpoint);
+  const reportError = uiThreadRpc.createCall(reportErrorEndpoint);
+  const docu = new OffscreenDocument({
+    onCommit: uiFlush,
+  });
+  uiThreadRpc.registerHandler(postOffscreenEventEndpoint, docu[_onEvent]);
+  const { startMainThread } = loadMainThread(
+    backgroundThreadRpc,
+    docu,
+    docu.commit.bind(docu),
+    markTimingInternal,
+    reportError,
   );
-  const __OnLifecycleEvent = backgroundThreadRpc.createCall(
-    onLifecycleEventEndpoint,
-  );
-  const mainThreadChunkReady = uiThreadRpc.createCall(
-    mainThreadChunkReadyEndpoint,
-  );
-  const flushElementTree = uiThreadRpc.createCall(flushElementTreeEndpoint);
-  markTimingInternal('lepus_excute_start');
   uiThreadRpc.registerHandler(
     mainThreadStartEndpoint,
-    async (config) => {
-      const {
-        globalProps,
-        template,
-        browserConfig,
-        nativeModulesMap,
-        napiModulesMap,
-      } = config;
-      const { styleInfo, pageConfig, customSections, cardType, lepusCode } =
-        template;
-      markTimingInternal('decode_start');
-      await import(
-        /* webpackIgnore: true */ template.lepusCode.root
-      );
-      const entry = (globalThis.module as LynxJSModule).exports!;
-      const runtime = new MainThreadRuntime({
-        browserConfig,
-        customSections,
-        globalProps,
-        pageConfig,
-        styleInfo,
-        lepusCode,
-        callbacks: {
-          mainChunkReady: function(): void {
-            mainThreadChunkReady({ pageConfig });
-            markTimingInternal('data_processor_start');
-            const initData = runtime.processData
-              ? runtime.processData(config.initData)
-              : config.initData;
-            markTimingInternal('data_processor_end');
-            registerCallLepusMethodHandler(
-              backgroundThreadRpc,
-              runtime,
-            );
-            registerPostMainThreadEventHandler(
-              uiThreadRpc,
-            );
-            registerGetCustomSectionHandler(
-              backgroundThreadRpc,
-              customSections,
-            );
-            registerUpdateDataHandler(uiThreadRpc, runtime);
-            backgroundStart({
-              initData,
-              globalProps,
-              template,
-              cardType: cardType ?? 'react',
-              customSections: Object.fromEntries(
-                Object.entries(customSections).filter(([, value]) =>
-                  value.type !== 'lazy'
-                ).map(([k, v]) => [k, v.content]),
-              ),
-              nativeModulesMap,
-              napiModulesMap,
-            });
-
-            runtime.renderPage!(initData);
-            runtime.__FlushElementTree(undefined, {});
-          },
-          flushElementTree,
-          _ReportError: function(error: Error, info?: unknown): void {
-            console.error('main-thread:', error, info);
-          },
-          __OnLifecycleEvent,
-          /**
-           * Note :
-           * The parameter of lynx.performance.markTiming is (pipelineId:string, timingFlag:string)=>void
-           * But our markTimingInternal is (timingFlag:string, pipelineId?:string, timeStamp?:number) => void
-           */
-          markTiming: (a, b) => markTimingInternal(b, a),
-        },
-      }).globalThis;
-      markTimingInternal('decode_end');
-      entry!(runtime);
+    (config) => {
+      startMainThread(config).then((runtime) => {
+        registerUpdateDataHandler(uiThreadRpc, runtime);
+      });
     },
   );
 }

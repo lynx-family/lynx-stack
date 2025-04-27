@@ -212,7 +212,7 @@ mod tests {
     ecma::{
       parser::{EsSyntax, Syntax},
       transforms::testing::test,
-      visit::as_folder,
+      visit::visit_mut_pass,
     },
   };
 
@@ -241,7 +241,7 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| as_folder(CSSScopeVisitor::<SingleThreadedComments>::new(
+    |_| visit_mut_pass(CSSScopeVisitor::<SingleThreadedComments>::new(
       CSSScopeVisitorConfig {
         mode: CSSScope::All,
         ..Default::default()
@@ -258,7 +258,7 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| as_folder(CSSScopeVisitor::<SingleThreadedComments>::new(
+    |_| visit_mut_pass(CSSScopeVisitor::<SingleThreadedComments>::new(
       super::CSSScopeVisitorConfig {
         mode: CSSScope::None,
         ..Default::default()
@@ -275,7 +275,7 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| as_folder(CSSScopeVisitor::<SingleThreadedComments>::new(
+    |_| visit_mut_pass(CSSScopeVisitor::<SingleThreadedComments>::new(
       super::CSSScopeVisitorConfig {
         mode: CSSScope::None,
         ..Default::default()
@@ -292,7 +292,7 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| as_folder(CSSScopeVisitor::<SingleThreadedComments>::new(
+    |_| visit_mut_pass(CSSScopeVisitor::<SingleThreadedComments>::new(
       super::CSSScopeVisitorConfig {
         mode: CSSScope::All,
         ..Default::default()
@@ -309,7 +309,7 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| as_folder(CSSScopeVisitor::<SingleThreadedComments>::new(
+    |_| visit_mut_pass(CSSScopeVisitor::<SingleThreadedComments>::new(
       super::CSSScopeVisitorConfig {
         mode: CSSScope::All,
         ..Default::default()
@@ -326,7 +326,7 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| as_folder(CSSScopeVisitor::<SingleThreadedComments>::new(
+    |_| visit_mut_pass(CSSScopeVisitor::<SingleThreadedComments>::new(
       super::CSSScopeVisitorConfig {
         mode: CSSScope::Modules,
         ..Default::default()
@@ -343,7 +343,7 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| as_folder(CSSScopeVisitor::<SingleThreadedComments>::new(
+    |_| visit_mut_pass(CSSScopeVisitor::<SingleThreadedComments>::new(
       super::CSSScopeVisitorConfig {
         mode: CSSScope::Modules,
         ..Default::default()

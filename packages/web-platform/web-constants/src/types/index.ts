@@ -1,10 +1,8 @@
 export * from './StyleInfo.js';
 export * from './EventType.js';
-export * from './ElementOperation.js';
 export * from './PageConfig.js';
 export * from './Cloneable.js';
 export * from './LynxModule.js';
-export * from './LynxLifecycleEvent.js';
 export * from './ProcessDataCallback.js';
 export * from './Performance.js';
 export * from './MainThreadStartConfigs.js';
@@ -12,3 +10,5 @@ export * from './NativeApp.js';
 export * from './UpdateDataOptions.js';
 export * from './NativeModules.js';
 export * from './NapiModules.js';
+export * from './FlushElementTreeOptions.js';
+export * from './LynxContextEventTarget.js';

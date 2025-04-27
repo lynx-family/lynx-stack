@@ -8,8 +8,8 @@ import { pathToFileURL } from 'node:url'
 
 import color from 'picocolors'
 
-import { validate } from './validate.js'
-import { register } from '../../register/index.js'
+import { register } from '@lynx-js/rspeedy/register'
+
 import { debug } from '../debug.js'
 
 import type { Config } from './index.js'
@@ -124,11 +124,14 @@ export async function loadConfig(
     : register()
 
   try {
-    const exports = await import(
-      /* webpackIgnore: true */ `${specifier}?t=${Date.now()}`
-    ) as {
-      default: Config
-    } | Config
+    const [exports, { validate }] = await Promise.all([
+      import(
+        /* webpackIgnore: true */ `${specifier}?t=${Date.now()}`
+      ) as {
+        default: Config
+      } | Config,
+      import('./validate.js'),
+    ])
 
     const content = validate(
       'default' in exports ? exports.default : exports,
@@ -149,6 +152,20 @@ function shouldUseNativeImport(configPath: string): boolean {
 }
 
 function hasNativeTSSupport(): boolean {
+  // eslint-disable-next-line n/no-unsupported-features/node-builtins
+  if (process.features.typescript) {
+    // This is added in Node.js v22.10.
+    // 1. Node.js v22.10+ with --experimental-transform-types or --experimental-strip-types
+    // 2. Node.js v23.6+
+    return true
+    // eslint-disable-next-line n/no-unsupported-features/node-builtins
+  } else if (process.features.typescript === false) {
+    // 1. Node.js v22.10+ without --experimental-transform-types or --experimental-strip-types
+    // 2. Node.js v23.6+ with --no-experimental-strip-types
+    return false
+  }
+
+  // Node.js < v22.10
   const { NODE_OPTIONS } = process.env
 
   if (!NODE_OPTIONS) {
@@ -162,4 +179,8 @@ function hasNativeTSSupport(): boolean {
 function isJavaScriptPath(configPath: string): boolean {
   const ext = extname(configPath)
   return ['.js', '.mjs', '.cjs'].includes(ext)
+}
+
+export function TEST_ONLY_hasNativeTSSupport(): boolean {
+  return hasNativeTSSupport()
 }

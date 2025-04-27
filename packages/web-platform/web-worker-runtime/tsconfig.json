@@ -11,5 +11,6 @@
     { "path": "../web-constants/tsconfig.json" },
     { "path": "../web-mainthread-apis/tsconfig.json" },
     { "path": "../web-worker-rpc/tsconfig.json" },
+    { "path": "../offscreen-document/tsconfig.json" },
   ],
 }

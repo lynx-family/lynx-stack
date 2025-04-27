@@ -35,6 +35,6 @@
     "test": "vitest run --coverage"
   },
   "devDependencies": {
-    "esbuild": "^0.25.1"
+    "esbuild": "^0.25.3"
   }
 }

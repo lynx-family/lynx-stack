@@ -124,6 +124,11 @@ list-item {
   min-width: 0;
   min-height: 0;
   border-style: solid;
+  scrollbar-width: none;
+}
+
+x-view::--webkit-scrollbar {
+  display: none;
 }
 
 /**

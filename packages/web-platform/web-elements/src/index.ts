@@ -3,6 +3,6 @@
 // LICENSE file in the root directory of this source tree.
 
 export * from '@lynx-js/web-elements-reactive';
-export * from './common/Exposure.js';
+export * from './common/CommonEventsAndMethods.js';
 export * from './common/commonEventInitConfiguration.js';
 export * from './common/constants.js';

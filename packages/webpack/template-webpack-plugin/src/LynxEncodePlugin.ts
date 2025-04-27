@@ -4,6 +4,7 @@
 
 import type { Compilation, Compiler } from 'webpack';
 
+import type { EncodeCSSOptions } from './css/encode.js';
 import { LynxTemplatePlugin } from './LynxTemplatePlugin.js';
 
 import type { CSS } from './index.js';
@@ -56,22 +57,7 @@ export class LynxEncodePlugin {
    */
   static async encodeCSS(
     cssChunks: string[],
-    options: {
-      /**
-       * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableCSSSelector}
-       */
-      enableCSSSelector: boolean;
-
-      /**
-       * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableRemoveCSSScope}
-       */
-      enableRemoveCSSScope: boolean;
-
-      /**
-       * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableRemoveCSSScope}
-       */
-      targetSdkVersion: string;
-    },
+    options: EncodeCSSOptions,
     plugins?: CSS.Plugin[],
     // biome-ignore lint/suspicious/noExplicitAny: <explanation>
     encode?: (options: any) => Promise<{
@@ -144,14 +130,13 @@ export class LynxEncodePluginImpl {
         const { manifest } = encodeData;
 
         if (!isDebug() && !isDev && !isRsdoctor()) {
-          templateHooks.beforeEmit.tap(this.name, (args) => {
+          compiler.hooks.emit.tap(this.name, () => {
             this.deleteDebuggingAssets(compilation, [
               encodeData.lepusCode.root,
               ...encodeData.lepusCode.chunks,
               ...Object.keys(manifest).map(name => ({ name })),
               ...encodeData.css.chunks,
             ]);
-            return args;
           });
         }
 
@@ -267,3 +252,5 @@ export function isDebug(): boolean {
 export function isRsdoctor(): boolean {
   return process.env['RSDOCTOR'] === 'true';
 }
+
+export type { EncodeCSSOptions } from './css/encode.js';

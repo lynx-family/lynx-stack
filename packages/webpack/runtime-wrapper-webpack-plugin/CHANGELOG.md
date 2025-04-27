@@ -1,5 +1,17 @@
 # @lynx-js/runtime-wrapper-webpack-plugin
 
+## 0.0.9
+
+### Patch Changes
+
+- Add `window` variable to callback argument in `background.js` and the `window` is `undefined` in Lynx. Sometimes it's useful to distinguish between Lynx and the Web. ([#248](https://github.com/lynx-family/lynx-stack/pull/248))
+
+  ```js
+  define('background.js', (..., window) => {
+    console.log(window); // `undefined` in Lynx
+  })
+  ```
+
 ## 0.0.8
 
 ### Patch Changes

@@ -1,29 +1,88 @@
 on:
   workflow_call:
-    inputs:
-      runs-on:
-        required: true
-        type: string
+    secrets:
+      CODECOV_TOKEN:
+        required: false
 env:
   CI: 1
   TURBO_TELEMETRY_DISABLED: 1
 jobs:
+  get-merge-base:
+    runs-on: lynx-ubuntu-24.04-medium
+    env:
+      # We have 2 cases:
+      #   1. Pull request
+      #   2. Merge group
+      BASE_REF: ${{ github.base_ref || github.event.merge_group.base_ref }}
+      HEAD_REF: ${{ github.head_ref || github.event.merge_group.head_ref }}
+    outputs:
+      merge-base: ${{ steps.merge-base.outputs.merge-base }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.HEAD_REF }}
+          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+      # Set up common variables for git operations
+      - name: Setup git refs
+        id: git-refs
+        run: |
+          # Strip refs/heads/ prefix if it exists
+          BASE_REF_CLEAN=${BASE_REF#refs/heads/}
+          HEAD_REF_CLEAN=${HEAD_REF#refs/heads/}
+          echo "base-ref=$BASE_REF_CLEAN" >> $GITHUB_OUTPUT
+          echo "head-ref=$HEAD_REF_CLEAN" >> $GITHUB_OUTPUT
+      # Modified from https://github.com/rmacklin/fetch-through-merge-base
+      - name: Fetch
+        if: github.event_name != 'push'
+        env:
+          CLEAN_BASE_REF: ${{ steps.git-refs.outputs.base-ref }}
+          CLEAN_HEAD_REF: ${{ steps.git-refs.outputs.head-ref }}
+          UPSTREAM_REMOTE: ${{ github.server_url }}/${{ github.repository }}
+        run: |
+          git remote add upstream $UPSTREAM_REMOTE
+          git fetch --progress --depth=1 upstream "+refs/heads/$CLEAN_BASE_REF:refs/remotes/upstream/$CLEAN_BASE_REF"
+          MAX_ATTEMPTS=10
+          ATTEMPT=0
+          while [ -z "$( git merge-base "refs/remotes/upstream/$CLEAN_BASE_REF" "$CLEAN_HEAD_REF" )" ] && [ "$ATTEMPT" -lt "$MAX_ATTEMPTS" ]; do
+            git fetch -q --deepen=10 upstream "refs/heads/$CLEAN_BASE_REF:refs/remotes/upstream/$CLEAN_BASE_REF"
+            git fetch -q --deepen=10 origin "$CLEAN_HEAD_REF"
+            ATTEMPT=$((ATTEMPT + 1))
+          done
+          if [ "$ATTEMPT" -ge "$MAX_ATTEMPTS" ]; then
+            echo "Failed to determine merge base after $MAX_ATTEMPTS attempts." >&2
+            exit 1
+          fi
+      - name: Get merge base
+        id: merge-base
+        env:
+          CLEAN_BASE_REF: ${{ format('upstream/{0}', steps.git-refs.outputs.base-ref) || github.event.base }}
+          CLEAN_HEAD_REF: ${{ steps.git-refs.outputs.head-ref }}
+        run: |
+          echo "merge-base=$(git merge-base "$CLEAN_BASE_REF" "$CLEAN_HEAD_REF" || git rev-parse "$CLEAN_BASE_REF")" >> $GITHUB_OUTPUT
   build-all:
-    runs-on: ${{ inputs.runs-on }}
+    runs-on: lynx-ubuntu-24.04-xlarge
+    needs: get-merge-base
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
       - name: TurboCache
-        uses: actions/cache@v4
+        uses: lynx-infra/cache@558d7c999f9f97ac02ed7e711503bb81d82ff8ee
         with:
           path: .turbo
           key: turbo-v3-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ github.sha }}
           # We can restore caches from
           #   1. Runs in the same PR
-          #   2. Previous PRs
+          #   2. Previous commit from base branch
+          #     2.1 Use the merge base
+          #     2.2 Use the base SHA
+          #   3. Any cache
           restore-keys: |
+            turbo-pull-request-${{ github.event.pull_request.number || 'non-exists' }}-${{ github.run_number }}
+            turbo-pull-request-${{ github.event.pull_request.number || 'non-exists' }}-
+            turbo-v3-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ needs.get-merge-base.outputs.merge-base }}
+            turbo-v3-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.push.before }}
             turbo-v3-${{ hashFiles('**/packages/**/src/**/*.rs') }}-
       - name: Install
         run: |
@@ -34,7 +93,18 @@ jobs:
         id: build
         run: |
           pnpm turbo build --summarize
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         continue-on-error: true
+      - name: Upload turbo summary
+        if: runner.debug == '1'
+        uses: actions/upload-artifact@v4
+        with:
+          name: turbo-summary-${{ github.sha }}
+          path: .turbo/runs/*.json
+          retention-days: 1
+          overwrite: true
+          include-hidden-files: true
       - name: Setup Rust and retry build if failed
         if: steps.build.outcome == 'failure'
         uses: actions-rust-lang/setup-rust-toolchain@v1
@@ -45,3 +115,11 @@ jobs:
         if: steps.build.outcome == 'failure'
         run: |
           pnpm turbo build --summarize
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      - name: Save turbo cache
+        if: github.event_name == 'pull_request'
+        uses: lynx-infra/cache/save@558d7c999f9f97ac02ed7e711503bb81d82ff8ee
+        with:
+          path: .turbo
+          key: turbo-pull-request-${{ github.event.pull_request.number }}-${{ github.run_number }}-${{ github.run_attempt }}

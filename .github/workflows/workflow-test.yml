@@ -1,5 +1,10 @@
 on:
   workflow_call:
+    secrets:
+      CODECOV_TOKEN:
+        required: false
+      LHCI_GITHUB_APP_TOKEN:
+        required: false
     inputs:
       runs-on:
         required: true
@@ -11,6 +16,11 @@ on:
         required: false
         type: boolean
         default: false
+      codecov-flags:
+        required: false
+        type: string
+        default: "unittest"
+
 env:
   CI: 1
   TURBO_TELEMETRY_DISABLED: 1
@@ -26,11 +36,12 @@ jobs:
         with:
           node-version: "22"
       - name: TurboCache
-        uses: actions/cache@v4
+        uses: lynx-infra/cache@558d7c999f9f97ac02ed7e711503bb81d82ff8ee
         with:
           path: .turbo
           # We have to be strict here to make sure getting the cache of build-all
           key: turbo-v3-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ github.sha }}
+          fail-on-cache-miss: true
       - name: Install
         run: |
           npm install -g corepack@latest
@@ -39,31 +50,30 @@ jobs:
       - name: Build
         run: |
           pnpm turbo build --summarize
-      - name: Upload Turbo Summary
-        if: ${{ failure() }}
-        uses: actions/upload-artifact@v4
+      - uses: ./.github/actions/setup-playwright
+        if: ${{ inputs.is-web }}
         with:
-          name: turbo-summary-${{ github.ref }}
-          path: .turbo/runs
-          if-no-files-found: error
-          retention-days: 1
-          overwrite: true
-          include-hidden-files: true
+          working-directory: packages/web-platform/web-tests
       - name: Test
         id: test
         env:
           NODE_OPTIONS: --max-old-space-size=8192
+          GITHUB_SHA: ${{ github.event.pull_request.head.sha }}
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
         run: ${{ inputs.run }}
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
-        if: inputs.is-web != 'true'
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+          flags: ${{ inputs.codecov-flags }}
       - name: Upload test results to Codecov
-        if: ${{ inputs.is-web != 'true' && !cancelled() }}
+        if: ${{ !cancelled() }}
         uses: codecov/test-results-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+          flags: ${{ inputs.codecov-flags }}
       - name: Upload Test Result
         if: ${{ inputs.is-web && failure() }}
         uses: actions/upload-artifact@v4

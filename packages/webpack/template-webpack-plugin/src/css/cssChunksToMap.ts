@@ -6,14 +6,18 @@ import type * as CSS from '@lynx-js/css-serializer';
 import { cssToAst } from './ast.js';
 import { debundleCSS } from './debundle.js';
 
-export function cssChunksToMap(cssChunks: string[], plugins: CSS.Plugin[]): {
+export function cssChunksToMap(
+  cssChunks: string[],
+  plugins: CSS.Plugin[],
+  enableCSSSelector: boolean,
+): {
   cssMap: Record<string, CSS.LynxStyleNode[]>;
   cssSource: Record<string, string>;
   contentMap: Map<number, string[]>;
 } {
   const cssMap = cssChunks
     .reduce<Map<number, string[]>>((cssMap, css) => {
-      debundleCSS(css, cssMap);
+      debundleCSS(css, cssMap, enableCSSSelector);
       return cssMap;
     }, new Map());
 

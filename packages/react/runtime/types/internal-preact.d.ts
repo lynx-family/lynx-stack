@@ -11,9 +11,9 @@ declare module 'preact' {
     /** _catchError */
     __e(
       error: any,
-      vnode: VNode,
-      oldVNode?: VNode | undefined,
-      errorInfo?: ErrorInfo | undefined,
+      vnode: VNode<any>,
+      oldVNode?: VNode<any>,
+      errorInfo?: ErrorInfo,
     ): void;
   }
 
@@ -22,8 +22,10 @@ declare module 'preact' {
     __c?: Component | null;
   }
 
-  interface Component {
+  interface Component<P = {}, S = {}> {
     /** _vnode */
     __v?: VNode<P> | null;
+    /** _renderCallbacks */
+    __h: ((this: Component<P, S>) => void)[];
   }
 }

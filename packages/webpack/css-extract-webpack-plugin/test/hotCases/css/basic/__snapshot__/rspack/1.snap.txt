@@ -5,10 +5,19 @@
 
 ## Asset Files
 - Bundle: rspack-bundle.js
+- Manifest: main.LAST_HASH.css.hot-update.json, size: 770
 - Manifest: main.LAST_HASH.hot-update.json, size: 28
-- Update: main.LAST_HASH.hot-update.js, size: 1029
+- Update: main.LAST_HASH.hot-update.js, size: 1097
 
 ## Manifest
+
+### main.LAST_HASH.css.hot-update.json
+
+```json
+{"content":"eyJjb21waWxlck9wdGlvbnMiOnsiZW5hYmxlRmliZXJBcmNoIjp0cnVlLCJ1c2VMZXB1c05HIjp0cnVlLCJidW5kbGVNb2R1bGVNb2RlIjoiUmV0dXJuQnlGdW5jdGlvbiIsImVuYWJsZUNTU1NlbGVjdG9yIjp0cnVlLCJlbmFibGVDU1NJbnZhbGlkYXRpb24iOnRydWUsInRhcmdldFNka1ZlcnNpb24iOiIzLjIifSwic291cmNlQ29udGVudCI6eyJhcHBUeXBlIjoiY2FyZCIsImNvbmZpZyI6eyJsZXB1c1N0cmljdCI6dHJ1ZSwiZW5hYmxlUmVtb3ZlQ1NTU2NvcGUiOmZhbHNlfXXsImNzcyI6eyJjc3NNYXAiOnsiMCI6WXsidHlwZSI6IlN0eWxlUnVsZSIsInN0eWxlIjpbeyJuYW1lIjoiYXsb3IiLCJ2YWx1ZSI6IlwiYmx1ZVwiIiwia2V5TG9jIjp7ImxpbmUiOjEsImNvbHVtbiI6MTF9LCJ2YWxMb2MiOnsibGluZSI6MSwiYXsdW1uIjoxOX19XSwic2VsZWN0b3JUZXh0Ijp7InZhbHVlIjoiLmZvbyIsImxvYyI6eyJsaW5lIjoxLCJjb2x1bW4iOjV9fSwidmFyaWFibGVzIjp7fX1dfSwiY3NzU291cmNlIjp7IjAiOiIvY3NzSWQvMC5jc3MifSwiY29udGVudE1hcCI6e319fQ==","deps":{"0":[]}}
+```
+
+
 
 ### main.LAST_HASH.hot-update.json
 
@@ -23,7 +32,7 @@
 ### main.LAST_HASH.hot-update.js
 
 #### Changed Modules
-- ./css/basic/file.css?f759
+- ./css/basic/file.css
 
 #### Changed Runtime Modules
 - webpack/runtime/get_full_hash
@@ -33,14 +42,14 @@
 "use strict";
 exports.ids = ['main'];
 exports.modules = {
-"./css/basic/file.css?f759": (function (module, __webpack_exports__, __webpack_require__) {
+"./css/basic/file.css": (function (module, __webpack_exports__, __webpack_require__) {
 __webpack_require__.r(__webpack_exports__);
 // extracted by mini-css-extract-plugin
 
   if (true) {
     (function() {
       var localsJsonString = undefined;
-      var cssReload = __webpack_require__(/*! ../../../../runtime/hotModuleReplacement.cjs */ "../../runtime/hotModuleReplacement.cjs")(module.id, {}, "");
+      var cssReload = __webpack_require__("../../runtime/hotModuleReplacement.cjs")(module.id, {}, "");
       // only invalidate when locals change
       if (
         module.hot.data &&
@@ -64,9 +73,12 @@ __webpack_require__.r(__webpack_exports__);
 exports.runtime = function(__webpack_require__) {
 // webpack/runtime/get_full_hash
 (() => {
-__webpack_require__.h = function () {
-	return "CURRENT_HASH";
-};
+__webpack_require__.h = () => ("CURRENT_HASH")
+})();
+// webpack/runtime/lynx css hot update
+(() => {
+
+__webpack_require__.cssHotUpdateList = [["main","main.LAST_HASH.css.hot-update.json"]];
 
 })();
 

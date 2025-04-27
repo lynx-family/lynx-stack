@@ -12,38 +12,42 @@ import {
   type LynxTemplate,
   type NativeApp,
   type NativeModulesMap,
+  type LynxCrossThreadContext,
+  type BrowserConfig,
+  systemInfo,
 } from '@lynx-js/web-constants';
 import { createInvokeUIMethod } from './crossThreadHandlers/createInvokeUIMethod.js';
-import { registerOnLifecycleEventHandler } from './crossThreadHandlers/registerOnLifecycleEventHandler.js';
 import { registerPublicComponentEventHandler } from './crossThreadHandlers/registerPublicComponentEventHandler.js';
 import { registerGlobalExposureEventHandler } from './crossThreadHandlers/registerGlobalExposureEventHandler.js';
 import { createNativeModules } from './createNativeModules.js';
 import { registerUpdateDataHandler } from './crossThreadHandlers/registerUpdateDataHandler.js';
 import { registerPublishEventHandler } from './crossThreadHandlers/registerPublishEventHandler.js';
 import { createPerformanceApis } from './createPerformanceApis.js';
-import { registerPostTimingResultHandler } from './crossThreadHandlers/registerPostTimingResultHandler.js';
-import { registerOnNativeAppReadyHandler } from './crossThreadHandlers/registerOnNativeAppReadyHandler.js';
 import { registerSendGlobalEventHandler } from './crossThreadHandlers/registerSendGlobalEvent.js';
 import { createJSObjectDestructionObserver } from './crossThreadHandlers/createJSObjectDestructionObserver.js';
+import type { TimingSystem } from './createTimingSystem.js';
 
 let nativeAppCount = 0;
+const sharedData: Record<string, unknown> = {};
 
 export async function createNativeApp(config: {
   template: LynxTemplate;
   uiThreadRpc: Rpc;
   mainThreadRpc: Rpc;
-  markTimingInternal: (timingKey: string, pipelineId?: string) => void;
   nativeModulesMap: NativeModulesMap;
+  timingSystem: TimingSystem;
+  browserConfig: BrowserConfig;
 }): Promise<NativeApp> {
   const {
     mainThreadRpc,
     uiThreadRpc,
-    markTimingInternal,
     template,
     nativeModulesMap,
+    timingSystem,
+    browserConfig,
   } = config;
-  const { performanceApis, pipelineIdToTimingFlags } = createPerformanceApis(
-    markTimingInternal,
+  const performanceApis = createPerformanceApis(
+    timingSystem,
   );
   const callLepusMethod = mainThreadRpc.createCallbackify(
     callLepusMethodEndpoint,
@@ -57,6 +61,20 @@ export async function createNativeApp(config: {
     selectComponentEndpoint,
     3,
   );
+  const createBundleInitReturnObj = (): BundleInitReturnObj => {
+    const entry = (globalThis.module as LynxJSModule).exports;
+    return {
+      init: (lynxCoreInject) => {
+        lynxCoreInject.tt.lynxCoreInject = lynxCoreInject;
+        lynxCoreInject.tt.globalThis ??= lynxCoreInject;
+        Object.assign(lynxCoreInject.tt, {
+          SystemInfo: { ...systemInfo, pixelRatio: browserConfig.pixelRatio },
+        });
+        const ret = entry?.(lynxCoreInject.tt);
+        return ret;
+      },
+    };
+  };
   const nativeApp: NativeApp = {
     id: (nativeAppCount++).toString(),
     ...performanceApis,
@@ -66,6 +84,7 @@ export async function createNativeApp(config: {
     clearInterval: clearInterval,
     nativeModuleProxy: await createNativeModules(
       uiThreadRpc,
+      mainThreadRpc,
       nativeModulesMap,
     ),
     loadScriptAsync: function(
@@ -78,27 +97,14 @@ export async function createNativeApp(config: {
         /* webpackIgnore: true */
         sourceURL
       ).catch(callback).then(async () => {
-        callback(null, {
-          init: (lynxCoreInject) => {
-            lynxCoreInject.tt.lynxCoreInject = lynxCoreInject;
-            lynxCoreInject.tt.globalThis ??= lynxCoreInject;
-            const entry = (globalThis.module as LynxJSModule).exports;
-            const ret = entry?.(lynxCoreInject.tt);
-            return ret;
-          },
-        });
+        callback(null, createBundleInitReturnObj());
       });
     },
     loadScript: (sourceURL: string) => {
       const mainfestUrl = template.manifest[`/${sourceURL}`];
       if (mainfestUrl) sourceURL = mainfestUrl;
       importScripts(sourceURL);
-      const entry = (globalThis.module as LynxJSModule).exports;
-      return {
-        init: (lynxCoreInject) => {
-          return entry?.(lynxCoreInject.tt);
-        },
-      };
+      return createBundleInitReturnObj();
     },
     requestAnimationFrame(cb: FrameRequestCallback) {
       return requestAnimationFrame(cb);
@@ -110,32 +116,19 @@ export async function createNativeApp(config: {
     setNativeProps,
     invokeUIMethod: createInvokeUIMethod(uiThreadRpc),
     setCard(tt) {
-      registerOnLifecycleEventHandler(
+      registerPublicComponentEventHandler(
         mainThreadRpc,
         tt,
       );
-      registerPublicComponentEventHandler(
-        uiThreadRpc,
-        tt,
-      );
       registerPublishEventHandler(
-        uiThreadRpc,
+        mainThreadRpc,
         tt,
       );
       registerGlobalExposureEventHandler(
-        uiThreadRpc,
+        mainThreadRpc,
         tt,
       );
       registerUpdateDataHandler(
-        uiThreadRpc,
-        tt,
-      );
-      registerPostTimingResultHandler(
-        uiThreadRpc,
-        tt,
-        pipelineIdToTimingFlags,
-      );
-      registerOnNativeAppReadyHandler(
         uiThreadRpc,
         tt,
       );
@@ -143,10 +136,18 @@ export async function createNativeApp(config: {
         uiThreadRpc,
         tt,
       );
+      timingSystem.registerGlobalEmitter(tt.GlobalEventEmitter);
+      (tt.lynx.getCoreContext() as LynxCrossThreadContext).__start();
     },
     triggerComponentEvent,
     selectComponent,
     createJSObjectDestructionObserver: createJSObjectDestructionObserver(),
+    setSharedData<T>(dataKey: string, dataVal: T) {
+      sharedData[dataKey] = dataVal;
+    },
+    getSharedData<T>(dataKey: string): T | undefined {
+      return sharedData[dataKey] as T | undefined;
+    },
   };
   return nativeApp;
 }

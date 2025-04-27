@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/web-worker-runtime",
-  "version": "0.8.0",
+  "version": "0.12.0",
   "private": false,
   "description": "",
   "keywords": [],
@@ -22,14 +22,15 @@
     "README.md"
   ],
   "dependencies": {
+    "@lynx-js/offscreen-document": "workspace:*",
     "@lynx-js/web-constants": "workspace:*",
     "@lynx-js/web-mainthread-apis": "workspace:*",
     "@lynx-js/web-worker-rpc": "workspace:*"
   },
   "devDependencies": {
-    "@lynx-js/lynx-core": "0.1.0"
+    "@lynx-js/lynx-core": "0.1.2"
   },
   "peerDependencies": {
-    "@lynx-js/lynx-core": "0.1.0"
+    "@lynx-js/lynx-core": "0.1.2"
   }
 }

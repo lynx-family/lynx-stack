@@ -3,4 +3,4 @@
 // LICENSE file in the root directory of this source tree.
 export { createLynxView } from './apis/createLynxView.js';
 export { LynxView } from './apis/LynxView.js';
-export { lynxRuntimeValue } from '@lynx-js/web-constants';
+export type { LynxTemplate } from '@lynx-js/web-constants';

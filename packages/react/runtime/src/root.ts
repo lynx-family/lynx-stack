@@ -4,7 +4,7 @@
 import { BackgroundSnapshotInstance } from './backgroundSnapshot.js';
 import { SnapshotInstance } from './snapshot.js';
 
-let __root: (SnapshotInstance | BackgroundSnapshotInstance) & { __jsx?: React.ReactNode };
+let __root: (SnapshotInstance | BackgroundSnapshotInstance) & { __jsx?: React.ReactNode; __opcodes?: any[] };
 
 function setRoot(root: typeof __root): void {
   __root = root;

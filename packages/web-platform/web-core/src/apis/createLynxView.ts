@@ -6,19 +6,26 @@ import type {
   Cloneable,
   NapiModulesMap,
   NativeModulesMap,
+  sendGlobalEventEndpoint,
   UpdateDataType,
 } from '@lynx-js/web-constants';
-import { startUIThread } from '../uiThread/startUIThread.js';
+import {
+  startUIThread,
+  type StartUIThreadCallbacks,
+} from '../uiThread/startUIThread.js';
+import type { RpcCallType } from '@lynx-js/web-worker-rpc';
 
 export interface LynxViewConfigs {
   templateUrl: string;
   initData: Cloneable;
   globalProps: Cloneable;
-  rootDom: HTMLElement;
-  callbacks: Parameters<typeof startUIThread>[3];
-  overrideLynxTagToHTMLTagMap?: Record<string, string>;
+  shadowRoot: ShadowRoot;
+  callbacks: StartUIThreadCallbacks;
   nativeModulesMap: NativeModulesMap;
   napiModulesMap: NapiModulesMap;
+  tagMap: Record<string, string>;
+  lynxGroupId: number | undefined;
+  threadStrategy: 'all-on-ui' | 'multi-thread';
 }
 
 export interface LynxView {
@@ -28,31 +35,37 @@ export interface LynxView {
     callback?: () => void,
   ): void;
   dispose(): Promise<void>;
-  sendGlobalEvent(name: string, params?: Cloneable[]): void;
+  sendGlobalEvent: RpcCallType<typeof sendGlobalEventEndpoint>;
 }
 
 export function createLynxView(configs: LynxViewConfigs): LynxView {
   const {
-    rootDom,
+    shadowRoot,
     callbacks,
     templateUrl,
     globalProps,
     initData,
-    overrideLynxTagToHTMLTagMap,
     nativeModulesMap,
     napiModulesMap,
+    tagMap,
+    lynxGroupId,
+    threadStrategy = 'multi-thread',
   } = configs;
   return startUIThread(
     templateUrl,
     {
+      tagMap,
       initData,
       globalProps,
       nativeModulesMap,
       napiModulesMap,
-      browserConfig: {},
+      browserConfig: {
+        pixelRatio: window.devicePixelRatio,
+      },
     },
-    rootDom,
+    shadowRoot,
+    lynxGroupId,
+    threadStrategy,
     callbacks,
-    overrideLynxTagToHTMLTagMap,
   );
 }

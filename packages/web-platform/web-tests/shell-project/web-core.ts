@@ -8,19 +8,22 @@ import '@lynx-js/web-elements-compat/LinearContainer';
 import '@lynx-js/web-core/index.css';
 import './index.css';
 
+const ALL_ON_UI = !!process.env.ALL_ON_UI;
 const color_environment = URL.createObjectURL(
   new Blob(
     [`export default function(NapiModules, NapiModulesCall) {
   return {
     getColor() {
-      NapiModules.color_methods.getColor({ color: 'green' }, color => {
-        console.log(color);
+      NapiModules.color_methods.getColor({ color: 'green' }, data => {
+        console.log(data.color);
+        console.log(data.tagName);
       });
     },
     ColorEngine: class ColorEngine {
       getColor(name) {
-        NapiModules.color_methods.getColor({ color: 'green' }, color => {
-          console.log(color);
+        NapiModules.color_methods.getColor({ color: 'green' }, data => {
+          console.log(data.color);
+        console.log(data.tagName);
         });
       }
     },
@@ -29,14 +32,26 @@ const color_environment = URL.createObjectURL(
     { type: 'text/javascript' },
   ),
 );
-
 const color_methods = URL.createObjectURL(
   new Blob(
     [`export default function(NapiModules, NapiModulesCall) {
   return {
     async getColor(data, callback) {
-      const color = await NapiModulesCall('getColor', data);
-      callback(color);
+      const handledData = await NapiModulesCall('getColor', data);
+      callback(handledData);
+    },
+  };
+};`],
+    { type: 'text/javascript' },
+  ),
+);
+const event_method = URL.createObjectURL(
+  new Blob(
+    [`export default function(NapiModules, NapiModulesCall, handleDispatch) {
+  return {
+    async bindEvent() {
+      await NapiModulesCall('bindEvent');
+      handleDispatch((data) => console.log(\`bts:\${data}\`))
     },
   };
 };`],
@@ -48,16 +63,32 @@ async function run() {
   const lepusjs = '/resources/web-core.main-thread.json';
   const lynxView = document.createElement('lynx-view') as LynxView;
   lynxView.setAttribute('url', lepusjs);
+  if (ALL_ON_UI) lynxView.setAttribute('thread-strategy', `all-on-ui`);
   lynxView.initData = { mockData: 'mockData' };
   lynxView.globalProps = { pink: 'pink' };
   lynxView.height = 'auto';
   lynxView.napiModulesMap = {
     'color_environment': color_environment,
     'color_methods': color_methods,
+    'event_method': event_method,
   };
-  lynxView.onNapiModulesCall = (name, data, moduleName) => {
+  lynxView.onNapiModulesCall = (
+    name,
+    data,
+    moduleName,
+    lynxView,
+    dispatchNapiModules,
+  ) => {
     if (name === 'getColor' && moduleName === 'color_methods') {
-      return { data: data.color };
+      return {
+        data: { color: data.color, tagName: lynxView.tagName },
+      };
+    }
+    if (name === 'bindEvent' && moduleName === 'event_method') {
+      document.querySelector('lynx-view')?.addEventListener('click', () => {
+        dispatchNapiModules('lynx-view');
+      });
+      return;
     }
   };
   lynxView.addEventListener('error', () => {

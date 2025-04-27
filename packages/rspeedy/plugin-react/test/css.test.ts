@@ -5,6 +5,7 @@
 
 import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { isRegExp } from 'node:util/types'
 
 import { createRsbuild } from '@rsbuild/core'
 import type {
@@ -544,6 +545,74 @@ describe('Plugins - CSS', () => {
       )
       expect({ module: { rules: [mainThreadRule] } }).not.toHaveLoader(
         'builtin:lightningcss-loader',
+      )
+    })
+  })
+
+  describe('Inline CSS', () => {
+    test('Use css-loader only', async () => {
+      const rsbuild = await createRsbuild({
+        rsbuildConfig: {
+          plugins: [pluginReactLynx(), pluginStubRspeedyAPI()],
+        },
+      })
+
+      const [config] = await rsbuild.initConfigs()
+
+      const mainThreadRule = config?.module?.rules?.find(
+        (rule): rule is Rspack.RuleSetRule => {
+          return !!rule && rule !== '...'
+            && (rule.test as RegExp | undefined)?.toString() === CSS_REGEXP
+            && isRegExp(rule.resourceQuery)
+            && rule.resourceQuery.test('inline')
+        },
+      )
+
+      expect(mainThreadRule).not.toBeUndefined()
+
+      expect({ module: { rules: [mainThreadRule] } }).toHaveLoader(
+        /[\\/]css-loader[\\/]/,
+      )
+      expect({ module: { rules: [mainThreadRule] } }).not.toHaveLoader(
+        /ignore-css-loader/,
+      )
+      expect({ module: { rules: [mainThreadRule] } }).not.toHaveLoader(
+        CssExtractRspackPlugin.loader,
+      )
+    })
+
+    test('Use sass-loader and css-loader only', async () => {
+      const { pluginSass } = await import('@rsbuild/plugin-sass')
+      const rsbuild = await createRsbuild({
+        rsbuildConfig: {
+          plugins: [pluginReactLynx(), pluginSass(), pluginStubRspeedyAPI()],
+        },
+      })
+
+      const [config] = await rsbuild.initConfigs()
+
+      const mainThreadRule = config?.module?.rules?.find(
+        (rule): rule is Rspack.RuleSetRule => {
+          return !!rule && rule !== '...'
+            && (rule.test as RegExp | undefined)?.toString() === SASS_REGEXP
+            && isRegExp(rule.resourceQuery)
+            && rule.resourceQuery.test('inline')
+        },
+      )
+
+      expect(mainThreadRule).not.toBeUndefined()
+
+      expect({ module: { rules: [mainThreadRule] } }).toHaveLoader(
+        /sass-loader/,
+      )
+      expect({ module: { rules: [mainThreadRule] } }).toHaveLoader(
+        /[\\/]css-loader[\\/]/,
+      )
+      expect({ module: { rules: [mainThreadRule] } }).not.toHaveLoader(
+        /ignore-css-loader/,
+      )
+      expect({ module: { rules: [mainThreadRule] } }).not.toHaveLoader(
+        CssExtractRspackPlugin.loader,
       )
     })
   })

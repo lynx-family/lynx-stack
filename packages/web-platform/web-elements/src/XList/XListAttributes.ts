@@ -11,12 +11,16 @@ import {
 } from '@lynx-js/web-elements-reactive';
 import type { XList } from './XList.js';
 
+const WATERFALL_SLOT = 'waterfall-slot';
+
 export class XListAttributes
   implements InstanceType<AttributeReactiveClass<typeof HTMLElement>>
 {
   static observedAttributes = [
     'sticky-offset',
     'initial-scroll-index',
+    'span-count',
+    'column-count',
   ];
 
   #dom: XList;
@@ -26,6 +30,14 @@ export class XListAttributes
     () => this.#dom,
     '--list-item-sticky-offset',
     (v) => `${parseFloat(v)}px`,
+  );
+
+  @registerAttributeHandler('span-count', true)
+  @registerAttributeHandler('column-count', true)
+  #handlerCount = bindToStyle(
+    () => this.#dom,
+    '--list-item-span-count',
+    (v) => `${parseFloat(v)}`,
   );
 
   constructor(dom: XList) {

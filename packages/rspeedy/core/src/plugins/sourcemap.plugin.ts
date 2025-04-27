@@ -83,6 +83,7 @@ function applySourceMapPlugin(
     const cheap = devtool.includes('cheap')
     const moduleMaps = devtool.includes('module')
     const noSources = devtool.includes('nosources') // cSpell:disable-line
+    const debugIds = devtool.includes('debugids')
 
     const options = {
       filename: inline
@@ -99,6 +100,7 @@ function applySourceMapPlugin(
       noSources,
       namespace: output?.devtoolNamespace,
       publicPath,
+      debugIds,
     } satisfies UndefinedOnPartialDeep<Rspack.SourceMapDevToolPluginOptions>
 
     chain

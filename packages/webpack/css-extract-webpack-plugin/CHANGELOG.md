@@ -1,5 +1,13 @@
 # @lynx-js/css-extract-webpack-plugin
 
+## 0.5.3
+
+### Patch Changes
+
+- Fix CSS HMR not working with nested entry name. ([#456](https://github.com/lynx-family/lynx-stack/pull/456))
+
+- fix: add enableCSSInvalidation for encodeCSS of css HMR, this will fix pseudo-class (such as `:active`) not working in HMR. ([#435](https://github.com/lynx-family/lynx-stack/pull/435))
+
 ## 0.5.2
 
 ### Patch Changes

@@ -13,7 +13,7 @@
     "github-actions",
   ],
 
-  "labels": ["renovate"],
+  "labels": ["bot:renovate"],
 
   "packageRules": [
     {
@@ -25,7 +25,7 @@
     {
       "groupName": "Rspack",
       "groupSlug": "Rspack",
-      "addLabels": ["Rspack"],
+      "addLabels": ["upstream:rspack"],
       "matchDepTypes": [
         "devDependencies",
         "dependencies",
@@ -39,7 +39,7 @@
     {
       "groupName": "Rsbuild",
       "groupSlug": "Rsbuild",
-      "addLabels": ["Rsbuild"],
+      "addLabels": ["upstream:rspack"],
       "matchDepTypes": [
         "devDependencies",
         "dependencies",
@@ -52,6 +52,20 @@
       "automerge": false,
     },
     {
+      "groupName": "Rspress",
+      "groupSlug": "Rspress",
+      "matchDepTypes": [
+        "devDependencies",
+        "dependencies",
+      ],
+      "matchPackageNames": [
+        "rspress",
+        "/@rspress/*/",
+        "@rstack-dev/doc-ui",
+      ],
+      "rangeStrategy": "pin",
+    },
+    {
       "groupName": "changesets",
       "groupSlug": "changesets",
       "matchPackageNames": [
@@ -59,10 +73,36 @@
       ],
     },
     {
+      "groupName": "API Extractor",
+      "groupSlug": "api-extractor",
+      "matchPackageNames": [
+        "@microsoft/api-documenter",
+        "@microsoft/api-extractor",
+        "@microsoft/api-extractor-model",
+        "@microsoft/tsdoc",
+      ],
+      "automerge": true,
+    },
+    {
+      "groupName": "linting",
+      "groupSlug": "linting",
+      "matchPackageNames": ["/eslint/", "/^@cspell/*/", "cspell"],
+    },
+    {
+      "groupName": "Typia",
+      "groupSlug": "typia",
+      "matchPackageNames": [
+        "typia",
+        "typia-rspack-plugin",
+        "@samchon/openapi",
+      ],
+      "automerge": false,
+      "rangeStrategy": "pin",
+    },
+    {
       "matchDepTypes": [
         "peerDependencies",
       ],
-      "addLabels": ["peerDependencies"],
       "rangeStrategy": "widen",
     },
   ],
@@ -72,5 +112,8 @@
   "ignoreDeps": [
     // align Node.js version minimum requirements
     "node",
+
+    // Rspress not compatible
+    "@microsoft/api-documenter",
   ],
 }

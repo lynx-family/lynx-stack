@@ -5,26 +5,25 @@ import type { RsbuildPluginAPI } from '@rsbuild/core'
 
 export function applySWC(api: RsbuildPluginAPI): void {
   api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
-    return mergeRsbuildConfig(config, {
+    return mergeRsbuildConfig({
       tools: {
-        swc(config) {
-          config.jsc ??= {}
-          config.jsc.transform ??= {}
-          config.jsc.transform.useDefineForClassFields = false
-          config.jsc.transform.optimizer ??= {}
-          config.jsc.transform.optimizer.simplify = true
-
-          config.jsc.parser ??= {
-            syntax: 'typescript',
-          }
-          if (config.jsc.parser.syntax === 'typescript') {
-            config.jsc.parser.tsx = false
-            config.jsc.parser.decorators = true
-          }
-
-          return config
+        swc: {
+          jsc: {
+            transform: {
+              // TODO: remove this in the next minor version
+              useDefineForClassFields: false,
+              optimizer: {
+                simplify: true,
+              },
+            },
+            parser: {
+              syntax: 'typescript',
+              tsx: false,
+              decorators: true,
+            },
+          },
         },
       },
-    })
+    }, config)
   })
 }

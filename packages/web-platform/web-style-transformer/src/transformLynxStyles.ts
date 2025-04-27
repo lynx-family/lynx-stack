@@ -242,16 +242,39 @@ const renameRules: {
     },
   ],
   'color': [
+    'color',
     {
-      name: '--lynx-color-toggle',
+      name: '--lynx-color',
       valueProcessor(value) {
         return value.includes('gradient')
-          ? 'var(--lynx-color-gradient)'
-          : 'var(--lynx-color-normal)';
+          ? 'transparent'
+          : value;
       },
     },
-    'color',
-    '--lynx-color',
+    {
+      name: '--lynx-text-bg-color',
+      valueProcessor(value) {
+        return value.includes('gradient')
+          ? value
+          : 'initial';
+      },
+    },
+    {
+      name: 'background-clip',
+      valueProcessor(value) {
+        return value.includes('gradient')
+          ? 'text'
+          : 'initial';
+      },
+    },
+    {
+      name: '-webkit-background-clip',
+      valueProcessor(value) {
+        return value.includes('gradient')
+          ? 'text'
+          : 'initial';
+      },
+    },
   ],
   'flex-direction': [
     '--flex-direction',
@@ -267,6 +290,12 @@ const renameRules: {
   ],
   'flex-basis': [
     '--flex-basis',
+  ],
+  'list-main-axis-gap': [
+    '--list-main-axis-gap',
+  ],
+  'list-cross-axis-gap': [
+    '--list-cross-axis-gap',
   ],
 };
 export function transformLynxStyles(

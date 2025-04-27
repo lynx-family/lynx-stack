@@ -7,8 +7,13 @@
 x-text {
   display: flex;
   overflow-wrap: break-word;
-  --lynx-color: none;
   align-items: stretch;
+  color: var(--lynx-color);
+  background-image: var(--lynx-text-bg-color);
+}
+x-text:not(x-text > x-text):not(x-text > lynx-wrapper > x-text) {
+  --lynx-color: canvastext;
+  --lynx-text-bg-color: initial;
 }
 x-text:not(:defined) {
   display: none;
@@ -20,53 +25,16 @@ x-text > * {
 
 x-text::part(inner-box) {
   text-overflow: inherit;
-  --lynx-color: inherit;
-  --lynx-color-gradient: inherit;
+  --lynx-text-bg-color: inherit;
 }
 
 x-text > x-text::part(inner-box),
 x-text > lynx-wrapper > x-text::part(inner-box) {
-  display: inline !important;
+  display: contents !important;
 }
-x-text, inline-text {
-  --lynx-color-toggle: var(--lynx-color-normal);
-  --lynx-color-gradient: var(--lynx-color-toggle,);
-  --lynx-color-normal: var(--lynx-color-toggle,);
-}
-
-/** For: `-a:var(-b,) -b:var(-a,) -c:var(-a)` -a,-b,-c will can be incorrectly detected as invalid when chrome version lower than 99
-  so we not support gradient
-  detail: https://issues.chromium.org/issues/40172841
-  chrome 99, firefox 46, safari 7
-  https://developer.mozilla.org/en-US/docs/Web/CSS/text-emphasis
- 
-  References:
-  https://developer.chrome.com/blog/new-in-chrome-99
-  https://chromestatus.com/feature/5679635154075648
-  https://developer.mozilla.org/en-US/docs/Web/CSS/text-emphasis
-  */
-/* autoprefixer: ignore next */
-@supports (text-emphasis: none) {
-  x-text::part(inner-box), inline-text {
-    background: var(--lynx-color-gradient, var(--lynx-color)) var(
-      --lynx-color-normal,
-      initial
-    );
-    -webkit-text-fill-color: var(--lynx-color-gradient, transparent) var(
-      --lynx-color-normal,
-      initial
-    );
-    background-clip: var(--lynx-color-gradient, text) var(
-      --lynx-color-normal,
-      initial
-    );
-    /* exist issue: https://github.com/facebook/react/issues/14200 */
-    /* import flag is essential on chromium */
-    -webkit-background-clip: var(--lynx-color-gradient, text) var(
-      --lynx-color-normal,
-      initial
-    );
-  }
+x-text::part(inner-box), inline-text, x-text::part(slot) {
+  background-clip: inherit;
+  -webkit-background-clip: inherit;
 }
 inline-text, inline-image, inline-truncation {
   display: none;
@@ -74,14 +42,12 @@ inline-text, inline-image, inline-truncation {
 
 /* nested components */
 x-text > x-text:defined,
-x-text > x-text:defined::part(inner-box),
 x-text > inline-text:defined,
 x-text > x-text:defined,
 inline-text > inline-text:defined,
 inline-truncation > inline-text:defined,
 inline-truncation > x-text:defined,
 x-text > lynx-wrapper > x-text:defined,
-x-text > lynx-wrapper > x-text:defined::part(inner-box),
 x-text > lynx-wrapper > inline-text:defined,
 x-text > lynx-wrapper > x-text:defined,
 inline-text > lynx-wrapper > inline-text:defined,
@@ -89,6 +55,8 @@ x-text > lynx-wrapper > x:defined,
 inline-truncation > lynx-wrapper > inline-text:defined,
 inline-truncation > lynx-wrapper > x-text:defined {
   display: inline;
+  background-clip: inherit;
+  -webkit-background-clip: inherit;
 }
 
 x-text > inline-image:defined,
@@ -263,6 +231,7 @@ x-text[text-maxline][tail-color-convert="false"]::part(inner-box) {
 
 raw-text {
   display: none;
+  white-space-collapse: preserve-breaks;
 }
 x-text > raw-text,
 inline-text > raw-text,

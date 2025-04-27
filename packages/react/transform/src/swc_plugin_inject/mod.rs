@@ -244,10 +244,10 @@ fn parse_define(define: &str) -> PResult<Box<Expr>> {
 mod tests {
   use std::collections::HashMap;
   use swc_core::{
-    common::{chain, Mark},
+    common::Mark,
     ecma::parser::Syntax,
     ecma::{parser::EsSyntax, transforms::testing::test},
-    ecma::{transforms::base::resolver, visit::as_folder},
+    ecma::{transforms::base::resolver, visit::visit_mut_pass},
   };
 
   use crate::swc_plugin_inject::{InjectAs, InjectVisitor, InjectVisitorConfig};
@@ -262,36 +262,36 @@ mod tests {
       let unresolved_mark = Mark::new();
       let top_level_mark = Mark::new();
 
-      chain!(
+      (
         resolver(unresolved_mark, top_level_mark, true),
-        as_folder(InjectVisitor::new(
+        visit_mut_pass(InjectVisitor::new(
           InjectVisitorConfig {
             inject: HashMap::from([
               (
                 "__SOME__".into(),
-                InjectAs::Expr("__globalProps.xxx ?? __globalProps.yyy ?? 'zzz'".into())
+                InjectAs::Expr("__globalProps.xxx ?? __globalProps.yyy ?? 'zzz'".into()),
               ),
               (
                 "__SOME_2__".into(),
-                InjectAs::Expr("__globalProps.xxx ?? __globalProps.yyy ?? zzz".into())
+                InjectAs::Expr("__globalProps.xxx ?? __globalProps.yyy ?? zzz".into()),
               ),
               (
                 "__SOME_3__".into(),
-                InjectAs::Expr("__globalProps.xxx ?? __globalProps.yyy ?? __SOME__".into())
+                InjectAs::Expr("__globalProps.xxx ?? __globalProps.yyy ?? __SOME__".into()),
               ),
               ("zzz".into(), InjectAs::ImportDefault("@lynx-js/zzz".into())),
               (
                 "FiberElementApi".into(),
-                InjectAs::ImportStarAs("@lynx-js/react".into())
+                InjectAs::ImportStarAs("@lynx-js/react".into()),
               ),
               (
                 "__SetClasses".into(),
-                InjectAs::ImportNamed("@lynx-js/react".into(), "__SetClassesDarkMode".into())
-              )
+                InjectAs::ImportNamed("@lynx-js/react".into(), "__SetClassesDarkMode".into()),
+              ),
             ]),
           },
           unresolved_mark,
-          top_level_mark
+          top_level_mark,
         )),
       )
     },
@@ -314,17 +314,17 @@ mod tests {
       let unresolved_mark = Mark::new();
       let top_level_mark = Mark::new();
 
-      chain!(
+      (
         resolver(unresolved_mark, top_level_mark, true),
-        as_folder(InjectVisitor::new(
+        visit_mut_pass(InjectVisitor::new(
           InjectVisitorConfig {
             inject: HashMap::from([(
               "__DARK_MODE_THEME__".into(),
-              InjectAs::Expr("__globalProps.xxx ?? __globalProps.yyy ?? 'zzz'".into())
-            ),]),
+              InjectAs::Expr("__globalProps.xxx ?? __globalProps.yyy ?? 'zzz'".into()),
+            )]),
           },
           unresolved_mark,
-          top_level_mark
+          top_level_mark,
         )),
       )
     },

@@ -11,6 +11,7 @@ import path from 'node:path'
 export default {
   output: {
     publicPath: './',
+    pathinfo: false,
   },
   module: {
     rules: [

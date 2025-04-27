@@ -50,6 +50,22 @@ export interface Server {
 
   /**
    * Specify the host that the Rspeedy Server listens to.
+   *
+   * @remarks
+   * By default, the server listens on local network IP, for example, `192.168.1.50`, verify your local net IP by the command `ifconfig` on your system for (en0 for MacOS and eth0 for LinuxOS users). In case you have multiple local network IP(s) particularly when you are running dockers on the host machine, then you can specify your desired host IP.
+   *
+   * @example
+   *
+   * Set the host to a custom value:
+   *
+   * ```js
+   * import { defineConfig } from '@lynx-js/rspeedy'
+   * export default defineConfig({
+   *   server: {
+   *     host: "192.168.1.50",
+   *   },
+   * })
+   * ```
    */
   host?: string | undefined
 
@@ -73,4 +89,11 @@ export interface Server {
    * ```
    */
   port?: number | undefined
+
+  /**
+   * When a port is occupied, Rspeedy will automatically increment the port number until an available port is found.
+   *
+   * Set strictPort to true and Rspeedy will throw an exception when the port is occupied.
+   */
+  strictPort?: boolean | undefined
 }

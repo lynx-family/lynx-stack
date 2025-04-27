@@ -73,6 +73,37 @@ describe('sourcemap.plugin', () => {
           columns: true, // non cheap
           module: true, // module
           noSources: false,
+          debugIds: false,
+        }),
+      )
+    })
+
+    test('with output.assetPrefix with output.sourceMap.js: "source-map-debugids"', async () => {
+      vi.stubEnv('NODE_ENV', 'production')
+      const { SourceMapDevToolPlugin } = await import(
+        '../../src/webpack/SourceMapDevToolPlugin.js'
+      )
+
+      const rspeedy = await createStubRspeedy({
+        output: {
+          assetPrefix: 'https://example.com/',
+          sourceMap: {
+            js: 'source-map-debugids',
+          },
+        },
+      })
+
+      const config = await rspeedy.unwrapConfig()
+      expect(config.devtool).toBe(false)
+      // source-map with publicPath applied
+      expect(SourceMapDevToolPlugin).toBeCalledWith(
+        expect.objectContaining({
+          publicPath: 'https://example.com/',
+          filename: '[file].map[query]',
+          columns: true, // non cheap
+          module: true, // module
+          noSources: false,
+          debugIds: true, // debugids
         }),
       )
     })
@@ -102,6 +133,7 @@ describe('sourcemap.plugin', () => {
           columns: false, // cheap
           module: true, // module
           noSources: false,
+          debugIds: false,
         }),
       )
     })
@@ -132,6 +164,7 @@ describe('sourcemap.plugin', () => {
           columns: true, // non cheap
           module: true, // module
           noSources: false,
+          debugIds: false,
         }),
       )
     })
@@ -176,6 +209,7 @@ describe('sourcemap.plugin', () => {
           columns: true, // non cheap
           module: true, // module
           noSources: false,
+          debugIds: false,
         }),
       )
     })
@@ -236,6 +270,7 @@ describe('sourcemap.plugin', () => {
           columns: true, // non cheap
           module: true, // module
           noSources: true, // no sources
+          debugIds: false,
         }),
       )
     })
@@ -259,6 +294,7 @@ describe('sourcemap.plugin', () => {
           columns: false, // cheap
           module: true, // module
           noSources: false,
+          debugIds: false,
         }),
       )
     })
@@ -285,6 +321,7 @@ describe('sourcemap.plugin', () => {
           columns: false, // cheap
           module: true, // module
           noSources: false,
+          debugIds: false,
         }),
       )
     })
@@ -315,6 +352,38 @@ describe('sourcemap.plugin', () => {
           columns: false, // cheap
           module: true, // module
           noSources: false,
+        }),
+      )
+    })
+
+    test('with output.sourceMap.js: "source-map-debugids"', async () => {
+      vi.stubEnv('NODE_ENV', 'development')
+      const { SourceMapDevToolPlugin } = await import(
+        '../../src/webpack/SourceMapDevToolPlugin.js'
+      )
+      const { EvalSourceMapDevToolPlugin } = await import(
+        '../../src/webpack/EvalSourceMapDevToolPlugin.js'
+      )
+      const rspeedy = await createStubRspeedy({
+        output: {
+          sourceMap: {
+            js: 'source-map-debugids',
+          },
+        },
+      })
+      const config = await rspeedy.unwrapConfig()
+
+      expect(config.devtool).toBe(false)
+      expect(SourceMapDevToolPlugin).toBeCalled()
+      expect(EvalSourceMapDevToolPlugin).not.toBeCalled()
+      // source-map-debugids applied
+      expect(SourceMapDevToolPlugin).toBeCalledWith(
+        expect.objectContaining({
+          filename: '[file].map[query]',
+          columns: true, // non cheap
+          module: true, // module
+          noSources: false,
+          debugIds: true, // debugIds
         }),
       )
     })

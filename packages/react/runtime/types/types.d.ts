@@ -16,6 +16,7 @@ declare global {
   declare const __BACKGROUND__: boolean;
   declare const __MAIN_THREAD__: boolean;
   declare const __PROFILE__: boolean;
+  declare const __ENABLE_SSR__: boolean;
 
   declare function __CreatePage(componentId: string, cssId: number): FiberElement;
   declare function __CreateElement(
@@ -56,6 +57,7 @@ declare global {
   declare function __LastElement(parent: FiberElement): FiberElement;
   declare function __NextElement(parent: FiberElement): FiberElement;
   declare function __GetPageElement(): FiberElement | undefined;
+  declare function __GetTemplateParts(e: FiberElement): Record<string, FiberElement>;
   declare function __AddDataset(node: FiberElement, key: string, value: any): void;
   declare function __SetDataset(
     node: FiberElement,
@@ -161,7 +163,10 @@ declare global {
 
   declare interface PipelineOptions {
     pipelineID: string; // Returned by native when calling `onPipelineStart()`
+    pipelineOrigin: string; // The origin of the pipeline
     needTimestamps: boolean; // Whether timing points should be reported
+    dsl: string;
+    stage: string;
   }
   declare let lynxCoreInject: any;
 
@@ -241,7 +246,7 @@ declare module '@lynx-js/types/background' {
 
   interface Performance {
     _generatePipelineOptions?(): PipelineOptions;
-    _onPipelineStart?(pipelineID: string): void;
+    _onPipelineStart?(pipelineID: string, options: PipelineOptions): void;
     _bindPipelineIdWithTimingFlag?(pipelineID: string, timingFlag: string): void;
     _markTiming?(pipelineID: string, key: string): void;
   }

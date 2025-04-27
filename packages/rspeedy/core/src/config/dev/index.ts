@@ -76,6 +76,88 @@ export interface Dev {
   client?: Client | undefined
 
   /**
+   * Whether to enable Hot Module Replacement (HMR).
+   *
+   * @remarks
+   *
+   * Defaults to `true`.
+   *
+   * By default, Rspeedy uses HMR as the preferred method to update modules. If HMR is disabled or cannot be used in certain scenarios, it will automatically fallback to {@link Dev.liveReload}.
+   *
+   * To completely disable both HMR and live reload, set both `dev.hmr` and `dev.liveReload` to `false`. Then, no WebSocket requests will be made to the dev server on the page, and the page will not automatically refresh when file changes.
+   *
+   * @example
+   *
+   * Disable HMR:
+   *
+   * ```js
+   * import { defineConfig } from '@lynx-js/rspeedy'
+   *
+   * export default defineConfig({
+   *   dev: {
+   *     hmr: false,
+   *   },
+   * })
+   * ```
+   *
+   * @example
+   *
+   * Disable both HMR and live reload:
+   *
+   * ```js
+   * import { defineConfig } from '@lynx-js/rspeedy'
+   *
+   * export default defineConfig({
+   *   dev: {
+   *     hmr: false,
+   *     liveReload: false,
+   *   },
+   * })
+   * ```
+   */
+  hmr?: boolean | undefined
+
+  /**
+   * Whether to enable live reload functionality.
+   *
+   * Defaults to `true`.
+   *
+   * Live reload is used as a fallback when {@link Dev.hmr} is disabled or cannot be used in certain scenarios. When enabled, the page will automatically refresh when source files are changed.
+   *
+   * To completely disable both HMR and live reload, set both `dev.hmr` and `dev.liveReload` to `false`. Then, no WebSocket requests will be made to the dev server on the page, and the page will not automatically refresh when file changes.
+   *
+   * @example
+   *
+   * Disable live reload:
+   *
+   * ```js
+   * import { defineConfig } from '@lynx-js/rspeedy'
+   *
+   * export default defineConfig({
+   *   dev: {
+   *     liveReload: false,
+   *   },
+   * })
+   * ```
+   *
+   * @example
+   *
+   * Disable both HMR and live reload:
+   *
+   * ```js
+   * import { defineConfig } from '@lynx-js/rspeedy'
+   *
+   * export default defineConfig({
+   *   dev: {
+   *     hmr: false,
+   *     liveReload: false,
+   *   },
+   * })
+   * ```
+   */
+  liveReload?: boolean | undefined
+
+  /**
    * Watch specified files and directories for changes. When a file change is detected, it can trigger a page reload or restart the dev server.
    *
    * @example
@@ -138,4 +220,43 @@ export interface Dev {
    * ```
    */
   writeToDisk?: boolean | ((filename: string) => boolean) | undefined
+
+  /**
+   * Whether to display progress bar during compilation.
+   *
+   * Defaults to `true`.
+   *
+   * @example
+   *
+   * Disable the progress bar.
+   *
+   * ```js
+   * import { defineConfig } from '@lynx-js/rspeedy'
+   *
+   * export default defineConfig({
+   *   dev: {
+   *     progressBar: false,
+   *   },
+   * })
+   * ```
+   *
+   * @example
+   *
+   * Modify the progress bar `id`
+   *
+   * To modify the text displayed on the left side of the progress bar, set the `id` option:
+   *
+   * ```js
+   * import { defineConfig } from '@lynx-js/rspeedy'
+   *
+   * export default defineConfig({
+   *   dev: {
+   *     progressBar: {
+   *       id: 'Some Text'
+   *     },
+   *   },
+   * })
+   * ```
+   */
+  progressBar?: boolean | { id?: string } | undefined
 }

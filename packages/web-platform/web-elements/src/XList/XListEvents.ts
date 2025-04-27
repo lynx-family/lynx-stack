@@ -51,6 +51,10 @@ export class XListEvents
     '#lower-threshold-observer',
   );
   #getScrollDetail() {
+    const needVisibleItemInfo = this.#dom.getAttribute(
+      'need-visible-item-info',
+    ) !== null;
+
     const { scrollTop, scrollLeft, scrollHeight, scrollWidth } = this
       .#getListContainer();
     const detail = {
@@ -60,6 +64,9 @@ export class XListEvents
       scrollWidth,
       deltaX: scrollLeft - this.#prevX,
       deltaY: scrollTop - this.#prevY,
+      attachedCells: needVisibleItemInfo
+        ? this.#dom.getVisibleCells()
+        : undefined,
     };
     this.#prevX = scrollLeft;
     this.#prevY = scrollTop;
@@ -217,8 +224,8 @@ export class XListEvents
           this.#dom.children.length
           - itemCount
         ];
-      observerDom && this.#lowerObserver.observe(observerDom);
 
+      observerDom && this.#lowerObserver.observe(observerDom);
       this.#childrenObserver.observe(this.#dom, {
         childList: true,
       });
@@ -337,9 +344,7 @@ export class XListEvents
     this.#dom.dispatchEvent(
       new CustomEvent('lynxscroll', {
         ...commonComponentEventSetting,
-        detail: {
-          type: 'scroll',
-        },
+        detail: this.#getScrollDetail(),
       }),
     );
   };

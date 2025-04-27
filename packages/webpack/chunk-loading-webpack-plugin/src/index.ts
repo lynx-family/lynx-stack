@@ -10,7 +10,6 @@
 
 import type { Compiler } from '@rspack/core';
 
-import { ChunkLoadingRspackPluginImpl } from './ChunkLoadingRspackPlugin.js';
 import { ChunkLoadingWebpackPluginImpl } from './ChunkLoadingWebpackPlugin.js';
 
 /**
@@ -80,16 +79,9 @@ export class ChunkLoadingWebpackPlugin {
       ChunkLoadingWebpackPlugin.defaultOptions,
       this.options,
     );
-    if (compiler.webpack.rspackVersion) {
-      new ChunkLoadingRspackPluginImpl(compiler, options);
-    } else {
-      new ChunkLoadingWebpackPluginImpl(
-        compiler as unknown as import('webpack').Compiler,
-        options,
-      );
-    }
+    new ChunkLoadingWebpackPluginImpl(
+      compiler as unknown as import('webpack').Compiler,
+      options,
+    );
   }
 }
-
-export { ChunkLoadingRspackPlugin } from './ChunkLoadingRspackPlugin.js';
-export type { ChunkLoadingRspackPluginOptions } from './ChunkLoadingRspackPlugin.js';

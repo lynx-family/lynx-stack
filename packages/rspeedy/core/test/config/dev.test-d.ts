@@ -34,6 +34,16 @@ describe('Config - Dev', () => {
     })
   })
 
+  test('hmr', () => {
+    assertType<Dev>({ hmr: true })
+    assertType<Dev>({ hmr: false })
+  })
+
+  test('liveReload', () => {
+    assertType<Dev>({ liveReload: true })
+    assertType<Dev>({ liveReload: false })
+  })
+
   test('watchFiles', () => {
     assertType<Dev>({ watchFiles: { paths: '' } })
     assertType<Dev>({ watchFiles: { paths: [] } })
@@ -64,5 +74,12 @@ describe('Config - Dev', () => {
     assertType<Dev>({ writeToDisk: () => false })
     assertType<Dev>({ writeToDisk: () => true })
     assertType<Dev>({ writeToDisk: (path) => path.includes('foo') })
+  })
+
+  test('progressBar', () => {
+    assertType<Dev>({ progressBar: undefined })
+    assertType<Dev>({ progressBar: false })
+    assertType<Dev>({ progressBar: true })
+    assertType<Dev>({ progressBar: { id: 'foo' } })
   })
 })

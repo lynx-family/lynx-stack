@@ -1,5 +1,150 @@
 # @lynx-js/web-worker-runtime
 
+## 0.12.0
+
+### Patch Changes
+
+- feat: fully support MTS ([#569](https://github.com/lynx-family/lynx-stack/pull/569))
+
+  Now use support the following usage
+
+  - mainthread event
+  - mainthread ref
+  - runOnMainThread/runOnBackground
+  - ref.current.xx
+
+- Updated dependencies [[`f1ca29b`](https://github.com/lynx-family/lynx-stack/commit/f1ca29bd766377dd46583f15e1e75bca447699cd), [`8ca9fcb`](https://github.com/lynx-family/lynx-stack/commit/8ca9fcbbc86b0f0ac05ee4319876cdd5dd08d668), [`efe6fd7`](https://github.com/lynx-family/lynx-stack/commit/efe6fd7de8a3d8119ea550f4d4e939d1fbfee4f0)]:
+  - @lynx-js/web-mainthread-apis@0.12.0
+  - @lynx-js/web-constants@0.12.0
+  - @lynx-js/web-worker-rpc@0.12.0
+
+## 0.11.0
+
+### Patch Changes
+
+- feat: support mts event handler (1/n) ([#495](https://github.com/lynx-family/lynx-stack/pull/495))
+
+  now the main-thread:bind handler could be invoked. The params of the handler will be implemented later.
+
+- feat: allow multi lynx-view to share bts worker ([#520](https://github.com/lynx-family/lynx-stack/pull/520))
+
+  Now we allow users to enable so-called "shared-context" feature on the Web Platform.
+
+  Similar to the same feature for Lynx iOS/Android, this feature let multi lynx cards to share one js context.
+
+  The `lynx.getSharedData` and `lynx.setSharedData` are also supported in this commit.
+
+  To enable this feature, set property `lynxGroupId` or attribute `lynx-group-id` before a lynx-view starts rendering. Those card with same context id will share one web worker for the bts scripts.
+
+- Updated dependencies [[`ea42e62`](https://github.com/lynx-family/lynx-stack/commit/ea42e62fbcd5c743132c3e6e7c4851770742d544), [`a0f5ca4`](https://github.com/lynx-family/lynx-stack/commit/a0f5ca4ea0895ccbaa6aa63f449f53a677a1cf73)]:
+  - @lynx-js/web-mainthread-apis@0.11.0
+  - @lynx-js/web-constants@0.11.0
+  - @lynx-js/web-worker-rpc@0.11.0
+
+## 0.10.1
+
+### Patch Changes
+
+- feat: onNapiModulesCall function add new param: `dispatchNapiModules`, napiModulesMap val add new param: `handleDispatch`. ([#414](https://github.com/lynx-family/lynx-stack/pull/414))
+
+  Now you can use them to actively communicate to napiModules (background thread) in onNapiModulesCall (ui thread).
+
+- Updated dependencies [[`1af3b60`](https://github.com/lynx-family/lynx-stack/commit/1af3b6052ab27f98bf0e4d1b0ec9f7d9e88e0afc)]:
+  - @lynx-js/web-constants@0.10.1
+  - @lynx-js/web-mainthread-apis@0.10.1
+  - @lynx-js/web-worker-rpc@0.10.1
+
+## 0.10.0
+
+### Minor Changes
+
+- feat: rewrite the main thread Element PAPIs ([#343](https://github.com/lynx-family/lynx-stack/pull/343))
+
+  In this commit we've rewritten the main thread apis.
+
+  The most highlighted change is that
+
+  - Before this commit we send events directly to bts
+  - After this change, we send events to mts then send them to bts with some data combined.
+
+### Patch Changes
+
+- Updated dependencies [[`2a8ddf3`](https://github.com/lynx-family/lynx-stack/commit/2a8ddf3fb2a2fc5ed9b44184e30847aaf74fd1f4), [`3a8dabd`](https://github.com/lynx-family/lynx-stack/commit/3a8dabd877084c15db1404c912dd8a19c7a0fc59), [`878050a`](https://github.com/lynx-family/lynx-stack/commit/878050aaa3d9eb534848cab1dd0d4a2096a0a940), [`a521759`](https://github.com/lynx-family/lynx-stack/commit/a5217592f5aebea4b17860e729d523ecabb5f691), [`890c6c5`](https://github.com/lynx-family/lynx-stack/commit/890c6c51470c82104abb1049681f55e5d97cf9d6)]:
+  - @lynx-js/web-mainthread-apis@0.10.0
+  - @lynx-js/web-constants@0.10.0
+  - @lynx-js/web-worker-rpc@0.10.0
+
+## 0.9.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-constants@0.9.1
+  - @lynx-js/web-mainthread-apis@0.9.1
+  - @lynx-js/web-worker-rpc@0.9.1
+
+## 0.9.0
+
+### Minor Changes
+
+- feat: `nativeModulesUrl` of lynx-view is changed to `nativeModulesMap`, and the usage is completely aligned with `napiModulesMap`. ([#220](https://github.com/lynx-family/lynx-stack/pull/220))
+
+  "warning: This is a breaking change."
+
+  `nativeModulesMap` will be a map: key is module-name, value should be a esm url which export default a
+  function with two parameters(you never need to use `this`):
+
+  - `NativeModules`: oriented `NativeModules`, which you can use to call
+    other Native-Modules.
+
+  - `NativeModulesCall`: trigger `onNativeModulesCall`, same as the deprecated `this.nativeModulesCall`.
+
+  example:
+
+  ```js
+  const nativeModulesMap = {
+    CustomModule: URL.createObjectURL(
+      new Blob(
+        [
+          `export default function(NativeModules, NativeModulesCall) {
+      return {
+        async getColor(data, callback) {
+          const color = await NativeModulesCall('getColor', data);
+          callback(color);
+        },
+      }
+    };`,
+        ],
+        { type: 'text/javascript' },
+      ),
+    ),
+  };
+  lynxView.nativeModulesMap = nativeModulesMap;
+  ```
+
+  In addition, we will use Promise.all to load `nativeModules`, which will optimize performance in the case of multiple modules.
+
+- refractor: remove entryId concept ([#217](https://github.com/lynx-family/lynx-stack/pull/217))
+
+  After the PR #198
+  All contents are isolated by a shadowroot.
+  Therefore we don't need to add the entryId selector to avoid the lynx-view's style taking effect on the whole page.
+
+### Patch Changes
+
+- refactor: remove customelement defined detecting logic ([#247](https://github.com/lynx-family/lynx-stack/pull/247))
+
+  Before this commit, for those element with tag without `-`, we always try to detect if the `x-${tagName}` is defined.
+
+  After this commit, we pre-define a map(could be override by the `overrideLynxTagToHTMLTagMap`) to make that transformation for tag name.
+
+  This change is a path to SSR and the MTS support.
+
+- Updated dependencies [[`5b5e090`](https://github.com/lynx-family/lynx-stack/commit/5b5e090fdf0e896f1c38a49bf3ed9889117c4fb8), [`b844e75`](https://github.com/lynx-family/lynx-stack/commit/b844e751f566d924256365d37aec4c86c520ec00), [`53230f0`](https://github.com/lynx-family/lynx-stack/commit/53230f012216f3a627853e11d544e4be175c5b9b), [`6f16827`](https://github.com/lynx-family/lynx-stack/commit/6f16827d1f4d7364870d354fc805a8868c110f1e), [`d2d55ef`](https://github.com/lynx-family/lynx-stack/commit/d2d55ef9fe438c35921d9db0daa40d5228822ecc)]:
+  - @lynx-js/web-constants@0.9.0
+  - @lynx-js/web-mainthread-apis@0.9.0
+  - @lynx-js/web-worker-rpc@0.9.0
+
 ## 0.8.0
 
 ### Minor Changes

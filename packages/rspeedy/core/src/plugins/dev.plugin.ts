@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { createRequire } from 'node:module'
+import path from 'node:path'
 
 import { logger } from '@rsbuild/core'
 import type { RsbuildConfig, RsbuildPlugin } from '@rsbuild/core'
@@ -89,6 +90,10 @@ export function pluginDev(
           return
         }
         const rsbuildPath = require.resolve('@rsbuild/core')
+        const rspeedyDir = path.dirname(
+          require.resolve('@lynx-js/rspeedy/package.json'),
+        )
+
         // dprint-ignore
         chain
           .resolve
@@ -111,7 +116,7 @@ export function pluginDev(
                   hostname
                 }&port=${
                   api.context.devServer?.port
-                }&pathname=/rsbuild-hmr&hot=true&live-reload=true&protocol=ws`
+                }&pathname=/rsbuild-hmr&hot=${options?.hmr ?? true}&live-reload=${options?.liveReload ?? true}&protocol=ws`
               )
               .set(
                 '@rspack/core/hot/dev-server',
@@ -128,7 +133,15 @@ export function pluginDev(
                   options?.client?.websocketTransport ?? require.resolve('@lynx-js/websocket'),
                   'default',
                 ],
-                __webpack_dev_server_client__: [require.resolve('../../client/hmr/WebSocketClient.js'), 'default'],
+                __webpack_dev_server_client__: [
+                  require.resolve(
+                    './client/hmr/WebSocketClient.js',
+                    {
+                      paths: [rspeedyDir],
+                    },
+                  ),
+                  'default'
+                ],
               }
             ])
           .end()
@@ -154,7 +167,7 @@ export async function findIp(
 
   let host: string | undefined
 
-  Object.values(os.networkInterfaces())
+  const networks = Object.values(os.networkInterfaces())
     .flatMap((networks) => networks ?? [])
     .filter((network) => {
       if (!network || !network.address) {
@@ -179,12 +192,16 @@ export async function findIp(
 
       return network.address
     })
-    .forEach((network) => {
-      host = network.address
-      if (host.includes(':')) {
-        host = `[${host}]`
-      }
-    })
+
+  if (networks.length > 0) {
+    // Take the first network found
+    // See: https://github.com/webpack/webpack-dev-server/pull/5411/
+    host = networks[0]!.address
+
+    if (host.includes(':')) {
+      host = `[${host}]`
+    }
+  }
 
   if (!host) {
     throw new Error(`No valid IP found`)

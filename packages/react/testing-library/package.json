@@ -1,0 +1,19 @@
+{
+  "name": "@lynx-js/react-lynx-testing-library",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "api-extractor": "api-extractor run --verbose",
+    "build": "rslib build",
+    "dev": "rslib build --watch",
+    "test": "vitest",
+    "test:ui": "vitest --ui"
+  },
+  "devDependencies": {
+    "@lynx-js/react": "workspace:*",
+    "@lynx-js/test-environment": "workspace:*",
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/jest-dom": "^6.6.3"
+  }
+}

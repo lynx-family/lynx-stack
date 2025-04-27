@@ -9,7 +9,10 @@
  */
 
 export { ReactWebpackPlugin } from './ReactWebpackPlugin.js';
-export type { ReactWebpackPluginOptions } from './ReactWebpackPlugin.js';
+export type {
+  ReactWebpackPluginOptions,
+  ExtractStrConfig,
+} from './ReactWebpackPlugin.js';
 
 export { LAYERS } from './layer.js';
 

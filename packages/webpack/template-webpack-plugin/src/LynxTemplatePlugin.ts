@@ -435,11 +435,12 @@ export class LynxTemplatePlugin {
   static convertCSSChunksToMap(
     cssChunks: string[],
     plugins: CSS.Plugin[],
+    enableCSSSelector: boolean,
   ): {
     cssMap: Record<string, CSS.LynxStyleNode[]>;
     cssSource: Record<string, string>;
   } {
-    return cssChunksToMap(cssChunks, plugins);
+    return cssChunksToMap(cssChunks, plugins, enableCSSSelector);
   }
 
   /**
@@ -522,7 +523,7 @@ class LynxTemplatePluginImpl {
                  * and source-map is generated
                  */
                 compiler.webpack.Compilation
-                  .PROCESS_ASSETS_STAGE_OPTIMIZE_INLINE,
+                  .PROCESS_ASSETS_STAGE_OPTIMIZE_HASH,
             },
             () => {
               return this.#generateTemplate(
@@ -571,9 +572,10 @@ class LynxTemplatePluginImpl {
           /**
            * Generate the html after minification and dev tooling is done
            * and source-map is generated
+           * and real content hash is generated
            */
           compiler.webpack.Compilation
-            .PROCESS_ASSETS_STAGE_OPTIMIZE_INLINE,
+            .PROCESS_ASSETS_STAGE_OPTIMIZE_HASH,
       }, async () => {
         await this.#generateAsyncTemplate(compilation);
       });
@@ -641,14 +643,12 @@ class LynxTemplatePluginImpl {
       return asyncChunkGroups;
     }
 
+    const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(compilation);
+
     asyncChunkGroups = groupBy(
       compilation.chunkGroups
         .filter(cg => !cg.isInitial()),
-      (cg) =>
-        cg.origins
-          .sort((a, b) => a.request.localeCompare(b.request))
-          .map(({ request }) => request)
-          .join('|'),
+      cg => hooks.asyncChunkName.call(cg.name)!,
     );
 
     LynxTemplatePluginImpl.#asyncChunkGroups.set(compilation, asyncChunkGroups);
@@ -762,6 +762,7 @@ class LynxTemplatePluginImpl {
         .filter((v): v is Asset => !!v)
         .map(asset => asset.source.source().toString()),
       cssPlugins,
+      enableCSSSelector,
     );
     const encodeRawData: EncodeRawData = {
       compilerOptions: {

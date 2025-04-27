@@ -26,16 +26,17 @@ use std::vec;
 
 use napi::{bindgen_prelude::AsyncTask, Either, Env, Task};
 
+use rustc_hash::FxBuildHasher;
+
 use swc_core::{
+  atoms::Atom,
   base::{
     config::{GlobalPassOption, IsModule, SourceMapsConfig},
     Compiler, PrintArgs,
   },
   common::{
-    chain,
-    collections::ARandomState,
     comments::SingleThreadedComments,
-    errors::{DiagnosticBuilder, Emitter, Handler},
+    errors::{DiagnosticBuilder, Emitter, Handler, HANDLER},
     pass::Optional,
     sync::Lrc,
     FileName, FilePathMapping, Mark, SourceMap, GLOBALS,
@@ -47,13 +48,14 @@ use swc_core::{
     transforms::{
       base::{
         fixer::fixer,
+        helpers,
         hygiene::{hygiene_with_config, Config},
         resolver,
       },
       optimization::{simplifier, simplify},
       react, typescript,
     },
-    visit::{as_folder, FoldWith},
+    visit::visit_mut_pass,
   },
 };
 
@@ -386,10 +388,10 @@ fn transform_react_lynx_inner(
 
     let directive_dce_plugin = match options.directive_dce {
       Either::A(config) => Optional::new(
-        as_folder(DirectiveDCEVisitor::new(Default::default())),
+        visit_mut_pass(DirectiveDCEVisitor::new(Default::default())),
         config,
       ),
-      Either::B(config) => Optional::new(as_folder(DirectiveDCEVisitor::new(config)), true),
+      Either::B(config) => Optional::new(visit_mut_pass(DirectiveDCEVisitor::new(config)), true),
     };
 
     let define_dce_plugin = {
@@ -397,7 +399,7 @@ fn transform_react_lynx_inner(
         vars: match &options.define_dce {
           Either::A(_) => Default::default(),
           Either::B(config) => {
-            let mut map = indexmap::IndexMap::<_, _, ARandomState>::default();
+            let mut map = indexmap::IndexMap::<_, _, FxBuildHasher>::default();
             for (key, value) in &config.define {
               map.insert(key.as_str().into(), value.as_str().into());
             }
@@ -416,14 +418,14 @@ fn transform_react_lynx_inner(
 
     let css_scope_plugin = match options.css_scope {
       Either::A(enabled) => Optional::new(
-        as_folder(CSSScopeVisitor::new(
+        visit_mut_pass(CSSScopeVisitor::new(
           CSSScopeVisitorConfig::default(),
           Some(&comments),
         )),
         enabled,
       ),
       Either::B(config) => Optional::new(
-        as_folder(CSSScopeVisitor::new(config, Some(&comments))),
+        visit_mut_pass(CSSScopeVisitor::new(config, Some(&comments))),
         true,
       ),
     };
@@ -446,7 +448,10 @@ fn transform_react_lynx_inner(
         react::Options {
           next: Some(false),
           runtime: Some(react::Runtime::Automatic),
-          import_source: snapshot_plugin_config.jsx_import_source.clone(),
+          import_source: snapshot_plugin_config
+            .jsx_import_source
+            .clone()
+            .map(|s| Atom::from(s)),
           pragma: None,
           pragma_frag: None,
           // We may want `main-thread:foo={fooMainThreadFunc}` to work
@@ -462,21 +467,23 @@ fn transform_react_lynx_inner(
     );
 
     let snapshot_plugin = Optional::new(
-      JSXTransformer::new(
-        snapshot_plugin_config,
-        cm.clone(),
-        Some(&comments),
-        top_level_mark,
-        unresolved_mark,
-        options.mode.unwrap_or(TransformMode::Production),
-      )
-      .with_content_hash(content_hash.clone()),
+      visit_mut_pass(
+        JSXTransformer::new(
+          snapshot_plugin_config,
+          cm.clone(),
+          Some(&comments),
+          top_level_mark,
+          unresolved_mark,
+          options.mode.unwrap_or(TransformMode::Production),
+        )
+        .with_content_hash(content_hash.clone()),
+      ),
       enabled,
     );
 
     let shake_plugin = match options.shake.clone() {
-      Either::A(config) => Optional::new(as_folder(ShakeVisitor::default()), config),
-      Either::B(config) => Optional::new(as_folder(ShakeVisitor::new(config)), true),
+      Either::A(config) => Optional::new(visit_mut_pass(ShakeVisitor::default()), config),
+      Either::B(config) => Optional::new(visit_mut_pass(ShakeVisitor::new(config)), true),
     };
 
     let simplify_pass = simplifier(
@@ -492,20 +499,21 @@ fn transform_react_lynx_inner(
 
     let compat_plugin = match options.compat.clone() {
       Either::A(config) => Optional::new(
-        as_folder(CompatVisitor::new(
+        visit_mut_pass(CompatVisitor::new(
           CompatVisitorConfig::default(),
           Some(&comments),
         )),
         config,
       ),
-      Either::B(config) => {
-        Optional::new(as_folder(CompatVisitor::new(config, Some(&comments))), true)
-      }
+      Either::B(config) => Optional::new(
+        visit_mut_pass(CompatVisitor::new(config, Some(&comments))),
+        true,
+      ),
     };
 
     let compat_post_plugin = match options.compat {
       Either::A(config) => Optional::new(
-        as_folder(CompatPostVisitor::new(
+        visit_mut_pass(CompatPostVisitor::new(
           Default::default(),
           unresolved_mark,
           top_level_mark,
@@ -513,7 +521,7 @@ fn transform_react_lynx_inner(
         config,
       ),
       Either::B(config) => Optional::new(
-        as_folder(CompatPostVisitor::new(
+        visit_mut_pass(CompatPostVisitor::new(
           config,
           unresolved_mark,
           top_level_mark,
@@ -524,25 +532,25 @@ fn transform_react_lynx_inner(
 
     let refresh_plugin = match options.refresh {
       Either::A(config) => Optional::new(
-        as_folder(RefreshVisitor::new(
+        visit_mut_pass(RefreshVisitor::new(
           RefreshVisitorConfig::default(),
           content_hash.clone(),
         )),
         config,
       ),
       Either::B(config) => Optional::new(
-        as_folder(RefreshVisitor::new(config, content_hash.clone())),
+        visit_mut_pass(RefreshVisitor::new(config, content_hash.clone())),
         true,
       ),
     };
 
     let worklet_plugin = match options.worklet {
       Either::A(config) => Optional::new(
-        as_folder(WorkletVisitor::default().with_content_hash(content_hash)),
+        visit_mut_pass(WorkletVisitor::default().with_content_hash(content_hash)),
         config,
       ),
       Either::B(config) => Optional::new(
-        as_folder(
+        visit_mut_pass(
           WorkletVisitor::new(options.mode.unwrap_or(TransformMode::Production), config)
             .with_content_hash(content_hash),
         ),
@@ -552,21 +560,21 @@ fn transform_react_lynx_inner(
 
     let dynamic_import_plugin = match options.dynamic_import.unwrap_or(Either::A(true)) {
       Either::A(config) => Optional::new(
-        as_folder(DynamicImportVisitor::new(
+        visit_mut_pass(DynamicImportVisitor::new(
           Default::default(),
           Some(&comments),
         )),
         config,
       ),
       Either::B(config) => Optional::new(
-        as_folder(DynamicImportVisitor::new(config, Some(&comments))),
+        visit_mut_pass(DynamicImportVisitor::new(config, Some(&comments))),
         true,
       ),
     };
 
     let inject_plugin = match options.inject.unwrap_or(Either::A(false)) {
       Either::A(config) => Optional::new(
-        as_folder(InjectVisitor::new(
+        visit_mut_pass(InjectVisitor::new(
           Default::default(),
           unresolved_mark,
           top_level_mark,
@@ -574,12 +582,13 @@ fn transform_react_lynx_inner(
         config,
       ),
       Either::B(config) => Optional::new(
-        as_folder(InjectVisitor::new(config, unresolved_mark, top_level_mark)),
+        visit_mut_pass(InjectVisitor::new(config, unresolved_mark, top_level_mark)),
         true,
       ),
     };
 
-    let pass = chain!(
+    let pass = (
+      &mut fixer(Some(&comments)),
       resolver(unresolved_mark, top_level_mark, true),
       typescript::typescript(
         typescript::Config {
@@ -588,7 +597,7 @@ fn transform_react_lynx_inner(
           ..Default::default()
         },
         unresolved_mark,
-        top_level_mark
+        top_level_mark,
       ),
       dynamic_import_plugin,
       refresh_plugin,
@@ -599,22 +608,25 @@ fn transform_react_lynx_inner(
       directive_dce_plugin,
       define_dce_plugin,
       simplify_pass_1, // do simplify after DCE above to make shake below works better
-      shake_plugin,
-      simplify_pass,
-      react_transformer,
-      // TODO(hongzhiyuan.hzy): if `ident` we added above is correctly marked, this pass will be unnecessary
-      resolver(unresolved_mark, top_level_mark, true),
-      compat_post_plugin,
-      inject_plugin,
-      hygiene_with_config(Config {
-        top_level_mark,
-        ..Default::default()
-      })
+      (
+        shake_plugin,
+        simplify_pass,
+        react_transformer,
+        // TODO(hongzhiyuan.hzy): if `ident` we added above is correctly marked, this pass will be unnecessary
+        resolver(unresolved_mark, top_level_mark, true),
+        compat_post_plugin,
+        inject_plugin,
+        hygiene_with_config(Config {
+          top_level_mark,
+          ..Default::default()
+        }),
+        &mut fixer(Some(&comments)),
+      ),
     );
 
-    let program = c
-      .transform(&handler, program, true, pass)
-      .fold_with(&mut fixer(Some(&comments)));
+    let program = helpers::HELPERS.set(&helpers::Helpers::new(true), || {
+      HANDLER.set(&handler, || program.apply(pass))
+    });
 
     let result = c.print(
       &program,

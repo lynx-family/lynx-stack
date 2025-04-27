@@ -10,7 +10,7 @@ const __dirname = path.dirname(__filename);
 const caseName = path.basename(__dirname);
 
 const root = path.join(__dirname, '..', '..', '..', 'dist', caseName);
-const commonConfigResult = commonConfig();
+const commonConfigResult = commonConfig({ firstScreenSyncTiming: 'jsReady' });
 commonConfigResult.output!.distPath = { root };
 commonConfigResult.output!.assetPrefix += `/${caseName}`;
 export default defineConfig({
@@ -22,8 +22,11 @@ export default defineConfig({
   },
   performance: {
     chunkSplit: {
-      // Rspack 1.2.8 introduced a bug that causes the split-by-experience strategy to fail.
-      // strategy: 'split-by-experience',
+      strategy: 'split-by-experience',
+      override: {
+        // See: https://github.com/web-infra-dev/rspack/issues/9812
+        filename: '[name].[contenthash:8].js',
+      },
     },
   },
 });

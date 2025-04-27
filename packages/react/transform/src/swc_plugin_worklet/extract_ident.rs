@@ -2,10 +2,10 @@ use crate::swc_plugin_worklet::decl_collect::{
   collect_current_scope_decls, collect_inner_scope_decls,
 };
 use crate::swc_plugin_worklet::globals::{DEFAULT_GLOBALS, LYNX_GLOBALS};
+use rustc_hash::FxHashSet;
 use std::cmp::max;
 use std::mem::swap;
 use std::ops::Deref;
-use swc_core::common::collections::AHashSet;
 use swc_core::common::util::take::Take;
 use swc_core::common::{EqIgnoreSpan, DUMMY_SP};
 use swc_core::ecma::ast::*;
@@ -18,7 +18,7 @@ pub struct ExtractingIdentsCollectorConfig {
 }
 
 struct ScopeEnv {
-  ids_declared_locally: AHashSet<Id>,
+  ids_declared_locally: FxHashSet<Id>,
   is_inner_fn_scope: bool,
   is_worklet_fn_scope: bool,
 }
@@ -56,7 +56,7 @@ impl ExtractingIdentsCollector {
       next_block_decls_collected: false,
       scope_env: vec![ScopeEnv {
         is_worklet_fn_scope: true,
-        ids_declared_locally: AHashSet::default(),
+        ids_declared_locally: FxHashSet::default(),
         is_inner_fn_scope: false,
       }],
       member_expr_depth: 0,
@@ -222,7 +222,7 @@ impl ExtractingIdentsCollector {
       })
   }
 
-  fn push_fn_scope(&mut self, ids_declared_in_scope: AHashSet<Id>) {
+  fn push_fn_scope(&mut self, ids_declared_in_scope: FxHashSet<Id>) {
     let last_scope = self.scope_env.last().unwrap();
     self.scope_env.push(ScopeEnv {
       is_worklet_fn_scope: false,
@@ -231,7 +231,7 @@ impl ExtractingIdentsCollector {
     });
   }
 
-  fn push_block_scope(&mut self, ids_declared_in_scope: AHashSet<Id>) {
+  fn push_block_scope(&mut self, ids_declared_in_scope: FxHashSet<Id>) {
     let last_scope = self.scope_env.last().unwrap();
     self.scope_env.push(ScopeEnv {
       is_worklet_fn_scope: false,

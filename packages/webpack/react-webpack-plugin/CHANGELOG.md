@@ -1,5 +1,34 @@
 # @lynx-js/react-webpack-plugin
 
+## 0.6.11
+
+### Patch Changes
+
+- feat: fully support MTS ([#569](https://github.com/lynx-family/lynx-stack/pull/569))
+
+  Now use support the following usage
+
+  - mainthread event
+  - mainthread ref
+  - runOnMainThread/runOnBackground
+  - ref.current.xx
+
+## 0.6.10
+
+### Patch Changes
+
+- feat: add extractStr option to pluginReactLynx ([#391](https://github.com/lynx-family/lynx-stack/pull/391))
+
+- Fix issue with lazy loading of bundles when source maps are enabled. ([#380](https://github.com/lynx-family/lynx-stack/pull/380))
+
+- Fix issue where loading a lazy bundle fails if it does not return a webpack chunk. ([#365](https://github.com/lynx-family/lynx-stack/pull/365))
+
+## 0.6.9
+
+### Patch Changes
+
+- Support `@lynx-js/react` v0.106.0. ([#239](https://github.com/lynx-family/lynx-stack/pull/239))
+
 ## 0.6.8
 
 ### Patch Changes

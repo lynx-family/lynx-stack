@@ -9,16 +9,12 @@ import type {
 } from './types/EventType.js';
 import type { Cloneable, CloneableObject } from './types/Cloneable.js';
 import type { MainThreadStartConfigs } from './types/MainThreadStartConfigs.js';
-import type { LynxLifecycleEvent } from './types/LynxLifecycleEvent.js';
-import type {
-  ElementOperation,
-  FlushElementTreeOptions,
-} from './types/ElementOperation.js';
-import type { PageConfig } from './types/PageConfig.js';
 import type { IdentifierType, InvokeCallbackRes } from './types/NativeApp.js';
 import type { LynxTemplate } from './types/LynxModule.js';
 import type { NapiModulesMap } from './types/NapiModules.js';
 import type { NativeModulesMap } from './types/NativeModules.js';
+import type { ElementOperation } from '@lynx-js/offscreen-document';
+import type { BrowserConfig } from './types/PageConfig.js';
 
 export const postExposureEndpoint = createRpcEndpoint<
   [{ exposures: ExposureWorkerEvent[]; disExposures: ExposureWorkerEvent[] }],
@@ -30,7 +26,7 @@ export const postExposureEndpoint = createRpcEndpoint<
 );
 
 export const publicComponentEventEndpoint = createRpcEndpoint<
-  [string, string, LynxCrossThreadEvent],
+  [componentId: string, hname: string, LynxCrossThreadEvent],
   void
 >('publicComponentEvent', false, false);
 
@@ -39,16 +35,21 @@ export const publishEventEndpoint = createRpcEndpoint<
   void
 >('publishEvent', false, false);
 
-export const postMainThreadEvent = createRpcEndpoint<
-  [LynxCrossThreadEvent],
+export const postOffscreenEventEndpoint = createRpcEndpoint<
+  [
+    eventType: string,
+    targetUniqueId: number,
+    bubbles: boolean,
+    Parameters<typeof structuredClone>[0],
+  ],
   void
->('postMainThreadEvent', false, false);
+>('postOffscreenEventEndpoint', false, false);
 
-export const switchExposureService = createRpcEndpoint<
+export const switchExposureServiceEndpoint = createRpcEndpoint<
   [boolean, boolean],
   void
 >(
-  '__switchExposureService',
+  'switchExposureServiceEndpoint',
   false,
   false,
 );
@@ -73,31 +74,6 @@ export const disposeEndpoint = createRpcEndpoint<
   void
 >('dispose', false, true);
 
-export const postTimingResult = createRpcEndpoint<
-  [
-    pipelineId: string | undefined,
-    updateTimingStamps: Record<string, number>,
-    timingFlags: string[],
-    setupTimingStamps: Record<string, number> | undefined,
-  ],
-  void
->('postTimingResult', false, false);
-
-export const uiThreadFpReadyEndpoint = createRpcEndpoint<[], void>(
-  'uiThreadFpReady',
-  false,
-  false,
-);
-
-export const onLifecycleEventEndpoint = createRpcEndpoint<
-  [LynxLifecycleEvent],
-  void
->(
-  '__OnLifecycleEvent',
-  false,
-  false,
-);
-
 export const BackgroundThreadStartEndpoint = createRpcEndpoint<[
   {
     initData: unknown;
@@ -107,41 +83,24 @@ export const BackgroundThreadStartEndpoint = createRpcEndpoint<[
     customSections: Record<string, Cloneable>;
     nativeModulesMap: NativeModulesMap;
     napiModulesMap: NapiModulesMap;
+    browserConfig: BrowserConfig;
   },
 ], void>('start', false, true);
 
 /**
- * threadLabel, Error message, info
+ * Error message, info
  */
 export const reportErrorEndpoint = createRpcEndpoint<
-  [string, string, unknown],
+  [string, unknown],
   void
->('reportError', false, true);
+>('reportError', false, false);
 
 export const flushElementTreeEndpoint = createRpcEndpoint<
   [
     operations: ElementOperation[],
-    FlushElementTreeOptions,
-    styleContent: string | undefined,
   ],
   void
 >('flushElementTree', false, true);
-
-export const mainThreadChunkReadyEndpoint = createRpcEndpoint<
-  [{
-    pageConfig: PageConfig;
-  }],
-  void
->('mainThreadChunkReady', false, false);
-
-export const postTimingInfoFromMainThread = createRpcEndpoint<
-  [
-    timingKey: string,
-    pipelineId: string | undefined,
-    timeStamp: number,
-  ],
-  void
->('postTimingInfoFromMainThread', false, false);
 
 export const callLepusMethodEndpoint = createRpcEndpoint<
   [name: string, data: unknown],
@@ -187,14 +146,22 @@ export const getCustomSectionsEndpoint = createRpcEndpoint<
   Cloneable
 >('getCustomSections', false, true);
 
-export const postTimingInfoFromBackgroundThread = createRpcEndpoint<
+export const markTimingEndpoint = createRpcEndpoint<
   [
     timingKey: string,
     pipelineId: string | undefined,
     timeStamp: number,
   ],
   void
->('postTimingInfoFromBackgroundThread', false, false);
+>('markTiming', false, false);
+
+export const postTimingFlagsEndpoint = createRpcEndpoint<
+  [
+    timingFlags: string[],
+    pipelineId: string | undefined,
+  ],
+  void
+>('postTimingFlags', false, false);
 
 export const triggerComponentEventEndpoint = createRpcEndpoint<
   [
@@ -216,3 +183,31 @@ export const selectComponentEndpoint = createRpcEndpoint<
   ],
   void
 >('__selectComponent', false, true);
+
+export const dispatchLynxViewEventEndpoint = createRpcEndpoint<
+  [
+    eventType: string,
+    detail: CloneableObject,
+  ],
+  void
+>('dispatchLynxViewEvent', false, false);
+
+export const dispatchNapiModuleEndpoint = createRpcEndpoint<
+  [data: Cloneable],
+  void
+>('dispatchNapiModule', false, false);
+export const dispatchCoreContextOnBackgroundEndpoint = createRpcEndpoint<
+  [{
+    type: string;
+    data: Cloneable;
+  }],
+  void
+>('dispatchCoreContextOnBackground', false, false);
+
+export const dispatchJSContextOnMainThreadEndpoint = createRpcEndpoint<
+  [{
+    type: string;
+    data: Cloneable;
+  }],
+  void
+>('dispatchJSContextOnMainThread', false, false);

@@ -5,10 +5,19 @@
 
 ## Asset Files
 - Bundle: rspack-bundle.js
+- Manifest: main.LAST_HASH.css.hot-update.json, size: 1082
 - Manifest: main.LAST_HASH.hot-update.json, size: 28
-- Update: main.LAST_HASH.hot-update.js, size: 1285
+- Update: main.LAST_HASH.hot-update.js, size: 1326
 
 ## Manifest
+
+### main.LAST_HASH.css.hot-update.json
+
+```json
+{"content":"eyJjb21waWxlck9wdGlvbnMiOnsiZW5hYmxlRmliZXJBcmNoIjp0cnVlLCJ1c2VMZXB1c05HIjp0cnVlLCJidW5kbGVNb2R1bGVNb2RlIjoiUmV0dXJuQnlGdW5jdGlvbiIsImVuYWJsZUNTU1NlbGVjdG9yIjp0cnVlLCJlbmFibGVDU1NJbnZhbGlkYXRpb24iOnRydWUsInRhcmdldFNka1ZlcnNpb24iOiIzLjIifSwic291cmNlQ29udGVudCI6eyJhcHBUeXBlIjoiY2FyZCIsImNvbmZpZyI6eyJsZXB1c1N0cmljdCI6dHJ1ZSwiZW5hYmxlUmVtb3ZlQ1NTU2NvcGUiOmZhbHNlfXXsImNzcyI6eyJjc3NNYXAiOnsiMCI6WXsidHlwZSI6IlN0eWxlUnVsZSIsInN0eWxlIjpbeyJuYW1lIjoiYXsb3IiLCJ2YWx1ZSI6IlwiYmx1ZVwiIiwia2V5TG9jIjp7ImxpbmUiOjEsImNvbHVtbiI6MjR9LCJ2YWxMb2MiOnsibGluZSI6MSwiYXsdW1uIjozMn19XSwic2VsZWN0b3JUZXh0Ijp7InZhbHVlIjoiLmNlWXRYYk9OMVpVYUJpelIiLCJsb2MiOnsibGluZSI6MSwiYXsdW1uIjoxOH19LCJ2YXJpYWJsZXMiOnt9fSx7InR5cGUiOiJTdHlsZVJ1bGUiLCJzdHlsZSI6WXsibmFtZSI6ImJhY2tncm91bmQtYXsb3IiLCJ2YWx1ZSI6ImJsYWNrIiwia2V5TG9jIjp7ImxpbmUiOjEsImNvbHVtbiI6NTl9LCJ2YWxMb2MiOnsibGluZSI6MSwiYXsdW1uIjo2Nn19XSwic2VsZWN0b3JUZXh0Ijp7InZhbHVlIjoiLm5vLWNoYW5nZSIsImxvYyI6eyJsaW5lIjoxLCJjb2x1bW4iOjQyfXXsInZhcmlhYmxlcyI6e319XXXsImNzc1NvdXJjZSI6eyIwIjoiL2Nzc0lkLzAuY3NzInXsImNvbnRlbnRNYXAiOnt9fX0=","deps":{"0":[]}}
+```
+
+
 
 ### main.LAST_HASH.hot-update.json
 
@@ -23,7 +32,7 @@
 ### main.LAST_HASH.hot-update.js
 
 #### Changed Modules
-- ./modules/export-default/file.module.css?abfa
+- ./modules/export-default/file.module.css
 
 #### Changed Runtime Modules
 - webpack/runtime/get_full_hash
@@ -33,17 +42,17 @@
 "use strict";
 exports.ids = ['main'];
 exports.modules = {
-"./modules/export-default/file.module.css?abfa": (function (module, __webpack_exports__, __webpack_require__) {
+"./modules/export-default/file.module.css": (function (module, __webpack_exports__, __webpack_require__) {
 __webpack_require__.r(__webpack_exports__);
 __webpack_require__.d(__webpack_exports__, {
-  "default": function() { return __WEBPACK_DEFAULT_EXPORT__; }
+  "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 });
 // extracted by mini-css-extract-plugin
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({"bar":"zJFwpKjDvYgnOH1TwP74"});
+/* ESM default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({"bar":"ceYtXbON1ZUaBizR"});
   if (true) {
     (function() {
-      var localsJsonString = "{/"bar/":/"zJFwpKjDvYgnOH1TwP74/"}";
-      var cssReload = __webpack_require__(/*! ../../../../runtime/hotModuleReplacement.cjs */ "../../runtime/hotModuleReplacement.cjs")(module.id, {}, "");
+      var localsJsonString = "{\"bar\":\"ceYtXbON1ZUaBizR\"}";
+      var cssReload = __webpack_require__("../../runtime/hotModuleReplacement.cjs")(module.id, {}, "");
       // only invalidate when locals change
       if (
         module.hot.data &&
@@ -67,9 +76,12 @@ __webpack_require__.d(__webpack_exports__, {
 exports.runtime = function(__webpack_require__) {
 // webpack/runtime/get_full_hash
 (() => {
-__webpack_require__.h = function () {
-	return "CURRENT_HASH";
-};
+__webpack_require__.h = () => ("CURRENT_HASH")
+})();
+// webpack/runtime/lynx css hot update
+(() => {
+
+__webpack_require__.cssHotUpdateList = [["main","main.LAST_HASH.css.hot-update.json"]];
 
 })();
 
@@ -95,7 +107,7 @@ check => prepare => dispose => apply => idle
 #### Outdated
 
 Outdated Modules:
-- ./modules/export-default/file.module.css?abfa
+- ./modules/export-default/file.module.css
 
 
 Outdated Dependencies:
@@ -106,9 +118,10 @@ Outdated Dependencies:
 #### Updated
 
 Updated Modules:
-- ./modules/export-default/file.module.css?abfa
+- ./modules/export-default/file.module.css
 
 Updated Runtime:
+- `__webpack_require__.cssHotUpdateList`
 - `__webpack_require__.h`
 
 
@@ -118,4 +131,4 @@ Accepted Callback:
 
 
 Disposed Callback:
-- ./modules/export-default/file.module.css?abfa
+- ./modules/export-default/file.module.css

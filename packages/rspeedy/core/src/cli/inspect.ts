@@ -10,6 +10,7 @@ import type { CommonOptions } from './commands.js'
 import { exit } from './exit.js'
 import { loadConfig } from '../config/loadConfig.js'
 import { createRspeedy } from '../create-rspeedy.js'
+import type { CreateRspeedyOptions } from '../create-rspeedy.js'
 
 export interface InspectOptions extends CommonOptions {
   mode?: 'production' | 'development' | undefined
@@ -28,7 +29,18 @@ export async function inspect(
       configPath: inspectOptions.config,
     })
 
-    const rspeedy = await createRspeedy({ cwd, rspeedyConfig })
+    const options: CreateRspeedyOptions = {
+      cwd,
+      rspeedyConfig,
+    }
+
+    if (inspectOptions.noEnv) {
+      options.loadEnv = false
+    } else if (inspectOptions.envMode) {
+      options.loadEnv = { mode: inspectOptions.envMode }
+    }
+
+    const rspeedy = await createRspeedy(options)
 
     await rspeedy.inspectConfig({
       mode: inspectOptions.mode

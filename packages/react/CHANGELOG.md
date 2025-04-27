@@ -1,5 +1,65 @@
 # @lynx-js/react
 
+## 0.106.5
+
+### Patch Changes
+
+- Fix `lynx.loadLazyBundle` is not a function ([#568](https://github.com/lynx-family/lynx-stack/pull/568))
+
+- fix: flushDelayedLifecycleEvents stack overflow error ([#540](https://github.com/lynx-family/lynx-stack/pull/540))
+
+## 0.106.4
+
+### Patch Changes
+
+- Disable MTS HMR functionality temporarily to address stability issues. This is a temporary fix while we work on a more robust solution. ([#512](https://github.com/lynx-family/lynx-stack/pull/512))
+
+## 0.106.3
+
+### Patch Changes
+
+- Do some global var initialize in hydrate, which fixes error like `cannot read property '-21' of undefined` and some style issue. ([#461](https://github.com/lynx-family/lynx-stack/pull/461))
+
+- fix: ensure ref lifecycle events run after firstScreen in the background thread ([#434](https://github.com/lynx-family/lynx-stack/pull/434))
+
+  This patch fixes an issue where ref lifecycle events were running before firstScreen events in the background thread async render mode, which could cause refs to be undefined when components try to access them.
+
+## 0.106.2
+
+### Patch Changes
+
+- fix: prevent multiple firstScreen events when reloading before `jsReady` ([#377](https://github.com/lynx-family/lynx-stack/pull/377))
+
+- Optimize the bundle size by eliminating unnecessary code when the lazy bundle is not utilized. ([#284](https://github.com/lynx-family/lynx-stack/pull/284))
+
+## 0.106.1
+
+### Patch Changes
+
+- Fix a stack underflow issue when running on PrimJS. ([#326](https://github.com/lynx-family/lynx-stack/pull/326))
+
+## 0.106.0
+
+### Minor Changes
+
+- Improved rendering performance by batching updates sent to the main thread in a single render pass. This optimization reduces redundant layout operations on the main thread, accelerates rendering, and prevents screen flickering. ([#239](https://github.com/lynx-family/lynx-stack/pull/239))
+
+  **BREAKING CHANGE**: This commit changes the behavior of Timing API. Previously, timing events were fired for each update individually. With the new batching mechanism, timing events related to the rendering pipeline will now be triggered once per render cycle rather than for each individual update, affecting applications that rely on the previous timing behavior.
+
+### Patch Changes
+
+- Add missing typing for `useErrorBoundary`. ([#263](https://github.com/lynx-family/lynx-stack/pull/263))
+
+  You can now use `useErrorBoundary` it in TypeScript like this:
+
+  ```tsx
+  import { useErrorBoundary } from '@lynx-js/react';
+  ```
+
+- Modified the format of data sent from background threads to the main thread. ([#207](https://github.com/lynx-family/lynx-stack/pull/207))
+
+- Support Lynx SSR. ([#60](https://github.com/lynx-family/lynx-stack/pull/60))
+
 ## 0.105.2
 
 ### Patch Changes

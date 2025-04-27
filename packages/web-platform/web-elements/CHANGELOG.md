@@ -1,5 +1,112 @@
 # @lynx-js/web-elements
 
+## 0.6.0
+
+### Minor Changes
+
+- fix: When list-type is not specified, it is treated as single formatting. ([#535](https://github.com/lynx-family/lynx-stack/pull/535))
+
+- feat: improve compatibility for chrome 108 & support linear-gradient for nested x-text ([#590](https://github.com/lynx-family/lynx-stack/pull/590))
+
+  **This is a breaking change**
+
+  - Please upgrade your `@lynx-js/web-elements` to >=0.6.0
+  - Please upgrade your `@lynx-js/web-core` to >=0.12.0
+  - The compiled lynx template json won't be impacted.
+
+  On chrome 108, the `-webkit-background-clip:text` cannot be computed by a `var(--css-var-value-text)`
+
+  Therefore we move the logic into style transformation logic.
+
+  Now the following status is supported
+
+  ```
+  <text style="color:linear-gradient()">
+    <text>
+    <text>
+  </text>
+  ```
+
+### Patch Changes
+
+- feat: fully support MTS ([#569](https://github.com/lynx-family/lynx-stack/pull/569))
+
+  Now use support the following usage
+
+  - mainthread event
+  - mainthread ref
+  - runOnMainThread/runOnBackground
+  - ref.current.xx
+
+- feat: support `layoutchange` event for x-overlay-ng ([#519](https://github.com/lynx-family/lynx-stack/pull/519))
+
+- fix: position:fixed not work in scroll-view ([#580](https://github.com/lynx-family/lynx-stack/pull/580))
+
+- fix: x-list may cause error: 'Resizeobserver loop completed with undelivered notifications'. ([#541](https://github.com/lynx-family/lynx-stack/pull/541))
+
+- fix: refactor foldview slot offset logic ([#575](https://github.com/lynx-family/lynx-stack/pull/575))
+
+- fix: improve x-foldview-ng ([#513](https://github.com/lynx-family/lynx-stack/pull/513))
+
+  - support fling for touch event driven scrolling
+  - allow the height of `x-foldview-slot-ng` + `x-foldview-toolbar-ng` > `x-foldview-ng`
+  - do not prevent horizontal gesture. After this commit we only allow one direction gesture for one touch (start -> end)
+
+- feat: add list with waterfall ([#331](https://github.com/lynx-family/lynx-stack/pull/331))
+
+## 0.5.4
+
+### Patch Changes
+
+- chore: bump the output target to es2024 ([#518](https://github.com/lynx-family/lynx-stack/pull/518))
+
+- fix: the `\n` character should create a new line ([#522](https://github.com/lynx-family/lynx-stack/pull/522))
+
+  add `white-space-collapse: preserve-breaks` to raw-text
+
+- fix: the `input` event of x-input with number type should have raw value ([#517](https://github.com/lynx-family/lynx-stack/pull/517))
+
+  For `type:=number` x-input with typed value "2."
+
+  Before this commit: the value is "2"
+
+  After this commit the value is "2."
+
+## 0.5.3
+
+### Patch Changes
+
+- feat: add `layoutchange` event support for x-view and x-text ([#408](https://github.com/lynx-family/lynx-stack/pull/408))
+
+## 0.5.2
+
+### Patch Changes
+
+- fix: When list with list-type: flow, scrolltoupper, scrolltolower were specified, there was a blank block. ([#379](https://github.com/lynx-family/lynx-stack/pull/379))
+
+- fix: do not show scroll bar ([#406](https://github.com/lynx-family/lynx-stack/pull/406))
+
+## 0.5.1
+
+### Patch Changes
+
+- Updated dependencies [[`082ad97`](https://github.com/lynx-family/lynx-stack/commit/082ad97510c212aa00a9395044bb6fc39a82940a)]:
+  - @lynx-js/web-elements-reactive@0.2.1
+
+## 0.5.0
+
+### Minor Changes
+
+- feat: 1. list adds support for the `sticky` attribute. Now sticky-offset, sticky-top, and sticky-bottom will only take effect when `sticky` is `true`. ([#257](https://github.com/lynx-family/lynx-stack/pull/257))
+
+  2. Added support for `list-main-axis-gap`, `list-cross-axis-gap`.
+
+- feat(web): The list element supports list-type with **flow**. ([#240](https://github.com/lynx-family/lynx-stack/pull/240))
+
+  It supports all attributes and events under single, and also provides `full-span`.
+
+  For detailed usage, please refer to the official website.
+
 ## 0.4.0
 
 ### Minor Changes

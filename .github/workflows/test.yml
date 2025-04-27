@@ -3,13 +3,13 @@ on:
   pull_request:
     branches:
       - main
+    paths-ignore:
+      - "**/*.md"
   merge_group:
     types: [checks_requested]
 permissions:
   repository-projects: read
   contents: read
-  actions: write
-  pull-requests: write
   statuses: read
 env:
   CI: 1
@@ -18,20 +18,57 @@ concurrency:
   group: ${{ github.event_name }}-${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
   cancel-in-progress: true
 jobs:
+  code-style-check:
+    runs-on: lynx-ubuntu-24.04-medium
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # We need full history for changeset status check
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install
+        run: |
+          npm install -g corepack@latest
+          corepack enable
+          pnpm install --frozen-lockfile
+      - name: Code Style Check
+        run: |
+          pnpm dprint check
+          pnpm biome check
+      - name: Spell Check
+        run: pnpm run spell
+      - name: API Check
+        run: pnpm turbo api-extractor
+      - name: Changeset Check
+        run: pnpm changeset status --since=origin/main
+
   build:
     uses: ./.github/workflows/workflow-build.yml
-    secrets: inherit
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+  benchmark:
+    needs: build
+    uses: ./.github/workflows/workflow-bench.yml
+  bundle-analysis:
+    needs: build
+    uses: ./.github/workflows/workflow-test.yml
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
-      runs-on: lynx-ubuntu-24.04-xlarge
+      runs-on: lynx-ubuntu-24.04-medium
+      run: |
+        pnpm --filter @lynx-js/web-explorer run build
+        pnpm --filter @lynx-js/example-react run build
   test-rspeedy:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
-    secrets: inherit
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
       runs-on: lynx-ubuntu-24.04-medium
       run: >
-        sudo apt-get update &&
-        sudo apt-get install -y iproute2 &&
         pnpm run test
         --project rspeedy
         --project upgrade-rspeedy
@@ -42,13 +79,16 @@ jobs:
         --outputFile=test-report.junit.xml
         --test-timeout=50000
         --coverage
+        --coverage.reporter='json'
+        --coverage.reporter='text'
         --no-cache
         --logHeapUsage
         --silent
   test-react:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
-    secrets: inherit
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
       runs-on: lynx-ubuntu-24.04-medium
       run: >
@@ -57,6 +97,12 @@ jobs:
         --filter @lynx-js/react-worklet-runtime
         --filter @lynx-js/react-transform
         run test
+        --reporter=github-actions
+        --reporter=dot
+        --reporter=junit
+        --outputFile=test-report.junit.xml
+        --coverage.reporter='json'
+        --coverage.reporter='text'
         --test-timeout=50000
         --no-cache
         --logHeapUsage
@@ -64,7 +110,8 @@ jobs:
   test-plugins:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
-    secrets: inherit
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
       runs-on: lynx-ubuntu-24.04-medium
       run: >
@@ -76,22 +123,182 @@ jobs:
         --reporter=junit
         --outputFile=test-report.junit.xml
         --coverage
+        --coverage.reporter='json'
+        --coverage.reporter='text'
         --no-cache
         --logHeapUsage
         --silent
+  test-publish:
+    needs: build
+    uses: ./.github/workflows/workflow-test.yml
+    permissions:
+      contents: read
+      pull-requests: read
+      statuses: read
+    with:
+      runs-on: lynx-ubuntu-24.04-medium
+      run: |
+        pnpm dlx @pnpm/registry-mock prepare
+        pnpm dlx @pnpm/registry-mock &
+        printf '\n//localhost:4873/:_authToken="this-is-a-fake-token"\n' >> ~/.npmrc
+        pnpm changeset version --snapshot regression
+        node packages/tools/canary-release/snapshot.js
+        pnpm --recursive publish --no-git-checks --access public --registry=http://localhost:4873
+        cd `mktemp -d`
+        npx --registry http://localhost:4873 create-rspeedy-canary@latest --template react --dir create-rspeedy-regression
+        cd create-rspeedy-regression
+        pnpm install --registry=http://localhost:4873
+        pnpm tsc --noEmit
+        pnpm run build
+        pnpm tsc --noEmit
+        npx --registry http://localhost:4873 create-rspeedy-canary@latest --template react-vitest-rltl --dir create-rspeedy-regression-vitest-rltl
+        cd create-rspeedy-regression-vitest-rltl
+        pnpm install --registry=http://localhost:4873
+        pnpm tsc --noEmit
+        pnpm run build
+        pnpm tsc --noEmit
+        pnpm run test
+  test-tools:
+    needs: build
+    uses: ./.github/workflows/workflow-test.yml
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    with:
+      runs-on: lynx-ubuntu-24.04-medium
+      run: >
+        pnpm run test
+        --project 'tools/*'
+        --test-timeout=50000
+        --reporter=github-actions
+        --reporter=dot
+        --reporter=junit
+        --outputFile=test-report.junit.xml
+        --coverage
+        --coverage.reporter='json'
+        --coverage.reporter='text'
+        --no-cache
+        --logHeapUsage
+        --silent
+  test-testing-library:
+    needs: build
+    uses: ./.github/workflows/workflow-test.yml
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    with:
+      runs-on: lynx-ubuntu-24.04-medium
+      run: >
+        pnpm run test
+        --project 'react/testing-library'
+        --project 'testing-library/*'
+        --test-timeout=50000
+        --reporter=github-actions
+        --reporter=dot
+        --reporter=junit
+        --outputFile=test-report.junit.xml
+        --coverage
+        --no-cache
+        --logHeapUsage
+        --silent
+  test-type:
+    needs: build
+    uses: ./.github/workflows/workflow-test.yml
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    with:
+      runs-on: lynx-ubuntu-24.04-medium
+      run: pnpm -r run test:type
   playwright-linux:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
-    secrets: inherit
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    with:
+      runs-on: lynx-ubuntu-24.04-xlarge
+      is-web: true
+      codecov-flags: "e2e"
+      run: |
+        export NODE_OPTIONS="--max-old-space-size=32768"
+        export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
+        pnpm --filter @lynx-js/web-tests run test --reporter='github,dot,junit,html'
+        pnpm --filter @lynx-js/web-tests run coverage:ci
+  playwright-linux-all-on-ui:
+    needs: build
+    uses: ./.github/workflows/workflow-test.yml
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    with:
+      runs-on: lynx-ubuntu-24.04-xlarge
+      is-web: true
+      codecov-flags: "e2e"
+      run: |
+        export NODE_OPTIONS="--max-old-space-size=32768"
+        export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
+        export ALL_ON_UI=true
+        pnpm --filter @lynx-js/web-tests run test --reporter='github,dot,junit,html'
+        pnpm --filter @lynx-js/web-tests run coverage:ci
+  lighthouse:
+    needs: build
+    uses: ./.github/workflows/workflow-test.yml
+    permissions:
+      contents: read
+      pull-requests: read
+      statuses: write
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
     with:
       runs-on: lynx-ubuntu-24.04-xlarge
       is-web: true
       run: |
         export NODE_OPTIONS="--max-old-space-size=32768"
-        pnpm --filter @lynx-js/web-tests run test:install
-        pnpm --filter @lynx-js/web-tests run test
+        pnpm --filter @lynx-js/web-tests run lh
   test-rust:
+    needs: build
     uses: ./.github/workflows/rust.yml
-    secrets: inherit
-    with:
-      runs-on: lynx-ubuntu-24.04-medium
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+  website:
+    needs: build
+    uses: ./.github/workflows/workflow-website.yml
+  zizmor:
+    runs-on: lynx-ubuntu-24.04-medium
+    permissions:
+      security-events: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install the latest version of uv
+        uses: astral-sh/setup-uv@v5
+      - name: Run zizmor 🌈
+        run: uvx zizmor --format=sarif . > results.sarif
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload SARIF file
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: results.sarif
+          category: zizmor
+  # Copied from https://github.com/swc-project/swc/blob/b192dc82e6a84bd30f159fb12ca8a216f41e8efb/.github/workflows/CI.yml#L491
+  done:
+    needs:
+      - code-style-check
+      - playwright-linux
+      - playwright-linux-all-on-ui
+      - test-plugins
+      - test-publish
+      - test-react
+      - test-rust
+      - test-rspeedy
+      - test-tools
+      - test-testing-library
+      - test-type
+      - website
+      - zizmor
+    if: always()
+    runs-on: lynx-ubuntu-24.04-medium
+    name: Done
+    steps:
+      - run: exit 1
+        if: ${{ always() && (contains(needs.*.result, 'failure') || contains(needs.*.result, 'skipped') || contains(needs.*.result, 'cancelled')) }}

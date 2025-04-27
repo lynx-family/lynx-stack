@@ -1,5 +1,110 @@
 # @lynx-js/web-mainthread-apis
 
+## 0.12.0
+
+### Patch Changes
+
+- feat: fully support MTS ([#569](https://github.com/lynx-family/lynx-stack/pull/569))
+
+  Now use support the following usage
+
+  - mainthread event
+  - mainthread ref
+  - runOnMainThread/runOnBackground
+  - ref.current.xx
+
+- feat: support mts event with target methods ([#564](https://github.com/lynx-family/lynx-stack/pull/564))
+
+  After this commit, developers are allowed to invoke `event.target.setStyleProperty` in mts handler
+
+- fix: crash on removing a id attribute ([#582](https://github.com/lynx-family/lynx-stack/pull/582))
+
+- Updated dependencies [[`f1ca29b`](https://github.com/lynx-family/lynx-stack/commit/f1ca29bd766377dd46583f15e1e75bca447699cd), [`7edf478`](https://github.com/lynx-family/lynx-stack/commit/7edf478410cb57eeedc18aac6f5d3950b16c7fa8)]:
+  - @lynx-js/web-constants@0.12.0
+  - @lynx-js/web-style-transformer@0.3.0
+
+## 0.11.0
+
+### Patch Changes
+
+- feat: support mts event handler (1/n) ([#495](https://github.com/lynx-family/lynx-stack/pull/495))
+
+  now the main-thread:bind handler could be invoked. The params of the handler will be implemented later.
+
+- Updated dependencies [[`ea42e62`](https://github.com/lynx-family/lynx-stack/commit/ea42e62fbcd5c743132c3e6e7c4851770742d544), [`a0f5ca4`](https://github.com/lynx-family/lynx-stack/commit/a0f5ca4ea0895ccbaa6aa63f449f53a677a1cf73)]:
+  - @lynx-js/web-constants@0.11.0
+
+## 0.10.1
+
+### Patch Changes
+
+- Updated dependencies [[`1af3b60`](https://github.com/lynx-family/lynx-stack/commit/1af3b6052ab27f98bf0e4d1b0ec9f7d9e88e0afc)]:
+  - @lynx-js/web-constants@0.10.1
+
+## 0.10.0
+
+### Minor Changes
+
+- feat: rewrite the main thread Element PAPIs ([#343](https://github.com/lynx-family/lynx-stack/pull/343))
+
+  In this commit we've rewritten the main thread apis.
+
+  The most highlighted change is that
+
+  - Before this commit we send events directly to bts
+  - After this change, we send events to mts then send them to bts with some data combined.
+
+### Patch Changes
+
+- feat(web): use pure DOM API to implement Element PAPIs ([#334](https://github.com/lynx-family/lynx-stack/pull/334))
+
+  1. rewrite all element PAPIs impl. Now we use DOM.
+  2. use our new package `@lynx-js/offscreen-document` to support the new Element PAPI implementation in a worker
+
+- fix: inline style will be removed for value number `0` ([#368](https://github.com/lynx-family/lynx-stack/pull/368))
+
+  the inline style value could be incorrectly removed for number value `0`;
+
+  For example, `flex-shrink:0` may be ignored.
+
+- fix: publicComponentEvent args order ([#401](https://github.com/lynx-family/lynx-stack/pull/401))
+
+- Updated dependencies [[`3a8dabd`](https://github.com/lynx-family/lynx-stack/commit/3a8dabd877084c15db1404c912dd8a19c7a0fc59), [`a521759`](https://github.com/lynx-family/lynx-stack/commit/a5217592f5aebea4b17860e729d523ecabb5f691), [`890c6c5`](https://github.com/lynx-family/lynx-stack/commit/890c6c51470c82104abb1049681f55e5d97cf9d6)]:
+  - @lynx-js/web-constants@0.10.0
+
+## 0.9.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-constants@0.9.1
+
+## 0.9.0
+
+### Minor Changes
+
+- refractor: remove entryId concept ([#217](https://github.com/lynx-family/lynx-stack/pull/217))
+
+  After the PR #198
+  All contents are isolated by a shadowroot.
+  Therefore we don't need to add the entryId selector to avoid the lynx-view's style taking effect on the whole page.
+
+### Patch Changes
+
+- refactor: clean the decodeOperations implementation ([#261](https://github.com/lynx-family/lynx-stack/pull/261))
+
+- refactor: remove customelement defined detecting logic ([#247](https://github.com/lynx-family/lynx-stack/pull/247))
+
+  Before this commit, for those element with tag without `-`, we always try to detect if the `x-${tagName}` is defined.
+
+  After this commit, we pre-define a map(could be override by the `overrideLynxTagToHTMLTagMap`) to make that transformation for tag name.
+
+  This change is a path to SSR and the MTS support.
+
+- Updated dependencies [[`5b5e090`](https://github.com/lynx-family/lynx-stack/commit/5b5e090fdf0e896f1c38a49bf3ed9889117c4fb8), [`f447811`](https://github.com/lynx-family/lynx-stack/commit/f4478112a08d3cf2d1483b87d591ea4e3b6cc2ea), [`b844e75`](https://github.com/lynx-family/lynx-stack/commit/b844e751f566d924256365d37aec4c86c520ec00), [`6f16827`](https://github.com/lynx-family/lynx-stack/commit/6f16827d1f4d7364870d354fc805a8868c110f1e), [`d2d55ef`](https://github.com/lynx-family/lynx-stack/commit/d2d55ef9fe438c35921d9db0daa40d5228822ecc)]:
+  - @lynx-js/web-constants@0.9.0
+  - @lynx-js/web-style-transformer@0.2.3
+
 ## 0.8.0
 
 ### Minor Changes

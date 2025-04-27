@@ -6,6 +6,7 @@ import path from 'node:path'
 
 import { createRsbuild } from '@rsbuild/core'
 import type {
+  CreateRsbuildOptions,
   InspectConfigOptions,
   InspectConfigResult,
   RsbuildConfig,
@@ -39,6 +40,21 @@ export interface CreateRspeedyOptions {
    * The config of Rspeedy.
    */
   rspeedyConfig?: Config
+  /**
+   * Rspeedy automatically loads the .env file by default, utilizing the [Rsbuild API](https://rsbuild.dev/api/javascript-api/core#load-env-variables).
+   * You can use the environment variables defined in the .env file within your code by accessing them via `import.meta.env.FOO` or `process.env.Foo`.
+   * @see https://rsbuild.dev/guide/advanced/env-vars#env-file
+   * @defaultValue true
+   */
+  loadEnv?: CreateRsbuildOptions['loadEnv']
+  /**
+   * Only build specified environments.
+   * For example, passing `['lynx']` will only build the `lynx` environment.
+   * If not specified or passing an empty array, all environments will be built.
+   * @see https://rsbuild.dev/guide/advanced/environments#build-specified-environment
+   * @defaultValue []
+   */
+  environment?: CreateRsbuildOptions['environment']
 }
 /**
  * The `createRspeedy` method can let you create a Rspeedy instance and you can customize the build or development process in Node.js Runtime.
@@ -60,14 +76,17 @@ export interface CreateRspeedyOptions {
  * @public
  */
 export async function createRspeedy(
-  { cwd = process.cwd(), rspeedyConfig = {} }: CreateRspeedyOptions,
+  { cwd = process.cwd(), rspeedyConfig = {}, loadEnv = true, environment = [] }:
+    CreateRspeedyOptions,
 ): Promise<RspeedyInstance> {
   const config = applyDefaultRspeedyConfig(rspeedyConfig)
 
   const [rspeedy, { applyDefaultPlugins }] = await Promise.all([
     createRsbuild({
       cwd,
+      loadEnv,
       rsbuildConfig: toRsbuildConfig(config) as RsbuildConfig,
+      environment,
     }),
     import('./plugins/index.js'),
   ])

@@ -217,7 +217,7 @@ mod tests {
   };
   use swc_core::{
     ecma::parser::Syntax,
-    ecma::visit::as_folder,
+    ecma::visit::visit_mut_pass,
     ecma::{parser::EsSyntax, transforms::testing::test},
   };
 
@@ -229,7 +229,7 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| as_folder(DirectiveDCEVisitor::new(DirectiveDCEVisitorConfig {
+    |_| visit_mut_pass(DirectiveDCEVisitor::new(DirectiveDCEVisitorConfig {
       target: TransformTarget::LEPUS,
     })),
     should_eliminate_js_only_but_keep_constructor,
@@ -249,7 +249,7 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| as_folder(DirectiveDCEVisitor::new(DirectiveDCEVisitorConfig {
+    |_| visit_mut_pass(DirectiveDCEVisitor::new(DirectiveDCEVisitorConfig {
       target: TransformTarget::LEPUS,
     })),
     should_eliminate_js_only_class_method,
@@ -273,7 +273,7 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| as_folder(DirectiveDCEVisitor::new(DirectiveDCEVisitorConfig {
+    |_| visit_mut_pass(DirectiveDCEVisitor::new(DirectiveDCEVisitorConfig {
       target: TransformTarget::LEPUS,
     })),
     should_eliminate_js_only_class_property,
@@ -297,7 +297,7 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| as_folder(DirectiveDCEVisitor::new(DirectiveDCEVisitorConfig {
+    |_| visit_mut_pass(DirectiveDCEVisitor::new(DirectiveDCEVisitorConfig {
       target: TransformTarget::LEPUS,
     })),
     should_eliminate_js_only_embedded,
@@ -320,7 +320,7 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| as_folder(DirectiveDCEVisitor::new(DirectiveDCEVisitorConfig {
+    |_| visit_mut_pass(DirectiveDCEVisitor::new(DirectiveDCEVisitorConfig {
       target: TransformTarget::MIXED,
     })),
     should_do_nothing_in_mixed_target,
@@ -340,7 +340,7 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| as_folder(DirectiveDCEVisitor::new(DirectiveDCEVisitorConfig {
+    |_| visit_mut_pass(DirectiveDCEVisitor::new(DirectiveDCEVisitorConfig {
       target: TransformTarget::MIXED,
     })),
     should_do_nothing_when_arrow_function_return_directive,
@@ -355,7 +355,7 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| as_folder(DirectiveDCEVisitor::new(DirectiveDCEVisitorConfig {
+    |_| visit_mut_pass(DirectiveDCEVisitor::new(DirectiveDCEVisitorConfig {
       target: TransformTarget::LEPUS,
     })),
     should_eliminate_native_modules_in_default_params,
@@ -373,7 +373,7 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| as_folder(DirectiveDCEVisitor::new(DirectiveDCEVisitorConfig {
+    |_| visit_mut_pass(DirectiveDCEVisitor::new(DirectiveDCEVisitorConfig {
       target: TransformTarget::LEPUS,
     })),
     should_eliminate_fn_body_in_component_props,
@@ -392,7 +392,7 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| as_folder(DirectiveDCEVisitor::new(DirectiveDCEVisitorConfig {
+    |_| visit_mut_pass(DirectiveDCEVisitor::new(DirectiveDCEVisitorConfig {
       target: TransformTarget::LEPUS,
     })),
     should_eliminate_fn_decl,

@@ -34,6 +34,10 @@ export default tseslint.config(
       '.changeset/*',
       '**/CHANGELOG.md',
       '**/etc/*.md',
+      'website/docs/en/api/**',
+      'website/docs/zh/api/**',
+      'website/docs/en/changelog/**',
+      'website/docs/zh/changelog/**',
 
       // Test snapshots
       '**/expected/**',
@@ -74,6 +78,11 @@ export default tseslint.config(
       // TODO: enable eslint for web-platform
       // web-platform
       'packages/web-platform/**',
+
+      // TODO: enable eslint for testing-library
+      // testing-library
+      'packages/testing-library/**',
+      'packages/react/testing-library/**',
     ],
   },
   js.configs.recommended,
@@ -81,6 +90,7 @@ export default tseslint.config(
     plugins: {
       headers,
     },
+    ignores: ['**/*.md/*'],
     rules: {
       'headers/header-format': [
         'error',

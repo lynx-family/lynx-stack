@@ -14,6 +14,7 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    if: github.repository == 'lynx-family/lynx-stack'
     steps:
       - uses: actions/checkout@v4
         with:
@@ -49,13 +50,18 @@ jobs:
       group: ${{ github.workflow }}
       cancel-in-progress: true
     uses: ./.github/workflows/workflow-build.yml
-    secrets: inherit
-    with:
-      runs-on: lynx-ubuntu-24.04-xlarge
+    if: github.repository == 'lynx-family/lynx-stack'
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+  benchmark:
+    needs: build-all
+    uses: ./.github/workflows/workflow-bench.yml
   coverage:
     needs: build-all
     uses: ./.github/workflows/workflow-test.yml
-    secrets: inherit
+    if: github.repository == 'lynx-family/lynx-stack'
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
       runs-on: lynx-ubuntu-24.04-medium
       run: >
@@ -68,9 +74,28 @@ jobs:
         --no-cache
         --logHeapUsage
         --silent
+  rust-coverage:
+    uses: ./.github/workflows/rust.yml
+    if: github.repository == 'lynx-family/lynx-stack'
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+  playwright-linux:
+    needs: build-all
+    uses: ./.github/workflows/workflow-test.yml
+    secrets: inherit
+    with:
+      runs-on: lynx-ubuntu-24.04-xlarge
+      is-web: true
+      codecov-flags: "e2e"
+      run: |
+        export NODE_OPTIONS="--max-old-space-size=32768"
+        export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
+        pnpm --filter @lynx-js/web-tests run test --reporter='github,dot,junit,html'
+        pnpm --filter @lynx-js/web-tests run coverage:ci
   publish:
     needs: build
     runs-on: ubuntu-latest
+    if: github.repository == 'lynx-family/lynx-stack'
     concurrency:
       group: ${{ github.workflow }}
       cancel-in-progress: false
@@ -119,6 +144,7 @@ jobs:
   canary-publish:
     needs: build
     runs-on: ubuntu-latest
+    if: github.repository == 'lynx-family/lynx-stack'
     environment: main branch
     permissions:
       contents: read
@@ -161,3 +187,25 @@ jobs:
           pnpm --recursive publish --no-git-checks --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+  website-build:
+    needs: build-all
+    if: github.repository == 'lynx-family/lynx-stack'
+    uses: ./.github/workflows/workflow-website.yml
+  website-deploy:
+    needs: website-build
+    if: github.repository == 'lynx-family/lynx-stack'
+    runs-on: ubuntu-latest
+    # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
+    permissions:
+      pages: write # to deploy to Pages
+      id-token: write # to verify the deployment originates from an appropriate source
+
+    # Deploy to the github-pages environment
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

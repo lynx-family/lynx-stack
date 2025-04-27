@@ -1,9 +1,9 @@
 on:
   workflow_call:
-    inputs:
-      runs-on:
+    secrets:
+      CODECOV_TOKEN:
         required: true
-        type: string
+
 env:
   CI: 1
   TURBO_TELEMETRY_DISABLED: 1
@@ -12,19 +12,30 @@ concurrency:
   cancel-in-progress: true
 jobs:
   test:
-    runs-on: ${{ inputs.runs-on }}
+    runs-on: lynx-ubuntu-24.04-xlarge
     steps:
       - uses: actions/checkout@v4
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           cache-key: test-${{ runner.os }}
-      - id: date
-        run: |
-          echo "month=$(date +%m)" >> $GITHUB_OUTPUT
-          echo "date=$(date +%d)" >> $GITHUB_OUTPUT
+      - name: Install llvm-cov and nextest
+        uses: taiki-e/install-action@f1390fd0d8205ae79e5e57b1d1e300dceeb4163e # v2
+        with:
+          tool: cargo-llvm-cov,cargo-nextest
       - name: Test
         run: |
-          cargo test
+          export CARGO_LLVM_COV_FLAGS_NO_RUNNER='--no-sparse'
+          cargo llvm-cov nextest --profile ci --config-file .cargo/nextest.toml --lcov --output-path lcov.info  --release
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+      - name: Upload test results to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/test-results-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: target/nextest/ci/test-report.junit.xml
 
   rustfmt:
     runs-on: lynx-ubuntu-24.04-medium

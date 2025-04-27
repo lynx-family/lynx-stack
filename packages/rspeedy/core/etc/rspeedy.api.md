@@ -4,7 +4,10 @@
 
 ```ts
 
+import type { CreateRsbuildOptions } from '@rsbuild/core';
+import type { DistPathConfig } from '@rsbuild/core';
 import { logger } from '@rsbuild/core';
+import type { PerformanceConfig } from '@rsbuild/core';
 import type { RsbuildConfig } from '@rsbuild/core';
 import type { RsbuildInstance } from '@rsbuild/core';
 import { RsbuildPlugin } from '@rsbuild/core';
@@ -68,11 +71,13 @@ export interface Config {
 export type ConsoleType = 'log' | 'warn' | 'error' | 'info' | 'debug' | 'profile' | 'profileEnd' | (string & Record<never, never>);
 
 // @public
-export function createRspeedy({ cwd, rspeedyConfig }: CreateRspeedyOptions): Promise<RspeedyInstance>;
+export function createRspeedy({ cwd, rspeedyConfig, loadEnv, environment }: CreateRspeedyOptions): Promise<RspeedyInstance>;
 
 // @public
 export interface CreateRspeedyOptions {
     cwd?: string;
+    environment?: CreateRsbuildOptions['environment'];
+    loadEnv?: CreateRsbuildOptions['loadEnv'];
     rspeedyConfig?: Config;
 }
 
@@ -130,6 +135,11 @@ export function defineConfig(config: Config): Config;
 export interface Dev {
     assetPrefix?: string | boolean | undefined;
     client?: DevClient | undefined;
+    hmr?: boolean | undefined;
+    liveReload?: boolean | undefined;
+    progressBar?: boolean | {
+        id?: string;
+    } | undefined;
     watchFiles?: WatchFiles | WatchFiles[] | undefined;
     writeToDisk?: boolean | ((filename: string) => boolean) | undefined;
 }
@@ -140,13 +150,8 @@ export interface DevClient {
 }
 
 // @public
-export interface DistPath {
-    css?: string | undefined;
-    cssAsync?: string | undefined;
+export interface DistPath extends DistPathConfig {
     intermediate?: string | undefined;
-    js?: string | undefined;
-    jsAsync?: string | undefined;
-    root?: string | undefined;
 }
 
 // @public
@@ -227,6 +232,7 @@ export interface Output {
 // @public
 export interface Performance {
     chunkSplit?: ChunkSplit | ChunkSplitBySize | ChunkSplitCustom | undefined;
+    printFileSize?: PerformanceConfig['printFileSize'] | undefined;
     removeConsole?: boolean | ConsoleType[] | undefined;
 }
 
@@ -261,6 +267,7 @@ export interface Server {
     headers?: Record<string, string | string[]> | undefined;
     host?: string | undefined;
     port?: number | undefined;
+    strictPort?: boolean | undefined;
 }
 
 // @public
@@ -278,7 +285,7 @@ export interface Source {
 
 // @public
 export interface SourceMap {
-    js?: Rspack.DevTool | undefined;
+    js?: Rspack.DevTool | undefined | `${Exclude<Rspack.DevTool, false | 'eval'>}-debugids`;
 }
 
 // @public

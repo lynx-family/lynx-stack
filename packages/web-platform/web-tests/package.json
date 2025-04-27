@@ -4,11 +4,17 @@
   "private": true,
   "license": "Apache-2.0",
   "type": "module",
+  "exports": {
+    ".": {
+      "default": "./shell-project/lynx-view.ts"
+    }
+  },
   "scripts": {
     "build": "if [ \"$CI\" = \"1\" ]; then pnpm build:cases; fi",
     "build:cases": "rm -rf dist && node  ./scripts/generate-build-command.js",
     "coverage": "nyc report --cwd=$(realpath ../)",
     "coverage:ci": "nyc report --cwd=$(realpath ../) --reporter=lcov",
+    "lh": "lhci autorun",
     "serve": "rspack serve",
     "test": "playwright test",
     "test:debug": "playwright test --ui",
@@ -16,7 +22,9 @@
     "test:update": "playwright test --ui --update-snapshots"
   },
   "devDependencies": {
-    "@lynx-js/lynx-core": "0.1.0",
+    "@lhci/cli": "^0.14.0",
+    "@lynx-js/lynx-core": "0.1.2",
+    "@lynx-js/offscreen-document": "workspace:*",
     "@lynx-js/react": "workspace:*",
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@lynx-js/rspeedy": "workspace:*",

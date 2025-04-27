@@ -39,7 +39,8 @@ export class ChunkLoadingWebpackPluginImpl {
       const ChunkLoadingRuntimeModule = createChunkLoadingRuntimeModule(
         compiler.webpack,
       );
-      const onceForChunkSet = new WeakSet<Chunk>();
+      // TODO(colinaaa): enable this after https://github.com/web-infra-dev/rspack/issues/9849 is fixed.
+      // const onceForChunkSet = new WeakSet<Chunk>();
 
       const globalChunkLoading = compilation.outputOptions.chunkLoading;
       /**
@@ -55,8 +56,8 @@ export class ChunkLoadingWebpackPluginImpl {
       };
 
       const handler = (chunk: Chunk, runtimeRequirements: Set<string>) => {
-        if (onceForChunkSet.has(chunk)) return;
-        onceForChunkSet.add(chunk);
+        // if (onceForChunkSet.has(chunk)) return;
+        // onceForChunkSet.add(chunk);
         if (!isEnabledForChunk(chunk)) return;
         runtimeRequirements.add(RuntimeGlobals.getChunkUpdateScriptFilename);
         runtimeRequirements.add(RuntimeGlobals.moduleFactoriesAddOnly);

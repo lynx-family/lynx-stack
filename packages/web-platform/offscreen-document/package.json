@@ -1,0 +1,41 @@
+{
+  "name": "@lynx-js/offscreen-document",
+  "version": "0.0.0",
+  "private": false,
+  "description": "Offscreen Document allows developers to use partical DOM in WebWorker",
+  "keywords": [
+    "WebWorker",
+    "DOM",
+    "lynx"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/web-platform/offscreen-document"
+  },
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    "./main": {
+      "types": "./dist/main/index.d.ts",
+      "default": "./dist/main/index.js"
+    },
+    "./webworker": {
+      "types": "./dist/webworker/index.d.ts",
+      "default": "./dist/webworker/index.js"
+    },
+    ".": {
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "!dist/**/*.js.map",
+    "LICENSE.txt",
+    "Notice.txt",
+    "CHANGELOG.md",
+    "README.md"
+  ]
+}

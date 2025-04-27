@@ -1,5 +1,29 @@
 # @lynx-js/web-webpack-plugin
 
+## 0.6.5
+
+### Patch Changes
+
+- Updated dependencies [[`7edf478`](https://github.com/lynx-family/lynx-stack/commit/7edf478410cb57eeedc18aac6f5d3950b16c7fa8)]:
+  - @lynx-js/web-style-transformer@0.3.0
+
+## 0.6.4
+
+### Patch Changes
+
+- feat: support mts event handler (1/n) ([#495](https://github.com/lynx-family/lynx-stack/pull/495))
+
+  now the main-thread:bind handler could be invoked. The params of the handler will be implemented later.
+
+## 0.6.3
+
+### Patch Changes
+
+- chore: remove unused file ([#217](https://github.com/lynx-family/lynx-stack/pull/217))
+
+- Updated dependencies [[`f447811`](https://github.com/lynx-family/lynx-stack/commit/f4478112a08d3cf2d1483b87d591ea4e3b6cc2ea)]:
+  - @lynx-js/web-style-transformer@0.2.3
+
 ## 0.6.2
 
 ### Patch Changes
@@ -57,7 +81,7 @@
 
   Now we'll add the chunk global scope wrapper on runtime, this will help us to provide a better backward compatibility.
 
-  Also we have a intergrated output file cache for one session.
+  Also we have a integrated output file cache for one session.
 
   Now your `output.filename` will work.
 
@@ -108,8 +132,8 @@
   }
   ```
 
-  After this commit, we changed the data structor of the styleinfo which bundled into the main-thread.js.
-  This allows us to add class selectors at the begining of selector and the end of plain selector(before the pseudo part).
+  After this commit, we changed the data structure of the style-info which bundled into the main-thread.js.
+  This allows us to add class selectors at the beginning of selector and the end of plain selector(before the pseudo part).
 
   **THIS IS A BREAKING CHANGE**
 
@@ -139,7 +163,7 @@
 - 47cb40c: Make `SystemInfo` defaults to `{}`.
 - 667593b: refractor: change the stage of web banner
 
-  1. We already required the react-rsbuild-plugin to make sure that the minifizer be correctly configurated for esm chunk.
+  1. We already required the react-rsbuild-plugin to make sure that the minimizer be correctly configured for esm chunk.
 
   2. use `var` to declare global identifiers
 
@@ -155,16 +179,16 @@
 
 ### Minor Changes
 
-- 06fe3cd: feat: support splitchunk and lynx.requireModuleAsync
+- 06fe3cd: feat: support splitChunk and lynx.requireModuleAsync
 
-  - support splitchunk option of rspeedy
+  - support splitChunk option of rspeedy
   - add implementation for lynx.requireModuleAsync for both main-thread and background-thread
   - mark worker `ready` after \_OnLifeCycleEvent is assigned
 
   close #96
 
 - 66ce343: feat: support config `defaultDisplayLinear`
-- 068f677: feat: suppport createSelectorQuery
+- 068f677: feat: support createSelectorQuery
 - d551d81: feat: support customSection
 
   - support lynx.getCustomSection
@@ -179,7 +203,7 @@
 
   **About enableCSSSelector:false**
 
-  This flag changes the behaviour of cascading. It provide a way to do this
+  This flag changes the behavior of cascading. It provide a way to do this
 
   ```jsx
   <view class='class-a class-b' />;
@@ -192,8 +216,8 @@
 
   - add element api `__SetCSSId`
   - add new WebpackPlugin `@lynx-js/web-webpack-plugin`
-  - add support for removeCSSSCope
-  - pass all configs via thie \*.lepus.js
+  - add support for removeCSSScope
+  - pass all configs via \*.lepus.js
   - support to scope styles of lynx card for browsers do not support `@scope` and nesting
 
 - c04669b: feat: migrate to new TemplatePlugin hooks

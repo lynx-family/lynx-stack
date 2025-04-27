@@ -16,11 +16,12 @@ napi = { version = "2.7.0", default-features = false, features = ["napi4"] }
 napi-derive = "2.7.0"
 once_cell = "1.20.2"
 regex = "1.11.1"
+rustc-hash = "2.1.1"
 serde = "1.0.217"
 serde_json = { version = "1.0.134", features = ["preserve_order"] }
 sha-1 = "0.10.1"
 # cSpell:disable-next-line
-swc_core = { version = "0.109.2", features = ["base", "ecma_codegen", "ecma_parser", "ecma_minifier", "ecma_transforms_typescript", "ecma_utils", "ecma_quote", "ecma_transforms_react", "ecma_transforms_optimization", "css_parser", "css_ast", "css_visit", "css_codegen", "__visit", "__testing_transform"] }
+swc_core = { version = "18.0.0", features = ["base", "ecma_codegen", "ecma_parser", "ecma_minifier", "ecma_transforms_typescript", "ecma_utils", "ecma_quote", "ecma_transforms_react", "ecma_transforms_optimization", "css_parser", "css_ast", "css_visit", "css_codegen", "__visit", "__testing_transform"] }
 version-compare = "0.2.0"
 
 # cSpell:disable-next-line

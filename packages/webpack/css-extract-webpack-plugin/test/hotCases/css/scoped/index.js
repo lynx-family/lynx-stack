@@ -53,14 +53,17 @@ it("should hot update style sheet when scoped", () => new Promise((resolve, reje
         /** content */ expect.toBeBase64EncodedMatching(
           '"enableRemoveCSSScope":false',
         ),
+        /** entry */ undefined,
       )
       expect(replaceStyleSheetByIdWithBase64).toBeCalledWith(
         /** cssId */ 100,
         /** content */ expect.toBeBase64EncodedMatching('foo'),
+        /** entry */ undefined,
       )
       expect(replaceStyleSheetByIdWithBase64).toBeCalledWith(
         /** cssId */ 100,
         /** content */ expect.toBeBase64EncodedMatching('blue'),
+        /** entry */ undefined,
       )
       expect(replaceStyleSheetByIdWithBase64).toBeCalledTimes(3)
       NEXT(
@@ -72,24 +75,29 @@ it("should hot update style sheet when scoped", () => new Promise((resolve, reje
             /** content */ expect.toBeBase64EncodedMatching(
               '"enableRemoveCSSScope":false',
             ),
+            /** entry */ undefined,
           )
           expect(replaceStyleSheetByIdWithBase64).toBeCalledWith(
             /** cssId */ 100,
             /** content */ expect.toBeBase64EncodedMatching('baz'),
+            /** entry */ undefined,
           )
           expect(replaceStyleSheetByIdWithBase64).toBeCalledWith(
             /** cssId */ 100,
             /** content */ expect.toBeBase64EncodedMatching('blue'),
+            /** entry */ undefined,
           )
           expect(replaceStyleSheetByIdWithBase64).toBeCalledWith(
             /** cssId */ 100,
             /** content */ expect.toBeBase64EncodedMatching('bar'),
+            /** entry */ undefined,
           )
           expect(replaceStyleSheetByIdWithBase64).toBeCalledWith(
             /** cssId */ 100,
             /** content */ expect.toBeBase64EncodedMatching(
               'rgba(15, 18, 19, 0.5)',
             ),
+            /** entry */ undefined,
           )
           done()
         }),

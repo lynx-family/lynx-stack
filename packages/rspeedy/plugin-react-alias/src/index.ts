@@ -44,6 +44,15 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
         reactLynxDir,
         lazy ? ['lazy', 'import'] : ['import'],
       )
+
+      api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
+        return mergeRsbuildConfig(config, {
+          source: {
+            include: [reactLynxDir],
+          },
+        })
+      })
+
       api.modifyBundlerChain(async chain => {
         // FIXME(colinaaa): use `Promise.all`
         const jsxRuntime = {
@@ -155,13 +164,13 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
   }
 }
 
-function createLazyResolver(context: string, conditionNames: string[]) {
+export function createLazyResolver(context: string, conditionNames: string[]) {
   let lazyExports: Record<string, string | false>
   let resolverLazy: ResolveFunction
 
   return async (
     request: string,
-  ) => {
+  ): Promise<string> => {
     const { default: resolver } = await import('enhanced-resolve')
 
     return (
@@ -170,6 +179,6 @@ function createLazyResolver(context: string, conditionNames: string[]) {
           context,
           request,
         )
-    )
+    ) as string
   }
 }

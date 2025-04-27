@@ -18,7 +18,7 @@ export default class ScrollBounce extends Component {
         id='bounce-view'
         style={`width:300px; height:600px; background-color:yellow;`}
         scroll-y={true}
-        initial-scroll-index={1}
+        initial-scroll-to-index={1}
       >
         <view style='width:100%;height:300px;background:red;'></view>
         <view style='width:100%;height:300px;background:green;'></view>

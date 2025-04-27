@@ -4,14 +4,17 @@
 // LICENSE file in the root directory of this source tree.
 */
 import { Component, html } from '@lynx-js/web-elements-reactive';
-import { LynxExposure } from '../common/Exposure.js';
 import { XTextTruncation } from './XTextTruncation.js';
 import { ScrollIntoView } from '../ScrollView/ScrollIntoView.js';
+import {
+  CommonEventsAndMethods,
+  layoutChangeTarget,
+} from '../common/CommonEventsAndMethods.js';
 
 @Component<typeof XText>(
   'x-text',
-  [LynxExposure, XTextTruncation],
-  html`<div id="inner-box" part="inner-box"><slot></slot><slot name="inline-truncation"></slot></div>`,
+  [CommonEventsAndMethods, XTextTruncation],
+  html`<div id="inner-box" part="inner-box"><slot part="slot"></slot><slot name="inline-truncation"></slot></div>`,
 )
 export class XText extends HTMLElement {
   static readonly notToFilterFalseAttributes = new Set(['tail-color-convert']);
@@ -35,4 +38,6 @@ export class XText extends HTMLElement {
       super.scrollIntoView(arg);
     }
   }
+
+  [layoutChangeTarget] = this;
 }

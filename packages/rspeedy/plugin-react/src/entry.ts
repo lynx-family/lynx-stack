@@ -50,9 +50,11 @@ export function applyEntry(
     enableParallelElement,
     enableRemoveCSSScope,
     firstScreenSyncTiming,
+    enableSSR,
     pipelineSchedulerConfig,
     removeDescendantSelectorScope,
     targetSdkVersion,
+    extractStr,
 
     experimental_isLazyBundle,
   } = options
@@ -220,7 +222,9 @@ export function applyEntry(
         disableCreateSelectorQueryIncompatibleWarning: compat
           ?.disableCreateSelectorQueryIncompatibleWarning ?? false,
         firstScreenSyncTiming,
+        enableSSR,
         mainThreadChunks,
+        extractStr,
         experimental_isLazyBundle,
       }])
   })

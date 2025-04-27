@@ -213,4 +213,44 @@ describe('Config - Performance', () => {
       removeConsole: false,
     })
   })
+
+  test('performance.printFileSize', () => {
+    assertType<Performance>({
+      printFileSize: undefined,
+    })
+    assertType<Performance>({
+      printFileSize: {},
+    })
+    assertType<Performance>({
+      printFileSize: true,
+    })
+    assertType<Performance>({
+      printFileSize: false,
+    })
+    assertType<Performance>({
+      printFileSize: {
+        detail: false,
+      },
+    })
+    assertType<Performance>({
+      printFileSize: {
+        total: false,
+      },
+    })
+    assertType<Performance>({
+      printFileSize: {
+        compressed: false,
+      },
+    })
+    assertType<Performance>({
+      printFileSize: {
+        include: () => false,
+      },
+    })
+    assertType<Performance>({
+      printFileSize: {
+        exclude: () => true,
+      },
+    })
+  })
 })

@@ -1,14 +1,9 @@
 // Copyright 2023 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type { RuntimePropertyOnElement } from '../../types/RuntimePropertyOnElement.js';
 import { Rpc } from '@lynx-js/web-worker-rpc';
 import { queryNodes } from './queryNodes.js';
-import {
-  ErrorCode,
-  lynxRuntimeValue,
-  invokeUIMethodEndpoint,
-} from '@lynx-js/web-constants';
+import { ErrorCode, invokeUIMethodEndpoint } from '@lynx-js/web-constants';
 
 const methodAlias: Record<
   string,
@@ -18,8 +13,6 @@ const methodAlias: Record<
     const rect = element.getBoundingClientRect();
     return {
       id: element.id,
-      dataset: (element as Element & RuntimePropertyOnElement)[lynxRuntimeValue]
-        .dataset,
       width: rect.width,
       height: rect.height,
       left: rect.left,
@@ -32,7 +25,7 @@ const methodAlias: Record<
 
 export function registerInvokeUIMethodHandler(
   rpc: Rpc,
-  rootDom: Element,
+  shadowRoot: ShadowRoot,
 ) {
   let code = ErrorCode.UNKNOWN;
   let data: any = undefined;
@@ -47,7 +40,7 @@ export function registerInvokeUIMethodHandler(
       root_unique_id,
     ) => {
       queryNodes(
-        rootDom,
+        shadowRoot,
         type,
         identifier,
         component_id,

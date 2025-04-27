@@ -28,4 +28,30 @@ describe('target.plugin', () => {
 
     expect(config.target).toEqual(['es2019'])
   })
+
+  test('Web', async () => {
+    const rspeedy = await createStubRspeedy({
+      environments: {
+        web: {},
+      },
+    })
+
+    const config = await rspeedy.unwrapConfig()
+
+    expect(config.target).toEqual(['es2019', 'web'])
+  })
+
+  test('multiple environments', async () => {
+    const rspeedy = await createStubRspeedy({
+      environments: {
+        web: {},
+        lynx: {},
+      },
+    })
+
+    const [webConfig, lynxConfig] = await rspeedy.initConfigs()
+
+    expect(webConfig?.target).toEqual(['es2019', 'web'])
+    expect(lynxConfig?.target).toEqual(['es2019'])
+  })
 })

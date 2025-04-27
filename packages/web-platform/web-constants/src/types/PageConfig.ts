@@ -5,7 +5,9 @@ export interface PageConfig {
   enableCSSSelector: boolean;
   enableRemoveCSSScope: boolean;
   defaultDisplayLinear: boolean;
+  defaultOverflowVisible: boolean;
 }
 
 export interface BrowserConfig {
+  pixelRatio: number;
 }

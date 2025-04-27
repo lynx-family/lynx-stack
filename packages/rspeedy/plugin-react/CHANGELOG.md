@@ -1,5 +1,96 @@
 # @lynx-js/react-rsbuild-plugin
 
+## 0.9.7
+
+### Patch Changes
+
+- Support overriding SWC configuration. ([#563](https://github.com/lynx-family/lynx-stack/pull/563))
+
+  Now you can override configuration like `useDefineForClassFields` using `tools.swc`.
+
+  ```js
+  import { defineConfig } from '@lynx-js/rspeedy'
+
+  export default defineConfig({
+    tools: {
+      swc: {
+        jsc: {
+          transform: {
+            useDefineForClassFields: true,
+          },
+        },
+      },
+    },
+  })
+  ```
+
+- Updated dependencies [[`f1ca29b`](https://github.com/lynx-family/lynx-stack/commit/f1ca29bd766377dd46583f15e1e75bca447699cd)]:
+  - @lynx-js/react-webpack-plugin@0.6.11
+  - @lynx-js/react-alias-rsbuild-plugin@0.9.7
+  - @lynx-js/react-refresh-webpack-plugin@0.3.2
+  - @lynx-js/web-webpack-plugin@0.6.5
+
+## 0.9.6
+
+### Patch Changes
+
+- Updated dependencies [[`ea42e62`](https://github.com/lynx-family/lynx-stack/commit/ea42e62fbcd5c743132c3e6e7c4851770742d544), [`12e3afe`](https://github.com/lynx-family/lynx-stack/commit/12e3afe14fa46bbec817bed48b730798f777543c)]:
+  - @lynx-js/web-webpack-plugin@0.6.4
+  - @lynx-js/template-webpack-plugin@0.6.9
+  - @lynx-js/react-alias-rsbuild-plugin@0.9.6
+  - @lynx-js/react-refresh-webpack-plugin@0.3.2
+  - @lynx-js/react-webpack-plugin@0.6.10
+  - @lynx-js/css-extract-webpack-plugin@0.5.3
+
+## 0.9.5
+
+### Patch Changes
+
+- fix: add enableCSSInvalidation for encodeCSS of css HMR, this will fix pseudo-class (such as `:active`) not working in HMR. ([#435](https://github.com/lynx-family/lynx-stack/pull/435))
+
+- Disable `module.generator.json.JSONParse` option as it increases the bundle size of `main-thread.js`. For more detail, please see this [issue](https://github.com/webpack/webpack/issues/19319). ([#402](https://github.com/lynx-family/lynx-stack/pull/402))
+
+- Updated dependencies [[`3e7988f`](https://github.com/lynx-family/lynx-stack/commit/3e7988f3af4b4f460eaf5add29cca19537dc1a6b), [`7243242`](https://github.com/lynx-family/lynx-stack/commit/7243242801e3a8ca0213c0ef642f69a22c39960e)]:
+  - @lynx-js/css-extract-webpack-plugin@0.5.3
+  - @lynx-js/template-webpack-plugin@0.6.8
+  - @lynx-js/react-alias-rsbuild-plugin@0.9.5
+  - @lynx-js/react-refresh-webpack-plugin@0.3.2
+  - @lynx-js/react-webpack-plugin@0.6.10
+  - @lynx-js/web-webpack-plugin@0.6.3
+
+## 0.9.4
+
+### Patch Changes
+
+- feat: add extractStr option to pluginReactLynx ([#391](https://github.com/lynx-family/lynx-stack/pull/391))
+
+- Convert background-only files from js to ts ([#346](https://github.com/lynx-family/lynx-stack/pull/346))
+
+- Updated dependencies [[`f849117`](https://github.com/lynx-family/lynx-stack/commit/f84911731faa4d0f6373d1202b9b2cabb0bafc48), [`d730101`](https://github.com/lynx-family/lynx-stack/commit/d7301017a383b8825cdc813a649ef26ce1c37641), [`42217c2`](https://github.com/lynx-family/lynx-stack/commit/42217c2c77a33e729977fc7108b218a1cb868e6a), [`f03bd4a`](https://github.com/lynx-family/lynx-stack/commit/f03bd4a62f81902ba55caf10df56447c89743e62)]:
+  - @lynx-js/react-webpack-plugin@0.6.10
+  - @lynx-js/template-webpack-plugin@0.6.7
+  - @lynx-js/react-alias-rsbuild-plugin@0.9.4
+  - @lynx-js/react-refresh-webpack-plugin@0.3.2
+  - @lynx-js/css-extract-webpack-plugin@0.5.2
+  - @lynx-js/web-webpack-plugin@0.6.3
+
+## 0.9.3
+
+### Patch Changes
+
+- Support `@lynx-js/react` v0.106.0. ([#239](https://github.com/lynx-family/lynx-stack/pull/239))
+
+- Fix the issue where the canary version of React was not included in the `rule.include` configuration. ([#275](https://github.com/lynx-family/lynx-stack/pull/275))
+
+- Updated dependencies [[`ba26a4d`](https://github.com/lynx-family/lynx-stack/commit/ba26a4db1ec3dcfd445dd834533b3bc10b091686), [`462e97b`](https://github.com/lynx-family/lynx-stack/commit/462e97b28c12b554c0c825c7df453bdf433749ae), [`aa1fbed`](https://github.com/lynx-family/lynx-stack/commit/aa1fbedec8459f8c830467a5b92033e3530dce80), [`d2d55ef`](https://github.com/lynx-family/lynx-stack/commit/d2d55ef9fe438c35921d9db0daa40d5228822ecc), [`6af0396`](https://github.com/lynx-family/lynx-stack/commit/6af039661844f22b65ad1b98db5c7b31df204ae4)]:
+  - @lynx-js/template-webpack-plugin@0.6.6
+  - @lynx-js/react-webpack-plugin@0.6.9
+  - @lynx-js/runtime-wrapper-webpack-plugin@0.0.9
+  - @lynx-js/web-webpack-plugin@0.6.3
+  - @lynx-js/react-alias-rsbuild-plugin@0.9.3
+  - @lynx-js/css-extract-webpack-plugin@0.5.2
+  - @lynx-js/react-refresh-webpack-plugin@0.3.2
+
 ## 0.9.2
 
 ### Patch Changes
@@ -294,7 +385,7 @@
   })
   ```
 
-  NOTE: This feature is deprecated and will be removed in the future. Use codemod instead.
+  NOTE: This feature is deprecated and will be removed in the future. Use CodeMod instead.
 
 - 5f8d492: **BREAKING CHANGE**: Require `@lynx-js/react` v0.103.0.
 - 5f8d492: Deprecate `compat.simplifyCtorLikeReactLynx2`
@@ -396,9 +487,9 @@
 
 ### Minor Changes
 
-- 91c267b: feat: enable auto publicpath for environment.web
+- 91c267b: feat: enable auto `publicPath` for environment.web
 
-  In many case, users cannot set a correct assertprefix configuration. Typically those chunks will be uploaded after chunk dumped. Developers may be not able to know the url before those chunks are uploaded.
+  In many case, users cannot set a correct `output.assertPrefix` configuration. Typically those chunks will be uploaded after chunk dumped. Developers may be not able to know the url before those chunks are uploaded.
 
   In this commit, we allow webpack to infer the correct public path by the import.meta.url.
 

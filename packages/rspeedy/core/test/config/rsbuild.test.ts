@@ -14,6 +14,7 @@ describe('Config - toRsBuildConfig', () => {
       })
       expect(rsbuildConfig.dev).toMatchInlineSnapshot(`
         {
+          "progressBar": true,
           "watchFiles": undefined,
           "writeToDisk": true,
         }
@@ -448,6 +449,37 @@ describe('Config - toRsBuildConfig', () => {
         performance: { removeConsole: false },
       })
       expect(rsbuildConfig.performance?.removeConsole).toBe(false)
+    })
+
+    test('transform performance.printFileSize false', () => {
+      const rsbuildConfig = toRsbuildConfig({
+        performance: { printFileSize: false },
+      })
+      expect(rsbuildConfig.performance?.printFileSize).toBe(
+        false,
+      )
+    })
+
+    test('transform performance.printFileSize', () => {
+      const printFileSizeOptions = {
+        total: false,
+        detail: false,
+        compressed: true,
+        include: (_: { name: string, size: number }) => false,
+        exclude: (_: { name: string, size: number }) => false,
+      }
+      const rsbuildConfig = toRsbuildConfig({
+        performance: {
+          printFileSize: printFileSizeOptions,
+        },
+      })
+      const printFileSize = rsbuildConfig.performance
+        ?.printFileSize as typeof printFileSizeOptions
+      expect(printFileSize.total).toBe(false)
+      expect(printFileSize.detail).toBe(false)
+      expect(printFileSize.compressed).toBe(true)
+      expect(printFileSize.include?.({ name: '', size: 1 })).toEqual(false)
+      expect(printFileSize.exclude?.({ name: '', size: 1 })).toEqual(false)
     })
   })
 

@@ -2,11 +2,11 @@ ERROR in ./jsx/component/index.jsx
 × Module build failed:
 ╰─▶   × Error: react-transform failed
 at Object.backgroundLoader (file://<PROJECT_ROOT>/packages/webpack/react-webpack-plugin/src/loaders/background.ts:<LINE:COLUMN>)
-at LOADER_EXECUTION (<PROJECT_ROOT>/node_modules/<PNPM_INNER>/@rspack/core/dist/index.js:<LINE:COLUMN>)
-at runSyncOrAsync2 (<PROJECT_ROOT>/node_modules/<PNPM_INNER>/@rspack/core/dist/index.js:<LINE:COLUMN>)
+at <PROJECT_ROOT>/node_modules/<PNPM_INNER>/@rspack/core/dist/index.js:<LINE:COLUMN>
 at node:internal/util:<LINE:COLUMN>
 at new Promise (<anonymous>)
-at runSyncOrAsync2 (node:internal/util:<LINE:COLUMN>)
+at node:internal/util:<LINE:COLUMN>
+at isomorphoicRun (<PROJECT_ROOT>/node_modules/<PNPM_INNER>/@rspack/core/dist/index.js:<LINE:COLUMN>)
 at runLoaders (<PROJECT_ROOT>/node_modules/<PNPM_INNER>/@rspack/core/dist/index.js:<LINE:COLUMN>)
 
 ERROR in ./jsx/component/index.jsx <LINE:COLUMN>-19

@@ -71,9 +71,6 @@ x-foldview-slot-ng {
   contain: strict;
   order: 3;
 }
-x-foldview-ng > x-foldview-slot-ng * {
-  touch-action: pan-x pinch-zoom;
-}
 x-foldview-slot-ng scroll-view {
   /* avoiding default bounce on ios safari */
   overscroll-behavior-y: none;

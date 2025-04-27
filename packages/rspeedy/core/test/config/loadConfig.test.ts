@@ -5,9 +5,12 @@ import { mkdtemp, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
-import { describe, expect, test } from 'vitest'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
 
-import { loadConfig } from '../../src/config/loadConfig.js'
+import {
+  TEST_ONLY_hasNativeTSSupport as hasNativeTSSupport,
+  loadConfig,
+} from '../../src/config/loadConfig.js'
 import type { Config } from '../../src/index.js'
 
 describe('Config - loadConfig', () => {
@@ -305,5 +308,59 @@ describe('Config - loadConfig', () => {
         `Unknown property: \`$input["default"]\` in configuration`,
       )
     })
+  })
+})
+
+describe('hasNativeTSSupport', () => {
+  const process: {
+    env: Record<string, string>
+    features: { typescript?: false | 'strip' | 'transform' | undefined }
+  } = {
+    env: {},
+    features: {},
+  }
+
+  beforeEach(() => {
+    process.env = {}
+    process.features = {}
+    vi.stubGlobal('process', process)
+
+    return () => {
+      vi.unstubAllGlobals()
+    }
+  })
+
+  test('without features.typescript', () => {
+    expect(hasNativeTSSupport()).toBe(false)
+  })
+
+  test('with features.typescript: "transform"', () => {
+    process.features.typescript = 'transform'
+    expect(hasNativeTSSupport()).toBe(true)
+  })
+
+  test('with features.typescript: "strip"', () => {
+    process.features.typescript = 'strip'
+    expect(hasNativeTSSupport()).toBe(true)
+  })
+
+  test('with features.typescript: false', () => {
+    process.features.typescript = false
+    expect(hasNativeTSSupport()).toBe(false)
+  })
+
+  test('with features.typescript: undefined', () => {
+    process.features.typescript = undefined
+    expect(hasNativeTSSupport()).toBe(false)
+  })
+
+  test('with NODE_OPTIONS: --experimental-transform-types', () => {
+    process.env['NODE_OPTIONS'] = '--experimental-transform-types'
+    expect(hasNativeTSSupport()).toBe(true)
+  })
+
+  test('with NODE_OPTIONS: --experimental-strip-types', () => {
+    process.env['NODE_OPTIONS'] = '--experimental-strip-types'
+    expect(hasNativeTSSupport()).toBe(true)
   })
 })

@@ -1,5 +1,106 @@
 # @lynx-js/rspeedy
 
+## 0.9.2
+
+### Patch Changes
+
+- Support cli option `--no-env` to disable loading of .env files ([#483](https://github.com/lynx-family/lynx-stack/pull/483))
+
+- Bump Rsbuild v1.3.8 with Rspack v1.3.5. ([#579](https://github.com/lynx-family/lynx-stack/pull/579))
+
+## 0.9.1
+
+### Patch Changes
+
+- Bump Rsbuild v1.3.5 with Rspack v1.3.3. ([#467](https://github.com/lynx-family/lynx-stack/pull/467))
+
+## 0.9.0
+
+### Minor Changes
+
+- Bundle Rspeedy with Rslib for faster start-up times. ([#395](https://github.com/lynx-family/lynx-stack/pull/395))
+
+  This would be a **BREAKING CHANGE** for using [global version of Rspeedy](https://lynxjs.org/rspeedy/cli#using-the-global-rspeedy-version).
+
+  Please ensure that you update your globally installed version of Rspeedy:
+
+  ```bash
+  npm install --global @lynx-js/rspeedy@latest
+  ```
+
+- Bump Rsbuild v1.3.2 with Rspack v1.3.1 ([#446](https://github.com/lynx-family/lynx-stack/pull/446))
+
+- **BREAKING CHANGE**: Added explicit TypeScript peer dependency requirement of 5.1.6 - 5.8.x. ([#480](https://github.com/lynx-family/lynx-stack/pull/480))
+
+  This formalizes the existing TypeScript version requirement in `peerDependencies` (marked as optional since it is only needed for TypeScript configurations). The actual required TypeScript version has not changed.
+
+  Note: This may cause installation to fail if you have strict peer dependency checks enabled.
+
+  Node.js v22.7+ users can bypass TypeScript installation using `--experimental-transform-types` or `--experimental-strip-types` flags. Node.js v23.6+ users don't need any flags. See [Node.js - TypeScript](https://nodejs.org/api/typescript.html) for details.
+
+### Patch Changes
+
+- Support cli flag `--base` to specify the base path of the server. ([#387](https://github.com/lynx-family/lynx-stack/pull/387))
+
+- Support cli option `--environment` to specify the name of environment to build ([#462](https://github.com/lynx-family/lynx-stack/pull/462))
+
+- Select the most appropriate network interface. ([#457](https://github.com/lynx-family/lynx-stack/pull/457))
+
+  This is a port of [webpack/webpack-dev-server#5411](https://github.com/webpack/webpack-dev-server/pull/5411).
+
+- Support Node.js v23.6+ native TypeScript. ([#481](https://github.com/lynx-family/lynx-stack/pull/481))
+
+  See [Node.js - TypeScript](https://nodejs.org/api/typescript.html) for more details.
+
+- Support cli option `--env-mode` to specify the env mode to load the `.env.[mode]` file. ([#453](https://github.com/lynx-family/lynx-stack/pull/453))
+
+- Support `dev.hmr` and `dev.liveReload`. ([#458](https://github.com/lynx-family/lynx-stack/pull/458))
+
+- Updated dependencies [[`df63722`](https://github.com/lynx-family/lynx-stack/commit/df637229e8dafda938aba73e10f3c8d95afc7dce), [`df63722`](https://github.com/lynx-family/lynx-stack/commit/df637229e8dafda938aba73e10f3c8d95afc7dce)]:
+  - @lynx-js/chunk-loading-webpack-plugin@0.2.0
+
+## 0.8.7
+
+### Patch Changes
+
+- Support using `-debugids` in `output.sourceMap.js`. ([#342](https://github.com/lynx-family/lynx-stack/pull/342))
+
+  See [Source Map Debug ID Proposal](https://github.com/tc39/ecma426/blob/main/proposals/debug-id.md) for more details.
+
+- Use `chunkLoading: 'import-scripts'` for Web platform ([#352](https://github.com/lynx-family/lynx-stack/pull/352))
+
+- Support `output.distPath.*`. ([#366](https://github.com/lynx-family/lynx-stack/pull/366))
+
+  See [Rsbuild - distPath](https://rsbuild.dev/config/output/dist-path) for all available options.
+
+- Support `performance.printFileSize` ([#336](https://github.com/lynx-family/lynx-stack/pull/336))
+
+  Whether to print the file sizes after production build.
+
+## 0.8.6
+
+### Patch Changes
+
+- Support `dev.progressBar` ([#307](https://github.com/lynx-family/lynx-stack/pull/307))
+
+  Whether to display progress bar during compilation.
+
+  Defaults to `true`.
+
+- support load `.env` file by default ([#233](https://github.com/lynx-family/lynx-stack/pull/233))
+
+- Support `server.strictPort` ([#303](https://github.com/lynx-family/lynx-stack/pull/303))
+
+  When a port is occupied, Rspeedy will automatically increment the port number until an available port is found.
+
+  Set strictPort to true and Rspeedy will throw an exception when the port is occupied.
+
+## 0.8.5
+
+### Patch Changes
+
+- Bump Rsdoctor v1.0.0. ([#250](https://github.com/lynx-family/lynx-stack/pull/250))
+
 ## 0.8.4
 
 ### Patch Changes

@@ -8,3 +8,4 @@ export type {
   RpcEndpointSyncVoid,
 } from './RpcEndpoint.js';
 export { createRpcEndpoint } from './RpcEndpoint.js';
+export type * from './TypeUtils.js';

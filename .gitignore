@@ -43,3 +43,6 @@ target/
 
 #pnpm
 .pnpm-store
+
+# lighthouse-ci
+.lighthouseci
