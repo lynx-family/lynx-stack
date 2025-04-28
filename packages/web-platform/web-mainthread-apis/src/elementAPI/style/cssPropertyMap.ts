@@ -225,25 +225,25 @@ V('text-stroke-width');
 V('text-stroke-color');
 V('-x-auto-font-size');
 V('-x-auto-font-size-preset-sizes');
-V('mask'),
-  V('mask-repeat'),
-  V('mask-position'),
-  V('mask-clip'),
-  V('mask-origin'),
-  V('mask-size'),
-  V('gap'),
-  V('column-gap'),
-  V('row-gap'),
-  V('image-rendering'),
-  V('hyphens'),
-  V('-x-app-region'),
-  V(
-    '-x-animation-color-interpolation',
-  ),
-  V('-x-handle-color'),
-  V('-x-handle-size'),
-  V('offset-path'),
-  V('offset-distance');
+V('mask');
+V('mask-repeat');
+V('mask-position');
+V('mask-clip');
+V('mask-origin');
+V('mask-size');
+V('gap');
+V('column-gap');
+V('row-gap');
+V('image-rendering');
+V('hyphens');
+V('-x-app-region');
+V(
+  '-x-animation-color-interpolation',
+);
+V('-x-handle-color');
+V('-x-handle-size');
+V('offset-path');
+V('offset-distance');
 
 export function queryCSSProperty(index: number): {
   name: string;
