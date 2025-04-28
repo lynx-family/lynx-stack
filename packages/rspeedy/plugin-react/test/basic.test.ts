@@ -69,7 +69,7 @@ describe('ReactLynx rsbuild', () => {
     const { pluginReactLynx } = await import('../src/index.js')
     vi.stubEnv('NODE_ENV', 'production')
 
-    const tmp = await mkdtemp(tmpdir())
+    const tmp = await mkdtemp(path.join(tmpdir(), 'rspeedy-react-test'))
 
     const rspeedy = await createRspeedy({
       rspeedyConfig: {
