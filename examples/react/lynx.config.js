@@ -7,6 +7,15 @@ import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin';
 const enableBundleAnalysis = !!process.env['CI'];
 
 export default defineConfig({
+  // performance: {
+  //   chunkSplit: {
+  //     strategy: 'split-by-experience',
+  //     override: {
+  //       // See: https://github.com/web-infra-dev/rspack/issues/9812
+  //       filename: '[name].[contenthash:8].js',
+  //     },
+  //   },
+  // },
   plugins: [
     pluginReactLynx(),
     pluginQRCode({

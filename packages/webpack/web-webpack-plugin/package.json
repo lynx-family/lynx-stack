@@ -34,6 +34,6 @@
     "webpack": "^5.99.6"
   },
   "peerDependencies": {
-    "@lynx-js/template-webpack-plugin": "^0.6.0"
+    "@lynx-js/template-webpack-plugin": "^0.6.0 || ^0.7.0"
   }
 }

@@ -18,12 +18,14 @@ it('should have both foo and bar', async () => {
   const content = await readFile(tasmJSONPath, 'utf-8');
 
   const { manifest } = JSON.parse(content);
-  expect(manifest).toHaveProperty(
-    `/async/test.js`,
-    expect.stringContaining(['function', 'foo()'].join(' ')),
-  );
-  expect(manifest).toHaveProperty(
-    `/async/test.js`,
-    expect.stringContaining(['function', 'bar()'].join(' ')),
+
+  const output = join(__dirname, 'async', 'test.js');
+  expect(existsSync(output));
+  const outputContent = await readFile(output, 'utf-8');
+  expect(outputContent).toContain(['function', 'foo()'].join(' '));
+  expect(outputContent).toContain(['function', 'bar()'].join(' '));
+
+  expect(manifest['/app-service.js']).toContain(
+    `lynx.requireModule('/async/test.js',globDynamicComponentEntry?globDynamicComponentEntry:'__Card__')`,
   );
 });

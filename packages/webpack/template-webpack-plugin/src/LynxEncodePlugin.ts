@@ -129,6 +129,17 @@ export class LynxEncodePluginImpl {
         const { encodeData } = args;
         const { manifest } = encodeData;
 
+        let publicPath = '/';
+        if (typeof compilation?.outputOptions.publicPath === 'function') {
+          compilation.errors.push(
+            new compiler.webpack.WebpackError(
+              '`publicPath` as a function is not supported yet.',
+            ),
+          );
+        } else {
+          publicPath = compilation?.outputOptions.publicPath ?? '/';
+        }
+
         if (!isDebug() && !isDev && !isRsdoctor()) {
           compiler.hooks.emit.tap(this.name, () => {
             this.deleteDebuggingAssets(compilation, [
@@ -152,8 +163,6 @@ export class LynxEncodePluginImpl {
           //     lynx.requireModule('initial-chunk1')
           //     lynx.requireModule('initial-chunk2')
           //   `,
-          //   'initial-chunk1': `<content-of-initial-chunk>`,
-          //   'initial-chunk2': `<content-of-initial-chunk>`,
           // },
           // ```
           '/app-service.js': [
@@ -161,18 +170,12 @@ export class LynxEncodePluginImpl {
             Object.keys(manifest)
               .map((name) =>
                 `module.exports=lynx.requireModule('${
-                  this.#formatJSName(name)
+                  this.#formatJSName(name, publicPath)
                 }',globDynamicComponentEntry?globDynamicComponentEntry:'__Card__')`
               )
               .join(','),
             this.#appServiceFooter(),
           ].join(''),
-          ...(Object.fromEntries(
-            Object.entries(manifest).map(([name, source]) => [
-              this.#formatJSName(name),
-              source,
-            ]),
-          )),
         };
 
         return args;
@@ -228,8 +231,8 @@ export class LynxEncodePluginImpl {
     return amdFooter + loadScriptFooter;
   }
 
-  #formatJSName(name: string): string {
-    return `/${name}`;
+  #formatJSName(name: string, publicPath: string): string {
+    return publicPath + name;
   }
 
   protected options: Required<LynxEncodePluginOptions>;
