@@ -229,7 +229,7 @@ jobs:
     with:
       runs-on: lynx-ubuntu-24.04-xlarge
       is-web: true
-      codecov-flags: "e2e"
+      codecov-flags: "e2e,all-on-ui"
       run: |
         export NODE_OPTIONS="--max-old-space-size=32768"
         export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
