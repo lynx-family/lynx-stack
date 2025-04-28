@@ -93,7 +93,7 @@ export class Rpc {
   ) => void = async (
     message,
   ) => {
-    console.warn(`[rpc] on ${this.name} received ${message.name}`, message);
+    // console.warn(`[rpc] on ${this.name} received ${message.name}`, message);
     const handler = this.#handlerMap.get(message.name);
     if (handler) {
       const lockViewer = message.sync

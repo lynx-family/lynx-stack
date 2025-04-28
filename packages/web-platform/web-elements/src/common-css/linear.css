@@ -196,14 +196,16 @@ x-refresh-view,
 x-swiper-item,
 x-viewpager-item-ng,
 x-viewpager-ng {
-  flex-wrap: var(--lynx-display-linear, nowrap) var(
-    --lynx-display-flex,
-    var(--flex-wrap)
-  );
-  flex-direction: var(--lynx-display-linear, var(--linear-flex-direction)) var(
-    --lynx-display-flex,
-    var(--flex-direction)
-  );
+  flex-wrap: var(--lynx-display-linear, nowrap)
+    var(
+      --lynx-display-flex,
+      var(--flex-wrap)
+    );
+  flex-direction: var(--lynx-display-linear, var(--linear-flex-direction))
+    var(
+      --lynx-display-flex,
+      var(--flex-direction)
+    );
   justify-content: var(--lynx-display-linear, var(--linear-justify-content));
 }
 

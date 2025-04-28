@@ -32,18 +32,21 @@
   <body>
     <script src="/web-elements.js" defer></script>
     <script type="module">
-    document.querySelector('#target').addEventListener('layoutchange', (ev) => {
-      console.log('layoutchange', ev.detail);
-      Object.assign(globalThis, { detail: ev.detail });
-    });
-    document.querySelector('#target').addEventListener('click', () => {
-      document.querySelector('#target').style.width = '200px';
-    });
+    document.querySelector('#target').addEventListener(
+        'layoutchange',
+        (ev) => {
+          console.log('layoutchange', ev.detail);
+          Object.assign(globalThis, { detail: ev.detail });
+        },
+      );
+      document.querySelector('#target').addEventListener('click', () => {
+        document.querySelector('#target').style.width = '200px';
+      });
     </script>
     <x-view class="page">
       <x-text
         id="target"
-        style="width:100px; height:400px; background-color: aquamarine;"
+        style="width: 100px; height: 400px; background-color: aquamarine"
       >
       </x-text>
     </x-view>

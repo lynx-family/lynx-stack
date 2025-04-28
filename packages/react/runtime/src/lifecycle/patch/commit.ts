@@ -30,8 +30,6 @@ let nextCommitTaskId = 1;
 
 let globalBackgroundSnapshotInstancesToRemove: number[] = [];
 
-let patchesToCommit: Patch[] = [];
-
 interface Patch {
   id: number;
   snapshotPatch?: SnapshotPatch;
@@ -50,28 +48,6 @@ interface PatchOptions {
 }
 
 function replaceCommitHook(): void {
-  // use our own `options.debounceRendering` to insert a timing flag before render
-  type DebounceRendering = (f: () => void) => void;
-  const injectDebounceRendering = (debounceRendering: DebounceRendering): DebounceRendering => {
-    return (f: () => void) => {
-      debounceRendering(() => {
-        f();
-        void commitToMainThread();
-      });
-    };
-  };
-  const defaultDebounceRendering = options.debounceRendering?.bind(options)
-    ?? (Promise.prototype.then.bind(Promise.resolve()) as DebounceRendering);
-  let _debounceRendering = injectDebounceRendering(defaultDebounceRendering);
-  Object.defineProperty(options, 'debounceRendering', {
-    get() {
-      return _debounceRendering;
-    },
-    set(debounceRendering: DebounceRendering) {
-      _debounceRendering = injectDebounceRendering(debounceRendering);
-    },
-  });
-
   const oldCommit = options[COMMIT];
   const commit = async (vnode: VNode, commitQueue: any[]) => {
     if (__LEPUS__) {
@@ -79,6 +55,9 @@ function replaceCommitHook(): void {
       commitQueue.length = 0;
       return;
     }
+
+    markTimingLegacy(PerformanceTimingKeys.updateDiffVdomEnd);
+    markTiming(PerformanceTimingKeys.diffVdomEnd);
     const renderCallbacks = commitQueue.map((component: Component<any>) => {
       const ret = {
         component,
@@ -118,7 +97,9 @@ function replaceCommitHook(): void {
     });
 
     const snapshotPatch = takeGlobalSnapshotPatch();
+    const flushOptions = globalFlushOptions;
     const workletRefInitValuePatch = takeWorkletRefInitValuePatch();
+    globalFlushOptions = {};
     if (!snapshotPatch && workletRefInitValuePatch.length === 0) {
       // before hydration, skip patch
       return;
@@ -134,79 +115,65 @@ function replaceCommitHook(): void {
     if (workletRefInitValuePatch.length) {
       patch.workletRefInitValuePatch = workletRefInitValuePatch;
     }
+    const patchList: PatchList = {
+      patchList: [patch],
+    };
+    if (!isEmptyObject(flushOptions)) {
+      patchList.flushOptions = flushOptions;
+    }
+    const obj = commitPatchUpdate(patchList, {});
 
-    patchesToCommit.push(patch);
+    lynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
+      const commitTask = globalCommitTaskMap.get(commitTaskId);
+      if (commitTask) {
+        commitTask();
+        globalCommitTaskMap.delete(commitTaskId);
+      }
+    });
   };
   options[COMMIT] = commit as ((...args: Parameters<typeof commit>) => void);
 }
 
-async function commitToMainThread(): Promise<void> {
-  if (patchesToCommit.length === 0) {
-    return;
+function commitPatchUpdate(patchList: PatchList, patchOptions: Omit<PatchOptions, 'reloadVersion'>): {
+  data: string;
+  patchOptions: PatchOptions;
+} {
+  // console.debug('********** JS update:');
+  // printSnapshotInstance(
+  //   (backgroundSnapshotInstanceManager.values.get(1) || backgroundSnapshotInstanceManager.values.get(-1))!,
+  // );
+  // console.debug('commitPatchUpdate: ', JSON.stringify(patchList));
+  if (__PROFILE__) {
+    console.profile('commitChanges');
   }
-
-  markTimingLegacy(PerformanceTimingKeys.update_diff_vdom_end);
-  markTiming(PerformanceTimingKeys.diff_vdom_end);
-
-  const flushOptions = globalFlushOptions;
-  globalFlushOptions = {};
-
-  const patchList: PatchList = {
-    patchList: patchesToCommit,
+  markTiming(PerformanceTimingKeys.packChangesStart);
+  const obj: {
+    data: string;
+    patchOptions: PatchOptions;
+  } = {
+    data: JSON.stringify(patchList),
+    patchOptions: {
+      ...patchOptions,
+      reloadVersion: getReloadVersion(),
+    },
   };
-  patchesToCommit = [];
-
-  if (!isEmptyObject(flushOptions)) {
-    patchList.flushOptions = flushOptions;
+  markTiming(PerformanceTimingKeys.packChangesEnd);
+  if (globalPipelineOptions) {
+    obj.patchOptions.pipelineOptions = globalPipelineOptions;
+    setPipeline(undefined);
+  }
+  if (__PROFILE__) {
+    console.profileEnd();
   }
 
-  await commitPatchUpdate(patchList, {});
-
-  for (let i = 0; i < patchList.patchList.length; i++) {
-    const patch = patchList.patchList[i]!;
-    const commitTask = globalCommitTaskMap.get(patch.id);
-    if (commitTask) {
-      commitTask();
-      globalCommitTaskMap.delete(patch.id);
-    }
-  }
-}
-
-function commitPatchUpdate(patchList: PatchList, patchOptions: Omit<PatchOptions, 'reloadVersion'>): Promise<void> {
-  return new Promise(resolve => {
-    // console.debug('********** JS update:');
-    // printSnapshotInstance(
-    //   (backgroundSnapshotInstanceManager.values.get(1) || backgroundSnapshotInstanceManager.values.get(-1))!,
-    // );
-    // console.debug('commitPatchUpdate: ', JSON.stringify(patchList));
-    if (__PROFILE__) {
-      console.profile('commitChanges');
-    }
-    markTiming(PerformanceTimingKeys.pack_changes_start);
-    const obj: {
-      data: string;
-      patchOptions: PatchOptions;
-    } = {
-      data: JSON.stringify(patchList),
-      patchOptions: {
-        ...patchOptions,
-        reloadVersion: getReloadVersion(),
-      },
-    };
-    markTiming(PerformanceTimingKeys.pack_changes_end);
-    if (globalPipelineOptions) {
-      obj.patchOptions.pipelineOptions = globalPipelineOptions;
-      setPipeline(undefined);
-    }
-    lynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, resolve);
-    if (__PROFILE__) {
-      console.profileEnd();
-    }
-  });
+  return obj;
 }
 
 function genCommitTaskId(): number {
   return nextCommitTaskId++;
+}
+function clearCommitTaskId(): void {
+  nextCommitTaskId = 1;
 }
 
 function replaceRequestAnimationFrame(): void {
@@ -222,8 +189,8 @@ function replaceRequestAnimationFrame(): void {
  */
 export {
   commitPatchUpdate,
-  commitToMainThread,
   genCommitTaskId,
+  clearCommitTaskId,
   globalBackgroundSnapshotInstancesToRemove,
   globalCommitTaskMap,
   globalFlushOptions,

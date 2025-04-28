@@ -1,20 +1,18 @@
-import { Component, options } from 'preact';
+import { Component, options, render } from 'preact';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useEffect, useLayoutEffect, useState } from '../src/index';
 import { globalEnvManager } from './utils/envManager';
+import { waitSchedule } from './utils/nativeMethod';
 import { initDelayUnmount } from '../src/lifecycle/delayUnmount';
 import { globalCommitTaskMap, replaceCommitHook, replaceRequestAnimationFrame } from '../src/lifecycle/patch/commit';
 import { deinitGlobalSnapshotPatch, initGlobalSnapshotPatch } from '../src/lifecycle/patch/snapshotPatch';
-import { renderBackground as render } from '../src/lifecycle/render';
 import { LifecycleConstant } from '../src/lifecycleConstant';
 import { CATCH_ERROR } from '../src/renderToOpcodes/constants';
 import { __root } from '../src/root';
 import { backgroundSnapshotInstanceManager, setupPage } from '../src/snapshot';
-import { elementTree, waitSchedule } from './utils/nativeMethod';
 
 beforeAll(() => {
-  options.debounceRendering = Promise.prototype.then.bind(Promise.resolve());
   setupPage(__CreatePage('0', 0));
   replaceCommitHook();
   initDelayUnmount();
@@ -30,7 +28,6 @@ afterEach(() => {
   globalEnvManager.resetEnv();
   deinitGlobalSnapshotPatch();
   vi.restoreAllMocks();
-  elementTree.clear();
 });
 
 describe('useEffect', () => {
@@ -52,10 +49,11 @@ describe('useEffect', () => {
     expect(callback).toHaveBeenCalledTimes(0);
     expect(cleanUp).toHaveBeenCalledTimes(0);
 
+    expect(callback).toHaveBeenCalledTimes(0);
     expect(mtCallbacks.mock.calls.length).toBe(1);
     mtCallbacks.mock.calls[0][2]();
     lynx.getNativeApp().callLepusMethod.mockClear();
-    expect(callback).toHaveBeenCalledTimes(0);
+    expect(callback).toHaveBeenCalledTimes(1);
     expect(cleanUp).toHaveBeenCalledTimes(0);
 
     await waitSchedule();
@@ -801,120 +799,6 @@ describe('useState', () => {
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1].data).toMatchInlineSnapshot(
         `"{"patchList":[{"id":39,"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_17",2,4,2,[false,{"str":"str"}],1,-1,2,null]}]}"`,
       );
-    }
-  });
-
-  it('should batch multiple updates', async function() {
-    let _setCount;
-    let _setCount2;
-
-    const Child1 = () => {
-      const [count, setCount] = useState(0);
-      _setCount = setCount;
-      return (
-        <view>
-          <text text={count} />
-        </view>
-      );
-    };
-
-    const Child2 = () => {
-      const [count, setCount] = useState(0);
-      _setCount2 = setCount;
-      return (
-        <view>
-          <text text={count} />
-        </view>
-      );
-    };
-
-    const Comp = () => {
-      return (
-        <view>
-          <Child1 />
-          <Child2 />
-        </view>
-      );
-    };
-
-    // main thread render
-    {
-      __root.__jsx = <Comp />;
-      renderPage();
-    }
-
-    // background render
-    {
-      globalEnvManager.switchToBackground();
-      render(<Comp />, __root);
-    }
-
-    // hydrate
-    {
-      // LifecycleConstant.firstScreen
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
-
-      // rLynxChange
-      globalEnvManager.switchToMainThread();
-      globalThis.__OnLifecycleEvent.mockClear();
-      const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
-      globalThis[rLynxChange[0]](rLynxChange[1]);
-      expect(globalThis.__OnLifecycleEvent).not.toBeCalled();
-    }
-
-    // insert node
-    {
-      globalEnvManager.switchToBackground();
-      lynx.getNativeApp().callLepusMethod.mockClear();
-      _setCount(1);
-      _setCount2(2);
-      await waitSchedule();
-
-      expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
-      expect(lynx.getNativeApp().callLepusMethod.mock.calls).toMatchInlineSnapshot(
-        `
-        [
-          [
-            "rLynxChange",
-            {
-              "data": "{"patchList":[{"id":42,"snapshotPatch":[3,-3,0,1]},{"id":43,"snapshotPatch":[3,-4,0,2]}]}",
-              "patchOptions": {
-                "reloadVersion": 0,
-              },
-            },
-            [Function],
-          ],
-        ]
-      `,
-      );
-    }
-
-    {
-      globalEnvManager.switchToMainThread();
-      globalThis.__OnLifecycleEvent.mockClear();
-      const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
-      globalThis[rLynxChange[0]](rLynxChange[1]);
-      rLynxChange[2];
-      lynx.getNativeApp().callLepusMethod.mockClear();
-      await waitSchedule();
-      expect(__root.__element_root).toMatchInlineSnapshot(`
-        <page
-          cssId="default-entry-from-native:0"
-        >
-          <view>
-            <view>
-              <text
-                text={1}
-              />
-            </view>
-            <view>
-              <text
-                text={2}
-              />
-            </view>
-          </view>
-        </page>
-      `);
     }
   });
 });

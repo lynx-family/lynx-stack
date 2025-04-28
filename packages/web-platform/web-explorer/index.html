@@ -8,9 +8,7 @@
     <link rel="icon" type="image/png" href="icons/icon-128x128.png">
     <link rel="stylesheet" href="dist/static/css/index.css">
     <title>Lynx Explorer on Web Platform</title>
-    <script
-      src="https://www.unpkg.com/@vant/touch-emulator@1.4.0/dist/index.js"
-    ></script>
+    <script src="https://www.unpkg.com/@vant/touch-emulator@1.4.0/dist/index.js"></script>
     <script type="module" src="./dist/static/js/index.js"></script>
     <style>
     #install-button {
@@ -48,15 +46,13 @@
     }
     </style>
   </head>
-  <body
-    style="margin: 0; display: flex; flex-direction: column; align-items: stretch; width:100vw; max-height: 100vh;"
-  >
-    <div style="display: flex; flex: 1 1 0;">
+  <body style="margin: 0; display: flex; flex-direction: column; align-items: stretch; width: 100vw; max-height: 100vh">
+    <div style="display: flex; flex: 1 1 0">
       <div
         id="nav"
-        style="display: none; width:100%; border-width: 0px 0px 2px 0px; border-style: solid;"
+        style="display: none; width: 100%; border-width: 0px 0px 2px 0px; border-style: solid"
       >
-        <div style="margin: 10px;" id="back-button" role="button">
+        <div style="margin: 10px" id="back-button" role="button">
           <svg
             viewBox="0 0 24 24"
             fill="none"
@@ -79,53 +75,54 @@
     </div>
     <lynx-view
       id="lynx-view"
-      style="flex: 0 1 100vh; height:100vh;"
+      style="flex: 0 1 100vh; height: 100vh"
     ></lynx-view>
     <video
       id="qr-scanner"
-      style="position: fixed; height: 100vh; width: 100vw;z-index:-1;"
+      style="position: fixed; height: 100vh; width: 100vw; z-index: -1"
     >
     </video>
-    <button id="install-button" style="display: none;"
-    >Install Lynx Explorer</button>
+    <button id="install-button" style="display: none">
+      Install Lynx Explorer
+    </button>
     <script>
     window.addEventListener('load', () => {
-      let deferredPrompt;
-      const addBtn = document.getElementById('install-button');
+        let deferredPrompt;
+        const addBtn = document.getElementById('install-button');
 
-      window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        addBtn.style.display = 'block';
+        window.addEventListener('beforeinstallprompt', (e) => {
+          e.preventDefault();
+          deferredPrompt = e;
+          addBtn.style.display = 'block';
 
-        // Add timeout to hide the button
-        setTimeout(() => {
-          addBtn.classList.add('fade-out');
+          // Add timeout to hide the button
           setTimeout(() => {
-            addBtn.style.display = 'none';
-          }, 500);
-        }, 5000);
+            addBtn.classList.add('fade-out');
+            setTimeout(() => {
+              addBtn.style.display = 'none';
+            }, 500);
+          }, 5000);
 
-        addBtn.addEventListener('click', () => {
-          addBtn.style.display = 'none';
-          deferredPrompt.prompt();
-          deferredPrompt.userChoice.then((choiceResult) => {
-            if (choiceResult.outcome === 'accepted') {
-              console.log('User accepted the install prompt');
-            } else {
-              console.log('User dismissed the install prompt');
-            }
-            deferredPrompt = null;
+          addBtn.addEventListener('click', () => {
+            addBtn.style.display = 'none';
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then((choiceResult) => {
+              if (choiceResult.outcome === 'accepted') {
+                console.log('User accepted the install prompt');
+              } else {
+                console.log('User dismissed the install prompt');
+              }
+              deferredPrompt = null;
+            });
           });
         });
-      });
 
-      if (window.matchMedia('(display-mode: standalone)').matches) {
-        console.log('PWA is installed');
-      } else {
-        console.log('PWA is not installed');
-      }
-    });
+        if (window.matchMedia('(display-mode: standalone)').matches) {
+          console.log('PWA is installed');
+        } else {
+          console.log('PWA is not installed');
+        }
+      });
     </script>
   </body>
 </html>

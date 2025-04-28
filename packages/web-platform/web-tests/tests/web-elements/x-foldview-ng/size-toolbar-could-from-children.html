@@ -35,32 +35,32 @@ LICENSE file in the root directory of this source tree. -->
   <body>
     <script src="/web-elements.js" defer></script>
     <x-view
-      style="width: 100vw; height:600px; display:flex; --lynx-display:flex;--lynx-display-toggle:var(--lynx-display-flex); flex-direction: column;"
+      style="width: 100vw; height: 600px; display: flex; --lynx-display: flex; --lynx-display-toggle: var(--lynx-display-flex); flex-direction: column"
     >
       <x-foldview-ng
-        style="width:80%; height:600px; --lynx-display:flex;--lynx-display-toggle:var(--lynx-display-flex); background-color: wheat;display:flex; flex-direction: column;"
+        style="width: 80%; height: 600px; --lynx-display: flex; --lynx-display-toggle: var(--lynx-display-flex); background-color: wheat; display: flex; flex-direction: column"
       >
         <x-foldview-toolbar-ng
-          style="display:flex; --lynx-display:flex;--lynx-display-toggle:var(--lynx-display-flex); width:70%; background-color: cadetblue;"
+          style="display: flex; --lynx-display: flex; --lynx-display-toggle: var(--lynx-display-flex); width: 70%; background-color: cadetblue"
         >
-          <x-view style="height:200px;width:100%;"></x-view>
+          <x-view style="height: 200px; width: 100%"></x-view>
         </x-foldview-toolbar-ng>
         <x-foldview-header-ng
-          style="position:absolute; width:80%; height:400px; background-color: pink;"
+          style="position: absolute; width: 80%; height: 400px; background-color: pink"
         >
-          <x-view style="background-color:aqua; width:95%;"></x-view>
+          <x-view style="background-color: aqua; width: 95%"></x-view>
         </x-foldview-header-ng>
         <x-foldview-slot-ng
-          style="display:flex; --lynx-display:flex;--lynx-display-toggle:var(--lynx-display-flex); width:90%; height:300px; flex-direction:column; background-color: salmon;"
+          style="display: flex; --lynx-display: flex; --lynx-display-toggle: var(--lynx-display-flex); width: 90%; height: 300px; flex-direction: column; background-color: salmon"
         >
-          <scroll-view style="width:80%; height:300px;" scroll-y>
-            <x-view style="background-color:orange;"> </x-view>
-            <x-view style="background-color:tomato;"> </x-view>
-            <x-view style="background-color:thistle;"> </x-view>
-            <x-view style="background-color:forestgreen;"> </x-view>
-            <x-view style="background-color:firebrick;"> </x-view>
-            <x-view style="background-color:silver;"> </x-view>
-            <x-view style="background-color:seashell;"> </x-view>
+          <scroll-view style="width: 80%; height: 300px" scroll-y>
+            <x-view style="background-color: orange"> </x-view>
+            <x-view style="background-color: tomato"> </x-view>
+            <x-view style="background-color: thistle"> </x-view>
+            <x-view style="background-color: forestgreen"> </x-view>
+            <x-view style="background-color: firebrick"> </x-view>
+            <x-view style="background-color: silver"> </x-view>
+            <x-view style="background-color: seashell"> </x-view>
           </scroll-view>
         </x-foldview-slot-ng>
       </x-foldview-ng>

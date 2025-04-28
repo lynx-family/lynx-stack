@@ -4,6 +4,7 @@
 import { swipe, dragAndHold } from './utils.js';
 import { test, expect } from './coverage-fixture.js';
 import type { Page } from '@playwright/test';
+const ALL_ON_UI = !!process.env['ALL_ON_UI'];
 
 const wait = async (ms: number) => {
   await new Promise((resolve) => {
@@ -293,6 +294,35 @@ test.describe('reactlynx3 tests', () => {
       await wait(100);
       expect(eventHandlerTriggered).toBe(true);
     });
+
+    test(
+      'basic-mts-bindtouchstart',
+      async ({ page, browserName, context }, { title }) => {
+        test.skip(browserName !== 'chromium', 'not support CDPsession');
+        await goto(page, title);
+        await wait(300);
+        const cdpSession = await context.newCDPSession(page);
+        await swipe(cdpSession, {
+          x: 20,
+          y: 20,
+          xDistance: 10,
+          yDistance: 0,
+        });
+        expect(page.locator('#target1'), 'has touches').toHaveCSS(
+          'background-color',
+          'rgb(0, 128, 0)',
+        ); // green
+        expect(page.locator('#target2'), 'has target touches').toHaveCSS(
+          'background-color',
+          'rgb(0, 128, 0)',
+        ); // green
+        expect(page.locator('#target3'), 'has changed touches').toHaveCSS(
+          'background-color',
+          'rgb(0, 128, 0)',
+        ); // green
+      },
+    );
+
     test(
       'basic-mts-bindtap-change-element-background',
       async ({ page }, { title }) => {
@@ -457,6 +487,16 @@ test.describe('reactlynx3 tests', () => {
       },
     );
 
+    test(
+      'api-SystemInfo-height-width',
+      async ({ page }, { title }) => {
+        await goto(page, title);
+        await wait(200);
+        const target = page.locator('#target');
+        await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
+      },
+    );
+
     test('api-initdata', async ({ page }, { title }) => {
       await goto(page, title);
       await wait(100);
@@ -488,7 +528,7 @@ test.describe('reactlynx3 tests', () => {
       expect(timingKeys).toContain('ui_operation_flush_start');
       expect(timingKeys).toContain('decode_start');
       expect(timingKeys).toContain('decode_end');
-      expect(timingKeys).toContain('lepus_excute_start');
+      expect(timingKeys).toContain('lepus_execute_start');
       expect(timingKeys).toContain('load_template_start');
       expect(timingKeys).toContain('data_processor_start');
       expect(timingKeys).toContain('data_processor_end');
@@ -577,14 +617,14 @@ test.describe('reactlynx3 tests', () => {
       await goto(page, title);
       const target = page.locator('#target');
       await expect(target).toHaveCSS('background-color', 'rgb(255, 192, 203)'); // pink
-      expect(page.workers().length).toStrictEqual(3);
+      expect(page.workers().length).toStrictEqual(ALL_ON_UI ? 2 : 3);
     });
 
     test('api-preheat-at-least-one', async ({ page }, { title }) => {
       await goto(page, title);
       const target = page.locator('#target');
       await expect(target).toHaveCSS('background-color', 'rgb(255, 192, 203)'); // pink
-      expect(page.workers().length).toBe(3);
+      expect(page.workers().length).toBe(ALL_ON_UI ? 2 : 3);
       await page.evaluate(() => {
         document.body.querySelector('lynx-view')?.remove();
       });
@@ -1064,6 +1104,7 @@ test.describe('reactlynx3 tests', () => {
     test(
       'config-splitchunk-single-vendor',
       async ({ page }, { title }) => {
+        test.skip(ALL_ON_UI, 'main thread do not support importScript');
         await goto(page, title, undefined, true);
         await wait(1500);
         const target = page.locator('#target');
@@ -1073,6 +1114,7 @@ test.describe('reactlynx3 tests', () => {
     test(
       'config-splitchunk-split-by-experience',
       async ({ page }, { title }) => {
+        test.skip(ALL_ON_UI, 'main thread do not support importScript');
         await goto(page, title, undefined, true);
         await wait(1500);
         const target = page.locator('#target');
@@ -1082,6 +1124,7 @@ test.describe('reactlynx3 tests', () => {
     test(
       'config-splitchunk-split-by-module',
       async ({ page }, { title }) => {
+        test.skip(ALL_ON_UI, 'main thread do not support importScript');
         await goto(page, title, undefined, true);
         await wait(1500);
         const target = page.locator('#target');

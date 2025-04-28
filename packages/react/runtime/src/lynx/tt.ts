@@ -1,72 +1,31 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { options } from 'preact';
-import type { VNode } from 'preact';
+import { render } from 'preact';
 
 import { LifecycleConstant, NativeUpdateDataType } from '../lifecycleConstant.js';
-import { PerformanceTimingKeys, beginPipeline, markTiming } from './performance.js';
+import {
+  PerformanceTimingFlags,
+  PerformanceTimingKeys,
+  PipelineOrigins,
+  beginPipeline,
+  markTiming,
+} from './performance.js';
 import { BackgroundSnapshotInstance, hydrate } from '../backgroundSnapshot.js';
+import { runWithForce } from './runWithForce.js';
 import { destroyBackground } from '../lifecycle/destroy.js';
 import { delayedEvents, delayedPublishEvent } from '../lifecycle/event/delayEvents.js';
 import { delayLifecycleEvent, delayedLifecycleEvents } from '../lifecycle/event/delayLifecycleEvents.js';
 import { commitPatchUpdate, genCommitTaskId, globalCommitTaskMap } from '../lifecycle/patch/commit.js';
+import type { PatchList } from '../lifecycle/patch/commit.js';
 import { reloadBackground } from '../lifecycle/reload.js';
-import { renderBackground } from '../lifecycle/render.js';
-import { CHILDREN, COMPONENT, DIFF, DIFFED, FORCE } from '../renderToOpcodes/constants.js';
+import { CHILDREN } from '../renderToOpcodes/constants.js';
 import { __root } from '../root.js';
 import { globalRefsToSet, updateBackgroundRefs } from '../snapshot/ref.js';
 import { backgroundSnapshotInstanceManager } from '../snapshot.js';
 import { destroyWorklet } from '../worklet/destroy.js';
 
-export function runWithForce(cb: () => void): void {
-  // save vnode and its `_component` in WeakMap
-  const m = new WeakMap<VNode, any>();
-
-  const oldDiff = options[DIFF];
-
-  options[DIFF] = (vnode: VNode) => {
-    if (oldDiff) {
-      oldDiff(vnode);
-    }
-
-    // when `options[DIFF]` is called, a newVnode is passed in
-    // so its `vnode[COMPONENT]` should be null,
-    // but it will be set later
-    Object.defineProperty(vnode, COMPONENT, {
-      configurable: true,
-      set(c) {
-        m.set(vnode, c);
-        if (c) {
-          c[FORCE] = true;
-        }
-      },
-      get() {
-        return m.get(vnode);
-      },
-    });
-  };
-
-  const oldDiffed = options[DIFFED];
-
-  options[DIFFED] = (vnode: VNode) => {
-    if (oldDiffed) {
-      oldDiffed(vnode);
-    }
-
-    // delete is a reverse operation of previous `Object.defineProperty`
-    delete vnode[COMPONENT];
-    // restore
-    vnode[COMPONENT] = m.get(vnode);
-  };
-
-  try {
-    cb();
-  } finally {
-    options[DIFF] = oldDiff as (vnode: VNode) => void;
-    options[DIFFED] = oldDiffed as (vnode: VNode) => void;
-  }
-}
+export { runWithForce };
 
 function injectTt(): void {
   // @ts-ignore
@@ -100,7 +59,7 @@ function onLifecycleEvent([type, data]: [string, any]) {
   }
 
   try {
-    void onLifecycleEventImpl(type, data);
+    onLifecycleEventImpl(type, data);
   } catch (e) {
     lynx.reportError(e as Error);
   }
@@ -110,18 +69,18 @@ function onLifecycleEvent([type, data]: [string, any]) {
   }
 }
 
-async function onLifecycleEventImpl(type: string, data: any): Promise<void> {
+function onLifecycleEventImpl(type: string, data: any): void {
   switch (type) {
     case LifecycleConstant.firstScreen: {
       const { root: lepusSide, refPatch, jsReadyEventIdSwap } = data;
       if (__PROFILE__) {
         console.profile('hydrate');
       }
-      beginPipeline(true, 'react_lynx_hydrate');
-      markTiming(PerformanceTimingKeys.hydrate_parse_snapshot_start);
+      beginPipeline(true, PipelineOrigins.reactLynxHydrate, PerformanceTimingFlags.reactLynxHydrate);
+      markTiming(PerformanceTimingKeys.hydrateParseSnapshotStart);
       const before = JSON.parse(lepusSide);
-      markTiming(PerformanceTimingKeys.hydrate_parse_snapshot_end);
-      markTiming(PerformanceTimingKeys.diff_vdom_start);
+      markTiming(PerformanceTimingKeys.hydrateParseSnapshotEnd);
+      markTiming(PerformanceTimingKeys.diffVdomStart);
       const snapshotPatch = hydrate(
         before,
         __root as BackgroundSnapshotInstance,
@@ -129,7 +88,7 @@ async function onLifecycleEventImpl(type: string, data: any): Promise<void> {
       if (__PROFILE__) {
         console.profileEnd();
       }
-      markTiming(PerformanceTimingKeys.diff_vdom_end);
+      markTiming(PerformanceTimingKeys.diffVdomEnd);
 
       // TODO: It seems `delayedEvents` and `delayedLifecycleEvents` should be merged into one array to ensure the proper order of events.
       flushDelayedLifecycleEvents();
@@ -166,14 +125,20 @@ async function onLifecycleEventImpl(type: string, data: any): Promise<void> {
         console.profile('commitChanges');
       }
       const commitTaskId = genCommitTaskId();
-      await commitPatchUpdate({ patchList: [{ snapshotPatch, id: commitTaskId }] }, { isHydration: true });
-      updateBackgroundRefs(commitTaskId);
-      globalCommitTaskMap.forEach((commitTask, id) => {
-        if (id > commitTaskId) {
-          return;
-        }
-        commitTask();
-        globalCommitTaskMap.delete(id);
+      const patchList: PatchList = {
+        patchList: [{ snapshotPatch, id: commitTaskId }],
+      };
+      const obj = commitPatchUpdate(patchList, { isHydration: true });
+
+      lynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
+        updateBackgroundRefs(commitTaskId);
+        globalCommitTaskMap.forEach((commitTask, id) => {
+          if (id > commitTaskId) {
+            return;
+          }
+          commitTask();
+          globalCommitTaskMap.delete(id);
+        });
       });
       break;
     }
@@ -240,7 +205,7 @@ function updateGlobalProps(newData: Record<string, any>): void {
   // This is already done because updateFromRoot will consume all dirty flags marked by
   // the setState, and setState's flush will be a noop. No extra diffs will be needed.
   Promise.resolve().then(() => {
-    runWithForce(() => renderBackground(__root.__jsx, __root as any));
+    runWithForce(() => render(__root.__jsx, __root as any));
   });
   lynxCoreInject.tt.GlobalEventEmitter.emit('onGlobalPropsChanged');
 }

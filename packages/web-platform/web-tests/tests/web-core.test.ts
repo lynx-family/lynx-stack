@@ -5,6 +5,7 @@
 import { test, expect } from './coverage-fixture.js';
 import type { Page, Worker } from '@playwright/test';
 
+const ALL_ON_UI = !!process.env.ALL_ON_UI;
 const wait = async (ms: number) => {
   await new Promise((resolve) => {
     setTimeout(resolve, ms);
@@ -18,16 +19,22 @@ const goto = async (page: Page) => {
   await wait(500);
 };
 
-async function getMainThreadWorker(page: Page): Promise<Worker | undefined> {
+async function getMainThreadWorker(
+  page: Page,
+): Promise<Worker | Page | undefined> {
   await wait(100);
-  for (const i of page.workers()) {
-    const isActive = await i.evaluate(() => {
-      return globalThis.runtime !== undefined
-        && globalThis.__lynx_worker_type === 'main';
-    });
+  if (ALL_ON_UI) {
+    return page;
+  } else {
+    for (const i of page.workers()) {
+      const isActive = await i.evaluate(() => {
+        return globalThis.runtime !== undefined
+          && globalThis.__lynx_worker_type === 'main';
+      });
 
-    if (isActive) {
-      return i;
+      if (isActive) {
+        return i;
+      }
     }
   }
 }

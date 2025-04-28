@@ -21,14 +21,14 @@ LICENSE file in the root directory of this source tree. -->
     />
     <script type="module">
     const top = document.createElement('div');
-    queueMicrotask(() => {
-      for (let ii = 0; ii < 3000; ii++) {
-        const text = document.createElement('x-text');
-        text.innerText = 'hello lynx';
-        top.append(text);
-      }
-    });
-    document.body.append(top);
+      queueMicrotask(() => {
+        for (let ii = 0; ii < 3000; ii++) {
+          const text = document.createElement('x-text');
+          text.innerText = 'hello lynx';
+          top.append(text);
+        }
+      });
+      document.body.append(top);
     </script>
     <style>
     x-view {

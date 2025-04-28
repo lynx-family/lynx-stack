@@ -2,12 +2,10 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { render } from 'preact';
-import type { ComponentChild, ContainerNode } from 'preact';
 
 import { renderOpcodesInto } from '../opcodes.js';
 import { render as renderToString } from '../renderToOpcodes/index.js';
 import { __root } from '../root.js';
-import { commitToMainThread } from './patch/commit.js';
 
 function renderMainThread(): void {
   /* v8 ignore start */
@@ -47,9 +45,4 @@ function renderMainThread(): void {
   /* v8 ignore stop */
 }
 
-function renderBackground(vnode: ComponentChild, parent: ContainerNode): void {
-  render(vnode, parent);
-  void commitToMainThread();
-}
-
-export { renderMainThread, renderBackground };
+export { renderMainThread };

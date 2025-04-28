@@ -10,7 +10,6 @@ import color from 'picocolors'
 
 import { register } from '@lynx-js/rspeedy/register'
 
-import { validate } from './validate.js'
 import { debug } from '../debug.js'
 
 import type { Config } from './index.js'
@@ -125,11 +124,14 @@ export async function loadConfig(
     : register()
 
   try {
-    const exports = await import(
-      /* webpackIgnore: true */ `${specifier}?t=${Date.now()}`
-    ) as {
-      default: Config
-    } | Config
+    const [exports, { validate }] = await Promise.all([
+      import(
+        /* webpackIgnore: true */ `${specifier}?t=${Date.now()}`
+      ) as {
+        default: Config
+      } | Config,
+      import('./validate.js'),
+    ])
 
     const content = validate(
       'default' in exports ? exports.default : exports,

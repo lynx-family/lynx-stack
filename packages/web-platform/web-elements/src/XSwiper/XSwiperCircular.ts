@@ -163,7 +163,7 @@ export class XSwiperCircular
     if (newVal !== null) {
       this.#changeEventHandler({
         detail: {
-          current: this.#dom.current,
+          current: this.#dom.currentIndex,
           isDragged: false,
           __isFirstLayout: true,
         },

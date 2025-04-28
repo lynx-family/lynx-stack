@@ -148,7 +148,16 @@ jobs:
         npx --registry http://localhost:4873 create-rspeedy-canary@latest --template react --dir create-rspeedy-regression
         cd create-rspeedy-regression
         pnpm install --registry=http://localhost:4873
+        pnpm tsc --noEmit
         pnpm run build
+        pnpm tsc --noEmit
+        npx --registry http://localhost:4873 create-rspeedy-canary@latest --template react-vitest-rltl --dir create-rspeedy-regression-vitest-rltl
+        cd create-rspeedy-regression-vitest-rltl
+        pnpm install --registry=http://localhost:4873
+        pnpm tsc --noEmit
+        pnpm run build
+        pnpm tsc --noEmit
+        pnpm run test
   test-tools:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
@@ -167,6 +176,26 @@ jobs:
         --coverage
         --coverage.reporter='json'
         --coverage.reporter='text'
+        --no-cache
+        --logHeapUsage
+        --silent
+  test-testing-library:
+    needs: build
+    uses: ./.github/workflows/workflow-test.yml
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    with:
+      runs-on: lynx-ubuntu-24.04-medium
+      run: >
+        pnpm run test
+        --project 'react/testing-library'
+        --project 'testing-library/*'
+        --test-timeout=50000
+        --reporter=github-actions
+        --reporter=dot
+        --reporter=junit
+        --outputFile=test-report.junit.xml
+        --coverage
         --no-cache
         --logHeapUsage
         --silent
@@ -192,6 +221,42 @@ jobs:
         export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
         pnpm --filter @lynx-js/web-tests run test --reporter='github,dot,junit,html'
         pnpm --filter @lynx-js/web-tests run coverage:ci
+  playwright-linux-all-on-ui:
+    needs: build
+    uses: ./.github/workflows/workflow-test.yml
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    with:
+      runs-on: lynx-ubuntu-24.04-xlarge
+      is-web: true
+      codecov-flags: "e2e"
+      run: |
+        export NODE_OPTIONS="--max-old-space-size=32768"
+        export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
+        export ALL_ON_UI=true
+        pnpm --filter @lynx-js/web-tests run test --reporter='github,dot,junit,html'
+        pnpm --filter @lynx-js/web-tests run coverage:ci
+  test-web-platform:
+    needs: build
+    uses: ./.github/workflows/workflow-test.yml
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    with:
+      runs-on: lynx-ubuntu-24.04-medium
+      run: >
+        pnpm
+        --filter @lynx-js/web-platform-rsbuild-plugin
+        run test
+        --reporter=github-actions
+        --reporter=dot
+        --reporter=junit
+        --outputFile=test-report.junit.xml
+        --coverage.reporter='json'
+        --coverage.reporter='text'
+        --test-timeout=50000
+        --no-cache
+        --logHeapUsage
+        --silent
   lighthouse:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
@@ -241,12 +306,15 @@ jobs:
     needs:
       - code-style-check
       - playwright-linux
+      - playwright-linux-all-on-ui
+      - test-web-platform
       - test-plugins
       - test-publish
       - test-react
       - test-rust
       - test-rspeedy
       - test-tools
+      - test-testing-library
       - test-type
       - website
       - zizmor

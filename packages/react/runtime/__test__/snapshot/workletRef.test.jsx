@@ -3,13 +3,13 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 */
+import { render } from 'preact';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createCompBG1, createCompBGList, createCompBGSpread } from './workletRefBG';
 import { createCompMT1, createCompMTList, createCompMTSpread } from './workletRefMT';
 import { replaceCommitHook } from '../../src/lifecycle/patch/commit';
 import { injectUpdateMainThread } from '../../src/lifecycle/patch/updateMainThread';
-import { renderBackground as render } from '../../src/lifecycle/render';
 import { __root } from '../../src/root';
 import { setupPage } from '../../src/snapshot';
 import { globalEnvManager } from '../utils/envManager';
@@ -237,8 +237,11 @@ describe('WorkletRef', () => {
               "patchOptions": {
                 "isHydration": true,
                 "pipelineOptions": {
+                  "dsl": "reactLynx",
                   "needTimestamps": true,
                   "pipelineID": "pipelineID",
+                  "pipelineOrigin": "reactLynxHydrate",
+                  "stage": "hydrate",
                 },
                 "reloadVersion": 0,
               },

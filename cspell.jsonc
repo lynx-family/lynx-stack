@@ -115,12 +115,31 @@
     "parseable", // https://pnpm.io/cli/list
     "debugids", // https://getsentry.github.io/debugids/
     "zizmor", // https://github.com/woodruffw/zizmor
+    "Vdom",
+    "wvid",
+    "bindscroll",
+    "deinit",
+    "layoutchange", // the "layoutchange" event of Lynx
+    "longtap",
+    "bgload",
+    "bgerror",
+    "mouseclick",
+    "mousedblclick",
+    "mouselongpress",
+    "mouselongpress",
+    "contentsizechanged",
+    "scrolltoupperedge",
+    "scrolltoloweredge",
+    "scrolltonormalstate",
+    "rltl", // ReactLynx Testing Library
     // lighthouse CI
     "lhci",
     "lh",
   ],
   // Glob
   "ignorePaths": [
+    // cSpell:disable-next-line
+    ".cargo/nextest.toml",
     ".gitignore",
     // Tests
     "coverage",

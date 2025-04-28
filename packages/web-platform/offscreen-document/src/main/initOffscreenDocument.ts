@@ -10,7 +10,6 @@ import {
 function emptyHandler() {
   // no-op
 }
-
 const otherPropertyNames = [
   'detail',
   'keyCode',
@@ -19,7 +18,41 @@ const otherPropertyNames = [
   'propertyName',
   'pseudoElement',
   'animationName',
+  'touches',
+  'targetTouches',
+  'changedTouches',
 ];
+const blockList = new Set([
+  'isTrusted',
+  'target',
+  'currentTarget',
+  'type',
+  'bubbles',
+  'window',
+  'self',
+  'view',
+  'srcElement',
+  'eventPhase',
+]);
+
+function transferToCloneable(value: any): any {
+  if (
+    typeof value === 'string' || typeof value === 'number'
+    || typeof value === 'boolean' || value === null || value === undefined
+  ) {
+    return value;
+  } else if (value[Symbol.iterator]) {
+    return [...value].map(transferToCloneable);
+  } else if (typeof value === 'object' && !(value instanceof EventTarget)) {
+    const obj: Record<string, any> = {};
+    for (const key in value) {
+      if (!blockList.has(key)) {
+        obj[key] = transferToCloneable(value[key]);
+      }
+    }
+    return obj;
+  }
+}
 
 export function initOffscreenDocument(options: {
   shadowRoot: ShadowRoot;
@@ -64,7 +97,8 @@ export function initOffscreenDocument(options: {
       const otherProperties: Record<string, unknown> = {};
       for (const propertyName of otherPropertyNames) {
         if (propertyName in ev) {
-          otherProperties[propertyName] = (ev as any)[propertyName];
+          // @ts-expect-error
+          otherProperties[propertyName] = transferToCloneable(ev[propertyName]);
         }
       }
       onEvent(eventType, targetUniqueId, ev.bubbles, otherProperties);

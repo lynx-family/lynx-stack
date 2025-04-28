@@ -31,22 +31,25 @@
 
   <body>
     <script src="/web-elements.js" defer></script>
-    <x-view style="width:100vw;height:100vh">
+    <x-view style="width: 100vw; height: 100vh">
       <x-view
-        style="width:100vw; --lynx-display:flex;--lynx-display-toggle:var(--lynx-display-flex); flex-direction: column;"
+        style="width: 100vw; --lynx-display: flex; --lynx-display-toggle: var(--lynx-display-flex); flex-direction: column"
       >
-        <x-viewpager-ng style="width:50%;height:50%;">
-          <x-viewpager-item-ng style="background:wheat;">
-            <x-view style="height:100%; width:100px; background: pink;"></x-view
-            >
-          </x-viewpager-item-ng>
-          <x-viewpager-item-ng style="background:sandybrown;">
+        <x-viewpager-ng style="width: 50%; height: 50%">
+          <x-viewpager-item-ng style="background: wheat">
             <x-view
-              style="height:100px; width:100px; background:green;"
+              style="height: 100%; width: 100px; background: pink"
+            ></x-view>
+          </x-viewpager-item-ng>
+          <x-viewpager-item-ng style="background: sandybrown">
+            <x-view
+              style="height: 100px; width: 100px; background: green"
             ></x-view>
           </x-viewpager-item-ng>
         </x-viewpager-ng>
-        <x-view style="height:100px; width:100px; background:yellow;"></x-view>
+        <x-view
+          style="height: 100px; width: 100px; background: yellow"
+        ></x-view>
       </x-view>
     </x-view>
   </body>

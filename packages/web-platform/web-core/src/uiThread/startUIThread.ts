@@ -3,19 +3,9 @@
 // LICENSE file in the root directory of this source tree.
 
 import type { LynxView } from '../apis/createLynxView.js';
-import { registerInvokeUIMethodHandler } from './crossThreadHandlers/registerInvokeUIMethodHandler.js';
-import { registerNativePropsHandler } from './crossThreadHandlers/registerSetNativePropsHandler.js';
-import { registerNativeModulesCallHandler } from './crossThreadHandlers/registerNativeModulesCallHandler.js';
 import { bootWorkers } from './bootWorkers.js';
-import { registerReportErrorHandler } from './crossThreadHandlers/registerReportErrorHandler.js';
-import { registerFlushElementTreeHandler } from './crossThreadHandlers/registerFlushElementTreeHandler.js';
 import { createDispose } from './crossThreadHandlers/createDispose.js';
-import { registerTriggerComponentEventHandler } from './crossThreadHandlers/registerTriggerComponentEventHandler.js';
-import { registerSelectComponentHandler } from './crossThreadHandlers/registerSelectComponentHandler.js';
 import {
-  mainThreadStartEndpoint,
-  markTimingEndpoint,
-  sendGlobalEventEndpoint,
   type LynxTemplate,
   type MainThreadStartConfigs,
   type NapiModulesCall,
@@ -23,30 +13,37 @@ import {
 } from '@lynx-js/web-constants';
 import { loadTemplate } from '../utils/loadTemplate.js';
 import { createUpdateData } from './crossThreadHandlers/createUpdateData.js';
-import { registerNapiModulesCallHandler } from './crossThreadHandlers/registerNapiModulesCallHandler.js';
-import { registerDispatchLynxViewEventHandler } from './crossThreadHandlers/registerDispatchLynxViewEventHandler.js';
+import { startBackground } from './startBackground.js';
+import { createRenderMultiThread } from './createRenderMultiThread.js';
+import { createRenderAllOnUI } from './createRenderAllOnUI.js';
+
+export type StartUIThreadCallbacks = {
+  nativeModulesCall: NativeModulesCall;
+  napiModulesCall: NapiModulesCall;
+  onError?: () => void;
+  customTemplateLoader?: (url: string) => Promise<LynxTemplate>;
+};
 
 export function startUIThread(
   templateUrl: string,
   configs: Omit<MainThreadStartConfigs, 'template'>,
   shadowRoot: ShadowRoot,
   lynxGroupId: number | undefined,
-  callbacks: {
-    nativeModulesCall: NativeModulesCall;
-    napiModulesCall: NapiModulesCall;
-    onError?: () => void;
-    customTemplateLoader?: (url: string) => Promise<LynxTemplate>;
-  },
+  threadStrategy: 'all-on-ui' | 'multi-thread',
+  callbacks: StartUIThreadCallbacks,
 ): LynxView {
   const createLynxStartTiming = performance.now() + performance.timeOrigin;
+  const allOnUI = threadStrategy === 'all-on-ui';
   const {
     mainThreadRpc,
     backgroundRpc,
     terminateWorkers,
-  } = bootWorkers(lynxGroupId);
-  const sendGlobalEvent = backgroundRpc.createCall(sendGlobalEventEndpoint);
-  const mainThreadStart = mainThreadRpc.createCall(mainThreadStartEndpoint);
-  const markTiming = backgroundRpc.createCall(markTimingEndpoint);
+  } = bootWorkers(lynxGroupId, allOnUI);
+  const { markTiming, sendGlobalEvent, updateDataBackground } = startBackground(
+    backgroundRpc,
+    shadowRoot,
+    callbacks,
+  );
   const markTimingInternal = (
     timingKey: string,
     pipelineId?: string,
@@ -55,52 +52,29 @@ export function startUIThread(
     if (!timeStamp) timeStamp = performance.now() + performance.timeOrigin;
     markTiming(timingKey, pipelineId, timeStamp);
   };
+  const { start, updateDataMainThread } = allOnUI
+    ? createRenderAllOnUI(
+      /* main-to-bg rpc*/ mainThreadRpc,
+      shadowRoot,
+      markTimingInternal,
+      callbacks,
+    )
+    : createRenderMultiThread(
+      /* main-to-ui rpc*/ mainThreadRpc,
+      shadowRoot,
+      callbacks,
+    );
   markTimingInternal('create_lynx_start', undefined, createLynxStartTiming);
   markTimingInternal('load_template_start');
   loadTemplate(templateUrl, callbacks.customTemplateLoader).then((template) => {
     markTimingInternal('load_template_end');
-    mainThreadStart({
+    start({
       ...configs,
       template,
     });
   });
-  registerReportErrorHandler(
-    mainThreadRpc,
-    callbacks.onError,
-  );
-  registerDispatchLynxViewEventHandler(backgroundRpc, shadowRoot);
-  registerFlushElementTreeHandler(
-    mainThreadRpc,
-    {
-      shadowRoot,
-    },
-  );
-  registerInvokeUIMethodHandler(
-    backgroundRpc,
-    shadowRoot,
-  );
-  registerNativePropsHandler(
-    backgroundRpc,
-    shadowRoot,
-  );
-  registerTriggerComponentEventHandler(
-    backgroundRpc,
-    shadowRoot,
-  );
-  registerSelectComponentHandler(
-    backgroundRpc,
-    shadowRoot,
-  );
-  registerNativeModulesCallHandler(
-    backgroundRpc,
-    callbacks.nativeModulesCall,
-  );
-  registerNapiModulesCallHandler(
-    backgroundRpc,
-    callbacks.napiModulesCall,
-  );
   return {
-    updateData: createUpdateData(mainThreadRpc, backgroundRpc),
+    updateData: createUpdateData(updateDataMainThread, updateDataBackground),
     dispose: createDispose(
       backgroundRpc,
       terminateWorkers,

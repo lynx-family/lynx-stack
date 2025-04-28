@@ -32,16 +32,22 @@
   <body>
     <script src="/web-elements.js" defer></script>
     <script type="module">
-    document.querySelector('#target').addEventListener('error', (ev) => {
-      ev.target.style.setProperty('background-color', 'green');
-    });
-    document.querySelector('#target').setAttribute('src', '/unknown/path');
+    document.querySelector('#target').addEventListener(
+        'error',
+        (ev) => {
+          ev.target.style.setProperty('background-color', 'green');
+        },
+      );
+      document.querySelector('#target').setAttribute(
+        'src',
+        '/unknown/path',
+      );
     </script>
     <x-view class="page">
       <x-image
         src="../../resources/firefox-logo.png"
         id="target"
-        style="width:100px; height:400px; background-color: aquamarine;"
+        style="width: 100px; height: 400px; background-color: aquamarine"
       >
       </x-image>
     </x-view>

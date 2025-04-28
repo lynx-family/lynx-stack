@@ -1,5 +1,11 @@
 # @lynx-js/web-explorer
 
+## 0.0.6
+
+### Patch Changes
+
+- fix: allow lynxjs.org to access native modules ([#599](https://github.com/lynx-family/lynx-stack/pull/599))
+
 ## 0.0.5
 
 ### Patch Changes

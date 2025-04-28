@@ -1,5 +1,18 @@
 # @lynx-js/react-alias-rsbuild-plugin
 
+## 0.9.8
+
+### Patch Changes
+
+- Refactor: Replace built-in `background-only` implementation with npm package ([#602](https://github.com/lynx-family/lynx-stack/pull/602))
+
+  Previously we maintained custom files:
+
+  - `empty.ts` for background thread
+  - `error.ts` for main thread validation
+
+  Now adopting the standard `background-only` npm package
+
 ## 0.9.7
 
 ## 0.9.6

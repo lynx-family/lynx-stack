@@ -18,7 +18,7 @@ export class ScrollAttributes
     'scroll-left',
     'initial-scroll-offset',
     'scroll-to-index',
-    'initial-scroll-index',
+    'initial-scroll-to-index',
   ];
 
   constructor(dom: ScrollView) {
@@ -27,7 +27,7 @@ export class ScrollAttributes
 
   @registerAttributeHandler('scroll-top', false)
   @registerAttributeHandler('scroll-left', false)
-  @registerAttributeHandler('nitial-scroll-offset', false)
+  @registerAttributeHandler('initial-scroll-offset', false)
   #handleInitialScrollOffset(
     newVal: string | null,
     _: string | null,
@@ -62,13 +62,13 @@ export class ScrollAttributes
   }
 
   @registerAttributeHandler('scroll-to-index', false)
-  @registerAttributeHandler('initial-scroll-index', false)
+  @registerAttributeHandler('initial-scroll-to-index', false)
   #handleInitialScrollIndex(newVal: string | null) {
     if (newVal) {
       const scrollValue = parseFloat(newVal);
       const childrenElement = this.#dom.children.item(scrollValue);
       if (childrenElement && childrenElement instanceof HTMLElement) {
-        const scrollX = !!this.#dom.getAttribute('scroll-x');
+        const scrollX = this.#dom.getAttribute('scroll-x') !== null;
         requestAnimationFrame(() => {
           if (scrollX) {
             this.#dom.scrollLeft = childrenElement.offsetLeft;

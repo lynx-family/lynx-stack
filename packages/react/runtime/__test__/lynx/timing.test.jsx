@@ -3,12 +3,11 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 */
-import { Component, options } from 'preact';
+import { Component, options, render } from 'preact';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { replaceCommitHook } from '../../src/lifecycle/patch/commit';
 import { injectUpdateMainThread } from '../../src/lifecycle/patch/updateMainThread';
-import { renderBackground as render } from '../../src/lifecycle/render';
 import '../../src/lynx/component';
 import { initTimingAPI } from '../../src/lynx/performance';
 import { __root } from '../../src/root';
@@ -83,17 +82,17 @@ describe('setState timing api', () => {
     expect(lynx.getNativeApp().markTiming).toHaveBeenNthCalledWith(
       1,
       '__lynx_timing_actual_fmp',
-      'update_set_state_trigger',
+      'updateSetStateTrigger',
     );
     expect(lynx.getNativeApp().markTiming).toHaveBeenNthCalledWith(
       2,
       '__lynx_timing_actual_fmp',
-      'update_diff_vdom_start',
+      'updateDiffVdomStart',
     );
     expect(lynx.getNativeApp().markTiming).toHaveBeenNthCalledWith(
       3,
       '__lynx_timing_actual_fmp',
-      'update_diff_vdom_end',
+      'updateDiffVdomEnd',
     );
 
     expect(mtCallbacks[0][1]).toMatchInlineSnapshot(`
@@ -101,8 +100,11 @@ describe('setState timing api', () => {
         "data": "{"patchList":[{"id":3,"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_2",3,0,null,4,3,4,0,1,1,3,4,null,1,-2,3,null]}],"flushOptions":{"__lynx_timing_flag":"__lynx_timing_actual_fmp"}}",
         "patchOptions": {
           "pipelineOptions": {
+            "dsl": "reactLynx",
             "needTimestamps": false,
             "pipelineID": "pipelineID",
+            "pipelineOrigin": "updateTriggeredByBts",
+            "stage": "update",
           },
           "reloadVersion": 0,
         },
@@ -177,8 +179,11 @@ describe('attribute timing api', () => {
         "data": "{"patchList":[{"id":6,"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_4",3,4,3,[{"__ltf":"__lynx_timing_actual_fmp"}],0,null,4,3,4,0,1,1,3,4,null,1,-2,3,null]}]}",
         "patchOptions": {
           "pipelineOptions": {
+            "dsl": "reactLynx",
             "needTimestamps": true,
             "pipelineID": "pipelineID",
+            "pipelineOrigin": "updateTriggeredByBts",
+            "stage": "update",
           },
           "reloadVersion": 0,
         },
@@ -215,42 +220,52 @@ describe('attribute timing api', () => {
         [
           "_markTiming",
           "pipelineID",
-          "diff_vdom_start",
+          "diffVdomStart",
         ],
         [
           "_markTiming",
           "pipelineID",
-          "diff_vdom_end",
+          "diffVdomEnd",
         ],
         [
           "_markTiming",
           "pipelineID",
-          "pack_changes_start",
+          "packChangesStart",
         ],
         [
           "_markTiming",
           "pipelineID",
-          "pack_changes_end",
+          "packChangesEnd",
         ],
         [
           "_markTiming",
           "pipelineID",
-          "parse_changes_start",
+          "mtsRenderStart",
         ],
         [
           "_markTiming",
           "pipelineID",
-          "parse_changes_end",
+          "parseChangesStart",
         ],
         [
           "_markTiming",
           "pipelineID",
-          "patch_changes_start",
+          "parseChangesEnd",
         ],
         [
           "_markTiming",
           "pipelineID",
-          "patch_changes_end",
+          "patchChangesStart",
+        ],
+        [
+          "_markTiming",
+          "pipelineID",
+          "patchChangesEnd",
+        ],
+        [
+          "_markTiming",
+          "pipelineID",
+          "mtsRenderEnd",
         ],
       ]
     `);
@@ -315,22 +330,22 @@ describe('attribute timing api', () => {
         [
           "_markTiming",
           "pipelineID",
-          "diff_vdom_start",
+          "diffVdomStart",
         ],
         [
           "_markTiming",
           "pipelineID",
-          "diff_vdom_end",
+          "diffVdomEnd",
         ],
         [
           "_markTiming",
           "pipelineID",
-          "pack_changes_start",
+          "packChangesStart",
         ],
         [
           "_markTiming",
           "pipelineID",
-          "pack_changes_end",
+          "packChangesEnd",
         ],
       ]
     `);
@@ -339,8 +354,11 @@ describe('attribute timing api', () => {
         "data": "{"patchList":[{"id":9,"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_6",3,4,3,[{"__ltf":"__lynx_timing_actual_fmp"}],0,null,4,3,4,0,1,1,3,4,null,1,-2,3,null]}]}",
         "patchOptions": {
           "pipelineOptions": {
+            "dsl": "reactLynx",
             "needTimestamps": true,
             "pipelineID": "pipelineID",
+            "pipelineOrigin": "updateTriggeredByBts",
+            "stage": "update",
           },
           "reloadVersion": 0,
         },
@@ -407,32 +425,32 @@ describe('attribute timing api', () => {
         [
           "_markTiming",
           "pipelineID",
-          "hydrate_parse_snapshot_start",
+          "hydrateParseSnapshotStart",
         ],
         [
           "_markTiming",
           "pipelineID",
-          "hydrate_parse_snapshot_end",
+          "hydrateParseSnapshotEnd",
         ],
         [
           "_markTiming",
           "pipelineID",
-          "diff_vdom_start",
+          "diffVdomStart",
         ],
         [
           "_markTiming",
           "pipelineID",
-          "diff_vdom_end",
+          "diffVdomEnd",
         ],
         [
           "_markTiming",
           "pipelineID",
-          "pack_changes_start",
+          "packChangesStart",
         ],
         [
           "_markTiming",
           "pipelineID",
-          "pack_changes_end",
+          "packChangesEnd",
         ],
       ]
     `);
@@ -442,8 +460,11 @@ describe('attribute timing api', () => {
         "patchOptions": {
           "isHydration": true,
           "pipelineOptions": {
+            "dsl": "reactLynx",
             "needTimestamps": true,
             "pipelineID": "pipelineID",
+            "pipelineOrigin": "reactLynxHydrate",
+            "stage": "hydrate",
           },
           "reloadVersion": 0,
         },
@@ -498,8 +519,11 @@ describe('attribute timing api', () => {
           "data": "{"patchList":[{"id":14,"snapshotPatch":[3,-2,1,444]}]}",
           "patchOptions": {
             "pipelineOptions": {
+              "dsl": "reactLynx",
               "needTimestamps": false,
               "pipelineID": "pipelineID",
+              "pipelineOrigin": "updateTriggeredByBts",
+              "stage": "update",
             },
             "reloadVersion": 0,
           },
@@ -518,7 +542,7 @@ describe('attribute timing api', () => {
           [
             "_markTiming",
             "pipelineID",
-            "diff_vdom_start",
+            "diffVdomStart",
           ],
         ]
       `);
@@ -654,8 +678,11 @@ describe('attribute timing api', () => {
           "data": "{"patchList":[{"id":17,"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_15",3,4,3,[{"xxx":333,"__lynx_timing_flag":"__lynx_timing_actual_fmp"}],0,null,4,3,4,0,1,1,3,4,null,1,-2,3,null]}]}",
           "patchOptions": {
             "pipelineOptions": {
+              "dsl": "reactLynx",
               "needTimestamps": true,
               "pipelineID": "pipelineID",
+              "pipelineOrigin": "updateTriggeredByBts",
+              "stage": "update",
             },
             "reloadVersion": 0,
           },
@@ -693,42 +720,52 @@ describe('attribute timing api', () => {
         [
           "_markTiming",
           "pipelineID",
-          "diff_vdom_start",
+          "diffVdomStart",
         ],
         [
           "_markTiming",
           "pipelineID",
-          "diff_vdom_end",
+          "diffVdomEnd",
         ],
         [
           "_markTiming",
           "pipelineID",
-          "pack_changes_start",
+          "packChangesStart",
         ],
         [
           "_markTiming",
           "pipelineID",
-          "pack_changes_end",
+          "packChangesEnd",
         ],
         [
           "_markTiming",
           "pipelineID",
-          "parse_changes_start",
+          "mtsRenderStart",
         ],
         [
           "_markTiming",
           "pipelineID",
-          "parse_changes_end",
+          "parseChangesStart",
         ],
         [
           "_markTiming",
           "pipelineID",
-          "patch_changes_start",
+          "parseChangesEnd",
         ],
         [
           "_markTiming",
           "pipelineID",
-          "patch_changes_end",
+          "patchChangesStart",
+        ],
+        [
+          "_markTiming",
+          "pipelineID",
+          "patchChangesEnd",
+        ],
+        [
+          "_markTiming",
+          "pipelineID",
+          "mtsRenderEnd",
         ],
       ]
     `);
@@ -747,8 +784,11 @@ describe('attribute timing api', () => {
           "data": "{"patchList":[{"id":18,"snapshotPatch":[3,3,0,{"xxx":666,"__lynx_timing_flag":"__lynx_timing_actual_fmp"}]}]}",
           "patchOptions": {
             "pipelineOptions": {
+              "dsl": "reactLynx",
               "needTimestamps": false,
               "pipelineID": "pipelineID",
+              "pipelineOrigin": "updateTriggeredByBts",
+              "stage": "update",
             },
             "reloadVersion": 0,
           },
@@ -786,7 +826,7 @@ describe('attribute timing api', () => {
           [
             "_markTiming",
             "pipelineID",
-            "diff_vdom_start",
+            "diffVdomStart",
           ],
         ]
       `);

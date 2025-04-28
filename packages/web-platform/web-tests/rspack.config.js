@@ -26,6 +26,9 @@ const config = {
     },
   },
   plugins: [
+    new rspack.DefinePlugin({
+      'process.env.ALL_ON_UI': JSON.stringify(process.env.ALL_ON_UI),
+    }),
     new rspack.HtmlRspackPlugin({
       title: 'lynx-for-web-test',
       meta: {

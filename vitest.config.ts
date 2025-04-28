@@ -9,6 +9,7 @@ export default defineConfig({
     coverage: {
       exclude: [
         '**/*.d.ts',
+        '**/*.test-d.*',
         '**/vitest.config.ts',
         '**/rslib.config.ts',
         '**/*.bench.js',
@@ -30,6 +31,8 @@ export default defineConfig({
         'packages/tools/canary-release/**',
         'packages/web-platform/**',
         'packages/webpack/test-tools/**',
+        'packages/testing-library/test-environment/**',
+        'packages/react/testing-library/**',
       ],
     },
 

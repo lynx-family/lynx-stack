@@ -45,6 +45,7 @@ export type INapiModulesCall = (
  * @property {INapiModulesCall} onNapiModulesCall [optional] the NapiModule value handler.
  * @property {"false" | "true" | null} injectHeadLinks [optional] @default true set it to "false" to disable injecting the <link href="" ref="stylesheet"> styles into shadowroot
  * @property {number} lynxGroupId [optional] (attribute: "lynx-group-id") the background shared context id, which is used to share webworker between different lynx cards
+ * @property {"all-on-ui" | "multi-thread"} threadStrategy [optional] @default "multi-thread" (attribute: "thread-strategy") controls the thread strategy for current lynx view
  * @property {(string)=>Promise<LynxTemplate>} customTemplateLoader [optional] the custom template loader, which is used to load the template
  *
  * @event error lynx card fired an error
@@ -285,6 +286,22 @@ export class LynxView extends HTMLElement {
   }
 
   /**
+   * @param
+   * @property
+   */
+  get threadStrategy(): 'all-on-ui' | 'multi-thread' {
+    // @ts-expect-error
+    return this.getAttribute('thread-strategy');
+  }
+  set threadStrategy(val: 'all-on-ui' | 'multi-thread') {
+    if (val) {
+      this.setAttribute('thread-strategy', val);
+    } else {
+      this.removeAttribute('thread-strategy');
+    }
+  }
+
+  /**
    * @private
    */
   disconnectedCallback() {
@@ -332,7 +349,11 @@ export class LynxView extends HTMLElement {
             this.attachShadow({ mode: 'open' });
           }
           const lynxGroupId = this.lynxGroupId;
+          const threadStrategy = (this.threadStrategy ?? 'multi-thread') as
+            | 'all-on-ui'
+            | 'multi-thread';
           const lynxView = createLynxView({
+            threadStrategy,
             tagMap,
             shadowRoot: this.shadowRoot!,
             templateUrl: this.#url,

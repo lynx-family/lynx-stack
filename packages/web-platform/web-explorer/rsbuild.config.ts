@@ -1,5 +1,7 @@
 import { defineConfig } from '@rsbuild/core';
 import { codecovWebpackPlugin } from '@codecov/webpack-plugin';
+import { pluginWebPlatform } from '@lynx-js/web-platform-rsbuild-plugin';
+import { RsdoctorRspackPlugin } from '@rsdoctor/rspack-plugin';
 const codecovEnabled = !!process.env.CI;
 console.info('codecov enabled:', codecovEnabled);
 export default defineConfig({
@@ -7,6 +9,7 @@ export default defineConfig({
     entry: {
       index: './index.ts',
     },
+    include: [/web/],
   },
   output: {
     target: 'web',
@@ -14,6 +17,7 @@ export default defineConfig({
       root: 'dist',
     },
     filenameHash: false,
+    overrideBrowserslist: ['Chrome > 118'],
   },
   dev: {
     writeToDisk: true,
@@ -37,6 +41,12 @@ export default defineConfig({
             sha: process.env.GITHUB_SHA,
           },
         }),
+        process.env.RSDOCTOR === 'true'
+        && new RsdoctorRspackPlugin({
+          supports: {
+            generateTileGraph: true,
+          },
+        }),
       ],
     },
   },
@@ -46,4 +56,5 @@ export default defineConfig({
     },
     profile: true,
   },
+  plugins: [pluginWebPlatform({ polyfill: false })],
 });

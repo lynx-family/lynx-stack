@@ -235,16 +235,6 @@ export const elementTree = new (class {
 
   __UpdateListComponents(list: Element, components: string[]) {}
 
-  __UpdateListActions(
-    list: Element,
-    removals: number[],
-    insertions: number[],
-    moveFrom: number[],
-    moveTo: number[],
-    updateFrom: number[],
-    updateTo: number[],
-  ) {}
-
   __UpdateListCallbacks(
     list: Element,
     componentAtIndex: (

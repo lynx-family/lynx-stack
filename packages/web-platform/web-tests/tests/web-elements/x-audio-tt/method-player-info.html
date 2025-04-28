@@ -25,12 +25,18 @@
       rel="stylesheet"
     />
     <script type="module">
-    document.querySelector('#play').addEventListener('click', function() {
-      document.querySelector('x-audio-tt').play();
-    });
-    document.querySelector('#playerInfo').addEventListener('click', function() {
-      console.log(document.querySelector('x-audio-tt').playerInfo());
-    });
+    document.querySelector('#play').addEventListener(
+        'click',
+        function() {
+          document.querySelector('x-audio-tt').play();
+        },
+      );
+      document.querySelector('#playerInfo').addEventListener(
+        'click',
+        function() {
+          console.log(document.querySelector('x-audio-tt').playerInfo());
+        },
+      );
     </script>
     <style>
     @import url("../../common.css");

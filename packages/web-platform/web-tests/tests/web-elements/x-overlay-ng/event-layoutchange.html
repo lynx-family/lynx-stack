@@ -32,15 +32,18 @@
   <body>
     <script src="/web-elements.js" defer></script>
     <script type="module">
-    document.querySelector('#target').addEventListener('layoutchange', (ev) => {
-      console.log('layoutchange', ev.detail);
-      Object.assign(globalThis, { detail: ev.detail });
-    });
+    document.querySelector('#target').addEventListener(
+        'layoutchange',
+        (ev) => {
+          console.log('layoutchange', ev.detail);
+          Object.assign(globalThis, { detail: ev.detail });
+        },
+      );
     </script>
     <x-view class="page">
       <x-overlay-ng
         id="target"
-        style="width:100px; height:400px; background-color: aquamarine;"
+        style="width: 100px; height: 400px; background-color: aquamarine"
       >
       </x-overlay-ng>
     </x-view>

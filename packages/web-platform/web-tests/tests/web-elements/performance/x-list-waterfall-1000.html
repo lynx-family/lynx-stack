@@ -26,29 +26,29 @@
 
     <script type="module">
     const list = document.createElement('x-list');
-    list.setAttribute('list-type', 'waterfall');
-    list.setAttribute('span-count', '2');
+      list.setAttribute('list-type', 'waterfall');
+      list.setAttribute('span-count', '2');
 
-    function getRandomHeight() {
-      return Math.floor(Math.random() * 151) + 150; // Generates random height between 150 and 300 (inclusive)
-    }
-
-    queueMicrotask(() => {
-      for (let ii = 0; ii < 1000; ii++) {
-        const listItem = document.createElement('list-item');
-        listItem.setAttribute('item-key', ii);
-        listItem.setAttribute(
-          'style',
-          `--item-index: ${ii}; height: ${getRandomHeight()}px;`,
-        );
-        listItem.setAttribute('class', 'item');
-        const xview = document.createElement('x-view');
-        xview.innerHTML = ii;
-        listItem.append(xview);
-        list.append(listItem);
+      function getRandomHeight() {
+        return Math.floor(Math.random() * 151) + 150; // Generates random height between 150 and 300 (inclusive)
       }
-    });
-    document.querySelector('.page').appendChild(list);
+
+      queueMicrotask(() => {
+        for (let ii = 0; ii < 1000; ii++) {
+          const listItem = document.createElement('list-item');
+          listItem.setAttribute('item-key', ii);
+          listItem.setAttribute(
+            'style',
+            `--item-index: ${ii}; height: ${getRandomHeight()}px;`,
+          );
+          listItem.setAttribute('class', 'item');
+          const xview = document.createElement('x-view');
+          xview.innerHTML = ii;
+          listItem.append(xview);
+          list.append(listItem);
+        }
+      });
+      document.querySelector('.page').appendChild(list);
     </script>
     <style>
     @import url("../../common.css");

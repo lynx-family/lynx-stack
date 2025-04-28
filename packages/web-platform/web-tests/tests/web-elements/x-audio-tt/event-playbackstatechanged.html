@@ -41,18 +41,27 @@
     <script src="/web-elements.js" defer></script>
     <script type="module">
     document.querySelector('x-audio-tt').addEventListener(
-      'playbackstatechanged',
-      event => console.log(event),
-    );
-    document.querySelector('#play').addEventListener('click', function() {
-      document.querySelector('x-audio-tt').play();
-    });
-    document.querySelector('#stop').addEventListener('click', function() {
-      document.querySelector('x-audio-tt').stop();
-    });
-    document.querySelector('#pause').addEventListener('click', function() {
-      document.querySelector('x-audio-tt').pause();
-    });
+        'playbackstatechanged',
+        event => console.log(event),
+      );
+      document.querySelector('#play').addEventListener(
+        'click',
+        function() {
+          document.querySelector('x-audio-tt').play();
+        },
+      );
+      document.querySelector('#stop').addEventListener(
+        'click',
+        function() {
+          document.querySelector('x-audio-tt').stop();
+        },
+      );
+      document.querySelector('#pause').addEventListener(
+        'click',
+        function() {
+          document.querySelector('x-audio-tt').pause();
+        },
+      );
     </script>
     <x-view class="page column">
       <x-audio-tt
