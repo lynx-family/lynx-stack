@@ -191,9 +191,15 @@ export function applyEntry(
         .plugin(PLUGIN_NAME_RUNTIME_WRAPPER)
         .use(RuntimeWrapperWebpackPlugin, [{
           injectVars(vars) {
+            const UNUSED_VARS = new Set([
+              'Card',
+              'Component',
+              'ReactLynx',
+              'Behavior',
+            ])
             return vars.map(name => {
-              if (name === 'Component') {
-                return '__Component'
+              if (UNUSED_VARS.has(name)) {
+                return `__${name}`
               }
               return name
             })
