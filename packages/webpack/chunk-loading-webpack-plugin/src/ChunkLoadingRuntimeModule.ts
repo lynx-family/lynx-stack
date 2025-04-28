@@ -4,6 +4,7 @@
 
 import type { Chunk, ChunkGraph, RuntimeModule } from 'webpack';
 
+import { ChunkLoadingType } from './LynxChunkLoadingType.js';
 import { JavaScriptRuntimeModule } from './runtime/JavaScriptRuntimeModule.js';
 
 type ChunkLoadingRuntimeModule = new(
@@ -12,6 +13,7 @@ type ChunkLoadingRuntimeModule = new(
 
 export function createChunkLoadingRuntimeModule(
   webpack: typeof import('webpack'),
+  options: ChunkLoadingType,
 ): ChunkLoadingRuntimeModule {
   const { RuntimeGlobals, RuntimeModule, Template } = webpack;
   return class ChunkLoadingRuntimeModule extends RuntimeModule {
@@ -46,6 +48,11 @@ export function createChunkLoadingRuntimeModule(
         ? `${RuntimeGlobals.hmrRuntimeStatePrefix}_require`
         : undefined;
 
+      // TODO: JS_MATCHER
+      const chunkLoading = options === ChunkLoadingType.ASYNC
+        ? JavaScriptRuntimeModule.generateChunkLoadingRuntime('true')
+        : JavaScriptRuntimeModule.generateSyncChunkLoadingRuntime('true');
+
       return Template.asString([
         '// object to store loaded chunks',
         '// "1" means "loaded", otherwise not loaded yet',
@@ -65,7 +72,7 @@ export function createChunkLoadingRuntimeModule(
           ? JavaScriptRuntimeModule.generateInstallChunkRuntime(withOnload)
           : '// no chunk install function needed',
         withLoading
-          ? JavaScriptRuntimeModule.generateChunkLoadingRuntime('true') // TODO: JS_MATCHER
+          ? chunkLoading
           : '// no chunk loading',
         withHmr
           ? JavaScriptRuntimeModule.generateHMRRuntime()
