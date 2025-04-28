@@ -9,12 +9,12 @@ import type { SnapshotPatch } from './snapshotPatch.js';
 import { takeGlobalSnapshotPatch } from './snapshotPatch.js';
 import { LifecycleConstant } from '../../lifecycleConstant.js';
 import {
-  PerformanceTimingKeys,
+  BackgroundThreadPerformanceTimingKeys,
   globalPipelineOptions,
-  markTiming,
-  markTimingLegacy,
+  markBackgroundThreadTiming,
+  markBackgroundThreadTimingLegacy,
   setPipeline,
-} from '../../lynx/performance.js';
+} from '../../lynx/performance/background.js';
 import { CATCH_ERROR, COMMIT, RENDER_CALLBACKS, VNODE } from '../../renderToOpcodes/constants.js';
 import { updateBackgroundRefs } from '../../snapshot/ref.js';
 import { backgroundSnapshotInstanceManager } from '../../snapshot.js';
@@ -144,12 +144,14 @@ function replaceCommitHook(): void {
 }
 
 async function commitToMainThread(): Promise<void> {
+  'background-only';
+
   if (patchesToCommit.length === 0) {
     return;
   }
 
-  markTimingLegacy(PerformanceTimingKeys.updateDiffVdomEnd);
-  markTiming(PerformanceTimingKeys.diffVdomEnd);
+  markBackgroundThreadTimingLegacy(BackgroundThreadPerformanceTimingKeys.update_diff_vdom_end);
+  markBackgroundThreadTiming(BackgroundThreadPerformanceTimingKeys.diff_vdom_end);
 
   const flushOptions = globalFlushOptions;
   globalFlushOptions = {};
@@ -181,6 +183,8 @@ function commitPatchUpdate(patchList: PatchList, patchOptions: Omit<PatchOptions
   data: string;
   patchOptions: PatchOptions;
 } {
+  'background-only';
+
   // console.debug('********** JS update:');
   // printSnapshotInstance(
   //   (backgroundSnapshotInstanceManager.values.get(1) || backgroundSnapshotInstanceManager.values.get(-1))!,
@@ -189,7 +193,7 @@ function commitPatchUpdate(patchList: PatchList, patchOptions: Omit<PatchOptions
   if (__PROFILE__) {
     console.profile('commitChanges');
   }
-  markTiming(PerformanceTimingKeys.packChangesStart);
+  markBackgroundThreadTiming(BackgroundThreadPerformanceTimingKeys.pack_changes_start);
   const obj: {
     data: string;
     patchOptions: PatchOptions;
@@ -200,7 +204,7 @@ function commitPatchUpdate(patchList: PatchList, patchOptions: Omit<PatchOptions
       reloadVersion: getReloadVersion(),
     },
   };
-  markTiming(PerformanceTimingKeys.packChangesEnd);
+  markBackgroundThreadTiming(BackgroundThreadPerformanceTimingKeys.pack_changes_end);
   if (globalPipelineOptions) {
     obj.patchOptions.pipelineOptions = globalPipelineOptions;
     setPipeline(undefined);

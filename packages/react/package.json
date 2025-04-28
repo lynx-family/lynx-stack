@@ -158,9 +158,12 @@
     "README.zh.md"
   ],
   "scripts": {
-    "api-extractor": "api-extractor run --verbose"
+    "api-extractor": "api-extractor run --verbose",
+    "build": "rslib build",
+    "dev": "rslib build --watch"
   },
   "dependencies": {
+    "background-only": "^0.0.1",
     "preact": "npm:@hongzhiyuan/preact@10.24.0-319c684e"
   },
   "devDependencies": {

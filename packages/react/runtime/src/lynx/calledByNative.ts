@@ -5,6 +5,7 @@ import { hydrate } from '../hydrate.js';
 import { isJSReady, jsReady, jsReadyEventIdSwap, resetJSReady } from '../lifecycle/event/jsReady.js';
 import { reloadMainThread } from '../lifecycle/reload.js';
 import { renderMainThread } from '../lifecycle/render.js';
+import { MainThreadPerformanceTimingKeys, markMainThreadTiming, setPipeline } from './performance/main-thread.js';
 import { LifecycleConstant } from '../lifecycleConstant.js';
 import { __pendingListUpdates } from '../list.js';
 import { ssrHydrateByOpcodes } from '../opcodes.js';
@@ -12,7 +13,6 @@ import { __root, setRoot } from '../root.js';
 import { takeGlobalRefPatchMap } from '../snapshot/ref.js';
 import { SnapshotInstance, __page, setupPage } from '../snapshot.js';
 import { isEmptyObject } from '../utils.js';
-import { PerformanceTimingKeys, markTiming, setPipeline } from './performance.js';
 
 function ssrEncode() {
   const { __opcodes } = __root;
@@ -115,7 +115,7 @@ function updatePage(data: any, options?: UpdatePageOption): void {
     __root.__jsx = oldRoot.__jsx;
 
     setPipeline(options?.pipelineOptions);
-    markTiming(PerformanceTimingKeys.updateDiffVdomStart);
+    markMainThreadTiming(MainThreadPerformanceTimingKeys.update_diff_vdom_start);
     {
       __pendingListUpdates.clear();
 
@@ -133,7 +133,7 @@ function updatePage(data: any, options?: UpdatePageOption): void {
       // always call this before `__FlushElementTree`
       __pendingListUpdates.flush();
     }
-    markTiming(PerformanceTimingKeys.updateDiffVdomEnd);
+    markMainThreadTiming(MainThreadPerformanceTimingKeys.update_diff_vdom_end);
   }
 
   if (options) {

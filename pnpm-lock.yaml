@@ -179,6 +179,9 @@ importers:
 
   packages/react:
     dependencies:
+      background-only:
+        specifier: ^0.0.1
+        version: 0.0.1
       preact:
         specifier: npm:@hongzhiyuan/preact@10.24.0-319c684e
         version: '@hongzhiyuan/preact@10.24.0-319c684e'

@@ -25,7 +25,7 @@ import { isDirectOrDeepEqual } from './utils.js';
 import { onPostWorkletCtx } from './worklet/ctx.js';
 import { processGestureBackground } from './gesture/processGestureBagkround.js';
 import type { GestureKind } from './gesture/types.js';
-import { globalPipelineOptions } from './lynx/performance.js';
+import { globalPipelineOptions } from './lynx/performance/impl.js';
 
 export class BackgroundSnapshotInstance {
   constructor(public type: string) {

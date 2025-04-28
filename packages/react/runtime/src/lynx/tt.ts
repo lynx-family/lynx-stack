@@ -3,12 +3,10 @@
 // LICENSE file in the root directory of this source tree.
 import { LifecycleConstant, NativeUpdateDataType } from '../lifecycleConstant.js';
 import {
-  PerformanceTimingKeys,
-  PerformanceTimingFlags,
-  PipelineOrigins,
+  BackgroundThreadPerformanceTimingKeys,
   beginPipeline,
-  markTiming,
-} from './performance.js';
+  markBackgroundThreadTiming,
+} from './performance/background.js';
 import { BackgroundSnapshotInstance, hydrate } from '../backgroundSnapshot.js';
 import { destroyBackground } from '../lifecycle/destroy.js';
 import { delayedEvents, delayedPublishEvent } from '../lifecycle/event/delayEvents.js';
@@ -80,11 +78,11 @@ function onLifecycleEventImpl(type: string, data: any): void {
       if (__PROFILE__) {
         console.profile('hydrate');
       }
-      beginPipeline(true, PipelineOrigins.reactLynxHydrate, PerformanceTimingFlags.reactLynxHydrate);
-      markTiming(PerformanceTimingKeys.hydrateParseSnapshotStart);
+      beginPipeline(true, 'react_lynx_hydrate');
+      markBackgroundThreadTiming(BackgroundThreadPerformanceTimingKeys.hydrate_parse_snapshot_start);
       const before = JSON.parse(lepusSide);
-      markTiming(PerformanceTimingKeys.hydrateParseSnapshotEnd);
-      markTiming(PerformanceTimingKeys.diffVdomStart);
+      markBackgroundThreadTiming(BackgroundThreadPerformanceTimingKeys.hydrate_parse_snapshot_end);
+      markBackgroundThreadTiming(BackgroundThreadPerformanceTimingKeys.diff_vdom_start);
       const snapshotPatch = hydrate(
         before,
         __root as BackgroundSnapshotInstance,
@@ -92,7 +90,7 @@ function onLifecycleEventImpl(type: string, data: any): void {
       if (__PROFILE__) {
         console.profileEnd();
       }
-      markTiming(PerformanceTimingKeys.diffVdomEnd);
+      markBackgroundThreadTiming(BackgroundThreadPerformanceTimingKeys.diff_vdom_end);
 
       // TODO: It seems `delayedEvents` and `delayedLifecycleEvents` should be merged into one array to ensure the proper order of events.
       flushDelayedLifecycleEvents();

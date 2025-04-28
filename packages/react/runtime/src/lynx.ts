@@ -13,7 +13,7 @@ import { injectUpdateMainThread } from './lifecycle/patch/updateMainThread.js';
 import { injectCalledByNative } from './lynx/calledByNative.js';
 import { setupLynxEnv } from './lynx/env.js';
 import { injectLepusMethods } from './lynx/injectLepusMethods.js';
-import { initTimingAPI } from './lynx/performance.js';
+import { initTimingAPI } from './lynx/performance/background.js';
 import { injectTt } from './lynx/tt.js';
 export { runWithForce } from './lynx/runWithForce.js';
 

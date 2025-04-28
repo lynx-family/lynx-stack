@@ -10,7 +10,7 @@ import { replaceCommitHook } from '../../src/lifecycle/patch/commit';
 import { injectUpdateMainThread } from '../../src/lifecycle/patch/updateMainThread';
 import { renderBackground as render } from '../../src/lifecycle/render';
 import '../../src/lynx/component';
-import { initTimingAPI } from '../../src/lynx/performance';
+import { initTimingAPI } from '../../src/lynx/performance/background';
 import { __root } from '../../src/root';
 import { setupPage } from '../../src/snapshot';
 import { globalEnvManager } from '../utils/envManager';
