@@ -72,7 +72,7 @@ export function createStyleFunctions(
       dashName = queryResult.dashName;
       if (queryResult.isX) {
         console.error(
-          `[lynx-web] css property with index: ${key} is not supported. Please check your usage.`,
+          `[lynx-web] css property: ${dashName} is not supported.`,
         );
       }
     } else {
