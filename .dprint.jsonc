@@ -44,6 +44,7 @@
     "website/docs/zh/api/**",
     "website/docs/en/changelog/**",
     "website/docs/zh/changelog/**",
+    "packages/web-platform/web-explorer/preinstalled/**",
 
     // The tsconfig.json contains comments that align with indents.
     "/tsconfig.json",
