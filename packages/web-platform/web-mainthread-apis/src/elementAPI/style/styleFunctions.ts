@@ -68,7 +68,13 @@ export function createStyleFunctions(
   ): void {
     let dashName: string | undefined;
     if (typeof key === 'number') {
-      dashName = queryCSSProperty(key).dashName;
+      const queryResult = queryCSSProperty(key);
+      dashName = queryResult.dashName;
+      if (queryResult.isX) {
+        console.error(
+          `[lynx-web] css property with index: ${key} is not supported. Please check your usage.`,
+        );
+      }
     } else {
       dashName = key;
     }

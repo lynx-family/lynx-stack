@@ -18,12 +18,13 @@ export function camelize(str: string): string {
 let index = 1;
 const cssPropertyMap: Record<
   number,
-  { name: string; dashName: string }
+  { name: string; dashName: string; isX: boolean }
 > = {};
 const cssPropertyReverseMap: Record<string, number> = {};
 const V = (name: string) => {
   const k = index++;
-  cssPropertyMap[k] = { name: camelize(name), dashName: name };
+  const isX = name.startsWith('-x-');
+  cssPropertyMap[k] = { name: camelize(name), dashName: name, isX };
   cssPropertyReverseMap[name] = k;
 };
 
@@ -248,6 +249,7 @@ V('offset-distance');
 export function queryCSSProperty(index: number): {
   name: string;
   dashName: string;
+  isX: boolean;
 } {
   return cssPropertyMap[index]!;
 }
