@@ -1397,11 +1397,15 @@ where
                   }
                 } else if let AttrName::Ref = attr_name {
                   snapshot_values_has_ref = true;
-                  quote!(
-                    "$runtime_id.transformRef($value)" as Expr,
-                    runtime_id: Expr = runtime_id.clone(),
-                    value: Expr = value,
-                  )
+                  if target == TransformTarget::LEPUS {
+                    quote!("1" as Expr)
+                  } else {
+                    quote!(
+                      "$runtime_id.transformRef($value)" as Expr,
+                      runtime_id: Expr = runtime_id.clone(),
+                      value: Expr = value,
+                    )
+                  }
                 } else {
                   value
                 }),
@@ -1588,7 +1592,9 @@ where
         name: JSXElementName::Ident(snapshot_id.clone()),
         span: node.span,
         attrs: {
-          if snapshot_values_has_ref || snapshot_values_has_spread {
+          if target != TransformTarget::LEPUS
+            && (snapshot_values_has_ref || snapshot_values_has_spread)
+          {
             snapshot_attrs.push(JSXAttrOrSpread::JSXAttr(JSXAttr {
               span: DUMMY_SP,
               name: JSXAttrName::Ident(IdentName::new("ref".into(), DUMMY_SP)),
