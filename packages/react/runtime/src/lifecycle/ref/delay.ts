@@ -60,7 +60,7 @@ class RefProxy {
 
   private setTask<K extends keyof NodesRef>(
     method: K,
-    args: Parameters<NodesRef[K] extends (...args: any[]) => any ? NodesRef[K] : never>,
+    args: Parameters<NodesRef[K]>,
   ): this {
     this.task = (nodesRef) => {
       return (nodesRef[method] as unknown as (...args: any[]) => SelectorQuery)(...args);
