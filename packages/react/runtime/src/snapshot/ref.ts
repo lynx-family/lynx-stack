@@ -30,7 +30,7 @@ function unref(snapshot: SnapshotInstance, recursive: boolean): void {
 }
 
 // This function is modified from preact source code.
-function applyRef(ref: Ref, value: null | [number, number]): void {
+function applyRef(ref: Ref, value: null | [snapshotInstanceId: number, expIndex: number]): void {
   const newRef = value && new RefProxy(value);
 
   try {
