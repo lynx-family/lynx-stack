@@ -27,14 +27,20 @@
     "dev": "rslib build --watch",
     "test": "vitest"
   },
+  "dependencies": {
+    "loader-utils": "^2.0.0",
+    "schema-utils": "^3.1.0"
+  },
   "devDependencies": {
     "@microsoft/api-extractor": "catalog:",
     "@rsbuild/core": "catalog:rsbuild",
     "@rslib/core": "^0.6.7",
     "typescript": "^5.8.3",
-    "vitest": "^3.1.2"
+    "vitest": "^3.1.2",
+    "worker-rspack-loader": "^3.1.2"
   },
   "peerDependencies": {
-    "@rsbuild/core": "*"
+    "@rsbuild/core": "*",
+    "worker-rspack-loader": "^3.1.2"
   }
 }
