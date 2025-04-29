@@ -2,10 +2,7 @@
 "@lynx-js/react": minor
 ---
 
-Fixes:
-
-- Fixed effect hook variable capture issue where stale values might be captured in closure.
-- Ensured `ref` and `useEffect()` side effects are now guaranteed to execute before event triggers.
+Fixed closure variable capture issue in effect hooks to prevent stale values and ensured proper execution order between refs, effects, and event handlers.
 
 **Breaking Changes**:
 
