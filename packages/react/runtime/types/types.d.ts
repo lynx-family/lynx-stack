@@ -260,7 +260,11 @@ declare module '@lynx-js/types/background' {
 
   interface Performance {
     _generatePipelineOptions?(): PipelineOptions;
-    _onPipelineStart?(pipelineID: string, options: PipelineOptions): void;
+    /**
+     * @param pipelineID - Returned by native when calling {@link _generatePipelineOptions}.
+     * @param options - Added since 3.1. See {@link PipelineOptions} for more details.
+     */
+    _onPipelineStart?(pipelineID: string, options?: PipelineOptions): void;
     _bindPipelineIdWithTimingFlag?(pipelineID: string, timingFlag: string): void;
     _markTiming?(pipelineID: string, key: string): void;
   }
