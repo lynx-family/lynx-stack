@@ -17,4 +17,10 @@ export class ChunkLoadingWebpackPlugin {
 export interface ChunkLoadingWebpackPluginOptions {
 }
 
+// @public
+export interface StartupChunkDependenciesPluginOptions {
+    asyncChunkLoading: boolean;
+    chunkLoading: string;
+}
+
 ```
