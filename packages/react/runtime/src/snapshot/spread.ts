@@ -270,8 +270,12 @@ function transformSpread(
       value ??= '';
       result['className'] = value;
     } else if (key === 'ref') {
-      // @ts-ignore
-      result[key] = transformRef(value)?.__ref;
+      if (__LEPUS__) {
+        result[key] = value ? 1 : undefined;
+      } else {
+        // @ts-ignore
+        result[key] = transformRef(value)?.__ref;
+      }
     } else if (typeof value === 'function') {
       result[key] = `${snapshot.__id}:${index}:${key}`;
     } else {
