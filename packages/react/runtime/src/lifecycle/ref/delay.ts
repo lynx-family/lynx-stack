@@ -51,10 +51,10 @@ function runDelayedUiOps(): void {
  * It delays the execution of tasks until hydration is complete.
  */
 class RefProxy {
-  private readonly refAttr: [number, number];
+  private readonly refAttr: [snapshotInstanceId: number, expIndex: number];
   private task: RefTask | undefined;
 
-  constructor(refAttr: [number, number]) {
+  constructor(refAttr: [snapshotInstanceId: number, expIndex: number]) {
     this.refAttr = refAttr;
   }
 
