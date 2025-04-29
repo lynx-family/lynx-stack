@@ -6,7 +6,8 @@ import { commitMainThreadPatchUpdate } from './lifecycle/patch/updateMainThread.
 import type { SnapshotInstance } from './snapshot.js';
 
 export interface ListUpdateInfo {
-  flush(): void;
+  flush(): number | undefined;
+  getAttachedListId(): number | undefined;
   onInsertBefore(
     newNode: SnapshotInstance,
     existingNode?: SnapshotInstance,
@@ -70,19 +71,32 @@ export class ListUpdateInfoRecording implements ListUpdateInfo {
   //   this.platformInfoUpdate.clear();
   // }
 
-  flush(): void {
+  flush(): undefined | number {
+    if (!this.list.__elements) {
+      return undefined;
+    }
     const elementIndex = this.list.__snapshot_def.slot[0]![1];
     const listElement = this.list.__elements![elementIndex]!;
     // this.__pendingAttributes?.forEach(pendingAttribute => {
     //   __SetAttribute(listElement, "update-list-info", pendingAttribute);
     //   __FlushElementTree(listElement);
     // });
+
     __SetAttribute(listElement, 'update-list-info', this.__toAttribute());
+
     __UpdateListCallbacks(
       listElement,
       componentAtIndexFactory(this.list.childNodes),
       enqueueComponentFactory(),
     );
+    return this.list.__id;
+  }
+
+  getAttachedListId(): undefined | number {
+    if (!this.list.__elements) {
+      return undefined;
+    }
+    return this.list.__id;
   }
 
   private oldChildNodes: SnapshotInstance[];
@@ -220,14 +234,20 @@ export class ListUpdateInfoRecording implements ListUpdateInfo {
 
 export const __pendingListUpdates = {
   values: {} as Record<number, ListUpdateInfo>,
-  clear(): void {
-    this.values = {};
+  clear(id: number): void {
+    delete this.values[id];
+  },
+  clearAttachedLists(): void {
+    Object.values(this.values)
+      .map(update => update.getAttachedListId())
+      .filter(id => id !== undefined)
+      .forEach(id => this.clear(id));
   },
   flush(): void {
-    Object.values(this.values).forEach(update => {
-      update.flush();
-    });
-    this.clear();
+    Object.values(this.values)
+      .map(update => update.flush())
+      .filter(id => id !== undefined)
+      .forEach(id => this.clear(id));
   },
 };
 
@@ -284,6 +304,7 @@ export function componentAtIndexFactory(ctx: SnapshotInstance[]): ComponentAtInd
       if (recycleSignMap?.has(sign)) {
         signMap.set(sign, childCtx);
         recycleSignMap.delete(sign);
+        __pendingListUpdates.flush();
         __FlushElementTree(root, { triggerLayout: true, operationID, elementID: sign, listID });
         return sign;
       } else {
@@ -299,6 +320,7 @@ export function componentAtIndexFactory(ctx: SnapshotInstance[]): ComponentAtInd
       hydrate(oldCtx, childCtx);
       oldCtx.unRenderElements();
       const root = childCtx.__element_root!;
+      __pendingListUpdates.flush();
       if (enableReuseNotification) {
         __FlushElementTree(root, {
           triggerLayout: true,
@@ -327,6 +349,7 @@ export function componentAtIndexFactory(ctx: SnapshotInstance[]): ComponentAtInd
     const root = childCtx.__element_root!;
     __AppendElement(list, root);
     const sign = __GetElementUniqueID(root);
+    __pendingListUpdates.flush();
     __FlushElementTree(root, {
       triggerLayout: true,
       operationID,
@@ -378,6 +401,29 @@ export function snapshotCreateList(
     {},
   );
   const listID = __GetElementUniqueID(list);
+  if (!__pendingListUpdates.values[_ctx.__id] && _ctx.childNodes.length > 0) {
+    const insertions: { position: number; type: string }[] = [];
+    for (let i = 0; i < _ctx.childNodes.length; i++) {
+      const childCtx = _ctx.childNodes[i]!;
+      const newValue = childCtx.__listItemPlatformInfo;
+      insertions.push({
+        ...newValue,
+        position: i,
+        type: childCtx.type,
+      });
+    }
+    const a = {
+      insertAction: insertions,
+      removeAction: [],
+      updateAction: [],
+    };
+    __SetAttribute(list, 'update-list-info', a);
+    __UpdateListCallbacks(
+      list,
+      componentAtIndexFactory(_ctx.childNodes),
+      enqueueComponentFactory(),
+    );
+  }
   gSignMap[listID] = signMap;
   gRecycleMap[listID] = recycleMap;
   return list;

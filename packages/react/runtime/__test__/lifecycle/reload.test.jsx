@@ -945,6 +945,32 @@ describe('reload', () => {
                   "removeAction": [],
                   "updateAction": [],
                 },
+                {
+                  "insertAction": [],
+                  "removeAction": [],
+                  "updateAction": [
+                    {
+                      "flush": false,
+                      "from": 0,
+                      "item-key": 0,
+                      "to": 0,
+                      "type": "__Card__:__snapshot_a94a8_test_8",
+                    },
+                  ],
+                },
+                {
+                  "insertAction": [],
+                  "removeAction": [],
+                  "updateAction": [
+                    {
+                      "flush": false,
+                      "from": 1,
+                      "item-key": 1,
+                      "to": 1,
+                      "type": "__Card__:__snapshot_a94a8_test_8",
+                    },
+                  ],
+                },
               ]
             }
           >
@@ -1021,6 +1047,32 @@ describe('reload', () => {
                   "removeAction": [],
                   "updateAction": [],
                 },
+                {
+                  "insertAction": [],
+                  "removeAction": [],
+                  "updateAction": [
+                    {
+                      "flush": false,
+                      "from": 0,
+                      "item-key": 0,
+                      "to": 0,
+                      "type": "__Card__:__snapshot_a94a8_test_8",
+                    },
+                  ],
+                },
+                {
+                  "insertAction": [],
+                  "removeAction": [],
+                  "updateAction": [
+                    {
+                      "flush": false,
+                      "from": 1,
+                      "item-key": 1,
+                      "to": 1,
+                      "type": "__Card__:__snapshot_a94a8_test_8",
+                    },
+                  ],
+                },
               ]
             }
           >
@@ -1084,23 +1136,54 @@ describe('reload', () => {
                   "updateAction": [],
                 },
                 {
-                  "insertAction": [
+                  "insertAction": [],
+                  "removeAction": [],
+                  "updateAction": [
                     {
+                      "flush": false,
+                      "from": 0,
                       "item-key": 0,
-                      "position": 0,
+                      "to": 0,
                       "type": "__Card__:__snapshot_a94a8_test_8",
+                    },
+                  ],
+                },
+                {
+                  "insertAction": [],
+                  "removeAction": [],
+                  "updateAction": [
+                    {
+                      "flush": false,
+                      "from": 1,
+                      "item-key": 1,
+                      "to": 1,
+                      "type": "__Card__:__snapshot_a94a8_test_8",
+                    },
+                  ],
+                },
+                {
+                  "insertAction": [],
+                  "removeAction": [],
+                  "updateAction": [
+                    {
+                      "flush": true,
+                      "from": 0,
+                      "item-key": 0,
+                      "to": 0,
                     },
                     {
+                      "flush": true,
+                      "from": 1,
                       "item-key": 1,
-                      "position": 1,
-                      "type": "__Card__:__snapshot_a94a8_test_8",
+                      "to": 1,
+                    },
+                    {
+                      "flush": true,
+                      "from": 2,
+                      "item-key": 2,
+                      "to": 2,
                     },
                   ],
-                  "removeAction": [
-                    0,
-                    1,
-                  ],
-                  "updateAction": [],
                 },
               ]
             }
@@ -1424,7 +1507,26 @@ describe('firstScreenSyncTiming - jsReady', () => {
                 {
                   "insertAction": [],
                   "removeAction": [],
-                  "updateAction": [],
+                  "updateAction": [
+                    {
+                      "flush": true,
+                      "from": 0,
+                      "item-key": 0,
+                      "to": 0,
+                    },
+                    {
+                      "flush": true,
+                      "from": 1,
+                      "item-key": 1,
+                      "to": 1,
+                    },
+                    {
+                      "flush": true,
+                      "from": 2,
+                      "item-key": 2,
+                      "to": 2,
+                    },
+                  ],
                 },
               ]
             }
@@ -1469,12 +1571,50 @@ describe('firstScreenSyncTiming - jsReady', () => {
                 {
                   "insertAction": [],
                   "removeAction": [],
-                  "updateAction": [],
+                  "updateAction": [
+                    {
+                      "flush": true,
+                      "from": 0,
+                      "item-key": 0,
+                      "to": 0,
+                    },
+                    {
+                      "flush": true,
+                      "from": 1,
+                      "item-key": 1,
+                      "to": 1,
+                    },
+                    {
+                      "flush": true,
+                      "from": 2,
+                      "item-key": 2,
+                      "to": 2,
+                    },
+                  ],
                 },
                 {
                   "insertAction": [],
                   "removeAction": [],
-                  "updateAction": [],
+                  "updateAction": [
+                    {
+                      "flush": true,
+                      "from": 0,
+                      "item-key": 0,
+                      "to": 0,
+                    },
+                    {
+                      "flush": true,
+                      "from": 1,
+                      "item-key": 1,
+                      "to": 1,
+                    },
+                    {
+                      "flush": true,
+                      "from": 2,
+                      "item-key": 2,
+                      "to": 2,
+                    },
+                  ],
                 },
               ]
             }
@@ -1640,7 +1780,26 @@ describe('firstScreenSyncTiming - jsReady', () => {
                 {
                   "insertAction": [],
                   "removeAction": [],
-                  "updateAction": [],
+                  "updateAction": [
+                    {
+                      "flush": true,
+                      "from": 0,
+                      "item-key": 0,
+                      "to": 0,
+                    },
+                    {
+                      "flush": true,
+                      "from": 1,
+                      "item-key": 1,
+                      "to": 1,
+                    },
+                    {
+                      "flush": true,
+                      "from": 2,
+                      "item-key": 2,
+                      "to": 2,
+                    },
+                  ],
                 },
               ]
             }
