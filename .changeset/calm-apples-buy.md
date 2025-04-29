@@ -2,27 +2,20 @@
 "@lynx-js/react": patch
 ---
 
-Supports list batch framework render with async resolve sub-tree properties and element tree.
+Add support for batch rendering in `<list>` with async resolution of sub-tree properties and element trees.
 
-```js
-export default defineConfig({
-  plugins: [
-    pluginReactLynx({
-      enableParallelElement: true,
-    }),
-    // ...
-  ],
-});
-```
+Use the `experimental-batch-render-strategy` attribute of `<list>`:
 
 ```tsx
 <list
-  /*
-    (1) experimental-batch-render-strategy={0}: Not enable batch render.
-    (2) experimental-batch-render-strategy={1}: Only Enable batch render.
-    (3) experimental-batch-render-strategy={2}: Enable batch render with async resolve property of list item subtree.
-    (4) experimental-batch-render-strategy={3}: Enable batch render with async resolve property and async resolve element tree of list item subtree.
-    */
+  /**
+   * Batch render strategy:
+   * 0: (Default) Disabled - No batch rendering
+   * 1: Basic - Only batch rendering enabled
+   * 2: Property Resolution - Batch render with async property resolution for list item subtree
+   * 3: Full Resolution - Batch render with async property and element tree resolution for list item subtree
+   */
   experimental-batch-render-strategy={3}
 >
+</list>;
 ```
