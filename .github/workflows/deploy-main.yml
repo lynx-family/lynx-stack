@@ -40,7 +40,7 @@ jobs:
       - name: Save Turbo Result
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ github.ref }}-${{ github.sha }}
+          name: deploy-${{ github.sha }}
           path: .turbo
           if-no-files-found: error
           retention-days: 1
@@ -127,7 +127,7 @@ jobs:
         uses: actions/download-artifact@v4
         timeout-minutes: 5
         with:
-          name: ${{ github.ref }}-${{ github.sha }}
+          name: deploy-${{ github.sha }}
           path: .turbo
       - name: build
         run: |
@@ -173,7 +173,7 @@ jobs:
         uses: actions/download-artifact@v4
         timeout-minutes: 5
         with:
-          name: ${{ github.ref }}-${{ github.sha }}
+          name: deploy-${{ github.sha }}
           path: .turbo
       - name: build
         run: |
