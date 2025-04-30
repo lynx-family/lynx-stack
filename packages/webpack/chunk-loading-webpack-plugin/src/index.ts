@@ -21,27 +21,6 @@ import { ChunkLoadingWebpackPluginImpl } from './ChunkLoadingWebpackPlugin.js';
 export interface ChunkLoadingWebpackPluginOptions {}
 
 /**
- * The options for StartupChunkDependenciesPlugin
- *
- * @public
- */
-export interface StartupChunkDependenciesPluginOptions {
-  /**
-   * Specifies the chunk loading method
-   * @defaultValue 'lynx'
-   * @remarks Currently only 'lynx' mode is supported
-   */
-  chunkLoading: string;
-
-  /**
-   * Whether to enable async chunk loading
-   * @defaultValue true
-   * @remarks Currently only async loading mode is supported
-   */
-  asyncChunkLoading: boolean;
-}
-
-/**
  * The ChunkLoadingWebpackPlugin enables chunk loading for webpack/Rspack in Lynx.
  *
  * @example
