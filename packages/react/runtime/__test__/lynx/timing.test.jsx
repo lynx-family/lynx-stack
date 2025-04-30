@@ -25,6 +25,7 @@ beforeAll(() => {
 
 beforeEach(() => {
   globalEnvManager.resetEnv();
+  SystemInfo.lynxSdkVersion = '3.1';
 });
 
 afterEach(() => {
@@ -217,6 +218,13 @@ describe('attribute timing api', () => {
         [
           "_onPipelineStart",
           "pipelineID",
+          {
+            "dsl": "reactLynx",
+            "needTimestamps": true,
+            "pipelineID": "pipelineID",
+            "pipelineOrigin": "updateTriggeredByBts",
+            "stage": "update",
+          },
         ],
         [
           "_markTiming",
@@ -327,6 +335,13 @@ describe('attribute timing api', () => {
         [
           "_onPipelineStart",
           "pipelineID",
+          {
+            "dsl": "reactLynx",
+            "needTimestamps": true,
+            "pipelineID": "pipelineID",
+            "pipelineOrigin": "updateTriggeredByBts",
+            "stage": "update",
+          },
         ],
         [
           "_markTiming",
@@ -417,6 +432,13 @@ describe('attribute timing api', () => {
         [
           "_onPipelineStart",
           "pipelineID",
+          {
+            "dsl": "reactLynx",
+            "needTimestamps": true,
+            "pipelineID": "pipelineID",
+            "pipelineOrigin": "reactLynxHydrate",
+            "stage": "hydrate",
+          },
         ],
         [
           "_bindPipelineIdWithTimingFlag",
@@ -539,6 +561,13 @@ describe('attribute timing api', () => {
           [
             "_onPipelineStart",
             "pipelineID",
+            {
+              "dsl": "reactLynx",
+              "needTimestamps": false,
+              "pipelineID": "pipelineID",
+              "pipelineOrigin": "updateTriggeredByBts",
+              "stage": "update",
+            },
           ],
           [
             "_markTiming",
@@ -717,6 +746,13 @@ describe('attribute timing api', () => {
         [
           "_onPipelineStart",
           "pipelineID",
+          {
+            "dsl": "reactLynx",
+            "needTimestamps": true,
+            "pipelineID": "pipelineID",
+            "pipelineOrigin": "updateTriggeredByBts",
+            "stage": "update",
+          },
         ],
         [
           "_markTiming",
@@ -823,6 +859,13 @@ describe('attribute timing api', () => {
           [
             "_onPipelineStart",
             "pipelineID",
+            {
+              "dsl": "reactLynx",
+              "needTimestamps": false,
+              "pipelineID": "pipelineID",
+              "pipelineOrigin": "updateTriggeredByBts",
+              "stage": "update",
+            },
           ],
           [
             "_markTiming",
@@ -832,5 +875,109 @@ describe('attribute timing api', () => {
         ]
       `);
     }
+  });
+});
+
+describe('timing api compatibility', () => {
+  it('basic', async function() {
+    SystemInfo.lynxSdkVersion = '2.18';
+    let mtCallbacks = [];
+    lynx.getNativeApp().callLepusMethod.mockImplementation((name, data, cb) => {
+      mtCallbacks.push([name, data, cb]);
+    });
+
+    let comp;
+    class Comp extends Component {
+      state = {
+        show: false,
+      };
+      render() {
+        comp = this;
+        return (
+          <view>
+            {this.state.show && <text __lynx_timing_flag={'__lynx_timing_actual_fmp'}>{1}</text>}
+          </view>
+        );
+      }
+    }
+
+    globalEnvManager.switchToMainThread();
+    __root.__jsx = <Comp />;
+    renderPage();
+    globalEnvManager.switchToBackground();
+    render(<Comp />, __root);
+    // LifecycleConstant.firstScreen
+    lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+    lynx.performance.__functionCallHistory = [];
+
+    mtCallbacks = [];
+    comp.setState({
+      show: true,
+    });
+    await waitSchedule();
+    globalEnvManager.switchToMainThread();
+    rLynxChange(mtCallbacks[0][1]);
+
+    expect(lynx.performance.__functionCallHistory).toMatchInlineSnapshot(`
+      [
+        [
+          "_generatePipelineOptions",
+        ],
+        [
+          "_onPipelineStart",
+          "pipelineID",
+        ],
+        [
+          "_markTiming",
+          "pipelineID",
+          "diffVdomStart",
+        ],
+        [
+          "_markTiming",
+          "pipelineID",
+          "diffVdomEnd",
+        ],
+        [
+          "_markTiming",
+          "pipelineID",
+          "packChangesStart",
+        ],
+        [
+          "_markTiming",
+          "pipelineID",
+          "packChangesEnd",
+        ],
+        [
+          "_markTiming",
+          "pipelineID",
+          "mtsRenderStart",
+        ],
+        [
+          "_markTiming",
+          "pipelineID",
+          "parseChangesStart",
+        ],
+        [
+          "_markTiming",
+          "pipelineID",
+          "parseChangesEnd",
+        ],
+        [
+          "_markTiming",
+          "pipelineID",
+          "patchChangesStart",
+        ],
+        [
+          "_markTiming",
+          "pipelineID",
+          "patchChangesEnd",
+        ],
+        [
+          "_markTiming",
+          "pipelineID",
+          "mtsRenderEnd",
+        ],
+      ]
+    `);
   });
 });

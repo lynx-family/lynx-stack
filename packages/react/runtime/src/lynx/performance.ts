@@ -6,6 +6,7 @@ import type { VNode } from 'preact';
 
 import { DIFF } from '../renderToOpcodes/constants.js';
 import { __globalSnapshotPatch } from '../lifecycle/patch/snapshotPatch.js';
+import { isSdkVersionGt } from '../utils.js';
 
 enum PerformanceTimingKeys {
   updateSetStateTrigger,
@@ -93,7 +94,11 @@ function beginPipeline(needTimestamps: boolean, pipelineOrigin: PipelineOrigin, 
         break;
     }
 
-    lynx.performance?._onPipelineStart?.(globalPipelineOptions.pipelineID, globalPipelineOptions);
+    if (isSdkVersionGt(3, 0)) {
+      lynx.performance?._onPipelineStart?.(globalPipelineOptions.pipelineID, globalPipelineOptions);
+    } else {
+      lynx.performance?._onPipelineStart?.(globalPipelineOptions.pipelineID);
+    }
     if (timingFlag) {
       lynx.performance?._bindPipelineIdWithTimingFlag?.(globalPipelineOptions.pipelineID, timingFlag);
     }
