@@ -30,9 +30,6 @@ export function createStartupChunkDependenciesRuntimeModule(
       const chunkIds = Array.from(
         chunkGraph.getChunkEntryDependentChunksIterable(chunk),
       ).map(chunk => chunk.id);
-      // const compilation = this.compilation!;
-      // const { runtimeTemplate } = compilation;
-
       let startupCode: string[];
 
       if (this.asyncChunkLoading === false) {
