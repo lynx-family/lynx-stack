@@ -5,7 +5,24 @@ import type { Chunk, Compiler } from 'webpack';
 
 import { createStartupChunkDependenciesRuntimeModule } from './StartupChunkDependenciesRuntimeModule.js';
 
-import type { StartupChunkDependenciesPluginOptions } from './index.js';
+/**
+ * The options for StartupChunkDependenciesPlugin
+ */
+interface StartupChunkDependenciesPluginOptions {
+  /**
+   * Specifies the chunk loading method
+   * @defaultValue 'lynx'
+   * @remarks Currently only 'lynx' is supported
+   */
+  chunkLoading: string;
+
+  /**
+   * Whether to enable async chunk loading
+   * @defaultValue true
+   * @remarks Currently only async loading mode is supported
+   */
+  asyncChunkLoading: boolean;
+}
 
 const PLUGIN_NAME = 'StartupChunkDependenciesPlugin';
 
