@@ -16,7 +16,7 @@ import {
   sExportsReactInternal,
   sExportsReactLepus,
   target,
-} from './target';
+} from './target.js';
 
 Object.defineProperty(target, sExportsReact, {
   value: ReactAPIs,
