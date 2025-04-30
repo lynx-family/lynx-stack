@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+/* WORKER_IMPORT_ADD */
 import { Rpc } from '@lynx-js/web-worker-rpc';
 import type { WorkerStartMessage } from '@lynx-js/web-worker-runtime';
 
@@ -118,6 +119,7 @@ function createBackgroundWorker(
 }
 
 function createWebWorker(name: string): Worker {
+  /* WORKER_IMPORT_REPLACE */
   return new Worker(
     new URL('@lynx-js/web-worker-runtime', import.meta.url),
     {
@@ -125,4 +127,5 @@ function createWebWorker(name: string): Worker {
       name,
     },
   );
+  /* WORKER_IMPORT_REPLACE */
 }

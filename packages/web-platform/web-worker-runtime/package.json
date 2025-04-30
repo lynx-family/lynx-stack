@@ -11,8 +11,8 @@
   },
   "license": "Apache-2.0",
   "type": "module",
-  "main": "dist/index.js",
-  "typings": "dist/index.d.ts",
+  "main": "dist/index.worker.js",
+  "typings": "dist/index.worker.d.ts",
   "files": [
     "dist",
     "!dist/**/*.js.map",

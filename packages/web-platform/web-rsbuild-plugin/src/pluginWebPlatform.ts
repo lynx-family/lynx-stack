@@ -3,6 +3,17 @@
 // LICENSE file in the root directory of this source tree.
 
 import type { RsbuildPlugin } from '@rsbuild/core';
+import path from 'path';
+
+const __filename = new URL('', import.meta.url).pathname;
+const __dirname = path.dirname(__filename);
+
+interface WorkerLoaderOptions {
+  /**
+   * @default "no-fallback"
+   */
+  inline: 'fallback' | 'no-fallback' | undefined;
+}
 
 /**
  * The options for {@link pluginWebPlatform}.
@@ -18,6 +29,12 @@ export interface PluginWebPlatformOptions {
    * @default true
    */
   polyfill?: boolean;
+  /**
+   * Web Worker processing methods, including inline, filename, chunkname, etc.
+   *
+   * For configuration capabilities, please refer to: https://github.com/rspack-contrib/worker-rspack-loader
+   */
+  worker?: WorkerLoaderOptions;
 }
 
 /**
@@ -44,6 +61,9 @@ export function pluginWebPlatform(
     async setup(api) {
       const defaultPluginOptions = {
         polyfill: true,
+        worker: {
+          inline: 'no-fallback',
+        },
       };
       const options = Object.assign({}, defaultPluginOptions, userOptions);
 
@@ -61,6 +81,29 @@ export function pluginWebPlatform(
             polyfill: 'usage',
           };
         }
+      });
+
+      api.modifyRspackConfig(rspackConfig => {
+        rspackConfig.module = {
+          ...rspackConfig.module,
+          rules: [
+            ...(rspackConfig.module?.rules ?? []),
+            {
+              test: /\.worker\.js$/,
+              loader: path.resolve(
+                __dirname,
+                './loaders/worker-loader/index.js',
+              ),
+            },
+            {
+              test: /^bootWorkers\.(js|ts)$/,
+              loader: path.resolve(
+                __dirname,
+                './loaders/replace-worker-import.js',
+              ),
+            },
+          ],
+        };
       });
     },
   };

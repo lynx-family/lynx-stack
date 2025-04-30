@@ -7,6 +7,7 @@
     "lib": ["ESNext"],
     "noUnusedParameters": false,
     "noImplicitReturns": false,
+    "allowJs": true,
   },
-  "include": ["src"],
+  "include": ["src/**/*"],
 }
