@@ -134,12 +134,12 @@ export class XSwiper extends HTMLElement {
       minOffsetToMid,
     };
   }
-  get current() {
+  get currentIndex() {
     return this.#getNeatestElementIndexAndDistanceToMid().current;
   }
-  set current(newval: number) {
+  set currentIndex(newval: number) {
     // When current is specified and current is updated in bindchange, there is no need to respond to the update of current
-    if (this.current === newval) {
+    if (this.currentIndex === newval) {
       return;
     }
 
@@ -185,28 +185,28 @@ export class XSwiper extends HTMLElement {
   }
 
   scrollToNext() {
-    const current = this.current;
+    const current = this.currentIndex;
     const count = this.childElementCount;
     if (current === count - 1) {
       const circularPlay = this.circularPlay;
       if (circularPlay) {
-        this.current = 0;
+        this.currentIndex = 0;
       }
     } else {
-      this.current += 1;
+      this.currentIndex += 1;
     }
   }
 
   scrollToPrevious() {
-    const current = this.current;
+    const current = this.currentIndex;
     const count = this.childElementCount;
     if (current === 0) {
       const circularPlay = this.circularPlay;
       if (circularPlay) {
-        this.current = count - 1;
+        this.currentIndex = count - 1;
       }
     } else {
-      this.current == count - 1;
+      this.currentIndex = count - 1;
     }
   }
 

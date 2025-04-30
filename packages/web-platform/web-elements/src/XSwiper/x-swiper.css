@@ -74,7 +74,7 @@ x-swiper-item {
   flex-basis: var(--lynx-linear-weight-basis) !important;
 }
 
-x-swiper-item:nth-child(n+5) {
+x-swiper-item:nth-child(n+20) {
   contain: strict;
   content-visibility: auto;
 }

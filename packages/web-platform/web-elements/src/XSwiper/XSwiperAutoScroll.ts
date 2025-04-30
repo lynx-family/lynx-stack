@@ -23,7 +23,7 @@ export class XSwiperAutoScroll
   #handleCurrentChange(newVal: string | null) {
     const newval = Number(newVal);
     if (!Number.isNaN(newval)) {
-      this.#dom.current = newval;
+      this.#dom.currentIndex = newval;
     }
   }
 

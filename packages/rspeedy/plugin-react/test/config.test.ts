@@ -991,18 +991,18 @@ describe('Config', () => {
           "main": {
             "filename": ".rspeedy/main/background.js",
             "import": [
-              "./fixtures/basic.tsx",
-              "@rspack/core/hot/dev-server",
-              "@lynx-js/webpack-dev-transport/client",
               "@lynx-js/react/refresh",
+              "@lynx-js/webpack-dev-transport/client",
+              "@rspack/core/hot/dev-server",
+              "./fixtures/basic.tsx",
             ],
             "layer": "react:background",
           },
           "main__main-thread": {
             "filename": ".rspeedy/main/main-thread.js",
             "import": [
-              "./fixtures/basic.tsx",
               "<WORKSPACE>/packages/webpack/css-extract-webpack-plugin/runtime/hotModuleReplacement.lepus.cjs",
+              "./fixtures/basic.tsx",
             ],
             "layer": "react:main-thread",
           },
@@ -1041,18 +1041,18 @@ describe('Config', () => {
           "main": {
             "filename": ".rspeedy/main/background.[contenthash].js",
             "import": [
-              "./fixtures/basic.tsx",
-              "@rspack/core/hot/dev-server",
-              "@lynx-js/webpack-dev-transport/client",
               "@lynx-js/react/refresh",
+              "@lynx-js/webpack-dev-transport/client",
+              "@rspack/core/hot/dev-server",
+              "./fixtures/basic.tsx",
             ],
             "layer": "react:background",
           },
           "main__main-thread": {
             "filename": ".rspeedy/main/main-thread.js",
             "import": [
-              "./fixtures/basic.tsx",
               "<WORKSPACE>/packages/webpack/css-extract-webpack-plugin/runtime/hotModuleReplacement.lepus.cjs",
+              "./fixtures/basic.tsx",
             ],
             "layer": "react:main-thread",
           },
@@ -1549,6 +1549,71 @@ describe('Config', () => {
     // @ts-expect-error private field
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     expect(templatePlugin?.options.targetSdkVersion).toBe('3.4')
+  })
+  ;['development', 'production'].forEach(mode => {
+    test(`lazyBundle on ${mode} mode`, async () => {
+      vi.stubEnv('NODE_ENV', mode)
+
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+      const rsbuild = await createRspeedy({
+        rspeedyConfig: {
+          plugins: [
+            pluginReactLynx({
+              experimental_isLazyBundle: true,
+            }),
+            pluginStubRspeedyAPI(),
+          ],
+        },
+      })
+
+      const [config] = await rsbuild.initConfigs()
+      if (mode === 'development') {
+        expect(config?.entry).toMatchInlineSnapshot(`
+          {
+            "main": {
+              "filename": ".rspeedy/main/background.[contenthash:8].js",
+              "import": [
+                "@lynx-js/react/refresh",
+                "@lynx-js/webpack-dev-transport/client",
+                "@rspack/core/hot/dev-server",
+                "./src/index.js",
+              ],
+              "layer": "react:background",
+            },
+            "main__main-thread": {
+              "filename": ".rspeedy/main/main-thread.js",
+              "import": [
+                "<WORKSPACE>/packages/webpack/css-extract-webpack-plugin/runtime/hotModuleReplacement.lepus.cjs",
+                "./src/index.js",
+              ],
+              "layer": "react:main-thread",
+            },
+          }
+        `)
+      } else {
+        expect(config?.entry).toMatchInlineSnapshot(`
+          {
+            "main": {
+              "filename": ".rspeedy/main/background.[contenthash:8].js",
+              "import": [
+                "./src/index.js",
+              ],
+              "layer": "react:background",
+            },
+            "main__main-thread": {
+              "filename": ".rspeedy/main/main-thread.js",
+              "import": [
+                "./src/index.js",
+              ],
+              "layer": "react:main-thread",
+            },
+          }
+        `)
+      }
+
+      vi.unstubAllEnvs()
+    })
   })
 })
 

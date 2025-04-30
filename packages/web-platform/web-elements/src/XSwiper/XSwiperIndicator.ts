@@ -139,7 +139,7 @@ export class XSwiperIndicator
       boostedQueueMicrotask(() => {
         (
           this.#getIndicatorContainer().children[
-            this.#dom.current
+            this.#dom.currentIndex
           ] as HTMLElement
         )?.style.setProperty(
           'background-color',
