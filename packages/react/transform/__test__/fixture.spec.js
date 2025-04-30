@@ -870,7 +870,8 @@ describe('dynamic import', () => {
     );
 
     expect(result.code).toMatchInlineSnapshot(`
-      "import { __dynamicImport } from "@lynx-js/react/internal";
+      "import "@lynx-js/react/experimental/lazy/import";
+      import { __dynamicImport } from "@lynx-js/react/internal";
       (async function() {
           await import();
           await import(0);
