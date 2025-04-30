@@ -1,5 +1,11 @@
 # @lynx-js/react
 
+## 0.107.1
+
+### Patch Changes
+
+- Fix error `OnPipelineStart arg count must == 1` on app load. ([#669](https://github.com/lynx-family/lynx-stack/pull/669))
+
 ## 0.107.0
 
 ### Minor Changes
