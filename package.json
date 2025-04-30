@@ -40,7 +40,7 @@
     "globals": "^16.0.0",
     "husky": "^9.1.7",
     "lint-staged": "^15.5.1",
-    "sort-package-json": "^3.0.0",
+    "sort-package-json": "^3.1.0",
     "ts-patch": "^3.3.0",
     "turbo": "^2.5.2",
     "typescript": "^5.8.3",
