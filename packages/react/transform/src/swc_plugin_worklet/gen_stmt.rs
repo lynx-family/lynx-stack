@@ -6,7 +6,7 @@ use std::collections::HashSet;
 use std::vec;
 use swc_core::common::DUMMY_SP;
 use swc_core::ecma::ast::*;
-use swc_core::quote;
+use swc_core::{quote, quote_expr};
 
 pub struct StmtGen {}
 
@@ -66,11 +66,11 @@ impl StmtGen {
     target: TransformTarget,
     extracted_value: Box<Expr>,
     extracted_this_expr: Box<Expr>,
-    extracted_js_fns: Box<Expr>,
+    extracted_js_fns: Vec<(IdentName, Box<Expr>)>,
     hash: Expr,
     named_imports: &mut HashSet<String>,
   ) -> Box<Expr> {
-    if target == TransformTarget::JS && !extracted_js_fns.as_object().unwrap().props.is_empty() {
+    if target == TransformTarget::JS && !extracted_js_fns.is_empty() {
       named_imports.insert("transformToWorklet".into());
     }
 
@@ -99,11 +99,37 @@ impl StmtGen {
       .into(),
     );
 
-    if target == TransformTarget::JS && !extracted_js_fns.as_object().unwrap().props.is_empty() {
+    if target == TransformTarget::JS && !extracted_js_fns.is_empty() {
+      let value: Box<Expr> = Expr::Object(ObjectLit {
+        span: DUMMY_SP,
+        props: extracted_js_fns
+          .into_iter()
+          .map(|(key, value)| {
+            {
+              match target {
+                TransformTarget::JS => Prop::KeyValue(KeyValueProp {
+                  key: key.into(),
+                  value: CallExpr {
+                    ctxt: Default::default(),
+                    span: DUMMY_SP,
+                    args: vec![value.into()],
+                    callee: Callee::Expr(quote_expr!("transformToWorklet")),
+                    type_args: None,
+                  }
+                  .into(),
+                }),
+                _ => unreachable!(),
+              }
+            }
+            .into()
+          })
+          .collect(),
+      })
+      .into();
       props.push(
         Prop::KeyValue(KeyValueProp {
           key: Ident::from("_jsFn").into(),
-          value: extracted_js_fns,
+          value: value,
         })
         .into(),
       );
@@ -141,7 +167,7 @@ impl StmtGen {
     function_name: Ident,
     function: Box<Function>,
     extracted_idents: Vec<Ident>,
-    extracted_js_fns: Box<Expr>,
+    extracted_js_fns: Vec<(IdentName, Box<Expr>)>,
     hash: Expr,
     is_class_member: bool,
     named_imports: &mut HashSet<String>,
@@ -184,7 +210,7 @@ impl StmtGen {
     function: Box<Function>,
     function_name: Ident,
     extracted_idents: Vec<Ident>,
-    extracted_js_fns: Box<Expr>,
+    extracted_js_fns: Vec<(IdentName, Box<Expr>)>,
     hash: Expr,
     is_class_member: bool,
   ) -> Function {
@@ -201,15 +227,10 @@ impl StmtGen {
     }
 
     // let { _jsFn1, _jsFn2 } = this._jsFn;
-    let fn_props = extracted_js_fns.expect_object().props;
-    if !fn_props.is_empty() {
-      let fn_ids = fn_props
-        .into_iter()
-        .map(|prop| match *prop.expect_prop() {
-          Prop::Shorthand(id) => id,
-          Prop::KeyValue(kv) => kv.key.expect_ident().into(),
-          _ => unreachable!(),
-        })
+    if !extracted_js_fns.is_empty() {
+      let fn_ids = extracted_js_fns
+        .iter()
+        .map(|(k, _)| Ident::from(k.clone()))
         .collect();
       stmts.push(StmtGen::gen_destructure_stmt(
         Ident::new("_jsFn".into(), DUMMY_SP, Default::default()).into(),
