@@ -3,6 +3,10 @@
 // LICENSE file in the root directory of this source tree.
 
 import type { RsbuildPlugin } from '@rsbuild/core';
+import path from 'path';
+
+const __filename = new URL('', import.meta.url).pathname;
+const __dirname = path.dirname(__filename);
 
 /**
  * The options for {@link pluginWebPlatform}.
@@ -13,11 +17,19 @@ export interface PluginWebPlatformOptions {
   /**
    * Whether to polyfill the packages about Lynx Web Platform.
    *
-   * If it is true, @lynx-js will be compiled and polyfills will be added
+   * If it is true, @lynx-js will be compiled and polyfills will be added.
    *
    * @default true
    */
   polyfill?: boolean;
+  /**
+   * The absolute path of the native-modules file.
+   *
+   * If you use it, you don't need to pass nativeModulesMap in the lynx-view tag, otherwise it will cause duplicate packaging.
+   *
+   * When enabled, nativeModules will be packaged directly into the worker chunk instead of being transferred through Blob.
+   */
+  nativeModulesPath?: string;
 }
 
 /**
@@ -30,7 +42,10 @@ export interface PluginWebPlatformOptions {
  * import { defineConfig } from '@rsbuild/core';
  *
  * export default defineConfig({
- *   plugins: [pluginWebPlatform()],
+ *   plugins: [pluginWebPlatform({
+ *     // replace with your actual native-modules file path
+ *     nativeModulesPath: path.resolve(__dirname, './index.native-modules.ts'),
+ *   })],
  * })
  * ```
  *
@@ -47,6 +62,15 @@ export function pluginWebPlatform(
       };
       const options = Object.assign({}, defaultPluginOptions, userOptions);
 
+      if (
+        options.nativeModulesPath !== undefined
+        && !path.isAbsolute(options.nativeModulesPath)
+      ) {
+        throw new Error(
+          'options.nativeModulesPath must be an absolute path.',
+        );
+      }
+
       api.modifyRsbuildConfig(config => {
         if (options.polyfill === true) {
           config.source = {
@@ -61,6 +85,30 @@ export function pluginWebPlatform(
             polyfill: 'usage',
           };
         }
+      });
+
+      api.modifyRspackConfig(rspackConfig => {
+        console.log(path.resolve(
+          __dirname,
+          './loaders/native-modules.js',
+        ));
+        rspackConfig.module = {
+          ...rspackConfig.module,
+          rules: [
+            ...(rspackConfig.module?.rules ?? []),
+            {
+              test:
+                /backgroundThread\/background-apis\/createNativeModules\.js$/,
+              loader: path.resolve(
+                __dirname,
+                './loaders/native-modules.js',
+              ),
+              options: {
+                nativeModulesPath: options.nativeModulesPath,
+              },
+            },
+          ],
+        };
       });
     },
   };

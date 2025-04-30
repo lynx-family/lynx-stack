@@ -23,18 +23,22 @@
     "README.md"
   ],
   "scripts": {
-    "build": "rslib build",
-    "dev": "rslib build --watch",
     "test": "vitest"
   },
+  "dependencies": {
+    "loader-utils": "^3.3.1"
+  },
   "devDependencies": {
-    "@microsoft/api-extractor": "catalog:",
+    "@lynx-js/web-core": "workspace:*",
+    "@lynx-js/web-elements": "workspace:*",
     "@rsbuild/core": "catalog:rsbuild",
-    "@rslib/core": "^0.6.7",
+    "@types/loader-utils": "^2.0.6",
+    "@types/webpack": "^5.28.5",
     "typescript": "^5.8.3",
     "vitest": "^3.1.2"
   },
   "peerDependencies": {
+    "@lynx-js/web-core": ">0.13.0",
     "@rsbuild/core": "*"
   }
 }

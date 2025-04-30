@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+/* LYNX_NATIVE_MODULES_IMPORT */
 import {
   nativeModulesCallEndpoint,
   switchExposureServiceEndpoint,
@@ -53,6 +54,7 @@ export async function createNativeModules(
       )
     ),
   );
+  /* LYNX_NATIVE_MODULES_ADD */
 
   return Object.assign(nativeModules, {
     bridge: bridgeModule,
