@@ -2,7 +2,10 @@ name: deploy-main
 
 on:
   push:
-    branches: ["main"]
+    branches: [
+      "main",
+      "release/*",
+    ]
 
 env:
   CI: 1
@@ -37,7 +40,7 @@ jobs:
       - name: Save Turbo Result
         uses: actions/upload-artifact@v4
         with:
-          name: main-${{ github.sha }}
+          name: deploy-${{ github.sha }}
           path: .turbo
           if-no-files-found: error
           retention-days: 1
@@ -47,7 +50,7 @@ jobs:
   # See: https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/caching-dependencies-to-speed-up-workflows#restrictions-for-accessing-a-cache
   build-all:
     concurrency:
-      group: ${{ github.workflow }}
+      group: ${{ github.workflow }}-${{ github.ref }}
       cancel-in-progress: true
     uses: ./.github/workflows/workflow-build.yml
     if: github.repository == 'lynx-family/lynx-stack'
@@ -97,7 +100,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.repository == 'lynx-family/lynx-stack'
     concurrency:
-      group: ${{ github.workflow }}
+      group: ${{ github.workflow }}-${{ github.ref }}
       cancel-in-progress: false
     environment: main branch
     permissions:
@@ -124,7 +127,7 @@ jobs:
         uses: actions/download-artifact@v4
         timeout-minutes: 5
         with:
-          name: main-${{ github.sha }}
+          name: deploy-${{ github.sha }}
           path: .turbo
       - name: build
         run: |
@@ -170,7 +173,7 @@ jobs:
         uses: actions/download-artifact@v4
         timeout-minutes: 5
         with:
-          name: main-${{ github.sha }}
+          name: deploy-${{ github.sha }}
           path: .turbo
       - name: build
         run: |

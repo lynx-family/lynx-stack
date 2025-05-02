@@ -235,6 +235,24 @@ where
           with: Default::default(),
         })),
       );
+
+      prepend_stmt(
+        &mut n.body,
+        ModuleItem::ModuleDecl(ModuleDecl::Import(ImportDecl {
+          span: DUMMY_SP,
+          phase: ImportPhase::Evaluation,
+          specifiers: vec![],
+          src: Box::new(Str {
+            span: DUMMY_SP,
+            raw: None,
+            value: format!("{}/experimental/lazy/import", self.opts.runtime_pkg)
+              .replace("/internal", "")
+              .into(),
+          }),
+          type_only: Default::default(),
+          with: Default::default(),
+        })),
+      );
     }
   }
 }
@@ -280,6 +298,32 @@ mod tests {
       await import("https://www/a.js", { with: { type: "component" } });
       await import(url, { with: { type: "component" } });
       await import(url+"?v=1.0", { with: { type: "component" } });
+    })();
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    |_| visit_mut_pass(DynamicImportVisitor::new(
+      DynamicImportVisitorConfig {
+        layer: "test".into(),
+        ..Default::default()
+      },
+      Some(SingleThreadedComments::default())
+    )),
+    should_not_import_lazy,
+    r#"
+    (async function () {
+      await import("./index.js");
+      await import(`./locales/${name}`);
+      await import("ftp://www/a.js");
+
+      await import("./index.js", { with: { type: "component" } });
+      await import("ftp://www/a.js", { with: { type: "component" } });
     })();
     "#
   );
