@@ -78,7 +78,7 @@ impl MultiEmitter {
 }
 
 impl Emitter for MultiEmitter {
-  fn emit(&mut self, db: &DiagnosticBuilder<'_>) {
+  fn emit(&mut self, db: &mut DiagnosticBuilder<'_>) {
     for emitter in &mut self.emitters {
       emitter.emit(db);
     }
@@ -157,6 +157,7 @@ pub fn transform_bundle_result_inner(
         output: None,
         source_root: "".into(), // TODO: add root
         source_file_name: options.source_file_name.as_ref().map(String::as_str),
+        source_map_url: None,
         output_path: None,
         inline_sources_content: true,
         source_map: match options.sourcemap {
