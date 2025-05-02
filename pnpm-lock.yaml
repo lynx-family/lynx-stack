@@ -1163,7 +1163,7 @@ importers:
         specifier: 2.0.0-beta.3
         version: 2.0.0-beta.3
       '@types/react':
-        specifier: npm:@types/react@19.1.2
+        specifier: npm:@types/react@^19.1.2
         version: 19.1.2
       '@types/react-dom':
         specifier: ^19.1.3
