@@ -102,6 +102,7 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
         // react-transform may add imports of the following entries
         // We need to add aliases for that
         const transformedEntries = [
+          'experimental/lazy/import',
           'internal',
           'legacy-react-runtime',
           'runtime-components',

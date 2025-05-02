@@ -52,6 +52,11 @@ describe('React - alias', () => {
     )
 
     expect(config.resolve.alias).toHaveProperty(
+      '@lynx-js/react/experimental/lazy/import$',
+      expect.stringContaining('/packages/react/runtime/lazy/import.js'),
+    )
+
+    expect(config.resolve.alias).toHaveProperty(
       'preact$',
       expect.stringContaining('/preact/dist/preact.mjs'),
     )
