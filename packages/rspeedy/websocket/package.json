@@ -49,7 +49,7 @@
   "devDependencies": {
     "@microsoft/api-extractor": "catalog:",
     "@types/ws": "^8.18.1",
-    "ws": "^8.18.1"
+    "ws": "^8.18.2"
   },
   "engines": {
     "node": ">=18"
