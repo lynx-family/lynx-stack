@@ -698,12 +698,7 @@ describe('Plugins - Output', () => {
       await rsbuild.unwrapConfig()
 
       expect(rsbuild.getRspeedyConfig().output?.filename).toMatchInlineSnapshot(
-        `
-        {
-          "bundle": "static/bundle/[name].bundle",
-          "template": "static/bundle/[name].bundle",
-        }
-      `,
+        `"static/bundle/[name].bundle"`,
       )
     })
 
@@ -758,7 +753,7 @@ describe('Plugins - Output', () => {
         .toMatchInlineSnapshot(`
           {
             "bundle": "[name].bundle",
-            "template": "[name].bundle",
+            "template": "[name].template",
           }
         `)
     })

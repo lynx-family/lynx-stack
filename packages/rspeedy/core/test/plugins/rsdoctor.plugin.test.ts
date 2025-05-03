@@ -29,6 +29,33 @@ describe('Plugins - Rsdoctor', () => {
     })
 
     expect(options.supports.banner).toBe(true)
+
+    expect(options.experiments?.enableNativePlugin).toBe(true)
+  })
+
+  test('experiments.enableNativePlugin: false', async () => {
+    vi.stubEnv('RSDOCTOR', 'true')
+
+    const { createStubRspeedy } = await import('../createStubRspeedy.js')
+
+    const rsbuild = await createStubRspeedy({
+      tools: {
+        rsdoctor: {
+          experiments: {
+            enableNativePlugin: false,
+          },
+        },
+      },
+    })
+
+    const compiler = await rsbuild.createCompiler<Rspack.Compiler>()
+
+    const { options } = compiler.options.plugins.find(
+      (plugin) => (typeof plugin === 'object'
+        && plugin?.['isRsdoctorPlugin'] === true),
+    ) as RsdoctorRspackPlugin<[]>
+
+    expect(options.experiments?.enableNativePlugin).toBe(false)
   })
 
   test('linter.rules.ecma-version-check', async () => {
