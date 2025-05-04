@@ -233,6 +233,7 @@ export interface Output {
 export interface Performance {
     chunkSplit?: ChunkSplit | ChunkSplitBySize | ChunkSplitCustom | undefined;
     printFileSize?: PerformanceConfig['printFileSize'] | undefined;
+    profile?: boolean | undefined;
     removeConsole?: boolean | ConsoleType[] | undefined;
 }
 

@@ -87,6 +87,8 @@ export function toRsbuildConfig(
     performance: {
       chunkSplit: config.performance?.chunkSplit,
 
+      profile: config.performance?.profile,
+
       removeConsole: toRsbuildRemoveConsole(config) as
         | ConsoleType[]
         | false

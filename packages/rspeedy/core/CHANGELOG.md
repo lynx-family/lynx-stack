@@ -10,7 +10,7 @@
 
 ### Patch Changes
 
-- Support cli option `--no-env` to disable loading of .env files ([#483](https://github.com/lynx-family/lynx-stack/pull/483))
+- Support CLI option `--no-env` to disable loading of `.env` files ([#483](https://github.com/lynx-family/lynx-stack/pull/483))
 
 - Bump Rsbuild v1.3.8 with Rspack v1.3.5. ([#579](https://github.com/lynx-family/lynx-stack/pull/579))
 
@@ -46,9 +46,9 @@
 
 ### Patch Changes
 
-- Support cli flag `--base` to specify the base path of the server. ([#387](https://github.com/lynx-family/lynx-stack/pull/387))
+- Support CLI flag `--base` to specify the base path of the server. ([#387](https://github.com/lynx-family/lynx-stack/pull/387))
 
-- Support cli option `--environment` to specify the name of environment to build ([#462](https://github.com/lynx-family/lynx-stack/pull/462))
+- Support CLI option `--environment` to specify the name of environment to build ([#462](https://github.com/lynx-family/lynx-stack/pull/462))
 
 - Select the most appropriate network interface. ([#457](https://github.com/lynx-family/lynx-stack/pull/457))
 
@@ -58,7 +58,7 @@
 
   See [Node.js - TypeScript](https://nodejs.org/api/typescript.html) for more details.
 
-- Support cli option `--env-mode` to specify the env mode to load the `.env.[mode]` file. ([#453](https://github.com/lynx-family/lynx-stack/pull/453))
+- Support CLI option `--env-mode` to specify the env mode to load the `.env.[mode]` file. ([#453](https://github.com/lynx-family/lynx-stack/pull/453))
 
 - Support `dev.hmr` and `dev.liveReload`. ([#458](https://github.com/lynx-family/lynx-stack/pull/458))
 

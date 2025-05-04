@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { RsbuildConfig, RsbuildPlugin } from '@rsbuild/core'
+import type { RsbuildPlugin } from '@rsbuild/core'
 
 export function pluginStats(): RsbuildPlugin {
   return {
@@ -11,14 +11,9 @@ export function pluginStats(): RsbuildPlugin {
       api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
         return mergeRsbuildConfig(config, {
           performance: {
-            bundleAnalyze: {
-              // Failed to parse background.js, so analyzerMode is disabled here.
-              // Please use Webpack Bundle Analyzer in rsdoctor.
-              analyzerMode: 'disabled',
-              generateStatsFile: true,
-            },
+            profile: true,
           },
-        } as RsbuildConfig)
+        })
       })
     },
   }
