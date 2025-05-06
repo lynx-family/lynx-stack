@@ -36,6 +36,10 @@ export function createStartupChunkDependenciesRuntimeModule(
         startupCode = chunkIds
           .map(id => `${RuntimeGlobals.ensureChunk}(${JSON.stringify(id)});`)
           .concat('return next();');
+        // lazy bundle can't exports Promise
+        // TODO: handle Promise in lazy bundle exports to support chunk splitting
+      } else if (chunkIds.length === 0) {
+        startupCode = ['return next();'];
       } else if (chunkIds.length === 1) {
         startupCode = [
           `return ${RuntimeGlobals.ensureChunk}(${
