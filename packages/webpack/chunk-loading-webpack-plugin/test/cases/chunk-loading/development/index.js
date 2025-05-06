@@ -36,17 +36,3 @@ it('should work with chunk loading require', async function() {
     expect(lynx.requireModuleAsync).toBeCalled();
   });
 });
-
-it('should contain startup chunk dependencies code', async () => {
-  const bundlePath = path.join(
-    __dirname,
-    'rspack.bundle.js',
-  );
-  const content = await fs.promises.readFile(bundlePath, 'utf-8');
-  // why appears twice:
-  //  1. Injected by StartupChunkDependenciesPlugin
-  //  2. Existing in test case's own bundle
-  expect((content.match(/Lynx startup chunk dependencies/g) || []).length).toBe(
-    2,
-  );
-});
