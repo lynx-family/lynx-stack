@@ -43,5 +43,8 @@ export function createBackgroundLynx(
       mainThreadRpc,
       config.customSections,
     ),
+    queueMicrotask: (callback: () => void) => {
+      queueMicrotask(callback);
+    },
   };
 }
