@@ -2,6 +2,7 @@ import { defineConfig } from '@rsbuild/core';
 import { codecovWebpackPlugin } from '@codecov/webpack-plugin';
 import { pluginWebPlatform } from '@lynx-js/web-platform-rsbuild-plugin';
 import { RsdoctorRspackPlugin } from '@rsdoctor/rspack-plugin';
+import path from 'path';
 const codecovEnabled = !!process.env.CI;
 console.info('codecov enabled:', codecovEnabled);
 export default defineConfig({
@@ -56,5 +57,10 @@ export default defineConfig({
     },
     profile: true,
   },
-  plugins: [pluginWebPlatform({ polyfill: false })],
+  plugins: [
+    pluginWebPlatform({
+      polyfill: false,
+      nativeModulesPath: path.resolve(__dirname, './index.native-modules.ts'),
+    }),
+  ],
 });

@@ -20,8 +20,12 @@ const performance = {
       needTimestamps: false,
     };
   }),
-  _onPipelineStart: vi.fn((id) => {
-    performance.__functionCallHistory.push(['_onPipelineStart', id]);
+  _onPipelineStart: vi.fn((id, options) => {
+    if (typeof options === 'undefined') {
+      performance.__functionCallHistory.push(['_onPipelineStart', id]);
+    } else {
+      performance.__functionCallHistory.push(['_onPipelineStart', id, options]);
+    }
   }),
   _markTiming: vi.fn((id, key) => {
     performance.__functionCallHistory.push(['_markTiming', id, key]);

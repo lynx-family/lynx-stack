@@ -146,7 +146,7 @@ impl EsbuildEmitter {
 }
 
 impl Emitter for EsbuildEmitter {
-  fn emit(&mut self, msg: &DiagnosticBuilder<'_>) {
+  fn emit(&mut self, msg: &mut DiagnosticBuilder<'_>) {
     let partial_message = PartialMessage {
       id: msg.code.as_ref().map(|code| match code {
         DiagnosticId::Error(id) => id.to_string(),
