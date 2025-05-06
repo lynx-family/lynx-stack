@@ -1,4 +1,4 @@
-import { define } from '../util';
+import { define } from '../util.js';
 
 function installOwnProperties(globalThis: any) {
   define(globalThis, {

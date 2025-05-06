@@ -1,4 +1,5 @@
 import { defineConfig } from '@rslib/core';
+import { pluginPublint } from 'rsbuild-plugin-publint';
 
 export default defineConfig({
   source: {
@@ -21,5 +22,8 @@ export default defineConfig({
       format: 'cjs',
       syntax: 'es2021',
     },
+  ],
+  plugins: [
+    pluginPublint(),
   ],
 });

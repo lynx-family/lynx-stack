@@ -7,11 +7,11 @@
 
 import EventEmitter from 'events';
 import { JSDOM } from 'jsdom';
-import { createGlobalThis, LynxGlobalThis } from './lynx/GlobalThis';
-import { initElementTree } from './lynx/ElementPAPI';
-export { initElementTree } from './lynx/ElementPAPI';
-export type { LynxElement } from './lynx/ElementPAPI';
-export type { LynxGlobalThis } from './lynx/GlobalThis';
+import { createGlobalThis, LynxGlobalThis } from './lynx/GlobalThis.js';
+import { initElementTree } from './lynx/ElementPAPI.js';
+export { initElementTree } from './lynx/ElementPAPI.js';
+export type { LynxElement } from './lynx/ElementPAPI.js';
+export type { LynxGlobalThis } from './lynx/GlobalThis.js';
 /**
  * @public
  * The lynx element tree

@@ -9,6 +9,12 @@
       "cache": false
     },
     "build": {
+      "dependsOn": [],
+      "inputs": [
+        "src/**",
+        "!src/**/__tests__/**",
+        "rslib.config.ts"
+      ],
       "outputs": ["dist/**"]
     }
   }
