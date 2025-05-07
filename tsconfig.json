@@ -124,7 +124,7 @@
     },
     {
       "path": "./packages/third-party"
-    },
+    }
   ],
   "include": []
 }
