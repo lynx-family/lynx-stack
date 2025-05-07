@@ -42,7 +42,7 @@
     "lint-staged": "^15.5.2",
     "sort-package-json": "^3.2.0",
     "ts-patch": "^3.3.0",
-    "turbo": "^2.5.2",
+    "turbo": "^2.5.3",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.32.0",
     "vitest": "^3.1.3"
