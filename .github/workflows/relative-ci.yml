@@ -1,0 +1,25 @@
+name: RelativeCI
+
+on:
+  workflow_run:
+    workflows: ["Bundle Analysis"]
+    types:
+      - completed
+
+jobs:
+  upload:
+    strategy:
+      matrix:
+        project:
+          - path: ./examples/react
+            name: example-react
+          - path: ./packages/web-platform/web-explorer
+            name: web-explorer
+    runs-on: lynx-ubuntu-24.04-medium
+    steps:
+      - name: Send bundle stats and build information to RelativeCI - ${{ matrix.project.name }}
+        uses: relative-ci/agent-action@v2
+        with:
+          artifactName: ${{ matrix.project.name }}-relative-ci-artifacts
+          key: ${{ secrets.RELATIVE_CI_KEY }}
+          token: ${{ secrets.GITHUB_TOKEN }}
