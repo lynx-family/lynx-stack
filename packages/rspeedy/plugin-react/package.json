@@ -59,7 +59,7 @@
     "@rsbuild/webpack": "catalog:rsbuild",
     "@samchon/openapi": "4.1.0",
     "tailwindcss": "^3.4.17",
-    "type-fest": "^4.40.1",
+    "type-fest": "^4.41.0",
     "typia": "9.1.1",
     "typia-rspack-plugin": "2.0.1"
   },
