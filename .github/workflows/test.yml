@@ -55,7 +55,6 @@ jobs:
     needs: build
     uses: ./.github/workflows/workflow-bundle-analysis.yml
     secrets:
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       RELATIVE_CI_KEY: ${{ secrets.RELATIVE_CI_KEY }}
   test-rspeedy:
     needs: build
