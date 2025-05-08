@@ -36,12 +36,12 @@
     "@rsbuild/plugin-sass": "1.3.1",
     "@rsbuild/plugin-type-check": "1.2.1",
     "@rsbuild/plugin-typed-css-modules": "1.0.2",
-    "@rspress/plugin-client-redirects": "2.0.0-beta.3",
-    "@rspress/shared": "2.0.0-beta.3",
+    "@rspress/plugin-client-redirects": "2.0.0-beta.4",
+    "@rspress/shared": "2.0.0-beta.4",
     "@types/react": "npm:@types/react@^19.1.3",
     "@types/react-dom": "^19.1.3",
     "change-case": "^5.4.4",
-    "rspress": "2.0.0-beta.3",
+    "rspress": "2.0.0-beta.4",
     "tailwindcss": "^3.4.17"
   },
   "engines": {
