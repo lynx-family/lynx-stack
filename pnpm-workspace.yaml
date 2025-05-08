@@ -47,6 +47,7 @@ patchedDependencies:
 
 onlyBuiltDependencies:
   - dprint
+  - esbuild
 
 ignoredBuiltDependencies:
   - core-js

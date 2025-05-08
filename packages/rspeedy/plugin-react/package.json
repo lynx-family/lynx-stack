@@ -44,7 +44,7 @@
     "@lynx-js/runtime-wrapper-webpack-plugin": "workspace:*",
     "@lynx-js/template-webpack-plugin": "workspace:*",
     "@lynx-js/web-webpack-plugin": "workspace:*",
-    "background-only": "^0.0.1"
+    "background-only": "workspace:^"
   },
   "devDependencies": {
     "@lynx-js/react": "workspace:*",

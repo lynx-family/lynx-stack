@@ -177,6 +177,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/rspeedy/core
 
+  packages/background-only: {}
+
   packages/react:
     dependencies:
       preact:
@@ -426,8 +428,8 @@ importers:
         specifier: workspace:*
         version: link:../../webpack/web-webpack-plugin
       background-only:
-        specifier: ^0.0.1
-        version: 0.0.1
+        specifier: workspace:^
+        version: link:../../background-only
     devDependencies:
       '@lynx-js/react':
         specifier: workspace:*
@@ -3809,9 +3811,6 @@ packages:
     resolution: {integrity: sha512-ldYss8SbBlWva1bs28q78Ju5Zq1F+8BrqBZZ0VFhLBvhh6lCpC2o3gDJi/5DRLs9FgYZCnmPYIVFU4lRXCkyUw==}
     peerDependencies:
       '@babel/core': ^7.0.0
-
-  background-only@0.0.1:
-    resolution: {integrity: sha512-YXR2zshAf3qs3jnpApQaDUG0x4L6YWpSZfLDhdeiCFxfp/n8YwfoAQ1hAigEF3VpXOMOJeZYFWtBbiFv/v2Qfg==}
 
   bail@2.0.2:
     resolution: {integrity: sha512-0xO6mYd7JB2YesxDKplafRpsiOzPt9V02ddPCLbY1xYGPOX24NTyN50qnUxgCPcSoYMhKpAuBTjQoRZCAkUDRw==}
@@ -11733,8 +11732,6 @@ snapshots:
       '@babel/plugin-syntax-optional-chaining': 7.8.3(@babel/core@7.26.10)
       '@babel/plugin-syntax-private-property-in-object': 7.14.5(@babel/core@7.26.10)
       '@babel/plugin-syntax-top-level-await': 7.14.5(@babel/core@7.26.10)
-
-  background-only@0.0.1: {}
 
   bail@2.0.2: {}
 
