@@ -41,7 +41,7 @@
   "devDependencies": {
     "@lynx-js/test-tools": "workspace:*",
     "@microsoft/api-extractor": "catalog:",
-    "webpack": "^5.99.7"
+    "webpack": "^5.99.8"
   },
   "engines": {
     "node": ">=18"

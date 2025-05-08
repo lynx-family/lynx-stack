@@ -177,6 +177,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/rspeedy/core
 
+  packages/background-only: {}
+
   packages/react:
     dependencies:
       preact:
@@ -359,7 +361,7 @@ importers:
         specifier: ^3.1.3
         version: 3.1.3(@types/debug@4.1.12)(@types/node@22.15.3)(@vitest/ui@3.1.3)(jsdom@26.1.0)(sass-embedded@1.86.0)(terser@5.31.6)
       webpack:
-        specifier: ^5.99.7
+        specifier: ^5.99.8
         version: 5.99.8
 
   packages/rspeedy/create-rspeedy:
@@ -626,7 +628,7 @@ importers:
         specifier: ^3.1.3
         version: 3.1.3(@types/debug@4.1.12)(@types/node@22.15.3)(@vitest/ui@3.1.3)(jsdom@26.1.0)(sass-embedded@1.86.0)(terser@5.31.6)
       webpack:
-        specifier: ^5.99.7
+        specifier: ^5.99.8
         version: 5.99.8
 
   packages/web-platform/offscreen-document: {}
@@ -869,7 +871,7 @@ importers:
         specifier: ^2.9.2
         version: 2.9.2(webpack@5.99.8)
       webpack:
-        specifier: ^5.99.7
+        specifier: ^5.99.8
         version: 5.99.8
 
   packages/webpack/css-extract-webpack-plugin:
@@ -903,7 +905,7 @@ importers:
         specifier: ^16.0.5
         version: 16.0.5(@rspack/core@1.3.9(@swc/helpers@0.5.17))(sass-embedded@1.86.0)(webpack@5.99.8)
       webpack:
-        specifier: ^5.99.7
+        specifier: ^5.99.8
         version: 5.99.8
 
   packages/webpack/react-refresh-webpack-plugin:
@@ -930,7 +932,7 @@ importers:
         specifier: ^0.2.6
         version: 0.2.6(@swc/core@1.7.35(@swc/helpers@0.5.17))(webpack@5.99.8(@swc/core@1.7.35(@swc/helpers@0.5.17)))
       webpack:
-        specifier: ^5.99.7
+        specifier: ^5.99.8
         version: 5.99.8(@swc/core@1.7.35(@swc/helpers@0.5.17))
 
   packages/webpack/react-webpack-plugin:
@@ -970,7 +972,7 @@ importers:
         specifier: ^0.2.6
         version: 0.2.6(@swc/core@1.7.35(@swc/helpers@0.5.17))(webpack@5.99.8(@swc/core@1.7.35(@swc/helpers@0.5.17)))
       webpack:
-        specifier: ^5.99.7
+        specifier: ^5.99.8
         version: 5.99.8(@swc/core@1.7.35(@swc/helpers@0.5.17))
 
   packages/webpack/runtime-wrapper-webpack-plugin:
@@ -986,7 +988,7 @@ importers:
         specifier: 'catalog:'
         version: 7.52.7(@types/node@22.15.3)
       webpack:
-        specifier: ^5.99.7
+        specifier: ^5.99.8
         version: 5.99.8
 
   packages/webpack/template-webpack-plugin:
@@ -1026,7 +1028,7 @@ importers:
         specifier: ^1.0.4
         version: 1.0.4
       webpack:
-        specifier: ^5.99.7
+        specifier: ^5.99.8
         version: 5.99.8
 
   packages/webpack/test-tools:
@@ -1053,7 +1055,7 @@ importers:
         specifier: ^1.3.3
         version: 1.3.3
       webpack:
-        specifier: ^5.99.7
+        specifier: ^5.99.8
         version: 5.99.8
       webpack-merge:
         specifier: ^6.0.1
@@ -1072,7 +1074,7 @@ importers:
         specifier: workspace:*
         version: link:../test-tools
       webpack:
-        specifier: ^5.99.7
+        specifier: ^5.99.8
         version: 5.99.8
 
   packages/webpack/webpack-dev-transport:
@@ -1081,7 +1083,7 @@ importers:
         specifier: 'catalog:'
         version: 7.52.7(@types/node@22.15.3)
       webpack:
-        specifier: ^5.99.7
+        specifier: ^5.99.8
         version: 5.99.8
 
   packages/webpack/webpack-runtime-globals:
