@@ -177,6 +177,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/rspeedy/core
 
+  packages/background-only: {}
+
   packages/react:
     dependencies:
       preact:
