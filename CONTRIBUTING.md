@@ -8,6 +8,15 @@ _Node_: Check that Node is [installed](https://nodejs.org/en/download/) with ver
 
 _pnpm_: Make sure that pnpm is available. You can use `corepack enable` to automatically setup pnpm.
 
+_Rust_: This project builds native code (WASM/NAPI) and **requires Rust toolchain version 1.81.0**, as specified in the `rust-toolchain` file at the project root.
+
+- Ensure you have `rustup` installed (from [https://rustup.rs/](https://rustup.rs/)).
+- Install the required toolchain and WASM target by running the following command from _any_ directory (you only need to do this once):
+  ```sh
+  rustup toolchain install 1.81.0 --profile minimal --target wasm32-unknown-unknown
+  ```
+- `rustup` will automatically use the correct `1.81.0` toolchain when you run build commands inside this project, thanks to the `rust-toolchain` file.
+
 ### Setup
 
 To setup the project, run:
@@ -18,31 +27,32 @@ pnpm install
 
 ### Building
 
-To build the projects, run:
+This project uses a combination of TypeScript, Rust, and custom build tools across multiple packages. A full build requires orchestration using Turborepo.
 
-```sh
-pnpm build # An alias for `tsc --build`
-```
+- **Full Workspace Build (Required for Tests):**
+  To perform a complete build of all packages, including compiling Rust code (WASM/NAPI) and running all necessary package-specific build scripts (`rslib`, `rsbuild`, etc.), **use Turborepo**:
 
-The project is managed using TypeScript's [Project Reference](https://www.typescriptlang.org/docs/handbook/project-references.html#handbook-content).
+  ```sh
+  pnpm exec turbo run build
+  ```
+  _(Note: The existing `pnpm turbo build` command might also work if configured similarly in the root package.json, but `pnpm exec turbo run build` is explicit.)_
 
-So running `tsc --build` at the repository root can build all projects.
+  This command respects the dependency graph, handles all necessary compilation steps, and utilizes caching for faster subsequent builds. **This full build is required before running the test suite (`pnpm test`).**
 
-Also, the repository can also be built with [`turborepo`]. Running:
+- **TypeScript Compilation Only (Optional):**
+  The `pnpm build` script in the root `package.json` is an alias for `tsc --build`. This command uses TypeScript's [Project References](https://www.typescriptlang.org/docs/handbook/project-references.html#handbook-content) to compile TypeScript files and check types across the workspace.
 
-```sh
-pnpm turbo build
-```
+  ```sh
+  pnpm build
+  ```
+  This command is **not sufficient** for a complete build or for running tests, as it does not handle Rust compilation or other necessary build steps. It might be useful for quick TypeScript-only checks.
 
-will built all the projects and it's dependencies recursively with cache enabled.
-
-#### Build with Watching
-
-To build the projects and incrementally build files on change, run:
-
-```sh
-pnpm build --watch
-```
+- **Build with Watching (TypeScript Only):**
+  To incrementally build TypeScript files on change using `tsc`:
+  ```sh
+  pnpm build --watch
+  ```
+  _(Note: This likely does not watch or rebuild Rust components or run other non-tsc build steps.)_
 
 ### Running linting/tests
 
