@@ -4,7 +4,7 @@ on:
   # zizmor: ignore[dangerous-triggers] This is a dangerous trigger, but it's ok because we're not using it to trigger other workflows
   # See: https://relative-ci.com/documentation/setup/agent/github-action/#workflow_run-event
   workflow_run:
-    workflows: ["Bundle Analysis"]
+    workflows: ["Bundle Analysis", "Deploy", "Test"]
     types:
       - completed
 
