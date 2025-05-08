@@ -307,8 +307,8 @@ importers:
         specifier: catalog:rsbuild
         version: 1.3.0(@rsbuild/core@1.3.17)(@rspack/core@1.3.9(@swc/helpers@0.5.17))
       '@samchon/openapi':
-        specifier: 4.1.0
-        version: 4.1.0
+        specifier: 4.2.0
+        version: 4.2.0
       chokidar:
         specifier: ^4.0.3
         version: 4.0.3
@@ -343,11 +343,11 @@ importers:
         specifier: ^4.41.0
         version: 4.41.0
       typia:
-        specifier: 9.1.1
-        version: 9.1.1(@samchon/openapi@4.1.0)(typescript@5.8.3)
+        specifier: 9.2.0
+        version: 9.2.0(@samchon/openapi@4.2.0)(typescript@5.8.3)
       typia-rspack-plugin:
         specifier: 2.0.1
-        version: 2.0.1(typescript@5.8.3)(typia@9.1.1(@samchon/openapi@4.1.0)(typescript@5.8.3))
+        version: 2.0.1(typescript@5.8.3)(typia@9.2.0(@samchon/openapi@4.2.0)(typescript@5.8.3))
       vitest:
         specifier: ^3.1.3
         version: 3.1.3(@types/debug@4.1.12)(@types/node@22.15.3)(@vitest/ui@3.1.3)(jsdom@26.1.0)(sass-embedded@1.86.0)(terser@5.31.6)
@@ -453,8 +453,8 @@ importers:
         specifier: catalog:rsbuild
         version: 1.3.0(@rsbuild/core@1.3.17)(@rspack/core@1.3.9(@swc/helpers@0.5.17))
       '@samchon/openapi':
-        specifier: 4.1.0
-        version: 4.1.0
+        specifier: 4.2.0
+        version: 4.2.0
       tailwindcss:
         specifier: ^3.4.17
         version: 3.4.17
@@ -462,11 +462,11 @@ importers:
         specifier: ^4.41.0
         version: 4.41.0
       typia:
-        specifier: 9.1.1
-        version: 9.1.1(@samchon/openapi@4.1.0)(typescript@5.8.3)
+        specifier: 9.2.0
+        version: 9.2.0(@samchon/openapi@4.2.0)(typescript@5.8.3)
       typia-rspack-plugin:
         specifier: 2.0.1
-        version: 2.0.1(typescript@5.8.3)(typia@9.1.1(@samchon/openapi@4.1.0)(typescript@5.8.3))
+        version: 2.0.1(typescript@5.8.3)(typia@9.2.0(@samchon/openapi@4.2.0)(typescript@5.8.3))
 
   packages/rspeedy/plugin-react-alias:
     dependencies:
@@ -3021,8 +3021,8 @@ packages:
   '@rushstack/ts-command-line@5.0.1':
     resolution: {integrity: sha512-bsbUucn41UXrQK7wgM8CNM/jagBytEyJqXw/umtI8d68vFm1Jwxh1OtLrlW7uGZgjCWiiPH6ooUNa1aVsuVr3Q==}
 
-  '@samchon/openapi@4.1.0':
-    resolution: {integrity: sha512-UUFBI6n8R9+V0xt4scGEaQ0rib04cOVARhu7DXBZuEG0ExiTFPoiW49+qYFwE44LjYpfxBIlNkd+rcpiRGhsNA==}
+  '@samchon/openapi@4.2.0':
+    resolution: {integrity: sha512-OIgKBbUtWf0bcv3PRGwm1CbOeZsVC8qGE0H7xXEtUwqbin9O3czhWf9jxP90GGEw55joNJyV2fXZ3eWBm45O5g==}
 
   '@selderee/plugin-htmlparser2@0.11.0':
     resolution: {integrity: sha512-P33hHGdldxGabLFjPPpaTxVolMrzrcegejx+0GxjrIb9Zv48D8yAIA/QTDR2dFl7Uz7urX8aX6+5bCZslr+gWQ==}
@@ -3032,6 +3032,9 @@ packages:
 
   '@socket.io/component-emitter@3.1.2':
     resolution: {integrity: sha512-9BCxFwvbGg/RsZK9tjXd8s4UcwR0MWeFQ1XEKIQVVvAGJyINdrqKMcTRyLoK8Rse1GjzLV9cwjWV1olXRWEXVA==}
+
+  '@standard-schema/spec@1.0.0':
+    resolution: {integrity: sha512-m2bOd0f2RT9k8QJx1JN85cZYyH1RqFBdlwtkSlf4tBDYLCiiZnv1fIIwacK6cqwXavOydf0NPToMQgpKq+dVlA==}
 
   '@svitejs/changesets-changelog-github-compact@1.2.0':
     resolution: {integrity: sha512-08eKiDAjj4zLug1taXSIJ0kGL5cawjVCyJkBb6EWSg5fEPX6L+Wtr0CH2If4j5KYylz85iaZiFlUItvgJvll5g==}
@@ -8255,11 +8258,11 @@ packages:
       typescript: '*'
       typia: '*'
 
-  typia@9.1.1:
-    resolution: {integrity: sha512-fMgrd2VLGZoDjZZwWlgriotUiG38UEzcMD0ToJOhQ0bPr966mit0ZEy5TnDhm2RidXfejZOqHb7iOoTG3VHd4w==}
+  typia@9.2.0:
+    resolution: {integrity: sha512-XvLnH32MziXohOopp7hgxK5BqAXTOSUh0kNdmau9lDwWzs1kA9l/jy3rS5y/AVyKPwBG4dO/9DmBKpe3AqJpSw==}
     hasBin: true
     peerDependencies:
-      '@samchon/openapi': '>=4.0.0 <5.0.0'
+      '@samchon/openapi': '>=4.2.0 <5.0.0'
       typescript: '>=4.8.0 <5.9.0'
 
   unbox-primitive@1.0.2:
@@ -10812,7 +10815,7 @@ snapshots:
     transitivePeerDependencies:
       - '@types/node'
 
-  '@samchon/openapi@4.1.0': {}
+  '@samchon/openapi@4.2.0': {}
 
   '@selderee/plugin-htmlparser2@0.11.0':
     dependencies:
@@ -10822,6 +10825,8 @@ snapshots:
   '@sinclair/typebox@0.27.8': {}
 
   '@socket.io/component-emitter@3.1.2': {}
+
+  '@standard-schema/spec@1.0.0': {}
 
   '@svitejs/changesets-changelog-github-compact@1.2.0':
     dependencies:
@@ -16932,15 +16937,16 @@ snapshots:
 
   typescript@5.8.3: {}
 
-  typia-rspack-plugin@2.0.1(typescript@5.8.3)(typia@9.1.1(@samchon/openapi@4.1.0)(typescript@5.8.3)):
+  typia-rspack-plugin@2.0.1(typescript@5.8.3)(typia@9.2.0(@samchon/openapi@4.2.0)(typescript@5.8.3)):
     dependencies:
       typescript: 5.8.3
-      typia: 9.1.1(@samchon/openapi@4.1.0)(typescript@5.8.3)
+      typia: 9.2.0(@samchon/openapi@4.2.0)(typescript@5.8.3)
       unplugin: 2.3.2
 
-  typia@9.1.1(@samchon/openapi@4.1.0)(typescript@5.8.3):
+  typia@9.2.0(@samchon/openapi@4.2.0)(typescript@5.8.3):
     dependencies:
-      '@samchon/openapi': 4.1.0
+      '@samchon/openapi': 4.2.0
+      '@standard-schema/spec': 1.0.0
       commander: 10.0.1
       comment-json: 4.2.5
       inquirer: 8.2.6
