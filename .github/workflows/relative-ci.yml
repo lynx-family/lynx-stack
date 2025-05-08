@@ -17,14 +17,19 @@ jobs:
         project:
           - path: ./examples/react
             name: example-react
+            key: RELATIVE_CI_PROJECT_EXAMPLES_REACT_KEY
           - path: ./packages/web-platform/web-explorer
             name: web-explorer
+            key: RELATIVE_CI_PROJECT_WEB_EXPLORER_KEY
     runs-on: lynx-ubuntu-24.04-medium
     name: Upload ${{ matrix.project.name }}
+    env:
+      RELATIVE_CI_PROJECT_EXAMPLES_REACT_KEY: ${{ secrets.RELATIVE_CI_PROJECT_EXAMPLES_REACT_KEY }}
+      RELATIVE_CI_PROJECT_WEB_EXPLORER_KEY: ${{ secrets.RELATIVE_CI_PROJECT_WEB_EXPLORER_KEY }}
     steps:
       - name: Send bundle stats and build information to RelativeCI - ${{ matrix.project.name }}
         uses: relative-ci/agent-action@38328454d6a23942175eba485fca4fbb807b1f03 #v2
         with:
           artifactName: ${{ matrix.project.name }}-relative-ci-artifacts
-          key: ${{ secrets.RELATIVE_CI_KEY }}
+          key: ${{ env[matrix.project.key] }}
           token: ${{ secrets.GITHUB_TOKEN }}
