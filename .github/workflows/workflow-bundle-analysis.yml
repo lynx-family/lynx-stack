@@ -1,15 +1,7 @@
 name: Bundle Analysis
 
 on:
-  push:
-    branches:
-      - main
   workflow_call:
-    secrets:
-      CODECOV_TOKEN:
-        required: false
-      RELATIVE_CI_KEY:
-        required: false
 
 env:
   CI: 1
