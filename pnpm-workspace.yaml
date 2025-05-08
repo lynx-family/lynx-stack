@@ -1,5 +1,4 @@
 packages:
-  - .github/actions/eco-ci
   - examples/*
   - packages/react
   - packages/react/refresh
