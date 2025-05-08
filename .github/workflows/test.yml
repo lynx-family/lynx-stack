@@ -51,16 +51,6 @@ jobs:
   benchmark:
     needs: build
     uses: ./.github/workflows/workflow-bench.yml
-  bundle-analysis:
-    needs: build
-    uses: ./.github/workflows/workflow-test.yml
-    secrets:
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-    with:
-      runs-on: lynx-ubuntu-24.04-medium
-      run: |
-        pnpm --filter @lynx-js/web-explorer run build
-        pnpm --filter @lynx-js/example-react run build
   test-rspeedy:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
