@@ -5,6 +5,7 @@
     ":automergeStableNonMajor",
     ":automergeTypes",
     ":maintainLockFilesWeekly",
+    "helpers:pinGitHubActionDigests",
   ],
 
   "enabledManagers": [
@@ -104,6 +105,11 @@
         "peerDependencies",
       ],
       "rangeStrategy": "widen",
+    },
+    {
+      "groupName": "github-actions",
+      "groupSlug": "github-actions",
+      "matchManagers": ["github-actions"],
     },
   ],
   "postUpdateOptions": [
