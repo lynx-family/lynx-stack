@@ -2015,3 +2015,313 @@ describe('list-item JSXSpread', () => {
     `);
   });
 });
+
+describe('list componentAtIndexes', () => {
+  const s0 = __SNAPSHOT__(
+    <view>
+      <text>111</text>
+      <list id='list'>{HOLE}</list>
+    </view>,
+  );
+
+  const s1 = __SNAPSHOT__(
+    <list-item item-key={HOLE}>
+      <text>World</text>
+    </list-item>,
+  );
+
+  it('basic componentAtIndexes with async flush', () => {
+    const b = new SnapshotInstance(s0);
+    b.ensureElements();
+    const listRef = b.__elements[3];
+
+    const d0 = new SnapshotInstance(s1);
+    const d1 = new SnapshotInstance(s1);
+    const d2 = new SnapshotInstance(s1);
+    d0.setAttribute(0, { 'item-key': 'list-item-0' });
+    d1.setAttribute(0, { 'item-key': 'list-item-1' });
+    d2.setAttribute(0, { 'item-key': 'list-item-2' });
+    b.insertBefore(d0);
+    b.insertBefore(d1);
+    b.insertBefore(d2);
+    __pendingListUpdates.flush();
+
+    const fn = vi.fn();
+    const __original = globalThis.__FlushElementTree;
+    globalThis.__FlushElementTree = (_, options = {}) => {
+      fn(options);
+    };
+
+    {
+      const cellIndexes = [0, 1, 2];
+      const operationIDs = [0, 1, 2];
+      const enableReuseNotification = false;
+      const asyncFlush = true;
+      elementTree.triggerComponentAtIndexes(listRef, cellIndexes, operationIDs, enableReuseNotification, asyncFlush);
+    }
+
+    globalThis.__FlushElementTree = __original;
+    expect(fn.mock.calls).toMatchInlineSnapshot(`
+      [
+        [
+          {
+            "asyncFlush": true,
+          },
+        ],
+        [
+          {
+            "asyncFlush": true,
+          },
+        ],
+        [
+          {
+            "asyncFlush": true,
+          },
+        ],
+        [
+          {
+            "elementIDs": [
+              203,
+              206,
+              209,
+            ],
+            "listID": 202,
+            "operationIDs": [
+              0,
+              1,
+              2,
+            ],
+            "triggerLayout": true,
+          },
+        ],
+      ]
+    `);
+  });
+
+  it('basic componentAtIndexes with no async flush', () => {
+    const b = new SnapshotInstance(s0);
+    b.ensureElements();
+    const listRef = b.__elements[3];
+
+    const d0 = new SnapshotInstance(s1);
+    const d1 = new SnapshotInstance(s1);
+    const d2 = new SnapshotInstance(s1);
+    d0.setAttribute(0, { 'item-key': 'list-item-0' });
+    d1.setAttribute(0, { 'item-key': 'list-item-1' });
+    d2.setAttribute(0, { 'item-key': 'list-item-2' });
+    b.insertBefore(d0);
+    b.insertBefore(d1);
+    b.insertBefore(d2);
+    __pendingListUpdates.flush();
+
+    const fn = vi.fn();
+    const __original = globalThis.__FlushElementTree;
+    globalThis.__FlushElementTree = (_, options = {}) => {
+      fn(options);
+    };
+
+    {
+      const cellIndexes = [0, 1, 2];
+      const enableReuseNotification = false;
+      const asyncFlush = false;
+      elementTree.triggerComponentAtIndexes(listRef, cellIndexes, [], enableReuseNotification, asyncFlush);
+    }
+
+    globalThis.__FlushElementTree = __original;
+    expect(fn.mock.calls).toMatchInlineSnapshot(`
+      [
+        [
+          {
+            "elementIDs": [
+              216,
+              219,
+              222,
+            ],
+            "listID": 215,
+            "operationIDs": [],
+            "triggerLayout": true,
+          },
+        ],
+      ]
+    `);
+  });
+
+  it('basic componentAtIndexes with async flush and `enableReuseNotification` is true', () => {
+    const b = new SnapshotInstance(s0);
+    b.ensureElements();
+    const listRef = b.__elements[3];
+    const d0 = new SnapshotInstance(s1);
+    const d1 = new SnapshotInstance(s1);
+    const d2 = new SnapshotInstance(s1);
+    const d3 = new SnapshotInstance(s1);
+    const d4 = new SnapshotInstance(s1);
+    const d5 = new SnapshotInstance(s1);
+    d0.setAttribute(0, { 'item-key': 'list-item-0' });
+    d1.setAttribute(0, { 'item-key': 'list-item-1' });
+    d2.setAttribute(0, { 'item-key': 'list-item-2' });
+    d3.setAttribute(0, { 'item-key': 'list-item-3' });
+    d4.setAttribute(0, { 'item-key': 'list-item-4' });
+    d5.setAttribute(0, { 'item-key': 'list-item-5' });
+    b.insertBefore(d0);
+    b.insertBefore(d1);
+    b.insertBefore(d2);
+    b.insertBefore(d3);
+    b.insertBefore(d4);
+    b.insertBefore(d5);
+    __pendingListUpdates.flush();
+
+    {
+      const component = [];
+      component[0] = elementTree.triggerComponentAtIndex(listRef, 0);
+      component[1] = elementTree.triggerComponentAtIndex(listRef, 1);
+      component[2] = elementTree.triggerComponentAtIndex(listRef, 2);
+      elementTree.triggerEnqueueComponent(listRef, component[0]);
+      elementTree.triggerEnqueueComponent(listRef, component[1]);
+      elementTree.triggerEnqueueComponent(listRef, component[2]);
+    }
+
+    const fn = vi.fn();
+    const __original = globalThis.__FlushElementTree;
+    globalThis.__FlushElementTree = (_, options = {}) => {
+      const { listReuseNotification } = options;
+      if (listReuseNotification !== undefined) {
+        listReuseNotification['listElement'] = undefined;
+      }
+      fn(options);
+    };
+
+    {
+      const cellIndexes = [3, 4, 5];
+      const operationIDs = [3, 4, 5];
+      const enableReuseNotification = true;
+      const asyncFlush = true;
+      elementTree.triggerComponentAtIndexes(listRef, cellIndexes, operationIDs, enableReuseNotification, asyncFlush);
+    }
+
+    globalThis.__FlushElementTree = __original;
+    expect(fn.mock.calls).toMatchInlineSnapshot(`
+      [
+        [
+          {
+            "asyncFlush": true,
+            "listReuseNotification": {
+              "itemKey": "list-item-3",
+              "listElement": undefined,
+            },
+          },
+        ],
+        [
+          {
+            "asyncFlush": true,
+            "listReuseNotification": {
+              "itemKey": "list-item-4",
+              "listElement": undefined,
+            },
+          },
+        ],
+        [
+          {
+            "asyncFlush": true,
+            "listReuseNotification": {
+              "itemKey": "list-item-5",
+              "listElement": undefined,
+            },
+          },
+        ],
+        [
+          {
+            "elementIDs": [
+              229,
+              232,
+              235,
+            ],
+            "listID": 228,
+            "operationIDs": [
+              3,
+              4,
+              5,
+            ],
+            "triggerLayout": true,
+          },
+        ],
+      ]
+    `);
+  });
+
+  it('should handle continuous componentAtIndexes on same index - self reuse', () => {
+    const b = new SnapshotInstance(s0);
+    b.ensureElements();
+    const listRef = b.__elements[3];
+    const d0 = new SnapshotInstance(s1);
+    const d1 = new SnapshotInstance(s1);
+    const d2 = new SnapshotInstance(s1);
+    d0.setAttribute(0, { 'item-key': 'list-item-0' });
+    d1.setAttribute(0, { 'item-key': 'list-item-1' });
+    d2.setAttribute(0, { 'item-key': 'list-item-2' });
+    b.insertBefore(d0);
+    b.insertBefore(d1);
+    b.insertBefore(d2);
+    __pendingListUpdates.flush();
+
+    {
+      const component = [];
+      component[0] = elementTree.triggerComponentAtIndex(listRef, 0);
+      component[1] = elementTree.triggerComponentAtIndex(listRef, 1);
+      component[2] = elementTree.triggerComponentAtIndex(listRef, 2);
+      elementTree.triggerEnqueueComponent(listRef, component[0]);
+      elementTree.triggerEnqueueComponent(listRef, component[1]);
+      elementTree.triggerEnqueueComponent(listRef, component[2]);
+    }
+
+    const fn = vi.fn();
+    const __original = globalThis.__FlushElementTree;
+    globalThis.__FlushElementTree = (_, options = {}) => {
+      fn(options);
+    };
+
+    {
+      const cellIndexes = [0, 1, 2];
+      const operationIDs = [0, 1, 2];
+      const enableReuseNotification = false;
+      const asyncFlush = true;
+      elementTree.triggerComponentAtIndexes(listRef, cellIndexes, operationIDs, enableReuseNotification, asyncFlush);
+    }
+
+    globalThis.__FlushElementTree = __original;
+    expect(fn.mock.calls).toMatchInlineSnapshot(`
+      [
+        [
+          {
+            "asyncFlush": true,
+          },
+        ],
+        [
+          {
+            "asyncFlush": true,
+          },
+        ],
+        [
+          {
+            "asyncFlush": true,
+          },
+        ],
+        [
+          {
+            "elementIDs": [
+              242,
+              245,
+              248,
+            ],
+            "listID": 241,
+            "operationIDs": [
+              0,
+              1,
+              2,
+            ],
+            "triggerLayout": true,
+          },
+        ],
+      ]
+    `);
+  });
+});

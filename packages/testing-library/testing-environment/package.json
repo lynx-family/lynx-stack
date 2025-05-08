@@ -1,0 +1,58 @@
+{
+  "name": "@lynx-js/testing-environment",
+  "version": "0.0.1",
+  "description": "A subset of a Lynx environment to be useful for testing",
+  "keywords": [
+    "Lynx",
+    "ReactLynx",
+    "testing"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/testing-library/test-environment"
+  },
+  "license": "Apache-2.0",
+  "author": {
+    "name": "Yiming Li",
+    "email": "yimingli.cs@gmail.com"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "default": "./dist/index.js"
+    },
+    "./env/vitest": {
+      "types": "./dist/env/vitest/index.d.ts",
+      "import": "./dist/env/vitest/index.js",
+      "require": "./dist/env/vitest/index.cjs",
+      "default": "./dist/env/vitest/index.js"
+    }
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "env/vitest": [
+        "./dist/env/vitest/index.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "api-extractor": "api-extractor run --verbose",
+    "build": "rslib build",
+    "dev": "rslib build --watch"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.3",
+    "@types/jsdom": "^21.1.7",
+    "rsbuild-plugin-publint": "0.3.1"
+  }
+}

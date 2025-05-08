@@ -35,6 +35,7 @@ declare global {
     componentAtIndex: ComponentAtIndexCallback,
     enqueueComponent: EnqueueComponentCallback,
     info?: any,
+    componentAtIndexes: ComponentAtIndexesCallback,
   ): FiberElement;
   declare function __AppendElement(
     parent: FiberElement,
@@ -95,6 +96,7 @@ declare global {
     list: FiberElement,
     componentAtIndex: ComponentAtIndexCallback,
     enqueueComponent: EnqueueComponentCallback,
+    componentAtIndexes: ComponentAtIndexesCallback,
   ): void;
   declare function __OnLifecycleEvent(...args: any[]): void;
   declare function _ReportError(
@@ -120,6 +122,15 @@ declare global {
     enableReuseNotification: boolean,
   ) => void;
 
+  declare type ComponentAtIndexesCallback = (
+    list: FiberElement,
+    listID: number,
+    cellIndexes: number[],
+    operationIDs: number[],
+    enableReuseNotification: boolean,
+    asyncFlush: boolean,
+  ) => void;
+
   declare type EnqueueComponentCallback = (
     list: FiberElement,
     listID: number,
@@ -138,6 +149,9 @@ declare global {
       itemKey: string;
     };
     pipelineOptions?: PipelineOptions;
+    elementIDs?: number[];
+    operationIDs?: any[];
+    asyncFlush?: boolean;
   }
 
   declare interface UpdatePageOption {
@@ -168,6 +182,7 @@ declare global {
     dsl: string;
     stage: string;
   }
+
   declare let lynxCoreInject: any;
 
   interface ISystemInfo {
@@ -246,7 +261,11 @@ declare module '@lynx-js/types/background' {
 
   interface Performance {
     _generatePipelineOptions?(): PipelineOptions;
-    _onPipelineStart?(pipelineID: string, options: PipelineOptions): void;
+    /**
+     * @param pipelineID - Returned by native when calling {@link _generatePipelineOptions}.
+     * @param options - Added since 3.1. See {@link PipelineOptions} for more details.
+     */
+    _onPipelineStart?(pipelineID: string, options?: PipelineOptions): void;
     _bindPipelineIdWithTimingFlag?(pipelineID: string, timingFlag: string): void;
     _markTiming?(pipelineID: string, key: string): void;
   }

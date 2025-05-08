@@ -101,7 +101,12 @@ export function applyEntry(
           // For non-Lynx environment, the entry is not deleted.
           // So we do not put it in the intermediate.
           : '',
-        getBackgroundFilename(entryName, environment.config, isProd),
+        getBackgroundFilename(
+          entryName,
+          environment.config,
+          isProd,
+          experimental_isLazyBundle,
+        ),
       )
       const backgroundEntry = entryName
 
@@ -116,8 +121,10 @@ export function applyEntry(
         })
         .when(isDev && !isWeb, entry => {
           const require = createRequire(import.meta.url)
+          // use prepend to make sure it does not affect the exports
+          // from the entry
           entry
-            .add({
+            .prepend({
               layer: LAYERS.MAIN_THREAD,
               import: require.resolve(
                 '@lynx-js/css-extract-webpack-plugin/runtime/hotModuleReplacement.lepus.cjs',
@@ -131,19 +138,23 @@ export function applyEntry(
           import: imports,
           filename: backgroundName,
         })
+        // in standalone lazy bundle mode, we do not add
+        // other entries to avoid wrongly exporting from other entries
         .when(isDev && !isWeb, entry => {
+          // use prepend to make sure it does not affect the exports
+          // from the entry
           entry
             // This is aliased in `@lynx-js/rspeedy`
-            .add({
+            .prepend({
               layer: LAYERS.BACKGROUND,
               import: '@rspack/core/hot/dev-server',
             })
-            .add({
+            .prepend({
               layer: LAYERS.BACKGROUND,
               import: '@lynx-js/webpack-dev-transport/client',
             })
             // This is aliased in `./refresh.ts`
-            .add({
+            .prepend({
               layer: LAYERS.BACKGROUND,
               import: '@lynx-js/react/refresh',
             })
@@ -191,9 +202,15 @@ export function applyEntry(
         .plugin(PLUGIN_NAME_RUNTIME_WRAPPER)
         .use(RuntimeWrapperWebpackPlugin, [{
           injectVars(vars) {
+            const UNUSED_VARS = new Set([
+              'Card',
+              'Component',
+              'ReactLynx',
+              'Behavior',
+            ])
             return vars.map(name => {
-              if (name === 'Component') {
-                return '__Component'
+              if (UNUSED_VARS.has(name)) {
+                return `__${name}`
               }
               return name
             })
@@ -201,6 +218,7 @@ export function applyEntry(
           targetSdkVersion,
           // Inject runtime wrapper for all `.js` but not `main-thread.js` and `main-thread.[hash].js`.
           test: /^(?!.*main-thread(?:\.[A-Fa-f0-9]*)?\.js$).*\.js$/,
+          experimental_isLazyBundle,
         }])
         .end()
         .plugin(`${LynxEncodePlugin.name}`)
@@ -215,6 +233,8 @@ export function applyEntry(
         .end()
     }
 
+    const rsbuildConfig = api.getRsbuildConfig()
+
     chain
       .plugin(PLUGIN_NAME_REACT)
       .after(PLUGIN_NAME_TEMPLATE)
@@ -226,6 +246,7 @@ export function applyEntry(
         mainThreadChunks,
         extractStr,
         experimental_isLazyBundle,
+        profile: rsbuildConfig.performance?.profile,
       }])
   })
 }
@@ -276,6 +297,7 @@ function getBackgroundFilename(
   entryName: string,
   config: NormalizedEnvironmentConfig,
   isProd: boolean,
+  experimental_isLazyBundle: boolean,
 ): string {
   const { filename } = config.output
 
@@ -284,18 +306,28 @@ function getBackgroundFilename(
       .replaceAll('[name]', entryName)
       .replaceAll('.js', '/background.js')
   } else {
-    return `${entryName}/background${getHash(config, isProd)}.js`
+    return `${entryName}/background${
+      getHash(config, isProd, experimental_isLazyBundle)
+    }.js`
   }
 }
 
-function getHash(config: NormalizedEnvironmentConfig, isProd: boolean): string {
+function getHash(
+  config: NormalizedEnvironmentConfig,
+  isProd: boolean,
+  experimental_isLazyBundle: boolean,
+): string {
   if (typeof config.output?.filenameHash === 'string') {
     return config.output.filenameHash
       ? `.[${config.output.filenameHash}]`
       : EMPTY_HASH
   } else if (config.output?.filenameHash === false) {
     return EMPTY_HASH
-  } else if (isProd) {
+  } else if (isProd || experimental_isLazyBundle) {
+    // In standalone lazy bundle mode, due to an internal bug of `lynx.requireModule`,
+    // it will cache module with same path (eg. `/.rspeedy/main/background.js`)
+    // even they have different entryName (eg. `__Card__` and `http://[ip]:[port]/main/template.js`)
+    // we need add hash (`/.rspeedy/main/background.[hash].js`) to avoid module conflict with the lazy bundle consumer.
     return DEFAULT_FILENAME_HASH
   } else {
     return EMPTY_HASH

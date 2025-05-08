@@ -560,6 +560,20 @@ where
           .for_each(|attr_or_spread| match attr_or_spread {
             JSXAttrOrSpread::SpreadElement(_) => todo!(),
             JSXAttrOrSpread::JSXAttr(JSXAttr { name, value, .. }) => {
+              if let Some(JSXAttrValue::Lit(lit)) = value {
+                match lit {
+                  Lit::Str(s) => {
+                    let transformed_value = transform_jsx_attr_str(&s.value);
+                    *value = Some(JSXAttrValue::Lit(Lit::Str(Str {
+                      span: s.span,
+                      raw: None,
+                      value: transformed_value.into(),
+                    })));
+                  }
+                  _ => {}
+                }
+              }
+
               match name {
                 JSXAttrName::Ident(ident_name) => {
                   let attr_name = AttrName::from(<IdentName as Into<Ident>>::into(ident_name.clone()));
@@ -786,18 +800,6 @@ where
                       match value {
                         None => {}
                         Some(JSXAttrValue::Lit(value)) => {
-                          let value = match &value {
-                            Lit::Str(s) => {
-                                let value = transform_jsx_attr_str(&s.value);
-
-                                Lit::Str(Str {
-                                  span: s.span,
-                                  raw: None,
-                                  value: value.into(),
-                                })
-                            }
-                            _ => value.clone(),
-                          };
                           let stmt = quote!(
                               r#"__SetClasses($element, $value)"# as Stmt,
                               element: Expr = el.clone(),
@@ -2911,6 +2913,23 @@ mod tests {
       <view className="123 456"></view>
       <view className="123  456"></view>
       <view className="123\t456"></view>
+      <svg
+        content='<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <path d="M14.3723 11.9999L7.53902 5.16659C7.34376 4.97133 7.34376 4.65475 7.53902 4.45948L8.45826 3.54025C8.65353 3.34498 8.97011 3.34498 9.16537 3.54025L17.2714 11.6463C17.4667 11.8416 17.4667 12.1582 17.2714 12.3534L9.16537 20.4595C8.97011 20.6547 8.65353 20.6547 8.45826 20.4595L7.53902 19.5402C7.34376 19.345 7.34376 19.0284 7.53903 18.8331L14.3723 11.9999Z" fill="white"/>
+        </svg>'
+        style={{
+          width: "24rpx",
+          height: "24rpx",
+          opacity: "0.4",
+        }}
+        id="x
+y"
+        data-attr="x
+        y"
+        __lynx_timing_flag="
+aaaaa
+"
+      ></svg>
     </view>
     "#
   );

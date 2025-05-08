@@ -7,8 +7,8 @@
         "@lynx-js/react-refresh#build",
         "@lynx-js/react-transform#build:wasm",
         "@lynx-js/react-worklet-runtime#build",
-        "@lynx-js/react-lynx-testing-library#build",
-        "@lynx-js/test-environment#build"
+        "@lynx-js/reactlynx-testing-library#build",
+        "@lynx-js/testing-environment#build"
       ]
     }
   }

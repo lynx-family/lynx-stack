@@ -16,6 +16,9 @@ export default defineConfig({
       },
     }),
   ],
+  performance: {
+    profile: true,
+  },
   tools: {
     rspack: {
       plugins: [

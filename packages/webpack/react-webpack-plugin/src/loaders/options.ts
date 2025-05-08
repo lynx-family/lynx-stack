@@ -149,7 +149,12 @@ function getCommonOptions(
     snapshot: {
       // TODO: config
       preserveJsx: false,
-      target: 'MIXED',
+      // In standalone lazy bundle mode, we do not support HMR now.
+      target: this.hot && !isDynamicComponent
+        // Using `MIX` when HMR is enabled.
+        // This allows serializing the updated runtime code to Lepus using `Function.prototype.toString`.
+        ? 'MIXED'
+        : 'JS',
       runtimePkg: RUNTIME_PKG,
       filename,
       isDynamicComponent: isDynamicComponent ?? false,
@@ -277,11 +282,6 @@ export function getBackgroundTransformOptions(
     snapshot: {
       ...commonOptions.snapshot,
       jsxImportSource: JSX_IMPORT_SOURCE.BACKGROUND,
-      target: this.hot
-        // Using `MIX` when HMR is enabled.
-        // This allows serializing the updated runtime code to Lepus using `Function.prototype.toString`.
-        ? 'MIXED'
-        : 'JS',
     },
     defineDCE: {
       define: {

@@ -1,12 +1,28 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+
+/**
+ * Implements the commit phase of the rendering lifecycle.
+ * This module patches Preact's commit phase to integrate with the snapshot system,
+ * handling the collection and transmission of patches between threads.
+ *
+ * The commit phase is responsible for:
+ * - Collecting patches from the snapshot system
+ * - Managing commit tasks and their execution
+ * - Coordinating with the native layer for updates
+ * - Handling performance timing and pipeline options
+ */
+
+/**
+ * This module patches Preact's commit phase by hacking into the internal of
+ * its [options](https://preactjs.com/guide/v10/options/) API
+ */
+
 import type { VNode } from 'preact';
 import { options } from 'preact';
 import type { Component } from 'preact/compat';
 
-import type { SnapshotPatch } from './snapshotPatch.js';
-import { takeGlobalSnapshotPatch } from './snapshotPatch.js';
 import { LifecycleConstant } from '../../lifecycleConstant.js';
 import {
   PerformanceTimingKeys,
@@ -16,12 +32,14 @@ import {
   setPipeline,
 } from '../../lynx/performance.js';
 import { CATCH_ERROR, COMMIT, RENDER_CALLBACKS, VNODE } from '../../renderToOpcodes/constants.js';
-import { updateBackgroundRefs } from '../../snapshot/ref.js';
 import { backgroundSnapshotInstanceManager } from '../../snapshot.js';
+import { updateBackgroundRefs } from '../../snapshot/ref.js';
 import { isEmptyObject } from '../../utils.js';
 import { takeWorkletRefInitValuePatch } from '../../worklet/workletRefPool.js';
 import { runDelayedUnmounts, takeDelayedUnmounts } from '../delayUnmount.js';
 import { getReloadVersion } from '../pass.js';
+import type { SnapshotPatch } from './snapshotPatch.js';
+import { takeGlobalSnapshotPatch } from './snapshotPatch.js';
 
 let globalFlushOptions: FlushOptions = {};
 
@@ -30,58 +48,50 @@ let nextCommitTaskId = 1;
 
 let globalBackgroundSnapshotInstancesToRemove: number[] = [];
 
-let patchesToCommit: Patch[] = [];
-function clearPatchesToCommit(): void {
-  patchesToCommit = [];
-}
-
+/**
+ * A single patch operation.
+ */
 interface Patch {
   id: number;
   snapshotPatch?: SnapshotPatch;
   workletRefInitValuePatch?: [id: number, value: unknown][];
 }
 
+/**
+ * List of patches to be applied in a single update cycle with flush options.
+ */
 interface PatchList {
   patchList: Patch[];
   flushOptions?: FlushOptions;
 }
 
+/**
+ * Configuration options for patch operations
+ */
 interface PatchOptions {
   pipelineOptions?: PipelineOptions;
   reloadVersion: number;
   isHydration?: boolean;
 }
 
+/**
+ * Replaces Preact's default commit hook with our custom implementation
+ */
 function replaceCommitHook(): void {
-  // use our own `options.debounceRendering` to insert a timing flag before render
-  type DebounceRendering = (f: () => void) => void;
-  const injectDebounceRendering = (debounceRendering: DebounceRendering): DebounceRendering => {
-    return (f: () => void) => {
-      debounceRendering(() => {
-        f();
-        void commitToMainThread();
-      });
-    };
-  };
-  const defaultDebounceRendering = options.debounceRendering?.bind(options)
-    ?? (Promise.prototype.then.bind(Promise.resolve()) as DebounceRendering);
-  let _debounceRendering = injectDebounceRendering(defaultDebounceRendering);
-  Object.defineProperty(options, 'debounceRendering', {
-    get() {
-      return _debounceRendering;
-    },
-    set(debounceRendering: DebounceRendering) {
-      _debounceRendering = injectDebounceRendering(debounceRendering);
-    },
-  });
-
-  const oldCommit = options[COMMIT];
+  const originalPreactCommit = options[COMMIT];
   const commit = async (vnode: VNode, commitQueue: any[]) => {
-    if (__LEPUS__) {
+    // Skip commit phase for MT runtime
+    if (__MAIN_THREAD__) {
       // for testing only
       commitQueue.length = 0;
       return;
     }
+
+    // Mark the end of virtual DOM diffing phase for performance tracking
+    markTimingLegacy(PerformanceTimingKeys.updateDiffVdomEnd);
+    markTiming(PerformanceTimingKeys.diffVdomEnd);
+
+    // The callback functions to be called after components are rendered.
     const renderCallbacks = commitQueue.map((component: Component<any>) => {
       const ret = {
         component,
@@ -92,16 +102,19 @@ function replaceCommitHook(): void {
       return ret;
     });
     commitQueue.length = 0;
+
     const delayedUnmounts = takeDelayedUnmounts();
 
     const backgroundSnapshotInstancesToRemove = globalBackgroundSnapshotInstancesToRemove;
     globalBackgroundSnapshotInstancesToRemove = [];
 
     const commitTaskId = genCommitTaskId();
+
+    // Register the commit task
     globalCommitTaskMap.set(commitTaskId, () => {
       updateBackgroundRefs(commitTaskId);
       runDelayedUnmounts(delayedUnmounts);
-      oldCommit?.(vnode, renderCallbacks);
+      originalPreactCommit?.(vnode, renderCallbacks);
       renderCallbacks.some(wrapper => {
         try {
           wrapper[RENDER_CALLBACKS].some((cb: (this: Component) => void) => {
@@ -120,8 +133,11 @@ function replaceCommitHook(): void {
       }
     });
 
+    // Collect patches for this update
     const snapshotPatch = takeGlobalSnapshotPatch();
+    const flushOptions = globalFlushOptions;
     const workletRefInitValuePatch = takeWorkletRefInitValuePatch();
+    globalFlushOptions = {};
     if (!snapshotPatch && workletRefInitValuePatch.length === 0) {
       // before hydration, skip patch
       return;
@@ -137,46 +153,29 @@ function replaceCommitHook(): void {
     if (workletRefInitValuePatch.length) {
       patch.workletRefInitValuePatch = workletRefInitValuePatch;
     }
+    const patchList: PatchList = {
+      patchList: [patch],
+    };
+    if (!isEmptyObject(flushOptions)) {
+      patchList.flushOptions = flushOptions;
+    }
+    const obj = commitPatchUpdate(patchList, {});
 
-    patchesToCommit.push(patch);
+    // Send the update to the native layer
+    lynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
+      const commitTask = globalCommitTaskMap.get(commitTaskId);
+      if (commitTask) {
+        commitTask();
+        globalCommitTaskMap.delete(commitTaskId);
+      }
+    });
   };
   options[COMMIT] = commit as ((...args: Parameters<typeof commit>) => void);
 }
 
-async function commitToMainThread(): Promise<void> {
-  if (patchesToCommit.length === 0) {
-    return;
-  }
-
-  markTimingLegacy(PerformanceTimingKeys.updateDiffVdomEnd);
-  markTiming(PerformanceTimingKeys.diffVdomEnd);
-
-  const flushOptions = globalFlushOptions;
-  globalFlushOptions = {};
-
-  const patchList: PatchList = {
-    patchList: patchesToCommit,
-  };
-  patchesToCommit = [];
-
-  if (!isEmptyObject(flushOptions)) {
-    patchList.flushOptions = flushOptions;
-  }
-
-  const obj = commitPatchUpdate(patchList, {});
-
-  lynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
-    for (let i = 0; i < patchList.patchList.length; i++) {
-      const patch = patchList.patchList[i]!;
-      const commitTask = globalCommitTaskMap.get(patch.id);
-      if (commitTask) {
-        commitTask();
-        globalCommitTaskMap.delete(patch.id);
-      }
-    }
-  });
-}
-
+/**
+ * Prepares the patch update for transmission to the native layer
+ */
 function commitPatchUpdate(patchList: PatchList, patchOptions: Omit<PatchOptions, 'reloadVersion'>): {
   data: string;
   patchOptions: PatchOptions;
@@ -212,9 +211,16 @@ function commitPatchUpdate(patchList: PatchList, patchOptions: Omit<PatchOptions
   return obj;
 }
 
+/**
+ * Generates a unique ID for commit tasks
+ */
 function genCommitTaskId(): number {
   return nextCommitTaskId++;
 }
+
+/**
+ * Resets the commit task ID counter
+ */
 function clearCommitTaskId(): void {
   nextCommitTaskId = 1;
 }
@@ -231,18 +237,15 @@ function replaceRequestAnimationFrame(): void {
  * @internal
  */
 export {
-  commitPatchUpdate,
-  commitToMainThread,
-  genCommitTaskId,
   clearCommitTaskId,
+  commitPatchUpdate,
+  genCommitTaskId,
   globalBackgroundSnapshotInstancesToRemove,
   globalCommitTaskMap,
   globalFlushOptions,
   nextCommitTaskId,
-  patchesToCommit,
-  clearPatchesToCommit,
   replaceCommitHook,
   replaceRequestAnimationFrame,
-  type PatchOptions,
   type PatchList,
+  type PatchOptions,
 };

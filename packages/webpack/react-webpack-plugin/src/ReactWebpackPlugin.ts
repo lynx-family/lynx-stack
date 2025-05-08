@@ -73,6 +73,13 @@ interface ReactWebpackPluginOptions {
    * @alpha
    */
   experimental_isLazyBundle?: boolean;
+
+  /**
+   * Whether to enable profile.
+   *
+   * @defaultValue `false` when production, `true` when development
+   */
+  profile?: boolean | undefined;
 }
 
 /**
@@ -145,6 +152,7 @@ class ReactWebpackPlugin {
       mainThreadChunks: [],
       extractStr: false,
       experimental_isLazyBundle: false,
+      profile: undefined,
     });
 
   /**
@@ -180,7 +188,9 @@ class ReactWebpackPlugin {
       // We enable profile by default in development.
       // It can also be disabled by environment variable `REACT_PROFILE=false`
       __PROFILE__: JSON.stringify(
-        process.env['REACT_PROFILE'] ?? compiler.options.mode === 'development',
+        options.profile
+          ?? process.env['REACT_PROFILE']
+          ?? compiler.options.mode === 'development',
       ),
       __EXTRACT_STR__: JSON.stringify(Boolean(options.extractStr)),
       __FIRST_SCREEN_SYNC_TIMING__: JSON.stringify(

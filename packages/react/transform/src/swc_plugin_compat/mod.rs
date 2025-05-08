@@ -138,6 +138,7 @@ where
   old_runtime_import_ids: Vec<Id>,
   runtime_id: Lazy<Ident>,
   comments: Option<C>,
+  has_component_is: bool,
 }
 
 impl<C> Default for CompatVisitor<C>
@@ -163,6 +164,7 @@ where
       add_component_element_state: vec![],
       runtime_id: Lazy::new(|| private_ident!("ReactLynx")),
       comments,
+      has_component_is: false,
     }
   }
 
@@ -404,6 +406,7 @@ where
     };
 
     if is_component_is {
+      self.has_component_is = true;
       match &n.opening.name {
         JSXElementName::Ident(_) => {
           n.opening.name = JSXElementName::JSXMemberExpr(JSXMemberExpr {
@@ -998,6 +1001,24 @@ where
       }
       None => {}
     }
+
+    if self.has_component_is {
+      prepend_stmt(
+        &mut n.body,
+        ModuleItem::ModuleDecl(ModuleDecl::Import(ImportDecl {
+          span: DUMMY_SP,
+          phase: ImportPhase::Evaluation,
+          specifiers: vec![],
+          src: Box::new(Str {
+            span: DUMMY_SP,
+            raw: None,
+            value: format!("{}/experimental/lazy/import", self.opts.new_runtime_pkg).into(),
+          }),
+          type_only: Default::default(),
+          with: Default::default(),
+        })),
+      );
+    }
   }
 }
 
@@ -1558,6 +1579,28 @@ mod tests {
     const a4 = <A {...x} onLoad={console.log} />
     const b = <view onClick={this.handleClick} handleTap={this.handleClick} />
     a1, a2, a3, a4, b;
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    |_| (
+      resolver(Mark::new(), Mark::new(), true),
+      visit_mut_pass(CompatVisitor::<&SingleThreadedComments>::new(
+        CompatVisitorConfig {
+          ..Default::default()
+        },
+        None
+      )),
+      hygiene_with_config(Default::default()),
+    ),
+    should_add_component_is_import,
+    r#"
+    let c = <component is="xxxx" />;
     "#
   );
 }

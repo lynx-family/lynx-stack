@@ -1,8 +1,8 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { options } from 'preact';
 import type { VNode } from 'preact';
+import { options } from 'preact';
 
 import { CATCH_ERROR, COMPONENT, DIFF, VNODE } from '../renderToOpcodes/constants.js';
 
@@ -74,4 +74,4 @@ function initDelayUnmount(): void {
   };
 }
 
-export { initDelayUnmount, takeDelayedUnmounts, runDelayedUnmounts };
+export { initDelayUnmount, runDelayedUnmounts, takeDelayedUnmounts };

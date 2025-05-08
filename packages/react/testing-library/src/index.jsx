@@ -11,13 +11,13 @@ if (
   if (typeof afterEach === 'function') {
     afterEach(() => {
       cleanup();
-      lynxEnv.resetLynxEnv();
+      lynxTestingEnv.reset();
     });
   } else if (typeof teardown === 'function') {
     // eslint-disable-next-line no-undef
     teardown(() => {
       cleanup();
-      lynxEnv.resetLynxEnv();
+      lynxTestingEnv.reset();
     });
   }
 }

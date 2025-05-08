@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import type { DataProcessorDefinition } from '../lynx-api.js';
 
-export function setupLynxEnv(): void {
+export function setupLynxTestingEnv(): void {
   if (!__LEPUS__) {
     const { initData, updateData } = lynxCoreInject.tt._params;
     // @ts-ignore

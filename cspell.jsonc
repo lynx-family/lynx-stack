@@ -135,6 +135,7 @@
     // lighthouse CI
     "lhci",
     "lh",
+    "queueMicrotask",
   ],
   // Glob
   "ignorePaths": [

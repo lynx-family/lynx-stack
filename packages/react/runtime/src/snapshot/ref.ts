@@ -137,12 +137,12 @@ function markRefToRemove(sign: string, ref: unknown): void {
 }
 
 export {
-  updateRef,
-  takeGlobalRefPatchMap,
-  updateBackgroundRefs,
-  unref,
-  transformRef,
   globalRefsToRemove,
   globalRefsToSet,
   markRefToRemove,
+  takeGlobalRefPatchMap,
+  transformRef,
+  unref,
+  updateBackgroundRefs,
+  updateRef,
 };

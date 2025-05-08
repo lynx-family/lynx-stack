@@ -18,7 +18,7 @@ jobs:
     outputs:
       merge-base: ${{ steps.merge-base.outputs.merge-base }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:
           ref: ${{ env.HEAD_REF }}
           repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
@@ -63,8 +63,8 @@ jobs:
     runs-on: lynx-ubuntu-24.04-xlarge
     needs: get-merge-base
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "22"
       - name: TurboCache
@@ -98,7 +98,7 @@ jobs:
         continue-on-error: true
       - name: Upload turbo summary
         if: runner.debug == '1'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: turbo-summary-${{ github.sha }}
           path: .turbo/runs/*.json
@@ -107,7 +107,7 @@ jobs:
           include-hidden-files: true
       - name: Setup Rust and retry build if failed
         if: steps.build.outcome == 'failure'
-        uses: actions-rust-lang/setup-rust-toolchain@v1
+        uses: actions-rust-lang/setup-rust-toolchain@9d7e65c320fdb52dcd45ffaa68deb6c02c8754d9 # v1
         with:
           target: wasm32-unknown-unknown
           cache-key: test-${{ runner.os }}

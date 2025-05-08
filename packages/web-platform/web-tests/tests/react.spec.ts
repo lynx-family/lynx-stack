@@ -956,6 +956,15 @@ test.describe('reactlynx3 tests', () => {
       await wait(100);
       await expect(result).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
     });
+    test(
+      'api-queueMicrotask',
+      async ({ page }, { title }) => {
+        await goto(page, title);
+        await wait(200);
+        const target = page.locator('#target');
+        await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
+      },
+    );
   });
 
   test.describe('configs', () => {

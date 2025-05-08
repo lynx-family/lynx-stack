@@ -1284,6 +1284,8 @@ describe('Config Validation', () => {
             },
           },
         },
+        { profile: true },
+        { profile: false },
         {
           removeConsole: true,
         },
@@ -1484,6 +1486,21 @@ describe('Config Validation', () => {
         [Error: Invalid configuration.
 
         Unknown property: \`$input.performance.chunkSplit.override\` in configuration
+        ]
+      `)
+
+      expect(() =>
+        validate({
+          performance: {
+            profile: 'ALL',
+          },
+        })
+      ).toThrowErrorMatchingInlineSnapshot(`
+        [Error: Invalid configuration.
+
+        Invalid config on \`$input.performance.profile\`.
+          - Expect to be (boolean | undefined)
+          - Got: string
         ]
       `)
 

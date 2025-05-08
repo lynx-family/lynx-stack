@@ -35,7 +35,6 @@
   },
   "ignore": [
     "@lynx-js/web-tests",
-    "@lynx-js/eco-ci",
     "@lynx-js/example-react"
   ],
   "changedFilePatterns": [

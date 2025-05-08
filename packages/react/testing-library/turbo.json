@@ -5,7 +5,7 @@
     "build": {
       "dependsOn": [
         "@lynx-js/react-transform#build:wasm",
-        "@lynx-js/test-environment#build"
+        "@lynx-js/testing-environment#build"
       ],
       "inputs": [
         "src"

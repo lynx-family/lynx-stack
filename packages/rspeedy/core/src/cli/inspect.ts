@@ -8,9 +8,8 @@ import type { Command } from 'commander'
 
 import type { CommonOptions } from './commands.js'
 import { exit } from './exit.js'
-import { loadConfig } from '../config/loadConfig.js'
 import { createRspeedy } from '../create-rspeedy.js'
-import type { CreateRspeedyOptions } from '../create-rspeedy.js'
+import { init } from './init.js'
 
 export interface InspectOptions extends CommonOptions {
   mode?: 'production' | 'development' | undefined
@@ -24,23 +23,8 @@ export async function inspect(
   inspectOptions: InspectOptions,
 ): Promise<void> {
   try {
-    const { content: rspeedyConfig } = await loadConfig({
-      cwd,
-      configPath: inspectOptions.config,
-    })
-
-    const options: CreateRspeedyOptions = {
-      cwd,
-      rspeedyConfig,
-    }
-
-    if (inspectOptions.noEnv) {
-      options.loadEnv = false
-    } else if (inspectOptions.envMode) {
-      options.loadEnv = { mode: inspectOptions.envMode }
-    }
-
-    const rspeedy = await createRspeedy(options)
+    const { createRspeedyOptions } = await init(cwd, inspectOptions)
+    const rspeedy = await createRspeedy(createRspeedyOptions)
 
     await rspeedy.inspectConfig({
       mode: inspectOptions.mode

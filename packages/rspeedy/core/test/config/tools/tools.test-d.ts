@@ -160,6 +160,28 @@ describe('Config - Tools', () => {
     })
   })
 
+  test('tools.rsdoctor', () => {
+    assertType<Tools>({
+      rsdoctor: {},
+    })
+
+    assertType<Tools>({
+      rsdoctor: {
+        experiments: {
+          enableNativePlugin: true,
+        },
+      },
+    })
+
+    assertType<Tools>({
+      rsdoctor: {
+        experiments: {
+          enableNativePlugin: false,
+        },
+      },
+    })
+  })
+
   test('tools.rspack', () => {
     // Object
     assertType<Tools>({

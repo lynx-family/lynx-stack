@@ -1,13 +1,13 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { render } from 'preact';
 import { createContext, createElement } from 'preact/compat';
 import { useState } from 'preact/hooks';
 import type { Consumer, FC, ReactNode } from 'react';
 
 import { factory, withInitDataInState } from './compat/initData.js';
 import { useLynxGlobalEventListener } from './hooks/useLynxGlobalEventListener.js';
-import { renderBackground } from './lifecycle/render.js';
 import { LifecycleConstant } from './lifecycleConstant.js';
 import { flushDelayedLifecycleEvents } from './lynx/tt.js';
 import { __root } from './root.js';
@@ -43,13 +43,13 @@ export interface Root {
    *   return <view>...</view>
    * }
    *
-   * if (__LEPUS__) {
+   * if (__MAIN_THREAD__) {
    *   root.render(
    *     <DataProvider data={DEFAULT_DATA}>
    *        <App/>
    *     </DataProvider>
    *   );
-   * } else if (__JS__) {
+   * } else if (__BACKGROUND__) {
    *   fetchData().then((data) => {
    *     root.render(
    *       <DataProvider data={data}>
@@ -82,11 +82,11 @@ export interface Root {
  */
 export const root: Root = {
   render: (jsx: ReactNode): void => {
-    if (__LEPUS__) {
+    if (__MAIN_THREAD__) {
       __root.__jsx = jsx;
     } else {
       __root.__jsx = jsx;
-      renderBackground(jsx, __root as any);
+      render(jsx, __root as any);
       if (__FIRST_SCREEN_SYNC_TIMING__ === 'immediately') {
         // This is for cases where `root.render()` is called asynchronously,
         // `firstScreen` message might have been reached.
@@ -370,7 +370,7 @@ export interface Lynx {
   registerDataProcessors: (dataProcessorDefinition?: DataProcessorDefinition) => void;
 }
 
-export { runOnMainThread } from './worklet/runOnMainThread.js';
-export { runOnBackground } from './worklet/runOnBackground.js';
-export { MainThreadRef, useMainThreadRef } from './worklet/workletRef.js';
 export { useLynxGlobalEventListener } from './hooks/useLynxGlobalEventListener.js';
+export { runOnBackground } from './worklet/runOnBackground.js';
+export { runOnMainThread } from './worklet/runOnMainThread.js';
+export { MainThreadRef, useMainThreadRef } from './worklet/workletRef.js';

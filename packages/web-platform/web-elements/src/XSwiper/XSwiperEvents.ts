@@ -77,7 +77,7 @@ export class XSwipeEvents
       || currentScrollDistance < 10
       || Math.abs(currentScrollDistance - totalScrollDistance) <= pageLength
     ) {
-      const current = this.#dom.current;
+      const current = this.#dom.currentIndex;
       if (current !== this.#current) {
         this.#dom.dispatchEvent(
           new CustomEvent('change', {

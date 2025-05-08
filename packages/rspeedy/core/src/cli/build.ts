@@ -6,10 +6,9 @@ import { logger } from '@rsbuild/core'
 import type { Command } from 'commander'
 
 import type { CommonOptions } from './commands.js'
-import type { CreateRspeedyOptions } from '../create-rspeedy.js'
 import { exit } from './exit.js'
-import { loadConfig } from '../config/loadConfig.js'
 import { createRspeedy } from '../create-rspeedy.js'
+import { init } from './init.js'
 import { isCI } from '../utils/is-ci.js'
 
 export type BuildOptions = CommonOptions & {
@@ -26,27 +25,9 @@ export async function build(
   const shouldExit = process.env['RSDOCTOR'] !== 'true' || isCI()
 
   try {
-    const { content: rspeedyConfig } = await loadConfig({
-      cwd,
-      configPath: buildOptions.config,
-    })
+    const { createRspeedyOptions } = await init(cwd, buildOptions)
 
-    const options: CreateRspeedyOptions = {
-      cwd,
-      rspeedyConfig,
-    }
-
-    if (buildOptions.noEnv) {
-      options.loadEnv = false
-    } else if (buildOptions.envMode) {
-      options.loadEnv = { mode: buildOptions.envMode }
-    }
-
-    if (buildOptions.environment) {
-      options.environment = buildOptions.environment
-    }
-
-    const rspeedy = await createRspeedy(options)
+    const rspeedy = await createRspeedy(createRspeedyOptions)
 
     await rspeedy.build()
   } catch (error) {

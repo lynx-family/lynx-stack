@@ -58,7 +58,7 @@ test('renders options.wrapper around node', async () => {
 });
 ```
 
-💡 Since our testing environment (`@lynx-js/test-environment`) is based on jsdom, You may also be interested in installing `@testing-library/jest-dom` so you can use
+💡 Since our testing environment (`@lynx-js/testing-environment`) is based on jsdom, You may also be interested in installing `@testing-library/jest-dom` so you can use
 [the custom jest matchers](https://github.com/testing-library/jest-dom).
 
 ## Examples

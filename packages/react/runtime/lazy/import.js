@@ -16,40 +16,46 @@ import {
   sExportsReactInternal,
   sExportsReactLepus,
   target,
-} from './target';
+} from './target.js';
 
 Object.defineProperty(target, sExportsReact, {
   value: ReactAPIs,
   enumerable: false,
   writable: false,
+  configurable: true,
 });
 
 Object.defineProperty(target, sExportsReactLepus, {
   value: ReactLepusAPIs,
   enumerable: false,
   writable: false,
+  configurable: true,
 });
 
 Object.defineProperty(target, sExportsReactInternal, {
   value: ReactInternal,
   enumerable: false,
   writable: false,
+  configurable: true,
 });
 
 Object.defineProperty(target, sExportsJSXRuntime, {
   value: ReactJSXRuntime,
   enumerable: false,
   writable: false,
+  configurable: true,
 });
 
 Object.defineProperty(target, sExportsJSXDevRuntime, {
   value: ReactJSXDevRuntime,
   enumerable: false,
   writable: false,
+  configurable: true,
 });
 
 Object.defineProperty(target, sExportsLegacyReactRuntime, {
   value: ReactLegacyReactRuntime,
   enumerable: false,
   writable: false,
+  configurable: true,
 });

@@ -9,9 +9,8 @@ import color from 'picocolors'
 
 import type { CommonOptions } from './commands.js'
 import { exit } from './exit.js'
-import { loadConfig, resolveConfigPath } from '../config/loadConfig.js'
 import { createRspeedy } from '../create-rspeedy.js'
-import type { CreateRspeedyOptions } from '../create-rspeedy.js'
+import { init } from './init.js'
 
 export interface PreviewOptions extends CommonOptions {
   base?: string | undefined
@@ -23,30 +22,9 @@ export async function preview(
   previewOptions: PreviewOptions,
 ): Promise<void> {
   try {
-    const configPath = resolveConfigPath(cwd, previewOptions.config)
+    const { createRspeedyOptions } = await init(cwd, previewOptions)
 
-    const { content: rspeedyConfig } = await loadConfig({
-      cwd,
-      configPath,
-    })
-
-    if (previewOptions.base) {
-      rspeedyConfig.server ??= {}
-      rspeedyConfig.server.base = previewOptions.base
-    }
-
-    const options: CreateRspeedyOptions = {
-      cwd,
-      rspeedyConfig,
-    }
-
-    if (previewOptions.noEnv) {
-      options.loadEnv = false
-    } else if (previewOptions.envMode) {
-      options.loadEnv = { mode: previewOptions.envMode }
-    }
-
-    const rspeedy = await createRspeedy(options)
+    const rspeedy = await createRspeedy(createRspeedyOptions)
 
     await rspeedy.initConfigs()
 

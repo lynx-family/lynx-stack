@@ -38,6 +38,33 @@ export interface Performance {
   chunkSplit?: ChunkSplit | ChunkSplitBySize | ChunkSplitCustom | undefined
 
   /**
+   * Whether capture timing information in the build time and the runtime, the same as the {@link https://rspack.dev/config/other-options#profile | profile} config of Rspack.
+   *
+   * @remarks
+   *
+   * This option would be `true` when `DEBUG` environment variable contains `rspeedy`.
+   *
+   * @example
+   *
+   * Enable profile.
+   *
+   * - Rsbuild will auto-generate `dist/stats.json` file through bundle analyzer.
+   *
+   * - Rspack will include the build time information when generating `stats.json`.
+   *
+   * - Frameworks like ReactLynx will include runtime information using `console.profile`.
+   *
+   * ```ts
+   * import { defineConfig } from '@lynx-js/rspeedy'
+   *
+   * export default defineConfig({
+   *   performance: { profile: true },
+   * })
+   * ```
+   */
+  profile?: boolean | undefined
+
+  /**
    * Whether to remove `console.[methodName]` in production build.
    *
    * @example

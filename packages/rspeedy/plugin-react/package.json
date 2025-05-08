@@ -44,7 +44,7 @@
     "@lynx-js/runtime-wrapper-webpack-plugin": "workspace:*",
     "@lynx-js/template-webpack-plugin": "workspace:*",
     "@lynx-js/web-webpack-plugin": "workspace:*",
-    "background-only": "^0.0.1"
+    "background-only": "workspace:^"
   },
   "devDependencies": {
     "@lynx-js/react": "workspace:*",
@@ -59,12 +59,12 @@
     "@rsbuild/webpack": "catalog:rsbuild",
     "@samchon/openapi": "4.1.0",
     "tailwindcss": "^3.4.17",
-    "type-fest": "^4.40.0",
+    "type-fest": "^4.40.1",
     "typia": "9.1.1",
     "typia-rspack-plugin": "2.0.1"
   },
   "peerDependencies": {
-    "@lynx-js/react": "^0.103.0 || ^0.104.0 || ^0.105.0 || ^0.106.0 || ^0.107.0"
+    "@lynx-js/react": "^0.103.0 || ^0.104.0 || ^0.105.0 || ^0.106.0 || ^0.107.0 || ^0.108.0"
   },
   "peerDependenciesMeta": {
     "@lynx-js/react": {

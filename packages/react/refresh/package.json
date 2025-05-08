@@ -16,6 +16,6 @@
     "@lynx-js/react": "workspace:*",
     "@prefresh/core": "^1.5.3",
     "@prefresh/utils": "^1.2.0",
-    "esbuild": "^0.25.3"
+    "esbuild": "^0.25.4"
   }
 }

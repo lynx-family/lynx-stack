@@ -4,14 +4,14 @@ use crate::swc_plugin_worklet::decl_collect::{
 use crate::swc_plugin_worklet::globals::{DEFAULT_GLOBALS, LYNX_GLOBALS};
 use rustc_hash::FxHashSet;
 use std::cmp::max;
-use std::mem::swap;
+use std::mem::{swap, take};
 use std::ops::Deref;
 use swc_core::common::util::take::Take;
-use swc_core::common::{EqIgnoreSpan, DUMMY_SP};
+use swc_core::common::EqIgnoreSpan;
 use swc_core::ecma::ast::*;
 use swc_core::ecma::utils::quote_ident;
 use swc_core::ecma::visit::{noop_visit_mut_type, VisitMut, VisitMutWith};
-use swc_core::{quote, quote_expr};
+use swc_core::quote;
 
 pub struct ExtractingIdentsCollectorConfig {
   pub custom_global_ident_names: Option<Vec<String>>,
@@ -31,7 +31,7 @@ pub struct ExtractingIdentsCollector {
   values_extracted: Box<Expr>,
   idents_to_extract: Vec<Ident>,
   this_expr_to_extract: Box<Expr>,
-  js_fns_to_extract: Box<Expr>,
+  js_fns_to_extract: Vec<(IdentName, Box<Expr>)>,
   id_of_last_js_fn: u32,
   next_block_decls_collected: bool,
   scope_env: Vec<ScopeEnv>,
@@ -51,7 +51,7 @@ impl ExtractingIdentsCollector {
       values_extracted: quote!("{}" as Expr).into(),
       idents_to_extract: vec![],
       this_expr_to_extract: quote!("{}" as Expr).into(),
-      js_fns_to_extract: quote!("{}" as Expr).into(),
+      js_fns_to_extract: vec![],
       id_of_last_js_fn: 0,
       next_block_decls_collected: false,
       scope_env: vec![ScopeEnv {
@@ -76,8 +76,8 @@ impl ExtractingIdentsCollector {
     self.this_expr_to_extract.take()
   }
 
-  pub fn take_js_fns(&mut self) -> Box<Expr> {
-    self.js_fns_to_extract.take()
+  pub fn take_js_fns(&mut self) -> Vec<(IdentName, Box<Expr>)> {
+    take(&mut self.js_fns_to_extract)
   }
 
   fn is_at_global(&self, s: &str) -> bool {
@@ -350,20 +350,7 @@ impl VisitMut for ExtractingIdentsCollector {
     let fn_ident = quote_ident!(format!("_jsFn{}", self.id_of_last_js_fn));
     let mut fn_expr = Box::new(fn_ident.clone().into());
     swap(&mut fn_expr, &mut n.args[0].expr);
-    self.js_fns_to_extract.as_mut_object().unwrap().props.push(
-      Prop::KeyValue(KeyValueProp {
-        key: fn_ident.into(),
-        value: CallExpr {
-          ctxt: Default::default(),
-          span: DUMMY_SP,
-          args: vec![fn_expr.into()],
-          callee: Callee::Expr(quote_expr!("transformToWorklet")),
-          type_args: None,
-        }
-        .into(),
-      })
-      .into(),
-    );
+    self.js_fns_to_extract.push((fn_ident.clone(), fn_expr));
     // skip visit_mut_children_with() here
   }
 

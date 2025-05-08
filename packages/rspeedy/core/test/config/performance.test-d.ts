@@ -189,6 +189,20 @@ describe('Config - Performance', () => {
     })
   })
 
+  test('performance.profile', () => {
+    assertType<Performance>({
+      profile: undefined,
+    })
+
+    assertType<Performance>({
+      profile: true,
+    })
+
+    assertType<Performance>({
+      profile: false,
+    })
+  })
+
   test('performance.removeConsole true', () => {
     assertType<Performance>({
       removeConsole: true,

@@ -1,0 +1,30 @@
+name: RelativeCI
+
+on:
+  # zizmor: ignore[dangerous-triggers] This is a dangerous trigger, but it's ok because we're not using it to trigger other workflows
+  # See: https://relative-ci.com/documentation/setup/agent/github-action/#workflow_run-event
+  workflow_run:
+    workflows: ["Bundle Analysis"]
+    types:
+      - completed
+
+permissions: {}
+
+jobs:
+  upload:
+    strategy:
+      matrix:
+        project:
+          - path: ./examples/react
+            name: example-react
+          - path: ./packages/web-platform/web-explorer
+            name: web-explorer
+    runs-on: lynx-ubuntu-24.04-medium
+    name: Upload ${{ matrix.project.name }}
+    steps:
+      - name: Send bundle stats and build information to RelativeCI - ${{ matrix.project.name }}
+        uses: relative-ci/agent-action@38328454d6a23942175eba485fca4fbb807b1f03 #v2
+        with:
+          artifactName: ${{ matrix.project.name }}-relative-ci-artifacts
+          key: ${{ secrets.RELATIVE_CI_KEY }}
+          token: ${{ secrets.GITHUB_TOKEN }}

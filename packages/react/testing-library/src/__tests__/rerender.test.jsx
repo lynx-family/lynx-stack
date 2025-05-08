@@ -45,7 +45,7 @@ test('rerender will flush pending hooks effects', async () => {
   const { rerender } = render(<Component />);
   const { findByText } = rerender(<Component />);
   vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
-  const callLepusMethod = lynxEnv.backgroundThread.lynx.getNativeApp().callLepusMethod;
+  const callLepusMethod = lynxTestingEnv.backgroundThread.lynx.getNativeApp().callLepusMethod;
   expect(callLepusMethod.mock.calls).toMatchInlineSnapshot(`[]`);
 
   await findByText('1');

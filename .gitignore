@@ -46,3 +46,6 @@ target/
 
 # lighthouse-ci
 .lighthouseci
+
+# rslib
+.rslib

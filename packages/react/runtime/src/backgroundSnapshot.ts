@@ -1,31 +1,38 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+
+/**
+ * Background snapshot implementation that runs in the background thread.
+ *
+ * This is the mirror of main thread's {@link SnapshotInstance}:
+ */
+
 import type { Worklet } from '@lynx-js/react/worklet-runtime/bindings';
 
+import { processGestureBackground } from './gesture/processGestureBagkround.js';
+import type { GestureKind } from './gesture/types.js';
 import { diffArrayAction, diffArrayLepus } from './hydrate.js';
 import { globalBackgroundSnapshotInstancesToRemove } from './lifecycle/patch/commit.js';
-import { markRefToRemove } from './snapshot/ref.js';
-import { transformSpread } from './snapshot/spread.js';
-import {
-  DynamicPartType,
-  backgroundSnapshotInstanceManager,
-  snapshotManager,
-  traverseSnapshotInstance,
-} from './snapshot.js';
-import type { SerializedSnapshotInstance } from './snapshot.js';
+import type { SnapshotPatch } from './lifecycle/patch/snapshotPatch.js';
 import {
   SnapshotOperation,
   __globalSnapshotPatch,
   initGlobalSnapshotPatch,
   takeGlobalSnapshotPatch,
 } from './lifecycle/patch/snapshotPatch.js';
-import type { SnapshotPatch } from './lifecycle/patch/snapshotPatch.js';
+import { globalPipelineOptions } from './lynx/performance.js';
+import type { SerializedSnapshotInstance } from './snapshot.js';
+import {
+  DynamicPartType,
+  backgroundSnapshotInstanceManager,
+  snapshotManager,
+  traverseSnapshotInstance,
+} from './snapshot.js';
+import { markRefToRemove } from './snapshot/ref.js';
+import { transformSpread } from './snapshot/spread.js';
 import { isDirectOrDeepEqual } from './utils.js';
 import { onPostWorkletCtx } from './worklet/ctx.js';
-import { processGestureBackground } from './gesture/processGestureBagkround.js';
-import type { GestureKind } from './gesture/types.js';
-import { globalPipelineOptions } from './lynx/performance.js';
 
 export class BackgroundSnapshotInstance {
   constructor(public type: string) {

@@ -1,16 +1,24 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { SnapshotInstance } from '../snapshot.js';
-import { updateEvent } from './event.js';
+
+/**
+ * Handles JSX spread operator in the snapshot system.
+ *
+ * Spread operators in JSX (e.g., <div {...props}>) are transformed into
+ * optimized attribute updates at compile time, avoiding runtime object spreads.
+ */
+
 import { BackgroundSnapshotInstance } from '../backgroundSnapshot.js';
+import { __pendingListUpdates, ListUpdateInfoRecording } from '../list.js';
+import { SnapshotInstance } from '../snapshot.js';
+import { isDirectOrDeepEqual, isEmptyObject, pick } from '../utils.js';
+import { updateEvent } from './event.js';
+import { updateGesture } from './gesture.js';
+import { platformInfoAttributes, updateListItemPlatformInfo } from './platformInfo.js';
 import { transformRef, updateRef } from './ref.js';
 import { updateWorkletEvent } from './workletEvent.js';
 import { updateWorkletRef } from './workletRef.js';
-import { updateGesture } from './gesture.js';
-import { platformInfoAttributes, updateListItemPlatformInfo } from './platformInfo.js';
-import { isDirectOrDeepEqual, isEmptyObject, pick } from '../utils.js';
-import { __pendingListUpdates, ListUpdateInfoRecording } from '../list.js';
 
 const eventRegExp = /^(([A-Za-z-]*):)?(bind|catch|capture-bind|capture-catch|global-bind)([A-Za-z]+)$/;
 const eventTypeMap: Record<string, string> = {
@@ -284,4 +292,4 @@ function transformSpread(
   return result;
 }
 
-export { updateSpread, transformSpread };
+export { transformSpread, updateSpread };

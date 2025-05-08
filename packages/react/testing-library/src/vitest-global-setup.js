@@ -1,28 +1,26 @@
 import { options } from 'preact';
-import { SnapshotInstance } from '../../runtime/lib/snapshot.js';
-import { snapshotInstanceManager } from '../../runtime/lib/snapshot.js';
+
 import { BackgroundSnapshotInstance } from '../../runtime/lib/backgroundSnapshot.js';
-import { backgroundSnapshotInstanceManager } from '../../runtime/lib/snapshot.js';
-import { injectCalledByNative } from '../../runtime/lib/lynx/calledByNative.js';
-import { injectUpdateMainThread } from '../../runtime/lib/lifecycle/patch/updateMainThread.js';
-import {
-  replaceCommitHook,
-  clearPatchesToCommit,
-  clearCommitTaskId,
-} from '../../runtime/lib/lifecycle/patch/commit.js';
-import { injectTt } from '../../runtime/lib/lynx/tt.js';
-import { setRoot } from '../../runtime/lib/root.js';
+import { clearCommitTaskId, replaceCommitHook } from '../../runtime/lib/lifecycle/patch/commit.js';
 import { deinitGlobalSnapshotPatch } from '../../runtime/lib/lifecycle/patch/snapshotPatch.js';
+import { injectUpdateMainThread } from '../../runtime/lib/lifecycle/patch/updateMainThread.js';
+import { injectCalledByNative } from '../../runtime/lib/lynx/calledByNative.js';
+import { flushDelayedLifecycleEvents, injectTt } from '../../runtime/lib/lynx/tt.js';
+import { setRoot } from '../../runtime/lib/root.js';
+import {
+  SnapshotInstance,
+  backgroundSnapshotInstanceManager,
+  snapshotInstanceManager,
+} from '../../runtime/lib/snapshot.js';
+import { destroyWorklet } from '../../runtime/lib/worklet/destroy.js';
 import { initApiEnv } from '../../worklet-runtime/lib/api/lynxApi.js';
 import { initEventListeners } from '../../worklet-runtime/lib/listeners.js';
 import { initWorklet } from '../../worklet-runtime/lib/workletRuntime.js';
-import { destroyWorklet } from '../../runtime/lib/worklet/destroy.js';
-import { flushDelayedLifecycleEvents } from '../../runtime/lib/lynx/tt.js';
 
 const {
   onInjectMainThreadGlobals,
   onInjectBackgroundThreadGlobals,
-  onResetLynxEnv,
+  onResetLynxTestingEnv,
   onSwitchedToMainThread,
   onSwitchedToBackgroundThread,
   onInitWorkletRuntime,
@@ -125,7 +123,7 @@ globalThis.onInjectBackgroundThreadGlobals = (target) => {
 
   // TODO: can we only inject to target(mainThread.globalThis) instead of globalThis?
   // packages/react/runtime/src/lynx.ts
-  // intercept lynxCoreInject assignments to lynxEnv.backgroundThread.globalThis.lynxCoreInject
+  // intercept lynxCoreInject assignments to lynxTestingEnv.backgroundThread.globalThis.lynxCoreInject
   const oldLynxCoreInject = globalThis.lynxCoreInject;
   globalThis.lynxCoreInject = target.lynxCoreInject;
   injectTt();
@@ -133,23 +131,22 @@ globalThis.onInjectBackgroundThreadGlobals = (target) => {
 
   // re-init global snapshot patch to undefined
   deinitGlobalSnapshotPatch();
-  clearPatchesToCommit();
   clearCommitTaskId();
 };
-globalThis.onResetLynxEnv = () => {
-  if (onResetLynxEnv) {
-    onResetLynxEnv();
+globalThis.onResetLynxTestingEnv = () => {
+  if (onResetLynxTestingEnv) {
+    onResetLynxTestingEnv();
   }
   if (process.env.DEBUG) {
-    console.log('onResetLynxEnv');
+    console.log('onResetLynxTestingEnv');
   }
 
   flushDelayedLifecycleEvents();
   destroyWorklet();
 
-  lynxEnv.switchToMainThread();
+  lynxTestingEnv.switchToMainThread();
   initEventListeners();
-  lynxEnv.switchToBackgroundThread();
+  lynxTestingEnv.switchToBackgroundThread();
 };
 
 globalThis.onSwitchedToMainThread = () => {
@@ -176,8 +173,8 @@ globalThis.onSwitchedToBackgroundThread = () => {
 };
 
 globalThis.onInjectMainThreadGlobals(
-  globalThis.lynxEnv.mainThread.globalThis,
+  globalThis.lynxTestingEnv.mainThread.globalThis,
 );
 globalThis.onInjectBackgroundThreadGlobals(
-  globalThis.lynxEnv.backgroundThread.globalThis,
+  globalThis.lynxTestingEnv.backgroundThread.globalThis,
 );

@@ -32,7 +32,7 @@
 ```js
 var globDynamicComponentEntry;
 "use strict";
-exports.ids = ['main'];
+exports.ids = ["main"];
 exports.modules = {
 "./app.jsx": 
 /*!*****************!*\

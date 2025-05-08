@@ -21,11 +21,11 @@ jobs:
   code-style-check:
     runs-on: lynx-ubuntu-24.04-medium
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:
           # We need full history for changeset status check
           fetch-depth: 0
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "22"
       - name: Install
@@ -53,14 +53,7 @@ jobs:
     uses: ./.github/workflows/workflow-bench.yml
   bundle-analysis:
     needs: build
-    uses: ./.github/workflows/workflow-test.yml
-    secrets:
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-    with:
-      runs-on: lynx-ubuntu-24.04-medium
-      run: |
-        pnpm --filter @lynx-js/web-explorer run build
-        pnpm --filter @lynx-js/example-react run build
+    uses: ./.github/workflows/workflow-bundle-analysis.yml
   test-rspeedy:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
@@ -236,6 +229,27 @@ jobs:
         export ALL_ON_UI=true
         pnpm --filter @lynx-js/web-tests run test --reporter='github,dot,junit,html'
         pnpm --filter @lynx-js/web-tests run coverage:ci
+  test-web-platform:
+    needs: build
+    uses: ./.github/workflows/workflow-test.yml
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    with:
+      runs-on: lynx-ubuntu-24.04-medium
+      run: >
+        pnpm
+        --filter @lynx-js/web-platform-rsbuild-plugin
+        run test
+        --reporter=github-actions
+        --reporter=dot
+        --reporter=junit
+        --outputFile=test-report.junit.xml
+        --coverage.reporter='json'
+        --coverage.reporter='text'
+        --test-timeout=50000
+        --no-cache
+        --logHeapUsage
+        --silent
   lighthouse:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
@@ -266,17 +280,17 @@ jobs:
       security-events: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:
           persist-credentials: false
       - name: Install the latest version of uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
       - name: Run zizmor 🌈
         run: uvx zizmor --format=sarif . > results.sarif
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Upload SARIF file
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@60168efe1c415ce0f5521ea06d5c2062adbeed1b # v3
         with:
           sarif_file: results.sarif
           category: zizmor
@@ -286,6 +300,7 @@ jobs:
       - code-style-check
       - playwright-linux
       - playwright-linux-all-on-ui
+      - test-web-platform
       - test-plugins
       - test-publish
       - test-react
