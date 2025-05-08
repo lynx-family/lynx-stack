@@ -1,4 +1,4 @@
-# @lynx-js/background-only
+# background-only
 
 This package serves as a mark package to enforce and mark modules that should only be used in the Background Thread context. It provides type definitions and runtime checks to ensure proper usage.
 
