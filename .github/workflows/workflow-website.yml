@@ -10,8 +10,8 @@ jobs:
   build:
     runs-on: lynx-ubuntu-24.04-medium
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "22"
       - name: TurboCache
@@ -21,7 +21,7 @@ jobs:
           key: turbo-v3-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ github.sha }}
           fail-on-cache-miss: true
       - name: Setup Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
       - name: Install
         run: |
           npm install -g corepack@latest
@@ -31,6 +31,6 @@ jobs:
         run: |
           pnpm turbo --filter website build:docs
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
         with:
           path: website/doc_build

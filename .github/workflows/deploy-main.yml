@@ -19,14 +19,14 @@ jobs:
     runs-on: ubuntu-latest
     if: github.repository == 'lynx-family/lynx-stack'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:
           fetch-depth: 0
-      - uses: actions-rust-lang/setup-rust-toolchain@v1
+      - uses: actions-rust-lang/setup-rust-toolchain@9d7e65c320fdb52dcd45ffaa68deb6c02c8754d9 # v1
         with:
           target: wasm32-unknown-unknown
           cache: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "22"
       - name: Install
@@ -38,7 +38,7 @@ jobs:
         run: |
           corepack pnpm turbo --filter !@lynx-js/web-tests build --summarize
       - name: Save Turbo Result
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: deploy-${{ github.sha }}
           path: .turbo
@@ -111,10 +111,10 @@ jobs:
       # See: https://docs.npmjs.com/generating-provenance-statements#publishing-packages-with-provenance-via-github-actions
       id-token: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:
           fetch-depth: 0
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "22"
           registry-url: "https://registry.npmjs.org"
@@ -124,7 +124,7 @@ jobs:
           corepack enable && corepack prepare
           corepack pnpm install --frozen-lockfile
       - name: Download Turbo Cache
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         timeout-minutes: 5
         with:
           name: deploy-${{ github.sha }}
@@ -157,10 +157,10 @@ jobs:
       # See: https://docs.npmjs.com/generating-provenance-statements#publishing-packages-with-provenance-via-github-actions
       id-token: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:
           fetch-depth: 0
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "22"
           registry-url: "https://registry.npmjs.org"
@@ -170,7 +170,7 @@ jobs:
           corepack enable && corepack prepare
           corepack pnpm install --frozen-lockfile
       - name: Download Turbo Cache
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         timeout-minutes: 5
         with:
           name: deploy-${{ github.sha }}
@@ -211,4 +211,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4
