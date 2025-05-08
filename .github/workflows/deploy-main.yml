@@ -60,6 +60,7 @@ jobs:
     needs: build-all
     uses: ./.github/workflows/workflow-bench.yml
   bundle-analysis:
+    permissions: {}
     needs: build-all
     uses: ./.github/workflows/workflow-bundle-analysis.yml
     if: github.repository == 'lynx-family/lynx-stack'
