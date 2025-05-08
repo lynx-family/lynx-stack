@@ -4,8 +4,35 @@
 import { BackgroundSnapshotInstance } from './backgroundSnapshot.js';
 import { SnapshotInstance } from './snapshot.js';
 
-const document: any = {};
+/**
+ * This module implements an Interface Adapter Pattern to integrate Preact's
+ * rendering system with Lynx's custom Snapshot-based virtual DOM.
+ *
+ * It works by:
+ * 1. Defining a minimal {@link Document}-like interface that Preact expects
+ * 2. Implementing this interface to return our {@link Snapshot} instances
+ * 3. Maintaining the same method signatures as the standard DOM API
+ *
+ * This allows Preact to build its virtual tree using our Snapshot system
+ * without knowing it's not working with a real DOM.
+ */
 
+/**
+ * Defines the minimal document interface that Preact expects, depending on
+ * which thread is running.
+ */
+interface SnapshotDocumentAdapter {
+  createElement(type: string): BackgroundSnapshotInstance | SnapshotInstance;
+  createElementNS(ns: string | null, type: string): BackgroundSnapshotInstance | SnapshotInstance;
+  createTextNode(text: string): BackgroundSnapshotInstance | SnapshotInstance;
+}
+
+const document: SnapshotDocumentAdapter = {} as SnapshotDocumentAdapter;
+
+/**
+ * Sets up the document interface for the background thread.
+ * All DOM operations are intercepted to create {@link BackgroundSnapshotInstance}.
+ */
 function setupBackgroundDocument(): void {
   document.createElement = function(type: string) {
     return new BackgroundSnapshotInstance(type);
@@ -25,6 +52,10 @@ function setupBackgroundDocument(): void {
   };
 }
 
+/**
+ * Sets up the document interface for the main thread.
+ * All DOM operations are intercepted to create {@link SnapshotInstance}.
+ */
 function setupDocument(): void {
   document.createElement = function(type: string) {
     return new SnapshotInstance(type);
@@ -50,4 +81,4 @@ function setupDocument(): void {
 //   setupDocument();
 // }
 
-export { setupBackgroundDocument, setupDocument, document };
+export { document, setupBackgroundDocument, setupDocument };

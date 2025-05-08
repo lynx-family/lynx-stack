@@ -182,6 +182,7 @@ declare global {
     dsl: string;
     stage: string;
   }
+
   declare let lynxCoreInject: any;
 
   interface ISystemInfo {

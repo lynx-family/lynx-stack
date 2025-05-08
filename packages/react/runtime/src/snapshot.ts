@@ -1,26 +1,44 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+
+/**
+ * Core snapshot system that implements a compiler-hinted virtual DOM.
+ *
+ * Key components:
+ * 1. {@link Snapshot}: Template definition generated at compile time
+ * 2. {@link SnapshotInstance}: Runtime instance in the main thread
+ * 3. {@link BackgroundSnapshotInstance}: Runtime instance in the background thread
+ *
+ * The system uses static analysis to identify dynamic parts and generate
+ * optimized update instructions, avoiding full virtual DOM diffing.
+ */
+
 import type { Worklet, WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bindings';
 
 import type { BackgroundSnapshotInstance } from './backgroundSnapshot.js';
+import { SnapshotOperation, __globalSnapshotPatch } from './lifecycle/patch/snapshotPatch.js';
 import { ListUpdateInfoRecording, __pendingListUpdates, snapshotDestroyList } from './list.js';
 import { unref } from './snapshot/ref.js';
-import { SnapshotOperation, __globalSnapshotPatch } from './lifecycle/patch/snapshotPatch.js';
 import { isDirectOrDeepEqual } from './utils.js';
 
+/**
+ * Types of dynamic parts that can be updated in a snapshot
+ * These are determined at compile time through static analysis
+ */
 export const enum DynamicPartType {
-  Attr = 0,
-  Spread,
-  Slot,
-  // Component,
-  Children,
-  ListChildren,
-
-  // Used by compat layer
-  MultiChildren,
+  Attr = 0, // Regular attribute updates
+  Spread, // Spread operator in JSX
+  Slot, // Slot for component children
+  Children, // Regular children updates
+  ListChildren, // List/array children updates
+  MultiChildren, // Multiple children updates (compat layer)
 }
 
+/**
+ * A snapshot definition that contains all the information needed to create and update elements
+ * This is generated at compile time through static analysis of the JSX
+ */
 interface Snapshot {
   create: null | ((ctx: SnapshotInstance) => FiberElement[]);
   update: null | ((ctx: SnapshotInstance, index: number, oldValue: any) => void)[];
@@ -234,6 +252,13 @@ export interface SerializedSnapshotInstance {
 const DEFAULT_ENTRY_NAME = '__Card__';
 const DEFAULT_CSS_ID = 0;
 
+/**
+ * The runtime instance of a {@link Snapshot} on the main thread that manages
+ * the actual elements and handles updates to dynamic parts.
+ *
+ * This class is designed to be compatible with Preact's {@link ContainerNode}
+ * interface for Preact's renderer to operate upon.
+ */
 export class SnapshotInstance {
   __id: number;
   __snapshot_def: Snapshot;

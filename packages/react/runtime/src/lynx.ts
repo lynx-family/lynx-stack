@@ -18,14 +18,14 @@ import { injectTt } from './lynx/tt.js';
 export { runWithForce } from './lynx/runWithForce.js';
 
 // @ts-expect-error Element implicitly has an 'any' type because type 'typeof globalThis' has no index signature
-if (__LEPUS__ && typeof globalThis.processEvalResult === 'undefined') {
+if (__MAIN_THREAD__ && typeof globalThis.processEvalResult === 'undefined') {
   // @ts-expect-error Element implicitly has an 'any' type because type 'typeof globalThis' has no index signature
   globalThis.processEvalResult = <T>(result: ((schema: string) => T) | undefined, schema: string) => {
     return result?.(schema);
   };
 }
 
-if (__LEPUS__) {
+if (__MAIN_THREAD__) {
   injectCalledByNative();
   injectUpdateMainThread();
   if (__DEV__) {
@@ -39,8 +39,9 @@ if (__PROFILE__) {
   initProfileHook();
 }
 
-if (__JS__) {
-  options.document = document;
+if (__BACKGROUND__) {
+  // Trick Preact and TypeScript to accept our custom document adapter.
+  options.document = document as any;
   setupBackgroundDocument();
   injectTt();
 

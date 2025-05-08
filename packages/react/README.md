@@ -28,6 +28,7 @@
 
 ## Content
 
+- [Content](#content)
 - [Getting Started](#getting-started)
 - [Documentation](#documentation)
 - [Community and Support](#community-and-support)
@@ -67,6 +68,7 @@ ReactLynx is [Apache License 2.0](https://github.com/lynx-family/lynx-stack/blob
 
 Thanks to:
 
-- [Preact](https://preactjs.com/) for creating a lightweight and efficient UI library that served as a foundation for the ReactLynx project.
-- [React](https://react.dev/) for creating a comprehensive and intuitive library for building user interfaces and providing the inspiration for ReactLynx's development model.
+- [Preact](https://preactjs.com/) for creating a lightweight and efficient implementation of React's APIs that served as the foundation for ReactLynx runtime.
+- [React](https://react.dev/) for creating a gaming-changing UI library and programming model that has inspired a generation of declarative UI technologies.
+- [Reanimated](https://docs.swmansion.com/react-native-reanimated/), [React Server Component](https://react.dev/reference/rsc/server-components) and [Web Worklet](https://developer.mozilla.org/en-US/docs/Web/API/Worklet) for inspiring ReactLynx's dual-threaded programming models such as [Main Thread Scripting](https://lynxjs.org/react/main-thread-script.html).
 - [SWC](https://github.com/swc-project/swc) project created by [@kdy1](https://github.com/kdy1), which turbocharges ReactLynx's code transformation with Rust-powered efficiency, achieving sub-second build times and frictionless developer experience.

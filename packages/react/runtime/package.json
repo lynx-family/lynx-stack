@@ -2,7 +2,7 @@
   "name": "@lynx-js/react-runtime",
   "version": "0.100.1",
   "private": true,
-  "description": "All-in-one package for React on Lynx (3.0)",
+  "description": "All-in-one package for React on Lynx",
   "type": "module",
   "main": "src/index.ts",
   "module": "src/index.ts",
