@@ -34,7 +34,6 @@ import {
 import { CATCH_ERROR, COMMIT, RENDER_CALLBACKS, VNODE } from '../../renderToOpcodes/constants.js';
 import { applyDelayedRefs } from '../../snapshot/ref.js';
 import { backgroundSnapshotInstanceManager } from '../../snapshot.js';
-import { updateBackgroundRefs } from '../../snapshot/ref.js';
 import { isEmptyObject } from '../../utils.js';
 import { takeWorkletRefInitValuePatch } from '../../worklet/workletRefPool.js';
 import { runDelayedUnmounts, takeDelayedUnmounts } from '../delayUnmount.js';
@@ -44,7 +43,7 @@ import { takeGlobalSnapshotPatch } from './snapshotPatch.js';
 
 let globalFlushOptions: FlushOptions = {};
 
-const globalCommitTaskMap: Map<number, () => void> = /*@__PURE__*/ new Map();
+const globalCommitTaskMap: Map<number, () => void> = /*@__PURE__*/ new Map<number, () => void>();
 let nextCommitTaskId = 1;
 
 let globalBackgroundSnapshotInstancesToRemove: number[] = [];
