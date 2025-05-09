@@ -1,5 +1,37 @@
 # @lynx-js/rspeedy
 
+## 0.9.4
+
+### Patch Changes
+
+- Bump Rsbuild v1.3.17 with Rspack v1.3.9. ([#708](https://github.com/lynx-family/lynx-stack/pull/708))
+
+- Support `performance.profile`. ([#691](https://github.com/lynx-family/lynx-stack/pull/691))
+
+- Support CLI flag `--mode` to specify the build mode. ([#723](https://github.com/lynx-family/lynx-stack/pull/723))
+
+- Enable native Rsdoctor plugin by default. ([#688](https://github.com/lynx-family/lynx-stack/pull/688))
+
+  Set `tools.rsdoctor.experiments.enableNativePlugin` to `false` to use the old JS plugin.
+
+  ```js
+  import { defineConfig } from '@lynx-js/rspeedy'
+
+  export default defineConfig({
+    tools: {
+      rsdoctor: {
+        experiments: {
+          enableNativePlugin: false,
+        },
+      },
+    },
+  })
+  ```
+
+  See [Rsdoctor - 1.0](https://rsdoctor.dev/blog/release/release-note-1_0#-faster-analysis) for more details.
+
+- Bump Rsbuild v1.3.14 with Rspack v1.3.8. ([#630](https://github.com/lynx-family/lynx-stack/pull/630))
+
 ## 0.9.3
 
 ### Patch Changes

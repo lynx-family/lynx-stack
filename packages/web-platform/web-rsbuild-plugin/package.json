@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/web-platform-rsbuild-plugin",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": false,
   "description": "A rsbuild plugin for Web projects in Lynx Web Platform",
   "keywords": [

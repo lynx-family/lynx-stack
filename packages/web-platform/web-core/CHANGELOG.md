@@ -1,5 +1,45 @@
 # @lynx-js/web-core
 
+## 0.13.1
+
+### Patch Changes
+
+- fix: some inline style properties cause crash ([#647](https://github.com/lynx-family/lynx-stack/pull/647))
+
+  add support for the following css properties
+
+  - mask
+  - mask-repeat
+  - mask-position
+  - mask-clip
+  - mask-origin
+  - mask-size
+  - gap
+  - column-gap
+  - row-gap
+  - image-rendering
+  - hyphens
+  - offset-path
+  - offset-distance
+
+- feat: support touch events for MTS ([#641](https://github.com/lynx-family/lynx-stack/pull/641))
+
+  now we support
+
+  - main-thread:bindtouchstart
+  - main-thread:bindtouchend
+  - main-thread:bindtouchmove
+  - main-thread:bindtouchcancel
+
+- feat: add SystemInfo.screenWidth and SystemInfo.screenHeight ([#641](https://github.com/lynx-family/lynx-stack/pull/641))
+
+- Updated dependencies [[`c9ccad6`](https://github.com/lynx-family/lynx-stack/commit/c9ccad6b574c98121149d3e9d4a9a7e97af63d91), [`9ad394e`](https://github.com/lynx-family/lynx-stack/commit/9ad394ea9ef28688a3b810b4051868b2a28eb7de), [`f4cfb70`](https://github.com/lynx-family/lynx-stack/commit/f4cfb70606d46cd4017254c326095432f9c6bcb8), [`c9ccad6`](https://github.com/lynx-family/lynx-stack/commit/c9ccad6b574c98121149d3e9d4a9a7e97af63d91), [`839d61c`](https://github.com/lynx-family/lynx-stack/commit/839d61c8a329ed1e265fe2edc12a702e9592f743)]:
+  - @lynx-js/offscreen-document@0.0.2
+  - @lynx-js/web-mainthread-apis@0.13.1
+  - @lynx-js/web-worker-runtime@0.13.1
+  - @lynx-js/web-constants@0.13.1
+  - @lynx-js/web-worker-rpc@0.13.1
+
 ## 0.13.0
 
 ### Patch Changes

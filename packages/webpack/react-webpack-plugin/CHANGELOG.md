@@ -1,5 +1,15 @@
 # @lynx-js/react-webpack-plugin
 
+## 0.6.13
+
+### Patch Changes
+
+- feat: add `experimental_isLazyBundle` option, it will disable snapshot HMR for standalone lazy bundle ([#653](https://github.com/lynx-family/lynx-stack/pull/653))
+
+- Add the `profile` option to control whether `__PROFILE__` is enabled. ([#722](https://github.com/lynx-family/lynx-stack/pull/722))
+
+- Support `@lynx-js/react` v0.108.0. ([#649](https://github.com/lynx-family/lynx-stack/pull/649))
+
 ## 0.6.12
 
 ### Patch Changes

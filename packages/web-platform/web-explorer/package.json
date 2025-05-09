@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/web-explorer",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "private": false,
   "repository": {
     "type": "git",
@@ -20,8 +20,8 @@
   ],
   "scripts": {
     "build": "rsbuild build",
-    "dev": "rsbuild dev",
-    "build:rsdoctor": "RSDOCTOR=true rsbuild build"
+    "build:rsdoctor": "RSDOCTOR=true rsbuild build",
+    "dev": "rsbuild dev"
   },
   "dependencies": {
     "qr-scanner": "^1.4.2"

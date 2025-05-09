@@ -1,5 +1,28 @@
 # @lynx-js/web-worker-runtime
 
+## 0.13.1
+
+### Patch Changes
+
+- feat: support for using `lynx.queueMicrotask`. ([#702](https://github.com/lynx-family/lynx-stack/pull/702))
+
+- feat: support touch events for MTS ([#641](https://github.com/lynx-family/lynx-stack/pull/641))
+
+  now we support
+
+  - main-thread:bindtouchstart
+  - main-thread:bindtouchend
+  - main-thread:bindtouchmove
+  - main-thread:bindtouchcancel
+
+- feat: provide comments for `@lynx-js/web-platform-rsbuild-plugin`. ([#668](https://github.com/lynx-family/lynx-stack/pull/668))
+
+- Updated dependencies [[`c9ccad6`](https://github.com/lynx-family/lynx-stack/commit/c9ccad6b574c98121149d3e9d4a9a7e97af63d91), [`9ad394e`](https://github.com/lynx-family/lynx-stack/commit/9ad394ea9ef28688a3b810b4051868b2a28eb7de), [`c9ccad6`](https://github.com/lynx-family/lynx-stack/commit/c9ccad6b574c98121149d3e9d4a9a7e97af63d91)]:
+  - @lynx-js/offscreen-document@0.0.2
+  - @lynx-js/web-mainthread-apis@0.13.1
+  - @lynx-js/web-constants@0.13.1
+  - @lynx-js/web-worker-rpc@0.13.1
+
 ## 0.13.0
 
 ### Patch Changes

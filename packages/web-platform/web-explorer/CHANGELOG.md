@@ -1,5 +1,17 @@
 # @lynx-js/web-explorer
 
+## 0.0.7
+
+### Patch Changes
+
+- feat: use nativeModulesPath instead of nativeModulesMap to lynx-view. ([#668](https://github.com/lynx-family/lynx-stack/pull/668))
+
+- fix: fork @vant/touch-emulator and make it work with shadowroot ([#662](https://github.com/lynx-family/lynx-stack/pull/662))
+
+- fix: loading errors caused by script import order ([#665](https://github.com/lynx-family/lynx-stack/pull/665))
+
+- chore: update homepage ([#645](https://github.com/lynx-family/lynx-stack/pull/645))
+
 ## 0.0.6
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @lynx-js/runtime-wrapper-webpack-plugin
 
+## 0.0.10
+
+### Patch Changes
+
+- feat: add `experimental_isLazyBundle` option, it will disable lynxChunkEntries for standalone lazy bundle ([#653](https://github.com/lynx-family/lynx-stack/pull/653))
+
 ## 0.0.9
 
 ### Patch Changes

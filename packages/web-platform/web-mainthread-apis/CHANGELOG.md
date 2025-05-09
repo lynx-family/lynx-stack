@@ -1,5 +1,39 @@
 # @lynx-js/web-mainthread-apis
 
+## 0.13.1
+
+### Patch Changes
+
+- fix: some inline style properties cause crash ([#647](https://github.com/lynx-family/lynx-stack/pull/647))
+
+  add support for the following css properties
+
+  - mask
+  - mask-repeat
+  - mask-position
+  - mask-clip
+  - mask-origin
+  - mask-size
+  - gap
+  - column-gap
+  - row-gap
+  - image-rendering
+  - hyphens
+  - offset-path
+  - offset-distance
+
+- feat: support touch events for MTS ([#641](https://github.com/lynx-family/lynx-stack/pull/641))
+
+  now we support
+
+  - main-thread:bindtouchstart
+  - main-thread:bindtouchend
+  - main-thread:bindtouchmove
+  - main-thread:bindtouchcancel
+
+- Updated dependencies [[`c9ccad6`](https://github.com/lynx-family/lynx-stack/commit/c9ccad6b574c98121149d3e9d4a9a7e97af63d91)]:
+  - @lynx-js/web-constants@0.13.1
+
 ## 0.13.0
 
 ### Minor Changes
