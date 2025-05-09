@@ -10,9 +10,9 @@ packages:
   - packages/tools/*
   - packages/web-platform/*
   - packages/webpack/*
+  - packages/third-party/*
   - packages/testing-library/*
   - packages/testing-library/examples/*
-  - packages/third-party/*
   - packages/background-only
   - "!packages/testing-library/examples"
   - website

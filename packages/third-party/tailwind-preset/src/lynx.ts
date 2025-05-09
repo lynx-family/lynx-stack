@@ -8,7 +8,6 @@ import { display, position, textDecoration } from './plugins/lynx/index.js';
  * Should be used with Tailwind JIT and configured with purge, otherwise the bundle will be too large.
  */
 export default {
-  content: ['./**/*.{js,ts,jsx,tsx,css}'],
   plugins: [position, textDecoration, display],
   corePlugins: [
     // 'preflight',

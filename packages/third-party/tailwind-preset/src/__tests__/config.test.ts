@@ -38,7 +38,6 @@ describe('Lynx Tailwind Preset', () => {
 
       // Read the generated CSS
       compiledCSS = fs.readFileSync(outputPath, 'utf-8');
-      console.log('Generated CSS length:', compiledCSS.length);
 
       // Extract classes and properties
       usedProperties = extractPropertiesFromCSS(compiledCSS);
