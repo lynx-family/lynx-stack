@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { hydrate } from './hydrate.js';
+import { commitMainThreadPatchUpdate } from './lifecycle/patch/updateMainThread.js';
 import type { SnapshotInstance } from './snapshot.js';
 
 export interface ListUpdateInfo {
@@ -338,6 +339,7 @@ export function componentAtIndexFactory(
         __FlushElementTree(root, flushOptions);
       }
       signMap.set(sign, childCtx);
+      commitMainThreadPatchUpdate(undefined);
       return sign;
     }
 
@@ -358,6 +360,7 @@ export function componentAtIndexFactory(
       });
     }
     signMap.set(sign, childCtx);
+    commitMainThreadPatchUpdate(undefined);
     return sign;
   };
 

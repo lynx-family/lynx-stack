@@ -1,10 +1,9 @@
 // cspell:disable
 import '@testing-library/jest-dom';
-import { expect, test, vi } from 'vitest';
-
-import { createRef } from '@lynx-js/react';
-
+import { test } from 'vitest';
 import { fireEvent, render } from '..';
+import { createRef } from '@lynx-js/react';
+import { expect, vi } from 'vitest';
 
 const eventTypes = [
   {
@@ -75,28 +74,29 @@ eventTypes.forEach(({ type, events, elementType, init }, eventTypeIdx) => {
         if (eventTypeIdx === 0 && eventIdx === 0) {
           expect(ref).toMatchInlineSnapshot(`
             {
-              "current": RefProxy {
-                "refAttr": [
-                  2,
-                  0,
-                ],
-                "task": undefined,
+              "current": NodesRef {
+                "_nodeSelectToken": {
+                  "identifier": "1",
+                  "type": 2,
+                },
+                "_selectorQuery": {},
               },
             }
           `);
           expect(ref.current.constructor.name).toMatchInlineSnapshot(
-            `"RefProxy"`,
+            `"NodesRef"`,
           );
-          const refId = `react-ref-${ref.current.refAttr[0]}-${ref.current.refAttr[1]}`;
-          const element = document.querySelector(`[${refId}]`);
+          const element = __GetElementByUniqueId(
+            Number(ref.current._nodeSelectToken.identifier),
+          );
           expect(element).toMatchInlineSnapshot(`
             <view
-              react-ref-2-0="1"
+              has-react-ref="true"
             />
           `);
           expect(element.attributes).toMatchInlineSnapshot(`
             NamedNodeMap {
-              "react-ref-2-0": "1",
+              "has-react-ref": "true",
             }
           `);
           expect(element.eventMap).toMatchInlineSnapshot(`

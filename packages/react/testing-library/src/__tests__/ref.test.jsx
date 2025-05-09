@@ -51,10 +51,10 @@ describe('component ref', () => {
             <view />
           </wrapper>
           <view
-            react-ref-2-0="1"
+            has-react-ref="true"
           />
           <view
-            react-ref-2-1="1"
+            has-react-ref="true"
           />
         </view>
       </page>
@@ -66,23 +66,23 @@ describe('component ref', () => {
     expect(ref3.mock.calls).toMatchInlineSnapshot(`
       [
         [
-          RefProxy {
-            "refAttr": [
-              2,
-              0,
-            ],
-            "task": undefined,
+          NodesRef {
+            "_nodeSelectToken": {
+              "identifier": "3",
+              "type": 2,
+            },
+            "_selectorQuery": {},
           },
         ],
       ]
     `);
     expect(ref4.current).toMatchInlineSnapshot(`
-      RefProxy {
-        "refAttr": [
-          2,
-          1,
-        ],
-        "task": undefined,
+      NodesRef {
+        "_nodeSelectToken": {
+          "identifier": "4",
+          "type": 2,
+        },
+        "_selectorQuery": {},
       }
     `);
     expect(cleanup).toBeCalledTimes(0);
@@ -121,10 +121,10 @@ describe('element ref', () => {
       <page>
         <view>
           <view
-            react-ref-2-0="1"
+            has-react-ref="true"
           />
           <view
-            react-ref-2-1="1"
+            has-react-ref="true"
           />
         </view>
       </page>
@@ -132,23 +132,23 @@ describe('element ref', () => {
     expect(ref1.mock.calls).toMatchInlineSnapshot(`
       [
         [
-          RefProxy {
-            "refAttr": [
-              2,
-              0,
-            ],
-            "task": undefined,
+          NodesRef {
+            "_nodeSelectToken": {
+              "identifier": "2",
+              "type": 2,
+            },
+            "_selectorQuery": {},
           },
         ],
       ]
     `);
     expect(ref2.current).toMatchInlineSnapshot(`
-      RefProxy {
-        "refAttr": [
-          2,
-          1,
-        ],
-        "task": undefined,
+      NodesRef {
+        "_nodeSelectToken": {
+          "identifier": "3",
+          "type": 2,
+        },
+        "_selectorQuery": {},
       }
     `);
   });
@@ -185,10 +185,10 @@ describe('element ref', () => {
       <page>
         <view>
           <view
-            react-ref-2-0="1"
+            has-react-ref="true"
           />
           <view
-            react-ref-2-1="1"
+            has-react-ref="true"
           />
         </view>
       </page>
@@ -196,23 +196,23 @@ describe('element ref', () => {
     expect(ref1.mock.calls).toMatchInlineSnapshot(`
       [
         [
-          RefProxy {
-            "refAttr": [
-              2,
-              0,
-            ],
-            "task": undefined,
+          NodesRef {
+            "_nodeSelectToken": {
+              "identifier": "2",
+              "type": 2,
+            },
+            "_selectorQuery": {},
           },
         ],
       ]
     `);
     expect(ref2.current).toMatchInlineSnapshot(`
-      RefProxy {
-        "refAttr": [
-          2,
-          1,
-        ],
-        "task": undefined,
+      NodesRef {
+        "_nodeSelectToken": {
+          "identifier": "3",
+          "type": 2,
+        },
+        "_selectorQuery": {},
       }
     `);
   });
@@ -244,10 +244,10 @@ describe('element ref', () => {
       <page>
         <view>
           <view
-            react-ref-2-0="1"
+            has-react-ref="true"
           />
           <view
-            react-ref-2-1="1"
+            has-react-ref="true"
           />
         </view>
       </page>
@@ -255,23 +255,23 @@ describe('element ref', () => {
     expect(ref1.mock.calls).toMatchInlineSnapshot(`
       [
         [
-          RefProxy {
-            "refAttr": [
-              2,
-              0,
-            ],
-            "task": undefined,
+          NodesRef {
+            "_nodeSelectToken": {
+              "identifier": "2",
+              "type": 2,
+            },
+            "_selectorQuery": {},
           },
         ],
       ]
     `);
     expect(ref2.current).toMatchInlineSnapshot(`
-      RefProxy {
-        "refAttr": [
-          2,
-          1,
-        ],
-        "task": undefined,
+      NodesRef {
+        "_nodeSelectToken": {
+          "identifier": "3",
+          "type": 2,
+        },
+        "_selectorQuery": {},
       }
     `);
     act(() => {
@@ -281,12 +281,12 @@ describe('element ref', () => {
     expect(ref1.mock.calls).toMatchInlineSnapshot(`
       [
         [
-          RefProxy {
-            "refAttr": [
-              2,
-              0,
-            ],
-            "task": undefined,
+          NodesRef {
+            "_nodeSelectToken": {
+              "identifier": "2",
+              "type": 2,
+            },
+            "_selectorQuery": {},
           },
         ],
         [
@@ -328,7 +328,7 @@ describe('element ref', () => {
       <page>
         <view>
           <view
-            react-ref-2-0="1"
+            has-react-ref="true"
           />
         </view>
       </page>
@@ -336,12 +336,12 @@ describe('element ref', () => {
     expect(ref1.mock.calls).toMatchInlineSnapshot(`
       [
         [
-          RefProxy {
-            "refAttr": [
-              2,
-              0,
-            ],
-            "task": undefined,
+          NodesRef {
+            "_nodeSelectToken": {
+              "identifier": "2",
+              "type": 2,
+            },
+            "_selectorQuery": {},
           },
         ],
       ]
@@ -355,12 +355,12 @@ describe('element ref', () => {
     expect(ref1.mock.calls).toMatchInlineSnapshot(`
       [
         [
-          RefProxy {
-            "refAttr": [
-              2,
-              0,
-            ],
-            "task": undefined,
+          NodesRef {
+            "_nodeSelectToken": {
+              "identifier": "2",
+              "type": 2,
+            },
+            "_selectorQuery": {},
           },
         ],
       ]
@@ -406,10 +406,10 @@ describe('element ref', () => {
       <page>
         <view>
           <view
-            react-ref-2-0="1"
+            has-react-ref="true"
           />
           <view
-            react-ref-2-1="1"
+            has-react-ref="true"
           />
         </view>
       </page>
@@ -417,23 +417,23 @@ describe('element ref', () => {
     expect(ref1.mock.calls).toMatchInlineSnapshot(`
       [
         [
-          RefProxy {
-            "refAttr": [
-              2,
-              0,
-            ],
-            "task": undefined,
+          NodesRef {
+            "_nodeSelectToken": {
+              "identifier": "2",
+              "type": 2,
+            },
+            "_selectorQuery": {},
           },
         ],
       ]
     `);
     expect(ref2.current).toMatchInlineSnapshot(`
-      RefProxy {
-        "refAttr": [
-          2,
-          1,
-        ],
-        "task": undefined,
+      NodesRef {
+        "_nodeSelectToken": {
+          "identifier": "3",
+          "type": 2,
+        },
+        "_selectorQuery": {},
       }
     `);
     expect(lynx.getNativeApp().callLepusMethod).toBeCalledTimes(1);
@@ -441,12 +441,12 @@ describe('element ref', () => {
     expect(ref1.mock.calls).toMatchInlineSnapshot(`
       [
         [
-          RefProxy {
-            "refAttr": [
-              2,
-              0,
-            ],
-            "task": undefined,
+          NodesRef {
+            "_nodeSelectToken": {
+              "identifier": "2",
+              "type": 2,
+            },
+            "_selectorQuery": {},
           },
         ],
       ]

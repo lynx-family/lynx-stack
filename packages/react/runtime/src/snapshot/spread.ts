@@ -91,6 +91,7 @@ function updateSpread(snapshot: SnapshotInstance, index: number, oldValue: any, 
       } else if (key.startsWith('data-')) {
         // collected below
       } else if (key === 'ref') {
+        snapshot.__ref_set ??= new Set();
         const fakeSnapshot = {
           __values: {
             get [index]() {
@@ -103,8 +104,9 @@ function updateSpread(snapshot: SnapshotInstance, index: number, oldValue: any, 
           },
           __id: snapshot.__id,
           __elements: snapshot.__elements,
+          __ref_set: snapshot.__ref_set,
         } as SnapshotInstance;
-        updateRef(fakeSnapshot, index, oldValue[key], elementIndex);
+        updateRef(fakeSnapshot, index, oldValue[key], elementIndex, key);
       } else if (key.endsWith(':ref')) {
         snapshot.__worklet_ref_set ??= new Set();
         const fakeSnapshot = {
@@ -130,7 +132,7 @@ function updateSpread(snapshot: SnapshotInstance, index: number, oldValue: any, 
           __elements: snapshot.__elements,
         } as SnapshotInstance;
         updateGesture(fakeSnapshot, index, oldValue[key], elementIndex, workletType);
-      } else if ((match = eventRegExp.exec(key))) {
+      } else if ((match = key.match(eventRegExp))) {
         const workletType = match[2];
         const eventType = eventTypeMap[match[3]!]!;
         const eventName = match[4]!;
@@ -177,6 +179,7 @@ function updateSpread(snapshot: SnapshotInstance, index: number, oldValue: any, 
       } else if (key.startsWith('data-')) {
         // collected below
       } else if (key === 'ref') {
+        snapshot.__ref_set ??= new Set();
         const fakeSnapshot = {
           __values: {
             get [index]() {
@@ -189,8 +192,9 @@ function updateSpread(snapshot: SnapshotInstance, index: number, oldValue: any, 
           },
           __id: snapshot.__id,
           __elements: snapshot.__elements,
+          __ref_set: snapshot.__ref_set,
         } as SnapshotInstance;
-        updateRef(fakeSnapshot, index, oldValue[key], elementIndex);
+        updateRef(fakeSnapshot, index, oldValue[key], elementIndex, key);
       } else if (key.endsWith(':ref')) {
         snapshot.__worklet_ref_set ??= new Set();
         const fakeSnapshot = {
@@ -216,7 +220,7 @@ function updateSpread(snapshot: SnapshotInstance, index: number, oldValue: any, 
           __elements: snapshot.__elements,
         } as SnapshotInstance;
         updateGesture(fakeSnapshot, index, oldValue[key], elementIndex, workletType);
-      } else if ((match = eventRegExp.exec(key))) {
+      } else if ((match = key.match(eventRegExp))) {
         const workletType = match[2];
         const eventType = eventTypeMap[match[3]!]!;
         const eventName = match[4]!;
@@ -270,12 +274,8 @@ function transformSpread(
       value ??= '';
       result['className'] = value;
     } else if (key === 'ref') {
-      if (__LEPUS__) {
-        result[key] = value ? 1 : undefined;
-      } else {
-        // @ts-ignore
-        result[key] = transformRef(value)?.__ref;
-      }
+      // @ts-ignore
+      result[key] = transformRef(value)?.__ref;
     } else if (typeof value === 'function') {
       result[key] = `${snapshot.__id}:${index}:${key}`;
     } else {

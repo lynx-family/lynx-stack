@@ -32,8 +32,8 @@ import {
   setPipeline,
 } from '../../lynx/performance.js';
 import { CATCH_ERROR, COMMIT, RENDER_CALLBACKS, VNODE } from '../../renderToOpcodes/constants.js';
-import { applyDelayedRefs } from '../../snapshot/ref.js';
 import { backgroundSnapshotInstanceManager } from '../../snapshot.js';
+import { updateBackgroundRefs } from '../../snapshot/ref.js';
 import { isEmptyObject } from '../../utils.js';
 import { takeWorkletRefInitValuePatch } from '../../worklet/workletRefPool.js';
 import { runDelayedUnmounts, takeDelayedUnmounts } from '../delayUnmount.js';
@@ -43,7 +43,7 @@ import { takeGlobalSnapshotPatch } from './snapshotPatch.js';
 
 let globalFlushOptions: FlushOptions = {};
 
-const globalCommitTaskMap: Map<number, () => void> = /*@__PURE__*/ new Map<number, () => void>();
+const globalCommitTaskMap: Map<number, () => void> = /*@__PURE__*/ new Map();
 let nextCommitTaskId = 1;
 
 let globalBackgroundSnapshotInstancesToRemove: number[] = [];
@@ -52,7 +52,6 @@ let globalBackgroundSnapshotInstancesToRemove: number[] = [];
  * A single patch operation.
  */
 interface Patch {
-  // TODO: ref: do we need `id`?
   id: number;
   snapshotPatch?: SnapshotPatch;
   workletRefInitValuePatch?: [id: number, value: unknown][];
@@ -113,6 +112,7 @@ function replaceCommitHook(): void {
 
     // Register the commit task
     globalCommitTaskMap.set(commitTaskId, () => {
+      updateBackgroundRefs(commitTaskId);
       runDelayedUnmounts(delayedUnmounts);
       originalPreactCommit?.(vnode, renderCallbacks);
       renderCallbacks.some(wrapper => {
@@ -140,7 +140,6 @@ function replaceCommitHook(): void {
     globalFlushOptions = {};
     if (!snapshotPatch && workletRefInitValuePatch.length === 0) {
       // before hydration, skip patch
-      applyDelayedRefs();
       return;
     }
 
@@ -170,8 +169,6 @@ function replaceCommitHook(): void {
         globalCommitTaskMap.delete(commitTaskId);
       }
     });
-
-    applyDelayedRefs();
   };
   options[COMMIT] = commit as ((...args: Parameters<typeof commit>) => void);
 }
@@ -246,6 +243,7 @@ export {
   globalBackgroundSnapshotInstancesToRemove,
   globalCommitTaskMap,
   globalFlushOptions,
+  nextCommitTaskId,
   replaceCommitHook,
   replaceRequestAnimationFrame,
   type PatchList,

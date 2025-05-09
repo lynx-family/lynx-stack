@@ -9,6 +9,7 @@ import { LifecycleConstant } from '../lifecycleConstant.js';
 import { __pendingListUpdates } from '../list.js';
 import { ssrHydrateByOpcodes } from '../opcodes.js';
 import { __root, setRoot } from '../root.js';
+import { takeGlobalRefPatchMap } from '../snapshot/ref.js';
 import { SnapshotInstance, __page, setupPage } from '../snapshot.js';
 import { isEmptyObject } from '../utils.js';
 import { PerformanceTimingKeys, markTiming, setPipeline } from './performance.js';
@@ -117,6 +118,9 @@ function updatePage(data: any, options?: UpdatePageOption): void {
     markTiming(PerformanceTimingKeys.updateDiffVdomStart);
     {
       __pendingListUpdates.clear();
+
+      // ignore ref & unref before jsReady
+      takeGlobalRefPatchMap();
       renderMainThread();
       // As said by codename `jsReadyEventIdSwap`, this swap will only be used for event remap,
       // because ref & unref cause by previous render will be ignored

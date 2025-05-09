@@ -9,7 +9,7 @@ import {
   useId,
   useImperativeHandle,
   useMemo,
-  useEffect as usePreactEffect,
+  useLayoutEffect as usePreactLayoutEffect,
   useReducer,
   useRef,
   useState,
@@ -29,7 +29,7 @@ import type { DependencyList, EffectCallback } from 'react';
  * @deprecated `useLayoutEffect` in the background thread cannot offer the precise timing for reading layout information and synchronously re-render, which is different from React.
  */
 function useLayoutEffect(effect: EffectCallback, deps?: DependencyList): void {
-  return usePreactEffect(effect, deps);
+  return usePreactLayoutEffect(effect, deps);
 }
 
 /**
@@ -42,7 +42,7 @@ function useLayoutEffect(effect: EffectCallback, deps?: DependencyList): void {
  * @public
  */
 function useEffect(effect: EffectCallback, deps?: DependencyList): void {
-  return usePreactEffect(effect, deps);
+  return usePreactLayoutEffect(effect, deps);
 }
 
 export {

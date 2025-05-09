@@ -35,46 +35,6 @@ const performance = {
   }),
 };
 
-class SelectorQuery {
-  static execLog = vi.fn();
-  id = '';
-  method = '';
-  params = undefined;
-
-  select(id) {
-    this.id = id;
-    return this;
-  }
-
-  invoke(...args) {
-    this.method = 'invoke';
-    this.params = args;
-    return this;
-  }
-
-  path(...args) {
-    this.method = 'path';
-    this.params = args;
-    return this;
-  }
-
-  fields(...args) {
-    this.method = 'fields';
-    this.params = args;
-    return this;
-  }
-
-  setNativeProps(...args) {
-    this.method = 'setNativeProps';
-    this.params = args;
-    return this;
-  }
-
-  exec() {
-    SelectorQuery.execLog(this.id, this.method, this.params);
-  }
-}
-
 function injectGlobals() {
   globalThis.__DEV__ = true;
   globalThis.__PROFILE__ = true;
@@ -92,28 +52,11 @@ function injectGlobals() {
   globalThis.lynx = {
     getNativeApp: () => app,
     performance,
-    createSelectorQuery: () => {
-      return new SelectorQuery();
-    },
-    getElementByIdTasks: vi.fn(),
-    getElementById: vi.fn((id) => {
+    createSelectorQuery: vi.fn(() => {
       return {
-        animate: vi.fn(() => {
-          lynx.getElementByIdTasks('animate');
-          return {
-            play: () => {
-              lynx.getElementByIdTasks('play');
-            },
-            pause: () => {
-              lynx.getElementByIdTasks('pause');
-            },
-            cancel: () => {
-              lynx.getElementByIdTasks('cancel');
-            },
-          };
-        }),
-        setProperty: (property, value) => {
-          lynx.getElementByIdTasks('setProperty', property, value);
+        selectUniqueID: function(uid) {
+          this.uid = uid;
+          return this;
         },
       };
     }),

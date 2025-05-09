@@ -5,6 +5,7 @@ export class LifecycleConstant {
   public static readonly firstScreen = 'rLynxFirstScreen';
   public static readonly updateFromRoot = 'updateFromRoot';
   public static readonly globalEventFromLepus = 'globalEventFromLepus';
+  public static readonly ref = 'rLynxRef';
   public static readonly jsReady = 'rLynxJSReady';
   public static readonly patchUpdate = 'rLynxChange';
 }

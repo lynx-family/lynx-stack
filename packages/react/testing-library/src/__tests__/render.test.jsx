@@ -17,12 +17,12 @@ test('renders view into page', async () => {
   };
   render(<Comp />);
   expect(ref.current).toMatchInlineSnapshot(`
-    RefProxy {
-      "refAttr": [
-        2,
-        0,
-      ],
-      "task": undefined,
+    NodesRef {
+      "_nodeSelectToken": {
+        "identifier": "1",
+        "type": 2,
+      },
+      "_selectorQuery": {},
     }
   `);
 });

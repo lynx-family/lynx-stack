@@ -1,10 +1,14 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { runWorkletCtx, updateWorkletRef as update } from '@lynx-js/react/worklet-runtime/bindings';
-import type { Worklet, WorkletRef } from '@lynx-js/react/worklet-runtime/bindings';
+import {
+  type Worklet,
+  type WorkletRef,
+  runWorkletCtx,
+  updateWorkletRef as update,
+} from '@lynx-js/react/worklet-runtime/bindings';
 
-import type { SnapshotInstance } from '../snapshot.js';
+import { SnapshotInstance } from '../snapshot.js';
 
 function workletUnRef(value: Worklet | WorkletRef<unknown>): void {
   if ('_wvid' in value) {
@@ -38,10 +42,10 @@ function updateWorkletRef(
   if (value === null || value === undefined) {
     // do nothing
   } else if (value._wvid) {
-    update(value, snapshot.__elements[elementIndex]!);
+    update(value as any, snapshot.__elements[elementIndex]!);
   } else if (value._wkltId) {
     // @ts-ignore
-    value._unmount = runWorkletCtx(value, [{ elementRefptr: snapshot.__elements[elementIndex]! }]);
+    value._unmount = runWorkletCtx(value as any, [{ elementRefptr: snapshot.__elements[elementIndex]! }]);
   } else if (value._type === '__LEPUS__' || value._lepusWorkletHash) {
     // During the initial render, we will not update the WorkletRef because the background thread is not ready yet.
   } else {

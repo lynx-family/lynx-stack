@@ -31,6 +31,7 @@ describe('delayedLifecycleEvents', () => {
             "rLynxFirstScreen",
             {
               "jsReadyEventIdSwap": {},
+              "refPatch": "{}",
               "root": "{"id":-1,"type":"root","children":[{"id":-2,"type":"__Card__:__snapshot_a94a8_test_1"}]}",
             },
           ],
@@ -44,6 +45,7 @@ describe('delayedLifecycleEvents', () => {
           "rLynxFirstScreen",
           {
             "jsReadyEventIdSwap": {},
+            "refPatch": "{}",
             "root": "{"id":-1,"type":"root","children":[{"id":-2,"type":"__Card__:__snapshot_a94a8_test_1"}]}",
           },
         ],
