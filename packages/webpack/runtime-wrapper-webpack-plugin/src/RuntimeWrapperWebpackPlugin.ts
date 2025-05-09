@@ -62,6 +62,25 @@ const defaultInjectVars = [
   'window',
 ];
 
+const charMap = {
+  '<': '\\u003C',
+  '>': '\\u003E',
+  '/': '\\u002F',
+  '\\': '\\\\',
+  '\b': '\\b',
+  '\f': '\\f',
+  '\n': '\\n',
+  '\r': '\\r',
+  '\t': '\\t',
+  '\0': '\\0',
+  '\u2028': '\\u2028',
+  '\u2029': '\\u2029'
+};
+
+function escapeUnsafeChars(str: string): string {
+  return str.replace(/[<>\b\f\n\r\t\0\u2028\u2029]/g, x => charMap[x]);
+}
+
 /**
  * RuntimeWrapperWebpackPlugin adds runtime wrappers to JavaScript and allow to be loaded by Lynx.
  *
@@ -239,7 +258,7 @@ const amdBanner = ({
     tt.define("${moduleId}", function(require, module, exports, ${injectStr}) {
 lynx = lynx || {};
 lynx.targetSdkVersion=lynx.targetSdkVersion||${
-      JSON.stringify(targetSdkVersion)
+      escapeUnsafeChars(JSON.stringify(targetSdkVersion))
     };
 ${overrideRuntimePromise ? `var Promise = lynx.Promise;` : ''}
 var fetch = lynx.fetch;
