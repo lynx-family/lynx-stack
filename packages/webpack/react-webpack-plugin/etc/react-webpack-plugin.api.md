@@ -51,6 +51,7 @@ export interface ReactWebpackPluginOptions {
     extractStr?: Partial<ExtractStrConfig> | boolean;
     firstScreenSyncTiming?: 'immediately' | 'jsReady';
     mainThreadChunks?: string[] | undefined;
+    profile?: boolean | undefined;
 }
 
 ```
