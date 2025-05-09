@@ -33,7 +33,7 @@
     "@lynx-js/web-elements": "workspace:*",
     "@lynx-js/web-platform-rsbuild-plugin": "workspace:*",
     "@rsbuild/core": "catalog:rsbuild",
-    "@rsdoctor/rspack-plugin": "1.0.2",
+    "@rsdoctor/rspack-plugin": "1.1.2",
     "tslib": "^2.8.1"
   }
 }
