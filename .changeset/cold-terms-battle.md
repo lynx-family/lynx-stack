@@ -10,11 +10,10 @@ It can be used to execute global logics, such as injecting polyfills, setting gl
 example：
 
 ```js
-import { defineConfig } from '@lynx-js/rspeedy'
+import { defineConfig } from '@lynx-js/rspeedy';
 export default defineConfig({
- source: {
+  source: {
     preEntry: './src/polyfill.ts',
- },
-})
+  },
+});
 ```
-
