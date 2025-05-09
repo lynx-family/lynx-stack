@@ -245,7 +245,9 @@ export interface Source {
    * ```js
    * import { defineConfig } from '@lynx-js/rspeedy'
    * export default defineConfig({
-   *   entry: './src/pages/main/index.js',
+   *   source: {
+   *     entry: './src/pages/main/index.js',
+   *   },
    * })
    * ```
    *
@@ -256,7 +258,9 @@ export interface Source {
    * ```js
    * import { defineConfig } from '@lynx-js/rspeedy'
    * export default defineConfig({
-   *   entry: ['./src/prefetch.js', './src/pages/main/index.js'],
+   *   source: {
+   *     entry: ['./src/prefetch.js', './src/pages/main/index.js'],
+   *   },
    * })
    * ```
    *
@@ -267,9 +271,11 @@ export interface Source {
    * ```js
    * import { defineConfig } from '@lynx-js/rspeedy'
    * export default defineConfig({
-   *   entry: {
-   *     foo: './src/pages/foo/index.js',
-   *     bar: ['./src/pages/bar/index.js', './src/post.js'], // multiple entry modules is allowed
+   *   source: {
+   *     entry: {
+   *       foo: './src/pages/foo/index.js',
+   *       bar: ['./src/pages/bar/index.js', './src/post.js'], // multiple entry modules is allowed
+   *     },
    *   },
    * })
    * ```
@@ -281,10 +287,12 @@ export interface Source {
    * ```js
    * import { defineConfig } from '@lynx-js/rspeedy'
    * export default defineConfig({
-   *   entry: {
-   *     foo: './src/pages/foo/index.js',
-   *     bar: {
-   *       import: ['./src/prefetch.js', './src/pages/bar'],
+   *   source: {
+   *     entry: {
+   *       foo: './src/pages/foo/index.js',
+   *       bar: {
+   *         import: ['./src/prefetch.js', './src/pages/bar'],
+   *       },
    *     },
    *   },
    * })
