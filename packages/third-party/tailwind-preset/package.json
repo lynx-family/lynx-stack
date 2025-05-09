@@ -12,11 +12,6 @@
     "url": "https://github.com/lynx-family/lynx-stack.git",
     "directory": "packages/third-party/tailwind-preset"
   },
-  "license": "Apache-2.0",
-  "author": {
-    "name": "Qingyu Wang",
-    "email": "colinwang.0616@gmail.com"
-  },
   "type": "module",
   "exports": null,
   "main": "./lib/lynx.js",
@@ -26,7 +21,13 @@
     "CHANGELOG.md",
     "README.md"
   ],
+  "scripts": {
+    "test": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
   "devDependencies": {
+    "@lynx-js/types": "^3.2.1",
+    "postcss": "^8.4.35",
     "tailwindcss": "^3.4.17"
   }
 }

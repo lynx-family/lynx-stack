@@ -2,13 +2,14 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { display, position, underline } from './plugins/lynx/index.js';
+import { display, position, textDecoration } from './plugins/lynx/index.js';
 
 /**
  * Should be used with Tailwind JIT and configured with purge, otherwise the bundle will be too large.
  */
 export default {
-  plugins: [position, underline, display],
+  content: ['./**/*.{js,ts,jsx,tsx,css}'],
+  plugins: [position, textDecoration, display],
   corePlugins: [
     // 'preflight',
     'alignContent',
@@ -76,7 +77,7 @@ export default {
     'zIndex',
 
     'textAlign',
-    // 'textDecoration', // Defined using plugin
+    // 'textDecoration', // Replaced with plugin
     'textOverflow',
 
     'transformOrigin',
@@ -93,6 +94,7 @@ export default {
 
     'visibility',
     'whitespace',
+    'wordBreak',
 
     'gridColumn',
     'gridColumnStart',
@@ -150,8 +152,6 @@ export default {
 // 'justifySelf'
 
 // 'overscrollBehavior'
-
-// 'wordBreak'
 
 // 'backgroundOpacity'
 // 'gradientColorStops'

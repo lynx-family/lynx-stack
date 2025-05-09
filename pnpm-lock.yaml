@@ -587,6 +587,12 @@ importers:
 
   packages/third-party/tailwind-preset:
     devDependencies:
+      '@lynx-js/types':
+        specifier: ^3.2.1
+        version: 3.2.1
+      postcss:
+        specifier: ^8.4.35
+        version: 8.5.3
       tailwindcss:
         specifier: ^3.4.17
         version: 3.4.17
