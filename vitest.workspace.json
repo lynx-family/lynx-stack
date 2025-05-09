@@ -5,5 +5,5 @@
   "packages/webpack/*/vitest.config.ts",
   "packages/testing-library/*/vitest.config.mts",
   "packages/testing-library/examples/*/vitest.config.ts",
-  "packages/third-party/tailwind-preset/*/vitest.config.ts"
+  "packages/third-party/*/vitest.config.ts"
 ]
