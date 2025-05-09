@@ -46,7 +46,7 @@
     "@rspack/core": "catalog:rspack",
     "css-loader": "^7.1.2",
     "mini-css-extract-plugin": "^2.9.2",
-    "webpack": "^5.99.7"
+    "webpack": "^5.99.8"
   },
   "peerDependencies": {
     "@rspack/core": "^1.3.0"

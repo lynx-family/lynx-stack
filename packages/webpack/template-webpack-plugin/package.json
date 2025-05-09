@@ -49,7 +49,7 @@
     "@microsoft/api-extractor": "catalog:",
     "@types/css-tree": "^2.3.10",
     "@types/object.groupby": "^1.0.4",
-    "webpack": "^5.99.7"
+    "webpack": "^5.99.8"
   },
   "engines": {
     "node": ">=18"

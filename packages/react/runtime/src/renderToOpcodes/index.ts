@@ -2,7 +2,12 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-// modified from preact-render-to-string@6.0.3
+/**
+ * Implements rendering to opcodes.
+ * This module is modified from preact-render-to-string@6.0.3 to generate
+ * opcodes instead of HTML strings for Lynx.
+ */
+
 // @ts-nocheck
 
 import { Fragment, h, options } from 'preact';

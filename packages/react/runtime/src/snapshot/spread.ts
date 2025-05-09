@@ -1,16 +1,24 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { SnapshotInstance } from '../snapshot.js';
-import { updateEvent } from './event.js';
+
+/**
+ * Handles JSX spread operator in the snapshot system.
+ *
+ * Spread operators in JSX (e.g., <div {...props}>) are transformed into
+ * optimized attribute updates at compile time, avoiding runtime object spreads.
+ */
+
 import { BackgroundSnapshotInstance } from '../backgroundSnapshot.js';
+import { __pendingListUpdates, ListUpdateInfoRecording } from '../list.js';
+import { SnapshotInstance } from '../snapshot.js';
+import { isDirectOrDeepEqual, isEmptyObject, pick } from '../utils.js';
+import { updateEvent } from './event.js';
+import { updateGesture } from './gesture.js';
+import { platformInfoAttributes, updateListItemPlatformInfo } from './platformInfo.js';
 import { transformRef, updateRef } from './ref.js';
 import { updateWorkletEvent } from './workletEvent.js';
 import { updateWorkletRef } from './workletRef.js';
-import { updateGesture } from './gesture.js';
-import { platformInfoAttributes, updateListItemPlatformInfo } from './platformInfo.js';
-import { isDirectOrDeepEqual, isEmptyObject, pick } from '../utils.js';
-import { __pendingListUpdates, ListUpdateInfoRecording } from '../list.js';
 
 const eventRegExp = /^(([A-Za-z-]*):)?(bind|catch|capture-bind|capture-catch|global-bind)([A-Za-z]+)$/;
 const eventTypeMap: Record<string, string> = {
@@ -83,7 +91,6 @@ function updateSpread(snapshot: SnapshotInstance, index: number, oldValue: any, 
       } else if (key.startsWith('data-')) {
         // collected below
       } else if (key === 'ref') {
-        snapshot.__ref_set ??= new Set();
         const fakeSnapshot = {
           __values: {
             get [index]() {
@@ -96,9 +103,8 @@ function updateSpread(snapshot: SnapshotInstance, index: number, oldValue: any, 
           },
           __id: snapshot.__id,
           __elements: snapshot.__elements,
-          __ref_set: snapshot.__ref_set,
         } as SnapshotInstance;
-        updateRef(fakeSnapshot, index, oldValue[key], elementIndex, key);
+        updateRef(fakeSnapshot, index, oldValue[key], elementIndex);
       } else if (key.endsWith(':ref')) {
         snapshot.__worklet_ref_set ??= new Set();
         const fakeSnapshot = {
@@ -124,7 +130,7 @@ function updateSpread(snapshot: SnapshotInstance, index: number, oldValue: any, 
           __elements: snapshot.__elements,
         } as SnapshotInstance;
         updateGesture(fakeSnapshot, index, oldValue[key], elementIndex, workletType);
-      } else if ((match = key.match(eventRegExp))) {
+      } else if ((match = eventRegExp.exec(key))) {
         const workletType = match[2];
         const eventType = eventTypeMap[match[3]!]!;
         const eventName = match[4]!;
@@ -171,7 +177,6 @@ function updateSpread(snapshot: SnapshotInstance, index: number, oldValue: any, 
       } else if (key.startsWith('data-')) {
         // collected below
       } else if (key === 'ref') {
-        snapshot.__ref_set ??= new Set();
         const fakeSnapshot = {
           __values: {
             get [index]() {
@@ -184,9 +189,8 @@ function updateSpread(snapshot: SnapshotInstance, index: number, oldValue: any, 
           },
           __id: snapshot.__id,
           __elements: snapshot.__elements,
-          __ref_set: snapshot.__ref_set,
         } as SnapshotInstance;
-        updateRef(fakeSnapshot, index, oldValue[key], elementIndex, key);
+        updateRef(fakeSnapshot, index, oldValue[key], elementIndex);
       } else if (key.endsWith(':ref')) {
         snapshot.__worklet_ref_set ??= new Set();
         const fakeSnapshot = {
@@ -212,7 +216,7 @@ function updateSpread(snapshot: SnapshotInstance, index: number, oldValue: any, 
           __elements: snapshot.__elements,
         } as SnapshotInstance;
         updateGesture(fakeSnapshot, index, oldValue[key], elementIndex, workletType);
-      } else if ((match = key.match(eventRegExp))) {
+      } else if ((match = eventRegExp.exec(key))) {
         const workletType = match[2];
         const eventType = eventTypeMap[match[3]!]!;
         const eventName = match[4]!;
@@ -266,8 +270,12 @@ function transformSpread(
       value ??= '';
       result['className'] = value;
     } else if (key === 'ref') {
-      // @ts-ignore
-      result[key] = transformRef(value)?.__ref;
+      if (__LEPUS__) {
+        result[key] = value ? 1 : undefined;
+      } else {
+        // @ts-ignore
+        result[key] = transformRef(value)?.__ref;
+      }
     } else if (typeof value === 'function') {
       result[key] = `${snapshot.__id}:${index}:${key}`;
     } else {
@@ -284,4 +292,4 @@ function transformSpread(
   return result;
 }
 
-export { updateSpread, transformSpread };
+export { transformSpread, updateSpread };

@@ -233,6 +233,8 @@ export function applyEntry(
         .end()
     }
 
+    const rsbuildConfig = api.getRsbuildConfig()
+
     chain
       .plugin(PLUGIN_NAME_REACT)
       .after(PLUGIN_NAME_TEMPLATE)
@@ -244,6 +246,7 @@ export function applyEntry(
         mainThreadChunks,
         extractStr,
         experimental_isLazyBundle,
+        profile: rsbuildConfig.performance?.profile,
       }])
   })
 }

@@ -43,13 +43,13 @@ export interface Root {
    *   return <view>...</view>
    * }
    *
-   * if (__LEPUS__) {
+   * if (__MAIN_THREAD__) {
    *   root.render(
    *     <DataProvider data={DEFAULT_DATA}>
    *        <App/>
    *     </DataProvider>
    *   );
-   * } else if (__JS__) {
+   * } else if (__BACKGROUND__) {
    *   fetchData().then((data) => {
    *     root.render(
    *       <DataProvider data={data}>
@@ -82,7 +82,7 @@ export interface Root {
  */
 export const root: Root = {
   render: (jsx: ReactNode): void => {
-    if (__LEPUS__) {
+    if (__MAIN_THREAD__) {
       __root.__jsx = jsx;
     } else {
       __root.__jsx = jsx;
@@ -370,7 +370,7 @@ export interface Lynx {
   registerDataProcessors: (dataProcessorDefinition?: DataProcessorDefinition) => void;
 }
 
-export { runOnMainThread } from './worklet/runOnMainThread.js';
-export { runOnBackground } from './worklet/runOnBackground.js';
-export { MainThreadRef, useMainThreadRef } from './worklet/workletRef.js';
 export { useLynxGlobalEventListener } from './hooks/useLynxGlobalEventListener.js';
+export { runOnBackground } from './worklet/runOnBackground.js';
+export { runOnMainThread } from './worklet/runOnMainThread.js';
+export { MainThreadRef, useMainThreadRef } from './worklet/workletRef.js';

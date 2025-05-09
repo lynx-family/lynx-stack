@@ -5,9 +5,15 @@
 /* eslint-disable @typescript-eslint/unbound-method */
 import { createPlugin } from '../../helpers.js';
 
-export const underline: void = createPlugin(({ addUtilities }) => {
+export const textDecoration: void = createPlugin(({ addUtilities }) => {
   addUtilities(
     {
+      '.no-underline': {
+        'text-decoration': 'none',
+      },
+      '.line-through': {
+        'text-decoration': 'line-through',
+      },
       '.underline': {
         'text-decoration': 'underline',
       },

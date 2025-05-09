@@ -1,4 +1,9 @@
+name: Rust
+
 on:
+  push:
+    branches:
+      - main
   workflow_call:
     secrets:
       CODECOV_TOKEN:
@@ -14,12 +19,12 @@ jobs:
   test:
     runs-on: lynx-ubuntu-24.04-xlarge
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions-rust-lang/setup-rust-toolchain@v1
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - uses: actions-rust-lang/setup-rust-toolchain@9d7e65c320fdb52dcd45ffaa68deb6c02c8754d9 # v1
         with:
           cache-key: test-${{ runner.os }}
       - name: Install llvm-cov and nextest
-        uses: taiki-e/install-action@f1390fd0d8205ae79e5e57b1d1e300dceeb4163e # v2
+        uses: taiki-e/install-action@97a83ae1347bc407f550a16fb0694d6f446eec88 # v2
         with:
           tool: cargo-llvm-cov,cargo-nextest
       - name: Test
@@ -27,12 +32,12 @@ jobs:
           export CARGO_LLVM_COV_FLAGS_NO_RUNNER='--no-sparse'
           cargo llvm-cov nextest --profile ci --config-file .cargo/nextest.toml --lcov --output-path lcov.info  --release
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@ad3126e916f78f00edff4ed0317cf185271ccc2d # v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
       - name: Upload test results to Codecov
         if: ${{ !cancelled() }}
-        uses: codecov/test-results-action@v1
+        uses: codecov/test-results-action@f2dba722c67b86c6caa034178c6e4d35335f6706 # v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: target/nextest/ci/test-report.junit.xml
@@ -40,8 +45,8 @@ jobs:
   rustfmt:
     runs-on: lynx-ubuntu-24.04-medium
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions-rust-lang/setup-rust-toolchain@v1
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - uses: actions-rust-lang/setup-rust-toolchain@9d7e65c320fdb52dcd45ffaa68deb6c02c8754d9 # v1
         with:
           components: rustfmt
           cache-key: test-${{ runner.os }}

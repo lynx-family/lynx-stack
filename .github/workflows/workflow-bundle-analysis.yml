@@ -1,0 +1,50 @@
+name: Bundle Analysis
+
+on:
+  workflow_call:
+
+permissions: {}
+
+env:
+  CI: 1
+  TURBO_TELEMETRY_DISABLED: 1
+jobs:
+  build:
+    runs-on: lynx-ubuntu-24.04-medium
+    strategy:
+      matrix:
+        project:
+          - path: ./examples/react
+            name: example-react
+          - path: ./packages/web-platform/web-explorer
+            name: web-explorer
+    name: Build ${{ matrix.project.name }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "22"
+      - name: TurboCache
+        uses: lynx-infra/cache@558d7c999f9f97ac02ed7e711503bb81d82ff8ee
+        with:
+          path: .turbo
+          # We have to be strict here to make sure getting the cache of build-all
+          key: turbo-v3-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ github.sha }}
+          fail-on-cache-miss: true
+      - name: Install
+        run: |
+          npm install -g corepack@latest
+          corepack enable
+          pnpm install --frozen-lockfile
+      - name: Build
+        run: |
+          pnpm turbo build --summarize
+      - name: Build ${{ matrix.project.name }}
+        run: |
+          pnpm --filter ${{ matrix.project.path }} run build
+      - uses: relative-ci/agent-upload-artifact-action@a2b5741b4f7e6a989c84ec1a3059696b23c152e5 #v2
+        with:
+          artifactName: ${{ matrix.project.name }}-relative-ci-artifacts
+          webpackStatsFile: ${{ matrix.project.path }}/dist/stats.json

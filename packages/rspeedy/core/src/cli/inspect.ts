@@ -12,7 +12,6 @@ import { createRspeedy } from '../create-rspeedy.js'
 import { init } from './init.js'
 
 export interface InspectOptions extends CommonOptions {
-  mode?: 'production' | 'development' | undefined
   verbose?: boolean | undefined
   output?: string | undefined
 }

@@ -269,4 +269,125 @@ describe('CLI - build', () => {
     expect(vi.mocked(gracefulExit)).toBeCalled()
     expect(vi.mocked(gracefulExit)).toBeCalledWith(1)
   })
+
+  describe('mode', () => {
+    test('with NODE_ENV="production"', async () => {
+      vi.stubEnv('NODE_ENV', 'production')
+
+      const core = await import('@rsbuild/core')
+      core.createRsbuild = vi.fn().mockReturnValueOnce({
+        build() {
+          return Promise.reject(new Error('Mocked Build Error'))
+        },
+        addPlugins() {
+          return Promise.resolve()
+        },
+      })
+
+      const program = new Command('test')
+      await build.call(
+        program,
+        join(fixturesRoot, 'hello-world'),
+        {},
+      )
+
+      expect(core.createRsbuild).toBeCalledWith(expect.objectContaining({
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        rsbuildConfig: expect.objectContaining({
+          mode: undefined,
+        }),
+      }))
+    })
+
+    test('with --mode development', async () => {
+      vi.stubEnv('NODE_ENV', 'production')
+
+      const core = await import('@rsbuild/core')
+      core.createRsbuild = vi.fn().mockReturnValueOnce({
+        build() {
+          return Promise.reject(new Error('Mocked Build Error'))
+        },
+        addPlugins() {
+          return Promise.resolve()
+        },
+      })
+
+      const program = new Command('test')
+      await build.call(
+        program,
+        join(fixturesRoot, 'hello-world'),
+        {
+          mode: 'development',
+        },
+      )
+
+      expect(core.createRsbuild).toBeCalledWith(expect.objectContaining({
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        rsbuildConfig: expect.objectContaining({
+          mode: 'development',
+        }),
+      }))
+    })
+
+    test('with --mode none', async () => {
+      vi.stubEnv('NODE_ENV', 'production')
+
+      const core = await import('@rsbuild/core')
+      core.createRsbuild = vi.fn().mockReturnValueOnce({
+        build() {
+          return Promise.reject(new Error('Mocked Build Error'))
+        },
+        addPlugins() {
+          return Promise.resolve()
+        },
+      })
+
+      const program = new Command('test')
+      await build.call(
+        program,
+        join(fixturesRoot, 'hello-world'),
+        {
+          mode: 'none',
+        },
+      )
+
+      expect(core.createRsbuild).toBeCalledWith(expect.objectContaining({
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        rsbuildConfig: expect.objectContaining({
+          mode: 'none',
+        }),
+      }))
+    })
+
+    test('with --mode foo', async () => {
+      vi.stubEnv('NODE_ENV', 'production')
+
+      const core = await import('@rsbuild/core')
+      core.createRsbuild = vi.fn().mockReturnValueOnce({
+        build() {
+          return Promise.reject(new Error('Mocked Build Error'))
+        },
+        addPlugins() {
+          return Promise.resolve()
+        },
+      })
+
+      const program = new Command('test')
+      await build.call(
+        program,
+        join(fixturesRoot, 'hello-world'),
+        {
+          // @ts-expect-error mocked wrong mode
+          mode: 'foo',
+        },
+      )
+
+      expect(core.createRsbuild).toBeCalledWith(expect.objectContaining({
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        rsbuildConfig: expect.objectContaining({
+          mode: 'foo',
+        }),
+      }))
+    })
+  })
 })
