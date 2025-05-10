@@ -1,5 +1,13 @@
 # @lynx-js/web-elements
 
+## 0.7.1
+
+### Patch Changes
+
+- fix(web): x-swiper-item threshold updated to 20 ([#639](https://github.com/lynx-family/lynx-stack/pull/639))
+
+- fix: In React19, setter and getter functions are treated as properties, making it impossible to retrieve the current value via attributes. ([#639](https://github.com/lynx-family/lynx-stack/pull/639))
+
 ## 0.7.0
 
 ### Minor Changes

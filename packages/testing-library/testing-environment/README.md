@@ -63,7 +63,7 @@ After configuration, you can directly access the `lynxTestingEnv` object globall
 
 If you want to use `@lynx-js/testing-environment` for unit testing in ReactLynx, you usually don't need to specify this configuration manually.
 
-Please refer to [ReactLynx Testing Library](https://lynxjs.org/react/react-lynx-testing-library.html) to inherit the configuration from `@lynx-js/react/testing-library`.
+Please refer to [ReactLynx Testing Library](https://lynxjs.org/react/reactlynx-testing-library.html) to inherit the configuration from `@lynx-js/react/testing-library`.
 
 ## Credits
 

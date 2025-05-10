@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/testing-environment",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "A subset of a Lynx environment to be useful for testing",
   "keywords": [
     "Lynx",

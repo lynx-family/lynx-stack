@@ -1,5 +1,21 @@
 # @lynx-js/web-constants
 
+## 0.13.1
+
+### Patch Changes
+
+- feat: support touch events for MTS ([#641](https://github.com/lynx-family/lynx-stack/pull/641))
+
+  now we support
+
+  - main-thread:bindtouchstart
+  - main-thread:bindtouchend
+  - main-thread:bindtouchmove
+  - main-thread:bindtouchcancel
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.13.1
+
 ## 0.13.0
 
 ### Patch Changes

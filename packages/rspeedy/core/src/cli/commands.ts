@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import type { RsbuildMode } from '@rsbuild/core'
 import type { Command } from 'commander'
 
 import type { BuildOptions } from './build.js'
@@ -14,6 +15,7 @@ export interface CommonOptions {
   config?: string
   envMode?: string
   noEnv?: boolean
+  mode?: RsbuildMode
 }
 
 function applyCommonOptions(command: Command) {
@@ -29,6 +31,10 @@ function applyCommonOptions(command: Command) {
     .option(
       '--no-env',
       'disable loading `.env` files"',
+    )
+    .option(
+      '-m --mode <mode>',
+      'specify the build mode, can be `development`, `production` or `none`',
     )
 }
 
@@ -82,7 +88,6 @@ export function apply(program: Command): Command {
   const inspectCommand = program.command('inspect')
   inspectCommand
     .description('View the Rsbuild config and Rspack config of the project.')
-    .option('--mode <mode>', 'specify the mode of Rsbuild', 'development')
     .option('--output <output>', 'specify inspect content output path')
     .option('--verbose', 'show full function definitions in output')
     .action((inspectOptions: InspectOptions) =>

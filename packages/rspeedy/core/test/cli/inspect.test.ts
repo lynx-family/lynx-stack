@@ -153,7 +153,11 @@ describe('CLI - Inspect', () => {
         await expect(
           import(path.join(tmp, 'dist', '.rsbuild', 'rspeedy.config.js')),
         )
-          .resolves.toStrictEqual(expect.objectContaining({ default: {} }))
+          .resolves.toStrictEqual(expect.objectContaining({
+            default: {
+              mode: 'production',
+            },
+          }))
 
         expect(existsSync(path.join(
           tmp,
@@ -227,7 +231,11 @@ describe('CLI - Inspect', () => {
         await expect(
           import(path.join(tmp, 'dist', '.rsbuild', 'rspeedy.config.js')),
         )
-          .resolves.toStrictEqual(expect.objectContaining({ default: {} }))
+          .resolves.toStrictEqual(expect.objectContaining({
+            default: {
+              mode: 'development',
+            },
+          }))
 
         expect(existsSync(path.join(
           tmp,

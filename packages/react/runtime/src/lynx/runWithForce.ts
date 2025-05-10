@@ -2,13 +2,17 @@ import { options } from 'preact';
 import type { VNode } from 'preact';
 import { COMPONENT, DIFF, DIFFED, FORCE } from '../renderToOpcodes/constants.js';
 
+const sForcedVNode = Symbol('FORCE');
+
+type PatchedVNode = VNode & { [sForcedVNode]?: true };
+
 export function runWithForce(cb: () => void): void {
   // save vnode and its `_component` in WeakMap
   const m = new WeakMap<VNode, any>();
 
   const oldDiff = options[DIFF];
 
-  options[DIFF] = (vnode: VNode) => {
+  options[DIFF] = (vnode: PatchedVNode) => {
     if (oldDiff) {
       oldDiff(vnode);
     }
@@ -28,19 +32,26 @@ export function runWithForce(cb: () => void): void {
         return m.get(vnode);
       },
     });
+    vnode[sForcedVNode] = true;
   };
 
   const oldDiffed = options[DIFFED];
 
-  options[DIFFED] = (vnode: VNode) => {
+  options[DIFFED] = (vnode: PatchedVNode) => {
     if (oldDiffed) {
       oldDiffed(vnode);
     }
 
-    // delete is a reverse operation of previous `Object.defineProperty`
-    delete vnode[COMPONENT];
-    // restore
-    vnode[COMPONENT] = m.get(vnode);
+    // There would be cases when `options[DIFF]` has been reset while options[DIFFED] is not,
+    // so we need to check if `vnode` is patched by `options[DIFF]`.
+    // We only want to change the patched vnode
+    if (vnode[sForcedVNode]) {
+      // delete is a reverse operation of previous `Object.defineProperty`
+      delete vnode[COMPONENT];
+      delete vnode[sForcedVNode];
+      // restore
+      vnode[COMPONENT] = m.get(vnode);
+    }
   };
 
   try {

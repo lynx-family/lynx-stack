@@ -69,13 +69,16 @@ Commands:
 
 Usage: rspeedy dev [options]
 
+Run the dev server and watch for source file changes while serving.
+
 Options:
-  -b --base <base>          specify the base path of the server
-  -c --config <config>      specify the configuration file, can be a relative or absolute path
-  --env-mode <mode>         specify the env mode to load the .env.[mode] file
-  --environment <name...>   specify the name of environment to build
-  --no-env                  disable loading `.env` files"
-  -h, --help                display help for command
+  --base <base>            specify the base path of the server
+  --environment <name...>  specify the name of environment to build
+  -c --config <config>     specify the configuration file, can be a relative or absolute path
+  --env-mode <mode>        specify the env mode to load the .env.[mode] file
+  --no-env                 disable loading `.env` files"
+  -m --mode <mode>         specify the build mode, can be `development`, `production` or `none`
+  -h, --help               display help for command
 ```
 
 当配置文件内容发生修改时，开发服务器会自动重启。
@@ -89,12 +92,15 @@ Options:
 
 Usage: rspeedy build [options]
 
+Build the project in production mode
+
 Options:
-  -c --config <config>      specify the configuration file, can be a relative or absolute path
-  --env-mode <mode>         specify the env mode to load the .env.[mode] file
-  --environment <name...>   specify the name of environment to build
-  --no-env                  disable loading `.env` files"
-  -h, --help                display help for command
+  --environment <name...>  specify the name of environment to build
+  -c --config <config>     specify the configuration file, can be a relative or absolute path
+  --env-mode <mode>        specify the env mode to load the .env.[mode] file
+  --no-env                 disable loading `.env` files"
+  -m --mode <mode>         specify the build mode, can be `development`, `production` or `none`
+  -h, --help               display help for command
 ```
 
 ## rspeedy preview
@@ -106,11 +112,14 @@ Options:
 
 Usage: rspeedy preview [options]
 
+Preview the production build outputs locally.
+
 Options:
-  -b --base <base>      specify the base path of the server
+  --base <base>         specify the base path of the server
   -c --config <config>  specify the configuration file, can be a relative or absolute path
   --env-mode <mode>     specify the env mode to load the .env.[mode] file
   --no-env              disable loading `.env` files"
+  -m --mode <mode>      specify the build mode, can be `development`, `production` or `none`
   -h, --help            display help for command
 ```
 
@@ -130,12 +139,12 @@ Usage: rspeedy inspect [options]
 View the Rsbuild config and Rspack config of the project.
 
 Options:
-  --mode <mode>         specify the mode of Rsbuild (default: "development")
   --output <output>     specify inspect content output path
   --verbose             show full function definitions in output
   -c --config <config>  specify the configuration file, can be a relative or absolute path
   --env-mode <mode>     specify the env mode to load the .env.[mode] file
   --no-env              disable loading `.env` files"
+  -m --mode <mode>      specify the build mode, can be `development`, `production` or `none`
   -h, --help            display help for command
 ```
 

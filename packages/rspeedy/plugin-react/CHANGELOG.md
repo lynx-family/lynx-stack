@@ -1,5 +1,23 @@
 # @lynx-js/react-rsbuild-plugin
 
+## 0.9.9
+
+### Patch Changes
+
+- Fix runtime error: "SyntaxError: Identifier 'i' has already been declared". ([#651](https://github.com/lynx-family/lynx-stack/pull/651))
+
+- Enable runtime profiling when `performance.profile` is set to true. ([#722](https://github.com/lynx-family/lynx-stack/pull/722))
+
+- fix: resolve page crash on development mode when enabling `experimental_isLazyBundle: true` ([#653](https://github.com/lynx-family/lynx-stack/pull/653))
+
+- Support `@lynx-js/react` v0.108.0. ([#649](https://github.com/lynx-family/lynx-stack/pull/649))
+
+- Updated dependencies [[`ea4da1a`](https://github.com/lynx-family/lynx-stack/commit/ea4da1af0ff14e2480e49f7004a3a2616594968d), [`ca15dda`](https://github.com/lynx-family/lynx-stack/commit/ca15dda4122c5eedc1fd82cefb0cd9af7fdaa47e), [`f8d369d`](https://github.com/lynx-family/lynx-stack/commit/f8d369ded802f8d7b9b859b1f150015d65773b0f), [`ea4da1a`](https://github.com/lynx-family/lynx-stack/commit/ea4da1af0ff14e2480e49f7004a3a2616594968d)]:
+  - @lynx-js/react-webpack-plugin@0.6.13
+  - @lynx-js/runtime-wrapper-webpack-plugin@0.0.10
+  - @lynx-js/react-alias-rsbuild-plugin@0.9.9
+  - @lynx-js/react-refresh-webpack-plugin@0.3.2
+
 ## 0.9.8
 
 ### Patch Changes

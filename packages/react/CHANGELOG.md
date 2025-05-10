@@ -1,5 +1,45 @@
 # @lynx-js/react
 
+## 0.108.0
+
+### Minor Changes
+
+- Reverts #239: "batch multiple patches for main thread communication" ([#649](https://github.com/lynx-family/lynx-stack/pull/649))
+
+  This reverts the change that batched updates sent to the main thread in a single render pass.
+
+### Patch Changes
+
+- Add support for batch rendering in `<list>` with async resolution of sub-tree properties and element trees. ([#624](https://github.com/lynx-family/lynx-stack/pull/624))
+
+  Use the `experimental-batch-render-strategy` attribute of `<list>`:
+
+  ```tsx
+  <list
+    /**
+     * Batch render strategy:
+     * 0: (Default) Disabled - No batch rendering
+     * 1: Basic - Only batch rendering enabled
+     * 2: Property Resolution - Batch render with async property resolution for list item subtree
+     * 3: Full Resolution - Batch render with async property and element tree resolution for list item subtree
+     */
+    experimental-batch-render-strategy={3}
+  >
+  </list>;
+  ```
+
+- rename @lynx-js/test-environment to @lynx-js/testing-environment ([#704](https://github.com/lynx-family/lynx-stack/pull/704))
+
+- Auto import `@lynx-js/react/experimental/lazy/import` when using `import(url)` ([#667](https://github.com/lynx-family/lynx-stack/pull/667))
+
+- Auto import `@lynx-js/react/experimental/lazy/import` when using `<component is={url} />` ([#666](https://github.com/lynx-family/lynx-stack/pull/666))
+
+- Fixed a race condition when updating states and GlobalProps simultaneously. ([#707](https://github.com/lynx-family/lynx-stack/pull/707))
+
+  This fix prevents the "Attempt to render more than one `<page />`" error from occurring during normal application usage.
+
+- Fix error like `Unterminated string constant` when using multi-line JSX StringLiteral. ([#654](https://github.com/lynx-family/lynx-stack/pull/654))
+
 ## 0.107.1
 
 ### Patch Changes

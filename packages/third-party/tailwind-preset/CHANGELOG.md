@@ -1,5 +1,11 @@
 # @lynx-js/tailwind-preset
 
+## 0.0.3
+
+### Patch Changes
+
+- Support `hidden`, `no-underline` and `line-through` utilities. ([#745](https://github.com/lynx-family/lynx-stack/pull/745))
+
 ## 0.0.2
 
 ### Patch Changes

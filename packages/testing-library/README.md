@@ -11,7 +11,7 @@ Unit testing library for lynx, same as https://github.com/testing-library.
 
 ## Documentation
 
-Find the complete documentation for ReactLynx Testing Library on [lynxjs.org](https://lynxjs.org/react/react-lynx-testing-library.html).
+Find the complete documentation for ReactLynx Testing Library on [lynxjs.org](https://lynxjs.org/react/reactlynx-testing-library.html).
 
 ## Credits
 

@@ -12,7 +12,10 @@ export const display: void = createPlugin(({ addUtilities, variants }) => {
       '.block': { display: 'block' },
       '.flex': { display: 'flex' },
       '.grid': { display: 'grid' },
+      '.hidden': { display: 'none' },
       // Below are not supported by Lynx:
+      // - anything with 'inline'
+      // - anything with 'table'
       // '.inline': { display: 'inline', },
       // '.list-item': { display: 'list-item', },
     },
