@@ -1,5 +1,44 @@
 # @lynx-js/rspeedy
 
+## 0.9.5
+
+### Patch Changes
+
+- Support `source.preEntry`. ([#750](https://github.com/lynx-family/lynx-stack/pull/750))
+
+  Add a script before the entry file of each page. This script will be executed before the page code.
+  It can be used to execute global logics, such as injecting polyfills, setting global styles, etc.
+
+  example：
+
+  ```js
+  import { defineConfig } from '@lynx-js/rspeedy'
+  export default defineConfig({
+    source: {
+      preEntry: './src/polyfill.ts',
+    },
+  })
+  ```
+
+- Add `callerName` option to `createRspeedy`. ([#757](https://github.com/lynx-family/lynx-stack/pull/757))
+
+  It can be accessed by Rsbuild plugins through [`api.context.callerName`](https://rsbuild.dev/api/javascript-api/instance#contextcallername), and execute different logic based on this identifier.
+
+  ```js
+  export const myPlugin = {
+    name: 'my-plugin',
+    setup(api) {
+      const { callerName } = api.context
+
+      if (callerName === 'rslib') {
+        // ...
+      } else if (callerName === 'rspeedy') {
+        // ...
+      }
+    },
+  }
+  ```
+
 ## 0.9.4
 
 ### Patch Changes
