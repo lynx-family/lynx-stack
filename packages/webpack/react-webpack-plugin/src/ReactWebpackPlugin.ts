@@ -8,7 +8,10 @@ import { createRequire } from 'node:module';
 import type { Chunk, Compilation, Compiler } from '@rspack/core';
 import invariant from 'tiny-invariant';
 
-import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin';
+import {
+  LAZY_CHUNK,
+  LynxTemplatePlugin,
+} from '@lynx-js/template-webpack-plugin';
 import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
 import { LAYERS } from './layer.js';
@@ -328,10 +331,13 @@ class ReactWebpackPlugin {
       // We replace it with an empty string here to make sure main-thread & background chunk match.
       hooks.asyncChunkName.tap(
         this.constructor.name,
-        (chunkName) =>
-          chunkName
-            ?.replaceAll(`-${LAYERS.BACKGROUND}`, '')
-            ?.replaceAll(`-${LAYERS.MAIN_THREAD}`, ''),
+        (chunkName) => {
+          if (!chunkName) return LAZY_CHUNK;
+
+          return chunkName
+            .replaceAll(`-${LAYERS.BACKGROUND}`, '')
+            .replaceAll(`-${LAYERS.MAIN_THREAD}`, '');
+        },
       );
     });
   }

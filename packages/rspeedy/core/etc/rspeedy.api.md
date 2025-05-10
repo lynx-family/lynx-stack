@@ -136,6 +136,7 @@ export interface Dev {
     assetPrefix?: string | boolean | undefined;
     client?: DevClient | undefined;
     hmr?: boolean | undefined;
+    lazyCompilation?: boolean | LazyCompilationOptions | undefined;
     liveReload?: boolean | undefined;
     progressBar?: boolean | {
         id?: string;
@@ -183,6 +184,11 @@ export interface Filename {
     svg?: string | undefined;
     // @deprecated
     template?: string | undefined;
+}
+
+// @public
+export interface LazyCompilationOptions {
+    entries?: boolean;
 }
 
 // @public

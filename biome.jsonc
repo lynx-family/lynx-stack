@@ -40,6 +40,8 @@
       "packages/react/runtime/**",
       "packages/react/worklet-runtime/**",
 
+      "packages/rspeedy/core/hot/lazy-compilation-fetch.js",
+
       "packages/tools/**",
 
       "packages/webpack/*/runtime/**",

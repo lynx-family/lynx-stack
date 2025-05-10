@@ -6,6 +6,7 @@ import type { ConsoleType, RsbuildConfig, SourceMap } from '@rsbuild/core'
 import type { UndefinedOnPartialDeep } from 'type-fest'
 
 import { toRsbuildEntry } from './entry.js'
+import { toRsbuildLazyCompilation } from './lazyCompilation.js'
 import type { Config } from '../index.js'
 
 // This is the default value from lynx-speedy.
@@ -21,6 +22,10 @@ export function toRsbuildConfig(
       watchFiles: config.dev?.watchFiles,
       // We expect to use different default writeToDisk with Rsbuild
       writeToDisk: config.dev?.writeToDisk ?? true,
+
+      lazyCompilation: toRsbuildLazyCompilation(
+        config.dev?.lazyCompilation,
+      ),
 
       progressBar: config.dev?.progressBar ?? true,
     },

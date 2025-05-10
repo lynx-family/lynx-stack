@@ -11,8 +11,10 @@ import type {
 } from '@rspack/core';
 
 import {
+  LAZY_CHUNK,
   LynxEncodePlugin,
   LynxTemplatePlugin,
+  REACT_REFRESH,
 } from '@lynx-js/template-webpack-plugin';
 
 /**
@@ -136,6 +138,17 @@ class CssExtractRspackPlugin {
 export { CssExtractRspackPlugin };
 export type { CssExtractRspackPluginOptions };
 
+interface PathData {
+  filename?: string;
+  hash?: string;
+  contentHash?: string;
+  runtime?: string;
+  url?: string;
+  id?: string;
+  chunk?: Chunk;
+  contentHashType?: string;
+}
+
 class CssExtractRspackPluginImpl {
   name = 'CssExtractRspackPlugin';
   private hash: string | null = null;
@@ -161,6 +174,12 @@ class CssExtractRspackPluginImpl {
       ) {
         const { RuntimeGlobals, RuntimeModule } = compiler.webpack;
 
+        // TODO: replace LynxTemplatePlugin types with Rspack
+        const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(
+          // @ts-expect-error Rspack x Webpack compilation not match
+          compilation,
+        );
+
         class CSSHotUpdateRuntimeModule extends RuntimeModule {
           hash: string | null;
 
@@ -173,20 +192,32 @@ class CssExtractRspackPluginImpl {
             const chunk = this.chunk!;
 
             const asyncChunks = Array.from(chunk.getAllAsyncChunks())
+              .filter(c => c.id !== REACT_REFRESH)
               .map(c => {
-                const { path } = compilation.getAssetPathWithInfo(
-                  options.chunkFilename ?? '.rspeedy/async/[name]/[name].css',
-                  { chunk: c },
-                );
-                return [c.name!, path];
+                let pathData: PathData = { chunk: c };
+                let chunkName = c.name;
+
+                if (hooks.asyncChunkName.call(c.name) === LAZY_CHUNK) {
+                  pathData = { filename: c.id! };
+                  chunkName = c.id;
+                }
+
+                const { path: cssHotUpdatePath } = compilation
+                  .getAssetPathWithInfo(
+                    options.chunkFilename
+                      ?? '.rspeedy/async/[name]/[name].css',
+                    pathData,
+                  );
+
+                return [chunkName, cssHotUpdatePath];
               });
 
-            const { path } = compilation.getPathWithInfo(
+            const { path: cssHotUpdatePath } = compilation.getPathWithInfo(
               options.filename ?? '[name].css',
               { chunk },
             );
 
-            const initialChunk = [chunk.name!, path];
+            const initialChunk = [chunk.name!, cssHotUpdatePath];
 
             const cssHotUpdateList = [...asyncChunks, initialChunk].map((
               [chunkName, cssHotUpdatePath],

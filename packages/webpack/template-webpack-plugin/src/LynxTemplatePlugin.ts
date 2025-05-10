@@ -23,6 +23,7 @@ import type * as CSS from '@lynx-js/css-serializer';
 import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
 import { cssChunksToMap } from './css/cssChunksToMap.js';
+import { LAZY_CHUNK } from './LazyChunk.js';
 import { createLynxAsyncChunksRuntimeModule } from './LynxAsyncChunksRuntimeModule.js';
 
 interface EncodeOptions {
@@ -561,7 +562,9 @@ class LynxTemplatePluginImpl {
           new LynxAsyncChunksRuntimeModule((chunkName) => {
             const filename = hooks.asyncChunkName.call(chunkName)!;
 
-            return this.#getAsyncFilenameTemplate(filename);
+            return filename === LAZY_CHUNK
+              ? filename
+              : this.#getAsyncFilenameTemplate(filename);
           }),
         );
       });
@@ -692,7 +695,7 @@ class LynxTemplatePluginImpl {
         const filename = Array.from(new Set(chunkNames)).join('_');
 
         // If no filename is found, avoid generating async template
-        if (!filename) {
+        if (!filename || filename === LAZY_CHUNK) {
           return;
         }
 

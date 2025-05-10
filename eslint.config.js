@@ -71,6 +71,9 @@ export default tseslint.config(
       'packages/react/runtime/**',
       'packages/react/worklet-runtime/**',
 
+      // rspeedy
+      'packages/rspeedy/core/hot/lazy-compilation-fetch.js',
+
       // TODO: enable eslint for tools
       // tools
       'packages/tools/**',
