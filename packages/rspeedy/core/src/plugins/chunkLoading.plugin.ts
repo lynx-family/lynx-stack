@@ -29,7 +29,7 @@ export function pluginChunkLoading(): RsbuildPlugin {
             .use(ChunkLoadingWebpackPlugin)
           .end()
           .output
-            .chunkLoading('lynx')
+            .chunkLoading('async-lynx')
             .chunkFormat('commonjs')
             .iife(false)
           .end()

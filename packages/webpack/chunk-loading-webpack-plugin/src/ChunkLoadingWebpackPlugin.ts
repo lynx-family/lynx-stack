@@ -8,13 +8,12 @@ import { RuntimeGlobals as LynxRuntimeGlobals } from '@lynx-js/webpack-runtime-g
 
 import { createChunkLoadingRuntimeModule } from './ChunkLoadingRuntimeModule.js';
 import { createCssChunkLoadingRuntimeModule } from './CssChunkLoadingRuntimeModule.js';
+import { ChunkLoadingType } from './LynxChunkLoadingType.js';
 
 import type { ChunkLoadingWebpackPluginOptions } from './index.js';
 
 export class ChunkLoadingWebpackPluginImpl {
   name = 'ChunkLoadingWebpackPlugin';
-
-  static chunkLoadingValue = 'lynx';
 
   constructor(
     public compiler: Compiler,
@@ -24,12 +23,16 @@ export class ChunkLoadingWebpackPluginImpl {
 
     javascript.EnableChunkLoadingPlugin.setEnabled(
       compiler,
-      ChunkLoadingWebpackPluginImpl.chunkLoadingValue,
+      typeof compiler.options.output.chunkLoading === 'string'
+        ? compiler.options.output.chunkLoading
+        : ChunkLoadingType.ASYNC,
     );
 
     if (
       compiler.options.output.chunkLoading
-        !== ChunkLoadingWebpackPluginImpl.chunkLoadingValue
+        !== ChunkLoadingType.ASYNC
+      && compiler.options.output.chunkLoading
+        !== ChunkLoadingType.SYNC
     ) {
       return;
     }
@@ -38,6 +41,7 @@ export class ChunkLoadingWebpackPluginImpl {
     compiler.hooks.thisCompilation.tap(this.name, (compilation) => {
       const ChunkLoadingRuntimeModule = createChunkLoadingRuntimeModule(
         compiler.webpack,
+        compiler.options.output.chunkLoading as ChunkLoadingType,
       );
       // TODO(colinaaa): enable this after https://github.com/web-infra-dev/rspack/issues/9849 is fixed.
       // const onceForChunkSet = new WeakSet<Chunk>();
@@ -52,7 +56,9 @@ export class ChunkLoadingWebpackPluginImpl {
         const chunkLoading = options && options.chunkLoading !== undefined
           ? options.chunkLoading
           : globalChunkLoading;
-        return chunkLoading === ChunkLoadingWebpackPluginImpl.chunkLoadingValue;
+
+        return chunkLoading === ChunkLoadingType.ASYNC
+          || chunkLoading === ChunkLoadingType.SYNC;
       };
 
       const handler = (chunk: Chunk, runtimeRequirements: Set<string>) => {

@@ -4,7 +4,7 @@ import { ChunkLoadingWebpackPlugin } from '../../../../src/index';
 export default {
   mode: 'production',
   output: {
-    chunkLoading: 'lynx',
+    chunkLoading: 'async-lynx',
     chunkFormat: 'commonjs',
     chunkFilename: '[id].webpack.bundle.cjs',
   },

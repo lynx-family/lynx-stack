@@ -1,12 +1,12 @@
 import { ChunkLoadingWebpackPlugin } from '../../../../src/index';
 
-/** @type {import('@rspack/core').Configuration} */
+/** @type {import('webpack').Configuration} */
 export default {
   mode: 'development',
   output: {
-    chunkLoading: 'async-lynx',
+    chunkLoading: 'sync-lynx',
     chunkFormat: 'commonjs',
-    chunkFilename: '[id].rspack.bundle.cjs',
+    chunkFilename: '[id].webpack.bundle.cjs',
   },
   plugins: [
     new ChunkLoadingWebpackPlugin(),
