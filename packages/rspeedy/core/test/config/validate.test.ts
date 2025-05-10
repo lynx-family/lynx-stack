@@ -1822,6 +1822,23 @@ describe('Config Validation', () => {
     test('valid type', () => {
       const cases: Source[] = [
         {},
+        {
+          assetsInclude: 'json5',
+        },
+        {
+          assetsInclude: /\.json5$/,
+        },
+        {
+          assetsInclude: [/\.json5$/, /\.pdf$/],
+        },
+        {
+          assetsInclude: (value: string) => value.endsWith('.json5'),
+        },
+        {
+          assetsInclude: {
+            not: /\.json5$/,
+          },
+        },
         { decorators: {} },
         { decorators: { version: '2022-03' } },
         { decorators: { version: 'legacy' } },
@@ -1879,6 +1896,12 @@ describe('Config Validation', () => {
             { not: /core-js/ },
           ],
         },
+        {
+          preEntry: './src/polyfill.ts',
+        },
+        {
+          preEntry: ['./src/polyfill-a.ts', './src/polyfill-b.ts'],
+        },
         { transformImport: [] },
         {
           transformImport: [
@@ -1902,23 +1925,6 @@ describe('Config Validation', () => {
               transformToDefaultImport: true,
             },
           ],
-        },
-        {
-          assetsInclude: 'json5',
-        },
-        {
-          assetsInclude: /\.json5$/,
-        },
-        {
-          assetsInclude: [/\.json5$/, /\.pdf$/],
-        },
-        {
-          assetsInclude: (value: string) => value.endsWith('.json5'),
-        },
-        {
-          assetsInclude: {
-            not: /\.json5$/,
-          },
         },
       ]
 
@@ -2129,6 +2135,16 @@ describe('Config Validation', () => {
           Invalid config on \`$input.source.include[0].and\`.
             - Expect to be (RuleSetConditions | undefined)
             - Got: object
+          ]
+        `)
+
+      expect(() => validate({ source: { preEntry: true } }))
+        .toThrowErrorMatchingInlineSnapshot(`
+          [Error: Invalid configuration.
+
+          Invalid config on \`$input.source.preEntry\`.
+            - Expect to be (Array<string> | string | undefined)
+            - Got: boolean
           ]
         `)
 

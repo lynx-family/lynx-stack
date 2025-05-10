@@ -280,6 +280,7 @@ export interface Source {
     entry?: Entry | undefined;
     exclude?: Rspack.RuleSetCondition[] | undefined;
     include?: Rspack.RuleSetCondition[] | undefined;
+    preEntry?: string | string[] | undefined;
     transformImport?: TransformImport[] | undefined;
     tsconfigPath?: string | undefined;
 }

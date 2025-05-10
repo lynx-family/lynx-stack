@@ -803,5 +803,34 @@ describe('Config - toRsBuildConfig', () => {
         }
       `)
     })
+
+    test('source.preEntry string', () => {
+      const rsbuildConfig = toRsbuildConfig({
+        source: {
+          preEntry: './src/polyfill.ts',
+        },
+      })
+
+      expect(rsbuildConfig.source?.preEntry).toMatchInlineSnapshot(
+        `"./src/polyfill.ts"`,
+      )
+    })
+
+    test('source.preEntry string[]', () => {
+      const rsbuildConfig = toRsbuildConfig({
+        source: {
+          preEntry: ['./src/polyfill-a.ts', './src/polyfill-b.ts'],
+        },
+      })
+
+      expect(rsbuildConfig.source?.preEntry).toMatchInlineSnapshot(
+        `
+        [
+          "./src/polyfill-a.ts",
+          "./src/polyfill-b.ts",
+        ]
+      `,
+      )
+    })
   })
 })

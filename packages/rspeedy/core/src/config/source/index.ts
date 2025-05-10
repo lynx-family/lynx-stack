@@ -430,6 +430,29 @@ export interface Source {
   include?: Rspack.RuleSetCondition[] | undefined
 
   /**
+   * Add a script before the entry file of each page. This script will be executed before the page code.
+   * It can be used to execute global logics, such as injecting polyfills, setting global styles, etc.
+   *
+   * @remarks
+   *
+   * See {@link https://rsbuild.dev/config/source/pre-entry | source.preEntry} for more details.
+   *
+   * @example
+   *
+   * Relative path will be resolved relative to the project root directory.
+   *
+   * ```js
+   * import { defineConfig } from '@lynx-js/rspeedy'
+   * export default defineConfig({
+   *   source: {
+   *     preEntry: './src/polyfill.ts',
+   *   },
+   * })
+   * ```
+   */
+  preEntry?: string | string[] | undefined
+
+  /**
    * The {@link TransformImport} option transforms the import paths to enable modular imports from subpaths of third-party packages, similar to the functionality provided by {@link https://npmjs.com/package/babel-plugin-import | babel-plugin-import}.
    *
    * @example

@@ -68,6 +68,8 @@ export function toRsbuildConfig(
 
       include: config.source?.include,
 
+      preEntry: config.source?.preEntry,
+
       transformImport: config.source?.transformImport,
 
       tsconfigPath: config.source?.tsconfigPath,
