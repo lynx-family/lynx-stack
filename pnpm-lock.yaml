@@ -331,8 +331,8 @@ importers:
         specifier: ^1.1.1
         version: 1.1.1
       rsbuild-plugin-publint:
-        specifier: 0.3.1
-        version: 0.3.1(@rsbuild/core@1.3.18)
+        specifier: 0.3.2
+        version: 0.3.2(@rsbuild/core@1.3.18)
       tiny-invariant:
         specifier: ^1.3.3
         version: 1.3.3
@@ -582,8 +582,8 @@ importers:
         specifier: ^21.1.7
         version: 21.1.7
       rsbuild-plugin-publint:
-        specifier: 0.3.1
-        version: 0.3.1(@rsbuild/core@1.3.18)
+        specifier: 0.3.2
+        version: 0.3.2(@rsbuild/core@1.3.18)
 
   packages/third-party/tailwind-preset:
     devDependencies:
@@ -6683,6 +6683,9 @@ packages:
   package-manager-detector@0.2.11:
     resolution: {integrity: sha512-BEnLolu+yuz22S56CU1SUKq3XC3PkwD5wv4ikR4MfGvnRVcmzXR9DwSlW2fEamyTPyXHomBJRzgapeuBvRNzJQ==}
 
+  package-manager-detector@1.3.0:
+    resolution: {integrity: sha512-ZsEbbZORsyHuO00lY1kV3/t72yp6Ysay6Pd17ZAlNGuGwmWDLCJxFpRs0IzfXfj1o4icJOkUEioexFHzyPurSQ==}
+
   param-case@3.0.4:
     resolution: {integrity: sha512-RXlj7zCYokReqWpOPH9oYivUzLYZ5vAPIfEmCTNViosC78F8F0H9y7T7gG2M39ymgutxF5gcFEsyZQSph9Bp3A==}
 
@@ -7103,8 +7106,8 @@ packages:
   proxy-from-env@1.1.0:
     resolution: {integrity: sha512-D+zkORCbA9f1tdWRK0RaCR3GPv50cMxcrz4X8k5LTSUD1Dkw47mKJEZQNunItRTkWwgtaUSo1RVFRIG9ZXiFYg==}
 
-  publint@0.3.9:
-    resolution: {integrity: sha512-irTwfRfYW38vomkxxoiZQtFtUOQKpz5m0p9Z60z4xpXrl1KmvSrX1OMARvnnolB5usOXeNfvLj6d/W3rwXKfBQ==}
+  publint@0.3.12:
+    resolution: {integrity: sha512-1w3MMtL9iotBjm1mmXtG3Nk06wnq9UhGNRpQ2j6n1Zq7YAD6gnxMMZMIxlRPAydVjVbjSm+n0lhwqsD1m4LD5w==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -7392,8 +7395,8 @@ packages:
       typescript:
         optional: true
 
-  rsbuild-plugin-publint@0.3.1:
-    resolution: {integrity: sha512-oBeem58KQa9LDWjRAsUZjoOzmw53X/EeIOKE+swG8pudVRSR0a9FSGNvLMJdZCmB3iw1d+brmGeJlnDi81mthQ==}
+  rsbuild-plugin-publint@0.3.2:
+    resolution: {integrity: sha512-vFqPvierA+ePsVouf05RDIMbsPoylDxveLTK+FS8mFxpFij9mM7uHl/8YQCbGOPpoY1qeykfkIEKZroXMuSU3A==}
     peerDependencies:
       '@rsbuild/core': 1.x
     peerDependenciesMeta:
@@ -15247,6 +15250,8 @@ snapshots:
     dependencies:
       quansync: 0.2.10
 
+  package-manager-detector@1.3.0: {}
+
   param-case@3.0.4:
     dependencies:
       dot-case: 3.0.4
@@ -15616,10 +15621,10 @@ snapshots:
 
   proxy-from-env@1.1.0: {}
 
-  publint@0.3.9:
+  publint@0.3.12:
     dependencies:
       '@publint/pack': 0.1.2
-      package-manager-detector: 0.2.11
+      package-manager-detector: 1.3.0
       picocolors: 1.1.1
       sade: 1.8.1
 
@@ -15995,10 +16000,10 @@ snapshots:
       '@microsoft/api-extractor': 7.52.7(@types/node@22.15.3)
       typescript: 5.8.3
 
-  rsbuild-plugin-publint@0.3.1(@rsbuild/core@1.3.18):
+  rsbuild-plugin-publint@0.3.2(@rsbuild/core@1.3.18):
     dependencies:
       picocolors: 1.1.1
-      publint: 0.3.9
+      publint: 0.3.12
     optionalDependencies:
       '@rsbuild/core': 1.3.18
 
