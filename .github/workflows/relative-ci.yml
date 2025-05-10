@@ -21,6 +21,9 @@ jobs:
           - path: ./packages/web-platform/web-explorer
             name: web-explorer
             key: RELATIVE_CI_PROJECT_WEB_EXPLORER_KEY
+          - path: ./packages/rspeedy/core
+            name: rspeedy
+            key: RELATIVE_CI_PROJECT_RSPEEDY_CORE_KEY
     runs-on: lynx-ubuntu-24.04-medium
     name: Upload ${{ matrix.project.name }}
     env:
