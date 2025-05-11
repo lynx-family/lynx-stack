@@ -98,6 +98,47 @@ describe('rspeedy config test', () => {
       }),
     )
   })
+
+  describe('buildCache', () => {
+    test('buildCache: true', async () => {
+      const { init } = await import('../../src/cli/init.js')
+
+      const { rspeedyConfig } = await init(
+        join(fixturesRoot, 'build-cache'),
+        {},
+      )
+
+      expect(rspeedyConfig).toStrictEqual({
+        performance: {
+          buildCache: {
+            buildDependencies: [
+              join(fixturesRoot, 'build-cache', 'lynx.config.js'),
+            ],
+          },
+        },
+      })
+    })
+
+    test('buildCache.buildDependencies', async () => {
+      const { init } = await import('../../src/cli/init.js')
+
+      const { rspeedyConfig } = await init(
+        join(fixturesRoot, 'build-cache'),
+        { config: './build-dependencies.js' },
+      )
+
+      expect(rspeedyConfig).toStrictEqual({
+        performance: {
+          buildCache: {
+            buildDependencies: [
+              './foo.js',
+              join(fixturesRoot, 'build-cache', './build-dependencies.js'),
+            ],
+          },
+        },
+      })
+    })
+  })
 })
 
 describe('rspeedy environment test', () => {

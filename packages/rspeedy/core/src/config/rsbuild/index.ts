@@ -87,6 +87,8 @@ export function toRsbuildConfig(
     },
     plugins: config.plugins,
     performance: {
+      buildCache: config.performance?.buildCache,
+
       chunkSplit: config.performance?.chunkSplit,
 
       profile: config.performance?.profile,

@@ -20,6 +20,13 @@ import { rspack } from '@rsbuild/core';
 import type { ToolsConfig } from '@rsbuild/core';
 import type { WatchFiles } from '@rsbuild/core';
 
+// @beta
+export interface BuildCache {
+    buildDependencies?: string[];
+    cacheDigest?: Array<string | undefined>;
+    cacheDirectory?: string;
+}
+
 // @public
 export interface ChunkSplit {
     override?: Rspack.Configuration extends {
@@ -232,6 +239,8 @@ export interface Output {
 
 // @public
 export interface Performance {
+    // @beta
+    buildCache?: BuildCache | boolean | undefined;
     chunkSplit?: ChunkSplit | ChunkSplitBySize | ChunkSplitCustom | undefined;
     printFileSize?: PerformanceConfig['printFileSize'] | undefined;
     profile?: boolean | undefined;
