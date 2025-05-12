@@ -106,7 +106,7 @@ jobs:
     with:
       runs-on: lynx-ubuntu-24.04-medium
       run: |
-        turbo api-extractor -- --local
+        pnpm turbo api-extractor -- --local
         if test "$(git diff -- './packages/**/*.api.md' --name-only | wc -l)" -gt 0 ; then
           echo "Following API reports have changed:"  >> $GITHUB_STEP_SUMMARY;
           echo "$(git diff -- './packages/**/*.api.md' --name-only)" >> $GITHUB_STEP_SUMMARY;
