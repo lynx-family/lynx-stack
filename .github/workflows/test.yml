@@ -101,8 +101,6 @@ jobs:
   test-api:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
-    secrets:
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
       runs-on: lynx-ubuntu-24.04-medium
       run: |
