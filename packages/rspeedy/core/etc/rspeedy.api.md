@@ -22,9 +22,9 @@ import type { WatchFiles } from '@rsbuild/core';
 
 // @beta
 export interface BuildCache {
-    buildDependencies?: string[];
-    cacheDigest?: Array<string | undefined>;
-    cacheDirectory?: string;
+    buildDependencies?: string[] | undefined;
+    cacheDigest?: Array<string | undefined> | undefined;
+    cacheDirectory?: string | undefined;
 }
 
 // @public
