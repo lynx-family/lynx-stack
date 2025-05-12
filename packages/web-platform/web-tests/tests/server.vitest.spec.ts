@@ -1,4 +1,4 @@
-import { test, bench, expect, describe } from 'vitest';
+import { test, expect, describe } from 'vitest';
 import { createLynxView } from '@lynx-js/web-core-server';
 import path from 'node:path';
 import { readFile } from 'fs/promises';
@@ -15,19 +15,22 @@ async function readTemplate(name: string) {
   return rawTemplate as any;
 }
 describe('server-tests', () => {
-  bench('basic-performance-div-10000', async () => {
-    const rawTemplate = await readTemplate('basic-performance-div-10000');
+  test('basic-performance-div-10000', async ({ task }) => {
+    const testName = task.name;
+    const rawTemplate = await readTemplate(testName);
     const lynxView = createLynxView({
       browserConfig: {
         pixelRatio: 1,
-        pixelWidth: 600,
         pixelHeight: 800,
+        pixelWidth: 375,
       },
       tagMap: {},
       initData: {},
       globalProps: {},
       template: rawTemplate,
     });
+
     const html = await lynxView.renderToString();
+    expect(html).toMatchSnapshot();
   });
 });
