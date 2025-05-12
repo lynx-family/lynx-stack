@@ -11,7 +11,6 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 
 import { BackgroundSnapshotInstance } from '../../src/backgroundSnapshot';
 import { setupBackgroundDocument } from '../../src/document';
-import { replaceRequestAnimationFrame } from '../../src/lifecycle/patch/commit';
 import { useLynxGlobalEventListener } from '../../src/lynx-api';
 import { SnapshotInstance, backgroundSnapshotInstanceManager, setupPage } from '../../src/snapshot';
 import { backgroundSnapshotInstanceToJSON } from '../utils/debug.js';
@@ -24,7 +23,6 @@ describe('useLynxGlobalEventListener', () => {
 
   beforeAll(() => {
     setupBackgroundDocument();
-    replaceRequestAnimationFrame();
     setupPage(__CreatePage('0', 0));
 
     BackgroundSnapshotInstance.prototype.toJSON = backgroundSnapshotInstanceToJSON;

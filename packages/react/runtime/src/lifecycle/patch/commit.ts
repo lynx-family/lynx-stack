@@ -228,14 +228,6 @@ function clearCommitTaskId(): void {
   nextCommitTaskId = 1;
 }
 
-function replaceRequestAnimationFrame(): void {
-  // to make afterPaintEffects run faster
-  const resolvedPromise = Promise.resolve();
-  options.requestAnimationFrame = (cb: () => void) => {
-    void resolvedPromise.then(cb);
-  };
-}
-
 /**
  * @internal
  */
@@ -247,7 +239,6 @@ export {
   globalCommitTaskMap,
   globalFlushOptions,
   replaceCommitHook,
-  replaceRequestAnimationFrame,
   type PatchList,
   type PatchOptions,
 };
