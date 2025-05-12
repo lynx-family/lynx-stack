@@ -14,9 +14,9 @@ async function readTemplate(name: string) {
   const rawTemplate = JSON.parse(file);
   return rawTemplate as any;
 }
+const rawTemplate = await readTemplate('basic-performance-div-10000');
 describe('server-tests', () => {
   bench('basic-performance-div-10000', async () => {
-    const rawTemplate = await readTemplate('basic-performance-div-10000');
     const lynxView = createLynxView({
       browserConfig: {
         pixelRatio: 1,
@@ -28,6 +28,6 @@ describe('server-tests', () => {
       globalProps: {},
       template: rawTemplate,
     });
-    const html = await lynxView.renderToString();
+    await lynxView.renderToString();
   });
 });
