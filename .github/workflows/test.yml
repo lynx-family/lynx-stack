@@ -98,6 +98,30 @@ jobs:
         export ALL_ON_UI=true
         pnpm --filter @lynx-js/web-tests run test --reporter='github,dot,junit,html'
         pnpm --filter @lynx-js/web-tests run coverage:ci
+  test-api:
+    needs: build
+    uses: ./.github/workflows/workflow-test.yml
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    with:
+      runs-on: lynx-ubuntu-24.04-medium
+      run: |
+        turbo api-extractor -- --local
+        if test "$(git diff -- './packages/**/*.api.md' --name-only | wc -l)" -gt 0 ; then
+          echo "Following API reports have changed:"  >> $GITHUB_STEP_SUMMARY;
+          echo "$(git diff -- './packages/**/*.api.md' --name-only)" >> $GITHUB_STEP_SUMMARY;
+          echo "" >> $GITHUB_STEP_SUMMARY;
+          echo "You should run 'turbo api-extractor -- --local' to update the api reports" >> $GITHUB_STEP_SUMMARY;
+          exit 1;
+        fi
+        git add --intent-to-add .
+        if test "$(git diff -- './packages/**/*.api.md' --name-only | wc -l)" -gt 0 ; then
+          echo "Following API reports have changed:"  >> $GITHUB_STEP_SUMMARY;
+          echo "$(git diff -- './packages/**/*.api.md' --name-only)" >> $GITHUB_STEP_SUMMARY;
+          echo "" >> $GITHUB_STEP_SUMMARY;
+          echo "You should run 'turbo api-extractor -- --local' to update the api reports" >> $GITHUB_STEP_SUMMARY;
+          exit 1;
+        fi
   test-publish:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
@@ -193,6 +217,7 @@ jobs:
       - code-style-check
       - playwright-linux
       - playwright-linux-all-on-ui
+      - test-api
       - test-publish
       - test-react
       - test-rust
