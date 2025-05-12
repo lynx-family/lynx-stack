@@ -10,7 +10,7 @@ export function commonConfig(
 ): Parameters<typeof defineConfig>[0] {
   return {
     plugins: [
-      pluginReactLynx(reactlynxConfigs),
+      pluginReactLynx({ enableSSR: true, ...reactlynxConfigs }),
     ],
     output: {
       filename: '[name]/index.[platform].json',
