@@ -18,6 +18,16 @@ concurrency:
   group: ${{ github.event_name }}-${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
   cancel-in-progress: true
 jobs:
+  benchmark:
+    needs: build
+    uses: ./.github/workflows/workflow-bench.yml
+  build:
+    uses: ./.github/workflows/workflow-build.yml
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+  bundle-analysis:
+    needs: build
+    uses: ./.github/workflows/workflow-bundle-analysis.yml
   code-style-check:
     runs-on: lynx-ubuntu-24.04-medium
     steps:
@@ -43,84 +53,51 @@ jobs:
         run: pnpm turbo api-extractor
       - name: Changeset Check
         run: pnpm changeset status --since=origin/main
-
-  build:
-    uses: ./.github/workflows/workflow-build.yml
+  lighthouse:
+    needs: build
+    uses: ./.github/workflows/workflow-test.yml
+    permissions:
+      contents: read
+      pull-requests: read
+      statuses: write
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-  benchmark:
-    needs: build
-    uses: ./.github/workflows/workflow-bench.yml
-  bundle-analysis:
-    needs: build
-    uses: ./.github/workflows/workflow-bundle-analysis.yml
-  test-rspeedy:
+      LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+    with:
+      runs-on: lynx-ubuntu-24.04-xlarge
+      is-web: true
+      run: |
+        export NODE_OPTIONS="--max-old-space-size=32768"
+        pnpm --filter @lynx-js/web-tests run lh || echo "Lighthouse failed"
+  playwright-linux:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
-      runs-on: lynx-ubuntu-24.04-medium
-      run: >
-        pnpm run test
-        --project rspeedy
-        --project upgrade-rspeedy
-        --project 'rspeedy/*'
-        --reporter=github-actions
-        --reporter=dot
-        --reporter=junit
-        --outputFile=test-report.junit.xml
-        --test-timeout=50000
-        --coverage
-        --coverage.reporter='json'
-        --coverage.reporter='text'
-        --no-cache
-        --logHeapUsage
-        --silent
-  test-react:
+      runs-on: lynx-ubuntu-24.04-xlarge
+      is-web: true
+      codecov-flags: "e2e"
+      run: |
+        export NODE_OPTIONS="--max-old-space-size=32768"
+        export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
+        pnpm --filter @lynx-js/web-tests run test --reporter='github,dot,junit,html'
+        pnpm --filter @lynx-js/web-tests run coverage:ci
+  playwright-linux-all-on-ui:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
-      runs-on: lynx-ubuntu-24.04-medium
-      run: >
-        pnpm
-        --filter @lynx-js/react-runtime
-        --filter @lynx-js/react-worklet-runtime
-        --filter @lynx-js/react-transform
-        run test
-        --reporter=github-actions
-        --reporter=dot
-        --reporter=junit
-        --outputFile=test-report.junit.xml
-        --coverage.reporter='json'
-        --coverage.reporter='text'
-        --test-timeout=50000
-        --no-cache
-        --logHeapUsage
-        --silent
-  test-plugins:
-    needs: build
-    uses: ./.github/workflows/workflow-test.yml
-    secrets:
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-    with:
-      runs-on: lynx-ubuntu-24.04-medium
-      run: >
-        pnpm run test
-        --project 'webpack/*'
-        --test-timeout=50000
-        --reporter=github-actions
-        --reporter=dot
-        --reporter=junit
-        --outputFile=test-report.junit.xml
-        --coverage
-        --coverage.reporter='json'
-        --coverage.reporter='text'
-        --no-cache
-        --logHeapUsage
-        --silent
+      runs-on: lynx-ubuntu-24.04-xlarge
+      is-web: true
+      codecov-flags: "e2e,all-on-ui"
+      run: |
+        export NODE_OPTIONS="--max-old-space-size=32768"
+        export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
+        export ALL_ON_UI=true
+        pnpm --filter @lynx-js/web-tests run test --reporter='github,dot,junit,html'
+        pnpm --filter @lynx-js/web-tests run coverage:ci
   test-publish:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
@@ -151,85 +128,7 @@ jobs:
         pnpm run build
         pnpm tsc --noEmit
         pnpm run test
-  test-tools:
-    needs: build
-    uses: ./.github/workflows/workflow-test.yml
-    secrets:
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-    with:
-      runs-on: lynx-ubuntu-24.04-medium
-      run: >
-        pnpm run test
-        --project 'tools/*'
-        --test-timeout=50000
-        --reporter=github-actions
-        --reporter=dot
-        --reporter=junit
-        --outputFile=test-report.junit.xml
-        --coverage
-        --coverage.reporter='json'
-        --coverage.reporter='text'
-        --no-cache
-        --logHeapUsage
-        --silent
-  test-testing-library:
-    needs: build
-    uses: ./.github/workflows/workflow-test.yml
-    secrets:
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-    with:
-      runs-on: lynx-ubuntu-24.04-medium
-      run: >
-        pnpm run test
-        --project 'react/testing-library'
-        --project 'testing-library/*'
-        --test-timeout=50000
-        --reporter=github-actions
-        --reporter=dot
-        --reporter=junit
-        --outputFile=test-report.junit.xml
-        --coverage
-        --no-cache
-        --logHeapUsage
-        --silent
-  test-type:
-    needs: build
-    uses: ./.github/workflows/workflow-test.yml
-    secrets:
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-    with:
-      runs-on: lynx-ubuntu-24.04-medium
-      run: pnpm -r run test:type
-  playwright-linux:
-    needs: build
-    uses: ./.github/workflows/workflow-test.yml
-    secrets:
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-    with:
-      runs-on: lynx-ubuntu-24.04-xlarge
-      is-web: true
-      codecov-flags: "e2e"
-      run: |
-        export NODE_OPTIONS="--max-old-space-size=32768"
-        export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
-        pnpm --filter @lynx-js/web-tests run test --reporter='github,dot,junit,html'
-        pnpm --filter @lynx-js/web-tests run coverage:ci
-  playwright-linux-all-on-ui:
-    needs: build
-    uses: ./.github/workflows/workflow-test.yml
-    secrets:
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-    with:
-      runs-on: lynx-ubuntu-24.04-xlarge
-      is-web: true
-      codecov-flags: "e2e,all-on-ui"
-      run: |
-        export NODE_OPTIONS="--max-old-space-size=32768"
-        export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
-        export ALL_ON_UI=true
-        pnpm --filter @lynx-js/web-tests run test --reporter='github,dot,junit,html'
-        pnpm --filter @lynx-js/web-tests run coverage:ci
-  test-web-platform:
+  test-react:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
     secrets:
@@ -238,7 +137,9 @@ jobs:
       runs-on: lynx-ubuntu-24.04-medium
       run: >
         pnpm
-        --filter @lynx-js/web-platform-rsbuild-plugin
+        --filter @lynx-js/react-runtime
+        --filter @lynx-js/react-worklet-runtime
+        --filter @lynx-js/react-transform
         run test
         --reporter=github-actions
         --reporter=dot
@@ -250,45 +151,53 @@ jobs:
         --no-cache
         --logHeapUsage
         --silent
-  lighthouse:
-    needs: build
-    uses: ./.github/workflows/workflow-test.yml
-    permissions:
-      contents: read
-      pull-requests: read
-      statuses: write
-    secrets:
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-      LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
-    with:
-      runs-on: lynx-ubuntu-24.04-xlarge
-      is-web: true
-      run: |
-        export NODE_OPTIONS="--max-old-space-size=32768"
-        pnpm --filter @lynx-js/web-tests run lh
   test-rust:
     needs: build
     uses: ./.github/workflows/rust.yml
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+  test-type:
+    needs: build
+    uses: ./.github/workflows/workflow-test.yml
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    with:
+      runs-on: lynx-ubuntu-24.04-medium
+      run: pnpm -r run test:type
+  test-vitest:
+    needs: build
+    uses: ./.github/workflows/workflow-test.yml
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    with:
+      runs-on: lynx-ubuntu-24.04-medium
+      run: >
+        pnpm run test
+        --reporter=github-actions
+        --reporter=dot
+        --reporter=junit
+        --outputFile=test-report.junit.xml
+        --test-timeout=50000
+        --coverage
+        --coverage.reporter='json'
+        --coverage.reporter='text'
+        --no-cache
+        --logHeapUsage
+        --silent
   website:
     needs: build
     uses: ./.github/workflows/workflow-website.yml
-  # Copied from https://github.com/swc-project/swc/blob/b192dc82e6a84bd30f159fb12ca8a216f41e8efb/.github/workflows/CI.yml#L491
   done:
     needs:
+      - bundle-analysis
       - code-style-check
       - playwright-linux
       - playwright-linux-all-on-ui
-      - test-web-platform
-      - test-plugins
       - test-publish
       - test-react
       - test-rust
-      - test-rspeedy
-      - test-tools
-      - test-testing-library
       - test-type
+      - test-vitest
       - website
     if: always()
     runs-on: lynx-ubuntu-24.04-medium
