@@ -27,6 +27,7 @@ export default defineConfig({
   globalTimeout: 20 * 60 * 1000,
   testDir: './tests',
   testMatch: ALL_ON_UI ? '**/{react,web-core}.{test,spec}.ts' : undefined,
+  testIgnore: '**vitest**',
   /* Run tests in files in parallel */
   fullyParallel: true,
   workers: isCI ? workerLimit : undefined,
