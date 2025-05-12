@@ -106,18 +106,26 @@ jobs:
       run: |
         pnpm turbo api-extractor -- --local
         if test "$(git diff -- './packages/**/*.api.md' --name-only | wc -l)" -gt 0 ; then
-          echo "Following API reports have changed:"  >> $GITHUB_STEP_SUMMARY;
-          echo "$(git diff -- './packages/**/*.api.md' --name-only)" >> $GITHUB_STEP_SUMMARY;
-          echo "" >> $GITHUB_STEP_SUMMARY;
-          echo "You should run 'turbo api-extractor -- --local' to update the api reports" >> $GITHUB_STEP_SUMMARY;
+          echo "API Report Changes Detected"
+          echo "The following API reports have changed:"
+          git diff -- './packages/**/*.api.md' --name-only
+          echo "Please run 'turbo api-extractor -- --local' to update them."
+          echo ""
+          git diff -- './packages/**/*.api.md' --name-only | while read file; do
+            echo "::error file=$file::API report needs to be updated"
+          done
           exit 1;
         fi
         git add --intent-to-add .
         if test "$(git diff -- './packages/**/*.api.md' --name-only | wc -l)" -gt 0 ; then
-          echo "Following API reports have changed:"  >> $GITHUB_STEP_SUMMARY;
-          echo "$(git diff -- './packages/**/*.api.md' --name-only)" >> $GITHUB_STEP_SUMMARY;
-          echo "" >> $GITHUB_STEP_SUMMARY;
-          echo "You should run 'turbo api-extractor -- --local' to update the api reports" >> $GITHUB_STEP_SUMMARY;
+          echo "API Report Changes Detected"
+          echo "The following API reports have changed:"
+          git diff -- './packages/**/*.api.md' --name-only
+          echo "Please run 'turbo api-extractor -- --local' to update them."
+          echo ""
+          git diff -- './packages/**/*.api.md' --name-only | while read file; do
+            echo "::error file=$file::API report needs to be updated"
+          done
           exit 1;
         fi
   test-publish:
