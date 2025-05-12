@@ -27,7 +27,7 @@
   },
   "devDependencies": {
     "@lynx-js/types": "^3.2.1",
-    "postcss": "^8.4.35",
+    "postcss": "^8.5.3",
     "tailwindcss": "^3.4.17"
   }
 }

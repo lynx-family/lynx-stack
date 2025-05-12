@@ -9,6 +9,9 @@ export default defineConfig({
       syntax: 'es2022',
       dts: { bundle: true },
       plugins: [pluginTypia()],
+      performance: {
+        profile: !!process.env.RSPEEDY_BUNDLE_ANALYSIS,
+      },
     },
     {
       format: 'esm',

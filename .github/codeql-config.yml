@@ -1,0 +1,6 @@
+paths-ignore:
+  - "**/node_modules"
+  - "packages/rspeedy/core/test/**"
+  - "packages/rspeedy/create-rspeedy/template-react-js/src/index.js"
+  - "packages/webpack/react-refresh-webpack-plugin/test/hotCases/**"
+  - "packages/webpack/test-tools/update.js"

@@ -55,6 +55,43 @@ export interface CreateRspeedyOptions {
    * @defaultValue []
    */
   environment?: CreateRsbuildOptions['environment']
+
+  /**
+   * The name of the framework or tool that is currently invoking Rsbuild.
+   * This allows plugins to tailor their behavior based on the calling context.
+   *
+   * @example
+   *
+   * Rsbuild plugins can access this value via `api.context.callerName`.
+   *
+   * ```js
+   * export function myPlugin() {
+   *   return {
+   *     name: 'my-plugin',
+   *     setup(api) {
+   *       // Log the name of the tool invoking Rsbuild
+   *       console.log(`Called by: ${api.context.callerName}`);
+   *
+   *       // Conditionally apply plugin logic based on caller
+   *       if (api.context.callerName === 'rspeedy') {
+   *         api.modifyRsbuildConfig((config) => {
+   *           // Apply rspeedy-specific config changes
+   *           return config;
+   *         });
+   *       } else if (api.context.callerName === 'rslib') {
+   *         api.modifyRsbuildConfig((config) => {
+   *           // Apply rslib-specific config changes
+   *           return config;
+   *         });
+   *       }
+   *     }
+   *   };
+   * }
+   * ```
+   *
+   * @defaultValue 'rspeedy'
+   */
+  callerName?: string
 }
 /**
  * The `createRspeedy` method can let you create a Rspeedy instance and you can customize the build or development process in Node.js Runtime.
@@ -76,8 +113,13 @@ export interface CreateRspeedyOptions {
  * @public
  */
 export async function createRspeedy(
-  { cwd = process.cwd(), rspeedyConfig = {}, loadEnv = true, environment = [] }:
-    CreateRspeedyOptions,
+  {
+    cwd = process.cwd(),
+    rspeedyConfig = {},
+    loadEnv = true,
+    environment = [],
+    callerName = 'rspeedy',
+  }: CreateRspeedyOptions,
 ): Promise<RspeedyInstance> {
   const config = applyDefaultRspeedyConfig(rspeedyConfig)
 
@@ -87,6 +129,7 @@ export async function createRspeedy(
       loadEnv,
       rsbuildConfig: toRsbuildConfig(config) as RsbuildConfig,
       environment,
+      callerName,
     }),
     import('./plugins/index.js'),
   ])

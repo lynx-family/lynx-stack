@@ -8,6 +8,9 @@
       "dependsOn": [
         "^build"
       ],
+      "env": [
+        "RSPEEDY_BUNDLE_ANALYSIS"
+      ],
       "inputs": [
         "register",
         "src",
