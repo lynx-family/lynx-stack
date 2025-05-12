@@ -38,4 +38,4 @@ jobs:
       - name: Run benchmark
         run: |
           . "$HOME/.cargo/env"
-          codspeed run -- pnpm -r run bench
+          codspeed run --workspace-concurrency 1 -- pnpm -r run bench

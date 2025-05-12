@@ -1,0 +1,17 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "composite": true,
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "lib": ["ESNext", "WebWorker"],
+    "exactOptionalPropertyTypes": true,
+  },
+  "include": ["src"],
+  "references": [
+    { "path": "../web-constants/tsconfig.json" },
+    { "path": "../web-worker-rpc/tsconfig.json" },
+    { "path": "../web-worker-runtime/tsconfig.json" },
+    { "path": "../offscreen-document/tsconfig.json" },
+  ],
+}

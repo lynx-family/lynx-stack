@@ -11,7 +11,7 @@ export interface WorkerStartMessage {
   toUIThread: MessagePort;
 }
 
-self.onmessage = (ev) => {
+globalThis.onmessage = (ev) => {
   const { mode, toPeerThread, toUIThread } = ev
     .data as WorkerStartMessage;
   if (mode === 'main') {
@@ -23,3 +23,5 @@ self.onmessage = (ev) => {
 Object.assign(globalThis, {
   module: { exports: null },
 });
+
+export { startMainThread };

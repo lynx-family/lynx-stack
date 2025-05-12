@@ -666,6 +666,18 @@ importers:
         specifier: workspace:*
         version: link:../web-elements
 
+  packages/web-platform/web-core-server:
+    devDependencies:
+      '@lynx-js/web-constants':
+        specifier: workspace:*
+        version: link:../web-constants
+      '@lynx-js/web-worker-rpc':
+        specifier: workspace:*
+        version: link:../web-worker-rpc
+      '@lynx-js/web-worker-runtime':
+        specifier: workspace:*
+        version: link:../web-worker-runtime
+
   packages/web-platform/web-elements:
     dependencies:
       '@lynx-js/web-elements-reactive':
@@ -783,6 +795,9 @@ importers:
       '@lynx-js/web-core':
         specifier: workspace:*
         version: link:../web-core
+      '@lynx-js/web-core-server':
+        specifier: workspace:*
+        version: link:../web-core-server
       '@lynx-js/web-elements':
         specifier: workspace:*
         version: link:../web-elements
