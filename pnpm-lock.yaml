@@ -307,8 +307,8 @@ importers:
         specifier: catalog:rsbuild
         version: 1.3.0(@rsbuild/core@1.3.18)(@rspack/core@1.3.9(@swc/helpers@0.5.17))
       '@samchon/openapi':
-        specifier: 4.2.0
-        version: 4.2.0
+        specifier: 4.3.0
+        version: 4.3.0
       chokidar:
         specifier: ^4.0.3
         version: 4.0.3
@@ -343,11 +343,11 @@ importers:
         specifier: ^4.41.0
         version: 4.41.0
       typia:
-        specifier: 9.2.0
-        version: 9.2.0(@samchon/openapi@4.2.0)(typescript@5.8.3)
+        specifier: 9.3.0
+        version: 9.3.0(@samchon/openapi@4.3.0)(typescript@5.8.3)
       typia-rspack-plugin:
         specifier: 2.0.1
-        version: 2.0.1(typescript@5.8.3)(typia@9.2.0(@samchon/openapi@4.2.0)(typescript@5.8.3))
+        version: 2.0.1(typescript@5.8.3)(typia@9.3.0(@samchon/openapi@4.3.0)(typescript@5.8.3))
       vitest:
         specifier: ^3.1.3
         version: 3.1.3(@types/debug@4.1.12)(@types/node@22.15.17)(@vitest/ui@3.1.3)(jsdom@26.1.0)(sass-embedded@1.86.0)(terser@5.31.6)
@@ -453,8 +453,8 @@ importers:
         specifier: catalog:rsbuild
         version: 1.3.0(@rsbuild/core@1.3.18)(@rspack/core@1.3.9(@swc/helpers@0.5.17))
       '@samchon/openapi':
-        specifier: 4.2.0
-        version: 4.2.0
+        specifier: 4.3.0
+        version: 4.3.0
       tailwindcss:
         specifier: ^3.4.17
         version: 3.4.17
@@ -462,11 +462,11 @@ importers:
         specifier: ^4.41.0
         version: 4.41.0
       typia:
-        specifier: 9.2.0
-        version: 9.2.0(@samchon/openapi@4.2.0)(typescript@5.8.3)
+        specifier: 9.3.0
+        version: 9.3.0(@samchon/openapi@4.3.0)(typescript@5.8.3)
       typia-rspack-plugin:
         specifier: 2.0.1
-        version: 2.0.1(typescript@5.8.3)(typia@9.2.0(@samchon/openapi@4.2.0)(typescript@5.8.3))
+        version: 2.0.1(typescript@5.8.3)(typia@9.3.0(@samchon/openapi@4.3.0)(typescript@5.8.3))
 
   packages/rspeedy/plugin-react-alias:
     dependencies:
@@ -3024,8 +3024,8 @@ packages:
   '@rushstack/ts-command-line@5.0.1':
     resolution: {integrity: sha512-bsbUucn41UXrQK7wgM8CNM/jagBytEyJqXw/umtI8d68vFm1Jwxh1OtLrlW7uGZgjCWiiPH6ooUNa1aVsuVr3Q==}
 
-  '@samchon/openapi@4.2.0':
-    resolution: {integrity: sha512-OIgKBbUtWf0bcv3PRGwm1CbOeZsVC8qGE0H7xXEtUwqbin9O3czhWf9jxP90GGEw55joNJyV2fXZ3eWBm45O5g==}
+  '@samchon/openapi@4.3.0':
+    resolution: {integrity: sha512-PdagymZCUCPmhtfriO+6xYRulds2hgo1ec0LduPFEAOWkZ4viM15iRuEa5wkm9DkDRF/oaMiC+dOgXefmOFZAA==}
 
   '@selderee/plugin-htmlparser2@0.11.0':
     resolution: {integrity: sha512-P33hHGdldxGabLFjPPpaTxVolMrzrcegejx+0GxjrIb9Zv48D8yAIA/QTDR2dFl7Uz7urX8aX6+5bCZslr+gWQ==}
@@ -8232,11 +8232,11 @@ packages:
       typescript: '*'
       typia: '*'
 
-  typia@9.2.0:
-    resolution: {integrity: sha512-XvLnH32MziXohOopp7hgxK5BqAXTOSUh0kNdmau9lDwWzs1kA9l/jy3rS5y/AVyKPwBG4dO/9DmBKpe3AqJpSw==}
+  typia@9.3.0:
+    resolution: {integrity: sha512-srQSYteGIrMiM36y/8MfqrCYA2RWyk4Bb7Xrlk3Ywfpc7AmmzcxwZkPuC4xOkI1IwRfjkhM7k4wviRb6WtW46g==}
     hasBin: true
     peerDependencies:
-      '@samchon/openapi': '>=4.2.0 <5.0.0'
+      '@samchon/openapi': '>=4.3.0 <5.0.0'
       typescript: '>=4.8.0 <5.9.0'
 
   unbox-primitive@1.0.2:
@@ -10781,7 +10781,7 @@ snapshots:
     transitivePeerDependencies:
       - '@types/node'
 
-  '@samchon/openapi@4.2.0': {}
+  '@samchon/openapi@4.3.0': {}
 
   '@selderee/plugin-htmlparser2@0.11.0':
     dependencies:
@@ -16875,15 +16875,15 @@ snapshots:
 
   typescript@5.8.3: {}
 
-  typia-rspack-plugin@2.0.1(typescript@5.8.3)(typia@9.2.0(@samchon/openapi@4.2.0)(typescript@5.8.3)):
+  typia-rspack-plugin@2.0.1(typescript@5.8.3)(typia@9.3.0(@samchon/openapi@4.3.0)(typescript@5.8.3)):
     dependencies:
       typescript: 5.8.3
-      typia: 9.2.0(@samchon/openapi@4.2.0)(typescript@5.8.3)
+      typia: 9.3.0(@samchon/openapi@4.3.0)(typescript@5.8.3)
       unplugin: 2.3.2
 
-  typia@9.2.0(@samchon/openapi@4.2.0)(typescript@5.8.3):
+  typia@9.3.0(@samchon/openapi@4.3.0)(typescript@5.8.3):
     dependencies:
-      '@samchon/openapi': 4.2.0
+      '@samchon/openapi': 4.3.0
       '@standard-schema/spec': 1.0.0
       commander: 10.0.1
       comment-json: 4.2.5
