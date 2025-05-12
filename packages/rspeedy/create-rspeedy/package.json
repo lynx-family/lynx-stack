@@ -35,7 +35,7 @@
     "test": "vitest"
   },
   "dependencies": {
-    "create-rstack": "1.4.2"
+    "create-rstack": "1.4.4"
   },
   "devDependencies": {
     "@lynx-js/qrcode-rsbuild-plugin": "workspace:^",
