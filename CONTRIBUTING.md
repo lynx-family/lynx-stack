@@ -137,6 +137,19 @@ You should always commit the change to git.
 
 ## Submitting
 
+### Code Formatting
+
+#### dprint
+
+We use [dprint](https://dprint.dev/install/) for automatic code formatting to maintain a consistent style.
+Please ensure your code is formatted prior to submitting.
+
+Just run:
+
+```sh
+pnpm dprint fmt`
+```
+
 ### Generating changesets
 
 We use [🦋 Changesets](https://github.com/changesets/changesets?tab=readme-ov-file) to manage versioning and changelogs.
@@ -155,11 +168,3 @@ Then commit the generated `.md` file in `.changeset/` and submit a PR on GitHub.
 
 [API Extractor]: https://api-extractor.com/
 [`turborepo`]: https://turbo.build/repo
-
-### Code Formatting
-
-#### dprint
-
-We use [dprint](https://dprint.dev/install/) to automatically format code.
-
-Be sure to run `pnpm dprint fmt` prior to submitting.
