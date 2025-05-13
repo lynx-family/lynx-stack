@@ -15,7 +15,7 @@ _Rust_: This project builds native code (WASM/NAPI) and **requires Rust toolchai
   ```sh
   rustup toolchain install 1.81.0 --profile minimal --target wasm32-unknown-unknown
   ```
-- `rustup` will automatically use the correct `1.81.0` toolchain when you run build commands inside this project, thanks to the `rust-toolchain` file.
+- `rustup` will automatically use the correct toolchain when you run build commands inside this project, thanks to the `rust-toolchain` file.
 
 ### Setup
 
