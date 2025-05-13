@@ -20,8 +20,8 @@ catalogs:
       specifier: 1.3.1
       version: 1.3.1
     '@rsbuild/plugin-webpack-swc':
-      specifier: 1.1.0
-      version: 1.1.0
+      specifier: 1.1.1
+      version: 1.1.1
     '@rsbuild/webpack':
       specifier: 1.3.0
       version: 1.3.0
@@ -448,7 +448,7 @@ importers:
         version: 1.0.2(@rsbuild/core@1.3.19)
       '@rsbuild/plugin-webpack-swc':
         specifier: catalog:rsbuild
-        version: 1.1.0(@rsbuild/core@1.3.19)
+        version: 1.1.1(@rsbuild/core@1.3.19)
       '@rsbuild/webpack':
         specifier: catalog:rsbuild
         version: 1.3.0(@rsbuild/core@1.3.19)(@rspack/core@1.3.10(@swc/helpers@0.5.17))
@@ -2765,8 +2765,8 @@ packages:
       '@rsbuild/core':
         optional: true
 
-  '@rsbuild/plugin-webpack-swc@1.1.0':
-    resolution: {integrity: sha512-94yvMzK5ZoiZ1XX+hz6jG+z+GunsNrBR+7OVFznIcqnttJJgqjF/gOo95j4DpU24G75akDEC7tnlT57eULKe7w==}
+  '@rsbuild/plugin-webpack-swc@1.1.1':
+    resolution: {integrity: sha512-7FIBkHWBaSHvaHyReWWQ7K5GzPIjZ1IcpPSwmNU+IVtMLt7gLGuUkxuPnWllGC7JdwM/PV2GEHxNhmjozgHrVA==}
     peerDependencies:
       '@rsbuild/core': 1.x
 
@@ -4225,9 +4225,6 @@ packages:
 
   core-js-compat@3.41.0:
     resolution: {integrity: sha512-RFsU9LySVue9RTwdDVX/T0e2Y6jRYWXERKElIjpuEOEnxaXffI0X7RUwVzfYLfzuLXSNJDYoRYUAmRUcyln20A==}
-
-  core-js@3.41.0:
-    resolution: {integrity: sha512-SJ4/EHwS36QMJd6h/Rg+GyR4A5xE0FSI3eZ+iBVpfqf1x0eTSg1smWLHrA+2jQThZSh97fmSgFSU8B61nxosxA==}
 
   core-js@3.42.0:
     resolution: {integrity: sha512-Sz4PP4ZA+Rq4II21qkNqOEDTDrCvcANId3xpIgB34NDkWc3UduWj2dqEtN9yZIq8Dk3HyPI33x9sqqU5C8sr0g==}
@@ -10320,12 +10317,12 @@ snapshots:
     optionalDependencies:
       '@rsbuild/core': 1.3.19
 
-  '@rsbuild/plugin-webpack-swc@1.1.0(@rsbuild/core@1.3.19)':
+  '@rsbuild/plugin-webpack-swc@1.1.1(@rsbuild/core@1.3.19)':
     dependencies:
       '@modern-js/swc-plugins': 0.6.11(@swc/helpers@0.5.17)
       '@rsbuild/core': 1.3.19
       '@swc/helpers': 0.5.17
-      core-js: 3.41.0
+      core-js: 3.42.0
       deepmerge: 4.3.1
       lodash: 4.17.21
       picocolors: 1.1.1
@@ -12117,8 +12114,6 @@ snapshots:
   core-js-compat@3.41.0:
     dependencies:
       browserslist: 4.24.4
-
-  core-js@3.41.0: {}
 
   core-js@3.42.0: {}
 
