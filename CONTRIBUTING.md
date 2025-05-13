@@ -27,32 +27,17 @@ pnpm install
 
 ### Building
 
-This project uses a combination of TypeScript, Rust, and custom build tools across multiple packages. A full build requires orchestration using Turborepo.
+* **Full Build (Required for Tests)**
 
-- **Full Workspace Build (Required for Tests):**
-  To perform a complete build of all packages, including compiling Rust code (WASM/NAPI) and running all necessary package-specific build scripts (`rslib`, `rsbuild`, etc.), **use Turborepo**:
-
-  ```sh
-  pnpm exec turbo run build
-  ```
-  _(Note: The existing `pnpm turbo build` command might also work if configured similarly in the root package.json, but `pnpm exec turbo run build` is explicit.)_
-
-  This command respects the dependency graph, handles all necessary compilation steps, and utilizes caching for faster subsequent builds. **This full build is required before running the test suite (`pnpm test`).**
-
-- **TypeScript Compilation Only (Optional):**
-  The `pnpm build` script in the root `package.json` is an alias for `tsc --build`. This command uses TypeScript's [Project References](https://www.typescriptlang.org/docs/handbook/project-references.html#handbook-content) to compile TypeScript files and check types across the workspace.
-
-  ```sh
-  pnpm build
-  ```
-  This command is **not sufficient** for a complete build or for running tests, as it does not handle Rust compilation or other necessary build steps. It might be useful for quick TypeScript-only checks.
-
-- **Build with Watching (TypeScript Only):**
-  To incrementally build TypeScript files on change using `tsc`:
-  ```sh
-  pnpm build --watch
-  ```
-  _(Note: This likely does not watch or rebuild Rust components or run other non-tsc build steps.)_
+    ```sh
+    pnpm turbo build
+    ```
+    
+* **Build with Watching (TypeScript Only)**
+  
+    ```sh
+    pnpm turbo watch build
+    ```
 
 ### Running linting/tests
 
