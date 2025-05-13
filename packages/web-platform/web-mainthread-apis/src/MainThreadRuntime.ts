@@ -215,6 +215,9 @@ export class MainThreadRuntime {
       target[prop] = value;
       return true;
     },
+    ownKeys(target) {
+      return Reflect.ownKeys(target).filter((key) => key !== 'globalThis');
+    },
   });
 
   SystemInfo: typeof systemInfo;

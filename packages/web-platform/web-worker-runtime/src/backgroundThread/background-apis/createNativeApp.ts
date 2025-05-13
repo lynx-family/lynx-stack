@@ -76,6 +76,11 @@ export async function createNativeApp(config: {
             target[prop] = value;
             return true;
           },
+          ownKeys(target) {
+            return Reflect.ownKeys(target).filter((key) =>
+              key !== 'globalThis'
+            );
+          },
         });
         Object.assign(lynxCoreInject.tt, {
           SystemInfo: { ...systemInfo, ...browserConfig },
