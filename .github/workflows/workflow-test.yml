@@ -74,7 +74,7 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           flags: ${{ inputs.codecov-flags }}
-          override_branch: ${{ github.event_name == 'merge_queue' && 'main' || '' }}
+          override_branch: ${{ github.event_name == 'merge_group' && 'main' || '' }}
       - name: Upload Test Result
         if: ${{ inputs.is-web && failure() }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

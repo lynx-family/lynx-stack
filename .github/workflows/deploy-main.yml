@@ -50,7 +50,7 @@ jobs:
   # See: https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/caching-dependencies-to-speed-up-workflows#restrictions-for-accessing-a-cache
   build-all:
     concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
+      group: ${{ github.workflow }}-build-${{ github.ref }}
       cancel-in-progress: true
     uses: ./.github/workflows/workflow-build.yml
     if: github.repository == 'lynx-family/lynx-stack'
@@ -87,7 +87,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.repository == 'lynx-family/lynx-stack'
     concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
+      group: ${{ github.workflow }}-publish-${{ github.ref }}
       cancel-in-progress: false
     environment: main branch
     permissions:
