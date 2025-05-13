@@ -8,7 +8,7 @@ _Node_: Check that Node is [installed](https://nodejs.org/en/download/) with ver
 
 _pnpm_: Make sure that pnpm is available. You can use `corepack enable` to automatically setup pnpm.
 
-_Rust_: This project builds native code (WASM/NAPI) and **requires Rust toolchain version 1.81.0**, as specified in the `rust-toolchain` file at the project root.
+_Rust_: ReactLynx utilizes SWC plugins, necessitating the Rust toolchain for building.
 
 - Ensure you have `rustup` installed (from [https://rustup.rs/](https://rustup.rs/)).
 - Install the required toolchain and WASM target by running the following command from _any_ directory (you only need to do this once):
