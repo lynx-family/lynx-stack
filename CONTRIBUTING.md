@@ -147,7 +147,7 @@ Please ensure your code is formatted prior to submitting.
 Just run:
 
 ```sh
-pnpm dprint fmt`
+pnpm dprint fmt
 ```
 
 ### Generating changesets
