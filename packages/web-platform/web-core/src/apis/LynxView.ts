@@ -308,6 +308,8 @@ export class LynxView extends HTMLElement {
   set injectHeadLinks(val: boolean) {
     if (val) {
       this.setAttribute('inject-head-links', 'true');
+    } else {
+      this.removeAttribute('inject-head-links');
     }
   }
 
