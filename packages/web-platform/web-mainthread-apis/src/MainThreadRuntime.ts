@@ -205,9 +205,17 @@ export class MainThreadRuntime {
    */
   __lynxGlobalBindingValues: Record<string, any> = {};
 
-  get globalThis() {
-    return this;
-  }
+  globalThis = new Proxy(this, {
+    get: (target, prop) => {
+      // @ts-expect-error
+      return target[prop] ?? globalThis[prop];
+    },
+    set: (target, prop, value) => {
+      // @ts-expect-error
+      target[prop] = value;
+      return true;
+    },
+  });
 
   SystemInfo: typeof systemInfo;
 

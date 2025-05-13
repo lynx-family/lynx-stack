@@ -66,7 +66,17 @@ export async function createNativeApp(config: {
     return {
       init: (lynxCoreInject) => {
         lynxCoreInject.tt.lynxCoreInject = lynxCoreInject;
-        lynxCoreInject.tt.globalThis ??= lynxCoreInject;
+        lynxCoreInject.tt.globalThis ??= new Proxy(lynxCoreInject, {
+          get(target, prop) {
+            // @ts-expect-error
+            return target[prop] ?? globalThis[prop];
+          },
+          set(target, prop, value) {
+            // @ts-expect-error
+            target[prop] = value;
+            return true;
+          },
+        });
         Object.assign(lynxCoreInject.tt, {
           SystemInfo: { ...systemInfo, ...browserConfig },
         });

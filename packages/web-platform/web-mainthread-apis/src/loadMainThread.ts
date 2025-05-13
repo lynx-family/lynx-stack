@@ -169,7 +169,7 @@ export function loadMainThread(
         publicComponentEvent,
         postExposure,
       },
-    }).globalThis;
+    });
     markTimingInternal('decode_end');
     entry!(runtime);
     jsContext.__start(); // start the jsContext after the runtime is created
