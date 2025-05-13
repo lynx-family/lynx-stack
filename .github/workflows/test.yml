@@ -67,8 +67,11 @@ jobs:
       runs-on: lynx-ubuntu-24.04-xlarge
       is-web: true
       run: |
+        export LIGHTHOUSE_CHROMIUM_PATH=$(pwd)/chrome-linux/chrome
+        export CHROME_PATH=$(pwd)/chrome-linux/chrome
+        curl -L https://raw.githubusercontent.com/GoogleChrome/chrome-launcher/master/scripts/download-chrome.sh | bash
         export NODE_OPTIONS="--max-old-space-size=32768"
-        pnpm --filter @lynx-js/web-tests run lh || echo "Lighthouse failed"
+        pnpm --filter @lynx-js/web-tests run lh
   playwright-linux:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
