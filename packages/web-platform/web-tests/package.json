@@ -10,8 +10,9 @@
     }
   },
   "scripts": {
-    "build": "if [ \"$CI\" = \"1\" ]; then pnpm build:cases; fi",
-    "build:cases": "rm -rf dist && node  ./scripts/generate-build-command.js",
+    "bench": "vitest bench",
+    "build": "pnpm dlx is-ci && pnpm build:cases || echo 'Skipping build:cases in non-CI environment'",
+    "build:cases": "rm -rf dist && node ./scripts/generate-build-command.js",
     "coverage": "nyc report --cwd=$(realpath ../)",
     "coverage:ci": "nyc report --cwd=$(realpath ../) --reporter=lcov",
     "lh": "pnpm dlx @lhci/cli autorun",
@@ -29,6 +30,7 @@
     "@lynx-js/rspeedy": "workspace:*",
     "@lynx-js/web-constants": "workspace:*",
     "@lynx-js/web-core": "workspace:*",
+    "@lynx-js/web-core-server": "workspace:*",
     "@lynx-js/web-elements": "workspace:*",
     "@lynx-js/web-elements-compat": "workspace:*",
     "@lynx-js/web-elements-reactive": "workspace:*",

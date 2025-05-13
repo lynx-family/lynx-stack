@@ -22,6 +22,19 @@ export async function init(
     configPath: options.config,
   })
 
+  if (rspeedyConfig.performance?.buildCache) {
+    if (rspeedyConfig.performance.buildCache === true) {
+      rspeedyConfig.performance.buildCache = {
+        buildDependencies: [configPath],
+      }
+    } else {
+      rspeedyConfig.performance.buildCache.buildDependencies ??= []
+      rspeedyConfig.performance.buildCache.buildDependencies.push(
+        configPath,
+      )
+    }
+  }
+
   const createRspeedyOptions: CreateRspeedyOptions = {
     cwd,
     rspeedyConfig,

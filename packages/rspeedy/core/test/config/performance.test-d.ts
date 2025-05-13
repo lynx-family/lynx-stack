@@ -13,6 +13,44 @@ describe('Config - Performance', () => {
     assertType<Performance>({})
   })
 
+  test('performance.buildCache', () => {
+    assertType<Performance>({
+      buildCache: undefined,
+    })
+
+    assertType<Performance>({
+      buildCache: true,
+    })
+
+    assertType<Performance>({
+      buildCache: false,
+    })
+
+    assertType<Performance>({
+      buildCache: {
+        cacheDigest: [process.env['SOME_ENV'], undefined],
+      },
+    })
+
+    assertType<Performance>({
+      buildCache: {
+        buildDependencies: ['foo.txt'],
+      },
+    })
+
+    assertType<Performance>({
+      buildCache: {
+        buildDependencies: ['foo.txt', 'bar.txt'],
+      },
+    })
+
+    assertType<Performance>({
+      buildCache: {
+        cacheDirectory: 'foo/.cache',
+      },
+    })
+  })
+
   test('performance.chunkSplit', () => {
     assertType<Performance>({
       chunkSplit: undefined,

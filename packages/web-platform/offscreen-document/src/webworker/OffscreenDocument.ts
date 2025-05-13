@@ -5,7 +5,7 @@ import {
   OperationType,
   type ElementOperation,
 } from '../types/ElementOperation.js';
-import { OffscreenElement } from './OffscreenElement.js';
+import { _attributes, OffscreenElement } from './OffscreenElement.js';
 import {
   eventPhase,
   OffscreenEvent,
@@ -131,4 +131,33 @@ export class OffscreenDocument extends OffscreenNode {
       }
     }
   };
+
+  get innerHTML(): string {
+    const buffer: string[] = [];
+    for (const child of this.children) {
+      getInnerHTMLImpl(buffer, child as OffscreenElement);
+    }
+    return buffer.join('');
+  }
+}
+
+function getInnerHTMLImpl(buffer: string[], element: OffscreenElement): void {
+  const tagName = element.tagName.toLowerCase();
+  buffer.push('<');
+  buffer.push(tagName);
+  for (const [key, value] of Object.entries(element[_attributes])) {
+    buffer.push(' ');
+    buffer.push(key);
+    buffer.push('="');
+    buffer.push(value);
+    buffer.push('"');
+  }
+
+  buffer.push('>');
+  for (const child of element.children) {
+    getInnerHTMLImpl(buffer, child as OffscreenElement);
+  }
+  buffer.push('</');
+  buffer.push(tagName);
+  buffer.push('>');
 }

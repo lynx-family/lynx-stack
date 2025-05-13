@@ -3,12 +3,12 @@
 // LICENSE file in the root directory of this source tree.
 import type { PerformanceConfig } from '@rsbuild/core'
 
+import type { BuildCache } from './build-cache.js'
 import type {
   ChunkSplit,
   ChunkSplitBySize,
   ChunkSplitCustom,
 } from './chunk-split.js'
-
 /**
  * The type of the console method.
  *
@@ -32,6 +32,44 @@ export type ConsoleType =
  * @public
  */
 export interface Performance {
+  /**
+   * Enable or configure persistent build cache.
+   *
+   * @beta This feature is experimental and may be changed in the future.
+   *
+   * @example
+   *
+   * Enable persistent build cache.
+   *
+   * ```js
+   * import { defineConfig } from '@lynx-js/rspeedy'
+   *
+   * export default defineConfig({
+   *   performance: {
+   *     buildCache: true,
+   *   },
+   * })
+   * ```
+   *
+   * @example
+   *
+   * Customize build cache.
+   *
+   * ```js
+   * import { defineConfig } from '@lynx-js/rspeedy'
+   *
+   * export default defineConfig({
+   *   performance: {
+   *     buildCache: {
+   *       cacheDigest: [process.env.SOME_ENV],
+   *       buildDependencies: ['postcss.config.js'],
+   *     },
+   *   },
+   * })
+   * ```
+   */
+  buildCache?: BuildCache | boolean | undefined
+
   /**
    * {@link Performance.chunkSplit} is used to configure the chunk splitting strategy.
    */

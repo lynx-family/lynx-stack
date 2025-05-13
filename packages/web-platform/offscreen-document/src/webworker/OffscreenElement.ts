@@ -11,8 +11,8 @@ import { OperationType } from '../types/ElementOperation.js';
 import { OffscreenNode, uniqueId } from './OffscreenNode.js';
 
 export const ancestorDocument = Symbol('ancestorDocument');
+export const _attributes = Symbol('_attributes');
 const _style = Symbol('_style');
-const _attributes = Symbol('_attributes');
 export class OffscreenElement extends OffscreenNode {
   private [_style]?: OffscreenCSSStyleDeclaration;
   private readonly [_attributes]: Record<string, string> = {};

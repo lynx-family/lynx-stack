@@ -54,13 +54,13 @@ export type { SourceMap } from './config/output/source-map.js'
 export type { Output } from './config/output/index.js'
 
 // Performance
-export type { Performance } from './config/performance/index.js'
+export type { ConsoleType, Performance } from './config/performance/index.js'
+export type { BuildCache } from './config/performance/build-cache.js'
 export type {
   ChunkSplit,
   ChunkSplitBySize,
   ChunkSplitCustom,
 } from './config/performance/chunk-split.js'
-export type { ConsoleType } from './config/performance/index.js'
 
 // RsbuildPlugin
 export type { RsbuildPlugin, RsbuildPluginAPI } from '@rsbuild/core'

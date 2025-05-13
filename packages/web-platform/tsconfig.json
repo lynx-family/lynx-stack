@@ -19,6 +19,7 @@
     { "path": "./web-constants/tsconfig.json" },
     { "path": "./web-worker-rpc/tsconfig.json" },
     { "path": "./web-mainthread-apis/tsconfig.json" },
+    { "path": "./web-core-server/tsconfig.json" },
     { "path": "./web-core/tsconfig.json" },
     { "path": "./web-rsbuild-plugin/tsconfig.json" },
     /** packages-end */

@@ -1,0 +1,29 @@
+{
+  "name": "@lynx-js/web-core-server",
+  "version": "0.12.0",
+  "private": false,
+  "description": "",
+  "keywords": [],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/web-platform/web-core-server"
+  },
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "!dist/**/*.js.map",
+    "LICENSE.txt",
+    "Notice.txt",
+    "CHANGELOG.md",
+    "README.md"
+  ],
+  "devDependencies": {
+    "@lynx-js/web-constants": "workspace:*",
+    "@lynx-js/web-worker-rpc": "workspace:*",
+    "@lynx-js/web-worker-runtime": "workspace:*"
+  }
+}

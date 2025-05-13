@@ -1133,6 +1133,28 @@ describe('Config Validation', () => {
     test('valid type', () => {
       const cases: Performance[] = [
         {},
+        { buildCache: true },
+        { buildCache: false },
+        {
+          buildCache: {
+            cacheDigest: [process.env['SOME_ENV'], undefined],
+          },
+        },
+        {
+          buildCache: {
+            buildDependencies: ['foo.txt'],
+          },
+        },
+        {
+          buildCache: {
+            buildDependencies: ['foo.txt', 'bar.txt'],
+          },
+        },
+        {
+          buildCache: {
+            cacheDirectory: 'foo/.cache',
+          },
+        },
         {
           chunkSplit: undefined,
         },
@@ -1349,6 +1371,72 @@ describe('Config Validation', () => {
     })
 
     test('invalid type', () => {
+      expect(() =>
+        validate({
+          performance: {
+            buildCache: null,
+          },
+        })
+      ).toThrowErrorMatchingInlineSnapshot(`
+        [Error: Invalid configuration.
+
+        Invalid config on \`$input.performance.buildCache\`.
+          - Expect to be (BuildCache | boolean | undefined)
+          - Got: null
+        ]
+      `)
+
+      expect(() =>
+        validate({
+          performance: {
+            buildCache: {
+              cacheDigest: null,
+            },
+          },
+        })
+      ).toThrowErrorMatchingInlineSnapshot(`
+        [Error: Invalid configuration.
+
+        Invalid config on \`$input.performance.buildCache.cacheDigest\`.
+          - Expect to be (Array<string | undefined> | undefined)
+          - Got: null
+        ]
+      `)
+
+      expect(() =>
+        validate({
+          performance: {
+            buildCache: {
+              cacheDigest: [123],
+            },
+          },
+        })
+      ).toThrowErrorMatchingInlineSnapshot(`
+        [Error: Invalid configuration.
+
+        Invalid config on \`$input.performance.buildCache.cacheDigest[0]\`.
+          - Expect to be (string | undefined)
+          - Got: number
+        ]
+      `)
+
+      expect(() =>
+        validate({
+          performance: {
+            buildCache: {
+              cacheDirectory: null,
+            },
+          },
+        })
+      ).toThrowErrorMatchingInlineSnapshot(`
+        [Error: Invalid configuration.
+
+        Invalid config on \`$input.performance.buildCache.cacheDirectory\`.
+          - Expect to be (string | undefined)
+          - Got: null
+        ]
+      `)
+
       expect(() =>
         validate({
           performance: {
