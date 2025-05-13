@@ -155,3 +155,11 @@ Then commit the generated `.md` file in `.changeset/` and submit a PR on GitHub.
 
 [API Extractor]: https://api-extractor.com/
 [`turborepo`]: https://turbo.build/repo
+
+### Code Formatting
+
+#### dprint
+
+We use [dprint](https://dprint.dev/install/) to automatically format code.
+
+Be sure to run `pnpm dprint fmt` prior to submitting.
