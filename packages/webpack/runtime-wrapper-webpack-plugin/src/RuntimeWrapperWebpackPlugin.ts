@@ -59,9 +59,9 @@ const defaultInjectVars = [
   'Behavior',
   'LynxJSBI',
   'lynx',
-  'window',
 
   // BOM API
+  'window',
   'document',
   'frames',
   'self',
