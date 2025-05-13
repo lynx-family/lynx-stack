@@ -6,15 +6,28 @@ import hotEmitter from 'webpack/hot/emitter.js';
 import type { Options, Status } from './index.js';
 
 declare const NativeModules: {
-  LynxDevtoolSetModule: LynxDevtoolSetModule;
+  // Added in Lynx 3.2
+  LynxDevToolSetModule?: LynxDevToolSetModule;
+
+  // Remove in Lynx 3.2
+  LynxDevtoolSetModule?: LynxDevtoolSetModule;
 };
 
+interface LynxDevToolSetModule {
+  // Added in Lynx 3.3
+  invokeCdp?: (
+    message: string,
+    callback: (data?: string) => void,
+  ) => void;
+}
+
 interface LynxDevtoolSetModule {
-  invokeCdp(
+  // Theoretically, this method should always available.
+  invokeCdp?: (
     type: string,
     message: string,
     callback: (data?: string) => void,
-  ): void;
+  ) => void;
 }
 
 function reloadApp({ hot, liveReload }: Options, status: Status): void {
@@ -38,8 +51,24 @@ function reloadApp({ hot, liveReload }: Options, status: Status): void {
 
 function applyReload(intervalId: number) {
   clearInterval(intervalId);
-  NativeModules.LynxDevtoolSetModule.invokeCdp(
+
+  if (
+    typeof NativeModules.LynxDevToolSetModule?.invokeCdp !== 'function'
+    && typeof NativeModules.LynxDevtoolSetModule?.invokeCdp !== 'function'
+  ) {
+    console.error('[HMR] live-reload failed: cannot invoke cdp from DevTool.');
+    console.error('[HMR] Please reload the page manually.');
+    return;
+  }
+
+  const invokeCdp = NativeModules.LynxDevToolSetModule?.invokeCdp?.bind(
+    NativeModules.LynxDevToolSetModule,
+  ) ?? NativeModules.LynxDevtoolSetModule?.invokeCdp?.bind(
+    NativeModules.LynxDevtoolSetModule,
     'Page.reload',
+  );
+
+  invokeCdp?.(
     JSON.stringify({
       method: 'Page.reload',
       params: {
