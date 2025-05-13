@@ -13,7 +13,7 @@ _Rust_: ReactLynx utilizes SWC plugins, necessitating the Rust toolchain for bui
 - Ensure you have [`rustup`](https://rustup.rs/) installed.
 - Install the required toolchain and WASM target by running the following command from _any_ directory (you only need to do this once):
   ```sh
-  rustup toolchain install 1.81.0 --profile minimal --target wasm32-unknown-unknown
+  rustup target add wasm32-unknown-unknown
   ```
 - `rustup` will automatically use the correct toolchain when you run build commands inside this project, thanks to the `rust-toolchain` file.
 
