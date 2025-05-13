@@ -48,6 +48,37 @@ describeCases({
             null,
             null,
             console,
+            undefined, // Component
+            undefined, // ReactLynx
+            undefined, // nativeAppId
+            undefined, // Behavior
+            undefined, // LynxJSBI
+            undefined, // lynx
+            undefined, // window
+            // BOM API
+            undefined, // document
+            undefined, // frames
+            undefined, // self
+            undefined, // location
+            undefined, // navigator
+            undefined, // localStorage
+            undefined, // history
+            undefined, // Caches
+            undefined, // screen
+            undefined, // alert
+            undefined, // confirm
+            undefined, // prompt
+            undefined, // fetch
+            undefined, // XMLHttpRequest
+            undefined, // WebSocket
+            undefined, // webkit
+            undefined, // Reporter
+            undefined, // print
+            undefined, // Function
+            undefined, // global
+            // Lynx API
+            vi.fn(), // requestAnimationFrame
+            vi.fn(), // cancelAnimationFrame
           );
         },
       },
