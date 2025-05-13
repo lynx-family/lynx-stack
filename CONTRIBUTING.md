@@ -27,14 +27,14 @@ pnpm install
 
 ### Building
 
-* **Full Build (Required for Tests)**
+**Full Build (Required for Tests)**
 
     ```sh
     pnpm turbo build
     ```
-    
-* **Build with Watching (TypeScript Only)**
-  
+
+**Build with Watching (TypeScript Only)**
+
     ```sh
     pnpm turbo watch build
     ```

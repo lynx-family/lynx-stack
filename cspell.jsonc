@@ -136,7 +136,7 @@
     "lhci",
     "lh",
     "queueMicrotask",
-    "rustup", // Rust installer/manager 
+    "rustup", // Rust installer/manager
   ],
   // Glob
   "ignorePaths": [
