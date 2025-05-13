@@ -115,6 +115,22 @@ describe('reloadApp', () => {
       expect(LynxDevToolSetModule.invokeCdp).not.toBeCalled();
     });
 
+    it('should not throw when no modules are present', () => {
+      vi.useFakeTimers();
+
+      vi.stubGlobal('NativeModules', {});
+
+      reloadApp({ liveReload: true, hot: false, progress: false }, status);
+
+      expect(LynxDevToolSetModule.invokeCdp).not.toBeCalled();
+      expect(LynxDevtoolSetModule.invokeCdp).not.toBeCalled();
+
+      vi.runAllTimers();
+
+      expect(LynxDevToolSetModule.invokeCdp).not.toBeCalled();
+      expect(LynxDevtoolSetModule.invokeCdp).not.toBeCalled();
+    });
+
     it('should call new method when both modules are present', () => {
       vi.useFakeTimers();
 
