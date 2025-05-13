@@ -2,16 +2,16 @@ import { ChunkLoadingWebpackPlugin } from '../../../../src/index';
 
 /** @type {import('@rspack/core').Configuration} */
 export default {
-  mode: 'development',
+  mode: 'production',
   output: {
-    chunkLoading: 'async-lynx',
+    chunkLoading: 'sync-lynx',
     chunkFormat: 'commonjs',
     chunkFilename: '[id].rspack.bundle.cjs',
   },
+  optimization: {
+    chunkIds: 'named',
+  },
   plugins: [
     new ChunkLoadingWebpackPlugin(),
-    compiler => {
-      new compiler.webpack.HotModuleReplacementPlugin().apply(compiler);
-    },
   ],
 };

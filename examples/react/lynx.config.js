@@ -21,6 +21,9 @@ export default defineConfig({
   },
   tools: {
     rspack: {
+      output: {
+        chunkLoading: 'sync-lynx',
+      },
       plugins: [
         codecovWebpackPlugin({
           enableBundleAnalysis,

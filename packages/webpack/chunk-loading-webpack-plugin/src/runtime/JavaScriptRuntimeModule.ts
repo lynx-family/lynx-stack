@@ -7,6 +7,7 @@ import rspack from '@rspack/core';
 
 import installChunkRuntime from './javascript/install-chunk.js';
 import chunkLoadingRuntime from './javascript/chunk-loading.js';
+import syncChunkLoadingRuntime from './javascript/sync-chunk-loading.js';
 import chunkOnloadRuntime from './javascript/chunk-onload.js';
 import hmrLoadChunkRuntime from './javascript/hmr-load-chunk.js';
 import hmrLoadManifestRuntime from './javascript/hmr-load-manifest.js';
@@ -45,6 +46,16 @@ export class JavaScriptRuntimeModule {
    */
   static generateChunkLoadingRuntime(matcher: string): string {
     return generateFromTemplate(chunkLoadingRuntime)
+      .replace(/\$JS_MATCHER\$/g, `"${matcher}"`);
+  }
+
+  /**
+   * @internal
+   * @param matcher filter initial chunk
+   * @returns JavaScript sync chunk loading Runtime Code
+   */
+  static generateSyncChunkLoadingRuntime(matcher: string): string {
+    return generateFromTemplate(syncChunkLoadingRuntime)
       .replace(/\$JS_MATCHER\$/g, `"${matcher}"`);
   }
 
