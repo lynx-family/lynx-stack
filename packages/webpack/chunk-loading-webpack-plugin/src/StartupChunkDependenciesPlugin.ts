@@ -62,13 +62,16 @@ export class StartupChunkDependenciesPlugin {
         PLUGIN_NAME,
         (chunk, set) => {
           if (!isEnabledForChunk(chunk)) return;
-          set.add(RuntimeGlobals.startup);
-          set.add(RuntimeGlobals.ensureChunk);
-          set.add(RuntimeGlobals.ensureChunkIncludeEntries);
-          compilation.addRuntimeModule(
-            chunk,
-            new StartupChunkDependenciesRuntimeModule(this.asyncChunkLoading),
-          );
+
+          if (compilation.chunkGraph.hasChunkEntryDependentChunks(chunk)) {
+            set.add(RuntimeGlobals.startup);
+            set.add(RuntimeGlobals.ensureChunk);
+            set.add(RuntimeGlobals.ensureChunkIncludeEntries);
+            compilation.addRuntimeModule(
+              chunk,
+              new StartupChunkDependenciesRuntimeModule(this.asyncChunkLoading),
+            );
+          }
         },
       );
     });
