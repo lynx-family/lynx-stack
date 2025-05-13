@@ -11,8 +11,8 @@
   },
   "scripts": {
     "bench": "vitest bench",
-    "build": "if [ \"$CI\" = \"1\" ]; then pnpm build:cases; fi",
-    "build:cases": "rm -rf dist && node  ./scripts/generate-build-command.js",
+    "build": "pnpm dlx is-ci && pnpm build:cases || echo 'Skipping build:cases in non-CI environment'",
+    "build:cases": "rm -rf dist && node ./scripts/generate-build-command.js",
     "coverage": "nyc report --cwd=$(realpath ../)",
     "coverage:ci": "nyc report --cwd=$(realpath ../) --reporter=lcov",
     "lh": "pnpm dlx @lhci/cli autorun",
