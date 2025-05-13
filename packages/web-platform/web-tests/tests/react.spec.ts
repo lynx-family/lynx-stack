@@ -551,6 +551,15 @@ test.describe('reactlynx3 tests', () => {
       ); // green;
     });
 
+    test('api-inject-style-rules', async ({ page }, { title }) => {
+      await goto(page, title);
+      const target = page.locator('#target');
+      await expect(target).toHaveCSS(
+        'background-color',
+        'rgb(0, 128, 0)',
+      ); // green;
+    });
+
     test('api-updateData-callback', async ({ page }, { title }) => {
       let successCallback = false;
       await page.on('console', async (message) => {

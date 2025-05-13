@@ -7,6 +7,7 @@ import {
   createLynxView,
 } from './createLynxView.js';
 import {
+  inShadowRootStyles,
   type Cloneable,
   type LynxTemplate,
   type NapiModulesCall,
@@ -15,7 +16,6 @@ import {
   type NativeModulesMap,
   type UpdateDataType,
 } from '@lynx-js/web-constants';
-import { inShadowRootStyles } from './inShadowRootStyles.js';
 
 export type INapiModulesCall = (
   name: string,
@@ -43,7 +43,8 @@ export type INapiModulesCall = (
  * @property {"auto" | null} width [optional] (attribute: "width") set it to "auto" for width auto-sizing
  * @property {NapiModulesMap} napiModulesMap [optional] the napiModule which is called in lynx-core. key is module-name, value is esm url.
  * @property {INapiModulesCall} onNapiModulesCall [optional] the NapiModule value handler.
- * @property {"false" | "true" | null} injectHeadLinks [optional] @default true set it to "false" to disable injecting the <link href="" ref="stylesheet"> styles into shadowroot
+ * @property {"false" | "true" | null} injectHeadLinks [optional] (attribute: "inject-head-links") @default true set it to "false" to disable injecting the <link href="" ref="stylesheet"> styles into shadowroot
+ * @property {string[]} injectStyleRules [optional] the css rules which will be injected into shadowroot. Each items will be inserted by `insertRule` method. @see https://developer.mozilla.org/docs/Web/API/CSSStyleSheet/insertRule
  * @property {number} lynxGroupId [optional] (attribute: "lynx-group-id") the background shared context id, which is used to share webworker between different lynx cards
  * @property {"all-on-ui" | "multi-thread"} threadStrategy [optional] @default "multi-thread" (attribute: "thread-strategy") controls the thread strategy for current lynx view
  * @property {(string)=>Promise<LynxTemplate>} customTemplateLoader [optional] the custom template loader, which is used to load the template
@@ -301,6 +302,17 @@ export class LynxView extends HTMLElement {
     }
   }
 
+  get injectHeadLinks(): boolean {
+    return this.getAttribute('inject-head-links') !== 'false';
+  }
+  set injectHeadLinks(val: boolean) {
+    if (val) {
+      this.setAttribute('inject-head-links', 'true');
+    }
+  }
+
+  public injectStyleRules: string[] = [];
+
   /**
    * @private
    */
@@ -390,6 +402,9 @@ export class LynxView extends HTMLElement {
           this.shadowRoot!.append(styleElement);
           const styleSheet = styleElement.sheet!;
           for (const rule of inShadowRootStyles) {
+            styleSheet.insertRule(rule);
+          }
+          for (const rule of this.injectStyleRules) {
             styleSheet.insertRule(rule);
           }
           const injectHeadLinks =

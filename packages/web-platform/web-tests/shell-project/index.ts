@@ -40,6 +40,7 @@ if (casename) {
     if (casename2) {
       lynxView.setAttribute('lynx-group-id', '2');
     }
+    lynxView.injectStyleRules = [`.injected-style-rules{background:green}`];
     lynxView.onNativeModulesCall = (name, data, moduleName) => {
       if (name === 'getColor' && moduleName === 'CustomModule') {
         return data.color;

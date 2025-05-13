@@ -4,18 +4,13 @@
 import { root, useEffect } from '@lynx-js/react';
 
 function App() {
-  useEffect(() => {
-    return () => {
-      console.log('fin');
-    };
-  }, []);
   return (
     <view
       id='target'
+      class='injected-style-rules'
       style={{
         height: '100px',
         width: '100px',
-        background: 'pink',
       }}
     />
   );
