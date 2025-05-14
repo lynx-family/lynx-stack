@@ -33,4 +33,78 @@ describe('server-tests', () => {
     const html = await lynxView.renderToString();
     expect(html).toMatchSnapshot();
   });
+
+  test('basic-performance-div-1000', async ({ task }) => {
+    const testName = task.name;
+    const rawTemplate = await readTemplate(testName);
+    const lynxView = createLynxView({
+      browserConfig: {
+        pixelRatio: 1,
+        pixelHeight: 800,
+        pixelWidth: 375,
+      },
+      tagMap: {},
+      initData: {},
+      globalProps: {},
+      template: rawTemplate,
+    });
+
+    const html = await lynxView.renderToString();
+    expect(html).toMatchSnapshot();
+  });
+  test('basic-performance-div-100', async ({ task }) => {
+    const testName = task.name;
+    const rawTemplate = await readTemplate(testName);
+    const lynxView = createLynxView({
+      browserConfig: {
+        pixelRatio: 1,
+        pixelHeight: 800,
+        pixelWidth: 375,
+      },
+      tagMap: {},
+      initData: {},
+      globalProps: {},
+      template: rawTemplate,
+    });
+
+    const html = await lynxView.renderToString();
+    expect(html).toMatchSnapshot();
+  });
+  test('basic-performance-div-10', async ({ task }) => {
+    const testName = task.name;
+    const rawTemplate = await readTemplate(testName);
+    const lynxView = createLynxView({
+      browserConfig: {
+        pixelRatio: 1,
+        pixelHeight: 800,
+        pixelWidth: 375,
+      },
+      tagMap: {},
+      initData: {},
+      globalProps: {},
+      template: rawTemplate,
+    });
+
+    const html = await lynxView.renderToString();
+    expect(html).toMatchSnapshot();
+  });
+
+  test('basic-performance-nest-level-100', async ({ task }) => {
+    const testName = task.name;
+    const rawTemplate = await readTemplate(testName);
+    const lynxView = createLynxView({
+      browserConfig: {
+        pixelRatio: 1,
+        pixelHeight: 800,
+        pixelWidth: 375,
+      },
+      tagMap: {},
+      initData: {},
+      globalProps: {},
+      template: rawTemplate,
+    });
+
+    const html = await lynxView.renderToString();
+    expect(html).toMatchSnapshot();
+  });
 });

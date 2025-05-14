@@ -26,7 +26,6 @@ import {
 } from './MainThreadRuntime.js';
 
 const moduleCache: Record<string, LynxJSModule> = {};
-
 export function loadMainThread(
   backgroundThreadRpc: Rpc,
   docu: Pick<Document, 'append' | 'createElement' | 'addEventListener'>,
@@ -65,7 +64,7 @@ export function loadMainThread(
     markTimingInternal('decode_start');
     const lepusCodeEntries = await Promise.all(
       Object.entries(lepusCode).map(async ([name, url]) => {
-        const cachedModule = moduleCache[name];
+        const cachedModule = moduleCache[url];
         if (cachedModule) {
           return [name, cachedModule] as [string, LynxJSModule];
         } else {
@@ -73,7 +72,7 @@ export function loadMainThread(
           await import(/* webpackIgnore: true */ url);
           const module = globalThis.module as LynxJSModule;
           Object.assign(globalThis, { module: {} });
-          moduleCache[name] = module;
+          moduleCache[url] = module;
           return [name, module] as [string, LynxJSModule];
         }
       }),
