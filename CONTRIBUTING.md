@@ -8,6 +8,15 @@ _Node_: Check that Node is [installed](https://nodejs.org/en/download/) with ver
 
 _pnpm_: Make sure that pnpm is available. You can use `corepack enable` to automatically setup pnpm.
 
+_Rust_: ReactLynx utilizes SWC plugins, necessitating the Rust toolchain for building.
+
+- Ensure you have [`rustup`](https://rustup.rs/) installed.
+- Install the required WASM target by running the following command (you only need to do this once):
+  ```sh
+  rustup target add wasm32-unknown-unknown
+  ```
+- `rustup` will automatically use the correct toolchain when you run build commands inside this project, thanks to the `rust-toolchain` file.
+
 ### Setup
 
 To setup the project, run:
@@ -18,31 +27,17 @@ pnpm install
 
 ### Building
 
-To build the projects, run:
+**Full Build (Required for Tests)**
 
-```sh
-pnpm build # An alias for `tsc --build`
-```
+    ```sh
+    pnpm turbo build
+    ```
 
-The project is managed using TypeScript's [Project Reference](https://www.typescriptlang.org/docs/handbook/project-references.html#handbook-content).
+**Build with Watching (TypeScript Only)**
 
-So running `tsc --build` at the repository root can build all projects.
-
-Also, the repository can also be built with [`turborepo`]. Running:
-
-```sh
-pnpm turbo build
-```
-
-will built all the projects and it's dependencies recursively with cache enabled.
-
-#### Build with Watching
-
-To build the projects and incrementally build files on change, run:
-
-```sh
-pnpm build --watch
-```
+    ```sh
+    pnpm turbo watch build
+    ```
 
 ### Running linting/tests
 
@@ -141,6 +136,19 @@ This will update the `<projectFolder>/etc` which describe all the public APIs.
 You should always commit the change to git.
 
 ## Submitting
+
+### Code Formatting
+
+#### dprint
+
+We use [dprint](https://dprint.dev/install/) for automatic code formatting to maintain a consistent style.
+Please ensure your code is formatted prior to submitting.
+
+Just run:
+
+```sh
+pnpm dprint fmt
+```
 
 ### Generating changesets
 
