@@ -1,46 +1,59 @@
 import { globalMuteableVars, type LynxTemplate } from '@lynx-js/web-constants';
+import os from 'node:os';
+import fs from 'node:fs/promises';
+import path from 'node:path';
 
 const templateCache: Map<LynxTemplate, LynxTemplate> = new Map();
+// Initialize tmpDir with the prefix
+let tmpDir = path.join(os.tmpdir(), 'lynx');
+// Update tmpDir with the actual path of the created temporary directory
+tmpDir = await fs.mkdtemp(tmpDir);
 
-function createJsModuleUrl(content: string): string {
-  const dataUrl = `data:text/javascript,${encodeURIComponent(content)}`;
-  return dataUrl;
+async function createJsModuleUrl(content: string, filename: string) {
+  const fileUrl = path.join(tmpDir, filename);
+  await fs.writeFile(fileUrl, content, { flag: 'w+' });
+  return fileUrl;
 }
 
-function generateJavascriptUrl<T extends Record<string, string>>(
+async function generateJavascriptUrl<T extends Record<string, string>>(
   obj: T,
   injectVars: string[],
   injectWithBind: string[],
   muteableVars: readonly string[],
+  templateName: string,
 ) {
   injectVars = injectVars.concat(muteableVars);
   return Object.fromEntries(
-    Object.entries(obj).map(([name, content]) => {
-      return [
-        name,
-        createJsModuleUrl(
-          [
-            'globalThis.module.exports = function(lynx_runtime) {',
-            'const module= {exports:{}};let exports = module.exports;',
-            'var {',
-            injectVars.join(','),
-            '} = lynx_runtime;',
-            ...injectWithBind.map((nm) =>
-              `const ${nm} = lynx_runtime.${nm}?.bind(lynx_runtime);`
-            ),
-            ';var globDynamicComponentEntry = \'__Card__\';',
-            'var {__globalProps} = lynx;',
-            'lynx_runtime._updateVars=()=>{',
-            ...muteableVars.map((nm) =>
-              `${nm} = lynx_runtime.__lynxGlobalBindingValues.${nm};`
-            ),
-            '};\n',
-            content,
-            '\n return module.exports;}',
-          ].join(''),
-        ),
-      ];
-    }),
+    await Promise.all(
+      Object.entries(obj).map(async ([name, content]) => {
+        return [
+          name,
+          await createJsModuleUrl(
+            [
+              '//# allFunctionsCalledOnLoad\n',
+              'globalThis.module.exports = function(lynx_runtime) {',
+              'const module= {exports:{}};let exports = module.exports;',
+              'var {',
+              injectVars.join(','),
+              '} = lynx_runtime;',
+              ...injectWithBind.map((nm) =>
+                `const ${nm} = lynx_runtime.${nm}?.bind(lynx_runtime);`
+              ),
+              ';var globDynamicComponentEntry = \'__Card__\';',
+              'var {__globalProps} = lynx;',
+              'lynx_runtime._updateVars=()=>{',
+              ...muteableVars.map((nm) =>
+                `${nm} = lynx_runtime.__lynxGlobalBindingValues.${nm};`
+              ),
+              '};\n',
+              content,
+              '\n return module.exports;}',
+            ].join(''),
+            `${templateName}-${name.replaceAll('/', '')}.js`,
+          ),
+        ];
+      }),
+    ),
   ) as T;
 }
 
@@ -116,22 +129,29 @@ const backgroundInjectWithBind = [
   'Component',
 ];
 
-export function loadTemplate(
+export async function loadTemplate(
   rawTemplate: LynxTemplate,
-): LynxTemplate {
+  templateName: string = Math.random().toString(36).substring(2, 7),
+): Promise<LynxTemplate> {
+  if (templateCache.has(rawTemplate)) {
+    return templateCache.get(rawTemplate)!;
+  }
+  templateName += Math.random().toString(36).substring(2, 7);
   const decodedTemplate: LynxTemplate = templateCache.get(rawTemplate) ?? {
     ...rawTemplate,
-    lepusCode: generateJavascriptUrl(
+    lepusCode: await generateJavascriptUrl(
       rawTemplate.lepusCode,
       mainThreadInjectVars,
       [],
       globalMuteableVars,
+      templateName + '-lepusCode',
     ),
-    manifest: generateJavascriptUrl(
+    manifest: await generateJavascriptUrl(
       rawTemplate.manifest,
       backgroundInjectVars,
       backgroundInjectWithBind,
       [],
+      templateName + '-manifest',
     ),
   };
   templateCache.set(rawTemplate, decodedTemplate);

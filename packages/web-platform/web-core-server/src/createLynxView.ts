@@ -13,9 +13,10 @@ interface LynxViewConfig extends
     'browserConfig' | 'tagMap' | 'initData' | 'globalProps' | 'template'
   >
 {
+  templateName?: string;
 }
 
-export function createLynxView(
+export async function createLynxView(
   config: LynxViewConfig,
 ) {
   const {
@@ -36,7 +37,7 @@ export function createLynxView(
   );
   const { promise: firstPaintReadyPromise, resolve: firstPaintReady } = Promise
     .withResolvers<void>();
-  const template = loadTemplate(rawTemplate);
+  const template = await loadTemplate(rawTemplate, config.templateName);
   const mainThreadStart = uiToMainRpc.createCall(mainThreadStartEndpoint);
   mainThreadStart({
     template,

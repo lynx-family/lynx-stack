@@ -28,74 +28,21 @@ const cases = {
   ),
 };
 describe('server-tests', () => {
-  bench('basic-performance-div-10000', async () => {
-    const lynxView = createLynxView({
-      browserConfig: {
-        pixelRatio: 1,
-        pixelWidth: 600,
-        pixelHeight: 800,
-      },
-      tagMap: {},
-      initData: {},
-      globalProps: {},
-      template: cases['basic-performance-div-10000'],
+  Object.entries(cases).forEach(([name, template]) => {
+    bench(name, async () => {
+      const lynxView = await createLynxView({
+        browserConfig: {
+          pixelRatio: 1,
+          pixelWidth: 600,
+          pixelHeight: 800,
+        },
+        tagMap: {},
+        initData: {},
+        globalProps: {},
+        template,
+        templateName: name,
+      });
+      await lynxView.renderToString();
     });
-    await lynxView.renderToString();
-  });
-  bench('basic-performance-div-1000', async () => {
-    const lynxView = createLynxView({
-      browserConfig: {
-        pixelRatio: 1,
-        pixelWidth: 600,
-        pixelHeight: 800,
-      },
-      tagMap: {},
-      initData: {},
-      globalProps: {},
-      template: cases['basic-performance-div-1000'],
-    });
-    await lynxView.renderToString();
-  });
-  bench('basic-performance-div-100', async () => {
-    const lynxView = createLynxView({
-      browserConfig: {
-        pixelRatio: 1,
-        pixelWidth: 600,
-        pixelHeight: 800,
-      },
-      tagMap: {},
-      initData: {},
-      globalProps: {},
-      template: cases['basic-performance-div-100'],
-    });
-    await lynxView.renderToString();
-  });
-  bench('basic-performance-div-10', async () => {
-    const lynxView = createLynxView({
-      browserConfig: {
-        pixelRatio: 1,
-        pixelWidth: 600,
-        pixelHeight: 800,
-      },
-      tagMap: {},
-      initData: {},
-      globalProps: {},
-      template: cases['basic-performance-div-10'],
-    });
-    await lynxView.renderToString();
-  });
-  bench('basic-performance-nest-level-100', async () => {
-    const lynxView = createLynxView({
-      browserConfig: {
-        pixelRatio: 1,
-        pixelWidth: 600,
-        pixelHeight: 800,
-      },
-      tagMap: {},
-      initData: {},
-      globalProps: {},
-      template: cases['basic-performance-nest-level-100'],
-    });
-    await lynxView.renderToString();
   });
 });
