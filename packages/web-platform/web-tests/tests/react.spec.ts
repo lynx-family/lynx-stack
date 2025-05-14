@@ -387,6 +387,16 @@ test.describe('reactlynx3 tests', () => {
       await wait(100);
       await expect(page.locator('#target')).toHaveCSS('color', 'rgb(0, 0, 0)');
     });
+    test('basic-globalThis-property-bts', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(100);
+      await expect(page.locator('#target')).toHaveCSS('color', 'rgb(0, 0, 0)');
+    });
+    test('basic-globalThis-property-mts', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(100);
+      await expect(page.locator('#target')).toHaveCSS('color', 'rgb(0, 0, 0)');
+    });
   });
   test.describe('apis', () => {
     test('api-custom-template-loader', async ({ page }, { title }) => {
