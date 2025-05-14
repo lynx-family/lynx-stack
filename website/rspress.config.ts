@@ -92,6 +92,7 @@ const SIDEBARS = {
         'Config',
 
         // Sub Configurations
+        'BuildCache',
         'ChunkSplit',
         'ChunkSplitBySize',
         'ChunkSplitCustom',
@@ -129,7 +130,7 @@ const SIDEBARS = {
         'version',
         'rspackVersion',
       ],
-      collapsed: false,
+      collapsed: true,
       depth: 3,
     }).items as Sidebar[string],
   ],
@@ -215,6 +216,7 @@ const SIDEBARS_ZH = {
         'Config',
 
         // Sub Configurations
+        'BuildCache',
         'ChunkSplit',
         'ChunkSplitBySize',
         'ChunkSplitCustom',
@@ -252,7 +254,7 @@ const SIDEBARS_ZH = {
         'version',
         'rspackVersion',
       ],
-      collapsed: false,
+      collapsed: true,
       depth: 3,
     }).items as Sidebar[string],
   ],
