@@ -25,7 +25,7 @@ import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 import { cssChunksToMap } from './css/cssChunksToMap.js';
 import { createLynxAsyncChunksRuntimeModule } from './LynxAsyncChunksRuntimeModule.js';
 
-interface EncodeOptions {
+export interface EncodeOptions {
   manifest: Record<string, string | undefined>;
   compilerOptions: Record<string, string | boolean>;
   lepusCode: {

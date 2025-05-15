@@ -5,7 +5,7 @@ import { removeFunctionWhiteSpace } from '@lynx-js/css-serializer/dist/plugins/r
 
 import { cssChunksToMap } from './cssChunksToMap.js';
 import type { CSS } from '../index.js';
-
+import type { EncodeOptions } from '../LynxTemplatePlugin.js';
 /**
  * The options for encoding CSS.
  *
@@ -54,7 +54,7 @@ export async function encodeCSS(
 ): Promise<Buffer> {
   const css = cssChunksToMap(cssChunks, plugins, enableCSSSelector);
 
-  const encodeOptions = {
+  const encodeOptions: EncodeOptions = {
     compilerOptions: {
       // Do not remove this, it will crash :)
       enableFiberArch: true,
@@ -74,6 +74,12 @@ export async function encodeCSS(
       },
     },
     css,
+    manifest: {},
+    lepusCode: {
+      root: undefined,
+      lepusChunk: {},
+    },
+    customSections: {},
   };
 
   const { buffer } = await encode(encodeOptions);
