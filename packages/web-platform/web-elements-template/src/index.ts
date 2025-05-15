@@ -86,11 +86,16 @@ export const templateScrollView = `<style>
     part="bot-fade-mask"
   ></div>`;
 export const templateXAudioTT = `<audio id="audio"></audio>`;
-
-export const templateXImage = (attributes: { src?: string }) =>
-  `<img part="img" alt="" id="img" ${
-    attributes.src ? `src="${attributes.src}"` : ''
-  }/> `;
+const XSSDetector = /<\s*script/g;
+export const templateXImage = (attributes: { src?: string }) => {
+  const { src } = attributes;
+  if (src && XSSDetector.test(src)) {
+    throw new Error(
+      'detected <script, this is a potential XSS attack, please check your src',
+    );
+  }
+  return `<img part="img" alt="" id="img" ${src ? `src="${src}"` : ''}/> `;
+};
 
 export const templateFilterImage = templateXImage;
 
