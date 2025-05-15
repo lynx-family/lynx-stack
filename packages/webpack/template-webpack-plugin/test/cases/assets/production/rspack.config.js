@@ -38,7 +38,7 @@ export default {
       });
 
       // Reset
-      compiler.hooks.emit.tap('test', () => {
+      compiler.hooks.afterDone.tap('test', () => {
         process.env['DEBUG'] = DEBUG;
         process.env['NODE_ENV'] = NODE_ENV;
       });
@@ -79,6 +79,30 @@ export default {
       });
 
       compiler.hooks.thisCompilation.tap('test', (compilation) => {
+        const { Compilation } = compiler.webpack;
+
+        // Should have `assets` in `PROCESS_ASSETS_STAGE_REPORT` stage
+        // E.g.: upload source-map to sentry.
+        compilation.hooks.processAssets.tap({
+          name: 'test',
+          stage: Compilation.PROCESS_ASSETS_STAGE_REPORT,
+        }, () => {
+          expect(Object.keys(compilation.assets)).toContain(
+            'main.bundle.js',
+          );
+        });
+
+        // Should not have inlined assets in `Infinity` stage
+        // E.g.: rspack-manifest-plugin
+        compilation.hooks.processAssets.tap({
+          name: 'test',
+          stage: Number.POSITIVE_INFINITY,
+        }, () => {
+          expect(Object.keys(compilation.assets)).not.toContain(
+            'main.bundle.js',
+          );
+        });
+
         compiler.hooks.done.tap('test', () => {
           expect(Object.keys(compilation.assets)).not.toContain(
             'main.bundle.js',

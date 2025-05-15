@@ -23,6 +23,24 @@ export class WebWebpackPlugin {
         const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(
           compilation,
         );
+
+        const inlinedAssets = new Set<string>();
+
+        const { Compilation } = compiler.webpack;
+        compilation.hooks.processAssets.tap({
+          name: WebWebpackPlugin.name,
+
+          // `PROCESS_ASSETS_STAGE_REPORT` is the last stage of the `processAssets` hook.
+          // We need to run our asset deletion after this stage to ensure all assets have been processed.
+          // E.g.: upload source-map to sentry.
+          stage: Compilation.PROCESS_ASSETS_STAGE_REPORT + 1,
+        }, () => {
+          inlinedAssets.forEach((name) => {
+            compilation.deleteAsset(name);
+          });
+          inlinedAssets.clear();
+        });
+
         hooks.beforeEncode.tap({
           name: WebWebpackPlugin.name,
           stage: WebWebpackPlugin.BEFORE_ENCODE_HOOK_STAGE,
@@ -34,14 +52,14 @@ export class WebWebpackPlugin {
           const [name, content] = last(Object.entries(encodeData.manifest))!;
 
           if (!isDebug() && !isDev && !isRsdoctor()) {
-            compiler.hooks.emit.tap({ name: WebWebpackPlugin.name }, () => {
-              this.deleteDebuggingAssets(compilation, [
-                { name },
-                encodeData.lepusCode.root,
-                ...encodeData.lepusCode.chunks,
-                ...encodeData.css.chunks,
-              ]);
-            });
+            [
+              { name },
+              encodeData.lepusCode.root,
+              ...encodeData.lepusCode.chunks,
+              ...encodeData.css.chunks,
+            ]
+              .filter(asset => asset !== undefined)
+              .forEach(asset => inlinedAssets.add(asset.name));
           }
 
           Object.assign(encodeData, {

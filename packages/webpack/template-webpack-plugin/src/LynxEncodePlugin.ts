@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { Compilation, Compiler } from 'webpack';
+import type { Compiler } from 'webpack';
 
 import type { EncodeCSSOptions } from './css/encode.js';
 import { LynxTemplatePlugin } from './LynxTemplatePlugin.js';
@@ -122,6 +122,23 @@ export class LynxEncodePluginImpl {
         compilation,
       );
 
+      const inlinedAssets = new Set<string>();
+
+      const { Compilation } = compiler.webpack;
+      compilation.hooks.processAssets.tap({
+        name: this.name,
+
+        // `PROCESS_ASSETS_STAGE_REPORT` is the last stage of the `processAssets` hook.
+        // We need to run our asset deletion after this stage to ensure all assets have been processed.
+        // E.g.: upload source-map to sentry.
+        stage: Compilation.PROCESS_ASSETS_STAGE_REPORT + 1,
+      }, () => {
+        inlinedAssets.forEach((name) => {
+          compilation.deleteAsset(name);
+        });
+        inlinedAssets.clear();
+      });
+
       templateHooks.beforeEncode.tapPromise({
         name: this.name,
         stage: LynxEncodePlugin.BEFORE_ENCODE_STAGE,
@@ -130,14 +147,14 @@ export class LynxEncodePluginImpl {
         const { manifest } = encodeData;
 
         if (!isDebug() && !isDev && !isRsdoctor()) {
-          compiler.hooks.emit.tap(this.name, () => {
-            this.deleteDebuggingAssets(compilation, [
-              encodeData.lepusCode.root,
-              ...encodeData.lepusCode.chunks,
-              ...Object.keys(manifest).map(name => ({ name })),
-              ...encodeData.css.chunks,
-            ]);
-          });
+          [
+            encodeData.lepusCode.root,
+            ...encodeData.lepusCode.chunks,
+            ...Object.keys(manifest).map(name => ({ name })),
+            ...encodeData.css.chunks,
+          ]
+            .filter(asset => asset !== undefined)
+            .forEach(asset => inlinedAssets.add(asset.name));
         }
 
         encodeData.manifest = {
@@ -195,21 +212,6 @@ export class LynxEncodePluginImpl {
         return { buffer, debugInfo: lepus_debug };
       });
     });
-  }
-
-  /**
-   * The deleteDebuggingAssets delete all the assets that are inlined into the template.
-   */
-  deleteDebuggingAssets(
-    compilation: Compilation,
-    assets: ({ name: string } | undefined)[],
-  ): void {
-    assets
-      .filter(asset => asset !== undefined)
-      .forEach(asset => deleteAsset(asset));
-    function deleteAsset({ name }: { name: string }) {
-      return compilation.deleteAsset(name);
-    }
   }
 
   #APP_SERVICE_NAME = '/app-service.js';
