@@ -1,7 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type { Worklet, WorkletRef } from '@lynx-js/react/worklet-runtime/bindings';
+import type { Element, Worklet, WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bindings';
 
 import { nextCommitTaskId } from '../lifecycle/patch/commit.js';
 import { SnapshotInstance, backgroundSnapshotInstanceManager } from '../snapshot.js';
@@ -20,7 +20,7 @@ function unref(snapshot: SnapshotInstance, recursive: boolean): void {
 
   snapshot.__worklet_ref_set?.forEach(v => {
     if (v) {
-      workletUnRef(v as Worklet | WorkletRef<unknown>);
+      workletUnRef(v as Worklet | WorkletRefImpl<Element>);
     }
   });
   snapshot.__worklet_ref_set?.clear();

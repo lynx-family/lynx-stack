@@ -8,7 +8,7 @@ import type { RefImpl } from './workletRef.js';
 
 declare global {
   var lynxWorkletImpl: {
-    _workletMap: Record<string, Function>;
+    _workletMap: Record<string, (...args: any[]) => any>;
     _jsFunctionLifecycleManager?: JsFunctionLifecycleManager;
     _eventDelayImpl: EventDelayImpl;
     _refImpl: RefImpl;
@@ -16,6 +16,6 @@ declare global {
 
   function runWorklet(ctx: Worklet, params: ClosureValueType[]): unknown;
 
-  function registerWorklet(type: string, id: string, worklet: Function): void;
-  function registerWorkletInternal(type: string, id: string, worklet: Function): void;
+  function registerWorklet(type: string, id: string, worklet: (...args: any[]) => any): void;
+  function registerWorkletInternal(type: string, id: string, worklet: (...args: any[]) => any): void;
 }

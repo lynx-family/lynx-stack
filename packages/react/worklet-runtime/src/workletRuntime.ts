@@ -31,7 +31,7 @@ function initWorklet(): void {
  * @param id worklet hash
  * @param worklet worklet function
  */
-function registerWorklet(_type: string, id: string, worklet: Function): void {
+function registerWorklet(_type: string, id: string, worklet: (...args: any[]) => any): void {
   lynxWorkletImpl._workletMap[id] = worklet;
 }
 
@@ -74,9 +74,9 @@ function validateWorklet(ctx: unknown): ctx is Worklet {
   return typeof ctx === 'object' && ctx !== null && ('_wkltId' in ctx || '_lepusWorkletHash' in ctx);
 }
 
-const workletCache = new WeakMap<object, ClosureValueType | Function>();
+const workletCache = new WeakMap<object, ClosureValueType | ((...args: any[]) => any)>();
 
-function transformWorklet(ctx: Worklet, isWorklet: true): Function;
+function transformWorklet(ctx: Worklet, isWorklet: true): (...args: any[]) => any;
 function transformWorklet(
   ctx: ClosureValueType[],
   isWorklet: false,
@@ -85,7 +85,7 @@ function transformWorklet(
 function transformWorklet(
   ctx: ClosureValueType,
   isWorklet: boolean,
-): ClosureValueType | Function {
+): ClosureValueType | ((...args: any[]) => any) {
   /* v8 ignore next 3 */
   if (typeof ctx !== 'object' || ctx === null) {
     return ctx;

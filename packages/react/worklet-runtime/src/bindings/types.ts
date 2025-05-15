@@ -1,6 +1,11 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+
+import type { Element } from '../api/element.js';
+
+export type { Element };
+
 export type WorkletRefId = number;
 
 export interface WorkletRefImpl<T> {
@@ -28,16 +33,19 @@ export type ClosureValueType =
   | number
   | Worklet
   | WorkletRef<unknown>
+  | Element
+  | (((...args: unknown[]) => unknown) & { ctx?: ClosureValueType })
   | ClosureValueType_
   | ClosureValueType[];
 
 export interface Worklet {
   _wkltId: string;
+  _workletType?: string;
   _c?: Record<string, ClosureValueType>;
   _lepusWorkletHash?: string;
   _execId?: number;
   _jsFn?: Record<string, string>;
-  _unmount?: any;
+  _unmount?: () => void;
   [key: string]: ClosureValueType;
 }
 

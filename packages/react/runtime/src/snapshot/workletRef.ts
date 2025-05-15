@@ -1,23 +1,19 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import {
-  type Worklet,
-  type WorkletRef,
-  runWorkletCtx,
-  updateWorkletRef as update,
-} from '@lynx-js/react/worklet-runtime/bindings';
+import { runWorkletCtx, updateWorkletRef as update } from '@lynx-js/react/worklet-runtime/bindings';
+import type { Element, Worklet, WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bindings';
 
-import { SnapshotInstance } from '../snapshot.js';
+import type { SnapshotInstance } from '../snapshot.js';
 
-function workletUnRef(value: Worklet | WorkletRef<unknown>): void {
+function workletUnRef(value: Worklet | WorkletRefImpl<Element>): void {
   if ('_wvid' in value) {
-    update(value as any, null);
+    update(value as WorkletRefImpl<Element>, null);
   } else if ('_wkltId' in value) {
     if (typeof value._unmount == 'function') {
-      value._unmount();
+      (value._unmount as () => void)();
     } else {
-      runWorkletCtx(value as any, [null]);
+      runWorkletCtx(value, [null]);
     }
   }
 }
@@ -25,7 +21,7 @@ function workletUnRef(value: Worklet | WorkletRef<unknown>): void {
 function updateWorkletRef(
   snapshot: SnapshotInstance,
   expIndex: number,
-  oldValue: any,
+  oldValue: WorkletRefImpl<Element> | Worklet | undefined,
   elementIndex: number,
   _workletType: string,
 ): void {
@@ -38,15 +34,16 @@ function updateWorkletRef(
     snapshot.__worklet_ref_set?.delete(oldValue);
   }
 
-  const value = snapshot.__values![expIndex];
+  const value = snapshot.__values![expIndex] as (WorkletRefImpl<Element> | Worklet | undefined);
   if (value === null || value === undefined) {
     // do nothing
   } else if (value._wvid) {
-    update(value as any, snapshot.__elements[elementIndex]!);
-  } else if (value._wkltId) {
-    // @ts-ignore
-    value._unmount = runWorkletCtx(value as any, [{ elementRefptr: snapshot.__elements[elementIndex]! }]);
-  } else if (value._type === '__LEPUS__' || value._lepusWorkletHash) {
+    update(value as WorkletRefImpl<Element>, snapshot.__elements[elementIndex]!);
+  } else if ((value as Worklet)._wkltId) {
+    (value as Worklet)._unmount = runWorkletCtx(value as Worklet, [{
+      elementRefptr: (snapshot.__elements[elementIndex]!) as any,
+    }]) as () => void;
+  } else if (value._type === '__LEPUS__' || (value as Worklet)._lepusWorkletHash) {
     // During the initial render, we will not update the WorkletRef because the background thread is not ready yet.
   } else {
     throw new Error('MainThreadRef: main-thread:ref must be of type MainThreadRef or main-thread function.');
