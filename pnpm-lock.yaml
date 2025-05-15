@@ -174,8 +174,8 @@ importers:
         version: '@hongzhiyuan/preact@10.24.0-319c684e'
     devDependencies:
       '@lynx-js/types':
-        specifier: ^3.2.1
-        version: 3.2.1
+        specifier: ^3.3.0
+        version: 3.3.0
       '@microsoft/api-extractor':
         specifier: 'catalog:'
         version: 7.52.8(@types/node@22.15.17)
@@ -502,8 +502,8 @@ importers:
         specifier: workspace:*
         version: link:../core
       '@lynx-js/types':
-        specifier: ^3.2.1
-        version: 3.2.1
+        specifier: ^3.3.0
+        version: 3.3.0
       '@lynx-js/web-core':
         specifier: workspace:*
         version: link:../../web-platform/web-core
@@ -585,8 +585,8 @@ importers:
   packages/third-party/tailwind-preset:
     devDependencies:
       '@lynx-js/types':
-        specifier: ^3.2.1
-        version: 3.2.1
+        specifier: ^3.3.0
+        version: 3.3.0
       postcss:
         specifier: ^8.5.3
         version: 8.5.3
@@ -2307,8 +2307,8 @@ packages:
   '@lynx-js/tasm@0.0.5':
     resolution: {integrity: sha512-E5ZTtNQslv0zGMqtEo/GULHM0XiyvkuL4K8SxP8R9n0WnInppIiekIP5Rzvt+oex7Sg8ngtm/ToUDiZ0NQ9+Qg==}
 
-  '@lynx-js/types@3.2.1':
-    resolution: {integrity: sha512-8iKCJwuI3Csot9V/aV9gxomejTejyyJhx5NiD9OrH1jCRPZFAIcfSQq2g5uprs4BjwLV33nhCyonabZ7imqb5Q==}
+  '@lynx-js/types@3.3.0':
+    resolution: {integrity: sha512-URUszZQBFGumpNDXm4FoLMMSSZAgH+NBvBOaERe8UWrnH0XB9Z8N2sAj28jfg57G+eZpRasbvu/ZR6NzFe5feQ==}
 
   '@manypkg/find-root@1.1.0':
     resolution: {integrity: sha512-mki5uBvhHzO8kYYix/WRy2WX8S3B5wdVSc9D6KcU5lQNglP2yt58/VfLuAK49glRXChosY8ap2oJ1qgma3GUVA==}
@@ -9673,7 +9673,7 @@ snapshots:
 
   '@lynx-js/tasm@0.0.5': {}
 
-  '@lynx-js/types@3.2.1':
+  '@lynx-js/types@3.3.0':
     dependencies:
       csstype: 3.1.3
 
