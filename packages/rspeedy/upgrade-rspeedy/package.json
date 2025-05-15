@@ -45,7 +45,7 @@
     "@rsbuild/plugin-sass": "catalog:rsbuild",
     "commander": "^13.1.0",
     "detect-indent": "^7.0.1",
-    "memfs": "^4.17.1",
+    "memfs": "^4.17.2",
     "picocolors": "^1.1.1",
     "rsbuild-plugin-tailwindcss": "0.2.1",
     "rslog": "^1.2.3",
