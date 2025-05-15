@@ -19,6 +19,7 @@ function generateJavascriptUrl<T extends Record<string, string>>(
         name,
         createJsModuleUrl(
           [
+            '//# allFunctionsCalledOnLoad\n',
             'globalThis.module.exports = function(lynx_runtime) {',
             'const module= {exports:{}};let exports = module.exports;',
             'var {',

@@ -18,7 +18,7 @@ describe('server-tests', () => {
   test('basic-performance-div-10000', async ({ task }) => {
     const testName = task.name;
     const rawTemplate = await readTemplate(testName);
-    const lynxView = createLynxView({
+    const lynxView = await createLynxView({
       browserConfig: {
         pixelRatio: 1,
         pixelHeight: 800,
@@ -28,6 +28,7 @@ describe('server-tests', () => {
       initData: {},
       globalProps: {},
       template: rawTemplate,
+      templateName: testName,
     });
 
     const html = await lynxView.renderToString();
@@ -37,7 +38,7 @@ describe('server-tests', () => {
   test('basic-performance-div-1000', async ({ task }) => {
     const testName = task.name;
     const rawTemplate = await readTemplate(testName);
-    const lynxView = createLynxView({
+    const lynxView = await createLynxView({
       browserConfig: {
         pixelRatio: 1,
         pixelHeight: 800,
@@ -47,6 +48,7 @@ describe('server-tests', () => {
       initData: {},
       globalProps: {},
       template: rawTemplate,
+      templateName: testName,
     });
 
     const html = await lynxView.renderToString();
@@ -55,7 +57,7 @@ describe('server-tests', () => {
   test('basic-performance-div-100', async ({ task }) => {
     const testName = task.name;
     const rawTemplate = await readTemplate(testName);
-    const lynxView = createLynxView({
+    const lynxView = await createLynxView({
       browserConfig: {
         pixelRatio: 1,
         pixelHeight: 800,
@@ -65,6 +67,7 @@ describe('server-tests', () => {
       initData: {},
       globalProps: {},
       template: rawTemplate,
+      templateName: testName,
     });
 
     const html = await lynxView.renderToString();
@@ -73,7 +76,7 @@ describe('server-tests', () => {
   test('basic-performance-div-10', async ({ task }) => {
     const testName = task.name;
     const rawTemplate = await readTemplate(testName);
-    const lynxView = createLynxView({
+    const lynxView = await createLynxView({
       browserConfig: {
         pixelRatio: 1,
         pixelHeight: 800,
@@ -83,6 +86,7 @@ describe('server-tests', () => {
       initData: {},
       globalProps: {},
       template: rawTemplate,
+      templateName: testName,
     });
 
     const html = await lynxView.renderToString();
@@ -92,7 +96,7 @@ describe('server-tests', () => {
   test('basic-performance-nest-level-100', async ({ task }) => {
     const testName = task.name;
     const rawTemplate = await readTemplate(testName);
-    const lynxView = createLynxView({
+    const lynxView = await createLynxView({
       browserConfig: {
         pixelRatio: 1,
         pixelHeight: 800,
@@ -102,6 +106,7 @@ describe('server-tests', () => {
       initData: {},
       globalProps: {},
       template: rawTemplate,
+      templateName: testName,
     });
 
     const html = await lynxView.renderToString();
