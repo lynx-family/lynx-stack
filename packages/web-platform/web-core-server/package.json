@@ -21,6 +21,10 @@
     "CHANGELOG.md",
     "README.md"
   ],
+  "scripts": {
+    "build": "rslib build",
+    "watch": "rslib build --watch"
+  },
   "devDependencies": {
     "@lynx-js/web-constants": "workspace:*",
     "@lynx-js/web-worker-rpc": "workspace:*",
