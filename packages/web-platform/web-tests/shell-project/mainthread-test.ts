@@ -135,7 +135,7 @@ function initializeMainThreadTest() {
       },
       postExposure: () => {},
     },
-  });
+  }).globalThis;
   Object.assign(globalThis, runtime);
   Object.assign(globalThis, {
     genFiberElementTree,

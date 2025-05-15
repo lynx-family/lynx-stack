@@ -202,6 +202,7 @@ test.describe('web core tests', () => {
   });
 
   test('createJSObjectDestructionObserver', async ({ page, browserName }) => {
+    test.skip(); // https://github.com/microsoft/playwright/issues/34774
     // firefox dose not support this.
     test.skip(browserName === 'firefox');
     await goto(page);
