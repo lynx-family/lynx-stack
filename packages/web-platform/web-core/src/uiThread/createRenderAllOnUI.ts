@@ -7,6 +7,10 @@ import type { MainThreadRuntime } from '@lynx-js/web-mainthread-apis';
 import { Rpc } from '@lynx-js/web-worker-rpc';
 
 const {
+  /* webpackMode: "lazy" */
+  /* webpackPrefetch: true */
+  /* webpackPreload: true */
+  /* webpackFetchPriority: "high" */
   loadMainThread,
 } = await import('@lynx-js/web-mainthread-apis');
 
