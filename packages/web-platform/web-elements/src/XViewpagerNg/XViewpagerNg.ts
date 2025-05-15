@@ -6,44 +6,16 @@
 import {
   boostedQueueMicrotask,
   Component,
-  html,
 } from '@lynx-js/web-elements-reactive';
 import { CommonEventsAndMethods } from '../common/CommonEventsAndMethods.js';
 import { XViewpagerNgEvents } from './XViewpagerNgEvents.js';
 import { scrollContainerDom } from '../common/constants.js';
+import { templateXViewpageNg } from '@lynx-js/web-elements-template';
 
 @Component<typeof XViewpagerNg>(
   'x-viewpager-ng',
   [CommonEventsAndMethods, XViewpagerNgEvents],
-  html`
-    <style>
-      #bounce-padding {
-        display: none;
-        flex: 0 0 0;
-        align-self: stretch;
-        scroll-snap-align: none;
-        flex-basis: 100%;
-      }
-      #content {
-        flex: 0 0 100%;
-        flex-direction: row;
-        align-self: stretch;
-        display: inherit;
-        justify-content: inherit;
-        align-items: inherit;
-        overflow: inherit;
-        scrollbar-width: none;
-        scroll-snap-type: inherit;
-      }
-      #content::-webkit-scrollbar {
-        display: none;
-      }
-    </style>
-    <div id="bounce-padding" part="bounce-padding"></div>
-    <div id="content" part="content">
-      <slot></slot>
-    </div>
-  `,
+  templateXViewpageNg,
 )
 export class XViewpagerNg extends HTMLElement {
   static notToFilterFalseAttributes = new Set([

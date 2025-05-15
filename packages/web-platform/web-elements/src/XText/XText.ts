@@ -3,18 +3,19 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 */
-import { Component, html } from '@lynx-js/web-elements-reactive';
+import { Component } from '@lynx-js/web-elements-reactive';
 import { XTextTruncation } from './XTextTruncation.js';
 import { ScrollIntoView } from '../ScrollView/ScrollIntoView.js';
 import {
   CommonEventsAndMethods,
   layoutChangeTarget,
 } from '../common/CommonEventsAndMethods.js';
+import { templateXText } from '@lynx-js/web-elements-template';
 
 @Component<typeof XText>(
   'x-text',
   [CommonEventsAndMethods, XTextTruncation],
-  html`<div id="inner-box" part="inner-box"><slot part="slot"></slot><slot name="inline-truncation"></slot></div>`,
+  templateXText,
 )
 export class XText extends HTMLElement {
   static readonly notToFilterFalseAttributes = new Set(['tail-color-convert']);

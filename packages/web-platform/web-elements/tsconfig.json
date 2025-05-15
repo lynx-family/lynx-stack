@@ -13,5 +13,8 @@
     {
       "path": "../web-elements-reactive",
     },
+    {
+      "path": "../web-elements-template",
+    },
   ],
 }

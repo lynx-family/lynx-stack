@@ -8,8 +8,9 @@ import { FadeEdgeLengthAttribute } from './FadeEdgeLengthAttribute.js';
 import { ScrollAttributes } from './ScrollAttributes.js';
 import { ScrollViewEvents } from './ScrollViewEvents.js';
 import { ScrollIntoView } from './ScrollIntoView.js';
-import { Component, html } from '@lynx-js/web-elements-reactive';
+import { Component } from '@lynx-js/web-elements-reactive';
 import { scrollContainerDom } from '../common/constants.js';
+import { templateScrollView } from '@lynx-js/web-elements-template';
 
 @Component<typeof ScrollView>(
   'scroll-view',
@@ -20,89 +21,7 @@ import { scrollContainerDom } from '../common/constants.js';
     ScrollViewEvents,
     ScrollIntoView,
   ],
-  html` <style>
-      .placeholder-dom {
-        display: none;
-        flex: 0 0 0;
-        align-self: stretch;
-        min-height: 0;
-        min-width: 0;
-      }
-      .mask {
-        z-index: 1;
-        position: sticky;
-      }
-      .observer-container {
-        flex-direction: inherit;
-        overflow: visible;
-      }
-      .observer {
-        display: flex;
-      }
-      ::-webkit-scrollbar {
-        display: none;
-      }
-
-      @keyframes topFading {
-        0% {
-          box-shadow: transparent 0px 0px 0px 0px;
-        }
-        5% {
-          box-shadow: var(--scroll-view-bg-color) 0px 0px
-            var(--scroll-view-fading-edge-length)
-            var(--scroll-view-fading-edge-length);
-        }
-        100% {
-          box-shadow: var(--scroll-view-bg-color) 0px 0px
-            var(--scroll-view-fading-edge-length)
-            var(--scroll-view-fading-edge-length);
-        }
-      }
-      @keyframes botFading {
-        0% {
-          box-shadow: var(--scroll-view-bg-color) 0px 0px
-            var(--scroll-view-fading-edge-length)
-            var(--scroll-view-fading-edge-length);
-        }
-        95% {
-          box-shadow: var(--scroll-view-bg-color) 0px 0px
-            var(--scroll-view-fading-edge-length)
-            var(--scroll-view-fading-edge-length);
-        }
-        100% {
-          box-shadow: transparent 0px 0px 0px 0px;
-        }
-      }
-    </style>
-      <div
-        class="mask placeholder-dom"
-        id="top-fade-mask"
-        part="top-fade-mask"
-      ></div>
-      <div
-        class="observer-container placeholder-dom"
-        part="upper-threshold-observer"
-      >
-        <div
-          class="observer placeholder-dom"
-          id="upper-threshold-observer"
-        ></div>
-      </div>
-      <slot></slot>
-      <div
-        class="observer-container placeholder-dom"
-        part="lower-threshold-observer"
-      >
-        <div
-          class="observer placeholder-dom"
-          id="lower-threshold-observer"
-        ></div>
-      </div>
-      <div
-        class="mask placeholder-dom"
-        id="bot-fade-mask"
-        part="bot-fade-mask"
-      ></div>`,
+  templateScrollView,
 )
 export class ScrollView extends HTMLElement {
   static readonly notToFilterFalseAttributes = new Set(['enable-scroll']);

@@ -3,12 +3,13 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 */
-import { Component, genDomGetter, html } from '@lynx-js/web-elements-reactive';
+import { Component, genDomGetter } from '@lynx-js/web-elements-reactive';
 import { Placeholder } from './Placeholder.js';
 import { TextareaBaseAttributes } from './TextareaBaseAttributes.js';
 import { XTextareaAttributes } from './XTextareaAttributes.js';
 import { XTextareaEvents } from './XTextareaEvents.js';
 import { CommonEventsAndMethods } from '../common/CommonEventsAndMethods.js';
+import { templateXTextarea } from '@lynx-js/web-elements-template';
 
 // x-textarea
 @Component(
@@ -20,16 +21,7 @@ import { CommonEventsAndMethods } from '../common/CommonEventsAndMethods.js';
     XTextareaAttributes,
     XTextareaEvents,
   ],
-  html`<style>
-      #textarea:focus,
-      #textarea:focus-visible {
-        border: inherit;
-        outline: inherit;
-      }
-    </style>
-    <form id="form" part="form" method="dialog">
-      <textarea id="textarea" part="textarea"></textarea>
-    </form> `,
+  templateXTextarea,
 )
 export class XTextarea extends HTMLElement {
   #getTextarea = genDomGetter<HTMLTextAreaElement>(

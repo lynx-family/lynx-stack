@@ -3,7 +3,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 */
-import { Component, genDomGetter, html } from '@lynx-js/web-elements-reactive';
+import { Component, genDomGetter } from '@lynx-js/web-elements-reactive';
 
 import { XSwipeEvents } from './XSwiperEvents.js';
 import { XSwiperAutoScroll } from './XSwiperAutoScroll.js';
@@ -11,6 +11,7 @@ import { XSwiperCircular } from './XSwiperCircular.js';
 import { XSwiperIndicator } from './XSwiperIndicator.js';
 import { CommonEventsAndMethods } from '../common/CommonEventsAndMethods.js';
 import { scrollContainerDom } from '../common/constants.js';
+import { templateXSwiper } from '@lynx-js/web-elements-template';
 
 @Component<typeof XSwiper>(
   'x-swiper',
@@ -21,53 +22,7 @@ import { scrollContainerDom } from '../common/constants.js';
     XSwiperCircular,
     XSwiperAutoScroll,
   ],
-  html` <style>
-      #bounce-padding {
-        display: none;
-        flex: 0 0 0;
-        align-self: stretch;
-        scroll-snap-align: none;
-        flex-basis: 100%;
-      }
-      #content {
-        position: relative;
-        display: flex;
-        flex: 0 0 100%;
-        flex-direction: inherit;
-        flex-wrap: inherit;
-        align-self: stretch;
-        justify-content: inherit;
-        align-items: inherit;
-        overflow: inherit;
-        scrollbar-width: none;
-        scroll-snap-align: start;
-        scroll-snap-type: inherit;
-      }
-      div::-webkit-scrollbar {
-        display: none;
-      }
-      #indicator-container {
-        display: none;
-      }
-      @keyframes indicator-dot {
-        30%,
-        70% {
-          background-color: var(--indicator-color);
-        }
-        31%,
-        69% {
-          background-color: var(--indicator-active-color);
-        }
-      }
-    </style>
-    <style id="indicator-style"></style>
-    <div id="bounce-padding" part="bounce-padding"></div>
-    <div id="indicator-container" part="indicator-container"></div>
-    <div id="content" part="content">
-      <slot part="slot-start" name="circular-start" id="circular-start"></slot>
-      <slot part="slot"></slot>
-      <slot part="slot-end" name="circular-end" id="circular-end"></slot>
-    </div>`,
+  templateXSwiper,
 )
 export class XSwiper extends HTMLElement {
   static notToFilterFalseAttributes = new Set([

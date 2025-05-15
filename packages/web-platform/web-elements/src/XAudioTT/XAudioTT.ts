@@ -5,7 +5,6 @@
 */
 import {
   Component,
-  html,
   genDomGetter,
   bindToAttribute,
 } from '@lynx-js/web-elements-reactive';
@@ -20,11 +19,12 @@ import {
   xAudioBlob,
   xAudioSrc,
 } from './utils.js';
+import { templateXAudioTT } from '@lynx-js/web-elements-template';
 
 @Component<typeof XAudioTT>(
   'x-audio-tt',
   [CommonEventsAndMethods, XAudioAttribute, XAudioEvents],
-  html`<audio id="audio"></audio>`,
+  templateXAudioTT,
 )
 export class XAudioTT extends HTMLElement {
   #getAudio = genDomGetter<HTMLAudioElement>(() => this.shadowRoot!, '#audio');

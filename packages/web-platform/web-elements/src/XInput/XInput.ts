@@ -3,13 +3,14 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 */
-import { Component, genDomGetter, html } from '@lynx-js/web-elements-reactive';
+import { Component, genDomGetter } from '@lynx-js/web-elements-reactive';
 
 import { InputBaseAttributes } from './InputBaseAttributes.js';
 import { Placeholder } from './Placeholder.js';
 import { XInputAttribute } from './XInputAttribute.js';
 import { XInputEvents } from './XInputEvents.js';
 import { CommonEventsAndMethods } from '../common/CommonEventsAndMethods.js';
+import { templateXInput } from '@lynx-js/web-elements-template';
 
 @Component<typeof XInput>(
   'x-input',
@@ -20,24 +21,7 @@ import { CommonEventsAndMethods } from '../common/CommonEventsAndMethods.js';
     InputBaseAttributes,
     XInputEvents,
   ],
-  html` <style>
-      #input:focus {
-        outline: none;
-      }
-      #form {
-        display: none;
-      }
-    </style>
-    <form id="form" part="form" method="dialog">
-      <input
-        id="input"
-        part="input"
-        step="any"
-        type="text"
-        inputmode="text"
-        spell-check="true"
-      />
-    </form>`,
+  templateXInput,
 )
 export class XInput extends HTMLElement {
   #getInput = genDomGetter<HTMLInputElement>(() => this.shadowRoot!, '#input');

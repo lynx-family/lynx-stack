@@ -679,6 +679,9 @@ importers:
       '@lynx-js/web-elements-reactive':
         specifier: workspace:*
         version: link:../web-elements-reactive
+      '@lynx-js/web-elements-template':
+        specifier: workspace:*
+        version: link:../web-elements-template
     devDependencies:
       tslib:
         specifier: ^2.8.1
@@ -691,6 +694,8 @@ importers:
         version: link:../web-elements
 
   packages/web-platform/web-elements-reactive: {}
+
+  packages/web-platform/web-elements-template: {}
 
   packages/web-platform/web-explorer:
     dependencies:

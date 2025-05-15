@@ -7,9 +7,9 @@ import {
   type AttributeReactiveClass,
   Component,
   genDomGetter,
-  html,
   registerAttributeHandler,
 } from '@lynx-js/web-elements-reactive';
+import { templateInlineImage } from '@lynx-js/web-elements-template';
 
 export class InlineImageAttributes
   implements InstanceType<AttributeReactiveClass<typeof InlineImage>>
@@ -34,6 +34,6 @@ export class InlineImageAttributes
 @Component<typeof InlineImage>(
   'inline-image',
   [InlineImageAttributes],
-  html` <img id="img" part="img" /> `,
+  templateInlineImage({}),
 )
 export class InlineImage extends HTMLElement {}

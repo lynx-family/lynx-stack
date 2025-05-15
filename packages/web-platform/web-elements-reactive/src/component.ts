@@ -103,10 +103,13 @@ export function Component<T extends WebComponentClass>(
           templateElement.innerHTML = template;
           document.body.appendChild(templateElement);
         }
-        if (templateElement) {
-          this.attachShadow({ mode: 'open', delegatesFocus: true });
+        if (templateElement && !this.shadowRoot) {
+          const shadowRoot = this.attachShadow({
+            mode: 'open',
+            delegatesFocus: true,
+          });
           const template = templateElement.content.cloneNode(true);
-          this.shadowRoot?.append(template);
+          shadowRoot.append(template);
         }
         this.#attributeReactives = attributeReactiveClasses.map((oneClass) => {
           const oneAttributeReactive = new oneClass(this as InstanceType<T>);

@@ -3,53 +3,18 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 */
-import { Component, genDomGetter, html } from '@lynx-js/web-elements-reactive';
+import { Component, genDomGetter } from '@lynx-js/web-elements-reactive';
 import { XListAttributes } from './XListAttributes.js';
 import { XListEvents } from './XListEvents.js';
 import { XListWaterfall } from './XListWaterfall.js';
 import { CommonEventsAndMethods } from '../common/CommonEventsAndMethods.js';
 import { commonComponentEventSetting } from '../common/commonEventInitConfiguration.js';
+import { templateXList } from '@lynx-js/web-elements-template';
 
 @Component<typeof XList>(
   'x-list',
   [CommonEventsAndMethods, XListAttributes, XListEvents, XListWaterfall],
-  html`<style>
-  .placeholder-dom {
-    display: none;
-    flex: 0 0 0;
-    align-self: stretch;
-    min-height: 0;
-    min-width: 0;
-  }
-  .observer-container {
-    flex-direction: inherit;
-    overflow: visible;
-  }
-  .observer {
-    display: flex;
-  }
-  </style>
-  <div id="content" part="content">
-    <div
-      class="observer-container placeholder-dom"
-      part="upper-threshold-observer"
-    >
-      <div
-        class="observer placeholder-dom"
-        id="upper-threshold-observer"
-      ></div>
-    </div>
-    <slot part="slot"></slot>
-    <div
-      class="observer-container placeholder-dom"
-      part="lower-threshold-observer"
-    >
-      <div
-        class="observer placeholder-dom"
-        id="lower-threshold-observer"
-      ></div>
-    </div>
-  </div>`,
+  templateXList,
 )
 export class XList extends HTMLElement {
   static readonly notToFilterFalseAttributes = new Set(['enable-scroll']);

@@ -100,7 +100,8 @@
     "**/*.css"
   ],
   "dependencies": {
-    "@lynx-js/web-elements-reactive": "workspace:*"
+    "@lynx-js/web-elements-reactive": "workspace:*",
+    "@lynx-js/web-elements-template": "workspace:*"
   },
   "devDependencies": {
     "tslib": "^2.8.1"
