@@ -8,7 +8,7 @@ export {
   runWorkletCtx,
   updateWorkletRef,
   updateWorkletRefInitValueChanges,
-  clearDelayedWorklets,
+  onHydrationFinished,
 } from './bindings.js';
 
 export type * from './types.js';

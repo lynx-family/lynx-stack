@@ -2,17 +2,18 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { clearDelayedWorklets, updateWorkletRefInitValueChanges } from '@lynx-js/react/worklet-runtime/bindings';
+import { updateWorkletRefInitValueChanges } from '@lynx-js/react/worklet-runtime/bindings';
 
 import type { PatchList, PatchOptions } from './commit.js';
 import { snapshotPatchApply } from './snapshotPatchApply.js';
 import { LifecycleConstant } from '../../lifecycleConstant.js';
 import { __pendingListUpdates } from '../../list.js';
-import { PerformanceTimingKeys, markTiming, setPipeline } from '../../lynx/performance.js';
+import { markTiming, PerformanceTimingKeys, setPipeline } from '../../lynx/performance.js';
 import { takeGlobalRefPatchMap } from '../../snapshot/ref.js';
 import { __page } from '../../snapshot.js';
 import { isEmptyObject } from '../../utils.js';
 import { getReloadVersion } from '../pass.js';
+import { setMainThreadHydrationFinished } from './isMainThreadHydrationFinished.js';
 
 function updateMainThread(
   { data, patchOptions }: {
@@ -47,7 +48,7 @@ function updateMainThread(
   markTiming(PerformanceTimingKeys.patchChangesEnd);
   markTiming(PerformanceTimingKeys.mtsRenderEnd);
   if (patchOptions.isHydration) {
-    clearDelayedWorklets();
+    setMainThreadHydrationFinished(true);
   }
   if (patchOptions.pipelineOptions) {
     flushOptions.pipelineOptions = patchOptions.pipelineOptions;

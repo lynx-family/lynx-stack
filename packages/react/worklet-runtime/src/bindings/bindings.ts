@@ -56,7 +56,7 @@ function updateWorkletRefInitValueChanges(patch?: [number, unknown][]): void {
  *
  * @internal
  */
-function clearDelayedWorklets(): void {
+function onHydrationFinished(): void {
   globalThis.lynxWorkletImpl?._eventDelayImpl.clearDelayedWorklets();
 }
 
@@ -74,6 +74,6 @@ export {
   runWorkletCtx,
   updateWorkletRef,
   updateWorkletRefInitValueChanges,
-  clearDelayedWorklets,
+  onHydrationFinished,
   registerWorklet,
 };

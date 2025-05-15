@@ -22,6 +22,7 @@ import { clearJSReadyEventIdSwap, isJSReady } from './event/jsReady.js';
 import { increaseReloadVersion } from './pass.js';
 import { deinitGlobalSnapshotPatch } from './patch/snapshotPatch.js';
 import { renderMainThread } from './render.js';
+import { setMainThreadHydrationFinished } from './patch/isMainThreadHydrationFinished.js';
 
 function reloadMainThread(data: any, options: UpdatePageOption): void {
   if (__PROFILE__) {
@@ -38,6 +39,7 @@ function reloadMainThread(data: any, options: UpdatePageOption): void {
   snapshotInstanceManager.clear();
   __pendingListUpdates.clear();
   clearJSReadyEventIdSwap();
+  setMainThreadHydrationFinished(false);
 
   const oldRoot = __root;
   setRoot(new SnapshotInstance('root'));
