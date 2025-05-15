@@ -1,12 +1,13 @@
 /** @jsxImportSource ../lepus */
 
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { elementTree, options } from './utils/nativeMethod';
+
 import { globalEnvManager } from './utils/envManager';
-import { __root } from '../src/root';
+import { elementTree, options } from './utils/nativeMethod';
 import { __page as __internalPage } from '../src/internal';
-import { clearPage } from '../src/snapshot';
 import { jsReadyEventIdSwap } from '../src/lifecycle/event/jsReady';
+import { __root } from '../src/root';
+import { clearPage } from '../src/snapshot';
 
 const ssrIDMap = new Map();
 
@@ -211,7 +212,7 @@ describe('ssr', () => {
               "color": "red",
             },
             "-2:2:",
-            "-2:3:",
+            "react-ref--2-3",
             {
               "_lepusWorkletHash": "1",
               "_workletType": "main-thread",
@@ -273,7 +274,7 @@ describe('ssr', () => {
               "main-thread:ref": {
                 "_lepusWorkletHash": "2",
               },
-              "ref": "-2:0:ref",
+              "ref": "react-ref--2-0",
               "style": {
                 "color": "red",
               },

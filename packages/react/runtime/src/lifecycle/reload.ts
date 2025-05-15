@@ -14,13 +14,13 @@ import { LifecycleConstant } from '../lifecycleConstant.js';
 import { __pendingListUpdates } from '../list.js';
 import { __root, setRoot } from '../root.js';
 import { SnapshotInstance, __page, snapshotInstanceManager } from '../snapshot.js';
-import { takeGlobalRefPatchMap } from '../snapshot/ref.js';
 import { isEmptyObject } from '../utils.js';
-import { destroyWorklet } from '../worklet/destroy.js';
 import { destroyBackground } from './destroy.js';
+import { destroyWorklet } from '../worklet/destroy.js';
 import { clearJSReadyEventIdSwap, isJSReady } from './event/jsReady.js';
 import { increaseReloadVersion } from './pass.js';
 import { deinitGlobalSnapshotPatch } from './patch/snapshotPatch.js';
+import { shouldDelayUiOps } from './ref/delay.js';
 import { renderMainThread } from './render.js';
 
 function reloadMainThread(data: any, options: UpdatePageOption): void {
@@ -55,7 +55,6 @@ function reloadMainThread(data: any, options: UpdatePageOption): void {
       LifecycleConstant.firstScreen, /* FIRST_SCREEN */
       {
         root: JSON.stringify(__root),
-        refPatch: JSON.stringify(takeGlobalRefPatchMap()),
       },
     ]);
   }
@@ -82,6 +81,7 @@ function reloadBackground(updateData: Record<string, any>): void {
   // COW when modify `lynx.__initData` to make sure Provider & Consumer works
   lynx.__initData = Object.assign({}, lynx.__initData, updateData);
 
+  shouldDelayUiOps.value = true;
   render(__root.__jsx, __root as any);
 
   if (__PROFILE__) {

@@ -8,7 +8,7 @@ import './hooks/react.js';
 import { initProfileHook } from './debug/profile.js';
 import { document, setupBackgroundDocument } from './document.js';
 import { initDelayUnmount } from './lifecycle/delayUnmount.js';
-import { replaceCommitHook, replaceRequestAnimationFrame } from './lifecycle/patch/commit.js';
+import { replaceCommitHook } from './lifecycle/patch/commit.js';
 import { injectUpdateMainThread } from './lifecycle/patch/updateMainThread.js';
 import { injectCalledByNative } from './lynx/calledByNative.js';
 import { setupLynxTestingEnv } from './lynx/env.js';
@@ -48,7 +48,6 @@ if (__BACKGROUND__) {
   if (process.env['NODE_ENV'] === 'test') {}
   else {
     replaceCommitHook();
-    replaceRequestAnimationFrame();
     initTimingAPI();
     initDelayUnmount();
   }

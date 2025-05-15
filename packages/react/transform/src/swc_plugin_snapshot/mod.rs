@@ -226,7 +226,7 @@ impl DynamicPart {
             element_index: Expr = i32_to_expr(element_index),
           ),
           AttrName::Ref => quote!(
-            "(snapshot, index, oldValue) => $runtime_id.updateRef(snapshot, index, oldValue, $element_index, '')" as Expr,
+            "(snapshot, index, oldValue) => $runtime_id.updateRef(snapshot, index, oldValue, $element_index)" as Expr,
             runtime_id: Expr = runtime_id.clone(),
             element_index: Expr = i32_to_expr(element_index),
           ),
@@ -1306,6 +1306,8 @@ where
 
     let mut snapshot_values: Vec<Option<ExprOrSpread>> = vec![];
     let mut snapshot_values_has_attr = false;
+    let mut snapshot_values_has_ref = false;
+    let mut snapshot_values_has_spread = false;
     let mut snapshot_attrs: Vec<JSXAttrOrSpread> = vec![];
     let mut snapshot_children: Vec<JSXElementChild> = vec![];
     let mut snapshot_dynamic_part_def: Vec<Option<ExprOrSpread>> = vec![];
@@ -1394,11 +1396,16 @@ where
                     value
                   }
                 } else if let AttrName::Ref = attr_name {
-                  quote!(
-                    "$runtime_id.transformRef($value)" as Expr,
-                    runtime_id: Expr = runtime_id.clone(),
-                    value: Expr = value,
-                  )
+                  snapshot_values_has_ref = true;
+                  if target == TransformTarget::LEPUS {
+                    quote!("1" as Expr)
+                  } else {
+                    quote!(
+                      "$runtime_id.transformRef($value)" as Expr,
+                      runtime_id: Expr = runtime_id.clone(),
+                      value: Expr = value,
+                    )
+                  }
                 } else {
                   value
                 }),
@@ -1427,6 +1434,7 @@ where
                 expr: Box::new(value),
               }));
               snapshot_values_has_attr = true;
+              snapshot_values_has_spread = true;
               // snapshot_attrs.push(JSXAttrOrSpread::JSXAttr(JSXAttr {
               //   span: DUMMY_SP,
               //   name,
@@ -1584,6 +1592,21 @@ where
         name: JSXElementName::Ident(snapshot_id.clone()),
         span: node.span,
         attrs: {
+          if target != TransformTarget::LEPUS
+            && (snapshot_values_has_ref || snapshot_values_has_spread)
+          {
+            snapshot_attrs.push(JSXAttrOrSpread::JSXAttr(JSXAttr {
+              span: DUMMY_SP,
+              name: JSXAttrName::Ident(IdentName::new("ref".into(), DUMMY_SP)),
+              value: Some(JSXAttrValue::JSXExprContainer(JSXExprContainer {
+                span: DUMMY_SP,
+                expr: JSXExpr::Expr(Box::new(quote!(
+                  r#"$runtime_id.applyRefs.bind([])"# as Expr,
+                    runtime_id: Expr = self.runtime_id.clone(),
+                ))),
+              })),
+            }))
+          };
           if snapshot_values_has_attr {
             snapshot_attrs.push(JSXAttrOrSpread::JSXAttr(JSXAttr {
               span: DUMMY_SP,
