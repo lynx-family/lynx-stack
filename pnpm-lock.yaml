@@ -693,10 +693,6 @@ importers:
   packages/web-platform/web-elements-reactive: {}
 
   packages/web-platform/web-explorer:
-    dependencies:
-      qr-scanner:
-        specifier: ^1.4.2
-        version: 1.4.2
     devDependencies:
       '@lynx-js/lynx-core':
         specifier: 0.1.2
@@ -3213,9 +3209,6 @@ packages:
 
   '@types/object.groupby@1.0.4':
     resolution: {integrity: sha512-n5gXvoz1nuDLLLMgTl82b5VCkSlqt2zfBkSWxoCmMS/j+hN6W7BuPlpOm68B/RRluy2bYo67KOtMQ28cySqeYw==}
-
-  '@types/offscreencanvas@2019.7.3':
-    resolution: {integrity: sha512-ieXiYmgSRXUDeOntE1InxjWyvEelZGP63M+cGuquuRLuIKKT1osnkXjxev9B7d1nXSug5vpunx+gNlbVxMlC9A==}
 
   '@types/prop-types@15.7.13':
     resolution: {integrity: sha512-hCZTSvwbzWGvhqxp/RqVqwU999pBf2vp7hzIjiYOsl8wqOmUxkQ6ddw1cV3l8811+kdUFus/q4d1Y3E3SyEifA==}
@@ -7016,9 +7009,6 @@ packages:
   punycode@2.3.1:
     resolution: {integrity: sha512-vYt7UD1U9Wg6138shLtLOvdAu+8DsC/ilFtEVHcH+wydcSpNE20AfSOduf6MkRFahL5FY7X1oU7nKVZFtfq8Fg==}
     engines: {node: '>=6'}
-
-  qr-scanner@1.4.2:
-    resolution: {integrity: sha512-kV1yQUe2FENvn59tMZW6mOVfpq9mGxGf8l6+EGaXUOd4RBOLg7tRC83OrirM5AtDvZRpdjdlXURsHreAOSPOUw==}
 
   qs@6.13.0:
     resolution: {integrity: sha512-+38qI9SOr8tfZ4QmJNplMUxqjbe7LKvvZgWdExBOmd+egZTtjLB67Gu0HRX3u/XOq7UU2Nx6nsjvS16Z9uwfpg==}
@@ -10883,8 +10873,6 @@ snapshots:
       undici-types: 6.21.0
 
   '@types/object.groupby@1.0.4': {}
-
-  '@types/offscreencanvas@2019.7.3': {}
 
   '@types/prop-types@15.7.13': {}
 
@@ -15384,10 +15372,6 @@ snapshots:
       sade: 1.8.1
 
   punycode@2.3.1: {}
-
-  qr-scanner@1.4.2:
-    dependencies:
-      '@types/offscreencanvas': 2019.7.3
 
   qs@6.13.0:
     dependencies:

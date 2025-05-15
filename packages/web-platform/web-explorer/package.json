@@ -23,9 +23,6 @@
     "build:rsdoctor": "RSDOCTOR=true rsbuild build",
     "dev": "rsbuild dev"
   },
-  "dependencies": {
-    "qr-scanner": "^1.4.2"
-  },
   "devDependencies": {
     "@lynx-js/lynx-core": "0.1.2",
     "@lynx-js/web-core": "workspace:*",

@@ -4,8 +4,6 @@ import '@lynx-js/web-core/index.css';
 import '@lynx-js/web-elements/index.css';
 import '@lynx-js/web-elements/all';
 
-import QrScanner from 'qr-scanner';
-
 const video = document.getElementById('qr-scanner') as HTMLVideoElement;
 let lynxView = document.getElementById('lynx-view') as LynxView;
 const backButton = document.getElementById('back-button') as HTMLDivElement;
@@ -17,6 +15,7 @@ backButton.addEventListener('click', () => {
   setLynxViewUrl(homepage);
 });
 
+// @ts-expect-error
 const qrScanner = new QrScanner(video, (result) => {
   console.log('qr', result);
   lynxView.style.visibility = 'visible';
