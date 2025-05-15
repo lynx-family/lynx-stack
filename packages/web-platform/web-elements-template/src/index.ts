@@ -89,7 +89,7 @@ export const templateXAudioTT = `<audio id="audio"></audio>`;
 
 export const templateXImage = (attributes: { src?: string }) =>
   `<img part="img" alt="" id="img" ${
-    attributes.src ? `src=${attributes.src}` : ''
+    attributes.src ? `src="${attributes.src}"` : ''
   }/> `;
 
 export const templateFilterImage = templateXImage;
