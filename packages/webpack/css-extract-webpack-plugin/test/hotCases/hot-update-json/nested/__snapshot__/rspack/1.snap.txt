@@ -7,7 +7,7 @@
 - Bundle: rspack-bundle.js
 - Manifest: pages/main.LAST_HASH.hot-update.json, size: 34
 - Manifest: pages/main/pages/main.LAST_HASH.css.hot-update.json, size: 1090
-- Update: pages/main.LAST_HASH.hot-update.js, size: 1249
+- Update: pages/main.LAST_HASH.hot-update.js, size: 1483
 
 ## Manifest
 
@@ -55,6 +55,13 @@ var _1 = "lSCZcGo4VS484j8B";
     (function() {
       var localsJsonString = "{\"foo\":\"lSCZcGo4VS484j8B\"}";
       var cssReload = __webpack_require__("../../../../runtime/hotModuleReplacement.cjs")(module.id, {}, "");
+
+      var lazyChunkInitialLoading = __webpack_require__("../../../../runtime/lazyChunkInitialLoading.cjs")(module.id, {}, "");
+
+      if(__webpack_require__.lynxLazyChunkIds?.length > 0) {
+        lazyChunkInitialLoading();
+      }
+
       // only invalidate when locals change
       if (
         module.hot.data &&

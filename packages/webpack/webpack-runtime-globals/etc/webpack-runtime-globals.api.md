@@ -7,6 +7,7 @@
 // @public
 export const RuntimeGlobals: {
     readonly lynxAsyncChunkIds: "__webpack_require__.lynx_aci";
+    readonly lynxLazyChunkIds: "__webpack_require__.lynxLazyChunkIds";
     readonly lynxChunkEntries: "lynx.__chunk_entries__";
     readonly lynxProcessEvalResult: "globalThis.processEvalResult";
 };

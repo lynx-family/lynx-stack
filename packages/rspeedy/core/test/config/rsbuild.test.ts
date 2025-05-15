@@ -1,7 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type { RsbuildPlugin } from '@rsbuild/core'
+import type { RsbuildPlugin, Rspack } from '@rsbuild/core'
 import { describe, expect, test } from 'vitest'
 
 import { toRsbuildConfig } from '../../src/config/rsbuild/index.js'
@@ -14,6 +14,7 @@ describe('Config - toRsBuildConfig', () => {
       })
       expect(rsbuildConfig.dev).toMatchInlineSnapshot(`
         {
+          "lazyCompilation": false,
           "progressBar": true,
           "watchFiles": undefined,
           "writeToDisk": true,
@@ -48,6 +49,87 @@ describe('Config - toRsBuildConfig', () => {
         },
       })
       expect(rsbuildConfig.dev?.writeToDisk).toStrictEqual(expect.any(Function))
+    })
+
+    test('transform dev.lazyCompilation: true', () => {
+      const rsbuildConfig = toRsbuildConfig({
+        dev: {
+          lazyCompilation: true,
+        },
+      })
+      expect(rsbuildConfig.dev?.lazyCompilation).toStrictEqual(
+        expect.any(Object),
+      )
+    })
+
+    test('transform dev.lazyCompilation: Object', () => {
+      const rsbuildConfig = toRsbuildConfig({
+        dev: {
+          lazyCompilation: {},
+        },
+      })
+      const lazyCompilation = rsbuildConfig.dev
+        ?.lazyCompilation as Rspack.LazyCompilationOptions
+
+      expect(typeof lazyCompilation).toBe('object')
+      expect(typeof lazyCompilation.test).toBe('function')
+
+      expect(lazyCompilation.client).toBeDefined()
+      expect(typeof lazyCompilation.client).toBe('string')
+      expect(lazyCompilation.client).toContain(
+        'lazy-compilation-fetch.js',
+      )
+    })
+
+    test('transform dev.lazyCompilation: true should return default options', () => {
+      const rsbuildConfig = toRsbuildConfig({
+        dev: {
+          lazyCompilation: true,
+        },
+      })
+      const lazyCompilation = rsbuildConfig.dev
+        ?.lazyCompilation as Rspack.LazyCompilationOptions
+
+      expect(typeof lazyCompilation).toBe('object')
+      expect(typeof lazyCompilation.test).toBe('function')
+
+      expect(lazyCompilation.client).toBeDefined()
+      expect(typeof lazyCompilation.client).toBe('string')
+      expect(lazyCompilation.client).toContain(
+        'lazy-compilation-fetch.js',
+      )
+    })
+
+    test('function should return false for HMR modules', () => {
+      const rsbuildConfig = toRsbuildConfig({
+        dev: {
+          lazyCompilation: true,
+        },
+      })
+
+      const lazyOptions = rsbuildConfig.dev
+        ?.lazyCompilation as Rspack.LazyCompilationOptions
+      const testFn = lazyOptions.test as (module: Rspack.Module) => boolean
+
+      const mockHMRModule1 = {
+        layer: 'react:background',
+        nameForCondition: () => 'path/to/@rspack/core/hot/dev-server.js',
+      } as unknown as Rspack.Module
+
+      const mockHMRModule2 = {
+        layer: 'react:background',
+        nameForCondition: () =>
+          'path/to/webpack-dev-transport/lib/client/index.js',
+      } as unknown as Rspack.Module
+
+      const mockHMRModule3 = {
+        layer: 'react:background',
+        nameForCondition: () => 'path/to/some/module.js',
+      } as unknown as Rspack.Module
+
+      expect(testFn(mockHMRModule1)).toBe(false)
+      expect(testFn(mockHMRModule2)).toBe(false)
+      expect(testFn(mockHMRModule3)).toBe(true)
     })
   })
 

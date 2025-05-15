@@ -14,6 +14,11 @@ export const RuntimeGlobals = {
   lynxAsyncChunkIds: '__webpack_require__.lynx_aci',
 
   /**
+   * An array of all the lazy chunk ids.
+   */
+  lynxLazyChunkIds: '__webpack_require__.lynxLazyChunkIds',
+
+  /**
    * A map from `chunk.id` to entryName of the chunk.
    */
   lynxChunkEntries: 'lynx.__chunk_entries__',
