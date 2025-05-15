@@ -1,5 +1,5 @@
 ---
-"@lynx-js/web-core": patch
+"@lynx-js/web-core-server": patch
 ---
 
 perf: use v8 hint for generated javascript file
