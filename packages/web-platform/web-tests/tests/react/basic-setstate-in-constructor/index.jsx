@@ -6,11 +6,21 @@ class Foo extends Component {
   constructor(props) {
     super(props);
     // the following line made `this._nextState !== this.state` be truthy prior to the fix for preactjs/preact#2638
-    this.state = { react: '111' };
-    this.setState({ react: 'awesome' });
+    this.state = { color: 'pink' };
+    this.setState({ color: 'green' });
   }
   render() {
-    return <text>{this.state.react}</text>;
+    return (
+      <view
+        id='target'
+        style={{
+          height: '100px',
+          width: '100px',
+          backgroundColor: this.state.color,
+        }}
+      >
+      </view>
+    );
   }
 }
 root.render(<Foo></Foo>);
