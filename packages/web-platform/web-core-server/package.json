@@ -1,7 +1,7 @@
 {
   "name": "@lynx-js/web-core-server",
   "version": "0.12.0",
-  "private": false,
+  "private": true,
   "description": "",
   "keywords": [],
   "repository": {
@@ -25,6 +25,5 @@
     "@lynx-js/web-constants": "workspace:*",
     "@lynx-js/web-worker-rpc": "workspace:*",
     "@lynx-js/web-worker-runtime": "workspace:*"
-  },
-  "preview": true
+  }
 }
