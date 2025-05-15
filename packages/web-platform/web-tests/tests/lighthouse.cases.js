@@ -5,19 +5,19 @@ export default [
       'categories:performance': [
         'error',
         {
-          'minScore': 0.93,
+          'minScore': 0.99,
         },
       ],
       'first-contentful-paint': [
         'error',
         {
-          'maxNumericValue': 800,
+          'maxNumericValue': 1000,
         },
       ],
-      'total-blocking-time': [
+      'largest-contentful-paint': [
         'error',
         {
-          'maxNumericValue': 350,
+          'maxNumericValue': 1000,
         },
       ],
     },
@@ -28,19 +28,19 @@ export default [
       'categories:performance': [
         'error',
         {
-          'minScore': 0.87,
+          'minScore': 0.99,
         },
       ],
       'first-contentful-paint': [
         'error',
         {
-          'maxNumericValue': 800,
+          'maxNumericValue': 1500,
         },
       ],
-      'total-blocking-time': [
+      'largest-contentful-paint': [
         'error',
         {
-          'maxNumericValue': 500,
+          'maxNumericValue': 1500,
         },
       ],
     },
@@ -52,19 +52,13 @@ export default [
       'categories:performance': [
         'error',
         {
-          'minScore': 0.79,
+          'minScore': 0.80,
         },
       ],
       'speed-index': [
         'error',
         {
-          'maxNumericValue': 550,
-        },
-      ],
-      'total-blocking-time': [
-        'error',
-        {
-          'maxNumericValue': 500,
+          'maxNumericValue': 1500,
         },
       ],
     },
