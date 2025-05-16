@@ -9,8 +9,10 @@
  * optimized attribute updates at compile time, avoiding runtime object spreads.
  */
 
+import type { Worklet } from '@lynx-js/react/worklet-runtime/bindings';
+
 import { BackgroundSnapshotInstance } from '../backgroundSnapshot.js';
-import { __pendingListUpdates, ListUpdateInfoRecording } from '../list.js';
+import { ListUpdateInfoRecording, __pendingListUpdates } from '../list.js';
 import { SnapshotInstance } from '../snapshot.js';
 import { isDirectOrDeepEqual, isEmptyObject, pick } from '../utils.js';
 import { updateEvent } from './event.js';
@@ -37,7 +39,7 @@ const noFlattenAttributes = /* @__PURE__ */ new Set<string>([
 ]);
 
 function updateSpread(snapshot: SnapshotInstance, index: number, oldValue: any, elementIndex: number): void {
-  oldValue ||= {};
+  oldValue ??= {};
   let newValue: Record<string, any> = snapshot.__values![index]; // compiler guarantee this must be an object;
 
   // @ts-ignore
@@ -132,7 +134,7 @@ function updateSpread(snapshot: SnapshotInstance, index: number, oldValue: any, 
           __elements: snapshot.__elements,
         } as SnapshotInstance;
         updateGesture(fakeSnapshot, index, oldValue[key], elementIndex, workletType);
-      } else if ((match = key.match(eventRegExp))) {
+      } else if ((match = eventRegExp.exec(key))) {
         const workletType = match[2];
         const eventType = eventTypeMap[match[3]!]!;
         const eventName = match[4]!;
@@ -150,7 +152,15 @@ function updateSpread(snapshot: SnapshotInstance, index: number, oldValue: any, 
           __elements: snapshot.__elements,
         } as SnapshotInstance;
         if (workletType) {
-          updateWorkletEvent(fakeSnapshot, index, oldValue[key], elementIndex, workletType, eventType, eventName);
+          updateWorkletEvent(
+            fakeSnapshot,
+            index,
+            oldValue[key] as Worklet,
+            elementIndex,
+            workletType,
+            eventType,
+            eventName,
+          );
         } else {
           updateEvent(fakeSnapshot, index, oldValue[key], elementIndex, eventType, eventName, key);
         }
@@ -220,7 +230,7 @@ function updateSpread(snapshot: SnapshotInstance, index: number, oldValue: any, 
           __elements: snapshot.__elements,
         } as SnapshotInstance;
         updateGesture(fakeSnapshot, index, oldValue[key], elementIndex, workletType);
-      } else if ((match = key.match(eventRegExp))) {
+      } else if ((match = eventRegExp.exec(key))) {
         const workletType = match[2];
         const eventType = eventTypeMap[match[3]!]!;
         const eventName = match[4]!;
