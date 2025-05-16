@@ -11,7 +11,6 @@ interface CtxTrace {
 export let currentCtx: CtxTrace | undefined;
 
 export function traceCtxCall(ctx: Worklet, _params: ClosureValueType[]): void {
-  console.log('traceCtxCall', ctx);
   currentCtx = {
     ctx,
   };
