@@ -1,5 +1,51 @@
 # @lynx-js/rspeedy
 
+## 0.9.5
+
+### Patch Changes
+
+- Support `source.preEntry`. ([#750](https://github.com/lynx-family/lynx-stack/pull/750))
+
+  Add a script before the entry file of each page. This script will be executed before the page code.
+  It can be used to execute global logics, such as injecting polyfills, setting global styles, etc.
+
+  example：
+
+  ```js
+  import { defineConfig } from '@lynx-js/rspeedy'
+  export default defineConfig({
+    source: {
+      preEntry: './src/polyfill.ts',
+    },
+  })
+  ```
+
+- Bump Rsbuild v1.3.20 with Rspack v1.3.10. ([#799](https://github.com/lynx-family/lynx-stack/pull/799))
+
+- Add `callerName` option to `createRspeedy`. ([#757](https://github.com/lynx-family/lynx-stack/pull/757))
+
+  It can be accessed by Rsbuild plugins through [`api.context.callerName`](https://rsbuild.dev/api/javascript-api/instance#contextcallername), and execute different logic based on this identifier.
+
+  ```js
+  export const myPlugin = {
+    name: 'my-plugin',
+    setup(api) {
+      const { callerName } = api.context
+
+      if (callerName === 'rslib') {
+        // ...
+      } else if (callerName === 'rspeedy') {
+        // ...
+      }
+    },
+  }
+  ```
+
+- Support `performance.buildCache`. ([#766](https://github.com/lynx-family/lynx-stack/pull/766))
+
+- Updated dependencies [[`fbc4fbb`](https://github.com/lynx-family/lynx-stack/commit/fbc4fbbdb572ad7128a33dc06e8d8a026d18e388)]:
+  - @lynx-js/webpack-dev-transport@0.1.3
+
 ## 0.9.4
 
 ### Patch Changes

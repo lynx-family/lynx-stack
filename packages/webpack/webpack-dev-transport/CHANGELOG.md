@@ -1,5 +1,11 @@
 # @lynx-js/webpack-dev-transport
 
+## 0.1.3
+
+### Patch Changes
+
+- Fix live-reload not working on Lynx 3.3 ([#795](https://github.com/lynx-family/lynx-stack/pull/795))
+
 ## 0.1.2
 
 ### Patch Changes

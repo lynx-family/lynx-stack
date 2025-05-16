@@ -1,5 +1,11 @@
 # @lynx-js/react
 
+## 0.108.1
+
+### Patch Changes
+
+- Bump swc_core v23.2.0. ([#827](https://github.com/lynx-family/lynx-stack/pull/827))
+
 ## 0.108.0
 
 ### Minor Changes

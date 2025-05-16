@@ -1,5 +1,36 @@
 # @lynx-js/web-core
 
+## 0.13.2
+
+### Patch Changes
+
+- feat: allow lynx code to get JS engine provided properties on globalThis ([#786](https://github.com/lynx-family/lynx-stack/pull/786))
+
+  ```
+  globalThis.Reflect; // this will be the Reflect Object
+  ```
+
+  Note that `assigning to the globalThis` is still not allowed.
+
+- perf: use v8 hint for generated javascript file ([#807](https://github.com/lynx-family/lynx-stack/pull/807))
+
+  https://v8.dev/blog/explicit-compile-hints
+
+- feat: add new property `inject-style-rules` for LynxView ([#785](https://github.com/lynx-family/lynx-stack/pull/785))
+
+  This property allows developer to inject some style rules into the shadowroot.
+
+  It's a wrapper of https://developer.mozilla.org/docs/Web/API/CSSStyleSheet/insertRule
+
+- fix: corrupt mainthread module cache ([#806](https://github.com/lynx-family/lynx-stack/pull/806))
+
+- Updated dependencies [[`03a5f64`](https://github.com/lynx-family/lynx-stack/commit/03a5f64d7d09e38903f5d1c022f36f6e68b6432d), [`6d3d852`](https://github.com/lynx-family/lynx-stack/commit/6d3d8529d0d528419920102ca52da279bbe0f1e0), [`8cdd288`](https://github.com/lynx-family/lynx-stack/commit/8cdd28884288b9456aee3a919d6edbf72da1c67b), [`6d3d852`](https://github.com/lynx-family/lynx-stack/commit/6d3d8529d0d528419920102ca52da279bbe0f1e0)]:
+  - @lynx-js/web-mainthread-apis@0.13.2
+  - @lynx-js/web-worker-runtime@0.13.2
+  - @lynx-js/web-constants@0.13.2
+  - @lynx-js/offscreen-document@0.0.3
+  - @lynx-js/web-worker-rpc@0.13.2
+
 ## 0.13.1
 
 ### Patch Changes

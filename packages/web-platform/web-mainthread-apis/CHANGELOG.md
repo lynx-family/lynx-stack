@@ -1,5 +1,22 @@
 # @lynx-js/web-mainthread-apis
 
+## 0.13.2
+
+### Patch Changes
+
+- feat: allow lynx code to get JS engine provided properties on globalThis ([#786](https://github.com/lynx-family/lynx-stack/pull/786))
+
+  ```
+  globalThis.Reflect; // this will be the Reflect Object
+  ```
+
+  Note that `assigning to the globalThis` is still not allowed.
+
+- fix: corrupt mainthread module cache ([#806](https://github.com/lynx-family/lynx-stack/pull/806))
+
+- Updated dependencies [[`8cdd288`](https://github.com/lynx-family/lynx-stack/commit/8cdd28884288b9456aee3a919d6edbf72da1c67b)]:
+  - @lynx-js/web-constants@0.13.2
+
 ## 0.13.1
 
 ### Patch Changes

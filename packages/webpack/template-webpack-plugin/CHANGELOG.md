@@ -1,5 +1,17 @@
 # @lynx-js/template-webpack-plugin
 
+## 0.6.11
+
+### Patch Changes
+
+- Be compatible with rspack-manifest-plugin. ([#812](https://github.com/lynx-family/lynx-stack/pull/812))
+
+  Now only the `[name].lynx.bundle` and `[name].web.bundle` would exist in `manifest.json`.
+
+  See [lynx-family/lynx-stack#763](https://github.com/lynx-family/lynx-stack/issues/763) for details.
+
+- Avoid CSS encode crash on Web platform. ([#814](https://github.com/lynx-family/lynx-stack/pull/814))
+
 ## 0.6.10
 
 ### Patch Changes

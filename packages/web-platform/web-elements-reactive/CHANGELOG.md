@@ -1,5 +1,15 @@
 # @lynx-js/web-elements-reactive
 
+## 0.2.2
+
+### Patch Changes
+
+- feat: do not create shadowroot if there already have one ([#811](https://github.com/lynx-family/lynx-stack/pull/811))
+
+  the shadowroot may already be created by
+
+  https://developer.mozilla.org/en-US/docs/Web/API/HTMLTemplateElement/shadowRootMode
+
 ## 0.2.1
 
 ### Patch Changes

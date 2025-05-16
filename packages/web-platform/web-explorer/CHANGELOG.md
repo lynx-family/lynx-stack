@@ -1,5 +1,11 @@
 # @lynx-js/web-explorer
 
+## 0.0.8
+
+### Patch Changes
+
+- chore: import qr-scanner from unpkg ([#815](https://github.com/lynx-family/lynx-stack/pull/815))
+
 ## 0.0.7
 
 ### Patch Changes

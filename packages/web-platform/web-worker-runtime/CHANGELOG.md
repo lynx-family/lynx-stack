@@ -1,5 +1,25 @@
 # @lynx-js/web-worker-runtime
 
+## 0.13.2
+
+### Patch Changes
+
+- feat: allow lynx code to get JS engine provided properties on globalThis ([#786](https://github.com/lynx-family/lynx-stack/pull/786))
+
+  ```
+  globalThis.Reflect; // this will be the Reflect Object
+  ```
+
+  Note that `assigning to the globalThis` is still not allowed.
+
+- feat: return the offscreenDocument instance for startMainThread() ([#772](https://github.com/lynx-family/lynx-stack/pull/772))
+
+- Updated dependencies [[`03a5f64`](https://github.com/lynx-family/lynx-stack/commit/03a5f64d7d09e38903f5d1c022f36f6e68b6432d), [`8cdd288`](https://github.com/lynx-family/lynx-stack/commit/8cdd28884288b9456aee3a919d6edbf72da1c67b), [`6d3d852`](https://github.com/lynx-family/lynx-stack/commit/6d3d8529d0d528419920102ca52da279bbe0f1e0)]:
+  - @lynx-js/web-mainthread-apis@0.13.2
+  - @lynx-js/web-constants@0.13.2
+  - @lynx-js/offscreen-document@0.0.3
+  - @lynx-js/web-worker-rpc@0.13.2
+
 ## 0.13.1
 
 ### Patch Changes

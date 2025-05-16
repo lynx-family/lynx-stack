@@ -1,5 +1,14 @@
 # @lynx-js/web-constants
 
+## 0.13.2
+
+### Patch Changes
+
+- fix: corrupt mainthread module cache ([#806](https://github.com/lynx-family/lynx-stack/pull/806))
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.13.2
+
 ## 0.13.1
 
 ### Patch Changes

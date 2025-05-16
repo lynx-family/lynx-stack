@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/webpack-dev-transport",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "A webpack dev-server transport implementation for Lynx",
   "keywords": [
     "webpack",
