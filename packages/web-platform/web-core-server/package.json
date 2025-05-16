@@ -26,7 +26,9 @@
     "watch": "rslib build --watch"
   },
   "devDependencies": {
+    "@lynx-js/offscreen-document": "workspace:*",
     "@lynx-js/web-constants": "workspace:*",
+    "@lynx-js/web-elements-template": "workspace:*",
     "@lynx-js/web-worker-rpc": "workspace:*",
     "@lynx-js/web-worker-runtime": "workspace:*"
   }

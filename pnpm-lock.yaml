@@ -664,9 +664,15 @@ importers:
 
   packages/web-platform/web-core-server:
     devDependencies:
+      '@lynx-js/offscreen-document':
+        specifier: workspace:*
+        version: link:../offscreen-document
       '@lynx-js/web-constants':
         specifier: workspace:*
         version: link:../web-constants
+      '@lynx-js/web-elements-template':
+        specifier: workspace:*
+        version: link:../web-elements-template
       '@lynx-js/web-worker-rpc':
         specifier: workspace:*
         version: link:../web-worker-rpc

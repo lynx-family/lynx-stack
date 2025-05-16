@@ -105,10 +105,11 @@ export function createStyleFunctions(
           value,
         ]),
       );
-    const transformedStyleStr = transformedStyle.map((
-      [property, value],
-    ) => `${property}:${value};`).join('');
-    element.setAttribute('style', transformedStyleStr);
+    const style = element.style;
+    for (const [property, value] of transformedStyle) {
+      const important = property.includes('!important');
+      style.setProperty(property, value, important ? 'important' : '');
+    }
   }
 
   function __SetCSSId(

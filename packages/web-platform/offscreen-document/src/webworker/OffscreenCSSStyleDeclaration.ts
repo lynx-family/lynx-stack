@@ -6,11 +6,13 @@ import { operations } from './OffscreenDocument.js';
 import { OperationType } from '../types/ElementOperation.js';
 import { uniqueId } from './OffscreenNode.js';
 
+export const styleMapSymbol = Symbol('styleMapSymbol');
 export class OffscreenCSSStyleDeclaration {
   /**
    * @private
    */
   private readonly _parent: OffscreenElement;
+  readonly [styleMapSymbol]: Map<string, string> = new Map();
 
   constructor(parent: OffscreenElement) {
     this._parent = parent;
@@ -28,6 +30,10 @@ export class OffscreenCSSStyleDeclaration {
       value: value,
       priority: priority,
     });
+    this[styleMapSymbol].set(
+      property,
+      priority ? `${value} !important` : value,
+    );
   }
 
   removeProperty(property: string): void {
@@ -36,5 +42,6 @@ export class OffscreenCSSStyleDeclaration {
       uid: this._parent[uniqueId],
       property,
     });
+    this[styleMapSymbol].delete(property);
   }
 }

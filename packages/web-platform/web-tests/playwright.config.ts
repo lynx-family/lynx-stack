@@ -8,10 +8,22 @@ process.env['LIBGL_ALWAYS_SOFTWARE'] = 'true'; // https://github.com/microsoft/p
 process.env['GALLIUM_HUD_SCALE'] = '1';
 const isCI = !!process.env.CI;
 const ALL_ON_UI = !!process.env.ALL_ON_UI;
+const enableSSR = !!process.env.ENABLE_SSR;
+const testFPOnly = !!process.env.TEST_FP_ONLY;
 const port = process.env.PORT ?? 3080;
 const workerLimit = process.env['cpu_limit']
   ? Math.floor(parseFloat(process.env['cpu_limit']) / 2)
   : undefined;
+
+const testMatch: string | undefined = (() => {
+  if (testFPOnly) {
+    return '**/fp-only.spec.ts';
+  }
+  if (ALL_ON_UI || enableSSR) {
+    return '**/{react,web-core}.{test,spec}.ts';
+  }
+  return undefined;
+})();
 
 /**
  * Read environment variables from file.
@@ -26,7 +38,7 @@ export default defineConfig({
   /** global timeout https://playwright.dev/docs/test-timeouts#global-timeout */
   globalTimeout: 20 * 60 * 1000,
   testDir: './tests',
-  testMatch: ALL_ON_UI ? '**/{react,web-core}.{test,spec}.ts' : undefined,
+  testMatch,
   testIgnore: '**vitest**',
   /* Run tests in files in parallel */
   fullyParallel: true,
