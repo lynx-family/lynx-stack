@@ -25,6 +25,14 @@ const testMatch: string | undefined = (() => {
   return undefined;
 })();
 
+const testIgnore: string[] = (() => {
+  const ignore = ['**vitest**'];
+  if (isCI) {
+    ignore.push('**/fp-only.spec.ts'); // fp-only tests has its own test steps
+  }
+  return ignore;
+})();
+
 /**
  * Read environment variables from file.
  * https://github.com/motdotla/dotenv
@@ -39,7 +47,7 @@ export default defineConfig({
   globalTimeout: 20 * 60 * 1000,
   testDir: './tests',
   testMatch,
-  testIgnore: '**vitest**',
+  testIgnore,
   /* Run tests in files in parallel */
   fullyParallel: true,
   workers: isCI ? workerLimit : undefined,
