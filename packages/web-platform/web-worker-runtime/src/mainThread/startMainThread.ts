@@ -14,6 +14,7 @@ import { OffscreenDocument } from '@lynx-js/offscreen-document/webworker';
 import { _onEvent } from '@lynx-js/offscreen-document/webworker';
 import { registerUpdateDataHandler } from './crossThreadHandlers/registerUpdateDataHandler.js';
 const mainThreaApiModule = import(
+  /* webpackChunkName: "@lynx-js/web-mainthread-apis" */
   /* webpackMode: "lazy" */
   /* webpackPrefetch: true */
   /* webpackPreload: true */
