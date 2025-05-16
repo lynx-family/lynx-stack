@@ -11,6 +11,10 @@ import { useMemo } from '../hooks/react.js';
 
 let lastId = 0;
 
+export function clearWorkletRefLastIdForTesting(): void {
+  lastId = 0;
+}
+
 abstract class WorkletRef<T> {
   /**
    * @internal

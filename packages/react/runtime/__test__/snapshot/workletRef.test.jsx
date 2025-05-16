@@ -223,7 +223,7 @@ describe('WorkletRef', () => {
           [
             "rLynxChange",
             {
-              "data": "{"patchList":[{"id":5,"workletRefInitValuePatch":[[5,null],[6,null],[7,null],[8,null],[9,null],[10,null]]}]}",
+              "data": "{"patchList":[{"id":5,"workletRefInitValuePatch":[[1,null],[2,null],[3,null],[4,null],[5,null],[6,null]]}]}",
               "patchOptions": {
                 "reloadVersion": 0,
               },
@@ -233,7 +233,7 @@ describe('WorkletRef', () => {
           [
             "rLynxChange",
             {
-              "data": "{"patchList":[{"snapshotPatch":[3,-2,0,{"_wvid":5},3,-3,0,{"_wkltId":233,"_execId":2},3,-4,0,{"_wkltId":233,"_execId":3}],"id":6}]}",
+              "data": "{"patchList":[{"snapshotPatch":[3,-2,0,{"_wvid":1},3,-3,0,{"_wkltId":233,"_execId":2},3,-4,0,{"_wkltId":233,"_execId":3}],"id":6}]}",
               "patchOptions": {
                 "isHydration": true,
                 "pipelineOptions": {
@@ -264,7 +264,7 @@ describe('WorkletRef', () => {
         [
           [
             {
-              "_wvid": 5,
+              "_wvid": 1,
             },
             <view
               has-react-ref={true}
@@ -317,7 +317,7 @@ describe('WorkletRef', () => {
           [
             "rLynxChange",
             {
-              "data": "{"patchList":[{"id":7,"snapshotPatch":[3,-2,0,{"_wvid":6},3,-3,0,{"_wvid":7},3,-4,0,{"_wkltId":233,"_execId":4}]}]}",
+              "data": "{"patchList":[{"id":7,"snapshotPatch":[3,-2,0,{"_wvid":2},3,-3,0,{"_wvid":3},3,-4,0,{"_wkltId":233,"_execId":4}]}]}",
               "patchOptions": {
                 "reloadVersion": 0,
               },
@@ -336,13 +336,13 @@ describe('WorkletRef', () => {
         [
           [
             {
-              "_wvid": 5,
+              "_wvid": 1,
             },
             null,
           ],
           [
             {
-              "_wvid": 6,
+              "_wvid": 2,
             },
             <view
               has-react-ref={true}
@@ -350,7 +350,7 @@ describe('WorkletRef', () => {
           ],
           [
             {
-              "_wvid": 7,
+              "_wvid": 3,
             },
             <view
               has-react-ref={true}
@@ -448,7 +448,7 @@ describe('WorkletRef', () => {
         [
           [
             {
-              "_wvid": 11,
+              "_wvid": 1,
             },
             <view
               has-react-ref={true}
@@ -496,7 +496,7 @@ describe('WorkletRef', () => {
         [
           [
             {
-              "_wvid": 11,
+              "_wvid": 1,
             },
             null,
           ],
@@ -719,7 +719,7 @@ describe('WorkletRef in spread', () => {
         [
           [
             {
-              "_wvid": 15,
+              "_wvid": 1,
             },
             <view
               has-react-ref={true}
@@ -744,7 +744,7 @@ describe('WorkletRef in spread', () => {
         [
           [
             {
-              "_wvid": 15,
+              "_wvid": 1,
             },
             null,
           ],
