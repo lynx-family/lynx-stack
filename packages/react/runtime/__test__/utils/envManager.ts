@@ -10,6 +10,7 @@ import { backgroundSnapshotInstanceManager, SnapshotInstance, snapshotInstanceMa
 import { deinitGlobalSnapshotPatch } from '../../src/lifecycle/patch/snapshotPatch.js';
 import { globalPipelineOptions, setPipeline } from '../../src/lynx/performance.js';
 import { clearListGlobal } from '../../src/list.js';
+import { clearWorkletRefLastIdForTesting } from '../../src/worklet/workletRef.js';
 
 export class EnvManager {
   root: typeof __root | undefined;
@@ -72,6 +73,7 @@ export class EnvManager {
     snapshotInstanceManager.nextId = 0;
     clearListGlobal();
     deinitGlobalSnapshotPatch();
+    clearWorkletRefLastIdForTesting();
     this.switchToBackground();
     this.switchToMainThread();
   }

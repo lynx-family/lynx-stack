@@ -54,7 +54,7 @@ describe('WorkletRef in js', () => {
   it('to json', () => {
     globalEnvManager.switchToBackground();
     const ref = new MainThreadRef(1);
-    expect(JSON.stringify(ref)).toMatchInlineSnapshot(`"{"_wvid":2}"`);
+    expect(JSON.stringify(ref)).toMatchInlineSnapshot(`"{"_wvid":1}"`);
   });
 
   it('should send init value to the main thread', () => {
@@ -88,7 +88,7 @@ describe('WorkletRef in js', () => {
           [
             "rLynxChange",
             {
-              "data": "{"patchList":[{"id":1,"workletRefInitValuePatch":[[3,233]]}]}",
+              "data": "{"patchList":[{"id":1,"workletRefInitValuePatch":[[1,233]]}]}",
               "patchOptions": {
                 "reloadVersion": 0,
               },
