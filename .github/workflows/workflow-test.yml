@@ -32,6 +32,7 @@ jobs:
         with:
           # Codecov requires fetch-depth: 0
           fetch-depth: 0
+          persist-credentials: false
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "22"
@@ -54,7 +55,7 @@ jobs:
         if: ${{ inputs.is-web }}
         with:
           working-directory: packages/web-platform/web-tests
-      - name: Test
+      - name: Test # zizmor: ignore[template-injection] The inputs.run is provided by us.
         id: test
         env:
           NODE_OPTIONS: --max-old-space-size=8192

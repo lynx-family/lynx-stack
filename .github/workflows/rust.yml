@@ -20,6 +20,8 @@ jobs:
     runs-on: lynx-ubuntu-24.04-xlarge
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        with:
+          persist-credentials: false
       - uses: actions-rust-lang/setup-rust-toolchain@9d7e65c320fdb52dcd45ffaa68deb6c02c8754d9 # v1
         with:
           cache-key: test-${{ runner.os }}
