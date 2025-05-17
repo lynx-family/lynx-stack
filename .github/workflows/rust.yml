@@ -12,7 +12,6 @@ on:
 # Set minimum permissions to prevent unnecessary access
 permissions: {}
 
-
 env:
   CI: 1
   TURBO_TELEMETRY_DISABLED: 1
