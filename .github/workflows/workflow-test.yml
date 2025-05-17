@@ -31,10 +31,7 @@ env:
 jobs:
   check:
     runs-on: ${{ inputs.runs-on }}
-    permissions:
-      contents: read
-      checks: write # For test result reports
-      pull-requests: read # For PR related information
+    permissions: {}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:
