@@ -11,6 +11,7 @@ permissions:
   repository-projects: read
   contents: read
   statuses: read
+
 env:
   CI: 1
   TURBO_TELEMETRY_DISABLED: 1
@@ -58,6 +59,7 @@ jobs:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
     permissions:
+      checks: write
       contents: read
       pull-requests: read
       statuses: write
@@ -73,6 +75,8 @@ jobs:
   playwright-linux:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
+    permissions:
+      checks: write
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
@@ -87,6 +91,8 @@ jobs:
   playwright-linux-all-on-ui:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
+    permissions:
+      checks: write
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
@@ -102,6 +108,8 @@ jobs:
   test-api:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
+    permissions:
+      checks: write
     with:
       runs-on: lynx-ubuntu-24.04-medium
       run: |
@@ -127,6 +135,7 @@ jobs:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
     permissions:
+      checks: write
       contents: read
       pull-requests: read
       statuses: read
@@ -156,6 +165,8 @@ jobs:
   test-react:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
+    permissions:
+      checks: write
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
@@ -184,6 +195,8 @@ jobs:
   test-type:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
+    permissions:
+      checks: write
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
@@ -192,6 +205,8 @@ jobs:
   test-vitest:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
+    permissions:
+      checks: write
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
