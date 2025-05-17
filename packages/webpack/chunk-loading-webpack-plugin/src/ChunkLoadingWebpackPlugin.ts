@@ -8,11 +8,13 @@ import { RuntimeGlobals as LynxRuntimeGlobals } from '@lynx-js/webpack-runtime-g
 
 import { createChunkLoadingRuntimeModule } from './ChunkLoadingRuntimeModule.js';
 import { createCssChunkLoadingRuntimeModule } from './CssChunkLoadingRuntimeModule.js';
+import { StartupChunkDependenciesPlugin } from './StartupChunkDependenciesPlugin.js';
 
 import type { ChunkLoadingWebpackPluginOptions } from './index.js';
 
 export class ChunkLoadingWebpackPluginImpl {
   name = 'ChunkLoadingWebpackPlugin';
+  _asyncChunkLoading = true;
 
   static chunkLoadingValue = 'lynx';
 
@@ -33,6 +35,11 @@ export class ChunkLoadingWebpackPluginImpl {
     ) {
       return;
     }
+
+    new StartupChunkDependenciesPlugin({
+      chunkLoading: ChunkLoadingWebpackPluginImpl.chunkLoadingValue,
+      asyncChunkLoading: this._asyncChunkLoading,
+    }).apply(compiler);
 
     // javascript chunk loading
     compiler.hooks.thisCompilation.tap(this.name, (compilation) => {
