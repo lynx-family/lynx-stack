@@ -214,7 +214,6 @@ jobs:
     uses: ./.github/workflows/workflow-website.yml
   done:
     needs:
-      - bundle-analysis
       - code-style-check
       - playwright-linux
       - playwright-linux-all-on-ui
