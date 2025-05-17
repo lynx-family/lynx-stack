@@ -71,15 +71,7 @@ jobs:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
-        # Run commands in a secure way to avoid code injection
-        run: |
-          # Validate if the input command matches the expected format
-          if [[ "${{ inputs.run }}" =~ ^pnpm\ run\ test.*$ ]]; then
-            ${{ inputs.run }}
-          else
-            echo "Error: Disallowed command format. Only commands starting with 'pnpm run test' are allowed."
-            exit 1
-          fi
+        run: ${{ inputs.run }}
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@18283e04ce6e62d37312384ff67231eb8fd56d24 # v5
         with:
