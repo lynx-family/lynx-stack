@@ -4,6 +4,8 @@
 import path from 'node:path';
 import rspack from '@rspack/core';
 import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
+const require = createRequire(import.meta.url);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -160,6 +162,37 @@ const config = {
         test: /\.js$/,
         enforce: 'pre',
         use: ['source-map-loader'],
+      },
+      {
+        test:
+          /backgroundThread[/\\]background-apis[/\\]createNativeModules\.js$/,
+        loader: path.resolve(
+          path.dirname(
+            require.resolve('@lynx-js/web-platform-rsbuild-plugin'),
+          ),
+          './loaders/native-modules.js',
+        ),
+        options: {
+          nativeModulesPath: path.resolve(
+            __dirname,
+            './shell-project/index.native-modules.ts',
+          ),
+        },
+      },
+      {
+        test: /backgroundThread\/background-apis\/createNapiLoader\.js$/,
+        loader: path.resolve(
+          path.dirname(
+            require.resolve('@lynx-js/web-platform-rsbuild-plugin'),
+          ),
+          './loaders/napi-modules.js',
+        ),
+        options: {
+          napiModulesPath: path.resolve(
+            __dirname,
+            './shell-project/index.napi-modules.ts',
+          ),
+        },
       },
     ],
   },

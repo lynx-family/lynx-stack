@@ -9,55 +9,6 @@ import '@lynx-js/web-core/index.css';
 import './index.css';
 
 const ALL_ON_UI = !!process.env.ALL_ON_UI;
-const color_environment = URL.createObjectURL(
-  new Blob(
-    [`export default function(NapiModules, NapiModulesCall) {
-  return {
-    getColor() {
-      NapiModules.color_methods.getColor({ color: 'green' }, data => {
-        console.log(data.color);
-        console.log(data.tagName);
-      });
-    },
-    ColorEngine: class ColorEngine {
-      getColor(name) {
-        NapiModules.color_methods.getColor({ color: 'green' }, data => {
-          console.log(data.color);
-        console.log(data.tagName);
-        });
-      }
-    },
-  };
-};`],
-    { type: 'text/javascript' },
-  ),
-);
-const color_methods = URL.createObjectURL(
-  new Blob(
-    [`export default function(NapiModules, NapiModulesCall) {
-  return {
-    async getColor(data, callback) {
-      const handledData = await NapiModulesCall('getColor', data);
-      callback(handledData);
-    },
-  };
-};`],
-    { type: 'text/javascript' },
-  ),
-);
-const event_method = URL.createObjectURL(
-  new Blob(
-    [`export default function(NapiModules, NapiModulesCall, handleDispatch) {
-  return {
-    async bindEvent() {
-      await NapiModulesCall('bindEvent');
-      handleDispatch((data) => console.log(\`bts:\${data}\`))
-    },
-  };
-};`],
-    { type: 'text/javascript' },
-  ),
-);
 
 async function run() {
   const lepusjs = '/resources/web-core.main-thread.json';
@@ -67,11 +18,6 @@ async function run() {
   lynxView.initData = { mockData: 'mockData' };
   lynxView.globalProps = { pink: 'pink' };
   lynxView.height = 'auto';
-  lynxView.napiModulesMap = {
-    'color_environment': color_environment,
-    'color_methods': color_methods,
-    'event_method': event_method,
-  };
   lynxView.onNapiModulesCall = (
     name,
     data,
