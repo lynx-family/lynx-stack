@@ -63,12 +63,15 @@ jobs:
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+    container:
+      image: patrickhulce/lhci-client
+      options: --cap-add=SYS_ADMIN
     with:
       runs-on: lynx-ubuntu-24.04-xlarge
       is-web: true
       run: |
         export NODE_OPTIONS="--max-old-space-size=32768"
-        pnpm --filter @lynx-js/web-tests run lh || echo "Lighthouse failed"
+        pnpm --filter @lynx-js/web-tests run lh
   playwright-linux:
     needs: build
     uses: ./.github/workflows/workflow-test.yml

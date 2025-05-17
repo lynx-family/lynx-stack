@@ -139,6 +139,7 @@
     "lh",
     "queueMicrotask",
     "rustup", // Rust installer/manager
+    "patrickhulce",
   ],
   // Glob
   "ignorePaths": [
