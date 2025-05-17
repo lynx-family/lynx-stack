@@ -79,6 +79,8 @@ jobs:
     if: github.repository == 'lynx-family/lynx-stack'
     permissions:
       checks: write
+      contents: read
+      pull-requests: read
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
