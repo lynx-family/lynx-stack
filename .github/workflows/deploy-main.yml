@@ -7,6 +7,10 @@ on:
       "release/*",
     ]
 
+# Set default minimum permissions to prevent unnecessary access
+permissions: {}
+
+
 env:
   CI: 1
   TURBO_TELEMETRY_DISABLED: 1
@@ -18,6 +22,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     if: github.repository == 'lynx-family/lynx-stack'
+    permissions:
+      contents: read
+      actions: read
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:
@@ -55,11 +62,13 @@ jobs:
       cancel-in-progress: true
     uses: ./.github/workflows/workflow-build.yml
     if: github.repository == 'lynx-family/lynx-stack'
+    permissions: {}
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
   benchmark:
     needs: build-all
     uses: ./.github/workflows/workflow-bench.yml
+    permissions: {}
   bundle-analysis:
     permissions: {}
     needs: build-all
@@ -69,6 +78,7 @@ jobs:
     needs: build-all
     uses: ./.github/workflows/workflow-test.yml
     if: github.repository == 'lynx-family/lynx-stack'
+    permissions: {}
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
@@ -125,7 +135,7 @@ jobs:
         id: date
         run: echo "::set-output name=date::$(date -u +'%Y-%m-%d %H:%M:%S')"
       - name: attempt to release
-        uses: changesets/action@v1
+        uses: changesets/action@e0538e686673de0265c8a3e2904b8c76beaa43fd # v1.5.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -184,6 +194,7 @@ jobs:
     needs: build-all
     if: github.repository == 'lynx-family/lynx-stack'
     uses: ./.github/workflows/workflow-website.yml
+    permissions: {}
   website-deploy:
     needs: website-build
     if: github.repository == 'lynx-family/lynx-stack'
@@ -192,6 +203,7 @@ jobs:
     permissions:
       pages: write # to deploy to Pages
       id-token: write # to verify the deployment originates from an appropriate source
+      contents: read
 
     # Deploy to the github-pages environment
     environment:

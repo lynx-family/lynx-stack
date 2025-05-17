@@ -7,6 +7,10 @@ name: NodeJS Dependencies
       - package.json
       - pnpm-lock.yaml
       - "**/package.json"
+
+# Set minimum permissions to prevent unnecessary access
+permissions: {}
+
 env:
   CI: 1
   TURBO_TELEMETRY_DISABLED: 1
@@ -16,6 +20,8 @@ concurrency:
 jobs:
   sherif:
     runs-on: lynx-ubuntu-24.04-medium
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:

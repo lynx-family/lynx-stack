@@ -12,6 +12,7 @@ on:
       run:
         required: true
         type: string
+        description: "Command run parameters, limited to predefined test commands"
       is-web:
         required: false
         type: boolean
@@ -21,12 +22,19 @@ on:
         type: string
         default: "unittest"
 
+# Set minimum permissions to prevent unnecessary access
+permissions: {}
+
 env:
   CI: 1
   TURBO_TELEMETRY_DISABLED: 1
 jobs:
   check:
     runs-on: ${{ inputs.runs-on }}
+    permissions:
+      contents: read
+      checks: write  # For test result reports
+      pull-requests: read  # For PR related information
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:
@@ -63,7 +71,15 @@ jobs:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
-        run: ${{ inputs.run }}
+        # Run commands in a secure way to avoid code injection
+        run: |
+          # Validate if the input command matches the expected format
+          if [[ "${{ inputs.run }}" =~ ^pnpm\ run\ test.*$ ]]; then
+            ${{ inputs.run }}
+          else
+            echo "Error: Disallowed command format. Only commands starting with 'pnpm run test' are allowed."
+            exit 1
+          fi
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@18283e04ce6e62d37312384ff67231eb8fd56d24 # v5
         with:

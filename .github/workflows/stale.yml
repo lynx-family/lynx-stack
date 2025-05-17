@@ -3,9 +3,15 @@ on:
   schedule:
     - cron: "30 17 * * *"
 
+# Set minimum permissions to prevent unnecessary access
+permissions: {}
+
 jobs:
   stale:
     runs-on: ubuntu-latest
+    permissions:
+      issues: write # Need write permission to mark and close stale issues
+      pull-requests: write # Need write permission to mark and close stale PRs
     steps:
       - uses: actions/stale@5bef64f19d7facfb25b37b414482c7164d639639 # v9
         if: github.repository == 'lynx-family/lynx-stack'
