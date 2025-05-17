@@ -92,10 +92,10 @@ export { localI18nInstance as i18n };
 
 接下来，可以直接使用 `i18n.t` 函数来进行文案翻译：
 
-```tsx title="src/App.tsx" {3,12}
+```tsx title="src/App.tsx"
 import { useEffect } from '@lynx-js/react';
 
-import { i18n } from './i18n.js';
+import { i18n } from './i18n.js'; // [!code highlight]
 
 export function App() {
   useEffect(() => {
@@ -188,10 +188,10 @@ export { localI18nInstance as i18n };
 
 接下来在 `src/i18n.ts` 中添加下面的代码：
 
-```typescript title="src/i18n.ts" {3,14-23,38}
+```typescript title="src/i18n.ts"
 import i18next from 'i18next';
 import type { i18n } from 'i18next';
-import resourcesToBackend from 'i18next-resources-to-backend';
+import resourcesToBackend from 'i18next-resources-to-backend'; // [!code highlight]
 
 // Localizations imported statically, available at the initial screen
 const localesContext = import.meta.webpackContext('./locales', {
@@ -201,6 +201,7 @@ const localesContext = import.meta.webpackContext('./locales', {
 
 const localI18nInstance: i18n = i18next.createInstance();
 
+// [!code highlight:11]
 // We can only loading resources on a background thread
 if (__JS__) {
   localI18nInstance.use(

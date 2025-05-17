@@ -10,7 +10,7 @@ The following is a basic directory for output files. By default, the compiled fi
 
 In production, the `dist/` directory contains all the files that need to be deployed.
 
-```tree
+```
 dist/
 ├── [name].lynx.bundle
 ├── async
@@ -40,7 +40,7 @@ In the filename, `[name]` is the entry name corresponding to this file, such as 
 
 In development, an `dist/.rspeedy` directory is emitted which contains the resources for debugging.
 
-```tree
+```
 dist/
 ├── .rspeedy
 │   ├── async

@@ -30,16 +30,16 @@ Begin by installing the plugin using your preferred package management tool:
 
 Next, incorporate the plugin into your configuration file by adding it to the relevant section:
 
-```ts title=lynx.config.ts {3,11}
+```ts title=lynx.config.ts
 import { defineConfig } from "@lynx-js/rspeedy";
 import { pluginReactLynx } from "@lynx-js/react-rsbuild-plugin";
-import { pluginTypeCheck } from "@rsbuild/plugin-type-check";
+import { pluginTypeCheck } from "@rsbuild/plugin-type-check";  // [!code highlight]
 
 export default defineConfig({
   source: {
     entry: "src/index.jsx",
   },
-  plugins: [pluginReactLynx(), pluginTypeCheck()],
+  plugins: [pluginReactLynx(), pluginTypeCheck()], // [!code highlight]
 });
 ```
 
@@ -58,12 +58,12 @@ For more detailed options, please refer to [`@rsbuild/plugin-type-check`](https:
 Enabling type checking in ReactLynx is also possible.
 This can be achieved by simply adding a `typecheck` script in the `package.json` file:
 
-```json title=package.json {5}
+```json title=package.json
 {
   "scripts": {
     "dev": "rspeedy dev",
     "build": "rspeedy build",
-    "typecheck": "tsc --build"
+    "typecheck": "tsc --build" // [!code focus]
   }
 }
 ```

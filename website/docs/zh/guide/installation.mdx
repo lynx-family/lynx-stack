@@ -27,16 +27,16 @@ import { PackageManagerTabs } from "@theme";
 
 接下来，将插件添加到配置文件中：
 
-```ts title=lynx.config.ts {3,9}
+```ts title=lynx.config.ts
 import { defineConfig } from "@lynx-js/rspeedy";
 import { pluginReactLynx } from "@lynx-js/react-rsbuild-plugin";
-import { pluginTypeCheck } from "@rsbuild/plugin-type-check";
+import { pluginTypeCheck } from "@rsbuild/plugin-type-check"; // [!code highlight]
 
 export default defineConfig({
   source: {
     entry: "src/index.jsx",
   },
-  plugins: [pluginReactLynx(), pluginTypeCheck()],
+  plugins: [pluginReactLynx(), pluginTypeCheck()], // [!code highlight]
 });
 ```
 
@@ -55,12 +55,12 @@ export default defineConfig({
 在 Rspeedy 中也可以启用类型检查。
 这可以通过在 `package.json` 文件中添加 `typecheck` 脚本来实现：
 
-```json title=package.json {5}
+```json title=package.json
 {
   "scripts": {
     "dev": "rspeedy dev",
     "build": "rspeedy build",
-    "typecheck": "tsc --build --noEmit"
+    "typecheck": "tsc --build --noEmit" // [!code focus]
   }
 }
 ```

@@ -96,10 +96,10 @@ If you import `*.json` in TypeScript file, you may need to set `compilerOptions.
 
 Then, the `i18n.t` function can be used for translations:
 
-```tsx title="src/App.tsx" {3,12}
+```tsx title="src/App.tsx"
 import { useEffect } from '@lynx-js/react';
 
-import { i18n } from './i18n.js';
+import { i18n } from './i18n.js'; // [!code highlight]
 
 export function App() {
   useEffect(() => {
@@ -192,10 +192,10 @@ You need to install the [`i18next-resources-to-backend`](https://github.com/i18n
 
 Then add the following code to `src/i18n.ts`:
 
-```typescript title="src/i18n.ts" {3,14-23,38}
+```typescript title="src/i18n.ts"
 import i18next from 'i18next';
 import type { i18n } from 'i18next';
-import resourcesToBackend from 'i18next-resources-to-backend';
+import resourcesToBackend from 'i18next-resources-to-backend'; // [!code highlight]
 
 // Localizations imported statically, available at the initial screen
 const localesContext = import.meta.webpackContext('./locales', {
@@ -205,6 +205,7 @@ const localesContext = import.meta.webpackContext('./locales', {
 
 const localI18nInstance: i18n = i18next.createInstance();
 
+// [!code highlight:11]
 // We can only loading resources on a background thread
 if (__JS__) {
   localI18nInstance.use(

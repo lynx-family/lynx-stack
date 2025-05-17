@@ -1171,6 +1171,9 @@ importers:
       '@rspress/shared':
         specifier: 2.0.0-beta.6
         version: 2.0.0-beta.6
+      '@shikijs/transformers':
+        specifier: ^3.4.2
+        version: 3.4.2
       '@types/react':
         specifier: npm:@types/react@^19.1.4
         version: 19.1.4
@@ -2984,6 +2987,9 @@ packages:
 
   '@shikijs/themes@3.4.2':
     resolution: {integrity: sha512-qAEuAQh+brd8Jyej2UDDf+b4V2g1Rm8aBIdvt32XhDPrHvDkEnpb7Kzc9hSuHUxz0Iuflmq7elaDuQAP9bHIhg==}
+
+  '@shikijs/transformers@3.4.2':
+    resolution: {integrity: sha512-I5baLVi/ynLEOZoWSAMlACHNnG+yw5HDmse0oe+GW6U1u+ULdEB3UHiVWaHoJSSONV7tlcVxuaMy74sREDkSvg==}
 
   '@shikijs/types@3.4.2':
     resolution: {integrity: sha512-zHC1l7L+eQlDXLnxvM9R91Efh2V4+rN3oMVS2swCBssbj2U/FBwybD1eeLaq8yl/iwT+zih8iUbTBCgGZOYlVg==}
@@ -10629,6 +10635,11 @@ snapshots:
 
   '@shikijs/themes@3.4.2':
     dependencies:
+      '@shikijs/types': 3.4.2
+
+  '@shikijs/transformers@3.4.2':
+    dependencies:
+      '@shikijs/core': 3.4.2
       '@shikijs/types': 3.4.2
 
   '@shikijs/types@3.4.2':

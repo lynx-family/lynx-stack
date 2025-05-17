@@ -10,7 +10,7 @@
 
 生产环境下，`dist/` 目录包含所有需要部署的文件。
 
-```tree
+```
 dist/
 ├── [name].lynx.bundle
 ├── async
@@ -44,7 +44,7 @@ dist/
 
 开发环境下会生成 `dist/.rspeedy` 目录用于调试：
 
-```tree
+```
 dist/
 ├── .rspeedy
 │   ├── async
