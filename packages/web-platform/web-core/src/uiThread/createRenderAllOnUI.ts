@@ -5,12 +5,16 @@ import type {
 } from '@lynx-js/web-constants';
 import type { MainThreadRuntime } from '@lynx-js/web-mainthread-apis';
 import { Rpc } from '@lynx-js/web-worker-rpc';
+const mainThreaApiModule = import(
+  /* webpackChunkName: "@lynx-js/web-mainthread-apis" */
+  /* webpackMode: "lazy" */
+  /* webpackPrefetch: true */
+  /* webpackPreload: true */
+  /* webpackFetchPriority: "high" */
+  '@lynx-js/web-mainthread-apis'
+);
 
-const {
-  loadMainThread,
-} = await import('@lynx-js/web-mainthread-apis');
-
-export function createRenderAllOnUI(
+export async function createRenderAllOnUI(
   mainToBackgroundRpc: Rpc,
   shadowRoot: ShadowRoot,
   markTimingInternal: (
@@ -28,6 +32,7 @@ export function createRenderAllOnUI(
   const docu = Object.assign(shadowRoot, {
     createElement: document.createElement.bind(document),
   });
+  const { loadMainThread } = await mainThreaApiModule;
   const { startMainThread } = loadMainThread(
     mainToBackgroundRpc,
     docu,
