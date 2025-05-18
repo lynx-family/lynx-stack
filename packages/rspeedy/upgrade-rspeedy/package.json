@@ -43,7 +43,7 @@
     "@lynx-js/web-elements": "workspace:*",
     "@rsbuild/plugin-less": "catalog:rsbuild",
     "@rsbuild/plugin-sass": "catalog:rsbuild",
-    "commander": "^13.1.0",
+    "commander": "^14.0.0",
     "detect-indent": "^7.0.1",
     "memfs": "^4.17.2",
     "picocolors": "^1.1.1",
