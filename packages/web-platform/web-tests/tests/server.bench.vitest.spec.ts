@@ -14,6 +14,15 @@ const cases = {
   'basic-performance-nest-level-100': await loadTemplate(
     'basic-performance-nest-level-100',
   ),
+  'basic-performance-image-100': await loadTemplate(
+    'basic-performance-image-100',
+  ),
+  'basic-performance-scroll-view-100': await loadTemplate(
+    'basic-performance-scroll-view-100',
+  ),
+  'basic-performance-text-200': await loadTemplate(
+    'basic-performance-text-200',
+  ),
 };
 describe('server-tests', async () => {
   for (const [testName, rawTemplate] of Object.entries(cases)) {
