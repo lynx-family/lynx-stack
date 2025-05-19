@@ -353,8 +353,35 @@ export interface DynamicImportVisitorConfig {
   /** @internal */
   layer: string
 }
+/**
+ * {@inheritdoc PluginReactLynxOptions.extractStr}
+ * @public
+ */
 export interface ExtractStrConfig {
-  /** @public */
+  /**
+   * @public
+   * The minimum length of string literals to be extracted.
+   *
+   * @remarks
+   * Default value: `20`.
+   *
+   * @example
+   *
+   * ```js
+   * import { defineConfig } from '@lynx-js/rspeedy'
+   * import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+   *
+   * export default defineConfig({
+   *   plugins: [
+   *     pluginReactLynx({
+   *       extractStr: {
+   *         strLength: 10,
+   *       },
+   *     })
+   *   ],
+   * })
+   * ```
+   */
   strLength: number
   /** @internal */
   extractedStrArr?: Array<string>
