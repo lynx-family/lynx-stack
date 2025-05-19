@@ -3,7 +3,10 @@
 // LICENSE file in the root directory of this source tree.
 import { describe, expect, test } from 'vitest'
 
-import type { CompatVisitorConfig } from '@lynx-js/react/transform'
+import type {
+  CompatVisitorConfig,
+  DefineDceVisitorConfig,
+} from '@lynx-js/react/transform'
 
 import { validateConfig } from '../src/validate.js'
 
@@ -53,6 +56,36 @@ describe('Validation', () => {
     cases.forEach(compat => {
       expect(validateConfig({ compat })).toStrictEqual({ compat })
     })
+  })
+
+  test('defineDCE', () => {
+    const cases: Partial<DefineDceVisitorConfig>[] = [
+      {},
+      { define: {} },
+      { define: { foo: 'bar' } },
+    ]
+
+    cases.forEach(defineDCE => {
+      expect(validateConfig({ defineDCE })).toStrictEqual({ defineDCE })
+    })
+  })
+
+  test('invalid defineDCE', () => {
+    expect(() => validateConfig({ defineDCE: 1 }))
+      .toThrowErrorMatchingInlineSnapshot(`
+        [Error: Invalid config on pluginReactLynx: \`$input.defineDCE\`.
+          - Expect to be (Partial<DefineDceVisitorConfig> | undefined)
+          - Got: number
+        ]
+      `)
+
+    expect(() => validateConfig({ defineDCE: [] }))
+      .toThrowErrorMatchingInlineSnapshot(`
+        [Error: Invalid config on pluginReactLynx: \`$input.defineDCE\`.
+          - Expect to be (Partial<DefineDceVisitorConfig> | undefined)
+          - Got: array
+        ]
+      `)
   })
 
   test('targetSdkVersion', () => {
