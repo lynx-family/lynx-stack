@@ -60,6 +60,7 @@ static COMPONENT_ATTRIBUTES: Lazy<Vec<&str>> = Lazy::new(|| {
 #[derive(Clone, Debug)]
 pub struct DarkModeConfig {
   /// @public
+  /// Theme expression to be used for dark mode
   pub theme_expr: String,
 }
 
@@ -67,9 +68,12 @@ pub struct DarkModeConfig {
 #[derive(Clone, Debug)]
 pub struct AddComponentElementConfig {
   /// @public
+  /// Whether to only add component element during compilation
   pub compiler_only: bool,
 }
 
+/// {@inheritdoc PluginReactLynxOptions.compat}
+/// @public
 #[napi(object)]
 #[derive(Clone, Debug)]
 pub struct CompatVisitorConfig {
@@ -77,26 +81,254 @@ pub struct CompatVisitorConfig {
   #[napi(ts_type = "'LEPUS' | 'JS' | 'MIXED'")]
   pub target: TransformTarget,
   /// @public
+  /// Specifies the list of component package names that need compatibility processing
+  ///
+  /// @remarks
+  /// Default value: `['@lynx-js/react-components']`
+  ///
+  /// @example
+  ///
+  /// ```js
+  /// import { defineConfig } from '@lynx-js/rspeedy'
+  /// import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+  ///
+  /// export default defineConfig({
+  ///   plugins: [
+  ///     pluginReactLynx({
+  ///       compat: {
+  ///         componentsPkg: ['@my-org/components', '@legacy/ui-kit']
+  ///       },
+  ///     })
+  ///   ],
+  /// })
+  /// ```
   pub components_pkg: Vec<String>,
   /// @public
+  /// Specifies the list of old runtime package names that need compatibility processing
+  ///
+  /// @remarks
+  /// Default value: `['@lynx-js/react-runtime']`
+  ///
+  /// @example
+  ///
+  /// ```js
+  /// import { defineConfig } from '@lynx-js/rspeedy'
+  /// import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+  ///
+  /// export default defineConfig({
+  ///   plugins: [
+  ///     pluginReactLynx({
+  ///       compat: {
+  ///         oldRuntimePkg: ['@my-org/runtime', '@legacy/runtime']
+  ///       },
+  ///     })
+  ///   ],
+  /// })
+  /// ```
   pub old_runtime_pkg: Vec<String>,
   /// @public
+  /// Specifies the new runtime package name
+  ///
+  /// @remarks
+  /// Default value: `'@lynx-js/react'`
+  ///
+  /// @example
+  ///
+  /// ```js
+  /// import { defineConfig } from '@lynx-js/rspeedy'
+  /// import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+  ///
+  /// export default defineConfig({
+  ///   plugins: [
+  ///     pluginReactLynx({
+  ///       compat: {
+  ///         newRuntimePkg: '@my-org/react'
+  ///       },
+  ///     })
+  ///   ],
+  /// })
+  /// ```
   pub new_runtime_pkg: String,
   /// @public
+  /// Specifies additional component attributes list, these attributes will be passed to the wrapped `<view>` instead of the component.
+  ///
+  /// @remarks
+  /// This only takes effect when {@link CompatVisitorConfig.addComponentElement} is enabled.
+  ///
+  /// Default value: `[]`
+  ///
+  /// @example
+  ///
+  /// ```js
+  /// import { defineConfig } from '@lynx-js/rspeedy'
+  /// import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+  ///
+  /// export default defineConfig({
+  ///   plugins: [
+  ///     pluginReactLynx({
+  ///       compat: {
+  ///         additionalComponentAttributes: ['custom-attr', 'data-special']
+  ///       },
+  ///     })
+  ///   ],
+  /// })
+  /// ```
   pub additional_component_attributes: Vec<String>,
   /// @public
+  /// Controls whether to add wrapper elements for components
+  ///
+  /// @remarks
+  /// Default value: `false`
+  ///
+  /// @example
+  ///
+  /// Add a `<view>` wrapper element for all components during runtime.
+  ///
+  /// ```js
+  /// import { defineConfig } from '@lynx-js/rspeedy'
+  /// import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+  ///
+  /// export default defineConfig({
+  ///   plugins: [
+  ///     pluginReactLynx({
+  ///       compat: {
+  ///         addComponentElement: true
+  ///       },
+  ///     })
+  ///   ],
+  /// })
+  /// ```
+  ///
+  /// @example
+  ///
+  /// Only add component element during compilation.
+  /// Note that this only take effects on `Component` imported from {@link CompatVisitorConfig.oldRuntimePkg}.
+  ///
+  /// ```js
+  /// import { defineConfig } from '@lynx-js/rspeedy'
+  /// import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+  ///
+  /// export default defineConfig({
+  ///   plugins: [
+  ///     pluginReactLynx({
+  ///       compat: {
+  ///         addComponentElement: { compilerOnly: true }
+  ///       },
+  ///     })
+  ///   ],
+  /// })
+  /// ```
   pub add_component_element: Either<bool, AddComponentElementConfig>,
   /// @public
+  /// Whether to simplify constructor calls like ReactLynx 2
+  ///
   /// @deprecated
+  /// Using `simplifyCtorLikeReactLynx2` is not recommended as it introduces implicit behaviors that can:
+  ///
+  /// - Make code harder to understand and maintain
+  ///
+  /// - Create hidden dependencies between components
+  ///
+  /// - Complicate debugging and testing processes
+  ///
+  /// Instead, use `background-only` on class methods for explicit and maintainable behavior
+  ///
+  /// @remarks
+  /// Default value: `false`
+  ///
+  /// @example
+  ///
+  /// ```js
+  /// import { defineConfig } from '@lynx-js/rspeedy'
+  /// import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+  ///
+  /// export default defineConfig({
+  ///   plugins: [
+  ///     pluginReactLynx({
+  ///       compat: {
+  ///         simplifyCtorLikeReactLynx2: true
+  ///       },
+  ///     })
+  ///   ],
+  /// })
+  /// ```
   pub simplify_ctor_like_react_lynx_2: bool,
+
   /// @public
-  /// @deprecated
-  #[napi(js_name = "removeComponentAttrRegex")]
+  /// Regular expression used to remove component attributes
+  ///
+  /// @deprecated It's recommended to use `background-only`.
+  ///
+  /// If your code depends on this switch, when distributing it to other projects through npm packages or other means, you'll also need to enable this switch. This will lead to the proliferation of switches, which is not conducive to code reuse between different projects.
+  ///
+  /// @remarks
+  /// Default value: `None`
+  ///
+  /// @example
+  ///
+  /// ```js
+  /// import { defineConfig } from '@lynx-js/rspeedy'
+  /// import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+  ///
+  /// export default defineConfig({
+  ///   plugins: [
+  ///     pluginReactLynx({
+  ///       compat: {
+  ///         removeComponentAttrRegex: '^data-test-'
+  ///       },
+  ///     })
+  ///   ],
+  /// })
+  /// ```
   pub remove_component_attr_regex: Option<String>,
   /// @public
+  /// Whether to disable deprecated warnings
+  ///
+  /// @remarks
+  /// Default value: `false`
+  ///
+  /// @example
+  ///
+  /// Disable all the `DEPRECATED:` warnings.
+  ///
+  /// ```js
+  /// import { defineConfig } from '@lynx-js/rspeedy'
+  /// import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+  ///
+  /// export default defineConfig({
+  ///   plugins: [
+  ///     pluginReactLynx({
+  ///       compat: {
+  ///         disableDeprecatedWarning: true
+  ///       },
+  ///     })
+  ///   ],
+  /// })
+  /// ```
   pub disable_deprecated_warning: bool,
   /// @public
   /// @deprecated
+  /// Dark mode configuration
+  ///
+  /// @remarks
+  /// Default value: `None`
+  ///
+  /// @example
+  ///
+  /// ```js
+  /// import { defineConfig } from '@lynx-js/rspeedy'
+  /// import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+  ///
+  /// export default defineConfig({
+  ///   plugins: [
+  ///     pluginReactLynx({
+  ///       compat: {
+  ///         darkMode: true
+  ///       },
+  ///     })
+  ///   ],
+  /// })
+  /// ```
   pub dark_mode: Option<Either<bool, DarkModeConfig>>,
 }
 
