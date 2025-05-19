@@ -198,15 +198,10 @@ export interface ShakeVisitorConfig {
    */
   removeCallParams: Array<string>
 }
-/** @internal */
 export interface JsxTransformerConfig {
-  /** @internal */
   preserveJsx: boolean
-  /** @internal */
   runtimePkg: string
-  /** @internal */
   jsxImportSource?: string
-  /** @internal */
   filename: string
   /** @internal */
   target: 'LEPUS' | 'JS' | 'MIXED'
