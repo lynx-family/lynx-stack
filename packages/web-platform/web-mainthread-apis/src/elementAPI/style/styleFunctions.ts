@@ -107,8 +107,9 @@ export function createStyleFunctions(
       );
     const style = element.style;
     for (const [property, value] of transformedStyle) {
-      const important = property.includes('!important');
-      style.setProperty(property, value, important ? 'important' : '');
+      const important = value.includes('!important');
+      const cleanValue = important ? value.replace('!important', '').trim() : value;
+      style.setProperty(property, cleanValue, important ? 'important' : '');
     }
   }
 
