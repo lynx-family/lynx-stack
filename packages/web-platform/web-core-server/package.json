@@ -21,10 +21,6 @@
     "CHANGELOG.md",
     "README.md"
   ],
-  "scripts": {
-    "build": "rslib build",
-    "watch": "rslib build --watch"
-  },
   "devDependencies": {
     "@lynx-js/offscreen-document": "workspace:*",
     "@lynx-js/web-constants": "workspace:*",

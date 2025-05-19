@@ -5,12 +5,12 @@ import path from 'node:path';
 
 const templateCache: Map<LynxTemplate, LynxTemplate> = new Map();
 // Initialize tmpDir with the prefix
-let tempDirName = path.join(os.tmpdir(), 'lynx');
+let tmpDir = path.join(os.tmpdir(), 'lynx');
 // Update tmpDir with the actual path of the created temporary directory
-const tmpDir = fs.mkdtemp(tempDirName);
+tmpDir = await fs.mkdtemp(tmpDir);
 
 async function createJsModuleUrl(content: string, filename: string) {
-  const fileUrl = path.join(await tmpDir, filename);
+  const fileUrl = path.join(tmpDir, filename);
   await fs.writeFile(fileUrl, content, { flag: 'w+' });
   return fileUrl;
 }

@@ -84,7 +84,7 @@ export async function createLynxView(
   const mainWithBackgroundChannel = new MessageChannel();
   const mainToUIMessagePort = mainToUIChannel.port2;
   const uiToMainRpc = new Rpc(mainToUIChannel.port1, 'main-to-ui');
-  const { docu: offscreenDocument } = await startMainThread(
+  const { docu: offscreenDocument } = startMainThread(
     mainToUIMessagePort,
     mainWithBackgroundChannel.port2,
   );
