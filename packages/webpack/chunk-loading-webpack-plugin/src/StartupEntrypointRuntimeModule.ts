@@ -24,7 +24,7 @@ export function createStartupEntrypointRuntimeModule(
     asyncChunkLoading: boolean;
 
     constructor(asyncChunkLoading: boolean) {
-      super('Lynx startup chunk entrypoint', RuntimeModule.STAGE_ATTACH);
+      super('Lynx startup entrypoint', RuntimeModule.STAGE_ATTACH);
       this.asyncChunkLoading = asyncChunkLoading;
     }
 
