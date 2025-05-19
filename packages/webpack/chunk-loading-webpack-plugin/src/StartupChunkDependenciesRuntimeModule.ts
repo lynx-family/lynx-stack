@@ -16,7 +16,7 @@ export function createStartupChunkDependenciesRuntimeModule(
   webpack: typeof import('webpack'),
 ): StartupChunkDependenciesRuntimeModule {
   const { RuntimeGlobals, RuntimeModule, Template } = webpack;
-  return class ChunkLoadingRuntimeModule extends RuntimeModule {
+  return class StartupChunkDependenciesRuntimeModule extends RuntimeModule {
     asyncChunkLoading: boolean;
 
     constructor(asyncChunkLoading: boolean) {

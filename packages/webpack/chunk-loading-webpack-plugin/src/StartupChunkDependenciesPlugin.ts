@@ -4,6 +4,7 @@
 import type { Chunk, Compiler } from 'webpack';
 
 import { createStartupChunkDependenciesRuntimeModule } from './StartupChunkDependenciesRuntimeModule.js';
+import { createStartupEntrypointRuntimeModule } from './StartupEntrypointRuntimeModule.js';
 
 /**
  * The options for StartupChunkDependenciesPlugin
@@ -47,6 +48,10 @@ export class StartupChunkDependenciesPlugin {
         compiler.webpack,
       );
 
+    const StartupEntrypointRuntimeModule = createStartupEntrypointRuntimeModule(
+      compiler.webpack,
+    );
+
     compiler.hooks.thisCompilation.tap(PLUGIN_NAME, (compilation) => {
       const globalChunkLoading = compilation.outputOptions.chunkLoading;
 
@@ -74,6 +79,20 @@ export class StartupChunkDependenciesPlugin {
           }
         },
       );
+
+      compilation.hooks.runtimeRequirementInTree
+        .for(RuntimeGlobals.startupEntrypoint)
+        .tap(PLUGIN_NAME, (chunk, set) => {
+          if (!isEnabledForChunk(chunk)) return;
+
+          set.add(RuntimeGlobals.require);
+          set.add(RuntimeGlobals.ensureChunk);
+          set.add(RuntimeGlobals.ensureChunkIncludeEntries);
+          compilation.addRuntimeModule(
+            chunk,
+            new StartupEntrypointRuntimeModule(this.asyncChunkLoading),
+          );
+        });
     });
   }
 }
