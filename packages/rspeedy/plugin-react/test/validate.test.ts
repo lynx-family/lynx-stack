@@ -6,6 +6,7 @@ import { describe, expect, test } from 'vitest'
 import type {
   CompatVisitorConfig,
   DefineDceVisitorConfig,
+  JsxTransformerConfig,
 } from '@lynx-js/react/transform'
 
 import { validateConfig } from '../src/validate.js'
@@ -63,6 +64,8 @@ describe('Validation', () => {
       {},
       { define: {} },
       { define: { foo: 'bar' } },
+      // @ts-expect-error We bypass the internal type check.
+      { define: { foo: 1 } },
     ]
 
     cases.forEach(defineDCE => {
@@ -86,6 +89,32 @@ describe('Validation', () => {
           - Got: array
         ]
       `)
+
+    expect(() => validateConfig({ defineDCEs: {} }))
+      .toThrowErrorMatchingInlineSnapshot(
+        `[Error: Unknown property: \`$input.defineDCEs\` in the configuration of pluginReactLynx]`,
+      )
+  })
+
+  test('jsx', () => {
+    const cases: Partial<JsxTransformerConfig>[] = [
+      {},
+      { filename: '1' },
+      { preserveJsx: false },
+      // @ts-expect-error We bypass the internal type check.
+      { preserveJsx: 'foo' },
+    ]
+
+    cases.forEach(jsx => {
+      expect(validateConfig({ jsx })).toStrictEqual({ jsx })
+    })
+
+    // cSpell:disable
+    expect(() => validateConfig({ jsxes: 1 }))
+      .toThrowErrorMatchingInlineSnapshot(
+        `[Error: Unknown property: \`$input.jsxes\` in the configuration of pluginReactLynx]`,
+      )
+    // cSpell:enable
   })
 
   test('targetSdkVersion', () => {
