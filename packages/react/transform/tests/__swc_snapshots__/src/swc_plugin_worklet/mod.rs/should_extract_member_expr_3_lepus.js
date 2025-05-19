@@ -7,10 +7,10 @@ let enableScroll = {
         b,
         f
     },
-    _lepusWorkletHash: "a123:test:1"
+    _wkltId: "a123:test:1"
 };
 let makeVelocityIfRequired = {
-    _lepusWorkletHash: "a123:test:2"
+    _wkltId: "a123:test:2"
 };
 loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "a123:test:1", function(enable: boolean) {
     const enableScroll = lynxWorkletImpl._workletMap["a123:test:1"].bind(this);

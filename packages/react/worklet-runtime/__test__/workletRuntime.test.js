@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { Element } from '../src/api/element';
 import { initApiEnv } from '../src/api/lynxApi';
 import { currentCtx } from '../src/ctxTrace';
 import { updateWorkletRefInitValueChanges } from '../src/workletRef';
@@ -201,7 +202,6 @@ describe('Worklet', () => {
   it('should support various types of parameters', async () => {
     initWorklet();
 
-    let value = 0;
     lynxWorkletImpl._workletMap['1'] = vi.fn(function(
       argNull,
       argUndefined,
@@ -211,6 +211,7 @@ describe('Worklet', () => {
       argObject,
       argWorklet,
       argWorkletRef,
+      argElement,
     ) {
       const worklet = lynxWorkletImpl._workletMap['1'].bind(this);
       expect(argNull).toBe(null);
@@ -221,6 +222,7 @@ describe('Worklet', () => {
       expect(argArray[1]).toStrictEqual([4]);
       expect(argArray[2].current).toStrictEqual(5);
       expect(argObject).toStrictEqual({ str: 'str5' });
+      expect(argElement).toBeInstanceOf(Element);
       argWorklet(
         argNull,
         argUndefined,
@@ -229,6 +231,7 @@ describe('Worklet', () => {
         argArray,
         argObject,
         argWorkletRef,
+        argElement,
       );
       expect(argWorkletRef.current).toBe(444);
     });
@@ -241,6 +244,7 @@ describe('Worklet', () => {
       argArray,
       argObject,
       argWorkletRef,
+      argElement,
     ) {
       const argWorklet = lynxWorkletImpl._workletMap['arg'].bind(this);
       expect(argNull).toBe(null);
@@ -252,6 +256,7 @@ describe('Worklet', () => {
       expect(argArray[2].current).toStrictEqual(5);
       expect(argObject).toStrictEqual({ str: 'str5' });
       expect(argWorkletRef.current).toBe(444);
+      expect(argElement).toBeInstanceOf(Element);
     });
 
     updateWorkletRefInitValueChanges([
@@ -277,6 +282,10 @@ describe('Worklet', () => {
       _wkltId: 'arg',
     };
 
+    let argElement = {
+      elementRefptr: 'element',
+    };
+
     runWorklet(worklet, [
       null,
       undefined,
@@ -286,6 +295,7 @@ describe('Worklet', () => {
       { str: 'str5' },
       argWorklet,
       argWorkletRef,
+      argElement,
     ]);
     expect(lynxWorkletImpl._workletMap['arg']).toBeCalled();
   });

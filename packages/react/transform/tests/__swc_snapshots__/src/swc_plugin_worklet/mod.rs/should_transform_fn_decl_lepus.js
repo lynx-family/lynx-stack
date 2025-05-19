@@ -1,11 +1,10 @@
-import {loadWorkletRuntime as __loadWorkletRuntime} from "@lynx-js/react";
-
+import { loadWorkletRuntime as __loadWorkletRuntime } from "@lynx-js/react";
 var loadWorkletRuntime = __loadWorkletRuntime;
 export default {
     _c: {
         x
     },
-    _lepusWorkletHash: "a123:test:1"
+    _wkltId: "a123:test:1"
 };
 loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "a123:test:1", function(exposureArgs) {
     let { x } = this["_c"];

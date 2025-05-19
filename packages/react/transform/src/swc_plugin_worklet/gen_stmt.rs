@@ -86,11 +86,7 @@ impl StmtGen {
       );
     }
 
-    let hash_name = if target == TransformTarget::JS {
-      "_wkltId"
-    } else {
-      "_lepusWorkletHash"
-    };
+    let hash_name = "_wkltId";
     props.push(
       Prop::KeyValue(KeyValueProp {
         key: Ident::from(hash_name).into(),

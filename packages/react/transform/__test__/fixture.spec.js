@@ -1353,7 +1353,7 @@ describe('worklet', () => {
                       }
                   }
               },
-              _lepusWorkletHash: "da39:75a1b:1"
+              _wkltId: "da39:75a1b:1"
           };
           loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "da39:75a1b:1", function(event) {
               const getCurrentDelta = lynxWorkletImpl._workletMap["da39:75a1b:1"].bind(this);
@@ -1454,7 +1454,7 @@ export function foo(event) {
                   }
               }
           },
-          _lepusWorkletHash: "da39:64631:1"
+          _wkltId: "da39:64631:1"
       };
       loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "da39:64631:1", function(event) {
           const foo = lynxWorkletImpl._workletMap["da39:64631:1"].bind(this);
@@ -1507,13 +1507,13 @@ console.log(bar)
       "import { loadWorkletRuntime as __loadWorkletRuntime } from "@lynx-js/react";
       var loadWorkletRuntime = __loadWorkletRuntime;
       let foo = {
-          _lepusWorkletHash: "da39:80ef4:1"
+          _wkltId: "da39:80ef4:1"
       };
       let bar = {
           _c: {
               foo
           },
-          _lepusWorkletHash: "da39:80ef4:2"
+          _wkltId: "da39:80ef4:2"
       };
       console.log(bar);
       loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "da39:80ef4:1", function() {

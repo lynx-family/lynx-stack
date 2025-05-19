@@ -5,7 +5,7 @@ let X = {
         y1,
         y2
     },
-    _lepusWorkletHash: "a77b:test:1"
+    _wkltId: "a77b:test:1"
 };
 loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "a77b:test:1", function(event) {
     let { y1, y2 } = this["_c"];

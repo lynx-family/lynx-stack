@@ -25,9 +25,10 @@ beforeAll(() => {
     _refImpl: {
       updateWorkletRef: vi.fn(),
       updateWorkletRefInitValueChanges: vi.fn(),
+      clearFirstScreenWorkletRefMap: vi.fn(),
     },
-    _eventDelayImpl: {
-      clearDelayedWorklets: vi.fn(),
+    _runOnBackgroundDelayImpl: {
+      runDelayedBackgroundFunctions: vi.fn(),
     },
   };
   globalThis.runWorklet = vi.fn();
@@ -206,6 +207,48 @@ describe('WorkletRef', () => {
           </view>
         </page>
       `);
+      expect(globalThis.runWorklet.mock.calls).toMatchInlineSnapshot(`
+        [
+          [
+            {
+              "_unmount": undefined,
+              "_wkltId": 233,
+            },
+            [
+              {
+                "elementRefptr": <view
+                  has-react-ref={true}
+                />,
+              },
+            ],
+          ],
+          [
+            {
+              "_unmount": undefined,
+              "_wkltId": 233,
+            },
+            [
+              {
+                "elementRefptr": <view
+                  has-react-ref={true}
+                />,
+              },
+            ],
+          ],
+        ]
+      `);
+      expect(globalThis.lynxWorkletImpl?._refImpl.updateWorkletRef.mock.calls).toMatchInlineSnapshot(`
+        [
+          [
+            {
+              "_wvid": -1,
+            },
+            <view
+              has-react-ref={true}
+            />,
+          ],
+        ]
+      `);
     }
 
     // background render
@@ -264,6 +307,12 @@ describe('WorkletRef', () => {
         [
           [
             {
+              "_wvid": -1,
+            },
+            null,
+          ],
+          [
+            {
               "_wvid": 1,
             },
             <view
@@ -276,6 +325,15 @@ describe('WorkletRef', () => {
         [
           [
             {
+              "_unmount": undefined,
+              "_wkltId": 233,
+            },
+            [
+              null,
+            ],
+          ],
+          [
+            {
               "_execId": 2,
               "_unmount": undefined,
               "_wkltId": 233,
@@ -286,6 +344,15 @@ describe('WorkletRef', () => {
                   has-react-ref={true}
                 />,
               },
+            ],
+          ],
+          [
+            {
+              "_unmount": undefined,
+              "_wkltId": 233,
+            },
+            [
+              null,
             ],
           ],
           [
@@ -362,7 +429,7 @@ describe('WorkletRef', () => {
         [
           [
             {
-              "_execId": 2,
+              "_execId": 3,
               "_unmount": undefined,
               "_wkltId": 233,
             },

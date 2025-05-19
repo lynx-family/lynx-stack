@@ -2,12 +2,12 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { runWorkletCtx, updateWorkletRef as update } from '@lynx-js/react/worklet-runtime/bindings';
-import type { Element, Worklet, WorkletRefId, WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bindings';
+import type { Element, Worklet, WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bindings';
 
 import type { SnapshotInstance } from '../snapshot.js';
 
 function workletUnRef(value: Worklet | WorkletRefImpl<Element>): void {
-  if ('_wvid' in value && (value._wvid as WorkletRefId) > 0) {
+  if ('_wvid' in value) {
     update(value as WorkletRefImpl<Element>, null);
   } else if ('_wkltId' in value) {
     if (typeof value._unmount == 'function') {
@@ -38,15 +38,11 @@ function updateWorkletRef(
   if (value === null || value === undefined) {
     // do nothing
   } else if (value._wvid) {
-    if ((value._wvid as WorkletRefId) > 0) {
-      update(value as WorkletRefImpl<Element>, snapshot.__elements[elementIndex]!);
-    }
+    update(value as WorkletRefImpl<Element>, snapshot.__elements[elementIndex]!);
   } else if ((value as Worklet)._wkltId) {
     (value as Worklet)._unmount = runWorkletCtx(value as Worklet, [{
       elementRefptr: (snapshot.__elements[elementIndex]!) as any,
     }]) as () => void;
-  } else if (value._type === '__LEPUS__' || (value as Worklet)._lepusWorkletHash) {
-    // During the initial render, we will not update the WorkletRef because the background thread is not ready yet.
   } else {
     throw new Error('MainThreadRef: main-thread:ref must be of type MainThreadRef or main-thread function.');
   }

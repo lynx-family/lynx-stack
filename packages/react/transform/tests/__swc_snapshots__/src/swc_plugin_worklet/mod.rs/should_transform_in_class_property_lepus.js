@@ -6,7 +6,7 @@ class App extends Component {
         _c: {
             a
         },
-        _lepusWorkletHash: "a77b:test:1"
+        _wkltId: "a77b:test:1"
     };
 }
 loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "a77b:test:1", function(event) {

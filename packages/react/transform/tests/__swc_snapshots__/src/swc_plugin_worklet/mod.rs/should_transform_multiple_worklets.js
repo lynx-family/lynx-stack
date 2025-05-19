@@ -5,14 +5,14 @@ let X = {
         y1,
         y2
     },
-    _lepusWorkletHash: "a77b:test:1"
+    _wkltId: "a77b:test:1"
 };
 let Y = {
     _c: {
         z1,
         z2
     },
-    _lepusWorkletHash: "a77b:test:2"
+    _wkltId: "a77b:test:2"
 };
 loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "a77b:test:1", function(event) {
     const X = lynxWorkletImpl._workletMap["a77b:test:1"].bind(this);

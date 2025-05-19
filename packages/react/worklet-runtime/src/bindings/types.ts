@@ -42,7 +42,6 @@ export interface Worklet {
   _wkltId: string;
   _workletType?: string;
   _c?: Record<string, ClosureValueType>;
-  _lepusWorkletHash?: string;
   _execId?: number;
   _jsFn?: Record<string, string>;
   _unmount?: () => void;

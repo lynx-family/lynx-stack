@@ -19,6 +19,16 @@ beforeAll(() => {
   setupPage(__CreatePage('0', 0));
   injectUpdateMainThread();
   replaceCommitHook();
+  globalThis.lynxWorkletImpl = {
+    _refImpl: {
+      updateWorkletRef: vi.fn(),
+      updateWorkletRefInitValueChanges: vi.fn(),
+      clearFirstScreenWorkletRefMap: vi.fn(),
+    },
+    _runOnBackgroundDelayImpl: {
+      runDelayedBackgroundFunctions: vi.fn(),
+    },
+  };
 });
 
 beforeEach(() => {
@@ -115,16 +125,10 @@ describe('WorkletRef in js', () => {
           ],
         ]
       `);
-      globalThis.lynxWorkletImpl = {
-        _refImpl: { updateWorkletRefInitValueChanges: vi.fn() },
-        _eventDelayImpl: { clearDelayedWorklets: vi.fn() },
-      };
       globalThis[rLynxChange[0][0]](rLynxChange[0][1]);
       expect(globalThis.lynxWorkletImpl._refImpl.updateWorkletRefInitValueChanges).toBeCalledTimes(1);
-      expect(globalThis.lynxWorkletImpl._eventDelayImpl.clearDelayedWorklets).not.toBeCalled();
       globalThis[rLynxChange[1][0]](rLynxChange[1][1]);
       expect(globalThis.lynxWorkletImpl._refImpl.updateWorkletRefInitValueChanges).toBeCalledTimes(1);
-      expect(globalThis.lynxWorkletImpl._eventDelayImpl.clearDelayedWorklets).toBeCalledTimes(1);
     }
   });
 

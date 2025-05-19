@@ -3,7 +3,7 @@ var loadWorkletRuntime = __loadWorkletRuntime;
 class App extends Component {
     a = 1;
     onTapLepus = {
-        _lepusWorkletHash: "a77b:test:1"
+        _wkltId: "a77b:test:1"
     };
 }
 loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "a77b:test:1", function(event) {

@@ -26,7 +26,7 @@ function Comp1(props) {
     ref = 1;
   } else if (props.ref_ === 'mts') {
     ref = {
-      _lepusWorkletHash: 233,
+      _wkltId: 233,
     };
   } else {
     throw new Error();

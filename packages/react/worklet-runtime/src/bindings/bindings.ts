@@ -2,22 +2,18 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-/// <reference path="../types/elementApi.d.ts" />
-
 import type { ClosureValueType, Worklet, WorkletRefImpl } from './types.js';
 import type { Element } from '../api/element.js';
 
 /**
- * Register a worklet function to the `jsFunctionLifecycleManager`.
- * This function mast be called when a worklet context is updated.
+ * This function must be called when a worklet context is updated.
  *
  * @param worklet - The worklet to be updated
- * @param element - The element associated with the worklet
+ * @param _element - The element associated with the worklet
  * @internal
  */
-function onWorkletCtxUpdate(worklet: Worklet, element: ElementNode): void {
+function onWorkletCtxUpdate(worklet: Worklet, _element: ElementNode): void {
   globalThis.lynxWorkletImpl?._jsFunctionLifecycleManager?.addRef(worklet._execId!, worklet);
-  globalThis.lynxWorkletImpl?._eventDelayImpl.runDelayedWorklet(worklet, element);
 }
 
 /**
@@ -52,12 +48,12 @@ function updateWorkletRefInitValueChanges(patch?: [number, unknown][]): void {
 }
 
 /**
- * Clear all delayed worklets to run.
+ * This must be called when the hydration is finished.
  *
  * @internal
  */
 function onHydrationFinished(): void {
-  globalThis.lynxWorkletImpl?._eventDelayImpl.clearDelayedWorklets();
+  // do nothing
 }
 
 /**

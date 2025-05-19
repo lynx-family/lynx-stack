@@ -1,12 +1,13 @@
 /** @jsxImportSource ../lepus */
 
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { elementTree, options } from './utils/nativeMethod';
+
 import { globalEnvManager } from './utils/envManager';
-import { __root } from '../src/root';
+import { elementTree, options } from './utils/nativeMethod';
 import { __page as __internalPage } from '../src/internal';
-import { clearPage } from '../src/snapshot';
 import { jsReadyEventIdSwap } from '../src/lifecycle/event/jsReady';
+import { __root } from '../src/root';
+import { clearPage } from '../src/snapshot';
 
 const ssrIDMap = new Map();
 
@@ -182,8 +183,8 @@ describe('ssr', () => {
           style={s}
           bindtap={() => {}}
           ref={() => {}}
-          main-thread:bindtap={{ _lepusWorkletHash: '1' }}
-          main-thread:ref={{ _lepusWorkletHash: '2' }}
+          main-thread:bindtap={{ _wkltId: '1' }}
+          main-thread:ref={{ _wkltId: '2' }}
           data-xxx={c}
         />
       );
@@ -213,11 +214,11 @@ describe('ssr', () => {
             "-2:2:",
             "-2:3:",
             {
-              "_lepusWorkletHash": "1",
+              "_wkltId": "1",
               "_workletType": "main-thread",
             },
             {
-              "_lepusWorkletHash": "2",
+              "_wkltId": "2",
             },
             "red",
           ],
@@ -237,8 +238,8 @@ describe('ssr', () => {
         style: s,
         bindtap: () => {},
         ref: () => {},
-        'main-thread:bindtap': { _lepusWorkletHash: '1' },
-        'main-thread:ref': { _lepusWorkletHash: '2' },
+        'main-thread:bindtap': { _wkltId: '1' },
+        'main-thread:ref': { _wkltId: '2' },
         'data-xxx': c,
       };
       return <view {...props} />;
@@ -267,11 +268,11 @@ describe('ssr', () => {
               "className": "red",
               "data-xxx": "red",
               "main-thread:bindtap": {
-                "_lepusWorkletHash": "1",
+                "_wkltId": "1",
                 "_workletType": "main-thread",
               },
               "main-thread:ref": {
-                "_lepusWorkletHash": "2",
+                "_wkltId": "2",
               },
               "ref": "-2:0:ref",
               "style": {

@@ -10,7 +10,7 @@ let Y = {
             r: y5.r
         }
     },
-    _lepusWorkletHash: "a77b:test:1"
+    _wkltId: "a77b:test:1"
 };
 loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "a77b:test:1", function() {
     const Y = lynxWorkletImpl._workletMap["a77b:test:1"].bind(this);
