@@ -115,18 +115,98 @@ export interface InjectVisitorConfig {
 export interface RefreshVisitorConfig {
   library?: Array<string>
 }
+/**
+ * {@inheritdoc PluginReactLynxOptions.shake}
+ * @public
+ */
 export interface ShakeVisitorConfig {
-  /** @public */
+  /**
+   * Package names to identify runtime imports that need to be processed
+   *
+   * @example
+   * ```js
+   * import { defineConfig } from '@lynx-js/rspeedy'
+   * import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+   *
+   * export default defineConfig({
+   *   plugins: [
+   *     pluginReactLynx({
+   *       shake: {
+   *         pkgName: ['@lynx-js/react-runtime']
+   *       }
+   *     })
+   *   ]
+   * })
+   * ```
+   *
+   * @remarks
+   * Default value: `['@lynx-js/react-runtime']`
+   * The provided values will be merged with the default values instead of replacing them.
+   * @public
+   */
   pkgName: Array<string>
-  /** @public */
+  /**
+   * Properties that should be retained in the component class
+   *
+   * @example
+   * ```js
+   * import { defineConfig } from '@lynx-js/rspeedy'
+   * import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+   *
+   * export default defineConfig({
+   *   plugins: [
+   *     pluginReactLynx({
+   *       shake: {
+   *         retainProp: ['myCustomMethod']
+   *       }
+   *     })
+   *   ]
+   * })
+   * ```
+   *
+   * @remarks
+   * Default value: `['constructor', 'render', 'getDerivedStateFromProps', 'state', 'defaultDataProcessor', 'dataProcessors', 'contextType', 'defaultProps']`
+   * The provided values will be merged with the default values instead of replacing them.
+   *
+   * @public
+   */
   retainProp: Array<string>
-  /** @public */
+  /**
+   * Function names whose parameters should be removed during transformation
+   *
+   * @example
+   * ```js
+   * import { defineConfig } from '@lynx-js/rspeedy'
+   * import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+   *
+   * export default defineConfig({
+   *   plugins: [
+   *     pluginReactLynx({
+   *       shake: {
+   *         removeCallParams: ['useMyCustomEffect']
+   *       }
+   *     })
+   *   ]
+   * })
+   * ```
+   *
+   * @remarks
+   * Default value: `['useEffect', 'useLayoutEffect', '__runInJS', 'useLynxGlobalEventListener', 'useImperativeHandle']`
+   * The provided values will be merged with the default values instead of replacing them.
+   *
+   * @public
+   */
   removeCallParams: Array<string>
 }
+/** @internal */
 export interface JsxTransformerConfig {
+  /** @internal */
   preserveJsx: boolean
+  /** @internal */
   runtimePkg: string
+  /** @internal */
   jsxImportSource?: string
+  /** @internal */
   filename: string
   /** @internal */
   target: 'LEPUS' | 'JS' | 'MIXED'
