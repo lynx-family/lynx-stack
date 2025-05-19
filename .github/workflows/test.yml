@@ -232,6 +232,7 @@ jobs:
       - code-style-check
       - playwright-linux
       - playwright-linux-all-on-ui
+      - playwright-linux-fp-only
       - test-api
       - test-publish
       - test-react

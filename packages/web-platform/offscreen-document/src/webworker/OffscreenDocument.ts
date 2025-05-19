@@ -6,7 +6,11 @@ import {
   type ElementOperation,
 } from '../types/ElementOperation.js';
 import { styleMapSymbol } from './OffscreenCSSStyleDeclaration.js';
-import { _attributes, OffscreenElement } from './OffscreenElement.js';
+import {
+  _attributes,
+  innerHTML,
+  OffscreenElement,
+} from './OffscreenElement.js';
 import {
   eventPhase,
   OffscreenEvent,
@@ -161,7 +165,7 @@ function getInnerHTMLImpl(
   }
 
   const cssText = Array.from(element.style[styleMapSymbol].entries())
-    .map(([key, value]) => `${key}: ${value};`).join(';');
+    .map(([key, value]) => `${key}: ${value};`).join('');
   if (cssText) {
     buffer.push(' style="', cssText, '"');
   }
@@ -174,13 +178,17 @@ function getInnerHTMLImpl(
       : templateImpl;
     buffer.push('<template shadowrootmode="open">', template, '</template>');
   }
-  for (const child of element.children) {
-    getInnerHTMLImpl(
-      buffer,
-      child as OffscreenElement,
-      shadowrootTemplates,
-      tagTransformMap,
-    );
+  if (element[innerHTML]) {
+    buffer.push(element[innerHTML]);
+  } else {
+    for (const child of element.children) {
+      getInnerHTMLImpl(
+        buffer,
+        child as OffscreenElement,
+        shadowrootTemplates,
+        tagTransformMap,
+      );
+    }
   }
   buffer.push('</');
   buffer.push(tagName);
