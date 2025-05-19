@@ -18,6 +18,16 @@ export class OffscreenCSSStyleDeclaration {
     this._parent = parent;
   }
 
+  set cssText(value: string) {
+    this[styleMapSymbol].clear();
+    this._parent[ancestorDocument][operations].push({
+      type: OperationType['SetAttribute'],
+      uid: this._parent[uniqueId],
+      key: 'style',
+      value: value,
+    });
+  }
+
   setProperty(
     property: string,
     value: string,

@@ -106,9 +106,12 @@ export function createStyleFunctions(
         ]),
       );
     const style = element.style;
+    style.cssText = '';
     for (const [property, value] of transformedStyle) {
       const important = value.includes('!important');
-      const cleanValue = important ? value.replace('!important', '').trim() : value;
+      const cleanValue = important
+        ? value.replace('!important', '').trim()
+        : value;
       style.setProperty(property, cleanValue, important ? 'important' : '');
     }
   }
