@@ -27,7 +27,7 @@ const testMatch: string | undefined = (() => {
 
 const testIgnore: string[] = (() => {
   const ignore = ['**vitest**'];
-  if (isCI) {
+  if (isCI && !testFPOnly) {
     ignore.push('**/fp-only.spec.ts'); // fp-only tests has its own test steps
   }
   return ignore;
