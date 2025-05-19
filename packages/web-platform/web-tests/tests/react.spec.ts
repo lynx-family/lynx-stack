@@ -691,6 +691,22 @@ test.describe('reactlynx3 tests', () => {
       expect(page.workers().length).toBeLessThanOrEqual(4);
     });
 
+    test('api-shared-context-worker-count-release', async ({ page }) => {
+      await goto(page, 'api-setSharedData', 'api-getSharedData');
+      await wait(100);
+      expect(page.workers().length).toBeLessThanOrEqual(4);
+      await page.evaluate(() =>
+        document.body.querySelector('lynx-view')?.remove()
+      );
+      await wait(100);
+      expect(page.workers().length).toBeLessThanOrEqual(3);
+      await page.evaluate(() =>
+        document.body.querySelector('lynx-view')?.remove()
+      );
+      await wait(100);
+      expect(page.workers().length).toBeLessThanOrEqual(1);
+    });
+
     test.describe('api-exposure', () => {
       const module = 'exposure';
       test(
