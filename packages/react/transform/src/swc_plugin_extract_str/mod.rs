@@ -7,11 +7,35 @@ use swc_core::{
   ecma::visit::{VisitMut, VisitMutWith},
   quote,
 };
+
+/// {@inheritdoc PluginReactLynxOptions.extractStr}
+/// @public
 #[derive(PartialEq, Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 #[napi(object)]
 pub struct ExtractStrConfig {
   /// @public
+  /// The minimum length of string literals to be extracted.
+  ///
+  /// @remarks
+  /// Default value: `20`.
+  ///
+  /// @example
+  ///
+  /// ```js
+  /// import { defineConfig } from '@lynx-js/rspeedy'
+  /// import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+  ///
+  /// export default defineConfig({
+  ///   plugins: [
+  ///     pluginReactLynx({
+  ///       extractStr: {
+  ///         strLength: 10,
+  ///       },
+  ///     })
+  ///   ],
+  /// })
+  /// ```
   pub str_length: u32,
   /// @internal
   pub extracted_str_arr: Option<Vec<String>>,
