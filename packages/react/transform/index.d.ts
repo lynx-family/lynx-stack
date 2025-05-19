@@ -89,8 +89,9 @@ export interface CssScopeVisitorConfig {
   /** @public */
   filename: string
 }
+/** @internal */
 export interface DefineDceVisitorConfig {
-  /** @public */
+  /** @internal */
   define: Record<string, string>
 }
 export interface DirectiveDceVisitorConfig {
@@ -123,10 +124,15 @@ export interface ShakeVisitorConfig {
   /** @public */
   removeCallParams: Array<string>
 }
+/** @internal */
 export interface JsxTransformerConfig {
+  /** @internal */
   preserveJsx: boolean
+  /** @internal */
   runtimePkg: string
+  /** @internal */
   jsxImportSource?: string
+  /** @internal */
   filename: string
   /** @internal */
   target: 'LEPUS' | 'JS' | 'MIXED'

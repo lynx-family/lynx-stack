@@ -2,10 +2,11 @@ use std::{collections::HashMap, fmt::Debug};
 
 use napi_derive::napi;
 
+/// @internal
 #[napi(object)]
 #[derive(Clone, Debug)]
 pub struct DefineDCEVisitorConfig {
-  /// @public
+  /// @internal
   pub define: HashMap<String, String>,
 }
 
