@@ -7,13 +7,11 @@
 import type { CompatVisitorConfig } from '@lynx-js/react/transform';
 import type { Compiler } from '@rspack/core';
 import type { DefineDceVisitorConfig } from '@lynx-js/react/transform';
+import { ExtractStrConfig } from '@lynx-js/react/transform';
 import type { JsxTransformerConfig } from '@lynx-js/react/transform';
 import type { ShakeVisitorConfig } from '@lynx-js/react/transform';
 
-// @public
-export interface ExtractStrConfig {
-    strLength: number;
-}
+export { ExtractStrConfig }
 
 // Warning: (ae-missing-release-tag) "LAYERS" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //

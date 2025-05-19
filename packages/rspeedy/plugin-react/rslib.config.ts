@@ -3,7 +3,7 @@ import { TypiaRspackPlugin } from 'typia-rspack-plugin'
 
 export default defineConfig({
   lib: [
-    { format: 'esm', syntax: 'es2022', dts: true },
+    { format: 'esm', syntax: 'es2022', dts: { bundle: true } },
   ],
   source: {
     entry: {
@@ -13,6 +13,11 @@ export default defineConfig({
       index: './src/index.ts',
     },
     tsconfigPath: './tsconfig.build.json',
+  },
+  output: {
+    externals: [
+      '@rsbuild/core',
+    ],
   },
   tools: {
     rspack: {

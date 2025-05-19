@@ -422,6 +422,9 @@ importers:
       '@lynx-js/react':
         specifier: workspace:*
         version: link:../../react
+      '@lynx-js/react-transform':
+        specifier: workspace:*
+        version: link:../../react/transform
       '@lynx-js/rspeedy':
         specifier: workspace:*
         version: link:../core

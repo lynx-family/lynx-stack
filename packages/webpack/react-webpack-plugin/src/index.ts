@@ -9,10 +9,8 @@
  */
 
 export { ReactWebpackPlugin } from './ReactWebpackPlugin.js';
-export type {
-  ReactWebpackPluginOptions,
-  ExtractStrConfig,
-} from './ReactWebpackPlugin.js';
+export type { ReactWebpackPluginOptions } from './ReactWebpackPlugin.js';
+export type { ExtractStrConfig } from '@lynx-js/react/transform';
 
 export { LAYERS } from './layer.js';
 

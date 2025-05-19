@@ -4,13 +4,39 @@
 
 ```ts
 
-import type { CompatVisitorConfig } from '@lynx-js/react/transform';
-import type { DefineDceVisitorConfig } from '@lynx-js/react/transform';
-import type { ExtractStrConfig } from '@lynx-js/react-webpack-plugin';
-import type { JsxTransformerConfig } from '@lynx-js/react/transform';
 import { LAYERS } from '@lynx-js/react-webpack-plugin';
 import type { RsbuildPlugin } from '@rsbuild/core';
-import type { ShakeVisitorConfig } from '@lynx-js/react/transform';
+
+// @public
+export interface CompatVisitorConfig {
+    // Warning: (ae-forgotten-export) The symbol "AddComponentElementConfig" needs to be exported by the entry point index.d.ts
+    addComponentElement: boolean | AddComponentElementConfig
+    additionalComponentAttributes: Array<string>
+    componentsPkg: Array<string>
+    // Warning: (ae-forgotten-export) The symbol "DarkModeConfig" needs to be exported by the entry point index.d.ts
+    //
+    // @deprecated (undocumented)
+    darkMode?: boolean | DarkModeConfig
+    disableDeprecatedWarning: boolean
+    newRuntimePkg: string
+    oldRuntimePkg: Array<string>
+    // @deprecated
+    removeComponentAttrRegex?: string
+    // @deprecated
+    simplifyCtorLikeReactLynx2: boolean
+    // @internal (undocumented)
+    target: 'LEPUS' | 'JS' | 'MIXED'
+}
+
+// Warning: (ae-missing-release-tag) "ExtractStrConfig" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface ExtractStrConfig {
+    // @internal (undocumented)
+    extractedStrArr?: Array<string>
+    // (undocumented)
+    strLength: number
+}
 
 export { LAYERS }
 
@@ -25,7 +51,6 @@ export interface PluginReactLynxOptions {
     customCSSInheritanceList?: string[] | undefined;
     debugInfoOutside?: boolean;
     defaultDisplayLinear?: boolean;
-    defineDCE?: Partial<DefineDceVisitorConfig> | undefined;
     enableAccessibilityElement?: boolean;
     enableCSSInheritance?: boolean;
     enableCSSInvalidation?: boolean;
@@ -40,12 +65,23 @@ export interface PluginReactLynxOptions {
     experimental_isLazyBundle?: boolean;
     extractStr?: Partial<ExtractStrConfig> | boolean;
     firstScreenSyncTiming?: 'immediately' | 'jsReady';
-    jsx?: Partial<JsxTransformerConfig> | undefined;
     pipelineSchedulerConfig?: number;
     removeDescendantSelectorScope?: boolean;
     shake?: Partial<ShakeVisitorConfig> | undefined;
     // @deprecated
     targetSdkVersion?: string;
+}
+
+// Warning: (ae-missing-release-tag) "ShakeVisitorConfig" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface ShakeVisitorConfig {
+    // (undocumented)
+    pkgName: Array<string>
+    // (undocumented)
+    removeCallParams: Array<string>
+    // (undocumented)
+    retainProp: Array<string>
 }
 
 ```

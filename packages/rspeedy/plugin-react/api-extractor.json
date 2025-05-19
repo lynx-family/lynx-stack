@@ -3,4 +3,7 @@
  */
 {
   "extends": "../../../api-extractor.json",
+  "bundledPackages": [
+    "@lynx-js/react-transform",
+  ],
 }

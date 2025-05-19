@@ -11,4 +11,10 @@
 export { pluginReactLynx } from './pluginReactLynx.js'
 export type { PluginReactLynxOptions } from './pluginReactLynx.js'
 
+export type {
+  CompatVisitorConfig,
+  ExtractStrConfig,
+  ShakeVisitorConfig,
+} from '@lynx-js/react-transform'
+
 export { LAYERS } from '@lynx-js/react-webpack-plugin'

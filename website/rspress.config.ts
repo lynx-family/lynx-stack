@@ -46,6 +46,13 @@ const SIDEBARS = {
     createAPI({
       name: 'react-rsbuild-plugin',
       skips: [
+        // Transform options
+        'CompatVisitorConfig',
+        'DefineDceVisitorConfig',
+        'ExtractStrConfig',
+        'JsxTransformerConfig',
+        'ShakeVisitorConfig',
+
         'PluginReactLynxOptions',
       ],
     }),
@@ -169,6 +176,13 @@ const SIDEBARS_ZH = {
       base: 'zh/api',
       name: 'react-rsbuild-plugin',
       skips: [
+        // Transform options
+        'CompatVisitorConfig',
+        'DefineDceVisitorConfig',
+        'ExtractStrConfig',
+        'JsxTransformerConfig',
+        'ShakeVisitorConfig',
+
         'PluginReactLynxOptions',
       ],
     }),
