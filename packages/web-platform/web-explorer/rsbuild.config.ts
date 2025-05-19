@@ -23,9 +23,10 @@ export default defineConfig({
     hmr: false,
     liveReload: false,
   },
-  html: {},
+  html: {
+    template: path.resolve(__dirname, './index.html'),
+  },
   tools: {
-    htmlPlugin: false,
     rspack: {
       output: {
         publicPath: 'auto',
@@ -50,6 +51,7 @@ export default defineConfig({
     pluginWebPlatform({
       polyfill: false,
       nativeModulesPath: path.resolve(__dirname, './index.native-modules.ts'),
+      prefetchWorker: true,
     }),
   ],
 });

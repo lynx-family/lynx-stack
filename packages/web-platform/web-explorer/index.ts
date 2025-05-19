@@ -9,7 +9,7 @@ let lynxView = document.getElementById('lynx-view') as LynxView;
 const backButton = document.getElementById('back-button') as HTMLDivElement;
 const nav = document.getElementById('nav') as HTMLDivElement;
 
-const homepage = 'preinstalled/homepage.json';
+const homepage = '../preinstalled/homepage.json';
 
 backButton.addEventListener('click', () => {
   setLynxViewUrl(homepage);

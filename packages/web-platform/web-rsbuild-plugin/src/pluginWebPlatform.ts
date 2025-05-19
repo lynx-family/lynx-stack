@@ -4,6 +4,8 @@
 
 import type { RsbuildPlugin } from '@rsbuild/core';
 import path from 'path';
+import { merge } from 'webpack-merge';
+import { PrefetchWorkerPlugin } from './plugins/prefetch-worker.js';
 
 const __filename = new URL('', import.meta.url).pathname;
 const __dirname = path.dirname(__filename);
@@ -30,6 +32,12 @@ export interface PluginWebPlatformOptions {
    * When enabled, nativeModules will be packaged directly into the worker chunk instead of being transferred through Blob.
    */
   nativeModulesPath?: string;
+  /**
+   * Prefetch the worker resource.
+   *
+   * @default false
+   */
+  prefetchWorker?: boolean;
 }
 
 /**
@@ -85,13 +93,36 @@ export function pluginWebPlatform(
             polyfill: 'usage',
           };
         }
+
+        if (options.prefetchWorker === true) {
+          if (!config.tools) {
+            config.tools = {};
+          }
+          const originToolsRspack = config.tools?.rspack;
+          if (typeof originToolsRspack === 'object') {
+            config.tools.rspack = (config, { HtmlPlugin }) => {
+              return merge(config, originToolsRspack, {
+                plugins: [
+                  new PrefetchWorkerPlugin({ HtmlPlugin }),
+                ],
+              }) as any;
+            };
+          } else {
+            config.tools.rspack = (...args) => {
+              originToolsRspack?.(...args);
+              args[0].plugins = [
+                ...(args[0].plugins ?? []),
+                new PrefetchWorkerPlugin({
+                  HtmlPlugin: args[1].HtmlPlugin,
+                }),
+              ];
+              return config as any;
+            };
+          }
+        }
       });
 
       api.modifyRspackConfig(rspackConfig => {
-        console.log(path.resolve(
-          __dirname,
-          './loaders/native-modules.js',
-        ));
         rspackConfig.module = {
           ...rspackConfig.module,
           rules: [
