@@ -6,23 +6,6 @@ import type { LynxTemplate } from '@lynx-js/web-core';
 import { lynxViewTests } from './lynx-view.ts';
 
 const ALL_ON_UI = !!process.env.ALL_ON_UI;
-const nativeModulesMap = {
-  CustomModule: URL.createObjectURL(
-    new Blob(
-      [
-        `export default function(NativeModules, NativeModulesCall) {
-    return {
-      async getColor(data, callback) {
-        const color = await NativeModulesCall('getColor', data);
-        callback(color);
-      },
-    }
-  };`,
-      ],
-      { type: 'text/javascript' },
-    ),
-  ),
-};
 
 const searchParams = new URLSearchParams(document.location.search);
 const casename = searchParams.get('casename');
@@ -35,7 +18,6 @@ if (casename) {
   lynxViewTests(lynxView => {
     lynxView.setAttribute('url', `${dir}/index.web.json`);
     if (ALL_ON_UI) lynxView.setAttribute('thread-strategy', `all-on-ui`);
-    lynxView.nativeModulesMap = nativeModulesMap;
     lynxView.id = 'lynxview1';
     if (casename2) {
       lynxView.setAttribute('lynx-group-id', '2');
@@ -83,7 +65,6 @@ if (casename) {
     lynxViewTests(lynxView2 => {
       lynxView2.id = 'lynxview2';
       lynxView2.setAttribute('url', `${dir2}/index.web.json`);
-      lynxView2.nativeModulesMap = nativeModulesMap;
       lynxView2.setAttribute('lynx-group-id', '2');
     });
   }
