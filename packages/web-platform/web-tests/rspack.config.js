@@ -144,7 +144,7 @@ const config = {
           } catch (e) {
             res.statusCode = 500;
             console.error(e);
-            res.send(e.toString() + '\n' + a.stack?.toString());
+            res.send(e.toString() + '\n' + e.stack?.toString());
             next();
           }
         },
