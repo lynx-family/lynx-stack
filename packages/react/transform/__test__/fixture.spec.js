@@ -2,10 +2,9 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { formatMessages } from 'esbuild';
 import { describe, expect, it } from 'vitest';
 
-import { transformBundleResult, transformReactLynx } from '../main.js';
+import { transformReactLynx } from '../index';
 
 describe('shake', () => {
   it('should match', async () => {
@@ -61,8 +60,6 @@ export class A extends Component {
     // eslint-disable-next-line unicorn/consistent-function-scoping
     const __cfg = (jsx) => ({
       mode: 'test',
-      pluginName: '',
-      filename: '',
       sourcemap: false,
       cssScope: false,
       jsx,
@@ -71,7 +68,6 @@ export class A extends Component {
       shake: true,
       compat: true,
       worklet: false,
-      refresh: false,
     });
 
     const result = await transformReactLynx(inputContent, __cfg(true));
@@ -79,7 +75,7 @@ export class A extends Component {
       "import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
       import * as ReactLynx from "@lynx-js/react";
       import { Component } from "@lynx-js/react/legacy-react-runtime";
-      const __snapshot_da39a_test_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_test_1", function() {
+      const __snapshot_05fe4_test_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_05fe4_test_1", function() {
           const pageId = ReactLynx.__pageId;
           const el = __CreateView(pageId);
           return [
@@ -88,7 +84,7 @@ export class A extends Component {
       }, null, null, undefined, globDynamicComponentEntry, null);
       export class A extends Component {
           render() {
-              return /*#__PURE__*/ _jsx(__snapshot_da39a_test_1, {});
+              return /*#__PURE__*/ _jsx(__snapshot_05fe4_test_1, {});
           }
       }
       "
@@ -99,7 +95,7 @@ export class A extends Component {
       "import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
       import * as ReactLynx from "@lynx-js/react";
       import { Component } from "@lynx-js/react/legacy-react-runtime";
-      const __snapshot_da39a_test_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_test_1", function() {
+      const __snapshot_05fe4_test_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_05fe4_test_1", function() {
           const pageId = ReactLynx.__pageId;
           const el = __CreateView(pageId);
           return [
@@ -108,7 +104,7 @@ export class A extends Component {
       }, null, null, undefined, globDynamicComponentEntry, null);
       export class A extends Component {
           render() {
-              return /*#__PURE__*/ _jsx(__snapshot_da39a_test_1, {});
+              return /*#__PURE__*/ _jsx(__snapshot_05fe4_test_1, {});
           }
       }
       "
@@ -119,21 +115,16 @@ export class A extends Component {
 describe('jsx', () => {
   it('should allow JSXNamespace', async () => {
     const result = await transformReactLynx('const jsx = <Foo main-thread:foo={foo} />', {
-      pluginName: '',
-      filename: '',
-      sourceFileName: '',
       defineDCE: true,
       sourcemap: false,
       compat: false,
-      jsx: true,
+      snapshot: true,
       shake: true,
       cssScope: false,
-      refresh: false,
       directiveDCE: {
         target: 'LEPUS',
       },
       worklet: true,
-      experimental_moduleCompress: false,
     });
 
     expect(result).toMatchInlineSnapshot(`
@@ -144,6 +135,7 @@ describe('jsx', () => {
       });
       ",
         "errors": [],
+        "map": undefined,
         "warnings": [],
       }
     `);
@@ -173,7 +165,7 @@ describe('jsx', () => {
         "code": "import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
       import * as ReactLynx from "@lynx-js/react";
       import * as ReactLynxRuntimeComponents from '@lynx-js/react/runtime-components';
-      const __snapshot_da39a_04d8c_2 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_04d8c_2", function() {
+      const __snapshot_05fe4_efa563d7_2 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_05fe4_efa563d7_2", function() {
           const pageId = ReactLynx.__pageId;
           const el = __CreateElement("list-item", pageId);
           return [
@@ -182,7 +174,7 @@ describe('jsx', () => {
       }, [
           (snapshot, index, oldValue)=>ReactLynx.updateListItemPlatformInfo(snapshot, index, oldValue, 0)
       ], ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null);
-      const __snapshot_da39a_04d8c_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_04d8c_1", function(snapshotInstance) {
+      const __snapshot_05fe4_efa563d7_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_05fe4_efa563d7_1", function(snapshotInstance) {
           const pageId = ReactLynx.__pageId;
           const el = ReactLynx.snapshotCreateList(pageId, snapshotInstance, 0);
           return [
@@ -194,9 +186,9 @@ describe('jsx', () => {
               0
           ]
       ], undefined, globDynamicComponentEntry, null);
-      /*#__PURE__*/ _jsx(__snapshot_da39a_04d8c_1, {
+      /*#__PURE__*/ _jsx(__snapshot_05fe4_efa563d7_1, {
           children: /*#__PURE__*/ _jsx(ReactLynxRuntimeComponents.DeferredListItem, {
-              renderListItem: (__c)=>_jsx(__snapshot_da39a_04d8c_2, {
+              renderListItem: (__c)=>_jsx(__snapshot_05fe4_efa563d7_2, {
                       values: [
                           {
                               "item-key": "1"
@@ -210,6 +202,7 @@ describe('jsx', () => {
       });
       ",
         "errors": [],
+        "map": undefined,
         "warnings": [],
       }
     `);
@@ -223,17 +216,11 @@ describe('errors and warnings', () => {
       {
         "code": "",
         "errors": [
-          {
-            "location": {
-              "column": 7,
-              "file": "",
-              "length": 0,
-              "line": 1,
-              "lineText": "<view>;",
-            },
-            "pluginName": "",
-            "text": "Expected '</', got '<eof>'",
-          },
+          "Error:   x Unexpected eof
+         ,----
+       1 | <view>;
+         \`----
+      ",
         ],
         "warnings": [],
       }
@@ -249,13 +236,10 @@ import { Component } from "@lynx-js/react-runtime";
 Component, View
 `,
       {
-        pluginName: '',
-        filename: '',
         sourcemap: false,
         cssScope: false,
-        jsx: {
+        snapshot: {
           runtimePkg: '@lynx-js/react-runtime',
-          filename: '',
           target: 'MIXED',
         },
         directiveDCE: false,
@@ -263,7 +247,6 @@ Component, View
         shake: false,
         compat: true,
         worklet: false,
-        refresh: false,
       },
     );
 
@@ -273,29 +256,38 @@ Component, View
       Component, View;
       ",
         "errors": [],
+        "map": undefined,
         "warnings": [
-          {
-            "location": {
-              "column": 0,
-              "file": "",
-              "length": 49,
-              "line": 2,
-              "lineText": "import { View } from "@lynx-js/react-components";",
-            },
-            "pluginName": "",
-            "text": "DEPRECATED: old package "@lynx-js/react-components" is removed",
-          },
-          {
-            "location": {
-              "column": 0,
-              "file": "",
-              "length": 51,
-              "line": 4,
-              "lineText": "import { Component } from "@lynx-js/react-runtime";",
-            },
-            "pluginName": "",
-            "text": "DEPRECATED: old runtime package "@lynx-js/react-runtime" is changed to "@lynx-js/react"",
-          },
+          "  ! DEPRECATED: old package "@lynx-js/react-components" is removed
+         ,-[2:1]
+       1 | 
+       2 | import { View } from "@lynx-js/react-components";
+         : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+       3 | import { Unused } from "@lynx-js/react-components";
+       4 | import { Component } from "@lynx-js/react-runtime";
+       5 | Component, View
+         \`----
+      ",
+          "  ! DEPRECATED: old package "@lynx-js/react-components" is removed
+         ,-[3:1]
+       1 | 
+       2 | import { View } from "@lynx-js/react-components";
+       3 | import { Unused } from "@lynx-js/react-components";
+         : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+       4 | import { Component } from "@lynx-js/react-runtime";
+       5 | Component, View
+         \`----
+      ",
+          "  ! DEPRECATED: old runtime package "@lynx-js/react-runtime" is changed to "@lynx-js/react"
+         ,-[4:1]
+       1 | 
+       2 | import { View } from "@lynx-js/react-components";
+       3 | import { Unused } from "@lynx-js/react-components";
+       4 | import { Component } from "@lynx-js/react-runtime";
+         : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+       5 | Component, View
+         \`----
+      ",
         ],
       }
     `);
@@ -307,22 +299,16 @@ Component, View
     expect(result.code).not.toContain(`__AddInlineStyle`);
     // Should have __SetInlineStyles(element, "invalid: true")
     expect(result.code).toContain('invalid: true');
-    expect(
-      await formatMessages(result.warnings, { kind: 'warning', color: false }),
-    ).toMatchInlineSnapshot(`[]`);
+    expect(result.warnings).toMatchInlineSnapshot(`[]`);
+    expect(result.errors).toMatchInlineSnapshot(`[]`);
   });
 
   it('should not warn JSXSpread when not enable addComponentElement', async () => {
-    const { formatMessages } = await import('esbuild');
-
     const cfg = {
-      pluginName: '',
-      filename: '',
       sourcemap: false,
       cssScope: false,
-      jsx: {
+      snapshot: {
         runtimePkg: '@lynx-js/react-runtime',
-        filename: '',
         target: 'MIXED',
       },
       directiveDCE: false,
@@ -339,18 +325,13 @@ Component, View
         disableDeprecatedWarning: false,
       },
       worklet: false,
-      refresh: false,
     };
 
     {
       cfg.compat.addComponentElement = false;
       const result = await transformReactLynx(`<Comp {...s}/>;`, cfg);
-      expect(
-        await formatMessages(result.warnings, {
-          kind: 'warning',
-          color: false,
-        }),
-      ).toMatchInlineSnapshot(`[]`);
+      expect(result.warnings).toMatchInlineSnapshot(`[]`);
+      expect(result.errors).toMatchInlineSnapshot(`[]`);
     }
 
     {
@@ -358,22 +339,17 @@ Component, View
         compilerOnly: true,
       };
       const result = await transformReactLynx(`<Comp {...s}/>;`, cfg);
-      expect(
-        await formatMessages(result.warnings, {
-          kind: 'warning',
-          color: false,
-        }),
-      ).toMatchInlineSnapshot(`
+      expect(result.warnings).toMatchInlineSnapshot(`
         [
-          "▲ [WARNING] addComponentElement: component with JSXSpread is ignored to avoid badcase, you can switch addComponentElement.compilerOnly to false to enable JSXSpread support
-
-            :1:7:
-              1 │ <Comp {...s}/>;
-                ╵        ~~~
-
+          "  ! addComponentElement: component with JSXSpread is ignored to avoid badcase, you can switch addComponentElement.compilerOnly to false to enable JSXSpread support
+           ,----
+         1 | <Comp {...s}/>;
+           :        ^^^
+           \`----
         ",
         ]
       `);
+      expect(result.errors).toMatchInlineSnapshot(`[]`);
       expect(result.code).toMatchInlineSnapshot(`
         "/*#__PURE__*/ import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
         _jsx(Comp, {
@@ -386,17 +362,13 @@ Component, View
     {
       cfg.compat.addComponentElement = true;
       const result = await transformReactLynx(`<Comp {...s}/>;`, cfg);
-      expect(
-        await formatMessages(result.warnings, {
-          kind: 'warning',
-          color: false,
-        }),
-      ).toMatchInlineSnapshot(`[]`);
+      expect(result.warnings).toMatchInlineSnapshot(`[]`);
+      expect(result.errors).toMatchInlineSnapshot(`[]`);
       expect(result.code).toMatchInlineSnapshot(`
         "/*#__PURE__*/ import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
-        import * as ReactLynx from "@lynx-js/react";
+        import * as ReactLynx from "@lynx-js/react-runtime";
         import * as ReactLynx1 from "@lynx-js/react/internal";
-        const __snapshot_da39a_89b7f_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_89b7f_1", function() {
+        const __snapshot_05fe4_4da58493_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_05fe4_4da58493_1", function() {
             const pageId = ReactLynx.__pageId;
             const el = __CreateView(pageId);
             return [
@@ -407,7 +379,7 @@ Component, View
         ], ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry, [
             0
         ]);
-        /*#__PURE__*/ ReactLynx1.wrapWithLynxComponent((__c, __spread)=>/*#__PURE__*/ _jsx(__snapshot_da39a_89b7f_1, {
+        /*#__PURE__*/ ReactLynx1.wrapWithLynxComponent((__c, __spread)=>/*#__PURE__*/ _jsx(__snapshot_05fe4_4da58493_1, {
                 values: [
                     {
                         ...__spread,
@@ -425,13 +397,10 @@ Component, View
 
   // eslint-disable-next-line unicorn/consistent-function-scoping
   const __cfg = () => ({
-    pluginName: 'transform',
-    filename: '',
     sourcemap: false,
     cssScope: false,
-    jsx: {
+    snapshot: {
       runtimePkg: '@lynx-js/react-runtime',
-      filename: '',
       target: 'MIXED',
     },
     directiveDCE: false,
@@ -448,12 +417,9 @@ Component, View
       disableDeprecatedWarning: false,
     },
     worklet: false,
-    refresh: false,
   });
 
   it('should error when encounter <component/>', async () => {
-    const { formatMessages } = await import('esbuild');
-
     const cfg = __cfg();
     {
       cfg.compat.addComponentElement = true;
@@ -461,43 +427,33 @@ Component, View
         `function A() { return <view><component/></view>; }`,
         cfg,
       );
-      expect(
-        await formatMessages(result.errors, { kind: 'error', color: false }),
-      ).toMatchInlineSnapshot(`[]`);
+      expect(result.warnings).toMatchInlineSnapshot(`[]`);
+      expect(result.errors).toMatchInlineSnapshot(`[]`);
     }
   });
 
   it('should error when encounter class property config', async () => {
-    const { formatMessages } = await import('esbuild');
-
     const cfg = __cfg();
     {
       const result = await transformReactLynx(
         `class A extends Component { config = {}; render() {return <view/>;} }`,
         cfg,
       );
-      expect(
-        await formatMessages(result.warnings, {
-          kind: 'warning',
-          color: false,
-        }),
-      ).toMatchInlineSnapshot(`
+      expect(result.warnings).toMatchInlineSnapshot(`
         [
-          "▲ [WARNING] BROKEN: supporting for class property \`config\` is removed and MUST be migrated in ReactLynx 3.0, you should put your configs inside \`pageConfig\` in lynx.config.js [plugin transform]
-
-            :1:28:
-              1 │ class A extends Component { config = {}; render() {return <view/>;} }
-                ╵                             ~~~~~~~~~~~~
-
+          "  ! BROKEN: supporting for class property \`config\` is removed and MUST be migrated in ReactLynx 3.0, you should put your configs inside \`pageConfig\` in lynx.config.js
+           ,----
+         1 | class A extends Component { config = {}; render() {return <view/>;} }
+           :                             ^^^^^^^^^^^^
+           \`----
         ",
         ]
       `);
+      expect(result.errors).toMatchInlineSnapshot(`[]`);
     }
   });
 
   it('should warning when encounter this.createSelectorQuery', async () => {
-    const { formatMessages } = await import('esbuild');
-
     const cfg = __cfg();
     {
       const result = await transformReactLynx(
@@ -505,169 +461,44 @@ Component, View
          this.getElementById();`,
         cfg,
       );
-      expect(
-        await formatMessages(result.warnings, {
-          kind: 'warning',
-          color: false,
-        }),
-      ).toMatchInlineSnapshot(`
+      expect(result.warnings).toMatchInlineSnapshot(`
         [
-          "▲ [WARNING] BROKEN: createSelectorQuery on component instance is broken and MUST be migrated in ReactLynx 3.0, please use ref or lynx.createSelectorQuery instead. [plugin transform]
-
-            :1:0:
-              1 │ this.createSelectorQuery();
-                ╵ ~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+          "  ! BROKEN: createSelectorQuery on component instance is broken and MUST be migrated in ReactLynx 3.0, please use ref or lynx.createSelectorQuery instead.
+           ,-[1:1]
+         1 | this.createSelectorQuery();
+           : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+         2 |          this.getElementById();
+           \`----
         ",
-          "▲ [WARNING] BROKEN: getElementById on component instance is broken and MUST be migrated in ReactLynx 3.0, please use ref or lynx.getElementById instead. [plugin transform]
-
-            :2:9:
-              2 │          this.getElementById();
-                ╵          ~~~~~~~~~~~~~~~~~~~~~
-
+          "  ! BROKEN: getElementById on component instance is broken and MUST be migrated in ReactLynx 3.0, please use ref or lynx.getElementById instead.
+           ,-[2:1]
+         1 | this.createSelectorQuery();
+         2 |          this.getElementById();
+           :          ^^^^^^^^^^^^^^^^^^^^^
+           \`----
         ",
         ]
       `);
+      expect(result.errors).toMatchInlineSnapshot(`[]`);
     }
   });
 });
 
-describe('transformBundle', () => {
-  it('should extract lepus str', async () => {
-    const inputContent = `
-    globalThis.processData = ()=>{
-      if (true) {
-        return {
-          _EXTRACT_STR: __EXTRACT_STR_IDENT_FLAG__,
-        };
-      }
-    }
-    const qq = {
-      a: '123',
-      b: false ? '456' : '789'
-    };
-    console.log('!@#@#$!!@#!#!3sasdega!!23!#$!@#%%');
-    let q = fun('456');
-    let a = '789';
-    const b = '111' + '000';`;
-    const result = await transformBundleResult(inputContent, {
-      filename: 'lepus.js',
-      pluginName: 'transformBundleResult',
-      sourcemap: true,
-      extractStr: {
-        strLength: 1,
-      },
-    });
-    expect(result.code).toMatchInlineSnapshot(`
-      "var _EXTRACT_STR = [
-          "123",
-          "456",
-          "789",
-          "!@#@#$!!@#!#!3sasdega!!23!#$!@#%%",
-          "111",
-          "000"
-      ];
-      globalThis.processData = ()=>{
-          if (true) {
-              return {
-                  _EXTRACT_STR: _EXTRACT_STR
-              };
-          }
-      };
-      const qq = {
-          a: _EXTRACT_STR[0],
-          b: false ? _EXTRACT_STR[1] : _EXTRACT_STR[2]
-      };
-      console.log(_EXTRACT_STR[3]);
-      let q = fun(_EXTRACT_STR[1]);
-      let a = _EXTRACT_STR[2];
-      const b = _EXTRACT_STR[4] + _EXTRACT_STR[5];
-      "
-    `);
-  });
-  it('should apply js str', async () => {
-    const inputContent = `
-    function aaa() {
-      var tt = lynxCoreInject.tt;
-      // for __EXTRACT_STR_FLAG__
-      tt.__sourcemap__release__ = "123";
-      tt.define("app-service.js", function(){
-        __EXTRACT_STR_JS_FLAG__(z=lynxCoreInject.tt._params.updateData._EXTRACT_STR,z);
-        const qq = {
-          a: '123',
-          b: false ? '456' : '789'
-        };
-        function render(){
-          const { abc: z } = this.state
-          console.log(z);
-          console.log('456');
-        }
-        function ffff(z) {
-          console.log(z);
-          return "asdasdasd"
-        }
-        console.log('!@#@#$!!@#!#!3sasdega!!23!#$!@#%%');
-        let q = fun('456');
-        let a = '789';
-        const b = '111' + '000';
-      });
-  }`;
-    const result = await transformBundleResult(inputContent, {
-      filename: 'app-service.js',
-      pluginName: 'transformBundleResult',
-      sourcemap: true,
-      extractStr: {
-        strLength: 1,
-        extractedStrArr: ['123', '456', 'asdasdasd'],
-      },
-    });
-    expect(result.code).toMatchInlineSnapshot(`
-      "function aaa() {
-          var tt = lynxCoreInject.tt;
-          // for __EXTRACT_STR_FLAG__
-          tt.__sourcemap__release__ = "123";
-          tt.define("app-service.js", function() {
-              __EXTRACT_STR_JS_FLAG__(z = lynxCoreInject.tt._params.updateData._EXTRACT_STR, z);
-              const qq = {
-                  a: '123',
-                  b: false ? '456' : '789'
-              };
-              function render() {
-                  const { abc: z1 } = this.state;
-                  console.log(z1);
-                  console.log('456');
-              }
-              function ffff(z1) {
-                  console.log(z1);
-                  return "asdasdasd";
-              }
-              console.log('!@#@#$!!@#!#!3sasdega!!23!#$!@#%%');
-              let q = fun('456');
-              let a = '789';
-              const b = '111' + '000';
-          });
-      }
-      "
-    `);
-  });
-
+describe('syntaxConfig', () => {
   it('should allow C-style type cast in .ts', async () => {
     const result = await transformReactLynx(`const p = <any>Promise.all([]);`, {
-      pluginName: '',
-      filename: '',
       sourcemap: false,
-      syntaxConfig: JSON.stringify({
+      syntaxConfig: {
         syntax: 'typescript',
         tsx: false,
-      }),
+      },
       cssScope: false,
-      jsx: false,
+      snapshot: false,
       directiveDCE: false,
       defineDCE: false,
       shake: false,
       compat: false,
       worklet: false,
-      refresh: false,
     });
     expect(result.code).toMatchInlineSnapshot(`
       "Promise.all([]);
@@ -677,58 +508,47 @@ describe('transformBundle', () => {
 
   it('should throw when using TS feature as TSX', async () => {
     const result = await transformReactLynx(`const p = <any>Promise.all([]);`, {
-      pluginName: '',
-      filename: '',
       sourcemap: false,
-      syntaxConfig: JSON.stringify({
+      syntaxConfig: {
         syntax: 'typescript',
         tsx: true,
-      }),
+      },
       cssScope: false,
-      jsx: false,
+      snapshot: false,
       directiveDCE: false,
       defineDCE: false,
       shake: false,
       compat: false,
       worklet: false,
-      refresh: false,
     });
 
     expect(result.code).toBe('');
+    expect(result.warnings).toMatchInlineSnapshot(`[]`);
     expect(result.errors).toMatchInlineSnapshot(`
       [
-        {
-          "location": {
-            "column": 31,
-            "file": "",
-            "length": 0,
-            "line": 1,
-            "lineText": "const p = <any>Promise.all([]);",
-          },
-          "pluginName": "",
-          "text": "Expected '</', got '<eof>'",
-        },
+        "Error:   x Unexpected eof
+         ,----
+       1 | const p = <any>Promise.all([]);
+         \`----
+      ",
       ]
     `);
   });
 
   it('should allow tsx-style type cast in .tsx', async () => {
     const result = await transformReactLynx(`const foo = <T,>(v: T) => v;foo`, {
-      pluginName: '',
-      filename: '',
       sourcemap: false,
-      syntaxConfig: JSON.stringify({
+      syntaxConfig: {
         syntax: 'typescript',
         tsx: true,
-      }),
+      },
       cssScope: false,
-      jsx: false,
+      snapshot: false,
       directiveDCE: false,
       defineDCE: false,
       shake: false,
       compat: false,
       worklet: false,
-      refresh: false,
     });
 
     // Note that the result is not valid TSX code, but it is valid TS code.
@@ -741,30 +561,31 @@ describe('transformBundle', () => {
 
   it('should compile when using with', async () => {
     const result = await transformReactLynx(`with(x) {y}`, {
-      pluginName: '',
-      filename: '',
       sourcemap: false,
-      syntaxConfig: JSON.stringify({
+      syntaxConfig: {
         syntax: 'ecmascript',
         jsx: false,
-      }),
+      },
       isModule: false,
       cssScope: false,
-      jsx: false,
+      snapshot: false,
       directiveDCE: false,
       defineDCE: false,
       shake: false,
       compat: false,
       worklet: {
-        filename: 'filename',
         target: 'LEPUS',
         minSdkVersion: '2.14',
         runtimePkg: '@lynx-js/react',
       },
-      refresh: false,
     });
 
-    expect(result.errors.length).toBe(0);
+    expect(result.code).toMatchInlineSnapshot(`
+      "with (x)y;
+      "
+    `);
+    expect(result.warnings).toMatchInlineSnapshot(`[]`);
+    expect(result.errors).toMatchInlineSnapshot(`[]`);
   });
 });
 
@@ -787,11 +608,9 @@ class X {
 }
 `,
       {
-        pluginName: '',
-        filename: '',
         sourcemap: false,
         cssScope: false,
-        jsx: false,
+        snapshot: false,
         directiveDCE: {
           target: 'LEPUS',
         },
@@ -799,37 +618,49 @@ class X {
         shake: false,
         compat: true,
         worklet: false,
-        refresh: false,
       },
     );
 
-    expect(
-      await formatMessages(result.warnings, { kind: 'warning', color: false }),
-    ).toMatchInlineSnapshot(`
+    expect(result.warnings).toMatchInlineSnapshot(`
       [
-        "▲ [WARNING] directive inside constructor is not allowed
-
-          :4:4:
-            4 │     'use js only';
-              ╵     ~~~~~~~~~~~~~~
-
+        "  ! directive inside constructor is not allowed
+         ,-[4:1]
+       1 | 
+       2 | class X {
+       3 |   constructor() {
+       4 |     'use js only';
+         :     ^^^^^^^^^^^^^^
+       5 |     console.log("js only");
+       6 |   }
+       7 |   get xxx() {
+         \`----
       ",
-        "▲ [WARNING] directive inside getter/setter is ignored
-
-          :8:4:
-            8 │     'use js only';
-              ╵     ~~~~~~~~~~~~~~
-
+        "  ! directive inside getter/setter is ignored
+          ,-[8:1]
+        5 |     console.log("js only");
+        6 |   }
+        7 |   get xxx() {
+        8 |     'use js only';
+          :     ^^^^^^^^^^^^^^
+        9 |     return 'js only';
+       10 |   }
+       11 |   set xxx(v) {
+          \`----
       ",
-        "▲ [WARNING] directive inside getter/setter is ignored
-
-          :12:4:
-            12 │     'use js only';
-               ╵     ~~~~~~~~~~~~~~
-
+        "  ! directive inside getter/setter is ignored
+          ,-[12:1]
+        9 |     return 'js only';
+       10 |   }
+       11 |   set xxx(v) {
+       12 |     'use js only';
+          :     ^^^^^^^^^^^^^^
+       13 |   }
+       14 | }
+          \`----
       ",
       ]
     `);
+    expect(result.errors).toMatchInlineSnapshot(`[]`);
   });
 });
 
@@ -856,11 +687,9 @@ export default class App extends Component {
 }
 `,
       {
-        pluginName: 'transform',
-        filename: '',
         sourcemap: false,
         cssScope: false,
-        jsx: false,
+        snapshot: false,
         directiveDCE: false,
         defineDCE: false,
         shake: true,
@@ -875,7 +704,6 @@ export default class App extends Component {
           disableDeprecatedWarning: false,
         },
         worklet: false,
-        refresh: false,
       },
     );
 
@@ -883,7 +711,7 @@ export default class App extends Component {
       "import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
       import * as ReactLynx from "@lynx-js/react";
       let c = 1;
-      const __snapshot_da39a_b7447_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_b7447_1", function() {
+      const __snapshot_05fe4_fdcd539e_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_05fe4_fdcd539e_1", function() {
           const pageId = ReactLynx.__pageId;
           const el = __CreateView(pageId);
           return [
@@ -893,7 +721,7 @@ export default class App extends Component {
       export default class App extends Component {
           a() {}
           render() {
-              return /*#__PURE__*/ _jsx(__snapshot_da39a_b7447_1, {});
+              return /*#__PURE__*/ _jsx(__snapshot_05fe4_fdcd539e_1, {});
           }
           state = ((()=>{
               if (!__LEPUS__) this.a();
@@ -920,84 +748,68 @@ describe('dynamic import', () => {
 })();
 `,
       {
-        pluginName: '',
-        filename: '',
         sourcemap: false,
         parserConfig: {
           tsx: true,
         },
         cssScope: false,
-        jsx: false,
+        snapshot: false,
         directiveDCE: false,
         defineDCE: false,
         shake: false,
         compat: false,
         worklet: false,
-        refresh: false,
       },
     );
 
-    expect(result.code).toMatchInlineSnapshot(`
-      "import "@lynx-js/react/experimental/lazy/import";
-      import { __dynamicImport } from "@lynx-js/react/internal";
-      (async function() {
-          await import();
-          await import(0);
-          await import(0, 0);
-          await import("./index.js", {
-              with: {
-                  typo: "component"
-              }
-          });
-          await __dynamicImport("https://www/a.js", {
-              with: {
-                  typo: "component"
-              }
-          });
-          await __dynamicImport(url, {
-              with: {
-                  typo: "component"
-              }
-          });
-      })();
-      "
+    expect(result.code).toMatchInlineSnapshot(`""`);
+    expect(result.warnings).toMatchInlineSnapshot(`[]`);
+    expect(result.errors).toMatchInlineSnapshot(`
+      [
+        "Error:   x \`import()\` with no argument is not allowed
+         ,-[2:1]
+       1 | (async function () {
+       2 |   await import();
+         :         ^^^^^^^^
+       3 |   await import(0);
+       4 |   await import(0, 0);
+       5 |   await import("./index.js", { with: { typo: "component" } });
+         \`----
+        x \`import(...)\` call with non-string literal module id is not allowed
+         ,-[3:1]
+       1 | (async function () {
+       2 |   await import();
+       3 |   await import(0);
+         :         ^^^^^^^^^
+       4 |   await import(0, 0);
+       5 |   await import("./index.js", { with: { typo: "component" } });
+       6 |   await import("https://www/a.js", { with: { typo: "component" } });
+         \`----
+        x \`import(...)\` call with non-string literal module id is not allowed
+         ,-[4:1]
+       1 | (async function () {
+       2 |   await import();
+       3 |   await import(0);
+       4 |   await import(0, 0);
+         :         ^^^^^^^^^^^^
+       5 |   await import("./index.js", { with: { typo: "component" } });
+       6 |   await import("https://www/a.js", { with: { typo: "component" } });
+       7 |   await import(url, { with: { typo: "component" } });
+         \`----
+        x \`import("...", ...)\` with invalid options is not allowed
+         ,-[5:1]
+       2 |   await import();
+       3 |   await import(0);
+       4 |   await import(0, 0);
+       5 |   await import("./index.js", { with: { typo: "component" } });
+         :         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+       6 |   await import("https://www/a.js", { with: { typo: "component" } });
+       7 |   await import(url, { with: { typo: "component" } });
+       8 | })();
+         \`----
+      ",
+      ]
     `);
-    // esbuild uses different icon on Windows
-    // See https://github.com/evanw/esbuild/blob/f4159a7b823cd5fe2217da2c30e8873d2f319667/internal/logger/logger.go#L82
-    const errorIcon = process.platform === 'win32' ? 'X' : '✘';
-    expect(await formatMessages(result.errors, { kind: 'error', color: false }))
-      .toMatchInlineSnapshot(`
-        [
-          "${errorIcon} [ERROR] \`import()\` with no argument is not allowed
-
-            :2:8:
-              2 │   await import();
-                ╵         ~~~~~~~~
-
-        ",
-          "${errorIcon} [ERROR] \`import(...)\` call with non-string literal module id is not allowed
-
-            :3:8:
-              3 │   await import(0);
-                ╵         ~~~~~~~~~
-
-        ",
-          "${errorIcon} [ERROR] \`import(...)\` call with non-string literal module id is not allowed
-
-            :4:8:
-              4 │   await import(0, 0);
-                ╵         ~~~~~~~~~~~~
-
-        ",
-          "${errorIcon} [ERROR] \`import("...", ...)\` with invalid options is not allowed
-
-            :5:8:
-              5 │   await import("./index.js", { with: { typo: "component" } });
-                ╵         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-        ",
-        ]
-      `);
   });
 });
 
@@ -1015,11 +827,9 @@ function X() {
 X();
 `,
       {
-        pluginName: '',
-        filename: '',
         sourcemap: false,
         cssScope: false,
-        jsx: false,
+        snapshot: false,
         directiveDCE: false,
         defineDCE: {
           define: {
@@ -1030,7 +840,6 @@ X();
         shake: false,
         compat: true,
         worklet: false,
-        refresh: false,
       },
     );
 
@@ -1087,11 +896,9 @@ X4();
 X5();
 `,
       {
-        pluginName: '',
-        filename: '',
         sourcemap: false,
         cssScope: false,
-        jsx: false,
+        snapshot: false,
         directiveDCE: false,
         defineDCE: {
           define: {
@@ -1102,7 +909,6 @@ X5();
         shake: false,
         compat: true,
         worklet: false,
-        refresh: false,
       },
     );
 
@@ -1147,11 +953,9 @@ function X() {
 X();
 `,
       {
-        pluginName: '',
-        filename: '',
         sourcemap: false,
         cssScope: false,
-        jsx: false,
+        snapshot: false,
         directiveDCE: false,
         defineDCE: {
           define: {
@@ -1162,7 +966,6 @@ X();
         shake: false,
         compat: true,
         worklet: false,
-        refresh: false,
       },
     );
 
@@ -1193,11 +996,9 @@ function X() {
 X();
 `,
       {
-        pluginName: '',
-        filename: '',
         sourcemap: false,
         cssScope: false,
-        jsx: false,
+        snapshot: false,
         directiveDCE: false,
         defineDCE: {
           define: {
@@ -1208,7 +1009,6 @@ X();
         shake: false,
         compat: true,
         worklet: false,
-        refresh: false,
       },
     );
 
@@ -1237,11 +1037,9 @@ function X() {
 X();
 `,
       {
-        pluginName: '',
-        filename: '',
         sourcemap: false,
         cssScope: false,
-        jsx: false,
+        snapshot: false,
         directiveDCE: false,
         defineDCE: {
           define: {
@@ -1253,7 +1051,6 @@ X();
         shake: false,
         compat: true,
         worklet: false,
-        refresh: false,
       },
     );
 
@@ -1282,11 +1079,9 @@ function X() {
 X();
 `,
       {
-        pluginName: '',
-        filename: '',
         sourcemap: false,
         cssScope: false,
-        jsx: false,
+        snapshot: false,
         directiveDCE: false,
         defineDCE: {
           define: {
@@ -1296,7 +1091,6 @@ X();
         shake: false,
         compat: true,
         worklet: false,
-        refresh: false,
       },
     );
 
@@ -1335,11 +1129,9 @@ class X extends Component {
 <X/>;
 `,
       {
-        pluginName: '',
-        filename: '',
         sourcemap: false,
         cssScope: false,
-        jsx: false,
+        snapshot: false,
         directiveDCE: false,
         defineDCE: {
           define: {
@@ -1350,7 +1142,6 @@ class X extends Component {
         shake: true,
         compat: true,
         worklet: false,
-        refresh: false,
       },
     );
 
@@ -1359,7 +1150,7 @@ class X extends Component {
     ).toMatchInlineSnapshot(`
       "import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
       import * as ReactLynx from "@lynx-js/react";
-      const __snapshot_da39a_e2935_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_e2935_1", function() {
+      const __snapshot_05fe4_6525c76e_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_05fe4_6525c76e_1", function() {
           const pageId = ReactLynx.__pageId;
           const el = __CreateView(pageId);
           return [
@@ -1369,7 +1160,7 @@ class X extends Component {
       class X extends Component {
           constructor(){}
           render() {
-              return /*#__PURE__*/ _jsx(__snapshot_da39a_e2935_1, {});
+              return /*#__PURE__*/ _jsx(__snapshot_05fe4_6525c76e_1, {});
           }
       }
       /*#__PURE__*/ _jsx(X, {});
@@ -1389,11 +1180,9 @@ describe('worklet', () => {
   }
   `,
         {
-          pluginName: '',
-          filename: '',
           sourcemap: false,
           cssScope: false,
-          jsx: false,
+          snapshot: false,
           directiveDCE: true,
           defineDCE: {
             define: {
@@ -1403,10 +1192,8 @@ describe('worklet', () => {
           },
           shake: false,
           compat: true,
-          refresh: false,
           worklet: {
             target,
-            filename: '',
             runtimePkg: '@lynx-js/react',
           },
         },
@@ -1424,10 +1211,10 @@ describe('worklet', () => {
                       }
                   }
               },
-              _wkltId: "da39:75a1b:1"
+              _wkltId: "05fe:b88d3c29:1"
           };
-          loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "da39:75a1b:1", function(event) {
-              const getCurrentDelta = lynxWorkletImpl._workletMap["da39:75a1b:1"].bind(this);
+          loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "05fe:b88d3c29:1", function(event) {
+              const getCurrentDelta = lynxWorkletImpl._workletMap["05fe:b88d3c29:1"].bind(this);
               let { foo } = this["_c"];
               "main thread";
               return foo.bar.baz;
@@ -1444,7 +1231,7 @@ describe('worklet', () => {
                       }
                   }
               },
-              _wkltId: "da39:75a1b:1"
+              _wkltId: "05fe:b88d3c29:1"
           };
           "
         `);
@@ -1460,10 +1247,10 @@ describe('worklet', () => {
                       }
                   }
               },
-              _wkltId: "da39:75a1b:1"
+              _wkltId: "05fe:b88d3c29:1"
           };
-          loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "da39:75a1b:1", function(event) {
-              const getCurrentDelta = lynxWorkletImpl._workletMap["da39:75a1b:1"].bind(this);
+          loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "05fe:b88d3c29:1", function(event) {
+              const getCurrentDelta = lynxWorkletImpl._workletMap["05fe:b88d3c29:1"].bind(this);
               let { foo } = this["_c"];
               "main thread";
               return foo.bar.baz;
@@ -1483,11 +1270,9 @@ export function foo(event) {
 }
 `,
       {
-        pluginName: '',
-        filename: '',
         sourcemap: false,
         cssScope: false,
-        jsx: false,
+        snapshot: false,
         directiveDCE: true,
         defineDCE: {
           define: {
@@ -1497,10 +1282,9 @@ export function foo(event) {
         },
         shake: false,
         compat: true,
-        refresh: false,
+
         worklet: {
           target: 'LEPUS',
-          filename: '',
           runtimePkg: '@lynx-js/react',
         },
       },
@@ -1525,10 +1309,10 @@ export function foo(event) {
                   }
               }
           },
-          _wkltId: "da39:64631:1"
+          _wkltId: "05fe:21759364:1"
       };
-      loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "da39:64631:1", function(event) {
-          const foo = lynxWorkletImpl._workletMap["da39:64631:1"].bind(this);
+      loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "05fe:21759364:1", function(event) {
+          const foo = lynxWorkletImpl._workletMap["05fe:21759364:1"].bind(this);
           let { bar, qux } = this["_c"];
           "main thread";
           return bar.baz['qux'] || bar.qux['baz'] || qux.bar.baz;
@@ -1551,11 +1335,9 @@ function bar() {
 console.log(bar)
 `,
       {
-        pluginName: '',
-        filename: '',
         sourcemap: false,
         cssScope: false,
-        jsx: false,
+        snapshot: false,
         directiveDCE: true,
         defineDCE: {
           define: {
@@ -1565,10 +1347,8 @@ console.log(bar)
         },
         shake: false,
         compat: true,
-        refresh: false,
         worklet: {
           target: 'LEPUS',
-          filename: '',
           runtimePkg: '@lynx-js/react',
         },
       },
@@ -1578,22 +1358,22 @@ console.log(bar)
       "import { loadWorkletRuntime as __loadWorkletRuntime } from "@lynx-js/react";
       var loadWorkletRuntime = __loadWorkletRuntime;
       let foo = {
-          _wkltId: "da39:80ef4:1"
+          _wkltId: "05fe:2ec866b7:1"
       };
       let bar = {
           _c: {
               foo
           },
-          _wkltId: "da39:80ef4:2"
+          _wkltId: "05fe:2ec866b7:2"
       };
       console.log(bar);
-      loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "da39:80ef4:1", function() {
-          const foo = lynxWorkletImpl._workletMap["da39:80ef4:1"].bind(this);
+      loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "05fe:2ec866b7:1", function() {
+          const foo = lynxWorkletImpl._workletMap["05fe:2ec866b7:1"].bind(this);
           "main thread";
           return null;
       });
-      loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "da39:80ef4:2", function() {
-          const bar = lynxWorkletImpl._workletMap["da39:80ef4:2"].bind(this);
+      loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "05fe:2ec866b7:2", function() {
+          const bar = lynxWorkletImpl._workletMap["05fe:2ec866b7:2"].bind(this);
           let { foo } = this["_c"];
           "main thread";
           foo();
@@ -1614,11 +1394,9 @@ function getCurrentDelta(event) {
 }
 `,
       {
-        pluginName: '',
-        filename: '',
         sourcemap: false,
         cssScope: false,
-        jsx: false,
+        snapshot: false,
         directiveDCE: true,
         defineDCE: {
           define: {
@@ -1628,10 +1406,9 @@ function getCurrentDelta(event) {
         },
         shake: false,
         compat: true,
-        refresh: false,
+
         worklet: {
           target: 'LEPUS',
-          filename: '',
           runtimePkg: '@lynx-js/react',
         },
       },
@@ -1640,8 +1417,8 @@ function getCurrentDelta(event) {
     expect(code).toMatchInlineSnapshot(`
       "import { loadWorkletRuntime as __loadWorkletRuntime } from "@lynx-js/react";
       var loadWorkletRuntime = __loadWorkletRuntime;
-      loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "da39:059d0:1", function(event) {
-          lynxWorkletImpl._workletMap["da39:059d0:1"].bind(this);
+      loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "05fe:b69521f0:1", function(event) {
+          lynxWorkletImpl._workletMap["05fe:b69521f0:1"].bind(this);
           let { foo, a, b } = this["_c"];
           "main thread";
           if (foo(a)) foo(b);

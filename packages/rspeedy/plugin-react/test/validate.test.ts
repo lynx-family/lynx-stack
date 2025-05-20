@@ -4,10 +4,10 @@
 import { describe, expect, test } from 'vitest'
 
 import type {
-  CompatVisitorConfig,
   DefineDceVisitorConfig,
   JsxTransformerConfig,
-} from '@lynx-js/react/transform'
+} from '@lynx-js/swc-plugin-reactlynx'
+import type { CompatVisitorConfig } from '@lynx-js/swc-plugin-reactlynx-compat'
 
 import { validateConfig } from '../src/validate.js'
 
@@ -114,10 +114,7 @@ describe('Validation', () => {
   test('jsx', () => {
     const cases: Partial<JsxTransformerConfig>[] = [
       {},
-      { filename: '1' },
-      { preserveJsx: false },
-      // @ts-expect-error We bypass the internal type check.
-      { preserveJsx: 'foo' },
+      { isDynamicComponent: false },
     ]
 
     cases.forEach(jsx => {

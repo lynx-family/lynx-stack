@@ -14,11 +14,11 @@ import type { RsbuildPlugin } from '@rsbuild/core'
 
 import { pluginReactAlias } from '@lynx-js/react-alias-rsbuild-plugin'
 import type {
-  CompatVisitorConfig,
   DefineDceVisitorConfig,
   ExtractStrConfig,
   ShakeVisitorConfig,
-} from '@lynx-js/react-transform'
+} from '@lynx-js/react/transform/swc-plugin-reactlynx'
+import type { CompatVisitorConfig } from '@lynx-js/react/transform/swc-plugin-reactlynx-compat'
 import { LAYERS } from '@lynx-js/react-webpack-plugin'
 import type { ExposedAPI } from '@lynx-js/rspeedy'
 

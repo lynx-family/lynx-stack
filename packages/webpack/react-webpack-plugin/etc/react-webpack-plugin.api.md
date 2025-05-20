@@ -4,14 +4,30 @@
 
 ```ts
 
-import type { CompatVisitorConfig } from '@lynx-js/react/transform';
+import type { CompatVisitorConfig } from '@lynx-js/react/transform/swc-plugin-reactlynx-compat';
 import type { Compiler } from '@rspack/core';
-import type { DefineDceVisitorConfig } from '@lynx-js/react/transform';
-import { ExtractStrConfig } from '@lynx-js/react/transform';
-import type { JsxTransformerConfig } from '@lynx-js/react/transform';
-import type { ShakeVisitorConfig } from '@lynx-js/react/transform';
+import type { DefineDceVisitorConfig } from '@lynx-js/react/transform/swc-plugin-reactlynx';
+import { ExtractStrConfig } from '@lynx-js/react/transform/swc-plugin-reactlynx';
+import type { JsxTransformerConfig } from '@lynx-js/react/transform/swc-plugin-reactlynx';
+import type { ShakeVisitorConfig } from '@lynx-js/react/transform/swc-plugin-reactlynx';
+import type { SwcPluginReactLynxOptions } from '@lynx-js/react/transform/swc-plugin-reactlynx';
 
 export { ExtractStrConfig }
+
+// Warning: (ae-missing-release-tag) "getBackgroundTransformOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export function getBackgroundTransformOptions(options: ReactLoaderOptions, isDev: boolean): SwcPluginReactLynxOptions;
+
+// Warning: (ae-missing-release-tag) "getCompatOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export function getCompatOptions(compat: CompatVisitorConfig | undefined, layer: string): CompatVisitorConfig | false;
+
+// Warning: (ae-missing-release-tag) "getMainThreadTransformOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export function getMainThreadTransformOptions(options: ReactLoaderOptions, isDev: boolean): SwcPluginReactLynxOptions;
 
 // Warning: (ae-missing-release-tag) "LAYERS" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -24,12 +40,11 @@ export const LAYERS: {
 // @public
 export interface ReactLoaderOptions {
     compat?: CompatVisitorConfig | undefined;
-    defineDCE?: DefineDceVisitorConfig | undefined;
+    defineDCE?: Partial<DefineDceVisitorConfig> | undefined;
     enableRemoveCSSScope?: boolean | undefined;
-    inlineSourcesContent?: boolean | undefined;
     jsx?: JsxTransformerConfig | undefined;
     refresh?: boolean | undefined;
-    shake?: ShakeVisitorConfig | undefined;
+    shake?: Partial<ShakeVisitorConfig> | undefined;
 }
 
 // @public

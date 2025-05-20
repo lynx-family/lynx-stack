@@ -10,8 +10,14 @@
 
 export { ReactWebpackPlugin } from './ReactWebpackPlugin.js';
 export type { ReactWebpackPluginOptions } from './ReactWebpackPlugin.js';
-export type { ExtractStrConfig } from '@lynx-js/react/transform';
+export type { ExtractStrConfig } from '@lynx-js/react/transform/swc-plugin-reactlynx';
 
 export { LAYERS } from './layer.js';
 
 export type { ReactLoaderOptions } from './loaders/options.js';
+
+export {
+  getCompatOptions,
+  getMainThreadTransformOptions,
+  getBackgroundTransformOptions,
+} from './loaders/options.js';

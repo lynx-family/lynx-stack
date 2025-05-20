@@ -34,5 +34,16 @@ export function commonConfig(
         strategy: 'all-in-one',
       },
     },
+    tools: {
+      swc: {
+        jsc: {
+          parser: {
+            syntax: 'ecmascript',
+            jsx: true,
+            decorators: true,
+          },
+        },
+      },
+    },
   };
 }
