@@ -4,10 +4,6 @@
 // LICENSE file in the root directory of this source tree.
 */
 x-input {
-  display: none;
-}
-
-x-input:defined {
   display: contents;
 }
 

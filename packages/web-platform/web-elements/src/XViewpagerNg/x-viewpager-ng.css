@@ -7,9 +7,9 @@ x-viewpager-ng, x-viewpager-item-ng {
   display: none;
 }
 
-x-viewpager-ng:defined,
-x-viewpager-ng > x-viewpager-item-ng:defined,
-x-viewpager-ng > lynx-wrapper > x-viewpager-item-ng:defined {
+x-viewpager-ng,
+x-viewpager-ng > x-viewpager-item-ng,
+x-viewpager-ng > lynx-wrapper > x-viewpager-item-ng {
   display: flex;
 }
 

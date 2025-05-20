@@ -13,9 +13,7 @@ x-image, filter-image {
 }
 
 x-image > *,
-filter-image > *,
-x-image:not(:defined),
-filter-image:not(:defined) {
+filter-image > * {
   display: none;
 }
 
