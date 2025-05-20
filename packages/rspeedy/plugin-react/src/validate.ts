@@ -6,28 +6,51 @@ import * as typia from 'typia'
 
 import type { PluginReactLynxOptions } from './pluginReactLynx.js'
 
+const validate: (
+  input: unknown,
+) => typia.IValidation<PluginReactLynxOptions | undefined> = typia
+  .createValidateEquals<PluginReactLynxOptions | undefined>()
+
 export const validateConfig: (
   input: unknown,
-) => PluginReactLynxOptions | undefined = typia.createAssertEquals<
-  PluginReactLynxOptions | undefined
->(({ path, expected, value }) => {
-  if (expected === 'undefined') {
-    const errorMessage =
-      `Unknown property: \`${path}\` in the configuration of pluginReactLynx`
+) => PluginReactLynxOptions | undefined = (input: unknown) => {
+  const result = validate(input)
 
-    // Unknown properties
-    return new Error(errorMessage)
+  if (result.success) {
+    return result.data
   }
 
-  return new Error(
-    [
-      `Invalid config on pluginReactLynx: \`${path}\`.`,
-      `  - Expect to be ${expected}`,
-      `  - Got: ${whatIs(value)}`,
-      '',
-    ].join('\n'),
-  )
-})
+  const messages: string[] = result
+    .errors
+    .flatMap(({ expected, path, value }) => {
+      // Ignore the internal options
+      // See: #846
+      if (
+        path
+        && (path === '$input.jsx' || path.startsWith('$input.jsx.'))
+        && expected === 'undefined'
+      ) {
+        return null
+      }
+
+      if (expected === 'undefined') {
+        return `Unknown property: \`${path}\` in the configuration of pluginReactLynx`
+      }
+      return [
+        `Invalid config on pluginReactLynx: \`${path}\`.`,
+        `  - Expect to be ${expected}`,
+        `  - Got: ${whatIs(value)}`,
+        '',
+      ]
+    })
+    .filter(message => message !== null)
+
+  if (messages.length === 0) {
+    return result.data as PluginReactLynxOptions | undefined
+  }
+
+  throw new Error(messages.join('\n'))
+}
 
 function whatIs(value: unknown): string {
   return Object.prototype.toString.call(value)

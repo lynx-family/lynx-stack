@@ -52,6 +52,11 @@ export function bootWorkers(
         curBackgroundWorker.backgroundThreadWorker.terminate();
         backgroundWorkerContextCount[lynxGroupId] = 0;
         contextIdToBackgroundWorker[lynxGroupId] = undefined;
+      } else if (
+        typeof backgroundWorkerContextCount[lynxGroupId] === 'number'
+        && backgroundWorkerContextCount[lynxGroupId] > 1
+      ) {
+        backgroundWorkerContextCount[lynxGroupId]--;
       }
     },
   };

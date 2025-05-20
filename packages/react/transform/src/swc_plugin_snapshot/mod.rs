@@ -1083,12 +1083,17 @@ where
   }
 }
 
+/// @internal
 #[napi(object)]
 #[derive(Clone, Debug)]
 pub struct JSXTransformerConfig {
+  /// @internal
   pub preserve_jsx: bool,
+  /// @internal
   pub runtime_pkg: String,
+  /// @internal
   pub jsx_import_source: Option<String>,
+  /// @internal
   pub filename: String,
   /// @internal
   #[napi(ts_type = "'LEPUS' | 'JS' | 'MIXED'")]

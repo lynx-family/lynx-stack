@@ -3,7 +3,11 @@
 // LICENSE file in the root directory of this source tree.
 import { describe, expect, test } from 'vitest'
 
-import type { CompatVisitorConfig } from '@lynx-js/react/transform'
+import type {
+  CompatVisitorConfig,
+  DefineDceVisitorConfig,
+  JsxTransformerConfig,
+} from '@lynx-js/react/transform'
 
 import { validateConfig } from '../src/validate.js'
 
@@ -53,6 +57,83 @@ describe('Validation', () => {
     cases.forEach(compat => {
       expect(validateConfig({ compat })).toStrictEqual({ compat })
     })
+  })
+
+  test('defineDCE', () => {
+    const cases: Partial<DefineDceVisitorConfig>[] = [
+      {},
+      { define: {} },
+      { define: { foo: 'bar' } },
+    ]
+
+    cases.forEach(defineDCE => {
+      expect(validateConfig({ defineDCE })).toStrictEqual({ defineDCE })
+    })
+  })
+
+  test('invalid defineDCE', () => {
+    expect(() => validateConfig({ defineDCE: 1 }))
+      .toThrowErrorMatchingInlineSnapshot(`
+        [Error: Invalid config on pluginReactLynx: \`$input.defineDCE\`.
+          - Expect to be (Partial<DefineDceVisitorConfig> | undefined)
+          - Got: number
+        ]
+      `)
+
+    expect(() => validateConfig({ defineDCE: [] }))
+      .toThrowErrorMatchingInlineSnapshot(`
+        [Error: Invalid config on pluginReactLynx: \`$input.defineDCE\`.
+          - Expect to be (Partial<DefineDceVisitorConfig> | undefined)
+          - Got: array
+        ]
+      `)
+
+    expect(() => validateConfig({ defineDCEs: {} }))
+      .toThrowErrorMatchingInlineSnapshot(
+        `[Error: Unknown property: \`$input.defineDCEs\` in the configuration of pluginReactLynx]`,
+      )
+
+    expect(() =>
+      validateConfig({
+        defineDCE: {
+          define: {
+            foo: 1,
+            bar: null,
+          },
+        },
+      })
+    )
+      .toThrowErrorMatchingInlineSnapshot(`
+        [Error: Invalid config on pluginReactLynx: \`$input.defineDCE.define.foo\`.
+          - Expect to be string
+          - Got: number
+
+        Invalid config on pluginReactLynx: \`$input.defineDCE.define.bar\`.
+          - Expect to be string
+          - Got: null
+        ]
+      `)
+  })
+
+  test('jsx', () => {
+    const cases: Partial<JsxTransformerConfig>[] = [
+      {},
+      { filename: '1' },
+      { preserveJsx: false },
+      // @ts-expect-error We bypass the internal type check.
+      { preserveJsx: 'foo' },
+    ]
+
+    cases.forEach(jsx => {
+      expect(validateConfig({ jsx })).toStrictEqual({ jsx })
+    })
+
+    // cSpell:disable
+    expect(() => validateConfig({ jsxes: 1 }))
+      .toThrowErrorMatchingInlineSnapshot(
+        `[Error: Unknown property: \`$input.jsxes\` in the configuration of pluginReactLynx]`,
+      )
+    // cSpell:enable
   })
 
   test('targetSdkVersion', () => {

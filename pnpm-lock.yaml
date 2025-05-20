@@ -164,6 +164,12 @@ importers:
       '@lynx-js/rspeedy':
         specifier: workspace:*
         version: link:../../packages/rspeedy/core
+      '@lynx-js/types':
+        specifier: ^3.3.0
+        version: 3.3.0
+      '@types/react':
+        specifier: ^18.3.21
+        version: 18.3.21
 
   packages/background-only: {}
 
