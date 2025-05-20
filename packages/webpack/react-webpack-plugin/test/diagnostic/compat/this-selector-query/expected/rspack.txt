@@ -1,23 +1,27 @@
-WARNING in ./compat/this-selector-query/index.jsx <LINE:COLUMN>-30
-⚠ ModuleWarning: BROKEN: createSelectorQuery on component instance is broken and MUST be migrated in ReactLynx 3.0, please use ref or lynx.createSelectorQuery instead.
-╭─[<LINE:COLUMN>]
-3  class App extends Component {
-4    componentDidMount() {
-5      this.createSelectorQuery().exec()
-·     ─────────────┬────────────
-·                  ╰── BROKEN: createSelectorQuery on component instance is broken and MUST be migrated in ReactLynx 3.0, please use ref or lynx.createSelectorQuery instead.
-6      this.getElementById()
-7    }
-╰────
+WARNING in ./compat/this-selector-query/index.jsx
+⚠ ModuleWarning:   ! BROKEN: createSelectorQuery on component instance is broken and MUST be migrated in ReactLynx 3.0, please use ref or lynx.createSelectorQuery instead.
+,-[<LINE:COLUMN>]
+2 |
+3 | class App extends Component {
+4 |   componentDidMount() {
+5 |     this.createSelectorQuery().exec()
+:     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+6 |     this.getElementById()
+7 |   }
+8 |
+`----
 
-WARNING in ./compat/this-selector-query/index.jsx <LINE:COLUMN>-25
-⚠ ModuleWarning: BROKEN: getElementById on component instance is broken and MUST be migrated in ReactLynx 3.0, please use ref or lynx.getElementById instead.
-╭─[<LINE:COLUMN>]
-4    componentDidMount() {
-5      this.createSelectorQuery().exec()
-6      this.getElementById()
-·     ──────────┬──────────
-·               ╰── BROKEN: getElementById on component instance is broken and MUST be migrated in ReactLynx 3.0, please use ref or lynx.getElementById instead.
-7    }
-8
-╰────
+
+WARNING in ./compat/this-selector-query/index.jsx
+⚠ ModuleWarning:   ! BROKEN: getElementById on component instance is broken and MUST be migrated in ReactLynx 3.0, please use ref or lynx.getElementById instead.
+,-[<LINE:COLUMN>]
+3 | class App extends Component {
+4 |   componentDidMount() {
+5 |     this.createSelectorQuery().exec()
+6 |     this.getElementById()
+:     ^^^^^^^^^^^^^^^^^^^^^
+7 |   }
+8 |
+9 |   render() {
+`----
+

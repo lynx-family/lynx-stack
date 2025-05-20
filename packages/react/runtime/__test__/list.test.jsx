@@ -233,20 +233,20 @@ describe(`list "update-list-info"`, () => {
 
     expect(__pendingListUpdates.values).toMatchInlineSnapshot(`
       {
-        "-2": [
+        "-6": [
           {
             "insertAction": [
               {
                 "position": 0,
-                "type": "__Card__:__snapshot_a94a8_test_14",
+                "type": "__Card__:__snapshot_05fe4_test_14",
               },
               {
                 "position": 1,
-                "type": "__Card__:__snapshot_a94a8_test_14",
+                "type": "__Card__:__snapshot_05fe4_test_14",
               },
               {
                 "position": 2,
-                "type": "__Card__:__snapshot_a94a8_test_14",
+                "type": "__Card__:__snapshot_05fe4_test_14",
               },
             ],
             "removeAction": [],
@@ -269,24 +269,24 @@ describe(`list "update-list-info"`, () => {
       b.removeChild(d2);
       expect(__pendingListUpdates.values).toMatchInlineSnapshot(`
         {
-          "-2": [
+          "-6": [
             {
               "insertAction": [
                 {
                   "position": 1,
-                  "type": "__Card__:__snapshot_a94a8_test_14",
+                  "type": "__Card__:__snapshot_05fe4_test_14",
                 },
                 {
                   "position": 2,
-                  "type": "__Card__:__snapshot_a94a8_test_15",
+                  "type": "__Card__:__snapshot_05fe4_test_15",
                 },
                 {
                   "position": 3,
-                  "type": "__Card__:__snapshot_a94a8_test_15",
+                  "type": "__Card__:__snapshot_05fe4_test_15",
                 },
                 {
                   "position": 5,
-                  "type": "__Card__:__snapshot_a94a8_test_14",
+                  "type": "__Card__:__snapshot_05fe4_test_14",
                 },
               ],
               "removeAction": [
@@ -304,12 +304,12 @@ describe(`list "update-list-info"`, () => {
       b.insertBefore(d3); // move
       expect(__pendingListUpdates.values).toMatchInlineSnapshot(`
         {
-          "-2": [
+          "-6": [
             {
               "insertAction": [
                 {
                   "position": 5,
-                  "type": "__Card__:__snapshot_a94a8_test_14",
+                  "type": "__Card__:__snapshot_05fe4_test_14",
                 },
               ],
               "removeAction": [
@@ -352,7 +352,7 @@ describe(`list "update-list-info"`, () => {
     d3.setAttribute(0, { 'item-key': 3 });
     expect(__pendingListUpdates.values).toMatchInlineSnapshot(`
       {
-        "-1": [
+        "-2": [
           {
             "insertAction": [],
             "removeAction": [],
@@ -362,14 +362,14 @@ describe(`list "update-list-info"`, () => {
                 "from": 0,
                 "item-key": 1,
                 "to": 0,
-                "type": "__Card__:__snapshot_a94a8_test_17",
+                "type": "__Card__:__snapshot_05fe4_test_17",
               },
               {
                 "flush": false,
                 "from": 2,
                 "item-key": 3,
                 "to": 2,
-                "type": "__Card__:__snapshot_a94a8_test_17",
+                "type": "__Card__:__snapshot_05fe4_test_17",
               },
             ],
           },
@@ -532,32 +532,32 @@ describe(`list componentAtIndex`, () => {
                 {
                   "item-key": "key-0",
                   "position": 0,
-                  "type": "__Card__:__snapshot_a94a8_test_21",
+                  "type": "__Card__:__snapshot_05fe4_test_21",
                 },
                 {
                   "item-key": "key-1",
                   "position": 1,
-                  "type": "__Card__:__snapshot_a94a8_test_21",
+                  "type": "__Card__:__snapshot_05fe4_test_21",
                 },
                 {
                   "item-key": "key-2",
                   "position": 2,
-                  "type": "__Card__:__snapshot_a94a8_test_21",
+                  "type": "__Card__:__snapshot_05fe4_test_21",
                 },
                 {
                   "item-key": "key-3",
                   "position": 3,
-                  "type": "__Card__:__snapshot_a94a8_test_21",
+                  "type": "__Card__:__snapshot_05fe4_test_21",
                 },
                 {
                   "item-key": "key-4",
                   "position": 4,
-                  "type": "__Card__:__snapshot_a94a8_test_21",
+                  "type": "__Card__:__snapshot_05fe4_test_21",
                 },
                 {
                   "item-key": "key-5",
                   "position": 5,
-                  "type": "__Card__:__snapshot_a94a8_test_21",
+                  "type": "__Card__:__snapshot_05fe4_test_21",
                 },
               ],
               "removeAction": [],
@@ -572,7 +572,7 @@ describe(`list componentAtIndex`, () => {
           <text
             event={
               {
-                "bindEvent:tap": "-6:1:",
+                "bindEvent:tap": "-7:1:",
               }
             }
           >
@@ -587,7 +587,7 @@ describe(`list componentAtIndex`, () => {
           <text
             event={
               {
-                "bindEvent:tap": "-7:1:",
+                "bindEvent:tap": "-8:1:",
               }
             }
           >
@@ -602,7 +602,7 @@ describe(`list componentAtIndex`, () => {
           <text
             event={
               {
-                "bindEvent:tap": "-4:1:",
+                "bindEvent:tap": "-5:1:",
               }
             }
           >
@@ -617,7 +617,7 @@ describe(`list componentAtIndex`, () => {
           <text
             event={
               {
-                "bindEvent:tap": "-5:1:",
+                "bindEvent:tap": "-6:1:",
               }
             }
           >
@@ -788,11 +788,11 @@ describe(`list componentAtIndex`, () => {
               "insertAction": [
                 {
                   "position": 0,
-                  "type": "__Card__:__snapshot_a94a8_test_25",
+                  "type": "__Card__:__snapshot_05fe4_test_25",
                 },
                 {
                   "position": 1,
-                  "type": "__Card__:__snapshot_a94a8_test_25",
+                  "type": "__Card__:__snapshot_05fe4_test_25",
                 },
               ],
               "removeAction": [],
@@ -839,11 +839,11 @@ describe(`list componentAtIndex`, () => {
               "insertAction": [
                 {
                   "position": 0,
-                  "type": "__Card__:__snapshot_a94a8_test_25",
+                  "type": "__Card__:__snapshot_05fe4_test_25",
                 },
                 {
                   "position": 1,
-                  "type": "__Card__:__snapshot_a94a8_test_25",
+                  "type": "__Card__:__snapshot_05fe4_test_25",
                 },
               ],
               "removeAction": [],
@@ -1068,11 +1068,11 @@ describe(`list componentAtIndex`, () => {
               "insertAction": [
                 {
                   "position": 0,
-                  "type": "__Card__:__snapshot_a94a8_test_29",
+                  "type": "__Card__:__snapshot_05fe4_test_29",
                 },
                 {
                   "position": 1,
-                  "type": "__Card__:__snapshot_a94a8_test_29",
+                  "type": "__Card__:__snapshot_05fe4_test_29",
                 },
               ],
               "removeAction": [],
@@ -1359,15 +1359,15 @@ describe('list reload', () => {
                 "insertAction": [
                   {
                     "position": 0,
-                    "type": "__Card__:__snapshot_a94a8_test_35",
+                    "type": "__Card__:__snapshot_05fe4_test_35",
                   },
                   {
                     "position": 1,
-                    "type": "__Card__:__snapshot_a94a8_test_35",
+                    "type": "__Card__:__snapshot_05fe4_test_35",
                   },
                   {
                     "position": 2,
-                    "type": "__Card__:__snapshot_a94a8_test_35",
+                    "type": "__Card__:__snapshot_05fe4_test_35",
                   },
                 ],
                 "removeAction": [],
@@ -1404,15 +1404,15 @@ describe('list reload', () => {
                 "insertAction": [
                   {
                     "position": 0,
-                    "type": "__Card__:__snapshot_a94a8_test_35",
+                    "type": "__Card__:__snapshot_05fe4_test_35",
                   },
                   {
                     "position": 1,
-                    "type": "__Card__:__snapshot_a94a8_test_35",
+                    "type": "__Card__:__snapshot_05fe4_test_35",
                   },
                   {
                     "position": 2,
-                    "type": "__Card__:__snapshot_a94a8_test_35",
+                    "type": "__Card__:__snapshot_05fe4_test_35",
                   },
                 ],
                 "removeAction": [],
@@ -1429,7 +1429,7 @@ describe('list reload', () => {
                 "insertAction": [
                   {
                     "position": 2,
-                    "type": "__Card__:__snapshot_a94a8_test_35",
+                    "type": "__Card__:__snapshot_05fe4_test_35",
                   },
                 ],
                 "removeAction": [],
@@ -1500,19 +1500,19 @@ describe('list reload', () => {
                 "insertAction": [
                   {
                     "position": 0,
-                    "type": "__Card__:__snapshot_a94a8_test_36",
+                    "type": "__Card__:__snapshot_05fe4_test_36",
                   },
                   {
                     "position": 1,
-                    "type": "__Card__:__snapshot_a94a8_test_36",
+                    "type": "__Card__:__snapshot_05fe4_test_36",
                   },
                   {
                     "position": 2,
-                    "type": "__Card__:__snapshot_a94a8_test_37",
+                    "type": "__Card__:__snapshot_05fe4_test_37",
                   },
                   {
                     "position": 3,
-                    "type": "__Card__:__snapshot_a94a8_test_36",
+                    "type": "__Card__:__snapshot_05fe4_test_36",
                   },
                 ],
                 "removeAction": [],
@@ -1522,7 +1522,7 @@ describe('list reload', () => {
                 "insertAction": [
                   {
                     "position": 2,
-                    "type": "__Card__:__snapshot_a94a8_test_36",
+                    "type": "__Card__:__snapshot_05fe4_test_36",
                   },
                 ],
                 "removeAction": [
@@ -1588,15 +1588,15 @@ describe('list reload', () => {
                 "insertAction": [
                   {
                     "position": 0,
-                    "type": "__Card__:__snapshot_a94a8_test_38",
+                    "type": "__Card__:__snapshot_05fe4_test_38",
                   },
                   {
                     "position": 1,
-                    "type": "__Card__:__snapshot_a94a8_test_38",
+                    "type": "__Card__:__snapshot_05fe4_test_38",
                   },
                   {
                     "position": 2,
-                    "type": "__Card__:__snapshot_a94a8_test_38",
+                    "type": "__Card__:__snapshot_05fe4_test_38",
                   },
                 ],
                 "removeAction": [],
@@ -1679,19 +1679,19 @@ describe('list reload', () => {
                     "full-span": true,
                     "item-key": "1",
                     "position": 0,
-                    "type": "__Card__:__snapshot_a94a8_test_39",
+                    "type": "__Card__:__snapshot_05fe4_test_39",
                   },
                   {
                     "full-span": true,
                     "item-key": "2",
                     "position": 1,
-                    "type": "__Card__:__snapshot_a94a8_test_39",
+                    "type": "__Card__:__snapshot_05fe4_test_39",
                   },
                   {
                     "full-span": true,
                     "item-key": "3",
                     "position": 2,
-                    "type": "__Card__:__snapshot_a94a8_test_39",
+                    "type": "__Card__:__snapshot_05fe4_test_39",
                   },
                 ],
                 "removeAction": [],
@@ -1707,7 +1707,7 @@ describe('list reload', () => {
                     "full-span": false,
                     "item-key": "2",
                     "to": 1,
-                    "type": "__Card__:__snapshot_a94a8_test_39",
+                    "type": "__Card__:__snapshot_05fe4_test_39",
                   },
                 ],
               },
@@ -1790,19 +1790,19 @@ describe('list reload', () => {
                 "insertAction": [
                   {
                     "position": 0,
-                    "type": "__Card__:__snapshot_a94a8_test_40",
+                    "type": "__Card__:__snapshot_05fe4_test_40",
                   },
                   {
                     "position": 1,
-                    "type": "__Card__:__snapshot_a94a8_test_40",
+                    "type": "__Card__:__snapshot_05fe4_test_40",
                   },
                   {
                     "position": 2,
-                    "type": "__Card__:__snapshot_a94a8_test_40",
+                    "type": "__Card__:__snapshot_05fe4_test_40",
                   },
                   {
                     "position": 3,
-                    "type": "__Card__:__snapshot_a94a8_test_40",
+                    "type": "__Card__:__snapshot_05fe4_test_40",
                   },
                 ],
                 "removeAction": [],
@@ -1812,7 +1812,7 @@ describe('list reload', () => {
                 "insertAction": [
                   {
                     "position": 0,
-                    "type": "__Card__:__snapshot_a94a8_test_41",
+                    "type": "__Card__:__snapshot_05fe4_test_41",
                   },
                 ],
                 "removeAction": [
@@ -1871,19 +1871,19 @@ describe('list reload', () => {
                 "insertAction": [
                   {
                     "position": 0,
-                    "type": "__Card__:__snapshot_a94a8_test_40",
+                    "type": "__Card__:__snapshot_05fe4_test_40",
                   },
                   {
                     "position": 1,
-                    "type": "__Card__:__snapshot_a94a8_test_40",
+                    "type": "__Card__:__snapshot_05fe4_test_40",
                   },
                   {
                     "position": 2,
-                    "type": "__Card__:__snapshot_a94a8_test_40",
+                    "type": "__Card__:__snapshot_05fe4_test_40",
                   },
                   {
                     "position": 3,
-                    "type": "__Card__:__snapshot_a94a8_test_40",
+                    "type": "__Card__:__snapshot_05fe4_test_40",
                   },
                 ],
                 "removeAction": [],
@@ -1893,7 +1893,7 @@ describe('list reload', () => {
                 "insertAction": [
                   {
                     "position": 0,
-                    "type": "__Card__:__snapshot_a94a8_test_41",
+                    "type": "__Card__:__snapshot_05fe4_test_41",
                   },
                 ],
                 "removeAction": [
@@ -2024,20 +2024,20 @@ describe('list bug', () => {
 
     expect(__pendingListUpdates.values).toMatchInlineSnapshot(`
       {
-        "-2": [
+        "-5": [
           {
             "insertAction": [
               {
                 "position": 0,
-                "type": "__Card__:__snapshot_a94a8_test_46",
+                "type": "__Card__:__snapshot_05fe4_test_46",
               },
               {
                 "position": 1,
-                "type": "__Card__:__snapshot_a94a8_test_46",
+                "type": "__Card__:__snapshot_05fe4_test_46",
               },
               {
                 "position": 2,
-                "type": "__Card__:__snapshot_a94a8_test_46",
+                "type": "__Card__:__snapshot_05fe4_test_46",
               },
             ],
             "removeAction": [],
@@ -2046,19 +2046,19 @@ describe('list bug', () => {
                 "flush": false,
                 "from": 0,
                 "to": 0,
-                "type": "__Card__:__snapshot_a94a8_test_46",
+                "type": "__Card__:__snapshot_05fe4_test_46",
               },
               {
                 "flush": false,
                 "from": 1,
                 "to": 1,
-                "type": "__Card__:__snapshot_a94a8_test_46",
+                "type": "__Card__:__snapshot_05fe4_test_46",
               },
               {
                 "flush": false,
                 "from": 2,
                 "to": 2,
-                "type": "__Card__:__snapshot_a94a8_test_46",
+                "type": "__Card__:__snapshot_05fe4_test_46",
               },
             ],
           },
@@ -2071,12 +2071,12 @@ describe('list bug', () => {
       b.insertBefore(d3); // move
       expect(__pendingListUpdates.values).toMatchInlineSnapshot(`
         {
-          "-2": [
+          "-5": [
             {
               "insertAction": [
                 {
                   "position": 2,
-                  "type": "__Card__:__snapshot_a94a8_test_46",
+                  "type": "__Card__:__snapshot_05fe4_test_46",
                 },
               ],
               "removeAction": [
@@ -2087,19 +2087,19 @@ describe('list bug', () => {
                   "flush": false,
                   "from": 0,
                   "to": 0,
-                  "type": "__Card__:__snapshot_a94a8_test_46",
+                  "type": "__Card__:__snapshot_05fe4_test_46",
                 },
                 {
                   "flush": false,
                   "from": 1,
                   "to": 1,
-                  "type": "__Card__:__snapshot_a94a8_test_46",
+                  "type": "__Card__:__snapshot_05fe4_test_46",
                 },
                 {
                   "flush": false,
                   "from": 2,
                   "to": 2,
-                  "type": "__Card__:__snapshot_a94a8_test_46",
+                  "type": "__Card__:__snapshot_05fe4_test_46",
                 },
               ],
             },
@@ -2113,7 +2113,7 @@ describe('list bug', () => {
       b.removeChild(d3); // move
       expect(__pendingListUpdates.values).toMatchInlineSnapshot(`
         {
-          "-2": [
+          "-5": [
             {
               "insertAction": [],
               "removeAction": [
@@ -2124,13 +2124,13 @@ describe('list bug', () => {
                   "flush": false,
                   "from": 0,
                   "to": 0,
-                  "type": "__Card__:__snapshot_a94a8_test_46",
+                  "type": "__Card__:__snapshot_05fe4_test_46",
                 },
                 {
                   "flush": false,
                   "from": 1,
                   "to": 1,
-                  "type": "__Card__:__snapshot_a94a8_test_46",
+                  "type": "__Card__:__snapshot_05fe4_test_46",
                 },
               ],
             },
@@ -2212,21 +2212,21 @@ describe('list-item JSXSpread', () => {
                     "item-key": "1",
                     "position": 0,
                     "recyclable": true,
-                    "type": "__Card__:__snapshot_a94a8_test_48",
+                    "type": "__Card__:__snapshot_05fe4_test_48",
                   },
                   {
                     "full-span": true,
                     "item-key": "2",
                     "position": 1,
                     "recyclable": true,
-                    "type": "__Card__:__snapshot_a94a8_test_48",
+                    "type": "__Card__:__snapshot_05fe4_test_48",
                   },
                   {
                     "full-span": true,
                     "item-key": "3",
                     "position": 2,
                     "recyclable": true,
-                    "type": "__Card__:__snapshot_a94a8_test_48",
+                    "type": "__Card__:__snapshot_05fe4_test_48",
                   },
                 ],
                 "removeAction": [],
@@ -2243,7 +2243,7 @@ describe('list-item JSXSpread', () => {
                     "item-key": "1",
                     "recyclable": false,
                     "to": 0,
-                    "type": "__Card__:__snapshot_a94a8_test_48",
+                    "type": "__Card__:__snapshot_05fe4_test_48",
                   },
                   {
                     "flush": false,
@@ -2252,7 +2252,7 @@ describe('list-item JSXSpread', () => {
                     "item-key": "2",
                     "recyclable": false,
                     "to": 1,
-                    "type": "__Card__:__snapshot_a94a8_test_48",
+                    "type": "__Card__:__snapshot_05fe4_test_48",
                   },
                   {
                     "flush": false,
@@ -2261,7 +2261,7 @@ describe('list-item JSXSpread', () => {
                     "item-key": "3",
                     "recyclable": false,
                     "to": 2,
-                    "type": "__Card__:__snapshot_a94a8_test_48",
+                    "type": "__Card__:__snapshot_05fe4_test_48",
                   },
                 ],
               },
@@ -2291,21 +2291,21 @@ describe('list-item JSXSpread', () => {
                     "item-key": "1",
                     "position": 0,
                     "recyclable": true,
-                    "type": "__Card__:__snapshot_a94a8_test_48",
+                    "type": "__Card__:__snapshot_05fe4_test_48",
                   },
                   {
                     "full-span": true,
                     "item-key": "2",
                     "position": 1,
                     "recyclable": true,
-                    "type": "__Card__:__snapshot_a94a8_test_48",
+                    "type": "__Card__:__snapshot_05fe4_test_48",
                   },
                   {
                     "full-span": true,
                     "item-key": "3",
                     "position": 2,
                     "recyclable": true,
-                    "type": "__Card__:__snapshot_a94a8_test_48",
+                    "type": "__Card__:__snapshot_05fe4_test_48",
                   },
                 ],
                 "removeAction": [],
@@ -2322,7 +2322,7 @@ describe('list-item JSXSpread', () => {
                     "item-key": "1",
                     "recyclable": false,
                     "to": 0,
-                    "type": "__Card__:__snapshot_a94a8_test_48",
+                    "type": "__Card__:__snapshot_05fe4_test_48",
                   },
                   {
                     "flush": false,
@@ -2331,7 +2331,7 @@ describe('list-item JSXSpread', () => {
                     "item-key": "2",
                     "recyclable": false,
                     "to": 1,
-                    "type": "__Card__:__snapshot_a94a8_test_48",
+                    "type": "__Card__:__snapshot_05fe4_test_48",
                   },
                   {
                     "flush": false,
@@ -2340,7 +2340,7 @@ describe('list-item JSXSpread', () => {
                     "item-key": "3",
                     "recyclable": false,
                     "to": 2,
-                    "type": "__Card__:__snapshot_a94a8_test_48",
+                    "type": "__Card__:__snapshot_05fe4_test_48",
                   },
                 ],
               },
@@ -2381,21 +2381,21 @@ describe('list-item JSXSpread', () => {
                     "item-key": "1",
                     "position": 0,
                     "recyclable": true,
-                    "type": "__Card__:__snapshot_a94a8_test_48",
+                    "type": "__Card__:__snapshot_05fe4_test_48",
                   },
                   {
                     "full-span": true,
                     "item-key": "2",
                     "position": 1,
                     "recyclable": true,
-                    "type": "__Card__:__snapshot_a94a8_test_48",
+                    "type": "__Card__:__snapshot_05fe4_test_48",
                   },
                   {
                     "full-span": true,
                     "item-key": "3",
                     "position": 2,
                     "recyclable": true,
-                    "type": "__Card__:__snapshot_a94a8_test_48",
+                    "type": "__Card__:__snapshot_05fe4_test_48",
                   },
                 ],
                 "removeAction": [],
@@ -2412,7 +2412,7 @@ describe('list-item JSXSpread', () => {
                     "item-key": "1",
                     "recyclable": false,
                     "to": 0,
-                    "type": "__Card__:__snapshot_a94a8_test_48",
+                    "type": "__Card__:__snapshot_05fe4_test_48",
                   },
                   {
                     "flush": false,
@@ -2421,7 +2421,7 @@ describe('list-item JSXSpread', () => {
                     "item-key": "2",
                     "recyclable": false,
                     "to": 1,
-                    "type": "__Card__:__snapshot_a94a8_test_48",
+                    "type": "__Card__:__snapshot_05fe4_test_48",
                   },
                   {
                     "flush": false,
@@ -2430,7 +2430,7 @@ describe('list-item JSXSpread', () => {
                     "item-key": "3",
                     "recyclable": false,
                     "to": 2,
-                    "type": "__Card__:__snapshot_a94a8_test_48",
+                    "type": "__Card__:__snapshot_05fe4_test_48",
                   },
                 ],
               },
@@ -2553,7 +2553,7 @@ describe('list-item with platform info attributes', () => {
                     "reuse-identifier": "A",
                     "sticky-bottom": false,
                     "sticky-top": true,
-                    "type": "__Card__:__snapshot_a94a8_test_50",
+                    "type": "__Card__:__snapshot_05fe4_test_50",
                   },
                   {
                     "estimated-height": 100,
@@ -2566,7 +2566,7 @@ describe('list-item with platform info attributes', () => {
                     "reuse-identifier": "A",
                     "sticky-bottom": false,
                     "sticky-top": false,
-                    "type": "__Card__:__snapshot_a94a8_test_50",
+                    "type": "__Card__:__snapshot_05fe4_test_50",
                   },
                   {
                     "estimated-height": 100,
@@ -2579,7 +2579,7 @@ describe('list-item with platform info attributes', () => {
                     "reuse-identifier": "A",
                     "sticky-bottom": true,
                     "sticky-top": false,
-                    "type": "__Card__:__snapshot_a94a8_test_50",
+                    "type": "__Card__:__snapshot_05fe4_test_50",
                   },
                 ],
                 "removeAction": [],
@@ -2616,7 +2616,7 @@ describe('list-item with platform info attributes', () => {
                   "reuse-identifier": "A",
                   "sticky-bottom": false,
                   "sticky-top": true,
-                  "type": "__Card__:__snapshot_a94a8_test_50",
+                  "type": "__Card__:__snapshot_05fe4_test_50",
                 },
                 {
                   "estimated-height": 100,
@@ -2629,7 +2629,7 @@ describe('list-item with platform info attributes', () => {
                   "reuse-identifier": "A",
                   "sticky-bottom": false,
                   "sticky-top": false,
-                  "type": "__Card__:__snapshot_a94a8_test_50",
+                  "type": "__Card__:__snapshot_05fe4_test_50",
                 },
                 {
                   "estimated-height": 100,
@@ -2642,7 +2642,7 @@ describe('list-item with platform info attributes', () => {
                   "reuse-identifier": "A",
                   "sticky-bottom": true,
                   "sticky-top": false,
-                  "type": "__Card__:__snapshot_a94a8_test_50",
+                  "type": "__Card__:__snapshot_05fe4_test_50",
                 },
               ],
               "removeAction": [],
@@ -3063,7 +3063,7 @@ describe('list-item with "defer" attribute', () => {
                   {
                     "item-key": "1",
                     "position": 0,
-                    "type": "__Card__:__snapshot_a94a8_test_54",
+                    "type": "__Card__:__snapshot_05fe4_test_54",
                   },
                 ],
                 "removeAction": [],
@@ -3100,7 +3100,7 @@ describe('list-item with "defer" attribute', () => {
                   {
                     "item-key": "1",
                     "position": 0,
-                    "type": "__Card__:__snapshot_a94a8_test_54",
+                    "type": "__Card__:__snapshot_05fe4_test_54",
                   },
                 ],
                 "removeAction": [],
@@ -3193,17 +3193,17 @@ describe('list-item with "defer" attribute', () => {
                     {
                       "item-key": "0",
                       "position": 0,
-                      "type": "__Card__:__snapshot_a94a8_test_59",
+                      "type": "__Card__:__snapshot_05fe4_test_59",
                     },
                     {
                       "item-key": "1",
                       "position": 1,
-                      "type": "__Card__:__snapshot_a94a8_test_60",
+                      "type": "__Card__:__snapshot_05fe4_test_60",
                     },
                     {
                       "item-key": "2",
                       "position": 2,
-                      "type": "__Card__:__snapshot_a94a8_test_61",
+                      "type": "__Card__:__snapshot_05fe4_test_61",
                     },
                   ],
                   "removeAction": [],
@@ -3276,17 +3276,17 @@ describe('list-item with "defer" attribute', () => {
                     {
                       "item-key": "0",
                       "position": 0,
-                      "type": "__Card__:__snapshot_a94a8_test_59",
+                      "type": "__Card__:__snapshot_05fe4_test_59",
                     },
                     {
                       "item-key": "1",
                       "position": 1,
-                      "type": "__Card__:__snapshot_a94a8_test_60",
+                      "type": "__Card__:__snapshot_05fe4_test_60",
                     },
                     {
                       "item-key": "2",
                       "position": 2,
-                      "type": "__Card__:__snapshot_a94a8_test_61",
+                      "type": "__Card__:__snapshot_05fe4_test_61",
                     },
                   ],
                   "removeAction": [],
@@ -3357,17 +3357,17 @@ describe('list-item with "defer" attribute', () => {
                   {
                     "item-key": "0",
                     "position": 0,
-                    "type": "__Card__:__snapshot_a94a8_test_64",
+                    "type": "__Card__:__snapshot_05fe4_test_64",
                   },
                   {
                     "item-key": "1",
                     "position": 1,
-                    "type": "__Card__:__snapshot_a94a8_test_64",
+                    "type": "__Card__:__snapshot_05fe4_test_64",
                   },
                   {
                     "item-key": "2",
                     "position": 2,
-                    "type": "__Card__:__snapshot_a94a8_test_64",
+                    "type": "__Card__:__snapshot_05fe4_test_64",
                   },
                 ],
                 "removeAction": [],
@@ -3404,17 +3404,17 @@ describe('list-item with "defer" attribute', () => {
                   {
                     "item-key": "0",
                     "position": 0,
-                    "type": "__Card__:__snapshot_a94a8_test_64",
+                    "type": "__Card__:__snapshot_05fe4_test_64",
                   },
                   {
                     "item-key": "1",
                     "position": 1,
-                    "type": "__Card__:__snapshot_a94a8_test_64",
+                    "type": "__Card__:__snapshot_05fe4_test_64",
                   },
                   {
                     "item-key": "2",
                     "position": 2,
-                    "type": "__Card__:__snapshot_a94a8_test_64",
+                    "type": "__Card__:__snapshot_05fe4_test_64",
                   },
                 ],
                 "removeAction": [],
@@ -3463,17 +3463,17 @@ describe('list-item with "defer" attribute', () => {
                     {
                       "item-key": "0",
                       "position": 0,
-                      "type": "__Card__:__snapshot_a94a8_test_64",
+                      "type": "__Card__:__snapshot_05fe4_test_64",
                     },
                     {
                       "item-key": "1",
                       "position": 1,
-                      "type": "__Card__:__snapshot_a94a8_test_64",
+                      "type": "__Card__:__snapshot_05fe4_test_64",
                     },
                     {
                       "item-key": "2",
                       "position": 2,
-                      "type": "__Card__:__snapshot_a94a8_test_64",
+                      "type": "__Card__:__snapshot_05fe4_test_64",
                     },
                   ],
                   "removeAction": [],
@@ -3502,7 +3502,7 @@ describe('list-item with "defer" attribute', () => {
               "rLynxPublishEvent",
               {
                 "data": {},
-                "handlerName": "-6:__extraProps:onComponentAtIndex",
+                "handlerName": "-7:__extraProps:onComponentAtIndex",
               },
             ],
           ],
@@ -3511,7 +3511,7 @@ describe('list-item with "defer" attribute', () => {
               "rLynxPublishEvent",
               {
                 "data": {},
-                "handlerName": "-4:__extraProps:onRecycleComponent",
+                "handlerName": "-5:__extraProps:onRecycleComponent",
               },
             ],
           ],

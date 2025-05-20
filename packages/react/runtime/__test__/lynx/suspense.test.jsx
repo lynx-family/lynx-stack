@@ -292,7 +292,7 @@ describe('suspense', () => {
           {
             "id": 6,
             "op": "CreateElement",
-            "type": "__Card__:__snapshot_a94a8_test_3",
+            "type": "__Card__:__snapshot_05fe4_test_3",
           },
           {
             "beforeId": null,
@@ -354,7 +354,7 @@ describe('suspense', () => {
           {
             "id": 3,
             "op": "CreateElement",
-            "type": "__Card__:__snapshot_a94a8_test_4",
+            "type": "__Card__:__snapshot_05fe4_test_4",
           },
           {
             "id": 3,
@@ -383,7 +383,7 @@ describe('suspense', () => {
           {
             "id": 7,
             "op": "CreateElement",
-            "type": "__Card__:__snapshot_a94a8_test_5",
+            "type": "__Card__:__snapshot_05fe4_test_5",
           },
           {
             "beforeId": null,

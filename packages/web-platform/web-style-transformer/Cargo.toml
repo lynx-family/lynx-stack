@@ -8,10 +8,6 @@ crate-type = ["cdylib"]
 
 [dependencies]
 inline-style-parser = { path = "../inline-style-parser" }
-js-sys = "0.3.77"
-lazy_static = "1.5.0"
-wasm-bindgen = "0.2.88"
-
-[profile.release]
-opt-level = 3
-lto = true
+js-sys = { workspace = true }
+lazy_static = { workspace = true }
+wasm-bindgen = { workspace = true }

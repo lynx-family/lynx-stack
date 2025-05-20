@@ -9,39 +9,39 @@ import type { RsbuildPlugin } from '@rsbuild/core';
 
 // @public
 export interface AddComponentElementConfig {
-    compilerOnly: boolean
+    compilerOnly: boolean;
 }
 
 // @public
 export interface CompatVisitorConfig {
-    addComponentElement: boolean | AddComponentElementConfig
-    additionalComponentAttributes: Array<string>
-    componentsPkg: Array<string>
+    addComponentElement: boolean | AddComponentElementConfig;
+    additionalComponentAttributes: Array<string>;
+    componentsPkg: Array<string>;
     // Warning: (ae-forgotten-export) The symbol "DarkModeConfig" needs to be exported by the entry point index.d.ts
     //
     // @deprecated (undocumented)
-    darkMode?: boolean | DarkModeConfig
-    disableDeprecatedWarning: boolean
-    newRuntimePkg: string
-    oldRuntimePkg: Array<string>
+    darkMode?: boolean | DarkModeConfig;
+    disableDeprecatedWarning: boolean;
+    newRuntimePkg: string;
+    oldRuntimePkg: Array<string>;
     // @deprecated
-    removeComponentAttrRegex?: string
+    removeComponentAttrRegex?: string;
     // @deprecated
-    simplifyCtorLikeReactLynx2: boolean
+    simplifyCtorLikeReactLynx2: boolean;
     // @internal (undocumented)
-    target: 'LEPUS' | 'JS' | 'MIXED'
+    target: 'LEPUS' | 'JS' | 'MIXED';
 }
 
 // @public
 export interface DefineDceVisitorConfig {
-    define: Record<string, string>
+    define: Record<string, string>;
 }
 
 // @public
 export interface ExtractStrConfig {
     // @internal (undocumented)
-    extractedStrArr?: Array<string>
-    strLength: number
+    extractedStrArr?: Array<string>;
+    strLength: number;
 }
 
 export { LAYERS }
@@ -81,9 +81,9 @@ export interface PluginReactLynxOptions {
 
 // @public
 export interface ShakeVisitorConfig {
-    pkgName: Array<string>
-    removeCallParams: Array<string>
-    retainProp: Array<string>
+    pkgName: Array<string>;
+    removeCallParams: Array<string>;
+    retainProp: Array<string>;
 }
 
 ```

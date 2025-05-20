@@ -125,7 +125,6 @@ jobs:
         if: steps.build.outcome == 'failure'
         uses: actions-rust-lang/setup-rust-toolchain@fb51252c7ba57d633bc668f941da052e410add48 # v1
         with:
-          target: wasm32-unknown-unknown
           cache-key: test-${{ runner.os }}
       - name: Retry Build
         if: steps.build.outcome == 'failure'
