@@ -349,8 +349,6 @@ export interface DefineDceVisitorConfig {
    * Replaces variables in your code with other values or expressions at compile time.
    *
    * @remarks
-   * Default defines: `__MAIN_THREAD__`, `__BACKGROUND__`, `__REACTLYNX2__`, `__REACTLYNX3__`
-   *
    * Caveat: differences between `source.define`
    *
    * `defineDCE` happens before transforming `background-only` directives.
