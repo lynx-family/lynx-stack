@@ -8,7 +8,7 @@ import { createRequire } from 'node:module';
 import type { Chunk, Compilation, Compiler } from '@rspack/core';
 import invariant from 'tiny-invariant';
 
-import type { ExtractStrConfig } from '@lynx-js/react/transform';
+import type { ExtractStrConfig } from '@lynx-js/swc-plugin-reactlynx';
 import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin';
 import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
@@ -82,37 +82,7 @@ interface ReactWebpackPluginOptions {
  */
 class ReactWebpackPlugin {
   /**
-   * The loaders for ReactLynx.
-   *
-   * @remarks
-   * Note that this loader will only transform JSX/TSX to valid JavaScript.
-   * For `.tsx` files, the type annotations would not be eliminated.
-   * You should use `babel-loader` or `swc-loader` to load TypeScript files.
-   *
-   * @example
-   * ```js
-   * // webpack.config.js
-   * import { ReactWebpackPlugin, LAYERS } from '@lynx-js/react-webpack-plugin'
-   * export default {
-   *   module: {
-   *     rules: [
-   *       {
-   *         test: /\.tsx?$/,
-   *         layer: LAYERS.MAIN_THREAD,
-   *         use: ['swc-loader', ReactWebpackPlugin.loaders.MAIN_THREAD]
-   *       },
-   *       {
-   *         test: /\.tsx?$/,
-   *         layer: LAYERS.BACKGROUND,
-   *         use: ['swc-loader', ReactWebpackPlugin.loaders.BACKGROUND]
-   *       },
-   *     ],
-   *   },
-   *   plugins: [new ReactWebpackPlugin()],
-   * }
-   * ```
-   *
-   * @public
+   * TODO: remove loaders
    */
   static loaders: Record<keyof typeof LAYERS, string> = {
     BACKGROUND: require.resolve('../lib/loaders/background.js'),

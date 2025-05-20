@@ -1,20 +1,14 @@
 ERROR in ./jsx/component/index.jsx
+× ModuleError: Error:   x <component /> is not supported
+,-[<LINE:COLUMN>]
+1 | function App() {
+2 |   return <component is="foo/bar" />
+:           ^^^^^^^^^
+3 | }
+`----
+
+
+ERROR in ./jsx/component/index.jsx
 × Module build failed:
 ╰─▶   × Error: react-transform failed
 at Object.backgroundLoader (file://<ROOT>/packages/webpack/react-webpack-plugin/src/loaders/background.ts:<LINE:COLUMN>)
-at <ROOT>/node_modules/<PNPM_INNER>/@rspack/core/dist/index.js:<LINE:COLUMN>
-at node:internal/util:<LINE:COLUMN>
-at new Promise (<anonymous>)
-at node:internal/util:<LINE:COLUMN>
-at isomorphoicRun (<ROOT>/node_modules/<PNPM_INNER>/@rspack/core/dist/index.js:<LINE:COLUMN>)
-at runLoaders (<ROOT>/node_modules/<PNPM_INNER>/@rspack/core/dist/index.js:<LINE:COLUMN>)
-
-ERROR in ./jsx/component/index.jsx <LINE:COLUMN>-19
-× ModuleError: <component /> is not supported
-╭─[<LINE:COLUMN>]
-1  function App() {
-2    return <component is="foo/bar" />
-·           ────┬────
-·               ╰── <component /> is not supported
-3  }
-╰────

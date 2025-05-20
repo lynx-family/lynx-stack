@@ -12,30 +12,36 @@ function transformReactLynxPlugin(): Plugin {
   return {
     name: 'transformReactLynxPlugin',
     enforce: 'pre',
-    transform(sourceText, sourcePath) {
-      const { transformReactLynxSync } = require(
-        '@lynx-js/react-transform',
-      ) as typeof import('@lynx-js/react-transform');
+    async transform(sourceText, sourcePath) {
+      const { transformReactLynx } = require(
+        '@lynx-js/react/transform',
+      ) as typeof import('@lynx-js/react/transform');
       const relativePath = path.basename(sourcePath);
-      const result = transformReactLynxSync(sourceText, {
+
+      const isTS = /\.[mc]?ts$/.exec(relativePath);
+      const isTSX = /\.tsx$/.exec(relativePath);
+      const syntax = (isTS || isTSX) ? 'typescript' : 'ecmascript';
+      const syntaxConfig = {
+        syntax,
+        decorators: true,
+        tsx: !isTS,
+        jsx: true,
+      };
+
+      const result = await transformReactLynx(sourceText, {
         mode: 'test',
-        pluginName: '',
-        filename: relativePath,
         sourcemap: true,
         snapshot: {
-          preserveJsx: true,
           runtimePkg,
           jsxImportSource: '@lynx-js/react',
-          filename: 'test',
           target: 'MIXED',
         },
-        // snapshot: true,
+        syntaxConfig,
         directiveDCE: false,
         defineDCE: false,
         shake: false,
         compat: false,
         worklet: false,
-        refresh: false,
         cssScope: false,
       });
 
