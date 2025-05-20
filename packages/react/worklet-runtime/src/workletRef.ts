@@ -3,7 +3,6 @@
 // LICENSE file in the root directory of this source tree.
 import { Element } from './api/element.js';
 import type { WorkletRef, WorkletRefId, WorkletRefImpl } from './bindings/types.js';
-import { currentCtx } from './ctxTrace.js';
 import { profile } from './utils/profile.js';
 
 interface RefImpl {
@@ -57,9 +56,6 @@ const getFromWorkletRefMap = <T>(
     // 2. In `main-thread:ref`
     value = impl!._firstScreenWorkletRefMap[id] as WorkletRef<T>;
     if (!value) {
-      if (currentCtx) {
-        currentCtx!.ctx._needsHydration = true;
-      }
       value = impl!._firstScreenWorkletRefMap[id] = createWorkletRef(id, refImpl._initValue);
     }
   } else {

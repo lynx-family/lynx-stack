@@ -17,10 +17,6 @@ import { Element } from './api/element.js';
  */
 export function hydrateCtx(ctx: Worklet, firstScreenCtx: Worklet): void {
   profile('hydrateCtx', () => {
-    if (!firstScreenCtx._needsHydration) {
-      return;
-    }
-
     hydrateCtxImpl(ctx, firstScreenCtx, ctx._execId!);
   });
 }

@@ -2,7 +2,6 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import type { JsFnHandle } from './bindings/types.js';
-import { currentCtx } from './ctxTrace.js';
 
 interface Details {
   task: (fnId: number, execId: number) => void;
@@ -29,7 +28,6 @@ function initRunOnBackgroundDelay(): RunOnBackgroundDelayImpl {
 }
 
 function delayRunOnBackground(fnObj: JsFnHandle, task: (fnId: number, execId: number) => void) {
-  currentCtx!.ctx._needsHydration = true;
   impl!.delayedBackgroundFunctionArray.push({ task });
   const delayIndices = fnObj._delayIndices ??= [];
   delayIndices.push(impl!.delayedBackgroundFunctionArray.length - 1);

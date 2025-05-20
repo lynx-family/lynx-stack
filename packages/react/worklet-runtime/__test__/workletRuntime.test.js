@@ -5,7 +5,6 @@ import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Element } from '../src/api/element';
 import { initApiEnv } from '../src/api/lynxApi';
-import { currentCtx } from '../src/ctxTrace';
 import { updateWorkletRefInitValueChanges } from '../src/workletRef';
 import { initWorklet } from '../src/workletRuntime';
 
@@ -154,21 +153,6 @@ describe('Worklet', () => {
     };
     runWorklet(worklet, []);
     expect(fn).toHaveBeenLastCalledWith(4);
-  });
-
-  it('should track current worklet ctx', async () => {
-    initWorklet();
-
-    const fn = vi.fn(() => {
-      expect(currentCtx.ctx._wkltId).toEqual('1');
-    });
-    registerWorklet('main-thread', '1', fn);
-    let worklet = {
-      _wkltId: '1',
-    };
-    runWorklet(worklet);
-    expect(fn).toBeCalled();
-    expect(currentCtx).toBeUndefined();
   });
 
   it('value of a workletRef should be preserved between calls', async () => {

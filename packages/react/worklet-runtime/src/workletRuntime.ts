@@ -3,7 +3,6 @@
 // LICENSE file in the root directory of this source tree.
 import { Element } from './api/element.js';
 import type { ClosureValueType, Worklet, WorkletRefImpl } from './bindings/types.js';
-import { clearCurrentCtx, traceCtxCall } from './ctxTrace.js';
 import { initRunOnBackgroundDelay } from './delayRunOnBackground.js';
 import { hydrateCtx } from './hydrate.js';
 import { JsFunctionLifecycleManager, isRunOnBackgroundEnabled } from './jsFunctionLifecycle.js';
@@ -53,20 +52,15 @@ function runWorklet(ctx: Worklet, params: ClosureValueType[]): unknown {
 }
 
 function runWorkletImpl(ctx: Worklet, params: ClosureValueType[]): unknown {
-  traceCtxCall(ctx, params);
-  try {
-    const worklet: (...args: any[]) => unknown = profile(
-      'transformWorkletCtx ' + ctx._wkltId,
-      () => transformWorklet(ctx, true),
-    );
-    const params_: ClosureValueType[] = profile(
-      'transformWorkletParams',
-      () => transformWorklet(params || [], false),
-    );
-    return profile('runWorklet', () => worklet(...params_));
-  } finally {
-    clearCurrentCtx();
-  }
+  const worklet: (...args: any[]) => unknown = profile(
+    'transformWorkletCtx ' + ctx._wkltId,
+    () => transformWorklet(ctx, true),
+  );
+  const params_: ClosureValueType[] = profile(
+    'transformWorkletParams',
+    () => transformWorklet(params || [], false),
+  );
+  return profile('runWorklet', () => worklet(...params_));
 }
 
 function validateWorklet(ctx: unknown): ctx is Worklet {
