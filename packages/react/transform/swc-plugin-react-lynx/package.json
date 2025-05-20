@@ -1,0 +1,21 @@
+{
+  "name": "@lynx-js/swc-plugin-react-lynx",
+  "version": "0.1.0",
+  "description": "",
+  "type": "module",
+  "keywords": [
+    "lynx",
+    "react",
+    "swc-plugin"
+  ],
+  "main": "./swc_plugin_react_lynx.wasm",
+  "types": "./index.d.ts",
+  "files": [
+    "swc_plugin_react_lynx.wasm",
+    "index.d.ts"
+  ],
+  "scripts": {
+    "build": "node ./build.js",
+    "test:cargo": "cargo test"
+  }
+}
