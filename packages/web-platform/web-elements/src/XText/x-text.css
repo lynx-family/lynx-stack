@@ -40,7 +40,6 @@ inline-text, inline-image, inline-truncation {
 /* nested components */
 x-text > x-text,
 x-text > inline-text,
-x-text > x-text,
 inline-text > inline-text,
 inline-truncation > inline-text,
 inline-truncation > x-text,
