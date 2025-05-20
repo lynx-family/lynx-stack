@@ -6,6 +6,22 @@ import {
 import { Rpc } from '@lynx-js/web-worker-rpc';
 import { startMainThread } from '@lynx-js/web-worker-runtime';
 import { loadTemplate } from './utils/loadTemplate.js';
+import { dumpHTMLString } from '@lynx-js/offscreen-document/webworker';
+import {
+  templateScrollView,
+  templateXAudioTT,
+  templateXImage,
+  templateFilterImage,
+  templateXInput,
+  templateXList,
+  templateXOverlayNg,
+  templateXRefreshView,
+  templateXSwiper,
+  templateXText,
+  templateInlineImage,
+  templateXTextarea,
+  templateXViewpageNg,
+} from '@lynx-js/web-elements-template';
 
 interface LynxViewConfig extends
   Pick<
@@ -14,7 +30,39 @@ interface LynxViewConfig extends
   >
 {
   templateName?: string;
+  hydrateUrl: string;
+  injectStyles: string;
+  overrideElemenTemplates?: Record<
+    string,
+    ((attributes: Record<string, string>) => string) | string
+  >;
+  overrideTagTransformMap?: Record<string, string>;
+  autoSize?: boolean;
 }
+
+const builtinElementTemplates = {
+  'scroll-view': templateScrollView,
+  'x-audio-tt': templateXAudioTT,
+  'x-image': templateXImage,
+  'filter-image': templateFilterImage,
+  'x-input': templateXInput,
+  'x-list': templateXList,
+  'x-overlay-ng': templateXOverlayNg,
+  'x-refresh-view': templateXRefreshView,
+  'x-swiper': templateXSwiper,
+  'x-text': templateXText,
+  'inline-image': templateInlineImage,
+  'x-textarea': templateXTextarea,
+  'x-viewpage-ng': templateXViewpageNg,
+};
+const builtinTagTransformMap = {
+  'page': 'div',
+  'view': 'x-view',
+  'text': 'x-text',
+  'image': 'x-image',
+  'list': 'x-list',
+  'svg': 'x-svg',
+};
 
 export async function createLynxView(
   config: LynxViewConfig,
@@ -25,6 +73,11 @@ export async function createLynxView(
     tagMap,
     initData,
     globalProps,
+    overrideElemenTemplates = {},
+    overrideTagTransformMap = {},
+    hydrateUrl,
+    autoSize,
+    injectStyles,
   } = config;
 
   const mainToUIChannel = new MessageChannel();
@@ -55,9 +108,31 @@ export async function createLynxView(
     },
   );
 
+  const elementTemplates = {
+    ...builtinElementTemplates,
+    ...overrideElemenTemplates,
+  };
+  const tagTransformMap = {
+    ...builtinTagTransformMap,
+    ...overrideTagTransformMap,
+  };
+
   async function renderToString(): Promise<string> {
     await firstPaintReadyPromise;
-    return offscreenDocument.innerHTML;
+    const innerShadowRootHTML = dumpHTMLString(
+      offscreenDocument,
+      elementTemplates,
+      tagTransformMap,
+    );
+    return `
+    <lynx-view url="${hydrateUrl}" ssr ${
+      autoSize ? 'height="auto" width="auto"' : ''
+    }>
+      <template shadowrootmode="open">
+        <style>${injectStyles}</style>
+        ${innerShadowRootHTML}
+      </template>
+    </lynx-view>`;
   }
   return {
     renderToString,
