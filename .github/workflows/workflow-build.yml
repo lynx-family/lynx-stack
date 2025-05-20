@@ -88,6 +88,19 @@ jobs:
             turbo-v3-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ needs.get-merge-base.outputs.merge-base }}
             turbo-v3-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.push.before }}
             turbo-v3-${{ hashFiles('**/packages/**/src/**/*.rs') }}-
+      - name: install emscripten
+        run: |
+          sudo apt update
+          sudo apt install -y build-essential cmake python3
+          mkdir -p ~/emcc
+          pushd ~/emcc
+          git clone https://github.com/emscripten-core/emsdk.git
+          cd emsdk
+          git pull
+          ./emsdk install latest
+          ./emsdk activate latest
+          source ~/emcc/emsdk/emsdk_env.sh
+          popd
       - name: Install
         run: |
           npm install -g corepack@latest
@@ -96,6 +109,7 @@ jobs:
       - name: Build
         id: build
         run: |
+          source ~/emcc/emsdk/emsdk_env.sh
           pnpm turbo build --summarize
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
@@ -118,6 +132,7 @@ jobs:
       - name: Retry Build
         if: steps.build.outcome == 'failure'
         run: |
+          source ~/emcc/emsdk/emsdk_env.sh
           pnpm turbo build --summarize
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
