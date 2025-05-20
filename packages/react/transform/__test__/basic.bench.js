@@ -19,7 +19,6 @@ export function App() {
 }`;
 
   const config = {
-    pluginName: '',
     filename: '',
     sourcemap: false,
     cssScope: false,
@@ -29,7 +28,6 @@ export function App() {
     shake: true,
     compat: false,
     worklet: false,
-    refresh: false,
   };
 
   bench('transform 1000 view elements', async () => {

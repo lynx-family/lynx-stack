@@ -8,7 +8,6 @@ import { transformReactLynx } from '../../main.js';
 /** @type {import('../../index.d.ts').TransformNodiffOptions} */
 const defaultOptions = {
   mode: 'test',
-  pluginName: '',
   filename: 'test.js',
   sourcemap: false,
   snapshot: {
@@ -23,7 +22,6 @@ const defaultOptions = {
   shake: false,
   compat: false,
   worklet: false,
-  refresh: false,
 };
 
 describe('CSS Scope', () => {

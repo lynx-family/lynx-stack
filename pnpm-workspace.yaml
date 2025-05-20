@@ -38,7 +38,6 @@ overrides:
   "path-serializer": "^0.4.1"
 
 patchedDependencies:
-  "@napi-rs/cli@2.18.4": "patches/@napi-rs__cli@2.18.4.patch"
   "@rollup/plugin-typescript": "patches/@rollup__plugin-typescript.patch"
 
 onlyBuiltDependencies:

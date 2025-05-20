@@ -1,7 +1,10 @@
 [workspace]
 resolver = "2"
 
-members = ["packages/react/transform"]
+members = [
+  "packages/react/transform/swc-plugin-reactlynx",
+  "packages/react/transform/swc-plugin-reactlynx-compat",
+]
 
 [profile.release]
 codegen-units = 1
