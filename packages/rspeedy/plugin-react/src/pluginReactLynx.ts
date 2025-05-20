@@ -280,8 +280,6 @@ export interface PluginReactLynxOptions {
 
   /**
    * Like `define` in various bundlers, but this one happens at transform time, and a DCE pass will be performed.
-   *
-   * @internal
    */
   defineDCE?: Partial<DefineDceVisitorConfig> | undefined
 
