@@ -33,6 +33,11 @@ export interface CompatVisitorConfig {
 }
 
 // @public
+export interface DefineDceVisitorConfig {
+    define: Record<string, string>
+}
+
+// @public
 export interface ExtractStrConfig {
     // @internal (undocumented)
     extractedStrArr?: Array<string>
@@ -52,6 +57,7 @@ export interface PluginReactLynxOptions {
     customCSSInheritanceList?: string[] | undefined;
     debugInfoOutside?: boolean;
     defaultDisplayLinear?: boolean;
+    defineDCE?: Partial<DefineDceVisitorConfig> | undefined;
     enableAccessibilityElement?: boolean;
     enableCSSInheritance?: boolean;
     enableCSSInvalidation?: boolean;
