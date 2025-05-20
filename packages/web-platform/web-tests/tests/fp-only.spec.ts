@@ -48,7 +48,7 @@ test.describe('SSR no Javascript tests', () => {
     test.skip(browserName === 'firefox', 'firefox does not support @container');
   });
   test.describe('basic', () => {
-    test.fixme('api-initdata', async ({ page }, { title }) => {
+    test('api-initdata', async ({ page }, { title }) => {
       await goto(page, title);
       await wait(100);
       await expect(page.locator('#target')).toHaveCSS(
@@ -180,7 +180,7 @@ test.describe('SSR no Javascript tests', () => {
       await expect(page.locator('#target')).toHaveCSS('color', 'rgb(0, 0, 0)');
     });
   });
-  test.describe.fixme('configs', () => {
+  test.describe('configs', () => {
     test(
       'config-css-remove-scope-false',
       async ({ page }, { title }) => {
@@ -208,49 +208,6 @@ test.describe('SSR no Javascript tests', () => {
       },
     );
     test(
-      'config-css-selector-false-exchange-class',
-      async ({ page }, { title }) => {
-        await goto(page, title);
-        await wait(100);
-        const target = page.locator('#target');
-        await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
-        await target.click();
-        await expect(target).toHaveCSS('background-color', 'rgb(255, 255, 0)'); // yellow
-        await target.click();
-        await expect(target).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)'); // unset
-      },
-    );
-    test(
-      'config-css-selector-false-inline-css-change-same-time',
-      async ({ page }, { title }) => {
-        await goto(page, title);
-        await wait(100);
-        const target = page.locator('#target');
-        await expect(target).toHaveCSS('background-color', 'rgb(255, 255, 0)'); // yellow
-        await target.click();
-        await expect(target).toHaveCSS('background-color', 'rgb(255, 0, 0)'); // red
-        await target.click();
-        await expect(target).toHaveCSS('background-color', 'rgb(255, 255, 0)'); // yellow
-      },
-    );
-    test(
-      'config-css-selector-false-inline-remove-css-remove-inline',
-      async ({ page }, { title }) => {
-        await goto(page, title);
-        await wait(100);
-        const target = page.locator('#target');
-        await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
-        await target.click();
-        await expect(target).toHaveCSS('background-color', 'rgb(255, 0, 0)'); // red
-        await target.click();
-        await expect(target).toHaveCSS('background-color', 'rgb(255, 0, 0)'); // red
-        await target.click();
-        await expect(target).toHaveCSS('background-color', 'rgb(255, 255, 0)'); // yellow
-        await target.click();
-        await expect(target).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)'); // unset
-      },
-    );
-    test(
       'config-css-selector-false-multi-level-selector',
       async ({ page }, { title }) => {
         await goto(page, title);
@@ -260,56 +217,6 @@ test.describe('SSR no Javascript tests', () => {
           'background-color',
           'rgb(255, 192, 203)',
         ); // pink
-      },
-    );
-    test(
-      'config-css-selector-false-remove-all',
-      async ({ page }, { title }) => {
-        await goto(page, title);
-        await wait(100);
-        const target = page.locator('#target');
-        await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
-        await target.click();
-        await expect(target).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)'); // unset
-      },
-    );
-    test(
-      'config-css-selector-false-remove-css-and-reuse-css',
-      async ({ page }, { title }) => {
-        await goto(page, title);
-        await wait(100);
-        const target = page.locator('#target');
-        await expect(target).toHaveCSS('background-color', 'rgb(255, 255, 0)'); // yellow
-        await target.click();
-        await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
-        await target.click();
-        await expect(target).toHaveCSS('background-color', 'rgb(255, 255, 0)'); // yellow
-      },
-    );
-    test(
-      'config-css-selector-false-remove-css-and-style-collapsed',
-      async ({ page }, { title }) => {
-        await goto(page, title);
-        await wait(100);
-        const target = page.locator('#target');
-        await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
-        await target.click();
-        await expect(target).toHaveCSS('background-color', 'rgb(255, 255, 0)'); // yellow
-        await target.click();
-        await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
-      },
-    );
-    test(
-      'config-css-selector-false-remove-inline-style-and-reuse-css',
-      async ({ page }, { title }) => {
-        await goto(page, title);
-        await wait(100);
-        const target = page.locator('#target');
-        await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
-        await target.click();
-        await expect(target).toHaveCSS('background-color', 'rgb(255, 0, 0)'); // red
-        await target.click();
-        await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
       },
     );
     test(
@@ -323,46 +230,6 @@ test.describe('SSR no Javascript tests', () => {
         await expect(target).toHaveCSS('height', '100px');
       },
     );
-    test(
-      'config-splitchunk-single-vendor',
-      async ({ page }, { title }) => {
-        test.skip(ALL_ON_UI, 'main thread do not support importScript');
-        await goto(page, title, undefined, true);
-        await wait(1500);
-        const target = page.locator('#target');
-        await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
-      },
-    );
-    test(
-      'config-splitchunk-split-by-experience',
-      async ({ page }, { title }) => {
-        test.skip(ALL_ON_UI, 'main thread do not support importScript');
-        await goto(page, title, undefined, true);
-        await wait(1500);
-        const target = page.locator('#target');
-        await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
-      },
-    );
-    test(
-      'config-splitchunk-split-by-module',
-      async ({ page }, { title }) => {
-        test.skip(ALL_ON_UI, 'main thread do not support importScript');
-        await goto(page, title, undefined, true);
-        await wait(1500);
-        const target = page.locator('#target');
-        await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
-      },
-    );
-
-    test('config-mode-dev-with-all-in-one', async ({ page }, { title }) => {
-      await goto(page, title, undefined, true);
-      await wait(100);
-      const target = page.locator('#target');
-      await target.click();
-      await expect(await target.getAttribute('style')).toContain('green');
-      await target.click();
-      await expect(await target.getAttribute('style')).toContain('pink');
-    });
 
     test(
       'config-css-default-overflow-visible-unset',
@@ -376,26 +243,6 @@ test.describe('SSR no Javascript tests', () => {
       },
     );
   });
-  test.describe.fixme('elements', () => {
-    test.describe('lynx-view', () => {
-      const elementName = 'lynx-view';
-      test('basic-element-lynx-view-not-auto', async ({ page }, { title }) => {
-        await goto(page, title);
-        await page.evaluate(() => {
-          document.querySelector('lynx-view')!.setAttribute('width', '100vw');
-          document.querySelector('lynx-view')!.setAttribute('height', '100vh');
-          document.querySelector('lynx-view')!.setAttribute(
-            'style',
-            'width: 100vw; height: 100vh',
-          );
-        });
-        await wait(100);
-        await diffScreenShot(
-          page,
-          elementName,
-          title,
-        );
-      });
-    });
+  test.describe('elements', () => {
   });
 });

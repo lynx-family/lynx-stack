@@ -20,13 +20,14 @@ export async function SSR(rawTemplate, caseName, projectName = 'fp-only') {
       pixelWidth: 375,
     },
     tagMap: {},
-    initData: {},
+    initData: { mockData: 'mockData' },
     globalProps: {},
     template: rawTemplate,
     templateName: caseName,
     hydrateUrl: `/dist/${caseName}/index.web.json`,
     injectStyles: `@import url("/${projectName}.css");`,
     autoSize: true,
+    lynxViewStyle: 'width:100vw; max-width: 500px;',
   });
   const ssrHtml = await lynxView.renderToString();
   return ssrHtml;
