@@ -64,8 +64,6 @@ describe('Validation', () => {
       {},
       { define: {} },
       { define: { foo: 'bar' } },
-      // @ts-expect-error We bypass the internal type check.
-      { define: { foo: 1 } },
     ]
 
     cases.forEach(defineDCE => {
@@ -94,6 +92,27 @@ describe('Validation', () => {
       .toThrowErrorMatchingInlineSnapshot(
         `[Error: Unknown property: \`$input.defineDCEs\` in the configuration of pluginReactLynx]`,
       )
+
+    expect(() =>
+      validateConfig({
+        defineDCE: {
+          define: {
+            foo: 1,
+            bar: null,
+          },
+        },
+      })
+    )
+      .toThrowErrorMatchingInlineSnapshot(`
+        [Error: Invalid config on pluginReactLynx: \`$input.defineDCE.define.foo\`.
+          - Expect to be string
+          - Got: number
+
+        Invalid config on pluginReactLynx: \`$input.defineDCE.define.bar\`.
+          - Expect to be string
+          - Got: null
+        ]
+      `)
   })
 
   test('jsx', () => {

@@ -27,12 +27,7 @@ export const validateConfig: (
       // See: #846
       if (
         path
-        && (
-          path === '$input.defineDCE'
-          || path.startsWith('$input.defineDCE.')
-          || path === '$input.jsx'
-          || path.startsWith('$input.jsx.')
-        )
+        && (path === '$input.jsx' || path.startsWith('$input.jsx.'))
         && expected === 'undefined'
       ) {
         return null
