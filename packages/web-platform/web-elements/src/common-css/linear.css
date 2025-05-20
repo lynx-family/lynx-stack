@@ -146,7 +146,8 @@ x-refresh-header,
 x-refresh-view,
 x-swiper-item,
 x-viewpager-item-ng,
-x-viewpager-ng {
+x-viewpager-ng,
+list-item {
   /*
   --lynx-display-toggle is compile-time generated.
   */
@@ -195,7 +196,8 @@ x-refresh-header,
 x-refresh-view,
 x-swiper-item,
 x-viewpager-item-ng,
-x-viewpager-ng {
+x-viewpager-ng,
+list-item {
   flex-wrap: var(--lynx-display-linear, nowrap)
     var(
       --lynx-display-flex,

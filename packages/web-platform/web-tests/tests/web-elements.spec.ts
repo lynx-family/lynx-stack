@@ -2346,6 +2346,11 @@ test.describe('web-elements test suite', () => {
         expect(scrolltolower).toBeTruthy();
       },
     );
+    test('list-item-linear', async ({ page }, { titlePath }) => {
+      const title = getTitle(titlePath);
+      await gotoWebComponentPage(page, title);
+      await diffScreenShot(page, title, 'index');
+    });
   });
   test.describe('x-input', () => {
     test('placeholder', async ({ page }, { titlePath }) => {
