@@ -12,6 +12,7 @@ export { pluginReactLynx } from './pluginReactLynx.js'
 export type { PluginReactLynxOptions } from './pluginReactLynx.js'
 
 export type {
+  AddComponentElementConfig,
   CompatVisitorConfig,
   ExtractStrConfig,
   ShakeVisitorConfig,

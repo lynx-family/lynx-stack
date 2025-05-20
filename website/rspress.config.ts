@@ -47,6 +47,7 @@ const SIDEBARS = {
       name: 'react-rsbuild-plugin',
       skips: [
         // Transform options
+        'AddComponentElementConfig',
         'CompatVisitorConfig',
         'DefineDceVisitorConfig',
         'ExtractStrConfig',
@@ -177,6 +178,7 @@ const SIDEBARS_ZH = {
       name: 'react-rsbuild-plugin',
       skips: [
         // Transform options
+        'AddComponentElementConfig',
         'CompatVisitorConfig',
         'DefineDceVisitorConfig',
         'ExtractStrConfig',

@@ -64,11 +64,32 @@ pub struct DarkModeConfig {
   pub theme_expr: String,
 }
 
+/// {@inheritdoc CompatVisitorConfig.addComponentElement}
+/// @public
 #[napi(object)]
 #[derive(Clone, Debug)]
 pub struct AddComponentElementConfig {
   /// @public
   /// Whether to only add component element during compilation
+  ///
+  /// @example
+  ///
+  /// Note that this only take effects on `Component` imported from {@link CompatVisitorConfig.oldRuntimePkg}.
+  ///
+  /// ```js
+  /// import { defineConfig } from '@lynx-js/rspeedy'
+  /// import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+  ///
+  /// export default defineConfig({
+  ///   plugins: [
+  ///     pluginReactLynx({
+  ///       compat: {
+  ///         addComponentElement: { compilerOnly: true }
+  ///       },
+  ///     })
+  ///   ],
+  /// })
+  /// ```
   pub compiler_only: bool,
 }
 

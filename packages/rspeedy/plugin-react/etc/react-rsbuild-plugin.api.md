@@ -8,8 +8,12 @@ import { LAYERS } from '@lynx-js/react-webpack-plugin';
 import type { RsbuildPlugin } from '@rsbuild/core';
 
 // @public
+export interface AddComponentElementConfig {
+    compilerOnly: boolean
+}
+
+// @public
 export interface CompatVisitorConfig {
-    // Warning: (ae-forgotten-export) The symbol "AddComponentElementConfig" needs to be exported by the entry point index.d.ts
     addComponentElement: boolean | AddComponentElementConfig
     additionalComponentAttributes: Array<string>
     componentsPkg: Array<string>
@@ -28,13 +32,10 @@ export interface CompatVisitorConfig {
     target: 'LEPUS' | 'JS' | 'MIXED'
 }
 
-// Warning: (ae-missing-release-tag) "ExtractStrConfig" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
-// @public (undocumented)
+// @public
 export interface ExtractStrConfig {
     // @internal (undocumented)
     extractedStrArr?: Array<string>
-    // (undocumented)
     strLength: number
 }
 
@@ -72,15 +73,10 @@ export interface PluginReactLynxOptions {
     targetSdkVersion?: string;
 }
 
-// Warning: (ae-missing-release-tag) "ShakeVisitorConfig" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
-// @public (undocumented)
+// @public
 export interface ShakeVisitorConfig {
-    // (undocumented)
     pkgName: Array<string>
-    // (undocumented)
     removeCallParams: Array<string>
-    // (undocumented)
     retainProp: Array<string>
 }
 
