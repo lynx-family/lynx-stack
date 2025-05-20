@@ -187,8 +187,6 @@ export interface TransformNodiffOptions {
 export interface TransformNodiffOutput {
   code: string;
   map?: string;
-  // errors: Array<PartialMessage>;
-  // warnings: Array<PartialMessage>;
 }
 export function transformReactLynxSync(
   code: string,
