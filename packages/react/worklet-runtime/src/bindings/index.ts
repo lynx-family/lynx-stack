@@ -9,6 +9,7 @@ export {
   updateWorkletRef,
   updateWorkletRefInitValueChanges,
   onHydrationFinished,
+  delayRunOnBackground,
 } from './bindings.js';
 
 export type * from './types.js';

@@ -2,8 +2,13 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { JsFnHandle, RunWorkletCtxRetData, Worklet } from '@lynx-js/react/worklet-runtime/bindings';
-import { WorkletEvents } from '@lynx-js/react/worklet-runtime/bindings';
+import type {
+  ClosureValueType,
+  JsFnHandle,
+  RunWorkletCtxRetData,
+  Worklet,
+} from '@lynx-js/react/worklet-runtime/bindings';
+import { WorkletEvents, delayRunOnBackground } from '@lynx-js/react/worklet-runtime/bindings';
 
 import { destroyTasks } from './destroy.js';
 import { WorkletExecIdMap } from './execMap.js';
@@ -44,7 +49,7 @@ function init() {
 function runJSFunction(event: RuntimeProxy.Event): void {
   'background only';
   const data = JSON.parse(event.data as string) as RunOnBackgroundData;
-  const obj = execIdMap!.findJsFnHandle(data.obj._execId!, data.obj._jsFnId);
+  const obj = execIdMap!.findJsFnHandle(data.obj._execId!, data.obj._jsFnId!);
   const f = obj?._fn;
   if (!f) {
     throw new Error('runOnBackground: JS function not found: ' + JSON.stringify(data.obj));
@@ -104,22 +109,39 @@ function runOnBackground<R, Fn extends (...args: any[]) => R>(f: Fn): (...args: 
   if (obj._error) {
     throw new Error(obj._error);
   }
-  return async (...params: any[]): Promise<R> => {
+  return async (...params: ClosureValueType[]): Promise<R> => {
     return new Promise((resolve) => {
       const resolveId = onFunctionCall(resolve);
-      lynx.getJSContext!().dispatchEvent({
-        type: WorkletEvents.runOnBackground,
-        data: JSON.stringify({
-          obj: {
-            _jsFnId: obj._jsFnId,
-            _execId: obj._execId!,
-          },
-          params,
-          resolveId,
-        } as RunOnBackgroundData),
-      });
+
+      if (obj._isFirstScreen) {
+        delayRunOnBackground(obj, (fnId: number, execId: number) => {
+          dispatchRunBackgroundFunctionEvent(fnId, params, execId, resolveId);
+        });
+        return;
+      }
+
+      dispatchRunBackgroundFunctionEvent(obj._jsFnId!, params, obj._execId!, resolveId);
     });
   };
+}
+
+function dispatchRunBackgroundFunctionEvent(
+  fnId: number,
+  params: ClosureValueType[],
+  execId: number,
+  resolveId: number,
+): void {
+  lynx.getJSContext!().dispatchEvent({
+    type: WorkletEvents.runOnBackground,
+    data: JSON.stringify({
+      obj: {
+        _jsFnId: fnId,
+        _execId: execId,
+      },
+      params,
+      resolveId,
+    } as RunOnBackgroundData),
+  });
 }
 
 export { registerWorkletCtx, runJSFunction, runOnBackground };

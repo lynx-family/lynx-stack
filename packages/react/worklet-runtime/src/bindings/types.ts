@@ -55,8 +55,14 @@ export interface Worklet {
  * @public
  */
 export interface JsFnHandle {
-  _jsFnId: number;
+  _jsFnId?: number;
   _fn?: (...args: unknown[]) => unknown;
   _execId?: number;
   _error?: string;
+  _isFirstScreen?: boolean;
+  /**
+   * Stores an array of indexes of runOnBackground tasks that should be processed with a delay.
+   * This is used before hydration.
+   */
+  _delayIndices?: number[];
 }

@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { ClosureValueType, Worklet, WorkletRefImpl } from './types.js';
+import type { ClosureValueType, JsFnHandle, Worklet, WorkletRefImpl } from './types.js';
 import type { Element } from '../api/element.js';
 
 /**
@@ -57,6 +57,7 @@ function updateWorkletRefInitValueChanges(patch?: [number, unknown][]): void {
  * @internal
  */
 function onHydrationFinished(): void {
+  globalThis.lynxWorkletImpl?._runOnBackgroundDelayImpl.runDelayedBackgroundFunctions();
   globalThis.lynxWorkletImpl?._refImpl.clearFirstScreenWorkletRefMap();
 }
 
@@ -69,6 +70,15 @@ function registerWorklet(type: string, id: string, worklet: (...args: any[]) => 
   globalThis.registerWorklet(type, id, worklet);
 }
 
+/**
+ * Delay a runOnBackground after hydration.
+ *
+ * @internal
+ */
+function delayRunOnBackground(fnObj: JsFnHandle, fn: (fnId: number, execId: number) => void): void {
+  globalThis.lynxWorkletImpl?._runOnBackgroundDelayImpl.delayRunOnBackground(fnObj, fn);
+}
+
 export {
   onWorkletCtxUpdate,
   runWorkletCtx,
@@ -76,4 +86,5 @@ export {
   updateWorkletRefInitValueChanges,
   onHydrationFinished,
   registerWorklet,
+  delayRunOnBackground,
 };

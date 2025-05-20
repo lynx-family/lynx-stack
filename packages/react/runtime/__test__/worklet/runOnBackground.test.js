@@ -13,6 +13,11 @@ beforeEach(() => {
   SystemInfo.lynxSdkVersion = '999.999';
   clearConfigCacheForTesting();
   globalEnvManager.switchToBackground();
+  globalThis.lynxWorkletImpl = {
+    _runOnBackgroundDelayImpl: {
+      delayRunOnBackground: vi.fn(),
+    },
+  };
 });
 
 afterEach(() => {
@@ -33,6 +38,35 @@ describe('runOnBackground', () => {
         [
           {
             "data": "{"obj":{"_jsFnId":233,"_execId":244},"params":[1,["args"]],"resolveId":1}",
+            "type": "Lynx.Worklet.runOnBackground",
+          },
+        ],
+      ]
+    `);
+  });
+
+  it('should delay event trigger at the first screen', () => {
+    globalEnvManager.switchToMainThread();
+    const jsFn = {
+      _jsFnId: 233,
+      _execId: 244,
+      _isFirstScreen: true,
+    };
+
+    runOnBackground(jsFn)(1, ['args']);
+    expect(lynx.getJSContext().dispatchEvent).not.toHaveBeenCalled();
+    expect(lynxWorkletImpl._runOnBackgroundDelayImpl.delayRunOnBackground).toHaveBeenCalledWith(
+      jsFn,
+      expect.any(Function),
+    );
+
+    // run the delayed task
+    lynxWorkletImpl._runOnBackgroundDelayImpl.delayRunOnBackground.mock.calls[0][1](7, 8);
+    expect(lynx.getJSContext().dispatchEvent.mock.calls).toMatchInlineSnapshot(`
+      [
+        [
+          {
+            "data": "{"obj":{"_jsFnId":7,"_execId":8},"params":[1,["args"]],"resolveId":1}",
             "type": "Lynx.Worklet.runOnBackground",
           },
         ],

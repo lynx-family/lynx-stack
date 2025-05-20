@@ -4,6 +4,7 @@
 import { Element } from './api/element.js';
 import type { ClosureValueType, Worklet, WorkletRefImpl } from './bindings/types.js';
 import { clearCurrentCtx, traceCtxCall } from './ctxTrace.js';
+import { initRunOnBackgroundDelay } from './delayRunOnBackground.js';
 import { hydrateCtx } from './hydrate.js';
 import { JsFunctionLifecycleManager, isRunOnBackgroundEnabled } from './jsFunctionLifecycle.js';
 import { profile } from './utils/profile.js';
@@ -13,6 +14,7 @@ function initWorklet(): void {
   globalThis.lynxWorkletImpl = {
     _workletMap: {},
     _refImpl: initWorkletRef(),
+    _runOnBackgroundDelayImpl: initRunOnBackgroundDelay(),
     _hydrateCtx: hydrateCtx,
   };
 

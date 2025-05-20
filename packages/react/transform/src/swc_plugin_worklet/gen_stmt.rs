@@ -95,7 +95,7 @@ impl StmtGen {
       .into(),
     );
 
-    if target == TransformTarget::JS && !extracted_js_fns.is_empty() {
+    if !extracted_js_fns.is_empty() {
       let value: Box<Expr> = Expr::Object(ObjectLit {
         span: DUMMY_SP,
         props: extracted_js_fns
@@ -103,7 +103,11 @@ impl StmtGen {
           .map(|(key, value)| {
             {
               match target {
-                TransformTarget::JS => Prop::KeyValue(KeyValueProp {
+                TransformTarget::LEPUS => Prop::KeyValue(KeyValueProp {
+                  key: key.clone().into(),
+                  value: quote_expr!("{_isFirstScreen: true}"),
+                }),
+                TransformTarget::JS | TransformTarget::MIXED => Prop::KeyValue(KeyValueProp {
                   key: key.into(),
                   value: CallExpr {
                     ctxt: Default::default(),
@@ -114,7 +118,6 @@ impl StmtGen {
                   }
                   .into(),
                 }),
-                _ => unreachable!(),
               }
             }
             .into()

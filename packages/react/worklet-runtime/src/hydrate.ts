@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { ClosureValueType, Worklet, WorkletRefId, WorkletRefImpl } from './bindings/index.js';
+import type { ClosureValueType, JsFnHandle, Worklet, WorkletRefId, WorkletRefImpl } from './bindings/index.js';
 import { profile } from './utils/profile.js';
 import { Element } from './api/element.js';
 
@@ -35,6 +35,12 @@ function hydrateCtxImpl(ctx: ClosureValueType, firstScreenCtx: ClosureValueType,
   for (const key in ctx) {
     if (key === '_wvid') {
       hydrateMainThreadRef(ctxObj[key] as WorkletRefId, firstScreenCtxObj as any as WorkletRefImpl<unknown>);
+    } else if (key === '_jsFn') {
+      hydrateDelayRunOnBackgroundTasks(
+        ctxObj[key] as Record<string, JsFnHandle>,
+        firstScreenCtxObj[key] as Record<string, JsFnHandle>,
+        execId,
+      );
     } else {
       const firstScreenValue = typeof firstScreenCtxObj[key] === 'function'
         ? (firstScreenCtxObj[key] as { ctx: ClosureValueType }).ctx
@@ -63,4 +69,29 @@ function hydrateMainThreadRef(refId: WorkletRefId, value: WorkletRefImpl<unknown
     return;
   }
   ref.current = value.current;
+}
+
+/**
+ * Hydrates delayed `runOnBackground` tasks.
+ * This function ensures that any `runOnBackground` calls that were delayed
+ * during the first-screen rendering are correctly associated with their
+ * respective JavaScript function handles in the hydrated Worklet context.
+ */
+function hydrateDelayRunOnBackgroundTasks(
+  fnObjs: Record<string, JsFnHandle>, // example: {"_jsFn1":{"_jsFnId":1}}
+  firstScreenFnObjs: Record<string, JsFnHandle>, // example: {"_jsFn1":{"_isFirstScreen":true,"_delayIndices":[0]}}
+  execId: number,
+) {
+  for (const fnName in fnObjs) {
+    const fnObj = fnObjs[fnName]!;
+    const firstScreenFnObj: JsFnHandle | undefined = firstScreenFnObjs[fnName]!;
+    if (!firstScreenFnObj?._delayIndices) {
+      continue;
+    }
+    for (const index of firstScreenFnObj._delayIndices) {
+      const details = lynxWorkletImpl!._runOnBackgroundDelayImpl.delayedBackgroundFunctionArray[index]!;
+      fnObj._execId = execId;
+      details.jsFnHandle = fnObj;
+    }
+  }
 }
