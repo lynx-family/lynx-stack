@@ -8,13 +8,82 @@ use swc_core::{
 
 mod is_component_class;
 
+/// {@inheritdoc PluginReactLynxOptions.shake}
+/// @public
 #[napi(object)]
 #[derive(Clone, Debug)]
 pub struct ShakeVisitorConfig {
+  /// Package names to identify runtime imports that need to be processed
+  ///
+  /// @example
+  /// ```js
+  /// import { defineConfig } from '@lynx-js/rspeedy'
+  /// import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+  ///
+  /// export default defineConfig({
+  ///   plugins: [
+  ///     pluginReactLynx({
+  ///       shake: {
+  ///         pkgName: ['@lynx-js/react-runtime']
+  ///       }
+  ///     })
+  ///   ]
+  /// })
+  /// ```
+  ///
+  /// @remarks
+  /// Default value: `['@lynx-js/react-runtime']`
+  /// The provided values will be merged with the default values instead of replacing them.
   /// @public
   pub pkg_name: Vec<String>,
+
+  /// Properties that should be retained in the component class
+  ///
+  /// @example
+  /// ```js
+  /// import { defineConfig } from '@lynx-js/rspeedy'
+  /// import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+  ///
+  /// export default defineConfig({
+  ///   plugins: [
+  ///     pluginReactLynx({
+  ///       shake: {
+  ///         retainProp: ['myCustomMethod']
+  ///       }
+  ///     })
+  ///   ]
+  /// })
+  /// ```
+  ///
+  /// @remarks
+  /// Default value: `['constructor', 'render', 'getDerivedStateFromProps', 'state', 'defaultDataProcessor', 'dataProcessors', 'contextType', 'defaultProps']`
+  /// The provided values will be merged with the default values instead of replacing them.
+  ///
   /// @public
   pub retain_prop: Vec<String>,
+
+  /// Function names whose parameters should be removed during transformation
+  ///
+  /// @example
+  /// ```js
+  /// import { defineConfig } from '@lynx-js/rspeedy'
+  /// import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+  ///
+  /// export default defineConfig({
+  ///   plugins: [
+  ///     pluginReactLynx({
+  ///       shake: {
+  ///         removeCallParams: ['useMyCustomEffect']
+  ///       }
+  ///     })
+  ///   ]
+  /// })
+  /// ```
+  ///
+  /// @remarks
+  /// Default value: `['useEffect', 'useLayoutEffect', '__runInJS', 'useLynxGlobalEventListener', 'useImperativeHandle']`
+  /// The provided values will be merged with the default values instead of replacing them.
+  ///
   /// @public
   pub remove_call_params: Vec<String>,
 }
@@ -22,8 +91,23 @@ pub struct ShakeVisitorConfig {
 impl Default for ShakeVisitorConfig {
   fn default() -> Self {
     let default_pkg_name = ["@lynx-js/react-runtime"];
-    let default_retain_prop = ["constructor", "render", "getDerivedStateFromProps", "state"];
-    let default_remove_call_params = ["useEffect", "useLayoutEffect"];
+    let default_retain_prop = [
+      "constructor",
+      "render",
+      "getDerivedStateFromProps",
+      "state",
+      "defaultDataProcessor",
+      "dataProcessors",
+      "contextType",
+      "defaultProps",
+    ];
+    let default_remove_call_params = [
+      "useEffect",
+      "useLayoutEffect",
+      "__runInJS",
+      "useLynxGlobalEventListener",
+      "useImperativeHandle",
+    ];
     ShakeVisitorConfig {
       pkg_name: default_pkg_name.iter().map(|x| x.to_string()).collect(),
       retain_prop: default_retain_prop.iter().map(|x| x.to_string()).collect(),

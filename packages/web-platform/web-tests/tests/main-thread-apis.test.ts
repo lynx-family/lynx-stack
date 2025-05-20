@@ -505,23 +505,25 @@ test.describe('main thread api tests', () => {
   });
 
   test('__SetInlineStyles', async ({ page }, { title }) => {
-    const ret = await page.evaluate(() => {
-      let root = globalThis.__CreateView(0);
-      globalThis.__SetInlineStyles(root, undefined);
-      globalThis.__SetInlineStyles(root, {
+    await page.evaluate(() => {
+      const root = globalThis.__CreatePage('page', 0);
+      let target = globalThis.__CreateView(0);
+      globalThis.__SetID(target, 'target');
+      globalThis.__SetInlineStyles(target, undefined);
+      globalThis.__SetInlineStyles(target, {
         'margin': '10px',
         'marginTop': '20px',
         'marginLeft': '30px',
         'marginRight': '20px',
         'marginBottom': '10px',
       });
-      return {
-        inlineStyle: root.getAttribute('style'),
-      };
+      globalThis.__AppendElement(root, target);
+      globalThis.__FlushElementTree();
     });
-    expect(ret.inlineStyle).toContain('20px');
-    expect(ret.inlineStyle).toContain('30px');
-    expect(ret.inlineStyle).toContain('10px');
+    const targetStyle = await page.locator(`#target`).getAttribute('style');
+    expect(targetStyle).toContain('20px');
+    expect(targetStyle).toContain('30px');
+    expect(targetStyle).toContain('10px');
   });
 
   test('__GetConfig__AddConfig', async ({ page }, { title }) => {

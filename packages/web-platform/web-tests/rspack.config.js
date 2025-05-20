@@ -2,8 +2,10 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import path from 'node:path';
+import { readFile } from 'node:fs/promises';
 import rspack from '@rspack/core';
 import { fileURLToPath } from 'node:url';
+import { genHtml } from './server.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -17,6 +19,7 @@ const config = {
     'main-thread-test': './shell-project/mainthread-test.ts',
     'rpc-test': './shell-project/rpc-test/index.ts',
     'web-core': './shell-project/web-core.ts',
+    'fp-only': './shell-project/fp-only.ts',
   },
   output: {
     filename: '[name].js',
@@ -75,7 +78,6 @@ const config = {
       scriptLoading: 'module',
       filename: 'rpc-test.html',
     }),
-
     new rspack.HtmlRspackPlugin({
       title: 'lynx-for-web-core-test',
       meta: {
@@ -91,6 +93,21 @@ const config = {
       scriptLoading: 'module',
       filename: 'web-core.html',
     }),
+    new rspack.HtmlRspackPlugin({
+      title: 'fp-only-test',
+      meta: {
+        viewport:
+          'width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no',
+        'mobile-web-app-capable': 'yes',
+        'apple-mobile-web-app-status-bar-style': 'default',
+        'screen-orientation': 'portrait',
+        'format-detection': 'telephone=no',
+        'x5-orientation': 'portrait',
+      },
+      chunks: ['fp-only'],
+      scriptLoading: 'module',
+      filename: 'fp-only.html',
+    }),
   ],
   mode: 'development',
   devServer: {
@@ -103,6 +120,36 @@ const config = {
     },
     devMiddleware: {
       writeToDisk: true,
+    },
+    setupMiddlewares: (middlewares) => {
+      middlewares.push({
+        name: 'fp-only',
+        path: '/fp-only',
+        middleware: async (req, res, next) => {
+          try {
+            const html = await readFile(
+              path.join(__dirname, 'www', 'fp-only.html'),
+              'utf-8',
+            );
+            const casename = req.query.casename;
+            if (!casename) {
+              res.statusCode = 400;
+              res.send('casename is required');
+              next();
+              return;
+            }
+
+            res.send(await genHtml(html, casename, 'fp-only'));
+            next();
+          } catch (e) {
+            res.statusCode = 500;
+            console.error(e);
+            res.send(e.toString() + '\n' + e.stack?.toString());
+            next();
+          }
+        },
+      });
+      return middlewares;
     },
     watchFiles: ['./dist/**/*', './node_modules/@lynx-js/**/*'],
     static: [
@@ -121,10 +168,6 @@ const config = {
       {
         directory: path.join(__dirname, 'dist'),
         publicPath: '/dist',
-      },
-      {
-        directory: path.join(__dirname, 'tests', 'web-elements-plus'),
-        publicPath: '/web-element-plus-tests',
       },
       {
         directory: path.join(__dirname, 'tests', 'common.css'),
