@@ -46,6 +46,9 @@ export interface Worklet {
   _jsFn?: Record<string, string>;
   _unmount?: () => void;
   [key: string]: ClosureValueType;
+
+  // For first screen rendering
+  _needsHydration?: boolean;
 }
 
 /**

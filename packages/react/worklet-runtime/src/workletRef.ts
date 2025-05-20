@@ -3,15 +3,18 @@
 // LICENSE file in the root directory of this source tree.
 import { Element } from './api/element.js';
 import type { WorkletRef, WorkletRefId, WorkletRefImpl } from './bindings/types.js';
+import { currentCtx } from './ctxTrace.js';
 import { profile } from './utils/profile.js';
 
 interface RefImpl {
   _workletRefMap: Record<WorkletRefId, WorkletRef<unknown>>;
+  _firstScreenWorkletRefMap: Record<WorkletRefId, WorkletRef<unknown>>;
   updateWorkletRef(
-    handle: WorkletRefImpl<Element>,
+    refImpl: WorkletRefImpl<Element | null>,
     element: ElementNode | null,
   ): void;
   updateWorkletRefInitValueChanges(patch: [number, unknown][]): void;
+  clearFirstScreenWorkletRefMap(): void;
 }
 
 let impl: RefImpl | undefined;
@@ -19,8 +22,16 @@ let impl: RefImpl | undefined;
 function initWorkletRef(): RefImpl {
   return (impl = {
     _workletRefMap: {},
+    /**
+     * Map of worklet refs that are created during first screen rendering.
+     * These refs are created with negative IDs and need to be hydrated
+     * when the app starts. The map is cleared after hydration is complete
+     * to free up memory.
+     */
+    _firstScreenWorkletRefMap: {},
     updateWorkletRef,
     updateWorkletRefInitValueChanges,
+    clearFirstScreenWorkletRefMap,
   });
 }
 
@@ -34,15 +45,32 @@ const createWorkletRef = <T>(
   };
 };
 
-const getFromWorkletRefMap = (
-  id: WorkletRefId,
-): WorkletRef<unknown> => {
-  const value = impl!._workletRefMap[id];
+const getFromWorkletRefMap = <T>(
+  refImpl: WorkletRefImpl<T>,
+): WorkletRef<T> => {
+  const id = refImpl._wvid;
+  let value;
+  if (id < 0) {
+    // At the first screen rendering, the worklet ref is created with a negative ID.
+    // Might be called in two scenarios:
+    // 1. In MTS events
+    // 2. In `main-thread:ref`
+    value = impl!._firstScreenWorkletRefMap[id] as WorkletRef<T>;
+    if (!value) {
+      if (currentCtx) {
+        currentCtx!.ctx._needsHydration = true;
+      }
+      value = impl!._firstScreenWorkletRefMap[id] = createWorkletRef(id, refImpl._initValue);
+    }
+  } else {
+    value = impl!._workletRefMap[id] as WorkletRef<T>;
+  }
+
   /* v8 ignore next 3 */
   if (__DEV__ && value === undefined) {
     throw new Error('Worklet: ref is not initialized: ' + id);
   }
-  return value!;
+  return value;
 };
 
 function removeValueFromWorkletRefMap(id: WorkletRefId): void {
@@ -50,16 +78,16 @@ function removeValueFromWorkletRefMap(id: WorkletRefId): void {
 }
 
 /**
- * Create an element instance of the given element node, then set worklet value to it.
+ * Create an element instance of the given element node, then set the worklet value to it.
  * This is called in `snapshotContextUpdateWorkletRef`.
  * @param handle handle of the worklet value.
  * @param element the element node.
  */
 function updateWorkletRef(
-  handle: WorkletRefImpl<Element>,
+  handle: WorkletRefImpl<Element | null>,
   element: ElementNode | null,
 ): void {
-  getFromWorkletRefMap(handle._wvid).current = element
+  getFromWorkletRefMap(handle).current = element
     ? new Element(element)
     : null;
 }
@@ -69,13 +97,20 @@ function updateWorkletRefInitValueChanges(
 ): void {
   profile('updateWorkletRefInitValueChanges', () => {
     patch.forEach(([id, value]) => {
-      impl!._workletRefMap[id] ??= createWorkletRef(id, value);
+      if (!impl!._workletRefMap[id]) {
+        impl!._workletRefMap[id] = createWorkletRef(id, value);
+      }
     });
   });
 }
 
+function clearFirstScreenWorkletRefMap(): void {
+  impl!._firstScreenWorkletRefMap = {};
+}
+
 export {
   type RefImpl,
+  createWorkletRef,
   initWorkletRef,
   getFromWorkletRefMap,
   removeValueFromWorkletRefMap,

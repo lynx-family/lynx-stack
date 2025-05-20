@@ -1,17 +1,16 @@
-import {
-  type GestureKind,
-  GestureTypeInner,
-  type ComposedGesture,
-  type BaseGesture,
-  type GestureConfig,
-} from './types.js';
+// Copyright 2024 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
 import { onWorkletCtxUpdate } from '@lynx-js/react/worklet-runtime/bindings';
+
+import { GestureTypeInner } from './types.js';
+import type { BaseGesture, ComposedGesture, GestureConfig, GestureKind } from './types.js';
 
 function isSerializedGesture(gesture: GestureKind): boolean {
   return gesture.__isSerialized ?? false;
 }
 
-function getGestureInfo(gesture: BaseGesture, dom: FiberElement) {
+function getGestureInfo(gesture: BaseGesture, oldGesture: BaseGesture | undefined, isFirstScreen: boolean) {
   const config = {
     callbacks: [],
   } as GestureConfig;
@@ -22,12 +21,11 @@ function getGestureInfo(gesture: BaseGesture, dom: FiberElement) {
   }
 
   for (
-    const key of Object.keys(baseGesture.callbacks) as Array<
-      keyof BaseGesture['callbacks']
-    >
+    const key of Object.keys(baseGesture.callbacks)
   ) {
     const callback = baseGesture.callbacks[key]!;
-    onWorkletCtxUpdate(callback, dom);
+    const oldCallback = oldGesture?.callbacks[key];
+    onWorkletCtxUpdate(callback, oldCallback, isFirstScreen);
     config.callbacks.push({
       name: key,
       callback: callback,
@@ -49,6 +47,8 @@ function getGestureInfo(gesture: BaseGesture, dom: FiberElement) {
 export function processGesture(
   dom: FiberElement,
   gesture: GestureKind,
+  oldGesture: GestureKind | undefined,
+  isFirstScreen: boolean,
   gestureOptions?: {
     domSet: boolean;
   },
@@ -63,13 +63,16 @@ export function processGesture(
   }
 
   if (gesture.type === GestureTypeInner.COMPOSED) {
-    for (const subGesture of (gesture as ComposedGesture).gestures) {
-      processGesture(dom, subGesture, { domSet: true });
+    for (const [index, subGesture] of (gesture as ComposedGesture).gestures.entries()) {
+      processGesture(dom, subGesture, (oldGesture as ComposedGesture)?.gestures[index], isFirstScreen, {
+        domSet: true,
+      });
     }
   } else {
     const baseGesture = gesture as BaseGesture;
+    const oldBaseGesture = oldGesture as BaseGesture | undefined;
 
-    const { config, relationMap } = getGestureInfo(baseGesture, dom);
+    const { config, relationMap } = getGestureInfo(baseGesture, oldBaseGesture, isFirstScreen);
     __SetGestureDetector(
       dom,
       baseGesture.id,

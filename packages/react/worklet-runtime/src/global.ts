@@ -6,10 +6,12 @@ import type { JsFunctionLifecycleManager } from './jsFunctionLifecycle.js';
 import type { RefImpl } from './workletRef.js';
 
 declare global {
+  // eslint-disable-next-line no-var
   var lynxWorkletImpl: {
     _workletMap: Record<string, (...args: any[]) => any>;
     _jsFunctionLifecycleManager?: JsFunctionLifecycleManager;
     _refImpl: RefImpl;
+    _hydrateCtx: (worklet: Worklet, firstScreenWorklet: Worklet) => void;
   };
 
   function runWorklet(ctx: Worklet, params: ClosureValueType[]): unknown;

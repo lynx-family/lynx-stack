@@ -9,11 +9,15 @@ import type { Element } from '../api/element.js';
  * This function must be called when a worklet context is updated.
  *
  * @param worklet - The worklet to be updated
- * @param _element - The element associated with the worklet
+ * @param oldWorklet - The old worklet context
+ * @param isFirstScreen - Whether it is before the hydration is finished
  * @internal
  */
-function onWorkletCtxUpdate(worklet: Worklet, _element: ElementNode): void {
+function onWorkletCtxUpdate(worklet: Worklet, oldWorklet: Worklet | null | undefined, isFirstScreen: boolean): void {
   globalThis.lynxWorkletImpl?._jsFunctionLifecycleManager?.addRef(worklet._execId!, worklet);
+  if (isFirstScreen && oldWorklet) {
+    globalThis.lynxWorkletImpl?._hydrateCtx(worklet, oldWorklet);
+  }
 }
 
 /**
@@ -53,7 +57,7 @@ function updateWorkletRefInitValueChanges(patch?: [number, unknown][]): void {
  * @internal
  */
 function onHydrationFinished(): void {
-  // do nothing
+  globalThis.lynxWorkletImpl?._refImpl.clearFirstScreenWorkletRefMap();
 }
 
 /**
