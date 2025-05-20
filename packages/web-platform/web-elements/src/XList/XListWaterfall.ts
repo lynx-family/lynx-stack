@@ -4,8 +4,8 @@
 // LICENSE file in the root directory of this source tree.
 */
 import {
-  boostedQueueMicrotask,
   genDomGetter,
+  registerAttributeHandler,
   type AttributeReactiveClass,
 } from '@lynx-js/web-elements-reactive';
 import type { XList } from './XList.js';
@@ -16,7 +16,7 @@ const WATERFALL_STYLE = 'waterfall-style';
 export class XListWaterfall
   implements InstanceType<AttributeReactiveClass<typeof HTMLElement>>
 {
-  static observedAttributes = [];
+  static observedAttributes = ['list-type'];
 
   #dom: XList;
   #getListContainer = genDomGetter(() => this.#dom.shadowRoot!, '#content');
@@ -182,7 +182,7 @@ export class XListWaterfall
     this.#resizeObserver = new ResizeObserver(() => {
       // may cause: Resizeobserver loop completed with undelivered notifications
       // https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver#observation_errors
-      boostedQueueMicrotask(() => {
+      requestAnimationFrame(() => {
         this.#layoutListItem(
           spanCount,
           isScrollVertical,
@@ -194,8 +194,9 @@ export class XListWaterfall
     });
   };
 
-  connectedCallback() {
-    if (this.#dom.getAttribute('list-type') === 'waterfall') {
+  @registerAttributeHandler('list-type', true)
+  #handlerListType(newVal: string | null) {
+    if (newVal === 'waterfall') {
       const spanCount = parseFloat(
         this.#dom.getAttribute('span-count')
           || this.#dom.getAttribute('column-count')
@@ -227,6 +228,17 @@ export class XListWaterfall
           childList: true,
         });
       }
+    } else {
+      this.#resizeObserver?.disconnect();
+      this.#resizeObserver = undefined;
+      this.#childrenObserver?.disconnect();
+      this.#childrenObserver = undefined;
+      for (let i = 0; i < this.#dom.children.length; i++) {
+        const listItem = this.#dom.children[i] as HTMLElement;
+        listItem.removeAttribute('slot');
+      }
+      this.#dom.shadowRoot?.querySelector(`slot[name=${WATERFALL_SLOT}]`)
+        ?.remove();
     }
   }
 }

@@ -59,6 +59,7 @@ list-item {
   display: none;
   content-visibility: auto;
   flex: 0 0 auto !important;
+  position: static;
 }
 
 x-list > list-item, x-list > lynx-wrapper > list-item {
