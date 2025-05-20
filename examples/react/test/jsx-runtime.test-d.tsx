@@ -1,11 +1,19 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type { JSX } from '../../jsx-runtime/index.js';
-import type { MainThread, NodesRef, Target, TouchEvent } from '@lynx-js/types';
 import { assertType, describe, test } from 'vitest';
-import { useMainThreadRef } from '../../src/lynx-api.js';
-import { useRef } from '../../src/hooks/react.js';
+
+import {
+  Component,
+  forwardRef,
+  Fragment,
+  memo,
+  Suspense,
+  useMainThreadRef,
+  useRef,
+} from '@lynx-js/react';
+import type { JSX, ReactNode } from '@lynx-js/react';
+import type { MainThread, NodesRef, Target, TouchEvent } from '@lynx-js/types';
 
 describe('JSX Runtime Types', () => {
   test('should support basic JSX element', () => {
@@ -19,7 +27,7 @@ describe('JSX Runtime Types', () => {
 
   test('should validate the required props for raw-text', () => {
     // @ts-expect-error: Missing required prop 'text'
-    const shouldError = <raw-text></raw-text>;
+    const _shouldError = <raw-text></raw-text>;
 
     const rawTextELe = <raw-text text={'text'}></raw-text>;
     assertType<JSX.Element>(rawTextELe);
@@ -37,7 +45,7 @@ describe('JSX Runtime Types', () => {
 
   test('should error on unsupported tags', () => {
     // @ts-expect-error: Unsupported tag
-    const divElement = <div></div>;
+    const _divElement = <div></div>;
   });
 
   test('should support event handlers', () => {
@@ -83,12 +91,10 @@ describe('JSX Runtime Types', () => {
   });
 
   test('should support ref prop with function', () => {
-    const ref = useRef<NodesRef>(null);
     const viewWithRefCallback = (
       <view
         ref={(n) => {
           assertType<NodesRef | null>(n);
-          ref.current = n;
         }}
       >
       </view>
@@ -100,5 +106,79 @@ describe('JSX Runtime Types', () => {
     const mtRef = useMainThreadRef<MainThread.Element>(null);
     const viewWithMainThreadRef = <view main-thread:ref={mtRef}></view>;
     assertType<JSX.Element>(viewWithMainThreadRef);
+  });
+
+  test('should support Suspense', () => {
+    const jsx = (
+      <Suspense fallback={<text>Loading...</text>}>
+        <text>Hello, World!</text>
+      </Suspense>
+    );
+    assertType<JSX.Element>(jsx);
+  });
+
+  test('should support Fragment', () => {
+    const jsx = (
+      <>
+        <text>Hello, World!</text>
+        <Fragment>
+          <text>Hello, World!</text>
+        </Fragment>
+      </>
+    );
+    assertType<JSX.Element>(jsx);
+  });
+
+  test('should support class attributes', () => {
+    class Foo extends Component {
+      override render(): ReactNode {
+        return <text>Hello, World!</text>;
+      }
+    }
+
+    assertType<JSX.Element>(
+      <Foo
+        ref={(foo) => {
+          assertType<Foo | null>(foo);
+        }}
+      />,
+    );
+
+    const ref = useRef<Foo>(null);
+    assertType<JSX.Element>(
+      <Foo ref={ref} />,
+    );
+  });
+
+  test('should support memo()', () => {
+    interface Props {
+      foo: string;
+    }
+
+    const MemoComponent = memo<Props>((props) => {
+      assertType<Props>(props);
+      return <text>Hello, World!</text>;
+    });
+
+    assertType<JSX.Element>(<MemoComponent foo='bar' />);
+  });
+
+  test('should support forwardRef()', () => {
+    interface Props {
+      foo: string;
+    }
+    const ForwardRefComponent = forwardRef<NodesRef, Props>((props, ref) => {
+      assertType<Props>(props);
+      return <text ref={ref}>Hello, World!</text>;
+    });
+
+    assertType<JSX.Element>(
+      <ForwardRefComponent
+        foo='bar'
+        ref={(node) => {
+          assertType<NodesRef | null>(node);
+        }}
+      />,
+    );
   });
 });

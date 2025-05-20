@@ -1,14 +1,15 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "jsx": "preserve",
+    "jsx": "react-jsx",
+    "jsxImportSource": "@lynx-js/react",
     "noEmit": true,
 
     "allowJs": true,
     "checkJs": true,
     "isolatedDeclarations": false,
   },
-  "include": ["src", "lynx.config.js"],
+  "include": ["src", "lynx.config.js", "test"],
   "references": [
     { "path": "../../packages/react/tsconfig.json" },
     { "path": "../../packages/rspeedy/core/tsconfig.build.json" },

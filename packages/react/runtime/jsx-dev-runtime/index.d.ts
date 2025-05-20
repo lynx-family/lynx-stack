@@ -1,17 +1,23 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { JSX as _JSX } from 'react';
+import * as React from 'react';
 
-import { IntrinsicElements as _IntrinsicElements } from '@lynx-js/types';
+import * as Lynx from '@lynx-js/types';
 
-export { jsxDEV, Fragment } from 'react/jsx-dev-runtime';
+export { jsxDEV, Fragment, JSXSource } from 'react/jsx-dev-runtime';
 export { jsx, jsxs } from 'react/jsx-runtime';
 
+// Modified from
+// https://github.com/DefinitelyTyped/DefinitelyTyped/blob/981449c691b9be0fca569c48151fc57606f5ea7a/types/react/jsx-runtime.d.ts#L5
 export namespace JSX {
-  interface IntrinsicElements extends _IntrinsicElements {}
-
+  type ElementType = React.JSX.ElementType;
+  interface Element extends React.JSX.Element {}
+  interface ElementClass extends React.JSX.ElementClass {}
+  interface ElementAttributesProperty extends React.JSX.ElementAttributesProperty {}
+  interface ElementChildrenAttribute extends React.JSX.ElementChildrenAttribute {}
+  type LibraryManagedAttributes<C, P> = React.JSX.LibraryManagedAttributes<C, P>;
   interface IntrinsicAttributes {}
-
-  type Element = _JSX.Element;
+  interface IntrinsicClassAttributes<T> extends React.JSX.IntrinsicClassAttributes<T> {}
+  interface IntrinsicElements extends Lynx.IntrinsicElements {}
 }
