@@ -45,7 +45,7 @@ const goto = async (
 
 test.describe('SSR no Javascript tests', () => {
   test.beforeEach(({ browserName }) => {
-    test.skip(browserName === 'firefox', 'firefox does not support @conatiner');
+    test.skip(browserName === 'firefox', 'firefox does not support @container');
   });
   test.describe('basic', () => {
     test.fixme('api-initdata', async ({ page }, { title }) => {
