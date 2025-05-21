@@ -198,9 +198,10 @@ export function applyEntry(
     })
 
     if (isLynx) {
-      const inlineScripts = typeof config.output?.inlineScripts === 'boolean'
-        ? config.output.inlineScripts
-        : true
+      const inlineScripts =
+        typeof environment.config.output?.inlineScripts === 'boolean'
+          ? environment.config.output.inlineScripts
+          : true
 
       chain
         .plugin(PLUGIN_NAME_RUNTIME_WRAPPER)
