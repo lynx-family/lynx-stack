@@ -344,7 +344,7 @@ export class LynxView extends HTMLElement {
   #render() {
     if (!this.#rendering) {
       this.#rendering = true;
-      queueMicrotask(() => {
+      queueMicrotask(async () => {
         this.#rendering = false;
         if (this.#instance) {
           this.disconnectedCallback();
@@ -366,7 +366,7 @@ export class LynxView extends HTMLElement {
           const threadStrategy = (this.threadStrategy ?? 'multi-thread') as
             | 'all-on-ui'
             | 'multi-thread';
-          const lynxView = createLynxView({
+          const lynxView = await createLynxView({
             threadStrategy,
             tagMap,
             shadowRoot: this.shadowRoot!,

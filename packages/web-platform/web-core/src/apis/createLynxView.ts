@@ -41,7 +41,7 @@ export interface LynxView {
   sendGlobalEvent: RpcCallType<typeof sendGlobalEventEndpoint>;
 }
 
-export function createLynxView(configs: LynxViewConfigs): LynxView {
+export function createLynxView(configs: LynxViewConfigs): Promise<LynxView> {
   const {
     shadowRoot,
     callbacks,

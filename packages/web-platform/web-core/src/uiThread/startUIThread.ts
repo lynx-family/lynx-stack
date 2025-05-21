@@ -24,14 +24,14 @@ export type StartUIThreadCallbacks = {
   customTemplateLoader?: (url: string) => Promise<LynxTemplate>;
 };
 
-export function startUIThread(
+export async function startUIThread(
   templateUrl: string,
   configs: Omit<MainThreadStartConfigs, 'template'>,
   shadowRoot: ShadowRoot,
   lynxGroupId: number | undefined,
   threadStrategy: 'all-on-ui' | 'multi-thread',
   callbacks: StartUIThreadCallbacks,
-): LynxView {
+): Promise<LynxView> {
   const createLynxStartTiming = performance.now() + performance.timeOrigin;
   const allOnUI = threadStrategy === 'all-on-ui';
   const {
@@ -53,7 +53,7 @@ export function startUIThread(
     markTiming(timingKey, pipelineId, timeStamp);
   };
   const { start, updateDataMainThread } = allOnUI
-    ? createRenderAllOnUI(
+    ? await createRenderAllOnUI(
       /* main-to-bg rpc*/ mainThreadRpc,
       shadowRoot,
       markTimingInternal,
