@@ -306,7 +306,9 @@ export interface Output {
    *
    * If no value is provided, the default value would be `true`.
    *
-   * This is different with {@link https://rsbuild.dev/config/output/inline-scripts | output.inlineScripts } since we normally want to inline scripts in Lynx manifest file.
+   * This is different with {@link https://rsbuild.dev/config/output/inline-scripts | output.inlineScripts } since we normally want to inline scripts in Lynx bundle (`.lynx.bundle`).
+   *
+   * Only background thread scripts can remain non-inlined, whereas the main thread script is always inlined.
    *
    * @example
    *
