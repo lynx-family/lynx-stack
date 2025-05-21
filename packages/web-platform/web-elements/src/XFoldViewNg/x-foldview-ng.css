@@ -9,7 +9,6 @@ x-foldview-ng {
   overflow-x: clip;
   overflow-x: hidden;
   overscroll-behavior: contain;
-  contain: content;
   --foldview-header-height: 0px;
   scrollbar-width: none;
 }

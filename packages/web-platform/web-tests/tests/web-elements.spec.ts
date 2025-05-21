@@ -1242,6 +1242,17 @@ test.describe('web-elements test suite', () => {
         });
       },
     );
+
+    test('x-foldview-ng/item-fixed', async ({ page }, { title }) => {
+      await gotoWebComponentPage(page, title);
+      await wait(100);
+      await diffScreenShot(page, title, 'initial');
+      await page.evaluate(() => {
+        document.querySelector('x-foldview-ng')?.scrollBy(0, 200);
+      });
+      await wait(100);
+      await diffScreenShot(page, title, 'scroll');
+    });
   });
   test.describe('x-viewpager-ng', () => {
     test('x-viewpager-ng/viewpager-size-cyclic-percentage-size', async ({
