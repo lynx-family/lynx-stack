@@ -8,6 +8,22 @@ Rsdoctor 是一个构建分析工具，可以直观地显示每个 Loader 和 Pl
 
 请参阅[使用 Rsdoctor](./use-rsdoctor) 以获取更多信息。
 
+## Rspack profiling
+
+Rspeedy 支持使用 `RSPACK_PROFILE` 环境变量进行 Rspack 构建性能分析。
+
+```bash
+# dev
+RSPACK_PROFILE=OVERVIEW rspeedy dev
+
+# build
+RSPACK_PROFILE=OVERVIEW rspeedy build
+```
+
+当 build 命令执行完成，或是 dev server 被关闭时，Rspeedy 会在当前目录下生成一个 `.rspack-profile-${timestamp}-${pid}` 文件夹，其中包含 `trace.json` 文件，该文件由 Rspack 基于 tracing 细粒度地记录了各个阶段的耗时，可以使用 [ui.perfetto.dev](https://ui.perfetto.dev/) 进行查看。
+
+> 有关 Rspack 构建性能分析使用的更多信息，请参阅 [Rspack - Tracing](https://rspack.dev/contribute/development/tracing)。
+
 ## Node.js profiling
 
 当 Rspeedy 执行一次构建时，你可以使用 Node.js 的 profiling 来分析 JavaScript 执行，这有助于发现性能瓶颈。
@@ -32,23 +48,3 @@ npm install -g speedscope
 # 请将文件名替换为本地文件的名称
 speedscope CPU.date.000000.00000.0.001.cpuprofile
 ```
-
-## Rspack profiling
-
-Rspeedy 支持使用 `RSPACK_PROFILE` 环境变量进行 Rspack 构建性能分析。
-
-```bash
-# dev
-RSPACK_PROFILE=ALL rspeedy dev
-
-# build
-RSPACK_PROFILE=ALL rspeedy build
-```
-
-此命令将在 dist 文件夹中生成 `rspack-profile-${timestamp}` 文件夹，其中包含 `logging.json`、`trace.json` 和 `jscpuprofile.json` 文件：
-
-- `trace.json`: 使用 tracing 记录 Rust 端每个阶段的时间消耗，可以通过 [ui.perfetto.dev](https://ui.perfetto.dev/) 查看
-- `jscpuprofile.json`: 使用 [Node.js inspector](https://nodejs.org/dist/latest-v18.x/docs/api/inspector.html) 记录 JavaScript 端每个阶段的时间消耗，可以通过 [speedscope.app](https://www.speedscope.app/) 查看。
-- `logging.json`: 包含一些日志信息，粗略记录了构建每个阶段所花费的时间。（开发环境中尚不支持）
-
-> 有关 Rspack 构建性能分析使用的更多信息，请参阅 [Rspack - Profiling](https://web-infra-dev.github.io/rspack-dev-guide/profiling/intro.html#profiling)。
