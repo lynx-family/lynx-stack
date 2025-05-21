@@ -1,7 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { assertType, describe, test } from 'vitest';
+import { assertType, describe, expectTypeOf, test } from 'vitest';
 
 import {
   Component,
@@ -12,7 +12,7 @@ import {
   useMainThreadRef,
   useRef,
 } from '@lynx-js/react';
-import type { JSX, ReactNode } from '@lynx-js/react';
+import type { FC, JSX, ReactNode } from '@lynx-js/react';
 import type { MainThread, NodesRef, Target, TouchEvent } from '@lynx-js/types';
 
 describe('JSX Runtime Types', () => {
@@ -180,5 +180,31 @@ describe('JSX Runtime Types', () => {
         }}
       />,
     );
+  });
+
+  test('should support key on JSX elements', () => {
+    assertType<JSX.Element>(<text key='foo'>Hello, World!</text>);
+    assertType<JSX.Element>(<text key={null}>Hello, World!</text>);
+  });
+
+  test('should support key on Components', () => {
+    class Foo extends Component {
+      override render(): ReactNode {
+        expectTypeOf(this.props).not.toHaveProperty('key');
+        return <text>Hello, World!</text>;
+      }
+    }
+    const Bar: FC = function Bar(props) {
+      expectTypeOf(props).not.toHaveProperty('key');
+      return <text>Hello, World!</text>;
+    };
+    const ForwardRefComponent = forwardRef<NodesRef>((props, ref) => {
+      expectTypeOf(props).not.toHaveProperty('key');
+      return <text ref={ref}>Hello, World!</text>;
+    });
+    assertType<JSX.Element>(<Foo key={null} />);
+    assertType<JSX.Element>(<Foo key='foo' />);
+    assertType<JSX.Element>(<Bar key='bar' />);
+    assertType<JSX.Element>(<ForwardRefComponent key='forward' />);
   });
 });

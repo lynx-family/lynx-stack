@@ -95,7 +95,7 @@ declare module '@lynx-js/types' {
   interface StandardProps {
     children?: ReactNode;
     ref?: Ref<NodesRef>;
-    key?: Key;
+    key?: Key | null | undefined;
     'main-thread:ref'?: Ref<MainThread.Element>;
   }
 

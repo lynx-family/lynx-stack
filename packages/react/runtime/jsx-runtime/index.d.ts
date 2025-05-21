@@ -16,7 +16,11 @@ export namespace JSX {
   interface ElementAttributesProperty extends React.JSX.ElementAttributesProperty {}
   interface ElementChildrenAttribute extends React.JSX.ElementChildrenAttribute {}
   type LibraryManagedAttributes<C, P> = React.JSX.LibraryManagedAttributes<C, P>;
-  interface IntrinsicAttributes {}
+  // We are not extending the `React.JSX.IntrinsicAttributes` because it will be populated
+  // by `Lynx.IntrinsicAttributes`.
+  interface IntrinsicAttributes {
+    key?: React.Key | null | undefined;
+  }
   interface IntrinsicClassAttributes<T> extends React.JSX.IntrinsicClassAttributes<T> {}
   interface IntrinsicElements extends Lynx.IntrinsicElements {}
 }
