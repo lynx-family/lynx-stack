@@ -312,7 +312,7 @@ export interface Output {
    *
    * @example
    *
-   * Disable inlining scripts.
+   * Disable inlining background thread scripts.
    * ```js
    * import { defineConfig } from '@lynx-js/rspeedy'
    *
