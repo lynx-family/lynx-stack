@@ -682,12 +682,12 @@ importers:
       '@lynx-js/web-elements-template':
         specifier: workspace:*
         version: link:../web-elements-template
+      '@lynx-js/web-mainthread-apis':
+        specifier: workspace:*
+        version: link:../web-mainthread-apis
       '@lynx-js/web-worker-rpc':
         specifier: workspace:*
         version: link:../web-worker-rpc
-      '@lynx-js/web-worker-runtime':
-        specifier: workspace:*
-        version: link:../web-worker-runtime
 
   packages/web-platform/web-elements:
     dependencies:

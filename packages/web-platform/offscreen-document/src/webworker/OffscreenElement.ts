@@ -148,4 +148,7 @@ export class OffscreenElement extends OffscreenNode {
     }
     this[innerHTML] = text;
   }
+  toJSON(): string {
+    return '';
+  }
 }

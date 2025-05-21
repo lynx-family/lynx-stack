@@ -25,7 +25,7 @@
     "@lynx-js/offscreen-document": "workspace:*",
     "@lynx-js/web-constants": "workspace:*",
     "@lynx-js/web-elements-template": "workspace:*",
-    "@lynx-js/web-worker-rpc": "workspace:*",
-    "@lynx-js/web-worker-runtime": "workspace:*"
+    "@lynx-js/web-mainthread-apis": "workspace:*",
+    "@lynx-js/web-worker-rpc": "workspace:*"
   }
 }

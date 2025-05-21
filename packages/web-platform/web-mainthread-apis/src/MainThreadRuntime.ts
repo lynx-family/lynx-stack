@@ -228,6 +228,8 @@ export class MainThreadRuntime {
 
   processData?: ProcessDataCallback;
 
+  ssrEncode?: () => string;
+
   #renderPage?: (data: unknown) => void;
 
   declare renderPage: (data: unknown) => void;

@@ -136,6 +136,9 @@ export class OffscreenDocument extends OffscreenNode {
       }
     }
   };
+  toJSON(): string {
+    return '';
+  }
 }
 
 type ShadowrootTemplates =
@@ -148,12 +151,8 @@ function getInnerHTMLImpl(
   buffer: string[],
   element: OffscreenElement,
   shadowrootTemplates: Record<string, ShadowrootTemplates>,
-  tagTransformMap: Record<string, string> = {},
 ): void {
   let tagName = element.tagName.toLowerCase();
-  if (tagTransformMap[tagName]) {
-    tagName = tagTransformMap[tagName]!;
-  }
   buffer.push('<');
   buffer.push(tagName);
   for (const [key, value] of Object.entries(element[_attributes])) {
@@ -186,7 +185,6 @@ function getInnerHTMLImpl(
         buffer,
         child as OffscreenElement,
         shadowrootTemplates,
-        tagTransformMap,
       );
     }
   }
@@ -198,7 +196,6 @@ function getInnerHTMLImpl(
 export function dumpHTMLString(
   element: OffscreenDocument,
   shadowrootTemplates: Record<string, ShadowrootTemplates>,
-  tagTransformMap: Record<string, string>,
 ): string {
   const buffer: string[] = [];
   for (const child of element.children) {
@@ -206,7 +203,6 @@ export function dumpHTMLString(
       buffer,
       child as OffscreenElement,
       shadowrootTemplates,
-      tagTransformMap,
     );
   }
   return buffer.join('');
