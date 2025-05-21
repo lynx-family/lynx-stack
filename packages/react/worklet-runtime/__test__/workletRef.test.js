@@ -231,4 +231,63 @@ describe('WorkletRef', () => {
     expect(getFromWorkletRefMap({ _wvid: 1 }).current).toBe('main-thread-set-1');
     expect(getFromWorkletRefMap({ _wvid: 2 }).current).toBe('main-thread-set-2');
   });
+
+  it('should not hydrate different ctxs', () => {
+    const firstScreenWorklet = {
+      _wkltId: 'ctx1',
+      _c: {
+        ref1: {
+          _wvid: -1,
+          _initValue: 'main-thread-init-1',
+        },
+        ctx2: {
+          _wkltId: 'ctx2',
+          _c: {
+            ref2: {
+              _wvid: -2,
+              _initValue: 'main-thread-init-2',
+            },
+          },
+        },
+      },
+    };
+    const worklet = {
+      _wkltId: 'ctx1',
+      _c: {
+        ref1: {
+          _wvid: 1,
+          _initValue: 'background-thread-init-1',
+        },
+        ctx2: {
+          _wkltId: 'ctx-different',
+          _c: {
+            ref2: {
+              _wvid: 2,
+              _initValue: 'background-thread-init-2',
+            },
+          },
+        },
+      },
+    };
+    // If the refs are not used in the first screen, they will not be hydrated
+    lynxWorkletImpl._hydrateCtx(worklet, firstScreenWorklet);
+    expect(getFromWorkletRefMap({ _wvid: 1 })).toBeUndefined();
+    expect(getFromWorkletRefMap({ _wvid: 2 })).toBeUndefined();
+
+    // If the refs are used in the first screen, they will be hydrated
+    registerWorklet('main-thread', 'ctx1', function() {
+      const { ref1, ctx2 } = this._c;
+      ref1.current = 'main-thread-set-1';
+      ctx2();
+    });
+    registerWorklet('main-thread', 'ctx2', function() {
+      const { ref2 } = this._c;
+      ref2.current = 'main-thread-set-2';
+    });
+    runWorklet(firstScreenWorklet, []);
+    updateWorkletRefInitValueChanges([[1, 'background-thread-init-1'], [2, 'background-thread-init-2']]);
+    lynxWorkletImpl._hydrateCtx(worklet, firstScreenWorklet);
+    expect(getFromWorkletRefMap({ _wvid: 1 }).current).toBe('main-thread-set-1');
+    expect(getFromWorkletRefMap({ _wvid: 2 }).current).toBe('background-thread-init-2');
+  });
 });

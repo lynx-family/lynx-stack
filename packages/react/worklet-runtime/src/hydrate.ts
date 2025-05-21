@@ -27,6 +27,10 @@ function hydrateCtxImpl(ctx: ClosureValueType, firstScreenCtx: ClosureValueType,
   const ctxObj = ctx as Record<string, ClosureValueType>;
   const firstScreenCtxObj = firstScreenCtx as Record<string, ClosureValueType>;
 
+  if (ctxObj['_wkltId'] && ctxObj['_wkltId'] !== firstScreenCtxObj['_wkltId']) {
+    return;
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-for-in-array
   for (const key in ctx) {
     if (key === '_wvid') {
