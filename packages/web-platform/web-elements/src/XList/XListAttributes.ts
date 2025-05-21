@@ -11,8 +11,6 @@ import {
 } from '@lynx-js/web-elements-reactive';
 import type { XList } from './XList.js';
 
-const WATERFALL_SLOT = 'waterfall-slot';
-
 export class XListAttributes
   implements InstanceType<AttributeReactiveClass<typeof HTMLElement>>
 {

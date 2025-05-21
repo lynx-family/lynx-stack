@@ -12,10 +12,12 @@ import { OffscreenNode, uniqueId } from './OffscreenNode.js';
 
 export const ancestorDocument = Symbol('ancestorDocument');
 export const _attributes = Symbol('_attributes');
+export const innerHTML = Symbol('innerHTML');
 const _style = Symbol('_style');
 export class OffscreenElement extends OffscreenNode {
   private [_style]?: OffscreenCSSStyleDeclaration;
   private readonly [_attributes]: Record<string, string> = {};
+  public [innerHTML]: string = '';
 
   /**
    * @private
@@ -141,5 +143,9 @@ export class OffscreenElement extends OffscreenNode {
       text,
       uid: this[uniqueId],
     });
+    for (const child of this.children) {
+      (child as OffscreenElement).remove();
+    }
+    this[innerHTML] = text;
   }
 }

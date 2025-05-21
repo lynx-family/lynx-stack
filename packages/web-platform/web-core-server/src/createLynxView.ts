@@ -1,5 +1,6 @@
 import {
   flushElementTreeEndpoint,
+  inShadowRootStyles,
   mainThreadStartEndpoint,
   type MainThreadStartConfigs,
 } from '@lynx-js/web-constants';
@@ -38,6 +39,7 @@ interface LynxViewConfig extends
   >;
   overrideTagTransformMap?: Record<string, string>;
   autoSize?: boolean;
+  lynxViewStyle?: string;
 }
 
 const builtinElementTemplates = {
@@ -78,6 +80,7 @@ export async function createLynxView(
     hydrateUrl,
     autoSize,
     injectStyles,
+    lynxViewStyle,
   } = config;
 
   const mainToUIChannel = new MessageChannel();
@@ -127,9 +130,9 @@ export async function createLynxView(
     return `
     <lynx-view url="${hydrateUrl}" ssr ${
       autoSize ? 'height="auto" width="auto"' : ''
-    }>
+    } ${lynxViewStyle ? `style="${lynxViewStyle}"` : ''}>
       <template shadowrootmode="open">
-        <style>${injectStyles}</style>
+        <style>${injectStyles}\n${inShadowRootStyles.join('\n')}</style>
         ${innerShadowRootHTML}
       </template>
     </lynx-view>`;

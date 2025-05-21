@@ -2351,6 +2351,34 @@ test.describe('web-elements test suite', () => {
       await gotoWebComponentPage(page, title);
       await diffScreenShot(page, title, 'index');
     });
+    test('list-type-change', async ({ page }) => {
+      await gotoWebComponentPage(page, 'x-list/basic-waterfall');
+      await diffScreenShot(page, 'x-list/list-type-change', 'index');
+      await page.evaluate(() => {
+        document.querySelector('x-list')?.setAttribute(
+          'list-type',
+          'single',
+        );
+      });
+      await wait(100);
+      await diffScreenShot(page, 'x-list/list-type-change', 'single');
+      await page.evaluate(() => {
+        document.querySelector('x-list')?.setAttribute(
+          'list-type',
+          'flow',
+        );
+      });
+      await wait(100);
+      await diffScreenShot(page, 'x-list/list-type-change', 'flow');
+      await page.evaluate(() => {
+        document.querySelector('x-list')?.setAttribute(
+          'list-type',
+          'waterfall',
+        );
+      });
+      await wait(100);
+      await diffScreenShot(page, 'x-list/list-type-change', 'waterfall');
+    });
   });
   test.describe('x-input', () => {
     test('placeholder', async ({ page }, { titlePath }) => {
