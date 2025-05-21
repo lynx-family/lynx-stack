@@ -300,7 +300,7 @@ export interface Output {
   filenameHash?: boolean | string | undefined
 
   /**
-   * The {@link Output.inlineScripts} option controls whether to inline scripts files when LynxEncodePlugin generates the manifest file.
+   * The {@link Output.inlineScripts} option controls whether to inline scripts into Lynx bundle (`.lynx.bundle`).
    *
    * @remarks
    *
