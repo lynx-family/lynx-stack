@@ -22,11 +22,11 @@ afterEach(() => {
 
 describe('DelayWorkletEvent', () => {
   it('should delay', () => {
-    const fn = vi.fn(function(event, c) {
-      const { abc, wv } = this._c;
+    const fn = vi.fn(function() {
+      const { wv } = this._c;
       expect(wv.current).toBe(333);
     });
-    registerWorklet('main-thread', '1', fn);
+    globalThis.registerWorklet('main-thread', '1', fn);
 
     const event = {
       currentTarget: {
@@ -39,7 +39,7 @@ describe('DelayWorkletEvent', () => {
       },
     };
     delayExecUntilJsReady('1', [event, 1]);
-    runWorklet({
+    globalThis.runWorklet({
       _lepusWorkletHash: '1',
     }, [event, 2]);
     delayExecUntilJsReady('1', [event2, 3]);
@@ -63,7 +63,7 @@ describe('DelayWorkletEvent', () => {
 
   it('should clear delayed worklets', () => {
     const fn = vi.fn();
-    registerWorklet('main-thread', '1', fn);
+    globalThis.registerWorklet('main-thread', '1', fn);
 
     const event = {
       currentTarget: {

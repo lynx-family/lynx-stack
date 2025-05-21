@@ -139,6 +139,7 @@
     "lh",
     "queueMicrotask",
     "rustup", // Rust installer/manager
+    "worklets",
   ],
   // Glob
   "ignorePaths": [
@@ -155,7 +156,6 @@
     // TODO: enable cspell for react
     "packages/react/runtime/",
     "packages/react/transform/**/*.rs",
-    "packages/react/worklet-runtime/",
     "packages/react/types/*.d.ts",
     "packages/tools/css-serializer/**",
     "packages/web-platform/**",

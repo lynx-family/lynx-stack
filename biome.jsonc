@@ -38,7 +38,6 @@
 
       "packages/react/index.d.ts",
       "packages/react/runtime/**",
-      "packages/react/worklet-runtime/**",
 
       "packages/tools/**",
 

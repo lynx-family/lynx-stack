@@ -4,7 +4,7 @@
 export class Element {
   private static willFlush = false;
 
-  // @ts-ignore set in constructor
+  // @ts-expect-error set in constructor
   private readonly element: ElementNode;
 
   constructor(element: ElementNode) {
@@ -18,7 +18,7 @@ export class Element {
     });
   }
 
-  public setAttribute(name: string, value: any): void {
+  public setAttribute(name: string, value: unknown): void {
     __SetAttribute(this.element, name, value);
     this.flushElementTree();
   }
@@ -30,12 +30,12 @@ export class Element {
 
   public setStyleProperties(styles: Record<string, string>): void {
     for (const key in styles) {
-      __AddInlineStyle(this.element, key, styles[key]);
+      __AddInlineStyle(this.element, key, styles[key]!);
     }
     this.flushElementTree();
   }
 
-  public getAttribute(attributeName: string): any {
+  public getAttribute(attributeName: string): unknown {
     return __GetAttributeByName(this.element, attributeName);
   }
 
@@ -56,14 +56,14 @@ export class Element {
 
   public invoke(
     methodName: string,
-    params?: Record<string, any>,
-  ): Promise<any> {
+    params?: Record<string, unknown>,
+  ): Promise<unknown> {
     return new Promise((resolve, reject) => {
       __InvokeUIMethod(
         this.element,
         methodName,
-        params || {},
-        (res: { code: number; data: any }) => {
+        params ?? {},
+        (res: { code: number; data: unknown }) => {
           if (res.code === 0) {
             resolve(res.data);
           } else {
@@ -80,7 +80,7 @@ export class Element {
       return;
     }
     Element.willFlush = true;
-    Promise.resolve().then(() => {
+    void Promise.resolve().then(() => {
       Element.willFlush = false;
       __FlushElementTree();
     });

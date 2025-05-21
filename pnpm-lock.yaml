@@ -269,6 +269,9 @@ importers:
 
   packages/react/worklet-runtime:
     devDependencies:
+      '@lynx-js/types':
+        specifier: ^3.3.0
+        version: 3.3.0
       esbuild:
         specifier: ^0.25.4
         version: 0.25.4

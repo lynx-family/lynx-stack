@@ -6,12 +6,12 @@ declare class ElementNode {}
 declare function __AddInlineStyle(
   e: ElementNode,
   key: number | string,
-  value: any,
+  value: string,
 ): void;
 
 declare function __FlushElementTree(element?: ElementNode): void;
 
-declare function __GetAttributeByName(e: ElementNode, name: string): any;
+declare function __GetAttributeByName(e: ElementNode, name: string): undefined | string;
 
 declare function __GetAttributeNames(e: ElementNode): string[];
 
@@ -20,13 +20,13 @@ declare function __GetPageElement(): ElementNode;
 declare function __InvokeUIMethod(
   e: ElementNode,
   method: string,
-  params: Record<string, any>,
-  callback: (res: { code: number; data: any }) => void,
+  params: Record<string, unknown>,
+  callback: (res: { code: number; data: unknown }) => void,
 ): ElementNode[];
 
 declare function __LoadLepusChunk(
   name: string,
-  cfg: { chunkType: number },
+  cfg: { chunkType: number; dynamicComponentEntry?: string | undefined },
 ): boolean;
 
 declare function __QuerySelector(
@@ -45,4 +45,4 @@ declare function __QuerySelectorAll(
   },
 ): ElementNode[];
 
-declare function __SetAttribute(e: ElementNode, key: string, value: any): void;
+declare function __SetAttribute(e: ElementNode, key: string, value: unknown): void;

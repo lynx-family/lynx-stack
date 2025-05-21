@@ -25,7 +25,7 @@ export default tseslint.config(
       // Outputs
       '**/.rslib/**',
       '**/.turbo/**',
-      'coverage/**',
+      '**/coverage/**',
       'output/**',
       'target/**',
       '**/test/js',
@@ -69,7 +69,6 @@ export default tseslint.config(
       'examples/**',
       'packages/react/types/**',
       'packages/react/runtime/**',
-      'packages/react/worklet-runtime/**',
 
       // TODO: enable eslint for tools
       // tools

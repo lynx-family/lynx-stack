@@ -31,25 +31,25 @@ describe('runOnBackground', () => {
       _execId: 8,
     };
     // If the functions are not used in the first screen, they will not be hydrated
-    lynxWorkletImpl._hydrateCtx(worklet, firstScreenWorklet);
-    expect(lynxWorkletImpl._runOnBackgroundDelayImpl.delayedBackgroundFunctionArray.length).toBe(0);
+    globalThis.lynxWorkletImpl._hydrateCtx(worklet, firstScreenWorklet);
+    expect(globalThis.lynxWorkletImpl._runOnBackgroundDelayImpl.delayedBackgroundFunctionArray.length).toBe(0);
 
     // If the functions are used in the first screen, they will be hydrated
     const task = vi.fn();
-    registerWorklet('main-thread', 'ctx1', function() {
+    globalThis.registerWorklet('main-thread', 'ctx1', function() {
       const { _jsFn1 } = this._jsFn;
-      lynxWorkletImpl._runOnBackgroundDelayImpl.delayRunOnBackground(_jsFn1, task);
+      globalThis.lynxWorkletImpl._runOnBackgroundDelayImpl.delayRunOnBackground(_jsFn1, task);
     });
-    runWorklet(firstScreenWorklet, []);
-    expect(lynxWorkletImpl._runOnBackgroundDelayImpl.delayedBackgroundFunctionArray).toMatchInlineSnapshot(`
+    globalThis.runWorklet(firstScreenWorklet, []);
+    expect(globalThis.lynxWorkletImpl._runOnBackgroundDelayImpl.delayedBackgroundFunctionArray).toMatchInlineSnapshot(`
       [
         {
           "task": [MockFunction spy],
         },
       ]
     `);
-    lynxWorkletImpl._hydrateCtx(worklet, firstScreenWorklet);
-    expect(lynxWorkletImpl._runOnBackgroundDelayImpl.delayedBackgroundFunctionArray).toMatchInlineSnapshot(`
+    globalThis.lynxWorkletImpl._hydrateCtx(worklet, firstScreenWorklet);
+    expect(globalThis.lynxWorkletImpl._runOnBackgroundDelayImpl.delayedBackgroundFunctionArray).toMatchInlineSnapshot(`
       [
         {
           "jsFnHandle": {
@@ -61,7 +61,7 @@ describe('runOnBackground', () => {
       ]
     `);
 
-    lynxWorkletImpl._runOnBackgroundDelayImpl.runDelayedBackgroundFunctions();
+    globalThis.lynxWorkletImpl._runOnBackgroundDelayImpl.runDelayedBackgroundFunctions();
     expect(task.mock.calls).toMatchInlineSnapshot(`
       [
         [
@@ -70,6 +70,6 @@ describe('runOnBackground', () => {
         ],
       ]
     `);
-    expect(lynxWorkletImpl._runOnBackgroundDelayImpl.delayedBackgroundFunctionArray.length).toBe(0);
+    expect(globalThis.lynxWorkletImpl._runOnBackgroundDelayImpl.delayedBackgroundFunctionArray.length).toBe(0);
   });
 });

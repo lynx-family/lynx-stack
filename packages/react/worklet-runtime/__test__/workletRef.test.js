@@ -32,12 +32,12 @@ describe('WorkletRef', () => {
     expect(getFromWorkletRefMap({ _wvid: 1 })).toBe(undefined);
     expect(getFromWorkletRefMap({ _wvid: 2 }).current).toBe('ref2');
 
-    lynxWorkletImpl._refImpl.updateWorkletRef({
+    globalThis.lynxWorkletImpl._refImpl.updateWorkletRef({
       _wvid: 2,
     }, 'ref2-new');
     expect(getFromWorkletRefMap({ _wvid: 2 }).current.element).toBe('ref2-new');
 
-    lynxWorkletImpl._refImpl.updateWorkletRef({
+    globalThis.lynxWorkletImpl._refImpl.updateWorkletRef({
       _wvid: 2,
     }, null);
     expect(getFromWorkletRefMap({ _wvid: 2 }).current).toBe(null);
@@ -51,12 +51,12 @@ describe('WorkletRef', () => {
     expect(getFromWorkletRefMap({ _wvid: -2 }).current).toBe('ref2');
     expect(getFromWorkletRefMap({ _wvid: -3 }).current).toBe(undefined);
 
-    lynxWorkletImpl._refImpl.updateWorkletRef({
+    globalThis.lynxWorkletImpl._refImpl.updateWorkletRef({
       _wvid: -2,
     }, 'ref2-new');
     expect(getFromWorkletRefMap({ _wvid: -2 }).current.element).toBe('ref2-new');
 
-    lynxWorkletImpl._refImpl.updateWorkletRef({
+    globalThis.lynxWorkletImpl._refImpl.updateWorkletRef({
       _wvid: -2,
     }, null);
     expect(getFromWorkletRefMap({ _wvid: -2 }).current).toBe(null);
@@ -114,19 +114,19 @@ describe('WorkletRef', () => {
       },
     };
     // If the refs are not used in the first screen, they will not be hydrated
-    lynxWorkletImpl._hydrateCtx(worklet, firstScreenWorklet);
+    globalThis.lynxWorkletImpl._hydrateCtx(worklet, firstScreenWorklet);
     expect(getFromWorkletRefMap({ _wvid: 1 })).toBeUndefined();
     expect(getFromWorkletRefMap({ _wvid: 2 })).toBeUndefined();
     expect(getFromWorkletRefMap({ _wvid: 3 })).toBeUndefined();
-    expect(lynxWorkletImpl._refImpl._firstScreenWorkletRefMap).toMatchInlineSnapshot(`{}`);
+    expect(globalThis.lynxWorkletImpl._refImpl._firstScreenWorkletRefMap).toMatchInlineSnapshot(`{}`);
 
     // If the refs are used in the first screen, they will be hydrated
-    registerWorklet('main-thread', 'ctx1', function() {
+    globalThis.registerWorklet('main-thread', 'ctx1', function() {
       const { ref1, ref2 } = this._c;
       ref1.current = 'main-thread-set-1';
       ref2.current;
     });
-    runWorklet(firstScreenWorklet, []);
+    globalThis.runWorklet(firstScreenWorklet, []);
     updateWorkletRefInitValueChanges([
       [1, 'background-thread-init-1'],
       [2, 'background-thread-init-2'],
@@ -134,17 +134,17 @@ describe('WorkletRef', () => {
       [4, 'background-thread-init-4'],
       [5, 'background-thread-init-5'],
     ]);
-    lynxWorkletImpl?._refImpl.updateWorkletRef({
+    globalThis.lynxWorkletImpl._refImpl.updateWorkletRef({
       _wvid: 5,
       _initValue: 'background-thread-init-5',
     }, 'background-thread-element-5');
-    lynxWorkletImpl._hydrateCtx(worklet, firstScreenWorklet);
+    globalThis.lynxWorkletImpl._hydrateCtx(worklet, firstScreenWorklet);
     expect(getFromWorkletRefMap({ _wvid: 1 }).current).toBe('main-thread-set-1');
     expect(getFromWorkletRefMap({ _wvid: 2 }).current).toBe('main-thread-init-2');
     expect(getFromWorkletRefMap({ _wvid: 3 }).current).toBe('main-thread-init-3');
     expect(getFromWorkletRefMap({ _wvid: 4 }).current).toBe('background-thread-init-4');
     expect(getFromWorkletRefMap({ _wvid: 5 }).current.element).toBe('background-thread-element-5');
-    expect(lynxWorkletImpl._refImpl._firstScreenWorkletRefMap).toMatchInlineSnapshot(`
+    expect(globalThis.lynxWorkletImpl._refImpl._firstScreenWorkletRefMap).toMatchInlineSnapshot(`
       {
         "-1": {
           "_wvid": -1,
@@ -169,8 +169,8 @@ describe('WorkletRef', () => {
       }
     `);
 
-    lynxWorkletImpl._refImpl.clearFirstScreenWorkletRefMap();
-    expect(lynxWorkletImpl._refImpl._firstScreenWorkletRefMap).toMatchInlineSnapshot(`{}`);
+    globalThis.lynxWorkletImpl._refImpl.clearFirstScreenWorkletRefMap();
+    expect(globalThis.lynxWorkletImpl._refImpl._firstScreenWorkletRefMap).toMatchInlineSnapshot(`{}`);
   });
 
   it('should hydrate in another ctx', () => {
@@ -211,23 +211,23 @@ describe('WorkletRef', () => {
       },
     };
     // If the refs are not used in the first screen, they will not be hydrated
-    lynxWorkletImpl._hydrateCtx(worklet, firstScreenWorklet);
+    globalThis.lynxWorkletImpl._hydrateCtx(worklet, firstScreenWorklet);
     expect(getFromWorkletRefMap({ _wvid: 1 })).toBeUndefined();
     expect(getFromWorkletRefMap({ _wvid: 2 })).toBeUndefined();
 
     // If the refs are used in the first screen, they will be hydrated
-    registerWorklet('main-thread', 'ctx1', function() {
+    globalThis.registerWorklet('main-thread', 'ctx1', function() {
       const { ref1, ctx2 } = this._c;
       ref1.current = 'main-thread-set-1';
       ctx2();
     });
-    registerWorklet('main-thread', 'ctx2', function() {
+    globalThis.registerWorklet('main-thread', 'ctx2', function() {
       const { ref2 } = this._c;
       ref2.current = 'main-thread-set-2';
     });
-    runWorklet(firstScreenWorklet, []);
+    globalThis.runWorklet(firstScreenWorklet, []);
     updateWorkletRefInitValueChanges([[1, 'background-thread-init-1'], [2, 'background-thread-init-2']]);
-    lynxWorkletImpl._hydrateCtx(worklet, firstScreenWorklet);
+    globalThis.lynxWorkletImpl._hydrateCtx(worklet, firstScreenWorklet);
     expect(getFromWorkletRefMap({ _wvid: 1 }).current).toBe('main-thread-set-1');
     expect(getFromWorkletRefMap({ _wvid: 2 }).current).toBe('main-thread-set-2');
   });
@@ -270,23 +270,23 @@ describe('WorkletRef', () => {
       },
     };
     // If the refs are not used in the first screen, they will not be hydrated
-    lynxWorkletImpl._hydrateCtx(worklet, firstScreenWorklet);
+    globalThis.lynxWorkletImpl._hydrateCtx(worklet, firstScreenWorklet);
     expect(getFromWorkletRefMap({ _wvid: 1 })).toBeUndefined();
     expect(getFromWorkletRefMap({ _wvid: 2 })).toBeUndefined();
 
     // If the refs are used in the first screen, they will be hydrated
-    registerWorklet('main-thread', 'ctx1', function() {
+    globalThis.registerWorklet('main-thread', 'ctx1', function() {
       const { ref1, ctx2 } = this._c;
       ref1.current = 'main-thread-set-1';
       ctx2();
     });
-    registerWorklet('main-thread', 'ctx2', function() {
+    globalThis.registerWorklet('main-thread', 'ctx2', function() {
       const { ref2 } = this._c;
       ref2.current = 'main-thread-set-2';
     });
-    runWorklet(firstScreenWorklet, []);
+    globalThis.runWorklet(firstScreenWorklet, []);
     updateWorkletRefInitValueChanges([[1, 'background-thread-init-1'], [2, 'background-thread-init-2']]);
-    lynxWorkletImpl._hydrateCtx(worklet, firstScreenWorklet);
+    globalThis.lynxWorkletImpl._hydrateCtx(worklet, firstScreenWorklet);
     expect(getFromWorkletRefMap({ _wvid: 1 }).current).toBe('main-thread-set-1');
     expect(getFromWorkletRefMap({ _wvid: 2 }).current).toBe('background-thread-init-2');
   });

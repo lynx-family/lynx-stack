@@ -1,18 +1,19 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-declare namespace RuntimeProxy {
-  interface Event {
-    type: string;
-    data: any;
-    origin?: string;
-  }
+
+import type { LynxApi } from '@lynx-js/types';
+
+export interface Event {
+  type: string;
+  data: unknown;
+  origin?: string;
 }
 
-declare class RuntimeProxy {
+export class RuntimeProxy {
   dispatchEvent(event: RuntimeProxy.Event): void;
 
-  postMessage(message: any);
+  postMessage(message: unknown);
 
   addEventListener(type: string, callback: (event: RuntimeProxy.Event) => void);
 
@@ -24,6 +25,8 @@ declare class RuntimeProxy {
   onTriggerEvent(callback: (event: RuntimeProxy.Event) => void);
 }
 
-declare namespace lynx {
-  function getJSContext(): RuntimeProxy;
+declare module '@lynx-js/types' {
+  interface Lynx extends LynxApi {
+    getJSContext(): RuntimeProxy;
+  }
 }
