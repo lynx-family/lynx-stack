@@ -4,7 +4,9 @@
 "@lynx-js/rspeedy": patch
 ---
 
-Support `output.inlineScripts`, which controls whether to inline scripts files when LynxEncodePlugin generates the manifest file.
+Support `output.inlineScripts`, which controls whether to inline scripts into Lynx bundle (`.lynx.bundle`).
+
+Only background thread scripts can remain non-inlined, whereas the main thread script is always inlined.
 
 example:
 
