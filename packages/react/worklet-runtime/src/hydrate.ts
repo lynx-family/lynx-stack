@@ -65,7 +65,7 @@ function hydrateMainThreadRef(refId: WorkletRefId, value: WorkletRefImpl<unknown
   }
   const ref = lynxWorkletImpl!._refImpl._workletRefMap[refId]!;
   if (ref.current instanceof Element) {
-    // Monified by `main-thread:ref`
+    // Modified by `main-thread:ref`
     return;
   }
   ref.current = value.current;
