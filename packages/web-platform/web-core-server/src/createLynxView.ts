@@ -136,7 +136,7 @@ export async function createLynxView(
     <lynx-view url="${hydrateUrl}" ssr ${
       autoSize ? 'height="auto" width="auto"' : ''
     } ${lynxViewStyle ? `style="${lynxViewStyle}"` : ''} ${
-      encodeDataEncoded ? `ssr-encode-data = ${encodeDataEncoded}` : ''
+      encodeDataEncoded ? `ssr-encode-data="${encodeDataEncoded}"` : ''
     }>
       <template shadowrootmode="open">
         <style>${injectStyles}\n${inShadowRootStyles.join('\n')}</style>
