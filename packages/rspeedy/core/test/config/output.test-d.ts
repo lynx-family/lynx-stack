@@ -175,6 +175,15 @@ describe('Config - Output', () => {
     })
   })
 
+  test('output.inlineScripts', () => {
+    assertType<Output>({
+      inlineScripts: true,
+    })
+    assertType<Output>({
+      inlineScripts: false,
+    })
+  })
+
   test('output.legalComments', () => {
     assertType<Output>({
       legalComments: 'inline',

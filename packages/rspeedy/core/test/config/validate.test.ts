@@ -833,6 +833,8 @@ describe('Config Validation', () => {
         { distPath: { image: 'image' } },
         { distPath: { font: 'font' } },
         { distPath: { svg: 'svg' } },
+        { inlineScripts: true },
+        { inlineScripts: false },
         { legalComments: 'inline' },
         { legalComments: 'none' },
         { legalComments: 'linked' },
@@ -1094,6 +1096,16 @@ describe('Config Validation', () => {
           [Error: Invalid configuration.
 
           Unknown property: \`$input.output.distPath.nonExistent\` in configuration
+          ]
+        `)
+
+      expect(() => validate({ output: { inlineScripts: null } }))
+        .toThrowErrorMatchingInlineSnapshot(`
+          [Error: Invalid configuration.
+
+          Invalid config on \`$input.output.inlineScripts\`.
+            - Expect to be (boolean | undefined)
+            - Got: null
           ]
         `)
 

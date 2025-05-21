@@ -198,6 +198,10 @@ export function applyEntry(
     })
 
     if (isLynx) {
+      const inlineScripts = typeof config.output?.inlineScripts === 'boolean'
+        ? config.output.inlineScripts
+        : true
+
       chain
         .plugin(PLUGIN_NAME_RUNTIME_WRAPPER)
         .use(RuntimeWrapperWebpackPlugin, [{
@@ -222,7 +226,7 @@ export function applyEntry(
         }])
         .end()
         .plugin(`${LynxEncodePlugin.name}`)
-        .use(LynxEncodePlugin, [{}])
+        .use(LynxEncodePlugin, [{ inlineScripts }])
         .end()
     }
 

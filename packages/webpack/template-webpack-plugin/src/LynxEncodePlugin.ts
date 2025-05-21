@@ -14,8 +14,10 @@ import type { CSS } from './index.js';
  *
  * @public
  */
-// biome-ignore lint/suspicious/noEmptyInterface: As expected.
-export interface LynxEncodePluginOptions {}
+export interface LynxEncodePluginOptions {
+  encodeBinary?: string;
+  inlineScripts?: boolean;
+}
 
 /**
  * LynxEncodePlugin
@@ -92,6 +94,7 @@ export class LynxEncodePlugin {
   static defaultOptions: Readonly<Required<LynxEncodePluginOptions>> = Object
     .freeze<Required<LynxEncodePluginOptions>>({
       encodeBinary: 'napi',
+      inlineScripts: true,
     });
   /**
    * The entry point of a webpack plugin.
@@ -146,6 +149,19 @@ export class LynxEncodePluginImpl {
         const { encodeData } = args;
         const { manifest } = encodeData;
 
+        let publicPath = '/';
+        if (!this.options.inlineScripts) {
+          if (typeof compilation?.outputOptions.publicPath === 'function') {
+            compilation.errors.push(
+              new compiler.webpack.WebpackError(
+                '`publicPath` as a function is not supported yet.',
+              ),
+            );
+          } else {
+            publicPath = compilation?.outputOptions.publicPath ?? '/';
+          }
+        }
+
         if (!isDebug() && !isDev && !isRsdoctor()) {
           [
             encodeData.lepusCode.root,
@@ -178,18 +194,20 @@ export class LynxEncodePluginImpl {
             Object.keys(manifest)
               .map((name) =>
                 `module.exports=lynx.requireModule('${
-                  this.#formatJSName(name)
+                  this.#formatJSName(name, publicPath)
                 }',globDynamicComponentEntry?globDynamicComponentEntry:'__Card__')`
               )
               .join(','),
             this.#appServiceFooter(),
           ].join(''),
-          ...(Object.fromEntries(
-            Object.entries(manifest).map(([name, source]) => [
-              this.#formatJSName(name),
-              source,
-            ]),
-          )),
+          ...(this.options.inlineScripts
+            ? Object.fromEntries(
+              Object.entries(manifest).map(([name, source]) => [
+                this.#formatJSName(name, publicPath),
+                source,
+              ]),
+            )
+            : {}),
         };
 
         return args;
@@ -230,8 +248,8 @@ export class LynxEncodePluginImpl {
     return amdFooter + loadScriptFooter;
   }
 
-  #formatJSName(name: string): string {
-    return `/${name}`;
+  #formatJSName(name: string, publicPath: string): string {
+    return publicPath + name;
   }
 
   protected options: Required<LynxEncodePluginOptions>;

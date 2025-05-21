@@ -14,6 +14,9 @@ export function applyDefaultRspeedyConfig(config: Config): Config {
       // since some plugin(e.g.: `@lynx-js/qrcode-rsbuild-plugin`) will read
       // from the `output.filename.bundle` field.
       filename: getFilename(config.output?.filename),
+
+      // inlineScripts should be enabled by default
+      inlineScripts: true,
     },
 
     tools: {

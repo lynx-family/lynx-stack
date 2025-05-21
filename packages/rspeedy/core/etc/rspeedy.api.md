@@ -232,6 +232,7 @@ export interface Output {
     distPath?: DistPath | undefined;
     filename?: string | Filename | undefined;
     filenameHash?: boolean | string | undefined;
+    inlineScripts?: boolean | undefined;
     legalComments?: 'none' | 'inline' | 'linked' | undefined;
     minify?: Minify | boolean | undefined;
     sourceMap?: boolean | SourceMap | undefined;
