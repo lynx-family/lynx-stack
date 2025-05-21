@@ -136,6 +136,14 @@ export class OffscreenDocument extends OffscreenNode {
       }
     }
   };
+  /**
+   * Converts the OffscreenDocument instance to a JSON string.
+   * Currently, this method returns an empty string as a placeholder.
+   * This behavior may be updated in the future to provide a meaningful
+   * JSON representation of the OffscreenDocument.
+   * 
+   * @returns {string} An empty string.
+   */
   toJSON(): string {
     return '';
   }
