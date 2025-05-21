@@ -47,6 +47,16 @@ interface CssExtractRspackPluginOptions
    * plugins passed to parser
    */
   cssPlugins: Parameters<typeof LynxTemplatePlugin.convertCSSChunksToMap>[1];
+
+  /**
+   * The name of non-initial CSS chunk files
+   */
+  chunkFilename?: string;
+
+  /**
+   * The name of each output bundle.
+   */
+  filename?: string;
 }
 
 const require = createRequire(import.meta.url);
