@@ -7,7 +7,7 @@ import { queryCSSProperty } from './cssPropertyMap.js';
 import { decodeCssInJs } from '../../utils/decodeCssInJs.js';
 import {
   transformInlineStyleString,
-  transfromParsedStyles,
+  transformParsedStyles,
 } from './transformInlineStyle.js';
 import {
   elementToRuntimeInfoMap,
@@ -82,7 +82,7 @@ export function createStyleFunctions(
     if (!valueStr) { // null or undefined
       element.style.removeProperty(dashName);
     } else {
-      const { transformedStyle } = transfromParsedStyles([[
+      const { transformedStyle } = transformParsedStyles([[
         dashName,
         valueStr,
       ]]);
@@ -99,7 +99,7 @@ export function createStyleFunctions(
     if (!value) return;
     const { transformedStyle } = typeof value === 'string'
       ? transformInlineStyleString(value)
-      : transfromParsedStyles(
+      : transformParsedStyles(
         Object.entries(value).map(([k, value]) => [
           hyphenateStyleName(k),
           value,

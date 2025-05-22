@@ -182,7 +182,7 @@ export function Component<T extends WebComponentClass>(
       }
 
       #connected = false;
-      /** handel custom element life-cycles */
+      /** handle custom element life-cycles */
       override attributeChangedCallback(
         name: string,
         oldValue: null | string,

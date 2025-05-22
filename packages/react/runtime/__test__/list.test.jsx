@@ -1140,7 +1140,7 @@ describe(`list componentAtIndex`, () => {
       expect(component[5]).toBe(component[3]);
     }
 
-    // reuse-identifier should not be visiable from element
+    // reuse-identifier should not be visible from element
     expect(__FirstElement(listRef)).toMatchInlineSnapshot(`
       <list-item
         item-key="2"

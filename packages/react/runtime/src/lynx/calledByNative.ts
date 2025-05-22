@@ -86,7 +86,7 @@ function renderPage(data: any): void {
   renderMainThread();
 
   // always call this before `__FlushElementTree`
-  // (There is an implict `__FlushElementTree` in `renderPage`)
+  // (There is an implicit `__FlushElementTree` in `renderPage`)
   __pendingListUpdates.flush();
 
   if (__FIRST_SCREEN_SYNC_TIMING__ === 'immediately') {

@@ -52,7 +52,7 @@ export type INapiModulesCall = (
  * @event error lynx card fired an error
  *
  * @example
- * HTML Exmaple
+ * HTML Example
  *
  * Note that you should declarae the size of lynx-view
  *
@@ -64,7 +64,7 @@ export type INapiModulesCall = (
  * React 19 Example
  * ```jsx
  * <lynx-view url={myLynxCardUrl} rawData={{}} globalProps={{}} style={{height:'300px', width:'300px'}}>
- * </lynx-vew>
+ * </lynx-view>
  * ```
  */
 export class LynxView extends HTMLElement {
