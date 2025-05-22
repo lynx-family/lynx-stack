@@ -247,6 +247,15 @@ impl DynamicPart {
             element_index: Expr = i32_to_expr(element_index),
             ns: Expr = Expr::Lit(Lit::Str(ns.clone().into())),
           ),
+          AttrName::SimpleStyle => quote!(
+            "function (ctx) {
+              if (ctx.__elements) {
+                $runtime_id.updateSimpleStyle(ctx, ctx.__values[$exp_index]);
+              }
+            }" as Expr,
+            runtime_id: Expr = runtime_id.clone(),
+            exp_index: Expr = i32_to_expr(&exp_index),
+          ),
         },
         DynamicPart::Spread(_, element_index) => quote!(
           "(snapshot, index, oldValue) => $runtime_id.updateSpread(snapshot, index, oldValue, $element_index)" as Expr,
@@ -278,13 +287,19 @@ where
   dynamic_parts: Vec<DynamicPart>,
   dynamic_part_visitor: &'a mut V,
   key: Option<JSXAttrValue>,
+  enable_simple_styling: bool,
 }
 
 impl<'a, V> DynamicPartExtractor<'a, V>
 where
   V: VisitMut,
 {
-  fn new(runtime_id: Expr, dynamic_part_count: i32, dynamic_part_visitor: &'a mut V) -> Self {
+  fn new(
+    runtime_id: Expr,
+    dynamic_part_count: i32,
+    dynamic_part_visitor: &'a mut V,
+    enable_simple_styling: bool,
+  ) -> Self {
     DynamicPartExtractor {
       page_id: Lazy::new(|| private_ident!("pageId")),
       runtime_id,
@@ -298,6 +313,7 @@ where
       dynamic_parts: vec![],
       dynamic_part_visitor,
       key: None,
+      enable_simple_styling,
     }
   }
 
@@ -871,6 +887,104 @@ where
                     AttrName::Gesture(..) => {
                       unreachable!("A gesture should have an attribute namespace.")
                     }
+                    AttrName::SimpleStyle => {
+                      if !self.enable_simple_styling {
+                        HANDLER.with(|handler| {
+                          handler
+                          .struct_span_warn(
+                              attr_or_spread.span(),
+                              "`simpleStyle` attribute is only supported in simple styling mode, please enable it by setting `enableSimpleStyling: true` in the pluginReactLynx.",
+                            )
+                          .emit();
+                        });
+                        return;
+                      }
+                      let mut not_an_array = false;
+                      match value {
+                        None => {}
+                        Some(JSXAttrValue::JSXExprContainer(JSXExprContainer {
+                          expr: JSXExpr::Expr(expr),
+                          ..
+                        })) => match &**expr {
+                          Expr::Array(array) => {
+                            let mut static_styles = vec![];
+                            let mut dynamic_styles = vec![];
+                            for elem in &array.elems {
+                              if let Some(ExprOrSpread { expr,.. }) = elem {
+                                if let Expr::Member(_) = &**expr {
+                                  static_styles.push(Some(ExprOrSpread {
+                                    expr: expr.clone(),
+                                    spread: None,
+                                  }));
+                                } else {
+                                  dynamic_styles.push(Some(ExprOrSpread {
+                                    expr: expr.clone(),
+                                    spread: None,
+                                  }));
+                                }
+                              }
+                            }
+
+                            if dynamic_styles.len() > 0 {
+                              self.dynamic_parts.push(DynamicPart::Attr(
+                                Expr::Array(ArrayLit {
+                                  span: DUMMY_SP,
+                                  elems: dynamic_styles.clone()
+                                }),
+                                self.element_index,
+                                attr_name.clone(),
+                              ))
+                            }
+                            let stmt = quote!(
+                              // `__DefineSimpleStyle` is a placeholder, and it will be replaced
+                              // by actual Simple Styling PAPIs in the swc_plugin_simple_styling plugin.
+                              r#"__DefineSimpleStyle($si_id, $element, $value);"# as Stmt,
+                              si_id = self.si_id.clone(),
+                              element: Expr = el.clone(),
+                              value: Expr = Expr::Array(ArrayLit {
+                                span: DUMMY_SP,
+                                // merge `static_styles` and `dynamic_styles`
+                                // note that we extract all static styles
+                                // to the front of the array, it makes 
+                                // handling dynamic styles easier.
+                                // it is based on the assumption that no
+                                // duplicate style property is allowed.
+                                elems: static_styles
+                                  .clone()
+                                  .into_iter()
+                                  .chain(dynamic_styles.into_iter())
+                                  .collect::<Vec<_>>()
+                              })
+                            );
+                            self.static_stmts.push(RefCell::new(stmt));
+                          },
+                          _ => {
+                            not_an_array = true;
+                          }
+                        },
+                        Some(JSXAttrValue::JSXExprContainer(JSXExprContainer {
+                          expr: JSXExpr::JSXEmptyExpr(_),
+                          ..
+                        })) => {
+                          not_an_array = true;
+                        },
+                        Some(JSXAttrValue::Lit(_)) => {
+                          not_an_array = true;
+                        },
+                        Some(JSXAttrValue::JSXElement(_)) => unreachable!(),
+                        Some(JSXAttrValue::JSXFragment(_)) => unreachable!(),
+                      }
+                      if not_an_array {
+                        HANDLER.with(|handler| {
+                          handler
+                            .struct_span_err(
+                              value.span(),
+                              "simpleStyle should be an array",
+                            )
+                            .emit();
+                        });
+                      }
+                    }
                   }
                 }
                 JSXAttrName::JSXNamespacedName(JSXNamespacedName { ns, name, .. }) => {
@@ -1100,6 +1214,8 @@ pub struct JSXTransformerConfig {
   pub target: TransformTarget,
   /// @internal
   pub is_dynamic_component: Option<bool>,
+  /// @internal
+  pub enable_simple_styling: bool,
 }
 
 impl Default for JSXTransformerConfig {
@@ -1111,6 +1227,7 @@ impl Default for JSXTransformerConfig {
       filename: Default::default(),
       target: TransformTarget::LEPUS,
       is_dynamic_component: Some(false),
+      enable_simple_styling: false,
     }
   }
 }
@@ -1305,6 +1422,7 @@ where
       self.runtime_id.clone(),
       wrap_dynamic_part.dynamic_part_count,
       self,
+      self.cfg.enable_simple_styling,
     );
 
     node.visit_mut_with(&mut dynamic_part_extractor);
@@ -2964,6 +3082,81 @@ aaaaa
       <text key={hello}>{hello}</text>
       <text key="hello">{hello}</text>
     </view>
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    |t| visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
+      super::JSXTransformerConfig {
+        preserve_jsx: true,
+        enable_simple_styling: true,
+        ..Default::default()
+      },
+      t.cm.clone(),
+      None,
+      Mark::new(),
+      Mark::new(),
+      TransformMode::Test,
+    )),
+    should_tranform_simple_style_attr,
+    // Input codes
+    r#"
+    import { SimpleStyleSheet } from '@lynx-js/react'
+
+    const styles = SimpleStyleSheet.create({
+      static1: {
+        width: '100px',
+        height: '100px',
+      },
+      static2: {
+        backgroundColor: 'blue',
+        color: 'green',
+      },
+      static3: {
+        textAlign: 'center',
+        display: 'flex'
+      },
+      conditional1: {
+        borderBottomWidth: '1px',
+        borderBottomColor: 'red',
+        borderBottomStyle: 'solid',
+      },
+      conditional2: {
+        borderTopWidth: '1px',
+        borderTopColor: 'red',
+        borderTopStyle: 'solid',
+      },
+      dynamic: (color, size) => ({
+        borderLeftColor: color,
+        borderLeftWidth: '1px',
+        borderLeftStyle: 'solid',
+        paddingTop: size,
+      })
+    })
+
+    function ComponentWithSimpleStyle({
+      condition1,
+      condition2,
+      dynamicStyleArgs,
+    }) {
+      return (
+        <view simpleStyle={[
+          styles.static1,
+          condition1 && styles.conditional1,
+          styles.static2,
+          styles.dynamic(...dynamicStyleArgs),
+          condition2 && styles.conditional2,
+          styles.static3,
+        ]}
+        />
+      )
+    }
+
     "#
   );
 }

@@ -25,6 +25,7 @@ export default function jsxLoader(source) {
       jsxImportSource: runtimePkgName,
       filename: relativePath,
       target: 'MIXED',
+      enableSimpleStyling: false,
     },
     // snapshot: true,
     directiveDCE: false,
@@ -38,6 +39,7 @@ export default function jsxLoader(source) {
     },
     refresh: false,
     cssScope: false,
+    simpleStyling: false,
   });
 
   if (result.errors.length > 0) {

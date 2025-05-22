@@ -21,6 +21,7 @@ pub enum AttrName {
   WorkletRef(/* worklet_type */ String),
   ListItemPlatformInfo,
   Gesture(String),
+  SimpleStyle,
 }
 
 impl From<String> for AttrName {
@@ -31,6 +32,8 @@ impl From<String> for AttrName {
       AttrName::Class
     } else if name == "style" {
       AttrName::Style
+    } else if name == "simpleStyle" {
+      AttrName::SimpleStyle
     } else if name == "id" {
       AttrName::ID
     } else if name == "ref" {

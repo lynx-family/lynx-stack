@@ -17,6 +17,7 @@ export function applyLoaders(
     jsx,
     shake,
     defineDCE,
+    enableSimpleStyling,
 
     experimental_isLazyBundle,
   } = options
@@ -67,6 +68,7 @@ export function applyLoaders(
           isDynamicComponent: experimental_isLazyBundle,
           inlineSourcesContent,
           defineDCE,
+          enableSimpleStyling,
         })
       .end()
 
@@ -107,6 +109,7 @@ export function applyLoaders(
           isDynamicComponent: experimental_isLazyBundle,
           shake,
           defineDCE,
+          enableSimpleStyling,
         })
       .end()
 

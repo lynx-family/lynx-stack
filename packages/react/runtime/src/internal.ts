@@ -31,6 +31,7 @@ export { updateWorkletEvent } from './snapshot/workletEvent.js';
 export { updateWorkletRef } from './snapshot/workletRef.js';
 export { updateGesture } from './snapshot/gesture.js';
 export { updateListItemPlatformInfo } from './snapshot/platformInfo.js';
+export { updateSimpleStyle } from './snapshot/simple-styling.js';
 
 export {
   options,

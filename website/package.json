@@ -25,6 +25,7 @@
     "@lynx-js/react": "workspace:*",
     "@lynx-js/react-refresh-webpack-plugin": "workspace:*",
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
+    "@lynx-js/react-simple-styling-webpack-plugin": "workspace:*",
     "@lynx-js/react-webpack-plugin": "workspace:*",
     "@lynx-js/rspeedy": "workspace:*",
     "@lynx-js/runtime-wrapper-webpack-plugin": "workspace:*",
