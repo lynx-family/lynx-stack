@@ -835,6 +835,24 @@ describe('Config Validation', () => {
         { distPath: { svg: 'svg' } },
         { inlineScripts: true },
         { inlineScripts: false },
+        { inlineScripts: /[\\/]background\.\w+\.js$/ },
+        {
+          inlineScripts: ({ size }) => {
+            return size < 10 * 1000
+          },
+        },
+        {
+          inlineScripts: {
+            enable: 'auto',
+            test: /[\\/]background\.\w+\.js$/,
+          },
+        },
+        {
+          inlineScripts: {
+            enable: true,
+            test: /[\\/]background\.\w+\.js$/,
+          },
+        },
         { legalComments: 'inline' },
         { legalComments: 'none' },
         { legalComments: 'linked' },
