@@ -15,7 +15,6 @@ import type { CSS } from './index.js';
  * @public
  */
 export interface LynxEncodePluginOptions {
-  encodeBinary?: string;
   inlineScripts?: boolean;
 }
 
@@ -93,7 +92,6 @@ export class LynxEncodePlugin {
    */
   static defaultOptions: Readonly<Required<LynxEncodePluginOptions>> = Object
     .freeze<Required<LynxEncodePluginOptions>>({
-      encodeBinary: 'napi',
       inlineScripts: true,
     });
   /**
