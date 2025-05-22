@@ -84,7 +84,13 @@ export class WebWebpackPlugin {
               styleInfo: encodeOptions['styleInfo'],
               manifest: encodeOptions.manifest,
               cardType: encodeOptions['cardType'],
-              pageConfig: encodeOptions.compilerOptions,
+              pageConfig: {
+                ...encodeOptions.compilerOptions,
+                ...((encodeOptions['sourceContent'] || {}) as Record<
+                  string,
+                  Record<string, string> | undefined
+                >)['config'],
+              },
               lepusCode: {
                 // flatten the lepusCode to a single object
                 ...encodeOptions.lepusCode.lepusChunk,
