@@ -173,7 +173,7 @@
     "/patches",
     "/pnpm-lock.yaml",
     ".github/renovate.json5",
-    ".typos.toml"
+    ".typos.toml",
   ],
   "enableFiletypes": [
     "mdx",
