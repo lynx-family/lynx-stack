@@ -73,7 +73,10 @@ export class WebEncodePlugin {
             },
             customSections: encodeData.customSections,
             cardType: encodeData.sourceContent.dsl.substring(0, 5),
-            pageConfig: encodeData.compilerOptions,
+            pageConfig: {
+              ...encodeData.compilerOptions,
+              ...encodeData.sourceContent.config,
+            },
           });
           return encodeOptions;
         });
@@ -87,7 +90,7 @@ export class WebEncodePlugin {
               styleInfo: encodeOptions['styleInfo'],
               manifest: encodeOptions.manifest,
               cardType: encodeOptions['cardType'],
-              pageConfig: encodeOptions.compilerOptions,
+              pageConfig: encodeOptions['pageConfig'],
               lepusCode: {
                 // flatten the lepusCode to a single object
                 ...encodeOptions.lepusCode.lepusChunk,
