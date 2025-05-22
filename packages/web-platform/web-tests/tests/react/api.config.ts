@@ -10,7 +10,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const reactBasicCases = await Array.fromAsync(glob(
-  path.join(__dirname, 'basic-*', 'index.jsx'),
+  path.join(__dirname, 'api-*', 'index.jsx'),
 ));
 
 const _default_1: Config = defineConfig({

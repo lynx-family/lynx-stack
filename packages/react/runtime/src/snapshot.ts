@@ -181,6 +181,10 @@ export const backgroundSnapshotInstanceManager: {
   },
 };
 
+export function entryUniqID(uniqID: string, entryName?: string): string {
+  return entryName ? `${entryName}:${uniqID}` : uniqID;
+}
+
 export function createSnapshot(
   uniqID: string,
   create: Snapshot['create'] | null,
@@ -194,7 +198,7 @@ export function createSnapshot(
     // `__globalSnapshotPatch` does not exist before hydration,
     // so the snapshot of the first screen will not be sent to the main thread.
     && __globalSnapshotPatch
-    && !snapshotManager.values.has(uniqID)
+    && !snapshotManager.values.has(entryUniqID(uniqID, entryName))
     // `create` may be `null` when loading a lazy bundle after hydration.
     && create !== null
   ) {
@@ -215,9 +219,7 @@ export function createSnapshot(
     );
   }
 
-  if (entryName) {
-    uniqID = `${entryName}:${uniqID}`;
-  }
+  uniqID = entryUniqID(uniqID, entryName);
 
   const s: Snapshot = { create, update, slot, cssId, entryName };
   snapshotManager.values.set(uniqID, s);

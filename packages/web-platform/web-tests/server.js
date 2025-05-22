@@ -7,7 +7,7 @@ const __dirname = path.dirname(__filename);
 export async function loadTemplate(caseName) {
   return JSON.parse(
     await readFile(
-      path.join(__dirname, 'dist', caseName, 'index.web.json'),
+      path.join(__dirname, 'dist', 'ssr', caseName, 'index.web.json'),
       'utf-8',
     ),
   );

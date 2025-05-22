@@ -13,7 +13,13 @@
  * order and with proper error handling.
  */
 
-import { SnapshotInstance, createSnapshot, snapshotInstanceManager, snapshotManager } from '../../snapshot.js';
+import {
+  SnapshotInstance,
+  createSnapshot,
+  entryUniqID,
+  snapshotInstanceManager,
+  snapshotManager,
+} from '../../snapshot.js';
 import type { SnapshotPatch } from './snapshotPatch.js';
 import { SnapshotOperation } from './snapshotPatch.js';
 
@@ -94,7 +100,7 @@ export function snapshotPatchApply(snapshotPatch: SnapshotPatch): void {
           const cssId: number = snapshotPatch[++i] ?? 0;
           const entryName: string | undefined = snapshotPatch[++i];
 
-          if (!snapshotManager.values.has(uniqID)) {
+          if (!snapshotManager.values.has(entryUniqID(uniqID, entryName))) {
             // HMR-related
             // Update the evaluated snapshots from JS.
             createSnapshot(

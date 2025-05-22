@@ -79,9 +79,7 @@ export class LynxEncodePlugin {
 // @public
 export interface LynxEncodePluginOptions {
     // (undocumented)
-    encodeBinary?: string;
-    // (undocumented)
-    inlineScripts?: boolean;
+    inlineScripts?: boolean | undefined;
 }
 
 // @public

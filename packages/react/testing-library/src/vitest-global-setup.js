@@ -129,6 +129,14 @@ globalThis.onInjectBackgroundThreadGlobals = (target) => {
   injectTt();
   globalThis.lynxCoreInject = oldLynxCoreInject;
 
+  target.lynx.requireModuleAsync = async (url, callback) => {
+    try {
+      callback(null, await __vite_ssr_dynamic_import__(url));
+    } catch (err) {
+      callback(err, null);
+    }
+  };
+
   // re-init global snapshot patch to undefined
   deinitGlobalSnapshotPatch();
   clearCommitTaskId();
