@@ -1,7 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type { Rspack } from '@rsbuild/core'
+import type { InlineChunkConfig, Rspack } from '@rsbuild/core'
 
 import type { CssModules } from './css-modules.js'
 import type { DistPath } from './dist-path.js'
@@ -323,7 +323,7 @@ export interface Output {
    * })
    * ```
    */
-  inlineScripts?: boolean | undefined
+  inlineScripts?: InlineChunkConfig | undefined
 
   /**
    * The {@link Output.legalComments} controls how to handle the legal comment.
