@@ -1748,13 +1748,13 @@ mod tests {
 
       (
         resolver(unresolved_mark, top_level_mark, true),
-        visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
+        visit_mut_pass(JSXTransformer::new(
           super::JSXTransformerConfig {
             preserve_jsx: true,
             ..Default::default()
           },
           t.cm.clone(),
-          None,
+          Some(t.comments.clone()),
           top_level_mark,
           unresolved_mark,
           TransformMode::Test,
@@ -1782,13 +1782,13 @@ mod tests {
 
       (
         resolver(unresolved_mark, top_level_mark, true),
-        visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
+        visit_mut_pass(JSXTransformer::new(
           super::JSXTransformerConfig {
             preserve_jsx: true,
             ..Default::default()
           },
           t.cm.clone(),
-          None,
+          Some(t.comments.clone()),
           top_level_mark,
           unresolved_mark,
           TransformMode::Test,
@@ -1812,13 +1812,13 @@ mod tests {
 
       (
         resolver(unresolved_mark, top_level_mark, true),
-        visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
+        visit_mut_pass(JSXTransformer::new(
           super::JSXTransformerConfig {
             preserve_jsx: true,
             ..Default::default()
           },
           t.cm.clone(),
-          None,
+          Some(t.comments.clone()),
           top_level_mark,
           unresolved_mark,
           TransformMode::Test,
@@ -1843,13 +1843,13 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |t| visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
+    |t| visit_mut_pass(JSXTransformer::new(
       super::JSXTransformerConfig {
         preserve_jsx: true,
         ..Default::default()
       },
       t.cm.clone(),
-      None,
+      Some(t.comments.clone()),
       Mark::new(),
       Mark::new(),
       TransformMode::Test,
@@ -1869,13 +1869,13 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |t| visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
+    |t| visit_mut_pass(JSXTransformer::new(
       super::JSXTransformerConfig {
         preserve_jsx: true,
         ..Default::default()
       },
       t.cm.clone(),
-      None,
+      Some(t.comments.clone()),
       Mark::new(),
       Mark::new(),
       TransformMode::Test,
@@ -1898,13 +1898,13 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |t| visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
+    |t| visit_mut_pass(JSXTransformer::new(
       super::JSXTransformerConfig {
         preserve_jsx: true,
         ..Default::default()
       },
       t.cm.clone(),
-      None,
+      Some(t.comments.clone()),
       Mark::new(),
       Mark::new(),
       TransformMode::Development,
@@ -1927,13 +1927,13 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |t| visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
+    |t| visit_mut_pass(JSXTransformer::new(
       super::JSXTransformerConfig {
         preserve_jsx: true,
         ..Default::default()
       },
       t.cm.clone(),
-      None,
+      Some(t.comments.clone()),
       Mark::new(),
       Mark::new(),
       TransformMode::Test,
@@ -1956,13 +1956,13 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |t| visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
+    |t| visit_mut_pass(JSXTransformer::new(
       super::JSXTransformerConfig {
         preserve_jsx: true,
         ..Default::default()
       },
       t.cm.clone(),
-      None,
+      Some(t.comments.clone()),
       Mark::new(),
       Mark::new(),
       TransformMode::Test
@@ -2083,13 +2083,13 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |t| visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
+    |t| visit_mut_pass(JSXTransformer::new(
       super::JSXTransformerConfig {
         preserve_jsx: true,
         ..Default::default()
       },
       t.cm.clone(),
-      None,
+      Some(t.comments.clone()),
       Mark::new(),
       Mark::new(),
       TransformMode::Test
@@ -2109,13 +2109,13 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |t| visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
+    |t| visit_mut_pass(JSXTransformer::new(
       super::JSXTransformerConfig {
         preserve_jsx: true,
         ..Default::default()
       },
       t.cm.clone(),
-      None,
+      Some(t.comments.clone()),
       Mark::new(),
       Mark::new(),
       TransformMode::Test
@@ -2136,13 +2136,13 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |t| visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
+    |t| visit_mut_pass(JSXTransformer::new(
       super::JSXTransformerConfig {
         preserve_jsx: true,
         ..Default::default()
       },
       t.cm.clone(),
-      None,
+      Some(t.comments.clone()),
       Mark::new(),
       Mark::new(),
       TransformMode::Test
@@ -2173,13 +2173,13 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |t| visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
+    |t| visit_mut_pass(JSXTransformer::new(
       super::JSXTransformerConfig {
         preserve_jsx: true,
         ..Default::default()
       },
       t.cm.clone(),
-      None,
+      Some(t.comments.clone()),
       Mark::new(),
       Mark::new(),
       TransformMode::Test
@@ -2202,13 +2202,13 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |t| visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
+    |t| visit_mut_pass(JSXTransformer::new(
       super::JSXTransformerConfig {
         preserve_jsx: true,
         ..Default::default()
       },
       t.cm.clone(),
-      None,
+      Some(t.comments.clone()),
       Mark::new(),
       Mark::new(),
       TransformMode::Test
@@ -2274,13 +2274,13 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |t| visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
+    |t| visit_mut_pass(JSXTransformer::new(
       super::JSXTransformerConfig {
         preserve_jsx: true,
         ..Default::default()
       },
       t.cm.clone(),
-      None,
+      Some(t.comments.clone()),
       Mark::new(),
       Mark::new(),
       TransformMode::Test
@@ -2308,13 +2308,13 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |t| visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
+    |t| visit_mut_pass(JSXTransformer::new(
       super::JSXTransformerConfig {
         preserve_jsx: true,
         ..Default::default()
       },
       t.cm.clone(),
-      None,
+      Some(t.comments.clone()),
       Mark::new(),
       Mark::new(),
       TransformMode::Test
@@ -2892,13 +2892,13 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |t| visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
+    |t| visit_mut_pass(JSXTransformer::new(
       super::JSXTransformerConfig {
         preserve_jsx: true,
         ..Default::default()
       },
       t.cm.clone(),
-      None,
+      Some(t.comments.clone()),
       Mark::new(),
       Mark::new(),
       TransformMode::Test,
@@ -2945,13 +2945,13 @@ aaaaa
       jsx: true,
       ..Default::default()
     }),
-    |t| visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
+    |t| visit_mut_pass(JSXTransformer::new(
       super::JSXTransformerConfig {
         preserve_jsx: true,
         ..Default::default()
       },
       t.cm.clone(),
-      None,
+      Some(t.comments.clone()),
       Mark::new(),
       Mark::new(),
       TransformMode::Test,
