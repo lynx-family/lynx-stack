@@ -5,14 +5,12 @@ import {
   OperationType,
   type ElementOperation,
 } from '../types/ElementOperation.js';
-import { styleMapSymbol } from './OffscreenCSSStyleDeclaration.js';
 import {
   _attributes,
   _children,
   ancestorDocument,
   innerHTML,
   OffscreenElement,
-  uniqueId,
 } from './OffscreenElement.js';
 import {
   eventPhase,
@@ -76,15 +74,6 @@ export class OffscreenDocument extends OffscreenElement {
     const currentOperations = this[operations];
     this[operations] = [];
     this._callbacks.onCommit(currentOperations);
-  }
-
-  override append(element: OffscreenElement) {
-    this[operations].push({
-      type: OperationType.Append,
-      uid: 0,
-      cid: [element[uniqueId]],
-    });
-    super.append(element);
   }
 
   createElement(tagName: string): OffscreenElement {
@@ -156,18 +145,12 @@ function getInnerHTMLImpl(
   const localName = element.localName;
   buffer.push('<');
   buffer.push(localName);
-  for (const [key, value] of Object.entries(element[_attributes])) {
+  for (const [key, value] of element[_attributes]) {
     buffer.push(' ');
     buffer.push(key);
     buffer.push('="');
     buffer.push(value);
     buffer.push('"');
-  }
-
-  const cssText = Array.from(element.style[styleMapSymbol].entries())
-    .map(([key, value]) => `${key}: ${value};`).join('');
-  if (cssText) {
-    buffer.push(' style="', cssText, '"');
   }
 
   buffer.push('>');

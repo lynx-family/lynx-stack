@@ -11,7 +11,7 @@ import { OperationType } from '../types/ElementOperation.js';
 
 export const ancestorDocument = Symbol('ancestorDocument');
 export const _attributes = Symbol('_attributes');
-export const _children = Symbol('[_children]');
+export const _children = Symbol('_children');
 export const innerHTML = Symbol('innerHTML');
 export const uniqueId = Symbol('uniqueId');
 const _style = Symbol('_style');
@@ -177,12 +177,11 @@ export class OffscreenElement extends EventTarget {
   }
 
   remove(): void {
-    if (this.parentElement) {
-      this[ancestorDocument][operations].push({
-        type: OperationType.Remove,
-        uid: this[uniqueId],
-      });
-    }
+    this[ancestorDocument][operations].push({
+      type: OperationType.Remove,
+      uid: this[uniqueId],
+    });
+    this._remove();
   }
 
   insertBefore(
