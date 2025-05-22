@@ -112,7 +112,6 @@ export interface LynxTemplatePluginOptions {
     enableNewGesture: boolean;
     enableParallelElement?: boolean;
     enableRemoveCSSScope: boolean;
-    encodeBinary?: 'napi' | 'wasm';
     excludeChunks?: string[];
     // @alpha
     experimental_isLazyBundle?: boolean;

@@ -284,15 +284,6 @@ export interface LynxTemplatePluginOptions {
   defaultOverflowVisible?: boolean;
 
   /**
-   * `encodeBinary` is used to specify the binary of the template encoder.
-   *
-   * @defaultValue `napi`
-   *
-   * @public
-   */
-  encodeBinary?: 'napi' | 'wasm';
-
-  /**
    * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.experimental_isLazyBundle}
    *
    * @alpha
@@ -408,7 +399,6 @@ export class LynxTemplatePlugin {
       defaultOverflowVisible: true,
       removeDescendantSelectorScope: false,
       dsl: 'react_nodiff',
-      encodeBinary: 'napi',
 
       experimental_isLazyBundle: false,
       cssPlugins: [],
