@@ -1416,7 +1416,7 @@ where
       })
     };
 
-    let mut snapshot_create_call = quote!(
+    let snapshot_create_call = quote!(
         r#"$runtime_id.createSnapshot(
              $snapshot_uid,
              $snapshot_creator,
@@ -1446,18 +1446,6 @@ where
         },
         // has_multi_children: Expr = Expr::Lit(Lit::Num(Number { span: DUMMY_SP, value: wrap_dynamic_part.dynamic_part_count as f64, raw: None })),
     );
-
-    snapshot_create_call = match snapshot_create_call {
-      Expr::Call(mut call) => {
-        let pure_span = Span::dummy_with_cmt();
-        self.comments.add_pure_comment(pure_span.lo);
-        call.span = pure_span;
-        Expr::Call(call)
-      }
-      _ => {
-        unreachable!("Unexpected expression type in snapshot creation - expected Call expression")
-      }
-    };
 
     let snapshot_def = ModuleItem::Stmt(quote!(
         r#"const $snapshot_id = $snapshot_create_call"#
