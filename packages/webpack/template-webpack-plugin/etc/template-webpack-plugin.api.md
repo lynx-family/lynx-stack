@@ -79,7 +79,7 @@ export class LynxEncodePlugin {
 // @public
 export interface LynxEncodePluginOptions {
     // (undocumented)
-    inlineScripts?: boolean;
+    inlineScripts?: boolean | undefined;
 }
 
 // @public

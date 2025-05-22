@@ -15,7 +15,7 @@ import type { CSS } from './index.js';
  * @public
  */
 export interface LynxEncodePluginOptions {
-  inlineScripts?: boolean;
+  inlineScripts?: boolean | undefined;
 }
 
 /**
