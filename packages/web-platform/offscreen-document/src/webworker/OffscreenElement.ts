@@ -173,7 +173,7 @@ export class OffscreenElement extends EventTarget {
   }
 
   getAttributeNames(): string[] {
-    return Object.keys(this[_attributes]);
+    return [...this[_attributes].keys()];
   }
 
   remove(): void {
