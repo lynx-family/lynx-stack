@@ -1279,7 +1279,7 @@ where
 mod tests {
   use napi::Either;
   use swc_core::{
-    common::{comments::SingleThreadedComments, Mark},
+    common::Mark,
     ecma::{
       parser::{EsSyntax, Syntax},
       transforms::{
@@ -1299,9 +1299,12 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| (
+    |t| (
       resolver(Mark::new(), Mark::new(), true),
-      visit_mut_pass(CompatVisitor::<&SingleThreadedComments>::default()),
+      visit_mut_pass(CompatVisitor::new(
+        CompatVisitorConfig::default(),
+        Some(t.comments.clone())
+      )),
       hygiene_with_config(Default::default()),
     ),
     should_rename_view,
@@ -1317,9 +1320,12 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| (
+    |t| (
       resolver(Mark::new(), Mark::new(), true),
-      visit_mut_pass(CompatVisitor::<&SingleThreadedComments>::default()),
+      visit_mut_pass(CompatVisitor::new(
+        CompatVisitorConfig::default(),
+        Some(t.comments.clone())
+      )),
       hygiene_with_config(Default::default()),
     ),
     should_not_rename_view_in_scope,
@@ -1342,9 +1348,12 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| (
+    |t| (
       resolver(Mark::new(), Mark::new(), true),
-      visit_mut_pass(CompatVisitor::<&SingleThreadedComments>::default()),
+      visit_mut_pass(CompatVisitor::new(
+        CompatVisitorConfig::default(),
+        Some(t.comments.clone())
+      )),
       hygiene_with_config(Default::default()),
     ),
     should_not_rename_view_redeclaration,
@@ -1363,9 +1372,12 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| (
+    |t| (
       resolver(Mark::new(), Mark::new(), true),
-      visit_mut_pass(CompatVisitor::<&SingleThreadedComments>::default()),
+      visit_mut_pass(CompatVisitor::new(
+        CompatVisitorConfig::default(),
+        Some(t.comments.clone())
+      )),
       hygiene_with_config(Default::default()),
     ),
     should_not_handle_jsx_member_expression,
@@ -1381,9 +1393,12 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| (
+    |t| (
       resolver(Mark::new(), Mark::new(), true),
-      visit_mut_pass(CompatVisitor::<&SingleThreadedComments>::default()),
+      visit_mut_pass(CompatVisitor::new(
+        CompatVisitorConfig::default(),
+        Some(t.comments.clone())
+      )),
       hygiene_with_config(Default::default()),
     ),
     should_transform_event_props_1,
@@ -1399,9 +1414,12 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| (
+    |t| (
       resolver(Mark::new(), Mark::new(), true),
-      visit_mut_pass(CompatVisitor::<&SingleThreadedComments>::default()),
+      visit_mut_pass(CompatVisitor::new(
+        CompatVisitorConfig::default(),
+        Some(t.comments.clone())
+      )),
       hygiene_with_config(Default::default()),
     ),
     should_transform_event_props_2,
@@ -1416,9 +1434,12 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| (
+    |t| (
       resolver(Mark::new(), Mark::new(), true),
-      visit_mut_pass(CompatVisitor::<&SingleThreadedComments>::default()),
+      visit_mut_pass(CompatVisitor::new(
+        CompatVisitorConfig::default(),
+        Some(t.comments.clone())
+      )),
       hygiene_with_config(Default::default()),
     ),
     should_handle_recursive,
@@ -1439,9 +1460,12 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| (
+    |t| (
       resolver(Mark::new(), Mark::new(), true),
-      visit_mut_pass(CompatVisitor::<&SingleThreadedComments>::default()),
+      visit_mut_pass(CompatVisitor::new(
+        CompatVisitorConfig::default(),
+        Some(t.comments.clone())
+      )),
       hygiene_with_config(Default::default()),
     ),
     should_change_runtime_pkg,
@@ -1456,14 +1480,14 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| (
+    |t| (
       resolver(Mark::new(), Mark::new(), true),
-      visit_mut_pass(CompatVisitor::<&SingleThreadedComments>::new(
+      visit_mut_pass(CompatVisitor::new(
         CompatVisitorConfig {
           add_component_element: Either::A(true),
           ..Default::default()
         },
-        None
+        Some(t.comments.clone())
       )),
       hygiene_with_config(Default::default()),
     ),
@@ -1493,16 +1517,16 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| (
+    |t| (
       resolver(Mark::new(), Mark::new(), true),
-      visit_mut_pass(CompatVisitor::<&SingleThreadedComments>::new(
+      visit_mut_pass(CompatVisitor::new(
         CompatVisitorConfig {
           add_component_element: Either::B(AddComponentElementConfig {
             compiler_only: true
           }),
           ..Default::default()
         },
-        None
+        Some(t.comments.clone())
       )),
       hygiene_with_config(Default::default()),
     ),
@@ -1532,14 +1556,14 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| (
+    |t| (
       resolver(Mark::new(), Mark::new(), true),
-      visit_mut_pass(CompatVisitor::<&SingleThreadedComments>::new(
+      visit_mut_pass(CompatVisitor::new(
         CompatVisitorConfig {
           add_component_element: Either::A(true),
           ..Default::default()
         },
-        None
+        Some(t.comments.clone())
       )),
       hygiene_with_config(Default::default()),
     ),
@@ -1555,16 +1579,16 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| (
+    |t| (
       resolver(Mark::new(), Mark::new(), true),
-      visit_mut_pass(CompatVisitor::<&SingleThreadedComments>::new(
+      visit_mut_pass(CompatVisitor::new(
         CompatVisitorConfig {
           add_component_element: Either::B(AddComponentElementConfig {
             compiler_only: true
           }),
           ..Default::default()
         },
-        None
+        Some(t.comments.clone())
       )),
       hygiene_with_config(Default::default()),
     ),
@@ -1580,14 +1604,14 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| (
+    |t| (
       resolver(Mark::new(), Mark::new(), true),
-      visit_mut_pass(CompatVisitor::<&SingleThreadedComments>::new(
+      visit_mut_pass(CompatVisitor::new(
         CompatVisitorConfig {
           // add_component_element: Either::A(true),
           ..Default::default()
         },
-        None
+        Some(t.comments.clone())
       )),
       hygiene_with_config(Default::default()),
     ),
@@ -1603,15 +1627,15 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| (
+    |t| (
       resolver(Mark::new(), Mark::new(), true),
-      visit_mut_pass(CompatVisitor::<&SingleThreadedComments>::new(
+      visit_mut_pass(CompatVisitor::new(
         CompatVisitorConfig {
           add_component_element: Either::A(true),
           simplify_ctor_like_react_lynx_2: true,
           ..Default::default()
         },
-        None
+        Some(t.comments.clone())
       )),
       hygiene_with_config(Default::default()),
     ),
@@ -1641,15 +1665,15 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| (
+    |t| (
       resolver(Mark::new(), Mark::new(), true),
-      visit_mut_pass(CompatVisitor::<&SingleThreadedComments>::new(
+      visit_mut_pass(CompatVisitor::new(
         CompatVisitorConfig {
           add_component_element: Either::A(true),
           simplify_ctor_like_react_lynx_2: true,
           ..Default::default()
         },
-        None
+        Some(t.comments.clone())
       )),
       hygiene_with_config(Default::default()),
     ),
@@ -1681,15 +1705,15 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| (
+    |t| (
       resolver(Mark::new(), Mark::new(), true),
-      visit_mut_pass(CompatVisitor::<&SingleThreadedComments>::new(
+      visit_mut_pass(CompatVisitor::new(
         CompatVisitorConfig {
           add_component_element: Either::A(true),
           simplify_ctor_like_react_lynx_2: true,
           ..Default::default()
         },
-        None
+        Some(t.comments.clone())
       )),
       hygiene_with_config(Default::default()),
     ),
@@ -1719,15 +1743,15 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| (
+    |t| (
       resolver(Mark::new(), Mark::new(), true),
-      visit_mut_pass(CompatVisitor::<&SingleThreadedComments>::new(
+      visit_mut_pass(CompatVisitor::new(
         CompatVisitorConfig {
           add_component_element: Either::A(true),
           simplify_ctor_like_react_lynx_2: true,
           ..Default::default()
         },
-        None
+        Some(t.comments.clone())
       )),
       hygiene_with_config(Default::default()),
     ),
@@ -1759,15 +1783,15 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| (
+    |t| (
       resolver(Mark::new(), Mark::new(), true),
-      visit_mut_pass(CompatVisitor::<&SingleThreadedComments>::new(
+      visit_mut_pass(CompatVisitor::new(
         CompatVisitorConfig {
           add_component_element: Either::A(true),
           simplify_ctor_like_react_lynx_2: true,
           ..Default::default()
         },
-        None
+        Some(t.comments.clone())
       )),
       hygiene_with_config(Default::default()),
     ),
@@ -1811,14 +1835,14 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| (
+    |t| (
       resolver(Mark::new(), Mark::new(), true),
-      visit_mut_pass(CompatVisitor::<&SingleThreadedComments>::new(
+      visit_mut_pass(CompatVisitor::new(
         CompatVisitorConfig {
           remove_component_attr_regex: Some("^(on|handle|bind)[A-Z]".into()),
           ..Default::default()
         },
-        None
+        Some(t.comments.clone())
       )),
       hygiene_with_config(Default::default()),
     ),
@@ -1841,13 +1865,13 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| (
+    |t| (
       resolver(Mark::new(), Mark::new(), true),
-      visit_mut_pass(CompatVisitor::<&SingleThreadedComments>::new(
+      visit_mut_pass(CompatVisitor::new(
         CompatVisitorConfig {
           ..Default::default()
         },
-        None
+        Some(t.comments.clone())
       )),
       hygiene_with_config(Default::default()),
     ),
