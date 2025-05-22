@@ -8,15 +8,17 @@ import {
 import { styleMapSymbol } from './OffscreenCSSStyleDeclaration.js';
 import {
   _attributes,
+  _children,
+  ancestorDocument,
   innerHTML,
   OffscreenElement,
+  uniqueId,
 } from './OffscreenElement.js';
 import {
   eventPhase,
   OffscreenEvent,
   propagationStopped,
 } from './OffscreenEvent.js';
-import { OffscreenNode, uniqueId } from './OffscreenNode.js';
 
 export const operations = Symbol('operations');
 export const enableEvent = Symbol('enableEvent');
@@ -24,7 +26,7 @@ export const getElementByUniqueId = Symbol('getElementByUniqueId');
 export const _onEvent = Symbol('_onEvent');
 const _uniqueIdInc = Symbol('uniqueIdInc');
 const _uniqueIdToElement = Symbol('_uniqueIdToElement');
-export class OffscreenDocument extends OffscreenNode {
+export class OffscreenDocument extends OffscreenElement {
   /**
    * @private
    */
@@ -65,7 +67,8 @@ export class OffscreenDocument extends OffscreenNode {
         uid,
       });
     };
-    super(0, enableEventImpl);
+    super('', 0);
+    this[ancestorDocument] = this;
     this[enableEvent] = enableEventImpl;
   }
 
@@ -86,7 +89,8 @@ export class OffscreenDocument extends OffscreenNode {
 
   createElement(tagName: string): OffscreenElement {
     const uniqueId = this[_uniqueIdInc]++;
-    const element = new OffscreenElement(tagName, this, uniqueId);
+    const element = new OffscreenElement(tagName, uniqueId);
+    element[ancestorDocument] = this;
     this[_uniqueIdToElement][uniqueId] = new WeakRef(element);
     this[operations].push({
       type: OperationType.CreateElement,
@@ -104,8 +108,8 @@ export class OffscreenDocument extends OffscreenNode {
   ) => {
     const target = this[getElementByUniqueId](targetUniqueId);
     if (target) {
-      const bubblePath: OffscreenNode[] = [];
-      let tempTarget: OffscreenNode = target;
+      const bubblePath: OffscreenElement[] = [];
+      let tempTarget: OffscreenElement = target;
       while (tempTarget.parentElement) {
         bubblePath.push(tempTarget.parentElement);
         tempTarget = tempTarget.parentElement;
@@ -136,17 +140,6 @@ export class OffscreenDocument extends OffscreenNode {
       }
     }
   };
-  /**
-   * Converts the OffscreenDocument instance to a JSON string.
-   * Currently, this method returns an empty string as a placeholder.
-   * This behavior may be updated in the future to provide a meaningful
-   * JSON representation of the OffscreenDocument.
-   *
-   * @returns {string} An empty string.
-   */
-  toJSON(): string {
-    return '';
-  }
 }
 
 type ShadowrootTemplates =
@@ -160,9 +153,9 @@ function getInnerHTMLImpl(
   element: OffscreenElement,
   shadowrootTemplates: Record<string, ShadowrootTemplates>,
 ): void {
-  let tagName = element.tagName.toLowerCase();
+  const localName = element.localName;
   buffer.push('<');
-  buffer.push(tagName);
+  buffer.push(localName);
   for (const [key, value] of Object.entries(element[_attributes])) {
     buffer.push(' ');
     buffer.push(key);
@@ -178,17 +171,17 @@ function getInnerHTMLImpl(
   }
 
   buffer.push('>');
-  const templateImpl = shadowrootTemplates[tagName];
+  const templateImpl = shadowrootTemplates[localName];
   if (templateImpl) {
     const template = typeof templateImpl === 'function'
-      ? templateImpl(element[_attributes])
+      ? templateImpl(Object.fromEntries(element[_attributes].entries()))
       : templateImpl;
     buffer.push('<template shadowrootmode="open">', template, '</template>');
   }
   if (element[innerHTML]) {
     buffer.push(element[innerHTML]);
   } else {
-    for (const child of element.children) {
+    for (const child of element[_children]) {
       getInnerHTMLImpl(
         buffer,
         child as OffscreenElement,
@@ -197,7 +190,7 @@ function getInnerHTMLImpl(
     }
   }
   buffer.push('</');
-  buffer.push(tagName);
+  buffer.push(localName);
   buffer.push('>');
 }
 
@@ -206,7 +199,7 @@ export function dumpHTMLString(
   shadowrootTemplates: Record<string, ShadowrootTemplates>,
 ): string {
   const buffer: string[] = [];
-  for (const child of element.children) {
+  for (const child of element[_children]) {
     getInnerHTMLImpl(
       buffer,
       child as OffscreenElement,

@@ -6,7 +6,7 @@ export function __AppendElement(
   parent: HTMLElement,
   child: HTMLElement,
 ): void {
-  parent.append(child);
+  parent.appendChild(child);
 }
 
 export function __ElementIsEqual(

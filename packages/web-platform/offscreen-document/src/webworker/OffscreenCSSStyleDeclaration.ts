@@ -4,7 +4,7 @@
 import { ancestorDocument, type OffscreenElement } from './OffscreenElement.js';
 import { operations } from './OffscreenDocument.js';
 import { OperationType } from '../types/ElementOperation.js';
-import { uniqueId } from './OffscreenNode.js';
+import { uniqueId } from './OffscreenElement.js';
 
 export const styleMapSymbol = Symbol('styleMapSymbol');
 export class OffscreenCSSStyleDeclaration {

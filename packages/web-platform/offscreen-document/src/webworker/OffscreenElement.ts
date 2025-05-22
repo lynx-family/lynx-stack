@@ -8,32 +8,42 @@ import {
 } from './OffscreenDocument.js';
 import { OffscreenCSSStyleDeclaration } from './OffscreenCSSStyleDeclaration.js';
 import { OperationType } from '../types/ElementOperation.js';
-import { OffscreenNode, uniqueId } from './OffscreenNode.js';
 
 export const ancestorDocument = Symbol('ancestorDocument');
 export const _attributes = Symbol('_attributes');
+export const _children = Symbol('[_children]');
 export const innerHTML = Symbol('innerHTML');
+export const uniqueId = Symbol('uniqueId');
 const _style = Symbol('_style');
-export class OffscreenElement extends OffscreenNode {
-  private [_style]?: OffscreenCSSStyleDeclaration;
-  private readonly [_attributes]: Record<string, string> = {};
+export class OffscreenElement extends EventTarget {
   public [innerHTML]: string = '';
+  private [_style]?: OffscreenCSSStyleDeclaration;
+  private readonly [_attributes] = new Map<string, string>();
+  private _parentElement: OffscreenElement | null = null;
+  readonly [_children]: OffscreenElement[] = [];
+  /**
+   * @private
+   */
+  readonly [uniqueId]: number;
 
   /**
    * @private
    */
-  readonly [ancestorDocument]: OffscreenDocument;
+  [ancestorDocument]!: OffscreenDocument;
 
-  public readonly tagName: string;
+  public readonly localName: string;
 
   constructor(
-    tagName: string,
-    parentDocument: OffscreenDocument,
+    localName: string,
     elementUniqueId: number,
   ) {
-    super(elementUniqueId, parentDocument[enableEvent]);
-    this.tagName = tagName.toUpperCase();
-    this[ancestorDocument] = parentDocument;
+    super();
+    this.localName = localName;
+    this[uniqueId] = elementUniqueId;
+  }
+
+  get tagName(): string {
+    return this.localName.toUpperCase();
   }
 
   get style(): OffscreenCSSStyleDeclaration {
@@ -46,20 +56,59 @@ export class OffscreenElement extends OffscreenNode {
   }
 
   get id(): string {
-    return this[_attributes]['id'] ?? '';
+    return this[_attributes].get('id') ?? '';
   }
 
   set id(value: string) {
-    this[_attributes]['id'] = value;
+    this[_attributes].set('id', value);
     this.setAttribute('id', value);
   }
 
   get className(): string {
-    return this[_attributes]['class'] ?? '';
+    return this[_attributes].get('class') ?? '';
+  }
+
+  get children(): OffscreenElement[] {
+    return this[_children].slice();
+  }
+
+  get parentElement(): OffscreenElement | null {
+    return this._parentElement;
+  }
+
+  get parentNode(): OffscreenElement | null {
+    return this._parentElement;
+  }
+
+  get firstElementChild(): OffscreenElement | null {
+    return this[_children][0] ?? null;
+  }
+
+  get lastElementChild(): OffscreenElement | null {
+    return this[_children][this[_children].length - 1] ?? null;
+  }
+
+  get nextElementSibling(): OffscreenElement | null {
+    const parent = this._parentElement;
+    if (parent) {
+      const nextElementSiblingIndex = parent[_children].indexOf(this);
+      if (nextElementSiblingIndex >= 0) {
+        return parent[_children][nextElementSiblingIndex + 1] || null;
+      }
+    }
+    return null;
+  }
+
+  protected _remove(): void {
+    if (this._parentElement) {
+      const currentIdx = this._parentElement[_children].indexOf(this);
+      this._parentElement[_children].splice(currentIdx, 1);
+      this._parentElement = null;
+    }
   }
 
   setAttribute(qualifiedName: string, value: string): void {
-    this[_attributes][qualifiedName] = value;
+    this[_attributes].set(qualifiedName, value);
     this[ancestorDocument][operations].push({
       type: OperationType.SetAttribute,
       uid: this[uniqueId],
@@ -69,11 +118,11 @@ export class OffscreenElement extends OffscreenNode {
   }
 
   getAttribute(qualifiedName: string): string | null {
-    return this[_attributes][qualifiedName] ?? null;
+    return this[_attributes].get(qualifiedName) ?? null;
   }
 
   removeAttribute(qualifiedName: string): void {
-    delete this[_attributes][qualifiedName];
+    this[_attributes].delete(qualifiedName);
     this[ancestorDocument][operations].push({
       type: OperationType.RemoveAttribute,
       uid: this[uniqueId],
@@ -81,22 +130,46 @@ export class OffscreenElement extends OffscreenNode {
     });
   }
 
-  override append(...nodes: (OffscreenElement)[]): void {
+  append(...nodes: (OffscreenElement)[]): void {
     this[ancestorDocument][operations].push({
       type: OperationType.Append,
       uid: this[uniqueId],
       cid: nodes.map(node => node[uniqueId]),
     });
-    super.append(...nodes);
+    for (const node of nodes) {
+      node._remove();
+      node._parentElement = this;
+    }
+    this[_children].push(...nodes);
   }
 
-  override replaceWith(...nodes: (OffscreenElement)[]): void {
+  appendChild(node: OffscreenElement): OffscreenElement {
+    this[ancestorDocument][operations].push({
+      type: OperationType.Append,
+      uid: this[uniqueId],
+      cid: [node[uniqueId]],
+    });
+    node._remove();
+    node._parentElement = this;
+    this[_children].push(node);
+    return node;
+  }
+
+  replaceWith(...nodes: (OffscreenElement)[]): void {
     this[ancestorDocument][operations].push({
       type: OperationType.ReplaceWith,
       uid: this[uniqueId],
       nid: nodes.map(node => node[uniqueId]),
     });
-    return super.replaceWith(...nodes);
+    if (this._parentElement) {
+      const parent = this._parentElement;
+      this._parentElement = null;
+      const currentIdx = parent[_children].indexOf(this);
+      parent[_children].splice(currentIdx, 1, ...nodes);
+      for (const node of nodes) {
+        node._parentElement = parent;
+      }
+    }
   }
 
   getAttributeNames(): string[] {
@@ -109,32 +182,63 @@ export class OffscreenElement extends OffscreenNode {
         type: OperationType.Remove,
         uid: this[uniqueId],
       });
-      super._remove();
     }
   }
 
-  override insertBefore(
+  insertBefore(
     newNode: OffscreenElement,
     refNode: OffscreenElement | null,
   ): OffscreenElement {
-    const ret = super.insertBefore(newNode, refNode);
+    newNode._remove();
+    if (refNode) {
+      const refNodeIndex = this[_children].indexOf(refNode);
+      if (refNodeIndex >= 0) {
+        newNode._parentElement = this;
+        this[_children].splice(refNodeIndex, 0, newNode);
+      }
+    } else {
+      newNode._parentElement = this;
+      this[_children].push(newNode);
+    }
+
     this[ancestorDocument][operations].push({
       type: OperationType.InsertBefore,
       uid: this[uniqueId],
       cid: newNode[uniqueId],
       ref: refNode?.[uniqueId],
     });
-    return ret as OffscreenElement;
+    return newNode;
   }
 
-  override removeChild(child: OffscreenElement | null): OffscreenElement {
-    const ret = super.removeChild(child);
+  removeChild(child: OffscreenElement | null): OffscreenElement {
+    if (!child) {
+      throw new DOMException(
+        'The node to be removed is not a child of this node.',
+        'NotFoundError',
+      );
+    }
+    if (child._parentElement !== this) {
+      throw new DOMException(
+        'The node to be removed is not a child of this node.',
+        'NotFoundError',
+      );
+    }
     this[ancestorDocument][operations].push({
       type: OperationType.RemoveChild,
       uid: this[uniqueId],
       cid: child![uniqueId],
     });
-    return ret as OffscreenElement;
+    child._remove();
+    return child;
+  }
+
+  override addEventListener(
+    type: string,
+    callback: EventListenerOrEventListenerObject | null,
+    options?: AddEventListenerOptions | boolean,
+  ): void {
+    this[ancestorDocument][enableEvent](type, this[uniqueId]);
+    super.addEventListener(type, callback, options);
   }
 
   set innerHTML(text: string) {
