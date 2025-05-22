@@ -19,6 +19,9 @@ export function commonConfig(
       }),
     ],
     output: {
+      distPath: {
+        root: enableSSR ? 'dist/ssr' : 'dist',
+      },
       filename: '[name]/index.[platform].json',
       cleanDistPath: false,
       assetPrefix: `http://localhost:${port}/dist`,

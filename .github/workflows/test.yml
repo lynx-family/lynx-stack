@@ -212,8 +212,6 @@ jobs:
     with:
       runs-on: lynx-ubuntu-24.04-medium
       run: >
-        pnpm --filter @lynx-js/web-tests run build:cases:ssr # the web-tests relies on this bundle with SSR mode
-
         pnpm run test
         --reporter=github-actions
         --reporter=dot

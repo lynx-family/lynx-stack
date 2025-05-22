@@ -19,19 +19,29 @@ const configFiles = [
 const command = configFiles
   .map(
     (lynxConfigFilePath) => `npx rspeedy build --config=${lynxConfigFilePath}`,
-  )
-  .join(' && ');
-if (command) {
-  const child = spawn(command, [], {
-    stdio: 'inherit',
-    cwd: path.join(__dirname, '..'),
-    shell: true,
-  });
+  );
 
-  child.on('exit', (code) => {
-    if (code !== 0) {
-      console.error(`Command failed with exit code ${code}`);
-      process.exit(code);
-    }
-  });
+if (command.length) {
+  const promises = [];
+  for (let i = 0; i < command.length; i++) {
+    promises.push(
+      new Promise((resolve, reject) => {
+        const child = spawn(command[i], [], {
+          stdio: 'inherit',
+          cwd: path.join(__dirname, '..'),
+          shell: true,
+        });
+
+        child.on('exit', (code) => {
+          if (code !== 0) {
+            console.error(`Command failed with exit code ${code}`);
+            reject(code);
+          } else {
+            resolve();
+          }
+        });
+      }),
+    );
+  }
+  await Promise.all(promises);
 }
