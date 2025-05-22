@@ -97,9 +97,12 @@ export function loadMainThread(
       callbacks: {
         mainChunkReady: () => {
           markTimingInternal('data_processor_start');
-          const initData = runtime.processData
-            ? runtime.processData(config.initData)
-            : config.initData;
+          let initData = config.initData;
+          if (
+            pageConfig.enableJSDataProcessor !== true && runtime.processData
+          ) {
+            initData = runtime.processData(config.initData);
+          }
           markTimingInternal('data_processor_end');
           registerCallLepusMethodHandler(
             backgroundThreadRpc,
