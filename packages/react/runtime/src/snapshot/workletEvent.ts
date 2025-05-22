@@ -23,7 +23,7 @@ function updateWorkletEvent(
   value._workletType = workletType;
 
   if (workletType === 'main-thread') {
-    onWorkletCtxUpdate(value, oldValue, !isMainThreadHydrationFinished);
+    onWorkletCtxUpdate(value, oldValue, !isMainThreadHydrationFinished, snapshot.__elements[elementIndex]!);
     const event = {
       type: 'worklet',
       value,

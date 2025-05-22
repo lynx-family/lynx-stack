@@ -43,6 +43,10 @@ function updateWorkletRef(
     (value as Worklet)._unmount = runWorkletCtx(value as Worklet, [{
       elementRefptr: (snapshot.__elements[elementIndex]!) as any,
     }]) as () => void;
+    /* v8 ignore next 3 */
+  } else if (value._type === '__LEPUS__' || (value as Worklet)._lepusWorkletHash) {
+    // for pre-0.99 compatibility
+    // During the initial render, we will not update the WorkletRef because the background thread is not ready yet.
   } else {
     throw new Error('MainThreadRef: main-thread:ref must be of type MainThreadRef or main-thread function.');
   }

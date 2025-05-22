@@ -4,6 +4,7 @@
 import { Element } from './api/element.js';
 import type { ClosureValueType, Worklet, WorkletRefImpl } from './bindings/types.js';
 import { initRunOnBackgroundDelay } from './delayRunOnBackground.js';
+import { delayExecUntilJsReady, initEventDelay } from './delayWorkletEvent.js';
 import { hydrateCtx } from './hydrate.js';
 import { JsFunctionLifecycleManager, isRunOnBackgroundEnabled } from './jsFunctionLifecycle.js';
 import { profile } from './utils/profile.js';
@@ -15,6 +16,7 @@ function initWorklet(): void {
     _refImpl: initWorkletRef(),
     _runOnBackgroundDelayImpl: initRunOnBackgroundDelay(),
     _hydrateCtx: hydrateCtx,
+    _eventDelayImpl: initEventDelay(),
   };
 
   if (isRunOnBackgroundEnabled()) {
@@ -48,6 +50,10 @@ function runWorklet(ctx: Worklet, params: ClosureValueType[]): unknown {
     console.warn('Worklet: Invalid worklet object: ' + JSON.stringify(ctx));
     return;
   }
+  if ('_lepusWorkletHash' in ctx) {
+    delayExecUntilJsReady(ctx._lepusWorkletHash, params);
+    return;
+  }
   return runWorkletImpl(ctx, params);
 }
 
@@ -64,7 +70,7 @@ function runWorkletImpl(ctx: Worklet, params: ClosureValueType[]): unknown {
 }
 
 function validateWorklet(ctx: unknown): ctx is Worklet {
-  return typeof ctx === 'object' && ctx !== null && '_wkltId' in ctx;
+  return typeof ctx === 'object' && ctx !== null && ('_wkltId' in ctx || '_lepusWorkletHash' in ctx);
 }
 
 const workletCache = new WeakMap<object, ClosureValueType | ((...args: any[]) => any)>();

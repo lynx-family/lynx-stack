@@ -11,13 +11,20 @@ import type { Element } from '../api/element.js';
  * @param worklet - The worklet to be updated
  * @param oldWorklet - The old worklet context
  * @param isFirstScreen - Whether it is before the hydration is finished
+ * @param element - The element
  * @internal
  */
-function onWorkletCtxUpdate(worklet: Worklet, oldWorklet: Worklet | null | undefined, isFirstScreen: boolean): void {
+function onWorkletCtxUpdate(
+  worklet: Worklet,
+  oldWorklet: Worklet | null | undefined,
+  isFirstScreen: boolean,
+  element: ElementNode,
+): void {
   globalThis.lynxWorkletImpl?._jsFunctionLifecycleManager?.addRef(worklet._execId!, worklet);
   if (isFirstScreen && oldWorklet) {
     globalThis.lynxWorkletImpl?._hydrateCtx(worklet, oldWorklet);
   }
+  globalThis.lynxWorkletImpl?._eventDelayImpl.runDelayedWorklet(worklet, element);
 }
 
 /**

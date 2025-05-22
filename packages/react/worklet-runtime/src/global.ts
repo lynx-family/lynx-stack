@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import type { ClosureValueType, Worklet } from './bindings/types.js';
 import type { RunOnBackgroundDelayImpl } from './delayRunOnBackground.js';
+import type { EventDelayImpl } from './delayWorkletEvent.js';
 import type { JsFunctionLifecycleManager } from './jsFunctionLifecycle.js';
 import type { RefImpl } from './workletRef.js';
 
@@ -11,6 +12,8 @@ declare global {
   var lynxWorkletImpl: {
     _workletMap: Record<string, (...args: any[]) => any>;
     _jsFunctionLifecycleManager?: JsFunctionLifecycleManager;
+    // for pre-0.99 compatibility
+    _eventDelayImpl: EventDelayImpl;
     _refImpl: RefImpl;
     _runOnBackgroundDelayImpl: RunOnBackgroundDelayImpl;
     _hydrateCtx: (worklet: Worklet, firstScreenWorklet: Worklet) => void;

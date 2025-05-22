@@ -10,7 +10,12 @@ function isSerializedGesture(gesture: GestureKind): boolean {
   return gesture.__isSerialized ?? false;
 }
 
-function getGestureInfo(gesture: BaseGesture, oldGesture: BaseGesture | undefined, isFirstScreen: boolean) {
+function getGestureInfo(
+  gesture: BaseGesture,
+  oldGesture: BaseGesture | undefined,
+  isFirstScreen: boolean,
+  dom: FiberElement,
+) {
   const config = {
     callbacks: [],
   } as GestureConfig;
@@ -25,7 +30,7 @@ function getGestureInfo(gesture: BaseGesture, oldGesture: BaseGesture | undefine
   ) {
     const callback = baseGesture.callbacks[key]!;
     const oldCallback = oldGesture?.callbacks[key];
-    onWorkletCtxUpdate(callback, oldCallback, isFirstScreen);
+    onWorkletCtxUpdate(callback, oldCallback, isFirstScreen, dom);
     config.callbacks.push({
       name: key,
       callback: callback,
@@ -72,7 +77,7 @@ export function processGesture(
     const baseGesture = gesture as BaseGesture;
     const oldBaseGesture = oldGesture as BaseGesture | undefined;
 
-    const { config, relationMap } = getGestureInfo(baseGesture, oldBaseGesture, isFirstScreen);
+    const { config, relationMap } = getGestureInfo(baseGesture, oldBaseGesture, isFirstScreen, dom);
     __SetGestureDetector(
       dom,
       baseGesture.id,

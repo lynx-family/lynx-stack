@@ -46,6 +46,9 @@ export interface Worklet {
   _jsFn?: Record<string, string>;
   _unmount?: () => void;
   [key: string]: ClosureValueType;
+
+  // for pre-0.99 compatibility
+  _lepusWorkletHash?: string;
 }
 
 /**
