@@ -6,7 +6,7 @@
 import { generateRegister } from './generateRegister.js';
 export type StyleChangeHandler = (
   newValue: string | null,
-  styleHypenName: string,
+  styleHyphenName: string,
 ) => void;
 
 export const registerStyleChangeHandler = generateRegister<

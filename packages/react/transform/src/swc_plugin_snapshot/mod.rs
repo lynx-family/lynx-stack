@@ -2903,7 +2903,7 @@ mod tests {
       Mark::new(),
       TransformMode::Test,
     )),
-    should_excape_newline_character,
+    should_escape_newline_character,
     // Input codes
     r#"
     <view>

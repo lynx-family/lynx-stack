@@ -299,11 +299,11 @@ const renameRules: {
   ],
 };
 export function transformLynxStyles(
-  hypenNameStyles: [string, string][],
+  hyphenNameStyles: [string, string][],
 ): { childStyle: [string, string][]; transformedStyle: [string, string][] } {
   const newStyle: [string, string][] = [];
   const childStyle: [string, string][] = [];
-  for (const declaration of hypenNameStyles) {
+  for (const declaration of hyphenNameStyles) {
     const [property, value] = declaration;
     const rule = replaceRules[property];
     if (rule?.[value]) {

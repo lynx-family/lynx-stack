@@ -56,7 +56,7 @@ export function genStyleInfo(
             let plainSelectors: string[] = [];
             let pseudoClassSelectors: string[] = [];
             let pseudoElementSelectors: string[] = [];
-            const currentSplittedSelectorInfo: string[][] = [];
+            const currentSplitSelectorInfo: string[][] = [];
             for (const selector of selectorList.children.toArray()) {
               if (
                 selector.type === 'PseudoClassSelector'
@@ -77,7 +77,7 @@ export function genStyleInfo(
               } else if (selector.type === 'TypeSelector') {
                 plainSelectors.push(`[lynx-tag="${selector.name}"]`);
               } else if (selector.type === 'Combinator') {
-                currentSplittedSelectorInfo.push(
+                currentSplitSelectorInfo.push(
                   plainSelectors,
                   pseudoClassSelectors,
                   pseudoElementSelectors,
@@ -90,13 +90,13 @@ export function genStyleInfo(
                 plainSelectors.push(CSS.csstree.generate(selector));
               }
             }
-            currentSplittedSelectorInfo.push(
+            currentSplitSelectorInfo.push(
               plainSelectors,
               pseudoClassSelectors,
               pseudoElementSelectors,
               [],
             );
-            groupedSelectors.push(currentSplittedSelectorInfo);
+            groupedSelectors.push(currentSplitSelectorInfo);
           }
           const decl = node.style.map<[string, string]>((
             declaration,

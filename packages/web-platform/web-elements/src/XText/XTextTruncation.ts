@@ -102,18 +102,18 @@ export class XTextTruncation
     this.#dom.removeAttribute(XTextTruncation.showInlineTruncation);
   }
 
-  #getAllSibilings(targetNode: Node) {
-    const sibilingNodes: (Text | Element)[] = [];
-    let targetNodeSibiling: Node | null = targetNode;
-    while ((targetNodeSibiling = targetNodeSibiling.nextSibling)) {
+  #getAllSiblings(targetNode: Node) {
+    const siblingNodes: (Text | Element)[] = [];
+    let targetNodeSibling: Node | null = targetNode;
+    while ((targetNodeSibling = targetNodeSibling.nextSibling)) {
       if (
-        targetNodeSibiling.nodeType === Node.TEXT_NODE
-        || targetNodeSibiling.nodeType === Node.ELEMENT_NODE
+        targetNodeSibling.nodeType === Node.TEXT_NODE
+        || targetNodeSibling.nodeType === Node.ELEMENT_NODE
       ) {
-        sibilingNodes.push(targetNodeSibiling as Text | Element);
+        siblingNodes.push(targetNodeSibling as Text | Element);
       }
     }
-    return sibilingNodes;
+    return siblingNodes;
   }
   #layoutText() {
     if (!this.#componentConnected || this.#dom.matches('x-text>x-text')) return;
@@ -207,11 +207,11 @@ export class XTextTruncation
         } else {
           toBeHideNodes.push(targetNode);
         }
-        toBeHideNodes = toBeHideNodes.concat(this.#getAllSibilings(targetNode));
+        toBeHideNodes = toBeHideNodes.concat(this.#getAllSiblings(targetNode));
         let targetNodeParentElement = targetNode.parentElement!;
         while (targetNodeParentElement !== this.#dom) {
           toBeHideNodes = toBeHideNodes.concat(
-            this.#getAllSibilings(targetNodeParentElement),
+            this.#getAllSiblings(targetNodeParentElement),
           );
           targetNodeParentElement = targetNodeParentElement.parentElement!;
         }
@@ -502,7 +502,7 @@ class TextRenderingMeasureTool {
   getLineInfo(lineIndex: number): LynxLineInfo | void {
     this.#genLinesInfoUntil(lineIndex + 1);
     if (lineIndex < this.#lazyLinesInfo.length) {
-      // get catched info first
+      // get caught info first
       const pervLineInfo = lineIndex > 0
         ? this.#cachedLineInfo[lineIndex - 1] ?? {}
         : undefined;

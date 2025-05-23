@@ -50,7 +50,7 @@ function App() {
       <text class='h1'>toast按钮</text>
       <view class='box'>
         <text class='desc'>
-          Toast blcok应该居中, 点显示/关闭按钮能控制toast显示
+          Toast block应该居中, 点显示/关闭按钮能控制toast显示
         </text>
         <view class='button' catchtap={toggleModal1} id='toggleModal1'>
           {showModal1

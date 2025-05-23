@@ -5,7 +5,7 @@
 import * as tokenizer from 'css-tree/tokenizer';
 import { transformLynxStyles } from '@lynx-js/web-style-transformer';
 function parseStyleStringToObject(str: string) {
-  const hypenNameStyles: [property: string, value: string][] = [];
+  const hyphenNameStyles: [property: string, value: string][] = [];
   let beforeColonToken = true;
   let propertyStart = 0;
   let propertyEnd = 0;
@@ -14,12 +14,12 @@ function parseStyleStringToObject(str: string) {
   tokenizer.tokenize(str + ';', (type: number, start: number, end: number) => {
     if (type === tokenizer.Semicolon || tokenizer.EOF) {
       valueEnd = start;
-      const trimedProperty = str.substring(propertyStart, propertyEnd).trim();
-      const trimedValue = str.substring(valueStart, valueEnd).trim();
-      if (!beforeColonToken && trimedValue && trimedProperty) {
-        hypenNameStyles.push([
-          trimedProperty,
-          trimedValue,
+      const trimmedProperty = str.substring(propertyStart, propertyEnd).trim();
+      const trimmedValue = str.substring(valueStart, valueEnd).trim();
+      if (!beforeColonToken && trimmedValue && trimmedProperty) {
+        hyphenNameStyles.push([
+          trimmedProperty,
+          trimmedValue,
         ]);
       }
       beforeColonToken = true;
@@ -30,14 +30,14 @@ function parseStyleStringToObject(str: string) {
       propertyEnd = start;
     }
   });
-  return hypenNameStyles;
+  return hyphenNameStyles;
 }
 
 export function transformInlineStyleString(str: string) {
-  return transfromParsedStyles(parseStyleStringToObject(str));
+  return transformParsedStyles(parseStyleStringToObject(str));
 }
 
-export function transfromParsedStyles(
+export function transformParsedStyles(
   hyphenatedStyleObject: [property: string, value: string][],
 ) {
   return transformLynxStyles(hyphenatedStyleObject);

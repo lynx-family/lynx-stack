@@ -32,16 +32,16 @@ export function stringifyRequest(
     );
   }
 
-  const splitted = request.split('!');
+  const split = request.split('!');
   const { context } = loaderContext;
 
   return JSON.stringify(
-    splitted
+    split
       .map((part: string) => {
         // First, separate singlePath from query, because the query might contain paths again
-        const splittedPart = /^(.*?)(\?.*)/.exec(part);
-        const query = splittedPart ? splittedPart[2] : '';
-        let singlePath = splittedPart ? splittedPart[1] : part;
+        const splitPart = /^(.*?)(\?.*)/.exec(part);
+        const query = splitPart ? splitPart[2] : '';
+        let singlePath = splitPart ? splitPart[1] : part;
 
         if (isAbsolutePath(singlePath!) && context) {
           singlePath = path.relative(context, singlePath!);

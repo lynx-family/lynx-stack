@@ -57,7 +57,7 @@ export class CommonEventsAndMethods {
   /**
    * If this dom is already exposured
    */
-  #exposureTriggerd = false;
+  #exposureTriggered = false;
 
   /**
    * keeps the observer of current dom
@@ -229,12 +229,12 @@ export class CommonEventsAndMethods {
             root = root.parentElement;
           }
         }
-        this.#exposureTriggerd = false;
+        this.#exposureTriggered = false;
         this.#exposureObserver = new IntersectionObserver(
           ([entry]) => {
             if (entry) {
               if (entry.isIntersecting) {
-                this.#exposureTriggerd = true;
+                this.#exposureTriggered = true;
               }
               this.#sendOneExposureEvent(entry);
             }
@@ -256,7 +256,7 @@ export class CommonEventsAndMethods {
     entry: IntersectionObserverEntry | { isIntersecting: boolean },
     overrideExposureId?: string,
   ) {
-    if (!this.#exposureTriggerd) {
+    if (!this.#exposureTriggered) {
       return;
     }
     const exposureID = overrideExposureId

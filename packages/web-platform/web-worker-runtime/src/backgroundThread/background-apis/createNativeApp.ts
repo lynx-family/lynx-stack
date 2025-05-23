@@ -106,8 +106,8 @@ export async function createNativeApp(config: {
       sourceURL: string,
       callback: (message: string | null, exports?: BundleInitReturnObj) => void,
     ): void {
-      const mainfestUrl = template.manifest[`/${sourceURL}`];
-      if (mainfestUrl) sourceURL = mainfestUrl;
+      const manifestUrl = template.manifest[`/${sourceURL}`];
+      if (manifestUrl) sourceURL = manifestUrl;
       import(
         /* webpackIgnore: true */
         sourceURL
@@ -116,8 +116,8 @@ export async function createNativeApp(config: {
       });
     },
     loadScript: (sourceURL: string) => {
-      const mainfestUrl = template.manifest[`/${sourceURL}`];
-      if (mainfestUrl) sourceURL = mainfestUrl;
+      const manifestUrl = template.manifest[`/${sourceURL}`];
+      if (manifestUrl) sourceURL = manifestUrl;
       importScripts(sourceURL);
       return createBundleInitReturnObj();
     },
