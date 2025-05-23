@@ -168,7 +168,7 @@ importers:
         specifier: ^3.3.0
         version: 3.3.0
       '@types/react':
-        specifier: ^18.3.21
+        specifier: ^18.3.22
         version: 18.3.22
 
   packages/background-only: {}

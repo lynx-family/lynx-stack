@@ -259,13 +259,10 @@ where
 
 #[cfg(test)]
 mod tests {
-  use swc_core::{
-    common::comments::SingleThreadedComments,
-    ecma::{
-      parser::{EsSyntax, Syntax},
-      transforms::testing::test,
-      visit::visit_mut_pass,
-    },
+  use swc_core::ecma::{
+    parser::{EsSyntax, Syntax},
+    transforms::testing::test,
+    visit::visit_mut_pass,
   };
 
   use super::{DynamicImportVisitor, DynamicImportVisitorConfig};
@@ -276,12 +273,12 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| visit_mut_pass(DynamicImportVisitor::new(
+    |t| visit_mut_pass(DynamicImportVisitor::new(
       DynamicImportVisitorConfig {
         layer: "test".into(),
         ..Default::default()
       },
-      Some(SingleThreadedComments::default())
+      Some(t.comments.clone())
     )),
     should_transform_import_call,
     r#"
@@ -308,12 +305,12 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| visit_mut_pass(DynamicImportVisitor::new(
+    |t| visit_mut_pass(DynamicImportVisitor::new(
       DynamicImportVisitorConfig {
         layer: "test".into(),
         ..Default::default()
       },
-      Some(SingleThreadedComments::default())
+      Some(t.comments.clone())
     )),
     should_not_import_lazy,
     r#"

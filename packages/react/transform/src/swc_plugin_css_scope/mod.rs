@@ -207,13 +207,10 @@ where
 
 #[cfg(test)]
 mod tests {
-  use swc_core::{
-    common::comments::SingleThreadedComments,
-    ecma::{
-      parser::{EsSyntax, Syntax},
-      transforms::testing::test,
-      visit::visit_mut_pass,
-    },
+  use swc_core::ecma::{
+    parser::{EsSyntax, Syntax},
+    transforms::testing::test,
+    visit::visit_mut_pass,
   };
 
   use super::CSSScopeVisitor;
@@ -241,12 +238,12 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| visit_mut_pass(CSSScopeVisitor::<SingleThreadedComments>::new(
+    |t| visit_mut_pass(CSSScopeVisitor::new(
       CSSScopeVisitorConfig {
         mode: CSSScope::All,
         ..Default::default()
       },
-      Some(SingleThreadedComments::default()),
+      Some(t.comments.clone()),
     )),
     scoped_all_transform_imports_with_query,
     IMPORTS
@@ -258,12 +255,12 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| visit_mut_pass(CSSScopeVisitor::<SingleThreadedComments>::new(
+    |t| visit_mut_pass(CSSScopeVisitor::new(
       super::CSSScopeVisitorConfig {
         mode: CSSScope::None,
         ..Default::default()
       },
-      Some(SingleThreadedComments::default()),
+      Some(t.comments.clone()),
     )),
     scoped_none_transform_imports,
     IMPORTS
@@ -275,12 +272,12 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| visit_mut_pass(CSSScopeVisitor::<SingleThreadedComments>::new(
+    |t| visit_mut_pass(CSSScopeVisitor::new(
       super::CSSScopeVisitorConfig {
         mode: CSSScope::None,
         ..Default::default()
       },
-      Some(SingleThreadedComments::default()),
+      Some(t.comments.clone()),
     )),
     scoped_none_transform_imports_without_jsx,
     IMPORTS_WITHOUT_JSX
@@ -292,12 +289,12 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| visit_mut_pass(CSSScopeVisitor::<SingleThreadedComments>::new(
+    |t| visit_mut_pass(CSSScopeVisitor::new(
       super::CSSScopeVisitorConfig {
         mode: CSSScope::All,
         ..Default::default()
       },
-      Some(SingleThreadedComments::default()),
+      Some(t.comments.clone()),
     )),
     scoped_all_transform_imports,
     IMPORTS
@@ -309,12 +306,12 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| visit_mut_pass(CSSScopeVisitor::<SingleThreadedComments>::new(
+    |t| visit_mut_pass(CSSScopeVisitor::new(
       super::CSSScopeVisitorConfig {
         mode: CSSScope::All,
         ..Default::default()
       },
-      Some(SingleThreadedComments::default()),
+      Some(t.comments.clone()),
     )),
     scoped_all_transform_imports_without_jsx,
     IMPORTS_WITHOUT_JSX
@@ -326,12 +323,12 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| visit_mut_pass(CSSScopeVisitor::<SingleThreadedComments>::new(
+    |t| visit_mut_pass(CSSScopeVisitor::new(
       super::CSSScopeVisitorConfig {
         mode: CSSScope::Modules,
         ..Default::default()
       },
-      Some(SingleThreadedComments::default()),
+      Some(t.comments.clone()),
     )),
     scoped_modules_transform_imports,
     IMPORTS
@@ -343,12 +340,12 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |_| visit_mut_pass(CSSScopeVisitor::<SingleThreadedComments>::new(
+    |t| visit_mut_pass(CSSScopeVisitor::new(
       super::CSSScopeVisitorConfig {
         mode: CSSScope::Modules,
         ..Default::default()
       },
-      Some(SingleThreadedComments::default()),
+      Some(t.comments.clone()),
     )),
     scoped_modules_transform_imports_without_jsx,
     IMPORTS_WITHOUT_JSX
