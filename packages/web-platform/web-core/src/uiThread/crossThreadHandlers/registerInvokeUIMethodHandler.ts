@@ -62,7 +62,7 @@ export function registerInvokeUIMethodHandler(
             }
           } catch (e) {
             console.error(
-              `[lynx-web] invokeUIMethod: apply method faild with`,
+              `[lynx-web] invokeUIMethod: apply method failed with`,
               e,
               element,
             );

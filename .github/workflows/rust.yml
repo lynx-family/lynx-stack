@@ -63,3 +63,14 @@ jobs:
           cache-key: test-${{ runner.os }}
       - name: Format
         run: cargo fmt --check
+
+  typos:
+    runs-on: lynx-ubuntu-24.04-medium
+    steps:
+      - name: Install llvm-cov and nextest
+        uses: taiki-e/install-action@13608a19a2204ea4cc0b5888e995ab288684b613 # v2
+        with:
+          tool: cargo-llvm-cov,cargo-nextest
+      - uses: crate-ci/typos@0f0ccba9ed1df83948f0c15026e4f5ccfce46109 # v1.32.0
+        with:
+          files: .

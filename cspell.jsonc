@@ -139,6 +139,8 @@
     "lh",
     "queueMicrotask",
     "rustup", // Rust installer/manager
+    "nextest",
+    "taiki",
   ],
   // Glob
   "ignorePaths": [

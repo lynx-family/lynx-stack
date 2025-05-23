@@ -4,13 +4,18 @@
 
 [files]
 extend-exclude = [
-  "**/*.snap",
-  "**/*.snap.txt",
-  "**/*/CHANGELOG.md",
+  "**/*.{css,snap,txt}",
+  "**/CHANGELOG.md",
   "pnpm-lock.yaml",
   "biome.jsonc",
   "packages/web-platform/web-explorer/preinstalled/homepage.json",
   "packages/web-platform/web-tests/tests/web-elements/performance/react-dom.production.min.js",
+]
+
+[default]
+extend-ignore-re = [
+  "(?Rm)^.*(#|//)\\s*spellchecker:disable-line$",
+  "(?s)(#|//)\\s*spellchecker:off.*?\\n\\s*(#|//)\\s*spellchecker:on",
 ]
 
 [default.extend-words]
@@ -18,3 +23,5 @@ childs = "childs"
 styl = "styl"
 aci = "aci"
 nd = "nd"
+bui = "bui"
+ba = "ba"
