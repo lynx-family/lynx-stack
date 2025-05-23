@@ -85,6 +85,7 @@ export const loadLazyBundle: <
     } else if (__JS__) {
       return new Promise((resolve, reject) => {
         const callback: (result: any) => void = result => {
+          lynxCoreInject.tt.GlobalEventEmitter.trigger("unstable_onLazyBundleResponse", result);
           const { code, detail } = result;
           if (code === 0) {
             const { schema } = detail;
