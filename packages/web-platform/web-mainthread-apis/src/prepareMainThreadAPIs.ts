@@ -13,7 +13,7 @@ import {
   dispatchCoreContextOnBackgroundEndpoint,
   dispatchJSContextOnMainThreadEndpoint,
   type Rpc,
-  type MainThreadStartConfigs,
+  type StartMainThreadContextConfig,
   LynxCrossThreadContext,
   type RpcCallType,
   type reportErrorEndpoint,
@@ -26,9 +26,10 @@ import {
 } from './MainThreadRuntime.js';
 
 const moduleCache: Record<string, LynxJSModule> = {};
-export function loadMainThread(
+export function prepareMainThreadAPIs(
   backgroundThreadRpc: Rpc,
-  docu: Pick<Document, 'append' | 'createElement' | 'addEventListener'>,
+  rootDom: Document | ShadowRoot,
+  createElement: Document['createElement'],
   commitDocument: () => Promise<void> | void,
   markTimingInternal: (timingKey: string, pipelineId?: string) => void,
   reportError: RpcCallType<typeof reportErrorEndpoint>,
@@ -48,7 +49,7 @@ export function loadMainThread(
   const postExposure = backgroundThreadRpc.createCall(postExposureEndpoint);
   markTimingInternal('lepus_execute_start');
   async function startMainThread(
-    config: MainThreadStartConfigs,
+    config: StartMainThreadContextConfig,
   ): Promise<MainThreadRuntime> {
     let isFp = true;
     const {
@@ -93,7 +94,8 @@ export function loadMainThread(
       pageConfig,
       styleInfo,
       lepusCode: lepusCodeLoaded,
-      docu,
+      createElement,
+      rootDom,
       callbacks: {
         mainChunkReady: () => {
           markTimingInternal('data_processor_start');
@@ -127,7 +129,6 @@ export function loadMainThread(
             napiModulesMap,
             browserConfig,
           });
-
           runtime.renderPage!(initData);
           runtime.__FlushElementTree(undefined, {});
         },

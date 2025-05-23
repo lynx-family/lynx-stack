@@ -8,7 +8,7 @@ import type { NapiModulesMap } from './NapiModules.js';
 import type { NativeModulesMap } from './NativeModules.js';
 import type { BrowserConfig } from './PageConfig.js';
 
-export interface MainThreadStartConfigs {
+export interface StartMainThreadContextConfig {
   template: LynxTemplate;
   initData: Cloneable;
   globalProps: Cloneable;

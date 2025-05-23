@@ -7,7 +7,7 @@ import { bootWorkers } from './bootWorkers.js';
 import { createDispose } from './crossThreadHandlers/createDispose.js';
 import {
   type LynxTemplate,
-  type MainThreadStartConfigs,
+  type StartMainThreadContextConfig,
   type NapiModulesCall,
   type NativeModulesCall,
 } from '@lynx-js/web-constants';
@@ -26,7 +26,7 @@ export type StartUIThreadCallbacks = {
 
 export function startUIThread(
   templateUrl: string,
-  configs: Omit<MainThreadStartConfigs, 'template'>,
+  configs: Omit<StartMainThreadContextConfig, 'template'>,
   shadowRoot: ShadowRoot,
   lynxGroupId: number | undefined,
   threadStrategy: 'all-on-ui' | 'multi-thread',

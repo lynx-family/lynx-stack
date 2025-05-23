@@ -13,14 +13,12 @@ import { createMarkTimingInternal } from './crossThreadHandlers/createMainthread
 import { OffscreenDocument } from '@lynx-js/offscreen-document/webworker';
 import { _onEvent } from '@lynx-js/offscreen-document/webworker';
 import { registerUpdateDataHandler } from './crossThreadHandlers/registerUpdateDataHandler.js';
-const { loadMainThread } = await import('@lynx-js/web-mainthread-apis');
+const { prepareMainThreadAPIs } = await import('@lynx-js/web-mainthread-apis');
 
-export function startMainThread(
+export function startMainThreadWorker(
   uiThreadPort: MessagePort,
   backgroundThreadPort: MessagePort,
-): {
-  docu: OffscreenDocument;
-} {
+) {
   const uiThreadRpc = new Rpc(uiThreadPort, 'main-to-ui');
   const backgroundThreadRpc = new Rpc(backgroundThreadPort, 'main-to-bg');
   const markTimingInternal = createMarkTimingInternal(backgroundThreadRpc);
@@ -30,9 +28,10 @@ export function startMainThread(
     onCommit: uiFlush,
   });
   uiThreadRpc.registerHandler(postOffscreenEventEndpoint, docu[_onEvent]);
-  const { startMainThread } = loadMainThread(
+  const { startMainThread } = prepareMainThreadAPIs(
     backgroundThreadRpc,
     docu,
+    docu.createElement.bind(docu),
     docu.commit.bind(docu),
     markTimingInternal,
     reportError,
@@ -45,7 +44,4 @@ export function startMainThread(
       });
     },
   );
-  return {
-    docu,
-  };
 }

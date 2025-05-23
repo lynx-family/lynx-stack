@@ -51,7 +51,7 @@ export interface MainThreadRuntimeCallbacks {
   postExposure: RpcCallType<typeof postExposureEndpoint>;
 }
 
-export interface MainThreadConfig {
+export interface MainThreadRuntimeConfig {
   pageConfig: PageConfig;
   globalProps: unknown;
   callbacks: MainThreadRuntimeCallbacks;
@@ -60,7 +60,8 @@ export interface MainThreadConfig {
   lepusCode: Record<string, LynxJSModule>;
   browserConfig: BrowserConfig;
   tagMap: Record<string, string>;
-  docu: Pick<Document, 'append' | 'createElement' | 'addEventListener'>;
+  createElement: Document['createElement'];
+  rootDom: Pick<Element, 'append' | 'addEventListener'>;
   jsContext: LynxContextEventTarget;
 }
 
@@ -93,6 +94,8 @@ export class MainThreadRuntime {
    * @private the CreatePage will append it to this
    */
   _rootDom: Pick<Element, 'append' | 'addEventListener'>;
+
+  _createElement: Document['createElement'];
   /**
    * @private
    */
@@ -105,10 +108,12 @@ export class MainThreadRuntime {
     new WeakMap();
 
   constructor(
-    public config: MainThreadConfig,
+    public config: MainThreadRuntimeConfig,
   ) {
     this.__globalProps = config.globalProps;
     this.lynx = createMainThreadLynx(config);
+    this._rootDom = config.rootDom;
+    this._createElement = config.createElement;
     /**
      * now create the style content
      * 1. flatten the styleInfo
@@ -122,12 +127,11 @@ export class MainThreadRuntime {
     const cssInJsInfo: CssInJsInfo = this.config.pageConfig.enableCSSSelector
       ? {}
       : genCssInJsInfo(this.config.styleInfo);
-    const cardStyleElement = this.config.docu.createElement('style');
+    const cardStyleElement = this._createElement('style');
     cardStyleElement.innerHTML = genCssContent(
       this.config.styleInfo,
       this.config.pageConfig,
     );
-    this._rootDom = this.config.docu;
     this._rootDom.append(cardStyleElement);
     /**
      * now create Element PAPIs
@@ -190,7 +194,7 @@ export class MainThreadRuntime {
   [updateCSSInJsStyle](uniqueId: number, newStyles: string) {
     let currentElement = this._lynxUniqueIdToStyleSheet[uniqueId]?.deref();
     if (!currentElement) {
-      currentElement = this.config.docu.createElement(
+      currentElement = this._createElement(
         'style',
       ) as HTMLStyleElement;
       this._lynxUniqueIdToStyleSheet[uniqueId] = new WeakRef(currentElement);
@@ -229,10 +233,17 @@ export class MainThreadRuntime {
   processData?: ProcessDataCallback;
 
   ssrEncode?: () => string;
+  ssrHydrate?: (encodeData?: string) => void;
 
   #renderPage?: (data: unknown) => void;
 
   declare renderPage: (data: unknown) => void;
+
+  __GetTemplateParts?: () => Record<string, Element> | undefined;
+
+  __GetPageElement = () => {
+    return this._page;
+  };
 
   _ReportError: RpcCallType<typeof reportErrorEndpoint>;
 

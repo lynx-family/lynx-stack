@@ -102,13 +102,19 @@ function initializeMainThreadTest() {
     },
     lepusCode: { root: '' },
     customSections: {},
-    browserConfig: {},
+    browserConfig: {
+      pixelRatio: 0,
+      pixelWidth: 0,
+      pixelHeight: 0,
+    },
     pageConfig: {
       enableCSSSelector: true,
       enableRemoveCSSScope: true,
       defaultDisplayLinear: true,
+      defaultOverflowVisible: false,
     },
-    docu,
+    rootDom: docu,
+    createElement: docu.createElement.bind(docu),
     styleInfo: {},
     globalProps: {},
     callbacks: {
