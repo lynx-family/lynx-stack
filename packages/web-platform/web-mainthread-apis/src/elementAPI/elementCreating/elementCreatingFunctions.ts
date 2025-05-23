@@ -37,7 +37,7 @@ export function initializeElementCreatingFunction(
       typeof createStyleFunctions
     >['__SetCSSId'];
     const htmlTag = runtime.config.tagMap[tag] ?? tag;
-    const element = runtime.config.docu.createElement(
+    const element = runtime._createElement(
       htmlTag,
     ) as HTMLElement;
     element.setAttribute(lynxTagAttribute, tag);
@@ -177,7 +177,7 @@ export function initializeElementCreatingFunction(
     childA: HTMLElement,
     childB: HTMLElement,
   ): void {
-    const temp = runtime.config.docu.createElement('div');
+    const temp = runtime._createElement('div');
     childA.replaceWith(temp);
     childB.replaceWith(childA);
     temp.replaceWith(childB);

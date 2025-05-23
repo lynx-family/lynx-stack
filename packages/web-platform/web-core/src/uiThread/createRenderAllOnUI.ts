@@ -1,5 +1,5 @@
 import type {
-  MainThreadStartConfigs,
+  StartMainThreadContextConfig,
   RpcCallType,
   updateDataEndpoint,
 } from '@lynx-js/web-constants';
@@ -7,7 +7,7 @@ import type { MainThreadRuntime } from '@lynx-js/web-mainthread-apis';
 import { Rpc } from '@lynx-js/web-worker-rpc';
 
 const {
-  loadMainThread,
+  prepareMainThreadAPIs,
 } = await import('@lynx-js/web-mainthread-apis');
 
 export function createRenderAllOnUI(
@@ -25,12 +25,10 @@ export function createRenderAllOnUI(
   if (!globalThis.module) {
     Object.assign(globalThis, { module: {} });
   }
-  const docu = Object.assign(shadowRoot, {
-    createElement: document.createElement.bind(document),
-  });
-  const { startMainThread } = loadMainThread(
+  const { startMainThread } = prepareMainThreadAPIs(
     mainToBackgroundRpc,
-    docu,
+    shadowRoot,
+    document.createElement.bind(document),
     () => {},
     markTimingInternal,
     () => {
@@ -38,7 +36,7 @@ export function createRenderAllOnUI(
     },
   );
   let runtime!: MainThreadRuntime;
-  const start = async (configs: MainThreadStartConfigs) => {
+  const start = async (configs: StartMainThreadContextConfig) => {
     const mainThreadRuntime = startMainThread(configs);
     runtime = await mainThreadRuntime;
   };

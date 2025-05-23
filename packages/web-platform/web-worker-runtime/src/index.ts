@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { startBackgroundThread } from './backgroundThread/index.js';
-import { startMainThread } from './mainThread/startMainThread.js';
+import { startMainThreadWorker } from './mainThread/startMainThread.js';
 
 export interface WorkerStartMessage {
   mode: 'main' | 'background';
@@ -15,7 +15,7 @@ globalThis.onmessage = (ev) => {
   const { mode, toPeerThread, toUIThread } = ev
     .data as WorkerStartMessage;
   if (mode === 'main') {
-    startMainThread(toUIThread, toPeerThread);
+    startMainThreadWorker(toUIThread, toPeerThread);
   } else {
     startBackgroundThread(toUIThread, toPeerThread);
   }
@@ -23,5 +23,3 @@ globalThis.onmessage = (ev) => {
 Object.assign(globalThis, {
   module: { exports: null },
 });
-
-export { startMainThread };

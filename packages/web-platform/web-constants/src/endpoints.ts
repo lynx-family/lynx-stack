@@ -8,7 +8,7 @@ import type {
   LynxCrossThreadEvent,
 } from './types/EventType.js';
 import type { Cloneable, CloneableObject } from './types/Cloneable.js';
-import type { MainThreadStartConfigs } from './types/MainThreadStartConfigs.js';
+import type { StartMainThreadContextConfig } from './types/MainThreadStartConfigs.js';
 import type { IdentifierType, InvokeCallbackRes } from './types/NativeApp.js';
 import type { LynxTemplate } from './types/LynxModule.js';
 import type { NapiModulesMap } from './types/NapiModules.js';
@@ -55,7 +55,7 @@ export const switchExposureServiceEndpoint = createRpcEndpoint<
 );
 
 export const mainThreadStartEndpoint = createRpcEndpoint<
-  [MainThreadStartConfigs],
+  [StartMainThreadContextConfig],
   void
 >('mainThreadStart', false, false);
 
