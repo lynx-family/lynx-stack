@@ -25,6 +25,11 @@ import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 import { cssChunksToMap } from './css/cssChunksToMap.js';
 import { createLynxAsyncChunksRuntimeModule } from './LynxAsyncChunksRuntimeModule.js';
 
+export type OriginManifest = Record<string, {
+  content: string;
+  size: number;
+}>;
+
 export interface EncodeOptions {
   manifest: Record<string, string | undefined>;
   compilerOptions: Record<string, string | boolean>;
@@ -83,6 +88,7 @@ export interface TemplateHooks {
    * @alpha
    */
   beforeEncode: AsyncSeriesWaterfallHook<{
+    originManifest: OriginManifest;
     encodeData: EncodeRawData;
     filenameTemplate: string;
     entryNames: string[];
@@ -799,11 +805,7 @@ class LynxTemplatePluginImpl {
         root: assetsInfoByGroups.mainThread[0],
         chunks: [],
       },
-      manifest: Object.fromEntries(
-        assetsInfoByGroups.backgroundThread.map(asset => {
-          return [asset.name, asset.source.source().toString()];
-        }),
-      ),
+      manifest: {},
       customSections: {},
     };
     const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(
@@ -812,6 +814,14 @@ class LynxTemplatePluginImpl {
 
     const { encodeData } = await hooks.beforeEncode.promise({
       encodeData: encodeRawData,
+      originManifest: Object.fromEntries(
+        assetsInfoByGroups.backgroundThread.map(asset => {
+          return [asset.name, {
+            content: asset.source.source().toString(),
+            size: asset.source.size(),
+          }];
+        }),
+      ),
       filenameTemplate,
       entryNames,
     });
