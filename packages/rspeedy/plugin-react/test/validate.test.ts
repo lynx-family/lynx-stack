@@ -107,10 +107,6 @@ describe('Validation', () => {
         [Error: Invalid config on pluginReactLynx: \`$input.defineDCE.define.foo\`.
           - Expect to be string
           - Got: number
-
-        Invalid config on pluginReactLynx: \`$input.defineDCE.define.bar\`.
-          - Expect to be string
-          - Got: null
         ]
       `)
   })
@@ -125,7 +121,9 @@ describe('Validation', () => {
     ]
 
     cases.forEach(jsx => {
-      expect(validateConfig({ jsx })).toStrictEqual({ jsx })
+      expect(() => validateConfig({ jsx })).toThrow(
+        `Unknown property: \`$input.jsx\``,
+      )
     })
 
     // cSpell:disable

@@ -276,7 +276,6 @@ describe('Config', () => {
         "enableRemoveCSSScope": true,
         "inlineSourcesContent": true,
         "isDynamicComponent": false,
-        "jsx": undefined,
       }
     `)
   })
@@ -303,7 +302,6 @@ describe('Config', () => {
         "enableRemoveCSSScope": undefined,
         "inlineSourcesContent": true,
         "isDynamicComponent": false,
-        "jsx": undefined,
       }
     `)
 
