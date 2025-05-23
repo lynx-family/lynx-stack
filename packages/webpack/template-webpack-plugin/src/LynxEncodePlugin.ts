@@ -5,9 +5,21 @@
 import type { Compiler } from 'webpack';
 
 import type { EncodeCSSOptions } from './css/encode.js';
+import type { OriginManifest } from './LynxTemplatePlugin.js';
 import { LynxTemplatePlugin } from './LynxTemplatePlugin.js';
 
 import type { CSS } from './index.js';
+
+// https://github.com/web-infra-dev/rsbuild/blob/main/packages/core/src/types/config.ts#L1029
+type InlineChunkTestFunction = (params: {
+  size: number;
+  name: string;
+}) => boolean;
+type InlineChunkTest = RegExp | InlineChunkTestFunction;
+type InlineChunkConfig = boolean | InlineChunkTest | {
+  enable?: boolean | 'auto';
+  test: InlineChunkTest;
+};
 
 /**
  * The options for LynxEncodePluginOptions
@@ -15,7 +27,7 @@ import type { CSS } from './index.js';
  * @public
  */
 export interface LynxEncodePluginOptions {
-  inlineScripts?: boolean | undefined;
+  inlineScripts?: InlineChunkConfig | undefined;
 }
 
 /**
@@ -144,27 +156,44 @@ export class LynxEncodePluginImpl {
         name: this.name,
         stage: LynxEncodePlugin.BEFORE_ENCODE_STAGE,
       }, async (args) => {
-        const { encodeData } = args;
-        const { manifest } = encodeData;
+        const { encodeData, originManifest } = args;
+
+        const [inlinedManifest, externalManifest] = Object.entries(
+          originManifest,
+        )
+          .reduce(
+            ([inlined, external], [name, assert]) => {
+              const shouldInline = this.#shouldInlineScript(
+                name,
+                assert.size,
+              );
+
+              if (shouldInline) {
+                inlined[name] = assert;
+              } else {
+                external[name] = assert;
+              }
+              return [inlined, external];
+            },
+            [{}, {}] as [OriginManifest, OriginManifest],
+          );
 
         let publicPath = '/';
-        if (!this.options.inlineScripts) {
-          if (typeof compilation?.outputOptions.publicPath === 'function') {
-            compilation.errors.push(
-              new compiler.webpack.WebpackError(
-                '`publicPath` as a function is not supported yet.',
-              ),
-            );
-          } else {
-            publicPath = compilation?.outputOptions.publicPath ?? '/';
-          }
+        if (typeof compilation?.outputOptions.publicPath === 'function') {
+          compilation.errors.push(
+            new compiler.webpack.WebpackError(
+              '`publicPath` as a function is not supported yet.',
+            ),
+          );
+        } else {
+          publicPath = compilation?.outputOptions.publicPath ?? '/';
         }
 
         if (!isDebug() && !isDev && !isRsdoctor()) {
           [
             encodeData.lepusCode.root,
             ...encodeData.lepusCode.chunks,
-            ...Object.keys(manifest).map(name => ({ name })),
+            ...Object.keys(originManifest).map(name => ({ name })),
             ...encodeData.css.chunks,
           ]
             .filter(asset => asset !== undefined)
@@ -180,32 +209,35 @@ export class LynxEncodePluginImpl {
           //   '/app-service.js': `
           //     lynx.requireModule('async-chunk1')
           //     lynx.requireModule('async-chunk2')
-          //     lynx.requireModule('initial-chunk1')
-          //     lynx.requireModule('initial-chunk2')
+          //     lynx.requireModule('inlined-initial-chunk1')
+          //     lynx.requireModule('inlined-initial-chunk2')
+          //     lynx.requireModule('external-initial-chunk1')
+          //     lynx.requireModule('external-initial-chunk2')
           //   `,
-          //   'initial-chunk1': `<content-of-initial-chunk>`,
-          //   'initial-chunk2': `<content-of-initial-chunk>`,
+          //   'inlined-initial-chunk1': `<content>`,
+          //   'inlined-initial-chunk2': `<content>`,
           // },
           // ```
           '/app-service.js': [
             this.#appServiceBanner(),
-            Object.keys(manifest)
-              .map((name) =>
+            ...[externalManifest, inlinedManifest].flatMap(manifest =>
+              Object.keys(manifest).map(name =>
                 `module.exports=lynx.requireModule('${
-                  this.#formatJSName(name, publicPath)
+                  this.#formatJSName(
+                    name,
+                    manifest === externalManifest ? publicPath : '/',
+                  )
                 }',globDynamicComponentEntry?globDynamicComponentEntry:'__Card__')`
               )
-              .join(','),
+            ),
             this.#appServiceFooter(),
           ].join(''),
-          ...(this.options.inlineScripts
-            ? Object.fromEntries(
-              Object.entries(manifest).map(([name, source]) => [
-                this.#formatJSName(name, publicPath),
-                source,
-              ]),
-            )
-            : {}),
+          ...Object.fromEntries(
+            Object.entries(inlinedManifest).map(([name, asset]) => [
+              this.#formatJSName(name, '/'),
+              asset.content,
+            ]),
+          ),
         };
 
         return args;
@@ -248,6 +280,29 @@ export class LynxEncodePluginImpl {
 
   #formatJSName(name: string, publicPath: string): string {
     return publicPath + name;
+  }
+
+  #shouldInlineScript(name: string, size: number): boolean {
+    const inlineConfig = this.options.inlineScripts;
+
+    if (inlineConfig instanceof RegExp) {
+      return inlineConfig.test(name);
+    }
+
+    if (typeof inlineConfig === 'function') {
+      return inlineConfig({ size, name });
+    }
+
+    if (typeof inlineConfig === 'object') {
+      // Currently, rspeedy does not support enable: 'auto'
+      if (inlineConfig.enable === false) return false;
+      if (inlineConfig.test instanceof RegExp) {
+        return inlineConfig.test.test(name);
+      }
+      return inlineConfig.test({ size, name });
+    }
+
+    return inlineConfig !== false;
   }
 
   protected options: Required<LynxEncodePluginOptions>;

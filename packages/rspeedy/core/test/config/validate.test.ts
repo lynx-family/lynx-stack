@@ -1122,7 +1122,7 @@ describe('Config Validation', () => {
           [Error: Invalid configuration.
 
           Invalid config on \`$input.output.inlineScripts\`.
-            - Expect to be (boolean | undefined)
+            - Expect to be (RegExp | __type.o110 | boolean | undefined)
             - Got: null
           ]
         `)
