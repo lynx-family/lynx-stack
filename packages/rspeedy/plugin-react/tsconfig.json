@@ -10,7 +10,6 @@
     { "path": "../../webpack/template-webpack-plugin/tsconfig.build.json" },
     { "path": "../../webpack/react-webpack-plugin/tsconfig.build.json" },
     { "path": "../../webpack/react-refresh-webpack-plugin/tsconfig.build.json" },
-    { "path": "../../webpack/web-webpack-plugin/tsconfig.json" },
     { "path": "../core/tsconfig.build.json" },
     { "path": "../plugin-react-alias/tsconfig.build.json" },
   ],

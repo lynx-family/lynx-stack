@@ -4,8 +4,8 @@
 import { createRsbuild } from '@rsbuild/core'
 import { describe, expect, test } from 'vitest'
 
+import { WebEncodePlugin } from '@lynx-js/template-webpack-plugin'
 import type { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'
-import { WebWebpackPlugin } from '@lynx-js/web-webpack-plugin'
 
 import { pluginStubRspeedyAPI } from './stub-rspeedy-api.plugin.js'
 
@@ -126,19 +126,19 @@ describe('Web', () => {
 
     expect(
       lynxConfig?.plugins?.some(p =>
-        p?.constructor.name === WebWebpackPlugin.name
+        p?.constructor.name === WebEncodePlugin.name
       ),
     ).toBeFalsy()
 
     expect(
       webConfig?.plugins?.some(p =>
-        p?.constructor.name === WebWebpackPlugin.name
+        p?.constructor.name === WebEncodePlugin.name
       ),
     ).toBeTruthy()
 
     expect(
       prefetchConfig?.plugins?.some(p =>
-        p?.constructor.name === WebWebpackPlugin.name
+        p?.constructor.name === WebEncodePlugin.name
       ),
     ).toBeFalsy()
   })

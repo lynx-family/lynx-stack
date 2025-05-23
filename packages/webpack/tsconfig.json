@@ -9,7 +9,6 @@
     { "path": "./runtime-wrapper-webpack-plugin/tsconfig.build.json" },
     { "path": "./webpack-dev-transport/tsconfig.build.json" },
     { "path": "./template-webpack-plugin/tsconfig.build.json" },
-    { "path": "./web-webpack-plugin/tsconfig.json" },
     { "path": "./react-webpack-plugin/tsconfig.build.json" },
     { "path": "./css-extract-webpack-plugin/tsconfig.build.json" },
     { "path": "./react-refresh-webpack-plugin/tsconfig.build.json" },

@@ -155,6 +155,23 @@ export interface TemplateHooks {
     }>;
 }
 
+// Warning: (ae-missing-release-tag) "WebEncodePlugin" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class WebEncodePlugin {
+    // (undocumented)
+    apply(compiler: Compiler): void;
+    // (undocumented)
+    static BEFORE_ENCODE_HOOK_STAGE: number;
+    deleteDebuggingAssets(compilation: Compilation, assets: ({
+        name: string;
+    } | undefined)[]): void;
+    // (undocumented)
+    static ENCODE_HOOK_STAGE: number;
+    // (undocumented)
+    static name: string;
+}
+
 // Warnings were encountered during analysis:
 //
 // lib/LynxTemplatePlugin.d.ts:58:9 - (ae-forgotten-export) The symbol "EncodeRawData" needs to be exported by the entry point index.d.ts

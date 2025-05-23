@@ -4,12 +4,15 @@
 
 import type { Compilation, Compiler } from 'webpack';
 
-import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin';
+import {
+  LynxTemplatePlugin,
+  isDebug,
+  isRsdoctor,
+} from './LynxTemplatePlugin.js';
+import { genStyleInfo } from './web/genStyleInfo.js';
 
-import { genStyleInfo } from './style/genStyleInfo.js';
-
-export class WebWebpackPlugin {
-  static name = 'lynx-for-web-plugin';
+export class WebEncodePlugin {
+  static name = 'WebEncodePlugin';
   static BEFORE_ENCODE_HOOK_STAGE = 100;
   static ENCODE_HOOK_STAGE = 100;
 
@@ -18,7 +21,7 @@ export class WebWebpackPlugin {
       || compiler.options.mode === 'development';
 
     compiler.hooks.thisCompilation.tap(
-      WebWebpackPlugin.name,
+      WebEncodePlugin.name,
       (compilation) => {
         const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(
           compilation,
@@ -28,7 +31,7 @@ export class WebWebpackPlugin {
 
         const { Compilation } = compiler.webpack;
         compilation.hooks.processAssets.tap({
-          name: WebWebpackPlugin.name,
+          name: WebEncodePlugin.name,
 
           // `PROCESS_ASSETS_STAGE_REPORT` is the last stage of the `processAssets` hook.
           // We need to run our asset deletion after this stage to ensure all assets have been processed.
@@ -42,8 +45,8 @@ export class WebWebpackPlugin {
         });
 
         hooks.beforeEncode.tap({
-          name: WebWebpackPlugin.name,
-          stage: WebWebpackPlugin.BEFORE_ENCODE_HOOK_STAGE,
+          name: WebEncodePlugin.name,
+          stage: WebEncodePlugin.BEFORE_ENCODE_HOOK_STAGE,
         }, (encodeOptions) => {
           const { encodeData } = encodeOptions;
           const { cssMap } = encodeData.css;
@@ -76,8 +79,8 @@ export class WebWebpackPlugin {
         });
 
         hooks.encode.tap({
-          name: WebWebpackPlugin.name,
-          stage: WebWebpackPlugin.ENCODE_HOOK_STAGE,
+          name: WebEncodePlugin.name,
+          stage: WebEncodePlugin.ENCODE_HOOK_STAGE,
         }, ({ encodeOptions }) => {
           return {
             buffer: Buffer.from(JSON.stringify({
@@ -113,24 +116,6 @@ export class WebWebpackPlugin {
       return compilation.deleteAsset(name);
     }
   }
-}
-
-export function isDebug(): boolean {
-  if (!process.env['DEBUG']) {
-    return false;
-  }
-
-  const values = process.env['DEBUG'].toLocaleLowerCase().split(',');
-  return [
-    'rspeedy',
-    '*',
-    'rspeedy:*',
-    'rspeedy:template',
-  ].some((key) => values.includes(key));
-}
-
-export function isRsdoctor(): boolean {
-  return process.env['RSDOCTOR'] === 'true';
 }
 
 function last<T>(array: T[]): T | undefined {

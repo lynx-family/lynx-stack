@@ -18,8 +18,8 @@ import {
   CSSPlugins,
   LynxEncodePlugin,
   LynxTemplatePlugin,
+  WebEncodePlugin,
 } from '@lynx-js/template-webpack-plugin'
-import { WebWebpackPlugin } from '@lynx-js/web-webpack-plugin'
 
 import type { PluginReactLynxOptions } from './pluginReactLynx.js'
 
@@ -234,7 +234,7 @@ export function applyEntry(
     if (isWeb) {
       chain
         .plugin(PLUGIN_NAME_WEB)
-        .use(WebWebpackPlugin, [])
+        .use(WebEncodePlugin, [])
         .end()
     }
 
