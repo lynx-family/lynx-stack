@@ -1,5 +1,40 @@
 # @lynx-js/react-rsbuild-plugin
 
+## 0.10.0
+
+### Minor Changes
+
+- **BREAKING CHANGE**: Remove the unused `jsx` option. ([#903](https://github.com/lynx-family/lynx-stack/pull/903))
+
+### Patch Changes
+
+- Support `output.inlineScripts`, which controls whether to inline scripts into Lynx bundle (`.lynx.bundle`). ([#874](https://github.com/lynx-family/lynx-stack/pull/874))
+
+  Only background thread scripts can remain non-inlined, whereas the main thread script is always inlined.
+
+  example:
+
+  ```js
+  import { defineConfig } from '@lynx-js/rspeedy'
+
+  export default defineConfig({
+    output: {
+      inlineScripts: false,
+    },
+  })
+  ```
+
+- Support `@lynx-js/react` v0.109.0. ([#840](https://github.com/lynx-family/lynx-stack/pull/840))
+
+- Use `WebEncodePlugin` instead of `WebWebpackPlugin`. ([#904](https://github.com/lynx-family/lynx-stack/pull/904))
+
+- Updated dependencies [[`7beb35e`](https://github.com/lynx-family/lynx-stack/commit/7beb35ebf72f9475c0a200c93c6b9bdaa7980e1b), [`b6e27da`](https://github.com/lynx-family/lynx-stack/commit/b6e27daf865b0627b1c3238228a4fdf65ad87ee3), [`5ddec12`](https://github.com/lynx-family/lynx-stack/commit/5ddec124ab26e61e415576d575a400e76c7bd8d2), [`77524bc`](https://github.com/lynx-family/lynx-stack/commit/77524bcf502675a182923823bf5c892846e0c729), [`fdab5dc`](https://github.com/lynx-family/lynx-stack/commit/fdab5dc9d624de0b39957695599cc8eebab90973), [`ff63b58`](https://github.com/lynx-family/lynx-stack/commit/ff63b58af137be5265458cb08db9af0aaa69c416), [`fdab5dc`](https://github.com/lynx-family/lynx-stack/commit/fdab5dc9d624de0b39957695599cc8eebab90973), [`2b83934`](https://github.com/lynx-family/lynx-stack/commit/2b83934f12c9ad9ed46ef76233d5bb12a1e6af23), [`3520031`](https://github.com/lynx-family/lynx-stack/commit/352003113596692c34d98644db401ece362bc936)]:
+  - @lynx-js/template-webpack-plugin@0.7.0
+  - @lynx-js/css-extract-webpack-plugin@0.5.4
+  - @lynx-js/react-refresh-webpack-plugin@0.3.3
+  - @lynx-js/react-webpack-plugin@0.6.14
+  - @lynx-js/react-alias-rsbuild-plugin@0.10.0
+
 ## 0.9.10
 
 ### Patch Changes

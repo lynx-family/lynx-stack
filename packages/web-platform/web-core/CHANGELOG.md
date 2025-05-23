@@ -1,5 +1,31 @@
 # @lynx-js/web-core
 
+## 0.13.3
+
+### Patch Changes
+
+- refactor: code clean ([#897](https://github.com/lynx-family/lynx-stack/pull/897))
+
+  rename many internal apis to make logic be clear:
+
+  multi-thread: startMainWorker -> prepareMainThreadAPIs -> startMainThread -> createMainThreadContext(new MainThreadRuntime)
+  all-on-ui: prepareMainThreadAPIs -> startMainThread -> createMainThreadContext(new MainThreadRuntime)
+
+- perf: improve dom operation performance ([#881](https://github.com/lynx-family/lynx-stack/pull/881))
+
+  - code clean for offscreen-document, cut down inheritance levels
+  - add `appendChild` method for OffscreenElement, improve performance for append one node
+  - bypass some JS getter for dumping SSR string
+
+- fix: worker not released when backgroundWorkerContextCount != 1 ([#845](https://github.com/lynx-family/lynx-stack/pull/845))
+
+- Updated dependencies [[`bb1f9d8`](https://github.com/lynx-family/lynx-stack/commit/bb1f9d845ef2395a0508666701409972e159389d), [`b6e27da`](https://github.com/lynx-family/lynx-stack/commit/b6e27daf865b0627b1c3238228a4fdf65ad87ee3), [`3d716d7`](https://github.com/lynx-family/lynx-stack/commit/3d716d79ae053b225e9bac2bbb036c968f5261e7)]:
+  - @lynx-js/offscreen-document@0.0.4
+  - @lynx-js/web-mainthread-apis@0.13.3
+  - @lynx-js/web-worker-runtime@0.13.3
+  - @lynx-js/web-constants@0.13.3
+  - @lynx-js/web-worker-rpc@0.13.3
+
 ## 0.13.2
 
 ### Patch Changes

@@ -1,5 +1,7 @@
 # @lynx-js/web-elements-template
 
+## 0.7.3
+
 ## 0.7.2
 
 ### Patch Changes

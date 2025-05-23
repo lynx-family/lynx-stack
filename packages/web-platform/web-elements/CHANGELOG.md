@@ -1,5 +1,28 @@
 # @lynx-js/web-elements
 
+## 0.7.3
+
+### Patch Changes
+
+- refactor: allow elements to be rendered before :defined ([#855](https://github.com/lynx-family/lynx-stack/pull/855))
+
+  Before this commit, we don't allow developers to render these elements before they're defined.
+
+  In this commit, we will remove these restrictions.
+
+- fix: remove the style `contain: content` of x-foldview-ng, otherwise it will cause the `position: fixed` elements to be positioned incorrectly after scrolling. ([#878](https://github.com/lynx-family/lynx-stack/pull/878))
+
+- fix: x-list should observe property list-type change. ([#862](https://github.com/lynx-family/lynx-stack/pull/862))
+
+  Before this commit, list-type only works when it was first assigned.
+
+  use `requestAnimationFrame` instead of `queueMicrotask` to layoutListItem, this is because it may cause crashes in webkit.
+
+- fix: list-item should support linear layout. ([#859](https://github.com/lynx-family/lynx-stack/pull/859))
+
+- Updated dependencies []:
+  - @lynx-js/web-elements-template@0.7.3
+
 ## 0.7.2
 
 ### Patch Changes

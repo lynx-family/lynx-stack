@@ -1,5 +1,11 @@
 # @lynx-js/chunk-loading-webpack-plugin
 
+## 0.2.1
+
+### Patch Changes
+
+- Add `StartupChunkDependenciesRuntimeModule` to fix `RuntimeGlobals.ensureChunkHandler` not found when using chunk splitting ([#798](https://github.com/lynx-family/lynx-stack/pull/798))
+
 ## 0.2.0
 
 ### Minor Changes
