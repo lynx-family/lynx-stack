@@ -896,7 +896,9 @@ class LynxTemplatePluginImpl {
         debugInfo,
         template: buffer,
         outputName: filename,
-        lepus: encodeData.lepusCode.chunks,
+        lepus: [lepusCode.root, ...encodeData.lepusCode.chunks].filter(i =>
+          i !== undefined
+        ),
       });
 
       compilation.emitAsset(filename, new RawSource(template, false));
