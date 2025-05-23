@@ -60,12 +60,12 @@ export default {
 
         hooks.beforeEmit.tap(
           'test',
-          ({ debugInfo, lepus, template }) => {
-            expect(lepus.length).toBe(2);
+          ({ debugInfo, mainThreadAssets, template }) => {
+            expect(mainThreadAssets.length).toBe(2);
 
             return {
               template,
-              lepus,
+              mainThreadAssets,
               debugInfo,
             };
           },

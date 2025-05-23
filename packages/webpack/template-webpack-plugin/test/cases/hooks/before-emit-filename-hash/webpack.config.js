@@ -18,12 +18,12 @@ export default {
 
         hooks.beforeEmit.tap(
           'test',
-          ({ debugInfo, lepus, outputName, template }) => {
+          ({ debugInfo, mainThreadAssets, outputName, template }) => {
             expect(outputName).toMatch(/main\.template\.[0-9a-fA-F]{8}\.js/);
 
             return {
               template,
-              lepus,
+              mainThreadAssets,
               debugInfo,
             };
           },

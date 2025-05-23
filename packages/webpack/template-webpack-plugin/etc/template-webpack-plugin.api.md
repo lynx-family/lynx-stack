@@ -137,7 +137,7 @@ export interface TemplateHooks {
         debugInfo: string;
         template: Buffer;
         outputName: string;
-        lepus: Asset[];
+        mainThreadAssets: Asset[];
     }>;
     // @alpha
     beforeEncode: AsyncSeriesWaterfallHook<{
