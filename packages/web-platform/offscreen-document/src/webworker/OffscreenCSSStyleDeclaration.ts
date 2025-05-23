@@ -48,7 +48,7 @@ export class OffscreenCSSStyleDeclaration {
     const currentStyle = this._parent.getAttribute('style') ?? '';
     this._parent[_attributes].set(
       'style',
-      currentStyle + `${property}:inital;`,
+      currentStyle + `${property}:initial;`,
     ); // only for SSR
   }
 }
