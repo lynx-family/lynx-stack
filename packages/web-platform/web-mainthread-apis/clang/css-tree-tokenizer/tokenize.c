@@ -30,7 +30,7 @@ void consume_numeric_token(const uint16_t* source, int32_t source_length, int32_
   // Otherwise, create a <number-token> with the same value and type flag as number, and return it.
   *type = TOKEN_NUMBER;
 }
-
+uint16_t url_str[3] = {'u', 'r', 'l'};
     // § 4.3.4. Consume an ident-like token
 void consume_ident_like_token(const uint16_t* source, int32_t source_length, int32_t* offset, TokenType* type) {
     uint32_t name_start_offset = *offset;
@@ -40,7 +40,7 @@ void consume_ident_like_token(const uint16_t* source, int32_t source_length, int
 
     // If string’s value is an ASCII case-insensitive match for "url",
     // and the next input code point is U+0028 LEFT PARENTHESIS ((), consume it.
-    uint16_t url_str[3] = {'u', 'r', 'l'};
+    
     if (cmp_str(source, source_length, name_start_offset, *offset, url_str, 3) && get_char_code(source, source_length, *offset) == 0x0028) {
         // While the next two input code points are whitespace, consume the next input code point.
         *offset = find_white_space_end(source, source_length, (*offset) + 1);
@@ -222,12 +222,19 @@ void consume_url_token(const uint16_t* source, int32_t source_length, int32_t* o
           }
       }
   }
-
+uint16_t important_str[9] = {'i', 'm', 'p', 'o', 'r', 't', 'a', 'n', 't'};
 void tokenize(const uint16_t* source, int32_t source_length) {
-
+  
   int32_t start = is_bom(get_char_code(source, source_length, 0));
   int32_t offset = start;
   TokenType type;
+  int32_t declaration_name_start = -1;
+  int32_t declaration_name_end = -1;
+  int32_t declaration_value_start = -1;
+  int32_t declaration_value_end = -1;
+  int32_t status = 0;
+  TokenType prev_type = TOKEN_EOF;
+  bool is_important = false;
   while(offset < source_length) {
     int16_t code = source[offset];
     switch ((char_code_category(code))) {
@@ -478,7 +485,87 @@ void tokenize(const uint16_t* source, int32_t source_length) {
             type = TOKEN_DELIM;
             offset++;
     }
-    on_token(type, start, offset);
+    //https://drafts.csswg.org/css-syntax-3/#consume-declaration
+    // on_token(type, start, offset);
+    /*
+    explain the status:code
+       height   :    1px     !important   ;
+    ^status = 0  ^status = 2
+             ^status = 1    
+                        ^status = 3
+                 
+    */
+   if (type == TOKEN_IDENT && status == 0) {
+      /*
+      1. If the next token is an <ident-token>, consume a token from input and set decl's name to the token’s value.
+        Otherwise, consume the remnants of a bad declaration from input, with nested, and return nothing.
+      */
+      declaration_name_start = start;
+      declaration_name_end = offset;
+      prev_type = type;
+      status = 1;
+      // 2. Discard whitespace from input.
+   }
+   else if (status == 1 && type == TOKEN_COLON)  {
+      /*
+      3. If the next token is a <colon-token>, discard a token from input.
+        Otherwise, consume the remnants of a bad declaration from input, with nested, and return nothing.
+      */
+      status = 2; // now find a value
+   }
+   else if (status == 2 && type != TOKEN_LEFT_CURLY_BRACKET && type != TOKEN_LEFT_PARENTHESIS && type != TOKEN_LEFT_SQUARE_BRACKET && type != TOKEN_SEMICOLON) {
+    // 4. Discard whitespace from input.
+    /*
+      5. Consume a list of component values from input, with nested, and with <semicolon-token, and set decl’s value to the result.
+      component values: A component value is one of the preserved tokens, a function, or a simple block.
+      preserved tokens: Any token produced by the tokenizer except for <function-token>s, <{-token>s, <(-token>s, and <[-token>s.
+      result: except  <{-token>s, <(-token>s, and <[-token>s
+    */
+    declaration_value_start = start;
+    status = 3; // now find a semicolon
+   }
+   else if (status == 3 && type == TOKEN_SEMICOLON) {
+      /*
+      6. If the next token is a <semicolon-token>, consume a token from input.
+        Otherwise, consume the remnants of a bad declaration from input, with nested, and return nothing.
+      */
+     if (declaration_value_end == -1) {
+        declaration_value_end = start;
+      }
+      while(is_white_space(source[declaration_value_end - 1]) && declaration_value_end > declaration_value_start) {
+        declaration_value_end--;
+      }
+      on_declaration(declaration_name_start, declaration_name_end, declaration_value_start, declaration_value_end, is_important);
+      status = 0; // reset
+      declaration_name_start = -1;
+      declaration_name_end = -1;
+      declaration_value_start = -1;
+      declaration_value_end = -1;
+      is_important = false;
+    }
+    else if (status == 3 && prev_type == TOKEN_DELIM && cmp_str(source, source_length, start, offset, important_str, 9)) {
+      // here we will have some bad caes: like
+      // height: 1px !important 2px;
+      // height: 1px /important;
+      // we accpet such limited cases for performance consideration
+      is_important = true;
+      declaration_value_end = start - 1;
+    }
+    else if (status == 3 &&  type != TOKEN_LEFT_CURLY_BRACKET && type != TOKEN_LEFT_PARENTHESIS && type != TOKEN_LEFT_SQUARE_BRACKET && type != TOKEN_SEMICOLON) {
+      if (type != TOKEN_WHITESPACE) {
+        declaration_value_end = offset;
+      }
+    }
+    else if (status != 0) {
+      // we have a bad declaration
+      status = 0; // reset
+      declaration_name_start = -1;
+      declaration_name_end = -1;
+      declaration_value_start = -1;
+      declaration_value_end = -1;
+      is_important = false;
+    }
+    prev_type = type;
     start = offset;
   }
 }

@@ -11,7 +11,7 @@ void consume_url_token(const uint16_t* source, int32_t source_length, int32_t* o
 void consume_string_token(const uint16_t* source, int32_t source_length, uint32_t ending_code_point, int32_t* offset, TokenType* type);
 EMSCRIPTEN_KEEPALIVE
 void tokenize(const uint16_t* source, int32_t source_length);
-EM_JS(void, on_token, (uint32_t type, uint32_t start, uint32_t end), {
-    globalThis._tokenizer_on_token_callback(type, start, end);
+EM_JS(void, on_declaration, (int32_t declaration_name_start,int32_t declaration_name_end,int32_t declaration_value_start,int32_t declaration_value_end, bool is_important), {
+    globalThis._tokenizer_on_declaration_callback(declaration_name_start, declaration_name_end, declaration_value_start, declaration_value_end, is_important);
 });
 #endif
