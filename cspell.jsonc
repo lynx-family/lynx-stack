@@ -140,6 +140,12 @@
     "queueMicrotask",
     "rustup", // Rust installer/manager
     "worklets",
+    // linux and emscripten
+    "emscripten",
+    "pushd",
+    "emcc",
+    "emsdk",
+    "popd",
   ],
   // Glob
   "ignorePaths": [
