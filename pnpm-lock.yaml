@@ -1104,8 +1104,8 @@ importers:
   website:
     dependencies:
       '@rstack-dev/doc-ui':
-        specifier: 1.10.0
-        version: 1.10.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+        specifier: 1.10.3
+        version: 1.10.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       react:
         specifier: ^19.1.0
         version: 19.1.0
@@ -2917,8 +2917,8 @@ packages:
     resolution: {integrity: sha512-JaIbF2Ohuucx8HirpqvkrF8ap17GobUr02GejowdJ3zK0tR2EkcgjAy6kjBAn4P4gr6cHhbqyFxqRTImVad2rg==}
     engines: {node: '>=18.0.0'}
 
-  '@rstack-dev/doc-ui@1.10.0':
-    resolution: {integrity: sha512-PRACISyGl8vnqQ1occngpVIfDT0ShKtpi+Tb/HIG7KK+WBV4DaZeNsN1JC5+LHWObEgYsyemCTwxHA9+i3PKIw==}
+  '@rstack-dev/doc-ui@1.10.3':
+    resolution: {integrity: sha512-V3j7bMGlA5+Ii01LLu9htu3HEl3RqTcLoCYu63Caow7kczNDNIY77AGQThYUYekTHCfy4mGh0a9xN2xXudeBXg==}
 
   '@rtsao/scc@1.1.0':
     resolution: {integrity: sha512-zt6OdqaDoOnJ1ZYsCYGt9YmWzDXl4vQdKTyJev62gFhRGKdx7mcT54V9KIjg+d2wi9EXsPvAPKe7i7WjfVWB8g==}
@@ -10423,7 +10423,7 @@ snapshots:
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
 
-  '@rstack-dev/doc-ui@1.10.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
+  '@rstack-dev/doc-ui@1.10.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
     dependencies:
       framer-motion: 12.11.4(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
     transitivePeerDependencies:
