@@ -17,7 +17,7 @@ bool cmp_char(const uint16_t* test_str, const uint32_t test_str_length, uint32_t
 
 bool cmp_str(const uint16_t* test_str, uint32_t test_str_length, int32_t start, int32_t end, uint16_t* reference_str, uint32_t reference_str_length);
 
-uint32_t find_white_space_start(const uint16_t* source, uint32_t source_length, uint32_t offset);
+uint32_t find_white_space_start(const uint16_t* source, uint32_t source_length, int32_t offset);
 
 uint32_t find_white_space_end(const uint16_t* source, uint32_t source_length, uint32_t offset);
 

@@ -41,7 +41,7 @@ bool cmp_str(const uint16_t* test_str, uint32_t test_str_length, int32_t start, 
   return true;
 }
 
-uint32_t find_white_space_start(const uint16_t* source, uint32_t source_length, uint32_t offset) {
+uint32_t find_white_space_start(const uint16_t* source, uint32_t source_length, int32_t offset) {
   for(; offset >= 0; offset--) {
     if (offset > source_length || !is_white_space(source[offset])) {
       break;
