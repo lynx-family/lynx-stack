@@ -6,6 +6,7 @@
   "packages/testing-library/examples/*/vitest.config.ts",
   "packages/third-party/*/vitest.config.ts",
   "packages/tools/*/vitest.config.ts",
+  "packages/use-sync-external-store/vitest.config.ts",
   "packages/web-platform/*/vitest.config.ts",
   "packages/webpack/*/vitest.config.ts"
 ]

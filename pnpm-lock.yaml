@@ -634,6 +634,12 @@ importers:
         specifier: ^5.99.9
         version: 5.99.9
 
+  packages/use-sync-external-store:
+    devDependencies:
+      '@lynx-js/react':
+        specifier: workspace:*
+        version: link:../react
+
   packages/web-platform/offscreen-document: {}
 
   packages/web-platform/web-constants:

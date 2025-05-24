@@ -1,20 +1,20 @@
 packages:
   - examples/*
+  - packages/background-only
   - packages/react
   - packages/react/refresh
   - packages/react/runtime
+  - packages/react/testing-library
   - packages/react/transform
   - packages/react/worklet-runtime
-  - packages/react/testing-library
   - packages/rspeedy/*
-  - packages/tools/*
-  - packages/web-platform/*
-  - packages/webpack/*
-  - packages/third-party/*
   - packages/testing-library/*
   - packages/testing-library/examples/*
-  - packages/background-only
-  - "!packages/testing-library/examples"
+  - packages/third-party/*
+  - packages/tools/*
+  - packages/use-sync-external-store
+  - packages/web-platform/*
+  - packages/webpack/*
   - website
 
 # Default catalogs

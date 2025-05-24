@@ -41,6 +41,8 @@
 
       "packages/tools/**",
 
+      "packages/use-sync-external-store/test/**",
+
       "packages/webpack/*/runtime/**",
 
       "packages/web-platform/**",
