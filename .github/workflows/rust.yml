@@ -31,7 +31,7 @@ jobs:
         with:
           cache-key: test-${{ runner.os }}
       - name: Install llvm-cov and nextest
-        uses: taiki-e/install-action@13608a19a2204ea4cc0b5888e995ab288684b613 # v2
+        uses: taiki-e/install-action@6c6479b49816fcc0975a31af977bdc1f847c2920 # v2
         with:
           tool: cargo-llvm-cov,cargo-nextest
       - name: Test
@@ -44,7 +44,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
       - name: Upload test results to Codecov
         if: ${{ !cancelled() }}
-        uses: codecov/test-results-action@f2dba722c67b86c6caa034178c6e4d35335f6706 # v1
+        uses: codecov/test-results-action@47f89e9acb64b76debcd5ea40642d25a4adced9f # v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: target/nextest/ci/test-report.junit.xml
