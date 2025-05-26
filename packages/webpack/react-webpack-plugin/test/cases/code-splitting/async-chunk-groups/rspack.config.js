@@ -43,9 +43,9 @@ export default {
               ],
             );
             expect(
-              Object.keys(args.encodeData.manifest).length,
+              Object.keys(args.originManifest).length,
             ).toBe(1);
-            expect(Object.keys(args.encodeData.manifest)[0]).toBeOneOf(
+            expect(Object.keys(args.originManifest)[0]).toBeOneOf(
               [ // main entry
                 'main:background.js',
                 // foo.js lazy bundle
