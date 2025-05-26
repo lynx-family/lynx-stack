@@ -32,7 +32,7 @@ export async function SSR(rawTemplate, caseName, projectName = 'fp-only') {
     threadStrategy: ALL_ON_UI ? 'all-on-ui' : undefined,
   });
   const ssrHtml = await lynxView.renderToString();
-  return ssrHtml.toString('utf-8');
+  return ssrHtml;
 }
 export async function genTemplate(caseName, projectName = 'fp-only') {
   const ssrHtml = await SSR(

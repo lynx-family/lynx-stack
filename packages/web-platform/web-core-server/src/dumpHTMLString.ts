@@ -1,4 +1,3 @@
-import { Buffer } from 'node:buffer';
 import {
   _attributes,
   _children,
@@ -6,6 +5,7 @@ import {
   type OffscreenDocument,
   type OffscreenElement,
 } from '@lynx-js/offscreen-document/webworker';
+import { write } from './createLynxView.js';
 
 type ShadowrootTemplates =
   | ((
@@ -14,34 +14,34 @@ type ShadowrootTemplates =
   | string;
 
 function getInnerHTMLImpl(
-  buffer: Buffer,
+  buffer: Uint16Array,
   offset: number,
   element: OffscreenElement,
   shadowrootTemplates: Record<string, ShadowrootTemplates>,
 ): number {
   const localName = element.localName;
-  offset += buffer.write('<', offset, 'utf-8');
-  offset += buffer.write(localName, offset, 'utf-8');
+  offset += write(buffer, '<', offset);
+  offset += write(buffer, localName, offset);
   for (const [key, value] of element[_attributes]) {
-    offset += buffer.write(' ', offset, 'utf-8');
-    offset += buffer.write(key, offset, 'utf-8');
-    offset += buffer.write('="', offset, 'utf-8');
-    offset += buffer.write(value, offset, 'utf-8');
-    offset += buffer.write('"', offset, 'utf-8');
+    offset += write(buffer, ' ', offset);
+    offset += write(buffer, key, offset);
+    offset += write(buffer, '="', offset);
+    offset += write(buffer, value, offset);
+    offset += write(buffer, '"', offset);
   }
 
-  offset += buffer.write('>', offset, 'utf-8');
+  offset += write(buffer, '>', offset);
   const templateImpl = shadowrootTemplates[localName];
   if (templateImpl) {
     const template = typeof templateImpl === 'function'
       ? templateImpl(Object.fromEntries(element[_attributes].entries()))
       : templateImpl;
-    offset += buffer.write('<template shadowrootmode="open">', offset, 'utf-8');
-    offset += buffer.write(template, offset, 'utf-8');
-    offset += buffer.write('</template>', offset, 'utf-8');
+    offset += write(buffer, '<template shadowrootmode="open">', offset);
+    offset += write(buffer, template, offset);
+    offset += write(buffer, '</template>', offset);
   }
   if (element[innerHTML]) {
-    offset += buffer.write(element[innerHTML], offset, 'utf-8');
+    offset += write(buffer, element[innerHTML], offset);
   } else {
     for (const child of element[_children]) {
       offset = getInnerHTMLImpl(
@@ -52,14 +52,14 @@ function getInnerHTMLImpl(
       );
     }
   }
-  offset += buffer.write('</', offset, 'utf-8');
-  offset += buffer.write(localName, offset, 'utf-8');
-  offset += buffer.write('>', offset, 'utf-8');
+  offset += write(buffer, '</', offset);
+  offset += write(buffer, localName, offset);
+  offset += write(buffer, '>', offset);
   return offset;
 }
 
 export function dumpHTMLString(
-  buffer: Buffer,
+  buffer: Uint16Array,
   offset: number,
   element: OffscreenDocument,
   shadowrootTemplates: Record<string, ShadowrootTemplates>,

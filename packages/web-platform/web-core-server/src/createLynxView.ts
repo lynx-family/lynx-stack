@@ -3,7 +3,6 @@ import {
   lynxUniqueIdAttribute,
   type StartMainThreadContextConfig,
 } from '@lynx-js/web-constants';
-import { Buffer } from 'node:buffer';
 import { Rpc } from '@lynx-js/web-worker-rpc';
 import { prepareMainThreadAPIs } from '@lynx-js/web-mainthread-apis';
 import { loadTemplate } from './utils/loadTemplate.js';
@@ -139,41 +138,38 @@ export async function createLynxView(
     ...overrideElemenTemplates,
   };
 
-  async function renderToString(): Promise<Buffer> {
+  async function renderToString(): Promise<ArrayBuffer> {
     await firstPaintReadyPromise;
     const ssrEncodeData = runtime?.ssrEncode?.();
     let offset = 0;
-    const buffer = Buffer.alloc(bufferSize); // 1MB
-    offset += buffer.write('<lynx-view ssr url="', offset, 'utf-8');
-    offset += buffer.write(hydrateUrl, offset, 'utf-8');
-    offset += buffer.write('"', offset, 'utf-8');
+    const buf = new ArrayBuffer(bufferSize);
+    const buffer = new Uint16Array(buf);
+    offset += write(buffer, '<lynx-view ssr url="', offset);
+    offset += write(buffer, hydrateUrl, offset);
+    offset += write(buffer, '"', offset);
     if (autoSize) {
-      offset += buffer.write(' height="auto" width="auto"', offset, 'utf-8');
+      offset += write(buffer, ' height="auto" width="auto"', offset);
     }
     if (lynxViewStyle) {
-      offset += buffer.write(' style="', offset, 'utf-8');
-      offset += buffer.write(lynxViewStyle, offset, 'utf-8');
-      offset += buffer.write('"', offset, 'utf-8');
+      offset += write(buffer, ' style="', offset);
+      offset += write(buffer, lynxViewStyle, offset);
+      offset += write(buffer, '"', offset);
     }
     if (ssrEncodeData) {
       const encodeDataEncoded = ssrEncodeData ? encodeURI(ssrEncodeData) : ''; // to avoid XSS
-      offset += buffer.write(' ssr-encode-data="', offset, 'utf-8');
-      offset += buffer.write(encodeDataEncoded, offset, 'utf-8');
-      offset += buffer.write('"', offset, 'utf-8');
+      offset += write(buffer, ' ssr-encode-data="', offset);
+      offset += write(buffer, encodeDataEncoded, offset);
+      offset += write(buffer, '"', offset);
     }
-    offset += buffer.write(
-      '><template shadowrootmode="open">',
-      offset,
-      'utf-8',
-    );
-    offset += buffer.write('<style>', offset, 'utf-8');
-    offset += buffer.write(injectStyles, offset, 'utf-8');
-    offset += buffer.write('\n', offset, 'utf-8');
+    offset += write(buffer, '><template shadowrootmode="open">', offset);
+    offset += write(buffer, '<style>', offset);
+    offset += write(buffer, injectStyles, offset);
+    offset += write(buffer, '\n', offset);
     for (const style of inShadowRootStyles) {
-      offset += buffer.write(style, offset, 'utf-8');
-      offset += buffer.write('\n', offset, 'utf-8');
+      offset += write(buffer, style, offset);
+      offset += write(buffer, '\n', offset);
     }
-    offset += buffer.write('</style>', offset, 'utf-8');
+    offset += write(buffer, '</style>', offset);
 
     offset = dumpHTMLString(
       buffer,
@@ -181,10 +177,25 @@ export async function createLynxView(
       offscreenDocument,
       elementTemplates,
     );
-    offset += buffer.write('</template></lynx-view>', offset, 'utf-8');
-    return buffer.subarray(0, offset);
+    offset += write(buffer, '</template></lynx-view>', offset);
+    return buf.slice(0, offset * 2);
   }
   return {
     renderToString,
   };
+}
+
+export function write(
+  buffer: Uint16Array,
+  data: string,
+  offset: number,
+  maxLength: number = buffer.length - offset,
+): number {
+  const maxWrite = maxLength < data.length
+    ? maxLength
+    : data.length;
+  for (let i = 0; i < maxWrite; i++) {
+    buffer[offset + i] = data.charCodeAt(i);
+  }
+  return maxWrite;
 }
