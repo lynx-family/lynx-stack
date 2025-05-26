@@ -97,13 +97,18 @@ export default tseslint.config(
           source: 'string',
           style: 'line',
           content: [
-            'Copyright {year} {authors}. All rights reserved.',
+            'Copyright (year) {authors}. All rights reserved.',
             'Licensed under the Apache License Version 2.0 that can be found in the',
             'LICENSE file in the root directory of this source tree.',
           ].join('\n'),
           variables: {
-            year: '2024',
             authors: 'The Lynx Authors',
+          },
+          patterns: {
+            year: {
+              pattern: '\\d{4}',
+              defaultValue: new Date().getFullYear().toString(),
+            },
           },
         },
       ],
