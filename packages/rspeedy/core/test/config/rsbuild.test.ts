@@ -358,6 +358,7 @@ describe('Config - toRsBuildConfig', () => {
           "dataUriLimit": 2048,
           "distPath": undefined,
           "filenameHash": undefined,
+          "inlineScripts": undefined,
           "legalComments": "none",
           "polyfill": "off",
           "sourceMap": undefined,
@@ -404,6 +405,17 @@ describe('Config - toRsBuildConfig', () => {
       })
 
       expect(rsbuildConfig.output?.distPath?.root).toBe('foo')
+    })
+
+    test('transform output.inlineScripts', () => {
+      const rsbuildConfig = toRsbuildConfig({
+        output: {
+          inlineScripts: false,
+        },
+      })
+      expect(rsbuildConfig.output?.inlineScripts).toMatchInlineSnapshot(
+        `false`,
+      )
     })
 
     test('transform output.legalComments', () => {
