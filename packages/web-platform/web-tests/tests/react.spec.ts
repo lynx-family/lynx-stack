@@ -1002,6 +1002,17 @@ test.describe('reactlynx3 tests', () => {
         await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
       },
     );
+    test(
+      'api-animate',
+      async ({ page }, { title }) => {
+        await goto(page, title);
+        await wait(500);
+        await diffScreenShot(page, title, 'initial');
+        await page.locator('#target').click();
+        await wait(2000);
+        await diffScreenShot(page, title, 'animate');
+      },
+    );
   });
 
   test.describe('configs', () => {

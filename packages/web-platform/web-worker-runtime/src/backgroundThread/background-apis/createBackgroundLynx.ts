@@ -11,6 +11,7 @@ import {
 } from '@lynx-js/web-constants';
 import type { Rpc } from '@lynx-js/web-worker-rpc';
 import { createGetCustomSection } from './crossThreadHandlers/createGetCustomSection.js';
+import { createElement } from './createElement.js';
 export interface CreateLynxConfig {
   globalProps: unknown;
   customSections: Record<string, Cloneable>;
@@ -20,6 +21,7 @@ export function createBackgroundLynx(
   config: CreateLynxConfig,
   nativeApp: NativeApp,
   mainThreadRpc: Rpc,
+  uiThreadRpc: Rpc,
 ) {
   const coreContext = new LynxCrossThreadContext({
     rpc: mainThreadRpc,
@@ -45,6 +47,9 @@ export function createBackgroundLynx(
     ),
     queueMicrotask: (callback: () => void) => {
       queueMicrotask(callback);
+    },
+    createElement(_: string, id: string) {
+      return createElement(id, uiThreadRpc);
     },
   };
 }

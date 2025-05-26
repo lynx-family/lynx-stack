@@ -12,3 +12,4 @@ export * from './NativeModules.js';
 export * from './NapiModules.js';
 export * from './FlushElementTreeOptions.js';
 export * from './LynxContextEventTarget.js';
+export * from './Element.js';
