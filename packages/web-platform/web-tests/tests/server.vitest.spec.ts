@@ -10,7 +10,9 @@ describe('server-tests', () => {
     ]
   ) {
     test(testName, async () => {
-      const html = await genTemplate(testName);
+      const html = (new TextDecoder('utf-8')).decode(
+        await genTemplate(testName),
+      );
       expect(html).toMatchSnapshot();
     });
   }

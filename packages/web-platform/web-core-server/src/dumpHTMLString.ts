@@ -1,3 +1,4 @@
+import { Buffer } from 'node:buffer';
 import {
   _attributes,
   _children,
@@ -13,55 +14,63 @@ type ShadowrootTemplates =
   | string;
 
 function getInnerHTMLImpl(
-  buffer: string[],
+  buffer: Buffer,
+  offset: number,
   element: OffscreenElement,
   shadowrootTemplates: Record<string, ShadowrootTemplates>,
-): void {
+): number {
   const localName = element.localName;
-  buffer.push('<');
-  buffer.push(localName);
+  offset += buffer.write('<', offset, 'utf-8');
+  offset += buffer.write(localName, offset, 'utf-8');
   for (const [key, value] of element[_attributes]) {
-    buffer.push(' ');
-    buffer.push(key);
-    buffer.push('="');
-    buffer.push(value);
-    buffer.push('"');
+    offset += buffer.write(' ', offset, 'utf-8');
+    offset += buffer.write(key, offset, 'utf-8');
+    offset += buffer.write('="', offset, 'utf-8');
+    offset += buffer.write(value, offset, 'utf-8');
+    offset += buffer.write('"', offset, 'utf-8');
   }
 
-  buffer.push('>');
+  offset += buffer.write('>', offset, 'utf-8');
   const templateImpl = shadowrootTemplates[localName];
   if (templateImpl) {
     const template = typeof templateImpl === 'function'
       ? templateImpl(Object.fromEntries(element[_attributes].entries()))
       : templateImpl;
-    buffer.push('<template shadowrootmode="open">', template, '</template>');
+    offset += buffer.write('<template shadowrootmode="open">', offset, 'utf-8');
+    offset += buffer.write(template, offset, 'utf-8');
+    offset += buffer.write('</template>', offset, 'utf-8');
   }
   if (element[innerHTML]) {
-    buffer.push(element[innerHTML]);
+    offset += buffer.write(element[innerHTML], offset, 'utf-8');
   } else {
     for (const child of element[_children]) {
-      getInnerHTMLImpl(
+      offset = getInnerHTMLImpl(
         buffer,
+        offset,
         child as OffscreenElement,
         shadowrootTemplates,
       );
     }
   }
-  buffer.push('</');
-  buffer.push(localName);
-  buffer.push('>');
+  offset += buffer.write('</', offset, 'utf-8');
+  offset += buffer.write(localName, offset, 'utf-8');
+  offset += buffer.write('>', offset, 'utf-8');
+  return offset;
 }
 
 export function dumpHTMLString(
-  buffer: string[],
+  buffer: Buffer,
+  offset: number,
   element: OffscreenDocument,
   shadowrootTemplates: Record<string, ShadowrootTemplates>,
-): void {
+): number {
   for (const child of element[_children]) {
-    getInnerHTMLImpl(
+    offset = getInnerHTMLImpl(
       buffer,
+      offset,
       child as OffscreenElement,
       shadowrootTemplates,
     );
   }
+  return offset;
 }
