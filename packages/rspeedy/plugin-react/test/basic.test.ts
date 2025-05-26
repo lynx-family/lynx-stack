@@ -7,7 +7,6 @@ import { tmpdir } from 'node:os'
 import path, { dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { createRsbuild } from '@rsbuild/core'
 import { describe, expect, test, vi } from 'vitest'
 
 import { createRspeedy } from '@lynx-js/rspeedy'
@@ -24,8 +23,8 @@ describe('ReactLynx rsbuild', () => {
     vi.stubEnv('NODE_ENV', 'production')
     const { pluginReactLynx } = await import('../src/index.js')
 
-    const rsbuild = await createRsbuild({
-      rsbuildConfig: {
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
         source: {
           tsconfigPath: new URL('./tsconfig.json', import.meta.url).pathname,
           entry: {
@@ -33,14 +32,7 @@ describe('ReactLynx rsbuild', () => {
           },
         },
         tools: {
-          swc(config) {
-            delete config.env
-            return config
-          },
           rspack: {
-            output: {
-              chunkFormat: 'commonjs',
-            },
             context: dirname(fileURLToPath(import.meta.url)),
             resolve: {
               extensionAlias: {
@@ -49,9 +41,6 @@ describe('ReactLynx rsbuild', () => {
               },
             },
           },
-        },
-        environments: {
-          lynx: {},
         },
         plugins: [
           pluginReactLynx(),
