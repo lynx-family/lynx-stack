@@ -1,5 +1,25 @@
 # @lynx-js/web-mainthread-apis
 
+## 0.13.3
+
+### Patch Changes
+
+- refactor: code clean ([#897](https://github.com/lynx-family/lynx-stack/pull/897))
+
+  rename many internal apis to make logic be clear:
+
+  multi-thread: startMainWorker -> prepareMainThreadAPIs -> startMainThread -> createMainThreadContext(new MainThreadRuntime)
+  all-on-ui: prepareMainThreadAPIs -> startMainThread -> createMainThreadContext(new MainThreadRuntime)
+
+- perf: improve dom operation performance ([#881](https://github.com/lynx-family/lynx-stack/pull/881))
+
+  - code clean for offscreen-document, cut down inheritance levels
+  - add `appendChild` method for OffscreenElement, improve performance for append one node
+  - bypass some JS getter for dumping SSR string
+
+- Updated dependencies [[`b6e27da`](https://github.com/lynx-family/lynx-stack/commit/b6e27daf865b0627b1c3238228a4fdf65ad87ee3)]:
+  - @lynx-js/web-constants@0.13.3
+
 ## 0.13.2
 
 ### Patch Changes

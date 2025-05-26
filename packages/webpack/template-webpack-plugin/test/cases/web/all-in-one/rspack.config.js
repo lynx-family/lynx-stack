@@ -1,5 +1,4 @@
-import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin';
-import { WebWebpackPlugin } from '../../../../src';
+import { LynxTemplatePlugin, WebEncodePlugin } from '../../../../src';
 
 /** @type {import('@rspack/core').Configuration} */
 export default {
@@ -14,7 +13,7 @@ export default {
     filename: '[name]/[name].js',
   },
   plugins: [
-    new WebWebpackPlugin({
+    new WebEncodePlugin({
       include: [/a.js/g],
       cardType: 'react',
       allInOne: true,

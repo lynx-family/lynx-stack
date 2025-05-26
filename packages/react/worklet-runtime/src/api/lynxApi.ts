@@ -5,26 +5,26 @@ import { querySelector, querySelectorAll } from './lepusQuerySelector.js';
 import { isSdkVersionGt } from '../utils/version.js';
 
 function initApiEnv(): void {
-  // @ts-ignore
+  // @ts-expect-error type
   lynx.querySelector = querySelector;
-  // @ts-ignore
+  // @ts-expect-error type
   lynx.querySelectorAll = querySelectorAll;
-  // @ts-ignore
-  globalThis.setTimeout = lynx.setTimeout;
-  // @ts-ignore
-  globalThis.setInterval = lynx.setInterval;
-  // @ts-ignore
-  globalThis.clearTimeout = lynx.clearTimeout;
+  // @ts-expect-error type
+  globalThis.setTimeout = lynx.setTimeout as (cb: () => void, timeout: number) => number;
+  // @ts-expect-error type
+  globalThis.setInterval = lynx.setInterval as (cb: () => void, timeout: number) => number;
+  // @ts-expect-error type
+  globalThis.clearTimeout = lynx.clearTimeout as (timeout: number) => void;
   // In lynx 2.14 `clearInterval` is mistakenly spelled as `clearTimeInterval`. This is fixed in lynx 2.15.
-  // @ts-ignore
-  globalThis.clearInterval = lynx.clearInterval ?? lynx.clearTimeInterval;
+  // @ts-expect-error type
+  globalThis.clearInterval = (lynx.clearInterval ?? lynx.clearTimeInterval) as (timeout: number) => void;
 
   {
-    // @ts-ignore
-    const requestAnimationFrame = lynx.requestAnimationFrame;
-    // @ts-ignore
+    // @ts-expect-error type
+    const requestAnimationFrame = lynx.requestAnimationFrame as (callback: () => void) => number;
+    // @ts-expect-error type
     lynx.requestAnimationFrame = globalThis.requestAnimationFrame = (
-      callback: () => {},
+      callback: () => void,
     ) => {
       if (!isSdkVersionGt(2, 15)) {
         throw new Error(
@@ -35,8 +35,8 @@ function initApiEnv(): void {
     };
   }
 
-  // @ts-ignore
-  globalThis.cancelAnimationFrame = lynx.cancelAnimationFrame;
+  // @ts-expect-error type
+  globalThis.cancelAnimationFrame = lynx.cancelAnimationFrame as (requestId: number) => void;
 }
 
 export { initApiEnv };

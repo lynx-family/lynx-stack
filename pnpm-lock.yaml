@@ -168,7 +168,7 @@ importers:
         specifier: ^3.3.0
         version: 3.3.0
       '@types/react':
-        specifier: ^18.3.21
+        specifier: ^18.3.22
         version: 18.3.22
 
   packages/background-only: {}
@@ -269,6 +269,9 @@ importers:
 
   packages/react/worklet-runtime:
     devDependencies:
+      '@lynx-js/types':
+        specifier: ^3.3.0
+        version: 3.3.0
       esbuild:
         specifier: ^0.25.4
         version: 0.25.4
@@ -418,9 +421,6 @@ importers:
       '@lynx-js/template-webpack-plugin':
         specifier: workspace:*
         version: link:../../webpack/template-webpack-plugin
-      '@lynx-js/web-webpack-plugin':
-        specifier: workspace:*
-        version: link:../../webpack/web-webpack-plugin
       background-only:
         specifier: workspace:^
         version: link:../../background-only
@@ -1089,22 +1089,6 @@ importers:
         specifier: ^6.0.1
         version: 6.0.1
 
-  packages/webpack/web-webpack-plugin:
-    dependencies:
-      '@lynx-js/web-style-transformer':
-        specifier: workspace:*
-        version: link:../../web-platform/web-style-transformer
-    devDependencies:
-      '@lynx-js/template-webpack-plugin':
-        specifier: workspace:*
-        version: link:../template-webpack-plugin
-      '@lynx-js/test-tools':
-        specifier: workspace:*
-        version: link:../test-tools
-      webpack:
-        specifier: ^5.99.9
-        version: 5.99.9
-
   packages/webpack/webpack-dev-transport:
     devDependencies:
       '@microsoft/api-extractor':
@@ -1165,9 +1149,6 @@ importers:
       '@lynx-js/template-webpack-plugin':
         specifier: workspace:*
         version: link:../packages/webpack/template-webpack-plugin
-      '@lynx-js/web-webpack-plugin':
-        specifier: workspace:*
-        version: link:../packages/webpack/web-webpack-plugin
       '@lynx-js/webpack-runtime-globals':
         specifier: workspace:*
         version: link:../packages/webpack/webpack-runtime-globals

@@ -10,7 +10,7 @@ import type { RefImpl } from './workletRef.js';
 declare global {
   // eslint-disable-next-line no-var
   var lynxWorkletImpl: {
-    _workletMap: Record<string, (...args: any[]) => any>;
+    _workletMap: Record<string, (...args: unknown[]) => unknown>;
     _jsFunctionLifecycleManager?: JsFunctionLifecycleManager;
     // for pre-0.99 compatibility
     _eventDelayImpl: EventDelayImpl;
@@ -21,6 +21,6 @@ declare global {
 
   function runWorklet(ctx: Worklet, params: ClosureValueType[]): unknown;
 
-  function registerWorklet(type: string, id: string, worklet: (...args: any[]) => any): void;
-  function registerWorkletInternal(type: string, id: string, worklet: (...args: any[]) => any): void;
+  function registerWorklet(type: string, id: string, worklet: (...args: unknown[]) => unknown): void;
+  function registerWorkletInternal(type: string, id: string, worklet: (...args: unknown[]) => unknown): void;
 }

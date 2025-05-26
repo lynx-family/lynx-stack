@@ -1,5 +1,14 @@
 # @lynx-js/web-explorer
 
+## 0.0.9
+
+### Patch Changes
+
+- chore: update dependencies: ([#868](https://github.com/lynx-family/lynx-stack/pull/868))
+
+  - @lynx-js/web-elements@0.7.2
+  - @lynx-js/web-core@0.13.2
+
 ## 0.0.8
 
 ### Patch Changes

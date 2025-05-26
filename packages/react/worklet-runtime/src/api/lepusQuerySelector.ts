@@ -7,9 +7,7 @@ class PageElement {
   private static pageElement: ElementNode | undefined;
 
   static get() {
-    if (PageElement.pageElement === undefined) {
-      PageElement.pageElement = __GetPageElement();
-    }
+    PageElement.pageElement ??= __GetPageElement();
     return PageElement.pageElement;
   }
 }

@@ -137,7 +137,7 @@ export interface TemplateHooks {
         debugInfo: string;
         template: Buffer;
         outputName: string;
-        lepus: Asset[];
+        mainThreadAssets: Asset[];
     }>;
     // @alpha
     beforeEncode: AsyncSeriesWaterfallHook<{
@@ -153,6 +153,23 @@ export interface TemplateHooks {
         buffer: Buffer;
         debugInfo: string;
     }>;
+}
+
+// Warning: (ae-missing-release-tag) "WebEncodePlugin" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class WebEncodePlugin {
+    // (undocumented)
+    apply(compiler: Compiler): void;
+    // (undocumented)
+    static BEFORE_ENCODE_HOOK_STAGE: number;
+    deleteDebuggingAssets(compilation: Compilation, assets: ({
+        name: string;
+    } | undefined)[]): void;
+    // (undocumented)
+    static ENCODE_HOOK_STAGE: number;
+    // (undocumented)
+    static name: string;
 }
 
 // Warnings were encountered during analysis:

@@ -35,7 +35,7 @@ function initWorklet(): void {
  * @param id worklet hash
  * @param worklet worklet function
  */
-function registerWorklet(_type: string, id: string, worklet: (...args: any[]) => any): void {
+function registerWorklet(_type: string, id: string, worklet: (...args: unknown[]) => unknown): void {
   lynxWorkletImpl._workletMap[id] = worklet;
 }
 
@@ -58,7 +58,7 @@ function runWorklet(ctx: Worklet, params: ClosureValueType[]): unknown {
 }
 
 function runWorkletImpl(ctx: Worklet, params: ClosureValueType[]): unknown {
-  const worklet: (...args: any[]) => unknown = profile(
+  const worklet: (...args: unknown[]) => unknown = profile(
     'transformWorkletCtx ' + ctx._wkltId,
     () => transformWorklet(ctx, true),
   );
@@ -73,9 +73,9 @@ function validateWorklet(ctx: unknown): ctx is Worklet {
   return typeof ctx === 'object' && ctx !== null && ('_wkltId' in ctx || '_lepusWorkletHash' in ctx);
 }
 
-const workletCache = new WeakMap<object, ClosureValueType | ((...args: any[]) => any)>();
+const workletCache = new WeakMap<object, ClosureValueType | ((...args: unknown[]) => unknown)>();
 
-function transformWorklet(ctx: Worklet, isWorklet: true): (...args: any[]) => any;
+function transformWorklet(ctx: Worklet, isWorklet: true): (...args: unknown[]) => unknown;
 function transformWorklet(
   ctx: ClosureValueType[],
   isWorklet: false,
@@ -84,7 +84,7 @@ function transformWorklet(
 function transformWorklet(
   ctx: ClosureValueType,
   isWorklet: boolean,
-): ClosureValueType | ((...args: any[]) => any) {
+): ClosureValueType | ((...args: unknown[]) => unknown) {
   /* v8 ignore next 3 */
   if (typeof ctx !== 'object' || ctx === null) {
     return ctx;
@@ -139,7 +139,7 @@ const transformWorkletInner = (
     const isWorkletRef = '_wvid' in (subObj as object);
     if (isWorkletRef) {
       obj[key] = getFromWorkletRefMap(
-        subObj as any as WorkletRefImpl<unknown>,
+        subObj as unknown as WorkletRefImpl<unknown>,
       );
       continue;
     }

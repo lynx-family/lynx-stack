@@ -1,5 +1,21 @@
 # @lynx-js/react
 
+## 0.109.0
+
+### Minor Changes
+
+- Support MTS functions running on the first screen. ([#840](https://github.com/lynx-family/lynx-stack/pull/840))
+
+### Patch Changes
+
+- Fix type error when using `Suspense` with `"jsx": "react-jsx"`. ([#854](https://github.com/lynx-family/lynx-stack/pull/854))
+
+- Support lazy bundle in ReactLynx testing library. ([#869](https://github.com/lynx-family/lynx-stack/pull/869))
+
+- Fix a bug in HMR that snapshots are always updated because the same unique ID check is not performed correctly. ([#869](https://github.com/lynx-family/lynx-stack/pull/869))
+
+- Fix missing types of `key` on components when using `"jsx": "react-jsx"`. ([#872](https://github.com/lynx-family/lynx-stack/pull/872))
+
 ## 0.108.1
 
 ### Patch Changes

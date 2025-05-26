@@ -14,10 +14,10 @@ export default {
 
         hooks.beforeEmit.tap(
           'test',
-          ({ debugInfo, lepus }) => {
+          ({ debugInfo, mainThreadAssets }) => {
             return {
               template: Buffer.from('Hello BeforeEmit'),
-              lepus,
+              mainThreadAssets,
               debugInfo,
             };
           },

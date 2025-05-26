@@ -1,5 +1,44 @@
 # @lynx-js/template-webpack-plugin
 
+## 0.7.0
+
+### Minor Changes
+
+- Rename `lepus` to `mainThreadAssets` in `beforeEmit` hook. ([#901](https://github.com/lynx-family/lynx-stack/pull/901))
+
+- Remove the unused `encodeBinary` option of `LynxEncodePlugin`. ([#880](https://github.com/lynx-family/lynx-stack/pull/880))
+
+### Patch Changes
+
+- Support `output.inlineScripts`, which controls whether to inline scripts into Lynx bundle (`.lynx.bundle`). ([#874](https://github.com/lynx-family/lynx-stack/pull/874))
+
+  Only background thread scripts can remain non-inlined, whereas the main thread script is always inlined.
+
+  example:
+
+  ```js
+  import { defineConfig } from '@lynx-js/rspeedy';
+
+  export default defineConfig({
+    output: {
+      inlineScripts: false,
+    },
+  });
+  ```
+
+- refactor: code clean ([#897](https://github.com/lynx-family/lynx-stack/pull/897))
+
+  rename many internal apis to make logic be clear:
+
+  multi-thread: startMainWorker -> prepareMainThreadAPIs -> startMainThread -> createMainThreadContext(new MainThreadRuntime)
+  all-on-ui: prepareMainThreadAPIs -> startMainThread -> createMainThreadContext(new MainThreadRuntime)
+
+- Add `WebEncodePlugin`. ([#904](https://github.com/lynx-family/lynx-stack/pull/904))
+
+  This is previously known as `WebWebpackPlugin` from `@lynx-js/web-webpack-plugin`.
+
+- Fix a bug that the `lepus` arg of `beforeEmit` hook does not contains the `root` main chunk of the main thread. ([#898](https://github.com/lynx-family/lynx-stack/pull/898))
+
 ## 0.6.11
 
 ### Patch Changes

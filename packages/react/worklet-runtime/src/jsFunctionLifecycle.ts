@@ -24,7 +24,7 @@ class JsFunctionLifecycleManager {
   addRef(execId: number, objToRef: object): void {
     this.execIdRefCount.set(
       execId,
-      (this.execIdRefCount.get(execId) || 0) + 1,
+      (this.execIdRefCount.get(execId) ?? 0) + 1,
     );
     this.registry!.register(objToRef, execId);
   }
@@ -39,7 +39,7 @@ class JsFunctionLifecycleManager {
     this.execIdSetToFire.add(execId);
     if (!this.willFire) {
       this.willFire = true;
-      Promise.resolve().then(() => {
+      void Promise.resolve().then(() => {
         this.fire();
       });
     }

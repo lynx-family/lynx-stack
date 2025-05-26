@@ -77,7 +77,6 @@ const SIDEBARS = {
     createAPI({ name: 'runtime-wrapper-webpack-plugin' }),
     createAPI({ name: 'template-webpack-plugin' }),
     createAPI({ name: 'webpack-runtime-globals' }),
-    createAPI({ name: 'web-webpack-plugin' }),
   ],
   Config: [
     {
@@ -209,7 +208,6 @@ const SIDEBARS_ZH = {
     createAPI({ base: 'zh/api', name: 'runtime-wrapper-webpack-plugin' }),
     createAPI({ base: 'zh/api', name: 'template-webpack-plugin' }),
     createAPI({ base: 'zh/api', name: 'webpack-runtime-globals' }),
-    createAPI({ base: 'zh/api', name: 'web-webpack-plugin' }),
   ],
   Config: [
     {
@@ -314,7 +312,6 @@ const CHANGELOG = {
       '@lynx-js/react-webpack-plugin',
       '@lynx-js/runtime-wrapper-webpack-plugin',
       '@lynx-js/template-webpack-plugin',
-      '@lynx-js/web-webpack-plugin',
     ],
   ),
 };
@@ -344,7 +341,6 @@ const CHANGELOG_ZH = {
       '@lynx-js/react-webpack-plugin',
       '@lynx-js/runtime-wrapper-webpack-plugin',
       '@lynx-js/template-webpack-plugin',
-      '@lynx-js/web-webpack-plugin',
     ],
     'zh',
   ),

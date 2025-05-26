@@ -16,7 +16,6 @@ import type {
   CompatVisitorConfig,
   DefineDceVisitorConfig,
   ExtractStrConfig,
-  JsxTransformerConfig,
   ShakeVisitorConfig,
 } from '@lynx-js/react-transform'
 import type { ExposedAPI } from '@lynx-js/rspeedy'
@@ -237,13 +236,6 @@ export interface PluginReactLynxOptions {
   enableSSR?: boolean
 
   /**
-   * The `jsx` option controls how JSX is transformed.
-   *
-   * @internal
-   */
-  jsx?: Partial<JsxTransformerConfig> | undefined
-
-  /**
    * Composite configuration representing pipeline scheduling strategies, including {@link PluginReactLynxOptions.enableParallelElement} and list batch-rendering. All newly introduced scheduling strategies will be managed by this uint64 configuration.
    *
    * @remarks
@@ -351,7 +343,6 @@ export function pluginReactLynx(
     enableRemoveCSSScope: true,
     firstScreenSyncTiming: 'immediately',
     enableSSR: false,
-    jsx: undefined,
     pipelineSchedulerConfig: 0x00010000,
     removeDescendantSelectorScope: true,
     shake: undefined,

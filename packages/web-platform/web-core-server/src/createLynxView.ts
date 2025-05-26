@@ -1,9 +1,9 @@
 import {
   inShadowRootStyles,
-  type MainThreadStartConfigs,
+  type StartMainThreadContextConfig,
 } from '@lynx-js/web-constants';
 import { Rpc } from '@lynx-js/web-worker-rpc';
-import { loadMainThread } from '@lynx-js/web-mainthread-apis';
+import { prepareMainThreadAPIs } from '@lynx-js/web-mainthread-apis';
 import { loadTemplate } from './utils/loadTemplate.js';
 import {
   dumpHTMLString,
@@ -27,7 +27,7 @@ import {
 
 interface LynxViewConfig extends
   Pick<
-    MainThreadStartConfigs,
+    StartMainThreadContextConfig,
     'browserConfig' | 'tagMap' | 'initData' | 'globalProps' | 'template'
   >
 {
@@ -93,9 +93,10 @@ export async function createLynxView(
     onCommit: () => {
     },
   });
-  const { startMainThread } = loadMainThread(
+  const { startMainThread } = prepareMainThreadAPIs(
     backgroundThreadRpc,
     offscreenDocument,
+    offscreenDocument.createElement.bind(offscreenDocument),
     () => {
       firstPaintReady();
     },

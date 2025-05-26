@@ -73,7 +73,7 @@ function onHydrationFinished(): void {
  *
  * @internal
  */
-function registerWorklet(type: string, id: string, worklet: (...args: any[]) => any): void {
+function registerWorklet(type: string, id: string, worklet: (...args: unknown[]) => unknown): void {
   globalThis.registerWorklet(type, id, worklet);
 }
 
