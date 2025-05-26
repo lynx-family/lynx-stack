@@ -139,7 +139,7 @@ impl Visit for CtorSimplifyVisitor {
             };
             prop_or_spread.visit_with(&mut call_expr_detect);
             prop_or_spread.visit_with(&mut func_detect);
-            prop_or_spread.visit_with(&mut local_decls_detect); //  constructor internel variable ,do not remain
+            prop_or_spread.visit_with(&mut local_decls_detect); //  constructor internal variable ,do not remain
 
             if !call_expr_detect.has && !func_detect.has && !local_decls_detect.has {
               self.remain_props.push(prop_or_spread.clone())

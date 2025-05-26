@@ -106,7 +106,7 @@ export default defineConfig({
             '--touch-slop-distance=5',
             '--disable-low-res-tiling',
             '--disable-smooth-scrolling',
-            '--diable-gpu',
+            '--disable-gpu',
           ],
         },
       },

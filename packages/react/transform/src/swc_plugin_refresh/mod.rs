@@ -541,7 +541,7 @@ mod tests {
 
     export function aaa(a, b) {
       const context = createContext({
-        key: "vaule"
+        key: "value"
       });
     }
     "#

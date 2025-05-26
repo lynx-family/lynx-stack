@@ -11,7 +11,7 @@ function getCurrentContextName() {
   return __JS__ ? 'jsContext' : 'coreContext';
 }
 
-function switchConext() {
+function switchContext() {
   if (__JS__) {
     globalEnvManager.switchToMainThread();
   } else {
@@ -43,11 +43,11 @@ class EventEmitter {
     }
     const context = eventEmitters[currentContextName];
     const realType = getType(this.name, event.type);
-    switchConext();
+    switchContext();
     if (context.listeners[realType]) {
       context.listeners[realType].forEach((listener) => listener(event));
     }
-    switchConext();
+    switchContext();
   };
 
   constructor(name: string) {

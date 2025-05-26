@@ -929,14 +929,14 @@ class LynxTemplatePluginImpl {
     excludedChunks: string[],
   ) {
     return chunks.filter((chunkName) => {
-      // Skip if the chunks should be filtered and the given chunk was not added explicity
+      // Skip if the chunks should be filtered and the given chunk was not added explicitly
       if (
         Array.isArray(includedChunks) && !includedChunks.includes(chunkName)
       ) {
         return false;
       }
 
-      // Skip if the chunks should be filtered and the given chunk was excluded explicity
+      // Skip if the chunks should be filtered and the given chunk was excluded explicitly
       if (excludedChunks.includes(chunkName)) {
         return false;
       }

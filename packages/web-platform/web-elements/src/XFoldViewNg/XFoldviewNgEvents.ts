@@ -40,8 +40,8 @@ export class XFoldviewNgEvents
   }
 
   #handleScroll = () => {
-    const curentScrollTop = this.#dom.scrollTop;
-    const scrollLength = Math.abs(this.#pervScroll - curentScrollTop);
+    const currentScrollTop = this.#dom.scrollTop;
+    const scrollLength = Math.abs(this.#pervScroll - currentScrollTop);
     if (
       scrollLength > this.#granularity
       || this.#dom.scrollTop === 0
@@ -49,12 +49,12 @@ export class XFoldviewNgEvents
           this.#dom.scrollHeight - this.#dom.clientHeight - this.#dom.scrollTop,
         ) <= 1
     ) {
-      this.#pervScroll = curentScrollTop;
+      this.#pervScroll = currentScrollTop;
       this.#dom.dispatchEvent(
         new CustomEvent('offset', {
           ...commonComponentEventSetting,
           detail: {
-            offset: curentScrollTop,
+            offset: currentScrollTop,
             height: this.#dom[scrollableLength],
           },
         }),

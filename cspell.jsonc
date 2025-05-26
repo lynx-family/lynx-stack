@@ -139,6 +139,8 @@
     "lh",
     "queueMicrotask",
     "rustup", // Rust installer/manager
+    "nextest",
+    "taiki",
     "worklets",
   ],
   // Glob
@@ -173,6 +175,7 @@
     "/patches",
     "/pnpm-lock.yaml",
     ".github/renovate.json5",
+    ".typos.toml",
   ],
   "enableFiletypes": [
     "mdx",

@@ -644,7 +644,7 @@ it('should compile @jsxImportSource', () => {
 describe('createElement', () => {
   const s = { __dummy: 1 };
 
-  it('key should not be accssible to developer', () => {
+  it('key should not be accessible to developer', () => {
     function Key({ key }) {
       expect(key).toBe(undefined);
       return <view />;
@@ -678,7 +678,7 @@ describe('createElement', () => {
     `);
   });
 
-  it('ref should not be accssible to developer', () => {
+  it('ref should not be accessible to developer', () => {
     function Key({ ref }) {
       expect(ref).toBe(undefined);
       return <view />;
