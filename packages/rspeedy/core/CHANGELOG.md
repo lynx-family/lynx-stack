@@ -1,5 +1,14 @@
 # @lynx-js/rspeedy
 
+## 0.9.7
+
+### Patch Changes
+
+- The default value of `output.inlineScripts` should be `true`. ([#915](https://github.com/lynx-family/lynx-stack/pull/915))
+
+- Updated dependencies [[`c210b79`](https://github.com/lynx-family/lynx-stack/commit/c210b79319cf014c89c2215f5e0940163eccfa1e)]:
+  - @lynx-js/chunk-loading-webpack-plugin@0.3.0
+
 ## 0.9.6
 
 ### Patch Changes
