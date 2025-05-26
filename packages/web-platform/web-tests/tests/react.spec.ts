@@ -1013,6 +1013,21 @@ test.describe('reactlynx3 tests', () => {
         await diffScreenShot(page, title, 'animate');
       },
     );
+    test(
+      'api-updateGlobalProps',
+      async ({ page }, { title }) => {
+        await goto(page, title);
+        await wait(200);
+        await diffScreenShot(page, title, 'initial');
+        await page.evaluate(() => {
+          (document.querySelector('lynx-view') as any)?.updateGlobalProps({
+            backgroundColor: 'blue',
+          });
+        });
+        await wait(500);
+        await diffScreenShot(page, title, 'blue');
+      },
+    );
   });
 
   test.describe('configs', () => {

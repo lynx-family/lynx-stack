@@ -68,6 +68,7 @@ export type NativeTTObject = {
   globalThis?: {
     tt: NativeTTObject;
   };
+  updateGlobalProps: (newData: Record<string, any>) => void;
 };
 
 export type BundleInitReturnObj = {

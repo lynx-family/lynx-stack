@@ -26,6 +26,7 @@ import { createPerformanceApis } from './createPerformanceApis.js';
 import { registerSendGlobalEventHandler } from './crossThreadHandlers/registerSendGlobalEvent.js';
 import { createJSObjectDestructionObserver } from './crossThreadHandlers/createJSObjectDestructionObserver.js';
 import type { TimingSystem } from './createTimingSystem.js';
+import { registerUpdateGlobalPropsHandler } from './crossThreadHandlers/registerUpdateGlobalPropsHandler.js';
 
 let nativeAppCount = 0;
 const sharedData: Record<string, unknown> = {};
@@ -151,6 +152,7 @@ export async function createNativeApp(config: {
         uiThreadRpc,
         tt,
       );
+      registerUpdateGlobalPropsHandler(uiThreadRpc, tt);
       timingSystem.registerGlobalEmitter(tt.GlobalEventEmitter);
       (tt.lynx.getCoreContext() as LynxCrossThreadContext).__start();
     },

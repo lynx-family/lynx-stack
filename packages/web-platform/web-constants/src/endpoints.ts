@@ -221,3 +221,8 @@ export const triggerElementMethodEndpoint = createRpcEndpoint<
   ],
   void
 >('__triggerElementMethod', false, false);
+
+export const updateGlobalPropsEndpoint = createRpcEndpoint<
+  [Cloneable],
+  void
+>('updateGlobalProps', false, false);

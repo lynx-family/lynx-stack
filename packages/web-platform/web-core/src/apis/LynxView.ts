@@ -238,6 +238,15 @@ export class LynxView extends HTMLElement {
   /**
    * @public
    * @method
+   * update the `__globalProps`
+   */
+  updateGlobalProps(data: Cloneable) {
+    this.#instance?.updateGlobalProps(data);
+  }
+
+  /**
+   * @public
+   * @method
    * send global events, which can be listened to using the GlobalEventEmitter
    */
   sendGlobalEvent(eventName: string, params: Cloneable[]) {
