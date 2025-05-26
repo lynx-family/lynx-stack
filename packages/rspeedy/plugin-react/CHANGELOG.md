@@ -1,5 +1,14 @@
 # @lynx-js/react-rsbuild-plugin
 
+## 0.10.1
+
+### Patch Changes
+
+- The default value of `output.inlineScripts` should be `true` on `@lynx-js/rspeedy` <= v0.9.6. ([#923](https://github.com/lynx-family/lynx-stack/pull/923))
+
+- Updated dependencies []:
+  - @lynx-js/react-alias-rsbuild-plugin@0.10.1
+
 ## 0.10.0
 
 ### Minor Changes

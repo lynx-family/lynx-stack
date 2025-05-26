@@ -1,5 +1,11 @@
 # @lynx-js/chunk-loading-webpack-plugin
 
+## 0.3.0
+
+### Minor Changes
+
+- **BREAKING CHANGE**: Requires `@rspack/core` v1.3.10. ([#922](https://github.com/lynx-family/lynx-stack/pull/922))
+
 ## 0.2.1
 
 ### Patch Changes
