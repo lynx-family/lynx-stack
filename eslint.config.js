@@ -68,7 +68,14 @@ export default tseslint.config(
       // react
       'examples/**',
       'packages/react/types/**',
-      'packages/react/runtime/**',
+      'packages/react/runtime/__test__/**',
+      'packages/react/runtime/jsx-dev-runtime/**',
+      'packages/react/runtime/jsx-runtime/**',
+      'packages/react/runtime/lazy/**',
+      'packages/react/runtime/lepus/**',
+      'packages/react/runtime/src/**/*',
+      'packages/react/runtime/types/**',
+      '!packages/react/runtime/src/worklet/**',
 
       // TODO: enable eslint for tools
       // tools

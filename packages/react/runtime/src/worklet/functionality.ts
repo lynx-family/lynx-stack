@@ -11,20 +11,14 @@ let runOnBackgroundEnabled: boolean | undefined;
  * @internal
  */
 function isMtsEnabled(): boolean {
-  if (mtsEnabled === undefined) {
-    mtsEnabled = isSdkVersionGt(2, 13);
-  }
-  return mtsEnabled;
+  return mtsEnabled ??= isSdkVersionGt(2, 13);
 }
 
 /**
  * @internal
  */
 function isRunOnBackgroundEnabled(): boolean {
-  if (runOnBackgroundEnabled === undefined) {
-    runOnBackgroundEnabled = isSdkVersionGt(2, 15);
-  }
-  return runOnBackgroundEnabled;
+  return runOnBackgroundEnabled ??= isSdkVersionGt(2, 15);
 }
 
 function clearConfigCacheForTesting(): void {
