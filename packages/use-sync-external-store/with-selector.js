@@ -29,64 +29,99 @@ export function useSyncExternalStoreWithSelector(
   selector,
   isEqual,
 ) {
-  var instRef = useRef(null);
-  if (null === instRef.current) {
-    var inst = { hasValue: !1, value: null };
+  // Use this to track the rendered snapshot.
+  const instRef = useRef(null);
+  let inst;
+  if (instRef.current === null) {
+    inst = {
+      hasValue: false,
+      value: null,
+    };
     instRef.current = inst;
-  } else inst = instRef.current;
-  instRef = useMemo(
-    function() {
-      function memoizedSelector(nextSnapshot) {
-        if (!hasMemo) {
-          hasMemo = !0;
-          memoizedSnapshot = nextSnapshot;
-          nextSnapshot = selector(nextSnapshot);
-          if (void 0 !== isEqual && inst.hasValue) {
-            var currentSelection = inst.value;
-            if (isEqual(currentSelection, nextSnapshot)) {
-              return (memoizedSelection = currentSelection);
-            }
-          }
-          return (memoizedSelection = nextSnapshot);
-        }
-        currentSelection = memoizedSelection;
-        if (is(memoizedSnapshot, nextSnapshot)) {
-          return currentSelection;
-        }
-        var nextSelection = selector(nextSnapshot);
-        if (void 0 !== isEqual && isEqual(currentSelection, nextSelection)) {
-          return (memoizedSnapshot = nextSnapshot), currentSelection;
-        }
+  } else {
+    inst = instRef.current;
+  }
+
+  const [getSelection, getServerSelection] = useMemo(() => {
+    // Track the memoized state using closure variables that are local to this
+    // memoized instance of a getSnapshot function. Intentionally not using a
+    // useRef hook, because that state would be shared across all concurrent
+    // copies of the hook/component.
+    let hasMemo = false;
+    let memoizedSnapshot;
+    let memoizedSelection;
+    const memoizedSelector = (nextSnapshot) => {
+      if (!hasMemo) {
+        // The first time the hook is called, there is no memoized result.
+        hasMemo = true;
         memoizedSnapshot = nextSnapshot;
-        return (memoizedSelection = nextSelection);
+        const nextSelection = selector(nextSnapshot);
+        if (
+          isEqual !== undefined
+          // Even if the selector has changed, the currently rendered selection
+          // may be equal to the new selection. We should attempt to reuse the
+          // current value if possible, to preserve downstream memoization.
+          && inst.hasValue
+        ) {
+          const currentSelection = inst.value;
+          if (isEqual(currentSelection, nextSelection)) {
+            memoizedSelection = currentSelection;
+            return currentSelection;
+          }
+        }
+        memoizedSelection = nextSelection;
+        return nextSelection;
       }
-      var hasMemo = !1,
-        memoizedSnapshot,
-        memoizedSelection,
-        maybeGetServerSnapshot = void 0 === getServerSnapshot
-          ? null
-          : getServerSnapshot;
-      return [
-        function() {
-          return memoizedSelector(getSnapshot());
-        },
-        null === maybeGetServerSnapshot
-          ? void 0
-          : function() {
-            return memoizedSelector(maybeGetServerSnapshot());
-          },
-      ];
-    },
-    [getSnapshot, getServerSnapshot, selector, isEqual],
+
+      // We may be able to reuse the previous invocation's result.
+      const prevSnapshot = memoizedSnapshot;
+      const prevSelection = memoizedSelection;
+
+      if (is(prevSnapshot, nextSnapshot)) {
+        // The snapshot is the same as last time. Reuse the previous selection.
+        return prevSelection;
+      }
+
+      // The snapshot has changed, so we need to compute a new selection.
+      const nextSelection = selector(nextSnapshot);
+
+      // If a custom isEqual function is provided, use that to check if the data
+      // has changed. If it hasn't, return the previous selection. That signals
+      // to React that the selections are conceptually equal, and we can bail
+      // out of rendering.
+      if (isEqual?.(prevSelection, nextSelection)) {
+        // The snapshot still has changed, so make sure to update to not keep
+        // old references alive
+        memoizedSnapshot = nextSnapshot;
+        return prevSelection;
+      }
+
+      memoizedSnapshot = nextSnapshot;
+      memoizedSelection = nextSelection;
+      return nextSelection;
+    };
+    // Assigning this to a constant so that Flow knows it can't change.
+    const maybeGetServerSnapshot = getServerSnapshot === undefined
+      ? null
+      : getServerSnapshot;
+    const getSnapshotWithSelector = () => memoizedSelector(getSnapshot());
+    const getServerSnapshotWithSelector = maybeGetServerSnapshot === null
+      ? undefined
+      : () => memoizedSelector(maybeGetServerSnapshot());
+    return [getSnapshotWithSelector, getServerSnapshotWithSelector];
+  }, [getSnapshot, getServerSnapshot, selector, isEqual]);
+
+  const value = useSyncExternalStore(
+    subscribe,
+    getSelection,
+    getServerSelection,
   );
-  var value = useSyncExternalStore(subscribe, instRef[0], instRef[1]);
-  useEffect(
-    function() {
-      inst.hasValue = !0;
-      inst.value = value;
-    },
-    [value],
-  );
+
+  useEffect(() => {
+    inst.hasValue = true;
+    inst.value = value;
+  }, [value]);
+
   useDebugValue(value);
   return value;
 }
