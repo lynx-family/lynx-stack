@@ -228,7 +228,7 @@ export class LynxEncodePluginImpl {
                     manifest === externalManifest ? publicPath : '/',
                   )
                 }',globDynamicComponentEntry?globDynamicComponentEntry:'__Card__')`
-              )
+              ).join(',')
             ),
             this.#appServiceFooter(),
           ].join(''),

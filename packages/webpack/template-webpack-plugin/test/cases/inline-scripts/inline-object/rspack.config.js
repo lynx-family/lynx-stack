@@ -6,8 +6,9 @@ export default {
   mode: 'development',
   plugins: [
     new LynxEncodePlugin({
-      inlineScripts: ({ name, size }) => {
-        return name.includes('foo') && size < 1000;
+      inlineScripts: {
+        enable: true,
+        test: /foo.*\.js$/,
       },
     }),
     new LynxTemplatePlugin({

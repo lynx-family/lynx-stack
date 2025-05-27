@@ -23,6 +23,20 @@ it('should have correct foo chunk content', async () => {
   expect(fooBackground.foo()).toBe(42);
 });
 
+it('should have correct bar chunk content', async () => {
+  const { bar } = await import(
+    /* webpackChunkName: 'bar:main-thread' */
+    './bar.js'
+  );
+  expect(bar()).toBe(52);
+
+  const fooBackground = await import(
+    /* webpackChunkName: 'bar:background' */
+    './bar.js'
+  );
+  expect(fooBackground.bar()).toBe(52);
+});
+
 it('should generate correct foo template', async () => {
   const tasmJSONPath = resolve(__dirname, '.rspeedy/async/foo/tasm.json');
   expect(existsSync(tasmJSONPath)).toBeTruthy();
@@ -35,5 +49,20 @@ it('should generate correct foo template', async () => {
   expect(manifest).toHaveProperty(
     '/foo:background.rspack.bundle.js',
     expect.stringContaining('function foo()'),
+  );
+});
+
+it('should generate correct bar template', async () => {
+  const tasmJSONPath = resolve(__dirname, '.rspeedy/async/bar/tasm.json');
+  expect(existsSync(tasmJSONPath)).toBeTruthy();
+
+  const content = await readFile(tasmJSONPath, 'utf-8');
+  const { sourceContent, manifest } = JSON.parse(content);
+  expect(sourceContent).toHaveProperty('appType', 'DynamicComponent');
+  expect(manifest).toHaveProperty('/app-service.js');
+
+  expect(manifest).not.toHaveProperty('/bar:background.rspack.bundle.js');
+  expect(manifest['/app-service.js']).toContain(
+    `lynx.requireModule('/bar:background.rspack.bundle.js',globDynamicComponentEntry?globDynamicComponentEntry:'__Card__')`,
   );
 });
