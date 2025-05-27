@@ -29,24 +29,22 @@ const __snapshot_da39a_test_2 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapsh
 const __snapshot_da39a_test_3 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_test_3", function() {
     const pageId = ReactLynx.__pageId;
     const el = __CreateView(pageId);
-    __AddInlineStyle(el, 7, "red");
     return [
         el
     ];
 }, [
     function(ctx) {
         if (ctx.__elements) {
-            let el = ctx.__elements[0];
-            let style_values = ctx.__values[0];
-            __AddInlineStyle(el, 27, style_values[0]), __AddInlineStyle(el, 26, style_values[1]);
+            __SetInlineStyles(ctx.__elements[0], ctx.__values[0]);
         }
     }
 ], null, 100, globDynamicComponentEntry);
 <__snapshot_da39a_test_3 values={[
-    [
-        w,
-        "100rpx"
-    ]
+    {
+        backgroundColor: "red",
+        width: w,
+        height: "100rpx"
+    }
 ]}/>;
 const __snapshot_da39a_test_4 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_test_4", function() {
     const pageId = ReactLynx.__pageId;

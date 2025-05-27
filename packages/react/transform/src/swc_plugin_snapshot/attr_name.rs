@@ -13,7 +13,6 @@ pub enum AttrName {
     /* event_name */ String,
   ),
   Style,
-  ParsedStyle(Vec<(u32, Expr)>),
   Class,
   ID,
   Ref,
