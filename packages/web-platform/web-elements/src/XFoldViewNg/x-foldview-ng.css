@@ -5,7 +5,7 @@
 */
 x-foldview-ng {
   display: flex;
-  overflow-y: scroll;
+  overflow-y: scroll !important;
   overflow-x: clip;
   overflow-x: hidden;
   overscroll-behavior: contain;
