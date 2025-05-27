@@ -13,6 +13,7 @@ import { registerTriggerComponentEventHandler } from './crossThreadHandlers/regi
 import { registerSelectComponentHandler } from './crossThreadHandlers/registerSelectComponentHandler.js';
 import { registerNapiModulesCallHandler } from './crossThreadHandlers/registerNapiModulesCallHandler.js';
 import { registerDispatchLynxViewEventHandler } from './crossThreadHandlers/registerDispatchLynxViewEventHandler.js';
+import { registerTriggerElementMethodEndpointHandler } from './crossThreadHandlers/registerTriggerElementMethodEndpointHandler.js';
 
 export function startBackground(
   backgroundRpc: Rpc,
@@ -47,6 +48,7 @@ export function startBackground(
     callbacks.napiModulesCall,
   );
   registerDispatchLynxViewEventHandler(backgroundRpc, shadowRoot);
+  registerTriggerElementMethodEndpointHandler(backgroundRpc, shadowRoot);
 
   const sendGlobalEvent = backgroundRpc.createCall(sendGlobalEventEndpoint);
   const markTiming = backgroundRpc.createCall(markTimingEndpoint);

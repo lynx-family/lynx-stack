@@ -11,7 +11,11 @@
  */
 // disable hmr until bugs are fixed
 // TODO: re-enable hmr or change a way to impl it; also need to fix the test case DEV_ONLY_RegisterWorklet
-function registerWorkletOnBackground(_type: string, _hash: string, _fn: Function) {
+function registerWorkletOnBackground(
+  _type: string,
+  _hash: string,
+  _fn: (...args: unknown[]) => unknown,
+) {
   // if (workletHashSet.has(hash)) {
   //   return;
   // }

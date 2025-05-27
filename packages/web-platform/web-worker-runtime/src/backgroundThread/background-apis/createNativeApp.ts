@@ -26,6 +26,7 @@ import { createPerformanceApis } from './createPerformanceApis.js';
 import { registerSendGlobalEventHandler } from './crossThreadHandlers/registerSendGlobalEvent.js';
 import { createJSObjectDestructionObserver } from './crossThreadHandlers/createJSObjectDestructionObserver.js';
 import type { TimingSystem } from './createTimingSystem.js';
+import { registerUpdateGlobalPropsHandler } from './crossThreadHandlers/registerUpdateGlobalPropsHandler.js';
 
 let nativeAppCount = 0;
 const sharedData: Record<string, unknown> = {};
@@ -106,8 +107,8 @@ export async function createNativeApp(config: {
       sourceURL: string,
       callback: (message: string | null, exports?: BundleInitReturnObj) => void,
     ): void {
-      const mainfestUrl = template.manifest[`/${sourceURL}`];
-      if (mainfestUrl) sourceURL = mainfestUrl;
+      const manifestUrl = template.manifest[`/${sourceURL}`];
+      if (manifestUrl) sourceURL = manifestUrl;
       import(
         /* webpackIgnore: true */
         sourceURL
@@ -116,8 +117,8 @@ export async function createNativeApp(config: {
       });
     },
     loadScript: (sourceURL: string) => {
-      const mainfestUrl = template.manifest[`/${sourceURL}`];
-      if (mainfestUrl) sourceURL = mainfestUrl;
+      const manifestUrl = template.manifest[`/${sourceURL}`];
+      if (manifestUrl) sourceURL = manifestUrl;
       importScripts(sourceURL);
       return createBundleInitReturnObj();
     },
@@ -151,6 +152,7 @@ export async function createNativeApp(config: {
         uiThreadRpc,
         tt,
       );
+      registerUpdateGlobalPropsHandler(uiThreadRpc, tt);
       timingSystem.registerGlobalEmitter(tt.GlobalEventEmitter);
       (tt.lynx.getCoreContext() as LynxCrossThreadContext).__start();
     },

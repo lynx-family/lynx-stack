@@ -8,7 +8,7 @@ export const enum UpdateDataType {
   Unknown = 0,
 
   // update by `setState` or `setData`
-  UpdateExplictByUser = 1,
+  UpdateExplicitByUser = 1,
 
   // update by lynx_core from ctor
   UpdateByKernelFromCtor = 1 << 1,

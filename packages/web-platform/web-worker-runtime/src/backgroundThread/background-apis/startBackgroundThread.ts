@@ -38,7 +38,12 @@ export function startBackgroundThread(
           config.napiModulesMap,
         );
 
-      const nativeLynx = createBackgroundLynx(config, nativeApp, mainThreadRpc);
+      const nativeLynx = createBackgroundLynx(
+        config,
+        nativeApp,
+        mainThreadRpc,
+        uiThreadRpc,
+      );
       lynxCore.then(
         ({ loadCard, destroyCard, callDestroyLifetimeFun }) => {
           loadCard(nativeApp, config, nativeLynx);

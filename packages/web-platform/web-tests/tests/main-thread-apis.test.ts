@@ -159,7 +159,7 @@ test.describe('main thread api tests', () => {
     expect(lynxTag.tag).toBe('lynx-wrapper');
   });
 
-  test('__AppendElement-chilren-count', async ({ page }, { title }) => {
+  test('__AppendElement-children-count', async ({ page }, { title }) => {
     const count = await page.evaluate(() => {
       let ret = globalThis.__CreateView(0) as HTMLElement;
       let child_0 = globalThis.__CreateView(0);

@@ -467,7 +467,7 @@ Component, View
 describe('transformBundle', () => {
   it('should extract lepus str', async () => {
     const inputContent = `
-    gloablThis.processData = ()=>{
+    globalThis.processData = ()=>{
       if (true) {
         return {
           _EXTRACT_STR: __EXTRACT_STR_IDENT_FLAG__,
@@ -499,7 +499,7 @@ describe('transformBundle', () => {
           "111",
           "000"
       ];
-      gloablThis.processData = ()=>{
+      globalThis.processData = ()=>{
           if (true) {
               return {
                   _EXTRACT_STR: _EXTRACT_STR

@@ -68,7 +68,14 @@ export default tseslint.config(
       // react
       'examples/**',
       'packages/react/types/**',
-      'packages/react/runtime/**',
+      'packages/react/runtime/__test__/**',
+      'packages/react/runtime/jsx-dev-runtime/**',
+      'packages/react/runtime/jsx-runtime/**',
+      'packages/react/runtime/lazy/**',
+      'packages/react/runtime/lepus/**',
+      'packages/react/runtime/src/**/*',
+      'packages/react/runtime/types/**',
+      '!packages/react/runtime/src/worklet/**',
 
       // TODO: enable eslint for tools
       // tools
@@ -97,13 +104,18 @@ export default tseslint.config(
           source: 'string',
           style: 'line',
           content: [
-            'Copyright {year} {authors}. All rights reserved.',
+            'Copyright (year) {authors}. All rights reserved.',
             'Licensed under the Apache License Version 2.0 that can be found in the',
             'LICENSE file in the root directory of this source tree.',
           ].join('\n'),
           variables: {
-            year: '2024',
             authors: 'The Lynx Authors',
+          },
+          patterns: {
+            year: {
+              pattern: '\\d{4}',
+              defaultValue: new Date().getFullYear().toString(),
+            },
           },
         },
       ],
@@ -127,7 +139,7 @@ export default tseslint.config(
       'n/file-extension-in-import': ['error', 'always'],
       'n/prefer-node-protocol': 'error',
       'n/no-extraneous-import': ['error', {
-        allowModules: ['vitest'],
+        allowModules: ['vitest', 'preact'],
       }],
       'n/no-unpublished-import': 'off',
       'n/no-missing-import': 'off',

@@ -1002,6 +1002,32 @@ test.describe('reactlynx3 tests', () => {
         await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
       },
     );
+    test(
+      'api-animate',
+      async ({ page }, { title }) => {
+        await goto(page, title);
+        await wait(500);
+        await diffScreenShot(page, title, 'initial');
+        await page.locator('#target').click();
+        await wait(2000);
+        await diffScreenShot(page, title, 'animate');
+      },
+    );
+    test(
+      'api-updateGlobalProps',
+      async ({ page }, { title }) => {
+        await goto(page, title);
+        await wait(200);
+        await diffScreenShot(page, title, 'initial');
+        await page.evaluate(() => {
+          (document.querySelector('lynx-view') as any)?.updateGlobalProps({
+            backgroundColor: 'blue',
+          });
+        });
+        await wait(500);
+        await diffScreenShot(page, title, 'blue');
+      },
+    );
   });
 
   test.describe('configs', () => {

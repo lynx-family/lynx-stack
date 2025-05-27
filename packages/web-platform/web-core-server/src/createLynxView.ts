@@ -1,13 +1,15 @@
 import {
   inShadowRootStyles,
+  lynxUniqueIdAttribute,
   type StartMainThreadContextConfig,
 } from '@lynx-js/web-constants';
 import { Rpc } from '@lynx-js/web-worker-rpc';
 import { prepareMainThreadAPIs } from '@lynx-js/web-mainthread-apis';
 import { loadTemplate } from './utils/loadTemplate.js';
 import {
-  dumpHTMLString,
+  _attributes,
   OffscreenDocument,
+  OffscreenElement,
 } from '@lynx-js/offscreen-document/webworker';
 import {
   templateScrollView,
@@ -24,6 +26,7 @@ import {
   templateXTextarea,
   templateXViewpageNg,
 } from '@lynx-js/web-elements-template';
+import { dumpHTMLString } from './dumpHTMLString.js';
 
 interface LynxViewConfig extends
   Pick<
@@ -34,7 +37,7 @@ interface LynxViewConfig extends
   templateName?: string;
   hydrateUrl: string;
   injectStyles: string;
-  overrideElemenTemplates?: Record<
+  overrideElementTemplates?: Record<
     string,
     ((attributes: Record<string, string>) => string) | string
   >;
@@ -66,6 +69,13 @@ const builtinTagTransformMap = {
   'svg': 'x-svg',
 };
 
+// @ts-expect-error
+OffscreenElement.prototype.toJSON = function toJSON(this: OffscreenElement) {
+  return {
+    ssrID: this[_attributes].get(lynxUniqueIdAttribute)!,
+  };
+};
+
 export async function createLynxView(
   config: LynxViewConfig,
 ) {
@@ -75,7 +85,7 @@ export async function createLynxView(
     tagMap,
     initData,
     globalProps,
-    overrideElemenTemplates = {},
+    overrideElementTemplates = {},
     hydrateUrl,
     autoSize,
     injectStyles,
@@ -122,28 +132,46 @@ export async function createLynxView(
 
   const elementTemplates = {
     ...builtinElementTemplates,
-    ...overrideElemenTemplates,
+    ...overrideElementTemplates,
   };
 
   async function renderToString(): Promise<string> {
     await firstPaintReadyPromise;
-    const innerShadowRootHTML = dumpHTMLString(
+    const ssrEncodeData = runtime?.ssrEncode?.();
+    const buffer: string[] = [];
+    buffer.push(
+      '<lynx-view url="',
+      hydrateUrl,
+      '" ssr',
+    );
+    if (autoSize) {
+      buffer.push(' height="auto" width="auto"');
+    }
+    if (lynxViewStyle) {
+      buffer.push(' style="', lynxViewStyle, '"');
+    }
+    if (ssrEncodeData) {
+      const encodeDataEncoded = ssrEncodeData ? encodeURI(ssrEncodeData) : ''; // to avoid XSS
+      buffer.push(' ssr-encode-data="', encodeDataEncoded, '"');
+    }
+    buffer.push(
+      '><template shadowrootmode="open">',
+      '<style>',
+      injectStyles,
+      '\n',
+      inShadowRootStyles.join('\n'),
+      '</style>',
+    );
+    dumpHTMLString(
+      buffer,
       offscreenDocument,
       elementTemplates,
     );
-    const ssrEncodeData = runtime?.ssrEncode?.();
-    const encodeDataEncoded = ssrEncodeData ? encodeURI(ssrEncodeData) : ''; // to avoid XSS
-    return `
-    <lynx-view url="${hydrateUrl}" ssr ${
-      autoSize ? 'height="auto" width="auto"' : ''
-    } ${lynxViewStyle ? `style="${lynxViewStyle}"` : ''} ${
-      encodeDataEncoded ? `ssr-encode-data="${encodeDataEncoded}"` : ''
-    }>
-      <template shadowrootmode="open">
-        <style>${injectStyles}\n${inShadowRootStyles.join('\n')}</style>
-        ${innerShadowRootHTML}
-      </template>
-    </lynx-view>`;
+    buffer.push(
+      '</template>',
+      '</lynx-view>',
+    );
+    return buffer.join('');
   }
   return {
     renderToString,

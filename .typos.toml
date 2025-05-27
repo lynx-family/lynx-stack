@@ -1,0 +1,32 @@
+# https://github.com/crate-ci/typos
+# cargo install typos-cli
+# typos
+
+[files]
+extend-exclude = [
+  "**/*.{css,snap,txt}",
+  "**/CHANGELOG.md",
+  "pnpm-lock.yaml",
+  "biome.jsonc",
+  "packages/web-platform/web-explorer/preinstalled/homepage.json",
+  "packages/web-platform/web-tests/tests/web-elements/performance/react-dom.production.min.js",
+  "packages/web-platform/web-tests/tests/web-elements/*",
+  "packages/web-platform/web-tests/tests/react.spec.ts-snapshots/*",
+  "packages/web-platform/web-tests/tests/react.spec.ts",
+  "packages/web-platform/web-tests/tests/react/basic-element-x-overlay-ng-playground-test/index.jsx",
+  "packages/web-platform/offscreen-document/src/webworker/OffscreenCSSStyleDeclaration.ts",
+]
+
+[default]
+extend-ignore-re = [
+  "(?Rm)^.*(#|//)\\s*spellchecker:disable-line$",
+  "(?s)(#|//)\\s*spellchecker:off.*?\\n\\s*(#|//)\\s*spellchecker:on",
+]
+
+[default.extend-words]
+childs = "childs"
+styl = "styl"
+aci = "aci"
+nd = "nd"
+bui = "bui"
+ba = "ba"

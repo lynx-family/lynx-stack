@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/chunk-loading-webpack-plugin",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "private": false,
   "description": "A webpack plugin to generate chunk loading runtime for Lynx.",
   "keywords": [
@@ -49,7 +49,7 @@
     "webpack": "^5.99.9"
   },
   "peerDependencies": {
-    "@rspack/core": "^1.3.0"
+    "@rspack/core": "^1.3.10"
   },
   "engines": {
     "node": ">=18"

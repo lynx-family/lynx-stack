@@ -179,7 +179,7 @@ x-text[x-text-clipped][x-text-custom-overflow]::part(inner-box)::after {
  * 1. without customized inline-truncation
  * 2. users do not force we apply styles on the ellipsis
  *
- * Overall, we do calculate the layout of texts with (dispaly:block) for
+ * Overall, we do calculate the layout of texts with (display:block) for
  * 1. analyze the truncation length for a customized inline-truncation (attribute x-text-custom-overflow, selector :has())
  * 2. users explicit declare that we have to put the ellipsis in place. (with attribute tail-color-convert='false')
  */

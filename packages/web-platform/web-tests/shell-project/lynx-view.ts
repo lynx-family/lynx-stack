@@ -13,7 +13,7 @@ export const lynxViewTests = (callback: (lynxView: LynxView) => void) => {
   const lynxView = document.createElement('lynx-view') as LynxView;
   lynxView.initData = { mockData: 'mockData' };
   lynxView.setAttribute('height', 'auto');
-  lynxView.globalProps = { pink: 'pink' };
+  lynxView.globalProps = { backgroundColor: 'pink' };
   lynxView.addEventListener('error', () => {
     lynxView.setAttribute('style', 'display:none');
     lynxView.innerHTML = '';

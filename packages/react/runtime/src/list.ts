@@ -184,10 +184,10 @@ export class ListUpdateInfoRecording implements ListUpdateInfo {
       const elementIndex = this.list.__snapshot_def.slot[0]![1];
       const listElement = this.list.__elements![elementIndex]!;
 
-      // `__GetAttributeByName` is avaiable since Lynx 2.14
+      // `__GetAttributeByName` is available since Lynx 2.14
       if (__GetAttributeByName(listElement, 'custom-list-name') === 'list-container') {
         // `updateAction` must be full (not incremental) when Lynx version <= 2.18 and
-        // when `custom-list-name` is `list-container` (avaiable when Lynx version >= 2.14) is true,
+        // when `custom-list-name` is `list-container` (available when Lynx version >= 2.14) is true,
         updates.length = 0;
         this.list.childNodes.forEach((child, index) => {
           updates.push({

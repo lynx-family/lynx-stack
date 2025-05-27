@@ -251,9 +251,4 @@ export class OffscreenElement extends EventTarget {
     }
     this[innerHTML] = text;
   }
-  // The toJSON method intentionally returns an empty string because
-  // serialization is not applicable for OffscreenElement instances.
-  toJSON(): string {
-    return '';
-  }
 }

@@ -29,11 +29,12 @@ export class WorkletExecIdMap extends IndexMap<Worklet> {
       return undefined;
     }
 
-    const f = (obj: any): JsFnHandle | undefined => {
-      if (obj === null || typeof obj !== 'object') {
+    const f = (value: unknown): JsFnHandle | undefined => {
+      if (value === null || typeof value !== 'object') {
         return undefined;
       }
-      if ('_jsFnId' in obj && obj._jsFnId === fnId) {
+      const obj = value as Record<string, unknown>;
+      if ('_jsFnId' in obj && obj['_jsFnId'] === fnId) {
         return obj as JsFnHandle;
       }
       for (const i in obj) {

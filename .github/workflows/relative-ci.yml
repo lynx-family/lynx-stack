@@ -32,7 +32,7 @@ jobs:
       RELATIVE_CI_PROJECT_RSPEEDY_CORE_KEY: ${{ secrets.RELATIVE_CI_PROJECT_RSPEEDY_CORE_KEY }}
     steps:
       - name: Send bundle stats and build information to RelativeCI - ${{ matrix.project.name }}
-        uses: relative-ci/agent-action@38328454d6a23942175eba485fca4fbb807b1f03 #v2
+        uses: relative-ci/agent-action@350cdbe8a51f6f64d7dca3fbfa2ae2c01db619cd # v3
         with:
           artifactName: ${{ matrix.project.name }}-relative-ci-artifacts
           key: ${{ env[matrix.project.key] }}

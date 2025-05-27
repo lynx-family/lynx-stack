@@ -10,6 +10,7 @@ import {
   type StartMainThreadContextConfig,
   type NapiModulesCall,
   type NativeModulesCall,
+  updateGlobalPropsEndpoint,
 } from '@lynx-js/web-constants';
 import { loadTemplate } from '../utils/loadTemplate.js';
 import { createUpdateData } from './crossThreadHandlers/createUpdateData.js';
@@ -80,5 +81,6 @@ export function startUIThread(
       terminateWorkers,
     ),
     sendGlobalEvent,
+    updateGlobalProps: backgroundRpc.createCall(updateGlobalPropsEndpoint),
   };
 }
