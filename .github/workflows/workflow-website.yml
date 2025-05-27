@@ -17,7 +17,7 @@ jobs:
         with:
           node-version: "22"
       - name: TurboCache
-        uses: lynx-infra/cache@558d7c999f9f97ac02ed7e711503bb81d82ff8ee
+        uses: lynx-infra/cache@5c6160a6a4c7fca80a2f3057bb9dfc9513fcb732
         with:
           path: .turbo
           key: turbo-v3-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ github.sha }}
