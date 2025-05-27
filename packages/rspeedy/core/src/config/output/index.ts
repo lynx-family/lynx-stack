@@ -304,11 +304,13 @@ export interface Output {
    *
    * @remarks
    *
-   * If no value is provided, the default value would be `true`.
+   * If no value is provided, the default value would be `true`, which means all background thread scripts will be inlined.
    *
    * This is different with {@link https://rsbuild.dev/config/output/inline-scripts | output.inlineScripts } since we normally want to inline scripts in Lynx bundle (`.lynx.bundle`).
    *
    * Only background thread scripts can remain non-inlined, whereas the main thread script is always inlined.
+   *
+   * The inlineScripts configuration type aligns with Rsbuild's implementation, with the exception that the `enable: 'auto'` option is not supported.
    *
    * @example
    *
@@ -318,7 +320,7 @@ export interface Output {
    *
    * export default defineConfig({
    *   output: {
-   *     inlineScripts: false,
+   *     inlineScripts: /[\\/]background\.\w+\.js$/,
    *   },
    * })
    * ```
