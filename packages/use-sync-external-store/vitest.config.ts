@@ -1,5 +1,9 @@
-import { defineProject } from 'vitest/config';
+import { defineProject, mergeConfig } from 'vitest/config';
 import type { UserWorkspaceConfig } from 'vitest/config';
+
+import { createVitestConfig } from '@lynx-js/react/testing-library/vitest-config';
+
+const defaultConfig = await createVitestConfig();
 
 const config: UserWorkspaceConfig = defineProject({
   test: {
@@ -7,4 +11,6 @@ const config: UserWorkspaceConfig = defineProject({
   },
 });
 
-export default config;
+const mergedConfig: UserWorkspaceConfig = mergeConfig(defaultConfig, config);
+
+export default mergedConfig;

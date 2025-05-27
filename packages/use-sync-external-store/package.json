@@ -41,6 +41,7 @@
     "LICENSE"
   ],
   "scripts": {
+    "test": "vitest",
     "test:type": "vitest --typecheck.only"
   },
   "devDependencies": {
