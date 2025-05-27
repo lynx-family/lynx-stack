@@ -165,7 +165,7 @@ importers:
         specifier: workspace:*
         version: link:../../packages/rspeedy/core
       '@lynx-js/types':
-        specifier: ^3.3.0
+        specifier: 3.3.0
         version: 3.3.0
       '@types/react':
         specifier: ^18.3.22
@@ -180,7 +180,7 @@ importers:
         version: '@hongzhiyuan/preact@10.24.0-319c684e'
     devDependencies:
       '@lynx-js/types':
-        specifier: ^3.3.0
+        specifier: 3.3.0
         version: 3.3.0
       '@microsoft/api-extractor':
         specifier: 'catalog:'
@@ -270,7 +270,7 @@ importers:
   packages/react/worklet-runtime:
     devDependencies:
       '@lynx-js/types':
-        specifier: ^3.3.0
+        specifier: 3.3.0
         version: 3.3.0
       esbuild:
         specifier: ^0.25.4
@@ -511,7 +511,7 @@ importers:
         specifier: workspace:*
         version: link:../core
       '@lynx-js/types':
-        specifier: ^3.3.0
+        specifier: 3.3.0
         version: 3.3.0
       '@lynx-js/web-core':
         specifier: workspace:*
@@ -594,7 +594,7 @@ importers:
   packages/third-party/tailwind-preset:
     devDependencies:
       '@lynx-js/types':
-        specifier: ^3.3.0
+        specifier: 3.3.0
         version: 3.3.0
       postcss:
         specifier: ^8.5.3
