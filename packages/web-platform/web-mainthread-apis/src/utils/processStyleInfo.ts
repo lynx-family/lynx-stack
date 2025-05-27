@@ -15,6 +15,7 @@ import { transformLynxStyles } from '@lynx-js/web-style-transformer';
 
 export function flattenStyleInfo(
   styleInfo: StyleInfo,
+  enableCSSSelector: boolean,
 ): void {
   function flattenOneStyleInfo(cssId: string): OneInfo | undefined {
     const oneInfo = styleInfo[cssId];
@@ -24,7 +25,14 @@ export function flattenStyleInfo(
         const flatInfo = flattenOneStyleInfo(im);
         if (flatInfo) {
           oneInfo.content.push(...flatInfo.content);
-          oneInfo.rules.push(...flatInfo.rules);
+          // oneInfo.rules.push(...flatInfo.rules);
+          oneInfo.rules.push(
+            ...(enableCSSSelector
+              ? flatInfo.rules
+              // when enableCSSSelector is false, need to make a shallow copy of rules.sel
+              // otherwise updating `oneCssInfo.sel` in `genCssInJsInfo()` will affect other imported cssInfo
+              : flatInfo.rules.map(i => ({ ...i }))),
+          );
         }
       }
       oneInfo.imports = undefined;
