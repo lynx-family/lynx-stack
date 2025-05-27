@@ -106,5 +106,16 @@ export function setupLynxEnv(): void {
 
     // register empty DataProcessors to make sure `globalThis.processData` is set
     lynx.registerDataProcessors();
+
+    lynx.experimental_addLazyBundleResponseListener = function(listener) {
+      if (__BACKGROUND__) {
+        lynx.getJSModule('GlobalEventEmitter').addListener('experimental_onLazyBundleResponse', listener);
+        return () => {
+          lynx.getJSModule('GlobalEventEmitter').removeListener('experimental_onLazyBundleResponse', listener);
+        };
+      } else {
+        return () => {};
+      }
+    };
   }
 }
