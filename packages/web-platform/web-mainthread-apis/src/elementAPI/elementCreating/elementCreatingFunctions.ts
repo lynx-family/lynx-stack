@@ -8,17 +8,17 @@ import {
   lynxDefaultDisplayLinearAttribute,
 } from '@lynx-js/web-constants';
 import {
-  type ComponentAtIndexCallback,
-  type EnqueueComponentCallback,
-  type LynxRuntimeInfo,
-} from '../ElementThreadElement.js';
-import {
   elementToRuntimeInfoMap,
   getElementByUniqueId,
   lynxUniqueIdToElement,
   type MainThreadRuntime,
 } from '../../MainThreadRuntime.js';
 import type { createStyleFunctions } from '../style/styleFunctions.js';
+import type {
+  ComponentAtIndexCallback,
+  EnqueueComponentCallback,
+  LynxRuntimeInfo,
+} from '@lynx-js/web-constants/src/types/LynxElementRuntimeInfo.js';
 
 export function initializeElementCreatingFunction(
   runtime: MainThreadRuntime,

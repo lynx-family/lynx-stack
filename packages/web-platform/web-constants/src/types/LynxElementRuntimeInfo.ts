@@ -1,7 +1,9 @@
 // Copyright 2023 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type { LynxEventType, Cloneable } from '@lynx-js/web-constants';
+
+import type { Cloneable } from './Cloneable.js';
+import type { LynxEventType } from './EventType.js';
 
 export interface LynxRuntimeInfo {
   uniqueId: number;
@@ -18,12 +20,12 @@ export interface LynxRuntimeInfo {
       handler: string | { type: 'worklet'; value: unknown };
     } | undefined;
   }>;
-  componentAtIndex?: ComponentAtIndexCallback;
-  enqueueComponent?: EnqueueComponentCallback;
+  componentAtIndex?: ComponentAtIndexCallback | undefined;
+  enqueueComponent?: EnqueueComponentCallback | undefined;
 }
 
 export type ComponentAtIndexCallback = (
-  list: HTMLElement,
+  list: unknown, /* HTMLElement */
   listID: number,
   cellIndex: number,
   operationID: number,
@@ -31,7 +33,7 @@ export type ComponentAtIndexCallback = (
 ) => void;
 
 export type EnqueueComponentCallback = (
-  list: HTMLElement,
+  list: unknown, /* HTMLElement */
   listID: number,
   sign: number,
 ) => void;

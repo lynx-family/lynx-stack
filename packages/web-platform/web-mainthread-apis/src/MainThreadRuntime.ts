@@ -34,8 +34,8 @@ import {
   genCssInJsInfo,
   transformToWebCss,
 } from './utils/processStyleInfo.js';
-import type { LynxRuntimeInfo } from './elementAPI/ElementThreadElement.js';
 import { createExposureService } from './utils/createExposureService.js';
+import type { LynxRuntimeInfo } from '@lynx-js/web-constants/src/types/LynxElementRuntimeInfo.js';
 
 export interface MainThreadRuntimeCallbacks {
   mainChunkReady: () => void;
@@ -106,6 +106,17 @@ export class MainThreadRuntime {
    */
   [elementToRuntimeInfoMap]: WeakMap<HTMLElement, LynxRuntimeInfo> =
     new WeakMap();
+
+  declare __AddEvent: (
+    element: HTMLElement,
+    eventType: string,
+    eventName: string,
+    newEventHandler: string | { type: 'worklet'; value: unknown } | undefined,
+  ) => void;
+
+  declare __GetElementUniqueID: (
+    element: HTMLElement,
+  ) => number;
 
   constructor(
     public config: MainThreadRuntimeConfig,
