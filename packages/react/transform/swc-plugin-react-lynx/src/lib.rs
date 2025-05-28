@@ -1,7 +1,6 @@
 #![deny(clippy::all)]
 
 mod css;
-mod css_property;
 mod swc_plugin_css_scope;
 mod swc_plugin_define_dce;
 mod swc_plugin_directive_dce;
