@@ -9,15 +9,10 @@ use serde::Deserialize;
 
 mod is_component_class;
 
-<<<<<<< HEAD:packages/react/transform/src/swc_plugin_shake/mod.rs
 /// {@inheritdoc PluginReactLynxOptions.shake}
 /// @public
-#[napi(object)]
-#[derive(Clone, Debug)]
-=======
 #[derive(Deserialize, PartialEq, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
->>>>>>> 3ce4ca6a (refactor: adopt swc-plugin-compat and swc-plugin-react-lynx):packages/react/transform/swc-plugin-react-lynx/src/swc_plugin_shake/mod.rs
 pub struct ShakeVisitorConfig {
   /// Package names to identify runtime imports that need to be processed
   ///

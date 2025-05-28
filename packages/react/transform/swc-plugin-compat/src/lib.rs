@@ -1,8 +1,8 @@
-use std::vec;
-use serde::Deserialize;
 use convert_case::{Case, Casing};
 use once_cell::sync::Lazy;
 use regex::Regex;
+use serde::Deserialize;
+use std::vec;
 
 use swc_core::{
   common::{comments::Comments, errors::HANDLER, util::take::Take, Span, DUMMY_SP},
@@ -62,12 +62,6 @@ pub struct DarkModeConfig {
   pub theme_expr: String,
 }
 
-<<<<<<< HEAD:packages/react/transform/src/swc_plugin_compat/mod.rs
-/// {@inheritdoc CompatVisitorConfig.addComponentElement}
-/// @public
-#[napi(object)]
-#[derive(Clone, Debug)]
-=======
 #[derive(Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase", untagged)]
 pub enum DarkMode {
@@ -75,9 +69,10 @@ pub enum DarkMode {
   Boolean(bool),
 }
 
+/// {@inheritdoc CompatVisitorConfig.addComponentElement}
+/// @public
 #[derive(Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
->>>>>>> 3ce4ca6a (refactor: adopt swc-plugin-compat and swc-plugin-react-lynx):packages/react/transform/swc-plugin-compat/src/lib.rs
 pub struct AddComponentElementConfig {
   /// @public
   /// Whether to only add component element during compilation
@@ -103,22 +98,10 @@ pub struct AddComponentElementConfig {
   pub compiler_only: bool,
 }
 
-<<<<<<< HEAD:packages/react/transform/src/swc_plugin_compat/mod.rs
 /// {@inheritdoc PluginReactLynxOptions.compat}
 /// @public
-#[napi(object)]
-#[derive(Clone, Debug)]
-=======
-#[derive(Deserialize, Debug, Clone, PartialEq)]
-#[serde(rename_all = "camelCase", untagged)]
-pub enum Either<A, B> {
-  A(A),
-  B(B),
-}
-
 #[derive(Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
->>>>>>> 3ce4ca6a (refactor: adopt swc-plugin-compat and swc-plugin-react-lynx):packages/react/transform/swc-plugin-compat/src/lib.rs
 pub struct CompatVisitorConfig {
   /// @internal
   pub target: TransformTarget,
@@ -297,7 +280,6 @@ pub struct CompatVisitorConfig {
   pub simplify_ctor_like_react_lynx_2: bool,
 
   /// @public
-<<<<<<< HEAD:packages/react/transform/src/swc_plugin_compat/mod.rs
   /// Regular expression used to remove component attributes
   ///
   /// @deprecated It's recommended to use `background-only`.
@@ -323,9 +305,6 @@ pub struct CompatVisitorConfig {
   ///   ],
   /// })
   /// ```
-=======
-  /// @deprecated
->>>>>>> 3ce4ca6a (refactor: adopt swc-plugin-compat and swc-plugin-react-lynx):packages/react/transform/swc-plugin-compat/src/lib.rs
   pub remove_component_attr_regex: Option<String>,
   /// @public
   /// Whether to disable deprecated warnings
@@ -354,7 +333,6 @@ pub struct CompatVisitorConfig {
   pub disable_deprecated_warning: bool,
   /// @public
   /// @deprecated
-<<<<<<< HEAD:packages/react/transform/src/swc_plugin_compat/mod.rs
   /// Dark mode configuration
   ///
   /// @remarks
@@ -377,9 +355,6 @@ pub struct CompatVisitorConfig {
   /// })
   /// ```
   pub dark_mode: Option<Either<bool, DarkModeConfig>>,
-=======
-  pub dark_mode: Option<DarkMode>,
->>>>>>> 3ce4ca6a (refactor: adopt swc-plugin-compat and swc-plugin-react-lynx):packages/react/transform/swc-plugin-compat/src/lib.rs
 }
 
 impl Default for CompatVisitorConfig {

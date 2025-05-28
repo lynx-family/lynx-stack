@@ -246,8 +246,8 @@ importers:
   packages/react/transform:
     dependencies:
       '@rspack/core':
-        specifier: 1.3.10
-        version: 1.3.10(@swc/helpers@0.5.17)
+        specifier: 1.3.12
+        version: 1.3.12(@swc/helpers@0.5.17)
 
   packages/react/worklet-runtime:
     devDependencies:

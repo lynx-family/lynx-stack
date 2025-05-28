@@ -983,14 +983,9 @@ where
   }
 }
 
-<<<<<<< HEAD:packages/react/transform/src/swc_plugin_snapshot/mod.rs
 /// @internal
-#[napi(object)]
-#[derive(Clone, Debug)]
-=======
 #[derive(Deserialize, PartialEq, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
->>>>>>> 3ce4ca6a (refactor: adopt swc-plugin-compat and swc-plugin-react-lynx):packages/react/transform/swc-plugin-react-lynx/src/swc_plugin_snapshot/mod.rs
 pub struct JSXTransformerConfig {
   /// @internal
   pub preserve_jsx: bool,

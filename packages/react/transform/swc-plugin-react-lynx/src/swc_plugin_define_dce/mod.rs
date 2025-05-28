@@ -1,16 +1,9 @@
-use std::{collections::HashMap, fmt::Debug};
 use serde::Deserialize;
-
-<<<<<<< HEAD:packages/react/transform/src/swc_plugin_define_dce/mod.rs
-use napi_derive::napi;
+use std::{collections::HashMap, fmt::Debug};
 
 /// {@inheritdoc PluginReactLynxOptions.defineDCE}
 /// @public
-#[napi(object)]
-#[derive(Clone, Debug)]
-=======
 #[derive(Deserialize, Clone, Debug, PartialEq)]
->>>>>>> 3ce4ca6a (refactor: adopt swc-plugin-compat and swc-plugin-react-lynx):packages/react/transform/swc-plugin-react-lynx/src/swc_plugin_define_dce/mod.rs
 pub struct DefineDCEVisitorConfig {
   /// @public
   /// Replaces variables in your code with other values or expressions at compile time.
