@@ -5,6 +5,11 @@
 import type { LynxTemplate } from '@lynx-js/web-core';
 import { lynxViewTests } from './lynx-view.ts';
 
+const wait = async (ms: number) => {
+  await new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+};
 const ALL_ON_UI = !!process.env.ALL_ON_UI;
 const nativeModulesMap = {
   CustomModule: URL.createObjectURL(
@@ -19,6 +24,21 @@ const nativeModulesMap = {
     }
   };`,
       ],
+      { type: 'text/javascript' },
+    ),
+  ),
+};
+const napiModulesMap = {
+  i18n: URL.createObjectURL(
+    new Blob(
+      [`export default function(NapiModules, NapiModulesCall) {
+    return {
+      async getI18nResourceByNative(options) {
+        const handledData = await NapiModulesCall('getI18nResourceByNative', options);
+        return handledData;
+      },
+    };
+  };`],
       { type: 'text/javascript' },
     ),
   ),
@@ -49,6 +69,24 @@ if (casename) {
         return data.color;
       }
     };
+    lynxView.napiModulesMap = napiModulesMap;
+    lynxView.onNapiModulesCall = async (name, data, moduleName, lynxView) => {
+      if (moduleName === 'i18n') {
+        if (name === 'getI18nResourceByNative') {
+          // mock fetch
+          await wait(1000);
+          if (data.locale = 'en') {
+            return {
+              data: {
+                hello: 'hello',
+                lynx: 'lynx web platform',
+              },
+            };
+          }
+        }
+      }
+      return undefined;
+    };
     if (casename.includes('custom-template-loader')) {
       lynxView.customTemplateLoader = async () => {
         const template: LynxTemplate = {
@@ -58,6 +96,7 @@ if (casename) {
             enableRemoveCSSScope: true,
             defaultDisplayLinear: true,
             defaultOverflowVisible: true,
+            enableJSDataProcessor: false,
           },
           customSections: {},
           lepusCode: {

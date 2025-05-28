@@ -343,4 +343,31 @@ test.describe('web core tests', () => {
     await wait(1000);
     expect(successDispatchNapiModule).toBeTruthy();
   });
+  test('api-get-i18n-resource', async ({ page, browserName }) => {
+    // firefox dose not support this.
+    test.skip(browserName === 'firefox');
+    await goto(page);
+    const mainWorker = await getMainThreadWorker(page);
+    await mainWorker.evaluate(() => {
+      globalThis.runtime.renderPage = () => {};
+      globalThis.runtime._I18nResourceTranslation({
+        locale: 'en',
+        channel: '',
+        fallback_url: '',
+      });
+    });
+    await wait(1000);
+    const backWorker = await getBackgroundThreadWorker(page);
+    let success = false;
+    await page.on('console', async (message) => {
+      if (message.text() === '{"hello":"hello","lynx":"lynx web platform"}') {
+        success = true;
+      }
+    });
+    await backWorker.evaluate(() => {
+      console.log(globalThis.runtime.lynx.getNativeLynx().getI18nResource());
+    });
+    await wait(2000);
+    expect(success).toBeTruthy();
+  });
 });

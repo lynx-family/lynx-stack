@@ -56,6 +56,7 @@ import {
   type GetTemplatePartsPAPI,
   type GetPageElementPAPI,
   type MinimalRawEventObject,
+  type I18nResourceTranslationOptions,
 } from '@lynx-js/web-constants';
 import { globalMuteableVars } from '@lynx-js/web-constants';
 import { createMainThreadLynx } from './createMainThreadLynx.js';
@@ -113,6 +114,9 @@ export interface MainThreadRuntimeCallbacks {
   publishEvent: RpcCallType<typeof publishEventEndpoint>;
   publicComponentEvent: RpcCallType<typeof publicComponentEventEndpoint>;
   createElement: (tag: string) => WebFiberElementImpl;
+  i18nResourceTranslation: (
+    options: I18nResourceTranslationOptions,
+  ) => unknown | undefined;
 }
 
 export interface MainThreadRuntimeConfig {
@@ -679,6 +683,8 @@ export function createMainThreadGlobalThis(
     __OnLifecycleEvent: callbacks.__OnLifecycleEvent,
     __FlushElementTree,
     __lynxGlobalBindingValues: lynxGlobalBindingValues,
+    _I18nResourceTranslation: callbacks.i18nResourceTranslation,
+    _AddEventListener: addEventListener,
     set _updateVars(handler: () => void) {
       varsUpdateHandlers.push(handler);
     },

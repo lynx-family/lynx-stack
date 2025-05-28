@@ -18,6 +18,7 @@ import {
   type reportErrorEndpoint,
   type MainThreadGlobalThis,
   switchExposureServiceEndpoint,
+  type I18nResourceTranslationOptions,
 } from '@lynx-js/web-constants';
 import { registerCallLepusMethodHandler } from './crossThreadHandlers/registerCallLepusMethodHandler.js';
 import { registerGetCustomSectionHandler } from './crossThreadHandlers/registerGetCustomSectionHandler.js';
@@ -32,6 +33,7 @@ export function prepareMainThreadAPIs(
   commitDocument: () => Promise<void> | void,
   markTimingInternal: (timingKey: string, pipelineId?: string) => void,
   reportError: RpcCallType<typeof reportErrorEndpoint>,
+  i18nResourceTranslation: (options: I18nResourceTranslationOptions) => unknown,
 ) {
   const postTimingFlags = backgroundThreadRpc.createCall(
     postTimingFlagsEndpoint,
@@ -174,6 +176,7 @@ export function prepareMainThreadAPIs(
         publishEvent,
         publicComponentEvent,
         createElement,
+        i18nResourceTranslation,
       },
     });
     markTimingInternal('decode_end');

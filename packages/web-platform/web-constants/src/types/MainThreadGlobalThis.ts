@@ -7,6 +7,7 @@ import type {
 } from './Element.js';
 import type { LynxEventType } from './EventType.js';
 import type { FlushElementTreeOptions } from './FlushElementTreeOptions.js';
+import type { I18nResourceTranslationOptions } from './I18n.js';
 import type { MainThreadLynx } from './MainThreadLynx.js';
 import type { ProcessDataCallback } from './ProcessDataCallback.js';
 
@@ -341,4 +342,11 @@ export interface MainThreadGlobalThis {
   renderPage: ((data: unknown) => void) | undefined;
   updatePage?: (data: Cloneable, options?: Record<string, string>) => void;
   runWorklet?: (obj: unknown, event: unknown) => void;
+  _I18nResourceTranslation: (
+    options: I18nResourceTranslationOptions,
+  ) => unknown | undefined;
+  _AddEventListener: (
+    eventName: string,
+    callback: (event: unknown) => void,
+  ) => void;
 }

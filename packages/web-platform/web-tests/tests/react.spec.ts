@@ -1064,6 +1064,36 @@ test.describe('reactlynx3 tests', () => {
         await diffScreenShot(page, title, 'blue');
       },
     );
+    test(
+      'api-i18n-resource-translation',
+      async ({ page }, { title }) => {
+        let first = false;
+        let second = false;
+        await page.on('console', async (msg) => {
+          if (msg.text() === 'i18nResource:undefined') {
+            first = true;
+          }
+          if (
+            msg.text()
+              === 'i18nResource:{"hello":"hello","lynx":"lynx web platform"}'
+          ) {
+            second = true;
+          }
+        });
+        await goto(page, title);
+        await wait(2000);
+        expect(first).toBe(true);
+        expect(second).toBe(true);
+      },
+    );
+    test('api-i18n-resource-translation-bts', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(100);
+      const target = page.locator('#target');
+      await expect(target).toHaveCSS('background-color', 'rgb(255, 192, 203)'); // pink
+      await wait(2000);
+      await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
+    });
   });
 
   test.describe('configs', () => {
