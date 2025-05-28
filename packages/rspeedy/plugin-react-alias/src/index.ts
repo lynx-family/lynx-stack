@@ -5,7 +5,7 @@ import { createRequire } from 'node:module'
 import path from 'node:path'
 
 import type { RsbuildPlugin } from '@rsbuild/core'
-import type { ResolveResult } from 'oxc-resolver'
+import type { ResolveResult } from 'unrs-resolver'
 
 export interface Options {
   lazy?: boolean | undefined
@@ -190,7 +190,7 @@ export function createLazyResolver(
   return async (
     request: string,
   ): Promise<string> => {
-    const { ResolverFactory } = await import('oxc-resolver')
+    const { ResolverFactory } = await import('unrs-resolver')
     const resolver = new ResolverFactory({ conditionNames })
 
     if (!lazyExports) {
