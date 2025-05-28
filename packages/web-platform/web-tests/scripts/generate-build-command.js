@@ -8,13 +8,16 @@ import { spawn } from 'node:child_process';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// const configFiles = [
+//   ...await Array.fromAsync(glob(
+//     path.join(__dirname, '..', 'tests', '*', '*.config.ts'),
+//   )),
+//   ...await Array.fromAsync(glob(
+//     path.join(__dirname, '..', 'tests', '*', '*', '*.config.ts'),
+//   )),
+// ];
 const configFiles = [
-  ...await Array.fromAsync(glob(
-    path.join(__dirname, '..', 'tests', '*', '*.config.ts'),
-  )),
-  ...await Array.fromAsync(glob(
-    path.join(__dirname, '..', 'tests', '*', '*', '*.config.ts'),
-  )),
+  '/Users/bytedance/Desktop/lynx/lynx-stack/packages/web-platform/web-tests/tests/react/i18n.config.ts',
 ];
 const command = configFiles
   .map(
