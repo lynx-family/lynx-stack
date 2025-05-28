@@ -54,18 +54,33 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
       })
 
       api.modifyBundlerChain(async chain => {
-        // FIXME(colinaaa): use `Promise.all`
+        const [
+          jsxRuntimeBackground,
+          jsxRuntimeMainThread,
+          jsxDevRuntimeBackground,
+          jsxDevRuntimeMainThread,
+          reactLepusBackground,
+          reactLepusMainThread,
+        ] = await Promise.all([
+          resolve('@lynx-js/react/jsx-runtime'),
+          resolve('@lynx-js/react/lepus/jsx-runtime'),
+          resolve('@lynx-js/react/jsx-dev-runtime'),
+          resolve('@lynx-js/react/lepus/jsx-dev-runtime'),
+          resolve('@lynx-js/react'),
+          resolve('@lynx-js/react/lepus'),
+        ])
+
         const jsxRuntime = {
-          background: await resolve('@lynx-js/react/jsx-runtime'),
-          mainThread: await resolve('@lynx-js/react/lepus/jsx-runtime'),
+          background: jsxRuntimeBackground,
+          mainThread: jsxRuntimeMainThread,
         }
         const jsxDevRuntime = {
-          background: await resolve('@lynx-js/react/jsx-dev-runtime'),
-          mainThread: await resolve('@lynx-js/react/lepus/jsx-dev-runtime'),
+          background: jsxDevRuntimeBackground,
+          mainThread: jsxDevRuntimeMainThread,
         }
         const reactLepus = {
-          background: await resolve('@lynx-js/react'),
-          mainThread: await resolve('@lynx-js/react/lepus'),
+          background: reactLepusBackground,
+          mainThread: reactLepusMainThread,
         }
 
         // dprint-ignore
