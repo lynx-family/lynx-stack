@@ -17,21 +17,21 @@ const swcPluginReactLynx = path.resolve(__dirname, './swc-plugin-react-lynx/swc_
 
 const transformReactLynx = async (source, options) => {
   const swcPluginReactLynxOptions = {
-    filename: options?.filename || '',
-    mode: options?.mode || 'production',
-    cssScope: options?.cssScope || {
+    filename: options?.filename ?? '',
+    mode: options?.mode ?? 'production',
+    cssScope: options?.cssScope ?? {
       mode: 'none',
       filename: '',
     },
-    shake: options?.shake || false,
-    defineDCE: options?.defineDCE || false,
-    directiveDCE: options?.directiveDCE || false,
-    worklet: options?.worklet || false,
-    dynamicImport: options?.dynamicImport || {
+    shake: options?.shake ?? false,
+    defineDCE: options?.defineDCE ?? false,
+    directiveDCE: options?.directiveDCE ?? false,
+    worklet: options?.worklet ?? false,
+    dynamicImport: options?.dynamicImport ?? {
       runtimePkg: '@lynx-js/react/internal',
       layer: '',
     },
-    inject: options?.inject || false,
+    inject: options?.inject ?? false,
   };
 
   if (typeof options?.jsx === 'object') {
