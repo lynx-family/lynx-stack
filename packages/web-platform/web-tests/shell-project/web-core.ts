@@ -66,7 +66,7 @@ async function run() {
   if (ALL_ON_UI) lynxView.setAttribute('thread-strategy', `all-on-ui`);
   lynxView.initData = { mockData: 'mockData' };
   lynxView.globalProps = { backgroundColor: 'pink' };
-  lynxView.height = 'auto';
+  lynxView.setAttribute('height', 'auto');
   lynxView.napiModulesMap = {
     'color_environment': color_environment,
     'color_methods': color_methods,

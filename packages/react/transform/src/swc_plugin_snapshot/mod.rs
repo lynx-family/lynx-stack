@@ -25,9 +25,7 @@ mod jsx_helpers;
 mod slot_marker;
 
 use crate::{
-  css::{get_inline_style_from_object, get_string_inline_style_from_literal},
-  target::TransformTarget,
-  utils::calc_hash,
+  css::get_string_inline_style_from_literal, target::TransformTarget, utils::calc_hash,
   TransformMode,
 };
 
@@ -162,36 +160,6 @@ impl DynamicPart {
             element_index: Expr = i32_to_expr(element_index),
             exp_index: Expr = i32_to_expr(&exp_index),
           ),
-          AttrName::ParsedStyle(block) => {
-            let exprs = block
-              .iter()
-              .enumerate()
-              .map(|(i, (key, _))| {
-                quote!(
-                  r#"__AddInlineStyle(el, $key, style_values[$index])"# as Expr,
-                  key: Expr = Expr::Lit((*key as f64).into()),
-                  index: Expr = Expr::Lit(i.into()),
-                )
-                .into()
-              })
-              .collect();
-
-            quote!(
-              "function (ctx) {
-                if (ctx.__elements) {
-                  let el = ctx.__elements[$element_index];
-                  let style_values = ctx.__values[$exp_index];
-                  $set_style;
-                }
-              }" as Expr,
-              element_index: Expr = i32_to_expr(element_index),
-              exp_index: Expr = i32_to_expr(&exp_index),
-              set_style: Expr = Expr::Seq(SeqExpr {
-                span: DUMMY_SP,
-                exprs,
-              })
-            )
-          }
           AttrName::Class => quote!(
             "function (ctx) {
               if (ctx.__elements) {
@@ -721,70 +689,11 @@ where
                               self.static_stmts.push(RefCell::new(stmt));
                             }
                           } else {
-                            // <view style={{backgroundColor: "red", width: w}} />;
-                            let styles: Vec<(u32, Expr)> = match &expr {
-                              Expr::Object(object) => get_inline_style_from_object(&object),
-                              _ => vec![],
-                            };
-
-                            if styles.is_empty() {
-                              // Failed to extract style keys, fallback to AttrBlock
-                              self.dynamic_parts.push(DynamicPart::Attr(
-                                expr.clone(),
-                                self.element_index,
-                                attr_name.clone(),
-                              ));
-                            }
-
-                            // Iterate over the extracted-styles,
-                            //   - If we have Some(StyleBlock), push (key, value) into the `StyleBlock::styles`;
-                            //   - If we have None
-                            //     - If the value is static, create a StaticStyleBlock;
-                            //     - If the value is non-static, create a StyleBlock with (key, value).
-                            let style_block = styles.into_iter().fold(
-                              None,
-                              |block: Option<Vec<(u32, Expr)>>, (key, value)| {
-                                if let Some(mut block) = block {
-                                  block.push((key, value));
-                                  return Some(block);
-                                }
-
-                                // TODO: use eval here
-                                if is_literal(&value) {
-                                  let stmt = quote!(
-                                    r#"__AddInlineStyle($element, $key, $value)"# as Stmt,
-                                    element: Expr = el.clone(),
-                                    key: Expr = Expr::Lit((key as usize).into()),
-                                    value: Expr = value.clone()
-                                  );
-                                  self.static_stmts.push(RefCell::new(stmt));
-                                  return None;
-                                }
-
-                                // Whoops, we are not static now, using StyleBlock.
-                                Some(vec![(key, value)])
-                              },
-                            );
-
-                            if let Some(block) = style_block {
-                              self.dynamic_parts.push(DynamicPart::Attr(
-                                // { width: w, display: 'flex', height: h } => [w, 'flex', h]
-                                Expr::Array(ArrayLit {
-                                  span: DUMMY_SP,
-                                  elems: block
-                                    .iter()
-                                    .map(|(_, value)| {
-                                      Some(ExprOrSpread {
-                                        expr: Box::new(value.clone()),
-                                        spread: None,
-                                      })
-                                    })
-                                    .collect::<Vec<_>>(),
-                                }),
-                                self.element_index,
-                                AttrName::ParsedStyle(block),
-                              ));
-                            }
+                            self.dynamic_parts.push(DynamicPart::Attr(
+                              expr.clone(),
+                              self.element_index,
+                              attr_name.clone(),
+                            ));
                           }
                         }
                         Some(JSXAttrValue::JSXExprContainer(JSXExprContainer {
@@ -795,7 +704,6 @@ where
                         Some(JSXAttrValue::JSXFragment(_)) => unreachable!(),
                       };
                     }
-                    AttrName::ParsedStyle(_) => unreachable!(),
                     AttrName::Class => {
                       match value {
                         None => {}
