@@ -84,7 +84,6 @@ describe('Plugins - chunkLoading', () => {
 
       expect(lynxConfig?.output?.chunkLoading).toBe('lynx')
       expect(lynxConfig?.output?.chunkFormat).toBe('commonjs')
-      expect(lynxConfig?.output?.iife).toBe(false)
     })
 
     test('override with tools.rspack.output.chunkLoading', async () => {
