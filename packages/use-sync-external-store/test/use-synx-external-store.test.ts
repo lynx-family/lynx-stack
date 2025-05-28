@@ -19,6 +19,12 @@ import { render, waitSchedule } from '@lynx-js/react/testing-library';
 
 import { useSyncExternalStoreWithSelector } from '../with-selector.js';
 
+async function act<T>(fn: () => Promise<T> | T): Promise<T> {
+  const ret = await fn();
+  await waitSchedule();
+  return ret;
+}
+
 // This tests shared behavior between the built-in and shim implementations of
 // of useSyncExternalStore.
 describe('useSyncExternalStoreWithSelector', () => {
@@ -79,17 +85,17 @@ describe('useSyncExternalStoreWithSelector', () => {
           text: 'A' + a,
         });
       }
-      const { container } = render(createElement(App, null));
-      await waitSchedule();
+      const { container } = await act(() => render(createElement(App, null)));
       assertLog(['App', 'Selector', 'A0']);
       expect(container.textContent).toEqual('A0');
 
       // Update the store
-      store.set({
-        a: 1,
-        b: 0,
-      });
-      await waitSchedule();
+      await act(() =>
+        store.set({
+          a: 1,
+          b: 0,
+        })
+      );
       assertLog([
         // The selector runs before React starts rendering
         'Selector',
@@ -144,27 +150,28 @@ describe('useSyncExternalStoreWithSelector', () => {
           createElement(B, null),
         );
       }
-      const { container } = render(createElement(App, null));
-      await waitSchedule();
+      const { container } = await act(() => render(createElement(App, null)));
       assertLog(['A0', 'B0']);
       expect(container.textContent).toEqual('A0B0');
 
       // Update b but not a
-      store.set({
-        a: 0,
-        b: 1,
-      });
-      await waitSchedule();
+      await act(() =>
+        store.set({
+          a: 0,
+          b: 1,
+        })
+      );
       // Only b re-renders
       assertLog(['B1']);
       expect(container.textContent).toEqual('A0B1');
 
       // Update a but not b
-      store.set({
-        a: 1,
-        b: 1,
-      });
-      await waitSchedule();
+      await act(() =>
+        store.set({
+          a: 1,
+          b: 1,
+        })
+      );
       // Only a re-renders
       assertLog(['A1']);
       expect(container.textContent).toEqual('A1B1');
@@ -225,17 +232,19 @@ describe('useSyncExternalStoreWithSelector', () => {
         }),
       );
     }
-    render(createElement(App, {
-      step: 0,
-    }));
-    await waitSchedule();
-    assertLog(['Inline selector', 'A', 'B', 'C', 'Sibling: 0']);
-    render(
-      createElement(App, {
-        step: 1,
-      }),
+    await act(() =>
+      render(createElement(App, {
+        step: 0,
+      }))
     );
-    await waitSchedule();
+    assertLog(['Inline selector', 'A', 'B', 'C', 'Sibling: 0']);
+    await act(() =>
+      render(
+        createElement(App, {
+          step: 1,
+        }),
+      )
+    );
     assertLog([
       // We had to call the selector again because it's not memoized
       'Inline selector',
@@ -297,20 +306,20 @@ describe('useSyncExternalStoreWithSelector', () => {
           text: a,
         });
       }
-      const { container } = render(
-        createElement(
-          ErrorBoundary,
-          null,
-          createElement(App, null),
-        ),
+      const { container } = await act(() =>
+        render(
+          createElement(
+            ErrorBoundary,
+            null,
+            createElement(App, null),
+          ),
+        )
       );
-      await waitSchedule();
 
       assertLog(['A']);
       expect(container.textContent).toEqual('A');
       // @ts-expect-error testing error
-      store.set({});
-      await waitSchedule();
+      await act(() => store.set({}));
       expect(container.textContent).toEqual('Malformed state');
     });
 
@@ -341,19 +350,20 @@ describe('useSyncExternalStoreWithSelector', () => {
           text: a,
         });
       }
-      const { container } = render(
-        createElement(
-          ErrorBoundary,
-          null,
-          createElement(App, null),
-        ),
+      const { container } = await act(() =>
+        render(
+          createElement(
+            ErrorBoundary,
+            null,
+            createElement(App, null),
+          ),
+        )
       );
 
       assertLog(['A']);
       expect(container.textContent).toEqual('A');
       // @ts-expect-error testing error
-      store.set({});
-      await waitSchedule();
+      await act(() => store.set({}));
       expect(container.textContent).toEqual('Malformed state');
     });
   });
