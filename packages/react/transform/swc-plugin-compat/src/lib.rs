@@ -54,6 +54,13 @@ static COMPONENT_ATTRIBUTES: Lazy<Vec<&str>> = Lazy::new(|| {
   ]
 });
 
+#[derive(Deserialize, Debug, Clone, PartialEq)]
+#[serde(rename_all = "camelCase", untagged)]
+pub enum Either<A, B> {
+  A(A),
+  B(B),
+}
+
 #[derive(Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct DarkModeConfig {
