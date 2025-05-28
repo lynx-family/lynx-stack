@@ -5,7 +5,9 @@
   "keywords": [],
   "license": "ISC",
   "author": "",
-  "main": "main.js",
+  "type": "module",
+  "main": "./main.js",
+  "types": "./index.d.ts",
   "scripts": {
     "test": "vitest"
   },

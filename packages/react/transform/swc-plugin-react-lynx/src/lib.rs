@@ -92,6 +92,7 @@ pub struct TransformNodiffOptions {
   pub mode: Option<TransformMode>,
 
   pub filename: String,
+
   pub css_scope: Either<bool, CSSScopeVisitorConfig>,
 
   pub snapshot: Option<Either<bool, JSXTransformerConfig>>,

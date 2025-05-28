@@ -19,7 +19,6 @@ export function App() {
 }`;
 
   const config = {
-    pluginName: '',
     filename: '',
     sourcemap: false,
     cssScope: false,

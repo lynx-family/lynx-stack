@@ -8,7 +8,6 @@ import { transformReactLynx } from '../../main.js';
 /** @type {import('../../index.d.ts').TransformNodiffOptions} */
 const defaultOptions = {
   mode: 'test',
-  pluginName: '',
   filename: 'test.js',
   sourcemap: false,
   snapshot: {

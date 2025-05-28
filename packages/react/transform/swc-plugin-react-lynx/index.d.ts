@@ -184,15 +184,3 @@ export interface TransformNodiffOptions {
   /** @internal */
   inject?: boolean | InjectVisitorConfig;
 }
-export interface TransformNodiffOutput {
-  code: string;
-  map?: string;
-}
-export function transformReactLynxSync(
-  code: string,
-  options?: TransformNodiffOptions | undefined | null,
-): TransformNodiffOutput;
-export function transformReactLynx(
-  code: string,
-  options?: TransformNodiffOptions | undefined | null,
-): Promise<TransformNodiffOutput>;
