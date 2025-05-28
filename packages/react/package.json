@@ -164,7 +164,7 @@
     "preact": "npm:@hongzhiyuan/preact@10.24.0-319c684e"
   },
   "devDependencies": {
-    "@lynx-js/types": "^3.3.0",
+    "@lynx-js/types": "3.3.0",
     "@microsoft/api-extractor": "catalog:",
     "@types/react": "^18.3.22"
   },
