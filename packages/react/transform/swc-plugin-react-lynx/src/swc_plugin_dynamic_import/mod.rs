@@ -1,5 +1,6 @@
 use std::{collections::HashSet, fmt::Debug};
 
+use serde::Deserialize;
 use serde_json::Value;
 use swc_core::{
   common::{
@@ -14,7 +15,6 @@ use swc_core::{
     visit::{VisitMut, VisitMutWith},
   },
 };
-use serde::Deserialize;
 
 use crate::utils::jsonify;
 

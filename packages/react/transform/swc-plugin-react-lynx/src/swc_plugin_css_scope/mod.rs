@@ -1,6 +1,6 @@
 use crate::calc_hash;
-use serde::{Deserialize, Deserializer};
 use regex::Regex;
+use serde::{Deserialize, Deserializer};
 use swc_core::{
   common::{
     comments::{Comment, CommentKind, Comments},
