@@ -9,6 +9,7 @@ env:
 jobs:
   get-merge-base:
     runs-on: lynx-ubuntu-24.04-medium
+    timeout-minutes: 5
     env:
       # We have 2 cases:
       #   1. Pull request
@@ -62,6 +63,7 @@ jobs:
           echo "merge-base=$(git merge-base "$CLEAN_BASE_REF" "$CLEAN_HEAD_REF" || git rev-parse "$CLEAN_BASE_REF")" >> $GITHUB_OUTPUT
   build-all:
     runs-on: lynx-ubuntu-24.04-xlarge
+    timeout-minutes: 30
     needs: get-merge-base
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4

@@ -11,6 +11,7 @@ env:
 jobs:
   build:
     runs-on: lynx-ubuntu-24.04-medium
+    timeout-minutes: 10
     strategy:
       matrix:
         project:

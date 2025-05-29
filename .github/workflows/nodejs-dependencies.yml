@@ -22,6 +22,7 @@ concurrency:
 jobs:
   sherif:
     runs-on: lynx-ubuntu-24.04-medium
+    timeout-minutes: 10
     permissions:
       contents: read
     steps:
