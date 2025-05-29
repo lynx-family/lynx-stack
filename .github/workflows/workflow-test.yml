@@ -33,6 +33,10 @@ jobs:
     runs-on: ${{ inputs.runs-on }}
     permissions: {}
     steps:
+      - name: set apt sources - use tls
+        run: |
+          sudo sed -i 's|http:|https:|' /etc/apt/sources.list.d/ubuntu.sources
+          sudo sed -i 's|http:|https:|' /etc/apt/sources.list.d/*.list
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:
           # Codecov requires fetch-depth: 0

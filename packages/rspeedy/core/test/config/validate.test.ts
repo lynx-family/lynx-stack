@@ -943,7 +943,7 @@ describe('Config Validation', () => {
             - Got: undefined
 
           Invalid config on \`$input.output.copy.patterns\`.
-            - Expect to be Array<string | (Pick<RawCopyPattern, "from"> & Partial<Omit<RawCopyPattern, "from">>)>
+            - Expect to be Array<string | ({ from: string; } & Partial<RawCopyPattern>)>
             - Got: undefined
           ]
         `)
@@ -957,7 +957,7 @@ describe('Config Validation', () => {
             - Got: null
 
           Invalid config on \`$input.output.copy.patterns\`.
-            - Expect to be Array<string | (Pick<RawCopyPattern, "from"> & Partial<Omit<RawCopyPattern, "from">>)>
+            - Expect to be Array<string | ({ from: string; } & Partial<RawCopyPattern>)>
             - Got: undefined
           ]
         `)
@@ -971,7 +971,7 @@ describe('Config Validation', () => {
             - Got: undefined
 
           Invalid config on \`$input.output.copy.patterns\`.
-            - Expect to be Array<string | (Pick<RawCopyPattern, "from"> & Partial<Omit<RawCopyPattern, "from">>)>
+            - Expect to be Array<string | ({ from: string; } & Partial<RawCopyPattern>)>
             - Got: undefined
           ]
         `)
@@ -985,7 +985,7 @@ describe('Config Validation', () => {
             - Got: undefined
 
           Invalid config on \`$input.output.copy.patterns\`.
-            - Expect to be Array<string | (Pick<RawCopyPattern, "from"> & Partial<Omit<RawCopyPattern, "from">>)>
+            - Expect to be Array<string | ({ from: string; } & Partial<RawCopyPattern>)>
             - Got: undefined
           ]
         `)
@@ -999,7 +999,7 @@ describe('Config Validation', () => {
           Unknown property: \`$input.output.copy[0].dist\` in configuration
 
           Invalid config on \`$input.output.copy.patterns\`.
-            - Expect to be Array<string | (Pick<RawCopyPattern, "from"> & Partial<Omit<RawCopyPattern, "from">>)>
+            - Expect to be Array<string | ({ from: string; } & Partial<RawCopyPattern>)>
             - Got: undefined
           ]
         `)
@@ -1013,7 +1013,7 @@ describe('Config Validation', () => {
             - Got: null
 
           Invalid config on \`$input.output.copy.patterns\`.
-            - Expect to be Array<string | (Pick<RawCopyPattern, "from"> & Partial<Omit<RawCopyPattern, "from">>)>
+            - Expect to be Array<string | ({ from: string; } & Partial<RawCopyPattern>)>
             - Got: undefined
           ]
         `)
