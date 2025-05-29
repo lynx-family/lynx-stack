@@ -96,7 +96,6 @@ let jsx = <view style={{
         shake: false,
         compat: false,
         worklet: false,
-        refresh: false,
       },
     );
     expect(result.code).toMatchInlineSnapshot(`
@@ -158,7 +157,6 @@ let jsx = <view style={{
         shake: false,
         compat: false,
         worklet: false,
-        refresh: false,
       },
     );
     expect(result.code).toMatchInlineSnapshot(`
@@ -216,7 +214,6 @@ let jsx = <view style={{ height, width }}/>`,
         shake: false,
         compat: false,
         worklet: false,
-        refresh: false,
       },
     );
     expect(result.code).toMatchInlineSnapshot(`

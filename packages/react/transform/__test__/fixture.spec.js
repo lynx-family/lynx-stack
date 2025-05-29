@@ -69,7 +69,6 @@ export class A extends Component {
       shake: true,
       compat: true,
       worklet: false,
-      refresh: false,
     });
 
     const result = await transformReactLynx(inputContent, __cfg(true));
@@ -125,7 +124,6 @@ describe('jsx', () => {
       jsx: true,
       shake: true,
       cssScope: false,
-      refresh: false,
       directiveDCE: {
         target: 'LEPUS',
       },
@@ -185,7 +183,6 @@ Component, View
         shake: false,
         compat: true,
         worklet: false,
-        refresh: false,
       },
     );
 
@@ -263,7 +260,6 @@ Component, View
         disableDeprecatedWarning: false,
       },
       worklet: false,
-      refresh: false,
     };
 
     {
@@ -353,7 +349,6 @@ Component, View
       disableDeprecatedWarning: false,
     },
     worklet: false,
-    refresh: false,
   });
 
   it('should error when encounter <component/>', async () => {
@@ -434,7 +429,6 @@ describe('syntaxConfig', () => {
       shake: false,
       compat: false,
       worklet: false,
-      refresh: false,
     });
     expect(result.code).toMatchInlineSnapshot(`
       "Promise.all([]);
@@ -457,7 +451,6 @@ describe('syntaxConfig', () => {
       shake: false,
       compat: false,
       worklet: false,
-      refresh: false,
     });
 
     expect(result.code).toBe('');
@@ -488,7 +481,6 @@ describe('syntaxConfig', () => {
       shake: false,
       compat: false,
       worklet: false,
-      refresh: false,
     });
 
     // Note that the result is not valid TSX code, but it is valid TS code.
@@ -520,7 +512,6 @@ describe('syntaxConfig', () => {
         minSdkVersion: '2.14',
         runtimePkg: '@lynx-js/react',
       },
-      refresh: false,
     });
 
     expect(result.code).toMatchInlineSnapshot(`
@@ -561,7 +552,6 @@ class X {
         shake: false,
         compat: true,
         worklet: false,
-        refresh: false,
       },
     );
 
@@ -648,7 +638,6 @@ export default class App extends Component {
           disableDeprecatedWarning: false,
         },
         worklet: false,
-        refresh: false,
       },
     );
 
@@ -705,7 +694,6 @@ describe('dynamic import', () => {
         shake: false,
         compat: false,
         worklet: false,
-        refresh: false,
       },
     );
 
@@ -788,7 +776,6 @@ X();
         shake: false,
         compat: true,
         worklet: false,
-        refresh: false,
       },
     );
 
@@ -859,7 +846,6 @@ X5();
         shake: false,
         compat: true,
         worklet: false,
-        refresh: false,
       },
     );
 
@@ -918,7 +904,6 @@ X();
         shake: false,
         compat: true,
         worklet: false,
-        refresh: false,
       },
     );
 
@@ -963,7 +948,6 @@ X();
         shake: false,
         compat: true,
         worklet: false,
-        refresh: false,
       },
     );
 
@@ -1007,7 +991,6 @@ X();
         shake: false,
         compat: true,
         worklet: false,
-        refresh: false,
       },
     );
 
@@ -1049,7 +1032,6 @@ X();
         shake: false,
         compat: true,
         worklet: false,
-        refresh: false,
       },
     );
 
@@ -1102,7 +1084,6 @@ class X extends Component {
         shake: true,
         compat: true,
         worklet: false,
-        refresh: false,
       },
     );
 
@@ -1154,7 +1135,7 @@ describe('worklet', () => {
           },
           shake: false,
           compat: true,
-          refresh: false,
+
           worklet: {
             target,
             filename: '',
@@ -1247,7 +1228,7 @@ export function foo(event) {
         },
         shake: false,
         compat: true,
-        refresh: false,
+
         worklet: {
           target: 'LEPUS',
           filename: '',
@@ -1314,7 +1295,7 @@ console.log(bar)
         },
         shake: false,
         compat: true,
-        refresh: false,
+
         worklet: {
           target: 'LEPUS',
           filename: '',
@@ -1376,7 +1357,7 @@ function getCurrentDelta(event) {
         },
         shake: false,
         compat: true,
-        refresh: false,
+
         worklet: {
           target: 'LEPUS',
           filename: '',

@@ -22,7 +22,6 @@ const defaultOptions = {
   shake: false,
   compat: false,
   worklet: false,
-  refresh: false,
 };
 
 describe('CSS Scope', () => {

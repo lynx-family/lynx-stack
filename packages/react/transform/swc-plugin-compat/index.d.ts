@@ -1,19 +1,33 @@
+/**
+ * {@inheritdoc CompatVisitorConfig.addComponentElement}
+ * @public
+ */
 export interface AddComponentElementConfig {
   /**
    * @public
    * Whether to only add component element during compilation
+   *
+   * @example
+   *
+   * Note that this only take effects on `Component` imported from {@link CompatVisitorConfig.oldRuntimePkg}.
+   *
+   * ```js
+   * import { defineConfig } from '@lynx-js/rspeedy'
+   * import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+   *
+   * export default defineConfig({
+   *   plugins: [
+   *     pluginReactLynx({
+   *       compat: {
+   *         addComponentElement: { compilerOnly: true }
+   *       },
+   *     })
+   *   ],
+   * })
+   * ```
    */
   compilerOnly: boolean;
 }
-
-export interface DarkModeConfig {
-  /**
-   * @public
-   * Theme expression to be used for dark mode
-   */
-  themeExpr: string;
-}
-
 /**
  * {@inheritdoc PluginReactLynxOptions.compat}
  * @public
@@ -288,4 +302,12 @@ export interface CompatVisitorConfig {
    * ```
    */
   darkMode?: boolean | DarkModeConfig;
+}
+
+export interface DarkModeConfig {
+  /**
+   * @public
+   * Theme expression to be used for dark mode
+   */
+  themeExpr: string;
 }
