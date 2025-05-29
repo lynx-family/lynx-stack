@@ -5,7 +5,7 @@ import path from 'node:path';
 
 const templateCache: Map<LynxTemplate, LynxTemplate> = new Map();
 // Initialize tmpDir with the prefix
-let tmpDir:string | undefined; ;
+let tmpDir: string | undefined;
 // Update tmpDir with the actual path of the created temporary directory
 const tmpDirPromise = fs.mkdtemp(path.join(os.tmpdir(), 'lynx'));
 
