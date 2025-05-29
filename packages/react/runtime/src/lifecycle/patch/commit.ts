@@ -32,7 +32,7 @@ import {
   setPipeline,
 } from '../../lynx/performance.js';
 import { CATCH_ERROR, COMMIT, RENDER_CALLBACKS, VNODE } from '../../renderToOpcodes/constants.js';
-import { applyDelayedRefs } from '../../snapshot/ref.js';
+import { applyQueuedRefs } from '../../snapshot/ref.js';
 import { backgroundSnapshotInstanceManager } from '../../snapshot.js';
 import { isEmptyObject } from '../../utils.js';
 import { takeWorkletRefInitValuePatch } from '../../worklet/workletRefPool.js';
@@ -140,7 +140,7 @@ function replaceCommitHook(): void {
     globalFlushOptions = {};
     if (!snapshotPatch && workletRefInitValuePatch.length === 0) {
       // before hydration, skip patch
-      applyDelayedRefs();
+      applyQueuedRefs();
       return;
     }
 
@@ -171,7 +171,7 @@ function replaceCommitHook(): void {
       }
     });
 
-    applyDelayedRefs();
+    applyQueuedRefs();
   };
   options[COMMIT] = commit as ((...args: Parameters<typeof commit>) => void);
 }

@@ -17,7 +17,6 @@ const __snapshot_da39a_test_1 = require('@lynx-js/react/internal').createSnapsho
 function Comp() {
     const handleRef = ()=>{};
     return _jsx(__snapshot_da39a_test_1, {
-        ref: require('@lynx-js/react/internal').applyRefs.bind([]),
         values: [
             require('@lynx-js/react/internal').transformRef(handleRef)
         ]
