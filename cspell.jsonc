@@ -142,6 +142,7 @@
     "nextest",
     "taiki",
     "worklets",
+    "unrs",
   ],
   // Glob
   "ignorePaths": [
