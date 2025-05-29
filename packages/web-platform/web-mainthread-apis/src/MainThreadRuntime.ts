@@ -122,7 +122,10 @@ export class MainThreadRuntime {
      * 4. create the style element
      * 5. append the style element to the root dom
      */
-    flattenStyleInfo(this.config.styleInfo);
+    flattenStyleInfo(
+      this.config.styleInfo,
+      this.config.pageConfig.enableCSSSelector,
+    );
     transformToWebCss(this.config.styleInfo);
     const cssInJsInfo: CssInJsInfo = this.config.pageConfig.enableCSSSelector
       ? {}

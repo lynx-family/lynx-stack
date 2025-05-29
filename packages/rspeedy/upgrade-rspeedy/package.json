@@ -38,7 +38,7 @@
     "@lynx-js/react": "workspace:*",
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@lynx-js/rspeedy": "workspace:*",
-    "@lynx-js/types": "^3.3.0",
+    "@lynx-js/types": "3.3.0",
     "@lynx-js/web-core": "workspace:*",
     "@lynx-js/web-elements": "workspace:*",
     "@rsbuild/plugin-less": "catalog:rsbuild",
