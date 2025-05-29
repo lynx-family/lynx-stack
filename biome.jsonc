@@ -127,7 +127,7 @@
         "noExplicitAny": "error",
         "noExtraNonNullAssertion": "error",
         "noConfusingVoidType": "error",
-        "noMisleadingInstantiator": "error", // cSpell:disable-line
+        "noMisleadingInstantiator": "error",
         "noRedeclare": "error",
         "noUnsafeDeclarationMerging": "error",
         "useAwait": "error",

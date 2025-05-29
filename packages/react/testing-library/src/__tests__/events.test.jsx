@@ -1,4 +1,3 @@
-// cspell:disable
 import '@testing-library/jest-dom';
 import { test } from 'vitest';
 import { fireEvent, render } from '..';

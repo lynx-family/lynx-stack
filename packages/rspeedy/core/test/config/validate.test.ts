@@ -2739,7 +2739,6 @@ describe('Config Validation', () => {
             },
           },
         })
-        // cSpell:disable
       ).toThrowErrorMatchingInlineSnapshot(`
         [Error: Invalid configuration.
 
@@ -2748,7 +2747,6 @@ describe('Config Validation', () => {
           - Got: string
         ]
       `)
-      // cSpell:enable
     })
   })
 })
