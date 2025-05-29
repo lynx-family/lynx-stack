@@ -775,6 +775,197 @@ describe('element ref', () => {
       expect(errorHandler).toHaveBeenCalledTimes(1);
     }
   });
+
+  it('should not trigger ref when ref function is not updated', async function() {
+    let ref1 = vi.fn();
+    let show = true;
+
+    class Comp extends Component {
+      render() {
+        return (
+          <view>
+            {show && <view ref={ref1} />}
+          </view>
+        );
+      }
+    }
+
+    // main thread render
+    {
+      __root.__jsx = <Comp />;
+      renderPage();
+    }
+
+    // background render
+    {
+      globalEnvManager.switchToBackground();
+      render(<Comp />, __root);
+    }
+
+    // hydrate
+    {
+      // LifecycleConstant.firstScreen
+      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      globalThis.__OnLifecycleEvent.mockClear();
+
+      // rLynxChange
+      globalEnvManager.switchToMainThread();
+      const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
+      globalThis[rLynxChange[0]](rLynxChange[1]);
+      lynx.getNativeApp().callLepusMethod.mockClear();
+    }
+
+    // ref
+    {
+      globalEnvManager.switchToBackground();
+      expect(ref1.mock.calls).toMatchInlineSnapshot(`
+        [
+          [
+            RefProxy {
+              "refAttr": [
+                3,
+                0,
+              ],
+              "task": undefined,
+            },
+          ],
+        ]
+      `);
+    }
+
+    // background render
+    {
+      globalEnvManager.switchToBackground();
+      ref1.mockClear();
+      render(<Comp />, __root);
+    }
+
+    // ref
+    {
+      globalEnvManager.switchToBackground();
+      expect(ref1.mock.calls).toMatchInlineSnapshot(`[]`);
+    }
+
+    // background render
+    {
+      globalEnvManager.switchToBackground();
+      ref1.mockClear();
+      show = false;
+      render(<Comp />, __root);
+    }
+    // ref
+    {
+      globalEnvManager.switchToBackground();
+      expect(ref1.mock.calls).toMatchInlineSnapshot(`
+        [
+          [
+            null,
+          ],
+        ]
+      `);
+    }
+  });
+
+  it('should trigger ref when element not exists in the first screen', async function() {
+    const ref1 = vi.fn();
+
+    class Comp extends Component {
+      x = 'x';
+      render() {
+        return (
+          <view>
+            {this.props.switch && (
+              <view>
+                <view ref={ref1} />
+              </view>
+            )}
+          </view>
+        );
+      }
+    }
+
+    // main thread render
+    {
+      __root.__jsx = <Comp switch={false} />;
+      renderPage();
+      expect(__root.__element_root).toMatchInlineSnapshot(`
+        <page
+          cssId="default-entry-from-native:0"
+        >
+          <view />
+        </page>
+      `);
+      expect(globalThis.__OnLifecycleEvent.mock.calls[0]).toMatchInlineSnapshot(`
+        [
+          [
+            "rLynxFirstScreen",
+            {
+              "jsReadyEventIdSwap": {},
+              "root": "{"id":-1,"type":"root","children":[{"id":-2,"type":"__Card__:__snapshot_a94a8_test_17"}]}",
+            },
+          ],
+        ]
+      `);
+    }
+
+    // background render
+    {
+      globalEnvManager.switchToBackground();
+      render(<Comp switch={true} />, __root);
+      lynx.getNativeApp().callLepusMethod.mockClear();
+
+      expect(ref1.mock.calls).toMatchInlineSnapshot(`
+        [
+          [
+            RefProxy {
+              "refAttr": [
+                3,
+                0,
+              ],
+              "task": undefined,
+            },
+          ],
+        ]
+      `);
+      ref1.mockClear();
+    }
+
+    // hydrate
+    {
+      // LifecycleConstant.firstScreen
+      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
+      expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1].data).toMatchInlineSnapshot(
+        `"{"patchList":[{"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_18",3,4,3,[1],1,-2,3,null],"id":2}]}"`,
+      );
+
+      // rLynxChange
+      globalEnvManager.switchToMainThread();
+      const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
+      globalThis[rLynxChange[0]](rLynxChange[1]);
+      rLynxChange[2]();
+      // Keep "-2:0" exists even if it is set to null. This is for the first screen.
+      expect(__root.__element_root).toMatchInlineSnapshot(`
+        <page
+          cssId="default-entry-from-native:0"
+        >
+          <view>
+            <view>
+              <view
+                react-ref-3-0={1}
+              />
+            </view>
+          </view>
+        </page>
+      `);
+    }
+
+    // ref
+    {
+      globalEnvManager.switchToBackground();
+      expect(ref1.mock.calls).toMatchInlineSnapshot(`[]`);
+    }
+  });
 });
 
 describe('element ref in spread', () => {
@@ -819,7 +1010,7 @@ describe('element ref in spread', () => {
               "rLynxFirstScreen",
               {
                 "jsReadyEventIdSwap": {},
-                "root": "{"id":-1,"type":"root","children":[{"id":-2,"type":"__Card__:__snapshot_a94a8_test_15","values":[{},{"ref":"react-ref--2-1"}]}]}",
+                "root": "{"id":-1,"type":"root","children":[{"id":-2,"type":"__Card__:__snapshot_a94a8_test_19","values":[{},{"ref":"react-ref--2-1"}]}]}",
               },
             ],
           ],
@@ -1186,22 +1377,7 @@ describe('element ref in spread', () => {
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1].data).toMatchInlineSnapshot(
         `"{"patchList":[{"id":4,"snapshotPatch":[3,-2,2,{"ref":1}]}]}"`,
       );
-      expect(ref1.mock.calls).toMatchInlineSnapshot(`
-        [
-          [
-            null,
-          ],
-          [
-            RefProxy {
-              "refAttr": [
-                -2,
-                0,
-              ],
-              "task": undefined,
-            },
-          ],
-        ]
-      `);
+      expect(ref1.mock.calls).toMatchInlineSnapshot(`[]`);
       expect(ref3.current).toMatchInlineSnapshot(`
         RefProxy {
           "refAttr": [
@@ -1257,17 +1433,17 @@ describe('element ref in list', () => {
                     {
                       "item-key": 0,
                       "position": 0,
-                      "type": "__Card__:__snapshot_a94a8_test_21",
+                      "type": "__Card__:__snapshot_a94a8_test_25",
                     },
                     {
                       "item-key": 1,
                       "position": 1,
-                      "type": "__Card__:__snapshot_a94a8_test_21",
+                      "type": "__Card__:__snapshot_a94a8_test_25",
                     },
                     {
                       "item-key": 2,
                       "position": 2,
-                      "type": "__Card__:__snapshot_a94a8_test_21",
+                      "type": "__Card__:__snapshot_a94a8_test_25",
                     },
                   ],
                   "removeAction": [],
@@ -1599,7 +1775,7 @@ describe('ui operations', () => {
       render(<Comp />, __root);
 
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1].data).toMatchInlineSnapshot(
-        `"{"patchList":[{"id":3,"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_26",3,4,3,[1],1,-2,3,null]}]}"`,
+        `"{"patchList":[{"id":3,"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_30",3,4,3,[1],1,-2,3,null]}]}"`,
       );
       expect(lynx.createSelectorQuery().constructor.execLog.mock.calls).toMatchInlineSnapshot(`
         [

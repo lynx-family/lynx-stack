@@ -16,7 +16,6 @@ export const {
   __page,
   __pageId,
   __root,
-  applyRefs,
   createSnapshot,
   loadDynamicJS,
   loadLazyBundle,

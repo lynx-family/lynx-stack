@@ -5,10 +5,10 @@ import type { Element, Worklet, WorkletRefImpl } from '@lynx-js/react/worklet-ru
 
 import type { SnapshotInstance } from '../snapshot.js';
 import { workletUnRef } from './workletRef.js';
-import type { BackgroundSnapshotInstance } from '../backgroundSnapshot.js';
 import { RefProxy } from '../lifecycle/ref/delay.js';
 
-const refsToApply: (Ref[] | BackgroundSnapshotInstance)[] = [];
+const refsToClear: Ref[] = [];
+const refsToApply: (Ref | [snapshotInstanceId: number, expIndex: number])[] = [];
 
 type Ref = (((ref: RefProxy) => () => void) | { current: RefProxy | null }) & {
   _unmount?: () => void;
@@ -90,68 +90,44 @@ function transformRef(ref: unknown): Ref | null | undefined {
   );
 }
 
-/**
- * Applies refs from a snapshot instance to their corresponding DOM elements.
- *
- * This function is called directly by preact with a `this` context of a Ref array that collects all
- * refs that are applied during the process.
- *
- * @param snapshotInstance - The snapshot instance containing refs to apply
- *
- * If snapshotInstance is null, all previously collected refs are cleared.
- * Otherwise, it iterates through the snapshot values, finds refs (either direct or in spreads),
- * and applies them to their corresponding elements.
- */
-function applyRefs(this: Ref[], snapshotInstance: BackgroundSnapshotInstance): void {
-  if (__LEPUS__) {
-    // for testing environment only
-    return;
-  }
-  refsToApply.push(this, snapshotInstance);
-}
-
-function applyDelayedRefs(): void {
+function applyQueuedRefs(): void {
   try {
+    for (const ref of refsToClear) {
+      applyRef(ref, null);
+    }
     for (let i = 0; i < refsToApply.length; i += 2) {
-      const refs = refsToApply[i] as Ref[];
-      const snapshotInstance = refsToApply[i + 1] as BackgroundSnapshotInstance;
-
-      if (snapshotInstance == null) {
-        try {
-          refs.forEach(ref => {
-            applyRef(ref, null);
-          });
-        } finally {
-          refs.length = 0;
-        }
-        continue;
-      }
-
-      for (let i = 0; i < snapshotInstance.__values!.length; i++) {
-        const value: unknown = snapshotInstance.__values![i];
-        if (!value || (typeof value !== 'function' && typeof value !== 'object')) {
-          continue;
-        }
-
-        let ref: Ref | undefined;
-        if ('__ref' in value) {
-          ref = value as Ref;
-        } else if ('__spread' in value) {
-          ref = (value as { ref?: Ref | undefined }).ref;
-        }
-
-        if (ref) {
-          applyRef(ref, [snapshotInstance.__id, i]);
-          refs.push(ref);
-        }
-      }
+      const ref = refsToApply[i] as Ref;
+      const value = refsToApply[i + 1] as [snapshotInstanceId: number, expIndex: number] | null;
+      applyRef(ref, value);
     }
   } finally {
-    refsToApply.length = 0;
+    clearQueuedRefs();
   }
+}
+
+function queueRefAttrUpdate(
+  oldRef: Ref | null | undefined,
+  newRef: Ref | null | undefined,
+  snapshotInstanceId: number,
+  expIndex: number,
+): void {
+  if (oldRef === newRef) {
+    return;
+  }
+  if (oldRef) {
+    refsToClear.push(oldRef);
+  }
+  if (newRef) {
+    refsToApply.push(newRef, [snapshotInstanceId, expIndex]);
+  }
+}
+
+function clearQueuedRefs(): void {
+  refsToClear.length = 0;
+  refsToApply.length = 0;
 }
 
 /**
  * @internal
  */
-export { updateRef, unref, transformRef, applyRef, applyRefs, applyDelayedRefs };
+export { queueRefAttrUpdate, updateRef, unref, transformRef, applyRef, applyQueuedRefs, clearQueuedRefs, type Ref };
