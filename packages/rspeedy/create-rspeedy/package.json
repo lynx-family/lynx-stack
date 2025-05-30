@@ -41,7 +41,9 @@
     "@lynx-js/qrcode-rsbuild-plugin": "workspace:^",
     "@lynx-js/react": "workspace:^",
     "@lynx-js/react-rsbuild-plugin": "workspace:^",
-    "@lynx-js/rspeedy": "workspace:^"
+    "@lynx-js/rspeedy": "workspace:^",
+    "@lynx-js/rspeedy-plugin-vue": "workspace:^",
+    "@lynx-js/vue": "workspace:^"
   },
   "engines": {
     "node": ">=18"

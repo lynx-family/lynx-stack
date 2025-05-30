@@ -11,6 +11,9 @@
     "prepare": "husky && ts-patch install",
     "test": "vitest"
   },
+  "dependencies": {
+    "cli@2.18.4": "link:napi-rs/cli@2.18.4"
+  },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
     "@changesets/cli": "^2.29.4",

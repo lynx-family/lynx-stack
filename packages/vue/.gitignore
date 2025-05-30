@@ -1,0 +1,7 @@
+lib
+node_modules
+*.tsbuildinfo
+.DS_Store
+coverage
+dist
+etc/api 

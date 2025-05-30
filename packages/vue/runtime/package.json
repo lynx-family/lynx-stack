@@ -1,0 +1,24 @@
+{
+  "name": "@lynx-js/vue-runtime",
+  "version": "0.0.1-alpha.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc --build",
+    "clean": "rm -rf lib && find src -name \"*.js\" -o -name \"*.js.map\" -o -name \"*.d.ts\" -o -name \"*.d.ts.map\" | xargs rm -f 2>/dev/null || true",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "vue": "^3.3.0"
+  },
+  "devDependencies": {
+    "@lynx-js/types": "^3.2.0",
+    "@lynx-js/vitest-setup": "workspace:*",
+    "@tsconfig/strictest": "^2.0.5",
+    "@vitest/coverage-v8": "^3.0.8",
+    "@vitest/ui": "^3.0.8",
+    "typescript": "~5.7.3",
+    "vitest": "^3.0.8"
+  }
+}

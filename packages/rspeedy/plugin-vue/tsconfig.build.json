@@ -1,0 +1,20 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "lib",
+    "declaration": true,
+    "declarationDir": "lib",
+    "sourceMap": true,
+    "inlineSources": true,
+    "target": "ES2022",
+    "module": "NodeNext",
+    "skipLibCheck": true,
+    "noEmitOnError": false,
+    "noImplicitAny": false,
+    "suppressImplicitAnyIndexErrors": true,
+    "ignoreDeprecations": "5.0"
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "lib", "dist", "test", "**/*.test.ts", "**/*.spec.ts"]
+}

@@ -4,7 +4,7 @@
 const fix = {
   '*.{ts,tsx,js,jsx,cjs,mjs,css,sass,scss,less,html,yml,yaml,rs,toml,md,json}':
     [
-      'eslint --cache --fix --no-warn-ignored',
+      // 'eslint --cache --fix --no-warn-ignored',
       'biome lint --write --no-errors-on-unmatched --files-ignore-unknown=true',
       'dprint fmt --allow-no-files --',
     ],

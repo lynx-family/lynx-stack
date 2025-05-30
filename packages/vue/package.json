@@ -1,0 +1,105 @@
+{
+  "name": "@lynx-js/vue",
+  "version": "0.0.1-alpha.0",
+  "description": "VueLynx is a framework for developing Lynx applications with familiar Vue 3.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/vue"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./types/vue.d.ts",
+      "lazy": "./runtime/lazy/vue.js",
+      "default": "./runtime/lib/index.js"
+    },
+    "./experimental/lazy/import": {
+      "types": "./runtime/lazy/import.d.ts",
+      "default": "./runtime/lazy/import.js"
+    },
+    "./internal": {
+      "types": "./runtime/lib/internal.d.ts",
+      "lazy": "./runtime/lazy/internal.js",
+      "default": "./runtime/lib/internal.js"
+    },
+    "./internal/document": {
+      "types": "./runtime/lib/document.d.ts",
+      "default": "./runtime/lib/document.js"
+    },
+    "./lepus": {
+      "types": "./runtime/lepus/index.d.ts",
+      "lazy": "./runtime/lazy/vue-lepus.js",
+      "default": "./runtime/lepus/index.js"
+    },
+    "./hmr": {
+      "types": "./runtime/hmr/index.d.ts",
+      "default": "./runtime/hmr/index.js"
+    },
+    "./runtime-components": {
+      "types": "./components/lib/index.d.ts",
+      "default": "./components/lib/index.js"
+    },
+    "./runtime-lynx": {
+      "types": "./runtime-lynx/lib/index.d.ts",
+      "default": "./runtime-lynx/lib/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "types": "./types/vue.d.ts",
+  "typesVersions": {
+    "*": {
+      "experimental/lazy/import": [
+        "./runtime/lazy/import.d.ts"
+      ],
+      "internal": [
+        "./runtime/lib/internal.d.ts"
+      ],
+      "internal/document": [
+        "./runtime/lib/document.d.ts"
+      ],
+      "lepus": [
+        "./runtime/lepus/index.d.ts"
+      ],
+      "hmr": [
+        "./runtime/hmr/index.d.ts"
+      ],
+      "runtime-components": [
+        "./components/lib/index.d.ts"
+      ],
+      "runtime-lynx": [
+        "./runtime-lynx/lib/index.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "components",
+    "runtime",
+    "runtime-lynx",
+    "types",
+    "docs",
+    "CHANGELOG.md",
+    "internal.js",
+    "README.md"
+  ],
+  "scripts": {
+    "api-extractor": "api-extractor run --verbose",
+    "build": "tsc --build",
+    "build:clean": "rm -rf runtime/lib runtime-lynx/lib components/lib"
+  },
+  "dependencies": {
+    "vue": "^3.3.0"
+  },
+  "devDependencies": {
+    "@lynx-js/types": "^3.2.0",
+    "@microsoft/api-extractor": "^7.38.0"
+  },
+  "peerDependencies": {
+    "@lynx-js/types": "*"
+  },
+  "peerDependenciesMeta": {
+    "@lynx-js/types": {
+      "optional": true
+    }
+  }
+} 

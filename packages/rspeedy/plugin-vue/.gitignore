@@ -1,0 +1,30 @@
+# Build output
+/lib
+/dist
+/coverage
+/.nyc_output
+/.rsbuild
+/.rspeedy
+
+# Dependency directories
+/node_modules
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor directories and files
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw? 

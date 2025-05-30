@@ -1,0 +1,26 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "rootDir": ".",
+    "outDir": ".",
+    "skipLibCheck": true,
+    "noEmit": true
+  },
+  "references": [
+    { "path": "./runtime" },
+    { "path": "./runtime-lynx" },
+    { "path": "./components" }
+  ],
+  "include": [
+    "types/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "**/*.test.ts",
+    "**/*.spec.ts"
+  ]
+} 

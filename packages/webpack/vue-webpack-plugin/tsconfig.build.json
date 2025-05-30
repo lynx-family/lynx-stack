@@ -1,0 +1,16 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "composite": true,
+    "outDir": "./lib",
+    "baseUrl": "./",
+    "rootDir": "./src",
+    "sourceMap": true,
+    "isolatedModules": false,
+
+    // See: https://github.com/vitest-dev/vitest/issues/5329
+    "useDefineForClassFields": false,
+  },
+  "include": ["src"],
+  "exclude": ["src/loader.js"],
+}

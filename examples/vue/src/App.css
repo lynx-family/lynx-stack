@@ -1,0 +1,30 @@
+.Logo--lynx {
+  height: 60px;
+  margin-bottom: 16px;
+}
+
+.Title {
+  font-size: 1.5em;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.Subtitle {
+  font-size: 1.2em;
+  color: #666;
+  margin-bottom: 16px;
+}
+
+button {
+  background-color: #42b983;
+  border: none;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 8px;
+}
+
+button:hover {
+  background-color: #3aa876;
+} 

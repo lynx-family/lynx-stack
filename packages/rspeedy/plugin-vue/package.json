@@ -1,0 +1,79 @@
+{
+  "name": "@lynx-js/rspeedy-plugin-vue",
+  "version": "0.0.1-alpha.0",
+  "description": "A rsbuild plugin for VueLynx",
+  "keywords": [
+    "rsbuild",
+    "Lynx",
+    "VueLynx"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/rspeedy/plugin-vue"
+  },
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "import": "./lib/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "types": "./lib/index.d.ts",
+  "files": [
+    "lib",
+    "CHANGELOG.md",
+    "README.md"
+  ],
+  "scripts": {
+    "api-extractor": "api-extractor run --verbose",
+    "build": "rslib build",
+    "prepublishOnly": "turbo build",
+    "test": "pnpm -w run test --project rspeedy/vue"
+  },
+  "dependencies": {
+    "@lynx-js/css-extract-webpack-plugin": "workspace:*",
+    "@lynx-js/runtime-wrapper-webpack-plugin": "workspace:*",
+    "@lynx-js/template-webpack-plugin": "workspace:*",
+    "@lynx-js/vue-webpack-plugin": "workspace:*"
+  },
+  "devDependencies": {
+    "@lynx-js/rspeedy": "workspace:*",
+    "@lynx-js/vitest-setup": "workspace:*",
+    "@microsoft/api-extractor": "^7.38.0",
+    "@rollup/plugin-typescript": "^12.1.2",
+    "@rsbuild/core": "catalog:rsbuild",
+    "@rsbuild/plugin-sass": "1.2.2",
+    "@rsbuild/plugin-typed-css-modules": "1.0.2",
+    "@rsbuild/plugin-webpack-swc": "1.0.11",
+    "@rsbuild/webpack": "1.2.3",
+    "tailwindcss": "^3.4.17",
+    "type-fest": "^4.37.0",
+    "typia": "7.6.4",
+    "typia-rspack-plugin": "^1.0.2"
+  },
+  "peerDependencies": {
+    "@lynx-js/vue": "workspace:*"
+  },
+  "peerDependenciesMeta": {
+    "@lynx-js/vue": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js"
+      },
+      "./package.json": "./package.json"
+    },
+    "types": "./dist/index.d.ts"
+  }
+}
