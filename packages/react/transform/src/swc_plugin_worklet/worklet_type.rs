@@ -6,7 +6,7 @@ pub enum WorkletType {
 
 impl WorkletType {
   pub fn from_directive(directive: String) -> Option<WorkletType> {
-    if directive == "main thread" {
+    if directive == "main thread" || directive == "main-thread" {
       Some(WorkletType::Element)
     } else if directive == "use worklet" {
       Some(WorkletType::UI)
