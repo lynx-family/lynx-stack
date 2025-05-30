@@ -10,19 +10,36 @@ export const initTokenizer = async () => {
   tokenizerRef.tokenizer = tokenizer;
 };
 
-export function tokenize(
+export function parseInlineStyle(
   source: string,
-  onToken: (type: number, start: number, end: number) => void,
 ) {
   const tokenizer = tokenizerRef.tokenizer;
   const sourcePtr = tokenizer._malloc((source.length + 1) * 2);
   tokenizer.stringToUTF16(source, sourcePtr, (source.length + 1) * 2);
+  const hypenNameStyles: [property: string, value: string][] = [];
   // @ts-expect-error
-  globalThis._tokenizer_on_token_callback = onToken;
+  globalThis._tokenizer_on_declaration_callback = (
+    declarationPropertyStart: number,
+    declarationPropertyEnd: number,
+    declarationValueStart: number,
+    declarationValueEnd: number,
+    // important: boolean,
+  ) => {
+    const declaration = source.substring(
+      declarationPropertyStart,
+      declarationPropertyEnd,
+    );
+    const value = source.substring(declarationValueStart, declarationValueEnd);
+    hypenNameStyles.push([
+      declaration,
+      value,
+    ]);
+  };
   tokenizer._tokenize(sourcePtr, source.length);
   // @ts-expect-error
   globalThis._tokenizer_on_token_callback = null;
   tokenizer._free(sourcePtr);
+  return hypenNameStyles;
 }
 
 export const EOF = 0; // <EOF-token>
