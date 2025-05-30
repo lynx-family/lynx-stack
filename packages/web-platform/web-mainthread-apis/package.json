@@ -24,7 +24,9 @@
     "**/*.css"
   ],
   "scripts": {
-    "build": "mkdir -p binary && emcc -std=c17 -O3 clang/css-tree-tokenizer/*.c -o binary/tokenizer.js --emit-tsd tokenizer.d.ts -sMALLOC=emmalloc -sINITIAL_HEAP=8MB -sSTACK_SIZE=8MB -sMODULARIZE=1 -sEXPORT_ES6=1 -sNO_EXIT_RUNTIME=1 -sEXPORTED_RUNTIME_METHODS=stringToUTF16,HEAP32 -sEXPORTED_FUNCTIONS=_malloc,_free"
+    "build": "pnpm run build:gen-rules && pnpm run build:wasm",
+    "build:gen-rules": "mkdir -p tmp && node scripts/gen-rules.js",
+    "build:wasm": "mkdir -p binary && emcc -std=c17 -O3 clang/*/*.c -o binary/tokenizer.js --emit-tsd tokenizer.d.ts -sMALLOC=emmalloc -sINITIAL_HEAP=8MB -sSTACK_SIZE=8MB -sMODULARIZE=1 -sEXPORT_ES6=1 -sNO_EXIT_RUNTIME=1 -sEXPORTED_RUNTIME_METHODS=stringToUTF16,HEAP32 -sEXPORTED_FUNCTIONS=_malloc,_free"
   },
   "dependencies": {
     "@lynx-js/web-constants": "workspace:*",

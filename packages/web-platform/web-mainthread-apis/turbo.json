@@ -13,7 +13,8 @@
       ],
       "outputs": [
         "dist",
-        "binary"
+        "binary",
+        "tmp"
       ]
     }
   }

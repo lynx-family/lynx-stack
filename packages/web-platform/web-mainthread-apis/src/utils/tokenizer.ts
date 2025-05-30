@@ -1,5 +1,7 @@
 // @ts-ignore the wasm module built later than the ts code
 import initWasm from '../../binary/tokenizer.js';
+// @ts-ignore built later than the ts code
+import { stringConsts } from '../../tmp/replace-rule-trie.js';
 
 const tokenizerRef = {
   tokenizer: null as any as Awaited<ReturnType<typeof initWasm>>,
@@ -10,36 +12,46 @@ export const initTokenizer = async () => {
   tokenizerRef.tokenizer = tokenizer;
 };
 
-export function parseInlineStyle(
+export function transformInlineStyleString(
   source: string,
 ) {
   const tokenizer = tokenizerRef.tokenizer;
   const sourcePtr = tokenizer._malloc((source.length + 1) * 2);
   tokenizer.stringToUTF16(source, sourcePtr, (source.length + 1) * 2);
-  const hypenNameStyles: [property: string, value: string][] = [];
+  let currentEnd = 0;
+  const transformedStringArray: string[] = [];
   // @ts-expect-error
   globalThis._tokenizer_on_declaration_callback = (
-    declarationPropertyStart: number,
-    declarationPropertyEnd: number,
-    declarationValueStart: number,
-    declarationValueEnd: number,
-    // important: boolean,
+    start: number,
+    end: number,
+    replaceId: number,
+    semicolonEnd: number,
+    isImportant: number,
   ) => {
-    const declaration = source.substring(
-      declarationPropertyStart,
-      declarationPropertyEnd,
-    );
-    const value = source.substring(declarationValueStart, declarationValueEnd);
-    hypenNameStyles.push([
-      declaration,
-      value,
-    ]);
+    const replacement = stringConsts[replaceId]!;
+    transformedStringArray.push(source.slice(currentEnd, start));
+    if (!Array.isArray(replacement)) { // rename rule
+      currentEnd = end;
+      transformedStringArray.push(replacement);
+    } else { // replace rule
+      currentEnd = semicolonEnd;
+      for (const [property, value] of replacement) {
+        transformedStringArray.push(
+          `${property}:${value}${isImportant ? '!important' : ''};`,
+        );
+      }
+    }
   };
   tokenizer._tokenize(sourcePtr, source.length);
   // @ts-expect-error
   globalThis._tokenizer_on_token_callback = null;
   tokenizer._free(sourcePtr);
-  return hypenNameStyles;
+  if (currentEnd === 0) {
+    return source;
+  } else {
+    transformedStringArray.push(source.slice(currentEnd));
+    return transformedStringArray.join('');
+  }
 }
 
 export const EOF = 0; // <EOF-token>

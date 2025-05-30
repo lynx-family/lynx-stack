@@ -232,9 +232,9 @@ void tokenize(const uint16_t* source, int32_t source_length) {
   int32_t declaration_name_end = -1;
   int32_t declaration_value_start = -1;
   int32_t declaration_value_end = -1;
+  bool is_important = false;
   int32_t status = 0;
   TokenType prev_type = TOKEN_EOF;
-  bool is_important = false;
   while(offset < source_length) {
     int16_t code = source[offset];
     switch ((char_code_category(code))) {
@@ -520,9 +520,12 @@ void tokenize(const uint16_t* source, int32_t source_length) {
       component values: A component value is one of the preserved tokens, a function, or a simple block.
       preserved tokens: Any token produced by the tokenizer except for <function-token>s, <{-token>s, <(-token>s, and <[-token>s.
       result: except  <{-token>s, <(-token>s, and <[-token>s
-    */
-    declaration_value_start = start;
-    status = 3; // now find a semicolon
+    */    
+    if (type != TOKEN_WHITESPACE) {
+      declaration_value_start = start;
+      status = 3; // now find a semicolon
+    }
+
    }
    else if (status == 3 && type == TOKEN_SEMICOLON) {
       /*
@@ -535,7 +538,20 @@ void tokenize(const uint16_t* source, int32_t source_length) {
       while(is_white_space(source[declaration_value_end - 1]) && declaration_value_end > declaration_value_start) {
         declaration_value_end--;
       }
-      on_declaration(declaration_name_start, declaration_name_end, declaration_value_start, declaration_value_end, is_important);
+      // on_declaration(declaration_name_start, declaration_name_end, declaration_value_start, declaration_value_end, is_important);
+      int32_t result;
+      result =read_replace_rules((uint16_t*)(source + declaration_name_start), declaration_name_end - declaration_name_start,
+                         (uint16_t*)(source + declaration_value_start), declaration_value_end - declaration_value_start);
+      if (result != 0) {
+        on_declaration(declaration_name_start, declaration_value_end, result, offset, is_important);
+        // replace rules will be applied for name and value
+      }
+      result = read_rename_rules((uint16_t*)(source + declaration_name_start), declaration_name_end - declaration_name_start);
+      if (result != 0) {
+        on_declaration(declaration_name_start, declaration_name_end, result, offset, false);
+        // rename rules will be applied for name only
+      }
+      
       status = 0; // reset
       declaration_name_start = -1;
       declaration_name_end = -1;
