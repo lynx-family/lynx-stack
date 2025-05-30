@@ -61,14 +61,12 @@ async function loop(
   devUrls: Record<string, string>,
 ) {
   const [
-    { autocomplete, select, selectKey, isCancel, cancel },
+    { select, selectKey, isCancel, cancel },
     { default: showQRCode },
   ] = await Promise.all([
     import('@clack/prompts'),
     import('./showQRCode.js'),
   ])
-
-  const selectFn = (length: number) => length > 5 ? autocomplete : select
 
   let currentEntry = options.entries[0]!
   let currentSchema = Object.keys(devUrls)[0]!
@@ -95,7 +93,7 @@ async function loop(
       break
     }
     if (name === 'r') {
-      const selection = await selectFn(options.entries.length)({
+      const selection = await select({
         message: 'Select entry',
         options: options.entries.map(entry => ({
           value: entry,
@@ -107,11 +105,7 @@ async function loop(
             options.port,
           )[currentSchema]!,
         })),
-        // autoComplete requires `maxItems`, otherwise it will render all items
-        maxItems: 8,
-        // autoComplete will not work if `initialValue` is set
-        // See: https://github.com/bombshell-dev/clack/issues/326
-        // initialValue: currentEntry,
+        initialValue: currentEntry,
       })
       if (isCancel(selection)) {
         break
@@ -125,18 +119,14 @@ async function loop(
         options.schema,
         options.port,
       )
-      const selection = await selectFn(Object.keys(devUrls).length)({
+      const selection = await select({
         message: 'Select schema',
         options: Object.entries(devUrls).map(([name, url]) => ({
           value: name,
           label: name,
           hint: url,
         })),
-        // autoComplete requires `maxItems`, otherwise it will render all items
-        maxItems: 8,
-        // autoComplete will not work if `initialValue` is set
-        // See: https://github.com/bombshell-dev/clack/issues/326
-        // initialValue: currentSchema,
+        initialValue: currentSchema,
       })
       if (isCancel(selection)) {
         break
