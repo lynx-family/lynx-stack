@@ -8,8 +8,7 @@ env:
   TURBO_TELEMETRY_DISABLED: 1
 jobs:
   get-merge-base:
-    permissions:
-      contents: read
+    permissions: {}
     runs-on: lynx-ubuntu-24.04-medium
     timeout-minutes: 5
     env:
@@ -64,8 +63,7 @@ jobs:
         run: |
           echo "merge-base=$(git merge-base "$CLEAN_BASE_REF" "$CLEAN_HEAD_REF" || git rev-parse "$CLEAN_BASE_REF")" >> $GITHUB_OUTPUT
   build-all:
-    permissions:
-      contents: read
+    permissions: {}
     runs-on: lynx-ubuntu-24.04-xlarge
     timeout-minutes: 30
     needs: get-merge-base

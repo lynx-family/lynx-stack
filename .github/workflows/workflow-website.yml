@@ -8,8 +8,7 @@ env:
   TURBO_TELEMETRY_DISABLED: 1
 jobs:
   build:
-    permissions:
-      contents: read
+    permissions: {}
     runs-on: lynx-ubuntu-24.04-medium
     timeout-minutes: 10
     steps:
