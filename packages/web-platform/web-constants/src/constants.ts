@@ -2,11 +2,13 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-export const lynxUniqueIdAttribute = 'lynx-unique-id' as const;
+export const lynxUniqueIdAttribute = 'l-uid' as const;
 
-export const cssIdAttribute = 'lynx-css-id' as const;
+export const cssIdAttribute = 'l-css-id' as const;
 
-export const componentIdAttribute = 'lynx-component-id' as const;
+export const componentIdAttribute = 'l-comp-id' as const;
+
+export const parentComponentUniqueIdAttribute = 'l-p-comp-uid' as const;
 
 export const lynxTagAttribute = 'lynx-tag' as const;
 
