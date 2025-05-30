@@ -297,7 +297,7 @@ class ReactWebpackPlugin {
               `\
 (function (globDynamicComponentEntry) {
   const module = { exports: {} }
-  const exports = module.exports
+  const exports = module.exports;
 `,
               old,
               `
