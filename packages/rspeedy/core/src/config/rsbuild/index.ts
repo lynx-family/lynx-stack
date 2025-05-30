@@ -55,9 +55,10 @@ export function toRsbuildConfig(
       // TODO: update the Rsbuild type to allow `sourceMap.js` to be `*-debugids`
       sourceMap: config.output?.sourceMap as SourceMap,
     },
-    source: {
+    resolve: {
       alias: config.source?.alias,
-
+    },
+    source: {
       assetsInclude: config.source?.assetsInclude,
 
       decorators: config.source?.decorators,

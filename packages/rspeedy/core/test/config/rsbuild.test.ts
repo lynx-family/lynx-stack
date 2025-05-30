@@ -559,7 +559,7 @@ describe('Config - toRsBuildConfig', () => {
           alias: {},
         },
       })
-      expect(rsbuildConfig.source?.alias).toStrictEqual(
+      expect(rsbuildConfig.resolve?.alias).toStrictEqual(
         {},
       )
     })
@@ -572,10 +572,10 @@ describe('Config - toRsBuildConfig', () => {
           },
         },
       })
-      expect(rsbuildConfig.source?.alias).toStrictEqual(
+      expect(rsbuildConfig.resolve?.alias).toStrictEqual(
         { foo: 'bar' },
       )
-      expect(rsbuildConfig.source?.alias).not.toStrictEqual({
+      expect(rsbuildConfig.resolve?.alias).not.toStrictEqual({
         foo: 'baz',
       })
     })
