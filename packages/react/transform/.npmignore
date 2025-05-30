@@ -1,8 +1,0 @@
-*
-!index.d.ts
-!main.js
-!main.cjs
-!cjs/*
-!dist/wasm.js
-!dist/wasm.cjs
-dist/*.node
