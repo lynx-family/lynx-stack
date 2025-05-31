@@ -6,13 +6,14 @@ import {
   LynxEventNameToW3cByTagName,
   LynxEventNameToW3cCommon,
   lynxTagAttribute,
+  parentComponentUniqueIdAttribute,
   W3cEventNameToLynx,
   type LynxEventType,
   type MainThreadScriptEvent,
 } from '@lynx-js/web-constants';
 import {
   elementToRuntimeInfoMap,
-  getElementByUniqueId,
+  lynxUniqueIdToElement,
   type MainThreadRuntime,
 } from '../../MainThreadRuntime.js';
 import { createCrossThreadEvent } from '../../utils/createCrossThreadEvent.js';
@@ -37,10 +38,11 @@ export function createEventFunctions(runtime: MainThreadRuntime) {
       lynxEventName,
     );
     if (typeof hname === 'string') {
-      const parentComponentUniqueId = runtimeInfo.parentComponentUniqueId;
-      const parentComponent = runtime[getElementByUniqueId](
-        Number(parentComponentUniqueId),
-      )!;
+      const parentComponentUniqueId = Number(
+        currentTarget.getAttribute(parentComponentUniqueIdAttribute)!,
+      );
+      const parentComponent =
+        runtime[lynxUniqueIdToElement][parentComponentUniqueId]!.deref()!;
       const componentId =
         parentComponent?.getAttribute(lynxTagAttribute) !== 'page'
           ? parentComponent?.getAttribute(componentIdAttribute) ?? undefined

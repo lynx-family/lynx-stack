@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import {
-  getElementByUniqueId,
+  lynxUniqueIdToElement,
   MainThreadRuntime,
 } from '@lynx-js/web-mainthread-apis';
 import { initOffscreenDocument } from '@lynx-js/offscreen-document/main';
@@ -15,6 +15,10 @@ import type {
   ElementOperation,
   OffscreenElement,
 } from '@lynx-js/offscreen-document';
+import {
+  lynxTagAttribute,
+  lynxUniqueIdAttribute,
+} from '@lynx-js/web-constants';
 
 type ComparableElementJson = {
   tag: string;
@@ -63,16 +67,17 @@ function serializeDomElement(element: Element): ComparableElementJson {
       attributes[attr.name] = attr.value;
     }
   }
-  const parentUid = element?.parentElement?.getAttribute('lynx-unique-id');
+  const parentUid = element?.parentElement?.getAttribute(lynxUniqueIdAttribute);
   return {
-    tag: element.getAttribute('lynx-tag')!,
+    tag: element.getAttribute(lynxTagAttribute)!,
     children: [...element.children].map(e => serializeDomElement(e)),
     parentUid: parentUid ? parseFloat(parentUid) : undefined,
   };
 }
 
 function genFiberElementTree() {
-  const page = runtime[getElementByUniqueId](1) as unknown as OffscreenElement;
+  const page = runtime[lynxUniqueIdToElement][1]
+    .deref() as unknown as OffscreenElement;
   if (runtime.__GetTag(page) === 'page') {
     return serializeElementThreadElement(page);
   } else {

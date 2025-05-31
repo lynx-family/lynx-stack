@@ -6,6 +6,7 @@ import {
   lynxUniqueIdAttribute,
   lynxTagAttribute,
   lynxDefaultDisplayLinearAttribute,
+  parentComponentUniqueIdAttribute,
 } from '@lynx-js/web-constants';
 import {
   type ComponentAtIndexCallback,
@@ -14,7 +15,6 @@ import {
 } from '../ElementThreadElement.js';
 import {
   elementToRuntimeInfoMap,
-  getElementByUniqueId,
   lynxUniqueIdToElement,
   type MainThreadRuntime,
 } from '../../MainThreadRuntime.js';
@@ -47,16 +47,19 @@ export function initializeElementCreatingFunction(
       componentConfig: {},
       lynxDataset: {},
       eventHandlerMap: {},
-      parentComponentUniqueId,
     };
     runtime[elementToRuntimeInfoMap].set(element, runtimeInfo);
     runtime[lynxUniqueIdToElement][uniqueId] = new WeakRef(element);
     element.setAttribute(lynxUniqueIdAttribute, uniqueId.toString());
+    element.setAttribute(
+      parentComponentUniqueIdAttribute,
+      parentComponentUniqueId.toString(),
+    );
     if (cssId !== undefined) __SetCSSId([element], cssId);
     else if (parentComponentUniqueId >= 0) { // don't infer for uniqueid === -1
-      const parentComponent = runtime[getElementByUniqueId](
-        parentComponentUniqueId,
-      );
+      const parentComponent =
+        runtime[lynxUniqueIdToElement][parentComponentUniqueId]
+          ?.deref();
       const parentCssId = parentComponent?.getAttribute(cssIdAttribute);
       if (parentCssId && parentCssId !== '0') {
         __SetCSSId([element], parentCssId);
@@ -113,8 +116,7 @@ export function initializeElementCreatingFunction(
   ) {
     const page = createLynxElement('page', 0, cssID, componentID, info);
     page.setAttribute('part', 'page');
-    const runtimeInfo = runtime[elementToRuntimeInfoMap].get(page)!;
-    runtimeInfo.parentComponentUniqueId = runtimeInfo.uniqueId;
+    page.setAttribute(parentComponentUniqueIdAttribute, '0');
     if (runtime.config.pageConfig.defaultDisplayLinear === false) {
       page.setAttribute(lynxDefaultDisplayLinearAttribute, 'false');
     }
