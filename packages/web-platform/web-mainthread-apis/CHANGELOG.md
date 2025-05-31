@@ -1,5 +1,14 @@
 # @lynx-js/web-mainthread-apis
 
+## 0.13.4
+
+### Patch Changes
+
+- fix: style loss issue caused by incorrect handling of styleInfo-imports when enableCSSSelector and enableRemoveCSSScope are turned off. ([#931](https://github.com/lynx-family/lynx-stack/pull/931))
+
+- Updated dependencies [[`569618d`](https://github.com/lynx-family/lynx-stack/commit/569618d8e2665f5c9e1672f7ee5900ec2a5179a2), [`f9f88d6`](https://github.com/lynx-family/lynx-stack/commit/f9f88d6fb9c42d3370a6622d9d799d671ffcf1a7)]:
+  - @lynx-js/web-constants@0.13.4
+
 ## 0.13.3
 
 ### Patch Changes

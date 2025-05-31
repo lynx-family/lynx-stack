@@ -1,5 +1,11 @@
 # @lynx-js/offscreen-document
 
+## 0.1.0
+
+### Minor Changes
+
+- remove `dumpHTMLString` ([#919](https://github.com/lynx-family/lynx-stack/pull/919))
+
 ## 0.0.4
 
 ### Patch Changes

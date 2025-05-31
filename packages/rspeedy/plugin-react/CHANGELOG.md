@@ -1,5 +1,18 @@
 # @lynx-js/react-rsbuild-plugin
 
+## 0.10.2
+
+### Patch Changes
+
+- Fix lazy bundle build failed on Rspeedy v0.9.8 (with `output.iife: true`). ([#972](https://github.com/lynx-family/lynx-stack/pull/972))
+
+- Updated dependencies [[`81361f3`](https://github.com/lynx-family/lynx-stack/commit/81361f3c72001ffdf07f2f9f53f8e43d2ff7c961), [`7097f52`](https://github.com/lynx-family/lynx-stack/commit/7097f52a53460527f786e2a8f150c3a907b8e722), [`43cd520`](https://github.com/lynx-family/lynx-stack/commit/43cd520df78c3dc77aeb347a0be8c8f3ff62cc3f)]:
+  - @lynx-js/react-webpack-plugin@0.6.15
+  - @lynx-js/react-alias-rsbuild-plugin@0.10.2
+  - @lynx-js/template-webpack-plugin@0.7.1
+  - @lynx-js/react-refresh-webpack-plugin@0.3.3
+  - @lynx-js/css-extract-webpack-plugin@0.5.4
+
 ## 0.10.1
 
 ### Patch Changes

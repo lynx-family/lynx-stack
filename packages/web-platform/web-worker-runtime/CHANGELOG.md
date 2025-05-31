@@ -1,5 +1,21 @@
 # @lynx-js/web-worker-runtime
 
+## 0.13.4
+
+### Patch Changes
+
+- feat: lynx-view supports `updateGlobalProps` method, which can be used to update lynx.\_\_globalProps ([#918](https://github.com/lynx-family/lynx-stack/pull/918))
+
+- feat: supports `lynx.getElementById()` && `animate()`. ([#912](https://github.com/lynx-family/lynx-stack/pull/912))
+
+  After this commit, you can use `lynx.getElementById()` to get the element by id, and use `element.animate()` to animate the element.
+
+- Updated dependencies [[`96d3133`](https://github.com/lynx-family/lynx-stack/commit/96d3133b149b61af01c5478f4dc7b0a071137d98), [`75e5b2f`](https://github.com/lynx-family/lynx-stack/commit/75e5b2ff16ecf5f7072a45cd130e653dee747461), [`569618d`](https://github.com/lynx-family/lynx-stack/commit/569618d8e2665f5c9e1672f7ee5900ec2a5179a2), [`f9f88d6`](https://github.com/lynx-family/lynx-stack/commit/f9f88d6fb9c42d3370a6622d9d799d671ffcf1a7)]:
+  - @lynx-js/web-mainthread-apis@0.13.4
+  - @lynx-js/offscreen-document@0.1.0
+  - @lynx-js/web-constants@0.13.4
+  - @lynx-js/web-worker-rpc@0.13.4
+
 ## 0.13.3
 
 ### Patch Changes
