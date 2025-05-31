@@ -6,6 +6,8 @@
     "outDir": "./dist",
     "lib": ["ESNext", "WebWorker"],
     "exactOptionalPropertyTypes": true,
+    "noEmit": true,
+    "isolatedModules": true,
   },
   "include": ["src"],
   "references": [
