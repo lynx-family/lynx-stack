@@ -835,6 +835,24 @@ describe('Config Validation', () => {
         { distPath: { svg: 'svg' } },
         { inlineScripts: true },
         { inlineScripts: false },
+        { inlineScripts: /[\\/]background\.\w+\.js$/ },
+        {
+          inlineScripts: ({ size }) => {
+            return size < 10 * 1000
+          },
+        },
+        {
+          inlineScripts: {
+            enable: 'auto',
+            test: /[\\/]background\.\w+\.js$/,
+          },
+        },
+        {
+          inlineScripts: {
+            enable: true,
+            test: /[\\/]background\.\w+\.js$/,
+          },
+        },
         { legalComments: 'inline' },
         { legalComments: 'none' },
         { legalComments: 'linked' },
@@ -1104,7 +1122,7 @@ describe('Config Validation', () => {
           [Error: Invalid configuration.
 
           Invalid config on \`$input.output.inlineScripts\`.
-            - Expect to be (boolean | undefined)
+            - Expect to be (RegExp | __type.o110 | boolean | undefined)
             - Got: null
           ]
         `)
