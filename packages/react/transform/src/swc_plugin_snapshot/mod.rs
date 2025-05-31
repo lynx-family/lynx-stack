@@ -194,7 +194,7 @@ impl DynamicPart {
             element_index: Expr = i32_to_expr(element_index),
           ),
           AttrName::Ref => quote!(
-            "(snapshot, index, oldValue) => $runtime_id.updateRef(snapshot, index, oldValue, $element_index, '')" as Expr,
+            "(snapshot, index, oldValue) => $runtime_id.updateRef(snapshot, index, oldValue, $element_index)" as Expr,
             runtime_id: Expr = runtime_id.clone(),
             element_index: Expr = i32_to_expr(element_index),
           ),
@@ -1307,11 +1307,15 @@ where
                     value
                   }
                 } else if let AttrName::Ref = attr_name {
-                  quote!(
-                    "$runtime_id.transformRef($value)" as Expr,
-                    runtime_id: Expr = runtime_id.clone(),
-                    value: Expr = value,
-                  )
+                  if target == TransformTarget::LEPUS {
+                    quote!("1" as Expr)
+                  } else {
+                    quote!(
+                      "$runtime_id.transformRef($value)" as Expr,
+                      runtime_id: Expr = runtime_id.clone(),
+                      value: Expr = value,
+                    )
+                  }
                 } else {
                   value
                 }),

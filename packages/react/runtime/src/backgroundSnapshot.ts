@@ -22,6 +22,9 @@ import {
   takeGlobalSnapshotPatch,
 } from './lifecycle/patch/snapshotPatch.js';
 import { globalPipelineOptions } from './lynx/performance.js';
+import { clearQueuedRefs, queueRefAttrUpdate } from './snapshot/ref.js';
+import type { Ref } from './snapshot/ref.js';
+import { transformSpread } from './snapshot/spread.js';
 import type { SerializedSnapshotInstance } from './snapshot.js';
 import {
   DynamicPartType,
@@ -29,8 +32,7 @@ import {
   snapshotManager,
   traverseSnapshotInstance,
 } from './snapshot.js';
-import { markRefToRemove } from './snapshot/ref.js';
-import { transformSpread } from './snapshot/spread.js';
+import { hydrationMap } from './snapshotInstanceHydrationMap.js';
 import { isDirectOrDeepEqual } from './utils.js';
 import { onPostWorkletCtx } from './worklet/ctx.js';
 
@@ -160,6 +162,18 @@ export class BackgroundSnapshotInstance {
 
     traverseSnapshotInstance(node, v => {
       v.__parent = null;
+      if (v.__values) {
+        for (let i = 0; i < v.__values.length; ++i) {
+          const value = v.__values[i] as unknown;
+          if (value && (typeof value === 'object' || typeof value === 'function')) {
+            if ('__spread' in value && 'ref' in value) {
+              queueRefAttrUpdate(value.ref as Ref, null, v.__id, i);
+            } else if ('__ref' in value) {
+              queueRefAttrUpdate(value as Ref, null, v.__id, i);
+            }
+          }
+        }
+      }
       globalBackgroundSnapshotInstancesToRemove.push(v.__id);
     });
   }
@@ -188,7 +202,7 @@ export class BackgroundSnapshotInstance {
           for (let index = 0; index < value.length; index++) {
             const { needUpdate, valueToCommit } = this.setAttributeImpl(value[index], oldValues[index], index);
             if (needUpdate) {
-              __globalSnapshotPatch?.push(
+              __globalSnapshotPatch!.push(
                 SnapshotOperation.SetAttribute,
                 this.__id,
                 index,
@@ -203,11 +217,22 @@ export class BackgroundSnapshotInstance {
             const { valueToCommit } = this.setAttributeImpl(value[index], null, index);
             patch[index] = valueToCommit;
           }
-          __globalSnapshotPatch?.push(
+          __globalSnapshotPatch!.push(
             SnapshotOperation.SetAttributes,
             this.__id,
             patch,
           );
+        }
+      } else {
+        for (let i = 0; i < (value as unknown[]).length; ++i) {
+          const v = (value as unknown[])[i];
+          if (v && (typeof v === 'object' || typeof v === 'function')) {
+            if ('__spread' in v && 'ref' in v) {
+              queueRefAttrUpdate(null, v.ref as Ref, this.__id, i);
+            } else if ('__ref' in v) {
+              queueRefAttrUpdate(null, v as Ref, this.__id, i);
+            }
+          }
         }
       }
       this.__values = value;
@@ -233,65 +258,64 @@ export class BackgroundSnapshotInstance {
     }
   }
 
-  private setAttributeImpl(newValue: any, oldValue: any, index: number): {
+  private setAttributeImpl(newValue: unknown, oldValue: unknown, index: number): {
     needUpdate: boolean;
-    valueToCommit: any;
+    valueToCommit: unknown;
   } {
     if (!newValue) {
-      if (oldValue && oldValue.__ref) {
-        markRefToRemove(`${this.__id}:${index}:`, oldValue);
+      // `oldValue` can't be a spread.
+      if (oldValue && typeof oldValue === 'object' && '__ref' in oldValue) {
+        queueRefAttrUpdate(oldValue as Ref, null, this.__id, index);
       }
       return { needUpdate: oldValue !== newValue, valueToCommit: newValue };
     }
 
     const newType = typeof newValue;
     if (newType === 'object') {
-      if (newValue.__spread) {
-        const oldSpread = oldValue ? oldValue.__spread : oldValue;
-        const newSpread = transformSpread(this, index, newValue);
+      const newValueObj = newValue as Record<string, unknown>;
+      if ('__spread' in newValueObj) {
+        const oldSpread = (oldValue as { __spread?: Record<string, unknown> } | undefined)?.__spread;
+        const newSpread = transformSpread(this, index, newValueObj);
         const needUpdate = !isDirectOrDeepEqual(oldSpread, newSpread);
         // use __spread to cache the transform result for next diff
-        newValue.__spread = newSpread;
+        newValueObj['__spread'] = newSpread;
+        queueRefAttrUpdate(
+          oldSpread && ((oldValue as { ref?: Ref }).ref),
+          newValueObj['ref'] as Ref,
+          this.__id,
+          index,
+        );
         if (needUpdate) {
-          if (oldSpread && oldSpread.ref) {
-            markRefToRemove(`${this.__id}:${index}:ref`, oldValue.ref);
-          }
-          for (let key in newSpread) {
+          for (const key in newSpread) {
             const newSpreadValue = newSpread[key];
             if (!newSpreadValue) {
               continue;
             }
-            if ((newSpreadValue as any)._wkltId) {
+            if ((newSpreadValue as { _wkltId?: string })._wkltId) {
               newSpread[key] = onPostWorkletCtx(newSpreadValue as Worklet);
-            } else if ((newSpreadValue as any).__isGesture) {
+            } else if ((newSpreadValue as { __isGesture?: boolean }).__isGesture) {
               processGestureBackground(newSpreadValue as GestureKind);
-            } else if (key == '__lynx_timing_flag' && oldSpread?.[key] != newSpreadValue) {
-              if (globalPipelineOptions) {
-                globalPipelineOptions.needTimestamps = true;
-              }
+            } else if (key == '__lynx_timing_flag' && oldSpread?.[key] != newSpreadValue && globalPipelineOptions) {
+              globalPipelineOptions.needTimestamps = true;
             }
           }
         }
         return { needUpdate, valueToCommit: newSpread };
       }
-      if (newValue.__ref) {
-        // force update to update ref value
-        // TODO: ref: optimize this. The ref update maybe can be done on the background thread to reduce updating.
-        // The old ref must have a place to be stored because it needs to be cleared when the main thread returns.
-        markRefToRemove(`${this.__id}:${index}:`, oldValue);
-        // update ref. On the main thread, the ref id will be replaced with value's sign when updating.
-        return { needUpdate: true, valueToCommit: newValue.__ref };
+      if ('__ref' in newValueObj) {
+        queueRefAttrUpdate(oldValue as Ref, newValueObj as Ref, this.__id, index);
+        return { needUpdate: false, valueToCommit: 1 };
       }
-      if (newValue._wkltId) {
-        return { needUpdate: true, valueToCommit: onPostWorkletCtx(newValue) };
+      if ('_wkltId' in newValueObj) {
+        return { needUpdate: true, valueToCommit: onPostWorkletCtx(newValueObj as Worklet) };
       }
-      if (newValue.__isGesture) {
-        processGestureBackground(newValue);
+      if ('__isGesture' in newValueObj) {
+        processGestureBackground(newValueObj as unknown as GestureKind);
         return { needUpdate: true, valueToCommit: newValue };
       }
-      if (newValue.__ltf) {
+      if ('__ltf' in newValueObj) {
         // __lynx_timing_flag
-        if (globalPipelineOptions && oldValue?.__ltf != newValue.__ltf) {
+        if (globalPipelineOptions && (oldValue as { __ltf?: unknown } | undefined)?.__ltf != newValueObj['__ltf']) {
           globalPipelineOptions.needTimestamps = true;
           return { needUpdate: true, valueToCommit: newValue };
         }
@@ -300,9 +324,9 @@ export class BackgroundSnapshotInstance {
       return { needUpdate: !isDirectOrDeepEqual(oldValue, newValue), valueToCommit: newValue };
     }
     if (newType === 'function') {
-      if (newValue.__ref) {
-        markRefToRemove(`${this.__id}:${index}:`, oldValue);
-        return { needUpdate: true, valueToCommit: newValue.__ref };
+      if ((newValue as { __ref?: unknown }).__ref) {
+        queueRefAttrUpdate(oldValue as Ref, newValue as Ref, this.__id, index);
+        return { needUpdate: false, valueToCommit: 1 };
       }
       /* event */
       return { needUpdate: !oldValue, valueToCommit: 1 };
@@ -335,6 +359,7 @@ export function hydrate(
     before: SerializedSnapshotInstance,
     after: BackgroundSnapshotInstance,
   ) => {
+    hydrationMap.set(after.__id, before.id);
     backgroundSnapshotInstanceManager.updateId(after.__id, before.id);
     after.__values?.forEach((value, index) => {
       const old = before.values![index];
@@ -344,7 +369,7 @@ export function hydrate(
           // `value.__spread` my contain event ids using snapshot ids before hydration. Remove it.
           delete value.__spread;
           value = transformSpread(after, index, value);
-          for (let key in value) {
+          for (const key in value) {
             if (value[key] && value[key]._wkltId) {
               onPostWorkletCtx(value[key]);
             } else if (value[key] && value[key].__isGesture) {
@@ -353,12 +378,8 @@ export function hydrate(
           }
           after.__values![index]!.__spread = value;
         } else if (value.__ref) {
-          if (old) {
-            // skip patch
-            value = old;
-          } else {
-            value = value.__ref;
-          }
+          // skip patch
+          value = old;
         } else if (typeof value === 'function') {
           value = `${after.__id}:${index}:`;
         }
@@ -455,5 +476,7 @@ export function hydrate(
   };
 
   helper(before, after);
+  // Hydration should not trigger ref updates. They were incorrectly triggered when using `setAttribute` to add values to the patch list.
+  clearQueuedRefs();
   return takeGlobalSnapshotPatch()!;
 }
