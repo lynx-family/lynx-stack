@@ -37,6 +37,19 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "22"
+      - name: install emscripten
+        run: |
+          sudo apt update
+          sudo apt install -y build-essential cmake python3
+          mkdir -p ~/emcc
+          pushd ~/emcc
+          git clone https://github.com/emscripten-core/emsdk.git
+          cd emsdk
+          git pull
+          ./emsdk install latest
+          ./emsdk activate latest
+          source ./emsdk_env.sh
+          popd
       - name: Install
         run: |
           npm install -g corepack@latest
