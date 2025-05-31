@@ -8,14 +8,13 @@ import {
   lynxTagAttribute,
 } from '@lynx-js/web-constants';
 import {
-  type ComponentAtIndexCallback,
-  type EnqueueComponentCallback,
-} from '../ElementThreadElement.js';
-import {
   elementToRuntimeInfoMap,
   type MainThreadRuntime,
 } from '../../MainThreadRuntime.js';
-
+import type {
+  ComponentAtIndexCallback,
+  EnqueueComponentCallback,
+} from '@lynx-js/web-constants/src/types/LynxElementRuntimeInfo.js';
 function setDatasetAttribute(
   element: HTMLElement,
   key: string,

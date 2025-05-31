@@ -4,7 +4,11 @@ import {
   type StartMainThreadContextConfig,
 } from '@lynx-js/web-constants';
 import { Rpc } from '@lynx-js/web-worker-rpc';
-import { prepareMainThreadAPIs } from '@lynx-js/web-mainthread-apis';
+import {
+  elementToRuntimeInfoMap,
+  lynxUniqueIdToElement,
+  prepareMainThreadAPIs,
+} from '@lynx-js/web-mainthread-apis';
 import { loadTemplate } from './utils/loadTemplate.js';
 import {
   _attributes,
@@ -129,6 +133,24 @@ export async function createLynxView(
       ...tagMap,
     },
   });
+  const replayAddEvent: [number, string, string, string][] = [];
+
+  runtime.__AddEvent = (
+    element,
+    eventType,
+    eventName,
+    newEventHandler,
+  ) => {
+    if (typeof newEventHandler === 'string') {
+      const elementUniqueId = runtime.__GetElementUniqueID(element);
+      replayAddEvent.push([
+        elementUniqueId,
+        eventType,
+        eventName,
+        newEventHandler,
+      ]);
+    }
+  };
 
   const elementTemplates = {
     ...builtinElementTemplates,
@@ -138,6 +160,16 @@ export async function createLynxView(
   async function renderToString(): Promise<string> {
     await firstPaintReadyPromise;
     const ssrEncodeData = runtime?.ssrEncode?.();
+    const runtimeInfoMap = runtime[elementToRuntimeInfoMap];
+    const runtimeInfos = runtime[lynxUniqueIdToElement].map((ref) =>
+      runtimeInfoMap.get(ref?.deref())
+    );
+    const encodeDataEncoded = ssrEncodeData ? encodeURI(ssrEncodeData) : '';
+    const hydrateData = {
+      runtimeInfos,
+      replayAddEvent,
+      encodeDataEncoded,
+    };
     const buffer: string[] = [];
     buffer.push(
       '<lynx-view url="',
@@ -150,10 +182,12 @@ export async function createLynxView(
     if (lynxViewStyle) {
       buffer.push(' style="', lynxViewStyle, '"');
     }
-    if (ssrEncodeData) {
-      const encodeDataEncoded = ssrEncodeData ? encodeURI(ssrEncodeData) : ''; // to avoid XSS
-      buffer.push(' ssr-encode-data="', encodeDataEncoded, '"');
-    }
+    buffer.push(
+      ' ssr-hydrate-data="',
+      encodeURI(JSON.stringify(hydrateData)),
+      '"',
+    );
+
     buffer.push(
       '><template shadowrootmode="open">',
       '<style>',
