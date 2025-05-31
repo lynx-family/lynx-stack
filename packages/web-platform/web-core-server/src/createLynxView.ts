@@ -116,6 +116,9 @@ export async function createLynxView(
     () => {
       // report error
     },
+    async () => {
+      // i18n resource translation
+    },
   );
   const runtime = await startMainThread({
     template,
