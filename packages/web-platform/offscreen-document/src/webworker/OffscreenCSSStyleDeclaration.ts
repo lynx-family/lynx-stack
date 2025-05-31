@@ -25,7 +25,7 @@ export class OffscreenCSSStyleDeclaration {
     value: string,
     priority?: 'important' | undefined | '',
   ): void {
-    this._parent[ancestorDocument][operations].push({
+    this._parent[ancestorDocument][operations]?.push({
       type: OperationType['StyleDeclarationSetProperty'],
       uid: this._parent[uniqueId],
       property,
@@ -40,7 +40,7 @@ export class OffscreenCSSStyleDeclaration {
   }
 
   removeProperty(property: string): void {
-    this._parent[ancestorDocument][operations].push({
+    this._parent[ancestorDocument][operations]?.push({
       type: OperationType['StyleDeclarationRemoveProperty'],
       uid: this._parent[uniqueId],
       property,
