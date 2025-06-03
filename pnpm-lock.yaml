@@ -418,6 +418,9 @@ importers:
       '@lynx-js/template-webpack-plugin':
         specifier: workspace:*
         version: link:../../webpack/template-webpack-plugin
+      '@lynx-js/use-sync-external-store':
+        specifier: workspace:*
+        version: link:../../use-sync-external-store
       background-only:
         specifier: workspace:^
         version: link:../../background-only

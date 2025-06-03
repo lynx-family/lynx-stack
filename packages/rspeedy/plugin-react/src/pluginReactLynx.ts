@@ -30,6 +30,7 @@ import { applyLoaders } from './loaders.js'
 import { applyRefresh } from './refresh.js'
 import { applySplitChunksRule } from './splitChunks.js'
 import { applySWC } from './swc.js'
+import { applyUseSyncExternalStore } from './useSyncExternalStore.js'
 import { validateConfig } from './validate.js'
 
 /**
@@ -374,6 +375,7 @@ export function pluginReactLynx(
       applyRefresh(api)
       applySplitChunksRule(api)
       applySWC(api)
+      applyUseSyncExternalStore(api)
 
       api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
         const userConfig = api.getRsbuildConfig('original')

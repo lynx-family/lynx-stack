@@ -122,6 +122,22 @@ describe('Config', () => {
       'preact/compat/scheduler$',
       expect.stringContaining('/preact/compat/scheduler.mjs'),
     )
+    expect(config.resolve.alias).toHaveProperty(
+      'use-sync-external-store$',
+      expect.stringContaining('/use-sync-external-store/index.js'),
+    )
+    expect(config.resolve.alias).toHaveProperty(
+      'use-sync-external-store/with-selector$',
+      expect.stringContaining('/use-sync-external-store/with-selector.js'),
+    )
+    expect(config.resolve.alias).toHaveProperty(
+      'use-sync-external-store/shim$',
+      expect.stringContaining('/use-sync-external-store/index.js'),
+    )
+    expect(config.resolve.alias).toHaveProperty(
+      'use-sync-external-store/shim/with-selector$',
+      expect.stringContaining('/use-sync-external-store/with-selector.js'),
+    )
   })
 
   test('alias with production', async () => {
@@ -175,6 +191,23 @@ describe('Config', () => {
 
     expect(config.resolve.alias).not.toHaveProperty(
       '@lynx-js/react/refresh$',
+    )
+
+    expect(config.resolve.alias).toHaveProperty(
+      'use-sync-external-store$',
+      expect.stringContaining('/use-sync-external-store/index.js'),
+    )
+    expect(config.resolve.alias).toHaveProperty(
+      'use-sync-external-store/with-selector$',
+      expect.stringContaining('/use-sync-external-store/with-selector.js'),
+    )
+    expect(config.resolve.alias).toHaveProperty(
+      'use-sync-external-store/shim$',
+      expect.stringContaining('/use-sync-external-store/index.js'),
+    )
+    expect(config.resolve.alias).toHaveProperty(
+      'use-sync-external-store/shim/with-selector$',
+      expect.stringContaining('/use-sync-external-store/with-selector.js'),
     )
   })
 
