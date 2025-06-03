@@ -5,7 +5,10 @@
 import {
   __lynx_timing_flag,
   componentIdAttribute,
+  lynxComponentConfigAttribute,
+  lynxDatasetAttribute,
   lynxTagAttribute,
+  lynxUniqueIdAttribute,
 } from '@lynx-js/web-constants';
 import {
   type ComponentAtIndexCallback,
@@ -16,19 +19,6 @@ import {
   type MainThreadRuntime,
 } from '../../MainThreadRuntime.js';
 
-function setDatasetAttribute(
-  element: HTMLElement,
-  key: string,
-  value: string | number | Record<string, any>,
-): void {
-  if (value !== null && value !== undefined) {
-    if (typeof value === 'object') {
-      element.setAttribute('data-' + key, JSON.stringify(value));
-    } else {
-      element.setAttribute('data-' + key, value.toString());
-    }
-  }
-}
 type UpdateListInfoAttributeValue = {
   insertAction: {
     position: number;
@@ -46,8 +36,18 @@ export function createAttributeAndPropertyFunctions(
     type: string,
     value: any,
   ) {
-    runtime[elementToRuntimeInfoMap].get(element)!.componentConfig[type] =
-      value;
+    const currentComponentConfigString = element.getAttribute(
+      lynxComponentConfigAttribute,
+    );
+    let currentComponentConfig: Record<string, any> =
+      currentComponentConfigString
+        ? JSON.parse(decodeURIComponent(currentComponentConfigString))
+        : {};
+    currentComponentConfig[type] = value;
+    element.setAttribute(
+      lynxComponentConfigAttribute,
+      encodeURIComponent(JSON.stringify(currentComponentConfig)),
+    );
   }
 
   function __AddDataset(
@@ -55,8 +55,13 @@ export function createAttributeAndPropertyFunctions(
     key: string,
     value: string | number | Record<string, any>,
   ): void {
-    runtime[elementToRuntimeInfoMap].get(element)!.lynxDataset[key] = value;
-    setDatasetAttribute(element, key, value);
+    const currentDataset = __GetDataset(element);
+    currentDataset[key] = value;
+    element.setAttribute(
+      lynxDatasetAttribute,
+      encodeURIComponent(JSON.stringify(currentDataset)),
+    );
+    element.setAttribute('data-' + key, value.toString());
   }
 
   function __GetAttributes(
@@ -77,25 +82,38 @@ export function createAttributeAndPropertyFunctions(
     element: HTMLElement,
     key: string,
   ) {
-    return runtime[elementToRuntimeInfoMap].get(element)!.lynxDataset[key];
+    const dataset = __GetDataset(element);
+    return dataset[key];
   }
 
   function __GetDataset(
     element: HTMLElement,
   ): Record<string, any> {
-    return runtime[elementToRuntimeInfoMap].get(element)!.lynxDataset;
+    const datasetString = element.getAttribute(lynxDatasetAttribute);
+    const currentDataset: Record<string, any> = datasetString
+      ? JSON.parse(decodeURIComponent(datasetString))
+      : {};
+    return currentDataset;
   }
 
   function __GetElementConfig(
     element: HTMLElement,
   ) {
-    return runtime[elementToRuntimeInfoMap].get(element)!.componentConfig;
+    const currentComponentConfigString = element.getAttribute(
+      lynxComponentConfigAttribute,
+    );
+    return currentComponentConfigString
+      ? JSON.parse(decodeURIComponent(currentComponentConfigString))
+      : {};
   }
 
   function __GetElementUniqueID(
-    element: HTMLElement,
+    element: unknown,
   ): number {
-    return runtime[elementToRuntimeInfoMap].get(element)?.uniqueId ?? -1;
+    // @ts-expect-error
+    return element && element.getAttribute
+      ? Number((element as HTMLElement).getAttribute(lynxUniqueIdAttribute))
+      : -1;
   }
 
   function __GetID(element: HTMLElement): string {
@@ -110,16 +128,22 @@ export function createAttributeAndPropertyFunctions(
     element: HTMLElement,
     config: Record<string, any>,
   ): void {
-    runtime[elementToRuntimeInfoMap].get(element)!.componentConfig = config;
+    element.setAttribute(
+      lynxComponentConfigAttribute,
+      encodeURIComponent(JSON.stringify(config)),
+    );
   }
 
   function __SetDataset(
     element: HTMLElement,
     dataset: Record<string, any>,
   ): void {
-    runtime[elementToRuntimeInfoMap].get(element)!.lynxDataset = dataset;
+    element.setAttribute(
+      lynxDatasetAttribute,
+      encodeURIComponent(JSON.stringify(dataset)),
+    );
     for (const [key, value] of Object.entries(dataset)) {
-      setDatasetAttribute(element, key, value);
+      element.setAttribute('data-' + key, value.toString());
     }
   }
 
@@ -137,22 +161,20 @@ export function createAttributeAndPropertyFunctions(
   ) {
     element.setAttribute(componentIdAttribute, componentID);
   }
-
-  function __GetConfig(
-    element: HTMLElement,
-  ) {
-    return runtime[elementToRuntimeInfoMap].get(element)!.componentConfig;
-  }
-
   function __UpdateListCallbacks(
     element: HTMLElement,
     componentAtIndex: ComponentAtIndexCallback,
     enqueueComponent: EnqueueComponentCallback,
   ) {
-    runtime[elementToRuntimeInfoMap].get(element)!.componentAtIndex =
-      componentAtIndex;
-    runtime[elementToRuntimeInfoMap].get(element)!.enqueueComponent =
-      enqueueComponent;
+    const runtimeInfo = runtime[elementToRuntimeInfoMap].get(element) ?? {
+      eventHandlerMap: {},
+      componentAtIndex: componentAtIndex,
+      enqueueComponent: enqueueComponent,
+      uniqueId: __GetElementUniqueID(element),
+    };
+    runtimeInfo.componentAtIndex = componentAtIndex;
+    runtimeInfo.enqueueComponent = enqueueComponent;
+    runtime[elementToRuntimeInfoMap].set(element, runtimeInfo);
   }
 
   function __SetAttribute(
@@ -167,20 +189,23 @@ export function createAttributeAndPropertyFunctions(
         const listInfo = value as UpdateListInfoAttributeValue;
         const { insertAction, removeAction } = listInfo;
         queueMicrotask(() => {
-          const runtimeInfo = runtime[elementToRuntimeInfoMap].get(element)!;
-          const componentAtIndex = runtimeInfo.componentAtIndex;
-          const enqueueComponent = runtimeInfo.enqueueComponent;
-          for (const action of insertAction) {
-            componentAtIndex?.(
-              element,
-              runtimeInfo.uniqueId,
-              action.position,
-              0,
-              false,
-            );
-          }
-          for (const action of removeAction) {
-            enqueueComponent?.(element, runtimeInfo.uniqueId, action.position);
+          const runtimeInfo = runtime[elementToRuntimeInfoMap].get(element);
+          if (runtimeInfo) {
+            const componentAtIndex = runtimeInfo.componentAtIndex;
+            const enqueueComponent = runtimeInfo.enqueueComponent;
+            const uniqueId = __GetElementUniqueID(element);
+            for (const action of insertAction) {
+              componentAtIndex?.(
+                element,
+                uniqueId,
+                action.position,
+                0,
+                false,
+              );
+            }
+            for (const action of removeAction) {
+              enqueueComponent?.(element, uniqueId, action.position);
+            }
           }
         });
       } else {
@@ -208,7 +233,7 @@ export function createAttributeAndPropertyFunctions(
     __SetID,
     __UpdateComponentID,
     __UpdateListCallbacks,
-    __GetConfig,
+    __GetConfig: __GetElementConfig,
     __SetAttribute,
   };
 }

@@ -66,7 +66,6 @@ export interface MainThreadRuntimeConfig {
 }
 
 export const elementToRuntimeInfoMap = Symbol('elementToRuntimeInfoMap');
-export const getElementByUniqueId = Symbol('getElementByUniqueId');
 export const updateCSSInJsStyle = Symbol('updateCSSInJsStyle');
 export const lynxUniqueIdToElement = Symbol('lynxUniqueIdToElement');
 export const switchExposureService = Symbol('switchExposureService');
@@ -186,12 +185,6 @@ export class MainThreadRuntime {
         },
       });
     }
-  }
-  /**
-   * @private
-   */
-  [getElementByUniqueId](uniqueId: number): HTMLElement | undefined {
-    return this[lynxUniqueIdToElement][uniqueId]?.deref();
   }
 
   [updateCSSInJsStyle](uniqueId: number, newStyles: string) {

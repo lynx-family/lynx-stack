@@ -21,6 +21,7 @@ concurrency:
 jobs:
   test:
     runs-on: lynx-ubuntu-24.04-xlarge
+    timeout-minutes: 10
     permissions:
       contents: read
     steps:
@@ -51,6 +52,7 @@ jobs:
 
   rustfmt:
     runs-on: lynx-ubuntu-24.04-medium
+    timeout-minutes: 10
     permissions:
       contents: read
     steps:

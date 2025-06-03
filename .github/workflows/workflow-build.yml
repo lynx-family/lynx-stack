@@ -8,7 +8,9 @@ env:
   TURBO_TELEMETRY_DISABLED: 1
 jobs:
   get-merge-base:
+    permissions: {}
     runs-on: lynx-ubuntu-24.04-medium
+    timeout-minutes: 5
     env:
       # We have 2 cases:
       #   1. Pull request
@@ -61,7 +63,9 @@ jobs:
         run: |
           echo "merge-base=$(git merge-base "$CLEAN_BASE_REF" "$CLEAN_HEAD_REF" || git rev-parse "$CLEAN_BASE_REF")" >> $GITHUB_OUTPUT
   build-all:
+    permissions: {}
     runs-on: lynx-ubuntu-24.04-xlarge
+    timeout-minutes: 30
     needs: get-merge-base
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
@@ -75,15 +79,10 @@ jobs:
         with:
           path: .turbo
           key: turbo-v3-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ github.sha }}
-          # We can restore caches from
-          #   1. Runs in the same PR
-          #   2. Previous commit from base branch
-          #     2.1 Use the merge base
-          #     2.2 Use the base SHA
-          #   3. Any cache
+          # We can restore caches from:
+          #   1. Previous commit from base branch (merge base or base SHA)
+          #   2. Any cache
           restore-keys: |
-            turbo-pull-request-${{ github.event.pull_request.number || 'non-exists' }}-${{ github.run_number }}
-            turbo-pull-request-${{ github.event.pull_request.number || 'non-exists' }}-
             turbo-v3-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ needs.get-merge-base.outputs.merge-base }}
             turbo-v3-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.push.before }}
             turbo-v3-${{ hashFiles('**/packages/**/src/**/*.rs') }}-
@@ -120,9 +119,3 @@ jobs:
           pnpm turbo build --summarize
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-      - name: Save turbo cache
-        if: github.event_name == 'pull_request'
-        uses: lynx-infra/cache/save@5c6160a6a4c7fca80a2f3057bb9dfc9513fcb732
-        with:
-          path: .turbo
-          key: turbo-pull-request-${{ github.event.pull_request.number }}-${{ github.run_number }}-${{ github.run_attempt }}

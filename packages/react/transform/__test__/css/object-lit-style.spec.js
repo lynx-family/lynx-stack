@@ -28,7 +28,7 @@ describe.skip('Parse Object Literal Style', () => {
     expect(result.code).not.toContain(`flexDirection`);
     expect(result.code).not.toContain(`flex-direction`);
     expect(result.code).not.toContain(`flexShrink`);
-    expect(result.code).not.toContain(`flex-hrink`); // cSpell:disable-line
+    expect(result.code).not.toContain(`flex-hrink`);
     expect(result.warnings).toEqual([]);
     expect(result.errors).toEqual([]);
   });

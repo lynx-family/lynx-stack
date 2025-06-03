@@ -82,7 +82,7 @@ function applySourceMapPlugin(
     const evalWrapped = devtool.includes('eval')
     const cheap = devtool.includes('cheap')
     const moduleMaps = devtool.includes('module')
-    const noSources = devtool.includes('nosources') // cSpell:disable-line
+    const noSources = devtool.includes('nosources')
     const debugIds = devtool.includes('debugids')
 
     const options = {

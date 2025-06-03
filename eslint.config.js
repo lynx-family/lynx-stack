@@ -105,7 +105,7 @@ export default tseslint.config(
           style: 'line',
           content: [
             'Copyright (year) {authors}. All rights reserved.',
-            'Licensed under the Apache License Version 2.0 that can be found in the',
+            'Licensed under the (license) that can be found in the',
             'LICENSE file in the root directory of this source tree.',
           ].join('\n'),
           variables: {
@@ -115,6 +115,13 @@ export default tseslint.config(
             year: {
               pattern: '\\d{4}',
               defaultValue: new Date().getFullYear().toString(),
+            },
+            license: {
+              pattern: [
+                'Apache License Version 2.0',
+                'MIT license',
+              ].join('|'),
+              defaultValue: 'Apache License Version 2.0',
             },
           },
         },

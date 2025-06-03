@@ -47,7 +47,7 @@ export function applyLoaders(
       // `false`
       || output?.sourceMap?.js === false
       // explicitly disable source content
-      || output?.sourceMap?.js?.includes('nosources') // cSpell:disable-line
+      || output?.sourceMap?.js?.includes('nosources')
     )
 
     const backgroundRule = rule.oneOf(LAYERS.BACKGROUND)

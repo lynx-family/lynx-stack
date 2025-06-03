@@ -1,13 +1,9 @@
 // Copyright 2023 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type { LynxEventType, Cloneable } from '@lynx-js/web-constants';
+import type { LynxEventType } from '@lynx-js/web-constants';
 
 export interface LynxRuntimeInfo {
-  uniqueId: number;
-  parentComponentUniqueId: number;
-  componentConfig: Record<string, Cloneable>;
-  lynxDataset: Record<string, Cloneable>;
   eventHandlerMap: Record<string, {
     capture: {
       type: LynxEventType;

@@ -30,7 +30,7 @@ export class XInputEvents
   );
 
   @registerEventEnableStatusChangeHandler('input')
-  #handleEnableConfirmEvent(status: boolean) {
+  #handleEnableInputEvent(status: boolean) {
     const input = this.#getInputElement();
     if (status) {
       input.addEventListener(

@@ -31,7 +31,6 @@ export function pluginChunkLoading(): RsbuildPlugin {
           .output
             .chunkLoading('lynx')
             .chunkFormat('commonjs')
-            .iife(false)
           .end()
         }
       })

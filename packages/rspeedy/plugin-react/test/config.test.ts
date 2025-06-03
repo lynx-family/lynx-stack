@@ -1212,14 +1212,14 @@ describe('Config', () => {
       expect(backgroundConfig).toHaveProperty('inlineSourcesContent', false)
     })
 
-    test('with output.sourceMap.js: "nosources"', async () => { // cSpell:disable-line
+    test('with output.sourceMap.js: "nosources"', async () => {
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
       const rsbuild = await createRsbuild({
         rsbuildConfig: {
           output: {
             sourceMap: {
-              js: 'nosources-source-map', // cSpell:disable-line
+              js: 'nosources-source-map',
             },
           },
           plugins: [

@@ -20,6 +20,7 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     if: github.repository == 'lynx-family/lynx-stack'
     permissions:
       contents: read
@@ -92,6 +93,7 @@ jobs:
         --logHeapUsage
         --silent
   publish:
+    timeout-minutes: 30
     needs: build
     runs-on: ubuntu-latest
     if: github.repository == 'lynx-family/lynx-stack'
@@ -142,6 +144,7 @@ jobs:
           title: "chore: Release ${{ steps.date.outputs.date }}"
 
   canary-publish:
+    timeout-minutes: 30
     needs: build
     runs-on: ubuntu-latest
     if: github.repository == 'lynx-family/lynx-stack'
@@ -194,6 +197,7 @@ jobs:
     uses: ./.github/workflows/workflow-website.yml
     permissions: {}
   website-deploy:
+    timeout-minutes: 10
     needs: website-build
     if: github.repository == 'lynx-family/lynx-stack'
     runs-on: ubuntu-latest

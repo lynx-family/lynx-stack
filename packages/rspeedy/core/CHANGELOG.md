@@ -1,5 +1,13 @@
 # @lynx-js/rspeedy
 
+## 0.9.8
+
+### Patch Changes
+
+- Fix the "SyntaxError: invalid redefinition of parameter name" error. ([#949](https://github.com/lynx-family/lynx-stack/pull/949))
+
+  Remove the default `output.iife: false` from Rspack.
+
 ## 0.9.7
 
 ### Patch Changes

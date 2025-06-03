@@ -1,5 +1,13 @@
 # @lynx-js/react
 
+## 0.109.1
+
+### Patch Changes
+
+- Support the 'main-thread' directive as an alias for 'main thread'. ([#970](https://github.com/lynx-family/lynx-stack/pull/970))
+
+- Reduce calls to `__AddInlineStyle` by pass non-literal object directly to `__SetInlineStyles`. ([#941](https://github.com/lynx-family/lynx-stack/pull/941))
+
 ## 0.109.0
 
 ### Minor Changes

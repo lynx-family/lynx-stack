@@ -6,6 +6,7 @@ export interface PageConfig {
   enableRemoveCSSScope: boolean;
   defaultDisplayLinear: boolean;
   defaultOverflowVisible: boolean;
+  enableJSDataProcessor: boolean;
 }
 
 export interface BrowserConfig {

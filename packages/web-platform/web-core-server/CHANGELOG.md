@@ -1,5 +1,11 @@
 # @lynx-js/web-core-server
 
+## 0.13.4
+
+### Patch Changes
+
+- feat: support to dump ssrID ([#919](https://github.com/lynx-family/lynx-stack/pull/919))
+
 ## 0.13.3
 
 ### Patch Changes

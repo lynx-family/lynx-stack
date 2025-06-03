@@ -1,5 +1,11 @@
 # @lynx-js/react-webpack-plugin
 
+## 0.6.15
+
+### Patch Changes
+
+- Fix lazy bundle build failed on Rspeedy v0.9.8 (with `output.iife: true`). ([#972](https://github.com/lynx-family/lynx-stack/pull/972))
+
 ## 0.6.14
 
 ### Patch Changes

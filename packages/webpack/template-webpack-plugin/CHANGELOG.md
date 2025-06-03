@@ -1,5 +1,13 @@
 # @lynx-js/template-webpack-plugin
 
+## 0.7.1
+
+### Patch Changes
+
+- feat: Merge the absent configurations for `.web.bundle`. ([#884](https://github.com/lynx-family/lynx-stack/pull/884))
+
+  Before this change, the configuration of pageConfig in `.web.bundle` was `compilerOptions`. After this commit, pageConfig will be a combination of `compilerOptions` and `sourceContent.config`.
+
 ## 0.7.0
 
 ### Minor Changes

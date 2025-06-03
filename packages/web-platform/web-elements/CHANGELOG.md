@@ -1,5 +1,14 @@
 # @lynx-js/web-elements
 
+## 0.7.4
+
+### Patch Changes
+
+- fix: x-foldview-ng `overflow-y: scroll` add !important to avoid being covered. ([#932](https://github.com/lynx-family/lynx-stack/pull/932))
+
+- Updated dependencies []:
+  - @lynx-js/web-elements-template@0.7.4
+
 ## 0.7.3
 
 ### Patch Changes

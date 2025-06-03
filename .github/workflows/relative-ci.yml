@@ -12,6 +12,7 @@ permissions: {}
 
 jobs:
   upload:
+    timeout-minutes: 10
     strategy:
       matrix:
         project:

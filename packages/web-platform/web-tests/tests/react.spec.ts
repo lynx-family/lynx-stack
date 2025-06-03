@@ -2198,6 +2198,45 @@ test.describe('reactlynx3 tests', () => {
         expect(result).toBe('foobar');
       });
       // input/bindinput test-case end
+      test(
+        'basic-element-x-input-getValue',
+        async ({ page }, { title }) => {
+          await goto(page, title);
+          await wait(200);
+          let val = false;
+          let selectionBegin = false;
+          let selectionEnd = false;
+          await page.on('console', async (msg) => {
+            const event = await msg.args()[0]?.evaluate((e) => ({
+              ...e,
+            }));
+            if (!event) return;
+            if (event.value === 'hello') {
+              val = true;
+            }
+            if (event.selectionBegin === 2) {
+              selectionBegin = true;
+            }
+            if (event.selectionEnd === 5) {
+              selectionEnd = true;
+            }
+          });
+          await page.evaluate(() => {
+            const inputDom = document.querySelector('lynx-view')?.shadowRoot
+              ?.querySelector('x-input')?.shadowRoot?.querySelector('input');
+            inputDom?.focus();
+            inputDom?.setSelectionRange(2, 5);
+            document.querySelector('lynx-view')?.shadowRoot
+              ?.querySelector(
+                '#target',
+              )?.click();
+          });
+          await wait(200);
+          expect(val).toBe(true);
+          expect(selectionBegin).toBe(true);
+          expect(selectionEnd).toBe(true);
+        },
+      );
     });
     test.describe('x-overlay-ng', () => {
       test('basic-element-x-overlay-ng-demo', async ({ page }, { title }) => {
@@ -3455,6 +3494,47 @@ test.describe('reactlynx3 tests', () => {
         },
       );
       // x-textarea/bindinput test-case end
+      test(
+        'basic-element-x-textarea-getValue',
+        async ({ page, browserName }, { title }) => {
+          test.skip(browserName === 'webkit');
+          await goto(page, title);
+          await wait(200);
+          let val = false;
+          let selectionBegin = false;
+          let selectionEnd = false;
+          await page.on('console', async (msg) => {
+            const event = await msg.args()[0]?.evaluate((e) => ({
+              ...e,
+            }));
+            if (!event) return;
+            if (event.value === 'hello') {
+              val = true;
+            }
+            if (event.selectionBegin === 2) {
+              selectionBegin = true;
+            }
+            if (event.selectionEnd === 5) {
+              selectionEnd = true;
+            }
+          });
+          await page.evaluate(() => {
+            const inputDom = document.querySelector('lynx-view')?.shadowRoot
+              ?.querySelector('x-textarea')?.shadowRoot?.querySelector(
+                'textarea',
+              );
+            inputDom?.focus();
+            inputDom?.setSelectionRange(2, 5);
+            document.querySelector('lynx-view')?.shadowRoot?.querySelector(
+              '#target',
+            )?.click();
+          });
+          await wait(200);
+          expect(val).toBe(true);
+          expect(selectionBegin).toBe(true);
+          expect(selectionEnd).toBe(true);
+        },
+      );
     });
     test.describe('x-audio-tt', () => {
       test('basic-element-x-audio-tt-play', async ({ page }, { title }) => {

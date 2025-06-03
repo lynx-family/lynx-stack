@@ -525,6 +525,35 @@ function worklet(event: Event) {
         TransformMode::Test,
         WorkletVisitorConfig {
           filename: "index.js".into(),
+          target: TransformTarget::LEPUS,
+          custom_global_ident_names: None,
+          runtime_pkg: "@lynx-js/react".into(),
+        }
+      )),
+      hygiene()
+    ),
+    should_transform_lepus_alias,
+    r#"
+function worklet(event: Event) {
+    "main-thread";
+    console.log(y1);
+    console.log(this.y1);
+    let a: object = y1;
+}
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Typescript(TsSyntax {
+      ..Default::default()
+    }),
+    |_| (
+      resolver(Mark::new(), Mark::new(), true),
+      visit_mut_pass(WorkletVisitor::new(
+        TransformMode::Test,
+        WorkletVisitorConfig {
+          filename: "index.js".into(),
           target: TransformTarget::MIXED,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
