@@ -1,7 +1,11 @@
 // Copyright 2023 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { cssIdAttribute, type CssInJsInfo } from '@lynx-js/web-constants';
+import {
+  cssIdAttribute,
+  lynxUniqueIdAttribute,
+  type CssInJsInfo,
+} from '@lynx-js/web-constants';
 import hyphenateStyleName from 'hyphenate-style-name';
 import { queryCSSProperty } from './cssPropertyMap.js';
 import { decodeCssInJs } from '../../utils/decodeCssInJs.js';
@@ -10,7 +14,6 @@ import {
   transformParsedStyles,
 } from './transformInlineStyle.js';
 import {
-  elementToRuntimeInfoMap,
   updateCSSInJsStyle,
   type MainThreadRuntime,
 } from '../../MainThreadRuntime.js';
@@ -33,7 +36,7 @@ export function createStyleFunctions(
         element.getAttribute(cssIdAttribute),
       );
       runtime[updateCSSInJsStyle](
-        runtime[elementToRuntimeInfoMap].get(element)!.uniqueId,
+        Number(element.getAttribute(lynxUniqueIdAttribute)),
         newStyleStr,
       );
     }
@@ -52,7 +55,7 @@ export function createStyleFunctions(
         element.getAttribute(cssIdAttribute),
       );
       runtime[updateCSSInJsStyle](
-        runtime[elementToRuntimeInfoMap].get(element)!.uniqueId,
+        Number(element.getAttribute(lynxUniqueIdAttribute)),
         newStyleStr ?? '',
       );
     }

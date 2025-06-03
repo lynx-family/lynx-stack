@@ -8,6 +8,7 @@ import {
   lynxComponentConfigAttribute,
   lynxDatasetAttribute,
   lynxTagAttribute,
+  lynxUniqueIdAttribute,
 } from '@lynx-js/web-constants';
 import {
   type ComponentAtIndexCallback,
@@ -107,9 +108,12 @@ export function createAttributeAndPropertyFunctions(
   }
 
   function __GetElementUniqueID(
-    element: HTMLElement,
+    element: unknown,
   ): number {
-    return runtime[elementToRuntimeInfoMap].get(element)?.uniqueId ?? -1;
+    // @ts-expect-error
+    return element && element.getAttribute
+      ? Number((element as HTMLElement).getAttribute(lynxUniqueIdAttribute))
+      : -1;
   }
 
   function __GetID(element: HTMLElement): string {
@@ -162,10 +166,15 @@ export function createAttributeAndPropertyFunctions(
     componentAtIndex: ComponentAtIndexCallback,
     enqueueComponent: EnqueueComponentCallback,
   ) {
-    runtime[elementToRuntimeInfoMap].get(element)!.componentAtIndex =
-      componentAtIndex;
-    runtime[elementToRuntimeInfoMap].get(element)!.enqueueComponent =
-      enqueueComponent;
+    const runtimeInfo = runtime[elementToRuntimeInfoMap].get(element) ?? {
+      eventHandlerMap: {},
+      componentAtIndex: componentAtIndex,
+      enqueueComponent: enqueueComponent,
+      uniqueId: __GetElementUniqueID(element),
+    };
+    runtimeInfo.componentAtIndex = componentAtIndex;
+    runtimeInfo.enqueueComponent = enqueueComponent;
+    runtime[elementToRuntimeInfoMap].set(element, runtimeInfo);
   }
 
   function __SetAttribute(
@@ -180,20 +189,23 @@ export function createAttributeAndPropertyFunctions(
         const listInfo = value as UpdateListInfoAttributeValue;
         const { insertAction, removeAction } = listInfo;
         queueMicrotask(() => {
-          const runtimeInfo = runtime[elementToRuntimeInfoMap].get(element)!;
-          const componentAtIndex = runtimeInfo.componentAtIndex;
-          const enqueueComponent = runtimeInfo.enqueueComponent;
-          for (const action of insertAction) {
-            componentAtIndex?.(
-              element,
-              runtimeInfo.uniqueId,
-              action.position,
-              0,
-              false,
-            );
-          }
-          for (const action of removeAction) {
-            enqueueComponent?.(element, runtimeInfo.uniqueId, action.position);
+          const runtimeInfo = runtime[elementToRuntimeInfoMap].get(element);
+          if (runtimeInfo) {
+            const componentAtIndex = runtimeInfo.componentAtIndex;
+            const enqueueComponent = runtimeInfo.enqueueComponent;
+            const uniqueId = __GetElementUniqueID(element);
+            for (const action of insertAction) {
+              componentAtIndex?.(
+                element,
+                uniqueId,
+                action.position,
+                0,
+                false,
+              );
+            }
+            for (const action of removeAction) {
+              enqueueComponent?.(element, uniqueId, action.position);
+            }
           }
         });
       } else {

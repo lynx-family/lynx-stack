@@ -4,7 +4,6 @@
 import type { LynxEventType } from '@lynx-js/web-constants';
 
 export interface LynxRuntimeInfo {
-  uniqueId: number;
   eventHandlerMap: Record<string, {
     capture: {
       type: LynxEventType;

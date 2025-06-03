@@ -42,11 +42,6 @@ export function initializeElementCreatingFunction(
     ) as HTMLElement;
     element.setAttribute(lynxTagAttribute, tag);
     const uniqueId = uniqueIdInc++;
-    const runtimeInfo: LynxRuntimeInfo = {
-      uniqueId,
-      eventHandlerMap: {},
-    };
-    runtime[elementToRuntimeInfoMap].set(element, runtimeInfo);
     runtime[lynxUniqueIdToElement][uniqueId] = new WeakRef(element);
     element.setAttribute(lynxUniqueIdAttribute, uniqueId.toString());
     element.setAttribute(
@@ -168,7 +163,12 @@ export function initializeElementCreatingFunction(
       undefined,
       info,
     ) as HTMLElement;
-    const runtimeInfo = runtime[elementToRuntimeInfoMap].get(element)!;
+    const runtimeInfo: LynxRuntimeInfo = {
+      eventHandlerMap: {},
+      componentAtIndex: componentAtIndex,
+      enqueueComponent: enqueueComponent,
+    };
+    runtime[elementToRuntimeInfoMap].set(element, runtimeInfo);
     runtimeInfo.componentAtIndex = componentAtIndex;
     runtimeInfo.enqueueComponent = enqueueComponent;
     return element;
