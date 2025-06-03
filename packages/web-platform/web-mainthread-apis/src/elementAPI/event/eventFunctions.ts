@@ -33,7 +33,6 @@ export function createEventFunctions(runtime: MainThreadRuntime) {
       : runtimeInfo.eventHandlerMap[lynxEventName]?.bind
         ?.handler;
     const crossThreadEvent = createCrossThreadEvent(
-      runtime,
       event,
       lynxEventName,
     );

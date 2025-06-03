@@ -6,7 +6,6 @@ import type { LynxEventType, Cloneable } from '@lynx-js/web-constants';
 export interface LynxRuntimeInfo {
   uniqueId: number;
   componentConfig: Record<string, Cloneable>;
-  lynxDataset: Record<string, Cloneable>;
   eventHandlerMap: Record<string, {
     capture: {
       type: LynxEventType;

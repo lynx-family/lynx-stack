@@ -5,6 +5,7 @@
 import {
   __lynx_timing_flag,
   componentIdAttribute,
+  lynxDatasetAttribute,
   lynxTagAttribute,
 } from '@lynx-js/web-constants';
 import {
@@ -16,19 +17,6 @@ import {
   type MainThreadRuntime,
 } from '../../MainThreadRuntime.js';
 
-function setDatasetAttribute(
-  element: HTMLElement,
-  key: string,
-  value: string | number | Record<string, any>,
-): void {
-  if (value !== null && value !== undefined) {
-    if (typeof value === 'object') {
-      element.setAttribute('data-' + key, JSON.stringify(value));
-    } else {
-      element.setAttribute('data-' + key, value.toString());
-    }
-  }
-}
 type UpdateListInfoAttributeValue = {
   insertAction: {
     position: number;
@@ -55,8 +43,16 @@ export function createAttributeAndPropertyFunctions(
     key: string,
     value: string | number | Record<string, any>,
   ): void {
-    runtime[elementToRuntimeInfoMap].get(element)!.lynxDataset[key] = value;
-    setDatasetAttribute(element, key, value);
+    const datasetString = element.getAttribute(lynxDatasetAttribute);
+    let currentDataset: Record<string, any> = datasetString
+      ? JSON.parse(decodeURI(datasetString))
+      : {};
+    currentDataset[key] = value;
+    element.setAttribute(
+      lynxDatasetAttribute,
+      encodeURI(JSON.stringify(currentDataset)),
+    );
+    element.setAttribute('data-' + key, value.toString());
   }
 
   function __GetAttributes(
@@ -77,13 +73,23 @@ export function createAttributeAndPropertyFunctions(
     element: HTMLElement,
     key: string,
   ) {
-    return runtime[elementToRuntimeInfoMap].get(element)!.lynxDataset[key];
+    const datasetString = element.getAttribute(lynxDatasetAttribute);
+    if (datasetString) {
+      const dataset = JSON.parse(decodeURI(datasetString));
+      return dataset[key] ?? null;
+    } else {
+      return null;
+    }
   }
 
   function __GetDataset(
     element: HTMLElement,
   ): Record<string, any> {
-    return runtime[elementToRuntimeInfoMap].get(element)!.lynxDataset;
+    const datasetString = element.getAttribute(lynxDatasetAttribute);
+    const currentDataset: Record<string, any> = datasetString
+      ? JSON.parse(decodeURI(datasetString))
+      : {};
+    return currentDataset;
   }
 
   function __GetElementConfig(
@@ -117,9 +123,12 @@ export function createAttributeAndPropertyFunctions(
     element: HTMLElement,
     dataset: Record<string, any>,
   ): void {
-    runtime[elementToRuntimeInfoMap].get(element)!.lynxDataset = dataset;
+    element.setAttribute(
+      lynxDatasetAttribute,
+      encodeURI(JSON.stringify(dataset)),
+    );
     for (const [key, value] of Object.entries(dataset)) {
-      setDatasetAttribute(element, key, value);
+      element.setAttribute('data-' + key, value.toString());
     }
   }
 

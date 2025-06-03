@@ -16,7 +16,6 @@ export function createExposureService(runtime: MainThreadRuntime) {
   const onScreen = new Map<string, ExposureWorkerEvent>();
   function exposureEventHandler(ev: Event) {
     const exposureEvent = createCrossThreadEvent(
-      runtime,
       ev,
       ev.type,
     ) as ExposureWorkerEvent;

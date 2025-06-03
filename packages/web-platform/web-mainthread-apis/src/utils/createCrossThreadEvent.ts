@@ -2,14 +2,12 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import {
+  lynxDatasetAttribute,
+  lynxUniqueIdAttribute,
   type Cloneable,
   type CloneableObject,
   type LynxCrossThreadEvent,
 } from '@lynx-js/web-constants';
-import {
-  elementToRuntimeInfoMap,
-  type MainThreadRuntime,
-} from '../MainThreadRuntime.js';
 
 function toCloneableObject(obj: any): CloneableObject {
   const cloneableObj: CloneableObject = {};
@@ -26,13 +24,12 @@ function toCloneableObject(obj: any): CloneableObject {
 }
 
 export function createCrossThreadEvent(
-  runtime: MainThreadRuntime,
   domEvent: Event,
   eventName: string,
 ): LynxCrossThreadEvent {
   const targetElement = domEvent.target as HTMLElement;
   const currentTargetElement = domEvent
-    .currentTarget! as HTMLElement;
+    .currentTarget as HTMLElement;
   const type = domEvent.type;
   const params: Cloneable = {};
   const isTrusted = domEvent.isTrusted;
@@ -68,25 +65,32 @@ export function createCrossThreadEvent(
         : changedTouches,
     });
   }
-  const targetElementRuntimeInfo = runtime[elementToRuntimeInfoMap].get(
-    targetElement,
-  )!;
-  const currentTargetElementRuntimeInfo = runtime[elementToRuntimeInfoMap].get(
-    currentTargetElement,
+  const currentTargetDatasetString = currentTargetElement.getAttribute(
+    lynxDatasetAttribute,
   );
+  const currentTargetDataset = currentTargetDatasetString
+    ? JSON.parse(decodeURI(currentTargetDatasetString))
+    : {};
+  const targetDatasetString = targetElement.getAttribute(lynxDatasetAttribute);
+  const targetDataset = targetDatasetString
+    ? JSON.parse(decodeURI(targetDatasetString))
+    : {};
+
   return {
     type: eventName,
     timestamp: domEvent.timeStamp,
     target: {
       id: targetElement.id,
-      dataset: targetElementRuntimeInfo.lynxDataset,
-      uniqueId: targetElementRuntimeInfo.uniqueId,
+      dataset: targetDataset,
+      uniqueId: Number(targetElement.getAttribute(lynxUniqueIdAttribute)),
     },
-    currentTarget: currentTargetElementRuntimeInfo
+    currentTarget: currentTargetElement
       ? {
         id: currentTargetElement.id,
-        dataset: currentTargetElementRuntimeInfo.lynxDataset,
-        uniqueId: currentTargetElementRuntimeInfo.uniqueId,
+        dataset: currentTargetDataset,
+        uniqueId: Number(
+          currentTargetElement.getAttribute(lynxUniqueIdAttribute),
+        ),
       }
       : null,
     // @ts-expect-error

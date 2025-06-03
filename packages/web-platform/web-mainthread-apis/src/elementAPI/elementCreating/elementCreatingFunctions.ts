@@ -45,7 +45,6 @@ export function initializeElementCreatingFunction(
     const runtimeInfo: LynxRuntimeInfo = {
       uniqueId,
       componentConfig: {},
-      lynxDataset: {},
       eventHandlerMap: {},
     };
     runtime[elementToRuntimeInfoMap].set(element, runtimeInfo);
