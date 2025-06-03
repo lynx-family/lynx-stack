@@ -5,6 +5,7 @@
 import {
   __lynx_timing_flag,
   componentIdAttribute,
+  lynxComponentConfigAttribute,
   lynxDatasetAttribute,
   lynxTagAttribute,
 } from '@lynx-js/web-constants';
@@ -34,8 +35,18 @@ export function createAttributeAndPropertyFunctions(
     type: string,
     value: any,
   ) {
-    runtime[elementToRuntimeInfoMap].get(element)!.componentConfig[type] =
-      value;
+    const currentComponentConfigString = element.getAttribute(
+      lynxComponentConfigAttribute,
+    );
+    let currentComponentConfig: Record<string, any> =
+      currentComponentConfigString
+        ? JSON.parse(decodeURIComponent(currentComponentConfigString))
+        : {};
+    currentComponentConfig[type] = value;
+    element.setAttribute(
+      lynxComponentConfigAttribute,
+      encodeURIComponent(JSON.stringify(currentComponentConfig)),
+    );
   }
 
   function __AddDataset(
@@ -87,7 +98,12 @@ export function createAttributeAndPropertyFunctions(
   function __GetElementConfig(
     element: HTMLElement,
   ) {
-    return runtime[elementToRuntimeInfoMap].get(element)!.componentConfig;
+    const currentComponentConfigString = element.getAttribute(
+      lynxComponentConfigAttribute,
+    );
+    return currentComponentConfigString
+      ? JSON.parse(decodeURIComponent(currentComponentConfigString))
+      : {};
   }
 
   function __GetElementUniqueID(
@@ -108,7 +124,10 @@ export function createAttributeAndPropertyFunctions(
     element: HTMLElement,
     config: Record<string, any>,
   ): void {
-    runtime[elementToRuntimeInfoMap].get(element)!.componentConfig = config;
+    element.setAttribute(
+      lynxComponentConfigAttribute,
+      encodeURIComponent(JSON.stringify(config)),
+    );
   }
 
   function __SetDataset(
@@ -138,13 +157,6 @@ export function createAttributeAndPropertyFunctions(
   ) {
     element.setAttribute(componentIdAttribute, componentID);
   }
-
-  function __GetConfig(
-    element: HTMLElement,
-  ) {
-    return runtime[elementToRuntimeInfoMap].get(element)!.componentConfig;
-  }
-
   function __UpdateListCallbacks(
     element: HTMLElement,
     componentAtIndex: ComponentAtIndexCallback,
@@ -209,7 +221,7 @@ export function createAttributeAndPropertyFunctions(
     __SetID,
     __UpdateComponentID,
     __UpdateListCallbacks,
-    __GetConfig,
+    __GetConfig: __GetElementConfig,
     __SetAttribute,
   };
 }
