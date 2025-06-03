@@ -129,10 +129,20 @@ export function snapshotPatchApply(snapshotPatch: SnapshotPatch): void {
   }
 }
 
+declare global {
+  const __webpack_require__: (<T>(id: string) => T) | undefined;
+}
+
 /**
  * Evaluates a string as code with ReactLynx runtime injected.
  * Used for HMR (Hot Module Replacement) to update snapshot definitions.
  */
 function evaluate<T>(code: string): T {
+  // This is a workaround for webpack when `output.iife` is `true`.
+  // We should fully support main-thread HMR and remove this `evaluate` function entirely.
+  // See https://github.com/lynx-family/lynx-stack/issues/983 for more details.
+  if (typeof __webpack_require__ !== 'undefined') {
+    return new Function('__webpack_require__', `return ${code}`)(__webpack_require__);
+  }
   return new Function(`return ${code}`)();
 }
