@@ -1192,6 +1192,60 @@ describe('DEV_ONLY_addSnapshot', () => {
     expect(fn).toBeCalledTimes(1);
     expect(fn).toBeCalledWith(si.__elements, 0, 'BAR');
   });
+
+  it('with __webpack_require__', () => {
+    const __webpack_require__ = vi.fn();
+    vi.stubGlobal('__webpack_require__', __webpack_require__);
+
+    const uniqID1 = createSnapshot(
+      'with-__webpack_require__-0',
+      /* v8 ignore start */
+      () => {
+        __webpack_require__('foo');
+        return [__CreateView(0)];
+      },
+      /* v8 ignore stop */
+      null,
+      null,
+    );
+
+    const patch = takeGlobalSnapshotPatch();
+
+    expect(patch).toMatchInlineSnapshot(`
+      [
+        100,
+        "with-__webpack_require__-0",
+        "() => {
+              __webpack_require__("foo");
+              return [
+                __CreateView(0)
+              ];
+            }",
+        [],
+        null,
+        undefined,
+        undefined,
+      ]
+    `);
+
+    const originalSize = snapshotManager.values.size;
+
+    // Remove the old definition
+    snapshotManager.values.delete(uniqID1);
+    snapshotPatchApply(patch);
+
+    expect(snapshotManager.values.size).toBe(originalSize);
+    expect(snapshotManager.values.has(uniqID1)).toBeTruthy();
+    const snapshot = snapshotManager.values.get(uniqID1);
+    expect(snapshot).toHaveProperty('create', expect.any(Function));
+    const si = new SnapshotInstance(uniqID1);
+    si.ensureElements();
+    expect(si.__element_root).not.toBeUndefined();
+    expect(__webpack_require__).toBeCalledTimes(1);
+    expect(__webpack_require__).toBeCalledWith('foo');
+
+    vi.unstubAllGlobals();
+  });
 });
 
 describe.skip('DEV_ONLY_RegisterWorklet', () => {
