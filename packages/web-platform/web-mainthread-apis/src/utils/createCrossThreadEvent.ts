@@ -28,8 +28,10 @@ export function createCrossThreadEvent(
   eventName: string,
 ): LynxCrossThreadEvent {
   const targetElement = domEvent.target as HTMLElement;
-  const currentTargetElement = domEvent
-    .currentTarget as HTMLElement;
+  const currentTargetElement = (domEvent
+      .currentTarget as HTMLElement).getAttribute
+    ? (domEvent.currentTarget as HTMLElement)
+    : undefined;
   const type = domEvent.type;
   const params: Cloneable = {};
   const isTrusted = domEvent.isTrusted;
@@ -65,15 +67,15 @@ export function createCrossThreadEvent(
         : changedTouches,
     });
   }
-  const currentTargetDatasetString = currentTargetElement.getAttribute(
+  const currentTargetDatasetString = currentTargetElement?.getAttribute(
     lynxDatasetAttribute,
   );
   const currentTargetDataset = currentTargetDatasetString
-    ? JSON.parse(decodeURI(currentTargetDatasetString))
+    ? JSON.parse(decodeURIComponent(currentTargetDatasetString))
     : {};
   const targetDatasetString = targetElement.getAttribute(lynxDatasetAttribute);
   const targetDataset = targetDatasetString
-    ? JSON.parse(decodeURI(targetDatasetString))
+    ? JSON.parse(decodeURIComponent(targetDatasetString))
     : {};
 
   return {

@@ -43,14 +43,11 @@ export function createAttributeAndPropertyFunctions(
     key: string,
     value: string | number | Record<string, any>,
   ): void {
-    const datasetString = element.getAttribute(lynxDatasetAttribute);
-    let currentDataset: Record<string, any> = datasetString
-      ? JSON.parse(decodeURI(datasetString))
-      : {};
+    const currentDataset = __GetDataset(element);
     currentDataset[key] = value;
     element.setAttribute(
       lynxDatasetAttribute,
-      encodeURI(JSON.stringify(currentDataset)),
+      encodeURIComponent(JSON.stringify(currentDataset)),
     );
     element.setAttribute('data-' + key, value.toString());
   }
@@ -73,13 +70,8 @@ export function createAttributeAndPropertyFunctions(
     element: HTMLElement,
     key: string,
   ) {
-    const datasetString = element.getAttribute(lynxDatasetAttribute);
-    if (datasetString) {
-      const dataset = JSON.parse(decodeURI(datasetString));
-      return dataset[key] ?? null;
-    } else {
-      return null;
-    }
+    const dataset = __GetDataset(element);
+    return dataset[key];
   }
 
   function __GetDataset(
@@ -87,7 +79,7 @@ export function createAttributeAndPropertyFunctions(
   ): Record<string, any> {
     const datasetString = element.getAttribute(lynxDatasetAttribute);
     const currentDataset: Record<string, any> = datasetString
-      ? JSON.parse(decodeURI(datasetString))
+      ? JSON.parse(decodeURIComponent(datasetString))
       : {};
     return currentDataset;
   }
@@ -125,7 +117,7 @@ export function createAttributeAndPropertyFunctions(
   ): void {
     element.setAttribute(
       lynxDatasetAttribute,
-      encodeURI(JSON.stringify(dataset)),
+      encodeURIComponent(JSON.stringify(dataset)),
     );
     for (const [key, value] of Object.entries(dataset)) {
       element.setAttribute('data-' + key, value.toString());
