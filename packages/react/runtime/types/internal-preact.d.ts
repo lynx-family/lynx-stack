@@ -20,6 +20,8 @@ declare module 'preact' {
   interface VNode {
     /** _component */
     __c?: Component | null;
+    /** _parent */
+    __: VNode | null;
   }
 
   interface Component<P = {}, S = {}> {

@@ -1,7 +1,10 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { Component, options } from 'preact';
+import type { ComponentType, ErrorInfo, VNode } from 'preact';
 import { Fragment, lazy as backgroundLazy, createElement } from 'preact/compat';
+import { CATCH_ERROR } from '../renderToOpcodes/constants.js';
 
 /**
  * To make code below works
@@ -48,6 +51,46 @@ export const makeSyncThen = function<T>(result: T) {
   };
 };
 
+const responseMap: Map<Promise<any>, any> = /* @__PURE__ */ new Map();
+
+export const LazyBundleResponseListener: ComponentType<any> = /* @__PURE__ */ (function() {
+  class LazyBundleResponseListener extends Component<any> {
+    _onLazyBundleResponse(p: any): void {
+      const onFullfill = () => {
+        if (responseMap.has(p)) {
+          if (this.props.onResponse) {
+            const { code, data } = responseMap.get(p)!;
+            this.props.onResponse({ code, data });
+          }
+        }
+      };
+      p.then(onFullfill, onFullfill);
+    }
+
+    override render(): any {
+      return this.props.children;
+    }
+  }
+
+  const oldCatchError = options[CATCH_ERROR];
+  options[CATCH_ERROR] = (error: any, newVNode: VNode<any>, oldVNode?: VNode<any>, errorInfo?: ErrorInfo) => {
+    if (error.then) {
+      let component;
+      let vnode: VNode<any> | null = newVNode;
+      for (; vnode = vnode.__;) {
+        if ((component = vnode.__c) && component instanceof LazyBundleResponseListener) {
+          component._onLazyBundleResponse(error);
+          break;
+        }
+      }
+    }
+
+    oldCatchError(error, newVNode, oldVNode, errorInfo);
+  };
+
+  return LazyBundleResponseListener;
+})();
+
 /**
  * Load dynamic component from source. Designed to be used with `lazy`.
  * @param source - where dynamic component template.js locates
@@ -83,8 +126,9 @@ export const loadLazyBundle: <
       r.then = makeSyncThen(result);
       return r;
     } else if (__JS__) {
-      return new Promise((resolve, reject) => {
+      const p = new Promise((resolve, reject) => {
         const callback: (result: any) => void = result => {
+          // responseMap.set(p, result);
           const { code, detail } = result;
           if (code === 0) {
             const { schema } = detail;
@@ -104,6 +148,8 @@ export const loadLazyBundle: <
           lynx.getNativeLynx().QueryComponent!(source, callback);
         }
       });
+
+      return p as Promise<T>;
     }
 
     throw new Error('unreachable');
