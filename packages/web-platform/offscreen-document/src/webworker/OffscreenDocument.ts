@@ -37,7 +37,7 @@ export class OffscreenDocument extends OffscreenElement {
   /**
    * @private
    */
-  [operations]: ElementOperation[] = [];
+  [operations]?: ElementOperation[];
 
   /**
    * @private
@@ -51,14 +51,14 @@ export class OffscreenDocument extends OffscreenElement {
   [enableEvent]: (eventType: string, uid: number) => void;
   constructor(
     private _callbacks: {
-      onCommit: (operations: ElementOperation[]) => void;
+      onCommit: (operations?: ElementOperation[]) => void;
     },
   ) {
     const enableEventImpl: (nm: string, uid: number) => void = (
       eventType,
       uid,
     ) => {
-      this[operations].push({
+      this[operations]?.push({
         type: OperationType.EnableEvent,
         eventType,
         uid,
@@ -80,7 +80,7 @@ export class OffscreenDocument extends OffscreenElement {
     const element = new OffscreenElement(tagName, uniqueId);
     element[ancestorDocument] = this;
     this[_uniqueIdToElement][uniqueId] = new WeakRef(element);
-    this[operations].push({
+    this[operations]?.push({
       type: OperationType.CreateElement,
       uid: uniqueId,
       tag: tagName,
