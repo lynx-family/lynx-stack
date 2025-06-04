@@ -108,6 +108,37 @@ export class XTextareaEvents
     }
   };
 
+  @registerEventEnableStatusChangeHandler('selection')
+  #handleEnableSelectionEvent(status: boolean) {
+    if (status) {
+      this.#getTextareaElement().addEventListener(
+        'select',
+        this.#selectEvent,
+        {
+          passive: true,
+        },
+      );
+    } else {
+      this.#getTextareaElement().removeEventListener(
+        'select',
+        this.#selectEvent,
+      );
+    }
+  }
+
+  #selectEvent = () => {
+    const input = this.#getTextareaElement();
+    this.#dom.dispatchEvent(
+      new CustomEvent('selection', {
+        ...commonComponentEventSetting,
+        detail: {
+          selectionStart: input.selectionStart,
+          selectionEnd: input.selectionEnd,
+        },
+      }),
+    );
+  };
+
   #blockHtmlEvent = (event: FocusEvent | InputEvent) => {
     if (
       event.target === this.#getTextareaElement()

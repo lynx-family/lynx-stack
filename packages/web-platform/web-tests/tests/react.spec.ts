@@ -2237,6 +2237,21 @@ test.describe('reactlynx3 tests', () => {
           expect(selectionEnd).toBe(true);
         },
       );
+      test(
+        'basic-element-x-input-bindselection',
+        async ({ page }, { title }) => {
+          await goto(page, title);
+          await wait(200);
+          await page.evaluate(() => {
+            const inputDom = document.querySelector('lynx-view')?.shadowRoot
+              ?.querySelector('x-input')?.shadowRoot?.querySelector('input');
+            inputDom?.focus();
+            inputDom?.setSelectionRange(2, 5);
+          });
+          const result = await page.locator('.result').first().innerText();
+          expect(result).toBe('2-5');
+        },
+      );
     });
     test.describe('x-overlay-ng', () => {
       test('basic-element-x-overlay-ng-demo', async ({ page }, { title }) => {
@@ -3533,6 +3548,23 @@ test.describe('reactlynx3 tests', () => {
           expect(val).toBe(true);
           expect(selectionBegin).toBe(true);
           expect(selectionEnd).toBe(true);
+        },
+      );
+      test(
+        'basic-element-x-textarea-bindselection',
+        async ({ page }, { title }) => {
+          await goto(page, title);
+          await wait(200);
+          await page.evaluate(() => {
+            const textareaDom = document.querySelector('lynx-view')?.shadowRoot
+              ?.querySelector('x-textarea')?.shadowRoot?.querySelector(
+                'textarea',
+              );
+            textareaDom?.focus();
+            textareaDom?.setSelectionRange(2, 5);
+          });
+          const result = await page.locator('.result').first().innerText();
+          expect(result).toBe('2-5');
         },
       );
     });

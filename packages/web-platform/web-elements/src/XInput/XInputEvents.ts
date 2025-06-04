@@ -108,6 +108,37 @@ export class XInputEvents
     }
   };
 
+  @registerEventEnableStatusChangeHandler('selection')
+  #handleEnableSelectionEvent(status: boolean) {
+    if (status) {
+      this.#getInputElement().addEventListener(
+        'select',
+        this.#selectEvent,
+        {
+          passive: true,
+        },
+      );
+    } else {
+      this.#getInputElement().removeEventListener(
+        'select',
+        this.#selectEvent,
+      );
+    }
+  }
+
+  #selectEvent = () => {
+    const input = this.#getInputElement();
+    this.#dom.dispatchEvent(
+      new CustomEvent('selection', {
+        ...commonComponentEventSetting,
+        detail: {
+          selectionStart: input.selectionStart,
+          selectionEnd: input.selectionEnd,
+        },
+      }),
+    );
+  };
+
   #blockHtmlEvent = (event: InputEvent) => {
     if (
       event.target === this.#getInputElement()
