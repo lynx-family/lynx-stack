@@ -138,13 +138,12 @@ declare global {
  * Used for HMR (Hot Module Replacement) to update snapshot definitions.
  */
 function evaluate<T>(code: string): T {
-  if (!__DEV__) {
-    /* v8 ignore start */
-    throw new Error('unreachable: evaluate is not supported in production');
-    /* v8 ignore stop */
+  if (__DEV__) {
+    // We are using `eval` here to make the updated snapshot to access variables like `__webpack_require__`.
+    // See: https://github.com/lynx-family/lynx-stack/issues/983.
+    return eval(`(() => ${code})()`);
   }
-
-  // We are using `eval` here to make the updated snapshot to access variables like `__webpack_require__`.
-  // See: https://github.com/lynx-family/lynx-stack/issues/983.
-  return eval(`(() => ${code})()`);
+  /* v8 ignore start */
+  throw new Error('unreachable: evaluate is not supported in production');
+  /* v8 ignore stop */
 }
