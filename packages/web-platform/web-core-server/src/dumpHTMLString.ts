@@ -5,6 +5,7 @@ import {
   type OffscreenDocument,
   type OffscreenElement,
 } from '@lynx-js/offscreen-document/webworker';
+import { escapeHtml } from './utils/escapeHtml.js';
 
 type ShadowrootTemplates =
   | ((
@@ -24,7 +25,7 @@ function getInnerHTMLImpl(
     buffer.push(' ');
     buffer.push(key);
     buffer.push('="');
-    buffer.push(value);
+    buffer.push(escapeHtml(value));
     buffer.push('"');
   }
 
