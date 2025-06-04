@@ -129,10 +129,6 @@ export function snapshotPatchApply(snapshotPatch: SnapshotPatch): void {
   }
 }
 
-declare global {
-  const __webpack_require__: (<T>(id: string) => T) | undefined;
-}
-
 /**
  * Evaluates a string as code with ReactLynx runtime injected.
  * Used for HMR (Hot Module Replacement) to update snapshot definitions.
