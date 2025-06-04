@@ -213,8 +213,8 @@ importers:
         specifier: ^18.3.22
         version: 18.3.22
       '@vitejs/plugin-react':
-        specifier: 4.5.0
-        version: 4.5.0(vite@5.4.2(@types/node@22.15.23)(sass-embedded@1.86.0)(terser@5.31.6))
+        specifier: 4.5.1
+        version: 4.5.1(vite@5.4.2(@types/node@22.15.23)(sass-embedded@1.86.0)(terser@5.31.6))
       '@vitest/coverage-v8':
         specifier: ^3.1.4
         version: 3.1.4(vitest@3.1.4)
@@ -3253,8 +3253,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@vitejs/plugin-react@4.5.0':
-    resolution: {integrity: sha512-JuLWaEqypaJmOJPLWwO335Ig6jSgC1FTONCWAxnqcQthLTK/Yc9aH6hr9z/87xciejbQcnP3GnA1FWUSWeXaeg==}
+  '@vitejs/plugin-react@4.5.1':
+    resolution: {integrity: sha512-uPZBqSI0YD4lpkIru6M35sIfylLGTyhGHvDZbNLuMA73lMlwJKz5xweH7FajfcCAc2HnINciejA9qTz0dr0M7A==}
     engines: {node: ^14.18.0 || >=16.0.0}
     peerDependencies:
       vite: ^4.2.0 || ^5.0.0 || ^6.0.0
@@ -10581,7 +10581,7 @@ snapshots:
   '@unrs/resolver-binding-win32-x64-msvc@1.7.2':
     optional: true
 
-  '@vitejs/plugin-react@4.5.0(vite@5.4.2(@types/node@22.15.23)(sass-embedded@1.86.0)(terser@5.31.6))':
+  '@vitejs/plugin-react@4.5.1(vite@5.4.2(@types/node@22.15.23)(sass-embedded@1.86.0)(terser@5.31.6))':
     dependencies:
       '@babel/core': 7.26.10
       '@babel/plugin-transform-react-jsx-self': 7.25.9(@babel/core@7.26.10)
