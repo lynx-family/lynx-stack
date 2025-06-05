@@ -153,8 +153,8 @@ importers:
         specifier: 3.3.0
         version: 3.3.0
       '@types/react':
-        specifier: ^18.3.22
-        version: 18.3.22
+        specifier: ^18.3.23
+        version: 18.3.23
 
   packages/background-only: {}
 
@@ -171,8 +171,8 @@ importers:
         specifier: 'catalog:'
         version: 7.52.8(@types/node@22.15.29)
       '@types/react':
-        specifier: ^18.3.22
-        version: 18.3.22
+        specifier: ^18.3.23
+        version: 18.3.23
 
   packages/react/refresh:
     devDependencies:
@@ -198,8 +198,8 @@ importers:
         specifier: workspace:*
         version: link:../transform
       '@types/react':
-        specifier: ^18.3.22
-        version: 18.3.22
+        specifier: ^18.3.23
+        version: 18.3.23
       '@vitejs/plugin-react':
         specifier: 4.5.1
         version: 4.5.1(vite@5.4.2(@types/node@22.15.29)(sass-embedded@1.89.0)(terser@5.31.6))
@@ -1165,17 +1165,17 @@ importers:
         specifier: ^3.5.0
         version: 3.5.0
       '@types/react':
-        specifier: npm:@types/react@^19.1.5
-        version: 19.1.5
+        specifier: npm:@types/react@^19.1.6
+        version: 19.1.6
       '@types/react-dom':
-        specifier: ^19.1.5
-        version: 19.1.5(@types/react@19.1.5)
+        specifier: ^19.1.6
+        version: 19.1.6(@types/react@19.1.6)
       change-case:
         specifier: ^5.4.4
         version: 5.4.4
       rspress:
         specifier: 2.0.0-beta.10
-        version: 2.0.0-beta.10(@types/react@19.1.5)(acorn@8.14.1)(webpack@5.99.9)
+        version: 2.0.0-beta.10(@types/react@19.1.6)(acorn@8.14.1)(webpack@5.99.9)
       tailwindcss:
         specifier: ^3.4.17
         version: 3.4.17
@@ -3038,16 +3038,16 @@ packages:
   '@types/range-parser@1.2.7':
     resolution: {integrity: sha512-hKormJbkJqzQGhziax5PItDUTMAM9uE2XXQmM37dyd4hVM+5aVl7oVxMVUiVQn2oCQFN/LKCZdvSM0pFRqbSmQ==}
 
-  '@types/react-dom@19.1.5':
-    resolution: {integrity: sha512-CMCjrWucUBZvohgZxkjd6S9h0nZxXjzus6yDfUb+xLxYM7VvjKNH1tQrE9GWLql1XoOP4/Ds3bwFqShHUYraGg==}
+  '@types/react-dom@19.1.6':
+    resolution: {integrity: sha512-4hOiT/dwO8Ko0gV1m/TJZYk3y0KBnY9vzDh7W+DH17b2HFSOGgdj33dhihPeuy3l0q23+4e+hoXHV6hCC4dCXw==}
     peerDependencies:
       '@types/react': ^19.0.0
 
-  '@types/react@18.3.22':
-    resolution: {integrity: sha512-vUhG0YmQZ7kL/tmKLrD3g5zXbXXreZXB3pmROW8bg3CnLnpjkRVwUlLne7Ufa2r9yJ8+/6B73RzhAek5TBKh2Q==}
+  '@types/react@18.3.23':
+    resolution: {integrity: sha512-/LDXMQh55EzZQ0uVAZmKKhfENivEvWz6E+EYzh+/MCjMhNsotd+ZHhBGIjFDTi6+fz0OhQQQLbTgdQIxxCsC0w==}
 
-  '@types/react@19.1.5':
-    resolution: {integrity: sha512-piErsCVVbpMMT2r7wbawdZsq4xMvIAhQuac2gedQHysu1TZYEigE6pnFfgZT+/jQnrRuF5r+SHzuehFjfRjr4g==}
+  '@types/react@19.1.6':
+    resolution: {integrity: sha512-JeG0rEWak0N6Itr6QUx+X60uQmN+5t3j9r/OVDtWzFXKaj6kD1BwJzOksD0FF6iWxZlbE1kB0q9vtnU2ekqa1Q==}
 
   '@types/retry@0.12.2':
     resolution: {integrity: sha512-XISRgDJ2Tc5q4TRqvgJtzsRkFYNJzZrhTdtMoGVBttwzzQJkPnS3WWTFc7kuDRoPtPakl+T+OfdEUjYJj7Jbow==}
@@ -9171,13 +9171,13 @@ snapshots:
   '@mdx-js/react@2.3.0(react@19.1.0)':
     dependencies:
       '@types/mdx': 2.0.13
-      '@types/react': 18.3.22
+      '@types/react': 18.3.23
       react: 19.1.0
 
-  '@mdx-js/react@3.1.0(@types/react@19.1.5)(react@19.1.0)':
+  '@mdx-js/react@3.1.0(@types/react@19.1.6)(react@19.1.0)':
     dependencies:
       '@types/mdx': 2.0.13
-      '@types/react': 19.1.5
+      '@types/react': 19.1.6
       react: 19.1.0
 
   '@microsoft/api-documenter@7.23.38(@types/node@22.15.29)':
@@ -9779,11 +9779,11 @@ snapshots:
       - utf-8-validate
       - webpack-cli
 
-  '@rspress/core@2.0.0-beta.10(@types/react@19.1.5)(acorn@8.14.1)(webpack@5.99.9)':
+  '@rspress/core@2.0.0-beta.10(@types/react@19.1.6)(acorn@8.14.1)(webpack@5.99.9)':
     dependencies:
       '@mdx-js/loader': 3.1.0(acorn@8.14.1)(webpack@5.99.9)
       '@mdx-js/mdx': 3.1.0(acorn@8.14.1)
-      '@mdx-js/react': 3.1.0(@types/react@19.1.5)(react@19.1.0)
+      '@mdx-js/react': 3.1.0(@types/react@19.1.6)(react@19.1.0)
       '@rsbuild/core': 1.3.21
       '@rsbuild/plugin-react': 1.3.1(@rsbuild/core@1.3.21)
       '@rspress/mdx-rs': 0.6.6
@@ -10339,16 +10339,16 @@ snapshots:
 
   '@types/range-parser@1.2.7': {}
 
-  '@types/react-dom@19.1.5(@types/react@19.1.5)':
+  '@types/react-dom@19.1.6(@types/react@19.1.6)':
     dependencies:
-      '@types/react': 19.1.5
+      '@types/react': 19.1.6
 
-  '@types/react@18.3.22':
+  '@types/react@18.3.23':
     dependencies:
       '@types/prop-types': 15.7.13
       csstype: 3.1.3
 
-  '@types/react@19.1.5':
+  '@types/react@19.1.6':
     dependencies:
       csstype: 3.1.3
 
@@ -15025,10 +15025,10 @@ snapshots:
     dependencies:
       fs-extra: 11.3.0
 
-  rspress@2.0.0-beta.10(@types/react@19.1.5)(acorn@8.14.1)(webpack@5.99.9):
+  rspress@2.0.0-beta.10(@types/react@19.1.6)(acorn@8.14.1)(webpack@5.99.9):
     dependencies:
       '@rsbuild/core': 1.3.21
-      '@rspress/core': 2.0.0-beta.10(@types/react@19.1.5)(acorn@8.14.1)(webpack@5.99.9)
+      '@rspress/core': 2.0.0-beta.10(@types/react@19.1.6)(acorn@8.14.1)(webpack@5.99.9)
       '@rspress/shared': 2.0.0-beta.10
       cac: 6.7.14
       chokidar: 3.6.0
