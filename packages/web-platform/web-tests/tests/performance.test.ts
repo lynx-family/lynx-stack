@@ -34,7 +34,7 @@ const goto = async (
 
 const usingMetrics = new Set(['LayoutCount', 'RecalcStyleCount']);
 
-interface MerticsResult {
+interface MetricsResult {
   LayoutCount: number;
   RecalcStyleCount: number;
   domComplete: number;
@@ -48,18 +48,18 @@ const getMetrics = async (cdpSession: CDPSession, page: Page) => {
   const performanceEvents =
     await (await page.evaluateHandle(() => globalThis.performanceResult))
       .jsonValue();
-  const merticsResult = Object.fromEntries(
+  const metricsResult = Object.fromEntries(
     rawMetrics.metrics.filter(({ name }) => usingMetrics.has(name)).map((
       { name, value },
     ) => [name, value]),
-  ) as unknown as MerticsResult;
-  merticsResult.domComplete = performanceEvents?.navigation.domComplete;
-  merticsResult.longTaskEnd = performanceEvents?.longtask
+  ) as unknown as MetricsResult;
+  metricsResult.domComplete = performanceEvents?.navigation.domComplete;
+  metricsResult.longTaskEnd = performanceEvents?.longtask
     ? performanceEvents?.longtask.duration
       + performanceEvents?.longtask.startTime
     : undefined;
-  merticsResult.firstPaint = performanceEvents?.paint?.startTime;
-  return merticsResult;
+  metricsResult.firstPaint = performanceEvents?.paint?.startTime;
+  return metricsResult;
 };
 
 test.describe('performance', () => {

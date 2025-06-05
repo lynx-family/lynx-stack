@@ -1,6 +1,8 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import path from 'node:path'
+
 import { fs, vol } from 'memfs'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
@@ -16,7 +18,9 @@ describe('Install', () => {
   test('no package.json', async () => {
     await expect(() => install('/tmp')).rejects
       .toThrowErrorMatchingInlineSnapshot(
-        `[Error: /tmp/package.json not found. Please run upgrade-rspeedy in your Rspeedy project.]`,
+        `[Error: ${
+          path.resolve('/tmp', 'package.json')
+        } not found. Please run upgrade-rspeedy in your Rspeedy project.]`,
       )
   })
 
@@ -41,7 +45,9 @@ describe('Install', () => {
 
     await expect(() => install('/tmp')).rejects
       .toThrowErrorMatchingInlineSnapshot(`
-      [Error: No @lynx-js/rspeedy found in /tmp/package.json.
+      [Error: No @lynx-js/rspeedy found in ${
+        path.resolve('/tmp', 'package.json')
+      }.
 
       Please run upgrade-rspeedy in your Rspeedy project.]
     `)
