@@ -129,6 +129,7 @@ export function snapshotPatchApply(snapshotPatch: SnapshotPatch): void {
   }
 }
 
+/* v8 ignore start */
 /**
  * Evaluates a string as code with ReactLynx runtime injected.
  * Used for HMR (Hot Module Replacement) to update snapshot definitions.
@@ -139,7 +140,6 @@ function evaluate<T>(code: string): T {
     // See: https://github.com/lynx-family/lynx-stack/issues/983.
     return eval(`(() => ${code})()`);
   }
-  /* v8 ignore start */
   throw new Error('unreachable: evaluate is not supported in production');
-  /* v8 ignore stop */
 }
+/* v8 ignore stop */
