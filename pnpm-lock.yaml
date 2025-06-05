@@ -24,6 +24,7 @@ catalogs:
 overrides:
   '@rspack/core': 1.3.14
   '@rsbuild/core>@rspack/core': 1.3.14
+  path-serializer: ^0.4.1
 
 patchedDependencies:
   '@napi-rs/cli@2.18.4':
@@ -6330,9 +6331,6 @@ packages:
     resolution: {integrity: sha512-ypGJsmGtdXUOeM5u93TyeIEfEhM6s+ljAhrk5vAvSx8uyY/02OvrZnA0YNGUrPXfpJMgI1ODd3nwz8Npx4O4cg==}
     engines: {node: 20 || >=22}
 
-  path-serializer@0.4.0:
-    resolution: {integrity: sha512-dg6dzlcs9/j7JXupC2ShAlyiVLjVt37+eSmvD9nfwaaB1iejHrkxfv4SLAKcvTDEJNYWG6UHWAqc5ELs3Gcffw==}
-
   path-serializer@0.4.1:
     resolution: {integrity: sha512-nZh0IWYm49uMU6upk268ryi8J7aA3hvlQaFS2jSTUWLkxxyZObz4dE0BrTFZDxU3qgPU/8xdpQ4TvWnYCQNHaQ==}
 
@@ -9764,7 +9762,7 @@ snapshots:
       jsdom: 26.1.0
       loader-utils: 2.0.4
       memfs: 4.17.2
-      path-serializer: 0.4.0
+      path-serializer: 0.4.1
       pretty-format: 29.7.0
       rimraf: 5.0.10
       source-map: 0.7.4
@@ -14367,8 +14365,6 @@ snapshots:
     dependencies:
       lru-cache: 11.0.2
       minipass: 7.1.2
-
-  path-serializer@0.4.0: {}
 
   path-serializer@0.4.1: {}
 
