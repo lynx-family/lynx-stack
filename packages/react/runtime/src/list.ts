@@ -466,10 +466,12 @@ export function snapshotCreateList(
       updateAction: [],
     };
     __SetAttribute(list, 'update-list-info', a);
+    const [componentAtIndex, componentAtIndexes] = componentAtIndexFactory(_ctx.childNodes);
     __UpdateListCallbacks(
       list,
-      componentAtIndexFactory(_ctx.childNodes),
+      componentAtIndex,
       enqueueComponentFactory(),
+      componentAtIndexes,
     );
   }
   gSignMap[listID] = signMap;
