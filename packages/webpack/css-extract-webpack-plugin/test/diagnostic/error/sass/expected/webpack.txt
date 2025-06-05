@@ -5,7 +5,7 @@ Expected identifier.
 1 │ ..foo {}
   │  ^
   ╵
-  <PROJECT_ROOT>/packages/webpack/css-extract-webpack-plugin/test/diagnostic/error/sass/index.scss <LINE:COLUMN>  root stylesheet
+  <ROOT>/packages/webpack/css-extract-webpack-plugin/test/diagnostic/error/sass/index.scss <LINE:COLUMN>  root stylesheet
 
 ERROR in ./error/sass/index.scss
 Module build failed (from ../../src/loader.js):
@@ -15,17 +15,17 @@ Expected identifier.
 1 │ ..foo {}
   │  ^
   ╵
-  <PROJECT_ROOT>/packages/webpack/css-extract-webpack-plugin/test/diagnostic/error/sass/index.scss <LINE:COLUMN>  root stylesheet
-    at tryRunOrWebpackError (<PROJECT_ROOT>/node_modules/<PNPM_INNER>/webpack/lib/HookWebpackError.js:<LINE:COLUMN>)
-    at __webpack_require_module__ (<PROJECT_ROOT>/node_modules/<PNPM_INNER>/webpack/lib/Compilation.js:<LINE:COLUMN>)
-    at __webpack_require__ (<PROJECT_ROOT>/node_modules/<PNPM_INNER>/webpack/lib/Compilation.js:<LINE:COLUMN>)
-    at <PROJECT_ROOT>/node_modules/<PNPM_INNER>/webpack/lib/Compilation.js:<LINE:COLUMN>
-    at symbolIterator (<PROJECT_ROOT>/node_modules/<PNPM_INNER>/neo-async/async.js:<LINE:COLUMN>)
-    at done (<PROJECT_ROOT>/node_modules/<PNPM_INNER>/neo-async/async.js:<LINE:COLUMN>)
-    at Hook.eval [as callAsync] (eval at create (<PROJECT_ROOT>/node_modules/<PNPM_INNER>/tapable/lib/HookCodeFactory.js:<LINE:COLUMN>), <anonymous>:<LINE:COLUMN>)
-    at Hook.CALL_ASYNC_DELEGATE [as _callAsync] (<PROJECT_ROOT>/node_modules/<PNPM_INNER>/tapable/lib/Hook.js:<LINE:COLUMN>)
-    at <PROJECT_ROOT>/node_modules/<PNPM_INNER>/webpack/lib/Compilation.js:<LINE:COLUMN>
-    at symbolIterator (<PROJECT_ROOT>/node_modules/<PNPM_INNER>/neo-async/async.js:<LINE:COLUMN>)
+  <ROOT>/packages/webpack/css-extract-webpack-plugin/test/diagnostic/error/sass/index.scss <LINE:COLUMN>  root stylesheet
+    at tryRunOrWebpackError (<ROOT>/node_modules/<PNPM_INNER>/webpack/lib/HookWebpackError.js:<LINE:COLUMN>)
+    at __webpack_require_module__ (<ROOT>/node_modules/<PNPM_INNER>/webpack/lib/Compilation.js:<LINE:COLUMN>)
+    at __webpack_require__ (<ROOT>/node_modules/<PNPM_INNER>/webpack/lib/Compilation.js:<LINE:COLUMN>)
+    at <ROOT>/node_modules/<PNPM_INNER>/webpack/lib/Compilation.js:<LINE:COLUMN>
+    at symbolIterator (<ROOT>/node_modules/<PNPM_INNER>/neo-async/async.js:<LINE:COLUMN>)
+    at done (<ROOT>/node_modules/<PNPM_INNER>/neo-async/async.js:<LINE:COLUMN>)
+    at Hook.eval [as callAsync] (eval at create (<ROOT>/node_modules/<PNPM_INNER>/tapable/lib/HookCodeFactory.js:<LINE:COLUMN>), <anonymous>:<LINE:COLUMN>)
+    at Hook.CALL_ASYNC_DELEGATE [as _callAsync] (<ROOT>/node_modules/<PNPM_INNER>/tapable/lib/Hook.js:<LINE:COLUMN>)
+    at <ROOT>/node_modules/<PNPM_INNER>/webpack/lib/Compilation.js:<LINE:COLUMN>
+    at symbolIterator (<ROOT>/node_modules/<PNPM_INNER>/neo-async/async.js:<LINE:COLUMN>)
 -- inner error --
 Error: Module build failed (from ../../../../../node_modules/<PNPM_INNER>/sass-loader/dist/cjs.js):
 Expected identifier.
@@ -33,17 +33,17 @@ Expected identifier.
 1 │ ..foo {}
   │  ^
   ╵
-  <PROJECT_ROOT>/packages/webpack/css-extract-webpack-plugin/test/diagnostic/error/sass/index.scss <LINE:COLUMN>  root stylesheet
-    at Object.<anonymous> (<PROJECT_ROOT>/node_modules/<PNPM_INNER>/css-loader/dist/cjs.js!<PROJECT_ROOT>/node_modules/<PNPM_INNER>/sass-loader/dist/cjs.js!<PROJECT_ROOT>/packages/webpack/css-extract-webpack-plugin/test/diagnostic/error/sass/index.scss:<LINE:COLUMN>)
-    at <PROJECT_ROOT>/node_modules/<PNPM_INNER>/webpack/lib/javascript/JavascriptModulesPlugin.js:<LINE:COLUMN>
-    at Hook.eval (eval at create (<PROJECT_ROOT>/node_modules/<PNPM_INNER>/tapable/lib/HookCodeFactory.js:<LINE:COLUMN>), <anonymous>:<LINE:COLUMN>)
-    at Hook.CALL_DELEGATE [as _call] (<PROJECT_ROOT>/node_modules/<PNPM_INNER>/tapable/lib/Hook.js:<LINE:COLUMN>)
-    at <PROJECT_ROOT>/node_modules/<PNPM_INNER>/webpack/lib/Compilation.js:<LINE:COLUMN>
-    at tryRunOrWebpackError (<PROJECT_ROOT>/node_modules/<PNPM_INNER>/webpack/lib/HookWebpackError.js:<LINE:COLUMN>)
-    at __webpack_require_module__ (<PROJECT_ROOT>/node_modules/<PNPM_INNER>/webpack/lib/Compilation.js:<LINE:COLUMN>)
-    at __webpack_require__ (<PROJECT_ROOT>/node_modules/<PNPM_INNER>/webpack/lib/Compilation.js:<LINE:COLUMN>)
-    at <PROJECT_ROOT>/node_modules/<PNPM_INNER>/webpack/lib/Compilation.js:<LINE:COLUMN>
-    at symbolIterator (<PROJECT_ROOT>/node_modules/<PNPM_INNER>/neo-async/async.js:<LINE:COLUMN>)
+  <ROOT>/packages/webpack/css-extract-webpack-plugin/test/diagnostic/error/sass/index.scss <LINE:COLUMN>  root stylesheet
+    at Object.<anonymous> (<ROOT>/node_modules/<PNPM_INNER>/css-loader/dist/cjs.js!<ROOT>/node_modules/<PNPM_INNER>/sass-loader/dist/cjs.js!<ROOT>/packages/webpack/css-extract-webpack-plugin/test/diagnostic/error/sass/index.scss:<LINE:COLUMN>)
+    at <ROOT>/node_modules/<PNPM_INNER>/webpack/lib/javascript/JavascriptModulesPlugin.js:<LINE:COLUMN>
+    at Hook.eval (eval at create (<ROOT>/node_modules/<PNPM_INNER>/tapable/lib/HookCodeFactory.js:<LINE:COLUMN>), <anonymous>:<LINE:COLUMN>)
+    at Hook.CALL_DELEGATE [as _call] (<ROOT>/node_modules/<PNPM_INNER>/tapable/lib/Hook.js:<LINE:COLUMN>)
+    at <ROOT>/node_modules/<PNPM_INNER>/webpack/lib/Compilation.js:<LINE:COLUMN>
+    at tryRunOrWebpackError (<ROOT>/node_modules/<PNPM_INNER>/webpack/lib/HookWebpackError.js:<LINE:COLUMN>)
+    at __webpack_require_module__ (<ROOT>/node_modules/<PNPM_INNER>/webpack/lib/Compilation.js:<LINE:COLUMN>)
+    at __webpack_require__ (<ROOT>/node_modules/<PNPM_INNER>/webpack/lib/Compilation.js:<LINE:COLUMN>)
+    at <ROOT>/node_modules/<PNPM_INNER>/webpack/lib/Compilation.js:<LINE:COLUMN>
+    at symbolIterator (<ROOT>/node_modules/<PNPM_INNER>/neo-async/async.js:<LINE:COLUMN>)
 
-Generated code for <PROJECT_ROOT>/node_modules/<PNPM_INNER>/css-loader/dist/cjs.js!<PROJECT_ROOT>/node_modules/<PNPM_INNER>/sass-loader/dist/cjs.js!<PROJECT_ROOT>/packages/webpack/css-extract-webpack-plugin/test/diagnostic/error/sass/index.scss
-1 | throw new Error("Module build failed (from ../../../../../node_modules/<PNPM_INNER>/sass-loader/dist/cjs.js):\nExpected identifier.\n  ╷\n1 │ ..foo {}\n  │  ^\n  ╵\n  <PROJECT_ROOT>/packages/webpack/css-extract-webpack-plugin/test/diagnostic/error/sass/index.scss <LINE:COLUMN>  root stylesheet");
+Generated code for <ROOT>/node_modules/<PNPM_INNER>/css-loader/dist/cjs.js!<ROOT>/node_modules/<PNPM_INNER>/sass-loader/dist/cjs.js!<ROOT>/packages/webpack/css-extract-webpack-plugin/test/diagnostic/error/sass/index.scss
+1 | throw new Error("Module build failed (from ../../../../../node_modules/<PNPM_INNER>/sass-loader/dist/cjs.js):\nExpected identifier.\n  ╷\n1 │ ..foo {}\n  │  ^\n  ╵\n  <ROOT>/packages/webpack/css-extract-webpack-plugin/test/diagnostic/error/sass/index.scss <LINE:COLUMN>  root stylesheet");

@@ -1061,6 +1061,9 @@ importers:
       fs-extra:
         specifier: ^11.3.0
         version: 11.3.0
+      path-serializer:
+        specifier: ^0.4.0
+        version: 0.4.0
       rimraf:
         specifier: ^6.0.1
         version: 6.0.1
