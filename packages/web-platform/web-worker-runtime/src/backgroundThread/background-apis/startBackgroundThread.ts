@@ -6,7 +6,10 @@ import { Rpc } from '@lynx-js/web-worker-rpc';
 import { createBackgroundLynx } from './createBackgroundLynx.js';
 import { createNativeApp } from './createNativeApp.js';
 import { registerDisposeHandler } from './crossThreadHandlers/registerDisposeHandler.js';
-import { BackgroundThreadStartEndpoint } from '@lynx-js/web-constants';
+import {
+  BackgroundThreadStartEndpoint,
+  type CacheI18nResources,
+} from '@lynx-js/web-constants';
 import { createNapiLoader } from './createNapiLoader.js';
 import { createTimingSystem } from './createTimingSystem.js';
 
@@ -26,23 +29,30 @@ export function startBackgroundThread(
     BackgroundThreadStartEndpoint,
     async (config) => {
       timingSystem.markTimingInternal('load_core_end');
+
+      const cacheI18nResources: CacheI18nResources = {
+        curCacheKey: '',
+        i18nResources: new Map<string, unknown>(),
+      };
       const nativeApp = await createNativeApp({
         ...config,
         uiThreadRpc,
         mainThreadRpc,
         timingSystem,
+        cacheI18nResources,
       });
-      (globalThis as any)['napiLoaderOnRT' + nativeApp.id] =
-        await createNapiLoader(
-          uiThreadRpc,
-          config.napiModulesMap,
-        );
+      const napiModules = await createNapiLoader(
+        uiThreadRpc,
+        config.napiModulesMap,
+      );
+      (globalThis as any)['napiLoaderOnRT' + nativeApp.id] = napiModules;
 
       const nativeLynx = createBackgroundLynx(
         config,
         nativeApp,
         mainThreadRpc,
         uiThreadRpc,
+        cacheI18nResources,
       );
       lynxCore.then(
         ({ loadCard, destroyCard, callDestroyLifetimeFun }) => {

@@ -16,6 +16,7 @@ import type { NativeModulesMap } from './types/NativeModules.js';
 import type { ElementOperation } from '@lynx-js/offscreen-document';
 import type { BrowserConfig } from './types/PageConfig.js';
 import type { ElementAnimationOptions } from './types/Element.js';
+import type { I18nResourceTranslationOptions } from './types/I18n.js';
 
 export const postExposureEndpoint = createRpcEndpoint<
   [{ exposures: ExposureWorkerEvent[]; disExposures: ExposureWorkerEvent[] }],
@@ -226,3 +227,8 @@ export const updateGlobalPropsEndpoint = createRpcEndpoint<
   [Cloneable],
   void
 >('updateGlobalProps', false, false);
+
+export const i18nResourceTranslationEndpoint = createRpcEndpoint<
+  [I18nResourceTranslationOptions],
+  void
+>('i18nResourceTranslation', false, true);

@@ -20,6 +20,7 @@ import {
   type LynxContextEventTarget,
   type LynxJSModule,
   systemInfo,
+  type I18nResourceTranslationOptions,
 } from '@lynx-js/web-constants';
 import { globalMuteableVars } from '@lynx-js/web-constants';
 import { createMainThreadLynx, type MainThreadLynx } from './MainThreadLynx.js';
@@ -36,6 +37,7 @@ import {
 } from './utils/processStyleInfo.js';
 import type { LynxRuntimeInfo } from './elementAPI/ElementThreadElement.js';
 import { createExposureService } from './utils/createExposureService.js';
+import { initializeTemplateCreatingFunction } from './elementAPI/template/templateCreatingFunctions.js';
 
 export interface MainThreadRuntimeCallbacks {
   mainChunkReady: () => void;
@@ -49,6 +51,9 @@ export interface MainThreadRuntimeCallbacks {
   publishEvent: RpcCallType<typeof publishEventEndpoint>;
   publicComponentEvent: RpcCallType<typeof publicComponentEventEndpoint>;
   postExposure: RpcCallType<typeof postExposureEndpoint>;
+  _I18nResourceTranslation: (
+    options: I18nResourceTranslationOptions,
+  ) => unknown | undefined;
 }
 
 export interface MainThreadRuntimeConfig {
@@ -148,6 +153,7 @@ export class MainThreadRuntime {
         cssInJsInfo,
       ),
       initializeElementCreatingFunction(this),
+      initializeTemplateCreatingFunction(),
     );
     this._ReportError = this.config.callbacks._ReportError;
     this.__OnLifecycleEvent = this.config.callbacks.__OnLifecycleEvent;
@@ -155,6 +161,8 @@ export class MainThreadRuntime {
       ...systemInfo,
       ...config.browserConfig,
     };
+    this._I18nResourceTranslation =
+      this.config.callbacks._I18nResourceTranslation;
     /**
      * Start the exposure service
      */
@@ -244,6 +252,10 @@ export class MainThreadRuntime {
   _ReportError: RpcCallType<typeof reportErrorEndpoint>;
 
   __OnLifecycleEvent: (lifeCycleEvent: Cloneable) => void;
+
+  _I18nResourceTranslation: (
+    options: I18nResourceTranslationOptions,
+  ) => unknown | undefined;
 
   __LoadLepusChunk: (path: string) => boolean = (path) => {
     const lepusModule = this.config.lepusCode[`${path}`];
