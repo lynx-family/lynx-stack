@@ -894,31 +894,34 @@ describe('dynamic import', () => {
       })();
       "
     `);
+    // esbuild uses different icon on Windows
+    // See https://github.com/evanw/esbuild/blob/f4159a7b823cd5fe2217da2c30e8873d2f319667/internal/logger/logger.go#L82
+    const errorIcon = process.platform === 'win32' ? 'X' : '✘';
     expect(await formatMessages(result.errors, { kind: 'error', color: false }))
       .toMatchInlineSnapshot(`
         [
-          "✘ [ERROR] \`import()\` with no argument is not allowed
+          "${errorIcon} [ERROR] \`import()\` with no argument is not allowed
 
             :2:8:
               2 │   await import();
                 ╵         ~~~~~~~~
 
         ",
-          "✘ [ERROR] \`import(...)\` call with non-string literal module id is not allowed
+          "${errorIcon} [ERROR] \`import(...)\` call with non-string literal module id is not allowed
 
             :3:8:
               3 │   await import(0);
                 ╵         ~~~~~~~~~
 
         ",
-          "✘ [ERROR] \`import(...)\` call with non-string literal module id is not allowed
+          "${errorIcon} [ERROR] \`import(...)\` call with non-string literal module id is not allowed
 
             :4:8:
               4 │   await import(0, 0);
                 ╵         ~~~~~~~~~~~~
 
         ",
-          "✘ [ERROR] \`import("...", ...)\` with invalid options is not allowed
+          "${errorIcon} [ERROR] \`import("...", ...)\` with invalid options is not allowed
 
             :5:8:
               5 │   await import("./index.js", { with: { typo: "component" } });
