@@ -1,0 +1,28 @@
+diff --git a/dist/cjs/index.js b/dist/cjs/index.js
+index 69e629f439307cb11bde2acb0c1e598adc9da474..64e70d1fa329fe57944c8b47d5524b4c993a9ead 100644
+--- a/dist/cjs/index.js
++++ b/dist/cjs/index.js
+@@ -869,8 +869,8 @@ function __webpack_require__(moduleId) {
+     const normalizePathToPosix = (p)=>upath_default().normalizeSafe(external_node_path_default().normalize(p || '')).replace(/^([a-zA-Z]+):/, (_, m)=>`/${m.toLowerCase()}`);
+     // find the path in code and replace it with normalizePathToPosix
+     const normalizeCodeToPosix = (code)=>code.replace(// ignore http, https, file
+-        /(?<![a-zA-Z])([a-zA-Z]:[\\/])([-\u4e00-\u9fa5\w\s.()~!@#$%^&()\[\]{}+=]+[\\/])*/g, (match, _diskName)=>normalizePathToPosix(match));
+-    const normalizeCLR = (str)=>str.replace(/\u001b\[1m\u001b\[([0-9;]*)m/g, '<CLR=$1,BOLD>').replace(/\u001b\[1m/g, '<CLR=BOLD>').replace(/\u001b\[39m\u001b\[22m/g, '</CLR>').replace(/\u001b\[([0-9;]*)m/g, '<CLR=$1>') // CHANGE: The time unit display in Rspack is second
++      /(?<![a-zA-Z])([a-zA-Z]:[\\/]+)([-\u4e00-\u9fa5\w\s.()~!@#$%^&()\[\]{}+=]+[\\/]+)*/g, (match, _diskName)=>normalizePathToPosix(match.replace(/[\\]{2,}/g, '\\')));
++  const normalizeCLR = (str)=>str.replace(/\u001b\[1m\u001b\[([0-9;]*)m/g, '<CLR=$1,BOLD>').replace(/\u001b\[1m/g, '<CLR=BOLD>').replace(/\u001b\[39m\u001b\[22m/g, '</CLR>').replace(/\u001b\[([0-9;]*)m/g, '<CLR=$1>') // CHANGE: The time unit display in Rspack is second
+         // CHANGE2: avoid a bad case "./react/assets.svg" -> "./react/assetsXsvg"
+         // modified based on https://github.com/webpack/webpack/blob/001cab14692eb9a833c6b56709edbab547e291a1/test/StatsTestCases.basictest.js#L199
+         .replace(/[0-9]+(\.[0-9]+)*(<\/CLR>)?(\s?s)/g, 'X$2$3');
+diff --git a/dist/esm/index.mjs b/dist/esm/index.mjs
+index 5690ea06648e1cbd7e8c30f7066fd4920cef8218..fffb02bbaa6fdd9536c5defad398bf8d5060e0a4 100644
+--- a/dist/esm/index.mjs
++++ b/dist/esm/index.mjs
+@@ -844,7 +844,7 @@ var upath_default = /*#__PURE__*/ __webpack_require__.n(upath);
+ const normalizePathToPosix = (p)=>upath_default().normalizeSafe(__WEBPACK_EXTERNAL_MODULE_node_path__["default"].normalize(p || '')).replace(/^([a-zA-Z]+):/, (_, m)=>`/${m.toLowerCase()}`);
+ // find the path in code and replace it with normalizePathToPosix
+ const normalizeCodeToPosix = (code)=>code.replace(// ignore http, https, file
+-    /(?<![a-zA-Z])([a-zA-Z]:[\\/])([-\u4e00-\u9fa5\w\s.()~!@#$%^&()\[\]{}+=]+[\\/])*/g, (match, _diskName)=>normalizePathToPosix(match));
++  /(?<![a-zA-Z])([a-zA-Z]:[\\/]+)([-\u4e00-\u9fa5\w\s.()~!@#$%^&()\[\]{}+=]+[\\/]+)*/g, (match, _diskName)=>normalizePathToPosix(match.replace(/[\\]{2,}/g, '\\')));
+ const normalizeCLR = (str)=>str.replace(/\u001b\[1m\u001b\[([0-9;]*)m/g, '<CLR=$1,BOLD>').replace(/\u001b\[1m/g, '<CLR=BOLD>').replace(/\u001b\[39m\u001b\[22m/g, '</CLR>').replace(/\u001b\[([0-9;]*)m/g, '<CLR=$1>') // CHANGE: The time unit display in Rspack is second
+     // CHANGE2: avoid a bad case "./react/assets.svg" -> "./react/assetsXsvg"
+     // modified based on https://github.com/webpack/webpack/blob/001cab14692eb9a833c6b56709edbab547e291a1/test/StatsTestCases.basictest.js#L199

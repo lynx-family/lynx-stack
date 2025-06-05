@@ -32,6 +32,9 @@ patchedDependencies:
   '@rollup/plugin-typescript':
     hash: 926ba262ec682d27369f1a8648a0dfb657fb5f1b28539ca3628d292276c91c3d
     path: patches/@rollup__plugin-typescript.patch
+  path-serializer:
+    hash: 46aafd3e7dc478c63e376e54c0350b1126a463a87cdfd7ee67f2900c8813c071
+    path: patches/path-serializer.patch
 
 importers:
 
@@ -614,7 +617,7 @@ importers:
     devDependencies:
       path-serializer:
         specifier: ^0.4.0
-        version: 0.4.0
+        version: 0.4.0(patch_hash=46aafd3e7dc478c63e376e54c0350b1126a463a87cdfd7ee67f2900c8813c071)
       vitest:
         specifier: ^3.2.1
         version: 3.2.1(@types/debug@4.1.12)(@types/node@22.15.29)(@vitest/ui@3.2.1)(jsdom@26.1.0)(sass-embedded@1.89.0)(terser@5.31.6)
@@ -9775,7 +9778,7 @@ snapshots:
       jest-snapshot: 29.7.0
       jsdom: 26.1.0
       memfs: 4.17.1
-      path-serializer: 0.4.0
+      path-serializer: 0.4.0(patch_hash=46aafd3e7dc478c63e376e54c0350b1126a463a87cdfd7ee67f2900c8813c071)
       pretty-format: 29.7.0
       rimraf: 5.0.10
       source-map: 0.7.4
@@ -14386,7 +14389,7 @@ snapshots:
       lru-cache: 11.0.2
       minipass: 7.1.2
 
-  path-serializer@0.4.0: {}
+  path-serializer@0.4.0(patch_hash=46aafd3e7dc478c63e376e54c0350b1126a463a87cdfd7ee67f2900c8813c071): {}
 
   path-to-regexp@0.1.12: {}
 
