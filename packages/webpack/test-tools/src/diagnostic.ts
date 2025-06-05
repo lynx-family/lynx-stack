@@ -89,6 +89,8 @@ function createCase(name: string, src: string, dist: string, cwd: string) {
           await runner(
             caseName,
             new RspeedyDiagnosticProcessor<ECompilerType>({
+              snapshotErrors: './raw-error.err',
+              snapshotWarning: './raw-warning.err',
               defaultOptions: () => caseOptions,
               overrideOptions: (_, options) => {
                 options.output ??= {};
