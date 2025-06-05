@@ -8,6 +8,18 @@
     "helpers:pinGitHubActionDigests",
   ],
 
+  // Exclude `examples` from "config:recommended"
+  "ignorePaths": [
+    "**/node_modules/**",
+    "**/bower_components/**",
+    "**/vendor/**",
+    // "**/examples/**",
+    "**/__tests__/**",
+    "**/test/**",
+    "**/tests/**",
+    "**/__fixtures__/**",
+  ],
+
   "enabledManagers": [
     "npm",
     "nvm",
@@ -63,6 +75,7 @@
         "rspress",
         "/@rspress/*/",
         "@rstack-dev/doc-ui",
+        "/@shikijs/*/",
       ],
       "rangeStrategy": "pin",
     },

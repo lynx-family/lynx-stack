@@ -35,10 +35,14 @@ export function generateHref(
   let projectPath = path.relative(projectRoot, fullPath);
 
   if (fullPath.startsWith('@')) {
-    return fullPath;
+    return normalizeSlashes(fullPath);
   } else if (!projectPath.startsWith('.')) {
     projectPath = path.join(path.sep, projectPath);
   }
 
-  return projectPath;
+  return normalizeSlashes(projectPath);
+}
+
+function normalizeSlashes(file: string) {
+  return file.replaceAll(path.win32.sep, '/');
 }
