@@ -82,9 +82,13 @@ export class XTextareaEvents
         ...commonComponentEventSetting,
         detail: {
           value,
+          /** @deprecated */
           textLength: value.length,
+          /** @deprecated */
           cursor: input.selectionStart,
           isComposing,
+          selectionStart: input.selectionStart,
+          selectionEnd: input.selectionEnd,
         },
       }),
     );
@@ -100,8 +104,13 @@ export class XTextareaEvents
           ...commonComponentEventSetting,
           detail: {
             value,
+            /** @deprecated */
             textLength: value.length,
+            /** @deprecated */
             cursor: input.selectionStart,
+            isComposing: false,
+            selectionStart: input.selectionStart,
+            selectionEnd: input.selectionEnd,
           },
         }),
       );

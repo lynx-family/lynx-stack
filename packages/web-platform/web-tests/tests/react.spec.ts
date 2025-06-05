@@ -2195,7 +2195,7 @@ test.describe('reactlynx3 tests', () => {
         await page.locator('input').fill('foobar');
         await wait(200);
         const result = await page.locator('.result').first().innerText();
-        expect(result).toBe('foobar');
+        expect(result).toBe('foobar-6-6');
       });
       // input/bindinput test-case end
       test(
@@ -3477,6 +3477,8 @@ test.describe('reactlynx3 tests', () => {
               event.type === 'input'
               && dataset.testid === 'textarea'
               && event.detail.value === 'value'
+              && event.detail.selectionStart === 5
+              && event.detail.selectionEnd === 5
             ) {
               bindinput = true;
             }

@@ -8,7 +8,7 @@ function App() {
   const [result, setResult] = useState();
 
   const onInput = ({ detail }) => {
-    const { value, cursor, textLength } = detail;
+    const { value, cursor, textLength, selectionStart, selectionEnd } = detail;
 
     if (value.length !== textLength) {
       throw new Error(
@@ -16,7 +16,7 @@ function App() {
       );
     }
 
-    setResult(value);
+    setResult(`${value}-${selectionStart}-${selectionStart}`);
   };
 
   return (
