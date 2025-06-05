@@ -23,7 +23,7 @@
     "@rspack/test-tools": "catalog:rspack",
     "@types/fs-extra": "11.0.4",
     "fs-extra": "^11.3.0",
-    "path-serializer": "^0.4.0",
+    "path-serializer": "^0.4.1",
     "rimraf": "^6.0.1",
     "source-map": "^0.7.4",
     "tiny-invariant": "^1.3.3",
