@@ -613,8 +613,8 @@ importers:
   packages/tools/vitest-setup:
     devDependencies:
       path-serializer:
-        specifier: ^0.4.0
-        version: 0.4.0
+        specifier: ^0.4.1
+        version: 0.4.1
       vitest:
         specifier: ^3.2.1
         version: 3.2.1(@types/debug@4.1.12)(@types/node@22.15.29)(@vitest/ui@3.2.1)(jsdom@26.1.0)(sass-embedded@1.89.0)(terser@5.31.6)
@@ -6332,6 +6332,9 @@ packages:
 
   path-serializer@0.4.0:
     resolution: {integrity: sha512-dg6dzlcs9/j7JXupC2ShAlyiVLjVt37+eSmvD9nfwaaB1iejHrkxfv4SLAKcvTDEJNYWG6UHWAqc5ELs3Gcffw==}
+
+  path-serializer@0.4.1:
+    resolution: {integrity: sha512-nZh0IWYm49uMU6upk268ryi8J7aA3hvlQaFS2jSTUWLkxxyZObz4dE0BrTFZDxU3qgPU/8xdpQ4TvWnYCQNHaQ==}
 
   path-to-regexp@0.1.12:
     resolution: {integrity: sha512-RA1GjUVMnvYFxuqovrEqZoxxW5NUZqbwKtYz/Tt7nXerk0LbLblQmrsgdeOxV5SFHf0UDggjS/bSeOZwt1pmEQ==}
@@ -14366,6 +14369,8 @@ snapshots:
       minipass: 7.1.2
 
   path-serializer@0.4.0: {}
+
+  path-serializer@0.4.1: {}
 
   path-to-regexp@0.1.12: {}
 
