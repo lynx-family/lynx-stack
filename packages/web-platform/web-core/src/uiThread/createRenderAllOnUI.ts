@@ -2,8 +2,8 @@ import type {
   StartMainThreadContextConfig,
   RpcCallType,
   updateDataEndpoint,
+  MainThreadGlobalThis,
 } from '@lynx-js/web-constants';
-import type { MainThreadRuntime } from '@lynx-js/web-mainthread-apis';
 import { Rpc } from '@lynx-js/web-worker-rpc';
 
 const {
@@ -35,15 +35,15 @@ export function createRenderAllOnUI(
       callbacks.onError?.();
     },
   );
-  let runtime!: MainThreadRuntime;
+  let mtsGlobalThis!: MainThreadGlobalThis;
   const start = async (configs: StartMainThreadContextConfig) => {
     const mainThreadRuntime = startMainThread(configs);
-    runtime = await mainThreadRuntime;
+    mtsGlobalThis = await mainThreadRuntime;
   };
   const updateDataMainThread: RpcCallType<typeof updateDataEndpoint> = async (
     ...args
   ) => {
-    runtime.updatePage?.(...args);
+    mtsGlobalThis.updatePage?.(...args);
   };
   return {
     start,

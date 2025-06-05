@@ -8,7 +8,6 @@ import {
   publishEventEndpoint,
   publicComponentEventEndpoint,
   postExposureEndpoint,
-  switchExposureServiceEndpoint,
   postTimingFlagsEndpoint,
   dispatchCoreContextOnBackgroundEndpoint,
   dispatchJSContextOnMainThreadEndpoint,
@@ -17,13 +16,13 @@ import {
   LynxCrossThreadContext,
   type RpcCallType,
   type reportErrorEndpoint,
+  type MainThreadGlobalThis,
+  switchExposureServiceEndpoint,
 } from '@lynx-js/web-constants';
 import { registerCallLepusMethodHandler } from './crossThreadHandlers/registerCallLepusMethodHandler.js';
 import { registerGetCustomSectionHandler } from './crossThreadHandlers/registerGetCustomSectionHandler.js';
-import {
-  MainThreadRuntime,
-  switchExposureService,
-} from './MainThreadRuntime.js';
+import { createMainThreadGlobalThis } from './createMainThreadGlobalThis.js';
+import { createExposureService } from './utils/createExposureService.js';
 
 const moduleCache: Record<string, LynxJSModule> = {};
 export function prepareMainThreadAPIs(
@@ -50,7 +49,7 @@ export function prepareMainThreadAPIs(
   markTimingInternal('lepus_execute_start');
   async function startMainThread(
     config: StartMainThreadContextConfig,
-  ): Promise<MainThreadRuntime> {
+  ): Promise<MainThreadGlobalThis> {
     let isFp = true;
     const {
       globalProps,
@@ -85,7 +84,7 @@ export function prepareMainThreadAPIs(
       receiveEventEndpoint: dispatchJSContextOnMainThreadEndpoint,
       sendEventEndpoint: dispatchCoreContextOnBackgroundEndpoint,
     });
-    const runtime = new MainThreadRuntime({
+    const mtsGlobalThis = createMainThreadGlobalThis({
       jsContext,
       tagMap,
       browserConfig,
@@ -94,29 +93,33 @@ export function prepareMainThreadAPIs(
       pageConfig,
       styleInfo,
       lepusCode: lepusCodeLoaded,
-      createElement,
       rootDom,
       callbacks: {
         mainChunkReady: () => {
           markTimingInternal('data_processor_start');
           let initData = config.initData;
           if (
-            pageConfig.enableJSDataProcessor !== true && runtime.processData
+            pageConfig.enableJSDataProcessor !== true
+            && mtsGlobalThis.processData
           ) {
-            initData = runtime.processData(config.initData);
+            initData = mtsGlobalThis.processData(config.initData);
           }
           markTimingInternal('data_processor_end');
           registerCallLepusMethodHandler(
             backgroundThreadRpc,
-            runtime,
+            mtsGlobalThis,
           );
           registerGetCustomSectionHandler(
             backgroundThreadRpc,
             customSections,
           );
+          const { switchExposureService } = createExposureService(
+            rootDom,
+            postExposure,
+          );
           backgroundThreadRpc.registerHandler(
             switchExposureServiceEndpoint,
-            runtime[switchExposureService],
+            switchExposureService,
           );
           backgroundStart({
             initData,
@@ -132,8 +135,8 @@ export function prepareMainThreadAPIs(
             napiModulesMap,
             browserConfig,
           });
-          runtime.renderPage!(initData);
-          runtime.__FlushElementTree(undefined, {});
+          mtsGlobalThis.renderPage!(initData);
+          mtsGlobalThis.__FlushElementTree(undefined, {});
         },
         flushElementTree: async (options, timingFlags) => {
           const pipelineId = options?.pipelineOptions?.pipelineID;
@@ -170,13 +173,13 @@ export function prepareMainThreadAPIs(
         markTiming: (a, b) => markTimingInternal(b, a),
         publishEvent,
         publicComponentEvent,
-        postExposure,
+        createElement,
       },
     });
     markTimingInternal('decode_end');
-    entry!(runtime);
+    entry!(mtsGlobalThis);
     jsContext.__start(); // start the jsContext after the runtime is created
-    return runtime;
+    return mtsGlobalThis;
   }
   return { startMainThread };
 }

@@ -55,17 +55,9 @@ export class OffscreenElement extends EventTarget {
     return this[_style];
   }
 
-  get id(): string {
-    return this[_attributes].get('id') ?? '';
-  }
-
   set id(value: string) {
     this[_attributes].set('id', value);
     this.setAttribute('id', value);
-  }
-
-  get className(): string {
-    return this[_attributes].get('class') ?? '';
   }
 
   get children(): OffscreenElement[] {

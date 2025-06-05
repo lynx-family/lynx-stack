@@ -4,12 +4,15 @@
 import {
   lynxUniqueIdAttribute,
   type ExposureWorkerEvent,
+  type postExposureEndpoint,
+  type RpcCallType,
 } from '@lynx-js/web-constants';
 import { createCrossThreadEvent } from './createCrossThreadEvent.js';
-import type { MainThreadRuntime } from '../MainThreadRuntime.js';
 
-export function createExposureService(runtime: MainThreadRuntime) {
-  const postExposure = runtime.config.callbacks.postExposure;
+export function createExposureService(
+  rootDom: Pick<EventTarget, 'addEventListener'>,
+  postExposure: RpcCallType<typeof postExposureEndpoint>,
+) {
   let working = true;
   let exposureCache: ExposureWorkerEvent[] = [];
   let disexposureCache: ExposureWorkerEvent[] = [];
@@ -43,10 +46,10 @@ export function createExposureService(runtime: MainThreadRuntime) {
       });
     }
   }, 1000 / 20);
-  runtime._rootDom.addEventListener('exposure', exposureEventHandler, {
+  rootDom.addEventListener('exposure', exposureEventHandler, {
     passive: true,
   });
-  runtime._rootDom.addEventListener('disexposure', exposureEventHandler, {
+  rootDom.addEventListener('disexposure', exposureEventHandler, {
     passive: true,
   });
 

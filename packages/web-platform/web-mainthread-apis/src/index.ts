@@ -3,4 +3,4 @@
 // LICENSE file in the root directory of this source tree.
 
 export { prepareMainThreadAPIs } from './prepareMainThreadAPIs.js';
-export * from './MainThreadRuntime.js';
+export * from './createMainThreadGlobalThis.js';
