@@ -20,7 +20,7 @@
     "@types/react": "^18.3.22",
     "jsdom": "^26.1.0",
     "typescript": "~5.8.3",
-    "vitest": "^3.1.4"
+    "vitest": "^3.2.1"
   },
   "engines": {
     "node": ">=18"
