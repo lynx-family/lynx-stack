@@ -11,9 +11,8 @@ import type { Worklet } from './types.js';
  * @param oldWorklet - The old worklet context
  * @param isFirstScreen - Whether it is before the hydration is finished
  * @param element - The element
- * @internal
  */
-function onWorkletCtxUpdate(
+export function onWorkletCtxUpdate(
   worklet: Worklet,
   oldWorklet: Worklet | null | undefined,
   isFirstScreen: boolean,
@@ -24,17 +23,17 @@ function onWorkletCtxUpdate(
     globalThis.lynxWorkletImpl?._hydrateCtx(worklet, oldWorklet);
   }
   // For old version dynamic component compatibility.
-  globalThis.lynxWorkletImpl?._eventDelayImpl.runDelayedWorklet(worklet, element);
+  if (isFirstScreen) {
+    globalThis.lynxWorkletImpl?._eventDelayImpl.runDelayedWorklet(worklet, element);
+  }
 }
 
 /**
  * This must be called when the hydration is finished.
- *
- * @internal
  */
-function onHydrationFinished(): void {
+export function onHydrationFinished(): void {
   globalThis.lynxWorkletImpl?._runOnBackgroundDelayImpl.runDelayedBackgroundFunctions();
   globalThis.lynxWorkletImpl?._refImpl.clearFirstScreenWorkletRefMap();
+  // For old version dynamic component compatibility.
+  globalThis.lynxWorkletImpl?._eventDelayImpl.clearDelayedWorklets();
 }
-
-export { onWorkletCtxUpdate, onHydrationFinished };

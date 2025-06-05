@@ -30,6 +30,11 @@ beforeAll(() => {
     _runOnBackgroundDelayImpl: {
       runDelayedBackgroundFunctions: vi.fn(),
     },
+    _eventDelayImpl: {
+      runDelayedWorklet: vi.fn(),
+      clearDelayedWorklets: vi.fn(),
+    },
+    _hydrateCtx: vi.fn(),
   };
   globalThis.runWorklet = vi.fn();
 });
