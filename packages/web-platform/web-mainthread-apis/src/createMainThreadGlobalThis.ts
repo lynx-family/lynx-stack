@@ -55,6 +55,7 @@ import {
   type SetClassesPAPI,
   type GetTemplatePartsPAPI,
   type GetPageElementPAPI,
+  type MinimalRawEventObject,
 } from '@lynx-js/web-constants';
 import { globalMuteableVars } from '@lynx-js/web-constants';
 import { createMainThreadLynx } from './createMainThreadLynx.js';
@@ -211,7 +212,7 @@ export function createMainThreadGlobalThis(
         : runtimeInfo.eventHandlerMap[lynxEventName]?.bind
           ?.handler;
       const crossThreadEvent = createCrossThreadEvent(
-        event,
+        event as MinimalRawEventObject,
         lynxEventName,
       );
       if (typeof hname === 'string') {

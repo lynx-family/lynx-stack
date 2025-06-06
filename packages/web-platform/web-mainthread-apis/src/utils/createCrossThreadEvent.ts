@@ -7,6 +7,7 @@ import {
   type Cloneable,
   type CloneableObject,
   type LynxCrossThreadEvent,
+  type MinimalRawEventObject,
 } from '@lynx-js/web-constants';
 
 function toCloneableObject(obj: any): CloneableObject {
@@ -24,7 +25,7 @@ function toCloneableObject(obj: any): CloneableObject {
 }
 
 export function createCrossThreadEvent(
-  domEvent: Event,
+  domEvent: MinimalRawEventObject,
   eventName: string,
 ): LynxCrossThreadEvent {
   const targetElement = domEvent.target as HTMLElement;
@@ -39,17 +40,17 @@ export function createCrossThreadEvent(
   if (type.match(/^transition/)) {
     Object.assign(params, {
       'animation_type': 'keyframe-animation',
-      'animation_name': (domEvent as TransitionEvent).propertyName,
+      'animation_name': domEvent.propertyName,
       new_animator: true, // we support the new_animator only
     });
   } else if (type.match(/animation/)) {
     Object.assign(params, {
       'animation_type': 'keyframe-animation',
-      'animation_name': (domEvent as AnimationEvent).animationName,
+      'animation_name': domEvent.animationName,
       new_animator: true, // we support the new_animator only
     });
   } else if (type.startsWith('touch')) {
-    const touchEvent = domEvent as TouchEvent;
+    const touchEvent = domEvent;
     const touch = [...touchEvent.touches as unknown as Touch[]];
     const targetTouches = [...touchEvent.targetTouches as unknown as Touch[]];
     const changedTouches = [...touchEvent.changedTouches as unknown as Touch[]];
@@ -82,13 +83,13 @@ export function createCrossThreadEvent(
     type: eventName,
     timestamp: domEvent.timeStamp,
     target: {
-      id: targetElement.id,
+      id: targetElement.getAttribute('id'),
       dataset: targetDataset,
       uniqueId: Number(targetElement.getAttribute(lynxUniqueIdAttribute)),
     },
     currentTarget: currentTargetElement
       ? {
-        id: currentTargetElement.id,
+        id: currentTargetElement.getAttribute('id'),
         dataset: currentTargetDataset,
         uniqueId: Number(
           currentTargetElement.getAttribute(lynxUniqueIdAttribute),
