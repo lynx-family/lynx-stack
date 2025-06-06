@@ -18,6 +18,7 @@ import {
   type reportErrorEndpoint,
   type MainThreadGlobalThis,
   switchExposureServiceEndpoint,
+  type SSRHydrateInfo,
 } from '@lynx-js/web-constants';
 import { registerCallLepusMethodHandler } from './crossThreadHandlers/registerCallLepusMethodHandler.js';
 import { registerGetCustomSectionHandler } from './crossThreadHandlers/registerGetCustomSectionHandler.js';
@@ -49,6 +50,7 @@ export function prepareMainThreadAPIs(
   markTimingInternal('lepus_execute_start');
   async function startMainThread(
     config: StartMainThreadContextConfig,
+    ssrHydrateInfo?: SSRHydrateInfo,
   ): Promise<MainThreadGlobalThis> {
     let isFp = true;
     const {
@@ -94,6 +96,7 @@ export function prepareMainThreadAPIs(
       styleInfo,
       lepusCode: lepusCodeLoaded,
       rootDom,
+      ssrHydrateInfo,
       callbacks: {
         mainChunkReady: () => {
           markTimingInternal('data_processor_start');
@@ -135,8 +138,12 @@ export function prepareMainThreadAPIs(
             napiModulesMap,
             browserConfig,
           });
-          mtsGlobalThis.renderPage!(initData);
-          mtsGlobalThis.__FlushElementTree(undefined, {});
+          if (!ssrHydrateInfo) {
+            mtsGlobalThis.renderPage!(initData);
+            mtsGlobalThis.__FlushElementTree(undefined, {});
+          } else {
+            mtsGlobalThis.ssrHydrate?.(ssrHydrateInfo.ssrHydrateData);
+          }
         },
         flushElementTree: async (options, timingFlags) => {
           const pipelineId = options?.pipelineOptions?.pipelineID;

@@ -117,6 +117,23 @@ jobs:
         pnpm --filter @lynx-js/web-tests run build:cases:ssr
         pnpm --filter @lynx-js/web-tests run test --reporter='github,dot,junit,html'
         pnpm --filter @lynx-js/web-tests run coverage:ci
+  playwright-linux-SSR-all-on-ui:
+    needs: build
+    uses: ./.github/workflows/workflow-test.yml
+
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    with:
+      runs-on: lynx-ubuntu-24.04-xlarge
+      is-web: true
+      codecov-flags: "e2e,all-on-ui,ssr"
+      run: |
+        export NODE_OPTIONS="--max-old-space-size=32768"
+        export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
+        export ALL_ON_UI=true
+        export ENABLE_SSR=true
+        pnpm --filter @lynx-js/web-tests run test --reporter='github,dot,junit,html'
+        pnpm --filter @lynx-js/web-tests run coverage:ci
   test-api:
     needs: build
     uses: ./.github/workflows/workflow-test.yml

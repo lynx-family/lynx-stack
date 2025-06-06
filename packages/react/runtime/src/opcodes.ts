@@ -22,7 +22,7 @@ export function ssrHydrateByOpcodes(
   into: SnapshotInstance,
   refMap?: Record<string, FiberElement>,
 ): void {
-  let top: SnapshotInstance & { __pendingElements?: SSRFiberElement[] } = into;
+  let top: SnapshotInstance & { __pendingElements?: FiberElement[] } = into;
   const stack: SnapshotInstance[] = [into];
   for (let i = 0; i < opcodes.length;) {
     const opcode = opcodes[i];
@@ -31,7 +31,7 @@ export function ssrHydrateByOpcodes(
         const p = top;
         const [type, __id, elements] = opcodes[i + 1] as SSRSnapshotInstance;
         top = new SnapshotInstance(type, __id);
-        top.__pendingElements = elements;
+        top.__pendingElements = elements!.map(({ ssrID }) => refMap![ssrID]!);
         p.insertBefore(top);
         stack.push(top);
 
@@ -42,8 +42,8 @@ export function ssrHydrateByOpcodes(
         // @ts-ignore
         top[CHILDREN] = undefined;
 
-        top.__elements = top.__pendingElements!.map(({ ssrID }) => refMap![ssrID]!);
-        top.__element_root = top.__elements[0];
+        top.__elements = top.__pendingElements!;
+        top.__element_root = top.__pendingElements![0];
         delete top.__pendingElements;
 
         if (top.__snapshot_def.isListHolder) {
@@ -75,9 +75,23 @@ export function ssrHydrateByOpcodes(
         break;
       }
       case Opcode.Attr: {
+        // On web-platform, we need to set the `__elements` and `__element_root` properties
+        // before `setAttribute`, because web-platform requires some PAPI to be called again like `__AddEvent`.
+        // TODO(hzy): Check if it is `__AddEvent`
+        const isWeb = SystemInfo.platform === 'web';
+        if (isWeb) {
+          top.__elements = top.__pendingElements!;
+          top.__element_root = top.__pendingElements![0];
+        }
+
         const key = opcodes[i + 1];
         const value = opcodes[i + 2];
         top.setAttribute(key, value);
+
+        if (isWeb) {
+          delete top.__elements;
+          delete top.__element_root;
+        }
 
         i += 3;
         break;

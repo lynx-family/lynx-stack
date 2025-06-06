@@ -244,5 +244,21 @@ test.describe('SSR no Javascript tests', () => {
     );
   });
   test.describe('elements', () => {
+    test.describe('svg', () => {
+      test('basic-element-svg-hex-color', async ({ page }, { title }) => {
+        await goto(page, title);
+        await diffScreenShot(page, 'svg', 'hex-color');
+      });
+
+      test('basic-element-svg-utf8', async ({ page }, { title }) => {
+        await goto(page, title);
+        await diffScreenShot(page, 'svg', 'utf8');
+      });
+
+      test('basic-element-svg-with-css', async ({ page }, { title }) => {
+        await goto(page, title);
+        await diffScreenShot(page, 'svg', 'with-css');
+      });
+    });
   });
 });
