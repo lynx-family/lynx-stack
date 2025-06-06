@@ -44,8 +44,9 @@ jobs:
         with:
           tool: cargo-llvm-cov,cargo-nextest
       - name: Test
+        env:
+          CARGO_LLVM_COV_FLAGS_NO_RUNNER: --no-sparse
         run: |
-          export CARGO_LLVM_COV_FLAGS_NO_RUNNER='--no-sparse'
           cargo llvm-cov nextest --profile ci --config-file .cargo/nextest.toml --lcov --output-path lcov.info  --release
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@18283e04ce6e62d37312384ff67231eb8fd56d24 # v5
