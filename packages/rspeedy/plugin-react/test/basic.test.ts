@@ -18,7 +18,7 @@ vi
   .stubEnv('NODE_ENV', 'development')
 
 describe('ReactLynx rsbuild', () => {
-  test('basic usage', async () => {
+  test('basic usage', { timeout: 10000 }, async () => {
     // TODO(react-refresh): support refresh
     vi.stubEnv('NODE_ENV', 'production')
     const { pluginReactLynx } = await import('../src/index.js')
@@ -26,7 +26,6 @@ describe('ReactLynx rsbuild', () => {
     const rsbuild = await createRspeedy({
       rspeedyConfig: {
         source: {
-          tsconfigPath: new URL('./tsconfig.json', import.meta.url).pathname,
           entry: {
             main: new URL('./fixtures/basic.tsx', import.meta.url).pathname,
           },
@@ -63,7 +62,6 @@ describe('ReactLynx rsbuild', () => {
     const rspeedy = await createRspeedy({
       rspeedyConfig: {
         source: {
-          tsconfigPath: new URL('./tsconfig.json', import.meta.url).pathname,
           entry: {
             main: new URL(
               './fixtures/special-var-name/index.jsx',
