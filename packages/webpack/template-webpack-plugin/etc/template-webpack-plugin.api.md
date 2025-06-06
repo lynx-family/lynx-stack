@@ -78,8 +78,10 @@ export class LynxEncodePlugin {
 
 // @public
 export interface LynxEncodePluginOptions {
+    // Warning: (ae-forgotten-export) The symbol "InlineChunkConfig" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
-    inlineScripts?: boolean | undefined;
+    inlineScripts?: InlineChunkConfig | undefined;
 }
 
 // @public
@@ -141,6 +143,7 @@ export interface TemplateHooks {
     }>;
     // @alpha
     beforeEncode: AsyncSeriesWaterfallHook<{
+        originManifest: OriginManifest;
         encodeData: EncodeRawData;
         filenameTemplate: string;
         entryNames: string[];
@@ -174,7 +177,8 @@ export class WebEncodePlugin {
 
 // Warnings were encountered during analysis:
 //
-// lib/LynxTemplatePlugin.d.ts:58:9 - (ae-forgotten-export) The symbol "EncodeRawData" needs to be exported by the entry point index.d.ts
-// lib/LynxTemplatePlugin.d.ts:68:9 - (ae-forgotten-export) The symbol "EncodeOptions" needs to be exported by the entry point index.d.ts
+// lib/LynxTemplatePlugin.d.ts:62:9 - (ae-forgotten-export) The symbol "OriginManifest" needs to be exported by the entry point index.d.ts
+// lib/LynxTemplatePlugin.d.ts:63:9 - (ae-forgotten-export) The symbol "EncodeRawData" needs to be exported by the entry point index.d.ts
+// lib/LynxTemplatePlugin.d.ts:73:9 - (ae-forgotten-export) The symbol "EncodeOptions" needs to be exported by the entry point index.d.ts
 
 ```
