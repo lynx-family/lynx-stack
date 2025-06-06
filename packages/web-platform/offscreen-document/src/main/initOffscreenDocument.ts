@@ -174,6 +174,16 @@ export function initOffscreenDocument(options: {
           case OperationType.SetInnerHTML:
             target.innerHTML = op.text;
             break;
+          case OperationType.sheetInsertRule:
+            (target as HTMLStyleElement).sheet!.insertRule(
+              op.rule,
+              op.index,
+            );
+            break;
+          case OperationType.sheetRuleUpdateCssText:
+            ((target as HTMLStyleElement).sheet!
+              .cssRules[op.index]! as CSSStyleRule).style.cssText = op.cssText;
+            break;
         }
       }
     }
