@@ -2,4 +2,4 @@
 "@lynx-js/offscreen-document": patch
 ---
 
-feat: add sheet.inserRule support
+feat: add sheet.insertRule support
