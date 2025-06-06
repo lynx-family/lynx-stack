@@ -5,6 +5,7 @@
 */
 import rspack from '@rspack/core'
 import { CssExtractRspackPlugin } from '../../../../src'
+import { mockLynxTemplatePlugin } from '../../../../test/plugins.js'
 import path from 'node:path'
 
 /** @type {import('webpack').Configuration} */
@@ -33,6 +34,12 @@ export default {
     css: false,
   },
   plugins: [
+    mockLynxTemplatePlugin({
+      "compilerOptions": {
+        enableCSSSelector: true,
+        enableRemoveCSSScope: true,
+      }
+    }),
     new rspack.DefinePlugin({
       HMR_RUNTIME_LEPUS: JSON.stringify(
         path.resolve(
@@ -41,9 +48,6 @@ export default {
         ),
       ),
     }),
-    new CssExtractRspackPlugin({
-      enableCSSSelector: true,
-      enableRemoveCSSScope: true,
-    }),
+    new CssExtractRspackPlugin(),
   ],
 }

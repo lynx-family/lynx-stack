@@ -5,6 +5,7 @@
 */
 import rspack from '@rspack/core'
 import { CssExtractRspackPlugin } from '../../../../src'
+import { plugins } from '../../../../test/plugins.js'
 import path from 'node:path'
 
 /** @type {import('webpack').Configuration} */
@@ -33,6 +34,7 @@ export default {
     css: false,
   },
   plugins: [
+    ...plugins,
     new rspack.DefinePlugin({
       HMR_RUNTIME_LEPUS: JSON.stringify(
         path.resolve(

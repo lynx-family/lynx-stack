@@ -25,10 +25,44 @@ describe('CSS', () => {
     );
 
     await LynxEncodePlugin.encodeCSS([`.red { color: red; }`], {
-      enableCSSSelector: false,
-      targetSdkVersion: '3.2',
-      enableRemoveCSSScope: true,
-      enableCSSInvalidation: true,
+      'compilerOptions': {
+        'enableFiberArch': true,
+        'useLepusNG': true,
+        'enableReuseContext': true,
+        'bundleModuleMode': 'ReturnByFunction',
+        'debugInfoOutside': true,
+        'defaultDisplayLinear': true,
+        'enableCSSInvalidation': true,
+        'enableCSSSelector': true,
+        'enableLepusDebug': true,
+        'enableParallelElement': true,
+        'enableRemoveCSSScope': true,
+        'targetSdkVersion': '3.2',
+        'defaultOverflowVisible': true,
+      },
+      'sourceContent': {
+        'dsl': 'react_nodiff',
+        'appType': 'card',
+        'config': {
+          'lepusStrict': true,
+          'useNewSwiper': true,
+          'enableICU': false,
+          'enableNewIntersectionObserver': true,
+          'enableNativeList': true,
+          'enableA11y': true,
+          'enableAccessibilityElement': false,
+          'enableCSSInheritance': false,
+          'enableNewGesture': false,
+          'pipelineSchedulerConfig': 65536,
+          'removeDescendantSelectorScope': true,
+        },
+      },
+      'manifest': {},
+      'lepusCode': {
+        'root': undefined,
+        'lepusChunk': {},
+      },
+      'customSections': {},
     });
 
     expect(encode).toBeCalledTimes(1);

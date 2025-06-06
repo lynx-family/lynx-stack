@@ -93,10 +93,17 @@ export interface TemplateHooks {
    *
    * @alpha
    */
-  encode: AsyncSeriesBailHook<{
-    encodeOptions: EncodeOptions;
-    intermediate: string;
-  }, { buffer: Buffer; debugInfo: string }>;
+  encode: AsyncSeriesBailHook<
+    {
+      encodeOptions: EncodeOptions;
+      intermediate: string;
+      templateType: 'main' | 'async';
+    } | {
+      encodeOptions: EncodeOptions;
+      templateType: 'css-hmr';
+    },
+    { buffer: Buffer; debugInfo: string }
+  >;
 
   /**
    * Called before the template is emitted. Can be used to modify the template.
@@ -883,6 +890,7 @@ class LynxTemplatePluginImpl {
       const { buffer, debugInfo } = await hooks.encode.promise({
         encodeOptions: resolvedEncodeOptions,
         intermediate,
+        templateType: isAsync ? 'async' : 'main',
       });
 
       const filename = compilation.getPath(filenameTemplate, {
