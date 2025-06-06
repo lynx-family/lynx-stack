@@ -5,7 +5,7 @@ import { useEffect, useLayoutEffect, useState } from '../src/index';
 import { globalEnvManager } from './utils/envManager';
 import { waitSchedule } from './utils/nativeMethod';
 import { initDelayUnmount } from '../src/lifecycle/delayUnmount';
-import { globalCommitTaskMap, replaceCommitHook, replaceRequestAnimationFrame } from '../src/lifecycle/patch/commit';
+import { globalCommitTaskMap, replaceCommitHook } from '../src/lifecycle/patch/commit';
 import { deinitGlobalSnapshotPatch, initGlobalSnapshotPatch } from '../src/lifecycle/patch/snapshotPatch';
 import { LifecycleConstant } from '../src/lifecycleConstant';
 import { CATCH_ERROR } from '../src/renderToOpcodes/constants';
@@ -16,7 +16,6 @@ beforeAll(() => {
   setupPage(__CreatePage('0', 0));
   replaceCommitHook();
   initDelayUnmount();
-  replaceRequestAnimationFrame();
 });
 
 beforeEach(() => {
@@ -42,243 +41,21 @@ describe('useEffect', () => {
     }
 
     initGlobalSnapshotPatch();
-    let mtCallbacks = lynx.getNativeApp().callLepusMethod;
     globalEnvManager.switchToBackground();
 
     render(<Comp />, __root);
-    expect(callback).toHaveBeenCalledTimes(0);
-    expect(cleanUp).toHaveBeenCalledTimes(0);
-
-    expect(callback).toHaveBeenCalledTimes(0);
-    expect(mtCallbacks.mock.calls.length).toBe(1);
-    mtCallbacks.mock.calls[0][2]();
-    lynx.getNativeApp().callLepusMethod.mockClear();
-    expect(callback).toHaveBeenCalledTimes(1);
-    expect(cleanUp).toHaveBeenCalledTimes(0);
 
     await waitSchedule();
+
     expect(callback).toHaveBeenCalledTimes(1);
     expect(cleanUp).toHaveBeenCalledTimes(0);
 
     render(<Comp />, __root);
-    expect(callback).toHaveBeenCalledTimes(1);
-    expect(cleanUp).toHaveBeenCalledTimes(0);
-
-    expect(mtCallbacks.mock.calls.length).toBe(1);
-    mtCallbacks.mock.calls[0][2]();
-    lynx.getNativeApp().callLepusMethod.mockClear();
 
     await waitSchedule();
+
     expect(callback).toHaveBeenCalledTimes(2);
     expect(cleanUp).toHaveBeenCalledTimes(1);
-  });
-
-  it('should call after main thread returns', async function() {
-    globalEnvManager.switchToBackground();
-
-    let mtCallbacks = lynx.getNativeApp().callLepusMethod.mock.calls;
-
-    const cleanUp = vi.fn();
-    const callback = vi.fn().mockImplementation(() => cleanUp);
-
-    function Comp() {
-      const [val, setVal] = useState(1);
-      useLayoutEffect(callback);
-      return <text>{val}</text>;
-    }
-
-    initGlobalSnapshotPatch();
-
-    render(<Comp />, __root);
-    render(<Comp />, __root);
-    render(<Comp />, __root);
-    expect(callback).toHaveBeenCalledTimes(0);
-    expect(cleanUp).toHaveBeenCalledTimes(0);
-
-    let mtCallback;
-    // expect(mtCallbacks.length).toEqual(3);
-    mtCallback = mtCallbacks.shift();
-    expect(mtCallback[0]).toEqual(LifecycleConstant.patchUpdate);
-    expect(mtCallback[1]).toMatchInlineSnapshot(`
-      {
-        "data": "{"patchList":[{"id":3,"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_2",2,0,null,3,3,3,0,1,1,2,3,null,1,1,2,null]}]}",
-        "patchOptions": {
-          "reloadVersion": 0,
-        },
-      }
-    `);
-    mtCallback[2]();
-    await waitSchedule();
-    expect(callback).toHaveBeenCalledTimes(1);
-    expect(cleanUp).toHaveBeenCalledTimes(0);
-
-    expect(mtCallbacks.length).toEqual(2);
-    mtCallback = mtCallbacks.shift();
-    expect(mtCallback[0]).toEqual(LifecycleConstant.patchUpdate);
-    expect(mtCallback[1]).toMatchInlineSnapshot(`
-      {
-        "data": "{"patchList":[{"id":4}]}",
-        "patchOptions": {
-          "reloadVersion": 0,
-        },
-      }
-    `);
-    mtCallback[2]();
-    await waitSchedule();
-    expect(callback).toHaveBeenCalledTimes(2);
-    expect(cleanUp).toHaveBeenCalledTimes(1);
-
-    expect(mtCallbacks.length).toEqual(1);
-    mtCallback = mtCallbacks.shift();
-    expect(mtCallback[0]).toEqual(LifecycleConstant.patchUpdate);
-    expect(mtCallback[1]).toMatchInlineSnapshot(`
-      {
-        "data": "{"patchList":[{"id":5}]}",
-        "patchOptions": {
-          "reloadVersion": 0,
-        },
-      }
-    `);
-    mtCallback[2]();
-    await waitSchedule();
-    expect(callback).toHaveBeenCalledTimes(3);
-    expect(cleanUp).toHaveBeenCalledTimes(2);
-  });
-
-  it('change before hydration', async function() {
-    let setVal_;
-
-    const cleanUp = vi.fn();
-    const callback = vi.fn(() => {
-      return cleanUp;
-    });
-
-    function Comp() {
-      const [val, setVal] = useState(1);
-      setVal_ = setVal;
-      useLayoutEffect(callback);
-      return <text>{val}</text>;
-    }
-
-    // main thread render
-    {
-      __root.__jsx = <Comp />;
-      renderPage();
-    }
-
-    // background render
-    {
-      globalEnvManager.switchToBackground();
-      render(<Comp />, __root);
-    }
-
-    // background state change
-    {
-      setVal_(300);
-      await waitSchedule();
-      expect(lynx.getNativeApp().callLepusMethod).not.toBeCalled();
-    }
-
-    // background state change
-    {
-      setVal_(400);
-      await waitSchedule();
-      expect(lynx.getNativeApp().callLepusMethod).not.toBeCalled();
-    }
-
-    // hydrate
-    {
-      // LifecycleConstant.firstScreen
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
-      expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
-      expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1].data).toMatchInlineSnapshot(
-        `"{"patchList":[{"snapshotPatch":[3,-3,0,400],"id":9}]}"`,
-      );
-      globalThis.__OnLifecycleEvent.mockClear();
-
-      await waitSchedule();
-      expect(callback).toHaveBeenCalledTimes(0);
-      expect(cleanUp).toHaveBeenCalledTimes(0);
-
-      // rLynxChange
-      globalEnvManager.switchToMainThread();
-      const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
-      globalThis[rLynxChange[0]](rLynxChange[1]);
-      rLynxChange[2]();
-
-      await waitSchedule();
-      expect(callback).toHaveBeenCalledTimes(3);
-      expect(cleanUp).toHaveBeenCalledTimes(2);
-    }
-  });
-
-  it('cleanup function should delay when unmounts', async function() {
-    const cleanUp = vi.fn();
-    const callback = vi.fn(() => {
-      return cleanUp;
-    });
-
-    function A() {
-      useLayoutEffect(callback);
-    }
-
-    function Comp(props) {
-      return props.show && <A />;
-    }
-
-    // main thread render
-    {
-      __root.__jsx = <Comp show={false} />;
-      renderPage();
-    }
-
-    // background render
-    {
-      globalEnvManager.switchToBackground();
-      render(<Comp show={false} />, __root);
-    }
-
-    // hydrate
-    {
-      // LifecycleConstant.firstScreen
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
-      globalThis.__OnLifecycleEvent.mockClear();
-
-      await waitSchedule();
-      expect(callback).toHaveBeenCalledTimes(0);
-      expect(cleanUp).toHaveBeenCalledTimes(0);
-
-      // rLynxChange
-      globalEnvManager.switchToMainThread();
-      const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
-      rLynxChange[2]();
-      await waitSchedule();
-    }
-
-    // background unmount
-    {
-      globalEnvManager.switchToBackground();
-      lynx.getNativeApp().callLepusMethod.mockClear();
-      render(<Comp show={true} />, __root);
-      render(<Comp show={false} />, __root);
-      expect(callback).toHaveBeenCalledTimes(0);
-      expect(cleanUp).toHaveBeenCalledTimes(0);
-    }
-
-    {
-      expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(2);
-      let rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
-      rLynxChange[2]();
-      await waitSchedule();
-      expect(callback).toHaveBeenCalledTimes(1);
-      expect(cleanUp).toHaveBeenCalledTimes(0);
-
-      rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[1];
-      rLynxChange[2]();
-      await waitSchedule();
-      expect(callback).toHaveBeenCalledTimes(1);
-      expect(cleanUp).toHaveBeenCalledTimes(1);
-    }
   });
 
   it('throw', async function() {
@@ -286,8 +63,6 @@ describe('useEffect', () => {
 
     const catchError = options[CATCH_ERROR];
     options[CATCH_ERROR] = vi.fn();
-
-    let mtCallbacks = lynx.getNativeApp().callLepusMethod.mock.calls;
 
     const callback = vi.fn().mockImplementation(() => {
       throw '???';
@@ -303,23 +78,10 @@ describe('useEffect', () => {
     render(<Comp />, __root);
     render(<Comp />, __root);
     render(<Comp />, __root);
-    expect(callback).toHaveBeenCalledTimes(0);
+    expect(callback).toHaveBeenCalledTimes(2);
 
-    let mtCallback;
-    expect(mtCallbacks.length).toEqual(3);
-    mtCallback = mtCallbacks.shift();
-    expect(mtCallback[0]).toEqual(LifecycleConstant.patchUpdate);
-    expect(mtCallback[1]).toMatchInlineSnapshot(`
-      {
-        "data": "{"patchList":[{"id":14,"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_4",2,0,null,3,3,3,0,1,1,2,3,null,1,1,2,null]}]}",
-        "patchOptions": {
-          "reloadVersion": 0,
-        },
-      }
-    `);
-    mtCallback[2]();
     await waitSchedule();
-    expect(callback).toHaveBeenCalledTimes(1);
+    expect(callback).toHaveBeenCalledTimes(3);
     expect(options[CATCH_ERROR]).toHaveBeenCalledWith('???', expect.anything());
     options[CATCH_ERROR] = catchError;
   });
@@ -359,7 +121,7 @@ describe('componentDidMount', () => {
     expect(mtCallback[0]).toEqual(LifecycleConstant.patchUpdate);
     expect(mtCallback[1]).toMatchInlineSnapshot(`
       {
-        "data": "{"patchList":[{"id":17,"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_5",2,0,null,3,3,3,0,1,1,2,3,null,1,1,2,null]}]}",
+        "data": "{"patchList":[{"id":6,"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_3",2,0,null,3,3,3,0,1,1,2,3,null,1,1,2,null]}]}",
         "patchOptions": {
           "reloadVersion": 0,
         },
@@ -406,7 +168,7 @@ describe('componentDidMount', () => {
     expect(mtCallback[0]).toEqual(LifecycleConstant.patchUpdate);
     expect(mtCallback[1]).toMatchInlineSnapshot(`
       {
-        "data": "{"patchList":[{"id":20,"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_6",2,0,null,3,3,3,0,1,1,2,3,null,1,1,2,null]}]}",
+        "data": "{"patchList":[{"id":9,"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_4",2,0,null,3,3,3,0,1,1,2,3,null,1,1,2,null]}]}",
         "patchOptions": {
           "reloadVersion": 0,
         },
@@ -739,7 +501,7 @@ describe('useState', () => {
       await waitSchedule();
       expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1].data).toMatchInlineSnapshot(
-        `"{"patchList":[{"id":36,"snapshotPatch":[3,-2,1,"abcd",3,-2,2,{"str":"efgh"}]}]}"`,
+        `"{"patchList":[{"id":25,"snapshotPatch":[3,-2,1,"abcd",3,-2,2,{"str":"efgh"}]}]}"`,
       );
     }
   });
@@ -797,7 +559,7 @@ describe('useState', () => {
       await waitSchedule();
       expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1].data).toMatchInlineSnapshot(
-        `"{"patchList":[{"id":39,"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_17",2,4,2,[false,{"str":"str"}],1,-1,2,null]}]}"`,
+        `"{"patchList":[{"id":28,"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_15",2,4,2,[false,{"str":"str"}],1,-1,2,null]}]}"`,
       );
     }
   });

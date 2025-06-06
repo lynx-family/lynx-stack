@@ -5,7 +5,7 @@ import { __root } from '../src/root';
 import { globalEnvManager } from './utils/envManager';
 import { expect } from 'vitest';
 import { render } from 'preact';
-import { globalCommitTaskMap, replaceCommitHook, replaceRequestAnimationFrame } from '../src/lifecycle/patch/commit';
+import { replaceCommitHook } from '../src/lifecycle/patch/commit';
 
 beforeEach(() => {
   replaceCommitHook();
@@ -31,7 +31,6 @@ describe('delayedLifecycleEvents', () => {
             "rLynxFirstScreen",
             {
               "jsReadyEventIdSwap": {},
-              "refPatch": "{}",
               "root": "{"id":-1,"type":"root","children":[{"id":-2,"type":"__Card__:__snapshot_a94a8_test_1"}]}",
             },
           ],
@@ -45,7 +44,6 @@ describe('delayedLifecycleEvents', () => {
           "rLynxFirstScreen",
           {
             "jsReadyEventIdSwap": {},
-            "refPatch": "{}",
             "root": "{"id":-1,"type":"root","children":[{"id":-2,"type":"__Card__:__snapshot_a94a8_test_1"}]}",
           },
         ],
