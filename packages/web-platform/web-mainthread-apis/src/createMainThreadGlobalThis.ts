@@ -56,6 +56,7 @@ import {
   type GetTemplatePartsPAPI,
   type GetPageElementPAPI,
   type MinimalRawEventObject,
+  type SSRHydrateInfo,
 } from '@lynx-js/web-constants';
 import { globalMuteableVars } from '@lynx-js/web-constants';
 import { createMainThreadLynx } from './createMainThreadLynx.js';
@@ -126,13 +127,12 @@ export interface MainThreadRuntimeConfig {
   tagMap: Record<string, string>;
   rootDom: Pick<Element, 'append' | 'addEventListener'>;
   jsContext: LynxContextEventTarget;
+  ssrHydrateInfo?: SSRHydrateInfo;
 }
 
 export function createMainThreadGlobalThis(
   config: MainThreadRuntimeConfig,
 ): MainThreadGlobalThis {
-  let pageElement!: WebFiberElementImpl;
-  let uniqueIdInc = 1;
   let timingFlags: string[] = [];
   let renderPage: MainThreadGlobalThis['renderPage'];
   const {
@@ -143,16 +143,24 @@ export function createMainThreadGlobalThis(
     rootDom,
     globalProps,
     styleInfo,
+    ssrHydrateInfo,
   } = config;
-  const lynxUniqueIdToElement: WeakRef<WebFiberElementImpl>[] = [];
+  const lynxUniqueIdToElement: WeakRef<WebFiberElementImpl>[] =
+    ssrHydrateInfo?.lynxUniqueIdToElement ?? [new WeakRef(rootDom as any)];
   const elementToRuntimeInfoMap: WeakMap<WebFiberElementImpl, LynxRuntimeInfo> =
     new WeakMap();
   const lynxUniqueIdToStyleRulesIndex: number[] = [];
+  const lynxTemplateParts: WeakMap<
+    WebFiberElementImpl,
+    Record<string, WebFiberElementImpl>
+  > = ssrHydrateInfo?.templatePartsMap ?? new WeakMap();
   /**
    * for "update" the globalThis.val in the main thread
    */
   const varsUpdateHandlers: (() => void)[] = [];
   const lynxGlobalBindingValues: Record<string, any> = {};
+  let uniqueIdInc = lynxUniqueIdToElement.length;
+  let pageElement = lynxUniqueIdToElement[1]?.deref();
 
   /**
    * now create the style content
@@ -381,7 +389,7 @@ export function createMainThreadGlobalThis(
     const element = callbacks.createElement(htmlTag);
     lynxUniqueIdToElement[uniqueId] = new WeakRef(element);
     const parentComponentCssID = lynxUniqueIdToElement[parentComponentUniqueId]
-      ?.deref()?.getAttribute(cssIdAttribute);
+      ?.deref()?.getAttribute?.(cssIdAttribute);
     parentComponentCssID && parentComponentCssID !== '0'
       && element.setAttribute(cssIdAttribute, parentComponentCssID);
     element.setAttribute(lynxTagAttribute, tag);
@@ -607,8 +615,8 @@ export function createMainThreadGlobalThis(
     callbacks.flushElementTree(options, timingFlagsCopied);
   };
 
-  const __GetTemplateParts: GetTemplatePartsPAPI = () => {
-    return undefined;
+  const __GetTemplateParts: GetTemplatePartsPAPI = (element) => {
+    return lynxTemplateParts.get(element) ?? {};
   };
 
   const __GetPageElement: GetPageElementPAPI = () => {

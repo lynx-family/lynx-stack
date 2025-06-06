@@ -32,6 +32,9 @@ export function startUIThread(
   lynxGroupId: number | undefined,
   threadStrategy: 'all-on-ui' | 'multi-thread',
   callbacks: StartUIThreadCallbacks,
+  ssr?: {
+    ssrHydrateData: string | null;
+  },
 ): LynxView {
   const createLynxStartTiming = performance.now() + performance.timeOrigin;
   const allOnUI = threadStrategy === 'all-on-ui';
@@ -59,6 +62,7 @@ export function startUIThread(
       shadowRoot,
       markTimingInternal,
       callbacks,
+      ssr,
     )
     : createRenderMultiThread(
       /* main-to-ui rpc*/ mainThreadRpc,

@@ -3,11 +3,22 @@
 // LICENSE file in the root directory of this source tree.
 
 import type { Cloneable } from './Cloneable.js';
+import type { WebFiberElementImpl } from './Element.js';
 import type { LynxTemplate } from './LynxModule.js';
 import type { NapiModulesMap } from './NapiModules.js';
 import type { NativeModulesMap } from './NativeModules.js';
 import type { BrowserConfig } from './PageConfig.js';
 
+export interface SSRHydrateInfo {
+  /** WeakRef<Element> */
+  lynxUniqueIdToElement: WeakRef<WebFiberElementImpl>[];
+  ssrHydrateData: string | null;
+  /** templatePartsMap: WeakMap<HTMLElement, Record<string, HTMLElement>>; */
+  templatePartsMap: WeakMap<
+    WebFiberElementImpl,
+    Record<string, WebFiberElementImpl>
+  >;
+}
 export interface StartMainThreadContextConfig {
   template: LynxTemplate;
   initData: Cloneable;
