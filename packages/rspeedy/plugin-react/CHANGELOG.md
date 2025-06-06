@@ -1,5 +1,22 @@
 # @lynx-js/react-rsbuild-plugin
 
+## 0.10.3
+
+### Patch Changes
+
+- Better [zustand](https://github.com/pmndrs/zustand) support by creating an alias for `use-sync-external-store`. ([#980](https://github.com/lynx-family/lynx-stack/pull/980))
+
+  See [lynx-family/lynx-stack#893](https://github.com/lynx-family/lynx-stack/issues/893) for more details.
+
+- Updated dependencies [[`acc0d80`](https://github.com/lynx-family/lynx-stack/commit/acc0d80ae45cb5d9b54acec13baf88086b7ba798)]:
+  - @lynx-js/runtime-wrapper-webpack-plugin@0.1.1
+  - @lynx-js/react-alias-rsbuild-plugin@0.10.3
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/react-refresh-webpack-plugin@0.3.3
+  - @lynx-js/react-webpack-plugin@0.6.15
+  - @lynx-js/css-extract-webpack-plugin@0.5.4
+  - @lynx-js/template-webpack-plugin@0.7.2
+
 ## 0.10.2
 
 ### Patch Changes

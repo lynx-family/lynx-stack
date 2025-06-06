@@ -1,5 +1,18 @@
 # @lynx-js/web-elements
 
+## 0.7.5
+
+### Patch Changes
+
+- feat: x-input && x-textarea add new method: `getValue`, which returns the value of the input element, selectionStart and selectEnd when success. ([#982](https://github.com/lynx-family/lynx-stack/pull/982))
+
+- feat: x-input and x-textarea bindinput event return structures add `selectionStart`, `selectionEnd`, and `textLength`, `textLength` are marked as @deprecated ([#996](https://github.com/lynx-family/lynx-stack/pull/996))
+
+- feat: x-input and x-textarea support bindselection event, the returned type structure is `{ selectionStart: number; selectionEnd: number }`. ([#990](https://github.com/lynx-family/lynx-stack/pull/990))
+
+- Updated dependencies []:
+  - @lynx-js/web-elements-template@0.7.5
+
 ## 0.7.4
 
 ### Patch Changes

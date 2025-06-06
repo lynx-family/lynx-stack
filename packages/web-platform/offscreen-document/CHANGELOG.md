@@ -1,5 +1,13 @@
 # @lynx-js/offscreen-document
 
+## 0.1.1
+
+### Patch Changes
+
+- feat: add sheet.insertRule support ([#1026](https://github.com/lynx-family/lynx-stack/pull/1026))
+
+- refactor: implement mts apis in closure pattern ([#1004](https://github.com/lynx-family/lynx-stack/pull/1004))
+
 ## 0.1.0
 
 ### Minor Changes
