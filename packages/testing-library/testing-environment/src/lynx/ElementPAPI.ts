@@ -37,6 +37,14 @@ export interface LynxElement extends HTMLElement {
     [key: string]: any;
   };
   /**
+   * The simple styling style objects bound to the element.
+   */
+  styleObjectList: string[];
+  /**
+   * The final simple style bound to the element.
+   */
+  simpleStyle: Record<string, any>;
+  /**
    * The cssId of the element
    */
   cssId?: string;
@@ -65,6 +73,10 @@ export interface LynxElement extends HTMLElement {
 export const initElementTree = () => {
   let uiSignNext = 0;
   const uniqueId2Element = new Map<number, LynxElement>();
+
+  let styleObjectIdNext = 1e8;
+  const staticSimpleStyleMap = new Map<string, Record<string, string>>();
+  const styleObject2ElementMap = new Map<string, Set<LynxElement>>();
 
   return new (class ElementTree {
     root: LynxElement | undefined;
@@ -413,6 +425,66 @@ export const initElementTree = () => {
     __GetAttributeByName(ele: LynxElement, name: string) {
       // return ele.props[name];
       return ele.getAttribute(name);
+    }
+
+    __SimpleStyleInject(id: string, cssKey: string, cssValue: string) {
+      staticSimpleStyleMap.set(id, {
+        [cssKey]: cssValue,
+      });
+    }
+
+    __CreateStyleObject(
+      cssObject: Record<string, any>,
+    ) {
+      const id = styleObjectIdNext++;
+      staticSimpleStyleMap.set(id.toString(), cssObject);
+      return id;
+    }
+
+    updateSimpleStyle(element: LynxElement) {
+      element.simpleStyle = element.styleObjectList
+        .reduce((prev, curr) => {
+          const style = staticSimpleStyleMap.get(curr);
+          if (style) {
+            return {
+              ...prev,
+              ...style,
+            };
+          }
+          return prev;
+        }, {});
+    }
+    __SetStyleObject(
+      element: LynxElement,
+      styleObjectList: string[],
+    ) {
+      styleObjectList = styleObjectList.map(String);
+      if (element.styleObjectList) {
+        element.styleObjectList.forEach((styleObject: string) => {
+          styleObject2ElementMap.get(styleObject)?.delete(element);
+        });
+      }
+      element.styleObjectList = styleObjectList;
+      styleObjectList.forEach(styleObject => {
+        if (!styleObject2ElementMap.has(styleObject)) {
+          styleObject2ElementMap.set(styleObject, new Set());
+        }
+        styleObject2ElementMap.get(styleObject)?.add(element);
+      });
+      this.updateSimpleStyle(element);
+    }
+    __UpdateStyleObject(
+      styleObject: string,
+      cssObject: Record<string, any>,
+    ) {
+      styleObject = String(styleObject);
+      const style = staticSimpleStyleMap.get(styleObject);
+      if (style) {
+        staticSimpleStyleMap.set(styleObject, cssObject);
+        styleObject2ElementMap.get(styleObject)?.forEach(element => {
+          this.updateSimpleStyle(element);
+        });
+      }
     }
 
     clear() {

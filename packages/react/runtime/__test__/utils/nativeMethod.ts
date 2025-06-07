@@ -22,6 +22,10 @@ export const parentMap = new WeakMap<Element, Element>();
 // export const elementPrototype = Object.create(null);
 export const options: ElementOptions = {};
 
+export const staticSimpleStyleMap = new Map<string, Record<string, string>>();
+let styleObjectIdNext = 1e8;
+export const styleObject2ElementMap = new Map<string, Set<Element>>();
+
 export const elementTree = new (class {
   root?: Element = undefined;
 
@@ -308,6 +312,65 @@ export const elementTree = new (class {
 
   __GetAttributeByName(ele: Element, name: string) {
     return ele.props[name];
+  }
+
+  updateSimpleStyle(element: Element) {
+    element.props.simpleStyle = (element.props.styleObjectList as string[]).reduce((prev, curr) => {
+      const style = staticSimpleStyleMap.get(curr);
+      if (style) {
+        return {
+          ...prev,
+          ...style,
+        };
+      }
+      return prev;
+    }, {});
+  }
+
+  __SimpleStyleInject(id: string, cssKey: string, cssValue: string) {
+    staticSimpleStyleMap.set(id, {
+      [cssKey]: cssValue,
+    });
+  }
+
+  __CreateStyleObject(
+    cssObject: Record<string, any>,
+  ) {
+    const id = styleObjectIdNext++;
+    staticSimpleStyleMap.set(id.toString(), cssObject);
+    return id;
+  }
+  __SetStyleObject(
+    element: Element,
+    styleObjectList: string[],
+  ) {
+    styleObjectList = styleObjectList.map(String);
+    if (element.props.styleObjectList) {
+      element.props.styleObjectList.forEach((styleObject: string) => {
+        styleObject2ElementMap.get(styleObject)?.delete(element);
+      });
+    }
+    element.props.styleObjectList = styleObjectList;
+    styleObjectList.forEach(styleObject => {
+      if (!styleObject2ElementMap.has(styleObject)) {
+        styleObject2ElementMap.set(styleObject, new Set());
+      }
+      styleObject2ElementMap.get(styleObject)?.add(element);
+    });
+    this.updateSimpleStyle(element);
+  }
+  __UpdateStyleObject(
+    styleObject: string,
+    cssObject: Record<string, any>,
+  ) {
+    styleObject = String(styleObject);
+    const style = staticSimpleStyleMap.get(styleObject);
+    if (style) {
+      staticSimpleStyleMap.set(styleObject, cssObject);
+      styleObject2ElementMap.get(styleObject)?.forEach(element => {
+        this.updateSimpleStyle(element);
+      });
+    }
   }
 
   clear() {

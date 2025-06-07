@@ -17,6 +17,7 @@ const defaultOptions = {
     jsxImportSource: '@lynx-js/react',
     target: 'MIXED',
     filename: 'test.js',
+    enableSimpleStyling: false,
   },
   directiveDCE: false,
   defineDCE: false,
@@ -24,6 +25,7 @@ const defaultOptions = {
   compat: false,
   worklet: false,
   refresh: false,
+  simpleStyling: false,
 };
 
 describe('CSS Scope', () => {

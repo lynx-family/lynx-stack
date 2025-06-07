@@ -111,8 +111,12 @@ declare global {
     config: any,
     relationMap: Record<string, number[]>,
   ): void;
+  declare function __CreateStyleObject(cssObject: Record<string, any>): StyleObject;
+  declare function __SetStyleObject(element: FiberElement, styleObjectList: Array<number | StyleObject>): void;
+  declare function __UpdateStyleObject(styleObject: number | StyleObject, cssObject: Record<string, any>): void;
 
   declare interface FiberElement {}
+  declare interface StyleObject {}
 
   declare type ComponentAtIndexCallback = (
     list: FiberElement,

@@ -29,6 +29,7 @@ export const {
   transformToWorklet,
   updateEvent,
   updateRef,
+  updateSimpleStyle,
   updateSpread,
   updateWorkletEvent,
   updateGesture,

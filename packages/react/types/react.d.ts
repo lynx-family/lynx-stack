@@ -97,6 +97,7 @@ declare module '@lynx-js/types' {
     ref?: Ref<NodesRef>;
     key?: Key | null | undefined;
     'main-thread:ref'?: Ref<MainThread.Element>;
+    simpleStyle?: Array<CSSProperties | false>;
   }
 
   interface Lynx extends LynxExtended {
