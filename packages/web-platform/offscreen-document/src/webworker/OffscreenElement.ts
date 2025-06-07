@@ -135,7 +135,7 @@ export class OffscreenElement extends EventTarget {
 
   setAttribute(qualifiedName: string, value: string): void {
     this[_attributes].set(qualifiedName, value);
-    this[ancestorDocument][operations].push({
+    this[ancestorDocument][operations]?.push({
       type: OperationType.SetAttribute,
       uid: this[uniqueId],
       key: qualifiedName,
@@ -149,7 +149,7 @@ export class OffscreenElement extends EventTarget {
 
   removeAttribute(qualifiedName: string): void {
     this[_attributes].delete(qualifiedName);
-    this[ancestorDocument][operations].push({
+    this[ancestorDocument][operations]?.push({
       type: OperationType.RemoveAttribute,
       uid: this[uniqueId],
       key: qualifiedName,
@@ -157,7 +157,7 @@ export class OffscreenElement extends EventTarget {
   }
 
   append(...nodes: (OffscreenElement)[]): void {
-    this[ancestorDocument][operations].push({
+    this[ancestorDocument][operations]?.push({
       type: OperationType.Append,
       uid: this[uniqueId],
       cid: nodes.map(node => node[uniqueId]),
@@ -166,23 +166,23 @@ export class OffscreenElement extends EventTarget {
       node._remove();
       node._parentElement = this;
     }
-    this[_children].push(...nodes);
+    this[_children]?.push(...nodes);
   }
 
   appendChild(node: OffscreenElement): OffscreenElement {
-    this[ancestorDocument][operations].push({
+    this[ancestorDocument][operations]?.push({
       type: OperationType.Append,
       uid: this[uniqueId],
       cid: [node[uniqueId]],
     });
     node._remove();
     node._parentElement = this;
-    this[_children].push(node);
+    this[_children]?.push(node);
     return node;
   }
 
   replaceWith(...nodes: (OffscreenElement)[]): void {
-    this[ancestorDocument][operations].push({
+    this[ancestorDocument][operations]?.push({
       type: OperationType.ReplaceWith,
       uid: this[uniqueId],
       nid: nodes.map(node => node[uniqueId]),
@@ -203,7 +203,7 @@ export class OffscreenElement extends EventTarget {
   }
 
   remove(): void {
-    this[ancestorDocument][operations].push({
+    this[ancestorDocument][operations]?.push({
       type: OperationType.Remove,
       uid: this[uniqueId],
     });
@@ -223,10 +223,10 @@ export class OffscreenElement extends EventTarget {
       }
     } else {
       newNode._parentElement = this;
-      this[_children].push(newNode);
+      this[_children]?.push(newNode);
     }
 
-    this[ancestorDocument][operations].push({
+    this[ancestorDocument][operations]?.push({
       type: OperationType.InsertBefore,
       uid: this[uniqueId],
       cid: newNode[uniqueId],
@@ -248,7 +248,7 @@ export class OffscreenElement extends EventTarget {
         'NotFoundError',
       );
     }
-    this[ancestorDocument][operations].push({
+    this[ancestorDocument][operations]?.push({
       type: OperationType.RemoveChild,
       uid: this[uniqueId],
       cid: child![uniqueId],
@@ -267,7 +267,7 @@ export class OffscreenElement extends EventTarget {
   }
 
   set innerHTML(text: string) {
-    this[ancestorDocument][operations].push({
+    this[ancestorDocument][operations]?.push({
       type: OperationType.SetInnerHTML,
       text,
       uid: this[uniqueId],

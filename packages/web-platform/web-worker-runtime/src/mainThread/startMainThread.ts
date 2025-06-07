@@ -25,7 +25,11 @@ export function startMainThreadWorker(
   const uiFlush = uiThreadRpc.createCall(flushElementTreeEndpoint);
   const reportError = uiThreadRpc.createCall(reportErrorEndpoint);
   const docu = new OffscreenDocument({
-    onCommit: uiFlush,
+    onCommit(operations) {
+      if (operations) {
+        uiFlush(operations);
+      }
+    },
   });
   uiThreadRpc.registerHandler(postOffscreenEventEndpoint, docu[_onEvent]);
   const { startMainThread } = prepareMainThreadAPIs(
