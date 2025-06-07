@@ -6,41 +6,10 @@ import { removeFunctionWhiteSpace } from '@lynx-js/css-serializer/dist/plugins/r
 import { cssChunksToMap } from './cssChunksToMap.js';
 import type { CSS } from '../index.js';
 import type { EncodeOptions } from '../LynxTemplatePlugin.js';
-/**
- * The options for encoding CSS.
- *
- * @public
- */
-export interface EncodeCSSOptions {
-  /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableCSSSelector}
-   */
-  enableCSSSelector: boolean;
-
-  /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableRemoveCSSScope}
-   */
-  enableRemoveCSSScope: boolean;
-
-  /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableCSSInvalidation}
-   */
-  enableCSSInvalidation: boolean;
-
-  /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableRemoveCSSScope}
-   */
-  targetSdkVersion: string;
-}
 
 export async function encodeCSS(
   cssChunks: string[],
-  {
-    enableCSSSelector,
-    enableRemoveCSSScope,
-    enableCSSInvalidation,
-    targetSdkVersion,
-  }: EncodeCSSOptions,
+  encodeOptions: EncodeOptions,
   plugins: CSS.Plugin[] = [removeFunctionWhiteSpace()],
   // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   encode: (options: any) => Promise<{
@@ -52,37 +21,16 @@ export async function encodeCSS(
     });
   },
 ): Promise<Buffer> {
-  const css = cssChunksToMap(cssChunks, plugins, enableCSSSelector);
+  const css = cssChunksToMap(
+    cssChunks,
+    plugins,
+    Boolean(encodeOptions.compilerOptions['enableCSSSelector']),
+  );
 
-  const encodeOptions: EncodeOptions = {
-    compilerOptions: {
-      // Do not remove this, it will crash :)
-      enableFiberArch: true,
-      useLepusNG: true,
-      bundleModuleMode: 'ReturnByFunction',
-
-      enableCSSSelector,
-      enableCSSInvalidation,
-      targetSdkVersion,
-    },
-    sourceContent: {
-      appType: 'card',
-      config: {
-        lepusStrict: true,
-
-        enableRemoveCSSScope,
-      },
-    },
+  const { buffer } = await encode({
+    ...encodeOptions,
     css,
-    manifest: {},
-    lepusCode: {
-      root: undefined,
-      lepusChunk: {},
-    },
-    customSections: {},
-  };
-
-  const { buffer } = await encode(encodeOptions);
+  });
 
   return buffer;
 }

@@ -53,12 +53,26 @@ declare namespace CSSPlugins {
     }
 }
 
-// @public
-export interface EncodeCSSOptions {
-    enableCSSInvalidation: boolean;
-    enableCSSSelector: boolean;
-    enableRemoveCSSScope: boolean;
-    targetSdkVersion: string;
+// Warning: (ae-missing-release-tag) "EncodeOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface EncodeOptions {
+    // (undocumented)
+    [k: string]: unknown;
+    // (undocumented)
+    compilerOptions: Record<string, string | boolean>;
+    // (undocumented)
+    customSections: Record<string, {
+        type?: 'lazy';
+        content: string | Record<string, unknown>;
+    }>;
+    // (undocumented)
+    lepusCode: {
+        root: string | undefined;
+        lepusChunk: Record<string, string>;
+    };
+    // (undocumented)
+    manifest: Record<string, string | undefined>;
 }
 
 // @public
@@ -69,7 +83,7 @@ export class LynxEncodePlugin {
     static BEFORE_ENCODE_STAGE: number;
     static defaultOptions: Readonly<Required<LynxEncodePluginOptions>>;
     static ENCODE_STAGE: number;
-    static encodeCSS(cssChunks: string[], options: EncodeCSSOptions, plugins?: CSS.Plugin[], encode?: (options: any) => Promise<{
+    static encodeCSS(cssChunks: string[], encodeOptions: EncodeOptions, plugins?: CSS.Plugin[], encode?: (options: any) => Promise<{
         buffer: Buffer;
     }>): Promise<Buffer>;
     // (undocumented)
@@ -149,6 +163,10 @@ export interface TemplateHooks {
     encode: AsyncSeriesBailHook<{
         encodeOptions: EncodeOptions;
         intermediate: string;
+        templateType: 'main' | 'async';
+    } | {
+        encodeOptions: EncodeOptions;
+        templateType: 'css-hmr';
     }, {
         buffer: Buffer;
         debugInfo: string;
@@ -175,6 +193,5 @@ export class WebEncodePlugin {
 // Warnings were encountered during analysis:
 //
 // lib/LynxTemplatePlugin.d.ts:58:9 - (ae-forgotten-export) The symbol "EncodeRawData" needs to be exported by the entry point index.d.ts
-// lib/LynxTemplatePlugin.d.ts:68:9 - (ae-forgotten-export) The symbol "EncodeOptions" needs to be exported by the entry point index.d.ts
 
 ```

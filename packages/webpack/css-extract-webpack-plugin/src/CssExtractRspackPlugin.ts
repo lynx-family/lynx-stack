@@ -5,6 +5,7 @@
 import { createRequire } from 'node:module';
 
 import type {
+  Assets,
   Chunk,
   Compiler,
   CssExtractRspackPluginOptions as ExternalCssExtractRspackPluginOptions,
@@ -14,6 +15,7 @@ import {
   LynxEncodePlugin,
   LynxTemplatePlugin,
 } from '@lynx-js/template-webpack-plugin';
+import type { EncodeOptions } from '@lynx-js/template-webpack-plugin';
 
 /**
  * The options for {@link @lynx-js/css-extract-webpack-plugin#CssExtractRspackPlugin}
@@ -23,26 +25,6 @@ import {
 interface CssExtractRspackPluginOptions
   extends ExternalCssExtractRspackPluginOptions
 {
-  /**
-   * {@inheritdoc @lynx-js/template-webpack-plugin#LynxTemplatePluginOptions.enableRemoveCSSScope}
-   */
-  enableRemoveCSSScope: boolean;
-
-  /**
-   * {@inheritdoc @lynx-js/template-webpack-plugin#LynxTemplatePluginOptions.enableCSSSelector}
-   */
-  enableCSSSelector: boolean;
-
-  /**
-   * {@inheritdoc @lynx-js/template-webpack-plugin#LynxTemplatePluginOptions.enableCSSInvalidation}
-   */
-  enableCSSInvalidation: boolean;
-
-  /**
-   * {@inheritdoc @lynx-js/template-webpack-plugin#LynxTemplatePluginOptions.targetSdkVersion}
-   */
-  targetSdkVersion: string;
-
   /**
    * plugins passed to parser
    */
@@ -123,10 +105,6 @@ class CssExtractRspackPlugin {
    */
   static defaultOptions: Readonly<CssExtractRspackPluginOptions> = Object
     .freeze<CssExtractRspackPluginOptions>({
-      enableRemoveCSSScope: false,
-      enableCSSSelector: true,
-      enableCSSInvalidation: true,
-      targetSdkVersion: '3.2',
       filename: '[name].css',
       cssPlugins: [],
     });
@@ -169,6 +147,109 @@ class CssExtractRspackPluginImpl {
         compiler.options.mode === 'development'
         || process.env['NODE_ENV'] === 'development'
       ) {
+        const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(
+          // @ts-expect-error Rspack to Webpack Compilation
+          compilation,
+        );
+        // Save the encode options used for template of this compilation.
+        let baseEncodeOptions: EncodeOptions;
+        // Save the assets
+        let assets: Assets;
+        let cssHmrJSONGenerated = false;
+
+        const generateCompilationCssHmrJSON = async () => {
+          if (cssHmrJSONGenerated) return;
+          if (!baseEncodeOptions || !assets) return;
+          // Generate the CSS HMR JSON for each CSS file
+          for (const [filename, source] of Object.entries(assets)) {
+            if (!filename.endsWith('.css')) {
+              continue;
+            }
+            const content: string = source.source().toString('utf-8');
+            const { cssMap } = LynxTemplatePlugin.convertCSSChunksToMap(
+              [content],
+              options.cssPlugins,
+              Boolean(baseEncodeOptions.compilerOptions['enableCSSSelector']),
+            );
+            const cssDeps = Object.entries(cssMap).reduce<
+              Record<string, string[]>
+            >((acc, [key, value]) => {
+              const importRuleNodes = value.filter(
+                (node) => node.type === 'ImportRule',
+              );
+
+              acc[key] = importRuleNodes.map(({ href }) => href);
+              return acc;
+            }, {});
+
+            try {
+              const encoded = await LynxEncodePlugin.encodeCSS(
+                [content],
+                baseEncodeOptions,
+                options.cssPlugins,
+                hooks.encode.taps.length > 1
+                  ? async (encodeOptions: EncodeOptions) => {
+                    return await hooks.encode.promise({
+                      encodeOptions,
+                      templateType: 'css-hmr',
+                    });
+                  }
+                  : undefined,
+              );
+              const result = {
+                content: encoded.toString('base64'),
+                deps: cssDeps,
+              };
+              compilation.emitAsset(
+                filename.replace(
+                  '.css',
+                  `${this.hash ? `.${this.hash}` : ''}.css.hot-update.json`,
+                ),
+                new compiler.webpack.sources.RawSource(
+                  JSON.stringify(result),
+                  true,
+                ),
+              );
+            } catch (error) {
+              if (
+                error && typeof error === 'object' && 'error_msg' in error
+              ) {
+                compilation.errors.push(
+                  // TODO: use more human-readable error message(i.e.: using sourcemap to get source code)
+                  //       or give webpack/rspack with location of bundle
+                  new compiler.webpack.WebpackError(
+                    error.error_msg as string,
+                  ),
+                );
+              } else {
+                compilation.errors.push(
+                  error as (typeof compilation.errors)[0],
+                );
+              }
+            }
+          }
+          this.hash = compilation.hash;
+          cssHmrJSONGenerated = true;
+        };
+
+        // @ts-expect-error only tap to get the encode options, not existing early
+        hooks.encode.tapPromise(this.name, async (args) => {
+          if (args.templateType !== 'css-hmr') {
+            const { compilerOptions, sourceContent } = args.encodeOptions;
+            baseEncodeOptions = {
+              compilerOptions,
+              sourceContent,
+              manifest: {},
+              lepusCode: {
+                root: undefined,
+                lepusChunk: {},
+              },
+              customSections: {},
+            };
+            await generateCompilationCssHmrJSON();
+          }
+        });
+
         const { RuntimeGlobals, RuntimeModule } = compiler.webpack;
 
         class CSSHotUpdateRuntimeModule extends RuntimeModule {
@@ -251,86 +332,9 @@ ${RuntimeGlobals.require}.cssHotUpdateList = ${
             name: this.name,
             stage: 300,
           },
-          async (assets) => {
-            for (const [filename, source] of Object.entries(assets)) {
-              if (!filename.endsWith('.css')) {
-                continue;
-              }
-              // TODO: sourcemap
-              const content: string = source.source().toString('utf-8');
-              const { cssMap } = LynxTemplatePlugin.convertCSSChunksToMap(
-                [content],
-                options.cssPlugins,
-                options.enableCSSSelector,
-              );
-              const cssDeps = Object.entries(cssMap).reduce<
-                Record<string, string[]>
-              >((acc, [key, value]) => {
-                const importRuleNodes = value.filter(
-                  (node) => node.type === 'ImportRule',
-                );
-
-                acc[key] = importRuleNodes.map(({ href }) => href);
-                return acc;
-              }, {});
-
-              const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(
-                // @ts-expect-error Rspack to Webpack Compilation
-                compilation,
-              );
-              try {
-                const encoded = await LynxEncodePlugin.encodeCSS(
-                  [content],
-                  {
-                    targetSdkVersion: options.targetSdkVersion,
-                    enableCSSSelector: options.enableCSSSelector,
-                    enableRemoveCSSScope: options.enableRemoveCSSScope,
-                    enableCSSInvalidation: options.enableCSSInvalidation,
-                  },
-                  options.cssPlugins,
-                  hooks.encode.taps.length > 0
-                    ? async (encodeOptions) => {
-                      // @ts-expect-error Only CSS is needed
-                      return await hooks.encode.promise({
-                        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-                        encodeOptions,
-                      });
-                    }
-                    : undefined,
-                );
-                const result = {
-                  content: encoded.toString('base64'),
-                  deps: cssDeps,
-                };
-                compilation.emitAsset(
-                  filename.replace(
-                    '.css',
-                    `${this.hash ? `.${this.hash}` : ''}.css.hot-update.json`,
-                  ),
-                  new compiler.webpack.sources.RawSource(
-                    JSON.stringify(result),
-                    true,
-                  ),
-                );
-              } catch (error) {
-                if (
-                  error && typeof error === 'object' && 'error_msg' in error
-                ) {
-                  compilation.errors.push(
-                    // TODO: use more human-readable error message(i.e.: using sourcemap to get source code)
-                    //       or give webpack/rspack with location of bundle
-                    new compiler.webpack.WebpackError(
-                      error.error_msg as string,
-                    ),
-                  );
-                } else {
-                  compilation.errors.push(
-                    error as (typeof compilation.errors)[0],
-                  );
-                }
-              }
-            }
-            this.hash = compilation.hash;
+          async (_assets) => {
+            assets = _assets;
+            await generateCompilationCssHmrJSON();
           },
         );
       }

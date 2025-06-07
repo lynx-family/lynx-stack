@@ -4,8 +4,8 @@
 
 import type { Compiler } from 'webpack';
 
-import type { EncodeCSSOptions } from './css/encode.js';
 import { LynxTemplatePlugin } from './LynxTemplatePlugin.js';
+import type { EncodeOptions } from './LynxTemplatePlugin.js';
 
 import type { CSS } from './index.js';
 
@@ -58,7 +58,7 @@ export class LynxEncodePlugin {
    */
   static async encodeCSS(
     cssChunks: string[],
-    options: EncodeCSSOptions,
+    encodeOptions: EncodeOptions,
     plugins?: CSS.Plugin[],
     // biome-ignore lint/suspicious/noExplicitAny: <explanation>
     encode?: (options: any) => Promise<{
@@ -66,7 +66,7 @@ export class LynxEncodePlugin {
     }>,
   ): Promise<Buffer> {
     const { encodeCSS } = await import('./css/encode.js');
-    return encodeCSS(cssChunks, options, plugins, encode);
+    return encodeCSS(cssChunks, encodeOptions, plugins, encode);
   }
 
   /**
@@ -270,5 +270,3 @@ export function isDebug(): boolean {
 export function isRsdoctor(): boolean {
   return process.env['RSDOCTOR'] === 'true';
 }
-
-export type { EncodeCSSOptions } from './css/encode.js';
