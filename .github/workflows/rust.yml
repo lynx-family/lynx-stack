@@ -32,7 +32,7 @@ jobs:
         with:
           cache-key: test-${{ runner.os }}
       - name: Install llvm-cov and nextest
-        uses: taiki-e/install-action@1cefd1553b1693f47889dc747f7d230904296a3b # v2
+        uses: taiki-e/install-action@92f69c195229fe62d58b4d697ab4bc75def98e76 # v2
         with:
           tool: cargo-llvm-cov,cargo-nextest
       - name: Test
