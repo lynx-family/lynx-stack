@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { hydrate } from './hydrate.js';
 import { commitMainThreadPatchUpdate } from './lifecycle/patch/updateMainThread.js';
+import { applyRefQueue } from './snapshot/workletRef.js';
 import type { SnapshotInstance } from './snapshot.js';
 
 export interface ListUpdateInfo {
@@ -340,6 +341,7 @@ export function componentAtIndexFactory(
       }
       signMap.set(sign, childCtx);
       commitMainThreadPatchUpdate(undefined);
+      applyRefQueue();
       return sign;
     }
 
@@ -361,6 +363,7 @@ export function componentAtIndexFactory(
     }
     signMap.set(sign, childCtx);
     commitMainThreadPatchUpdate(undefined);
+    applyRefQueue();
     return sign;
   };
 

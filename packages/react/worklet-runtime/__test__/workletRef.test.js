@@ -134,11 +134,11 @@ describe('WorkletRef', () => {
       [4, 'background-thread-init-4'],
       [5, 'background-thread-init-5'],
     ]);
+    globalThis.lynxWorkletImpl._hydrateCtx(worklet, firstScreenWorklet);
     globalThis.lynxWorkletImpl._refImpl.updateWorkletRef({
       _wvid: 5,
       _initValue: 'background-thread-init-5',
     }, 'background-thread-element-5');
-    globalThis.lynxWorkletImpl._hydrateCtx(worklet, firstScreenWorklet);
     expect(getFromWorkletRefMap({ _wvid: 1 }).current).toBe('main-thread-set-1');
     expect(getFromWorkletRefMap({ _wvid: 2 }).current).toBe('main-thread-init-2');
     expect(getFromWorkletRefMap({ _wvid: 3 }).current).toBe('main-thread-init-3');
