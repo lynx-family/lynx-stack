@@ -39,7 +39,7 @@ export const enum DynamicPartType {
  * A snapshot definition that contains all the information needed to create and update elements
  * This is generated at compile time through static analysis of the JSX
  */
-interface Snapshot {
+export interface Snapshot {
   create: null | ((ctx: SnapshotInstance) => FiberElement[]);
   update: null | ((ctx: SnapshotInstance, index: number, oldValue: any) => void)[];
   slot: [DynamicPartType, number][];
@@ -47,6 +47,7 @@ interface Snapshot {
   isListHolder?: boolean;
   cssId?: number | undefined;
   entryName?: string | undefined;
+  refAndSpreadIndexes?: number[] | null;
 }
 
 export let __page: FiberElement;
@@ -190,8 +191,9 @@ export function createSnapshot(
   create: Snapshot['create'] | null,
   update: Snapshot['update'] | null,
   slot: Snapshot['slot'],
-  cssId?: number,
-  entryName?: string,
+  cssId: number | undefined,
+  entryName: string | undefined,
+  refAndSpreadIndexes: number[] | null,
 ): string {
   if (
     __DEV__ && __JS__
@@ -221,7 +223,7 @@ export function createSnapshot(
 
   uniqID = entryUniqID(uniqID, entryName);
 
-  const s: Snapshot = { create, update, slot, cssId, entryName };
+  const s: Snapshot = { create, update, slot, cssId, entryName, refAndSpreadIndexes };
   snapshotManager.values.set(uniqID, s);
   if (slot && slot[0] && slot[0][0] === DynamicPartType.ListChildren) {
     s.isListHolder = true;

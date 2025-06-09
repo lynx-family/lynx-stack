@@ -25,7 +25,7 @@ import { globalPipelineOptions } from './lynx/performance.js';
 import { clearQueuedRefs, queueRefAttrUpdate } from './snapshot/ref.js';
 import type { Ref } from './snapshot/ref.js';
 import { transformSpread } from './snapshot/spread.js';
-import type { SerializedSnapshotInstance } from './snapshot.js';
+import type { SerializedSnapshotInstance, Snapshot } from './snapshot.js';
 import {
   DynamicPartType,
   backgroundSnapshotInstanceManager,
@@ -38,6 +38,7 @@ import { onPostWorkletCtx } from './worklet/ctx.js';
 
 export class BackgroundSnapshotInstance {
   constructor(public type: string) {
+    this.__snapshot_def = snapshotManager.values.get(type)!;
     let id;
     id = this.__id = backgroundSnapshotInstanceManager.nextId += 1;
     backgroundSnapshotInstanceManager.values.set(id, this);
@@ -47,6 +48,7 @@ export class BackgroundSnapshotInstance {
 
   __id: number;
   __values: any[] | undefined;
+  __snapshot_def: Snapshot;
 
   private __parent: BackgroundSnapshotInstance | null = null;
   private __firstChild: BackgroundSnapshotInstance | null = null;
@@ -163,8 +165,8 @@ export class BackgroundSnapshotInstance {
     traverseSnapshotInstance(node, v => {
       v.__parent = null;
       if (v.__values) {
-        for (let i = 0; i < v.__values.length; ++i) {
-          const value = v.__values[i] as unknown;
+        v.__snapshot_def.refAndSpreadIndexes?.forEach((i) => {
+          const value = v.__values![i] as unknown;
           if (value && (typeof value === 'object' || typeof value === 'function')) {
             if ('__spread' in value && 'ref' in value) {
               queueRefAttrUpdate(value.ref as Ref, null, v.__id, i);
@@ -172,7 +174,7 @@ export class BackgroundSnapshotInstance {
               queueRefAttrUpdate(value as Ref, null, v.__id, i);
             }
           }
-        }
+        });
       }
       globalBackgroundSnapshotInstancesToRemove.push(v.__id);
     });
@@ -224,16 +226,16 @@ export class BackgroundSnapshotInstance {
           );
         }
       } else {
-        for (let i = 0; i < (value as unknown[]).length; ++i) {
-          const v = (value as unknown[])[i];
+        this.__snapshot_def.refAndSpreadIndexes?.forEach((index) => {
+          const v = (value as unknown[])[index];
           if (v && (typeof v === 'object' || typeof v === 'function')) {
             if ('__spread' in v && 'ref' in v) {
-              queueRefAttrUpdate(null, v.ref as Ref, this.__id, i);
+              queueRefAttrUpdate(null, v.ref as Ref, this.__id, index);
             } else if ('__ref' in v) {
-              queueRefAttrUpdate(null, v as Ref, this.__id, i);
+              queueRefAttrUpdate(null, v as Ref, this.__id, index);
             }
           }
-        }
+        });
       }
       this.__values = value;
       if (__PROFILE__) {
@@ -400,7 +402,7 @@ export function hydrate(
       }
     });
 
-    const { slot } = snapshotManager.values.get(after.type)!;
+    const { slot } = after.__snapshot_def;
 
     const beforeChildNodes = before.children || [];
     const afterChildNodes = after.childNodes;
