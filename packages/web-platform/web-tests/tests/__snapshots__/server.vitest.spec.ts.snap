@@ -1,7 +1,7 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`server-tests > basic-performance-div-10 1`] = `
-"<lynx-view url="/dist/basic-performance-div-10/index.web.json" ssr thread-strategy="all-on-ui" height="auto" width="auto" style="width:100vw; max-width: 500px;"><template shadowrootmode="open"><style>@import url("/fp-only.css");
+"<lynx-view url="/dist/ssr/basic-performance-div-10/index.web.json" ssr thread-strategy="all-on-ui" height="auto" width="auto" style="width:100vw; max-width: 500px;"><template shadowrootmode="open"><style>@import url("/fp-only.css"); .injected-style-rules{background:green}
  [lynx-default-display-linear="false"] * {
     --lynx-display: flex;
     --lynx-display-toggle: var(--lynx-display-flex);
@@ -12,7 +12,7 @@ exports[`server-tests > basic-performance-div-10 1`] = `
 `;
 
 exports[`server-tests > basic-performance-nest-level-100 1`] = `
-"<lynx-view url="/dist/basic-performance-nest-level-100/index.web.json" ssr thread-strategy="all-on-ui" height="auto" width="auto" style="width:100vw; max-width: 500px;"><template shadowrootmode="open"><style>@import url("/fp-only.css");
+"<lynx-view url="/dist/ssr/basic-performance-nest-level-100/index.web.json" ssr thread-strategy="all-on-ui" height="auto" width="auto" style="width:100vw; max-width: 500px;"><template shadowrootmode="open"><style>@import url("/fp-only.css"); .injected-style-rules{background:green}
  [lynx-default-display-linear="false"] * {
     --lynx-display: flex;
     --lynx-display-toggle: var(--lynx-display-flex);

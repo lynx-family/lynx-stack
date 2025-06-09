@@ -4,7 +4,8 @@
 import { swipe, dragAndHold } from './utils.js';
 import { test, expect } from './coverage-fixture.js';
 import type { Page } from '@playwright/test';
-const ALL_ON_UI = !!process.env['ALL_ON_UI'];
+const isSSR = !!process.env['ENABLE_SSR'];
+const ALL_ON_UI = !!process.env['ALL_ON_UI'] || isSSR;
 
 const wait = async (ms: number) => {
   await new Promise((resolve) => {
@@ -49,7 +50,7 @@ const goto = async (
   testname2?: string,
   hasDir?: boolean,
 ) => {
-  let url = `/?casename=${testname}`;
+  let url = isSSR ? `/ssr?casename=${testname}` : `/?casename=${testname}`;
   if (hasDir) {
     url += '&hasdir=true';
   }
@@ -60,6 +61,7 @@ const goto = async (
     waitUntil: 'load',
   });
   await page.evaluate(() => document.fonts.ready);
+  if (isSSR) await wait(200);
 };
 
 test.describe('reactlynx3 tests', () => {
@@ -366,6 +368,8 @@ test.describe('reactlynx3 tests', () => {
     test(
       'basic-mts-run-on-main-thread',
       async ({ page }, { title }) => {
+        // TODO: @Yradex
+        test.fixme(isSSR, 'reactlynx jsready bug');
         await goto(page, title);
         await wait(100);
         const target = page.locator('#target');
@@ -410,6 +414,7 @@ test.describe('reactlynx3 tests', () => {
   });
   test.describe('apis', () => {
     test('api-custom-template-loader', async ({ page }, { title }) => {
+      test.skip(isSSR, 'No need to test on SSR');
       await goto(page, title);
       await wait(100);
       const target = page.locator('#target');
@@ -527,6 +532,7 @@ test.describe('reactlynx3 tests', () => {
     });
 
     test('api-lynx-performance', async ({ page }, { title }) => {
+      test.fixme(isSSR, 'implement performance API for SSR');
       await goto(page, title);
       await wait(200);
       await expect(page.locator('#target')).toHaveCSS(
@@ -636,6 +642,7 @@ test.describe('reactlynx3 tests', () => {
     });
 
     test('api-error', async ({ page }, { title }) => {
+      test.skip(isSSR, 'No need to test this on SSR');
       await goto(page, title);
       await wait(300);
       const target = await page.locator('lynx-view');
@@ -718,6 +725,7 @@ test.describe('reactlynx3 tests', () => {
 
     test.describe('api-exposure', () => {
       const module = 'exposure';
+      test.fixme(isSSR, 'TODO: migrate exposure from web-elements to runtime');
       test(
         'api-exposure-area',
         async ({ page }, { title }) => {
@@ -1214,6 +1222,7 @@ test.describe('reactlynx3 tests', () => {
     );
 
     test('config-mode-dev-with-all-in-one', async ({ page }, { title }) => {
+      test.fixme(isSSR, 'implement dev mode for SSR');
       await goto(page, title, undefined, true);
       await wait(100);
       const target = page.locator('#target');
@@ -1660,6 +1669,7 @@ test.describe('reactlynx3 tests', () => {
     });
     test.describe('svg', () => {
       test('basic-element-svg-bindload', async ({ page }, { title }) => {
+        test.skip(isSSR, 'the event is ignored in SSR');
         await goto(page, title);
         await expect(
           await page.locator('#result'),
@@ -2013,6 +2023,7 @@ test.describe('reactlynx3 tests', () => {
           title,
         }) => {
           test.skip(browserName !== 'chromium', 'cannot swipe');
+          test.fixme(isSSR, 'SSR does not support exposure');
           await goto(page, title);
           await wait(100);
           const cdpSession = await context.newCDPSession(page);
@@ -2264,6 +2275,7 @@ test.describe('reactlynx3 tests', () => {
     });
     test.describe('x-overlay-ng', () => {
       test('basic-element-x-overlay-ng-demo', async ({ page }, { title }) => {
+        test.fixme(isSSR, 'flaky');
         await goto(page, title);
         await wait(200);
         await diffScreenShot(page, 'x-overlay-ng/demo', '', 'inital');

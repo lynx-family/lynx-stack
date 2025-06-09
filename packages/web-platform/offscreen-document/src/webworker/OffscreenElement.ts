@@ -27,6 +27,7 @@ export class OffscreenElement extends EventTarget {
   private _parentElement: OffscreenElement | null = null;
   readonly [_children]: OffscreenElement[] = [];
   #sheet?: OffscreenStyleSheet;
+  _cssRuleContents: string[] = [];
   /**
    * @private
    */
@@ -68,6 +69,7 @@ export class OffscreenElement extends EventTarget {
               },
             },
           });
+          this._cssRuleContents.splice(index, 0, rule);
           this[ancestorDocument][operations].push({
             type: OperationType.sheetInsertRule,
             uid,
