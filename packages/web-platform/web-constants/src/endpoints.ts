@@ -13,7 +13,6 @@ import type { IdentifierType, InvokeCallbackRes } from './types/NativeApp.js';
 import type { LynxTemplate } from './types/LynxModule.js';
 import type { NapiModulesMap } from './types/NapiModules.js';
 import type { NativeModulesMap } from './types/NativeModules.js';
-import type { ElementOperation } from '@lynx-js/offscreen-document';
 import type { BrowserConfig } from './types/PageConfig.js';
 import type { ElementAnimationOptions } from './types/Element.js';
 
@@ -98,7 +97,7 @@ export const reportErrorEndpoint = createRpcEndpoint<
 
 export const flushElementTreeEndpoint = createRpcEndpoint<
   [
-    operations: ElementOperation[],
+    operations: (string | number)[],
   ],
   void
 >('flushElementTree', false, true);
