@@ -12,7 +12,6 @@
     },
     "build": {
       "dependsOn": [
-        "build:debug",
         "build:wasm"
       ]
     }

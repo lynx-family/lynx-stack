@@ -13,7 +13,7 @@ impl TransformVisitor {
     TransformVisitor {
       has_render_method: false,
       has_super_class: false,
-      has_jsx: false,
+      has_jsx: true,
     }
   }
 }
