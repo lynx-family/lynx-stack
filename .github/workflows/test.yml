@@ -151,6 +151,11 @@ jobs:
         pnpm dlx @pnpm/registry-mock prepare
         pnpm dlx @pnpm/registry-mock &
         printf '\n//localhost:4873/:_authToken="this-is-a-fake-token"\n' >> ~/.npmrc
+        echo ---  > .changeset/temp-regression.md
+        echo create-rspeedy: patch >> .changeset/temp-regression.md
+        echo --- >> .changeset/temp-regression.md
+        echo     >> .changeset/temp-regression.md
+        echo For regression only >> .changeset/temp-regression.md
         pnpm changeset version --snapshot regression
         node packages/tools/canary-release/snapshot.js
         pnpm --recursive publish --no-git-checks --access public --registry=http://localhost:4873
