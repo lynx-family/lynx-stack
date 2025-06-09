@@ -2,11 +2,12 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { RsbuildPlugin } from '@rsbuild/core';
-import path from 'path';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const __filename = new URL('', import.meta.url).pathname;
-const __dirname = path.dirname(__filename);
+import type { RsbuildPlugin } from '@rsbuild/core';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
  * The options for {@link pluginWebPlatform}.
@@ -88,17 +89,13 @@ export function pluginWebPlatform(
       });
 
       api.modifyRspackConfig(rspackConfig => {
-        console.log(path.resolve(
-          __dirname,
-          './loaders/native-modules.js',
-        ));
         rspackConfig.module = {
           ...rspackConfig.module,
           rules: [
             ...(rspackConfig.module?.rules ?? []),
             {
               test:
-                /backgroundThread\/background-apis\/createNativeModules\.js$/,
+                /backgroundThread[\\/]background-apis[\\/]createNativeModules\.js$/,
               loader: path.resolve(
                 __dirname,
                 './loaders/native-modules.js',
