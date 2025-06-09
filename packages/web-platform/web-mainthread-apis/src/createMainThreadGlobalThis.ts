@@ -8,7 +8,7 @@ import {
   type StyleInfo,
   type FlushElementTreeOptions,
   type Cloneable,
-  type CssInJsInfo,
+  type CssOGInfo,
   type BrowserConfig,
   lynxUniqueIdAttribute,
   type publishEventEndpoint,
@@ -56,13 +56,15 @@ import {
   type GetTemplatePartsPAPI,
   type GetPageElementPAPI,
   type MinimalRawEventObject,
+  type SSRHydrateInfo,
+  cssOGStyleContainerId,
 } from '@lynx-js/web-constants';
 import { globalMuteableVars } from '@lynx-js/web-constants';
 import { createMainThreadLynx } from './createMainThreadLynx.js';
 import {
   flattenStyleInfo,
   genCssContent,
-  genCssInJsInfo,
+  genCssOGInfo,
   transformToWebCss,
 } from './utils/processStyleInfo.js';
 import {
@@ -99,7 +101,7 @@ import {
   __UpdateComponentID,
 } from './pureElementPAPIs.js';
 import { createCrossThreadEvent } from './utils/createCrossThreadEvent.js';
-import { decodeCssInJs } from './utils/decodeCssInJs.js';
+import { decodeCssOG } from './utils/decodeCssOG.js';
 
 export interface MainThreadRuntimeCallbacks {
   mainChunkReady: () => void;
@@ -126,13 +128,12 @@ export interface MainThreadRuntimeConfig {
   tagMap: Record<string, string>;
   rootDom: Pick<Element, 'append' | 'addEventListener'>;
   jsContext: LynxContextEventTarget;
+  ssrHydrateInfo?: SSRHydrateInfo;
 }
 
 export function createMainThreadGlobalThis(
   config: MainThreadRuntimeConfig,
 ): MainThreadGlobalThis {
-  let pageElement!: WebFiberElementImpl;
-  let uniqueIdInc = 1;
   let timingFlags: string[] = [];
   let renderPage: MainThreadGlobalThis['renderPage'];
   const {
@@ -143,54 +144,77 @@ export function createMainThreadGlobalThis(
     rootDom,
     globalProps,
     styleInfo,
+    ssrHydrateInfo,
   } = config;
-  const lynxUniqueIdToElement: WeakRef<WebFiberElementImpl>[] = [];
+  const isSSR = !!ssrHydrateInfo;
+  const lynxUniqueIdToElement: WeakRef<WebFiberElementImpl>[] =
+    ssrHydrateInfo?.lynxUniqueIdToElement ?? [new WeakRef(rootDom as any)];
+  const lynxUniqueIdToStyleRulesIndex: number[] =
+    ssrHydrateInfo?.lynxUniqueIdToStyleRulesIndex ?? [];
   const elementToRuntimeInfoMap: WeakMap<WebFiberElementImpl, LynxRuntimeInfo> =
     new WeakMap();
-  const lynxUniqueIdToStyleRulesIndex: number[] = [];
+  const lynxTemplateParts: WeakMap<
+    WebFiberElementImpl,
+    Record<string, WebFiberElementImpl>
+  > = ssrHydrateInfo?.templatePartsMap ?? new WeakMap();
   /**
    * for "update" the globalThis.val in the main thread
    */
   const varsUpdateHandlers: (() => void)[] = [];
   const lynxGlobalBindingValues: Record<string, any> = {};
+  let uniqueIdInc = lynxUniqueIdToElement.length;
+  let pageElement = lynxUniqueIdToElement[1]?.deref();
 
-  /**
-   * now create the style content
-   * 1. flatten the styleInfo
-   * 2. transform the styleInfo to web css
-   * 3. generate the css in js info
-   * 4. create the style element
-   * 5. append the style element to the root dom
-   */
-  flattenStyleInfo(
-    styleInfo,
-    pageConfig.enableCSSSelector,
-  );
-  transformToWebCss(styleInfo);
-  const cssInJsInfo: CssInJsInfo = pageConfig.enableCSSSelector
-    ? {}
-    : genCssInJsInfo(styleInfo);
-  const cardStyleElement = callbacks.createElement('style');
-  cardStyleElement.innerHTML = genCssContent(
-    styleInfo,
-    pageConfig,
-  );
-  // @ts-expect-error
-  rootDom.append(cardStyleElement);
-  const cardStyleElementSheet =
-    (cardStyleElement as unknown as HTMLStyleElement).sheet!;
-  const updateCSSInJsStyle: (
+  let cssOGInfo: CssOGInfo = {};
+  const cssOGStyleElement: HTMLStyleElement | null =
+    (ssrHydrateInfo?.cssOGStyleElement as HTMLStyleElement)
+      ?? callbacks.createElement('style') as unknown as HTMLStyleElement;
+  if (!isSSR || !pageConfig.enableCSSSelector) {
+    /**
+     * now create the style content
+     * 1. flatten the styleInfo
+     * 2. transform the styleInfo to web css
+     * 3. generate the css in js info
+     * 4. create the style element
+     * 5. append the style element to the root dom
+     */
+    flattenStyleInfo(
+      styleInfo,
+      pageConfig.enableCSSSelector,
+    );
+    transformToWebCss(styleInfo);
+    if (!pageConfig.enableCSSSelector) {
+      cssOGInfo = genCssOGInfo(styleInfo);
+      if (!isSSR) {
+        cssOGStyleElement?.setAttribute('id', cssOGStyleContainerId);
+        rootDom.append(cssOGStyleElement);
+      }
+    }
+    if (!isSSR) {
+      const cardStyleElement = callbacks.createElement('style');
+      cardStyleElement.innerHTML = genCssContent(
+        styleInfo,
+        pageConfig,
+      );
+      // @ts-expect-error
+      rootDom.append(cardStyleElement);
+    }
+  }
+  const cssOGStyleSheets = (cssOGStyleElement as unknown as HTMLStyleElement)
+    .sheet!;
+
+  const updateCssOGStyle: (
     uniqueId: number,
     newStyles: string,
   ) => void = (uniqueId, newStyles) => {
     if (lynxUniqueIdToStyleRulesIndex[uniqueId] !== undefined) {
-      const rule = cardStyleElementSheet
+      const rule = cssOGStyleSheets
         .cssRules[lynxUniqueIdToStyleRulesIndex[uniqueId]] as CSSStyleRule;
       rule.style.cssText = newStyles;
     } else {
-      const index = cardStyleElementSheet.insertRule(
+      const index = cssOGStyleSheets.insertRule(
         `[${lynxUniqueIdAttribute}="${uniqueId}"]{${newStyles}}`,
-        cardStyleElementSheet.cssRules.length,
+        cssOGStyleSheets.cssRules.length,
       );
       lynxUniqueIdToStyleRulesIndex[uniqueId] = index;
     }
@@ -381,7 +405,7 @@ export function createMainThreadGlobalThis(
     const element = callbacks.createElement(htmlTag);
     lynxUniqueIdToElement[uniqueId] = new WeakRef(element);
     const parentComponentCssID = lynxUniqueIdToElement[parentComponentUniqueId]
-      ?.deref()?.getAttribute(cssIdAttribute);
+      ?.deref()?.getAttribute?.(cssIdAttribute);
     parentComponentCssID && parentComponentCssID !== '0'
       && element.setAttribute(cssIdAttribute, parentComponentCssID);
     element.setAttribute(lynxTagAttribute, tag);
@@ -553,12 +577,12 @@ export function createMainThreadGlobalThis(
       ((element.getAttribute('class') ?? '') + ' ' + className)
         .trim();
     element.setAttribute('class', newClassName);
-    const newStyleStr = decodeCssInJs(
+    const newStyleStr = decodeCssOG(
       newClassName,
-      cssInJsInfo,
+      cssOGInfo,
       element.getAttribute(cssIdAttribute),
     );
-    updateCSSInJsStyle(
+    updateCssOGStyle(
       Number(element.getAttribute(lynxUniqueIdAttribute)),
       newStyleStr,
     );
@@ -569,12 +593,12 @@ export function createMainThreadGlobalThis(
     classNames,
   ) => {
     __SetClasses(element, classNames);
-    const newStyleStr = decodeCssInJs(
+    const newStyleStr = decodeCssOG(
       classNames ?? '',
-      cssInJsInfo,
+      cssOGInfo,
       element.getAttribute(cssIdAttribute),
     );
-    updateCSSInJsStyle(
+    updateCssOGStyle(
       Number(element.getAttribute(lynxUniqueIdAttribute)),
       newStyleStr ?? '',
     );
@@ -607,8 +631,8 @@ export function createMainThreadGlobalThis(
     callbacks.flushElementTree(options, timingFlagsCopied);
   };
 
-  const __GetTemplateParts: GetTemplatePartsPAPI = () => {
-    return undefined;
+  const __GetTemplateParts: GetTemplatePartsPAPI = (element) => {
+    return lynxTemplateParts.get(element) ?? {};
   };
 
   const __GetPageElement: GetPageElementPAPI = () => {

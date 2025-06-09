@@ -29,6 +29,9 @@ export interface LynxViewConfigs {
   tagMap: Record<string, string>;
   lynxGroupId: number | undefined;
   threadStrategy: 'all-on-ui' | 'multi-thread';
+  ssr?: {
+    ssrHydrateData: string | null;
+  };
 }
 
 export interface LynxView {
@@ -54,6 +57,7 @@ export function createLynxView(configs: LynxViewConfigs): LynxView {
     tagMap,
     lynxGroupId,
     threadStrategy = 'multi-thread',
+    ssr,
   } = configs;
   return startUIThread(
     templateUrl,
@@ -73,5 +77,6 @@ export function createLynxView(configs: LynxViewConfigs): LynxView {
     lynxGroupId,
     threadStrategy,
     callbacks,
+    ssr,
   );
 }

@@ -39,6 +39,8 @@ function getInnerHTMLImpl(
   }
   if (element[innerHTML]) {
     buffer.push(element[innerHTML]);
+  } else if (element._cssRuleContents.length > 0) {
+    buffer.push(...element._cssRuleContents);
   } else {
     for (const child of element[_children]) {
       getInnerHTMLImpl(

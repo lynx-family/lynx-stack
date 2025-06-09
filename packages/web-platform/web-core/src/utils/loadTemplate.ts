@@ -100,6 +100,8 @@ const mainThreadInjectVars = [
   '__OnLifecycleEvent',
   '__FlushElementTree',
   '__LoadLepusChunk',
+  '__GetPageElement',
+  '__GetTemplateParts',
   'SystemInfo',
 ];
 

@@ -324,7 +324,7 @@ export interface MainThreadGlobalThis {
   lynx: MainThreadLynx;
   processData?: ProcessDataCallback;
   ssrEncode?: () => string;
-  ssrHydrate?: (encodeData?: string) => void;
+  ssrHydrate?: (encodeData?: string | null) => void;
   _ReportError: (error: string, _: unknown) => void;
   __OnLifecycleEvent: (lifeCycleEvent: Cloneable) => void;
   __LoadLepusChunk: (path: string) => boolean;
