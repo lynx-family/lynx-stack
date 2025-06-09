@@ -81,7 +81,7 @@ test('App', async () => {
             </text>
           </view>
           <view
-            style="flex: 1;"
+            style="flex: 1 1 0%;"
           />
         </view>
       </view>
