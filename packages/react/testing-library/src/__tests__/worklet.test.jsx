@@ -428,7 +428,7 @@ describe('worklet', () => {
       <page>
         <view
           has-react-ref="true"
-          style="width: 300px; height: 300px;"
+          style="width:300px;height:300px"
         >
           <text>
             Hello main thread ref
