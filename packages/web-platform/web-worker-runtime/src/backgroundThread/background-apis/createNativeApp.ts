@@ -14,6 +14,7 @@ import {
   systemInfo,
   type BackMainThreadContextConfig,
   I18nResource,
+  reportErrorEndpoint,
 } from '@lynx-js/web-constants';
 import { createInvokeUIMethod } from './crossThreadHandlers/createInvokeUIMethod.js';
 import { registerPublicComponentEventHandler } from './crossThreadHandlers/registerPublicComponentEventHandler.js';
@@ -61,6 +62,7 @@ export async function createNativeApp(
     selectComponentEndpoint,
     3,
   );
+  const reportError = uiThreadRpc.createCall(reportErrorEndpoint);
   const createBundleInitReturnObj = (): BundleInitReturnObj => {
     const entry = (globalThis.module as LynxJSModule).exports;
     return {
@@ -91,6 +93,7 @@ export async function createNativeApp(
     };
   };
   const i18nResource = new I18nResource();
+  let release = '';
   const nativeApp: NativeApp = {
     id: (nativeAppCount++).toString(),
     ...performanceApis,
@@ -167,6 +170,8 @@ export async function createNativeApp(
       return sharedData[dataKey] as T | undefined;
     },
     i18nResource,
+    reportException: (err: Error, _: unknown) => reportError(err, _, release),
+    __SetSourceMapRelease: (err: Error) => release = err.message,
   };
   return nativeApp;
 }

@@ -7,8 +7,6 @@ import {
   type Cloneable,
   type I18nResourceTranslationOptions,
   type InitI18nResources,
-  type NapiModulesCall,
-  type NativeModulesCall,
 } from '@lynx-js/web-constants';
 import type { Rpc } from '@lynx-js/web-worker-rpc';
 import { registerInvokeUIMethodHandler } from './crossThreadHandlers/registerInvokeUIMethodHandler.js';
@@ -19,14 +17,13 @@ import { registerSelectComponentHandler } from './crossThreadHandlers/registerSe
 import { registerNapiModulesCallHandler } from './crossThreadHandlers/registerNapiModulesCallHandler.js';
 import { registerDispatchLynxViewEventHandler } from './crossThreadHandlers/registerDispatchLynxViewEventHandler.js';
 import { registerTriggerElementMethodEndpointHandler } from './crossThreadHandlers/registerTriggerElementMethodEndpointHandler.js';
+import type { StartUIThreadCallbacks } from './startUIThread.js';
+import { registerReportErrorHandler } from './crossThreadHandlers/registerReportErrorHandler.js';
 
 export function startBackground(
   backgroundRpc: Rpc,
   shadowRoot: ShadowRoot,
-  callbacks: {
-    nativeModulesCall: NativeModulesCall;
-    napiModulesCall: NapiModulesCall;
-  },
+  callbacks: StartUIThreadCallbacks,
 ) {
   registerInvokeUIMethodHandler(
     backgroundRpc,
@@ -54,6 +51,7 @@ export function startBackground(
   );
   registerDispatchLynxViewEventHandler(backgroundRpc, shadowRoot);
   registerTriggerElementMethodEndpointHandler(backgroundRpc, shadowRoot);
+  registerReportErrorHandler(backgroundRpc, callbacks.onError);
 
   const sendGlobalEvent = backgroundRpc.createCall(sendGlobalEventEndpoint);
   const markTiming = backgroundRpc.createCall(markTimingEndpoint);

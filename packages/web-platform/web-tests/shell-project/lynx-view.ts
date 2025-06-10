@@ -14,11 +14,6 @@ export const lynxViewTests = (callback: (lynxView: LynxView) => void) => {
   lynxView.initData = { mockData: 'mockData' };
   lynxView.setAttribute('height', 'auto');
   lynxView.globalProps = { backgroundColor: 'pink' };
-  lynxView.addEventListener('error', (e) => {
-    console.log(e);
-    lynxView.setAttribute('style', 'display:none');
-    lynxView.innerHTML = '';
-  });
   lynxView.addEventListener('timing', (ev) => {
     // @ts-expect-error
     globalThis.timing = Object.assign(globalThis.timing ?? {}, ev.detail);

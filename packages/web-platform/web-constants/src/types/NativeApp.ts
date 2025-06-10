@@ -192,4 +192,7 @@ export interface NativeApp {
   getSharedData<T = unknown>(dataKey: string): T | undefined;
 
   i18nResource: I18nResource;
+
+  reportException: (error: Error, _: unknown) => void;
+  __SetSourceMapRelease: (err: Error) => void;
 }
