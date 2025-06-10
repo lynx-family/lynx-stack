@@ -1,6 +1,8 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import path from 'node:path'
+
 import { createRsbuild } from '@rsbuild/core'
 import type { RsbuildInstance } from '@rsbuild/core'
 import { describe, expect, test, vi } from 'vitest'
@@ -41,12 +43,16 @@ describe('Config', () => {
 
     expect(config.resolve.alias).toHaveProperty(
       '@lynx-js/react$',
-      expect.stringContaining('/packages/react/runtime/lib/index.js'),
+      expect.stringContaining(
+        '/packages/react/runtime/lib/index.js'.replaceAll('/', path.sep),
+      ),
     )
 
     expect(config.resolve.alias).toHaveProperty(
       '@lynx-js/react/internal$',
-      expect.stringContaining('/packages/react/runtime/lib/internal.js'),
+      expect.stringContaining(
+        '/packages/react/runtime/lib/internal.js'.replaceAll('/', path.sep),
+      ),
     )
 
     expect(config.resolve.alias).not.toHaveProperty(
@@ -63,64 +69,112 @@ describe('Config', () => {
 
     expect(config.resolve.alias).toHaveProperty(
       '@lynx-js/react/refresh$',
-      expect.stringContaining('/packages/react/refresh/dist/index.js'),
+      expect.stringContaining(
+        '/packages/react/refresh/dist/index.js'.replaceAll('/', path.sep),
+      ),
     )
 
     expect(config.resolve.alias).toHaveProperty(
       'preact$',
-      expect.stringContaining('/preact/dist/preact.mjs'),
+      expect.stringContaining(
+        '/preact/dist/preact.mjs'.replaceAll('/', path.sep),
+      ),
     )
     expect(config.resolve.alias).toHaveProperty(
       'preact/compat$',
-      expect.stringContaining('/preact/compat/dist/compat.mjs'),
+      expect.stringContaining(
+        '/preact/compat/dist/compat.mjs'.replaceAll('/', path.sep),
+      ),
     )
     expect(config.resolve.alias).toHaveProperty(
       'preact/debug$',
-      expect.stringContaining('/preact/debug/dist/debug.mjs'),
+      expect.stringContaining(
+        '/preact/debug/dist/debug.mjs'.replaceAll('/', path.sep),
+      ),
     )
     expect(config.resolve.alias).toHaveProperty(
       'preact/devtools$',
-      expect.stringContaining('/preact/devtools/dist/devtools.mjs'),
+      expect.stringContaining(
+        '/preact/devtools/dist/devtools.mjs'.replaceAll('/', path.sep),
+      ),
     )
     expect(config.resolve.alias).toHaveProperty(
       'preact/hooks$',
-      expect.stringContaining('/preact/hooks/dist/hooks.mjs'),
+      expect.stringContaining(
+        '/preact/hooks/dist/hooks.mjs'.replaceAll('/', path.sep),
+      ),
     )
     expect(config.resolve.alias).toHaveProperty(
       'preact/test-utils$',
-      expect.stringContaining('/preact/test-utils/dist/testUtils.mjs'),
+      expect.stringContaining(
+        '/preact/test-utils/dist/testUtils.mjs'.replaceAll('/', path.sep),
+      ),
     )
     expect(config.resolve.alias).toHaveProperty(
       'preact/jsx-runtime$',
-      expect.stringContaining('/preact/jsx-runtime/dist/jsxRuntime.mjs'),
+      expect.stringContaining(
+        '/preact/jsx-runtime/dist/jsxRuntime.mjs'.replaceAll('/', path.sep),
+      ),
     )
     expect(config.resolve.alias).toHaveProperty(
       'preact/jsx-dev-runtime$',
       expect.stringContaining(
-        '/preact/jsx-runtime/dist/jsxRuntime.mjs',
+        '/preact/jsx-runtime/dist/jsxRuntime.mjs'.replaceAll('/', path.sep),
       ),
     )
     expect(config.resolve.alias).toHaveProperty(
       'preact/compat/client$',
-      expect.stringContaining('/preact/compat/client.mjs'),
+      expect.stringContaining(
+        '/preact/compat/client.mjs'.replaceAll('/', path.sep),
+      ),
     )
     expect(config.resolve.alias).toHaveProperty(
       'preact/compat/server$',
-      expect.stringContaining('/preact/compat/server.mjs'),
+      expect.stringContaining(
+        '/preact/compat/server.mjs'.replaceAll('/', path.sep),
+      ),
     )
     expect(config.resolve.alias).toHaveProperty(
       'preact/compat/jsx-runtime$',
-      expect.stringContaining('/preact/compat/jsx-runtime.mjs'),
+      expect.stringContaining(
+        '/preact/compat/jsx-runtime.mjs'.replaceAll('/', path.sep),
+      ),
     )
     expect(config.resolve.alias).toHaveProperty(
       'preact/compat/jsx-dev-runtime$',
       expect.stringContaining(
-        '/preact/compat/jsx-dev-runtime.mjs',
+        '/preact/compat/jsx-dev-runtime.mjs'.replaceAll('/', path.sep),
       ),
     )
     expect(config.resolve.alias).toHaveProperty(
       'preact/compat/scheduler$',
-      expect.stringContaining('/preact/compat/scheduler.mjs'),
+      expect.stringContaining(
+        '/preact/compat/scheduler.mjs'.replaceAll('/', path.sep),
+      ),
+    )
+    expect(config.resolve.alias).toHaveProperty(
+      'use-sync-external-store$',
+      expect.stringContaining(
+        '/use-sync-external-store/index.js'.replaceAll('/', path.sep),
+      ),
+    )
+    expect(config.resolve.alias).toHaveProperty(
+      'use-sync-external-store/with-selector$',
+      expect.stringContaining(
+        '/use-sync-external-store/with-selector.js'.replaceAll('/', path.sep),
+      ),
+    )
+    expect(config.resolve.alias).toHaveProperty(
+      'use-sync-external-store/shim$',
+      expect.stringContaining(
+        '/use-sync-external-store/index.js'.replaceAll('/', path.sep),
+      ),
+    )
+    expect(config.resolve.alias).toHaveProperty(
+      'use-sync-external-store/shim/with-selector$',
+      expect.stringContaining(
+        '/use-sync-external-store/with-selector.js'.replaceAll('/', path.sep),
+      ),
     )
   })
 
@@ -153,12 +207,16 @@ describe('Config', () => {
 
     expect(config.resolve.alias).toHaveProperty(
       '@lynx-js/react$',
-      expect.stringContaining('/packages/react/runtime/lib/index.js'),
+      expect.stringContaining(
+        '/packages/react/runtime/lib/index.js'.replaceAll('/', path.sep),
+      ),
     )
 
     expect(config.resolve.alias).toHaveProperty(
       '@lynx-js/react/internal$',
-      expect.stringContaining('/packages/react/runtime/lib/internal.js'),
+      expect.stringContaining(
+        '/packages/react/runtime/lib/internal.js'.replaceAll('/', path.sep),
+      ),
     )
 
     expect(config.resolve.alias).not.toHaveProperty(
@@ -175,6 +233,31 @@ describe('Config', () => {
 
     expect(config.resolve.alias).not.toHaveProperty(
       '@lynx-js/react/refresh$',
+    )
+
+    expect(config.resolve.alias).toHaveProperty(
+      'use-sync-external-store$',
+      expect.stringContaining(
+        '/use-sync-external-store/index.js'.replaceAll('/', path.sep),
+      ),
+    )
+    expect(config.resolve.alias).toHaveProperty(
+      'use-sync-external-store/with-selector$',
+      expect.stringContaining(
+        '/use-sync-external-store/with-selector.js'.replaceAll('/', path.sep),
+      ),
+    )
+    expect(config.resolve.alias).toHaveProperty(
+      'use-sync-external-store/shim$',
+      expect.stringContaining(
+        '/use-sync-external-store/index.js'.replaceAll('/', path.sep),
+      ),
+    )
+    expect(config.resolve.alias).toHaveProperty(
+      'use-sync-external-store/shim/with-selector$',
+      expect.stringContaining(
+        '/use-sync-external-store/with-selector.js'.replaceAll('/', path.sep),
+      ),
     )
   })
 
@@ -1485,7 +1568,6 @@ describe('Config', () => {
       const rsbuild = await createRspeedy({
         rspeedyConfig: {
           source: {
-            tsconfigPath: new URL('./tsconfig.json', import.meta.url).pathname,
             entry: {
               main: new URL('./fixtures/defineDCE/basic.js', import.meta.url)
                 .pathname,

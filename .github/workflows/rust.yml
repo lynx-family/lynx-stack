@@ -20,8 +20,16 @@ concurrency:
   cancel-in-progress: true
 jobs:
   test:
-    runs-on: lynx-ubuntu-24.04-xlarge
-    timeout-minutes: 10
+    name: Test (${{ matrix.runs-on.name }})
+    runs-on: ${{ matrix.runs-on.label }}
+    strategy:
+      matrix:
+        runs-on:
+          - label: lynx-ubuntu-24.04-xlarge
+            name: Ubuntu
+          - label: lynx-windows-2022-large
+            name: Windows
+    timeout-minutes: 30
     permissions:
       contents: read
     steps:
@@ -32,12 +40,13 @@ jobs:
         with:
           cache-key: test-${{ runner.os }}
       - name: Install llvm-cov and nextest
-        uses: taiki-e/install-action@84c20235bedc3797c7e1ddf685c574a4a6c666da # v2
+        uses: taiki-e/install-action@92f69c195229fe62d58b4d697ab4bc75def98e76 # v2
         with:
           tool: cargo-llvm-cov,cargo-nextest
       - name: Test
+        env:
+          CARGO_LLVM_COV_FLAGS_NO_RUNNER: --no-sparse
         run: |
-          export CARGO_LLVM_COV_FLAGS_NO_RUNNER='--no-sparse'
           cargo llvm-cov nextest --profile ci --config-file .cargo/nextest.toml --lcov --output-path lcov.info  --release
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@18283e04ce6e62d37312384ff67231eb8fd56d24 # v5
@@ -62,6 +71,6 @@ jobs:
       - uses: actions-rust-lang/setup-rust-toolchain@9d7e65c320fdb52dcd45ffaa68deb6c02c8754d9 # v1
         with:
           components: rustfmt
-          cache-key: test-${{ runner.os }}
+          cache: false
       - name: Format
         run: cargo fmt --check

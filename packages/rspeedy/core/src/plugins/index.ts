@@ -12,6 +12,9 @@ async function applyDebugPlugins(
   config: Config,
 ): Promise<void> {
   const debugPlugins = Object.freeze<Promise<RsbuildPlugin>[]>([
+    import('./emitOnErrors.plugin.js').then(({ pluginEmitOnErrors }) =>
+      pluginEmitOnErrors()
+    ),
     import('./inspect.plugin.js').then(({ pluginInspect }) =>
       pluginInspect(config)
     ),

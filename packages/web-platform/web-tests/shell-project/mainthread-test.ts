@@ -2,10 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import {
-  lynxUniqueIdToElement,
-  MainThreadRuntime,
-} from '@lynx-js/web-mainthread-apis';
+import { createMainThreadGlobalThis } from '@lynx-js/web-mainthread-apis';
 import { initOffscreenDocument } from '@lynx-js/offscreen-document/main';
 import {
   _onEvent,
@@ -18,6 +15,8 @@ import type {
 import {
   lynxTagAttribute,
   lynxUniqueIdAttribute,
+  type MainThreadGlobalThis,
+  type WebFiberElementImpl,
 } from '@lynx-js/web-constants';
 
 type ComparableElementJson = {
@@ -25,7 +24,7 @@ type ComparableElementJson = {
   children: ComparableElementJson[];
   parentUid?: number;
 };
-let runtime: any;
+let runtime!: MainThreadGlobalThis;
 let elementOperations: ElementOperation[] = [];
 
 const div: HTMLElement = document.createElement('div');
@@ -43,7 +42,7 @@ const { decodeOperation } = initOffscreenDocument({
 });
 
 function serializeElementThreadElement(
-  element: OffscreenElement,
+  element: WebFiberElementImpl,
 ): ComparableElementJson {
   const parent = runtime.__GetParent(element);
   const tag = runtime.__GetTag(element);
@@ -76,14 +75,12 @@ function serializeDomElement(element: Element): ComparableElementJson {
 }
 
 function genFiberElementTree() {
-  const page = runtime[lynxUniqueIdToElement][1]
-    .deref() as unknown as OffscreenElement;
-  if (runtime.__GetTag(page) === 'page') {
-    return serializeElementThreadElement(page);
+  const page = runtime.__GetPageElement()!;
+  if (page && runtime.__GetTag(page) === 'page') {
+    return serializeElementThreadElement(page as any);
   } else {
     return {};
   }
-  return serializeElementThreadElement(page);
 }
 
 function genDomElementTree() {
@@ -96,7 +93,7 @@ function genDomElementTree() {
 }
 
 function initializeMainThreadTest() {
-  runtime = new MainThreadRuntime({
+  runtime = createMainThreadGlobalThis({
     tagMap: {
       'page': 'div',
       'view': 'x-view',
@@ -105,7 +102,10 @@ function initializeMainThreadTest() {
       'list': 'x-list',
       'svg': 'x-svg',
     },
-    lepusCode: { root: '' },
+    lepusCode: {
+      // @ts-expect-error
+      root: '',
+    },
     customSections: {},
     browserConfig: {
       pixelRatio: 0,
@@ -117,9 +117,10 @@ function initializeMainThreadTest() {
       enableRemoveCSSScope: true,
       defaultDisplayLinear: true,
       defaultOverflowVisible: false,
+      enableJSDataProcessor: false,
     },
+    // @ts-expect-error
     rootDom: docu,
-    createElement: docu.createElement.bind(docu),
     styleInfo: {},
     globalProps: {},
     callbacks: {
@@ -144,10 +145,13 @@ function initializeMainThreadTest() {
           publicComponentEvent: { componentId, hname, ev },
         });
       },
-      postExposure: () => {},
+      createElement: docu.createElement.bind(docu),
     },
-  }).globalThis;
+  });
+  const originalGlobalThis = globalThis;
   Object.assign(globalThis, runtime);
+  // @ts-ignore
+  globalThis = originalGlobalThis;
   Object.assign(globalThis, {
     genFiberElementTree,
     genDomElementTree,

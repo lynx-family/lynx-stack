@@ -1,5 +1,17 @@
 # @lynx-js/react
 
+## 0.109.2
+
+### Patch Changes
+
+- Support for locating errors in the source code directly on the device when exceptions occur when using MTS. ([#1019](https://github.com/lynx-family/lynx-stack/pull/1019))
+
+  This requires Lynx engine v3.4 or later.
+
+- Fix the "main-thread.js exception: ReferenceError: `__webpack_require__` is not defined" error in HMR. ([#985](https://github.com/lynx-family/lynx-stack/pull/985))
+
+  This error occurred when setting `output.iife: true`, which is the default value in `@lynx-js/rspeedy` v0.9.8.
+
 ## 0.109.1
 
 ### Patch Changes

@@ -15,12 +15,18 @@ export const _children = Symbol('_children');
 export const innerHTML = Symbol('innerHTML');
 export const uniqueId = Symbol('uniqueId');
 const _style = Symbol('_style');
+
+type OffscreenStyleSheet = {
+  cssRules: { style: { cssText: string } }[];
+  insertRule: (rule: string, index: number) => number;
+};
 export class OffscreenElement extends EventTarget {
   public [innerHTML]: string = '';
   private [_style]?: OffscreenCSSStyleDeclaration;
   private readonly [_attributes] = new Map<string, string>();
   private _parentElement: OffscreenElement | null = null;
   readonly [_children]: OffscreenElement[] = [];
+  #sheet?: OffscreenStyleSheet;
   /**
    * @private
    */
@@ -42,6 +48,39 @@ export class OffscreenElement extends EventTarget {
     this[uniqueId] = elementUniqueId;
   }
 
+  get sheet() {
+    if (!this.#sheet) {
+      const uid = this[uniqueId];
+      const ancestor = this[ancestorDocument];
+      const cssRules: { style: { cssText: string } }[] = [];
+      this.#sheet = {
+        cssRules,
+        insertRule: (rule: string, index: number) => {
+          cssRules.splice(index, 0, {
+            style: {
+              set cssText(text: string) {
+                ancestor[operations].push({
+                  type: OperationType.sheetRuleUpdateCssText,
+                  uid,
+                  cssText: text,
+                  index,
+                });
+              },
+            },
+          });
+          this[ancestorDocument][operations].push({
+            type: OperationType.sheetInsertRule,
+            uid,
+            rule,
+            index,
+          });
+          return index;
+        },
+      };
+    }
+    return this.#sheet!;
+  }
+
   get tagName(): string {
     return this.localName.toUpperCase();
   }
@@ -53,19 +92,6 @@ export class OffscreenElement extends EventTarget {
       );
     }
     return this[_style];
-  }
-
-  get id(): string {
-    return this[_attributes].get('id') ?? '';
-  }
-
-  set id(value: string) {
-    this[_attributes].set('id', value);
-    this.setAttribute('id', value);
-  }
-
-  get className(): string {
-    return this[_attributes].get('class') ?? '';
   }
 
   get children(): OffscreenElement[] {

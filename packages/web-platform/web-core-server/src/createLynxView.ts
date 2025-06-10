@@ -43,6 +43,7 @@ interface LynxViewConfig extends
   >;
   autoSize?: boolean;
   lynxViewStyle?: string;
+  threadStrategy?: 'all-on-ui';
 }
 
 const builtinElementTemplates = {
@@ -90,6 +91,7 @@ export async function createLynxView(
     autoSize,
     injectStyles,
     lynxViewStyle,
+    threadStrategy = 'all-on-ui',
   } = config;
   const template = await loadTemplate(rawTemplate, config.templateName);
   const { promise: firstPaintReadyPromise, resolve: firstPaintReady } = Promise
@@ -142,17 +144,16 @@ export async function createLynxView(
     buffer.push(
       '<lynx-view url="',
       hydrateUrl,
-      '" ssr',
+      '" ssr ',
+      'thread-strategy="',
+      threadStrategy,
+      '"',
     );
     if (autoSize) {
       buffer.push(' height="auto" width="auto"');
     }
     if (lynxViewStyle) {
       buffer.push(' style="', lynxViewStyle, '"');
-    }
-    if (ssrEncodeData) {
-      const encodeDataEncoded = ssrEncodeData ? encodeURI(ssrEncodeData) : ''; // to avoid XSS
-      buffer.push(' ssr-encode-data="', encodeDataEncoded, '"');
     }
     buffer.push(
       '><template shadowrootmode="open">',
@@ -169,8 +170,13 @@ export async function createLynxView(
     );
     buffer.push(
       '</template>',
-      '</lynx-view>',
     );
+
+    if (ssrEncodeData) {
+      const encodeDataEncoded = ssrEncodeData ? encodeURI(ssrEncodeData) : ''; // to avoid XSS
+      buffer.push('<!--', encodeDataEncoded, '-->');
+    }
+    buffer.push('</lynx-view>');
     return buffer.join('');
   }
   return {

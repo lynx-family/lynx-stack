@@ -383,7 +383,7 @@ export default defineConfig({
         editLink: {
           docRepoBaseUrl:
             'https://github.com/lynx-family/lynx-stack/tree/main/website/docs',
-          text: '📝 在 GitHub 上编辑此页',
+          text: '在 GitHub 上编辑此页',
         },
         searchNoResultsText: '未搜索到相关结果',
         searchPlaceholderText: '搜索文档',
@@ -402,7 +402,7 @@ export default defineConfig({
         editLink: {
           docRepoBaseUrl:
             'https://github.com/lynx-family/lynx-stack/tree/main/website/docs',
-          text: '📝 Edit this page on GitHub',
+          text: 'Edit this page on GitHub',
         },
       },
     ],
@@ -651,8 +651,6 @@ export default defineConfig({
     enableScrollToTop: true,
   },
   ssg: true,
-  // We use GitHub Pages to host the website, so we need to set the base path to `/lynx-stack/`
-  base: '/lynx-stack/',
   globalStyles: join(__dirname, 'src', 'styles', 'global.scss'),
   builderConfig: {
     output: {

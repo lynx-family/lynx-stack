@@ -13,3 +13,5 @@ export * from './NapiModules.js';
 export * from './FlushElementTreeOptions.js';
 export * from './LynxContextEventTarget.js';
 export * from './Element.js';
+export * from './MainThreadGlobalThis.js';
+export * from './MainThreadLynx.js';

@@ -6,7 +6,6 @@ import { fileURLToPath } from 'node:url'
 
 import type { RsbuildPluginAPI } from '@rsbuild/core'
 
-import { createLazyResolver } from '@lynx-js/react-alias-rsbuild-plugin'
 import { LAYERS } from '@lynx-js/react-webpack-plugin'
 
 const DETECT_IMPORT_ERROR = 'react:detect-import-error'
@@ -17,22 +16,15 @@ const ALIAS_BACKGROUND_ONLY_BACKGROUND =
 export function applyBackgroundOnly(
   api: RsbuildPluginAPI,
 ): void {
-  const __dirname = path.dirname(fileURLToPath(import.meta.url))
-
-  const backgroundResolve = createLazyResolver(
-    __dirname,
-    ['import'],
-  )
-  const mainThreadResolve = createLazyResolver(
-    __dirname,
-    ['lepus'],
-  )
-
   api.modifyBundlerChain(async chain => {
-    const backgroundOnly = {
-      background: await backgroundResolve('background-only'),
-      mainThread: await mainThreadResolve('background-only'),
-    }
+    const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
+    const { resolve, resolveMainThread } = await import('./resolve.js')
+
+    const [backgroundOnly, backgroundOnlyMainThread] = await Promise.all([
+      resolve('background-only'),
+      resolveMainThread('background-only'),
+    ])
 
     chain
       .module
@@ -42,7 +34,7 @@ export function applyBackgroundOnly(
       .alias
       .set(
         'background-only$',
-        backgroundOnly.mainThread,
+        backgroundOnlyMainThread,
       )
 
     chain
@@ -53,13 +45,13 @@ export function applyBackgroundOnly(
       .alias
       .set(
         'background-only$',
-        backgroundOnly.background,
+        backgroundOnly,
       )
 
     chain
       .module
       .rule(DETECT_IMPORT_ERROR)
-      .test(backgroundOnly.mainThread)
+      .test(backgroundOnlyMainThread)
       .issuerLayer(LAYERS.MAIN_THREAD)
       .use(DETECT_IMPORT_ERROR)
       .loader(path.resolve(__dirname, 'loaders/invalid-import-error-loader'))

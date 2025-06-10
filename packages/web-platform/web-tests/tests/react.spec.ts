@@ -96,6 +96,15 @@ test.describe('reactlynx3 tests', () => {
       await target.click();
       await expect(await target.getAttribute('style')).toContain('pink');
     });
+    test('basic-event-target-id', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(100);
+      const target = page.locator('#target');
+      await target.click();
+      await expect(await target.getAttribute('style')).toContain('green');
+      await target.click();
+      await expect(await target.getAttribute('style')).toContain('pink');
+    });
     test('basic-class-selector', async ({ page }, { title }) => {
       await goto(page, title);
       await wait(100);
@@ -2195,7 +2204,7 @@ test.describe('reactlynx3 tests', () => {
         await page.locator('input').fill('foobar');
         await wait(200);
         const result = await page.locator('.result').first().innerText();
-        expect(result).toBe('foobar');
+        expect(result).toBe('foobar-6-6');
       });
       // input/bindinput test-case end
       test(
@@ -2235,6 +2244,33 @@ test.describe('reactlynx3 tests', () => {
           expect(val).toBe(true);
           expect(selectionBegin).toBe(true);
           expect(selectionEnd).toBe(true);
+        },
+      );
+      test(
+        'basic-element-x-input-bindselection',
+        async ({ page }, { title }) => {
+          await goto(page, title);
+          await wait(200);
+          await page.evaluate(() => {
+            const inputDom = document.querySelector('lynx-view')?.shadowRoot
+              ?.querySelector('x-input')?.shadowRoot?.querySelector('input');
+            inputDom?.focus();
+            inputDom?.setSelectionRange(2, 5);
+          });
+          const result = await page.locator('.result').first().innerText();
+          expect(result).toBe('2-5');
+        },
+      );
+      test(
+        'basic-element-x-input-input-filter',
+        async ({ page }, { title }) => {
+          await goto(page, title);
+          await page.locator('input').press('Enter');
+          await wait(200);
+          await page.locator('input').fill('foobar!@#)');
+          await wait(200);
+          const result = await page.locator('.result').first().innerText();
+          expect(result).toBe('foobar');
         },
       );
     });
@@ -3477,6 +3513,8 @@ test.describe('reactlynx3 tests', () => {
               event.type === 'input'
               && dataset.testid === 'textarea'
               && event.detail.value === 'value'
+              && event.detail.selectionStart === 5
+              && event.detail.selectionEnd === 5
             ) {
               bindinput = true;
             }
@@ -3533,6 +3571,36 @@ test.describe('reactlynx3 tests', () => {
           expect(val).toBe(true);
           expect(selectionBegin).toBe(true);
           expect(selectionEnd).toBe(true);
+        },
+      );
+      test(
+        'basic-element-x-textarea-bindselection',
+        async ({ page }, { title }) => {
+          await goto(page, title);
+          await wait(200);
+          await page.evaluate(() => {
+            const textareaDom = document.querySelector('lynx-view')?.shadowRoot
+              ?.querySelector('x-textarea')?.shadowRoot?.querySelector(
+                'textarea',
+              );
+            textareaDom?.focus();
+            textareaDom?.setSelectionRange(2, 5);
+          });
+          const result = await page.locator('.result').first().innerText();
+          expect(result).toBe('2-5');
+        },
+      );
+
+      test(
+        'basic-element-x-textarea-input-filter',
+        async ({ page }, { title }) => {
+          await goto(page, title);
+          await page.locator('textarea').press('Enter');
+          await wait(200);
+          await page.locator('textarea').fill('foobar!@#)');
+          await wait(200);
+          const result = await page.locator('.result').first().innerText();
+          expect(result).toBe('foobar');
         },
       );
     });

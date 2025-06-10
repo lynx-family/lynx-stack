@@ -1,5 +1,34 @@
 # @lynx-js/web-constants
 
+## 0.13.5
+
+### Patch Changes
+
+- refactor: move some internal status to dom's attribute ([#945](https://github.com/lynx-family/lynx-stack/pull/945))
+
+  It's essential for SSR
+
+- fix: target.id is undefined ([#1016](https://github.com/lynx-family/lynx-stack/pull/1016))
+
+- feat: add new pageConfig configuration: enableJSDataProcessor ([#886](https://github.com/lynx-family/lynx-stack/pull/886))
+
+- refactor: move component config info to attribute ([#984](https://github.com/lynx-family/lynx-stack/pull/984))
+
+- refactor: save dataset on an attribute ([#981](https://github.com/lynx-family/lynx-stack/pull/981))
+
+  On lynx, the `data-*` attributes have different behaviors than the HTMLElement has.
+
+  The dataset will be treated as properties, the key will not be applied the camel-case <-> hyphenate name transformation.
+
+  Before this commit we use it as a runtime data, but after this commit we will use encodeURI(JSON.stringify(dataset)) to encode it as a string.
+
+- refactor: create elements of `elementToRuntimeInfoMap` on demand ([#986](https://github.com/lynx-family/lynx-stack/pull/986))
+
+- refactor: implement mts apis in closure pattern ([#1004](https://github.com/lynx-family/lynx-stack/pull/1004))
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.13.5
+
 ## 0.13.4
 
 ### Patch Changes

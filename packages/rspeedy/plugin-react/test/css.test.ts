@@ -252,7 +252,7 @@ describe('Plugins - CSS', () => {
 
       expect(mainThreadRule).not.toBeUndefined()
       expect({ module: { rules: [mainThreadRule] } }).toHaveLoader(
-        /\/css-loader\//,
+        /[\\/]css-loader[\\/]/,
       )
       expect({ module: { rules: [mainThreadRule] } }).not.toHaveLoader(
         CssExtractRspackPlugin.loader,
@@ -260,7 +260,7 @@ describe('Plugins - CSS', () => {
 
       const cssLoaderOptions = getLoaderOptions<CSSLoaderOptions>({
         module: { rules: [mainThreadRule] },
-      }, /\/css-loader\//)
+      }, /[\\/]css-loader[\\/]/)
 
       expect(cssLoaderOptions).not.toBeUndefined()
       expect(cssLoaderOptions?.modules).toHaveProperty(
@@ -293,7 +293,7 @@ describe('Plugins - CSS', () => {
 
       expect(mainThreadRule).not.toBeUndefined()
       expect({ module: { rules: [mainThreadRule] } }).toHaveLoader(
-        /\/css-loader\//,
+        /[\\/]css-loader[\\/]/,
       )
       expect({ module: { rules: [mainThreadRule] } }).not.toHaveLoader(
         CssExtractRspackPlugin.loader,
@@ -301,7 +301,7 @@ describe('Plugins - CSS', () => {
 
       const cssLoaderOptions = getLoaderOptions<CSSLoaderOptions>({
         module: { rules: [mainThreadRule] },
-      }, /\/css-loader\//)
+      }, /[\\/]css-loader[\\/]/)
 
       expect(cssLoaderOptions).not.toBeUndefined()
       expect(cssLoaderOptions?.modules).toStrictEqual({
@@ -333,7 +333,7 @@ describe('Plugins - CSS', () => {
 
       expect(mainThreadRule).not.toBeUndefined()
       expect({ module: { rules: [mainThreadRule] } }).toHaveLoader(
-        /\/css-loader\//,
+        /[\\/]css-loader[\\/]/,
       )
       expect({ module: { rules: [mainThreadRule] } }).not.toHaveLoader(
         CssExtractRspackPlugin.loader,
@@ -341,7 +341,7 @@ describe('Plugins - CSS', () => {
 
       const cssLoaderOptions = getLoaderOptions<CSSLoaderOptions>({
         module: { rules: [mainThreadRule] },
-      }, /\/css-loader\//)
+      }, /[\\/]css-loader[\\/]/)
 
       expect(cssLoaderOptions).not.toBeUndefined()
       expect(cssLoaderOptions?.modules).toHaveProperty(

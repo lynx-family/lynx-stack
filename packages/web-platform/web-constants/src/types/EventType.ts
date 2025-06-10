@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import type { Cloneable } from './Cloneable.js';
+import type { WebFiberElementImpl } from './Element.js';
 
 export type LynxEventType =
   | 'bindEvent'
@@ -14,7 +15,7 @@ export interface LynxCrossThreadEventTarget {
   dataset: {
     [key: string]: Cloneable;
   };
-  id?: string;
+  id: string | null;
   uniqueId: number;
 }
 
@@ -56,3 +57,17 @@ export type ExposureEvent = {
 export type ExposureWorkerEvent =
   & LynxCrossThreadEvent<ExposureEventDetail>
   & ExposureEventDetail;
+
+export type MinimalRawEventObject = {
+  type: string;
+  target: Pick<WebFiberElementImpl, 'getAttribute'> | null;
+  currentTarget: Pick<WebFiberElementImpl, 'getAttribute'> | null;
+  detail?: Cloneable;
+  isTrusted: boolean;
+  timeStamp: number;
+  propertyName?: string; // For transition events
+  animationName?: string; // For animation events
+  touches?: unknown[]; // For touch events
+  targetTouches?: unknown[]; // For touch events
+  changedTouches?: unknown[]; // For touch events
+};

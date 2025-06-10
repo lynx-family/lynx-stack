@@ -83,6 +83,7 @@ export class LynxView extends HTMLElement {
   );
   #instance?: LynxViewInstance;
 
+  #connected = false;
   #url?: string;
   /**
    * @public
@@ -351,7 +352,7 @@ export class LynxView extends HTMLElement {
    * @private
    */
   #render() {
-    if (!this.#rendering) {
+    if (!this.#rendering && this.#connected) {
       this.#rendering = true;
       queueMicrotask(() => {
         this.#rendering = false;
@@ -436,6 +437,7 @@ export class LynxView extends HTMLElement {
    * @private
    */
   connectedCallback() {
+    this.#connected = true;
     this.#render();
   }
 }

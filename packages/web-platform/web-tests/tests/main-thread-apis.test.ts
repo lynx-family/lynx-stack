@@ -226,7 +226,7 @@ test.describe('main thread api tests', () => {
       };
     });
     expect(ret.ret0).toBeFalsy();
-    expect(ret.ret_u).toBe(undefined);
+    expect(ret.ret_u).toBeFalsy();
     expect(ret.ret1).toBe('text');
   });
 
@@ -248,8 +248,8 @@ test.describe('main thread api tests', () => {
         ret1: globalThis.__GetTag(ret1),
       };
     });
-    expect(ret.ret0).toBe(undefined);
-    expect(ret.ret_u).toBe(undefined);
+    expect(ret.ret0).toBeFalsy();
+    expect(ret.ret_u).toBeFalsy();
     expect(ret.ret1).toBe('view');
   });
 
@@ -271,8 +271,8 @@ test.describe('main thread api tests', () => {
         ret1: globalThis.__GetTag(ret1),
       };
     });
-    expect(ret.ret0).toBe(undefined);
-    expect(ret.ret_u).toBe(undefined);
+    expect(ret.ret0).toBeFalsy();
+    expect(ret.ret_u).toBeFalsy();
     expect(ret.ret1).toBe('image');
   });
 
@@ -297,7 +297,7 @@ test.describe('main thread api tests', () => {
         ret1: globalThis.__GetTag(ret1),
       };
     });
-    expect(ret.ret0).toBe(undefined);
+    expect(ret.ret0).toBeFalsy();
     expect(ret.ret1).toBe('scroll-view');
   });
 
@@ -321,7 +321,7 @@ test.describe('main thread api tests', () => {
         ],
       };
     });
-    expect(ret.ret0).toBe(undefined);
+    expect(ret.ret0).toBeFalsy();
     expect(ret.ret_children[0]).toBe('image');
     expect(ret.ret_children[1]).toBe('view');
   });
@@ -365,8 +365,8 @@ test.describe('main thread api tests', () => {
         ret_u,
       };
     });
-    expect(ret.ret0).toBe(undefined);
-    expect(ret.ret_u).toBe(undefined);
+    expect(ret.ret0).toBeFalsy();
+    expect(ret.ret_u).toBeFalsy();
     expect(Array.isArray(ret.ret1)).toBe(true);
     expect(ret.ret1.length).toBe(3);
   });
@@ -1058,7 +1058,7 @@ test.describe('main thread api tests', () => {
           ret1: globalThis.__GetTag(ret1),
         };
       });
-      expect(ret.ret0).toBe(undefined);
+      expect(ret.ret0).toBeFalsy();
       expect(ret.ret1).toBe('scroll-view');
     },
   );
