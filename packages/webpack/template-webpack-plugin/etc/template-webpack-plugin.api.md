@@ -83,9 +83,6 @@ export class LynxEncodePlugin {
     static BEFORE_ENCODE_STAGE: number;
     static defaultOptions: Readonly<Required<LynxEncodePluginOptions>>;
     static ENCODE_STAGE: number;
-    static encodeCSS(cssChunks: string[], encodeOptions: EncodeOptions, plugins?: CSS.Plugin[], encode?: (options: any) => Promise<{
-        buffer: Buffer;
-    }>): Promise<Buffer>;
     // (undocumented)
     protected options?: LynxEncodePluginOptions | undefined;
 }

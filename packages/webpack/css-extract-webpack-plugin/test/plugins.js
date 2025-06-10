@@ -15,36 +15,51 @@ export const mockLynxTemplatePlugin = (encodeOptions = {}) => {
       compiler.hooks.thisCompilation.tap(
         'MockLynxTemplatePlugin',
         (compilation) => {
-          // Wait CSS Extract Plugin to finish its `hooks.encode.tap`
-          setTimeout(() => {
+          const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(
             // @ts-expect-error
-            const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(
-              compilation,
-            );
-            hooks.encode.promise({
-              templateType: 'main',
-              encodeOptions: {
-                'compilerOptions': {
-                  'enableRemoveCSSScope': false,
-                },
-                'sourceContent': {
-                  'dsl': 'react_nodiff',
-                  'appType': 'card',
-                  'config': {
-                    'lepusStrict': true,
+            compilation,
+          );
+          hooks.encode.tapPromise(
+            'MockLynxTemplatePlugin',
+            (args) => {
+              const buffer = Buffer.from(JSON.stringify(args.encodeOptions));
+              return Promise.resolve({
+                buffer,
+                debugInfo: '',
+              });
+            },
+          );
+          compilation.hooks.processAssets.tap(
+            {
+              name: 'MockLynxTemplatePlugin',
+              stage: compiler.webpack.Compilation
+                .PROCESS_ASSETS_STAGE_OPTIMIZE_HASH,
+            },
+            () => {
+              // @ts-expect-error Only finalEncodeOptions is used in the css extract plugin.
+              hooks.beforeEmit.promise({
+                finalEncodeOptions: {
+                  'compilerOptions': {
+                    'enableRemoveCSSScope': false,
                   },
+                  'sourceContent': {
+                    'dsl': 'react_nodiff',
+                    'appType': 'card',
+                    'config': {
+                      'lepusStrict': true,
+                    },
+                  },
+                  'manifest': {},
+                  'lepusCode': {
+                    'root': undefined,
+                    'lepusChunk': {},
+                  },
+                  'customSections': {},
+                  ...encodeOptions,
                 },
-                'manifest': {},
-                'lepusCode': {
-                  'root': undefined,
-                  'lepusChunk': {},
-                },
-                'customSections': {},
-                ...encodeOptions,
-              },
-              intermediate: '.rspeedy/main',
-            });
-          });
+              });
+            },
+          );
         },
       );
     },

@@ -5,9 +5,6 @@
 import type { Compiler } from 'webpack';
 
 import { LynxTemplatePlugin } from './LynxTemplatePlugin.js';
-import type { EncodeOptions } from './LynxTemplatePlugin.js';
-
-import type { CSS } from './index.js';
 
 /**
  * The options for LynxEncodePluginOptions
@@ -37,37 +34,6 @@ export class LynxEncodePlugin {
    */
   static BEFORE_EMIT_STAGE = 256;
   constructor(protected options?: LynxEncodePluginOptions | undefined) {}
-
-  /**
-   * Encode CSS chunks into a template.
-   *
-   * @param cssChunks - The CSS chunks' content.
-   * @param options - The encode options.
-   * @returns The buffer of the template.
-   *
-   * @example
-   * ```
-   * (await encodeCSS(
-   *   '.red { color: red; }',
-   *   {
-   *     targetSdkVersion: '3.2',
-   *     enableCSSSelector: true,
-   *   },
-   * )).toString('base64'),
-   * ```
-   */
-  static async encodeCSS(
-    cssChunks: string[],
-    encodeOptions: EncodeOptions,
-    plugins?: CSS.Plugin[],
-    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-    encode?: (options: any) => Promise<{
-      buffer: Buffer;
-    }>,
-  ): Promise<Buffer> {
-    const { encodeCSS } = await import('./css/encode.js');
-    return encodeCSS(cssChunks, encodeOptions, plugins, encode);
-  }
 
   /**
    * `defaultOptions` is the default options that the {@link LynxEncodePlugin} uses.
