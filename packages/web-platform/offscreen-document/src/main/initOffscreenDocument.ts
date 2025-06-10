@@ -122,10 +122,9 @@ export function initOffscreenDocument(options: {
       SetInnerHTML,
       sheetInsertRule,
       sheetRuleUpdateCssText,
-      End,
     } = OperationType;
     let op: number | string | undefined;
-    while ((op = operations[offset++]) && op !== End) {
+    while ((op = operations[offset++])) {
       const uid = operations[offset++] as number;
       if (op === CreateElement) {
         const element = document.createElement(operations[offset++] as string);

@@ -17,7 +17,6 @@ export const OperationType = {
   SetInnerHTML: 12,
   sheetInsertRule: 13,
   sheetRuleUpdateCssText: 14,
-  End: 0,
 } as const;
 
 // keep these types for opcode hint
