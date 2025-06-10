@@ -57,7 +57,7 @@ function applyRef(ref: Ref, value: null | [snapshotInstanceId: number, expIndex:
 function updateRef(
   snapshot: SnapshotInstance,
   expIndex: number,
-  _oldValue: any,
+  oldValue: string | null,
   elementIndex: number,
 ): void {
   const value: unknown = snapshot.__values![expIndex];
@@ -69,8 +69,13 @@ function updateRef(
   }
 
   snapshot.__values![expIndex] = ref;
-  if (snapshot.__elements && ref) {
-    __SetAttribute(snapshot.__elements[elementIndex]!, ref, 1);
+  if (snapshot.__elements && oldValue !== ref) {
+    if (oldValue) {
+      __SetAttribute(snapshot.__elements[elementIndex]!, oldValue, undefined);
+    }
+    if (ref) {
+      __SetAttribute(snapshot.__elements[elementIndex]!, ref, 1);
+    }
   }
 }
 

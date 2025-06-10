@@ -1394,6 +1394,7 @@ describe('element ref in spread', () => {
 describe('element ref in list', () => {
   it('should trigger ref in list', async function() {
     const refs = [createRef(), createRef(), createRef()];
+    const signs = [0, 0, 0];
 
     class ListItem extends Component {
       render() {
@@ -1494,6 +1495,117 @@ describe('element ref in list', () => {
             "task": undefined,
           },
         }
+      `);
+    }
+
+    // list render item 1 & 2
+    {
+      globalEnvManager.switchToMainThread();
+      globalThis.lynxWorkletImpl?._refImpl.updateWorkletRef.mockClear();
+      signs[0] = elementTree.triggerComponentAtIndex(__root.childNodes[0].__elements[0], 0);
+      signs[1] = elementTree.triggerComponentAtIndex(__root.childNodes[0].__elements[0], 1);
+      expect(__root.__element_root).toMatchInlineSnapshot(`
+        <page
+          cssId="default-entry-from-native:0"
+        >
+          <list
+            update-list-info={
+              [
+                {
+                  "insertAction": [
+                    {
+                      "item-key": 0,
+                      "position": 0,
+                      "type": "__Card__:__snapshot_a94a8_test_25",
+                    },
+                    {
+                      "item-key": 1,
+                      "position": 1,
+                      "type": "__Card__:__snapshot_a94a8_test_25",
+                    },
+                    {
+                      "item-key": 2,
+                      "position": 2,
+                      "type": "__Card__:__snapshot_a94a8_test_25",
+                    },
+                  ],
+                  "removeAction": [],
+                  "updateAction": [],
+                },
+              ]
+            }
+          >
+            <list-item
+              item-key={0}
+            >
+              <view
+                react-ref--4-0={1}
+              />
+            </list-item>
+            <list-item
+              item-key={1}
+            >
+              <view
+                react-ref--6-0={1}
+              />
+            </list-item>
+          </list>
+        </page>
+      `);
+    }
+
+    // list enqueue item 1 & render item 3
+    {
+      globalThis.lynxWorkletImpl?._refImpl.updateWorkletRef.mockClear();
+      elementTree.triggerEnqueueComponent(__root.childNodes[0].__elements[0], signs[0]);
+      elementTree.triggerComponentAtIndex(__root.childNodes[0].__elements[0], 2);
+      expect(__root.__element_root).toMatchInlineSnapshot(`
+        <page
+          cssId="default-entry-from-native:0"
+        >
+          <list
+            update-list-info={
+              [
+                {
+                  "insertAction": [
+                    {
+                      "item-key": 0,
+                      "position": 0,
+                      "type": "__Card__:__snapshot_a94a8_test_25",
+                    },
+                    {
+                      "item-key": 1,
+                      "position": 1,
+                      "type": "__Card__:__snapshot_a94a8_test_25",
+                    },
+                    {
+                      "item-key": 2,
+                      "position": 2,
+                      "type": "__Card__:__snapshot_a94a8_test_25",
+                    },
+                  ],
+                  "removeAction": [],
+                  "updateAction": [],
+                },
+              ]
+            }
+          >
+            <list-item
+              item-key={2}
+            >
+              <view
+                react-ref--8-0={1}
+              />
+            </list-item>
+            <list-item
+              item-key={1}
+            >
+              <view
+                react-ref--6-0={1}
+              />
+            </list-item>
+          </list>
+        </page>
       `);
     }
   });
