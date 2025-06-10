@@ -8,10 +8,10 @@ import type {
   Chunk,
   Compiler,
   CssExtractRspackPluginOptions as ExternalCssExtractRspackPluginOptions,
+  RspackError,
 } from '@rspack/core';
 
-import { removeFunctionWhiteSpace } from '@lynx-js/css-serializer/dist/plugins/removeFunctionWhiteSpace.js';
-import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin';
+import { CSS, LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin';
 
 /**
  * The options for {@link @lynx-js/css-extract-webpack-plugin#CssExtractRspackPlugin}
@@ -103,7 +103,7 @@ class CssExtractRspackPlugin {
     .freeze<CssExtractRspackPluginOptions>({
       filename: '[name].css',
       cssPlugins: [
-        removeFunctionWhiteSpace(),
+        CSS.Plugins.removeFunctionWhiteSpace(),
       ],
     });
 
@@ -174,33 +174,44 @@ class CssExtractRspackPluginImpl {
               return acc;
             }, {});
 
-            const { buffer } = await hooks.encode.promise({
-              encodeOptions: {
-                ...args.finalEncodeOptions,
-                css,
-                lepusCode: {
-                  root: undefined,
-                  lepusChunk: {},
+            try {
+              const { buffer } = await hooks.encode.promise({
+                encodeOptions: {
+                  ...args.finalEncodeOptions,
+                  css,
+                  lepusCode: {
+                    root: undefined,
+                    lepusChunk: {},
+                  },
+                  manifest: {},
+                  customSections: {},
                 },
-                manifest: {},
-                customSections: {},
-              },
-              templateType: 'css-hmr',
-            });
-            const result = {
-              content: buffer.toString('base64'),
-              deps: cssDeps,
-            };
-            compilation.emitAsset(
-              filename.replace(
-                '.css',
-                `${this.hash ? `.${this.hash}` : ''}.css.hot-update.json`,
-              ),
-              new compiler.webpack.sources.RawSource(
-                JSON.stringify(result),
-                true,
-              ),
-            );
+              });
+              const result = {
+                content: buffer.toString('base64'),
+                deps: cssDeps,
+              };
+              compilation.emitAsset(
+                filename.replace(
+                  '.css',
+                  `${this.hash ? `.${this.hash}` : ''}.css.hot-update.json`,
+                ),
+                new compiler.webpack.sources.RawSource(
+                  JSON.stringify(result),
+                  true,
+                ),
+              );
+            } catch (error) {
+              if (error && typeof error === 'object' && 'error_msg' in error) {
+                compilation.errors.push(
+                  // TODO: use more human-readable error message(i.e.: using sourcemap to get source code)
+                  //       or give webpack/rspack with location of bundle
+                  new compiler.webpack.WebpackError(error.error_msg as string),
+                );
+              } else {
+                compilation.errors.push(error as RspackError);
+              }
+            }
           }
 
           this.hash = compilation.hash;

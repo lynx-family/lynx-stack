@@ -1,5 +1,5 @@
 ---
-"@lynx-js/template-webpack-plugin": patch
+"@lynx-js/template-webpack-plugin": minor
 ---
 
-Merge `EncodeCSSOptions` into `EncodeOptions` to ensure consistent encoding options are used across CSS HMR updates and the main template.
+Remove `EncodeCSSOptions` and `encodeCSS` to ensure consistent encoding options are used across CSS HMR updates and the main template.

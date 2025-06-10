@@ -53,9 +53,7 @@ declare namespace CSSPlugins {
     }
 }
 
-// Warning: (ae-missing-release-tag) "EncodeOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
-// @public (undocumented)
+// @public
 export interface EncodeOptions {
     // (undocumented)
     [k: string]: unknown;
@@ -159,11 +157,7 @@ export interface TemplateHooks {
     // @alpha
     encode: AsyncSeriesBailHook<{
         encodeOptions: EncodeOptions;
-        intermediate: string;
-        templateType: 'main' | 'async';
-    } | {
-        encodeOptions: EncodeOptions;
-        templateType: 'css-hmr';
+        intermediate?: string;
     }, {
         buffer: Buffer;
         debugInfo: string;
@@ -189,6 +183,6 @@ export class WebEncodePlugin {
 
 // Warnings were encountered during analysis:
 //
-// lib/LynxTemplatePlugin.d.ts:58:9 - (ae-forgotten-export) The symbol "EncodeRawData" needs to be exported by the entry point index.d.ts
+// lib/LynxTemplatePlugin.d.ts:63:9 - (ae-forgotten-export) The symbol "EncodeRawData" needs to be exported by the entry point index.d.ts
 
 ```

@@ -25,6 +25,11 @@ import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 import { cssChunksToMap } from './css/cssChunksToMap.js';
 import { createLynxAsyncChunksRuntimeModule } from './LynxAsyncChunksRuntimeModule.js';
 
+/**
+ * The options for encoding a Lynx bundle.
+ *
+ * @public
+ */
 export interface EncodeOptions {
   manifest: Record<string, string | undefined>;
   compilerOptions: Record<string, string | boolean>;
@@ -96,11 +101,7 @@ export interface TemplateHooks {
   encode: AsyncSeriesBailHook<
     {
       encodeOptions: EncodeOptions;
-      intermediate: string;
-      templateType: 'main' | 'async';
-    } | {
-      encodeOptions: EncodeOptions;
-      templateType: 'css-hmr';
+      intermediate?: string;
     },
     { buffer: Buffer; debugInfo: string }
   >;
@@ -890,7 +891,6 @@ class LynxTemplatePluginImpl {
       const { buffer, debugInfo } = await hooks.encode.promise({
         encodeOptions: resolvedEncodeOptions,
         intermediate,
-        templateType: isAsync ? 'async' : 'main',
       });
 
       const filename = compilation.getPath(filenameTemplate, {
