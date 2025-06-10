@@ -325,7 +325,7 @@ export interface MainThreadGlobalThis {
   processData?: ProcessDataCallback;
   ssrEncode?: () => string;
   ssrHydrate?: (encodeData?: string) => void;
-  _ReportError: (error: string, _: unknown) => void;
+  _ReportError: (error: Error, _: unknown) => void;
   __OnLifecycleEvent: (lifeCycleEvent: Cloneable) => void;
   __LoadLepusChunk: (path: string) => boolean;
   __FlushElementTree: (

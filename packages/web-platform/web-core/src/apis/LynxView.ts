@@ -401,9 +401,19 @@ export class LynxView extends HTMLElement {
               napiModulesCall: (...args) => {
                 return this.#onNapiModulesCall?.(...args);
               },
-              onError: () => {
+              onError: (error: Error) => {
                 this.dispatchEvent(
-                  new CustomEvent('error', {}),
+                  new CustomEvent('error', {
+                    detail: {
+                      sourceMap: {
+                        offset: {
+                          line: 2,
+                          col: 0,
+                        },
+                      },
+                      error,
+                    },
+                  }),
                 );
               },
               customTemplateLoader: this.customTemplateLoader,

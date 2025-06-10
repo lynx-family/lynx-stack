@@ -92,7 +92,7 @@ export const BackgroundThreadStartEndpoint = createRpcEndpoint<[
  * Error message, info
  */
 export const reportErrorEndpoint = createRpcEndpoint<
-  [string, unknown],
+  [Error, unknown],
   void
 >('reportError', false, false);
 
