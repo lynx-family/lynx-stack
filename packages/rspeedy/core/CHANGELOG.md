@@ -1,5 +1,13 @@
 # @lynx-js/rspeedy
 
+## 0.9.9
+
+### Patch Changes
+
+- Set `optimization.emitOnErrors` when `DEBUG` is enabled. ([#1000](https://github.com/lynx-family/lynx-stack/pull/1000))
+
+  This is useful for debugging PrimJS Syntax error.
+
 ## 0.9.8
 
 ### Patch Changes

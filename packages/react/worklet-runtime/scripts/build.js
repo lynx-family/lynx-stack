@@ -20,7 +20,6 @@ const commonOptions = {
   write: true,
   bundle: true,
   format: 'iife',
-  sourcemap: true,
   sourceRoot: path.join(__dirname, '../src'),
   target: 'es2019',
 };
@@ -38,5 +37,6 @@ esbuild.build({
   define: {
     __DEV__: 'true',
   },
+  sourcemap: 'inline',
   ...commonOptions,
 });

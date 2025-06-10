@@ -15,6 +15,7 @@ import type {
   TCompilerOptions,
 } from '@rspack/test-tools';
 import fs from 'fs-extra';
+import { createSnapshotSerializer } from 'path-serializer';
 import { rimrafSync } from 'rimraf';
 import { describe, expect, it } from 'vitest';
 
@@ -48,6 +49,13 @@ class RspeedyDiagnosticProcessor<Compiler extends ECompilerType>
     ));
   }
 }
+
+const serializer = createSnapshotSerializer({
+  features: {
+    addDoubleQuotes: false,
+    escapeDoubleQuotes: false,
+  },
+});
 
 function createCase(name: string, src: string, dist: string, cwd: string) {
   describe(name, () => {
@@ -89,6 +97,8 @@ function createCase(name: string, src: string, dist: string, cwd: string) {
           await runner(
             caseName,
             new RspeedyDiagnosticProcessor<ECompilerType>({
+              snapshotErrors: './raw-error.err',
+              snapshotWarning: './raw-warning.err',
               defaultOptions: () => caseOptions,
               overrideOptions: (_, options) => {
                 options.output ??= {};
@@ -109,14 +119,8 @@ function createCase(name: string, src: string, dist: string, cwd: string) {
                     .map((s: string) => s.trim())
                     .join('\n');
                 }
-                return output
-                  .replaceAll(
-                    /(?<=\/)\.pnpm\/.+?\/node_modules(?=\/)/g,
-                    '<PNPM_INNER>',
-                  )
-                  .replaceAll(/\d+:\d+/g, '<LINE:COLUMN>')
-                  .split(process.cwd())
-                  .join('<PROJECT_ROOT>');
+                return serializer.serialize(output)
+                  .replaceAll(/\d+:\d+/g, '<LINE:COLUMN>');
               },
             }),
           );

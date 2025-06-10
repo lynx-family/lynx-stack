@@ -55,6 +55,7 @@ import {
   type SetClassesPAPI,
   type GetTemplatePartsPAPI,
   type GetPageElementPAPI,
+  type MinimalRawEventObject,
 } from '@lynx-js/web-constants';
 import { globalMuteableVars } from '@lynx-js/web-constants';
 import { createMainThreadLynx } from './createMainThreadLynx.js';
@@ -146,29 +147,12 @@ export function createMainThreadGlobalThis(
   const lynxUniqueIdToElement: WeakRef<WebFiberElementImpl>[] = [];
   const elementToRuntimeInfoMap: WeakMap<WebFiberElementImpl, LynxRuntimeInfo> =
     new WeakMap();
-  const lynxUniqueIdToStyleSheet: WeakRef<WebFiberElementImpl>[] = [];
+  const lynxUniqueIdToStyleRulesIndex: number[] = [];
   /**
    * for "update" the globalThis.val in the main thread
    */
   const varsUpdateHandlers: (() => void)[] = [];
   const lynxGlobalBindingValues: Record<string, any> = {};
-
-  const updateCSSInJsStyle: (
-    uniqueId: number,
-    newStyles: string,
-  ) => void = (uniqueId, newStyles) => {
-    let currentElement = lynxUniqueIdToStyleSheet[uniqueId]?.deref();
-    if (!currentElement) {
-      currentElement = callbacks.createElement(
-        'style',
-      );
-      lynxUniqueIdToStyleSheet[uniqueId] = new WeakRef(currentElement);
-      // @ts-expect-error
-      rootDom.append(currentElement);
-    }
-    currentElement.innerHTML =
-      `[${lynxUniqueIdAttribute}="${uniqueId}"]{${newStyles}}`;
-  };
 
   /**
    * now create the style content
@@ -193,6 +177,24 @@ export function createMainThreadGlobalThis(
   );
   // @ts-expect-error
   rootDom.append(cardStyleElement);
+  const cardStyleElementSheet =
+    (cardStyleElement as unknown as HTMLStyleElement).sheet!;
+  const updateCSSInJsStyle: (
+    uniqueId: number,
+    newStyles: string,
+  ) => void = (uniqueId, newStyles) => {
+    if (lynxUniqueIdToStyleRulesIndex[uniqueId] !== undefined) {
+      const rule = cardStyleElementSheet
+        .cssRules[lynxUniqueIdToStyleRulesIndex[uniqueId]] as CSSStyleRule;
+      rule.style.cssText = newStyles;
+    } else {
+      const index = cardStyleElementSheet.insertRule(
+        `[${lynxUniqueIdAttribute}="${uniqueId}"]{${newStyles}}`,
+        cardStyleElementSheet.cssRules.length,
+      );
+      lynxUniqueIdToStyleRulesIndex[uniqueId] = index;
+    }
+  };
 
   const commonHandler = (event: Event) => {
     if (!event.currentTarget) {
@@ -211,7 +213,7 @@ export function createMainThreadGlobalThis(
         : runtimeInfo.eventHandlerMap[lynxEventName]?.bind
           ?.handler;
       const crossThreadEvent = createCrossThreadEvent(
-        event,
+        event as MinimalRawEventObject,
         lynxEventName,
       );
       if (typeof hname === 'string') {

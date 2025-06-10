@@ -17,15 +17,15 @@
     "@codspeed/vitest-plugin": "^4.0.1",
     "@eslint/js": "^9.28.0",
     "@microsoft/api-extractor": "catalog:",
-    "@rslib/core": "^0.9.1",
+    "@rslib/core": "^0.9.2",
     "@rspack/core": "catalog:rspack",
     "@svitejs/changesets-changelog-github-compact": "^1.2.0",
     "@tsconfig/node20": "^20.1.5",
     "@tsconfig/strictest": "^2.0.5",
-    "@types/node": "^22.15.29",
-    "@vitest/coverage-v8": "^3.2.1",
+    "@types/node": "^22.15.30",
+    "@vitest/coverage-v8": "^3.2.2",
     "@vitest/eslint-plugin": "^1.2.1",
-    "@vitest/ui": "^3.2.1",
+    "@vitest/ui": "^3.2.2",
     "dprint": "^0.50.0",
     "eslint": "^9.28.0",
     "eslint-import-resolver-typescript": "^4.4.2",
@@ -43,7 +43,7 @@
     "turbo": "^2.5.4",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.33.1",
-    "vitest": "^3.2.1"
+    "vitest": "^3.2.2"
   },
   "packageManager": "pnpm@10.11.1",
   "engines": {

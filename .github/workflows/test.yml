@@ -72,49 +72,29 @@ jobs:
   playwright-linux:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
-
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    name: Playwright (${{ matrix.config.name }})
+    strategy:
+      matrix:
+        config:
+          - name: Default
+            env: []
+          - name: All on UI
+            env:
+              - ALL_ON_UI=true
+          - name: FP only
+            env:
+              - ENABLE_SSR=true
+              - TEST_FP_ONLY=true
     with:
       runs-on: lynx-ubuntu-24.04-xlarge
       is-web: true
       codecov-flags: "e2e"
       run: |
+        export ${{ join(matrix.config.env, ' ') }}
         export NODE_OPTIONS="--max-old-space-size=32768"
         export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
-        pnpm --filter @lynx-js/web-tests run test --reporter='github,dot,junit,html'
-        pnpm --filter @lynx-js/web-tests run coverage:ci
-  playwright-linux-all-on-ui:
-    needs: build
-    uses: ./.github/workflows/workflow-test.yml
-
-    secrets:
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-    with:
-      runs-on: lynx-ubuntu-24.04-xlarge
-      is-web: true
-      codecov-flags: "e2e,all-on-ui"
-      run: |
-        export NODE_OPTIONS="--max-old-space-size=32768"
-        export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
-        export ALL_ON_UI=true
-        pnpm --filter @lynx-js/web-tests run test --reporter='github,dot,junit,html'
-        pnpm --filter @lynx-js/web-tests run coverage:ci
-  playwright-linux-fp-only:
-    needs: build
-    uses: ./.github/workflows/workflow-test.yml
-    secrets:
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-    with:
-      runs-on: lynx-ubuntu-24.04-xlarge
-      is-web: true
-      codecov-flags: "e2e,fp-only"
-      run: |
-        export NODE_OPTIONS="--max-old-space-size=32768"
-        export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
-        export ENABLE_SSR=true
-        export TEST_FP_ONLY=true
-        pnpm --filter @lynx-js/web-tests run build:cases:ssr
         pnpm --filter @lynx-js/web-tests run test --reporter='github,dot,junit,html'
         pnpm --filter @lynx-js/web-tests run coverage:ci
   test-api:
@@ -208,7 +188,7 @@ jobs:
     runs-on: lynx-ubuntu-24.04-medium
     steps:
       - uses: taiki-e/checkout-action@b13d20b7cda4e2f325ef19895128f7ff735c0b3d # v1.3.1
-      - uses: crate-ci/typos@0f0ccba9ed1df83948f0c15026e4f5ccfce46109 # v1.32.0
+      - uses: crate-ci/typos@b1ae8d918b6e85bd611117d3d9a3be4f903ee5e4 # v1.33.1
         with:
           files: .
   test-vitest:
@@ -238,8 +218,6 @@ jobs:
     needs:
       - code-style-check
       - playwright-linux
-      - playwright-linux-all-on-ui
-      - playwright-linux-fp-only
       - test-api
       - test-publish
       - test-react

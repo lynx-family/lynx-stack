@@ -3,11 +3,14 @@
 // LICENSE file in the root directory of this source tree.
 import { exec } from 'node:child_process'
 import path from 'node:path'
+import { pathToFileURL } from 'node:url'
 
 import { describe, expect, test } from 'vitest'
 
 describe('register - hooks', () => {
-  const registerPath = path.resolve(__dirname, './fixtures/register.js')
+  const registerPath = pathToFileURL(
+    path.resolve(__dirname, './fixtures/register.js'),
+  ).toString()
 
   async function runWithRegister(script: string) {
     return await new Promise<[string, string]>((resolve, reject) => {

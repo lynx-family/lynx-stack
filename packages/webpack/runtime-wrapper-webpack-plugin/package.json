@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/runtime-wrapper-webpack-plugin",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Use runtime wrapper which allow JavaScript to be load by Lynx.",
   "keywords": [
     "webpack",

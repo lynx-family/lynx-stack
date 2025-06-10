@@ -15,7 +15,7 @@ import { registerEventEnableStatusChangeHandler } from '@lynx-js/web-elements-re
 export class XTextareaEvents
   implements InstanceType<AttributeReactiveClass<typeof HTMLElement>>
 {
-  static observedAttributes = ['send-composing-input'];
+  static observedAttributes = ['send-composing-input', 'input-filter'];
   #dom: HTMLElement;
 
   #sendComposingInput = false;
@@ -29,8 +29,9 @@ export class XTextareaEvents
     '#form',
   );
 
+  @registerAttributeHandler('input-filter', true)
   @registerEventEnableStatusChangeHandler('input')
-  #handleEnableConfirmEvent(status: boolean) {
+  #handleEnableConfirmEvent(status: string | boolean | null) {
     const textareaElement = this.#getTextareaElement();
     if (status) {
       textareaElement.addEventListener(
@@ -74,16 +75,20 @@ export class XTextareaEvents
 
   #teleportInput = (event: InputEvent) => {
     const input = this.#getTextareaElement();
-    const value = input.value;
+    const inputFilter = this.#dom.getAttribute('input-filter');
+    const filterValue = inputFilter
+      ? input.value.replace(new RegExp(inputFilter, 'g'), '')
+      : input.value;
     const isComposing = event.isComposing;
+    input.value = filterValue;
     if (isComposing && !this.#sendComposingInput) return;
     this.#dom.dispatchEvent(
       new CustomEvent('input', {
         ...commonComponentEventSetting,
         detail: {
-          value,
+          value: filterValue,
           /** @deprecated */
-          textLength: value.length,
+          textLength: filterValue.length,
           /** @deprecated */
           cursor: input.selectionStart,
           isComposing,
@@ -96,16 +101,20 @@ export class XTextareaEvents
 
   #teleportCompositionendInput = () => {
     const input = this.#getTextareaElement();
-    const value = input.value;
+    const inputFilter = this.#dom.getAttribute('input-filter');
+    const filterValue = inputFilter
+      ? input.value.replace(new RegExp(inputFilter, 'g'), '')
+      : input.value;
+    input.value = filterValue;
     // if #sendComposingInput set true, #teleportInput will send detail
     if (!this.#sendComposingInput) {
       this.#dom.dispatchEvent(
         new CustomEvent('input', {
           ...commonComponentEventSetting,
           detail: {
-            value,
+            value: filterValue,
             /** @deprecated */
-            textLength: value.length,
+            textLength: filterValue.length,
             /** @deprecated */
             cursor: input.selectionStart,
             isComposing: false,

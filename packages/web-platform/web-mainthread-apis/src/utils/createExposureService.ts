@@ -4,6 +4,7 @@
 import {
   lynxUniqueIdAttribute,
   type ExposureWorkerEvent,
+  type MinimalRawEventObject,
   type postExposureEndpoint,
   type RpcCallType,
 } from '@lynx-js/web-constants';
@@ -19,7 +20,7 @@ export function createExposureService(
   const onScreen = new Map<string, ExposureWorkerEvent>();
   function exposureEventHandler(ev: Event) {
     const exposureEvent = createCrossThreadEvent(
-      ev,
+      ev as MinimalRawEventObject,
       ev.type,
     ) as ExposureWorkerEvent;
     exposureEvent.detail['unique-id'] = parseFloat(
