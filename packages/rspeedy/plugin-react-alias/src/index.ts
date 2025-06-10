@@ -190,15 +190,14 @@ export function createLazyResolver(
   return async (
     request: string,
   ): Promise<string> => {
-    const { ResolverFactory } = await import('unrs-resolver')
-    const resolver = new ResolverFactory({ conditionNames })
-
     if (!lazyExports) {
       lazyExports = {}
     }
 
     if (lazyExports[request] === undefined) {
       if (!resolverLazy) {
+        const { ResolverFactory } = await import('unrs-resolver')
+        const resolver = new ResolverFactory({ conditionNames })
         resolverLazy = (dir: string, req: string) => resolver.sync(dir, req)
       }
       const resolveResult = resolverLazy(directory, request)
