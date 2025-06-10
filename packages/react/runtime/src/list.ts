@@ -310,7 +310,6 @@ export function componentAtIndexFactory(
       if (recycleSignMap?.has(sign)) {
         signMap.set(sign, childCtx);
         recycleSignMap.delete(sign);
-        __pendingListUpdates.flush();
         if (!enableBatchRender) {
           __FlushElementTree(root, { triggerLayout: true, operationID, elementID: sign, listID });
         } else if (enableBatchRender && asyncFlush) {
@@ -333,7 +332,6 @@ export function componentAtIndexFactory(
       hydrate(oldCtx, childCtx);
       oldCtx.unRenderElements();
       const root = childCtx.__element_root!;
-      __pendingListUpdates.flush();
       if (!enableBatchRender) {
         const flushOptions: FlushOptions = {
           triggerLayout: true,

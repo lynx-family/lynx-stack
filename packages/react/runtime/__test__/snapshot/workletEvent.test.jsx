@@ -1076,19 +1076,6 @@ describe('WorkletEvent in list', () => {
                     },
                   ],
                 },
-                {
-                  "insertAction": [],
-                  "removeAction": [],
-                  "updateAction": [
-                    {
-                      "flush": false,
-                      "from": 2,
-                      "item-key": 2,
-                      "to": 2,
-                      "type": "__Card__:__snapshot_a94a8_test_13",
-                    },
-                  ],
-                },
               ]
             }
           >
@@ -1188,19 +1175,6 @@ describe('WorkletEvent in list', () => {
                       "from": 1,
                       "item-key": 1,
                       "to": 1,
-                      "type": "__Card__:__snapshot_a94a8_test_13",
-                    },
-                  ],
-                },
-                {
-                  "insertAction": [],
-                  "removeAction": [],
-                  "updateAction": [
-                    {
-                      "flush": false,
-                      "from": 2,
-                      "item-key": 2,
-                      "to": 2,
                       "type": "__Card__:__snapshot_a94a8_test_13",
                     },
                   ],

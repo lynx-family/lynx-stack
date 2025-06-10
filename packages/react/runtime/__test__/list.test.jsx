@@ -603,32 +603,6 @@ describe(`list componentAtIndex`, () => {
                 },
               ],
             },
-            {
-              "insertAction": [],
-              "removeAction": [],
-              "updateAction": [
-                {
-                  "flush": false,
-                  "from": 4,
-                  "item-key": "key-4",
-                  "to": 4,
-                  "type": "__Card__:__snapshot_a94a8_test_21",
-                },
-              ],
-            },
-            {
-              "insertAction": [],
-              "removeAction": [],
-              "updateAction": [
-                {
-                  "flush": false,
-                  "from": 5,
-                  "item-key": "key-5",
-                  "to": 5,
-                  "type": "__Card__:__snapshot_a94a8_test_21",
-                },
-              ],
-            },
           ]
         }
       >
