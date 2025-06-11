@@ -115,4 +115,4 @@ export default defineConfig({
 });
 ```
 
-完整配置选项请参考 [Type Check 插件文档](https://rsbuild.dev/plugins/list/plugin-type-check)。
+完整配置选项请参考 [Type Check 插件文档](https://rsbuild.rs/guide/basic/typescript#type-checking)。

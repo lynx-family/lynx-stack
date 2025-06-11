@@ -117,4 +117,4 @@ export default defineConfig({
 });
 ```
 
-Please refer to the [Type Check plugin](https://rsbuild.dev/plugins/list/plugin-type-check) for more available options.
+Please refer to the [Type Check plugin](https://rsbuild.rs/guide/basic/typescript#type-checking) for more available options.
