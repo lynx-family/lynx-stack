@@ -312,6 +312,7 @@ export function componentAtIndexFactory(
       hydrate(oldCtx, childCtx);
       oldCtx.unRenderElements();
       const root = childCtx.__element_root!;
+      applyRefQueue();
       if (!enableBatchRender) {
         const flushOptions: FlushOptions = {
           triggerLayout: true,
@@ -339,7 +340,6 @@ export function componentAtIndexFactory(
         __FlushElementTree(root, flushOptions);
       }
       signMap.set(sign, childCtx);
-      applyRefQueue();
       return sign;
     }
 
@@ -347,6 +347,7 @@ export function componentAtIndexFactory(
     const root = childCtx.__element_root!;
     __AppendElement(list, root);
     const sign = __GetElementUniqueID(root);
+    applyRefQueue();
     if (!enableBatchRender) {
       __FlushElementTree(root, {
         triggerLayout: true,
@@ -360,7 +361,6 @@ export function componentAtIndexFactory(
       });
     }
     signMap.set(sign, childCtx);
-    applyRefQueue();
     return sign;
   };
 
