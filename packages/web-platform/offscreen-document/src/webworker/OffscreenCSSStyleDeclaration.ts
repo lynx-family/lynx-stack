@@ -25,13 +25,13 @@ export class OffscreenCSSStyleDeclaration {
     value: string,
     priority?: 'important' | undefined | '',
   ): void {
-    this._parent[ancestorDocument][operations].push({
-      type: OperationType['StyleDeclarationSetProperty'],
-      uid: this._parent[uniqueId],
+    this._parent[ancestorDocument][operations].push(
+      OperationType['StyleDeclarationSetProperty'],
+      this._parent[uniqueId],
       property,
-      value: value,
-      priority: priority,
-    });
+      value,
+      priority ?? '',
+    );
     const currentStyle = this._parent.getAttribute('style') ?? '';
     this._parent[_attributes].set(
       'style',
@@ -40,11 +40,11 @@ export class OffscreenCSSStyleDeclaration {
   }
 
   removeProperty(property: string): void {
-    this._parent[ancestorDocument][operations].push({
-      type: OperationType['StyleDeclarationRemoveProperty'],
-      uid: this._parent[uniqueId],
+    this._parent[ancestorDocument][operations].push(
+      OperationType['StyleDeclarationRemoveProperty'],
+      this._parent[uniqueId],
       property,
-    });
+    );
     const currentStyle = this._parent.getAttribute('style') ?? '';
     this._parent[_attributes].set(
       'style',

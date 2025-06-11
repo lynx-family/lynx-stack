@@ -1,9 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { __page } from '../src/snapshot';
-import { elementTree } from './utils/nativeMethod';
 import { globalEnvManager } from './utils/envManager';
+import { elementTree } from './utils/nativeMethod';
+import { useRef, useState } from '../src/index';
 import { __root } from '../src/root';
-import { useState, useRef } from '../src/index';
 
 beforeEach(() => {
   globalEnvManager.resetEnv();
@@ -77,7 +78,7 @@ describe('support <page /> element attributes', () => {
             "bindEvent:tap": "-1:0:bindtap",
           }
         }
-        has-react-ref={true}
+        react-ref--1-0={1}
       >
         <view />
       </page>
@@ -315,6 +316,7 @@ describe('support <page /> element attributes', () => {
     expect(__root.__element_root).toMatchInlineSnapshot(`
       <page
         cssId="default-entry-from-native:0"
+        react-ref--1-0={1}
       >
         <text>
           <raw-text

@@ -6,7 +6,7 @@ const __snapshot_da39a_test_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapsh
     return [
         el
     ];
-}, null, null, undefined, globDynamicComponentEntry);
+}, null, null, undefined, globDynamicComponentEntry, null);
 <__snapshot_da39a_test_1/>;
 const __snapshot_da39a_test_2 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_test_2", function() {
     const pageId = ReactLynx.__pageId;
@@ -15,5 +15,5 @@ const __snapshot_da39a_test_2 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapsh
     return [
         el
     ];
-}, null, null, undefined, globDynamicComponentEntry);
+}, null, null, undefined, globDynamicComponentEntry, null);
 <__snapshot_da39a_test_2/>;

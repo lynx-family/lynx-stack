@@ -110,6 +110,7 @@ export function snapshotPatchApply(snapshotPatch: SnapshotPatch): void {
               slot,
               cssId,
               entryName,
+              null,
             );
           }
         }

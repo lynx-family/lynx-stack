@@ -5,14 +5,14 @@ const __snapshot_da39a_test_2 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapsh
     return [
         el
     ];
-}, null, ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry);
+}, null, ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null);
 const __snapshot_da39a_test_3 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_test_3", function() {
     const pageId = ReactLynx.__pageId;
     const el = __CreateText(pageId);
     return [
         el
     ];
-}, null, ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry);
+}, null, ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null);
 const __snapshot_da39a_test_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_test_1", function() {
     const pageId = ReactLynx.__pageId;
     const el = __CreateView(pageId);
@@ -47,6 +47,6 @@ const __snapshot_da39a_test_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapsh
         ReactLynx.__DynamicPartSlot,
         5
     ]
-], undefined, globDynamicComponentEntry);
+], undefined, globDynamicComponentEntry, null);
 <__snapshot_da39a_test_1><wrapper>{hello}</wrapper><wrapper><__snapshot_da39a_test_2 key={hello}>{hello}</__snapshot_da39a_test_2>
       </wrapper><__snapshot_da39a_test_3 key="hello">{hello}</__snapshot_da39a_test_3></__snapshot_da39a_test_1>;
