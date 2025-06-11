@@ -25,14 +25,14 @@ import { deinitGlobalSnapshotPatch } from './patch/snapshotPatch.js';
 import { shouldDelayUiOps } from './ref/delay.js';
 import { renderMainThread } from './render.js';
 
-function reloadMainThread(data: any, options: UpdatePageOption): void {
+function reloadMainThread(data: unknown, options: UpdatePageOption): void {
   if (__PROFILE__) {
     console.profile('reloadTemplate');
   }
 
   increaseReloadVersion();
 
-  if (typeof data == 'object' && !isEmptyObject(data)) {
+  if (typeof data == 'object' && !isEmptyObject(data as Record<string, unknown>)) {
     Object.assign(lynx.__initData, data);
   }
 
@@ -86,6 +86,7 @@ function reloadBackground(updateData: Record<string, any>): void {
   lynx.__initData = Object.assign({}, lynx.__initData, updateData);
 
   shouldDelayUiOps.value = true;
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   render(__root.__jsx, __root as any);
 
   if (__PROFILE__) {
