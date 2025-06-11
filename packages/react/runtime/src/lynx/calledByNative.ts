@@ -12,6 +12,7 @@ import { __root, setRoot } from '../root.js';
 import { SnapshotInstance, __page, setupPage } from '../snapshot.js';
 import { isEmptyObject } from '../utils.js';
 import { PerformanceTimingKeys, markTiming, setPipeline } from './performance.js';
+import { applyRefQueue } from '../snapshot/workletRef.js';
 
 function ssrEncode() {
   const { __opcodes } = __root;
@@ -87,6 +88,7 @@ function renderPage(data: any): void {
   // always call this before `__FlushElementTree`
   // (There is an implicit `__FlushElementTree` in `renderPage`)
   __pendingListUpdates.flush();
+  applyRefQueue();
 
   if (__FIRST_SCREEN_SYNC_TIMING__ === 'immediately') {
     jsReady();
@@ -128,6 +130,7 @@ function updatePage(data: any, options?: UpdatePageOption): void {
 
       // always call this before `__FlushElementTree`
       __pendingListUpdates.flush();
+      applyRefQueue();
     }
     markTiming(PerformanceTimingKeys.updateDiffVdomEnd);
   }

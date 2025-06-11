@@ -28,6 +28,9 @@ beforeAll(() => {
     _runOnBackgroundDelayImpl: {
       runDelayedBackgroundFunctions: vi.fn(),
     },
+    _eventDelayImpl: {
+      clearDelayedWorklets: vi.fn(),
+    },
   };
 });
 

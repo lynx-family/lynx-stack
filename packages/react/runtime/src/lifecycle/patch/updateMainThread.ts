@@ -6,12 +6,13 @@ import { updateWorkletRefInitValueChanges } from '@lynx-js/react/worklet-runtime
 
 import { LifecycleConstant } from '../../lifecycleConstant.js';
 import { __pendingListUpdates } from '../../list.js';
-import { markTiming, PerformanceTimingKeys, setPipeline } from '../../lynx/performance.js';
+import { PerformanceTimingKeys, markTiming, setPipeline } from '../../lynx/performance.js';
 import { __page } from '../../snapshot.js';
 import { getReloadVersion } from '../pass.js';
 import type { PatchList, PatchOptions } from './commit.js';
 import { setMainThreadHydrationFinished } from './isMainThreadHydrationFinished.js';
 import { snapshotPatchApply } from './snapshotPatchApply.js';
+import { applyRefQueue } from '../../snapshot/workletRef.js';
 
 function updateMainThread(
   { data, patchOptions }: {
@@ -46,6 +47,7 @@ function updateMainThread(
   if (patchOptions.isHydration) {
     setMainThreadHydrationFinished(true);
   }
+  applyRefQueue();
   if (patchOptions.pipelineOptions) {
     flushOptions.pipelineOptions = patchOptions.pipelineOptions;
   }

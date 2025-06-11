@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { hydrate } from './hydrate.js';
+import { applyRefQueue } from './snapshot/workletRef.js';
 import type { SnapshotInstance } from './snapshot.js';
 
 export interface ListUpdateInfo {
@@ -311,6 +312,7 @@ export function componentAtIndexFactory(
       hydrate(oldCtx, childCtx);
       oldCtx.unRenderElements();
       const root = childCtx.__element_root!;
+      applyRefQueue();
       if (!enableBatchRender) {
         const flushOptions: FlushOptions = {
           triggerLayout: true,
@@ -345,6 +347,7 @@ export function componentAtIndexFactory(
     const root = childCtx.__element_root!;
     __AppendElement(list, root);
     const sign = __GetElementUniqueID(root);
+    applyRefQueue();
     if (!enableBatchRender) {
       __FlushElementTree(root, {
         triggerLayout: true,

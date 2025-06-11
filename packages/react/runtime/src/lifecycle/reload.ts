@@ -13,16 +13,17 @@ import { hydrate } from '../hydrate.js';
 import { LifecycleConstant } from '../lifecycleConstant.js';
 import { __pendingListUpdates } from '../list.js';
 import { __root, setRoot } from '../root.js';
+import { destroyBackground } from './destroy.js';
+import { applyRefQueue } from '../snapshot/workletRef.js';
 import { SnapshotInstance, __page, snapshotInstanceManager } from '../snapshot.js';
 import { isEmptyObject } from '../utils.js';
-import { destroyBackground } from './destroy.js';
 import { destroyWorklet } from '../worklet/destroy.js';
 import { clearJSReadyEventIdSwap, isJSReady } from './event/jsReady.js';
 import { increaseReloadVersion } from './pass.js';
+import { setMainThreadHydrationFinished } from './patch/isMainThreadHydrationFinished.js';
 import { deinitGlobalSnapshotPatch } from './patch/snapshotPatch.js';
 import { shouldDelayUiOps } from './ref/delay.js';
 import { renderMainThread } from './render.js';
-import { setMainThreadHydrationFinished } from './patch/isMainThreadHydrationFinished.js';
 
 function reloadMainThread(data: any, options: UpdatePageOption): void {
   if (__PROFILE__) {
@@ -51,6 +52,7 @@ function reloadMainThread(data: any, options: UpdatePageOption): void {
 
   // always call this before `__FlushElementTree`
   __pendingListUpdates.flush();
+  applyRefQueue();
 
   if (isJSReady) {
     __OnLifecycleEvent([
