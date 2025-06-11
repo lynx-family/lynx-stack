@@ -2,7 +2,6 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 import {
   DiagnosticProcessor,
@@ -52,11 +51,6 @@ class RspeedyDiagnosticProcessor<Compiler extends ECompilerType>
 }
 
 const serializer = createSnapshotSerializer({
-  beforeSerialize(val) {
-    return val.replaceAll(/\(file:\/\/.*\)/g, (match) => {
-      return `(${fileURLToPath(match.slice(1, -1))})`;
-    });
-  },
   features: {
     addDoubleQuotes: false,
     escapeDoubleQuotes: false,
