@@ -8,6 +8,11 @@ import '@lynx-js/web-elements-compat/LinearContainer';
 import '@lynx-js/web-core/index.css';
 import './index.css';
 
+const wait = async (ms: number) => {
+  await new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+};
 const ALL_ON_UI = !!process.env.ALL_ON_UI;
 const color_environment = URL.createObjectURL(
   new Blob(
@@ -67,12 +72,38 @@ async function run() {
   lynxView.initData = { mockData: 'mockData' };
   lynxView.globalProps = { backgroundColor: 'pink' };
   lynxView.setAttribute('height', 'auto');
+  lynxView.initI18nResources = [
+    {
+      options: {
+        locale: 'en',
+        channel: '1',
+        fallback_url: '',
+      },
+      resource: {
+        hello: 'hello',
+        lynx: 'lynx web platform1',
+      },
+    },
+  ];
   lynxView.napiModulesMap = {
     'color_environment': color_environment,
     'color_methods': color_methods,
     'event_method': event_method,
+    i18n: URL.createObjectURL(
+      new Blob(
+        [`export default function(NapiModules, NapiModulesCall) {
+      return {
+        async getI18nResourceByNative(options) {
+          const handledData = await NapiModulesCall('getI18nResourceByNative', options);
+          return handledData;
+        },
+      };
+    };`],
+        { type: 'text/javascript' },
+      ),
+    ),
   };
-  lynxView.onNapiModulesCall = (
+  lynxView.onNapiModulesCall = async (
     name,
     data,
     moduleName,
@@ -89,6 +120,20 @@ async function run() {
         dispatchNapiModules('lynx-view');
       });
       return;
+    }
+    if (moduleName === 'i18n') {
+      if (name === 'getI18nResourceByNative') {
+        // mock fetch
+        await wait(1000);
+        if (data.locale = 'en') {
+          return {
+            data: {
+              hello: 'hello',
+              lynx: 'lynx web platform',
+            },
+          };
+        }
+      }
     }
   };
   lynxView.addEventListener('error', () => {

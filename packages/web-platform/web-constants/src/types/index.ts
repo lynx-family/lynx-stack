@@ -15,3 +15,4 @@ export * from './LynxContextEventTarget.js';
 export * from './Element.js';
 export * from './MainThreadGlobalThis.js';
 export * from './MainThreadLynx.js';
+export * from './I18n.js';

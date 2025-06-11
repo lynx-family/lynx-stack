@@ -27,6 +27,7 @@ import { registerSendGlobalEventHandler } from './crossThreadHandlers/registerSe
 import { createJSObjectDestructionObserver } from './crossThreadHandlers/createJSObjectDestructionObserver.js';
 import type { TimingSystem } from './createTimingSystem.js';
 import { registerUpdateGlobalPropsHandler } from './crossThreadHandlers/registerUpdateGlobalPropsHandler.js';
+import { registerI18nResourceTranslation } from './crossThreadHandlers/registerI18nResourceTranslation.js';
 
 let nativeAppCount = 0;
 const sharedData: Record<string, unknown> = {};
@@ -155,6 +156,13 @@ export async function createNativeApp(config: {
       registerUpdateGlobalPropsHandler(uiThreadRpc, tt);
       timingSystem.registerGlobalEmitter(tt.GlobalEventEmitter);
       (tt.lynx.getCoreContext() as LynxCrossThreadContext).__start();
+      registerI18nResourceTranslation(
+        {
+          rpc: mainThreadRpc,
+          i18nNapiModule: (globalThis as any)['napiLoaderOnRT' + nativeApp.id]
+            ?.['load']('i18n'),
+        },
+      );
     },
     triggerComponentEvent,
     selectComponent,

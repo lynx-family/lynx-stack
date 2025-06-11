@@ -9,6 +9,7 @@ import {
 import {
   inShadowRootStyles,
   type Cloneable,
+  type InitI18nResources,
   type LynxTemplate,
   type NapiModulesCall,
   type NapiModulesMap,
@@ -23,10 +24,14 @@ export type INapiModulesCall = (
   moduleName: string,
   lynxView: LynxView,
   dispatchNapiModules: (data: Cloneable) => void,
-) => Promise<{ data: unknown; transfer?: Transferable[] }> | {
-  data: unknown;
-  transfer?: Transferable[];
-} | undefined;
+) =>
+  | Promise<{ data: unknown; transfer?: Transferable[] } | undefined>
+  | {
+    data: unknown;
+    transfer?: Transferable[];
+  }
+  | undefined
+  | Promise<undefined>;
 
 /**
  * Based on our experiences, these elements are almost used in all lynx cards.
@@ -48,6 +53,7 @@ export type INapiModulesCall = (
  * @property {number} lynxGroupId [optional] (attribute: "lynx-group-id") the background shared context id, which is used to share webworker between different lynx cards
  * @property {"all-on-ui" | "multi-thread"} threadStrategy [optional] @default "multi-thread" (attribute: "thread-strategy") controls the thread strategy for current lynx view
  * @property {(string)=>Promise<LynxTemplate>} customTemplateLoader [optional] the custom template loader, which is used to load the template
+ * @property {InitI18nResources} initI18nResources [optional] (attribute: "init-i18n-resources") the i18n resources which can be obtained synchronously by _I18nResourceTranslation
  *
  * @event error lynx card fired an error
  *
@@ -128,6 +134,23 @@ export class LynxView extends HTMLElement {
       this.#initData = JSON.parse(val);
     } else {
       this.#initData = val;
+    }
+  }
+
+  #initI18nResources: InitI18nResources = [];
+  /**
+   * @public
+   * @property initI18nResources
+   * @default {}
+   */
+  get initI18nResources(): InitI18nResources {
+    return this.#initI18nResources;
+  }
+  set initI18nResources(val: string | InitI18nResources) {
+    if (typeof val === 'string') {
+      this.#initI18nResources = JSON.parse(val);
+    } else {
+      this.#initI18nResources = val;
     }
   }
 
@@ -292,6 +315,9 @@ export class LynxView extends HTMLElement {
         case 'init-data':
           this.#initData = JSON.parse(newValue);
           break;
+        case 'init-i18n-resources':
+          this.#initI18nResources = JSON.parse(newValue);
+          break;
       }
     }
   }
@@ -386,6 +412,7 @@ export class LynxView extends HTMLElement {
             nativeModulesMap: this.#nativeModulesMap,
             napiModulesMap: this.#napiModulesMap,
             lynxGroupId,
+            initI18nResources: this.#initI18nResources,
             callbacks: {
               nativeModulesCall: (
                 ...args: [name: string, data: any, moduleName: string]

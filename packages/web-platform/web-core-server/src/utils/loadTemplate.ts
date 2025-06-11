@@ -114,6 +114,8 @@ const mainThreadInjectVars = [
   '__FlushElementTree',
   '__LoadLepusChunk',
   'SystemInfo',
+  '_I18nResourceTranslation',
+  '_AddEventListener',
 ];
 
 const backgroundInjectVars = [

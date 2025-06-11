@@ -31,7 +31,12 @@ import { dumpHTMLString } from './dumpHTMLString.js';
 interface LynxViewConfig extends
   Pick<
     StartMainThreadContextConfig,
-    'browserConfig' | 'tagMap' | 'initData' | 'globalProps' | 'template'
+    | 'browserConfig'
+    | 'tagMap'
+    | 'initData'
+    | 'globalProps'
+    | 'template'
+    | 'initI18nResources'
   >
 {
   templateName?: string;
@@ -92,6 +97,7 @@ export async function createLynxView(
     injectStyles,
     lynxViewStyle,
     threadStrategy = 'all-on-ui',
+    initI18nResources,
   } = config;
   const template = await loadTemplate(rawTemplate, config.templateName);
   const { promise: firstPaintReadyPromise, resolve: firstPaintReady } = Promise
@@ -118,6 +124,9 @@ export async function createLynxView(
     () => {
       // report error
     },
+    async () => {
+      // i18n resource translation
+    },
   );
   const runtime = await startMainThread({
     template,
@@ -130,6 +139,7 @@ export async function createLynxView(
       ...builtinTagTransformMap,
       ...tagMap,
     },
+    initI18nResources,
   });
 
   const elementTemplates = {
