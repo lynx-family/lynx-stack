@@ -13,6 +13,8 @@
  * order and with proper error handling.
  */
 
+import type { SnapshotPatch } from './snapshotPatch.js';
+import { SnapshotOperation } from './snapshotPatch.js';
 import {
   SnapshotInstance,
   createSnapshot,
@@ -20,8 +22,6 @@ import {
   snapshotInstanceManager,
   snapshotManager,
 } from '../../snapshot.js';
-import type { SnapshotPatch } from './snapshotPatch.js';
-import { SnapshotOperation } from './snapshotPatch.js';
 
 function reportCtxNotFound(): void {
   lynx.reportError(new Error(`snapshotPatchApply failed: ctx not found`));
