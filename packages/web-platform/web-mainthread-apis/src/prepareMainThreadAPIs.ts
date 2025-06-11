@@ -18,6 +18,8 @@ import {
   type reportErrorEndpoint,
   type MainThreadGlobalThis,
   switchExposureServiceEndpoint,
+  type I18nResourceTranslationOptions,
+  getCacheI18nResourcesKey,
 } from '@lynx-js/web-constants';
 import { registerCallLepusMethodHandler } from './crossThreadHandlers/registerCallLepusMethodHandler.js';
 import { registerGetCustomSectionHandler } from './crossThreadHandlers/registerGetCustomSectionHandler.js';
@@ -32,6 +34,9 @@ export function prepareMainThreadAPIs(
   commitDocument: () => Promise<void> | void,
   markTimingInternal: (timingKey: string, pipelineId?: string) => void,
   reportError: RpcCallType<typeof reportErrorEndpoint>,
+  triggerI18nResourceLoading: (
+    options: I18nResourceTranslationOptions,
+  ) => unknown,
 ) {
   const postTimingFlags = backgroundThreadRpc.createCall(
     postTimingFlagsEndpoint,
@@ -58,6 +63,7 @@ export function prepareMainThreadAPIs(
       nativeModulesMap,
       napiModulesMap,
       tagMap,
+      initI18nResources,
     } = config;
     const { styleInfo, pageConfig, customSections, cardType, lepusCode } =
       template;
@@ -174,6 +180,16 @@ export function prepareMainThreadAPIs(
         publishEvent,
         publicComponentEvent,
         createElement,
+        _I18nResourceTranslation: (options: I18nResourceTranslationOptions) => {
+          const matchedInitI18nResources = initI18nResources.find(i =>
+            getCacheI18nResourcesKey(i.options)
+              === getCacheI18nResourcesKey(options)
+          );
+          if (matchedInitI18nResources) {
+            return matchedInitI18nResources.resource;
+          }
+          return triggerI18nResourceLoading(options);
+        },
       },
     });
     markTimingInternal('decode_end');
