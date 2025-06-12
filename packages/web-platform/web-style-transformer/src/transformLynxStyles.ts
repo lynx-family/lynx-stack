@@ -242,9 +242,8 @@ const renameRules: {
     },
   ],
   'color': [
-    'color',
     {
-      name: '--lynx-color',
+      name: 'color',
       valueProcessor(value) {
         return value.includes('gradient')
           ? 'transparent'
