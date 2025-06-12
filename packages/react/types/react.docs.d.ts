@@ -1,5 +1,8 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
+
+import type { ReactNode, ExoticComponent } from 'react';
+
 // LICENSE file in the root directory of this source tree.
 declare global {
   /**
@@ -67,6 +70,11 @@ export { Fragment, Suspense } from 'react';
  * @see https://react.dev/reference/react/legacy
  */
 export { Component, PureComponent, createElement, createRef, isValidElement } from 'react';
+
+export const LazyBundleResponseListener: ExoticComponent<{
+  children?: ReactNode | undefined;
+  onResponse: (response: unknown) => void;
+}>;
 
 /**
  * RL-defined Lynx APIs
