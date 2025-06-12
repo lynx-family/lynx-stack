@@ -55,6 +55,9 @@ const serializer = createSnapshotSerializer({
     addDoubleQuotes: false,
     escapeDoubleQuotes: false,
   },
+  afterSerialize(val) {
+    return val.replaceAll(/\d+:\d+/g, '<LINE:COLUMN>');
+  },
 });
 
 function createCase(name: string, src: string, dist: string, cwd: string) {
@@ -119,8 +122,7 @@ function createCase(name: string, src: string, dist: string, cwd: string) {
                     .map((s: string) => s.trim())
                     .join('\n');
                 }
-                return serializer.serialize(output)
-                  .replaceAll(/\d+:\d+/g, '<LINE:COLUMN>');
+                return serializer.serialize(output);
               },
             }),
           );

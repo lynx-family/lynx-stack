@@ -17,7 +17,7 @@
   "main": "index.ts",
   "types": "index.ts",
   "devDependencies": {
-    "path-serializer": "^0.4.1",
+    "path-serializer": "^0.5.0",
     "vitest": "^3.2.2",
     "webpack": "^5.99.9"
   },
