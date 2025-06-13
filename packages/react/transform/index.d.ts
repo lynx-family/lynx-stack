@@ -2,13 +2,14 @@ import type {
   CssScopeVisitorConfig,
   JsxTransformerConfig,
   ShakeVisitorConfig,
-  CompatVisitorConfig,
   DefineDceVisitorConfig,
   DirectiveDceVisitorConfig,
   WorkletVisitorConfig,
   DynamicImportVisitorConfig,
   InjectVisitorConfig,
 } from './swc-plugin-react-lynx/index.d.ts';
+
+import type { CompatVisitorConfig } from './swc-plugin-compat/index.d.ts';
 
 export interface TransformReactLynxOptions {
   /**

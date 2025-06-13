@@ -12,14 +12,13 @@ function transformReactLynxPlugin(): Plugin {
   return {
     name: 'transformReactLynxPlugin',
     enforce: 'pre',
-    transform(sourceText, sourcePath) {
-      const { transformReactLynxSync } = require(
+    async transform(sourceText, sourcePath) {
+      const { transformReactLynx } = require(
         '@lynx-js/react-transform',
       ) as typeof import('@lynx-js/react-transform');
       const relativePath = path.basename(sourcePath);
-      const result = transformReactLynxSync(sourceText, {
+      const result = await transformReactLynx(sourceText, {
         mode: 'test',
-        pluginName: '',
         filename: relativePath,
         sourcemap: true,
         snapshot: {
@@ -35,7 +34,6 @@ function transformReactLynxPlugin(): Plugin {
         shake: false,
         compat: false,
         worklet: false,
-        refresh: false,
         cssScope: false,
       });
 

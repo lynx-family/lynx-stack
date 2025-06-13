@@ -98,7 +98,7 @@ export interface ExtractStrConfig {
    */
   strLength: number;
   /** @internal */
-  extractedStrArr?: Array<string>;
+  extractedStrArr?: string[];
 }
 export interface InjectVisitorConfig {
   inject: Record<
@@ -136,7 +136,7 @@ export interface ShakeVisitorConfig {
    * The provided values will be merged with the default values instead of replacing them.
    * @public
    */
-  pkgName: Array<string>;
+  pkgName: string[];
   /**
    * Properties that should be retained in the component class
    *
@@ -162,7 +162,7 @@ export interface ShakeVisitorConfig {
    *
    * @public
    */
-  retainProp: Array<string>;
+  retainProp: string[];
   /**
    * Function names whose parameters should be removed during transformation
    *
@@ -188,7 +188,7 @@ export interface ShakeVisitorConfig {
    *
    * @public
    */
-  removeCallParams: Array<string>;
+  removeCallParams: string[];
 }
 /** @internal */
 export interface JsxTransformerConfig {
@@ -214,7 +214,7 @@ export interface WorkletVisitorConfig {
    * users can customize the global identifier list through this option.
    * This configuration will take effect together with the default lepus global identifier list.
    */
-  customGlobalIdentNames?: Array<string>;
+  customGlobalIdentNames?: string[];
   /** @internal */
   filename: string;
   /** @internal */

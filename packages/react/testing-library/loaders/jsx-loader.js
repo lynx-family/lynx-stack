@@ -1,11 +1,13 @@
 import { fileURLToPath } from 'node:url';
-import { transformReactLynxSync } from '../../transform/main.js';
+import { transformReactLynx } from '../../transform/main.js';
 import path from 'node:path';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export default function jsxLoader(source) {
+export default async function jsxLoader(source) {
+  const callback = this.async()
+
   const runtimePkgName = '@lynx-js/react';
   const sourcePath = this.resourcePath;
   const basename = path.basename(sourcePath);
@@ -14,9 +16,8 @@ export default function jsxLoader(source) {
     sourcePath,
   );
 
-  const result = transformReactLynxSync(source, {
+  const result = await transformReactLynx(source, {
     mode: 'test',
-    pluginName: '',
     filename: basename,
     sourcemap: true,
     snapshot: {
@@ -36,14 +37,13 @@ export default function jsxLoader(source) {
       runtimePkg: `${runtimePkgName}/internal`,
       target: 'MIXED',
     },
-    refresh: false,
     cssScope: false,
   });
 
-  if (result.errors.length > 0) {
-    console.error(result.errors);
-    throw new Error('transformReactLynxSync failed');
+  if (result.diagnostics.length > 0) {
+    console.error(result.diagnostics);
+    throw new Error('transformReactLynx failed');
   }
 
-  this.callback(null, result.code, result.map);
+  callback(null, result.code, result.map);
 }
