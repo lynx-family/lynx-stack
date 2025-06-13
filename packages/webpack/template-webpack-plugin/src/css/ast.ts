@@ -7,9 +7,11 @@ import type { Plugin } from '@lynx-js/css-serializer';
 export function cssToAst(
   content: string,
   plugins: Plugin[],
+  enableCSSSelector: boolean,
 ): [CSS.LynxStyleNode[], CSS.ParserError[]] {
   const parsedCSS = CSS.parse(content, {
     plugins,
+    enableCSSSelector,
   });
   return [parsedCSS.root, parsedCSS.errors] as const;
 }

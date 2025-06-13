@@ -24,7 +24,7 @@ export function cssChunksToMap(
   return {
     cssMap: Object.fromEntries(
       Array.from(cssMap.entries()).map(([cssId, content]) => {
-        const [root] = cssToAst(content.join('\n'), plugins);
+        const [root] = cssToAst(content.join('\n'), plugins, enableCSSSelector);
 
         root.forEach(rule => {
           if (rule.type === 'ImportRule') {

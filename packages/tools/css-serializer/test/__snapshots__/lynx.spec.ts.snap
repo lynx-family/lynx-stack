@@ -134,6 +134,172 @@ exports[`attribute 1`] = `
 ]
 `;
 
+exports[`backslash-escape 1`] = `
+{
+  "errors": [],
+  "root": [
+    {
+      "selectorText": {
+        "loc": {
+          "column": 11,
+          "line": 1,
+        },
+        "value": ".h-\\[3px\\]",
+      },
+      "style": [
+        {
+          "keyLoc": {
+            "column": 9,
+            "line": 2,
+          },
+          "name": "height",
+          "valLoc": {
+            "column": 15,
+            "line": 2,
+          },
+          "value": "3px",
+        },
+      ],
+      "type": "StyleRule",
+      "variables": {},
+    },
+    {
+      "selectorText": {
+        "loc": {
+          "column": 16,
+          "line": 5,
+        },
+        "value": ".text-\\[\\#000\\]",
+      },
+      "style": [
+        {
+          "keyLoc": {
+            "column": 8,
+            "line": 6,
+          },
+          "name": "color",
+          "valLoc": {
+            "column": 15,
+            "line": 6,
+          },
+          "value": "#000",
+        },
+      ],
+      "type": "StyleRule",
+      "variables": {},
+    },
+    {
+      "selectorText": {
+        "loc": {
+          "column": 6,
+          "line": 9,
+        },
+        "value": ".C\\\\a",
+      },
+      "style": [
+        {
+          "keyLoc": {
+            "column": 8,
+            "line": 10,
+          },
+          "name": "color",
+          "valLoc": {
+            "column": 14,
+            "line": 10,
+          },
+          "value": "red",
+        },
+      ],
+      "type": "StyleRule",
+      "variables": {},
+    },
+  ],
+}
+`;
+
+exports[`backslash-escape 2`] = `
+{
+  "errors": [],
+  "root": [
+    {
+      "selectorText": {
+        "loc": {
+          "column": 11,
+          "line": 1,
+        },
+        "value": ".h-[3px]",
+      },
+      "style": [
+        {
+          "keyLoc": {
+            "column": 9,
+            "line": 2,
+          },
+          "name": "height",
+          "valLoc": {
+            "column": 15,
+            "line": 2,
+          },
+          "value": "3px",
+        },
+      ],
+      "type": "StyleRule",
+      "variables": {},
+    },
+    {
+      "selectorText": {
+        "loc": {
+          "column": 16,
+          "line": 5,
+        },
+        "value": ".text-[#000]",
+      },
+      "style": [
+        {
+          "keyLoc": {
+            "column": 8,
+            "line": 6,
+          },
+          "name": "color",
+          "valLoc": {
+            "column": 15,
+            "line": 6,
+          },
+          "value": "#000",
+        },
+      ],
+      "type": "StyleRule",
+      "variables": {},
+    },
+    {
+      "selectorText": {
+        "loc": {
+          "column": 6,
+          "line": 9,
+        },
+        "value": ".C\\\\a",
+      },
+      "style": [
+        {
+          "keyLoc": {
+            "column": 8,
+            "line": 10,
+          },
+          "name": "color",
+          "valLoc": {
+            "column": 14,
+            "line": 10,
+          },
+          "value": "red",
+        },
+      ],
+      "type": "StyleRule",
+      "variables": {},
+    },
+  ],
+}
+`;
+
 exports[`break-rule 1`] = `
 [
   {

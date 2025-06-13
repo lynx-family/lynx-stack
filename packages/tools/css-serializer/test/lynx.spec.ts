@@ -108,3 +108,19 @@ test('set-string-mark', () => {
     }),
   ).toMatchSnapshot();
 });
+
+test('backslash-escape', () => {
+  expect(
+    parse(readCode('backslash-escape'), {
+      plugins: [],
+      enableCSSSelector: true,
+    }),
+  ).toMatchSnapshot();
+
+  expect(
+    parse(readCode('backslash-escape'), {
+      plugins: [],
+      enableCSSSelector: false,
+    }),
+  ).toMatchSnapshot();
+});

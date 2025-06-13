@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { describe, expect, test, vi } from 'vitest';
 
-import type { LynxStyleNode } from '@lynx-js/css-serializer';
+import type { LynxStyleNode, StyleRule } from '@lynx-js/css-serializer';
 
 import { cssChunksToMap } from '../src/css/cssChunksToMap.js';
 import { debundleCSS } from '../src/css/debundle.js';
@@ -450,6 +450,52 @@ describe('CSS', () => {
         '--foo': 'red',
         '--bar': 'blue',
       });
+    });
+    const backslashEscapeStr = `\
+.h-\\[3px\\] {
+  height: 3px
+}
+
+.text-\\[\\#000\\] {
+  color: #000;
+}
+
+.C\\a{
+  color: red;
+}
+`;
+    test('should keep backslash escapes for `\\[`, `\\]` and `\\#`', () => {
+      const ret = cssChunksToMap(
+        [backslashEscapeStr],
+        [],
+        true,
+      );
+      expect((ret.cssMap['0']![0] as StyleRule).selectorText.value).toBe(
+        '.h-\\[3px\\]',
+      );
+      expect((ret.cssMap['0']![1] as StyleRule).selectorText.value).toBe(
+        '.text-\\[\\#000\\]',
+      );
+      expect((ret.cssMap['0']![2] as StyleRule).selectorText.value).toBe(
+        '.C\\a',
+      );
+    });
+
+    test('should remove backslash escapes for `\\[`, `\\]` and `\\#`', () => {
+      const ret = cssChunksToMap(
+        [backslashEscapeStr],
+        [],
+        false,
+      );
+      expect((ret.cssMap['0']![0] as StyleRule).selectorText.value).toBe(
+        '.h-[3px]',
+      );
+      expect((ret.cssMap['0']![1] as StyleRule).selectorText.value).toBe(
+        '.text-[#000]',
+      );
+      expect((ret.cssMap['0']![2] as StyleRule).selectorText.value).toBe(
+        '.C\\a',
+      );
     });
   });
 
