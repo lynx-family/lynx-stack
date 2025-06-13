@@ -164,6 +164,8 @@ export class BackgroundSnapshotInstance {
 
     traverseSnapshotInstance(node, v => {
       v.__parent = null;
+      v.__previousSibling = null;
+      v.__nextSibling = null;
       if (v.__values) {
         v.__snapshot_def.refAndSpreadIndexes?.forEach((i) => {
           const value = v.__values![i] as unknown;

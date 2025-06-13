@@ -635,6 +635,97 @@ describe('renderOpcodesInto', () => {
       />
     `);
   });
+
+  it('opcodes will not ref FiberElement', () => {
+    scratch.ensureElements();
+
+    function Fragment({ children }) {
+      return children;
+    }
+
+    const opcodes = renderToString(
+      <view>
+        <text>Hello World</text>
+        {[
+          <view>A</view>,
+          <view>B</view>,
+          <view>C</view>,
+          <view>
+            C
+            <Fragment>
+              <text>C1</text>
+              <text>C2</text>
+              <text>C3</text>
+              <text>C4</text>
+            </Fragment>
+          </view>,
+          <view>D{[<text>D1</text>, <text>D2</text>, <text>D3</text>, <text>D4</text>]}</view>,
+        ]}
+      </view>,
+    );
+
+    renderOpcodesInto(opcodes, scratch);
+
+    scratch.__firstChild.removeChild(scratch.__firstChild.__firstChild);
+    scratch.__firstChild.removeChild(scratch.__firstChild.__lastChild);
+    scratch.__firstChild.removeChild(scratch.__firstChild.__lastChild);
+
+    expect(scratch.__element_root).toMatchInlineSnapshot(`
+      <page
+        cssId="default-entry-from-native:0"
+      >
+        <view>
+          <text>
+            <raw-text
+              text="Hello World"
+            />
+          </text>
+          <wrapper>
+            <view>
+              <raw-text
+                text="B"
+              />
+            </view>
+            <view>
+              <raw-text
+                text="C"
+              />
+            </view>
+          </wrapper>
+        </view>
+      </page>
+    `);
+
+    const [vnodeA, vnodeB, vnodeC, vnodeC2, vnodeD] = scratch.__firstChild.props.children;
+
+    expect(vnodeA).not.toHaveProperty('__elements');
+    expect(vnodeA).not.toHaveProperty('__element_root');
+    expect(vnodeB).toHaveProperty('__elements');
+    expect(vnodeB).toHaveProperty('__element_root');
+    expect(vnodeC).toHaveProperty('__elements');
+    expect(vnodeC).toHaveProperty('__element_root');
+    expect(vnodeD).not.toHaveProperty('__elements');
+    expect(vnodeD).not.toHaveProperty('__element_root');
+
+    {
+      const componentVNodeC = vnodeC2.props.children;
+      expect(componentVNodeC.type).toBe(Fragment);
+      expect(componentVNodeC.props.children).toHaveLength(4);
+      expect(componentVNodeC.__c.constructor).toBe(Fragment);
+      // FIXME(hzy): there is still a cycle reference
+      expect(componentVNodeC.__c.__v).toBe(componentVNodeC);
+      componentVNodeC.props.children.forEach((vnode) => {
+        expect(vnode).not.toHaveProperty('__elements');
+        expect(vnode).not.toHaveProperty('__element_root');
+      });
+    }
+
+    expect(vnodeD.props.children).toHaveLength(4);
+    vnodeD.props.children.forEach((vnode) => {
+      expect(vnode).not.toHaveProperty('__elements');
+      expect(vnode).not.toHaveProperty('__element_root');
+    });
+  });
 });
 
 it('should compile @jsxImportSource', () => {
@@ -656,8 +747,8 @@ describe('createElement', () => {
         0,
         {
           "children": undefined,
-          "id": -44,
-          "type": "__Card__:__snapshot_a94a8_test_30",
+          "id": -59,
+          "type": "__Card__:__snapshot_a94a8_test_44",
           "values": undefined,
         },
         1,
@@ -669,8 +760,8 @@ describe('createElement', () => {
         0,
         {
           "children": undefined,
-          "id": -45,
-          "type": "__Card__:__snapshot_a94a8_test_30",
+          "id": -60,
+          "type": "__Card__:__snapshot_a94a8_test_44",
           "values": undefined,
         },
         1,
@@ -690,8 +781,8 @@ describe('createElement', () => {
         0,
         {
           "children": undefined,
-          "id": -46,
-          "type": "__Card__:__snapshot_a94a8_test_31",
+          "id": -61,
+          "type": "__Card__:__snapshot_a94a8_test_45",
           "values": undefined,
         },
         1,
@@ -703,8 +794,8 @@ describe('createElement', () => {
         0,
         {
           "children": undefined,
-          "id": -47,
-          "type": "__Card__:__snapshot_a94a8_test_31",
+          "id": -62,
+          "type": "__Card__:__snapshot_a94a8_test_45",
           "values": undefined,
         },
         1,
