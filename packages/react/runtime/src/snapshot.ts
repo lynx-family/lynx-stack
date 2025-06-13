@@ -544,8 +544,6 @@ export class SnapshotInstance {
       this.__removeChild(child);
       traverseSnapshotInstance(child, v => {
         v.__parent = null;
-        v.__previousSibling = null;
-        v.__nextSibling = null;
         snapshotInstanceManager.values.delete(v.__id);
       });
     };
