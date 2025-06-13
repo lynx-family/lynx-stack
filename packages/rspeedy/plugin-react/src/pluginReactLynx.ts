@@ -12,13 +12,13 @@ import { createRequire } from 'node:module'
 
 import type { RsbuildPlugin } from '@rsbuild/core'
 
+import type { ExposedAPI } from '@lynx-js/rspeedy'
+import type { CompatVisitorConfig } from '@lynx-js/swc-plugin-compat'
 import type {
-  CompatVisitorConfig,
   DefineDceVisitorConfig,
   ExtractStrConfig,
   ShakeVisitorConfig,
-} from '@lynx-js/react-transform'
-import type { ExposedAPI } from '@lynx-js/rspeedy'
+} from '@lynx-js/swc-plugin-react-lynx'
 
 import { applyAlias } from './alias.js'
 import { applyBackgroundOnly } from './backgroundOnly.js'
@@ -371,10 +371,10 @@ export function pluginReactLynx(
       applyEntry(api, resolvedOptions)
       applyBackgroundOnly(api)
       applyGenerator(api)
+      applySWC(api)
       applyLoaders(api, resolvedOptions)
       applyRefresh(api)
       applySplitChunksRule(api)
-      applySWC(api)
       applyUseSyncExternalStore(api)
 
       api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {

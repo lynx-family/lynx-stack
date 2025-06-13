@@ -8,12 +8,12 @@
     "react",
     "swc-plugin"
   ],
-  "main": "./swc_plugin_compat.wasm",
-  "types": "./index.d.ts",
-  "files": [
-    "swc_plugin_compat.wasm",
-    "index.d.ts"
-  ],
+  "exports": {
+    ".": {
+      "default": "./swc_plugin_compat.wasm",
+      "types": "./index.d.ts"
+    }
+  },
   "scripts": {
     "build": "node ./build.js",
     "test:cargo": "cargo test"
