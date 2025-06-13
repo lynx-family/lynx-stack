@@ -1,5 +1,36 @@
 # @lynx-js/web-core
 
+## 0.13.6
+
+### Patch Changes
+
+- refactor: make the opcode be a plain array ([#1051](https://github.com/lynx-family/lynx-stack/pull/1051))
+
+  #1042
+
+- feat: The error event return value detail of lynx-view adds `sourceMap` value, the type is as follows: ([#1058](https://github.com/lynx-family/lynx-stack/pull/1058))
+
+  ```
+  CustomEvent<{
+    error: Error;
+    sourceMap: {
+      offset: {
+        line: number;
+        col: number;
+      };
+    };
+  }>;
+  ```
+
+  This is because web-core adds wrapper at runtime, which causes the stack offset to be different. Now you can calculate the real offset based on it.
+
+- Updated dependencies [[`42ed2e3`](https://github.com/lynx-family/lynx-stack/commit/42ed2e325ff38f781dc88b92cc56093a7a7164ea), [`873a285`](https://github.com/lynx-family/lynx-stack/commit/873a2852fa3df9e32c48a6504160bb243540c7b9)]:
+  - @lynx-js/web-worker-runtime@0.13.6
+  - @lynx-js/offscreen-document@0.1.2
+  - @lynx-js/web-constants@0.13.6
+  - @lynx-js/web-mainthread-apis@0.13.6
+  - @lynx-js/web-worker-rpc@0.13.6
+
 ## 0.13.5
 
 ### Patch Changes

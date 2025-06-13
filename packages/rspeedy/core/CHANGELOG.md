@@ -1,5 +1,7 @@
 # @lynx-js/rspeedy
 
+## 0.9.10
+
 ## 0.9.9
 
 ### Patch Changes

@@ -1,5 +1,20 @@
 # @lynx-js/web-elements
 
+## 0.7.6
+
+### Patch Changes
+
+- fix: incorrect syntax for x-canvas part ([#1067](https://github.com/lynx-family/lynx-stack/pull/1067))
+
+- feat: x-input && x-textarea add attribute input-filter, which can filter input value. ([#1037](https://github.com/lynx-family/lynx-stack/pull/1037))
+
+- perf: add loading="lazy" for image element ([#1056](https://github.com/lynx-family/lynx-stack/pull/1056))
+
+  https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/img#loading
+
+- Updated dependencies [[`62d1078`](https://github.com/lynx-family/lynx-stack/commit/62d1078e67f2aba216a0d97bf1ad9ece624e498e)]:
+  - @lynx-js/web-elements-template@0.7.6
+
 ## 0.7.5
 
 ### Patch Changes

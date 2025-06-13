@@ -1,5 +1,11 @@
 # @lynx-js/react-alias-rsbuild-plugin
 
+## 0.10.4
+
+### Patch Changes
+
+- Replace `enhanced-resolve` with `unrs-resolver` ([#936](https://github.com/lynx-family/lynx-stack/pull/936))
+
 ## 0.10.3
 
 ## 0.10.2

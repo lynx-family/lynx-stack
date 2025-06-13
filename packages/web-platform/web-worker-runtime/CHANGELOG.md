@@ -1,5 +1,17 @@
 # @lynx-js/web-worker-runtime
 
+## 0.13.6
+
+### Patch Changes
+
+- fix: The parameter config of loadCard needs to add updateData, otherwise some event binding will fail when enableJSDataProcessor is turned on. ([#1077](https://github.com/lynx-family/lynx-stack/pull/1077))
+
+- Updated dependencies [[`873a285`](https://github.com/lynx-family/lynx-stack/commit/873a2852fa3df9e32c48a6504160bb243540c7b9)]:
+  - @lynx-js/offscreen-document@0.1.2
+  - @lynx-js/web-constants@0.13.6
+  - @lynx-js/web-mainthread-apis@0.13.6
+  - @lynx-js/web-worker-rpc@0.13.6
+
 ## 0.13.5
 
 ### Patch Changes
