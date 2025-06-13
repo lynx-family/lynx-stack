@@ -5,7 +5,7 @@ const __snapshot_da39a_test_1 = /*#__PURE__*/ require('@lynx-js/react/internal')
     return [
         el
     ];
-}, null, require('@lynx-js/react/internal').__DynamicPartChildren_0, undefined, globDynamicComponentEntry);
+}, null, require('@lynx-js/react/internal').__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null);
 <ReactLynxRuntimeComponents.Page custom-key-str="custom-value" custom-key-var={customVariable} class="classValue" data-attr={dataAttr}>
       <__snapshot_da39a_test_1>{[
     <ReactLynxRuntimeComponents.Page/>,

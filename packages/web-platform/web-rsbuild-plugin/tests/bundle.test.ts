@@ -47,7 +47,9 @@ describe('Bundle Build', () => {
       for (const m of modules) {
         if (
           m.type === 'javascript/auto'
-          && m.userRequest.includes('tests/fixtures/index.native-modules.ts')
+          && m.userRequest.includes(
+            'tests/fixtures/index.native-modules.ts'.replaceAll('/', path.sep),
+          )
         ) {
           if (!i.isOnlyInitial()) {
             asyncChunkImportCount++;

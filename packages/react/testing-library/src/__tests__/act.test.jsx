@@ -77,7 +77,7 @@ test('findByTestId returns the element', async () => {
     <page>
       <view
         data-testid="foo"
-        has-react-ref="true"
+        react-ref-2-0="1"
       >
         <text>
           Hello world!
@@ -88,7 +88,7 @@ test('findByTestId returns the element', async () => {
   expect(await findByTestId('foo')).toMatchInlineSnapshot(`
     <view
       data-testid="foo"
-      has-react-ref="true"
+      react-ref-2-0="1"
     >
       <text>
         Hello world!
@@ -96,12 +96,12 @@ test('findByTestId returns the element', async () => {
     </view>
   `);
   expect(ref.current).toMatchInlineSnapshot(`
-    NodesRef {
-      "_nodeSelectToken": {
-        "identifier": "1",
-        "type": 2,
-      },
-      "_selectorQuery": {},
+    RefProxy {
+      "refAttr": [
+        2,
+        0,
+      ],
+      "task": undefined,
     }
   `);
 });

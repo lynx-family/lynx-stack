@@ -641,6 +641,33 @@ test.describe('reactlynx3 tests', () => {
       const target = await page.locator('lynx-view');
       await expect(target).toHaveCSS('display', 'none');
     });
+    test('api-error-detail', async ({ page }, { title }) => {
+      let offset = false;
+      await page.on('console', async (msg) => {
+        const event = await msg.args()[0]?.evaluate((e) => {
+          return {
+            type: e.type,
+            error: e.detail?.error,
+            offset: e.detail?.sourceMap?.offset,
+          };
+        });
+        if (!event || event.type !== 'error') {
+          return;
+        }
+        if (
+          typeof event.offset.line === 'number' && event.offset.line === 2
+          && typeof event.offset.col === 'number' && event.offset.col === 0
+          && event.error.message === 'error'
+          && typeof event.error.stack === 'string'
+          && event.error.stack !== ''
+        ) {
+          offset = true;
+        }
+      });
+      await goto(page, 'api-error');
+      await wait(500);
+      expect(offset).toBe(true);
+    });
 
     test('api-preheat', async ({ page }, { title }) => {
       await goto(page, title);
@@ -2261,6 +2288,18 @@ test.describe('reactlynx3 tests', () => {
           expect(result).toBe('2-5');
         },
       );
+      test(
+        'basic-element-x-input-input-filter',
+        async ({ page }, { title }) => {
+          await goto(page, title);
+          await page.locator('input').press('Enter');
+          await wait(200);
+          await page.locator('input').fill('foobar!@#)');
+          await wait(200);
+          const result = await page.locator('.result').first().innerText();
+          expect(result).toBe('foobar');
+        },
+      );
     });
     test.describe('x-overlay-ng', () => {
       test('basic-element-x-overlay-ng-demo', async ({ page }, { title }) => {
@@ -3576,6 +3615,19 @@ test.describe('reactlynx3 tests', () => {
           });
           const result = await page.locator('.result').first().innerText();
           expect(result).toBe('2-5');
+        },
+      );
+
+      test(
+        'basic-element-x-textarea-input-filter',
+        async ({ page }, { title }) => {
+          await goto(page, title);
+          await page.locator('textarea').press('Enter');
+          await wait(200);
+          await page.locator('textarea').fill('foobar!@#)');
+          await wait(200);
+          const result = await page.locator('.result').first().innerText();
+          expect(result).toBe('foobar');
         },
       );
     });

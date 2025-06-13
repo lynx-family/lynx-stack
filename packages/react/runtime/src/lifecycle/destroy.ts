@@ -13,6 +13,7 @@ function destroyBackground(): void {
     console.profile('destroyBackground');
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   render(null, __root as any);
 
   globalCommitTaskMap.forEach(task => {
