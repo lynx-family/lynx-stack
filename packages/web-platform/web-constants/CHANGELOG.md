@@ -1,5 +1,16 @@
 # @lynx-js/web-constants
 
+## 0.13.6
+
+### Patch Changes
+
+- refactor: make the opcode be a plain array ([#1051](https://github.com/lynx-family/lynx-stack/pull/1051))
+
+  #1042
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.13.6
+
 ## 0.13.5
 
 ### Patch Changes

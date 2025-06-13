@@ -1,5 +1,11 @@
 # @lynx-js/web-platform-rsbuild-plugin
 
+## 0.1.1
+
+### Patch Changes
+
+- Fix build on Windows ([#1048](https://github.com/lynx-family/lynx-stack/pull/1048))
+
 ## 0.1.0
 
 ### Minor Changes

@@ -1,5 +1,24 @@
 # @lynx-js/react
 
+## 0.110.0
+
+### Minor Changes
+
+- Fixed closure variable capture issue in effect hooks to prevent stale values and ensured proper execution order between refs, effects, and event handlers. ([#770](https://github.com/lynx-family/lynx-stack/pull/770))
+
+  **Breaking Changes**:
+
+  - The execution timing of `ref` and `useEffect()` side effects has been moved forward. These effects will now execute before hydration is complete, rather than waiting for the main thread update to complete.
+  - For components inside `<list />`, `ref` callbacks will now be triggered during background thread rendering, regardless of component visibility. If your code depends on component visibility timing, use `main-thread:ref` instead of regular `ref`.
+
+### Patch Changes
+
+- Fix a memory leak in ReactLynx where the C++ FiberElement is not released when removing the child from page. ([#1054](https://github.com/lynx-family/lynx-stack/pull/1054))
+
+- Fix a problem causing `MainThreadRef`s to not be updated correctly during hydration when they are set to `main-thread:ref`s. ([#1001](https://github.com/lynx-family/lynx-stack/pull/1001))
+
+- Fix a bug in ReactLynx Testing Library that rendered snapshot of inline style was normalized incorrectly (eg. `flex:1` was normalized to `flex: 1 1 0%;` incorrectly). ([#1040](https://github.com/lynx-family/lynx-stack/pull/1040))
+
 ## 0.109.2
 
 ### Patch Changes
