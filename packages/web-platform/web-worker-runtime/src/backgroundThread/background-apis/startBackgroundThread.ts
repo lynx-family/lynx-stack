@@ -46,7 +46,11 @@ export function startBackgroundThread(
       );
       lynxCore.then(
         ({ loadCard, destroyCard, callDestroyLifetimeFun }) => {
-          loadCard(nativeApp, config, nativeLynx);
+          loadCard(nativeApp, {
+            ...config,
+            // @ts-ignore
+            updateData: config.initData,
+          }, nativeLynx);
           registerDisposeHandler(
             uiThreadRpc,
             nativeApp,
