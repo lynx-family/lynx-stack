@@ -91,7 +91,7 @@ export { type SomeType } from './types.js';
 
 ## 类型检查
 
-默认情况下 Rspeedy 不会执行类型检查。如果需要类型检查功能，可以使用 Rsbuild 提供的 [Type Check 插件](https://rsbuild.dev/plugins/list/plugin-type-check)，该插件会在独立进程中运行 TypeScript 类型检查（内部集成了 [fork-ts-checker-webpack-plugin](https://github.com/TypeStrong/fork-ts-checker-webpack-plugin)）。
+默认情况下 Rspeedy 不会执行类型检查。如果需要类型检查功能，可以使用 Rsbuild 提供的 [Type Check 插件](https://rsbuild.rs/zh/guide/basic/typescript#%E7%B1%BB%E5%9E%8B%E6%A3%80%E6%9F%A5)，该插件会在独立进程中运行 TypeScript 类型检查（内部集成了 [fork-ts-checker-webpack-plugin](https://github.com/TypeStrong/fork-ts-checker-webpack-plugin)）。
 
 1. 安装插件包
 
@@ -115,4 +115,4 @@ export default defineConfig({
 });
 ```
 
-完整配置选项请参考 [Type Check 插件文档](https://rsbuild.dev/plugins/list/plugin-type-check)。
+完整配置选项请参考 [Type Check 插件文档](https://rsbuild.rs/zh/guide/basic/typescript#%E7%B1%BB%E5%9E%8B%E6%A3%80%E6%9F%A5)。
