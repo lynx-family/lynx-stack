@@ -13,6 +13,8 @@
  * order and with proper error handling.
  */
 
+import type { SnapshotPatch } from './snapshotPatch.js';
+import { SnapshotOperation } from './snapshotPatch.js';
 import {
   SnapshotInstance,
   createSnapshot,
@@ -20,8 +22,7 @@ import {
   snapshotInstanceManager,
   snapshotManager,
 } from '../../snapshot.js';
-import type { SnapshotPatch } from './snapshotPatch.js';
-import { SnapshotOperation } from './snapshotPatch.js';
+import type { DynamicPartType } from '../../snapshot.js';
 
 function reportCtxNotFound(): void {
   lynx.reportError(new Error(`snapshotPatchApply failed: ctx not found`));
@@ -37,18 +38,18 @@ export function snapshotPatchApply(snapshotPatch: SnapshotPatch): void {
   for (let i = 0; i < length; ++i) {
     switch (snapshotPatch[i]) {
       case SnapshotOperation.CreateElement: {
-        const type = snapshotPatch[++i];
-        const id = snapshotPatch[++i];
+        const type = snapshotPatch[++i] as string;
+        const id = snapshotPatch[++i] as number;
         new SnapshotInstance(type, id);
         break;
       }
       case SnapshotOperation.InsertBefore: {
-        const parentId = snapshotPatch[++i];
-        const childId = snapshotPatch[++i];
-        const beforeId = snapshotPatch[++i];
+        const parentId = snapshotPatch[++i] as number;
+        const childId = snapshotPatch[++i] as number;
+        const beforeId = snapshotPatch[++i] as number | undefined;
         const parent = snapshotInstanceManager.values.get(parentId);
         const child = snapshotInstanceManager.values.get(childId);
-        const existingNode = snapshotInstanceManager.values.get(beforeId);
+        const existingNode = snapshotInstanceManager.values.get(beforeId!);
         if (!parent || !child) {
           reportCtxNotFound();
         } else {
@@ -57,8 +58,8 @@ export function snapshotPatchApply(snapshotPatch: SnapshotPatch): void {
         break;
       }
       case SnapshotOperation.RemoveChild: {
-        const parentId = snapshotPatch[++i];
-        const childId = snapshotPatch[++i];
+        const parentId = snapshotPatch[++i] as number;
+        const childId = snapshotPatch[++i] as number;
         const parent = snapshotInstanceManager.values.get(parentId);
         const child = snapshotInstanceManager.values.get(childId);
         if (!parent || !child) {
@@ -69,8 +70,8 @@ export function snapshotPatchApply(snapshotPatch: SnapshotPatch): void {
         break;
       }
       case SnapshotOperation.SetAttribute: {
-        const id = snapshotPatch[++i];
-        const dynamicPartIndex = snapshotPatch[++i];
+        const id = snapshotPatch[++i] as number;
+        const dynamicPartIndex = snapshotPatch[++i] as number;
         const value = snapshotPatch[++i];
         const si = snapshotInstanceManager.values.get(id);
         if (si) {
@@ -81,7 +82,7 @@ export function snapshotPatchApply(snapshotPatch: SnapshotPatch): void {
         break;
       }
       case SnapshotOperation.SetAttributes: {
-        const id = snapshotPatch[++i];
+        const id = snapshotPatch[++i] as number;
         const values = snapshotPatch[++i];
         const si = snapshotInstanceManager.values.get(id);
         if (si) {
@@ -93,12 +94,12 @@ export function snapshotPatchApply(snapshotPatch: SnapshotPatch): void {
       }
       case SnapshotOperation.DEV_ONLY_AddSnapshot: {
         if (__DEV__) {
-          const uniqID: string = snapshotPatch[++i];
-          const create: string = snapshotPatch[++i];
-          const update: string[] = snapshotPatch[++i];
-          const slot = snapshotPatch[++i];
-          const cssId: number = snapshotPatch[++i] ?? 0;
-          const entryName: string | undefined = snapshotPatch[++i];
+          const uniqID = snapshotPatch[++i] as string;
+          const create = snapshotPatch[++i] as string;
+          const update = snapshotPatch[++i] as string[];
+          const slot = snapshotPatch[++i] as [DynamicPartType, number][];
+          const cssId = (snapshotPatch[++i] ?? 0) as number;
+          const entryName = snapshotPatch[++i] as string | undefined;
 
           if (!snapshotManager.values.has(entryUniqID(uniqID, entryName))) {
             // HMR-related
@@ -106,10 +107,12 @@ export function snapshotPatchApply(snapshotPatch: SnapshotPatch): void {
             createSnapshot(
               uniqID,
               evaluate<(ctx: SnapshotInstance) => FiberElement[]>(create),
+              // eslint-disable-next-line unicorn/no-array-callback-reference
               update.map<(ctx: SnapshotInstance, index: number, oldValue: any) => void>(evaluate),
               slot,
               cssId,
               entryName,
+              null,
             );
           }
         }
@@ -138,7 +141,7 @@ function evaluate<T>(code: string): T {
   if (__DEV__) {
     // We are using `eval` here to make the updated snapshot to access variables like `__webpack_require__`.
     // See: https://github.com/lynx-family/lynx-stack/issues/983.
-    return eval(`(() => ${code})()`);
+    return eval(`(() => ${code})()`) as T;
   }
   throw new Error('unreachable: evaluate is not supported in production');
 }

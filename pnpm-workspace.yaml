@@ -35,7 +35,7 @@ catalogs:
 overrides:
   "@rspack/core": "$@rspack/core"
   "@rsbuild/core>@rspack/core": "$@rspack/core"
-  "path-serializer": "^0.4.1"
+  "path-serializer": "^0.5.0"
 
 patchedDependencies:
   "@napi-rs/cli@2.18.4": "patches/@napi-rs__cli@2.18.4.patch"

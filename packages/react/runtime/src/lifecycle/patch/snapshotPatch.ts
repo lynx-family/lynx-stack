@@ -42,9 +42,9 @@ export const enum SnapshotOperation {
 //   fn: string,
 // ]
 
-export type SnapshotPatch = any[];
+export type SnapshotPatch = unknown[];
 
-export let __globalSnapshotPatch: any;
+export let __globalSnapshotPatch: SnapshotPatch | undefined;
 
 export function takeGlobalSnapshotPatch(): SnapshotPatch | undefined {
   if (__globalSnapshotPatch) {

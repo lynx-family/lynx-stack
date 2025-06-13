@@ -20,7 +20,7 @@ const __snapshot_da39a_test_1 = ReactLynx.createSnapshot("__snapshot_da39a_test_
         ReactLynx.__DynamicPartChildren,
         3
     ]
-], undefined, globDynamicComponentEntry);
+], undefined, globDynamicComponentEntry, null);
 _jsxDEV(__snapshot_da39a_test_1, {
     children: _jsxDEV(A, {}, void 0, false, {
         fileName: "input.js",

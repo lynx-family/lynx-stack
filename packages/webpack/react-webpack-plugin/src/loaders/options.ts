@@ -80,10 +80,16 @@ export interface ReactLoaderOptions {
   transformPath?: string | undefined;
 }
 
+function normalizeSlashes(file: string) {
+  return file.replaceAll(path.win32.sep, '/');
+}
+
 function getCommonOptions(
   this: LoaderContext<ReactLoaderOptions>,
 ) {
-  const filename = path.relative(this.rootContext, this.resourcePath);
+  const filename = normalizeSlashes(
+    path.relative(this.rootContext, this.resourcePath),
+  );
 
   const {
     compat,

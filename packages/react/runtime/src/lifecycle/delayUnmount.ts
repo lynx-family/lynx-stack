@@ -28,6 +28,7 @@ function runDelayedUnmounts(delayedUnmounts: DelayedUnmounts): void {
  * Delay `componentWillUnmount` until main thread patching finishes.
  */
 function initDelayUnmount(): void {
+  // eslint-disable-next-line @typescript-eslint/unbound-method
   const oldUnmount = options.unmount;
   options.unmount = (vnode: VNode) => {
     if (!parentVNode) {
@@ -57,8 +58,9 @@ function initDelayUnmount(): void {
         });
       }
       if (component.componentWillUnmount) {
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         const unmount = component.componentWillUnmount;
-        // @ts-ignore
+        // @ts-expect-error clear unmount
         component.componentWillUnmount = undefined;
         const parentVNode_ = parentVNode;
         delayedUnmounts.push(() => {
