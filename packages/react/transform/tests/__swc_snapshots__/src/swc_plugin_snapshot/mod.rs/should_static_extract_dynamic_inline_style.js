@@ -6,7 +6,7 @@ const __snapshot_da39a_test_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapsh
     return [
         el
     ];
-}, null, null, undefined, globDynamicComponentEntry);
+}, null, null, undefined, globDynamicComponentEntry, null);
 <__snapshot_da39a_test_1/>;
 const __snapshot_da39a_test_2 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_test_2", function() {
     const pageId = ReactLynx.__pageId;
@@ -20,7 +20,7 @@ const __snapshot_da39a_test_2 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapsh
             __SetInlineStyles(ctx.__elements[0], ctx.__values[0]);
         }
     }
-], null, undefined, globDynamicComponentEntry);
+], null, undefined, globDynamicComponentEntry, null);
 <__snapshot_da39a_test_2 values={[
     `background-color: red; width: ${w};`
 ]}/>;
@@ -36,7 +36,7 @@ const __snapshot_da39a_test_3 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapsh
             __SetInlineStyles(ctx.__elements[0], ctx.__values[0]);
         }
     }
-], null, undefined, globDynamicComponentEntry);
+], null, undefined, globDynamicComponentEntry, null);
 <__snapshot_da39a_test_3 values={[
     {
         backgroundColor: "red",
@@ -56,7 +56,7 @@ const __snapshot_da39a_test_4 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapsh
             __SetInlineStyles(ctx.__elements[0], ctx.__values[0]);
         }
     }
-], null, undefined, globDynamicComponentEntry);
+], null, undefined, globDynamicComponentEntry, null);
 <__snapshot_da39a_test_4 values={[
     {
         backgroundColor: "red",

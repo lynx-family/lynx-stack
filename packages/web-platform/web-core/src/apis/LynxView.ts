@@ -83,6 +83,7 @@ export class LynxView extends HTMLElement {
   );
   #instance?: LynxViewInstance;
 
+  #connected = false;
   #url?: string;
   /**
    * @public
@@ -351,7 +352,7 @@ export class LynxView extends HTMLElement {
    * @private
    */
   #render() {
-    if (!this.#rendering) {
+    if (!this.#rendering && this.#connected) {
       this.#rendering = true;
       queueMicrotask(() => {
         this.#rendering = false;
@@ -400,9 +401,19 @@ export class LynxView extends HTMLElement {
               napiModulesCall: (...args) => {
                 return this.#onNapiModulesCall?.(...args);
               },
-              onError: () => {
+              onError: (error: Error) => {
                 this.dispatchEvent(
-                  new CustomEvent('error', {}),
+                  new CustomEvent('error', {
+                    detail: {
+                      sourceMap: {
+                        offset: {
+                          line: 2,
+                          col: 0,
+                        },
+                      },
+                      error,
+                    },
+                  }),
                 );
               },
               customTemplateLoader: this.customTemplateLoader,
@@ -436,6 +447,7 @@ export class LynxView extends HTMLElement {
    * @private
    */
   connectedCallback() {
+    this.#connected = true;
     this.#render();
   }
 }

@@ -10,7 +10,7 @@ x-canvas {
 x-canvas > * {
   display: none !important;
 }
-x-canvas::part {
+x-canvas::part(canvas) {
   height: 100%;
   width: 100%;
 }

@@ -246,7 +246,7 @@ describe('SWC configuration', () => {
     )
     expect(backgroundRules).not.toBeUndefined()
     expect({ module: { rules: [backgroundRules] } }).toHaveLoader(
-      /@rsbuild\/plugin-webpack-swc/,
+      /@rsbuild[\\/]plugin-webpack-swc/,
     )
     expect({ module: { rules: [backgroundRules] } }).toHaveLoader(
       ReactWebpackPlugin.loaders.BACKGROUND,
@@ -260,7 +260,7 @@ describe('SWC configuration', () => {
     )
     expect(mainThreadRules).not.toBeUndefined()
     expect({ module: { rules: [mainThreadRules] } }).toHaveLoader(
-      /@rsbuild\/plugin-webpack-swc/,
+      /@rsbuild[\\/]plugin-webpack-swc/,
     )
     expect({ module: { rules: [mainThreadRules] } }).toHaveLoader(
       ReactWebpackPlugin.loaders.MAIN_THREAD,

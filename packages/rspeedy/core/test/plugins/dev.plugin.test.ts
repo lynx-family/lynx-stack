@@ -58,7 +58,9 @@ describe('Plugins - Dev', () => {
     assert(config.resolve?.alias)
 
     expect(config.resolve.alias['webpack/hot/emitter.js']).toStrictEqual(
-      expect.stringContaining('@rspack/core/hot/emitter.js'),
+      expect.stringContaining(
+        ('@rspack/core/hot/emitter.js').replaceAll('/', path.sep),
+      ),
     )
   })
 
@@ -87,11 +89,13 @@ describe('Plugins - Dev', () => {
 
     expect(config.resolve?.alias).toHaveProperty(
       '@rspack/core/hot/dev-server',
-      expect.stringContaining('hot/dev-server.js'),
+      expect.stringContaining('hot/dev-server.js'.replaceAll('/', path.sep)),
     )
     expect(config.resolve?.alias).toHaveProperty(
       '@lynx-js/webpack-dev-transport/client',
-      expect.stringContaining('packages/webpack/webpack-dev-transport'),
+      expect.stringContaining(
+        'packages/webpack/webpack-dev-transport'.replaceAll('/', path.sep),
+      ),
     )
   })
 

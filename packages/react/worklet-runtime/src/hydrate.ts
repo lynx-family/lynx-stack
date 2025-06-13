@@ -2,7 +2,6 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { Element } from './api/element.js';
 import type { ClosureValueType, JsFnHandle, Worklet, WorkletRefId, WorkletRefImpl } from './bindings/index.js';
 import { profile } from './utils/profile.js';
 
@@ -64,10 +63,6 @@ function hydrateMainThreadRef(refId: WorkletRefId, value: WorkletRefImpl<unknown
     return;
   }
   const ref = lynxWorkletImpl!._refImpl._workletRefMap[refId]!;
-  if (ref.current instanceof Element) {
-    // Modified by `main-thread:ref`
-    return;
-  }
   ref.current = value.current;
 }
 

@@ -64,7 +64,15 @@ jobs:
           echo "merge-base=$(git merge-base "$CLEAN_BASE_REF" "$CLEAN_HEAD_REF" || git rev-parse "$CLEAN_BASE_REF")" >> $GITHUB_OUTPUT
   build-all:
     permissions: {}
-    runs-on: lynx-ubuntu-24.04-xlarge
+    name: Build (${{ matrix.runs-on.name }})
+    runs-on: ${{ matrix.runs-on.label }}
+    strategy:
+      matrix:
+        runs-on:
+          - label: lynx-ubuntu-24.04-xlarge
+            name: Ubuntu
+          - label: lynx-windows-2022-large
+            name: Windows
     timeout-minutes: 30
     needs: get-merge-base
     steps:
@@ -78,14 +86,15 @@ jobs:
         uses: lynx-infra/cache@5c6160a6a4c7fca80a2f3057bb9dfc9513fcb732
         with:
           path: .turbo
-          key: turbo-v3-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ github.sha }}
+          key: turbo-v4-${{ runner.os }}-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ github.sha }}
           # We can restore caches from:
           #   1. Previous commit from base branch (merge base or base SHA)
           #   2. Any cache
           restore-keys: |
-            turbo-v3-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ needs.get-merge-base.outputs.merge-base }}
-            turbo-v3-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.push.before }}
-            turbo-v3-${{ hashFiles('**/packages/**/src/**/*.rs') }}-
+            turbo-v4-${{ runner.os }}-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ needs.get-merge-base.outputs.merge-base }}
+            turbo-v4-${{ runner.os }}-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.push.before }}
+            turbo-v4-${{ runner.os }}-${{ hashFiles('**/packages/**/src/**/*.rs') }}-
+            turbo-v4-${{ runner.os }}-
       - name: Install
         run: |
           npm install -g corepack@latest

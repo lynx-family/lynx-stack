@@ -1,5 +1,17 @@
 # @lynx-js/web-worker-runtime
 
+## 0.13.5
+
+### Patch Changes
+
+- refactor: implement mts apis in closure pattern ([#1004](https://github.com/lynx-family/lynx-stack/pull/1004))
+
+- Updated dependencies [[`70b82d2`](https://github.com/lynx-family/lynx-stack/commit/70b82d23744d6b6ec945dff9f8895ab3488ba4c8), [`5651e24`](https://github.com/lynx-family/lynx-stack/commit/5651e24827358963c3261252bcc53c2ad981c13e), [`9499ea9`](https://github.com/lynx-family/lynx-stack/commit/9499ea91debdf73b2d31af0b31bcbc216135543b), [`50f0193`](https://github.com/lynx-family/lynx-stack/commit/50f01933942268b697bf5abe790da86c932f1dfc), [`57bf0ef`](https://github.com/lynx-family/lynx-stack/commit/57bf0ef19f1d79bc52ab6a4f0cd2939e7901d98b), [`5651e24`](https://github.com/lynx-family/lynx-stack/commit/5651e24827358963c3261252bcc53c2ad981c13e), [`0525fbf`](https://github.com/lynx-family/lynx-stack/commit/0525fbf38baa7a977a7a8c66e8a4d8bf34cc3b68), [`b6b87fd`](https://github.com/lynx-family/lynx-stack/commit/b6b87fd11dbc76c28f3b5022aa8c6afeb773d90f), [`c014327`](https://github.com/lynx-family/lynx-stack/commit/c014327ad0cf599b32d4182d95116b46c35f5fa5)]:
+  - @lynx-js/web-mainthread-apis@0.13.5
+  - @lynx-js/web-constants@0.13.5
+  - @lynx-js/offscreen-document@0.1.1
+  - @lynx-js/web-worker-rpc@0.13.5
+
 ## 0.13.4
 
 ### Patch Changes

@@ -19,7 +19,7 @@ export function createRenderAllOnUI(
     timeStamp?: number,
   ) => void,
   callbacks: {
-    onError?: () => void;
+    onError?: (err: Error) => void;
   },
 ) {
   if (!globalThis.module) {
@@ -31,8 +31,8 @@ export function createRenderAllOnUI(
     document.createElement.bind(document),
     () => {},
     markTimingInternal,
-    () => {
-      callbacks.onError?.();
+    (err) => {
+      callbacks.onError?.(err);
     },
   );
   let mtsGlobalThis!: MainThreadGlobalThis;

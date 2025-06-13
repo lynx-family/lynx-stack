@@ -80,7 +80,6 @@ const defaultInjectVars = [
   'webkit',
   'Reporter',
   'print',
-  '__Function__', // We should allow using `Function`
   'global',
 
   // Lynx API

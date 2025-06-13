@@ -1,5 +1,11 @@
 # @lynx-js/runtime-wrapper-webpack-plugin
 
+## 0.1.1
+
+### Patch Changes
+
+- Fix `requestAnimationFrame` is not working. ([#1021](https://github.com/lynx-family/lynx-stack/pull/1021))
+
 ## 0.1.0
 
 ### Minor Changes

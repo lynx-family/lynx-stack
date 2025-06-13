@@ -1,6 +1,8 @@
+// Copyright 2025 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
 import { LifecycleConstant } from '../../lifecycleConstant.js';
 import { __root } from '../../root.js';
-import { takeGlobalRefPatchMap } from '../../snapshot/ref.js';
 
 let isJSReady: boolean;
 let jsReadyEventIdSwap: Record<number, number>;
@@ -11,7 +13,6 @@ function jsReady(): void {
     LifecycleConstant.firstScreen, /* FIRST_SCREEN */
     {
       root: JSON.stringify(__root),
-      refPatch: JSON.stringify(takeGlobalRefPatchMap()),
       jsReadyEventIdSwap,
     },
   ]);

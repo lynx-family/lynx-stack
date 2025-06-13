@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { mkdtemp, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { join, sep } from 'node:path'
 
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
@@ -253,7 +253,8 @@ describe('Config - loadConfig', () => {
     test('load non-exists default config', async () => {
       await expect(() => loadConfig({ cwd: 'non-exist-path' })).rejects
         .toThrowError(
-          `Cannot find the default config file: non-exist-path/lynx.config.ts. Use custom config with \`--config <config>\` options.`,
+          `Cannot find the default config file: non-exist-path/lynx.config.ts. Use custom config with \`--config <config>\` options.`
+            .replaceAll('/', sep),
         )
     })
 

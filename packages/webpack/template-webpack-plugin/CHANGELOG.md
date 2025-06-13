@@ -1,5 +1,12 @@
 # @lynx-js/template-webpack-plugin
 
+## 0.7.2
+
+### Patch Changes
+
+- Updated dependencies [[`ccb4254`](https://github.com/lynx-family/lynx-stack/commit/ccb4254cf4008362e2536a473660c4e3453e5a64)]:
+  - @lynx-js/css-serializer@0.1.3
+
 ## 0.7.1
 
 ### Patch Changes

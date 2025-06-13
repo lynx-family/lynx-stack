@@ -1,6 +1,8 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import path from 'node:path'
+
 import { createRsbuild } from '@rsbuild/core'
 import type { Rspack } from '@rsbuild/core'
 import { describe, expect, test, vi } from 'vitest'
@@ -31,14 +33,14 @@ describe('Lazy', () => {
     )
     expect(config?.resolve?.alias).toHaveProperty(
       '@lynx-js/react$',
-      expect.stringContaining('lazy/react'),
+      expect.stringContaining('lazy/react'.replaceAll('/', path.sep)),
     )
     expect(config?.resolve?.alias).not.toHaveProperty(
       'react',
     )
     expect(config?.resolve?.alias).toHaveProperty(
       'react$',
-      expect.stringContaining('lazy/react'),
+      expect.stringContaining('lazy/react'.replaceAll('/', path.sep)),
     )
 
     expect(config?.resolve?.alias).not.toHaveProperty(
@@ -46,7 +48,7 @@ describe('Lazy', () => {
     )
     expect(config?.resolve?.alias).toHaveProperty(
       '@lynx-js/react/internal$',
-      expect.stringContaining('lazy/internal'),
+      expect.stringContaining('lazy/internal'.replaceAll('/', path.sep)),
     )
   })
 

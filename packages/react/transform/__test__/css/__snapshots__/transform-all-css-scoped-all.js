@@ -8,7 +8,7 @@ const __snapshot_2d408_test_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapsh
     return [
         el
     ];
-}, null, null, 1185352, globDynamicComponentEntry);
+}, null, null, 1185352, globDynamicComponentEntry, null);
 function App() {
     return /*#__PURE__*/ _jsx(Baz, {
         foo: /*#__PURE__*/ _jsx(__snapshot_2d408_test_1, {})
