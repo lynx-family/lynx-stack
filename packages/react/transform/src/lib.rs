@@ -4,6 +4,7 @@
 extern crate napi_derive;
 mod bundle;
 mod css;
+mod css_property;
 mod esbuild;
 mod swc_plugin_compat;
 mod swc_plugin_compat_post;
@@ -15,6 +16,7 @@ mod swc_plugin_extract_str;
 mod swc_plugin_inject;
 mod swc_plugin_refresh;
 mod swc_plugin_shake;
+mod swc_plugin_simple_styling;
 mod swc_plugin_snapshot;
 mod swc_plugin_worklet;
 mod swc_plugin_worklet_post_process;
@@ -69,6 +71,7 @@ use swc_plugin_dynamic_import::{DynamicImportVisitor, DynamicImportVisitorConfig
 use swc_plugin_inject::{InjectVisitor, InjectVisitorConfig};
 use swc_plugin_refresh::{RefreshVisitor, RefreshVisitorConfig};
 use swc_plugin_shake::{ShakeVisitor, ShakeVisitorConfig};
+use swc_plugin_simple_styling::{SimpleStylingVisitor, SimpleStylingVisitorConfig};
 use swc_plugin_snapshot::{JSXTransformer, JSXTransformerConfig};
 use swc_plugin_worklet::{WorkletVisitor, WorkletVisitorConfig};
 use utils::calc_hash;
@@ -247,6 +250,7 @@ pub struct TransformNodiffOptions {
   pub is_module: Option<IsModuleConfig>,
   pub css_scope: Either<bool, CSSScopeVisitorConfig>,
   pub snapshot: Option<Either<bool, JSXTransformerConfig>>,
+  pub simple_styling: Either<bool, SimpleStylingVisitorConfig>,
   pub shake: Either<bool, ShakeVisitorConfig>,
   pub compat: Either<bool, CompatVisitorConfig>,
   pub refresh: Either<bool, RefreshVisitorConfig>,
@@ -274,6 +278,7 @@ impl Default for TransformNodiffOptions {
       is_module: Default::default(),
       css_scope: Either::B(Default::default()),
       snapshot: Default::default(),
+      simple_styling: Either::A(false),
       shake: Either::A(false),
       compat: Either::A(false),
       refresh: Either::A(false),
@@ -433,6 +438,10 @@ fn transform_react_lynx_inner(
       Either::A(config) => (
         JSXTransformerConfig {
           filename: options.filename,
+          enable_simple_styling: match &options.simple_styling {
+            Either::A(config) => *config,
+            Either::B(_config) => true,
+          },
           ..Default::default()
         },
         *config,
@@ -479,6 +488,17 @@ fn transform_react_lynx_inner(
       ),
       enabled,
     );
+
+    let simple_styling_plugin = match options.simple_styling {
+      Either::A(config) => Optional::new(visit_mut_pass(SimpleStylingVisitor::default()), config),
+      Either::B(config) => Optional::new(
+        visit_mut_pass(SimpleStylingVisitor::new(
+          options.mode.unwrap_or(TransformMode::Production),
+          config,
+        )),
+        true,
+      ),
+    };
 
     let shake_plugin = match options.shake.clone() {
       Either::A(config) => Optional::new(visit_mut_pass(ShakeVisitor::default()), config),
@@ -598,15 +618,20 @@ fn transform_react_lynx_inner(
         unresolved_mark,
         top_level_mark,
       ),
-      dynamic_import_plugin,
-      refresh_plugin,
-      compat_plugin,
-      worklet_plugin,
-      css_scope_plugin,
-      snapshot_plugin,
-      directive_dce_plugin,
-      define_dce_plugin,
-      simplify_pass_1, // do simplify after DCE above to make shake below works better
+      (
+        dynamic_import_plugin,
+        refresh_plugin,
+        compat_plugin,
+        worklet_plugin,
+        css_scope_plugin,
+      ),
+      (
+        snapshot_plugin,
+        simple_styling_plugin,
+        directive_dce_plugin,
+        define_dce_plugin,
+        simplify_pass_1, // do simplify after DCE above to make shake below works better
+      ),
       (
         shake_plugin,
         simplify_pass,

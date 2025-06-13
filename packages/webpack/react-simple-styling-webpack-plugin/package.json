@@ -1,0 +1,54 @@
+{
+  "name": "@lynx-js/react-simple-styling-webpack-plugin",
+  "version": "0.0.0",
+  "description": "A webpack plugin to support simple styling for ReactLynx.",
+  "keywords": [
+    "webpack",
+    "Lynx",
+    "SimpleStyling"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/webpack/react-simple-styling-webpack-plugin"
+  },
+  "license": "Apache-2.0",
+  "author": {
+    "name": "Yiming Li",
+    "email": "yimingli.cs@gmail.com"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "import": "./lib/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "types": "./lib/index.d.ts",
+  "files": [
+    "lib",
+    "!lib/**/*.js.map",
+    "runtime",
+    "loader.js",
+    "CHANGELOG.md",
+    "README.md"
+  ],
+  "scripts": {
+    "api-extractor": "api-extractor run --verbose"
+  },
+  "dependencies": {
+    "@babel/generator": "^7.26.3",
+    "@babel/parser": "^7.26.3",
+    "@babel/traverse": "^7.26.4",
+    "@babel/types": "^7.26.3",
+    "source-map": "^0.7.4"
+  },
+  "devDependencies": {
+    "@lynx-js/react": "workspace:*",
+    "@lynx-js/test-tools": "workspace:*",
+    "@lynx-js/vitest-setup": "workspace:*",
+    "@rspack/core": "catalog:rspack",
+    "webpack": "^5.99.9"
+  }
+}

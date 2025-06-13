@@ -215,6 +215,15 @@ impl DynamicPart {
             element_index: Expr = i32_to_expr(element_index),
             ns: Expr = Expr::Lit(Lit::Str(ns.clone().into())),
           ),
+          AttrName::SimpleStyle => quote!(
+            "function (ctx) {
+              if (ctx.__elements) {
+                __SetStyleObject(ctx.__elements[$element_index], ctx.__values[$exp_index])
+              }
+            }" as Expr,
+            element_index: Expr = i32_to_expr(element_index),
+            exp_index: Expr = i32_to_expr(&exp_index),
+          ),
         },
         DynamicPart::Spread(_, element_index) => quote!(
           "(snapshot, index, oldValue) => $runtime_id.updateSpread(snapshot, index, oldValue, $element_index)" as Expr,
@@ -246,13 +255,19 @@ where
   dynamic_parts: Vec<DynamicPart>,
   dynamic_part_visitor: &'a mut V,
   key: Option<JSXAttrValue>,
+  enable_simple_styling: bool,
 }
 
 impl<'a, V> DynamicPartExtractor<'a, V>
 where
   V: VisitMut,
 {
-  fn new(runtime_id: Expr, dynamic_part_count: i32, dynamic_part_visitor: &'a mut V) -> Self {
+  fn new(
+    runtime_id: Expr,
+    dynamic_part_count: i32,
+    dynamic_part_visitor: &'a mut V,
+    enable_simple_styling: bool,
+  ) -> Self {
     DynamicPartExtractor {
       page_id: Lazy::new(|| private_ident!("pageId")),
       runtime_id,
@@ -266,6 +281,7 @@ where
       dynamic_parts: vec![],
       dynamic_part_visitor,
       key: None,
+      enable_simple_styling,
     }
   }
 
@@ -779,6 +795,131 @@ where
                     AttrName::Gesture(..) => {
                       unreachable!("A gesture should have an attribute namespace.")
                     }
+                    AttrName::SimpleStyle => {
+                      // usage: 
+                      // <view 
+                      //   simpleStyle={[
+                      //     styles.static,
+                      //     condition && styles.conditional,
+                      //     styles.dynamic()]} 
+                      // />
+                      // it will be transpiled into `__DefineSimpleStyle`
+                      // calls in creator function of current snapshot
+                      // `__DefineSimpleStyle` will be transpiled 
+                      // by simple styling plugin again to 
+                      // generating corresponding style objects
+                      if !self.enable_simple_styling {
+                        HANDLER.with(|handler| {
+                          handler
+                          .struct_span_warn(
+                              attr_or_spread.span(),
+                              "`simpleStyle` attribute is only supported in simple styling mode, please enable it by setting `enableSimpleStyling: true` in the pluginReactLynx.",
+                            )
+                          .emit();
+                        });
+                        return;
+                      }
+                      let mut not_an_array = false;
+                      match value {
+                        None => {
+                          not_an_array = true;
+                        }
+                        Some(JSXAttrValue::JSXExprContainer(JSXExprContainer {
+                          expr: JSXExpr::Expr(expr),
+                          ..
+                        })) => match &**expr {
+                          Expr::Array(array) => {
+                            let mut static_styles = vec![];
+                            let mut dynamic_styles = vec![];
+                            for elem in &array.elems {
+                              if let Some(ExprOrSpread { expr,.. }) = elem {
+                                if let Expr::Member(_) = &**expr {
+                                  static_styles.push(Some(ExprOrSpread {
+                                    expr: expr.clone(),
+                                    spread: None,
+                                  }));
+                                } else {
+                                  dynamic_styles.push(Some(ExprOrSpread {
+                                    expr: expr.clone(),
+                                    spread: None,
+                                  }));
+                                }
+                              }
+                            }
+
+                            let static_styles_expr = Expr::Array(ArrayLit {
+                                span: DUMMY_SP,
+                                // note that we extract all static styles
+                                // to the front of the array, it makes 
+                                // handling dynamic styles easier.
+                                // it is based on the assumption that no
+                                // duplicate style property is allowed.
+                                elems: static_styles
+                                  .clone()
+                              });
+                            let dynamic_styles_expr = Expr::Array(ArrayLit {
+                                span: DUMMY_SP,
+                                elems: dynamic_styles
+                                  .clone()
+                              });
+                            if dynamic_styles.len() > 0 {
+                              self.dynamic_parts.push(DynamicPart::Attr(
+                                quote!(r#"__ConsumeSimpleStyle({
+                                  staticStyles: $static_styles,
+                                  dynamicStyles: $dynamic_styles
+                                })"# as Expr, 
+                                static_styles: Expr = static_styles_expr.clone(),
+                                dynamic_styles: Expr = dynamic_styles_expr.clone(),
+                              ),
+                                self.element_index,
+                                attr_name.clone(),
+                              ))
+                            }
+                            let stmt = quote!(
+                              // `__DefineSimpleStyle` is a placeholder, and it will be replaced
+                              // by actual Simple Styling PAPIs in the swc_plugin_simple_styling plugin.
+                              r#"__DefineSimpleStyle({
+                                snapshotInstance: $snapshot_instance,
+                                element: $element,
+                                elementIndex: $element_index,
+                                staticStyles: $static_styles,
+                                dynamicStyles: $dynamic_styles
+                              });"# as Stmt,
+                              snapshot_instance = self.si_id.clone(),
+                              element: Expr = el.clone(),
+                              element_index: Expr = i32_to_expr(&self.element_index),
+                              static_styles: Expr = static_styles_expr.clone(),
+                              dynamic_styles: Expr = dynamic_styles_expr.clone(),
+                            );
+                            self.static_stmts.push(RefCell::new(stmt));
+                          },
+                          _ => {
+                            not_an_array = true;
+                          }
+                        },
+                        Some(JSXAttrValue::JSXExprContainer(JSXExprContainer {
+                          expr: JSXExpr::JSXEmptyExpr(_),
+                          ..
+                        })) => {
+                          not_an_array = true;
+                        },
+                        Some(JSXAttrValue::Lit(_)) => {
+                          not_an_array = true;
+                        },
+                        Some(JSXAttrValue::JSXElement(_)) => unreachable!(),
+                        Some(JSXAttrValue::JSXFragment(_)) => unreachable!(),
+                      }
+                      if not_an_array {
+                        HANDLER.with(|handler| {
+                          handler
+                            .struct_span_err(
+                              value.span(),
+                              "simpleStyle should be an array",
+                            )
+                            .emit();
+                        });
+                      }
+                    }
                   }
                 }
                 JSXAttrName::JSXNamespacedName(JSXNamespacedName { ns, name, .. }) => {
@@ -1008,6 +1149,8 @@ pub struct JSXTransformerConfig {
   pub target: TransformTarget,
   /// @internal
   pub is_dynamic_component: Option<bool>,
+  /// @internal
+  pub enable_simple_styling: bool,
 }
 
 impl Default for JSXTransformerConfig {
@@ -1019,6 +1162,7 @@ impl Default for JSXTransformerConfig {
       filename: Default::default(),
       target: TransformTarget::LEPUS,
       is_dynamic_component: Some(false),
+      enable_simple_styling: false,
     }
   }
 }
@@ -1213,6 +1357,7 @@ where
       self.runtime_id.clone(),
       wrap_dynamic_part.dynamic_part_count,
       self,
+      self.cfg.enable_simple_styling,
     );
 
     node.visit_mut_with(&mut dynamic_part_extractor);
@@ -2891,6 +3036,272 @@ aaaaa
       <text key={hello}>{hello}</text>
       <text key="hello">{hello}</text>
     </view>
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    |t| visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
+      super::JSXTransformerConfig {
+        preserve_jsx: true,
+        enable_simple_styling: true,
+        ..Default::default()
+      },
+      t.cm.clone(),
+      None,
+      Mark::new(),
+      Mark::new(),
+      TransformMode::Test,
+    )),
+    snapshot_simple_style_static,
+    // Input codes
+    r#"
+    import { SimpleStyleSheet } from '@lynx-js/react'
+
+    const styles = SimpleStyleSheet.create({
+      static1: {
+        width: '100px',
+        height: '100px',
+      },
+      static2: {
+        backgroundColor: 'blue',
+        color: 'green',
+      },
+      static3: {
+        textAlign: 'center',
+        display: 'flex'
+      },
+    })
+
+    function ComponentWithSimpleStyle() {
+      return (
+        <view className="root" bindtap={() => {}}>
+          <view simpleStyle={[
+              styles.static1,
+              styles['static2'],
+              styles.static3,
+            ]}
+          />
+          <view simpleStyle={[
+              styles.static1,
+              styles['static2'],
+              styles.static3,
+            ]}
+          />
+        </view>
+      )
+    }
+
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    |t| visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
+      super::JSXTransformerConfig {
+        preserve_jsx: true,
+        enable_simple_styling: true,
+        ..Default::default()
+      },
+      t.cm.clone(),
+      None,
+      Mark::new(),
+      Mark::new(),
+      TransformMode::Test,
+    )),
+    snapshot_simple_style_conditional,
+    // Input codes
+    r#"
+    import { SimpleStyleSheet } from '@lynx-js/react'
+
+    const styles = SimpleStyleSheet.create({
+      conditional1: {
+        borderBottomWidth: '1px',
+        borderBottomColor: 'red',
+        borderBottomStyle: 'solid',
+      },
+      conditional2: {
+        borderTopWidth: '1px',
+        borderTopColor: 'red',
+        borderTopStyle: 'solid',
+      },
+    })
+
+    function ComponentWithSimpleStyle({
+      condition1,
+      condition2,
+    }) {
+      return (
+        <view className="root" bindtap={() => {}}>
+          <view simpleStyle={[
+              condition1 && styles.conditional1,
+              condition2 && styles.conditional2,
+            ]}
+          />
+          <view simpleStyle={[
+              condition1 && styles.conditional1,
+              condition2 && styles.conditional2,
+            ]}
+          />
+        </view>
+      )
+    }
+
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    |t| visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
+      super::JSXTransformerConfig {
+        preserve_jsx: true,
+        enable_simple_styling: true,
+        ..Default::default()
+      },
+      t.cm.clone(),
+      None,
+      Mark::new(),
+      Mark::new(),
+      TransformMode::Test,
+    )),
+    snapshot_simple_style_dynamic,
+    // Input codes
+    r#"
+    import { SimpleStyleSheet } from '@lynx-js/react'
+
+    const styles = SimpleStyleSheet.create({
+      dynamic: (color, size) => ({
+        borderLeftColor: color,
+        borderLeftWidth: '1px',
+        borderLeftStyle: 'solid',
+        paddingTop: size,
+      })
+    })
+
+    function ComponentWithSimpleStyle({
+      dynamicStyleArgs,
+    }) {
+      return (
+        <view className="root" bindtap={() => {}}>
+          <view simpleStyle={[
+              styles.dynamic(...dynamicStyleArgs),
+            ]}
+          />
+          <view simpleStyle={[
+              styles.dynamic(...dynamicStyleArgs),
+            ]}
+          />
+        </view>
+      )
+    }
+
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    |t| visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
+      super::JSXTransformerConfig {
+        preserve_jsx: true,
+        enable_simple_styling: true,
+        ..Default::default()
+      },
+      t.cm.clone(),
+      None,
+      Mark::new(),
+      Mark::new(),
+      TransformMode::Test,
+    )),
+    snapshot_simple_style_complex,
+    // Input codes
+    r#"
+    import { SimpleStyleSheet } from '@lynx-js/react'
+
+    const styles = SimpleStyleSheet.create({
+      static1: {
+        width: '100px',
+        height: '100px',
+      },
+      static2: {
+        backgroundColor: 'blue',
+        color: 'green',
+      },
+      static3: {
+        textAlign: 'center',
+        display: 'flex'
+      },
+      conditional1: {
+        borderBottomWidth: '1px',
+        borderBottomColor: 'red',
+        borderBottomStyle: 'solid',
+      },
+      conditional2: {
+        borderTopWidth: '1px',
+        borderTopColor: 'red',
+        borderTopStyle: 'solid',
+      },
+      conditional3: {
+        borderRightWidth: '1px',
+        borderRightColor: 'red',
+        borderRightStyle: 'solid',
+      },
+      conditional4: {
+        borderRightWidth: '2px',
+        borderRightColor: 'blue',
+        borderRightStyle: 'dashed',
+      },
+      conditional5: {
+        fontSize: '12px'
+      },
+      conditional6: {},
+      dynamic: (color, size) => ({
+        borderLeftColor: color,
+        borderLeftWidth: '1px',
+        borderLeftStyle: 'solid',
+        paddingTop: size,
+      })
+    })
+
+    function ComponentWithSimpleStyle({
+      condition1,
+      condition2,
+      condition3,
+      condition5,
+      dynamicStyleArgs,
+    }) {
+      return (
+        <view className="root" bindtap={() => {}}>
+          <view simpleStyle={[
+              styles.static1,
+              condition1 && styles.conditional1,
+              styles.static2,
+              styles.dynamic(...dynamicStyleArgs),
+              condition2 && styles.conditional2,
+              styles['static3'],
+              condition3 ? styles.conditional3 : styles.conditional4,
+              condition5 ? styles.conditional5 : styles.conditional6,
+            ]}
+          />
+        </view>
+      )
+    }
+
     "#
   );
 }

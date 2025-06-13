@@ -12,6 +12,7 @@ export const {
   InitDataProvider,
   MainThreadRef,
   PureComponent,
+  SimpleStyleSheet,
   Suspense,
   createContext,
   createElement,

@@ -30,6 +30,7 @@ export function App() {
     compat: false,
     worklet: false,
     refresh: false,
+    simpleStyling: false,
   };
 
   bench('transform 1000 view elements', async () => {

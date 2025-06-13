@@ -49,6 +49,7 @@ export {
 } from 'react';
 
 export { useEffect, useLayoutEffect, useErrorBoundary } from '../runtime/lib/hooks/react.js';
+export { SimpleStyleSheet, SimpleStyleCSSProperties, LonghandProperties } from '../runtime/lib/simple-styling/index.js';
 
 /**
  * Built-in React APIs

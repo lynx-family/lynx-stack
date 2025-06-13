@@ -28,6 +28,7 @@ import { applyGenerator } from './generator.js'
 import { applyLazy } from './lazy.js'
 import { applyLoaders } from './loaders.js'
 import { applyRefresh } from './refresh.js'
+import { applySimpleStyling } from './simple-styling.js'
 import { applySplitChunksRule } from './splitChunks.js'
 import { applySWC } from './swc.js'
 import { applyUseSyncExternalStore } from './useSyncExternalStore.js'
@@ -300,6 +301,11 @@ export interface PluginReactLynxOptions {
   extractStr?: Partial<ExtractStrConfig> | boolean
 
   /**
+   * Enable simple styling.
+   */
+  enableSimpleStyling?: boolean
+
+  /**
    * Generate standalone lazy bundle.
    *
    * @alpha
@@ -353,6 +359,7 @@ export function pluginReactLynx(
     targetSdkVersion: '',
     engineVersion: '',
     extractStr: false,
+    enableSimpleStyling: false,
 
     experimental_isLazyBundle: false,
   }
@@ -402,6 +409,10 @@ export function pluginReactLynx(
 
         return config
       })
+
+      if (resolvedOptions.enableSimpleStyling) {
+        applySimpleStyling(api)
+      }
 
       if (resolvedOptions.experimental_isLazyBundle) {
         applyLazy(api)
