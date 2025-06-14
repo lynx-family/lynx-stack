@@ -368,6 +368,56 @@ export interface Lynx {
    * @public
    */
   registerDataProcessors: (dataProcessorDefinition?: DataProcessorDefinition) => void;
+
+  /**
+   * Add a listener for lazy bundle response.
+   * The response's shape is defined by the Lynx Engine.
+   * This is an experimental API and may change in the future.
+   *
+   * @example
+   * Use in module scope (global scope)
+   *
+   * ```ts
+   * import { lazy } from "@lynx-js/react";
+   *
+   * lynx.experimental_addLazyBundleResponseListener((response) => {
+   *   console.log(response);
+   * });
+   *
+   * const D = lazy(() => import('./D.jsx'));
+   *
+   * // When the lazy bundle is loaded, the listener will be called with the response.
+   * ```
+   *
+   * @example
+   * Use in a React component
+   *
+   * When used in a React component, note:
+   * 1. You should use `useMemo` to ensure the listener is added only once and __as soon as possible__.
+   * 2. You should also handle cleanup to avoid memory leaks.
+   *
+   * Below is an example implementation of a custom hook that adds a lazy bundle response listener:
+   *
+   * ```tsx
+   * function useLazyBundleResponseListener(listener: (result: any) => void) {
+   *   const cleanupRef = useRef<() => void>();
+   *   useMemo(() => {
+   *     if (cleanupRef.current) {
+   *       cleanupRef.current();
+   *     }
+   *     cleanupRef.current = lynx.experimental_addLazyBundleResponseListener(listener);
+   *   }, [listener]);
+   *   useEffect(() => () => {
+   *     if (cleanupRef.current) {
+   *       cleanupRef.current();
+   *     }
+   *   }, []);
+   * }
+   * ```
+   *
+   * @experimental
+   */
+  experimental_addLazyBundleResponseListener: (listener: (result: any) => void) => () => void;
 }
 
 export { useLynxGlobalEventListener } from './hooks/useLynxGlobalEventListener.js';

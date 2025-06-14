@@ -32,7 +32,7 @@ import {
   useRef,
   useState,
 } from './hooks/react.js';
-import { loadLazyBundle, mainThreadLazy } from './lynx/lazy-bundle.js';
+import { loadLazyBundle, mainThreadLazy, LazyBundleResponseListener } from './lynx/lazy-bundle.js';
 
 export { Component, createContext } from 'preact';
 export { PureComponent } from 'preact/compat';
@@ -84,6 +84,7 @@ export {
   memo,
   forwardRef,
   Suspense,
+  LazyBundleResponseListener,
   lazy,
   createElement,
   useSyncExternalStore,
