@@ -15,6 +15,7 @@ import {
   type LynxCrossThreadContext,
   type BrowserConfig,
   systemInfo,
+  reportErrorEndpoint,
 } from '@lynx-js/web-constants';
 import { createInvokeUIMethod } from './crossThreadHandlers/createInvokeUIMethod.js';
 import { registerPublicComponentEventHandler } from './crossThreadHandlers/registerPublicComponentEventHandler.js';
@@ -62,6 +63,7 @@ export async function createNativeApp(config: {
     selectComponentEndpoint,
     3,
   );
+  const reportError = uiThreadRpc.createCall(reportErrorEndpoint);
   const createBundleInitReturnObj = (): BundleInitReturnObj => {
     const entry = (globalThis.module as LynxJSModule).exports;
     return {
@@ -165,6 +167,7 @@ export async function createNativeApp(config: {
     getSharedData<T>(dataKey: string): T | undefined {
       return sharedData[dataKey] as T | undefined;
     },
+    reportException: reportError,
   };
   return nativeApp;
 }

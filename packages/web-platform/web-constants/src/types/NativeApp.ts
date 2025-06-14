@@ -189,4 +189,6 @@ export interface NativeApp {
 
   setSharedData<T>(dataKey: string, dataVal: T): void;
   getSharedData<T = unknown>(dataKey: string): T | undefined;
+
+  reportException: (error: Error, _: unknown) => void;
 }
