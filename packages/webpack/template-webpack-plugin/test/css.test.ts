@@ -451,6 +451,40 @@ describe('CSS', () => {
         '--bar': 'blue',
       });
     });
+
+    test('keep backslash escapes', () => {
+      const ret = cssChunksToMap(
+        [
+          `\
+.h-\\[3px\\] {
+  height: 3px
+}
+`,
+        ],
+        [],
+        true,
+      );
+      // @ts-expect-error xxx
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      expect(ret.cssMap['0']![0]!.selectorText!.value).toBe('.h-\\[3px\\]');
+    });
+
+    test('remove backslash escapes', () => {
+      const ret = cssChunksToMap(
+        [
+          `\
+.h-\\[3px\\] {
+  height: 3px
+}
+`,
+        ],
+        [],
+        false,
+      );
+      // @ts-expect-error xxx
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      expect(ret.cssMap['0']![0]!.selectorText!.value).toBe('.h-[3px]');
+    });
   });
 
   describe('debundle', () => {

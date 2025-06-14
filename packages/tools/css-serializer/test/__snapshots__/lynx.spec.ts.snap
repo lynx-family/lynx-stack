@@ -134,6 +134,72 @@ exports[`attribute 1`] = `
 ]
 `;
 
+exports[`backslash-escape 1`] = `
+{
+  "errors": [],
+  "root": [
+    {
+      "selectorText": {
+        "loc": {
+          "column": 11,
+          "line": 1,
+        },
+        "value": ".h-\\[3px\\]",
+      },
+      "style": [
+        {
+          "keyLoc": {
+            "column": 9,
+            "line": 2,
+          },
+          "name": "height",
+          "valLoc": {
+            "column": 15,
+            "line": 2,
+          },
+          "value": "3px",
+        },
+      ],
+      "type": "StyleRule",
+      "variables": {},
+    },
+  ],
+}
+`;
+
+exports[`backslash-escape 2`] = `
+{
+  "errors": [],
+  "root": [
+    {
+      "selectorText": {
+        "loc": {
+          "column": 11,
+          "line": 1,
+        },
+        "value": ".h-[3px]",
+      },
+      "style": [
+        {
+          "keyLoc": {
+            "column": 9,
+            "line": 2,
+          },
+          "name": "height",
+          "valLoc": {
+            "column": 15,
+            "line": 2,
+          },
+          "value": "3px",
+        },
+      ],
+      "type": "StyleRule",
+      "variables": {},
+    },
+  ],
+}
+`;
+
 exports[`break-rule 1`] = `
 [
   {
