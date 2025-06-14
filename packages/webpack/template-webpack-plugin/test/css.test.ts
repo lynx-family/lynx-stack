@@ -1,54 +1,15 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { describe, expect, test, vi } from 'vitest';
+import { describe, expect, test } from 'vitest';
 
 import type { LynxStyleNode } from '@lynx-js/css-serializer';
 
 import { cssChunksToMap } from '../src/css/cssChunksToMap.js';
 import { debundleCSS } from '../src/css/debundle.js';
 import { CSSPlugins } from '../src/index.js';
-import { LynxEncodePlugin } from '../src/LynxEncodePlugin.js';
 
 describe('CSS', () => {
-  test('encodeCSS', async () => {
-    const realJSONStringify = JSON.stringify;
-    vi.mock('JSON');
-
-    const encode = vi.fn().mockImplementation((str) => realJSONStringify(str));
-
-    vi.spyOn(JSON, 'stringify').mockImplementation(
-      (str: string) => {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-        return encode(str);
-      },
-    );
-
-    await LynxEncodePlugin.encodeCSS([`.red { color: red; }`], {
-      enableCSSSelector: false,
-      targetSdkVersion: '3.2',
-      enableRemoveCSSScope: true,
-      enableCSSInvalidation: true,
-    });
-
-    expect(encode).toBeCalledTimes(1);
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const { compilerOptions, css: { cssMap, cssSource } } =
-      encode.mock.calls[0]?.[0] ?? {};
-    expect(compilerOptions).toStrictEqual(expect.objectContaining({
-      enableFiberArch: true,
-      useLepusNG: true,
-    }));
-
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    expect(Object.entries(cssMap)).toHaveLength(1);
-    expect(cssSource).toMatchInlineSnapshot(`
-      {
-        "0": "/cssId/0.css",
-      }
-    `);
-  });
-
   describe('cssChunksToMap', () => {
     test('global styles only', () => {
       const { cssMap, cssSource } = cssChunksToMap(

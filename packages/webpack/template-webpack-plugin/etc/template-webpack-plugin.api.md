@@ -54,11 +54,23 @@ declare namespace CSSPlugins {
 }
 
 // @public
-export interface EncodeCSSOptions {
-    enableCSSInvalidation: boolean;
-    enableCSSSelector: boolean;
-    enableRemoveCSSScope: boolean;
-    targetSdkVersion: string;
+export interface EncodeOptions {
+    // (undocumented)
+    [k: string]: unknown;
+    // (undocumented)
+    compilerOptions: Record<string, string | boolean>;
+    // (undocumented)
+    customSections: Record<string, {
+        type?: 'lazy';
+        content: string | Record<string, unknown>;
+    }>;
+    // (undocumented)
+    lepusCode: {
+        root: string | undefined;
+        lepusChunk: Record<string, string>;
+    };
+    // (undocumented)
+    manifest: Record<string, string | undefined>;
 }
 
 // @public
@@ -69,9 +81,6 @@ export class LynxEncodePlugin {
     static BEFORE_ENCODE_STAGE: number;
     static defaultOptions: Readonly<Required<LynxEncodePluginOptions>>;
     static ENCODE_STAGE: number;
-    static encodeCSS(cssChunks: string[], options: EncodeCSSOptions, plugins?: CSS.Plugin[], encode?: (options: any) => Promise<{
-        buffer: Buffer;
-    }>): Promise<Buffer>;
     // (undocumented)
     protected options?: LynxEncodePluginOptions | undefined;
 }
@@ -148,7 +157,7 @@ export interface TemplateHooks {
     // @alpha
     encode: AsyncSeriesBailHook<{
         encodeOptions: EncodeOptions;
-        intermediate: string;
+        intermediate?: string;
     }, {
         buffer: Buffer;
         debugInfo: string;
@@ -174,7 +183,6 @@ export class WebEncodePlugin {
 
 // Warnings were encountered during analysis:
 //
-// lib/LynxTemplatePlugin.d.ts:58:9 - (ae-forgotten-export) The symbol "EncodeRawData" needs to be exported by the entry point index.d.ts
-// lib/LynxTemplatePlugin.d.ts:68:9 - (ae-forgotten-export) The symbol "EncodeOptions" needs to be exported by the entry point index.d.ts
+// lib/LynxTemplatePlugin.d.ts:63:9 - (ae-forgotten-export) The symbol "EncodeRawData" needs to be exported by the entry point index.d.ts
 
 ```

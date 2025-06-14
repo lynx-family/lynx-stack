@@ -25,6 +25,11 @@ import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 import { cssChunksToMap } from './css/cssChunksToMap.js';
 import { createLynxAsyncChunksRuntimeModule } from './LynxAsyncChunksRuntimeModule.js';
 
+/**
+ * The options for encoding a Lynx bundle.
+ *
+ * @public
+ */
 export interface EncodeOptions {
   manifest: Record<string, string | undefined>;
   compilerOptions: Record<string, string | boolean>;
@@ -93,10 +98,13 @@ export interface TemplateHooks {
    *
    * @alpha
    */
-  encode: AsyncSeriesBailHook<{
-    encodeOptions: EncodeOptions;
-    intermediate: string;
-  }, { buffer: Buffer; debugInfo: string }>;
+  encode: AsyncSeriesBailHook<
+    {
+      encodeOptions: EncodeOptions;
+      intermediate?: string;
+    },
+    { buffer: Buffer; debugInfo: string }
+  >;
 
   /**
    * Called before the template is emitted. Can be used to modify the template.

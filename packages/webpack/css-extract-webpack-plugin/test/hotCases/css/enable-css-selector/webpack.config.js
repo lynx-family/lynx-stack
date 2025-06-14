@@ -5,6 +5,7 @@
 */
 import { DefinePlugin } from 'webpack'
 import { CssExtractWebpackPlugin } from '../../../../src'
+import { mockLynxTemplatePlugin } from '../../../../test/plugins.js'
 import path from 'node:path'
 
 /** @type {import('webpack').Configuration} */
@@ -27,12 +28,15 @@ export default {
     ],
   },
   plugins: [
+    mockLynxTemplatePlugin({
+      "compilerOptions": {
+        enableCSSSelector: true,
+        enableRemoveCSSScope: true,
+      }
+    }),
     new DefinePlugin({
       HMR_RUNTIME_LEPUS: JSON.stringify(path.resolve(__dirname, "../../../../runtime/hotModuleReplacement.lepus.cjs"))
     }),
-    new CssExtractWebpackPlugin({
-      enableCSSSelector: true,
-      enableRemoveCSSScope: true,
-    }),
+    new CssExtractWebpackPlugin(),
   ],
 }
