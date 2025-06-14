@@ -6,6 +6,7 @@ import {
   dispatchCoreContextOnBackgroundEndpoint,
   dispatchJSContextOnMainThreadEndpoint,
   LynxCrossThreadContext,
+  type CacheI18nResources,
   type Cloneable,
   type NativeApp,
 } from '@lynx-js/web-constants';
@@ -22,6 +23,7 @@ export function createBackgroundLynx(
   nativeApp: NativeApp,
   mainThreadRpc: Rpc,
   uiThreadRpc: Rpc,
+  cacheI18nResources: CacheI18nResources,
 ) {
   const coreContext = new LynxCrossThreadContext({
     rpc: mainThreadRpc,
@@ -50,6 +52,11 @@ export function createBackgroundLynx(
     },
     createElement(_: string, id: string) {
       return createElement(id, uiThreadRpc);
+    },
+    getI18nResource: () => {
+      return JSON.stringify(cacheI18nResources.i18nResources.get(
+        cacheI18nResources.curCacheKey,
+      ));
     },
   };
 }

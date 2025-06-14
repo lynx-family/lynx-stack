@@ -23,10 +23,14 @@ export type INapiModulesCall = (
   moduleName: string,
   lynxView: LynxView,
   dispatchNapiModules: (data: Cloneable) => void,
-) => Promise<{ data: unknown; transfer?: Transferable[] }> | {
-  data: unknown;
-  transfer?: Transferable[];
-} | undefined;
+) =>
+  | Promise<{ data: unknown; transfer?: Transferable[] } | undefined>
+  | {
+    data: unknown;
+    transfer?: Transferable[];
+  }
+  | undefined
+  | Promise<undefined>;
 
 /**
  * Based on our experiences, these elements are almost used in all lynx cards.
