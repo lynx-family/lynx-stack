@@ -1586,6 +1586,12 @@ test.describe('reactlynx3 tests', () => {
         await goto(page, title);
         await diffScreenShot(page, 'text', 'word-break');
       });
+
+      test('basic-element-text-color', async ({ page }, { title }) => {
+        await goto(page, title);
+        await wait(100);
+        await diffScreenShot(page, 'text', 'color');
+      });
     });
     test.describe('image', () => {
       test('basic-element-image-src', async ({ page }, { title }) => {
