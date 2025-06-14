@@ -1,10 +1,10 @@
 /** @type {import("@lynx-js/test-tools").TConfigCaseConfig} */
 module.exports = {
   bundlePath: [
-    'a:background.js',
-    'b:background.js',
-    'c:background.js',
-    'd:background.js',
-    'e:background.js',
+    'a__background.js',
+    'b__background.js',
+    'c__background.js',
+    'd__background.js',
+    'e__background.js',
   ],
 };

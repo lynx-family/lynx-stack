@@ -20,7 +20,7 @@ export default {
     new LynxEncodePlugin(),
     new LynxTemplatePlugin({
       ...LynxTemplatePlugin.defaultOptions,
-      chunks: ['main:main-thread', 'main:background'],
+      chunks: ['main__main-thread', 'main__background'],
       filename: 'main/template.js',
       intermediate: '.rspeedy/main',
     }),
@@ -37,9 +37,9 @@ export default {
           (args) => {
             expect(args.encodeData.lepusCode.root.name).toBeOneOf(
               [ // main entry
-                'main:main-thread.js',
+                'main__main-thread.js',
                 // foo.js lazy bundle
-                '.rspeedy/async/./foo.js-react:main-thread.js',
+                '.rspeedy/async/./foo.js-react__main-thread.js',
               ],
             );
             expect(
@@ -47,9 +47,9 @@ export default {
             ).toBe(1);
             expect(Object.keys(args.encodeData.manifest)[0]).toBeOneOf(
               [ // main entry
-                'main:background.js',
+                'main__background.js',
                 // foo.js lazy bundle
-                '.rspeedy/async/./foo.js-react:background.js',
+                '.rspeedy/async/./foo.js-react__background.js',
               ],
             );
           },

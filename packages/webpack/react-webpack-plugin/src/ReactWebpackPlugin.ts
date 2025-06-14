@@ -309,14 +309,14 @@ class ReactWebpackPlugin {
         return args;
       });
 
-      // The react-transform will add `-${LAYER}` to the webpackChunkName.
+      // The react-transform will add `-react__${LAYER}` to the webpackChunkName.
       // We replace it with an empty string here to make sure main-thread & background chunk match.
       hooks.asyncChunkName.tap(
         this.constructor.name,
         (chunkName) =>
           chunkName
-            ?.replaceAll(`-${LAYERS.BACKGROUND}`, '')
-            ?.replaceAll(`-${LAYERS.MAIN_THREAD}`, ''),
+            ?.replaceAll(`-react__background`, '')
+            ?.replaceAll(`-react__main-thread`, ''),
       );
     });
   }

@@ -20,7 +20,7 @@ export default {
     new LynxEncodePlugin(),
     new LynxTemplatePlugin({
       ...LynxTemplatePlugin.defaultOptions,
-      chunks: ['main:main-thread', 'main:background'],
+      chunks: ['main__main-thread', 'main__background'],
       filename: 'main/template.js',
       intermediate: '.rspeedy/main',
     }),

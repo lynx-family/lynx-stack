@@ -1,7 +1,6 @@
 /** @type {import("@lynx-js/test-tools").TConfigCaseConfig} */
 module.exports = {
   bundlePath: [
-    'main:main-thread.js',
-    'main:background.js',
+    'main__main-thread.js',
   ],
 };

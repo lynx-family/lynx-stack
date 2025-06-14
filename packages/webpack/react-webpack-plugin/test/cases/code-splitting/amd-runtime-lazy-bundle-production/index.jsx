@@ -53,11 +53,11 @@ it('should have module.exports in foo.js template', async () => {
     expect.stringContaining('function (globDynamicComponentEntry)'),
   );
 
-  expect(tasmJSON.manifest['/.rspeedy/async/./foo.js-react:background.js'])
+  expect(tasmJSON.manifest['/.rspeedy/async/./foo.js-react__background.js'])
     .toBeDefined();
-  expect(tasmJSON.manifest['/.rspeedy/async/./foo.js-react:background.js']).not
+  expect(tasmJSON.manifest['/.rspeedy/async/./foo.js-react__background.js']).not
     .toContain('const module = { exports: {} }');
-  expect(tasmJSON.manifest['/.rspeedy/async/./foo.js-react:background.js']).not
+  expect(tasmJSON.manifest['/.rspeedy/async/./foo.js-react__background.js']).not
     .toContain('function (globDynamicComponentEntry)');
 });
 
@@ -78,11 +78,11 @@ it('should have module.exports in bar.js template', async () => {
     expect.stringContaining('function (globDynamicComponentEntry)'),
   );
 
-  expect(tasmJSON.manifest['/.rspeedy/async/./bar.js-react:background.js'])
+  expect(tasmJSON.manifest['/.rspeedy/async/./bar.js-react__background.js'])
     .toBeDefined();
-  expect(tasmJSON.manifest['/.rspeedy/async/./bar.js-react:background.js']).not
+  expect(tasmJSON.manifest['/.rspeedy/async/./bar.js-react__background.js']).not
     .toContain('const module = { exports: {} }');
-  expect(tasmJSON.manifest['/.rspeedy/async/./bar.js-react:background.js']).not
+  expect(tasmJSON.manifest['/.rspeedy/async/./bar.js-react__background.js']).not
     .toContain('function (globDynamicComponentEntry)');
 });
 
@@ -103,10 +103,10 @@ it('should have module.exports in baz.js template', async () => {
     expect.stringContaining('function (globDynamicComponentEntry)'),
   );
 
-  expect(tasmJSON.manifest['/.rspeedy/async/./baz.js-react:background.js'])
+  expect(tasmJSON.manifest['/.rspeedy/async/./baz.js-react__background.js'])
     .toBeDefined();
-  expect(tasmJSON.manifest['/.rspeedy/async/./baz.js-react:background.js']).not
+  expect(tasmJSON.manifest['/.rspeedy/async/./baz.js-react__background.js']).not
     .toContain('const module = { exports: {} }');
-  expect(tasmJSON.manifest['/.rspeedy/async/./baz.js-react:background.js']).not
+  expect(tasmJSON.manifest['/.rspeedy/async/./baz.js-react__background.js']).not
     .toContain('function (globDynamicComponentEntry)');
 });
