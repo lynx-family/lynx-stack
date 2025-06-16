@@ -1315,3 +1315,17 @@ describe('list', () => {
     `);
   });
 });
+
+describe('missing snapshot', () => {
+  beforeEach(() => {
+    initGlobalSnapshotPatch();
+  });
+
+  it('should throw error when missing snapshot', () => {
+    const bsi1 = new BackgroundSnapshotInstance('missing-snapshot');
+    let patch;
+    patch = takeGlobalSnapshotPatch();
+    expect(patch.length).toMatchInlineSnapshot(`3`);
+    expect(() => snapshotPatchApply(patch)).toThrowError('Snapshot not found: missing-snapshot');
+  });
+});

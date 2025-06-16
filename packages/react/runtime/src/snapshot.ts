@@ -275,6 +275,10 @@ export class SnapshotInstance {
 
   constructor(public type: string, id?: number) {
     this.__snapshot_def = snapshotManager.values.get(type)!;
+    // Suspense uses 'div'
+    if (!this.__snapshot_def && type !== 'div') {
+      throw new Error('Snapshot not found: ' + type);
+    }
 
     id ||= snapshotInstanceManager.nextId -= 1;
     this.__id = id;
