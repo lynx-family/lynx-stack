@@ -9,12 +9,10 @@ import {
   selectComponentEndpoint,
   type BundleInitReturnObj,
   type LynxJSModule,
-  type LynxTemplate,
   type NativeApp,
-  type NativeModulesMap,
   type LynxCrossThreadContext,
-  type BrowserConfig,
   systemInfo,
+  type BackMainThreadContextConfig,
 } from '@lynx-js/web-constants';
 import { createInvokeUIMethod } from './crossThreadHandlers/createInvokeUIMethod.js';
 import { registerPublicComponentEventHandler } from './crossThreadHandlers/registerPublicComponentEventHandler.js';
@@ -27,19 +25,17 @@ import { registerSendGlobalEventHandler } from './crossThreadHandlers/registerSe
 import { createJSObjectDestructionObserver } from './crossThreadHandlers/createJSObjectDestructionObserver.js';
 import type { TimingSystem } from './createTimingSystem.js';
 import { registerUpdateGlobalPropsHandler } from './crossThreadHandlers/registerUpdateGlobalPropsHandler.js';
-import { registerI18nResourceTranslation } from './crossThreadHandlers/registerI18nResourceTranslation.js';
 
 let nativeAppCount = 0;
 const sharedData: Record<string, unknown> = {};
 
-export async function createNativeApp(config: {
-  template: LynxTemplate;
-  uiThreadRpc: Rpc;
-  mainThreadRpc: Rpc;
-  nativeModulesMap: NativeModulesMap;
-  timingSystem: TimingSystem;
-  browserConfig: BrowserConfig;
-}): Promise<NativeApp> {
+export async function createNativeApp(
+  config: {
+    uiThreadRpc: Rpc;
+    mainThreadRpc: Rpc;
+    timingSystem: TimingSystem;
+  } & BackMainThreadContextConfig,
+): Promise<NativeApp> {
   const {
     mainThreadRpc,
     uiThreadRpc,
@@ -156,13 +152,6 @@ export async function createNativeApp(config: {
       registerUpdateGlobalPropsHandler(uiThreadRpc, tt);
       timingSystem.registerGlobalEmitter(tt.GlobalEventEmitter);
       (tt.lynx.getCoreContext() as LynxCrossThreadContext).__start();
-      registerI18nResourceTranslation(
-        {
-          rpc: mainThreadRpc,
-          i18nNapiModule: (globalThis as any)['napiLoaderOnRT' + nativeApp.id]
-            ?.['load']('i18n'),
-        },
-      );
     },
     triggerComponentEvent,
     selectComponent,

@@ -24,3 +24,5 @@ export type InitI18nResources = Array<{
   options: I18nResourceTranslationOptions;
   resource: Record<string, unknown>;
 }>;
+
+export const i18nResourceMissedEventName = 'i18nResourceMissed' as const;

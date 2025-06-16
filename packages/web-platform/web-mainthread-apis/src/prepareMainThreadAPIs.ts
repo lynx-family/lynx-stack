@@ -34,9 +34,9 @@ export function prepareMainThreadAPIs(
   commitDocument: () => Promise<void> | void,
   markTimingInternal: (timingKey: string, pipelineId?: string) => void,
   reportError: RpcCallType<typeof reportErrorEndpoint>,
-  triggerI18nResourceLoading: (
+  triggerI18nResourceFallback: (
     options: I18nResourceTranslationOptions,
-  ) => unknown,
+  ) => void,
 ) {
   const postTimingFlags = backgroundThreadRpc.createCall(
     postTimingFlagsEndpoint,
@@ -140,6 +140,7 @@ export function prepareMainThreadAPIs(
             nativeModulesMap,
             napiModulesMap,
             browserConfig,
+            initI18nResources,
           });
           mtsGlobalThis.renderPage!(initData);
           mtsGlobalThis.__FlushElementTree(undefined, {});
@@ -188,7 +189,7 @@ export function prepareMainThreadAPIs(
           if (matchedInitI18nResources) {
             return matchedInitI18nResources.resource;
           }
-          return triggerI18nResourceLoading(options);
+          return triggerI18nResourceFallback(options);
         },
       },
     });

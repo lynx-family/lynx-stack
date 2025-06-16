@@ -89,19 +89,6 @@ async function run() {
     'color_environment': color_environment,
     'color_methods': color_methods,
     'event_method': event_method,
-    i18n: URL.createObjectURL(
-      new Blob(
-        [`export default function(NapiModules, NapiModulesCall) {
-      return {
-        async getI18nResourceByNative(options) {
-          const handledData = await NapiModulesCall('getI18nResourceByNative', options);
-          return handledData;
-        },
-      };
-    };`],
-        { type: 'text/javascript' },
-      ),
-    ),
   };
   lynxView.onNapiModulesCall = async (
     name,
@@ -121,24 +108,13 @@ async function run() {
       });
       return;
     }
-    if (moduleName === 'i18n') {
-      if (name === 'getI18nResourceByNative') {
-        // mock fetch
-        await wait(1000);
-        if (data.locale = 'en') {
-          return {
-            data: {
-              hello: 'hello',
-              lynx: 'lynx web platform',
-            },
-          };
-        }
-      }
-    }
   };
   lynxView.addEventListener('error', () => {
     lynxView.setAttribute('style', 'display:none');
     lynxView.innerHTML = '';
+  });
+  lynxView.addEventListener('i18nResourceMissed', (e) => {
+    console.log(e);
   });
   lynxView.addEventListener('timing', (ev) => {
     // @ts-expect-error

@@ -343,39 +343,7 @@ test.describe('web core tests', () => {
     await wait(1000);
     expect(successDispatchNapiModule).toBeTruthy();
   });
-  test('api-i18n-resource-translation', async ({ page, browserName }) => {
-    // firefox dose not support this.
-    test.skip(browserName === 'firefox');
-    await goto(page);
-    const mainWorker = await getMainThreadWorker(page);
-    const first = await mainWorker.evaluate(() => {
-      globalThis.runtime.renderPage = () => {};
-      if (
-        globalThis.runtime._I18nResourceTranslation({
-          locale: 'en',
-          channel: '',
-          fallback_url: '',
-        }) === undefined
-      ) {
-        return true;
-      }
-    });
-    await wait(2000);
-    const second = await mainWorker.evaluate(() => {
-      if (
-        JSON.stringify(globalThis.runtime._I18nResourceTranslation({
-          locale: 'en',
-          channel: '',
-          fallback_url: '',
-        })) === '{"hello":"hello","lynx":"lynx web platform"}'
-      ) {
-        return true;
-      }
-    });
-    expect(first).toBeTruthy();
-    expect(second).toBeTruthy();
-  });
-  test('api-init-i18n-resources', async ({ page, browserName }) => {
+  test('api-i18n-resources-translation', async ({ page, browserName }) => {
     // firefox dose not support this.
     test.skip(browserName === 'firefox');
     await goto(page);
@@ -391,6 +359,37 @@ test.describe('web core tests', () => {
       ) {
         return true;
       }
+    });
+    await wait(2000);
+    expect(success).toBeTruthy();
+  });
+  test('event-i18n-resources-missed', async ({ page, browserName }) => {
+    // firefox dose not support this.
+    test.skip(browserName === 'firefox');
+    await goto(page);
+    let success = false;
+    await page.on('console', async (msg) => {
+      const event = await msg.args()[0]?.evaluate((e) => {
+        return {
+          type: e.type,
+          channel: e.detail?.channel,
+        };
+      });
+      if (!event || event.type !== 'i18nResourceMissed') {
+        return;
+      }
+      if (event.channel === '2') {
+        success = true;
+      }
+    });
+    const mainWorker = await getMainThreadWorker(page);
+    await mainWorker.evaluate(() => {
+      globalThis.runtime.renderPage = () => {};
+      globalThis.runtime._I18nResourceTranslation({
+        locale: 'en',
+        channel: '2',
+        fallback_url: '',
+      });
     });
     await wait(2000);
     expect(success).toBeTruthy();

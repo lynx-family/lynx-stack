@@ -3,17 +3,16 @@ import {
   type RpcCallType,
   type updateDataEndpoint,
   type MainThreadGlobalThis,
-  i18nResourceTranslationEndpoint,
   type I18nResourceTranslationOptions,
-  getCacheI18nResourcesKey,
+  type CloneableObject,
+  i18nResourceMissedEventName,
 } from '@lynx-js/web-constants';
 import { Rpc } from '@lynx-js/web-worker-rpc';
+import { dispatchLynxViewEvent } from '../utils/dispatchLynxViewEvent.js';
 
 const {
   prepareMainThreadAPIs,
 } = await import('@lynx-js/web-mainthread-apis');
-
-const CacheI18nResources = new Map<string, unknown>();
 
 export function createRenderAllOnUI(
   mainToBackgroundRpc: Rpc,
@@ -30,20 +29,14 @@ export function createRenderAllOnUI(
   if (!globalThis.module) {
     Object.assign(globalThis, { module: {} });
   }
-  const i18nResourceTranslation = (options: I18nResourceTranslationOptions) => {
-    const cacheKey = getCacheI18nResourcesKey(options);
-
-    if (CacheI18nResources.has(cacheKey)) {
-      return CacheI18nResources.get(cacheKey);
-    }
-    mainToBackgroundRpc.invoke(i18nResourceTranslationEndpoint, [options]).then(
-      res => {
-        if (res !== undefined) {
-          CacheI18nResources.set(cacheKey, res);
-        }
-      },
+  const triggerI18nResourceFallback = (
+    options: I18nResourceTranslationOptions,
+  ) => {
+    dispatchLynxViewEvent(
+      shadowRoot,
+      i18nResourceMissedEventName,
+      options as CloneableObject,
     );
-    return undefined;
   };
   const { startMainThread } = prepareMainThreadAPIs(
     mainToBackgroundRpc,
@@ -54,7 +47,7 @@ export function createRenderAllOnUI(
     (err) => {
       callbacks.onError?.(err);
     },
-    i18nResourceTranslation,
+    triggerI18nResourceFallback,
   );
   let mtsGlobalThis!: MainThreadGlobalThis;
   const start = async (configs: StartMainThreadContextConfig) => {

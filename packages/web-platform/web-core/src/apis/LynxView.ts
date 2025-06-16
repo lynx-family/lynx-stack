@@ -53,9 +53,10 @@ export type INapiModulesCall = (
  * @property {number} lynxGroupId [optional] (attribute: "lynx-group-id") the background shared context id, which is used to share webworker between different lynx cards
  * @property {"all-on-ui" | "multi-thread"} threadStrategy [optional] @default "multi-thread" (attribute: "thread-strategy") controls the thread strategy for current lynx view
  * @property {(string)=>Promise<LynxTemplate>} customTemplateLoader [optional] the custom template loader, which is used to load the template
- * @property {InitI18nResources} initI18nResources [optional] (attribute: "init-i18n-resources") the i18n resources which can be obtained synchronously by _I18nResourceTranslation
+ * @property {InitI18nResources} initI18nResources [optional] (attribute: "init-i18n-resources") the complete set of i18nResources that on the container side, which can be obtained synchronously by _I18nResourceTranslation
  *
  * @event error lynx card fired an error
+ * @event i18nResourceMissed i18n resource cache miss
  *
  * @example
  * HTML Example
@@ -314,9 +315,6 @@ export class LynxView extends HTMLElement {
           break;
         case 'init-data':
           this.#initData = JSON.parse(newValue);
-          break;
-        case 'init-i18n-resources':
-          this.#initI18nResources = JSON.parse(newValue);
           break;
       }
     }
