@@ -35,7 +35,7 @@ if (casename) {
   lynxViewTests(lynxView => {
     lynxView.setAttribute('url', `${dir}/index.web.json`);
     ENABLE_MULTI_THREAD
-      ? lynxView.setAttribute('thread-strategy', `multi-thread`)
+      ? lynxView.setAttribute('thread-strategy', 'multi-thread')
       : lynxView.setAttribute('thread-strategy', 'all-on-ui');
     lynxView.nativeModulesMap = nativeModulesMap;
     lynxView.id = 'lynxview1';
