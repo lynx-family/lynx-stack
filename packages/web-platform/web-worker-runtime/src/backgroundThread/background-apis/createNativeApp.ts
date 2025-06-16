@@ -9,12 +9,10 @@ import {
   selectComponentEndpoint,
   type BundleInitReturnObj,
   type LynxJSModule,
-  type LynxTemplate,
   type NativeApp,
-  type NativeModulesMap,
   type LynxCrossThreadContext,
-  type BrowserConfig,
   systemInfo,
+  type BackMainThreadContextConfig,
 } from '@lynx-js/web-constants';
 import { createInvokeUIMethod } from './crossThreadHandlers/createInvokeUIMethod.js';
 import { registerPublicComponentEventHandler } from './crossThreadHandlers/registerPublicComponentEventHandler.js';
@@ -31,14 +29,13 @@ import { registerUpdateGlobalPropsHandler } from './crossThreadHandlers/register
 let nativeAppCount = 0;
 const sharedData: Record<string, unknown> = {};
 
-export async function createNativeApp(config: {
-  template: LynxTemplate;
-  uiThreadRpc: Rpc;
-  mainThreadRpc: Rpc;
-  nativeModulesMap: NativeModulesMap;
-  timingSystem: TimingSystem;
-  browserConfig: BrowserConfig;
-}): Promise<NativeApp> {
+export async function createNativeApp(
+  config: {
+    uiThreadRpc: Rpc;
+    mainThreadRpc: Rpc;
+    timingSystem: TimingSystem;
+  } & BackMainThreadContextConfig,
+): Promise<NativeApp> {
   const {
     mainThreadRpc,
     uiThreadRpc,

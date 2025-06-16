@@ -29,7 +29,7 @@ export default {
   target: 'node',
   plugins: [
     new ReactWebpackPlugin({
-      mainThreadChunks: ['main:main-thread.js'],
+      mainThreadChunks: ['main__main-thread.js'],
     }),
     /**
      * @param {import('@rspack/core').Compiler} compiler - The Rspack Compiler.
@@ -37,7 +37,7 @@ export default {
     compiler => {
       compiler.hooks.thisCompilation.tap('check', (compilation) => {
         compiler.hooks.done.tap('check', () => {
-          const lepus = compilation.getAsset('main:main-thread.js');
+          const lepus = compilation.getAsset('main__main-thread.js');
           expect(lepus).not.toBeUndefined();
           expect(lepus.info).toHaveProperty(
             'lynx:main-thread',

@@ -4,6 +4,7 @@
 
 import type {
   Cloneable,
+  InitI18nResources,
   NapiModulesMap,
   NativeModulesMap,
   sendGlobalEventEndpoint,
@@ -29,6 +30,7 @@ export interface LynxViewConfigs {
   tagMap: Record<string, string>;
   lynxGroupId: number | undefined;
   threadStrategy: 'all-on-ui' | 'multi-thread';
+  initI18nResources: InitI18nResources;
 }
 
 export interface LynxView {
@@ -40,6 +42,7 @@ export interface LynxView {
   dispose(): Promise<void>;
   sendGlobalEvent: RpcCallType<typeof sendGlobalEventEndpoint>;
   updateGlobalProps: (data: Cloneable) => void;
+  updateI18nResources: (data: Cloneable) => void;
 }
 
 export function createLynxView(configs: LynxViewConfigs): LynxView {
@@ -54,6 +57,7 @@ export function createLynxView(configs: LynxViewConfigs): LynxView {
     tagMap,
     lynxGroupId,
     threadStrategy = 'multi-thread',
+    initI18nResources,
   } = configs;
   return startUIThread(
     templateUrl,
@@ -68,6 +72,7 @@ export function createLynxView(configs: LynxViewConfigs): LynxView {
         pixelWidth: screenWidth,
         pixelHeight: screenHeight,
       },
+      initI18nResources,
     },
     shadowRoot,
     lynxGroupId,

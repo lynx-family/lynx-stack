@@ -8,6 +8,11 @@ import '@lynx-js/web-elements-compat/LinearContainer';
 import '@lynx-js/web-core/index.css';
 import './index.css';
 
+const wait = async (ms: number) => {
+  await new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+};
 const ALL_ON_UI = !!process.env.ALL_ON_UI;
 const color_environment = URL.createObjectURL(
   new Blob(
@@ -67,12 +72,25 @@ async function run() {
   lynxView.initData = { mockData: 'mockData' };
   lynxView.globalProps = { backgroundColor: 'pink' };
   lynxView.setAttribute('height', 'auto');
+  lynxView.initI18nResources = [
+    {
+      options: {
+        locale: 'en',
+        channel: '1',
+        fallback_url: '',
+      },
+      resource: {
+        hello: 'hello',
+        lynx: 'lynx web platform1',
+      },
+    },
+  ];
   lynxView.napiModulesMap = {
     'color_environment': color_environment,
     'color_methods': color_methods,
     'event_method': event_method,
   };
-  lynxView.onNapiModulesCall = (
+  lynxView.onNapiModulesCall = async (
     name,
     data,
     moduleName,
@@ -94,6 +112,9 @@ async function run() {
   lynxView.addEventListener('error', () => {
     lynxView.setAttribute('style', 'display:none');
     lynxView.innerHTML = '';
+  });
+  lynxView.addEventListener('i18nResourceMissed', (e) => {
+    console.log(e);
   });
   lynxView.addEventListener('timing', (ev) => {
     // @ts-expect-error

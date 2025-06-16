@@ -11,6 +11,7 @@ import {
   type NapiModulesCall,
   type NativeModulesCall,
   updateGlobalPropsEndpoint,
+  type Cloneable,
 } from '@lynx-js/web-constants';
 import { loadTemplate } from '../utils/loadTemplate.js';
 import { createUpdateData } from './crossThreadHandlers/createUpdateData.js';
@@ -53,7 +54,7 @@ export function startUIThread(
     if (!timeStamp) timeStamp = performance.now() + performance.timeOrigin;
     markTiming(timingKey, pipelineId, timeStamp);
   };
-  const { start, updateDataMainThread } = allOnUI
+  const { start, updateDataMainThread, updateI18nResourcesMainThread } = allOnUI
     ? createRenderAllOnUI(
       /* main-to-bg rpc*/ mainThreadRpc,
       shadowRoot,
@@ -82,5 +83,7 @@ export function startUIThread(
     ),
     sendGlobalEvent,
     updateGlobalProps: backgroundRpc.createCall(updateGlobalPropsEndpoint),
+    updateI18nResources: (data: Cloneable) =>
+      updateI18nResourcesMainThread(data),
   };
 }
