@@ -70,7 +70,7 @@ async function run() {
   lynxView.setAttribute('url', lepusjs);
   ENABLE_MULTI_THREAD
     ? lynxView.setAttribute('thread-strategy', 'multi-thread')
-    : lynxView.setAttribute('thread-strategy', `all-on-ui`);
+    : lynxView.setAttribute('thread-strategy', 'all-on-ui');
   lynxView.initData = { mockData: 'mockData' };
   lynxView.globalProps = { backgroundColor: 'pink' };
   lynxView.setAttribute('height', 'auto');
