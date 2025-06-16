@@ -8,12 +8,12 @@ import '@lynx-js/web-elements-compat/LinearContainer';
 import '@lynx-js/web-core/index.css';
 import './index.css';
 
+const ENABLE_MULTI_THREAD = !!process.env.ENABLE_MULTI_THREAD;
 const wait = async (ms: number) => {
   await new Promise((resolve) => {
     setTimeout(resolve, ms);
   });
 };
-const ALL_ON_UI = !!process.env.ALL_ON_UI;
 const color_environment = URL.createObjectURL(
   new Blob(
     [`export default function(NapiModules, NapiModulesCall) {
@@ -68,7 +68,9 @@ async function run() {
   const lepusjs = '/resources/web-core.main-thread.json';
   const lynxView = document.createElement('lynx-view') as LynxView;
   lynxView.setAttribute('url', lepusjs);
-  if (ALL_ON_UI) lynxView.setAttribute('thread-strategy', `all-on-ui`);
+  ENABLE_MULTI_THREAD
+    ? lynxView.setAttribute('thread-strategy', 'multi-thread')
+    : lynxView.setAttribute('thread-strategy', `all-on-ui`);
   lynxView.initData = { mockData: 'mockData' };
   lynxView.globalProps = { backgroundColor: 'pink' };
   lynxView.setAttribute('height', 'auto');

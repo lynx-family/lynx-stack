@@ -80,9 +80,9 @@ jobs:
         config:
           - name: Default
             env: []
-          - name: All on UI
+          - name: MULTI_THREAD
             env:
-              - ALL_ON_UI=true
+              - ENABLE_MULTI_THREAD=true
           - name: FP only
             env:
               - ENABLE_SSR=true

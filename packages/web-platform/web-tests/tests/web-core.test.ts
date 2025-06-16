@@ -5,7 +5,7 @@
 import { test, expect } from './coverage-fixture.js';
 import type { Page, Worker } from '@playwright/test';
 
-const ALL_ON_UI = !!process.env.ALL_ON_UI;
+const ENABLE_MULTI_THREAD = !!process.env.ENABLE_MULTI_THREAD;
 const wait = async (ms: number) => {
   await new Promise((resolve) => {
     setTimeout(resolve, ms);
@@ -23,7 +23,7 @@ async function getMainThreadWorker(
   page: Page,
 ): Promise<Worker | Page | undefined> {
   await wait(100);
-  if (ALL_ON_UI) {
+  if (!ENABLE_MULTI_THREAD) {
     return page;
   } else {
     for (const i of page.workers()) {

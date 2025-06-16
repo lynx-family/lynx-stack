@@ -30,7 +30,9 @@ const config = {
   },
   plugins: [
     new rspack.DefinePlugin({
-      'process.env.ALL_ON_UI': JSON.stringify(process.env.ALL_ON_UI),
+      'process.env.ENABLE_MULTI_THREAD': JSON.stringify(
+        process.env.ENABLE_MULTI_THREAD,
+      ),
     }),
     new rspack.HtmlRspackPlugin({
       title: 'lynx-for-web-test',
