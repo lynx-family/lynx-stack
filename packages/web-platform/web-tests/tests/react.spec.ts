@@ -5,7 +5,6 @@ import { swipe, dragAndHold } from './utils.js';
 import { test, expect } from './coverage-fixture.js';
 import type { Page } from '@playwright/test';
 const ENABLE_MULTI_THREAD = !!process.env['ENABLE_MULTI_THREAD'];
-const ALL_ON_UI = !ENABLE_MULTI_THREAD;
 const wait = async (ms: number) => {
   await new Promise((resolve) => {
     setTimeout(resolve, ms);
@@ -1212,7 +1211,10 @@ test.describe('reactlynx3 tests', () => {
     test(
       'config-splitchunk-single-vendor',
       async ({ page }, { title }) => {
-        test.skip(ALL_ON_UI, 'main thread do not support importScript');
+        test.skip(
+          !ENABLE_MULTI_THREAD,
+          'main thread do not support importScript',
+        );
         await goto(page, title, undefined, true);
         await wait(1500);
         const target = page.locator('#target');
@@ -1222,7 +1224,10 @@ test.describe('reactlynx3 tests', () => {
     test(
       'config-splitchunk-split-by-experience',
       async ({ page }, { title }) => {
-        test.skip(ALL_ON_UI, 'main thread do not support importScript');
+        test.skip(
+          !ENABLE_MULTI_THREAD,
+          'main thread do not support importScript',
+        );
         await goto(page, title, undefined, true);
         await wait(1500);
         const target = page.locator('#target');
@@ -1232,7 +1237,10 @@ test.describe('reactlynx3 tests', () => {
     test(
       'config-splitchunk-split-by-module',
       async ({ page }, { title }) => {
-        test.skip(ALL_ON_UI, 'main thread do not support importScript');
+        test.skip(
+          !ENABLE_MULTI_THREAD,
+          'main thread do not support importScript',
+        );
         await goto(page, title, undefined, true);
         await wait(1500);
         const target = page.locator('#target');
