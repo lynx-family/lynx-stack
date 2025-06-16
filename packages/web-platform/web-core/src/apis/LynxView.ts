@@ -155,6 +155,15 @@ export class LynxView extends HTMLElement {
     }
   }
 
+  /**
+   * @public
+   * @method
+   * update the `__initData` and trigger essential flow
+   */
+  updateI18nResources(data: InitI18nResources) {
+    this.#instance?.updateI18nResources(data as Cloneable);
+  }
+
   #overrideLynxTagToHTMLTagMap: Record<string, string> = { 'page': 'div' };
   /**
    * @public

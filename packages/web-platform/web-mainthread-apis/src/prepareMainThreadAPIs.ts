@@ -20,6 +20,8 @@ import {
   switchExposureServiceEndpoint,
   type I18nResourceTranslationOptions,
   getCacheI18nResourcesKey,
+  type InitI18nResources,
+  type I18nResources,
 } from '@lynx-js/web-constants';
 import { registerCallLepusMethodHandler } from './crossThreadHandlers/registerCallLepusMethodHandler.js';
 import { registerGetCustomSectionHandler } from './crossThreadHandlers/registerGetCustomSectionHandler.js';
@@ -37,6 +39,7 @@ export function prepareMainThreadAPIs(
   triggerI18nResourceFallback: (
     options: I18nResourceTranslationOptions,
   ) => void,
+  initialI18nResources: (data: InitI18nResources) => I18nResources,
 ) {
   const postTimingFlags = backgroundThreadRpc.createCall(
     postTimingFlagsEndpoint,
@@ -90,6 +93,7 @@ export function prepareMainThreadAPIs(
       receiveEventEndpoint: dispatchJSContextOnMainThreadEndpoint,
       sendEventEndpoint: dispatchCoreContextOnBackgroundEndpoint,
     });
+    const i18nResources = initialI18nResources(initI18nResources);
     const mtsGlobalThis = createMainThreadGlobalThis({
       jsContext,
       tagMap,
@@ -140,7 +144,6 @@ export function prepareMainThreadAPIs(
             nativeModulesMap,
             napiModulesMap,
             browserConfig,
-            initI18nResources,
           });
           mtsGlobalThis.renderPage!(initData);
           mtsGlobalThis.__FlushElementTree(undefined, {});
@@ -182,7 +185,7 @@ export function prepareMainThreadAPIs(
         publicComponentEvent,
         createElement,
         _I18nResourceTranslation: (options: I18nResourceTranslationOptions) => {
-          const matchedInitI18nResources = initI18nResources.find(i =>
+          const matchedInitI18nResources = i18nResources.data?.find(i =>
             getCacheI18nResourcesKey(i.options)
               === getCacheI18nResourcesKey(options)
           );

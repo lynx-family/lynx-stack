@@ -394,4 +394,65 @@ test.describe('web core tests', () => {
     await wait(2000);
     expect(success).toBeTruthy();
   });
+  test('api-update-i18n-resources', async ({ page, browserName }) => {
+    // firefox dose not support this.
+    test.skip(browserName === 'firefox');
+    await goto(page);
+    const mainWorker = await getMainThreadWorker(page);
+    const first = await mainWorker.evaluate(() => {
+      globalThis.runtime.renderPage = () => {};
+      if (
+        globalThis.runtime._I18nResourceTranslation({
+          locale: 'en',
+          channel: '2',
+          fallback_url: '',
+        }) === undefined
+      ) {
+        return true;
+      }
+    });
+    await wait(500);
+    await page.evaluate(() => {
+      document.querySelector('lynx-view').updateI18nResources([
+        {
+          options: {
+            locale: 'en',
+            channel: '1',
+            fallback_url: '',
+          },
+          resource: {
+            hello: 'hello',
+            lynx: 'lynx web platform1',
+          },
+        },
+        {
+          options: {
+            locale: 'en',
+            channel: '2',
+            fallback_url: '',
+          },
+          resource: {
+            hello: 'hello',
+            lynx: 'lynx web platform2',
+          },
+        },
+      ]);
+    });
+    await wait(500);
+    const second = await mainWorker.evaluate(() => {
+      globalThis.runtime.renderPage = () => {};
+      if (
+        JSON.stringify(globalThis.runtime._I18nResourceTranslation({
+          locale: 'en',
+          channel: '2',
+          fallback_url: '',
+        })) === '{"hello":"hello","lynx":"lynx web platform2"}'
+      ) {
+        return true;
+      }
+    });
+    await wait(500);
+    expect(first).toBeTruthy();
+    expect(second).toBeTruthy();
+  });
 });

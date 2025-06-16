@@ -3,7 +3,6 @@
 // LICENSE file in the root directory of this source tree.
 
 import type { Cloneable } from './Cloneable.js';
-import type { InitI18nResources } from './index.js';
 import type { LynxTemplate } from './LynxModule.js';
 import type { NapiModulesMap } from './NapiModules.js';
 import type { NativeModulesMap } from './NativeModules.js';
@@ -18,5 +17,4 @@ export interface BackMainThreadContextConfig {
   nativeModulesMap: NativeModulesMap;
   napiModulesMap: NapiModulesMap;
   browserConfig: BrowserConfig;
-  initI18nResources: InitI18nResources;
 }

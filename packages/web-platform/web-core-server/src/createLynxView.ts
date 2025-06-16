@@ -1,6 +1,8 @@
 import {
+  I18nResources,
   inShadowRootStyles,
   lynxUniqueIdAttribute,
+  type InitI18nResources,
   type StartMainThreadContextConfig,
 } from '@lynx-js/web-constants';
 import { Rpc } from '@lynx-js/web-worker-rpc';
@@ -111,6 +113,7 @@ export async function createLynxView(
     onCommit: () => {
     },
   });
+  const i18nResources = new I18nResources();
   const { startMainThread } = prepareMainThreadAPIs(
     backgroundThreadRpc,
     offscreenDocument,
@@ -126,6 +129,10 @@ export async function createLynxView(
     },
     () => {
       // trigger i18n resource fallback
+    },
+    (initI18nResources: InitI18nResources) => {
+      i18nResources.setData(initI18nResources);
+      return i18nResources;
     },
   );
   const runtime = await startMainThread({

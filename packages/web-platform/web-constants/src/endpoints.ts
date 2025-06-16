@@ -213,3 +213,8 @@ export const updateGlobalPropsEndpoint = createRpcEndpoint<
   [Cloneable],
   void
 >('updateGlobalProps', false, false);
+
+export const updateI18nResourcesEndpoint = createRpcEndpoint<
+  [Cloneable],
+  void
+>('updateI18nResources', false, false);

@@ -42,6 +42,7 @@ export interface LynxView {
   dispose(): Promise<void>;
   sendGlobalEvent: RpcCallType<typeof sendGlobalEventEndpoint>;
   updateGlobalProps: (data: Cloneable) => void;
+  updateI18nResources: (data: Cloneable) => void;
 }
 
 export function createLynxView(configs: LynxViewConfigs): LynxView {

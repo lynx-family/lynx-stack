@@ -26,3 +26,13 @@ export type InitI18nResources = Array<{
 }>;
 
 export const i18nResourceMissedEventName = 'i18nResourceMissed' as const;
+
+export class I18nResources {
+  data?: InitI18nResources;
+  constructor(data?: InitI18nResources) {
+    this.data = data;
+  }
+  setData(data: InitI18nResources) {
+    this.data = data;
+  }
+}
