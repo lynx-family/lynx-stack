@@ -796,7 +796,7 @@ class LynxTemplatePluginImpl {
       },
       lepusCode: {
         // TODO: support multiple lepus chunks
-        root: assetsInfoByGroups.mainThread[0],
+        root: assetsInfoByGroups.backgroundThread[0],
         chunks: [],
       },
       manifest: Object.fromEntries(
