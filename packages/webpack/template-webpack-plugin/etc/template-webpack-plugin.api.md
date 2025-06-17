@@ -147,6 +147,7 @@ export interface TemplateHooks {
         template: Buffer;
         outputName: string;
         mainThreadAssets: Asset[];
+        cssChunks: Asset[];
     }>;
     // @alpha
     beforeEncode: AsyncSeriesWaterfallHook<{
