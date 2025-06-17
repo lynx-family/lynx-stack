@@ -1590,7 +1590,7 @@ test.describe('reactlynx3 tests', () => {
       test('basic-element-text-color', async ({ page }, { title }) => {
         await goto(page, title);
         await wait(100);
-        await diffScreenShot(page, 'text', 'color');
+        await diffScreenShot(page, 'text', 'basic-element-text-color');
       });
     });
     test.describe('image', () => {
