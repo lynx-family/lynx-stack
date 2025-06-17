@@ -294,10 +294,9 @@ export function componentAtIndexFactory(
           __FlushElementTree(root, { triggerLayout: true, operationID, elementID: sign, listID });
         } else if (enableBatchRender && asyncFlush) {
           __FlushElementTree(root, { asyncFlush: true });
-        } else {
-          // enableBatchRender == true && asyncFlush == false
-          // in this case, no need to invoke __FlushElementTree because in the end of componentAtIndexes(), the list will invoke __FlushElementTree.
         }
+        // enableBatchRender == true && asyncFlush == false
+        // in this case, no need to invoke __FlushElementTree because in the end of componentAtIndexes(), the list will invoke __FlushElementTree.
         return sign;
       } else {
         const newCtx = childCtx.takeElements();

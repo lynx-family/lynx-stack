@@ -10,6 +10,7 @@ import { setupDocument } from '../src/document';
 import { renderOpcodesInto } from '../src/opcodes';
 import renderToString from '../src/renderToOpcodes';
 import { setupPage, SnapshotInstance, snapshotInstanceManager } from '../src/snapshot';
+import { createElement } from '../lepus';
 
 describe('renderToOpcodes', () => {
   beforeAll(() => {
@@ -714,6 +715,22 @@ describe('createElement', () => {
 
   it('children can be pass as extra arguments (length > 3)', () => {
     function Key({ key, children }) {
+      expect(key).toBe(undefined);
+      expect(children).toMatchInlineSnapshot(`
+        [
+          1,
+          1,
+        ]
+      `);
+      return <view />;
+    }
+
+    renderToString(createElement(Key, { key: 1 }, 1, 1));
+  });
+
+  it('children can be pass as extra arguments (length > 3) (JSX)', () => {
+    function Key({ key, children }) {
+      expect(key).toBe(undefined);
       expect(children).toMatchInlineSnapshot(`
         [
           1,
