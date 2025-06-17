@@ -64,7 +64,7 @@ jobs:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
     with:
-      runs-on: lynx-ubuntu-24.04-xlarge
+      runs-on: '[{"label": "lynx-ubuntu-24.04-xlarge", "name": "Ubuntu"}]'
       is-web: true
       run: |
         export NODE_OPTIONS="--max-old-space-size=32768"
@@ -88,7 +88,7 @@ jobs:
               - ENABLE_SSR=true
               - TEST_FP_ONLY=true
     with:
-      runs-on: lynx-ubuntu-24.04-xlarge
+      runs-on: '[{"label": "lynx-ubuntu-24.04-xlarge", "name": "Ubuntu"}]'
       is-web: true
       codecov-flags: "e2e"
       run: |
@@ -102,7 +102,6 @@ jobs:
     uses: ./.github/workflows/workflow-test.yml
 
     with:
-      runs-on: lynx-ubuntu-24.04-medium
       run: |
         pnpm turbo api-extractor -- --local
         if test "$(git diff -- './packages/**/*.api.md' --name-only | wc -l)" -gt 0 ; then
@@ -126,7 +125,6 @@ jobs:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
     with:
-      runs-on: lynx-ubuntu-24.04-medium
       run: |
         pnpm dlx @pnpm/registry-mock prepare
         pnpm dlx @pnpm/registry-mock &
@@ -154,7 +152,6 @@ jobs:
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
-      runs-on: lynx-ubuntu-24.04-medium
       run: >
         pnpm
         --filter @lynx-js/react-runtime
@@ -182,7 +179,6 @@ jobs:
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
-      runs-on: lynx-ubuntu-24.04-medium
       run: pnpm -r run test:type
   test-typos:
     runs-on: lynx-ubuntu-24.04-medium
@@ -197,8 +193,18 @@ jobs:
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
-      runs-on: lynx-ubuntu-24.04-medium
-      run: >
+      runs-on: >
+        '[
+          {
+            "label": "lynx-ubuntu-24.04-medium",
+            "name": "Ubuntu"
+          },
+          {
+            "label": "lynx-windows-2022-large",
+            "name": "Windows"
+          }
+        ]'
+      run: |
         pnpm run test
         --reporter=github-actions
         --reporter=dot
