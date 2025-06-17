@@ -4644,6 +4644,41 @@ test.describe('reactlynx3 tests', () => {
           await diffScreenShot(page, elementName, title, 'scroll-to-position');
         },
       );
+      test(
+        'basic-element-list-remove-action',
+        async ({ page }, { title }) => {
+          test.skip(isSSR, 'not support on SSR');
+          await goto(page, title);
+
+          // Initial state: loading = true
+          // Expected: 1, 2, 3, 5
+          await expect(page.locator('list-item').count()).resolves.toBe(4);
+          let ids = await page.locator('list-item').evaluateAll((items) =>
+            items.map((i) => i.id)
+          );
+          expect(ids).toEqual(['1', '2', '3', '5']);
+
+          // First click: loading = false
+          // Expected: 1, 4, 5
+          await page.locator('#target').click();
+          await wait(1000);
+          await expect(page.locator('list-item').count()).resolves.toBe(3);
+          ids = await page.locator('list-item').evaluateAll((items) =>
+            items.map((i) => i.id)
+          );
+          expect(ids).toEqual(['1', '4', '5']);
+
+          // Second click: loading = true
+          // Expected: 1, 2, 3, 5
+          await page.locator('#target').click();
+          await wait(1000);
+          await expect(page.locator('list-item').count()).resolves.toBe(4);
+          ids = await page.locator('list-item').evaluateAll((items) =>
+            items.map((i) => i.id)
+          );
+          expect(ids).toEqual(['1', '2', '3', '5']);
+        },
+      );
 
       test(
         'basic-element-list-waterfall',
