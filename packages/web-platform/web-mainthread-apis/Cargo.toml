@@ -1,0 +1,24 @@
+[package]
+name = "web-mainthread-apis"
+version = "0.0.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+js-sys = "0.3.77"
+wasm-bindgen = "0.2.88"
+
+[profile.release]
+opt-level = 3
+lto = true
+
+# Add rustflags to enable reference-types
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = ['-O4']
+
+# This is where we enable the reference-types feature
+[package.metadata.wasm-pack.profile.release.wasm-bindgen]
+# target-feature = ['+reference-types']
+initial_memory = 64

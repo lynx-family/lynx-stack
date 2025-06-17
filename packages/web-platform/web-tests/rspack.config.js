@@ -21,6 +21,11 @@ const config = {
     'web-core': './shell-project/web-core.ts',
     'fp-only': './shell-project/fp-only.ts',
   },
+  resolve: {
+    fallback: {
+      'module': false,
+    },
+  },
   output: {
     filename: '[name].js',
     path: path.resolve(__dirname, 'www'),
