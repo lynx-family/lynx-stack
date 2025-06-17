@@ -7,9 +7,8 @@ on:
         required: false
     inputs:
       runs-on:
-        required: false
+        required: true
         type: string
-        default: '[{"label": "lynx-ubuntu-24.04-medium", "name": "Ubuntu"}]'
       run:
         required: true
         type: string
@@ -32,11 +31,7 @@ env:
 jobs:
   check:
     timeout-minutes: 30
-    strategy:
-      matrix:
-        runs-on: ${{ fromJson(inputs.runs-on) }}
-    name: Check (${{ matrix.runs-on.name }})
-    runs-on: ${{ matrix.runs-on.label }}
+    runs-on: ${{ inputs.runs-on }}
     permissions: {}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
