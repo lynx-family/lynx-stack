@@ -75,7 +75,7 @@ export interface TemplateHooks {
    *
    * @alpha
    */
-  asyncChunkName: SyncWaterfallHook<string | undefined | null>;
+  asyncChunkName: SyncWaterfallHook<string>;
 
   /**
    * Called before the encode process. Can be used to modify the encode options.
@@ -549,7 +549,7 @@ class LynxTemplatePluginImpl {
         compilation.addRuntimeModule(
           chunk,
           new LynxAsyncChunksRuntimeModule((chunkName) => {
-            const filename = hooks.asyncChunkName.call(chunkName)!;
+            const filename = hooks.asyncChunkName.call(chunkName);
 
             return this.#getAsyncFilenameTemplate(filename);
           }),
@@ -637,8 +637,9 @@ class LynxTemplatePluginImpl {
 
     asyncChunkGroups = groupBy(
       compilation.chunkGroups
-        .filter(cg => !cg.isInitial()),
-      cg => hooks.asyncChunkName.call(cg.name)!,
+        .filter(cg => !cg.isInitial())
+        .filter(cg => cg.name !== null && cg.name !== undefined),
+      cg => hooks.asyncChunkName.call(cg.name!),
     );
 
     LynxTemplatePluginImpl.#asyncChunkGroups.set(compilation, asyncChunkGroups);
@@ -676,8 +677,8 @@ class LynxTemplatePluginImpl {
         const chunkNames =
           // We use the chunk name(provided by `webpackChunkName`) as filename
           chunkGroups
-            .map(cg => hooks.asyncChunkName.call(cg.name))
-            .filter(chunkName => chunkName !== undefined);
+            .filter(cg => cg.name !== null && cg.name !== undefined)
+            .map(cg => hooks.asyncChunkName.call(cg.name!));
 
         const filename = Array.from(new Set(chunkNames)).join('_');
 
