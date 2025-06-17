@@ -206,7 +206,7 @@ jobs:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
       runs-on: ${{ matrix.runs-on.label }}
-      run: |
+      run: >
         pnpm run test
         --reporter=github-actions
         --reporter=dot
