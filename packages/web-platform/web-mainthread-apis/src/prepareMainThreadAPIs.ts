@@ -90,7 +90,8 @@ export function prepareMainThreadAPIs(
           );
           const loadedModule = globalThis.module as LynxJSModule;
           moduleCache[path] = loadedModule;
-          globalThis.module = undefined;
+          // @ts-expect-error
+          globalThis.module = {};
           resolve(loadedModule);
         });
       } else {
