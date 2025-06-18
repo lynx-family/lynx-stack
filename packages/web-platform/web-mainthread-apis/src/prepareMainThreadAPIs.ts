@@ -71,23 +71,50 @@ export function prepareMainThreadAPIs(
     const { styleInfo, pageConfig, customSections, cardType, lepusCode } =
       template;
     markTimingInternal('decode_start');
-    const lepusCodeEntries = await Promise.all(
-      Object.entries(lepusCode).map(async ([name, url]) => {
-        const cachedModule = moduleCache[url];
-        if (cachedModule) {
-          return [name, cachedModule] as [string, LynxJSModule];
+    const loadChunk = (
+      path: string,
+      sync: boolean,
+    ): LynxJSModule | Promise<LynxJSModule> | undefined => {
+      if (lepusCode[path]) {
+        path = lepusCode[path]!;
+      }
+      if (moduleCache[path]) {
+        return moduleCache[path]!;
+      }
+      Object.assign(globalThis, { module: { exports: {} } });
+      if (!sync) {
+        return new Promise(async (resolve) => {
+          await import(
+            /* webpackIgnore: true */
+            path
+          );
+          resolve(globalThis.module as LynxJSModule);
+        });
+      } else {
+        if (
+          // @ts-expect-error in a web worker
+          typeof globalThis.importScripts === 'function'
+        ) {
+          // @ts-expect-error in a web worker
+          importSciprts(
+            /* webpackIgnore: true */
+            path,
+          );
+          return globalThis.module as LynxJSModule;
         } else {
-          Object.assign(globalThis, { module: {} });
-          await import(/* webpackIgnore: true */ url);
-          const module = globalThis.module as LynxJSModule;
-          Object.assign(globalThis, { module: {} });
-          moduleCache[url] = module;
-          return [name, module] as [string, LynxJSModule];
+          const syncLoader = new XMLHttpRequest();
+          syncLoader.open('GET', path, false);
+          syncLoader.send();
+          if (syncLoader.readyState === syncLoader.DONE) {
+            const content = syncLoader.responseText;
+            const fn = new Function(content);
+            fn();
+            return globalThis.module as LynxJSModule;
+          }
         }
-      }),
-    );
-    const lepusCodeLoaded = Object.fromEntries(lepusCodeEntries);
-    const entry = lepusCodeLoaded['root']!.exports;
+      }
+      return;
+    };
     const jsContext = new LynxCrossThreadContext({
       rpc: backgroundThreadRpc,
       receiveEventEndpoint: dispatchJSContextOnMainThreadEndpoint,
@@ -102,9 +129,9 @@ export function prepareMainThreadAPIs(
       globalProps,
       pageConfig,
       styleInfo,
-      lepusCode: lepusCodeLoaded,
       rootDom,
       callbacks: {
+        loadChunk,
         mainChunkReady: () => {
           markTimingInternal('data_processor_start');
           let initData = config.initData;
@@ -197,7 +224,8 @@ export function prepareMainThreadAPIs(
       },
     });
     markTimingInternal('decode_end');
-    entry!(mtsGlobalThis);
+    const entry = await loadChunk('root', false);
+    entry?.exports!(mtsGlobalThis);
     jsContext.__start(); // start the jsContext after the runtime is created
     return mtsGlobalThis;
   }
