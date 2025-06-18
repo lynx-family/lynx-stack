@@ -162,7 +162,7 @@ export class LynxEncodePluginImpl {
           originManifest,
         )
           .reduce(
-            ([inlined, external], [name, assert]) => {
+            ([inlined, external], [name, asset]) => {
               const shouldInline = this.#shouldInlineScript(
                 name,
                 assert.size,
