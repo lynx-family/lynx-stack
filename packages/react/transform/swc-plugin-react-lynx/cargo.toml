@@ -6,9 +6,6 @@ edition = "2021"
 [lib]
 crate-type = ["cdylib"]
 
-[profile.release]
-lto = true
-
 [dependencies]
 convert_case = "0.6.0"
 hex = "0.4.3"

@@ -21,7 +21,7 @@ const transformReactLynx = async (source, options) => {
     mode: options?.mode ?? 'production',
     cssScope: options?.cssScope ?? {
       mode: 'none',
-      filename: '',
+      filename: 'index.jsx',
     },
     shake: options?.shake ?? false,
     defineDCE: options?.defineDCE ?? false,
@@ -34,19 +34,20 @@ const transformReactLynx = async (source, options) => {
     inject: options?.inject ?? false,
   };
 
-  if (typeof options?.jsx === 'object') {
-    swcPluginReactLynxOptions.snapshot = options.jsx;
+  if (typeof options?.snapshot === 'object') {
+    swcPluginReactLynxOptions.snapshot = options.snapshot;
   }
 
   const transformOptions = {
     sourceMaps: options?.sourcemap ?? false,
-    isModule: options?.isModule ?? true,
+    isModule: options?.isModule ?? "unknown",
     jsc: {
       transform: {
         react: {
           throwIfNamespace: false,
-          importSource: '@lynx-js/react',
+          importSource: options?.snapshot?.jsxImportSource ?? '@lynx-js/react',
           runtime: 'automatic',
+          development: options?.mode === 'development',
         },
       },
       target: 'es2022',
