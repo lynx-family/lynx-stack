@@ -14,12 +14,20 @@ import { resizeObserver, type XFoldviewNg } from './XFoldviewNg.js';
   ],
 )
 export class XFoldviewHeaderNg extends HTMLElement {
+  #parentResizeObserver: ResizeObserver | undefined = undefined;
   connectedCallback() {
-    (this.parentElement as XFoldviewNg | null)?.[resizeObserver]?.observe(this);
+    let parentElement: XFoldviewNg | null = this.parentElement as
+      | XFoldviewNg
+      | null;
+    if (parentElement?.tagName === 'LYNX-WRAPPER') {
+      parentElement = parentElement.parentElement as XFoldviewNg | null;
+    }
+    this.#parentResizeObserver = parentElement?.[resizeObserver];
+    this.#parentResizeObserver?.observe(this);
   }
 
   dispose() {
-    (this.parentElement as XFoldviewNg | null)?.[resizeObserver]?.unobserve(
+    this.#parentResizeObserver?.unobserve(
       this,
     );
   }

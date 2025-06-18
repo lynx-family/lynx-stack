@@ -830,6 +830,14 @@ test.describe('web-elements test suite', () => {
       await gotoWebComponentPage(page, title);
       await diffScreenShot(page, title, '300px-inf');
     });
+    test('x-foldview-ng/basic-toolbar-in-lynx-wrapper', async ({
+      page,
+      browserName,
+    }, { title }) => {
+      await gotoWebComponentPage(page, title);
+      await wait(100);
+      expect(page.locator('x-foldview-slot-ng')).toHaveCSS('top', '200px');
+    });
     test('x-foldview-ng/size-parent-grow-children-specific', async ({
       page,
       browserName,
