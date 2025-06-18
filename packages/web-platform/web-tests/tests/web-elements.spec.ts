@@ -835,7 +835,7 @@ test.describe('web-elements test suite', () => {
       browserName,
     }, { title }) => {
       await gotoWebComponentPage(page, title);
-      await wait(100);
+      await wait(500);
       expect(page.locator('x-foldview-slot-ng')).toHaveCSS('top', '200px');
     });
     test('x-foldview-ng/size-parent-grow-children-specific', async ({
