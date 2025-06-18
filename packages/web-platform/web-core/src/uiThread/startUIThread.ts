@@ -41,7 +41,12 @@ export function startUIThread(
     backgroundRpc,
     terminateWorkers,
   } = bootWorkers(lynxGroupId, allOnUI);
-  const { markTiming, sendGlobalEvent, updateDataBackground } = startBackground(
+  const {
+    markTiming,
+    sendGlobalEvent,
+    updateDataBackground,
+    updateI18nResourceBackground,
+  } = startBackground(
     backgroundRpc,
     shadowRoot,
     callbacks,
@@ -83,7 +88,9 @@ export function startUIThread(
     ),
     sendGlobalEvent,
     updateGlobalProps: backgroundRpc.createCall(updateGlobalPropsEndpoint),
-    updateI18nResources: (data: Cloneable) =>
-      updateI18nResourcesMainThread(data),
+    updateI18nResources: (...args) => {
+      updateI18nResourcesMainThread(args[0] as Cloneable);
+      updateI18nResourceBackground(...args);
+    },
   };
 }

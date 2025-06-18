@@ -4,6 +4,7 @@
 
 import type {
   Cloneable,
+  I18nResourceTranslationOptions,
   InitI18nResources,
   NapiModulesMap,
   NativeModulesMap,
@@ -42,7 +43,10 @@ export interface LynxView {
   dispose(): Promise<void>;
   sendGlobalEvent: RpcCallType<typeof sendGlobalEventEndpoint>;
   updateGlobalProps: (data: Cloneable) => void;
-  updateI18nResources: (data: Cloneable) => void;
+  updateI18nResources: (
+    data: InitI18nResources,
+    options: I18nResourceTranslationOptions,
+  ) => void;
 }
 
 export function createLynxView(configs: LynxViewConfigs): LynxView {

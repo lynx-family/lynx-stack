@@ -18,7 +18,7 @@ vi
   .stubEnv('NODE_ENV', 'development')
 
 describe('ReactLynx rsbuild', () => {
-  test('basic usage', { timeout: 10000 }, async () => {
+  test('basic usage', async () => {
     // TODO(react-refresh): support refresh
     vi.stubEnv('NODE_ENV', 'production')
     const { pluginReactLynx } = await import('../src/index.js')

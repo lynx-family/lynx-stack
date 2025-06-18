@@ -13,6 +13,7 @@ import {
   type LynxCrossThreadContext,
   systemInfo,
   type BackMainThreadContextConfig,
+  I18nResource,
 } from '@lynx-js/web-constants';
 import { createInvokeUIMethod } from './crossThreadHandlers/createInvokeUIMethod.js';
 import { registerPublicComponentEventHandler } from './crossThreadHandlers/registerPublicComponentEventHandler.js';
@@ -25,6 +26,7 @@ import { registerSendGlobalEventHandler } from './crossThreadHandlers/registerSe
 import { createJSObjectDestructionObserver } from './crossThreadHandlers/createJSObjectDestructionObserver.js';
 import type { TimingSystem } from './createTimingSystem.js';
 import { registerUpdateGlobalPropsHandler } from './crossThreadHandlers/registerUpdateGlobalPropsHandler.js';
+import { registerUpdateI18nResource } from './crossThreadHandlers/registerUpdateI18nResource.js';
 
 let nativeAppCount = 0;
 const sharedData: Record<string, unknown> = {};
@@ -88,6 +90,7 @@ export async function createNativeApp(
       },
     };
   };
+  const i18nResource = new I18nResource();
   const nativeApp: NativeApp = {
     id: (nativeAppCount++).toString(),
     ...performanceApis,
@@ -150,6 +153,7 @@ export async function createNativeApp(
         tt,
       );
       registerUpdateGlobalPropsHandler(uiThreadRpc, tt);
+      registerUpdateI18nResource(uiThreadRpc, mainThreadRpc, i18nResource, tt);
       timingSystem.registerGlobalEmitter(tt.GlobalEventEmitter);
       (tt.lynx.getCoreContext() as LynxCrossThreadContext).__start();
     },
@@ -162,6 +166,7 @@ export async function createNativeApp(
     getSharedData<T>(dataKey: string): T | undefined {
       return sharedData[dataKey] as T | undefined;
     },
+    i18nResource,
   };
   return nativeApp;
 }
