@@ -88,7 +88,10 @@ export function prepareMainThreadAPIs(
             /* webpackIgnore: true */
             path
           );
-          resolve(globalThis.module as LynxJSModule);
+          const loadedModule = globalThis.module as LynxJSModule;
+          moduleCache[path] = loadedModule;
+          globalThis.module = undefined;
+          resolve(loadedModule);
         });
       } else {
         if (
