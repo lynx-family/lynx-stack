@@ -410,7 +410,7 @@ export class LynxView extends HTMLElement {
             this.attachShadow({ mode: 'open' });
           }
           const lynxGroupId = this.lynxGroupId;
-          const threadStrategy = (this.threadStrategy ?? 'multi-thread') as
+          const threadStrategy = (this.threadStrategy ?? 'all-on-ui') as
             | 'all-on-ui'
             | 'multi-thread';
           const lynxView = createLynxView({
