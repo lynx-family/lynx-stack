@@ -35,8 +35,8 @@ jobs:
     steps:
       - name: echo github.com ip
         run: |
-          apt update
-          apt install -y dnsutils
+          sudo apt update
+          sudo apt install -y dnsutils
           echo "github.com IPs:"
           dig +short github.com | sort -u
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
