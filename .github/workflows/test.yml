@@ -33,6 +33,12 @@ jobs:
     runs-on: lynx-ubuntu-24.04-medium
     timeout-minutes: 10
     steps:
+      - name: echo github.com ip
+        run: |
+          apt update
+          apt install -y dnsutils
+          echo "github.com IPs:"
+          dig +short github.com | sort -u
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:
           # We need full history for changeset status check
