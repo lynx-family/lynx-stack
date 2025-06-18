@@ -161,7 +161,7 @@ Foo, App
 `,
         {
           ...defaultOptions,
-          jsx: {
+          snapshot: {
             ...defaultOptions.jsx,
             isDynamicComponent: true,
           },

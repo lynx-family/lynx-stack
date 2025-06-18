@@ -1,20 +1,14 @@
 ERROR in ./jsx/namespace-name/index.jsx
+× ModuleError: Error:   x JSX Namespace is disabled
+,-[<LINE:COLUMN>]
+1 | function App() {
+2 |   return <main-thread:foo />
+:           ^^^^^^^^^^^^^^^
+3 | }
+`----
+
+
+ERROR in ./jsx/namespace-name/index.jsx
 × Module build failed:
 ╰─▶   × Error: react-transform failed
 at Object.backgroundLoader (file://<ROOT>/packages/webpack/react-webpack-plugin/src/loaders/background.ts:<LINE:COLUMN>)
-at <ROOT>/node_modules/<PNPM_INNER>/@rspack/core/dist/index.js:<LINE:COLUMN>
-at node:internal/util:<LINE:COLUMN>
-at new Promise (<anonymous>)
-at node:internal/util:<LINE:COLUMN>
-at isomorphoicRun (<ROOT>/node_modules/<PNPM_INNER>/@rspack/core/dist/index.js:<LINE:COLUMN>)
-at runLoaders (<ROOT>/node_modules/<PNPM_INNER>/@rspack/core/dist/index.js:<LINE:COLUMN>)
-
-ERROR in ./jsx/namespace-name/index.jsx <LINE:COLUMN>-25
-× ModuleError: JSX Namespace is disabled
-╭─[<LINE:COLUMN>]
-1  function App() {
-2    return <main-thread:foo />
-·           ───────┬───────
-·                  ╰── JSX Namespace is disabled
-3  }
-╰────

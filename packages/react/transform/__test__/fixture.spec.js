@@ -121,7 +121,7 @@ describe('jsx', () => {
       defineDCE: true,
       sourcemap: false,
       compat: false,
-      jsx: true,
+      snapshot: true,
       shake: true,
       cssScope: false,
       directiveDCE: {
@@ -132,7 +132,7 @@ describe('jsx', () => {
 
     expect(result).toMatchInlineSnapshot(`
       {
-        "code": "import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
+        "code": "const { jsx: _jsx } = require("@lynx-js/react/jsx-runtime");
       /*#__PURE__*/ _jsx(Foo, {
           "main-thread:foo": foo
       });
@@ -176,7 +176,7 @@ Component, View
         filename: '',
         sourcemap: false,
         cssScope: false,
-        jsx: {
+        snapshot: {
           runtimePkg: '@lynx-js/react-runtime',
           filename: '',
           target: 'MIXED',
@@ -247,7 +247,7 @@ Component, View
       filename: '',
       sourcemap: false,
       cssScope: false,
-      jsx: {
+      snapshot: {
         runtimePkg: '@lynx-js/react-runtime',
         filename: '',
         target: 'MIXED',
@@ -292,7 +292,7 @@ Component, View
       `);
       expect(result.errors).toMatchInlineSnapshot(`[]`);
       expect(result.code).toMatchInlineSnapshot(`
-        "/*#__PURE__*/ import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
+        "/*#__PURE__*/ const { jsx: _jsx } = require("@lynx-js/react/jsx-runtime");
         _jsx(Comp, {
             ...s
         });
@@ -306,21 +306,8 @@ Component, View
       expect(result.warnings).toMatchInlineSnapshot(`[]`);
       expect(result.errors).toMatchInlineSnapshot(`[]`);
       expect(result.code).toMatchInlineSnapshot(`
-        "/*#__PURE__*/ import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
-        import * as ReactLynx from "@lynx-js/react";
-        import * as ReactLynx1 from "@lynx-js/react/internal";
-        const __snapshot_da39a_4da58493_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_4da58493_1", function() {
-            const pageId = ReactLynx.__pageId;
-            const el = __CreateView(pageId);
-            return [
-                el
-            ];
-        }, [
-            (snapshot, index, oldValue)=>ReactLynx.updateSpread(snapshot, index, oldValue, 0)
-        ], ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry, [
-            0
-        ]);
-        /*#__PURE__*/ ReactLynx1.wrapWithLynxComponent((__c, __spread)=>/*#__PURE__*/ _jsx(__snapshot_da39a_4da58493_1, {
+        "/*#__PURE__*/ const { jsx: _jsx } = require("@lynx-js/react/jsx-runtime");
+        /*#__PURE__*/ ReactLynx.wrapWithLynxComponent((__c, __spread)=>/*#__PURE__*/ _jsx(__snapshot_da39a_4da58493_1, {
                 values: [
                     {
                         ...__spread,
@@ -341,7 +328,7 @@ Component, View
     filename: '',
     sourcemap: false,
     cssScope: false,
-    jsx: {
+    snapshot: {
       runtimePkg: '@lynx-js/react-runtime',
       filename: '',
       target: 'MIXED',
@@ -437,7 +424,7 @@ describe('syntaxConfig', () => {
         tsx: false,
       },
       cssScope: false,
-      jsx: false,
+      snapshot: false,
       directiveDCE: false,
       defineDCE: false,
       shake: false,
@@ -459,7 +446,7 @@ describe('syntaxConfig', () => {
         tsx: true,
       },
       cssScope: false,
-      jsx: false,
+      snapshot: false,
       directiveDCE: false,
       defineDCE: false,
       shake: false,
@@ -490,7 +477,7 @@ describe('syntaxConfig', () => {
         tsx: true,
       },
       cssScope: false,
-      jsx: false,
+      snapshot: false,
       directiveDCE: false,
       defineDCE: false,
       shake: false,
@@ -516,7 +503,7 @@ describe('syntaxConfig', () => {
       },
       isModule: false,
       cssScope: false,
-      jsx: false,
+      snapshot: false,
       directiveDCE: false,
       defineDCE: false,
       shake: false,
@@ -560,7 +547,7 @@ class X {
         filename: '',
         sourcemap: false,
         cssScope: false,
-        jsx: false,
+        snapshot: false,
         directiveDCE: {
           target: 'LEPUS',
         },
@@ -640,7 +627,7 @@ export default class App extends Component {
         filename: '',
         sourcemap: false,
         cssScope: false,
-        jsx: false,
+        snapshot: false,
         directiveDCE: false,
         defineDCE: false,
         shake: true,
@@ -705,7 +692,7 @@ describe('dynamic import', () => {
           tsx: true,
         },
         cssScope: false,
-        jsx: false,
+        snapshot: false,
         directiveDCE: false,
         defineDCE: false,
         shake: false,
@@ -782,7 +769,7 @@ X();
         filename: '',
         sourcemap: false,
         cssScope: false,
-        jsx: false,
+        snapshot: false,
         directiveDCE: false,
         defineDCE: {
           define: {
@@ -852,7 +839,7 @@ X5();
         filename: '',
         sourcemap: false,
         cssScope: false,
-        jsx: false,
+        snapshot: false,
         directiveDCE: false,
         defineDCE: {
           define: {
@@ -910,7 +897,7 @@ X();
         filename: '',
         sourcemap: false,
         cssScope: false,
-        jsx: false,
+        snapshot: false,
         directiveDCE: false,
         defineDCE: {
           define: {
@@ -954,7 +941,7 @@ X();
         filename: '',
         sourcemap: false,
         cssScope: false,
-        jsx: false,
+        snapshot: false,
         directiveDCE: false,
         defineDCE: {
           define: {
@@ -996,7 +983,7 @@ X();
         filename: '',
         sourcemap: false,
         cssScope: false,
-        jsx: false,
+        snapshot: false,
         directiveDCE: false,
         defineDCE: {
           define: {
@@ -1039,7 +1026,7 @@ X();
         filename: '',
         sourcemap: false,
         cssScope: false,
-        jsx: false,
+        snapshot: false,
         directiveDCE: false,
         defineDCE: {
           define: {
@@ -1090,7 +1077,7 @@ class X extends Component {
         filename: '',
         sourcemap: false,
         cssScope: false,
-        jsx: false,
+        snapshot: false,
         directiveDCE: false,
         defineDCE: {
           define: {
@@ -1107,15 +1094,7 @@ class X extends Component {
     expect(
       result.code,
     ).toMatchInlineSnapshot(`
-      "import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
-      import * as ReactLynx from "@lynx-js/react";
-      const __snapshot_da39a_6525c76e_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_6525c76e_1", function() {
-          const pageId = ReactLynx.__pageId;
-          const el = __CreateView(pageId);
-          return [
-              el
-          ];
-      }, null, null, undefined, globDynamicComponentEntry, null);
+      "const { jsx: _jsx } = require("@lynx-js/react/jsx-runtime");
       class X extends Component {
           constructor(){}
           render() {
@@ -1142,7 +1121,7 @@ describe('worklet', () => {
           filename: '',
           sourcemap: false,
           cssScope: false,
-          jsx: false,
+          snapshot: false,
           directiveDCE: true,
           defineDCE: {
             define: {
@@ -1235,7 +1214,7 @@ export function foo(event) {
         filename: '',
         sourcemap: false,
         cssScope: false,
-        jsx: false,
+        snapshot: false,
         directiveDCE: true,
         defineDCE: {
           define: {
@@ -1302,7 +1281,7 @@ console.log(bar)
         filename: '',
         sourcemap: false,
         cssScope: false,
-        jsx: false,
+        snapshot: false,
         directiveDCE: true,
         defineDCE: {
           define: {
@@ -1322,9 +1301,7 @@ console.log(bar)
     );
 
     expect(code).toMatchInlineSnapshot(`
-      "import { loadWorkletRuntime as __loadWorkletRuntime } from "@lynx-js/react";
-      var loadWorkletRuntime = __loadWorkletRuntime;
-      let foo = {
+      "let foo = {
           _wkltId: "da39:2ec866b7:1"
       };
       let bar = {
@@ -1334,17 +1311,6 @@ console.log(bar)
           _wkltId: "da39:2ec866b7:2"
       };
       console.log(bar);
-      loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "da39:2ec866b7:1", function() {
-          const foo = lynxWorkletImpl._workletMap["da39:2ec866b7:1"].bind(this);
-          "main thread";
-          return null;
-      });
-      loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "da39:2ec866b7:2", function() {
-          const bar = lynxWorkletImpl._workletMap["da39:2ec866b7:2"].bind(this);
-          let { foo } = this["_c"];
-          "main thread";
-          foo();
-      });
       "
     `);
   });
@@ -1364,7 +1330,7 @@ function getCurrentDelta(event) {
         filename: '',
         sourcemap: false,
         cssScope: false,
-        jsx: false,
+        snapshot: false,
         directiveDCE: true,
         defineDCE: {
           define: {
@@ -1383,17 +1349,6 @@ function getCurrentDelta(event) {
       },
     );
 
-    expect(code).toMatchInlineSnapshot(`
-      "import { loadWorkletRuntime as __loadWorkletRuntime } from "@lynx-js/react";
-      var loadWorkletRuntime = __loadWorkletRuntime;
-      loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "da39:b69521f0:1", function(event) {
-          lynxWorkletImpl._workletMap["da39:b69521f0:1"].bind(this);
-          let { foo, a, b } = this["_c"];
-          "main thread";
-          if (foo(a)) foo(b);
-          return null;
-      });
-      "
-    `);
+    expect(code).toMatchInlineSnapshot(`""`);
   });
 });

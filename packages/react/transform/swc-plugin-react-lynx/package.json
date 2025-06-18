@@ -1,5 +1,6 @@
 {
   "name": "@lynx-js/swc-plugin-react-lynx",
+  "private": true,
   "version": "0.1.0",
   "description": "",
   "type": "module",
@@ -8,12 +9,12 @@
     "react",
     "swc-plugin"
   ],
-  "main": "./swc_plugin_react_lynx.wasm",
-  "types": "./index.d.ts",
-  "files": [
-    "swc_plugin_react_lynx.wasm",
-    "index.d.ts"
-  ],
+  "exports": {
+    ".": {
+      "default": "./swc_plugin_react_lynx.wasm",
+      "types": "./index.d.ts"
+    }
+  },
   "scripts": {
     "build": "node ./build.js",
     "test:cargo": "cargo test"

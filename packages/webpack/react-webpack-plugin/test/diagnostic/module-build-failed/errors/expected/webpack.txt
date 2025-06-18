@@ -1,6 +1,12 @@
 ERROR in ./module-build-failed/errors/invalid.js
 Module Error (from ../../lib/loaders/background.js):
-Expected ';', '}' or <eof>
+Error:   x Expected ';', '}' or <eof>
+   ,-[<LINE:COLUMN>]
+ 1 | /* eslint-disable */
+ 2 | This is an invalid JavaScript file
+   : ^^|^ ^^
+   :   `-- This is the expression part of an expression statement
+   `----
 
 ERROR in ./module-build-failed/errors/invalid.js
 Module build failed (from ../../lib/loaders/background.js):
