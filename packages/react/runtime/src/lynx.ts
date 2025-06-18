@@ -9,12 +9,14 @@ import { initProfileHook } from './debug/profile.js';
 import { document, setupBackgroundDocument } from './document.js';
 import { initDelayUnmount } from './lifecycle/delayUnmount.js';
 import { replaceCommitHook } from './lifecycle/patch/commit.js';
+import { addCtxNotFoundEventListener } from './lifecycle/patch/error.js';
 import { injectUpdateMainThread } from './lifecycle/patch/updateMainThread.js';
 import { injectCalledByNative } from './lynx/calledByNative.js';
-import { setupLynxTestingEnv } from './lynx/env.js';
+import { setupLynxEnv } from './lynx/env.js';
 import { injectLepusMethods } from './lynx/injectLepusMethods.js';
 import { initTimingAPI } from './lynx/performance.js';
 import { injectTt } from './lynx/tt.js';
+
 export { runWithForce } from './lynx/runWithForce.js';
 
 // @ts-expect-error Element implicitly has an 'any' type because type 'typeof globalThis' has no index signature
@@ -44,6 +46,7 @@ if (__BACKGROUND__) {
   options.document = document as any;
   setupBackgroundDocument();
   injectTt();
+  addCtxNotFoundEventListener();
 
   if (process.env['NODE_ENV'] === 'test') {}
   else {
@@ -53,4 +56,4 @@ if (__BACKGROUND__) {
   }
 }
 
-setupLynxTestingEnv();
+setupLynxEnv();
