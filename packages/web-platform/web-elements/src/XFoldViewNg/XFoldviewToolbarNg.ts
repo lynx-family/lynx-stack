@@ -6,6 +6,7 @@
 import { Component } from '@lynx-js/web-elements-reactive';
 import { CommonEventsAndMethods } from '../common/CommonEventsAndMethods.js';
 import { resizeObserver, type XFoldviewNg } from './XFoldviewNg.js';
+import { getCombinedDirectParentElement } from '../common/getCombinedParentElement.js';
 
 @Component<typeof XFoldviewToolbarNg>('x-foldview-toolbar-ng', [
   CommonEventsAndMethods,
@@ -13,12 +14,10 @@ import { resizeObserver, type XFoldviewNg } from './XFoldviewNg.js';
 export class XFoldviewToolbarNg extends HTMLElement {
   #parentResizeObserver: ResizeObserver | undefined = undefined;
   connectedCallback() {
-    let parentElement: XFoldviewNg | null = this.parentElement as
-      | XFoldviewNg
-      | null;
-    if (parentElement?.tagName === 'LYNX-WRAPPER') {
-      parentElement = parentElement.parentElement as XFoldviewNg | null;
-    }
+    const parentElement = getCombinedDirectParentElement<XFoldviewNg>(
+      this,
+      'X-FOLDVIEW-NG',
+    );
     this.#parentResizeObserver = parentElement?.[resizeObserver];
     this.#parentResizeObserver?.observe(this);
   }
