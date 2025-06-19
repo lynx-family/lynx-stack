@@ -12,7 +12,7 @@ pub fn accept_raw_uint16_ptr(ptr: *const u16, len: usize) {
   unsafe {
     let slice = core::slice::from_raw_parts(ptr, len);
     // Call the tokenize function with our data and callback
-    css::tokenize::tokenize(&slice);
+    css::parse_inline_style::parse_inline_style(slice, on_declaration);
   }
 }
 
@@ -30,4 +30,17 @@ pub fn free(ptr: *mut u8, size: usize) {
   // Assuming align is 1 as used in malloc.
   let layout = std::alloc::Layout::from_size_align(size, 8).unwrap();
   unsafe { std::alloc::dealloc(ptr, layout) }
+}
+
+#[wasm_bindgen(
+  inline_js = "export function on_declaration(nS, nE, vS, vE, im) { globalThis._tokenizer_on_declaration_callback(nS, nE, vS, vE, im); }"
+)]
+extern "C" {
+  fn on_declaration(
+    name_start: usize,
+    name_end: usize,
+    value_start: usize,
+    value_end: usize,
+    is_important: bool,
+  );
 }

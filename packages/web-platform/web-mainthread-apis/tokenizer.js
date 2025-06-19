@@ -4,7 +4,7 @@ var ENVIRONMENT_IS_NODE = typeof process == 'object'
   && typeof process.versions == 'object'
   && typeof process.versions.node == 'string';
 const start = async () => {
-  // initializate wasm module in node.js environment
+  // initialize wasm module in node.js environment
   if (ENVIRONMENT_IS_NODE) {
     const path = await import(/* webpackIgnore:true */ 'node:path');
     const fs = await import(/* webpackIgnore:true */ 'node:fs/promises');
@@ -26,11 +26,11 @@ const stringToUTF16 = (ptr, str, len) => {
     HEAPU16[(ptr >> 1) + i] = str.charCodeAt(i);
   }
 };
-export function tokenize(str, onToken) {
+export function parseInlineStyle(str, onDeclaration) {
   const len = str.length;
   const ptr = wasm.malloc(len * 2);
   stringToUTF16(ptr, str, len);
-  globalThis._tokenizer_on_token_callback = onToken;
+  globalThis._tokenizer_on_declaration_callback = onDeclaration;
   wasm.accept_raw_uint16_ptr(ptr, len);
   globalThis._tokenizer_on_token_callback = null;
   wasm.free(ptr, len * 2);
