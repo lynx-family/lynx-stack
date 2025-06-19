@@ -77,6 +77,7 @@ interface PatchOptions {
  * Replaces Preact's default commit hook with our custom implementation
  */
 function replaceCommitHook(): void {
+  // This is actually not used since Preact use `hooks._commit` for callbacks of `useLayoutEffect`.
   const originalPreactCommit = options[COMMIT];
   const commit = async (vnode: VNode, commitQueue: any[]) => {
     // Skip commit phase for MT runtime
@@ -97,7 +98,6 @@ function replaceCommitHook(): void {
 
     // Register the commit task
     globalCommitTaskMap.set(commitTaskId, () => {
-      originalPreactCommit?.(vnode, commitQueue);
       if (backgroundSnapshotInstancesToRemove.length) {
         setTimeout(() => {
           backgroundSnapshotInstancesToRemove.forEach(id => {
@@ -115,6 +115,7 @@ function replaceCommitHook(): void {
     if (!snapshotPatch && workletRefInitValuePatch.length === 0) {
       // before hydration, skip patch
       applyQueuedRefs();
+      originalPreactCommit?.(vnode, commitQueue);
       return;
     }
 
@@ -146,6 +147,7 @@ function replaceCommitHook(): void {
     });
 
     applyQueuedRefs();
+    originalPreactCommit?.(vnode, commitQueue);
   };
   options[COMMIT] = commit as ((...args: Parameters<typeof commit>) => void);
 }
