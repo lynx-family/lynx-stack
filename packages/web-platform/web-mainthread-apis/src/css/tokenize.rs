@@ -1,7 +1,8 @@
+use crate::css::parse_inline_style::ParserState;
 use crate::css::{char_code_definitions, types::*, utils::*};
 use crate::*;
 
-const URL_STR: [u16; 3] = [0x0075, 0x0072, 0x006C];
+const URL_STR: [u16; 3] = ['u' as u16, 'r' as u16, 'l' as u16];
 /**
  * this code forked from css-tree
  */
@@ -249,13 +250,7 @@ pub fn consume_url_token(source: &[u16], offset: &mut usize, token_type: &mut u1
     *offset += 1;
   }
 }
-#[wasm_bindgen(
-  inline_js = "export function on_token(type, start, end) { globalThis._tokenizer_on_token_callback(type, start, end); }"
-)]
-extern "C" {
-  fn on_token(a: u16, b: usize, c: usize);
-}
-pub fn tokenize(source: &[u16]) {
+pub fn tokenize(source: &[u16], parser: &mut ParserState) {
   let source_length = source.len();
   let mut start: usize = is_bom!(get_char_code!(source, source_length, 0));
   let mut offset = start;
@@ -537,7 +532,7 @@ pub fn tokenize(source: &[u16]) {
         offset += 1;
       }
     }
-    on_token(token_type, start, offset);
+    parser.on_token(source, token_type, start, offset);
     start = offset;
   }
 }
