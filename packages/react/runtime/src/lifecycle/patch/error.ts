@@ -8,15 +8,16 @@ export const ctxNotFoundType = 'Lynx.Error.CtxNotFound';
 
 const errorMsg = 'snapshotPatchApply failed: ctx not found';
 
+let ctxNotFoundEventListener: ((e: RuntimeProxy.Event) => void) | null = null;
+
 export interface CtxNotFoundData {
   id: number;
 }
 
 export function sendCtxNotFoundEventToBackground(id: number): void {
-  const error = new Error(errorMsg);
   /* v8 ignore next 3 */
   if (!lynx.getJSContext) {
-    throw error;
+    throw new Error(errorMsg);
   }
   lynx.getJSContext().dispatchEvent({
     type: ctxNotFoundType,
@@ -30,17 +31,31 @@ export function reportCtxNotFound(data: CtxNotFoundData): void {
   const id = data.id;
   const instance = backgroundSnapshotInstanceManager.values.get(id);
 
-  const snapshotDef = [...snapshotManager.values.entries()]
-    .filter(({ 1: v }) => v === instance?.__snapshot_def)
-    .map(([k]) => k);
+  let snapshotType = 'null';
 
-  const snapshotType = snapshotDef[0] ?? 'null';
-  const error = new Error(`${errorMsg}, snapshot type: '${snapshotType}'`);
-  lynx.reportError(error);
+  if (instance && instance.__snapshot_def) {
+    for (const [snapshotId, snapshot] of snapshotManager.values.entries()) {
+      if (snapshot === instance.__snapshot_def) {
+        snapshotType = snapshotId;
+        break;
+      }
+    }
+  }
+
+  lynx.reportError(new Error(`${errorMsg}, snapshot type: '${snapshotType}'`));
 }
 
 export function addCtxNotFoundEventListener(): void {
-  lynx.getCoreContext?.().addEventListener(ctxNotFoundType, e => {
+  ctxNotFoundEventListener = (e) => {
     reportCtxNotFound(e.data as CtxNotFoundData);
-  });
+  };
+  lynx.getCoreContext?.().addEventListener(ctxNotFoundType, ctxNotFoundEventListener);
+}
+
+export function removeCtxNotFoundEventListener(): void {
+  const coreContext = lynx.getCoreContext?.();
+  if (coreContext && ctxNotFoundEventListener) {
+    coreContext.removeEventListener(ctxNotFoundType, ctxNotFoundEventListener);
+    ctxNotFoundEventListener = null;
+  }
 }

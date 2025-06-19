@@ -18,6 +18,7 @@ import { delayedEvents, delayedPublishEvent } from '../lifecycle/event/delayEven
 import { delayLifecycleEvent, delayedLifecycleEvents } from '../lifecycle/event/delayLifecycleEvents.js';
 import { commitPatchUpdate, genCommitTaskId, globalCommitTaskMap } from '../lifecycle/patch/commit.js';
 import type { PatchList } from '../lifecycle/patch/commit.js';
+import { removeCtxNotFoundEventListener } from '../lifecycle/patch/error.js';
 import { runDelayedUiOps } from '../lifecycle/ref/delay.js';
 import { reloadBackground } from '../lifecycle/reload.js';
 import { CHILDREN } from '../renderToOpcodes/constants.js';
@@ -36,6 +37,7 @@ function injectTt(): void {
   tt.callDestroyLifetimeFun = () => {
     destroyWorklet();
     destroyBackground();
+    removeCtxNotFoundEventListener();
   };
   tt.updateGlobalProps = updateGlobalProps;
   tt.updateCardData = updateCardData;
