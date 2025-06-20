@@ -64,10 +64,20 @@ const event_method = URL.createObjectURL(
   ),
 );
 
+const searchParams = new URLSearchParams(document.location.search);
+const casename = searchParams.get('casename');
+
 async function run() {
   const lepusjs = '/resources/web-core.main-thread.json';
   const lynxView = document.createElement('lynx-view') as LynxView;
-  lynxView.setAttribute('url', lepusjs);
+  if (casename === 'enable-css-selector-false') {
+    lynxView.setAttribute(
+      'url',
+      '/resources/web-core.enable-css-selector-false.json',
+    );
+  } else {
+    lynxView.setAttribute('url', lepusjs);
+  }
   ENABLE_MULTI_THREAD
     ? lynxView.setAttribute('thread-strategy', 'multi-thread')
     : lynxView.setAttribute('thread-strategy', 'all-on-ui');

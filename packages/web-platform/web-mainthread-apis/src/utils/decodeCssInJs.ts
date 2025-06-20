@@ -23,7 +23,7 @@ export function decodeCssInJs(
       if (oneRule) declarations.push(...oneRule);
     }
   } else {
-    throw new Error(`[lynx-web] cannot find styleinfo for cssid ${cssId}`);
+    console.warn(`[lynx-web] cannot find styleinfo for cssid ${cssId}`);
   }
   return declarations.map(([property, value]) => `${property}:${value};`).join(
     '',
