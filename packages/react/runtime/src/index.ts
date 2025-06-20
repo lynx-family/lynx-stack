@@ -13,6 +13,7 @@ import {
   lazy as backgroundLazy,
   createContext,
   createElement,
+  cloneElement,
   createRef,
   forwardRef,
   isValidElement,
@@ -86,6 +87,7 @@ export {
   Suspense,
   lazy,
   createElement,
+  cloneElement,
   useSyncExternalStore,
 };
 

@@ -352,7 +352,7 @@ describe('document - background', () => {
     expect(scratch).toMatchInlineSnapshot(`
       <root>
         <__Card__:__snapshot_a94a8_test_13
-          __0="world"
+          0="world"
         >
           "Hello"
         </__Card__:__snapshot_a94a8_test_13>
@@ -483,7 +483,7 @@ describe('document - background', () => {
     expect(scratch).toMatchInlineSnapshot(`
       <root>
         <__Card__:__snapshot_a94a8_test_22
-          __0="Hello"
+          0="Hello"
         />
       </root>
     `);
@@ -491,7 +491,7 @@ describe('document - background', () => {
     expect(scratch).toMatchInlineSnapshot(`
       <root>
         <__Card__:__snapshot_a94a8_test_22
-          __0={null}
+          0={null}
         />
       </root>
     `);
@@ -506,7 +506,7 @@ describe('document - background', () => {
     expect(scratch).toMatchInlineSnapshot(`
       <root>
         <__Card__:__snapshot_a94a8_test_22
-          __0={[MockFunction spy]}
+          0={[MockFunction spy]}
         />
       </root>
     `);
@@ -516,7 +516,7 @@ describe('document - background', () => {
     expect(scratch).toMatchInlineSnapshot(`
       <root>
         <__Card__:__snapshot_a94a8_test_22
-          __0={[MockFunction spy]}
+          0={[MockFunction spy]}
         />
       </root>
     `);
@@ -610,7 +610,7 @@ describe('document - background', () => {
     expect(scratch).toMatchInlineSnapshot(`
       <root>
         <__Card__:__snapshot_a94a8_test_23
-          __0="bar"
+          0="bar"
         />
       </root>
     `);

@@ -13,6 +13,7 @@ mod swc_plugin_directive_dce;
 mod swc_plugin_dynamic_import;
 mod swc_plugin_extract_str;
 mod swc_plugin_inject;
+mod swc_plugin_list;
 mod swc_plugin_refresh;
 mod swc_plugin_shake;
 mod swc_plugin_snapshot;
@@ -480,6 +481,11 @@ fn transform_react_lynx_inner(
       enabled,
     );
 
+    let list_plugin = Optional::new(
+      visit_mut_pass(swc_plugin_list::ListVisitor::new(Some(&comments))),
+      enabled,
+    );
+
     let shake_plugin = match options.shake.clone() {
       Either::A(config) => Optional::new(visit_mut_pass(ShakeVisitor::default()), config),
       Either::B(config) => Optional::new(visit_mut_pass(ShakeVisitor::new(config)), true),
@@ -603,7 +609,7 @@ fn transform_react_lynx_inner(
       compat_plugin,
       worklet_plugin,
       css_scope_plugin,
-      snapshot_plugin,
+      (list_plugin, snapshot_plugin),
       directive_dce_plugin,
       define_dce_plugin,
       simplify_pass_1, // do simplify after DCE above to make shake below works better

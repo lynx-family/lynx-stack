@@ -4,6 +4,8 @@
 import { hydrate } from './hydrate.js';
 import { applyRefQueue } from './snapshot/workletRef.js';
 import type { SnapshotInstance } from './snapshot.js';
+import { LifecycleConstant } from './lifecycleConstant.js';
+import { maybePromise } from './utils.js';
 
 export interface ListUpdateInfo {
   flush(): void;
@@ -248,10 +250,10 @@ export function clearListGlobal(): void {
 export function componentAtIndexFactory(
   ctx: SnapshotInstance[],
 ): [ComponentAtIndexCallback, ComponentAtIndexesCallback] {
-  const componentAtIndex = (
+  const componentAtChildCtx = (
     list: FiberElement,
     listID: number,
-    cellIndex: number,
+    childCtx: SnapshotInstance,
     operationID: number,
     enableReuseNotification: boolean,
     enableBatchRender: boolean = false,
@@ -263,12 +265,55 @@ export function componentAtIndexFactory(
       throw new Error('componentAtIndex called on removed list');
     }
 
-    const childCtx = ctx[cellIndex];
-    if (!childCtx) {
-      throw new Error('childCtx not found');
-    }
-
     const platformInfo = childCtx.__listItemPlatformInfo || {};
+
+    // The lifecycle of this `__extraProps.isReady`:
+    //   0 -> Promise<number> -> 1
+    // 0: The initial state, the list-item is not ready yet, we will send a event to background
+    //    when `componentAtIndex` is called on it
+    // Promise<number>: A promise that will be resolved when the list-item is ready
+    // 1: The list-item is ready, we can use it to render the list
+    if (childCtx.__extraProps?.['isReady'] === 0) {
+      __OnLifecycleEvent([LifecycleConstant.publishEvent, {
+        handlerName: `${childCtx.__id}:__extraProps:onComponentAtIndex`,
+        data: {
+          listID,
+          childCtxId: childCtx.__id,
+        },
+      }]);
+
+      let p: Promise<number>;
+      return (p = new Promise<number>((resolve) => {
+        Object.defineProperty(childCtx.__extraProps, 'isReady', {
+          set(isReady) {
+            if (isReady === 1) {
+              delete childCtx.__extraProps!['isReady'];
+              childCtx.__extraProps!['isReady'] = 1;
+
+              Promise.resolve().then(() => {
+                // the cellIndex may be changed already, but the `childCtx` is the same
+                resolve(componentAtChildCtx(list, listID, childCtx, operationID, enableReuseNotification));
+              });
+            }
+          },
+          get() {
+            return p;
+          },
+        });
+      }));
+    } else if (maybePromise<number>(childCtx.__extraProps?.['isReady'])) {
+      return childCtx.__extraProps['isReady'].then((uiSign) => {
+        if (!enableBatchRender) {
+          __FlushElementTree(root, { triggerLayout: true, operationID, elementID: sign, listID });
+        } else if (enableBatchRender && asyncFlush) {
+          __FlushElementTree(root, { asyncFlush: true });
+        } else {
+          // enableBatchRender == true && asyncFlush == false
+          // in this case, no need to invoke __FlushElementTree because in the end of componentAtIndexes(), the list will invoke __FlushElementTree.
+        }
+        return uiSign;
+      });
+    }
 
     const uniqID = childCtx.type + (platformInfo['reuse-identifier'] ?? '');
     const recycleSignMap = recycleMap.get(uniqID);
@@ -311,6 +356,12 @@ export function componentAtIndexFactory(
       recycleSignMap.delete(sign);
       hydrate(oldCtx, childCtx);
       oldCtx.unRenderElements();
+      if (oldCtx.__extraProps?.['isReady'] === 1) {
+        __OnLifecycleEvent([LifecycleConstant.publishEvent, {
+          handlerName: `${oldCtx.__id}:__extraProps:onEnqueueComponent`,
+          data: {},
+        }]);
+      }
       const root = childCtx.__element_root!;
       applyRefQueue();
       if (!enableBatchRender) {
@@ -364,25 +415,68 @@ export function componentAtIndexFactory(
     return sign;
   };
 
-  const componentAtIndexes = (
+  function componentAtIndex(
+    list: FiberElement,
+    listID: number,
+    cellIndex: number,
+    operationID: number,
+    enableReuseNotification: boolean,
+  ) {
+    const childCtx = ctx[cellIndex];
+    if (!childCtx) {
+      throw new Error('childCtx not found');
+    }
+    return componentAtChildCtx(list, listID, childCtx, operationID, enableReuseNotification);
+  }
+
+  function componentAtIndexes(
     list: FiberElement,
     listID: number,
     cellIndexes: number[],
     operationIDs: number[],
     enableReuseNotification: boolean,
     asyncFlush: boolean,
-  ) => {
-    const uiSigns = cellIndexes.map((cellIndex, index) => {
+  ) {
+    const readyOperationIDs: number[] = [];
+    const readyUiSigns: number[] = [];
+    const unreadyOperationIDs: number[] = [];
+    const unreadyPromises: Promise<number>[] = [];
+
+    cellIndexes.forEach((cellIndex, index) => {
       const operationID = operationIDs[index] ?? 0;
-      return componentAtIndex(list, listID, cellIndex, operationID, enableReuseNotification, true, asyncFlush);
+      const childCtx = ctx[cellIndex];
+      if (!childCtx) {
+        throw new Error('childCtx not found');
+      }
+
+      const u = componentAtChildCtx(list, listID, childCtx, operationID, enableReuseNotification, true, asyncFlush);
+      if (typeof u === 'number') {
+        readyOperationIDs.push(operationID);
+        readyUiSigns.push(u);
+      } else {
+        unreadyOperationIDs.push(operationID);
+        unreadyPromises.push(u);
+      }
     });
+
+    if (unreadyPromises.length > 0) {
+      Promise.all(unreadyPromises).then((uiSigns) => {
+        __FlushElementTree(list, {
+          triggerLayout: true,
+          operationIDs: unreadyOperationIDs,
+          elementIDs: uiSigns,
+          listID,
+        });
+      });
+    }
+
     __FlushElementTree(list, {
       triggerLayout: true,
-      operationIDs: operationIDs,
-      elementIDs: uiSigns,
+      operationIDs: readyOperationIDs,
+      elementIDs: readyUiSigns,
       listID,
     });
-  };
+  }
   return [componentAtIndex, componentAtIndexes] as const;
 }
 
