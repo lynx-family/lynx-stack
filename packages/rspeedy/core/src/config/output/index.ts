@@ -312,12 +312,13 @@ export interface Output {
    *
    * @example
    *
+   * Disable inlining background thread scripts.
    * ```js
    * import { defineConfig } from '@lynx-js/rspeedy'
    *
    * export default defineConfig({
    *   output: {
-   *     inlineScripts: /[\\/]background\.\w+\.js$/,
+   *     inlineScripts: false,
    *   },
    * })
    * ```

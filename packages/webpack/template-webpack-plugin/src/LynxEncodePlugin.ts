@@ -138,7 +138,10 @@ export class LynxEncodePluginImpl {
               if (shouldInline) {
                 inlined[name] = content;
               } else {
-                external[name] = content;
+                // externalManifest should only contains background[.hash].js
+                if (/[\\/]background(?:\.\w+)?\.js$/.test(name)) {
+                  external[name] = content;
+                }
               }
               return [inlined, external];
             },
