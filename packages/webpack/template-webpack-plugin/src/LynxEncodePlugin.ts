@@ -178,8 +178,8 @@ export class LynxEncodePluginImpl {
           //     lynx.requireModule('async-chunk2')
           //     lynx.requireModule('inlined-initial-chunk1')
           //     lynx.requireModule('inlined-initial-chunk2')
-          //     lynx.requireModule('external-initial-chunk1')
-          //     lynx.requireModule('external-initial-chunk2')
+          //     lynx.requireModuleAsync('external-initial-chunk1')
+          //     lynx.requireModuleAsync('external-initial-chunk2')
           //   `,
           //   'inlined-initial-chunk1': `<content>`,
           //   'inlined-initial-chunk2': `<content>`,
