@@ -8,10 +8,10 @@ export default defineConfig({
   plugins: [
     pluginReactLynx(),
     pluginQRCode({
-      // schema(url) {
-      //   // We use `?fullscreen=true` to open the page in LynxExplorer in full screen mode
-      //   return `${url}?fullscreen=true`;
-      // },
+      schema(url) {
+        // We use `?fullscreen=true` to open the page in LynxExplorer in full screen mode
+        return `${url}?fullscreen=true`;
+      },
     }),
   ],
   performance: {
