@@ -148,6 +148,65 @@ describe('jsx', () => {
       }
     `);
   });
+
+  it('<list-item deferred />', async () => {
+    const result = await transformReactLynx('const jsx = <list><list-item deferred /></list>;', {
+      pluginName: '',
+      filename: '',
+      sourceFileName: '',
+      defineDCE: true,
+      sourcemap: false,
+      compat: false,
+      jsx: true,
+      shake: true,
+      cssScope: false,
+      refresh: false,
+      directiveDCE: {
+        target: 'LEPUS',
+      },
+      worklet: true,
+      experimental_moduleCompress: false,
+    });
+
+    expect(result).toMatchInlineSnapshot(`
+      {
+        "code": "import { jsx as _jsx, Fragment as _Fragment } from "@lynx-js/react/jsx-runtime";
+      import * as ReactLynx from "@lynx-js/react";
+      import * as ReactLynxRuntimeComponents from '@lynx-js/react/runtime-components';
+      const __snapshot_da39a_228b3_2 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_228b3_2", function() {
+          const pageId = ReactLynx.__pageId;
+          const el = __CreateElement("list-item", pageId);
+          return [
+              el
+          ];
+      }, null, ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null);
+      const __snapshot_da39a_228b3_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_228b3_1", function(snapshotInstance) {
+          const pageId = ReactLynx.__pageId;
+          const el = ReactLynx.snapshotCreateList(pageId, snapshotInstance, 0);
+          return [
+              el
+          ];
+      }, null, [
+          [
+              ReactLynx.__DynamicPartListChildren,
+              0
+          ]
+      ], undefined, globDynamicComponentEntry, null);
+      /*#__PURE__*/ _jsx(__snapshot_da39a_228b3_1, {
+          children: /*#__PURE__*/ _jsx(ReactLynxRuntimeComponents.DeferredListItem, {
+              renderListItem: (__c)=>_jsx(__snapshot_da39a_228b3_2, {
+                      children: __c
+                  }),
+              renderChildren: ()=>/*#__PURE__*/ _jsx(_Fragment, {}),
+              deferred: true
+          })
+      });
+      ",
+        "errors": [],
+        "warnings": [],
+      }
+    `);
+  });
 });
 
 describe('errors and warnings', () => {

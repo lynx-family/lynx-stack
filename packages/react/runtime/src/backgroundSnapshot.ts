@@ -45,6 +45,7 @@ export class BackgroundSnapshotInstance {
   __id: number;
   __values: any[] | undefined;
   __snapshot_def: Snapshot;
+  __extraProps?: Record<string, unknown>;
 
   private __parent: BackgroundSnapshotInstance | null = null;
   private __firstChild: BackgroundSnapshotInstance | null = null;
@@ -242,15 +243,27 @@ export class BackgroundSnapshotInstance {
       return;
     }
 
-    // old path (`<__snapshot_xxxx_xxxx __0={} __1={} />` or `this.setAttribute(0, xxx)`)
-    // is reserved as slow path
-    const index = typeof key === 'string' ? Number(key.slice(2)) : key;
-    (this.__values ??= [])[index] = value;
+    if (typeof key === 'string') {
+      (this.__extraProps ??= {})[key] = value;
+      __globalSnapshotPatch?.push(
+        SnapshotOperation.SetAttribute,
+        this.__id,
+        key,
+        value,
+      );
+      if (__PROFILE__) {
+        console.profileEnd();
+      }
+      return;
+    }
 
+    // old path (`this.setAttribute(0, xxx)`)
+    // is reserved as slow path
+    (this.__values ??= [])[key] = value;
     __globalSnapshotPatch?.push(
       SnapshotOperation.SetAttribute,
       this.__id,
-      index,
+      key,
       value,
     );
     if (__PROFILE__) {
