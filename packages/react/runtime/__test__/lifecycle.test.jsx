@@ -564,3 +564,121 @@ describe('useState', () => {
     }
   });
 });
+
+describe('componentDidUpdate', () => {
+  it('basic', async function() {
+    globalEnvManager.switchToBackground();
+
+    const callback = vi.fn();
+    let mtCallbacks = lynx.getNativeApp().callLepusMethod.mock.calls;
+    let _setState = vi.fn();
+
+    class Comp extends Component {
+      state = {
+        show: false,
+      };
+
+      constructor(props) {
+        super(props);
+        _setState = this.setState.bind(this);
+      }
+
+      componentDidUpdate() {
+        callback();
+      }
+
+      render() {
+        return <text>{this.state.show ? '1' : '2'}</text>;
+      }
+    }
+
+    initGlobalSnapshotPatch();
+
+    render(<Comp />, __root);
+    expect(callback).toHaveBeenCalledTimes(0);
+
+    let mtCallback;
+    expect(mtCallbacks.length).toEqual(1);
+    mtCallback = mtCallbacks.shift();
+    expect(mtCallback.length).toEqual(3);
+    expect(mtCallback[0]).toEqual(LifecycleConstant.patchUpdate);
+    mtCallback[2]();
+
+    await waitSchedule();
+    expect(callback).toHaveBeenCalledTimes(0);
+
+    _setState({ show: true });
+    await waitSchedule();
+    mtCallback = mtCallbacks.shift();
+    expect(mtCallback.length).toEqual(3);
+    expect(mtCallback[0]).toEqual(LifecycleConstant.patchUpdate);
+    mtCallback[2]();
+    expect(callback).toHaveBeenCalledTimes(1);
+
+    _setState({ show: false });
+    await waitSchedule();
+    mtCallback = mtCallbacks.shift();
+    expect(mtCallback.length).toEqual(3);
+    expect(mtCallback[0]).toEqual(LifecycleConstant.patchUpdate);
+    mtCallback[2]();
+    expect(callback).toHaveBeenCalledTimes(2);
+  });
+
+  it('multiple updates', async function() {
+    globalEnvManager.switchToBackground();
+
+    const callback = vi.fn();
+    let mtCallbacks = lynx.getNativeApp().callLepusMethod.mock.calls;
+    let _setState = vi.fn();
+
+    class Comp extends Component {
+      state = {
+        count: 0,
+      };
+
+      constructor(props) {
+        super(props);
+        _setState = this.setState.bind(this);
+      }
+
+      componentDidUpdate() {
+        callback(this.state.count);
+      }
+
+      render() {
+        return <text>{this.state.count}</text>;
+      }
+    }
+
+    initGlobalSnapshotPatch();
+
+    render(<Comp />, __root);
+    expect(callback).toHaveBeenCalledTimes(0);
+
+    let mtCallback;
+    expect(mtCallbacks.length).toEqual(1);
+    mtCallback = mtCallbacks.shift();
+    expect(mtCallback.length).toEqual(3);
+    expect(mtCallback[0]).toEqual(LifecycleConstant.patchUpdate);
+    mtCallback[2]();
+    expect(callback).toHaveBeenCalledTimes(0);
+
+    _setState(({ count }) => ({ count: count + 1 }));
+    await waitSchedule();
+    _setState(({ count }) => ({ count: count + 1 }));
+    await waitSchedule();
+
+    expect(mtCallbacks.length).toEqual(2);
+    expect(callback).toHaveBeenCalledTimes(0);
+
+    mtCallbacks.forEach(mtCallback => {
+      expect(mtCallback.length).toEqual(3);
+      expect(mtCallback[0]).toEqual(LifecycleConstant.patchUpdate);
+      mtCallback[2]();
+    });
+
+    expect(callback).toHaveBeenCalledTimes(2);
+    expect(callback).nthCalledWith(1, 2);
+    expect(callback).nthCalledWith(2, 2);
+  });
+});
