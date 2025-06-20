@@ -209,6 +209,7 @@ jobs:
         --reporter=junit
         --outputFile=test-report.junit.xml
         --test-timeout=50000
+        --hook-timeout=50000
         --coverage
         --coverage.reporter='json'
         --coverage.reporter='text'

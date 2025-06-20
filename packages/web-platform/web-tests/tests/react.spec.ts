@@ -684,21 +684,25 @@ test.describe('reactlynx3 tests', () => {
         document.body.querySelector('lynx-view')?.remove();
       });
       await wait(100);
+      const threadStrategy = ENABLE_MULTI_THREAD ? 'multi-thread' : 'all-on-ui';
       expect(page.workers().length).toBe(1);
-      await page.evaluate(() => {
+      await page.evaluate((threadStrategy) => {
         const newView = document.createElement('lynx-view');
         newView.setAttribute('style', 'height:50vh; width:100vw;');
+        newView.setAttribute('thread-strategy', threadStrategy);
         newView.setAttribute('url', '/dist/api-preheat/main-thread.js');
         document.body.append(newView);
-      });
-      await page.evaluate(() => {
+      }, threadStrategy);
+
+      await page.evaluate((threadStrategy) => {
         const newView = document.createElement('lynx-view');
         newView.setAttribute('style', 'height:50vh; width:100vw;');
+        newView.setAttribute('thread-strategy', threadStrategy);
         newView.setAttribute('url', '/dist/api-preheat/main-thread.js');
         document.body.append(newView);
-      });
+      }, threadStrategy);
       await wait(500);
-      expect(page.workers().length).toBe(5);
+      expect(page.workers().length).toBe(ENABLE_MULTI_THREAD ? 5 : 3);
     });
 
     test('api-setSharedData', async ({ page }, { title }) => {
