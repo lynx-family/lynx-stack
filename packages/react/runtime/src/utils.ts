@@ -33,3 +33,12 @@ export function pick<T extends object, K extends keyof T>(obj: T, keys: Iterable
   }
   return result as Pick<T, K>;
 }
+
+export function maybePromise<T>(value: unknown): value is Promise<T> {
+  return (
+    typeof value === 'object'
+    && value !== null
+    // @ts-expect-error
+    && typeof value.then === 'function'
+  );
+}

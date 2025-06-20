@@ -143,6 +143,8 @@ declare module '@lynx-js/types' {
      * By default, the developer does not provide a reuse-identifier, which is determined by the framework at the compile stage.
      */
     'reuse-identifier'?: Key | null | undefined;
+
+    'deferred'?: boolean | undefined;
   }
 
   export interface FrameworkRenderingTimings {

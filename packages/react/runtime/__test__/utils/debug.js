@@ -28,7 +28,7 @@ function backgroundSnapshotInstanceToJSON() {
     type: this.type,
     children: this.childNodes,
     props: Object.fromEntries(
-      this.__values?.map((v, i) => [`__${i}`, v]) ?? [],
+      this.__values?.map((v, i) => [`${i}`, v]) ?? [],
     ),
   };
   Object.defineProperty(json, '$$typeof', {

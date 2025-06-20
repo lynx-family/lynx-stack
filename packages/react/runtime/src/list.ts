@@ -1,36 +1,14 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { LifecycleConstant } from './lifecycleConstant.js';
 import { applyRefQueue } from './snapshot/workletRef.js';
 import type { SnapshotInstance } from './snapshot.js';
-import { LifecycleConstant } from './lifecycleConstant.js';
+import { maybePromise } from './utils.js';
 
 export const gSignMap: Record<number, Map<number, SnapshotInstance>> = {};
 export const gRecycleMap: Record<number, Map<string, Map<number, SnapshotInstance>>> = {};
 const gParentWeakMap: WeakMap<SnapshotInstance, unknown> = new WeakMap();
-
-const { gReadyCallbacks, saveReadyCallback } = /* @__PURE__ */ (function() {
-  const gReadyCallbacks: Record<number, Map<number, () => void>> = {};
-
-  function saveReadyCallback(listID: number, childCtxId: number, cb: () => void): void {
-    gReadyCallbacks[listID] ??= new Map();
-    gReadyCallbacks[listID]!.set(childCtxId, cb);
-  }
-
-  // @ts-expect-error `rLynxOnListItemReady` is a global function
-  globalThis.rLynxOnListItemReady = (data: any) => {
-    const { listID, childCtxId } = data;
-    const cb = gReadyCallbacks[listID]?.get(childCtxId);
-    if (cb) {
-      gReadyCallbacks[listID]?.delete(childCtxId);
-      cb();
-    }
-  };
-
-  return { gReadyCallbacks, saveReadyCallback };
-})();
-
-export { gReadyCallbacks };
 
 export function clearListGlobal(): void {
   for (const key in gSignMap) {
@@ -38,9 +16,6 @@ export function clearListGlobal(): void {
   }
   for (const key in gRecycleMap) {
     delete gRecycleMap[key];
-  }
-  for (const key in gReadyCallbacks) {
-    delete gReadyCallbacks[key];
   }
 }
 
@@ -82,22 +57,51 @@ export function componentAtIndexFactory(
 
     const platformInfo = childCtx.__listItemPlatformInfo ?? {};
 
-    if (
-      childCtx.__values?.[0]['data-isReady'] === false
-    ) {
+    // The lifecycle of this `__extraProps.isReady`:
+    //   0 -> Promise<number> -> 1
+    // 0: The initial state, the list-item is not ready yet, we will send a event to background
+    //    when `componentAtIndex` is called on it
+    // Promise<number>: A promise that will be resolved when the list-item is ready
+    // 1: The list-item is ready, we can use it to render the list
+    if (childCtx.__extraProps?.['isReady'] === 0) {
       __OnLifecycleEvent([LifecycleConstant.publishEvent, {
-        handlerName: `${childCtx.__id}:0:bindComponentAtIndex`,
+        handlerName: `${childCtx.__id}:__extraProps:onComponentAtIndex`,
         data: {
           listID,
           childCtxId: childCtx.__id,
         },
       }]);
 
-      return new Promise<number>((resolve) => {
-        saveReadyCallback(listID, childCtx.__id, () => {
-          // the cellIndex may be changed already, but the `childCtx` is the same
-          resolve(componentAtChildCtx(list, listID, childCtx, operationID, enableReuseNotification));
+      let p: Promise<number>;
+      return (p = new Promise<number>((resolve) => {
+        Object.defineProperty(childCtx.__extraProps, 'isReady', {
+          set(isReady) {
+            if (isReady === 1) {
+              delete childCtx.__extraProps!['isReady'];
+              childCtx.__extraProps!['isReady'] = 1;
+
+              void Promise.resolve().then(() => {
+                // the cellIndex may be changed already, but the `childCtx` is the same
+                resolve(componentAtChildCtx(list, listID, childCtx, operationID, enableReuseNotification));
+              });
+            }
+          },
+          get() {
+            return p;
+          },
         });
+      }));
+    } else if (maybePromise<number>(childCtx.__extraProps?.['isReady'])) {
+      return childCtx.__extraProps['isReady'].then((uiSign) => {
+        if (!enableBatchRender) {
+          __FlushElementTree(root, { triggerLayout: true, operationID, elementID: sign, listID });
+        } else if (enableBatchRender && asyncFlush) {
+          __FlushElementTree(root, { asyncFlush: true });
+        } else {
+          // enableBatchRender == true && asyncFlush == false
+          // in this case, no need to invoke __FlushElementTree because in the end of componentAtIndexes(), the list will invoke __FlushElementTree.
+        }
+        return uiSign;
       });
     }
 
@@ -144,10 +148,11 @@ export function componentAtIndexFactory(
       if (!oldCtx.__id) {
         oldCtx.tearDown();
       } else if (
-        oldCtx.__values?.[0]['data-isReady'] === true
+        oldCtx.__extraProps?.['isReady'] === 1
       ) {
         __OnLifecycleEvent([LifecycleConstant.publishEvent, {
-          handlerName: `${oldCtx.__id}:0:bindEnqueueComponent`,
+          handlerName: `${oldCtx.__id}:__extraProps:onEnqueueComponent`,
+          data: {},
         }]);
       }
       const root = childCtx.__element_root!;
@@ -248,7 +253,7 @@ export function componentAtIndexFactory(
     });
 
     if (unreadyPromises.length > 0) {
-      Promise.all(unreadyPromises).then((uiSigns) => {
+      void Promise.all(unreadyPromises).then((uiSigns) => {
         __FlushElementTree(list, {
           triggerLayout: true,
           operationIDs: unreadyOperationIDs,

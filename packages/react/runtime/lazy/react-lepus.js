@@ -6,4 +6,5 @@ import { sExportsReactLepus, target } from './target';
 
 export const {
   createElement,
+  cloneElement,
 } = target[sExportsReactLepus];
