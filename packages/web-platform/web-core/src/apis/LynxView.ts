@@ -280,6 +280,7 @@ export class LynxView extends HTMLElement {
    */
   updateGlobalProps(data: Cloneable) {
     this.#instance?.updateGlobalProps(data);
+    this.globalProps = data;
   }
 
   /**

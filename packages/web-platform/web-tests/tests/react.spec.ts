@@ -4,6 +4,7 @@
 import { swipe, dragAndHold } from './utils.js';
 import { test, expect } from './coverage-fixture.js';
 import type { Page } from '@playwright/test';
+import type { LynxView } from '../../web-core/src/index.js';
 const ENABLE_MULTI_THREAD = !!process.env['ENABLE_MULTI_THREAD'];
 const wait = async (ms: number) => {
   await new Promise((resolve) => {
@@ -144,6 +145,26 @@ test.describe('reactlynx3 tests', () => {
     test('basic-dataprocessor', async ({ page }, { title }) => {
       await goto(page, title);
       await wait(100);
+      expect(await page.locator('#target').getAttribute('style')).toContain(
+        'green',
+      );
+    });
+    test('basic-globalProps-reload', async ({ page }, { title }) => {
+      await goto(page, 'basic-globalProps');
+      await wait(100);
+      expect(await page.locator('#target').getAttribute('style')).toContain(
+        'pink',
+      );
+      await page.evaluate(() => {
+        (document.querySelector('lynx-view') as LynxView)?.updateGlobalProps({
+          backgroundColor: 'green',
+        });
+      });
+      await wait(500);
+      await page.evaluate(() => {
+        (document.querySelector('lynx-view') as LynxView)?.reload();
+      });
+      await wait(500);
       expect(await page.locator('#target').getAttribute('style')).toContain(
         'green',
       );
