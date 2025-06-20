@@ -1,6 +1,7 @@
 use wasm_bindgen::prelude::*;
 
 pub mod css;
+pub mod transformer;
 // lifted from the `console_log` example
 /**
 accept a raw uint16 ptr from JS
