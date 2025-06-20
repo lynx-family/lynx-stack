@@ -312,7 +312,7 @@ export interface Output {
    *
    * 1. Only background thread scripts can remain non-inlined, whereas the main thread script is always inlined.
    *
-   * 2. When `experimental_isLazyBundle` is enabled, `inlineScripts` will always be `true`.
+   * 2. Currently, when `experimental_isLazyBundle` is enabled, `inlineScripts` will always be `true`.
    *
    * @example
    *

@@ -200,6 +200,7 @@ export function applyEntry(
     if (isLynx) {
       let inlineScripts
       if (experimental_isLazyBundle) {
+        // TODO: support inlineScripts in lazyBundle
         inlineScripts = true
       } else {
         inlineScripts = environment.config.output?.inlineScripts ?? true
