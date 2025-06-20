@@ -144,7 +144,7 @@ declare module '@lynx-js/types' {
      */
     'reuse-identifier'?: Key | null | undefined;
 
-    'deferred'?: boolean | undefined;
+    'defer'?: boolean | undefined;
   }
 
   export interface FrameworkRenderingTimings {
