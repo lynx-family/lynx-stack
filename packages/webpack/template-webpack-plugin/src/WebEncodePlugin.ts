@@ -49,11 +49,10 @@ export class WebEncodePlugin {
           stage: WebEncodePlugin.BEFORE_ENCODE_HOOK_STAGE,
         }, (encodeOptions) => {
           const { encodeData } = encodeOptions;
-          const { manifest } = encodeData;
           const { cssMap } = encodeData.css;
           const styleInfo = genStyleInfo(cssMap);
 
-          const [name, content] = last(Object.entries(manifest))!;
+          const [name, content] = last(Object.entries(encodeData.manifest))!;
 
           if (!isDebug() && !isDev && !isRsdoctor()) {
             [
