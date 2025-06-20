@@ -174,10 +174,17 @@ export const backgroundSnapshotInstanceManager: {
       return null;
     }
     const spreadKey = res[2];
-    if (spreadKey) {
-      return ctx.__values![expIndex][spreadKey];
+    if (res[1] === '__extraProps') {
+      if (spreadKey) {
+        return ctx.__extraProps![spreadKey];
+      }
+      throw new Error('unreachable');
     } else {
-      return ctx.__values![expIndex];
+      if (spreadKey) {
+        return ctx.__values![expIndex][spreadKey];
+      } else {
+        return ctx.__values![expIndex];
+      }
     }
   },
 };
@@ -272,6 +279,7 @@ export class SnapshotInstance {
   __current_slot_index = 0;
   __worklet_ref_set?: Set<WorkletRefImpl<any> | Worklet>;
   __listItemPlatformInfo?: any;
+  __extraProps?: Record<string, unknown>;
 
   constructor(public type: string, id?: number) {
     this.__snapshot_def = snapshotManager.values.get(type)!;
@@ -594,9 +602,14 @@ export class SnapshotInstance {
       return;
     }
 
-    const index = typeof key === 'string' ? Number(key.slice(2)) : key;
+    if (typeof key === 'string') {
+      // for more flexible usage, we allow setting non-indexed attributes
+      (this.__extraProps ??= {})[key] = value;
+      return;
+    }
+
     this.__values ??= [];
-    helper(index, this.__values[index], this.__values[index] = value);
+    helper(key, this.__values[key], this.__values[key] = value);
   }
 
   toJSON(): Omit<SerializedSnapshotInstance, 'children'> & { children: SnapshotInstance[] | undefined } {
