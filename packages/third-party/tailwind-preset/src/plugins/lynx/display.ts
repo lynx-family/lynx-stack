@@ -6,7 +6,7 @@
 
 import { createPlugin } from '../../helpers.js';
 
-export const display: void = createPlugin(({ addUtilities, variants }) => {
+export const display = createPlugin(({ addUtilities }) => {
   addUtilities(
     {
       '.block': { display: 'block' },
@@ -19,6 +19,5 @@ export const display: void = createPlugin(({ addUtilities, variants }) => {
       // '.inline': { display: 'inline', },
       // '.list-item': { display: 'list-item', },
     },
-    variants('display'),
   );
 });

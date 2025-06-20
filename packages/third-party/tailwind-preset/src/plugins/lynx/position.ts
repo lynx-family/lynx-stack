@@ -3,10 +3,9 @@
 // LICENSE file in the root directory of this source tree.
 
 /* eslint-disable @typescript-eslint/unbound-method */
-
 import { createPlugin } from '../../helpers.js';
 
-export const position: void = createPlugin(({ addUtilities, variants }) => {
+export const position = createPlugin(({ addUtilities }) => {
   addUtilities(
     {
       '.fixed': { position: 'fixed' },
@@ -18,6 +17,5 @@ export const position: void = createPlugin(({ addUtilities, variants }) => {
       // Below are not supported by Lynx:
       // '.static': { position: 'static' },
     },
-    variants('position'),
   );
 });

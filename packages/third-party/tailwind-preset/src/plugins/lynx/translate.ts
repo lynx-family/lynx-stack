@@ -7,7 +7,7 @@ import { createUtilityPlugin } from '../../helpers.js';
 /**
  * Base on https://github.com/tailwindlabs/tailwindcss/blob/d1f066d97a30539c1c86aa987c75b6d84ef29609/src/corePlugins.js#L476
  */
-export const translate: void = createUtilityPlugin(
+export const translate = createUtilityPlugin(
   'translate',
   [
     [

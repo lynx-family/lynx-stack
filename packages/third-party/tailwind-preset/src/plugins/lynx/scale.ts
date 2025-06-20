@@ -4,7 +4,7 @@
 
 import { createUtilityPlugin } from '../../helpers.js';
 
-export const scale: void = createUtilityPlugin('scale', [
+export const scale = createUtilityPlugin('scale', [
   [
     'scale',
     [

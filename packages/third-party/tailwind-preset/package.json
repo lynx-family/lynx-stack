@@ -13,7 +13,14 @@
     "directory": "packages/third-party/tailwind-preset"
   },
   "type": "module",
-  "exports": null,
+  "exports": {
+    ".": {
+      "types": "./lib/lynx.d.ts",
+      "import": "./lib/lynx.js",
+      "require": "./lib/lynx.js",
+      "default": "./lib/lynx.js"
+    }
+  },
   "main": "./lib/lynx.js",
   "types": "./lib/lynx.d.ts",
   "files": [
