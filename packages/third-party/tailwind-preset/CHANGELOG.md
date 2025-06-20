@@ -1,5 +1,11 @@
 # @lynx-js/tailwind-preset
 
+## 0.0.4
+
+### Patch Changes
+
+- Avoid publishing test files. ([#1125](https://github.com/lynx-family/lynx-stack/pull/1125))
+
 ## 0.0.3
 
 ### Patch Changes
