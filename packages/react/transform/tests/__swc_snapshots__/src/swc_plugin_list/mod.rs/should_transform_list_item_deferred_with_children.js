@@ -3,4 +3,4 @@ import * as ReactLynxRuntimeComponents from '@lynx-js/react/runtime-components';
       <view/>
       <text/>
       <image/>
-    </>} key="1" deferred/>;
+    </>} key="1" defer/>;

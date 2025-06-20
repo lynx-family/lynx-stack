@@ -9,15 +9,15 @@ import type { SnapshotInstance } from '@lynx-js/react/internal';
 import { cloneElement as _cloneElementLepus } from '@lynx-js/react/lepus';
 
 export interface DeferredListItem {
-  deferred?: boolean;
+  defer?: boolean;
   renderListItem: (children: ReactNode | undefined) => JSX.Element;
   renderChildren: () => ReactNode;
 }
 
-export const DeferredListItem: FC<DeferredListItem> = ({ deferred, renderListItem, renderChildren }) => {
+export const DeferredListItem: FC<DeferredListItem> = ({ defer, renderListItem, renderChildren }) => {
   const __cloneElement = __LEPUS__ ? _cloneElementLepus : _cloneElement;
 
-  const initialDeferred = useRef(deferred);
+  const initialDeferred = useRef(defer);
   const onGetDomRef = useRef<RefCallback<SnapshotInstance>>((ctx) => {
     ctx!.__extraProps ??= {};
 
@@ -34,7 +34,7 @@ export const DeferredListItem: FC<DeferredListItem> = ({ deferred, renderListIte
       delete ctx!.__extraProps!['onEnqueueComponent'];
     };
   });
-  const [isReady, setIsReady] = useState(!deferred);
+  const [isReady, setIsReady] = useState(!defer);
 
   return initialDeferred.current
     ? __cloneElement(renderListItem(isReady ? renderChildren() : null), {
