@@ -138,10 +138,7 @@ export class LynxEncodePluginImpl {
               if (shouldInline) {
                 inlined[name] = content;
               } else {
-                // externalManifest should only contains background[.hash].js
-                if (/[\\/]background(?:\.\w+)?\.js$/.test(name)) {
-                  external[name] = content;
-                }
+                external[name] = content;
               }
               return [inlined, external];
             },
@@ -191,14 +188,17 @@ export class LynxEncodePluginImpl {
           '/app-service.js': [
             this.#appServiceBanner(),
             ...[externalManifest, inlinedManifest].flatMap(manifest =>
-              Object.keys(manifest).map(name =>
-                `module.exports=lynx.requireModule('${
-                  this.#formatJSName(
-                    name,
-                    manifest === externalManifest ? publicPath : '/',
-                  )
-                }',globDynamicComponentEntry?globDynamicComponentEntry:'__Card__')`
-              ).join(',')
+              Object.keys(manifest).map(name => {
+                if (manifest === externalManifest) {
+                  return `lynx.requireModuleAsync('${
+                    this.#formatJSName(name, publicPath)
+                  }')`;
+                } else {
+                  return `module.exports=lynx.requireModule('${
+                    this.#formatJSName(name, '/')
+                  }',globDynamicComponentEntry?globDynamicComponentEntry:'__Card__')`;
+                }
+              }).join(',')
             ),
             this.#appServiceFooter(),
           ].join(''),

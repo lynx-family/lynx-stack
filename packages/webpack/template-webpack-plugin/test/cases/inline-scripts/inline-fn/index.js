@@ -63,6 +63,6 @@ it('should generate correct bar template', async () => {
 
   expect(manifest).not.toHaveProperty('/bar:background.rspack.bundle.js');
   expect(manifest['/app-service.js']).toContain(
-    `lynx.requireModule('/bar:background.rspack.bundle.js',globDynamicComponentEntry?globDynamicComponentEntry:'__Card__')`,
+    `lynx.requireModuleAsync('/bar:background.rspack.bundle.js')`,
   );
 });
