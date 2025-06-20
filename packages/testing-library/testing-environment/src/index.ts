@@ -202,6 +202,7 @@ function injectMainThreadGlobals(target?: any, polyfills?: any) {
 
   const {
     performance,
+    CoreContext,
     JsContext,
     __LoadLepusChunk,
   } = polyfills || {};
@@ -222,6 +223,7 @@ function injectMainThreadGlobals(target?: any, polyfills?: any) {
   target.globDynamicComponentEntry = '__Card__';
   target.lynx = {
     performance,
+    getCoreContext: (() => CoreContext),
     getJSContext: (() => JsContext),
     reportError: (e: Error) => {
       throw e;
@@ -272,6 +274,7 @@ function injectBackgroundThreadGlobals(target?: any, polyfills?: any) {
     app,
     performance,
     CoreContext,
+    JsContext,
     __LoadLepusChunk,
   } = polyfills || {};
   if (typeof target === 'undefined') {
@@ -319,6 +322,7 @@ function injectBackgroundThreadGlobals(target?: any, polyfills?: any) {
       };
     }),
     getCoreContext: (() => CoreContext),
+    getJSContext: (() => JsContext),
     getJSModule: (moduleName) => {
       if (moduleName === 'GlobalEventEmitter') {
         return globalEventEmitter;
