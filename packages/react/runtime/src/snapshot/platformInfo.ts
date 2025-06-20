@@ -24,8 +24,7 @@ function updateListItemPlatformInfo(
 ): void {
   const newValue = ctx.__listItemPlatformInfo = ctx.__values![index];
 
-  // @ts-ignore
-  const list = ctx.__parent;
+  const list = ctx.parentNode;
   if (list?.__snapshot_def.isListHolder) {
     (__pendingListUpdates.values[list.__id] ??= new ListUpdateInfoRecording(list)).onSetAttribute(
       ctx,
@@ -38,7 +37,7 @@ function updateListItemPlatformInfo(
   // No adding / removing keys.
   if (ctx.__elements) {
     const e = ctx.__elements[elementIndex]!;
-    const value = ctx.__values![index];
+    const value = ctx.__values![index] as Record<string, unknown>;
     for (const k in value) {
       if (platformInfoVirtualAttributes.has(k)) {
         continue;

@@ -77,6 +77,7 @@ export default tseslint.config(
       'packages/react/runtime/types/**',
       '!packages/react/runtime/src/lifecycle/**',
       '!packages/react/runtime/src/lynx/**',
+      '!packages/react/runtime/src/snapshot/**',
       '!packages/react/runtime/src/worklet/**',
 
       // TODO: enable eslint for tools

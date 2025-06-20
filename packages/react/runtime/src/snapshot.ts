@@ -268,7 +268,7 @@ export class SnapshotInstance {
   __snapshot_def: Snapshot;
   __elements?: FiberElement[] | undefined;
   __element_root?: FiberElement | undefined;
-  __values?: any[] | undefined;
+  __values?: unknown[] | undefined;
   __current_slot_index = 0;
   __worklet_ref_set?: Set<WorkletRefImpl<any> | Worklet>;
   __listItemPlatformInfo?: any;

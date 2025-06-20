@@ -43,7 +43,7 @@ export function workletUnRef(value: Worklet | WorkletRefImpl<Element>): void {
 export function updateWorkletRef(
   snapshot: SnapshotInstance,
   expIndex: number,
-  oldValue: WorkletRefImpl<Element> | Worklet | undefined,
+  oldValue: WorkletRefImpl<Element> | Worklet | null | undefined,
   elementIndex: number,
   _workletType: string,
 ): void {
