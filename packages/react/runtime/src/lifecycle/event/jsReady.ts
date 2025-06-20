@@ -5,7 +5,7 @@ import { LifecycleConstant } from '../../lifecycleConstant.js';
 import { __root } from '../../root.js';
 
 let isJSReady: boolean;
-let jsReadyEventIdSwap: Record<number, number>;
+let jsReadyEventIdSwap: Record<string | number, number>;
 
 function jsReady(): void {
   isJSReady = true;

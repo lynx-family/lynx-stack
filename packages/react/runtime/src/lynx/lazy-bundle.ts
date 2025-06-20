@@ -9,18 +9,24 @@ import { Fragment, lazy as backgroundLazy, createElement } from 'preact/compat';
  * const App2 = lazy(() => import("./x").then(({App2}) => ({default: App2})))
  * @internal
  */
-export const makeSyncThen = function<T>(result: T) {
-  return function(this: Promise<T>, onF?: Function): Promise<T> {
+export const makeSyncThen = function<T>(result: T): Promise<T>['then'] {
+  return function<TR1 = T, TR2 = never>(
+    this: Promise<T>,
+    onF?: ((value: T) => TR1 | PromiseLike<TR1>) | null,
+    _onR?: ((reason: any) => TR2 | PromiseLike<TR2>) | null,
+  ): Promise<TR1 | TR2> {
     if (onF) {
-      let ret;
+      let ret: TR1 | PromiseLike<TR1>;
       try {
         ret = onF(result);
       } catch (e) {
-        return Promise.reject(e);
+        // if (onR) {
+        //   return Promise.resolve(onR(e));
+        // }
+        return Promise.reject(e as Error);
       }
 
-      // @ts-ignore
-      if (ret && typeof ret.then === 'function' /* `thenable` object */) {
+      if (ret && typeof (ret as PromiseLike<TR1>).then === 'function' /* `thenable` object */) {
         // lazy(() =>
         //   import("./x").then(() => new Promise(...))
         // )
@@ -39,12 +45,14 @@ export const makeSyncThen = function<T>(result: T) {
       }
 
       const p = Promise.resolve(ret);
-      // @ts-ignore
-      p.then = makeSyncThen(ret);
-      return p;
+
+      const then = makeSyncThen(ret as TR1);
+      p.then = then as Promise<Awaited<TR1>>['then'];
+
+      return p as Promise<TR1 | TR2>;
     }
 
-    return this;
+    return this as Promise<TR1 | TR2>;
   };
 };
 
@@ -66,7 +74,7 @@ export const loadLazyBundle: <
       const query = __QueryComponent(source);
       let result: T;
       try {
-        result = query.evalResult;
+        result = query.evalResult as T;
       } catch (e) {
         // Here we cannot return a rejected promise
         // (which will eventually be an unhandled rejection and cause unnecessary redbox)
@@ -79,12 +87,11 @@ export const loadLazyBundle: <
       // Why we should modify the implementation of `then`?
       // We should make it `sync` so lepus first-screen render can use result above instantly
       // We also should keep promise shape
-      // @ts-ignore
       r.then = makeSyncThen(result);
       return r;
     } else if (__JS__) {
       return new Promise((resolve, reject) => {
-        const callback: (result: any) => void = result => {
+        const callback: (result: { code: number; detail: { schema: string } }) => void = result => {
           const { code, detail } = result;
           if (code === 0) {
             const { schema } = detail;
@@ -92,7 +99,7 @@ export const loadLazyBundle: <
             // `code === 0` means that the lazy bundle has been successfully parsed. However,
             // its javascript files may still fail to run, which would prevent the retrieval of the exports object.
             if (exports) {
-              resolve(exports);
+              resolve(exports as T);
               return;
             }
           }
@@ -121,6 +128,7 @@ export function mainThreadLazy<T>(loader: () => Promise<{ default: T } | T>) {
   function _Lazy(props: any) {
     try {
       // @ts-expect-error `Lazy` returned from `backgroundLazy` should be a FC
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       return Lazy(props);
     } catch (e) {
       // We should never throw at mainThread

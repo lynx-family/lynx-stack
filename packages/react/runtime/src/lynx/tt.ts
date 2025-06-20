@@ -4,6 +4,7 @@
 import { render } from 'preact';
 
 import { LifecycleConstant, NativeUpdateDataType } from '../lifecycleConstant.js';
+import type { FirstScreenData } from '../lifecycleConstant.js';
 import {
   PerformanceTimingFlags,
   PerformanceTimingKeys,
@@ -23,12 +24,12 @@ import { reloadBackground } from '../lifecycle/reload.js';
 import { CHILDREN } from '../renderToOpcodes/constants.js';
 import { __root } from '../root.js';
 import { backgroundSnapshotInstanceManager } from '../snapshot.js';
+import type { SerializedSnapshotInstance } from '../snapshot.js';
 import { destroyWorklet } from '../worklet/destroy.js';
 
 export { runWithForce };
 
 function injectTt(): void {
-  // @ts-ignore
   const tt = lynxCoreInject.tt;
   tt.OnLifecycleEvent = onLifecycleEvent;
   tt.publishEvent = delayedPublishEvent;
@@ -45,7 +46,7 @@ function injectTt(): void {
   };
 }
 
-function onLifecycleEvent([type, data]: [string, any]) {
+function onLifecycleEvent([type, data]: [LifecycleConstant, unknown]) {
   const hasRootRendered = CHILDREN in __root;
   // never called `render(<App/>, __root)`
   // happens if user call `root.render()` async
@@ -69,16 +70,16 @@ function onLifecycleEvent([type, data]: [string, any]) {
   }
 }
 
-function onLifecycleEventImpl(type: string, data: any): void {
+function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
   switch (type) {
     case LifecycleConstant.firstScreen: {
-      const { root: lepusSide, jsReadyEventIdSwap } = data;
+      const { root: lepusSide, jsReadyEventIdSwap } = data as FirstScreenData;
       if (__PROFILE__) {
         console.profile('hydrate');
       }
       beginPipeline(true, PipelineOrigins.reactLynxHydrate, PerformanceTimingFlags.reactLynxHydrate);
       markTiming(PerformanceTimingKeys.hydrateParseSnapshotStart);
-      const before = JSON.parse(lepusSide);
+      const before = JSON.parse(lepusSide) as SerializedSnapshotInstance;
       markTiming(PerformanceTimingKeys.hydrateParseSnapshotEnd);
       markTiming(PerformanceTimingKeys.diffVdomStart);
       const snapshotPatch = hydrate(
@@ -95,8 +96,9 @@ function onLifecycleEventImpl(type: string, data: any): void {
       if (delayedEvents) {
         delayedEvents.forEach((args) => {
           const [handlerName, data] = args;
+          // eslint-disable-next-line prefer-const
           let [idStr, ...rest] = handlerName.split(':');
-          while (jsReadyEventIdSwap[idStr!]) idStr = jsReadyEventIdSwap[idStr!];
+          while (jsReadyEventIdSwap[idStr!]) idStr = jsReadyEventIdSwap[idStr!]?.toString();
           try {
             publishEvent([idStr, ...rest].join(':'), data);
           } catch (e) {
@@ -133,7 +135,7 @@ function onLifecycleEventImpl(type: string, data: any): void {
       break;
     }
     case LifecycleConstant.globalEventFromLepus: {
-      const [eventName, params] = data;
+      const [eventName, params] = data as [string, Record<string, any>];
       lynx.getJSModule('GlobalEventEmitter').trigger(eventName, params);
       break;
     }
@@ -155,14 +157,13 @@ function flushDelayedLifecycleEvents(): void {
 }
 
 function publishEvent(handlerName: string, data: unknown) {
-  // TODO: delay js events until js ready
   lynxCoreInject.tt.callBeforePublishEvent?.(data);
   const eventHandler = backgroundSnapshotInstanceManager.getValueBySign(
     handlerName,
   );
   if (eventHandler) {
     try {
-      (eventHandler as Function)(data);
+      (eventHandler as (...args: unknown[]) => void)(data);
     } catch (e) {
       lynx.reportError(e as Error);
     }
@@ -184,10 +185,11 @@ function updateGlobalProps(newData: Record<string, any>): void {
   // can be batched with updateFromRoot
   // This is already done because updateFromRoot will consume all dirty flags marked by
   // the setState, and setState's flush will be a noop. No extra diffs will be needed.
-  Promise.resolve().then(() => {
+  void Promise.resolve().then(() => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     runWithForce(() => render(__root.__jsx, __root as any));
   });
-  lynxCoreInject.tt.GlobalEventEmitter.emit('onGlobalPropsChanged');
+  lynxCoreInject.tt.GlobalEventEmitter.emit('onGlobalPropsChanged', undefined);
 }
 
 function updateCardData(newData: Record<string, any>, options?: Record<string, any>): void {
@@ -199,16 +201,14 @@ function updateCardData(newData: Record<string, any>, options?: Record<string, a
       ),
     );
   }
-  const { type = NativeUpdateDataType.UPDATE } = options || {};
+  const { type = NativeUpdateDataType.UPDATE } = options ?? {};
   if (type == NativeUpdateDataType.RESET) {
-    // @ts-ignore
     lynx.__initData = {};
   }
 
   // COW when modify `lynx.__initData` to make sure Provider & Consumer works
-  // @ts-ignore
   lynx.__initData = Object.assign({}, lynx.__initData, restNewData);
-  lynxCoreInject.tt.GlobalEventEmitter.emit('onDataChanged');
+  lynxCoreInject.tt.GlobalEventEmitter.emit('onDataChanged', undefined);
 }
 
 export { injectTt, flushDelayedLifecycleEvents };

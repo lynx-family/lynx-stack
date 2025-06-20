@@ -1,6 +1,9 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+
+/* eslint-disable */
+
 import { Component } from 'preact';
 
 import { PerfSpecificKey, PerformanceTimingKeys, markTimingLegacy } from './performance.js';
@@ -20,11 +23,14 @@ if (__JS__) {
         ),
       );
     }
+    // @ts-expect-error hack lynx-kernel
     return lynxCoreInject.tt._reactLynx.ReactComponent.prototype.getNodeRef
       .call(
         {
           _type: '',
+          // @ts-expect-error hack lynx-kernel
           _nativeApp: lynxCoreInject.tt._nativeApp,
+          // @ts-expect-error hack lynx-kernel
           _uiModule: lynxCoreInject.tt._nativeApp.nativeModuleProxy.LynxUIMethodModule,
           _reactAppInstance: lynxCoreInject.tt,
         },
@@ -41,11 +47,14 @@ if (__JS__) {
         ),
       );
     }
+    // @ts-expect-error hack lynx-kernel
     return lynxCoreInject.tt._reactLynx.ReactComponent.prototype
       .getNodeRefFromRoot.call(
         {
           _type: '',
+          // @ts-expect-error hack lynx-kernel
           _nativeApp: lynxCoreInject.tt._nativeApp,
+          // @ts-expect-error hack lynx-kernel
           _uiModule: lynxCoreInject.tt._nativeApp.nativeModuleProxy.LynxUIMethodModule,
           _reactAppInstance: lynxCoreInject.tt,
         },
