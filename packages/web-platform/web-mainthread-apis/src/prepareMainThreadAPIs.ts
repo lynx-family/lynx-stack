@@ -18,6 +18,12 @@ import {
   type reportErrorEndpoint,
   type MainThreadGlobalThis,
   switchExposureServiceEndpoint,
+  type I18nResourceTranslationOptions,
+  getCacheI18nResourcesKey,
+  type InitI18nResources,
+  type I18nResources,
+  dispatchI18nResourceEndpoint,
+  type Cloneable,
 } from '@lynx-js/web-constants';
 import { registerCallLepusMethodHandler } from './crossThreadHandlers/registerCallLepusMethodHandler.js';
 import { registerGetCustomSectionHandler } from './crossThreadHandlers/registerGetCustomSectionHandler.js';
@@ -32,6 +38,10 @@ export function prepareMainThreadAPIs(
   commitDocument: () => Promise<void> | void,
   markTimingInternal: (timingKey: string, pipelineId?: string) => void,
   reportError: RpcCallType<typeof reportErrorEndpoint>,
+  triggerI18nResourceFallback: (
+    options: I18nResourceTranslationOptions,
+  ) => void,
+  initialI18nResources: (data: InitI18nResources) => I18nResources,
 ) {
   const postTimingFlags = backgroundThreadRpc.createCall(
     postTimingFlagsEndpoint,
@@ -46,6 +56,9 @@ export function prepareMainThreadAPIs(
     publicComponentEventEndpoint,
   );
   const postExposure = backgroundThreadRpc.createCall(postExposureEndpoint);
+  const dispatchI18nResource = backgroundThreadRpc.createCall(
+    dispatchI18nResourceEndpoint,
+  );
   markTimingInternal('lepus_execute_start');
   async function startMainThread(
     config: StartMainThreadContextConfig,
@@ -58,6 +71,7 @@ export function prepareMainThreadAPIs(
       nativeModulesMap,
       napiModulesMap,
       tagMap,
+      initI18nResources,
     } = config;
     const { styleInfo, pageConfig, customSections, cardType, lepusCode } =
       template;
@@ -84,6 +98,7 @@ export function prepareMainThreadAPIs(
       receiveEventEndpoint: dispatchJSContextOnMainThreadEndpoint,
       sendEventEndpoint: dispatchCoreContextOnBackgroundEndpoint,
     });
+    const i18nResources = initialI18nResources(initI18nResources);
     const mtsGlobalThis = createMainThreadGlobalThis({
       jsContext,
       tagMap,
@@ -174,6 +189,17 @@ export function prepareMainThreadAPIs(
         publishEvent,
         publicComponentEvent,
         createElement,
+        _I18nResourceTranslation: (options: I18nResourceTranslationOptions) => {
+          const matchedInitI18nResources = i18nResources.data?.find(i =>
+            getCacheI18nResourcesKey(i.options)
+              === getCacheI18nResourcesKey(options)
+          );
+          dispatchI18nResource(matchedInitI18nResources?.resource as Cloneable);
+          if (matchedInitI18nResources) {
+            return matchedInitI18nResources.resource;
+          }
+          return triggerI18nResourceFallback(options);
+        },
       },
     });
     markTimingInternal('decode_end');

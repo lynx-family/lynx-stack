@@ -22,11 +22,7 @@ export class CssExtractRspackPlugin {
 export interface CssExtractRspackPluginOptions extends CssExtractRspackPluginOptions_2 {
     chunkFilename?: string;
     cssPlugins: Parameters<typeof LynxTemplatePlugin.convertCSSChunksToMap>[1];
-    enableCSSInvalidation: boolean;
-    enableCSSSelector: boolean;
-    enableRemoveCSSScope: boolean;
     filename?: string;
-    targetSdkVersion: string;
 }
 
 // @public

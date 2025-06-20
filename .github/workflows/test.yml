@@ -80,9 +80,9 @@ jobs:
         config:
           - name: Default
             env: []
-          - name: All on UI
+          - name: MULTI_THREAD
             env:
-              - ALL_ON_UI=true
+              - ENABLE_MULTI_THREAD=true
           - name: FP only
             env:
               - ENABLE_SSR=true
@@ -138,15 +138,11 @@ jobs:
         npx --registry http://localhost:4873 create-rspeedy-canary@latest --template react --dir create-rspeedy-regression
         cd create-rspeedy-regression
         pnpm install --registry=http://localhost:4873
-        pnpm tsc --noEmit
         pnpm run build
-        pnpm tsc --noEmit
         npx --registry http://localhost:4873 create-rspeedy-canary@latest --template react-vitest-rltl --dir create-rspeedy-regression-vitest-rltl
         cd create-rspeedy-regression-vitest-rltl
         pnpm install --registry=http://localhost:4873
-        pnpm tsc --noEmit
         pnpm run build
-        pnpm tsc --noEmit
         pnpm run test
   test-react:
     needs: build
@@ -194,10 +190,18 @@ jobs:
   test-vitest:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
+    strategy:
+      matrix:
+        runs-on:
+          - name: Ubuntu
+            label: lynx-ubuntu-24.04-medium
+          - name: Windows
+            label: lynx-windows-2022-large
+    name: Vitest (${{ matrix.runs-on.name }})
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
-      runs-on: lynx-ubuntu-24.04-medium
+      runs-on: ${{ matrix.runs-on.label }}
       run: >
         pnpm run test
         --reporter=github-actions
@@ -205,6 +209,7 @@ jobs:
         --reporter=junit
         --outputFile=test-report.junit.xml
         --test-timeout=50000
+        --hook-timeout=50000
         --coverage
         --coverage.reporter='json'
         --coverage.reporter='text'

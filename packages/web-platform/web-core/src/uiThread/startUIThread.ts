@@ -11,6 +11,7 @@ import {
   type NapiModulesCall,
   type NativeModulesCall,
   updateGlobalPropsEndpoint,
+  type Cloneable,
 } from '@lynx-js/web-constants';
 import { loadTemplate } from '../utils/loadTemplate.js';
 import { createUpdateData } from './crossThreadHandlers/createUpdateData.js';
@@ -21,7 +22,7 @@ import { createRenderAllOnUI } from './createRenderAllOnUI.js';
 export type StartUIThreadCallbacks = {
   nativeModulesCall: NativeModulesCall;
   napiModulesCall: NapiModulesCall;
-  onError?: () => void;
+  onError?: (err: Error) => void;
   customTemplateLoader?: (url: string) => Promise<LynxTemplate>;
 };
 
@@ -40,7 +41,12 @@ export function startUIThread(
     backgroundRpc,
     terminateWorkers,
   } = bootWorkers(lynxGroupId, allOnUI);
-  const { markTiming, sendGlobalEvent, updateDataBackground } = startBackground(
+  const {
+    markTiming,
+    sendGlobalEvent,
+    updateDataBackground,
+    updateI18nResourceBackground,
+  } = startBackground(
     backgroundRpc,
     shadowRoot,
     callbacks,
@@ -53,7 +59,7 @@ export function startUIThread(
     if (!timeStamp) timeStamp = performance.now() + performance.timeOrigin;
     markTiming(timingKey, pipelineId, timeStamp);
   };
-  const { start, updateDataMainThread } = allOnUI
+  const { start, updateDataMainThread, updateI18nResourcesMainThread } = allOnUI
     ? createRenderAllOnUI(
       /* main-to-bg rpc*/ mainThreadRpc,
       shadowRoot,
@@ -82,5 +88,9 @@ export function startUIThread(
     ),
     sendGlobalEvent,
     updateGlobalProps: backgroundRpc.createCall(updateGlobalPropsEndpoint),
+    updateI18nResources: (...args) => {
+      updateI18nResourcesMainThread(args[0] as Cloneable);
+      updateI18nResourceBackground(...args);
+    },
   };
 }

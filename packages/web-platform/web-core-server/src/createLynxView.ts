@@ -1,6 +1,8 @@
 import {
+  I18nResources,
   inShadowRootStyles,
   lynxUniqueIdAttribute,
+  type InitI18nResources,
   type StartMainThreadContextConfig,
 } from '@lynx-js/web-constants';
 import { Rpc } from '@lynx-js/web-worker-rpc';
@@ -31,7 +33,12 @@ import { dumpHTMLString } from './dumpHTMLString.js';
 interface LynxViewConfig extends
   Pick<
     StartMainThreadContextConfig,
-    'browserConfig' | 'tagMap' | 'initData' | 'globalProps' | 'template'
+    | 'browserConfig'
+    | 'tagMap'
+    | 'initData'
+    | 'globalProps'
+    | 'template'
+    | 'initI18nResources'
   >
 {
   templateName?: string;
@@ -92,6 +99,7 @@ export async function createLynxView(
     injectStyles,
     lynxViewStyle,
     threadStrategy = 'all-on-ui',
+    initI18nResources,
   } = config;
   const template = await loadTemplate(rawTemplate, config.templateName);
   const { promise: firstPaintReadyPromise, resolve: firstPaintReady } = Promise
@@ -105,6 +113,7 @@ export async function createLynxView(
     onCommit: () => {
     },
   });
+  const i18nResources = new I18nResources();
   const { startMainThread } = prepareMainThreadAPIs(
     backgroundThreadRpc,
     offscreenDocument,
@@ -118,6 +127,13 @@ export async function createLynxView(
     () => {
       // report error
     },
+    () => {
+      // trigger i18n resource fallback
+    },
+    (initI18nResources: InitI18nResources) => {
+      i18nResources.setData(initI18nResources);
+      return i18nResources;
+    },
   );
   const runtime = await startMainThread({
     template,
@@ -130,6 +146,7 @@ export async function createLynxView(
       ...builtinTagTransformMap,
       ...tagMap,
     },
+    initI18nResources,
   });
 
   const elementTemplates = {

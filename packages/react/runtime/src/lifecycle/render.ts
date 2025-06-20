@@ -18,6 +18,7 @@ function renderMainThread(): void {
     process.env['NODE_ENV'] === 'test' && typeof __TESTING_FORCE_RENDER_TO_OPCODE__ !== 'undefined'
     && !__TESTING_FORCE_RENDER_TO_OPCODE__
   ) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     render(__root.__jsx, __root as any);
   } else {
     let opcodes;
@@ -25,8 +26,7 @@ function renderMainThread(): void {
       if (__PROFILE__) {
         console.profile('renderToString');
       }
-      // @ts-ignore
-      opcodes = renderToString(__root.__jsx);
+      opcodes = renderToString(__root.__jsx, undefined);
     } catch (e) {
       lynx.reportError(e as Error);
       opcodes = [];
@@ -39,6 +39,7 @@ function renderMainThread(): void {
     if (__PROFILE__) {
       console.profile('renderOpcodesInto');
     }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     renderOpcodesInto(opcodes, __root as any);
     if (__ENABLE_SSR__) {
       __root.__opcodes = opcodes;

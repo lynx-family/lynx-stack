@@ -14,7 +14,7 @@ const __snapshot_2d408_test_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapsh
     function(ctx) {
         if (ctx.__elements) __SetClasses(ctx.__elements[0], ctx.__values[0] || '');
     }
-], null, undefined, globDynamicComponentEntry);
+], null, undefined, globDynamicComponentEntry, null);
 /*#__PURE__*/ _jsx(__snapshot_2d408_test_1, {
     values: [
         `foo ${styles.bar} ${styles2.baz} ${clsA} ${clsB}`

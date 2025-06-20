@@ -85,7 +85,7 @@ export class A extends Component {
           return [
               el
           ];
-      }, null, null, undefined, globDynamicComponentEntry);
+      }, null, null, undefined, globDynamicComponentEntry, null);
       export class A extends Component {
           render() {
               return /*#__PURE__*/ _jsx(__snapshot_da39a_test_1, {});
@@ -105,7 +105,7 @@ export class A extends Component {
           return [
               el
           ];
-      }, null, null, undefined, globDynamicComponentEntry);
+      }, null, null, undefined, globDynamicComponentEntry, null);
       export class A extends Component {
           render() {
               return /*#__PURE__*/ _jsx(__snapshot_da39a_test_1, {});
@@ -338,7 +338,9 @@ Component, View
             ];
         }, [
             (snapshot, index, oldValue)=>ReactLynx.updateSpread(snapshot, index, oldValue, 0)
-        ], ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry);
+        ], ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry, [
+            0
+        ]);
         /*#__PURE__*/ ReactLynx1.wrapWithLynxComponent((__c, __spread)=>/*#__PURE__*/ _jsx(__snapshot_da39a_89b7f_1, {
                 values: [
                     {
@@ -821,7 +823,7 @@ export default class App extends Component {
           return [
               el
           ];
-      }, null, null, undefined, globDynamicComponentEntry);
+      }, null, null, undefined, globDynamicComponentEntry, null);
       export default class App extends Component {
           a() {}
           render() {
@@ -1297,7 +1299,7 @@ class X extends Component {
           return [
               el
           ];
-      }, null, null, undefined, globDynamicComponentEntry);
+      }, null, null, undefined, globDynamicComponentEntry, null);
       class X extends Component {
           constructor(){}
           render() {

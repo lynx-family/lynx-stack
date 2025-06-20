@@ -4,8 +4,7 @@
 import { swipe, dragAndHold } from './utils.js';
 import { test, expect } from './coverage-fixture.js';
 import type { Page } from '@playwright/test';
-const ALL_ON_UI = !!process.env['ALL_ON_UI'];
-
+const ENABLE_MULTI_THREAD = !!process.env['ENABLE_MULTI_THREAD'];
 const wait = async (ms: number) => {
   await new Promise((resolve) => {
     setTimeout(resolve, ms);
@@ -641,38 +640,69 @@ test.describe('reactlynx3 tests', () => {
       const target = await page.locator('lynx-view');
       await expect(target).toHaveCSS('display', 'none');
     });
+    test('api-error-detail', async ({ page }, { title }) => {
+      let offset = false;
+      await page.on('console', async (msg) => {
+        const event = await msg.args()[0]?.evaluate((e) => {
+          return {
+            type: e.type,
+            error: e.detail?.error,
+            offset: e.detail?.sourceMap?.offset,
+          };
+        });
+        if (!event || event.type !== 'error') {
+          return;
+        }
+        if (
+          typeof event.offset.line === 'number' && event.offset.line === 2
+          && typeof event.offset.col === 'number' && event.offset.col === 0
+          && event.error.message === 'error'
+          && typeof event.error.stack === 'string'
+          && event.error.stack !== ''
+        ) {
+          offset = true;
+        }
+      });
+      await goto(page, 'api-error');
+      await wait(500);
+      expect(offset).toBe(true);
+    });
 
     test('api-preheat', async ({ page }, { title }) => {
       await goto(page, title);
       const target = page.locator('#target');
       await expect(target).toHaveCSS('background-color', 'rgb(255, 192, 203)'); // pink
-      expect(page.workers().length).toStrictEqual(ALL_ON_UI ? 2 : 3);
+      expect(page.workers().length).toStrictEqual(ENABLE_MULTI_THREAD ? 3 : 2);
     });
 
     test('api-preheat-at-least-one', async ({ page }, { title }) => {
       await goto(page, title);
       const target = page.locator('#target');
       await expect(target).toHaveCSS('background-color', 'rgb(255, 192, 203)'); // pink
-      expect(page.workers().length).toBe(ALL_ON_UI ? 2 : 3);
+      expect(page.workers().length).toBe(ENABLE_MULTI_THREAD ? 3 : 2);
       await page.evaluate(() => {
         document.body.querySelector('lynx-view')?.remove();
       });
       await wait(100);
+      const threadStrategy = ENABLE_MULTI_THREAD ? 'multi-thread' : 'all-on-ui';
       expect(page.workers().length).toBe(1);
-      await page.evaluate(() => {
+      await page.evaluate((threadStrategy) => {
         const newView = document.createElement('lynx-view');
         newView.setAttribute('style', 'height:50vh; width:100vw;');
+        newView.setAttribute('thread-strategy', threadStrategy);
         newView.setAttribute('url', '/dist/api-preheat/main-thread.js');
         document.body.append(newView);
-      });
-      await page.evaluate(() => {
+      }, threadStrategy);
+
+      await page.evaluate((threadStrategy) => {
         const newView = document.createElement('lynx-view');
         newView.setAttribute('style', 'height:50vh; width:100vw;');
+        newView.setAttribute('thread-strategy', threadStrategy);
         newView.setAttribute('url', '/dist/api-preheat/main-thread.js');
         document.body.append(newView);
-      });
+      }, threadStrategy);
       await wait(500);
-      expect(page.workers().length).toBe(5);
+      expect(page.workers().length).toBe(ENABLE_MULTI_THREAD ? 5 : 3);
     });
 
     test('api-setSharedData', async ({ page }, { title }) => {
@@ -1185,7 +1215,10 @@ test.describe('reactlynx3 tests', () => {
     test(
       'config-splitchunk-single-vendor',
       async ({ page }, { title }) => {
-        test.skip(ALL_ON_UI, 'main thread do not support importScript');
+        test.skip(
+          !ENABLE_MULTI_THREAD,
+          'main thread do not support importScript',
+        );
         await goto(page, title, undefined, true);
         await wait(1500);
         const target = page.locator('#target');
@@ -1195,7 +1228,10 @@ test.describe('reactlynx3 tests', () => {
     test(
       'config-splitchunk-split-by-experience',
       async ({ page }, { title }) => {
-        test.skip(ALL_ON_UI, 'main thread do not support importScript');
+        test.skip(
+          !ENABLE_MULTI_THREAD,
+          'main thread do not support importScript',
+        );
         await goto(page, title, undefined, true);
         await wait(1500);
         const target = page.locator('#target');
@@ -1205,7 +1241,10 @@ test.describe('reactlynx3 tests', () => {
     test(
       'config-splitchunk-split-by-module',
       async ({ page }, { title }) => {
-        test.skip(ALL_ON_UI, 'main thread do not support importScript');
+        test.skip(
+          !ENABLE_MULTI_THREAD,
+          'main thread do not support importScript',
+        );
         await goto(page, title, undefined, true);
         await wait(1500);
         const target = page.locator('#target');
@@ -1558,6 +1597,12 @@ test.describe('reactlynx3 tests', () => {
       test('basic-element-text-word-break', async ({ page }, { title }) => {
         await goto(page, title);
         await diffScreenShot(page, 'text', 'word-break');
+      });
+
+      test('basic-element-text-color', async ({ page }, { title }) => {
+        await goto(page, title);
+        await wait(100);
+        await diffScreenShot(page, 'text', 'basic-element-text-color');
       });
     });
     test.describe('image', () => {

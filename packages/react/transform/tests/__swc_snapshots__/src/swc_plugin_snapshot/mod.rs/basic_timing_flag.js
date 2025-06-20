@@ -17,7 +17,7 @@ const __snapshot_da39a_test_1 = require('@lynx-js/react/internal').createSnapsho
             __SetAttribute(ctx.__elements[1], '__lynx_timing_flag', ctx.__values[0].__ltf);
         }
     }
-], null, undefined, globDynamicComponentEntry);
+], null, undefined, globDynamicComponentEntry, null);
 function Comp() {
     return _jsx(__snapshot_da39a_test_1, {
         values: [

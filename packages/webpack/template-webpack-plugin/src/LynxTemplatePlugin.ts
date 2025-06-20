@@ -30,6 +30,11 @@ export type OriginManifest = Record<string, {
   size: number;
 }>;
 
+/**
+ * The options for encoding a Lynx bundle.
+ *
+ * @public
+ */
 export interface EncodeOptions {
   manifest: Record<string, string | undefined>;
   compilerOptions: Record<string, string | boolean>;
@@ -99,10 +104,13 @@ export interface TemplateHooks {
    *
    * @alpha
    */
-  encode: AsyncSeriesBailHook<{
-    encodeOptions: EncodeOptions;
-    intermediate: string;
-  }, { buffer: Buffer; debugInfo: string }>;
+  encode: AsyncSeriesBailHook<
+    {
+      encodeOptions: EncodeOptions;
+      intermediate?: string;
+    },
+    { buffer: Buffer; debugInfo: string }
+  >;
 
   /**
    * Called before the template is emitted. Can be used to modify the template.
@@ -115,6 +123,7 @@ export interface TemplateHooks {
     template: Buffer;
     outputName: string;
     mainThreadAssets: Asset[];
+    cssChunks: Asset[];
   }>;
 
   /**
@@ -908,6 +917,7 @@ class LynxTemplatePluginImpl {
         outputName: filename,
         mainThreadAssets: [lepusCode.root, ...encodeData.lepusCode.chunks]
           .filter(i => i !== undefined),
+        cssChunks: assetsInfoByGroups.css,
       });
 
       compilation.emitAsset(filename, new RawSource(template, false));

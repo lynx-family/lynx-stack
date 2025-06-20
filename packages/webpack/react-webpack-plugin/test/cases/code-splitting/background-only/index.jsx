@@ -13,7 +13,7 @@ it('should have chunkName', async () => {
     const content = await readFile(__filename, 'utf-8');
 
     expect(content).toContain(
-      `__webpack_require__.e(/*! import() | ./foo.js-react:background */ "./foo.js-react:background")`,
+      `__webpack_require__.e(/*! import() | ./foo.js-react__background */ "./foo.js-react__background")`,
     );
   }
 });
@@ -25,7 +25,7 @@ it('should not have duplicated chunk', async () => {
   ).toHaveLength(
     [
       'main',
-      'main:background',
+      'main__background',
       'foo',
       'bar',
       'baz',
@@ -38,7 +38,7 @@ it('should have async chunks', () => {
     expect(['foo', 'bar', 'baz'].every(entry =>
       existsSync(join(
         __dirname,
-        `${entry}.js-react:background.js`,
+        `${entry}.js-react__background.js`,
       ))
     )).toBeTruthy();
   }

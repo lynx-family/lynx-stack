@@ -7,7 +7,7 @@ import { defineConfig, devices } from '@playwright/test';
 process.env['LIBGL_ALWAYS_SOFTWARE'] = 'true'; // https://github.com/microsoft/playwright/issues/32151
 process.env['GALLIUM_HUD_SCALE'] = '1';
 const isCI = !!process.env.CI;
-const ALL_ON_UI = !!process.env.ALL_ON_UI;
+const enableMultiThread = !!process.env.ENABLE_MULTI_THREAD;
 const enableSSR = !!process.env.ENABLE_SSR;
 const testFPOnly = !!process.env.TEST_FP_ONLY;
 const port = process.env.PORT ?? 3080;
@@ -19,7 +19,7 @@ const testMatch: string | undefined = (() => {
   if (testFPOnly) {
     return '**/fp-only.spec.ts';
   }
-  if (ALL_ON_UI || enableSSR) {
+  if (enableMultiThread || enableSSR) {
     return '**/{react,web-core}.{test,spec}.ts';
   }
   return undefined;

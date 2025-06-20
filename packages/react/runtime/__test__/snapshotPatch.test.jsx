@@ -12,19 +12,16 @@ import { snapshotPatchApply } from '../src/lifecycle/patch/snapshotPatchApply';
 import {
   DynamicPartType,
   SnapshotInstance,
-  backgroundSnapshotInstanceManager,
   createSnapshot,
   snapshotInstanceManager,
   snapshotManager,
 } from '../src/snapshot';
+import { globalEnvManager } from './utils/envManager';
 
 const HOLE = null;
 
 beforeEach(() => {
-  backgroundSnapshotInstanceManager.clear();
-  backgroundSnapshotInstanceManager.nextId = 0;
-  snapshotInstanceManager.clear();
-  snapshotInstanceManager.nextId = 0;
+  globalEnvManager.resetEnv();
 });
 
 afterEach(() => {
@@ -82,17 +79,17 @@ describe('createElement', () => {
       [
         0,
         "__Card__:__snapshot_a94a8_test_1",
-        1,
+        2,
         0,
         "__Card__:__snapshot_a94a8_test_2",
-        2,
+        3,
       ]
     `);
 
-    expect(snapshotInstanceManager.values.size).toEqual(0);
+    expect(snapshotInstanceManager.values.size).toEqual(1);
     snapshotPatchApply(patch);
-    expect(snapshotInstanceManager.values.size).toEqual(2);
-    const si1 = snapshotInstanceManager.values.get(1);
+    expect(snapshotInstanceManager.values.size).toEqual(3);
+    const si1 = snapshotInstanceManager.values.get(bsi1.__id);
     si1.ensureElements();
     expect(si1.__element_root).toMatchInlineSnapshot(`
       <view>
@@ -104,7 +101,7 @@ describe('createElement', () => {
         <view />
       </view>
     `);
-    const si2 = snapshotInstanceManager.values.get(2);
+    const si2 = snapshotInstanceManager.values.get(bsi2.__id);
     si2.ensureElements();
     expect(si2.__element_root).toMatchInlineSnapshot(`
       <view>
@@ -132,21 +129,21 @@ describe('insertBefore', () => {
       [
         0,
         "__Card__:__snapshot_a94a8_test_1",
-        1,
+        2,
         0,
         "__Card__:__snapshot_a94a8_test_2",
-        2,
+        3,
         1,
-        1,
         2,
+        3,
         undefined,
       ]
     `);
 
-    expect(snapshotInstanceManager.values.size).toEqual(0);
+    expect(snapshotInstanceManager.values.size).toEqual(1);
     snapshotPatchApply(patch);
-    expect(snapshotInstanceManager.values.size).toEqual(2);
-    const si1 = snapshotInstanceManager.values.get(1);
+    expect(snapshotInstanceManager.values.size).toEqual(3);
+    const si1 = snapshotInstanceManager.values.get(bsi1.__id);
     si1.ensureElements();
     expect(si1.__element_root).toMatchInlineSnapshot(`
       <view>
@@ -179,28 +176,28 @@ describe('insertBefore', () => {
       [
         0,
         "__Card__:__snapshot_a94a8_test_1",
-        1,
+        2,
         0,
         "__Card__:__snapshot_a94a8_test_2",
-        2,
+        3,
         0,
         "__Card__:__snapshot_a94a8_test_3",
-        3,
+        4,
         1,
-        1,
-        3,
+        2,
+        4,
         undefined,
-        1,
         1,
         2,
         3,
+        4,
       ]
     `);
 
-    expect(snapshotInstanceManager.values.size).toEqual(0);
+    expect(snapshotInstanceManager.values.size).toEqual(1);
     snapshotPatchApply(patch);
-    expect(snapshotInstanceManager.values.size).toEqual(3);
-    const si1 = snapshotInstanceManager.values.get(1);
+    expect(snapshotInstanceManager.values.size).toEqual(4);
+    const si1 = snapshotInstanceManager.values.get(bsi1.__id);
     si1.ensureElements();
     expect(si1.__element_root).toMatchInlineSnapshot(`
       <view>
@@ -238,10 +235,10 @@ describe('insertBefore', () => {
       [
         0,
         "__Card__:__snapshot_a94a8_test_1",
-        1,
+        2,
         0,
         "__Card__:__snapshot_a94a8_test_2",
-        2,
+        3,
         1,
         1,
         100,
@@ -253,7 +250,7 @@ describe('insertBefore', () => {
       ]
     `);
 
-    expect(snapshotInstanceManager.values.size).toEqual(0);
+    expect(snapshotInstanceManager.values.size).toEqual(1);
     snapshotPatchApply(patch);
     expect(_ReportError).toHaveBeenCalledTimes(2);
     expect(_ReportError.mock.calls).toMatchInlineSnapshot(`
@@ -272,8 +269,8 @@ describe('insertBefore', () => {
         ],
       ]
     `);
-    expect(snapshotInstanceManager.values.size).toEqual(2);
-    const si1 = snapshotInstanceManager.values.get(1);
+    expect(snapshotInstanceManager.values.size).toEqual(3);
+    const si1 = snapshotInstanceManager.values.get(bsi1.__id);
     si1.ensureElements();
     expect(si1.__element_root).toMatchInlineSnapshot(`
       <view>
@@ -300,7 +297,7 @@ describe('removeChild', () => {
     let patch = takeGlobalSnapshotPatch();
     snapshotPatchApply(patch);
 
-    const si1 = snapshotInstanceManager.values.get(1);
+    const si1 = snapshotInstanceManager.values.get(bsi1.__id);
     si1.ensureElements();
     expect(si1.__element_root).toMatchInlineSnapshot(`
       <view>
@@ -326,8 +323,8 @@ describe('removeChild', () => {
     expect(patch).toMatchInlineSnapshot(`
       [
         2,
-        1,
         2,
+        3,
       ]
     `);
     snapshotPatchApply(patch);
@@ -352,7 +349,7 @@ describe('removeChild', () => {
     let patch = takeGlobalSnapshotPatch();
     snapshotPatchApply(patch);
 
-    const si1 = snapshotInstanceManager.values.get(1);
+    const si1 = snapshotInstanceManager.values.get(bsi1.__id);
     si1.ensureElements();
     expect(si1.__element_root).toMatchInlineSnapshot(`
       <view>
@@ -385,8 +382,8 @@ describe('removeChild', () => {
     expect(patch).toMatchInlineSnapshot(`
       [
         2,
-        1,
         2,
+        3,
       ]
     `);
     snapshotPatchApply(patch);
@@ -464,8 +461,8 @@ describe('removeChild', () => {
     expect(patch).toMatchInlineSnapshot(`
       [
         2,
-        1,
-        3,
+        2,
+        4,
       ]
     `);
     snapshotPatchApply(patch);
@@ -496,21 +493,21 @@ describe('setAttribute', () => {
       [
         0,
         "__Card__:__snapshot_a94a8_test_4",
-        1,
+        2,
         3,
-        1,
+        2,
         0,
         "attr 1",
         3,
-        1,
+        2,
         1,
         "attr 2",
       ]
     `);
 
-    expect(snapshotInstanceManager.values.size).toEqual(0);
+    expect(snapshotInstanceManager.values.size).toEqual(1);
     snapshotPatchApply(patch);
-    const si1 = snapshotInstanceManager.values.get(1);
+    const si1 = snapshotInstanceManager.values.get(bsi1.__id);
     si1.ensureElements();
     expect(si1.__element_root).toMatchInlineSnapshot(`
         <view>
@@ -532,9 +529,9 @@ describe('setAttribute', () => {
       [
         0,
         "__Card__:__snapshot_a94a8_test_4",
-        1,
+        2,
         4,
-        1,
+        2,
         [
           "attr 1",
           "attr 2",
@@ -542,9 +539,9 @@ describe('setAttribute', () => {
       ]
     `);
 
-    expect(snapshotInstanceManager.values.size).toEqual(0);
+    expect(snapshotInstanceManager.values.size).toEqual(1);
     snapshotPatchApply(patch);
-    const si1 = snapshotInstanceManager.values.get(1);
+    const si1 = snapshotInstanceManager.values.get(bsi1.__id);
     si1.ensureElements();
     expect(si1.__element_root).toMatchInlineSnapshot(`
         <view>
@@ -566,9 +563,9 @@ describe('setAttribute', () => {
       [
         0,
         "__Card__:__snapshot_a94a8_test_4",
-        1,
+        2,
         4,
-        1,
+        2,
         [
           "attr 1",
           "attr 2",
@@ -576,11 +573,11 @@ describe('setAttribute', () => {
       ]
     `);
 
-    patch.push(SnapshotOperation.SetAttributes, 1, ['attr 3', 'attr 4']);
+    patch.push(SnapshotOperation.SetAttributes, 2, ['attr 3', 'attr 4']);
 
-    expect(snapshotInstanceManager.values.size).toEqual(0);
+    expect(snapshotInstanceManager.values.size).toEqual(1);
     snapshotPatchApply(patch);
-    const si1 = snapshotInstanceManager.values.get(1);
+    const si1 = snapshotInstanceManager.values.get(bsi1.__id);
     si1.ensureElements();
     expect(si1.__element_root).toMatchInlineSnapshot(`
       <view>
@@ -602,7 +599,7 @@ describe('setAttribute', () => {
       [
         0,
         "__Card__:__snapshot_a94a8_test_4",
-        1,
+        2,
         4,
         100,
         [
@@ -611,9 +608,9 @@ describe('setAttribute', () => {
       ]
     `);
 
-    patch.push(SnapshotOperation.SetAttributes, 1, ['attr 3', 'attr 4']);
+    patch.push(SnapshotOperation.SetAttributes, 2, ['attr 3', 'attr 4']);
 
-    expect(snapshotInstanceManager.values.size).toEqual(0);
+    expect(snapshotInstanceManager.values.size).toEqual(1);
     snapshotPatchApply(patch);
     expect(_ReportError).toHaveBeenCalledTimes(1);
     expect(_ReportError.mock.calls).toMatchInlineSnapshot(`
@@ -626,7 +623,7 @@ describe('setAttribute', () => {
         ],
       ]
     `);
-    const si1 = snapshotInstanceManager.values.get(1);
+    const si1 = snapshotInstanceManager.values.get(bsi1.__id);
     si1.ensureElements();
     expect(si1.__element_root).toMatchInlineSnapshot(`
       <view>
@@ -648,7 +645,7 @@ describe('setAttribute', () => {
       [
         0,
         "__Card__:__snapshot_a94a8_test_4",
-        1,
+        2,
         3,
         3,
         2,
@@ -657,7 +654,7 @@ describe('setAttribute', () => {
       ]
     `);
 
-    expect(snapshotInstanceManager.values.size).toEqual(0);
+    expect(snapshotInstanceManager.values.size).toEqual(1);
     snapshotPatchApply(patch);
     expect(_ReportError).toHaveBeenCalledTimes(1);
 
@@ -669,7 +666,7 @@ describe('setAttribute', () => {
         },
       ]
     `);
-    const si1 = snapshotInstanceManager.values.get(1);
+    const si1 = snapshotInstanceManager.values.get(bsi1.__id);
     si1.ensureElements();
     expect(si1.__element_root).toMatchInlineSnapshot(`
       <view>
@@ -682,6 +679,7 @@ describe('setAttribute', () => {
 
 describe('DEV_ONLY_addSnapshot', () => {
   beforeEach(() => {
+    globalEnvManager.switchToBackground();
     initGlobalSnapshotPatch();
   });
 
@@ -1292,7 +1290,7 @@ describe('list', () => {
     patch = takeGlobalSnapshotPatch();
     expect(patch.length).toMatchInlineSnapshot(`3`);
     snapshotPatchApply(patch);
-    const si1 = snapshotInstanceManager.values.get(1);
+    const si1 = snapshotInstanceManager.values.get(bsi1.__id);
     si1.ensureElements();
 
     const bsi2 = new BackgroundSnapshotInstance(snapshot5);
@@ -1315,5 +1313,19 @@ describe('list', () => {
         </view>
       </view>
     `);
+  });
+});
+
+describe('missing snapshot', () => {
+  beforeEach(() => {
+    initGlobalSnapshotPatch();
+  });
+
+  it('should throw error when missing snapshot', () => {
+    const bsi1 = new BackgroundSnapshotInstance('missing-snapshot');
+    let patch;
+    patch = takeGlobalSnapshotPatch();
+    expect(patch.length).toMatchInlineSnapshot(`3`);
+    expect(() => snapshotPatchApply(patch)).toThrowError('Snapshot not found: missing-snapshot');
   });
 });

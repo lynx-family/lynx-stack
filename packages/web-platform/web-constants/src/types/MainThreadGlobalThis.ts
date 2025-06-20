@@ -7,6 +7,7 @@ import type {
 } from './Element.js';
 import type { LynxEventType } from './EventType.js';
 import type { FlushElementTreeOptions } from './FlushElementTreeOptions.js';
+import type { I18nResourceTranslationOptions } from './index.js';
 import type { MainThreadLynx } from './MainThreadLynx.js';
 import type { ProcessDataCallback } from './ProcessDataCallback.js';
 
@@ -325,13 +326,18 @@ export interface MainThreadGlobalThis {
   processData?: ProcessDataCallback;
   ssrEncode?: () => string;
   ssrHydrate?: (encodeData?: string) => void;
-  _ReportError: (error: string, _: unknown) => void;
+  _ReportError: (error: Error, _: unknown) => void;
   __OnLifecycleEvent: (lifeCycleEvent: Cloneable) => void;
   __LoadLepusChunk: (path: string) => boolean;
   __FlushElementTree: (
     _subTree: unknown,
     options: FlushElementTreeOptions,
   ) => void;
+  _I18nResourceTranslation: (
+    options: I18nResourceTranslationOptions,
+  ) => unknown | undefined;
+  // This is an empty implementation, just to avoid business call errors
+  _AddEventListener: (...args: unknown[]) => void;
   /**
    * private fields
    */

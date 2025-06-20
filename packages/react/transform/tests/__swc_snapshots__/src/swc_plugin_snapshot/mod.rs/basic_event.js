@@ -13,7 +13,7 @@ const __snapshot_da39a_test_1 = require('@lynx-js/react/internal').createSnapsho
     ];
 }, [
     (snapshot, index, oldValue)=>require('@lynx-js/react/internal').updateEvent(snapshot, index, oldValue, 1, "bindEvent", "tap", '')
-], null, undefined, globDynamicComponentEntry);
+], null, undefined, globDynamicComponentEntry, null);
 function Comp() {
     const handleTap = ()=>{};
     return _jsx(__snapshot_da39a_test_1, {

@@ -4,11 +4,8 @@
 
 import type { Compiler } from 'webpack';
 
-import type { EncodeCSSOptions } from './css/encode.js';
 import type { OriginManifest } from './LynxTemplatePlugin.js';
 import { LynxTemplatePlugin } from './LynxTemplatePlugin.js';
-
-import type { CSS } from './index.js';
 
 // https://github.com/web-infra-dev/rsbuild/blob/main/packages/core/src/types/config.ts#L1029
 type InlineChunkTestFunction = (params: {
@@ -49,37 +46,6 @@ export class LynxEncodePlugin {
    */
   static BEFORE_EMIT_STAGE = 256;
   constructor(protected options?: LynxEncodePluginOptions | undefined) {}
-
-  /**
-   * Encode CSS chunks into a template.
-   *
-   * @param cssChunks - The CSS chunks' content.
-   * @param options - The encode options.
-   * @returns The buffer of the template.
-   *
-   * @example
-   * ```
-   * (await encodeCSS(
-   *   '.red { color: red; }',
-   *   {
-   *     targetSdkVersion: '3.2',
-   *     enableCSSSelector: true,
-   *   },
-   * )).toString('base64'),
-   * ```
-   */
-  static async encodeCSS(
-    cssChunks: string[],
-    options: EncodeCSSOptions,
-    plugins?: CSS.Plugin[],
-    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-    encode?: (options: any) => Promise<{
-      buffer: Buffer;
-    }>,
-  ): Promise<Buffer> {
-    const { encodeCSS } = await import('./css/encode.js');
-    return encodeCSS(cssChunks, options, plugins, encode);
-  }
 
   /**
    * `defaultOptions` is the default options that the {@link LynxEncodePlugin} uses.
@@ -325,5 +291,3 @@ export function isDebug(): boolean {
 export function isRsdoctor(): boolean {
   return process.env['RSDOCTOR'] === 'true';
 }
-
-export type { EncodeCSSOptions } from './css/encode.js';
