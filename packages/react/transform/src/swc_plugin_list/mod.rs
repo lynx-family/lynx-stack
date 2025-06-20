@@ -40,7 +40,7 @@ fn jsx_list_item_deferred(n: &JSXElement) -> bool {
   return n.opening.attrs.iter().any(|attr| {
     if let JSXAttrOrSpread::JSXAttr(attr) = attr {
       if let JSXAttrName::Ident(ident) = &attr.name {
-        ident.sym == "deferred"
+        ident.sym == "defer"
       } else {
         false
       }
@@ -55,7 +55,7 @@ where
   C: Comments,
 {
   // transform
-  // <list-item ... deferred key={...}>
+  // <list-item ... defer key={...}>
   //   ...
   // </list-item>
   // to
@@ -69,7 +69,7 @@ where
 
     if jsx_list_item_deferred(&n) {
       let mut key: Option<JSXAttrOrSpread> = None;
-      let mut deferred: Option<JSXAttrOrSpread> = None;
+      let mut defer: Option<JSXAttrOrSpread> = None;
 
       n.opening.attrs.retain_mut(|attr_or_spread| {
         if let JSXAttrOrSpread::JSXAttr(attr) = attr_or_spread {
@@ -77,8 +77,8 @@ where
             if ident.sym == "key" {
               key = Some(attr_or_spread.clone());
               return false;
-            } else if ident.sym == "deferred" {
-              deferred = Some(attr_or_spread.clone());
+            } else if ident.sym == "defer" {
+              defer = Some(attr_or_spread.clone());
               return false;
             }
           }
@@ -149,7 +149,7 @@ where
           ]
           .into_iter()
           .chain(key)
-          .chain(deferred)
+          .chain(defer)
           .collect(),
           type_args: None,
           self_closing: true,
@@ -207,7 +207,7 @@ mod tests {
     |t| visit_mut_pass(ListVisitor::new(Some(t.comments.clone()))),
     should_transform_list_item_deferred_basic,
     r#"
-    <list-item deferred key="1"></list-item>;
+    <list-item defer key="1"></list-item>;
     "#
   );
 
@@ -221,8 +221,8 @@ mod tests {
     should_transform_list_item_deferred_in_list,
     r#"
     <list>
-      <list-item deferred key="1"></list-item>
-      <list-item deferred key="2"></list-item>
+      <list-item defer key="1"></list-item>
+      <list-item defer key="2"></list-item>
     </list>;
     "#
   );
@@ -249,7 +249,7 @@ mod tests {
     |t| visit_mut_pass(ListVisitor::new(Some(t.comments.clone()))),
     should_transform_list_item_with_spread_deferred,
     r#"
-    <list-item deferred key="1" {...spread}></list-item>;
+    <list-item defer key="1" {...spread}></list-item>;
     "#
   );
 
@@ -262,7 +262,7 @@ mod tests {
     |t| visit_mut_pass(ListVisitor::new(Some(t.comments.clone()))),
     should_transform_list_item_deferred_with_children,
     r#"
-    <list-item deferred key="1" style="color: red; width: 100rpx;" className="x" bindtap={noop}>
+    <list-item defer key="1" style="color: red; width: 100rpx;" className="x" bindtap={noop}>
       <view/>
       <text/>
       <image/>
@@ -297,7 +297,7 @@ mod tests {
     },
     should_transform_list_item_deferred_with_children_with_snapshot,
     r#"
-    <list-item deferred key="1" style="color: red; width: 100rpx;" className="x" bindtap={noop}>
+    <list-item defer key="1" style="color: red; width: 100rpx;" className="x" bindtap={noop}>
       <view/>
       <text/>
       <image/>

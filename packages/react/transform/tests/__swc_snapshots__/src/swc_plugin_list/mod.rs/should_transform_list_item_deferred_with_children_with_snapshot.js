@@ -37,4 +37,4 @@ const __snapshot_da39a_test_4 = require('@lynx-js/react/internal').createSnapsho
       <__snapshot_da39a_test_2/>
       <__snapshot_da39a_test_3/>
       <__snapshot_da39a_test_4/>
-    </>} key="1" deferred/>;
+    </>} key="1" defer/>;

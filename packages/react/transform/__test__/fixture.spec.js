@@ -149,8 +149,8 @@ describe('jsx', () => {
     `);
   });
 
-  it('<list-item deferred />', async () => {
-    const result = await transformReactLynx('const jsx = <list><list-item deferred /></list>;', {
+  it('<list-item defer />', async () => {
+    const result = await transformReactLynx('const jsx = <list><list-item defer /></list>;', {
       pluginName: '',
       filename: '',
       sourceFileName: '',
@@ -198,7 +198,7 @@ describe('jsx', () => {
                       children: __c
                   }),
               renderChildren: ()=>/*#__PURE__*/ _jsx(_Fragment, {}),
-              deferred: true
+              defer: true
           })
       });
       ",
