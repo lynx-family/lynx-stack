@@ -5,3 +5,7 @@
 export { display } from './display.js';
 export { position } from './position.js';
 export { textDecoration } from './textDecoration.js';
+export { rotate } from './rotate.js';
+export { scale } from './scale.js';
+export { translate } from './translate.js';
+export { transform } from './transform.js';

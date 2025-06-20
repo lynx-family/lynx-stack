@@ -7,7 +7,7 @@ import { createUtilityPlugin } from '../../helpers.js';
 /**
  * Base on https://github.com/tailwindlabs/tailwindcss/blob/d1f066d97a30539c1c86aa987c75b6d84ef29609/src/corePlugins.js#L492
  */
-export const rotate: void = createUtilityPlugin(
+export const rotate = createUtilityPlugin(
   'rotate',
   [
     ['rotate', ['--tw-rotate', ['transform', 'rotate(var(--tw-rotate))']]],

@@ -1,14 +1,16 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import type { Config } from 'tailwindcss';
 
 import { display, position, textDecoration } from './plugins/lynx/index.js';
 
 /**
  * Should be used with Tailwind JIT and configured with purge, otherwise the bundle will be too large.
  */
-export default {
-  plugins: [position, textDecoration, display],
+
+const preset: Partial<Config> = {
+  plugins: [display, position, textDecoration],
   corePlugins: [
     // 'preflight',
     'alignContent',
@@ -68,7 +70,7 @@ export default {
 
     'opacity',
     'order',
-    'outline',
+    // 'outline',
     'overflow',
 
     'padding',
@@ -111,6 +113,8 @@ export default {
   ],
 };
 
+export default preset;
+
 // Tailwind un-configured corePlugins
 // 'container'
 
@@ -125,8 +129,6 @@ export default {
 // 'tableLayout'
 // 'borderCollapse'
 
-// 'animation'
-
 // 'cursor'
 // 'userSelect'
 // 'resize'
@@ -140,7 +142,6 @@ export default {
 // 'placeItems'
 
 // 'justifyItems'
-// 'gap'
 // 'space'
 // 'divideWidth'
 // 'divideStyle'
@@ -206,3 +207,38 @@ export default {
 // 'backdropSaturate'
 // 'backdropSepia'
 // 'backdropFilter'
+
+// 'accentColor',
+//   'borderOpacity',
+//   'borderSpacing',
+//   'boxShadowColor',
+//   'breakAfter',
+//   'breakBefore',
+//   'breakInside',
+//   'captionSide',
+//   'columns',
+//   'contain',
+//   'flexBasis',
+//   'forcedColorAdjust',
+//   'hyphens',
+//   'lineClamp',
+//   'listStyleImage',
+//   'outlineColor',
+//   'outlineOffset',
+//   'outlineStyle',
+//   'outlineWidth',
+//   'scrollBehavior',
+//   'scrollMargin',
+//   'scrollPadding',
+//   'scrollSnapAlign',
+//   'scrollSnapStop',
+//   'scrollSnapType',
+//   'size',
+//   'textDecorationColor',
+//   'textDecorationStyle',
+//   'textDecorationThickness',
+//   'textIndent',
+//   'textUnderlineOffset',
+//   'textWrap',
+//   'touchAction',
+//   'willChange'

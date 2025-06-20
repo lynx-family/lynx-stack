@@ -9,6 +9,11 @@
     "baseUrl": "./",
     "resolveJsonModule": true,
     "isolatedDeclarations": false,
+    "paths": {
+      "tailwindcss/types/config": ["node_modules/tailwindcss/types/config.d.ts"],
+    },
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
   },
   "include": [
     "src",

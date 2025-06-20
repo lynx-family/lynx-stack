@@ -1,0 +1,26 @@
+{
+  "name": "@lynx-js/example-tailwindcss",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "rspeedy build",
+    "dev": "rspeedy dev",
+    "test:type": "vitest --typecheck.only"
+  },
+  "dependencies": {
+    "@lynx-js/react": "workspace:*",
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^2.6.0"
+  },
+  "devDependencies": {
+    "@lynx-js/qrcode-rsbuild-plugin": "workspace:*",
+    "@lynx-js/react-rsbuild-plugin": "workspace:*",
+    "@lynx-js/rspeedy": "workspace:*",
+    "@lynx-js/tailwind-preset": "workspace:*",
+    "@lynx-js/types": "3.3.0",
+    "@types/react": "^18.3.23",
+    "rsbuild-plugin-tailwindcss": "0.2.1",
+    "tailwindcss": "^3.4.17"
+  }
+}

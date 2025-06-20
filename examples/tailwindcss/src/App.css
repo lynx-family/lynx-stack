@@ -1,0 +1,21 @@
+@tailwind utilities;
+
+:root {
+  --radius: 8px;
+  --color-base-1: rgba(0, 0, 0, 1);
+  --color-base-2: rgba(38, 38, 38, 1);
+  --color-base-3: rgba(0, 0, 0, 1);
+  --color-base-4: rgba(38, 38, 38, 1);
+  --color-base-content: rgba(255, 255, 255, 1);
+  --color-primary: rgba(255, 100, 72, 1);
+  --color-primary-content: rgba(255, 255, 255, 1);
+  --color-secondary: rgba(61, 234, 231, 1);
+  --color-secondary-content: rgb(0, 0, 0, 1);
+  --color-muted: rgba(38, 38, 38, 1);
+  --color-muted-content: rgba(163, 163, 163, 1);
+  --color-neutral: rgba(0, 0, 0, 1);
+  --color-neutral-content: rgba(255, 255, 255, 1);
+  --color-border: rgba(64, 64, 64, 1);
+  --color-ring: rgba(61, 234, 231, 1);
+  --color-field: rgba(64, 64, 64, 1);
+}

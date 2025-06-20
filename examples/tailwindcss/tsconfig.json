@@ -1,0 +1,33 @@
+{
+  "compilerOptions": {
+    "composite": true,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "outDir": "dist/types",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+    },
+    "jsx": "react-jsx",
+    "jsxImportSource": "@lynx-js/react",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+
+    "allowJs": true,
+    "checkJs": true,
+    "isolatedDeclarations": false,
+
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+  },
+  "include": ["src", "lynx.config.js"],
+  "exclude": ["dist/"],
+  "references": [
+    { "path": "../../packages/react/tsconfig.json" },
+    { "path": "../../packages/rspeedy/core/tsconfig.build.json" },
+    { "path": "../../packages/rspeedy/plugin-qrcode/tsconfig.build.json" },
+    { "path": "../../packages/rspeedy/plugin-react/tsconfig.build.json" },
+  ],
+}

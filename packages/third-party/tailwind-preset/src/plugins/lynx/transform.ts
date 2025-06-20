@@ -5,7 +5,7 @@
 /* eslint-disable @typescript-eslint/unbound-method */
 import { createPlugin } from '../../helpers.js';
 
-export const transform: void = createPlugin(({ addUtilities, variants }) => {
+export const transform = createPlugin(({ addUtilities }) => {
   addUtilities(
     {
       '.transform': {
@@ -17,6 +17,5 @@ export const transform: void = createPlugin(({ addUtilities, variants }) => {
       },
       '.transform-none': { transform: 'none' },
     },
-    variants('transform'),
   );
 });
