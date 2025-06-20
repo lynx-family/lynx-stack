@@ -5,7 +5,7 @@
 "@lynx-js/template-webpack-plugin": patch
 ---
 
-Align `output.inlineScripts` with Rsbuild, except for `enable: 'auto'`
+Align `output.inlineScripts` with Rsbuild
 
 ```ts
 type InlineChunkTestFunction = (params: {

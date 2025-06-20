@@ -153,7 +153,6 @@ export interface TemplateHooks {
     }>;
     // @alpha
     beforeEncode: AsyncSeriesWaterfallHook<{
-        originManifest: OriginManifest;
         encodeData: EncodeRawData;
         filenameTemplate: string;
         entryNames: string[];
@@ -187,6 +186,6 @@ export class WebEncodePlugin {
 
 // Warnings were encountered during analysis:
 //
-// lib/LynxTemplatePlugin.d.ts:63:9 - (ae-forgotten-export) The symbol "EncodeRawData" needs to be exported by the entry point index.d.ts
+// lib/LynxTemplatePlugin.d.ts:67:9 - (ae-forgotten-export) The symbol "EncodeRawData" needs to be exported by the entry point index.d.ts
 
 ```
