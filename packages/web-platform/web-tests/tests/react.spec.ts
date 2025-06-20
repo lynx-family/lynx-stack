@@ -667,6 +667,28 @@ test.describe('reactlynx3 tests', () => {
       await wait(500);
       expect(offset).toBe(true);
     });
+    test('api-set-release', async ({ page }, { title }) => {
+      let success = false;
+      await page.on('console', async (msg) => {
+        const event = await msg.args()[0]?.evaluate((e) => {
+          return {
+            type: e.type,
+            release: e.detail?.release,
+          };
+        });
+        if (!event || event.type !== 'error') {
+          return;
+        }
+        if (
+          typeof event.release === 'string' && event.release === '1'
+        ) {
+          success = true;
+        }
+      });
+      await goto(page, title);
+      await wait(500);
+      expect(success).toBe(true);
+    });
 
     test('api-preheat', async ({ page }, { title }) => {
       await goto(page, title);
