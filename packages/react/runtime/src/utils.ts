@@ -14,7 +14,7 @@ export function isDirectOrDeepEqual(a: any, b: any): boolean {
 }
 
 export function isEmptyObject(obj?: object): obj is Record<string, never> {
-  for (var _ in obj) return false;
+  for (const _ in obj) return false;
   return true;
 }
 

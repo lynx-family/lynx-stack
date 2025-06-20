@@ -206,7 +206,7 @@ export class BackgroundSnapshotInstance {
           for (let index = 0; index < value.length; index++) {
             const { needUpdate, valueToCommit } = this.setAttributeImpl(value[index], oldValues[index], index);
             if (needUpdate) {
-              __globalSnapshotPatch!.push(
+              __globalSnapshotPatch.push(
                 SnapshotOperation.SetAttribute,
                 this.__id,
                 index,
@@ -221,7 +221,7 @@ export class BackgroundSnapshotInstance {
             const { valueToCommit } = this.setAttributeImpl(value[index], null, index);
             patch[index] = valueToCommit;
           }
-          __globalSnapshotPatch!.push(
+          __globalSnapshotPatch.push(
             SnapshotOperation.SetAttributes,
             this.__id,
             patch,

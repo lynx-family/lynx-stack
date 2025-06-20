@@ -73,12 +73,20 @@ export default tseslint.config(
       'packages/react/runtime/jsx-runtime/**',
       'packages/react/runtime/lazy/**',
       'packages/react/runtime/lepus/**',
-      'packages/react/runtime/src/**/*',
+      'packages/react/runtime/src/renderToOpcodes/**',
       'packages/react/runtime/types/**',
-      '!packages/react/runtime/src/lifecycle/**',
-      '!packages/react/runtime/src/lynx/**',
-      '!packages/react/runtime/src/snapshot/**',
-      '!packages/react/runtime/src/worklet/**',
+
+      // TODO: enable eslint for react-runtime
+      'packages/react/runtime/src/backgroundSnapshot.ts',
+      'packages/react/runtime/src/compat/**',
+      'packages/react/runtime/src/debug/**',
+      'packages/react/runtime/src/hydrate.ts',
+      'packages/react/runtime/src/list.ts',
+      'packages/react/runtime/src/lynx-api.ts',
+      'packages/react/runtime/src/lynx.ts',
+      'packages/react/runtime/src/opcodes.ts',
+      'packages/react/runtime/src/snapshot.ts',
+      'packages/react/runtime/src/utils.ts',
 
       // TODO: enable eslint for tools
       // tools

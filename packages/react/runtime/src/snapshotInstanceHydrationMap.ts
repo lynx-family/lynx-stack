@@ -9,7 +9,7 @@
  * The map is used by the ref system to translate between snapshot instance IDs when
  * operations need to cross the thread boundary during the commit phase.
  */
-const hydrationMap: Map<number, number> = new Map();
+const hydrationMap: Map<number, number> = new Map<number, number>();
 
 /**
  * @internal
