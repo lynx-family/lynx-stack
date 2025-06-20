@@ -308,7 +308,11 @@ export interface Output {
    *
    * This is different with {@link https://rsbuild.dev/config/output/inline-scripts | output.inlineScripts } since we normally want to inline scripts in Lynx bundle (`.lynx.bundle`).
    *
-   * Only background thread scripts can remain non-inlined, whereas the main thread script is always inlined.
+   * There are two points that need to be especially noted:
+   *
+   * 1. Only background thread scripts can remain non-inlined, whereas the main thread script is always inlined.
+   *
+   * 2. When `experimental_isLazyBundle` is enabled, `inlineScripts` will always be `true`.
    *
    * @example
    *
