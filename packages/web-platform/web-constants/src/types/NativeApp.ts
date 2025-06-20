@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 
 import type { CloneableObject } from './Cloneable.js';
+import type { I18nResource } from './I18n.js';
 import type { LynxContextEventTarget } from './LynxContextEventTarget.js';
 import type { PerformancePipelineOptions } from './Performance.js';
 
@@ -189,4 +190,6 @@ export interface NativeApp {
 
   setSharedData<T>(dataKey: string, dataVal: T): void;
   getSharedData<T = unknown>(dataKey: string): T | undefined;
+
+  i18nResource: I18nResource;
 }

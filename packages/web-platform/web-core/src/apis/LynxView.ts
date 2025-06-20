@@ -9,6 +9,7 @@ import {
 import {
   inShadowRootStyles,
   type Cloneable,
+  type I18nResourceTranslationOptions,
   type InitI18nResources,
   type LynxTemplate,
   type NapiModulesCall,
@@ -160,8 +161,11 @@ export class LynxView extends HTMLElement {
    * @method
    * update the `__initData` and trigger essential flow
    */
-  updateI18nResources(data: InitI18nResources) {
-    this.#instance?.updateI18nResources(data as Cloneable);
+  updateI18nResources(
+    data: InitI18nResources,
+    options: I18nResourceTranslationOptions,
+  ) {
+    this.#instance?.updateI18nResources(data, options);
   }
 
   #overrideLynxTagToHTMLTagMap: Record<string, string> = { 'page': 'div' };
@@ -406,7 +410,7 @@ export class LynxView extends HTMLElement {
             this.attachShadow({ mode: 'open' });
           }
           const lynxGroupId = this.lynxGroupId;
-          const threadStrategy = (this.threadStrategy ?? 'multi-thread') as
+          const threadStrategy = (this.threadStrategy ?? 'all-on-ui') as
             | 'all-on-ui'
             | 'multi-thread';
           const lynxView = createLynxView({

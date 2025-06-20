@@ -22,6 +22,8 @@ import {
   getCacheI18nResourcesKey,
   type InitI18nResources,
   type I18nResources,
+  dispatchI18nResourceEndpoint,
+  type Cloneable,
 } from '@lynx-js/web-constants';
 import { registerCallLepusMethodHandler } from './crossThreadHandlers/registerCallLepusMethodHandler.js';
 import { registerGetCustomSectionHandler } from './crossThreadHandlers/registerGetCustomSectionHandler.js';
@@ -54,6 +56,9 @@ export function prepareMainThreadAPIs(
     publicComponentEventEndpoint,
   );
   const postExposure = backgroundThreadRpc.createCall(postExposureEndpoint);
+  const dispatchI18nResource = backgroundThreadRpc.createCall(
+    dispatchI18nResourceEndpoint,
+  );
   markTimingInternal('lepus_execute_start');
   async function startMainThread(
     config: StartMainThreadContextConfig,
@@ -189,6 +194,7 @@ export function prepareMainThreadAPIs(
             getCacheI18nResourcesKey(i.options)
               === getCacheI18nResourcesKey(options)
           );
+          dispatchI18nResource(matchedInitI18nResources?.resource as Cloneable);
           if (matchedInitI18nResources) {
             return matchedInitI18nResources.resource;
           }

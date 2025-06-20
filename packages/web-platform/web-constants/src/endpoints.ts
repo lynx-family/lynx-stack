@@ -218,3 +218,13 @@ export const updateI18nResourcesEndpoint = createRpcEndpoint<
   [Cloneable],
   void
 >('updateI18nResources', false, false);
+
+export const updateI18nResourceEndpoint = createRpcEndpoint<
+  [Cloneable | undefined],
+  void
+>('updateI18nResource', false, false);
+
+export const dispatchI18nResourceEndpoint = createRpcEndpoint<
+  [Cloneable],
+  void
+>('dispatchI18nResource', false, false);

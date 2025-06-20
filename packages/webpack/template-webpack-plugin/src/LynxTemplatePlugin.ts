@@ -117,6 +117,7 @@ export interface TemplateHooks {
     template: Buffer;
     outputName: string;
     mainThreadAssets: Asset[];
+    cssChunks: Asset[];
   }>;
 
   /**
@@ -906,6 +907,7 @@ class LynxTemplatePluginImpl {
         outputName: filename,
         mainThreadAssets: [lepusCode.root, ...encodeData.lepusCode.chunks]
           .filter(i => i !== undefined),
+        cssChunks: assetsInfoByGroups.css,
       });
 
       compilation.emitAsset(filename, new RawSource(template, false));

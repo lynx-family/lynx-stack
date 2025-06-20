@@ -47,5 +47,6 @@ export function createBackgroundLynx(
     createElement(_: string, id: string) {
       return createElement(id, uiThreadRpc);
     },
+    getI18nResource: () => nativeApp.i18nResource.data,
   };
 }

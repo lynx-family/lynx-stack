@@ -16,12 +16,6 @@ runs:
       run: |
         echo "version=$(pnpm ls @playwright/test --depth=0 --parseable | grep @playwright | sed -E 's/.*@([0-9]+\.[0-9]+\.[0-9]+).*/\1/')" >> "$GITHUB_OUTPUT"
       shell: bash
-    - name: force to use https apt
-      run: |
-        sudo sed -i 's|http:|https:|' /etc/apt/sources.list.d/ubuntu.sources
-        sudo sed -i 's|http:|https:|' /etc/apt/sources.list.d/*.list
-        sudo apt update
-      shell: bash
     - name: Cache Playwright
       uses: lynx-infra/cache@5c6160a6a4c7fca80a2f3057bb9dfc9513fcb732
       id: playwright-cache
