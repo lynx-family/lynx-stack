@@ -4,7 +4,6 @@
 
 import type { Compiler } from 'webpack';
 
-import type { OriginManifest } from './LynxTemplatePlugin.js';
 import { LynxTemplatePlugin } from './LynxTemplatePlugin.js';
 
 // https://github.com/web-infra-dev/rsbuild/blob/main/packages/core/src/types/config.ts#L1029
@@ -122,26 +121,28 @@ export class LynxEncodePluginImpl {
         name: this.name,
         stage: LynxEncodePlugin.BEFORE_ENCODE_STAGE,
       }, async (args) => {
-        const { encodeData, originManifest } = args;
+        const { encodeData } = args;
+        const { manifest } = encodeData;
 
         const [inlinedManifest, externalManifest] = Object.entries(
-          originManifest,
+          manifest,
         )
           .reduce(
-            ([inlined, external], [name, asset]) => {
+            ([inlined, external], [name, content]) => {
+              const assert = compilation.getAsset(name);
               const shouldInline = this.#shouldInlineScript(
                 name,
-                assert.size,
+                assert!.source.size(),
               );
 
               if (shouldInline) {
-                inlined[name] = assert;
+                inlined[name] = content;
               } else {
-                external[name] = assert;
+                external[name] = content;
               }
               return [inlined, external];
             },
-            [{}, {}] as [OriginManifest, OriginManifest],
+            [{}, {}] as [Record<string, string>, Record<string, string>],
           );
 
         let publicPath = '/';
@@ -159,7 +160,7 @@ export class LynxEncodePluginImpl {
           [
             encodeData.lepusCode.root,
             ...encodeData.lepusCode.chunks,
-            ...Object.keys(originManifest).map(name => ({ name })),
+            ...Object.keys(manifest).map(name => ({ name })),
             ...encodeData.css.chunks,
           ]
             .filter(asset => asset !== undefined)
@@ -199,9 +200,9 @@ export class LynxEncodePluginImpl {
             this.#appServiceFooter(),
           ].join(''),
           ...Object.fromEntries(
-            Object.entries(inlinedManifest).map(([name, asset]) => [
+            Object.entries(inlinedManifest).map(([name, content]) => [
               this.#formatJSName(name, '/'),
-              asset.content,
+              content,
             ]),
           ),
         };
@@ -260,7 +261,6 @@ export class LynxEncodePluginImpl {
     }
 
     if (typeof inlineConfig === 'object') {
-      // Currently, rspeedy does not support enable: 'auto'
       if (inlineConfig.enable === false) return false;
       if (inlineConfig.test instanceof RegExp) {
         return inlineConfig.test.test(name);

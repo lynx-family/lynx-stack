@@ -93,7 +93,6 @@ export interface TemplateHooks {
    * @alpha
    */
   beforeEncode: AsyncSeriesWaterfallHook<{
-    originManifest: OriginManifest;
     encodeData: EncodeRawData;
     filenameTemplate: string;
     entryNames: string[];
@@ -814,7 +813,11 @@ class LynxTemplatePluginImpl {
         root: assetsInfoByGroups.mainThread[0],
         chunks: [],
       },
-      manifest: {},
+      manifest: Object.fromEntries(
+        assetsInfoByGroups.backgroundThread.map(asset => {
+          return [asset.name, asset.source.source().toString()];
+        }),
+      ),
       customSections: {},
     };
     const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(
@@ -823,14 +826,6 @@ class LynxTemplatePluginImpl {
 
     const { encodeData } = await hooks.beforeEncode.promise({
       encodeData: encodeRawData,
-      originManifest: Object.fromEntries(
-        assetsInfoByGroups.backgroundThread.map(asset => {
-          return [asset.name, {
-            content: asset.source.source().toString(),
-            size: asset.source.size(),
-          }];
-        }),
-      ),
       filenameTemplate,
       entryNames,
     });

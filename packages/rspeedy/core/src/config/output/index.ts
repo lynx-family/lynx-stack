@@ -310,11 +310,8 @@ export interface Output {
    *
    * Only background thread scripts can remain non-inlined, whereas the main thread script is always inlined.
    *
-   * The inlineScripts configuration type aligns with Rsbuild's implementation, with the exception that the `enable: 'auto'` option is not supported.
-   *
    * @example
    *
-   * Disable inlining background thread scripts.
    * ```js
    * import { defineConfig } from '@lynx-js/rspeedy'
    *
