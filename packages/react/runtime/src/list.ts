@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { hydrate } from './hydrate.js';
 import { applyRefQueue } from './snapshot/workletRef.js';
-import type { SnapshotInstance } from './snapshot.js';
+import { type SnapshotInstance } from './snapshot.js';
 
 export interface ListUpdateInfo {
   flush(): void;
@@ -294,10 +294,9 @@ export function componentAtIndexFactory(
           __FlushElementTree(root, { triggerLayout: true, operationID, elementID: sign, listID });
         } else if (enableBatchRender && asyncFlush) {
           __FlushElementTree(root, { asyncFlush: true });
-        } else {
-          // enableBatchRender == true && asyncFlush == false
-          // in this case, no need to invoke __FlushElementTree because in the end of componentAtIndexes(), the list will invoke __FlushElementTree.
         }
+        // enableBatchRender == true && asyncFlush == false
+        // in this case, no need to invoke __FlushElementTree because in the end of componentAtIndexes(), the list will invoke __FlushElementTree.
         return sign;
       } else {
         const newCtx = childCtx.takeElements();
@@ -311,6 +310,9 @@ export function componentAtIndexFactory(
       recycleSignMap.delete(sign);
       hydrate(oldCtx, childCtx);
       oldCtx.unRenderElements();
+      if (!oldCtx.__id) {
+        oldCtx.tearDown();
+      }
       const root = childCtx.__element_root!;
       applyRefQueue();
       if (!enableBatchRender) {

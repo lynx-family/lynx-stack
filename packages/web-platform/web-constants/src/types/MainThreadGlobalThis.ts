@@ -267,6 +267,10 @@ export type GetTemplatePartsPAPI = (
   templateElement: WebFiberElementImpl,
 ) => Record<string, WebFiberElementImpl> | undefined;
 
+interface JSErrorInfo {
+  release: string;
+}
+
 export interface MainThreadGlobalThis {
   __AddEvent: AddEventPAPI;
   __GetEvent: GetEventPAPI;
@@ -327,6 +331,7 @@ export interface MainThreadGlobalThis {
   ssrEncode?: () => string;
   ssrHydrate?: (encodeData?: string) => void;
   _ReportError: (error: Error, _: unknown) => void;
+  _SetSourceMapRelease: (errInfo: JSErrorInfo) => void;
   __OnLifecycleEvent: (lifeCycleEvent: Cloneable) => void;
   __LoadLepusChunk: (path: string) => boolean;
   __FlushElementTree: (

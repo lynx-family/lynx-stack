@@ -1,5 +1,9 @@
+// Copyright 2025 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
 import { options } from 'preact';
-import type { VNode } from 'preact';
+import type { Component, VNode } from 'preact';
+
 import { COMPONENT, DIFF, DIFFED, FORCE } from '../renderToOpcodes/constants.js';
 
 const sForcedVNode = Symbol('FORCE');
@@ -8,7 +12,7 @@ type PatchedVNode = VNode & { [sForcedVNode]?: true };
 
 export function runWithForce(cb: () => void): void {
   // save vnode and its `_component` in WeakMap
-  const m = new WeakMap<VNode, any>();
+  const m = new WeakMap<VNode, Component>();
 
   const oldDiff = options[DIFF];
 
@@ -22,13 +26,13 @@ export function runWithForce(cb: () => void): void {
     // but it will be set later
     Object.defineProperty(vnode, COMPONENT, {
       configurable: true,
-      set(c) {
+      set(c: Component) {
         m.set(vnode, c);
         if (c) {
           c[FORCE] = true;
         }
       },
-      get() {
+      get(): Component | undefined {
         return m.get(vnode);
       },
     });
@@ -50,7 +54,7 @@ export function runWithForce(cb: () => void): void {
       delete vnode[COMPONENT];
       delete vnode[sForcedVNode];
       // restore
-      vnode[COMPONENT] = m.get(vnode);
+      vnode[COMPONENT] = m.get(vnode)!;
     }
   };
 

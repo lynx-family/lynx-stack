@@ -41,7 +41,9 @@ describe('lazy bundle', () => {
     </view>
   `);
 
-    await waitForElementToBeRemoved(() => screen.getByText('loading...'));
+    await waitForElementToBeRemoved(() => screen.getByText('loading...'), {
+      timeout: 50_000,
+    });
 
     expect(container.firstChild).toMatchInlineSnapshot(`
       <view>

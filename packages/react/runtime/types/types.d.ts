@@ -2,8 +2,11 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import '@lynx-js/types';
+import { EventEmitter } from '@lynx-js/types';
+
+import { LifecycleConstant } from '../src/lifecycleConstant.js';
 import { Lynx as LynxApi } from '../src/lynx-api.js';
+import type { InitData, InitDataRaw } from '../src/lynx-api.js';
 
 declare global {
   declare const __DISABLE_CREATE_SELECTOR_QUERY_INCOMPATIBLE_WARNING__: boolean;
@@ -172,7 +175,24 @@ declare global {
   }
 
   namespace lynxCoreInject {
-    const tt: any;
+    const tt: {
+      _params: {
+        initData: Record<string, any>;
+        updateData: Record<string, any>;
+      };
+
+      OnLifecycleEvent: ([type, data]: [LifecycleConstant, unknown]) => void;
+      publishEvent: (handlerName: string, data: unknown) => void;
+      publicComponentEvent: (componentId: string, handlerName: string, data: unknown) => void;
+      callDestroyLifetimeFun: () => void;
+      updateGlobalProps: (newData: Record<string, unknown>) => void;
+      updateCardData: (newData: Record<string, any>, options?: Record<string, unknown>) => void;
+      onAppReload: (updateData: Record<string, any>) => void;
+      processCardConfig: () => void;
+      callBeforePublishEvent: (data: unknown) => void;
+      getDynamicComponentExports: (schema: string) => { default: React.ComponentType<any> } | null | undefined;
+      GlobalEventEmitter: EventEmitter;
+    };
   }
 
   declare interface PipelineOptions {
@@ -223,6 +243,8 @@ declare global {
 
     onTriggerEvent(callback: (event: RuntimeProxy.Event) => void);
   }
+
+  declare function processData(data: InitDataRaw, processorName?: string): InitData;
 }
 
 interface NativeApp {

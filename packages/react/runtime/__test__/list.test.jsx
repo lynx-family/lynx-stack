@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { elementTree } from './utils/nativeMethod';
+import { elementTree, nativeMethodQueue } from './utils/nativeMethod';
 import { hydrate } from '../src/hydrate';
 import { __pendingListUpdates } from '../src/list';
 import { SnapshotInstance, snapshotInstanceManager } from '../src/snapshot';
@@ -618,31 +618,30 @@ describe(`list componentAtIndex`, () => {
     `);
   });
 
+  const _s3 = __SNAPSHOT__(<list-item item-key={HOLE}>{HOLE}</list-item>);
+  const _s4 = __SNAPSHOT__(<text>Hello</text>);
+  const _s5 = __SNAPSHOT__(<text>World</text>);
   it('should reuse and hydrate - with childNodes', () => {
     const b = new SnapshotInstance(s1);
     b.ensureElements();
     const listRef = b.__elements[3];
 
-    const s3 = __SNAPSHOT__(<list-item item-key={HOLE}>{HOLE}</list-item>);
-    const s4 = __SNAPSHOT__(<text>Hello</text>);
-    const s5 = __SNAPSHOT__(<text>World</text>);
-
-    const c0 = new SnapshotInstance(s3);
-    const c1 = new SnapshotInstance(s3);
-    const c2 = new SnapshotInstance(s3);
+    const c0 = new SnapshotInstance(_s3);
+    const c1 = new SnapshotInstance(_s3);
+    const c2 = new SnapshotInstance(_s3);
     b.insertBefore(c0);
     b.insertBefore(c1);
     b.insertBefore(c2);
 
-    const c0_d0 = new SnapshotInstance(s4);
-    const c0_d1 = new SnapshotInstance(s5);
+    const c0_d0 = new SnapshotInstance(_s4);
+    const c0_d1 = new SnapshotInstance(_s5);
     c0.insertBefore(c0_d0);
     c0.insertBefore(c0_d1);
 
-    const c1_d0 = new SnapshotInstance(s4);
+    const c1_d0 = new SnapshotInstance(_s4);
     c1.insertBefore(c1_d0);
 
-    const c2_d0 = new SnapshotInstance(s5);
+    const c2_d0 = new SnapshotInstance(_s5);
     c2.insertBefore(c2_d0);
 
     __pendingListUpdates.flush();
@@ -871,6 +870,145 @@ describe(`list componentAtIndex`, () => {
     expect(component[0]).toBe(component[1]);
   });
 
+  it('should reuse and hydrate - item removed can be reused correctly', () => {
+    const b = new SnapshotInstance(s1);
+    b.ensureElements();
+    const listRef = b.__elements[3];
+
+    const c0 = new SnapshotInstance(_s3);
+    const c1 = new SnapshotInstance(_s3);
+    const c2 = new SnapshotInstance(_s3);
+    const c3 = new SnapshotInstance(_s3);
+    const c4 = new SnapshotInstance(_s3);
+    const c5 = new SnapshotInstance(_s3);
+
+    [c0, c1, c2, c3, c4, c5].forEach(c => {
+      const d0 = new SnapshotInstance(_s4);
+      const d1 = new SnapshotInstance(_s4);
+      const d2 = new SnapshotInstance(_s4);
+      const d3 = new SnapshotInstance(_s4);
+
+      c.insertBefore(d0);
+      c.insertBefore(d1);
+      c.insertBefore(d2);
+      c.insertBefore(d3);
+    });
+
+    b.insertBefore(c0);
+    b.insertBefore(c1);
+    b.insertBefore(c2);
+    b.insertBefore(c3);
+    b.insertBefore(c4);
+    b.insertBefore(c5);
+
+    // item-key
+    c0.setAttribute(0, { 'item-key': 'key-0' });
+    c1.setAttribute(0, { 'item-key': 'key-1' });
+    c2.setAttribute(0, { 'item-key': 'key-2' });
+    c3.setAttribute(0, { 'item-key': 'key-3' });
+    c4.setAttribute(0, { 'item-key': 'key-4' });
+    c5.setAttribute(0, { 'item-key': 'key-5' });
+
+    __pendingListUpdates.flush();
+
+    const component = [];
+    {
+      component[0] = elementTree.triggerComponentAtIndex(listRef, 0);
+      component[1] = elementTree.triggerComponentAtIndex(listRef, 1);
+      component[2] = elementTree.triggerComponentAtIndex(listRef, 2);
+      component[3] = elementTree.triggerComponentAtIndex(listRef, 3);
+
+      elementTree.triggerEnqueueComponent(listRef, component[0]);
+      component[4] = elementTree.triggerComponentAtIndex(listRef, 4);
+      expect(component[4]).toBe(component[0]);
+
+      elementTree.triggerEnqueueComponent(listRef, component[1]);
+      component[5] = elementTree.triggerComponentAtIndex(listRef, 5);
+      expect(component[5]).toBe(component[1]);
+
+      // should ignore
+      elementTree.triggerEnqueueComponent(listRef, 99999);
+    }
+
+    b.removeChild(c3);
+    __pendingListUpdates.flush();
+    elementTree.triggerEnqueueComponent(listRef, component[3]);
+
+    nativeMethodQueue.clear();
+    component[1] = elementTree.triggerComponentAtIndex(listRef, 1);
+
+    expect(nativeMethodQueue).toMatchInlineSnapshot(`
+      [
+        [
+          "__SetAttribute",
+          [
+            <list-item
+              item-key="key-1"
+            >
+              <text>
+                <raw-text
+                  text="Hello"
+                />
+              </text>
+              <text>
+                <raw-text
+                  text="Hello"
+                />
+              </text>
+              <text>
+                <raw-text
+                  text="Hello"
+                />
+              </text>
+              <text>
+                <raw-text
+                  text="Hello"
+                />
+              </text>
+            </list-item>,
+            "item-key",
+            "key-1",
+          ],
+        ],
+        [
+          "__FlushElementTree",
+          [
+            <list-item
+              item-key="key-1"
+            >
+              <text>
+                <raw-text
+                  text="Hello"
+                />
+              </text>
+              <text>
+                <raw-text
+                  text="Hello"
+                />
+              </text>
+              <text>
+                <raw-text
+                  text="Hello"
+                />
+              </text>
+              <text>
+                <raw-text
+                  text="Hello"
+                />
+              </text>
+            </list-item>,
+            {
+              "elementID": 136,
+              "listID": 108,
+              "operationID": undefined,
+              "triggerLayout": true,
+            },
+          ],
+        ],
+      ]
+    `);
+  });
+
   it('should reuse and hydrate - with slot', () => {
     const b = new SnapshotInstance(s1);
     b.ensureElements();
@@ -971,8 +1109,8 @@ describe(`list componentAtIndex`, () => {
 
     // only call componentAtIndx after flush
     __pendingListUpdates.flush();
-    expect(elementTree.triggerComponentAtIndex(listRef, 0)).toMatchInlineSnapshot(`119`);
-    expect(elementTree.triggerComponentAtIndex(listRef, 0)).toMatchInlineSnapshot(`122`); // should return a new uiSign
+    expect(elementTree.triggerComponentAtIndex(listRef, 0)).toMatchInlineSnapshot(`159`);
+    expect(elementTree.triggerComponentAtIndex(listRef, 0)).toMatchInlineSnapshot(`162`); // should return a new uiSign
   });
 
   it('should handle continuous componentAtIndex on same index - self reuse', () => {
@@ -1001,9 +1139,9 @@ describe(`list componentAtIndex`, () => {
     // only call componentAtIndx after flush
     __pendingListUpdates.flush();
     let uiSign;
-    expect(uiSign = elementTree.triggerComponentAtIndex(listRef, 0)).toMatchInlineSnapshot(`129`);
+    expect(uiSign = elementTree.triggerComponentAtIndex(listRef, 0)).toMatchInlineSnapshot(`169`);
     elementTree.triggerEnqueueComponent(listRef, uiSign);
-    expect(elementTree.triggerComponentAtIndex(listRef, 0)).toMatchInlineSnapshot(`129`); // should reuse self
+    expect(elementTree.triggerComponentAtIndex(listRef, 0)).toMatchInlineSnapshot(`169`); // should reuse self
   });
 
   it('should handle componentAtIndex when `enableReuseNotification` is true', () => {
@@ -1066,27 +1204,27 @@ describe(`list componentAtIndex`, () => {
     expect(fn.mock.calls).toMatchInlineSnapshot(`
       [
         [
-          136,
+          176,
           undefined,
         ],
         [
-          139,
+          179,
           undefined,
         ],
         [
-          142,
+          182,
           undefined,
         ],
         [
-          145,
+          185,
           undefined,
         ],
         [
-          136,
+          176,
           "4",
         ],
         [
-          139,
+          179,
           "5",
         ],
       ]
@@ -2081,11 +2219,11 @@ describe('list componentAtIndexes', () => {
         [
           {
             "elementIDs": [
-              203,
-              206,
-              209,
+              243,
+              246,
+              249,
             ],
-            "listID": 202,
+            "listID": 242,
             "operationIDs": [
               0,
               1,
@@ -2133,11 +2271,11 @@ describe('list componentAtIndexes', () => {
         [
           {
             "elementIDs": [
-              216,
-              219,
-              222,
+              256,
+              259,
+              262,
             ],
-            "listID": 215,
+            "listID": 255,
             "operationIDs": [],
             "triggerLayout": true,
           },
@@ -2231,11 +2369,11 @@ describe('list componentAtIndexes', () => {
         [
           {
             "elementIDs": [
-              229,
-              232,
-              235,
+              269,
+              272,
+              275,
             ],
-            "listID": 228,
+            "listID": 268,
             "operationIDs": [
               3,
               4,
@@ -2308,11 +2446,11 @@ describe('list componentAtIndexes', () => {
         [
           {
             "elementIDs": [
-              242,
-              245,
-              248,
+              282,
+              285,
+              288,
             ],
-            "listID": 241,
+            "listID": 281,
             "operationIDs": [
               0,
               1,

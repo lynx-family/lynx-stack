@@ -1,4 +1,7 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+// Copyright 2025 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { BackgroundSnapshotInstance } from '../src/backgroundSnapshot';
 import { elementTree } from './utils/nativeMethod';
@@ -17,8 +20,16 @@ import {
   snapshotManager,
 } from '../src/snapshot';
 import { globalEnvManager } from './utils/envManager';
+import { addCtxNotFoundEventListener } from '../src/lifecycle/patch/error';
 
 const HOLE = null;
+
+beforeAll(() => {
+  globalEnvManager.resetEnv();
+  globalEnvManager.switchToBackground();
+  addCtxNotFoundEventListener();
+  globalEnvManager.switchToMainThread();
+});
 
 beforeEach(() => {
   globalEnvManager.resetEnv();
@@ -230,7 +241,21 @@ describe('insertBefore', () => {
     const bsi1 = new BackgroundSnapshotInstance(snapshot1);
     const bsi2 = new BackgroundSnapshotInstance(snapshot2);
     const patch = takeGlobalSnapshotPatch();
-    patch.push(SnapshotOperation.InsertBefore, 1, 100, null, SnapshotOperation.InsertBefore, 100, 2, null);
+    const bsi3 = new BackgroundSnapshotInstance(snapshot3);
+    patch.push(
+      SnapshotOperation.InsertBefore,
+      2,
+      100,
+      null,
+      SnapshotOperation.InsertBefore,
+      100,
+      2,
+      null,
+      SnapshotOperation.InsertBefore,
+      4,
+      100,
+      null,
+    );
     expect(patch).toMatchInlineSnapshot(`
       [
         0,
@@ -240,35 +265,45 @@ describe('insertBefore', () => {
         "__Card__:__snapshot_a94a8_test_2",
         3,
         1,
-        1,
+        2,
         100,
         null,
         1,
         100,
         2,
         null,
+        1,
+        4,
+        100,
+        null,
       ]
     `);
 
     expect(snapshotInstanceManager.values.size).toEqual(1);
     snapshotPatchApply(patch);
-    expect(_ReportError).toHaveBeenCalledTimes(2);
     expect(_ReportError.mock.calls).toMatchInlineSnapshot(`
       [
         [
-          [Error: snapshotPatchApply failed: ctx not found],
+          [Error: snapshotPatchApply failed: ctx not found, snapshot type: 'null'],
           {
             "errorCode": 1101,
           },
         ],
         [
-          [Error: snapshotPatchApply failed: ctx not found],
+          [Error: snapshotPatchApply failed: ctx not found, snapshot type: 'null'],
+          {
+            "errorCode": 1101,
+          },
+        ],
+        [
+          [Error: snapshotPatchApply failed: ctx not found, snapshot type: '__Card__:__snapshot_a94a8_test_3'],
           {
             "errorCode": 1101,
           },
         ],
       ]
     `);
+
     expect(snapshotInstanceManager.values.size).toEqual(3);
     const si1 = snapshotInstanceManager.values.get(bsi1.__id);
     si1.ensureElements();
@@ -407,14 +442,14 @@ describe('removeChild', () => {
     `);
 
     patch = takeGlobalSnapshotPatch();
-    patch.push(SnapshotOperation.RemoveChild, 1, 2, SnapshotOperation.RemoveChild, 100, 1);
+    patch.push(SnapshotOperation.RemoveChild, 1, 2, SnapshotOperation.RemoveChild, 2, 1);
     expect(patch).toMatchInlineSnapshot(`
       [
         2,
         1,
         2,
         2,
-        100,
+        2,
         1,
       ]
     `);
@@ -424,13 +459,13 @@ describe('removeChild', () => {
     expect(_ReportError.mock.calls).toMatchInlineSnapshot(`
       [
         [
-          [Error: snapshotPatchApply failed: ctx not found],
+          [Error: snapshotPatchApply failed: ctx not found, snapshot type: 'root'],
           {
             "errorCode": 1101,
           },
         ],
         [
-          [Error: snapshotPatchApply failed: ctx not found],
+          [Error: snapshotPatchApply failed: ctx not found, snapshot type: 'root'],
           {
             "errorCode": 1101,
           },
@@ -616,7 +651,7 @@ describe('setAttribute', () => {
     expect(_ReportError.mock.calls).toMatchInlineSnapshot(`
       [
         [
-          [Error: snapshotPatchApply failed: ctx not found],
+          [Error: snapshotPatchApply failed: ctx not found, snapshot type: 'null'],
           {
             "errorCode": 1101,
           },
@@ -660,7 +695,7 @@ describe('setAttribute', () => {
 
     expect(_ReportError.mock.calls[0]).toMatchInlineSnapshot(`
       [
-        [Error: snapshotPatchApply failed: ctx not found],
+        [Error: snapshotPatchApply failed: ctx not found, snapshot type: 'null'],
         {
           "errorCode": 1101,
         },

@@ -43,7 +43,7 @@ export { createRef }
 
 // @public
 export interface DataProcessorDefinition {
-    dataProcessors?: Record<string, Function>;
+    dataProcessors?: Record<string, ((rawInitData: InitDataRaw) => InitData)>;
     defaultDataProcessor?: (rawInitData: InitDataRaw) => InitData;
 }
 

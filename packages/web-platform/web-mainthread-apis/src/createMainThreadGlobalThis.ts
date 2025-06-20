@@ -619,6 +619,7 @@ export function createMainThreadGlobalThis(
     return pageElement;
   };
 
+  let release = '';
   const isCSSOG = !pageConfig.enableCSSSelector;
   const mtsGlobalThis: MainThreadGlobalThis = {
     __AddEvent,
@@ -679,7 +680,8 @@ export function createMainThreadGlobalThis(
       ...config.browserConfig,
     },
     lynx: createMainThreadLynx(config),
-    _ReportError: callbacks._ReportError,
+    _ReportError: (err, _) => callbacks._ReportError(err, _, release),
+    _SetSourceMapRelease: (errInfo) => release = errInfo?.release,
     __OnLifecycleEvent: callbacks.__OnLifecycleEvent,
     __FlushElementTree,
     __lynxGlobalBindingValues: lynxGlobalBindingValues,

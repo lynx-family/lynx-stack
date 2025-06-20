@@ -61,6 +61,7 @@ const mainThreadInjectVars = [
   'lynx',
   'globalThis',
   '_ReportError',
+  '_SetSourceMapRelease',
   '__AddConfig',
   '__AddDataset',
   '__GetAttributes',

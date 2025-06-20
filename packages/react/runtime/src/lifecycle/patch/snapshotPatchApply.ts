@@ -13,6 +13,7 @@
  * order and with proper error handling.
  */
 
+import { sendCtxNotFoundEventToBackground } from './error.js';
 import type { SnapshotPatch } from './snapshotPatch.js';
 import { SnapshotOperation } from './snapshotPatch.js';
 import {
@@ -23,10 +24,6 @@ import {
   snapshotManager,
 } from '../../snapshot.js';
 import type { DynamicPartType } from '../../snapshot.js';
-
-function reportCtxNotFound(): void {
-  lynx.reportError(new Error(`snapshotPatchApply failed: ctx not found`));
-}
 
 /**
  * Applies a patch of snapshot operations to the main thread.
@@ -51,7 +48,7 @@ export function snapshotPatchApply(snapshotPatch: SnapshotPatch): void {
         const child = snapshotInstanceManager.values.get(childId);
         const existingNode = snapshotInstanceManager.values.get(beforeId!);
         if (!parent || !child) {
-          reportCtxNotFound();
+          sendCtxNotFoundEventToBackground(parent ? childId : parentId);
         } else {
           parent.insertBefore(child, existingNode);
         }
@@ -63,7 +60,7 @@ export function snapshotPatchApply(snapshotPatch: SnapshotPatch): void {
         const parent = snapshotInstanceManager.values.get(parentId);
         const child = snapshotInstanceManager.values.get(childId);
         if (!parent || !child) {
-          reportCtxNotFound();
+          sendCtxNotFoundEventToBackground(parent ? childId : parentId);
         } else {
           parent.removeChild(child);
         }
@@ -77,7 +74,7 @@ export function snapshotPatchApply(snapshotPatch: SnapshotPatch): void {
         if (si) {
           si.setAttribute(dynamicPartIndex, value);
         } else {
-          reportCtxNotFound();
+          sendCtxNotFoundEventToBackground(id);
         }
         break;
       }
@@ -88,7 +85,7 @@ export function snapshotPatchApply(snapshotPatch: SnapshotPatch): void {
         if (si) {
           si.setAttribute('values', values);
         } else {
-          reportCtxNotFound();
+          sendCtxNotFoundEventToBackground(id);
         }
         break;
       }

@@ -393,6 +393,14 @@ export class SnapshotInstance {
     return a;
   }
 
+  tearDown(): void {
+    traverseSnapshotInstance(this, v => {
+      v.__parent = null;
+      v.__previousSibling = null;
+      v.__nextSibling = null;
+    });
+  }
+
   // onCreate?: () => void;
   // onAttach?: () => void;
   // onDetach?: () => void;
@@ -544,25 +552,22 @@ export class SnapshotInstance {
   }
 
   removeChild(child: SnapshotInstance): void {
-    const r = () => {
-      this.__removeChild(child);
-      traverseSnapshotInstance(child, v => {
-        v.__parent = null;
-        snapshotInstanceManager.values.delete(v.__id);
-      });
-    };
-
     const __snapshot_def = this.__snapshot_def;
     if (__snapshot_def.isListHolder) {
       (__pendingListUpdates.values[this.__id] ??= new ListUpdateInfoRecording(
         this,
       )).onRemoveChild(child);
-      r();
+
+      this.__removeChild(child);
+      traverseSnapshotInstance(child, v => {
+        snapshotInstanceManager.values.delete(v.__id);
+      });
+      // mark this child as deleted
+      child.__id = 0;
       return;
     }
 
     unref(child, true);
-    r();
     if (this.__elements) {
       const [, elementIndex] = __snapshot_def.slot[0]!;
       __RemoveElement(this.__elements[elementIndex]!, child.__element_root!);
@@ -571,6 +576,16 @@ export class SnapshotInstance {
     if (child.__snapshot_def.isListHolder) {
       snapshotDestroyList(child);
     }
+
+    this.__removeChild(child);
+    traverseSnapshotInstance(child, v => {
+      v.__parent = null;
+      v.__previousSibling = null;
+      v.__nextSibling = null;
+      delete v.__elements;
+      delete v.__element_root;
+      snapshotInstanceManager.values.delete(v.__id);
+    });
   }
 
   setAttribute(key: string | number, value: any): void {

@@ -130,7 +130,7 @@ function initializeMainThreadTest() {
         docu.commit();
         decodeOperation(elementOperations);
       },
-      _ReportError: function(error: string, info?: unknown): void {
+      _ReportError: function(): void {
         document.body.innerHTML = '';
       },
       __OnLifecycleEvent() {
@@ -146,6 +146,7 @@ function initializeMainThreadTest() {
         });
       },
       createElement: docu.createElement.bind(docu),
+      _I18nResourceTranslation: () => {},
     },
   });
   const originalGlobalThis = globalThis;

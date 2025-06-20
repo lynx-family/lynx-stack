@@ -26,7 +26,7 @@ export function createRenderAllOnUI(
     timeStamp?: number,
   ) => void,
   callbacks: {
-    onError?: (err: Error) => void;
+    onError?: (err: Error, release: string) => void;
   },
 ) {
   if (!globalThis.module) {
@@ -48,8 +48,8 @@ export function createRenderAllOnUI(
     document.createElement.bind(document),
     () => {},
     markTimingInternal,
-    (err) => {
-      callbacks.onError?.(err);
+    (err, _, release) => {
+      callbacks.onError?.(err, release);
     },
     triggerI18nResourceFallback,
     (initI18nResources: InitI18nResources) => {
