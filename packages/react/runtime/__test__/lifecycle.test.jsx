@@ -669,7 +669,7 @@ describe('componentDidUpdate', () => {
     await waitSchedule();
 
     expect(mtCallbacks.length).toEqual(2);
-    expect(callback).toHaveBeenCalledTimes(0);
+    expect(callback).toHaveBeenCalledTimes(2);
 
     mtCallbacks.forEach(mtCallback => {
       expect(mtCallback.length).toEqual(3);
@@ -678,7 +678,7 @@ describe('componentDidUpdate', () => {
     });
 
     expect(callback).toHaveBeenCalledTimes(2);
-    expect(callback).nthCalledWith(1, 2);
+    expect(callback).nthCalledWith(1, 1);
     expect(callback).nthCalledWith(2, 2);
   });
 });
