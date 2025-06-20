@@ -163,7 +163,7 @@ jobs:
         --outputFile=test-report.junit.xml
         --coverage.reporter='json'
         --coverage.reporter='text'
-        --test-timeout=50000
+        --testTimeout=50000
         --no-cache
         --logHeapUsage
         --silent
@@ -208,8 +208,8 @@ jobs:
         --reporter=dot
         --reporter=junit
         --outputFile=test-report.junit.xml
-        --test-timeout=50000
-        --hook-timeout=50000
+        --testTimeout=50000
+        --hookTimeout=50000
         --coverage
         --coverage.reporter='json'
         --coverage.reporter='text'
