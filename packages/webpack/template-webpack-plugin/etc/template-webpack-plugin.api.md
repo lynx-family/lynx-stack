@@ -87,8 +87,10 @@ export class LynxEncodePlugin {
 
 // @public
 export interface LynxEncodePluginOptions {
+    // Warning: (ae-forgotten-export) The symbol "InlineChunkConfig" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
-    inlineScripts?: boolean | undefined;
+    inlineScripts?: InlineChunkConfig | undefined;
 }
 
 // @public
@@ -184,6 +186,6 @@ export class WebEncodePlugin {
 
 // Warnings were encountered during analysis:
 //
-// lib/LynxTemplatePlugin.d.ts:63:9 - (ae-forgotten-export) The symbol "EncodeRawData" needs to be exported by the entry point index.d.ts
+// lib/LynxTemplatePlugin.d.ts:67:9 - (ae-forgotten-export) The symbol "EncodeRawData" needs to be exported by the entry point index.d.ts
 
 ```

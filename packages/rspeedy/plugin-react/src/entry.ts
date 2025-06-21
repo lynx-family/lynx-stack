@@ -198,10 +198,13 @@ export function applyEntry(
     })
 
     if (isLynx) {
-      const inlineScripts =
-        typeof environment.config.output?.inlineScripts === 'boolean'
-          ? environment.config.output.inlineScripts
-          : true
+      let inlineScripts
+      if (experimental_isLazyBundle) {
+        // TODO: support inlineScripts in lazyBundle
+        inlineScripts = true
+      } else {
+        inlineScripts = environment.config.output?.inlineScripts ?? true
+      }
 
       chain
         .plugin(PLUGIN_NAME_RUNTIME_WRAPPER)
