@@ -10,6 +10,7 @@ import type {
   DefineDceVisitorConfig,
   JsxTransformerConfig,
   ShakeVisitorConfig,
+  SimpleStylingVisitorConfig,
   TransformNodiffOptions,
 } from '@lynx-js/react/transform';
 
@@ -76,6 +77,15 @@ export interface ReactLoaderOptions {
    * @internal
    */
   transformPath?: string | undefined;
+
+  /**
+   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableSimpleStyling}
+   */
+  enableSimpleStyling?: boolean | undefined;
+  /**
+   * The options of the simple styling transform.
+   */
+  simpleStyling?: SimpleStylingVisitorConfig | undefined;
 }
 
 function normalizeSlashes(file: string) {
@@ -85,6 +95,7 @@ function normalizeSlashes(file: string) {
 function getCommonOptions(
   this: LoaderContext<ReactLoaderOptions>,
 ) {
+  const { simpleStyling } = this.getOptions();
   const filename = normalizeSlashes(
     path.relative(this.rootContext, this.resourcePath),
   );
@@ -95,6 +106,7 @@ function getCommonOptions(
     inlineSourcesContent,
     isDynamicComponent,
     defineDCE = { define: {} },
+    enableSimpleStyling,
   } = this.getOptions();
 
   const syntax = (/\.[mc]?tsx?$/.exec(this.resourcePath))
@@ -162,6 +174,7 @@ function getCommonOptions(
       runtimePkg: RUNTIME_PKG,
       filename,
       isDynamicComponent: isDynamicComponent ?? false,
+      enableSimpleStyling: enableSimpleStyling ?? false,
     },
     syntaxConfig: JSON.stringify({
       syntax,
@@ -181,6 +194,12 @@ function getCommonOptions(
     defineDCE,
     refresh: false,
     isModule: 'unknown',
+    simpleStyling: enableSimpleStyling
+      ? {
+        runtimePkg: simpleStyling?.runtimePkg ?? PUBLIC_RUNTIME_PKG,
+        filename,
+      }
+      : false,
   } satisfies Partial<TransformNodiffOptions>;
 
   return commonOptions;

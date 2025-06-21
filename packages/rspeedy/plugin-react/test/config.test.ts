@@ -357,6 +357,7 @@ describe('Config', () => {
         "compat": undefined,
         "defineDCE": undefined,
         "enableRemoveCSSScope": true,
+        "enableSimpleStyling": false,
         "inlineSourcesContent": true,
         "isDynamicComponent": false,
       }
@@ -383,6 +384,7 @@ describe('Config', () => {
         "compat": undefined,
         "defineDCE": undefined,
         "enableRemoveCSSScope": undefined,
+        "enableSimpleStyling": false,
         "inlineSourcesContent": true,
         "isDynamicComponent": false,
       }
@@ -1637,6 +1639,7 @@ describe('Config', () => {
         "enableNewGesture": false,
         "enableParallelElement": true,
         "enableRemoveCSSScope": true,
+        "enableSimpleStyling": false,
         "experimental_isLazyBundle": false,
         "filename": "main.lynx.bundle",
         "intermediate": ".rspeedy/main",

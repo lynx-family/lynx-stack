@@ -57,6 +57,11 @@ export const initElementTree: () => {
     __CreateList(parentComponentUniqueId: number, componentAtIndex: any, enqueueComponent: any): LynxElement;
     __GetTag(ele: LynxElement): string;
     __GetAttributeByName(ele: LynxElement, name: string): string | null;
+    __SimpleStyleInject(id: string, cssKey: string, cssValue: string): void;
+    __CreateStyleObject(cssObject: Record<string, any>): string;
+    updateSimpleStyle(element: LynxElement): void;
+    __SetStyleObject(element: LynxElement, styleObjectList: Array<string | string[] | Record<string, any>>): void;
+    __UpdateStyleObject(styleObject: string, cssObject: Record<string, any>): void;
     clear(): void;
     toTree(): LynxElement | undefined;
     enterListItemAtIndex(e: LynxElement, index: number, ...args: any[]): number;
@@ -77,6 +82,8 @@ export interface LynxElement extends HTMLElement {
     };
     nextSibling: LynxElement;
     parentNode: LynxElement;
+    simpleStyle: Record<string, any>;
+    styleObjectList: string[];
 }
 
 // @public
