@@ -64,6 +64,8 @@ export default tseslint.config(
       'packages/react/transform/index.d.ts',
       'packages/react/transform/index.cjs',
 
+      'packages/react-actual/**',
+
       // TODO: enable eslint for react
       // react
       'examples/**',
