@@ -61,12 +61,14 @@ async function loop(
   devUrls: Record<string, string>,
 ) {
   const [
-    { select, selectKey, isCancel, cancel },
+    { autocomplete, select, selectKey, isCancel, cancel },
     { default: showQRCode },
   ] = await Promise.all([
     import('@clack/prompts'),
     import('./showQRCode.js'),
   ])
+
+  const selectFn = (length: number) => length > 5 ? autocomplete : select
 
   let currentEntry = options.entries[0]!
   let currentSchema = Object.keys(devUrls)[0]!
@@ -93,7 +95,7 @@ async function loop(
       break
     }
     if (name === 'r') {
-      const selection = await select({
+      const selection = await selectFn(options.entries.length)({
         message: 'Select entry',
         options: options.entries.map(entry => ({
           value: entry,
@@ -119,7 +121,7 @@ async function loop(
         options.schema,
         options.port,
       )
-      const selection = await select({
+      const selection = await selectFn(Object.keys(devUrls).length)({
         message: 'Select schema',
         options: Object.entries(devUrls).map(([name, url]) => ({
           value: name,
