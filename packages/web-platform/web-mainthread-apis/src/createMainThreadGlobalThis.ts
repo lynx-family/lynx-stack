@@ -117,6 +117,10 @@ export interface MainThreadRuntimeCallbacks {
   _I18nResourceTranslation: (
     options: I18nResourceTranslationOptions,
   ) => unknown | undefined;
+  loadChunk: (
+    path: string,
+    sync: boolean,
+  ) => LynxJSModule | Promise<LynxJSModule> | undefined;
 }
 
 export interface MainThreadRuntimeConfig {
@@ -125,7 +129,6 @@ export interface MainThreadRuntimeConfig {
   callbacks: MainThreadRuntimeCallbacks;
   styleInfo: StyleInfo;
   customSections: LynxTemplate['customSections'];
-  lepusCode: Record<string, LynxJSModule>;
   browserConfig: BrowserConfig;
   tagMap: Record<string, string>;
   rootDom: Pick<Element, 'append' | 'addEventListener'>;
@@ -143,7 +146,6 @@ export function createMainThreadGlobalThis(
     callbacks,
     tagMap,
     pageConfig,
-    lepusCode,
     rootDom,
     globalProps,
     styleInfo,
@@ -585,14 +587,12 @@ export function createMainThreadGlobalThis(
   };
 
   const __LoadLepusChunk: (path: string) => boolean = (path) => {
-    const lepusModule = lepusCode[`${path}`];
-    if (lepusModule) {
-      const entry = lepusModule.exports;
-      entry?.(mtsGlobalThis);
+    const module = callbacks.loadChunk(path, true) as LynxJSModule | undefined;
+    if (module) {
+      module.exports?.(mtsGlobalThis);
       return true;
-    } else {
-      return false;
     }
+    return false;
   };
 
   const __FlushElementTree: (
