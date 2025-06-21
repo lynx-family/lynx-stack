@@ -125,10 +125,11 @@ export function transformBlock(
 }
 
 export function parse(content: string, options: {
+  enableCSSSelector?: boolean;
   plugins?: Plugin[];
   filename?: string;
   projectRoot?: string;
-} = {}): {
+} = { enableCSSSelector: true }): {
   root: LynxStyleNode[];
   errors: ParserError[];
 } {
@@ -280,7 +281,14 @@ export function parse(content: string, options: {
           type: 'StyleRule',
           style: transformBlock(node.block, errors),
           selectorText: {
-            value: preludeText,
+            value: options.enableCSSSelector
+              ? preludeText
+              // When enableCSSSelector is disabled, remove backslash escapes to ensure CSS selector compatibility.
+              // For example, TailwindCSS generates selectors like `.h-\\[370px\\]` which require unescaping.
+              : preludeText
+                .replaceAll('\\[', '[')
+                .replaceAll('\\]', ']')
+                .replaceAll('\\#', '#'),
             loc: toLoc(node.prelude.loc!.end),
           },
           variables: Object.fromEntries(
