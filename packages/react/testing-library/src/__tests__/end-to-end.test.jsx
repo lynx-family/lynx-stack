@@ -174,7 +174,7 @@ test('it waits for the data to be loaded', async () => {
   const loading = () => {
     return screen.getByText('Loading...');
   };
-  await waitForElementToBeRemoved(loading);
+  await waitForElementToBeRemoved(loading, { timeout: 50_000 });
   expect(document.body).toMatchInlineSnapshot(`
     <body>
       <page>

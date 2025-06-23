@@ -1,5 +1,32 @@
 # @lynx-js/react
 
+## 0.110.0
+
+### Minor Changes
+
+- Fixed closure variable capture issue in effect hooks to prevent stale values and ensured proper execution order between refs, effects, and event handlers. ([#770](https://github.com/lynx-family/lynx-stack/pull/770))
+
+  **Breaking Changes**:
+
+  - The execution timing of `ref`, `useEffect()` callback, `componentDidMount`, `componentDidUpdate`, `componentWillUnmount` and the callback of `setState` have been moved forward. These effects will now execute before hydration is complete, rather than waiting for the main thread update to complete.
+  - For components inside `<list />`, `ref` callbacks will now be triggered during background thread rendering, regardless of component visibility. If your code depends on component visibility timing, use `main-thread:ref` instead of regular `ref`.
+
+### Patch Changes
+
+- Fixed two memory leaks: ([#1071](https://github.com/lynx-family/lynx-stack/pull/1071))
+
+  1. When JSX is rendered on the main thread and removed, FiberElement can still be referenced by `__root.__jsx` through `props.children`;
+
+  2. When the SnapshotInstance tree is removed from the root node, its child nodes form a cycle reference because the `__previousSibling` and `__nextSibling` properties point to each other, thus causing a FiberElement leak.
+
+- Optimize the error message when snapshots cannot be found in the main thread. ([#1083](https://github.com/lynx-family/lynx-stack/pull/1083))
+
+- Fix a problem causing `MainThreadRef`s to not be updated correctly during hydration when they are set to `main-thread:ref`s. ([#1001](https://github.com/lynx-family/lynx-stack/pull/1001))
+
+- Add snapshot id report when throwing `snapshotPatchApply failed: ctx not found` error. ([#1107](https://github.com/lynx-family/lynx-stack/pull/1107))
+
+- Fix a bug in ReactLynx Testing Library that rendered snapshot of inline style was normalized incorrectly (eg. `flex:1` was normalized to `flex: 1 1 0%;` incorrectly). ([#1040](https://github.com/lynx-family/lynx-stack/pull/1040))
+
 ## 0.109.2
 
 ### Patch Changes

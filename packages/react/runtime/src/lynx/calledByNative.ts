@@ -18,6 +18,7 @@ function ssrEncode() {
   const { __opcodes } = __root;
   delete __root.__opcodes;
 
+  // eslint-disable-next-line @typescript-eslint/unbound-method
   const oldToJSON = SnapshotInstance.prototype.toJSON;
   SnapshotInstance.prototype.toJSON = function(this: SnapshotInstance): any {
     return [
@@ -44,8 +45,13 @@ function ssrHydrate(info: string) {
   setupPage(nativePage);
   const refsMap = __GetTemplateParts(nativePage);
 
-  const { __opcodes, __root_values } = JSON.parse(info);
-  __root_values && __root.setAttribute('values', __root_values);
+  const { __opcodes, __root_values } = JSON.parse(info) as {
+    __opcodes: unknown[];
+    __root_values: unknown[] | undefined;
+  };
+  if (__root_values) {
+    __root.setAttribute('values', __root_values);
+  }
   ssrHydrateByOpcodes(__opcodes, __root as SnapshotInstance, refsMap);
 
   (__root as SnapshotInstance).__elements = [nativePage];
@@ -74,11 +80,11 @@ function injectCalledByNative(): void {
   });
 }
 
-function renderPage(data: any): void {
+function renderPage(data: Record<string, unknown> | undefined): void {
   // reset `jsReady` state
   resetJSReady();
 
-  lynx.__initData = data || {};
+  lynx.__initData = data ?? {};
 
   setupPage(__CreatePage('0', 0));
   (__root as SnapshotInstance).ensureElements();
@@ -95,7 +101,7 @@ function renderPage(data: any): void {
   }
 }
 
-function updatePage(data: any, options?: UpdatePageOption): void {
+function updatePage(data: Record<string, unknown> | undefined, options?: UpdatePageOption): void {
   if (options?.reloadTemplate) {
     reloadMainThread(data, options);
     return;

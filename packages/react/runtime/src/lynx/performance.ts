@@ -4,8 +4,8 @@
 import { options } from 'preact';
 import type { VNode } from 'preact';
 
-import { DIFF } from '../renderToOpcodes/constants.js';
 import { __globalSnapshotPatch } from '../lifecycle/patch/snapshotPatch.js';
+import { DIFF } from '../renderToOpcodes/constants.js';
 import { isSdkVersionGt } from '../utils.js';
 
 enum PerformanceTimingKeys {

@@ -84,7 +84,8 @@ jobs:
       runs-on: lynx-ubuntu-24.04-medium
       run: >
         pnpm run test
-        --test-timeout=50000
+        --testTimeout=50000
+        --hookTimeout=50000
         --reporter=dot
         --reporter=junit
         --outputFile=test-report.junit.xml

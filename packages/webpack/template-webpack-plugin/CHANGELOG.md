@@ -1,5 +1,17 @@
 # @lynx-js/template-webpack-plugin
 
+## 0.8.0
+
+### Minor Changes
+
+- Remove `EncodeCSSOptions` and `encodeCSS` to ensure consistent encoding options are used across CSS HMR updates and the main template. ([#1033](https://github.com/lynx-family/lynx-stack/pull/1033))
+
+### Patch Changes
+
+- Avoid generating lazy bundles when there are no chunk name. ([#1090](https://github.com/lynx-family/lynx-stack/pull/1090))
+
+  E.g.: using `import.meta.webpackContext`.
+
 ## 0.7.2
 
 ### Patch Changes

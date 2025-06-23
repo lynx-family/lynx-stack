@@ -4,6 +4,7 @@
 import { swipe, dragAndHold } from './utils.js';
 import { test, expect } from './coverage-fixture.js';
 import type { Page } from '@playwright/test';
+import type { LynxView } from '../../web-core/src/index.js';
 const ENABLE_MULTI_THREAD = !!process.env['ENABLE_MULTI_THREAD'];
 const wait = async (ms: number) => {
   await new Promise((resolve) => {
@@ -144,6 +145,26 @@ test.describe('reactlynx3 tests', () => {
     test('basic-dataprocessor', async ({ page }, { title }) => {
       await goto(page, title);
       await wait(100);
+      expect(await page.locator('#target').getAttribute('style')).toContain(
+        'green',
+      );
+    });
+    test('basic-globalProps-reload', async ({ page }, { title }) => {
+      await goto(page, 'basic-globalProps');
+      await wait(100);
+      expect(await page.locator('#target').getAttribute('style')).toContain(
+        'pink',
+      );
+      await page.evaluate(() => {
+        (document.querySelector('lynx-view') as LynxView)?.updateGlobalProps({
+          backgroundColor: 'green',
+        });
+      });
+      await wait(500);
+      await page.evaluate(() => {
+        (document.querySelector('lynx-view') as LynxView)?.reload();
+      });
+      await wait(500);
       expect(await page.locator('#target').getAttribute('style')).toContain(
         'green',
       );
@@ -667,6 +688,28 @@ test.describe('reactlynx3 tests', () => {
       await wait(500);
       expect(offset).toBe(true);
     });
+    test('api-set-release', async ({ page }, { title }) => {
+      let success = false;
+      await page.on('console', async (msg) => {
+        const event = await msg.args()[0]?.evaluate((e) => {
+          return {
+            type: e.type,
+            release: e.detail?.release,
+          };
+        });
+        if (!event || event.type !== 'error') {
+          return;
+        }
+        if (
+          typeof event.release === 'string' && event.release === '1'
+        ) {
+          success = true;
+        }
+      });
+      await goto(page, title);
+      await wait(500);
+      expect(success).toBe(true);
+    });
 
     test('api-preheat', async ({ page }, { title }) => {
       await goto(page, title);
@@ -684,21 +727,25 @@ test.describe('reactlynx3 tests', () => {
         document.body.querySelector('lynx-view')?.remove();
       });
       await wait(100);
+      const threadStrategy = ENABLE_MULTI_THREAD ? 'multi-thread' : 'all-on-ui';
       expect(page.workers().length).toBe(1);
-      await page.evaluate(() => {
+      await page.evaluate((threadStrategy) => {
         const newView = document.createElement('lynx-view');
         newView.setAttribute('style', 'height:50vh; width:100vw;');
+        newView.setAttribute('thread-strategy', threadStrategy);
         newView.setAttribute('url', '/dist/api-preheat/main-thread.js');
         document.body.append(newView);
-      });
-      await page.evaluate(() => {
+      }, threadStrategy);
+
+      await page.evaluate((threadStrategy) => {
         const newView = document.createElement('lynx-view');
         newView.setAttribute('style', 'height:50vh; width:100vw;');
+        newView.setAttribute('thread-strategy', threadStrategy);
         newView.setAttribute('url', '/dist/api-preheat/main-thread.js');
         document.body.append(newView);
-      });
+      }, threadStrategy);
       await wait(500);
-      expect(page.workers().length).toBe(5);
+      expect(page.workers().length).toBe(ENABLE_MULTI_THREAD ? 5 : 3);
     });
 
     test('api-setSharedData', async ({ page }, { title }) => {

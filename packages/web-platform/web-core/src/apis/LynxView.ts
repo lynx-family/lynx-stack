@@ -280,6 +280,7 @@ export class LynxView extends HTMLElement {
    */
   updateGlobalProps(data: Cloneable) {
     this.#instance?.updateGlobalProps(data);
+    this.globalProps = data;
   }
 
   /**
@@ -410,7 +411,7 @@ export class LynxView extends HTMLElement {
             this.attachShadow({ mode: 'open' });
           }
           const lynxGroupId = this.lynxGroupId;
-          const threadStrategy = (this.threadStrategy ?? 'multi-thread') as
+          const threadStrategy = (this.threadStrategy ?? 'all-on-ui') as
             | 'all-on-ui'
             | 'multi-thread';
           const lynxView = createLynxView({
@@ -439,7 +440,7 @@ export class LynxView extends HTMLElement {
               napiModulesCall: (...args) => {
                 return this.#onNapiModulesCall?.(...args);
               },
-              onError: (error: Error) => {
+              onError: (error: Error, release: string) => {
                 this.dispatchEvent(
                   new CustomEvent('error', {
                     detail: {
@@ -450,6 +451,7 @@ export class LynxView extends HTMLElement {
                         },
                       },
                       error,
+                      release,
                     },
                   }),
                 );

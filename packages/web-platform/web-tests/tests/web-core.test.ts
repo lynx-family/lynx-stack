@@ -12,8 +12,13 @@ const wait = async (ms: number) => {
   });
 };
 
-const goto = async (page: Page) => {
-  await page.goto('/web-core.html', {
+const goto = async (page: Page, title?: string) => {
+  let url = '/web-core.html';
+  if (title) {
+    url += `?casename=${title}`;
+  }
+
+  await page.goto(url, {
     waitUntil: 'load',
   });
   await wait(500);
@@ -631,5 +636,33 @@ test.describe('web core tests', () => {
     });
     await wait(500);
     expect(success).toBeTruthy();
+  });
+  test('decode-css-in-js-warn', async ({ page, browserName }) => {
+    // firefox not support
+    test.skip(browserName === 'firefox');
+    await goto(page, 'enable-css-selector-false');
+    const mainWorker = await getMainThreadWorker(page);
+    await mainWorker.evaluate(() => {
+      globalThis.runtime.renderPage = () => {
+        const root = globalThis.runtime.__CreatePage('0', '0', {});
+        const container = globalThis.runtime.__CreateElement('view', '0', {});
+        globalThis.runtime.__SetAttribute(container, 'l-css-id', '-1');
+        globalThis.runtime.__SetAttribute(
+          container,
+          'style',
+          'width: 100px;height: 100px; background-color: red',
+        );
+        globalThis.runtime.__AppendElement(root, container);
+        globalThis.runtime.__AddClass(container, 'target');
+      };
+    });
+    await wait(1000);
+    const height = await page.evaluate(() =>
+      getComputedStyle(document.querySelector('lynx-view')).getPropertyValue(
+        'height',
+      )
+    );
+    await wait(500);
+    expect(height).toBe('100px');
   });
 });

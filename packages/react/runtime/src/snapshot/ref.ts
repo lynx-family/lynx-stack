@@ -12,6 +12,7 @@ const refsToApply: (Ref | [snapshotInstanceId: number, expIndex: number])[] = []
 
 type Ref = (((ref: RefProxy) => () => void) | { current: RefProxy | null }) & {
   _unmount?: () => void;
+  __ref?: { value: number };
 };
 
 function unref(snapshot: SnapshotInstance, recursive: boolean): void {

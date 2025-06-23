@@ -12,7 +12,7 @@ export function createRenderMultiThread(
   mainThreadRpc: Rpc,
   shadowRoot: ShadowRoot,
   callbacks: {
-    onError?: (err: Error) => void;
+    onError?: (err: Error, release: string) => void;
   },
 ) {
   registerReportErrorHandler(

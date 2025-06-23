@@ -1,5 +1,13 @@
 # create-rspeedy
 
+## 0.9.10
+
+### Patch Changes
+
+- Enable TypeScript check in templates. ([#1093](https://github.com/lynx-family/lynx-stack/pull/1093))
+
+- Fix a bug in ReactLynx Testing Library that rendered snapshot of inline style was normalized incorrectly (eg. `flex:1` was normalized to `flex: 1 1 0%;` incorrectly). ([#1040](https://github.com/lynx-family/lynx-stack/pull/1040))
+
 ## 0.9.9
 
 ## 0.9.8

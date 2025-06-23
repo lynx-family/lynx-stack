@@ -1,5 +1,11 @@
 # @lynx-js/web-style-transformer
 
+## 0.3.1
+
+### Patch Changes
+
+- fix: --lynx-color will be removed, and if color contains `gradient` it will be processed as transparent. ([#1069](https://github.com/lynx-family/lynx-stack/pull/1069))
+
 ## 0.3.0
 
 ### Minor Changes

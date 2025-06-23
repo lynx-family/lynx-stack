@@ -1,5 +1,11 @@
 # @lynx-js/testing-environment
 
+## 0.1.1
+
+### Patch Changes
+
+- Fix `getJSContext` or `getCoreContext` is not a function. ([#1122](https://github.com/lynx-family/lynx-stack/pull/1122))
+
 ## 0.1.0
 
 ### Minor Changes

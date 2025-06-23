@@ -235,7 +235,7 @@ export interface DataProcessorDefinition {
    *
    * @public
    */
-  dataProcessors?: Record<string, Function>;
+  dataProcessors?: Record<string, ((rawInitData: InitDataRaw) => InitData)>;
 }
 
 /**

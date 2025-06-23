@@ -1,7 +1,6 @@
 import { createRequire } from 'node:module';
 import * as path from 'node:path';
 
-import react from '@vitejs/plugin-react';
 import type { Plugin } from 'vitest/config';
 import { defineConfig } from 'vitest/config';
 
@@ -17,13 +16,21 @@ function transformReactLynxPlugin(): Plugin {
         '@lynx-js/react-transform',
       ) as typeof import('@lynx-js/react-transform');
       const relativePath = path.basename(sourcePath);
+
+      if (!relativePath.endsWith('.jsx') && !relativePath.endsWith('.tsx')) {
+        return {
+          code: sourceText,
+          map: null,
+        };
+      }
+
       const result = transformReactLynxSync(sourceText, {
         mode: 'test',
         pluginName: '',
         filename: relativePath,
         sourcemap: true,
         snapshot: {
-          preserveJsx: true,
+          preserveJsx: false,
           runtimePkg,
           jsxImportSource: '@lynx-js/react',
           filename: 'test',
@@ -50,7 +57,6 @@ function transformReactLynxPlugin(): Plugin {
 export default defineConfig({
   plugins: [
     transformReactLynxPlugin(),
-    react({ jsxImportSource: '@lynx-js/react' }),
   ],
   resolve: {
     alias: {
@@ -67,10 +73,10 @@ export default defineConfig({
   test: {
     name: 'react/runtime',
     coverage: {
-      // # Should be sync with .codebase/apps.yaml
       exclude: [
         'jsx-runtime',
         'jsx-dev-runtime',
+        'lepus/jsx-dev-runtime',
         'lepus/index.d.ts',
         'vitest.config.ts',
         '__test__/utils/**',

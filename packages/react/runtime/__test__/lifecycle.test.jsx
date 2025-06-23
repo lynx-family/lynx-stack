@@ -4,7 +4,6 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 import { useEffect, useLayoutEffect, useState } from '../src/index';
 import { globalEnvManager } from './utils/envManager';
 import { waitSchedule } from './utils/nativeMethod';
-import { initDelayUnmount } from '../src/lifecycle/delayUnmount';
 import { globalCommitTaskMap, replaceCommitHook } from '../src/lifecycle/patch/commit';
 import { deinitGlobalSnapshotPatch, initGlobalSnapshotPatch } from '../src/lifecycle/patch/snapshotPatch';
 import { LifecycleConstant } from '../src/lifecycleConstant';
@@ -15,7 +14,6 @@ import { backgroundSnapshotInstanceManager, setupPage } from '../src/snapshot';
 beforeAll(() => {
   setupPage(__CreatePage('0', 0));
   replaceCommitHook();
-  initDelayUnmount();
 });
 
 beforeEach(() => {
@@ -113,7 +111,8 @@ describe('componentDidMount', () => {
     render(<Comp />, __root);
     render(<Comp />, __root);
     render(<Comp />, __root);
-    expect(callback).toHaveBeenCalledTimes(0);
+    expect(callback).toHaveBeenCalledTimes(1);
+    expect(x_).toEqual(1);
 
     let mtCallback;
     expect(mtCallbacks.length).toEqual(3);
@@ -160,7 +159,7 @@ describe('componentDidMount', () => {
     render(<Comp />, __root);
     render(<Comp />, __root);
     render(<Comp />, __root);
-    expect(callback).toHaveBeenCalledTimes(0);
+    expect(callback).toHaveBeenCalledTimes(1);
 
     let mtCallback;
     expect(mtCallbacks.length).toEqual(3);
@@ -190,7 +189,7 @@ describe('componentWillUnmount', () => {
 
     let x_ = 0;
     const willUnmount = vi.fn();
-    const didupdate = vi.fn();
+    const didMount = vi.fn();
 
     class Comp extends Component {
       x = 1;
@@ -200,7 +199,7 @@ describe('componentWillUnmount', () => {
       }
 
       componentDidMount() {
-        didupdate();
+        didMount();
       }
 
       render() {
@@ -212,13 +211,13 @@ describe('componentWillUnmount', () => {
 
     render(<Comp />, __root);
     await waitSchedule();
-    expect(didupdate).toHaveBeenCalledTimes(0);
+    expect(didMount).toHaveBeenCalledTimes(1);
     expect(willUnmount).toHaveBeenCalledTimes(0);
 
     render(null, __root);
     await waitSchedule();
-    expect(didupdate).toHaveBeenCalledTimes(0);
-    expect(willUnmount).toHaveBeenCalledTimes(0);
+    expect(didMount).toHaveBeenCalledTimes(1);
+    expect(willUnmount).toHaveBeenCalledTimes(1);
 
     let mtCallback;
     expect(mtCallbacks.length).toEqual(2);
@@ -226,14 +225,14 @@ describe('componentWillUnmount', () => {
     mtCallback[2]();
     await waitSchedule();
 
-    expect(didupdate).toHaveBeenCalledTimes(1);
-    expect(willUnmount).toHaveBeenCalledTimes(0);
+    expect(didMount).toHaveBeenCalledTimes(1);
+    expect(willUnmount).toHaveBeenCalledTimes(1);
 
     mtCallback = mtCallbacks.shift();
     mtCallback[2]();
     await waitSchedule();
 
-    expect(didupdate).toHaveBeenCalledTimes(1);
+    expect(didMount).toHaveBeenCalledTimes(1);
     expect(willUnmount).toHaveBeenCalledTimes(1);
     expect(x_).toEqual(1);
   });
@@ -312,12 +311,12 @@ describe('componentWillUnmount', () => {
     mtCallback = mtCallbacks.shift();
     mtCallback[2]();
     await waitSchedule();
-    expect(willUnmount).toHaveBeenCalledTimes(0);
+    expect(willUnmount).toHaveBeenCalledTimes(4);
 
     mtCallback = mtCallbacks.shift();
     mtCallback[2]();
     await waitSchedule();
-    expect(willUnmount).toHaveBeenCalledTimes(2);
+    expect(willUnmount).toHaveBeenCalledTimes(4);
     expect(willUnmountBase).toHaveBeenCalledTimes(2);
     expect(didCatch).toHaveBeenCalledTimes(2);
     expect(didCatch).toHaveBeenNthCalledWith(1, 'error1');
@@ -363,13 +362,14 @@ describe('componentWillUnmount', () => {
 
     render(<Comp />, __root);
     await waitSchedule();
+    expect(willUnmount).toHaveBeenCalledTimes(0);
 
     showB = false;
     render(<Comp />, __root);
     Object.assign(__root, __root);
     await waitSchedule();
 
-    expect(willUnmount).toHaveBeenCalledTimes(0);
+    expect(willUnmount).toHaveBeenCalledTimes(1);
 
     lynxCoreInject.tt.callDestroyLifetimeFun();
     expect(willUnmount).toHaveBeenCalledTimes(2);
@@ -501,7 +501,7 @@ describe('useState', () => {
       await waitSchedule();
       expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1].data).toMatchInlineSnapshot(
-        `"{"patchList":[{"id":25,"snapshotPatch":[3,-2,1,"abcd",3,-2,2,{"str":"efgh"}]}]}"`,
+        `"{"patchList":[{"id":24,"snapshotPatch":[3,-2,1,"abcd",3,-2,2,{"str":"efgh"}]}]}"`,
       );
     }
   });
@@ -559,8 +559,126 @@ describe('useState', () => {
       await waitSchedule();
       expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1].data).toMatchInlineSnapshot(
-        `"{"patchList":[{"id":28,"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_15",2,4,2,[false,{"str":"str"}],1,-1,2,null]}]}"`,
+        `"{"patchList":[{"id":27,"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_15",2,4,2,[false,{"str":"str"}],1,-1,2,null]}]}"`,
       );
     }
+  });
+});
+
+describe('componentDidUpdate', () => {
+  it('basic', async function() {
+    globalEnvManager.switchToBackground();
+
+    const callback = vi.fn();
+    let mtCallbacks = lynx.getNativeApp().callLepusMethod.mock.calls;
+    let _setState = vi.fn();
+
+    class Comp extends Component {
+      state = {
+        show: false,
+      };
+
+      constructor(props) {
+        super(props);
+        _setState = this.setState.bind(this);
+      }
+
+      componentDidUpdate() {
+        callback();
+      }
+
+      render() {
+        return <text>{this.state.show ? '1' : '2'}</text>;
+      }
+    }
+
+    initGlobalSnapshotPatch();
+
+    render(<Comp />, __root);
+    expect(callback).toHaveBeenCalledTimes(0);
+
+    let mtCallback;
+    expect(mtCallbacks.length).toEqual(1);
+    mtCallback = mtCallbacks.shift();
+    expect(mtCallback.length).toEqual(3);
+    expect(mtCallback[0]).toEqual(LifecycleConstant.patchUpdate);
+    mtCallback[2]();
+
+    await waitSchedule();
+    expect(callback).toHaveBeenCalledTimes(0);
+
+    _setState({ show: true });
+    await waitSchedule();
+    mtCallback = mtCallbacks.shift();
+    expect(mtCallback.length).toEqual(3);
+    expect(mtCallback[0]).toEqual(LifecycleConstant.patchUpdate);
+    mtCallback[2]();
+    expect(callback).toHaveBeenCalledTimes(1);
+
+    _setState({ show: false });
+    await waitSchedule();
+    mtCallback = mtCallbacks.shift();
+    expect(mtCallback.length).toEqual(3);
+    expect(mtCallback[0]).toEqual(LifecycleConstant.patchUpdate);
+    mtCallback[2]();
+    expect(callback).toHaveBeenCalledTimes(2);
+  });
+
+  it('multiple updates', async function() {
+    globalEnvManager.switchToBackground();
+
+    const callback = vi.fn();
+    let mtCallbacks = lynx.getNativeApp().callLepusMethod.mock.calls;
+    let _setState = vi.fn();
+
+    class Comp extends Component {
+      state = {
+        count: 0,
+      };
+
+      constructor(props) {
+        super(props);
+        _setState = this.setState.bind(this);
+      }
+
+      componentDidUpdate() {
+        callback(this.state.count);
+      }
+
+      render() {
+        return <text>{this.state.count}</text>;
+      }
+    }
+
+    initGlobalSnapshotPatch();
+
+    render(<Comp />, __root);
+    expect(callback).toHaveBeenCalledTimes(0);
+
+    let mtCallback;
+    expect(mtCallbacks.length).toEqual(1);
+    mtCallback = mtCallbacks.shift();
+    expect(mtCallback.length).toEqual(3);
+    expect(mtCallback[0]).toEqual(LifecycleConstant.patchUpdate);
+    mtCallback[2]();
+    expect(callback).toHaveBeenCalledTimes(0);
+
+    _setState(({ count }) => ({ count: count + 1 }));
+    await waitSchedule();
+    _setState(({ count }) => ({ count: count + 1 }));
+    await waitSchedule();
+
+    expect(mtCallbacks.length).toEqual(2);
+    expect(callback).toHaveBeenCalledTimes(2);
+
+    mtCallbacks.forEach(mtCallback => {
+      expect(mtCallback.length).toEqual(3);
+      expect(mtCallback[0]).toEqual(LifecycleConstant.patchUpdate);
+      mtCallback[2]();
+    });
+
+    expect(callback).toHaveBeenCalledTimes(2);
+    expect(callback).nthCalledWith(1, 1);
+    expect(callback).nthCalledWith(2, 2);
   });
 });

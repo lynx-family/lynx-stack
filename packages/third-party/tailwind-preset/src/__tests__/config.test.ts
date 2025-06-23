@@ -1,7 +1,6 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { execSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -18,36 +17,15 @@ describe('Lynx Tailwind Preset', () => {
 
   beforeAll(() => {
     try {
-      const cwd = path.resolve(__dirname, '../../');
-      const configPath = path.resolve(__dirname, 'tailwind.config.ts');
-      const inputPath = path.resolve(__dirname, 'styles.css');
       const outputPath = path.resolve(__dirname, 'output.css');
-
-      // console.log('Working directory:', cwd);
-      // console.log('Config path:', configPath);
-      // console.log('Input path:', inputPath);
-      // console.log('Output path:', outputPath);
-
-      // Use Tailwind CLI to build CSS
-      execSync(
-        `npx tailwindcss -i ${inputPath} -o ${outputPath} -c ${configPath}`,
-        {
-          cwd,
-        },
-      );
 
       // Read the generated CSS
       compiledCSS = fs.readFileSync(outputPath, 'utf-8');
 
       // Extract classes and properties
       usedProperties = extractPropertiesFromCSS(compiledCSS);
-
-      // Cleanup only if file exists
-      if (fs.existsSync(outputPath)) {
-        fs.unlinkSync(outputPath);
-      }
     } catch (error) {
-      console.error('Failed to generate CSS:', error);
+      console.error('Failed to read output.css:', error);
       throw error;
     }
   });

@@ -151,10 +151,12 @@ class CssExtractRspackPluginImpl {
         );
 
         hooks.beforeEmit.tapPromise(this.name, async (args) => {
-          for (const [filename, source] of Object.entries(compilation.assets)) {
-            if (!filename.endsWith('.css')) {
-              continue;
-            }
+          for (
+            const {
+              name: filename,
+              source,
+            } of args.cssChunks
+          ) {
             const content: string = source.source().toString('utf-8');
             const css = LynxTemplatePlugin.convertCSSChunksToMap(
               [content],
@@ -213,7 +215,6 @@ class CssExtractRspackPluginImpl {
               }
             }
           }
-
           this.hash = compilation.hash;
 
           return args;

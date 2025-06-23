@@ -21,7 +21,6 @@
 
 import type { VNode } from 'preact';
 import { options } from 'preact';
-import type { Component } from 'preact/compat';
 
 import { LifecycleConstant } from '../../lifecycleConstant.js';
 import {
@@ -31,12 +30,11 @@ import {
   markTimingLegacy,
   setPipeline,
 } from '../../lynx/performance.js';
-import { CATCH_ERROR, COMMIT, RENDER_CALLBACKS, VNODE } from '../../renderToOpcodes/constants.js';
+import { COMMIT } from '../../renderToOpcodes/constants.js';
 import { applyQueuedRefs } from '../../snapshot/ref.js';
 import { backgroundSnapshotInstanceManager } from '../../snapshot.js';
 import { isEmptyObject } from '../../utils.js';
 import { takeWorkletRefInitValuePatch } from '../../worklet/workletRefPool.js';
-import { runDelayedUnmounts, takeDelayedUnmounts } from '../delayUnmount.js';
 import { getReloadVersion } from '../pass.js';
 import type { SnapshotPatch } from './snapshotPatch.js';
 import { takeGlobalSnapshotPatch } from './snapshotPatch.js';
@@ -79,6 +77,7 @@ interface PatchOptions {
  * Replaces Preact's default commit hook with our custom implementation
  */
 function replaceCommitHook(): void {
+  // This is actually not used since Preact use `hooks._commit` for callbacks of `useLayoutEffect`.
   const originalPreactCommit = options[COMMIT];
   const commit = async (vnode: VNode, commitQueue: any[]) => {
     // Skip commit phase for MT runtime
@@ -92,20 +91,6 @@ function replaceCommitHook(): void {
     markTimingLegacy(PerformanceTimingKeys.updateDiffVdomEnd);
     markTiming(PerformanceTimingKeys.diffVdomEnd);
 
-    // The callback functions to be called after components are rendered.
-    const renderCallbacks = commitQueue.map((component: Component<any>) => {
-      const ret = {
-        component,
-        [RENDER_CALLBACKS]: component[RENDER_CALLBACKS],
-        [VNODE]: component[VNODE],
-      };
-      component[RENDER_CALLBACKS] = [];
-      return ret;
-    });
-    commitQueue.length = 0;
-
-    const delayedUnmounts = takeDelayedUnmounts();
-
     const backgroundSnapshotInstancesToRemove = globalBackgroundSnapshotInstancesToRemove;
     globalBackgroundSnapshotInstancesToRemove = [];
 
@@ -113,17 +98,6 @@ function replaceCommitHook(): void {
 
     // Register the commit task
     globalCommitTaskMap.set(commitTaskId, () => {
-      runDelayedUnmounts(delayedUnmounts);
-      originalPreactCommit?.(vnode, renderCallbacks);
-      renderCallbacks.some(wrapper => {
-        try {
-          wrapper[RENDER_CALLBACKS].some((cb: (this: Component) => void) => {
-            cb.call(wrapper.component);
-          });
-        } catch (e) {
-          options[CATCH_ERROR](e, wrapper[VNODE]!);
-        }
-      });
       if (backgroundSnapshotInstancesToRemove.length) {
         setTimeout(() => {
           backgroundSnapshotInstancesToRemove.forEach(id => {
@@ -141,6 +115,7 @@ function replaceCommitHook(): void {
     if (!snapshotPatch && workletRefInitValuePatch.length === 0) {
       // before hydration, skip patch
       applyQueuedRefs();
+      originalPreactCommit?.(vnode, commitQueue);
       return;
     }
 
@@ -172,6 +147,7 @@ function replaceCommitHook(): void {
     });
 
     applyQueuedRefs();
+    originalPreactCommit?.(vnode, commitQueue);
   };
   options[COMMIT] = commit as ((...args: Parameters<typeof commit>) => void);
 }

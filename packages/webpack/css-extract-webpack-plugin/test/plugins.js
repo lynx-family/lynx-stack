@@ -35,8 +35,7 @@ export const mockLynxTemplatePlugin = (encodeOptions = {}) => {
               stage: compiler.webpack.Compilation
                 .PROCESS_ASSETS_STAGE_OPTIMIZE_HASH,
             },
-            () => {
-              // @ts-expect-error Only finalEncodeOptions is used in the css extract plugin.
+            (assets) => {
               hooks.beforeEmit.promise({
                 finalEncodeOptions: {
                   'compilerOptions': {
@@ -57,6 +56,13 @@ export const mockLynxTemplatePlugin = (encodeOptions = {}) => {
                   'customSections': {},
                   ...encodeOptions,
                 },
+                // @ts-expect-error `info` field is not needed by css extract plugin.
+                'cssChunks': Object.entries(assets).filter(([filename]) =>
+                  filename.endsWith('.css')
+                ).map(([filename, source]) => ({
+                  'name': filename,
+                  'source': source,
+                })),
               });
             },
           );

@@ -1,5 +1,67 @@
 # @lynx-js/web-mainthread-apis
 
+## 0.14.0
+
+### Patch Changes
+
+- feat: add `_SetSourceMapRelease(errInfo)` MTS API. ([#1118](https://github.com/lynx-family/lynx-stack/pull/1118))
+
+  You can get `errInfo.release` through `e.detail.release` in the error event callback of lynx-view.
+
+  The `_SetSourceMapRelease` function is not complete yet, because it is currently limited by the Web platform and some functions and some props such as `err.stack` do not need to be supported for the time being.
+
+- feat: add `_I18nResourceTranslation` api in mts && `init-i18n-resources` attr, `i18nResourceMissed` event of lynx-view. ([#1065](https://github.com/lynx-family/lynx-stack/pull/1065))
+
+  `init-i18n-resource` is the complete set of i18nResources that need to be maintained on the container side. Note: You need to pass this value when lynx-view is initialized.
+
+  You can use `_I18nResourceTranslation` in MTS to get the corresponding i18nResource from `init-i18n-resources`. If it is undefined, the `i18nResourceMissed` event will be dispatched.
+
+  ```js
+  // ui thread
+  lynxView.initI18nResources = [
+    {
+      options: {
+        locale: 'en',
+        channel: '1',
+        fallback_url: '',
+      },
+      resource: {
+        hello: 'hello',
+        lynx: 'lynx web platform1',
+      },
+    },
+  ];
+  lynxView.addEventListener('i18nResourceMissed', (e) => {
+    console.log(e);
+  });
+
+  // mts
+  _I18nResourceTranslation({
+    locale: 'en',
+    channel: '1',
+    fallback_url: '',
+  });
+  ```
+
+- feat: supports `lynx.getI18nResource()` and `onI18nResourceReady` event in bts. ([#1088](https://github.com/lynx-family/lynx-stack/pull/1088))
+
+  - `lynx.getI18nResource()` can be used to get i18nResource in bts, it has two data sources:
+    - the result of `_I18nResourceTranslation()`
+    - lynx-view `updateI18nResources(data: InitI18nResources, options: I18nResourceTranslationOptions)`, it will be matched to the correct i8nResource as a result of `lynx.getI18nResource()`
+  - `onI18nResourceReady` event can be used to listen `_I18nResourceTranslation` and lynx-view `updateI18nResources` execution.
+
+- feat: add `updateI18nResources` method of lynx-view. ([#1085](https://github.com/lynx-family/lynx-stack/pull/1085))
+
+  Now you can use `updateI18nResources` to update i18nResources, and then use \_I18nResourceTranslation() to get the updated result.
+
+- fix: `decodeCssInJs` will not throw error. ([#1120](https://github.com/lynx-family/lynx-stack/pull/1120))
+
+  Before this pr, decoding css will be strictly executed according to cssInfo, and an error will be thrown if data that does not meet the requirements is encountered. Now it is changed to console.warn, which will not block rendering.
+
+- Updated dependencies [[`25a04c9`](https://github.com/lynx-family/lynx-stack/commit/25a04c9e59f4b893227bdead74f2de69f6615cdb), [`0dbb8b1`](https://github.com/lynx-family/lynx-stack/commit/0dbb8b1f580d0700e2b67b92018a7a00d1494837), [`f99de1e`](https://github.com/lynx-family/lynx-stack/commit/f99de1ef60cc5a11eae4fd0acc70a490787d36c9), [`873a285`](https://github.com/lynx-family/lynx-stack/commit/873a2852fa3df9e32c48a6504160bb243540c7b9), [`afacb2c`](https://github.com/lynx-family/lynx-stack/commit/afacb2cbea7feca46c553651000625d0845b2b00), [`7e73450`](https://github.com/lynx-family/lynx-stack/commit/7e73450f8f5f1153f8a064036f5552c1335c23d7)]:
+  - @lynx-js/web-constants@0.14.0
+  - @lynx-js/web-style-transformer@0.3.1
+
 ## 0.13.5
 
 ### Patch Changes

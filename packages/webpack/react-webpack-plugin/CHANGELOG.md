@@ -1,5 +1,17 @@
 # @lynx-js/react-webpack-plugin
 
+## 0.6.16
+
+### Patch Changes
+
+- Supports `@lynx-js/template-webpack-plugin` 0.8.0. ([#1033](https://github.com/lynx-family/lynx-stack/pull/1033))
+
+- Support `@lynx-js/react` v0.110.0. ([#770](https://github.com/lynx-family/lynx-stack/pull/770))
+
+- Keep snapshot id unchanged on Windows. ([#1050](https://github.com/lynx-family/lynx-stack/pull/1050))
+
+- Fix lazy bundle name on Windows. ([#1060](https://github.com/lynx-family/lynx-stack/pull/1060))
+
 ## 0.6.15
 
 ### Patch Changes
