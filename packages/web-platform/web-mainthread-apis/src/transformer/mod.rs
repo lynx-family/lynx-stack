@@ -83,4 +83,13 @@ mod tests {
       "height:1px;--lynx-display-toggle:var(--lynx-display-linear); --lynx-display:linear; display:flex;--flex-direction:row;width:100px;"
     );
   }
+
+  #[test]
+  fn transform_with_blank() {
+    let source = "flex-direction : row ;";
+    let source_vec: Vec<u16> = source.bytes().map(|b| b as u16).collect();
+    let source: &[u16] = &source_vec;
+    let result = transform_inline_style_string(source);
+    assert_eq!(String::from_utf16_lossy(&result), "--flex-direction: row ;");
+  }
 }
