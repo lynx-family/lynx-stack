@@ -6,4 +6,5 @@
 
 const { default: _exports } = require('../dist/wasm.cjs');
 
+// eslint-disable-next-line n/no-missing-require
 module.exports = process.env['USE_NAPI'] ? require('../index.cjs') : _exports;
