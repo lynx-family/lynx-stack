@@ -132,6 +132,7 @@ test('fireEvent triggers useEffect calls', async () => {
     Map {
       -1 => {
         "children": undefined,
+        "extraProps": undefined,
         "id": -1,
         "type": "root",
         "values": undefined,
@@ -182,6 +183,7 @@ test('fireEvent triggers useEffect calls', async () => {
             "children": [
               {
                 "children": undefined,
+                "extraProps": undefined,
                 "id": 3,
                 "type": null,
                 "values": [
@@ -189,6 +191,7 @@ test('fireEvent triggers useEffect calls', async () => {
                 ],
               },
             ],
+            "extraProps": undefined,
             "id": 2,
             "type": "__Card__:__snapshot_e8d0a_test_4",
             "values": [
@@ -196,6 +199,7 @@ test('fireEvent triggers useEffect calls', async () => {
             ],
           },
         ],
+        "extraProps": undefined,
         "id": -1,
         "type": "root",
         "values": undefined,
@@ -204,6 +208,7 @@ test('fireEvent triggers useEffect calls', async () => {
         "children": [
           {
             "children": undefined,
+            "extraProps": undefined,
             "id": 3,
             "type": null,
             "values": [
@@ -211,6 +216,7 @@ test('fireEvent triggers useEffect calls', async () => {
             ],
           },
         ],
+        "extraProps": undefined,
         "id": 2,
         "type": "__Card__:__snapshot_e8d0a_test_4",
         "values": [
@@ -219,6 +225,7 @@ test('fireEvent triggers useEffect calls', async () => {
       },
       3 => {
         "children": undefined,
+        "extraProps": undefined,
         "id": 3,
         "type": null,
         "values": [
