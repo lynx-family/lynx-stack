@@ -344,8 +344,8 @@ describe(`list "update-list-info"`, () => {
     b.insertBefore(d3);
     __pendingListUpdates.clear();
 
-    d1.setAttribute('__0', { 'item-key': 1 });
-    d3.setAttribute('__0', { 'item-key': 3 });
+    d1.setAttribute(0, { 'item-key': 1 });
+    d3.setAttribute(0, { 'item-key': 3 });
     expect(__pendingListUpdates.values).toMatchInlineSnapshot(`
       {
         "-1": [
@@ -429,6 +429,14 @@ describe(`list componentAtIndex`, () => {
     expect(() => {
       elementTree.triggerComponentAtIndex(listRef, 0);
     }).toThrowErrorMatchingInlineSnapshot(`[Error: childCtx not found]`);
+
+    const d1 = new SnapshotInstance(s3);
+    const d2 = new SnapshotInstance(s3);
+    const d3 = new SnapshotInstance(s3);
+    b.insertBefore(d1);
+    b.insertBefore(d2);
+    b.insertBefore(d3);
+    __pendingListUpdates.flush();
 
     a.removeChild(b);
     expect(() => {
@@ -2262,7 +2270,7 @@ describe('list componentAtIndexes', () => {
       const cellIndexes = [0, 1, 2];
       const enableReuseNotification = false;
       const asyncFlush = false;
-      elementTree.triggerComponentAtIndexes(listRef, cellIndexes, [], enableReuseNotification, asyncFlush);
+      elementTree.triggerComponentAtIndexes(listRef, cellIndexes, [11, 22, 33], enableReuseNotification, asyncFlush);
     }
 
     globalThis.__FlushElementTree = __original;
@@ -2276,7 +2284,11 @@ describe('list componentAtIndexes', () => {
               262,
             ],
             "listID": 255,
-            "operationIDs": [],
+            "operationIDs": [
+              11,
+              22,
+              33,
+            ],
             "triggerLayout": true,
           },
         ],
