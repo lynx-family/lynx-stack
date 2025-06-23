@@ -142,8 +142,8 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
       break;
     }
     case LifecycleConstant.publishEvent: {
-      const { handlerName, data: data2 } = data;
-      publishEvent(handlerName, data2);
+      const { handlerName, data: d } = data as { handlerName: string; data: unknown };
+      publishEvent(handlerName, d);
       break;
     }
   }
