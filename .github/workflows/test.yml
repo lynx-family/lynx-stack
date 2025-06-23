@@ -55,6 +55,14 @@ jobs:
       - name: Changeset Check
         run: pnpm changeset status --since=origin/main
 
+  eslint:
+    needs: build
+    uses: ./.github/workflows/workflow-test.yml
+    permissions: {}
+    with:
+      runs-on: lynx-ubuntu-24.04-medium
+      run: pnpm eslint .
+
   lighthouse:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
