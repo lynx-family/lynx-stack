@@ -3,17 +3,43 @@
 // LICENSE file in the root directory of this source tree.
 import type { Config } from 'tailwindcss';
 
-import { display, position, textDecoration } from './plugins/lynx/index.js';
+import {
+  alignContent,
+  defaults,
+  display,
+  inset,
+  position,
+  rotate,
+  scale,
+  skew,
+  textDecoration,
+  transform,
+  translate,
+} from './plugins/lynx/index.js';
 
 /**
- * Should be used with Tailwind JIT and configured with purge, otherwise the bundle will be too large.
+ * Should be used with Tailwind v3+ (JIT is enabled by default) and configured with `content`,
+ * otherwise the generated CSS bundle may include unused utilities.
  */
 
 const preset: Partial<Config> = {
-  plugins: [display, position, textDecoration],
+  plugins: [
+    defaults,
+    display,
+    position,
+    textDecoration,
+    inset,
+    alignContent,
+    transform,
+    translate,
+    rotate,
+    skew,
+    scale,
+  ],
   corePlugins: [
     // 'preflight',
-    'alignContent',
+
+    // 'alignContent',
     'alignItems',
     'alignSelf',
 
@@ -54,7 +80,7 @@ const preset: Partial<Config> = {
     'fontWeight',
 
     'height',
-    'inset',
+    // 'inset',
 
     'justifyContent',
 
@@ -82,16 +108,16 @@ const preset: Partial<Config> = {
     'textOverflow',
 
     'transformOrigin',
-    'transform',
+    // 'transform',
     'transitionDelay',
     'transitionDuration',
     'transitionProperty',
     'transitionTimingFunction',
 
-    'translate',
-    'rotate',
-    'scale',
-    'skew',
+    // 'translate',
+    // 'rotate',
+    // 'scale',
+    // 'skew',
 
     'visibility',
     'whitespace',

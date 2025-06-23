@@ -4,27 +4,14 @@
 
 import _createUtilityPlugin from 'tailwindcss/lib/util/createUtilityPlugin.js';
 
+import type {
+  UtilityPluginOptions,
+  UtilityVariations,
+} from './types/plugin-types.js';
 import type { PluginCreator } from './types/tailwind-types.js';
 
 function createPlugin(fn: PluginCreator): PluginCreator {
   return fn;
-}
-
-type PropertyEntry =
-  | string
-  | [string, string]
-  | [string, [string, string]];
-
-export type UtilityEntry = [string, PropertyEntry[]];
-
-export type UtilityVariation =
-  | UtilityEntry
-  | UtilityEntry[];
-
-interface UtilityPluginOptions {
-  type?: string[];
-  supportsNegativeValues?: boolean;
-  filterDefault?: boolean;
 }
 
 /**
@@ -33,10 +20,10 @@ interface UtilityPluginOptions {
  */
 function createUtilityPlugin(
   themeKey: string,
-  utilityVariations?: UtilityVariation[] | UtilityVariation,
+  utilityVariations?: UtilityVariations,
   options?: UtilityPluginOptions,
 ): PluginCreator {
-  return _createUtilityPlugin(themeKey, utilityVariations, options);
+  return _createUtilityPlugin(themeKey, utilityVariations as unknown, options);
 }
 
 export { createUtilityPlugin, createPlugin };

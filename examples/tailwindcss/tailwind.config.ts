@@ -5,7 +5,6 @@ import preset from '@lynx-js/tailwind-preset';
 export default {
   content: [],
   presets: [preset],
-  corePlugins: { inset: false },
   theme: {
     extend: {
       colors: {
