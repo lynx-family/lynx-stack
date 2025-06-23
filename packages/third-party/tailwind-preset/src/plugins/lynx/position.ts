@@ -4,8 +4,8 @@
 
 import { createPlugin } from '../../helpers.js';
 
-export const position = createPlugin((api) => {
-  api.addUtilities(
+export const position = createPlugin(({ addUtilities }) => {
+  addUtilities(
     {
       '.fixed': { position: 'fixed' },
       '.absolute': { position: 'absolute' },

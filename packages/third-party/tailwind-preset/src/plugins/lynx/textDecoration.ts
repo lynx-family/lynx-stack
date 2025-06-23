@@ -4,8 +4,8 @@
 
 import { createPlugin } from '../../helpers.js';
 
-export const textDecoration = createPlugin((api) => {
-  api.addUtilities(
+export const textDecoration = createPlugin(({ addUtilities }) => {
+  addUtilities(
     {
       '.no-underline': {
         'text-decoration': 'none',

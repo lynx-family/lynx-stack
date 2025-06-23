@@ -8,12 +8,43 @@ import type {
   UtilityPluginOptions,
   UtilityVariations,
 } from './types/plugin-types.js';
-import type { PluginCreator } from './types/tailwind-types.js';
+import type { PluginAPI, PluginCreator } from './types/tailwind-types.js';
 
-function createPlugin(fn: PluginCreator): PluginCreator {
-  return fn;
+/**
+ * Wraps a Tailwind PluginCreator and auto-binds all function properties of the API.
+ */
+function createPlugin(
+  fn: (api: Bound<PluginAPI>) => void,
+): PluginCreator {
+  return (api) => {
+    const bound = autoBind(api);
+    fn(bound);
+  };
 }
+/**
+ * Auto-binds all function-valued properties to the original object.
+ */
+function autoBind<T extends object>(obj: T): Bound<T> {
+  const result = {} as Bound<T>;
 
+  for (const key of Object.keys(obj) as Array<keyof T>) {
+    const value = obj[key];
+
+    result[key] = (typeof value === 'function'
+      ? (value.bind(obj) as Bound<T>[typeof key])
+      : value) as Bound<T>[typeof key];
+  }
+
+  return result;
+}
+/**
+ * Type helper: binds all function-valued properties in T.
+ */
+type Bound<T> = {
+  [K in keyof T]: T[K] extends (...args: infer A) => infer R
+    ? (this: void, ...args: A) => R
+    : T[K];
+};
 /**
  * A type-safe re-export of Tailwind's internal createUtilityPlugin.
  * For internal use in Lynx plugin system.
