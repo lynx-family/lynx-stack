@@ -86,7 +86,7 @@ jobs:
         with:
           category: "/language:${{matrix.language}}"
 
-  eslint-check:
+  eslint:
     timeout-minutes: 10
     runs-on: lynx-ubuntu-24.04-medium
     steps:
