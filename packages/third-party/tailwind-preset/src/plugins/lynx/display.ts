@@ -4,8 +4,8 @@
 
 import { createPlugin } from '../../helpers.js';
 
-export const display = createPlugin((api) => {
-  api.addUtilities(
+export const display = createPlugin(({ addUtilities }) => {
+  addUtilities(
     {
       '.block': { display: 'block' },
       '.flex': { display: 'flex' },

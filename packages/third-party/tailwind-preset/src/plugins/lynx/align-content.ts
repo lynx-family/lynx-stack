@@ -3,8 +3,8 @@
 // LICENSE file in the root directory of this source tree.
 import { createPlugin } from '../../helpers.js';
 
-export const alignContent = createPlugin((api) => {
-  api.addUtilities({
+export const alignContent = createPlugin(({ addUtilities }) => {
+  addUtilities({
     '.content-center': { 'align-content': 'center' },
     '.content-start': { 'align-content': 'flex-start' },
     '.content-end': { 'align-content': 'flex-end' },

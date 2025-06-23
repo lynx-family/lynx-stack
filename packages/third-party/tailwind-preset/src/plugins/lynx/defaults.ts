@@ -4,8 +4,8 @@
 import { createPlugin } from '../../helpers.js';
 // import { cssTransformValue } from './transform.js';
 
-export const defaults = createPlugin((api) => {
-  api.addBase(
+export const defaults = createPlugin(({ addBase }) => {
+  addBase(
     {
       ':root': {
         '--tw-translate-x': '0',
