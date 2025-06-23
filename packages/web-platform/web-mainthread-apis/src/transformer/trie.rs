@@ -26,7 +26,7 @@ macro_rules! get_trie_char_code {
     } else if $code >= ('A' as u16) && $code <= ('Z' as u16) {
       $code - ('A' as u16)
     } else {
-      27 // for all other characters
+      26 // for all other characters
     }
   };
 }
@@ -279,7 +279,7 @@ pub fn get_trie_leaf_value(
 ) -> Option<&'static str> {
   let mut ii = 0;
   let len = core::cmp::min(end - start, source.len());
-  while ii < len {
+  while ii < len && ii < leaves.len() {
     let raw_code = source[start + ii];
     let code = get_trie_char_code!(raw_code) as usize;
     if let Some(trie_node_leaf) = &leaves[ii] {
@@ -305,7 +305,7 @@ pub fn get_trie_node_value(
 ) -> Option<&'static [Option<TrieNodeLeaf>]> {
   let mut ii = 0;
   let len = core::cmp::min(end - start, source.len());
-  while ii < len {
+  while ii < len && ii < trie_nodes.len() {
     let raw_code = source[start + ii];
     let code = get_trie_char_code!(raw_code) as usize;
     if let Some(trie_node) = &trie_nodes[ii] {
@@ -427,6 +427,28 @@ mod tests {
       Some("--lynx-display-toggle:var(--lynx-display-linear); --lynx-display:linear; display:flex")
     );
   }
+
+  // #[test]
+  // fn test_replace_rule_display_linear_important() {
+  //   let source = "display:linear ;".as_bytes();
+  //   let source: Vec<u16> = source.iter().map(|&b| b as u16).collect();
+  //   let name_start = 0;
+  //   let name_end = 7;
+  //   let value_start = 8;
+  //   let value_end = source.len();
+  //   let result = get_replace_rule_value!(
+  //     &source,
+  //     name_start,
+  //     name_end,
+  //     &source,
+  //     value_start,
+  //     value_end
+  //   );
+  //   assert_eq!(
+  //     result,
+  //     Some("--lynx-display-toggle:var(--lynx-display-linear) !important; --lynx-display:linear !important; display:flex !important")
+  //   );
+  // }
 
   #[test]
   fn test_rename_rule_not_exist() {

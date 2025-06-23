@@ -43,7 +43,9 @@ impl<'a, 'b, T: Transformer> Parser for ParserState<'a, 'b, T> {
       self.status = 1;
     }
     // 2. Discard whitespace from input.
-    else if self.status == 1 && token_type == css::types::COLON_TOKEN {
+    else if self.status == 1 && token_type == css::types::WHITESPACE_TOKEN {
+      // do nothing, just skip whitespace
+    } else if self.status == 1 && token_type == css::types::COLON_TOKEN {
       /*
       3. If the next token is a <colon-token>, discard a token from input.
         Otherwise, consume the remnants of a bad declaration from input, with nested, and return nothing.
