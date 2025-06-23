@@ -173,14 +173,14 @@ describe('jsx', () => {
         "code": "import { jsx as _jsx, Fragment as _Fragment } from "@lynx-js/react/jsx-runtime";
       import * as ReactLynx from "@lynx-js/react";
       import * as ReactLynxRuntimeComponents from '@lynx-js/react/runtime-components';
-      const __snapshot_da39a_228b3_2 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_228b3_2", function() {
+      const __snapshot_da39a_871f7_2 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_871f7_2", function() {
           const pageId = ReactLynx.__pageId;
           const el = __CreateElement("list-item", pageId);
           return [
               el
           ];
       }, null, ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null);
-      const __snapshot_da39a_228b3_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_228b3_1", function(snapshotInstance) {
+      const __snapshot_da39a_871f7_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_871f7_1", function(snapshotInstance) {
           const pageId = ReactLynx.__pageId;
           const el = ReactLynx.snapshotCreateList(pageId, snapshotInstance, 0);
           return [
@@ -192,9 +192,9 @@ describe('jsx', () => {
               0
           ]
       ], undefined, globDynamicComponentEntry, null);
-      /*#__PURE__*/ _jsx(__snapshot_da39a_228b3_1, {
+      /*#__PURE__*/ _jsx(__snapshot_da39a_871f7_1, {
           children: /*#__PURE__*/ _jsx(ReactLynxRuntimeComponents.DeferredListItem, {
-              renderListItem: (__c)=>_jsx(__snapshot_da39a_228b3_2, {
+              renderListItem: (__c)=>_jsx(__snapshot_da39a_871f7_2, {
                       children: __c
                   }),
               renderChildren: ()=>/*#__PURE__*/ _jsx(_Fragment, {}),
