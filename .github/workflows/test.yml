@@ -230,6 +230,7 @@ jobs:
   done:
     needs:
       - code-style-check
+      - eslint
       - playwright-linux
       - test-api
       - test-publish
