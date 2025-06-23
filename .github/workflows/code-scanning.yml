@@ -86,6 +86,30 @@ jobs:
         with:
           category: "/language:${{matrix.language}}"
 
+  eslint-check:
+    timeout-minutes: 10
+    runs-on: lynx-ubuntu-24.04-medium
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Install
+        run: |
+          npm install -g corepack@latest
+          corepack enable
+          pnpm install --frozen-lockfile
+          pnpm build
+      - name: ESLint Check
+        run: |
+          pnpm add -D @microsoft/eslint-formatter-sarif
+          pnpm eslint -f @microsoft/sarif -o results.sarif . --cache --cache-strategy content
+      - name: Upload SARIF file
+        uses: github/codeql-action/upload-sarif@ce28f5bb42b7a9f2c824e633a3f6ee835bab6858 # v3
+        with:
+          sarif_file: results.sarif
+          category: eslint
+
   zizmor:
     timeout-minutes: 10
     runs-on: lynx-ubuntu-24.04-medium
