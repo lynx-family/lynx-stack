@@ -8,6 +8,7 @@ import type {
   PluginCreator,
   PluginUtils,
   PluginsConfig,
+  ValueType,
 } from 'tailwindcss/types/config';
 
 export type {
@@ -17,6 +18,7 @@ export type {
   PluginsConfig,
   CorePluginsConfig,
   Config,
+  ValueType,
 };
 
 export type Plugin = PluginsConfig[number];

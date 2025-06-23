@@ -5,24 +5,11 @@
 declare module 'tailwindcss/lib/util/createUtilityPlugin.js' {
   import type { PluginCreator } from 'tailwindcss/types/config';
 
-  type PropertyEntry =
-    | string
-    | [string, string]
-    | [string, [string, string]];
-
-  type UtilityEntry = [string, PropertyEntry[]];
-
-  type UtilityVariation = UtilityEntry | UtilityEntry[];
-
-  interface UtilityPluginOptions {
-    type?: string[];
-    supportsNegativeValues?: boolean;
-    filterDefault?: boolean;
-  }
+  import type { UtilityPluginOptions, UtilityVariations } from './types.js';
 
   const createUtilityPlugin: (
     themeKey: string,
-    utilityVariations?: UtilityVariation[] | UtilityVariation,
+    utilityVariations?: UtilityVariations,
     options?: UtilityPluginOptions,
   ) => PluginCreator;
 

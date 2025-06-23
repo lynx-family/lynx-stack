@@ -14,7 +14,10 @@ export default defineConfig({
         return `${url}?fullscreen=true`;
       },
     }),
-    pluginTailwindCSS({ config: 'tailwind.config.ts' }),
+    pluginTailwindCSS({
+      config: 'tailwind.config.ts',
+      exclude: [/[\\/]node_modules[\\/]/],
+    }),
   ],
   performance: {
     profile: enableBundleAnalysis,

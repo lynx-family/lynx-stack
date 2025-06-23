@@ -8,4 +8,8 @@ export { textDecoration } from './textDecoration.js';
 export { rotate } from './rotate.js';
 export { scale } from './scale.js';
 export { translate } from './translate.js';
+export { skew } from './skew.js';
 export { transform } from './transform.js';
+export { defaults } from './defaults.js';
+export { inset } from './inset.js';
+export { alignContent } from './align-content.js';
