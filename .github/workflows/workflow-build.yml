@@ -105,6 +105,7 @@ jobs:
         run: |
           pnpm turbo build --summarize
         env:
+          NODE_OPTIONS: --max-old-space-size=32768
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         continue-on-error: true
       - name: Upload turbo summary

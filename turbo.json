@@ -4,7 +4,8 @@
     "CI",
     "COREPACK_INTEGRITY_KEYS",
     "COREPACK_NPM_REGISTRY",
-    "COREPACK_DEFAULT_TO_LATEST"
+    "COREPACK_DEFAULT_TO_LATEST",
+    "NODE_OPTIONS"
   ],
   "ui": "tui",
   "tasks": {
