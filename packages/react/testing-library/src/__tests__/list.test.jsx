@@ -1,8 +1,14 @@
-import { describe, expect } from 'vitest';
-import { render } from '..';
-import { useState } from '@lynx-js/react';
-import { __pendingListUpdates } from '../../../runtime/lib/list.js';
+// Copyright 2025 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+
 import { act } from 'preact/test-utils';
+import { describe, expect } from 'vitest';
+
+import { useState } from '@lynx-js/react';
+
+import { render } from '..';
+import { __pendingListUpdates } from '../../../runtime/lib/pendingListUpdates.js';
 
 describe('list', () => {
   it('basic', async () => {

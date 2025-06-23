@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { elementTree, nativeMethodQueue } from './utils/nativeMethod';
 import { hydrate } from '../src/hydrate';
-import { __pendingListUpdates } from '../src/list';
+import { __pendingListUpdates } from '../src/pendingListUpdates';
 import { SnapshotInstance, snapshotInstanceManager } from '../src/snapshot';
 
 const HOLE = null;

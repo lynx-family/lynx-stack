@@ -4,23 +4,18 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { BackgroundSnapshotInstance } from '../src/backgroundSnapshot';
+import { globalEnvManager } from './utils/envManager';
 import { elementTree } from './utils/nativeMethod';
 import { registerWorkletOnBackground } from '../src/internal';
+import { addCtxNotFoundEventListener } from '../src/lifecycle/patch/error';
 import {
   SnapshotOperation,
   initGlobalSnapshotPatch,
   takeGlobalSnapshotPatch,
 } from '../src/lifecycle/patch/snapshotPatch';
 import { snapshotPatchApply } from '../src/lifecycle/patch/snapshotPatchApply';
-import {
-  DynamicPartType,
-  SnapshotInstance,
-  createSnapshot,
-  snapshotInstanceManager,
-  snapshotManager,
-} from '../src/snapshot';
-import { globalEnvManager } from './utils/envManager';
-import { addCtxNotFoundEventListener } from '../src/lifecycle/patch/error';
+import { SnapshotInstance, createSnapshot, snapshotInstanceManager, snapshotManager } from '../src/snapshot';
+import { DynamicPartType } from '../src/snapshot/dynamicPartType';
 
 const HOLE = null;
 
