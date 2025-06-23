@@ -1,5 +1,5 @@
 use crate::{
-  css::{self, utils::cmp_str},
+  css::{self, tokenize::Parser, utils::cmp_str},
   is_newline, is_white_space,
 };
 
@@ -8,8 +8,9 @@ const IMPORTANT_STR: [u16; 9] = [
   't' as u16,
 ];
 
-pub struct ParserState {
-  on_declaration: fn(usize, usize, usize, usize, bool),
+pub struct ParserState<'a, 'b, T: Transformer> {
+  transformer: &'b mut T,
+  source: &'a [u16],
   status: usize,
   name_start: usize,
   name_end: usize,
@@ -19,8 +20,8 @@ pub struct ParserState {
   prev_token_type: u16,
 }
 
-impl ParserState {
-  pub fn on_token(&mut self, input: &[u16], token_type: u16, start: usize, end: usize) {
+impl<'a, 'b, T: Transformer> Parser for ParserState<'a, 'b, T> {
+  fn on_token(&mut self, token_type: u16, start: usize, end: usize) {
     //https://drafts.csswg.org/css-syntax-3/#consume-declaration
     // on_token(type, start, offset);
     /*
@@ -71,10 +72,10 @@ impl ParserState {
       if self.value_end == 0 {
         self.value_end = start;
       }
-      while is_white_space!(input[self.value_end - 1]) && self.value_end > self.value_start {
+      while is_white_space!(self.source[self.value_end - 1]) && self.value_end > self.value_start {
         self.value_end -= 1;
       }
-      (self.on_declaration)(
+      self.transformer.on_declaration(
         self.name_start,
         self.name_end,
         self.value_start,
@@ -89,7 +90,7 @@ impl ParserState {
       self.is_important = false;
     } else if self.status == 3
       && self.prev_token_type == css::types::DELIM_TOKEN
-      && cmp_str(input, start, end, &IMPORTANT_STR)
+      && cmp_str(self.source, start, end, &IMPORTANT_STR)
     {
       // here we will have some bad caes: like
       // height: 1px !important 2px;
@@ -119,9 +120,21 @@ impl ParserState {
   }
 }
 
-pub fn parse_inline_style(input: &[u16], on_declaration_cb: fn(usize, usize, usize, usize, bool)) {
-  let mut parser: ParserState = ParserState {
-    on_declaration: on_declaration_cb,
+pub trait Transformer {
+  fn on_declaration(
+    &mut self,
+    name_start: usize,
+    name_end: usize,
+    value_start: usize,
+    value_end: usize,
+    is_important: bool,
+  );
+}
+
+pub fn parse_inline_style<'a, T: Transformer>(source: &[u16], transformer: &'a mut T) {
+  let mut parser = ParserState {
+    transformer,
+    source,
     status: 0,
     name_start: 0,
     name_end: 0,
@@ -130,8 +143,8 @@ pub fn parse_inline_style(input: &[u16], on_declaration_cb: fn(usize, usize, usi
     is_important: false,
     prev_token_type: css::types::WHITESPACE_TOKEN, // start with whitespace
   };
-  css::tokenize::tokenize(input, &mut parser);
+  css::tokenize::tokenize(source, &mut parser);
   if parser.prev_token_type != css::types::SEMICOLON_TOKEN {
-    parser.on_token(input, css::types::SEMICOLON_TOKEN, input.len(), input.len());
+    parser.on_token(css::types::SEMICOLON_TOKEN, source.len(), source.len());
   }
 }

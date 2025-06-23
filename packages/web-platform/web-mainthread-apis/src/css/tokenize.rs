@@ -1,4 +1,3 @@
-use crate::css::parse_inline_style::ParserState;
 use crate::css::{char_code_definitions, types::*, utils::*};
 use crate::*;
 
@@ -250,7 +249,12 @@ pub fn consume_url_token(source: &[u16], offset: &mut usize, token_type: &mut u1
     *offset += 1;
   }
 }
-pub fn tokenize(source: &[u16], parser: &mut ParserState) {
+
+pub trait Parser {
+  fn on_token(&mut self, token_type: u16, start: usize, end: usize);
+}
+
+pub fn tokenize<T: Parser>(source: &[u16], parser: &mut T) {
   let source_length = source.len();
   let mut start: usize = is_bom!(get_char_code!(source, source_length, 0));
   let mut offset = start;
@@ -532,7 +536,7 @@ pub fn tokenize(source: &[u16], parser: &mut ParserState) {
         offset += 1;
       }
     }
-    parser.on_token(source, token_type, start, offset);
+    parser.on_token(token_type, start, offset);
     start = offset;
   }
 }

@@ -304,16 +304,18 @@ export const __SetInlineStyles: SetInlineStylesPAPI = /*#__PURE__*/ (
   value,
 ) => {
   if (!value) return;
-  const { transformedStyle } = typeof value === 'string'
-    ? transformInlineStyleString(value)
-    : transformParsedStyles(
+  if (typeof value === 'string') {
+    element.setAttribute('style', transformInlineStyleString(value));
+  } else {
+    const { transformedStyle } = transformParsedStyles(
       Object.entries(value).map(([k, value]) => [
         hyphenateStyleName(k),
         value,
       ]),
     );
-  const transformedStyleStr = transformedStyle.map((
-    [property, value],
-  ) => `${property}:${value};`).join('');
-  element.setAttribute('style', transformedStyleStr);
+    const transformedStyleStr = transformedStyle.map((
+      [property, value],
+    ) => `${property}:${value};`).join('');
+    element.setAttribute('style', transformedStyleStr);
+  }
 };

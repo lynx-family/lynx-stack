@@ -1,6 +1,7 @@
 use wasm_bindgen::prelude::*;
 
 pub mod css;
+pub mod transformer;
 // lifted from the `console_log` example
 /**
 accept a raw uint16 ptr from JS
@@ -12,7 +13,11 @@ pub fn accept_raw_uint16_ptr(ptr: *const u16, len: usize) {
   unsafe {
     let slice = core::slice::from_raw_parts(ptr, len);
     // Call the tokenize function with our data and callback
-    css::parse_inline_style::parse_inline_style(slice, on_declaration);
+    let result = transformer::transform_inline_style_string(&slice);
+    if !result.is_empty() {
+      let ptr = result.as_ptr();
+      on_transformed(ptr, result.len());
+    }
   }
 }
 
@@ -33,14 +38,8 @@ pub fn free(ptr: *mut u8, size: usize) {
 }
 
 #[wasm_bindgen(
-  inline_js = "export function on_declaration(nS, nE, vS, vE, im) { globalThis._tokenizer_on_declaration_callback(nS, nE, vS, vE, im); }"
+  inline_js = "export function on_transformed(ptr, len) { globalThis._on_transformed_callback(ptr, len); }"
 )]
 extern "C" {
-  fn on_declaration(
-    name_start: usize,
-    name_end: usize,
-    value_start: usize,
-    value_end: usize,
-    is_important: bool,
-  );
+  fn on_transformed(ptr: *const u16, len: usize);
 }

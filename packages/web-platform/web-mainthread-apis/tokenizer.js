@@ -26,12 +26,23 @@ const stringToUTF16 = (ptr, str, len) => {
     HEAPU16[(ptr >> 1) + i] = str.charCodeAt(i);
   }
 };
-export function parseInlineStyle(str, onDeclaration) {
+const UTF16ToString = (ptr, len) => {
+  if (!HEAPU16 || HEAPU16.byteLength == 0) {
+    HEAPU16 = new Uint16Array(wasm.memory.buffer);
+  }
+  return String.fromCharCode(...HEAPU16.subarray(ptr >> 1, (ptr >> 1) + len));
+};
+export function transformInlineStyle(str) {
   const len = str.length;
   const ptr = wasm.malloc(len * 2);
+  let result = str;
   stringToUTF16(ptr, str, len);
-  globalThis._tokenizer_on_declaration_callback = onDeclaration;
+  globalThis._on_transformed_callback = (ptr, len) => {
+    const transformed = UTF16ToString(ptr, len);
+    result = transformed;
+  };
   wasm.accept_raw_uint16_ptr(ptr, len);
   globalThis._tokenizer_on_token_callback = null;
   wasm.free(ptr, len * 2);
+  return result;
 }

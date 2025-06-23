@@ -2,5 +2,5 @@
 import initTokenizer from '../../tokenizer.js';
 
 // @ts-ignore
-export { parseInlineStyle } from '../../tokenizer.js';
+export { transformInlineStyle as transformInlineStyleString } from '../../tokenizer.js';
 export { initTokenizer };
