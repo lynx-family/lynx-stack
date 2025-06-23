@@ -22,16 +22,12 @@ import {
   takeGlobalSnapshotPatch,
 } from './lifecycle/patch/snapshotPatch.js';
 import { globalPipelineOptions } from './lynx/performance.js';
+import { DynamicPartType } from './snapshot/dynamicPartType.js';
 import { clearQueuedRefs, queueRefAttrUpdate } from './snapshot/ref.js';
 import type { Ref } from './snapshot/ref.js';
 import { transformSpread } from './snapshot/spread.js';
 import type { SerializedSnapshotInstance, Snapshot } from './snapshot.js';
-import {
-  DynamicPartType,
-  backgroundSnapshotInstanceManager,
-  snapshotManager,
-  traverseSnapshotInstance,
-} from './snapshot.js';
+import { backgroundSnapshotInstanceManager, snapshotManager, traverseSnapshotInstance } from './snapshot.js';
 import { hydrationMap } from './snapshotInstanceHydrationMap.js';
 import { isDirectOrDeepEqual } from './utils.js';
 import { onPostWorkletCtx } from './worklet/ctx.js';

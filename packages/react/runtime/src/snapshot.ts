@@ -18,22 +18,12 @@ import type { Worklet, WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bin
 
 import type { BackgroundSnapshotInstance } from './backgroundSnapshot.js';
 import { SnapshotOperation, __globalSnapshotPatch } from './lifecycle/patch/snapshotPatch.js';
-import { ListUpdateInfoRecording, __pendingListUpdates, snapshotDestroyList } from './list.js';
+import { ListUpdateInfoRecording } from './listUpdateInfo.js';
+import { __pendingListUpdates } from './pendingListUpdates.js';
+import { DynamicPartType } from './snapshot/dynamicPartType.js';
+import { snapshotDestroyList } from './snapshot/list.js';
 import { unref } from './snapshot/ref.js';
 import { isDirectOrDeepEqual } from './utils.js';
-
-/**
- * Types of dynamic parts that can be updated in a snapshot
- * These are determined at compile time through static analysis
- */
-export const enum DynamicPartType {
-  Attr = 0, // Regular attribute updates
-  Spread, // Spread operator in JSX
-  Slot, // Slot for component children
-  Children, // Regular children updates
-  ListChildren, // List/array children updates
-  MultiChildren, // Multiple children updates (compat layer)
-}
 
 /**
  * A snapshot definition that contains all the information needed to create and update elements

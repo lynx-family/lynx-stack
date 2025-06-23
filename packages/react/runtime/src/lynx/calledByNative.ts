@@ -6,13 +6,13 @@ import { isJSReady, jsReady, jsReadyEventIdSwap, resetJSReady } from '../lifecyc
 import { reloadMainThread } from '../lifecycle/reload.js';
 import { renderMainThread } from '../lifecycle/render.js';
 import { LifecycleConstant } from '../lifecycleConstant.js';
-import { __pendingListUpdates } from '../list.js';
 import { ssrHydrateByOpcodes } from '../opcodes.js';
+import { __pendingListUpdates } from '../pendingListUpdates.js';
 import { __root, setRoot } from '../root.js';
+import { applyRefQueue } from '../snapshot/workletRef.js';
 import { SnapshotInstance, __page, setupPage } from '../snapshot.js';
 import { isEmptyObject } from '../utils.js';
 import { PerformanceTimingKeys, markTiming, setPipeline } from './performance.js';
-import { applyRefQueue } from '../snapshot/workletRef.js';
 
 function ssrEncode() {
   const { __opcodes } = __root;

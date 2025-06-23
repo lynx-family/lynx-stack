@@ -2,9 +2,11 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { __pendingListUpdates, componentAtIndexFactory, enqueueComponentFactory } from './list.js';
+import { componentAtIndexFactory, enqueueComponentFactory } from './list.js';
+import { __pendingListUpdates } from './pendingListUpdates.js';
+import { DynamicPartType } from './snapshot/dynamicPartType.js';
 import { unref } from './snapshot/ref.js';
-import { DynamicPartType, SnapshotInstance } from './snapshot.js';
+import type { SnapshotInstance } from './snapshot.js';
 import { isEmptyObject } from './utils.js';
 
 export interface DiffResult<K> {
@@ -349,7 +351,7 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
 
         const listElement = before.__elements![elementIndex]!;
         __SetAttribute(listElement, 'update-list-info', info);
-        const [componentAtIndex, componentAtIndexes] = componentAtIndexFactory(afterChildNodes);
+        const [componentAtIndex, componentAtIndexes] = componentAtIndexFactory(afterChildNodes, hydrate);
         __UpdateListCallbacks(
           listElement,
           componentAtIndex,

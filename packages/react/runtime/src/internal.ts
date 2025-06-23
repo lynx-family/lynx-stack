@@ -9,10 +9,11 @@ import './lynx.js';
 
 import { factory as factory2 } from './compat/componentIs.js';
 import { useMemo } from './hooks/react.js';
-import { snapshotCreateList } from './list.js';
 import { loadLazyBundle } from './lynx/lazy-bundle.js';
 import { __root } from './root.js';
-import { DynamicPartType, SnapshotInstance, __page, __pageId, createSnapshot, snapshotManager } from './snapshot.js';
+import { DynamicPartType } from './snapshot/dynamicPartType.js';
+import { snapshotCreateList } from './snapshot/list.js';
+import { SnapshotInstance, __page, __pageId, createSnapshot, snapshotManager } from './snapshot.js';
 
 export { __page, __pageId, __root };
 

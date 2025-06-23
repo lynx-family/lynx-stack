@@ -16,6 +16,7 @@
 import { sendCtxNotFoundEventToBackground } from './error.js';
 import type { SnapshotPatch } from './snapshotPatch.js';
 import { SnapshotOperation } from './snapshotPatch.js';
+import type { DynamicPartType } from '../../snapshot/dynamicPartType.js';
 import {
   SnapshotInstance,
   createSnapshot,
@@ -23,7 +24,6 @@ import {
   snapshotInstanceManager,
   snapshotManager,
 } from '../../snapshot.js';
-import type { DynamicPartType } from '../../snapshot.js';
 
 /**
  * Applies a patch of snapshot operations to the main thread.

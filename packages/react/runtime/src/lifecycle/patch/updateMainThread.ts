@@ -4,15 +4,15 @@
 
 import { updateWorkletRefInitValueChanges } from '@lynx-js/react/worklet-runtime/bindings';
 
-import { LifecycleConstant } from '../../lifecycleConstant.js';
-import { __pendingListUpdates } from '../../list.js';
-import { PerformanceTimingKeys, markTiming, setPipeline } from '../../lynx/performance.js';
-import { __page } from '../../snapshot.js';
-import { getReloadVersion } from '../pass.js';
 import type { PatchList, PatchOptions } from './commit.js';
 import { setMainThreadHydrationFinished } from './isMainThreadHydrationFinished.js';
 import { snapshotPatchApply } from './snapshotPatchApply.js';
+import { LifecycleConstant } from '../../lifecycleConstant.js';
+import { PerformanceTimingKeys, markTiming, setPipeline } from '../../lynx/performance.js';
+import { __pendingListUpdates } from '../../pendingListUpdates.js';
 import { applyRefQueue } from '../../snapshot/workletRef.js';
+import { __page } from '../../snapshot.js';
+import { getReloadVersion } from '../pass.js';
 
 function updateMainThread(
   { data, patchOptions }: {

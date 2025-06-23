@@ -11,7 +11,7 @@ import { render } from 'preact';
 
 import { hydrate } from '../hydrate.js';
 import { LifecycleConstant } from '../lifecycleConstant.js';
-import { __pendingListUpdates } from '../list.js';
+import { __pendingListUpdates } from '../pendingListUpdates.js';
 import { __root, setRoot } from '../root.js';
 import { destroyBackground } from './destroy.js';
 import { applyRefQueue } from '../snapshot/workletRef.js';
