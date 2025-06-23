@@ -45,7 +45,7 @@ export class BackgroundSnapshotInstance {
   __id: number;
   __values: any[] | undefined;
   __snapshot_def: Snapshot;
-  __extraProps?: Record<string, unknown>;
+  __extraProps?: Record<string, unknown> | undefined;
 
   private __parent: BackgroundSnapshotInstance | null = null;
   private __firstChild: BackgroundSnapshotInstance | null = null;
@@ -354,7 +354,7 @@ export function hydrate(
 ): SnapshotPatch {
   initGlobalSnapshotPatch();
 
-  const helper2 = (afters: BackgroundSnapshotInstance[], parentId: number) => {
+  const helper2 = (afters: BackgroundSnapshotInstance[], parentId: number, targetId?: number) => {
     for (const child of afters) {
       const id = child.__id;
       __globalSnapshotPatch!.push(SnapshotOperation.CreateElement, child.type, id);
@@ -363,8 +363,12 @@ export function hydrate(
         child.__values = undefined;
         child.setAttribute('values', values);
       }
+      const extraProps = child.__extraProps;
+      for (const key in extraProps) {
+        child.setAttribute(key, extraProps[key]);
+      }
       helper2(child.childNodes, id);
-      __globalSnapshotPatch!.push(SnapshotOperation.InsertBefore, parentId, id, undefined);
+      __globalSnapshotPatch!.push(SnapshotOperation.InsertBefore, parentId, id, targetId);
     }
   };
 
@@ -413,6 +417,21 @@ export function hydrate(
       }
     });
 
+    if (after.__extraProps) {
+      for (const key in after.__extraProps) {
+        const value = after.__extraProps[key];
+        const old = before.extraProps?.[key];
+        if (!isDirectOrDeepEqual(value, old)) {
+          __globalSnapshotPatch!.push(
+            SnapshotOperation.SetAttribute,
+            after.__id,
+            key,
+            value,
+          );
+        }
+      }
+    }
+
     const { slot } = after.__snapshot_def;
 
     const beforeChildNodes = before.children || [];
@@ -446,23 +465,7 @@ export function hydrate(
             beforeChildNodes,
             diffResult,
             (node, target) => {
-              __globalSnapshotPatch!.push(
-                SnapshotOperation.CreateElement,
-                node.type,
-                node.__id,
-              );
-              helper2(node.childNodes, node.__id);
-              const values = node.__values;
-              if (values) {
-                node.__values = undefined;
-                node.setAttribute('values', values);
-              }
-              __globalSnapshotPatch!.push(
-                SnapshotOperation.InsertBefore,
-                before.id,
-                node.__id,
-                target?.id,
-              );
+              helper2([node], before.id, target?.id);
               return undefined as unknown as SerializedSnapshotInstance;
             },
             node => {

@@ -248,6 +248,7 @@ export interface SerializedSnapshotInstance {
   id: number;
   type: string;
   values?: any[] | undefined;
+  extraProps?: Record<string, unknown> | undefined;
   children?: SerializedSnapshotInstance[] | undefined;
 }
 
@@ -270,7 +271,7 @@ export class SnapshotInstance {
   __current_slot_index = 0;
   __worklet_ref_set?: Set<WorkletRefImpl<any> | Worklet>;
   __listItemPlatformInfo?: PlatformInfo;
-  __extraProps?: Record<string, unknown>;
+  __extraProps?: Record<string, unknown> | undefined;
 
   constructor(public type: string, id?: number) {
     this.__snapshot_def = snapshotManager.values.get(type)!;
@@ -619,6 +620,7 @@ export class SnapshotInstance {
       id: this.__id,
       type: this.type,
       values: this.__values,
+      extraProps: this.__extraProps,
       children: this.__firstChild ? this.childNodes : undefined,
     };
   }

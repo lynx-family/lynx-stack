@@ -1,9 +1,12 @@
+/** @jsxImportSource ../lepus */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { elementTree, nativeMethodQueue } from './utils/nativeMethod';
 import { hydrate } from '../src/hydrate';
 import { __pendingListUpdates } from '../src/pendingListUpdates';
 import { SnapshotInstance, snapshotInstanceManager } from '../src/snapshot';
+import { __root } from '../src/root';
+import { globalEnvManager } from './utils/envManager';
 
 const HOLE = null;
 
@@ -2242,6 +2245,16 @@ describe('list componentAtIndexes', () => {
         ],
       ]
     `);
+
+    {
+      const cellIndexes = [3];
+      const operationIDs = [3];
+      const enableReuseNotification = false;
+      const asyncFlush = true;
+      expect(() => {
+        elementTree.triggerComponentAtIndexes(listRef, cellIndexes, operationIDs, enableReuseNotification, asyncFlush);
+      }).toThrowErrorMatchingInlineSnapshot(`[Error: childCtx not found]`);
+    }
   });
 
   it('basic componentAtIndexes with no async flush', () => {
@@ -2473,5 +2486,349 @@ describe('list componentAtIndexes', () => {
         ],
       ]
     `);
+  });
+});
+
+describe('list-item with "defer" attribute', () => {
+  beforeEach(() => {
+    globalEnvManager.resetEnv();
+    globalThis.__TESTING_FORCE_RENDER_TO_OPCODE__ = true;
+    elementTree.clear();
+    vi.useFakeTimers();
+  });
+
+  it('basic deferred <list-item/>', async () => {
+    const _F1 = vi.fn();
+
+    const jsx = (
+      <list id='list'>
+        <list-item item-key='1' defer>
+          <_F1 />
+        </list-item>
+      </list>
+    );
+    const child = __SNAPSHOT__(<text>Hello World</text>);
+
+    __root.__jsx = jsx;
+
+    renderPage();
+
+    expect(_F1).toBeCalledTimes(0);
+    expect(__root.__element_root).toMatchInlineSnapshot(`
+      <page
+        cssId="default-entry-from-native:0"
+      >
+        <list
+          id="list"
+          update-list-info={
+            [
+              {
+                "insertAction": [
+                  {
+                    "item-key": "1",
+                    "position": 0,
+                    "type": "__Card__:__snapshot_a94a8_test_50",
+                  },
+                ],
+                "removeAction": [],
+                "updateAction": [],
+              },
+            ]
+          }
+        />
+      </page>
+    `);
+
+    __pendingListUpdates.flush();
+
+    const listRef = elementTree.getElementById('list');
+    elementTree.triggerComponentAtIndex(listRef, 0);
+
+    const p = __root.__firstChild.__firstChild.__extraProps['isReady'];
+    __root.__firstChild.__firstChild.__extraProps['isReady'] = 1;
+    __root.__firstChild.__firstChild.insertBefore(new SnapshotInstance(child));
+    const uiSign = await p;
+
+    expect(uiSign).toBeTypeOf('number');
+    expect(__root.__element_root).toMatchInlineSnapshot(`
+      <page
+        cssId="default-entry-from-native:0"
+      >
+        <list
+          id="list"
+          update-list-info={
+            [
+              {
+                "insertAction": [
+                  {
+                    "item-key": "1",
+                    "position": 0,
+                    "type": "__Card__:__snapshot_a94a8_test_50",
+                  },
+                ],
+                "removeAction": [],
+                "updateAction": [],
+              },
+            ]
+          }
+        >
+          <list-item
+            item-key="1"
+          >
+            <text>
+              <raw-text
+                text="Hello World"
+              />
+            </text>
+          </list-item>
+        </list>
+      </page>
+    `);
+  });
+
+  it('basic deferred <list-item/> - componentAtIndex continuously', async () => {
+    const _F1 = vi.fn();
+
+    const jsx = (
+      <list id='list'>
+        <list-item item-key='1' defer>
+          <_F1 />
+        </list-item>
+      </list>
+    );
+    __root.__jsx = jsx;
+
+    renderPage();
+    __pendingListUpdates.flush();
+
+    const listRef = elementTree.getElementById('list');
+    elementTree.triggerComponentAtIndex(listRef, 0, 11);
+    elementTree.triggerComponentAtIndex(listRef, 0, 22);
+    elementTree.triggerComponentAtIndexes(
+      listRef,
+      [0],
+      [111],
+      /* enableReuseNotification */ false,
+      /* asyncFlush */ true,
+    );
+    elementTree.triggerComponentAtIndexes(
+      listRef,
+      [0],
+      [222],
+      /* enableReuseNotification */ false,
+      /* asyncFlush */ false,
+    );
+
+    const p = __root.__firstChild.__firstChild.__extraProps['isReady'];
+
+    const old = globalThis.__FlushElementTree;
+    const fn = globalThis.__FlushElementTree = vi.fn();
+    __root.__firstChild.__firstChild.__extraProps['isReady'] = 1;
+    await p;
+    globalThis.__FlushElementTree = old;
+    expect(fn).toBeCalledTimes(3); // asyncFlush will not call __FlushElementTree
+    expect(fn.mock.calls).toMatchInlineSnapshot(`
+      [
+        [
+          <list-item
+            item-key="1"
+          />,
+          {
+            "elementID": 298,
+            "listID": 297,
+            "operationID": 11,
+            "triggerLayout": true,
+          },
+        ],
+        [
+          <list-item
+            item-key="1"
+          />,
+          {
+            "elementID": 298,
+            "listID": 297,
+            "operationID": 22,
+            "triggerLayout": true,
+          },
+        ],
+        [
+          <list-item
+            item-key="1"
+          />,
+          {
+            "asyncFlush": true,
+          },
+        ],
+      ]
+    `);
+  });
+
+  it('basic deferred <list-item/> - should unmount when reused', async () => {
+    const _F1 = vi.fn();
+
+    const child = __SNAPSHOT__(<text>Hello World</text>);
+    const jsx = (
+      <list id='list'>
+        {[0, 1, 2].map((v) => (
+          <list-item item-key={`${v}`} defer>
+            <_F1 />
+          </list-item>
+        ))}
+      </list>
+    );
+
+    __root.__jsx = jsx;
+
+    renderPage();
+
+    expect(_F1).toBeCalledTimes(0);
+    expect(__root.__element_root).toMatchInlineSnapshot(`
+      <page
+        cssId="default-entry-from-native:0"
+      >
+        <list
+          id="list"
+          update-list-info={
+            [
+              {
+                "insertAction": [
+                  {
+                    "item-key": "0",
+                    "position": 0,
+                    "type": "__Card__:__snapshot_a94a8_test_56",
+                  },
+                  {
+                    "item-key": "1",
+                    "position": 1,
+                    "type": "__Card__:__snapshot_a94a8_test_56",
+                  },
+                  {
+                    "item-key": "2",
+                    "position": 2,
+                    "type": "__Card__:__snapshot_a94a8_test_56",
+                  },
+                ],
+                "removeAction": [],
+                "updateAction": [],
+              },
+            ]
+          }
+        />
+      </page>
+    `);
+
+    __pendingListUpdates.flush();
+
+    const listRef = elementTree.getElementById('list');
+    elementTree.triggerComponentAtIndex(listRef, 0);
+
+    const p = __root.__firstChild.__firstChild.__extraProps['isReady'];
+    __root.__firstChild.__firstChild.__extraProps['isReady'] = 1;
+    __root.__firstChild.__firstChild.insertBefore(new SnapshotInstance(child));
+    const uiSign = await p;
+
+    expect(uiSign).toBeTypeOf('number');
+    expect(__root.__element_root).toMatchInlineSnapshot(`
+      <page
+        cssId="default-entry-from-native:0"
+      >
+        <list
+          id="list"
+          update-list-info={
+            [
+              {
+                "insertAction": [
+                  {
+                    "item-key": "0",
+                    "position": 0,
+                    "type": "__Card__:__snapshot_a94a8_test_56",
+                  },
+                  {
+                    "item-key": "1",
+                    "position": 1,
+                    "type": "__Card__:__snapshot_a94a8_test_56",
+                  },
+                  {
+                    "item-key": "2",
+                    "position": 2,
+                    "type": "__Card__:__snapshot_a94a8_test_56",
+                  },
+                ],
+                "removeAction": [],
+                "updateAction": [],
+              },
+            ]
+          }
+        >
+          <list-item
+            item-key="0"
+          >
+            <text>
+              <raw-text
+                text="Hello World"
+              />
+            </text>
+          </list-item>
+        </list>
+      </page>
+    `);
+
+    elementTree.triggerEnqueueComponent(listRef, uiSign);
+
+    {
+      elementTree.triggerComponentAtIndex(listRef, 1);
+      const item = __root.__firstChild.__firstChild.__nextSibling;
+      const p = item.__extraProps['isReady'];
+      item.__extraProps['isReady'] = 1;
+      item.insertBefore(new SnapshotInstance(child));
+      const uiSign2 = await p;
+
+      expect(uiSign2).toBeTypeOf('number');
+      expect(uiSign2).toBe(uiSign);
+      expect(__root.__element_root).toMatchInlineSnapshot(`
+        <page
+          cssId="default-entry-from-native:0"
+        >
+          <list
+            id="list"
+            update-list-info={
+              [
+                {
+                  "insertAction": [
+                    {
+                      "item-key": "0",
+                      "position": 0,
+                      "type": "__Card__:__snapshot_a94a8_test_56",
+                    },
+                    {
+                      "item-key": "1",
+                      "position": 1,
+                      "type": "__Card__:__snapshot_a94a8_test_56",
+                    },
+                    {
+                      "item-key": "2",
+                      "position": 2,
+                      "type": "__Card__:__snapshot_a94a8_test_56",
+                    },
+                  ],
+                  "removeAction": [],
+                  "updateAction": [],
+                },
+              ]
+            }
+          >
+            <list-item
+              item-key="1"
+            >
+              <text>
+                <raw-text
+                  text="Hello World"
+                />
+              </text>
+            </list-item>
+          </list>
+        </page>
+      `);
+    }
   });
 });

@@ -92,9 +92,11 @@ export function componentAtIndexFactory(
         });
       }));
     } else if (maybePromise<number>(childCtx.__extraProps?.['isReady'])) {
+      // throw new Error('componentAtIndex called on a preparing list-item');
       return childCtx.__extraProps['isReady'].then((uiSign) => {
+        const root = childCtx.__elements![0]!;
         if (!enableBatchRender) {
-          __FlushElementTree(root, { triggerLayout: true, operationID, elementID: sign, listID });
+          __FlushElementTree(root, { triggerLayout: true, operationID, elementID: uiSign, listID });
         } else if (enableBatchRender && asyncFlush) {
           __FlushElementTree(root, { asyncFlush: true });
         } else {
@@ -236,7 +238,7 @@ export function componentAtIndexFactory(
     const unreadyPromises: Promise<number>[] = [];
 
     cellIndexes.forEach((cellIndex, index) => {
-      const operationID = operationIDs[index] ?? 0;
+      const operationID = operationIDs[index]!;
       const childCtx = ctx[cellIndex];
       if (!childCtx) {
         throw new Error('childCtx not found');
