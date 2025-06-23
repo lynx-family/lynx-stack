@@ -144,14 +144,14 @@ const fn get_rule_size(rule: &[(&'static str, &'static str)]) -> usize {
 const fn create_trie_node_leaf<const LEN: usize>(
   rule: &'static [(&str, &str)],
 ) -> [Option<TrieNodeLeaf>; LEN] {
-  let mut trie_node_leves: [Option<TrieNodeLeaf>; LEN] = [const { None }; LEN];
+  let mut trie_node_leaves: [Option<TrieNodeLeaf>; LEN] = [const { None }; LEN];
   let mut ii = 0;
   while ii < rule.len() {
     let (key, value) = rule[ii];
-    set_trie_node_leaf(&mut trie_node_leves, key, value);
+    set_trie_node_leaf(&mut trie_node_leaves, key, value);
     ii += 1;
   }
-  trie_node_leves
+  trie_node_leaves
 }
 
 pub const RENAME_RULE: [Option<TrieNodeLeaf>; get_rule_size(&RENAME_RULES_RAW)] =
