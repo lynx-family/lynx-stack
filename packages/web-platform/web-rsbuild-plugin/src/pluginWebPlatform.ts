@@ -20,6 +20,17 @@ export const getNativeModulesPathRule = (nativeModulesPath: string) => ({
   },
 });
 
+export const getNapiModulesPathRule = (napiModulesPath: string) => ({
+  test: /backgroundThread[\\/]background-apis[\\/]createNapiLoader\.js$/,
+  loader: path.resolve(
+    __dirname,
+    './loaders/napi-modules.js',
+  ),
+  options: {
+    napiModulesPath,
+  },
+});
+
 /**
  * The options for {@link pluginWebPlatform}.
  *
@@ -37,11 +48,19 @@ export interface PluginWebPlatformOptions {
   /**
    * The absolute path of the native-modules file.
    *
-   * If you use it, you don't need to pass nativeModulesMap in the lynx-view tag, otherwise it will cause duplicate packaging.
-   *
    * When enabled, nativeModules will be packaged directly into the worker chunk instead of being transferred through Blob.
+   *
+   * Warning: If you use this, you don't need to pass nativeModulesMap in the lynx-view tag, otherwise it will cause duplicate packaging.
    */
   nativeModulesPath?: string;
+  /**
+   * The absolute path of the napi-modules file, it is similar to nativeModulesPath.
+   *
+   * When enabled, napiModules will be packaged directly into the worker chunk instead of being transferred through Blob.
+   *
+   * Warning: If you use this, you don't need to pass napiModulesMap in the lynx-view tag, otherwise it will cause duplicate packaging.
+   */
+  napiModulesPath?: string;
 }
 
 /**
@@ -83,6 +102,15 @@ export function pluginWebPlatform(
         );
       }
 
+      if (
+        options.napiModulesPath !== undefined
+        && !path.isAbsolute(options.napiModulesPath)
+      ) {
+        throw new Error(
+          'options.napiModulesPath must be an absolute path.',
+        );
+      }
+
       api.modifyRsbuildConfig(config => {
         if (options.polyfill === true) {
           config.source = {
@@ -106,6 +134,8 @@ export function pluginWebPlatform(
             ...(rspackConfig.module?.rules ?? []),
             options.nativeModulesPath
             && getNativeModulesPathRule(options.nativeModulesPath),
+            options.napiModulesPath
+            && getNapiModulesPathRule(options.napiModulesPath),
           ],
         };
       });
