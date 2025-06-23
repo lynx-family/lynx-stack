@@ -157,7 +157,7 @@ test('fireEvent triggers useEffect calls', async () => {
       [
         "rLynxChange",
         {
-          "data": "{"patchList":[{"snapshotPatch":[0,"__Card__:__snapshot_e8d0a_test_4",2,0,null,3,4,3,[0],1,2,3,null,4,2,[1],1,-1,2,null],"id":2}]}",
+          "data": "{"patchList":[{"snapshotPatch":[0,"__Card__:__snapshot_e8d0a_test_4",2,4,2,[1],0,null,3,4,3,[0],1,2,3,null,1,-1,2,null],"id":2}]}",
           "patchOptions": {
             "isHydration": true,
             "pipelineOptions": {
@@ -235,7 +235,7 @@ test('fireEvent triggers useEffect calls', async () => {
       [
         "rLynxChange",
         {
-          "data": "{"patchList":[{"snapshotPatch":[0,"__Card__:__snapshot_e8d0a_test_4",2,0,null,3,4,3,[0],1,2,3,null,4,2,[1],1,-1,2,null],"id":2}]}",
+          "data": "{"patchList":[{"snapshotPatch":[0,"__Card__:__snapshot_e8d0a_test_4",2,4,2,[1],0,null,3,4,3,[0],1,2,3,null,1,-1,2,null],"id":2}]}",
           "patchOptions": {
             "isHydration": true,
             "pipelineOptions": {

@@ -1,4 +1,4 @@
-import { Component, render } from 'preact';
+import { cloneElement, Component, render } from 'preact';
 import { Suspense, lazy } from 'preact/compat';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -616,6 +616,10 @@ describe('document - background', () => {
     `);
     delete BackgroundSnapshotInstance.prototype.toJSON;
   });
+
+  it('extraProps - should set __extraProps', () => {
+    render(cloneElement(<view />, { x: 1 }), scratch);
+  });
 });
 
 describe('document - dual-runtime', () => {
@@ -623,7 +627,7 @@ describe('document - dual-runtime', () => {
     const jsx = t => (
       <view>
         <text>Hello</text>
-        {t.split('').map(key => <text key={key}>{key}</text>)}
+        {t.split('').map(key => cloneElement(<text key={key}>{key}</text>, { k: key }))}
       </view>
     );
 
@@ -634,28 +638,31 @@ describe('document - dual-runtime', () => {
     setupBackgroundDocument();
     const backgroundRoot = document.createElement('root');
     render(jsx('World'), backgroundRoot);
-    render(jsx('W0rld'), backgroundRoot);
+    render(jsx('W0rld_'), backgroundRoot);
 
     BackgroundSnapshotInstance.prototype.toJSON = backgroundSnapshotInstanceToJSON;
     expect(backgroundRoot).toMatchInlineSnapshot(`
       <root>
-        <__Card__:__snapshot_a94a8_test_25>
-          <__Card__:__snapshot_a94a8_test_26>
+        <__Card__:__snapshot_a94a8_test_26>
+          <__Card__:__snapshot_a94a8_test_27>
             "W"
-          </__Card__:__snapshot_a94a8_test_26>
-          <__Card__:__snapshot_a94a8_test_26>
+          </__Card__:__snapshot_a94a8_test_27>
+          <__Card__:__snapshot_a94a8_test_27>
             "0"
-          </__Card__:__snapshot_a94a8_test_26>
-          <__Card__:__snapshot_a94a8_test_26>
+          </__Card__:__snapshot_a94a8_test_27>
+          <__Card__:__snapshot_a94a8_test_27>
             "r"
-          </__Card__:__snapshot_a94a8_test_26>
-          <__Card__:__snapshot_a94a8_test_26>
+          </__Card__:__snapshot_a94a8_test_27>
+          <__Card__:__snapshot_a94a8_test_27>
             "l"
-          </__Card__:__snapshot_a94a8_test_26>
-          <__Card__:__snapshot_a94a8_test_26>
+          </__Card__:__snapshot_a94a8_test_27>
+          <__Card__:__snapshot_a94a8_test_27>
             "d"
-          </__Card__:__snapshot_a94a8_test_26>
-        </__Card__:__snapshot_a94a8_test_25>
+          </__Card__:__snapshot_a94a8_test_27>
+          <__Card__:__snapshot_a94a8_test_27>
+            "_"
+          </__Card__:__snapshot_a94a8_test_27>
+        </__Card__:__snapshot_a94a8_test_26>
       </root>
     `);
     delete BackgroundSnapshotInstance.prototype.toJSON;
@@ -664,9 +671,36 @@ describe('document - dual-runtime', () => {
       .toMatchInlineSnapshot(`
         [
           3,
+          -68,
+          "k",
+          "0",
+          3,
           -69,
           0,
           "0",
+          0,
+          "__Card__:__snapshot_a94a8_test_27",
+          93,
+          3,
+          93,
+          "k",
+          "_",
+          0,
+          null,
+          94,
+          4,
+          94,
+          [
+            "_",
+          ],
+          1,
+          93,
+          94,
+          undefined,
+          1,
+          -65,
+          93,
+          undefined,
         ]
       `);
 
@@ -678,25 +712,39 @@ describe('document - dual-runtime', () => {
         2,
         -65,
         -68,
+        2,
+        -65,
+        93,
         0,
-        "__Card__:__snapshot_a94a8_test_26",
-        91,
+        "__Card__:__snapshot_a94a8_test_27",
+        95,
+        3,
+        95,
+        "k",
+        "1",
         0,
         null,
-        92,
+        96,
         3,
-        92,
+        96,
         0,
         "1",
         1,
-        91,
-        92,
+        95,
+        96,
         undefined,
         1,
         -65,
-        91,
+        95,
         -70,
       ]
     `);
+
+    backgroundSnapshotInstanceManager.getValueBySign(`${backgroundRoot.__firstChild.__firstChild.__id}:__extraProps:k`);
+    expect(() => {
+      backgroundSnapshotInstanceManager.getValueBySign(
+        `${backgroundRoot.__firstChild.__firstChild.__id}:__extraProps:`,
+      );
+    }).toThrowErrorMatchingInlineSnapshot(`[Error: unreachable]`);
   });
 });
