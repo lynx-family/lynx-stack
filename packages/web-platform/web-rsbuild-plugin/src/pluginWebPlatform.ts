@@ -9,6 +9,17 @@ import type { RsbuildPlugin } from '@rsbuild/core';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+export const getNativeModulesPathRule = (nativeModulesPath: string) => ({
+  test: /backgroundThread[\\/]background-apis[\\/]createNativeModules\.js$/,
+  loader: path.resolve(
+    __dirname,
+    './loaders/native-modules.js',
+  ),
+  options: {
+    nativeModulesPath,
+  },
+});
+
 /**
  * The options for {@link pluginWebPlatform}.
  *
@@ -93,17 +104,8 @@ export function pluginWebPlatform(
           ...rspackConfig.module,
           rules: [
             ...(rspackConfig.module?.rules ?? []),
-            {
-              test:
-                /backgroundThread[\\/]background-apis[\\/]createNativeModules\.js$/,
-              loader: path.resolve(
-                __dirname,
-                './loaders/native-modules.js',
-              ),
-              options: {
-                nativeModulesPath: options.nativeModulesPath,
-              },
-            },
+            options.nativeModulesPath
+            && getNativeModulesPathRule(options.nativeModulesPath),
           ],
         };
       });

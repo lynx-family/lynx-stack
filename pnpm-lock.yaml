@@ -805,6 +805,9 @@ importers:
       '@lynx-js/web-mainthread-apis':
         specifier: workspace:*
         version: link:../web-mainthread-apis
+      '@lynx-js/web-platform-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../web-rsbuild-plugin
       '@lynx-js/web-worker-rpc':
         specifier: workspace:*
         version: link:../web-worker-rpc
