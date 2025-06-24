@@ -12,13 +12,13 @@ import { createRequire } from 'node:module'
 
 import type { RsbuildPlugin } from '@rsbuild/core'
 
+import type { ExposedAPI } from '@lynx-js/rspeedy'
 import type {
-  CompatVisitorConfig,
   DefineDceVisitorConfig,
   ExtractStrConfig,
   ShakeVisitorConfig,
-} from '@lynx-js/react-transform'
-import type { ExposedAPI } from '@lynx-js/rspeedy'
+} from '@lynx-js/swc-plugin-reactlynx'
+import type { CompatVisitorConfig } from '@lynx-js/swc-plugin-reactlynx-compat'
 
 import { applyAlias } from './alias.js'
 import { applyBackgroundOnly } from './backgroundOnly.js'

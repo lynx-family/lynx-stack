@@ -1,11 +1,15 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import path from 'node:path';
+
+import type { LoaderContext } from '@rspack/core';
+
+import type { TransformReactLynxOptions } from '@lynx-js/react-transform';
 import type {
   DefineDceVisitorConfig,
   JsxTransformerConfig,
   ShakeVisitorConfig,
-  SwcPluginReactLynxOptions,
 } from '@lynx-js/swc-plugin-reactlynx';
 import type { CompatVisitorConfig } from '@lynx-js/swc-plugin-reactlynx-compat';
 
@@ -47,14 +51,19 @@ export interface ReactLoaderOptions {
   /**
    * How main-thread code will be shaken.
    */
-  shake?: Partial<ShakeVisitorConfig> | undefined;
+  shake?: ShakeVisitorConfig | undefined;
 
   /**
    * Like `define` in various bundlers, but this one happens at transform time, and a DCE pass will be performed.
    */
-  defineDCE?: Partial<DefineDceVisitorConfig> | undefined;
+  defineDCE?: DefineDceVisitorConfig | undefined;
 
-  // TODO(BitterGourd): rename to lazy bundle.
+  /**
+   * Generate inline source content in source-map.
+   */
+  inlineSourcesContent?: boolean | undefined;
+
+  // TODO: rename to lazy bundle.
   /**
    * Whether is building standalone dynamic component.
    *
@@ -70,32 +79,82 @@ export interface ReactLoaderOptions {
   transformPath?: string | undefined;
 }
 
-function getCommonOptions(
-  options: ReactLoaderOptions,
-  isDev: boolean,
-) {
-  const {
-    enableRemoveCSSScope,
-    isDynamicComponent,
-    defineDCE,
-  } = options;
+function normalizeSlashes(file: string) {
+  return file.replaceAll(path.win32.sep, '/');
+}
 
-  const filename = 'test.js';
+function getCommonOptions(
+  this: LoaderContext<ReactLoaderOptions>,
+) {
+  const filename = normalizeSlashes(
+    path.relative(this.rootContext, this.resourcePath),
+  );
+
+  const {
+    compat,
+    enableRemoveCSSScope,
+    inlineSourcesContent,
+    isDynamicComponent,
+    defineDCE = { define: {} },
+  } = this.getOptions();
+
+  const syntax = (/\.[mc]?tsx?$/.exec(this.resourcePath))
+    ? 'typescript'
+    : 'ecmascript';
+  // is '.ts' (one of '.js', '.jsx', '.ts', '.tsx')
+  const isTS = /\.[mc]?ts$/.exec(this.resourcePath);
 
   const commonOptions = {
     // We need to set `mode: 'development'` for HMR to work
-    mode: isDev ? 'development' : 'production',
+    mode: this.hot ? 'development' : 'production',
+    compat: typeof compat === 'object'
+      ? {
+        target: 'MIXED',
+
+        addComponentElement: compat?.addComponentElement ?? false,
+
+        additionalComponentAttributes: compat?.additionalComponentAttributes
+          ?? [],
+
+        componentsPkg: compat?.componentsPkg ?? [COMPONENT_PKG],
+
+        disableDeprecatedWarning: compat?.disableDeprecatedWarning ?? false,
+
+        newRuntimePkg: compat?.newRuntimePkg ?? PUBLIC_RUNTIME_PKG,
+
+        oldRuntimePkg: compat?.oldRuntimePkg ?? [OLD_RUNTIME_PKG],
+
+        simplifyCtorLikeReactLynx2: compat?.simplifyCtorLikeReactLynx2 ?? false,
+
+        // NOTE: never pass '' (empty string) as default value
+        ...(typeof compat?.removeComponentAttrRegex === 'string' && {
+          removeComponentAttrRegex: compat?.removeComponentAttrRegex,
+        }),
+
+        darkMode: false,
+      }
+      : false,
     // Ensure that swc get a full absolute path so that it will generate
     // absolute path in the `source` param of `jsxDev(type, props, key, isStatic, source, self)`
-    filename,
+    filename: this.resourcePath,
     cssScope: {
       mode: getCSSScopeMode(enableRemoveCSSScope),
       filename,
     },
+    // Ensure that Webpack will get a full absolute path in the sourcemap
+    // so that it can properly map the module back to its internal cached
+    // modules.
+    // See: https://github.com/babel/babel-loader/blob/d85f4207947b618e040fb6a70afe9be9e1fd87d7/src/index.js#L135C1-L137C16
+    // See: https://github.com/swc-project/pkgs/blob/d096fdc1ac372ac045894bdda3180ef99bbcbe33/packages/swc-loader/src/index.js#L42
+    sourceFileName: this.resourcePath,
+    sourcemap: this.sourceMap,
+    sourceMapColumns: this.sourceMap && !this.hot,
+    inlineSourcesContent: inlineSourcesContent ?? !this.hot,
     snapshot: {
+      // TODO: config
       preserveJsx: false,
       // In standalone lazy bundle mode, we do not support HMR now.
-      target: isDev && !isDynamicComponent
+      target: this.hot && !isDynamicComponent
         // Using `MIX` when HMR is enabled.
         // This allows serializing the updated runtime code to Lepus using `Function.prototype.toString`.
         ? 'MIXED'
@@ -104,30 +163,43 @@ function getCommonOptions(
       filename,
       isDynamicComponent: isDynamicComponent ?? false,
     },
+    syntaxConfig: {
+      syntax,
+      decorators: true,
+      // Only '.ts' conflicts with tsx, both '.js' and '.jsx' can be handled by tsx.
+      tsx: !isTS,
+      // `.js` is not conflicts with jsx, always pass true
+      jsx: true,
+    },
+    // TODO: config
     worklet: {
       filename: filename,
       runtimePkg: RUNTIME_PKG,
       target: 'MIXED',
     },
     directiveDCE: false,
-    defineDCE: {
-      define: defineDCE?.define ?? {},
-    },
-  } satisfies Omit<SwcPluginReactLynxOptions, 'shake'>;
+    defineDCE,
+    isModule: 'unknown',
+  } satisfies Partial<TransformReactLynxOptions>;
 
   return commonOptions;
 }
 
 export function getMainThreadTransformOptions(
-  options: ReactLoaderOptions,
-  isDev: boolean,
-): SwcPluginReactLynxOptions {
-  const commonOptions = getCommonOptions(options, isDev);
+  this: LoaderContext<ReactLoaderOptions>,
+): TransformReactLynxOptions {
+  const commonOptions = getCommonOptions.call(this);
 
-  const { shake } = options;
+  const { shake } = this.getOptions();
 
   return {
     ...commonOptions,
+    compat: typeof commonOptions.compat === 'object'
+      ? {
+        ...commonOptions.compat,
+        target: 'LEPUS',
+      }
+      : false,
     snapshot: {
       ...commonOptions.snapshot,
       jsxImportSource: JSX_IMPORT_SOURCE.MAIN_THREAD,
@@ -159,8 +231,8 @@ export function getMainThreadTransformOptions(
         PUBLIC_RUNTIME_PKG,
         `${PUBLIC_RUNTIME_PKG}/legacy-react-runtime`,
         RUNTIME_PKG,
-        ...typeof options.compat === 'object'
-          ? options.compat.oldRuntimePkg
+        ...typeof commonOptions.compat === 'object'
+          ? commonOptions.compat.oldRuntimePkg
           : [],
         ...(shake?.pkgName ?? []),
       ],
@@ -195,13 +267,17 @@ export function getMainThreadTransformOptions(
 }
 
 export function getBackgroundTransformOptions(
-  options: ReactLoaderOptions,
-  isDev: boolean,
-): SwcPluginReactLynxOptions {
-  const commonOptions = getCommonOptions(options, isDev);
-
+  this: LoaderContext<ReactLoaderOptions>,
+): TransformReactLynxOptions {
+  const commonOptions = getCommonOptions.call(this);
   return {
     ...commonOptions,
+    compat: typeof commonOptions.compat === 'object'
+      ? {
+        ...commonOptions.compat,
+        target: 'JS',
+      }
+      : false,
     dynamicImport: {
       layer: LAYERS.BACKGROUND,
       runtimePkg: RUNTIME_PKG,
@@ -231,39 +307,6 @@ export function getBackgroundTransformOptions(
     directiveDCE: {
       target: 'JS',
     },
-  };
-}
-
-export function getCompatOptions(
-  compat: CompatVisitorConfig | undefined,
-  layer: string,
-): CompatVisitorConfig | false {
-  if (typeof compat !== 'object') return false;
-
-  return {
-    target: layer === LAYERS.MAIN_THREAD ? 'LEPUS' : 'JS',
-
-    addComponentElement: compat?.addComponentElement ?? false,
-
-    additionalComponentAttributes: compat?.additionalComponentAttributes
-      ?? [],
-
-    componentsPkg: compat?.componentsPkg ?? [COMPONENT_PKG],
-
-    disableDeprecatedWarning: compat?.disableDeprecatedWarning ?? false,
-
-    newRuntimePkg: compat?.newRuntimePkg ?? PUBLIC_RUNTIME_PKG,
-
-    oldRuntimePkg: compat?.oldRuntimePkg ?? [OLD_RUNTIME_PKG],
-
-    simplifyCtorLikeReactLynx2: compat?.simplifyCtorLikeReactLynx2 ?? false,
-
-    // NOTE: never pass '' (empty string) as default value
-    ...(typeof compat?.removeComponentAttrRegex === 'string' && {
-      removeComponentAttrRegex: compat?.removeComponentAttrRegex,
-    }),
-
-    darkMode: false,
   };
 }
 

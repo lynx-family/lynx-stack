@@ -5,6 +5,17 @@ import type { RsbuildPluginAPI } from '@rsbuild/core'
 
 export function applySWC(api: RsbuildPluginAPI): void {
   api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
+    const { output } = api.getRsbuildConfig()
+
+    const inlineSourcesContent: boolean = output?.sourceMap === true || !(
+      // `false`
+      output?.sourceMap === false
+      // `false`
+      || output?.sourceMap?.js === false
+      // explicitly disable source content
+      || output?.sourceMap?.js?.includes('nosources')
+    )
+
     return mergeRsbuildConfig({
       tools: {
         swc: {
@@ -15,6 +26,11 @@ export function applySWC(api: RsbuildPluginAPI): void {
               optimizer: {
                 simplify: true,
               },
+              react: {
+                throwIfNamespace: false,
+                importSource: '@lynx-js/react',
+                runtime: 'automatic',
+              },
             },
             parser: {
               syntax: 'typescript',
@@ -22,6 +38,7 @@ export function applySWC(api: RsbuildPluginAPI): void {
               decorators: true,
             },
           },
+          inlineSourcesContent,
         },
       },
     }, config)
