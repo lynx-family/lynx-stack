@@ -5,10 +5,12 @@ import type {
   CSSRuleObject,
   Config,
   CorePluginsConfig,
+  KeyValuePair,
   PluginAPI,
   PluginCreator,
   PluginUtils,
   PluginsConfig,
+  ThemeConfig,
   ValueType,
 } from 'tailwindcss/types/config';
 
@@ -21,6 +23,8 @@ export type {
   Config,
   ValueType,
   CSSRuleObject,
+  KeyValuePair,
+  ThemeConfig,
 };
 
 export type Plugin = PluginsConfig[number];

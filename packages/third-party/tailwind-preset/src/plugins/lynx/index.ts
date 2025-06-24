@@ -16,3 +16,4 @@ export { alignContent } from './alignContent.js';
 export { textAlign } from './textAlign.js';
 export { direction } from './direction.js';
 export { overflow } from './overflow.js';
+export { boxShadow } from './boxShadow.js';

@@ -13,7 +13,7 @@ export function App() {
     <page>
       <view className='w-full h-full bg-primary'>
         <view
-          className='absolute inset-10 top-24 bg-secondary flex flex-col justify-center items-center'
+          className='absolute inset-10 top-24 bg-secondary flex flex-col justify-center items-center shadow-lg'
           bindtap={() => setTransform(prev => !prev)}
         >
           <text className='text-primary-content text-6xl'>Hello ReactLynx</text>
