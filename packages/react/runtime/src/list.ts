@@ -92,19 +92,7 @@ export function componentAtIndexFactory(
         });
       }));
     } else if (maybePromise<number>(childCtx.__extraProps?.['isReady'])) {
-      // throw new Error('componentAtIndex called on a preparing list-item');
-      return childCtx.__extraProps['isReady'].then((uiSign) => {
-        const root = childCtx.__elements![0]!;
-        if (!enableBatchRender) {
-          __FlushElementTree(root, { triggerLayout: true, operationID, elementID: uiSign, listID });
-        } else if (enableBatchRender && asyncFlush) {
-          __FlushElementTree(root, { asyncFlush: true });
-        } else {
-          // enableBatchRender == true && asyncFlush == false
-          // in this case, no need to invoke __FlushElementTree because in the end of componentAtIndexes(), the list will invoke __FlushElementTree.
-        }
-        return uiSign;
-      });
+      throw new Error('componentAtIndex called on a pending deferred list-item');
     }
 
     const uniqID = childCtx.type + (platformInfo['reuse-identifier'] ?? '');

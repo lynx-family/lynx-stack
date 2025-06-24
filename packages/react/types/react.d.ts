@@ -144,6 +144,24 @@ declare module '@lynx-js/types' {
      */
     'reuse-identifier'?: Key | null | undefined;
 
+    /**
+     * Makes the `<list-item />` deferred, which means it will not be eagerly rendered
+     * on the main thread like the non-deferred `<list-item />`,
+     * but will be sent to the background thread for rendering when necessary.
+     *
+     * Therefore, the rendering will become asynchronous,
+     * which means that extremely fast scrolling may find `<list-item />`s that have not yet been rendered - usually blank.
+     *
+     * @example
+     *
+     * Render `<list-item />` with heavyweight component on background thread.
+     *
+     * ```tsx
+     * <list-item defer item-key="heavy-item">
+     *  <HeavyComponent />
+     * </list-item>
+     * ```
+     */
     'defer'?: boolean | undefined;
   }
 

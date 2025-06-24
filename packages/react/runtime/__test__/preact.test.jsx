@@ -619,6 +619,11 @@ describe('document - background', () => {
 
   it('extraProps - should set __extraProps', () => {
     render(cloneElement(<view />, { x: 1 }), scratch);
+    expect(scratch.__firstChild.__extraProps).toMatchInlineSnapshot(`
+      {
+        "x": 1,
+      }
+    `);
   });
 });
 
