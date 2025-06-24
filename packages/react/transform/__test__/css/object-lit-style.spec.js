@@ -89,7 +89,7 @@ let jsx = <view style={{
         filename: '',
         sourcemap: false,
         cssScope: false,
-        jsx: {
+        snapshot: {
           runtimePkg: '@lynx-js/react-runtime',
           target: 'MIXED',
           filename: '',
@@ -150,7 +150,7 @@ let jsx = <view style={{
         filename: '',
         sourcemap: false,
         cssScope: false,
-        jsx: {
+        snapshot: {
           runtimePkg: '@lynx-js/react-runtime',
           target: 'MIXED',
           filename: '',
@@ -207,7 +207,7 @@ let jsx = <view style={{ height, width }}/>`,
         filename: '',
         sourcemap: false,
         cssScope: false,
-        jsx: {
+        snapshot: {
           runtimePkg: '@lynx-js/react-runtime',
           target: 'MIXED',
           filename: '',

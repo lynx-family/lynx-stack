@@ -121,7 +121,7 @@ describe('jsx', () => {
       defineDCE: true,
       sourcemap: false,
       compat: false,
-      jsx: true,
+      snapshot: true,
       shake: true,
       cssScope: false,
       directiveDCE: {
@@ -176,7 +176,7 @@ Component, View
         filename: '',
         sourcemap: false,
         cssScope: false,
-        jsx: {
+        snapshot: {
           runtimePkg: '@lynx-js/react-runtime',
           filename: '',
           target: 'MIXED',
@@ -247,7 +247,7 @@ Component, View
       filename: '',
       sourcemap: false,
       cssScope: false,
-      jsx: {
+      snapshot: {
         runtimePkg: '@lynx-js/react-runtime',
         filename: '',
         target: 'MIXED',
@@ -341,7 +341,7 @@ Component, View
     filename: '',
     sourcemap: false,
     cssScope: false,
-    jsx: {
+    snapshot: {
       runtimePkg: '@lynx-js/react-runtime',
       filename: '',
       target: 'MIXED',
@@ -437,7 +437,7 @@ describe('syntaxConfig', () => {
         tsx: false,
       },
       cssScope: false,
-      jsx: false,
+      snapshot: false,
       directiveDCE: false,
       defineDCE: false,
       shake: false,
@@ -459,7 +459,7 @@ describe('syntaxConfig', () => {
         tsx: true,
       },
       cssScope: false,
-      jsx: false,
+      snapshot: false,
       directiveDCE: false,
       defineDCE: false,
       shake: false,
@@ -490,7 +490,7 @@ describe('syntaxConfig', () => {
         tsx: true,
       },
       cssScope: false,
-      jsx: false,
+      snapshot: false,
       directiveDCE: false,
       defineDCE: false,
       shake: false,
@@ -516,7 +516,7 @@ describe('syntaxConfig', () => {
       },
       isModule: false,
       cssScope: false,
-      jsx: false,
+      snapshot: false,
       directiveDCE: false,
       defineDCE: false,
       shake: false,
@@ -560,7 +560,7 @@ class X {
         filename: '',
         sourcemap: false,
         cssScope: false,
-        jsx: false,
+        snapshot: false,
         directiveDCE: {
           target: 'LEPUS',
         },
@@ -640,7 +640,7 @@ export default class App extends Component {
         filename: '',
         sourcemap: false,
         cssScope: false,
-        jsx: false,
+        snapshot: false,
         directiveDCE: false,
         defineDCE: false,
         shake: true,
@@ -705,7 +705,7 @@ describe('dynamic import', () => {
           tsx: true,
         },
         cssScope: false,
-        jsx: false,
+        snapshot: false,
         directiveDCE: false,
         defineDCE: false,
         shake: false,
@@ -782,7 +782,7 @@ X();
         filename: '',
         sourcemap: false,
         cssScope: false,
-        jsx: false,
+        snapshot: false,
         directiveDCE: false,
         defineDCE: {
           define: {
@@ -852,7 +852,7 @@ X5();
         filename: '',
         sourcemap: false,
         cssScope: false,
-        jsx: false,
+        snapshot: false,
         directiveDCE: false,
         defineDCE: {
           define: {
@@ -910,7 +910,7 @@ X();
         filename: '',
         sourcemap: false,
         cssScope: false,
-        jsx: false,
+        snapshot: false,
         directiveDCE: false,
         defineDCE: {
           define: {
@@ -954,7 +954,7 @@ X();
         filename: '',
         sourcemap: false,
         cssScope: false,
-        jsx: false,
+        snapshot: false,
         directiveDCE: false,
         defineDCE: {
           define: {
@@ -996,7 +996,7 @@ X();
         filename: '',
         sourcemap: false,
         cssScope: false,
-        jsx: false,
+        snapshot: false,
         directiveDCE: false,
         defineDCE: {
           define: {
@@ -1039,7 +1039,7 @@ X();
         filename: '',
         sourcemap: false,
         cssScope: false,
-        jsx: false,
+        snapshot: false,
         directiveDCE: false,
         defineDCE: {
           define: {
@@ -1090,7 +1090,7 @@ class X extends Component {
         filename: '',
         sourcemap: false,
         cssScope: false,
-        jsx: false,
+        snapshot: false,
         directiveDCE: false,
         defineDCE: {
           define: {
@@ -1142,7 +1142,7 @@ describe('worklet', () => {
           filename: '',
           sourcemap: false,
           cssScope: false,
-          jsx: false,
+          snapshot: false,
           directiveDCE: true,
           defineDCE: {
             define: {
@@ -1235,7 +1235,7 @@ export function foo(event) {
         filename: '',
         sourcemap: false,
         cssScope: false,
-        jsx: false,
+        snapshot: false,
         directiveDCE: true,
         defineDCE: {
           define: {
@@ -1302,7 +1302,7 @@ console.log(bar)
         filename: '',
         sourcemap: false,
         cssScope: false,
-        jsx: false,
+        snapshot: false,
         directiveDCE: true,
         defineDCE: {
           define: {
@@ -1364,7 +1364,7 @@ function getCurrentDelta(event) {
         filename: '',
         sourcemap: false,
         cssScope: false,
-        jsx: false,
+        snapshot: false,
         directiveDCE: true,
         defineDCE: {
           define: {

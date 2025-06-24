@@ -161,8 +161,8 @@ Foo, App
 `,
         {
           ...defaultOptions,
-          jsx: {
-            ...defaultOptions.jsx,
+          snapshot: {
+            ...defaultOptions.snapshot,
             isDynamicComponent: true,
           },
           cssScope: {

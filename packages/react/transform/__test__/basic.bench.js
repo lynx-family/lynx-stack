@@ -22,7 +22,7 @@ export function App() {
     filename: '',
     sourcemap: false,
     cssScope: false,
-    jsx: true,
+    snapshot: true,
     directiveDCE: false,
     defineDCE: false,
     shake: true,

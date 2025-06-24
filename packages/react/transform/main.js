@@ -35,8 +35,8 @@ const transformReactLynx = async (source, options) => {
     inject: options?.inject ?? false,
   };
 
-  if (typeof options?.jsx === 'object') {
-    swcPluginReactLynxOptions.snapshot = options.jsx;
+  if (typeof options?.snapshot === 'object') {
+    swcPluginReactLynxOptions.snapshot = options.snapshot;
   }
 
   const transformOptions = {
@@ -46,8 +46,9 @@ const transformReactLynx = async (source, options) => {
       transform: {
         react: {
           throwIfNamespace: false,
-          importSource: '@lynx-js/react',
+          importSource: options?.snapshot?.jsxImportSource ?? '@lynx-js/react',
           runtime: 'automatic',
+          development: options?.mode ? options?.mode === 'development' : false,
         },
       },
       target: 'es2022',
