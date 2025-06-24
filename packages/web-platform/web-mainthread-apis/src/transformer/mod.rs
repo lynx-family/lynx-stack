@@ -5,6 +5,20 @@ use crate::{
 
 pub mod trie;
 
+const IMPORTANT_STR_u16: &[u16] = &[
+  b' ' as u16,
+  b'!' as u16,
+  b'i' as u16,
+  b'm' as u16,
+  b'p' as u16,
+  b'o' as u16,
+  b'r' as u16,
+  b't' as u16,
+  b'a' as u16,
+  b'n' as u16,
+  b't' as u16,
+];
+
 pub struct TransformerData<'a> {
   source: &'a [u16],
   transformed_source: Vec<u16>,
@@ -18,7 +32,7 @@ impl<'a> Transformer for TransformerData<'a> {
     name_end: usize,
     value_start: usize,
     value_end: usize,
-    _: bool,
+    is_important: bool,
   ) {
     // check the rename rule
     if let Some(renamed_value) = get_rename_rule_value!(self.source, name_start, name_end) {
@@ -29,7 +43,7 @@ impl<'a> Transformer for TransformerData<'a> {
       // Convert the bytes to u16 values
       self
         .transformed_source
-        .extend(renamed_value.bytes().map(|b| b as u16));
+        .extend(renamed_value[0].bytes().map(|b| b as u16));
       self.offset = name_end;
     }
     if let Some(replaced_value) = get_replace_rule_value!(
@@ -43,10 +57,20 @@ impl<'a> Transformer for TransformerData<'a> {
       self
         .transformed_source
         .extend_from_slice(&self.source[self.offset..name_start]);
-      // Convert the bytes to u16 values
-      self
-        .transformed_source
-        .extend(replaced_value.bytes().map(|b| b as u16));
+      for ii in 0..replaced_value.len() {
+        let one_decl = &replaced_value[ii];
+        // Convert the bytes to u16 values
+        self
+          .transformed_source
+          .extend(one_decl.bytes().map(|b| b as u16));
+        // append ';' at the end of each declaration except the last one
+        if ii < replaced_value.len() - 1 {
+          if is_important {
+            self.transformed_source.extend_from_slice(IMPORTANT_STR_u16);
+          }
+          self.transformed_source.push(b';' as u16);
+        }
+      }
       self.offset = value_end;
     }
   }
@@ -80,7 +104,7 @@ mod tests {
     let result = transform_inline_style_string(source);
     assert_eq!(
       String::from_utf16_lossy(&result),
-      "height:1px;--lynx-display-toggle:var(--lynx-display-linear); --lynx-display:linear; display:flex;--flex-direction:row;width:100px;"
+      "height:1px;--lynx-display-toggle:var(--lynx-display-linear);--lynx-display:linear;display:flex;--flex-direction:row;width:100px;"
     );
   }
 
@@ -90,6 +114,33 @@ mod tests {
     let source_vec: Vec<u16> = source.bytes().map(|b| b as u16).collect();
     let source: &[u16] = &source_vec;
     let result = transform_inline_style_string(source);
-    assert_eq!(String::from_utf16_lossy(&result), "--flex-direction: row ;");
+    assert_eq!(
+      String::from_utf16_lossy(&result),
+      "--flex-direction : row ;"
+    );
+  }
+
+  #[test]
+  fn test_replace_rule_display_linear_blank_after_colon() {
+    let source = "display: linear;";
+    let source_vec: Vec<u16> = source.bytes().map(|b| b as u16).collect();
+    let source: &[u16] = &source_vec;
+    let result = transform_inline_style_string(source);
+    assert_eq!(
+      String::from_utf16_lossy(&result),
+      "--lynx-display-toggle:var(--lynx-display-linear);--lynx-display:linear;display:flex;"
+    );
+  }
+
+  #[test]
+  fn test_replace_rule_display_linear_important() {
+    let source = "display: linear !important;";
+    let source_vec: Vec<u16> = source.bytes().map(|b| b as u16).collect();
+    let source: &[u16] = &source_vec;
+    let result = transform_inline_style_string(source);
+    assert_eq!(
+      String::from_utf16_lossy(&result),
+      "--lynx-display-toggle:var(--lynx-display-linear) !important;--lynx-display:linear !important;display:flex !important;"
+    );
   }
 }
