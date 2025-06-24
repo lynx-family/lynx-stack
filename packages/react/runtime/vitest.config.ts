@@ -17,6 +17,16 @@ function transformReactLynxPlugin(): Plugin {
         '@lynx-js/react-transform',
       ) as typeof import('@lynx-js/react-transform');
       const relativePath = path.basename(sourcePath);
+
+      const isTS = /\.[mc]?ts$/.exec(relativePath);
+      const syntax = isTS ? 'typescript' : 'ecmascript';
+      const syntaxConfig = {
+        syntax,
+        decorators: true,
+        tsx: !isTS,
+        jsx: true,
+      };
+
       const result = await transformReactLynx(sourceText, {
         mode: 'test',
         filename: relativePath,
@@ -28,6 +38,7 @@ function transformReactLynxPlugin(): Plugin {
           filename: 'test',
           target: 'MIXED',
         },
+        syntaxConfig,
         // snapshot: true,
         directiveDCE: false,
         defineDCE: false,

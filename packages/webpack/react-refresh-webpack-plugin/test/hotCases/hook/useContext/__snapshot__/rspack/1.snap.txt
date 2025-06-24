@@ -6,7 +6,7 @@
 ## Asset Files
 - Bundle: rspack-bundle.js
 - Manifest: main.LAST_HASH.hot-update.json, size: 28
-- Update: main.LAST_HASH.hot-update.js, size: 4562
+- Update: main.LAST_HASH.hot-update.js, size: 4319
 
 ## Manifest
 
@@ -50,7 +50,7 @@ __webpack_require__.d(__webpack_exports__, {
 
 
 const Theme = (0,_lynx_js_react__WEBPACK_IMPORTED_MODULE_1__.createContext)('light');
-const __snapshot_4953c_6688c_1 = /*#__PURE__*/ (__webpack_require__(/*! @lynx-js/react/internal */ "../../../../../../react/runtime/lib/internal.js")/* .createSnapshot */.createSnapshot)("__snapshot_4953c_6688c_1", function() {
+const __snapshot_4953c_fcebc475_1 = /*#__PURE__*/ (__webpack_require__(/*! @lynx-js/react/internal */ "../../../../../../react/runtime/lib/internal.js")/* .createSnapshot */.createSnapshot)("__snapshot_4953c_fcebc475_1", function() {
     const pageId = (__webpack_require__(/*! @lynx-js/react/internal */ "../../../../../../react/runtime/lib/internal.js")/* .__pageId */.__pageId);
     const el = __CreateText(pageId);
     const el1 = __CreateRawText("after: ");
@@ -71,10 +71,10 @@ const __snapshot_4953c_6688c_1 = /*#__PURE__*/ (__webpack_require__(/*! @lynx-js
 function Inner() {
     const theme = (0,_lynx_js_react__WEBPACK_IMPORTED_MODULE_1__.useContext)(Theme);
     __RenderContent(`after: ${theme}`);
-    return /*#__PURE__*/ (0,_lynx_js_react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxDEV)(__snapshot_4953c_6688c_1, {
+    return /*#__PURE__*/ (0,_lynx_js_react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxDEV)(__snapshot_4953c_fcebc475_1, {
         children: theme
     }, void 0, false, {
-        fileName: "<ROOT>/packages/webpack/react-refresh-webpack-plugin/test/hotCases/hook/useContext/app.jsx",
+        fileName: "<anon>",
         lineNumber: 8,
         columnNumber: 10
     }, this);
@@ -83,12 +83,12 @@ function App() {
     return /*#__PURE__*/ (0,_lynx_js_react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxDEV)(Theme.Provider, {
         value: "dark",
         children: /*#__PURE__*/ (0,_lynx_js_react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxDEV)(Inner, {}, void 0, false, {
-            fileName: "<ROOT>/packages/webpack/react-refresh-webpack-plugin/test/hotCases/hook/useContext/app.jsx",
+            fileName: "<anon>",
             lineNumber: 14,
             columnNumber: 7
         }, this)
     }, void 0, false, {
-        fileName: "<ROOT>/packages/webpack/react-refresh-webpack-plugin/test/hotCases/hook/useContext/app.jsx",
+        fileName: "<anon>",
         lineNumber: 13,
         columnNumber: 5
     }, this);

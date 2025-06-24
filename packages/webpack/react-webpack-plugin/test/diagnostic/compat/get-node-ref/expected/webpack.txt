@@ -1,7 +1,27 @@
 WARNING in ./compat/get-node-ref/index.jsx
 Module Warning (from ../../lib/loaders/background.js):
-BROKEN: getNodeRef on component instance is broken and MUST be migrated in ReactLynx 3.0, please use ref or lynx.createSelectorQuery instead.
+  ! BROKEN: getNodeRef on component instance is broken and MUST be migrated in ReactLynx 3.0, please use ref or lynx.createSelectorQuery instead.
+   ,-[<LINE:COLUMN>]
+ 2 | 
+ 3 | class App extends Component {
+ 4 |   componentDidMount() {
+ 5 |     this.getNodeRef('foo')
+   :     ^^^^^^^^^^^^^^^^^^^^^^
+ 6 |     this.getNodeRefFromRoot('bar')
+ 7 |   }
+ 8 |   
+   `----
 
 WARNING in ./compat/get-node-ref/index.jsx
 Module Warning (from ../../lib/loaders/background.js):
-BROKEN: getNodeRefFromRoot on component instance is broken and MUST be migrated in ReactLynx 3.0, please use ref or lynx.createSelectorQuery instead.
+  ! BROKEN: getNodeRefFromRoot on component instance is broken and MUST be migrated in ReactLynx 3.0, please use ref or lynx.createSelectorQuery instead.
+   ,-[<LINE:COLUMN>]
+ 3 | class App extends Component {
+ 4 |   componentDidMount() {
+ 5 |     this.getNodeRef('foo')
+ 6 |     this.getNodeRefFromRoot('bar')
+   :     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ 7 |   }
+ 8 |   
+ 9 |   render() {
+   `----

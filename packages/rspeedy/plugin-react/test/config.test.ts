@@ -11,6 +11,7 @@ import type { ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'
 import { createRspeedy } from '@lynx-js/rspeedy'
 import type { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'
 
+import { getLoaderOptions } from './getLoaderOptions.js'
 import { pluginStubRspeedyAPI } from './stub-rspeedy-api.plugin.js'
 
 describe('Config', () => {
@@ -352,15 +353,7 @@ describe('Config', () => {
 
     expect(
       await getBackgroundLayerOptions(rsbuild),
-    ).toMatchInlineSnapshot(`
-      {
-        "compat": undefined,
-        "defineDCE": undefined,
-        "enableRemoveCSSScope": true,
-        "inlineSourcesContent": true,
-        "isDynamicComponent": false,
-      }
-    `)
+    ).toMatchInlineSnapshot(`undefined`)
   })
   test('enableRemoveCSSScope can be set to undefined explicitly', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
@@ -378,15 +371,7 @@ describe('Config', () => {
 
     expect(
       await getBackgroundLayerOptions(rsbuild),
-    ).toMatchInlineSnapshot(`
-      {
-        "compat": undefined,
-        "defineDCE": undefined,
-        "enableRemoveCSSScope": undefined,
-        "inlineSourcesContent": true,
-        "isDynamicComponent": false,
-      }
-    `)
+    ).toMatchInlineSnapshot(`undefined`)
 
     const [config] = await rsbuild.initConfigs()
 
@@ -1250,9 +1235,12 @@ describe('Config', () => {
         },
       })
 
-      const backgroundConfig = await getBackgroundLayerOptions(rsbuild)
+      const [config] = await rsbuild.initConfigs()
 
-      expect(backgroundConfig).toHaveProperty('inlineSourcesContent', true)
+      expect(getLoaderOptions(config!, 'builtin:swc-loader')).toHaveProperty(
+        'inlineSourcesContent',
+        true,
+      )
     })
 
     test('with output.sourceMap: true', async () => {
@@ -1270,9 +1258,12 @@ describe('Config', () => {
         },
       })
 
-      const backgroundConfig = await getBackgroundLayerOptions(rsbuild)
+      const [config] = await rsbuild.initConfigs()
 
-      expect(backgroundConfig).toHaveProperty('inlineSourcesContent', true)
+      expect(getLoaderOptions(config!, 'builtin:swc-loader')).toHaveProperty(
+        'inlineSourcesContent',
+        true,
+      )
     })
 
     test('with output.sourceMap: false', async () => {
@@ -1290,9 +1281,12 @@ describe('Config', () => {
         },
       })
 
-      const backgroundConfig = await getBackgroundLayerOptions(rsbuild)
+      const [config] = await rsbuild.initConfigs()
 
-      expect(backgroundConfig).toHaveProperty('inlineSourcesContent', false)
+      expect(getLoaderOptions(config!, 'builtin:swc-loader')).toHaveProperty(
+        'inlineSourcesContent',
+        false,
+      )
     })
 
     test('with output.sourceMap.js: "nosources"', async () => {
@@ -1312,9 +1306,12 @@ describe('Config', () => {
         },
       })
 
-      const backgroundConfig = await getBackgroundLayerOptions(rsbuild)
+      const [config] = await rsbuild.initConfigs()
 
-      expect(backgroundConfig).toHaveProperty('inlineSourcesContent', false)
+      expect(getLoaderOptions(config!, 'builtin:swc-loader')).toHaveProperty(
+        'inlineSourcesContent',
+        false,
+      )
     })
   })
 

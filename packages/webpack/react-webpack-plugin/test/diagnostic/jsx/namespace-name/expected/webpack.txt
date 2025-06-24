@@ -1,6 +1,12 @@
 ERROR in ./jsx/namespace-name/index.jsx
 Module Error (from ../../lib/loaders/background.js):
-JSX Namespace is disabled
+Error:   x JSX Namespace is disabled
+   ,-[<LINE:COLUMN>]
+ 1 | function App() {
+ 2 |   return <main-thread:foo />
+   :           ^^^^^^^^^^^^^^^
+ 3 | }
+   `----
 
 ERROR in ./jsx/namespace-name/index.jsx
 Module build failed (from ../../lib/loaders/background.js):
