@@ -59,12 +59,12 @@
       "default": "./components/lib/index.js"
     },
     "./transform/swc-plugin-reactlynx-compat": {
-      "default": "./transform/swc-plugin-reactlynx-compat/swc_plugin_reactlynx_compat.wasm",
-      "types": "./transform/swc-plugin-reactlynx-compat/index.d.ts"
+      "types": "./transform/swc-plugin-reactlynx-compat/index.d.ts",
+      "default": "./transform/swc-plugin-reactlynx-compat/swc_plugin_reactlynx_compat.wasm"
     },
     "./transform/swc-plugin-reactlynx": {
-      "default": "./transform/swc-plugin-reactlynx/swc_plugin_reactlynx.wasm",
-      "types": "./transform/swc-plugin-reactlynx/index.d.ts"
+      "types": "./transform/swc-plugin-reactlynx/index.d.ts",
+      "default": "./transform/swc-plugin-reactlynx/swc_plugin_reactlynx.wasm"
     },
     "./worklet-runtime": {
       "types": "./worklet-runtime/lib/index.d.ts",

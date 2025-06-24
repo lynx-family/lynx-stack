@@ -221,3 +221,21 @@ export interface WorkletVisitorConfig {
   target: 'LEPUS' | 'JS' | 'MIXED';
   runtimePkg: string;
 }
+
+export interface SwcPluginReactLynxOptions {
+  /**
+   * @internal
+   * This is used internally to make sure the test output is consistent.
+   */
+  mode?: 'production' | 'development' | 'test';
+  filename: string;
+  cssScope: boolean | CssScopeVisitorConfig;
+  snapshot?: boolean | JsxTransformerConfig;
+  shake: boolean | ShakeVisitorConfig;
+  defineDCE: boolean | DefineDceVisitorConfig;
+  directiveDCE: boolean | DirectiveDceVisitorConfig;
+  worklet: boolean | WorkletVisitorConfig;
+  dynamicImport?: boolean | DynamicImportVisitorConfig;
+  /** @internal */
+  inject?: boolean | InjectVisitorConfig;
+}

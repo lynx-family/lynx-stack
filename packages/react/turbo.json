@@ -5,7 +5,7 @@
     "build": {
       "dependsOn": [
         "@lynx-js/react-refresh#build",
-        "@lynx-js/react-transform#build:wasm",
+        "@lynx-js/react-transform#build",
         "@lynx-js/react-worklet-runtime#build",
         "@lynx-js/reactlynx-testing-library#build",
         "@lynx-js/testing-environment#build"

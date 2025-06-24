@@ -2,7 +2,6 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-// TODO: refactor: use rslib
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 

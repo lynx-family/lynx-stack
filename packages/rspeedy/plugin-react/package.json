@@ -48,7 +48,8 @@
   },
   "devDependencies": {
     "@lynx-js/react": "workspace:*",
-    "@lynx-js/react-transform": "workspace:*",
+    "@lynx-js/swc-plugin-reactlynx-compat": "workspace:*",
+    "@lynx-js/swc-plugin-reactlynx": "workspace:*",
     "@lynx-js/rspeedy": "workspace:*",
     "@lynx-js/vitest-setup": "workspace:*",
     "@microsoft/api-extractor": "catalog:",

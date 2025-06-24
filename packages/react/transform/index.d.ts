@@ -2,13 +2,14 @@ import type {
   CssScopeVisitorConfig,
   JsxTransformerConfig,
   ShakeVisitorConfig,
-  CompatVisitorConfig,
   DefineDceVisitorConfig,
   DirectiveDceVisitorConfig,
   WorkletVisitorConfig,
   DynamicImportVisitorConfig,
   InjectVisitorConfig,
 } from './swc-plugin-reactlynx/index.d.ts';
+
+import type { CompatVisitorConfig } from './swc-plugin-reactlynx-compat/index.d.ts';
 
 export interface TransformReactLynxOptions {
   /**
@@ -25,7 +26,7 @@ export interface TransformReactLynxOptions {
    * @public
    * This is swc syntax config in JSON format
    */
-  syntaxConfig?: string;
+  syntaxConfig?: Record<string, any>;
   isModule?: boolean | 'unknown';
   cssScope: boolean | CssScopeVisitorConfig;
   snapshot?: boolean | JsxTransformerConfig;
