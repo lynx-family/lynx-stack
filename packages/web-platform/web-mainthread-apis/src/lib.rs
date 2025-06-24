@@ -13,7 +13,7 @@ pub fn accept_raw_uint16_ptr(ptr: *const u16, len: usize) {
   unsafe {
     let slice = core::slice::from_raw_parts(ptr, len);
     // Call the tokenize function with our data and callback
-    let result = transformer::transform_inline_style_string(&slice);
+    let result = transformer::transformer::transform_inline_style_string(&slice);
     if !result.is_empty() {
       let ptr = result.as_ptr();
       on_transformed(ptr, result.len());
