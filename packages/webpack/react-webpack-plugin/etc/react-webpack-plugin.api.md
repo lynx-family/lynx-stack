@@ -10,6 +10,7 @@ import type { DefineDceVisitorConfig } from '@lynx-js/react/transform';
 import { ExtractStrConfig } from '@lynx-js/react/transform';
 import type { JsxTransformerConfig } from '@lynx-js/react/transform';
 import type { ShakeVisitorConfig } from '@lynx-js/react/transform';
+import type { SimpleStylingVisitorConfig } from '@lynx-js/react/transform';
 
 export { ExtractStrConfig }
 
@@ -26,10 +27,12 @@ export interface ReactLoaderOptions {
     compat?: CompatVisitorConfig | undefined;
     defineDCE?: DefineDceVisitorConfig | undefined;
     enableRemoveCSSScope?: boolean | undefined;
+    enableSimpleStyling?: boolean | undefined;
     inlineSourcesContent?: boolean | undefined;
     jsx?: JsxTransformerConfig | undefined;
     refresh?: boolean | undefined;
     shake?: ShakeVisitorConfig | undefined;
+    simpleStyling?: SimpleStylingVisitorConfig | undefined;
 }
 
 // @public

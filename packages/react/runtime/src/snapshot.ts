@@ -262,6 +262,8 @@ export class SnapshotInstance {
   __current_slot_index = 0;
   __worklet_ref_set?: Set<WorkletRefImpl<any> | Worklet>;
   __listItemPlatformInfo?: any;
+  __styles_st_len?: Array<number>;
+  __styles?: StyleObject[][];
 
   constructor(public type: string, id?: number) {
     this.__snapshot_def = snapshotManager.values.get(type)!;

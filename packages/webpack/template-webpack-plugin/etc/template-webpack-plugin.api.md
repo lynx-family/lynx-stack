@@ -121,6 +121,7 @@ export interface LynxTemplatePluginOptions {
     enableNewGesture: boolean;
     enableParallelElement?: boolean;
     enableRemoveCSSScope: boolean;
+    enableSimpleStyling?: boolean;
     excludeChunks?: string[];
     // @alpha
     experimental_isLazyBundle?: boolean;

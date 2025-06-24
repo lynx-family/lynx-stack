@@ -40,6 +40,7 @@
     "@lynx-js/css-extract-webpack-plugin": "workspace:*",
     "@lynx-js/react-alias-rsbuild-plugin": "workspace:*",
     "@lynx-js/react-refresh-webpack-plugin": "workspace:*",
+    "@lynx-js/react-simple-styling-webpack-plugin": "workspace:*",
     "@lynx-js/react-webpack-plugin": "workspace:*",
     "@lynx-js/runtime-wrapper-webpack-plugin": "workspace:*",
     "@lynx-js/template-webpack-plugin": "workspace:*",

@@ -55,6 +55,7 @@ export function applyEntry(
     removeDescendantSelectorScope,
     targetSdkVersion,
     extractStr,
+    enableSimpleStyling,
 
     experimental_isLazyBundle,
   } = options
@@ -188,6 +189,7 @@ export function applyEntry(
           pipelineSchedulerConfig,
           removeDescendantSelectorScope,
           targetSdkVersion,
+          enableSimpleStyling,
 
           experimental_isLazyBundle,
           cssPlugins: [

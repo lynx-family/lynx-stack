@@ -13,6 +13,7 @@ exports[`template > template/defaults/compile-options > template/defaults/compil
   "enableParallelElement": true,
   "enableRemoveCSSScope": false,
   "enableReuseContext": true,
+  "enableSimpleStyling": false,
   "targetSdkVersion": "3.2",
   "templateDebugUrl": "https://example.com/.rspeedy/main/debug-info.json",
   "useLepusNG": true,

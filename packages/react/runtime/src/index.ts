@@ -33,6 +33,7 @@ import {
   useState,
 } from './hooks/react.js';
 import { loadLazyBundle, mainThreadLazy } from './lynx/lazy-bundle.js';
+import { SimpleStyleSheet } from './simple-styling/index.js';
 
 export { Component, createContext } from 'preact';
 export { PureComponent } from 'preact/compat';
@@ -87,6 +88,7 @@ export {
   lazy,
   createElement,
   useSyncExternalStore,
+  SimpleStyleSheet,
 };
 
 export * from './lynx-api.js';

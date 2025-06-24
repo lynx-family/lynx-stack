@@ -293,6 +293,11 @@ export interface LynxTemplatePluginOptions {
   defaultOverflowVisible?: boolean;
 
   /**
+   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableSimpleStyling}
+   */
+  enableSimpleStyling?: boolean;
+
+  /**
    * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.experimental_isLazyBundle}
    *
    * @alpha
@@ -408,6 +413,7 @@ export class LynxTemplatePlugin {
       defaultOverflowVisible: true,
       removeDescendantSelectorScope: false,
       dsl: 'react_nodiff',
+      enableSimpleStyling: false,
 
       experimental_isLazyBundle: false,
       cssPlugins: [],
@@ -751,6 +757,7 @@ class LynxTemplatePluginImpl {
       defaultOverflowVisible,
       dsl,
       cssPlugins,
+      enableSimpleStyling,
     } = this.#options;
 
     const isDev = process.env['NODE_ENV'] === 'development'
@@ -781,6 +788,7 @@ class LynxTemplatePluginImpl {
         enableRemoveCSSScope,
         targetSdkVersion,
         defaultOverflowVisible,
+        enableSimpleStyling,
       },
       sourceContent: {
         dsl,
@@ -861,6 +869,19 @@ class LynxTemplatePluginImpl {
         debugInfoPath,
         compiler.options.output.publicPath,
       ).toString();
+    }
+
+    if (enableSimpleStyling) {
+      resolvedEncodeOptions['simpleStyleObjects'] = (compilation as unknown as {
+        styleRules: [string, string][];
+      }).styleRules?.map(
+        rule =>
+          rule.length > 0
+            ? ({
+              [rule[0]]: rule[1],
+            })
+            : {},
+      );
     }
 
     const { RawSource } = compiler.webpack.sources;

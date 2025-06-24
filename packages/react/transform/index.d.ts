@@ -547,6 +547,12 @@ export interface ShakeVisitorConfig {
    */
   removeCallParams: Array<string>
 }
+export interface SimpleStylingVisitorConfig {
+  /** @public */
+  runtimePkg: string
+  /** @internal */
+  filename: string
+}
 /** @internal */
 export interface JsxTransformerConfig {
   /** @internal */
@@ -561,6 +567,8 @@ export interface JsxTransformerConfig {
   target: 'LEPUS' | 'JS' | 'MIXED'
   /** @internal */
   isDynamicComponent?: boolean
+  /** @internal */
+  enableSimpleStyling: boolean
 }
 export interface WorkletVisitorConfig {
   /**
@@ -598,6 +606,7 @@ export interface TransformNodiffOptions {
   isModule?: boolean | 'unknown'
   cssScope: boolean | CssScopeVisitorConfig
   snapshot?: boolean | JsxTransformerConfig
+  simpleStyling: boolean | SimpleStylingVisitorConfig
   shake: boolean | ShakeVisitorConfig
   compat: boolean | CompatVisitorConfig
   refresh: boolean | RefreshVisitorConfig

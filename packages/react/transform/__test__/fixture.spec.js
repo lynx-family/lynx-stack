@@ -72,6 +72,7 @@ export class A extends Component {
       compat: true,
       worklet: false,
       refresh: false,
+      simpleStyling: false,
     });
 
     const result = await transformReactLynx(inputContent, __cfg(true));
@@ -129,6 +130,7 @@ describe('jsx', () => {
       shake: true,
       cssScope: false,
       refresh: false,
+      simpleStyling: false,
       directiveDCE: {
         target: 'LEPUS',
       },
@@ -198,6 +200,7 @@ Component, View
         compat: true,
         worklet: false,
         refresh: false,
+        simpleStyling: false,
       },
     );
 
@@ -274,6 +277,7 @@ Component, View
       },
       worklet: false,
       refresh: false,
+      simpleStyling: false,
     };
 
     {
@@ -383,6 +387,7 @@ Component, View
     },
     worklet: false,
     refresh: false,
+    simpleStyling: false,
   });
 
   it('should error when encounter <component/>', async () => {
@@ -602,6 +607,7 @@ describe('transformBundle', () => {
       compat: false,
       worklet: false,
       refresh: false,
+      simpleStyling: false,
     });
     expect(result.code).toMatchInlineSnapshot(`
       "Promise.all([]);
@@ -626,6 +632,7 @@ describe('transformBundle', () => {
       compat: false,
       worklet: false,
       refresh: false,
+      simpleStyling: false,
     });
 
     expect(result.code).toBe('');
@@ -663,6 +670,7 @@ describe('transformBundle', () => {
       compat: false,
       worklet: false,
       refresh: false,
+      simpleStyling: false,
     });
 
     // Note that the result is not valid TSX code, but it is valid TS code.
@@ -696,6 +704,7 @@ describe('transformBundle', () => {
         runtimePkg: '@lynx-js/react',
       },
       refresh: false,
+      simpleStyling: false,
     });
 
     expect(result.errors.length).toBe(0);
@@ -734,6 +743,7 @@ class X {
         compat: true,
         worklet: false,
         refresh: false,
+        simpleStyling: false,
       },
     );
 
@@ -810,6 +820,7 @@ export default class App extends Component {
         },
         worklet: false,
         refresh: false,
+        simpleStyling: false,
       },
     );
 
@@ -868,6 +879,7 @@ describe('dynamic import', () => {
         compat: false,
         worklet: false,
         refresh: false,
+        simpleStyling: false,
       },
     );
 
@@ -965,6 +977,7 @@ X();
         compat: true,
         worklet: false,
         refresh: false,
+        simpleStyling: false,
       },
     );
 
@@ -1037,6 +1050,7 @@ X5();
         compat: true,
         worklet: false,
         refresh: false,
+        simpleStyling: false,
       },
     );
 
@@ -1097,6 +1111,7 @@ X();
         compat: true,
         worklet: false,
         refresh: false,
+        simpleStyling: false,
       },
     );
 
@@ -1143,6 +1158,7 @@ X();
         compat: true,
         worklet: false,
         refresh: false,
+        simpleStyling: false,
       },
     );
 
@@ -1188,6 +1204,7 @@ X();
         compat: true,
         worklet: false,
         refresh: false,
+        simpleStyling: false,
       },
     );
 
@@ -1231,6 +1248,7 @@ X();
         compat: true,
         worklet: false,
         refresh: false,
+        simpleStyling: false,
       },
     );
 
@@ -1285,6 +1303,7 @@ class X extends Component {
         compat: true,
         worklet: false,
         refresh: false,
+        simpleStyling: false,
       },
     );
 
@@ -1338,6 +1357,7 @@ describe('worklet', () => {
           shake: false,
           compat: true,
           refresh: false,
+          simpleStyling: false,
           worklet: {
             target,
             filename: '',
@@ -1432,6 +1452,7 @@ export function foo(event) {
         shake: false,
         compat: true,
         refresh: false,
+        simpleStyling: false,
         worklet: {
           target: 'LEPUS',
           filename: '',
@@ -1500,6 +1521,7 @@ console.log(bar)
         shake: false,
         compat: true,
         refresh: false,
+        simpleStyling: false,
         worklet: {
           target: 'LEPUS',
           filename: '',
@@ -1563,6 +1585,7 @@ function getCurrentDelta(event) {
         shake: false,
         compat: true,
         refresh: false,
+        simpleStyling: false,
         worklet: {
           target: 'LEPUS',
           filename: '',
