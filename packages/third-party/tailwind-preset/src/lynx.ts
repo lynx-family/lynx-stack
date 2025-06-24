@@ -5,6 +5,7 @@ import type { Config } from 'tailwindcss';
 
 import {
   alignContent,
+  boxShadow,
   defaults,
   direction,
   display,
@@ -19,6 +20,7 @@ import {
   transform,
   translate,
 } from './plugins/lynx/index.js';
+import { lynxTheme } from './theme.js';
 
 /**
  * Should be used with Tailwind v3+ (JIT is enabled by default) and configured with `content`,
@@ -41,6 +43,7 @@ const preset: Partial<Config> = {
     textAlign,
     direction,
     overflow,
+    boxShadow,
   ],
   corePlugins: [
     // 'preflight',
@@ -66,7 +69,7 @@ const preset: Partial<Config> = {
     'borderStyle',
     'borderColor',
 
-    'boxShadow',
+    // 'boxShadow',  // Defined using plugin
     'boxSizing',
     'caretColor',
 
@@ -143,6 +146,7 @@ const preset: Partial<Config> = {
     'gridTemplateRows',
     'gap',
   ],
+  theme: lynxTheme,
 };
 
 export default preset;

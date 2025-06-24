@@ -20,10 +20,10 @@ export const defaults = createPlugin(({ addBase }) => {
         '--tw-scale-y': '1',
         // Lynx does not support Nested CSS Variables, uncomment in the future
         // '--tw-transform': cssTransformValue,
-        '--tw-ring-offset-shadow': '0 0 #0000',
-        '--tw-ring-shadow': '0 0 #0000',
-        '--tw-shadow': '0 0 #0000',
-        '--tw-shadow-colored': '0 0 #0000',
+        '--tw-ring-offset-shadow': '0 0 0 0 transparent',
+        '--tw-ring-shadow': '0 0 0 0 transparent',
+        '--tw-shadow': '0 0 0 0 transparent',
+        '--tw-shadow-colored': '0 0 0 0 transparent',
       },
     },
   );
