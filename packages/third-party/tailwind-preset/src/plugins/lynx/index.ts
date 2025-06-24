@@ -12,4 +12,7 @@ export { skew } from './skew.js';
 export { transform } from './transform.js';
 export { defaults } from './defaults.js';
 export { inset } from './inset.js';
-export { alignContent } from './align-content.js';
+export { alignContent } from './alignContent.js';
+export { textAlign } from './textAlign.js';
+export { direction } from './direction.js';
+export { overflow } from './overflow.js';

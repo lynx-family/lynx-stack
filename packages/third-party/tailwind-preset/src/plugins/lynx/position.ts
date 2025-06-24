@@ -10,9 +10,7 @@ export const position = createPlugin(({ addUtilities }) => {
       '.fixed': { position: 'fixed' },
       '.absolute': { position: 'absolute' },
       '.relative': { position: 'relative' },
-      '.sticky': {
-        position: 'sticky',
-      },
+      '.sticky': { position: 'sticky' },
       // Below are not supported by Lynx:
       // '.static': { position: 'static' },
     },

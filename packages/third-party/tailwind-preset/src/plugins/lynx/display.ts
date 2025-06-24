@@ -7,11 +7,13 @@ import { createPlugin } from '../../helpers.js';
 export const display = createPlugin(({ addUtilities }) => {
   addUtilities(
     {
-      '.block': { display: 'block' },
       '.flex': { display: 'flex' },
       '.grid': { display: 'grid' },
       '.hidden': { display: 'none' },
+      '.display-relative': { display: 'relative' },
+      '.linear': { display: 'linear' },
       // Below are not supported by Lynx:
+      // '.block': { display: 'block' },
       // - anything with 'inline'
       // - anything with 'table'
       // '.inline': { display: 'inline', },
