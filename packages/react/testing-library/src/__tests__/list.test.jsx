@@ -573,8 +573,6 @@ describe('list - deferred <list-item/> should render as normal', () => {
       );
     }
 
-    console.log(App.toString());
-
     const { container } = render(<App />);
     expect(container).toMatchInlineSnapshot(`
       <page>

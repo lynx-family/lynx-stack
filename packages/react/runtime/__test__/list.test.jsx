@@ -2586,7 +2586,7 @@ describe('list-item with "defer" attribute', () => {
     `);
   });
 
-  it('basic deferred <list-item/> - componentAtIndex continuously', async () => {
+  it('basic deferred <list-item/> - componentAtIndex continuously should throw', async () => {
     const _F1 = vi.fn();
 
     const jsx = (
@@ -2603,60 +2603,176 @@ describe('list-item with "defer" attribute', () => {
 
     const listRef = elementTree.getElementById('list');
     elementTree.triggerComponentAtIndex(listRef, 0, 11);
-    elementTree.triggerComponentAtIndex(listRef, 0, 22);
-    elementTree.triggerComponentAtIndexes(
-      listRef,
-      [0],
-      [111],
-      /* enableReuseNotification */ false,
-      /* asyncFlush */ true,
+    expect(() => elementTree.triggerComponentAtIndex(listRef, 0, 22)).toThrowErrorMatchingInlineSnapshot(
+      `[Error: componentAtIndex called on a pending deferred list-item]`,
     );
-    elementTree.triggerComponentAtIndexes(
-      listRef,
-      [0],
-      [222],
-      /* enableReuseNotification */ false,
-      /* asyncFlush */ false,
+  });
+
+  it('basic deferred <list-item/> - componentAtIndexes', async () => {
+    const _F1 = vi.fn();
+
+    const jsx = (
+      <list id='list'>
+        <list-item item-key='0'>
+          <_F1 />
+        </list-item>
+        <list-item item-key='1' defer>
+          <_F1 />
+        </list-item>
+        <list-item item-key='2' defer>
+          <_F1 />
+        </list-item>
+      </list>
     );
+    __root.__jsx = jsx;
 
-    const p = __root.__firstChild.__firstChild.__extraProps['isReady'];
+    renderPage();
+    __pendingListUpdates.flush();
 
-    const old = globalThis.__FlushElementTree;
-    const fn = globalThis.__FlushElementTree = vi.fn();
-    __root.__firstChild.__firstChild.__extraProps['isReady'] = 1;
-    await p;
-    globalThis.__FlushElementTree = old;
-    expect(fn).toBeCalledTimes(3); // asyncFlush will not call __FlushElementTree
-    expect(fn.mock.calls).toMatchInlineSnapshot(`
+    const listRef = elementTree.getElementById('list');
+    const __FlushElementTree = vi.fn();
+    vi.stubGlobal('__FlushElementTree', __FlushElementTree);
+    elementTree.triggerComponentAtIndexes(listRef, [0, 1, 2], [11, 22, 33], false, true);
+
+    // a list-item which is not deferred should trigger two flush
+    expect(__FlushElementTree.mock.calls).toMatchInlineSnapshot(`
+      [
+        [
+          <list-item
+            item-key="0"
+          />,
+          {
+            "asyncFlush": true,
+          },
+        ],
+        [
+          <list
+            id="list"
+            update-list-info={
+              [
+                {
+                  "insertAction": [
+                    {
+                      "item-key": "0",
+                      "position": 0,
+                      "type": "__Card__:__snapshot_a94a8_test_55",
+                    },
+                    {
+                      "item-key": "1",
+                      "position": 1,
+                      "type": "__Card__:__snapshot_a94a8_test_56",
+                    },
+                    {
+                      "item-key": "2",
+                      "position": 2,
+                      "type": "__Card__:__snapshot_a94a8_test_57",
+                    },
+                  ],
+                  "removeAction": [],
+                  "updateAction": [],
+                },
+              ]
+            }
+          >
+            <list-item
+              item-key="0"
+            />
+          </list>,
+          {
+            "elementIDs": [
+              300,
+            ],
+            "listID": 299,
+            "operationIDs": [
+              11,
+            ],
+            "triggerLayout": true,
+          },
+        ],
+      ]
+    `);
+    __FlushElementTree.mockClear();
+
+    const ps = __root.__firstChild.childNodes.map(c => c.__extraProps?.['isReady']);
+
+    __root.__firstChild.childNodes[1].__extraProps['isReady'] = 1;
+    __root.__firstChild.childNodes[2].__extraProps['isReady'] = 1;
+
+    await Promise.all(ps);
+    expect(__FlushElementTree.mock.calls).toMatchInlineSnapshot(`
       [
         [
           <list-item
             item-key="1"
           />,
           {
-            "elementID": 298,
-            "listID": 297,
-            "operationID": 11,
-            "triggerLayout": true,
-          },
-        ],
-        [
-          <list-item
-            item-key="1"
-          />,
-          {
-            "elementID": 298,
-            "listID": 297,
+            "elementID": 301,
+            "listID": 299,
             "operationID": 22,
             "triggerLayout": true,
           },
         ],
         [
           <list-item
-            item-key="1"
+            item-key="2"
           />,
           {
-            "asyncFlush": true,
+            "elementID": 302,
+            "listID": 299,
+            "operationID": 33,
+            "triggerLayout": true,
+          },
+        ],
+        [
+          <list
+            id="list"
+            update-list-info={
+              [
+                {
+                  "insertAction": [
+                    {
+                      "item-key": "0",
+                      "position": 0,
+                      "type": "__Card__:__snapshot_a94a8_test_55",
+                    },
+                    {
+                      "item-key": "1",
+                      "position": 1,
+                      "type": "__Card__:__snapshot_a94a8_test_56",
+                    },
+                    {
+                      "item-key": "2",
+                      "position": 2,
+                      "type": "__Card__:__snapshot_a94a8_test_57",
+                    },
+                  ],
+                  "removeAction": [],
+                  "updateAction": [],
+                },
+              ]
+            }
+          >
+            <list-item
+              item-key="0"
+            />
+            <list-item
+              item-key="1"
+            />
+            <list-item
+              item-key="2"
+            />
+          </list>,
+          {
+            "elementIDs": [
+              301,
+              302,
+            ],
+            "listID": 299,
+            "operationIDs": [
+              22,
+              33,
+            ],
+            "triggerLayout": true,
           },
         ],
       ]
@@ -2695,17 +2811,17 @@ describe('list-item with "defer" attribute', () => {
                   {
                     "item-key": "0",
                     "position": 0,
-                    "type": "__Card__:__snapshot_a94a8_test_56",
+                    "type": "__Card__:__snapshot_a94a8_test_60",
                   },
                   {
                     "item-key": "1",
                     "position": 1,
-                    "type": "__Card__:__snapshot_a94a8_test_56",
+                    "type": "__Card__:__snapshot_a94a8_test_60",
                   },
                   {
                     "item-key": "2",
                     "position": 2,
-                    "type": "__Card__:__snapshot_a94a8_test_56",
+                    "type": "__Card__:__snapshot_a94a8_test_60",
                   },
                 ],
                 "removeAction": [],
@@ -2741,17 +2857,17 @@ describe('list-item with "defer" attribute', () => {
                   {
                     "item-key": "0",
                     "position": 0,
-                    "type": "__Card__:__snapshot_a94a8_test_56",
+                    "type": "__Card__:__snapshot_a94a8_test_60",
                   },
                   {
                     "item-key": "1",
                     "position": 1,
-                    "type": "__Card__:__snapshot_a94a8_test_56",
+                    "type": "__Card__:__snapshot_a94a8_test_60",
                   },
                   {
                     "item-key": "2",
                     "position": 2,
-                    "type": "__Card__:__snapshot_a94a8_test_56",
+                    "type": "__Card__:__snapshot_a94a8_test_60",
                   },
                 ],
                 "removeAction": [],
@@ -2798,17 +2914,17 @@ describe('list-item with "defer" attribute', () => {
                     {
                       "item-key": "0",
                       "position": 0,
-                      "type": "__Card__:__snapshot_a94a8_test_56",
+                      "type": "__Card__:__snapshot_a94a8_test_60",
                     },
                     {
                       "item-key": "1",
                       "position": 1,
-                      "type": "__Card__:__snapshot_a94a8_test_56",
+                      "type": "__Card__:__snapshot_a94a8_test_60",
                     },
                     {
                       "item-key": "2",
                       "position": 2,
-                      "type": "__Card__:__snapshot_a94a8_test_56",
+                      "type": "__Card__:__snapshot_a94a8_test_60",
                     },
                   ],
                   "removeAction": [],
