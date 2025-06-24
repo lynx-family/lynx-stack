@@ -524,8 +524,8 @@ importers:
         specifier: 0.2.2
         version: 0.2.2(@rsbuild/core@1.4.0-beta.2)(tailwindcss@3.4.17)
       rslog:
-        specifier: ^1.2.3
-        version: 1.2.3
+        specifier: ^1.2.8
+        version: 1.2.8
       type-fest:
         specifier: ^4.41.0
         version: 4.41.0
@@ -6935,9 +6935,8 @@ packages:
       '@rsbuild/core':
         optional: true
 
-  rslog@1.2.3:
-    resolution: {integrity: sha512-antALPJaKBRPBU1X2q9t085K4htWDOOv/K1qhTUk7h0l1ePU/KbDqKJn19eKP0dk7PqMioeA0+fu3gyPXCsXxQ==}
-    engines: {node: '>=14.17.6'}
+  rslog@1.2.8:
+    resolution: {integrity: sha512-BXUB5LnElxG0n9dSS+1Num4q+U+GGuCasi2/8I6hYMyZm2+L5kUGvv7pAc6z7+ODxFXVV6AHy9mSa2VSoauk+g==}
 
   rspack-plugin-virtual-module@1.0.1:
     resolution: {integrity: sha512-NQJ3fXa1v0WayvfHMWbyqLUA3JIqgCkhIcIOnZscuisinxorQyIAo+bqcU5pCusMKSyPqVIWO3caQyl0s9VDAg==}
@@ -9638,7 +9637,7 @@ snapshots:
       json-stream-stringify: 3.0.1
       lines-and-columns: 2.0.4
       picocolors: 1.1.1
-      rslog: 1.2.3
+      rslog: 1.2.8
       strip-ansi: 6.0.1
     transitivePeerDependencies:
       - '@rspack/core'
@@ -14992,7 +14991,7 @@ snapshots:
     optionalDependencies:
       '@rsbuild/core': 1.4.0-beta.2
 
-  rslog@1.2.3: {}
+  rslog@1.2.8: {}
 
   rspack-plugin-virtual-module@1.0.1:
     dependencies:
