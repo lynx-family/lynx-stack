@@ -57,15 +57,18 @@ impl<'a, 'b, T: Transformer> Parser for ParserState<'a, 'b, T> {
       && token_type != css::types::LEFT_SQUARE_BRACKET_TOKEN
       && token_type != css::types::SEMICOLON_TOKEN
     {
-      // 4. Discard whitespace from input.
-      /*
-        5. Consume a list of component values from input, with nested, and with <semicolon-token, and set decl’s value to the result.
-        component values: A component value is one of the preserved tokens, a function, or a simple block.
-        preserved tokens: Any token produced by the tokenizer except for <function-token>s, <{-token>s, <(-token>s, and <[-token>s.
-        result: except  <{-token>s, <(-token>s, and <[-token>s
-      */
-      self.value_start = start;
-      self.status = 3; // now find a semicolon
+      if token_type == css::types::WHITESPACE_TOKEN {
+        // 4. Discard whitespace from input.
+      } else {
+        /*
+          5. Consume a list of component values from input, with nested, and with <semicolon-token, and set decl’s value to the result.
+          component values: A component value is one of the preserved tokens, a function, or a simple block.
+          preserved tokens: Any token produced by the tokenizer except for <function-token>s, <{-token>s, <(-token>s, and <[-token>s.
+          result: except  <{-token>s, <(-token>s, and <[-token>s
+        */
+        self.value_start = start;
+        self.status = 3; // now find a semicolon
+      }
     } else if self.status == 3 && token_type == css::types::SEMICOLON_TOKEN {
       /*
       6. If the next token is a <semicolon-token>, consume a token from input.
