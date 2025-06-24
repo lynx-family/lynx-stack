@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import type {
+  CSSRuleObject,
   Config,
   CorePluginsConfig,
   PluginAPI,
@@ -19,6 +20,7 @@ export type {
   CorePluginsConfig,
   Config,
   ValueType,
+  CSSRuleObject,
 };
 
 export type Plugin = PluginsConfig[number];

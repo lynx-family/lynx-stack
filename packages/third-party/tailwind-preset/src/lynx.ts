@@ -6,12 +6,15 @@ import type { Config } from 'tailwindcss';
 import {
   alignContent,
   defaults,
+  direction,
   display,
   inset,
+  overflow,
   position,
   rotate,
   scale,
   skew,
+  textAlign,
   textDecoration,
   transform,
   translate,
@@ -35,11 +38,14 @@ const preset: Partial<Config> = {
     rotate,
     skew,
     scale,
+    textAlign,
+    direction,
+    overflow,
   ],
   corePlugins: [
     // 'preflight',
 
-    // 'alignContent',
+    // 'alignContent', // Defined using plugin
     'alignItems',
     'alignSelf',
 
@@ -96,28 +102,28 @@ const preset: Partial<Config> = {
 
     'opacity',
     'order',
-    // 'outline',
-    'overflow',
+    // 'overflow', // Defined using plugin
 
     'padding',
     // 'position', // Defined using plugin
     'zIndex',
 
-    'textAlign',
+    // 'textAlign', // Defined using plugin
     // 'textDecoration', // Replaced with plugin
     'textOverflow',
 
     'transformOrigin',
-    // 'transform',
+    // 'transform', // Defined using plugin
+
     'transitionDelay',
     'transitionDuration',
     'transitionProperty',
     'transitionTimingFunction',
 
-    // 'translate',
-    // 'rotate',
-    // 'scale',
-    // 'skew',
+    // 'translate', // Defined using plugin
+    // 'rotate', // Defined using plugin
+    // 'scale', // Defined using plugin
+    // 'skew', // Defined using plugin
 
     'visibility',
     'whitespace',
@@ -235,36 +241,36 @@ export default preset;
 // 'backdropFilter'
 
 // 'accentColor',
-//   'borderOpacity',
-//   'borderSpacing',
-//   'boxShadowColor',
-//   'breakAfter',
-//   'breakBefore',
-//   'breakInside',
-//   'captionSide',
-//   'columns',
-//   'contain',
-//   'flexBasis',
-//   'forcedColorAdjust',
-//   'hyphens',
-//   'lineClamp',
-//   'listStyleImage',
-//   'outlineColor',
-//   'outlineOffset',
-//   'outlineStyle',
-//   'outlineWidth',
-//   'scrollBehavior',
-//   'scrollMargin',
-//   'scrollPadding',
-//   'scrollSnapAlign',
-//   'scrollSnapStop',
-//   'scrollSnapType',
-//   'size',
-//   'textDecorationColor',
-//   'textDecorationStyle',
-//   'textDecorationThickness',
-//   'textIndent',
-//   'textUnderlineOffset',
-//   'textWrap',
-//   'touchAction',
-//   'willChange'
+// 'borderOpacity',
+// 'borderSpacing',
+// 'boxShadowColor',
+// 'breakAfter',
+// 'breakBefore',
+// 'breakInside',
+// 'captionSide',
+// 'columns',
+// 'contain',
+// 'flexBasis',
+// 'forcedColorAdjust',
+// 'hyphens',
+// 'lineClamp',
+// 'listStyleImage',
+// 'outlineColor',
+// 'outlineOffset',
+// 'outlineStyle',
+// 'outlineWidth',
+// 'scrollBehavior',
+// 'scrollMargin',
+// 'scrollPadding',
+// 'scrollSnapAlign',
+// 'scrollSnapStop',
+// 'scrollSnapType',
+// 'size',
+// 'textDecorationColor',
+// 'textDecorationStyle',
+// 'textDecorationThickness',
+// 'textIndent',
+// 'textUnderlineOffset',
+// 'textWrap',
+// 'touchAction',
+// 'willChange'

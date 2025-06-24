@@ -33,7 +33,7 @@ export function App() {
             Translate
           </text>
           <text
-            className={'text-primary-content text-xl'}
+            className={'text-primary-content text-xl rotate-x-45 rotate-y-45'}
           >
             Translate
           </text>
