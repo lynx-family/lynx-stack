@@ -42,6 +42,7 @@ if (__PROFILE__) {
 
 if (__BACKGROUND__) {
   // Trick Preact and TypeScript to accept our custom document adapter.
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   options.document = document as any;
   setupBackgroundDocument();
   injectTt();

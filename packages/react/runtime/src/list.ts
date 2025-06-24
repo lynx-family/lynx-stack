@@ -40,7 +40,7 @@ export function componentAtIndexFactory(
       throw new Error('childCtx not found');
     }
 
-    const platformInfo = childCtx.__listItemPlatformInfo || {};
+    const platformInfo = childCtx.__listItemPlatformInfo ?? {};
 
     const uniqID = childCtx.type + (platformInfo['reuse-identifier'] ?? '');
     const recycleSignMap = recycleMap.get(uniqID);
@@ -97,7 +97,7 @@ export function componentAtIndexFactory(
         if (enableReuseNotification) {
           flushOptions.listReuseNotification = {
             listElement: list,
-            itemKey: platformInfo['item-key'],
+            itemKey: platformInfo['item-key']!,
           };
         }
         __FlushElementTree(root, flushOptions);
@@ -108,7 +108,7 @@ export function componentAtIndexFactory(
         if (enableReuseNotification) {
           flushOptions.listReuseNotification = {
             listElement: list,
-            itemKey: platformInfo['item-key'],
+            itemKey: platformInfo['item-key']!,
           };
         }
         __FlushElementTree(root, flushOptions);
@@ -161,6 +161,7 @@ export function componentAtIndexFactory(
 }
 
 export function enqueueComponentFactory(): EnqueueComponentCallback {
+  // eslint-disable-next-line unicorn/consistent-function-scoping
   const enqueueComponent = (_: FiberElement, listID: number, sign: number) => {
     const signMap = gSignMap[listID];
     const recycleMap = gRecycleMap[listID];
@@ -173,7 +174,7 @@ export function enqueueComponentFactory(): EnqueueComponentCallback {
       return;
     }
 
-    const platformInfo = childCtx.__listItemPlatformInfo || {};
+    const platformInfo = childCtx.__listItemPlatformInfo ?? {};
 
     const uniqID = childCtx.type + (platformInfo['reuse-identifier'] ?? '');
     if (!recycleMap.has(uniqID)) {

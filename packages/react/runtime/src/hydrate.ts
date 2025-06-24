@@ -217,7 +217,7 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
   }
 
   let swap;
-  if (swap = options?.swap) {
+  if ((swap = options?.swap)) {
     swap[before.__id] = after.__id;
   }
 

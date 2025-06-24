@@ -17,13 +17,24 @@ const platformInfoAttributes: Set<string> = /* @__PURE__ */ new Set<string>([
   'estimated-main-axis-size-px',
 ]);
 
+export interface PlatformInfo {
+  'reuse-identifier'?: string;
+  'full-span'?: boolean;
+  'item-key'?: string;
+  'sticky-top'?: boolean;
+  'sticky-bottom'?: boolean;
+  'estimated-height'?: number;
+  'estimated-height-px'?: number;
+  'estimated-main-axis-size-px'?: number;
+}
+
 function updateListItemPlatformInfo(
   ctx: SnapshotInstance,
   index: number,
   oldValue: any,
   elementIndex: number,
 ): void {
-  const newValue = ctx.__listItemPlatformInfo = ctx.__values![index];
+  const newValue = ctx.__listItemPlatformInfo = ctx.__values![index] as PlatformInfo;
 
   const list = ctx.parentNode;
   if (list?.__snapshot_def.isListHolder) {

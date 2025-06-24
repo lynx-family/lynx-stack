@@ -80,13 +80,8 @@ export default tseslint.config(
       'packages/react/runtime/src/backgroundSnapshot.ts',
       'packages/react/runtime/src/compat/**',
       'packages/react/runtime/src/debug/**',
-      'packages/react/runtime/src/hydrate.ts',
-      'packages/react/runtime/src/list.ts',
       'packages/react/runtime/src/lynx-api.ts',
-      'packages/react/runtime/src/lynx.ts',
       'packages/react/runtime/src/opcodes.ts',
-      'packages/react/runtime/src/snapshot.ts',
-      'packages/react/runtime/src/utils.ts',
 
       // TODO: enable eslint for tools
       // tools
@@ -274,6 +269,9 @@ export default tseslint.config(
         },
         tsconfigRootDir: import.meta.dirname,
       },
+    },
+    rules: {
+      '@typescript-eslint/consistent-generic-constructors': 'off',
     },
   },
   // JavaScript-related

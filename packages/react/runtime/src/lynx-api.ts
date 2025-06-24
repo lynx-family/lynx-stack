@@ -86,6 +86,7 @@ export const root: Root = {
       __root.__jsx = jsx;
     } else {
       __root.__jsx = jsx;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       render(jsx, __root as any);
       if (__FIRST_SCREEN_SYNC_TIMING__ === 'immediately') {
         // This is for cases where `root.render()` is called asynchronously,

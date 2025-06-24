@@ -22,6 +22,7 @@ import { ListUpdateInfoRecording } from './listUpdateInfo.js';
 import { __pendingListUpdates } from './pendingListUpdates.js';
 import { DynamicPartType } from './snapshot/dynamicPartType.js';
 import { snapshotDestroyList } from './snapshot/list.js';
+import type { PlatformInfo } from './snapshot/platformInfo.js';
 import { unref } from './snapshot/ref.js';
 import { isDirectOrDeepEqual } from './utils.js';
 
@@ -165,7 +166,7 @@ export const backgroundSnapshotInstanceManager: {
     }
     const spreadKey = res[2];
     if (spreadKey) {
-      return ctx.__values![expIndex][spreadKey];
+      return (ctx.__values![expIndex] as { [spreadKey]: unknown })[spreadKey];
     } else {
       return ctx.__values![expIndex];
     }
@@ -261,7 +262,7 @@ export class SnapshotInstance {
   __values?: unknown[] | undefined;
   __current_slot_index = 0;
   __worklet_ref_set?: Set<WorkletRefImpl<any> | Worklet>;
-  __listItemPlatformInfo?: any;
+  __listItemPlatformInfo?: PlatformInfo;
 
   constructor(public type: string, id?: number) {
     this.__snapshot_def = snapshotManager.values.get(type)!;
@@ -270,7 +271,7 @@ export class SnapshotInstance {
       throw new Error('Snapshot not found: ' + type);
     }
 
-    id ||= snapshotInstanceManager.nextId -= 1;
+    id ??= snapshotInstanceManager.nextId -= 1;
     this.__id = id;
     snapshotInstanceManager.values.set(id, this);
   }
@@ -579,23 +580,17 @@ export class SnapshotInstance {
   }
 
   setAttribute(key: string | number, value: any): void {
-    const helper = (index: number, oldValue: any, newValue: any) => {
-      if (isDirectOrDeepEqual(oldValue, newValue)) {}
-      else {
-        this.__snapshot_def.update![index]!(this, index, oldValue);
-      }
-    };
-
     if (key === 'values') {
       const oldValues = this.__values;
-      this.__values = value;
+      const values = value as unknown[];
+      this.__values = values;
       if (oldValues) {
-        for (let index = 0; index < value.length; index++) {
-          helper(index, oldValues[index], value[index]);
+        for (let index = 0; index < values.length; index++) {
+          this.callUpdateIfNotDirectOrDeepEqual(index, oldValues[index], values[index]);
         }
       } else {
-        for (let index = 0; index < value.length; index++) {
-          helper(index, undefined, value[index]);
+        for (let index = 0; index < values.length; index++) {
+          this.callUpdateIfNotDirectOrDeepEqual(index, undefined, values[index]);
         }
       }
       return;
@@ -603,7 +598,7 @@ export class SnapshotInstance {
 
     const index = typeof key === 'string' ? Number(key.slice(2)) : key;
     this.__values ??= [];
-    helper(index, this.__values[index], this.__values[index] = value);
+    this.callUpdateIfNotDirectOrDeepEqual(index, this.__values[index], this.__values[index] = value);
   }
 
   toJSON(): Omit<SerializedSnapshotInstance, 'children'> & { children: SnapshotInstance[] | undefined } {
@@ -613,5 +608,12 @@ export class SnapshotInstance {
       values: this.__values,
       children: this.__firstChild ? this.childNodes : undefined,
     };
+  }
+
+  callUpdateIfNotDirectOrDeepEqual(index: number, oldValue: any, newValue: any): void {
+    if (isDirectOrDeepEqual(oldValue, newValue)) {}
+    else {
+      this.__snapshot_def.update![index]!(this, index, oldValue);
+    }
   }
 }

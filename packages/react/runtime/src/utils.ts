@@ -25,11 +25,11 @@ export function isSdkVersionGt(major: number, minor: number): boolean {
 }
 
 export function pick<T extends object, K extends keyof T>(obj: T, keys: Iterable<K>): Pick<T, K> {
-  const result: any = {};
+  const result: Partial<Pick<T, K>> = {};
   for (const key of keys) {
     if (key in obj) {
       result[key] = obj[key];
     }
   }
-  return result;
+  return result as Pick<T, K>;
 }
