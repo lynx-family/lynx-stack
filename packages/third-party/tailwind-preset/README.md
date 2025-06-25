@@ -5,6 +5,32 @@ A [Tailwind V3](https://v3.tailwindcss.com/) CSS preset specifically designed fo
 > **⚠️ Experimental**\
 > This preset is currently in experimental stage as we are still exploring the best possible DX to write Tailwind upon Lynx. We welcome and encourage contributions from the community to help shape its future development. Your feedback, bug reports, and pull requests are invaluable in making this preset more robust and feature-complete.
 
+## Basic Usage
+
+```typescript
+// tailwind.config.ts
+import preset from '@lynx-js/tailwind-preset';
+
+export default {
+  content: ['./src/**/*.{ts,tsx}'],
+  presets: [preset],
+};
+```
+
+```typescript
+// tailwind.config.ts
+import { createLynxPreset } from '@lynx-js/tailwind-preset';
+
+export default {
+  content: ['./src/**/*.{js,ts,jsx,tsx}'],
+  presets: [
+    createLynxPreset({
+      lynxPlugins: { boxShadow: false }, // disable boxShadow plugin
+    }),
+  ],
+};
+```
+
 ## Structure
 
 - `src/lynx.ts`: Main preset configuration that reverse-engineered [Tailwind's core plugins](https://github.com/tailwindlabs/tailwindcss/blob/v3/src/corePlugins.js).
