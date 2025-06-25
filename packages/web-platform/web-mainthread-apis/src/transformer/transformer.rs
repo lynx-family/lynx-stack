@@ -59,7 +59,7 @@ impl<'a> Transformer for TransformerData<'a> {
       // Convert the bytes to u16 values
       self
         .transformed_source
-        .extend(renamed_value[0].bytes().map(|b| b as u16));
+        .extend(renamed_value[0][0].bytes().map(|b| b as u16));
       self.offset = name_end;
     } else if let Some(replaced_value) = get_replace_rule_value!(
       self.source,
@@ -73,11 +73,15 @@ impl<'a> Transformer for TransformerData<'a> {
         .transformed_source
         .extend_from_slice(&self.source[self.offset..name_start]);
       for ii in 0..replaced_value.len() {
-        let one_decl = &replaced_value[ii];
+        let [decl_name, decl_value] = &replaced_value[ii];
         // Convert the bytes to u16 values
         self
           .transformed_source
-          .extend(one_decl.bytes().map(|b| b as u16));
+          .extend(decl_name.bytes().map(|b| b as u16));
+        self.transformed_source.push(b':' as u16);
+        self
+          .transformed_source
+          .extend(decl_value.bytes().map(|b| b as u16));
         append_separator!(
           self.transformed_source,
           ii,
