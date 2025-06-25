@@ -120,7 +120,8 @@ impl<'a> Transformer for TransformerData<'a> {
           .extend("--lynx-text-bg-color".bytes().map(|b| b as u16));
         self.offset = name_end;
       } else {
-        self.offset = name_start;
+        self.transformed_source.extend_from_slice(COLOR_STR_U16);
+        self.offset = name_end;
       };
       // this is special because we expect to remain the value for color: xx or --lynx-text-bg-color: linear-gradient(xx)
     }
@@ -197,13 +198,25 @@ mod tests {
 
   #[test]
   fn transform_color_normal() {
+    let source = "color:blue;";
+    let source_vec: Vec<u16> = source.bytes().map(|b| b as u16).collect();
+    let source: &[u16] = &source_vec;
+    let result = transform_inline_style_string(source);
+    assert_eq!(
+      String::from_utf16_lossy(&result),
+      "--lynx-text-bg-color:initial;-webkit-background-clip:initial;background-clip:initial;color:blue;"
+    );
+  }
+
+  #[test]
+  fn transform_color_normal_with_blank() {
     let source = " color : blue ;";
     let source_vec: Vec<u16> = source.bytes().map(|b| b as u16).collect();
     let source: &[u16] = &source_vec;
     let result = transform_inline_style_string(source);
     assert_eq!(
       String::from_utf16_lossy(&result),
-      "--lynx-text-bg-color:initial;-webkit-background-clip:initial;background-clip:initial;color : blue ;"
+      " --lynx-text-bg-color:initial;-webkit-background-clip:initial;background-clip:initial;color : blue ;"
     );
   }
 
@@ -215,7 +228,7 @@ mod tests {
     let result = transform_inline_style_string(source);
     assert_eq!(
       String::from_utf16_lossy(&result),
-      "--lynx-text-bg-color:initial !important;-webkit-background-clip:initial !important;background-clip:initial !important;color : blue !important ;"
+      " --lynx-text-bg-color:initial !important;-webkit-background-clip:initial !important;background-clip:initial !important;color : blue !important ;"
     );
   }
 
@@ -227,7 +240,7 @@ mod tests {
     let result = transform_inline_style_string(source);
     assert_eq!(
       String::from_utf16_lossy(&result),
-      "color:transparent;-webkit-background-clip:text;background-clip:text;--lynx-text-bg-color : linear-gradient(pink, blue) ;"
+      " color:transparent;-webkit-background-clip:text;background-clip:text;--lynx-text-bg-color : linear-gradient(pink, blue) ;"
     );
   }
 
@@ -239,7 +252,7 @@ mod tests {
     let result = transform_inline_style_string(source);
     assert_eq!(
       String::from_utf16_lossy(&result),
-      "color:transparent !important;-webkit-background-clip:text !important;background-clip:text !important;--lynx-text-bg-color : linear-gradient(pink, blue) !important ;"
+      " color:transparent !important;-webkit-background-clip:text !important;background-clip:text !important;--lynx-text-bg-color : linear-gradient(pink, blue) !important ;"
     );
   }
 
