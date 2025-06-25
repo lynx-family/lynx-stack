@@ -80,8 +80,8 @@ export const DEFAULT_CORE_PLUGINS = [
 
   'textColor',
   // 'textOpacity',
-  'textDecorationColor',
-  'textDecorationStyle',
+  // 'textDecorationColor',
+  // 'textDecorationStyle',
   // 'content',
 
   // 'display', // Defined using plugin
