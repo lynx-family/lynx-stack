@@ -89,6 +89,9 @@ impl<'a> Transformer for TransformerData<'a> {
     else if name_end - name_start == COLOR_STR_U16.len()
       && self.source[name_start..name_end] == *COLOR_STR_U16
     {
+      self
+        .transformed_source
+        .extend_from_slice(&self.source[self.offset..name_start]);
       // check if the value is starting with "linear-gradient"
       let is_linear_gradient = value_end - value_start >= LINEAR_GRADIENT_STR_U16.len()
         && self.source[value_start..value_start + LINEAR_GRADIENT_STR_U16.len()]
@@ -237,6 +240,18 @@ mod tests {
     assert_eq!(
       String::from_utf16_lossy(&result),
       "color:transparent !important;-webkit-background-clip:text !important;background-clip:text !important;--lynx-text-bg-color : linear-gradient(pink, blue) !important ;"
+    );
+  }
+
+  #[test]
+  fn transform_color_with_font_size() {
+    let source = "font-size: 24px; color: blue";
+    let source_vec: Vec<u16> = source.bytes().map(|b| b as u16).collect();
+    let source: &[u16] = &source_vec;
+    let result = transform_inline_style_string(source);
+    assert_eq!(
+      String::from_utf16_lossy(&result),
+      "font-size: 24px; --lynx-text-bg-color:initial;-webkit-background-clip:initial;background-clip:initial;color: blue"
     );
   }
 }
