@@ -55,3 +55,23 @@ pub const FLEX_STR_U16: &[u16] = &[b'f' as u16, b'l' as u16, b'e' as u16, b'x' a
 pub const AUTO_STR_U16: &[u16] = &[b'a' as u16, b'u' as u16, b't' as u16, b'o' as u16];
 
 pub const NONE_STR_U16: &[u16] = &[b'n' as u16, b'o' as u16, b'n' as u16, b'e' as u16];
+
+pub const LINEAR_WEIGHT_SUM_STR_U16: &[u16] = &[
+  b'l' as u16,
+  b'i' as u16,
+  b'n' as u16,
+  b'e' as u16,
+  b'a' as u16,
+  b'r' as u16,
+  b'-' as u16,
+  b'w' as u16,
+  b'e' as u16,
+  b'i' as u16,
+  b'g' as u16,
+  b'h' as u16,
+  b't' as u16,
+  b'-' as u16,
+  b's' as u16,
+  b'u' as u16,
+  b'm' as u16,
+];

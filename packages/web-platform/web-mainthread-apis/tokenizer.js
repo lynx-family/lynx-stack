@@ -35,14 +35,22 @@ const UTF16ToString = (ptr, len) => {
 export function transformInlineStyle(str) {
   const len = str.length;
   const ptr = wasm.malloc(len * 2);
-  let result = str;
+  let inlineStyle = str;
+  let childrenStyle = '';
   stringToUTF16(ptr, str, len);
   globalThis._on_transformed_callback = (ptr, len) => {
     const transformed = UTF16ToString(ptr, len);
-    result = transformed;
+    inlineStyle = transformed;
   };
-  wasm.accept_raw_uint16_ptr(ptr, len);
+  globalThis._on_extra_children_style_callback = (ptr, len) => {
+    const extraChildrenStyle = UTF16ToString(ptr, len);
+    childrenStyle = extraChildrenStyle;
+  };
+  wasm.transform_raw_u16_inline_style_ptr(ptr, len);
   globalThis._tokenizer_on_token_callback = null;
   wasm.free(ptr, len * 2);
-  return result;
+  return [
+    inlineStyle,
+    childrenStyle,
+  ];
 }

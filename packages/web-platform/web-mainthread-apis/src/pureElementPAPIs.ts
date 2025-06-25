@@ -305,7 +305,7 @@ export const __SetInlineStyles: SetInlineStylesPAPI = /*#__PURE__*/ (
 ) => {
   if (!value) return;
   if (typeof value === 'string') {
-    element.setAttribute('style', transformInlineStyleString(value));
+    element.setAttribute('style', transformInlineStyleString(value)[0]);
   } else {
     const { transformedStyle } = transformParsedStyles(
       Object.entries(value).map(([k, value]) => [
