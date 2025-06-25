@@ -1,6 +1,7 @@
 use crate::transformer::constants::{
   AUTO_STR_U16, COLOR_APPENDIX_FOR_GRADIENT, COLOR_APPENDIX_FOR_NORMAL_COLOR, COLOR_STR_U16,
-  FLEX_STR_U16, IMPORTANT_STR_U16, LINEAR_GRADIENT_STR_U16, NONE_STR_U16,
+  FLEX_STR_U16, IMPORTANT_STR_U16, LINEAR_GRADIENT_STR_U16, LINEAR_WEIGHT_SUM_STR_U16,
+  NONE_STR_U16,
 };
 use crate::{
   css::{self, parse_inline_style::Transformer},
@@ -11,7 +12,8 @@ use crate::{is_newline, is_white_space};
 pub struct TransformerData<'a> {
   source: &'a [u16],
   transformed_source: Vec<u16>,
-  offset: usize, // current the tail offset of the original source
+  offset: usize,                   // current the tail offset of the original source
+  extra_children_styles: Vec<u16>, // used to store the extra styles for children elements
 }
 
 // append ';' at the end of each declaration except the last one
@@ -100,9 +102,7 @@ impl<'a> Transformer for TransformerData<'a> {
         color: xx;
     */
     // compare the name is "color"
-    else if name_end - name_start == COLOR_STR_U16.len()
-      && self.source[name_start..name_end] == *COLOR_STR_U16
-    {
+    else if self.source[name_start..name_end] == *COLOR_STR_U16 {
       self
         .transformed_source
         .extend_from_slice(&self.source[self.offset..name_start]);
@@ -143,7 +143,7 @@ impl<'a> Transformer for TransformerData<'a> {
     --flex-grow:2;
     --flex-basis:3;
     */
-    else if name_end - name_start == 4 && self.source[name_start..name_end] == *FLEX_STR_U16 {
+    else if self.source[name_start..name_end] == *FLEX_STR_U16 {
       self
         .transformed_source
         .extend_from_slice(&self.source[self.offset..name_start]);
@@ -264,14 +264,39 @@ impl<'a> Transformer for TransformerData<'a> {
         }
       }
     }
+    /*
+     now we're going to generate children style for linear-weight-sum
+     linear-weight-sum: 0; --> --linear-weight-sum: 1;
+     linear-weight-sum: <value> --> --linear-weight-sum: <value>;
+    */
+    if self.source[name_start..name_end] == *LINEAR_WEIGHT_SUM_STR_U16 {
+      if value_end - value_start == 1 && self.source[value_start] == b'0' as u16 {
+        // if the value is 0, we will use 1
+        self
+          .extra_children_styles
+          .extend("--linear-weight-sum:1".bytes().map(|b| b as u16));
+      } else {
+        self
+          .extra_children_styles
+          .extend("--linear-weight-sum:".bytes().map(|b| b as u16));
+        self
+          .extra_children_styles
+          .extend_from_slice(&self.source[value_start..value_end]);
+      }
+      if is_important {
+        self.extra_children_styles.extend(IMPORTANT_STR_U16);
+      }
+      self.extra_children_styles.push(b';' as u16);
+    }
   }
 }
 
-pub fn transform_inline_style_string<'a>(source: &'a [u16]) -> Vec<u16> {
+pub fn transform_inline_style_string<'a>(source: &'a [u16]) -> (Vec<u16>, Vec<u16>) {
   let mut transformer: TransformerData<'a> = TransformerData {
     source,
     transformed_source: Vec::new(),
     offset: 0,
+    extra_children_styles: Vec::new(),
   };
   css::parse_inline_style::parse_inline_style(source, &mut transformer);
   if transformer.offset != 0 {
@@ -280,7 +305,10 @@ pub fn transform_inline_style_string<'a>(source: &'a [u16]) -> Vec<u16> {
       .transformed_source
       .extend_from_slice(&source[transformer.offset..]);
   }
-  transformer.transformed_source
+  (
+    transformer.transformed_source,
+    transformer.extra_children_styles,
+  )
 }
 
 #[cfg(test)]
@@ -292,7 +320,7 @@ mod tests {
     let source = "height:1px;display:linear;flex-direction:row;width:100px;";
     let source_vec: Vec<u16> = source.bytes().map(|b| b as u16).collect();
     let source: &[u16] = &source_vec;
-    let result = transform_inline_style_string(source);
+    let result = transform_inline_style_string(source).0;
     assert_eq!(
       String::from_utf16_lossy(&result),
       "height:1px;--lynx-display-toggle:var(--lynx-display-linear);--lynx-display:linear;display:flex;--flex-direction:row;width:100px;"
@@ -304,7 +332,7 @@ mod tests {
     let source = "flex-direction : row ;";
     let source_vec: Vec<u16> = source.bytes().map(|b| b as u16).collect();
     let source: &[u16] = &source_vec;
-    let result = transform_inline_style_string(source);
+    let result = transform_inline_style_string(source).0;
     assert_eq!(
       String::from_utf16_lossy(&result),
       "--flex-direction : row ;"
@@ -316,7 +344,7 @@ mod tests {
     let source = "display: linear;";
     let source_vec: Vec<u16> = source.bytes().map(|b| b as u16).collect();
     let source: &[u16] = &source_vec;
-    let result = transform_inline_style_string(source);
+    let result = transform_inline_style_string(source).0;
     assert_eq!(
       String::from_utf16_lossy(&result),
       "--lynx-display-toggle:var(--lynx-display-linear);--lynx-display:linear;display:flex;"
@@ -328,7 +356,7 @@ mod tests {
     let source = "display: linear !important;";
     let source_vec: Vec<u16> = source.bytes().map(|b| b as u16).collect();
     let source: &[u16] = &source_vec;
-    let result = transform_inline_style_string(source);
+    let result = transform_inline_style_string(source).0;
     assert_eq!(
       String::from_utf16_lossy(&result),
       "--lynx-display-toggle:var(--lynx-display-linear) !important;--lynx-display:linear !important;display:flex !important;"
@@ -340,7 +368,7 @@ mod tests {
     let source = "color:blue;";
     let source_vec: Vec<u16> = source.bytes().map(|b| b as u16).collect();
     let source: &[u16] = &source_vec;
-    let result = transform_inline_style_string(source);
+    let result = transform_inline_style_string(source).0;
     assert_eq!(
       String::from_utf16_lossy(&result),
       "--lynx-text-bg-color:initial;-webkit-background-clip:initial;background-clip:initial;color:blue;"
@@ -352,7 +380,7 @@ mod tests {
     let source = " color : blue ;";
     let source_vec: Vec<u16> = source.bytes().map(|b| b as u16).collect();
     let source: &[u16] = &source_vec;
-    let result = transform_inline_style_string(source);
+    let result = transform_inline_style_string(source).0;
     assert_eq!(
       String::from_utf16_lossy(&result),
       " --lynx-text-bg-color:initial;-webkit-background-clip:initial;background-clip:initial;color : blue ;"
@@ -364,7 +392,7 @@ mod tests {
     let source = " color : blue !important ;";
     let source_vec: Vec<u16> = source.bytes().map(|b| b as u16).collect();
     let source: &[u16] = &source_vec;
-    let result = transform_inline_style_string(source);
+    let result = transform_inline_style_string(source).0;
     assert_eq!(
       String::from_utf16_lossy(&result),
       " --lynx-text-bg-color:initial !important;-webkit-background-clip:initial !important;background-clip:initial !important;color : blue !important ;"
@@ -376,7 +404,7 @@ mod tests {
     let source = " color : linear-gradient(pink, blue) ;";
     let source_vec: Vec<u16> = source.bytes().map(|b| b as u16).collect();
     let source: &[u16] = &source_vec;
-    let result = transform_inline_style_string(source);
+    let result = transform_inline_style_string(source).0;
     assert_eq!(
       String::from_utf16_lossy(&result),
       " color:transparent;-webkit-background-clip:text;background-clip:text;--lynx-text-bg-color : linear-gradient(pink, blue) ;"
@@ -388,7 +416,7 @@ mod tests {
     let source = " color : linear-gradient(pink, blue) !important ;";
     let source_vec: Vec<u16> = source.bytes().map(|b| b as u16).collect();
     let source: &[u16] = &source_vec;
-    let result = transform_inline_style_string(source);
+    let result = transform_inline_style_string(source).0;
     assert_eq!(
       String::from_utf16_lossy(&result),
       " color:transparent !important;-webkit-background-clip:text !important;background-clip:text !important;--lynx-text-bg-color : linear-gradient(pink, blue) !important ;"
@@ -400,7 +428,7 @@ mod tests {
     let source = "font-size: 24px; color: blue";
     let source_vec: Vec<u16> = source.bytes().map(|b| b as u16).collect();
     let source: &[u16] = &source_vec;
-    let result = transform_inline_style_string(source);
+    let result = transform_inline_style_string(source).0;
     assert_eq!(
       String::from_utf16_lossy(&result),
       "font-size: 24px; --lynx-text-bg-color:initial;-webkit-background-clip:initial;background-clip:initial;color: blue"
@@ -412,7 +440,7 @@ mod tests {
     let source = "flex:none;";
     let source_vec: Vec<u16> = source.bytes().map(|b| b as u16).collect();
     let source: &[u16] = &source_vec;
-    let result = transform_inline_style_string(source);
+    let result = transform_inline_style_string(source).0;
     assert_eq!(
       String::from_utf16_lossy(&result),
       "--flex-shrink:0;--flex-grow:0;--flex-basis:auto;"
@@ -424,7 +452,7 @@ mod tests {
     let source = "flex:auto;";
     let source_vec: Vec<u16> = source.bytes().map(|b| b as u16).collect();
     let source: &[u16] = &source_vec;
-    let result = transform_inline_style_string(source);
+    let result = transform_inline_style_string(source).0;
     assert_eq!(
       String::from_utf16_lossy(&result),
       "--flex-shrink:1;--flex-grow:1;--flex-basis:auto;"
@@ -436,7 +464,7 @@ mod tests {
     let source = "flex:1;";
     let source_vec: Vec<u16> = source.bytes().map(|b| b as u16).collect();
     let source: &[u16] = &source_vec;
-    let result = transform_inline_style_string(source);
+    let result = transform_inline_style_string(source).0;
     assert_eq!(
       String::from_utf16_lossy(&result),
       "--flex-shrink:1;--flex-basis:0%;--flex-grow:1;"
@@ -447,7 +475,7 @@ mod tests {
     let source = "flex:1%;";
     let source_vec: Vec<u16> = source.bytes().map(|b| b as u16).collect();
     let source: &[u16] = &source_vec;
-    let result = transform_inline_style_string(source);
+    let result = transform_inline_style_string(source).0;
     assert_eq!(
       String::from_utf16_lossy(&result),
       "--flex-shrink:1;--flex-grow:1;--flex-basis:1%;"
@@ -459,7 +487,7 @@ mod tests {
     let source = "flex:2 3;";
     let source_vec: Vec<u16> = source.bytes().map(|b| b as u16).collect();
     let source: &[u16] = &source_vec;
-    let result = transform_inline_style_string(source);
+    let result = transform_inline_style_string(source).0;
     assert_eq!(
       String::from_utf16_lossy(&result),
       "--flex-grow:2;--flex-basis:0%;--flex-shrink:3;"
@@ -471,7 +499,7 @@ mod tests {
     let source = "flex:2 3%;";
     let source_vec: Vec<u16> = source.bytes().map(|b| b as u16).collect();
     let source: &[u16] = &source_vec;
-    let result = transform_inline_style_string(source);
+    let result = transform_inline_style_string(source).0;
     assert_eq!(
       String::from_utf16_lossy(&result),
       "--flex-grow:2;--flex-shrink:1;--flex-basis:3%;"
@@ -483,7 +511,7 @@ mod tests {
     let source = "flex:2 3px;";
     let source_vec: Vec<u16> = source.bytes().map(|b| b as u16).collect();
     let source: &[u16] = &source_vec;
-    let result = transform_inline_style_string(source);
+    let result = transform_inline_style_string(source).0;
     assert_eq!(
       String::from_utf16_lossy(&result),
       "--flex-grow:2;--flex-shrink:1;--flex-basis:3px;"
@@ -495,7 +523,7 @@ mod tests {
     let source = "flex:3 4 5%;";
     let source_vec: Vec<u16> = source.bytes().map(|b| b as u16).collect();
     let source: &[u16] = &source_vec;
-    let result = transform_inline_style_string(source);
+    let result = transform_inline_style_string(source).0;
     assert_eq!(
       String::from_utf16_lossy(&result),
       "--flex-grow:3;--flex-shrink:4;--flex-basis:5%;"
@@ -507,10 +535,40 @@ mod tests {
     let source = "width:100px; flex:none; width:100px;";
     let source_vec: Vec<u16> = source.bytes().map(|b| b as u16).collect();
     let source: &[u16] = &source_vec;
-    let result = transform_inline_style_string(source);
+    let result = transform_inline_style_string(source).0;
     assert_eq!(
       String::from_utf16_lossy(&result),
       "width:100px; --flex-shrink:0;--flex-grow:0;--flex-basis:auto; width:100px;"
+    );
+  }
+
+  #[test]
+  fn linear_weight_sum_0_children_style() {
+    let source = "linear-weight-sum: 0;";
+    let source_vec: Vec<u16> = source.bytes().map(|b| b as u16).collect();
+    let source: &[u16] = &source_vec;
+    let result = transform_inline_style_string(source).1;
+    assert_eq!(String::from_utf16_lossy(&result), "--linear-weight-sum:1;");
+  }
+
+  #[test]
+  fn linear_weight_sum_1_children_style() {
+    let source = "linear-weight-sum: 1;";
+    let source_vec: Vec<u16> = source.bytes().map(|b| b as u16).collect();
+    let source: &[u16] = &source_vec;
+    let result = transform_inline_style_string(source).1;
+    assert_eq!(String::from_utf16_lossy(&result), "--linear-weight-sum:1;");
+  }
+
+  #[test]
+  fn linear_weight_sum_1_important_children_style() {
+    let source = "linear-weight-sum: 1 !important;";
+    let source_vec: Vec<u16> = source.bytes().map(|b| b as u16).collect();
+    let source: &[u16] = &source_vec;
+    let result = transform_inline_style_string(source).1;
+    assert_eq!(
+      String::from_utf16_lossy(&result),
+      "--linear-weight-sum:1 !important;"
     );
   }
 }
