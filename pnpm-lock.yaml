@@ -117,8 +117,8 @@ importers:
         specifier: ^16.1.2
         version: 16.1.2
       sort-package-json:
-        specifier: ^3.2.1
-        version: 3.2.1
+        specifier: ^3.3.0
+        version: 3.3.0
       ts-patch:
         specifier: ^3.3.0
         version: 3.3.0
@@ -7289,8 +7289,8 @@ packages:
   sort-object-keys@1.1.3:
     resolution: {integrity: sha512-855pvK+VkU7PaKYPc+Jjnmt4EzejQHyhhF33q31qG8x7maDzkeFhAAThdCYay11CISO+qAMwjOBP+fPZe0IPyg==}
 
-  sort-package-json@3.2.1:
-    resolution: {integrity: sha512-rTfRdb20vuoAn7LDlEtCqOkYfl2X+Qze6cLbNOzcDpbmKEhJI30tTN44d5shbKJnXsvz24QQhlCm81Bag7EOKg==}
+  sort-package-json@3.3.0:
+    resolution: {integrity: sha512-r7r8W0b9jrAKySkYbe0dp4nbrvlPh0mV8gJ2dRUt1baXV5cLulsQqsWeuMOy8IQV4O7f3uucbC0K6pZA6ncPyQ==}
     hasBin: true
 
   source-map-js@1.2.1:
@@ -15378,7 +15378,7 @@ snapshots:
 
   sort-object-keys@1.1.3: {}
 
-  sort-package-json@3.2.1:
+  sort-package-json@3.3.0:
     dependencies:
       detect-indent: 7.0.1
       detect-newline: 4.0.1
