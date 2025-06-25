@@ -49,3 +49,9 @@ pub const COLOR_APPENDIX_FOR_NORMAL_COLOR: &'static [&'static str] = &[
   "-webkit-background-clip:initial",
   "background-clip:initial",
 ];
+
+pub const FLEX_STR_U16: &[u16] = &[b'f' as u16, b'l' as u16, b'e' as u16, b'x' as u16];
+
+pub const AUTO_STR_U16: &[u16] = &[b'a' as u16, b'u' as u16, b't' as u16, b'o' as u16];
+
+pub const NONE_STR_U16: &[u16] = &[b'n' as u16, b'o' as u16, b'n' as u16, b'e' as u16];

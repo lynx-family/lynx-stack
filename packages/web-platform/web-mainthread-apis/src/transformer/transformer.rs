@@ -1,11 +1,12 @@
 use crate::transformer::constants::{
-  COLOR_APPENDIX_FOR_GRADIENT, COLOR_APPENDIX_FOR_NORMAL_COLOR, COLOR_STR_U16, IMPORTANT_STR_U16,
-  LINEAR_GRADIENT_STR_U16,
+  AUTO_STR_U16, COLOR_APPENDIX_FOR_GRADIENT, COLOR_APPENDIX_FOR_NORMAL_COLOR, COLOR_STR_U16,
+  FLEX_STR_U16, IMPORTANT_STR_U16, LINEAR_GRADIENT_STR_U16, NONE_STR_U16,
 };
 use crate::{
   css::{self, parse_inline_style::Transformer},
   get_rename_rule_value, get_replace_rule_value,
 };
+use crate::{is_newline, is_white_space};
 
 pub struct TransformerData<'a> {
   source: &'a [u16],
@@ -23,6 +24,19 @@ macro_rules! append_separator {
       $transformed_source.push(b';' as u16);
     }
   };
+}
+
+macro_rules! is_digit_only {
+  ($source:expr, $start:expr, $end:expr) => {{
+    let mut result = true;
+    for code in $source[$start..$end].iter() {
+      if *code > b'9' as u16 || *code < b'0' as u16 {
+        result = false;
+        break;
+      }
+    }
+    result
+  }};
 }
 
 impl<'a> Transformer for TransformerData<'a> {
@@ -123,7 +137,132 @@ impl<'a> Transformer for TransformerData<'a> {
         self.transformed_source.extend_from_slice(COLOR_STR_U16);
         self.offset = name_end;
       };
-      // this is special because we expect to remain the value for color: xx or --lynx-text-bg-color: linear-gradient(xx)
+    }
+    /* transform the flex 1 2 3 to
+    --flex-shrink:1;
+    --flex-grow:2;
+    --flex-basis:3;
+    */
+    else if name_end - name_start == 4 && self.source[name_start..name_end] == *FLEX_STR_U16 {
+      self
+        .transformed_source
+        .extend_from_slice(&self.source[self.offset..name_start]);
+      // we will use the value as flex-basis, flex-grow, flex-shrink
+      let mut offset = value_start;
+      let mut val_fields = [value_end; 6]; // we will use 3 fields, but we will use 6 to avoid the need to check the length
+      let mut ii = 0;
+      while offset < value_end && ii < val_fields.len() {
+        let code = self.source[offset];
+        if (ii % 2 == 0 && !is_white_space!(code)) || (ii % 2 == 1 && is_white_space!(code)) {
+          val_fields[ii] = offset;
+          ii += 1;
+        }
+        offset += 1;
+      }
+      let value_num: usize = (ii + 1) / 2; // we will have 3 values, but the last one is optional
+      match value_num {
+        0 => {
+          self.offset = name_start;
+        }
+        1 => {
+          if self.source[val_fields[0]..val_fields[1]] == *NONE_STR_U16 {
+            /*
+             * --flex-shrink:0;
+             * --flex-grow:0;
+             * --flex-basis:auto;
+             */
+            self.transformed_source.extend(
+              "--flex-shrink:0;--flex-grow:0;--flex-basis:auto"
+                .bytes()
+                .map(|b| b as u16),
+            );
+            self.offset = value_end;
+          } else if self.source[val_fields[0]..val_fields[1]] == *AUTO_STR_U16 {
+            /*
+             * --flex-shrink:1;
+             * --flex-grow:1;
+             * --flex-basis:auto;
+             */
+            self.transformed_source.extend(
+              "--flex-shrink:1;--flex-grow:1;--flex-basis:auto"
+                .bytes()
+                .map(|b| b as u16),
+            );
+            self.offset = value_end;
+          } else {
+            // if we only have one number, we will use it as flex-grow
+            // flex: <flex-grow> 1 0
+            let is_flex_grow = is_digit_only!(self.source, val_fields[0], val_fields[1]);
+            if is_flex_grow {
+              self.transformed_source.extend(
+                "--flex-shrink:1;--flex-basis:0%;--flex-grow:"
+                  .bytes()
+                  .map(|b| b as u16),
+              );
+              self.offset = value_start;
+            } else {
+              self.transformed_source.extend(
+                "--flex-shrink:1;--flex-grow:1;--flex-basis:"
+                  .bytes()
+                  .map(|b| b as u16),
+              );
+              self.offset = value_start;
+            }
+          }
+        }
+        2 => {
+          // The first value must be a valid value for flex-grow.
+          self
+            .transformed_source
+            .extend("--flex-grow:".bytes().map(|b| b as u16));
+          self
+            .transformed_source
+            .extend_from_slice(&self.source[val_fields[0]..val_fields[1]]);
+          let is_flex_shrink = is_digit_only!(self.source, val_fields[2], val_fields[3]);
+          if is_flex_shrink {
+            /*
+            a valid value for flex-shrink: then, in all the browsers,
+            the shorthand expands to flex: <flex-grow> <flex-shrink> 0%.
+             */
+            self
+              .transformed_source
+              .extend(";--flex-basis:0%;--flex-shrink:".bytes().map(|b| b as u16));
+          } else {
+            /*
+            a valid value for flex-basis: then the shorthand expands to flex: <flex-grow> 1 <flex-basis>.
+             */
+            self
+              .transformed_source
+              .extend(";--flex-shrink:1;--flex-basis:".bytes().map(|b| b as u16));
+          }
+          self.offset = val_fields[2];
+        }
+        3 => {
+          // flex: <flex-grow> <flex-shrink> <flex-basis>
+          self
+            .transformed_source
+            .extend("--flex-grow:".bytes().map(|b| b as u16));
+          self
+            .transformed_source
+            .extend_from_slice(&self.source[val_fields[0]..val_fields[1]]);
+          self
+            .transformed_source
+            .extend(";--flex-shrink:".bytes().map(|b| b as u16));
+          self
+            .transformed_source
+            .extend_from_slice(&self.source[val_fields[2]..val_fields[3]]);
+          self
+            .transformed_source
+            .extend(";--flex-basis:".bytes().map(|b| b as u16));
+          self
+            .transformed_source
+            .extend_from_slice(&self.source[val_fields[4]..val_fields[5]]);
+          self.offset = value_end;
+        }
+        _ => {
+          // we have more than 3 values, we will ignore the rest
+        }
+      }
     }
   }
 }
@@ -265,6 +404,113 @@ mod tests {
     assert_eq!(
       String::from_utf16_lossy(&result),
       "font-size: 24px; --lynx-text-bg-color:initial;-webkit-background-clip:initial;background-clip:initial;color: blue"
+    );
+  }
+
+  #[test]
+  fn flex_none() {
+    let source = "flex:none;";
+    let source_vec: Vec<u16> = source.bytes().map(|b| b as u16).collect();
+    let source: &[u16] = &source_vec;
+    let result = transform_inline_style_string(source);
+    assert_eq!(
+      String::from_utf16_lossy(&result),
+      "--flex-shrink:0;--flex-grow:0;--flex-basis:auto;"
+    );
+  }
+
+  #[test]
+  fn flex_auto() {
+    let source = "flex:auto;";
+    let source_vec: Vec<u16> = source.bytes().map(|b| b as u16).collect();
+    let source: &[u16] = &source_vec;
+    let result = transform_inline_style_string(source);
+    assert_eq!(
+      String::from_utf16_lossy(&result),
+      "--flex-shrink:1;--flex-grow:1;--flex-basis:auto;"
+    );
+  }
+
+  #[test]
+  fn flex_1() {
+    let source = "flex:1;";
+    let source_vec: Vec<u16> = source.bytes().map(|b| b as u16).collect();
+    let source: &[u16] = &source_vec;
+    let result = transform_inline_style_string(source);
+    assert_eq!(
+      String::from_utf16_lossy(&result),
+      "--flex-shrink:1;--flex-basis:0%;--flex-grow:1;"
+    );
+  }
+  #[test]
+  fn flex_1_percent() {
+    let source = "flex:1%;";
+    let source_vec: Vec<u16> = source.bytes().map(|b| b as u16).collect();
+    let source: &[u16] = &source_vec;
+    let result = transform_inline_style_string(source);
+    assert_eq!(
+      String::from_utf16_lossy(&result),
+      "--flex-shrink:1;--flex-grow:1;--flex-basis:1%;"
+    );
+  }
+
+  #[test]
+  fn flex_2_3() {
+    let source = "flex:2 3;";
+    let source_vec: Vec<u16> = source.bytes().map(|b| b as u16).collect();
+    let source: &[u16] = &source_vec;
+    let result = transform_inline_style_string(source);
+    assert_eq!(
+      String::from_utf16_lossy(&result),
+      "--flex-grow:2;--flex-basis:0%;--flex-shrink:3;"
+    );
+  }
+
+  #[test]
+  fn flex_2_3_percentage() {
+    let source = "flex:2 3%;";
+    let source_vec: Vec<u16> = source.bytes().map(|b| b as u16).collect();
+    let source: &[u16] = &source_vec;
+    let result = transform_inline_style_string(source);
+    assert_eq!(
+      String::from_utf16_lossy(&result),
+      "--flex-grow:2;--flex-shrink:1;--flex-basis:3%;"
+    );
+  }
+
+  #[test]
+  fn flex_2_3_px() {
+    let source = "flex:2 3px;";
+    let source_vec: Vec<u16> = source.bytes().map(|b| b as u16).collect();
+    let source: &[u16] = &source_vec;
+    let result = transform_inline_style_string(source);
+    assert_eq!(
+      String::from_utf16_lossy(&result),
+      "--flex-grow:2;--flex-shrink:1;--flex-basis:3px;"
+    );
+  }
+
+  #[test]
+  fn flex_3_4_5_percentage() {
+    let source = "flex:3 4 5%;";
+    let source_vec: Vec<u16> = source.bytes().map(|b| b as u16).collect();
+    let source: &[u16] = &source_vec;
+    let result = transform_inline_style_string(source);
+    assert_eq!(
+      String::from_utf16_lossy(&result),
+      "--flex-grow:3;--flex-shrink:4;--flex-basis:5%;"
+    );
+  }
+
+  #[test]
+  fn flex_1_extra() {
+    let source = "width:100px; flex:none; width:100px;";
+    let source_vec: Vec<u16> = source.bytes().map(|b| b as u16).collect();
+    let source: &[u16] = &source_vec;
+    let result = transform_inline_style_string(source);
+    assert_eq!(
+      String::from_utf16_lossy(&result),
+      "width:100px; --flex-shrink:0;--flex-grow:0;--flex-basis:auto; width:100px;"
     );
   }
 }
