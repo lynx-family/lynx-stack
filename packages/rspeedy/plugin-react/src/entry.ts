@@ -86,7 +86,6 @@ export function applyEntry(
 
       const mainThreadName = path.posix.join(
         isLynx
-          // TODO: config intermediate
           ? DEFAULT_DIST_PATH_INTERMEDIATE
           // For non-Lynx environment, the entry is not deleted.
           // So we do not put it in the intermediate.
@@ -96,7 +95,6 @@ export function applyEntry(
 
       const backgroundName = path.posix.join(
         isLynx
-          // TODO: config intermediate
           ? DEFAULT_DIST_PATH_INTERMEDIATE
           // For non-Lynx environment, the entry is not deleted.
           // So we do not put it in the intermediate.
@@ -169,7 +167,6 @@ export function applyEntry(
             environment.name,
           ),
           intermediate: path.posix.join(
-            // TODO: config intermediate
             DEFAULT_DIST_PATH_INTERMEDIATE,
             entryName,
           ),
