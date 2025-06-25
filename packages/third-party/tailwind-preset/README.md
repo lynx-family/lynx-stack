@@ -45,7 +45,7 @@ If it needs custom handling e.g. Lynx only support a partial set of the core plu
 
 - Create a new plugin in `src/plugins/lynx/`
 - Export it in `src/plugins/lynx/index.ts`
-- Add it to the plugins array in `src/lynx.ts`
+- Add it to the plugins array in `src/core.ts`
 
 #### 3. Adding Tests
 
