@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/tailwind-preset",
-  "version": "0.0.4",
+  "version": "0.1.0",
   "description": "A tailwindcss preset for ReactLynx",
   "keywords": [
     "Lynx",
