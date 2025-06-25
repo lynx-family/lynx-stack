@@ -13,15 +13,41 @@ pub fn transform_raw_u16_inline_style_ptr(ptr: *const u16, len: usize) {
   unsafe {
     let slice = core::slice::from_raw_parts(ptr, len);
     // Call the tokenize function with our data and callback
-    let (transformed_inline_style, extra_children_style) =
+    let (transformed_inline_style, _) =
       transformer::transformer::transform_inline_style_string(&slice);
     if !transformed_inline_style.is_empty() {
       let ptr = transformed_inline_style.as_ptr();
       on_transformed(ptr, transformed_inline_style.len());
     }
-    if !extra_children_style.is_empty() {
-      let ptr = extra_children_style.as_ptr();
-      on_extra_children_style(ptr, extra_children_style.len());
+  }
+}
+
+#[wasm_bindgen]
+pub fn transform_raw_u16_inline_style_ptr_parsed(
+  source_ptr: *const u16,
+  source_len: usize,
+  declaration_position_arr_ptr: *const usize,
+  declaration_position_arr_len: usize,
+) {
+  // Safety: We assume the pointer is valid and points to a slice of u16
+  // of length `source_len` and `declaration_position_arr_len`.
+  unsafe {
+    let source_slice = core::slice::from_raw_parts(source_ptr, source_len);
+    let declaration_position_arr_slice =
+      core::slice::from_raw_parts(declaration_position_arr_ptr, declaration_position_arr_len);
+    let (transformed_inline_style, transformed_children_styles) =
+      transformer::transformer::transform_parsed_style_string(
+        source_slice,
+        declaration_position_arr_slice,
+      );
+
+    if !transformed_inline_style.is_empty() {
+      let ptr = transformed_inline_style.as_ptr();
+      on_transformed(ptr, transformed_inline_style.len());
+    }
+    if !transformed_children_styles.is_empty() {
+      let ptr = transformed_children_styles.as_ptr();
+      on_extra_children_style(ptr, transformed_children_styles.len());
     }
   }
 }
