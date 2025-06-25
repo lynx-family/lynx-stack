@@ -122,12 +122,6 @@ describe('Config - Output', () => {
 
     assertType<Output>({
       distPath: {
-        intermediate: 'foo',
-      },
-    })
-
-    assertType<Output>({
-      distPath: {
         css: 'foo',
       },
     })

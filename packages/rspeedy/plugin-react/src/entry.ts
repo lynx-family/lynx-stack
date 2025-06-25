@@ -28,7 +28,6 @@ const PLUGIN_NAME_TEMPLATE = 'lynx:template'
 const PLUGIN_NAME_RUNTIME_WRAPPER = 'lynx:runtime-wrapper'
 const PLUGIN_NAME_WEB = 'lynx:web'
 
-const DEFAULT_DIST_PATH_INTERMEDIATE = '.rspeedy'
 const DEFAULT_FILENAME_HASH = '.[contenthash:8]'
 const EMPTY_HASH = ''
 
@@ -84,30 +83,15 @@ export function applyEntry(
       // We would like to avoid adding `__background` to the output CSS filename.
       const mainThreadEntry = `${entryName}__main-thread`
 
-      const mainThreadName = path.posix.join(
-        isLynx
-          // TODO: config intermediate
-          ? DEFAULT_DIST_PATH_INTERMEDIATE
-          // For non-Lynx environment, the entry is not deleted.
-          // So we do not put it in the intermediate.
-          : '',
-        `${entryName}/main-thread.js`,
+      const mainThreadName = `${entryName}/main-thread.js`
+
+      const backgroundName = getBackgroundFilename(
+        entryName,
+        environment.config,
+        isProd,
+        experimental_isLazyBundle,
       )
 
-      const backgroundName = path.posix.join(
-        isLynx
-          // TODO: config intermediate
-          ? DEFAULT_DIST_PATH_INTERMEDIATE
-          // For non-Lynx environment, the entry is not deleted.
-          // So we do not put it in the intermediate.
-          : '',
-        getBackgroundFilename(
-          entryName,
-          environment.config,
-          isProd,
-          experimental_isLazyBundle,
-        ),
-      )
       const backgroundEntry = entryName
 
       mainThreadChunks.push(mainThreadName)
@@ -169,8 +153,6 @@ export function applyEntry(
             environment.name,
           ),
           intermediate: path.posix.join(
-            // TODO: config intermediate
-            DEFAULT_DIST_PATH_INTERMEDIATE,
             entryName,
           ),
           customCSSInheritanceList,

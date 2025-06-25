@@ -85,7 +85,7 @@ describe('ReactLynx rsbuild', () => {
 
     await result.close()
 
-    const backgroundJSPath = path.resolve(tmp, '.rspeedy/main/background.js')
+    const backgroundJSPath = path.resolve(tmp, 'main/background.js')
     expect(existsSync(backgroundJSPath)).toBe(true)
 
     const define = vi.fn()
