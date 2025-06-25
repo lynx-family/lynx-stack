@@ -18,7 +18,7 @@ export const lynxTheme: NonNullable<Config['theme']> = {
     none: 'none',
   },
   transitionProperty: {
-    // fill, stroke,backdrop-filter is not suppored
+    // fill, stroke,backdrop-filter is not supported
     none: 'none',
     all: 'all',
     DEFAULT:
