@@ -616,6 +616,9 @@ importers:
       '@lynx-js/types':
         specifier: 3.3.0
         version: 3.3.0
+      postcss:
+        specifier: ^8.5.4
+        version: 8.5.4
       tailwindcss:
         specifier: ^3.4.17
         version: 3.4.17

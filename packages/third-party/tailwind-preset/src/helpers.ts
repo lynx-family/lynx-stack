@@ -11,10 +11,17 @@ import type { ShadowPart } from 'tailwindcss/lib/util/parseBoxShadowValue.js';
 import _transformThemeValue from 'tailwindcss/lib/util/transformThemeValue.js';
 
 import type {
+  Bound,
+  BoundedPluginCreator,
+  OptionsFn,
   UtilityPluginOptions,
   UtilityVariations,
 } from './types/plugin-types.js';
-import type { PluginAPI, PluginCreator } from './types/tailwind-types.js';
+import type {
+  Config,
+  PluginAPI,
+  PluginCreator,
+} from './types/tailwind-types.js';
 
 /* ───────────────────────── createPlugin / autoBind ───────────────────────── */
 
@@ -22,22 +29,63 @@ import type { PluginAPI, PluginCreator } from './types/tailwind-types.js';
  * Wraps a Tailwind PluginCreator and auto-binds all function properties of the API.
  */
 function createPlugin(
-  fn: (api: Bound<PluginAPI>) => void,
-): PluginCreator {
-  return (api) => {
-    const bound = autoBind(api);
-    fn(bound);
+  fn: BoundedPluginCreator,
+  cfg?: Partial<Config>,
+): { handler: PluginCreator; config?: Partial<Config> | undefined } {
+  return {
+    handler: (api) => fn(autoBind(api)),
+    config: cfg,
   };
 }
 
-/**
- * Type helper: binds all function-valued properties in T.
- */
-type Bound<T> = {
-  [K in keyof T]: T[K] extends (...args: infer A) => infer R
-    ? (this: void, ...args: A) => R
-    : T[K];
+function isCorePluginDisabled(api: PluginAPI, key: string): boolean {
+  return api.config<boolean>(`corePlugins.${key}`) === false;
+}
+
+function createPluginWithName(
+  name: string,
+  fn: BoundedPluginCreator,
+  cfg?: Partial<Config>,
+): { handler: PluginCreator; config?: Partial<Config> | undefined } {
+  return {
+    handler: (api) => {
+      if (isCorePluginDisabled(api, name)) return;
+      fn(autoBind(api));
+    },
+    config: { ...cfg, name },
+  };
+}
+
+function basePlugin(
+  pluginFn: PluginCreator,
+  cfg?: Partial<Config>,
+): { handler: PluginCreator; config?: Partial<Config> | undefined } {
+  return { handler: pluginFn, config: cfg };
+}
+
+function pluginImpl(
+  pluginFn: BoundedPluginCreator,
+  cfg?: Partial<Config>,
+): { handler: PluginCreator; config?: Partial<Config> | undefined } {
+  const wrapped: PluginCreator = api => pluginFn(autoBind(api));
+  return basePlugin(wrapped, cfg);
+}
+
+pluginImpl.withOptions = function withOptions<T>(
+  factory: (options: T) => BoundedPluginCreator,
+  cfgFactory?: (options: T) => Partial<Config>,
+): OptionsFn<T> {
+  const optionsFn = ((options: T) =>
+    basePlugin(
+      api => factory(options)(autoBind(api)),
+      cfgFactory?.(options),
+    )) as OptionsFn<T>;
+
+  optionsFn.__isOptionsFunction = true as const;
+  return optionsFn;
 };
+
+export const plugin = pluginImpl;
 
 /**
  * Auto-binds all function-valued properties to the original object.
@@ -70,7 +118,7 @@ function createUtilityPlugin(
   return _createUtilityPlugin(themeKey, utilityVariations as unknown, options);
 }
 
-export { createUtilityPlugin, createPlugin };
+export { createUtilityPlugin, createPlugin, createPluginWithName };
 
 /* ──────────────── 100 % typed exports for transform/shadow utils ─────────── */
 

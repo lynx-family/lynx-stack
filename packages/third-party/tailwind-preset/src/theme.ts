@@ -3,8 +3,6 @@
 // LICENSE file in the root directory of this source tree.
 import type { Config } from 'tailwindcss';
 
-type NonNullable<T> = T extends null | undefined ? never : T;
-
 export const lynxTheme: NonNullable<Config['theme']> = {
   boxShadow: {
     sm: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',

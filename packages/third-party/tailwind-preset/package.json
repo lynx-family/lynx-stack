@@ -17,7 +17,7 @@
     ".": {
       "types": "./lib/lynx.d.ts",
       "import": "./lib/lynx.js",
-      "require": "./lib/lynx.js",
+      "require": "./lib/lynx.cjs",
       "default": "./lib/lynx.js"
     }
   },
@@ -31,11 +31,14 @@
     "README.md"
   ],
   "scripts": {
+    "build": "rslib build",
     "test": "vitest",
     "test:coverage": "vitest run --coverage"
   },
   "devDependencies": {
     "@lynx-js/types": "3.3.0",
+    "@rslib/core": "^0.9.2",
+    "postcss": "^8.5.4",
     "tailwindcss": "^3.4.17"
   }
 }
