@@ -2228,6 +2228,14 @@ test.describe('reactlynx3 tests', () => {
         await diffScreenShot(page, 'x-input', 'placeholder');
       });
       // input/placeholder test-case end
+      test(
+        'basic-element-x-input-placeholder-pseudo-element',
+        async ({ page }, { title }) => {
+          await goto(page, title);
+          await wait(100);
+          await diffScreenShot(page, 'x-input', 'placeholder-pseudo-element');
+        },
+      );
 
       // input/type test-case start
       test('basic-element-x-input-type', async ({ page }, { title }) => {
