@@ -87,6 +87,23 @@ test.describe('reactlynx3 tests', () => {
       await wait(100);
       await expect(await target.getAttribute('style')).toContain('pink');
     });
+    test('basic-reload-page-only-one', async ({ page }, { title }) => {
+      await goto(page, 'basic-reload');
+      await wait(100);
+      await page.evaluate(() => {
+        // @ts-expect-error
+        globalThis.lynxView.reload();
+      });
+      await wait(100);
+      expect(
+        await page.evaluate(() =>
+          Array.from(
+            document.querySelector('lynx-view')?.shadowRoot?.children || [],
+          )
+            .filter(i => i.getAttribute('lynx-tag') === 'page').length
+        ),
+      ).toBe(1);
+    });
     test('basic-bindtap', async ({ page }, { title }) => {
       await goto(page, title);
       await wait(100);

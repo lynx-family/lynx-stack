@@ -57,6 +57,7 @@ import {
   type GetPageElementPAPI,
   type MinimalRawEventObject,
   type I18nResourceTranslationOptions,
+  lynxDisposedAttribute,
 } from '@lynx-js/web-constants';
 import { globalMuteableVars } from '@lynx-js/web-constants';
 import { createMainThreadLynx } from './createMainThreadLynx.js';
@@ -604,7 +605,10 @@ export function createMainThreadGlobalThis(
   ) => {
     const timingFlagsCopied = timingFlags;
     timingFlags = [];
-    if (pageElement && !pageElement.parentNode) {
+    if (
+      pageElement && !pageElement.parentNode
+      && pageElement.getAttribute(lynxDisposedAttribute) !== ''
+    ) {
       // @ts-expect-error
       rootDom.append(pageElement);
     }

@@ -8,6 +8,8 @@ import {
 } from './createLynxView.js';
 import {
   inShadowRootStyles,
+  lynxDisposedAttribute,
+  lynxTagAttribute,
   type Cloneable,
   type I18nResourceTranslationOptions,
   type InitI18nResources,
@@ -369,6 +371,13 @@ export class LynxView extends HTMLElement {
   disconnectedCallback() {
     this.#instance?.dispose();
     this.#instance = undefined;
+    // under the all-on-ui strategy, when reload() triggers dsl flush, the previously removed pageElement will be used in __FlushElementTree.
+    // This attribute is added to filter this issue.
+    this.shadowRoot?.querySelector(`[${lynxTagAttribute}="page"]`)
+      ?.setAttribute(
+        lynxDisposedAttribute,
+        '',
+      );
     if (this.shadowRoot) {
       this.shadowRoot.innerHTML = '';
     }
