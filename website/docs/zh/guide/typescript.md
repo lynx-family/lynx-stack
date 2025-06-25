@@ -22,7 +22,7 @@ Rspeedy 基于 Rsbuild 原生支持 TypeScript，允许你在项目中直接使�
 
 配置后，当代码中引用 `@common/request.ts` 时，将会映射到 `<project>/src/common/request.ts` 路径。
 
-<!-- eslint-disable-next-line import/no-unresolved -->
+<!-- eslint-disable-next-line import/no-unresolved, no-unused-vars -->
 
 ```js
 import { get } from '@common/request.js'; // 等同于 './common/request.js'

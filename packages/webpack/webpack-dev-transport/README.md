@@ -14,8 +14,6 @@ configuration of `webpack.config.js`.
 // LICENSE file in the root directory of this source tree.
 import { createRequire } from 'node:module';
 
-import { LynxTransportServer } from '@lynx-js/webpack-dev-transport';
-
 const require = createRequire(import.meta.url);
 export default {
   devServer: {

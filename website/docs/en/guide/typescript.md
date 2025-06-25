@@ -22,7 +22,7 @@ The [`paths`](https://www.typescriptlang.org/tsconfig/#paths) option of TypeScri
 
 After configuring, if you reference `@common/request.ts` in your code, it will be mapped to the `<project>/src/common/request.ts` path.
 
-<!-- eslint-disable-next-line import/no-unresolved -->
+<!-- eslint-disable-next-line import/no-unresolved, no-unused-vars -->
 
 ```js
 import { get } from '@common/request.js'; // The same as './common/request.js'
