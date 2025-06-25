@@ -311,6 +311,39 @@ pub fn transform_inline_style_string<'a>(source: &'a [u16]) -> (Vec<u16>, Vec<u1
   )
 }
 
+pub fn transform_parsed_style_string<'a>(
+  source: &'a [u16],
+  declaration_positions: &[usize],
+) -> (Vec<u16>, Vec<u16>) {
+  assert!(declaration_positions.len() % 5 == 0, "declaration_positions must be a multiple of 5 for name_start, name_end, value_start, value_end, is_important");
+  let mut transformer: TransformerData<'a> = TransformerData {
+    source,
+    transformed_source: Vec::new(),
+    offset: 0,
+    extra_children_styles: Vec::new(),
+  };
+  let mut ii = 0;
+  while ii + 4 < declaration_positions.len() {
+    let name_start = declaration_positions[ii];
+    let name_end = declaration_positions[ii + 1];
+    let value_start = declaration_positions[ii + 2];
+    let value_end = declaration_positions[ii + 3];
+    let is_important = declaration_positions[ii + 4] != 0;
+    transformer.on_declaration(name_start, name_end, value_start, value_end, is_important);
+    ii += 5;
+  }
+  if transformer.offset != 0 {
+    // append the remaining part of the source
+    transformer
+      .transformed_source
+      .extend_from_slice(&source[transformer.offset..]);
+  }
+  (
+    transformer.transformed_source,
+    transformer.extra_children_styles,
+  )
+}
+
 #[cfg(test)]
 mod tests {
   use super::*;
@@ -569,6 +602,18 @@ mod tests {
     assert_eq!(
       String::from_utf16_lossy(&result),
       "--linear-weight-sum:1 !important;"
+    );
+  }
+
+  #[test]
+  fn transform_parsed_style_string_work() {
+    let source = "flex:1;";
+    let source_vec: Vec<u16> = source.bytes().map(|b| b as u16).collect();
+    let source: &[u16] = &source_vec;
+    let result = transform_parsed_style_string(source, &[0, 4, 5, 6, 0]).0;
+    assert_eq!(
+      String::from_utf16_lossy(&result),
+      "--flex-shrink:1;--flex-basis:0%;--flex-grow:1;"
     );
   }
 }
