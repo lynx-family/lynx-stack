@@ -133,7 +133,7 @@ export const useInitDataChanged: (callback: (data: InitData) => void) => void;
 export function useLayoutEffect(effect: EffectCallback, deps?: DependencyList): void;
 
 // @public
-export function useLynxGlobalEventListener<T extends (...args: unknown[]) => void>(eventName: string, listener: T): void;
+export function useLynxGlobalEventListener<T extends (...args: any[]) => void>(eventName: string, listener: T): void;
 
 // @public
 export function useMainThreadRef<T>(initValue: T): MainThreadRef<T>;

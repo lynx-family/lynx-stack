@@ -31,7 +31,7 @@ import { useEffect, useMemo, useRef } from 'preact/hooks';
  * @param listener - Event handler
  * @public
  */
-export function useLynxGlobalEventListener<T extends (...args: unknown[]) => void>(
+export function useLynxGlobalEventListener<T extends (...args: any[]) => void>(
   eventName: string,
   listener: T,
 ): void {

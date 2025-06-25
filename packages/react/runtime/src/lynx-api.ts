@@ -108,7 +108,7 @@ const _InitData = /* @__PURE__ */ factory<InitData>(
     useState,
     createElement,
     useLynxGlobalEventListener,
-  } as any,
+  },
   '__initData',
   'onDataChanged',
 );
@@ -138,6 +138,7 @@ const _InitData = /* @__PURE__ */ factory<InitData>(
  *
  * @public
  */
+// @ts-expect-error make preact and react types work
 export const InitDataProvider: FC<{ children?: ReactNode | undefined }> = /* @__PURE__ */ _InitData.Provider();
 /**
  * The {@link https://react.dev/reference/react/createContext#consumer | Consumer} Component that provide `initData`.
@@ -145,6 +146,7 @@ export const InitDataProvider: FC<{ children?: ReactNode | undefined }> = /* @__
  * @group Components
  * @public
  */
+// @ts-expect-error make preact and react types work
 export const InitDataConsumer: Consumer<InitData> = /* @__PURE__ */ _InitData.Consumer();
 /**
  * A React Hooks for you to get `initData`.
