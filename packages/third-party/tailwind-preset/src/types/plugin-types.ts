@@ -1,7 +1,12 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type { ValueType } from './tailwind-types.js';
+import type {
+  Config,
+  PluginAPI,
+  PluginCreator,
+  ValueType,
+} from './tailwind-types.js';
 
 /** Anything that is legal on the right-hand side of a CSS-in-JS object. */
 type CSSStatic =
@@ -37,6 +42,36 @@ interface UtilityPluginOptions {
   filterDefault?: boolean;
 }
 
+/**
+ * Type helper: binds all function-valued properties in T.
+ */
+type Bound<T> = {
+  [K in keyof T]: T[K] extends (...args: infer A) => infer R
+    ? (this: void, ...args: A) => R
+    : T[K];
+};
+
+type BoundedPluginCreator = (api: Bound<PluginAPI>) => void;
+
+interface OptionsFn<T> {
+  (options: T): { handler: PluginCreator; config?: Partial<Config> };
+  __isOptionsFunction: true;
+}
+
+interface PluginFn {
+  (
+    pluginFn: BoundedPluginCreator,
+    cfg?: Partial<Config>,
+  ): { handler: PluginCreator; config?: Partial<Config> };
+  withOptions<T>(
+    factory: (opts: T) => BoundedPluginCreator,
+    cfgFactory?: (opts: T) => Partial<Config>,
+  ): {
+    (opts: T): { handler: PluginCreator; config?: Partial<Config> };
+    __isOptionsFunction: true;
+  };
+}
+
 export type {
   CSSStatic,
   PropertyEntry,
@@ -44,4 +79,8 @@ export type {
   UtilityGroup,
   UtilityVariations,
   UtilityPluginOptions,
+  BoundedPluginCreator,
+  OptionsFn,
+  PluginFn,
+  Bound,
 };
