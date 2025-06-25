@@ -17,4 +17,76 @@ export const lynxTheme: NonNullable<Config['theme']> = {
     inner: 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.05)',
     none: 'none',
   },
+  transitionProperty: {
+    // fill, stroke,backdrop-filter is not suppored
+    none: 'none',
+    all: 'all',
+    DEFAULT:
+      'color, background-color, border-color, text-decoration-color, opacity, box-shadow, transform, filter',
+
+    // 'color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter',
+    colors: 'color, background-color, border-color, text-decoration-color',
+    // 'color, background-color, border-color, text-decoration-color, fill, stroke',
+    opacity: 'opacity',
+    shadow: 'box-shadow',
+    transform: 'transform',
+  },
+  zIndex: {
+    // value 'auto' is not allowed
+    // auto: 'auto',
+    0: '0',
+    10: '10',
+    20: '20',
+    30: '30',
+    40: '40',
+    50: '50',
+  },
+  gridTemplateColumns: {
+    1: 'repeat(1, minmax(0, 1fr))',
+    2: 'repeat(2, minmax(0, 1fr))',
+    3: 'repeat(3, minmax(0, 1fr))',
+    4: 'repeat(4, minmax(0, 1fr))',
+    5: 'repeat(5, minmax(0, 1fr))',
+    6: 'repeat(6, minmax(0, 1fr))',
+    7: 'repeat(7, minmax(0, 1fr))',
+    8: 'repeat(8, minmax(0, 1fr))',
+    9: 'repeat(9, minmax(0, 1fr))',
+    10: 'repeat(10, minmax(0, 1fr))',
+    11: 'repeat(11, minmax(0, 1fr))',
+    12: 'repeat(12, minmax(0, 1fr))',
+    // Below are not supported in Lynx
+    // none: 'none',
+    // subgrid: 'subgrid',
+  },
+  gridTemplateRows: {
+    1: 'repeat(1, minmax(0, 1fr))',
+    2: 'repeat(2, minmax(0, 1fr))',
+    3: 'repeat(3, minmax(0, 1fr))',
+    4: 'repeat(4, minmax(0, 1fr))',
+    5: 'repeat(5, minmax(0, 1fr))',
+    6: 'repeat(6, minmax(0, 1fr))',
+    7: 'repeat(7, minmax(0, 1fr))',
+    8: 'repeat(8, minmax(0, 1fr))',
+    9: 'repeat(9, minmax(0, 1fr))',
+    10: 'repeat(10, minmax(0, 1fr))',
+    11: 'repeat(11, minmax(0, 1fr))',
+    12: 'repeat(12, minmax(0, 1fr))',
+    // Below are not supported in Lynx
+    // none: 'none',
+    // subgrid: 'subgrid',
+  },
+  gridAutoColumns: {
+    auto: 'auto',
+    max: 'max-content',
+    fr: 'minmax(0, 1fr)',
+    // Not supported in Lynx
+    // min: 'min-content',
+  },
+  gridAutoRows: {
+    auto: 'auto',
+    max: 'max-content',
+    fr: 'minmax(0, 1fr)',
+    // Not supported in Lynx
+    // min: 'min-content',
+  },
 };

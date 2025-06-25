@@ -3,11 +3,15 @@
 // LICENSE file in the root directory of this source tree.
 import {
   alignContent,
+  backgroundClip,
   boxShadow,
   defaults,
   direction,
   display,
+  gridColumn,
+  gridRow,
   inset,
+  justifyContent,
   overflow,
   position,
   rotate,
@@ -17,10 +21,14 @@ import {
   textDecoration,
   transform,
   translate,
+  visibility,
+  whitespace,
+  wordBreak,
 } from './plugins/lynx/index.js';
 
 /* -------------------------------- constants ------------------------------- */
 export const PLUGIN_MAP = {
+  defaults,
   alignContent,
   boxShadow,
   direction,
@@ -35,7 +43,13 @@ export const PLUGIN_MAP = {
   textDecoration,
   transform,
   translate,
-  defaults,
+  justifyContent,
+  backgroundClip,
+  visibility,
+  whitespace,
+  wordBreak,
+  gridColumn,
+  gridRow,
 } as const;
 
 export const DEFAULT_CORE_PLUGINS = [
@@ -45,7 +59,7 @@ export const DEFAULT_CORE_PLUGINS = [
   'alignSelf',
   // 'animation',
   // 'aspectRatio',
-  'backgroundClip',
+  // 'backgroundClip', // Defined using plugin
   'backgroundColor',
   'backgroundImage',
   'backgroundOrigin',
@@ -66,6 +80,8 @@ export const DEFAULT_CORE_PLUGINS = [
 
   'textColor',
   // 'textOpacity',
+  'textDecorationColor',
+  'textDecorationStyle',
   // 'content',
 
   // 'display', // Defined using plugin
@@ -81,9 +97,9 @@ export const DEFAULT_CORE_PLUGINS = [
   'fontWeight',
 
   'height',
-  // 'inset',
+  // 'inset', // Defined using plugin
 
-  'justifyContent',
+  // 'justifyContent', // Defined using plugin
 
   'letterSpacing',
   'lineHeight',
@@ -120,14 +136,16 @@ export const DEFAULT_CORE_PLUGINS = [
   // 'scale', // Defined using plugin
   // 'skew', // Defined using plugin
 
-  'visibility',
-  'whitespace',
-  'wordBreak',
+  // 'visibility', // Defined using plugin
+  // 'whitespace', // Defined using plugin
+  // 'wordBreak', // Defined using plugin
 
-  'gridColumn',
+  'verticalAlign',
+
+  // 'gridColumn', // Defined using plugin
   'gridColumnStart',
   'gridColumnEnd',
-  'gridRow',
+  // 'gridRow', // Defined using plugin
   'gridRowStart',
   'gridRowEnd',
 
@@ -222,8 +240,6 @@ export const isPluginReplaceable = (p: string): p is LynxPluginName =>
 // 'objectFit'
 // 'objectPosition'
 
-// 'verticalAlign'
-
 // 'textTransform'
 
 // 'fontVariantNumeric'
@@ -288,8 +304,6 @@ export const isPluginReplaceable = (p: string): p is LynxPluginName =>
 // 'scrollSnapStop',
 // 'scrollSnapType',
 // 'size',
-// 'textDecorationColor',
-// 'textDecorationStyle',
 // 'textDecorationThickness',
 // 'textIndent',
 // 'textUnderlineOffset',
