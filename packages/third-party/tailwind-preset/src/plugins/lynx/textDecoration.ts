@@ -8,13 +8,13 @@ export const textDecoration = createPlugin(({ addUtilities }) => {
   addUtilities(
     {
       '.no-underline': {
-        'text-decoration-line': 'none',
+        'text-decoration': 'none',
       },
       '.line-through': {
-        'text-decoration-line': 'line-through',
+        'text-decoration': 'line-through',
       },
       '.underline': {
-        'text-decoration-line': 'underline',
+        'text-decoration': 'underline',
       },
     },
   );

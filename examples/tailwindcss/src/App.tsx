@@ -16,10 +16,12 @@ export function App() {
           className='absolute inset-10 top-24 bg-secondary flex flex-col justify-center items-center shadow-lg'
           bindtap={() => setTransform(prev => !prev)}
         >
-          <text className='text-primary-content text-6xl'>Hello ReactLynx</text>
+          <text className='text-primary-content text-6xl underline'>
+            Hello ReactLynx
+          </text>
           <text
             className={cn(
-              'text-primary-content text-xl',
+              'text-primary-content text-xl line-through',
               transform && 'translate-x-10 scale-125',
             )}
           >
