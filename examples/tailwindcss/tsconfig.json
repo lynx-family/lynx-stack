@@ -1,28 +1,17 @@
 {
+  "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "composite": true,
-    "declaration": true,
-    "emitDeclarationOnly": true,
-    "outDir": "dist/types",
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["./src/*"],
-    },
     "jsx": "react-jsx",
     "jsxImportSource": "@lynx-js/react",
-    "module": "esnext",
-    "moduleResolution": "bundler",
-
+    "noEmit": true,
     "allowJs": true,
     "checkJs": true,
     "isolatedDeclarations": false,
-
-    "isolatedModules": true,
-    "verbatimModuleSyntax": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
+    "paths": {
+      "@/*": ["./src/*"],
+    },
   },
-  "include": ["src", "lynx.config.js"],
+  "include": ["src", "lynx.config.js", "test"],
   "exclude": ["dist/"],
   "references": [
     { "path": "../../packages/react/tsconfig.json" },
