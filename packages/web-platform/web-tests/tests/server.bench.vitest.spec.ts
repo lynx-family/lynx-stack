@@ -22,6 +22,12 @@ const cases = {
   'basic-performance-text-200': await loadTemplate(
     'basic-performance-text-200',
   ),
+  'basic-performance-large-css': await loadTemplate(
+    'basic-performance-large-css',
+  ),
+  'basic-performance-small-css': await loadTemplate(
+    'basic-performance-small-css',
+  ),
 };
 describe('server-tests', async () => {
   for (const [testName, rawTemplate] of Object.entries(cases)) {
