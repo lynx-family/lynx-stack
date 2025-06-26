@@ -35,6 +35,10 @@ export class Element {
     this.flushElementTree();
   }
 
+  public getComputedStyle(): Record<string, string> {
+    return __GetComputedStyle(this.element);
+  }
+
   public getAttribute(attributeName: string): unknown {
     return __GetAttributeByName(this.element, attributeName);
   }
