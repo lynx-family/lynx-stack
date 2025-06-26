@@ -2,8 +2,9 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { createUtilityPlugin } from '../../helpers.js';
+import type { Plugin } from '../../helpers.js';
 
-export const inset = createUtilityPlugin(
+export const inset: Plugin = createUtilityPlugin(
   'inset',
   [
     // 'inset' shorthand is not supported by Lynx, replace with 'left', 'right', 'top', 'bottom'

@@ -7,14 +7,14 @@ export function App() {
     console.info('Hello, ReactLynx');
   }, []);
 
-  const [transform, setTransform] = useState(false);
+  const [reset, setReset] = useState(false);
 
   return (
     <page>
       <view className='w-full h-full bg-primary'>
         <view
           className='absolute inset-10 top-24 bg-secondary flex flex-col justify-center items-center shadow-lg'
-          bindtap={() => setTransform(prev => !prev)}
+          bindtap={() => setReset(prev => !prev)}
         >
           <text className='text-primary-content text-6xl underline'>
             Hello ReactLynx
@@ -22,10 +22,10 @@ export function App() {
           <text
             className={cn(
               'text-primary-content text-xl line-through',
-              transform && 'translate-x-10 scale-125',
+              !reset && 'translate-x-10 scale-150',
             )}
           >
-            Translate
+            Translate & Scale
           </text>
           <text
             className={cn(
@@ -37,7 +37,13 @@ export function App() {
           <text
             className={'text-primary-content text-xl rotate-x-45 rotate-y-45'}
           >
-            Translate
+            Rotate
+          </text>
+          <text
+            className={'text-primary-content text-xl truncate'}
+          >
+            The longest word in any of the major English language dictionaries
+            is pneumonoultramicroscopicsilicovolcanoco
           </text>
         </view>
       </view>

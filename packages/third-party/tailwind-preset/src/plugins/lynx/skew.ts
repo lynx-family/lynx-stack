@@ -3,8 +3,9 @@
 // LICENSE file in the root directory of this source tree.
 import { cssTransformValue } from './transform.js';
 import { createUtilityPlugin } from '../../helpers.js';
+import type { Plugin } from '../../helpers.js';
 
-export const skew = createUtilityPlugin(
+export const skew: Plugin = createUtilityPlugin(
   'skew',
   [
     [

@@ -4,7 +4,7 @@
   },
   "references": [
     /** packages-start */
-    // { "path": "./tailwind-preset/tsconfig.build.json" },
+    { "path": "./tailwind-preset/tsconfig.build.json" },
     /** packages-end */
   ],
   "include": [],

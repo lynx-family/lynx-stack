@@ -9,7 +9,11 @@ export default defineConfig({
   },
   output: {
     distPath: {
-      root: './lib',
+      root: './dist',
+    },
+    externals: {
+      tailwindcss: 'tailwindcss',
+      'tailwindcss/**': 'tailwindcss',
     },
   },
   lib: [

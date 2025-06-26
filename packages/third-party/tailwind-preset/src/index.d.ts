@@ -22,36 +22,27 @@ declare module 'tailwindcss/lib/util/transformThemeValue.js' {
     opts?: Record<string, unknown>,
   ) => string | number | string[] | undefined;
 
-  export function transformThemeValue(
-    themeSection: 'fontSize' | 'outline',
-  ): (value: unknown) => string;
-  export function transformThemeValue(
-    themeSection: 'fontFamily',
-  ): (value: unknown) => string;
+  type FontKeys = 'fontSize' | 'fontFamily' | 'outline';
+  type TransformKeys =
+    | 'boxShadow'
+    | 'transitionProperty'
+    | 'transitionDuration'
+    | 'transitionDelay'
+    | 'transitionTimingFunction'
+    | 'backgroundImage'
+    | 'backgroundSize'
+    | 'backgroundColor'
+    | 'cursor'
+    | 'animation'
+    | 'gridTemplateColumns'
+    | 'gridTemplateRows'
+    | 'objectPosition';
 
-  export function transformThemeValue(
-    themeSection:
-      | 'boxShadow'
-      | 'transitionProperty'
-      | 'transitionDuration'
-      | 'transitionDelay'
-      | 'transitionTimingFunction'
-      | 'backgroundImage'
-      | 'backgroundSize'
-      | 'backgroundColor'
-      | 'cursor'
-      | 'animation',
-  ): (value: unknown) => string;
+  export type ThemeKey = FontKeys | TransformKeys;
 
-  export function transformThemeValue(
-    themeSection:
-      | 'gridTemplateColumns'
-      | 'gridTemplateRows'
-      | 'objectPosition',
-  ): (value: unknown) => string;
-  export function transformThemeValue(themeSection: string): ValueTransformer;
-
-  export default transformThemeValue;
+  export default function transformThemeValue(
+    themeKey: ThemeKey,
+  ): ValueTransformer;
 }
 
 declare module 'tailwindcss/lib/util/parseBoxShadowValue.js' {

@@ -4,8 +4,9 @@
 
 import { cssTransformValue } from './transform.js';
 import { createUtilityPlugin } from '../../helpers.js';
+import type { Plugin } from '../../helpers.js';
 
-export const scale = createUtilityPlugin('scale', [
+export const scale: Plugin = createUtilityPlugin('scale', [
   [
     'scale',
     [

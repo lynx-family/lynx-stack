@@ -3,8 +3,9 @@
 // LICENSE file in the root directory of this source tree.
 
 import { createPlugin } from '../../helpers.js';
+import type { Plugin } from '../../helpers.js';
 
-export const position = createPlugin(({ addUtilities }) => {
+export const position: Plugin = createPlugin(({ addUtilities }) => {
   addUtilities(
     {
       '.fixed': { position: 'fixed' },
