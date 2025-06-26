@@ -9,6 +9,7 @@ import EventEmitter from 'events';
 import { JSDOM } from 'jsdom';
 import { createGlobalThis, LynxGlobalThis } from './lynx/GlobalThis.js';
 import { initElementTree } from './lynx/ElementPAPI.js';
+import { Console } from 'console';
 export { initElementTree } from './lynx/ElementPAPI.js';
 export type { LynxElement } from './lynx/ElementPAPI.js';
 export type { LynxGlobalThis } from './lynx/GlobalThis.js';
@@ -232,8 +233,13 @@ function injectMainThreadGlobals(target?: any, polyfills?: any) {
   target.requestAnimationFrame = setTimeout;
   target.cancelAnimationFrame = clearTimeout;
 
+  target.console = new Console(
+    process.stdout,
+    process.stderr,
+  );
   target.console.profile = () => {};
   target.console.profileEnd = () => {};
+  target.console.alog = () => {};
 
   target.__LoadLepusChunk = __LoadLepusChunk;
 
@@ -337,8 +343,13 @@ function injectBackgroundThreadGlobals(target?: any, polyfills?: any) {
   target.requestAnimationFrame = setTimeout;
   target.cancelAnimationFrame = clearTimeout;
 
+  target.console = new Console(
+    process.stdout,
+    process.stderr,
+  );
   target.console.profile = () => {};
   target.console.profileEnd = () => {};
+  target.console.alog = () => {};
 
   // TODO: user-configurable
   target.SystemInfo = {

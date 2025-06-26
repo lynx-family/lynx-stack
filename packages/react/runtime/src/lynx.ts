@@ -5,6 +5,7 @@ import { options } from 'preact';
 // to make sure preact's hooks to register earlier than ours
 import './hooks/react.js';
 
+import { initAlog } from './alog/index.js';
 import { initProfileHook } from './debug/profile.js';
 import { document, setupBackgroundDocument } from './document.js';
 import { replaceCommitHook } from './lifecycle/patch/commit.js';
@@ -38,6 +39,12 @@ if (__MAIN_THREAD__) {
 if (__PROFILE__) {
   // We are profiling both main-thread and background.
   initProfileHook();
+}
+
+// Only enable Alog in production and test environments.
+if (process.env['NODE_ENV'] !== 'development') {
+  // We are logging both main-thread and background.
+  initAlog();
 }
 
 if (__BACKGROUND__) {

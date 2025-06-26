@@ -13,6 +13,7 @@ export const COMPONENT = '__c';
 export const CHILDREN = '__k';
 export const PARENT = '__';
 export const MASK = '__m';
+export const DOM = '__e';
 
 // Component properties
 export const VNODE = '__v';

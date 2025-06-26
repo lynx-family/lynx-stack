@@ -1,6 +1,8 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import type { ComponentClass } from 'preact';
+
 export function isDirectOrDeepEqual(a: any, b: any): boolean {
   if (a === b) {
     return true;
@@ -32,4 +34,8 @@ export function pick<T extends object, K extends keyof T>(obj: T, keys: Iterable
     }
   }
   return result as Pick<T, K>;
+}
+
+export function getDisplayName(type: ComponentClass): string {
+  return type.displayName ?? type.name;
 }
