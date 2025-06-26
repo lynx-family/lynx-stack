@@ -1256,6 +1256,15 @@ test.describe('reactlynx3 tests', () => {
       },
     );
     test(
+      'config-css-selector-false-specital-char',
+      async ({ page }, { title }) => {
+        await goto(page, title);
+        await wait(100);
+        const target = page.locator('#target');
+        await expect(target).toHaveCSS('height', '40px');
+      },
+    );
+    test(
       'config-splitchunk-single-vendor',
       async ({ page }, { title }) => {
         test.skip(

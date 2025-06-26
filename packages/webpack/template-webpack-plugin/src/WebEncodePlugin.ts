@@ -50,7 +50,11 @@ export class WebEncodePlugin {
         }, (encodeOptions) => {
           const { encodeData } = encodeOptions;
           const { cssMap } = encodeData.css;
-          const styleInfo = genStyleInfo(cssMap);
+          const pageConfig = {
+            ...encodeData.compilerOptions,
+            ...encodeData.sourceContent.config,
+          };
+          const styleInfo = genStyleInfo(cssMap, pageConfig.enableCSSSelector);
 
           const [name, content] = last(Object.entries(encodeData.manifest))!;
 
@@ -73,10 +77,7 @@ export class WebEncodePlugin {
             },
             customSections: encodeData.customSections,
             cardType: encodeData.sourceContent.dsl.substring(0, 5),
-            pageConfig: {
-              ...encodeData.compilerOptions,
-              ...encodeData.sourceContent.config,
-            },
+            pageConfig,
           });
           return encodeOptions;
         });

@@ -2,11 +2,14 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import type { ClassSelector, IdSelector } from 'css-tree';
+
 import type { CSSRule, OneInfo, StyleInfo } from './StyleInfo.js';
 import * as CSS from '../css/index.js';
 
 export function genStyleInfo(
   cssMap: Record<string, CSS.LynxStyleNode[]>,
+  enableCSSSelector: boolean,
 ): StyleInfo {
   return Object.fromEntries(
     Object.entries(cssMap).map(([cssId, nodes]) => {
@@ -86,6 +89,24 @@ export function genStyleInfo(
                 pseudoClassSelectors = [];
                 pseudoElementSelectors = [];
               } else {
+                /**
+                 * .h-\[40px\] {
+                 * }
+                 * ===>
+                 * .h-[40px] {
+                 * }
+                 */
+                if (
+                  !enableCSSSelector
+                  && (selector as ClassSelector | IdSelector).name
+                ) {
+                  (selector as ClassSelector | IdSelector).name =
+                    (selector as ClassSelector | IdSelector).name
+                      .replace(
+                        /\\([\\[\]()/:])/g,
+                        (_, char: string) => char,
+                      );
+                }
                 plainSelectors.push(CSS.csstree.generate(selector));
               }
             }
