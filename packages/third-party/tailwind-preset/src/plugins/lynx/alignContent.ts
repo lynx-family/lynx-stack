@@ -2,8 +2,9 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { createPlugin } from '../../helpers.js';
+import type { Plugin } from '../../helpers.js';
 
-export const alignContent = createPlugin(({ addUtilities }) => {
+export const alignContent: Plugin = createPlugin(({ addUtilities }) => {
   addUtilities({
     '.content-center': { 'align-content': 'center' },
     '.content-start': { 'align-content': 'flex-start' },

@@ -5,14 +5,15 @@ import { createPlugin } from '../../helpers.js';
 import type {
   CSSRuleObject,
   KeyValuePair,
+  Plugin,
 } from '../../types/tailwind-types.js';
 
-export const gridColumn = createPlugin(({ matchUtilities, theme }) => {
+export const gridColumn: Plugin = createPlugin(({ matchUtilities, theme }) => {
   const values = theme('gridColumn') as KeyValuePair<string, string>;
 
   matchUtilities(
     {
-      col: (value) => {
+      col: (value: unknown) => {
         if (typeof value !== 'string') {
           return {};
         }

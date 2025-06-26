@@ -62,12 +62,12 @@ interface PluginFn {
   (
     pluginFn: BoundedPluginCreator,
     cfg?: Partial<Config>,
-  ): { handler: PluginCreator; config?: Partial<Config> };
+  ): { handler: PluginCreator; config?: Partial<Config> | undefined };
   withOptions<T>(
     factory: (opts: T) => BoundedPluginCreator,
     cfgFactory?: (opts: T) => Partial<Config>,
   ): {
-    (opts: T): { handler: PluginCreator; config?: Partial<Config> };
+    (opts: T): { handler: PluginCreator; config?: Partial<Config> | undefined };
     __isOptionsFunction: true;
   };
 }

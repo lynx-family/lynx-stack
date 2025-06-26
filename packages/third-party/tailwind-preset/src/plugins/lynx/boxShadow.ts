@@ -10,11 +10,12 @@ import {
 import type {
   CSSRuleObject,
   KeyValuePair,
+  Plugin,
 } from '../../types/tailwind-types.js';
 
 // const transparentShadow = `0 0 0 0 transparent`;
 
-export const boxShadow = (() => {
+export const boxShadow: Plugin = (() => {
   // Keep theme-based defaultShadow in closure
   // avoid recalculation
 
@@ -29,7 +30,7 @@ export const boxShadow = (() => {
   return createPlugin(({ matchUtilities, theme }) => {
     matchUtilities(
       {
-        shadow: (value) => {
+        shadow: (value: unknown) => {
           value = transformValue(value);
 
           const ast = parseBoxShadowValue(value as string);

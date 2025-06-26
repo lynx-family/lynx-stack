@@ -1,58 +1,18 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import {
-  alignContent,
-  backgroundClip,
-  boxShadow,
-  defaults,
-  direction,
-  display,
-  gridColumn,
-  gridRow,
-  inset,
-  justifyContent,
-  overflow,
-  position,
-  rotate,
-  scale,
-  skew,
-  textAlign,
-  textDecoration,
-  transform,
-  translate,
-  visibility,
-  whitespace,
-  wordBreak,
-} from './plugins/lynx/index.js';
+import * as pluginModules from 'plugins/lynx';
 
-/* -------------------------------- constants ------------------------------- */
-export const PLUGIN_MAP = {
-  defaults,
-  alignContent,
-  boxShadow,
-  direction,
-  display,
-  inset,
-  overflow,
-  position,
-  rotate,
-  scale,
-  skew,
-  textAlign,
-  textDecoration,
-  transform,
-  translate,
-  justifyContent,
-  backgroundClip,
-  visibility,
-  whitespace,
-  wordBreak,
-  gridColumn,
-  gridRow,
-} as const;
+import type { Plugin } from './helpers.js';
+import type { CorePluginsConfig } from './types/tailwind-types.js';
 
-export const DEFAULT_CORE_PLUGINS = [
+/* -----------------------------------------------------------------------------
+ * Plugin map
+ * -------------------------------------------------------------------------- */
+
+export type LynxPluginName = keyof typeof pluginModules;
+
+export const DEFAULT_CORE_PLUGINS: CorePluginsConfig = [
   // 'preflight',
   // 'alignContent', // Defined using plugin
   'alignItems',
@@ -158,10 +118,11 @@ export const DEFAULT_CORE_PLUGINS = [
 ];
 
 /* ---------- derived types & constants --------------------------- */
-export type LynxPluginName = Exclude<keyof typeof PLUGIN_MAP, 'defaults'>;
+export const LYNX_PLUGIN_MAP: Record<LynxPluginName, Plugin> =
+  pluginModules as Record<LynxPluginName, Plugin>;
 
 export const REPLACEABLE_PLUGINS = Object.freeze(
-  Object.keys(PLUGIN_MAP).filter(k => k !== 'defaults'),
+  Object.keys(LYNX_PLUGIN_MAP).filter(k => k !== 'defaults'),
 ) as readonly LynxPluginName[];
 
 /* ---------- helper: normalize user option ----------------------- */
@@ -187,9 +148,10 @@ export function toEnabledSet(
 }
 
 /* ---------- tiny public helpers --------------------------------- */
-export const getReplaceablePlugins = () => REPLACEABLE_PLUGINS;
+export const getReplaceablePlugins = (): readonly LynxPluginName[] =>
+  REPLACEABLE_PLUGINS;
 export const isPluginReplaceable = (p: string): p is LynxPluginName =>
-  p !== 'defaults' && p in PLUGIN_MAP;
+  p !== 'defaults' && p in LYNX_PLUGIN_MAP;
 
 // Tailwind un-configured corePlugins
 // 'container'

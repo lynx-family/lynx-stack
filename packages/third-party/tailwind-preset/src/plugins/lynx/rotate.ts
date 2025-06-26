@@ -4,10 +4,12 @@
 
 import { cssTransformValue } from './transform.js';
 import { createUtilityPlugin } from '../../helpers.js';
+import type { Plugin } from '../../helpers.js';
+
 /**
  * Base on https://github.com/tailwindlabs/tailwindcss/blob/d1f066d97a30539c1c86aa987c75b6d84ef29609/src/corePlugins.js#L492
  */
-export const rotate = createUtilityPlugin(
+export const rotate: Plugin = createUtilityPlugin(
   'rotate',
   [
     // rotate (Z axis)

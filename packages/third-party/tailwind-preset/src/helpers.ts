@@ -9,16 +9,22 @@ import {
 } from 'tailwindcss/lib/util/parseBoxShadowValue.js';
 import type { ShadowPart } from 'tailwindcss/lib/util/parseBoxShadowValue.js';
 import _transformThemeValue from 'tailwindcss/lib/util/transformThemeValue.js';
+import type {
+  ThemeKey,
+  ValueTransformer,
+} from 'tailwindcss/lib/util/transformThemeValue.js';
 
 import type {
   Bound,
   BoundedPluginCreator,
   OptionsFn,
+  PluginFn,
   UtilityPluginOptions,
   UtilityVariations,
 } from './types/plugin-types.js';
 import type {
   Config,
+  Plugin,
   PluginAPI,
   PluginCreator,
 } from './types/tailwind-types.js';
@@ -33,7 +39,7 @@ function createPlugin(
   cfg?: Partial<Config>,
 ): { handler: PluginCreator; config?: Partial<Config> | undefined } {
   return {
-    handler: (api) => fn(autoBind(api)),
+    handler: (api: PluginAPI) => fn(autoBind(api)),
     config: cfg,
   };
 }
@@ -48,7 +54,7 @@ function createPluginWithName(
   cfg?: Partial<Config>,
 ): { handler: PluginCreator; config?: Partial<Config> | undefined } {
   return {
-    handler: (api) => {
+    handler: (api: PluginAPI) => {
       if (isCorePluginDisabled(api, name)) return;
       fn(autoBind(api));
     },
@@ -67,25 +73,27 @@ function pluginImpl(
   pluginFn: BoundedPluginCreator,
   cfg?: Partial<Config>,
 ): { handler: PluginCreator; config?: Partial<Config> | undefined } {
-  const wrapped: PluginCreator = api => pluginFn(autoBind(api));
+  const wrapped: PluginCreator = (api: PluginAPI) => pluginFn(autoBind(api));
   return basePlugin(wrapped, cfg);
 }
 
-pluginImpl.withOptions = function withOptions<T>(
+function withOptions<T>(
   factory: (options: T) => BoundedPluginCreator,
   cfgFactory?: (options: T) => Partial<Config>,
 ): OptionsFn<T> {
-  const optionsFn = ((options: T) =>
+  const optionsFn: OptionsFn<T> = ((options: T) =>
     basePlugin(
-      api => factory(options)(autoBind(api)),
+      (api: PluginAPI) => factory(options)(autoBind(api)),
       cfgFactory?.(options),
     )) as OptionsFn<T>;
 
   optionsFn.__isOptionsFunction = true as const;
   return optionsFn;
-};
+}
 
-export const plugin = pluginImpl;
+pluginImpl.withOptions = withOptions;
+
+export const plugin: PluginFn = pluginImpl;
 
 /**
  * Auto-binds all function-valued properties to the original object.
@@ -119,9 +127,11 @@ function createUtilityPlugin(
 }
 
 export { createUtilityPlugin, createPlugin, createPluginWithName };
+export type { Plugin };
 
 /* ──────────────── 100 % typed exports for transform/shadow utils ─────────── */
 
-export const transformThemeValue = _transformThemeValue;
+export const transformThemeValue: (key: ThemeKey) => ValueTransformer =
+  _transformThemeValue;
 export { parseBoxShadowValue, formatBoxShadowValue };
 export type { ShadowPart };

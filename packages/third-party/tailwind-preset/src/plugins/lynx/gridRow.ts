@@ -5,24 +5,27 @@ import { createPlugin } from '../../helpers.js';
 import type {
   CSSRuleObject,
   KeyValuePair,
+  Plugin,
 } from '../../types/tailwind-types.js';
 
-export const gridRow = createPlugin(({ matchUtilities, theme }) => {
-  const values = theme('gridRow') as KeyValuePair<string, string>;
+export const gridRow: Plugin = createPlugin(
+  ({ matchUtilities, theme }) => {
+    const values = theme('gridRow') as KeyValuePair<string, string>;
 
-  matchUtilities(
-    {
-      row: (value) => {
-        if (typeof value !== 'string') return {};
+    matchUtilities(
+      {
+        row: (value: unknown) => {
+          if (typeof value !== 'string') return {};
 
-        const [start, end] = value.split('/').map((s) => s.trim());
+          const [start, end] = value.split('/').map((s) => s.trim());
 
-        return {
-          gridRowStart: start,
-          gridRowEnd: end ?? start,
-        } as CSSRuleObject;
+          return {
+            gridRowStart: start,
+            gridRowEnd: end ?? start,
+          } as CSSRuleObject;
+        },
       },
-    },
-    { values },
-  );
-});
+      { values },
+    );
+  },
+);
