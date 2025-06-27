@@ -195,4 +195,8 @@ export interface NativeApp {
 
   reportException: (error: Error, _: unknown) => void;
   __SetSourceMapRelease: (err: Error) => void;
+
+  console: Console & {
+    alog: (message?: string) => void;
+  };
 }

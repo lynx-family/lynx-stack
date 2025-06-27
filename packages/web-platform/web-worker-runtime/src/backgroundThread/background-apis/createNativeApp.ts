@@ -172,6 +172,15 @@ export async function createNativeApp(
     i18nResource,
     reportException: (err: Error, _: unknown) => reportError(err, _, release),
     __SetSourceMapRelease: (err: Error) => release = err.message,
+
+    console: {
+      ...Object.keys(console).reduce((acc, key) => {
+        // @ts-expect-error key must be a keyof Console
+        acc[key] = console[key].bind(console);
+        return acc;
+      }, {} as Console),
+      alog: console.log.bind(console),
+    },
   };
   return nativeApp;
 }

@@ -104,6 +104,7 @@ const mainThreadInjectVars = [
   'SystemInfo',
   '_I18nResourceTranslation',
   '_AddEventListener',
+  'console',
 ];
 
 const backgroundInjectVars = [
@@ -112,6 +113,7 @@ const backgroundInjectVars = [
   'lynx',
   'lynxCoreInject',
   'SystemInfo',
+  'console',
 ];
 
 const backgroundInjectWithBind = [

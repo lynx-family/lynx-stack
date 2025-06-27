@@ -701,6 +701,15 @@ export function createMainThreadGlobalThis(
     get renderPage() {
       return renderPage!;
     },
+
+    console: {
+      ...Object.keys(console).reduce((acc, key) => {
+        // @ts-expect-error key must be a keyof Console
+        acc[key] = console[key].bind(console);
+        return acc;
+      }, {} as Console),
+      alog: console.log.bind(console),
+    },
   };
   mtsGlobalThis.globalThis = new Proxy(mtsGlobalThis, {
     get: (target, prop) => {
