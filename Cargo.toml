@@ -1,7 +1,7 @@
 [workspace]
 resolver = "2"
 
-members = ["packages/react/transform"]
+members = ["packages/react/transform", "packages/web-platform/web-mainthread-apis"]
 
 [profile.release]
 codegen-units = 1
