@@ -132,6 +132,7 @@ test('fireEvent triggers useEffect calls', async () => {
     Map {
       -1 => {
         "children": undefined,
+        "extraProps": undefined,
         "id": -1,
         "type": "root",
         "values": undefined,
@@ -157,7 +158,7 @@ test('fireEvent triggers useEffect calls', async () => {
       [
         "rLynxChange",
         {
-          "data": "{"patchList":[{"snapshotPatch":[0,"__Card__:__snapshot_e8d0a_test_4",2,0,null,3,4,3,[0],1,2,3,null,4,2,[1],1,-1,2,null],"id":2}]}",
+          "data": "{"patchList":[{"snapshotPatch":[0,"__Card__:__snapshot_e8d0a_test_4",2,4,2,[1],0,null,3,4,3,[0],1,2,3,null,1,-1,2,null],"id":2}]}",
           "patchOptions": {
             "isHydration": true,
             "pipelineOptions": {
@@ -182,6 +183,7 @@ test('fireEvent triggers useEffect calls', async () => {
             "children": [
               {
                 "children": undefined,
+                "extraProps": undefined,
                 "id": 3,
                 "type": null,
                 "values": [
@@ -189,6 +191,7 @@ test('fireEvent triggers useEffect calls', async () => {
                 ],
               },
             ],
+            "extraProps": undefined,
             "id": 2,
             "type": "__Card__:__snapshot_e8d0a_test_4",
             "values": [
@@ -196,6 +199,7 @@ test('fireEvent triggers useEffect calls', async () => {
             ],
           },
         ],
+        "extraProps": undefined,
         "id": -1,
         "type": "root",
         "values": undefined,
@@ -204,6 +208,7 @@ test('fireEvent triggers useEffect calls', async () => {
         "children": [
           {
             "children": undefined,
+            "extraProps": undefined,
             "id": 3,
             "type": null,
             "values": [
@@ -211,6 +216,7 @@ test('fireEvent triggers useEffect calls', async () => {
             ],
           },
         ],
+        "extraProps": undefined,
         "id": 2,
         "type": "__Card__:__snapshot_e8d0a_test_4",
         "values": [
@@ -219,6 +225,7 @@ test('fireEvent triggers useEffect calls', async () => {
       },
       3 => {
         "children": undefined,
+        "extraProps": undefined,
         "id": 3,
         "type": null,
         "values": [
@@ -235,7 +242,7 @@ test('fireEvent triggers useEffect calls', async () => {
       [
         "rLynxChange",
         {
-          "data": "{"patchList":[{"snapshotPatch":[0,"__Card__:__snapshot_e8d0a_test_4",2,0,null,3,4,3,[0],1,2,3,null,4,2,[1],1,-1,2,null],"id":2}]}",
+          "data": "{"patchList":[{"snapshotPatch":[0,"__Card__:__snapshot_e8d0a_test_4",2,4,2,[1],0,null,3,4,3,[0],1,2,3,null,1,-1,2,null],"id":2}]}",
           "patchOptions": {
             "isHydration": true,
             "pipelineOptions": {

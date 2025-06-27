@@ -10,7 +10,7 @@ import { setupDocument } from '../src/document';
 import { renderOpcodesInto } from '../src/opcodes';
 import renderToString from '../src/renderToOpcodes';
 import { setupPage, SnapshotInstance, snapshotInstanceManager } from '../src/snapshot';
-import { createElement } from '../lepus';
+import { createElement, cloneElement } from '../lepus';
 
 describe('renderToOpcodes', () => {
   beforeAll(() => {
@@ -32,6 +32,7 @@ describe('renderToOpcodes', () => {
         0,
         {
           "children": undefined,
+          "extraProps": undefined,
           "id": -3,
           "type": "__Card__:__snapshot_a94a8_test_1",
           "values": undefined,
@@ -68,6 +69,7 @@ describe('renderToOpcodes', () => {
         0,
         {
           "children": undefined,
+          "extraProps": undefined,
           "id": -4,
           "type": "__Card__:__snapshot_a94a8_test_3",
           "values": undefined,
@@ -75,6 +77,7 @@ describe('renderToOpcodes', () => {
         0,
         {
           "children": undefined,
+          "extraProps": undefined,
           "id": -6,
           "type": "__Card__:__snapshot_a94a8_test_2",
           "values": undefined,
@@ -108,6 +111,7 @@ describe('renderToOpcodes', () => {
         0,
         {
           "children": undefined,
+          "extraProps": undefined,
           "id": -7,
           "type": "__Card__:__snapshot_a94a8_test_5",
           "values": undefined,
@@ -115,6 +119,7 @@ describe('renderToOpcodes', () => {
         0,
         {
           "children": undefined,
+          "extraProps": undefined,
           "id": -8,
           "type": "__Card__:__snapshot_a94a8_test_4",
           "values": undefined,
@@ -141,6 +146,7 @@ describe('renderToOpcodes', () => {
         0,
         {
           "children": undefined,
+          "extraProps": undefined,
           "id": -9,
           "type": "__Card__:__snapshot_a94a8_test_6",
           "values": undefined,
@@ -169,6 +175,7 @@ describe('renderToOpcodes', () => {
         0,
         {
           "children": undefined,
+          "extraProps": undefined,
           "id": -10,
           "type": "__Card__:__snapshot_a94a8_test_7",
           "values": undefined,
@@ -197,6 +204,7 @@ describe('renderToOpcodes', () => {
         0,
         {
           "children": undefined,
+          "extraProps": undefined,
           "id": -11,
           "type": "__Card__:__snapshot_a94a8_test_8",
           "values": undefined,
@@ -223,6 +231,7 @@ describe('renderToOpcodes', () => {
         0,
         {
           "children": undefined,
+          "extraProps": undefined,
           "id": -12,
           "type": "__Card__:__snapshot_a94a8_test_9",
           "values": undefined,
@@ -248,6 +257,7 @@ describe('renderToOpcodes', () => {
         0,
         {
           "children": undefined,
+          "extraProps": undefined,
           "id": -13,
           "type": "__Card__:__snapshot_a94a8_test_10",
           "values": undefined,
@@ -255,6 +265,7 @@ describe('renderToOpcodes', () => {
         0,
         {
           "children": undefined,
+          "extraProps": undefined,
           "id": -14,
           "type": "__Card__:__snapshot_a94a8_test_11",
           "values": undefined,
@@ -280,6 +291,7 @@ describe('renderToOpcodes', () => {
         0,
         {
           "children": undefined,
+          "extraProps": undefined,
           "id": -15,
           "type": "__Card__:__snapshot_a94a8_test_12",
           "values": undefined,
@@ -287,6 +299,7 @@ describe('renderToOpcodes', () => {
         0,
         {
           "children": undefined,
+          "extraProps": undefined,
           "id": -16,
           "type": "__Card__:__snapshot_a94a8_test_13",
           "values": undefined,
@@ -748,6 +761,7 @@ describe('createElement', () => {
         0,
         {
           "children": undefined,
+          "extraProps": undefined,
           "id": -59,
           "type": "__Card__:__snapshot_a94a8_test_44",
           "values": undefined,
@@ -761,6 +775,7 @@ describe('createElement', () => {
         0,
         {
           "children": undefined,
+          "extraProps": undefined,
           "id": -60,
           "type": "__Card__:__snapshot_a94a8_test_44",
           "values": undefined,
@@ -782,6 +797,7 @@ describe('createElement', () => {
         0,
         {
           "children": undefined,
+          "extraProps": undefined,
           "id": -61,
           "type": "__Card__:__snapshot_a94a8_test_45",
           "values": undefined,
@@ -795,6 +811,7 @@ describe('createElement', () => {
         0,
         {
           "children": undefined,
+          "extraProps": undefined,
           "id": -62,
           "type": "__Card__:__snapshot_a94a8_test_45",
           "values": undefined,
@@ -852,5 +869,95 @@ describe('createElement', () => {
     Counter.defaultProps = { count: 1 };
 
     renderToString(<Counter {...s} key={1} />);
+  });
+});
+
+describe('cloneElement', () => {
+  it('should clone component', () => {
+    function Comp() {}
+    const instance = <Comp prop1={1}>hello</Comp>;
+    const clone = cloneElement(instance);
+
+    // expect(clone.type).to.equal(instance.type);
+    // expect(clone.props).not.to.equal(instance.props); // Should be a different object...
+    // expect(clone.props).to.deep.equal(instance.props); // with the same properties
+
+    expect(clone.type).toBe(instance.type);
+    expect(clone.props).not.toBe(instance.props); // Should be a different object...
+    expect(clone.props).toEqual(instance.props); // with the same properties
+  });
+
+  it('should merge new props', () => {
+    function Foo() {}
+    const instance = <Foo prop1={1} prop2={2} />;
+    const clone = cloneElement(instance, { prop1: -1, newProp: -2 });
+
+    expect(clone.type).toBe(instance.type);
+    expect(clone.props).not.toBe(instance.props);
+    expect(clone.props).not.toEqual(instance.props);
+    expect(clone.props.prop1).toBe(-1);
+    expect(clone.props.prop2).toBe(2);
+    expect(clone.props.newProp).toBe(-2);
+  });
+
+  it('should override children if specified', () => {
+    function Foo() {}
+    const instance = <Foo>hello</Foo>;
+    const clone = cloneElement(instance, null, 'world', '!');
+
+    expect(clone.type).toBe(instance.type);
+    expect(clone.props).not.toBe(instance.props);
+    expect(clone.props.children).toEqual(['world', '!']);
+  });
+
+  it('should override children if null is provided as an argument', () => {
+    function Foo() {}
+    const instance = <Foo>hello</Foo>;
+    const clone = cloneElement(instance, { children: 'bar' }, null);
+
+    expect(clone.type).toBe(instance.type);
+    expect(clone.props).not.toBe(instance.props);
+    expect(clone.props.children).toBeNull();
+  });
+
+  it('should override key if specified', () => {
+    function Foo() {}
+    const instance = <Foo key='1'>hello</Foo>;
+
+    let clone = cloneElement(instance);
+    // key is omit in lepus vnode
+    // expect(clone.key).toBe('1');
+
+    clone = cloneElement(instance, { key: '2' });
+    // key is omit in lepus vnode
+    // expect(clone.key).toBe('2');
+  });
+
+  it('should override ref if specified', () => {
+    function a() {}
+    function b() {}
+    function Foo() {}
+    const instance = <Foo ref={a}>hello</Foo>;
+
+    let clone = cloneElement(instance);
+    // ref is omit in lepus vnode
+    // expect(clone.ref).toBe(a);
+
+    clone = cloneElement(instance, { ref: b });
+    // ref is omit in lepus vnode
+    // expect(clone.ref).toBe(b);
+  });
+
+  it('should prevent undefined properties from overriding default props', () => {
+    class Example extends Component {
+      render(props) {
+        return <div style={{ color: props.color }}>thing</div>;
+      }
+    }
+    Example.defaultProps = { color: 'blue' };
+
+    const element = <Example color='red' />;
+    const clone = cloneElement(element, { color: undefined });
+    expect(clone.props.color).toBe('blue');
   });
 });

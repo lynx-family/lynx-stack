@@ -141,6 +141,11 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
       lynx.getJSModule('GlobalEventEmitter').trigger(eventName, params);
       break;
     }
+    case LifecycleConstant.publishEvent: {
+      const { handlerName, data: d } = data as { handlerName: string; data: unknown };
+      publishEvent(handlerName, d);
+      break;
+    }
   }
 }
 

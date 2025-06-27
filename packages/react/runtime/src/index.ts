@@ -11,6 +11,7 @@ import {
   PureComponent,
   Suspense,
   lazy as backgroundLazy,
+  cloneElement,
   createContext,
   createElement,
   createRef,
@@ -86,6 +87,7 @@ export {
   Suspense,
   lazy,
   createElement,
+  cloneElement,
   useSyncExternalStore,
 };
 

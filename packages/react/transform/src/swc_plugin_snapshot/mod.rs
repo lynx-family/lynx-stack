@@ -21,7 +21,7 @@ use swc_core::{
 };
 
 mod attr_name;
-mod jsx_helpers;
+pub mod jsx_helpers;
 mod slot_marker;
 
 use crate::{
