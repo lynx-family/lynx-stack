@@ -12,7 +12,7 @@
     "test": "vitest"
   },
   "devDependencies": {
-    "@biomejs/biome": "^1.9.4",
+    "@biomejs/biome": "^2.0.6",
     "@changesets/cli": "^2.29.5",
     "@codspeed/vitest-plugin": "^4.0.1",
     "@eslint/js": "^9.29.0",
