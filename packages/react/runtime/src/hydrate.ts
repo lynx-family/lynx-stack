@@ -311,15 +311,6 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
                 to: newIndex,
                 flush: true,
               });
-
-              if (a.__elements) {
-                const enqueueComponent = enqueueComponentFactory();
-                const elementIndex = before.__snapshot_def.slot[0]![1];
-                const listElement = before.__elements![elementIndex]!;
-                const listID = __GetElementUniqueID(listElement!);
-                const sign = __GetElementUniqueID(a.__element_root!);
-                enqueueComponent(listElement, listID, sign);
-              }
             } else {
               if (
                 JSON.stringify(a.__listItemPlatformInfo)
