@@ -2501,7 +2501,7 @@ describe('list-item with "defer" attribute', () => {
     const _F1 = vi.fn();
 
     const jsx = (
-      <list id='list'>
+      <list id='list' custom-list-name='list-container'>
         <list-item item-key='1' defer>
           <_F1 />
         </list-item>
@@ -2519,6 +2519,7 @@ describe('list-item with "defer" attribute', () => {
         cssId="default-entry-from-native:0"
       >
         <list
+          custom-list-name="list-container"
           id="list"
           update-list-info={
             [
@@ -2555,6 +2556,7 @@ describe('list-item with "defer" attribute', () => {
         cssId="default-entry-from-native:0"
       >
         <list
+          custom-list-name="list-container"
           id="list"
           update-list-info={
             [
@@ -2590,7 +2592,7 @@ describe('list-item with "defer" attribute', () => {
     const _F1 = vi.fn();
 
     const jsx = (
-      <list id='list'>
+      <list id='list' custom-list-name='list-container'>
         <list-item item-key='1' defer>
           <_F1 />
         </list-item>
@@ -2612,7 +2614,7 @@ describe('list-item with "defer" attribute', () => {
     const _F1 = vi.fn();
 
     const jsx = (
-      <list id='list'>
+      <list id='list' custom-list-name='list-container'>
         <list-item item-key='0'>
           <_F1 />
         </list-item>
@@ -2647,6 +2649,7 @@ describe('list-item with "defer" attribute', () => {
         ],
         [
           <list
+            custom-list-name="list-container"
             id="list"
             update-list-info={
               [
@@ -2725,6 +2728,7 @@ describe('list-item with "defer" attribute', () => {
         ],
         [
           <list
+            custom-list-name="list-container"
             id="list"
             update-list-info={
               [
@@ -2784,7 +2788,7 @@ describe('list-item with "defer" attribute', () => {
 
     const child = __SNAPSHOT__(<text>Hello World</text>);
     const jsx = (
-      <list id='list'>
+      <list id='list' custom-list-name='list-container'>
         {[0, 1, 2].map((v) => (
           <list-item item-key={`${v}`} defer>
             <_F1 />
@@ -2803,6 +2807,7 @@ describe('list-item with "defer" attribute', () => {
         cssId="default-entry-from-native:0"
       >
         <list
+          custom-list-name="list-container"
           id="list"
           update-list-info={
             [
@@ -2849,6 +2854,7 @@ describe('list-item with "defer" attribute', () => {
         cssId="default-entry-from-native:0"
       >
         <list
+          custom-list-name="list-container"
           id="list"
           update-list-info={
             [
@@ -2906,6 +2912,7 @@ describe('list-item with "defer" attribute', () => {
           cssId="default-entry-from-native:0"
         >
           <list
+            custom-list-name="list-container"
             id="list"
             update-list-info={
               [
@@ -2946,5 +2953,32 @@ describe('list-item with "defer" attribute', () => {
         </page>
       `);
     }
+  });
+
+  it('should throw without custom-list-name="list-container"', async () => {
+    const _F1 = vi.fn();
+
+    const jsx = (
+      <list id='list'>
+        {[0, 1, 2].map((v) => (
+          <list-item item-key={`${v}`} defer>
+            <_F1 />
+          </list-item>
+        ))}
+      </list>
+    );
+
+    __root.__jsx = jsx;
+
+    renderPage();
+
+    expect(_F1).toBeCalledTimes(0);
+
+    __pendingListUpdates.flush();
+
+    const listRef = elementTree.getElementById('list');
+    expect(() => elementTree.triggerComponentAtIndex(listRef, 0)).toThrowErrorMatchingInlineSnapshot(
+      `[Error: Unsupported: \`<list-item/>\` with \`defer={true}\` must be used with \`<list custom-list-name="list-container"/>\`]`,
+    );
   });
 });

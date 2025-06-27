@@ -64,6 +64,18 @@ export function componentAtIndexFactory(
     // Promise<number>: A promise that will be resolved when the list-item is ready
     // 1: The list-item is ready, we can use it to render the list
     if (childCtx.__extraProps?.['isReady'] === 0) {
+      if (
+        typeof __GetAttributeByName === 'function'
+        && __GetAttributeByName(list, 'custom-list-name') === 'list-container'
+      ) {
+        // we are in supported env
+        // do not throw
+      } else {
+        throw new Error(
+          'Unsupported: `<list-item/>` with `defer={true}` must be used with `<list custom-list-name="list-container"/>`',
+        );
+      }
+
       __OnLifecycleEvent([LifecycleConstant.publishEvent, {
         handlerName: `${childCtx.__id}:__extraProps:onComponentAtIndex`,
         data: {},
