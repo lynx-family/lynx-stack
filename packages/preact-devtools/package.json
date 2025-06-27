@@ -1,0 +1,52 @@
+{
+  "name": "@lynx-js/preact-devtools",
+  "version": "0.0.0",
+  "description": "Preact Devtools Panel Support in LynxDevtool",
+  "keywords": [
+    "reactlynx",
+    "devtools"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/preact-devtools"
+  },
+  "license": "MIT",
+  "type": "module",
+  "main": "lib/react-lynx/index.js",
+  "types": "lib/react-lynx/index.d.ts",
+  "files": [
+    "dist",
+    "lib"
+  ],
+  "scripts": {
+    "build": "rsbuild build --config ldt-plugin/rsbuild.config.ts",
+    "dev": "rsbuild dev --config ldt-plugin/rsbuild.config.ts",
+    "test": "mocha -r tsx -r tools/test-setup.js 'src/**/*.test.{ts,tsx}'"
+  },
+  "dependencies": {
+    "errorstacks": "^2.4.1",
+    "htm": "^3.1.1"
+  },
+  "devDependencies": {
+    "@lynx-js/react": "workspace:*",
+    "@lynx-js/testing-environment": "workspace:*",
+    "@lynx-js/types": "3.3.0",
+    "@preact/signals": "^1.2.3",
+    "@rsbuild/core": "catalog:rsbuild",
+    "@rsbuild/plugin-preact": "^1.4.0",
+    "@rslib/core": "^0.10.2",
+    "@rspack/core": "catalog:rspack",
+    "@testing-library/preact": "^3.2.3",
+    "@types/chai": "4.2.14",
+    "@types/chrome": "^0.0.202",
+    "@types/mocha": "^10.0.9",
+    "@types/sinon": "9.0.8",
+    "chai": "4.2.0",
+    "cross-env": "^7.0.2",
+    "mocha": "8.2.1",
+    "preact": "npm:@hongzhiyuan/preact@10.24.0-319c684e",
+    "sinon": "9.2.1",
+    "tsx": "^4.20.3"
+  }
+}

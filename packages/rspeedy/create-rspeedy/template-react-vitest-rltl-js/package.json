@@ -17,7 +17,8 @@
     "@lynx-js/rspeedy": "workspace:*",
     "@testing-library/jest-dom": "^6.6.3",
     "jsdom": "^26.1.0",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "@lynx-js/preact-devtools": "workspace:*"
   },
   "engines": {
     "node": ">=18"

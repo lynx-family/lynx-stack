@@ -1,0 +1,99 @@
+<svg style="display:none">
+	<symbol id="preact-devtools-undo" viewBox="0 0 24 24">
+		<path d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z" fill="currentColor" />
+	</symbol>
+
+	<symbol id="preact-devtools-add-circle" viewBox="0 0 24 24">
+		<path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" fill="currentColor" />
+		<path d="M0 0h24v24H0z" fill="none" />
+	</symbol>
+
+	<symbol id="preact-devtools-bug" viewBox="0 0 24 24">
+		<path d="M20 8h-2.81a5.985 5.985 0 0 0-1.82-1.96L17 4.41 15.59 3l-2.17 2.17C12.96 5.06 12.49 5 12 5c-.49 0-.96.06-1.41.17L8.41 3 7 4.41l1.62 1.63C7.88 6.55 7.26 7.22 6.81 8H4v2h2.09c-.05.33-.09.66-.09 1v1H4v2h2v1c0 .34.04.67.09 1H4v2h2.81c1.04 1.79 2.97 3 5.19 3s4.15-1.21 5.19-3H20v-2h-2.09c.05-.33.09-.66.09-1v-1h2v-2h-2v-1c0-.34-.04-.67-.09-1H20V8zm-6 8h-4v-2h4v2zm0-4h-4v-2h4v2z" fill="currentColor" />
+	</symbol>
+
+	<symbol id="preact-devtools-inspect" viewBox="0 0 24 24">
+		<path d="M0 0h24v24H0z" fill="none" />
+		<path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" fill="currentColor" />
+	</symbol>
+
+	<symbol id="preact-devtools-remove" viewBox="0 0 24 24">
+		<path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" fill="currentColor" />
+		<path d="M0 0h24v24H0z" fill="none" />
+	</symbol>
+
+	<symbol id="preact-devtools-refresh" viewBox="0 0 24 24">
+		<path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" fill="currentColor" />
+	</symbol>
+
+	<symbol id="preact-devtools-keyboard-down" viewBox="0 0 24 24">
+		<path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z" fill="currentColor" />
+	</symbol>
+
+	<symbol id="preact-devtools-keyboard-up" viewBox="0 0 24 24">
+		<path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z" fill="currentColor" />
+	</symbol>
+
+	<symbol id="preact-devtools-close" viewBox="0 0 24 24">
+		<path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" fill="currentColor" />
+	</symbol>
+
+	<symbol id="preact-devtools-search" viewBox="0 0 24 24">
+		<path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" fill="currentColor" />
+	</symbol>
+
+	<symbol id="preact-devtools-filter-list" viewBox="0 0 24 24">
+		<path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z" fill="currentColor" />
+	</symbol>
+
+	<symbol id="preact-devtools-checkbox-checked" viewBox="0 0 24 24">
+		<path d="M19 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.11 0 2-.9 2-2V5c0-1.1-.89-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" fill="currentColor" />
+	</symbol>
+
+	<symbol id="preact-devtools-checkbox-unchecked" viewBox="0 0 24 24">
+		<path d="M19 5v14H5V5h14m0-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z" fill="currentColor" />
+		<path d="M0 0h24v24H0z" fill="none" />
+	</symbol>
+
+	<symbol id="preact-devtools-file-copy" viewBox="0 0 24 24">
+		<path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm-1 4l6 6v10c0 1.1-.9 2-2 2H7.99C6.89 23 6 22.1 6 21l.01-14c0-1.1.89-2 1.99-2h7zm-1 7h5.5L14 6.5V12z" fill="currentColor" />
+	</symbol>
+
+	<symbol id="preact-devtools-arrow-back" viewBox="0 0 24 24">
+		<path d="M0 0h24v24H0z" fill="none" />
+		<path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" fill="currentColor" />
+	</symbol>
+
+	<symbol id="preact-devtools-arrow-forward" viewBox="0 0 24 24">
+		<path d="M0 0h24v24H0z" fill="none" />
+		<path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z" fill="currentColor" />
+	</symbol>
+
+	<symbol id="preact-devtools-record-icon" viewBox="0 0 24 24">
+		<circle fill="currentColor" cx="12" cy="12" r="8" />
+	</symbol>
+
+	<symbol id="preact-devtools-not-interested" viewBox="0 0 24 24">
+		<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8 0-1.85.63-3.55 1.69-4.9L16.9 18.31C15.55 19.37 13.85 20 12 20zm6.31-3.1L7.1 5.69C8.45 4.63 10.15 4 12 4c4.42 0 8 3.58 8 8 0 1.85-.63 3.55-1.69 4.9z" fill="currentColor" />
+	</symbol>
+
+	<symbol id="preact-devtools-sort-icon" viewBox="0 0 24 24">
+		<path d="M3 18h6v-2H3v2zM3 6v2h18V6H3zm0 7h12v-2H3v2z" fill="currentColor" />
+		<path d="M0 0h24v24H0z" fill="none" />
+	</symbol>
+
+	<symbol id="preact-devtools-fire-icon" viewBox="0 0 24 24">
+		<path d="M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67zM11.71 19c-1.78 0-3.22-1.4-3.22-3.14 0-1.62 1.05-2.76 2.81-3.12 1.77-.36 3.6-1.21 4.62-2.58.39 1.29.59 2.65.59 4.04 0 2.65-2.15 4.8-4.8 4.8z" fill="currentColor" />
+		<path d="M0 0h24v24H0z" fill="none" />
+	</symbol>
+
+	<symbol id="preact-devtools-code-icon" viewBox="0 0 24 24">
+		<path d="M0 0h24v24H0V0z" fill="none" />
+		<path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z" fill="currentColor" />
+	</symbol>
+
+	<symbol id="preact-devtools-suspend-icon" viewBox="0 0 24 24">
+		<path d="M0 0h24v24H0z" fill="none" />
+		<path d="M15 1H9v2h6V1zm-4 13h2V8h-2v6zm8.03-6.61l1.42-1.42c-.43-.51-.9-.99-1.41-1.41l-1.42 1.42C16.07 4.74 14.12 4 12 4c-4.97 0-9 4.03-9 9s4.02 9 9 9 9-4.03 9-9c0-2.12-.74-4.07-1.97-5.61zM12 20c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z" fill="currentColor" />
+	</symbol>
+</svg>

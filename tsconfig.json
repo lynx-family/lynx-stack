@@ -124,6 +124,9 @@
     },
     {
       "path": "./packages/third-party"
+    },
+    {
+      "path": "./packages/preact-devtools/tsconfig.build.json"
     }
   ],
   "include": []

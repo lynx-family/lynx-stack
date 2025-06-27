@@ -13,7 +13,8 @@
   "devDependencies": {
     "@lynx-js/qrcode-rsbuild-plugin": "workspace:*",
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
-    "@lynx-js/rspeedy": "workspace:*"
+    "@lynx-js/rspeedy": "workspace:*",
+    "@lynx-js/preact-devtools": "workspace:*"
   },
   "engines": {
     "node": ">=18"

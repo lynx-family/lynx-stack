@@ -1,0 +1,108 @@
+.actions {
+  grid-area: actions;
+}
+
+.content {
+  grid-area: content;
+  padding: 1rem;
+  overflow: auto;
+}
+
+.label {
+  display: block;
+  margin-bottom: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.btnWrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
+}
+
+.intro a {
+  color: var(--name-dynamic);
+}
+
+.heading {
+  margin-top: 0.5rem;
+  font-size: 1rem;
+  font-weight: lighter;
+}
+
+.message {
+  margin-left: 1.25rem;
+  margin-top: 0.5rem;
+}
+
+.description {
+  margin-left: 1.25rem;
+  margin-top: 0.25rem !important;
+  margin-bottom: 2rem;
+  font-size: 0.9rem;
+}
+
+.cards {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+}
+
+.card {
+  margin-bottom: 1rem;
+}
+
+@media (min-width: 31.5rem) {
+  .cards {
+    flex-direction: row;
+  }
+
+  .card {
+    margin-right: 4rem;
+  }
+
+  .cards .card:last-of-type {
+    margin-right: 0;
+  }
+}
+
+.table {
+  color: var(--color-text);
+  margin-bottom: 0.5rem;
+}
+
+.table,
+.table td,
+.table th {
+  border: 0.0625rem inset black;
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+.table tr:hover td {
+  background: var(--table-hover);
+}
+
+.table td,
+.table th {
+  padding: 0.25rem 0.5rem;
+  border: 0.0625rem solid var(--color-bg);
+}
+
+.table th {
+  text-align: left;
+  font-weight: normal;
+  background: var(--color-selected-bg);
+  color: var(--color-selected-text);
+}
+
+.table tbody tr:nth-child(odd) {
+  background: var(--color-hover);
+}
+
+.alignRight {
+  text-align: right;
+}

@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { vi } from 'vitest';
+import { EventEmitter } from 'node:events';
 
 const app = {
   callLepusMethod: vi.fn(),
@@ -75,6 +76,8 @@ class SelectorQuery {
   }
 }
 
+const ee = new EventEmitter();
+
 function injectGlobals() {
   globalThis.__DEV__ = true;
   globalThis.__PROFILE__ = true;
@@ -117,6 +120,11 @@ function injectGlobals() {
         },
       };
     }),
+    getJSModule: (moduleName) => {
+      if (moduleName === 'GlobalEventEmitter') {
+        return ee;
+      }
+    },
   };
   globalThis.requestAnimationFrame = setTimeout;
   globalThis.cancelAnimationFrame = clearTimeout;

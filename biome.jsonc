@@ -51,6 +51,8 @@
 
       "packages/testing-library/**",
       "packages/react/testing-library/**",
+
+      "packages/preact-devtools/**",
     ],
     "rules": {
       // We are migrating from ESLint to Biome

@@ -1,0 +1,12 @@
+.root {
+  position: fixed;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  z-index: 10000000;
+  /**
+   * Canvas renders rectangles in the wrong size if this rule is set.
+   * See: https://twitter.com/marvinhagemeist/status/1263506164144316416
+   */
+  max-width: none !important;
+}
