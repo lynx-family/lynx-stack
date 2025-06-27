@@ -66,10 +66,7 @@ export function componentAtIndexFactory(
     if (childCtx.__extraProps?.['isReady'] === 0) {
       __OnLifecycleEvent([LifecycleConstant.publishEvent, {
         handlerName: `${childCtx.__id}:__extraProps:onComponentAtIndex`,
-        data: {
-          listID,
-          childCtxId: childCtx.__id,
-        },
+        data: {},
       }]);
 
       let p: Promise<number>;
@@ -141,7 +138,7 @@ export function componentAtIndexFactory(
         oldCtx.__extraProps?.['isReady'] === 1
       ) {
         __OnLifecycleEvent([LifecycleConstant.publishEvent, {
-          handlerName: `${oldCtx.__id}:__extraProps:onEnqueueComponent`,
+          handlerName: `${oldCtx.__id}:__extraProps:onRecycleComponent`,
           data: {},
         }]);
       }
@@ -209,7 +206,15 @@ export function componentAtIndexFactory(
     if (!childCtx) {
       throw new Error('childCtx not found');
     }
-    return componentAtChildCtx(list, listID, childCtx, operationID, enableReuseNotification);
+    const r = componentAtChildCtx(list, listID, childCtx, operationID, enableReuseNotification);
+
+    /* v8 ignore start */
+    if (process.env['NODE_ENV'] === 'test') {
+      return r;
+    } else {
+      return typeof r === 'number' ? r : undefined;
+    }
+    /* v8 ignore end */
   }
 
   function componentAtIndexes(
