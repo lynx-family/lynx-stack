@@ -160,7 +160,7 @@ export class LynxEncodePluginImpl {
           [
             encodeData.lepusCode.root,
             ...encodeData.lepusCode.chunks,
-            ...Object.keys(manifest).map(name => ({ name })),
+            ...Object.keys(inlinedManifest).map(name => ({ name })),
             ...encodeData.css.chunks,
           ]
             .filter(asset => asset !== undefined)
