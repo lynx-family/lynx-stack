@@ -292,37 +292,59 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
         const insertions: number[] = [];
         const updateAction: any[] = [];
 
+        const isNewEngine = SystemInfo.engineVersion === '3.4';
+
+        const isSameType = isNewEngine
+          ? (a: SnapshotInstance, b: SnapshotInstance) =>
+            a.type === b.type && a.__listItemPlatformInfo?.['item-key'] === b.__listItemPlatformInfo?.['item-key']
+          : (a: SnapshotInstance, b: SnapshotInstance) => a.type === b.type;
+
         const diffResult = diffArrayLepus(
           beforeChildNodes,
           afterChildNodes,
-          (a, b) => a.type === b.type,
-          (a, b, _oldIndex, newIndex) => {
-            // if (
-            //   JSON.stringify(a.__listItemPlatformInfo)
-            //     !== JSON.stringify(b.__listItemPlatformInfo)
-            // ) {
-            updateAction.push({
-              ...b.__listItemPlatformInfo,
-              from: newIndex,
-              to: newIndex,
-              flush: true,
-            });
-            // }
+          isSameType,
+          (a, b, oldIndex, newIndex) => {
+            if (isNewEngine) {
+              updateAction.push({
+                ...b.__listItemPlatformInfo,
+                from: newIndex,
+                to: newIndex,
+                flush: true,
+              });
 
-            // Mark list-item which is rendered (has `__elements`) as DELETE
-            // so list platform will call `enqueueComponent` on it
-            // and will call `componentAtIndex` on the inserted one
-            // In this way:
-            //  1. we make sure `<list/>` for hydrate is like a leaf node
-            //  2. we avoid hydrate so modifying recycleMap can be avoid
-            //  3. the delete list-item is recycled for later use, so no waste
-            if (a.__elements) {
-              const enqueueComponent = enqueueComponentFactory();
-              const elementIndex = before.__snapshot_def.slot[0]![1];
-              const listElement = before.__elements![elementIndex]!;
-              const listID = __GetElementUniqueID(listElement!);
-              const sign = __GetElementUniqueID(a.__element_root!);
-              enqueueComponent(listElement, listID, sign);
+              if (a.__elements) {
+                const enqueueComponent = enqueueComponentFactory();
+                const elementIndex = before.__snapshot_def.slot[0]![1];
+                const listElement = before.__elements![elementIndex]!;
+                const listID = __GetElementUniqueID(listElement!);
+                const sign = __GetElementUniqueID(a.__element_root!);
+                enqueueComponent(listElement, listID, sign);
+              }
+            } else {
+              if (
+                JSON.stringify(a.__listItemPlatformInfo)
+                  !== JSON.stringify(b.__listItemPlatformInfo)
+              ) {
+                updateAction.push({
+                  ...b.__listItemPlatformInfo,
+                  from: newIndex,
+                  to: newIndex,
+                  // no flush
+                  flush: false,
+                });
+              }
+
+              // Mark list-item which is rendered (has `__elements`) as DELETE
+              // so list platform will call `enqueueComponent` on it
+              // and will call `componentAtIndex` on the inserted one
+              // In this way:
+              //  1. we make sure `<list/>` for hydrate is like a leaf node
+              //  2. we avoid hydrate so modifying recycleMap can be avoid
+              //  3. the delete list-item is recycled for later use, so no waste
+              if (a.__elements) {
+                removals.push(oldIndex);
+                insertions.push(newIndex);
+              }
             }
           },
         );

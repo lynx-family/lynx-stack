@@ -458,12 +458,12 @@ export function snapshotCreateList(
         type: childCtx.type,
       });
     }
-    const a = {
+    const updateListInfo = {
       insertAction: insertions,
       removeAction: [],
       updateAction: [],
     };
-    __SetAttribute(list, 'update-list-info', a);
+    __SetAttribute(list, 'update-list-info', updateListInfo);
     const [componentAtIndex, componentAtIndexes] = componentAtIndexFactory(_ctx.childNodes);
     __UpdateListCallbacks(
       list,
