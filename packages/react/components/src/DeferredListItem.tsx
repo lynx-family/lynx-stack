@@ -4,42 +4,50 @@
 
 import type { FC, ReactNode, RefCallback } from 'react';
 
-import { cloneElement as _cloneElement, useRef, useState } from '@lynx-js/react';
+import { cloneElement as _cloneElement, useCallback, useRef, useState } from '@lynx-js/react';
 import type { SnapshotInstance } from '@lynx-js/react/internal';
-import { cloneElement as _cloneElementLepus } from '@lynx-js/react/lepus';
+import { cloneElement as _cloneElementMainThread } from '@lynx-js/react/lepus';
 
-export interface DeferredListItem {
+export interface DeferredListItemProps {
   defer?: boolean;
   renderListItem: (children: ReactNode | undefined) => JSX.Element;
   renderChildren: () => ReactNode;
 }
 
-export const DeferredListItem: FC<DeferredListItem> = ({ defer, renderListItem, renderChildren }) => {
-  const __cloneElement = __LEPUS__ ? _cloneElementLepus : _cloneElement;
+export const DeferredListItem: FC<DeferredListItemProps> = ({ defer, renderListItem, renderChildren }) => {
+  const __cloneElement = __MAIN_THREAD__ ? _cloneElementMainThread : _cloneElement;
 
-  const initialDeferred = useRef(defer);
-  const onGetDomRef = useRef<RefCallback<SnapshotInstance>>((ctx) => {
+  const initialDeferRef = useRef(defer);
+  const prevDeferRef = useRef(defer);
+  const [isReady, setIsReady] = useState(!defer);
+  const onGetSnapshotInstance = useCallback<RefCallback<SnapshotInstance>>((ctx) => {
     ctx!.__extraProps ??= {};
 
     // hack: preact ignore function property on dom
     ctx!.__extraProps['onComponentAtIndex'] = () => {
       setIsReady(true);
     };
-    ctx!.__extraProps['onEnqueueComponent'] = () => {
+    ctx!.__extraProps['onRecycleComponent'] = () => {
       setIsReady(false);
     };
 
     return () => {
       delete ctx!.__extraProps!['onComponentAtIndex'];
-      delete ctx!.__extraProps!['onEnqueueComponent'];
+      delete ctx!.__extraProps!['onRecycleComponent'];
     };
-  });
-  const [isReady, setIsReady] = useState(!defer);
+  }, []);
 
-  return initialDeferred.current
+  if (__BACKGROUND__) {
+    if (prevDeferRef.current && !defer) {
+      setIsReady(true);
+    }
+    prevDeferRef.current = defer;
+  }
+
+  return initialDeferRef.current
     ? __cloneElement(renderListItem(isReady ? renderChildren() : null), {
-      isReady: +isReady,
-      ref: onGetDomRef.current,
+      isReady: +isReady, // hack: preact specially handled boolean props
+      ref: onGetSnapshotInstance,
     })
     : renderListItem(renderChildren());
 };
