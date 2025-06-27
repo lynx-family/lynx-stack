@@ -341,8 +341,8 @@ importers:
   packages/rspeedy/create-rspeedy:
     dependencies:
       create-rstack:
-        specifier: 1.4.5
-        version: 1.4.5
+        specifier: 1.5.2
+        version: 1.5.2
     devDependencies:
       '@lynx-js/qrcode-rsbuild-plugin':
         specifier: workspace:^
@@ -3923,8 +3923,8 @@ packages:
     resolution: {integrity: sha512-KIHbLJqu73RGr/hnbrO9uBeixNGuvSQjul/jdFvS/KFSIH1hWVd1ng7zOHx+YrEfInLG7q4n6GHQ9cDtxv/P6g==}
     engines: {node: '>= 0.10'}
 
-  create-rstack@1.4.5:
-    resolution: {integrity: sha512-+35gMGeFjDJE/ms+knFCl4QFjy/zXylfPZyDgbMsrVeO0SAmvLc2MAy3C5ckBVs8lDPo2/1lbf5IQTuqpPJISA==}
+  create-rstack@1.5.2:
+    resolution: {integrity: sha512-z8F7Rnl7j8IDbDHWYn5K1KWkXZkELFEBfmCs1P2xbbeWCbnUhI7a988WOxCu7p0pPK4e+iqJnGGTTmCMqT0UiA==}
 
   cross-env@7.0.3:
     resolution: {integrity: sha512-+/HKd6EgcQCJGh2PSjZuUitQBQynKor4wrFbRg4DtAgS1aWO+gU52xpH7M9ScGgXSYmAVS9bIJ8EzuaGw0oNAw==}
@@ -11310,7 +11310,7 @@ snapshots:
       object-assign: 4.1.1
       vary: 1.1.2
 
-  create-rstack@1.4.5: {}
+  create-rstack@1.5.2: {}
 
   cross-env@7.0.3:
     dependencies:
