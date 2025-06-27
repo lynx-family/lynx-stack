@@ -93,7 +93,6 @@ export default defineConfig({
         'src/lynx/env.ts',
         'src/lynx/tt.ts',
         'src/compat/componentIs.ts',
-        'src/compat/initData.ts',
 
         '__test__/page.test.jsx',
         '**/*.d.ts',

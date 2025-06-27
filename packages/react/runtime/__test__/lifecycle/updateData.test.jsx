@@ -7,7 +7,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 
 import { replaceCommitHook } from '../../src/lifecycle/patch/commit';
 import { deinitGlobalSnapshotPatch } from '../../src/lifecycle/patch/snapshotPatch';
-import { InitDataConsumer, InitDataProvider, useInitData } from '../../src/lynx-api';
+import { InitDataConsumer, InitDataProvider, useInitData, withInitDataInState } from '../../src/lynx-api';
 import { __root } from '../../src/root';
 import { globalEnvManager } from '../utils/envManager';
 import { elementTree, waitSchedule } from '../utils/nativeMethod';
@@ -617,6 +617,139 @@ describe('triggerDataUpdated', () => {
           </view>
         </page>
       `);
+    }
+  });
+
+  /**
+   * This test verifies that `triggerDataUpdated` is sent when using the `withInitDataInState` HOC.
+   * The test follows these steps:
+   * 1. **Initial Render (Main Thread):** Renders the component wrapped with `withInitDataInState` on the main thread.
+   * 2. **Background Render:** Renders the component in the background.
+   * 3. **Hydration:** Simulates the hydration process.
+   * 4. **Main Thread Update (No-op):** Updates data on the main thread, which should not trigger a re-render immediately.
+   * 5. **Background Update:** Calls `updateCardData` to update the component in the background.
+   * 6. **Verification:** Asserts that `rLynxChange` is called with `triggerDataUpdated: true`.
+   * 7. **Final Update:** Applies the changes to the main thread and verifies the UI is updated.
+   */
+  it('should send triggerDataUpdated when using withInitDataInState', async function() {
+    const willUnmount = vi.fn();
+    class App extends Component {
+      componentWillUnmount() {
+        willUnmount();
+      }
+
+      render() {
+        return <text>{lynx.__initData.msg}</text>;
+      }
+    }
+    const Comp = withInitDataInState(App);
+
+    // main thread render
+    {
+      __root.__jsx = <Comp />;
+      renderPage({ msg: 'init' });
+      expect(__root.__element_root).toMatchInlineSnapshot(`
+        <page
+          cssId="default-entry-from-native:0"
+        >
+          <text>
+            <raw-text
+              text="init"
+            />
+          </text>
+        </page>
+      `);
+    }
+
+    // background render
+    {
+      globalEnvManager.switchToBackground();
+      render(<Comp />, __root);
+    }
+
+    // hydrate
+    {
+      // LifecycleConstant.firstScreen
+      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+    }
+
+    // rLynxChange
+    {
+      globalEnvManager.switchToMainThread();
+      globalThis.__OnLifecycleEvent.mockClear();
+      const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
+      globalThis[rLynxChange[0]](rLynxChange[1]);
+      expect(globalThis.__OnLifecycleEvent).not.toBeCalled();
+      await waitSchedule();
+    }
+
+    // update MT
+    {
+      globalEnvManager.switchToMainThread();
+      updatePage({ msg: 'update' });
+      expect(__root.__element_root).toMatchInlineSnapshot(`
+        <page
+          cssId="default-entry-from-native:0"
+        >
+          <text>
+            <raw-text
+              text="init"
+            />
+          </text>
+        </page>
+      `);
+    }
+
+    // update BG
+    {
+      globalEnvManager.switchToBackground();
+      lynx.getNativeApp().callLepusMethod.mockClear();
+      lynxCoreInject.tt.updateCardData({ msg: 'update' });
+      await waitSchedule();
+
+      expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
+      expect(lynx.getNativeApp().callLepusMethod.mock.calls).toMatchInlineSnapshot(
+        `
+        [
+          [
+            "rLynxChange",
+            {
+              "data": "{"patchList":[{"id":18,"snapshotPatch":[3,-3,0,"update"]}],"flushOptions":{"triggerDataUpdated":true}}",
+              "patchOptions": {
+                "reloadVersion": 0,
+              },
+            },
+            [Function],
+          ],
+        ]
+      `,
+      );
+    }
+
+    // rLynxChange
+    {
+      globalEnvManager.switchToMainThread();
+      const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
+      globalThis[rLynxChange[0]](rLynxChange[1]);
+      rLynxChange[2]();
+      expect(__root.__element_root).toMatchInlineSnapshot(`
+        <page
+          cssId="default-entry-from-native:0"
+        >
+          <text>
+            <raw-text
+              text="update"
+            />
+          </text>
+        </page>
+      `);
+    }
+
+    // destroy
+    {
+      globalEnvManager.switchToBackground();
+      render(null, __root);
+      expect(willUnmount).toBeCalled();
     }
   });
 });

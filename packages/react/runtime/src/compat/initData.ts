@@ -72,6 +72,7 @@ export function factory<Data>(
   };
 
   return {
+    /* v8 ignore next */
     Context: () => Context,
     Provider: () => Provider,
     Consumer: () => Consumer,
@@ -107,6 +108,7 @@ export function factory<Data>(
  */
 export function withInitDataInState<P, S>(App: ComponentClass<P, S>): ComponentClass<P, S> {
   const isClassComponent = 'prototype' in App && 'render' in App.prototype;
+  /* v8 ignore next 4 */
   if (!isClassComponent) {
     // return as-is when not class component
     return App;
