@@ -140,12 +140,9 @@ function updatePage(data: Record<string, unknown> | undefined, options?: UpdateP
     }
     markTiming('updateDiffVdomEnd');
   }
-
-  if (options) {
-    __FlushElementTree(__page, options);
-  } else {
-    __FlushElementTree();
-  }
+  const flushOptions = options ?? {};
+  flushOptions.triggerDataUpdated = true;
+  __FlushElementTree(__page, flushOptions);
 }
 
 function updateGlobalProps(_data: any, options?: UpdatePageOption): void {

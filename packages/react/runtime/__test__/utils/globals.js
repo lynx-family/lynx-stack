@@ -3,6 +3,8 @@
 // LICENSE file in the root directory of this source tree.
 import { vi } from 'vitest';
 
+import { getJSModule } from './jsModule.ts';
+
 const app = {
   callLepusMethod: vi.fn(),
   markTiming: vi.fn(),
@@ -88,13 +90,16 @@ function injectGlobals() {
   globalThis.__TESTING_FORCE_RENDER_TO_OPCODE__ = false;
   globalThis.globDynamicComponentEntry = '__Card__';
   globalThis.lynxCoreInject = {};
-  globalThis.lynxCoreInject.tt = {};
+  globalThis.lynxCoreInject.tt = {
+    GlobalEventEmitter: getJSModule('GlobalEventEmitter'),
+  };
   globalThis.lynx = {
     getNativeApp: () => app,
     performance,
     createSelectorQuery: () => {
       return new SelectorQuery();
     },
+    getJSModule,
     getElementByIdTasks: vi.fn(),
     getElementById: vi.fn((id) => {
       return {
