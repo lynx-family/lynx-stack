@@ -51,7 +51,6 @@ function updateMainThread(
   if (patchOptions.pipelineOptions) {
     flushOptions.pipelineOptions = patchOptions.pipelineOptions;
   }
-  // TODO: triggerDataUpdated?
   __FlushElementTree(__page, flushOptions);
 }
 

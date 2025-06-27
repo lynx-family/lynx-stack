@@ -5,6 +5,7 @@ import type { ComponentChildren, Consumer, Context, Provider } from 'preact';
 import type { ComponentClass } from 'react';
 
 import { useLynxGlobalEventListener } from '../hooks/useLynxGlobalEventListener.js';
+import { globalFlushOptions } from '../lifecycle/patch/commit.js';
 
 type Getter<T> = {
   [key in keyof T]: () => T[key];
@@ -33,6 +34,9 @@ export function factory<Data>(
     const [__, set] = useState<Data>(lynx[prop] as Data);
 
     const handleChange = () => {
+      if (prop === '__initData') {
+        globalFlushOptions.triggerDataUpdated = true;
+      }
       set(lynx[prop] as Data);
     };
 
@@ -52,6 +56,9 @@ export function factory<Data>(
   const use = (): Data => {
     const [__, set] = useState(lynx[prop]);
     useChanged(() => {
+      if (prop === '__initData') {
+        globalFlushOptions.triggerDataUpdated = true;
+      }
       set(lynx[prop]);
     });
 
@@ -119,6 +126,7 @@ export function withInitDataInState<P, S>(App: ComponentClass<P, S>): ComponentC
         lynx.getJSModule('GlobalEventEmitter').addListener(
           'onDataChanged',
           this.h = () => {
+            globalFlushOptions.triggerDataUpdated = true;
             this.setState(lynx.__initData as S);
           },
         );
