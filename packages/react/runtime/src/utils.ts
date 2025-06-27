@@ -38,7 +38,7 @@ export function maybePromise<T>(value: unknown): value is Promise<T> {
   return (
     typeof value === 'object'
     && value !== null
-    // @ts-expect-error
+    // @ts-expect-error the check is safe
     && typeof value.then === 'function'
   );
 }
