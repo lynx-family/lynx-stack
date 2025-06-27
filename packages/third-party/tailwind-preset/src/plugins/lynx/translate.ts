@@ -2,28 +2,37 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { cssTransformValue } from './transform.js';
 import { createUtilityPlugin } from '../../helpers.js';
+import type { Plugin } from '../../helpers.js';
 
 /**
  * Base on https://github.com/tailwindlabs/tailwindcss/blob/d1f066d97a30539c1c86aa987c75b6d84ef29609/src/corePlugins.js#L476
  */
-export const translate: void = createUtilityPlugin(
+export const translate: Plugin = createUtilityPlugin(
   'translate',
   [
     [
       [
         'translate-x',
-        [
-          '--tw-translate-x',
-          ['transform', 'translateX(var(--tw-translate-x))'],
-        ],
+        [['@defaults transform', {}], '--tw-translate-x', [
+          'transform',
+          cssTransformValue,
+        ]],
       ],
       [
         'translate-y',
-        [
-          '--tw-translate-y',
-          ['transform', 'translateY(var(--tw-translate-y))'],
-        ],
+        [['@defaults transform', {}], '--tw-translate-y', [
+          'transform',
+          cssTransformValue,
+        ]],
+      ],
+      [
+        'translate-z',
+        [['@defaults transform', {}], '--tw-translate-z', [
+          'transform',
+          cssTransformValue,
+        ]],
       ],
     ],
   ],

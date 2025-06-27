@@ -5,14 +5,17 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import type { Config } from 'tailwindcss';
+
 import lynxPreset from '../lynx.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-export default {
+const config: Config = {
   presets: [lynxPreset],
   content: [
     path.resolve(__dirname, 'test-content.tsx'),
     path.resolve(__dirname, 'styles.css'),
   ],
 };
+export default config;

@@ -2,21 +2,31 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-/* eslint-disable @typescript-eslint/unbound-method */
 import { createPlugin } from '../../helpers.js';
+import type { Plugin } from '../../helpers.js';
 
-export const transform: void = createPlugin(({ addUtilities, variants }) => {
+export const cssTransformValue: string = [
+  'translate3d(var(--tw-translate-x), var(--tw-translate-y), var(--tw-translate-z))',
+  'rotateX(var(--tw-rotate-x))',
+  'rotateY(var(--tw-rotate-y))',
+  'rotateZ(var(--tw-rotate))',
+  'skewX(var(--tw-skew-x))',
+  'skewY(var(--tw-skew-y))',
+  'scaleX(var(--tw-scale-x))',
+  'scaleY(var(--tw-scale-y))',
+].join(' ');
+
+export const transform: Plugin = createPlugin(({ addUtilities }) => {
   addUtilities(
     {
-      '.transform': {
-        transform: 'translate(0, 0)',
+      '.transform': { '@defaults transform': {}, transform: cssTransformValue },
+      '.transform-cpu': {
+        transform: cssTransformValue,
       },
-      '.transform-cpu': {},
       '.transform-gpu': {
-        transform: 'translate3d(0, 0, 0)',
+        transform: cssTransformValue,
       },
       '.transform-none': { transform: 'none' },
     },
-    variants('transform'),
   );
 });

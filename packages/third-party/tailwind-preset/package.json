@@ -13,19 +13,28 @@
     "directory": "packages/third-party/tailwind-preset"
   },
   "type": "module",
-  "exports": null,
-  "main": "./lib/lynx.js",
-  "types": "./lib/lynx.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/lynx.d.ts",
+      "import": "./dist/lynx.js",
+      "require": "./dist/lynx.cjs",
+      "default": "./dist/lynx.js"
+    }
+  },
+  "main": "./dist/lynx.js",
+  "types": "./dist/lynx.d.ts",
   "files": [
-    "lib",
-    "!lib/__tests__",
-    "!lib/**/*.js.map",
+    "dist",
+    "!dist/__tests__",
+    "!dist/**/*.js.map",
     "CHANGELOG.md",
     "README.md"
   ],
   "scripts": {
+    "build": "rslib build",
     "test": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "tsc": "tsc -b tsconfig.build.json"
   },
   "devDependencies": {
     "@lynx-js/types": "3.3.0",
