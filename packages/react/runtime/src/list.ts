@@ -251,6 +251,11 @@ export const __pendingListUpdates = {
       .filter(id => id !== undefined)
       .forEach(id => this.clear(id));
   },
+  flushWithId(id: number): void {
+    if (this.values[id]?.flush()) {
+      this.clear(id);
+    }
+  },
 };
 
 export const gSignMap: Record<number, Map<number, SnapshotInstance>> = {};
@@ -367,7 +372,6 @@ export function componentAtIndexFactory(
     const root = childCtx.__element_root!;
     __AppendElement(list, root);
     const sign = __GetElementUniqueID(root);
-    __pendingListUpdates.flush();
     if (!enableBatchRender) {
       __FlushElementTree(root, {
         triggerLayout: true,
