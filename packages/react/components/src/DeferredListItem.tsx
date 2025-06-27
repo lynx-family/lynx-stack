@@ -28,7 +28,8 @@ export const DeferredListItem: FC<DeferredListItemProps> = ({ defer, renderListI
       setIsReady(true);
     };
     ctx!.__extraProps['onRecycleComponent'] = () => {
-      setIsReady(false);
+      // TODO(hzy): figure out if we need to unmount the component when recycled
+      // setIsReady(false);
     };
 
     return () => {
