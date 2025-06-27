@@ -87,7 +87,21 @@ export async function createNativeApp(
         Object.assign(lynxCoreInject.tt, {
           SystemInfo: { ...systemInfo, ...browserConfig },
         });
-        const ret = entry?.(lynxCoreInject.tt);
+        const ret = entry?.({
+          ...lynxCoreInject.tt,
+          console: {
+            ...Object.keys(console).reduce((acc, key) => {
+              // @ts-expect-error key must be a keyof Console
+              acc[key] = typeof console[key] === 'function'
+                // @ts-expect-error key must be a keyof Console
+                ? console[key].bind(console)
+                // @ts-expect-error key must be a keyof Console
+                : console[key];
+              return acc;
+            }, {} as Console),
+            alog: console.log.bind(console),
+          },
+        });
         return ret;
       },
     };
@@ -172,15 +186,6 @@ export async function createNativeApp(
     i18nResource,
     reportException: (err: Error, _: unknown) => reportError(err, _, release),
     __SetSourceMapRelease: (err: Error) => release = err.message,
-
-    console: {
-      ...Object.keys(console).reduce((acc, key) => {
-        // @ts-expect-error key must be a keyof Console
-        acc[key] = console[key].bind(console);
-        return acc;
-      }, {} as Console),
-      alog: console.log.bind(console),
-    },
   };
   return nativeApp;
 }

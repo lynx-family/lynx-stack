@@ -705,7 +705,11 @@ export function createMainThreadGlobalThis(
     console: {
       ...Object.keys(console).reduce((acc, key) => {
         // @ts-expect-error key must be a keyof Console
-        acc[key] = console[key].bind(console);
+        acc[key] = typeof console[key] === 'function'
+          // @ts-expect-error key must be a keyof Console
+          ? console[key].bind(console)
+          // @ts-expect-error key must be a keyof Console
+          : console[key];
         return acc;
       }, {} as Console),
       alog: console.log.bind(console),

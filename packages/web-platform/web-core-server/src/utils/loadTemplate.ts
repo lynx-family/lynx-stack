@@ -126,6 +126,7 @@ const backgroundInjectVars = [
   'lynx',
   'lynxCoreInject',
   'SystemInfo',
+  'console',
 ];
 
 const backgroundInjectWithBind = [
