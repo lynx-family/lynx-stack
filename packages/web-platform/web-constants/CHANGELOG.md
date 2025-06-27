@@ -1,5 +1,16 @@
 # @lynx-js/web-constants
 
+## 0.14.1
+
+### Patch Changes
+
+- feat: support BTS API `lynx.reportError` && `__SetSourceMapRelease`, now you can use it and handle it in lynx-view error event. ([#1059](https://github.com/lynx-family/lynx-stack/pull/1059))
+
+- fix: under the all-on-ui strategy, reload() will add two page elements. ([#1147](https://github.com/lynx-family/lynx-stack/pull/1147))
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.14.1
+
 ## 0.14.0
 
 ### Patch Changes

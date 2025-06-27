@@ -1,5 +1,14 @@
 # @lynx-js/web-elements
 
+## 0.7.7
+
+### Patch Changes
+
+- fix: the param `index` of list scrollToPosition function should be `position`. ([#1135](https://github.com/lynx-family/lynx-stack/pull/1135))
+
+- Updated dependencies []:
+  - @lynx-js/web-elements-template@0.7.7
+
 ## 0.7.6
 
 ### Patch Changes

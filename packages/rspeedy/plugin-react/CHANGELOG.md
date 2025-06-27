@@ -1,5 +1,45 @@
 # @lynx-js/react-rsbuild-plugin
 
+## 0.10.5
+
+### Patch Changes
+
+- Enable fine-grained control for `output.inlineScripts` ([#883](https://github.com/lynx-family/lynx-stack/pull/883))
+
+  ```ts
+  type InlineChunkTestFunction = (params: {
+    size: number
+    name: string
+  }) => boolean
+
+  type InlineChunkTest = RegExp | InlineChunkTestFunction
+
+  type InlineChunkConfig =
+    | boolean
+    | InlineChunkTest
+    | { enable?: boolean | 'auto', test: InlineChunkTest }
+  ```
+
+  ```ts
+  import { defineConfig } from '@lynx-js/rspeedy'
+
+  export default defineConfig({
+    output: {
+      inlineScripts: ({ name, size }) => {
+        return name.includes('foo') && size < 1000
+      },
+    },
+  })
+  ```
+
+- Updated dependencies [[`69fb042`](https://github.com/lynx-family/lynx-stack/commit/69fb0420e297abf768c889769c95a207c480b3c7), [`a7e8b5b`](https://github.com/lynx-family/lynx-stack/commit/a7e8b5bbbab0490e7cf6f47581130e7b32739abb)]:
+  - @lynx-js/template-webpack-plugin@0.8.1
+  - @lynx-js/react-webpack-plugin@0.6.17
+  - @lynx-js/react-alias-rsbuild-plugin@0.10.5
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/react-refresh-webpack-plugin@0.3.3
+  - @lynx-js/css-extract-webpack-plugin@0.6.0
+
 ## 0.10.4
 
 ### Patch Changes
