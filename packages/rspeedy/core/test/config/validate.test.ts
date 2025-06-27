@@ -1117,11 +1117,71 @@ describe('Config Validation', () => {
           ]
         `)
 
-      //  FIXME:
-      //  ubuntu will matchingInlineSnapshot _type.o111
-      //  macos will matchingInlineSnapshot _type.o110
+      expect(() =>
+        validate({
+          output: {
+            inlineScripts: {
+              enable: 123,
+            },
+          },
+        })
+      ).toThrowErrorMatchingInlineSnapshot(`
+        [Error: Invalid configuration.
+
+        Invalid config on \`$input.output.inlineScripts.enable\`.
+          - Expect to be ("auto" | boolean | undefined)
+          - Got: number
+
+        Invalid config on \`$input.output.inlineScripts.test\`.
+          - Expect to be RegExp
+          - Got: undefined
+        ]
+      `)
+
+      expect(() =>
+        validate({
+          output: {
+            inlineScripts: {
+              enable: true,
+            },
+          },
+        })
+      ).toThrowErrorMatchingInlineSnapshot(`
+        [Error: Invalid configuration.
+
+        Invalid config on \`$input.output.inlineScripts.test\`.
+          - Expect to be RegExp
+          - Got: undefined
+        ]
+      `)
+
+      expect(() =>
+        validate({
+          output: {
+            inlineScripts: {
+              enable: true,
+              test: 123,
+            },
+          },
+        })
+      ).toThrowErrorMatchingInlineSnapshot(`
+        [Error: Invalid configuration.
+
+        Invalid config on \`$input.output.inlineScripts.test\`.
+          - Expect to be RegExp
+          - Got: number
+        ]
+      `)
+
       expect(() => validate({ output: { inlineScripts: null } }))
-        .toThrowError()
+        .toThrowErrorMatchingInlineSnapshot(`
+        [Error: Invalid configuration.
+
+        Invalid config on \`$input.output.inlineScripts\`.
+          - Expect to be (RegExp | __type.o110 | boolean | undefined)
+          - Got: null
+        ]
+      `)
 
       expect(() => validate({ output: { legalComments: [null] } }))
         .toThrowErrorMatchingInlineSnapshot(`

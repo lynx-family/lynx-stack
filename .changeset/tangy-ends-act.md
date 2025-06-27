@@ -5,7 +5,7 @@
 "@lynx-js/template-webpack-plugin": patch
 ---
 
-Align `output.inlineScripts` with Rsbuild
+Enable fine-grained control for `output.inlineScripts`
 
 ```ts
 type InlineChunkTestFunction = (params: {
@@ -19,4 +19,16 @@ type InlineChunkConfig =
   | boolean
   | InlineChunkTest
   | { enable?: boolean | 'auto'; test: InlineChunkTest };
+```
+
+```ts
+import { defineConfig } from '@lynx-js/rspeedy';
+
+export default defineConfig({
+  output: {
+    inlineScripts: ({ name, size }) => {
+      return name.includes('foo') && size < 1000;
+    },
+  },
+});
 ```

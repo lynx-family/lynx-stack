@@ -197,6 +197,8 @@ export function applyEntry(
         .end()
     })
 
+    let finalFirstScreenSyncTiming = firstScreenSyncTiming
+
     if (isLynx) {
       let inlineScripts
       if (experimental_isLazyBundle) {
@@ -204,6 +206,10 @@ export function applyEntry(
         inlineScripts = true
       } else {
         inlineScripts = environment.config.output?.inlineScripts ?? true
+      }
+
+      if (inlineScripts !== true) {
+        finalFirstScreenSyncTiming = 'jsReady'
       }
 
       chain
@@ -249,7 +255,7 @@ export function applyEntry(
       .use(ReactWebpackPlugin, [{
         disableCreateSelectorQueryIncompatibleWarning: compat
           ?.disableCreateSelectorQueryIncompatibleWarning ?? false,
-        firstScreenSyncTiming,
+        firstScreenSyncTiming: finalFirstScreenSyncTiming,
         enableSSR,
         mainThreadChunks,
         extractStr,
