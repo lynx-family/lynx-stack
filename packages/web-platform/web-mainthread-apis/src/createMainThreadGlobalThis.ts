@@ -489,6 +489,12 @@ export function createMainThreadGlobalThis(
           const componentAtIndex = runtimeInfo.componentAtIndex;
           const enqueueComponent = runtimeInfo.enqueueComponent;
           const uniqueId = __GetElementUniqueID(element);
+          removeAction.forEach((position, i) => {
+            enqueueComponent?.(element, uniqueId, position);
+            // remove list-item
+            const removedEle = element.children[position - i];
+            removedEle && element.removeChild(removedEle);
+          });
           for (const action of insertAction) {
             componentAtIndex?.(
               element,
@@ -497,9 +503,6 @@ export function createMainThreadGlobalThis(
               0,
               false,
             );
-          }
-          for (const action of removeAction) {
-            enqueueComponent?.(element, uniqueId, action.position);
           }
         }
       });
