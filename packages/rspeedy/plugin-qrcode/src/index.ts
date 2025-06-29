@@ -33,7 +33,7 @@ export interface PluginQRCodeOptions {
    * @example
    *
    * ```js
-   * import { pluginQRCode } from '@lynx-js/plugin-qrcode'
+   * import { pluginQRCode } from '@lynx-js/qrcode-rsbuild-plugin'
    * import { defineConfig } from '@lynx-js/rspeedy'
    *
    * export default defineConfig({
@@ -54,7 +54,7 @@ export interface PluginQRCodeOptions {
    * You may press `a` in the terminal to switch between schemas.
    *
    * ```js
-   * import { pluginQRCode } from '@lynx-js/plugin-qrcode'
+   * import { pluginQRCode } from '@lynx-js/qrcode-rsbuild-plugin'
    * import { defineConfig } from '@lynx-js/rspeedy'
    *
    * export default defineConfig({
