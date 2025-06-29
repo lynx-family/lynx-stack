@@ -11,6 +11,8 @@ import type { DistPathConfig } from '@rsbuild/core'
  */
 export interface DistPath extends DistPathConfig {
   /**
+   * @deprecated Not configurable - always uses '.rspeedy'
+   *
    * The output directory of the intermediate files.
    *
    * @remarks
