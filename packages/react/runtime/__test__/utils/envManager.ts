@@ -1,8 +1,7 @@
-/*
-// Copyright 2024 The Lynx Authors. All rights reserved.
+// Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-*/
+import { getJSModule } from './jsModule.js';
 import { BackgroundSnapshotInstance } from '../../src/backgroundSnapshot.js';
 import { setupBackgroundDocument, setupDocument } from '../../src/document.js';
 import { deinitGlobalSnapshotPatch } from '../../src/lifecycle/patch/snapshotPatch.js';
@@ -78,6 +77,7 @@ export class EnvManager {
     clearListGlobal();
     deinitGlobalSnapshotPatch();
     clearWorkletRefLastIdForTesting();
+    getJSModule('GlobalEventEmitter')?.clear();
     this.switchToBackground();
     this.switchToMainThread();
   }
