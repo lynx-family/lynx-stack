@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "strictNullChecks": true,
+    "strict": true,
+    "composite": true,
+    "outDir": "./lib",
+    "rootDir": "./src",
+    "baseUrl": "./",
+    "resolveJsonModule": true,
+  },
+  "include": [
+    "src",
+  ],
+}

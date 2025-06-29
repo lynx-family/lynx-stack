@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "composite": true,
+    "skipLibCheck": true,
+  },
+  "include": [
+    "types/types.d.ts",
+    "src",
+  ],
+}
