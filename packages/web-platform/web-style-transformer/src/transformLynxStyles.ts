@@ -263,7 +263,7 @@ const renameRules: {
       valueProcessor(value) {
         return value.includes('gradient')
           ? 'text'
-          : 'initial';
+          : 'border-box';
       },
     },
     {
@@ -271,7 +271,7 @@ const renameRules: {
       valueProcessor(value) {
         return value.includes('gradient')
           ? 'text'
-          : 'initial';
+          : 'border-box';
       },
     },
   ],
