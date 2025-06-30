@@ -1,3 +1,5 @@
+use crate::str_to_u16_slice;
+
 pub struct TrieNode {
   /*
   Use bit 0 to 27 to show if there may be a key in current position
@@ -15,7 +17,7 @@ pub struct TrieNodeLeaf {
   27 for all other characters
   */
   char_map: u32,
-  result: [Option<&'static [[&'static str; 2]]>; 27],
+  result: [Option<&'static [[&'static [u16]; 2]]>; 27],
 }
 
 #[macro_export]
@@ -31,324 +33,629 @@ macro_rules! get_trie_char_code {
   };
 }
 
-const RENAME_RULES_RAW: [(&'static str, &'static [[&'static str; 2]]); 7] = [
-  ("flex-direction", &[["--flex-direction", ""]]),
-  ("flex-wrap", &[["--flex-wrap", ""]]),
-  ("flex-grow", &[["--flex-grow", ""]]),
-  ("flex-shrink", &[["--flex-shrink", ""]]),
-  ("flex-basis", &[["--flex-basis", ""]]),
-  ("list-main-axis-gap", &[["--list-main-axis-gap", ""]]),
-  ("list-cross-axis-gap", &[["--list-cross-axis-gap", ""]]),
+const RENAME_RULES_RAW: [(&'static [u16], &'static [[&'static [u16]; 2]]); 7] = [
+  (
+    str_to_u16_slice!("flex-direction"),
+    &[[str_to_u16_slice!("--flex-direction"), str_to_u16_slice!("")]],
+  ),
+  (
+    str_to_u16_slice!("flex-wrap"),
+    &[[str_to_u16_slice!("--flex-wrap"), str_to_u16_slice!("")]],
+  ),
+  (
+    str_to_u16_slice!("flex-grow"),
+    &[[str_to_u16_slice!("--flex-grow"), str_to_u16_slice!("")]],
+  ),
+  (
+    str_to_u16_slice!("flex-shrink"),
+    &[[str_to_u16_slice!("--flex-shrink"), str_to_u16_slice!("")]],
+  ),
+  (
+    str_to_u16_slice!("flex-basis"),
+    &[[str_to_u16_slice!("--flex-basis"), str_to_u16_slice!("")]],
+  ),
+  (
+    str_to_u16_slice!("list-main-axis-gap"),
+    &[[
+      str_to_u16_slice!("--list-main-axis-gap"),
+      str_to_u16_slice!(""),
+    ]],
+  ),
+  (
+    str_to_u16_slice!("list-cross-axis-gap"),
+    &[[
+      str_to_u16_slice!("--list-cross-axis-gap"),
+      str_to_u16_slice!(""),
+    ]],
+  ),
 ];
 
-const DISPLAY_REPLACE_RULE: [(&'static str, &'static [[&'static str; 2]]); 2] = [
+const DISPLAY_REPLACE_RULE: [(&'static [u16], &'static [[&'static [u16]; 2]]); 2] = [
   (
-    "linear",
+    str_to_u16_slice!("linear"),
     &[
-      ["--lynx-display-toggle", "var(--lynx-display-linear)"],
-      ["--lynx-display", "linear"],
-      ["display", "flex"],
-    ],
-  ),
-  (
-    "flex",
-    &[
-      ["--lynx-display-toggle", "var(--lynx-display-flex)"],
-      ["--lynx-display", "flex"],
-      ["display", "flex"],
-    ],
-  ),
-];
-
-const DIRECTION_REPLACE_RULE: [(&'static str, &'static [[&'static str; 2]]); 1] =
-  [("lynx-rtl", &[["direction", "rtl"]])];
-
-const LINEAR_ORIENTATION_REPLACE_RULE: [(&'static str, &'static [[&'static str; 2]]); 4] = [
-  (
-    "horizontal",
-    &[
-      ["--lynx-linear-orientation", "horizontal"],
       [
-        "--lynx-linear-orientation-toggle",
-        "var(--lynx-linear-orientation-horizontal)",
+        str_to_u16_slice!("--lynx-display-toggle"),
+        str_to_u16_slice!("var(--lynx-display-linear)"),
       ],
+      [
+        str_to_u16_slice!("--lynx-display"),
+        str_to_u16_slice!("linear"),
+      ],
+      [str_to_u16_slice!("display"), str_to_u16_slice!("flex")],
     ],
   ),
   (
-    "horizontal-reverse",
+    str_to_u16_slice!("flex"),
     &[
-      ["--lynx-linear-orientation", "horizontal-reverse"],
       [
-        "--lynx-linear-orientation-toggle",
-        "var(--lynx-linear-orientation-horizontal-reverse)",
+        str_to_u16_slice!("--lynx-display-toggle"),
+        str_to_u16_slice!("var(--lynx-display-flex)"),
       ],
-    ],
-  ),
-  (
-    "vertical",
-    &[
-      ["--lynx-linear-orientation", "vertical"],
       [
-        "--lynx-linear-orientation-toggle",
-        "var(--lynx-linear-orientation-vertical)",
+        str_to_u16_slice!("--lynx-display"),
+        str_to_u16_slice!("flex"),
       ],
-    ],
-  ),
-  (
-    "vertical-reverse",
-    &[
-      ["--lynx-linear-orientation", "vertical-reverse"],
-      [
-        "--lynx-linear-orientation-toggle",
-        "var(--lynx-linear-orientation-vertical-reverse)",
-      ],
+      [str_to_u16_slice!("display"), str_to_u16_slice!("flex")],
     ],
   ),
 ];
 
-const LINEAR_DIRECTION_REPLACE_RULE: [(&'static str, &'static [[&'static str; 2]]); 4] = [
+const DIRECTION_REPLACE_RULE: [(&'static [u16], &'static [[&'static [u16]; 2]]); 1] = [(
+  str_to_u16_slice!("lynx-rtl"),
+  &[[str_to_u16_slice!("direction"), str_to_u16_slice!("rtl")]],
+)];
+
+const LINEAR_ORIENTATION_REPLACE_RULE: [(&'static [u16], &'static [[&'static [u16]; 2]]); 4] = [
   (
-    "row",
+    str_to_u16_slice!("horizontal"),
     &[
-      ["--lynx-linear-orientation", "horizontal"],
       [
-        "--lynx-linear-orientation-toggle",
-        "var(--lynx-linear-orientation-horizontal)",
+        str_to_u16_slice!("--lynx-linear-orientation"),
+        str_to_u16_slice!("horizontal"),
+      ],
+      [
+        str_to_u16_slice!("--lynx-linear-orientation-toggle"),
+        str_to_u16_slice!("var(--lynx-linear-orientation-horizontal)"),
       ],
     ],
   ),
   (
-    "row-reverse",
+    str_to_u16_slice!("horizontal-reverse"),
     &[
-      ["--lynx-linear-orientation", "horizontal-reverse"],
       [
-        "--lynx-linear-orientation-toggle",
-        "var(--lynx-linear-orientation-horizontal-reverse)",
+        str_to_u16_slice!("--lynx-linear-orientation"),
+        str_to_u16_slice!("horizontal-reverse"),
+      ],
+      [
+        str_to_u16_slice!("--lynx-linear-orientation-toggle"),
+        str_to_u16_slice!("var(--lynx-linear-orientation-horizontal-reverse)"),
       ],
     ],
   ),
   (
-    "column",
+    str_to_u16_slice!("vertical"),
     &[
-      ["--lynx-linear-orientation", "vertical"],
       [
-        "--lynx-linear-orientation-toggle",
-        "var(--lynx-linear-orientation-vertical)",
+        str_to_u16_slice!("--lynx-linear-orientation"),
+        str_to_u16_slice!("vertical"),
+      ],
+      [
+        str_to_u16_slice!("--lynx-linear-orientation-toggle"),
+        str_to_u16_slice!("var(--lynx-linear-orientation-vertical)"),
       ],
     ],
   ),
   (
-    "column-reverse",
+    str_to_u16_slice!("vertical-reverse"),
     &[
-      ["--lynx-linear-orientation", "vertical-reverse"],
       [
-        "--lynx-linear-orientation-toggle",
-        "var(--lynx-linear-orientation-vertical-reverse)",
+        str_to_u16_slice!("--lynx-linear-orientation"),
+        str_to_u16_slice!("vertical-reverse"),
+      ],
+      [
+        str_to_u16_slice!("--lynx-linear-orientation-toggle"),
+        str_to_u16_slice!("var(--lynx-linear-orientation-vertical-reverse)"),
       ],
     ],
   ),
 ];
 
-const LINEAR_GRAVITY_REPLACE_RULE: [(&'static str, &'static [[&'static str; 2]]); 10] = [
+const LINEAR_DIRECTION_REPLACE_RULE: [(&'static [u16], &'static [[&'static [u16]; 2]]); 4] = [
   (
-    "top",
+    str_to_u16_slice!("row"),
     &[
-      ["--justify-content-column", "flex-start"],
-      ["--justify-content-column-reverse", "flex-end"],
-      ["--justify-content-row", "flex-start"],
-      ["--justify-content-row-reverse", "flex-start"],
+      [
+        str_to_u16_slice!("--lynx-linear-orientation"),
+        str_to_u16_slice!("horizontal"),
+      ],
+      [
+        str_to_u16_slice!("--lynx-linear-orientation-toggle"),
+        str_to_u16_slice!("var(--lynx-linear-orientation-horizontal)"),
+      ],
     ],
   ),
   (
-    "bottom",
+    str_to_u16_slice!("row-reverse"),
     &[
-      ["--justify-content-column", "flex-end"],
-      ["--justify-content-column-reverse", "flex-start"],
-      ["--justify-content-row", "flex-start"],
-      ["--justify-content-row-reverse", "flex-start"],
+      [
+        str_to_u16_slice!("--lynx-linear-orientation"),
+        str_to_u16_slice!("horizontal-reverse"),
+      ],
+      [
+        str_to_u16_slice!("--lynx-linear-orientation-toggle"),
+        str_to_u16_slice!("var(--lynx-linear-orientation-horizontal-reverse)"),
+      ],
     ],
   ),
   (
-    "left",
+    str_to_u16_slice!("column"),
     &[
-      ["--justify-content-column", "flex-start"],
-      ["--justify-content-column-reverse", "flex-start"],
-      ["--justify-content-row", "flex-start"],
-      ["--justify-content-row-reverse", "flex-end"],
+      [
+        str_to_u16_slice!("--lynx-linear-orientation"),
+        str_to_u16_slice!("vertical"),
+      ],
+      [
+        str_to_u16_slice!("--lynx-linear-orientation-toggle"),
+        str_to_u16_slice!("var(--lynx-linear-orientation-vertical)"),
+      ],
     ],
   ),
   (
-    "right",
+    str_to_u16_slice!("column-reverse"),
     &[
-      ["--justify-content-column", "flex-start"],
-      ["--justify-content-column-reverse", "flex-start"],
-      ["--justify-content-row", "flex-end"],
-      ["--justify-content-row-reverse", "flex-start"],
-    ],
-  ),
-  (
-    "center-vertical",
-    &[
-      ["--justify-content-column", "center"],
-      ["--justify-content-column-reverse", "center"],
-      ["--justify-content-row", "flex-start"],
-      ["--justify-content-row-reverse", "flex-start"],
-    ],
-  ),
-  (
-    "center-horizontal",
-    &[
-      ["--justify-content-column", "flex-start"],
-      ["--justify-content-column-reverse", "flex-start"],
-      ["--justify-content-row", "center"],
-      ["--justify-content-row-reverse", "center"],
-    ],
-  ),
-  (
-    "start",
-    &[
-      ["--justify-content-column", "flex-start"],
-      ["--justify-content-column-reverse", "flex-start"],
-      ["--justify-content-row", "flex-start"],
-      ["--justify-content-row-reverse", "flex-start"],
-    ],
-  ),
-  (
-    "end",
-    &[
-      ["--justify-content-column", "flex-end"],
-      ["--justify-content-column-reverse", "flex-end"],
-      ["--justify-content-row", "flex-end"],
-      ["--justify-content-row-reverse", "flex-end"],
-    ],
-  ),
-  (
-    "center",
-    &[
-      ["--justify-content-column", "center"],
-      ["--justify-content-column-reverse", "center"],
-      ["--justify-content-row", "center"],
-      ["--justify-content-row-reverse", "center"],
-    ],
-  ),
-  (
-    "space-between",
-    &[
-      ["--justify-content-column", "space-between"],
-      ["--justify-content-column-reverse", "space-between"],
-      ["--justify-content-row", "space-between"],
-      ["--justify-content-row-reverse", "space-between"],
+      [
+        str_to_u16_slice!("--lynx-linear-orientation"),
+        str_to_u16_slice!("vertical-reverse"),
+      ],
+      [
+        str_to_u16_slice!("--lynx-linear-orientation-toggle"),
+        str_to_u16_slice!("var(--lynx-linear-orientation-vertical-reverse)"),
+      ],
     ],
   ),
 ];
 
-const LINEAR_CROSS_GRAVITY_REPLACE_RULE: [(&'static str, &'static [[&'static str; 2]]); 4] = [
-  ("start", &[["align-items", "start"]]),
-  ("end", &[["align-items", "end"]]),
-  ("center", &[["align-items", "center"]]),
-  ("stretch", &[["align-items", "stretch"]]),
+const LINEAR_GRAVITY_REPLACE_RULE: [(&'static [u16], &'static [[&'static [u16]; 2]]); 10] = [
+  (
+    str_to_u16_slice!("top"),
+    &[
+      [
+        str_to_u16_slice!("--justify-content-column"),
+        str_to_u16_slice!("flex-start"),
+      ],
+      [
+        str_to_u16_slice!("--justify-content-column-reverse"),
+        str_to_u16_slice!("flex-end"),
+      ],
+      [
+        str_to_u16_slice!("--justify-content-row"),
+        str_to_u16_slice!("flex-start"),
+      ],
+      [
+        str_to_u16_slice!("--justify-content-row-reverse"),
+        str_to_u16_slice!("flex-start"),
+      ],
+    ],
+  ),
+  (
+    str_to_u16_slice!("bottom"),
+    &[
+      [
+        str_to_u16_slice!("--justify-content-column"),
+        str_to_u16_slice!("flex-end"),
+      ],
+      [
+        str_to_u16_slice!("--justify-content-column-reverse"),
+        str_to_u16_slice!("flex-start"),
+      ],
+      [
+        str_to_u16_slice!("--justify-content-row"),
+        str_to_u16_slice!("flex-start"),
+      ],
+      [
+        str_to_u16_slice!("--justify-content-row-reverse"),
+        str_to_u16_slice!("flex-start"),
+      ],
+    ],
+  ),
+  (
+    str_to_u16_slice!("left"),
+    &[
+      [
+        str_to_u16_slice!("--justify-content-column"),
+        str_to_u16_slice!("flex-start"),
+      ],
+      [
+        str_to_u16_slice!("--justify-content-column-reverse"),
+        str_to_u16_slice!("flex-start"),
+      ],
+      [
+        str_to_u16_slice!("--justify-content-row"),
+        str_to_u16_slice!("flex-start"),
+      ],
+      [
+        str_to_u16_slice!("--justify-content-row-reverse"),
+        str_to_u16_slice!("flex-end"),
+      ],
+    ],
+  ),
+  (
+    str_to_u16_slice!("right"),
+    &[
+      [
+        str_to_u16_slice!("--justify-content-column"),
+        str_to_u16_slice!("flex-start"),
+      ],
+      [
+        str_to_u16_slice!("--justify-content-column-reverse"),
+        str_to_u16_slice!("flex-start"),
+      ],
+      [
+        str_to_u16_slice!("--justify-content-row"),
+        str_to_u16_slice!("flex-end"),
+      ],
+      [
+        str_to_u16_slice!("--justify-content-row-reverse"),
+        str_to_u16_slice!("flex-start"),
+      ],
+    ],
+  ),
+  (
+    str_to_u16_slice!("center-vertical"),
+    &[
+      [
+        str_to_u16_slice!("--justify-content-column"),
+        str_to_u16_slice!("center"),
+      ],
+      [
+        str_to_u16_slice!("--justify-content-column-reverse"),
+        str_to_u16_slice!("center"),
+      ],
+      [
+        str_to_u16_slice!("--justify-content-row"),
+        str_to_u16_slice!("flex-start"),
+      ],
+      [
+        str_to_u16_slice!("--justify-content-row-reverse"),
+        str_to_u16_slice!("flex-start"),
+      ],
+    ],
+  ),
+  (
+    str_to_u16_slice!("center-horizontal"),
+    &[
+      [
+        str_to_u16_slice!("--justify-content-column"),
+        str_to_u16_slice!("flex-start"),
+      ],
+      [
+        str_to_u16_slice!("--justify-content-column-reverse"),
+        str_to_u16_slice!("flex-start"),
+      ],
+      [
+        str_to_u16_slice!("--justify-content-row"),
+        str_to_u16_slice!("center"),
+      ],
+      [
+        str_to_u16_slice!("--justify-content-row-reverse"),
+        str_to_u16_slice!("center"),
+      ],
+    ],
+  ),
+  (
+    str_to_u16_slice!("start"),
+    &[
+      [
+        str_to_u16_slice!("--justify-content-column"),
+        str_to_u16_slice!("flex-start"),
+      ],
+      [
+        str_to_u16_slice!("--justify-content-column-reverse"),
+        str_to_u16_slice!("flex-start"),
+      ],
+      [
+        str_to_u16_slice!("--justify-content-row"),
+        str_to_u16_slice!("flex-start"),
+      ],
+      [
+        str_to_u16_slice!("--justify-content-row-reverse"),
+        str_to_u16_slice!("flex-start"),
+      ],
+    ],
+  ),
+  (
+    str_to_u16_slice!("end"),
+    &[
+      [
+        str_to_u16_slice!("--justify-content-column"),
+        str_to_u16_slice!("flex-end"),
+      ],
+      [
+        str_to_u16_slice!("--justify-content-column-reverse"),
+        str_to_u16_slice!("flex-end"),
+      ],
+      [
+        str_to_u16_slice!("--justify-content-row"),
+        str_to_u16_slice!("flex-end"),
+      ],
+      [
+        str_to_u16_slice!("--justify-content-row-reverse"),
+        str_to_u16_slice!("flex-end"),
+      ],
+    ],
+  ),
+  (
+    str_to_u16_slice!("center"),
+    &[
+      [
+        str_to_u16_slice!("--justify-content-column"),
+        str_to_u16_slice!("center"),
+      ],
+      [
+        str_to_u16_slice!("--justify-content-column-reverse"),
+        str_to_u16_slice!("center"),
+      ],
+      [
+        str_to_u16_slice!("--justify-content-row"),
+        str_to_u16_slice!("center"),
+      ],
+      [
+        str_to_u16_slice!("--justify-content-row-reverse"),
+        str_to_u16_slice!("center"),
+      ],
+    ],
+  ),
+  (
+    str_to_u16_slice!("space-between"),
+    &[
+      [
+        str_to_u16_slice!("--justify-content-column"),
+        str_to_u16_slice!("space-between"),
+      ],
+      [
+        str_to_u16_slice!("--justify-content-column-reverse"),
+        str_to_u16_slice!("space-between"),
+      ],
+      [
+        str_to_u16_slice!("--justify-content-row"),
+        str_to_u16_slice!("space-between"),
+      ],
+      [
+        str_to_u16_slice!("--justify-content-row-reverse"),
+        str_to_u16_slice!("space-between"),
+      ],
+    ],
+  ),
 ];
 
-const LINEAR_LAYOUT_GRAVITY_REPLACE_RULE: [(&'static str, &'static [[&'static str; 2]]); 13] = [
+const LINEAR_CROSS_GRAVITY_REPLACE_RULE: [(&'static [u16], &'static [[&'static [u16]; 2]]); 4] = [
   (
-    "none",
+    str_to_u16_slice!("start"),
+    &[[str_to_u16_slice!("align-items"), str_to_u16_slice!("start")]],
+  ),
+  (
+    str_to_u16_slice!("end"),
+    &[[str_to_u16_slice!("align-items"), str_to_u16_slice!("end")]],
+  ),
+  (
+    str_to_u16_slice!("center"),
+    &[[
+      str_to_u16_slice!("align-items"),
+      str_to_u16_slice!("center"),
+    ]],
+  ),
+  (
+    str_to_u16_slice!("stretch"),
+    &[[
+      str_to_u16_slice!("align-items"),
+      str_to_u16_slice!("stretch"),
+    ]],
+  ),
+];
+
+const LINEAR_LAYOUT_GRAVITY_REPLACE_RULE: [(&'static [u16], &'static [[&'static [u16]; 2]]); 13] = [
+  (
+    str_to_u16_slice!("none"),
     &[
-      ["--align-self-row", "auto"],
-      ["--align-self-column", "auto"],
+      [
+        str_to_u16_slice!("--align-self-row"),
+        str_to_u16_slice!("auto"),
+      ],
+      [
+        str_to_u16_slice!("--align-self-column"),
+        str_to_u16_slice!("auto"),
+      ],
     ],
   ),
   (
-    "stretch",
+    str_to_u16_slice!("stretch"),
     &[
-      ["--align-self-row", "stretch"],
-      ["--align-self-column", "stretch"],
+      [
+        str_to_u16_slice!("--align-self-row"),
+        str_to_u16_slice!("stretch"),
+      ],
+      [
+        str_to_u16_slice!("--align-self-column"),
+        str_to_u16_slice!("stretch"),
+      ],
     ],
   ),
   (
-    "top",
+    str_to_u16_slice!("top"),
     &[
-      ["--align-self-row", "start"],
-      ["--align-self-column", "auto"],
+      [
+        str_to_u16_slice!("--align-self-row"),
+        str_to_u16_slice!("start"),
+      ],
+      [
+        str_to_u16_slice!("--align-self-column"),
+        str_to_u16_slice!("auto"),
+      ],
     ],
   ),
   (
-    "bottom",
-    &[["--align-self-row", "end"], ["--align-self-column", "auto"]],
-  ),
-  (
-    "left",
+    str_to_u16_slice!("bottom"),
     &[
-      ["--align-self-row", "auto"],
-      ["--align-self-column", "start"],
+      [
+        str_to_u16_slice!("--align-self-row"),
+        str_to_u16_slice!("end"),
+      ],
+      [
+        str_to_u16_slice!("--align-self-column"),
+        str_to_u16_slice!("auto"),
+      ],
     ],
   ),
   (
-    "right",
-    &[["--align-self-row", "auto"], ["--align-self-column", "end"]],
-  ),
-  (
-    "start",
+    str_to_u16_slice!("left"),
     &[
-      ["--align-self-row", "auto"],
-      ["--align-self-column", "start"],
+      [
+        str_to_u16_slice!("--align-self-row"),
+        str_to_u16_slice!("auto"),
+      ],
+      [
+        str_to_u16_slice!("--align-self-column"),
+        str_to_u16_slice!("start"),
+      ],
     ],
   ),
   (
-    "end",
-    &[["--align-self-row", "auto"], ["--align-self-column", "end"]],
-  ),
-  (
-    "center",
+    str_to_u16_slice!("right"),
     &[
-      ["--align-self-row", "center"],
-      ["--align-self-column", "center"],
+      [
+        str_to_u16_slice!("--align-self-row"),
+        str_to_u16_slice!("auto"),
+      ],
+      [
+        str_to_u16_slice!("--align-self-column"),
+        str_to_u16_slice!("end"),
+      ],
     ],
   ),
   (
-    "center-vertical",
+    str_to_u16_slice!("start"),
     &[
-      ["--align-self-row", "center"],
-      ["--align-self-column", "start"],
+      [
+        str_to_u16_slice!("--align-self-row"),
+        str_to_u16_slice!("auto"),
+      ],
+      [
+        str_to_u16_slice!("--align-self-column"),
+        str_to_u16_slice!("start"),
+      ],
     ],
   ),
   (
-    "center-horizontal",
+    str_to_u16_slice!("end"),
     &[
-      ["--align-self-row", "start"],
-      ["--align-self-column", "center"],
+      [
+        str_to_u16_slice!("--align-self-row"),
+        str_to_u16_slice!("auto"),
+      ],
+      [
+        str_to_u16_slice!("--align-self-column"),
+        str_to_u16_slice!("end"),
+      ],
     ],
   ),
   (
-    "fill-vertical",
+    str_to_u16_slice!("center"),
     &[
-      ["--align-self-row", "stretch"],
-      ["--align-self-column", "auto"],
+      [
+        str_to_u16_slice!("--align-self-row"),
+        str_to_u16_slice!("center"),
+      ],
+      [
+        str_to_u16_slice!("--align-self-column"),
+        str_to_u16_slice!("center"),
+      ],
     ],
   ),
   (
-    "fill-horizontal",
+    str_to_u16_slice!("center-vertical"),
     &[
-      ["--align-self-row", "auto"],
-      ["--align-self-column", "stretch"],
+      [
+        str_to_u16_slice!("--align-self-row"),
+        str_to_u16_slice!("center"),
+      ],
+      [
+        str_to_u16_slice!("--align-self-column"),
+        str_to_u16_slice!("start"),
+      ],
+    ],
+  ),
+  (
+    str_to_u16_slice!("center-horizontal"),
+    &[
+      [
+        str_to_u16_slice!("--align-self-row"),
+        str_to_u16_slice!("start"),
+      ],
+      [
+        str_to_u16_slice!("--align-self-column"),
+        str_to_u16_slice!("center"),
+      ],
+    ],
+  ),
+  (
+    str_to_u16_slice!("fill-vertical"),
+    &[
+      [
+        str_to_u16_slice!("--align-self-row"),
+        str_to_u16_slice!("stretch"),
+      ],
+      [
+        str_to_u16_slice!("--align-self-column"),
+        str_to_u16_slice!("auto"),
+      ],
+    ],
+  ),
+  (
+    str_to_u16_slice!("fill-horizontal"),
+    &[
+      [
+        str_to_u16_slice!("--align-self-row"),
+        str_to_u16_slice!("auto"),
+      ],
+      [
+        str_to_u16_slice!("--align-self-column"),
+        str_to_u16_slice!("stretch"),
+      ],
     ],
   ),
 ];
 
-const JUSTIFY_CONTENT_REPLACE_RULE: [(&'static str, &'static [[&'static str; 2]]); 2] = [
+const JUSTIFY_CONTENT_REPLACE_RULE: [(&'static [u16], &'static [[&'static [u16]; 2]]); 2] = [
   (
-    "start",
+    str_to_u16_slice!("start"),
     &[
-      ["justify-content", "flex-start"],
-      ["justify-content", "start"],
+      [
+        str_to_u16_slice!("justify-content"),
+        str_to_u16_slice!("flex-start"),
+      ],
+      [
+        str_to_u16_slice!("justify-content"),
+        str_to_u16_slice!("start"),
+      ],
     ],
   ),
   (
-    "end",
-    &[["justify-content", "flex-end"], ["justify-content", "end"]],
+    str_to_u16_slice!("end"),
+    &[
+      [
+        str_to_u16_slice!("justify-content"),
+        str_to_u16_slice!("flex-end"),
+      ],
+      [
+        str_to_u16_slice!("justify-content"),
+        str_to_u16_slice!("end"),
+      ],
+    ],
   ),
 ];
 
-const fn get_rule_size(rule: &[(&'static str, &'static [[&str; 2]])]) -> usize {
+const fn get_rule_size(rule: &[(&'static [u16], &'static [[&[u16]; 2]])]) -> usize {
   let mut max_len = 0;
   let mut ii = 0;
   while ii < rule.len() {
@@ -363,7 +670,7 @@ const fn get_rule_size(rule: &[(&'static str, &'static [[&str; 2]])]) -> usize {
 }
 
 const fn create_trie_node_leaf<const LEN: usize>(
-  rule: &'static [(&'static str, &'static [[&'static str; 2]])],
+  rule: &'static [(&'static [u16], &'static [[&'static [u16]; 2]])],
 ) -> [Option<TrieNodeLeaf>; LEN] {
   let mut trie_node_leaves: [Option<TrieNodeLeaf>; LEN] = [const { None }; LEN];
   let mut ii = 0;
@@ -468,14 +775,12 @@ pub const REPLACE_RULE: [Option<TrieNode>; REPLACE_RULES_RAW_SIZE] = {
 
 const fn set_trie_node_leaf(
   trie_nodes: &mut [Option<TrieNodeLeaf>],
-  key: &str,
-  value: &'static [[&str; 2]],
+  key: &[u16],
+  value: &'static [[&[u16]; 2]],
 ) {
-  let bytes = key.as_bytes();
   let mut ii = 0;
-  while ii < bytes.len() {
-    let byte = bytes[ii];
-    let code = get_trie_char_code!(byte as u16) as usize;
+  while ii < key.len() {
+    let code = get_trie_char_code!(key[ii]) as usize;
     if trie_nodes[ii].is_none() {
       // Initialize a new TrieNodeLeaf if it doesn't exist
       trie_nodes[ii] = Some(TrieNodeLeaf {
@@ -484,7 +789,7 @@ const fn set_trie_node_leaf(
       });
     }
     trie_nodes[ii].as_mut().unwrap().char_map |= 1 << code;
-    if (ii + 1) == bytes.len() {
+    if (ii + 1) == key.len() {
       // This is the last character in the key, set the value
       trie_nodes[ii].as_mut().unwrap().result[code] = Some(value);
     }
@@ -497,7 +802,7 @@ pub fn get_trie_leaf_value(
   start: usize,
   end: usize,
   leaves: &'static [Option<TrieNodeLeaf>],
-) -> Option<&'static [[&'static str; 2]]> {
+) -> Option<&'static [[&'static [u16]; 2]]> {
   let mut ii = 0;
   let len = core::cmp::min(end - start, source.len());
   while ii < len && ii < leaves.len() {
@@ -582,6 +887,9 @@ macro_rules! get_replace_rule_value {
 
 #[cfg(test)]
 mod tests {
+  use std::str::from_utf8;
+
+  use crate::str_to_u16_slice;
 
   #[test]
   fn test_rename_rule_flex_direction() {
@@ -589,8 +897,9 @@ mod tests {
     let source: Vec<u16> = source.iter().map(|&b| b as u16).collect();
     let name_start = 0;
     let name_end = source.len() - 4;
-    let result = get_rename_rule_value!(&source, name_start, name_end).unwrap()[0][0];
-    assert_eq!(result, "--flex-direction");
+    let result: &'static [u16] =
+      get_rename_rule_value!(&source, name_start, name_end).unwrap()[0][0];
+    assert_eq!(result, str_to_u16_slice!("--flex-direction"));
   }
   #[test]
   fn test_rename_rule_flex_direction_at_mid() {
@@ -600,7 +909,7 @@ mod tests {
     let name_start = offset;
     let name_end = source.len() - 4;
     let result = get_rename_rule_value!(&source, name_start, name_end).unwrap()[0][0];
-    assert_eq!(result, "--flex-direction");
+    assert_eq!(result, str_to_u16_slice!("--flex-direction"));
   }
   #[test]
   fn test_replace_rule_display_linear() {
@@ -620,7 +929,15 @@ mod tests {
     )
     .unwrap()
     .iter()
-    .map(|pair| pair.join(":"))
+    .map(|pair| {
+      let key = pair[0].iter().map(|&c| c as u8).collect::<Vec<u8>>();
+      let value = pair[1].iter().map(|&c| c as u8).collect::<Vec<u8>>();
+      format!(
+        "{}:{}",
+        from_utf8(&key).unwrap(),
+        from_utf8(&value).unwrap()
+      )
+    })
     .collect::<Vec<_>>()
     .join(";");
     assert_eq!(
@@ -647,7 +964,15 @@ mod tests {
     )
     .unwrap()
     .iter()
-    .map(|pair| pair.join(":"))
+    .map(|pair| {
+      let key = pair[0].iter().map(|&c| c as u8).collect::<Vec<u8>>();
+      let value = pair[1].iter().map(|&c| c as u8).collect::<Vec<u8>>();
+      format!(
+        "{}:{}",
+        from_utf8(&key).unwrap(),
+        from_utf8(&value).unwrap()
+      )
+    })
     .collect::<Vec<_>>()
     .join(";");
     assert_eq!(
