@@ -1,0 +1,105 @@
+.filterBtnWrapper {
+  position: relative;
+  display: flex;
+  height: 100%;
+  align-items: center;
+}
+
+.filter {
+  position: absolute;
+  top: 90%;
+  right: -0.5rem;
+  border-top: none;
+  border: 0.0625rem solid var(--color-border);
+  background: var(--color-bg);
+  width: 12rem;
+  z-index: 10;
+  padding: 0.5rem 0.5rem 0.5rem 0.75rem;
+}
+
+.filter form {
+  margin: 0;
+}
+
+.filter label {
+  cursor: pointer;
+}
+
+.filterRow {
+  display: flex;
+  height: 1.375rem;
+  align-items: center;
+}
+
+.filterCheck {
+  width: 1.25rem;
+  display: flex;
+  flex: 0 0 auto;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.filterCheck svg {
+  width: 1.25rem;
+}
+
+.filterCheck input {
+  opacity: 0;
+  position: absolute;
+  left: 0;
+}
+
+.filterCheck input:checked + svg {
+  color: var(--color-selected-bg);
+}
+
+.filterValue {
+  text-align: left;
+}
+
+.filterValueText {
+  padding-left: 0.25rem;
+  font-size: 0.875rem;
+}
+
+.filterAdd {
+  display: flex;
+  align-items: center;
+  font-size: 0.875rem;
+}
+
+.filterName {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  background: var(--color-props-input-bg);
+  border: none;
+  color: var(--color-text-input);
+  padding: 0.15rem 0.3rem;
+  font-size: 0.75rem;
+}
+
+.filterActions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.filterSubmitBtn {
+  display: block;
+  background: var(--color-selected-bg);
+  color: var(--color-selected-text);
+  border: none;
+  border-radius: 0.1875rem;
+  font-size: 0.875rem;
+  padding: 0.25rem 0.5rem;
+}
+
+.filterSubmitBtn svg {
+  margin-right: 0.25rem;
+}
+
+.filterInputNumber {
+  width: 3rem;
+  padding: 0.15rem;
+}

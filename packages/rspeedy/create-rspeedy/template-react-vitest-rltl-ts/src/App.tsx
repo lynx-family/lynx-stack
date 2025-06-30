@@ -1,3 +1,4 @@
+import '@lynx-js/preact-devtools'
 import { useCallback, useEffect, useState } from '@lynx-js/react'
 
 import './App.css'

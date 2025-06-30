@@ -93,6 +93,9 @@ export default tseslint.config(
       // testing-library
       'packages/testing-library/**',
       'packages/react/testing-library/**',
+
+      // preact-devtools
+      'packages/preact-devtools/**',
     ],
   },
   js.configs.recommended,

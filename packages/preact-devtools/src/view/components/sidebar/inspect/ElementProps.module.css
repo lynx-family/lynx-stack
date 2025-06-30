@@ -1,0 +1,101 @@
+.root {
+  font-family: var(--font-monospace);
+  font-size: 1rem;
+}
+
+.form {
+  width: 100%;
+}
+
+.row {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  font-size: var(--font-small);
+  line-height: 1.4;
+  height: 1.125rem;
+  font-family: var(--font-monospace);
+  --indent-depth: 0.75rem;
+}
+
+.name {
+  display: inline-block;
+  line-height: 1;
+  white-space: nowrap;
+  padding: 0 0 0 0.2em;
+  color: var(--name-static);
+  flex-shrink: 0;
+}
+
+.name.nameEditable {
+  color: var(--name-dynamic);
+}
+
+.name:not([data-type="empty"])::after {
+  content: ":";
+  /**
+   * Firefox doesn't reset ::after elements somehow.
+   * Using "inherit" isn't respected either.
+   */
+  font-family: var(--font-monospace);
+  color: var(--color-props-sep);
+}
+
+.nameInput {
+  border: none;
+  background: transparent;
+  padding: 0.3em 0 0.3em 0.4em;
+  outline: none;
+  color: inherit;
+  font-family: var(--font-monospace);
+}
+
+.nameInput:focus {
+  background: var(--color-props-input-bg);
+}
+
+.property {
+  display: inline-block;
+  padding-left: 0.25rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  color: var(--property-static);
+}
+
+.noCollapse {
+  padding-left: 1.25rem;
+}
+
+.toggle {
+  background: none;
+  display: flex;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  padding: 0 0.13em;
+  cursor: pointer;
+  color: #aaa;
+}
+
+.toggle:focus {
+  outline: none;
+}
+
+.toggle svg {
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+
+.toggle[data-collapsed="true"] svg {
+  transform: rotate(-90deg);
+}
+
+.mask {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  display: block;
+}

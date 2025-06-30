@@ -16,14 +16,11 @@ const callLepusMethod = vi.fn((_, __, callback) => {
 console.profile = vi.fn()
 console.profileEnd = vi.fn()
 
-vi
-  .stubGlobal('lynx', {
-    getNativeApp() {
-      return {
-        callLepusMethod,
-      }
-    },
-  })
+lynx.getNativeApp = () => {
+  return {
+    callLepusMethod,
+  };
+}
 
 root.render(
   <page>

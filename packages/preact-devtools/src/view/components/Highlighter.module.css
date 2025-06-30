@@ -1,0 +1,90 @@
+/**
+ * This file will be inlined and therefor cannot access variables
+ * defined in another file.
+ */
+
+.root {
+  font-family:
+    "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+  color: #bebebe;
+  font-size: 10px;
+  text-align: center;
+  position: absolute;
+  pointer-events: none;
+  z-index: 999999;
+}
+
+.content {
+  background: rgba(136, 194, 232, 0.75);
+  border-color: rgba(5, 150, 45, 0.5);
+  border-style: solid;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex: 1;
+}
+
+.border {
+  border-color: rgba(255, 241, 118, 0.75);
+  border-style: solid;
+  display: flex;
+  flex: 1;
+}
+
+.margin {
+  border-color: rgba(236, 169, 99, 0.75);
+  border-style: solid;
+  display: flex;
+}
+
+.label {
+  color: #fda5e9;
+}
+
+.value {
+  color: #ececec;
+}
+
+.footer {
+  display: inline-block;
+  white-space: nowrap;
+  margin: 0.5rem 0 0 0;
+  border-radius: 0.2rem;
+  padding: 0.125rem 0.4rem;
+  background: #101010;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 0.0625rem solid #9a9a9a;
+  font-weight: bold;
+}
+
+.fixed {
+  position: fixed;
+}
+
+.fixed.fixedLeft {
+  left: 1.5em;
+  transform: translateX(0);
+}
+
+.fixed.fixedTop {
+  top: 1.5em;
+}
+
+.fixed.fixedRight {
+  right: 1.5em;
+}
+
+.fixed.fixedBottom {
+  bottom: 1.5em;
+}
+
+.outerContainer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}

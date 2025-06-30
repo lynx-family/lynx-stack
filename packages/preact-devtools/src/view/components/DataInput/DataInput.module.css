@@ -1,0 +1,111 @@
+.valueWrapper {
+  display: flex;
+  justify-content: flex-end;
+  max-width: 100%;
+}
+
+.check {
+  cursor: pointer;
+  align-self: center;
+}
+
+.withCheck .valueInput {
+  color: transparent !important;
+}
+
+.withCheck:focus-within .valueInput {
+  color: inherit !important;
+}
+
+.valueInput {
+  font-family: var(--font-monospace);
+  background: none;
+  border: none;
+  line-height: 1;
+  z-index: 20;
+  color: inherit;
+  flex: 1;
+  padding-right: 0.2em;
+  min-width: 0;
+  box-shadow: none;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.innerWrapper {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+}
+
+.innerWrapper .valueInput:focus {
+  background: var(--color-props-input-bg);
+  outline: none;
+}
+
+.innerWrapper .valueInput:invalid {
+  border-bottom: 0.125rem solid var(--color-input-invalid);
+  outline: none;
+}
+
+.undoBtn {
+  background: none;
+  border: none;
+  background: none;
+  cursor: pointer;
+  outline: none;
+  padding: 0 0.75rem;
+  opacity: 0;
+  transition: all 0.2s;
+  visibility: hidden;
+  color: var(--color-text);
+}
+
+.showUndoBtn {
+  visibility: visible;
+  opacity: 1;
+}
+
+.undoBtn:hover {
+  color: var(--color-button-active);
+}
+
+.undoBtn:focus {
+  color: var(--color-button-active);
+}
+
+.mask {
+  position: relative;
+}
+
+.valueInput[data-type="string"]:not(:focus) {
+  color: var(--color-props-string);
+}
+
+.valueInput[data-type="function"]:not(:focus) {
+  color: var(--color-props-function);
+}
+
+.valueInput[data-type="number"]:not(:focus) {
+  color: var(--color-props-number);
+}
+
+.valueInput[data-type="boolean"]:not(:focus) {
+  color: var(--color-props-boolean);
+}
+
+.valueInput[data-type="array"]:not(:focus) {
+  color: var(--color-props-array);
+}
+
+.valueInput[data-type="object"]:not(:focus) {
+  color: var(--color-props-object);
+}
+
+.valueInput[data-type="null"]:not(:focus) {
+  color: var(--color-props-null);
+}
+
+.valueInput[data-type="vnode"]:not(:focus) {
+  color: var(--color-props-vnode);
+}

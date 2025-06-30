@@ -224,6 +224,14 @@ jobs:
         --no-cache
         --logHeapUsage
         --silent
+  test-preact-devtools:
+    needs: build
+    uses: ./.github/workflows/workflow-test.yml
+    with:
+      runs-on: lynx-ubuntu-24.04-medium
+      run: |
+        cd packages/preact-devtools
+        pnpm test
   website:
     needs: build
     uses: ./.github/workflows/workflow-website.yml
@@ -239,6 +247,7 @@ jobs:
       - test-type
       - test-typos
       - test-vitest
+      - test-preact-devtools
       - website
     if: always()
     runs-on: lynx-ubuntu-24.04-medium

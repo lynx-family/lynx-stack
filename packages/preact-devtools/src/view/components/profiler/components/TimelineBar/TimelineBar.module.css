@@ -1,0 +1,14 @@
+.filterPopup {
+  width: 18rem;
+}
+
+.timelineActions {
+  display: flex;
+  justify-content: space-between;
+  flex: 1 1 auto;
+}
+
+.timelineCommitsEmpty {
+  font-size: 0.8rem;
+  padding: 0 0.3rem;
+}
