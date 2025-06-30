@@ -202,11 +202,11 @@ macro_rules! is_number_start {
 macro_rules! char_code_category {
   ($char_code:expr) => {
     if $char_code < 0x80 {
-      $crate::css::char_code_definitions::CATEGORY[$char_code]
+      $crate::parser::char_code_definitions::CATEGORY[$char_code]
     } else {
       // For char_code >= 0x80, it's considered NameStart_Category.
       // This aligns with CSS syntax where non-ASCII characters are name-start characters.
-      $crate::css::char_code_definitions::NAME_START_CATEGORY
+      $crate::parser::char_code_definitions::NAME_START_CATEGORY
     }
   };
 }
