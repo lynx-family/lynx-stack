@@ -87,21 +87,7 @@ export async function createNativeApp(
         Object.assign(lynxCoreInject.tt, {
           SystemInfo: { ...systemInfo, ...browserConfig },
         });
-        const ret = entry?.({
-          ...lynxCoreInject.tt,
-          console: {
-            ...Object.keys(console).reduce((acc, key) => {
-              // @ts-expect-error key must be a keyof Console
-              acc[key] = typeof console[key] === 'function'
-                // @ts-expect-error key must be a keyof Console
-                ? console[key].bind(console)
-                // @ts-expect-error key must be a keyof Console
-                : console[key];
-              return acc;
-            }, {} as Console),
-            alog: console.log.bind(console),
-          },
-        });
+        const ret = entry?.(lynxCoreInject.tt);
         return ret;
       },
     };

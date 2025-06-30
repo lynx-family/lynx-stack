@@ -352,8 +352,4 @@ export interface MainThreadGlobalThis {
   renderPage: ((data: unknown) => void) | undefined;
   updatePage?: (data: Cloneable, options?: Record<string, string>) => void;
   runWorklet?: (obj: unknown, event: unknown) => void;
-
-  console: Console & {
-    alog: (message?: string) => void;
-  };
 }

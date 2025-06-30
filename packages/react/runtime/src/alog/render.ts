@@ -13,7 +13,7 @@ export function initRenderAlog(): void {
   options[RENDER] = function(vnode: VNode & { [DOM]: SnapshotInstance }) {
     const displayName = getDisplayName(vnode.type as ComponentClass);
     // log the component render into Alog
-    console.alog(
+    console.alog?.(
       `[${__MAIN_THREAD__ ? 'MainThread' : 'BackgroundThread'} Component Render] name: ${displayName}, snapshotId: ${
         vnode[DOM]?.type
       }, __id: ${vnode[DOM]?.__id}`,
