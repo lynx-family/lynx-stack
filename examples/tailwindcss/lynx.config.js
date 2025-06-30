@@ -3,8 +3,6 @@ import { pluginQRCode } from '@lynx-js/qrcode-rsbuild-plugin';
 import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin';
 import { pluginTailwindCSS } from 'rsbuild-plugin-tailwindcss';
 
-const enableBundleAnalysis = !!process.env['RSPEEDY_BUNDLE_ANALYSIS'];
-
 export default defineConfig({
   plugins: [
     pluginReactLynx(),
@@ -19,7 +17,4 @@ export default defineConfig({
       exclude: [/[\\/]node_modules[\\/]/],
     }),
   ],
-  performance: {
-    profile: enableBundleAnalysis,
-  },
 });
