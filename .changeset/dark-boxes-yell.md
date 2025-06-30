@@ -32,7 +32,15 @@ Add createLynxPreset, expand Lynx plugin coverage, and enforce strict config typ
 - **visibility**: Removed `collapse`.
 - **whitespace**: Retains only `normal` and `nowrap`.
 - **wordBreak**: Removed `overflow-wrap` property and `keep-all` value.
-- **verticalAlign**: Now enabled via core plugin.
+
+#### Enabled the following utilities via Tailwind core plugins:
+
+- **verticalAlign**
+- **justifyItems**
+- **justifySelf**
+- **size**
+- **flexBasis**
+- **textIndent**
 
 #### Added Lynx Specific Plugin(s)
 

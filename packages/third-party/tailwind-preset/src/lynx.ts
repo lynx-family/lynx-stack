@@ -47,3 +47,5 @@ const preset: Partial<Config> = createLynxPreset();
 export default preset;
 
 export { createLynxPreset };
+
+export type { LynxPluginName };

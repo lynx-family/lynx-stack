@@ -17,8 +17,7 @@ export const DEFAULT_CORE_PLUGINS: CorePluginsConfig = [
   // 'alignContent', // Defined using plugin
   'alignItems',
   'alignSelf',
-  // 'animation',
-  // 'aspectRatio',
+
   // 'backgroundClip', // Defined using plugin
   'backgroundColor',
   'backgroundImage',
@@ -42,7 +41,6 @@ export const DEFAULT_CORE_PLUGINS: CorePluginsConfig = [
   // 'textOpacity',
   // 'textDecorationColor',
   // 'textDecorationStyle',
-  // 'content',
 
   // 'display', // Defined using plugin
   'flexDirection',
@@ -50,6 +48,7 @@ export const DEFAULT_CORE_PLUGINS: CorePluginsConfig = [
   'flexShrink',
   'flexWrap',
   'flex',
+  'flexBasis',
 
   'fontFamily',
   'fontSize',
@@ -60,6 +59,8 @@ export const DEFAULT_CORE_PLUGINS: CorePluginsConfig = [
   // 'inset', // Defined using plugin
 
   // 'justifyContent', // Defined using plugin
+  'justifyItems',
+  'justifySelf',
 
   'letterSpacing',
   'lineHeight',
@@ -81,6 +82,7 @@ export const DEFAULT_CORE_PLUGINS: CorePluginsConfig = [
 
   // 'textAlign', // Defined using plugin
   // 'textDecoration', // Replaced with plugin
+  'textIndent',
   'textOverflow',
 
   'transformOrigin',
@@ -115,6 +117,32 @@ export const DEFAULT_CORE_PLUGINS: CorePluginsConfig = [
   'gridTemplateColumns',
   'gridTemplateRows',
   'gap',
+
+  'size',
+  /* Plugins to be customized */
+  // 'animation',
+  // 'aspectRatio',
+  // 'gradientColorStops'
+  // 'blur'
+  // 'grayscale'
+  // 'filter'
+  // 'accessibility'
+
+  /* Plugins coming in next release */
+  // 'fontVariantNumeric'
+
+  /* Plugins waiting for Nested CSS Variables */
+  // 'boxShadowColor',
+  // 'ringWidth'
+  // 'ringColor'
+  // 'ringOpacity'
+  // 'ringOffsetWidth'
+  // 'ringOffsetColor'
+  // 'space'
+  // 'divideWidth'
+  // 'divideStyle'
+  // 'divideColor'
+  // 'divideOpacity'
 ];
 
 /* ---------- derived types & constants --------------------------- */
@@ -153,82 +181,25 @@ export const getReplaceablePlugins = (): readonly LynxPluginName[] =>
 export const isPluginReplaceable = (p: string): p is LynxPluginName =>
   p !== 'defaults' && p in LYNX_PLUGIN_MAP;
 
-// Tailwind un-configured corePlugins
-// 'container'
+/* ---------- Tailwind un-configured corePlugins --------------------------------- */
 
-// 'accessibility'
-// 'pointerEvents'
-
-// 'isolation'
-
-// 'float'
-// 'clear'
-
-// 'tableLayout'
-// 'borderCollapse'
-
-// 'cursor'
-// 'userSelect'
-// 'resize'
-
-// 'listStylePosition'
-// 'listStyleType'
-
-// 'appearance'
-
-// 'placeContent'
-// 'placeItems'
-
-// 'justifyItems'
-// 'space'
-// 'divideWidth'
-// 'divideStyle'
-// 'divideColor'
-// 'divideOpacity'
-
-// 'placeSelf'
-// 'justifySelf'
-
-// 'overscrollBehavior'
-
-// 'gradientColorStops'
-// 'boxDecorationBreak'
-// 'backgroundAttachment'
+/** svg-related plugins */
 
 // 'fill'
 // 'stroke'
 // 'strokeWidth'
 
-// 'objectFit'
-// 'objectPosition'
+/** filter-related plugins, only gradyscale and blur are supported*/
 
-// 'textTransform'
-
-// 'fontVariantNumeric'
-
-// 'fontSmoothing'
-// 'placeholderColor'
-// 'placeholderOpacity'
-
-// 'backgroundBlendMode'
-// 'mixBlendMode'
-
-// 'ringWidth'
-// 'ringColor'
-// 'ringOpacity'
-// 'ringOffsetWidth'
-// 'ringOffsetColor'
-
-// 'blur'
 // 'brightness'
 // 'contrast'
 // 'dropShadow'
-// 'grayscale'
 // 'hueRotate'
 // 'invert'
 // 'saturate'
 // 'sepia'
-// 'filter'
+
+/** backdrop-related plugins */
 
 // 'backdropBlur'
 // 'backdropBrightness'
@@ -241,34 +212,90 @@ export const isPluginReplaceable = (p: string): p is LynxPluginName =>
 // 'backdropSepia'
 // 'backdropFilter'
 
-// 'accentColor',
-// 'borderSpacing',
-// 'boxShadowColor',
-// 'breakAfter',
-// 'breakBefore',
-// 'breakInside',
-// 'captionSide',
-// 'columns',
-// 'contain',
-// 'flexBasis',
-// 'forcedColorAdjust',
-// 'hyphens',
-// 'lineClamp',
-// 'listStyleImage',
+/** deprecated outline-related plugins */
+
 // 'outlineColor',
 // 'outlineOffset',
 // 'outlineStyle',
 // 'outlineWidth',
+
+/** non-supported scroll-related plugins */
+
+// 'overscrollBehavior'
 // 'scrollBehavior',
 // 'scrollMargin',
 // 'scrollPadding',
 // 'scrollSnapAlign',
 // 'scrollSnapStop',
 // 'scrollSnapType',
-// 'size',
-// 'textDecorationThickness',
-// 'textIndent',
-// 'textUnderlineOffset',
-// 'textWrap',
+
+/** interactivity related plugins */
+
+// 'pointerEvents'
+// 'cursor'
+// 'userSelect'
 // 'touchAction',
 // 'willChange'
+
+/** layout and box model related plugins */
+
+// 'container'
+// 'clear'
+// 'float'
+// 'columns',
+// 'contain',
+// 'isolation'
+
+/** table & list related plugins */
+
+// 'borderCollapse'
+// 'captionSide',
+// 'listStylePosition'
+// 'listStyleType'
+// 'listStyleImage',
+// 'tableLayout'
+
+/** form appearance related plugins */
+
+// 'appearance'
+// 'accentColor',
+// 'placeholderColor'
+// 'placeholderOpacity'
+
+/** background and effects related plugins */
+
+// 'backgroundAttachment'
+// 'backgroundBlendMode'
+// 'mixBlendMode'
+
+/** sizing and positioning related plugins */
+
+// 'resize'
+// 'objectFit'
+// 'objectPosition'
+// 'placeContent'
+// 'placeItems'
+// 'placeSelf'
+// 'borderSpacing',
+
+/** break control related plugins */
+
+// 'breakAfter',
+// 'breakBefore',
+// 'breakInside',
+
+/** decoration and compositing related plugins */
+
+// 'boxDecorationBreak'
+// 'content',
+// 'forcedColorAdjust',
+
+/** typography and text styling related plugins */
+
+// 'textTransform'
+// 'fontSmoothing'
+// 'textDecorationThickness',
+// 'textUnderlineOffset',
+// 'textWrap',
+// 'hyphens',
+// 'lineClamp',
