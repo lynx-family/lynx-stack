@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { cssTransformValue } from './transform.js';
+import { cssTransformValue, cssTransformVarMap } from './transform.js';
 import { createUtilityPlugin } from '../../helpers.js';
 import type { Plugin } from '../../helpers.js';
 
@@ -11,19 +11,19 @@ export const scale: Plugin = createUtilityPlugin('scale', [
     'scale',
     [
       ['@defaults transform', {}],
-      '--tw-scale-x',
-      '--tw-scale-y',
+      cssTransformVarMap.scaleX,
+      cssTransformVarMap.scaleY,
       ['transform', cssTransformValue],
     ],
   ],
   [
-    ['scale-x', [['@defaults transform', {}], '--tw-scale-x', [
+    ['scale-x', [['@defaults transform', {}], cssTransformVarMap.scaleX, [
       'transform',
       cssTransformValue,
     ]]],
     [
       'scale-y',
-      [['@defaults transform', {}], '--tw-scale-y', [
+      [['@defaults transform', {}], cssTransformVarMap.scaleY, [
         'transform',
         cssTransformValue,
       ]],

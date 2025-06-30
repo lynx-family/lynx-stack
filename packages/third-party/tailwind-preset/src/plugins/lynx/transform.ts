@@ -5,15 +5,61 @@
 import { createPlugin } from '../../helpers.js';
 import type { Plugin } from '../../helpers.js';
 
+export type TransformKey =
+  | 'translateX'
+  | 'translateY'
+  | 'translateZ'
+  | 'rotateX'
+  | 'rotateY'
+  | 'rotateZ'
+  | 'skewX'
+  | 'skewY'
+  | 'scaleX'
+  | 'scaleY';
+
+export const cssTransformVarMap: Record<TransformKey, string> = {
+  translateX: '--tw-tx',
+  translateY: '--tw-ty',
+  translateZ: '--tw-tz',
+  rotateX: '--tw-rx',
+  rotateY: '--tw-ry',
+  rotateZ: '--tw-rz',
+  skewX: '--tw-skx',
+  skewY: '--tw-sky',
+  scaleX: '--tw-sx',
+  scaleY: '--tw-sy',
+};
+
+export const cssTransformDefault: Record<string, string> = {
+  '--tw-tx': '0',
+  '--tw-ty': '0',
+  '--tw-tz': '0',
+  '--tw-rx': '0',
+  '--tw-ry': '0',
+  '--tw-rz': '0',
+  '--tw-skx': '0',
+  '--tw-sky': '0',
+  '--tw-sx': '1',
+  '--tw-sy': '1',
+};
+
+/*
+ * These variables are layered into `transform: ...` via customized transform utility:
+ *     transform: translate3d(var(--tw-tx), var(--tw-ty), var(--tw-tz))
+ *                rotateX(var(--tw-rx)) rotateY(var(--tw-ry)) rotateZ(var(--tw-rz))
+ *                skewX(var(--tw-skx)) skewY(var(--tw-sky))
+ *                scaleX(var(--tw-sx)) scaleY(var(--tw-sy));
+ */
+
 export const cssTransformValue: string = [
-  'translate3d(var(--tw-translate-x), var(--tw-translate-y), var(--tw-translate-z))',
-  'rotateX(var(--tw-rotate-x))',
-  'rotateY(var(--tw-rotate-y))',
-  'rotateZ(var(--tw-rotate))',
-  'skewX(var(--tw-skew-x))',
-  'skewY(var(--tw-skew-y))',
-  'scaleX(var(--tw-scale-x))',
-  'scaleY(var(--tw-scale-y))',
+  `translate3d(var(${cssTransformVarMap.translateX}), var(${cssTransformVarMap.translateY}), var(${cssTransformVarMap.translateZ}))`,
+  `rotateX(var(${cssTransformVarMap.rotateX}))`,
+  `rotateY(var(${cssTransformVarMap.rotateY}))`,
+  `rotateZ(var(${cssTransformVarMap.rotateZ}))`,
+  `skewX(var(${cssTransformVarMap.skewX}))`,
+  `skewY(var(${cssTransformVarMap.skewY}))`,
+  `scaleX(var(${cssTransformVarMap.scaleX}))`,
+  `scaleY(var(${cssTransformVarMap.scaleY}))`,
 ].join(' ');
 
 export const transform: Plugin = createPlugin(({ addUtilities }) => {
@@ -30,3 +76,39 @@ export const transform: Plugin = createPlugin(({ addUtilities }) => {
     },
   );
 });
+
+/* Abbreviated Tailwind Transform Variables
+ *
+ * These custom properties follow a shortened naming convention to simplify transform-related
+ * values used in animation utilities and component transitions.
+ *
+ * ┌──────────────┬──────────────┬────────────────────────────────────┐
+ * │ Full Name    │ Abbreviation │ Description                        │
+ * ├──────────────┼──────────────┼────────────────────────────────────┤
+ * │ translate-x  │ --tw-tx      │ Horizontal translation             │
+ * │ translate-y  │ --tw-ty      │ Vertical translation               │
+ * │ translate-z  │ --tw-tz      │ Depth translation (if 3D enabled)  │
+ * │ rotate       │ --tw-rz      │ Rotation around Z axis             │
+ * │ rotate-x     │ --tw-rx      │ Rotation around X axis             │
+ * │ rotate-y     │ --tw-ry      │ Rotation around Y axis             │
+ * │ skew-x       │ --tw-skx     │ Skew along the X axis              │
+ * │ skew-y       │ --tw-sky     │ Skew along the Y axis              │
+ * │ scale-x      │ --tw-sx      │ Scale along the X axis             │
+ * │ scale-y      │ --tw-sy      │ Scale along the Y axis             │
+ * └──────────────┴──────────────┴────────────────────────────────────┘
+ *
+ * Notes:
+ * - `sx`/`sy` are reserved for `scale`, following established graphics conventions.
+ * - `skx`/`sky` are used for skew to avoid collision and confusion.
+ * - All variables are initialized as follows:
+ *     --tw-tx: 0;
+ *     --tw-ty: 0;
+ *     --tw-tz: 0;
+ *     --tw-rx: 0;
+ *     --tw-ry: 0;
+ *     --tw-rz: 0;
+ *     --tw-skx: 0;
+ *     --tw-sky: 0;
+ *     --tw-sx: 1;
+ *     --tw-sy: 1;
+ * */

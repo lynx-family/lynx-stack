@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { cssTransformValue } from './transform.js';
+import { cssTransformValue, cssTransformVarMap } from './transform.js';
 import { createUtilityPlugin } from '../../helpers.js';
 import type { Plugin } from '../../helpers.js';
 
@@ -13,7 +13,7 @@ export const rotate: Plugin = createUtilityPlugin(
   'rotate',
   [
     // rotate (Z axis)
-    ['rotate', [['@defaults transform', {}], '--tw-rotate', [
+    ['rotate', [['@defaults transform', {}], cssTransformVarMap.rotateZ, [
       'transform',
       cssTransformValue,
     ]]],
@@ -21,15 +21,15 @@ export const rotate: Plugin = createUtilityPlugin(
     [
       [
         'rotate-x',
-        ['--tw-rotate-x', ['transform', cssTransformValue]],
+        [cssTransformVarMap.rotateX, ['transform', cssTransformValue]],
       ],
       [
         'rotate-y',
-        ['--tw-rotate-y', ['transform', cssTransformValue]],
+        [cssTransformVarMap.rotateY, ['transform', cssTransformValue]],
       ],
       [
         'rotate-z',
-        ['--tw-rotate', ['transform', cssTransformValue]],
+        [cssTransformVarMap.rotateZ, ['transform', cssTransformValue]],
       ],
     ],
   ],

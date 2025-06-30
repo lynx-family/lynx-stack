@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { cssTransformValue } from './transform.js';
+import { cssTransformValue, cssTransformVarMap } from './transform.js';
 import { createUtilityPlugin } from '../../helpers.js';
 import type { Plugin } from '../../helpers.js';
 
@@ -15,21 +15,25 @@ export const translate: Plugin = createUtilityPlugin(
     [
       [
         'translate-x',
-        [['@defaults transform', {}], '--tw-translate-x', [
-          'transform',
-          cssTransformValue,
-        ]],
+        [
+          ['@defaults transform', {}],
+          cssTransformVarMap.translateX,
+          [
+            'transform',
+            cssTransformValue,
+          ],
+        ],
       ],
       [
         'translate-y',
-        [['@defaults transform', {}], '--tw-translate-y', [
+        [['@defaults transform', {}], cssTransformVarMap.translateY, [
           'transform',
           cssTransformValue,
         ]],
       ],
       [
         'translate-z',
-        [['@defaults transform', {}], '--tw-translate-z', [
+        [['@defaults transform', {}], cssTransformVarMap.translateZ, [
           'transform',
           cssTransformValue,
         ]],

@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { cssTransformValue } from './transform.js';
+import { cssTransformVarMap } from './transform.js';
 import { createUtilityPlugin } from '../../helpers.js';
 import type { Plugin } from '../../helpers.js';
 
@@ -9,11 +10,11 @@ export const skew: Plugin = createUtilityPlugin(
   'skew',
   [
     [
-      ['skew-x', [['@defaults transform', {}], '--tw-skew-x', [
+      ['skew-x', [['@defaults transform', {}], cssTransformVarMap.skewX, [
         'transform',
         cssTransformValue,
       ]]],
-      ['skew-y', [['@defaults transform', {}], '--tw-skew-y', [
+      ['skew-y', [['@defaults transform', {}], cssTransformVarMap.skewY, [
         'transform',
         cssTransformValue,
       ]]],
