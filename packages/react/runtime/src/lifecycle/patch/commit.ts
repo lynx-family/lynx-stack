@@ -23,13 +23,7 @@ import type { VNode } from 'preact';
 import { options } from 'preact';
 
 import { LifecycleConstant } from '../../lifecycleConstant.js';
-import {
-  PerformanceTimingKeys,
-  globalPipelineOptions,
-  markTiming,
-  markTimingLegacy,
-  setPipeline,
-} from '../../lynx/performance.js';
+import { globalPipelineOptions, markTiming, markTimingLegacy, setPipeline } from '../../lynx/performance.js';
 import { COMMIT } from '../../renderToOpcodes/constants.js';
 import { applyQueuedRefs } from '../../snapshot/ref.js';
 import { backgroundSnapshotInstanceManager } from '../../snapshot.js';
@@ -88,8 +82,8 @@ function replaceCommitHook(): void {
     }
 
     // Mark the end of virtual DOM diffing phase for performance tracking
-    markTimingLegacy(PerformanceTimingKeys.updateDiffVdomEnd);
-    markTiming(PerformanceTimingKeys.diffVdomEnd);
+    markTimingLegacy('updateDiffVdomEnd');
+    markTiming('diffVdomEnd');
 
     const backgroundSnapshotInstancesToRemove = globalBackgroundSnapshotInstancesToRemove;
     globalBackgroundSnapshotInstancesToRemove = [];
@@ -167,7 +161,7 @@ function commitPatchUpdate(patchList: PatchList, patchOptions: Omit<PatchOptions
   if (__PROFILE__) {
     console.profile('commitChanges');
   }
-  markTiming(PerformanceTimingKeys.packChangesStart);
+  markTiming('packChangesStart');
   const obj: {
     data: string;
     patchOptions: PatchOptions;
@@ -178,7 +172,7 @@ function commitPatchUpdate(patchList: PatchList, patchOptions: Omit<PatchOptions
       reloadVersion: getReloadVersion(),
     },
   };
-  markTiming(PerformanceTimingKeys.packChangesEnd);
+  markTiming('packChangesEnd');
   if (globalPipelineOptions) {
     obj.patchOptions.pipelineOptions = globalPipelineOptions;
     setPipeline(undefined);

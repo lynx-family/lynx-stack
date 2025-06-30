@@ -5,13 +5,7 @@ import { render } from 'preact';
 
 import { LifecycleConstant, NativeUpdateDataType } from '../lifecycleConstant.js';
 import type { FirstScreenData } from '../lifecycleConstant.js';
-import {
-  PerformanceTimingFlags,
-  PerformanceTimingKeys,
-  PipelineOrigins,
-  beginPipeline,
-  markTiming,
-} from './performance.js';
+import { PerformanceTimingFlags, PipelineOrigins, beginPipeline, markTiming } from './performance.js';
 import { BackgroundSnapshotInstance, hydrate } from '../backgroundSnapshot.js';
 import { runWithForce } from './runWithForce.js';
 import { destroyBackground } from '../lifecycle/destroy.js';
@@ -80,10 +74,10 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
         console.profile('hydrate');
       }
       beginPipeline(true, PipelineOrigins.reactLynxHydrate, PerformanceTimingFlags.reactLynxHydrate);
-      markTiming(PerformanceTimingKeys.hydrateParseSnapshotStart);
+      markTiming('hydrateParseSnapshotStart');
       const before = JSON.parse(lepusSide) as SerializedSnapshotInstance;
-      markTiming(PerformanceTimingKeys.hydrateParseSnapshotEnd);
-      markTiming(PerformanceTimingKeys.diffVdomStart);
+      markTiming('hydrateParseSnapshotEnd');
+      markTiming('diffVdomStart');
       const snapshotPatch = hydrate(
         before,
         __root as BackgroundSnapshotInstance,
@@ -91,7 +85,7 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
       if (__PROFILE__) {
         console.profileEnd();
       }
-      markTiming(PerformanceTimingKeys.diffVdomEnd);
+      markTiming('diffVdomEnd');
 
       // TODO: It seems `delayedEvents` and `delayedLifecycleEvents` should be merged into one array to ensure the proper order of events.
       flushDelayedLifecycleEvents();
