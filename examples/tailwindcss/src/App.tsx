@@ -23,6 +23,7 @@ export function App() {
             className={cn(
               'text-primary-content text-xl line-through',
               !reset && 'translate-x-10 scale-150',
+              reset && 'animate-fade-in',
             )}
           >
             Translate & Scale

@@ -89,4 +89,10 @@ export const lynxTheme: NonNullable<Config['theme']> = {
     // Not supported in Lynx
     // min: 'min-content',
   },
+  aspectRatio: {
+    square: '1 / 1',
+    video: '16 / 9',
+    // Not supported in Lynx
+    // auto: 'auto',
+  },
 };

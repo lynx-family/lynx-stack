@@ -41,6 +41,8 @@ Add createLynxPreset, expand Lynx plugin coverage, and enforce strict config typ
 - **size**
 - **flexBasis**
 - **textIndent**
+- **aspectRatio**
+- **animation**
 
 #### Added Lynx Specific Plugin(s)
 
@@ -53,6 +55,7 @@ Add createLynxPreset, expand Lynx plugin coverage, and enforce strict config typ
 - **zIndex**: Removed `auto`.
 - **gridTemplateColumns & gridTemplateRows**: Removed `subgrid` and `none`.
 - **gridAutoColumns & gridAutoRows**: Removed `min-content`.
+- **aspectRatio**: Removed `auto`.
 
 #### New: createLynxPreset Factory
 

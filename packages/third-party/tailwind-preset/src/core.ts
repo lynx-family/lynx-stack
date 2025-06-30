@@ -14,6 +14,10 @@ export type LynxPluginName = keyof typeof pluginModules;
 
 export const DEFAULT_CORE_PLUGINS: CorePluginsConfig = [
   // 'preflight',
+
+  'animation',
+  'aspectRatio',
+
   // 'alignContent', // Defined using plugin
   'alignItems',
   'alignSelf',
@@ -120,8 +124,7 @@ export const DEFAULT_CORE_PLUGINS: CorePluginsConfig = [
 
   'size',
   /* Plugins to be customized */
-  // 'animation',
-  // 'aspectRatio',
+
   // 'gradientColorStops'
   // 'blur'
   // 'grayscale'
