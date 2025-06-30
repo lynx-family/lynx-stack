@@ -10,11 +10,11 @@ export const skew: Plugin = createUtilityPlugin(
   'skew',
   [
     [
-      ['skew-x', [['@defaults transform', {}], cssTransformVarMap.skewX, [
+      ['skew-x', [cssTransformVarMap.skewX, [
         'transform',
         cssTransformValue,
       ]]],
-      ['skew-y', [['@defaults transform', {}], cssTransformVarMap.skewY, [
+      ['skew-y', [cssTransformVarMap.skewY, [
         'transform',
         cssTransformValue,
       ]]],

@@ -47,8 +47,8 @@ export const cssTransformDefault: Record<string, string> = {
  * These variables are layered into `transform: ...` via customized transform utility:
  *     transform: translate3d(var(--tw-tx), var(--tw-ty), var(--tw-tz))
  *                rotateX(var(--tw-rx)) rotateY(var(--tw-ry)) rotateZ(var(--tw-rz))
- *                skewX(var(--tw-skx)) skewY(var(--tw-sky))
- *                scaleX(var(--tw-sx)) scaleY(var(--tw-sy));
+ *                skew(var(--tw-skx), var(--tw-sky))
+ *                scale(var(--tw-sx), var(--tw-sy));
  */
 
 export const cssTransformValue: string = [
@@ -56,16 +56,14 @@ export const cssTransformValue: string = [
   `rotateX(var(${cssTransformVarMap.rotateX}))`,
   `rotateY(var(${cssTransformVarMap.rotateY}))`,
   `rotateZ(var(${cssTransformVarMap.rotateZ}))`,
-  `skewX(var(${cssTransformVarMap.skewX}))`,
-  `skewY(var(${cssTransformVarMap.skewY}))`,
-  `scaleX(var(${cssTransformVarMap.scaleX}))`,
-  `scaleY(var(${cssTransformVarMap.scaleY}))`,
+  `skew(var(${cssTransformVarMap.skewX}), var(${cssTransformVarMap.skewY}))`,
+  `scale(var(${cssTransformVarMap.scaleX}), var(${cssTransformVarMap.scaleY}))`,
 ].join(' ');
 
 export const transform: Plugin = createPlugin(({ addUtilities }) => {
   addUtilities(
     {
-      '.transform': { '@defaults transform': {}, transform: cssTransformValue },
+      '.transform': { transform: cssTransformValue },
       '.transform-cpu': {
         transform: cssTransformValue,
       },
@@ -88,7 +86,8 @@ export const transform: Plugin = createPlugin(({ addUtilities }) => {
  * │ translate-x  │ --tw-tx      │ Horizontal translation             │
  * │ translate-y  │ --tw-ty      │ Vertical translation               │
  * │ translate-z  │ --tw-tz      │ Depth translation (if 3D enabled)  │
- * │ rotate       │ --tw-rz      │ Rotation around Z axis             │
+ * │ rotate       │ --tw-rz      │ Rotation around Z axis
+ * | rotate-z     │ --tw-rz      │ Rotation around Z axis             │
  * │ rotate-x     │ --tw-rx      │ Rotation around X axis             │
  * │ rotate-y     │ --tw-ry      │ Rotation around Y axis             │
  * │ skew-x       │ --tw-skx     │ Skew along the X axis              │

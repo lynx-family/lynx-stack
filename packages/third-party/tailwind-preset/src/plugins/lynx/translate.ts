@@ -3,42 +3,69 @@
 // LICENSE file in the root directory of this source tree.
 
 import { cssTransformValue, cssTransformVarMap } from './transform.js';
-import { createUtilityPlugin } from '../../helpers.js';
+import { createPlugin } from '../../helpers.js';
 import type { Plugin } from '../../helpers.js';
+import type {
+  CSSRuleObject,
+  KeyValuePair,
+} from '../../types/tailwind-types.js';
 
 /**
  * Base on https://github.com/tailwindlabs/tailwindcss/blob/d1f066d97a30539c1c86aa987c75b6d84ef29609/src/corePlugins.js#L476
  */
-export const translate: Plugin = createUtilityPlugin(
-  'translate',
-  [
-    [
-      [
-        'translate-x',
-        [
-          ['@defaults transform', {}],
-          cssTransformVarMap.translateX,
-          [
-            'transform',
-            cssTransformValue,
-          ],
-        ],
-      ],
-      [
-        'translate-y',
-        [['@defaults transform', {}], cssTransformVarMap.translateY, [
-          'transform',
-          cssTransformValue,
-        ]],
-      ],
-      [
-        'translate-z',
-        [['@defaults transform', {}], cssTransformVarMap.translateZ, [
-          'transform',
-          cssTransformValue,
-        ]],
-      ],
-    ],
-  ],
-  { supportsNegativeValues: true },
-);
+export const translate: Plugin = createPlugin(({ matchUtilities, theme }) => {
+  matchUtilities(
+    {
+      'translate-x': (value: unknown) => {
+        if (typeof value !== 'string') {
+          return null;
+        }
+        const result: CSSRuleObject = {
+          [cssTransformVarMap.translateX]: value,
+          transform: cssTransformValue,
+        };
+        return result;
+      },
+    },
+    {
+      supportsNegativeValues: true,
+      values: theme('translate') as KeyValuePair,
+    },
+  );
+  matchUtilities(
+    {
+      'translate-y': (value: unknown) => {
+        if (typeof value !== 'string') {
+          return null;
+        }
+        const result: CSSRuleObject = {
+          [cssTransformVarMap.translateY]: value,
+          transform: cssTransformValue,
+        };
+        return result;
+      },
+    },
+    {
+      supportsNegativeValues: true,
+      values: theme('translate') as KeyValuePair,
+    },
+  );
+  matchUtilities(
+    {
+      'translate-z': (value: unknown) => {
+        if (typeof value !== 'string' || value.includes('%')) {
+          return null;
+        }
+        const result: CSSRuleObject = {
+          [cssTransformVarMap.translateZ]: value,
+          transform: cssTransformValue,
+        };
+        return result;
+      },
+    },
+    {
+      supportsNegativeValues: true,
+      values: theme('translate') as KeyValuePair,
+    },
+  );
+});

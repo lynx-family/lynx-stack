@@ -3,8 +3,8 @@
 // LICENSE file in the root directory of this source tree.
 import {
   createPlugin,
-  parseBoxShadowValue,
   transformThemeValue,
+  // parseBoxShadowValue,
   // formatBoxShadowValue,
 } from '../../helpers.js';
 import type {
@@ -30,9 +30,9 @@ export const boxShadow: Plugin = (() => {
   return createPlugin(({ matchUtilities, theme }) => {
     matchUtilities(
       {
-        shadow: (value: unknown) => {
-          value = transformValue(value);
-
+        shadow: (_value: unknown) => {
+          const value = transformValue(_value);
+          /**
           const ast = parseBoxShadowValue(value as string);
           for (const shadow of ast) {
             // Don't override color if the whole shadow is a variable
@@ -44,12 +44,12 @@ export const boxShadow: Plugin = (() => {
             // uncomment in the future
             // shadow.color = 'var(--tw-shadow-color)';
           }
+          */
 
           return {
             // Bug in box-shadow & CSS var
             // uncomment in the future
             /*
-            '@defaults box-shadow': {},
             '--tw-shadow': value === 'none' ? transparentShadow : value,
             '--tw-shadow-colored': value === 'none'
               ? transparentShadow

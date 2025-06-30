@@ -13,7 +13,7 @@ export const rotate: Plugin = createUtilityPlugin(
   'rotate',
   [
     // rotate (Z axis)
-    ['rotate', [['@defaults transform', {}], cssTransformVarMap.rotateZ, [
+    ['rotate', [cssTransformVarMap.rotateZ, [
       'transform',
       cssTransformValue,
     ]]],

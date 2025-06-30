@@ -10,6 +10,7 @@ import type {
   PluginCreator,
   PluginUtils,
   PluginsConfig,
+  ResolvableTo,
   ThemeConfig,
   ValueType,
 } from 'tailwindcss/types/config';
@@ -25,6 +26,11 @@ export type {
   CSSRuleObject,
   KeyValuePair,
   ThemeConfig,
+  ResolvableTo,
 };
+
+export type StrictThemeConfig =
+  & ThemeConfig
+  & Record<string, ResolvableTo<KeyValuePair<string, string>> | undefined>;
 
 export type Plugin = PluginsConfig[number];

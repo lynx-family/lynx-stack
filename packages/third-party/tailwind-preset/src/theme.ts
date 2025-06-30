@@ -1,9 +1,9 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type { Config } from 'tailwindcss';
+import type { StrictThemeConfig } from './types/tailwind-types.js';
 
-export const lynxTheme: NonNullable<Config['theme']> = {
+export const lynxTheme: Partial<StrictThemeConfig> = {
   boxShadow: {
     sm: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
     DEFAULT:
@@ -94,5 +94,13 @@ export const lynxTheme: NonNullable<Config['theme']> = {
     video: '16 / 9',
     // Not supported in Lynx
     // auto: 'auto',
+  },
+  perspective: {
+    auto: 'auto',
+    dramatic: '100px',
+    near: '300px',
+    normal: '500px',
+    midrange: '800px',
+    distant: '1200px',
   },
 };

@@ -10,20 +10,19 @@ export const scale: Plugin = createUtilityPlugin('scale', [
   [
     'scale',
     [
-      ['@defaults transform', {}],
       cssTransformVarMap.scaleX,
       cssTransformVarMap.scaleY,
       ['transform', cssTransformValue],
     ],
   ],
   [
-    ['scale-x', [['@defaults transform', {}], cssTransformVarMap.scaleX, [
+    ['scale-x', [cssTransformVarMap.scaleX, [
       'transform',
       cssTransformValue,
     ]]],
     [
       'scale-y',
-      [['@defaults transform', {}], cssTransformVarMap.scaleY, [
+      [cssTransformVarMap.scaleY, [
         'transform',
         cssTransformValue,
       ]],

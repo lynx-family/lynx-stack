@@ -36,7 +36,8 @@ declare module 'tailwindcss/lib/util/transformThemeValue.js' {
     | 'animation'
     | 'gridTemplateColumns'
     | 'gridTemplateRows'
-    | 'objectPosition';
+    | 'objectPosition'
+    | string & {};
 
   export type ThemeKey = FontKeys | TransformKeys;
 

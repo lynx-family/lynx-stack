@@ -24,3 +24,4 @@ export { whitespace } from './whitespace.js';
 export { wordBreak } from './wordBreak.js';
 export { gridColumn } from './gridColumn.js';
 export { gridRow } from './gridRow.js';
+export { perspective } from './perspective.js';
