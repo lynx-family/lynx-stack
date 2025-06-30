@@ -207,7 +207,7 @@ mod tests {
     |t| visit_mut_pass(ListVisitor::new(Some(t.comments.clone()))),
     should_transform_list_item_deferred_basic,
     r#"
-    <list-item defer key="1"></list-item>;
+    <list-item defer key="1" item-key="1"></list-item>;
     "#
   );
 
@@ -221,8 +221,8 @@ mod tests {
     should_transform_list_item_deferred_in_list,
     r#"
     <list>
-      <list-item defer key="1"></list-item>
-      <list-item defer key="2"></list-item>
+      <list-item defer key="1" item-key="1"></list-item>
+      <list-item defer key="2" item-key="2"></list-item>
     </list>;
     "#
   );
@@ -236,7 +236,7 @@ mod tests {
     |t| visit_mut_pass(ListVisitor::new(Some(t.comments.clone()))),
     should_transform_list_item_not_deferred,
     r#"
-    <list-item key="1"></list-item>;
+    <list-item key="1" item-key="1"></list-item>;
     "#
   );
 
@@ -249,7 +249,7 @@ mod tests {
     |t| visit_mut_pass(ListVisitor::new(Some(t.comments.clone()))),
     should_transform_list_item_with_spread_deferred,
     r#"
-    <list-item defer key="1" {...spread}></list-item>;
+    <list-item defer key="1" item-key="1" {...spread}></list-item>;
     "#
   );
 
@@ -262,7 +262,7 @@ mod tests {
     |t| visit_mut_pass(ListVisitor::new(Some(t.comments.clone()))),
     should_transform_list_item_deferred_with_children,
     r#"
-    <list-item defer key="1" style="color: red; width: 100rpx;" className="x" bindtap={noop}>
+    <list-item defer key="1" item-key="1" style="color: red; width: 100rpx;" className="x" bindtap={noop}>
       <view/>
       <text/>
       <image/>
@@ -297,7 +297,7 @@ mod tests {
     },
     should_transform_list_item_deferred_with_children_with_snapshot,
     r#"
-    <list-item defer key="1" style="color: red; width: 100rpx;" className="x" bindtap={noop}>
+    <list-item defer key="1" item-key="1" style="color: red; width: 100rpx;" className="x" bindtap={noop}>
       <view/>
       <text/>
       <image/>

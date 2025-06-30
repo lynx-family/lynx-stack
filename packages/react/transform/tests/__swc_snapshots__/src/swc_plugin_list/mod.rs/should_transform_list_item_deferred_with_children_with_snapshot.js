@@ -8,6 +8,7 @@ const __snapshot_da39a_test_1 = require('@lynx-js/react/internal').createSnapsho
         el
     ];
 }, [
+    (snapshot, index, oldValue)=>require('@lynx-js/react/internal').updateListItemPlatformInfo(snapshot, index, oldValue, 0),
     (snapshot, index, oldValue)=>require('@lynx-js/react/internal').updateEvent(snapshot, index, oldValue, 0, "bindEvent", "tap", '')
 ], require('@lynx-js/react/internal').__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null);
 const __snapshot_da39a_test_2 = require('@lynx-js/react/internal').createSnapshot("__snapshot_da39a_test_2", function() {
@@ -32,6 +33,9 @@ const __snapshot_da39a_test_4 = require('@lynx-js/react/internal').createSnapsho
     ];
 }, null, null, undefined, globDynamicComponentEntry, null);
 <ReactLynxRuntimeComponents.DeferredListItem renderListItem={(__c)=><__snapshot_da39a_test_1 values={[
+        {
+            "item-key": "1"
+        },
         noop
     ]}>{__c}</__snapshot_da39a_test_1>} renderChildren={()=><>
       <__snapshot_da39a_test_2/>
