@@ -701,19 +701,6 @@ export function createMainThreadGlobalThis(
     get renderPage() {
       return renderPage!;
     },
-
-    console: {
-      ...Object.keys(console).reduce((acc, key) => {
-        // @ts-expect-error key must be a keyof Console
-        acc[key] = typeof console[key] === 'function'
-          // @ts-expect-error key must be a keyof Console
-          ? console[key].bind(console)
-          // @ts-expect-error key must be a keyof Console
-          : console[key];
-        return acc;
-      }, {} as Console),
-      alog: console.log.bind(console),
-    },
   };
   mtsGlobalThis.globalThis = new Proxy(mtsGlobalThis, {
     get: (target, prop) => {
