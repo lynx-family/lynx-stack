@@ -245,6 +245,10 @@ declare global {
   }
 
   declare function processData(data: InitDataRaw, processorName?: string): InitData;
+
+  interface Console {
+    alog(message?: string): void;
+  }
 }
 
 interface NativeApp {

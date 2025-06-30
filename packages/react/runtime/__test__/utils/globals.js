@@ -123,6 +123,7 @@ function injectGlobals() {
 
   console.profile = vi.fn();
   console.profileEnd = vi.fn();
+  console.alog = vi.fn();
 }
 
 injectGlobals();
