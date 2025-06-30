@@ -8,8 +8,8 @@ use crate::transformer::constants::{
   LYNX_TEXT_BG_COLOR_STR_U16, NONE_STR_U16,
 };
 use crate::{
-  css::{self, parse_inline_style::Transformer},
   get_rename_rule_value, get_replace_rule_value,
+  parser::{self, parse_inline_style::Transformer},
 };
 use crate::{is_newline, is_white_space, str_to_u16_slice};
 
@@ -384,7 +384,7 @@ pub fn transform_inline_style_string<'a>(source: &'a [u16]) -> (Vec<u16>, Vec<u1
     offset: 0,
     extra_children_styles: Vec::new(),
   };
-  css::parse_inline_style::parse_inline_style(source, &mut transformer);
+  parser::parse_inline_style::parse_inline_style(source, &mut transformer);
   if transformer.offset != 0 {
     // append the remaining part of the source
     transformer

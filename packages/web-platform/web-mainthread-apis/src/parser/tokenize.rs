@@ -1,4 +1,4 @@
-use crate::css::{char_code_definitions, types::*, utils::*};
+use crate::parser::{char_code_definitions, types::*, utils::*};
 use crate::*;
 
 const URL_STR: [u16; 3] = ['u' as u16, 'r' as u16, 'l' as u16];

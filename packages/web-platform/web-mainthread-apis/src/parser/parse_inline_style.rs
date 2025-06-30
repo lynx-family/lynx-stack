@@ -1,6 +1,6 @@
 use crate::{
-  css::{self, tokenize::Parser, utils::cmp_str},
   is_newline, is_white_space,
+  parser::{self, tokenize::Parser, utils::cmp_str},
 };
 
 const IMPORTANT_STR: [u16; 9] = [
@@ -32,7 +32,7 @@ impl<'a, 'b, T: Transformer> Parser for ParserState<'a, 'b, T> {
                         ^status = 3
 
     */
-    if token_type == css::types::IDENT_TOKEN && self.status == 0 {
+    if token_type == parser::types::IDENT_TOKEN && self.status == 0 {
       /*
       1. If the next token is an <ident-token>, consume a token from input and set decl's name to the token’s value.
         Otherwise, consume the remnants of a bad declaration from input, with nested, and return nothing.
@@ -43,21 +43,21 @@ impl<'a, 'b, T: Transformer> Parser for ParserState<'a, 'b, T> {
       self.status = 1;
     }
     // 2. Discard whitespace from input.
-    else if self.status == 1 && token_type == css::types::WHITESPACE_TOKEN {
+    else if self.status == 1 && token_type == parser::types::WHITESPACE_TOKEN {
       // do nothing, just skip whitespace
-    } else if self.status == 1 && token_type == css::types::COLON_TOKEN {
+    } else if self.status == 1 && token_type == parser::types::COLON_TOKEN {
       /*
       3. If the next token is a <colon-token>, discard a token from input.
         Otherwise, consume the remnants of a bad declaration from input, with nested, and return nothing.
       */
       self.status = 2; // now find a value
     } else if self.status == 2
-      && token_type != css::types::LEFT_CURLY_BRACKET_TOKEN
-      && token_type != css::types::LEFT_PARENTHESES_TOKEN
-      && token_type != css::types::LEFT_SQUARE_BRACKET_TOKEN
-      && token_type != css::types::SEMICOLON_TOKEN
+      && token_type != parser::types::LEFT_CURLY_BRACKET_TOKEN
+      && token_type != parser::types::LEFT_PARENTHESES_TOKEN
+      && token_type != parser::types::LEFT_SQUARE_BRACKET_TOKEN
+      && token_type != parser::types::SEMICOLON_TOKEN
     {
-      if token_type == css::types::WHITESPACE_TOKEN {
+      if token_type == parser::types::WHITESPACE_TOKEN {
         // 4. Discard whitespace from input.
       } else {
         /*
@@ -69,7 +69,7 @@ impl<'a, 'b, T: Transformer> Parser for ParserState<'a, 'b, T> {
         self.value_start = start;
         self.status = 3; // now find a semicolon
       }
-    } else if self.status == 3 && token_type == css::types::SEMICOLON_TOKEN {
+    } else if self.status == 3 && token_type == parser::types::SEMICOLON_TOKEN {
       /*
       6. If the next token is a <semicolon-token>, consume a token from input.
         Otherwise, consume the remnants of a bad declaration from input, with nested, and return nothing.
@@ -94,7 +94,7 @@ impl<'a, 'b, T: Transformer> Parser for ParserState<'a, 'b, T> {
       self.value_end = 0;
       self.is_important = false;
     } else if self.status == 3
-      && self.prev_token_type == css::types::DELIM_TOKEN
+      && self.prev_token_type == parser::types::DELIM_TOKEN
       && cmp_str(self.source, start, end, &IMPORTANT_STR)
     {
       // here we will have some bad caes: like
@@ -104,12 +104,12 @@ impl<'a, 'b, T: Transformer> Parser for ParserState<'a, 'b, T> {
       self.is_important = true;
       self.value_end = start - 1;
     } else if self.status == 3
-      && token_type != css::types::LEFT_CURLY_BRACKET_TOKEN
-      && token_type != css::types::LEFT_PARENTHESES_TOKEN
-      && token_type != css::types::LEFT_SQUARE_BRACKET_TOKEN
-      && token_type != css::types::SEMICOLON_TOKEN
+      && token_type != parser::types::LEFT_CURLY_BRACKET_TOKEN
+      && token_type != parser::types::LEFT_PARENTHESES_TOKEN
+      && token_type != parser::types::LEFT_SQUARE_BRACKET_TOKEN
+      && token_type != parser::types::SEMICOLON_TOKEN
     {
-      if token_type != css::types::WHITESPACE_TOKEN {
+      if token_type != parser::types::WHITESPACE_TOKEN {
         self.value_end = end;
       }
     } else if self.status != 0 {
@@ -146,10 +146,10 @@ pub fn parse_inline_style<'a, T: Transformer>(source: &[u16], transformer: &'a m
     value_start: 0,
     value_end: 0,
     is_important: false,
-    prev_token_type: css::types::WHITESPACE_TOKEN, // start with whitespace
+    prev_token_type: parser::types::WHITESPACE_TOKEN, // start with whitespace
   };
-  css::tokenize::tokenize(source, &mut parser);
-  if parser.prev_token_type != css::types::SEMICOLON_TOKEN {
-    parser.on_token(css::types::SEMICOLON_TOKEN, source.len(), source.len());
+  parser::tokenize::tokenize(source, &mut parser);
+  if parser.prev_token_type != parser::types::SEMICOLON_TOKEN {
+    parser.on_token(parser::types::SEMICOLON_TOKEN, source.len(), source.len());
   }
 }
