@@ -8,6 +8,12 @@ function App() {
   const [result, setResult] = useState();
 
   const onInput = ({ detail }) => {
+    if (typeof detail !== 'object') {
+      throw new Error(
+        `detail type not match. expect object, got ${typeof detail}`,
+      );
+    }
+
     const { value, cursor, textLength, selectionStart, selectionEnd } = detail;
 
     if (value.length !== textLength) {
