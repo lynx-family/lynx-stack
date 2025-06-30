@@ -147,9 +147,7 @@ export function componentAtIndexFactory(
       oldCtx.unRenderElements();
       if (!oldCtx.__id) {
         oldCtx.tearDown();
-      } else if (
-        oldCtx.__extraProps?.['isReady'] === 1
-      ) {
+      } else if (oldCtx.__extraProps?.['isReady'] === 1) {
         __OnLifecycleEvent([LifecycleConstant.publishEvent, {
           handlerName: `${oldCtx.__id}:__extraProps:onRecycleComponent`,
           data: {},

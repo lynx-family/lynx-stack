@@ -21,6 +21,8 @@ export const DeferredListItem: FC<DeferredListItemProps> = ({ defer, renderListI
   const prevDeferRef = useRef(defer);
   const [isReady, setIsReady] = useState(!defer);
   const onGetSnapshotInstance = useCallback<RefCallback<SnapshotInstance>>((ctx) => {
+    'background only';
+
     ctx!.__extraProps ??= {};
 
     // hack: preact ignore function property on dom
