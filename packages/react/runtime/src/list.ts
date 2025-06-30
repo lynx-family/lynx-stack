@@ -9,6 +9,7 @@ import { maybePromise } from './utils.js';
 export const gSignMap: Record<number, Map<number, SnapshotInstance>> = {};
 export const gRecycleMap: Record<number, Map<string, Map<number, SnapshotInstance>>> = {};
 const gParentWeakMap: WeakMap<SnapshotInstance, unknown> = new WeakMap();
+const resolvedPromise = /* @__PURE__ */ Promise.resolve();
 
 export function clearListGlobal(): void {
   for (const key in gSignMap) {
@@ -89,7 +90,7 @@ export function componentAtIndexFactory(
               delete childCtx.__extraProps!['isReady'];
               childCtx.__extraProps!['isReady'] = 1;
 
-              void Promise.resolve().then(() => {
+              void resolvedPromise.then(() => {
                 // the cellIndex may be changed already, but the `childCtx` is the same
                 resolve(componentAtChildCtx(list, listID, childCtx, operationID, enableReuseNotification));
               });
