@@ -292,7 +292,9 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
         const insertions: number[] = [];
         const updateAction: any[] = [];
 
-        const isNewEngine = SystemInfo.engineVersion === '3.4';
+        const listElement = before.__elements![elementIndex]!;
+        const isNewEngine = SystemInfo.engineVersion === '3.4'
+          && __GetAttributeByName(listElement, 'custom-list-name') === 'list-container';
 
         const isSameType = isNewEngine
           ? (a: SnapshotInstance, b: SnapshotInstance) =>
@@ -363,7 +365,6 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
           updateAction,
         };
 
-        const listElement = before.__elements![elementIndex]!;
         __SetAttribute(listElement, 'update-list-info', info);
         const [componentAtIndex, componentAtIndexes] = componentAtIndexFactory(afterChildNodes);
         __UpdateListCallbacks(
