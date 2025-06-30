@@ -170,7 +170,7 @@ describe('jsx', () => {
 
     expect(result).toMatchInlineSnapshot(`
       {
-        "code": "import { jsx as _jsx, Fragment as _Fragment } from "@lynx-js/react/jsx-runtime";
+        "code": "import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
       import * as ReactLynx from "@lynx-js/react";
       import * as ReactLynxRuntimeComponents from '@lynx-js/react/runtime-components';
       const __snapshot_da39a_04d8c_2 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_04d8c_2", function() {
@@ -204,7 +204,7 @@ describe('jsx', () => {
                       ],
                       children: __c
                   }),
-              renderChildren: ()=>/*#__PURE__*/ _jsx(_Fragment, {}),
+              renderChildren: ()=>[],
               defer: true
           })
       });

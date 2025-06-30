@@ -8,7 +8,9 @@ use swc_core::{
   quote,
 };
 
-use crate::swc_plugin_snapshot::jsx_helpers::jsx_is_list_item;
+use crate::swc_plugin_snapshot::jsx_helpers::{
+  jsx_attr_value, jsx_children_to_expr, jsx_is_list_item,
+};
 
 pub struct ListVisitor<C>
 where
@@ -41,6 +43,13 @@ fn jsx_list_item_deferred(n: &JSXElement) -> bool {
     if let JSXAttrOrSpread::JSXAttr(attr) = attr {
       if let JSXAttrName::Ident(ident) = &attr.name {
         ident.sym == "defer"
+          && match *jsx_attr_value(attr.value.clone()) {
+            Expr::Lit(lit) => match lit {
+              Lit::Bool(b) => b.value,
+              _ => true,
+            },
+            _ => true,
+          }
       } else {
         false
       }
@@ -102,12 +111,7 @@ where
 
       let render_children = quote!(
         "() => $children" as Expr,
-        children: Expr = Expr::JSXFragment(JSXFragment {
-          span: DUMMY_SP,
-          opening: JSXOpeningFragment { span: DUMMY_SP },
-          closing: JSXClosingFragment { span: DUMMY_SP },
-          children,
-        }),
+        children: Expr = jsx_children_to_expr(children),
       );
 
       if self.runtime_components_module_item.is_none() {
@@ -260,6 +264,34 @@ mod tests {
       ..Default::default()
     }),
     |t| visit_mut_pass(ListVisitor::new(Some(t.comments.clone()))),
+    should_not_transform_list_item_with_defer_false,
+    r#"
+    <list-item defer={false}></list-item>;
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    |t| visit_mut_pass(ListVisitor::new(Some(t.comments.clone()))),
+    should_transform_list_item_when_defer_is_expr,
+    r#"
+    <list-item defer={index >= 10}></list-item>;
+    <list-item defer={shouldDefer}></list-item>;
+    <list-item defer={"x"}></list-item>;
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    |t| visit_mut_pass(ListVisitor::new(Some(t.comments.clone()))),
     should_transform_list_item_deferred_with_children,
     r#"
     <list-item defer key="1" item-key="1" style="color: red; width: 100rpx;" className="x" bindtap={noop}>
@@ -301,6 +333,14 @@ mod tests {
       <view/>
       <text/>
       <image/>
+    </list-item>;
+
+    <list-item defer key="1" item-key="1" style="color: red; width: 100rpx;" className="x" bindtap={noop}>
+      <view/>
+    </list-item>;
+
+    <list-item defer key="1" item-key="1" style="color: red; width: 100rpx;" className="x" bindtap={noop}>
+      <App/>
     </list-item>;
     "#
   );
