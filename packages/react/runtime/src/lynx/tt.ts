@@ -143,7 +143,7 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
     }
     case LifecycleConstant.publishEvent: {
       const { handlerName, data: d } = data as { handlerName: string; data: unknown };
-      publishEvent(handlerName, d);
+      lynxCoreInject.tt.publishEvent(handlerName, d);
       break;
     }
   }
