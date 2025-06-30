@@ -2684,10 +2684,14 @@ describe('list-item with "defer" attribute', () => {
           {
             "elementIDs": [
               300,
+              -1,
+              -1,
             ],
             "listID": 299,
             "operationIDs": [
               11,
+              22,
+              33,
             ],
             "triggerLayout": true,
           },
@@ -2768,11 +2772,13 @@ describe('list-item with "defer" attribute', () => {
           </list>,
           {
             "elementIDs": [
+              300,
               301,
               302,
             ],
             "listID": 299,
             "operationIDs": [
+              11,
               22,
               33,
             ],
