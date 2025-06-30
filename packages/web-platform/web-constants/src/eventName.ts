@@ -8,6 +8,7 @@ export const W3cEventNameToLynx: Record<string, string> = {
   overlaytouch: 'touch',
   lynxfocus: 'focus',
   lynxblur: 'blur',
+  lynxinput: 'input',
 };
 export const LynxEventNameToW3cByTagName: Record<
   string,
@@ -16,10 +17,12 @@ export const LynxEventNameToW3cByTagName: Record<
   'X-INPUT': {
     'blur': 'lynxblur',
     'focus': 'lynxfocus',
+    'input': 'lynxinput',
   },
   'X-TEXTAREA': {
     'blur': 'lynxblur',
     'focus': 'lynxfocus',
+    'input': 'lynxinput',
   },
 };
 

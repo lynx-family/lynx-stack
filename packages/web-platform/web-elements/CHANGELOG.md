@@ -1,5 +1,16 @@
 # @lynx-js/web-elements
 
+## 0.7.7
+
+### Patch Changes
+
+- fix: the param `index` of list scrollToPosition function should be `position`. ([#1135](https://github.com/lynx-family/lynx-stack/pull/1135))
+
+- fix: in lynx-view all-on-ui mode, the input event of input and textarea is triggered twice, and the first e.detail is a string, which does not conform to the expected data format. ([#1179](https://github.com/lynx-family/lynx-stack/pull/1179))
+
+- Updated dependencies []:
+  - @lynx-js/web-elements-template@0.7.7
+
 ## 0.7.6
 
 ### Patch Changes

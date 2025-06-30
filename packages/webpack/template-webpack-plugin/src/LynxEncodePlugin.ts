@@ -6,13 +6,24 @@ import type { Compiler } from 'webpack';
 
 import { LynxTemplatePlugin } from './LynxTemplatePlugin.js';
 
+// https://github.com/web-infra-dev/rsbuild/blob/main/packages/core/src/types/config.ts#L1029
+type InlineChunkTestFunction = (params: {
+  size: number;
+  name: string;
+}) => boolean;
+type InlineChunkTest = RegExp | InlineChunkTestFunction;
+type InlineChunkConfig = boolean | InlineChunkTest | {
+  enable?: boolean | 'auto';
+  test: InlineChunkTest;
+};
+
 /**
  * The options for LynxEncodePluginOptions
  *
  * @public
  */
 export interface LynxEncodePluginOptions {
-  inlineScripts?: boolean | undefined;
+  inlineScripts?: InlineChunkConfig | undefined;
 }
 
 /**
@@ -113,24 +124,43 @@ export class LynxEncodePluginImpl {
         const { encodeData } = args;
         const { manifest } = encodeData;
 
+        const [inlinedManifest, externalManifest] = Object.entries(
+          manifest,
+        )
+          .reduce(
+            ([inlined, external], [name, content]) => {
+              const assert = compilation.getAsset(name);
+              const shouldInline = this.#shouldInlineScript(
+                name,
+                assert!.source.size(),
+              );
+
+              if (shouldInline) {
+                inlined[name] = content;
+              } else {
+                external[name] = content;
+              }
+              return [inlined, external];
+            },
+            [{}, {}] as [Record<string, string>, Record<string, string>],
+          );
+
         let publicPath = '/';
-        if (!this.options.inlineScripts) {
-          if (typeof compilation?.outputOptions.publicPath === 'function') {
-            compilation.errors.push(
-              new compiler.webpack.WebpackError(
-                '`publicPath` as a function is not supported yet.',
-              ),
-            );
-          } else {
-            publicPath = compilation?.outputOptions.publicPath ?? '/';
-          }
+        if (typeof compilation?.outputOptions.publicPath === 'function') {
+          compilation.errors.push(
+            new compiler.webpack.WebpackError(
+              '`publicPath` as a function is not supported yet.',
+            ),
+          );
+        } else {
+          publicPath = compilation?.outputOptions.publicPath ?? '/';
         }
 
         if (!isDebug() && !isDev && !isRsdoctor()) {
           [
             encodeData.lepusCode.root,
             ...encodeData.lepusCode.chunks,
-            ...Object.keys(manifest).map(name => ({ name })),
+            ...Object.keys(inlinedManifest).map(name => ({ name })),
             ...encodeData.css.chunks,
           ]
             .filter(asset => asset !== undefined)
@@ -146,32 +176,38 @@ export class LynxEncodePluginImpl {
           //   '/app-service.js': `
           //     lynx.requireModule('async-chunk1')
           //     lynx.requireModule('async-chunk2')
-          //     lynx.requireModule('initial-chunk1')
-          //     lynx.requireModule('initial-chunk2')
+          //     lynx.requireModule('inlined-initial-chunk1')
+          //     lynx.requireModule('inlined-initial-chunk2')
+          //     lynx.requireModuleAsync('external-initial-chunk1')
+          //     lynx.requireModuleAsync('external-initial-chunk2')
           //   `,
-          //   'initial-chunk1': `<content-of-initial-chunk>`,
-          //   'initial-chunk2': `<content-of-initial-chunk>`,
+          //   'inlined-initial-chunk1': `<content>`,
+          //   'inlined-initial-chunk2': `<content>`,
           // },
           // ```
           '/app-service.js': [
             this.#appServiceBanner(),
-            Object.keys(manifest)
-              .map((name) =>
-                `module.exports=lynx.requireModule('${
-                  this.#formatJSName(name, publicPath)
-                }',globDynamicComponentEntry?globDynamicComponentEntry:'__Card__')`
-              )
-              .join(','),
+            ...[externalManifest, inlinedManifest].flatMap(manifest =>
+              Object.keys(manifest).map(name => {
+                if (manifest === externalManifest) {
+                  return `lynx.requireModuleAsync('${
+                    this.#formatJSName(name, publicPath)
+                  }')`;
+                } else {
+                  return `module.exports=lynx.requireModule('${
+                    this.#formatJSName(name, '/')
+                  }',globDynamicComponentEntry?globDynamicComponentEntry:'__Card__')`;
+                }
+              }).join(',')
+            ),
             this.#appServiceFooter(),
           ].join(''),
-          ...(this.options.inlineScripts
-            ? Object.fromEntries(
-              Object.entries(manifest).map(([name, source]) => [
-                this.#formatJSName(name, publicPath),
-                source,
-              ]),
-            )
-            : {}),
+          ...Object.fromEntries(
+            Object.entries(inlinedManifest).map(([name, content]) => [
+              this.#formatJSName(name, '/'),
+              content,
+            ]),
+          ),
         };
 
         return args;
@@ -214,6 +250,28 @@ export class LynxEncodePluginImpl {
 
   #formatJSName(name: string, publicPath: string): string {
     return publicPath + name;
+  }
+
+  #shouldInlineScript(name: string, size: number): boolean {
+    const inlineConfig = this.options.inlineScripts;
+
+    if (inlineConfig instanceof RegExp) {
+      return inlineConfig.test(name);
+    }
+
+    if (typeof inlineConfig === 'function') {
+      return inlineConfig({ size, name });
+    }
+
+    if (typeof inlineConfig === 'object') {
+      if (inlineConfig.enable === false) return false;
+      if (inlineConfig.test instanceof RegExp) {
+        return inlineConfig.test.test(name);
+      }
+      return inlineConfig.test({ size, name });
+    }
+
+    return inlineConfig !== false;
   }
 
   protected options: Required<LynxEncodePluginOptions>;

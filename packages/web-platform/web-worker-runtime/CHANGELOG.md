@@ -1,5 +1,16 @@
 # @lynx-js/web-worker-runtime
 
+## 0.14.1
+
+### Patch Changes
+
+- feat: support BTS API `lynx.reportError` && `__SetSourceMapRelease`, now you can use it and handle it in lynx-view error event. ([#1059](https://github.com/lynx-family/lynx-stack/pull/1059))
+
+- Updated dependencies [[`a64333e`](https://github.com/lynx-family/lynx-stack/commit/a64333ef28228d6b90c32e027f67bef8acbd8432), [`7751375`](https://github.com/lynx-family/lynx-stack/commit/775137521782ca5445f22029c39163c0a63bbfa5), [`b52a924`](https://github.com/lynx-family/lynx-stack/commit/b52a924a2375cb6f7ebafdd8abfbab0254eb2330)]:
+  - @lynx-js/web-constants@0.14.1
+  - @lynx-js/web-mainthread-apis@0.14.1
+  - @lynx-js/web-worker-rpc@0.14.1
+
 ## 0.14.0
 
 ### Patch Changes

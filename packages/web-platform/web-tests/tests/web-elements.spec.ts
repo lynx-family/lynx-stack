@@ -2701,7 +2701,7 @@ test.describe('web-elements test suite', () => {
           .locator('#target')
           .evaluateHandle((target) => {
             let detail = { value: undefined };
-            target.addEventListener('input', (e) => {
+            target.addEventListener('lynxinput', (e) => {
               detail.value = (e as any).detail.value;
             });
             return detail;

@@ -25,6 +25,11 @@ import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 import { cssChunksToMap } from './css/cssChunksToMap.js';
 import { createLynxAsyncChunksRuntimeModule } from './LynxAsyncChunksRuntimeModule.js';
 
+export type OriginManifest = Record<string, {
+  content: string;
+  size: number;
+}>;
+
 /**
  * The options for encoding a Lynx bundle.
  *

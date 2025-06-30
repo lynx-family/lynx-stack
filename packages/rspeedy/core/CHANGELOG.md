@@ -1,5 +1,39 @@
 # @lynx-js/rspeedy
 
+## 0.9.11
+
+### Patch Changes
+
+- Enable fine-grained control for `output.inlineScripts` ([#883](https://github.com/lynx-family/lynx-stack/pull/883))
+
+  ```ts
+  type InlineChunkTestFunction = (params: {
+    size: number
+    name: string
+  }) => boolean
+
+  type InlineChunkTest = RegExp | InlineChunkTestFunction
+
+  type InlineChunkConfig =
+    | boolean
+    | InlineChunkTest
+    | { enable?: boolean | 'auto', test: InlineChunkTest }
+  ```
+
+  ```ts
+  import { defineConfig } from '@lynx-js/rspeedy'
+
+  export default defineConfig({
+    output: {
+      inlineScripts: ({ name, size }) => {
+        return name.includes('foo') && size < 1000
+      },
+    },
+  })
+  ```
+
+- docs: remove chunks: 'all' in comments ([#1168](https://github.com/lynx-family/lynx-stack/pull/1168))
+
 ## 0.9.10
 
 ## 0.9.9

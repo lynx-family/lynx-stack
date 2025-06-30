@@ -1,5 +1,11 @@
 # @lynx-js/react
 
+## 0.110.1
+
+### Patch Changes
+
+- Fix a memory leak when using `<list/>`. ([#1144](https://github.com/lynx-family/lynx-stack/pull/1144))
+
 ## 0.110.0
 
 ### Minor Changes
