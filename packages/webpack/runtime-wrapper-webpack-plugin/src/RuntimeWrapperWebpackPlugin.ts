@@ -151,6 +151,7 @@ class RuntimeWrapperWebpackPluginImpl {
     if (typeof options.injectVars === 'function') {
       injectStr = options.injectVars(defaultInjectVars).join(',');
     }
+    const iife = compiler.options.output.iife ?? true;
 
     // banner
     new BannerPlugin({
@@ -168,6 +169,7 @@ class RuntimeWrapperWebpackPluginImpl {
             overrideRuntimePromise: true,
             moduleId: '[name].js',
             targetSdkVersion,
+            iife,
           })
           // In standalone lazy bundle mode, the lazy bundle will
           // also has chunk.id "main", it will be conflict with the
@@ -189,7 +191,7 @@ class RuntimeWrapperWebpackPluginImpl {
         const footer = this.#getBannerType(filename) === 'script'
           ? loadScriptFooter
           : loadBundleFooter;
-        return amdFooter('[name].js') + footer;
+        return amdFooter('[name].js', iife) + footer;
       },
     }).apply(compiler);
   }
@@ -253,12 +255,18 @@ const amdBanner = ({
   moduleId,
   overrideRuntimePromise,
   targetSdkVersion,
+  iife,
 }: {
   injectStr: string;
   moduleId: string;
   overrideRuntimePromise: boolean;
   targetSdkVersion: string;
+  iife: boolean;
 }) => {
+  const iifeWrapper = iife ? '' : `
+// This needs to be wrapped in an IIFE because it needs to be isolated against Lynx injected variables.
+(() => {`;
+
   return (
     `
     tt.define("${moduleId}", function(require, module, exports, ${injectStr}) {
@@ -270,11 +278,13 @@ ${overrideRuntimePromise ? `var Promise = lynx.Promise;` : ''}
 fetch = fetch || lynx.fetch;
 requestAnimationFrame = requestAnimationFrame || lynx.requestAnimationFrame;
 cancelAnimationFrame = cancelAnimationFrame || lynx.cancelAnimationFrame;
+${iifeWrapper}
 `
   );
 };
 
-const amdFooter = (moduleId: string) => `
+const amdFooter = (moduleId: string, iife: boolean) => `
+${iife ? '' : '})();'}
     });
     return tt.require("${moduleId}");`;
 
