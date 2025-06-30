@@ -37,6 +37,7 @@ export function prepareMainThreadAPIs(
   createElement: Document['createElement'],
   commitDocument: () => Promise<void> | void,
   markTimingInternal: (timingKey: string, pipelineId?: string) => void,
+  flushMarkTimingInternal: () => void,
   reportError: RpcCallType<typeof reportErrorEndpoint>,
   triggerI18nResourceFallback: (
     options: I18nResourceTranslationOptions,
@@ -169,6 +170,7 @@ export function prepareMainThreadAPIs(
           markTimingInternal('ui_operation_flush_end', pipelineId);
           markTimingInternal('layout_end', pipelineId);
           markTimingInternal('dispatch_end', pipelineId);
+          flushMarkTimingInternal();
           requestAnimationFrame(() => {
             postTimingFlags(timingFlags, pipelineId);
           });
