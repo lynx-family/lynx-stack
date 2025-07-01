@@ -1,30 +1,34 @@
 WARNING in ./compat/utf-8/index.jsx
-⚠ ModuleWarning: DEPRECATED: old package "@lynx-js/react-components" is removed
-╭─[<LINE:COLUMN>]
-1  import { Text } from '@lynx-js/react-components'
-· ────────────────────────┬───────────────────────
-·                         ╰── DEPRECATED: old package "@lynx-js/react-components" is removed
-2
-3  function App() {
-╰────
+⚠ ModuleWarning:   ! DEPRECATED: old package "@lynx-js/react-components" is removed
+,-[<LINE:COLUMN>]
+1 | import { Text } from '@lynx-js/react-components'
+: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2 |
+3 | function App() {
+4 |   return <Text>你好，世界</Text>
+`----
+
 
 WARNING in ./compat/utf-8/index.jsx
-⚠ ModuleWarning: DEPRECATED: old JSXElementName "Text" is changed to "text" (from: <ROOT>/packages/webpack/react-webpack-plugin/lib/loaders/background.js??ruleSet[1].rules[0].use[1])
-at Object.backgroundLoader (file://<ROOT>/packages/webpack/react-webpack-plugin/src/loaders/background.ts:<LINE:COLUMN>)
-at <ROOT>/node_modules/<PNPM_INNER>/@rspack/core/dist/index.js:<LINE:COLUMN>
-at node:internal/util:<LINE:COLUMN>
-at new Promise (<anonymous>)
-at node:internal/util:<LINE:COLUMN>
-at isomorphoicRun (<ROOT>/node_modules/<PNPM_INNER>/@rspack/core/dist/index.js:<LINE:COLUMN>)
-at runLoaders (<ROOT>/node_modules/<PNPM_INNER>/@rspack/core/dist/index.js:<LINE:COLUMN>)
+⚠ ModuleWarning:   ! DEPRECATED: old JSXElementName "Text" is changed to "text"
+,-[<LINE:COLUMN>]
+1 | import { Text } from '@lynx-js/react-components'
+2 |
+3 | function App() {
+4 |   return <Text>你好，世界</Text>
+:           ^^^^
+5 | }
+`----
+
 
 WARNING in ./compat/utf-8/index.jsx
-⚠ ModuleWarning: DEPRECATED: old JSXElementName "Text" is changed to "text"
-╭─[<LINE:COLUMN>]
-2
-3  function App() {
-4    return <Text>你好，世界</Text>
-·           ──┬─
-·             ╰── DEPRECATED: old JSXElementName "Text" is changed to "text"
-5  }
-╰────
+⚠ ModuleWarning:   ! DEPRECATED: old JSXElementName "Text" is changed to "text"
+,-[<LINE:COLUMN>]
+1 | import { Text } from '@lynx-js/react-components'
+2 |
+3 | function App() {
+4 |   return <Text>你好，世界</Text>
+:                            ^^^^
+5 | }
+`----
+

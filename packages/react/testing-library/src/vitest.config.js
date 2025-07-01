@@ -32,7 +32,7 @@ export const createVitestConfig = async (options) => {
     return {
       name: 'transformReactLynxPlugin',
       enforce: 'pre',
-      transform(sourceText, sourcePath) {
+      async transform(sourceText, sourcePath) {
         const id = sourcePath;
         if (
           id.endsWith('.css') || id.endsWith('.less') || id.endsWith('.scss')
@@ -43,8 +43,8 @@ export const createVitestConfig = async (options) => {
           return '';
         }
 
-        const { transformReactLynxSync } = require(
-          '@lynx-js/react/transform',
+        const { transformReactLynx } = require(
+          '@lynx-js/react-transform',
         );
         // relativePath should be stable between different runs with different cwd
         const relativePath = normalizeSlashes(path.relative(
@@ -52,9 +52,18 @@ export const createVitestConfig = async (options) => {
           sourcePath,
         ));
         const basename = path.basename(sourcePath);
-        const result = transformReactLynxSync(sourceText, {
+
+        const isTS = /\.[mc]?ts$/.exec(relativePath);
+        const syntax = isTS ? 'typescript' : 'ecmascript';
+        const syntaxConfig = {
+          syntax,
+          decorators: true,
+          tsx: !isTS,
+          jsx: true,
+        };
+
+        const result = await transformReactLynx(sourceText, {
           mode: 'test',
-          pluginName: '',
           filename: basename,
           sourcemap: true,
           snapshot: {
@@ -64,6 +73,7 @@ export const createVitestConfig = async (options) => {
             filename: relativePath,
             target: 'MIXED',
           },
+          syntaxConfig,
           // snapshot: true,
           directiveDCE: false,
           defineDCE: false,
@@ -74,7 +84,6 @@ export const createVitestConfig = async (options) => {
             runtimePkg: `${runtimePkgName}/internal`,
             target: 'MIXED',
           },
-          refresh: false,
           cssScope: false,
         });
         if (result.errors.length > 0) {

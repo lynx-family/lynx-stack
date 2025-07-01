@@ -69,6 +69,16 @@ describe('ReactLynx rsbuild', () => {
             ).pathname,
           },
         },
+        tools: {
+          swc: {
+            jsc: {
+              parser: {
+                syntax: 'ecmascript',
+                jsx: true,
+              },
+            },
+          },
+        },
         output: {
           distPath: {
             root: tmp,
