@@ -184,8 +184,8 @@ importers:
         specifier: ^1.5.3
         version: 1.5.3(preact@10.23.2)
       '@prefresh/utils':
-        specifier: ^1.2.0
-        version: 1.2.0
+        specifier: ^1.2.1
+        version: 1.2.1
       esbuild:
         specifier: ^0.25.5
         version: 0.25.5
@@ -2261,8 +2261,8 @@ packages:
     peerDependencies:
       preact: ^10.0.0
 
-  '@prefresh/utils@1.2.0':
-    resolution: {integrity: sha512-KtC/fZw+oqtwOLUFM9UtiitB0JsVX0zLKNyRTA332sqREqSALIIQQxdUCS1P3xR/jT1e2e8/5rwH6gdcMLEmsQ==}
+  '@prefresh/utils@1.2.1':
+    resolution: {integrity: sha512-vq/sIuN5nYfYzvyayXI4C2QkprfNaHUQ9ZX+3xLD8nL3rWyzpxOm1+K7RtMbhd+66QcaISViK7amjnheQ/4WZw==}
 
   '@publint/pack@0.1.2':
     resolution: {integrity: sha512-S+9ANAvUmjutrshV4jZjaiG8XQyuJIZ8a4utWmN/vW1sgQ9IfBnPndwkmQYw53QmouOIytT874u65HEmu6H5jw==}
@@ -9377,7 +9377,7 @@ snapshots:
     dependencies:
       preact: 10.23.2
 
-  '@prefresh/utils@1.2.0': {}
+  '@prefresh/utils@1.2.1': {}
 
   '@publint/pack@0.1.2': {}
 

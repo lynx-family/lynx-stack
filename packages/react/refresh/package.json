@@ -15,7 +15,7 @@
   "devDependencies": {
     "@lynx-js/react": "workspace:*",
     "@prefresh/core": "^1.5.3",
-    "@prefresh/utils": "^1.2.0",
+    "@prefresh/utils": "^1.2.1",
     "esbuild": "^0.25.5"
   }
 }
