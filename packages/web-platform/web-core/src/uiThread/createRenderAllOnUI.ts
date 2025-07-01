@@ -25,6 +25,7 @@ export function createRenderAllOnUI(
     pipelineId?: string,
     timeStamp?: number,
   ) => void,
+  flushMarkTimingInternal: () => void,
   callbacks: {
     onError?: (err: Error, release: string) => void;
   },
@@ -48,6 +49,7 @@ export function createRenderAllOnUI(
     document.createElement.bind(document),
     () => {},
     markTimingInternal,
+    flushMarkTimingInternal,
     (err, _, release) => {
       callbacks.onError?.(err, release);
     },

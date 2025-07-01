@@ -12,7 +12,7 @@ import { __root, setRoot } from '../root.js';
 import { applyRefQueue } from '../snapshot/workletRef.js';
 import { SnapshotInstance, __page, setupPage } from '../snapshot.js';
 import { isEmptyObject } from '../utils.js';
-import { PerformanceTimingKeys, markTiming, setPipeline } from './performance.js';
+import { markTiming, setPipeline } from './performance.js';
 
 function ssrEncode() {
   const { __opcodes } = __root;
@@ -122,7 +122,7 @@ function updatePage(data: Record<string, unknown> | undefined, options?: UpdateP
     __root.__jsx = oldRoot.__jsx;
 
     setPipeline(options?.pipelineOptions);
-    markTiming(PerformanceTimingKeys.updateDiffVdomStart);
+    markTiming('updateDiffVdomStart');
     {
       __pendingListUpdates.clear();
       renderMainThread();
@@ -138,7 +138,7 @@ function updatePage(data: Record<string, unknown> | undefined, options?: UpdateP
       __pendingListUpdates.flush();
       applyRefQueue();
     }
-    markTiming(PerformanceTimingKeys.updateDiffVdomEnd);
+    markTiming('updateDiffVdomEnd');
   }
 
   if (options) {

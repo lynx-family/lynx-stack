@@ -28,7 +28,8 @@ export function startMainThreadWorker(
 ) {
   const uiThreadRpc = new Rpc(uiThreadPort, 'main-to-ui');
   const backgroundThreadRpc = new Rpc(backgroundThreadPort, 'main-to-bg');
-  const markTimingInternal = createMarkTimingInternal(backgroundThreadRpc);
+  const { markTimingInternal, flushMarkTimingInternal } =
+    createMarkTimingInternal(backgroundThreadRpc);
   const uiFlush = uiThreadRpc.createCall(flushElementTreeEndpoint);
   const reportError = uiThreadRpc.createCall(reportErrorEndpoint);
   const triggerI18nResourceFallback = (
@@ -50,6 +51,7 @@ export function startMainThreadWorker(
     docu.createElement.bind(docu),
     docu.commit.bind(docu),
     markTimingInternal,
+    flushMarkTimingInternal,
     reportError,
     triggerI18nResourceFallback,
     (initI18nResources: InitI18nResources) => {
