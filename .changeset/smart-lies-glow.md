@@ -2,9 +2,9 @@
 "@lynx-js/react": minor
 ---
 
-Allow some `<list-item/>`s to be defer and render at background thread.
+Allow some `<list-item/>`s to be deferred and rendered in the background thread.
 
-Using the following syntax:
+Use the following syntax:
 
 ```diff
 <list>
@@ -15,4 +15,4 @@ Using the following syntax:
 </list>
 ```
 
-You should render your heavyweight components with `defer` attribute to avoid blocking the main thread.
+You should render your heavyweight components with the `defer` attribute to avoid blocking the main thread.

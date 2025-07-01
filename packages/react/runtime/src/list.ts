@@ -102,7 +102,7 @@ export function componentAtIndexFactory(
         });
       }));
     } else if (maybePromise<number>(childCtx.__extraProps?.['isReady'])) {
-      throw new Error('componentAtIndex called on a pending deferred list-item');
+      throw new Error('componentAtIndex was called on a pending deferred list item');
     }
 
     const uniqID = childCtx.type + (platformInfo['reuse-identifier'] ?? '');
