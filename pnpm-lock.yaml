@@ -181,8 +181,8 @@ importers:
         specifier: workspace:*
         version: link:..
       '@prefresh/core':
-        specifier: ^1.5.3
-        version: 1.5.3(preact@10.23.2)
+        specifier: ^1.5.4
+        version: 1.5.4(preact@10.23.2)
       '@prefresh/utils':
         specifier: ^1.2.0
         version: 1.2.0
@@ -2256,8 +2256,8 @@ packages:
   '@polka/url@1.0.0-next.25':
     resolution: {integrity: sha512-j7P6Rgr3mmtdkeDGTe0E/aYyWEWVtc5yFXtHCRHs28/jptDEWfaVOc5T7cblqy1XKPPfCxJc/8DwQ5YgLOZOVQ==}
 
-  '@prefresh/core@1.5.3':
-    resolution: {integrity: sha512-nDzxj0tA1/M6APNAWqaxkZ+3sTdPHESa+gol4+Bw7rMc2btWdkLoNH7j9rGhUb8SThC0Vz0VoXtq+U+9azGLHg==}
+  '@prefresh/core@1.5.4':
+    resolution: {integrity: sha512-F7Sd/qnPX2QEkgiJr0hmImYjp6s85chlkR3Y9ncWVSMusN3UM9vMhQIdcYo/ugqxqo7cKH7Y7Oofrsimf7TWuQ==}
     peerDependencies:
       preact: ^10.0.0
 
@@ -9373,7 +9373,7 @@ snapshots:
 
   '@polka/url@1.0.0-next.25': {}
 
-  '@prefresh/core@1.5.3(preact@10.23.2)':
+  '@prefresh/core@1.5.4(preact@10.23.2)':
     dependencies:
       preact: 10.23.2
 
