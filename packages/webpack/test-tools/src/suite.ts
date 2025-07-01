@@ -92,6 +92,19 @@ export function createRunner(
 ): (name: string, processor: ITestProcessor) => void {
   const require = createRequire(import.meta.url);
   const testConfigFile = path.join(src, 'test.config.cjs');
+  const testConfig = existsSync(testConfigFile)
+    ? require(testConfigFile) as TTestConfig<ECompilerType>
+    : {};
+  const oldModuleScope = testConfig.moduleScope;
+  testConfig.moduleScope = (ms, stats) => {
+    if (typeof oldModuleScope === 'function') {
+      ms = oldModuleScope(ms, stats);
+    }
+    // @ts-expect-error Mock the console.alog method
+    ms.console.alog = () => void 0;
+    return ms;
+  };
+
   const context = new TestContext({
     src,
     dist,
@@ -106,9 +119,7 @@ export function createRunner(
         ) as TCompiler<ECompilerType>,
     },
     runnerFactory,
-    testConfig: existsSync(testConfigFile)
-      ? require(testConfigFile) as TTestConfig<ECompilerType>
-      : {},
+    testConfig,
   });
   const runner = function run(name: string, processor: ITestProcessor) {
     it(`should run before`, async () => {
