@@ -222,6 +222,9 @@ importers:
       '@lynx-js/react':
         specifier: workspace:*
         version: link:..
+      '@lynx-js/react-transform':
+        specifier: workspace:*
+        version: link:../transform
       '@lynx-js/testing-environment':
         specifier: workspace:*
         version: link:../../testing-library/testing-environment
