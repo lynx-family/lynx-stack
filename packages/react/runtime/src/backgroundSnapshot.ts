@@ -245,21 +245,11 @@ export class BackgroundSnapshotInstance {
 
     if (typeof key === 'string') {
       (this.__extraProps ??= {})[key] = value;
-      __globalSnapshotPatch?.push(
-        SnapshotOperation.SetAttribute,
-        this.__id,
-        key,
-        value,
-      );
-      if (__PROFILE__) {
-        console.profileEnd();
-      }
-      return;
+    } else {
+      // old path (`this.setAttribute(0, xxx)`)
+      // is reserved as slow path
+      (this.__values ??= [])[key] = value;
     }
-
-    // old path (`this.setAttribute(0, xxx)`)
-    // is reserved as slow path
-    (this.__values ??= [])[key] = value;
     __globalSnapshotPatch?.push(
       SnapshotOperation.SetAttribute,
       this.__id,
