@@ -87,6 +87,13 @@
       ],
     },
     {
+      "groupName": "Prefresh",
+      "groupSlug": "prefresh",
+      "matchPackageNames": [
+        "/@prefresh/*/"
+      ]
+    },
+    {
       "groupName": "API Extractor",
       "groupSlug": "api-extractor",
       "matchPackageNames": [
