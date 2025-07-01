@@ -2606,7 +2606,7 @@ describe('list-item with "defer" attribute', () => {
     const listRef = elementTree.getElementById('list');
     elementTree.triggerComponentAtIndex(listRef, 0, 11);
     expect(() => elementTree.triggerComponentAtIndex(listRef, 0, 22)).toThrowErrorMatchingInlineSnapshot(
-      `[Error: componentAtIndex called on a pending deferred list-item]`,
+      `[Error: componentAtIndex was called on a pending deferred list item]`,
     );
   });
 
