@@ -446,6 +446,11 @@ test.describe('reactlynx3 tests', () => {
       await wait(100);
       await expect(page.locator('#target')).toHaveCSS('color', 'rgb(0, 0, 0)');
     });
+    test('basic-css-compound-selector', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(500);
+      await diffScreenShot(page, title, 'compound-selector');
+    });
   });
   test.describe('apis', () => {
     test('api-custom-template-loader', async ({ page }, { title }) => {
