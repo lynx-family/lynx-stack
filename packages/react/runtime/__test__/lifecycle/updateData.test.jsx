@@ -25,7 +25,6 @@ afterEach(() => {
   deinitGlobalSnapshotPatch();
   elementTree.clear();
   vi.restoreAllMocks();
-  globalThis.__FIRST_SCREEN_SYNC_TIMING__ = 'immediately';
 });
 
 describe('triggerDataUpdated', () => {
@@ -172,95 +171,6 @@ describe('triggerDataUpdated', () => {
   });
 
   /**
-   * This test verifies that updates initiated by `updateCardData` include the `"flushOptions":{"triggerDataUpdated":true}` property
-   * when `__FIRST_SCREEN_SYNC_TIMING__` is set to `jsReady` and an update occurs before hydration.
-   * The test follows these steps:
-   * 1. **Initial Render (Main Thread):** Renders the component on the main thread with initial data.
-   * 2. **Background Render:** Renders the component in the background.
-   * 3. **Main Thread Update:** Updates data on the main thread, which should trigger an immediate flush with `triggerDataUpdated: true`.
-   * 4. **Background Update:** Calls `updateCardData` to update the component in the background, which should be a no-op as the data is already updated.
-   */
-  it('should send triggerDataUpdated when updateData before hydration when jsReady is enabled', async function() {
-    globalThis.__FIRST_SCREEN_SYNC_TIMING__ = 'jsReady';
-
-    function Comp() {
-      const initData = useInitData();
-
-      return <text>{initData.msg}</text>;
-    }
-
-    // main thread render
-    {
-      __root.__jsx = <Comp />;
-      renderPage({ msg: 'init' });
-      expect(__root.__element_root).toMatchInlineSnapshot(`
-        <page
-          cssId="default-entry-from-native:0"
-        >
-          <text>
-            <raw-text
-              text="init"
-            />
-          </text>
-        </page>
-      `);
-    }
-
-    // background render
-    {
-      globalEnvManager.switchToBackground();
-      render(<Comp />, __root);
-    }
-
-    // update MT
-    {
-      globalEnvManager.switchToMainThread();
-      __FlushElementTree.mockClear();
-      updatePage({ msg: 'update' });
-
-      expect(__FlushElementTree.mock.calls).toMatchInlineSnapshot(`
-        [
-          [
-            <page
-              cssId="default-entry-from-native:0"
-            >
-              <text>
-                <raw-text
-                  text="update"
-                />
-              </text>
-            </page>,
-            {
-              "triggerDataUpdated": true,
-            },
-          ],
-        ]
-      `);
-      expect(__root.__element_root).toMatchInlineSnapshot(`
-        <page
-          cssId="default-entry-from-native:0"
-        >
-          <text>
-            <raw-text
-              text="update"
-            />
-          </text>
-        </page>
-      `);
-    }
-
-    // update BG
-    {
-      globalEnvManager.switchToBackground();
-      lynx.getNativeApp().callLepusMethod.mockClear();
-      lynxCoreInject.tt.updateCardData({ msg: 'update' });
-      await waitSchedule();
-
-      expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(0);
-    }
-  });
-
-  /**
    * This test verifies that `triggerDataUpdated` is sent only once, even when multiple components
    * call `useInitData`.
    * The test follows these steps:
@@ -365,7 +275,7 @@ describe('triggerDataUpdated', () => {
           [
             "rLynxChange",
             {
-              "data": "{"patchList":[{"id":8}],"flushOptions":{"triggerDataUpdated":true}}",
+              "data": "{"patchList":[{"id":6}],"flushOptions":{"triggerDataUpdated":true}}",
               "patchOptions": {
                 "reloadVersion": 0,
               },
@@ -375,7 +285,7 @@ describe('triggerDataUpdated', () => {
           [
             "rLynxChange",
             {
-              "data": "{"patchList":[{"id":9,"snapshotPatch":[3,-6,0,"update"]}]}",
+              "data": "{"patchList":[{"id":7,"snapshotPatch":[3,-6,0,"update"]}]}",
               "patchOptions": {
                 "reloadVersion": 0,
               },
@@ -385,7 +295,7 @@ describe('triggerDataUpdated', () => {
           [
             "rLynxChange",
             {
-              "data": "{"patchList":[{"id":10,"snapshotPatch":[3,-8,0,"update"]}]}",
+              "data": "{"patchList":[{"id":8,"snapshotPatch":[3,-8,0,"update"]}]}",
               "patchOptions": {
                 "reloadVersion": 0,
               },
@@ -555,7 +465,7 @@ describe('triggerDataUpdated', () => {
           [
             "rLynxChange",
             {
-              "data": "{"patchList":[{"id":13}],"flushOptions":{"triggerDataUpdated":true}}",
+              "data": "{"patchList":[{"id":11}],"flushOptions":{"triggerDataUpdated":true}}",
               "patchOptions": {
                 "reloadVersion": 0,
               },
@@ -565,7 +475,7 @@ describe('triggerDataUpdated', () => {
           [
             "rLynxChange",
             {
-              "data": "{"patchList":[{"id":14,"snapshotPatch":[3,-5,0,"update"]}]}",
+              "data": "{"patchList":[{"id":12,"snapshotPatch":[3,-5,0,"update"]}]}",
               "patchOptions": {
                 "reloadVersion": 0,
               },
@@ -575,7 +485,7 @@ describe('triggerDataUpdated', () => {
           [
             "rLynxChange",
             {
-              "data": "{"patchList":[{"id":15,"snapshotPatch":[3,-7,0,"update"]}]}",
+              "data": "{"patchList":[{"id":13,"snapshotPatch":[3,-7,0,"update"]}]}",
               "patchOptions": {
                 "reloadVersion": 0,
               },
@@ -633,6 +543,7 @@ describe('triggerDataUpdated', () => {
    */
   it('should send triggerDataUpdated when using withInitDataInState', async function() {
     const willUnmount = vi.fn();
+
     class App extends Component {
       componentWillUnmount() {
         willUnmount();
@@ -642,6 +553,7 @@ describe('triggerDataUpdated', () => {
         return <text>{lynx.__initData.msg}</text>;
       }
     }
+
     const Comp = withInitDataInState(App);
 
     // main thread render
@@ -714,7 +626,7 @@ describe('triggerDataUpdated', () => {
           [
             "rLynxChange",
             {
-              "data": "{"patchList":[{"id":18,"snapshotPatch":[3,-3,0,"update"]}],"flushOptions":{"triggerDataUpdated":true}}",
+              "data": "{"patchList":[{"id":16,"snapshotPatch":[3,-3,0,"update"]}],"flushOptions":{"triggerDataUpdated":true}}",
               "patchOptions": {
                 "reloadVersion": 0,
               },
@@ -750,6 +662,181 @@ describe('triggerDataUpdated', () => {
       globalEnvManager.switchToBackground();
       render(null, __root);
       expect(willUnmount).toBeCalled();
+    }
+  });
+});
+
+describe('triggerDataUpdated when jsReady is enabled', () => {
+  beforeEach(() => {
+    globalThis.__FIRST_SCREEN_SYNC_TIMING__ = 'jsReady';
+  });
+
+  afterEach(() => {
+    globalThis.__FIRST_SCREEN_SYNC_TIMING__ = 'immediately';
+  });
+
+  /**
+   * This test verifies that updates initiated by `updateCardData` include the `"flushOptions":{"triggerDataUpdated":true}` property
+   * when `__FIRST_SCREEN_SYNC_TIMING__` is set to `jsReady` and an update occurs before hydration.
+   * The test follows these steps:
+   * 1. **Initial Render (Main Thread):** Renders the component on the main thread with initial data.
+   * 2. **Background Render:** Renders the component in the background.
+   * 3. **Main Thread Update:** Updates data on the main thread, which should trigger an immediate flush with `triggerDataUpdated: true`.
+   * 4. **Background Update:** Calls `updateCardData` to update the component in the background, which should be a no-op as the data is already updated.
+   */
+  it('should send triggerDataUpdated when updateData before hydration', async function() {
+    function Comp() {
+      const initData = useInitData();
+
+      return <text>{initData.msg}</text>;
+    }
+
+    // main thread render
+    {
+      __root.__jsx = <Comp />;
+      renderPage({ msg: 'init' });
+      expect(__root.__element_root).toMatchInlineSnapshot(`
+        <page
+          cssId="default-entry-from-native:0"
+        >
+          <text>
+            <raw-text
+              text="init"
+            />
+          </text>
+        </page>
+      `);
+    }
+
+    // background render
+    {
+      globalEnvManager.switchToBackground();
+      render(<Comp />, __root);
+    }
+
+    // update MT
+    {
+      globalEnvManager.switchToMainThread();
+      __FlushElementTree.mockClear();
+      updatePage({ msg: 'update' });
+
+      expect(__FlushElementTree.mock.calls).toMatchInlineSnapshot(`
+        [
+          [
+            <page
+              cssId="default-entry-from-native:0"
+            >
+              <text>
+                <raw-text
+                  text="update"
+                />
+              </text>
+            </page>,
+            {
+              "triggerDataUpdated": true,
+            },
+          ],
+        ]
+      `);
+      expect(__root.__element_root).toMatchInlineSnapshot(`
+        <page
+          cssId="default-entry-from-native:0"
+        >
+          <text>
+            <raw-text
+              text="update"
+            />
+          </text>
+        </page>
+      `);
+    }
+
+    // update BG
+    {
+      globalEnvManager.switchToBackground();
+      lynx.getNativeApp().callLepusMethod.mockClear();
+      lynxCoreInject.tt.updateCardData({ msg: 'update' });
+      await waitSchedule();
+
+      expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(0);
+    }
+  });
+
+  it('should not send triggerDataUpdated when updateData after hydration', async function() {
+    function Comp() {
+      const initData = useInitData();
+
+      return <text>{initData.msg}</text>;
+    }
+
+    // main thread render
+    {
+      __root.__jsx = <Comp />;
+      renderPage({ msg: 'init' });
+    }
+
+    // background render
+    {
+      globalEnvManager.switchToBackground();
+      render(<Comp />, __root);
+    }
+
+    // LifecycleConstant.jsReady
+    {
+      globalEnvManager.switchToMainThread();
+      rLynxJSReady();
+    }
+
+    // hydrate
+    {
+      globalEnvManager.switchToBackground();
+      // LifecycleConstant.firstScreen
+      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+    }
+
+    // rLynxChange
+    {
+      globalEnvManager.switchToMainThread();
+      globalThis.__OnLifecycleEvent.mockClear();
+      const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
+      globalThis[rLynxChange[0]](rLynxChange[1]);
+      expect(globalThis.__OnLifecycleEvent).not.toBeCalled();
+      await waitSchedule();
+    }
+
+    // update MT
+    {
+      globalEnvManager.switchToMainThread();
+      globalThis.__FlushElementTree.mockClear();
+
+      updatePage({ msg: 'update' });
+      expect(__root.__element_root).toMatchInlineSnapshot(`
+        <page
+          cssId="default-entry-from-native:0"
+        >
+          <text>
+            <raw-text
+              text="init"
+            />
+          </text>
+        </page>
+      `);
+      expect(globalThis.__FlushElementTree.mock.calls).toMatchInlineSnapshot(`
+        [
+          [
+            <page
+              cssId="default-entry-from-native:0"
+            >
+              <text>
+                <raw-text
+                  text="init"
+                />
+              </text>
+            </page>,
+            {},
+          ],
+        ]
+      `);
     }
   });
 });

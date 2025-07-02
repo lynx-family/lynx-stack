@@ -116,6 +116,7 @@ function updatePage(data: Record<string, unknown> | undefined, options?: UpdateP
     Object.assign(lynx.__initData, data);
   }
 
+  const flushOptions = options ?? {};
   if (!isJSReady) {
     const oldRoot = __root;
     setRoot(new SnapshotInstance('root'));
@@ -138,10 +139,10 @@ function updatePage(data: Record<string, unknown> | undefined, options?: UpdateP
       __pendingListUpdates.flush();
       applyRefQueue();
     }
+    flushOptions.triggerDataUpdated = true;
     markTiming('updateDiffVdomEnd');
   }
-  const flushOptions = options ?? {};
-  flushOptions.triggerDataUpdated = true;
+
   __FlushElementTree(__page, flushOptions);
 }
 
