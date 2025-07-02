@@ -238,7 +238,10 @@ export interface DataProcessorDefinition {
    *
    * @public
    */
-  dataProcessors?: Record<string, ((rawInitData: InitDataRaw) => InitData)>;
+  dataProcessors?: {
+    getScreenMetricsOverride?: (metrics: { width: number; height: number }) => { width: number; height: number };
+    [key: string]: (...args: any[]) => any;
+  };
 }
 
 /**

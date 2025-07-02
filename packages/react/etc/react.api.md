@@ -46,7 +46,16 @@ export { createRef }
 
 // @public
 export interface DataProcessorDefinition {
-    dataProcessors?: Record<string, ((rawInitData: InitDataRaw) => InitData)>;
+    dataProcessors?: {
+        getScreenMetricsOverride?: (metrics: {
+            width: number;
+            height: number;
+        }) => {
+            width: number;
+            height: number;
+        };
+        [key: string]: (...args: any[]) => any;
+    };
     defaultDataProcessor?: (rawInitData: InitDataRaw) => InitData;
 }
 
