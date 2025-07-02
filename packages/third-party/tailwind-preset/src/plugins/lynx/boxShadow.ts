@@ -31,20 +31,22 @@ export const boxShadow: Plugin = (() => {
     matchUtilities(
       {
         shadow: (_value: unknown) => {
-          const value = transformValue(_value);
-          /**
-          const ast = parseBoxShadowValue(value as string);
+          const resolved = transformValue(_value);
+
+          if (typeof resolved !== 'string') return null;
+
+          // Lynx does not support nesting CSS variables
+          // uncomment this block in the future
+
+          /*
+          const ast = parseBoxShadowValue(resolved as string);
           for (const shadow of ast) {
             // Don't override color if the whole shadow is a variable
             if (!shadow.valid) {
               continue;
             }
-
-            // Lynx does not support nested variable
-            // uncomment in the future
-            // shadow.color = 'var(--tw-shadow-color)';
-          }
-          */
+            shadow.color = 'var(--tw-shadow-color)';
+          } */
 
           return {
             // Bug in box-shadow & CSS var
@@ -54,7 +56,7 @@ export const boxShadow: Plugin = (() => {
             '--tw-shadow-colored': value === 'none'
               ? transparentShadow
               : formatBoxShadowValue(ast), */
-            'box-shadow': value,
+            'box-shadow': resolved,
           } as CSSRuleObject;
         },
       },

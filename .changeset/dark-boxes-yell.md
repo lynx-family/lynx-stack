@@ -11,7 +11,7 @@ Add createLynxPreset, expand Lynx plugin coverage, and enforce strict config typ
 - Removed the unofficial theme key `outline`.
 - Refined types for `createPlugin` and `createUtilityPlugin`.
 
-#### Replaced & Updated corePlugins
+#### Replaced & Updated core plugins
 
 - Removed deprecated `variants()` syntax (used only in Tailwind v1/v2).
 
@@ -32,6 +32,7 @@ Add createLynxPreset, expand Lynx plugin coverage, and enforce strict config typ
 - **visibility**: Removed `collapse`.
 - **whitespace**: Retains only `normal` and `nowrap`.
 - **wordBreak**: Removed `overflow-wrap` property and `keep-all` value.
+- **perspective**: (Tailwind v4 plugin) Added `perspective-*` utlities.
 
 #### Enabled the following utilities via Tailwind core plugins:
 
@@ -44,7 +45,7 @@ Add createLynxPreset, expand Lynx plugin coverage, and enforce strict config typ
 - **aspectRatio**
 - **animation**
 
-#### Added Lynx Specific Plugin(s)
+#### Added Lynx Specific Plugins
 
 - **direction**: add Lynx specific plugin to handle `ltr`, `rtr` and `lynx-ltr`.
 

@@ -126,7 +126,7 @@ function createUtilityPlugin(
   return _createUtilityPlugin(themeKey, utilityVariations as unknown, options);
 }
 
-export { createUtilityPlugin, createPlugin, createPluginWithName };
+export { createUtilityPlugin, createPlugin, createPluginWithName, autoBind };
 export type { Plugin };
 
 /* ──────────────── 100 % typed exports for transform/shadow utils ─────────── */

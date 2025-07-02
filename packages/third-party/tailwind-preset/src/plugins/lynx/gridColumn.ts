@@ -15,7 +15,7 @@ export const gridColumn: Plugin = createPlugin(({ matchUtilities, theme }) => {
     {
       col: (value: unknown) => {
         if (typeof value !== 'string') {
-          return {};
+          return null;
         }
         const [start, end] = value.split('/').map((s) => s.trim());
         return {

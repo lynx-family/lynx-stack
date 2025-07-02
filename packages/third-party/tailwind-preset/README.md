@@ -83,6 +83,11 @@ To test new Tailwind utilities:
 2. Modify `supportedProperties` or `allowedUnsupportedProperties` in `config.test.ts`
 3. Run tests with `pnpm test` to verify with Vitest.
 
+To test new plugins:
+
+1. Add new test file in `src/__tests__/plugins`. Import `runPlugin` test util function from `src/__tests__/utils/run-plugin.ts`. Mock theme values.
+2. Run tests with `pnpm test` to verify with Vitest.
+
 ## Integration notes
 
 ### tailwind-merge & rsbuild-plugin-tailwindcss
