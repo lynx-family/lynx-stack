@@ -308,11 +308,13 @@ export class SnapshotInstance {
       }
     }
 
-    const values = this.__values;
-    if (values) {
-      this.__values = undefined;
-      this.setAttribute('values', values);
-    }
+    __pendingListUpdates.runWithNoUpdates(() => {
+      const values = this.__values;
+      if (values) {
+        this.__values = undefined;
+        this.setAttribute('values', values);
+      }
+    });
 
     if (isListHolder) {
       // never recurse into list's children
@@ -497,9 +499,11 @@ export class SnapshotInstance {
   insertBefore(newNode: SnapshotInstance, existingNode?: SnapshotInstance): void {
     const __snapshot_def = this.__snapshot_def;
     if (__snapshot_def.isListHolder) {
-      (__pendingListUpdates.values[this.__id] ??= new ListUpdateInfoRecording(
-        this,
-      )).onInsertBefore(newNode, existingNode);
+      if (__pendingListUpdates.values) {
+        (__pendingListUpdates.values[this.__id] ??= new ListUpdateInfoRecording(
+          this,
+        )).onInsertBefore(newNode, existingNode);
+      }
       this.__insertBefore(newNode, existingNode);
       return;
     }
@@ -554,9 +558,11 @@ export class SnapshotInstance {
   removeChild(child: SnapshotInstance): void {
     const __snapshot_def = this.__snapshot_def;
     if (__snapshot_def.isListHolder) {
-      (__pendingListUpdates.values[this.__id] ??= new ListUpdateInfoRecording(
-        this,
-      )).onRemoveChild(child);
+      if (__pendingListUpdates.values) {
+        (__pendingListUpdates.values[this.__id] ??= new ListUpdateInfoRecording(
+          this,
+        )).onRemoveChild(child);
+      }
 
       this.__removeChild(child);
       traverseSnapshotInstance(child, v => {
