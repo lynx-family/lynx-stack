@@ -56,8 +56,7 @@ export function setupLynxEnv(): void {
         let r: InitData | InitDataRaw;
         try {
           if (processorName) {
-            r = dataProcessorDefinition?.dataProcessors?.[processorName]?.(data)
-              ?? data;
+            r = dataProcessorDefinition?.dataProcessors?.[processorName]?.(data) as InitData ?? data;
           } else {
             r = dataProcessorDefinition?.defaultDataProcessor?.(data) ?? data;
           }
