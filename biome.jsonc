@@ -6,51 +6,41 @@
       "allowTrailingCommas": true,
     },
   },
-  "organizeImports": {
-    // We use `eslint-plugin-import` for imports sorting
-    "enabled": false,
-  },
+  "assist": { "actions": { "source": { "organizeImports": "off" } } },
   "formatter": {
     // We use `dprint` for formatting
     "enabled": false,
   },
   "linter": {
     "enabled": true,
-    "ignore": [
-      "coverage/**",
-      "dist/**",
-      "lib/**",
-      "output/**",
-      "etc/*.md",
-      "website/docs/en/api/**",
-      "website/docs/zh/api/**",
-      "website/docs/en/changelog/**",
-      "website/docs/zh/changelog/**",
-
-      "fixtures/error/**",
-      "test/diagnostic/**",
-      "test/hotCases/**",
-      "__swc_snapshots__/**",
-      "__snapshots__/**",
-      "__preparation__/**",
-      "packages/react/transform/index.d.ts",
-      "packages/react/transform/index.cjs",
-
-      "packages/react/index.d.ts",
-      "packages/react/runtime/**",
-
-      "packages/tools/**",
-
-      "packages/use-sync-external-store/test/**",
-
-      "packages/webpack/*/runtime/**",
-
-      "packages/web-platform/**",
-
-      "packages/third-party/**",
-
-      "packages/testing-library/**",
-      "packages/react/testing-library/**",
+    "includes": [
+      "**",
+      "!**/coverage/**",
+      "!**/dist/**",
+      "!**/lib/**",
+      "!**/output/**",
+      "!**/etc/**/*.md",
+      "!**/website/docs/en/api/**",
+      "!**/website/docs/zh/api/**",
+      "!**/website/docs/en/changelog/**",
+      "!**/website/docs/zh/changelog/**",
+      "!**/fixtures/error/**",
+      "!**/test/diagnostic/**",
+      "!**/test/hotCases/**",
+      "!**/__swc_snapshots__/**",
+      "!**/__snapshots__/**",
+      "!**/__preparation__/**",
+      "!**/packages/react/transform/index.d.ts",
+      "!**/packages/react/transform/index.cjs",
+      "!**/packages/react/index.d.ts",
+      "!**/packages/react/runtime/**",
+      "!**/packages/tools/**",
+      "!**/packages/use-sync-external-store/test/**",
+      "!**/packages/webpack/**/*/runtime/**",
+      "!**/packages/web-platform/**",
+      "!**/packages/third-party/**",
+      "!**/packages/testing-library/**",
+      "!**/packages/react/testing-library/**",
     ],
     "rules": {
       // We are migrating from ESLint to Biome
@@ -114,8 +104,6 @@
         "useLiteralEnumMembers": "error",
       },
       "suspicious": {
-        "noConsoleLog": "error",
-
         // eslint-plugin-react
         "noDuplicateJsxProps": "error",
 
@@ -133,11 +121,11 @@
         "noRedeclare": "error",
         "noUnsafeDeclarationMerging": "error",
         "useAwait": "error",
-      },
-      "nursery": {
+        "noConsole": { "level": "error", "options": { "allow": ["info"] } },
         // typescript-eslint
         "useAdjacentOverloadSignatures": "error",
       },
+      "nursery": {},
     },
   },
   "vcs": {
