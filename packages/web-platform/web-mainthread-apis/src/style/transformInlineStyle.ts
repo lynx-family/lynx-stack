@@ -2,11 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-export { transformInlineStyleString } from '../utils/tokenizer.js';
-import { transformLynxStyles } from '@lynx-js/web-style-transformer';
-
-export function transformParsedStyles(
-  hyphenatedStyleObject: [property: string, value: string][],
-) {
-  return transformLynxStyles(hyphenatedStyleObject);
-}
+export {
+  transformInlineStyleString,
+  transformParsedStyles,
+} from '../utils/tokenizer.js';

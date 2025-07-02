@@ -11,7 +11,7 @@ import {
   cssIdAttribute,
   lynxTagAttribute,
 } from '@lynx-js/web-constants';
-import { transformLynxStyles } from '@lynx-js/web-style-transformer';
+import { transformParsedStyles } from './tokenizer.js';
 
 export function flattenStyleInfo(
   styleInfo: StyleInfo,
@@ -51,7 +51,7 @@ export function transformToWebCss(styleInfo: StyleInfo) {
   for (const cssInfos of Object.values(styleInfo)) {
     for (const rule of cssInfos.rules) {
       const { sel: selectors, decl: declarations } = rule;
-      const { transformedStyle, childStyle } = transformLynxStyles(
+      const { transformedStyle, childStyle } = transformParsedStyles(
         declarations,
       );
       rule.decl = transformedStyle;
