@@ -88,7 +88,6 @@ export default defineConfig({
         'src/debug/debug.ts',
         'src/lynx/calledByNative.ts',
         'src/lynx/component.ts',
-        'src/lynx/lazy-bundle.ts',
         'src/lynx/dynamic-js.ts',
         'src/lynx/env.ts',
         'src/lynx/tt.ts',

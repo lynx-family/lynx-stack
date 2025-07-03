@@ -133,6 +133,8 @@ export const loadLazyBundle: <
 })();
 
 function withSyncResolvers<T>() {
+  'background-only';
+
   const resolver: {
     result: T | null;
     error: Error | null;
