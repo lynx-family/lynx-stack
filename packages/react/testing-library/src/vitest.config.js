@@ -51,7 +51,6 @@ export const createVitestConfig = async (options) => {
           __dirname,
           sourcePath,
         ));
-        const basename = path.basename(sourcePath);
 
         const isTS = /\.[mc]?ts$/.exec(relativePath);
         const syntax = isTS ? 'typescript' : 'ecmascript';
@@ -64,23 +63,19 @@ export const createVitestConfig = async (options) => {
 
         const result = await transformReactLynx(sourceText, {
           mode: 'test',
-          filename: basename,
           sourcemap: true,
           snapshot: {
             preserveJsx: false,
             runtimePkg: `${runtimePkgName}/internal`,
             jsxImportSource: runtimePkgName,
-            filename: relativePath,
             target: 'MIXED',
           },
           syntaxConfig,
-          // snapshot: true,
           directiveDCE: false,
           defineDCE: false,
           shake: false,
           compat: false,
           worklet: {
-            filename: relativePath,
             runtimePkg: `${runtimePkgName}/internal`,
             target: 'MIXED',
           },

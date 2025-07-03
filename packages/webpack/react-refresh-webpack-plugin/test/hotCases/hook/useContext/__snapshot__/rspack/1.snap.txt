@@ -50,7 +50,7 @@ __webpack_require__.d(__webpack_exports__, {
 
 
 const Theme = (0,_lynx_js_react__WEBPACK_IMPORTED_MODULE_1__.createContext)('light');
-const __snapshot_4953c_fcebc475_1 = /*#__PURE__*/ (__webpack_require__(/*! @lynx-js/react/internal */ "../../../../../../react/runtime/lib/internal.js")/* .createSnapshot */.createSnapshot)("__snapshot_4953c_fcebc475_1", function() {
+const __snapshot_05fe4_fcebc475_1 = /*#__PURE__*/ (__webpack_require__(/*! @lynx-js/react/internal */ "../../../../../../react/runtime/lib/internal.js")/* .createSnapshot */.createSnapshot)("__snapshot_05fe4_fcebc475_1", function() {
     const pageId = (__webpack_require__(/*! @lynx-js/react/internal */ "../../../../../../react/runtime/lib/internal.js")/* .__pageId */.__pageId);
     const el = __CreateText(pageId);
     const el1 = __CreateRawText("after: ");
@@ -71,7 +71,7 @@ const __snapshot_4953c_fcebc475_1 = /*#__PURE__*/ (__webpack_require__(/*! @lynx
 function Inner() {
     const theme = (0,_lynx_js_react__WEBPACK_IMPORTED_MODULE_1__.useContext)(Theme);
     __RenderContent(`after: ${theme}`);
-    return /*#__PURE__*/ (0,_lynx_js_react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxDEV)(__snapshot_4953c_fcebc475_1, {
+    return /*#__PURE__*/ (0,_lynx_js_react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxDEV)(__snapshot_05fe4_fcebc475_1, {
         children: theme
     }, void 0, false, {
         fileName: "<anon>",

@@ -1,39 +1,24 @@
-import { fileURLToPath } from 'node:url';
 import { transformReactLynx } from '../../transform/main.js';
-import path from 'node:path';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 export default async function jsxLoader(source) {
   const callback = this.async();
 
   const runtimePkgName = '@lynx-js/react';
-  const sourcePath = this.resourcePath;
-  const basename = path.basename(sourcePath);
-  const relativePath = path.relative(
-    __dirname,
-    sourcePath,
-  );
 
   const result = await transformReactLynx(source, {
     mode: 'test',
-    filename: basename,
     sourcemap: true,
     snapshot: {
       preserveJsx: false,
       runtimePkg: `${runtimePkgName}/internal`,
       jsxImportSource: runtimePkgName,
-      filename: relativePath,
       target: 'MIXED',
     },
-    // snapshot: true,
     directiveDCE: false,
     defineDCE: false,
     shake: false,
     compat: false,
     worklet: {
-      filename: relativePath,
       runtimePkg: `${runtimePkgName}/internal`,
       target: 'MIXED',
     },

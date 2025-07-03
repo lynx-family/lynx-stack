@@ -1,5 +1,5 @@
 import * as ReactLynx from "@lynx-js/react";
-const __snapshot_da39a_test_2 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_test_2", function() {
+const __snapshot_2d408_test_2 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_2d408_test_2", function() {
     const pageId = ReactLynx.__pageId;
     const el = __CreateView(pageId);
     __SetClasses(el, 'commdityV1TextVerticalWrapper');
@@ -7,7 +7,7 @@ const __snapshot_da39a_test_2 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapsh
         el
     ];
 }, null, ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null);
-const __snapshot_da39a_test_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_test_1", function() {
+const __snapshot_2d408_test_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_2d408_test_1", function() {
     const pageId = ReactLynx.__pageId;
     const el = __CreateView(pageId);
     const el1 = __CreateView(pageId);
@@ -54,12 +54,12 @@ const __snapshot_da39a_test_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapsh
         6
     ]
 ], undefined, globDynamicComponentEntry, null);
-<__snapshot_da39a_test_1 values={[
+<__snapshot_2d408_test_1 values={[
     id
-]}><__snapshot_da39a_test_2>{[
+]}><__snapshot_2d408_test_2>{[
     <ItemTextWithTag/>,
     desc
-]}</__snapshot_da39a_test_2><wrapper>{unit}
+]}</__snapshot_2d408_test_2><wrapper>{unit}
         </wrapper><wrapper>{unit}
         {unit}
-      </wrapper></__snapshot_da39a_test_1>;
+      </wrapper></__snapshot_2d408_test_1>;

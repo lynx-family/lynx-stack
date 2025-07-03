@@ -20,8 +20,8 @@ use serde::{Deserialize, Deserializer};
 use swc_core::{
   base::config::GlobalPassOption,
   common::{
-    errors::HANDLER, pass::Optional, sync::Lrc, FilePathMapping, Mark, SourceMap, SourceMapper,
-    Spanned,
+    errors::HANDLER, pass::Optional, plugin::metadata::TransformPluginMetadataContextKind,
+    sync::Lrc, FilePathMapping, Mark, SourceMap, SourceMapper, Spanned,
   },
   ecma::{
     ast::*,
@@ -91,8 +91,6 @@ pub struct TransformNodiffOptions {
   /// This is used internally to make sure the test output is consistent.
   pub mode: Option<TransformMode>,
 
-  pub filename: String,
-
   pub css_scope: Either<bool, CSSScopeVisitorConfig>,
 
   pub snapshot: Option<Either<bool, JSXTransformerConfig>>,
@@ -117,7 +115,6 @@ impl Default for TransformNodiffOptions {
   fn default() -> Self {
     Self {
       mode: Some(TransformMode::Production),
-      filename: Default::default(),
       css_scope: Either::B(Default::default()),
       snapshot: Default::default(),
       shake: Either::A(false),
@@ -133,6 +130,10 @@ impl Default for TransformNodiffOptions {
 #[plugin_transform]
 pub fn process_transform(program: Program, metadata: TransformPluginProgramMetadata) -> Program {
   let comments = metadata.comments.as_ref();
+
+  let filename = metadata
+    .get_context(&TransformPluginMetadataContextKind::Filename)
+    .unwrap_or("test.js".to_string());
 
   let config_json = metadata.get_transform_plugin_config().unwrap_or_default();
   let options: TransformNodiffOptions = serde_json::from_str(&config_json).unwrap_or_default();
@@ -208,24 +209,23 @@ pub fn process_transform(program: Program, metadata: TransformPluginProgramMetad
     Either::A(enabled) => Optional::new(
       visit_mut_pass(CSSScopeVisitor::new(
         CSSScopeVisitorConfig::default(),
+        filename.clone(),
         Some(&comments),
       )),
       enabled,
     ),
     Either::B(config) => Optional::new(
-      visit_mut_pass(CSSScopeVisitor::new(config, Some(&comments))),
+      visit_mut_pass(CSSScopeVisitor::new(
+        config,
+        filename.clone(),
+        Some(&comments),
+      )),
       true,
     ),
   };
 
   let (snapshot_plugin_config, enabled) = match &options.snapshot.unwrap_or(Either::A(true)) {
-    Either::A(config) => (
-      JSXTransformerConfig {
-        filename: options.filename,
-        ..Default::default()
-      },
-      *config,
-    ),
+    Either::A(config) => (JSXTransformerConfig::default(), *config),
     Either::B(config) => (config.clone(), true),
   };
 
@@ -257,6 +257,7 @@ pub fn process_transform(program: Program, metadata: TransformPluginProgramMetad
         snapshot_plugin_config,
         cm.clone(),
         Some(&comments),
+        filename.clone(),
         top_level_mark,
         unresolved_mark,
         options.mode.unwrap_or(TransformMode::Production),
@@ -284,13 +285,21 @@ pub fn process_transform(program: Program, metadata: TransformPluginProgramMetad
 
   let worklet_plugin = match options.worklet {
     Either::A(config) => Optional::new(
-      visit_mut_pass(WorkletVisitor::default().with_content_hash(content_hash)),
+      visit_mut_pass(
+        WorkletVisitor::default()
+          .with_filename(filename)
+          .with_content_hash(content_hash),
+      ),
       config,
     ),
     Either::B(config) => Optional::new(
       visit_mut_pass(
-        WorkletVisitor::new(options.mode.unwrap_or(TransformMode::Production), config)
-          .with_content_hash(content_hash),
+        WorkletVisitor::new(
+          options.mode.unwrap_or(TransformMode::Production),
+          filename,
+          config,
+        )
+        .with_content_hash(content_hash),
       ),
       true,
     ),
@@ -407,7 +416,6 @@ mod tests {
     let json_data = r#"
       {
           "shake": true,
-          "filename": "test.js",
           "cssScope":true,
           "defineDCE": true,
           "directiveDCE": true,
@@ -417,7 +425,6 @@ mod tests {
     let options: TransformNodiffOptions = serde_json::from_str(json_data).unwrap();
 
     assert_eq!(options.mode, Some(TransformMode::Production));
-    assert_eq!(options.filename, "test.js");
     assert_eq!(options.css_scope, Either::A(true));
     assert_eq!(options.snapshot, None);
     assert_eq!(options.shake, Either::A(true));
@@ -433,8 +440,7 @@ mod tests {
     let json_data = r#"
     {
        "cssScope":{
-          "mode": "all",
-          "filename":"test.js"
+          "mode": "all"
        }
     }"#;
     let options: TransformNodiffOptions = serde_json::from_str(json_data).unwrap();
@@ -442,7 +448,6 @@ mod tests {
       options.css_scope,
       Either::B(CSSScopeVisitorConfig {
         mode: CSSScope::All,
-        filename: "test.js".into()
       })
     );
   }
