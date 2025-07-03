@@ -169,19 +169,6 @@ export class XSwiper extends HTMLElement {
     super.scrollTo(...args);
   }
 
-  scrollToNext() {
-    const current = this.currentIndex;
-    const count = this.childElementCount;
-    if (current === count - 1) {
-      const circularPlay = this.circularPlay;
-      if (circularPlay) {
-        this.currentIndex = 0;
-      }
-    } else {
-      this.currentIndex += 1;
-    }
-  }
-
   connectedCallback() {
     const current = this.getAttribute('current');
     if (current !== null) {
