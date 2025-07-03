@@ -85,7 +85,7 @@ To test new Tailwind utilities:
 
 To test new plugins:
 
-1. Add new test file in `src/__tests__/plugins`. Import `runPlugin` test util function from `src/__tests__/utils/run-plugin.ts`. Mock theme values.
+1. Add new test file in `src/__tests__/plugins`. Import `runPlugin` and `getMock` test util function from `src/__tests__/utils/run-plugin.ts`. Mock theme values.
 2. Run tests with `pnpm test` to verify with Vitest.
 
 ## Integration notes

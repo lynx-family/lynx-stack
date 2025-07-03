@@ -5,11 +5,11 @@ import { describe, expect, it } from 'vitest';
 
 import { gridColumn } from '../../plugins/lynx/gridColumn.js';
 import { gridRow } from '../../plugins/lynx/gridRow.js';
-import { runPlugin } from '../utils/run-plugin.js';
+import { getMock, runPlugin } from '../utils/run-plugin.js';
 
 describe('gridRow plugin', () => {
   it('registers utilities correctly', () => {
-    const { matchUtilities } = runPlugin(gridRow, {
+    const { api } = runPlugin(gridRow, {
       theme: {
         gridRow: {
           '1': '1',
@@ -22,6 +22,7 @@ describe('gridRow plugin', () => {
       },
     });
 
+    const matchUtilities = getMock(api.matchUtilities);
     expect(matchUtilities).toHaveBeenCalledTimes(1);
 
     const [utils, options] = matchUtilities.mock.calls[0] as [
@@ -57,7 +58,7 @@ describe('gridRow plugin', () => {
 
 describe('gridColumn plugin', () => {
   it('registers utilities correctly', () => {
-    const { matchUtilities } = runPlugin(gridColumn, {
+    const { api } = runPlugin(gridColumn, {
       theme: {
         gridColumn: {
           '1': '1',
@@ -70,6 +71,7 @@ describe('gridColumn plugin', () => {
       },
     });
 
+    const matchUtilities = getMock(api.matchUtilities);
     expect(matchUtilities).toHaveBeenCalledTimes(1);
 
     const [utils, options] = matchUtilities.mock.calls[0] as [

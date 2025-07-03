@@ -4,11 +4,11 @@
 import { describe, expect, it } from 'vitest';
 
 import { boxShadow } from '../../plugins/lynx/boxShadow.js';
-import { runPlugin } from '../utils/run-plugin.js';
+import { getMock, runPlugin } from '../utils/run-plugin.js';
 
 describe('boxShadow plugin', () => {
   it('registers shadow utilities and transforms values', () => {
-    const { matchUtilities } = runPlugin(boxShadow, {
+    const { api } = runPlugin(boxShadow, {
       theme: {
         boxShadow: {
           sm: '0 1px 2px 0 rgba(0,0,0,0.05)',
@@ -17,6 +17,7 @@ describe('boxShadow plugin', () => {
       },
     });
 
+    const matchUtilities = getMock(api.matchUtilities);
     expect(matchUtilities).toHaveBeenCalledTimes(1);
 
     const call = matchUtilities.mock.calls[0];

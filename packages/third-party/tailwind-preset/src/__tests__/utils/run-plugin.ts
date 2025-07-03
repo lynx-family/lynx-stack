@@ -2,9 +2,10 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { vi } from 'vitest';
+import type { Mock } from 'vitest';
 
-import type { RuntimePluginAPI } from './stub-api.js';
-import { stubApi } from './stub-api.js';
+import type { RuntimePluginAPI } from './mock-api.js';
+import { mockPluginAPI } from './mock-api.js';
 import type { Plugin, PluginCreator } from '../../types/tailwind-types.js';
 
 /**
@@ -30,22 +31,12 @@ export function runPlugin(
   opts: RunPluginOptions = {},
 ): {
   api: RuntimePluginAPI;
-  matchUtilities: ReturnType<typeof vi.fn>;
-  addUtilities: ReturnType<typeof vi.fn>;
-  addBase: ReturnType<typeof vi.fn>;
-  addComponents: ReturnType<typeof vi.fn>;
-  addVariant: ReturnType<typeof vi.fn>;
-  matchVariant: ReturnType<typeof vi.fn>;
-  theme: RuntimePluginAPI['theme'];
-  config: RuntimePluginAPI['config'];
-  prefix: RuntimePluginAPI['prefix'];
-  e: RuntimePluginAPI['e'];
 } {
   const { theme: themeVals = {}, config: cfg = {} } = opts;
   const prefixValue = (cfg['prefix'] as string) ?? '';
 
-  /* Build the API: start with stubApi, then layer spies / helpers on top */
-  const api: RuntimePluginAPI = stubApi({
+  /* Build the API: start with mockPluginAPI, then layer spies / helpers on top */
+  const api: RuntimePluginAPI = mockPluginAPI({
     /* spies for assertions */
     matchUtilities: vi.fn(),
     matchComponents: vi.fn(),
@@ -58,7 +49,7 @@ export function runPlugin(
 
     /* config + theme tailored for this invocation */
     config: vi.fn().mockImplementation(
-      (key: string, _def?: unknown): unknown => cfg[key],
+      (_key: string, def?: unknown): unknown => cfg[_key] ?? def,
     ),
     theme: (<T = unknown>(
       path?: string,
@@ -76,20 +67,14 @@ export function runPlugin(
   /* Execute the plugin */
   resolvePluginHandler(plugin)(api);
 
-  /* Expose spies + helpers for assertions */
-  return {
-    api,
-    /** vitest spies */
-    matchUtilities: api.matchUtilities.bind(api) as ReturnType<typeof vi.fn>,
-    addUtilities: api.addUtilities.bind(api) as ReturnType<typeof vi.fn>,
-    addBase: api.addBase.bind(api) as ReturnType<typeof vi.fn>,
-    addComponents: api.addComponents.bind(api) as ReturnType<typeof vi.fn>,
-    addVariant: api.addVariant.bind(api) as ReturnType<typeof vi.fn>,
-    matchVariant: api.matchVariant.bind(api) as ReturnType<typeof vi.fn>,
-    /** handy accessors */
-    theme: api.theme.bind(api),
-    config: api.config.bind(api),
-    prefix: api.prefix.bind(api),
-    e: api.e.bind(api),
-  };
+  /* Expose API for assertions */
+  return { api };
+}
+
+/**
+ * Helper to cast a runtime plugin API method to a vi.Mock for assertion use.
+ * Ensures type safety for .mock.calls and other spy methods.
+ */
+export function getMock<T extends (...args: any[]) => any>(fn: T): Mock<T> {
+  return fn as unknown as Mock<T>;
 }

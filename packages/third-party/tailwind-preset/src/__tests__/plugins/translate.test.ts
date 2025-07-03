@@ -5,11 +5,11 @@ import { describe, expect, it } from 'vitest';
 
 import { cssTransformValue } from '../../plugins/lynx/transform.js';
 import { translate } from '../../plugins/lynx/translate.js';
-import { runPlugin } from '../utils/run-plugin.js';
+import { getMock, runPlugin } from '../utils/run-plugin.js';
 
 describe('translate plugin', () => {
   it('covers all branches', () => {
-    const { matchUtilities } = runPlugin(translate, {
+    const { api } = runPlugin(translate, {
       theme: {
         translate: {
           '1': '1rem',
@@ -18,6 +18,7 @@ describe('translate plugin', () => {
       },
     });
 
+    const matchUtilities = getMock(api.matchUtilities);
     expect(matchUtilities).toHaveBeenCalledTimes(3);
 
     // Build a strictly typed utility map

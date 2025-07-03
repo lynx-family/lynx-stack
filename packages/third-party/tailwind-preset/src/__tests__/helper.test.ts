@@ -11,8 +11,8 @@ import {
   plugin,
   transformThemeValue,
 } from '../helpers.js';
-import type { RuntimePluginAPI } from './utils/stub-api.js';
-import { stubApi } from './utils/stub-api.js';
+import type { RuntimePluginAPI } from './utils/mock-api.js';
+import { mockPluginAPI } from './utils/mock-api.js';
 import type { Bound } from '../types/plugin-types.js';
 import type { PluginAPI } from '../types/tailwind-types.js';
 
@@ -51,8 +51,8 @@ describe('helpers.ts', () => {
     const mockFn = vi.fn<(api: Bound<PluginAPI>) => void>();
     const pluginObj = createPlugin(mockFn);
 
-    const api: RuntimePluginAPI = stubApi({
-      config: (() => true) as RuntimePluginAPI['config'],
+    const api: RuntimePluginAPI = mockPluginAPI({
+      config: vi.fn().mockReturnValue(true),
     });
 
     pluginObj.handler(api);
@@ -66,11 +66,10 @@ describe('helpers.ts', () => {
     const mockFn = vi.fn();
     const pluginObj = createPluginWithName('myPlugin', mockFn);
 
-    const api = stubApi({
-      config: ((key?: string) =>
-        key === 'corePlugins.myPlugin'
-          ? false
-          : undefined) as RuntimePluginAPI['config'],
+    const api = mockPluginAPI({
+      config: vi.fn((key?: string) =>
+        key === 'corePlugins.myPlugin' ? false : undefined
+      ),
     });
 
     pluginObj.handler(api);
@@ -81,11 +80,10 @@ describe('helpers.ts', () => {
     const mockFn = vi.fn();
     const pluginObj = createPluginWithName('myPlugin', mockFn);
 
-    const api = stubApi({
-      config: ((key?: string) =>
-        key === 'corePlugins.myPlugin'
-          ? true
-          : undefined) as RuntimePluginAPI['config'],
+    const api = mockPluginAPI({
+      config: vi.fn((key?: string) =>
+        key === 'corePlugins.myPlugin' ? true : undefined
+      ),
     });
 
     pluginObj.handler(api);
@@ -99,7 +97,7 @@ describe('helpers.ts', () => {
     const mockFn = vi.fn();
     const pluginObj = plugin(mockFn);
 
-    pluginObj.handler(stubApi());
+    pluginObj.handler(mockPluginAPI());
     expect(mockFn).toHaveBeenCalled();
   });
 
@@ -115,7 +113,7 @@ describe('helpers.ts', () => {
     expect(optionsPlugin.__isOptionsFunction).toBe(true);
 
     const result = optionsPlugin({ foo: 1 });
-    result.handler(stubApi()); // stubApi returns a superset (RuntimePluginAPI)
+    result.handler(mockPluginAPI()); // mockPluginAPI returns a superset (RuntimePluginAPI)
 
     expect(pluginFactory).toHaveBeenCalledWith({ foo: 1 });
   });
