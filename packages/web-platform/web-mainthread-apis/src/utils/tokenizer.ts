@@ -72,7 +72,9 @@ export function transformParsedStyles(
         valueLen,
       );
     transformedStyle = transformedStyle.concat(transformedStyleForCurrent);
-    childStyle = childStyle.concat(childStyleForCurrent);
+    if (childStyleForCurrent) {
+      childStyle = childStyle.concat(childStyleForCurrent);
+    }
     wasm.free(propertyPtr, propertyLen);
     wasm.free(valuePtr, valueLen);
   }

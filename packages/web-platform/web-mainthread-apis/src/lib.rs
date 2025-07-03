@@ -59,7 +59,11 @@ pub fn transform_raw_u16_inline_style_ptr_parsed(
     // now we need to convert the result into a JS array
     let ret = js_sys::Array::new();
     ret.push(&push_parsed_result_to_js_array!(result).into());
-    ret.push(&push_parsed_result_to_js_array!(children_result).into());
+    if !children_result.is_empty() {
+      // if there are no children, we don't need to push an empty array
+      // but if there are children, we need to push them as well
+      ret.push(&push_parsed_result_to_js_array!(children_result).into());
+    }
     ret
   }
 }
