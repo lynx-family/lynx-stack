@@ -1,7 +1,7 @@
 use crate::transformer::constants::{
   AUTO_STR_U16, COLOR_APPENDIX_FOR_GRADIENT, COLOR_APPENDIX_FOR_NORMAL_COLOR, COLOR_STR_U16,
-  FLEX_AUTO_TRANSFORMED_VALIES, FLEX_BASIS_CSS_VAR_NAME, FLEX_GROW_CSS_VAR_NAME,
-  FLEX_NONE_TRANSFORMED_VALIES, FLEX_SHRINK_CSS_VAR_NAME,
+  FLEX_AUTO_TRANSFORMED_VALUES, FLEX_BASIS_CSS_VAR_NAME, FLEX_GROW_CSS_VAR_NAME,
+  FLEX_NONE_TRANSFORMED_VALUES, FLEX_SHRINK_CSS_VAR_NAME,
   FLEX_SINGLE_VALUE_USE_BASIS_TRANSFORMED_DEFAULT_VALUES,
   FLEX_SINGLE_VALUE_USE_GROW_TRANSFORMED_DEFAULT_VALUES, FLEX_STR_U16, IMPORTANT_STR_U16,
   LINEAR_GRADIENT_STR_U16, LINEAR_WEIGHT_SUM_CSS_VAR_NAME, LINEAR_WEIGHT_SUM_STR_U16,
@@ -156,14 +156,14 @@ pub fn query_transform_rules<'a>(
            * --flex-grow:0;
            * --flex-basis:auto;
            */
-          push_u16_decl_pairs!(result, FLEX_NONE_TRANSFORMED_VALIES);
+          push_u16_decl_pairs!(result, FLEX_NONE_TRANSFORMED_VALUES);
         } else if value[val_fields[0]..val_fields[1]] == *AUTO_STR_U16 {
           /*
            * --flex-shrink:1;
            * --flex-grow:1;
            * --flex-basis:auto;
            */
-          push_u16_decl_pairs!(result, FLEX_AUTO_TRANSFORMED_VALIES);
+          push_u16_decl_pairs!(result, FLEX_AUTO_TRANSFORMED_VALUES);
         } else {
           let is_flex_grow = is_digit_only!(value, val_fields[0], val_fields[1]);
           if is_flex_grow {
