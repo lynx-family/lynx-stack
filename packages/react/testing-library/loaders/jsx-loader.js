@@ -9,7 +9,6 @@ export default async function jsxLoader(source) {
     mode: 'test',
     sourcemap: true,
     snapshot: {
-      preserveJsx: false,
       runtimePkg: `${runtimePkgName}/internal`,
       jsxImportSource: runtimePkgName,
       target: 'MIXED',

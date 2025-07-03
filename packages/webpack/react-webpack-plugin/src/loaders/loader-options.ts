@@ -137,8 +137,6 @@ function getCommonOptions(
     sourceMapColumns: this.sourceMap && !this.hot,
     inlineSourcesContent: inlineSourcesContent ?? !this.hot,
     snapshot: {
-      // TODO: config
-      preserveJsx: false,
       // In standalone lazy bundle mode, we do not support HMR now.
       target: this.hot && !isDynamicComponent
         // Using `MIX` when HMR is enabled.

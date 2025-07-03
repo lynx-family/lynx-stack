@@ -191,8 +191,6 @@ export interface ShakeVisitorConfig {
 /** @internal */
 export interface JsxTransformerConfig {
   /** @internal */
-  preserveJsx: boolean;
-  /** @internal */
   runtimePkg: string;
   /** @internal */
   jsxImportSource?: string;
