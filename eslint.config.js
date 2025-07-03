@@ -181,7 +181,11 @@ export default tseslint.config(
     settings: {
       'import/resolver': {
         typescript: {
-          project: ['./tsconfig.json', './packages/**/tsconfig*.json'],
+          project: [
+            './tsconfig.json',
+            ,
+            './packages/third-party/tailwind-preset/tsconfig*.json',
+          ],
         },
       },
       'import/internal-regex': '^@lynx-js/',
