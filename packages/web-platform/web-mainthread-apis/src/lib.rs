@@ -8,7 +8,7 @@ pub mod transformer;
 accept a raw uint16 ptr from JS
 */
 #[wasm_bindgen]
-pub fn transform_raw_u16_inline_style_ptr(ptr: *const u16, len: usize) {
+pub fn transform_raw_u16_inline_style_ptr(ptr: *const u16, len: usize) -> Option<js_sys::JsString> {
   // Safety: We assume the pointer is valid and points to a slice of u16
   // of length `len`. This is a contract with the JavaScript side.
   unsafe {
@@ -17,10 +17,12 @@ pub fn transform_raw_u16_inline_style_ptr(ptr: *const u16, len: usize) {
     let (transformed_inline_style, _) =
       transformer::transformer::transform_inline_style_string(&slice);
     if !transformed_inline_style.is_empty() {
-      let ptr = transformed_inline_style.as_ptr();
-      on_transformed(ptr, transformed_inline_style.len());
+      return Some(js_sys::JsString::from_char_code(
+        &transformed_inline_style.as_slice(),
+      ));
     }
   }
+  None
 }
 macro_rules! push_parsed_result_to_js_array {
   ($source:expr) => {{
@@ -82,17 +84,4 @@ pub fn free(ptr: *mut u8, size: usize) {
   // Assuming align is 1 as used in malloc.
   let layout = std::alloc::Layout::from_size_align(size, 8).unwrap();
   unsafe { std::alloc::dealloc(ptr, layout) }
-}
-
-#[wasm_bindgen(
-  inline_js = "export function on_transformed(ptr, len) { globalThis._on_transformed_callback(ptr, len); }"
-)]
-extern "C" {
-  fn on_transformed(ptr: *const u16, len: usize);
-}
-#[wasm_bindgen(
-  inline_js = "export function on_extra_children_style(ptr, len) { globalThis._on_extra_children_style_callback(ptr, len); }"
-)]
-extern "C" {
-  fn on_extra_children_style(ptr: *const u16, len: usize);
 }

@@ -35,25 +35,18 @@ const stringToUTF16 = (str: string) => {
   }
   return { ptr, len: len * 2 };
 };
-const UTF16ToString = (ptr: number, len: number) => {
-  if (!HEAPU16 || HEAPU16.byteLength == 0) {
-    HEAPU16 = new Uint16Array(wasm.memory.buffer);
-  }
-  return String.fromCharCode(...HEAPU16.subarray(ptr >> 1, (ptr >> 1) + len));
-};
+// const UTF16ToString = (ptr: number, len: number) => {
+//   if (!HEAPU16 || HEAPU16.byteLength == 0) {
+//     HEAPU16 = new Uint16Array(wasm.memory.buffer);
+//   }
+//   return String.fromCharCode(...HEAPU16.subarray(ptr >> 1, (ptr >> 1) + len));
+// };
 export function transformInlineStyleString(str: string): string {
-  let inlineStyle = str;
   const { ptr, len } = stringToUTF16(str);
-  // @ts-ignore
-  globalThis._on_transformed_callback = (ptr, len) => {
-    const transformed = UTF16ToString(ptr, len);
-    inlineStyle = transformed;
-  };
-  wasm.transform_raw_u16_inline_style_ptr(ptr, len);
-  // @ts-ignore
-  globalThis._on_transformed_callback = undefined;
+  const transformedStyle = wasm.transform_raw_u16_inline_style_ptr(ptr, len)
+    ?? str;
   wasm.free(ptr, len);
-  return inlineStyle;
+  return transformedStyle;
 }
 
 export function transformParsedStyles(
