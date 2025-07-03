@@ -63,13 +63,13 @@ pub const LINEAR_WEIGHT_SUM_CSS_VAR_NAME: &[u16] = str_to_u16_slice!("--linear-w
 
 pub const LYNX_TEXT_BG_COLOR_STR_U16: &[u16] = str_to_u16_slice!("--lynx-text-bg-color");
 
-pub const FLEX_NONE_TRANSFORMED_VALIES: &'static [&'static [&'static [u16]; 2]] = &[
+pub const FLEX_NONE_TRANSFORMED_VALUES: &'static [&'static [&'static [u16]; 2]] = &[
   &[FLEX_SHRINK_CSS_VAR_NAME, str_to_u16_slice!("0")],
   &[FLEX_GROW_CSS_VAR_NAME, str_to_u16_slice!("0")],
   &[FLEX_BASIS_CSS_VAR_NAME, str_to_u16_slice!("auto")],
 ];
 
-pub const FLEX_AUTO_TRANSFORMED_VALIES: &'static [&'static [&'static [u16]; 2]] = &[
+pub const FLEX_AUTO_TRANSFORMED_VALUES: &'static [&'static [&'static [u16]; 2]] = &[
   /*
    * --flex-shrink:1;
    * --flex-grow:1;
