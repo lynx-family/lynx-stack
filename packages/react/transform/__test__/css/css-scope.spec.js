@@ -10,7 +10,6 @@ const defaultOptions = {
   mode: 'test',
   sourcemap: false,
   snapshot: {
-    preserveJsx: false,
     runtimePkg: '@lynx-js/react',
     jsxImportSource: '@lynx-js/react',
     target: 'MIXED',

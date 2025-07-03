@@ -89,7 +89,6 @@ function getCommonOptions(
       mode: getCSSScopeMode(enableRemoveCSSScope),
     },
     snapshot: {
-      preserveJsx: false,
       // In standalone lazy bundle mode, we do not support HMR now.
       target: isDev && !isDynamicComponent
         // Using `MIX` when HMR is enabled.

@@ -988,8 +988,6 @@ where
 #[serde(rename_all = "camelCase")]
 pub struct JSXTransformerConfig {
   /// @internal
-  pub preserve_jsx: bool,
-  /// @internal
   pub runtime_pkg: String,
   /// @internal
   pub jsx_import_source: Option<String>,
@@ -1002,7 +1000,6 @@ pub struct JSXTransformerConfig {
 impl Default for JSXTransformerConfig {
   fn default() -> Self {
     Self {
-      preserve_jsx: false,
       runtime_pkg: "@lynx-js/react".into(),
       jsx_import_source: Some("@lynx-js/react".into()),
       target: TransformTarget::LEPUS,
@@ -1663,10 +1660,7 @@ mod tests {
       (
         resolver(unresolved_mark, top_level_mark, true),
         visit_mut_pass(JSXTransformer::new(
-          super::JSXTransformerConfig {
-            preserve_jsx: true,
-            ..Default::default()
-          },
+          super::JSXTransformerConfig::default(),
           t.cm.clone(),
           Some(t.comments.clone()),
           "test.js".into(),
@@ -1698,10 +1692,7 @@ mod tests {
       (
         resolver(unresolved_mark, top_level_mark, true),
         visit_mut_pass(JSXTransformer::new(
-          super::JSXTransformerConfig {
-            preserve_jsx: true,
-            ..Default::default()
-          },
+          super::JSXTransformerConfig::default(),
           t.cm.clone(),
           Some(t.comments.clone()),
           "test.js".into(),
@@ -1729,10 +1720,7 @@ mod tests {
       (
         resolver(unresolved_mark, top_level_mark, true),
         visit_mut_pass(JSXTransformer::new(
-          super::JSXTransformerConfig {
-            preserve_jsx: true,
-            ..Default::default()
-          },
+          super::JSXTransformerConfig::default(),
           t.cm.clone(),
           Some(t.comments.clone()),
           "test.js".into(),
@@ -1761,10 +1749,7 @@ mod tests {
       ..Default::default()
     }),
     |t| visit_mut_pass(JSXTransformer::new(
-      super::JSXTransformerConfig {
-        preserve_jsx: true,
-        ..Default::default()
-      },
+      super::JSXTransformerConfig::default(),
       t.cm.clone(),
       Some(t.comments.clone()),
       "test.js".into(),
@@ -1788,10 +1773,7 @@ mod tests {
       ..Default::default()
     }),
     |t| visit_mut_pass(JSXTransformer::new(
-      super::JSXTransformerConfig {
-        preserve_jsx: true,
-        ..Default::default()
-      },
+      super::JSXTransformerConfig::default(),
       t.cm.clone(),
       Some(t.comments.clone()),
       "test.js".into(),
@@ -1818,10 +1800,7 @@ mod tests {
       ..Default::default()
     }),
     |t| visit_mut_pass(JSXTransformer::new(
-      super::JSXTransformerConfig {
-        preserve_jsx: true,
-        ..Default::default()
-      },
+      super::JSXTransformerConfig::default(),
       t.cm.clone(),
       Some(t.comments.clone()),
       "test.js".into(),
@@ -1848,10 +1827,7 @@ mod tests {
       ..Default::default()
     }),
     |t| visit_mut_pass(JSXTransformer::new(
-      super::JSXTransformerConfig {
-        preserve_jsx: true,
-        ..Default::default()
-      },
+      super::JSXTransformerConfig::default(),
       t.cm.clone(),
       Some(t.comments.clone()),
       "test.js".into(),
@@ -1878,10 +1854,7 @@ mod tests {
       ..Default::default()
     }),
     |t| visit_mut_pass(JSXTransformer::new(
-      super::JSXTransformerConfig {
-        preserve_jsx: true,
-        ..Default::default()
-      },
+      super::JSXTransformerConfig::default(),
       t.cm.clone(),
       Some(t.comments.clone()),
       "test.js".into(),
@@ -1910,10 +1883,7 @@ mod tests {
       let unresolved_mark = Mark::new();
       (
         visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
-          super::JSXTransformerConfig {
-            preserve_jsx: false,
-            ..Default::default()
-          },
+          super::JSXTransformerConfig::default(),
           t.cm.clone(),
           None,
           "test.js".into(),
@@ -1961,10 +1931,7 @@ mod tests {
       let unresolved_mark = Mark::new();
       (
         visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
-          super::JSXTransformerConfig {
-            preserve_jsx: false,
-            ..Default::default()
-          },
+          super::JSXTransformerConfig::default(),
           t.cm.clone(),
           None,
           "test.js".into(),
@@ -2008,10 +1975,7 @@ mod tests {
       ..Default::default()
     }),
     |t| visit_mut_pass(JSXTransformer::new(
-      super::JSXTransformerConfig {
-        preserve_jsx: true,
-        ..Default::default()
-      },
+      super::JSXTransformerConfig::default(),
       t.cm.clone(),
       Some(t.comments.clone()),
       "test.js".into(),
@@ -2035,10 +1999,7 @@ mod tests {
       ..Default::default()
     }),
     |t| visit_mut_pass(JSXTransformer::new(
-      super::JSXTransformerConfig {
-        preserve_jsx: true,
-        ..Default::default()
-      },
+      super::JSXTransformerConfig::default(),
       t.cm.clone(),
       Some(t.comments.clone()),
       "test.js".into(),
@@ -2063,10 +2024,7 @@ mod tests {
       ..Default::default()
     }),
     |t| visit_mut_pass(JSXTransformer::new(
-      super::JSXTransformerConfig {
-        preserve_jsx: true,
-        ..Default::default()
-      },
+      super::JSXTransformerConfig::default(),
       t.cm.clone(),
       Some(t.comments.clone()),
       "test.js".into(),
@@ -2101,10 +2059,7 @@ mod tests {
       ..Default::default()
     }),
     |t| visit_mut_pass(JSXTransformer::new(
-      super::JSXTransformerConfig {
-        preserve_jsx: true,
-        ..Default::default()
-      },
+      super::JSXTransformerConfig::default(),
       t.cm.clone(),
       Some(t.comments.clone()),
       "test.js".into(),
@@ -2131,10 +2086,7 @@ mod tests {
       ..Default::default()
     }),
     |t| visit_mut_pass(JSXTransformer::new(
-      super::JSXTransformerConfig {
-        preserve_jsx: true,
-        ..Default::default()
-      },
+      super::JSXTransformerConfig::default(),
       t.cm.clone(),
       Some(t.comments.clone()),
       "test.js".into(),
@@ -2170,10 +2122,7 @@ mod tests {
       (
         resolver(unresolved_mark, top_level_mark, true),
         visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
-          super::JSXTransformerConfig {
-            preserve_jsx: true,
-            ..Default::default()
-          },
+          super::JSXTransformerConfig::default(),
           t.cm.clone(),
           None,
           "test.js".into(),
@@ -2205,10 +2154,7 @@ mod tests {
       ..Default::default()
     }),
     |t| visit_mut_pass(JSXTransformer::new(
-      super::JSXTransformerConfig {
-        preserve_jsx: true,
-        ..Default::default()
-      },
+      super::JSXTransformerConfig::default(),
       t.cm.clone(),
       Some(t.comments.clone()),
       "test.js".into(),
@@ -2240,10 +2186,7 @@ mod tests {
       ..Default::default()
     }),
     |t| visit_mut_pass(JSXTransformer::new(
-      super::JSXTransformerConfig {
-        preserve_jsx: true,
-        ..Default::default()
-      },
+      super::JSXTransformerConfig::default(),
       t.cm.clone(),
       Some(t.comments.clone()),
       "test.js".into(),
@@ -2268,10 +2211,7 @@ mod tests {
       ..Default::default()
     }),
     |t| visit_mut_pass(JSXTransformer::new(
-      super::JSXTransformerConfig {
-        preserve_jsx: true,
-        ..Default::default()
-      },
+      super::JSXTransformerConfig::default(),
       t.cm.clone(),
       Some(t.comments.clone()),
       "test.js".into(),
@@ -2296,10 +2236,7 @@ mod tests {
       ..Default::default()
     }),
     |t| visit_mut_pass(JSXTransformer::new(
-      super::JSXTransformerConfig {
-        preserve_jsx: true,
-        ..Default::default()
-      },
+      super::JSXTransformerConfig::default(),
       t.cm.clone(),
       Some(t.comments.clone()),
       "test.js".into(),
@@ -2328,7 +2265,6 @@ mod tests {
     }),
     |t| visit_mut_pass(JSXTransformer::new(
       super::JSXTransformerConfig {
-        preserve_jsx: true,
         is_dynamic_component: Some(true),
         ..Default::default()
       },
@@ -2360,7 +2296,6 @@ mod tests {
     }),
     |t| visit_mut_pass(JSXTransformer::new(
       super::JSXTransformerConfig {
-        preserve_jsx: true,
         is_dynamic_component: Some(true),
         ..Default::default()
       },
@@ -2392,10 +2327,7 @@ mod tests {
       let unresolved_mark = Mark::new();
       (
         visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
-          super::JSXTransformerConfig {
-            preserve_jsx: false,
-            ..Default::default()
-          },
+          super::JSXTransformerConfig::default(),
           t.cm.clone(),
           None,
           "test.js".into(),
@@ -2441,10 +2373,7 @@ mod tests {
       let top_level_mark = Mark::new();
       let unresolved_mark = Mark::new();
       visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
-        super::JSXTransformerConfig {
-          preserve_jsx: false,
-          ..Default::default()
-        },
+        super::JSXTransformerConfig::default(),
         t.cm.clone(),
         None,
         "test.js".into(),
@@ -2471,10 +2400,7 @@ mod tests {
       let top_level_mark = Mark::new();
       let unresolved_mark = Mark::new();
       visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
-        super::JSXTransformerConfig {
-          preserve_jsx: false,
-          ..Default::default()
-        },
+        super::JSXTransformerConfig::default(),
         t.cm.clone(),
         None,
         "test.js".into(),
@@ -2501,10 +2427,7 @@ mod tests {
       let top_level_mark = Mark::new();
       let unresolved_mark = Mark::new();
       visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
-        super::JSXTransformerConfig {
-          preserve_jsx: false,
-          ..Default::default()
-        },
+        super::JSXTransformerConfig::default(),
         t.cm.clone(),
         None,
         "test.js".into(),
@@ -2531,7 +2454,6 @@ mod tests {
       let unresolved_mark = Mark::new();
       visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
         super::JSXTransformerConfig {
-          preserve_jsx: false,
           runtime_pkg: "@lynx-js/react/internal".into(),
           ..Default::default()
         },
@@ -2563,7 +2485,6 @@ mod tests {
       (
         visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
           super::JSXTransformerConfig {
-            preserve_jsx: false,
             target: TransformTarget::MIXED,
             ..Default::default()
           },
@@ -2619,7 +2540,6 @@ mod tests {
       (
         visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
           super::JSXTransformerConfig {
-            preserve_jsx: false,
             target: TransformTarget::MIXED,
             ..Default::default()
           },
@@ -2677,7 +2597,6 @@ mod tests {
       (
         visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
           super::JSXTransformerConfig {
-            preserve_jsx: false,
             target: TransformTarget::MIXED,
             ..Default::default()
           },
@@ -2735,7 +2654,6 @@ mod tests {
       (
         visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
           super::JSXTransformerConfig {
-            preserve_jsx: false,
             target: TransformTarget::MIXED,
             ..Default::default()
           },
@@ -2791,7 +2709,6 @@ mod tests {
       (
         visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
           super::JSXTransformerConfig {
-            preserve_jsx: false,
             target: TransformTarget::MIXED,
             ..Default::default()
           },
@@ -2841,10 +2758,7 @@ mod tests {
       ..Default::default()
     }),
     |t| visit_mut_pass(JSXTransformer::new(
-      super::JSXTransformerConfig {
-        preserve_jsx: true,
-        ..Default::default()
-      },
+      super::JSXTransformerConfig::default(),
       t.cm.clone(),
       Some(t.comments.clone()),
       "test.js".into(),
@@ -2895,10 +2809,7 @@ aaaaa
       ..Default::default()
     }),
     |t| visit_mut_pass(JSXTransformer::new(
-      super::JSXTransformerConfig {
-        preserve_jsx: true,
-        ..Default::default()
-      },
+      super::JSXTransformerConfig::default(),
       t.cm.clone(),
       Some(t.comments.clone()),
       "test.js".into(),
