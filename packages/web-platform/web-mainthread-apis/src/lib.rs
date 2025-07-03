@@ -45,7 +45,7 @@ pub fn transform_raw_u16_inline_style_ptr_parsed(
   name_len: usize,
   value_ptr: *const u16,
   value_len: usize,
-) -> js_sys::Array {
+) -> Option<js_sys::Array> {
   unsafe {
     let name_slice = core::slice::from_raw_parts(name_ptr, name_len);
     let value_slice = core::slice::from_raw_parts(value_ptr, value_len);
@@ -58,6 +58,10 @@ pub fn transform_raw_u16_inline_style_ptr_parsed(
       0,
       value_len,
     );
+    if result.is_empty() && children_result.is_empty() {
+      // if there are no results, we return None
+      return None;
+    }
     // now we need to convert the result into a JS array
     let ret = js_sys::Array::new();
     ret.push(&push_parsed_result_to_js_array!(result).into());
@@ -66,7 +70,7 @@ pub fn transform_raw_u16_inline_style_ptr_parsed(
       // but if there are children, we need to push them as well
       ret.push(&push_parsed_result_to_js_array!(children_result).into());
     }
-    ret
+    Some(ret)
   }
 }
 
