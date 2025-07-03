@@ -2848,6 +2848,27 @@ test.describe('reactlynx3 tests', () => {
         });
       });
       test(
+        'basic-element-x-swiper-method-scroll-to',
+        async ({ page }, { title }) => {
+          await goto(page, title);
+          await wait(100);
+          await diffScreenShot(page, 'x-swiper', 'scroll-to', '1', {
+            animations: 'allow',
+          });
+          await page.locator('#swiper-1').click();
+          // default duration is 500ms, add 100ms buffer time
+          await wait(600);
+          await diffScreenShot(page, 'x-swiper', 'scroll-to', '2', {
+            animations: 'allow',
+          });
+          await page.locator('#swiper-1').click();
+          await wait(600);
+          await diffScreenShot(page, 'x-swiper', 'scroll-to', '3', {
+            animations: 'allow',
+          });
+        },
+      );
+      test(
         'basic-element-x-swiper-mode-normal',
         async ({ page }, { title }) => {
           await goto(page, title);
