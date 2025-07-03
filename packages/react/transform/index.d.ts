@@ -17,7 +17,6 @@ export interface TransformReactLynxOptions {
    * This is used internally to make sure the test output is consistent.
    */
   mode?: 'production' | 'development' | 'test';
-  filename: string;
   sourceFileName?: string;
   sourcemap: boolean | string;
   sourceMapColumns?: boolean;

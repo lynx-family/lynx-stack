@@ -1,6 +1,6 @@
 import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
 import * as ReactLynx from "@lynx-js/react";
-const __snapshot_da39a_test_1 = ReactLynx.createSnapshot("__snapshot_da39a_test_1", function() {
+const __snapshot_2d408_test_1 = ReactLynx.createSnapshot("__snapshot_2d408_test_1", function() {
     const pageId = ReactLynx.__pageId;
     const el = __CreateView(pageId);
     const el1 = __CreateText(pageId);
@@ -21,6 +21,6 @@ const __snapshot_da39a_test_1 = ReactLynx.createSnapshot("__snapshot_da39a_test_
         3
     ]
 ], undefined, globDynamicComponentEntry, null);
-_jsx(__snapshot_da39a_test_1, {
+_jsx(__snapshot_2d408_test_1, {
     children: _jsx(A, {})
 });

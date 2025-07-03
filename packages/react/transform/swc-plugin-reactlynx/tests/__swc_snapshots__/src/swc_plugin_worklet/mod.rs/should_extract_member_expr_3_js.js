@@ -5,8 +5,8 @@ let enableScroll = {
         b,
         f
     },
-    _wkltId: "a123:test:1"
+    _wkltId: "a77b:test:1"
 };
 let makeVelocityIfRequired = {
-    _wkltId: "a123:test:2"
+    _wkltId: "a77b:test:2"
 };

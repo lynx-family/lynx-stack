@@ -86,13 +86,11 @@ let jsx = <view style={{
 }}/>`,
       {
         mode: 'test',
-        filename: '',
         sourcemap: false,
         cssScope: false,
         snapshot: {
           runtimePkg: '@lynx-js/react-runtime',
           target: 'MIXED',
-          filename: '',
         },
         directiveDCE: false,
         defineDCE: false,
@@ -147,13 +145,11 @@ let jsx = <view style={{
 }}/>`,
       {
         mode: 'test',
-        filename: '',
         sourcemap: false,
         cssScope: false,
         snapshot: {
           runtimePkg: '@lynx-js/react-runtime',
           target: 'MIXED',
-          filename: '',
         },
         directiveDCE: false,
         defineDCE: false,
@@ -204,13 +200,11 @@ let height = '100px';
 let jsx = <view style={{ height, width }}/>`,
       {
         mode: 'test',
-        filename: '',
         sourcemap: false,
         cssScope: false,
         snapshot: {
           runtimePkg: '@lynx-js/react-runtime',
           target: 'MIXED',
-          filename: '',
         },
         directiveDCE: false,
         defineDCE: false,

@@ -17,11 +17,9 @@ const swcPluginReactLynx = path.resolve(__dirname, './swc-plugin-reactlynx/swc_p
 
 const transformReactLynx = async (source, options) => {
   const swcPluginReactLynxOptions = {
-    filename: options?.filename ?? '',
     mode: options?.mode ?? 'production',
     cssScope: options?.cssScope ?? {
       mode: 'none',
-      filename: '',
     },
     shake: options?.shake ?? false,
     defineDCE: options?.defineDCE ?? false,

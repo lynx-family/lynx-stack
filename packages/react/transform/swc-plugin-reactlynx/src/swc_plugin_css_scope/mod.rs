@@ -55,16 +55,12 @@ impl<'de> Deserialize<'de> for CSSScope {
 pub struct CSSScopeVisitorConfig {
   /// @public
   pub mode: CSSScope,
-
-  /// @public
-  pub filename: String,
 }
 
 impl Default for CSSScopeVisitorConfig {
   fn default() -> Self {
     CSSScopeVisitorConfig {
       mode: CSSScope::None,
-      filename: "index.jsx".into(),
     }
   }
 }
@@ -86,9 +82,9 @@ impl<C> CSSScopeVisitor<C>
 where
   C: Comments,
 {
-  pub fn new(cfg: CSSScopeVisitorConfig, comments: Option<C>) -> Self {
+  pub fn new(cfg: CSSScopeVisitorConfig, filename: String, comments: Option<C>) -> Self {
     CSSScopeVisitor {
-      css_id: usize::from_str_radix(&calc_hash(&cfg.filename), 16).expect("should have css id")
+      css_id: usize::from_str_radix(&calc_hash(&filename), 16).expect("should have css id")
         // cssId for `@file` starts from `1` and auto increases one by one
         // to avoid cssId collision, we start our cssId from `1e6`, so that
         // we will never collide with `cssId` of `@file` if user have less than 1e6 css files
@@ -221,6 +217,7 @@ mod tests {
         mode: CSSScope::All,
         ..Default::default()
       },
+      "test.js".into(),
       Some(t.comments.clone()),
     )),
     scoped_all_transform_imports_with_query,
@@ -238,6 +235,7 @@ mod tests {
         mode: CSSScope::None,
         ..Default::default()
       },
+      "test.js".into(),
       Some(t.comments.clone()),
     )),
     scoped_none_transform_imports,
@@ -255,6 +253,7 @@ mod tests {
         mode: CSSScope::None,
         ..Default::default()
       },
+      "test.js".into(),
       Some(t.comments.clone()),
     )),
     scoped_none_transform_imports_without_jsx,
@@ -272,6 +271,7 @@ mod tests {
         mode: CSSScope::All,
         ..Default::default()
       },
+      "test.js".into(),
       Some(t.comments.clone()),
     )),
     scoped_all_transform_imports,
@@ -289,6 +289,7 @@ mod tests {
         mode: CSSScope::All,
         ..Default::default()
       },
+      "test.js".into(),
       Some(t.comments.clone()),
     )),
     scoped_all_transform_imports_without_jsx,
@@ -306,6 +307,7 @@ mod tests {
         mode: CSSScope::Modules,
         ..Default::default()
       },
+      "test.js".into(),
       Some(t.comments.clone()),
     )),
     scoped_modules_transform_imports,
@@ -323,6 +325,7 @@ mod tests {
         mode: CSSScope::Modules,
         ..Default::default()
       },
+      "test.js".into(),
       Some(t.comments.clone()),
     )),
     scoped_modules_transform_imports_without_jsx,

@@ -4,10 +4,10 @@ let onTapLepus = {
     _c: {
         wv
     },
-    _wkltId: "a123:test:1"
+    _wkltId: "a77b:test:1"
 };
-loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "a123:test:1", function(event: ReactLynx.Worklet.ITouchEvent) {
-    const onTapLepus = lynxWorkletImpl._workletMap["a123:test:1"].bind(this);
+loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "a77b:test:1", function(event: ReactLynx.Worklet.ITouchEvent) {
+    const onTapLepus = lynxWorkletImpl._workletMap["a77b:test:1"].bind(this);
     let { wv } = this["_c"];
     "main thread";
     type XXXX = YYYY;

@@ -1,5 +1,5 @@
 import * as ReactLynx from "@lynx-js/react";
-const __snapshot_da39a_test_3 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_test_3", function() {
+const __snapshot_2d408_test_3 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_2d408_test_3", function() {
     const pageId = ReactLynx.__pageId;
     const el = __CreateElement("list-item", pageId);
     return [
@@ -8,7 +8,7 @@ const __snapshot_da39a_test_3 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapsh
 }, [
     (snapshot, index, oldValue)=>ReactLynx.updateListItemPlatformInfo(snapshot, index, oldValue, 0)
 ], null, undefined, globDynamicComponentEntry, null);
-const __snapshot_da39a_test_2 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_test_2", function(snapshotInstance) {
+const __snapshot_2d408_test_2 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_2d408_test_2", function(snapshotInstance) {
     const pageId = ReactLynx.__pageId;
     const el = ReactLynx.snapshotCreateList(pageId, snapshotInstance, 0);
     return [
@@ -20,14 +20,14 @@ const __snapshot_da39a_test_2 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapsh
         0
     ]
 ], undefined, globDynamicComponentEntry, null);
-const __snapshot_da39a_test_4 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_test_4", function() {
+const __snapshot_2d408_test_4 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_2d408_test_4", function() {
     const pageId = ReactLynx.__pageId;
     const el = __CreateView(pageId);
     return [
         el
     ];
 }, null, ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null);
-const __snapshot_da39a_test_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_test_1", function() {
+const __snapshot_2d408_test_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_2d408_test_1", function() {
     const pageId = ReactLynx.__pageId;
     const el = __CreateView(pageId);
     const el1 = __CreateWrapperElement(pageId);
@@ -49,9 +49,9 @@ const __snapshot_da39a_test_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapsh
         2
     ]
 ], undefined, globDynamicComponentEntry, null);
-<__snapshot_da39a_test_1><__snapshot_da39a_test_2><__snapshot_da39a_test_3 values={[
+<__snapshot_2d408_test_1><__snapshot_2d408_test_2><__snapshot_2d408_test_3 values={[
     {
         "full-span": true,
         "reuse-identifier": x
     }
-]}/></__snapshot_da39a_test_2><__snapshot_da39a_test_4><A/></__snapshot_da39a_test_4></__snapshot_da39a_test_1>;
+]}/></__snapshot_2d408_test_2><__snapshot_2d408_test_4><A/></__snapshot_2d408_test_4></__snapshot_2d408_test_1>;

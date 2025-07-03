@@ -24,7 +24,7 @@ describe('list', () => {
     expect(container).toMatchInlineSnapshot(`
       <page>
         <list
-          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_2","item-key":0},{"position":1,"type":"__Card__:__snapshot_a9e46_test_2","item-key":1},{"position":2,"type":"__Card__:__snapshot_a9e46_test_2","item-key":2}],"removeAction":[],"updateAction":[]}]"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_05fe4_test_2","item-key":0},{"position":1,"type":"__Card__:__snapshot_05fe4_test_2","item-key":1},{"position":2,"type":"__Card__:__snapshot_05fe4_test_2","item-key":2}],"removeAction":[],"updateAction":[]}]"
         />
       </page>
     `);
@@ -43,7 +43,7 @@ describe('list', () => {
                 "from": 0,
                 "item-key": 0,
                 "to": 0,
-                "type": "__Card__:__snapshot_a9e46_test_2",
+                "type": "__Card__:__snapshot_05fe4_test_2",
               },
             ],
           },
@@ -53,7 +53,7 @@ describe('list', () => {
     expect(container).toMatchInlineSnapshot(`
       <page>
         <list
-          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_2","item-key":0},{"position":1,"type":"__Card__:__snapshot_a9e46_test_2","item-key":1},{"position":2,"type":"__Card__:__snapshot_a9e46_test_2","item-key":2}],"removeAction":[],"updateAction":[]}]"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_05fe4_test_2","item-key":0},{"position":1,"type":"__Card__:__snapshot_05fe4_test_2","item-key":1},{"position":2,"type":"__Card__:__snapshot_05fe4_test_2","item-key":2}],"removeAction":[],"updateAction":[]}]"
         >
           <list-item
             item-key="0"
@@ -78,14 +78,14 @@ describe('list', () => {
                 "from": 0,
                 "item-key": 0,
                 "to": 0,
-                "type": "__Card__:__snapshot_a9e46_test_2",
+                "type": "__Card__:__snapshot_05fe4_test_2",
               },
               {
                 "flush": false,
                 "from": 1,
                 "item-key": 1,
                 "to": 1,
-                "type": "__Card__:__snapshot_a9e46_test_2",
+                "type": "__Card__:__snapshot_05fe4_test_2",
               },
             ],
           },
@@ -95,7 +95,7 @@ describe('list', () => {
     expect(container).toMatchInlineSnapshot(`
       <page>
         <list
-          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_2","item-key":0},{"position":1,"type":"__Card__:__snapshot_a9e46_test_2","item-key":1},{"position":2,"type":"__Card__:__snapshot_a9e46_test_2","item-key":2}],"removeAction":[],"updateAction":[]}]"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_05fe4_test_2","item-key":0},{"position":1,"type":"__Card__:__snapshot_05fe4_test_2","item-key":1},{"position":2,"type":"__Card__:__snapshot_05fe4_test_2","item-key":2}],"removeAction":[],"updateAction":[]}]"
         >
           <list-item
             item-key="0"
@@ -129,14 +129,14 @@ describe('list', () => {
                 "from": 0,
                 "item-key": 0,
                 "to": 0,
-                "type": "__Card__:__snapshot_a9e46_test_2",
+                "type": "__Card__:__snapshot_05fe4_test_2",
               },
               {
                 "flush": false,
                 "from": 1,
                 "item-key": 1,
                 "to": 1,
-                "type": "__Card__:__snapshot_a9e46_test_2",
+                "type": "__Card__:__snapshot_05fe4_test_2",
               },
             ],
           },
@@ -146,7 +146,7 @@ describe('list', () => {
     expect(container).toMatchInlineSnapshot(`
       <page>
         <list
-          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_2","item-key":0},{"position":1,"type":"__Card__:__snapshot_a9e46_test_2","item-key":1},{"position":2,"type":"__Card__:__snapshot_a9e46_test_2","item-key":2}],"removeAction":[],"updateAction":[]}]"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_05fe4_test_2","item-key":0},{"position":1,"type":"__Card__:__snapshot_05fe4_test_2","item-key":1},{"position":2,"type":"__Card__:__snapshot_05fe4_test_2","item-key":2}],"removeAction":[],"updateAction":[]}]"
         >
           <list-item
             item-key="0"
@@ -179,21 +179,21 @@ describe('list', () => {
                 "from": 0,
                 "item-key": 0,
                 "to": 0,
-                "type": "__Card__:__snapshot_a9e46_test_2",
+                "type": "__Card__:__snapshot_05fe4_test_2",
               },
               {
                 "flush": false,
                 "from": 1,
                 "item-key": 1,
                 "to": 1,
-                "type": "__Card__:__snapshot_a9e46_test_2",
+                "type": "__Card__:__snapshot_05fe4_test_2",
               },
               {
                 "flush": false,
                 "from": 2,
                 "item-key": 2,
                 "to": 2,
-                "type": "__Card__:__snapshot_a9e46_test_2",
+                "type": "__Card__:__snapshot_05fe4_test_2",
               },
             ],
           },
@@ -204,7 +204,7 @@ describe('list', () => {
     expect(container).toMatchInlineSnapshot(`
       <page>
         <list
-          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_2","item-key":0},{"position":1,"type":"__Card__:__snapshot_a9e46_test_2","item-key":1},{"position":2,"type":"__Card__:__snapshot_a9e46_test_2","item-key":2}],"removeAction":[],"updateAction":[]}]"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_05fe4_test_2","item-key":0},{"position":1,"type":"__Card__:__snapshot_05fe4_test_2","item-key":1},{"position":2,"type":"__Card__:__snapshot_05fe4_test_2","item-key":2}],"removeAction":[],"updateAction":[]}]"
         >
           <list-item
             item-key="2"

@@ -32,7 +32,7 @@ describe('renderToOpcodes', () => {
         {
           "children": undefined,
           "id": -3,
-          "type": "__Card__:__snapshot_a94a8_test_1",
+          "type": "__Card__:__snapshot_05fe4_test_1",
           "values": undefined,
         },
         2,
@@ -68,14 +68,14 @@ describe('renderToOpcodes', () => {
         {
           "children": undefined,
           "id": -4,
-          "type": "__Card__:__snapshot_a94a8_test_3",
+          "type": "__Card__:__snapshot_05fe4_test_3",
           "values": undefined,
         },
         0,
         {
           "children": undefined,
           "id": -6,
-          "type": "__Card__:__snapshot_a94a8_test_2",
+          "type": "__Card__:__snapshot_05fe4_test_2",
           "values": undefined,
         },
         3,
@@ -108,14 +108,14 @@ describe('renderToOpcodes', () => {
         {
           "children": undefined,
           "id": -7,
-          "type": "__Card__:__snapshot_a94a8_test_5",
+          "type": "__Card__:__snapshot_05fe4_test_5",
           "values": undefined,
         },
         0,
         {
           "children": undefined,
           "id": -8,
-          "type": "__Card__:__snapshot_a94a8_test_4",
+          "type": "__Card__:__snapshot_05fe4_test_4",
           "values": undefined,
         },
         3,
@@ -141,7 +141,7 @@ describe('renderToOpcodes', () => {
         {
           "children": undefined,
           "id": -9,
-          "type": "__Card__:__snapshot_a94a8_test_6",
+          "type": "__Card__:__snapshot_05fe4_test_6",
           "values": undefined,
         },
         2,
@@ -169,7 +169,7 @@ describe('renderToOpcodes', () => {
         {
           "children": undefined,
           "id": -10,
-          "type": "__Card__:__snapshot_a94a8_test_7",
+          "type": "__Card__:__snapshot_05fe4_test_7",
           "values": undefined,
         },
         3,
@@ -197,7 +197,7 @@ describe('renderToOpcodes', () => {
         {
           "children": undefined,
           "id": -11,
-          "type": "__Card__:__snapshot_a94a8_test_8",
+          "type": "__Card__:__snapshot_05fe4_test_8",
           "values": undefined,
         },
         3,
@@ -223,7 +223,7 @@ describe('renderToOpcodes', () => {
         {
           "children": undefined,
           "id": -12,
-          "type": "__Card__:__snapshot_a94a8_test_9",
+          "type": "__Card__:__snapshot_05fe4_test_9",
           "values": undefined,
         },
         3,
@@ -248,14 +248,14 @@ describe('renderToOpcodes', () => {
         {
           "children": undefined,
           "id": -13,
-          "type": "__Card__:__snapshot_a94a8_test_10",
+          "type": "__Card__:__snapshot_05fe4_test_10",
           "values": undefined,
         },
         0,
         {
           "children": undefined,
           "id": -14,
-          "type": "__Card__:__snapshot_a94a8_test_11",
+          "type": "__Card__:__snapshot_05fe4_test_11",
           "values": undefined,
         },
         3,
@@ -280,14 +280,14 @@ describe('renderToOpcodes', () => {
         {
           "children": undefined,
           "id": -15,
-          "type": "__Card__:__snapshot_a94a8_test_12",
+          "type": "__Card__:__snapshot_05fe4_test_12",
           "values": undefined,
         },
         0,
         {
           "children": undefined,
           "id": -16,
-          "type": "__Card__:__snapshot_a94a8_test_13",
+          "type": "__Card__:__snapshot_05fe4_test_13",
           "values": undefined,
         },
         3,
@@ -657,7 +657,7 @@ describe('createElement', () => {
         {
           "children": undefined,
           "id": -44,
-          "type": "__Card__:__snapshot_a94a8_test_30",
+          "type": "__Card__:__snapshot_05fe4_test_30",
           "values": undefined,
         },
         1,
@@ -670,7 +670,7 @@ describe('createElement', () => {
         {
           "children": undefined,
           "id": -45,
-          "type": "__Card__:__snapshot_a94a8_test_30",
+          "type": "__Card__:__snapshot_05fe4_test_30",
           "values": undefined,
         },
         1,
@@ -691,7 +691,7 @@ describe('createElement', () => {
         {
           "children": undefined,
           "id": -46,
-          "type": "__Card__:__snapshot_a94a8_test_31",
+          "type": "__Card__:__snapshot_05fe4_test_31",
           "values": undefined,
         },
         1,
@@ -704,7 +704,7 @@ describe('createElement', () => {
         {
           "children": undefined,
           "id": -47,
-          "type": "__Card__:__snapshot_a94a8_test_31",
+          "type": "__Card__:__snapshot_05fe4_test_31",
           "values": undefined,
         },
         1,

@@ -98,7 +98,7 @@ describe('setState timing api', () => {
 
     expect(mtCallbacks[0][1]).toMatchInlineSnapshot(`
       {
-        "data": "{"patchList":[{"id":3,"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_2",3,0,null,4,3,4,0,1,1,3,4,null,1,-2,3,null]}],"flushOptions":{"__lynx_timing_flag":"__lynx_timing_actual_fmp"}}",
+        "data": "{"patchList":[{"id":3,"snapshotPatch":[0,"__Card__:__snapshot_05fe4_test_2",3,0,null,4,3,4,0,1,1,3,4,null,1,-2,3,null]}],"flushOptions":{"__lynx_timing_flag":"__lynx_timing_actual_fmp"}}",
         "patchOptions": {
           "pipelineOptions": {
             "dsl": "reactLynx",
@@ -177,7 +177,7 @@ describe('attribute timing api', () => {
     await waitSchedule();
     expect(mtCallbacks[0][1]).toMatchInlineSnapshot(`
       {
-        "data": "{"patchList":[{"id":6,"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_4",3,4,3,[{"__ltf":"__lynx_timing_actual_fmp"}],0,null,4,3,4,0,1,1,3,4,null,1,-2,3,null]}]}",
+        "data": "{"patchList":[{"id":6,"snapshotPatch":[0,"__Card__:__snapshot_05fe4_test_4",3,4,3,[{"__ltf":"__lynx_timing_actual_fmp"}],0,null,4,3,4,0,1,1,3,4,null,1,-2,3,null]}]}",
         "patchOptions": {
           "pipelineOptions": {
             "dsl": "reactLynx",
@@ -366,7 +366,7 @@ describe('attribute timing api', () => {
     `);
     expect(mtCallbacks[0][1]).toMatchInlineSnapshot(`
       {
-        "data": "{"patchList":[{"id":9,"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_6",3,4,3,[{"__ltf":"__lynx_timing_actual_fmp"}],0,null,4,3,4,0,1,1,3,4,null,1,-2,3,null]}]}",
+        "data": "{"patchList":[{"id":9,"snapshotPatch":[0,"__Card__:__snapshot_05fe4_test_6",3,4,3,[{"__ltf":"__lynx_timing_actual_fmp"}],0,null,4,3,4,0,1,1,3,4,null,1,-2,3,null]}]}",
         "patchOptions": {
           "pipelineOptions": {
             "dsl": "reactLynx",
@@ -704,7 +704,7 @@ describe('attribute timing api', () => {
       await waitSchedule();
       expect(mtCallbacks[0][1]).toMatchInlineSnapshot(`
         {
-          "data": "{"patchList":[{"id":17,"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_15",3,4,3,[{"xxx":333,"__lynx_timing_flag":"__lynx_timing_actual_fmp"}],0,null,4,3,4,0,1,1,3,4,null,1,-2,3,null]}]}",
+          "data": "{"patchList":[{"id":17,"snapshotPatch":[0,"__Card__:__snapshot_05fe4_test_15",3,4,3,[{"xxx":333,"__lynx_timing_flag":"__lynx_timing_actual_fmp"}],0,null,4,3,4,0,1,1,3,4,null,1,-2,3,null]}]}",
           "patchOptions": {
             "pipelineOptions": {
               "dsl": "reactLynx",

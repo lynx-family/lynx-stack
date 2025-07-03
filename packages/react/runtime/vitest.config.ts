@@ -29,17 +29,14 @@ function transformReactLynxPlugin(): Plugin {
 
       const result = await transformReactLynx(sourceText, {
         mode: 'test',
-        filename: relativePath,
         sourcemap: true,
         snapshot: {
           preserveJsx: true,
           runtimePkg,
           jsxImportSource: '@lynx-js/react',
-          filename: 'test',
           target: 'MIXED',
         },
         syntaxConfig,
-        // snapshot: true,
         directiveDCE: false,
         defineDCE: false,
         shake: false,

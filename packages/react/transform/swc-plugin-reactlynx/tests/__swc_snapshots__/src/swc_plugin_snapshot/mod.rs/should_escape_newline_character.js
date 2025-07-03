@@ -1,5 +1,5 @@
 import * as ReactLynx from "@lynx-js/react";
-const __snapshot_da39a_test_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_test_1", function() {
+const __snapshot_2d408_test_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_2d408_test_1", function() {
     const pageId = ReactLynx.__pageId;
     const el = __CreateView(pageId);
     const el1 = __CreateView(pageId);
@@ -47,7 +47,7 @@ const __snapshot_da39a_test_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapsh
         }
     }
 ], null, undefined, globDynamicComponentEntry, null);
-<__snapshot_da39a_test_1 values={[
+<__snapshot_2d408_test_1 values={[
     {
         __ltf: " aaaaa "
     }
