@@ -159,7 +159,7 @@ export const REPLACEABLE_PLUGINS = Object.freeze(
 /* ---------- helper: normalize user option ----------------------- */
 export type LynxPluginsOption =
   | boolean // true → all, false → none
-  | LynxPluginName[] // whitelist
+  | LynxPluginName[] // allowed array
   | Partial<Record<LynxPluginName, boolean>>; // granular on/off
 
 export function toEnabledSet(
@@ -167,9 +167,9 @@ export function toEnabledSet(
 ): Set<LynxPluginName> {
   if (opt === true) return new Set(REPLACEABLE_PLUGINS); // all
   if (opt === false) return new Set(); // none
-  if (Array.isArray(opt)) return new Set(opt); // whitelist array
+  if (Array.isArray(opt)) return new Set(opt); // allowed array
 
-  // object form → blacklist
+  // object form → blocked
   const set = new Set(REPLACEABLE_PLUGINS);
   for (const [k, on] of Object.entries(opt)) {
     if (on === false) set.delete(k as LynxPluginName); // explicitly disable
