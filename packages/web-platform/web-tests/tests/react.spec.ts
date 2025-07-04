@@ -394,10 +394,9 @@ test.describe('reactlynx3 tests', () => {
       'basic-mts-run-on-background',
       async ({ page }, { title }) => {
         await goto(page, title);
-        await wait(200);
+        await wait(500);
         const target = page.locator('#target');
         await target.click();
-        await wait(100);
         await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
       },
     );
