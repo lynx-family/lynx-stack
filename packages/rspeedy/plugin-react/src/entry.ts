@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { createRequire } from 'node:module'
+import path from 'node:path'
 
 import type {
   NormalizedEnvironmentConfig,
@@ -27,6 +28,7 @@ const PLUGIN_NAME_TEMPLATE = 'lynx:template'
 const PLUGIN_NAME_RUNTIME_WRAPPER = 'lynx:runtime-wrapper'
 const PLUGIN_NAME_WEB = 'lynx:web'
 
+const DEFAULT_DIST_PATH_INTERMEDIATE = '.rspeedy'
 const DEFAULT_FILENAME_HASH = '.[contenthash:8]'
 const EMPTY_HASH = ''
 
@@ -82,13 +84,29 @@ export function applyEntry(
       // We would like to avoid adding `__background` to the output CSS filename.
       const mainThreadEntry = `${entryName}__main-thread`
 
-      const mainThreadName = `${entryName}/main-thread.js`
+      const mainThreadName = path.posix.join(
+        isLynx
+          // TODO: config intermediate
+          ? DEFAULT_DIST_PATH_INTERMEDIATE
+          // For non-Lynx environment, the entry is not deleted.
+          // So we do not put it in the intermediate.
+          : '',
+        `${entryName}/main-thread.js`,
+      )
 
-      const backgroundName = getBackgroundFilename(
-        entryName,
-        environment.config,
-        isProd,
-        experimental_isLazyBundle,
+      const backgroundName = path.posix.join(
+        isLynx
+          // TODO: config intermediate
+          ? DEFAULT_DIST_PATH_INTERMEDIATE
+          // For non-Lynx environment, the entry is not deleted.
+          // So we do not put it in the intermediate.
+          : '',
+        getBackgroundFilename(
+          entryName,
+          environment.config,
+          isProd,
+          experimental_isLazyBundle,
+        ),
       )
 
       const backgroundEntry = entryName
@@ -151,7 +169,10 @@ export function applyEntry(
             '[platform]',
             environment.name,
           ),
-          intermediate: entryName,
+          intermediate: path.posix.join(
+            DEFAULT_DIST_PATH_INTERMEDIATE,
+            entryName,
+          ),
           customCSSInheritanceList,
           debugInfoOutside,
           defaultDisplayLinear,

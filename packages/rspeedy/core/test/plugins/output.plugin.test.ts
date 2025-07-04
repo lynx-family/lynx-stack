@@ -509,10 +509,10 @@ describe('Plugins - Output', () => {
         !!plugin && plugin.constructor.name === 'CssExtractRspackPlugin'
       )
       expect(cssExtractPlugin?.options.filename).toMatchInlineSnapshot(
-        `"[name]/[name].css"`,
+        `".rspeedy/[name]/[name].css"`,
       )
       expect(cssExtractPlugin?.options.chunkFilename).toMatchInlineSnapshot(
-        `"async/[name]/[name].css"`,
+        `".rspeedy/async/[name]/[name].css"`,
       )
     })
 
@@ -581,7 +581,7 @@ describe('Plugins - Output', () => {
         !!plugin && plugin.constructor.name === 'CssExtractRspackPlugin'
       )
       expect(cssExtractPlugin?.options.filename).toMatchInlineSnapshot(
-        `"[name]/[name].css"`,
+        `".rspeedy/[name]/[name].css"`,
       )
       expect(cssExtractPlugin?.options.chunkFilename).toMatchInlineSnapshot(
         `"css_chunks/[name]/[name].css"`,

@@ -386,7 +386,7 @@ export class LynxTemplatePlugin {
     .freeze<Required<LynxTemplatePluginOptions>>({
       filename: '[name].bundle',
       lazyBundleFilename: 'async/[name].[fullhash].bundle',
-      intermediate: '',
+      intermediate: '.rspeedy',
       chunks: 'all',
       excludeChunks: [],
 

@@ -4,6 +4,7 @@
 
 import type { RsbuildConfig, RsbuildPlugin } from '@rsbuild/core'
 
+import { DEFAULT_DIST_PATH_INTERMEDIATE } from '../config/output/dist-path.js'
 import type { DistPath } from '../config/output/dist-path.js'
 import type { Filename } from '../config/output/filename.js'
 import type { Output } from '../config/output/index.js'
@@ -18,7 +19,7 @@ const defaultDistPathOptions = Object.freeze(
   {
     // We override the default value of Rsbuild(`static/css`) here.
     // Since all the CSS should be encoded into the template in Lynx.
-    css: '',
+    css: DEFAULT_DIST_PATH_INTERMEDIATE,
   } satisfies DistPath,
 )
 
