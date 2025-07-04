@@ -669,4 +669,24 @@ mod tests {
     );
     assert_eq!(String::from_utf16_lossy(&result[0].3), "horizontal");
   }
+
+  #[test]
+  fn linear_layout_gravity() {
+    let source = str_to_u16_slice!("linear-layout-gravity: right;");
+    let result = transform_inline_style_string(source).0;
+    assert_eq!(
+      String::from_utf16_lossy(&result),
+      "--align-self-row:auto;--align-self-column:end;"
+    );
+  }
+
+  #[test]
+  fn linear_layout_gravity_start() {
+    let source = str_to_u16_slice!("linear-layout-gravity: start;");
+    let result = transform_inline_style_string(source).0;
+    assert_eq!(
+      String::from_utf16_lossy(&result),
+      "--align-self-row:start;--align-self-column:start;"
+    );
+  }
 }
