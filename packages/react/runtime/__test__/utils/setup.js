@@ -16,7 +16,12 @@ function inject() {
 
 inject();
 
-afterEach(() => {
+afterEach((context) => {
+  if (context.task.name.includes('preact/debug')) {
+    // Skip preact/debug tests since it would throw errors and abort the rendering process
+    return;
+  }
+
   // check profile call times equal end call times
   expect(console.profile.mock.calls.length).toBe(
     console.profileEnd.mock.calls.length,
