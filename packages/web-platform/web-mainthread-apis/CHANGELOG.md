@@ -1,5 +1,23 @@
 # @lynx-js/web-mainthread-apis
 
+## 0.14.2
+
+### Patch Changes
+
+- feat: merge multiple markTiming RPC communication events together and send them together, which can effectively reduce the number of RPC communications. ([#1178](https://github.com/lynx-family/lynx-stack/pull/1178))
+
+- fix: correctly handle with CSS compound-selector, such as `.a.b`, which will be processed as `.a .b` incorrectly. ([#1187](https://github.com/lynx-family/lynx-stack/pull/1187))
+
+  This problem also occurs when used in combination with other selectors, here are some ways to write styles that worked incorrectly before this commit:
+
+  - `.a.b { }`
+  - `.a.b view { }`
+  - `.a.b:not(.c) { }`
+  - `.a.b::placeholder { }`
+
+- Updated dependencies [[`e44b146`](https://github.com/lynx-family/lynx-stack/commit/e44b146b1bc2b58c0347af7fb4e4157688e07e36), [`6ca5b91`](https://github.com/lynx-family/lynx-stack/commit/6ca5b9106aade393dfac88914b160960a61a82f2)]:
+  - @lynx-js/web-constants@0.14.2
+
 ## 0.14.1
 
 ### Patch Changes

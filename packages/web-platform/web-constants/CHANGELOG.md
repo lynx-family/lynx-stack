@@ -1,5 +1,16 @@
 # @lynx-js/web-constants
 
+## 0.14.2
+
+### Patch Changes
+
+- feat: merge multiple markTiming RPC communication events together and send them together, which can effectively reduce the number of RPC communications. ([#1178](https://github.com/lynx-family/lynx-stack/pull/1178))
+
+- chore: extract shared logic from web-core and web-core-server's loadTemplate into a unified generateTemplate function ([#1211](https://github.com/lynx-family/lynx-stack/pull/1211))
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.14.2
+
 ## 0.14.1
 
 ### Patch Changes
