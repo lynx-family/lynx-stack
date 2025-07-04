@@ -57,9 +57,14 @@ pub const AUTO_STR_U16: &[u16] = str_to_u16_slice!("auto");
 
 pub const NONE_STR_U16: &[u16] = str_to_u16_slice!("none");
 
+pub const LINEAR_WEIGHT_STR_U16: &[u16] = str_to_u16_slice!("linear-weight");
+
 pub const LINEAR_WEIGHT_SUM_STR_U16: &[u16] = str_to_u16_slice!("linear-weight-sum");
 
 pub const LINEAR_WEIGHT_SUM_CSS_VAR_NAME: &[u16] = str_to_u16_slice!("--linear-weight-sum");
+
+pub const LINEAR_WEGIHT_BASIS_CSS_VAR_NAME: &[u16] =
+  str_to_u16_slice!("--lynx-linear-weight-basis");
 
 pub const LYNX_TEXT_BG_COLOR_STR_U16: &[u16] = str_to_u16_slice!("--lynx-text-bg-color");
 

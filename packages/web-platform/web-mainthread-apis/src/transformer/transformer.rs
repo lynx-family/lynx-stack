@@ -4,8 +4,9 @@ use crate::transformer::constants::{
   FLEX_NONE_TRANSFORMED_VALUES, FLEX_SHRINK_CSS_VAR_NAME,
   FLEX_SINGLE_VALUE_USE_BASIS_TRANSFORMED_DEFAULT_VALUES,
   FLEX_SINGLE_VALUE_USE_GROW_TRANSFORMED_DEFAULT_VALUES, FLEX_STR_U16, IMPORTANT_STR_U16,
-  LINEAR_GRADIENT_STR_U16, LINEAR_WEIGHT_SUM_CSS_VAR_NAME, LINEAR_WEIGHT_SUM_STR_U16,
-  LYNX_TEXT_BG_COLOR_STR_U16, NONE_STR_U16,
+  LINEAR_GRADIENT_STR_U16, LINEAR_WEGIHT_BASIS_CSS_VAR_NAME, LINEAR_WEIGHT_STR_U16,
+  LINEAR_WEIGHT_SUM_CSS_VAR_NAME, LINEAR_WEIGHT_SUM_STR_U16, LYNX_TEXT_BG_COLOR_STR_U16,
+  NONE_STR_U16,
 };
 use crate::{
   get_rename_rule_value, get_replace_rule_value,
@@ -276,30 +277,34 @@ pub fn query_transform_rules<'a>(
   }
   /*
    now we're going to generate children style for linear-weight-sum
-   linear-weight-sum: 0; --> --linear-weight-sum: 1;
    linear-weight-sum: <value> --> --linear-weight-sum: <value>;
   */
   if name[name_start..name_end] == *LINEAR_WEIGHT_SUM_STR_U16 {
-    if value_end - value_start == 1 && value[value_start] == b'0' as u16 {
-      // if the value is 0, we will use 1
-      result_children.push((
-        LINEAR_WEIGHT_SUM_CSS_VAR_NAME,
-        0,
-        LINEAR_WEIGHT_SUM_CSS_VAR_NAME.len(),
-        str_to_u16_slice!("1"),
-        0,
-        1,
-      ));
-    } else {
-      result_children.push((
-        LINEAR_WEIGHT_SUM_CSS_VAR_NAME,
-        0,
-        LINEAR_WEIGHT_SUM_CSS_VAR_NAME.len(),
-        value,
-        value_start,
-        value_end,
-      ));
-    }
+    result_children.push((
+      LINEAR_WEIGHT_SUM_CSS_VAR_NAME,
+      0,
+      LINEAR_WEIGHT_SUM_CSS_VAR_NAME.len(),
+      value,
+      value_start,
+      value_end,
+    ));
+  }
+  /*
+   * There is a special rule for linear-weight
+   * linear-weight: 0; -->  do nothing
+   * linear-weight: <value> --> --lynx-linear-weight: 0;
+   */
+  if name[name_start..name_end] == *LINEAR_WEIGHT_STR_U16
+    && value[value_start..value_end] != *str_to_u16_slice!("0")
+  {
+    result.push((
+      LINEAR_WEGIHT_BASIS_CSS_VAR_NAME,
+      0,
+      LINEAR_WEGIHT_BASIS_CSS_VAR_NAME.len(),
+      str_to_u16_slice!("0"),
+      0,
+      1,
+    ));
   }
   (result, result_children)
 }
@@ -425,6 +430,16 @@ mod tests {
     assert_eq!(
       String::from_utf16_lossy(&result),
       "--lynx-display-toggle:var(--lynx-display-linear);--lynx-display:linear;display:flex;"
+    );
+  }
+
+  #[test]
+  fn test_replace_rule_linear_orientation() {
+    let source = str_to_u16_slice!("linear-direction:row;");
+    let result = transform_inline_style_string(source).0;
+    assert_eq!(
+      String::from_utf16_lossy(&result),
+      "--lynx-linear-orientation:horizontal;--lynx-linear-orientation-toggle:var(--lynx-linear-orientation-horizontal);"
     );
   }
 
@@ -591,7 +606,7 @@ mod tests {
   fn linear_weight_sum_0_children_style() {
     let source = str_to_u16_slice!("linear-weight-sum: 0;");
     let result = transform_inline_style_string(source).1;
-    assert_eq!(String::from_utf16_lossy(&result), "--linear-weight-sum:1;");
+    assert_eq!(String::from_utf16_lossy(&result), "--linear-weight-sum:0;");
   }
 
   #[test]
@@ -609,5 +624,43 @@ mod tests {
       String::from_utf16_lossy(&result),
       "--linear-weight-sum:1 !important;"
     );
+  }
+  #[test]
+  fn complex_1() {
+    let source = str_to_u16_slice!("linear-direction:row;linear-weight: 0;");
+    let result = transform_inline_style_string(source).0;
+    assert_eq!(
+      String::from_utf16_lossy(&result),
+      "--lynx-linear-orientation:horizontal;--lynx-linear-orientation-toggle:var(--lynx-linear-orientation-horizontal);--lynx-linear-weight:0;"
+    );
+  }
+
+  #[test]
+  fn linear_weight_0() {
+    let source = str_to_u16_slice!("linear-weight: 0;");
+    let result = transform_inline_style_string(source).0;
+    assert_eq!(String::from_utf16_lossy(&result), "--lynx-linear-weight:0;");
+  }
+
+  #[test]
+  fn linear_weight_1() {
+    let source = str_to_u16_slice!("linear-weight: 1;");
+    let result = transform_inline_style_string(source).0;
+    assert_eq!(
+      String::from_utf16_lossy(&result),
+      "--lynx-linear-weight:1;--lynx-linear-weight-basis:0;"
+    );
+  }
+
+  #[test]
+  fn test_query_transform_rules_linear_direction() {
+    let name = str_to_u16_slice!("linear-direction");
+    let value = str_to_u16_slice!("row");
+    let (result, _) = query_transform_rules(name, 0, name.len(), value, 0, value.len());
+    assert_eq!(
+      String::from_utf16_lossy(&result[0].0),
+      "--lynx-linear-orientation"
+    );
+    assert_eq!(String::from_utf16_lossy(&result[0].3), "horizontal");
   }
 }

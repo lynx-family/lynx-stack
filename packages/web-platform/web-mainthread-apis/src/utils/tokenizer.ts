@@ -26,7 +26,7 @@ export const initTokenizer = async () => {
 };
 const stringToUTF16 = (str: string) => {
   const len = str.length;
-  const ptr = wasm.malloc(len * 2);
+  const ptr = wasm.malloc(len << 1);
   if (!HEAPU16 || HEAPU16.byteLength == 0) {
     HEAPU16 = new Uint16Array(wasm.memory.buffer);
   }
