@@ -18,7 +18,7 @@ inject();
 
 afterEach((context) => {
   if (context.task.name.includes('preact/debug')) {
-    // Skip preact/debug tests since there would be error
+    // Skip preact/debug tests since it would throw errors and abort the rendering process
     return;
   }
 
