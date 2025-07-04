@@ -23,6 +23,9 @@ describe('Plugins - SWC', () => {
               "keepImportAttributes": true,
             },
             "externalHelpers": true,
+            "output": {
+              "charset": "utf8",
+            },
             "parser": {
               "decorators": true,
               "syntax": "typescript",
@@ -71,6 +74,9 @@ describe('Plugins - SWC', () => {
               "keepImportAttributes": true,
             },
             "externalHelpers": true,
+            "output": {
+              "charset": "utf8",
+            },
             "parser": {
               "decorators": true,
               "syntax": "typescript",

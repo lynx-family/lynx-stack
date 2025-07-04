@@ -54,6 +54,9 @@ describe('SWC configuration', () => {
               "keepImportAttributes": true,
             },
             "externalHelpers": true,
+            "output": {
+              "charset": "utf8",
+            },
             "parser": {
               "decorators": true,
               "syntax": "typescript",
@@ -134,12 +137,7 @@ describe('SWC configuration', () => {
     expect(swcRule.include).toMatchInlineSnapshot(`
       [
         {
-          "and": [
-            "<WORKSPACE>",
-            {
-              "not": /\\[\\\\\\\\/\\]node_modules\\[\\\\\\\\/\\]/,
-            },
-          ],
+          "not": /\\[\\\\\\\\/\\]node_modules\\[\\\\\\\\/\\]/,
         },
         /\\\\\\.\\(\\?:ts\\|tsx\\|jsx\\|mts\\|cts\\)\\$/,
         /\\[\\\\\\\\/\\]@rsbuild\\[\\\\\\\\/\\]core\\[\\\\\\\\/\\]dist\\[\\\\\\\\/\\]/,
@@ -218,12 +216,7 @@ describe('SWC configuration', () => {
     expect(swcRule.include).toMatchInlineSnapshot(`
       [
         {
-          "and": [
-            "<WORKSPACE>",
-            {
-              "not": /\\[\\\\\\\\/\\]node_modules\\[\\\\\\\\/\\]/,
-            },
-          ],
+          "not": /\\[\\\\\\\\/\\]node_modules\\[\\\\\\\\/\\]/,
         },
         /\\\\\\.\\(\\?:ts\\|tsx\\|jsx\\|mts\\|cts\\)\\$/,
         /\\[\\\\\\\\/\\]@rsbuild\\[\\\\\\\\/\\]core\\[\\\\\\\\/\\]dist\\[\\\\\\\\/\\]/,
@@ -411,12 +404,7 @@ describe('SWC configuration', () => {
     expect(swcRule.include).toMatchInlineSnapshot(`
       [
         {
-          "and": [
-            "<WORKSPACE>",
-            {
-              "not": /\\[\\\\\\\\/\\]node_modules\\[\\\\\\\\/\\]/,
-            },
-          ],
+          "not": /\\[\\\\\\\\/\\]node_modules\\[\\\\\\\\/\\]/,
         },
         /\\\\\\.\\(\\?:ts\\|tsx\\|jsx\\|mts\\|cts\\)\\$/,
         /\\[\\\\\\\\/\\]@rsbuild\\[\\\\\\\\/\\]core\\[\\\\\\\\/\\]dist\\[\\\\\\\\/\\]/,

@@ -8,7 +8,6 @@ import { act } from 'preact/test-utils';
 
 import { __root } from '@lynx-js/react/internal';
 
-import { commitToMainThread } from '../../runtime/lib/lifecycle/patch/commit.js';
 import { flushDelayedLifecycleEvents } from '../../runtime/lib/lynx/tt.js';
 import { clearPage } from '../../runtime/lib/snapshot.js';
 
@@ -134,3 +133,4 @@ export function renderHook(renderCallback, options) {
 
 export * from '@testing-library/dom';
 export { fireEvent } from './fire-event';
+export { act };
