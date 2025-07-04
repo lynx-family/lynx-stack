@@ -277,7 +277,7 @@ pub fn query_transform_rules<'a>(
   }
   /*
    now we're going to generate children style for linear-weight-sum
-   linear-weight-sum: <value> --> --linear-weight-sum: <value>;
+   linear-weight-sum: <value> --> --lynx-linear-weight-sum: <value>;
   */
   if name[name_start..name_end] == *LINEAR_WEIGHT_SUM_STR_U16 {
     result_children.push((
@@ -606,14 +606,20 @@ mod tests {
   fn linear_weight_sum_0_children_style() {
     let source = str_to_u16_slice!("linear-weight-sum: 0;");
     let result = transform_inline_style_string(source).1;
-    assert_eq!(String::from_utf16_lossy(&result), "--linear-weight-sum:0;");
+    assert_eq!(
+      String::from_utf16_lossy(&result),
+      "--lynx-linear-weight-sum:0;"
+    );
   }
 
   #[test]
   fn linear_weight_sum_1_children_style() {
     let source = str_to_u16_slice!("linear-weight-sum: 1;");
     let result = transform_inline_style_string(source).1;
-    assert_eq!(String::from_utf16_lossy(&result), "--linear-weight-sum:1;");
+    assert_eq!(
+      String::from_utf16_lossy(&result),
+      "--lynx-linear-weight-sum:1;"
+    );
   }
 
   #[test]
@@ -622,7 +628,7 @@ mod tests {
     let result = transform_inline_style_string(source).1;
     assert_eq!(
       String::from_utf16_lossy(&result),
-      "--linear-weight-sum:1 !important;"
+      "--lynx-linear-weight-sum:1 !important;"
     );
   }
   #[test]
