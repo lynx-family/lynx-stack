@@ -241,9 +241,6 @@ importers:
       '@types/react':
         specifier: ^18.3.23
         version: 18.3.23
-      esbuild:
-        specifier: ^0.25.5
-        version: 0.25.5
       pretty-format:
         specifier: ^29.7.0
         version: 29.7.0
