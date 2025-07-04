@@ -15,7 +15,7 @@ export interface DistPath extends DistPathConfig {
    *
    * @deprecated
    *
-   * This option is never readed and will be removed in the future version.
+   * This option is never read and will be removed in the future version.
    *
    * @remarks
    *
