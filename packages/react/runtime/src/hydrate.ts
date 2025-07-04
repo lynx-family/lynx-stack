@@ -221,7 +221,7 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
     swap[before.__id] = after.__id;
   }
 
-  __pendingListUpdates.runWithNoUpdates(() => {
+  __pendingListUpdates.runWithoutUpdates(() => {
     after.__values?.forEach((value, index) => {
       const old = before.__values![index];
       if (value !== old) {

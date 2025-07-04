@@ -17,7 +17,7 @@ export const __pendingListUpdates = {
       this.clear();
     }
   },
-  runWithNoUpdates(cb: () => void): void {
+  runWithoutUpdates(cb: () => void): void {
     const old = this.values;
     this.values = null as unknown as Record<number, ListUpdateInfo>;
     try {

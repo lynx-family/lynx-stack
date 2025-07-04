@@ -308,7 +308,7 @@ export class SnapshotInstance {
       }
     }
 
-    __pendingListUpdates.runWithNoUpdates(() => {
+    __pendingListUpdates.runWithoutUpdates(() => {
       const values = this.__values;
       if (values) {
         this.__values = undefined;
