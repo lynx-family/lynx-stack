@@ -205,7 +205,11 @@ export function applyEntry(
         // TODO: support inlineScripts in lazyBundle
         inlineScripts = true
       } else {
-        inlineScripts = environment.config.output?.inlineScripts ?? true
+        const isChunkSplitAllInOne =
+          environment.config.performance?.chunkSplit?.strategy === 'all-in-one'
+
+        inlineScripts = environment.config.output?.inlineScripts
+          ?? isChunkSplitAllInOne
       }
 
       if (inlineScripts !== true) {
