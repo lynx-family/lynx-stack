@@ -259,7 +259,6 @@ pub fn process_transform(program: Program, metadata: TransformPluginProgramMetad
         Some(&comments),
         filename.clone(),
         top_level_mark,
-        unresolved_mark,
         options.mode.unwrap_or(TransformMode::Production),
       )
       .with_content_hash(content_hash.clone()),

@@ -121,6 +121,10 @@ function injectGlobals() {
   globalThis.requestAnimationFrame = setTimeout;
   globalThis.cancelAnimationFrame = clearTimeout;
 
+  globalThis.__SNAPSHOT__ = (snapshot) => {
+    return snapshot.type;
+  };
+
   console.profile = vi.fn();
   console.profileEnd = vi.fn();
 }

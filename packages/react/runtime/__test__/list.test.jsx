@@ -7,10 +7,6 @@ import { SnapshotInstance, snapshotInstanceManager } from '../src/snapshot';
 
 const HOLE = null;
 
-const __SNAPSHOT__ = (snapshot) => {
-  return snapshot.type;
-};
-
 beforeEach(() => {
   // snapshotManager.values.clear();
   __pendingListUpdates.clear();

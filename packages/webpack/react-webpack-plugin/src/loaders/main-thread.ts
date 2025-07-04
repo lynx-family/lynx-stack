@@ -15,8 +15,8 @@ async function mainThreadLoader(
   const callback = this.async();
   const require = createRequire(import.meta.url);
   const { transformReactLynx } = require(
-    '@lynx-js/react-transform',
-  ) as typeof import('@lynx-js/react-transform');
+    '@lynx-js/react/transform',
+  ) as typeof import('@lynx-js/react/transform');
 
   const result = await transformReactLynx(
     content,

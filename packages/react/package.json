@@ -58,6 +58,10 @@
       "types": "./components/lib/index.d.ts",
       "default": "./components/lib/index.js"
     },
+    "./transform": {
+      "types": "./transform/index.d.ts",
+      "default": "./transform/main.js"
+    },
     "./transform/swc-plugin-reactlynx-compat": {
       "types": "./transform/swc-plugin-reactlynx-compat/index.d.ts",
       "default": "./transform/swc-plugin-reactlynx-compat/swc_plugin_reactlynx_compat.wasm"

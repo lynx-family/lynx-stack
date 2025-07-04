@@ -11,6 +11,8 @@ import type {
 
 import type { CompatVisitorConfig } from './swc-plugin-reactlynx-compat/index.d.ts';
 
+import type { SwcLoaderParserConfig } from '@rspack/core';
+
 export interface TransformReactLynxOptions {
   /**
    * @internal
@@ -25,7 +27,7 @@ export interface TransformReactLynxOptions {
    * @public
    * This is swc syntax config in JSON format
    */
-  syntaxConfig?: Record<string, any>;
+  syntaxConfig?: SwcLoaderParserConfig;
   isModule?: boolean | 'unknown';
   cssScope: boolean | CssScopeVisitorConfig;
   snapshot?: boolean | JsxTransformerConfig;

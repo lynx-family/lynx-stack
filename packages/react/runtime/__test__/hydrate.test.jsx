@@ -5,10 +5,6 @@ import { backgroundSnapshotInstanceManager, SnapshotInstance, snapshotInstanceMa
 
 const HOLE = null;
 
-const __SNAPSHOT__ = (snapshot) => {
-  return snapshot.type;
-};
-
 beforeEach(() => {
   backgroundSnapshotInstanceManager.clear();
   backgroundSnapshotInstanceManager.nextId = 0;

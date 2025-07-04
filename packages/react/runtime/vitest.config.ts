@@ -14,8 +14,8 @@ function transformReactLynxPlugin(): Plugin {
     enforce: 'pre',
     async transform(sourceText, sourcePath) {
       const { transformReactLynx } = require(
-        '@lynx-js/react-transform',
-      ) as typeof import('@lynx-js/react-transform');
+        '@lynx-js/react/transform',
+      ) as typeof import('@lynx-js/react/transform');
       const relativePath = path.basename(sourcePath);
 
       const isTS = /\.[mc]?ts$/.exec(relativePath);
