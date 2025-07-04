@@ -11,10 +11,6 @@
     "declaration": true,
     "emitDeclarationOnly": false,
     "isolatedDeclarations": true,
-    "paths": {
-      "tailwindcss/types/config": ["node_modules/tailwindcss/types/config.d.ts"],
-      "plugins/lynx": ["src/plugins/lynx/index.ts"],
-    },
     "moduleResolution": "nodenext",
   },
   "include": [

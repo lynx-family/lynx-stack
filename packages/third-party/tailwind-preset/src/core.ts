@@ -1,9 +1,9 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import * as pluginModules from 'plugins/lynx';
 
 import type { Plugin } from './helpers.js';
+import * as pluginModules from './plugins/lynx/index.js';
 import type { CorePluginsConfig } from './types/tailwind-types.js';
 
 /* -----------------------------------------------------------------------------

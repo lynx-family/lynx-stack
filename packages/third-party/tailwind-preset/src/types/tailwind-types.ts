@@ -13,7 +13,7 @@ import type {
   ResolvableTo,
   ThemeConfig,
   ValueType,
-} from 'tailwindcss/types/config';
+} from 'tailwindcss/types/config.js';
 
 export type {
   PluginAPI,

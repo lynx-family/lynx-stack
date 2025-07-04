@@ -4,77 +4,20 @@
 
 Add createLynxPreset, expand Lynx plugin coverage, and enforce strict config types
 
-#### TypeScript Compatibility Fixes
+- Supports TypeScript config `tailwind.config.ts`.
 
-- Fixed type errors when using the Lynx Tailwind Preset in `tailwind.config.ts`.
-- Enforced strict typing on the Tailwind config object.
-- Removed the unofficial theme key `outline`.
-- Refined types for `createPlugin` and `createUtilityPlugin`.
+- New `createLynxPreset()` Factory: enabling/disabling of Lynx plugins.
 
-#### Replaced & Updated core plugins
+- Added v3 utilities: `align-*`, `basis-*`, `col-*`, `inset-*`, `justify-items-*`, `justify-self-*`, `row-*`, `shadow-*`, `size-*`, `indent-*`, `aspect-*`, `animation-*`.
 
-- Removed deprecated `variants()` syntax (used only in Tailwind v1/v2).
+- Added v4 utilities: `rotate-x-*`, `rotate-y-*`, `rotate-z-*`, `translate-z-*`, `perspective-*`.
 
-- **inset**: Replaced shorthand with explicit `top`, `right`, `bottom`, and `left` utilities.
+- Added Lynx Specific utilities: `display-relative`, `linear`, `ltr`, `rtr`, `normal`, `lynx-ltr`.
 
-- **rotate**: Added support for `rotateX`, `rotateY`, and `rotateZ` (aligns with Tailwind v4).
-- **translate**: Added support for `translateZ`.
-- **skew & scale**: Updated their implementation to use the same `CSSTransformValue`.
-- **transform**: Now supports `translateZ`, `rotateX`, `rotateY`, and `rotateZ` utilities.
-- **boxShadow**: Uses Lynx-compatible color and shadow format; CSS variables not supported due to a boxShadow rendering bug.
-- **gridColumn & gridRow**: Now implemented using longhand properties.
-- **display**: Added `relative` and `linear` values.
-- **alignContent**: Removed values not supported by Lynx.
-- **textAlign**: Removed `justify`.
-- **overflow**: Removed unsupported values.
-- **backgroundClip**: Removed `text`.
-- **justifyContent**: Removed `normal`.
-- **visibility**: Removed `collapse`.
-- **whitespace**: Retains only `normal` and `nowrap`.
-- **wordBreak**: Removed `overflow-wrap` property and `keep-all` value.
-- **perspective**: (Tailwind v4 plugin) Added `perspective-*` utlities.
+- Refined Lynx Compatiable Utilities: `bg-clip-*`, `content-*`, `text-*`(textAlign), `justify-*`, `overflow-*`, `whitespace-*`, `break-*`.
 
-#### Enabled the following utilities via Tailwind core plugins:
+- Removed Lynx Uncompatiable Utilties: `collapse`.
 
-- **verticalAlign**
-- **justifyItems**
-- **justifySelf**
-- **size**
-- **flexBasis**
-- **textIndent**
-- **aspectRatio**
-- **animation**
-
-#### Added Lynx Specific Plugins
-
-- **direction**: add Lynx specific plugin to handle `ltr`, `rtr` and `lynx-ltr`.
-
-#### Theme Object Refinements
-
-- **boxShadow**: Uses Lynx-compatible color formatting.
-- **transitionProperty**: Removed unsupported values: `filter`, `stroke`, `backdrop-filter`.
-- **zIndex**: Removed `auto`.
-- **gridTemplateColumns & gridTemplateRows**: Removed `subgrid` and `none`.
-- **gridAutoColumns & gridAutoRows**: Removed `min-content`.
-- **aspectRatio**: Removed `auto`.
-
-#### New: createLynxPreset Factory
-
-- Introduced `createLynxPreset()` to support:
-- Selective enabling/disabling of Lynx plugins.
-- Future per-plugin configuration.
-
-#### CSS Variable Defaults Overhaul
+- Refined Lynx Compatiable Theme Object: `boxShadow`, `transitionProperty`, `zIndex`, `gridTemplateColumns`, `gridTemplateRows`, `gridAutoColumns`, `gridAutoRows`, `aspectRatio`.
 
 - Replaced Tailwind’s default variable insertion (`*`, `::before`, `::after`) with `:root` based insertion.
-
-#### Tailwind v3.4.17 JIT Default
-
-- JIT is now enabled by default.
-- No need to configure jit or set purge (this field has been renamed to content).
-
-#### Integration Notes: Tailwind Merge
-
-- Documented an issue where tailwind-merge may generate unused classes during bundling.
-- Caused by scanning source code in `node_modules`.
-- Added integration guidance in the `README.md`.

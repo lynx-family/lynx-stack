@@ -7,15 +7,6 @@ export default defineConfig({
     },
     tsconfigPath: './tsconfig.build.json',
   },
-  output: {
-    distPath: {
-      root: './dist',
-    },
-    externals: {
-      tailwindcss: 'tailwindcss',
-      'tailwindcss/**': 'tailwindcss',
-    },
-  },
   lib: [
     {
       dts: true,

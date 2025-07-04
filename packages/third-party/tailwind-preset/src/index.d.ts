@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 declare module 'tailwindcss/lib/util/createUtilityPlugin.js' {
-  import type { PluginCreator } from 'tailwindcss/types/config';
+  import type { PluginCreator } from 'tailwindcss/types/config.js';
 
   import type { UtilityPluginOptions, UtilityVariations } from './types.js';
 

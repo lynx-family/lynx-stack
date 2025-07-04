@@ -33,10 +33,12 @@
   "scripts": {
     "build": "rslib build",
     "test": "vitest",
-    "test:coverage": "vitest run --coverage",
-    "tsc": "tsc -b tsconfig.build.json"
+    "test:coverage": "vitest run --coverage"
   },
   "devDependencies": {
     "tailwindcss": "^3.4.17"
+  },
+  "peerDependencies": {
+    "tailwindcss": "^3"
   }
 }
