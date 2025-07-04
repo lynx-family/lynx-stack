@@ -18,7 +18,7 @@ describe('core plugin utilities', () => {
     );
   });
 
-  it('toEnabledSet handles whitelist array', () => {
+  it('toEnabledSet handles allowed array', () => {
     const set = toEnabledSet(['translate', 'direction']);
     expect([...set] as string[]).toEqual(['translate', 'direction']);
   });

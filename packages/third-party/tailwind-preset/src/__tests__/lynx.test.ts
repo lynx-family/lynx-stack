@@ -24,7 +24,7 @@ describe('createLynxPreset', () => {
     }
   });
 
-  it('respects the lynxPlugins whitelist', () => {
+  it('respects the lynxPlugins allowed list', () => {
     const result = createLynxPreset({ lynxPlugins: ['transform'] });
     expect(result.plugins).toContain(LYNX_PLUGIN_MAP.transform);
     expect(result.plugins).not.toContain(LYNX_PLUGIN_MAP.rotate);
