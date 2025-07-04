@@ -461,174 +461,99 @@ const LINEAR_CROSS_GRAVITY_REPLACE_RULE: [(&'static [u16], &'static [[&'static [
   ),
 ];
 
+const ALLIGN_SELF_ROW_STR_U16: &[u16] = str_to_u16_slice!("--align-self-row");
+const ALLIGN_SELF_COLUMN_STR_U16: &[u16] = str_to_u16_slice!("--align-self-column");
+
 const LINEAR_LAYOUT_GRAVITY_REPLACE_RULE: [(&'static [u16], &'static [[&'static [u16]; 2]]); 13] = [
   (
     str_to_u16_slice!("none"),
     &[
-      [
-        str_to_u16_slice!("--align-self-row"),
-        str_to_u16_slice!("auto"),
-      ],
-      [
-        str_to_u16_slice!("--align-self-column"),
-        str_to_u16_slice!("auto"),
-      ],
+      [ALLIGN_SELF_ROW_STR_U16, str_to_u16_slice!("auto")],
+      [ALLIGN_SELF_COLUMN_STR_U16, str_to_u16_slice!("auto")],
     ],
   ),
   (
     str_to_u16_slice!("stretch"),
     &[
-      [
-        str_to_u16_slice!("--align-self-row"),
-        str_to_u16_slice!("stretch"),
-      ],
-      [
-        str_to_u16_slice!("--align-self-column"),
-        str_to_u16_slice!("stretch"),
-      ],
+      [ALLIGN_SELF_ROW_STR_U16, str_to_u16_slice!("stretch")],
+      [ALLIGN_SELF_COLUMN_STR_U16, str_to_u16_slice!("stretch")],
     ],
   ),
   (
     str_to_u16_slice!("top"),
     &[
-      [
-        str_to_u16_slice!("--align-self-row"),
-        str_to_u16_slice!("start"),
-      ],
-      [
-        str_to_u16_slice!("--align-self-column"),
-        str_to_u16_slice!("auto"),
-      ],
+      [ALLIGN_SELF_ROW_STR_U16, str_to_u16_slice!("start")],
+      [ALLIGN_SELF_COLUMN_STR_U16, str_to_u16_slice!("auto")],
     ],
   ),
   (
     str_to_u16_slice!("bottom"),
     &[
-      [
-        str_to_u16_slice!("--align-self-row"),
-        str_to_u16_slice!("end"),
-      ],
-      [
-        str_to_u16_slice!("--align-self-column"),
-        str_to_u16_slice!("auto"),
-      ],
+      [ALLIGN_SELF_ROW_STR_U16, str_to_u16_slice!("end")],
+      [ALLIGN_SELF_COLUMN_STR_U16, str_to_u16_slice!("auto")],
     ],
   ),
   (
     str_to_u16_slice!("left"),
     &[
-      [
-        str_to_u16_slice!("--align-self-row"),
-        str_to_u16_slice!("auto"),
-      ],
-      [
-        str_to_u16_slice!("--align-self-column"),
-        str_to_u16_slice!("start"),
-      ],
+      [ALLIGN_SELF_ROW_STR_U16, str_to_u16_slice!("auto")],
+      [ALLIGN_SELF_COLUMN_STR_U16, str_to_u16_slice!("start")],
     ],
   ),
   (
     str_to_u16_slice!("right"),
     &[
-      [
-        str_to_u16_slice!("--align-self-row"),
-        str_to_u16_slice!("auto"),
-      ],
-      [
-        str_to_u16_slice!("--align-self-column"),
-        str_to_u16_slice!("end"),
-      ],
+      [ALLIGN_SELF_ROW_STR_U16, str_to_u16_slice!("auto")],
+      [ALLIGN_SELF_COLUMN_STR_U16, str_to_u16_slice!("end")],
     ],
   ),
   (
     str_to_u16_slice!("start"),
     &[
-      [
-        str_to_u16_slice!("--align-self-row"),
-        str_to_u16_slice!("auto"),
-      ],
-      [
-        str_to_u16_slice!("--align-self-column"),
-        str_to_u16_slice!("start"),
-      ],
+      [ALLIGN_SELF_ROW_STR_U16, str_to_u16_slice!("start")],
+      [ALLIGN_SELF_COLUMN_STR_U16, str_to_u16_slice!("start")],
     ],
   ),
   (
     str_to_u16_slice!("end"),
     &[
-      [
-        str_to_u16_slice!("--align-self-row"),
-        str_to_u16_slice!("auto"),
-      ],
-      [
-        str_to_u16_slice!("--align-self-column"),
-        str_to_u16_slice!("end"),
-      ],
+      [ALLIGN_SELF_ROW_STR_U16, str_to_u16_slice!("end")],
+      [ALLIGN_SELF_COLUMN_STR_U16, str_to_u16_slice!("end")],
     ],
   ),
   (
     str_to_u16_slice!("center"),
     &[
-      [
-        str_to_u16_slice!("--align-self-row"),
-        str_to_u16_slice!("center"),
-      ],
-      [
-        str_to_u16_slice!("--align-self-column"),
-        str_to_u16_slice!("center"),
-      ],
+      [ALLIGN_SELF_ROW_STR_U16, str_to_u16_slice!("center")],
+      [ALLIGN_SELF_COLUMN_STR_U16, str_to_u16_slice!("center")],
     ],
   ),
   (
     str_to_u16_slice!("center-vertical"),
     &[
-      [
-        str_to_u16_slice!("--align-self-row"),
-        str_to_u16_slice!("center"),
-      ],
-      [
-        str_to_u16_slice!("--align-self-column"),
-        str_to_u16_slice!("start"),
-      ],
+      [ALLIGN_SELF_ROW_STR_U16, str_to_u16_slice!("center")],
+      [ALLIGN_SELF_COLUMN_STR_U16, str_to_u16_slice!("start")],
     ],
   ),
   (
     str_to_u16_slice!("center-horizontal"),
     &[
-      [
-        str_to_u16_slice!("--align-self-row"),
-        str_to_u16_slice!("start"),
-      ],
-      [
-        str_to_u16_slice!("--align-self-column"),
-        str_to_u16_slice!("center"),
-      ],
+      [ALLIGN_SELF_ROW_STR_U16, str_to_u16_slice!("start")],
+      [ALLIGN_SELF_COLUMN_STR_U16, str_to_u16_slice!("center")],
     ],
   ),
   (
     str_to_u16_slice!("fill-vertical"),
     &[
-      [
-        str_to_u16_slice!("--align-self-row"),
-        str_to_u16_slice!("stretch"),
-      ],
-      [
-        str_to_u16_slice!("--align-self-column"),
-        str_to_u16_slice!("auto"),
-      ],
+      [ALLIGN_SELF_ROW_STR_U16, str_to_u16_slice!("stretch")],
+      [ALLIGN_SELF_COLUMN_STR_U16, str_to_u16_slice!("auto")],
     ],
   ),
   (
     str_to_u16_slice!("fill-horizontal"),
     &[
-      [
-        str_to_u16_slice!("--align-self-row"),
-        str_to_u16_slice!("auto"),
-      ],
-      [
-        str_to_u16_slice!("--align-self-column"),
-        str_to_u16_slice!("stretch"),
-      ],
+      [ALLIGN_SELF_ROW_STR_U16, str_to_u16_slice!("auto")],
+      [ALLIGN_SELF_COLUMN_STR_U16, str_to_u16_slice!("stretch")],
     ],
   ),
 ];
