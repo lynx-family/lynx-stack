@@ -180,9 +180,7 @@ export default tseslint.config(
     settings: {
       'import/resolver': {
         typescript: {
-          project: [
-            './tsconfig.json',
-          ],
+          project: './tsconfig.json',
         },
       },
       'import/internal-regex': '^@lynx-js/',
