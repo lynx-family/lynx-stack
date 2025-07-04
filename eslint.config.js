@@ -183,8 +183,6 @@ export default tseslint.config(
         typescript: {
           project: [
             './tsconfig.json',
-            ,
-            './packages/third-party/tailwind-preset/tsconfig*.json',
           ],
         },
       },
