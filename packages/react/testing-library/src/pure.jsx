@@ -60,7 +60,9 @@ export function render(
 
   globalThis.lynxTestingEnv.switchToMainThread();
   __root.__jsx = enableMainThread ? compMainThread : null;
-  renderPage();
+  act(() => {
+    renderPage();
+  });
   if (enableBackgroundThread) {
     globalThis.lynxTestingEnv.switchToBackgroundThread();
     act(() => {
