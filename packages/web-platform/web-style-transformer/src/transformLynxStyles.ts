@@ -348,11 +348,7 @@ export function transformLynxStyles(
       newStyle.push(declaration);
     }
     if (property === 'linear-weight-sum') {
-      let linearWeightSum = value;
-      if (linearWeightSum === '0' || linearWeightSum === '0 !important') {
-        linearWeightSum = '1';
-      }
-      childStyle.push(['--lynx-linear-weight-sum', linearWeightSum]);
+      childStyle.push(['--lynx-linear-weight-sum', value]);
     }
   }
   return { transformedStyle: newStyle, childStyle };
