@@ -1,9 +1,9 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
-import { getMock, runPlugin } from './utils/run-plugin.js';
+import { runPlugin } from './utils/run-plugin.js';
 import * as plugins from '../plugins/lynx/index.js';
 
 describe('Lynx plugin coverage sanity check', () => {
@@ -11,10 +11,10 @@ describe('Lynx plugin coverage sanity check', () => {
     it(`${name} registers utilities`, () => {
       const { api } = runPlugin(plugin);
 
-      const matchUtilities = getMock(api.matchUtilities);
-      const addUtilities = getMock(api.addUtilities);
-      const addComponents = getMock(api.addComponents);
-      const addBase = getMock(api.addBase);
+      const matchUtilities = vi.mocked(api.matchUtilities);
+      const addUtilities = vi.mocked(api.addUtilities);
+      const addComponents = vi.mocked(api.addComponents);
+      const addBase = vi.mocked(api.addBase);
 
       const called = matchUtilities.mock.calls.length > 0
         || addUtilities.mock.calls.length > 0

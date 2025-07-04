@@ -2,7 +2,6 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { vi } from 'vitest';
-import type { Mock } from 'vitest';
 
 import type { RuntimePluginAPI } from './mock-api.js';
 import { mockPluginAPI } from './mock-api.js';
@@ -69,12 +68,4 @@ export function runPlugin(
 
   /* Expose API for assertions */
   return { api };
-}
-
-/**
- * Helper to cast a runtime plugin API method to a vi.Mock for assertion use.
- * Ensures type safety for .mock.calls and other spy methods.
- */
-export function getMock<T extends (...args: any[]) => any>(fn: T): Mock<T> {
-  return fn as unknown as Mock<T>;
 }
