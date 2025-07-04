@@ -157,6 +157,31 @@ importers:
         specifier: ^18.3.23
         version: 18.3.23
 
+  examples/react-actual:
+    dependencies:
+      '@lynx-js/react-actual':
+        specifier: workspace:*
+        version: link:../../packages/react-actual
+      react:
+        specifier: ^19.1.0
+        version: 19.1.0
+    devDependencies:
+      '@lynx-js/qrcode-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/plugin-qrcode
+      '@lynx-js/rspeedy':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/core
+      '@lynx-js/template-webpack-plugin':
+        specifier: workspace:*
+        version: link:../../packages/webpack/template-webpack-plugin
+      '@lynx-js/types':
+        specifier: 3.3.0
+        version: 3.3.0
+      '@types/react':
+        specifier: ^19.1.6
+        version: 19.1.6
+
   packages/background-only: {}
 
   packages/react:
@@ -174,6 +199,22 @@ importers:
       '@types/react':
         specifier: ^18.3.23
         version: 18.3.23
+
+  packages/react-actual:
+    dependencies:
+      react-reconciler:
+        specifier: ^0.32.0
+        version: 0.32.0(react@19.1.0)
+    devDependencies:
+      '@lynx-js/types':
+        specifier: 3.3.0
+        version: 3.3.0
+      '@types/react':
+        specifier: ^19.1.6
+        version: 19.1.6
+      '@types/react-reconciler':
+        specifier: ^0.32.0
+        version: 0.32.0(@types/react@19.1.6)
 
   packages/react/refresh:
     devDependencies:
@@ -3022,6 +3063,11 @@ packages:
     resolution: {integrity: sha512-4hOiT/dwO8Ko0gV1m/TJZYk3y0KBnY9vzDh7W+DH17b2HFSOGgdj33dhihPeuy3l0q23+4e+hoXHV6hCC4dCXw==}
     peerDependencies:
       '@types/react': ^19.0.0
+
+  '@types/react-reconciler@0.32.0':
+    resolution: {integrity: sha512-+WHarFkJevhH1s655qeeSEf/yxFST0dVRsmSqUgxG8mMOKqycgYBv2wVpyubBY7MX8KiX5FQ03rNIwrxfm7Bmw==}
+    peerDependencies:
+      '@types/react': '*'
 
   '@types/react@18.3.23':
     resolution: {integrity: sha512-/LDXMQh55EzZQ0uVAZmKKhfENivEvWz6E+EYzh+/MCjMhNsotd+ZHhBGIjFDTi6+fz0OhQQQLbTgdQIxxCsC0w==}
@@ -6714,6 +6760,12 @@ packages:
   react-lazy-with-preload@2.2.1:
     resolution: {integrity: sha512-ONSb8gizLE5jFpdHAclZ6EAAKuFX2JydnFXPPPjoUImZlLjGtKzyBS8SJgJq7CpLgsGKh9QCZdugJyEEOVC16Q==}
 
+  react-reconciler@0.32.0:
+    resolution: {integrity: sha512-2NPMOzgTlG0ZWdIf3qG+dcbLSoAc/uLfOwckc3ofy5sSK0pLJqnQLpUFxvGcN2rlXSjnVtGeeFLNimCQEj5gOQ==}
+    engines: {node: '>=0.10.0'}
+    peerDependencies:
+      react: ^19.1.0
+
   react-refresh@0.17.0:
     resolution: {integrity: sha512-z6F7K9bV85EfseRCp2bzrpyQ0Gkw1uLoCel9XBVWPg/TjRj94SkJzUTGfOa4bs7iJvBWtQG0Wq7wnI0syw3EBQ==}
     engines: {node: '>=0.10.0'}
@@ -9207,7 +9259,7 @@ snapshots:
   '@mdx-js/react@2.3.0(react@19.1.0)':
     dependencies:
       '@types/mdx': 2.0.13
-      '@types/react': 18.3.23
+      '@types/react': 19.1.6
       react: 19.1.0
 
   '@mdx-js/react@3.1.0(@types/react@19.1.8)(react@19.1.0)':
@@ -10383,6 +10435,10 @@ snapshots:
   '@types/react-dom@19.1.6(@types/react@19.1.8)':
     dependencies:
       '@types/react': 19.1.8
+
+  '@types/react-reconciler@0.32.0(@types/react@19.1.6)':
+    dependencies:
+      '@types/react': 19.1.6
 
   '@types/react@18.3.23':
     dependencies:
@@ -14766,6 +14822,11 @@ snapshots:
   react-is@18.3.1: {}
 
   react-lazy-with-preload@2.2.1: {}
+
+  react-reconciler@0.32.0(react@19.1.0):
+    dependencies:
+      react: 19.1.0
+      scheduler: 0.26.0
 
   react-refresh@0.17.0: {}
 

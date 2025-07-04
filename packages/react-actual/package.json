@@ -1,0 +1,21 @@
+{
+  "name": "@lynx-js/react-actual",
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "build": "rslib build"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "react-reconciler": "^0.32.0"
+  },
+  "devDependencies": {
+    "@lynx-js/types": "3.3.0",
+    "@types/react": "^19.1.6",
+    "@types/react-reconciler": "^0.32.0"
+  }
+}

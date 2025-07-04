@@ -2,6 +2,7 @@ packages:
   - examples/*
   - packages/background-only
   - packages/react
+  - packages/react-actual
   - packages/react/refresh
   - packages/react/runtime
   - packages/react/testing-library
