@@ -33,7 +33,14 @@ macro_rules! get_trie_char_code {
   };
 }
 
-const RENAME_RULES_RAW: [(&'static [u16], &'static [[&'static [u16]; 2]]); 7] = [
+const RENAME_RULES_RAW: [(&'static [u16], &'static [[&'static [u16]; 2]]); 8] = [
+  (
+    str_to_u16_slice!("linear-weight"),
+    &[[
+      str_to_u16_slice!("--lynx-linear-weight"),
+      str_to_u16_slice!(""),
+    ]],
+  ),
   (
     str_to_u16_slice!("flex-direction"),
     &[[str_to_u16_slice!("--flex-direction"), str_to_u16_slice!("")]],

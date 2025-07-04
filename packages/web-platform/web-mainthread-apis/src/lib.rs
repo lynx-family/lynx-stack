@@ -9,12 +9,10 @@ accept a raw uint16 ptr from JS
 */
 #[wasm_bindgen]
 pub fn transform_raw_u16_inline_style_ptr(ptr: *const u16, len: usize) -> Option<js_sys::JsString> {
-  log(len);
   // Safety: We assume the pointer is valid and points to a slice of u16
   // of length `len`. This is a contract with the JavaScript side.
   unsafe {
     let slice = core::slice::from_raw_parts(ptr, len);
-    log(slice.len());
     // Call the tokenize function with our data and callback
     let (transformed_inline_style, _) =
       transformer::transformer::transform_inline_style_string(&slice);
@@ -90,9 +88,4 @@ pub fn free(ptr: *mut u8, size: usize) {
   // Assuming align is 1 as used in malloc.
   let layout = std::alloc::Layout::from_size_align(size, 16).unwrap();
   unsafe { std::alloc::dealloc(ptr, layout) }
-}
-
-#[wasm_bindgen(inline_js = "export function log(n) { console.log(n); }")]
-extern "C" {
-  fn log(n: usize);
 }
