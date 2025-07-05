@@ -44,6 +44,7 @@ patchedDependencies:
 onlyBuiltDependencies:
   - dprint
   - esbuild
+  - unrs-resolver
 
 ignoredBuiltDependencies:
   - core-js
