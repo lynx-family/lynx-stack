@@ -180,9 +180,7 @@ export type UpdateListInfoAttributeValue = {
   insertAction: {
     position: number;
   }[];
-  removeAction: {
-    position: number;
-  }[];
+  removeAction: number[];
 };
 export type SetAttributePAPI = (
   element: WebFiberElementImpl,
