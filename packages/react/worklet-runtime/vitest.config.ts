@@ -10,7 +10,7 @@ const config: UserConfig = defineConfig({
       exclude: [
         'dist/**',
         'lib/**',
-        'scripts',
+        'rslib.config.ts',
         'src/api/**',
         'src/bindings/**',
         'src/index.ts',
