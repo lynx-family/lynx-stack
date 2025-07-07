@@ -1,4 +1,5 @@
-import { generateTemplate, type LynxTemplate } from '@lynx-js/web-constants';
+import type { LynxTemplate } from '../types/LynxModule.js';
+import { generateTemplate } from './generateTemplate.js';
 
 const templateCache: Record<string, LynxTemplate> = {};
 
@@ -8,6 +9,7 @@ function createJsModuleUrl(content: string): string {
 
 export async function loadTemplate(
   url: string,
+  isLazyComponent = false,
   customTemplateLoader?: (url: string) => Promise<LynxTemplate>,
 ): Promise<LynxTemplate> {
   const cachedTemplate = templateCache[url];
@@ -17,7 +19,12 @@ export async function loadTemplate(
     : (await (await fetch(url, {
       method: 'GET',
     })).json()) as LynxTemplate;
-  const decodedTemplate = await generateTemplate(template, createJsModuleUrl);
+  const decodedTemplate = await generateTemplate({
+    template,
+    createJsModuleUrl,
+    isLazyComponent,
+    source: url,
+  });
   templateCache[url] = decodedTemplate;
   /**
    * This will cause a memory leak, which is expected.
@@ -25,3 +32,6 @@ export async function loadTemplate(
    */
   return decodedTemplate;
 }
+
+export const getTemplate = (url: string): LynxTemplate | undefined =>
+  templateCache[url];

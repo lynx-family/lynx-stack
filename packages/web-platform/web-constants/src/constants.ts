@@ -30,6 +30,8 @@ export const lynxDefaultDisplayLinearAttribute =
 export const lynxDefaultOverflowVisibleAttribute =
   'lynx-default-overflow-visible' as const;
 
+export const lynxEntryNameAttribute = 'l-entry-name' as const;
+
 export const __lynx_timing_flag = '__lynx_timing_flag' as const;
 
 export const systemInfo = {

@@ -5,3 +5,5 @@
 export { LynxCrossThreadContext } from './LynxCrossThreadContext.js';
 export { dispatchMarkTiming, flushMarkTiming } from './markTiming.js';
 export { generateTemplate } from './generateTemplate.js';
+export { loadTemplate, getTemplate } from './loadTemplate.js';
+export { getLepusEntries } from './getLepusEntries.js';

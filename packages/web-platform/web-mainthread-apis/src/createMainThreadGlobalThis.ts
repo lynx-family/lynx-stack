@@ -61,6 +61,7 @@ import {
   type JSRealm,
 } from '@lynx-js/web-constants';
 import { createMainThreadLynx } from './createMainThreadLynx.js';
+import { insertStyleElement } from './utils/processStyleInfo.js';
 import {
   __AddClass,
   __AddConfig,
@@ -129,11 +130,7 @@ export interface MainThreadRuntimeCallbacks {
   _I18nResourceTranslation: (
     options: I18nResourceTranslationOptions,
   ) => unknown | undefined;
-  updateCssOGStyle: (
-    uniqueId: number,
-    newClassName: string,
-    cssID: string | null,
-  ) => void;
+  __QueryComponent: (source: string) => void;
 }
 
 export interface MainThreadRuntimeConfig {
@@ -179,6 +176,27 @@ export function createMainThreadGlobalThis(
     ?.deref();
   let uniqueIdInc = lynxUniqueIdToElement.length || 1;
   const exposureChangedElements = new Set<WebFiberElementImpl>();
+
+  const { cssOGInfo, cardStyleElementSheet } = insertStyleElement({
+    ...config,
+    createElement: callbacks.createElement,
+  });
+  const updateCssOGStyle: (
+    uniqueId: number,
+    newStyles: string,
+  ) => void = (uniqueId, newStyles) => {
+    if (lynxUniqueIdToStyleRulesIndex[uniqueId] !== undefined) {
+      const rule = cardStyleElementSheet
+        .cssRules[lynxUniqueIdToStyleRulesIndex[uniqueId]] as CSSStyleRule;
+      rule.style.cssText = newStyles;
+    } else {
+      const index = cardStyleElementSheet.insertRule(
+        `[${lynxUniqueIdAttribute}="${uniqueId}"]{${newStyles}}`,
+        cardStyleElementSheet.cssRules.length,
+      );
+      lynxUniqueIdToStyleRulesIndex[uniqueId] = index;
+    }
+  };
 
   const commonHandler = (event: Event) => {
     if (!event.currentTarget) {
@@ -775,6 +793,9 @@ export function createMainThreadGlobalThis(
     __LoadLepusChunk,
     __GetPageElement,
     __globalProps: globalProps,
+    __QueryComponent: (source: string) => {
+      callbacks.__QueryComponent(source);
+    },
     SystemInfo,
     lynx: createMainThreadLynx(config, SystemInfo),
     _ReportError: (err, _) => callbacks._ReportError(err, _, release),

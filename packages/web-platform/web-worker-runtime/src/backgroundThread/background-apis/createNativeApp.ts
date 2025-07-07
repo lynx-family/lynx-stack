@@ -14,6 +14,9 @@ import {
   type BackMainThreadContextConfig,
   I18nResource,
   reportErrorEndpoint,
+  globalDisallowedVars,
+  type LynxTemplate,
+  queryComponentEndpoint,
 } from '@lynx-js/web-constants';
 import { createInvokeUIMethod } from './crossThreadHandlers/createInvokeUIMethod.js';
 import { registerPublicComponentEventHandler } from './crossThreadHandlers/registerPublicComponentEventHandler.js';
@@ -28,9 +31,11 @@ import type { TimingSystem } from './createTimingSystem.js';
 import { registerUpdateGlobalPropsHandler } from './crossThreadHandlers/registerUpdateGlobalPropsHandler.js';
 import { registerUpdateI18nResource } from './crossThreadHandlers/registerUpdateI18nResource.js';
 import { createGetPathInfo } from './crossThreadHandlers/createGetPathInfo.js';
+import { registerQueryComponentTemplate } from './crossThreadHandlers/registerQueryComponentTemplate.js';
 
 let nativeAppCount = 0;
 const sharedData: Record<string, unknown> = {};
+const templateCache: Record<string, LynxTemplate | undefined> = {};
 
 export async function createNativeApp(
   config: {
@@ -61,6 +66,9 @@ export async function createNativeApp(
     selectComponentEndpoint,
     3,
   );
+  const triggerQueryComponent = uiThreadRpc.createCall(
+    queryComponentEndpoint,
+  );
   const reportError = uiThreadRpc.createCall(reportErrorEndpoint);
   const createBundleInitReturnObj = (): BundleInitReturnObj => {
     const entry = (globalThis.module as LynxJSModule).exports;
@@ -68,6 +76,17 @@ export async function createNativeApp(
   };
   const i18nResource = new I18nResource();
   let release = '';
+  const queryComponentCallbacks: Record<
+    string,
+    Array<
+      (
+        ret: { __hasReady: boolean } | {
+          code: number;
+          detail?: { schema: string };
+        },
+      ) => void
+    >
+  > = {};
   const nativeApp: NativeApp = {
     id: (nativeAppCount++).toString(),
     ...performanceApis,
@@ -93,8 +112,10 @@ export async function createNativeApp(
         callback(null, createBundleInitReturnObj());
       });
     },
-    loadScript: (sourceURL: string) => {
-      const manifestUrl = template.manifest[`/${sourceURL}`];
+    loadScript: (sourceURL: string, entryName?: string) => {
+      const manifestUrl = (entryName && entryName !== '__Card__')
+        ? templateCache[entryName]?.manifest[`/${sourceURL}`]
+        : template.manifest[`/${sourceURL}`];
       if (manifestUrl) sourceURL = manifestUrl;
       importScripts(sourceURL);
       return createBundleInitReturnObj();
@@ -109,6 +130,7 @@ export async function createNativeApp(
     setNativeProps,
     getPathInfo: createGetPathInfo(uiThreadRpc),
     invokeUIMethod: createInvokeUIMethod(uiThreadRpc),
+    tt: null,
     setCard(tt) {
       registerPublicComponentEventHandler(
         mainThreadRpc,
@@ -130,10 +152,17 @@ export async function createNativeApp(
         uiThreadRpc,
         tt,
       );
+      registerQueryComponentTemplate(
+        uiThreadRpc,
+        queryComponentCallbacks,
+        templateCache,
+        nativeApp,
+      );
       registerUpdateGlobalPropsHandler(uiThreadRpc, tt);
       registerUpdateI18nResource(uiThreadRpc, mainThreadRpc, i18nResource, tt);
       timingSystem.registerGlobalEmitter(tt.GlobalEventEmitter);
       (tt.lynx.getCoreContext() as LynxCrossThreadContext).__start();
+      nativeApp.tt = tt;
     },
     triggerComponentEvent,
     selectComponent,
@@ -147,6 +176,21 @@ export async function createNativeApp(
     i18nResource,
     reportException: (err: Error, _: unknown) => reportError(err, _, release),
     __SetSourceMapRelease: (err: Error) => release = err.message,
+    queryComponent: (
+      source: string,
+      callback: (
+        ret: { __hasReady: boolean } | {
+          code: number;
+          detail?: { schema: string };
+        },
+      ) => void,
+    ) => {
+      if (!queryComponentCallbacks[source]) {
+        queryComponentCallbacks[source] = [];
+      }
+      queryComponentCallbacks[source].push(callback);
+      triggerQueryComponent(source);
+    },
   };
   return nativeApp;
 }
