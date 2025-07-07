@@ -17,5 +17,6 @@ export type {
 export { LynxEncodePlugin } from './LynxEncodePlugin.js';
 export type { LynxEncodePluginOptions } from './LynxEncodePlugin.js';
 export { WebEncodePlugin } from './WebEncodePlugin.js';
+export type { WebEncodePluginOptions } from './WebEncodePlugin.js';
 export * as CSSPlugins from './css/plugins/index.js';
 export * as CSS from './css/index.js';

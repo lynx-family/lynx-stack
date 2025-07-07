@@ -241,9 +241,17 @@ export function applyEntry(
     }
 
     if (isWeb) {
+      let inlineScripts
+      if (experimental_isLazyBundle) {
+        // TODO: support inlineScripts in lazyBundle
+        inlineScripts = true
+      } else {
+        inlineScripts = environment.config.output?.inlineScripts ?? true
+      }
+
       chain
         .plugin(PLUGIN_NAME_WEB)
-        .use(WebEncodePlugin, [])
+        .use(WebEncodePlugin, [{ inlineScripts }])
         .end()
     }
 

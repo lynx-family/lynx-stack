@@ -171,10 +171,13 @@ export interface TemplateHooks {
 //
 // @public (undocumented)
 export class WebEncodePlugin {
+    constructor(options?: WebEncodePluginOptions);
     // (undocumented)
     apply(compiler: Compiler): void;
     // (undocumented)
     static BEFORE_ENCODE_HOOK_STAGE: number;
+    // (undocumented)
+    static defaultOptions: Readonly<Required<WebEncodePluginOptions>>;
     deleteDebuggingAssets(compilation: Compilation, assets: ({
         name: string;
     } | undefined)[]): void;
@@ -182,6 +185,18 @@ export class WebEncodePlugin {
     static ENCODE_HOOK_STAGE: number;
     // (undocumented)
     static name: string;
+    // (undocumented)
+    protected options: Required<WebEncodePluginOptions>;
+}
+
+// @public
+export interface WebEncodePluginOptions {
+    // (undocumented)
+    encodeBinary?: string;
+    // Warning: (ae-forgotten-export) The symbol "InlineChunkConfig_2" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    inlineScripts?: InlineChunkConfig_2 | undefined;
 }
 
 // Warnings were encountered during analysis:
