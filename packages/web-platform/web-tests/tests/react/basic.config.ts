@@ -22,6 +22,9 @@ const _default_1: Config = defineConfig({
         publicPath: '/dist/',
       }];
     })),
+    define: {
+      'process.env.PORT': JSON.stringify(process.env.PORT ?? 3080),
+    },
   },
 });
 export default _default_1;

@@ -195,4 +195,15 @@ export interface NativeApp {
 
   reportException: (error: Error, _: unknown) => void;
   __SetSourceMapRelease: (err: Error) => void;
+
+  queryComponent: (
+    source: string,
+    callback: (
+      ret: { __hasReady: boolean } | {
+        code: number;
+        detail: { schema: string };
+      },
+    ) => void,
+  ) => void;
+  tt: NativeTTObject | null;
 }
