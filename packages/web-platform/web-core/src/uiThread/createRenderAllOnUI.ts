@@ -15,10 +15,16 @@ import {
   type Cloneable,
   lynxUniqueIdAttribute,
   type SSRDumpInfo,
+  loadTemplate,
+  type LynxTemplate,
 } from '@lynx-js/web-constants';
 import { Rpc } from '@lynx-js/web-worker-rpc';
 import { dispatchLynxViewEvent } from '../utils/dispatchLynxViewEvent.js';
 import { createExposureMonitor } from './crossThreadHandlers/createExposureMonitor.js';
+import type { StartUIThreadCallbacks } from './startUIThread.js';
+import { registerBtsQueryComponent } from './crossThreadHandlers/registerBtsQueryComponent.js';
+import { executeTemplateEntry } from '@lynx-js/web-mainthread-apis';
+import { statusPromise } from '../utils/readablePromise.js';
 
 const {
   prepareMainThreadAPIs,
@@ -26,6 +32,7 @@ const {
 
 export function createRenderAllOnUI(
   mainToBackgroundRpc: Rpc,
+  backgroundToUiRpc: Rpc,
   shadowRoot: ShadowRoot,
   markTimingInternal: (
     timingKey: string,
@@ -33,9 +40,7 @@ export function createRenderAllOnUI(
     timeStamp?: number,
   ) => void,
   flushMarkTimingInternal: () => void,
-  callbacks: {
-    onError?: (err: Error, release: string, fileName: string) => void;
-  },
+  callbacks: StartUIThreadCallbacks,
   ssrDumpInfo: SSRDumpInfo | undefined,
 ) {
   if (!globalThis.module) {
@@ -52,6 +57,33 @@ export function createRenderAllOnUI(
   };
   const i18nResources = new I18nResources();
   const { exposureChangedCallback } = createExposureMonitor(shadowRoot);
+  let mtsGlobalThis: MainThreadGlobalThis | undefined;
+  const mtsGlobalThisPromise = statusPromise();
+  // Indicates whether the template has been executed
+  const templateEntries: Record<string, boolean> = {};
+  const triggerMtsQueryComponentTemplate = (
+    source: string,
+    template: LynxTemplate,
+  ) => {
+    if (templateEntries[source]) return;
+    // waiting for mtsGlobalThis to initialize
+    mtsGlobalThisPromise.promise.then(() => {
+      executeTemplateEntry({
+        template,
+        rootDom: shadowRoot,
+        createElement: document.createElement.bind(document),
+        source,
+        mtsGlobalThis: mtsGlobalThis!,
+      });
+      templateEntries[source] = true;
+    });
+  };
+  registerBtsQueryComponent(
+    backgroundToUiRpc,
+    triggerMtsQueryComponentTemplate,
+    (source: string) =>
+      loadTemplate(source, true, callbacks.customTemplateLoader),
+  );
   const { startMainThread } = prepareMainThreadAPIs(
     mainToBackgroundRpc,
     shadowRoot,
@@ -67,8 +99,9 @@ export function createRenderAllOnUI(
       i18nResources.setData(initI18nResources);
       return i18nResources;
     },
+    (source) => loadTemplate(source, true, callbacks.customTemplateLoader),
+    templateEntries,
   );
-  let mtsGlobalThis: MainThreadGlobalThis | undefined;
   const pendingUpdateCalls: Parameters<
     RpcCallType<typeof updateDataEndpoint>
   >[] = [];
@@ -117,6 +150,7 @@ export function createRenderAllOnUI(
     } else {
       mtsGlobalThis = await startMainThread(configs);
     }
+    mtsGlobalThisPromise.complete();
 
     // Process any pending update calls that were queued while mtsGlobalThis was undefined
     for (const args of pendingUpdateCalls) {

@@ -10,8 +10,13 @@ import {
   type CSSRule,
   cssIdAttribute,
   lynxTagAttribute,
+  type LynxTemplate,
+  lynxEntryNameAttribute,
+  getLepusEntries,
+  type MainThreadGlobalThis,
 } from '@lynx-js/web-constants';
 import { transformParsedStyles } from './tokenizer.js';
+import type { MainThreadRuntimeConfig } from '../createMainThreadGlobalThis.js';
 
 export function flattenStyleInfo(
   styleInfo: StyleInfo,
@@ -82,32 +87,44 @@ export function transformToWebCss(styleInfo: StyleInfo) {
 export function genCssContent(
   styleInfo: StyleInfo,
   pageConfig: PageConfig,
+  isLazyComponent?: boolean,
 ): string {
   function getExtraSelectors(
     cssId?: string,
   ) {
-    let suffix = '';
+    let prefix = '';
     if (!pageConfig.enableRemoveCSSScope) {
       if (cssId !== undefined) {
-        suffix += `[${cssIdAttribute}="${cssId}"]`;
+        prefix += `[${cssIdAttribute}="${cssId}"]`;
       } else {
         // To make sure the Specificity correct
-        suffix += `[${lynxTagAttribute}]`;
+        prefix += `[${lynxTagAttribute}]`;
       }
     } else {
-      suffix += `[${lynxTagAttribute}]`;
+      prefix += `[${lynxTagAttribute}]`;
     }
-    return suffix;
+    return prefix;
   }
   const finalCssContent: string[] = [];
   for (const [cssId, cssInfos] of Object.entries(styleInfo)) {
-    const suffix = getExtraSelectors(cssId);
+    const prefix = getExtraSelectors(cssId);
     const declarationContent = cssInfos.rules.map((rule) => {
       const { sel: selectorList, decl: declarations } = rule;
       // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/splice
-      const selectorString = selectorList.map(
+      const newSelectorList = isLazyComponent
+        ? selectorList
+        // card style needs to be added with :not([l-entry-name]) to filter non-lazy components
+        : selectorList.map(([p, pc, pe, c, ...r]) => [
+          p,
+          [...pc, `:not([${lynxEntryNameAttribute}])`],
+          pe,
+          c,
+          ...r,
+        ]);
+      const selectorString = newSelectorList.map(
         (selectors) => {
-          return selectors.toSpliced(-4, 0, [suffix]).flat().join('');
+          return selectors.toSpliced(-4, 0, [prefix]).flat()
+            .join('');
         },
       ).join(',');
       const declarationString = declarations.map(([k, v]) => `${k}:${v};`).join(
@@ -158,4 +175,90 @@ export function genCssOGInfo(styleInfo: StyleInfo): CssOGInfo {
       return [cssId, oneCssOGInfo];
     }),
   );
+}
+
+type InsertStyleElementOptions =
+  & Pick<
+    MainThreadRuntimeConfig,
+    'styleInfo' | 'pageConfig' | 'ssrHydrateInfo' | 'rootDom'
+  >
+  & {
+    createElement: MainThreadRuntimeConfig['callbacks']['createElement'];
+    isLazyComponent?: boolean;
+  };
+
+export function insertStyleElement(
+  {
+    styleInfo,
+    pageConfig,
+    ssrHydrateInfo,
+    rootDom,
+    createElement,
+    isLazyComponent,
+  }: InsertStyleElementOptions,
+) {
+  /**
+   * now create the style content
+   * 1. flatten the styleInfo
+   * 2. transform the styleInfo to web css
+   * 3. generate the css in js info
+   * 4. create the style element
+   * 5. append the style element to the root dom
+   */
+  flattenStyleInfo(
+    styleInfo,
+    pageConfig.enableCSSSelector,
+  );
+  transformToWebCss(styleInfo);
+  const cssOGInfo: CssOGInfo = pageConfig.enableCSSSelector
+    ? {}
+    : genCssOGInfo(styleInfo);
+  let cardStyleElement: HTMLStyleElement;
+  if (ssrHydrateInfo?.cardStyleElement) {
+    cardStyleElement = ssrHydrateInfo.cardStyleElement;
+  } else {
+    cardStyleElement = createElement(
+      'style',
+    ) as unknown as HTMLStyleElement;
+    cardStyleElement.innerHTML = genCssContent(
+      styleInfo,
+      pageConfig,
+      isLazyComponent,
+    );
+    rootDom.append(cardStyleElement);
+  }
+  const cardStyleElementSheet =
+    (cardStyleElement as unknown as HTMLStyleElement).sheet!;
+
+  return { cssOGInfo, cardStyleElementSheet };
+}
+
+interface ExecuteTemplateEntry {
+  template: LynxTemplate;
+  source: string;
+  mtsGlobalThis: MainThreadGlobalThis;
+  rootDom: MainThreadRuntimeConfig['rootDom'];
+  createElement: MainThreadRuntimeConfig['callbacks']['createElement'];
+}
+
+export async function executeTemplateEntry(
+  { template, rootDom, createElement, source, mtsGlobalThis }:
+    ExecuteTemplateEntry,
+) {
+  const { lepusCode, styleInfo, pageConfig } = template;
+  insertStyleElement({
+    styleInfo,
+    pageConfig,
+    ssrHydrateInfo: undefined,
+    rootDom,
+    createElement,
+    isLazyComponent: true,
+  });
+  const { entry } = await getLepusEntries(
+    lepusCode,
+    // The same template will only be executed once, and there is no async chunk yet, so caching the lazy component module is meaningless.
+    {},
+  );
+  const lepusVal = entry!(mtsGlobalThis) as (schema: string) => void;
+  mtsGlobalThis.globalThis?.processEvalResult?.(lepusVal, source);
 }

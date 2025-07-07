@@ -26,12 +26,15 @@ import {
   type Cloneable,
   type SSRHydrateInfo,
   type SSRDehydrateHooks,
+  getLepusEntries,
+  type LynxTemplate,
 } from '@lynx-js/web-constants';
 import { registerCallLepusMethodHandler } from './crossThreadHandlers/registerCallLepusMethodHandler.js';
 import { registerGetCustomSectionHandler } from './crossThreadHandlers/registerGetCustomSectionHandler.js';
 import { createMainThreadGlobalThis } from './createMainThreadGlobalThis.js';
 import { createExposureService } from './utils/createExposureService.js';
 import { initWasm } from '@lynx-js/web-style-transformer';
+import { executeTemplateEntry } from './utils/processStyleInfo.js';
 const initWasmPromise = initWasm();
 
 const moduleCache: Record<string, LynxJSModule> = {};
@@ -49,6 +52,8 @@ export function prepareMainThreadAPIs(
     options: I18nResourceTranslationOptions,
   ) => void,
   initialI18nResources: (data: InitI18nResources) => I18nResources,
+  triggerQueryComponent: (source: string) => Promise<LynxTemplate>,
+  templateEntries: Record<string, boolean>,
   ssrHooks?: SSRDehydrateHooks,
 ) {
   const postTimingFlags = backgroundThreadRpc.createCall(
@@ -92,25 +97,10 @@ export function prepareMainThreadAPIs(
     } = template;
     markTimingInternal('decode_start');
     await initWasmPromise;
-    const lepusCodeEntries = await Promise.all(
-      Object.entries(lepusCode).map(async ([name, url]) => {
-        const cachedModule = moduleCache[url];
-        if (cachedModule) {
-          return [name, cachedModule] as [string, LynxJSModule];
-        } else {
-          const { default: evaluateModule } = await import(
-            /* webpackIgnore: true */ url
-          );
-          const module: LynxJSModule = {
-            exports: evaluateModule,
-          };
-          moduleCache[url] = module;
-          return [name, module] as [string, LynxJSModule];
-        }
-      }),
+    const { lepusEntries, entry } = await getLepusEntries(
+      lepusCode,
+      moduleCache,
     );
-    const lepusCodeLoaded = Object.fromEntries(lepusCodeEntries);
-    const entry = lepusCodeLoaded['root']!.exports;
     const jsContext = new LynxCrossThreadContext({
       rpc: backgroundThreadRpc,
       receiveEventEndpoint: dispatchJSContextOnMainThreadEndpoint,
@@ -126,7 +116,7 @@ export function prepareMainThreadAPIs(
       globalProps,
       pageConfig,
       styleInfo,
-      lepusCode: lepusCodeLoaded,
+      lepusCode: lepusEntries,
       rootDom,
       ssrHydrateInfo,
       ssrHooks,
@@ -240,6 +230,19 @@ export function prepareMainThreadAPIs(
             return matchedInitI18nResources.resource;
           }
           return triggerI18nResourceFallback(options);
+        },
+        __QueryComponent: (source: string) => {
+          if (templateEntries[source]) return;
+          templateEntries[source] = true;
+          triggerQueryComponent(source).then(async template => {
+            executeTemplateEntry({
+              template,
+              rootDom,
+              createElement,
+              source,
+              mtsGlobalThis,
+            });
+          });
         },
       },
     });
