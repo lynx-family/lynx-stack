@@ -8,6 +8,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 js-sys = "0.3.77"
+lazy_static = "1.5.0"
 wasm-bindgen = "0.2.88"
 
 [profile.release]

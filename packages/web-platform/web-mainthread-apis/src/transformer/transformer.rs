@@ -77,7 +77,7 @@ pub fn query_transform_rules<'a>(
   let mut result: Vec<(&'a [u16], usize, usize, &'a [u16], usize, usize)> = Vec::new();
   let mut result_children: Vec<(&'a [u16], usize, usize, &'a [u16], usize, usize)> = Vec::new();
   if let Some(renamed_value) = get_rename_rule_value!(name, name_start, name_end) {
-    let renamed_value = renamed_value[0][0];
+    let renamed_value = renamed_value;
     result.push((
       renamed_value,
       0,
