@@ -5,6 +5,7 @@ import { options } from 'preact';
 // to make sure preact's hooks to register earlier than ours
 import './hooks/react.js';
 
+import { setupComponentStack } from './debug/component-stack.js';
 import { initProfileHook } from './debug/profile.js';
 import { document, setupBackgroundDocument } from './document.js';
 import { replaceCommitHook } from './lifecycle/patch/commit.js';
@@ -32,6 +33,10 @@ if (__MAIN_THREAD__) {
   if (__DEV__) {
     injectLepusMethods();
   }
+}
+
+if (__DEV__) {
+  setupComponentStack();
 }
 
 // TODO: replace this with __PROFILE__
