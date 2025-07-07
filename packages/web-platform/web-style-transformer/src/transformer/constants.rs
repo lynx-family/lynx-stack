@@ -93,7 +93,7 @@ pub const LINEAR_WEIGHT_SUM_STR_U16: &[u16] = str_to_u16_slice!("linear-weight-s
 
 pub const LINEAR_WEIGHT_SUM_CSS_VAR_NAME: &[u16] = str_to_u16_slice!("--lynx-linear-weight-sum");
 
-pub const LINEAR_WEGIHT_BASIS_CSS_VAR_NAME: &[u16] =
+pub const LINEAR_WEIGHT_BASIS_CSS_VAR_NAME: &[u16] =
   str_to_u16_slice!("--lynx-linear-weight-basis");
 
 pub const LYNX_TEXT_BG_COLOR_STR_U16: &[u16] = str_to_u16_slice!("--lynx-text-bg-color");
