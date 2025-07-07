@@ -424,6 +424,90 @@ test.describe('reactlynx3 tests', () => {
         await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
       },
     );
+
+    // dynamic component
+    test(
+      'basic-dynamic',
+      async ({ page }, { title }) => {
+        test.skip(isSSR, 'Dynamic Component not support on SSR');
+        await goto(page, title);
+        await wait(300);
+        await expect(page.locator('#target1')).toHaveCSS(
+          'background-color',
+          'rgb(0, 128, 0)',
+        ); // green
+        await page.locator('#target2').click();
+        await wait(100);
+        await expect(page.locator('#target1')).toHaveCSS(
+          'background-color',
+          'rgb(255, 192, 203)',
+        ); // pink
+        await page.locator('#target2').click();
+        await wait(100);
+        await expect(page.locator('#target1')).toHaveCSS(
+          'background-color',
+          'rgb(0, 128, 0)',
+        ); // green
+      },
+    );
+    test(
+      'basic-dynamic-fail',
+      async ({ page }, { title }) => {
+        test.skip(isSSR, 'Dynamic Component not support on SSR');
+        await goto(page, title);
+        await wait(300);
+        const result = await page.locator('#fallback').first().innerText();
+        expect(result).toBe('Loading...');
+      },
+    );
+    test(
+      'basic-dynamic-effect',
+      async ({ page }, { title }) => {
+        test.skip(isSSR, 'Dynamic Component not support on SSR');
+        await goto(page, title);
+        await wait(300);
+        await expect(page.locator('#target')).toHaveCSS(
+          'background-color',
+          'rgb(255, 192, 203)',
+        ); // pink
+      },
+    );
+    test(
+      'basic-dynamic-multi',
+      async ({ page }, { title }) => {
+        test.skip(isSSR, 'Dynamic Component not support on SSR');
+        await goto(page, title);
+        await wait(300);
+        await expect(page.locator('#target1').nth(0)).toHaveCSS(
+          'background-color',
+          'rgb(0, 128, 0)',
+        ); // green
+        await expect(page.locator('#target1').nth(1)).toHaveCSS(
+          'background-color',
+          'rgb(0, 128, 0)',
+        ); // green
+        await page.locator('#target2').nth(0).click();
+        await wait(100);
+        await expect(page.locator('#target1').nth(0)).toHaveCSS(
+          'background-color',
+          'rgb(255, 192, 203)',
+        ); // pink
+        await expect(page.locator('#target1').nth(1)).toHaveCSS(
+          'background-color',
+          'rgb(0, 128, 0)',
+        ); // green
+        await page.locator('#target2').nth(1).click();
+        await wait(100);
+        await expect(page.locator('#target1').nth(0)).toHaveCSS(
+          'background-color',
+          'rgb(255, 192, 203)',
+        ); // pink
+        await expect(page.locator('#target1').nth(1)).toHaveCSS(
+          'background-color',
+          'rgb(255, 192, 203)',
+        ); // pink
+      },
+    );
   });
   test.describe('basic-css', () => {
     test('basic-css-asset-in-css', async ({ page }, { title }) => {
