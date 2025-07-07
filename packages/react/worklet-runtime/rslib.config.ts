@@ -32,6 +32,9 @@ export default defineConfig({
         define: {
           __DEV__: 'false',
         },
+        entry: {
+          main: './src/index.ts',
+        },
       },
       output: {
         minify: true,
