@@ -4,27 +4,25 @@
 import { glob } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { defineConfig, type Config } from '@lynx-js/rspeedy';
+import { defineConfig } from '@lynx-js/rspeedy';
 import { commonConfig } from './commonConfig.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const reactBasicCases = await Array.fromAsync(glob(
-  path.join(__dirname, 'basic-*', 'index.jsx'),
+  path.join(
+    __dirname,
+    'config-dynamic-component-*',
+    '*.jsx',
+  ),
 ));
 
-const _default_1: Config = defineConfig({
-  ...commonConfig(),
+const commonConfigResult = commonConfig({ experimental_isLazyBundle: true });
+export default defineConfig({
+  ...commonConfigResult,
   source: {
     entry: Object.fromEntries(reactBasicCases.map((reactBasicEntry) => {
-      return [path.basename(path.dirname(reactBasicEntry)), {
-        import: reactBasicEntry,
-        publicPath: '/dist/',
-      }];
+      return [path.basename(path.dirname(reactBasicEntry)), reactBasicEntry];
     })),
-    define: {
-      'process.env.PORT': JSON.stringify(process.env.PORT ?? 3080),
-    },
   },
 });
-export default _default_1;

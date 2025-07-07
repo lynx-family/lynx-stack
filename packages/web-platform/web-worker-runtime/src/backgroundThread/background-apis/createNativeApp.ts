@@ -28,6 +28,7 @@ import { createJSObjectDestructionObserver } from './crossThreadHandlers/createJ
 import type { TimingSystem } from './createTimingSystem.js';
 import { registerUpdateGlobalPropsHandler } from './crossThreadHandlers/registerUpdateGlobalPropsHandler.js';
 import { registerUpdateI18nResource } from './crossThreadHandlers/registerUpdateI18nResource.js';
+import { createRegisterQueryComponentResourceHandler } from './crossThreadHandlers/createRegisterQueryComponentResourceHandler.js';
 
 let nativeAppCount = 0;
 const sharedData: Record<string, unknown> = {};
@@ -94,6 +95,8 @@ export async function createNativeApp(
   };
   const i18nResource = new I18nResource();
   let release = '';
+  const { registerQueryComponentResourceHandler, templateCache } =
+    createRegisterQueryComponentResourceHandler(mainThreadRpc);
   const nativeApp: NativeApp = {
     id: (nativeAppCount++).toString(),
     ...performanceApis,
@@ -119,8 +122,10 @@ export async function createNativeApp(
         callback(null, createBundleInitReturnObj());
       });
     },
-    loadScript: (sourceURL: string) => {
-      const manifestUrl = template.manifest[`/${sourceURL}`];
+    loadScript: (sourceURL: string, entryName?: string) => {
+      const manifestUrl = (entryName && entryName !== '__Card__')
+        ? templateCache[entryName]?.manifest[`/${sourceURL}`]
+        : template.manifest[`/${sourceURL}`];
       if (manifestUrl) sourceURL = manifestUrl;
       importScripts(sourceURL);
       return createBundleInitReturnObj();
@@ -134,6 +139,7 @@ export async function createNativeApp(
     callLepusMethod,
     setNativeProps,
     invokeUIMethod: createInvokeUIMethod(uiThreadRpc),
+    tt: null,
     setCard(tt) {
       registerPublicComponentEventHandler(
         mainThreadRpc,
@@ -159,6 +165,7 @@ export async function createNativeApp(
       registerUpdateI18nResource(uiThreadRpc, mainThreadRpc, i18nResource, tt);
       timingSystem.registerGlobalEmitter(tt.GlobalEventEmitter);
       (tt.lynx.getCoreContext() as LynxCrossThreadContext).__start();
+      nativeApp.tt = tt;
     },
     triggerComponentEvent,
     selectComponent,
@@ -172,6 +179,27 @@ export async function createNativeApp(
     i18nResource,
     reportException: (err: Error, _: unknown) => reportError(err, _, release),
     __SetSourceMapRelease: (err: Error) => release = err.message,
+    queryComponent: (
+      source: string,
+      callback: (
+        ret: { __hasReady: boolean } | {
+          code: number;
+          detail?: { schema: string };
+        },
+      ) => void,
+    ) => {
+      registerQueryComponentResourceHandler(source, template => {
+        if (!template) {
+          callback({ code: -1 });
+        } else {
+          const exports =
+            (nativeApp.loadScript(template.manifest['/app-service.js'])).init;
+          const factory = exports.bind(exports);
+          factory({ tt: nativeApp.tt! });
+          callback({ __hasReady: true });
+        }
+      });
+    },
   };
   return nativeApp;
 }

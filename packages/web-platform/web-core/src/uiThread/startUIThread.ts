@@ -14,8 +14,8 @@ import {
   type Cloneable,
   dispatchMarkTiming,
   flushMarkTiming,
+  loadTemplate,
 } from '@lynx-js/web-constants';
-import { loadTemplate } from '../utils/loadTemplate.js';
 import { createUpdateData } from './crossThreadHandlers/createUpdateData.js';
 import { startBackground } from './startBackground.js';
 import { createRenderMultiThread } from './createRenderMultiThread.js';
@@ -87,14 +87,16 @@ export function startUIThread(
     );
   markTimingInternal('create_lynx_start', undefined, createLynxStartTiming);
   markTimingInternal('load_template_start');
-  loadTemplate(templateUrl, callbacks.customTemplateLoader).then((template) => {
-    markTimingInternal('load_template_end');
-    flushMarkTimingInternal();
-    start({
-      ...configs,
-      template,
-    });
-  });
+  loadTemplate(templateUrl, false, callbacks.customTemplateLoader).then(
+    (template) => {
+      markTimingInternal('load_template_end');
+      flushMarkTimingInternal();
+      start({
+        ...configs,
+        template,
+      });
+    },
+  );
   return {
     updateData: createUpdateData(updateDataMainThread, updateDataBackground),
     dispose: createDispose(
