@@ -85,7 +85,7 @@ const renderStack: PatchedVNode[] = [];
  * ```
  *
  * Note: A `vnode` may be hoisted to the root scope due to compiler
- * optimiztions. In these cases the `_owner` will be different.
+ * optimization. In these cases the `_owner` will be different.
  */
 let ownerStack: PatchedVNode[] = [];
 
