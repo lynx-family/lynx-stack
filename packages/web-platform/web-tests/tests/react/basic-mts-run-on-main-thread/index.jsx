@@ -21,9 +21,10 @@ export function App() {
   };
 
   useEffect(() => {
-    runOnMainThread(handleColor)('green');
+    setTimeout(() => {
+      runOnMainThread(handleColor)('green');
+    }, 100);
   }, []);
-
   return (
     <view
       id='target'
