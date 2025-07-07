@@ -20,3 +20,4 @@ export * from './BackThreadStartConfigs.js';
 export * from './MarkTiming.js';
 export * from './SSR.js';
 export * from './JSRealm.js';
+export * from './TemplateLoader.js';

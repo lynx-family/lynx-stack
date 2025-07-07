@@ -25,6 +25,8 @@ import {
   type SSRHydrateInfo,
   type SSRDehydrateHooks,
   type JSRealm,
+  type MainThreadGlobalThis,
+  type TemplateLoader,
 } from '@lynx-js/web-constants';
 import { registerCallLepusMethodHandler } from './crossThreadHandlers/registerCallLepusMethodHandler.js';
 import { registerGetCustomSectionHandler } from './crossThreadHandlers/registerGetCustomSectionHandler.js';
@@ -32,6 +34,7 @@ import { createMainThreadGlobalThis } from './createMainThreadGlobalThis.js';
 import { createExposureService } from './utils/createExposureService.js';
 import { initWasm } from '@lynx-js/web-style-transformer';
 import { appendStyleElement } from './utils/processStyleInfo.js';
+import { createQueryComponent } from './crossThreadHandlers/createQueryComponent.js';
 const initWasmPromise = initWasm();
 
 export function prepareMainThreadAPIs(
@@ -49,6 +52,7 @@ export function prepareMainThreadAPIs(
     options: I18nResourceTranslationOptions,
   ) => void,
   initialI18nResources: (data: InitI18nResources) => I18nResources,
+  loadTemplate: TemplateLoader,
   ssrHooks?: SSRDehydrateHooks,
 ) {
   const postTimingFlags = backgroundThreadRpc.createCall(
@@ -97,13 +101,24 @@ export function prepareMainThreadAPIs(
     });
     const i18nResources = initialI18nResources(initI18nResources);
 
-    const { updateCssOGStyle } = appendStyleElement(
+    const { updateCssOGStyle, updateLazyComponentStyle } = appendStyleElement(
       styleInfo,
       pageConfig,
       rootDom as unknown as Node,
       document,
       undefined,
       ssrHydrateInfo,
+    );
+    const mtsGlobalThisRef: { mtsGlobalThis: MainThreadGlobalThis } = {
+      mtsGlobalThis: undefined as unknown as MainThreadGlobalThis,
+    };
+    const __QueryComponent = createQueryComponent(
+      loadTemplate,
+      updateLazyComponentStyle,
+      backgroundThreadRpc,
+      mtsGlobalThisRef,
+      jsContext,
+      mtsRealm,
     );
     const mtsGlobalThis = createMainThreadGlobalThis({
       lynxTemplate: template,
@@ -227,8 +242,10 @@ export function prepareMainThreadAPIs(
           }
           return triggerI18nResourceFallback(options);
         },
+        __QueryComponent,
       },
     });
+    mtsGlobalThisRef.mtsGlobalThis = mtsGlobalThis;
     markTimingInternal('decode_end');
     await mtsRealm.loadScript(template.lepusCode.root);
     jsContext.__start(); // start the jsContext after the runtime is created

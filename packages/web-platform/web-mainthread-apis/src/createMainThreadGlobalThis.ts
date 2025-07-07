@@ -59,6 +59,7 @@ import {
   type ElementTemplateData,
   type ElementFromBinaryPAPI,
   type JSRealm,
+  type QueryComponentPAPI,
 } from '@lynx-js/web-constants';
 import { createMainThreadLynx } from './createMainThreadLynx.js';
 import {
@@ -134,6 +135,7 @@ export interface MainThreadRuntimeCallbacks {
     newClassName: string,
     cssID: string | null,
   ) => void;
+  __QueryComponent: QueryComponentPAPI;
 }
 
 export interface MainThreadRuntimeConfig {
@@ -775,6 +777,7 @@ export function createMainThreadGlobalThis(
     __LoadLepusChunk,
     __GetPageElement,
     __globalProps: globalProps,
+    __QueryComponent: callbacks.__QueryComponent,
     SystemInfo,
     lynx: createMainThreadLynx(config, SystemInfo),
     _ReportError: (err, _) => callbacks._ReportError(err, _, release),

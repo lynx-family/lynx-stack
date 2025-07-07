@@ -8,6 +8,7 @@ import {
   lynxComponentConfigAttribute,
   lynxDatasetAttribute,
   lynxElementTemplateMarkerAttribute,
+  lynxEntryNameAttribute,
   lynxPartIdAttribute,
   lynxTagAttribute,
   lynxUniqueIdAttribute,
@@ -268,9 +269,11 @@ export const __UpdateComponentInfo: UpdateComponentInfoPAPI = /*#__PURE__*/ (
 export const __SetCSSId: SetCSSIdPAPI = /*#__PURE__*/ (
   elements,
   cssId,
+  entryName,
 ) => {
   for (const element of elements) {
     element.setAttribute(cssIdAttribute, cssId + '');
+    entryName && element.setAttribute(lynxEntryNameAttribute, entryName);
   }
 };
 

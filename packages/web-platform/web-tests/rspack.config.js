@@ -17,6 +17,7 @@ const isCI = !!process.env.CI;
 const port = process.env.PORT ?? 3080;
 /** @type {import('@rspack/cli').Configuration} */
 const config = {
+  cache: false,
   entry: {
     main: './shell-project/index.ts',
     'web-elements': './shell-project/web-elements.ts',

@@ -123,7 +123,7 @@ export interface NativeApp {
 
   cancelAnimationFrame: (id: number) => void;
 
-  loadScript: (sourceURL: string) => BundleInitReturnObj;
+  loadScript: (sourceURL: string, entryName?: string) => BundleInitReturnObj;
 
   loadScriptAsync(
     sourceURL: string,
@@ -219,4 +219,15 @@ export interface NativeApp {
 
   reportException: (error: Error, _: unknown) => void;
   __SetSourceMapRelease: (err: Error) => void;
+
+  queryComponent: (
+    source: string,
+    callback: (
+      ret: { __hasReady: boolean } | {
+        code: number;
+        detail?: { schema: string };
+      },
+    ) => void,
+  ) => void;
+  tt: NativeTTObject | null;
 }
