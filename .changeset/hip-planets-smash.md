@@ -1,5 +1,5 @@
 ---
-"@lynx-js/rspeedy": patch
+"create-rspeedy": patch
 ---
 
-Fix demo missing color.
+Fix missing color in nested `<text>`.
