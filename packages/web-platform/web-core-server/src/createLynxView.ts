@@ -201,7 +201,9 @@ export async function createLynxView(
     if (ssrEncodeData) {
       buffer.push(
         '<!--',
-        Buffer.from(JSON.stringify({ ssrEncodeData, events })).toString('base64'),
+        Buffer.from(JSON.stringify({ ssrEncodeData, events })).toString(
+          'base64',
+        ),
         '-->',
       ); // encodeURI to avoid XSS
     }
