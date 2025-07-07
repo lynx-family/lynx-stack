@@ -212,11 +212,9 @@ lazy_static::lazy_static! {
     let mut justify_content_map = HashMap::new();
     justify_content_map.insert(START_STR_U16, &[
       [JUSTIFY_CONTENT_STR_U16, FLEX_START_STR_U16],
-      [JUSTIFY_CONTENT_STR_U16, START_STR_U16],
     ] as &[[&[u16]; 2]]);
     justify_content_map.insert(END_STR_U16, &[
       [JUSTIFY_CONTENT_STR_U16, FLEX_END_STR_U16],
-      [JUSTIFY_CONTENT_STR_U16, END_STR_U16],
     ] as &[[&[u16]; 2]]);
 
     map.insert(DISPLAY_STR_U16, display_map);
