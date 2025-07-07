@@ -5,7 +5,12 @@ import type { RsbuildPluginAPI } from '@rsbuild/core'
 
 import { LAYERS } from '@lynx-js/react-webpack-plugin'
 
-export function applyGenerator(api: RsbuildPluginAPI): void {
+import type { PluginReactLynxOptions } from './pluginReactLynx.js'
+
+export function applyGenerator(
+  api: RsbuildPluginAPI,
+  options: Required<PluginReactLynxOptions>,
+): void {
   api.modifyBundlerChain({
     order: 'pre',
     handler: chain => {
@@ -19,6 +24,19 @@ export function applyGenerator(api: RsbuildPluginAPI): void {
         .generator({
           JSONParse: false,
         })
+
+      // If `extractStr` is enabled, we also need to apply the same rule for the background layer.
+      // It will ensure that string literals are same in both main thread and background thread.
+      if (options.extractStr) {
+        chain.module
+          .rule(`json-parse:${LAYERS.BACKGROUND}`)
+          .issuerLayer(LAYERS.BACKGROUND)
+          .test(/\.json$/)
+          .type('json')
+          .generator({
+            JSONParse: false,
+          })
+      }
     },
   })
 }
