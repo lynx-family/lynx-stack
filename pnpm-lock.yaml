@@ -758,10 +758,6 @@ importers:
       hyphenate-style-name:
         specifier: ^1.1.0
         version: 1.1.0
-    devDependencies:
-      wasm-pack:
-        specifier: ^0.13.1
-        version: 0.13.1
 
   packages/web-platform/web-rsbuild-plugin:
     dependencies:
@@ -791,7 +787,11 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(@types/debug@4.1.12)(@types/node@22.15.33)(@vitest/ui@3.2.4)(jsdom@26.1.0)(sass-embedded@1.89.2)(terser@5.31.6)
 
-  packages/web-platform/web-style-transformer: {}
+  packages/web-platform/web-style-transformer:
+    devDependencies:
+      wasm-pack:
+        specifier: ^0.13.1
+        version: 0.13.1
 
   packages/web-platform/web-tests:
     devDependencies:

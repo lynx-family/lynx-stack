@@ -23,15 +23,9 @@
     "README.md",
     "**/*.css"
   ],
-  "scripts": {
-    "build": "wasm-pack build --target web"
-  },
   "dependencies": {
     "@lynx-js/web-constants": "workspace:*",
     "@lynx-js/web-style-transformer": "workspace:*",
     "hyphenate-style-name": "^1.1.0"
-  },
-  "devDependencies": {
-    "wasm-pack": "^0.13.1"
   }
 }

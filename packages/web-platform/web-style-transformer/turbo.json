@@ -4,16 +4,13 @@
   "tasks": {
     "build": {
       "dependsOn": [
-        "//#build",
         "^build"
       ],
       "inputs": [
-        "src",
-        "clang"
+        "src"
       ],
       "outputs": [
-        "dist",
-        "pkg"
+        "dist"
       ]
     }
   }

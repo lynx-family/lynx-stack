@@ -1,5 +1,5 @@
 // @ts-ignore the wasm module built later than the ts code
-import init from '../../pkg/web_mainthread_apis.js';
+import init from '@lynx-js/web-style-transformer';
 let wasm: Awaited<ReturnType<typeof init>>;
 let HEAPU16: Uint16Array | undefined;
 var ENVIRONMENT_IS_NODE = typeof process == 'object'
@@ -15,8 +15,11 @@ export const initTokenizer = async () => {
         import.meta.dirname,
         '..',
         '..',
-        'pkg',
-        'web_mainthread_apis_bg.wasm',
+        'node_modules',
+        '@lynx-js',
+        'web-style-transformer',
+        'dist',
+        'index_bg.wasm',
       ),
     );
     wasm = await init(wasmModuleBuffer);
