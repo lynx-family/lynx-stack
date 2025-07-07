@@ -209,3 +209,5 @@ pub const JUSTIFY_CONTENT_ROW_REVERSE_STR_U16: &[u16] =
 
 pub const ALIGN_SELF_ROW_STR_U16: &[u16] = str_to_u16_slice!("--align-self-row");
 pub const ALIGN_SELF_COLUMN_STR_U16: &[u16] = str_to_u16_slice!("--align-self-column");
+
+pub const INVALID_STR_U16: &[u16] = str_to_u16_slice!("--lynx-invalid-invalid-invalid");

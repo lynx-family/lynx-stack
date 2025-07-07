@@ -216,6 +216,12 @@ lazy_static::lazy_static! {
     justify_content_map.insert(END_STR_U16, &[
       [JUSTIFY_CONTENT_STR_U16, FLEX_END_STR_U16],
     ] as &[[&[u16]; 2]]);
+    justify_content_map.insert(LEFT_STR_U16, &[
+      [INVALID_STR_U16,INVALID_STR_U16],
+    ] as &[[&[u16]; 2]]);
+    justify_content_map.insert(RIGHT_STR_U16, &[
+      [INVALID_STR_U16,INVALID_STR_U16],
+    ] as &[[&[u16]; 2]]);
 
     map.insert(DISPLAY_STR_U16, display_map);
     map.insert(DIRECTION_STR_U16, direction_map);
