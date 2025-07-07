@@ -289,6 +289,9 @@ list-item {
        <value> -> <value>
        */
       flex-shrink: 0;
+      /* The following `calc` and `clamp` logic ensures that if 
+         `--lynx-linear-weight-sum` is zero, it defaults to 1. This prevents
+         division by zero and ensures consistent behavior. */
       flex-grow: calc(
         var(--lynx-linear-weight) /
           calc(
