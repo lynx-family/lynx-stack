@@ -4,24 +4,75 @@
 
 import type { LynxTemplate } from '../types/LynxModule.js';
 
-const currentSupportedTemplateVersion = 2;
-const globalDisallowedVars = ['navigator', 'postMessage'];
-type templateUpgrader = (template: LynxTemplate) => LynxTemplate;
-const templateUpgraders: templateUpgrader[] = [
-  (template) => {
-    const defaultInjectStr = [
-      'Card',
-      'setTimeout',
-      'setInterval',
-      'clearInterval',
-      'clearTimeout',
-      'NativeModules',
-      'Component',
-      'ReactLynx',
-      'nativeAppId',
-      'Behavior',
-      'LynxJSBI',
-      'lynx',
+const mainThreadInjectVars = [
+  'lynx',
+  'globalThis',
+  '_ReportError',
+  '_SetSourceMapRelease',
+  '__AddConfig',
+  '__AddDataset',
+  '__GetAttributes',
+  '__GetComponentID',
+  '__GetDataByKey',
+  '__GetDataset',
+  '__GetElementConfig',
+  '__GetElementUniqueID',
+  '__GetID',
+  '__GetTag',
+  '__SetAttribute',
+  '__SetConfig',
+  '__SetDataset',
+  '__SetID',
+  '__UpdateComponentID',
+  '__UpdateComponentInfo',
+  '__GetConfig',
+  '__GetAttributeByName',
+  '__UpdateListCallbacks',
+  '__AppendElement',
+  '__ElementIsEqual',
+  '__FirstElement',
+  '__GetChildren',
+  '__GetParent',
+  '__InsertElementBefore',
+  '__LastElement',
+  '__NextElement',
+  '__RemoveElement',
+  '__ReplaceElement',
+  '__ReplaceElements',
+  '__SwapElement',
+  '__CreateComponent',
+  '__CreateElement',
+  '__CreatePage',
+  '__CreateView',
+  '__CreateText',
+  '__CreateRawText',
+  '__CreateImage',
+  '__CreateScrollView',
+  '__CreateWrapperElement',
+  '__CreateList',
+  '__AddEvent',
+  '__GetEvent',
+  '__GetEvents',
+  '__SetEvents',
+  '__AddClass',
+  '__SetClasses',
+  '__GetClasses',
+  '__AddInlineStyle',
+  '__SetInlineStyles',
+  '__SetCSSId',
+  '__OnLifecycleEvent',
+  '__FlushElementTree',
+  '__LoadLepusChunk',
+  'SystemInfo',
+  '_I18nResourceTranslation',
+  '_AddEventListener',
+  '__GetTemplateParts',
+  '__MarkPartElement',
+  '__MarkTemplateElement',
+  '__GetPageElement',
+  '__ElementFromBinary',
+  '__QueryComponent',
+];
 
       // BOM API
       'window',
@@ -70,27 +121,61 @@ const templateUpgraders: templateUpgrader[] = [
 
 const generateModuleContent = (
   content: string,
+  injectVars: readonly string[],
+  injectWithBind: readonly string[],
+  muteableVars: readonly string[],
+  globalDisallowedVars: readonly string[],
+  isESM: boolean,
+  isLazyComponent: boolean,
+  source?: string,
 ) =>
   [
     '//# allFunctionsCalledOnLoad\n',
-    '"use strict";\n',
-    `(() => {const ${
-      globalDisallowedVars.join('=void 0,')
-    }=void 0;module.exports = `,
-    content,
-    '\n})()',
+    isESM ? 'export default ' : 'globalThis.module.exports =',
+    'function(lynx_runtime) {',
+    'const module= {exports:{}};let exports = module.exports;',
+    'var {',
+    injectVars.join(','),
+    '} = lynx_runtime;',
+    ...injectWithBind.map(nm =>
+      `const ${nm} = lynx_runtime.${nm}?.bind(lynx_runtime);`
+    ),
+    isLazyComponent
+      ? `;var globDynamicComponentEntry = '${source}';`
+      : ';var globDynamicComponentEntry = \'__Card__\';',
+    globalDisallowedVars.length !== 0
+      ? `var ${globalDisallowedVars.join('=')}=undefined;`
+      : '',
+    'var {__globalProps} = lynx;',
+    'lynx_runtime._updateVars=()=>{',
+    ...muteableVars.map(nm =>
+      `${nm} = lynx_runtime.__lynxGlobalBindingValues.${nm};`
+    ),
+    '};\n',
+    (isLazyComponent && isESM) ? `return ${content}` : content,
+    '\n return module.exports;}',
   ].join('');
 
 async function generateJavascriptUrl<T extends Record<string, string | {}>>(
   obj: T,
   createJsModuleUrl: (content: string, name: string) => Promise<string>,
+  isESM: boolean,
+  isLazyComponent: boolean,
   templateName?: string,
+  source?: string,
 ): Promise<T> {
   const processEntry = async ([name, content]: [string, string]) => [
     name,
     await createJsModuleUrl(
       generateModuleContent(
         content,
+        injectVars.concat(muteableVars),
+        injectWithBind,
+        muteableVars,
+        globalDisallowedVars,
+        isESM,
+        isLazyComponent,
+        source,
       ),
       `${templateName}-${name.replaceAll('/', '')}.js`,
     ),
@@ -105,11 +190,21 @@ async function generateJavascriptUrl<T extends Record<string, string | {}>>(
 }
 
 export async function generateTemplate(
-  template: LynxTemplate,
-  createJsModuleUrl:
-    | ((content: string, name: string) => Promise<string>)
-    | ((content: string) => string),
-  templateName?: string,
+  {
+    template,
+    createJsModuleUrl,
+    templateName,
+    isLazyComponent = false,
+    source,
+  }: {
+    template: LynxTemplate;
+    createJsModuleUrl:
+      | ((content: string, name: string) => Promise<string>)
+      | ((content: string) => string);
+    templateName?: string;
+    isLazyComponent?: boolean;
+    source?: string;
+  },
 ): Promise<LynxTemplate> {
   template.version = template.version ?? 1;
   if (template.version > currentSupportedTemplateVersion) {
@@ -129,12 +224,18 @@ export async function generateTemplate(
     lepusCode: await generateJavascriptUrl(
       template.lepusCode,
       createJsModuleUrl as (content: string, name: string) => Promise<string>,
+      true,
+      isLazyComponent,
       templateName,
+      source,
     ),
     manifest: await generateJavascriptUrl(
       template.manifest,
       createJsModuleUrl as (content: string, name: string) => Promise<string>,
+      false,
+      isLazyComponent,
       templateName,
+      source,
     ),
   };
 }

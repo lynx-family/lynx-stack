@@ -24,7 +24,7 @@ import {
   type Cloneable,
   type SSRHydrateInfo,
   type SSRDehydrateHooks,
-  type JSRealm,
+  getLepusEntries,
 } from '@lynx-js/web-constants';
 import { registerCallLepusMethodHandler } from './crossThreadHandlers/registerCallLepusMethodHandler.js';
 import { registerGetCustomSectionHandler } from './crossThreadHandlers/registerGetCustomSectionHandler.js';
@@ -49,6 +49,7 @@ export function prepareMainThreadAPIs(
     options: I18nResourceTranslationOptions,
   ) => void,
   initialI18nResources: (data: InitI18nResources) => I18nResources,
+  triggerQueryComponent: (source: string) => void,
   ssrHooks?: SSRDehydrateHooks,
 ) {
   const postTimingFlags = backgroundThreadRpc.createCall(
@@ -90,6 +91,10 @@ export function prepareMainThreadAPIs(
     } = template;
     markTimingInternal('decode_start');
     await initWasmPromise;
+    const { lepusEntries, entry } = await getLepusEntries(
+      lepusCode,
+      moduleCache,
+    );
     const jsContext = new LynxCrossThreadContext({
       rpc: backgroundThreadRpc,
       receiveEventEndpoint: dispatchJSContextOnMainThreadEndpoint,
@@ -113,6 +118,8 @@ export function prepareMainThreadAPIs(
       browserConfig,
       globalProps,
       pageConfig,
+      styleInfo,
+      lepusCode: lepusEntries,
       rootDom,
       ssrHydrateInfo,
       ssrHooks,
@@ -226,6 +233,9 @@ export function prepareMainThreadAPIs(
             return matchedInitI18nResources.resource;
           }
           return triggerI18nResourceFallback(options);
+        },
+        __QueryComponent: (source: string) => {
+          triggerQueryComponent(source);
         },
       },
     });

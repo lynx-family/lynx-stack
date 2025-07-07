@@ -16,14 +16,14 @@ import {
   updateI18nResourcesEndpoint,
   multiThreadExposureChangedEndpoint,
   lynxUniqueIdAttribute,
-  type JSRealm,
-  type MainThreadGlobalThis,
+  queryComponentEndpoint,
 } from '@lynx-js/web-constants';
 import { Rpc } from '@lynx-js/web-worker-rpc';
 import { createMarkTimingInternal } from './crossThreadHandlers/createMainthreadMarkTimingInternal.js';
 import { OffscreenDocument } from '@lynx-js/offscreen-document/webworker';
 import { _onEvent } from '@lynx-js/offscreen-document/webworker';
 import { registerUpdateDataHandler } from './crossThreadHandlers/registerUpdateDataHandler.js';
+import { registerQueryComponentTemplate } from './crossThreadHandlers/registerQueryComponentTemplate.js';
 
 const { prepareMainThreadAPIs } = await import(
   /* webpackChunkName: "web-core-main-thread-apis" */
@@ -66,6 +66,8 @@ export async function startMainThreadWorker(
     createMarkTimingInternal(backgroundThreadRpc);
   const uiFlush = uiThreadRpc.createCall(flushElementTreeEndpoint);
   const reportError = uiThreadRpc.createCall(reportErrorEndpoint);
+  const triggerQueryComponent = (source: string) =>
+    uiThreadRpc.invoke(queryComponentEndpoint, [source]);
   const triggerI18nResourceFallback = (
     options: I18nResourceTranslationOptions,
   ) => {
@@ -107,18 +109,22 @@ export async function startMainThreadWorker(
       i18nResources.setData(initI18nResources);
       return i18nResources;
     },
+    triggerQueryComponent,
   );
   uiThreadRpc.registerHandler(
     mainThreadStartEndpoint,
-    async (config) => {
-      await startMainThread(config);
-      registerUpdateDataHandler(
-        uiThreadRpc,
-        globalThis as typeof globalThis & MainThreadGlobalThis,
-      );
+    (config) => {
+      startMainThread(config).then(mtsGlobalThis => {
+        registerUpdateDataHandler(uiThreadRpc, mtsGlobalThis);
+        registerQueryComponentTemplate(uiThreadRpc, {
+          rootDom: docu,
+          createElement: docu.createElement.bind(docu) as any,
+          mtsGlobalThis,
+        });
+      });
     },
   );
-  uiThreadRpc?.registerHandler(updateI18nResourcesEndpoint, data => {
+  uiThreadRpc.registerHandler(updateI18nResourcesEndpoint, data => {
     i18nResources.setData(data as InitI18nResources);
   });
 }

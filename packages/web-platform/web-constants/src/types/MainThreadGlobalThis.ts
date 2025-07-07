@@ -270,6 +270,7 @@ export type SetInlineStylesPAPI = (
 export type SetCSSIdPAPI = (
   elements: WebFiberElementImpl[],
   cssId: number | null,
+  entryName: string | undefined,
 ) => void;
 
 export type GetPageElementPAPI = () => WebFiberElementImpl | undefined;
@@ -381,6 +382,17 @@ export interface MainThreadGlobalThis {
   ) => unknown | undefined;
   // This is an empty implementation, just to avoid business call errors
   _AddEventListener: (...args: unknown[]) => void;
+  __QueryComponent: (source: string, result?: unknown) => void;
+  // DSL runtime binding
+  processEvalResult?: (
+    callback: (schema: string) => void,
+    schema: string,
+  ) => void;
+  /**
+   * private fields
+   */
+  _updateVars: () => void;
+  __lynxGlobalBindingValues: Record<string, unknown>;
   // the following methods is assigned by the main thread user code
   renderPage: ((data: unknown) => void) | undefined;
   updatePage?: (data: Cloneable, options?: Record<string, string>) => void;
