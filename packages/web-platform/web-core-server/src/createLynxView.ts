@@ -2,6 +2,7 @@ import {
   I18nResources,
   inShadowRootStyles,
   lynxUniqueIdAttribute,
+  type AddEventPAPI,
   type InitI18nResources,
   type StartMainThreadContextConfig,
 } from '@lynx-js/web-constants';
@@ -152,6 +153,11 @@ export async function createLynxView(
     initI18nResources,
   });
 
+  const events: Parameters<AddEventPAPI>[] = [];
+  runtime.__AddEvent = (...args: Parameters<AddEventPAPI>) => {
+    events.push(args);
+  };
+
   const elementTemplates = {
     ...builtinElementTemplates,
     ...overrideElementTemplates,
@@ -193,8 +199,11 @@ export async function createLynxView(
     );
 
     if (ssrEncodeData) {
-      const encodeDataEncoded = ssrEncodeData ? encodeURI(ssrEncodeData) : ''; // to avoid XSS
-      buffer.push('<!--', encodeDataEncoded, '-->');
+      buffer.push(
+        '<!--',
+        encodeURI(JSON.stringify({ ssrEncodeData, events })),
+        '-->',
+      ); // encodeURI to avoid XSS
     }
     buffer.push('</lynx-view>');
     return buffer.join('');
