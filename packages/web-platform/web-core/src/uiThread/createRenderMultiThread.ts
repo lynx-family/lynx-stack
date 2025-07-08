@@ -12,19 +12,11 @@ export function createRenderMultiThread(
   mainThreadRpc: Rpc,
   shadowRoot: ShadowRoot,
   callbacks: {
-    onError?: (err: Error, release: string) => void;
+    onError?: (err: Error, release: string, fileName: string) => void;
   },
 ) {
-  registerReportErrorHandler(
-    mainThreadRpc,
-    callbacks.onError,
-  );
-  registerFlushElementTreeHandler(
-    mainThreadRpc,
-    {
-      shadowRoot,
-    },
-  );
+  registerReportErrorHandler(mainThreadRpc, 'lepus.js', callbacks.onError);
+  registerFlushElementTreeHandler(mainThreadRpc, { shadowRoot });
   registerDispatchLynxViewEventHandler(mainThreadRpc, shadowRoot);
   const start = mainThreadRpc.createCall(mainThreadStartEndpoint);
   const updateDataMainThread = mainThreadRpc.createCall(updateDataEndpoint);

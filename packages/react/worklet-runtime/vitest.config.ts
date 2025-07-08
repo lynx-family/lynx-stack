@@ -1,6 +1,7 @@
-import { defineConfig, type UserConfig } from 'vitest/config';
+import { defineConfig } from 'vitest/config';
+import type { ViteUserConfig } from 'vitest/config';
 
-const config: UserConfig = defineConfig({
+const config: ViteUserConfig = defineConfig({
   define: {
     __DEV__: false,
   },
@@ -10,7 +11,7 @@ const config: UserConfig = defineConfig({
       exclude: [
         'dist/**',
         'lib/**',
-        'scripts',
+        'rslib.config.ts',
         'src/api/**',
         'src/bindings/**',
         'src/index.ts',
