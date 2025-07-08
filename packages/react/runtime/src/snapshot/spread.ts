@@ -14,7 +14,7 @@ import type { Element, Worklet, WorkletRefImpl } from '@lynx-js/react/worklet-ru
 import type { BackgroundSnapshotInstance } from '../backgroundSnapshot.js';
 import { ListUpdateInfoRecording } from '../listUpdateInfo.js';
 import { __pendingListUpdates } from '../pendingListUpdates.js';
-import { SnapshotInstance } from '../snapshot.js';
+import { ListSnapshotInstance, SnapshotInstance } from '../snapshot.js';
 import { isDirectOrDeepEqual, isEmptyObject, pick } from '../utils.js';
 import { updateEvent } from './event.js';
 import { updateGesture } from './gesture.js';
@@ -50,7 +50,7 @@ function updateSpread(
   let newValue: Record<string, unknown> = snapshot.__values![index] as Record<string, unknown>; // compiler guarantee this must be an object;
 
   const list = snapshot.parentNode;
-  if (list?.__snapshot_def.isListHolder) {
+  if (list instanceof ListSnapshotInstance) {
     const oldPlatformInfo = pick(oldValue, platformInfoAttributes);
     const platformInfo = pick(newValue, platformInfoAttributes);
     if (!isDirectOrDeepEqual(oldPlatformInfo, platformInfo)) {
