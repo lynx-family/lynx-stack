@@ -27,7 +27,7 @@ export function createRenderAllOnUI(
   ) => void,
   flushMarkTimingInternal: () => void,
   callbacks: {
-    onError?: (err: Error, release: string) => void;
+    onError?: (err: Error, release: string, fileName: string) => void;
   },
 ) {
   if (!globalThis.module) {
@@ -51,7 +51,7 @@ export function createRenderAllOnUI(
     markTimingInternal,
     flushMarkTimingInternal,
     (err, _, release) => {
-      callbacks.onError?.(err, release);
+      callbacks.onError?.(err, release, 'lepus.js');
     },
     triggerI18nResourceFallback,
     (initI18nResources: InitI18nResources) => {

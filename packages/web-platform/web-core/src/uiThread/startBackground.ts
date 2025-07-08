@@ -51,7 +51,11 @@ export function startBackground(
   );
   registerDispatchLynxViewEventHandler(backgroundRpc, shadowRoot);
   registerTriggerElementMethodEndpointHandler(backgroundRpc, shadowRoot);
-  registerReportErrorHandler(backgroundRpc, callbacks.onError);
+  registerReportErrorHandler(
+    backgroundRpc,
+    'app-service.js',
+    callbacks.onError,
+  );
 
   const sendGlobalEvent = backgroundRpc.createCall(sendGlobalEventEndpoint);
   const markTiming = backgroundRpc.createCall(markTimingEndpoint);

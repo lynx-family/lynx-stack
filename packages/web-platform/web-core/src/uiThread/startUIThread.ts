@@ -24,7 +24,7 @@ import { createRenderAllOnUI } from './createRenderAllOnUI.js';
 export type StartUIThreadCallbacks = {
   nativeModulesCall: NativeModulesCall;
   napiModulesCall: NapiModulesCall;
-  onError?: (err: Error, release: string) => void;
+  onError?: (err: Error, release: string, fileName: string) => void;
   customTemplateLoader?: (url: string) => Promise<LynxTemplate>;
 };
 

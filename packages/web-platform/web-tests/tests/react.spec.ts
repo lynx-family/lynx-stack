@@ -709,6 +709,51 @@ test.describe('reactlynx3 tests', () => {
       await wait(500);
       expect(offset).toBe(true);
     });
+    test('api-error-mts', async ({ page }, { title }) => {
+      let fileName = false;
+      await page.on('console', async (msg) => {
+        const event = await msg.args()[0]?.evaluate((e) => {
+          return {
+            type: e.type,
+            fileName: e.detail?.fileName,
+          };
+        });
+        if (!event || event.type !== 'error') {
+          return;
+        }
+        if (
+          typeof event.fileName === 'string' && event.fileName === 'lepus.js'
+        ) {
+          fileName = true;
+        }
+      });
+      await goto(page, 'api-error');
+      await wait(500);
+      expect(fileName).toBe(true);
+    });
+    test('api-error-bts', async ({ page }, { title }) => {
+      let fileName = false;
+      await page.on('console', async (msg) => {
+        const event = await msg.args()[0]?.evaluate((e) => {
+          return {
+            type: e.type,
+            fileName: e.detail?.fileName,
+          };
+        });
+        if (!event || event.type !== 'error') {
+          return;
+        }
+        if (
+          typeof event.fileName === 'string'
+          && event.fileName === 'app-service.js'
+        ) {
+          fileName = true;
+        }
+      });
+      await goto(page, 'api-error');
+      await wait(500);
+      expect(fileName).toBe(true);
+    });
     test('api-set-release', async ({ page }, { title }) => {
       let success = false;
       await page.on('console', async (msg) => {
