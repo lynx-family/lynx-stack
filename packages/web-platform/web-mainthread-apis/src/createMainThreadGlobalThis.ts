@@ -103,11 +103,25 @@ import {
 import { createCrossThreadEvent } from './utils/createCrossThreadEvent.js';
 import { decodeCssInJs } from './utils/decodeCssInJs.js';
 
+const exposureRelatedAttributes = new Set<string>([
+  'exposure-id',
+  'exposure-area',
+  'exposure-screen-margin-top',
+  'exposure-screen-margin-right',
+  'exposure-screen-margin-bottom',
+  'exposure-screen-margin-left',
+  'exposure-ui-margin-top',
+  'exposure-ui-margin-right',
+  'exposure-ui-margin-bottom',
+  'exposure-ui-margin-left',
+]);
+
 export interface MainThreadRuntimeCallbacks {
   mainChunkReady: () => void;
   flushElementTree: (
     options: FlushElementTreeOptions,
     timingFlags: string[],
+    exposureChangedElements: WebFiberElementImpl[],
   ) => void;
   _ReportError: RpcCallType<typeof reportErrorEndpoint>;
   __OnLifecycleEvent: (lifeCycleEvent: Cloneable) => void;
@@ -158,6 +172,7 @@ export function createMainThreadGlobalThis(
    */
   const varsUpdateHandlers: (() => void)[] = [];
   const lynxGlobalBindingValues: Record<string, any> = {};
+  const exposureChangedElements = new Set<WebFiberElementImpl>();
 
   /**
    * now create the style content
@@ -288,6 +303,12 @@ export function createMainThreadGlobalThis(
         element.removeEventListener(eventName, currentRegisteredHandler, {
           capture: isCapture,
         });
+        // remove the exposure id if the exposure-id is a placeholder value
+        const isExposure = eventName === 'uiappear'
+          || eventName === 'uidisappear';
+        if (isExposure && element.getAttribute('exposure-id') === '-1') {
+          mtsGlobalThis.__SetAttribute(element, 'exposure-id', null);
+        }
       }
     } else {
       /**
@@ -300,6 +321,12 @@ export function createMainThreadGlobalThis(
         element.addEventListener(htmlEventName, currentRegisteredHandler, {
           capture: isCapture,
         });
+        // add exposure id if no exposure-id is set
+        const isExposure = eventName === 'uiappear'
+          || eventName === 'uidisappear';
+        if (isExposure && element.getAttribute('exposure-id') === null) {
+          mtsGlobalThis.__SetAttribute(element, 'exposure-id', '-1');
+        }
       }
     }
     if (newEventHandler) {
@@ -510,6 +537,10 @@ export function createMainThreadGlobalThis(
       if (key === __lynx_timing_flag && value) {
         timingFlags.push(value as string);
       }
+      if (exposureRelatedAttributes.has(key)) {
+        // if the attribute is related to exposure, we need to mark the element as changed
+        exposureChangedElements.add(element);
+      }
     }
   };
 
@@ -612,7 +643,13 @@ export function createMainThreadGlobalThis(
       // @ts-expect-error
       rootDom.append(pageElement);
     }
-    callbacks.flushElementTree(options, timingFlagsCopied);
+    const exposureChangedElementsArray = Array.from(exposureChangedElements);
+    exposureChangedElements.clear();
+    callbacks.flushElementTree(
+      options,
+      timingFlagsCopied,
+      exposureChangedElementsArray,
+    );
   };
 
   const __GetTemplateParts: GetTemplatePartsPAPI = () => {

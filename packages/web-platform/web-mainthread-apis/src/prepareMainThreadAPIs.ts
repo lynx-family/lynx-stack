@@ -35,7 +35,9 @@ export function prepareMainThreadAPIs(
   backgroundThreadRpc: Rpc,
   rootDom: Document | ShadowRoot,
   createElement: Document['createElement'],
-  commitDocument: () => Promise<void> | void,
+  commitDocument: (
+    exposureChangedElements: HTMLElement[],
+  ) => Promise<void> | void,
   markTimingInternal: (timingKey: string, pipelineId?: string) => void,
   flushMarkTimingInternal: () => void,
   reportError: RpcCallType<typeof reportErrorEndpoint>,
@@ -154,7 +156,11 @@ export function prepareMainThreadAPIs(
           mtsGlobalThis.renderPage!(initData);
           mtsGlobalThis.__FlushElementTree(undefined, {});
         },
-        flushElementTree: async (options, timingFlags) => {
+        flushElementTree: async (
+          options,
+          timingFlags,
+          exposureChangedElements,
+        ) => {
           const pipelineId = options?.pipelineOptions?.pipelineID;
           markTimingInternal('dispatch_start', pipelineId);
           if (isFp) {
@@ -166,7 +172,9 @@ export function prepareMainThreadAPIs(
           }
           markTimingInternal('layout_start', pipelineId);
           markTimingInternal('ui_operation_flush_start', pipelineId);
-          await commitDocument();
+          await commitDocument(
+            exposureChangedElements as unknown as HTMLElement[],
+          );
           markTimingInternal('ui_operation_flush_end', pipelineId);
           markTimingInternal('layout_end', pipelineId);
           markTimingInternal('dispatch_end', pipelineId);

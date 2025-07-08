@@ -17,6 +17,7 @@ export function createExposureService(
   let working = true;
   let exposureCache: ExposureWorkerEvent[] = [];
   let disexposureCache: ExposureWorkerEvent[] = [];
+  let delayCallback: ReturnType<typeof setTimeout> | null = null;
   const onScreen = new Map<string, ExposureWorkerEvent>();
   function exposureEventHandler(ev: Event) {
     const exposureEvent = createCrossThreadEvent(
@@ -34,19 +35,22 @@ export function createExposureService(
       disexposureCache.push(exposureEvent);
       onScreen.delete(exposureID);
     }
-  }
-  setInterval(() => {
-    if (exposureCache.length > 0 || disexposureCache.length > 0) {
-      const currentExposure = exposureCache;
-      const currentDisexposure = disexposureCache;
-      exposureCache = [];
-      disexposureCache = [];
-      postExposure({
-        exposures: currentExposure,
-        disExposures: currentDisexposure,
-      });
+    if (!delayCallback) {
+      setInterval(() => {
+        if (exposureCache.length > 0 || disexposureCache.length > 0) {
+          const currentExposure = exposureCache;
+          const currentDisexposure = disexposureCache;
+          exposureCache = [];
+          disexposureCache = [];
+          postExposure({
+            exposures: currentExposure,
+            disExposures: currentDisexposure,
+          });
+        }
+        delayCallback = null;
+      }, 1000 / 20);
     }
-  }, 1000 / 20);
+  }
   rootDom.addEventListener('exposure', exposureEventHandler, {
     passive: true,
   });

@@ -1,3 +1,7 @@
+// Copyright 2023 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+
 import {
   type StartMainThreadContextConfig,
   type RpcCallType,
@@ -12,6 +16,7 @@ import {
 } from '@lynx-js/web-constants';
 import { Rpc } from '@lynx-js/web-worker-rpc';
 import { dispatchLynxViewEvent } from '../utils/dispatchLynxViewEvent.js';
+import { createExposureMonitor } from './crossThreadHandlers/createExposureMonitor.js';
 
 const {
   prepareMainThreadAPIs,
@@ -43,11 +48,12 @@ export function createRenderAllOnUI(
     );
   };
   const i18nResources = new I18nResources();
+  const { exposureChangedCallback } = createExposureMonitor(shadowRoot);
   const { startMainThread } = prepareMainThreadAPIs(
     mainToBackgroundRpc,
     shadowRoot,
     document.createElement.bind(document),
-    () => {},
+    exposureChangedCallback,
     markTimingInternal,
     flushMarkTimingInternal,
     (err, _, release) => {

@@ -95,6 +95,11 @@ export const callLepusMethodEndpoint = createRpcEndpoint<
   void
 >('callLepusMethod', false, true);
 
+export const multiThreadExposureChangedEndpoint = createRpcEndpoint<
+  [number[]],
+  void
+>('multiThreadExposureChangedEndpoint', false, false);
+
 export const invokeUIMethodEndpoint = createRpcEndpoint<
   [
     type: IdentifierType,
