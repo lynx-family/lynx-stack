@@ -57,9 +57,9 @@ export function startMainThreadWorker(
     (exposureChangedElementUniqueIds) => {
       docu.commit();
       sendMultiThreadExposureChangedEndpoint(
-        exposureChangedElementUniqueIds.map(e =>
-          e.getAttribute(lynxUniqueIdAttribute)
-        ),
+        exposureChangedElementUniqueIds
+          .map(e => e.getAttribute(lynxUniqueIdAttribute))
+          .filter(id => id !== null),
       );
     },
     markTimingInternal,
