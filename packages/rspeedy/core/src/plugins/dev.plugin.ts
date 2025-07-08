@@ -97,8 +97,8 @@ export function pluginDev(
           hostname,
           port: api.context.devServer?.port.toString() ?? '',
           pathname: '/rsbuild-hmr',
-          hot: options?.hmr ?? true ? 'true' : 'false',
-          liveReload: options?.liveReload ?? true ? 'true' : 'false',
+          hot: (options?.hmr ?? true) ? 'true' : 'false',
+          'live-reload': (options?.liveReload ?? true) ? 'true' : 'false',
           protocol: 'ws',
           token: environment.webSocketToken,
         })
