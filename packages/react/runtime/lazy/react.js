@@ -24,6 +24,7 @@ export const {
   root,
   runOnBackground,
   runOnMainThread,
+  startTransition,
   useCallback,
   useContext,
   useDebugValue,
@@ -41,6 +42,7 @@ export const {
   useRef,
   useState,
   useSyncExternalStore,
+  useTransition,
   withInitDataInState,
 } = target[sExportsReact];
 

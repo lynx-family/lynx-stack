@@ -123,6 +123,9 @@ export function runOnBackground<R, Fn extends (...args: any[]) => R>(f: Fn): (..
 // @public
 export function runOnMainThread<R, Fn extends (...args: any[]) => R>(fn: Fn): (...args: Parameters<Fn>) => Promise<R>;
 
+// @public
+export function startTransition(cb: () => void): void;
+
 export { Suspense }
 
 export { useCallback }
@@ -168,6 +171,9 @@ export { useRef }
 export { useState }
 
 export { useSyncExternalStore }
+
+// @public
+export function useTransition(): [false, typeof startTransition];
 
 // @public
 export function withInitDataInState<P, S>(App: ComponentClass<P, S>): ComponentClass<P, S>;
