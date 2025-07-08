@@ -153,9 +153,15 @@ export async function createLynxView(
     initI18nResources,
   });
 
-  const events: Parameters<AddEventPAPI>[] = [];
-  runtime.__AddEvent = (...args: Parameters<AddEventPAPI>) => {
-    events.push(args);
+  const events: [
+    number,
+    Parameters<AddEventPAPI>[1],
+    Parameters<AddEventPAPI>[2],
+    Parameters<AddEventPAPI>[3],
+  ][] = [];
+  runtime.__AddEvent = (element, eventType, eventName, newEventHandler) => {
+    const uniqueId = runtime.__GetElementUniqueID(element);
+    events.push([uniqueId, eventType, eventName, newEventHandler]);
   };
 
   const elementTemplates = {
