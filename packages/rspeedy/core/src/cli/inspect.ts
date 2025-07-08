@@ -3,7 +3,6 @@
 // LICENSE file in the root directory of this source tree.
 
 import { logger } from '@rsbuild/core'
-import type { RsbuildMode } from '@rsbuild/core'
 import type { Command } from 'commander'
 
 import type { CommonOptions } from './commands.js'
@@ -27,7 +26,7 @@ export async function inspect(
 
     await rspeedy.inspectConfig({
       mode: inspectOptions.mode
-        ?? process.env['NODE_ENV'] as RsbuildMode
+        ?? rspeedy.getRspeedyConfig().mode
         ?? 'development',
       verbose: inspectOptions.verbose ?? false,
       outputPath: inspectOptions.output!,

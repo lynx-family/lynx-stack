@@ -11,6 +11,7 @@ export function pluginSwc(): RsbuildPlugin {
     name: 'lynx:rsbuild:swc',
     setup(api) {
       api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
+        const isProd = config.mode === 'production'
         return mergeRsbuildConfig(config, {
           tools: {
             swc(config) {
@@ -19,7 +20,7 @@ export function pluginSwc(): RsbuildPlugin {
               config.jsc ??= {}
 
               // TODO(target): use configuration
-              config.jsc.target = getESVersionTarget()
+              config.jsc.target = getESVersionTarget(isProd)
             },
           },
         })
