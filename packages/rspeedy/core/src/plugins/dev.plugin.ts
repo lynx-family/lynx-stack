@@ -95,13 +95,17 @@ export function pluginDev(
 
         const searchParams = new URLSearchParams({
           hostname,
-          port: api.context.devServer?.port.toString() ?? '',
+          port: api.context.devServer?.port?.toString() ?? '',
           pathname: '/rsbuild-hmr',
           hot: (options?.hmr ?? true) ? 'true' : 'false',
           'live-reload': (options?.liveReload ?? true) ? 'true' : 'false',
           protocol: 'ws',
-          token: environment.webSocketToken,
         })
+
+        // Only add token if it's defined
+        if (environment.webSocketToken) {
+          searchParams.set('token', environment.webSocketToken)
+        }
 
         // dprint-ignore
         chain
