@@ -10,7 +10,7 @@ refactor: move exposure system to web-core
 
 **THIS IS A BREAKING CHANGE**
 
-**You'll need to upgrate your @lynx-js/web-elements to >= 0.8.0**
+**You'll need to upgrade your @lynx-js/web-elements to >= 0.8.0**
 
 For SSR and better performance, we moved the lynx's exposure system from web-element to web-core.
 
