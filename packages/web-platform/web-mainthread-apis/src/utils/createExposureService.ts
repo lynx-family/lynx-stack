@@ -36,7 +36,7 @@ export function createExposureService(
       onScreen.delete(exposureID);
     }
     if (!delayCallback) {
-      setInterval(() => {
+      setTimeout(() => {
         if (exposureCache.length > 0 || disexposureCache.length > 0) {
           const currentExposure = exposureCache;
           const currentDisexposure = disexposureCache;

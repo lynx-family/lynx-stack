@@ -96,7 +96,7 @@ export const callLepusMethodEndpoint = createRpcEndpoint<
 >('callLepusMethod', false, true);
 
 export const multiThreadExposureChangedEndpoint = createRpcEndpoint<
-  [number[]],
+  [string[]],
   void
 >('multiThreadExposureChangedEndpoint', false, false);
 
