@@ -24,6 +24,7 @@ export const {
   root,
   runOnBackground,
   runOnMainThread,
+  startTransition,
   useCallback,
   useContext,
   useDebugValue,
