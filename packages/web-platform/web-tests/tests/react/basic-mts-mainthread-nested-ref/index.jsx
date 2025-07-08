@@ -9,13 +9,18 @@ function Foo(props) {
   function setRef(element) {
     'main thread';
     mainThreadSetRef(element);
+
+    element?.setStyleProperties({
+      'background-color': 'rgb(0, 128, 0)',
+      'height': '200px',
+      'width': '200px',
+    });
   }
 
   return (
     <view
       main-thread:ref={setRef}
       id='target'
-      style={{ backgroundColor: 'rgb(0, 128, 0)' }}
     />
   );
 }
