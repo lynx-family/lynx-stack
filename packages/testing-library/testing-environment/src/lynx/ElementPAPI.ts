@@ -325,7 +325,6 @@ export const initElementTree = () => {
           parent.removeChild(ch);
           break;
         }
-        ch = ch.nextSibling;
       }
     }
 

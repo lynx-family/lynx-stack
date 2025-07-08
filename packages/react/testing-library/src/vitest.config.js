@@ -1,7 +1,7 @@
 import { defineConfig } from 'vitest/config';
 import { VitestPackageInstaller } from 'vitest/node';
 import path from 'path';
-import { fileURLToPath, pathToFileURL } from 'url';
+import { fileURLToPath } from 'url';
 import { createRequire } from 'module';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -47,8 +47,9 @@ export const createVitestConfig = async (options) => {
       const name = path.posix.join(pkgName, key);
       pkgAlias.push({
         find: new RegExp('^' + name + '$'),
-        // Use `import.meta.resolve` to ensure `import` field is resolve (instead of `require` field)
-        replacement: fileURLToPath(import.meta.resolve(name, pathToFileURL(resolveDir))),
+        replacement: require.resolve(name, {
+          paths: [resolveDir],
+        }),
       });
     });
     return pkgAlias;
