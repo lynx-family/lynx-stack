@@ -637,7 +637,9 @@ describe('spreadUpdate', () => {
     setSpread_(a);
 
     expect(() => render(<Comp />, scratch)).toThrowErrorMatchingInlineSnapshot(`
-      [Error: Circular reference detected in attribute.
+      [TypeError: Converting circular structure to JSON
+          --> starting at object with constructor 'Object'
+          --- property 'a' closes the circle
 
         in Bar
         in Comp

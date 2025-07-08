@@ -16,16 +16,16 @@ export function isDirectOrDeepEqual(a: any, b: any): boolean {
       return true;
     }
   } catch (error) {
-    if (__DEV__ && (error as Error).message.includes('circular')) {
+    if (__DEV__ && /circular|cyclic/i.test((error as Error).message)) {
+      // JavaScript engines give this different errors name and messages:
+      // PrimJS: "circular reference"
+      // JavaScriptCore: "JSON.stringify cannot serialize cyclic structures"
+      // V8: "Converting circular structure to JSON"
       const vnode = getCurrentVNode();
-      let errorMessage = 'Circular reference detected in attribute.';
       if (vnode) {
         const stack = getOwnerStack(vnode);
-        errorMessage += `\n\n${stack}`;
+        (error as Error).message += `\n\n${stack}`;
       }
-
-      throw new Error(errorMessage);
-      /* v8 ignore next 3 */
     }
     throw error;
   }
