@@ -19,6 +19,19 @@ export class XSwiperAutoScroll
     this.#dom = dom;
   }
 
+  #scrollToNext() {
+    const current = this.#dom.currentIndex;
+    const count = this.#dom.childElementCount;
+    if (current === count - 1) {
+      const circularPlay = this.#dom.circularPlay;
+      if (circularPlay) {
+        this.#dom.currentIndex = 0;
+      }
+    } else {
+      this.#dom.currentIndex += 1;
+    }
+  }
+
   @registerAttributeHandler('current', false)
   #handleCurrentChange(newVal: string | null) {
     const newval = Number(newVal);
@@ -30,7 +43,7 @@ export class XSwiperAutoScroll
   #autoPlayTimer?: ReturnType<typeof setInterval>;
 
   #autoPlayTick = (() => {
-    this.#dom.scrollToNext();
+    this.#scrollToNext();
   }).bind(this);
 
   #startAutoplay(interval: number) {

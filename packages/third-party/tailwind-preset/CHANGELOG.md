@@ -1,5 +1,11 @@
 # @lynx-js/tailwind-preset
 
+## 0.1.1
+
+### Patch Changes
+
+- Fix output not found when publishing. ([#1225](https://github.com/lynx-family/lynx-stack/pull/1225))
+
 ## 0.1.0
 
 ### Minor Changes

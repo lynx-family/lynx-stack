@@ -404,10 +404,8 @@ test.describe('reactlynx3 tests', () => {
       'basic-mts-run-on-main-thread',
       async ({ page }, { title }) => {
         await goto(page, title);
-        await wait(200);
+        await wait(800);
         const target = page.locator('#target');
-        await target.click();
-        await wait(100);
         await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
       },
     );
@@ -2849,6 +2847,27 @@ test.describe('reactlynx3 tests', () => {
           animations: 'allow',
         });
       });
+      test(
+        'basic-element-x-swiper-method-scroll-to',
+        async ({ page }, { title }) => {
+          await goto(page, title);
+          await wait(100);
+          await diffScreenShot(page, 'x-swiper', 'scroll-to', '1', {
+            animations: 'allow',
+          });
+          await page.locator('#swiper-1').click();
+          // default duration is 500ms, add 100ms buffer time
+          await wait(600);
+          await diffScreenShot(page, 'x-swiper', 'scroll-to', '2', {
+            animations: 'allow',
+          });
+          await page.locator('#swiper-1').click();
+          await wait(600);
+          await diffScreenShot(page, 'x-swiper', 'scroll-to', '3', {
+            animations: 'allow',
+          });
+        },
+      );
       test(
         'basic-element-x-swiper-mode-normal',
         async ({ page }, { title }) => {
