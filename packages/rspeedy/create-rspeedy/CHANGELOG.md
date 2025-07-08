@@ -1,11 +1,5 @@
 # create-rspeedy
 
-## 0.10.1
-
-### Patch Changes
-
-- Fix example missing color: `color: rgba(255, 255, 255, 0.65)`, because inheritance in Harmony is not support.
-
 ## 0.10.0
 
 ## 0.9.11
