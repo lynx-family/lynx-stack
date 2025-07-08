@@ -18,6 +18,7 @@ import {
   forwardRef,
   isValidElement,
   memo,
+  startTransition,
   useSyncExternalStore,
 } from 'preact/compat';
 
@@ -74,6 +75,7 @@ export default {
   forwardRef,
   Suspense,
   lazy,
+  startTransition,
   createElement,
 };
 
@@ -86,6 +88,7 @@ export {
   forwardRef,
   Suspense,
   lazy,
+  startTransition,
   createElement,
   cloneElement,
   useSyncExternalStore,
