@@ -18,14 +18,14 @@ export function isDirectOrDeepEqual(a: any, b: any): boolean {
   } catch (error) {
     if (__DEV__ && (error as Error).message.includes('circular')) {
       const vnode = getCurrentVNode();
-      let errorMessage = 'Cannot use circular reference as attribute.';
+      let errorMessage = 'Circular reference detected in attribute.';
       if (vnode) {
         const stack = getOwnerStack(vnode);
         errorMessage += `\n\n${stack}`;
       }
 
-      /* v8 ignore next 4  */
       throw new Error(errorMessage);
+      /* v8 ignore next 3 */
     }
     throw error;
   }

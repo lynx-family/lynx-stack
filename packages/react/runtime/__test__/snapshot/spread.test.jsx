@@ -637,7 +637,7 @@ describe('spreadUpdate', () => {
     setSpread_(a);
 
     expect(() => render(<Comp />, scratch)).toThrowErrorMatchingInlineSnapshot(`
-      [Error: Cannot use circular reference as attribute.
+      [Error: Circular reference detected in attribute.
 
         in Bar
         in Comp
