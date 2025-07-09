@@ -133,16 +133,16 @@ pub fn query_transform_rules<'a>(
   */
   else if name[name_start..name_end] == *FLEX_STR_U16 {
     // we will use the value as flex-basis, flex-grow, flex-shrink
-    let mut offset = value_start;
+    let mut current_offset = value_start;
     let mut val_fields = [value_end; 6]; // we will use 3 fields, but we will use 6 to avoid the need to check the length
     let mut ii = 0;
-    while offset < value_end && ii < val_fields.len() {
-      let code = value[offset];
+    while current_offset < value_end && ii < val_fields.len() {
+      let code = value[current_offset];
       if (ii % 2 == 0 && !is_white_space!(code)) || (ii % 2 == 1 && is_white_space!(code)) {
-        val_fields[ii] = offset;
+        val_fields[ii] = current_offset;
         ii += 1;
       }
-      offset += 1;
+      current_offset += 1;
     }
     let value_num: usize = (ii + 1) / 2; // we will have 3 values, but the last one is optional
     match value_num {
