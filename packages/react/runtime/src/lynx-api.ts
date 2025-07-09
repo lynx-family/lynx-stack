@@ -219,6 +219,82 @@ export interface InitData {}
 export { withInitDataInState };
 
 /**
+ * The data processors that registered with {@link Lynx.registerDataProcessors}.
+ *
+ * @example
+ *
+ * Extending `dataProcessors` interface
+ *
+ * ```ts
+ * import type { DataProcessors as WellKnownDataProcessors } from '@lynx-js/react';
+ *
+ * declare module '@lynx-js/react' {
+ *   interface DataProcessors extends WellKnownDataProcessors {
+ *     foo(bar: string): number;
+ *   }
+ * }
+ * ```
+ *
+ * Then you can use `lynx.registerDataProcessors` with types.
+ *
+ * ```js
+ * lynx.registerDataProcessors({
+ *   dataProcessors: {
+ *     foo(bar) {
+ *       return 1;
+ *     }
+ *   }
+ * })
+ * ```
+ *
+ * @public
+ */
+export interface DataProcessors {
+  /**
+   * Optional processor to override screen metrics used by the app
+   *
+   * @param metrics - The physical screen dimensions in pixels
+   *
+   * @returns New screen dimensions to be used by the app
+   *
+   * @example
+   *
+   * ```ts
+   * lynx.registerDataProcessors({
+   *   dataProcessors: {
+   *     getScreenMetricsOverride: (metrics) => {
+   *       // Force a specific aspect ratio
+   *       return {
+   *         width: metrics.width,
+   *         height: metrics.width * (16/9)
+   *       };
+   *     }
+   *   }
+   * });
+   * ```
+   */
+  getScreenMetricsOverride?(metrics: {
+    /**
+     * The physical pixel width of the screen
+     */
+    width: number;
+    /**
+     * The physical pixel height of the screen
+     */
+    height: number;
+  }): { width: number; height: number };
+
+  /**
+   * Custom unknown data processors.
+   *
+   * @remarks
+   *
+   * You may extends the `DataProcessors` interface for better TypeScript types. See {@link DataProcessors}.
+   */
+  [processorName: string]: (...args: any[]) => any;
+}
+
+/**
  * Definition of DataProcessor(s)
  * @public
  */
@@ -238,7 +314,7 @@ export interface DataProcessorDefinition {
    *
    * @public
    */
-  dataProcessors?: Record<string, ((rawInitData: InitDataRaw) => InitData)>;
+  dataProcessors?: DataProcessors;
 }
 
 /**

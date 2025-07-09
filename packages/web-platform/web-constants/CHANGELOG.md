@@ -1,5 +1,29 @@
 # @lynx-js/web-constants
 
+## 0.14.2
+
+### Patch Changes
+
+- feat: merge multiple markTiming RPC communication events together and send them together, which can effectively reduce the number of RPC communications. ([#1178](https://github.com/lynx-family/lynx-stack/pull/1178))
+
+- chore: extract shared logic from web-core and web-core-server's loadTemplate into a unified generateTemplate function ([#1211](https://github.com/lynx-family/lynx-stack/pull/1211))
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.14.2
+
+## 0.14.1
+
+### Patch Changes
+
+- feat: support BTS API `lynx.reportError` && `__SetSourceMapRelease`, now you can use it and handle it in lynx-view error event. ([#1059](https://github.com/lynx-family/lynx-stack/pull/1059))
+
+- fix: in lynx-view all-on-ui mode, the input event of input and textarea is triggered twice, and the first e.detail is a string, which does not conform to the expected data format. ([#1179](https://github.com/lynx-family/lynx-stack/pull/1179))
+
+- fix: under the all-on-ui strategy, reload() will add two page elements. ([#1147](https://github.com/lynx-family/lynx-stack/pull/1147))
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.14.1
+
 ## 0.14.0
 
 ### Patch Changes

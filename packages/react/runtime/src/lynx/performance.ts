@@ -8,24 +8,24 @@ import { __globalSnapshotPatch } from '../lifecycle/patch/snapshotPatch.js';
 import { DIFF } from '../renderToOpcodes/constants.js';
 import { isSdkVersionGt } from '../utils.js';
 
-enum PerformanceTimingKeys {
-  updateSetStateTrigger,
-  updateDiffVdomStart,
-  updateDiffVdomEnd,
+const PerformanceTimingKeys = [
+  'updateSetStateTrigger',
+  'updateDiffVdomStart',
+  'updateDiffVdomEnd',
   // updateSetStateTrigger, updateDiffVdomStart and updateDiffVdomEnd is deprecated
-  diffVdomStart,
-  diffVdomEnd,
-  packChangesStart,
-  packChangesEnd,
-  parseChangesStart,
-  parseChangesEnd,
-  patchChangesStart,
-  patchChangesEnd,
-  hydrateParseSnapshotStart,
-  hydrateParseSnapshotEnd,
-  mtsRenderStart,
-  mtsRenderEnd,
-}
+  'diffVdomStart',
+  'diffVdomEnd',
+  'packChangesStart',
+  'packChangesEnd',
+  'parseChangesStart',
+  'parseChangesEnd',
+  'patchChangesStart',
+  'patchChangesEnd',
+  'hydrateParseSnapshotStart',
+  'hydrateParseSnapshotEnd',
+  'mtsRenderStart',
+  'mtsRenderEnd',
+] as const;
 
 const PerformanceTimingFlags = {
   reactLynxHydrate: 'react_lynx_hydrate',
@@ -51,15 +51,15 @@ let globalPipelineOptions: PipelineOptions | undefined;
 /**
  * @deprecated used by old timing api(setState timing flag)
  */
-function markTimingLegacy(key: PerformanceTimingKeys, timingFlag_?: string): void {
+function markTimingLegacy(key: typeof PerformanceTimingKeys[number], timingFlag_?: string): void {
   switch (key) {
-    case PerformanceTimingKeys.updateSetStateTrigger: {
+    case 'updateSetStateTrigger': {
       shouldMarkDiffVdomStart = true;
       shouldMarkDiffVdomEnd = true;
       timingFlag = timingFlag_;
       break;
     }
-    case PerformanceTimingKeys.updateDiffVdomStart: {
+    case 'updateDiffVdomStart': {
       /* v8 ignore start */
       if (!shouldMarkDiffVdomStart) {
         return;
@@ -68,7 +68,7 @@ function markTimingLegacy(key: PerformanceTimingKeys, timingFlag_?: string): voi
       shouldMarkDiffVdomStart = false;
       break;
     }
-    case PerformanceTimingKeys.updateDiffVdomEnd: {
+    case 'updateDiffVdomEnd': {
       if (!shouldMarkDiffVdomEnd) {
         return;
       }
@@ -76,7 +76,7 @@ function markTimingLegacy(key: PerformanceTimingKeys, timingFlag_?: string): voi
       break;
     }
   }
-  lynx.getNativeApp().markTiming?.(timingFlag!, PerformanceTimingKeys[key]);
+  lynx.getNativeApp().markTiming?.(timingFlag!, key);
 }
 
 function beginPipeline(needTimestamps: boolean, pipelineOrigin: PipelineOrigin, timingFlag?: string): void {
@@ -109,9 +109,9 @@ function setPipeline(pipeline: PipelineOptions | undefined): void {
   globalPipelineOptions = pipeline;
 }
 
-function markTiming(timestampKey: PerformanceTimingKeys, force?: boolean): void {
+function markTiming(timestampKey: typeof PerformanceTimingKeys[number], force?: boolean): void {
   if (globalPipelineOptions && (force || globalPipelineOptions.needTimestamps)) {
-    lynx.performance?._markTiming?.(globalPipelineOptions.pipelineID, PerformanceTimingKeys[timestampKey]);
+    lynx.performance?._markTiming?.(globalPipelineOptions.pipelineID, timestampKey);
   }
 }
 
@@ -122,10 +122,10 @@ function initTimingAPI(): void {
     if (__JS__ && __globalSnapshotPatch) {
       if (!globalPipelineOptions) {
         beginPipeline(false, PipelineOrigins.updateTriggeredByBts);
-        markTiming(PerformanceTimingKeys.diffVdomStart, true);
+        markTiming('diffVdomStart', true);
       }
       if (shouldMarkDiffVdomStart) {
-        markTimingLegacy(PerformanceTimingKeys.updateDiffVdomStart);
+        markTimingLegacy('updateDiffVdomStart');
       }
     }
     oldDiff?.(vnode);
@@ -136,7 +136,6 @@ function initTimingAPI(): void {
  * @internal
  */
 export {
-  PerformanceTimingKeys,
   PerformanceTimingFlags,
   PipelineOrigins,
   PerfSpecificKey,

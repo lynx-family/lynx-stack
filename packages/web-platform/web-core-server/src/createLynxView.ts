@@ -125,6 +125,9 @@ export async function createLynxView(
       // mark timing
     },
     () => {
+      // flush mark timing
+    },
+    () => {
       // report error
     },
     () => {

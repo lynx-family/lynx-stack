@@ -1,5 +1,27 @@
 # @lynx-js/web-worker-runtime
 
+## 0.14.2
+
+### Patch Changes
+
+- feat: merge multiple markTiming RPC communication events together and send them together, which can effectively reduce the number of RPC communications. ([#1178](https://github.com/lynx-family/lynx-stack/pull/1178))
+
+- Updated dependencies [[`e44b146`](https://github.com/lynx-family/lynx-stack/commit/e44b146b1bc2b58c0347af7fb4e4157688e07e36), [`5a9b38b`](https://github.com/lynx-family/lynx-stack/commit/5a9b38b783e611aa9761c4cd52191172270c09c7), [`6ca5b91`](https://github.com/lynx-family/lynx-stack/commit/6ca5b9106aade393dfac88914b160960a61a82f2)]:
+  - @lynx-js/web-mainthread-apis@0.14.2
+  - @lynx-js/web-constants@0.14.2
+  - @lynx-js/web-worker-rpc@0.14.2
+
+## 0.14.1
+
+### Patch Changes
+
+- feat: support BTS API `lynx.reportError` && `__SetSourceMapRelease`, now you can use it and handle it in lynx-view error event. ([#1059](https://github.com/lynx-family/lynx-stack/pull/1059))
+
+- Updated dependencies [[`a64333e`](https://github.com/lynx-family/lynx-stack/commit/a64333ef28228d6b90c32e027f67bef8acbd8432), [`7751375`](https://github.com/lynx-family/lynx-stack/commit/775137521782ca5445f22029c39163c0a63bbfa5), [`b52a924`](https://github.com/lynx-family/lynx-stack/commit/b52a924a2375cb6f7ebafdd8abfbab0254eb2330)]:
+  - @lynx-js/web-constants@0.14.1
+  - @lynx-js/web-mainthread-apis@0.14.1
+  - @lynx-js/web-worker-rpc@0.14.1
+
 ## 0.14.0
 
 ### Patch Changes

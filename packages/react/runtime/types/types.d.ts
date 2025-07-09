@@ -156,6 +156,7 @@ declare global {
     elementIDs?: number[];
     operationIDs?: any[];
     asyncFlush?: boolean;
+    triggerDataUpdated?: boolean;
   }
 
   declare interface UpdatePageOption {
@@ -164,6 +165,7 @@ declare global {
     reloadFromJS?: boolean;
     resetPageData?: boolean;
     pipelineOptions?: PipelineOptions;
+    triggerDataUpdated?: boolean;
   }
 
   declare interface LynxCallByNative {

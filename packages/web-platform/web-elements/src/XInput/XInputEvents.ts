@@ -30,7 +30,7 @@ export class XInputEvents
   );
 
   @registerAttributeHandler('input-filter', true)
-  @registerEventEnableStatusChangeHandler('input')
+  @registerEventEnableStatusChangeHandler('lynxinput')
   #handleEnableInputEvent(status: boolean | string | null) {
     const input = this.#getInputElement();
     if (status) {
@@ -83,7 +83,7 @@ export class XInputEvents
     input.value = filterValue;
     if (isComposing && !this.#sendComposingInput) return;
     this.#dom.dispatchEvent(
-      new CustomEvent('input', {
+      new CustomEvent('lynxinput', {
         ...commonComponentEventSetting,
         detail: {
           value: filterValue,
@@ -109,7 +109,7 @@ export class XInputEvents
     // if #sendComposingInput set true, #teleportInput will send detail
     if (!this.#sendComposingInput) {
       this.#dom.dispatchEvent(
-        new CustomEvent('input', {
+        new CustomEvent('lynxinput', {
           ...commonComponentEventSetting,
           detail: {
             value: filterValue,

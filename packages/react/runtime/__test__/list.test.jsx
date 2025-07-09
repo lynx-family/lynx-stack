@@ -1,9 +1,12 @@
+/** @jsxImportSource ../lepus */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { elementTree, nativeMethodQueue } from './utils/nativeMethod';
 import { hydrate } from '../src/hydrate';
 import { __pendingListUpdates } from '../src/pendingListUpdates';
 import { SnapshotInstance, snapshotInstanceManager } from '../src/snapshot';
+import { __root } from '../src/root';
+import { globalEnvManager } from './utils/envManager';
 
 const HOLE = null;
 
@@ -344,8 +347,8 @@ describe(`list "update-list-info"`, () => {
     b.insertBefore(d3);
     __pendingListUpdates.clear();
 
-    d1.setAttribute('__0', { 'item-key': 1 });
-    d3.setAttribute('__0', { 'item-key': 3 });
+    d1.setAttribute(0, { 'item-key': 1 });
+    d3.setAttribute(0, { 'item-key': 3 });
     expect(__pendingListUpdates.values).toMatchInlineSnapshot(`
       {
         "-1": [
@@ -414,9 +417,9 @@ describe(`list componentAtIndex`, () => {
 
     // only call componentAtIndx after flush
     __pendingListUpdates.flush();
-    expect(elementTree.triggerComponentAtIndex(listRef, 0)).toMatchInlineSnapshot(`46`);
-    expect(elementTree.triggerComponentAtIndex(listRef, 1)).toMatchInlineSnapshot(`49`);
-    expect(elementTree.triggerComponentAtIndex(listRef, 2)).toMatchInlineSnapshot(`52`);
+    expect(elementTree.triggerComponentAtIndex(listRef, 0)).toMatchInlineSnapshot(`4`);
+    expect(elementTree.triggerComponentAtIndex(listRef, 1)).toMatchInlineSnapshot(`7`);
+    expect(elementTree.triggerComponentAtIndex(listRef, 2)).toMatchInlineSnapshot(`10`);
   });
 
   it('remove list si', () => {
@@ -429,6 +432,14 @@ describe(`list componentAtIndex`, () => {
     expect(() => {
       elementTree.triggerComponentAtIndex(listRef, 0);
     }).toThrowErrorMatchingInlineSnapshot(`[Error: childCtx not found]`);
+
+    const d1 = new SnapshotInstance(s3);
+    const d2 = new SnapshotInstance(s3);
+    const d3 = new SnapshotInstance(s3);
+    b.insertBefore(d1);
+    b.insertBefore(d2);
+    b.insertBefore(d3);
+    __pendingListUpdates.flush();
 
     a.removeChild(b);
     expect(() => {
@@ -998,8 +1009,8 @@ describe(`list componentAtIndex`, () => {
               </text>
             </list-item>,
             {
-              "elementID": 136,
-              "listID": 108,
+              "elementID": 31,
+              "listID": 3,
               "operationID": undefined,
               "triggerLayout": true,
             },
@@ -1109,8 +1120,8 @@ describe(`list componentAtIndex`, () => {
 
     // only call componentAtIndx after flush
     __pendingListUpdates.flush();
-    expect(elementTree.triggerComponentAtIndex(listRef, 0)).toMatchInlineSnapshot(`159`);
-    expect(elementTree.triggerComponentAtIndex(listRef, 0)).toMatchInlineSnapshot(`162`); // should return a new uiSign
+    expect(elementTree.triggerComponentAtIndex(listRef, 0)).toMatchInlineSnapshot(`4`);
+    expect(elementTree.triggerComponentAtIndex(listRef, 0)).toMatchInlineSnapshot(`7`); // should return a new uiSign
   });
 
   it('should handle continuous componentAtIndex on same index - self reuse', () => {
@@ -1139,9 +1150,9 @@ describe(`list componentAtIndex`, () => {
     // only call componentAtIndx after flush
     __pendingListUpdates.flush();
     let uiSign;
-    expect(uiSign = elementTree.triggerComponentAtIndex(listRef, 0)).toMatchInlineSnapshot(`169`);
+    expect(uiSign = elementTree.triggerComponentAtIndex(listRef, 0)).toMatchInlineSnapshot(`4`);
     elementTree.triggerEnqueueComponent(listRef, uiSign);
-    expect(elementTree.triggerComponentAtIndex(listRef, 0)).toMatchInlineSnapshot(`169`); // should reuse self
+    expect(elementTree.triggerComponentAtIndex(listRef, 0)).toMatchInlineSnapshot(`4`); // should reuse self
   });
 
   it('should handle componentAtIndex when `enableReuseNotification` is true', () => {
@@ -1204,27 +1215,27 @@ describe(`list componentAtIndex`, () => {
     expect(fn.mock.calls).toMatchInlineSnapshot(`
       [
         [
-          176,
+          4,
           undefined,
         ],
         [
-          179,
+          7,
           undefined,
         ],
         [
-          182,
+          10,
           undefined,
         ],
         [
-          185,
+          13,
           undefined,
         ],
         [
-          176,
+          4,
           "4",
         ],
         [
-          179,
+          7,
           "5",
         ],
       ]
@@ -2219,11 +2230,11 @@ describe('list componentAtIndexes', () => {
         [
           {
             "elementIDs": [
-              243,
-              246,
-              249,
+              4,
+              7,
+              10,
             ],
-            "listID": 242,
+            "listID": 3,
             "operationIDs": [
               0,
               1,
@@ -2234,6 +2245,16 @@ describe('list componentAtIndexes', () => {
         ],
       ]
     `);
+
+    {
+      const cellIndexes = [3];
+      const operationIDs = [3];
+      const enableReuseNotification = false;
+      const asyncFlush = true;
+      expect(() => {
+        elementTree.triggerComponentAtIndexes(listRef, cellIndexes, operationIDs, enableReuseNotification, asyncFlush);
+      }).toThrowErrorMatchingInlineSnapshot(`[Error: childCtx not found]`);
+    }
   });
 
   it('basic componentAtIndexes with no async flush', () => {
@@ -2262,7 +2283,7 @@ describe('list componentAtIndexes', () => {
       const cellIndexes = [0, 1, 2];
       const enableReuseNotification = false;
       const asyncFlush = false;
-      elementTree.triggerComponentAtIndexes(listRef, cellIndexes, [], enableReuseNotification, asyncFlush);
+      elementTree.triggerComponentAtIndexes(listRef, cellIndexes, [11, 22, 33], enableReuseNotification, asyncFlush);
     }
 
     globalThis.__FlushElementTree = __original;
@@ -2271,12 +2292,16 @@ describe('list componentAtIndexes', () => {
         [
           {
             "elementIDs": [
-              256,
-              259,
-              262,
+              4,
+              7,
+              10,
             ],
-            "listID": 255,
-            "operationIDs": [],
+            "listID": 3,
+            "operationIDs": [
+              11,
+              22,
+              33,
+            ],
             "triggerLayout": true,
           },
         ],
@@ -2369,11 +2394,11 @@ describe('list componentAtIndexes', () => {
         [
           {
             "elementIDs": [
-              269,
-              272,
-              275,
+              4,
+              7,
+              10,
             ],
-            "listID": 268,
+            "listID": 3,
             "operationIDs": [
               3,
               4,
@@ -2446,11 +2471,11 @@ describe('list componentAtIndexes', () => {
         [
           {
             "elementIDs": [
-              282,
-              285,
-              288,
+              4,
+              7,
+              10,
             ],
-            "listID": 281,
+            "listID": 3,
             "operationIDs": [
               0,
               1,
@@ -2461,5 +2486,505 @@ describe('list componentAtIndexes', () => {
         ],
       ]
     `);
+  });
+});
+
+describe('list-item with "defer" attribute', () => {
+  beforeEach(() => {
+    globalEnvManager.resetEnv();
+    globalThis.__TESTING_FORCE_RENDER_TO_OPCODE__ = true;
+    elementTree.clear();
+    vi.useFakeTimers();
+  });
+
+  it('basic deferred <list-item/>', async () => {
+    const _F1 = vi.fn();
+
+    const jsx = (
+      <list id='list' custom-list-name='list-container'>
+        <list-item item-key='1' defer>
+          <_F1 />
+        </list-item>
+      </list>
+    );
+    const child = __SNAPSHOT__(<text>Hello World</text>);
+
+    __root.__jsx = jsx;
+
+    renderPage();
+
+    expect(_F1).toBeCalledTimes(0);
+    expect(__root.__element_root).toMatchInlineSnapshot(`
+      <page
+        cssId="default-entry-from-native:0"
+      >
+        <list
+          custom-list-name="list-container"
+          id="list"
+          update-list-info={
+            [
+              {
+                "insertAction": [
+                  {
+                    "item-key": "1",
+                    "position": 0,
+                    "type": "__Card__:__snapshot_a94a8_test_50",
+                  },
+                ],
+                "removeAction": [],
+                "updateAction": [],
+              },
+            ]
+          }
+        />
+      </page>
+    `);
+
+    __pendingListUpdates.flush();
+
+    const listRef = elementTree.getElementById('list');
+    elementTree.triggerComponentAtIndex(listRef, 0);
+
+    const p = __root.__firstChild.__firstChild.__extraProps['isReady'];
+    __root.__firstChild.__firstChild.__extraProps['isReady'] = 1;
+    __root.__firstChild.__firstChild.insertBefore(new SnapshotInstance(child));
+    const uiSign = await p;
+
+    expect(uiSign).toBeTypeOf('number');
+    expect(__root.__element_root).toMatchInlineSnapshot(`
+      <page
+        cssId="default-entry-from-native:0"
+      >
+        <list
+          custom-list-name="list-container"
+          id="list"
+          update-list-info={
+            [
+              {
+                "insertAction": [
+                  {
+                    "item-key": "1",
+                    "position": 0,
+                    "type": "__Card__:__snapshot_a94a8_test_50",
+                  },
+                ],
+                "removeAction": [],
+                "updateAction": [],
+              },
+            ]
+          }
+        >
+          <list-item
+            item-key="1"
+          >
+            <text>
+              <raw-text
+                text="Hello World"
+              />
+            </text>
+          </list-item>
+        </list>
+      </page>
+    `);
+  });
+
+  it('basic deferred <list-item/> - componentAtIndex continuously should throw', async () => {
+    const _F1 = vi.fn();
+
+    const jsx = (
+      <list id='list' custom-list-name='list-container'>
+        <list-item item-key='1' defer>
+          <_F1 />
+        </list-item>
+      </list>
+    );
+    __root.__jsx = jsx;
+
+    renderPage();
+    __pendingListUpdates.flush();
+
+    const listRef = elementTree.getElementById('list');
+    elementTree.triggerComponentAtIndex(listRef, 0, 11);
+    expect(() => elementTree.triggerComponentAtIndex(listRef, 0, 22)).toThrowErrorMatchingInlineSnapshot(
+      `[Error: componentAtIndex was called on a pending deferred list item]`,
+    );
+  });
+
+  it('basic deferred <list-item/> - componentAtIndexes', async () => {
+    const _F1 = vi.fn();
+
+    const jsx = (
+      <list id='list' custom-list-name='list-container'>
+        <list-item item-key='0'>
+          <_F1 />
+        </list-item>
+        <list-item item-key='1' defer>
+          <_F1 />
+        </list-item>
+        <list-item item-key='2' defer>
+          <_F1 />
+        </list-item>
+      </list>
+    );
+    __root.__jsx = jsx;
+
+    renderPage();
+    __pendingListUpdates.flush();
+
+    const listRef = elementTree.getElementById('list');
+    const __FlushElementTree = vi.fn();
+    vi.stubGlobal('__FlushElementTree', __FlushElementTree);
+    elementTree.triggerComponentAtIndexes(listRef, [0, 1, 2], [11, 22, 33], false, true);
+
+    // a list-item which is not deferred should trigger two flush
+    expect(__FlushElementTree.mock.calls).toMatchInlineSnapshot(`
+      [
+        [
+          <list-item
+            item-key="0"
+          />,
+          {
+            "asyncFlush": true,
+          },
+        ],
+        [
+          <list
+            custom-list-name="list-container"
+            id="list"
+            update-list-info={
+              [
+                {
+                  "insertAction": [
+                    {
+                      "item-key": "0",
+                      "position": 0,
+                      "type": "__Card__:__snapshot_a94a8_test_55",
+                    },
+                    {
+                      "item-key": "1",
+                      "position": 1,
+                      "type": "__Card__:__snapshot_a94a8_test_56",
+                    },
+                    {
+                      "item-key": "2",
+                      "position": 2,
+                      "type": "__Card__:__snapshot_a94a8_test_57",
+                    },
+                  ],
+                  "removeAction": [],
+                  "updateAction": [],
+                },
+              ]
+            }
+          >
+            <list-item
+              item-key="0"
+            />
+          </list>,
+          {
+            "elementIDs": [
+              2,
+              -1,
+              -1,
+            ],
+            "listID": 1,
+            "operationIDs": [
+              11,
+              22,
+              33,
+            ],
+            "triggerLayout": true,
+          },
+        ],
+      ]
+    `);
+    __FlushElementTree.mockClear();
+
+    const ps = __root.__firstChild.childNodes.map(c => c.__extraProps?.['isReady']);
+
+    __root.__firstChild.childNodes[1].__extraProps['isReady'] = 1;
+    __root.__firstChild.childNodes[2].__extraProps['isReady'] = 1;
+
+    await Promise.all(ps);
+    expect(__FlushElementTree.mock.calls).toMatchInlineSnapshot(`
+      [
+        [
+          <list-item
+            item-key="1"
+          />,
+          {
+            "elementID": 3,
+            "listID": 1,
+            "operationID": 22,
+            "triggerLayout": true,
+          },
+        ],
+        [
+          <list-item
+            item-key="2"
+          />,
+          {
+            "elementID": 4,
+            "listID": 1,
+            "operationID": 33,
+            "triggerLayout": true,
+          },
+        ],
+        [
+          <list
+            custom-list-name="list-container"
+            id="list"
+            update-list-info={
+              [
+                {
+                  "insertAction": [
+                    {
+                      "item-key": "0",
+                      "position": 0,
+                      "type": "__Card__:__snapshot_a94a8_test_55",
+                    },
+                    {
+                      "item-key": "1",
+                      "position": 1,
+                      "type": "__Card__:__snapshot_a94a8_test_56",
+                    },
+                    {
+                      "item-key": "2",
+                      "position": 2,
+                      "type": "__Card__:__snapshot_a94a8_test_57",
+                    },
+                  ],
+                  "removeAction": [],
+                  "updateAction": [],
+                },
+              ]
+            }
+          >
+            <list-item
+              item-key="0"
+            />
+            <list-item
+              item-key="1"
+            />
+            <list-item
+              item-key="2"
+            />
+          </list>,
+          {
+            "elementIDs": [
+              2,
+              3,
+              4,
+            ],
+            "listID": 1,
+            "operationIDs": [
+              11,
+              22,
+              33,
+            ],
+            "triggerLayout": true,
+          },
+        ],
+      ]
+    `);
+  });
+
+  it('basic deferred <list-item/> - should unmount when reused', async () => {
+    const _F1 = vi.fn();
+
+    const child = __SNAPSHOT__(<text>Hello World</text>);
+    const jsx = (
+      <list id='list' custom-list-name='list-container'>
+        {[0, 1, 2].map((v) => (
+          <list-item item-key={`${v}`} defer>
+            <_F1 />
+          </list-item>
+        ))}
+      </list>
+    );
+
+    __root.__jsx = jsx;
+
+    renderPage();
+
+    expect(_F1).toBeCalledTimes(0);
+    expect(__root.__element_root).toMatchInlineSnapshot(`
+      <page
+        cssId="default-entry-from-native:0"
+      >
+        <list
+          custom-list-name="list-container"
+          id="list"
+          update-list-info={
+            [
+              {
+                "insertAction": [
+                  {
+                    "item-key": "0",
+                    "position": 0,
+                    "type": "__Card__:__snapshot_a94a8_test_60",
+                  },
+                  {
+                    "item-key": "1",
+                    "position": 1,
+                    "type": "__Card__:__snapshot_a94a8_test_60",
+                  },
+                  {
+                    "item-key": "2",
+                    "position": 2,
+                    "type": "__Card__:__snapshot_a94a8_test_60",
+                  },
+                ],
+                "removeAction": [],
+                "updateAction": [],
+              },
+            ]
+          }
+        />
+      </page>
+    `);
+
+    __pendingListUpdates.flush();
+
+    const listRef = elementTree.getElementById('list');
+    elementTree.triggerComponentAtIndex(listRef, 0);
+
+    const p = __root.__firstChild.__firstChild.__extraProps['isReady'];
+    __root.__firstChild.__firstChild.__extraProps['isReady'] = 1;
+    __root.__firstChild.__firstChild.insertBefore(new SnapshotInstance(child));
+    const uiSign = await p;
+
+    expect(uiSign).toBeTypeOf('number');
+    expect(__root.__element_root).toMatchInlineSnapshot(`
+      <page
+        cssId="default-entry-from-native:0"
+      >
+        <list
+          custom-list-name="list-container"
+          id="list"
+          update-list-info={
+            [
+              {
+                "insertAction": [
+                  {
+                    "item-key": "0",
+                    "position": 0,
+                    "type": "__Card__:__snapshot_a94a8_test_60",
+                  },
+                  {
+                    "item-key": "1",
+                    "position": 1,
+                    "type": "__Card__:__snapshot_a94a8_test_60",
+                  },
+                  {
+                    "item-key": "2",
+                    "position": 2,
+                    "type": "__Card__:__snapshot_a94a8_test_60",
+                  },
+                ],
+                "removeAction": [],
+                "updateAction": [],
+              },
+            ]
+          }
+        >
+          <list-item
+            item-key="0"
+          >
+            <text>
+              <raw-text
+                text="Hello World"
+              />
+            </text>
+          </list-item>
+        </list>
+      </page>
+    `);
+
+    elementTree.triggerEnqueueComponent(listRef, uiSign);
+
+    {
+      elementTree.triggerComponentAtIndex(listRef, 1);
+      const item = __root.__firstChild.__firstChild.__nextSibling;
+      const p = item.__extraProps['isReady'];
+      item.__extraProps['isReady'] = 1;
+      item.insertBefore(new SnapshotInstance(child));
+      const uiSign2 = await p;
+
+      expect(uiSign2).toBeTypeOf('number');
+      expect(uiSign2).toBe(uiSign);
+      expect(__root.__element_root).toMatchInlineSnapshot(`
+        <page
+          cssId="default-entry-from-native:0"
+        >
+          <list
+            custom-list-name="list-container"
+            id="list"
+            update-list-info={
+              [
+                {
+                  "insertAction": [
+                    {
+                      "item-key": "0",
+                      "position": 0,
+                      "type": "__Card__:__snapshot_a94a8_test_60",
+                    },
+                    {
+                      "item-key": "1",
+                      "position": 1,
+                      "type": "__Card__:__snapshot_a94a8_test_60",
+                    },
+                    {
+                      "item-key": "2",
+                      "position": 2,
+                      "type": "__Card__:__snapshot_a94a8_test_60",
+                    },
+                  ],
+                  "removeAction": [],
+                  "updateAction": [],
+                },
+              ]
+            }
+          >
+            <list-item
+              item-key="1"
+            >
+              <text>
+                <raw-text
+                  text="Hello World"
+                />
+              </text>
+            </list-item>
+          </list>
+        </page>
+      `);
+    }
+  });
+
+  it('should throw without custom-list-name="list-container"', async () => {
+    const _F1 = vi.fn();
+
+    const jsx = (
+      <list id='list'>
+        {[0, 1, 2].map((v) => (
+          <list-item item-key={`${v}`} defer>
+            <_F1 />
+          </list-item>
+        ))}
+      </list>
+    );
+
+    __root.__jsx = jsx;
+
+    renderPage();
+
+    expect(_F1).toBeCalledTimes(0);
+
+    __pendingListUpdates.flush();
+
+    const listRef = elementTree.getElementById('list');
+    expect(() => elementTree.triggerComponentAtIndex(listRef, 0)).toThrowErrorMatchingInlineSnapshot(
+      `[Error: Unsupported: \`<list-item/>\` with \`defer={true}\` must be used with \`<list custom-list-name="list-container"/>\`]`,
+    );
   });
 });

@@ -11,7 +11,7 @@ import type { Cloneable, CloneableObject } from './types/Cloneable.js';
 import type { StartMainThreadContextConfig } from './types/MainThreadStartConfigs.js';
 import type { IdentifierType, InvokeCallbackRes } from './types/NativeApp.js';
 import type { ElementAnimationOptions } from './types/Element.js';
-import type { BackMainThreadContextConfig } from './types/index.js';
+import type { BackMainThreadContextConfig, MarkTiming } from './types/index.js';
 
 export const postExposureEndpoint = createRpcEndpoint<
   [{ exposures: ExposureWorkerEvent[]; disExposures: ExposureWorkerEvent[] }],
@@ -135,11 +135,7 @@ export const getCustomSectionsEndpoint = createRpcEndpoint<
 >('getCustomSections', false, true);
 
 export const markTimingEndpoint = createRpcEndpoint<
-  [
-    timingKey: string,
-    pipelineId: string | undefined,
-    timeStamp: number,
-  ],
+  [MarkTiming[]],
   void
 >('markTiming', false, false);
 

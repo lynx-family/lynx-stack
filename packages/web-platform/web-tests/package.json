@@ -36,6 +36,7 @@
     "@lynx-js/web-elements-compat": "workspace:*",
     "@lynx-js/web-elements-reactive": "workspace:*",
     "@lynx-js/web-mainthread-apis": "workspace:*",
+    "@lynx-js/web-platform-rsbuild-plugin": "workspace:*",
     "@lynx-js/web-worker-rpc": "workspace:*",
     "@lynx-js/webpack-dev-transport": "workspace:*",
     "@playwright/test": "^1.50.1",

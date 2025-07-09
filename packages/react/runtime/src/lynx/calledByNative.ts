@@ -12,7 +12,7 @@ import { __root, setRoot } from '../root.js';
 import { applyRefQueue } from '../snapshot/workletRef.js';
 import { SnapshotInstance, __page, setupPage } from '../snapshot.js';
 import { isEmptyObject } from '../utils.js';
-import { PerformanceTimingKeys, markTiming, setPipeline } from './performance.js';
+import { markTiming, setPipeline } from './performance.js';
 
 function ssrEncode() {
   const { __opcodes } = __root;
@@ -116,13 +116,14 @@ function updatePage(data: Record<string, unknown> | undefined, options?: UpdateP
     Object.assign(lynx.__initData, data);
   }
 
+  const flushOptions = options ?? {};
   if (!isJSReady) {
     const oldRoot = __root;
     setRoot(new SnapshotInstance('root'));
     __root.__jsx = oldRoot.__jsx;
 
     setPipeline(options?.pipelineOptions);
-    markTiming(PerformanceTimingKeys.updateDiffVdomStart);
+    markTiming('updateDiffVdomStart');
     {
       __pendingListUpdates.clear();
       renderMainThread();
@@ -138,14 +139,11 @@ function updatePage(data: Record<string, unknown> | undefined, options?: UpdateP
       __pendingListUpdates.flush();
       applyRefQueue();
     }
-    markTiming(PerformanceTimingKeys.updateDiffVdomEnd);
+    flushOptions.triggerDataUpdated = true;
+    markTiming('updateDiffVdomEnd');
   }
 
-  if (options) {
-    __FlushElementTree(__page, options);
-  } else {
-    __FlushElementTree();
-  }
+  __FlushElementTree(__page, flushOptions);
 }
 
 function updateGlobalProps(_data: any, options?: UpdatePageOption): void {

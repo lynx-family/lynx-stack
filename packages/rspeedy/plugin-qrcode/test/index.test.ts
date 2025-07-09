@@ -504,7 +504,7 @@ async function usingDevServer(rsbuild: RsbuildInstance) {
       await vi.waitUntil(() => done, { timeout: timeout ?? 5000 })
     },
     async waitDevCompileSuccess(timeout?: number) {
-      await vi.waitUntil(() => !hasErrors, { timeout: timeout ?? 1000 })
+      await vi.waitUntil(() => !hasErrors, { timeout: timeout ?? 5000 })
     },
     hasErrors,
     async [Symbol.asyncDispose]() {

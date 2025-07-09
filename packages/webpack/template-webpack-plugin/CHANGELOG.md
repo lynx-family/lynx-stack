@@ -1,5 +1,53 @@
 # @lynx-js/template-webpack-plugin
 
+## 0.8.1
+
+### Patch Changes
+
+- feat: `::placeholder` will be compiled to `part(input)::placeholder`, which means you can use pseudo-element CSS to add placeholder styles to input and textarea. ([#1158](https://github.com/lynx-family/lynx-stack/pull/1158))
+
+  ```
+  // before
+  <input placeholder-color='red' placeholder-font-weight='bold' placeholder-font-size='20px'>
+
+  // after
+  <input>
+
+  input::placeholder {
+    color: red;
+    font-weight: bold;
+    font-size: 20px;
+  }
+  ```
+
+- Enable fine-grained control for `output.inlineScripts` ([#883](https://github.com/lynx-family/lynx-stack/pull/883))
+
+  ```ts
+  type InlineChunkTestFunction = (params: {
+    size: number;
+    name: string;
+  }) => boolean;
+
+  type InlineChunkTest = RegExp | InlineChunkTestFunction;
+
+  type InlineChunkConfig =
+    | boolean
+    | InlineChunkTest
+    | { enable?: boolean | 'auto'; test: InlineChunkTest };
+  ```
+
+  ```ts
+  import { defineConfig } from '@lynx-js/rspeedy';
+
+  export default defineConfig({
+    output: {
+      inlineScripts: ({ name, size }) => {
+        return name.includes('foo') && size < 1000;
+      },
+    },
+  });
+  ```
+
 ## 0.8.0
 
 ### Minor Changes

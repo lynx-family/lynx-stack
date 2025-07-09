@@ -122,12 +122,6 @@ describe('Config - Output', () => {
 
     assertType<Output>({
       distPath: {
-        intermediate: 'foo',
-      },
-    })
-
-    assertType<Output>({
-      distPath: {
         css: 'foo',
       },
     })
@@ -181,6 +175,26 @@ describe('Config - Output', () => {
     })
     assertType<Output>({
       inlineScripts: false,
+    })
+    assertType<Output>({
+      inlineScripts: /[\\/]background\.\w+\.js$/,
+    })
+    assertType<Output>({
+      inlineScripts: ({ size }) => {
+        return size < 10 * 1000
+      },
+    })
+    assertType<Output>({
+      inlineScripts: {
+        enable: 'auto',
+        test: /[\\/]background\.\w+\.js$/,
+      },
+    })
+    assertType<Output>({
+      inlineScripts: {
+        enable: true,
+        test: /[\\/]background\.\w+\.js$/,
+      },
     })
   })
 

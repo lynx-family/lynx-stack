@@ -1,5 +1,55 @@
 # @lynx-js/react
 
+## 0.111.0
+
+### Minor Changes
+
+- Allow some `<list-item/>`s to be deferred and rendered in the background thread. ([#204](https://github.com/lynx-family/lynx-stack/pull/204))
+
+  Use the following syntax:
+
+  ```diff
+  <list>
+  -  <list-item item-key="...">
+  +  <list-item item-key="..." defer>
+        <SomeHeavyComponent />
+    </list-item>
+  </list>
+  ```
+
+  You should render your heavyweight components with the `defer` attribute to avoid blocking the main thread.
+
+### Patch Changes
+
+- Add missing alias of `@lynx-js/react` and `preact` in testing library, it will fix the `Failed to resolve import "@lynx-js/react/internal"` error in node_modules. ([#1182](https://github.com/lynx-family/lynx-stack/pull/1182))
+
+- Allow any types of `dataProcessors` in `lynx.registerDataProcessors`. ([#1200](https://github.com/lynx-family/lynx-stack/pull/1200))
+
+- Make `loadLazyBundle` being able to render the content on the first screen of the background thread. ([#1212](https://github.com/lynx-family/lynx-stack/pull/1212))
+
+- Fixed: An issue where the `lynxViewDidUpdate` callback did not trigger when data was updated from native. ([#1171](https://github.com/lynx-family/lynx-stack/pull/1171))
+
+  Notice:
+
+  - Even if no data changes are actually processed after calling `updateData()`, the `lynxViewDidUpdate` callback will still be triggered.
+  - Only one `lynxViewDidUpdate` callback will be triggered per render cycle. Consequently, if multiple `updateData()` calls are made within a single cycle but the data updates are batched, the number of `lynxViewDidUpdate` callbacks triggered may be less than the number of `updateData()` calls.
+
+- Supports `act` in testing library. ([#1182](https://github.com/lynx-family/lynx-stack/pull/1182))
+
+  ```js
+  import { act } from '@lynx-js/react/testing-library';
+
+  act(() => {
+    // ...
+  });
+  ```
+
+## 0.110.1
+
+### Patch Changes
+
+- Fix a memory leak when using `<list/>`. ([#1144](https://github.com/lynx-family/lynx-stack/pull/1144))
+
 ## 0.110.0
 
 ### Minor Changes

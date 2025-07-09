@@ -5,7 +5,7 @@
 import { act } from 'preact/test-utils';
 import { describe, expect } from 'vitest';
 
-import { useState } from '@lynx-js/react';
+import { Component, useState } from '@lynx-js/react';
 
 import { render } from '..';
 import { __pendingListUpdates } from '../../../runtime/lib/pendingListUpdates.js';
@@ -235,7 +235,9 @@ describe('list', () => {
   });
   it('should reuse removed list item', async () => {
     let setListVal;
-    let initListVal = Array(6).fill(0).map((v, i) => i);
+    let initListVal = Array(6)
+      .fill(0)
+      .map((v, i) => i);
 
     const A = () => {
       return <text>hello</text>;
@@ -263,12 +265,8 @@ describe('list', () => {
                 return (
                   <list-item item-key={`${v}`} key={v} full-span>
                     <view>
-                      {showMask
-                        ? <text>{v}</text>
-                        : null}
-                      {showMask
-                        ? <text>{v}</text>
-                        : null}
+                      {showMask ? <text>{v}</text> : null}
+                      {showMask ? <text>{v}</text> : null}
                     </view>
                     {/* This will generate `__DynamicPartSlot` part for testing the hydration behavior of slot is as expected */}
                     <view>
@@ -335,7 +333,7 @@ describe('list', () => {
 
     // Remove the element 3
     act(() => {
-      setListVal(initListVal.filter(x => x !== 3));
+      setListVal(initListVal.filter((x) => x !== 3));
     });
 
     const __CreateElement = vi.spyOn(globalThis, '__CreateElement');
@@ -343,9 +341,8 @@ describe('list', () => {
     const __FlushElementTree = vi.spyOn(globalThis, '__FlushElementTree');
 
     // Remove action is generated
-    expect(
-      JSON.parse(list.getAttribute('update-list-info'))[1].removeAction,
-    ).toMatchInlineSnapshot(`
+    expect(JSON.parse(list.getAttribute('update-list-info'))[1].removeAction)
+      .toMatchInlineSnapshot(`
       [
         3,
       ]
@@ -550,5 +547,204 @@ describe('list', () => {
         </list-item>
       </list>
     `);
+  });
+});
+
+describe('list - deferred <list-item/> should render as normal', () => {
+  it('basic', async () => {
+    function App() {
+      return (
+        <list
+          custom-list-name='list-container'
+          style='height: 700rpx; width: 700rpx; background-color: #f0f0f0;'
+        >
+          <list-item item-key='x' defer>
+            <view style='height: 50rpx; width: 600rpx; background-color: red;' />
+          </list-item>
+
+          {Array.from({ length: 3 }).map((_, index) => (
+            <list-item item-key={`${index}`} key={index} defer>
+              <view style='height: 50rpx; width: 600rpx; background-color: #fff; border-bottom: 1px solid #ccc;'>
+                <text style='padding: 10rpx;'>Item {index + 1}</text>
+              </view>
+            </list-item>
+          ))}
+        </list>
+      );
+    }
+
+    const { container } = render(<App />);
+    expect(container).toMatchInlineSnapshot(`
+      <page>
+        <list
+          custom-list-name="list-container"
+          style="height: 700rpx; width: 700rpx; background-color: #f0f0f0;"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_12","item-key":"x"},{"position":1,"type":"__Card__:__snapshot_a9e46_test_14","item-key":"0"},{"position":2,"type":"__Card__:__snapshot_a9e46_test_14","item-key":"1"},{"position":3,"type":"__Card__:__snapshot_a9e46_test_14","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
+        />
+      </page>
+    `);
+
+    const list = container.firstChild;
+
+    const p = [
+      elementTree.enterListItemAtIndex(list, 0),
+      elementTree.enterListItemAtIndex(list, 1),
+      elementTree.enterListItemAtIndex(list, 2),
+      elementTree.enterListItemAtIndex(list, 3),
+    ];
+
+    expect(p[0].then).toBeTypeOf('function');
+    expect(p[1].then).toBeTypeOf('function');
+    expect(p[2].then).toBeTypeOf('function');
+    expect(p[3].then).toBeTypeOf('function');
+
+    expect(container).toMatchInlineSnapshot(`
+      <page>
+        <list
+          custom-list-name="list-container"
+          style="height: 700rpx; width: 700rpx; background-color: #f0f0f0;"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_12","item-key":"x"},{"position":1,"type":"__Card__:__snapshot_a9e46_test_14","item-key":"0"},{"position":2,"type":"__Card__:__snapshot_a9e46_test_14","item-key":"1"},{"position":3,"type":"__Card__:__snapshot_a9e46_test_14","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
+        />
+      </page>
+    `);
+
+    await Promise.all(p);
+
+    expect(container).toMatchInlineSnapshot(`
+      <page>
+        <list
+          custom-list-name="list-container"
+          style="height: 700rpx; width: 700rpx; background-color: #f0f0f0;"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_12","item-key":"x"},{"position":1,"type":"__Card__:__snapshot_a9e46_test_14","item-key":"0"},{"position":2,"type":"__Card__:__snapshot_a9e46_test_14","item-key":"1"},{"position":3,"type":"__Card__:__snapshot_a9e46_test_14","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
+        >
+          <list-item
+            item-key="x"
+          >
+            <view
+              style="height: 50rpx; width: 600rpx; background-color: red;"
+            />
+          </list-item>
+          <list-item
+            item-key="0"
+          >
+            <view
+              style="height: 50rpx; width: 600rpx; background-color: #fff; border-bottom: 1px solid #ccc;"
+            >
+              <text
+                style="padding: 10rpx;"
+              >
+                Item 
+                <wrapper>
+                  1
+                </wrapper>
+              </text>
+            </view>
+          </list-item>
+          <list-item
+            item-key="1"
+          >
+            <view
+              style="height: 50rpx; width: 600rpx; background-color: #fff; border-bottom: 1px solid #ccc;"
+            >
+              <text
+                style="padding: 10rpx;"
+              >
+                Item 
+                <wrapper>
+                  2
+                </wrapper>
+              </text>
+            </view>
+          </list-item>
+          <list-item
+            item-key="2"
+          >
+            <view
+              style="height: 50rpx; width: 600rpx; background-color: #fff; border-bottom: 1px solid #ccc;"
+            >
+              <text
+                style="padding: 10rpx;"
+              >
+                Item 
+                <wrapper>
+                  3
+                </wrapper>
+              </text>
+            </view>
+          </list-item>
+        </list>
+      </page>
+    `);
+  });
+
+  it('switch from defer={false} to defer={true} and backwards', async () => {
+    let _setDefers;
+
+    class C extends Component {
+      componentWillUnmount() {
+        this.props.onUnmount?.();
+      }
+
+      render() {
+        this.props.onRender?.();
+        return null;
+      }
+    }
+
+    const unmounts = [vi.fn(), vi.fn(), vi.fn()];
+    const renders = [vi.fn(), vi.fn(), vi.fn()];
+
+    function App() {
+      const [defers, setDefers] = useState([true, true, false]);
+      _setDefers = setDefers;
+
+      return (
+        <list
+          custom-list-name='list-container'
+          style='height: 700rpx; width: 700rpx; background-color: #f0f0f0;'
+        >
+          <list-item item-key='x' defer>
+            <view style='height: 50rpx; width: 600rpx; background-color: red;' />
+          </list-item>
+
+          {Array.from({ length: 3 }).map((_, index) => (
+            <list-item item-key={`${index}`} key={index} defer={defers[index]}>
+              <view style='height: 50rpx; width: 600rpx; background-color: #fff; border-bottom: 1px solid #ccc;'>
+                <text style='padding: 10rpx;'>Item {index + 1}</text>
+                <C onUnmount={unmounts[index]} onRender={renders[index]} />
+              </view>
+            </list-item>
+          ))}
+        </list>
+      );
+    }
+
+    const { container } = render(<App />);
+
+    expect(container).toMatchInlineSnapshot(`
+      <page>
+        <list
+          custom-list-name="list-container"
+          style="height: 700rpx; width: 700rpx; background-color: #f0f0f0;"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_17","item-key":"x"},{"position":1,"type":"__Card__:__snapshot_a9e46_test_19","item-key":"0"},{"position":2,"type":"__Card__:__snapshot_a9e46_test_19","item-key":"1"},{"position":3,"type":"__Card__:__snapshot_a9e46_test_19","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
+        />
+      </page>
+    `);
+
+    expect(renders[2]).toHaveBeenCalledTimes(1);
+
+    act(() => {
+      _setDefers([true, true, true]);
+    });
+
+    expect(renders[0]).toHaveBeenCalledTimes(0);
+    expect(renders[2]).toHaveBeenCalledTimes(2);
+    expect(unmounts[2]).toHaveBeenCalledTimes(0); // should not unmount, because it will be a pure waste
+
+    act(() => {
+      _setDefers([false, true, true]);
+    });
+
+    expect(renders[0]).toHaveBeenCalledTimes(1); // change from defer={true} to defer={false} should render the component
   });
 });

@@ -38,12 +38,7 @@ describe('React - Include', () => {
     expect(swcRule?.include).toMatchInlineSnapshot(`
       [
         {
-          "and": [
-            "<WORKSPACE>",
-            {
-              "not": /\\[\\\\\\\\/\\]node_modules\\[\\\\\\\\/\\]/,
-            },
-          ],
+          "not": /\\[\\\\\\\\/\\]node_modules\\[\\\\\\\\/\\]/,
         },
         /\\\\\\.\\(\\?:ts\\|tsx\\|jsx\\|mts\\|cts\\)\\$/,
         "<WORKSPACE>/packages/react",

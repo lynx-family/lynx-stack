@@ -30,7 +30,7 @@ export class XTextareaEvents
   );
 
   @registerAttributeHandler('input-filter', true)
-  @registerEventEnableStatusChangeHandler('input')
+  @registerEventEnableStatusChangeHandler('lynxinput')
   #handleEnableConfirmEvent(status: string | boolean | null) {
     const textareaElement = this.#getTextareaElement();
     if (status) {
@@ -83,7 +83,7 @@ export class XTextareaEvents
     input.value = filterValue;
     if (isComposing && !this.#sendComposingInput) return;
     this.#dom.dispatchEvent(
-      new CustomEvent('input', {
+      new CustomEvent('lynxinput', {
         ...commonComponentEventSetting,
         detail: {
           value: filterValue,
@@ -109,7 +109,7 @@ export class XTextareaEvents
     // if #sendComposingInput set true, #teleportInput will send detail
     if (!this.#sendComposingInput) {
       this.#dom.dispatchEvent(
-        new CustomEvent('input', {
+        new CustomEvent('lynxinput', {
           ...commonComponentEventSetting,
           detail: {
             value: filterValue,

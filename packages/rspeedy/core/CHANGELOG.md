@@ -1,5 +1,51 @@
 # @lynx-js/rspeedy
 
+## 0.10.0
+
+### Minor Changes
+
+- Bump Rsbuild v1.4.3 with Rspack v1.4.2. ([#1204](https://github.com/lynx-family/lynx-stack/pull/1204))
+
+  See [Announcing Rspack 1.4](https://rspack.rs/blog/announcing-1-4) for more details.
+
+- Deprecated `output.distPath.intermediate` ([#1154](https://github.com/lynx-family/lynx-stack/pull/1154))
+
+  This option is never read and will be removed in the future version.
+
+## 0.9.11
+
+### Patch Changes
+
+- Enable fine-grained control for `output.inlineScripts` ([#883](https://github.com/lynx-family/lynx-stack/pull/883))
+
+  ```ts
+  type InlineChunkTestFunction = (params: {
+    size: number
+    name: string
+  }) => boolean
+
+  type InlineChunkTest = RegExp | InlineChunkTestFunction
+
+  type InlineChunkConfig =
+    | boolean
+    | InlineChunkTest
+    | { enable?: boolean | 'auto', test: InlineChunkTest }
+  ```
+
+  ```ts
+  import { defineConfig } from '@lynx-js/rspeedy'
+
+  export default defineConfig({
+    output: {
+      inlineScripts: ({ name, size }) => {
+        return name.includes('foo') && size < 1000
+      },
+    },
+  })
+  ```
+
+- docs: remove chunks: 'all' in comments ([#1168](https://github.com/lynx-family/lynx-stack/pull/1168))
+
 ## 0.9.10
 
 ## 0.9.9

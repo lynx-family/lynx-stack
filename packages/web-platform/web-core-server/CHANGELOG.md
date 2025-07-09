@@ -1,5 +1,13 @@
 # @lynx-js/web-core-server
 
+## 0.14.2
+
+### Patch Changes
+
+- chore: extract shared logic from web-core and web-core-server's loadTemplate into a unified generateTemplate function ([#1211](https://github.com/lynx-family/lynx-stack/pull/1211))
+
+## 0.14.1
+
 ## 0.14.0
 
 ### Patch Changes

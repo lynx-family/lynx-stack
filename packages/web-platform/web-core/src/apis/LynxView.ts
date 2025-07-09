@@ -449,7 +449,7 @@ export class LynxView extends HTMLElement {
               napiModulesCall: (...args) => {
                 return this.#onNapiModulesCall?.(...args);
               },
-              onError: (error: Error, release: string) => {
+              onError: (error: Error, release: string, fileName: string) => {
                 this.dispatchEvent(
                   new CustomEvent('error', {
                     detail: {
@@ -461,6 +461,7 @@ export class LynxView extends HTMLElement {
                       },
                       error,
                       release,
+                      fileName,
                     },
                   }),
                 );

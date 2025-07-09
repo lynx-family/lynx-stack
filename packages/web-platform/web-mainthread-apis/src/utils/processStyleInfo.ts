@@ -107,7 +107,7 @@ export function genCssContent(
       // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/splice
       const selectorString = selectorList.map(
         (selectors) => {
-          return selectors.toSpliced(-4, 0, [suffix]).join('');
+          return selectors.toSpliced(-4, 0, [suffix]).flat().join('');
         },
       ).join(',');
       const declarationString = declarations.map(([k, v]) => `${k}:${v};`).join(

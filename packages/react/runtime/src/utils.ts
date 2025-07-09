@@ -36,6 +36,15 @@ export function pick<T extends object, K extends keyof T>(obj: T, keys: Iterable
   return result as Pick<T, K>;
 }
 
+export function maybePromise<T>(value: unknown): value is Promise<T> {
+  return (
+    typeof value === 'object'
+    && value !== null
+    // @ts-expect-error the check is safe
+    && typeof value.then === 'function'
+  );
+}
+
 export function getDisplayName(type: ComponentClass): string {
   return type.displayName ?? type.name;
 }

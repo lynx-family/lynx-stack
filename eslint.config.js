@@ -77,7 +77,6 @@ export default tseslint.config(
       'packages/react/runtime/types/**',
 
       // TODO: enable eslint for react-runtime
-      'packages/react/runtime/src/backgroundSnapshot.ts',
       'packages/react/runtime/src/compat/**',
       'packages/react/runtime/src/opcodes.ts',
 

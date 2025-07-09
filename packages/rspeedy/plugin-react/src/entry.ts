@@ -108,6 +108,7 @@ export function applyEntry(
           experimental_isLazyBundle,
         ),
       )
+
       const backgroundEntry = entryName
 
       mainThreadChunks.push(mainThreadName)
@@ -169,7 +170,6 @@ export function applyEntry(
             environment.name,
           ),
           intermediate: path.posix.join(
-            // TODO: config intermediate
             DEFAULT_DIST_PATH_INTERMEDIATE,
             entryName,
           ),
@@ -197,11 +197,20 @@ export function applyEntry(
         .end()
     })
 
+    let finalFirstScreenSyncTiming = firstScreenSyncTiming
+
     if (isLynx) {
-      const inlineScripts =
-        typeof environment.config.output?.inlineScripts === 'boolean'
-          ? environment.config.output.inlineScripts
-          : true
+      let inlineScripts
+      if (experimental_isLazyBundle) {
+        // TODO: support inlineScripts in lazyBundle
+        inlineScripts = true
+      } else {
+        inlineScripts = environment.config.output?.inlineScripts ?? true
+      }
+
+      if (inlineScripts !== true) {
+        finalFirstScreenSyncTiming = 'jsReady'
+      }
 
       chain
         .plugin(PLUGIN_NAME_RUNTIME_WRAPPER)
@@ -246,7 +255,7 @@ export function applyEntry(
       .use(ReactWebpackPlugin, [{
         disableCreateSelectorQueryIncompatibleWarning: compat
           ?.disableCreateSelectorQueryIncompatibleWarning ?? false,
-        firstScreenSyncTiming,
+        firstScreenSyncTiming: finalFirstScreenSyncTiming,
         enableSSR,
         mainThreadChunks,
         extractStr,

@@ -380,6 +380,12 @@ test.describe('reactlynx3 tests', () => {
         await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
       },
     );
+    test('basic-mts-mainthread-nested-ref', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(100);
+      const target = page.locator('#target');
+      await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
+    });
     test(
       'basic-mts-mainthread-ref',
       async ({ page }, { title }) => {
@@ -394,7 +400,7 @@ test.describe('reactlynx3 tests', () => {
       'basic-mts-run-on-background',
       async ({ page }, { title }) => {
         await goto(page, title);
-        await wait(100);
+        await wait(500);
         const target = page.locator('#target');
         await target.click();
         await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
@@ -404,9 +410,8 @@ test.describe('reactlynx3 tests', () => {
       'basic-mts-run-on-main-thread',
       async ({ page }, { title }) => {
         await goto(page, title);
-        await wait(100);
+        await wait(800);
         const target = page.locator('#target');
-        await target.click();
         await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
       },
     );
@@ -443,6 +448,11 @@ test.describe('reactlynx3 tests', () => {
       await goto(page, title);
       await wait(100);
       await expect(page.locator('#target')).toHaveCSS('color', 'rgb(0, 0, 0)');
+    });
+    test('basic-css-compound-selector', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(500);
+      await diffScreenShot(page, title, 'compound-selector');
     });
   });
   test.describe('apis', () => {
@@ -704,6 +714,51 @@ test.describe('reactlynx3 tests', () => {
       await goto(page, 'api-error');
       await wait(500);
       expect(offset).toBe(true);
+    });
+    test('api-error-mts', async ({ page }, { title }) => {
+      let fileName = false;
+      await page.on('console', async (msg) => {
+        const event = await msg.args()[0]?.evaluate((e) => {
+          return {
+            type: e.type,
+            fileName: e.detail?.fileName,
+          };
+        });
+        if (!event || event.type !== 'error') {
+          return;
+        }
+        if (
+          typeof event.fileName === 'string' && event.fileName === 'lepus.js'
+        ) {
+          fileName = true;
+        }
+      });
+      await goto(page, 'api-error');
+      await wait(500);
+      expect(fileName).toBe(true);
+    });
+    test('api-error-bts', async ({ page }, { title }) => {
+      let fileName = false;
+      await page.on('console', async (msg) => {
+        const event = await msg.args()[0]?.evaluate((e) => {
+          return {
+            type: e.type,
+            fileName: e.detail?.fileName,
+          };
+        });
+        if (!event || event.type !== 'error') {
+          return;
+        }
+        if (
+          typeof event.fileName === 'string'
+          && event.fileName === 'app-service.js'
+        ) {
+          fileName = true;
+        }
+      });
+      await goto(page, 'api-error');
+      await wait(500);
+      expect(fileName).toBe(true);
     });
     test('api-set-release', async ({ page }, { title }) => {
       let success = false;
@@ -2843,6 +2898,27 @@ test.describe('reactlynx3 tests', () => {
           animations: 'allow',
         });
       });
+      test(
+        'basic-element-x-swiper-method-scroll-to',
+        async ({ page }, { title }) => {
+          await goto(page, title);
+          await wait(100);
+          await diffScreenShot(page, 'x-swiper', 'scroll-to', '1', {
+            animations: 'allow',
+          });
+          await page.locator('#swiper-1').click();
+          // default duration is 500ms, add 100ms buffer time
+          await wait(600);
+          await diffScreenShot(page, 'x-swiper', 'scroll-to', '2', {
+            animations: 'allow',
+          });
+          await page.locator('#swiper-1').click();
+          await wait(600);
+          await diffScreenShot(page, 'x-swiper', 'scroll-to', '3', {
+            animations: 'allow',
+          });
+        },
+      );
       test(
         'basic-element-x-swiper-mode-normal',
         async ({ page }, { title }) => {

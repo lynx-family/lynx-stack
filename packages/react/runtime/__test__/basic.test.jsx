@@ -257,20 +257,20 @@ describe('setAttribute', () => {
     const a = new SnapshotInstance(snapshot3);
     a.ensureElements();
 
-    a.setAttribute('__0', 'id');
+    a.setAttribute(0, 'id');
     {
       const pre = a.__snapshot_def.update[0];
       a.__snapshot_def.update[0] = vi.fn();
-      a.setAttribute('__0', 'id');
+      a.setAttribute(0, 'id');
       expect(a.__snapshot_def.update[0]).toHaveBeenCalledTimes(0);
       a.__snapshot_def.update[0] = pre;
     }
-    a.setAttribute('__1', 'className');
-    a.setAttribute('__2', 'style');
-    a.setAttribute('__3', '1');
-    a.setAttribute('__4', null); // to cover unset attr
-    a.setAttribute('__4', 'text');
-    a.setAttribute('__5', ':2333:5');
+    a.setAttribute(1, 'className');
+    a.setAttribute(2, 'style');
+    a.setAttribute(3, '1');
+    a.setAttribute(4, null); // to cover unset attr
+    a.setAttribute(4, 'text');
+    a.setAttribute(5, ':2333:5');
 
     expect(() => __SetAttribute(a.__element_root, 'style', 'xxx'))
       .toThrowErrorMatchingInlineSnapshot(
@@ -330,8 +330,8 @@ describe('setAttribute', () => {
     const a = new SnapshotInstance(snapshot4);
     a.ensureElements();
 
-    a.setAttribute('__0', { 'full-span': true });
-    a.setAttribute('__1', 'style');
+    a.setAttribute(0, { 'full-span': true });
+    a.setAttribute(1, 'style');
 
     expect(a.__element_root).toMatchInlineSnapshot(`
       <list-item
@@ -347,19 +347,19 @@ describe('setAttribute', () => {
     const a = new SnapshotInstance(s);
     a.ensureElements();
 
-    a.setAttribute('__0', 'class');
+    a.setAttribute(0, 'class');
     expect(a.__element_root).toMatchInlineSnapshot(`
       <view
         class="class"
       />
     `);
-    a.setAttribute('__0', 'clazz');
+    a.setAttribute(0, 'clazz');
     expect(a.__element_root).toMatchInlineSnapshot(`
       <view
         class="clazz"
       />
     `);
-    a.setAttribute('__0', null);
+    a.setAttribute(0, null);
     expect(a.__element_root).toMatchInlineSnapshot(`
       <view
         class=""

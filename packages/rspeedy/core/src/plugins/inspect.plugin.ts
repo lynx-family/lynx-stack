@@ -23,8 +23,7 @@ export function pluginInspect(config: Config): RsbuildPlugin {
           config,
           /** path */ path.join(
             api.context.distPath,
-            config.output?.distPath?.intermediate
-              ?? DEFAULT_DIST_PATH_INTERMEDIATE,
+            DEFAULT_DIST_PATH_INTERMEDIATE,
             'rspeedy.config.js',
           ),
           /** verbose */ false,

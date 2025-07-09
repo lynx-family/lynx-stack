@@ -148,6 +148,72 @@ describe('jsx', () => {
       }
     `);
   });
+
+  it('<list-item defer item-key="1" />', async () => {
+    const result = await transformReactLynx('const jsx = <list><list-item defer item-key="1" /></list>;', {
+      pluginName: '',
+      filename: '',
+      sourceFileName: '',
+      defineDCE: true,
+      sourcemap: false,
+      compat: false,
+      jsx: true,
+      shake: true,
+      cssScope: false,
+      refresh: false,
+      directiveDCE: {
+        target: 'LEPUS',
+      },
+      worklet: true,
+      experimental_moduleCompress: false,
+    });
+
+    expect(result).toMatchInlineSnapshot(`
+      {
+        "code": "import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
+      import * as ReactLynx from "@lynx-js/react";
+      import * as ReactLynxRuntimeComponents from '@lynx-js/react/runtime-components';
+      const __snapshot_da39a_04d8c_2 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_04d8c_2", function() {
+          const pageId = ReactLynx.__pageId;
+          const el = __CreateElement("list-item", pageId);
+          return [
+              el
+          ];
+      }, [
+          (snapshot, index, oldValue)=>ReactLynx.updateListItemPlatformInfo(snapshot, index, oldValue, 0)
+      ], ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null);
+      const __snapshot_da39a_04d8c_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_04d8c_1", function(snapshotInstance) {
+          const pageId = ReactLynx.__pageId;
+          const el = ReactLynx.snapshotCreateList(pageId, snapshotInstance, 0);
+          return [
+              el
+          ];
+      }, null, [
+          [
+              ReactLynx.__DynamicPartListChildren,
+              0
+          ]
+      ], undefined, globDynamicComponentEntry, null);
+      /*#__PURE__*/ _jsx(__snapshot_da39a_04d8c_1, {
+          children: /*#__PURE__*/ _jsx(ReactLynxRuntimeComponents.DeferredListItem, {
+              renderListItem: (__c)=>_jsx(__snapshot_da39a_04d8c_2, {
+                      values: [
+                          {
+                              "item-key": "1"
+                          }
+                      ],
+                      children: __c
+                  }),
+              renderChildren: ()=>[],
+              defer: true
+          })
+      });
+      ",
+        "errors": [],
+        "warnings": [],
+      }
+    `);
+  });
 });
 
 describe('errors and warnings', () => {

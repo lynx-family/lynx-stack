@@ -1318,6 +1318,66 @@ describe('Config', () => {
     })
   })
 
+  describe('Output IIFE', () => {
+    test('defaults', async () => {
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+      const rspeedy = await createRspeedy({
+        rspeedyConfig: {
+          plugins: [
+            pluginReactLynx(),
+          ],
+        },
+      })
+
+      const [config] = await rspeedy.initConfigs()
+
+      expect(config?.output?.iife).toBe(false)
+    })
+
+    test('with output.iife: false', async () => {
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+      const rspeedy = await createRspeedy({
+        rspeedyConfig: {
+          tools: {
+            rspack: {
+              output: {
+                iife: false,
+              },
+            },
+          },
+          plugins: [
+            pluginReactLynx(),
+          ],
+        },
+      })
+
+      const [config] = await rspeedy.initConfigs()
+
+      expect(config?.output?.iife).toBe(false)
+    })
+    test('with output.iife: true', async () => {
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+      const rspeedy = await createRspeedy({
+        rspeedyConfig: {
+          tools: {
+            rspack: {
+              output: {
+                iife: true,
+              },
+            },
+          },
+          plugins: [
+            pluginReactLynx(),
+          ],
+        },
+      })
+
+      const [config] = await rspeedy.initConfigs()
+
+      expect(config?.output?.iife).toBe(true)
+    })
+  })
+
   describe('Bundle Splitting', () => {
     test('default', async () => {
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')

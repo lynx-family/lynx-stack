@@ -15,15 +15,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Component, createElement, Fragment, memo } from '@lynx-js/react';
 import type { PropsWithChildren } from '@lynx-js/react';
-import { render, waitSchedule } from '@lynx-js/react/testing-library';
+import { render, act } from '@lynx-js/react/testing-library';
 
 import { useSyncExternalStoreWithSelector } from '../with-selector.js';
-
-async function act<T>(fn: () => Promise<T> | T): Promise<T> {
-  const ret = await fn();
-  await waitSchedule();
-  return ret;
-}
 
 // This tests shared behavior between the built-in and shim implementations of
 // of useSyncExternalStore.
@@ -85,12 +79,12 @@ describe('useSyncExternalStoreWithSelector', () => {
           text: 'A' + a,
         });
       }
-      const { container } = await act(() => render(createElement(App, null)));
+      const { container } = render(createElement(App, null));
       assertLog(['App', 'Selector', 'A0']);
       expect(container.textContent).toEqual('A0');
 
       // Update the store
-      await act(() =>
+      act(() =>
         store.set({
           a: 1,
           b: 0,
@@ -150,12 +144,12 @@ describe('useSyncExternalStoreWithSelector', () => {
           createElement(B, null),
         );
       }
-      const { container } = await act(() => render(createElement(App, null)));
+      const { container } = render(createElement(App, null));
       assertLog(['A0', 'B0']);
       expect(container.textContent).toEqual('A0B0');
 
       // Update b but not a
-      await act(() =>
+      act(() =>
         store.set({
           a: 0,
           b: 1,
@@ -166,7 +160,7 @@ describe('useSyncExternalStoreWithSelector', () => {
       expect(container.textContent).toEqual('A0B1');
 
       // Update a but not b
-      await act(() =>
+      act(() =>
         store.set({
           a: 1,
           b: 1,
@@ -232,19 +226,19 @@ describe('useSyncExternalStoreWithSelector', () => {
         }),
       );
     }
-    await act(() =>
+    act(() => {
       render(createElement(App, {
         step: 0,
-      }))
-    );
+      }));
+    });
     assertLog(['Inline selector', 'A', 'B', 'C', 'Sibling: 0']);
-    await act(() =>
+    act(() => {
       render(
         createElement(App, {
           step: 1,
         }),
-      )
-    );
+      );
+    });
     assertLog([
       // We had to call the selector again because it's not memoized
       'Inline selector',
@@ -306,20 +300,18 @@ describe('useSyncExternalStoreWithSelector', () => {
           text: a,
         });
       }
-      const { container } = await act(() =>
-        render(
-          createElement(
-            ErrorBoundary,
-            null,
-            createElement(App, null),
-          ),
-        )
+      const { container } = render(
+        createElement(
+          ErrorBoundary,
+          null,
+          createElement(App, null),
+        ),
       );
 
       assertLog(['A']);
       expect(container.textContent).toEqual('A');
       // @ts-expect-error testing error
-      await act(() => store.set({}));
+      act(() => store.set({}));
       expect(container.textContent).toEqual('Malformed state');
     });
 
@@ -350,20 +342,18 @@ describe('useSyncExternalStoreWithSelector', () => {
           text: a,
         });
       }
-      const { container } = await act(() =>
-        render(
-          createElement(
-            ErrorBoundary,
-            null,
-            createElement(App, null),
-          ),
-        )
+      const { container } = render(
+        createElement(
+          ErrorBoundary,
+          null,
+          createElement(App, null),
+        ),
       );
 
       assertLog(['A']);
       expect(container.textContent).toEqual('A');
       // @ts-expect-error testing error
-      await act(() => store.set({}));
+      act(() => store.set({}));
       expect(container.textContent).toEqual('Malformed state');
     });
   });

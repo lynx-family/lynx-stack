@@ -835,6 +835,24 @@ describe('Config Validation', () => {
         { distPath: { svg: 'svg' } },
         { inlineScripts: true },
         { inlineScripts: false },
+        { inlineScripts: /[\\/]background\.\w+\.js$/ },
+        {
+          inlineScripts: ({ size }) => {
+            return size < 10 * 1000
+          },
+        },
+        {
+          inlineScripts: {
+            enable: 'auto',
+            test: /[\\/]background\.\w+\.js$/,
+          },
+        },
+        {
+          inlineScripts: {
+            enable: true,
+            test: /[\\/]background\.\w+\.js$/,
+          },
+        },
         { legalComments: 'inline' },
         { legalComments: 'none' },
         { legalComments: 'linked' },
@@ -1099,15 +1117,67 @@ describe('Config Validation', () => {
           ]
         `)
 
-      expect(() => validate({ output: { inlineScripts: null } }))
-        .toThrowErrorMatchingInlineSnapshot(`
-          [Error: Invalid configuration.
+      expect(() =>
+        validate({
+          output: {
+            inlineScripts: {
+              enable: 123,
+            },
+          },
+        })
+      ).toThrowErrorMatchingInlineSnapshot(`
+        [Error: Invalid configuration.
 
-          Invalid config on \`$input.output.inlineScripts\`.
-            - Expect to be (boolean | undefined)
-            - Got: null
-          ]
-        `)
+        Invalid config on \`$input.output.inlineScripts.enable\`.
+          - Expect to be ("auto" | boolean | undefined)
+          - Got: number
+
+        Invalid config on \`$input.output.inlineScripts.test\`.
+          - Expect to be RegExp
+          - Got: undefined
+        ]
+      `)
+
+      expect(() =>
+        validate({
+          output: {
+            inlineScripts: {
+              enable: true,
+            },
+          },
+        })
+      ).toThrowErrorMatchingInlineSnapshot(`
+        [Error: Invalid configuration.
+
+        Invalid config on \`$input.output.inlineScripts.test\`.
+          - Expect to be RegExp
+          - Got: undefined
+        ]
+      `)
+
+      expect(() =>
+        validate({
+          output: {
+            inlineScripts: {
+              enable: true,
+              test: 123,
+            },
+          },
+        })
+      ).toThrowErrorMatchingInlineSnapshot(`
+        [Error: Invalid configuration.
+
+        Invalid config on \`$input.output.inlineScripts.test\`.
+          - Expect to be RegExp
+          - Got: number
+        ]
+      `)
+
+      //  FIXME:
+      //  ubuntu will matchingInlineSnapshot _type.o111
+      //  macos will matchingInlineSnapshot _type.o110
+      expect(() => validate({ output: { inlineScripts: null } }))
+        .toThrowError()
 
       expect(() => validate({ output: { legalComments: [null] } }))
         .toThrowErrorMatchingInlineSnapshot(`
