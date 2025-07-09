@@ -57,15 +57,6 @@ test('json generator in dual-thread layer when extractStr is enabled', async () 
   expect(config!.module!.rules).toContainEqual({
     test: /\.json$/,
     type: 'json',
-    issuerLayer: LAYERS.MAIN_THREAD,
-    generator: {
-      JSONParse: false,
-    },
-  })
-  expect(config!.module!.rules).toContainEqual({
-    test: /\.json$/,
-    type: 'json',
-    issuerLayer: LAYERS.BACKGROUND,
     generator: {
       JSONParse: false,
     },
