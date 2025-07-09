@@ -312,6 +312,7 @@ export const elementTree = new (class {
 
   clear() {
     this.root = undefined;
+    uiSignNext = 0;
   }
 
   toTree() {
