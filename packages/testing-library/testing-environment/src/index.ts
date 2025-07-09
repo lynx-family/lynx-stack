@@ -198,6 +198,18 @@ function createPolyfills() {
   };
 }
 
+function createPreconfiguredConsole() {
+  const console = new Console(
+    process.stdout,
+    process.stderr,
+  );
+  console.profile = () => {};
+  console.profileEnd = () => {};
+  // @ts-expect-error Lynx has console.alog
+  console.alog = () => {};
+  return console;
+}
+
 function injectMainThreadGlobals(target?: any, polyfills?: any) {
   __injectElementApi(target);
 
@@ -234,13 +246,7 @@ function injectMainThreadGlobals(target?: any, polyfills?: any) {
   target.requestAnimationFrame = setTimeout;
   target.cancelAnimationFrame = clearTimeout;
 
-  target.console = new Console(
-    process.stdout,
-    process.stderr,
-  );
-  target.console.profile = () => {};
-  target.console.profileEnd = () => {};
-  target.console.alog = () => {};
+  target.console = createPreconfiguredConsole();
 
   target.__LoadLepusChunk = __LoadLepusChunk;
 
@@ -345,13 +351,7 @@ function injectBackgroundThreadGlobals(target?: any, polyfills?: any) {
   target.requestAnimationFrame = setTimeout;
   target.cancelAnimationFrame = clearTimeout;
 
-  target.console = new Console(
-    process.stdout,
-    process.stderr,
-  );
-  target.console.profile = () => {};
-  target.console.profileEnd = () => {};
-  target.console.alog = () => {};
+  target.console = createPreconfiguredConsole();
 
   // TODO: user-configurable
   target.SystemInfo = {

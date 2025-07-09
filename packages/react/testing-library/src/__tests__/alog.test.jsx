@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom';
 import { describe, test, vi, expect } from 'vitest';
 import { Component, useState } from '@lynx-js/react';
-import { render, waitSchedule } from '..';
+import { render } from '..';
 import { act } from 'preact/test-utils';
 
 describe('alog', () => {
@@ -10,18 +10,16 @@ describe('alog', () => {
     vi.spyOn(lynxTestingEnv.backgroundThread.console, 'alog');
 
     let _setCount;
-    class App extends Component {
-      render() {
-        const [count, setCount] = useState(0);
-        _setCount = setCount;
-        return (
-          <view>
-            <text bindtap={() => setCount(count + 1)}>count: {count}</text>
-            <ClassComponent />
-            <FunctionComponent />
-          </view>
-        );
-      }
+    function App() {
+      const [count, setCount] = useState(0);
+      _setCount = setCount;
+      return (
+        <view>
+          <text bindtap={() => setCount(count + 1)}>count: {count}</text>
+          <ClassComponent />
+          <FunctionComponent />
+        </view>
+      );
     }
     class ClassComponent extends Component {
       render() {
