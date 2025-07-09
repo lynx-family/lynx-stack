@@ -7,6 +7,7 @@ describe('server-tests', () => {
     const testName of [
       'basic-performance-div-10',
       'basic-performance-nest-level-100',
+      'basic-performance-event-div-100',
     ]
   ) {
     test(testName, async () => {
