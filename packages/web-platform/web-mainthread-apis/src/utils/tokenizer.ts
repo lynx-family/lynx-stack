@@ -40,10 +40,15 @@ const stringToUTF16 = (str: string) => {
 };
 export function transformInlineStyleString(str: string): string {
   const { ptr, len } = stringToUTF16(str);
-  const transformedStyle = wasm.transform_raw_u16_inline_style_ptr(ptr, len)
-    ?? str;
-  wasm.free(ptr, len << 1);
-  return transformedStyle;
+  try {
+    const transformedStyle = wasm.transform_raw_u16_inline_style_ptr(ptr, len)
+      ?? str;
+    wasm.free(ptr, len << 1);
+    return transformedStyle;
+  } catch (e) {
+    wasm.free(ptr, len << 1);
+    throw e;
+  }
 }
 
 export function transformParsedStyles(
@@ -54,25 +59,31 @@ export function transformParsedStyles(
   for (const [property, value] of styles) {
     const { ptr: propertyPtr, len: propertyLen } = stringToUTF16(property);
     const { ptr: valuePtr, len: valueLen } = stringToUTF16(value);
-    const transformedResult = wasm
-      .transform_raw_u16_inline_style_ptr_parsed(
-        propertyPtr,
-        propertyLen,
-        valuePtr,
-        valueLen,
-      );
-    wasm.free(propertyPtr, propertyLen << 1);
-    wasm.free(valuePtr, valueLen << 1);
-    if (transformedResult) {
-      const [transformedStyleForCurrent, childStyleForCurrent] =
-        transformedResult;
-      transformedStyle = transformedStyle.concat(transformedStyleForCurrent);
-      if (childStyleForCurrent) {
-        childStyle = childStyle.concat(childStyleForCurrent);
+    try {
+      const transformedResult = wasm
+        .transform_raw_u16_inline_style_ptr_parsed(
+          propertyPtr,
+          propertyLen,
+          valuePtr,
+          valueLen,
+        );
+      wasm.free(propertyPtr, propertyLen << 1);
+      wasm.free(valuePtr, valueLen << 1);
+      if (transformedResult) {
+        const [transformedStyleForCurrent, childStyleForCurrent] =
+          transformedResult;
+        transformedStyle = transformedStyle.concat(transformedStyleForCurrent);
+        if (childStyleForCurrent) {
+          childStyle = childStyle.concat(childStyleForCurrent);
+        }
+      } else {
+        // If the transformation fails, we keep the original style
+        transformedStyle.push([property, value]);
       }
-    } else {
-      // If the transformation fails, we keep the original style
-      transformedStyle.push([property, value]);
+    } catch (e) {
+      wasm.free(propertyPtr, propertyLen << 1);
+      wasm.free(valuePtr, valueLen << 1);
+      throw e;
     }
   }
   return {
