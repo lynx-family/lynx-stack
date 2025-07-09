@@ -14,6 +14,11 @@ export default defineConfig({
       },
     }),
   ],
+  source: {
+    define: {
+      __ALOG__: true,
+    },
+  },
   performance: {
     profile: enableBundleAnalysis,
   },
