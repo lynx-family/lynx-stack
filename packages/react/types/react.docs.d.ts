@@ -54,7 +54,7 @@ export { useEffect, useLayoutEffect, useErrorBoundary } from '../runtime/lib/hoo
  * Built-in React APIs
  * @see https://react.dev/reference/react/apis
  */
-export { createContext, forwardRef, lazy, memo } from 'react';
+export { createContext, forwardRef, lazy, memo, startTransition } from 'react';
 
 /**
  * Built-in React Components
