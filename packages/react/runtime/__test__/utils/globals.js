@@ -80,6 +80,7 @@ class SelectorQuery {
 function injectGlobals() {
   globalThis.__DEV__ = true;
   globalThis.__PROFILE__ = true;
+  globalThis.__ALOG__ = true;
   globalThis.__JS__ = true;
   globalThis.__LEPUS__ = true;
   globalThis.__BACKGROUND__ = true;
