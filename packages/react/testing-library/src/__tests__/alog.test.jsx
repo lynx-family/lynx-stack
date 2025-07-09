@@ -38,32 +38,32 @@ describe('alog', () => {
     expect(lynxTestingEnv.mainThread.console.alog.mock.calls).toMatchInlineSnapshot(`
       [
         [
-          "[MainThread Component Render] name: Fragment, snapshotId: undefined, __id: undefined",
+          "[MainThread Component Render] name: ClassComponent, uniqID: __Card__:__snapshot_426db_test_2, __id: -6",
         ],
         [
-          "[MainThread Component Render] name: App, snapshotId: undefined, __id: undefined",
+          "[MainThread Component Render] name: FunctionComponent, uniqID: __Card__:__snapshot_426db_test_3, __id: -7",
         ],
         [
-          "[MainThread Component Render] name: ClassComponent, snapshotId: undefined, __id: undefined",
+          "[MainThread Component Render] name: App, uniqID: __Card__:__snapshot_426db_test_1, __id: -2",
         ],
         [
-          "[MainThread Component Render] name: FunctionComponent, snapshotId: undefined, __id: undefined",
+          "[MainThread Component Render] name: Fragment, uniqID: __Card__:__snapshot_426db_test_1, __id: -2",
         ],
       ]
     `);
     expect(lynxTestingEnv.backgroundThread.console.alog.mock.calls).toMatchInlineSnapshot(`
       [
         [
-          "[BackgroundThread Component Render] name: Fragment, snapshotId: undefined, __id: undefined",
+          "[BackgroundThread Component Render] name: ClassComponent, uniqID: __Card__:__snapshot_426db_test_2, __id: 6",
         ],
         [
-          "[BackgroundThread Component Render] name: App, snapshotId: undefined, __id: undefined",
+          "[BackgroundThread Component Render] name: FunctionComponent, uniqID: __Card__:__snapshot_426db_test_3, __id: 7",
         ],
         [
-          "[BackgroundThread Component Render] name: ClassComponent, snapshotId: undefined, __id: undefined",
+          "[BackgroundThread Component Render] name: App, uniqID: __Card__:__snapshot_426db_test_1, __id: 2",
         ],
         [
-          "[BackgroundThread Component Render] name: FunctionComponent, snapshotId: undefined, __id: undefined",
+          "[BackgroundThread Component Render] name: Fragment, uniqID: __Card__:__snapshot_426db_test_1, __id: 2",
         ],
       ]
     `);
@@ -89,13 +89,13 @@ describe('alog', () => {
     expect(lynxTestingEnv.backgroundThread.console.alog.mock.calls).toMatchInlineSnapshot(`
       [
         [
-          "[BackgroundThread Component Render] name: App, snapshotId: __Card__:__snapshot_426db_test_1, __id: -2",
+          "[BackgroundThread Component Render] name: ClassComponent, uniqID: __Card__:__snapshot_426db_test_2, __id: -6",
         ],
         [
-          "[BackgroundThread Component Render] name: ClassComponent, snapshotId: undefined, __id: undefined",
+          "[BackgroundThread Component Render] name: FunctionComponent, uniqID: __Card__:__snapshot_426db_test_3, __id: -7",
         ],
         [
-          "[BackgroundThread Component Render] name: FunctionComponent, snapshotId: undefined, __id: undefined",
+          "[BackgroundThread Component Render] name: App, uniqID: __Card__:__snapshot_426db_test_1, __id: -2",
         ],
       ]
     `);

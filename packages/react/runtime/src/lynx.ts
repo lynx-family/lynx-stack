@@ -41,7 +41,6 @@ if (__PROFILE__) {
   initProfileHook();
 }
 
-// Only enable Alog in production and test environments.
 if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
   // We are logging both main-thread and background.
   initAlog();
