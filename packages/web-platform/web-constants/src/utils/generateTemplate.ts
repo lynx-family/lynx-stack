@@ -65,6 +65,7 @@ const mainThreadInjectVars = [
   'SystemInfo',
   '_I18nResourceTranslation',
   '_AddEventListener',
+  '__QueryComponent',
 ];
 
 const backgroundInjectVars = [
@@ -81,29 +82,54 @@ const backgroundInjectWithBind = [
 ];
 
 async function generateJavascriptUrl<T extends Record<string, string>>(
-  obj: T,
-  injectVars: string[],
-  injectWithBind: string[],
-  muteableVars: readonly string[],
-  createJsModuleUrl: (content: string) => string,
+  options: {
+    obj: T;
+    injectVars: string[];
+    injectWithBind: string[];
+    muteableVars: readonly string[];
+    createJsModuleUrl: (content: string) => string;
+    isDynamicComponent?: boolean;
+    isMain: boolean;
+    source?: string;
+  },
 ): Promise<T>;
 async function generateJavascriptUrl<T extends Record<string, string>>(
-  obj: T,
-  injectVars: string[],
-  injectWithBind: string[],
-  muteableVars: readonly string[],
-  createJsModuleUrl: (content: string, name: string) => Promise<string>,
-  templateName: string,
+  options: {
+    obj: T;
+    injectVars: string[];
+    injectWithBind: string[];
+    muteableVars: readonly string[];
+    createJsModuleUrl: (content: string, name: string) => Promise<string>;
+    templateName: string;
+    isDynamicComponent?: boolean;
+    isMain: boolean;
+    source?: string;
+  },
 ): Promise<T>;
 async function generateJavascriptUrl<T extends Record<string, string>>(
-  obj: T,
-  injectVars: string[],
-  injectWithBind: string[],
-  muteableVars: readonly string[],
-  createJsModuleUrl:
-    | ((content: string) => string)
-    | ((content: string, name: string) => Promise<string>),
-  templateName?: string,
+  {
+    obj,
+    injectVars,
+    injectWithBind,
+    muteableVars,
+    createJsModuleUrl,
+    templateName,
+    isDynamicComponent,
+    isMain,
+    source,
+  }: {
+    obj: T;
+    injectVars: string[];
+    injectWithBind: string[];
+    muteableVars: readonly string[];
+    createJsModuleUrl:
+      | ((content: string) => string)
+      | ((content: string, name: string) => Promise<string>);
+    templateName?: string;
+    isDynamicComponent?: boolean;
+    isMain: boolean;
+    source?: string;
+  },
 ): Promise<T> {
   injectVars = injectVars.concat(muteableVars);
   const generateModuleContent = (content: string) =>
@@ -117,14 +143,16 @@ async function generateJavascriptUrl<T extends Record<string, string>>(
       ...injectWithBind.map(nm =>
         `const ${nm} = lynx_runtime.${nm}?.bind(lynx_runtime);`
       ),
-      ';var globDynamicComponentEntry = \'__Card__\';',
+      isDynamicComponent
+        ? `;var globDynamicComponentEntry = '${source}';`
+        : ';var globDynamicComponentEntry = \'__Card__\';',
       'var {__globalProps} = lynx;',
       'lynx_runtime._updateVars=()=>{',
       ...muteableVars.map(nm =>
         `${nm} = lynx_runtime.__lynxGlobalBindingValues.${nm};`
       ),
       '};\n',
-      content,
+      (isDynamicComponent && isMain) ? `return ${content}` : content,
       '\n return module.exports;}',
     ].join('');
   if (!templateName) {
@@ -153,37 +181,66 @@ async function generateJavascriptUrl<T extends Record<string, string>>(
 }
 
 export async function generateTemplate(
-  template: LynxTemplate,
-  createJsModuleUrl: (content: string) => string,
+  options: {
+    template: LynxTemplate;
+    createJsModuleUrl: (content: string) => string;
+    isDynamicComponent: boolean;
+    source?: string;
+  },
 ): Promise<LynxTemplate>;
 export async function generateTemplate(
-  template: LynxTemplate,
-  createJsModuleUrl: (content: string, name: string) => Promise<string>,
-  templateName: string,
+  options: {
+    template: LynxTemplate;
+    createJsModuleUrl: (content: string, name: string) => Promise<string>;
+    templateName: string;
+    isDynamicComponent: boolean;
+    source?: string;
+  },
 ): Promise<LynxTemplate>;
 export async function generateTemplate(
-  template: LynxTemplate,
-  createJsModuleUrl:
-    | ((content: string) => string)
-    | ((content: string, name: string) => Promise<string>),
-  templateName?: string,
+  options: {
+    template: LynxTemplate;
+    createJsModuleUrl:
+      | ((content: string) => string)
+      | ((content: string, name: string) => Promise<string>);
+    templateName?: string;
+    isDynamicComponent: boolean;
+    source?: string;
+  },
 ): Promise<LynxTemplate> {
+  const {
+    template,
+    createJsModuleUrl,
+    templateName,
+    isDynamicComponent,
+    source,
+  } = options;
   if (!templateName) {
     return {
       ...template,
       lepusCode: await generateJavascriptUrl(
-        template.lepusCode,
-        mainThreadInjectVars,
-        [],
-        globalMuteableVars,
-        createJsModuleUrl as (content: string) => string,
+        {
+          obj: template.lepusCode,
+          injectVars: mainThreadInjectVars,
+          injectWithBind: [],
+          muteableVars: globalMuteableVars,
+          createJsModuleUrl: createJsModuleUrl as (content: string) => string,
+          isDynamicComponent,
+          isMain: true,
+          source,
+        },
       ),
       manifest: await generateJavascriptUrl(
-        template.manifest,
-        backgroundInjectVars,
-        backgroundInjectWithBind,
-        [],
-        createJsModuleUrl as (content: string) => string,
+        {
+          obj: template.manifest,
+          injectVars: backgroundInjectVars,
+          injectWithBind: backgroundInjectWithBind,
+          muteableVars: [],
+          createJsModuleUrl: createJsModuleUrl as (content: string) => string,
+          isDynamicComponent,
+          isMain: false,
+          source,
+        },
       ),
     };
   }
@@ -191,20 +248,36 @@ export async function generateTemplate(
   return {
     ...template,
     lepusCode: await generateJavascriptUrl(
-      template.lepusCode,
-      mainThreadInjectVars,
-      [],
-      globalMuteableVars,
-      createJsModuleUrl as (content: string, name: string) => Promise<string>,
-      templateName,
+      {
+        obj: template.lepusCode,
+        injectVars: mainThreadInjectVars,
+        injectWithBind: [],
+        muteableVars: globalMuteableVars,
+        createJsModuleUrl: createJsModuleUrl as (
+          content: string,
+          name: string,
+        ) => Promise<string>,
+        templateName,
+        isDynamicComponent,
+        isMain: true,
+        source,
+      },
     ),
     manifest: await generateJavascriptUrl(
-      template.manifest,
-      backgroundInjectVars,
-      backgroundInjectWithBind,
-      [],
-      createJsModuleUrl as (content: string, name: string) => Promise<string>,
-      templateName,
+      {
+        obj: template.manifest,
+        injectVars: backgroundInjectVars,
+        injectWithBind: backgroundInjectWithBind,
+        muteableVars: [],
+        createJsModuleUrl: createJsModuleUrl as (
+          content: string,
+          name: string,
+        ) => Promise<string>,
+        templateName,
+        isDynamicComponent,
+        isMain: false,
+        source,
+      },
     ),
   };
 }

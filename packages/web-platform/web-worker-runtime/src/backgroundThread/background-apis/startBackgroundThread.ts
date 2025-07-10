@@ -45,7 +45,16 @@ export function startBackgroundThread(
         uiThreadRpc,
       );
       lynxCore.then(
-        ({ loadCard, destroyCard, callDestroyLifetimeFun }) => {
+        (
+          {
+            loadCard,
+            destroyCard,
+            callDestroyLifetimeFun,
+            nativeGlobal,
+            loadDynamicComponent,
+          },
+        ) => {
+          nativeGlobal.loadDynamicComponent = loadDynamicComponent;
           loadCard(nativeApp, {
             ...config,
             // @ts-ignore

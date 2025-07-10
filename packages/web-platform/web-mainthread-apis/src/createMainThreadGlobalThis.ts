@@ -58,6 +58,8 @@ import {
   type MinimalRawEventObject,
   type I18nResourceTranslationOptions,
   lynxDisposedAttribute,
+  loadTemplate,
+  type queryComponentResourceEndpoint,
 } from '@lynx-js/web-constants';
 import { globalMuteableVars } from '@lynx-js/web-constants';
 import { createMainThreadLynx } from './createMainThreadLynx.js';
@@ -102,6 +104,7 @@ import {
 } from './pureElementPAPIs.js';
 import { createCrossThreadEvent } from './utils/createCrossThreadEvent.js';
 import { decodeCssInJs } from './utils/decodeCssInJs.js';
+import { getLepusEntries } from './utils/getLepusEntries.js';
 
 const exposureRelatedAttributes = new Set<string>([
   'exposure-id',
@@ -132,6 +135,7 @@ export interface MainThreadRuntimeCallbacks {
   _I18nResourceTranslation: (
     options: I18nResourceTranslationOptions,
   ) => unknown | undefined;
+  queryComponentResource: RpcCallType<typeof queryComponentResourceEndpoint>;
 }
 
 export interface MainThreadRuntimeConfig {
@@ -149,6 +153,7 @@ export interface MainThreadRuntimeConfig {
 
 export function createMainThreadGlobalThis(
   config: MainThreadRuntimeConfig,
+  moduleCache: Record<string, LynxJSModule>,
 ): MainThreadGlobalThis {
   let pageElement!: WebFiberElementImpl;
   let uniqueIdInc = 1;
@@ -719,6 +724,22 @@ export function createMainThreadGlobalThis(
     SystemInfo: {
       ...systemInfo,
       ...config.browserConfig,
+    },
+    __QueryComponent: (source: string) => {
+      loadTemplate(source, true).then(
+        async (template: LynxTemplate) => {
+          callbacks.queryComponentResource(source, template);
+          const { lepusCode } = template;
+          const { entry } = await getLepusEntries(
+            lepusCode,
+            moduleCache,
+          );
+          const lepusVal = entry!(mtsGlobalThis) as (schema: string) => void;
+          mtsGlobalThis.globalThis?.processEvalResult?.(lepusVal, source);
+        },
+      );
+
+      return undefined;
     },
     lynx: createMainThreadLynx(config),
     _ReportError: (err, _) => callbacks._ReportError(err, _, release),
