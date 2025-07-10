@@ -27,7 +27,9 @@
     },
     "//#build": {
       "cache": false,
-      "dependsOn": []
+      "dependsOn": [
+        "@lynx-js/web-style-transformer#build"
+      ]
     }
   }
 }
