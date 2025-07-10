@@ -575,7 +575,6 @@ describe('Config', () => {
       expect(LynxEncodePlugin).toBeDefined()
 
       // @ts-expect-error private field
-
       const { inlineScripts } = LynxEncodePlugin?.options ?? {}
 
       expect(typeof inlineScripts).toBe('function')
