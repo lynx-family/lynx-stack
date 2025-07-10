@@ -49,5 +49,7 @@ onlyBuiltDependencies:
   - wasm-pack
 
 ignoredBuiltDependencies:
+  - "@biomejs/biome"
+  - "@swc/core"
   - core-js
   - unrs-resolver
