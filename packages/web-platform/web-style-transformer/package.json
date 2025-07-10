@@ -11,10 +11,11 @@
   "sideEffects": false,
   "type": "module",
   "main": "dist/index.js",
-  "typings": "dist/index.d.ts",
+  "typings": "index.d.ts",
   "files": [
     "dist",
     "!dist/**/*.js.map",
+    "index.d.ts",
     "LICENSE.txt",
     "Notice.txt",
     "CHANGELOG.md",
