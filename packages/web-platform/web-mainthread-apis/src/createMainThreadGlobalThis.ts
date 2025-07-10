@@ -8,7 +8,7 @@ import {
   type StyleInfo,
   type FlushElementTreeOptions,
   type Cloneable,
-  type CssInJsInfo,
+  type CssOGInfo,
   type BrowserConfig,
   lynxUniqueIdAttribute,
   type publishEventEndpoint,
@@ -64,7 +64,7 @@ import { createMainThreadLynx } from './createMainThreadLynx.js';
 import {
   flattenStyleInfo,
   genCssContent,
-  genCssInJsInfo,
+  genCssOGInfo,
   transformToWebCss,
 } from './utils/processStyleInfo.js';
 import {
@@ -101,7 +101,7 @@ import {
   __UpdateComponentID,
 } from './pureElementPAPIs.js';
 import { createCrossThreadEvent } from './utils/createCrossThreadEvent.js';
-import { decodeCssInJs } from './utils/decodeCssInJs.js';
+import { decodeCssOG } from './utils/decodeCssOG.js';
 
 const exposureRelatedAttributes = new Set<string>([
   'exposure-id',
@@ -187,9 +187,9 @@ export function createMainThreadGlobalThis(
     pageConfig.enableCSSSelector,
   );
   transformToWebCss(styleInfo);
-  const cssInJsInfo: CssInJsInfo = pageConfig.enableCSSSelector
+  const cssOGInfo: CssOGInfo = pageConfig.enableCSSSelector
     ? {}
-    : genCssInJsInfo(styleInfo);
+    : genCssOGInfo(styleInfo);
   const cardStyleElement = callbacks.createElement('style');
   cardStyleElement.innerHTML = genCssContent(
     styleInfo,
@@ -199,7 +199,7 @@ export function createMainThreadGlobalThis(
   rootDom.append(cardStyleElement);
   const cardStyleElementSheet =
     (cardStyleElement as unknown as HTMLStyleElement).sheet!;
-  const updateCSSInJsStyle: (
+  const updateCssOGStyle: (
     uniqueId: number,
     newStyles: string,
   ) => void = (uniqueId, newStyles) => {
@@ -589,12 +589,12 @@ export function createMainThreadGlobalThis(
       ((element.getAttribute('class') ?? '') + ' ' + className)
         .trim();
     element.setAttribute('class', newClassName);
-    const newStyleStr = decodeCssInJs(
+    const newStyleStr = decodeCssOG(
       newClassName,
-      cssInJsInfo,
+      cssOGInfo,
       element.getAttribute(cssIdAttribute),
     );
-    updateCSSInJsStyle(
+    updateCssOGStyle(
       Number(element.getAttribute(lynxUniqueIdAttribute)),
       newStyleStr,
     );
@@ -605,12 +605,12 @@ export function createMainThreadGlobalThis(
     classNames,
   ) => {
     __SetClasses(element, classNames);
-    const newStyleStr = decodeCssInJs(
+    const newStyleStr = decodeCssOG(
       classNames ?? '',
-      cssInJsInfo,
+      cssOGInfo,
       element.getAttribute(cssIdAttribute),
     );
-    updateCSSInJsStyle(
+    updateCssOGStyle(
       Number(element.getAttribute(lynxUniqueIdAttribute)),
       newStyleStr ?? '',
     );
