@@ -9,7 +9,10 @@ import { describe, expect, test, vi } from 'vitest'
 
 import type { ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'
 import { createRspeedy } from '@lynx-js/rspeedy'
-import type { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'
+import type {
+  LynxEncodePlugin,
+  LynxTemplatePlugin,
+} from '@lynx-js/template-webpack-plugin'
 
 import { pluginStubRspeedyAPI } from './stub-rspeedy-api.plugin.js'
 
@@ -536,6 +539,65 @@ describe('Config', () => {
       )
 
       expect(encodePlugin).toHaveProperty('options', { inlineScripts: false })
+    })
+
+    test('output.inlineScripts: function', async () => {
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+      const rsbuild = await createRspeedy({
+        rspeedyConfig: {
+          output: {
+            inlineScripts: ({ name, size }) => {
+              return name.includes('background') && size > 1000
+            },
+          },
+          source: {
+            entry: {
+              foo: {
+                import: ['./foo/index.jsx', './common.js'],
+              },
+              bar: './bar/index.jsx',
+            },
+          },
+          plugins: [
+            pluginReactLynx(),
+            pluginStubRspeedyAPI(),
+          ],
+        },
+      })
+
+      const [config] = await rsbuild.initConfigs()
+
+      const LynxEncodePlugin = config?.plugins?.find((
+        p,
+      ): p is LynxEncodePlugin => p?.constructor.name === 'LynxEncodePlugin')
+
+      expect(LynxEncodePlugin).toBeDefined()
+
+      // @ts-expect-error private field
+
+      const { inlineScripts } = LynxEncodePlugin?.options ?? {}
+
+      expect(typeof inlineScripts).toBe('function')
+      // eslint-disable-next-line @typescript-eslint/no-base-to-string
+      expect(inlineScripts?.toString()).toMatchInlineSnapshot(`
+        "({ name, size }) => {
+                      return name.includes("background") && size > 1e3;
+                    }"
+      `)
+
+      const ReactWebpackPlugin = config?.plugins?.find((
+        p,
+      ): p is ReactWebpackPlugin =>
+        p?.constructor.name === 'ReactWebpackPlugin'
+      )
+
+      expect(ReactWebpackPlugin).toBeDefined()
+
+      // @ts-expect-error private field
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const { firstScreenSyncTiming } = ReactWebpackPlugin?.options ?? {}
+      expect(firstScreenSyncTiming).toBe('jsReady')
     })
 
     test('environments.lynx.output.inlineScripts: false', async () => {
