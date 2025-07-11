@@ -22,7 +22,7 @@
     "@lynx-js/react-transform": "workspace:*",
     "@lynx-js/types": "3.3.0",
     "@types/react": "^18.3.23",
-    "pretty-format": "^29.7.0"
+    "pretty-format": "^30.0.2"
   },
   "peerDependencies": {
     "@types/react": "^18.0.0"
