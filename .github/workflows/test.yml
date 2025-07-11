@@ -147,10 +147,12 @@ jobs:
         cd create-rspeedy-regression
         pnpm install --registry=http://localhost:4873
         pnpm run build
+        pnpm run build --mode development
         npx --registry http://localhost:4873 create-rspeedy-canary@latest --template react-vitest-rltl --dir create-rspeedy-regression-vitest-rltl
         cd create-rspeedy-regression-vitest-rltl
         pnpm install --registry=http://localhost:4873
         pnpm run build
+        pnpm run build --mode development
         pnpm run test
   test-react:
     needs: build

@@ -11,8 +11,5 @@
     {
       "path": "../web-constants",
     },
-    {
-      "path": "../web-style-transformer",
-    },
   ],
 }

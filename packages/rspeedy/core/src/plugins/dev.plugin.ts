@@ -12,7 +12,6 @@ import color from 'picocolors'
 import type { Dev } from '../config/dev/index.js'
 import type { Server } from '../config/server/index.js'
 import { debug } from '../debug.js'
-import { CompilationIdPlugin } from '../webpack/CompilationIdPlugin.js'
 import { ProvidePlugin } from '../webpack/ProvidePlugin.js'
 
 export function pluginDev(
@@ -85,7 +84,7 @@ export function pluginDev(
 
       const require = createRequire(import.meta.url)
 
-      api.modifyBundlerChain((chain, { isProd }) => {
+      api.modifyBundlerChain((chain, { isProd, environment }) => {
         if (isProd) {
           return
         }
@@ -93,6 +92,20 @@ export function pluginDev(
         const rspeedyDir = path.dirname(
           require.resolve('@lynx-js/rspeedy/package.json'),
         )
+
+        const searchParams = new URLSearchParams({
+          hostname,
+          port: api.context.devServer?.port?.toString() ?? '',
+          pathname: '/rsbuild-hmr',
+          hot: (options?.hmr ?? true) ? 'true' : 'false',
+          'live-reload': (options?.liveReload ?? true) ? 'true' : 'false',
+          protocol: 'ws',
+        })
+
+        // Only add token if it's defined
+        if (environment.webSocketToken) {
+          searchParams.set('token', environment.webSocketToken)
+        }
 
         // dprint-ignore
         chain
@@ -112,11 +125,7 @@ export function pluginDev(
               )
               .set(
                 '@lynx-js/webpack-dev-transport/client',
-                `${require.resolve('@lynx-js/webpack-dev-transport/client')}?hostname=${
-                  hostname
-                }&port=${
-                  api.context.devServer?.port
-                }&pathname=/rsbuild-hmr&hot=${options?.hmr ?? true}&live-reload=${options?.liveReload ?? true}&protocol=ws`
+                `${require.resolve('@lynx-js/webpack-dev-transport/client')}?${searchParams.toString()}`
               )
               .set(
                 '@rspack/core/hot/dev-server',
@@ -144,9 +153,6 @@ export function pluginDev(
                 ],
               }
             ])
-          .end()
-          .plugin('lynx.hmr.compilation-id')
-            .use(CompilationIdPlugin, [])
           .end()
       })
     },

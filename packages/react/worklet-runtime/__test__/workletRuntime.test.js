@@ -305,6 +305,37 @@ describe('Worklet', () => {
       globalThis.runWorklet({ _wkltId: '1' }, [a]);
     }).toThrow(new Error('Depth of value exceeds limit of 1000.'));
   });
+
+  it('should not throw with nested worklet', () => {
+    initWorklet();
+    const worklet1 = vi.fn();
+    const worklet2 = vi.fn();
+    globalThis.registerWorklet('main-thread', '1', worklet1);
+    globalThis.registerWorklet('main-thread', '2', worklet2);
+
+    const element = {
+      _parent: null,
+    };
+    element._parent = element;
+
+    const ref = { elementRefptr: element };
+
+    const worklet1Ctx = {
+      _wkltId: '1',
+      _c: ref,
+    };
+
+    globalThis.runWorklet(worklet1Ctx, [1]);
+    expect(worklet1).toBeCalledWith(1);
+
+    const worklet2Ctx = {
+      _wkltId: '2',
+      _c: { worklet1: worklet1Ctx },
+    };
+
+    globalThis.runWorklet(worklet2Ctx, [2]);
+    expect(worklet2).toBeCalledWith(2);
+  });
 });
 
 it('requestAnimationFrame should throw error before 2.16', async () => {

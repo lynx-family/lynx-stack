@@ -14,4 +14,9 @@ describe('server-tests', () => {
       expect(html).toMatchSnapshot();
     });
   }
+
+  test('config-css-selector-false-exchange-class', async () => {
+    const html = await genTemplate('config-css-selector-false-exchange-class');
+    expect(html).toContain('[l-uid="2"]');
+  });
 });

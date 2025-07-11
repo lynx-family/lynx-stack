@@ -127,15 +127,15 @@ const transformWorkletInner = (
       continue;
     }
 
-    const isEventTarget = 'elementRefptr' in subObj;
-    if (!isEventTarget) {
-      transformWorkletInner(subObj, depth, ctx);
-    }
-
-    if (isEventTarget) {
+    if (/** isEventTarget */ 'elementRefptr' in subObj) {
       obj[key] = new Element(subObj['elementRefptr'] as ElementNode);
       continue;
+    } else if (subObj instanceof Element) {
+      continue;
     }
+
+    transformWorkletInner(subObj, depth, ctx);
+
     const isWorkletRef = '_wvid' in (subObj as object);
     if (isWorkletRef) {
       obj[key] = getFromWorkletRefMap(

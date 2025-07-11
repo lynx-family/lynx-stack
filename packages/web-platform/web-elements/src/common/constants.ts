@@ -12,4 +12,4 @@ export const isWebkit = /\b(iPad|iPhone|iPod|OS X)\b/.test(UA)
   // @ts-expect-error
   && !window.MSStream;
 
-export const scrollContainerDom = Symbol();
+export const scrollContainerDom = Symbol.for('lynx-scroll-container-dom');

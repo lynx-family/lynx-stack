@@ -6,7 +6,10 @@ import { readFile } from 'node:fs/promises';
 import rspack from '@rspack/core';
 import { fileURLToPath } from 'node:url';
 import { genHtml } from './server.js';
-import { getNativeModulesPathRule } from '@lynx-js/web-platform-rsbuild-plugin/dist/pluginWebPlatform.js';
+import {
+  getNativeModulesPathRule,
+  getNapiModulesPathRule,
+} from '@lynx-js/web-platform-rsbuild-plugin';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -21,6 +24,11 @@ const config = {
     'rpc-test': './shell-project/rpc-test/index.ts',
     'web-core': './shell-project/web-core.ts',
     'fp-only': './shell-project/fp-only.ts',
+  },
+  resolve: {
+    fallback: {
+      'module': false,
+    },
   },
   output: {
     filename: '[name].js',
@@ -210,6 +218,10 @@ const config = {
       getNativeModulesPathRule(path.resolve(
         __dirname,
         './shell-project/index.native-modules.ts',
+      )),
+      getNapiModulesPathRule(path.resolve(
+        __dirname,
+        './shell-project/index.napi-modules.ts',
       )),
     ],
   },

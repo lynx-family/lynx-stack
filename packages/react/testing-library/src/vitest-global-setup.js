@@ -52,7 +52,7 @@ globalThis.onInitWorkletRuntime = () => {
 
 globalThis.onInjectMainThreadGlobals = (target) => {
   if (onInjectMainThreadGlobals) {
-    onInjectMainThreadGlobals();
+    onInjectMainThreadGlobals(target);
   }
   if (process.env.DEBUG) {
     console.log('onInjectMainThreadGlobals');
@@ -88,7 +88,7 @@ globalThis.onInjectMainThreadGlobals = (target) => {
 };
 globalThis.onInjectBackgroundThreadGlobals = (target) => {
   if (onInjectBackgroundThreadGlobals) {
-    onInjectBackgroundThreadGlobals();
+    onInjectBackgroundThreadGlobals(target);
   }
   if (process.env.DEBUG) {
     console.log('onInjectBackgroundThreadGlobals');

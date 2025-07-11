@@ -169,7 +169,7 @@ Inspect Rspeedy config succeed, open following files to view the content:
 
 ### 指定模式
 
-默认情况下，inspect 命令会输出开发模式的配置。可以通过添加 `--env production` 选项来输出生产模式的配置：
+默认情况下，inspect 命令会输出开发模式的配置。可以通过添加 `--mode production` 选项来输出生产模式的配置：
 
 ```bash
 rspeedy inspect --mode production

@@ -564,7 +564,7 @@ describe('Plugins - CSS', () => {
           return !!rule && rule !== '...'
             && (rule.test as RegExp | undefined)?.toString() === CSS_REGEXP
             && isRegExp(rule.resourceQuery)
-            && rule.resourceQuery.test('inline')
+            && rule.resourceQuery.test('?inline')
         },
       )
 
@@ -596,7 +596,7 @@ describe('Plugins - CSS', () => {
           return !!rule && rule !== '...'
             && (rule.test as RegExp | undefined)?.toString() === SASS_REGEXP
             && isRegExp(rule.resourceQuery)
-            && rule.resourceQuery.test('inline')
+            && rule.resourceQuery.test('?inline')
         },
       )
 

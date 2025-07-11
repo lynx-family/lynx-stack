@@ -2,6 +2,7 @@ import {
   _attributes,
   _children,
   innerHTML,
+  _cssRuleContents,
   type OffscreenDocument,
   type OffscreenElement,
 } from '@lynx-js/offscreen-document/webworker';
@@ -36,6 +37,9 @@ function getInnerHTMLImpl(
       ? templateImpl(Object.fromEntries(element[_attributes].entries()))
       : templateImpl;
     buffer.push('<template shadowrootmode="open">', template, '</template>');
+  }
+  if (element[_cssRuleContents]?.length) {
+    buffer.push(...element[_cssRuleContents]);
   }
   if (element[innerHTML]) {
     buffer.push(element[innerHTML]);

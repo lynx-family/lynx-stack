@@ -294,7 +294,7 @@ describe('CLI - build', () => {
       expect(core.createRsbuild).toBeCalledWith(expect.objectContaining({
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         rsbuildConfig: expect.objectContaining({
-          mode: undefined,
+          mode: 'production',
         }),
       }))
     })

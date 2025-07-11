@@ -81,8 +81,7 @@ export async function applyDefaultPlugins(
     }),
   ]
 
-  // TODO: replace with `isDev()` helper
-  if (process.env['NODE_ENV'] === 'development') {
+  if (config.mode === 'development') {
     debug('apply Rspeedy default development plugins')
     promises.push(applyDefaultDevPlugins(rsbuildInstance, config))
   }
