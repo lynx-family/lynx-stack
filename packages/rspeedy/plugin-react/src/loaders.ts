@@ -110,5 +110,8 @@ export function applyLoaders(
     // Clear the Rsbuild default loader.
     // Otherwise, the JSX will be transformed by the `builtin:swc-loader`.
     rule.uses.clear()
+
+    rule.use('react-compiler')
+      .loader(ReactWebpackPlugin.loaders.REACT_COMPILER)
   })
 }

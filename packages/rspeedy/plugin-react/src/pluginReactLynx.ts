@@ -27,6 +27,7 @@ import { applyEntry } from './entry.js'
 import { applyGenerator } from './generator.js'
 import { applyLazy } from './lazy.js'
 import { applyLoaders } from './loaders.js'
+import { applyReactCompiler } from './reactCompiler.js'
 import { applyRefresh } from './refresh.js'
 import { applySplitChunksRule } from './splitChunks.js'
 import { applySWC } from './swc.js'
@@ -305,6 +306,13 @@ export interface PluginReactLynxOptions {
    * @alpha
    */
   experimental_isLazyBundle?: boolean
+
+  /**
+   * Enable React Compiler for this build.
+   *
+   * @link https://react.dev/learn/react-compiler
+   */
+  experimental_enableReactCompiler?: boolean
 }
 
 /**
@@ -355,6 +363,7 @@ export function pluginReactLynx(
     extractStr: false,
 
     experimental_isLazyBundle: false,
+    experimental_enableReactCompiler: false,
   }
   const resolvedOptions = Object.assign(defaultOptions, userOptions, {
     // Use `engineVersion` to override the default values
@@ -413,6 +422,9 @@ export function pluginReactLynx(
 
       if (resolvedOptions.experimental_isLazyBundle) {
         applyLazy(api)
+      }
+      if (resolvedOptions.experimental_enableReactCompiler) {
+        await applyReactCompiler(api)
       }
 
       const rspeedyAPIs = api.useExposed<ExposedAPI>(

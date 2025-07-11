@@ -618,3 +618,5 @@ export function transformReactLynxSync(code: string, options?: TransformNodiffOp
 export function transformReactLynx(code: string, options?: TransformNodiffOptions | undefined | null): Promise<TransformNodiffOutput>
 export function transformBundleResultSync(code: string, options?: TransformNodiffBundleOptions | undefined | null): TransformNodiffBundleOutput
 export function transformBundleResult(code: string, options?: TransformNodiffBundleOptions | undefined | null): Promise<TransformNodiffBundleOutput>
+export function isReactCompilerRequired(code: string, signal?: AbortSignal | undefined | null): Promise<boolean>
+export function isReactCompilerRequiredSync(code: string): boolean
