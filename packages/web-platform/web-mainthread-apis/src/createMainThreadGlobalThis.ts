@@ -53,15 +53,10 @@ import {
   type SetCSSIdPAPI,
   type AddClassPAPI,
   type SetClassesPAPI,
-  type GetTemplatePartsPAPI,
   type GetPageElementPAPI,
   type MinimalRawEventObject,
   type I18nResourceTranslationOptions,
   lynxDisposedAttribute,
-  lynxPartIdAttribute,
-  type MarkPartElementPAPI,
-  type MarkTemplateElementPAPI,
-  lynxElementTemplateMarkerAttribute,
 } from '@lynx-js/web-constants';
 import { globalMuteableVars } from '@lynx-js/web-constants';
 import { createMainThreadLynx } from './createMainThreadLynx.js';
@@ -90,8 +85,11 @@ import {
   __GetID,
   __GetParent,
   __GetTag,
+  __GetTemplateParts,
   __InsertElementBefore,
   __LastElement,
+  __MarkPartElement,
+  __MarkTemplateElement,
   __NextElement,
   __RemoveElement,
   __ReplaceElement,
@@ -658,45 +656,6 @@ export function createMainThreadGlobalThis(
     );
   };
 
-  const __GetTemplateParts: GetTemplatePartsPAPI | undefined =
-    rootDom.querySelectorAll
-      ? (
-        templateElement,
-      ) => {
-        const isTemplate =
-          templateElement.getAttribute(lynxElementTemplateMarkerAttribute)
-            !== null;
-        if (!isTemplate) {
-          return {};
-        }
-        const templateUniqueId = __GetElementUniqueID(templateElement);
-        const parts: Record<string, WebFiberElementImpl> = {};
-        const partElements = templateElement.querySelectorAll!(
-          `[${lynxUniqueIdAttribute}="${templateUniqueId}"] [${lynxPartIdAttribute}]:not([${lynxUniqueIdAttribute}="${templateUniqueId}"] [${lynxElementTemplateMarkerAttribute}] [${lynxPartIdAttribute}])`,
-        );
-        for (const partElement of partElements) {
-          const partId = partElement.getAttribute(lynxPartIdAttribute);
-          if (partId) {
-            parts[partId] = partElement as WebFiberElementImpl;
-          }
-        }
-        return parts;
-      }
-      : undefined;
-
-  const __MarkTemplateElement: MarkTemplateElementPAPI = (
-    element,
-  ) => {
-    element.setAttribute(lynxElementTemplateMarkerAttribute, '');
-  };
-
-  const __MarkPartElement: MarkPartElementPAPI = (
-    element,
-    partId,
-  ) => {
-    element.setAttribute(lynxPartIdAttribute, partId);
-  };
-
   const __GetPageElement: GetPageElementPAPI = () => {
     return pageElement;
   };
@@ -704,7 +663,9 @@ export function createMainThreadGlobalThis(
   let release = '';
   const isCSSOG = !pageConfig.enableCSSSelector;
   const mtsGlobalThis: MainThreadGlobalThis = {
-    __GetTemplateParts,
+    __GetTemplateParts: rootDom.querySelectorAll
+      ? __GetTemplateParts
+      : undefined,
     __MarkTemplateElement,
     __MarkPartElement,
     __AddEvent,

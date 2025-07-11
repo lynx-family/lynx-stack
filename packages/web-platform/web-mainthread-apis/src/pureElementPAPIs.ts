@@ -7,6 +7,8 @@ import {
   cssIdAttribute,
   lynxComponentConfigAttribute,
   lynxDatasetAttribute,
+  lynxElementTemplateMarkerAttribute,
+  lynxPartIdAttribute,
   lynxTagAttribute,
   lynxUniqueIdAttribute,
   type AddClassPAPI,
@@ -27,8 +29,11 @@ import {
   type GetIDPAPI,
   type GetParentPAPI,
   type GetTagPAPI,
+  type GetTemplatePartsPAPI,
   type InsertElementBeforePAPI,
   type LastElementPAPI,
+  type MarkPartElementPAPI,
+  type MarkTemplateElementPAPI,
   type NextElementPAPI,
   type RemoveElementPAPI,
   type ReplaceElementPAPI,
@@ -40,6 +45,7 @@ import {
   type SetIDPAPI,
   type SetInlineStylesPAPI,
   type UpdateComponentIDPAPI,
+  type WebFiberElementImpl,
 } from '@lynx-js/web-constants';
 import { queryCSSProperty } from './style/cssPropertyMap.js';
 import {
@@ -318,4 +324,40 @@ export const __SetInlineStyles: SetInlineStylesPAPI = /*#__PURE__*/ (
     ) => `${property}:${value};`).join('');
     element.setAttribute('style', transformedStyleStr);
   }
+};
+
+export const __GetTemplateParts: GetTemplatePartsPAPI = (
+  templateElement,
+) => {
+  const isTemplate =
+    templateElement.getAttribute(lynxElementTemplateMarkerAttribute)
+      !== null;
+  if (!isTemplate) {
+    return {};
+  }
+  const templateUniqueId = __GetElementUniqueID(templateElement);
+  const parts: Record<string, WebFiberElementImpl> = {};
+  const partElements = templateElement.querySelectorAll!(
+    `[${lynxUniqueIdAttribute}="${templateUniqueId}"] [${lynxPartIdAttribute}]:not([${lynxUniqueIdAttribute}="${templateUniqueId}"] [${lynxElementTemplateMarkerAttribute}] [${lynxPartIdAttribute}])`,
+  );
+  for (const partElement of partElements) {
+    const partId = partElement.getAttribute(lynxPartIdAttribute);
+    if (partId) {
+      parts[partId] = partElement as WebFiberElementImpl;
+    }
+  }
+  return parts;
+};
+
+export const __MarkTemplateElement: MarkTemplateElementPAPI = (
+  element,
+) => {
+  element.setAttribute(lynxElementTemplateMarkerAttribute, '');
+};
+
+export const __MarkPartElement: MarkPartElementPAPI = (
+  element,
+  partId,
+) => {
+  element.setAttribute(lynxPartIdAttribute, partId);
 };
