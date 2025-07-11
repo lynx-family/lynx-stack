@@ -4,7 +4,7 @@
 import { hydrate } from './hydrate.js';
 import { componentAtIndexFactory, enqueueComponentFactory, gRecycleMap, gSignMap } from './list.js';
 import { CHILDREN } from './renderToOpcodes/constants.js';
-import { SnapshotInstance } from './snapshot.js';
+import { ListSnapshotInstance, SnapshotInstance } from './snapshot.js';
 
 const enum Opcode {
   Begin = 0,
@@ -47,7 +47,7 @@ export function ssrHydrateByOpcodes(
         top.__element_root = top.__elements[0];
         delete top.__pendingElements;
 
-        if (top.__snapshot_def.isListHolder) {
+        if (top instanceof ListSnapshotInstance) {
           const listElement = top.__element_root!;
           const listElementUniqueID = __GetElementUniqueID(listElement);
           const signMap = gSignMap[listElementUniqueID] = new Map();

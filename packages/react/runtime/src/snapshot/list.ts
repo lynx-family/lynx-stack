@@ -5,10 +5,11 @@
 import { hydrate } from '../hydrate.js';
 import { componentAtIndexFactory, enqueueComponentFactory, gRecycleMap, gSignMap } from '../list.js';
 import type { SnapshotInstance } from '../snapshot.js';
+import { hook } from '../utils.js';
 
 export function snapshotCreateList(
   pageId: number,
-  _ctx: SnapshotInstance,
+  ctx: SnapshotInstance,
   _expIndex: number,
 ): FiberElement {
   const signMap = new Map<number, SnapshotInstance>();
@@ -24,6 +25,13 @@ export function snapshotCreateList(
   const listID = __GetElementUniqueID(list);
   gSignMap[listID] = signMap;
   gRecycleMap[listID] = recycleMap;
+  hook(ctx, 'onRemoved', (old) => {
+    /* v8 ignore next */
+    old?.();
+    if (ctx.__elements) {
+      snapshotDestroyList(ctx);
+    }
+  });
   return list;
 }
 

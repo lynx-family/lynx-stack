@@ -1,6 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+
 export function isDirectOrDeepEqual(a: any, b: any): boolean {
   if (a === b) {
     return true;
@@ -41,4 +42,16 @@ export function maybePromise<T>(value: unknown): value is Promise<T> {
     // @ts-expect-error the check is safe
     && typeof value.then === 'function'
   );
+}
+
+export function hook<T, K extends keyof T>(
+  object: T,
+  key: K,
+  fn: Required<T>[K] extends (...args: infer P) => infer Q ? ((old?: T[K], ...args: P) => Q)
+    : never,
+): void {
+  const oldFn = object[key];
+  object[key] = function(this: T, ...args: unknown[]) {
+    return fn.call(this, oldFn, ...args);
+  } as T[K];
 }

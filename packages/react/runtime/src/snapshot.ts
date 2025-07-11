@@ -21,7 +21,6 @@ import { SnapshotOperation, __globalSnapshotPatch } from './lifecycle/patch/snap
 import { ListUpdateInfoRecording } from './listUpdateInfo.js';
 import { __pendingListUpdates } from './pendingListUpdates.js';
 import { DynamicPartType } from './snapshot/dynamicPartType.js';
-import { snapshotDestroyList } from './snapshot/list.js';
 import type { PlatformInfo } from './snapshot/platformInfo.js';
 import { unref } from './snapshot/ref.js';
 import { isDirectOrDeepEqual } from './utils.js';
@@ -283,6 +282,9 @@ export class SnapshotInstance {
     id ??= snapshotInstanceManager.nextId -= 1;
     this.__id = id;
     snapshotInstanceManager.values.set(id, this);
+    if (this.__snapshot_def.isListHolder) {
+      Object.setPrototypeOf(this, ListSnapshotInstance.prototype);
+    }
   }
 
   ensureElements(): void {
@@ -370,7 +372,8 @@ export class SnapshotInstance {
   }
 
   takeElements(): SnapshotInstance {
-    const a = Object.create(SnapshotInstance.prototype) as SnapshotInstance;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    const a = Object.create(this.constructor.prototype) as SnapshotInstance;
 
     a.__id = this.__id;
     a.__snapshot_def = this.__snapshot_def;
@@ -405,7 +408,8 @@ export class SnapshotInstance {
   // onAttach?: () => void;
   // onDetach?: () => void;
   // onRef?: () => void;
-  // onUnref?: () => void;
+  onUnref?: () => void;
+  onRemoved?: () => void;
 
   private __parent: SnapshotInstance | null = null;
   private __firstChild: SnapshotInstance | null = null;
@@ -496,13 +500,6 @@ export class SnapshotInstance {
 
   insertBefore(newNode: SnapshotInstance, existingNode?: SnapshotInstance): void {
     const __snapshot_def = this.__snapshot_def;
-    if (__snapshot_def.isListHolder) {
-      (__pendingListUpdates.values[this.__id] ??= new ListUpdateInfoRecording(
-        this,
-      )).onInsertBefore(newNode, existingNode);
-      this.__insertBefore(newNode, existingNode);
-      return;
-    }
 
     const shouldRemove = newNode.__parent === this;
     this.__insertBefore(newNode, existingNode);
@@ -553,19 +550,6 @@ export class SnapshotInstance {
 
   removeChild(child: SnapshotInstance): void {
     const __snapshot_def = this.__snapshot_def;
-    if (__snapshot_def.isListHolder) {
-      (__pendingListUpdates.values[this.__id] ??= new ListUpdateInfoRecording(
-        this,
-      )).onRemoveChild(child);
-
-      this.__removeChild(child);
-      traverseSnapshotInstance(child, v => {
-        snapshotInstanceManager.values.delete(v.__id);
-      });
-      // mark this child as deleted
-      child.__id = 0;
-      return;
-    }
 
     unref(child, true);
     if (this.__elements) {
@@ -573,12 +557,9 @@ export class SnapshotInstance {
       __RemoveElement(this.__elements[elementIndex]!, child.__element_root!);
     }
 
-    if (child.__snapshot_def.isListHolder) {
-      snapshotDestroyList(child);
-    }
-
     this.__removeChild(child);
     traverseSnapshotInstance(child, v => {
+      v.onRemoved?.();
       v.__parent = null;
       v.__previousSibling = null;
       v.__nextSibling = null;
@@ -630,5 +611,26 @@ export class SnapshotInstance {
     else {
       this.__snapshot_def.update![index]!(this, index, oldValue);
     }
+  }
+}
+
+export class ListSnapshotInstance extends SnapshotInstance {
+  override insertBefore(newNode: SnapshotInstance, existingNode?: SnapshotInstance): void {
+    (__pendingListUpdates.values[this.__id] ??= new ListUpdateInfoRecording(
+      this,
+    )).onInsertBefore(newNode, existingNode);
+    this.__insertBefore(newNode, existingNode);
+  }
+
+  override removeChild(child: SnapshotInstance): void {
+    (__pendingListUpdates.values[this.__id] ??= new ListUpdateInfoRecording(
+      this,
+    )).onRemoveChild(child);
+    this.__removeChild(child);
+    traverseSnapshotInstance(child, v => {
+      snapshotInstanceManager.values.delete(v.__id);
+    });
+    // mark this child as deleted
+    child.__id = 0;
   }
 }

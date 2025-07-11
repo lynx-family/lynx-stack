@@ -450,6 +450,37 @@ describe(`list componentAtIndex`, () => {
     }).toThrowErrorMatchingInlineSnapshot(`[Error: enqueueComponent called on removed list]`);
   });
 
+  it('remove list parent si', () => {
+    const a = new SnapshotInstance(s);
+    a.ensureElements();
+
+    const aa = new SnapshotInstance(s);
+    a.insertBefore(aa);
+
+    const b = new SnapshotInstance(s1);
+    aa.insertBefore(b);
+    const listRef = b.__elements[3];
+    expect(() => {
+      elementTree.triggerComponentAtIndex(listRef, 0);
+    }).toThrowErrorMatchingInlineSnapshot(`[Error: childCtx not found]`);
+
+    const d1 = new SnapshotInstance(s3);
+    const d2 = new SnapshotInstance(s3);
+    const d3 = new SnapshotInstance(s3);
+    b.insertBefore(d1);
+    b.insertBefore(d2);
+    b.insertBefore(d3);
+    __pendingListUpdates.flush();
+
+    a.removeChild(aa);
+    expect(() => {
+      elementTree.triggerComponentAtIndex(listRef, 0);
+    }).toThrowErrorMatchingInlineSnapshot(`[Error: componentAtIndex called on removed list]`);
+    expect(() => {
+      elementTree.triggerEnqueueComponent(listRef, 0);
+    }).toThrowErrorMatchingInlineSnapshot(`[Error: enqueueComponent called on removed list]`);
+  });
+
   it('should reuse and hydrate', () => {
     const b = new SnapshotInstance(s1);
     b.ensureElements();
