@@ -48,13 +48,13 @@ export {
   useSyncExternalStore,
 } from 'react';
 
-export { useEffect, useLayoutEffect, useErrorBoundary } from '../runtime/lib/hooks/react.js';
+export { useEffect, useLayoutEffect, useErrorBoundary, startTransition } from '../runtime/lib/hooks/react.js';
 
 /**
  * Built-in React APIs
  * @see https://react.dev/reference/react/apis
  */
-export { createContext, forwardRef, lazy, memo, startTransition } from 'react';
+export { createContext, forwardRef, lazy, memo } from 'react';
 
 /**
  * Built-in React Components
