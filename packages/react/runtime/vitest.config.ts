@@ -85,6 +85,7 @@ export default defineConfig({
         'src/lynx-api.ts',
         'src/lynx.ts',
         'src/root.ts',
+        'src/debug/component-stack.ts',
         'src/debug/debug.ts',
         'src/lynx/calledByNative.ts',
         'src/lynx/component.ts',
