@@ -281,7 +281,7 @@ interface JSErrorInfo {
 }
 
 export interface MainThreadGlobalThis {
-  // __GetTemplateParts currently only provied by the thread-strategy = "all-on-ui" (default)
+  // __GetTemplateParts currently only provided by the thread-strategy = "all-on-ui" (default)
   __GetTemplateParts?: GetTemplatePartsPAPI;
 
   __MarkPartElement: MarkPartElementPAPI;
