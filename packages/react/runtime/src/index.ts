@@ -22,6 +22,7 @@ import {
 } from 'preact/compat';
 
 import {
+  startTransition,
   useCallback,
   useContext,
   useDebugValue,
@@ -32,6 +33,7 @@ import {
   useReducer,
   useRef,
   useState,
+  useTransition,
 } from './hooks/react.js';
 import { loadLazyBundle, mainThreadLazy } from './lynx/lazy-bundle.js';
 
@@ -74,6 +76,8 @@ export default {
   forwardRef,
   Suspense,
   lazy,
+  startTransition,
+  useTransition,
   createElement,
 };
 
