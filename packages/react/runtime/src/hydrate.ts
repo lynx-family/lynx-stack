@@ -221,12 +221,14 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
     swap[before.__id] = after.__id;
   }
 
-  after.__values?.forEach((value, index) => {
-    const old = before.__values![index];
-    if (value !== old) {
-      after.__values![index] = old;
-      after.setAttribute(index, value);
-    }
+  __pendingListUpdates.runWithoutUpdates(() => {
+    after.__values?.forEach((value, index) => {
+      const old = before.__values![index];
+      if (value !== old) {
+        after.__values![index] = old;
+        after.setAttribute(index, value);
+      }
+    });
   });
 
   const { slot } = after.__snapshot_def;
@@ -361,7 +363,9 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
 
         // The `before` & `after` target to the same list element, so we need to
         // avoid the newly created list's (behind snapshot instance `after`) "update-list-info" being recorded.
-        delete __pendingListUpdates.values[after.__id];
+        if (__pendingListUpdates.values) {
+          delete __pendingListUpdates.values[after.__id];
+        }
       }
     }
   });
