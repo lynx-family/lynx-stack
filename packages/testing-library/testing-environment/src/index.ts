@@ -9,6 +9,7 @@ import EventEmitter from 'events';
 import { JSDOM } from 'jsdom';
 import { createGlobalThis, LynxGlobalThis } from './lynx/GlobalThis.js';
 import { initElementTree } from './lynx/ElementPAPI.js';
+import { Console } from 'console';
 export { initElementTree } from './lynx/ElementPAPI.js';
 export type { LynxElement } from './lynx/ElementPAPI.js';
 export type { LynxGlobalThis } from './lynx/GlobalThis.js';
@@ -197,6 +198,18 @@ function createPolyfills() {
   };
 }
 
+function createPreconfiguredConsole() {
+  const console = new Console(
+    process.stdout,
+    process.stderr,
+  );
+  console.profile = () => {};
+  console.profileEnd = () => {};
+  // @ts-expect-error Lynx has console.alog
+  console.alog = () => {};
+  return console;
+}
+
 function injectMainThreadGlobals(target?: any, polyfills?: any) {
   __injectElementApi(target);
 
@@ -212,6 +225,7 @@ function injectMainThreadGlobals(target?: any, polyfills?: any) {
 
   target.__DEV__ = true;
   target.__PROFILE__ = true;
+  target.__ALOG__ = true;
   target.__JS__ = false;
   target.__LEPUS__ = true;
   target.__BACKGROUND__ = false;
@@ -232,8 +246,7 @@ function injectMainThreadGlobals(target?: any, polyfills?: any) {
   target.requestAnimationFrame = setTimeout;
   target.cancelAnimationFrame = clearTimeout;
 
-  target.console.profile = () => {};
-  target.console.profileEnd = () => {};
+  target.console = createPreconfiguredConsole();
 
   target.__LoadLepusChunk = __LoadLepusChunk;
 
@@ -283,6 +296,7 @@ function injectBackgroundThreadGlobals(target?: any, polyfills?: any) {
 
   target.__DEV__ = true;
   target.__PROFILE__ = true;
+  target.__ALOG__ = true;
   target.__JS__ = true;
   target.__LEPUS__ = false;
   target.__BACKGROUND__ = true;
@@ -337,8 +351,7 @@ function injectBackgroundThreadGlobals(target?: any, polyfills?: any) {
   target.requestAnimationFrame = setTimeout;
   target.cancelAnimationFrame = clearTimeout;
 
-  target.console.profile = () => {};
-  target.console.profileEnd = () => {};
+  target.console = createPreconfiguredConsole();
 
   // TODO: user-configurable
   target.SystemInfo = {

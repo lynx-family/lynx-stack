@@ -176,6 +176,8 @@ class ReactWebpackPlugin {
           ?? process.env['REACT_PROFILE']
           ?? compiler.options.mode === 'development',
       ),
+      // User can enable ALog by environment variable `REACT_ALOG=true`
+      __ALOG__: JSON.stringify(Boolean(process.env['REACT_ALOG'])),
       __EXTRACT_STR__: JSON.stringify(Boolean(options.extractStr)),
       __FIRST_SCREEN_SYNC_TIMING__: JSON.stringify(
         options.firstScreenSyncTiming,
