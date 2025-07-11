@@ -46,7 +46,6 @@ strictDepBuilds: true
 onlyBuiltDependencies:
   - dprint
   - esbuild
-  - wasm-pack
 
 ignoredBuiltDependencies:
   - "@biomejs/biome"

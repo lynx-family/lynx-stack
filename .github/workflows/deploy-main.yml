@@ -37,6 +37,10 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "22"
+      - name: Install wasm-pack
+        uses: taiki-e/install-action@9ca1734d8940023f074414ee621fd530c4ce10f2 # v2
+        with:
+          tool: wasm-pack
       - name: Install
         run: |
           npm install -g corepack@latest

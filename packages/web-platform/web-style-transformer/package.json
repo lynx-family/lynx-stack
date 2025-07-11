@@ -22,9 +22,6 @@
     "README.md"
   ],
   "scripts": {
-    "build": "wasm-pack build --target web --out-dir dist --out-name index"
-  },
-  "devDependencies": {
-    "wasm-pack": "^0.13.1"
+    "build": "cargo install wasm-pack && wasm-pack build --target web --out-dir dist --out-name index"
   }
 }
