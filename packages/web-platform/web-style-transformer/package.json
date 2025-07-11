@@ -22,7 +22,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "wasm-pack build --target web --out-dir dist --out-name index",
+    "build": "wasm-pack build --target web --out-dir dist --out-name index --mode no-install",
     "build:wasm-pack": "wasm-pack --version || cargo install wasm-pack"
   }
 }
