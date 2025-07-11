@@ -1,7 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { startTransition as preactStartTransition } from 'preact/compat';
+import { startTransition as preactStartTransition, useTransition as usePreactTransition } from 'preact/compat';
 import {
   useCallback,
   useContext,
@@ -61,9 +61,26 @@ function startTransition(cb: () => void): void {
   return preactStartTransition(cb);
 }
 
+/**
+ * Returns a tuple with a pending state and a startTransition function
+ *
+ * Note: This is Preact's useTransition implementation, which differs from React's:
+ * - React returns [isPending, startTransition] where isPending reflects actual transition state
+ * - Preact always returns [false, startTransition] since there's no real concurrent rendering
+ * - The isPending value is always false because Preact executes transitions synchronously
+ *
+ * @returns A tuple containing:
+ *   - isPending: Always false in Preact (unlike React where it indicates transition state)
+ *   - startTransition: Function to start a transition (executes callback synchronously)
+ *
+ * @public
+ */
+function useTransition(): [false, typeof startTransition] {
+  return usePreactTransition();
+}
+
 export {
   // preact
-  startTransition,
   useState,
   useReducer,
   useRef,
@@ -76,4 +93,6 @@ export {
   useDebugValue,
   useErrorBoundary,
   useId,
+  useTransition,
+  startTransition,
 };

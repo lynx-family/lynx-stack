@@ -2,4 +2,4 @@
 "@lynx-js/react": patch
 ---
 
-Export `startTransition` to support TanStack Router
+Export `startTransition` and `useTransition` to support TanStack Router

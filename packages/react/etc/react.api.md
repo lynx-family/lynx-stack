@@ -173,6 +173,9 @@ export { useState }
 export { useSyncExternalStore }
 
 // @public
+export function useTransition(): [false, typeof startTransition];
+
+// @public
 export function withInitDataInState<P, S>(App: ComponentClass<P, S>): ComponentClass<P, S>;
 
 // (No @packageDocumentation comment for this package)

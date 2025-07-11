@@ -42,6 +42,7 @@ export const {
   useRef,
   useState,
   useSyncExternalStore,
+  useTransition,
   withInitDataInState,
 } = target[sExportsReact];
 

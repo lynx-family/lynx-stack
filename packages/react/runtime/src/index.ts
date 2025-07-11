@@ -18,11 +18,11 @@ import {
   forwardRef,
   isValidElement,
   memo,
-  startTransition,
   useSyncExternalStore,
 } from 'preact/compat';
 
 import {
+  startTransition,
   useCallback,
   useContext,
   useDebugValue,
@@ -33,6 +33,7 @@ import {
   useReducer,
   useRef,
   useState,
+  useTransition,
 } from './hooks/react.js';
 import { loadLazyBundle, mainThreadLazy } from './lynx/lazy-bundle.js';
 
@@ -76,6 +77,7 @@ export default {
   Suspense,
   lazy,
   startTransition,
+  useTransition,
   createElement,
 };
 
@@ -88,7 +90,6 @@ export {
   forwardRef,
   Suspense,
   lazy,
-  startTransition,
   createElement,
   cloneElement,
   useSyncExternalStore,
