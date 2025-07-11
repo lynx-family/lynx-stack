@@ -23,7 +23,7 @@
   ],
   "scripts": {
     "build": "wasm-pack build --target web --out-dir dist --out-name index --mode no-install",
-    "build:wasm-bindgen": "wasm-bindgen --version || cargo install wasm-bindgen",
+    "build:wasm-bindgen": "wasm-bindgen --version || cargo install wasm-bindgen-cli",
     "build:wasm-pack": "wasm-pack --version || cargo install wasm-pack"
   }
 }
