@@ -1,5 +1,32 @@
 # @lynx-js/web-elements
 
+## 0.8.0
+
+### Minor Changes
+
+- refactor: move exposure system to web-core ([#1254](https://github.com/lynx-family/lynx-stack/pull/1254))
+
+  **THIS IS A BREAKING CHANGE**
+
+  **You'll need to upgrade your @lynx-js/web-elements to >= 0.8.0**
+
+  For SSR and better performance, we moved the lynx's exposure system from web-element to web-core.
+
+  Before this commit, we create Intersection observers by creating HTMLElements.
+
+  After this commit, we will create such Intersection observers after dom stabled.
+
+  Also, the setInterval for exposure has been removed, now we use an on time lazy timer for such features.
+
+### Patch Changes
+
+- feat: add support for scrollTo method in x-swiper, remove scrollToNext && scrollToPrevious method ([#1197](https://github.com/lynx-family/lynx-stack/pull/1197))
+
+- refactor: improve `linear-weight-sum` performance ([#1216](https://github.com/lynx-family/lynx-stack/pull/1216))
+
+- Updated dependencies []:
+  - @lynx-js/web-elements-template@0.8.0
+
 ## 0.7.7
 
 ### Patch Changes

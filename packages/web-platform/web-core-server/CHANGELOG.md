@@ -1,5 +1,13 @@
 # @lynx-js/web-core-server
 
+## 0.15.0
+
+### Patch Changes
+
+- feat: support to dump the css og system's style ([#1272](https://github.com/lynx-family/lynx-stack/pull/1272))
+
+- perf: use rust implemented style transformer ([#1094](https://github.com/lynx-family/lynx-stack/pull/1094))
+
 ## 0.14.2
 
 ### Patch Changes

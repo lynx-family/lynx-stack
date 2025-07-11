@@ -1,5 +1,7 @@
 # @lynx-js/web-elements-template
 
+## 0.8.0
+
 ## 0.7.7
 
 ## 0.7.6

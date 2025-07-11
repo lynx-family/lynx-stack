@@ -1,5 +1,11 @@
 # create-rspeedy
 
+## 0.10.1
+
+### Patch Changes
+
+- Fix missing color in nested `<text>`. ([#1233](https://github.com/lynx-family/lynx-stack/pull/1233))
+
 ## 0.10.0
 
 ## 0.9.11
