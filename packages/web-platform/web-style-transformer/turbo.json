@@ -15,7 +15,8 @@
     },
     "build:wasm-pack": {
       "dependsOn": [],
-      "cache": false
+      "inputs": [],
+      "outputs": []
     }
   }
 }
