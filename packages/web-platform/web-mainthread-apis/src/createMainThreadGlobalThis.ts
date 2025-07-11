@@ -53,7 +53,6 @@ import {
   type SetCSSIdPAPI,
   type AddClassPAPI,
   type SetClassesPAPI,
-  type GetTemplatePartsPAPI,
   type GetPageElementPAPI,
   type MinimalRawEventObject,
   type I18nResourceTranslationOptions,
@@ -86,8 +85,11 @@ import {
   __GetID,
   __GetParent,
   __GetTag,
+  __GetTemplateParts,
   __InsertElementBefore,
   __LastElement,
+  __MarkPartElement,
+  __MarkTemplateElement,
   __NextElement,
   __RemoveElement,
   __ReplaceElement,
@@ -143,7 +145,9 @@ export interface MainThreadRuntimeConfig {
   lepusCode: Record<string, LynxJSModule>;
   browserConfig: BrowserConfig;
   tagMap: Record<string, string>;
-  rootDom: Pick<Element, 'append' | 'addEventListener'>;
+  rootDom:
+    & Pick<Element, 'append' | 'addEventListener'>
+    & Partial<Pick<Element, 'querySelectorAll'>>;
   jsContext: LynxContextEventTarget;
 }
 
@@ -652,10 +656,6 @@ export function createMainThreadGlobalThis(
     );
   };
 
-  const __GetTemplateParts: GetTemplatePartsPAPI = () => {
-    return undefined;
-  };
-
   const __GetPageElement: GetPageElementPAPI = () => {
     return pageElement;
   };
@@ -663,6 +663,11 @@ export function createMainThreadGlobalThis(
   let release = '';
   const isCSSOG = !pageConfig.enableCSSSelector;
   const mtsGlobalThis: MainThreadGlobalThis = {
+    __GetTemplateParts: rootDom.querySelectorAll
+      ? __GetTemplateParts
+      : undefined,
+    __MarkTemplateElement,
+    __MarkPartElement,
     __AddEvent,
     __GetEvent,
     __GetEvents,
@@ -714,7 +719,6 @@ export function createMainThreadGlobalThis(
     __SetInlineStyles,
     __LoadLepusChunk,
     __GetPageElement,
-    __GetTemplateParts,
     __globalProps: globalProps,
     SystemInfo: {
       ...systemInfo,

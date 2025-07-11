@@ -6,6 +6,8 @@ import { componentIdAttribute, cssIdAttribute } from '@lynx-js/web-constants';
 import { test, expect } from './coverage-fixture.js';
 import type { Page } from '@playwright/test';
 
+const ENABLE_MULTI_THREAD = !!process.env.ENABLE_MULTI_THREAD;
+
 const wait = async (ms: number) => {
   await new Promise((resolve) => {
     setTimeout(resolve, ms);
@@ -1214,4 +1216,58 @@ test.describe('main thread api tests', () => {
     await expect(publicComponentEventArgs.hname).toBe('hname');
     await expect(publicComponentEventArgs.componentId).toBe('id1');
   });
+
+  test(
+    '__MarkTemplate_and_Get_Parts',
+    async ({ page }, { title }) => {
+      test.skip(ENABLE_MULTI_THREAD, 'NYI for multi-thread');
+      /*
+       * <view template> <!-- grand parent template -->
+       *   <view part>
+       *    <view template> <!-- target template -->
+       *     <view> <!-- normal node -->
+       *       <view part id="target"> <!-- target part -->
+       *        <view template> <!-- sub template -->
+       *         <view part> <!-- sub part, should be able to "get part" from the target -->
+       *         </view>
+       *       </view>
+       *      </view>
+       *     </view>
+       *   </view>
+       * </view>
+       */
+      const result = await page.evaluate(() => {
+        const root = globalThis.__CreatePage('page', 0);
+        const grandParentTemplate = globalThis.__CreateView(0);
+        globalThis.__MarkTemplateElement(grandParentTemplate);
+        let view = globalThis.__CreateView(0);
+        globalThis.__MarkPartElement(view, 'grandParentPart');
+        globalThis.__AppendElement(grandParentTemplate, view);
+        const targetTemplate = globalThis.__CreateView(0);
+        globalThis.__MarkTemplateElement(targetTemplate);
+        globalThis.__AppendElement(view, targetTemplate);
+        view = globalThis.__CreateView(0);
+        globalThis.__AppendElement(targetTemplate, view);
+        const targetPart = globalThis.__CreateView(0);
+        globalThis.__MarkPartElement(targetPart, 'targetPart');
+        globalThis.__AppendElement(view, targetPart);
+        const subTemplate = globalThis.__CreateView(0);
+        globalThis.__MarkTemplateElement(subTemplate);
+        globalThis.__AppendElement(targetPart, subTemplate);
+        const subPart = globalThis.__CreateView(0);
+        globalThis.__MarkPartElement(subPart, 'subPart');
+        globalThis.__AppendElement(subTemplate, subPart);
+        globalThis.__FlushElementTree();
+        return {
+          targetPartLength:
+            Object.keys(globalThis.__GetTemplateParts(targetTemplate)).length,
+          targetPartExist:
+            globalThis.__GetTemplateParts(targetTemplate)['targetPart']
+              === targetPart,
+        };
+      });
+      expect(result.targetPartLength).toBe(1);
+      expect(result.targetPartExist).toBe(true);
+    },
+  );
 });
