@@ -22,6 +22,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "cargo install wasm-pack && wasm-pack build --target web --out-dir dist --out-name index"
+    "build": "wasm-pack build --target web --out-dir dist --out-name index",
+    "build:wasm-pack": "wasm-pack --version || cargo install wasm-pack"
   }
 }

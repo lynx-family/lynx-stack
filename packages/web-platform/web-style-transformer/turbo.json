@@ -4,7 +4,7 @@
   "tasks": {
     "build": {
       "dependsOn": [
-        "^build"
+        "build:wasm-pack"
       ],
       "inputs": [
         "src"
@@ -12,6 +12,10 @@
       "outputs": [
         "dist"
       ]
+    },
+    "build:wasm-pack": {
+      "dependsOn": [],
+      "cache": false
     }
   }
 }
