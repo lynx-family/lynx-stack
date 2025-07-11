@@ -1,6 +1,7 @@
 packages:
   - examples/*
   - packages/background-only
+  - packages/eslint-config-reactlynx
   - packages/react
   - packages/react/refresh
   - packages/react/runtime
@@ -17,39 +18,36 @@ packages:
   - packages/webpack/*
   - website
 
-# Default catalogs
 catalog:
-  "@microsoft/api-extractor": "7.52.8"
+  "@microsoft/api-extractor": 7.52.8
 
 catalogs:
-  # Rsbuild monorepo packages
   rsbuild:
-    "@rsbuild/core": "1.4.5"
-
-  # Rspack monorepo packages
+    "@rsbuild/core": 1.4.5
   rspack:
-    "@rspack/cli": "1.4.5"
-    "@rspack/core": "1.4.5"
-    "@rspack/test-tools": "1.4.5"
-
-overrides:
-  "@rspack/core": "$@rspack/core"
-  "@rsbuild/core>@rspack/core": "$@rspack/core"
-  "path-serializer": "^0.5.0"
-
-patchedDependencies:
-  "@napi-rs/cli@2.18.4": "patches/@napi-rs__cli@2.18.4.patch"
-  "@rollup/plugin-typescript": "patches/@rollup__plugin-typescript.patch"
-
-strictDepBuilds: true
-
-onlyBuiltDependencies:
-  - dprint
-  - esbuild
-  - wasm-pack
+    "@rspack/cli": 1.4.5
+    "@rspack/core": 1.4.5
+    "@rspack/test-tools": 1.4.5
 
 ignoredBuiltDependencies:
   - "@biomejs/biome"
   - "@swc/core"
   - core-js
   - unrs-resolver
+
+onlyBuiltDependencies:
+  - dprint
+  - esbuild
+  - wasm-pack
+
+overrides:
+  "@rspack/core": $@rspack/core
+  "@rsbuild/core>@rspack/core": $@rspack/core
+  path-serializer: ^0.5.0
+
+patchedDependencies:
+  "@napi-rs/cli@2.18.4": patches/@napi-rs__cli@2.18.4.patch
+  "@rollup/plugin-typescript": patches/@rollup__plugin-typescript.patch
+  create-rstack: patches/create-rstack.patch
+
+strictDepBuilds: true

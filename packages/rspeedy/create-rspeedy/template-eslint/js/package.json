@@ -1,0 +1,11 @@
+{
+  "scripts": {
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "eslint": "^9.30.0"
+  },
+  "devDependencies": {
+    "@lynx-js/eslint-config-reactlynx": "workspace:*"
+  }
+}

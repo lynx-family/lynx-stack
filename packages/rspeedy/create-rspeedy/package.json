@@ -38,6 +38,7 @@
     "create-rstack": "1.5.2"
   },
   "devDependencies": {
+    "@lynx-js/eslint-config-reactlynx": "workspace:*",
     "@lynx-js/qrcode-rsbuild-plugin": "workspace:^",
     "@lynx-js/react": "workspace:^",
     "@lynx-js/react-rsbuild-plugin": "workspace:^",

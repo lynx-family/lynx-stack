@@ -6,12 +6,14 @@
   "scripts": {
     "build": "rspeedy build",
     "dev": "rspeedy dev",
+    "lint": "eslint .",
     "test:type": "vitest --typecheck.only"
   },
   "dependencies": {
     "@lynx-js/react": "workspace:*"
   },
   "devDependencies": {
+    "@lynx-js/eslint-config-reactlynx": "workspace:*",
     "@lynx-js/qrcode-rsbuild-plugin": "workspace:*",
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@lynx-js/rspeedy": "workspace:*",

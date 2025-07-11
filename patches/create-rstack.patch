@@ -1,0 +1,26 @@
+diff --git a/dist/index.d.ts b/dist/index.d.ts
+index 7f5fdb7b0fa741f8189fc07e2d27f4946bc7a3be..f7dc8366b60dfbc29d5bae8339d9a99dc3e527c6 100644
+--- a/dist/index.d.ts
++++ b/dist/index.d.ts
+@@ -33,7 +33,7 @@ export declare function create({ name, root, templates, skipFiles, getTemplateNa
+     skipFiles?: string[];
+     templates: string[];
+     getTemplateName: (argv: Argv) => Promise<string>;
+-    mapESLintTemplate: (templateName: string) => ESLintTemplateName | null;
++    mapESLintTemplate: (templateName: string, distFolder: string) => ESLintTemplateName | null;
+     version?: Record<string, string> | string;
+     noteInformation?: string[];
+ }): Promise<void>;
+diff --git a/dist/index.js b/dist/index.js
+index 67f7008074fd2a205ce5e8a66c4518439aad7bbf..148fb591264edcace23886d42f59fd8380e635fc 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -1672,7 +1672,7 @@ async function create({ name, root, templates, skipFiles, getTemplateName, mapES
+     for (const tool of tools){
+         const toolFolder = node_path.join(packageRoot, `template-${tool}`);
+         if ('eslint' === tool) {
+-            const eslintTemplateName = mapESLintTemplate(templateName);
++            const eslintTemplateName = mapESLintTemplate(templateName, distFolder);
+             if (!eslintTemplateName) continue;
+             const subFolder = node_path.join(toolFolder, eslintTemplateName);
+             copyFolder({
