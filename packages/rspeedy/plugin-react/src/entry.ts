@@ -9,6 +9,7 @@ import type {
   RsbuildPluginAPI,
   Rspack,
 } from '@rsbuild/core'
+import { logger } from '@rsbuild/core'
 import type { UndefinedOnPartialDeep } from 'type-fest'
 
 import { LAYERS, ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'
@@ -54,7 +55,7 @@ export function applyEntry(
     pipelineSchedulerConfig,
     removeDescendantSelectorScope,
     targetSdkVersion,
-    extractStr,
+    extractStr: originalExtractStr,
 
     experimental_isLazyBundle,
   } = options
@@ -248,6 +249,17 @@ export function applyEntry(
     }
 
     const rsbuildConfig = api.getRsbuildConfig()
+
+    let extractStr = originalExtractStr
+    if (
+      rsbuildConfig.performance?.chunkSplit?.strategy !== 'all-in-one'
+      && originalExtractStr
+    ) {
+      logger.warn(
+        '`extractStr` is changed to `false` because it is only supported in `all-in-one` chunkSplit strategy, please set `performance.chunkSplit.strategy` to `all-in-one` to use `extractStr.`',
+      )
+      extractStr = false
+    }
 
     chain
       .plugin(PLUGIN_NAME_REACT)
