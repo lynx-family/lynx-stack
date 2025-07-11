@@ -52,7 +52,6 @@ function useEffect(effect: EffectCallback, deps?: DependencyList): void {
  * Note: This is Preact's startTransition implementation, which differs fundamentally from React's:
  * - React marks updates as low priority with interruption and time-slicing support
  * - Preact simply executes the callback synchronously without true concurrent features
- * - In Preact, this is essentially equivalent to: const startTransition = (cb) => { cb() }
  *
  * @param cb - Callback function containing state updates, executed immediately and synchronously
  *

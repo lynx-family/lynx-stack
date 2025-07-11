@@ -22,7 +22,6 @@ import { memo } from 'react';
 import { PureComponent } from 'react';
 import type { ReactNode } from 'react';
 import type { RefObject } from 'react';
-import { startTransition } from 'react';
 import { Suspense } from 'react';
 import { useCallback } from 'react';
 import { useContext } from 'react';
@@ -124,7 +123,8 @@ export function runOnBackground<R, Fn extends (...args: any[]) => R>(f: Fn): (..
 // @public
 export function runOnMainThread<R, Fn extends (...args: any[]) => R>(fn: Fn): (...args: Parameters<Fn>) => Promise<R>;
 
-export { startTransition }
+// @public
+export function startTransition(cb: () => void): void;
 
 export { Suspense }
 
