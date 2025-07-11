@@ -12,6 +12,7 @@
     "path": "../worklet-runtime/tsconfig.json",
   }],
   "include": [
+    "debug",
     "jsx-dev-runtime",
     "jsx-runtime",
     "lepus",

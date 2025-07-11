@@ -74,6 +74,7 @@ export default defineConfig({
     name: 'react/runtime',
     coverage: {
       exclude: [
+        'debug',
         'jsx-runtime',
         'jsx-dev-runtime',
         'lepus/jsx-dev-runtime',

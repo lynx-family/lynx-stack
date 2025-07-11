@@ -53,7 +53,7 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
         })
       })
 
-      api.modifyBundlerChain(async chain => {
+      api.modifyBundlerChain(async (chain, { isProd }) => {
         const [
           jsxRuntimeBackground,
           jsxRuntimeMainThread,
@@ -117,6 +117,8 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
         // react-transform may add imports of the following entries
         // We need to add aliases for that
         const transformedEntries = [
+          // TODO: add `debug` after bump peerDependencies['@lynx-js/react'] to 0.111.1
+          // 'debug',
           'experimental/lazy/import',
           'internal',
           'legacy-react-runtime',
@@ -136,6 +138,10 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
               })
             ),
         )
+
+        if (isProd) {
+          chain.resolve.alias.set('@lynx-js/react/debug$', false)
+        }
 
         chain
           .resolve
