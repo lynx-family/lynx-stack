@@ -20,7 +20,7 @@ const testMatch: string | undefined = (() => {
     return '**/fp-only.spec.ts';
   }
   if (enableMultiThread || enableSSR) {
-    return '**/{react,web-core}.{test,spec}.ts';
+    return '**/{react,web-core,main-thread-apis}.{test,spec}.ts';
   }
   return undefined;
 })();

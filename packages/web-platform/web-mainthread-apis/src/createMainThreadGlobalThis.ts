@@ -58,6 +58,10 @@ import {
   type MinimalRawEventObject,
   type I18nResourceTranslationOptions,
   lynxDisposedAttribute,
+  lynxPartIdAttribute,
+  type MarkPartElementPAPI,
+  type MarkTemplateElementPAPI,
+  lynxElementTemplateMarkerAttribute,
 } from '@lynx-js/web-constants';
 import { globalMuteableVars } from '@lynx-js/web-constants';
 import { createMainThreadLynx } from './createMainThreadLynx.js';
@@ -143,7 +147,9 @@ export interface MainThreadRuntimeConfig {
   lepusCode: Record<string, LynxJSModule>;
   browserConfig: BrowserConfig;
   tagMap: Record<string, string>;
-  rootDom: Pick<Element, 'append' | 'addEventListener'>;
+  rootDom:
+    & Pick<Element, 'append' | 'addEventListener'>
+    & Partial<Pick<Element, 'querySelectorAll'>>;
   jsContext: LynxContextEventTarget;
 }
 
@@ -652,8 +658,43 @@ export function createMainThreadGlobalThis(
     );
   };
 
-  const __GetTemplateParts: GetTemplatePartsPAPI = () => {
-    return undefined;
+  const __GetTemplateParts: GetTemplatePartsPAPI | undefined =
+    rootDom.querySelectorAll
+      ? (
+        templateElement,
+      ) => {
+        const isTemplate =
+          templateElement.getAttribute(lynxElementTemplateMarkerAttribute)
+            !== null;
+        if (!isTemplate) {
+          return {};
+        }
+        const templateUniqueId = __GetElementUniqueID(templateElement);
+        const parts: Record<string, WebFiberElementImpl> = {};
+        const partElements = templateElement.querySelectorAll!(
+          `[${lynxUniqueIdAttribute}="${templateUniqueId}"] [${lynxPartIdAttribute}]:not([${lynxUniqueIdAttribute}="${templateUniqueId}"] [${lynxElementTemplateMarkerAttribute}] [${lynxPartIdAttribute}])`,
+        );
+        for (const partElement of partElements) {
+          const partId = partElement.getAttribute(lynxPartIdAttribute);
+          if (partId) {
+            parts[partId] = partElement as WebFiberElementImpl;
+          }
+        }
+        return parts;
+      }
+      : undefined;
+
+  const __MarkTemplateElement: MarkTemplateElementPAPI = (
+    element,
+  ) => {
+    element.setAttribute(lynxElementTemplateMarkerAttribute, '');
+  };
+
+  const __MarkPartElement: MarkPartElementPAPI = (
+    element,
+    partId,
+  ) => {
+    element.setAttribute(lynxPartIdAttribute, partId);
   };
 
   const __GetPageElement: GetPageElementPAPI = () => {
@@ -663,6 +704,9 @@ export function createMainThreadGlobalThis(
   let release = '';
   const isCSSOG = !pageConfig.enableCSSSelector;
   const mtsGlobalThis: MainThreadGlobalThis = {
+    __GetTemplateParts,
+    __MarkTemplateElement,
+    __MarkPartElement,
     __AddEvent,
     __GetEvent,
     __GetEvents,
@@ -714,7 +758,6 @@ export function createMainThreadGlobalThis(
     __SetInlineStyles,
     __LoadLepusChunk,
     __GetPageElement,
-    __GetTemplateParts,
     __globalProps: globalProps,
     SystemInfo: {
       ...systemInfo,

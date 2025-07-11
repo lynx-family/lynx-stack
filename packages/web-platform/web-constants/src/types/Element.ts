@@ -49,6 +49,7 @@ export interface ElementAnimationOptions {
 }
 
 export interface WebFiberElementImpl {
+  querySelectorAll?: (selectors: string) => WebFiberElementImpl[];
   getAttributeNames: () => string[];
   getAttribute: (name: string) => string | null;
   setAttribute: (name: string, value: string) => void;
