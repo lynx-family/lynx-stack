@@ -370,7 +370,7 @@ export function pluginReactLynx(
       applyCSS(api, resolvedOptions)
       applyEntry(api, resolvedOptions)
       applyBackgroundOnly(api)
-      applyGenerator(api)
+      applyGenerator(api, resolvedOptions)
       applyLoaders(api, resolvedOptions)
       applyRefresh(api)
       applySplitChunksRule(api)
