@@ -35,13 +35,13 @@
     "@rsbuild/plugin-sass": "1.3.3",
     "@rsbuild/plugin-type-check": "1.2.3",
     "@rsbuild/plugin-typed-css-modules": "1.0.2",
-    "@rspress/plugin-client-redirects": "2.0.0-beta.15",
-    "@rspress/shared": "2.0.0-beta.15",
-    "@shikijs/transformers": "3.5.0",
+    "@rspress/plugin-client-redirects": "2.0.0-beta.20",
+    "@rspress/shared": "2.0.0-beta.20",
+    "@shikijs/transformers": "3.7.0",
     "@types/react": "npm:@types/react@^19.1.8",
     "@types/react-dom": "^19.1.6",
     "change-case": "^5.4.4",
-    "rspress": "2.0.0-beta.15",
+    "rspress": "2.0.0-beta.20",
     "tailwindcss": "^3.4.17"
   },
   "engines": {

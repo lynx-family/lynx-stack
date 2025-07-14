@@ -1,5 +1,11 @@
 # @lynx-js/web-style-transformer
 
+## 0.3.3
+
+### Patch Changes
+
+- Fix `index_bg.wasm` not found when publishing. ([#1277](https://github.com/lynx-family/lynx-stack/pull/1277))
+
 ## 0.3.2
 
 ### Patch Changes

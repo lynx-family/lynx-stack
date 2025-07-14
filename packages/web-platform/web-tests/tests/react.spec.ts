@@ -3903,6 +3903,15 @@ test.describe('reactlynx3 tests', () => {
           await diffScreenShot(page, elementName, title, 'scroll-to-position');
         },
       );
+
+      test(
+        'basic-element-list-waterfall',
+        async ({ page }, { title }) => {
+          await goto(page, title);
+          await wait(500);
+          await diffScreenShot(page, elementName, title, 'initial');
+        },
+      );
     });
   });
 

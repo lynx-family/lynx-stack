@@ -65,6 +65,9 @@ const mainThreadInjectVars = [
   'SystemInfo',
   '_I18nResourceTranslation',
   '_AddEventListener',
+  '__GetTemplateParts',
+  '__MarkPartElement',
+  '__MarkTemplateElement',
 ];
 
 const backgroundInjectVars = [

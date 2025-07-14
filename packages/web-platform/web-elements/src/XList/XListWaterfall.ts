@@ -35,7 +35,14 @@ export class XListWaterfall
       ?.insertAdjacentElement('afterend', waterfallSlot);
   };
 
-  #layoutListItem = (spanCount: number, isScrollVertical: boolean) => {
+  #layoutListItem = () => {
+    const spanCount = parseFloat(
+      this.#dom.getAttribute('span-count')
+        || this.#dom.getAttribute('column-count')
+        || '',
+    ) || 1;
+    const isScrollVertical = (this.#dom.getAttribute('scroll-orientation')
+      || 'vertical') === 'vertical';
     const measurements = new Array(spanCount).fill(0);
 
     for (let i = 0; i < this.#dom.children.length; i++) {
@@ -177,16 +184,13 @@ export class XListWaterfall
     this.#dom = dom;
   }
 
-  #resizeObserverInit = (spanCount: number, isScrollVertical: boolean) => {
+  #resizeObserverInit = () => {
     this.#resizeObserver?.disconnect();
     this.#resizeObserver = new ResizeObserver(() => {
       // may cause: Resizeobserver loop completed with undelivered notifications
       // https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver#observation_errors
       requestAnimationFrame(() => {
-        this.#layoutListItem(
-          spanCount,
-          isScrollVertical,
-        );
+        this.#layoutListItem();
       });
     });
     Array.from(this.#dom.children).forEach(element => {
@@ -197,18 +201,10 @@ export class XListWaterfall
   @registerAttributeHandler('list-type', true)
   #handlerListType(newVal: string | null) {
     if (newVal === 'waterfall') {
-      const spanCount = parseFloat(
-        this.#dom.getAttribute('span-count')
-          || this.#dom.getAttribute('column-count')
-          || '',
-      ) || 1;
-      const scrollOrientation = this.#dom.getAttribute('scroll-orientation')
-        || 'vertical';
-
       this.#createWaterfallContainer();
 
       if (!this.#resizeObserver) {
-        this.#resizeObserverInit(spanCount, scrollOrientation === 'vertical');
+        this.#resizeObserverInit();
       }
 
       if (!this.#childrenObserver) {
@@ -217,10 +213,7 @@ export class XListWaterfall
             const mutation = mutationList?.[0]!;
 
             if (mutation?.type === 'childList') {
-              this.#resizeObserverInit(
-                spanCount,
-                scrollOrientation === 'vertical',
-              );
+              this.#resizeObserverInit();
             }
           },
         );
