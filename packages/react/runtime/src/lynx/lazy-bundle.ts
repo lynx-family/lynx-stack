@@ -1,7 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { Fragment, lazy as backgroundLazy, createElement } from 'preact/compat';
+import { lazy as backgroundLazy } from 'preact/compat';
 
 /**
  * To make code below works
@@ -157,19 +157,4 @@ function withSyncResolvers<T>() {
 /**
  * @internal
  */
-export function mainThreadLazy<T>(loader: () => Promise<{ default: T } | T>) {
-  const Lazy = backgroundLazy<T>(loader);
-
-  function _Lazy(props: any) {
-    try {
-      // @ts-expect-error `Lazy` returned from `backgroundLazy` should be a FC
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-      return Lazy(props);
-    } catch (e) {
-      // We should never throw at mainThread
-      return createElement(Fragment, {});
-    }
-  }
-
-  return _Lazy as T;
-}
+export const mainThreadLazy = backgroundLazy;

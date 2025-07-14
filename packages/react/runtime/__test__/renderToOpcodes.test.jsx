@@ -4,21 +4,54 @@ import { Component, createContext, Fragment } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { elementTree } from './utils/nativeMethod';
+import { elementTree, waitSchedule } from './utils/nativeMethod';
 import { globalEnvManager } from './utils/envManager';
 import { setupDocument } from '../src/document';
 import { renderOpcodesInto } from '../src/opcodes';
 import renderToString from '../src/renderToOpcodes';
 import { setupPage, SnapshotInstance, snapshotInstanceManager } from '../src/snapshot';
 import { createElement, cloneElement } from '../lepus';
+import { Suspense } from 'preact/compat';
+import { Deferred } from '../src/renderToOpcodes/utils';
+
+const defaultChildren = <text>it works</text>;
+
+// `createSuspender()` is forked from `preact` unit test
+export function createSuspender() {
+  const deferred = new Deferred();
+  let resolved;
+
+  deferred.promise.then(() => (resolved = true));
+
+  function Suspender({ children = defaultChildren }) {
+    if (!resolved) {
+      throw deferred.promise;
+    }
+
+    return children;
+  }
+
+  return {
+    getResolved() {
+      return resolved;
+    },
+    suspended: deferred,
+    Suspender,
+  };
+}
 
 describe('renderToOpcodes', () => {
   beforeAll(() => {
     globalEnvManager.switchToMainThread();
   });
 
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   it('should render hello world', () => {
-    expect(renderToString(function() {})).toMatchInlineSnapshot(`[]`);
+    expect(renderToString(function() {
+    })).toMatchInlineSnapshot(`[]`);
 
     expect(
       renderToString(
@@ -33,8 +66,8 @@ describe('renderToOpcodes', () => {
         {
           "children": undefined,
           "extraProps": undefined,
-          "id": -3,
-          "type": "__Card__:__snapshot_a94a8_test_1",
+          "id": -4,
+          "type": "__Card__:__snapshot_a94a8_test_2",
           "values": undefined,
         },
         2,
@@ -57,6 +90,7 @@ describe('renderToOpcodes', () => {
       }, []);
       return <view>{a}</view>;
     }
+
     expect(
       renderToString(
         <view>
@@ -70,16 +104,16 @@ describe('renderToOpcodes', () => {
         {
           "children": undefined,
           "extraProps": undefined,
-          "id": -4,
-          "type": "__Card__:__snapshot_a94a8_test_3",
+          "id": -5,
+          "type": "__Card__:__snapshot_a94a8_test_4",
           "values": undefined,
         },
         0,
         {
           "children": undefined,
           "extraProps": undefined,
-          "id": -6,
-          "type": "__Card__:__snapshot_a94a8_test_2",
+          "id": -7,
+          "type": "__Card__:__snapshot_a94a8_test_3",
           "values": undefined,
         },
         3,
@@ -95,10 +129,12 @@ describe('renderToOpcodes', () => {
       static getDerivedStateFromProps(props, state) {
         return { a: 1 };
       }
+
       render() {
         return <view>{this.state.a}</view>;
       }
     }
+
     expect(
       renderToString(
         <view>
@@ -112,16 +148,16 @@ describe('renderToOpcodes', () => {
         {
           "children": undefined,
           "extraProps": undefined,
-          "id": -7,
-          "type": "__Card__:__snapshot_a94a8_test_5",
+          "id": -8,
+          "type": "__Card__:__snapshot_a94a8_test_6",
           "values": undefined,
         },
         0,
         {
           "children": undefined,
           "extraProps": undefined,
-          "id": -8,
-          "type": "__Card__:__snapshot_a94a8_test_4",
+          "id": -9,
+          "type": "__Card__:__snapshot_a94a8_test_5",
           "values": undefined,
         },
         3,
@@ -141,14 +177,15 @@ describe('renderToOpcodes', () => {
         </view>
       );
     }
+
     expect(renderToString(<App />)).toMatchInlineSnapshot(`
       [
         0,
         {
           "children": undefined,
           "extraProps": undefined,
-          "id": -9,
-          "type": "__Card__:__snapshot_a94a8_test_6",
+          "id": -10,
+          "type": "__Card__:__snapshot_a94a8_test_7",
           "values": undefined,
         },
         2,
@@ -170,14 +207,15 @@ describe('renderToOpcodes', () => {
         </view>
       );
     }
+
     expect(renderToString(<App />)).toMatchInlineSnapshot(`
       [
         0,
         {
           "children": undefined,
           "extraProps": undefined,
-          "id": -10,
-          "type": "__Card__:__snapshot_a94a8_test_7",
+          "id": -11,
+          "type": "__Card__:__snapshot_a94a8_test_8",
           "values": undefined,
         },
         3,
@@ -205,8 +243,8 @@ describe('renderToOpcodes', () => {
         {
           "children": undefined,
           "extraProps": undefined,
-          "id": -11,
-          "type": "__Card__:__snapshot_a94a8_test_8",
+          "id": -12,
+          "type": "__Card__:__snapshot_a94a8_test_9",
           "values": undefined,
         },
         3,
@@ -232,8 +270,8 @@ describe('renderToOpcodes', () => {
         {
           "children": undefined,
           "extraProps": undefined,
-          "id": -12,
-          "type": "__Card__:__snapshot_a94a8_test_9",
+          "id": -13,
+          "type": "__Card__:__snapshot_a94a8_test_10",
           "values": undefined,
         },
         3,
@@ -258,16 +296,16 @@ describe('renderToOpcodes', () => {
         {
           "children": undefined,
           "extraProps": undefined,
-          "id": -13,
-          "type": "__Card__:__snapshot_a94a8_test_10",
+          "id": -14,
+          "type": "__Card__:__snapshot_a94a8_test_11",
           "values": undefined,
         },
         0,
         {
           "children": undefined,
           "extraProps": undefined,
-          "id": -14,
-          "type": "__Card__:__snapshot_a94a8_test_11",
+          "id": -15,
+          "type": "__Card__:__snapshot_a94a8_test_12",
           "values": undefined,
         },
         3,
@@ -292,16 +330,16 @@ describe('renderToOpcodes', () => {
         {
           "children": undefined,
           "extraProps": undefined,
-          "id": -15,
-          "type": "__Card__:__snapshot_a94a8_test_12",
+          "id": -16,
+          "type": "__Card__:__snapshot_a94a8_test_13",
           "values": undefined,
         },
         0,
         {
           "children": undefined,
           "extraProps": undefined,
-          "id": -16,
-          "type": "__Card__:__snapshot_a94a8_test_13",
+          "id": -17,
+          "type": "__Card__:__snapshot_a94a8_test_14",
           "values": undefined,
         },
         3,
@@ -316,6 +354,7 @@ describe('renderToOpcodes', () => {
     function App() {
       undefined();
     }
+
     expect(
       () =>
         renderToString(
@@ -333,8 +372,10 @@ describe('renderToOpcodes', () => {
 
   it('should throw when error occur - with ErrorBoundary ignored', () => {
     const f = vi.fn();
+
     class ErrorBoundary extends Component {
       componentDidCatch = f;
+
       render() {
         return this.props.children;
       }
@@ -343,6 +384,7 @@ describe('renderToOpcodes', () => {
     function App() {
       undefined();
     }
+
     expect(
       () =>
         renderToString(
@@ -358,6 +400,7 @@ describe('renderToOpcodes', () => {
 
     class ErrorBoundary2 extends Component {
       static getDerivedStateFromError = f;
+
       render() {
         return this.props.children;
       }
@@ -379,6 +422,225 @@ describe('renderToOpcodes', () => {
     // renderToString will throw on Error without calling `options[DIFFED]`
     vi.mocked(console.profile).mockClear();
     vi.mocked(console.profileEnd).mockClear();
+  });
+
+  it('should render fallback with suspense', async () => {
+    const { Suspender, suspended } = createSuspender();
+
+    const fallbackJsx = <text>loading...</text>;
+
+    const rendered = renderToString(
+      <Suspense fallback={fallbackJsx}>
+        <Suspender>
+          <text className='foo'>bar</text>
+        </Suspender>
+      </Suspense>,
+    );
+
+    expect(rendered.length).toBe(3);
+    expect(rendered[0]).toStrictEqual(0);
+    expect(rendered[1].type).toStrictEqual(fallbackJsx.type);
+    expect(rendered[2]).toStrictEqual(1);
+  });
+
+  it('should render fallback with suspense 2', async () => {
+    const { Suspender, suspended } = createSuspender();
+
+    const fallbackJsx = <text>loading...</text>;
+
+    const rendered = renderToString(
+      <Suspense fallback={fallbackJsx}>
+        <view attr={Math.random()}>
+          <Suspender>
+            <text className='foo'>bar</text>
+          </Suspender>
+        </view>
+      </Suspense>,
+    );
+
+    expect(rendered.length).toBe(3);
+    expect(rendered[0]).toStrictEqual(0);
+    expect(rendered[1].type).toStrictEqual(fallbackJsx.type);
+    expect(rendered[2]).toStrictEqual(1);
+  });
+
+  it('should render fallback with suspense 3', async () => {
+    const { Suspender, suspended } = createSuspender();
+
+    const fallbackJsx1 = <text>{`loading1...`}</text>;
+    const fallbackJsx2 = <text>{`loading2...`}</text>;
+
+    const fallbackJsx = (
+      <>
+        {fallbackJsx1}
+        {fallbackJsx2}
+      </>
+    );
+
+    const rendered = renderToString(
+      <Suspense fallback={fallbackJsx}>
+        <view attr={Math.random()}>
+          <Suspender>
+            <text className='foo'>bar</text>
+          </Suspender>
+        </view>
+      </Suspense>,
+    );
+
+    expect(rendered).toMatchInlineSnapshot(`
+      [
+        0,
+        {
+          "children": undefined,
+          "extraProps": undefined,
+          "id": -26,
+          "type": "__Card__:__snapshot_a94a8_test_23",
+          "values": undefined,
+        },
+        3,
+        "loading1...",
+        1,
+        0,
+        {
+          "children": undefined,
+          "extraProps": undefined,
+          "id": -27,
+          "type": "__Card__:__snapshot_a94a8_test_24",
+          "values": undefined,
+        },
+        3,
+        "loading2...",
+        1,
+      ]
+    `);
+
+    expect(rendered[1].type).toStrictEqual(fallbackJsx1.type);
+    expect(rendered[6].type).toStrictEqual(fallbackJsx2.type);
+  });
+
+  it('should render fallback with nested suspense 1', async () => {
+    const { Suspender: Suspender1, suspended: suspended1 } = createSuspender();
+    const { Suspender: Suspender2, suspended: suspended2 } = createSuspender();
+
+    const fallbackJsx1 = <text>loading1...</text>;
+    const fallbackJsx2 = <text>loading2...</text>;
+
+    const rendered = renderToString(
+      <Suspense fallback={fallbackJsx1}>
+        <view attr={Math.random()}>
+          <Suspender1>
+            <text className='foo'>bar</text>
+            <Suspender2 fallback={fallbackJsx2}>
+              <text className='foo'>bar</text>
+            </Suspender2>
+          </Suspender1>
+        </view>
+      </Suspense>,
+    );
+
+    expect(rendered.length).toBe(3);
+    expect(rendered[0]).toStrictEqual(0);
+    expect(rendered[1].type).toStrictEqual(fallbackJsx1.type);
+    expect(rendered[2]).toStrictEqual(1);
+  });
+
+  it('should render fallback with nested suspense 2', async () => {
+    const { Suspender: Suspender1, suspended: suspended1 } = createSuspender();
+    const { Suspender: Suspender2, suspended: suspended2 } = createSuspender();
+    suspended1.resolve();
+    await waitSchedule();
+
+    const fallbackJsx1 = <text>loading1...</text>;
+    const fallbackJsx2 = <text>loading2...</text>;
+    const resolvedJsx1 = <text className='foo'>bar</text>;
+    const resolvedJsx2 = <text className='foo'>bar</text>;
+
+    const rendered = renderToString(
+      <Suspense>
+        <Suspender1 fallback={fallbackJsx1}>
+          <>
+            {resolvedJsx1}
+            <Suspense fallback={fallbackJsx2}>
+              <Suspender2>
+                <text className='foo' attr={Math.random()}>bar</text>
+              </Suspender2>
+            </Suspense>
+            {resolvedJsx2}
+          </>
+        </Suspender1>
+      </Suspense>,
+    );
+
+    expect(rendered.length).toBe(9);
+    expect(rendered[1].type).toStrictEqual(resolvedJsx1.type);
+    expect(rendered[4].type).toStrictEqual(fallbackJsx2.type);
+    expect(rendered[7].type).toStrictEqual(resolvedJsx2.type);
+  });
+
+  it('should render text with resolved suspense', async () => {
+    const { Suspender, suspended } = createSuspender();
+    suspended.resolve();
+    await waitSchedule();
+
+    const resolvedJsx = <text className='foo'>bar</text>;
+
+    const rendered = renderToString(
+      <Suspense fallback={<text>loading...</text>}>
+        <Suspender>
+          {resolvedJsx}
+        </Suspender>
+      </Suspense>,
+    );
+
+    expect(rendered.length).toBe(3);
+    expect(rendered[0]).toStrictEqual(0);
+    expect(rendered[1].type).toStrictEqual(resolvedJsx.type);
+    expect(rendered[2]).toStrictEqual(1);
+  });
+
+  it('should render text with nested suspense', async () => {
+    const { Suspender: Suspender1, suspended: suspended1 } = createSuspender();
+    const { Suspender: Suspender2, suspended: suspended2 } = createSuspender();
+    const { Suspender: Suspender3, suspended: suspended3 } = createSuspender();
+    suspended1.resolve();
+    suspended2.resolve();
+    suspended3.resolve();
+    await waitSchedule();
+
+    const resolvedJsx1 = <text className='foo'>bar1</text>;
+    const resolvedJsx2 = <text className='foo'>bar2</text>;
+    const resolvedJsx3 = <text className='foo'>bar3</text>;
+    const resolvedJsx4 = <text className='foo'>bar4</text>;
+    const resolvedJsx5 = <text className='foo'>bar5</text>;
+
+    const rendered = renderToString(
+      <view>
+        <Suspense fallback={<text>loading...</text>}>
+          <Suspender1>
+            {resolvedJsx1}
+            <Suspense fallback={<text>loading...</text>}>
+              <Suspender2>
+                {resolvedJsx2}
+                <Suspense fallback={<text>loading...</text>}>
+                  <Suspender3>
+                    {resolvedJsx3}
+                  </Suspender3>
+                </Suspense>
+                {resolvedJsx4}
+              </Suspender2>
+            </Suspense>
+            {resolvedJsx5}
+          </Suspender1>
+        </Suspense>
+      </view>,
+    );
+
+    expect(rendered.length).toBe(18);
+    expect(rendered[3].type).toStrictEqual(resolvedJsx1.type);
+    expect(rendered[6].type).toStrictEqual(resolvedJsx2.type);
+    expect(rendered[9].type).toStrictEqual(resolvedJsx3.type);
+    expect(rendered[12].type).toStrictEqual(resolvedJsx4.type);
+    expect(rendered[15].type).toStrictEqual(resolvedJsx5.type);
   });
 });
 
@@ -725,7 +987,6 @@ describe('renderOpcodesInto', () => {
       const componentVNodeC = vnodeC2.props.children;
       expect(componentVNodeC.type).toBe(Fragment);
       expect(componentVNodeC.props.children).toHaveLength(4);
-      expect(componentVNodeC.__c.constructor).toBe(Fragment);
       // FIXME(hzy): there is still a cycle reference
       expect(componentVNodeC.__c.__v).toBe(componentVNodeC);
       componentVNodeC.props.children.forEach((vnode) => {
@@ -762,8 +1023,8 @@ describe('createElement', () => {
         {
           "children": undefined,
           "extraProps": undefined,
-          "id": -59,
-          "type": "__Card__:__snapshot_a94a8_test_44",
+          "id": -90,
+          "type": "__Card__:__snapshot_a94a8_test_75",
           "values": undefined,
         },
         1,
@@ -776,8 +1037,8 @@ describe('createElement', () => {
         {
           "children": undefined,
           "extraProps": undefined,
-          "id": -60,
-          "type": "__Card__:__snapshot_a94a8_test_44",
+          "id": -91,
+          "type": "__Card__:__snapshot_a94a8_test_75",
           "values": undefined,
         },
         1,
@@ -798,8 +1059,8 @@ describe('createElement', () => {
         {
           "children": undefined,
           "extraProps": undefined,
-          "id": -61,
-          "type": "__Card__:__snapshot_a94a8_test_45",
+          "id": -92,
+          "type": "__Card__:__snapshot_a94a8_test_76",
           "values": undefined,
         },
         1,
@@ -812,8 +1073,8 @@ describe('createElement', () => {
         {
           "children": undefined,
           "extraProps": undefined,
-          "id": -62,
-          "type": "__Card__:__snapshot_a94a8_test_45",
+          "id": -93,
+          "type": "__Card__:__snapshot_a94a8_test_76",
           "values": undefined,
         },
         1,
@@ -874,7 +1135,9 @@ describe('createElement', () => {
 
 describe('cloneElement', () => {
   it('should clone component', () => {
-    function Comp() {}
+    function Comp() {
+    }
+
     const instance = <Comp prop1={1}>hello</Comp>;
     const clone = cloneElement(instance);
 
@@ -888,7 +1151,9 @@ describe('cloneElement', () => {
   });
 
   it('should merge new props', () => {
-    function Foo() {}
+    function Foo() {
+    }
+
     const instance = <Foo prop1={1} prop2={2} />;
     const clone = cloneElement(instance, { prop1: -1, newProp: -2 });
 
@@ -901,7 +1166,9 @@ describe('cloneElement', () => {
   });
 
   it('should override children if specified', () => {
-    function Foo() {}
+    function Foo() {
+    }
+
     const instance = <Foo>hello</Foo>;
     const clone = cloneElement(instance, null, 'world', '!');
 
@@ -911,7 +1178,9 @@ describe('cloneElement', () => {
   });
 
   it('should override children if null is provided as an argument', () => {
-    function Foo() {}
+    function Foo() {
+    }
+
     const instance = <Foo>hello</Foo>;
     const clone = cloneElement(instance, { children: 'bar' }, null);
 
@@ -921,7 +1190,9 @@ describe('cloneElement', () => {
   });
 
   it('should override key if specified', () => {
-    function Foo() {}
+    function Foo() {
+    }
+
     const instance = <Foo key='1'>hello</Foo>;
 
     let clone = cloneElement(instance);
@@ -934,9 +1205,15 @@ describe('cloneElement', () => {
   });
 
   it('should override ref if specified', () => {
-    function a() {}
-    function b() {}
-    function Foo() {}
+    function a() {
+    }
+
+    function b() {
+    }
+
+    function Foo() {
+    }
+
     const instance = <Foo ref={a}>hello</Foo>;
 
     let clone = cloneElement(instance);
@@ -954,6 +1231,7 @@ describe('cloneElement', () => {
         return <div style={{ color: props.color }}>thing</div>;
       }
     }
+
     Example.defaultProps = { color: 'blue' };
 
     const element = <Example color='red' />;

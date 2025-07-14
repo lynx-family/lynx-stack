@@ -7,12 +7,6 @@ describe('mainThreadLazy', () => {
     return <view></view>;
   }
 
-  it('should not throw when async', () => {
-    const Lazy = mainThreadLazy(() => Promise.resolve({ default: App }));
-
-    expect(renderToString(<Lazy />)).toMatchInlineSnapshot(`[]`);
-  });
-
   it('should not throw when sync', () => {
     const Lazy = mainThreadLazy(() => {
       const ret = { default: App };
