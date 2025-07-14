@@ -466,6 +466,7 @@ export function createMainThreadGlobalThis(
     page.setAttribute(cssIdAttribute, cssID + '');
     page.setAttribute(parentComponentUniqueIdAttribute, '0');
     page.setAttribute(componentIdAttribute, componentID);
+    __MarkTemplateElement(page);
     if (pageConfig.defaultDisplayLinear === false) {
       page.setAttribute(lynxDefaultDisplayLinearAttribute, 'false');
     }

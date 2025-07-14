@@ -1,6 +1,7 @@
 import {
   I18nResources,
   inShadowRootStyles,
+  lynxPartIdAttribute,
   lynxUniqueIdAttribute,
   type AddEventPAPI,
   type InitI18nResources,
@@ -81,7 +82,8 @@ const builtinTagTransformMap = {
 // @ts-expect-error
 OffscreenElement.prototype.toJSON = function toJSON(this: OffscreenElement) {
   return {
-    ssrID: this[_attributes].get(lynxUniqueIdAttribute)!,
+    ssrID: this[_attributes].get(lynxPartIdAttribute)
+      ?? this[_attributes].get(lynxUniqueIdAttribute)!,
   };
 };
 
