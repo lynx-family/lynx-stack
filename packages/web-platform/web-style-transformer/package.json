@@ -22,7 +22,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "wasm-pack build --target web --out-dir dist --out-name index --mode no-install && node -e \"require('fs').rmSync('dist/.gitignore')\"",
+    "build": "wasm-pack build --target web --out-dir dist --out-name index --mode no-install && node -e \"require('fs').rmSync('dist/.gitignore', { force: true })\"",
     "build:wasm-bindgen": "wasm-bindgen --version || cargo install wasm-bindgen-cli",
     "build:wasm-pack": "wasm-pack --version || cargo install wasm-pack"
   }
