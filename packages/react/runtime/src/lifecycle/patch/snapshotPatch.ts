@@ -19,28 +19,34 @@ export const SnapshotOperation = {
   DEV_ONLY_RegisterWorklet: 101,
 } as const;
 
-// Operation format definitions:
-//
-// [opcode: SnapshotOperation.CreateElement, type: string, id: number]
-// [opcode: SnapshotOperation.InsertBefore, parentId: number, id: number, beforeId: number | undefined]
-// [opcode: SnapshotOperation.RemoveChild, parentId: number, childId: number]
-// [opcode: SnapshotOperation.SetAttribute, id: number, dynamicPartIndex: number, value: any]
-// [opcode: SnapshotOperation.SetAttributes, id: number, value: any]
-// [
-//   opcode: SnapshotOperation.DEV_ONLY_AddSnapshot,
-//   uniqID: string,
-//   create: string,
-//   update: string[],
-//   /** The same as Snapshot['slot'] */
-//   slot: [DynamicPartType, number][],
-//   cssId: number | undefined,
-//   entryName: string | undefined
-// ]
-// [
-//   opcode: SnapshotOperation.DEV_ONLY_RegisterWorklet,
-//   hash: string,
-//   fn: string,
-// ]
+export const SnapshotOperationParams: Record<number, { name: string; params: string[] }> = /* @__PURE__ */ {
+  [SnapshotOperation.CreateElement]: { name: 'CreateElement', params: ['type', /* string */ 'id' /* number */] },
+  [SnapshotOperation.InsertBefore]: {
+    name: 'InsertBefore',
+    params: ['parentId', /* number */ 'childId', /* number */ 'beforeId' /* number | undefined */],
+  },
+  [SnapshotOperation.RemoveChild]: { name: 'RemoveChild', params: ['parentId', /* number */ 'childId' /* number */] },
+  [SnapshotOperation.SetAttribute]: {
+    name: 'SetAttribute',
+    params: ['id', /* number */ 'dynamicPartIndex', /* number */ 'value' /* any */],
+  },
+  [SnapshotOperation.SetAttributes]: { name: 'SetAttributes', params: ['id', /* number */ 'values' /* any */] },
+  [SnapshotOperation.DEV_ONLY_AddSnapshot]: {
+    name: 'DEV_ONLY_AddSnapshot',
+    params: [
+      'uniqID', /* string */
+      'create', /* string */
+      'update', /* string[] */
+      'slot', /* [DynamicPartType, number][] */
+      'cssId', /* number | undefined */
+      'entryName', /* string | undefined */
+    ],
+  },
+  [SnapshotOperation.DEV_ONLY_RegisterWorklet]: {
+    name: 'DEV_ONLY_RegisterWorklet',
+    params: ['hash', /* string */ 'fnStr' /* string */],
+  },
+} as const;
 
 export type SnapshotPatch = unknown[];
 
