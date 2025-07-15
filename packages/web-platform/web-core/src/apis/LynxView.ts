@@ -479,9 +479,7 @@ export class LynxView extends HTMLElement {
           for (const rule of this.injectStyleRules) {
             styleSheet.insertRule(rule);
           }
-          const injectHeadLinks =
-            this.getAttribute('inject-head-links') !== 'false';
-          if (injectHeadLinks) {
+          if (this.injectHeadLinks) {
             document.head.querySelectorAll('link[rel="stylesheet"]').forEach(
               (linkElement) => {
                 const href = (linkElement as HTMLLinkElement).href;

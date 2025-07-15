@@ -50,4 +50,92 @@ export const inShadowRootStyles: string[] = [
   `[lynx-default-overflow-visible="true"] x-view{
     overflow: visible;
   }`,
+  `@property --lynx-display {
+    syntax: "linear | flex";
+    inherits: false;
+    initial-value: linear;
+  }`,
+  `@property --lynx-linear-weight-sum {
+    syntax: "<number>";
+    inherits: false;
+    initial-value: 1;
+  }`,
+  `@property --lynx-linear-weight {
+    syntax: "<number>";
+    inherits: false;
+    initial-value: 0;
+  }`,
+  `@property --justify-content-column {
+    syntax: "flex-start|flex-end|center|space-between|space-around";
+    inherits: false;
+    initial-value: flex-start;
+  }`,
+  `@property --justify-content-column-reverse {
+    syntax: "flex-start|flex-end|center|space-between|space-around";
+    inherits: false;
+    initial-value: flex-start;
+  }`,
+  `@property --justify-content-row {
+    syntax: "flex-start|flex-end|center|space-between|space-around";
+    inherits: false;
+    initial-value: flex-start;
+  }`,
+  `
+  @property --justify-content-row-reverse {
+    syntax: "flex-start|flex-end|center|space-between|space-around";
+    inherits: false;
+    initial-value: flex-start;
+  }`,
+  `@property --align-self-row {
+    syntax: "start|end|center|stretch|auto";
+    inherits: false;
+    initial-value: auto;
+  }`,
+  `@property --align-self-column {
+    syntax: "start|end|center|stretch|auto";
+    inherits: false;
+    initial-value: auto;
+  }`,
+  `@property --lynx-linear-weight-basis {
+    syntax: "auto|<number>|<length>";
+    inherits: false;
+    initial-value: auto;
+  }`,
+  `@property --lynx-linear-orientation {
+    syntax: "<custom-ident>";
+    inherits: false;
+    initial-value: vertical;
+  }`,
+  `@property --flex-direction {
+    syntax: "*";
+    inherits: false;
+  }`,
+  `@property --flex-wrap {
+    syntax: "*";
+    inherits: false;
+  }`,
+  `@property --flex-grow {
+    syntax: "<number>";
+    inherits: false;
+    initial-value: 0;
+  }`,
+  `@property --flex-shrink {
+    syntax: "<number>";
+    inherits: false;
+    initial-value: 1;
+  }`,
+  `@property --flex-basis {
+    syntax: "*";
+    inherits: false;
+    initial-value: auto;
+  }`,
+  `@property --flex-value {
+    syntax: "*";
+    inherits: false;
+  }`,
+  `@property --linear-justify-content {
+    syntax: "flex-start|flex-end|center|space-between|space-around";
+    inherits: false;
+    initial-value: flex-start;
+  }`,
 ];
