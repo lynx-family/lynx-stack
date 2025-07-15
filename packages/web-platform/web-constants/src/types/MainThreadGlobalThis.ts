@@ -342,7 +342,7 @@ export interface MainThreadGlobalThis {
   lynx: MainThreadLynx;
   processData?: ProcessDataCallback;
   ssrEncode?: () => string;
-  ssrHydrate?: (encodeData?: string) => void;
+  ssrHydrate?: (encodeData?: string | null) => void;
   _ReportError: (error: Error, _: unknown) => void;
   _SetSourceMapRelease: (errInfo: JSErrorInfo) => void;
   __OnLifecycleEvent: (lifeCycleEvent: Cloneable) => void;

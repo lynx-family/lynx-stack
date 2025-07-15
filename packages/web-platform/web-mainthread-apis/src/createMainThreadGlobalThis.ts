@@ -57,6 +57,7 @@ import {
   type MinimalRawEventObject,
   type I18nResourceTranslationOptions,
   lynxDisposedAttribute,
+  type SSRDehydrateHooks,
 } from '@lynx-js/web-constants';
 import { globalMuteableVars } from '@lynx-js/web-constants';
 import { createMainThreadLynx } from './createMainThreadLynx.js';
@@ -149,6 +150,7 @@ export interface MainThreadRuntimeConfig {
     & Pick<Element, 'append' | 'addEventListener'>
     & Partial<Pick<Element, 'querySelectorAll'>>;
   jsContext: LynxContextEventTarget;
+  ssrHooks?: SSRDehydrateHooks;
 }
 
 export function createMainThreadGlobalThis(
@@ -166,6 +168,7 @@ export function createMainThreadGlobalThis(
     rootDom,
     globalProps,
     styleInfo,
+    ssrHooks,
   } = config;
   const lynxUniqueIdToElement: WeakRef<WebFiberElementImpl>[] = [];
   const elementToRuntimeInfoMap: WeakMap<WebFiberElementImpl, LynxRuntimeInfo> =
@@ -669,7 +672,7 @@ export function createMainThreadGlobalThis(
       : undefined,
     __MarkTemplateElement,
     __MarkPartElement,
-    __AddEvent,
+    __AddEvent: ssrHooks?.__AddEvent ?? __AddEvent,
     __GetEvent,
     __GetEvents,
     __SetEvents,

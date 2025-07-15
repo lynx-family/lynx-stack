@@ -24,6 +24,7 @@ import {
   type I18nResources,
   dispatchI18nResourceEndpoint,
   type Cloneable,
+  type SSRDehydrateHooks,
 } from '@lynx-js/web-constants';
 import { registerCallLepusMethodHandler } from './crossThreadHandlers/registerCallLepusMethodHandler.js';
 import { registerGetCustomSectionHandler } from './crossThreadHandlers/registerGetCustomSectionHandler.js';
@@ -47,6 +48,7 @@ export function prepareMainThreadAPIs(
     options: I18nResourceTranslationOptions,
   ) => void,
   initialI18nResources: (data: InitI18nResources) => I18nResources,
+  ssrHooks?: SSRDehydrateHooks,
 ) {
   const postTimingFlags = backgroundThreadRpc.createCall(
     postTimingFlagsEndpoint,
@@ -115,6 +117,7 @@ export function prepareMainThreadAPIs(
       styleInfo,
       lepusCode: lepusCodeLoaded,
       rootDom,
+      ssrHooks,
       callbacks: {
         mainChunkReady: () => {
           markTimingInternal('data_processor_start');

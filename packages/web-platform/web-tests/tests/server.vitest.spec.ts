@@ -20,4 +20,9 @@ describe('server-tests', () => {
     const html = await genTemplate('config-css-selector-false-exchange-class');
     expect(html).toContain('[l-uid="2"]');
   });
+
+  test('config-css-selector-false-exchange-class', async () => {
+    const html = await genTemplate('basic-bindtap');
+    expect(html).toContain('bindEvent');
+  });
 });
