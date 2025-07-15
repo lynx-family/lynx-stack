@@ -13,6 +13,8 @@ import {
   I18nResources,
   type InitI18nResources,
   type Cloneable,
+  lynxUniqueIdAttribute,
+  type SSRDumpInfo,
 } from '@lynx-js/web-constants';
 import { Rpc } from '@lynx-js/web-worker-rpc';
 import { dispatchLynxViewEvent } from '../utils/dispatchLynxViewEvent.js';
@@ -34,6 +36,7 @@ export function createRenderAllOnUI(
   callbacks: {
     onError?: (err: Error, release: string, fileName: string) => void;
   },
+  ssrDumpInfo: SSRDumpInfo | undefined,
 ) {
   if (!globalThis.module) {
     Object.assign(globalThis, { module: {} });
@@ -67,8 +70,51 @@ export function createRenderAllOnUI(
   );
   let mtsGlobalThis!: MainThreadGlobalThis;
   const start = async (configs: StartMainThreadContextConfig) => {
-    const mainThreadRuntime = startMainThread(configs);
-    mtsGlobalThis = await mainThreadRuntime;
+    if (ssrDumpInfo) {
+      const lynxUniqueIdToElement: WeakRef<HTMLElement>[] = [];
+      const allLynxElements = shadowRoot.querySelectorAll<HTMLElement>(
+        `[${lynxUniqueIdAttribute}]`,
+      );
+      const length = allLynxElements.length;
+      const ssrPartsMap: Record<string, HTMLElement> = {};
+      for (let ii = 0; ii < length; ii++) {
+        const element = allLynxElements[ii]! as HTMLElement;
+        const lynxUniqueId = Number(
+          element.getAttribute(lynxUniqueIdAttribute)!,
+        );
+        lynxUniqueIdToElement[lynxUniqueId] = new WeakRef<HTMLElement>(element);
+        ssrPartsMap[lynxUniqueId] = element;
+      }
+      const hydrateStyleElement = shadowRoot.querySelector(
+        `style:nth-of-type(2)`,
+      ) as HTMLStyleElement | null;
+      const styleSheet = hydrateStyleElement?.sheet;
+      const lynxUniqueIdToStyleRulesIndex: number[] = [];
+      const cssRulesLength = styleSheet?.cssRules.length ?? 0;
+      for (let ii = 0; ii < cssRulesLength; ii++) {
+        const cssRule = styleSheet?.cssRules[ii];
+        if (cssRule?.constructor.name === 'CSSStyleRule') {
+          const lynxUniqueId = parseFloat(
+            (cssRule as CSSStyleRule).selectorText.substring(
+              lynxUniqueIdAttribute.length + 3, // skip `[`, `="`
+            ),
+          );
+          if (lynxUniqueId !== undefined && !isNaN(lynxUniqueId)) {
+            lynxUniqueIdToStyleRulesIndex[lynxUniqueId] = ii;
+          }
+        }
+      }
+
+      mtsGlobalThis = await startMainThread(configs, {
+        // @ts-expect-error
+        lynxUniqueIdToElement: lynxUniqueIdToElement,
+        lynxUniqueIdToStyleRulesIndex,
+        ...ssrDumpInfo,
+        cardStyleElement: hydrateStyleElement,
+      });
+    } else {
+      mtsGlobalThis = await startMainThread(configs);
+    }
   };
   const updateDataMainThread: RpcCallType<typeof updateDataEndpoint> = async (
     ...args

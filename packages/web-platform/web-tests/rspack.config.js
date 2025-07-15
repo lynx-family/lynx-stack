@@ -59,6 +59,21 @@ const config = {
       filename: 'index.html',
     }),
     new rspack.HtmlRspackPlugin({
+      title: 'lynx-for-web-test',
+      meta: {
+        viewport:
+          'width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no',
+        'apple-mobile-web-app-capable': 'yes',
+        'apple-mobile-web-app-status-bar-style': 'default',
+        'screen-orientation': 'portrait',
+        'format-detection': 'telephone=no',
+        'x5-orientation': 'portrait',
+      },
+      chunks: ['main'],
+      scriptLoading: 'module',
+      filename: 'ssr.html',
+    }),
+    new rspack.HtmlRspackPlugin({
       title: 'mainthread-test',
       meta: {
         viewport:
@@ -151,6 +166,32 @@ const config = {
             }
 
             res.send(await genHtml(html, casename, 'fp-only'));
+            next();
+          } catch (e) {
+            res.statusCode = 500;
+            console.error(e);
+            res.send(e.toString() + '\n' + e.stack?.toString());
+            next();
+          }
+        },
+      }, {
+        name: 'ssr',
+        path: '/ssr',
+        middleware: async (req, res, next) => {
+          try {
+            const html = await readFile(
+              path.join(__dirname, 'www', 'index.html'),
+              'utf-8',
+            );
+            const casename = req.query.casename;
+            if (!casename) {
+              res.statusCode = 400;
+              res.send('casename is required');
+              next();
+              return;
+            }
+
+            res.send(await genHtml(html, casename, 'main'));
             next();
           } catch (e) {
             res.statusCode = 500;

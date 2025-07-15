@@ -95,6 +95,9 @@ jobs:
             env:
               - ENABLE_SSR=true
               - TEST_FP_ONLY=true
+          - name: SSR-ALL-ON-UI
+            env:
+              - ENABLE_SSR=true
     with:
       runs-on: lynx-ubuntu-24.04-xlarge
       is-web: true
