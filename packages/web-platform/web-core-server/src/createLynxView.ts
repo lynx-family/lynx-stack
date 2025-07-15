@@ -183,9 +183,9 @@ export async function createLynxView(
     buffer.push(
       '<lynx-view url="',
       hydrateUrl,
-      '" ssr =',
-      encodeURIComponent(JSON.stringify(ssrDumpInfo)),
-      ' ',
+      '" ssr ="',
+      encodeURI(JSON.stringify(ssrDumpInfo)),
+      '" ',
       'thread-strategy="',
       threadStrategy,
       '"',

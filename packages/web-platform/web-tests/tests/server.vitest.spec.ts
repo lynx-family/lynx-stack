@@ -21,7 +21,7 @@ describe('server-tests', () => {
     expect(html).toContain('[l-uid="2"]');
   });
 
-  test('config-css-selector-false-exchange-class', async () => {
+  test('basic-bindtap-contains-bind-event', async () => {
     const html = await genTemplate('basic-bindtap');
     expect(html).toContain('bindEvent');
   });
