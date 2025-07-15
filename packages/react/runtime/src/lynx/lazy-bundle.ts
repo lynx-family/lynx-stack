@@ -1,7 +1,6 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { lazy as backgroundLazy } from 'preact/compat';
 
 /**
  * To make code below works
@@ -153,8 +152,3 @@ function withSyncResolvers<T>() {
 
   return resolver;
 }
-
-/**
- * @internal
- */
-export const mainThreadLazy = backgroundLazy;

@@ -12,13 +12,12 @@ import renderToString from '../src/renderToOpcodes';
 import { setupPage, SnapshotInstance, snapshotInstanceManager } from '../src/snapshot';
 import { createElement, cloneElement } from '../lepus';
 import { Suspense } from 'preact/compat';
-import { Deferred } from '../src/renderToOpcodes/utils';
 
 const defaultChildren = <text>it works</text>;
 
 // `createSuspender()` is forked from `preact` unit test
 export function createSuspender() {
-  const deferred = new Deferred();
+  const deferred = Promise.withResolvers();
   let resolved;
 
   deferred.promise.then(() => (resolved = true));
@@ -530,9 +529,11 @@ describe('renderToOpcodes', () => {
         <view attr={Math.random()}>
           <Suspender1>
             <text className='foo'>bar</text>
-            <Suspender2 fallback={fallbackJsx2}>
-              <text className='foo'>bar</text>
-            </Suspender2>
+            <Suspense fallback={fallbackJsx2}>
+              <Suspender2>
+                <text className='foo'>bar</text>
+              </Suspender2>
+            </Suspense>
           </Suspender1>
         </view>
       </Suspense>,
@@ -556,8 +557,8 @@ describe('renderToOpcodes', () => {
     const resolvedJsx2 = <text className='foo'>bar</text>;
 
     const rendered = renderToString(
-      <Suspense>
-        <Suspender1 fallback={fallbackJsx1}>
+      <Suspense fallback={fallbackJsx1}>
+        <Suspender1>
           <>
             {resolvedJsx1}
             <Suspense fallback={fallbackJsx2}>
