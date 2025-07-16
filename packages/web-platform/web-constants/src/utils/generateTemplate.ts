@@ -68,6 +68,7 @@ const mainThreadInjectVars = [
   '__GetTemplateParts',
   '__MarkPartElement',
   '__MarkTemplateElement',
+  '__GetPageElement',
 ];
 
 const backgroundInjectVars = [

@@ -1,10 +1,12 @@
 import {
   I18nResources,
   inShadowRootStyles,
+  lynxPartIdAttribute,
   lynxUniqueIdAttribute,
-  type AddEventPAPI,
   type InitI18nResources,
   type StartMainThreadContextConfig,
+  type SSREventReplayInfo,
+  type SSRDumpInfo,
 } from '@lynx-js/web-constants';
 import { Rpc } from '@lynx-js/web-worker-rpc';
 import { prepareMainThreadAPIs } from '@lynx-js/web-mainthread-apis';
@@ -81,7 +83,8 @@ const builtinTagTransformMap = {
 // @ts-expect-error
 OffscreenElement.prototype.toJSON = function toJSON(this: OffscreenElement) {
   return {
-    ssrID: this[_attributes].get(lynxUniqueIdAttribute)!,
+    ssrID: this[_attributes].get(lynxPartIdAttribute)
+      ?? this[_attributes].get(lynxUniqueIdAttribute)!,
   };
 };
 
@@ -115,6 +118,7 @@ export async function createLynxView(
     },
   });
   const i18nResources = new I18nResources();
+  const events: SSREventReplayInfo[] = [];
   const { startMainThread } = prepareMainThreadAPIs(
     backgroundThreadRpc,
     offscreenDocument,
@@ -138,6 +142,16 @@ export async function createLynxView(
       i18nResources.setData(initI18nResources);
       return i18nResources;
     },
+    {
+      __AddEvent(element, eventName, eventData, eventOptions) {
+        events.push([
+          Number(element.getAttribute(lynxUniqueIdAttribute)!),
+          eventName,
+          eventData,
+          eventOptions,
+        ]);
+      },
+    },
   );
   const runtime = await startMainThread({
     template,
@@ -153,17 +167,6 @@ export async function createLynxView(
     initI18nResources,
   });
 
-  const events: [
-    number,
-    Parameters<AddEventPAPI>[1],
-    Parameters<AddEventPAPI>[2],
-    Parameters<AddEventPAPI>[3],
-  ][] = [];
-  runtime.__AddEvent = (element, eventType, eventName, newEventHandler) => {
-    const uniqueId = runtime.__GetElementUniqueID(element);
-    events.push([uniqueId, eventType, eventName, newEventHandler]);
-  };
-
   const elementTemplates = {
     ...builtinElementTemplates,
     ...overrideElementTemplates,
@@ -172,11 +175,17 @@ export async function createLynxView(
   async function renderToString(): Promise<string> {
     await firstPaintReadyPromise;
     const ssrEncodeData = runtime?.ssrEncode?.();
+    const ssrDumpInfo: SSRDumpInfo = {
+      ssrEncodeData,
+      events,
+    };
     const buffer: string[] = [];
     buffer.push(
       '<lynx-view url="',
       hydrateUrl,
-      '" ssr ',
+      '" ssr ="',
+      encodeURI(JSON.stringify(ssrDumpInfo)),
+      '" ',
       'thread-strategy="',
       threadStrategy,
       '"',
@@ -203,16 +212,6 @@ export async function createLynxView(
     buffer.push(
       '</template>',
     );
-
-    if (ssrEncodeData) {
-      buffer.push(
-        '<!--',
-        Buffer.from(JSON.stringify({ ssrEncodeData, events })).toString(
-          'base64',
-        ),
-        '-->',
-      ); // encodeURI to avoid XSS
-    }
     buffer.push('</lynx-view>');
     return buffer.join('');
   }

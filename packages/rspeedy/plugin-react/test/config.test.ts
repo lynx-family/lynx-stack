@@ -1555,6 +1555,91 @@ describe('Config', () => {
         `)
     })
 
+    test('performance.chunkSplit.strategy: "split-by-experience" along with extractStr: true', async () => {
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+      let config, ReactLynxWebpackPlugin
+
+      let rsbuild = await createRsbuild({
+        rsbuildConfig: {
+          plugins: [
+            pluginReactLynx({
+              extractStr: true,
+            }),
+            pluginStubRspeedyAPI(),
+          ],
+          performance: {
+            chunkSplit: {
+              strategy: 'split-by-experience',
+            },
+          },
+        },
+      })
+      ;[config] = await rsbuild.initConfigs()
+
+      ReactLynxWebpackPlugin = config?.plugins?.find((
+        p,
+      ): p is ReactWebpackPlugin =>
+        p?.constructor.name === 'ReactWebpackPlugin'
+      )
+
+      // @ts-expect-error private field
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      expect(ReactLynxWebpackPlugin?.options.extractStr).toBe(false)
+      // expect(config).toMatchInlineSnapshot()
+
+      rsbuild = await createRsbuild({
+        rsbuildConfig: {
+          plugins: [
+            pluginReactLynx({
+              extractStr: true,
+            }),
+            pluginStubRspeedyAPI(),
+          ],
+        },
+      })
+      ;[config] = await rsbuild.initConfigs()
+
+      ReactLynxWebpackPlugin = config?.plugins?.find((
+        p,
+      ): p is ReactWebpackPlugin =>
+        p?.constructor.name === 'ReactWebpackPlugin'
+      )
+
+      // @ts-expect-error private field
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      expect(ReactLynxWebpackPlugin?.options.extractStr).toBe(true)
+      // expect(config).toMatchInlineSnapshot()
+
+      rsbuild = await createRsbuild({
+        rsbuildConfig: {
+          plugins: [
+            pluginReactLynx({
+              extractStr: true,
+            }),
+            pluginStubRspeedyAPI(),
+          ],
+          performance: {
+            chunkSplit: {
+              strategy: 'all-in-one',
+            },
+          },
+        },
+      })
+      ;[config] = await rsbuild.initConfigs()
+
+      ReactLynxWebpackPlugin = config?.plugins?.find((
+        p,
+      ): p is ReactWebpackPlugin =>
+        p?.constructor.name === 'ReactWebpackPlugin'
+      )
+
+      // @ts-expect-error private field
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      expect(ReactLynxWebpackPlugin?.options.extractStr).toBe(true)
+      // expect(config).toMatchInlineSnapshot()
+    })
+
     test('tools.rspack.optimization.splitChunks: false', async () => {
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 

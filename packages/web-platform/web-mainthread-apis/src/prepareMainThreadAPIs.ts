@@ -24,6 +24,8 @@ import {
   type I18nResources,
   dispatchI18nResourceEndpoint,
   type Cloneable,
+  type SSRHydrateInfo,
+  type SSRDehydrateHooks,
 } from '@lynx-js/web-constants';
 import { registerCallLepusMethodHandler } from './crossThreadHandlers/registerCallLepusMethodHandler.js';
 import { registerGetCustomSectionHandler } from './crossThreadHandlers/registerGetCustomSectionHandler.js';
@@ -47,6 +49,7 @@ export function prepareMainThreadAPIs(
     options: I18nResourceTranslationOptions,
   ) => void,
   initialI18nResources: (data: InitI18nResources) => I18nResources,
+  ssrHooks?: SSRDehydrateHooks,
 ) {
   const postTimingFlags = backgroundThreadRpc.createCall(
     postTimingFlagsEndpoint,
@@ -67,6 +70,7 @@ export function prepareMainThreadAPIs(
   markTimingInternal('lepus_execute_start');
   async function startMainThread(
     config: StartMainThreadContextConfig,
+    ssrHydrateInfo?: SSRHydrateInfo,
   ): Promise<MainThreadGlobalThis> {
     let isFp = true;
     const {
@@ -115,6 +119,8 @@ export function prepareMainThreadAPIs(
       styleInfo,
       lepusCode: lepusCodeLoaded,
       rootDom,
+      ssrHydrateInfo,
+      ssrHooks,
       callbacks: {
         mainChunkReady: () => {
           markTimingInternal('data_processor_start');
@@ -156,8 +162,21 @@ export function prepareMainThreadAPIs(
             napiModulesMap,
             browserConfig,
           });
-          mtsGlobalThis.renderPage!(initData);
-          mtsGlobalThis.__FlushElementTree(undefined, {});
+          if (!ssrHydrateInfo) {
+            mtsGlobalThis.renderPage!(initData);
+            mtsGlobalThis.__FlushElementTree(undefined, {});
+          } else {
+            // replay the hydrate event
+            for (const event of ssrHydrateInfo.events) {
+              const uniqueId = event[0];
+              const element = ssrHydrateInfo.lynxUniqueIdToElement[uniqueId]
+                ?.deref();
+              if (element) {
+                mtsGlobalThis.__AddEvent(element, event[1], event[2], event[3]);
+              }
+            }
+            mtsGlobalThis.ssrHydrate?.(ssrHydrateInfo.ssrEncodeData);
+          }
         },
         flushElementTree: async (
           options,

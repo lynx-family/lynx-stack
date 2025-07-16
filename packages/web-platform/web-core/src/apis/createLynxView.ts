@@ -4,6 +4,7 @@
 
 import type {
   Cloneable,
+  SSRDumpInfo,
   I18nResourceTranslationOptions,
   InitI18nResources,
   NapiModulesMap,
@@ -32,6 +33,7 @@ export interface LynxViewConfigs {
   lynxGroupId: number | undefined;
   threadStrategy: 'all-on-ui' | 'multi-thread';
   initI18nResources: InitI18nResources;
+  ssr?: SSRDumpInfo;
 }
 
 export interface LynxView {
@@ -62,6 +64,7 @@ export function createLynxView(configs: LynxViewConfigs): LynxView {
     lynxGroupId,
     threadStrategy = 'multi-thread',
     initI18nResources,
+    ssr,
   } = configs;
   return startUIThread(
     templateUrl,
@@ -82,5 +85,6 @@ export function createLynxView(configs: LynxViewConfigs): LynxView {
     lynxGroupId,
     threadStrategy,
     callbacks,
+    ssr,
   );
 }

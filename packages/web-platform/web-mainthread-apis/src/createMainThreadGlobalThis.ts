@@ -57,6 +57,8 @@ import {
   type MinimalRawEventObject,
   type I18nResourceTranslationOptions,
   lynxDisposedAttribute,
+  type SSRHydrateInfo,
+  type SSRDehydrateHooks,
 } from '@lynx-js/web-constants';
 import { globalMuteableVars } from '@lynx-js/web-constants';
 import { createMainThreadLynx } from './createMainThreadLynx.js';
@@ -149,13 +151,13 @@ export interface MainThreadRuntimeConfig {
     & Pick<Element, 'append' | 'addEventListener'>
     & Partial<Pick<Element, 'querySelectorAll'>>;
   jsContext: LynxContextEventTarget;
+  ssrHydrateInfo?: SSRHydrateInfo;
+  ssrHooks?: SSRDehydrateHooks;
 }
 
 export function createMainThreadGlobalThis(
   config: MainThreadRuntimeConfig,
 ): MainThreadGlobalThis {
-  let pageElement!: WebFiberElementImpl;
-  let uniqueIdInc = 1;
   let timingFlags: string[] = [];
   let renderPage: MainThreadGlobalThis['renderPage'];
   const {
@@ -166,11 +168,19 @@ export function createMainThreadGlobalThis(
     rootDom,
     globalProps,
     styleInfo,
+    ssrHydrateInfo,
+    ssrHooks,
   } = config;
-  const lynxUniqueIdToElement: WeakRef<WebFiberElementImpl>[] = [];
+  const lynxUniqueIdToElement: WeakRef<WebFiberElementImpl>[] =
+    ssrHydrateInfo?.lynxUniqueIdToElement ?? [];
+  const lynxUniqueIdToStyleRulesIndex: number[] =
+    ssrHydrateInfo?.lynxUniqueIdToStyleRulesIndex ?? [];
   const elementToRuntimeInfoMap: WeakMap<WebFiberElementImpl, LynxRuntimeInfo> =
     new WeakMap();
-  const lynxUniqueIdToStyleRulesIndex: number[] = [];
+
+  let pageElement: WebFiberElementImpl | undefined = lynxUniqueIdToElement[1]
+    ?.deref();
+  let uniqueIdInc = lynxUniqueIdToElement.length || 1;
   /**
    * for "update" the globalThis.val in the main thread
    */
@@ -194,13 +204,19 @@ export function createMainThreadGlobalThis(
   const cssOGInfo: CssOGInfo = pageConfig.enableCSSSelector
     ? {}
     : genCssOGInfo(styleInfo);
-  const cardStyleElement = callbacks.createElement('style');
-  cardStyleElement.innerHTML = genCssContent(
-    styleInfo,
-    pageConfig,
-  );
-  // @ts-expect-error
-  rootDom.append(cardStyleElement);
+  let cardStyleElement: HTMLStyleElement;
+  if (ssrHydrateInfo?.cardStyleElement) {
+    cardStyleElement = ssrHydrateInfo.cardStyleElement;
+  } else {
+    cardStyleElement = callbacks.createElement(
+      'style',
+    ) as unknown as HTMLStyleElement;
+    cardStyleElement.innerHTML = genCssContent(
+      styleInfo,
+      pageConfig,
+    );
+    rootDom.append(cardStyleElement);
+  }
   const cardStyleElementSheet =
     (cardStyleElement as unknown as HTMLStyleElement).sheet!;
   const updateCssOGStyle: (
@@ -466,6 +482,7 @@ export function createMainThreadGlobalThis(
     page.setAttribute(cssIdAttribute, cssID + '');
     page.setAttribute(parentComponentUniqueIdAttribute, '0');
     page.setAttribute(componentIdAttribute, componentID);
+    __MarkTemplateElement(page);
     if (pageConfig.defaultDisplayLinear === false) {
       page.setAttribute(lynxDefaultDisplayLinearAttribute, 'false');
     }
@@ -668,7 +685,7 @@ export function createMainThreadGlobalThis(
       : undefined,
     __MarkTemplateElement,
     __MarkPartElement,
-    __AddEvent,
+    __AddEvent: ssrHooks?.__AddEvent ?? __AddEvent,
     __GetEvent,
     __GetEvents,
     __SetEvents,

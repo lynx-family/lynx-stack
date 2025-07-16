@@ -187,19 +187,18 @@ export class LynxEncodePluginImpl {
           // ```
           '/app-service.js': [
             this.#appServiceBanner(),
-            ...[externalManifest, inlinedManifest].flatMap(manifest =>
-              Object.keys(manifest).map(name => {
-                if (manifest === externalManifest) {
-                  return `lynx.requireModuleAsync('${
-                    this.#formatJSName(name, publicPath)
-                  }')`;
-                } else {
-                  return `module.exports=lynx.requireModule('${
-                    this.#formatJSName(name, '/')
-                  }',globDynamicComponentEntry?globDynamicComponentEntry:'__Card__')`;
-                }
-              }).join(',')
-            ),
+            Object.keys(externalManifest).map(name =>
+              `lynx.requireModuleAsync('${
+                this.#formatJSName(name, publicPath)
+              }')`
+            ).join(','),
+            ';module.exports=',
+            Object.keys(inlinedManifest).map(name =>
+              `lynx.requireModule('${
+                this.#formatJSName(name, '/')
+              }',globDynamicComponentEntry?globDynamicComponentEntry:'__Card__')`
+            ).join(','),
+            ';',
             this.#appServiceFooter(),
           ].join(''),
           ...Object.fromEntries(

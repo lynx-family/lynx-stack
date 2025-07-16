@@ -14,6 +14,7 @@ import {
   type Cloneable,
   dispatchMarkTiming,
   flushMarkTiming,
+  type SSRDumpInfo,
 } from '@lynx-js/web-constants';
 import { loadTemplate } from '../utils/loadTemplate.js';
 import { createUpdateData } from './crossThreadHandlers/createUpdateData.js';
@@ -35,6 +36,7 @@ export function startUIThread(
   lynxGroupId: number | undefined,
   threadStrategy: 'all-on-ui' | 'multi-thread',
   callbacks: StartUIThreadCallbacks,
+  ssr?: SSRDumpInfo,
 ): LynxView {
   const createLynxStartTiming = performance.now() + performance.timeOrigin;
   const allOnUI = threadStrategy === 'all-on-ui';
@@ -79,6 +81,7 @@ export function startUIThread(
       markTimingInternal,
       flushMarkTimingInternal,
       callbacks,
+      ssr,
     )
     : createRenderMultiThread(
       /* main-to-ui rpc*/ mainThreadRpc,

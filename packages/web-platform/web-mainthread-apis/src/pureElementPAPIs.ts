@@ -314,10 +314,12 @@ export const __SetInlineStyles: SetInlineStylesPAPI = /*#__PURE__*/ (
     element.setAttribute('style', transformInlineStyleString(value));
   } else {
     const { transformedStyle } = transformParsedStyles(
-      Object.entries(value).map(([k, value]) => [
-        hyphenateStyleName(k),
-        value,
-      ]),
+      Object.entries(value).map(([k, value]) =>
+        [
+          hyphenateStyleName(k),
+          value?.toString?.() ?? '',
+        ] as [string, string]
+      ),
     );
     const transformedStyleStr = transformedStyle.map((
       [property, value],

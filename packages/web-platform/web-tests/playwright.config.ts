@@ -19,7 +19,10 @@ const testMatch: string | undefined = (() => {
   if (testFPOnly) {
     return '**/fp-only.spec.ts';
   }
-  if (enableMultiThread || enableSSR) {
+  if (enableSSR) {
+    return '**/react.{test,spec}.ts';
+  }
+  if (enableMultiThread) {
     return '**/{react,web-core,main-thread-apis}.{test,spec}.ts';
   }
   return undefined;

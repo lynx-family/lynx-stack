@@ -5,20 +5,31 @@ import type { RsbuildPluginAPI } from '@rsbuild/core'
 
 import { LAYERS } from '@lynx-js/react-webpack-plugin'
 
-export function applyGenerator(api: RsbuildPluginAPI): void {
+import type { PluginReactLynxOptions } from './pluginReactLynx.js'
+
+export function applyGenerator(
+  api: RsbuildPluginAPI,
+  options: Required<PluginReactLynxOptions>,
+): void {
   api.modifyBundlerChain({
     order: 'pre',
     handler: chain => {
       // Avoid generating `JSON.parse()` for a JSON file which has more than 20 characters as it increases the bundle size of `main-thread.js`.
       // For more detail, see https://github.com/webpack/webpack/issues/19319
-      chain.module
-        .rule(`json-parse:${LAYERS.MAIN_THREAD}`)
-        .issuerLayer(LAYERS.MAIN_THREAD)
+      const rule = chain.module
+        .rule(`react:json-parse`)
         .test(/\.json$/)
         .type('json')
         .generator({
           JSONParse: false,
         })
+
+      // If `extractStr` is enabled, we also need to apply the rule for both main thread and background thread.
+      // It will ensure that string literals are same in both main thread and background thread.
+      // Otherwise, we only apply the rule for main thread, because `JSON.parse` in background thread has better performance.
+      if (!options.extractStr) {
+        rule.issuerLayer(LAYERS.MAIN_THREAD)
+      }
     },
   })
 }

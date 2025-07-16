@@ -24,13 +24,15 @@ export async function SSR(rawTemplate, caseName, projectName = 'fp-only') {
     globalProps: {},
     template: rawTemplate,
     templateName: caseName,
-    hydrateUrl: `/dist/${caseName}/index.web.json`,
-    injectStyles: `@import url("/${projectName}.css");`,
+    hydrateUrl: `/dist/ssr/${caseName}/index.web.json`,
+    injectStyles:
+      `@import url("/${projectName}.css"); .injected-style-rules{background:green}`,
     autoSize: true,
     lynxViewStyle: 'width:100vw; max-width: 500px;',
+    threadStrategy: 'all-on-ui',
   });
   const ssrHtml = await lynxView.renderToString();
-  return ssrHtml;
+  return ssrHtml.toString('utf-16le');
 }
 export async function genTemplate(caseName, projectName = 'fp-only') {
   const ssrHtml = await SSR(

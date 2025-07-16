@@ -7,6 +7,10 @@ import {
   type OffscreenElement,
 } from '@lynx-js/offscreen-document/webworker';
 import { escapeHtml } from './utils/escapeHtml.js';
+import {
+  lynxPartIdAttribute,
+  lynxUniqueIdAttribute,
+} from '@lynx-js/web-constants';
 
 type ShadowrootTemplates =
   | ((
@@ -25,10 +29,16 @@ function getInnerHTMLImpl(
   for (const [key, value] of element[_attributes]) {
     buffer.push(' ');
     buffer.push(key);
-    buffer.push('="');
-    buffer.push(escapeHtml(value));
-    buffer.push('"');
+    if (value.length > 0) {
+      buffer.push('="');
+      buffer.push(escapeHtml(value));
+      buffer.push('"');
+    }
   }
+
+  const partId = element[_attributes].get(lynxPartIdAttribute)
+    ?? element[_attributes].get(lynxUniqueIdAttribute)!;
+  buffer.push(' ', lynxPartIdAttribute, '="', partId, '"');
 
   buffer.push('>');
   const templateImpl = shadowrootTemplates[localName];
