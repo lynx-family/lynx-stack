@@ -407,7 +407,8 @@ export function hydrate(
             (a, b) => {
               helper(a, b);
             },
-            type === DynamicPartType.ListChildren,
+            // Should be false in hydrate as SerializedSnapshotInstance has no item-key
+            false,
           );
           diffArrayAction(
             beforeChildNodes,
