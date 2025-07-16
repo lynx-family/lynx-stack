@@ -13,6 +13,7 @@ export function App(props: {
   useEffect(() => {
     console.info('Hello, ReactLynx')
     props.onMounted?.()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const onTap = useCallback(() => {
@@ -48,7 +49,7 @@ export function App(props: {
             to see updates!
           </text>
         </view>
-        <view style={{ flex: 1 }}></view>
+        <view style={{ flex: 1 }} />
       </view>
     </view>
   )

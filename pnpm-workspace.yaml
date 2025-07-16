@@ -1,6 +1,7 @@
 packages:
   - examples/*
   - packages/background-only
+  - packages/eslint-config-reactlynx
   - packages/react
   - packages/react/refresh
   - packages/react/runtime
@@ -36,6 +37,7 @@ overrides:
   "@rspack/core": "$@rspack/core"
   "@rsbuild/core>@rspack/core": "$@rspack/core"
   "path-serializer": "^0.5.0"
+  "@types/eslint": "npm:eslint@^9.30.0"
 
 patchedDependencies:
   "@napi-rs/cli@2.18.4": "patches/@napi-rs__cli@2.18.4.patch"

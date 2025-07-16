@@ -35,9 +35,10 @@
     "test": "vitest"
   },
   "dependencies": {
-    "create-rstack": "1.5.4"
+    "create-rstack": "1.5.5"
   },
   "devDependencies": {
+    "@lynx-js/eslint-config-reactlynx": "workspace:*",
     "@lynx-js/qrcode-rsbuild-plugin": "workspace:^",
     "@lynx-js/react": "workspace:^",
     "@lynx-js/react-rsbuild-plugin": "workspace:^",
