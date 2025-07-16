@@ -28,9 +28,9 @@ catalogs:
 
   # Rspack monorepo packages
   rspack:
-    "@rspack/cli": "1.4.6"
-    "@rspack/core": "1.4.6"
-    "@rspack/test-tools": "1.4.6"
+    "@rspack/cli": "1.4.8"
+    "@rspack/core": "1.4.8"
+    "@rspack/test-tools": "1.4.8"
 
 overrides:
   "@rspack/core": "$@rspack/core"
