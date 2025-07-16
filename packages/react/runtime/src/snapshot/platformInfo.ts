@@ -42,7 +42,7 @@ function updateListItemPlatformInfo(
       (__pendingListUpdates.values[list.__id] ??= new ListUpdateInfoRecording(list)).onSetAttribute(
         ctx,
         newValue,
-        oldValue,
+        oldValue as PlatformInfo,
       );
     }
   }
