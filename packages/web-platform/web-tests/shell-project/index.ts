@@ -21,8 +21,7 @@ if (casename) {
     hasdir ? `/${casename2}` : ''
   }`;
   const lynxView = isSSR
-    ? document.querySelector('lynx-view') as any
-      ?? document.createElement('div')
+    ? document.querySelector('lynx-view')!
     : undefined;
   lynxViewTests(lynxView => {
     lynxView.setAttribute('url', `${dir}/index.web.json`);
