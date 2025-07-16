@@ -2904,6 +2904,7 @@ describe('list-item with "defer" attribute', () => {
     elementTree.triggerEnqueueComponent(listRef, uiSign);
 
     {
+      globalThis.__OnLifecycleEvent.mockClear();
       elementTree.triggerComponentAtIndex(listRef, 1);
       const item = __root.__firstChild.__firstChild.__nextSibling;
       const p = item.__extraProps['isReady'];
@@ -2957,6 +2958,29 @@ describe('list-item with "defer" attribute', () => {
             </list-item>
           </list>
         </page>
+      `);
+
+      expect(globalThis.__OnLifecycleEvent.mock.calls).toMatchInlineSnapshot(`
+        [
+          [
+            [
+              "rLynxPublishEvent",
+              {
+                "data": {},
+                "handlerName": "-6:__extraProps:onComponentAtIndex",
+              },
+            ],
+          ],
+          [
+            [
+              "rLynxPublishEvent",
+              {
+                "data": {},
+                "handlerName": "-4:__extraProps:onRecycleComponent",
+              },
+            ],
+          ],
+        ]
       `);
     }
   });
