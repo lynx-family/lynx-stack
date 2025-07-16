@@ -451,31 +451,6 @@ export function snapshotCreateList(
     componentAtIndexes,
   );
   const listID = __GetElementUniqueID(list);
-  if (!__pendingListUpdates.values[_ctx.__id] && _ctx.childNodes.length > 0) {
-    const insertions: { position: number; type: string }[] = [];
-    for (let i = 0; i < _ctx.childNodes.length; i++) {
-      const childCtx = _ctx.childNodes[i]!;
-      const newValue = childCtx.__listItemPlatformInfo;
-      insertions.push({
-        ...newValue,
-        position: i,
-        type: childCtx.type,
-      });
-    }
-    const updateListInfo = {
-      insertAction: insertions,
-      removeAction: [],
-      updateAction: [],
-    };
-    __SetAttribute(list, 'update-list-info', updateListInfo);
-    const [componentAtIndex, componentAtIndexes] = componentAtIndexFactory(_ctx.childNodes);
-    __UpdateListCallbacks(
-      list,
-      componentAtIndex,
-      enqueueComponentFactory(),
-      componentAtIndexes,
-    );
-  }
   gSignMap[listID] = signMap;
   gRecycleMap[listID] = recycleMap;
   return list;

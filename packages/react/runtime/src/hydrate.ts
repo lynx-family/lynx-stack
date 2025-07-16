@@ -19,6 +19,7 @@ export interface DiffResult<K> {
 
 export interface Typed {
   type: string;
+  __listItemPlatformInfo?: Record<string, string>;
 }
 
 export function isEmptyDiffResult<K>(diffResult: DiffResult<K>): boolean {
@@ -32,6 +33,7 @@ export function diffArrayLepus<A extends Typed, B extends Typed>(
   after: B[],
   isSameType: (a: A, b: B) => boolean,
   onDiffChildren: (a: A, b: B, oldIndex: number, newIndex: number) => void,
+  isListChidren: boolean,
 ): DiffResult<B> {
   let lastPlacedIndex = 0;
   const result: DiffResult<B> = {
@@ -44,12 +46,14 @@ export function diffArrayLepus<A extends Typed, B extends Typed>(
 
   for (let i = 0; i < before.length; i++) {
     const node = before[i]!;
-    (beforeMap[node.type] ??= new Set()).add([node, i]);
+    const key = isListChidren ? node.__listItemPlatformInfo?.['item-key']! : node.type;
+    (beforeMap[key] ??= new Set()).add([node, i]);
   }
 
   for (let i = 0; i < after.length; i++) {
     const afterNode = after[i]!;
-    const beforeNodes = beforeMap[afterNode.type];
+    const key = isListChidren ? afterNode.__listItemPlatformInfo?.['item-key']! : afterNode.type;
+    const beforeNodes = beforeMap[key];
     let beforeNode: [A, number];
 
     if (
@@ -254,6 +258,7 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
           (a, b) => {
             hydrate(a, b, options);
           },
+          false,
         );
         diffArrayAction(
           beforeChildNodes,
@@ -296,15 +301,10 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
         const isNewEngine = SystemInfo.engineVersion === '3.4'
           && __GetAttributeByName(listElement, 'custom-list-name') === 'list-container';
 
-        const isSameType = isNewEngine
-          ? (a: SnapshotInstance, b: SnapshotInstance) =>
-            a.type === b.type && a.__listItemPlatformInfo?.['item-key'] === b.__listItemPlatformInfo?.['item-key']
-          : (a: SnapshotInstance, b: SnapshotInstance) => a.type === b.type;
-
         const diffResult = diffArrayLepus(
           beforeChildNodes,
           afterChildNodes,
-          isSameType,
+          (a: SnapshotInstance, b: SnapshotInstance) => a.type === b.type,
           (a, b, oldIndex, newIndex) => {
             if (isNewEngine) {
               updateAction.push({
@@ -340,6 +340,7 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
               }
             }
           },
+          true,
         );
 
         for (const i of diffResult.r) {

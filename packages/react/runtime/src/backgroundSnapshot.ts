@@ -407,6 +407,7 @@ export function hydrate(
             (a, b) => {
               helper(a, b);
             },
+            type === DynamicPartType.ListChildren,
           );
           diffArrayAction(
             beforeChildNodes,

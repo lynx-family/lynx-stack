@@ -551,58 +551,6 @@ describe(`list componentAtIndex`, () => {
               "removeAction": [],
               "updateAction": [],
             },
-            {
-              "insertAction": [],
-              "removeAction": [],
-              "updateAction": [
-                {
-                  "flush": false,
-                  "from": 0,
-                  "item-key": "key-0",
-                  "to": 0,
-                  "type": "__Card__:__snapshot_a94a8_test_21",
-                },
-              ],
-            },
-            {
-              "insertAction": [],
-              "removeAction": [],
-              "updateAction": [
-                {
-                  "flush": false,
-                  "from": 1,
-                  "item-key": "key-1",
-                  "to": 1,
-                  "type": "__Card__:__snapshot_a94a8_test_21",
-                },
-              ],
-            },
-            {
-              "insertAction": [],
-              "removeAction": [],
-              "updateAction": [
-                {
-                  "flush": false,
-                  "from": 2,
-                  "item-key": "key-2",
-                  "to": 2,
-                  "type": "__Card__:__snapshot_a94a8_test_21",
-                },
-              ],
-            },
-            {
-              "insertAction": [],
-              "removeAction": [],
-              "updateAction": [
-                {
-                  "flush": false,
-                  "from": 3,
-                  "item-key": "key-3",
-                  "to": 3,
-                  "type": "__Card__:__snapshot_a94a8_test_21",
-                },
-              ],
-            },
           ]
         }
       >
@@ -1280,18 +1228,7 @@ describe('list reload', () => {
                 "removeAction": [
                   2,
                 ],
-                "updateAction": [
-                  {
-                    "flush": true,
-                    "from": 0,
-                    "to": 0,
-                  },
-                  {
-                    "flush": true,
-                    "from": 1,
-                    "to": 1,
-                  },
-                ],
+                "updateAction": [],
               },
             ]
           }
@@ -1336,18 +1273,7 @@ describe('list reload', () => {
                 "removeAction": [
                   2,
                 ],
-                "updateAction": [
-                  {
-                    "flush": true,
-                    "from": 0,
-                    "to": 0,
-                  },
-                  {
-                    "flush": true,
-                    "from": 1,
-                    "to": 1,
-                  },
-                ],
+                "updateAction": [],
               },
               {
                 "insertAction": [
@@ -1357,18 +1283,7 @@ describe('list reload', () => {
                   },
                 ],
                 "removeAction": [],
-                "updateAction": [
-                  {
-                    "flush": true,
-                    "from": 0,
-                    "to": 0,
-                  },
-                  {
-                    "flush": true,
-                    "from": 1,
-                    "to": 1,
-                  },
-                ],
+                "updateAction": [],
               },
             ]
           }
@@ -1456,35 +1371,19 @@ describe('list reload', () => {
               {
                 "insertAction": [
                   {
-                    "position": 2,
+                    "position": 1,
+                    "type": "__Card__:__snapshot_a94a8_test_37",
+                  },
+                  {
+                    "position": 3,
                     "type": "__Card__:__snapshot_a94a8_test_36",
                   },
                 ],
                 "removeAction": [
-                  1,
+                  2,
+                  3,
                 ],
-                "updateAction": [
-                  {
-                    "flush": true,
-                    "from": 0,
-                    "to": 0,
-                  },
-                  {
-                    "flush": true,
-                    "from": 1,
-                    "to": 1,
-                  },
-                  {
-                    "flush": true,
-                    "from": 2,
-                    "to": 2,
-                  },
-                  {
-                    "flush": true,
-                    "from": 3,
-                    "to": 3,
-                  },
-                ],
+                "updateAction": [],
               },
             ]
           }
@@ -1559,25 +1458,16 @@ describe('list reload', () => {
                 "updateAction": [],
               },
               {
-                "insertAction": [],
-                "removeAction": [],
-                "updateAction": [
+                "insertAction": [
                   {
-                    "flush": true,
-                    "from": 0,
-                    "to": 0,
-                  },
-                  {
-                    "flush": true,
-                    "from": 1,
-                    "to": 1,
-                  },
-                  {
-                    "flush": true,
-                    "from": 2,
-                    "to": 2,
+                    "position": 0,
+                    "type": "__Card__:__snapshot_a94a8_test_38",
                   },
                 ],
+                "removeAction": [
+                  0,
+                ],
+                "updateAction": [],
               },
             ]
           }
@@ -1674,25 +1564,11 @@ describe('list reload', () => {
                 "removeAction": [],
                 "updateAction": [
                   {
-                    "flush": true,
-                    "from": 0,
-                    "full-span": true,
-                    "item-key": "1",
-                    "to": 0,
-                  },
-                  {
-                    "flush": true,
+                    "flush": false,
                     "from": 1,
                     "full-span": false,
                     "item-key": "2",
                     "to": 1,
-                  },
-                  {
-                    "flush": true,
-                    "from": 2,
-                    "full-span": true,
-                    "item-key": "3",
-                    "to": 2,
                   },
                 ],
               },
@@ -1994,25 +1870,11 @@ describe('list-item JSXSpread', () => {
                 "removeAction": [],
                 "updateAction": [
                   {
-                    "flush": true,
-                    "from": 0,
-                    "full-span": true,
-                    "item-key": "1",
-                    "to": 0,
-                  },
-                  {
-                    "flush": true,
+                    "flush": false,
                     "from": 1,
                     "full-span": false,
                     "item-key": "2",
                     "to": 1,
-                  },
-                  {
-                    "flush": true,
-                    "from": 2,
-                    "full-span": true,
-                    "item-key": "3",
-                    "to": 2,
                   },
                 ],
               },
@@ -2064,39 +1926,11 @@ describe('list-item JSXSpread', () => {
                 "removeAction": [],
                 "updateAction": [
                   {
-                    "flush": true,
-                    "from": 0,
-                    "full-span": true,
-                    "item-key": "1",
-                    "to": 0,
-                  },
-                  {
-                    "flush": true,
+                    "flush": false,
                     "from": 1,
                     "full-span": false,
                     "item-key": "2",
                     "to": 1,
-                  },
-                  {
-                    "flush": true,
-                    "from": 2,
-                    "full-span": true,
-                    "item-key": "3",
-                    "to": 2,
-                  },
-                ],
-              },
-              {
-                "insertAction": [],
-                "removeAction": [],
-                "updateAction": [
-                  {
-                    "flush": false,
-                    "from": 0,
-                    "full-span": true,
-                    "item-key": "1",
-                    "to": 0,
-                    "type": "__Card__:__snapshot_a94a8_test_46",
                   },
                 ],
               },
@@ -2159,39 +1993,11 @@ describe('list-item JSXSpread', () => {
                 "removeAction": [],
                 "updateAction": [
                   {
-                    "flush": true,
-                    "from": 0,
-                    "full-span": true,
-                    "item-key": "1",
-                    "to": 0,
-                  },
-                  {
-                    "flush": true,
+                    "flush": false,
                     "from": 1,
                     "full-span": false,
                     "item-key": "2",
                     "to": 1,
-                  },
-                  {
-                    "flush": true,
-                    "from": 2,
-                    "full-span": true,
-                    "item-key": "3",
-                    "to": 2,
-                  },
-                ],
-              },
-              {
-                "insertAction": [],
-                "removeAction": [],
-                "updateAction": [
-                  {
-                    "flush": false,
-                    "from": 0,
-                    "full-span": true,
-                    "item-key": "1",
-                    "to": 0,
-                    "type": "__Card__:__snapshot_a94a8_test_46",
                   },
                 ],
               },
