@@ -76,14 +76,12 @@ export function createRenderAllOnUI(
         `[${lynxUniqueIdAttribute}]`,
       );
       const length = allLynxElements.length;
-      const ssrPartsMap: Record<string, HTMLElement> = {};
       for (let ii = 0; ii < length; ii++) {
         const element = allLynxElements[ii]! as HTMLElement;
         const lynxUniqueId = Number(
           element.getAttribute(lynxUniqueIdAttribute)!,
         );
         lynxUniqueIdToElement[lynxUniqueId] = new WeakRef<HTMLElement>(element);
-        ssrPartsMap[lynxUniqueId] = element;
       }
       const hydrateStyleElement = shadowRoot.querySelector(
         `style:nth-of-type(2)`,
