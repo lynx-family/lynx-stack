@@ -31,7 +31,6 @@ x-textarea::part(textarea), x-textarea::part(form) {
 }
 x-textarea::part(textarea) {
   --placeholder-color: grey;
-  --placeholder-font-size: 14px;
   --placeholder-font-weight: normal;
   --placeholder-font-family: inherit;
   resize: none;
