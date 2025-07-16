@@ -22,6 +22,8 @@ function unref(snapshot: SnapshotInstance, recursive: boolean): void {
     }
   });
   snapshot.__worklet_ref_set?.clear();
+  /* v8 ignore next */
+  snapshot.onUnref?.();
 
   if (recursive) {
     snapshot.childNodes.forEach(it => {

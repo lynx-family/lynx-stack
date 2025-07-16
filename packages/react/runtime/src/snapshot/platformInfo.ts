@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { ListUpdateInfoRecording } from '../listUpdateInfo.js';
 import { __pendingListUpdates } from '../pendingListUpdates.js';
-import { SnapshotInstance } from '../snapshot.js';
+import { ListSnapshotInstance, SnapshotInstance } from '../snapshot.js';
 
 const platformInfoVirtualAttributes: Set<string> = /* @__PURE__ */ new Set<string>(['reuse-identifier']);
 const platformInfoAttributes: Set<string> = /* @__PURE__ */ new Set<string>([
@@ -37,7 +37,7 @@ function updateListItemPlatformInfo(
   const newValue = ctx.__listItemPlatformInfo = ctx.__values![index] as PlatformInfo;
 
   const list = ctx.parentNode;
-  if (list?.__snapshot_def.isListHolder) {
+  if (list instanceof ListSnapshotInstance) {
     (__pendingListUpdates.values[list.__id] ??= new ListUpdateInfoRecording(list)).onSetAttribute(
       ctx,
       newValue,
