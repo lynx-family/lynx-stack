@@ -8,6 +8,7 @@ import type { SnapshotInstance } from './snapshot.js';
 
 export interface ListUpdateInfo {
   flush(): void;
+  getAttachedListId(): number | undefined;
   onInsertBefore(
     newNode: SnapshotInstance,
     existingNode?: SnapshotInstance,
@@ -86,6 +87,13 @@ export class ListUpdateInfoRecording implements ListUpdateInfo {
       enqueueComponentFactory(),
       componentAtIndexes,
     );
+  }
+
+  getAttachedListId(): undefined | number {
+    if (!this.list.__elements) {
+      return undefined;
+    }
+    return this.list.__id;
   }
 
   private oldChildNodes: SnapshotInstance[];
