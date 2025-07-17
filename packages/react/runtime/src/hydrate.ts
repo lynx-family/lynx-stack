@@ -309,7 +309,7 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
         const diffResult = diffArrayLepus(
           beforeChildNodes,
           afterChildNodes,
-          (a: SnapshotInstance, b: SnapshotInstance) => a.type === b.type,
+          (a, b) => a.type === b.type,
           (a, b, oldIndex, newIndex) => {
             if (isNewEngine) {
               updateAction.push({
