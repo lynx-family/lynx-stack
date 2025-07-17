@@ -5,6 +5,14 @@ on:
         required: false
       LHCI_GITHUB_APP_TOKEN:
         required: false
+      TOS_AP_ACCESS_KEY:
+        required: false
+      TOS_AP_SECRET_KEY:
+        required: false
+      TOS_AP_ENDPOINT:
+        required: false
+      TOS_AP_REGION:
+        required: false
     inputs:
       runs-on:
         required: true
@@ -31,8 +39,19 @@ env:
 jobs:
   check:
     timeout-minutes: 30
-    runs-on: ${{ inputs.runs-on }}
     permissions: {}
+    runs-on: ${{ inputs.runs-on }}
+    container:
+      image: mcr.microsoft.com/playwright:v1.50.1-noble
+      # credentials:
+      #   username: lynx-family
+      #   password: ${{ secrets.GITHUB_TOKEN }}
+      env:
+        ACCESS_KEY: ${{ secrets.TOS_AP_ACCESS_KEY }}
+        SECRET_KEY: ${{ secrets.TOS_AP_SECRET_KEY }}
+        ENDPOINT: ${{ secrets.TOS_AP_ENDPOINT }}
+        BUCKET_NAME: actions
+        REGION: ${{ secrets.TOS_AP_REGION }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:
@@ -57,10 +76,10 @@ jobs:
       - name: Build
         run: |
           pnpm turbo build --summarize
-      - uses: ./.github/actions/setup-playwright
-        if: ${{ inputs.is-web }}
-        with:
-          working-directory: packages/web-platform/web-tests
+      # - uses: ./.github/actions/setup-playwright
+      #   if: ${{ inputs.is-web }}
+      #   with:
+      #     working-directory: packages/web-platform/web-tests
       - name: Test # zizmor: ignore[template-injection] The inputs.run is provided by us.
         id: test
         env:
