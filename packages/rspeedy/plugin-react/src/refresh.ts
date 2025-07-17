@@ -14,6 +14,7 @@ import {
   ReactRefreshRspackPlugin,
   ReactRefreshWebpackPlugin,
 } from '@lynx-js/react-refresh-webpack-plugin'
+import { LAYERS } from '@lynx-js/react-webpack-plugin'
 
 const PLUGIN_NAME_REACT_REFRESH = 'lynx:react:refresh'
 const require = createRequire(import.meta.url)
@@ -57,7 +58,8 @@ function applyRefreshRules<Bundler extends 'webpack' | 'rspack'>(
   .end()
     .module
       .rule('react:refresh')
-        .after(CHAIN_ID.RULE.JS)
+        .issuerLayer(LAYERS.BACKGROUND)
+        .before(CHAIN_ID.RULE.JS)
         .test(/\.[jt]sx$/)
         .exclude
           .add(/node_modules/)
