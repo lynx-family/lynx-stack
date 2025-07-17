@@ -71,6 +71,10 @@ jobs:
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+      TOS_AP_ACCESS_KEY: ${{ secrets.TOS_AP_ACCESS_KEY }}
+      TOS_AP_SECRET_KEY: ${{ secrets.TOS_AP_SECRET_KEY }}
+      TOS_AP_ENDPOINT: ${{ secrets.TOS_AP_ENDPOINT }}
+      TOS_AP_REGION: ${{ secrets.TOS_AP_REGION }}
     with:
       runs-on: lynx-ubuntu-24.04-xlarge
       is-web: true
@@ -79,7 +83,7 @@ jobs:
         pnpm --filter @lynx-js/web-tests run lh || echo "Lighthouse failed"
   playwright-linux:
     needs: build
-    uses: ./.github/workflows/workflow-test.yml
+    uses: ./.github/workflows/workflow-test-in-container.yml
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     name: Playwright (${{ matrix.config.name }})
@@ -99,7 +103,7 @@ jobs:
             env:
               - ENABLE_SSR=true
     with:
-      runs-on: lynx-custom-dind
+      runs-on: lynx-container
       is-web: true
       codecov-flags: "e2e"
       run: |
@@ -108,6 +112,35 @@ jobs:
         export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
         pnpm --filter @lynx-js/web-tests run test --reporter='github,dot,junit,html'
         pnpm --filter @lynx-js/web-tests run coverage:ci
+
+  # playwright-linux-2:
+  #   needs: build
+  #   uses: ./.github/workflows/workflow-test-in-container.yml
+  #   secrets:
+  #     CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+  #   name: Playwright (${{ matrix.config.name }})
+  #   strategy:
+  #     matrix:
+  #       config:
+  #         - name: Default-2
+  #           env: []
+  #         - name: MULTI_THREAD-2
+  #           env:
+  #             - ENABLE_MULTI_THREAD=true
+  #         - name: FP only-2
+  #           env:
+  #             - ENABLE_SSR=true
+  #             - TEST_FP_ONLY=true
+  #   with:
+  #     runs-on: lynx-custom-container
+  #     is-web: true
+  #     codecov-flags: "e2e"
+  #     run: |
+  #       export ${{ join(matrix.config.env, ' ') }}
+  #       export NODE_OPTIONS="--max-old-space-size=32768"
+  #       export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
+  #       pnpm --filter @lynx-js/web-tests run test --reporter='github,dot,junit,html'
+  #       pnpm --filter @lynx-js/web-tests run coverage:ci
   test-api:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
