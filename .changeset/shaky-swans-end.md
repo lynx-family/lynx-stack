@@ -2,7 +2,7 @@
 "@lynx-js/react": patch
 ---
 
-Remove and insert `list-item`s those `item-key` have been changed.
+Remove and insert `list-item`s whose `item-key` have been changed.
 
 For example:
 
