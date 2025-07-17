@@ -36,7 +36,7 @@ export function diffArrayLepus<A extends Typed, B extends Typed>(
   after: B[],
   isSameType: (a: A, b: B) => boolean,
   onDiffChildren: (a: A, b: B, oldIndex: number, newIndex: number) => void,
-  isListChidren: boolean,
+  isListChildren: boolean,
 ): DiffResult<B> {
   let lastPlacedIndex = 0;
   const result: DiffResult<B> = {
@@ -49,13 +49,13 @@ export function diffArrayLepus<A extends Typed, B extends Typed>(
 
   for (let i = 0; i < before.length; i++) {
     const node = before[i]!;
-    const key = isListChidren ? node.__listItemPlatformInfo?.['item-key'] ?? '-1' : node.type;
+    const key = isListChildren ? node.__listItemPlatformInfo?.['item-key'] ?? '-1' : node.type;
     (beforeMap[key] ??= new Set()).add([node, i]);
   }
 
   for (let i = 0; i < after.length; i++) {
     const afterNode = after[i]!;
-    const key = isListChidren ? afterNode.__listItemPlatformInfo?.['item-key'] ?? '-1' : afterNode.type;
+    const key = isListChildren ? afterNode.__listItemPlatformInfo?.['item-key'] ?? '-1' : afterNode.type;
     const beforeNodes = beforeMap[key];
     let beforeNode: [A, number];
 
