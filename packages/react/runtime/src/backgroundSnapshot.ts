@@ -23,7 +23,7 @@ import {
 } from './lifecycle/patch/snapshotPatch.js';
 import { globalPipelineOptions } from './lynx/performance.js';
 import { DynamicPartType } from './snapshot/dynamicPartType.js';
-import { clearQueuedRefs, queueRefAttrUpdate } from './snapshot/ref.js';
+import { applyRef, clearQueuedRefs, queueRefAttrUpdate } from './snapshot/ref.js';
 import type { Ref } from './snapshot/ref.js';
 import { transformSpread } from './snapshot/spread.js';
 import type { SerializedSnapshotInstance, Snapshot } from './snapshot.js';
@@ -158,23 +158,37 @@ export class BackgroundSnapshotInstance {
     node.__previousSibling = null;
     node.__nextSibling = null;
 
-    traverseSnapshotInstance(node, v => {
+    queueRefAttrUpdate(
+      () => {
+        traverseSnapshotInstance(node, v => {
+          if (v.__values) {
+            v.__snapshot_def.refAndSpreadIndexes?.forEach((i) => {
+              const value = v.__values![i] as unknown;
+              if (value && (typeof value === 'object' || typeof value === 'function')) {
+                if ('__spread' in value && 'ref' in value) {
+                  applyRef(value.ref as Ref, null);
+                } else if ('__ref' in value) {
+                  applyRef(value as Ref, null);
+                }
+              }
+            });
+          }
+        });
+      },
+      null,
+      0,
+      0,
+    );
+
+    globalBackgroundSnapshotInstancesToRemove.push(node.__id);
+  }
+
+  tearDown(): void {
+    traverseSnapshotInstance(this, v => {
       v.__parent = null;
       v.__previousSibling = null;
       v.__nextSibling = null;
-      if (v.__values) {
-        v.__snapshot_def.refAndSpreadIndexes?.forEach((i) => {
-          const value = v.__values![i] as unknown;
-          if (value && (typeof value === 'object' || typeof value === 'function')) {
-            if ('__spread' in value && 'ref' in value) {
-              queueRefAttrUpdate(value.ref as Ref, null, v.__id, i);
-            } else if ('__ref' in value) {
-              queueRefAttrUpdate(value as Ref, null, v.__id, i);
-            }
-          }
-        });
-      }
-      globalBackgroundSnapshotInstancesToRemove.push(v.__id);
+      backgroundSnapshotInstanceManager.values.delete(v.__id);
     });
   }
 

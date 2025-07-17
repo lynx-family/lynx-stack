@@ -10,8 +10,8 @@ import { RefProxy } from '../lifecycle/ref/delay.js';
 const refsToClear: Ref[] = [];
 const refsToApply: (Ref | [snapshotInstanceId: number, expIndex: number])[] = [];
 
-type Ref = (((ref: RefProxy) => () => void) | { current: RefProxy | null }) & {
-  _unmount?: () => void;
+type Ref = (((ref: RefProxy) => (() => void) | void) | { current: RefProxy | null }) & {
+  _unmount?: (() => void) | void;
   __ref?: { value: number };
 };
 

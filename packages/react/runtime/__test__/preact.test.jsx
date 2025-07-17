@@ -404,7 +404,6 @@ describe('document - background', () => {
     expect(globalBackgroundSnapshotInstancesToRemove).toMatchInlineSnapshot(`
       [
         2,
-        3,
       ]
     `);
   });
