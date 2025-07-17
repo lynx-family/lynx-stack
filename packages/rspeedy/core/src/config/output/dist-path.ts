@@ -13,6 +13,10 @@ export interface DistPath extends DistPathConfig {
   /**
    * The output directory of the intermediate files.
    *
+   * @deprecated
+   *
+   * This option is never read and will be removed in the future version.
+   *
    * @remarks
    *
    * Default value:

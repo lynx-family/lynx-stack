@@ -4,6 +4,7 @@
 
 import { HomeLayout } from './HomeLayout/index.jsx';
 
+// eslint-disable-next-line import/export
 export { HomeLayout };
 
 // The eslint-plugin-import cannot resolve `@rspress/core`

@@ -103,7 +103,7 @@ _This works with any code ran in Node, so will work with most JS testing framewo
 
 See [Debugging Vitest](https://vitest.dev/guide/debugging.html) for more details.
 
-You can combine debug with `--project` or `.only` to debug a subset of tests. If you plan to stay long in the debugger (which you'll likely do!), you may increase the test timeout by setting `--test-timeout`.
+You can combine debug with `--project` or `.only` to debug a subset of tests. If you plan to stay long in the debugger (which you'll likely do!), you may increase the test timeout by setting `--testTimeout`.
 
 To overwrite any test fixtures when fixing a bug or anything, add the `--update`
 

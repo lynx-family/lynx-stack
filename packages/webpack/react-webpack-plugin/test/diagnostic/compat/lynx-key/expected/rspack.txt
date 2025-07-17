@@ -1,4 +1,4 @@
-WARNING in ./compat/lynx-key/index.jsx
+WARNING in ./compat/lynx-key/index.jsx <LINE:COLUMN>-50
 ⚠ ModuleWarning: DEPRECATED: old runtime package "@lynx-js/react-runtime" is changed to "@lynx-js/react"
 ╭─[<LINE:COLUMN>]
 1  import { Component } from '@lynx-js/react-runtime'
@@ -8,7 +8,7 @@ WARNING in ./compat/lynx-key/index.jsx
 3  export class App extends Component {
 ╰────
 
-WARNING in ./compat/lynx-key/index.jsx
+WARNING in ./compat/lynx-key/index.jsx <LINE:COLUMN>-25
 ⚠ ModuleWarning: DEPRECATED: lynx-key is changed to key
 ╭─[<LINE:COLUMN>]
 3  export class App extends Component {

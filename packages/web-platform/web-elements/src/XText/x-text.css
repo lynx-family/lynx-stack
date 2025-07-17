@@ -8,11 +8,15 @@ x-text {
   display: flex;
   overflow-wrap: break-word;
   align-items: stretch;
-  color: var(--lynx-color);
   background-image: var(--lynx-text-bg-color);
+  color: initial;
 }
+
+x-text > x-text, x-text > lynx-wrapper > x-text {
+  color: inherit;
+}
+
 x-text:not(x-text > x-text):not(x-text > lynx-wrapper > x-text) {
-  --lynx-color: canvastext;
   --lynx-text-bg-color: initial;
 }
 

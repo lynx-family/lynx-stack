@@ -1,7 +1,12 @@
 import {
+  I18nResources,
   inShadowRootStyles,
+  lynxPartIdAttribute,
   lynxUniqueIdAttribute,
+  type InitI18nResources,
   type StartMainThreadContextConfig,
+  type SSREventReplayInfo,
+  type SSRDumpInfo,
 } from '@lynx-js/web-constants';
 import { Rpc } from '@lynx-js/web-worker-rpc';
 import { prepareMainThreadAPIs } from '@lynx-js/web-mainthread-apis';
@@ -31,7 +36,12 @@ import { dumpHTMLString } from './dumpHTMLString.js';
 interface LynxViewConfig extends
   Pick<
     StartMainThreadContextConfig,
-    'browserConfig' | 'tagMap' | 'initData' | 'globalProps' | 'template'
+    | 'browserConfig'
+    | 'tagMap'
+    | 'initData'
+    | 'globalProps'
+    | 'template'
+    | 'initI18nResources'
   >
 {
   templateName?: string;
@@ -73,7 +83,8 @@ const builtinTagTransformMap = {
 // @ts-expect-error
 OffscreenElement.prototype.toJSON = function toJSON(this: OffscreenElement) {
   return {
-    ssrID: this[_attributes].get(lynxUniqueIdAttribute)!,
+    ssrID: this[_attributes].get(lynxPartIdAttribute)
+      ?? this[_attributes].get(lynxUniqueIdAttribute)!,
   };
 };
 
@@ -92,6 +103,7 @@ export async function createLynxView(
     injectStyles,
     lynxViewStyle,
     threadStrategy = 'all-on-ui',
+    initI18nResources,
   } = config;
   const template = await loadTemplate(rawTemplate, config.templateName);
   const { promise: firstPaintReadyPromise, resolve: firstPaintReady } = Promise
@@ -105,6 +117,8 @@ export async function createLynxView(
     onCommit: () => {
     },
   });
+  const i18nResources = new I18nResources();
+  const events: SSREventReplayInfo[] = [];
   const { startMainThread } = prepareMainThreadAPIs(
     backgroundThreadRpc,
     offscreenDocument,
@@ -116,7 +130,27 @@ export async function createLynxView(
       // mark timing
     },
     () => {
+      // flush mark timing
+    },
+    () => {
       // report error
+    },
+    () => {
+      // trigger i18n resource fallback
+    },
+    (initI18nResources: InitI18nResources) => {
+      i18nResources.setData(initI18nResources);
+      return i18nResources;
+    },
+    {
+      __AddEvent(element, eventName, eventData, eventOptions) {
+        events.push([
+          Number(element.getAttribute(lynxUniqueIdAttribute)!),
+          eventName,
+          eventData,
+          eventOptions,
+        ]);
+      },
     },
   );
   const runtime = await startMainThread({
@@ -130,6 +164,7 @@ export async function createLynxView(
       ...builtinTagTransformMap,
       ...tagMap,
     },
+    initI18nResources,
   });
 
   const elementTemplates = {
@@ -140,11 +175,17 @@ export async function createLynxView(
   async function renderToString(): Promise<string> {
     await firstPaintReadyPromise;
     const ssrEncodeData = runtime?.ssrEncode?.();
+    const ssrDumpInfo: SSRDumpInfo = {
+      ssrEncodeData,
+      events,
+    };
     const buffer: string[] = [];
     buffer.push(
       '<lynx-view url="',
       hydrateUrl,
-      '" ssr ',
+      '" ssr ="',
+      encodeURI(JSON.stringify(ssrDumpInfo)),
+      '" ',
       'thread-strategy="',
       threadStrategy,
       '"',
@@ -171,11 +212,6 @@ export async function createLynxView(
     buffer.push(
       '</template>',
     );
-
-    if (ssrEncodeData) {
-      const encodeDataEncoded = ssrEncodeData ? encodeURI(ssrEncodeData) : ''; // to avoid XSS
-      buffer.push('<!--', encodeDataEncoded, '-->');
-    }
     buffer.push('</lynx-view>');
     return buffer.join('');
   }

@@ -90,10 +90,7 @@ describe('Lazy', () => {
           },
           output: {
             distPath: {
-              root: new URL(
-                './dist/standalone-lazy-bundle',
-                import.meta.url,
-              ).pathname,
+              root: './dist/standalone-lazy-bundle',
             },
           },
           plugins: [

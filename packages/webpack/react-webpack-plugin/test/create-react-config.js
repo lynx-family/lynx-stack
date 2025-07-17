@@ -13,11 +13,11 @@ import { LAYERS, ReactWebpackPlugin } from '../src';
  */
 export function createEntries(name = 'main', source = './index.js') {
   return {
-    [`${name}:main-thread`]: {
+    [`${name}__main-thread`]: {
       layer: LAYERS.MAIN_THREAD,
       import: source,
     },
-    [`${name}:background`]: {
+    [`${name}__background`]: {
       layer: LAYERS.BACKGROUND,
       import: source,
     },
@@ -91,7 +91,7 @@ export function createConfig(loaderOptions, pluginOptions, swcLoaderOptions) {
     },
     plugins: [
       new ReactWebpackPlugin({
-        mainThreadChunks: ['main:main-thread.js'],
+        mainThreadChunks: ['main__main-thread.js'],
         ...pluginOptions,
       }),
       /**

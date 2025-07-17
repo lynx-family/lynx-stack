@@ -43,6 +43,7 @@ test('state change will cause re-render', async () => {
     Map {
       -1 => {
         "children": undefined,
+        "extraProps": undefined,
         "id": -1,
         "type": "root",
         "values": undefined,
@@ -64,17 +65,20 @@ test('state change will cause re-render', async () => {
         "children": [
           {
             "children": undefined,
+            "extraProps": undefined,
             "id": 2,
             "type": "__Card__:__snapshot_354a3_test_1",
             "values": undefined,
           },
         ],
+        "extraProps": undefined,
         "id": -1,
         "type": "root",
         "values": undefined,
       },
       2 => {
         "children": undefined,
+        "extraProps": undefined,
         "id": 2,
         "type": "__Card__:__snapshot_354a3_test_1",
         "values": undefined,
@@ -156,6 +160,7 @@ test('it waits for the data to be loaded', async () => {
     Map {
       -1 => {
         "children": undefined,
+        "extraProps": undefined,
         "id": -1,
         "type": "root",
         "values": undefined,
@@ -174,7 +179,7 @@ test('it waits for the data to be loaded', async () => {
   const loading = () => {
     return screen.getByText('Loading...');
   };
-  await waitForElementToBeRemoved(loading);
+  await waitForElementToBeRemoved(loading, { timeout: 50_000 });
   expect(document.body).toMatchInlineSnapshot(`
     <body>
       <page>

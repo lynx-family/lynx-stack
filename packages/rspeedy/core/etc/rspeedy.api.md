@@ -6,6 +6,7 @@
 
 import type { CreateRsbuildOptions } from '@rsbuild/core';
 import type { DistPathConfig } from '@rsbuild/core';
+import type { InlineChunkConfig } from '@rsbuild/core';
 import { logger } from '@rsbuild/core';
 import type { PerformanceConfig } from '@rsbuild/core';
 import type { RsbuildConfig } from '@rsbuild/core';
@@ -159,6 +160,7 @@ export interface DevClient {
 
 // @public
 export interface DistPath extends DistPathConfig {
+    // @deprecated
     intermediate?: string | undefined;
 }
 
@@ -232,7 +234,7 @@ export interface Output {
     distPath?: DistPath | undefined;
     filename?: string | Filename | undefined;
     filenameHash?: boolean | string | undefined;
-    inlineScripts?: boolean | undefined;
+    inlineScripts?: InlineChunkConfig | undefined;
     legalComments?: 'none' | 'inline' | 'linked' | undefined;
     minify?: Minify | boolean | undefined;
     sourceMap?: boolean | SourceMap | undefined;

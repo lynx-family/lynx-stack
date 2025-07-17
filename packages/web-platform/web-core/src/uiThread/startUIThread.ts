@@ -11,6 +11,10 @@ import {
   type NapiModulesCall,
   type NativeModulesCall,
   updateGlobalPropsEndpoint,
+  type Cloneable,
+  dispatchMarkTiming,
+  flushMarkTiming,
+  type SSRDumpInfo,
 } from '@lynx-js/web-constants';
 import { loadTemplate } from '../utils/loadTemplate.js';
 import { createUpdateData } from './crossThreadHandlers/createUpdateData.js';
@@ -21,7 +25,7 @@ import { createRenderAllOnUI } from './createRenderAllOnUI.js';
 export type StartUIThreadCallbacks = {
   nativeModulesCall: NativeModulesCall;
   napiModulesCall: NapiModulesCall;
-  onError?: () => void;
+  onError?: (err: Error, release: string, fileName: string) => void;
   customTemplateLoader?: (url: string) => Promise<LynxTemplate>;
 };
 
@@ -32,6 +36,7 @@ export function startUIThread(
   lynxGroupId: number | undefined,
   threadStrategy: 'all-on-ui' | 'multi-thread',
   callbacks: StartUIThreadCallbacks,
+  ssr?: SSRDumpInfo,
 ): LynxView {
   const createLynxStartTiming = performance.now() + performance.timeOrigin;
   const allOnUI = threadStrategy === 'all-on-ui';
@@ -40,25 +45,43 @@ export function startUIThread(
     backgroundRpc,
     terminateWorkers,
   } = bootWorkers(lynxGroupId, allOnUI);
-  const { markTiming, sendGlobalEvent, updateDataBackground } = startBackground(
+  const {
+    markTiming,
+    sendGlobalEvent,
+    updateDataBackground,
+    updateI18nResourceBackground,
+  } = startBackground(
     backgroundRpc,
     shadowRoot,
     callbacks,
   );
+  const cacheMarkTimings = {
+    records: [],
+    timeout: null,
+  };
   const markTimingInternal = (
     timingKey: string,
     pipelineId?: string,
     timeStamp?: number,
   ) => {
-    if (!timeStamp) timeStamp = performance.now() + performance.timeOrigin;
-    markTiming(timingKey, pipelineId, timeStamp);
+    dispatchMarkTiming({
+      timingKey,
+      pipelineId,
+      timeStamp,
+      markTiming,
+      cacheMarkTimings,
+    });
   };
-  const { start, updateDataMainThread } = allOnUI
+  const flushMarkTimingInternal = () =>
+    flushMarkTiming(markTiming, cacheMarkTimings);
+  const { start, updateDataMainThread, updateI18nResourcesMainThread } = allOnUI
     ? createRenderAllOnUI(
       /* main-to-bg rpc*/ mainThreadRpc,
       shadowRoot,
       markTimingInternal,
+      flushMarkTimingInternal,
       callbacks,
+      ssr,
     )
     : createRenderMultiThread(
       /* main-to-ui rpc*/ mainThreadRpc,
@@ -69,6 +92,7 @@ export function startUIThread(
   markTimingInternal('load_template_start');
   loadTemplate(templateUrl, callbacks.customTemplateLoader).then((template) => {
     markTimingInternal('load_template_end');
+    flushMarkTimingInternal();
     start({
       ...configs,
       template,
@@ -82,5 +106,9 @@ export function startUIThread(
     ),
     sendGlobalEvent,
     updateGlobalProps: backgroundRpc.createCall(updateGlobalPropsEndpoint),
+    updateI18nResources: (...args) => {
+      updateI18nResourcesMainThread(args[0] as Cloneable);
+      updateI18nResourceBackground(...args);
+    },
   };
 }

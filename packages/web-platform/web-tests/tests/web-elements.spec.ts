@@ -830,6 +830,14 @@ test.describe('web-elements test suite', () => {
       await gotoWebComponentPage(page, title);
       await diffScreenShot(page, title, '300px-inf');
     });
+    test('x-foldview-ng/basic-toolbar-in-lynx-wrapper', async ({
+      page,
+      browserName,
+    }, { title }) => {
+      await gotoWebComponentPage(page, title);
+      await wait(500);
+      expect(page.locator('x-foldview-slot-ng')).toHaveCSS('top', '200px');
+    });
     test('x-foldview-ng/size-parent-grow-children-specific', async ({
       page,
       browserName,
@@ -2693,7 +2701,7 @@ test.describe('web-elements test suite', () => {
           .locator('#target')
           .evaluateHandle((target) => {
             let detail = { value: undefined };
-            target.addEventListener('input', (e) => {
+            target.addEventListener('lynxinput', (e) => {
               detail.value = (e as any).detail.value;
             });
             return detail;

@@ -9,7 +9,10 @@ import { describe, expect, test, vi } from 'vitest'
 
 import type { ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'
 import { createRspeedy } from '@lynx-js/rspeedy'
-import type { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'
+import type {
+  LynxEncodePlugin,
+  LynxTemplatePlugin,
+} from '@lynx-js/template-webpack-plugin'
 
 import { pluginStubRspeedyAPI } from './stub-rspeedy-api.plugin.js'
 
@@ -536,6 +539,64 @@ describe('Config', () => {
       )
 
       expect(encodePlugin).toHaveProperty('options', { inlineScripts: false })
+    })
+
+    test('output.inlineScripts: function', async () => {
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+      const rsbuild = await createRspeedy({
+        rspeedyConfig: {
+          output: {
+            inlineScripts: ({ name, size }) => {
+              return name.includes('background') && size > 1000
+            },
+          },
+          source: {
+            entry: {
+              foo: {
+                import: ['./foo/index.jsx', './common.js'],
+              },
+              bar: './bar/index.jsx',
+            },
+          },
+          plugins: [
+            pluginReactLynx(),
+            pluginStubRspeedyAPI(),
+          ],
+        },
+      })
+
+      const [config] = await rsbuild.initConfigs()
+
+      const LynxEncodePlugin = config?.plugins?.find((
+        p,
+      ): p is LynxEncodePlugin => p?.constructor.name === 'LynxEncodePlugin')
+
+      expect(LynxEncodePlugin).toBeDefined()
+
+      // @ts-expect-error private field
+      const { inlineScripts } = LynxEncodePlugin?.options ?? {}
+
+      expect(typeof inlineScripts).toBe('function')
+      // eslint-disable-next-line @typescript-eslint/no-base-to-string
+      expect(inlineScripts?.toString()).toMatchInlineSnapshot(`
+        "({ name, size }) => {
+                      return name.includes("background") && size > 1e3;
+                    }"
+      `)
+
+      const ReactWebpackPlugin = config?.plugins?.find((
+        p,
+      ): p is ReactWebpackPlugin =>
+        p?.constructor.name === 'ReactWebpackPlugin'
+      )
+
+      expect(ReactWebpackPlugin).toBeDefined()
+
+      // @ts-expect-error private field
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const { firstScreenSyncTiming } = ReactWebpackPlugin?.options ?? {}
+      expect(firstScreenSyncTiming).toBe('jsReady')
     })
 
     test('environments.lynx.output.inlineScripts: false', async () => {
@@ -1318,6 +1379,66 @@ describe('Config', () => {
     })
   })
 
+  describe('Output IIFE', () => {
+    test('defaults', async () => {
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+      const rspeedy = await createRspeedy({
+        rspeedyConfig: {
+          plugins: [
+            pluginReactLynx(),
+          ],
+        },
+      })
+
+      const [config] = await rspeedy.initConfigs()
+
+      expect(config?.output?.iife).toBe(false)
+    })
+
+    test('with output.iife: false', async () => {
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+      const rspeedy = await createRspeedy({
+        rspeedyConfig: {
+          tools: {
+            rspack: {
+              output: {
+                iife: false,
+              },
+            },
+          },
+          plugins: [
+            pluginReactLynx(),
+          ],
+        },
+      })
+
+      const [config] = await rspeedy.initConfigs()
+
+      expect(config?.output?.iife).toBe(false)
+    })
+    test('with output.iife: true', async () => {
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+      const rspeedy = await createRspeedy({
+        rspeedyConfig: {
+          tools: {
+            rspack: {
+              output: {
+                iife: true,
+              },
+            },
+          },
+          plugins: [
+            pluginReactLynx(),
+          ],
+        },
+      })
+
+      const [config] = await rspeedy.initConfigs()
+
+      expect(config?.output?.iife).toBe(true)
+    })
+  })
+
   describe('Bundle Splitting', () => {
     test('default', async () => {
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
@@ -1432,6 +1553,91 @@ describe('Config', () => {
             "test": /node_modules\\[\\\\\\\\/\\]\\(\\.\\*\\?\\[\\\\\\\\/\\]\\)\\?\\(\\?:preact\\|preact\\[\\\\\\\\/\\]compat\\|preact\\[\\\\\\\\/\\]hooks\\|preact\\[\\\\\\\\/\\]jsx-runtime\\)\\[\\\\\\\\/\\]/,
           }
         `)
+    })
+
+    test('performance.chunkSplit.strategy: "split-by-experience" along with extractStr: true', async () => {
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+      let config, ReactLynxWebpackPlugin
+
+      let rsbuild = await createRsbuild({
+        rsbuildConfig: {
+          plugins: [
+            pluginReactLynx({
+              extractStr: true,
+            }),
+            pluginStubRspeedyAPI(),
+          ],
+          performance: {
+            chunkSplit: {
+              strategy: 'split-by-experience',
+            },
+          },
+        },
+      })
+      ;[config] = await rsbuild.initConfigs()
+
+      ReactLynxWebpackPlugin = config?.plugins?.find((
+        p,
+      ): p is ReactWebpackPlugin =>
+        p?.constructor.name === 'ReactWebpackPlugin'
+      )
+
+      // @ts-expect-error private field
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      expect(ReactLynxWebpackPlugin?.options.extractStr).toBe(false)
+      // expect(config).toMatchInlineSnapshot()
+
+      rsbuild = await createRsbuild({
+        rsbuildConfig: {
+          plugins: [
+            pluginReactLynx({
+              extractStr: true,
+            }),
+            pluginStubRspeedyAPI(),
+          ],
+        },
+      })
+      ;[config] = await rsbuild.initConfigs()
+
+      ReactLynxWebpackPlugin = config?.plugins?.find((
+        p,
+      ): p is ReactWebpackPlugin =>
+        p?.constructor.name === 'ReactWebpackPlugin'
+      )
+
+      // @ts-expect-error private field
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      expect(ReactLynxWebpackPlugin?.options.extractStr).toBe(true)
+      // expect(config).toMatchInlineSnapshot()
+
+      rsbuild = await createRsbuild({
+        rsbuildConfig: {
+          plugins: [
+            pluginReactLynx({
+              extractStr: true,
+            }),
+            pluginStubRspeedyAPI(),
+          ],
+          performance: {
+            chunkSplit: {
+              strategy: 'all-in-one',
+            },
+          },
+        },
+      })
+      ;[config] = await rsbuild.initConfigs()
+
+      ReactLynxWebpackPlugin = config?.plugins?.find((
+        p,
+      ): p is ReactWebpackPlugin =>
+        p?.constructor.name === 'ReactWebpackPlugin'
+      )
+
+      // @ts-expect-error private field
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      expect(ReactLynxWebpackPlugin?.options.extractStr).toBe(true)
+      // expect(config).toMatchInlineSnapshot()
     })
 
     test('tools.rspack.optimization.splitChunks: false', async () => {

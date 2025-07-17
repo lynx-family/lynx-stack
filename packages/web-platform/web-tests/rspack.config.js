@@ -6,6 +6,10 @@ import { readFile } from 'node:fs/promises';
 import rspack from '@rspack/core';
 import { fileURLToPath } from 'node:url';
 import { genHtml } from './server.js';
+import {
+  getNativeModulesPathRule,
+  getNapiModulesPathRule,
+} from '@lynx-js/web-platform-rsbuild-plugin';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -21,6 +25,11 @@ const config = {
     'web-core': './shell-project/web-core.ts',
     'fp-only': './shell-project/fp-only.ts',
   },
+  resolve: {
+    fallback: {
+      'module': false,
+    },
+  },
   output: {
     filename: '[name].js',
     path: path.resolve(__dirname, 'www'),
@@ -30,7 +39,9 @@ const config = {
   },
   plugins: [
     new rspack.DefinePlugin({
-      'process.env.ALL_ON_UI': JSON.stringify(process.env.ALL_ON_UI),
+      'process.env.ENABLE_MULTI_THREAD': JSON.stringify(
+        process.env.ENABLE_MULTI_THREAD,
+      ),
     }),
     new rspack.HtmlRspackPlugin({
       title: 'lynx-for-web-test',
@@ -46,6 +57,21 @@ const config = {
       chunks: ['main'],
       scriptLoading: 'module',
       filename: 'index.html',
+    }),
+    new rspack.HtmlRspackPlugin({
+      title: 'lynx-for-web-test',
+      meta: {
+        viewport:
+          'width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no',
+        'apple-mobile-web-app-capable': 'yes',
+        'apple-mobile-web-app-status-bar-style': 'default',
+        'screen-orientation': 'portrait',
+        'format-detection': 'telephone=no',
+        'x5-orientation': 'portrait',
+      },
+      chunks: ['main'],
+      scriptLoading: 'module',
+      filename: 'ssr.html',
     }),
     new rspack.HtmlRspackPlugin({
       title: 'mainthread-test',
@@ -148,6 +174,32 @@ const config = {
             next();
           }
         },
+      }, {
+        name: 'ssr',
+        path: '/ssr',
+        middleware: async (req, res, next) => {
+          try {
+            const html = await readFile(
+              path.join(__dirname, 'www', 'index.html'),
+              'utf-8',
+            );
+            const casename = req.query.casename;
+            if (!casename) {
+              res.statusCode = 400;
+              res.send('casename is required');
+              next();
+              return;
+            }
+
+            res.send(await genHtml(html, casename, 'main'));
+            next();
+          } catch (e) {
+            res.statusCode = 500;
+            console.error(e);
+            res.send(e.toString() + '\n' + e.stack?.toString());
+            next();
+          }
+        },
       });
       return middlewares;
     },
@@ -204,6 +256,14 @@ const config = {
         enforce: 'pre',
         use: ['source-map-loader'],
       },
+      getNativeModulesPathRule(path.resolve(
+        __dirname,
+        './shell-project/index.native-modules.ts',
+      )),
+      getNapiModulesPathRule(path.resolve(
+        __dirname,
+        './shell-project/index.napi-modules.ts',
+      )),
     ],
   },
   experiments: {

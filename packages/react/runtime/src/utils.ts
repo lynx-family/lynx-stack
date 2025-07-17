@@ -14,7 +14,7 @@ export function isDirectOrDeepEqual(a: any, b: any): boolean {
 }
 
 export function isEmptyObject(obj?: object): obj is Record<string, never> {
-  for (var _ in obj) return false;
+  for (const _ in obj) return false;
   return true;
 }
 
@@ -25,11 +25,20 @@ export function isSdkVersionGt(major: number, minor: number): boolean {
 }
 
 export function pick<T extends object, K extends keyof T>(obj: T, keys: Iterable<K>): Pick<T, K> {
-  const result: any = {};
+  const result: Partial<Pick<T, K>> = {};
   for (const key of keys) {
     if (key in obj) {
       result[key] = obj[key];
     }
   }
-  return result;
+  return result as Pick<T, K>;
+}
+
+export function maybePromise<T>(value: unknown): value is Promise<T> {
+  return (
+    typeof value === 'object'
+    && value !== null
+    // @ts-expect-error the check is safe
+    && typeof value.then === 'function'
+  );
 }

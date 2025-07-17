@@ -5,7 +5,7 @@ import { createRequire } from 'node:module'
 import path from 'node:path'
 
 import type { RsbuildPlugin } from '@rsbuild/core'
-import type { ResolveFunction } from 'enhanced-resolve'
+import type { ResolveResult } from 'unrs-resolver'
 
 export interface Options {
   lazy?: boolean | undefined
@@ -180,21 +180,36 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
   }
 }
 
-export function createLazyResolver(context: string, conditionNames: string[]) {
-  let lazyExports: Record<string, string | false>
-  let resolverLazy: ResolveFunction
+export function createLazyResolver(
+  directory: string,
+  conditionNames: string[],
+) {
+  let lazyExports: Record<string, string>
+  let resolverLazy: (directory: string, request: string) => ResolveResult
 
   return async (
     request: string,
   ): Promise<string> => {
-    const { default: resolver } = await import('enhanced-resolve')
+    if (!lazyExports) {
+      lazyExports = {}
+    }
 
-    return (
-      (lazyExports ??= {})[request] ??=
-        (resolverLazy ??= resolver.create.sync({ conditionNames }))(
-          context,
-          request,
-        )
-    ) as string
+    if (lazyExports[request] === undefined) {
+      if (!resolverLazy) {
+        const { ResolverFactory } = await import('unrs-resolver')
+        const resolver = new ResolverFactory({ conditionNames })
+        resolverLazy = (dir: string, req: string) => resolver.sync(dir, req)
+      }
+      const resolveResult = resolverLazy(directory, request)
+      if (resolveResult.error) {
+        throw new Error(resolveResult.error)
+      }
+      if (!resolveResult.path) {
+        throw new Error(`Failed to resolve ${request}`)
+      }
+      lazyExports[request] = resolveResult.path
+    }
+
+    return lazyExports[request]
   }
 }

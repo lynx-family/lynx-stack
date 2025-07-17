@@ -10,8 +10,9 @@
 import { queries, Queries, BoundFunction } from '@testing-library/dom';
 import { LynxElement, type ElementTree, type LynxTestingEnv } from '@lynx-js/testing-environment';
 import { ComponentChild, ComponentType } from 'preact';
+import { act } from 'preact/test-utils';
 export * from '@testing-library/dom';
-export { ElementTree, LynxTestingEnv };
+export { ElementTree, LynxTestingEnv, act };
 
 /**
  * The options for {@link render}.
@@ -252,6 +253,6 @@ export function renderHook<Result, Props>(
  *
  * It will be useful when you want to wait for the next event loop to finish.
  *
- * @public
+ * @deprecated Please use `act` instead
  */
 export function waitSchedule(): Promise<void>;

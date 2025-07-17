@@ -7,6 +7,7 @@ import type {
 } from './Element.js';
 import type { LynxEventType } from './EventType.js';
 import type { FlushElementTreeOptions } from './FlushElementTreeOptions.js';
+import type { I18nResourceTranslationOptions } from './index.js';
 import type { MainThreadLynx } from './MainThreadLynx.js';
 import type { ProcessDataCallback } from './ProcessDataCallback.js';
 
@@ -61,7 +62,7 @@ export type FirstElementPAPI = (
 
 export type GetChildrenPAPI = (
   element: WebFiberElementImpl,
-) => WebFiberElementImpl[];
+) => WebFiberElementImpl[] | null;
 
 export type GetParentPAPI = (
   element: WebFiberElementImpl,
@@ -262,11 +263,29 @@ export type SetCSSIdPAPI = (
 
 export type GetPageElementPAPI = () => WebFiberElementImpl | undefined;
 
+export type MarkTemplateElementPAPI = (
+  element: WebFiberElementImpl,
+) => void;
+
+export type MarkPartElementPAPI = (
+  element: WebFiberElementImpl,
+  partId: string,
+) => void;
+
 export type GetTemplatePartsPAPI = (
   templateElement: WebFiberElementImpl,
-) => Record<string, WebFiberElementImpl> | undefined;
+) => Record<string, WebFiberElementImpl>;
+
+interface JSErrorInfo {
+  release: string;
+}
 
 export interface MainThreadGlobalThis {
+  // __GetTemplateParts currently only provided by the thread-strategy = "all-on-ui" (default)
+  __GetTemplateParts?: GetTemplatePartsPAPI;
+
+  __MarkPartElement: MarkPartElementPAPI;
+  __MarkTemplateElement: MarkTemplateElementPAPI;
   __AddEvent: AddEventPAPI;
   __GetEvent: GetEventPAPI;
   __GetEvents: GetEventsPAPI;
@@ -317,21 +336,26 @@ export interface MainThreadGlobalThis {
   __SetInlineStyles: SetInlineStylesPAPI;
   __SetCSSId: SetCSSIdPAPI;
   __GetPageElement: GetPageElementPAPI;
-  __GetTemplateParts: GetTemplatePartsPAPI;
   __globalProps: unknown;
   SystemInfo: typeof systemInfo;
   globalThis?: MainThreadGlobalThis;
   lynx: MainThreadLynx;
   processData?: ProcessDataCallback;
   ssrEncode?: () => string;
-  ssrHydrate?: (encodeData?: string) => void;
-  _ReportError: (error: string, _: unknown) => void;
+  ssrHydrate?: (encodeData?: string | null) => void;
+  _ReportError: (error: Error, _: unknown) => void;
+  _SetSourceMapRelease: (errInfo: JSErrorInfo) => void;
   __OnLifecycleEvent: (lifeCycleEvent: Cloneable) => void;
   __LoadLepusChunk: (path: string) => boolean;
   __FlushElementTree: (
     _subTree: unknown,
     options: FlushElementTreeOptions,
   ) => void;
+  _I18nResourceTranslation: (
+    options: I18nResourceTranslationOptions,
+  ) => unknown | undefined;
+  // This is an empty implementation, just to avoid business call errors
+  _AddEventListener: (...args: unknown[]) => void;
   /**
    * private fields
    */

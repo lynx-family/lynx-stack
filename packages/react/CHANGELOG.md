@@ -1,5 +1,88 @@
 # @lynx-js/react
 
+## 0.111.1
+
+### Patch Changes
+
+- Wrap the main thread `renderPage` in preact `act` to ensure that the effects are flushed. ([#1170](https://github.com/lynx-family/lynx-stack/pull/1170))
+
+## 0.111.0
+
+### Minor Changes
+
+- Allow some `<list-item/>`s to be deferred and rendered in the background thread. ([#204](https://github.com/lynx-family/lynx-stack/pull/204))
+
+  Use the following syntax:
+
+  ```diff
+  <list>
+  -  <list-item item-key="...">
+  +  <list-item item-key="..." defer>
+        <SomeHeavyComponent />
+    </list-item>
+  </list>
+  ```
+
+  You should render your heavyweight components with the `defer` attribute to avoid blocking the main thread.
+
+### Patch Changes
+
+- Add missing alias of `@lynx-js/react` and `preact` in testing library, it will fix the `Failed to resolve import "@lynx-js/react/internal"` error in node_modules. ([#1182](https://github.com/lynx-family/lynx-stack/pull/1182))
+
+- Allow any types of `dataProcessors` in `lynx.registerDataProcessors`. ([#1200](https://github.com/lynx-family/lynx-stack/pull/1200))
+
+- Make `loadLazyBundle` being able to render the content on the first screen of the background thread. ([#1212](https://github.com/lynx-family/lynx-stack/pull/1212))
+
+- Fixed: An issue where the `lynxViewDidUpdate` callback did not trigger when data was updated from native. ([#1171](https://github.com/lynx-family/lynx-stack/pull/1171))
+
+  Notice:
+
+  - Even if no data changes are actually processed after calling `updateData()`, the `lynxViewDidUpdate` callback will still be triggered.
+  - Only one `lynxViewDidUpdate` callback will be triggered per render cycle. Consequently, if multiple `updateData()` calls are made within a single cycle but the data updates are batched, the number of `lynxViewDidUpdate` callbacks triggered may be less than the number of `updateData()` calls.
+
+- Supports `act` in testing library. ([#1182](https://github.com/lynx-family/lynx-stack/pull/1182))
+
+  ```js
+  import { act } from '@lynx-js/react/testing-library';
+
+  act(() => {
+    // ...
+  });
+  ```
+
+## 0.110.1
+
+### Patch Changes
+
+- Fix a memory leak when using `<list/>`. ([#1144](https://github.com/lynx-family/lynx-stack/pull/1144))
+
+## 0.110.0
+
+### Minor Changes
+
+- Fixed closure variable capture issue in effect hooks to prevent stale values and ensured proper execution order between refs, effects, and event handlers. ([#770](https://github.com/lynx-family/lynx-stack/pull/770))
+
+  **Breaking Changes**:
+
+  - The execution timing of `ref`, `useEffect()` callback, `componentDidMount`, `componentDidUpdate`, `componentWillUnmount` and the callback of `setState` have been moved forward. These effects will now execute before hydration is complete, rather than waiting for the main thread update to complete.
+  - For components inside `<list />`, `ref` callbacks will now be triggered during background thread rendering, regardless of component visibility. If your code depends on component visibility timing, use `main-thread:ref` instead of regular `ref`.
+
+### Patch Changes
+
+- Fixed two memory leaks: ([#1071](https://github.com/lynx-family/lynx-stack/pull/1071))
+
+  1. When JSX is rendered on the main thread and removed, FiberElement can still be referenced by `__root.__jsx` through `props.children`;
+
+  2. When the SnapshotInstance tree is removed from the root node, its child nodes form a cycle reference because the `__previousSibling` and `__nextSibling` properties point to each other, thus causing a FiberElement leak.
+
+- Optimize the error message when snapshots cannot be found in the main thread. ([#1083](https://github.com/lynx-family/lynx-stack/pull/1083))
+
+- Fix a problem causing `MainThreadRef`s to not be updated correctly during hydration when they are set to `main-thread:ref`s. ([#1001](https://github.com/lynx-family/lynx-stack/pull/1001))
+
+- Add snapshot id report when throwing `snapshotPatchApply failed: ctx not found` error. ([#1107](https://github.com/lynx-family/lynx-stack/pull/1107))
+
+- Fix a bug in ReactLynx Testing Library that rendered snapshot of inline style was normalized incorrectly (eg. `flex:1` was normalized to `flex: 1 1 0%;` incorrectly). ([#1040](https://github.com/lynx-family/lynx-stack/pull/1040))
+
 ## 0.109.2
 
 ### Patch Changes

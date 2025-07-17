@@ -95,6 +95,10 @@ jobs:
             turbo-v4-${{ runner.os }}-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.push.before }}
             turbo-v4-${{ runner.os }}-${{ hashFiles('**/packages/**/src/**/*.rs') }}-
             turbo-v4-${{ runner.os }}-
+      - name: Install wasm-bindgen and wasm-pack
+        uses: taiki-e/install-action@9ca1734d8940023f074414ee621fd530c4ce10f2 # v2
+        with:
+          tool: wasm-bindgen,wasm-pack
       - name: Install
         run: |
           npm install -g corepack@latest
@@ -105,6 +109,7 @@ jobs:
         run: |
           pnpm turbo build --summarize
         env:
+          NODE_OPTIONS: --max-old-space-size=32768
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         continue-on-error: true
       - name: Upload turbo summary
@@ -118,7 +123,7 @@ jobs:
           include-hidden-files: true
       - name: Setup Rust and retry build if failed
         if: steps.build.outcome == 'failure'
-        uses: actions-rust-lang/setup-rust-toolchain@9d7e65c320fdb52dcd45ffaa68deb6c02c8754d9 # v1
+        uses: actions-rust-lang/setup-rust-toolchain@fb51252c7ba57d633bc668f941da052e410add48 # v1
         with:
           target: wasm32-unknown-unknown
           cache-key: test-${{ runner.os }}

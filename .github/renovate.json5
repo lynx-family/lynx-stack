@@ -87,6 +87,13 @@
       ],
     },
     {
+      "groupName": "Prefresh",
+      "groupSlug": "prefresh",
+      "matchPackageNames": [
+        "/@prefresh/*/"
+      ]
+    },
+    {
       "groupName": "API Extractor",
       "groupSlug": "api-extractor",
       "matchPackageNames": [
@@ -100,7 +107,13 @@
     {
       "groupName": "linting",
       "groupSlug": "linting",
-      "matchPackageNames": ["/eslint/"],
+      "matchPackageNames": [
+        "/eslint/",
+        "globals",
+        "husky",
+        "lint-staged",
+        "sort-package-json",
+      ],
     },
     {
       "groupName": "Typia",
@@ -123,6 +136,14 @@
       "groupName": "github-actions",
       "groupSlug": "github-actions",
       "matchManagers": ["github-actions"],
+    },
+    {
+      "groupName": "types",
+      "groupSlug": "types",
+      "matchPackageNames": [
+        "/^@tsconfig/*/",
+        "/^@types/*/",
+      ],
     },
   ],
   "postUpdateOptions": [

@@ -1,6 +1,6 @@
-import { defineProject } from 'vitest/config';
+import { defineProject, type UserConfigExport } from 'vitest/config';
 
-export default defineProject({
+const config: UserConfigExport = defineProject({
   test: {
     name: 'tools/tailwind-preset',
     environment: 'node',
@@ -8,3 +8,5 @@ export default defineProject({
     globals: true,
   },
 });
+
+export default config;

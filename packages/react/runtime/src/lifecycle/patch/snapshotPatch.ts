@@ -8,16 +8,16 @@
  * efficient transmission between threads and application to element tree.
  */
 
-export const enum SnapshotOperation {
-  CreateElement,
-  InsertBefore,
-  RemoveChild,
-  SetAttribute,
-  SetAttributes,
+export const SnapshotOperation = {
+  CreateElement: 0,
+  InsertBefore: 1,
+  RemoveChild: 2,
+  SetAttribute: 3,
+  SetAttributes: 4,
 
-  DEV_ONLY_AddSnapshot = 100,
-  DEV_ONLY_RegisterWorklet = 101,
-}
+  DEV_ONLY_AddSnapshot: 100,
+  DEV_ONLY_RegisterWorklet: 101,
+} as const;
 
 // Operation format definitions:
 //
@@ -42,9 +42,9 @@ export const enum SnapshotOperation {
 //   fn: string,
 // ]
 
-export type SnapshotPatch = any[];
+export type SnapshotPatch = unknown[];
 
-export let __globalSnapshotPatch: any;
+export let __globalSnapshotPatch: SnapshotPatch | undefined;
 
 export function takeGlobalSnapshotPatch(): SnapshotPatch | undefined {
   if (__globalSnapshotPatch) {

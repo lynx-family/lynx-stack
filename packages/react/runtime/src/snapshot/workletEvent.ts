@@ -4,8 +4,8 @@
 import { onWorkletCtxUpdate } from '@lynx-js/react/worklet-runtime/bindings';
 import type { Worklet } from '@lynx-js/react/worklet-runtime/bindings';
 
-import { SnapshotInstance } from '../snapshot.js';
 import { isMainThreadHydrationFinished } from '../lifecycle/patch/isMainThreadHydrationFinished.js';
+import { SnapshotInstance } from '../snapshot.js';
 
 function updateWorkletEvent(
   snapshot: SnapshotInstance,

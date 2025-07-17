@@ -11,27 +11,28 @@ import { render } from 'preact';
 
 import { hydrate } from '../hydrate.js';
 import { LifecycleConstant } from '../lifecycleConstant.js';
-import { __pendingListUpdates } from '../list.js';
+import { __pendingListUpdates } from '../pendingListUpdates.js';
 import { __root, setRoot } from '../root.js';
+import { destroyBackground } from './destroy.js';
+import { applyRefQueue } from '../snapshot/workletRef.js';
 import { SnapshotInstance, __page, snapshotInstanceManager } from '../snapshot.js';
-import { takeGlobalRefPatchMap } from '../snapshot/ref.js';
 import { isEmptyObject } from '../utils.js';
 import { destroyWorklet } from '../worklet/destroy.js';
-import { destroyBackground } from './destroy.js';
 import { clearJSReadyEventIdSwap, isJSReady } from './event/jsReady.js';
 import { increaseReloadVersion } from './pass.js';
-import { deinitGlobalSnapshotPatch } from './patch/snapshotPatch.js';
-import { renderMainThread } from './render.js';
 import { setMainThreadHydrationFinished } from './patch/isMainThreadHydrationFinished.js';
+import { deinitGlobalSnapshotPatch } from './patch/snapshotPatch.js';
+import { shouldDelayUiOps } from './ref/delay.js';
+import { renderMainThread } from './render.js';
 
-function reloadMainThread(data: any, options: UpdatePageOption): void {
+function reloadMainThread(data: unknown, options: UpdatePageOption): void {
   if (__PROFILE__) {
     console.profile('reloadTemplate');
   }
 
   increaseReloadVersion();
 
-  if (typeof data == 'object' && !isEmptyObject(data)) {
+  if (typeof data == 'object' && !isEmptyObject(data as Record<string, unknown>)) {
     Object.assign(lynx.__initData, data);
   }
 
@@ -51,13 +52,13 @@ function reloadMainThread(data: any, options: UpdatePageOption): void {
 
   // always call this before `__FlushElementTree`
   __pendingListUpdates.flush();
+  applyRefQueue();
 
   if (isJSReady) {
     __OnLifecycleEvent([
       LifecycleConstant.firstScreen, /* FIRST_SCREEN */
       {
         root: JSON.stringify(__root),
-        refPatch: JSON.stringify(takeGlobalRefPatchMap()),
       },
     ]);
   }
@@ -84,6 +85,8 @@ function reloadBackground(updateData: Record<string, any>): void {
   // COW when modify `lynx.__initData` to make sure Provider & Consumer works
   lynx.__initData = Object.assign({}, lynx.__initData, updateData);
 
+  shouldDelayUiOps.value = true;
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   render(__root.__jsx, __root as any);
 
   if (__PROFILE__) {

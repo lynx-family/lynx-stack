@@ -1,5 +1,11 @@
 # @lynx-js/qrcode-rsbuild-plugin
 
+## 0.4.0
+
+### Minor Changes
+
+- Support "Type to search" when switching entries and schema. ([#1115](https://github.com/lynx-family/lynx-stack/pull/1115))
+
 ## 0.3.6
 
 ### Patch Changes

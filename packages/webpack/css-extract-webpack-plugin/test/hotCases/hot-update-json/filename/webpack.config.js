@@ -5,6 +5,7 @@
 */
 import { DefinePlugin } from 'webpack'
 import { CssExtractWebpackPlugin } from '../../../../src/index.js'
+import { plugins } from '../../../../test/plugins.js'
 import path from 'node:path'
 
 /** @type {import('webpack').Configuration} */
@@ -37,6 +38,7 @@ export default {
     ],
   },
   plugins: [
+    ...plugins,
     new DefinePlugin({
       HMR_RUNTIME_LEPUS: JSON.stringify(
         path.resolve(

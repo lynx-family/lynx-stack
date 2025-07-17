@@ -144,7 +144,7 @@ const SIDEBARS = {
       ],
       collapsed: true,
       depth: 3,
-    }).items as Sidebar[string],
+    }).items,
   ],
 } satisfies Sidebar;
 
@@ -275,7 +275,7 @@ const SIDEBARS_ZH = {
       ],
       collapsed: true,
       depth: 3,
-    }).items as Sidebar[string],
+    }).items,
   ],
 } satisfies Sidebar;
 
@@ -522,32 +522,71 @@ export default defineConfig({
         {
           'text': 'Getting Started',
           items: [
-            '/guide/installation',
+            {
+              text: 'Installation',
+              link: '/guide/installation',
+            },
             // '/guide/glossary',
           ],
         },
         {
           text: 'Features',
           items: [
-            '/guide/cli',
+            {
+              text: 'CLI',
+              link: '/guide/cli',
+            },
             // '/guide/hmr',
-            '/guide/typescript',
-            '/guide/css',
-            '/guide/assets',
-            '/guide/output',
-            '/guide/resolve',
-            '/guide/i18n',
-            '/guide/plugin',
-            '/guide/code-splitting',
+            {
+              text: 'TypeScript',
+              link: '/guide/typescript',
+            },
+            {
+              text: 'CSS',
+              link: '/guide/css',
+            },
+            {
+              text: 'Static Assets',
+              link: '/guide/assets',
+            },
+            {
+              text: 'Output Files',
+              link: '/guide/output',
+            },
+            {
+              text: 'Module Resolution',
+              link: '/guide/resolve',
+            },
+            {
+              text: 'Internationalization',
+              link: '/guide/i18n',
+            },
+            {
+              text: 'Plugin',
+              link: '/guide/plugin',
+            },
+            {
+              text: 'Code Splitting',
+              link: '/guide/code-splitting',
+            },
             // '/guide/compatibility',
-            '/guide/upgrade-rspeedy',
+            {
+              text: 'Upgrade Rspeedy',
+              link: '/guide/upgrade-rspeedy',
+            },
           ],
         },
         {
           text: 'Debug',
           items: [
-            '/guide/build-profiling',
-            '/guide/use-rsdoctor',
+            {
+              text: 'Build Profiling',
+              link: '/guide/build-profiling',
+            },
+            {
+              text: 'Use Rsdoctor',
+              link: '/guide/use-rsdoctor',
+            },
           ],
         },
       ],
@@ -561,32 +600,71 @@ export default defineConfig({
         {
           'text': '入门',
           items: [
-            '/zh/guide/installation',
+            {
+              text: '安装',
+              link: '/zh/guide/installation',
+            },
             // '/guide/glossary',
           ],
         },
         {
           text: '特性',
           items: [
-            '/zh/guide/cli',
+            {
+              text: '命令行界面',
+              link: '/zh/guide/cli',
+            },
             // '/guide/hmr',
-            '/zh/guide/typescript',
-            '/zh/guide/css',
-            '/zh/guide/assets',
-            '/zh/guide/output',
-            '/zh/guide/resolve',
-            '/guide/i18n',
-            '/zh/guide/plugin',
-            '/zh/guide/code-splitting',
+            {
+              text: 'TypeScript',
+              link: '/zh/guide/typescript',
+            },
+            {
+              text: '样式',
+              link: '/zh/guide/css',
+            },
+            {
+              text: '使用静态资源',
+              link: '/zh/guide/assets',
+            },
+            {
+              text: '构建输出文件',
+              link: '/zh/guide/output',
+            },
+            {
+              text: '模块解析',
+              link: '/zh/guide/resolve',
+            },
+            {
+              text: '国际化',
+              link: '/guide/i18n',
+            },
+            {
+              text: '插件',
+              link: '/zh/guide/plugin',
+            },
+            {
+              text: '代码拆分',
+              link: '/zh/guide/code-splitting',
+            },
             // '/guide/compatibility',
-            '/zh/guide/upgrade-rspeedy',
+            {
+              text: '升级 Rspeedy',
+              link: '/zh/guide/upgrade-rspeedy',
+            },
           ],
         },
         {
           text: '调试',
           items: [
-            '/zh/guide/build-profiling',
-            '/zh/guide/use-rsdoctor',
+            {
+              text: '构建性能分析',
+              link: '/zh/guide/build-profiling',
+            },
+            {
+              text: '使用 Rsdoctor',
+              link: '/zh/guide/use-rsdoctor',
+            },
           ],
         },
       ],
@@ -656,14 +734,14 @@ export default defineConfig({
     output: {
       assetPrefix: `//${CDN_HOST}/`,
     },
-    server: {
-      open: 'http://localhost:<port>/lynx-stack/',
-    },
-    source: {
+    resolve: {
       alias: {
         '@site': __dirname,
         '@components': join(__dirname, 'src', 'components'),
       },
+    },
+    server: {
+      open: 'http://localhost:<port>/',
     },
     plugins: [
       pluginSass(),

@@ -97,9 +97,9 @@ export const __OpText = 3;
  * @param {Record<string, unknown>} context
  */
 function renderClassComponent(vnode, context) {
-  let type = /** @type {import("preact").ComponentClass<typeof vnode.props>} */ (vnode.type);
+  const type = /** @type {import("preact").ComponentClass<typeof vnode.props>} */ (vnode.type);
 
-  let c = new type(vnode.props, context);
+  const c = new type(vnode.props, context);
 
   vnode[COMPONENT] = c;
   c[VNODE] = vnode;
@@ -162,7 +162,7 @@ function _renderToString(
   if (isArray(vnode)) {
     parent[CHILDREN] = vnode;
     for (let i = 0; i < vnode.length; i++) {
-      let child = vnode[i];
+      const child = vnode[i];
       if (child == null || typeof child === 'boolean') continue;
 
       _renderToString(child, context, isSvgMode, selectValue, parent, opcodes);
@@ -190,7 +190,7 @@ function _renderToString(
     } else {
       contextType = type.contextType;
       if (contextType != null) {
-        let provider = context[contextType.__c];
+        const provider = context[contextType.__c];
         cctx = provider ? provider.props.value : contextType.__;
       }
 
@@ -236,7 +236,7 @@ function _renderToString(
 
     // When a component returns a Fragment node we flatten it in core, so we
     // need to mirror that logic here too
-    let isTopLevelFragment = rendered != null && rendered.type === Fragment
+    const isTopLevelFragment = rendered != null && rendered.type === Fragment
       && rendered.key == null;
     rendered = isTopLevelFragment ? rendered.props.children : rendered;
 
@@ -254,8 +254,8 @@ function _renderToString(
 
   opcodes.push(__OpBegin, vnode);
 
-  for (let name in props) {
-    let v = props[name];
+  for (const name in props) {
+    const v = props[name];
 
     switch (name) {
       case 'children':

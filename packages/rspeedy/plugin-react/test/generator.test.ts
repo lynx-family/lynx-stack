@@ -29,4 +29,36 @@ test('json generator in main-thread layer', async () => {
       JSONParse: false,
     },
   })
+  expect(config!.module!.rules).not.toContainEqual({
+    test: /\.json$/,
+    type: 'json',
+    issuerLayer: LAYERS.BACKGROUND,
+    generator: {
+      JSONParse: false,
+    },
+  })
+})
+
+test('json generator in dual-thread layer when extractStr is enabled', async () => {
+  const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+  const rsbuild = await createRsbuild({
+    rsbuildConfig: {
+      plugins: [
+        pluginStubRspeedyAPI(),
+        pluginReactLynx({
+          extractStr: true,
+        }),
+      ],
+    },
+  })
+
+  const [config] = await rsbuild.initConfigs()
+
+  expect(config!.module!.rules).toContainEqual({
+    test: /\.json$/,
+    type: 'json',
+    generator: {
+      JSONParse: false,
+    },
+  })
 })

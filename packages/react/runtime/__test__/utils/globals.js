@@ -3,6 +3,8 @@
 // LICENSE file in the root directory of this source tree.
 import { vi } from 'vitest';
 
+import { getJSModule } from './jsModule.ts';
+
 const app = {
   callLepusMethod: vi.fn(),
   markTiming: vi.fn(),
@@ -35,6 +37,46 @@ const performance = {
   }),
 };
 
+class SelectorQuery {
+  static execLog = vi.fn();
+  id = '';
+  method = '';
+  params = undefined;
+
+  select(id) {
+    this.id = id;
+    return this;
+  }
+
+  invoke(...args) {
+    this.method = 'invoke';
+    this.params = args;
+    return this;
+  }
+
+  path(...args) {
+    this.method = 'path';
+    this.params = args;
+    return this;
+  }
+
+  fields(...args) {
+    this.method = 'fields';
+    this.params = args;
+    return this;
+  }
+
+  setNativeProps(...args) {
+    this.method = 'setNativeProps';
+    this.params = args;
+    return this;
+  }
+
+  exec() {
+    SelectorQuery.execLog(this.id, this.method, this.params);
+  }
+}
+
 function injectGlobals() {
   globalThis.__DEV__ = true;
   globalThis.__PROFILE__ = true;
@@ -48,15 +90,35 @@ function injectGlobals() {
   globalThis.__TESTING_FORCE_RENDER_TO_OPCODE__ = false;
   globalThis.globDynamicComponentEntry = '__Card__';
   globalThis.lynxCoreInject = {};
-  globalThis.lynxCoreInject.tt = {};
+  globalThis.lynxCoreInject.tt = {
+    GlobalEventEmitter: getJSModule('GlobalEventEmitter'),
+  };
   globalThis.lynx = {
     getNativeApp: () => app,
     performance,
-    createSelectorQuery: vi.fn(() => {
+    createSelectorQuery: () => {
+      return new SelectorQuery();
+    },
+    getJSModule,
+    getElementByIdTasks: vi.fn(),
+    getElementById: vi.fn((id) => {
       return {
-        selectUniqueID: function(uid) {
-          this.uid = uid;
-          return this;
+        animate: vi.fn(() => {
+          lynx.getElementByIdTasks('animate');
+          return {
+            play: () => {
+              lynx.getElementByIdTasks('play');
+            },
+            pause: () => {
+              lynx.getElementByIdTasks('pause');
+            },
+            cancel: () => {
+              lynx.getElementByIdTasks('cancel');
+            },
+          };
+        }),
+        setProperty: (property, value) => {
+          lynx.getElementByIdTasks('setProperty', property, value);
         },
       };
     }),

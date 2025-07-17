@@ -18,20 +18,38 @@ import {
   type reportErrorEndpoint,
   type MainThreadGlobalThis,
   switchExposureServiceEndpoint,
+  type I18nResourceTranslationOptions,
+  getCacheI18nResourcesKey,
+  type InitI18nResources,
+  type I18nResources,
+  dispatchI18nResourceEndpoint,
+  type Cloneable,
+  type SSRHydrateInfo,
+  type SSRDehydrateHooks,
 } from '@lynx-js/web-constants';
 import { registerCallLepusMethodHandler } from './crossThreadHandlers/registerCallLepusMethodHandler.js';
 import { registerGetCustomSectionHandler } from './crossThreadHandlers/registerGetCustomSectionHandler.js';
 import { createMainThreadGlobalThis } from './createMainThreadGlobalThis.js';
 import { createExposureService } from './utils/createExposureService.js';
+import { initTokenizer } from './utils/tokenizer.js';
+const initTokenizerPromise = initTokenizer();
 
 const moduleCache: Record<string, LynxJSModule> = {};
 export function prepareMainThreadAPIs(
   backgroundThreadRpc: Rpc,
   rootDom: Document | ShadowRoot,
   createElement: Document['createElement'],
-  commitDocument: () => Promise<void> | void,
+  commitDocument: (
+    exposureChangedElements: HTMLElement[],
+  ) => Promise<void> | void,
   markTimingInternal: (timingKey: string, pipelineId?: string) => void,
+  flushMarkTimingInternal: () => void,
   reportError: RpcCallType<typeof reportErrorEndpoint>,
+  triggerI18nResourceFallback: (
+    options: I18nResourceTranslationOptions,
+  ) => void,
+  initialI18nResources: (data: InitI18nResources) => I18nResources,
+  ssrHooks?: SSRDehydrateHooks,
 ) {
   const postTimingFlags = backgroundThreadRpc.createCall(
     postTimingFlagsEndpoint,
@@ -46,9 +64,13 @@ export function prepareMainThreadAPIs(
     publicComponentEventEndpoint,
   );
   const postExposure = backgroundThreadRpc.createCall(postExposureEndpoint);
+  const dispatchI18nResource = backgroundThreadRpc.createCall(
+    dispatchI18nResourceEndpoint,
+  );
   markTimingInternal('lepus_execute_start');
   async function startMainThread(
     config: StartMainThreadContextConfig,
+    ssrHydrateInfo?: SSRHydrateInfo,
   ): Promise<MainThreadGlobalThis> {
     let isFp = true;
     const {
@@ -58,10 +80,12 @@ export function prepareMainThreadAPIs(
       nativeModulesMap,
       napiModulesMap,
       tagMap,
+      initI18nResources,
     } = config;
     const { styleInfo, pageConfig, customSections, cardType, lepusCode } =
       template;
     markTimingInternal('decode_start');
+    await initTokenizerPromise;
     const lepusCodeEntries = await Promise.all(
       Object.entries(lepusCode).map(async ([name, url]) => {
         const cachedModule = moduleCache[url];
@@ -84,6 +108,7 @@ export function prepareMainThreadAPIs(
       receiveEventEndpoint: dispatchJSContextOnMainThreadEndpoint,
       sendEventEndpoint: dispatchCoreContextOnBackgroundEndpoint,
     });
+    const i18nResources = initialI18nResources(initI18nResources);
     const mtsGlobalThis = createMainThreadGlobalThis({
       jsContext,
       tagMap,
@@ -94,6 +119,8 @@ export function prepareMainThreadAPIs(
       styleInfo,
       lepusCode: lepusCodeLoaded,
       rootDom,
+      ssrHydrateInfo,
+      ssrHooks,
       callbacks: {
         mainChunkReady: () => {
           markTimingInternal('data_processor_start');
@@ -135,10 +162,27 @@ export function prepareMainThreadAPIs(
             napiModulesMap,
             browserConfig,
           });
-          mtsGlobalThis.renderPage!(initData);
-          mtsGlobalThis.__FlushElementTree(undefined, {});
+          if (!ssrHydrateInfo) {
+            mtsGlobalThis.renderPage!(initData);
+            mtsGlobalThis.__FlushElementTree(undefined, {});
+          } else {
+            // replay the hydrate event
+            for (const event of ssrHydrateInfo.events) {
+              const uniqueId = event[0];
+              const element = ssrHydrateInfo.lynxUniqueIdToElement[uniqueId]
+                ?.deref();
+              if (element) {
+                mtsGlobalThis.__AddEvent(element, event[1], event[2], event[3]);
+              }
+            }
+            mtsGlobalThis.ssrHydrate?.(ssrHydrateInfo.ssrEncodeData);
+          }
         },
-        flushElementTree: async (options, timingFlags) => {
+        flushElementTree: async (
+          options,
+          timingFlags,
+          exposureChangedElements,
+        ) => {
           const pipelineId = options?.pipelineOptions?.pipelineID;
           markTimingInternal('dispatch_start', pipelineId);
           if (isFp) {
@@ -150,10 +194,13 @@ export function prepareMainThreadAPIs(
           }
           markTimingInternal('layout_start', pipelineId);
           markTimingInternal('ui_operation_flush_start', pipelineId);
-          await commitDocument();
+          await commitDocument(
+            exposureChangedElements as unknown as HTMLElement[],
+          );
           markTimingInternal('ui_operation_flush_end', pipelineId);
           markTimingInternal('layout_end', pipelineId);
           markTimingInternal('dispatch_end', pipelineId);
+          flushMarkTimingInternal();
           requestAnimationFrame(() => {
             postTimingFlags(timingFlags, pipelineId);
           });
@@ -174,6 +221,17 @@ export function prepareMainThreadAPIs(
         publishEvent,
         publicComponentEvent,
         createElement,
+        _I18nResourceTranslation: (options: I18nResourceTranslationOptions) => {
+          const matchedInitI18nResources = i18nResources.data?.find(i =>
+            getCacheI18nResourcesKey(i.options)
+              === getCacheI18nResourcesKey(options)
+          );
+          dispatchI18nResource(matchedInitI18nResources?.resource as Cloneable);
+          if (matchedInitI18nResources) {
+            return matchedInitI18nResources.resource;
+          }
+          return triggerI18nResourceFallback(options);
+        },
       },
     });
     markTimingInternal('decode_end');

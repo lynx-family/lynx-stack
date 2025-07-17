@@ -8,8 +8,5 @@ ERROR in × Module build failed:
 
 ERROR in ./error/sass/index.scss
 × Module build failed:
-╰─▶   × TypeError: Cannot read properties of undefined (reading '__esModule')
-at isCJSExports (file://<ROOT>/packages/webpack/css-extract-webpack-plugin/src/loader.ts:<LINE:COLUMN>)
-at isNamedExports (file://<ROOT>/packages/webpack/css-extract-webpack-plugin/src/loader.ts:<LINE:COLUMN>)
-at Object.load (file://<ROOT>/packages/webpack/css-extract-webpack-plugin/src/loader.ts:<LINE:COLUMN>)
-at Object.pitch (file://<ROOT>/packages/webpack/css-extract-webpack-plugin/src/rspack-loader.ts:<LINE:COLUMN>)
+╰─▶   × Error: Module build failed:
+at <ROOT>/node_modules/<PNPM_INNER>/@rspack/core/dist/index.js:<LINE:COLUMN>

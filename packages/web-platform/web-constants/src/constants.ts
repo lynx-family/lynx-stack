@@ -16,6 +16,12 @@ export const lynxDatasetAttribute = 'l-dset' as const;
 
 export const lynxComponentConfigAttribute = 'l-comp-cfg' as const;
 
+export const lynxDisposedAttribute = 'l-disposed' as const;
+
+export const lynxElementTemplateMarkerAttribute = 'l-template' as const;
+
+export const lynxPartIdAttribute = 'l-part' as const;
+
 export const lynxDefaultDisplayLinearAttribute =
   'lynx-default-display-linear' as const;
 

@@ -1,5 +1,11 @@
 # @lynx-js/css-extract-webpack-plugin
 
+## 0.6.0
+
+### Minor Changes
+
+- Fix CSS HMR crash issues by using the same encode options with the main template. ([#1033](https://github.com/lynx-family/lynx-stack/pull/1033))
+
 ## 0.5.4
 
 ### Patch Changes

@@ -30,13 +30,17 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - uses: actions-rust-lang/setup-rust-toolchain@9d7e65c320fdb52dcd45ffaa68deb6c02c8754d9 # v1
+      - uses: actions-rust-lang/setup-rust-toolchain@fb51252c7ba57d633bc668f941da052e410add48 # v1
         with:
           target: wasm32-unknown-unknown
           cache: false
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "22"
+      - name: Install wasm-bindgen and wasm-pack
+        uses: taiki-e/install-action@9ca1734d8940023f074414ee621fd530c4ce10f2 # v2
+        with:
+          tool: wasm-bindgen,wasm-pack
       - name: Install
         run: |
           npm install -g corepack@latest
@@ -84,7 +88,8 @@ jobs:
       runs-on: lynx-ubuntu-24.04-medium
       run: >
         pnpm run test
-        --test-timeout=50000
+        --testTimeout=50000
+        --hookTimeout=50000
         --reporter=dot
         --reporter=junit
         --outputFile=test-report.junit.xml

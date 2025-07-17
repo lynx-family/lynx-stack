@@ -13,6 +13,7 @@ export const ancestorDocument = Symbol('ancestorDocument');
 export const _attributes = Symbol('_attributes');
 export const _children = Symbol('_children');
 export const innerHTML = Symbol('innerHTML');
+export const _cssRuleContents = Symbol('_cssRuleContents');
 export const uniqueId = Symbol('uniqueId');
 const _style = Symbol('_style');
 
@@ -26,6 +27,7 @@ export class OffscreenElement extends EventTarget {
   private readonly [_attributes] = new Map<string, string>();
   private _parentElement: OffscreenElement | null = null;
   readonly [_children]: OffscreenElement[] = [];
+  [_cssRuleContents]?: string[];
   #sheet?: OffscreenStyleSheet;
   /**
    * @private
@@ -59,21 +61,25 @@ export class OffscreenElement extends EventTarget {
           cssRules.splice(index, 0, {
             style: {
               set cssText(text: string) {
-                ancestor[operations].push({
-                  type: OperationType.sheetRuleUpdateCssText,
+                ancestor[operations].push(
+                  OperationType.sheetRuleUpdateCssText,
                   uid,
-                  cssText: text,
                   index,
-                });
+                  text,
+                );
               },
             },
           });
-          this[ancestorDocument][operations].push({
-            type: OperationType.sheetInsertRule,
+          if (!this[_cssRuleContents]) {
+            this[_cssRuleContents] = [];
+          }
+          this[_cssRuleContents].splice(index, 0, rule);
+          this[ancestorDocument][operations].push(
+            OperationType.sheetInsertRule,
             uid,
-            rule,
             index,
-          });
+            rule,
+          );
           return index;
         },
       };
@@ -135,12 +141,12 @@ export class OffscreenElement extends EventTarget {
 
   setAttribute(qualifiedName: string, value: string): void {
     this[_attributes].set(qualifiedName, value);
-    this[ancestorDocument][operations].push({
-      type: OperationType.SetAttribute,
-      uid: this[uniqueId],
-      key: qualifiedName,
+    this[ancestorDocument][operations].push(
+      OperationType.SetAttribute,
+      this[uniqueId],
+      qualifiedName,
       value,
-    });
+    );
   }
 
   getAttribute(qualifiedName: string): string | null {
@@ -149,19 +155,20 @@ export class OffscreenElement extends EventTarget {
 
   removeAttribute(qualifiedName: string): void {
     this[_attributes].delete(qualifiedName);
-    this[ancestorDocument][operations].push({
-      type: OperationType.RemoveAttribute,
-      uid: this[uniqueId],
-      key: qualifiedName,
-    });
+    this[ancestorDocument][operations].push(
+      OperationType.RemoveAttribute,
+      this[uniqueId],
+      qualifiedName,
+    );
   }
 
   append(...nodes: (OffscreenElement)[]): void {
-    this[ancestorDocument][operations].push({
-      type: OperationType.Append,
-      uid: this[uniqueId],
-      cid: nodes.map(node => node[uniqueId]),
-    });
+    this[ancestorDocument][operations].push(
+      OperationType.Append,
+      this[uniqueId],
+      nodes.length,
+      ...nodes.map(node => node[uniqueId]),
+    );
     for (const node of nodes) {
       node._remove();
       node._parentElement = this;
@@ -170,11 +177,12 @@ export class OffscreenElement extends EventTarget {
   }
 
   appendChild(node: OffscreenElement): OffscreenElement {
-    this[ancestorDocument][operations].push({
-      type: OperationType.Append,
-      uid: this[uniqueId],
-      cid: [node[uniqueId]],
-    });
+    this[ancestorDocument][operations].push(
+      OperationType.Append,
+      this[uniqueId],
+      1,
+      node[uniqueId],
+    );
     node._remove();
     node._parentElement = this;
     this[_children].push(node);
@@ -182,11 +190,12 @@ export class OffscreenElement extends EventTarget {
   }
 
   replaceWith(...nodes: (OffscreenElement)[]): void {
-    this[ancestorDocument][operations].push({
-      type: OperationType.ReplaceWith,
-      uid: this[uniqueId],
-      nid: nodes.map(node => node[uniqueId]),
-    });
+    this[ancestorDocument][operations].push(
+      OperationType.ReplaceWith,
+      this[uniqueId],
+      nodes.length,
+      ...nodes.map(node => node[uniqueId]),
+    );
     if (this._parentElement) {
       const parent = this._parentElement;
       this._parentElement = null;
@@ -203,10 +212,10 @@ export class OffscreenElement extends EventTarget {
   }
 
   remove(): void {
-    this[ancestorDocument][operations].push({
-      type: OperationType.Remove,
-      uid: this[uniqueId],
-    });
+    this[ancestorDocument][operations].push(
+      OperationType.Remove,
+      this[uniqueId],
+    );
     this._remove();
   }
 
@@ -226,12 +235,12 @@ export class OffscreenElement extends EventTarget {
       this[_children].push(newNode);
     }
 
-    this[ancestorDocument][operations].push({
-      type: OperationType.InsertBefore,
-      uid: this[uniqueId],
-      cid: newNode[uniqueId],
-      ref: refNode?.[uniqueId],
-    });
+    this[ancestorDocument][operations].push(
+      OperationType.InsertBefore,
+      this[uniqueId],
+      newNode[uniqueId],
+      refNode?.[uniqueId] ?? 0,
+    );
     return newNode;
   }
 
@@ -248,11 +257,11 @@ export class OffscreenElement extends EventTarget {
         'NotFoundError',
       );
     }
-    this[ancestorDocument][operations].push({
-      type: OperationType.RemoveChild,
-      uid: this[uniqueId],
-      cid: child![uniqueId],
-    });
+    this[ancestorDocument][operations].push(
+      OperationType.RemoveChild,
+      this[uniqueId],
+      child![uniqueId],
+    );
     child._remove();
     return child;
   }
@@ -267,14 +276,17 @@ export class OffscreenElement extends EventTarget {
   }
 
   set innerHTML(text: string) {
-    this[ancestorDocument][operations].push({
-      type: OperationType.SetInnerHTML,
+    this[ancestorDocument][operations].push(
+      OperationType.SetInnerHTML,
+      this[uniqueId],
       text,
-      uid: this[uniqueId],
-    });
+    );
     for (const child of this.children) {
       (child as OffscreenElement).remove();
     }
     this[innerHTML] = text;
+    if (this[_cssRuleContents]) {
+      this[_cssRuleContents] = [];
+    }
   }
 }

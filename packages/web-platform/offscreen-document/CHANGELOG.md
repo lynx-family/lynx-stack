@@ -1,5 +1,19 @@
 # @lynx-js/offscreen-document
 
+## 0.1.3
+
+### Patch Changes
+
+- feat: support to dump the css og system's style ([#1272](https://github.com/lynx-family/lynx-stack/pull/1272))
+
+## 0.1.2
+
+### Patch Changes
+
+- refactor: make the opcode be a plain array ([#1051](https://github.com/lynx-family/lynx-stack/pull/1051))
+
+  #1042
+
 ## 0.1.1
 
 ### Patch Changes

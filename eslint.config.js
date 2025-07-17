@@ -3,10 +3,10 @@
 // LICENSE file in the root directory of this source tree.
 
 import js from '@eslint/js';
+import markdown from '@eslint/markdown';
 import vitest from '@vitest/eslint-plugin';
 import headers from 'eslint-plugin-headers';
 import importPlugin from 'eslint-plugin-import';
-import markdownPlugin from 'eslint-plugin-markdown';
 import nodePlugin from 'eslint-plugin-n';
 import * as regexpPlugin from 'eslint-plugin-regexp';
 import eslintPluginUnicorn from 'eslint-plugin-unicorn';
@@ -73,9 +73,12 @@ export default tseslint.config(
       'packages/react/runtime/jsx-runtime/**',
       'packages/react/runtime/lazy/**',
       'packages/react/runtime/lepus/**',
-      'packages/react/runtime/src/**/*',
+      'packages/react/runtime/src/renderToOpcodes/**',
       'packages/react/runtime/types/**',
-      '!packages/react/runtime/src/worklet/**',
+
+      // TODO: enable eslint for react-runtime
+      'packages/react/runtime/src/compat/**',
+      'packages/react/runtime/src/opcodes.ts',
 
       // TODO: enable eslint for tools
       // tools
@@ -129,16 +132,8 @@ export default tseslint.config(
     },
   },
   regexpPlugin.configs['flat/recommended'],
-  ...markdownPlugin.configs.recommended,
-  {
-    rules: {
-      'jsdoc/require-jsdoc': 'off',
-      'jsdoc/require-returns': 'off',
-      'jsdoc/check-alignment': 'off',
-
-      'jsdoc/tag-lines': 'off',
-    },
-  },
+  ...markdown.configs.recommended,
+  ...markdown.configs.processor,
   // Rules from eslint-plugin-n
   nodePlugin.configs['flat/recommended-module'],
   {
@@ -263,6 +258,9 @@ export default tseslint.config(
         },
         tsconfigRootDir: import.meta.dirname,
       },
+    },
+    rules: {
+      '@typescript-eslint/consistent-generic-constructors': 'off',
     },
   },
   // JavaScript-related

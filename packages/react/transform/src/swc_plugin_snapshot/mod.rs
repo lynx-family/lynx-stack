@@ -21,7 +21,7 @@ use swc_core::{
 };
 
 mod attr_name;
-mod jsx_helpers;
+pub mod jsx_helpers;
 mod slot_marker;
 
 use crate::{
@@ -194,7 +194,7 @@ impl DynamicPart {
             element_index: Expr = i32_to_expr(element_index),
           ),
           AttrName::Ref => quote!(
-            "(snapshot, index, oldValue) => $runtime_id.updateRef(snapshot, index, oldValue, $element_index, '')" as Expr,
+            "(snapshot, index, oldValue) => $runtime_id.updateRef(snapshot, index, oldValue, $element_index)" as Expr,
             runtime_id: Expr = runtime_id.clone(),
             element_index: Expr = i32_to_expr(element_index),
           ),
@@ -1222,6 +1222,7 @@ where
     let mut snapshot_attrs: Vec<JSXAttrOrSpread> = vec![];
     let mut snapshot_children: Vec<JSXElementChild> = vec![];
     let mut snapshot_dynamic_part_def: Vec<Option<ExprOrSpread>> = vec![];
+    let mut snapshot_refs_and_spread_index: Vec<Option<ExprOrSpread>> = vec![];
     let mut snapshot_slot_def: Vec<Option<ExprOrSpread>> = vec![];
 
     match dynamic_part_extractor.key {
@@ -1282,6 +1283,13 @@ where
         |(_name, _child_name, _jsx_opening, _jsx_closing, dynamic_part)| {
           match &dynamic_part {
             DynamicPart::Attr(_, _, _) | DynamicPart::Spread(_, _) => {
+              if let DynamicPart::Attr(_, _, AttrName::Ref) | DynamicPart::Spread(_, _) =
+                dynamic_part
+              {
+                snapshot_refs_and_spread_index.push(Some(
+                  Expr::Lit(Lit::Num(snapshot_dynamic_part_def.len().into())).into(),
+                ));
+              }
               snapshot_dynamic_part_def.push(Some(ExprOrSpread {
                 spread: None,
                 expr: Box::new((&dynamic_part).to_updater(
@@ -1307,11 +1315,15 @@ where
                     value
                   }
                 } else if let AttrName::Ref = attr_name {
-                  quote!(
-                    "$runtime_id.transformRef($value)" as Expr,
-                    runtime_id: Expr = runtime_id.clone(),
-                    value: Expr = value,
-                  )
+                  if target == TransformTarget::LEPUS {
+                    quote!("1" as Expr)
+                  } else {
+                    quote!(
+                      "$runtime_id.transformRef($value)" as Expr,
+                      runtime_id: Expr = runtime_id.clone(),
+                      value: Expr = value,
+                    )
+                  }
                 } else {
                   value
                 }),
@@ -1452,7 +1464,8 @@ where
              $snapshot_dynamic_parts_def,
              $slot,
              $css_id,
-             globDynamicComponentEntry
+             globDynamicComponentEntry,
+             $snapshot_refs_and_spread_index
         )"# as Expr,
         runtime_id: Expr = self.runtime_id.clone(),
         // FIXME(colinaaa): Use snapshot_uid with entry_name
@@ -1467,6 +1480,10 @@ where
           Some(css_id_expr) => css_id_expr.clone(),
           // We use `undefined` here since runtime will skip `__SetCSSId` when `cssId === undefined && entryName === undefined`
           None => Expr::Ident("undefined".into()),
+        },
+        snapshot_refs_and_spread_index: Expr = match snapshot_refs_and_spread_index.len() {
+          0 => Expr::Lit(Lit::Null(Null { span: DUMMY_SP })),
+          _ => Expr::Array(ArrayLit { span: DUMMY_SP, elems: snapshot_refs_and_spread_index }),
         },
         // has_multi_children: Expr = Expr::Lit(Lit::Num(Number { span: DUMMY_SP, value: wrap_dynamic_part.dynamic_part_count as f64, raw: None })),
     );
@@ -2622,6 +2639,8 @@ mod tests {
       return (
         <view>
           <text ref={handleRef}>1</text>
+          <text bindtap={handleRef}>2</text>
+          <text ref={handleRef}>3</text>
         </view>
       )
     }

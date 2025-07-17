@@ -1,5 +1,62 @@
 # @lynx-js/web-elements
 
+## 0.8.0
+
+### Minor Changes
+
+- refactor: move exposure system to web-core ([#1254](https://github.com/lynx-family/lynx-stack/pull/1254))
+
+  **THIS IS A BREAKING CHANGE**
+
+  **You'll need to upgrade your @lynx-js/web-elements to >= 0.8.0**
+
+  For SSR and better performance, we moved the lynx's exposure system from web-element to web-core.
+
+  Before this commit, we create Intersection observers by creating HTMLElements.
+
+  After this commit, we will create such Intersection observers after dom stabled.
+
+  Also, the setInterval for exposure has been removed, now we use an on time lazy timer for such features.
+
+### Patch Changes
+
+- feat: add support for scrollTo method in x-swiper, remove scrollToNext && scrollToPrevious method ([#1197](https://github.com/lynx-family/lynx-stack/pull/1197))
+
+- refactor: improve `linear-weight-sum` performance ([#1216](https://github.com/lynx-family/lynx-stack/pull/1216))
+
+- Updated dependencies []:
+  - @lynx-js/web-elements-template@0.8.0
+
+## 0.7.7
+
+### Patch Changes
+
+- fix: the param `index` of list scrollToPosition function should be `position`. ([#1135](https://github.com/lynx-family/lynx-stack/pull/1135))
+
+- fix: in lynx-view all-on-ui mode, the input event of input and textarea is triggered twice, and the first e.detail is a string, which does not conform to the expected data format. ([#1179](https://github.com/lynx-family/lynx-stack/pull/1179))
+
+- Updated dependencies []:
+  - @lynx-js/web-elements-template@0.7.7
+
+## 0.7.6
+
+### Patch Changes
+
+- fix: incorrect syntax for x-canvas part ([#1067](https://github.com/lynx-family/lynx-stack/pull/1067))
+
+- feat: x-input && x-textarea add attribute input-filter, which can filter input value. ([#1037](https://github.com/lynx-family/lynx-stack/pull/1037))
+
+- fix: incorrect top style of x-foldview-slot-ng if the toolbar is wrapped in lynx-wrapper ([#1101](https://github.com/lynx-family/lynx-stack/pull/1101))
+
+- perf: add loading="lazy" for image element ([#1056](https://github.com/lynx-family/lynx-stack/pull/1056))
+
+  https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/img#loading
+
+- fix: --lynx-color will be removed, and if color contains `gradient` it will be processed as transparent. ([#1069](https://github.com/lynx-family/lynx-stack/pull/1069))
+
+- Updated dependencies [[`62d1078`](https://github.com/lynx-family/lynx-stack/commit/62d1078e67f2aba216a0d97bf1ad9ece624e498e)]:
+  - @lynx-js/web-elements-template@0.7.6
+
 ## 0.7.5
 
 ### Patch Changes

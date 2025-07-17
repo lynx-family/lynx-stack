@@ -1,0 +1,28 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "dependsOn": [
+        "build:wasm-bindgen",
+        "build:wasm-pack"
+      ],
+      "inputs": [
+        "src"
+      ],
+      "outputs": [
+        "dist"
+      ]
+    },
+    "build:wasm-bindgen": {
+      "dependsOn": [],
+      "inputs": [],
+      "outputs": []
+    },
+    "build:wasm-pack": {
+      "dependsOn": [],
+      "inputs": [],
+      "outputs": []
+    }
+  }
+}

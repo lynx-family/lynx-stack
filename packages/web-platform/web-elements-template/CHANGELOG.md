@@ -1,5 +1,17 @@
 # @lynx-js/web-elements-template
 
+## 0.8.0
+
+## 0.7.7
+
+## 0.7.6
+
+### Patch Changes
+
+- perf: add loading="lazy" for image element ([#1056](https://github.com/lynx-family/lynx-stack/pull/1056))
+
+  https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/img#loading
+
 ## 0.7.5
 
 ## 0.7.4

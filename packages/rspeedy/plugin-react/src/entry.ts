@@ -54,12 +54,12 @@ export function applyEntry(
     pipelineSchedulerConfig,
     removeDescendantSelectorScope,
     targetSdkVersion,
-    extractStr,
+    extractStr: originalExtractStr,
 
     experimental_isLazyBundle,
   } = options
 
-  const { config } = api.useExposed<ExposedAPI>(
+  const { config, logger } = api.useExposed<ExposedAPI>(
     Symbol.for('rspeedy.api'),
   )!
   api.modifyBundlerChain((chain, { environment, isDev, isProd }) => {
@@ -108,6 +108,7 @@ export function applyEntry(
           experimental_isLazyBundle,
         ),
       )
+
       const backgroundEntry = entryName
 
       mainThreadChunks.push(mainThreadName)
@@ -169,7 +170,6 @@ export function applyEntry(
             environment.name,
           ),
           intermediate: path.posix.join(
-            // TODO: config intermediate
             DEFAULT_DIST_PATH_INTERMEDIATE,
             entryName,
           ),
@@ -197,11 +197,20 @@ export function applyEntry(
         .end()
     })
 
+    let finalFirstScreenSyncTiming = firstScreenSyncTiming
+
     if (isLynx) {
-      const inlineScripts =
-        typeof environment.config.output?.inlineScripts === 'boolean'
-          ? environment.config.output.inlineScripts
-          : true
+      let inlineScripts
+      if (experimental_isLazyBundle) {
+        // TODO: support inlineScripts in lazyBundle
+        inlineScripts = true
+      } else {
+        inlineScripts = environment.config.output?.inlineScripts ?? true
+      }
+
+      if (inlineScripts !== true) {
+        finalFirstScreenSyncTiming = 'jsReady'
+      }
 
       chain
         .plugin(PLUGIN_NAME_RUNTIME_WRAPPER)
@@ -240,13 +249,24 @@ export function applyEntry(
 
     const rsbuildConfig = api.getRsbuildConfig()
 
+    let extractStr = originalExtractStr
+    if (
+      rsbuildConfig.performance?.chunkSplit?.strategy !== 'all-in-one'
+      && originalExtractStr
+    ) {
+      logger.warn(
+        '`extractStr` is changed to `false` because it is only supported in `all-in-one` chunkSplit strategy, please set `performance.chunkSplit.strategy` to `all-in-one` to use `extractStr.`',
+      )
+      extractStr = false
+    }
+
     chain
       .plugin(PLUGIN_NAME_REACT)
       .after(PLUGIN_NAME_TEMPLATE)
       .use(ReactWebpackPlugin, [{
         disableCreateSelectorQueryIncompatibleWarning: compat
           ?.disableCreateSelectorQueryIncompatibleWarning ?? false,
-        firstScreenSyncTiming,
+        firstScreenSyncTiming: finalFirstScreenSyncTiming,
         enableSSR,
         mainThreadChunks,
         extractStr,

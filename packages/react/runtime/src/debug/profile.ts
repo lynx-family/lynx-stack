@@ -29,6 +29,7 @@ export function initProfileHook(): void {
   const oldRender = options[RENDER];
   options[RENDER] = function(vnode: VNode & { [COMPONENT]: Component }) {
     const displayName = getDisplayName(vnode.type as ComponentClass);
+    // eslint-disable-next-line @typescript-eslint/unbound-method
     const originalRender = vnode[COMPONENT].render;
     vnode[COMPONENT].render = function render(this, props, state, context) {
       // This __PROFILE__ is used for DCE testing

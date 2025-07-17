@@ -17,21 +17,76 @@ test('render calls useEffect immediately', async () => {
     });
     return <view />;
   }
-  const { container } = render(<Comp />);
-  expect(container).toMatchInlineSnapshot(`
+  {
+    const { container, unmount } = render(<Comp />);
+    expect(container).toMatchInlineSnapshot(`
     <page>
       <view />
     </page>
   `);
 
-  expect(cb).toBeCalledTimes(1);
-  expect(cb.mock.calls).toMatchInlineSnapshot(`
+    expect(cb).toBeCalledTimes(1);
+    expect(cb.mock.calls).toMatchInlineSnapshot(`
     [
       [
         "__MAIN_THREAD__: false",
       ],
     ]
   `);
+
+    unmount();
+    cb.mockClear();
+  }
+
+  {
+    const { container, unmount } = render(<Comp />, {
+      enableMainThread: true,
+      enableBackgroundThread: false,
+    });
+    expect(container).toMatchInlineSnapshot(`<page />`);
+
+    // this is a different behavior from the testing library and real Lynx environment
+    // in the testing library, `useEffect` will be called since we are using `render`
+    // in the real Lynx environment, `useEffect` will not be called since we are not using `renderToString`
+    expect(cb).toBeCalledTimes(1);
+    expect(cb.mock.calls).toMatchInlineSnapshot(`
+      [
+        [
+          "__MAIN_THREAD__: true",
+        ],
+      ]
+    `);
+
+    unmount();
+    cb.mockClear();
+  }
+
+  {
+    const { container, unmount } = render(<Comp />, {
+      enableMainThread: true,
+      enableBackgroundThread: true,
+    });
+    expect(container).toMatchInlineSnapshot(`
+      <page>
+        <view />
+      </page>
+    `);
+
+    expect(cb).toBeCalledTimes(2);
+    expect(cb.mock.calls).toMatchInlineSnapshot(`
+      [
+        [
+          "__MAIN_THREAD__: true",
+        ],
+        [
+          "__MAIN_THREAD__: false",
+        ],
+      ]
+    `);
+
+    unmount();
+    cb.mockClear();
+  }
 });
 
 test('render calls componentDidMount immediately', async () => {
@@ -77,7 +132,7 @@ test('findByTestId returns the element', async () => {
     <page>
       <view
         data-testid="foo"
-        has-react-ref="true"
+        react-ref-2-0="1"
       >
         <text>
           Hello world!
@@ -88,7 +143,7 @@ test('findByTestId returns the element', async () => {
   expect(await findByTestId('foo')).toMatchInlineSnapshot(`
     <view
       data-testid="foo"
-      has-react-ref="true"
+      react-ref-2-0="1"
     >
       <text>
         Hello world!
@@ -96,12 +151,12 @@ test('findByTestId returns the element', async () => {
     </view>
   `);
   expect(ref.current).toMatchInlineSnapshot(`
-    NodesRef {
-      "_nodeSelectToken": {
-        "identifier": "1",
-        "type": 2,
-      },
-      "_selectorQuery": {},
+    RefProxy {
+      "refAttr": [
+        2,
+        0,
+      ],
+      "task": undefined,
     }
   `);
 });
@@ -132,6 +187,7 @@ test('fireEvent triggers useEffect calls', async () => {
     Map {
       -1 => {
         "children": undefined,
+        "extraProps": undefined,
         "id": -1,
         "type": "root",
         "values": undefined,
@@ -157,7 +213,7 @@ test('fireEvent triggers useEffect calls', async () => {
       [
         "rLynxChange",
         {
-          "data": "{"patchList":[{"snapshotPatch":[0,"__Card__:__snapshot_e8d0a_test_4",2,0,null,3,4,3,[0],1,2,3,null,4,2,[1],1,-1,2,null],"id":2}]}",
+          "data": "{"patchList":[{"snapshotPatch":[0,"__Card__:__snapshot_e8d0a_test_4",2,4,2,[1],0,null,3,4,3,[0],1,2,3,null,1,-1,2,null],"id":2}]}",
           "patchOptions": {
             "isHydration": true,
             "pipelineOptions": {
@@ -182,6 +238,7 @@ test('fireEvent triggers useEffect calls', async () => {
             "children": [
               {
                 "children": undefined,
+                "extraProps": undefined,
                 "id": 3,
                 "type": null,
                 "values": [
@@ -189,6 +246,7 @@ test('fireEvent triggers useEffect calls', async () => {
                 ],
               },
             ],
+            "extraProps": undefined,
             "id": 2,
             "type": "__Card__:__snapshot_e8d0a_test_4",
             "values": [
@@ -196,6 +254,7 @@ test('fireEvent triggers useEffect calls', async () => {
             ],
           },
         ],
+        "extraProps": undefined,
         "id": -1,
         "type": "root",
         "values": undefined,
@@ -204,6 +263,7 @@ test('fireEvent triggers useEffect calls', async () => {
         "children": [
           {
             "children": undefined,
+            "extraProps": undefined,
             "id": 3,
             "type": null,
             "values": [
@@ -211,6 +271,7 @@ test('fireEvent triggers useEffect calls', async () => {
             ],
           },
         ],
+        "extraProps": undefined,
         "id": 2,
         "type": "__Card__:__snapshot_e8d0a_test_4",
         "values": [
@@ -219,6 +280,7 @@ test('fireEvent triggers useEffect calls', async () => {
       },
       3 => {
         "children": undefined,
+        "extraProps": undefined,
         "id": 3,
         "type": null,
         "values": [
@@ -235,7 +297,7 @@ test('fireEvent triggers useEffect calls', async () => {
       [
         "rLynxChange",
         {
-          "data": "{"patchList":[{"snapshotPatch":[0,"__Card__:__snapshot_e8d0a_test_4",2,0,null,3,4,3,[0],1,2,3,null,4,2,[1],1,-1,2,null],"id":2}]}",
+          "data": "{"patchList":[{"snapshotPatch":[0,"__Card__:__snapshot_e8d0a_test_4",2,4,2,[1],0,null,3,4,3,[0],1,2,3,null,1,-1,2,null],"id":2}]}",
           "patchOptions": {
             "isHydration": true,
             "pipelineOptions": {
