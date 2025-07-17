@@ -99,7 +99,7 @@ jobs:
             env:
               - ENABLE_SSR=true
     with:
-      runs-on: lynx-ubuntu-24.04-xlarge
+      runs-on: lynx-custom-dind
       is-web: true
       codecov-flags: "e2e"
       run: |
@@ -208,8 +208,8 @@ jobs:
         runs-on:
           - name: Ubuntu
             label: lynx-ubuntu-24.04-medium
-          - name: Windows
-            label: lynx-windows-2022-large
+          # - name: Windows
+          #   label: lynx-windows-2022-large
     name: Vitest (${{ matrix.runs-on.name }})
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
