@@ -247,7 +247,7 @@ export function traverseSnapshotInstance<I extends WithChildren>(
 export interface SerializedSnapshotInstance {
   id: number;
   type: string;
-  values?: Record<string, unknown> | undefined;
+  values?: any[] | undefined;
   extraProps?: Record<string, unknown> | undefined;
   children?: SerializedSnapshotInstance[] | undefined;
 }
@@ -625,13 +625,7 @@ export class SnapshotInstance {
     return {
       id: this.__id,
       type: this.type,
-      values: this.__values
-        // If `this.__values` is `[0, 1, 2]`, it can be transformed to `{ '0': 0, '1': 1, '2': 2 }`
-        // by `{ ...this.__values }`, so if `this.__values` is [undefined],
-        // it will be transformed to `{ '0': undefined }`, and transformed to `{}` by `JSON.stringify`.
-        // Therefore, `values[0] === undefined` is preserved during serialization.
-        ? { ...this.__values }
-        : undefined,
+      values: this.__values,
       extraProps: this.__extraProps,
       children: this.__firstChild ? this.childNodes : undefined,
     };

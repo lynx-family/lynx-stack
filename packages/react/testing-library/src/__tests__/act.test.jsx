@@ -241,17 +241,17 @@ test('fireEvent triggers useEffect calls', async () => {
                 "extraProps": undefined,
                 "id": 3,
                 "type": null,
-                "values": {
-                  "0": 0,
-                },
+                "values": [
+                  0,
+                ],
               },
             ],
             "extraProps": undefined,
             "id": 2,
             "type": "__Card__:__snapshot_e8d0a_test_4",
-            "values": {
-              "0": "2:0:",
-            },
+            "values": [
+              "2:0:",
+            ],
           },
         ],
         "extraProps": undefined,
@@ -266,26 +266,26 @@ test('fireEvent triggers useEffect calls', async () => {
             "extraProps": undefined,
             "id": 3,
             "type": null,
-            "values": {
-              "0": 0,
-            },
+            "values": [
+              0,
+            ],
           },
         ],
         "extraProps": undefined,
         "id": 2,
         "type": "__Card__:__snapshot_e8d0a_test_4",
-        "values": {
-          "0": "2:0:",
-        },
+        "values": [
+          "2:0:",
+        ],
       },
       3 => {
         "children": undefined,
         "extraProps": undefined,
         "id": 3,
         "type": null,
-        "values": {
-          "0": 0,
-        },
+        "values": [
+          0,
+        ],
       },
     }
   `);
