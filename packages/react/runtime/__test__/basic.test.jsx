@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { elementTree } from './utils/nativeMethod';
 import { SnapshotInstance, snapshotInstanceManager } from '../src/snapshot';
+import { destroyRemovedSnapshotInstances } from '../src/snapshot';
 
 const HOLE = null;
 
@@ -238,6 +239,8 @@ describe('removeChild', () => {
       </view>
     `);
 
+    expect(snapshotInstanceManager.values.size).toMatchInlineSnapshot(`2`);
+    destroyRemovedSnapshotInstances();
     expect(snapshotInstanceManager.values.size).toMatchInlineSnapshot(`1`);
   });
 });

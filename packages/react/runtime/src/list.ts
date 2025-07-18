@@ -144,7 +144,9 @@ export function componentAtIndexFactory(
       const [sign, oldCtx] = first!;
       recycleSignMap.delete(sign);
       hydrateFunction(oldCtx, childCtx);
-      oldCtx.unRenderElements();
+      if (oldCtx.__id) {
+        oldCtx.unRenderElements();
+      }
       if (!oldCtx.__id) {
         oldCtx.tearDown();
       } else if (oldCtx.__extraProps?.['isReady'] === 1) {

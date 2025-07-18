@@ -9,7 +9,7 @@ import { globalEnvManager } from './utils/envManager';
 import { setupDocument } from '../src/document';
 import { renderOpcodesInto } from '../src/opcodes';
 import renderToString from '../src/renderToOpcodes';
-import { setupPage, SnapshotInstance, snapshotInstanceManager } from '../src/snapshot';
+import { setupPage, SnapshotInstance, snapshotInstanceManager, destroyRemovedSnapshotInstances } from '../src/snapshot';
 import { createElement, cloneElement } from '../lepus';
 
 describe('renderToOpcodes', () => {
@@ -683,6 +683,7 @@ describe('renderOpcodesInto', () => {
     scratch.__firstChild.removeChild(scratch.__firstChild.__firstChild);
     scratch.__firstChild.removeChild(scratch.__firstChild.__lastChild);
     scratch.__firstChild.removeChild(scratch.__firstChild.__lastChild);
+    destroyRemovedSnapshotInstances();
 
     expect(scratch.__element_root).toMatchInlineSnapshot(`
       <page

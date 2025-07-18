@@ -38,13 +38,17 @@ export class BackgroundSnapshotInstance {
     const id = this.__id = backgroundSnapshotInstanceManager.nextId += 1;
     backgroundSnapshotInstanceManager.values.set(id, this);
 
-    __globalSnapshotPatch?.push(SnapshotOperation.CreateElement, type, id);
+    // prevent `div`s created by suspense from being created in the main thread
+    if (type !== 'div') {
+      __globalSnapshotPatch?.push(SnapshotOperation.CreateElement, type, id);
+    }
   }
 
   __id: number;
   __values: any[] | undefined;
   __snapshot_def: Snapshot;
   __extraProps?: Record<string, unknown> | undefined;
+  __should_delay_destroy?: unknown;
 
   private __parent: BackgroundSnapshotInstance | null = null;
   private __firstChild: BackgroundSnapshotInstance | null = null;
@@ -72,8 +76,8 @@ export class BackgroundSnapshotInstance {
   // This will be called in `lazy`/`Suspense`.
   // We currently ignore this since we did not find a way to test.
   /* v8 ignore start */
-  appendChild(child: BackgroundSnapshotInstance): void {
-    return this.insertBefore(child);
+  appendChild(_child: BackgroundSnapshotInstance): void {
+    // return this.insertBefore(_child);
   }
   /* v8 ignore stop */
 
