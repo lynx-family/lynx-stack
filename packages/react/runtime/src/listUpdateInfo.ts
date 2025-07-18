@@ -94,6 +94,7 @@ export class ListUpdateInfoRecording implements ListUpdateInfo {
   }
 
   getAttachedListId(): undefined | number {
+    /* v8 ignore next 3 */
     if (!this.list.__elements) {
       return undefined;
     }
