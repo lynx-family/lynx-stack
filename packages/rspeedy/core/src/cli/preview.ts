@@ -22,9 +22,18 @@ export async function preview(
   previewOptions: PreviewOptions,
 ): Promise<void> {
   try {
-    const { createRspeedyOptions } = await init(cwd, previewOptions)
+    const {
+      createRspeedyOptions,
+      rspeedyConfig,
+    } = await init(cwd, previewOptions)
 
     const rspeedy = await createRspeedy(createRspeedyOptions)
+
+    // When using `rspeedy preview --mode=production`, the `lynx:rsbuild:dev` plugin will not be loaded.
+    if (!rspeedy.isPluginExists('lynx:rsbuild:dev')) {
+      const { applyDefaultDevPlugins } = await import('../plugins/index.js')
+      await applyDefaultDevPlugins(rspeedy, rspeedyConfig)
+    }
 
     await rspeedy.initConfigs()
 
