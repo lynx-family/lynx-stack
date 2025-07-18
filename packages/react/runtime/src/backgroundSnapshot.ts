@@ -425,12 +425,18 @@ export function hydrate(
       }
 
       if (!isDirectOrDeepEqual(value, old)) {
-        __globalSnapshotPatch!.push(
-          SnapshotOperation.SetAttribute,
-          after.__id,
-          index,
-          value,
-        );
+        if (value === undefined && old === null) {
+          // This is a workaround for the case where we set an attribute to `undefined` in the main thread,
+          // but the old value becomes `null` during JSON serialization.
+          // In this case, we should not patch the value.
+        } else {
+          __globalSnapshotPatch!.push(
+            SnapshotOperation.SetAttribute,
+            after.__id,
+            index,
+            value,
+          );
+        }
       }
     });
 
