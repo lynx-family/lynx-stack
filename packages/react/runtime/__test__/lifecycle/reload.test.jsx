@@ -301,7 +301,7 @@ describe('reload', () => {
             [
               "rLynxFirstScreen",
               {
-                "root": "{"id":-9,"type":"root","children":[{"id":-13,"type":"__Card__:__snapshot_a94a8_test_2","values":[{"dataX":"WorldX"}],"children":[{"id":-10,"type":"__Card__:__snapshot_a94a8_test_3","children":[{"id":-15,"type":null,"values":["Enjoy"]}]},{"id":-11,"type":"__Card__:__snapshot_a94a8_test_4","children":[{"id":-16,"type":null,"values":["World"]}]},{"id":-12,"type":"wrapper","children":[{"id":-14,"type":"__Card__:__snapshot_a94a8_test_1","values":[{"attr":{"dataX":"WorldX"}}]}]}]}]}",
+                "root": "{"id":-9,"type":"root","children":[{"id":-13,"type":"__Card__:__snapshot_a94a8_test_2","values":{"0":{"dataX":"WorldX"}},"children":[{"id":-10,"type":"__Card__:__snapshot_a94a8_test_3","children":[{"id":-15,"type":null,"values":{"0":"Enjoy"}}]},{"id":-11,"type":"__Card__:__snapshot_a94a8_test_4","children":[{"id":-16,"type":null,"values":{"0":"World"}}]},{"id":-12,"type":"wrapper","children":[{"id":-14,"type":"__Card__:__snapshot_a94a8_test_1","values":{"0":{"attr":{"dataX":"WorldX"}}}}]}]}]}",
               },
             ],
           ],
@@ -710,7 +710,7 @@ describe('reload', () => {
             [
               "rLynxFirstScreen",
               {
-                "root": "{"id":-9,"type":"root","children":[{"id":-15,"type":"__Card__:__snapshot_a94a8_test_5","children":[{"id":-13,"type":"__Card__:__snapshot_a94a8_test_2","values":[{"dataX":"WorldX"}],"children":[{"id":-10,"type":"__Card__:__snapshot_a94a8_test_3","children":[{"id":-16,"type":null,"values":["Enjoy"]}]},{"id":-11,"type":"__Card__:__snapshot_a94a8_test_4","children":[{"id":-17,"type":null,"values":["World"]}]},{"id":-12,"type":"wrapper","children":[{"id":-14,"type":"__Card__:__snapshot_a94a8_test_1","values":[{"attr":{"dataX":"WorldX"}}]}]}]}]}]}",
+                "root": "{"id":-9,"type":"root","children":[{"id":-15,"type":"__Card__:__snapshot_a94a8_test_5","children":[{"id":-13,"type":"__Card__:__snapshot_a94a8_test_2","values":{"0":{"dataX":"WorldX"}},"children":[{"id":-10,"type":"__Card__:__snapshot_a94a8_test_3","children":[{"id":-16,"type":null,"values":{"0":"Enjoy"}}]},{"id":-11,"type":"__Card__:__snapshot_a94a8_test_4","children":[{"id":-17,"type":null,"values":{"0":"World"}}]},{"id":-12,"type":"wrapper","children":[{"id":-14,"type":"__Card__:__snapshot_a94a8_test_1","values":{"0":{"attr":{"dataX":"WorldX"}}}}]}]}]}]}",
               },
             ],
           ],
@@ -1312,7 +1312,7 @@ describe('firstScreenSyncTiming - jsReady', () => {
                 "-8": -16,
                 "-9": -17,
               },
-              "root": "{"id":-17,"type":"root","children":[{"id":-21,"type":"__Card__:__snapshot_a94a8_test_2","values":[{"dataX":"WorldX"}],"children":[{"id":-18,"type":"__Card__:__snapshot_a94a8_test_3","children":[{"id":-23,"type":null,"values":["Hello 2"]}]},{"id":-19,"type":"__Card__:__snapshot_a94a8_test_4","children":[{"id":-24,"type":null,"values":["World"]}]},{"id":-20,"type":"wrapper","children":[{"id":-22,"type":"__Card__:__snapshot_a94a8_test_1","values":[{"attr":{"dataX":"WorldX"}}]}]}]}]}",
+              "root": "{"id":-17,"type":"root","children":[{"id":-21,"type":"__Card__:__snapshot_a94a8_test_2","values":{"0":{"dataX":"WorldX"}},"children":[{"id":-18,"type":"__Card__:__snapshot_a94a8_test_3","children":[{"id":-23,"type":null,"values":{"0":"Hello 2"}}]},{"id":-19,"type":"__Card__:__snapshot_a94a8_test_4","children":[{"id":-24,"type":null,"values":{"0":"World"}}]},{"id":-20,"type":"wrapper","children":[{"id":-22,"type":"__Card__:__snapshot_a94a8_test_1","values":{"0":{"attr":{"dataX":"WorldX"}}}}]}]}]}",
             },
           ],
         ]
@@ -1515,7 +1515,7 @@ describe('firstScreenSyncTiming - jsReady', () => {
                 "-5": -13,
                 "-9": -17,
               },
-              "root": "{"id":-17,"type":"root","children":[{"id":-21,"type":"__Card__:__snapshot_a94a8_test_7","children":[{"id":-18,"type":"__Card__:__snapshot_a94a8_test_8","values":[{"item-key":0}],"children":[{"id":-22,"type":"__Card__:__snapshot_a94a8_test_6","values":["a"]}]},{"id":-19,"type":"__Card__:__snapshot_a94a8_test_8","values":[{"item-key":1}],"children":[{"id":-23,"type":"__Card__:__snapshot_a94a8_test_6","values":["b"]}]},{"id":-20,"type":"__Card__:__snapshot_a94a8_test_8","values":[{"item-key":2}],"children":[{"id":-24,"type":"__Card__:__snapshot_a94a8_test_6","values":["c"]}]}]}]}",
+              "root": "{"id":-17,"type":"root","children":[{"id":-21,"type":"__Card__:__snapshot_a94a8_test_7","children":[{"id":-18,"type":"__Card__:__snapshot_a94a8_test_8","values":{"0":{"item-key":0}},"children":[{"id":-22,"type":"__Card__:__snapshot_a94a8_test_6","values":{"0":"a"}}]},{"id":-19,"type":"__Card__:__snapshot_a94a8_test_8","values":{"0":{"item-key":1}},"children":[{"id":-23,"type":"__Card__:__snapshot_a94a8_test_6","values":{"0":"b"}}]},{"id":-20,"type":"__Card__:__snapshot_a94a8_test_8","values":{"0":{"item-key":2}},"children":[{"id":-24,"type":"__Card__:__snapshot_a94a8_test_6","values":{"0":"c"}}]}]}]}",
             },
           ],
         ]
@@ -1679,7 +1679,7 @@ describe('firstScreenSyncTiming - jsReady', () => {
                 "-2": -10,
                 "-6": -14,
               },
-              "root": "{"id":-10,"type":"root","children":[{"id":-14,"type":"__Card__:__snapshot_a94a8_test_9","children":[{"id":-11,"type":"__Card__:__snapshot_a94a8_test_10","values":[{"item-key":0}],"children":[{"id":-15,"type":"__Card__:__snapshot_a94a8_test_6","values":["a"]}]},{"id":-12,"type":"__Card__:__snapshot_a94a8_test_10","values":[{"item-key":1}],"children":[{"id":-16,"type":"__Card__:__snapshot_a94a8_test_6","values":["b"]}]},{"id":-13,"type":"__Card__:__snapshot_a94a8_test_10","values":[{"item-key":2}],"children":[{"id":-17,"type":"__Card__:__snapshot_a94a8_test_6","values":["c"]}]}]}]}",
+              "root": "{"id":-10,"type":"root","children":[{"id":-14,"type":"__Card__:__snapshot_a94a8_test_9","children":[{"id":-11,"type":"__Card__:__snapshot_a94a8_test_10","values":{"0":{"item-key":0}},"children":[{"id":-15,"type":"__Card__:__snapshot_a94a8_test_6","values":{"0":"a"}}]},{"id":-12,"type":"__Card__:__snapshot_a94a8_test_10","values":{"0":{"item-key":1}},"children":[{"id":-16,"type":"__Card__:__snapshot_a94a8_test_6","values":{"0":"b"}}]},{"id":-13,"type":"__Card__:__snapshot_a94a8_test_10","values":{"0":{"item-key":2}},"children":[{"id":-17,"type":"__Card__:__snapshot_a94a8_test_6","values":{"0":"c"}}]}]}]}",
             },
           ],
         ]
@@ -1872,7 +1872,7 @@ describe('firstScreenSyncTiming - jsReady', () => {
             "rLynxFirstScreen",
             {
               "jsReadyEventIdSwap": {},
-              "root": "{"id":-17,"type":"root","children":[{"id":-21,"type":"__Card__:__snapshot_a94a8_test_2","values":[{"dataX":"WorldX"}],"children":[{"id":-18,"type":"__Card__:__snapshot_a94a8_test_3","children":[{"id":-23,"type":null,"values":["Hello 2"]}]},{"id":-19,"type":"__Card__:__snapshot_a94a8_test_4","children":[{"id":-24,"type":null,"values":["World"]}]},{"id":-20,"type":"wrapper","children":[{"id":-22,"type":"__Card__:__snapshot_a94a8_test_1","values":[{"attr":{"dataX":"WorldX"}}]}]}]}]}",
+              "root": "{"id":-17,"type":"root","children":[{"id":-21,"type":"__Card__:__snapshot_a94a8_test_2","values":{"0":{"dataX":"WorldX"}},"children":[{"id":-18,"type":"__Card__:__snapshot_a94a8_test_3","children":[{"id":-23,"type":null,"values":{"0":"Hello 2"}}]},{"id":-19,"type":"__Card__:__snapshot_a94a8_test_4","children":[{"id":-24,"type":null,"values":{"0":"World"}}]},{"id":-20,"type":"wrapper","children":[{"id":-22,"type":"__Card__:__snapshot_a94a8_test_1","values":{"0":{"attr":{"dataX":"WorldX"}}}}]}]}]}",
             },
           ],
         ]

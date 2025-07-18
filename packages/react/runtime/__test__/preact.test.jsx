@@ -751,4 +751,34 @@ describe('document - dual-runtime', () => {
       );
     }).toThrowErrorMatchingInlineSnapshot(`[Error: unreachable]`);
   });
+
+  it('should not emit patch about `undefined` not being `null`', () => {
+    const jsx = t => (
+      <view>
+        <text>Hello</text>
+        <text>
+          <raw-text text={t} />
+        </text>
+      </view>
+    );
+
+    setupDocument();
+    const root = document.createElement('root');
+    render(jsx(undefined), root);
+
+    setupBackgroundDocument();
+    const backgroundRoot = document.createElement('root');
+    render(jsx(undefined), backgroundRoot);
+
+    BackgroundSnapshotInstance.prototype.toJSON = backgroundSnapshotInstanceToJSON;
+    expect(backgroundRoot).toMatchInlineSnapshot(`
+      <root>
+        <__Card__:__snapshot_a94a8_test_28 />
+      </root>
+    `);
+    delete BackgroundSnapshotInstance.prototype.toJSON;
+
+    expect(hydrate(JSON.parse(JSON.stringify(root)), backgroundRoot))
+      .toMatchInlineSnapshot(`[]`);
+  });
 });
