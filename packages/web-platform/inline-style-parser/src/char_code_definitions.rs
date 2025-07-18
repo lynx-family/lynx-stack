@@ -1,5 +1,4 @@
 use crate::*;
-
 pub const EOF_CATEGORY: u16 = 0x80;
 pub const WHITE_SPACE_CATEGORY: u16 = 0x82;
 pub const DIGIT_CATEGORY: u16 = 0x83;
@@ -202,11 +201,11 @@ macro_rules! is_number_start {
 macro_rules! char_code_category {
   ($char_code:expr) => {
     if $char_code < 0x80 {
-      $crate::parser::char_code_definitions::CATEGORY[$char_code]
+      $crate::char_code_definitions::CATEGORY[$char_code]
     } else {
       // For char_code >= 0x80, it's considered NameStart_Category.
       // This aligns with CSS syntax where non-ASCII characters are name-start characters.
-      $crate::parser::char_code_definitions::NAME_START_CATEGORY
+      $crate::char_code_definitions::NAME_START_CATEGORY
     }
   };
 }
