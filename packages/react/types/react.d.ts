@@ -161,8 +161,20 @@ declare module '@lynx-js/types' {
      *   <HeavyComponent />
      * </list-item>
      * ```
+     *
+     * @example
+     *
+     * Turn on the `unmountRecycled` switch to uninstall invisible JSX nodes.
+     * If they are components, related lifecycle (e.g. `componentWillUnmount` and cleanup of `useEffect`) will be executed accordingly.
+     * If they are intrinsic element, they will be `unref`-ed (`ref` will be set to `null` or cleanup of `ref` will be executed).
+     *
+     * ```tsx
+     * <list-item defer={{ unmountRecycled: true }} item-key="some-item">
+     *   <WillBeUnmountIfRecycled />
+     * </list-item>
+     * ```
      */
-    'defer'?: boolean | undefined;
+    'defer'?: boolean | { unmountRecycled?: boolean } | undefined;
   }
 
   export interface FrameworkRenderingTimings {

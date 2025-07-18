@@ -20,7 +20,10 @@ export interface StyleInfo {
   [cssId: string]: OneInfo;
 }
 
-export interface CssInJsInfo {
+/**
+ * CSS Info for Old Generation CSS System
+ */
+export interface CssOGInfo {
   [cssId: string]: {
     [className: string]: [string, string][];
   };

@@ -1,5 +1,35 @@
 # @lynx-js/web-constants
 
+## 0.15.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.15.1
+
+## 0.15.0
+
+### Minor Changes
+
+- refactor: move exposure system to web-core ([#1254](https://github.com/lynx-family/lynx-stack/pull/1254))
+
+  **THIS IS A BREAKING CHANGE**
+
+  **You'll need to upgrade your @lynx-js/web-elements to >= 0.8.0**
+
+  For SSR and better performance, we moved the lynx's exposure system from web-element to web-core.
+
+  Before this commit, we create Intersection observers by creating HTMLElements.
+
+  After this commit, we will create such Intersection observers after dom stabled.
+
+  Also, the setInterval for exposure has been removed, now we use an on time lazy timer for such features.
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.15.0
+
 ## 0.14.2
 
 ### Patch Changes

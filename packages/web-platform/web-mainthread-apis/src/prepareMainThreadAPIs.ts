@@ -24,18 +24,24 @@ import {
   type I18nResources,
   dispatchI18nResourceEndpoint,
   type Cloneable,
+  type SSRHydrateInfo,
+  type SSRDehydrateHooks,
 } from '@lynx-js/web-constants';
 import { registerCallLepusMethodHandler } from './crossThreadHandlers/registerCallLepusMethodHandler.js';
 import { registerGetCustomSectionHandler } from './crossThreadHandlers/registerGetCustomSectionHandler.js';
 import { createMainThreadGlobalThis } from './createMainThreadGlobalThis.js';
 import { createExposureService } from './utils/createExposureService.js';
+import { initTokenizer } from './utils/tokenizer.js';
+const initTokenizerPromise = initTokenizer();
 
 const moduleCache: Record<string, LynxJSModule> = {};
 export function prepareMainThreadAPIs(
   backgroundThreadRpc: Rpc,
   rootDom: Document | ShadowRoot,
   createElement: Document['createElement'],
-  commitDocument: () => Promise<void> | void,
+  commitDocument: (
+    exposureChangedElements: HTMLElement[],
+  ) => Promise<void> | void,
   markTimingInternal: (timingKey: string, pipelineId?: string) => void,
   flushMarkTimingInternal: () => void,
   reportError: RpcCallType<typeof reportErrorEndpoint>,
@@ -43,6 +49,7 @@ export function prepareMainThreadAPIs(
     options: I18nResourceTranslationOptions,
   ) => void,
   initialI18nResources: (data: InitI18nResources) => I18nResources,
+  ssrHooks?: SSRDehydrateHooks,
 ) {
   const postTimingFlags = backgroundThreadRpc.createCall(
     postTimingFlagsEndpoint,
@@ -63,6 +70,7 @@ export function prepareMainThreadAPIs(
   markTimingInternal('lepus_execute_start');
   async function startMainThread(
     config: StartMainThreadContextConfig,
+    ssrHydrateInfo?: SSRHydrateInfo,
   ): Promise<MainThreadGlobalThis> {
     let isFp = true;
     const {
@@ -77,6 +85,7 @@ export function prepareMainThreadAPIs(
     const { styleInfo, pageConfig, customSections, cardType, lepusCode } =
       template;
     markTimingInternal('decode_start');
+    await initTokenizerPromise;
     const lepusCodeEntries = await Promise.all(
       Object.entries(lepusCode).map(async ([name, url]) => {
         const cachedModule = moduleCache[url];
@@ -110,6 +119,8 @@ export function prepareMainThreadAPIs(
       styleInfo,
       lepusCode: lepusCodeLoaded,
       rootDom,
+      ssrHydrateInfo,
+      ssrHooks,
       callbacks: {
         mainChunkReady: () => {
           markTimingInternal('data_processor_start');
@@ -151,10 +162,27 @@ export function prepareMainThreadAPIs(
             napiModulesMap,
             browserConfig,
           });
-          mtsGlobalThis.renderPage!(initData);
-          mtsGlobalThis.__FlushElementTree(undefined, {});
+          if (!ssrHydrateInfo) {
+            mtsGlobalThis.renderPage!(initData);
+            mtsGlobalThis.__FlushElementTree(undefined, {});
+          } else {
+            // replay the hydrate event
+            for (const event of ssrHydrateInfo.events) {
+              const uniqueId = event[0];
+              const element = ssrHydrateInfo.lynxUniqueIdToElement[uniqueId]
+                ?.deref();
+              if (element) {
+                mtsGlobalThis.__AddEvent(element, event[1], event[2], event[3]);
+              }
+            }
+            mtsGlobalThis.ssrHydrate?.(ssrHydrateInfo.ssrEncodeData);
+          }
         },
-        flushElementTree: async (options, timingFlags) => {
+        flushElementTree: async (
+          options,
+          timingFlags,
+          exposureChangedElements,
+        ) => {
           const pipelineId = options?.pipelineOptions?.pipelineID;
           markTimingInternal('dispatch_start', pipelineId);
           if (isFp) {
@@ -166,7 +194,9 @@ export function prepareMainThreadAPIs(
           }
           markTimingInternal('layout_start', pipelineId);
           markTimingInternal('ui_operation_flush_start', pipelineId);
-          await commitDocument();
+          await commitDocument(
+            exposureChangedElements as unknown as HTMLElement[],
+          );
           markTimingInternal('ui_operation_flush_end', pipelineId);
           markTimingInternal('layout_end', pipelineId);
           markTimingInternal('dispatch_end', pipelineId);

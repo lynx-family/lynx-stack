@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+/* LYNX_NAPI_MODULES_IMPORT */
 import {
   dispatchNapiModuleEndpoint,
   napiModulesCallEndpoint,
@@ -34,6 +35,7 @@ export const createNapiLoader = async (
       )
     ),
   );
+  /* LYNX_NAPI_MODULES_ADD */
 
   return {
     load(moduleName: string) {

@@ -13,6 +13,7 @@ export const ancestorDocument = Symbol('ancestorDocument');
 export const _attributes = Symbol('_attributes');
 export const _children = Symbol('_children');
 export const innerHTML = Symbol('innerHTML');
+export const _cssRuleContents = Symbol('_cssRuleContents');
 export const uniqueId = Symbol('uniqueId');
 const _style = Symbol('_style');
 
@@ -26,6 +27,7 @@ export class OffscreenElement extends EventTarget {
   private readonly [_attributes] = new Map<string, string>();
   private _parentElement: OffscreenElement | null = null;
   readonly [_children]: OffscreenElement[] = [];
+  [_cssRuleContents]?: string[];
   #sheet?: OffscreenStyleSheet;
   /**
    * @private
@@ -68,6 +70,10 @@ export class OffscreenElement extends EventTarget {
               },
             },
           });
+          if (!this[_cssRuleContents]) {
+            this[_cssRuleContents] = [];
+          }
+          this[_cssRuleContents].splice(index, 0, rule);
           this[ancestorDocument][operations].push(
             OperationType.sheetInsertRule,
             uid,
@@ -279,5 +285,8 @@ export class OffscreenElement extends EventTarget {
       (child as OffscreenElement).remove();
     }
     this[innerHTML] = text;
+    if (this[_cssRuleContents]) {
+      this[_cssRuleContents] = [];
+    }
   }
 }

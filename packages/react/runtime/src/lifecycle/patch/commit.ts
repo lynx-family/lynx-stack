@@ -95,7 +95,7 @@ function replaceCommitHook(): void {
       if (backgroundSnapshotInstancesToRemove.length) {
         setTimeout(() => {
           backgroundSnapshotInstancesToRemove.forEach(id => {
-            backgroundSnapshotInstanceManager.values.delete(id);
+            backgroundSnapshotInstanceManager.values.get(id)?.tearDown();
           });
         }, 10000);
       }

@@ -9,7 +9,7 @@ import type { SnapshotInstance } from '@lynx-js/react/internal';
 import { cloneElement as _cloneElementMainThread } from '@lynx-js/react/lepus';
 
 export interface DeferredListItemProps {
-  defer?: boolean;
+  defer?: boolean | { unmountRecycled?: boolean };
   renderListItem: (children: ReactNode | undefined) => JSX.Element;
   renderChildren: () => ReactNode;
 }
@@ -30,8 +30,10 @@ export const DeferredListItem: FC<DeferredListItemProps> = ({ defer, renderListI
       setIsReady(true);
     };
     ctx!.__extraProps['onRecycleComponent'] = () => {
-      // TODO(hzy): figure out if we need to unmount the component when recycled
-      // setIsReady(false);
+      if (defer && typeof defer === 'object' && defer.unmountRecycled) {
+        // unmount the component when recycled
+        setIsReady(false);
+      }
     };
 
     return () => {

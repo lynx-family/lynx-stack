@@ -6,6 +6,8 @@ import { test, expect } from './coverage-fixture.js';
 import type { Page } from '@playwright/test';
 import type { LynxView } from '../../web-core/src/index.js';
 const ENABLE_MULTI_THREAD = !!process.env['ENABLE_MULTI_THREAD'];
+const isSSR = !!process.env['ENABLE_SSR'];
+
 const wait = async (ms: number) => {
   await new Promise((resolve) => {
     setTimeout(resolve, ms);
@@ -49,7 +51,7 @@ const goto = async (
   testname2?: string,
   hasDir?: boolean,
 ) => {
-  let url = `/?casename=${testname}`;
+  let url = isSSR ? `/ssr?casename=${testname}` : `/?casename=${testname}`;
   if (hasDir) {
     url += '&hasdir=true';
   }
@@ -60,6 +62,7 @@ const goto = async (
     waitUntil: 'load',
   });
   await page.evaluate(() => document.fonts.ready);
+  if (isSSR) await wait(300);
 };
 
 test.describe('reactlynx3 tests', () => {
@@ -109,8 +112,10 @@ test.describe('reactlynx3 tests', () => {
       await wait(100);
       const target = page.locator('#target');
       await target.click();
+      await wait(100);
       await expect(await target.getAttribute('style')).toContain('green');
       await target.click();
+      await wait(100);
       await expect(await target.getAttribute('style')).toContain('pink');
     });
     test('basic-event-target-id', async ({ page }, { title }) => {
@@ -118,8 +123,10 @@ test.describe('reactlynx3 tests', () => {
       await wait(100);
       const target = page.locator('#target');
       await target.click();
+      await wait(100);
       await expect(await target.getAttribute('style')).toContain('green');
       await target.click();
+      await wait(100);
       await expect(await target.getAttribute('style')).toContain('pink');
     });
     test('basic-class-selector', async ({ page }, { title }) => {
@@ -380,6 +387,12 @@ test.describe('reactlynx3 tests', () => {
         await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
       },
     );
+    test('basic-mts-mainthread-nested-ref', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(100);
+      const target = page.locator('#target');
+      await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
+    });
     test(
       'basic-mts-mainthread-ref',
       async ({ page }, { title }) => {
@@ -403,6 +416,8 @@ test.describe('reactlynx3 tests', () => {
     test(
       'basic-mts-run-on-main-thread',
       async ({ page }, { title }) => {
+        // TODO: @Yradex
+        test.fixme(isSSR, 'reactlynx jsready bug');
         await goto(page, title);
         await wait(800);
         const target = page.locator('#target');
@@ -451,6 +466,7 @@ test.describe('reactlynx3 tests', () => {
   });
   test.describe('apis', () => {
     test('api-custom-template-loader', async ({ page }, { title }) => {
+      test.skip(isSSR, 'No need to test on SSR');
       await goto(page, title);
       await wait(100);
       const target = page.locator('#target');
@@ -568,6 +584,7 @@ test.describe('reactlynx3 tests', () => {
     });
 
     test('api-lynx-performance', async ({ page }, { title }) => {
+      test.fixme(isSSR, 'implement performance API for SSR');
       await goto(page, title);
       await wait(200);
       await expect(page.locator('#target')).toHaveCSS(
@@ -677,12 +694,14 @@ test.describe('reactlynx3 tests', () => {
     });
 
     test('api-error', async ({ page }, { title }) => {
+      test.skip(isSSR, 'No need to test this on SSR');
       await goto(page, title);
       await wait(300);
       const target = await page.locator('lynx-view');
       await expect(target).toHaveCSS('display', 'none');
     });
     test('api-error-detail', async ({ page }, { title }) => {
+      test.skip(isSSR, 'No need to test this on SSR');
       let offset = false;
       await page.on('console', async (msg) => {
         const event = await msg.args()[0]?.evaluate((e) => {
@@ -709,7 +728,54 @@ test.describe('reactlynx3 tests', () => {
       await wait(500);
       expect(offset).toBe(true);
     });
+    test('api-error-mts', async ({ page }, { title }) => {
+      test.skip(isSSR, 'No need to test this on SSR');
+      let fileName = false;
+      await page.on('console', async (msg) => {
+        const event = await msg.args()[0]?.evaluate((e) => {
+          return {
+            type: e.type,
+            fileName: e.detail?.fileName,
+          };
+        });
+        if (!event || event.type !== 'error') {
+          return;
+        }
+        if (
+          typeof event.fileName === 'string' && event.fileName === 'lepus.js'
+        ) {
+          fileName = true;
+        }
+      });
+      await goto(page, 'api-error');
+      await wait(500);
+      expect(fileName).toBe(true);
+    });
+    test('api-error-bts', async ({ page }, { title }) => {
+      let fileName = false;
+      await page.on('console', async (msg) => {
+        const event = await msg.args()[0]?.evaluate((e) => {
+          return {
+            type: e.type,
+            fileName: e.detail?.fileName,
+          };
+        });
+        if (!event || event.type !== 'error') {
+          return;
+        }
+        if (
+          typeof event.fileName === 'string'
+          && event.fileName === 'app-service.js'
+        ) {
+          fileName = true;
+        }
+      });
+      await goto(page, 'api-error');
+      await wait(500);
+      expect(fileName).toBe(true);
+    });
     test('api-set-release', async ({ page }, { title }) => {
+      test.skip(isSSR, 'No need to test this on SSR');
       let success = false;
       await page.on('console', async (msg) => {
         const event = await msg.args()[0]?.evaluate((e) => {
@@ -870,6 +936,7 @@ test.describe('reactlynx3 tests', () => {
 
     test.describe('api-exposure', () => {
       const module = 'exposure';
+      test.fixme(isSSR, 'TODO: migrate exposure from web-elements to runtime');
       test(
         'api-exposure-area',
         async ({ page }, { title }) => {
@@ -1375,12 +1442,15 @@ test.describe('reactlynx3 tests', () => {
     );
 
     test('config-mode-dev-with-all-in-one', async ({ page }, { title }) => {
+      test.fixme(isSSR, 'implement dev mode for SSR');
       await goto(page, title, undefined, true);
       await wait(100);
       const target = page.locator('#target');
       await target.click();
+      await wait(100);
       await expect(await target.getAttribute('style')).toContain('green');
       await target.click();
+      await wait(100);
       await expect(await target.getAttribute('style')).toContain('pink');
     });
 
@@ -1827,6 +1897,7 @@ test.describe('reactlynx3 tests', () => {
     });
     test.describe('svg', () => {
       test('basic-element-svg-bindload', async ({ page }, { title }) => {
+        test.skip(isSSR, 'the event is ignored in SSR');
         await goto(page, title);
         await expect(
           await page.locator('#result'),
@@ -2180,6 +2251,7 @@ test.describe('reactlynx3 tests', () => {
           title,
         }) => {
           test.skip(browserName !== 'chromium', 'cannot swipe');
+          test.fixme(isSSR, 'SSR does not support exposure');
           await goto(page, title);
           await wait(100);
           const cdpSession = await context.newCDPSession(page);
@@ -2451,6 +2523,7 @@ test.describe('reactlynx3 tests', () => {
     });
     test.describe('x-overlay-ng', () => {
       test('basic-element-x-overlay-ng-demo', async ({ page }, { title }) => {
+        test.fixme(isSSR, 'flaky');
         await goto(page, title);
         await wait(200);
         await diffScreenShot(page, 'x-overlay-ng/demo', '', 'inital');
@@ -3850,6 +3923,15 @@ test.describe('reactlynx3 tests', () => {
           await wait(1000);
           await page.locator('#scrollToPosition').click();
           await diffScreenShot(page, elementName, title, 'scroll-to-position');
+        },
+      );
+
+      test(
+        'basic-element-list-waterfall',
+        async ({ page }, { title }) => {
+          await goto(page, title);
+          await wait(500);
+          await diffScreenShot(page, elementName, title, 'initial');
         },
       );
     });

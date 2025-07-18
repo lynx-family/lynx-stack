@@ -1,5 +1,11 @@
 # @lynx-js/testing-environment
 
+## 0.1.2
+
+### Patch Changes
+
+- Fix the infinite loop in the `__RemoveElement` element PAPI. ([#1263](https://github.com/lynx-family/lynx-stack/pull/1263))
+
 ## 0.1.1
 
 ### Patch Changes

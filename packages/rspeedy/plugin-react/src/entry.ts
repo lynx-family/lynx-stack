@@ -54,12 +54,12 @@ export function applyEntry(
     pipelineSchedulerConfig,
     removeDescendantSelectorScope,
     targetSdkVersion,
-    extractStr,
+    extractStr: originalExtractStr,
 
     experimental_isLazyBundle,
   } = options
 
-  const { config } = api.useExposed<ExposedAPI>(
+  const { config, logger } = api.useExposed<ExposedAPI>(
     Symbol.for('rspeedy.api'),
   )!
   api.modifyBundlerChain((chain, { environment, isDev, isProd }) => {
@@ -248,6 +248,17 @@ export function applyEntry(
     }
 
     const rsbuildConfig = api.getRsbuildConfig()
+
+    let extractStr = originalExtractStr
+    if (
+      rsbuildConfig.performance?.chunkSplit?.strategy !== 'all-in-one'
+      && originalExtractStr
+    ) {
+      logger.warn(
+        '`extractStr` is changed to `false` because it is only supported in `all-in-one` chunkSplit strategy, please set `performance.chunkSplit.strategy` to `all-in-one` to use `extractStr.`',
+      )
+      extractStr = false
+    }
 
     chain
       .plugin(PLUGIN_NAME_REACT)

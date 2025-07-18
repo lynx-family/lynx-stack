@@ -2,6 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import type { ComponentClass } from 'preact';
+
 import { getCurrentVNode, getOwnerStack } from './debug/component-stack.js';
 
 export function isDirectOrDeepEqual(a: any, b: any): boolean {
@@ -60,4 +62,8 @@ export function maybePromise<T>(value: unknown): value is Promise<T> {
     // @ts-expect-error the check is safe
     && typeof value.then === 'function'
   );
+}
+
+export function getDisplayName(type: ComponentClass): string {
+  return type.displayName ?? type.name;
 }

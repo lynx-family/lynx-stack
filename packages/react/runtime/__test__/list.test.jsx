@@ -417,9 +417,9 @@ describe(`list componentAtIndex`, () => {
 
     // only call componentAtIndx after flush
     __pendingListUpdates.flush();
-    expect(elementTree.triggerComponentAtIndex(listRef, 0)).toMatchInlineSnapshot(`46`);
-    expect(elementTree.triggerComponentAtIndex(listRef, 1)).toMatchInlineSnapshot(`49`);
-    expect(elementTree.triggerComponentAtIndex(listRef, 2)).toMatchInlineSnapshot(`52`);
+    expect(elementTree.triggerComponentAtIndex(listRef, 0)).toMatchInlineSnapshot(`4`);
+    expect(elementTree.triggerComponentAtIndex(listRef, 1)).toMatchInlineSnapshot(`7`);
+    expect(elementTree.triggerComponentAtIndex(listRef, 2)).toMatchInlineSnapshot(`10`);
   });
 
   it('remove list si', () => {
@@ -1009,8 +1009,8 @@ describe(`list componentAtIndex`, () => {
               </text>
             </list-item>,
             {
-              "elementID": 136,
-              "listID": 108,
+              "elementID": 31,
+              "listID": 3,
               "operationID": undefined,
               "triggerLayout": true,
             },
@@ -1120,8 +1120,8 @@ describe(`list componentAtIndex`, () => {
 
     // only call componentAtIndx after flush
     __pendingListUpdates.flush();
-    expect(elementTree.triggerComponentAtIndex(listRef, 0)).toMatchInlineSnapshot(`159`);
-    expect(elementTree.triggerComponentAtIndex(listRef, 0)).toMatchInlineSnapshot(`162`); // should return a new uiSign
+    expect(elementTree.triggerComponentAtIndex(listRef, 0)).toMatchInlineSnapshot(`4`);
+    expect(elementTree.triggerComponentAtIndex(listRef, 0)).toMatchInlineSnapshot(`7`); // should return a new uiSign
   });
 
   it('should handle continuous componentAtIndex on same index - self reuse', () => {
@@ -1150,9 +1150,9 @@ describe(`list componentAtIndex`, () => {
     // only call componentAtIndx after flush
     __pendingListUpdates.flush();
     let uiSign;
-    expect(uiSign = elementTree.triggerComponentAtIndex(listRef, 0)).toMatchInlineSnapshot(`169`);
+    expect(uiSign = elementTree.triggerComponentAtIndex(listRef, 0)).toMatchInlineSnapshot(`4`);
     elementTree.triggerEnqueueComponent(listRef, uiSign);
-    expect(elementTree.triggerComponentAtIndex(listRef, 0)).toMatchInlineSnapshot(`169`); // should reuse self
+    expect(elementTree.triggerComponentAtIndex(listRef, 0)).toMatchInlineSnapshot(`4`); // should reuse self
   });
 
   it('should handle componentAtIndex when `enableReuseNotification` is true', () => {
@@ -1215,27 +1215,27 @@ describe(`list componentAtIndex`, () => {
     expect(fn.mock.calls).toMatchInlineSnapshot(`
       [
         [
-          176,
+          4,
           undefined,
         ],
         [
-          179,
+          7,
           undefined,
         ],
         [
-          182,
+          10,
           undefined,
         ],
         [
-          185,
+          13,
           undefined,
         ],
         [
-          176,
+          4,
           "4",
         ],
         [
-          179,
+          7,
           "5",
         ],
       ]
@@ -2230,11 +2230,11 @@ describe('list componentAtIndexes', () => {
         [
           {
             "elementIDs": [
-              243,
-              246,
-              249,
+              4,
+              7,
+              10,
             ],
-            "listID": 242,
+            "listID": 3,
             "operationIDs": [
               0,
               1,
@@ -2292,11 +2292,11 @@ describe('list componentAtIndexes', () => {
         [
           {
             "elementIDs": [
-              256,
-              259,
-              262,
+              4,
+              7,
+              10,
             ],
-            "listID": 255,
+            "listID": 3,
             "operationIDs": [
               11,
               22,
@@ -2394,11 +2394,11 @@ describe('list componentAtIndexes', () => {
         [
           {
             "elementIDs": [
-              269,
-              272,
-              275,
+              4,
+              7,
+              10,
             ],
-            "listID": 268,
+            "listID": 3,
             "operationIDs": [
               3,
               4,
@@ -2471,11 +2471,11 @@ describe('list componentAtIndexes', () => {
         [
           {
             "elementIDs": [
-              282,
-              285,
-              288,
+              4,
+              7,
+              10,
             ],
-            "listID": 281,
+            "listID": 3,
             "operationIDs": [
               0,
               1,
@@ -2683,11 +2683,11 @@ describe('list-item with "defer" attribute', () => {
           </list>,
           {
             "elementIDs": [
-              300,
+              2,
               -1,
               -1,
             ],
-            "listID": 299,
+            "listID": 1,
             "operationIDs": [
               11,
               22,
@@ -2713,8 +2713,8 @@ describe('list-item with "defer" attribute', () => {
             item-key="1"
           />,
           {
-            "elementID": 301,
-            "listID": 299,
+            "elementID": 3,
+            "listID": 1,
             "operationID": 22,
             "triggerLayout": true,
           },
@@ -2724,8 +2724,8 @@ describe('list-item with "defer" attribute', () => {
             item-key="2"
           />,
           {
-            "elementID": 302,
-            "listID": 299,
+            "elementID": 4,
+            "listID": 1,
             "operationID": 33,
             "triggerLayout": true,
           },
@@ -2772,11 +2772,11 @@ describe('list-item with "defer" attribute', () => {
           </list>,
           {
             "elementIDs": [
-              300,
-              301,
-              302,
+              2,
+              3,
+              4,
             ],
-            "listID": 299,
+            "listID": 1,
             "operationIDs": [
               11,
               22,
@@ -2904,6 +2904,7 @@ describe('list-item with "defer" attribute', () => {
     elementTree.triggerEnqueueComponent(listRef, uiSign);
 
     {
+      globalThis.__OnLifecycleEvent.mockClear();
       elementTree.triggerComponentAtIndex(listRef, 1);
       const item = __root.__firstChild.__firstChild.__nextSibling;
       const p = item.__extraProps['isReady'];
@@ -2957,6 +2958,29 @@ describe('list-item with "defer" attribute', () => {
             </list-item>
           </list>
         </page>
+      `);
+
+      expect(globalThis.__OnLifecycleEvent.mock.calls).toMatchInlineSnapshot(`
+        [
+          [
+            [
+              "rLynxPublishEvent",
+              {
+                "data": {},
+                "handlerName": "-6:__extraProps:onComponentAtIndex",
+              },
+            ],
+          ],
+          [
+            [
+              "rLynxPublishEvent",
+              {
+                "data": {},
+                "handlerName": "-4:__extraProps:onRecycleComponent",
+              },
+            ],
+          ],
+        ]
       `);
     }
   });

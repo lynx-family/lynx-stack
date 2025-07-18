@@ -1,5 +1,11 @@
 # @lynx-js/react
 
+## 0.111.1
+
+### Patch Changes
+
+- Wrap the main thread `renderPage` in preact `act` to ensure that the effects are flushed. ([#1170](https://github.com/lynx-family/lynx-stack/pull/1170))
+
 ## 0.111.0
 
 ### Minor Changes

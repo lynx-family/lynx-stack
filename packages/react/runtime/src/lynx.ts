@@ -5,6 +5,7 @@ import { options } from 'preact';
 // to make sure preact's hooks to register earlier than ours
 import './hooks/react.js';
 
+import { initAlog } from './alog/index.js';
 import { setupComponentStack } from './debug/component-stack.js';
 import { initProfileHook } from './debug/profile.js';
 import { document, setupBackgroundDocument } from './document.js';
@@ -43,6 +44,11 @@ if (__DEV__) {
 if (__PROFILE__) {
   // We are profiling both main-thread and background.
   initProfileHook();
+}
+
+if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
+  // We are logging both main-thread and background.
+  initAlog();
 }
 
 if (__BACKGROUND__) {

@@ -24,13 +24,13 @@ catalog:
 catalogs:
   # Rsbuild monorepo packages
   rsbuild:
-    "@rsbuild/core": "1.4.3"
+    "@rsbuild/core": "1.4.7"
 
   # Rspack monorepo packages
   rspack:
-    "@rspack/cli": "1.4.2"
-    "@rspack/core": "1.4.2"
-    "@rspack/test-tools": "1.4.2"
+    "@rspack/cli": "1.4.8"
+    "@rspack/core": "1.4.8"
+    "@rspack/test-tools": "1.4.8"
 
 overrides:
   "@rspack/core": "$@rspack/core"
@@ -41,9 +41,14 @@ patchedDependencies:
   "@napi-rs/cli@2.18.4": "patches/@napi-rs__cli@2.18.4.patch"
   "@rollup/plugin-typescript": "patches/@rollup__plugin-typescript.patch"
 
+strictDepBuilds: true
+
 onlyBuiltDependencies:
   - dprint
   - esbuild
 
 ignoredBuiltDependencies:
+  - "@biomejs/biome"
+  - "@swc/core"
   - core-js
+  - unrs-resolver
