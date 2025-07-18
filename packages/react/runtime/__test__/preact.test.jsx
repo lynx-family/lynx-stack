@@ -14,6 +14,7 @@ import { runWithForce } from '../src/lynx/tt';
 import {
   SnapshotInstance,
   backgroundSnapshotInstanceManager,
+  destroyRemovedSnapshotInstances,
   setupPage,
   snapshotInstanceManager,
   traverseSnapshotInstance,
@@ -173,6 +174,7 @@ describe('document', () => {
         </__Card__:__snapshot_a94a8_test_2>
       </root>
     `);
+    destroyRemovedSnapshotInstances();
     expect([...snapshotInstanceManager.values.keys()]).toMatchInlineSnapshot(`
       [
         -3,

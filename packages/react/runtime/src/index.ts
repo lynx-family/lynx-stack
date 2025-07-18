@@ -9,7 +9,6 @@ import {
   Component,
   Fragment,
   PureComponent,
-  Suspense,
   lazy as backgroundLazy,
   cloneElement,
   createContext,
@@ -34,6 +33,7 @@ import {
   useState,
 } from './hooks/react.js';
 import { loadLazyBundle, mainThreadLazy } from './lynx/lazy-bundle.js';
+import { Suspense } from './lynx/suspense.js';
 
 export { Component, createContext } from 'preact';
 export { PureComponent } from 'preact/compat';

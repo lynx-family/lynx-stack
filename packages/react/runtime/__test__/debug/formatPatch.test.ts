@@ -22,6 +22,8 @@ describe('formatPatch', () => {
       SnapshotOperation.SetAttributes,
       2,
       { hidden: true },
+      SnapshotOperation.PreventDestroy,
+      1,
       SnapshotOperation.DEV_ONLY_AddSnapshot,
       'unique-1',
       'create-val',
@@ -40,6 +42,7 @@ describe('formatPatch', () => {
       { op: 'RemoveChild', parentId: 1, childId: 2 },
       { op: 'SetAttribute', id: 2, dynamicPartIndex: 1, value: 'disabled' },
       { op: 'SetAttributes', id: 2, values: { hidden: true } },
+      { op: 'PreventDestroy', id: 1 },
       {
         op: 'DEV_ONLY_AddSnapshot',
         uniqID: 'unique-1',

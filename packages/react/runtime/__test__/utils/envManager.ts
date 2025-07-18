@@ -9,7 +9,12 @@ import { shouldDelayUiOps } from '../../src/lifecycle/ref/delay.js';
 import { clearListGlobal } from '../../src/list.js';
 import { globalPipelineOptions, setPipeline } from '../../src/lynx/performance.js';
 import { __root, setRoot } from '../../src/root.js';
-import { SnapshotInstance, backgroundSnapshotInstanceManager, snapshotInstanceManager } from '../../src/snapshot.js';
+import {
+  SnapshotInstance,
+  backgroundSnapshotInstanceManager,
+  snapshotInstanceManager,
+  snapshotInstancesToDestroy,
+} from '../../src/snapshot.js';
 import { hydrationMap } from '../../src/snapshotInstanceHydrationMap.js';
 import { clearWorkletRefLastIdForTesting } from '../../src/worklet/workletRef.js';
 
@@ -74,6 +79,7 @@ export class EnvManager {
     snapshotInstanceManager.nextId = 0;
     hydrationMap.clear();
     shouldDelayUiOps.value = true;
+    snapshotInstancesToDestroy.length = 0;
     clearListGlobal();
     deinitGlobalSnapshotPatch();
     clearWorkletRefLastIdForTesting();

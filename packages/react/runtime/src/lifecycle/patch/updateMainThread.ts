@@ -11,7 +11,7 @@ import { LifecycleConstant } from '../../lifecycleConstant.js';
 import { markTiming, setPipeline } from '../../lynx/performance.js';
 import { __pendingListUpdates } from '../../pendingListUpdates.js';
 import { applyRefQueue } from '../../snapshot/workletRef.js';
-import { __page } from '../../snapshot.js';
+import { __page, destroyRemovedSnapshotInstances } from '../../snapshot.js';
 import { getReloadVersion } from '../pass.js';
 
 function updateMainThread(
@@ -51,6 +51,7 @@ function updateMainThread(
   if (patchOptions.pipelineOptions) {
     flushOptions.pipelineOptions = patchOptions.pipelineOptions;
   }
+  destroyRemovedSnapshotInstances();
   __FlushElementTree(__page, flushOptions);
 }
 

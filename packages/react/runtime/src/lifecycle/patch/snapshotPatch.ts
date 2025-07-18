@@ -14,6 +14,7 @@ export const SnapshotOperation = {
   RemoveChild: 2,
   SetAttribute: 3,
   SetAttributes: 4,
+  PreventDestroy: 5,
 
   DEV_ONLY_AddSnapshot: 100,
   DEV_ONLY_RegisterWorklet: 101,
@@ -31,6 +32,10 @@ export const SnapshotOperationParams: Record<number, { name: string; params: str
     params: ['id', /* number */ 'dynamicPartIndex', /* number */ 'value' /* any */],
   },
   [SnapshotOperation.SetAttributes]: { name: 'SetAttributes', params: ['id', /* number */ 'values' /* any */] },
+  [SnapshotOperation.PreventDestroy]: {
+    name: 'PreventDestroy',
+    params: ['id' /* number */],
+  },
   [SnapshotOperation.DEV_ONLY_AddSnapshot]: {
     name: 'DEV_ONLY_AddSnapshot',
     params: [

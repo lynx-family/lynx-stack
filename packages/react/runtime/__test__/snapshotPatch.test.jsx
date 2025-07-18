@@ -707,6 +707,28 @@ describe('setAttribute', () => {
   });
 });
 
+describe('PreventDestroy', () => {
+  beforeEach(() => {
+    initGlobalSnapshotPatch();
+  });
+
+  it('error', async function() {
+    initGlobalSnapshotPatch();
+    const patch = takeGlobalSnapshotPatch();
+    patch.push(SnapshotOperation.PreventDestroy, 100);
+    snapshotPatchApply(patch);
+    expect(_ReportError).toHaveBeenCalledTimes(1);
+    expect(_ReportError.mock.calls[0]).toMatchInlineSnapshot(`
+      [
+        [Error: snapshotPatchApply failed: ctx not found, snapshot type: 'null'],
+        {
+          "errorCode": 1101,
+        },
+      ]
+    `);
+  });
+});
+
 describe('DEV_ONLY_addSnapshot', () => {
   beforeEach(() => {
     globalEnvManager.switchToBackground();

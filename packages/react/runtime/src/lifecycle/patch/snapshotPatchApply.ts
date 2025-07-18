@@ -89,6 +89,16 @@ export function snapshotPatchApply(snapshotPatch: SnapshotPatch): void {
         }
         break;
       }
+      case SnapshotOperation.PreventDestroy: {
+        const id = snapshotPatch[++i] as number;
+        const si = snapshotInstanceManager.values.get(id);
+        if (si) {
+          si.preventDestroy();
+        } else {
+          sendCtxNotFoundEventToBackground(id);
+        }
+        break;
+      }
       case SnapshotOperation.DEV_ONLY_AddSnapshot: {
         if (__DEV__) {
           const uniqID = snapshotPatch[++i] as string;

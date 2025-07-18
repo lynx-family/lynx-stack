@@ -180,6 +180,14 @@ export const backgroundSnapshotInstanceManager: {
   },
 };
 
+export const snapshotInstancesToDestroy: number[] = [];
+
+export function destroyRemovedSnapshotInstances(): void {
+  for (const id of snapshotInstancesToDestroy) {
+    snapshotInstanceManager.values.get(id)?.tearDown();
+  }
+}
+
 export function entryUniqID(uniqID: string, entryName?: string): string {
   return entryName ? `${entryName}:${uniqID}` : uniqID;
 }
@@ -400,6 +408,9 @@ export class SnapshotInstance {
       v.__parent = null;
       v.__previousSibling = null;
       v.__nextSibling = null;
+      delete v.__elements;
+      delete v.__element_root;
+      snapshotInstanceManager.values.delete(v.__id);
     });
   }
 
@@ -565,9 +576,6 @@ export class SnapshotInstance {
       }
 
       this.__removeChild(child);
-      traverseSnapshotInstance(child, v => {
-        snapshotInstanceManager.values.delete(v.__id);
-      });
       // mark this child as deleted
       child.__id = 0;
       return;
@@ -584,14 +592,8 @@ export class SnapshotInstance {
     }
 
     this.__removeChild(child);
-    traverseSnapshotInstance(child, v => {
-      v.__parent = null;
-      v.__previousSibling = null;
-      v.__nextSibling = null;
-      delete v.__elements;
-      delete v.__element_root;
-      snapshotInstanceManager.values.delete(v.__id);
-    });
+
+    snapshotInstancesToDestroy.push(child.__id);
   }
 
   setAttribute(key: string | number, value: any): void {
@@ -635,6 +637,13 @@ export class SnapshotInstance {
     if (isDirectOrDeepEqual(oldValue, newValue)) {}
     else {
       this.__snapshot_def.update![index]!(this, index, oldValue);
+    }
+  }
+
+  preventDestroy(): void {
+    const index = snapshotInstancesToDestroy.indexOf(this.__id);
+    if (index !== -1) {
+      snapshotInstancesToDestroy.splice(index, 1);
     }
   }
 }
