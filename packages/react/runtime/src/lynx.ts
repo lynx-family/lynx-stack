@@ -6,6 +6,7 @@ import { options } from 'preact';
 import './hooks/react.js';
 
 import { initAlog } from './alog/index.js';
+import { setupComponentStack } from './debug/component-stack.js';
 import { initProfileHook } from './debug/profile.js';
 import { document, setupBackgroundDocument } from './document.js';
 import { replaceCommitHook } from './lifecycle/patch/commit.js';
@@ -33,6 +34,10 @@ if (__MAIN_THREAD__) {
   if (__DEV__) {
     injectLepusMethods();
   }
+}
+
+if (__DEV__) {
+  setupComponentStack();
 }
 
 // TODO: replace this with __PROFILE__
