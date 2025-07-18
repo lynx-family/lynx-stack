@@ -636,7 +636,7 @@ describe('spreadUpdate', () => {
     initGlobalSnapshotPatch();
     setSpread_(a);
 
-    expect(() => render(<Comp />, scratch)).toThrowErrorMatchingInlineSnapshot(`
+    expect(() => render(<Comp />, scratchBackground)).toThrowErrorMatchingInlineSnapshot(`
       [TypeError: Converting circular structure to JSON
           --> starting at object with constructor 'Object'
           --- property 'a' closes the circle
