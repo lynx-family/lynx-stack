@@ -631,7 +631,7 @@ describe('spreadUpdate', () => {
     render(<Comp />, scratch);
 
     globalEnvManager.switchToBackground();
-    render(<Comp />, scratch);
+    render(<Comp />, scratchBackground);
 
     initGlobalSnapshotPatch();
     setSpread_(a);
