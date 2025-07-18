@@ -3047,7 +3047,7 @@ describe('nested list', () => {
     );
     const s3 = __SNAPSHOT__(
       <list-item>
-        <text>s2</text>
+        <text>s3</text>
       </list-item>,
     );
 
@@ -3193,6 +3193,134 @@ describe('nested list', () => {
     expect(elementTree.triggerComponentAtIndex(childListRef1, 0)).toMatchInlineSnapshot(`16`);
     expect(elementTree.triggerComponentAtIndex(childListRef2, 0)).toMatchInlineSnapshot(`19`);
     expect(elementTree.triggerComponentAtIndex(childListRef3, 0)).toMatchInlineSnapshot(`22`);
+
+    expect(elementTree).toMatchInlineSnapshot(`
+      "<view>
+        <text>
+          <raw-text
+            text="s1"
+          />
+        </text>
+        <list
+          update-list-info={
+            Array [
+              Object {
+                "insertAction": Array [
+                  Object {
+                    "position": 0,
+                    "type": "__Card__:__snapshot_a94a8_test_65",
+                  },
+                  Object {
+                    "position": 1,
+                    "type": "__Card__:__snapshot_a94a8_test_65",
+                  },
+                  Object {
+                    "position": 2,
+                    "type": "__Card__:__snapshot_a94a8_test_65",
+                  },
+                ],
+                "removeAction": Array [],
+                "updateAction": Array [],
+              },
+            ]
+          }
+        >
+          <list-item>
+            <text>
+              <raw-text
+                text="s2"
+              />
+            </text>
+            <list
+              update-list-info={
+                Array [
+                  Object {
+                    "insertAction": Array [
+                      Object {
+                        "position": 0,
+                        "type": "__Card__:__snapshot_a94a8_test_66",
+                      },
+                    ],
+                    "removeAction": Array [],
+                    "updateAction": Array [],
+                  },
+                ]
+              }
+            >
+              <list-item>
+                <text>
+                  <raw-text
+                    text="s3"
+                  />
+                </text>
+              </list-item>
+            </list>
+          </list-item>
+          <list-item>
+            <text>
+              <raw-text
+                text="s2"
+              />
+            </text>
+            <list
+              update-list-info={
+                Array [
+                  Object {
+                    "insertAction": Array [
+                      Object {
+                        "position": 0,
+                        "type": "__Card__:__snapshot_a94a8_test_66",
+                      },
+                    ],
+                    "removeAction": Array [],
+                    "updateAction": Array [],
+                  },
+                ]
+              }
+            >
+              <list-item>
+                <text>
+                  <raw-text
+                    text="s3"
+                  />
+                </text>
+              </list-item>
+            </list>
+          </list-item>
+          <list-item>
+            <text>
+              <raw-text
+                text="s2"
+              />
+            </text>
+            <list
+              update-list-info={
+                Array [
+                  Object {
+                    "insertAction": Array [
+                      Object {
+                        "position": 0,
+                        "type": "__Card__:__snapshot_a94a8_test_66",
+                      },
+                    ],
+                    "removeAction": Array [],
+                    "updateAction": Array [],
+                  },
+                ]
+              }
+            >
+              <list-item>
+                <text>
+                  <raw-text
+                    text="s3"
+                  />
+                </text>
+              </list-item>
+            </list>
+          </list-item>
+        </list>
+      </view>"
+    `);
   });
 
   it('updateAction of NewEngine should include flush: true.', () => {
