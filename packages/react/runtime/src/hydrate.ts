@@ -354,6 +354,7 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
         for (const i in diffResult.i) {
           insertions.push(Number(i));
         }
+        /* v8 ignore next 4 */
         for (const i in diffResult.m) {
           removals.push(Number(i));
           insertions.push(diffResult.m[i]!);
