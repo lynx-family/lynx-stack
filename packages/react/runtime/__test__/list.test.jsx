@@ -12,7 +12,7 @@ const HOLE = null;
 
 beforeEach(() => {
   // snapshotManager.values.clear();
-  __pendingListUpdates.clear();
+  __pendingListUpdates.clearAttachedLists();
   snapshotInstanceManager.clear();
   snapshotInstanceManager.nextId = 0;
 });
@@ -256,7 +256,7 @@ describe(`list "update-list-info"`, () => {
     `);
 
     {
-      __pendingListUpdates.clear();
+      __pendingListUpdates.clearAttachedLists();
       const d4 = new SnapshotInstance(s3);
       const d5 = new SnapshotInstance(s3);
       const d6 = new SnapshotInstance(s4);
@@ -299,7 +299,7 @@ describe(`list "update-list-info"`, () => {
     }
 
     {
-      __pendingListUpdates.clear();
+      __pendingListUpdates.clearAttachedLists();
       b.insertBefore(d3); // move
       expect(__pendingListUpdates.values).toMatchInlineSnapshot(`
         {
@@ -345,7 +345,7 @@ describe(`list "update-list-info"`, () => {
     b.insertBefore(d1);
     b.insertBefore(d2);
     b.insertBefore(d3);
-    __pendingListUpdates.clear();
+    __pendingListUpdates.clearAttachedLists();
 
     d1.setAttribute(0, { 'item-key': 1 });
     d3.setAttribute(0, { 'item-key': 3 });
@@ -1520,12 +1520,17 @@ describe('list reload', () => {
               {
                 "insertAction": [
                   {
-                    "position": 2,
+                    "position": 1,
+                    "type": "__Card__:__snapshot_a94a8_test_37",
+                  },
+                  {
+                    "position": 3,
                     "type": "__Card__:__snapshot_a94a8_test_36",
                   },
                 ],
                 "removeAction": [
-                  1,
+                  2,
+                  3,
                 ],
                 "updateAction": [],
               },
@@ -1847,7 +1852,7 @@ describe('list bug', () => {
     `);
 
     {
-      __pendingListUpdates.clear();
+      __pendingListUpdates.clearAttachedLists();
       b.insertBefore(d3); // move
       expect(__pendingListUpdates.values).toMatchInlineSnapshot(`
         {
@@ -1889,7 +1894,7 @@ describe('list bug', () => {
     }
 
     {
-      __pendingListUpdates.clear();
+      __pendingListUpdates.clearAttachedLists();
       b.removeChild(d3); // move
       expect(__pendingListUpdates.values).toMatchInlineSnapshot(`
         {
@@ -3010,5 +3015,404 @@ describe('list-item with "defer" attribute', () => {
     expect(() => elementTree.triggerComponentAtIndex(listRef, 0)).toThrowErrorMatchingInlineSnapshot(
       `[Error: Unsupported: \`<list-item/>\` with \`defer={true}\` must be used with \`<list custom-list-name="list-container"/>\`]`,
     );
+  });
+});
+
+describe('nested list', () => {
+  beforeEach(() => {
+    globalThis.SystemInfo.engineVersion = '3.3';
+  });
+
+  const s = __SNAPSHOT__(
+    <view>
+      <text>Hello</text>
+      {HOLE}
+    </view>,
+  );
+
+  it('nested list should work', () => {
+    expect(SystemInfo.engineVersion).toMatchInlineSnapshot(`"3.3"`);
+
+    const s1 = __SNAPSHOT__(
+      <view>
+        <text>s1</text>
+        <list>{HOLE}</list>
+      </view>,
+    );
+    const s2 = __SNAPSHOT__(
+      <list-item>
+        <text>s2</text>
+        <list>{HOLE}</list>
+      </list-item>,
+    );
+    const s3 = __SNAPSHOT__(
+      <list-item>
+        <text>s3</text>
+      </list-item>,
+    );
+
+    const a = new SnapshotInstance(s);
+
+    const b = new SnapshotInstance(s1);
+    a.insertBefore(b);
+    b.ensureElements();
+    const parentListRef = b.__elements[3];
+
+    const c1 = new SnapshotInstance(s2);
+    const c2 = new SnapshotInstance(s2);
+    const c3 = new SnapshotInstance(s2);
+    b.insertBefore(c1);
+    b.insertBefore(c2);
+    b.insertBefore(c3);
+
+    const d1 = new SnapshotInstance(s3);
+    c1.insertBefore(d1);
+
+    const d2 = new SnapshotInstance(s3);
+    c2.insertBefore(d2);
+
+    const d3 = new SnapshotInstance(s3);
+    c3.insertBefore(d3);
+
+    expect(__pendingListUpdates.values).toMatchInlineSnapshot(`
+      {
+        "-2": [
+          {
+            "insertAction": [
+              {
+                "position": 0,
+                "type": "__Card__:__snapshot_a94a8_test_65",
+              },
+              {
+                "position": 1,
+                "type": "__Card__:__snapshot_a94a8_test_65",
+              },
+              {
+                "position": 2,
+                "type": "__Card__:__snapshot_a94a8_test_65",
+              },
+            ],
+            "removeAction": [],
+            "updateAction": [],
+          },
+        ],
+        "-3": [
+          {
+            "insertAction": [
+              {
+                "position": 0,
+                "type": "__Card__:__snapshot_a94a8_test_66",
+              },
+            ],
+            "removeAction": [],
+            "updateAction": [],
+          },
+        ],
+        "-4": [
+          {
+            "insertAction": [
+              {
+                "position": 0,
+                "type": "__Card__:__snapshot_a94a8_test_66",
+              },
+            ],
+            "removeAction": [],
+            "updateAction": [],
+          },
+        ],
+        "-5": [
+          {
+            "insertAction": [
+              {
+                "position": 0,
+                "type": "__Card__:__snapshot_a94a8_test_66",
+              },
+            ],
+            "removeAction": [],
+            "updateAction": [],
+          },
+        ],
+      }
+    `);
+    expect(parentListRef).toMatchInlineSnapshot(`<list />`);
+
+    __pendingListUpdates.flush();
+    // children list should not be cleared
+    expect(__pendingListUpdates.values).toMatchInlineSnapshot(`
+      {
+        "-3": [
+          {
+            "insertAction": [
+              {
+                "position": 0,
+                "type": "__Card__:__snapshot_a94a8_test_66",
+              },
+            ],
+            "removeAction": [],
+            "updateAction": [],
+          },
+        ],
+        "-4": [
+          {
+            "insertAction": [
+              {
+                "position": 0,
+                "type": "__Card__:__snapshot_a94a8_test_66",
+              },
+            ],
+            "removeAction": [],
+            "updateAction": [],
+          },
+        ],
+        "-5": [
+          {
+            "insertAction": [
+              {
+                "position": 0,
+                "type": "__Card__:__snapshot_a94a8_test_66",
+              },
+            ],
+            "removeAction": [],
+            "updateAction": [],
+          },
+        ],
+      }
+    `);
+
+    expect(elementTree.triggerComponentAtIndex(parentListRef, 0)).toMatchInlineSnapshot(`4`);
+    expect(elementTree.triggerComponentAtIndex(parentListRef, 1)).toMatchInlineSnapshot(`8`);
+    expect(elementTree.triggerComponentAtIndex(parentListRef, 2)).toMatchInlineSnapshot(`12`);
+
+    __pendingListUpdates.flush();
+    // all lists should be cleared
+    expect(__pendingListUpdates.values).toMatchInlineSnapshot(`{}`);
+
+    const childListRef1 = c1.__elements[3];
+    const childListRef2 = c2.__elements[3];
+    const childListRef3 = c3.__elements[3];
+    expect(elementTree.triggerComponentAtIndex(childListRef1, 0)).toMatchInlineSnapshot(`16`);
+    expect(elementTree.triggerComponentAtIndex(childListRef2, 0)).toMatchInlineSnapshot(`19`);
+    expect(elementTree.triggerComponentAtIndex(childListRef3, 0)).toMatchInlineSnapshot(`22`);
+
+    expect(elementTree).toMatchInlineSnapshot(`
+      "<view>
+        <text>
+          <raw-text
+            text="s1"
+          />
+        </text>
+        <list
+          update-list-info={
+            Array [
+              Object {
+                "insertAction": Array [
+                  Object {
+                    "position": 0,
+                    "type": "__Card__:__snapshot_a94a8_test_65",
+                  },
+                  Object {
+                    "position": 1,
+                    "type": "__Card__:__snapshot_a94a8_test_65",
+                  },
+                  Object {
+                    "position": 2,
+                    "type": "__Card__:__snapshot_a94a8_test_65",
+                  },
+                ],
+                "removeAction": Array [],
+                "updateAction": Array [],
+              },
+            ]
+          }
+        >
+          <list-item>
+            <text>
+              <raw-text
+                text="s2"
+              />
+            </text>
+            <list
+              update-list-info={
+                Array [
+                  Object {
+                    "insertAction": Array [
+                      Object {
+                        "position": 0,
+                        "type": "__Card__:__snapshot_a94a8_test_66",
+                      },
+                    ],
+                    "removeAction": Array [],
+                    "updateAction": Array [],
+                  },
+                ]
+              }
+            >
+              <list-item>
+                <text>
+                  <raw-text
+                    text="s3"
+                  />
+                </text>
+              </list-item>
+            </list>
+          </list-item>
+          <list-item>
+            <text>
+              <raw-text
+                text="s2"
+              />
+            </text>
+            <list
+              update-list-info={
+                Array [
+                  Object {
+                    "insertAction": Array [
+                      Object {
+                        "position": 0,
+                        "type": "__Card__:__snapshot_a94a8_test_66",
+                      },
+                    ],
+                    "removeAction": Array [],
+                    "updateAction": Array [],
+                  },
+                ]
+              }
+            >
+              <list-item>
+                <text>
+                  <raw-text
+                    text="s3"
+                  />
+                </text>
+              </list-item>
+            </list>
+          </list-item>
+          <list-item>
+            <text>
+              <raw-text
+                text="s2"
+              />
+            </text>
+            <list
+              update-list-info={
+                Array [
+                  Object {
+                    "insertAction": Array [
+                      Object {
+                        "position": 0,
+                        "type": "__Card__:__snapshot_a94a8_test_66",
+                      },
+                    ],
+                    "removeAction": Array [],
+                    "updateAction": Array [],
+                  },
+                ]
+              }
+            >
+              <list-item>
+                <text>
+                  <raw-text
+                    text="s3"
+                  />
+                </text>
+              </list-item>
+            </list>
+          </list-item>
+        </list>
+      </view>"
+    `);
+  });
+
+  it('updateAction of NewEngine should include flush: true.', () => {
+    globalThis.SystemInfo.engineVersion = '3.4';
+    expect(SystemInfo.engineVersion).toMatchInlineSnapshot(`"3.4"`);
+
+    const s1 = __SNAPSHOT__(
+      <view>
+        <text>111</text>
+        <list custom-list-name={HOLE}>{HOLE}</list>
+      </view>,
+    );
+    const b = new SnapshotInstance(s1);
+    b.ensureElements();
+    b.setAttribute(0, 'list-container');
+    const listRef = b.__elements[3];
+    expect(listRef).toMatchInlineSnapshot(`
+      <list
+        custom-list-name="list-container"
+      />
+    `);
+
+    const s3 = __SNAPSHOT__(
+      <list-item item-key={HOLE}>
+        <text>World</text>
+      </list-item>,
+    );
+
+    const d1 = new SnapshotInstance(s3);
+    const d2 = new SnapshotInstance(s3);
+    const d3 = new SnapshotInstance(s3);
+    b.insertBefore(d1);
+    b.insertBefore(d2);
+    b.insertBefore(d3);
+
+    __pendingListUpdates.flush();
+
+    const bb = new SnapshotInstance(s1);
+    {
+      const d1 = new SnapshotInstance(s3);
+      const d2 = new SnapshotInstance(s3);
+      bb.insertBefore(d1);
+      bb.insertBefore(d2);
+    }
+
+    hydrate(b, bb);
+    b.unRenderElements();
+
+    expect(listRef).toMatchInlineSnapshot(`
+      <list
+        custom-list-name="list-container"
+        update-list-info={
+          [
+            {
+              "insertAction": [
+                {
+                  "position": 0,
+                  "type": "__Card__:__snapshot_a94a8_test_68",
+                },
+                {
+                  "position": 1,
+                  "type": "__Card__:__snapshot_a94a8_test_68",
+                },
+                {
+                  "position": 2,
+                  "type": "__Card__:__snapshot_a94a8_test_68",
+                },
+              ],
+              "removeAction": [],
+              "updateAction": [],
+            },
+            {
+              "insertAction": [],
+              "removeAction": [
+                2,
+              ],
+              "updateAction": [
+                {
+                  "flush": true,
+                  "from": 0,
+                  "to": 0,
+                },
+                {
+                  "flush": true,
+                  "from": 1,
+                  "to": 1,
+                },
+              ],
+            },
+          ]
+        }
+      />
+    `);
   });
 });

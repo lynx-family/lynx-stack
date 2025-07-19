@@ -318,6 +318,8 @@ export class SnapshotInstance {
 
     if (isListHolder) {
       // never recurse into list's children
+
+      __pendingListUpdates.flushWithId(this.__id);
     } else {
       let index = 0;
       let child = this.__firstChild;

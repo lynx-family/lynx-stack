@@ -38,7 +38,7 @@ function reloadMainThread(data: unknown, options: UpdatePageOption): void {
 
   destroyWorklet();
   snapshotInstanceManager.clear();
-  __pendingListUpdates.clear();
+  __pendingListUpdates.clearAttachedLists();
   clearJSReadyEventIdSwap();
   setMainThreadHydrationFinished(false);
 
