@@ -24,7 +24,7 @@ async function applyDebugPlugins(
   rsbuildInstance.addPlugins(await Promise.all(debugPlugins))
 }
 
-async function applyDefaultDevPlugins(
+export async function applyDefaultDevPlugins(
   rsbuildInstance: RsbuildInstance,
   config: Config,
 ): Promise<void> {
