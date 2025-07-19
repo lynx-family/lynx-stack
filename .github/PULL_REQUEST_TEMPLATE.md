@@ -8,13 +8,8 @@
   If you want to learn more about contributing to this project, please visit: https://github.com/lynx-family/lynx-stack/blob/main/CONTRIBUTING.md.
 -->
 
-## Summary
-
-<!-- Can you explain the reasoning behind implementing this change? What problem or issue does this pull request resolve? -->
-
+<!-- We may use the AI generated summary. Write your own summary is you want. Just deleted the following line. -->
 <!-- @coderabbitai summary -->
-
-<!-- It would be helpful if you could provide any relevant context, such as GitHub issues or related discussions. -->
 
 ## Checklist
 
