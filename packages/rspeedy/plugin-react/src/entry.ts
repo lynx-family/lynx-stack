@@ -248,6 +248,7 @@ export function applyEntry(
     }
 
     const rsbuildConfig = api.getRsbuildConfig()
+    const userConfig = api.getRsbuildConfig('original')
 
     let extractStr = originalExtractStr
     if (
@@ -271,9 +272,30 @@ export function applyEntry(
         mainThreadChunks,
         extractStr,
         experimental_isLazyBundle,
-        profile: rsbuildConfig.performance?.profile,
+        profile: getDefaultProfile(),
       }])
+
+    function getDefaultProfile(): boolean | undefined {
+      if (userConfig.performance?.profile !== undefined) {
+        return userConfig.performance.profile
+      }
+
+      if (isDebug()) {
+        return true
+      }
+
+      return undefined
+    }
   })
+}
+
+export const isDebug = (): boolean => {
+  if (!process.env['DEBUG']) {
+    return false
+  }
+
+  const values = process.env['DEBUG'].toLocaleLowerCase().split(',')
+  return ['rspeedy', '*'].some((key) => values.includes(key))
 }
 
 // This is copied from https://github.com/web-infra-dev/rsbuild/blob/037da7b9d92e20c7136c8b2efa21eef539fa2f88/packages/core/src/plugins/html.ts#L168

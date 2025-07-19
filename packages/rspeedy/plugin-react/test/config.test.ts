@@ -2021,7 +2021,36 @@ describe('Config', () => {
 
       // @ts-expect-error private field
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      expect(ReactLynxWebpackPlugin?.options.profile).toBe(false)
+      expect(ReactLynxWebpackPlugin?.options.profile).toBe(undefined)
+    })
+
+    test('with mode=development', async () => {
+      vi.stubEnv('DEBUG', '')
+
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+      const rspeedy = await createRspeedy({
+        rspeedyConfig: {
+          plugins: [
+            pluginReactLynx(),
+          ],
+          mode: 'development',
+        },
+      })
+
+      const [config] = await rspeedy.initConfigs()
+
+      const ReactLynxWebpackPlugin = config?.plugins?.find((
+        p,
+      ): p is ReactWebpackPlugin =>
+        p?.constructor.name === 'ReactWebpackPlugin'
+      )
+
+      // @ts-expect-error private field
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      expect(ReactLynxWebpackPlugin?.options.profile).toBe(undefined)
+
+      vi.unstubAllEnvs()
     })
 
     test('with DEBUG', async () => {
