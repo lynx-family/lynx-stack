@@ -28,4 +28,4 @@ export const scale: Plugin = createUtilityPlugin('scale', [
       ]],
     ],
   ],
-]);
+], { supportsNegativeValues: true });
