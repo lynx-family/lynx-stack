@@ -3,7 +3,6 @@ language: "en-US"
 early_access: false
 reviews:
   # Make less review comments
-  changed_files_summary: false
   collapse_walkthrough: true
   sequence_diagrams: false
 
