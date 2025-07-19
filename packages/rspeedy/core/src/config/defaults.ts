@@ -4,12 +4,13 @@
 import { mergeRsbuildConfig } from '@rsbuild/core'
 import type { RsbuildMode } from '@rsbuild/core'
 
+import { isDebug } from '../debug.js'
 import type { Filename } from './output/filename.js'
 
 import type { Config } from './index.js'
 
 export function applyDefaultRspeedyConfig(config: Config): Config {
-  const ret = mergeRsbuildConfig({
+  return mergeRsbuildConfig({
     mode: ((): RsbuildMode => {
       if (config.mode) {
         return config.mode
@@ -29,6 +30,10 @@ export function applyDefaultRspeedyConfig(config: Config): Config {
       inlineScripts: true,
     },
 
+    performance: {
+      profile: isDebug() ? true : undefined,
+    },
+
     tools: {
       rsdoctor: {
         experiments: {
@@ -37,8 +42,6 @@ export function applyDefaultRspeedyConfig(config: Config): Config {
       },
     },
   }, config)
-
-  return ret
 }
 
 const DEFAULT_FILENAME = '[name].[platform].bundle'
