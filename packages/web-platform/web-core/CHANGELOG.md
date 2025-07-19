@@ -1,5 +1,29 @@
 # @lynx-js/web-core
 
+## 0.15.2
+
+### Patch Changes
+
+- feat: support SSR for all-on-ui ([#1029](https://github.com/lynx-family/lynx-stack/pull/1029))
+
+- feat: move SSR hydrate essential info to the ssr attribute ([#1292](https://github.com/lynx-family/lynx-stack/pull/1292))
+
+  We found that in browser there is no simple tool to decode a base64 string
+
+  Therefore we move the data to `ssr` attribute
+
+  Also fix some ssr issues
+
+- feat: support \_\_MarkTemplateElement, \_\_MarkPartElement and \_\_GetTemplateParts for all-on-ui ([#1275](https://github.com/lynx-family/lynx-stack/pull/1275))
+
+- feat: mark template elements for SSR and update part ID handling ([#1286](https://github.com/lynx-family/lynx-stack/pull/1286))
+
+- Updated dependencies [[`cebda59`](https://github.com/lynx-family/lynx-stack/commit/cebda592ac5c7d152c877c2ac5ec403d477077e1), [`1443e46`](https://github.com/lynx-family/lynx-stack/commit/1443e468a353363e29aab0d90cd8b91c232a5525), [`5062128`](https://github.com/lynx-family/lynx-stack/commit/5062128c68e21abcf276ebcb40d7cc8f6e54244b), [`f656b7f`](https://github.com/lynx-family/lynx-stack/commit/f656b7f0d390d69c0da0d11a6c9b3f66ae877ac8)]:
+  - @lynx-js/web-mainthread-apis@0.15.2
+  - @lynx-js/web-constants@0.15.2
+  - @lynx-js/web-worker-runtime@0.15.2
+  - @lynx-js/web-worker-rpc@0.15.2
+
 ## 0.15.1
 
 ### Patch Changes

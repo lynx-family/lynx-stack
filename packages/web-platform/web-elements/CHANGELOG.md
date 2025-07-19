@@ -1,5 +1,21 @@
 # @lynx-js/web-elements
 
+## 0.8.1
+
+### Patch Changes
+
+- fix: indicator dots' bg-color on safari 26 ([#1298](https://github.com/lynx-family/lynx-stack/pull/1298))
+
+  https://bugs.webkit.org/show_bug.cgi?id=296048
+  The animation name should be defined in the template
+
+- fix: list may only render only one column in ReactLynx. ([#1280](https://github.com/lynx-family/lynx-stack/pull/1280))
+
+  This is because `span-count` may not be specified when `list-type` is specified, resulting in layout according to `span-count="1"`. Postponing the acquisition of `span-count` until layoutListItem can solve this problem.
+
+- Updated dependencies [[`443f3d5`](https://github.com/lynx-family/lynx-stack/commit/443f3d57fc9ac41c3e845bdba5adfa4df16e5519)]:
+  - @lynx-js/web-elements-template@0.8.1
+
 ## 0.8.0
 
 ### Minor Changes
