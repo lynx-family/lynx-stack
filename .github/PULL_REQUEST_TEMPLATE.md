@@ -12,6 +12,8 @@
 
 <!-- Can you explain the reasoning behind implementing this change? What problem or issue does this pull request resolve? -->
 
+<!-- @coderabbitai summary -->
+
 <!-- It would be helpful if you could provide any relevant context, such as GitHub issues or related discussions. -->
 
 ## Checklist
