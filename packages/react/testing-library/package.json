@@ -7,11 +7,14 @@
     "build": "rslib build",
     "dev": "rslib build --watch",
     "test": "vitest",
+    "test:rs": "rstest run",
     "test:ui": "vitest --ui"
   },
   "devDependencies": {
     "@lynx-js/react": "workspace:*",
+    "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@lynx-js/testing-environment": "workspace:*",
+    "@rsbuild/core": "catalog:rsbuild",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3"
   }

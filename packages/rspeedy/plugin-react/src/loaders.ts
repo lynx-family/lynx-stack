@@ -7,6 +7,62 @@ import { LAYERS, ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'
 
 import type { PluginReactLynxOptions } from './pluginReactLynx.js'
 
+export function applyTestingEnvLoaders(
+  api: RsbuildPluginAPI,
+  options: Required<PluginReactLynxOptions>,
+): void {
+  const {
+    compat,
+    enableRemoveCSSScope,
+    defineDCE,
+
+    experimental_isLazyBundle,
+  } = options
+
+  api.modifyBundlerChain((chain, { CHAIN_ID }) => {
+    const rule = chain.module.rules.get(CHAIN_ID.RULE.JS)
+    // The Rsbuild default loaders:
+    // - Rspack:
+    //   - builtin:swc-loader
+    // - Webpack + plugin-swc:
+    //   - swc-loader
+    // - Webpack: None
+    const uses = rule.uses.entries() ?? {}
+
+    const { output } = api.getRsbuildConfig()
+
+    const inlineSourcesContent: boolean = output?.sourceMap === true || !(
+      // `false`
+      output?.sourceMap === false
+      // `false`
+      || output?.sourceMap?.js === false
+      // explicitly disable source content
+      || output?.sourceMap?.js?.includes('nosources')
+    )
+
+    const backgroundRule = rule.oneOf('react:testing')
+    // dprint-ignore
+    backgroundRule
+      .uses
+        .merge(uses)
+      .end()
+      .use(LAYERS.BACKGROUND)
+        .loader(ReactWebpackPlugin.loaders.TESTING)
+        .options({
+          compat,
+          enableRemoveCSSScope,
+          isDynamicComponent: experimental_isLazyBundle,
+          inlineSourcesContent,
+          defineDCE,
+        })
+      .end()
+
+    // Clear the Rsbuild default loader.
+    // Otherwise, the JSX will be transformed by the `builtin:swc-loader`.
+    rule.uses.clear()
+  })
+}
+
 export function applyLoaders(
   api: RsbuildPluginAPI,
   options: Required<PluginReactLynxOptions>,

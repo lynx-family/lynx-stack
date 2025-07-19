@@ -37,13 +37,14 @@ export class ReactWebpackPlugin {
     constructor(options?: ReactWebpackPluginOptions | undefined);
     apply(compiler: Compiler): void;
     static defaultOptions: Readonly<Required<ReactWebpackPluginOptions>>;
-    static loaders: Record<keyof typeof LAYERS, string>;
+    static loaders: Record<keyof typeof LAYERS | 'TESTING', string>;
 }
 
 // @public
 export interface ReactWebpackPluginOptions {
     disableCreateSelectorQueryIncompatibleWarning?: boolean | undefined;
     enableSSR?: boolean;
+    enableTestingLibrary?: boolean;
     // @alpha
     experimental_isLazyBundle?: boolean;
     extractStr?: Partial<ExtractStrConfig> | boolean;

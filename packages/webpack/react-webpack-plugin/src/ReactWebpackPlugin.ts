@@ -64,6 +64,11 @@ interface ReactWebpackPluginOptions {
    * @defaultValue `false` when production, `true` when development
    */
   profile?: boolean | undefined;
+
+  /**
+   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableTestingLibrary}
+   */
+  enableTestingLibrary?: boolean;
 }
 
 /**
@@ -114,9 +119,10 @@ class ReactWebpackPlugin {
    *
    * @public
    */
-  static loaders: Record<keyof typeof LAYERS, string> = {
+  static loaders: Record<keyof typeof LAYERS | 'TESTING', string> = {
     BACKGROUND: require.resolve('../lib/loaders/background.js'),
     MAIN_THREAD: require.resolve('../lib/loaders/main-thread.js'),
+    TESTING: require.resolve('../lib/loaders/testing.js'),
   };
 
   constructor(
@@ -137,6 +143,7 @@ class ReactWebpackPlugin {
       extractStr: false,
       experimental_isLazyBundle: false,
       profile: undefined,
+      enableTestingLibrary: false,
     });
 
   /**
@@ -167,26 +174,28 @@ class ReactWebpackPlugin {
       DEBUG: null,
     }).apply(compiler);
 
-    new DefinePlugin({
-      __DEV__: JSON.stringify(compiler.options.mode === 'development'),
-      // We enable profile by default in development.
-      // It can also be disabled by environment variable `REACT_PROFILE=false`
-      __PROFILE__: JSON.stringify(
-        options.profile
-          ?? process.env['REACT_PROFILE']
-          ?? compiler.options.mode === 'development',
-      ),
-      // User can enable ALog by environment variable `REACT_ALOG=true`
-      __ALOG__: JSON.stringify(Boolean(process.env['REACT_ALOG'])),
-      __EXTRACT_STR__: JSON.stringify(Boolean(options.extractStr)),
-      __FIRST_SCREEN_SYNC_TIMING__: JSON.stringify(
-        options.firstScreenSyncTiming,
-      ),
-      __ENABLE_SSR__: JSON.stringify(options.enableSSR),
-      __DISABLE_CREATE_SELECTOR_QUERY_INCOMPATIBLE_WARNING__: JSON.stringify(
-        options.disableCreateSelectorQueryIncompatibleWarning,
-      ),
-    }).apply(compiler);
+    if (!options.enableTestingLibrary) {
+      new DefinePlugin({
+        __DEV__: JSON.stringify(compiler.options.mode === 'development'),
+        // We enable profile by default in development.
+        // It can also be disabled by environment variable `REACT_PROFILE=false`
+        __PROFILE__: JSON.stringify(
+          options.profile
+            ?? process.env['REACT_PROFILE']
+            ?? compiler.options.mode === 'development',
+        ),
+        // User can enable ALog by environment variable `REACT_ALOG=true`
+        __ALOG__: JSON.stringify(Boolean(process.env['REACT_ALOG'])),
+        __EXTRACT_STR__: JSON.stringify(Boolean(options.extractStr)),
+        __FIRST_SCREEN_SYNC_TIMING__: JSON.stringify(
+          options.firstScreenSyncTiming,
+        ),
+        __ENABLE_SSR__: JSON.stringify(options.enableSSR),
+        __DISABLE_CREATE_SELECTOR_QUERY_INCOMPATIBLE_WARNING__: JSON.stringify(
+          options.disableCreateSelectorQueryIncompatibleWarning,
+        ),
+      }).apply(compiler);
+    }
 
     compiler.hooks.thisCompilation.tap(this.constructor.name, compilation => {
       const onceForChunkSet = new WeakSet<Chunk>();
