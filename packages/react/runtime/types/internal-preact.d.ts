@@ -32,5 +32,7 @@ declare module 'preact' {
     __h: ((this: Component<P, S>) => void)[];
     /** _force */
     __e?: boolean;
+    /** dirty */
+    __d?: boolean;
   }
 }
