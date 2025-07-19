@@ -8,10 +8,9 @@ import type { CSSRuleObject } from '../../types/tailwind-types.js';
 import { runPlugin } from '../utils/run-plugin.js';
 
 describe('transform plugin', () => {
-  it('registers base utilities and arbitrary transform', () => {
+  it('registers base transform utilities', () => {
     const { api } = runPlugin(transform);
 
-    // ----- Check addUtilities for .transform, .transform-cpu, etc. -----
     const addUtilities = vi.mocked(api.addUtilities);
     expect(addUtilities).toHaveBeenCalledTimes(1);
 
@@ -25,8 +24,11 @@ describe('transform plugin', () => {
       '.transform-gpu': { transform: cssTransformValue },
       '.transform-none': { transform: 'none' },
     });
+  });
 
-    // ----- Check matchUtilities: arbitrary transform values -----
+  it('supports arbitrary transform values', () => {
+    const { api } = runPlugin(transform);
+
     const matchUtilities = vi.mocked(api.matchUtilities);
     const utils: Record<string, (value: unknown) => unknown> = {};
 
