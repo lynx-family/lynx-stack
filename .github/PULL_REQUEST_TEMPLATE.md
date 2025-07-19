@@ -8,8 +8,9 @@
   If you want to learn more about contributing to this project, please visit: https://github.com/lynx-family/lynx-stack/blob/main/CONTRIBUTING.md.
 -->
 
-<!-- We may use the AI generated summary. Write your own summary is you want. Just deleted the following line. -->
-<!-- @coderabbitai summary -->
+<!-- The AI summary below will be auto-generated - feel free to replace it with your own. -->
+
+@coderabbitai summary
 
 ## Checklist
 
