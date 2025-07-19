@@ -3,42 +3,27 @@
 // LICENSE file in the root directory of this source tree.
 import { createPlugin } from '../../helpers.js';
 import type { Plugin } from '../../helpers.js';
-import type {
-  CSSRuleObject,
-  KeyValuePair,
-} from '../../types/tailwind-types.js';
+import {
+  createFunctionCallUtility,
+  withStringGuard,
+} from '../../plugin-utils/index.js';
+import type { KeyValuePair } from '../../types/tailwind-types.js';
 
 export const soloTranslate: Plugin = createPlugin(
   ({ matchUtilities, theme }) => {
     matchUtilities(
       {
-        'solo-translate-x': (value: unknown) => {
-          if (typeof value !== 'string') {
-            return null;
-          }
-          const result: CSSRuleObject = {
-            transform: `translateX(${value})`,
-          };
-          return result;
-        },
-        'solo-translate-y': (value: unknown) => {
-          if (typeof value !== 'string') {
-            return null;
-          }
-          const result: CSSRuleObject = {
-            transform: `translateY(${value})`,
-          };
-          return result;
-        },
-        'solo-translate-z': (value: unknown) => {
-          if (typeof value !== 'string' || value.includes('%')) {
-            return null;
-          }
-          const result: CSSRuleObject = {
-            transform: `translateZ(${value})`,
-          };
-          return result;
-        },
+        'solo-translate-x': withStringGuard(
+          createFunctionCallUtility('transform', 'translateX'),
+        ),
+        'solo-translate-y': withStringGuard(
+          createFunctionCallUtility('transform', 'translateY'),
+        ),
+        'solo-translate-z': withStringGuard((value) => {
+          // Prevent use of percent values for translateZ
+          if (value.includes('%')) return null;
+          return { transform: `translateZ(${value})` };
+        }),
       },
       {
         supportsNegativeValues: true,

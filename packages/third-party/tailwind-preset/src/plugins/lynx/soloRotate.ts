@@ -3,10 +3,11 @@
 // LICENSE file in the root directory of this source tree.
 import { createPlugin } from '../../helpers.js';
 import type { Plugin } from '../../helpers.js';
-import type {
-  CSSRuleObject,
-  KeyValuePair,
-} from '../../types/tailwind-types.js';
+import {
+  createFunctionCallUtility,
+  withStringGuard,
+} from '../../plugin-utils/index.js';
+import type { KeyValuePair } from '../../types/tailwind-types.js';
 
 export const soloRotate: Plugin = createPlugin(({
   matchUtilities,
@@ -14,42 +15,18 @@ export const soloRotate: Plugin = createPlugin(({
 }) => {
   matchUtilities(
     {
-      'solo-rotate': (value: unknown) => {
-        if (typeof value !== 'string') {
-          return null;
-        }
-        const result: CSSRuleObject = {
-          transform: `rotate(${value})`,
-        };
-        return result;
-      },
-      'solo-rotate-x': (value: unknown) => {
-        if (typeof value !== 'string') {
-          return null;
-        }
-        const result: CSSRuleObject = {
-          transform: `rotateX(${value})`,
-        };
-        return result;
-      },
-      'solo-rotate-y': (value: unknown) => {
-        if (typeof value !== 'string') {
-          return null;
-        }
-        const result: CSSRuleObject = {
-          transform: `rotateY(${value})`,
-        };
-        return result;
-      },
-      'solo-rotate-z': (value: unknown) => {
-        if (typeof value !== 'string') {
-          return null;
-        }
-        const result: CSSRuleObject = {
-          transform: `rotateZ(${value})`,
-        };
-        return result;
-      },
+      'solo-rotate': withStringGuard(
+        createFunctionCallUtility('transform', 'rotate'),
+      ),
+      'solo-rotate-x': withStringGuard(
+        createFunctionCallUtility('transform', 'rotateX'),
+      ),
+      'solo-rotate-y': withStringGuard(
+        createFunctionCallUtility('transform', 'rotateY'),
+      ),
+      'solo-rotate-z': withStringGuard(
+        createFunctionCallUtility('transform', 'rotateZ'),
+      ),
     },
     {
       supportsNegativeValues: true,

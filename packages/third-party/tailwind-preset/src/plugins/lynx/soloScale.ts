@@ -3,10 +3,11 @@
 // LICENSE file in the root directory of this source tree.
 import { createPlugin } from '../../helpers.js';
 import type { Plugin } from '../../helpers.js';
-import type {
-  CSSRuleObject,
-  KeyValuePair,
-} from '../../types/tailwind-types.js';
+import {
+  createFunctionCallUtility,
+  withStringGuard,
+} from '../../plugin-utils/index.js';
+import type { KeyValuePair } from '../../types/tailwind-types.js';
 
 export const soloScale: Plugin = createPlugin(({
   matchUtilities,
@@ -14,33 +15,15 @@ export const soloScale: Plugin = createPlugin(({
 }) => {
   matchUtilities(
     {
-      'solo-scale': (value: unknown) => {
-        if (typeof value !== 'string') {
-          return null;
-        }
-        const result: CSSRuleObject = {
-          transform: `scale(${value})`,
-        };
-        return result;
-      },
-      'solo-scale-x': (value: unknown) => {
-        if (typeof value !== 'string') {
-          return null;
-        }
-        const result: CSSRuleObject = {
-          transform: `scaleX(${value})`,
-        };
-        return result;
-      },
-      'solo-scale-y': (value: unknown) => {
-        if (typeof value !== 'string') {
-          return null;
-        }
-        const result: CSSRuleObject = {
-          transform: `scaleY(${value})`,
-        };
-        return result;
-      },
+      'solo-scale': withStringGuard(
+        createFunctionCallUtility('transform', 'scale'),
+      ),
+      'solo-scale-x': withStringGuard(
+        createFunctionCallUtility('transform', 'scaleX'),
+      ),
+      'solo-scale-y': withStringGuard(
+        createFunctionCallUtility('transform', 'scaleY'),
+      ),
     },
     {
       supportsNegativeValues: true,

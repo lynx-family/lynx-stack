@@ -3,10 +3,11 @@
 // LICENSE file in the root directory of this source tree.
 import { createPlugin } from '../../helpers.js';
 import type { Plugin } from '../../helpers.js';
-import type {
-  CSSRuleObject,
-  KeyValuePair,
-} from '../../types/tailwind-types.js';
+import {
+  createFunctionCallUtility,
+  withStringGuard,
+} from '../../plugin-utils/index.js';
+import type { KeyValuePair } from '../../types/tailwind-types.js';
 
 export const soloSkew: Plugin = createPlugin(({
   matchUtilities,
@@ -14,33 +15,15 @@ export const soloSkew: Plugin = createPlugin(({
 }) => {
   matchUtilities(
     {
-      'solo-skew': (value: unknown) => {
-        if (typeof value !== 'string') {
-          return null;
-        }
-        const result: CSSRuleObject = {
-          transform: `skew(${value})`,
-        };
-        return result;
-      },
-      'solo-skew-x': (value: unknown) => {
-        if (typeof value !== 'string') {
-          return null;
-        }
-        const result: CSSRuleObject = {
-          transform: `skewX(${value})`,
-        };
-        return result;
-      },
-      'solo-skew-y': (value: unknown) => {
-        if (typeof value !== 'string') {
-          return null;
-        }
-        const result: CSSRuleObject = {
-          transform: `skewY(${value})`,
-        };
-        return result;
-      },
+      'solo-skew': withStringGuard(
+        createFunctionCallUtility('transform', 'skew'),
+      ),
+      'solo-skew-x': withStringGuard(
+        createFunctionCallUtility('transform', 'skewX'),
+      ),
+      'solo-skew-y': withStringGuard(
+        createFunctionCallUtility('transform', 'skewY'),
+      ),
     },
     {
       supportsNegativeValues: true,
