@@ -11,10 +11,41 @@ import {
 } from './LynxTemplatePlugin.js';
 import { genStyleInfo } from './web/genStyleInfo.js';
 
+// https://github.com/web-infra-dev/rsbuild/blob/main/packages/core/src/types/config.ts#L1029
+type InlineChunkTestFunction = (params: {
+  size: number;
+  name: string;
+}) => boolean;
+type InlineChunkTest = RegExp | InlineChunkTestFunction;
+type InlineChunkConfig = boolean | InlineChunkTest | {
+  enable?: boolean | 'auto';
+  test: InlineChunkTest;
+};
+
+/**
+ * The options for WebEncodePluginOptions
+ *
+ * @public
+ */
+export interface WebEncodePluginOptions {
+  encodeBinary?: string;
+  inlineScripts?: InlineChunkConfig | undefined;
+}
+
 export class WebEncodePlugin {
   static name = 'WebEncodePlugin';
   static BEFORE_ENCODE_HOOK_STAGE = 100;
   static ENCODE_HOOK_STAGE = 100;
+
+  static defaultOptions: Readonly<Required<WebEncodePluginOptions>> = Object
+    .freeze<Required<WebEncodePluginOptions>>({
+      encodeBinary: 'napi',
+      inlineScripts: true,
+    });
+
+  constructor(options: WebEncodePluginOptions = {}) {
+    this.options = { ...WebEncodePlugin.defaultOptions, ...options };
+  }
 
   apply(compiler: Compiler): void {
     const isDev = process.env['NODE_ENV'] === 'development'
@@ -50,13 +81,33 @@ export class WebEncodePlugin {
         }, (encodeOptions) => {
           const { encodeData } = encodeOptions;
           const { cssMap } = encodeData.css;
+          const { manifest } = encodeData;
           const styleInfo = genStyleInfo(cssMap);
 
-          const [name, content] = last(Object.entries(encodeData.manifest))!;
+          const [, content] = last(Object.entries(manifest))!;
+
+          // Determine which assets should be inlined vs external
+          const inlinedAssetNames = new Set<string>();
+          const externalAssetNames = new Set<string>();
+
+          Object.keys(manifest).forEach(manifestName => {
+            const assert = compilation.getAsset(manifestName);
+            const shouldInline = this.#shouldInlineScript(
+              manifestName,
+              assert!.source.size(),
+            );
+
+            if (shouldInline) {
+              inlinedAssetNames.add(manifestName);
+            } else {
+              externalAssetNames.add(manifestName);
+            }
+          });
 
           if (!isDebug() && !isDev && !isRsdoctor()) {
             [
-              { name },
+              // Only add inlined assets to the deletion list
+              ...Array.from(inlinedAssetNames).map(name => ({ name })),
               encodeData.lepusCode.root,
               ...encodeData.lepusCode.chunks,
               ...encodeData.css.chunks,
@@ -119,6 +170,30 @@ export class WebEncodePlugin {
       return compilation.deleteAsset(name);
     }
   }
+
+  #shouldInlineScript(name: string, size: number): boolean {
+    const inlineConfig = this.options.inlineScripts;
+
+    if (inlineConfig instanceof RegExp) {
+      return inlineConfig.test(name);
+    }
+
+    if (typeof inlineConfig === 'function') {
+      return inlineConfig({ size, name });
+    }
+
+    if (typeof inlineConfig === 'object') {
+      if (inlineConfig.enable === false) return false;
+      if (inlineConfig.test instanceof RegExp) {
+        return inlineConfig.test.test(name);
+      }
+      return inlineConfig.test({ size, name });
+    }
+
+    return inlineConfig !== false;
+  }
+
+  protected options: Required<WebEncodePluginOptions>;
 }
 
 function last<T>(array: T[]): T | undefined {
