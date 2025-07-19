@@ -68,6 +68,7 @@ export interface PluginReactLynxOptions {
     enableRemoveCSSScope?: boolean | undefined;
     enableSSR?: boolean;
     engineVersion?: string;
+    experimental_enableReactCompiler?: boolean;
     // @alpha
     experimental_isLazyBundle?: boolean;
     extractStr?: Partial<ExtractStrConfig> | boolean;
