@@ -3,31 +3,29 @@
 // LICENSE file in the root directory of this source tree.
 import { createPlugin } from '../../helpers.js';
 import type { Plugin } from '../../helpers.js';
-import {
-  createFunctionCallUtility,
-  withStringGuard,
-} from '../../plugin-utils/index.js';
-import type { KeyValuePair } from '../../types/tailwind-types.js';
+import { createFunctionCallUtility } from '../../plugin-utils/index.js';
 
 export const soloTranslate: Plugin = createPlugin(
   ({ matchUtilities, theme }) => {
     matchUtilities(
       {
-        'solo-translate-x': withStringGuard(
-          createFunctionCallUtility('transform', 'translateX'),
+        'solo-translate-x': createFunctionCallUtility(
+          'transform',
+          'translateX',
         ),
-        'solo-translate-y': withStringGuard(
-          createFunctionCallUtility('transform', 'translateY'),
+        'solo-translate-y': createFunctionCallUtility(
+          'transform',
+          'translateY',
         ),
-        'solo-translate-z': withStringGuard((value) => {
+        'solo-translate-z': (value: string) => {
           // Prevent use of percent values for translateZ
-          if (value.includes('%')) return null;
-          return { transform: `translateZ(${value})` };
-        }),
+          if (typeof value === 'string' && value.includes('%')) return null;
+          return createFunctionCallUtility('transform', 'translateZ')(value);
+        },
       },
       {
         supportsNegativeValues: true,
-        values: theme('translate') as KeyValuePair,
+        values: theme('translate'),
       },
     );
   },

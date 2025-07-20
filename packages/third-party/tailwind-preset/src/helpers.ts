@@ -15,7 +15,6 @@ import type {
 } from 'tailwindcss/lib/util/transformThemeValue.js';
 
 import type {
-  Bound,
   BoundedPluginCreator,
   OptionsFn,
   PluginFn,
@@ -96,20 +95,25 @@ pluginImpl.withOptions = withOptions;
 export const plugin: PluginFn = pluginImpl;
 
 /**
- * Auto-binds all function-valued properties to the original object.
+ * Returns a shallow clone of the object where all function values
+ * are bound with `this` set to `undefined`,
+ * so that destructuring is safe and ESLint `unbound-method` rule won't trigger.
+ *
+ * This is only safe for objects whose function values are `this`-independent
+ *
+ * E.g. Use this when passing a `PluginAPI` to a plugin handler to ensure functions like
+ * `theme()` or `matchUtilities()` can be safely destructured and called.
  */
-function autoBind<T extends object>(obj: T): Bound<T> {
-  const result = {} as Bound<T>;
+function autoBind<T extends object>(obj: T): T {
+  return Object.fromEntries(
+    Object.entries(obj).map(([k, v]) =>
+      isFunction(v) ? [k, v.bind(undefined)] : [k, v]
+    ),
+  ) as T;
+}
 
-  for (const key of Object.keys(obj) as Array<keyof T>) {
-    const value = obj[key];
-
-    result[key] = (typeof value === 'function'
-      ? (value.bind(obj) as Bound<T>[typeof key])
-      : value) as Bound<T>[typeof key];
-  }
-
-  return result;
+function isFunction(value: unknown): value is (...args: unknown[]) => unknown {
+  return typeof value === 'function';
 }
 
 /* ─────────────────────── re-export Tailwind utility helper ───────────────── */

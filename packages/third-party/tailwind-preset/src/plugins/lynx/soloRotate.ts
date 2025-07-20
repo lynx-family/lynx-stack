@@ -3,11 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { createPlugin } from '../../helpers.js';
 import type { Plugin } from '../../helpers.js';
-import {
-  createFunctionCallUtility,
-  withStringGuard,
-} from '../../plugin-utils/index.js';
-import type { KeyValuePair } from '../../types/tailwind-types.js';
+import { createFunctionCallUtility } from '../../plugin-utils/index.js';
 
 export const soloRotate: Plugin = createPlugin(({
   matchUtilities,
@@ -15,22 +11,14 @@ export const soloRotate: Plugin = createPlugin(({
 }) => {
   matchUtilities(
     {
-      'solo-rotate': withStringGuard(
-        createFunctionCallUtility('transform', 'rotate'),
-      ),
-      'solo-rotate-x': withStringGuard(
-        createFunctionCallUtility('transform', 'rotateX'),
-      ),
-      'solo-rotate-y': withStringGuard(
-        createFunctionCallUtility('transform', 'rotateY'),
-      ),
-      'solo-rotate-z': withStringGuard(
-        createFunctionCallUtility('transform', 'rotateZ'),
-      ),
+      'solo-rotate': createFunctionCallUtility('transform', 'rotate'),
+      'solo-rotate-x': createFunctionCallUtility('transform', 'rotateX'),
+      'solo-rotate-y': createFunctionCallUtility('transform', 'rotateY'),
+      'solo-rotate-z': createFunctionCallUtility('transform', 'rotateZ'),
     },
     {
       supportsNegativeValues: true,
-      values: theme('rotate') as KeyValuePair,
+      values: theme('rotate'),
     },
   );
 });

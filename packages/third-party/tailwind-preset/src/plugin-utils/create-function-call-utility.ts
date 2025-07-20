@@ -6,8 +6,11 @@ import type { CSSRuleObject } from 'tailwindcss/types/config.js';
 export function createFunctionCallUtility(
   property: string,
   fn: string,
-): (value: string) => CSSRuleObject {
-  return (value: string) => ({
-    [property]: `${fn}(${value})`,
-  });
+): (value: string) => CSSRuleObject | null {
+  return (value: string) => {
+    if (typeof value !== 'string') return null;
+    return {
+      [property]: `${fn}(${value})`,
+    };
+  };
 }
