@@ -16,14 +16,14 @@ describe('Lynx plugin coverage sanity check', () => {
       const addComponents = vi.mocked(api.addComponents);
       const addBase = vi.mocked(api.addBase);
       const matchVariant = vi.mocked(api.matchVariant);
-      const matchComponent = vi.mocked(api.matchComponents);
+      const matchComponents = vi.mocked(api.matchComponents);
 
       const called = matchUtilities.mock.calls.length > 0
         || addUtilities.mock.calls.length > 0
         || addComponents.mock.calls.length > 0
         || addBase.mock.calls.length > 0
         || matchVariant.mock.calls.length > 0
-        || matchComponent.mock.calls.length > 0;
+        || matchComponents.mock.calls.length > 0;
 
       expect(called).toBe(true);
     });
