@@ -1,9 +1,9 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type { StrictThemeConfig } from './types/tailwind-types.js';
+import type { LynxThemeConfig } from './types/theme-types.js';
 
-export const lynxTheme: Partial<StrictThemeConfig> = {
+export const lynxTheme: Partial<LynxThemeConfig> = {
   boxShadow: {
     sm: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
     DEFAULT:
@@ -16,20 +16,6 @@ export const lynxTheme: Partial<StrictThemeConfig> = {
     '2xl': '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
     inner: 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.05)',
     none: 'none',
-  },
-  transitionProperty: {
-    // fill, stroke, backdrop-filter are not supported in Lynx
-    none: 'none',
-    all: 'all',
-    DEFAULT:
-      'color, background-color, border-color, text-decoration-color, opacity, box-shadow, transform, filter',
-
-    // 'color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter',
-    colors: 'color, background-color, border-color, text-decoration-color',
-    // 'color, background-color, border-color, text-decoration-color, fill, stroke',
-    opacity: 'opacity',
-    shadow: 'box-shadow',
-    transform: 'transform',
   },
   zIndex: {
     // value 'auto' is not allowed
@@ -102,5 +88,39 @@ export const lynxTheme: Partial<StrictThemeConfig> = {
     normal: '500px',
     midrange: '800px',
     distant: '1200px',
+  },
+  transitionProperty: {
+    // fill, stroke, backdrop-filter, box-shadow, text-decoration-color cannot be animated in Lynx
+    none: 'none',
+    all: 'all',
+    DEFAULT: 'background-color, opacity, transform, border-color, color',
+    colors: 'background-color, border-color, color',
+    visual: 'background-color, border-color, opacity, color',
+    effects: 'filter',
+    opacity: 'opacity',
+    transform: 'transform',
+    color: 'color',
+    filter: 'filter',
+    'background-color': 'background-color',
+    'border-color': 'border-color',
+  },
+  transitionDuration: {
+    DEFAULT: '150ms',
+    0: '0s',
+    75: '75ms',
+    100: '100ms',
+    150: '150ms',
+    200: '200ms',
+    300: '300ms',
+    500: '500ms',
+    700: '700ms',
+    1000: '1000ms',
+  },
+  transitionTimingFunction: {
+    DEFAULT: 'cubic-bezier(0.4, 0, 0.2, 1)',
+    linear: 'linear',
+    in: 'cubic-bezier(0.4, 0, 1, 1)',
+    out: 'cubic-bezier(0, 0, 0.2, 1)',
+    'in-out': 'cubic-bezier(0.4, 0, 0.2, 1)',
   },
 };

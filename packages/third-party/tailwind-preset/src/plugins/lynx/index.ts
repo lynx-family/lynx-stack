@@ -29,3 +29,7 @@ export { soloTranslate } from './soloTranslate.js';
 export { soloRotate } from './soloRotate.js';
 export { soloScale } from './soloScale.js';
 export { soloSkew } from './soloSkew.js';
+export { transitionProperty } from './transitionProperty.js';
+export { transitionDuration } from './transitionDuration.js';
+export { transitionDelay } from './transitionDelay.js';
+export { transitionTimingFunction } from './transitionTimingFunction.js';

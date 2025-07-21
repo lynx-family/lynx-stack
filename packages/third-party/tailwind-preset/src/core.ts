@@ -92,10 +92,10 @@ export const DEFAULT_CORE_PLUGINS: CorePluginsConfig = [
   'transformOrigin',
   // 'transform', // Defined using plugin
 
-  'transitionDelay',
-  'transitionDuration',
-  'transitionProperty',
-  'transitionTimingFunction',
+  // 'transitionDelay', // Defined using plugin
+  // 'transitionDuration', // Defined using plugin
+  // 'transitionProperty', // Defined using plugin
+  // 'transitionTimingFunction', // Defined using plugin
 
   // 'translate', // Defined using plugin
   // 'rotate', // Defined using plugin
