@@ -32,7 +32,19 @@ afterEach(() => {
 });
 
 describe('background render', () => {
-  it('should enable async render when background init render', async () => {
+  it('should render component during background initial render', async () => {
+    class Comp extends Component {
+      render() {
+        return <text>{`Hello World`}</text>;
+      }
+    }
+
+    globalEnvManager.switchToBackground();
+    root.render(<Comp />);
+    expect(__root.__firstChild.__firstChild.__values).toEqual(['Hello World']);
+  });
+
+  it('should render component synchronously during background initial render', async () => {
     class Comp extends Component {
       state = {
         a: 1,
@@ -40,7 +52,7 @@ describe('background render', () => {
       render() {
         if (this.state.a < 88) {
           this.setState({
-            a: ++this.state.a,
+            a: this.state.a + 1,
           });
         }
         return <text>{this.state.a}</text>;
