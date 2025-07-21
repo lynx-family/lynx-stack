@@ -13,15 +13,15 @@ import type { CSSRuleObject } from 'tailwindcss/types/config.js';
  * The repeat count is determined in the following order:
  *
  * 1. If `count` is provided and is a valid number, it takes precedence.
- * 2. Otherwise, `matchValue` is split by `splitDeliminator` (default: ',') to infer the count.
+ * 2. Otherwise, `matchValue` is split by `splitDelimiter` (default: ',') to infer the count.
  * 3. If neither provides a valid count, the utility will be skipped (returns `null`).
  *
  * @param {string} property - The CSS property to assign (e.g. `transition-delay`).
  * @param {RepeaterOptions} options - Configuration for repetition behavior.
  * @param {number} [options.count] - A fixed number of repetitions. Takes precedence over `matchValue`.
  * @param {string} [options.matchValue] - A string to infer repeat count from (e.g. `opacity, transform`).
- * @param {string} [options.splitDeliminator] - The delimiter to split `matchValue` with. Leading/trailing whitespaces are trimmed after splitting. Defaults to `','`
- * @param {string} [options.fillDeliminator] - The delimiter to join repeated values with. Defaults to `', '`.
+ * @param {string} [options.splitDelimiter] - The delimiter to split `matchValue` with. Leading/trailing whitespaces are trimmed after splitting. Defaults to `','`
+ * @param {string} [options.fillDelimiter] - The delimiter to join repeated values with. Defaults to `', '`.
  *
  * @returns A function that takes a value string and returns a repeated CSS declaration,
  *          or `null` if input is invalid.
@@ -41,8 +41,8 @@ export function createRepeaterUtility(
   const {
     matchValue,
     count,
-    splitDeliminator = ',',
-    fillDeliminator = ', ',
+    splitDelimiter = ',',
+    fillDelimiter = ', ',
   } = options;
 
   const valuesFromMatchValue =
@@ -51,7 +51,7 @@ export function createRepeaterUtility(
     // opaque value: 'x, var(--a, c), y'
     typeof matchValue === 'string'
       ? (isPlainIdentList(matchValue)
-        ? matchValue.split(splitDeliminator).map(v => v.trim()).filter(Boolean)
+        ? matchValue.split(splitDelimiter).map(v => v.trim()).filter(Boolean)
         : [matchValue]) // fallback to single item
       : null;
 
@@ -69,7 +69,7 @@ export function createRepeaterUtility(
   return (value: unknown) => {
     if (typeof value !== 'string') return null;
     return {
-      [property]: Array(repeatCount).fill(value).join(fillDeliminator),
+      [property]: Array(repeatCount).fill(value).join(fillDelimiter),
     };
   };
 }
@@ -93,14 +93,14 @@ export interface RepeaterOptions {
    * The delimiter used to split `matchValue` when inferring repeat count. Defaults to `','`.
    * Each segment is trimmed (i.e., leading/trailing spaces are removed) after splitting.
    */
-  splitDeliminator?: string;
+  splitDelimiter?: string;
 
   /**
    * The delimiter used to join repeated values into a single declaration. Defaults to `', '`.
    */
-  fillDeliminator?: string;
+  fillDelimiter?: string;
 }
 
 function isPlainIdentList(value: string): boolean {
-  return !value.includes('var(') && !value.includes('calc(');
+  return !/(?:var|calc|attr|url)\s*\(/i.test(value);
 }

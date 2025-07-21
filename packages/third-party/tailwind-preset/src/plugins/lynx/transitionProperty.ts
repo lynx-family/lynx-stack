@@ -9,7 +9,7 @@ export const transitionProperty: Plugin = createPlugin(
   ({ matchUtilities, theme }) => {
     const defaultTimingFunction = theme(
       'transitionTimingFunction.DEFAULT',
-      'ease', // Lynx default transition-timing-function is 'linear' (Web is 'ease'), we use 'ease' for similar DX experience with Web
+      'ease', // Lynx default is 'linear' (Web is 'ease'), we use 'ease' for similar DX experience
     );
     const defaultDuration = theme('transitionDuration.DEFAULT', '0s');
 

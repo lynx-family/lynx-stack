@@ -71,6 +71,7 @@ describe('createRepeaterUtility', () => {
   });
 
   it('treats complex matchValue as single item', () => {
+    // CSS variables with commas should not be split - treated as single value
     const fn = createRepeaterUtility('transition-delay', {
       matchValue: 'x, var(--a, y), z',
     });
@@ -82,8 +83,8 @@ describe('createRepeaterUtility', () => {
   it('respects custom split and fill delimiters', () => {
     const fn = createRepeaterUtility('transition-delay', {
       matchValue: 'opacity|transform',
-      splitDeliminator: '|',
-      fillDeliminator: ' ',
+      splitDelimiter: '|',
+      fillDelimiter: ' ',
     });
     expect(fn('200ms')).toEqual({
       'transition-delay': '200ms 200ms',
