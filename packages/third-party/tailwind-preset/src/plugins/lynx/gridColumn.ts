@@ -2,15 +2,9 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { createPlugin } from '../../helpers.js';
-import type {
-  CSSRuleObject,
-  KeyValuePair,
-  Plugin,
-} from '../../types/tailwind-types.js';
+import type { CSSRuleObject, Plugin } from '../../types/tailwind-types.js';
 
 export const gridColumn: Plugin = createPlugin(({ matchUtilities, theme }) => {
-  const values = theme('gridColumn') as KeyValuePair<string, string>;
-
   matchUtilities(
     {
       col: (value: unknown) => {
@@ -24,6 +18,6 @@ export const gridColumn: Plugin = createPlugin(({ matchUtilities, theme }) => {
         } as CSSRuleObject;
       },
     },
-    { values },
+    { values: theme('gridColumn') },
   );
 });

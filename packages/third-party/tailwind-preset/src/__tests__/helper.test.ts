@@ -128,20 +128,43 @@ describe('helpers.ts', () => {
     expect(result.config).toEqual({ env: 'test' });
     expect(cfgFactory).toHaveBeenCalledWith({ env: 'test' });
   });
+});
 
-  /* ------------------------------------------------------------------ *
-   *  autoBind                                                          *
-   * ------------------------------------------------------------------ */
-  it('autoBind binds only functions and preserves other values', () => {
-    const obj = {
-      x: 1,
-      greet() {
-        return this.x;
-      },
-    };
+describe('autoBind', () => {
+  interface API {
+    x: number;
+    greet(this: API): string;
+    echo(msg: string): string;
+  }
 
-    const bound = autoBind(obj);
+  const impl: API = {
+    x: 1,
+    greet() {
+      return `hi ${this.x}`;
+    },
+    echo(msg) {
+      return msg;
+    },
+  };
+
+  const bound = autoBind(impl);
+
+  it('preserves non-function values', () => {
     expect(bound.x).toBe(1);
-    expect(bound.greet()).toBe(1);
+  });
+
+  it('preserves callability for plain functions', () => {
+    expect(bound.echo('yo')).toBe('yo');
+  });
+
+  it('autoBind fails with `this`-dependent methods', () => {
+    const { greet } = bound;
+    // Intentionally calling an unbound method to confirm that `this` is lost
+    expect(() => (greet as (this: unknown) => string)()).toThrow(TypeError);
+  });
+
+  it('`this`-independent methods can be destructured without losing context', () => {
+    const { echo } = bound;
+    expect(echo('test')).toBe('test');
   });
 });

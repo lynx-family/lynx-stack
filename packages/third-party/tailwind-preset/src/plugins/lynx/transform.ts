@@ -4,6 +4,7 @@
 
 import { createPlugin } from '../../helpers.js';
 import type { Plugin } from '../../helpers.js';
+import type { CSSRuleObject } from '../../types/tailwind-types.js';
 
 export type TransformKey =
   | 'translateX'
@@ -60,20 +61,33 @@ export const cssTransformValue: string = [
   `scale(var(${cssTransformVarMap.scaleX}), var(${cssTransformVarMap.scaleY}))`,
 ].join(' ');
 
-export const transform: Plugin = createPlugin(({ addUtilities }) => {
-  addUtilities(
-    {
-      '.transform': { transform: cssTransformValue },
-      '.transform-cpu': {
-        transform: cssTransformValue,
+export const transform: Plugin = createPlugin(
+  ({ addUtilities, matchUtilities }) => {
+    addUtilities(
+      {
+        '.transform': { transform: cssTransformValue },
+        '.transform-cpu': {
+          transform: cssTransformValue,
+        },
+        '.transform-gpu': {
+          transform: cssTransformValue,
+        },
+        '.transform-none': { transform: 'none' },
       },
-      '.transform-gpu': {
-        transform: cssTransformValue,
+    );
+    matchUtilities({
+      transform: (value: unknown) => {
+        if (typeof value !== 'string') {
+          return null;
+        }
+        const result: CSSRuleObject = {
+          transform: value,
+        };
+        return result;
       },
-      '.transform-none': { transform: 'none' },
-    },
-  );
-});
+    });
+  },
+);
 
 /* Abbreviated Tailwind Transform Variables
  *
