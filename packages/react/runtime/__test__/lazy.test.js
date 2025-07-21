@@ -24,10 +24,15 @@ describe('Lazy Exports', () => {
   });
 
   test('export APIs from "react/compat"', async () => {
+    const realAPIs = Object.assign(
+      {},
+      await import('@lynx-js/react/compat'),
+    );
+
     expect(
       new Set(Object.keys(ReactCompatExports)),
     ).toStrictEqual(
-      new Set(['startTransition', 'useTransition']),
+      new Set(Object.keys(realAPIs)),
     );
   });
 
