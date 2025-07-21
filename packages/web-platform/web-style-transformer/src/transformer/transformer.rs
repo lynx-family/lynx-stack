@@ -1,3 +1,7 @@
+use inline_style_parser::parse_inline_style::Transformer;
+use inline_style_parser::{is_newline, is_white_space, parse_inline_style};
+
+use crate::str_to_u16_slice;
 use crate::transformer::constants::{
   AUTO_STR_U16, COLOR_APPENDIX_FOR_GRADIENT, COLOR_APPENDIX_FOR_NORMAL_COLOR, COLOR_STR_U16,
   FLEX_AUTO_TRANSFORMED_VALUES, FLEX_BASIS_CSS_VAR_NAME, FLEX_GROW_CSS_VAR_NAME,
@@ -8,11 +12,7 @@ use crate::transformer::constants::{
   LINEAR_WEIGHT_SUM_CSS_VAR_NAME, LINEAR_WEIGHT_SUM_STR_U16, LYNX_TEXT_BG_COLOR_STR_U16,
   NONE_STR_U16,
 };
-use crate::{
-  get_rename_rule_value, get_replace_rule_value,
-  parser::{self, parse_inline_style::Transformer},
-};
-use crate::{is_newline, is_white_space, str_to_u16_slice};
+use crate::{get_rename_rule_value, get_replace_rule_value};
 
 pub struct TransformerData<'a> {
   source: &'a [u16],
@@ -389,7 +389,7 @@ pub fn transform_inline_style_string<'a>(source: &'a [u16]) -> (Vec<u16>, Vec<u1
     offset: 0,
     extra_children_styles: Vec::new(),
   };
-  parser::parse_inline_style::parse_inline_style(source, &mut transformer);
+  parse_inline_style::parse_inline_style(source, &mut transformer);
   if transformer.offset != 0 {
     // append the remaining part of the source
     transformer

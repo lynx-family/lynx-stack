@@ -46,8 +46,8 @@ interface UtilityPluginOptions {
  * Type helper: binds all function-valued properties in T.
  */
 type Bound<T> = {
-  [K in keyof T]: T[K] extends (...args: infer A) => infer R
-    ? (this: void, ...args: A) => R
+  [K in keyof T]: T[K] extends (...args: infer _A) => infer _R
+    ? OmitThisParameter<T[K]>
     : T[K];
 };
 

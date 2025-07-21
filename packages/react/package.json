@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/react",
-  "version": "0.111.1",
+  "version": "0.111.2",
   "description": "ReactLynx is a framework for developing Lynx applications with familiar React.",
   "repository": {
     "type": "git",
@@ -13,6 +13,11 @@
       "types": "./types/react.d.ts",
       "lazy": "./runtime/lazy/react.js",
       "default": "./runtime/lib/index.js"
+    },
+    "./debug": {
+      "types": "./runtime/debug/index.d.ts",
+      "lazy": "./runtime/debug/index.js",
+      "default": "./runtime/debug/index.js"
     },
     "./experimental/lazy/import": {
       "types": "./runtime/lazy/import.d.ts",

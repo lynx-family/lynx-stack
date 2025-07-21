@@ -5,6 +5,7 @@ import { options } from 'preact';
 import type { Component, ComponentClass, VNode } from 'preact';
 
 import { COMPONENT, DIFF, DIFFED, RENDER } from '../renderToOpcodes/constants.js';
+import { getDisplayName } from '../utils.js';
 
 export function initProfileHook(): void {
   const oldDiff = options[DIFF];
@@ -48,8 +49,4 @@ export function initProfileHook(): void {
     };
     oldRender?.(vnode);
   };
-}
-
-function getDisplayName(type: ComponentClass): string {
-  return type.displayName ?? type.name;
 }

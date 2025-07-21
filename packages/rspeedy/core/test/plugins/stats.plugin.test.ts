@@ -35,6 +35,6 @@ describe('stats plugin', () => {
 
     const config = rspeedy.getRsbuildConfig()
 
-    expect(config.performance?.profile).toBe(true)
+    expect(config.performance?.profile).toBe(false)
   })
 })

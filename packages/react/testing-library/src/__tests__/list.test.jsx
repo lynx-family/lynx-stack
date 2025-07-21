@@ -38,25 +38,7 @@ describe('list', () => {
     const list = container.firstChild;
     expect(list.props).toMatchInlineSnapshot(`undefined`);
     const uid0 = elementTree.enterListItemAtIndex(list, 0);
-    expect(__pendingListUpdates.values).toMatchInlineSnapshot(`
-      {
-        "2": [
-          {
-            "insertAction": [],
-            "removeAction": [],
-            "updateAction": [
-              {
-                "flush": false,
-                "from": 0,
-                "item-key": 0,
-                "to": 0,
-                "type": "__Card__:__snapshot_a9e46_test_2",
-              },
-            ],
-          },
-        ],
-      }
-    `);
+    expect(__pendingListUpdates.values).toMatchInlineSnapshot(`{}`);
     expect(container).toMatchInlineSnapshot(`
       <page>
         <list
@@ -73,32 +55,7 @@ describe('list', () => {
       </page>
     `);
     const uid1 = elementTree.enterListItemAtIndex(list, 1);
-    expect(__pendingListUpdates.values).toMatchInlineSnapshot(`
-      {
-        "2": [
-          {
-            "insertAction": [],
-            "removeAction": [],
-            "updateAction": [
-              {
-                "flush": false,
-                "from": 0,
-                "item-key": 0,
-                "to": 0,
-                "type": "__Card__:__snapshot_a9e46_test_2",
-              },
-              {
-                "flush": false,
-                "from": 1,
-                "item-key": 1,
-                "to": 1,
-                "type": "__Card__:__snapshot_a9e46_test_2",
-              },
-            ],
-          },
-        ],
-      }
-    `);
+    expect(__pendingListUpdates.values).toMatchInlineSnapshot(`{}`);
     expect(container).toMatchInlineSnapshot(`
       <page>
         <list
@@ -124,32 +81,7 @@ describe('list', () => {
     expect(uid0).toMatchInlineSnapshot(`2`);
     expect(uid1).toMatchInlineSnapshot(`5`);
     elementTree.leaveListItem(list, uid0);
-    expect(__pendingListUpdates.values).toMatchInlineSnapshot(`
-      {
-        "2": [
-          {
-            "insertAction": [],
-            "removeAction": [],
-            "updateAction": [
-              {
-                "flush": false,
-                "from": 0,
-                "item-key": 0,
-                "to": 0,
-                "type": "__Card__:__snapshot_a9e46_test_2",
-              },
-              {
-                "flush": false,
-                "from": 1,
-                "item-key": 1,
-                "to": 1,
-                "type": "__Card__:__snapshot_a9e46_test_2",
-              },
-            ],
-          },
-        ],
-      }
-    `);
+    expect(__pendingListUpdates.values).toMatchInlineSnapshot(`{}`);
     expect(container).toMatchInlineSnapshot(`
       <page>
         <list
@@ -174,39 +106,7 @@ describe('list', () => {
     `);
     const uid2 = elementTree.enterListItemAtIndex(list, 2);
     expect(__pendingListUpdates.values).toMatchInlineSnapshot(
-      `
-      {
-        "2": [
-          {
-            "insertAction": [],
-            "removeAction": [],
-            "updateAction": [
-              {
-                "flush": false,
-                "from": 0,
-                "item-key": 0,
-                "to": 0,
-                "type": "__Card__:__snapshot_a9e46_test_2",
-              },
-              {
-                "flush": false,
-                "from": 1,
-                "item-key": 1,
-                "to": 1,
-                "type": "__Card__:__snapshot_a9e46_test_2",
-              },
-              {
-                "flush": false,
-                "from": 2,
-                "item-key": 2,
-                "to": 2,
-                "type": "__Card__:__snapshot_a9e46_test_2",
-              },
-            ],
-          },
-        ],
-      }
-    `,
+      `{}`,
     );
     expect(container).toMatchInlineSnapshot(`
       <page>
@@ -746,5 +646,119 @@ describe('list - deferred <list-item/> should render as normal', () => {
     });
 
     expect(renders[0]).toHaveBeenCalledTimes(1); // change from defer={true} to defer={false} should render the component
+  });
+
+  it('should unmount when reused', async () => {
+    class U extends Component {
+      componentWillUnmount() {
+        this.props.onUnmount?.();
+      }
+      render() {
+        return null;
+      }
+    }
+
+    const unmounts = [vi.fn(), vi.fn(), vi.fn()];
+
+    function App() {
+      return (
+        <list
+          custom-list-name='list-container'
+          style='height: 700rpx; width: 700rpx; background-color: #f0f0f0;'
+        >
+          {Array.from({ length: 3 }).map((_, index) => (
+            <list-item item-key={`${index}`} key={index} defer={{ unmountRecycled: true }}>
+              <view style='height: 50rpx; width: 600rpx; background-color: #fff; border-bottom: 1px solid #ccc;'>
+                <text style='padding: 10rpx;'>Item {index + 1}</text>
+              </view>
+              <U onUnmount={unmounts[index]} />
+            </list-item>
+          ))}
+        </list>
+      );
+    }
+
+    const { container } = render(<App />);
+    expect(container).toMatchInlineSnapshot(`
+      <page>
+        <list
+          custom-list-name="list-container"
+          style="height: 700rpx; width: 700rpx; background-color: #f0f0f0;"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_22","item-key":"0"},{"position":1,"type":"__Card__:__snapshot_a9e46_test_22","item-key":"1"},{"position":2,"type":"__Card__:__snapshot_a9e46_test_22","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
+        />
+      </page>
+    `);
+
+    const list = container.firstChild;
+
+    const p = [
+      elementTree.enterListItemAtIndex(list, 0),
+      elementTree.enterListItemAtIndex(list, 1),
+    ];
+
+    expect(p[0].then).toBeTypeOf('function');
+    expect(p[1].then).toBeTypeOf('function');
+
+    expect(container).toMatchInlineSnapshot(`
+      <page>
+        <list
+          custom-list-name="list-container"
+          style="height: 700rpx; width: 700rpx; background-color: #f0f0f0;"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_22","item-key":"0"},{"position":1,"type":"__Card__:__snapshot_a9e46_test_22","item-key":"1"},{"position":2,"type":"__Card__:__snapshot_a9e46_test_22","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
+        />
+      </page>
+    `);
+
+    await Promise.all(p);
+
+    elementTree.leaveListItem(list, await p[0]);
+    p[2] = elementTree.enterListItemAtIndex(list, 2);
+
+    await Promise.all(p);
+
+    expect(unmounts[0]).toHaveBeenCalledTimes(1);
+
+    expect(container).toMatchInlineSnapshot(`
+      <page>
+        <list
+          custom-list-name="list-container"
+          style="height: 700rpx; width: 700rpx; background-color: #f0f0f0;"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_22","item-key":"0"},{"position":1,"type":"__Card__:__snapshot_a9e46_test_22","item-key":"1"},{"position":2,"type":"__Card__:__snapshot_a9e46_test_22","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
+        >
+          <list-item
+            item-key="2"
+          >
+            <view
+              style="height: 50rpx; width: 600rpx; background-color: #fff; border-bottom: 1px solid #ccc;"
+            >
+              <text
+                style="padding: 10rpx;"
+              >
+                Item 
+                <wrapper>
+                  3
+                </wrapper>
+              </text>
+            </view>
+          </list-item>
+          <list-item
+            item-key="1"
+          >
+            <view
+              style="height: 50rpx; width: 600rpx; background-color: #fff; border-bottom: 1px solid #ccc;"
+            >
+              <text
+                style="padding: 10rpx;"
+              >
+                Item 
+                <wrapper>
+                  2
+                </wrapper>
+              </text>
+            </view>
+          </list-item>
+        </list>
+      </page>
+    `);
   });
 });

@@ -488,7 +488,7 @@ importers:
   packages/rspeedy/plugin-react-alias:
     dependencies:
       unrs-resolver:
-        specifier: ^1.9.2
+        specifier: 1.9.2
         version: 1.9.2
     devDependencies:
       '@lynx-js/react':

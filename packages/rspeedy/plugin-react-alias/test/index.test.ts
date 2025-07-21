@@ -66,6 +66,10 @@ describe('React - alias', () => {
       ),
     )
 
+    expect(config.resolve.alias).not.toHaveProperty(
+      '@lynx-js/react/debug$',
+    )
+
     expect(config.resolve.alias).toHaveProperty(
       'preact$',
       expect.stringContaining(
@@ -193,6 +197,11 @@ describe('React - alias', () => {
       expect.stringContaining(
         '/packages/react/runtime/lib/internal.js'.replaceAll('/', path.sep),
       ),
+    )
+
+    expect(config.resolve.alias).toHaveProperty(
+      '@lynx-js/react/debug$',
+      false,
     )
   })
 

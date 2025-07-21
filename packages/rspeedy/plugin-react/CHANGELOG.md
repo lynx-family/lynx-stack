@@ -1,5 +1,23 @@
 # @lynx-js/react-rsbuild-plugin
 
+## 0.10.8
+
+### Patch Changes
+
+- Fix "TypeError: cannot read property 'call' of undefined" error during HMR updates. ([#1304](https://github.com/lynx-family/lynx-stack/pull/1304))
+
+- Supports extractStr for large JSON ([#1230](https://github.com/lynx-family/lynx-stack/pull/1230))
+
+- Change `extractStr` to `false` when `performance.chunkSplit.strategy` is not `all-in-one`. ([#1251](https://github.com/lynx-family/lynx-stack/pull/1251))
+
+- Updated dependencies [[`cb7feb6`](https://github.com/lynx-family/lynx-stack/commit/cb7feb6e8cc9f4b83ac3147bd3e5a82059caa06a), [`ec7228f`](https://github.com/lynx-family/lynx-stack/commit/ec7228fadfb917a1f6149aca4775386badae73fa)]:
+  - @lynx-js/template-webpack-plugin@0.8.2
+  - @lynx-js/react-alias-rsbuild-plugin@0.10.8
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/react-refresh-webpack-plugin@0.3.4
+  - @lynx-js/react-webpack-plugin@0.6.18
+  - @lynx-js/css-extract-webpack-plugin@0.6.0
+
 ## 0.10.7
 
 ### Patch Changes

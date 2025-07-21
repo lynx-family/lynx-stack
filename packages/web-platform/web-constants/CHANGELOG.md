@@ -1,5 +1,22 @@
 # @lynx-js/web-constants
 
+## 0.15.2
+
+### Patch Changes
+
+- feat: move SSR hydrate essential info to the ssr attribute ([#1292](https://github.com/lynx-family/lynx-stack/pull/1292))
+
+  We found that in browser there is no simple tool to decode a base64 string
+
+  Therefore we move the data to `ssr` attribute
+
+  Also fix some ssr issues
+
+- feat: support \_\_MarkTemplateElement, \_\_MarkPartElement and \_\_GetTemplateParts for all-on-ui ([#1275](https://github.com/lynx-family/lynx-stack/pull/1275))
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.15.2
+
 ## 0.15.1
 
 ### Patch Changes

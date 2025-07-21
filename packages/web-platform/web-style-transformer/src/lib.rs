@@ -1,6 +1,5 @@
 use wasm_bindgen::prelude::*;
 
-pub mod parser;
 pub mod transformer;
 
 // lifted from the `console_log` example

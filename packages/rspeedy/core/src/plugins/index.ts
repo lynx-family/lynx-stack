@@ -18,7 +18,6 @@ async function applyDebugPlugins(
     import('./inspect.plugin.js').then(({ pluginInspect }) =>
       pluginInspect(config)
     ),
-    import('./stats.plugin.js').then(({ pluginStats }) => pluginStats()),
   ])
 
   rsbuildInstance.addPlugins(await Promise.all(debugPlugins))

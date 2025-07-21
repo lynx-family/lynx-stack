@@ -1,5 +1,11 @@
 # create-rspeedy
 
+## 0.10.2
+
+### Patch Changes
+
+- Add `import '@lynx-js/react/debug'` for all templates. ([#1250](https://github.com/lynx-family/lynx-stack/pull/1250))
+
 ## 0.10.1
 
 ### Patch Changes
