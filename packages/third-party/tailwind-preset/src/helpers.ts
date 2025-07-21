@@ -15,6 +15,7 @@ import type {
 } from 'tailwindcss/lib/util/transformThemeValue.js';
 
 import type {
+  Bound,
   BoundedPluginCreator,
   OptionsFn,
   PluginFn,
@@ -104,12 +105,12 @@ export const plugin: PluginFn = pluginImpl;
  * E.g. Use this when passing a `PluginAPI` to a plugin handler to ensure functions like
  * `theme()` or `matchUtilities()` can be safely destructured and called.
  */
-function autoBind<T extends object>(obj: T): T {
+function autoBind<T extends object>(obj: T): Bound<T> {
   return Object.fromEntries(
     Object.entries(obj).map(([k, v]) =>
       isFunction(v) ? [k, v.bind(undefined)] : [k, v]
     ),
-  ) as T;
+  ) as Bound<T>;
 }
 
 function isFunction(value: unknown): value is (...args: unknown[]) => unknown {

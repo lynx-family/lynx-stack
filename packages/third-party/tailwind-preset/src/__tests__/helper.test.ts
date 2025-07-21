@@ -130,7 +130,7 @@ describe('helpers.ts', () => {
   });
 });
 
-describe('Bound + autoBind', () => {
+describe('autoBind', () => {
   interface API {
     x: number;
     greet(this: API): string;
@@ -147,7 +147,7 @@ describe('Bound + autoBind', () => {
     },
   };
 
-  const bound = autoBind(impl) as Bound<API>;
+  const bound = autoBind(impl);
 
   it('preserves non-function values', () => {
     expect(bound.x).toBe(1);
@@ -157,13 +157,13 @@ describe('Bound + autoBind', () => {
     expect(bound.echo('yo')).toBe('yo');
   });
 
-  it('fails without autoBind for `this`-dependent methods', () => {
-    // eslint-disable-next-line @typescript-eslint/unbound-method
-    const { greet } = impl;
+  it('autoBind fails with `this`-dependent methods', () => {
+    const { greet } = bound;
     // Intentionally calling an unbound method to confirm that `this` is lost
     expect(() => (greet as (this: unknown) => string)()).toThrow(TypeError);
   });
-  it('can be destructured without losing context', () => {
+
+  it('`this`-independent methods can be destructured without losing context', () => {
     const { echo } = bound;
     expect(echo('test')).toBe('test');
   });
