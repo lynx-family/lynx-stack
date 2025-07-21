@@ -31,3 +31,10 @@ declare function startTransition(cb: () => void): void;
  */
 declare function useTransition(): [false, typeof startTransition];
 export { startTransition, useTransition };
+
+// type for the default export
+declare const _default: typeof import('@lynx-js/react') & {
+  startTransition: typeof startTransition;
+  useTransition: typeof useTransition;
+};
+export default _default;

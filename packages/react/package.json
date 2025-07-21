@@ -16,7 +16,7 @@
     },
     "./compat": {
       "types": "./runtime/compat/index.d.ts",
-      "lazy": "./runtime/compat/index.js",
+      "lazy": "./runtime/lazy/compat.js",
       "default": "./runtime/compat/index.js"
     },
     "./debug": {
@@ -109,6 +109,9 @@
   "types": "./types/react.d.ts",
   "typesVersions": {
     "*": {
+      "compat": [
+        "./runtime/compat/index.d.ts"
+      ],
       "experimental/lazy/import": [
         "./runtime/lazy/import.d.ts"
       ],

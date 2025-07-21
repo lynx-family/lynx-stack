@@ -208,3 +208,6 @@ declare module '@lynx-js/types' {
 }
 
 export type { JSX } from '../runtime/jsx-runtime/index.d.ts';
+
+declare const _default: typeof import('@lynx-js/react');
+export default _default;

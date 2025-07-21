@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import * as ReactLynx from '@lynx-js/react';
+import ReactLynx from '@lynx-js/react';
 import { startTransition as preactStartTransition, useTransition as preactUseTransition } from 'preact/compat';
 
 import compat from '../../compat';
