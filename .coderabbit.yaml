@@ -28,7 +28,7 @@ reviews:
           - `./packages/webpack/react-webpack-plugin/**`
         Or when the linked issue has lable "framework:React"
   path_instructions:
-    - path: "packages/react/transform/**"
+    - path: "./packages/react/transform/**"
       instructions: |
         When reviewing changes in this directory,
         keep in mind that transformed code will call specific runtime APIs,
