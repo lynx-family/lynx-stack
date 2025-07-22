@@ -27,3 +27,12 @@ reviews:
           - `./packages/rspeedy/plugin-react-alias/**`
           - `./packages/webpack/react-webpack-plugin/**`
         Or when the linked issue has lable "framework:React"
+  path_instructions:
+    - path: "packages/react/transform"
+      instructions: |
+        When reviewing changes in this directory,
+        keep in mind that transformed code will call specific runtime APIs,
+        so any changes here should have corresponding updates in the runtime code.
+        If the updates in the runtime code introduces incompatible changes
+        (e.g., code transformed by old version of transformer will not work with new runtime),
+        it should be reflected in changesets.

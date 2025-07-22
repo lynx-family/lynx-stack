@@ -18,3 +18,4 @@
 
 - [ ] Tests updated (or not required).
 - [ ] Documentation updated (or not required).
+- [ ] Changeset added, and when a BREAK CHANGE occurs, it needs to be clearly marked (or not required).
