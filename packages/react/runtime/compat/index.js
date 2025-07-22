@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { startTransition, useTransition } from 'preact/compat';
 
+/* eslint-disable-next-line import/default */
 import ReactLynx from '@lynx-js/react';
 
 export default {

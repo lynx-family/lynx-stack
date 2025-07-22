@@ -1,10 +1,12 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import path from 'node:path'
 
 import type { RsbuildPlugin } from '@rsbuild/core'
+import semver from 'semver'
 import type { ResolveResult } from 'unrs-resolver'
 
 export interface Options {
@@ -40,6 +42,22 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
           paths: [rootPath ?? api.context.rootPath],
         }),
       )
+
+      const pkgPath = path.join(reactLynxDir, 'package.json')
+      const pkgContent = readFileSync(pkgPath, 'utf-8')
+
+      let version: string | undefined
+      try {
+        const pkg = JSON.parse(pkgContent) as { version?: string }
+        version = semver.coerce(pkg?.version ?? undefined)?.version
+      } catch {
+        throw new Error('Failed to parse @lynx-js/react version')
+      }
+
+      if (!version) {
+        throw new Error('version field not found in @lynx-js/react package')
+      }
+
       const resolve = createLazyResolver(
         reactLynxDir,
         lazy ? ['lazy', 'import'] : ['import'],
@@ -69,7 +87,9 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
           resolve('@lynx-js/react/lepus/jsx-dev-runtime'),
           resolve('@lynx-js/react'),
           resolve('@lynx-js/react/lepus'),
-          resolve('@lynx-js/react/compat'),
+          semver.gte(version, '0.112.0')
+            ? resolve('@lynx-js/react/compat')
+            : Promise.resolve(null),
         ])
 
         const jsxRuntime = {
@@ -156,10 +176,16 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
             '@lynx-js/react$',
             reactLepus.background,
           )
-          .set(
-            '@lynx-js/react/compat$',
-            reactCompat,
-          )
+
+        if (reactCompat) {
+          chain
+            .resolve
+            .alias
+            .set(
+              '@lynx-js/react/compat$',
+              reactCompat,
+            )
+        }
 
         const preactEntries = [
           'preact',

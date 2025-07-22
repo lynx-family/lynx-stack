@@ -44,7 +44,9 @@
     "@lynx-js/react-webpack-plugin": "workspace:*",
     "@lynx-js/vitest-setup": "workspace:*",
     "@microsoft/api-extractor": "catalog:",
-    "@rsbuild/core": "catalog:rsbuild"
+    "@rsbuild/core": "catalog:rsbuild",
+    "@types/semver": "^7.7.0",
+    "semver": "^7.7.2"
   },
   "engines": {
     "node": ">=18"
