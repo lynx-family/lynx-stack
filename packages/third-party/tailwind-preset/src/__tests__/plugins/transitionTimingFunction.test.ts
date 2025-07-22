@@ -17,9 +17,8 @@ describe('transitionTimingFunction plugin', () => {
           DEFAULT: 'ease-in-out', // will be filtered out
         },
         transitionProperty: {
-          DEFAULT: 'all',
+          DEFAULT: 'background-color, border-color, opacity, transform, color',
           colors: 'color, background-color',
-          visual: 'opacity, transform, visibility',
           effects: 'filter, box-shadow',
         },
       },
@@ -42,8 +41,8 @@ describe('transitionTimingFunction plugin', () => {
 
     // Invalid values
     expect(utils['ease']?.(false)).toBeNull();
-    expect(utils['ease-effects']?.(null)).toBeNull();
-    expect(utils['ease-visual']?.(123)).toBeNull();
+    expect(utils['ease-colors']?.(null)).toBeNull();
+    expect(utils['ease-colors']?.(123)).toBeNull();
 
     // Single value
     expect(utils['ease']?.('linear')).toEqual({
@@ -55,16 +54,12 @@ describe('transitionTimingFunction plugin', () => {
       'transition-timing-function': 'ease-in, ease-in',
     });
 
-    expect(utils['ease-visual']?.('ease')).toEqual({
-      'transition-timing-function': 'ease, ease, ease',
+    expect(utils['ease-effects']?.('ease-out')).toEqual({
+      'transition-timing-function': 'ease-out, ease-out',
     });
 
-    expect(utils['ease-effects']?.('ease-in-out')).toEqual({
-      'transition-timing-function': 'ease-in-out, ease-in-out',
-    });
-
-    expect(utils['ease-repeat']?.('ease')).toEqual({
-      'transition-timing-function': 'ease',
+    expect(utils['ease-n']?.('ease')).toEqual({
+      'transition-timing-function': 'ease, ease, ease, ease, ease',
     });
   });
 });

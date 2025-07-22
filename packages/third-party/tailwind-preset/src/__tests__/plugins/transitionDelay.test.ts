@@ -16,10 +16,8 @@ describe('transitionDelay plugin', () => {
           DEFAULT: '300ms', // should be filtered out
         },
         transitionProperty: {
-          DEFAULT: 'all',
-          colors: 'color, background-color',
-          visual: 'opacity, visibility, transform',
-          effects: 'box-shadow, filter',
+          DEFAULT: 'background-color, border-color, opacity, transform, color',
+          colors: 'background-color, border-color',
         },
       },
     });
@@ -41,8 +39,8 @@ describe('transitionDelay plugin', () => {
 
     // Invalid types
     expect(utils['delay']?.(null)).toBeNull();
-    expect(utils['delay-effects']?.(false)).toBeNull();
-    expect(utils['delay-visual']?.(42)).toBeNull();
+    expect(utils['delay-colors']?.(false)).toBeNull();
+    expect(utils['delay-colors']?.(42)).toBeNull();
 
     // Basic delay
     expect(utils['delay']?.('100ms')).toEqual({
@@ -54,16 +52,8 @@ describe('transitionDelay plugin', () => {
       'transition-delay': '200ms, 200ms',
     });
 
-    expect(utils['delay-visual']?.('100ms')).toEqual({
-      'transition-delay': '100ms, 100ms, 100ms',
-    });
-
-    expect(utils['delay-effects']?.('250ms')).toEqual({
-      'transition-delay': '250ms, 250ms',
-    });
-
-    expect(utils['delay-repeat']?.('400ms')).toEqual({
-      'transition-delay': '400ms',
+    expect(utils['delay-n']?.('400ms')).toEqual({
+      'transition-delay': '400ms, 400ms, 400ms, 400ms, 400ms',
     });
   });
 });

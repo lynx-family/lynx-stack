@@ -3,29 +3,33 @@
 // LICENSE file in the root directory of this source tree.
 import { createPlugin } from '../../helpers.js';
 import type { Plugin } from '../../helpers.js';
-import { createRepeaterUtility } from '../../plugin-utils/index.js';
+import {
+  TRANSITION_REPEATED_MODIFIER,
+  createRepeaterUtility,
+} from '../../plugin-utils/index.js';
 
 export const transitionDelay: Plugin = createPlugin(
   ({ matchUtilities, theme }) => {
+    const transitionProps = theme('transitionProperty', '') ?? {};
+    const propEntries = Object.entries(transitionProps).filter(
+      ([modifier]) => modifier !== 'DEFAULT',
+    );
     const propDefault = theme('transitionProperty.DEFAULT', '');
-    const propColors = theme('transitionProperty.colors', '');
-    const propVisual = theme('transitionProperty.visual', '');
-    const propEffects = theme('transitionProperty.effects', '');
 
     matchUtilities({
       delay: createRepeaterUtility('transition-delay', { count: 1 }),
-      'delay-repeat': createRepeaterUtility('transition-delay', {
-        matchValue: propDefault,
-      }),
-      'delay-colors': createRepeaterUtility('transition-delay', {
-        matchValue: propColors,
-      }),
-      'delay-visual': createRepeaterUtility('transition-delay', {
-        matchValue: propVisual,
-      }),
-      'delay-effects': createRepeaterUtility('transition-delay', {
-        matchValue: propEffects,
-      }),
+      [`delay-${TRANSITION_REPEATED_MODIFIER}`]: createRepeaterUtility(
+        'transition-delay',
+        {
+          matchValue: propDefault,
+        },
+      ),
+      ...Object.fromEntries(
+        propEntries.map(([modifier, value]) => [
+          `delay-${modifier}`,
+          createRepeaterUtility('transition-delay', { matchValue: value }),
+        ]),
+      ),
     }, {
       values: Object.fromEntries(
         Object.entries(theme('transitionDelay') ?? {}).filter(([modifier]) =>

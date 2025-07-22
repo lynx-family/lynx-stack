@@ -3,30 +3,36 @@
 // LICENSE file in the root directory of this source tree.
 import { createPlugin } from '../../helpers.js';
 import type { Plugin } from '../../helpers.js';
-import { createRepeaterUtility } from '../../plugin-utils/index.js';
+import {
+  TRANSITION_REPEATED_MODIFIER,
+  createRepeaterUtility,
+} from '../../plugin-utils/index.js';
 
 export const transitionTimingFunction: Plugin = createPlugin(
   ({ matchUtilities, theme }) => {
+    const transitionProps = theme('transitionProperty', '') ?? {};
+
+    const propEntries = Object.entries(transitionProps).filter(
+      ([modifier]) => modifier !== 'DEFAULT',
+    );
     const propDefault = theme('transitionProperty.DEFAULT', '');
-    const propColors = theme('transitionProperty.colors', '');
-    const propVisual = theme('transitionProperty.visual', '');
-    const propEffects = theme('transitionProperty.effects', '');
 
     matchUtilities({
       ease: createRepeaterUtility('transition-timing-function', { count: 1 }),
-      'ease-repeat': createRepeaterUtility('transition-timing-function', {
-        matchValue: propDefault,
-      }),
-      'ease-colors': createRepeaterUtility('transition-timing-function', {
-        matchValue: propColors,
-      }),
-      'ease-visual': createRepeaterUtility(
+      [`ease-${TRANSITION_REPEATED_MODIFIER}`]: createRepeaterUtility(
         'transition-timing-function',
-        { matchValue: propVisual },
+        {
+          matchValue: propDefault,
+        },
       ),
-      'ease-effects': createRepeaterUtility(
-        'transition-timing-function',
-        { matchValue: propEffects },
+      // automatic register other transitionProperty modifiers
+      ...Object.fromEntries(
+        propEntries.map(([modifier, value]) => [
+          `ease-${modifier}`,
+          createRepeaterUtility('transition-timing-function', {
+            matchValue: value,
+          }),
+        ]),
       ),
     }, {
       values: Object.fromEntries(

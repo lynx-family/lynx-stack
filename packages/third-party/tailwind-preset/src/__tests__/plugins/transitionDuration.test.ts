@@ -16,10 +16,9 @@ describe('transitionDuration plugin', () => {
           DEFAULT: '200ms', // will be filtered out
         },
         transitionProperty: {
-          DEFAULT: 'all',
-          colors: 'color, background-color',
-          visual: 'opacity, visibility, transform',
-          effects: 'box-shadow, filter',
+          DEFAULT: 'background-color, border-color, opacity, transform, color',
+          colors: 'color, background-color, border-color',
+          visual: 'opacity, background-color, color',
         },
       },
     });
@@ -49,23 +48,15 @@ describe('transitionDuration plugin', () => {
       'transition-duration': '75ms',
     });
 
-    // Grouped durations based on number of props
+    // Grouped durations based on number of props: count = 3
     expect(utils['duration-colors']?.('150ms')).toEqual({
-      'transition-duration': '150ms, 150ms',
+      'transition-duration': '150ms, 150ms, 150ms',
     });
 
-    expect(utils['duration-visual']?.('75ms')).toEqual({
-      'transition-duration': '75ms, 75ms, 75ms',
-    });
-
-    expect(utils['duration-effects']?.('200ms')).toEqual({
-      'transition-duration': '200ms, 200ms',
-    });
-
-    // fallback to empty string group: count = 1
-    const result = utils['duration-repeat']?.('150ms');
+    // fallback to empty string group: count = 5
+    const result = utils['duration-n']?.('150ms');
     expect(result).toEqual({
-      'transition-duration': '150ms',
+      'transition-duration': '150ms, 150ms, 150ms, 150ms, 150ms',
     });
   });
 });

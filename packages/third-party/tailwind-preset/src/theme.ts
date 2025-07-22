@@ -95,8 +95,6 @@ export const lynxTheme: Partial<LynxThemeConfig> = {
     all: 'all',
     DEFAULT: 'background-color, opacity, transform, border-color, color',
     colors: 'background-color, border-color, color',
-    visual: 'background-color, border-color, opacity, color',
-    effects: 'filter',
     opacity: 'opacity',
     transform: 'transform',
     color: 'color',
