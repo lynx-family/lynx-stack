@@ -82,6 +82,10 @@ jobs:
     uses: ./.github/workflows/workflow-test.yml
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      TOS_AP_ACCESS_KEY: ${{ secrets.TOS_AP_ACCESS_KEY }}
+      TOS_AP_SECRET_KEY: ${{ secrets.TOS_AP_SECRET_KEY }}
+      TOS_AP_ENDPOINT: ${{ secrets.TOS_AP_ENDPOINT }}
+      TOS_AP_REGION: ${{ secrets.TOS_AP_REGION }}
     name: Playwright (${{ matrix.config.name }})
     strategy:
       matrix:
@@ -99,7 +103,7 @@ jobs:
             env:
               - ENABLE_SSR=true
     with:
-      runs-on: lynx-custom-dind
+      runs-on: lynx-container
       is-web: true
       codecov-flags: "e2e"
       run: |
