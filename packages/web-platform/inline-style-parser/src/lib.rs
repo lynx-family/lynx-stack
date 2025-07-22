@@ -452,14 +452,6 @@ mod tests {
 
   #[test]
   fn test_malformed_css() {
-    // Test unclosed strings - these may still produce declarations
-    let (transformer, _) = parse_css("content: \"unclosed;");
-    // The parser may still accept this, let's check what it actually does
-
-    // Test unclosed brackets
-    let (transformer, _) = parse_css("background: url(unclosed;");
-    // Same here - let's see what actually happens
-
     // Test invalid characters
     let (transformer, _) = parse_css("color: red;; invalid: ;;");
     // This should parse "color: red" successfully, others may fail
@@ -812,7 +804,7 @@ mod tests {
 
   #[test]
   fn test_string_tokenizer_edge_cases() {
-    use crate::tokenize::{consume_string_token, tokenize, Parser};
+    use crate::tokenize::{tokenize, Parser};
     use crate::types::*;
 
     struct TokenCollector {
