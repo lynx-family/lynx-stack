@@ -24,7 +24,10 @@ mod utils;
 
 use std::vec;
 
-use napi::{bindgen_prelude::AsyncTask, Either, Env, Task};
+use napi::{
+  bindgen_prelude::{AbortSignal, AsyncTask},
+  Either, Env, Task,
+};
 
 use rustc_hash::FxBuildHasher;
 
@@ -45,6 +48,7 @@ use swc_core::{
     ast::*,
     codegen,
     parser::{Syntax, TsSyntax},
+    react_compiler,
     transforms::{
       base::{
         fixer::fixer,
@@ -761,6 +765,64 @@ pub fn transform_bundle_result(
   }))
 }
 
+// from swc: bindings/binding_react_compiler_node/src/support.rs
+pub struct IsReactCompilerRequiredTask {
+  code: String,
+}
+
+#[napi]
+impl Task for IsReactCompilerRequiredTask {
+  type JsValue = bool;
+  type Output = bool;
+
+  fn compute(&mut self) -> napi::Result<Self::Output> {
+    Ok(is_react_compiler_required_inner(&self.code))
+  }
+
+  fn resolve(&mut self, _env: napi::Env, output: Self::Output) -> napi::Result<Self::JsValue> {
+    Ok(output)
+  }
+}
+
+fn is_react_compiler_required_inner(code: &str) -> bool {
+  let cm = Lrc::new(SourceMap::default());
+  let fm = cm.new_source_file(FileName::Anon.into(), code.to_string());
+
+  let program = swc_core::ecma::parser::parse_file_as_program(
+    &fm,
+    Syntax::Typescript(swc_core::ecma::parser::TsSyntax {
+      decorators: true,
+      tsx: true,
+      ..Default::default()
+    }),
+    EsVersion::latest(),
+    None,
+    &mut vec![],
+  );
+
+  let Ok(program) = program else {
+    return false;
+  };
+
+  react_compiler::fast_check::is_required(&program)
+}
+
+#[napi]
+pub fn is_react_compiler_required(
+  _env: Env,
+  code: String,
+  signal: Option<AbortSignal>,
+) -> AsyncTask<IsReactCompilerRequiredTask> {
+  let task = IsReactCompilerRequiredTask { code };
+
+  AsyncTask::with_optional_signal(task, signal)
+}
+
+#[napi]
+pub fn is_react_compiler_required_sync(_env: Env, code: String) -> napi::Result<bool> {
+  Ok(is_react_compiler_required_inner(&code))
+}
+
 #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
 mod wasm {
   use getrandom::register_custom_getrandom;
@@ -830,6 +892,8 @@ mod wasm {
       let _ = exports.create_named_method("transformBundleResultSync", crate::__napi__transform_bundle_result_sync);
       let _ = exports.create_named_method("transformReactLynx", crate::__napi__transform_react_lynx);
       let _ = exports.create_named_method("transformBundleResult", crate::__napi__transform_bundle_result);
+      let _ = exports.create_named_method("isReactCompilerRequiredSync", crate::__napi__is_react_compiler_required_sync);
+      let _ = exports.create_named_method("isReactCompilerRequired", crate::__napi__is_react_compiler_required);
     }
   }
 }

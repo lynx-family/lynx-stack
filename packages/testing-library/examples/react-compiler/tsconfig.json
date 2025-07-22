@@ -1,0 +1,11 @@
+{
+  "extends": "../../../../tsconfig.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "@lynx-js/react",
+
+    /* Disable emitting files from a compilation. */
+    "noEmit": true,
+  },
+  "include": ["src"],
+}
