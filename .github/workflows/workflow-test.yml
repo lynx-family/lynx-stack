@@ -49,6 +49,9 @@ jobs:
         ENDPOINT: ${{ secrets.TOS_AP_ENDPOINT }}
         BUCKET_NAME: actions
         REGION: ${{ secrets.TOS_AP_REGION }}
+        CI: 1
+        TURBO_TELEMETRY_DISABLED: 1
+        NODE_OPTIONS: --max-old-space-size=32768
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:
@@ -70,6 +73,13 @@ jobs:
           npm install -g corepack@latest
           corepack enable
           pnpm install --frozen-lockfile
+      - name: debug cache
+        run: |
+          echo ${{ runner.os }}
+          echo ${{ github.sha }}
+          echo $CI
+          echo $TURBO_TELEMETRY_DISABLED
+          sleep infinity
       - name: Build
         run: |
           pnpm turbo build --summarize

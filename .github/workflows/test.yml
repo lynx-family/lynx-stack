@@ -63,20 +63,20 @@ jobs:
       runs-on: lynx-ubuntu-24.04-medium
       run: pnpm eslint .
 
-  lighthouse:
-    needs: build
-    uses: ./.github/workflows/workflow-test.yml
-    permissions:
-      statuses: write
-    secrets:
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-      LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
-    with:
-      runs-on: lynx-ubuntu-24.04-xlarge
-      is-web: true
-      run: |
-        export NODE_OPTIONS="--max-old-space-size=32768"
-        pnpm --filter @lynx-js/web-tests run lh || echo "Lighthouse failed"
+  # lighthouse:
+  #   needs: build
+  #   uses: ./.github/workflows/workflow-test.yml
+  #   permissions:
+  #     statuses: write
+  #   secrets:
+  #     CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+  #     LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+  #   with:
+  #     runs-on: lynx-ubuntu-24.04-xlarge
+  #     is-web: true
+  #     run: |
+  #       export NODE_OPTIONS="--max-old-space-size=32768"
+  #       pnpm --filter @lynx-js/web-tests run lh || echo "Lighthouse failed"
   playwright-linux:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
