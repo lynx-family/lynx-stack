@@ -71,10 +71,10 @@ jobs:
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
-      TOS_AP_ACCESS_KEY: ${{ secrets.TOS_AP_ACCESS_KEY }}
-      TOS_AP_SECRET_KEY: ${{ secrets.TOS_AP_SECRET_KEY }}
-      TOS_AP_ENDPOINT: ${{ secrets.TOS_AP_ENDPOINT }}
-      TOS_AP_REGION: ${{ secrets.TOS_AP_REGION }}
+      # TOS_AP_ACCESS_KEY: ${{ secrets.TOS_AP_ACCESS_KEY }}
+      # TOS_AP_SECRET_KEY: ${{ secrets.TOS_AP_SECRET_KEY }}
+      # TOS_AP_ENDPOINT: ${{ secrets.TOS_AP_ENDPOINT }}
+      # TOS_AP_REGION: ${{ secrets.TOS_AP_REGION }}
     with:
       runs-on: lynx-container
       is-web: true
@@ -86,10 +86,10 @@ jobs:
     uses: ./.github/workflows/workflow-test.yml
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-      TOS_AP_ACCESS_KEY: ${{ secrets.TOS_AP_ACCESS_KEY }}
-      TOS_AP_SECRET_KEY: ${{ secrets.TOS_AP_SECRET_KEY }}
-      TOS_AP_ENDPOINT: ${{ secrets.TOS_AP_ENDPOINT }}
-      TOS_AP_REGION: ${{ secrets.TOS_AP_REGION }}
+      # TOS_AP_ACCESS_KEY: ${{ secrets.TOS_AP_ACCESS_KEY }}
+      # TOS_AP_SECRET_KEY: ${{ secrets.TOS_AP_SECRET_KEY }}
+      # TOS_AP_ENDPOINT: ${{ secrets.TOS_AP_ENDPOINT }}
+      # TOS_AP_REGION: ${{ secrets.TOS_AP_REGION }}
     name: Playwright (${{ matrix.config.name }})
     strategy:
       matrix:
