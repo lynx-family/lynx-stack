@@ -11,7 +11,7 @@ reviews:
   high_level_summary_placeholder: "@coderabbitai summary"
 
   # Labeling
-  # auto_apply_labels: true
+  auto_apply_labels: true
   labeling_instructions:
     - label: "platform:Web"
       instructions: |
