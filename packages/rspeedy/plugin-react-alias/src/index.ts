@@ -61,6 +61,7 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
           jsxDevRuntimeMainThread,
           reactLepusBackground,
           reactLepusMainThread,
+          reactCompat,
         ] = await Promise.all([
           resolve('@lynx-js/react/jsx-runtime'),
           resolve('@lynx-js/react/lepus/jsx-runtime'),
@@ -68,6 +69,7 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
           resolve('@lynx-js/react/lepus/jsx-dev-runtime'),
           resolve('@lynx-js/react'),
           resolve('@lynx-js/react/lepus'),
+          resolve('@lynx-js/react/compat'),
         ])
 
         const jsxRuntime = {
@@ -153,6 +155,10 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
           .set(
             '@lynx-js/react$',
             reactLepus.background,
+          )
+          .set(
+            '@lynx-js/react/compat$',
+            reactCompat,
           )
 
         const preactEntries = [
