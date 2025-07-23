@@ -24,6 +24,15 @@ function updateMainThread(
     return;
   }
 
+  const flowIds = patchOptions.flowIds;
+  if (flowIds) {
+    lynx.performance.profileStart('ReactLynx::patch', {
+      flowId: flowIds[0],
+      // @ts-expect-error flowIds is not defined in the type, for now
+      flowIds,
+    });
+  }
+
   setPipeline(patchOptions.pipelineOptions);
   markTiming('mtsRenderStart');
   markTiming('parseChangesStart');
@@ -57,6 +66,10 @@ function updateMainThread(
     flushOptions.pipelineOptions = patchOptions.pipelineOptions;
   }
   __FlushElementTree(__page, flushOptions);
+
+  if (flowIds) {
+    lynx.performance.profileEnd();
+  }
 }
 
 function injectUpdateMainThread(): void {
