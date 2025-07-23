@@ -60,17 +60,17 @@ describe('profile', () => {
     );
 
     // render::
-    expect(console.profile).toBeCalledWith(`render::Foo`);
-    expect(console.profile).not.toBeCalledWith(`render::Bar`);
-    expect(console.profile).toBeCalledWith(`render::Baz`);
-    expect(console.profile).not.toBeCalledWith(`render::ClassComponent`);
-    expect(console.profile).toBeCalledWith(`render::Clazz`);
+    expect(lynx.performance.profileStart).toBeCalledWith(`render::Foo`);
+    expect(lynx.performance.profileStart).not.toBeCalledWith(`render::Bar`);
+    expect(lynx.performance.profileStart).toBeCalledWith(`render::Baz`);
+    expect(lynx.performance.profileStart).not.toBeCalledWith(`render::ClassComponent`);
+    expect(lynx.performance.profileStart).toBeCalledWith(`render::Clazz`);
 
     // diff::
-    expect(console.profile).toBeCalledWith(`diff::Foo`);
-    expect(console.profile).not.toBeCalledWith(`diff::Bar`);
-    expect(console.profile).toBeCalledWith(`diff::Baz`);
-    expect(console.profile).not.toBeCalledWith(`diff::ClassComponent`);
-    expect(console.profile).toBeCalledWith(`diff::Clazz`);
+    expect(lynx.performance.profileStart).toBeCalledWith(`diff::Foo`);
+    expect(lynx.performance.profileStart).not.toBeCalledWith(`diff::Bar`);
+    expect(lynx.performance.profileStart).toBeCalledWith(`diff::Baz`);
+    expect(lynx.performance.profileStart).not.toBeCalledWith(`diff::ClassComponent`);
+    expect(lynx.performance.profileStart).toBeCalledWith(`diff::Clazz`);
   });
 });

@@ -40,9 +40,12 @@ if (__DEV__) {
   setupComponentStack();
 }
 
-// TODO: replace this with __PROFILE__
-if (__PROFILE__) {
-  // We are profiling both main-thread and background.
+// We are profiling both main-thread and background.
+if (__MAIN_THREAD__) {
+  if (__PROFILE__) {
+    initProfileHook();
+  }
+} else if (__BACKGROUND__ && lynx.performance?.isProfileRecording?.()) {
   initProfileHook();
 }
 
