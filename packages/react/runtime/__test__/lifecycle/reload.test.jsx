@@ -127,6 +127,9 @@ describe('reload', () => {
         {
           "data": "{"patchList":[{"id":3,"snapshotPatch":[3,-5,0,{"dataX2":"WorldX2"},3,-8,0,"update",3,-6,0,{"attr":{"dataX2":"WorldX2"}}]}]}",
           "patchOptions": {
+            "flowIds": [
+              666,
+            ],
             "reloadVersion": 0,
           },
         }
@@ -235,6 +238,9 @@ describe('reload', () => {
         {
           "data": "{"patchList":[{"id":4,"snapshotPatch":[3,-8,0,"???"]}]}",
           "patchOptions": {
+            "flowIds": [
+              666,
+            ],
             "reloadVersion": 0,
           },
         }
@@ -384,6 +390,9 @@ describe('reload', () => {
         {
           "data": "{"patchList":[{"id":8,"snapshotPatch":[3,-16,0,"update"]}]}",
           "patchOptions": {
+            "flowIds": [
+              666,
+            ],
             "reloadVersion": 2,
           },
         }
@@ -530,6 +539,9 @@ describe('reload', () => {
         {
           "data": "{"patchList":[{"id":11,"snapshotPatch":[3,-5,0,{"dataX2":"WorldX2"},3,-8,0,"update",3,-6,0,{"attr":{"dataX2":"WorldX2"}}]}]}",
           "patchOptions": {
+            "flowIds": [
+              666,
+            ],
             "reloadVersion": 2,
           },
         }
@@ -642,6 +654,9 @@ describe('reload', () => {
         {
           "data": "{"patchList":[{"id":12,"snapshotPatch":[3,-8,0,"???"]}]}",
           "patchOptions": {
+            "flowIds": [
+              666,
+            ],
             "reloadVersion": 2,
           },
         }
@@ -795,6 +810,9 @@ describe('reload', () => {
         {
           "data": "{"patchList":[{"id":16,"snapshotPatch":[3,-17,0,"update"]}]}",
           "patchOptions": {
+            "flowIds": [
+              666,
+            ],
             "reloadVersion": 4,
           },
         }
@@ -980,6 +998,9 @@ describe('reload', () => {
             {
               "data": "{"patchList":[{"id":19,"snapshotPatch":[3,-6,0,"d",3,-7,0,"e",3,-8,0,"f"]}]}",
               "patchOptions": {
+                "flowIds": [
+                  666,
+                ],
                 "reloadVersion": 4,
               },
             },

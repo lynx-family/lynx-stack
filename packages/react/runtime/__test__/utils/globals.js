@@ -4,6 +4,7 @@
 import { vi } from 'vitest';
 
 import { getJSModule } from './jsModule.ts';
+import { beforeEach, afterEach, expect } from 'vitest';
 
 const app = {
   callLepusMethod: vi.fn(),
@@ -35,6 +36,12 @@ const performance = {
   _bindPipelineIdWithTimingFlag: vi.fn((id, flag) => {
     performance.__functionCallHistory.push(['_bindPipelineIdWithTimingFlag', id, flag]);
   }),
+
+  profileStart: vi.fn(),
+  profileEnd: vi.fn(),
+  profileMark: vi.fn(),
+  profileFlowId: vi.fn(() => 666),
+  isProfileRecording: vi.fn(() => true),
 };
 
 class SelectorQuery {
@@ -132,5 +139,25 @@ function injectGlobals() {
   console.profileEnd = vi.fn();
   console.alog = vi.fn();
 }
+
+beforeEach(() => {
+  performance.profileStart.mockClear();
+  performance.profileEnd.mockClear();
+});
+
+afterEach((context) => {
+  const skippedTasks = [
+    // Skip preact/debug tests since it would throw errors and abort the rendering process
+    'preact/debug',
+    'should remove event listener when throw in cleanup',
+  ];
+  if (skippedTasks.some(task => context.task.name.includes(task))) {
+    return;
+  }
+
+  expect(performance.profileStart.mock.calls.length).toBe(
+    performance.profileEnd.mock.calls.length,
+  );
+});
 
 injectGlobals();

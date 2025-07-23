@@ -180,6 +180,21 @@ export interface NativeApp {
    */
   profileEnd: () => void;
 
+  /***
+   * Support from Lynx 3.0
+   */
+  profileMark: () => void;
+
+  /**
+   * Support from Lynx 3.0
+   */
+  profileFlowId: () => number;
+
+  /**
+   * Support from Lynx 2.18
+   */
+  isProfileRecording: () => boolean;
+
   triggerComponentEvent(id: string, params: {
     eventDetail: CloneableObject;
     eventOption: CloneableObject;
