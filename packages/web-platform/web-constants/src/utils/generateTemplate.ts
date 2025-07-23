@@ -84,14 +84,14 @@ const backgroundInjectWithBind = [
   'Component',
 ];
 
-async function generateJavascriptUrl<T extends Record<string, string>>(
+async function generateJavascriptUrl<T extends Record<string, string | {}>>(
   obj: T,
   injectVars: string[],
   injectWithBind: string[],
   muteableVars: readonly string[],
   createJsModuleUrl: (content: string) => string,
 ): Promise<T>;
-async function generateJavascriptUrl<T extends Record<string, string>>(
+async function generateJavascriptUrl<T extends Record<string, string | {}>>(
   obj: T,
   injectVars: string[],
   injectWithBind: string[],
@@ -99,7 +99,7 @@ async function generateJavascriptUrl<T extends Record<string, string>>(
   createJsModuleUrl: (content: string, name: string) => Promise<string>,
   templateName: string,
 ): Promise<T>;
-async function generateJavascriptUrl<T extends Record<string, string>>(
+async function generateJavascriptUrl<T extends Record<string, string | {}>>(
   obj: T,
   injectVars: string[],
   injectWithBind: string[],
@@ -151,7 +151,11 @@ async function generateJavascriptUrl<T extends Record<string, string>>(
         generateModuleContent(content),
       ),
     ];
-  return Promise.all(Object.entries(obj).map(processEntry)).then(
+  return Promise.all(
+    (Object.entries(obj).filter(([_, content]) =>
+      typeof content === 'string'
+    ) as [string, string][]).map(processEntry),
+  ).then(
     Object.fromEntries,
   );
 }
