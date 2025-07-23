@@ -155,9 +155,10 @@ function commitPatchUpdate(patchList: PatchList, patchOptions: Omit<PatchOptions
 } {
   // console.debug('********** JS update:');
   // printSnapshotInstance(
-  //   (backgroundSnapshotInstanceManager.values.get(1) || backgroundSnapshotInstanceManager.values.get(-1))!,
+  //   (backgroundSnapshotInstanceManager.values.get(1) ?? backgroundSnapshotInstanceManager.values.get(-1))!,
   // );
-  // console.debug('commitPatchUpdate: ', JSON.stringify(patchList));
+  // console.debug('commitPatchUpdate:', prettyFormatSnapshotPatch(patchList.patchList[0]?.snapshotPatch));
+
   if (__PROFILE__) {
     console.profile('commitChanges');
   }

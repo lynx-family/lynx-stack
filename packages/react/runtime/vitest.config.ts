@@ -83,7 +83,6 @@ export default defineConfig({
         '__test__/utils/**',
         'lib/**',
         'src/index.ts',
-        'src/lynx-api.ts',
         'src/lynx.ts',
         'src/root.ts',
         'src/debug/component-stack.ts',

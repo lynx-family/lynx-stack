@@ -175,14 +175,11 @@ function createPolyfills() {
 
   function __LoadLepusChunk(
     chunkName: string,
-    options,
+    _options,
   ) {
     const isBackground = !__MAIN_THREAD__;
     globalThis.lynxTestingEnv.switchToMainThread();
 
-    if (process.env['DEBUG']) {
-      console.log('__LoadLepusChunk', chunkName, options);
-    }
     let ans;
     if (chunkName === 'worklet-runtime') {
       ans = globalThis.onInitWorkletRuntime?.();
