@@ -2,15 +2,17 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { Plugin } from './helpers.js';
-import * as pluginModules from './plugins/lynx/index.js';
+import {
+  LYNX_PLUGIN_MAP,
+  ORDERED_LYNX_PLUGIN_NAMES,
+  REPLACEABLE_LYNX_PLUGINS,
+} from './plugins/lynx/plugin-registry.js';
+import type { LynxPluginName } from './plugins/lynx/plugin-types.js';
 import type { CorePluginsConfig } from './types/tailwind-types.js';
 
 /* -----------------------------------------------------------------------------
  * Plugin map
  * -------------------------------------------------------------------------- */
-
-export type LynxPluginName = keyof typeof pluginModules;
 
 export const DEFAULT_CORE_PLUGINS: CorePluginsConfig = [
   // 'preflight',
@@ -148,14 +150,6 @@ export const DEFAULT_CORE_PLUGINS: CorePluginsConfig = [
   // 'divideOpacity'
 ];
 
-/* ---------- derived types & constants --------------------------- */
-export const LYNX_PLUGIN_MAP: Record<LynxPluginName, Plugin> =
-  pluginModules as Record<LynxPluginName, Plugin>;
-
-export const REPLACEABLE_PLUGINS = Object.freeze(
-  Object.keys(LYNX_PLUGIN_MAP).filter(k => k !== 'defaults'),
-) as readonly LynxPluginName[];
-
 /* ---------- helper: normalize user option ----------------------- */
 export type LynxPluginsOption =
   | boolean // true → all, false → none
@@ -165,12 +159,12 @@ export type LynxPluginsOption =
 export function toEnabledSet(
   opt: LynxPluginsOption = true,
 ): Set<LynxPluginName> {
-  if (opt === true) return new Set(REPLACEABLE_PLUGINS); // all
+  if (opt === true) return new Set(REPLACEABLE_LYNX_PLUGINS); // all
   if (opt === false) return new Set(); // none
   if (Array.isArray(opt)) return new Set(opt); // allowed array
 
   // object form → blocked
-  const set = new Set(REPLACEABLE_PLUGINS);
+  const set = new Set(REPLACEABLE_LYNX_PLUGINS);
   for (const [k, on] of Object.entries(opt)) {
     if (on === false) set.delete(k as LynxPluginName); // explicitly disable
     else if (on === true) set.add(k as LynxPluginName); // redundant but harmless
@@ -180,9 +174,15 @@ export function toEnabledSet(
 
 /* ---------- tiny public helpers --------------------------------- */
 export const getReplaceablePlugins = (): readonly LynxPluginName[] =>
-  REPLACEABLE_PLUGINS;
+  REPLACEABLE_LYNX_PLUGINS;
 export const isPluginReplaceable = (p: string): p is LynxPluginName =>
   p !== 'defaults' && p in LYNX_PLUGIN_MAP;
+
+/* ---------- exports ------------- */
+
+export type { LynxPluginName };
+
+export { LYNX_PLUGIN_MAP, ORDERED_LYNX_PLUGIN_NAMES };
 
 /* ---------- Tailwind un-configured corePlugins --------------------------------- */
 
