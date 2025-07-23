@@ -1,8 +1,8 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type { CSSRuleObject } from 'tailwindcss/types/config.js';
-
+import { isPlainIdentList } from './is-plain-ident-list.js';
+import type { CSSRuleObject } from '../types/tailwind-types.js';
 /**
  * Creates a utility function that repeats a given CSS value multiple times
  * and joins them into a single declaration for a specified property.
@@ -22,9 +22,12 @@ import type { CSSRuleObject } from 'tailwindcss/types/config.js';
  * @param {string} [options.matchValue] - A string to infer repeat count from (e.g. `opacity, transform`).
  * @param {string} [options.splitDelimiter] - The delimiter to split `matchValue` with. Leading/trailing whitespaces are trimmed after splitting. Defaults to `','`
  * @param {string} [options.fillDelimiter] - The delimiter to join repeated values with. Defaults to `', '`.
+ * @param {boolean} [options.skipIfSingleProperty] - If true, returns null when the inferred repeat count is 1.
  *
- * @returns A function that takes a value string and returns a repeated CSS declaration,
- *          or `null` if input is invalid.
+ * @returns Either
+ *   – a utility callback `(value) => CSSRuleObject | null` that applies the repetition logic,
+ *   – or `null` when the utility should be skipped (e.g. invalid options, repeat count < 1, or
+ *     `skipIfSingleProperty` && only one property).
  *
  * @example
  * createRepeaterUtility('transition-delay', { matchValue: 'opacity, transform' })('200ms');
@@ -37,35 +40,32 @@ import type { CSSRuleObject } from 'tailwindcss/types/config.js';
 export function createRepeaterUtility(
   property: string,
   options: RepeaterOptions,
-): (value: unknown) => CSSRuleObject | null {
+): ((value: unknown) => CSSRuleObject | null) | null {
   const {
     matchValue,
     count,
     splitDelimiter = ',',
     fillDelimiter = ', ',
+    skipIfSingleProperty = false, // Defaults to 'false' as Tailwind's default plugin philosophy favors predictability over minimalism
   } = options;
 
-  const valuesFromMatchValue =
-    // If it's a plain list of idents, split it. Otherwise treat it as opaque.
-    // plain list of indents: '<indent>, <indent>, ...'
-    // opaque value: 'x, var(--a, c), y'
-    typeof matchValue === 'string'
-      ? (isPlainIdentList(matchValue)
-        ? matchValue.split(splitDelimiter).map(v => v.trim()).filter(Boolean)
-        : [matchValue]) // fallback to single item
-      : null;
+  if (!property || typeof property !== 'string') return null;
 
-  const repeatCount =
-    typeof count === 'number' && Number.isFinite(count) && count >= 1
-      ? count
-      : valuesFromMatchValue?.length ?? null;
+  let repeatCount: number | null = null;
 
-  if (
-    !property || typeof property !== 'string' || typeof repeatCount !== 'number'
-    || repeatCount < 1
-  ) {
-    return (_value: unknown) => null;
+  if (typeof count === 'number' && Number.isFinite(count) && count >= 1) {
+    repeatCount = count;
+  } else if (typeof matchValue === 'string') {
+    const segments = isPlainIdentList(matchValue, splitDelimiter)
+      // If it's a plain list of idents, split it. Otherwise treat it as opaque.
+      ? matchValue.split(splitDelimiter).map((v) => v.trim()).filter(Boolean)
+      : [matchValue];
+    repeatCount = segments.length;
   }
+
+  if (repeatCount == null || repeatCount < 1) return null;
+  if (repeatCount === 1 && skipIfSingleProperty) return null;
+
   return (value: unknown) => {
     if (typeof value !== 'string') return null;
     return {
@@ -99,8 +99,9 @@ export interface RepeaterOptions {
    * The delimiter used to join repeated values into a single declaration. Defaults to `', '`.
    */
   fillDelimiter?: string;
-}
-
-function isPlainIdentList(value: string): boolean {
-  return !/(?:var|calc|attr|url)\s*\(/i.test(value);
+  /**
+   * If true, returns null when the inferred repeat count is 1.
+   * Useful for skipping redundant utilities like `duration-opacity-*`.
+   */
+  skipIfSingleProperty?: boolean;
 }

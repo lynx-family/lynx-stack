@@ -20,20 +20,32 @@ export const transitionProperty: Plugin = createPlugin(
             return null;
           }
 
-          const durationCSSRuleObject = createRepeaterUtility(
-            'transition-duration',
-            { matchValue: value },
-          )(defaultDuration);
-
-          const timingFunctionCSSRuleObject = createRepeaterUtility(
-            'transition-timing-function',
-            { matchValue: value },
-          )(defaultTimingFunction);
-
-          return {
+          const base = {
             'transition-property': value,
-            ...(durationCSSRuleObject ?? {}),
-            ...(timingFunctionCSSRuleObject ?? {}),
+          };
+
+          const durationRepeater = createRepeaterUtility(
+            'transition-duration',
+            {
+              matchValue: value,
+              skipIfSingleProperty: false,
+            },
+          );
+
+          const timingFunctionRepeater = createRepeaterUtility(
+            'transition-timing-function',
+            {
+              matchValue: value,
+              skipIfSingleProperty: false,
+            },
+          );
+          // Generate corresponding duration / timing-function
+          const duration = durationRepeater?.(defaultDuration);
+          const timing = timingFunctionRepeater?.(defaultTimingFunction);
+          return {
+            ...base,
+            ...(duration ?? {}),
+            ...(timing ?? {}),
           };
         },
       },

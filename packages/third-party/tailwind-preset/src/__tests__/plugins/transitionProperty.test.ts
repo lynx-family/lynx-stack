@@ -73,7 +73,7 @@ describe('transitionProperty plugin', () => {
       'transition-timing-function': 'ease-in-out, ease-in-out, ease-in-out',
     });
 
-    // Case: not a plain list of indents
+    // Case: not a plain list of identifiers
     expect(
       utils['transition']?.('x, var(--tw, a, b), y'),
     ).toEqual({

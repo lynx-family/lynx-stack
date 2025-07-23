@@ -3,4 +3,5 @@
 // LICENSE file in the root directory of this source tree.
 export { createFunctionCallUtility } from './create-function-call-utility.js';
 export { createRepeaterUtility } from './create-repeater-utility.js';
-export { TRANSITION_REPEATED_MODIFIER } from './constants.js';
+export { getModifierRepeaterMap } from './get-modifier-repeater-map.js';
+export { isPlainIdentList } from './is-plain-ident-list.js';
