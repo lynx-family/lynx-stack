@@ -14,8 +14,7 @@ vi.mock('node:fs', async (importOriginal) => {
     ...original as object,
     readFileSync: vi.fn().mockImplementation((filePath: string) => {
       if (
-        filePath.includes('packages/react')
-        && filePath.endsWith('package.json')
+        /[\\/](?:packages[\\/])?react[\\/]*package\.json$/.test(filePath)
       ) {
         return JSON.stringify({})
       } else {
