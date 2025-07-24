@@ -6,11 +6,20 @@ import type { CSSRuleObject } from '../types/tailwind-types.js';
 export function createFunctionCallUtility(
   property: string,
   fn: string,
-): (value: string) => CSSRuleObject | null {
-  return (value: string) => {
+  options?: { emptyFallback?: string },
+): (value: unknown) => CSSRuleObject | null {
+  return (value: unknown) => {
     if (typeof value !== 'string') return null;
+
+    const trimmed = value.trim();
+
+    if (trimmed === '') {
+      return options?.emptyFallback == null
+        ? null
+        : { [property]: options.emptyFallback };
+    }
     return {
-      [property]: `${fn}(${value})`,
+      [property]: `${fn}(${trimmed})`,
     };
   };
 }
