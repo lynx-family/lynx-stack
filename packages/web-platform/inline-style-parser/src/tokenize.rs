@@ -2,7 +2,7 @@ use crate::*;
 use crate::{char_code_definitions, types::*, utils::*};
 
 const URL_STR: [u16; 3] = ['u' as u16, 'r' as u16, 'l' as u16];
-/**
+/*
  * this code forked from css-tree
  */
 

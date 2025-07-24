@@ -80,10 +80,9 @@ fn is_import_call_str_lit(call_expr: &CallExpr) -> (bool, bool, &str) {
 
 fn is_import_call_tpl(call_expr: &CallExpr) -> bool {
   match &call_expr.callee {
-    Callee::Import(_) if !call_expr.args.is_empty() => match &*call_expr.args[0].expr {
-      Expr::Tpl(_) => true,
-      _ => false,
-    },
+    Callee::Import(_) if !call_expr.args.is_empty() => {
+      matches!(&*call_expr.args[0].expr, Expr::Tpl(_))
+    }
     _ => false,
   }
 }

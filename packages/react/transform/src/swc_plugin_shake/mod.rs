@@ -205,8 +205,7 @@ impl VisitMut for ShakeVisitor {
             v.push(val.clone());
           }
           None => {
-            let mut v: Vec<String> = Vec::new();
-            v.push(val.clone());
+            let v = vec![val.clone()];
             scannd_map.insert(member.clone(), v);
           }
         }

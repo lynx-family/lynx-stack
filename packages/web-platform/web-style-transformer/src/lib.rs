@@ -2,19 +2,25 @@ use wasm_bindgen::prelude::*;
 
 pub mod transformer;
 
-// lifted from the `console_log` example
-/**
-accept a raw uint16 ptr from JS
-*/
+/// lifted from the `console_log` example
+/// Accepts a raw uint16 pointer from JS and transforms the inline style string into a JS string.
+/// Returns `Some(JsString)` if the transformation was successful, or `None` if the input was empty or invalid.
+///
+/// # Safety
+/// The caller must ensure that `ptr` is valid and points to a slice of `u16` of length `len`.
+/// This is a contract with the JavaScript side. Passing an invalid pointer or incorrect length may cause undefined behavior.
 #[wasm_bindgen]
-pub fn transform_raw_u16_inline_style_ptr(ptr: *const u16, len: usize) -> Option<js_sys::JsString> {
+pub unsafe fn transform_raw_u16_inline_style_ptr(
+  ptr: *const u16,
+  len: usize,
+) -> Option<js_sys::JsString> {
   // Safety: We assume the pointer is valid and points to a slice of u16
   // of length `len`. This is a contract with the JavaScript side.
   unsafe {
     let slice = core::slice::from_raw_parts(ptr, len);
     // Call the tokenize function with our data and callback
     let (transformed_inline_style, _) =
-      transformer::transformer::transform_inline_style_string(slice);
+      transformer::transform::transform_inline_style_string(slice);
     if !transformed_inline_style.is_empty() {
       return Some(js_sys::JsString::from_char_code(
         transformed_inline_style.as_slice(),
@@ -38,8 +44,15 @@ macro_rules! push_parsed_result_to_js_array {
     target
   }};
 }
+
+/// Accepts raw uint16 pointers from JS and parses the inline style name and value into a JS array.
+/// Returns `Some(Array)` if parsing was successful, or `None` if both results are empty.
+///
+/// # Safety
+/// The caller must ensure that `name_ptr` and `value_ptr` are valid and point to slices of `u16` of lengths `name_len` and `value_len` respectively.
+/// Passing invalid pointers or incorrect lengths may cause undefined behavior.
 #[wasm_bindgen]
-pub fn transform_raw_u16_inline_style_ptr_parsed(
+pub unsafe fn transform_raw_u16_inline_style_ptr_parsed(
   name_ptr: *const u16,
   name_len: usize,
   value_ptr: *const u16,
@@ -49,7 +62,7 @@ pub fn transform_raw_u16_inline_style_ptr_parsed(
     let name_slice = core::slice::from_raw_parts(name_ptr, name_len);
     let value_slice = core::slice::from_raw_parts(value_ptr, value_len);
     // Call the tokenize function with our data and callback
-    let (result, children_result) = transformer::transformer::query_transform_rules(
+    let (result, children_result) = transformer::transform::query_transform_rules(
       name_slice,
       0,
       name_len,
@@ -80,8 +93,13 @@ pub fn malloc(size: usize) -> *mut u8 {
   unsafe { std::alloc::alloc(layout) }
 }
 
+/// Frees the allocated memory at the given pointer with the specified size.
+///
+/// # Safety
+/// The caller must ensure that `ptr` was allocated with the same size and alignment using `malloc`,
+/// and that it is not used after being freed. Passing an invalid pointer or incorrect size may cause undefined behavior.
 #[wasm_bindgen]
-pub fn free(ptr: *mut u8, size: usize) {
+pub unsafe fn free(ptr: *mut u8, size: usize) {
   // Free the allocated memory
   // We need to reconstruct the Layout that was used for allocation.
   // Assuming align is 1 as used in malloc.

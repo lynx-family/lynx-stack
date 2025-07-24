@@ -150,35 +150,34 @@ impl VisitMut for ExtractStrVisitor {
           if str.value.to_string().len() < self.opts.str_length as usize {
             return;
           }
-          let index: f64;
-          match &self.extracted_str_arr {
+          let index: f64 = match &self.extracted_str_arr {
             Some(arr) => {
               // js
-              let position = arr.iter().position(|x| *x == str.value.to_string());
-              index = match position {
-                Some(i) => i,
+              let position = arr.iter().position(|x| x == str.value.as_ref());
+              match position {
+                Some(i) => i as f64,
                 None => {
                   expr.visit_mut_children_with(self);
                   return;
                 }
-              } as f64;
+              }
             }
             None => {
               // lepus
               let position = self
                 .select_str_vec
                 .iter()
-                .position(|x| *x == str.value.to_string());
-              index = match position {
-                Some(i) => i,
+                .position(|x| x == str.value.as_ref());
+              match position {
+                Some(i) => i as f64,
                 None => {
                   let i = self.select_str_vec.len();
                   self.select_str_vec.push(str.value.to_string());
-                  i
+                  i as f64
                 }
-              } as f64;
+              }
             }
-          }
+          };
           let container = Expr::Ident(self.arr_name.clone());
           let index_expr = Expr::Lit(Lit::Num(Number {
             value: index,

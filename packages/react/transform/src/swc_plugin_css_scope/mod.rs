@@ -153,10 +153,8 @@ where
       .body
       .iter_mut()
       .filter_map(|module_item| {
-        if let ModuleItem::ModuleDecl(decl) = module_item {
-          if let ModuleDecl::Import(import_decl) = decl {
-            return Some(import_decl);
-          }
+        if let ModuleItem::ModuleDecl(ModuleDecl::Import(import_decl)) = module_item {
+          return Some(import_decl);
         }
 
         None
@@ -165,6 +163,8 @@ where
 
     let mut has_css_import = false;
 
+    let re = Regex::new(r"\.(scss|sass|css|less)$").unwrap();
+
     for import_decl in import_decls {
       if matches!(self.cfg.mode, CSSScope::Modules) && import_decl.specifiers.is_empty() {
         // Is named/default/namespace import, nothing to do
@@ -172,7 +172,6 @@ where
       }
       // Is sideEffects import or force scoped
 
-      let re = Regex::new(r"\.(scss|sass|css|less)$").unwrap();
       if re.is_match(import_decl.src.value.to_string().as_str()) {
         // Is CSS files
         //

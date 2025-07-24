@@ -41,79 +41,11 @@ pub struct PartialLocation {
   pub suggestion: Option<String>,
 }
 
-#[cfg(test)]
-mod tests {
-  use super::*;
-  use serde_json::json;
-
-  #[test]
-  fn test_partial_message() {
-    let json = json!({
-        "pluginName": "test",
-        "text": "test",
-        "location": {
-            "file": "test",
-            "namespace": "test",
-            "line": 1,
-            "column": 0,
-            "length": 1,
-            "lineText": "test",
-            "suggestion": "test",
-        },
-        "notes": [
-            {
-                "text": "test",
-                "location": {
-                    "file": "test",
-                    "namespace": "test",
-                    "line": 1,
-                    "column": 0,
-                    "length": 1,
-                    "lineText": "test",
-                    "suggestion": "test",
-                },
-            },
-        ],
-        "detail": "test",
-    });
-    let s: PartialMessage = serde_json::from_value(json).unwrap();
-
-    assert_eq!(s.plugin_name, Some("test".to_string()));
-    assert_eq!(s.text, Some("test".to_string()));
-    assert_eq!(s.location.unwrap().file, Some("test".to_string()));
-    assert_eq!(s.notes.unwrap()[0].text, Some("test".to_string()));
-    assert_eq!(s.detail, Some("test".to_string()));
-  }
-
-  #[test]
-  fn test_partial_location() {
-    let s = PartialLocation {
-      file: Some("test".to_string()),
-      namespace: Some("test".to_string()),
-      line: Some(1),
-      column: Some(0),
-      length: Some(1),
-      line_text: Some("test".to_string()),
-      suggestion: Some("test".to_string()),
-    };
-
-    let json = json!({
-        "file": "test",
-        "namespace": "test",
-        "line": 1,
-        "column": 0,
-        "length": 1,
-        "lineText": "test",
-        "suggestion": "test",
-    });
-
-    assert_eq!(s, serde_json::from_value(json).unwrap());
-  }
-}
+type LRVPartialMessage = Lrc<RwLock<Vec<PartialMessage>>>;
 
 pub struct EsbuildEmitter {
-  pub errors: Lrc<RwLock<Vec<PartialMessage>>>,
-  pub warnings: Lrc<RwLock<Vec<PartialMessage>>>,
+  pub errors: LRVPartialMessage,
+  pub warnings: LRVPartialMessage,
 
   plugin_name: String,
   source_map: Option<Lrc<SourceMapperDyn>>,
@@ -123,11 +55,7 @@ impl EsbuildEmitter {
   pub fn new(
     plugin_name: String,
     source_map: Option<Lrc<SourceMapperDyn>>,
-  ) -> (
-    Self,
-    Lrc<RwLock<Vec<PartialMessage>>>,
-    Lrc<RwLock<Vec<PartialMessage>>>,
-  ) {
+  ) -> (Self, LRVPartialMessage, LRVPartialMessage) {
     let errors = Lrc::new(RwLock::new(vec![]));
     let warnings = Lrc::new(RwLock::new(vec![]));
 
@@ -199,5 +127,75 @@ impl Emitter for EsbuildEmitter {
         todo!()
       }
     }
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+  use serde_json::json;
+
+  #[test]
+  fn test_partial_message() {
+    let json = json!({
+        "pluginName": "test",
+        "text": "test",
+        "location": {
+            "file": "test",
+            "namespace": "test",
+            "line": 1,
+            "column": 0,
+            "length": 1,
+            "lineText": "test",
+            "suggestion": "test",
+        },
+        "notes": [
+            {
+                "text": "test",
+                "location": {
+                    "file": "test",
+                    "namespace": "test",
+                    "line": 1,
+                    "column": 0,
+                    "length": 1,
+                    "lineText": "test",
+                    "suggestion": "test",
+                },
+            },
+        ],
+        "detail": "test",
+    });
+    let s: PartialMessage = serde_json::from_value(json).unwrap();
+
+    assert_eq!(s.plugin_name, Some("test".to_string()));
+    assert_eq!(s.text, Some("test".to_string()));
+    assert_eq!(s.location.unwrap().file, Some("test".to_string()));
+    assert_eq!(s.notes.unwrap()[0].text, Some("test".to_string()));
+    assert_eq!(s.detail, Some("test".to_string()));
+  }
+
+  #[test]
+  fn test_partial_location() {
+    let s = PartialLocation {
+      file: Some("test".to_string()),
+      namespace: Some("test".to_string()),
+      line: Some(1),
+      column: Some(0),
+      length: Some(1),
+      line_text: Some("test".to_string()),
+      suggestion: Some("test".to_string()),
+    };
+
+    let json = json!({
+        "file": "test",
+        "namespace": "test",
+        "line": 1,
+        "column": 0,
+        "length": 1,
+        "lineText": "test",
+        "suggestion": "test",
+    });
+
+    assert_eq!(s, serde_json::from_value(json).unwrap());
   }
 }

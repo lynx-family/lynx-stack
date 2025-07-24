@@ -24,8 +24,8 @@ pub enum AttrName {
 
 impl From<String> for AttrName {
   fn from(name: String) -> Self {
-    if name.starts_with("data-") {
-      AttrName::Dataset(name[5..].to_string())
+    if let Some(stripped_name) = name.strip_prefix("data-") {
+      AttrName::Dataset(stripped_name.to_string())
     } else if name == "class" || name == "className" {
       AttrName::Class
     } else if name == "style" {

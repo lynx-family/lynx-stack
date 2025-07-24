@@ -622,35 +622,27 @@ where
   }
 
   fn visit_mut_jsx_element(&mut self, n: &mut JSXElement) {
-    let is_component_is = match &n {
-      JSXElement {
-        opening: JSXOpeningElement { name, attrs, .. },
-        ..
-      } => match name {
-        JSXElementName::Ident(id) => {
-          if id.sym == "component" {
-            // <component is=? />
-            attrs
-              .iter()
-              .find(|attr| match attr {
-                JSXAttrOrSpread::JSXAttr(JSXAttr {
-                  name: JSXAttrName::Ident(ident),
-                  ..
-                }) => ident.sym == "is",
-                JSXAttrOrSpread::JSXAttr(JSXAttr {
-                  name: JSXAttrName::JSXNamespacedName(_),
-                  ..
-                }) => false,
-                JSXAttrOrSpread::SpreadElement(_) => false,
-              })
-              .is_some()
-          } else {
-            false
-          }
+    let is_component_is = match &n.opening.name {
+      JSXElementName::Ident(id) => {
+        if id.sym == "component" {
+          // <component is=? />
+          n.opening.attrs.iter().any(|attr| match attr {
+            JSXAttrOrSpread::JSXAttr(JSXAttr {
+              name: JSXAttrName::Ident(ident),
+              ..
+            }) => ident.sym == "is",
+            JSXAttrOrSpread::JSXAttr(JSXAttr {
+              name: JSXAttrName::JSXNamespacedName(_),
+              ..
+            }) => false,
+            JSXAttrOrSpread::SpreadElement(_) => false,
+          })
+        } else {
+          false
         }
-        JSXElementName::JSXMemberExpr(_) => false,
-        _ => false,
-      },
+      }
+      JSXElementName::JSXMemberExpr(_) => false,
+      _ => false,
     };
 
     if is_component_is {
@@ -675,49 +667,39 @@ where
       }
     }
 
-    let is_target_jsx_element = match &n {
-      JSXElement {
-        opening: JSXOpeningElement { name, .. },
-        ..
-      } => match name {
-        JSXElementName::Ident(id) => {
-          if self.old_runtime_import_ids.contains(&id.to_id()) {
-            // import { View } from "@lynx-js/react-components"
-            // <View/>
-            true
-          } else if id.sym == id.sym.to_string().to_lowercase() {
-            // lowercase
-            // <view/>
-            true
-          } else {
-            false
-          }
-        }
-        _ => false,
-      },
+    // this test if the jsx element is lynx instrict element, like <view/>
+    let is_target_jsx_element = if let JSXElementName::Ident(id) = &n.opening.name {
+      if self.old_runtime_import_ids.contains(&id.to_id()) {
+        // import { View } from "@lynx-js/react-components"
+        // <View/>
+        true
+      } else if id.sym == id.sym.to_string().to_lowercase() {
+        // lowercase
+        // <view/>
+        true
+      } else {
+        false
+      }
+    } else {
+      false
     };
 
-    let is_component = match &n {
-      JSXElement {
-        opening: JSXOpeningElement { name, .. },
-        ..
-      } => match name {
-        JSXElementName::Ident(id) => {
-          if self.old_runtime_import_ids.contains(&id.to_id()) {
-            // import { View } from "@lynx-js/react-components"
-            // <View/>
-            false
-          } else if id.sym == id.sym.to_string().to_lowercase() {
-            // lowercase
-            // <view/>
-            false
-          } else {
-            true
-          }
+    let is_component = match &n.opening.name {
+      JSXElementName::Ident(id) => {
+        if self.old_runtime_import_ids.contains(&id.to_id()) {
+          // import { View } from "@lynx-js/react-components"
+          // <View/>
+          false
+        } else if id.sym == id.sym.to_string().to_lowercase() {
+          // lowercase
+          // <view/>
+          false
+        } else {
+          true
         }
-        JSXElementName::JSXMemberExpr(_) => true,
-        _ => false,
-      },
+      }
+      JSXElementName::JSXMemberExpr(_) => true,
+      _ => false,
     };
 
     if is_component {
@@ -779,11 +761,13 @@ where
         if let Some(remove_component_attr_regex) = &self.opts.remove_component_attr_regex {
           let re = regex::Regex::new(remove_component_attr_regex).unwrap();
           n.opening.attrs.retain(|p| {
-            if let JSXAttrOrSpread::JSXAttr(JSXAttr { name, .. }) = p {
-              if let JSXAttrName::Ident(IdentName { sym, .. }) = name {
-                if re.is_match(sym.as_ref()) {
-                  return false;
-                }
+            if let JSXAttrOrSpread::JSXAttr(JSXAttr {
+              name: JSXAttrName::Ident(IdentName { sym, .. }),
+              ..
+            }) = p
+            {
+              if re.is_match(sym.as_ref()) {
+                return false;
               }
             }
             true
@@ -1054,52 +1038,49 @@ where
 
   fn visit_mut_call_expr(&mut self, n: &mut CallExpr) {
     // check if it is e.stopPropagation()
-    match &mut n.callee {
-      Callee::Expr(e) => {
-        if let Expr::Member(m) = &**e {
-          // check if it is e.stopPropagation
-          if let MemberProp::Ident(id) = &m.prop {
-            if id.sym == "stopPropagation" {
-              HANDLER.with(|handler| {
+    if let Callee::Expr(e) = &mut n.callee {
+      if let Expr::Member(m) = &**e {
+        // check if it is e.stopPropagation
+        if let MemberProp::Ident(id) = &m.prop {
+          if id.sym == "stopPropagation" {
+            HANDLER.with(|handler| {
               handler
-                .struct_span_warn(
-                  n.span,
-                  "BROKEN: e.stopPropagation() takes no effect and MUST be migrated in ReactLynx 3.0",
-                )
-                .emit()
+              .struct_span_warn(
+                n.span,
+                "BROKEN: e.stopPropagation() takes no effect and MUST be migrated in ReactLynx 3.0",
+              )
+              .emit()
             });
-            }
           }
-          if let Expr::This(_) = &*m.obj {
-            if let MemberProp::Ident(id) = &m.prop {
-              match id.sym.to_string().as_str() {
-                "getNodeRef" | "getNodeRefFromRoot" | "createSelectorQuery" => {
-                  HANDLER.with(|handler| {
-                                      handler
-                                          .struct_span_warn(
-                                              n.span,
-                                              format!("BROKEN: {} on component instance is broken and MUST be migrated in ReactLynx 3.0, please use ref or lynx.createSelectorQuery instead.", id.sym).as_str(),
-                                          )
-                                          .emit()
-                                  });
-                }
-                "getElementById" => {
-                  HANDLER.with(|handler| {
-                                  handler
-                                      .struct_span_warn(
-                                          n.span,
-                                          format!("BROKEN: {} on component instance is broken and MUST be migrated in ReactLynx 3.0, please use ref or lynx.getElementById instead.", id.sym).as_str(),
-                                      )
-                                      .emit()
-                              });
-                }
-                &_ => {}
+        }
+        if let Expr::This(_) = &*m.obj {
+          if let MemberProp::Ident(id) = &m.prop {
+            match id.sym.to_string().as_str() {
+              "getNodeRef" | "getNodeRefFromRoot" | "createSelectorQuery" => {
+                HANDLER.with(|handler| {
+                                    handler
+                                        .struct_span_warn(
+                                            n.span,
+                                            format!("BROKEN: {} on component instance is broken and MUST be migrated in ReactLynx 3.0, please use ref or lynx.createSelectorQuery instead.", id.sym).as_str(),
+                                        )
+                                        .emit()
+                                });
               }
+              "getElementById" => {
+                HANDLER.with(|handler| {
+                                handler
+                                    .struct_span_warn(
+                                        n.span,
+                                        format!("BROKEN: {} on component instance is broken and MUST be migrated in ReactLynx 3.0, please use ref or lynx.getElementById instead.", id.sym).as_str(),
+                                    )
+                                    .emit()
+                            });
+              }
+              &_ => {}
             }
           }
         }
       }
-      _ => {}
     }
 
     n.visit_mut_children_with(self);
@@ -1121,18 +1102,16 @@ where
           ClassMember::Constructor(_) => false, // remove constructor
           ClassMember::ClassProp(ClassProp {
             is_static: false,
-            key,
+            key: PropName::Ident(ident),
             ..
-          }) => match key {
-            PropName::Ident(ident) => {
-              if ident.sym == "state" {
-                false // remove `state = {...}`
-              } else {
-                true
-              }
+          }) => {
+            if ident.sym == "state" {
+              false // remove `state = {...}`
+            } else {
+              true
             }
-            _ => true,
-          },
+          }
+          ClassMember::ClassProp(_) => true,
           _ => true,
         });
 
@@ -1190,31 +1169,29 @@ where
       }
 
       n.body.retain_mut(|member| match member {
-                ClassMember::ClassProp(ClassProp {
-                    is_static: false,
-                    key,
-                    span,
-                    ..
-                }) => match key {
-                    PropName::Ident(ident) => {
-                        if ident.sym == "config" {
-                            HANDLER.with(|handler| {
-                                handler
-                                    .struct_span_warn(
-                                        *span,
-                                        "BROKEN: supporting for class property `config` is removed and MUST be migrated in ReactLynx 3.0, you should put your configs inside `pageConfig` in lynx.config.js",
-                                    )
-                                    .emit()
-                            });
-                            false // remove `config = {...}`
-                        } else {
-                            true
-                        }
-                    }
-                    _ => true,
-                },
-                _ => true,
+        ClassMember::ClassProp(ClassProp {
+          is_static: false,
+          key: PropName::Ident(ident),
+          span,
+          ..
+        }) => {
+          if ident.sym == "config" {
+            HANDLER.with(|handler| {
+              handler
+                .struct_span_warn(
+                  *span,
+                  "BROKEN: supporting for class property `config` is removed and MUST be migrated in ReactLynx 3.0, you should put your configs inside `pageConfig` in lynx.config.js",
+                )
+                .emit()
             });
+            false // remove `config = {...}`
+          } else {
+            true
+          }
+        }
+        ClassMember::ClassProp(_) => true,
+        _ => true,
+      });
     }
 
     n.visit_mut_children_with(self);

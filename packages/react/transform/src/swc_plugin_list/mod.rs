@@ -44,10 +44,8 @@ fn jsx_list_item_deferred(n: &JSXElement) -> bool {
       if let JSXAttrName::Ident(ident) = &attr.name {
         ident.sym == "defer"
           && match *jsx_attr_value(attr.value.clone()) {
-            Expr::Lit(lit) => match lit {
-              Lit::Bool(b) => b.value,
-              _ => true,
-            },
+            Expr::Lit(Lit::Bool(b)) => b.value,
+            Expr::Lit(_) => true,
             _ => true,
           }
       } else {

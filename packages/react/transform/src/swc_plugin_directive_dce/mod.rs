@@ -92,10 +92,10 @@ impl VisitMut for DirectiveDCEVisitor {
           None => {}
           Some(stmt) => {
             let (_, span) = self.should_eliminate(stmt);
-            if span.is_some() {
+            if let Some(span) = span {
               HANDLER.with(|handler| {
                 handler
-                  .struct_span_warn(span.unwrap(), "directive inside constructor is not allowed")
+                  .struct_span_warn(span, "directive inside constructor is not allowed")
                   .emit();
               });
             }
@@ -130,10 +130,10 @@ impl VisitMut for DirectiveDCEVisitor {
           None => {}
           Some(stmt) => {
             let (_, span) = self.should_eliminate(stmt);
-            if span.is_some() {
+            if let Some(span) = span {
               HANDLER.with(|handler| {
                 handler
-                  .struct_span_warn(span.unwrap(), "directive inside getter/setter is ignored")
+                  .struct_span_warn(span, "directive inside getter/setter is ignored")
                   .emit();
               });
             }

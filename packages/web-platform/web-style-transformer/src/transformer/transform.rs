@@ -63,6 +63,8 @@ macro_rules! push_u16_decl_pairs {
   };
 }
 
+type CSSPair<'a> = (&'a [u16], usize, usize, &'a [u16], usize, usize);
+
 pub fn query_transform_rules<'a>(
   name: &'a [u16],
   name_start: usize,
@@ -70,14 +72,10 @@ pub fn query_transform_rules<'a>(
   value: &'a [u16],
   value_start: usize,
   value_end: usize,
-) -> (
-  Vec<(&'a [u16], usize, usize, &'a [u16], usize, usize)>,
-  Vec<(&'a [u16], usize, usize, &'a [u16], usize, usize)>,
-) {
-  let mut result: Vec<(&'a [u16], usize, usize, &'a [u16], usize, usize)> = Vec::new();
-  let mut result_children: Vec<(&'a [u16], usize, usize, &'a [u16], usize, usize)> = Vec::new();
+) -> (Vec<CSSPair<'a>>, Vec<CSSPair<'a>>) {
+  let mut result: Vec<CSSPair<'a>> = Vec::new();
+  let mut result_children: Vec<CSSPair<'a>> = Vec::new();
   if let Some(renamed_value) = get_rename_rule_value!(name, name_start, name_end) {
-    let renamed_value = renamed_value;
     result.push((
       renamed_value,
       0,

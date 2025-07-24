@@ -1,4 +1,5 @@
 #![deny(clippy::all)]
+#![allow(clippy::boxed_local, clippy::borrowed_box)]
 
 #[macro_use]
 extern crate napi_derive;
@@ -195,8 +196,8 @@ impl napi::bindgen_prelude::FromNapiValue for IsModuleConfig {
     napi_val: napi::bindgen_prelude::sys::napi_value,
   ) -> napi::bindgen_prelude::Result<Self> {
     let bool_val = <bool>::from_napi_value(env, napi_val);
-    if bool_val.is_ok() {
-      return Ok(IsModuleConfig(IsModule::Bool(bool_val.unwrap())));
+    if let Ok(bool_val) = bool_val {
+      return Ok(IsModuleConfig(IsModule::Bool(bool_val)));
     }
 
     let str_val = <&str>::from_napi_value(env, napi_val);
@@ -324,7 +325,7 @@ fn transform_react_lynx_inner(
   options: TransformNodiffOptions,
 ) -> TransformNodiffOutput {
   let content_hash = match options.mode {
-    Some(val) if val == TransformMode::Test => "test".into(),
+    Some(TransformMode::Test) => "test".into(),
     _ => calc_hash(code.as_str()),
   };
   let comments = SingleThreadedComments::default();

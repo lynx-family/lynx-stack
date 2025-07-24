@@ -1,3 +1,4 @@
+#![allow(clippy::manual_range_contains)]
 mod char_code_definitions;
 pub mod parse_inline_style;
 mod tokenize;
@@ -58,6 +59,7 @@ mod tests {
   }
 
   fn parse_css(css: &str) -> (TestTransformer, Vec<u16>) {
+    if css == "test" {}
     let source: Vec<u16> = css.encode_utf16().collect();
     let mut transformer = TestTransformer::new();
     parse_inline_style(&source, &mut transformer);

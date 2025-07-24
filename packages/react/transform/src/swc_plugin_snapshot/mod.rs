@@ -272,70 +272,68 @@ where
   fn static_stmt_from_jsx_element(&mut self, n: &JSXElement, el: Ident) -> Stmt {
     let mut static_stmt: Stmt = Stmt::Empty(EmptyStmt { span: DUMMY_SP });
 
-    if let Expr::Lit(lit) = *jsx_name(n.opening.name.clone()) {
-      if let Lit::Str(str) = lit {
-        match str.value.as_ref() {
-          "view" => {
-            static_stmt = quote!(
-              r#"const $element = __CreateView($page_id)"# as Stmt,
+    if let Expr::Lit(Lit::Str(str)) = *jsx_name(n.opening.name.clone()) {
+      match str.value.as_ref() {
+        "view" => {
+          static_stmt = quote!(
+            r#"const $element = __CreateView($page_id)"# as Stmt,
+            element = el.clone(),
+            page_id = self.page_id.clone(),
+          );
+        }
+        "scroll-view" => {
+          static_stmt = quote!(
+            r#"const $element = __CreateScrollView($page_id)"# as Stmt,
+            element = el.clone(),
+            page_id = self.page_id.clone(),
+          );
+        }
+        "x-scroll-view" => {
+          static_stmt = quote!(
+            r#"const $element = __CreateScrollView($page_id, { tag: "x-scroll-view" })"# as Stmt,
+            element = el.clone(),
+            page_id = self.page_id.clone(),
+          );
+        }
+        "image" => {
+          static_stmt = quote!(
+            r#"const $element = __CreateImage($page_id)"# as Stmt,
+            element = el.clone(),
+            page_id = self.page_id.clone(),
+          );
+        }
+        "text" => {
+          static_stmt = quote!(
+            r#"const $element = __CreateText($page_id)"# as Stmt,
+            element = el.clone(),
+            page_id = self.page_id.clone(),
+          );
+        }
+        "wrapper" => {
+          static_stmt = quote!(
+            r#"const $element = __CreateWrapperElement($page_id)"# as Stmt,
+            element = el.clone(),
+            page_id = self.page_id.clone(),
+          );
+        }
+        "list" => {
+          static_stmt = quote!(
+              r#"const $element = $runtime_id.snapshotCreateList($page_id, $si_id, $element_index)"#
+                  as Stmt,
               element = el.clone(),
+              runtime_id: Expr = self.runtime_id.clone(),
               page_id = self.page_id.clone(),
-            );
-          }
-          "scroll-view" => {
-            static_stmt = quote!(
-              r#"const $element = __CreateScrollView($page_id)"# as Stmt,
+              si_id = self.si_id.clone(),
+              element_index: Expr = Expr::Lit(Lit::Num(Number { span: DUMMY_SP, value: self.element_index as f64, raw: None })),
+          );
+        }
+        _ => {
+          static_stmt = quote!(
+              r#"const $element = __CreateElement($name, $page_id)"# as Stmt,
               element = el.clone(),
+              name: Expr = Expr::Lit(Lit::Str(str)),
               page_id = self.page_id.clone(),
-            );
-          }
-          "x-scroll-view" => {
-            static_stmt = quote!(
-              r#"const $element = __CreateScrollView($page_id, { tag: "x-scroll-view" })"# as Stmt,
-              element = el.clone(),
-              page_id = self.page_id.clone(),
-            );
-          }
-          "image" => {
-            static_stmt = quote!(
-              r#"const $element = __CreateImage($page_id)"# as Stmt,
-              element = el.clone(),
-              page_id = self.page_id.clone(),
-            );
-          }
-          "text" => {
-            static_stmt = quote!(
-              r#"const $element = __CreateText($page_id)"# as Stmt,
-              element = el.clone(),
-              page_id = self.page_id.clone(),
-            );
-          }
-          "wrapper" => {
-            static_stmt = quote!(
-              r#"const $element = __CreateWrapperElement($page_id)"# as Stmt,
-              element = el.clone(),
-              page_id = self.page_id.clone(),
-            );
-          }
-          "list" => {
-            static_stmt = quote!(
-                r#"const $element = $runtime_id.snapshotCreateList($page_id, $si_id, $element_index)"#
-                    as Stmt,
-                element = el.clone(),
-                runtime_id: Expr = self.runtime_id.clone(),
-                page_id = self.page_id.clone(),
-                si_id = self.si_id.clone(),
-                element_index: Expr = Expr::Lit(Lit::Num(Number { span: DUMMY_SP, value: self.element_index as f64, raw: None })),
-            );
-          }
-          _ => {
-            static_stmt = quote!(
-                r#"const $element = __CreateElement($name, $page_id)"# as Stmt,
-                element = el.clone(),
-                name: Expr = Expr::Lit(Lit::Str(str)),
-                page_id = self.page_id.clone(),
-            );
-          }
+          );
         }
       };
     }
@@ -523,15 +521,13 @@ where
           .for_each(|attr_or_spread| match attr_or_spread {
             JSXAttrOrSpread::SpreadElement(_) => todo!(),
             JSXAttrOrSpread::JSXAttr(JSXAttr { name, value, .. }) => {
-              if let Some(JSXAttrValue::Lit(lit)) = value {
-                if let Lit::Str(s) = lit {
-                  let transformed_value = transform_jsx_attr_str(&s.value);
-                  *value = Some(JSXAttrValue::Lit(Lit::Str(Str {
-                    span: s.span,
-                    raw: None,
-                    value: transformed_value.into(),
-                  })));
-                }
+              if let Some(JSXAttrValue::Lit(Lit::Str(s))) = value {
+                let transformed_value = transform_jsx_attr_str(&s.value);
+                *value = Some(JSXAttrValue::Lit(Lit::Str(Str {
+                  span: s.span,
+                  raw: None,
+                  value: transformed_value.into(),
+                })));
               }
 
               match name {
@@ -1548,28 +1544,26 @@ where
     }
 
     n.visit_mut_children_with(self);
-    if let Some(runtime_id) = Lazy::<Expr>::get(&self.runtime_id) {
-      if let Expr::Ident(runtime_id) = runtime_id {
-        prepend_stmt(
-          &mut n.body,
-          ModuleItem::ModuleDecl(ModuleDecl::Import(ImportDecl {
+    if let Some(Expr::Ident(runtime_id)) = Lazy::<Expr>::get(&self.runtime_id) {
+      prepend_stmt(
+        &mut n.body,
+        ModuleItem::ModuleDecl(ModuleDecl::Import(ImportDecl {
+          span: DUMMY_SP,
+          specifiers: vec![ImportSpecifier::Namespace(ImportStarAsSpecifier {
             span: DUMMY_SP,
-            specifiers: vec![ImportSpecifier::Namespace(ImportStarAsSpecifier {
-              span: DUMMY_SP,
-              local: runtime_id.clone(),
-            })],
-            src: Box::new(Str {
-              span: DUMMY_SP,
-              raw: None,
-              value: self.cfg.runtime_pkg.clone().into(),
-            }),
-            type_only: Default::default(),
-            // asserts: Default::default(),
-            with: Default::default(),
-            phase: ImportPhase::Evaluation,
-          })),
-        );
-      };
+            local: runtime_id.clone(),
+          })],
+          src: Box::new(Str {
+            span: DUMMY_SP,
+            raw: None,
+            value: self.cfg.runtime_pkg.clone().into(),
+          }),
+          type_only: Default::default(),
+          // asserts: Default::default(),
+          with: Default::default(),
+          phase: ImportPhase::Evaluation,
+        })),
+      );
     }
   }
 

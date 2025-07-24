@@ -9,7 +9,7 @@ impl WorkletHash {
     WorkletHash { last_id: 0 }
   }
 
-  pub fn gen(&mut self, filename: &String, content_hash: &String) -> String {
+  pub fn gen(&mut self, filename: &str, content_hash: &str) -> String {
     self.last_id += 1;
     format!(
       "{}:{}:{}",

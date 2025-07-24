@@ -218,16 +218,19 @@ pub fn jsx_is_custom(jsx: &JSXElement) -> bool {
 
 pub fn jsx_has_dynamic_key(jsx: &JSXElement) -> bool {
   jsx.opening.attrs.iter().any(|attr| {
-    if let JSXAttrOrSpread::JSXAttr(JSXAttr { name, value, .. }) = attr {
-      if let JSXAttrName::Ident(ident) = name {
-        if ident.sym == atom!("key") {
-          if let Some(JSXAttrValue::JSXExprContainer(JSXExprContainer {
-            expr: JSXExpr::Expr(_),
-            ..
-          })) = value
-          {
-            return true;
-          }
+    if let JSXAttrOrSpread::JSXAttr(JSXAttr {
+      name: JSXAttrName::Ident(ident),
+      value,
+      ..
+    }) = attr
+    {
+      if ident.sym == atom!("key") {
+        if let Some(JSXAttrValue::JSXExprContainer(JSXExprContainer {
+          expr: JSXExpr::Expr(_),
+          ..
+        })) = value
+        {
+          return true;
         }
       }
     }
@@ -256,15 +259,22 @@ pub fn jsx_is_children_full_dynamic(n: &JSXElement) -> bool {
       .iter()
       .filter(|child| {
         // don't handle comment
-        if let JSXElementChild::JSXExprContainer(JSXExprContainer {
-          expr: JSXExpr::JSXEmptyExpr(_),
-          ..
-        }) = child
-        {
-          false
-        } else {
-          true
-        }
+        // if let JSXElementChild::JSXExprContainer(JSXExprContainer {
+        //   expr: JSXExpr::JSXEmptyExpr(_),
+        //   ..
+        // }) = child
+        // {
+        //   false
+        // } else {
+        //   true
+        // }
+        matches!(
+          child,
+          JSXElementChild::JSXExprContainer(JSXExprContainer {
+            expr: JSXExpr::JSXEmptyExpr(_),
+            ..
+          })
+        )
       })
       .all(|child| match child {
         JSXElementChild::JSXText(text) => jsx_text_to_str(&text.value).is_empty(),

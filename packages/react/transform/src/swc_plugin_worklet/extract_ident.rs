@@ -1,3 +1,4 @@
+#![allow(clippy::vec_box)]
 use crate::swc_plugin_worklet::decl_collect::{
   collect_current_scope_decls, collect_inner_scope_decls,
 };
@@ -192,10 +193,7 @@ impl ExtractingIdentsCollector {
     }
   }
 
-  fn find_prop<'l>(
-    props: &'l mut Vec<PropOrSpread>,
-    name: &PropName,
-  ) -> Option<&'l mut PropOrSpread> {
+  fn find_prop<'l>(props: &'l mut [PropOrSpread], name: &PropName) -> Option<&'l mut PropOrSpread> {
     let name_str: &str = match name {
       PropName::Ident(id) => &id.sym,
       PropName::Str(str) => &str.value,
@@ -213,11 +211,11 @@ impl ExtractingIdentsCollector {
         Prop::KeyValue(KeyValueProp {
           key: PropName::Ident(id),
           ..
-        }) => &id.sym == name_str,
+        }) => id.sym == *name_str,
         Prop::KeyValue(KeyValueProp {
           key: PropName::Str(str),
           ..
-        }) => &str.value == name_str,
+        }) => str.value == *name_str,
         _ => false,
       })
   }

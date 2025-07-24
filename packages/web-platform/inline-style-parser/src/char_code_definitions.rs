@@ -200,8 +200,8 @@ macro_rules! is_number_start {
 #[macro_export]
 macro_rules! char_code_category {
   ($char_code:expr) => {
-    if $char_code < 0x80 {
-      $crate::char_code_definitions::CATEGORY[$char_code]
+    if let Some(category) = $crate::char_code_definitions::CATEGORY.get($char_code as usize) {
+      *category
     } else {
       // For char_code >= 0x80, it's considered NameStart_Category.
       // This aligns with CSS syntax where non-ASCII characters are name-start characters.

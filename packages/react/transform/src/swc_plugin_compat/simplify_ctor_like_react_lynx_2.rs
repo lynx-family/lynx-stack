@@ -33,8 +33,8 @@ impl CtorSimplifyVisitor {
 impl Visit for CtorSimplifyVisitor {
   fn visit_constructor(&mut self, n: &Constructor) {
     if let Some(body) = &n.body {
+      let re = Regex::new(r"^__[A-Z_]+__$").unwrap();
       for stmt in &body.stmts {
-        let re = Regex::new(r"^__[A-Z_]+__$").unwrap();
         if let Stmt::If(stmt_if) = stmt {
           let mut test_ident = &Ident::dummy();
 
@@ -86,20 +86,18 @@ impl Visit for CtorSimplifyVisitor {
     if self.in_constructor {
       if let AssignExpr {
         op: AssignOp::Assign,
-        left: AssignTarget::Simple(left),
+        left: AssignTarget::Simple(SimpleAssignTarget::Member(member)),
         right,
         ..
       } = &n
       {
-        if let SimpleAssignTarget::Member(member) = left {
-          if member.obj.is_this() {
-            if let MemberProp::Ident(key) = &member.prop {
-              if key.sym == "state" && right.is_object() {
-                self.is_target_object = true;
-                n.visit_children_with(self);
-                self.is_target_object = false;
-                return;
-              }
+        if member.obj.is_this() {
+          if let MemberProp::Ident(key) = &member.prop {
+            if key.sym == "state" && right.is_object() {
+              self.is_target_object = true;
+              n.visit_children_with(self);
+              self.is_target_object = false;
+              return;
             }
           }
         }
