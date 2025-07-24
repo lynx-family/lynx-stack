@@ -43,7 +43,7 @@ jobs:
         run: |
           pnpm turbo build --summarize
         env:
-          NODE_OPTIONS: --max-old-space-size=32768
+          NODE_OPTIONS: --max-old-space-size=6144
         continue-on-error: true
       - name: Setup Rust and retry build if failed
         if: steps.build.outcome == 'failure'
