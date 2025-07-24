@@ -95,6 +95,7 @@ function injectGlobals() {
     GlobalEventEmitter: getJSModule('GlobalEventEmitter'),
   };
   globalThis.lynx = {
+    queueMicrotask: Promise.prototype.then.bind(Promise.resolve()),
     getNativeApp: () => app,
     performance,
     createSelectorQuery: () => {
