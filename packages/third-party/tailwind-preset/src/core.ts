@@ -125,12 +125,12 @@ export const DEFAULT_CORE_PLUGINS: CorePluginsConfig = [
   'gap',
 
   'size',
+  // 'blur' // Defined using plugin
+  // 'grayscale' // Defined using plugin
+  // 'filter' // Defined using plugin
   /* Plugins to be customized */
 
   // 'gradientColorStops'
-  // 'blur'
-  // 'grayscale'
-  // 'filter'
   // 'accessibility'
 
   /* Plugins coming in next release */
