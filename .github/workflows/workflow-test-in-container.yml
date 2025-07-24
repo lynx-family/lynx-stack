@@ -1,0 +1,113 @@
+on:
+  workflow_call:
+    secrets:
+      CODECOV_TOKEN:
+        required: false
+      LHCI_GITHUB_APP_TOKEN:
+        required: false
+      TOS_AP_ACCESS_KEY:
+        required: false
+      TOS_AP_SECRET_KEY:
+        required: false
+      TOS_AP_ENDPOINT:
+        required: false
+      TOS_AP_REGION:
+        required: false
+    inputs:
+      runs-on:
+        required: true
+        type: string
+      run:
+        required: true
+        type: string
+        description: "Command run parameters, limited to predefined test commands"
+      is-web:
+        required: false
+        type: boolean
+        default: false
+      codecov-flags:
+        required: false
+        type: string
+        default: "unittest"
+
+# Set minimum permissions to prevent unnecessary access
+permissions: {}
+
+env:
+  CI: 1
+  TURBO_TELEMETRY_DISABLED: 1
+jobs:
+  check:
+    timeout-minutes: 30
+    permissions: {}
+    runs-on: ${{ inputs.runs-on }}
+    container:
+      image: mcr.microsoft.com/playwright:v1.50.1-noble
+      # credentials:
+      #   username: lynx-family
+      #   password: ${{ secrets.GITHUB_TOKEN }}
+      env:
+        ACCESS_KEY: ${{ secrets.TOS_AP_ACCESS_KEY }}
+        SECRET_KEY: ${{ secrets.TOS_AP_SECRET_KEY }}
+        ENDPOINT: ${{ secrets.TOS_AP_ENDPOINT }}
+        BUCKET_NAME: actions
+        REGION: ${{ secrets.TOS_AP_REGION }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        with:
+          # Codecov requires fetch-depth: 0
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "22"
+      - name: TurboCache
+        uses: lynx-infra/cache@5c6160a6a4c7fca80a2f3057bb9dfc9513fcb732
+        with:
+          path: .turbo
+          # We have to be strict here to make sure getting the cache of build-all
+          key: turbo-v4-${{ runner.os }}-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ github.sha }}
+          fail-on-cache-miss: true
+      - name: Install
+        run: |
+          npm install -g corepack@latest
+          corepack enable
+          pnpm install --frozen-lockfile
+      - name: Build
+        run: |
+          pnpm turbo build --summarize
+      # - uses: ./.github/actions/setup-playwright
+      #   if: ${{ inputs.is-web }}
+      #   with:
+      #     working-directory: packages/web-platform/web-tests
+      - name: Test # zizmor: ignore[template-injection] The inputs.run is provided by us.
+        id: test
+        env:
+          NODE_OPTIONS: --max-old-space-size=8192
+          GITHUB_SHA: ${{ github.event.pull_request.head.sha }}
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+        run: ${{ inputs.run }}
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@18283e04ce6e62d37312384ff67231eb8fd56d24 # v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          flags: ${{ inputs.codecov-flags }}
+      - name: Upload test results to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/test-results-action@47f89e9acb64b76debcd5ea40642d25a4adced9f # v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          flags: ${{ inputs.codecov-flags }}
+          override_branch: ${{ github.event_name == 'merge_group' && 'main' || '' }}
+      - name: Upload Test Result
+        if: ${{ inputs.is-web && failure() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: playwright-report
+          path: packages/web-platform/web-tests/playwright-report
+          if-no-files-found: error
+          retention-days: 1
+          overwrite: true
+          include-hidden-files: true
