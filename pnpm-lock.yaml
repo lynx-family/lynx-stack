@@ -20,6 +20,10 @@ catalogs:
     '@rspack/test-tools':
       specifier: 1.4.8
       version: 1.4.8
+  rstest:
+    '@rstest/core':
+      specifier: 0.0.9
+      version: 0.0.9
 
 overrides:
   '@rspack/core': 1.4.8
@@ -280,6 +284,9 @@ importers:
       '@lynx-js/types':
         specifier: 3.3.0
         version: 3.3.0
+      '@rstest/core':
+        specifier: catalog:rstest
+        version: 0.0.9(jsdom@26.1.0)
 
   packages/rspeedy/core:
     dependencies:
@@ -2719,6 +2726,19 @@ packages:
   '@rstack-dev/doc-ui@1.10.8':
     resolution: {integrity: sha512-F/v0XzRI1ZIAzBBLx91um4TLMIUWw3LiQsPXtZe8ZAF6wQUVk47YPK/kB1VPkLLaD214JrwWq+L6P7UnD8MT7A==}
 
+  '@rstest/core@0.0.9':
+    resolution: {integrity: sha512-4TnZ+ce9jntbl9w3fELP0KwrQQHI7Ep2tYlSEx5PchxFvG+hGuXAWminWw9QqM6qk8aQNlYvtjHhonol0UxyHg==}
+    engines: {node: '>=18.0.0'}
+    hasBin: true
+    peerDependencies:
+      happy-dom: '*'
+      jsdom: '*'
+    peerDependenciesMeta:
+      happy-dom:
+        optional: true
+      jsdom:
+        optional: true
+
   '@rtsao/scc@1.1.0':
     resolution: {integrity: sha512-zt6OdqaDoOnJ1ZYsCYGt9YmWzDXl4vQdKTyJev62gFhRGKdx7mcT54V9KIjg+d2wi9EXsPvAPKe7i7WjfVWB8g==}
 
@@ -3609,6 +3629,9 @@ packages:
     resolution: {integrity: sha512-Ceh+7ox5qe7LJuLHoY0feh3pHuUDHAcRUeyL2VYghZwfpkNIy/+8Ocg0a3UuSoYzavmylwuLWQOf3hl0jjMMIw==}
     engines: {node: '>=8'}
 
+  birpc@2.5.0:
+    resolution: {integrity: sha512-VSWO/W6nNQdyP520F1mhf+Lc2f8pjGQOtoHHm7Ze8Go1kX7akpVIrtTa0fn+HB0QJEDVacl6aO08YE0PgXfdnQ==}
+
   bl@4.1.0:
     resolution: {integrity: sha512-1W07cM9gS6DcLperZfFSj+bWLtaPGSOHWhPiGzXmvVJbRLdG82sH/Kn8EtW1VqWVA54AKf2h5k5BbnIbwF3h6w==}
 
@@ -3721,6 +3744,10 @@ packages:
   chai@5.2.0:
     resolution: {integrity: sha512-mCuXncKXk5iCLhfhwTc0izo0gtEmpz5CtG2y8GiOINBlMVS6v8TMRc5TaLWKS6692m9+dVVfzgeVxR5UxWHTYw==}
     engines: {node: '>=12'}
+
+  chai@5.2.1:
+    resolution: {integrity: sha512-5nFxhUrX0PqtyogoYOA8IPswy5sZFTOsBFl/9bNsmDLgsxYTzSZQJDPppDnZPTQbzSEm0hqGjWPzRemQCYbD6A==}
+    engines: {node: '>=18'}
 
   chalk@3.0.0:
     resolution: {integrity: sha512-4D3B6Wf41KOYRFdszmDqMCGq5VV/uMAB273JILmO+3jAlh8X4qDtdtgCR3fxtbLEMzSx22QdhnDcJvu2u1fVwg==}
@@ -10015,6 +10042,20 @@ snapshots:
       - react
       - react-dom
 
+  '@rstest/core@0.0.9(jsdom@26.1.0)':
+    dependencies:
+      '@rsbuild/core': 1.4.8
+      '@types/chai': 5.2.2
+      '@vitest/expect': 3.2.4
+      '@vitest/snapshot': 3.2.4
+      birpc: 2.5.0
+      chai: 5.2.1
+      pathe: 2.0.3
+      std-env: 3.9.0
+      tinypool: 1.1.1
+    optionalDependencies:
+      jsdom: 26.1.0
+
   '@rtsao/scc@1.1.0': {}
 
   '@rushstack/node-core-library@4.0.2(@types/node@22.15.33)':
@@ -11046,6 +11087,8 @@ snapshots:
 
   binary-extensions@2.3.0: {}
 
+  birpc@2.5.0: {}
+
   bl@4.1.0:
     dependencies:
       buffer: 5.7.1
@@ -11176,6 +11219,14 @@ snapshots:
   ccount@2.0.1: {}
 
   chai@5.2.0:
+    dependencies:
+      assertion-error: 2.0.1
+      check-error: 2.1.1
+      deep-eql: 5.0.2
+      loupe: 3.1.4
+      pathval: 2.0.0
+
+  chai@5.2.1:
     dependencies:
       assertion-error: 2.0.1
       check-error: 2.1.1

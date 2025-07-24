@@ -32,9 +32,11 @@
   ],
   "scripts": {
     "build": "rslib build",
-    "test": "vitest run --coverage"
+    "test": "vitest run --coverage",
+    "test:rs": "rstest"
   },
   "devDependencies": {
-    "@lynx-js/types": "3.3.0"
+    "@lynx-js/types": "3.3.0",
+    "@rstest/core": "catalog:rstest"
   }
 }

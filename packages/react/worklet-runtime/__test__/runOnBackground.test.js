@@ -1,7 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 import { initWorklet } from '../src/workletRuntime';
 
@@ -35,7 +35,7 @@ describe('runOnBackground', () => {
     expect(globalThis.lynxWorkletImpl._runOnBackgroundDelayImpl.delayedBackgroundFunctionArray.length).toBe(0);
 
     // If the functions are used in the first screen, they will be hydrated
-    const task = vi.fn();
+    const task = rs.fn();
     globalThis.registerWorklet('main-thread', 'ctx1', function() {
       const { _jsFn1 } = this._jsFn;
       globalThis.lynxWorkletImpl._runOnBackgroundDelayImpl.delayRunOnBackground(_jsFn1, task);
@@ -44,7 +44,7 @@ describe('runOnBackground', () => {
     expect(globalThis.lynxWorkletImpl._runOnBackgroundDelayImpl.delayedBackgroundFunctionArray).toMatchInlineSnapshot(`
       [
         {
-          "task": [MockFunction spy],
+          "task": [MockFunction rstest.fn()],
         },
       ]
     `);
@@ -56,7 +56,7 @@ describe('runOnBackground', () => {
             "_execId": 8,
             "_jsFnId": 1,
           },
-          "task": [MockFunction spy],
+          "task": [MockFunction rstest.fn()],
         },
       ]
     `);
