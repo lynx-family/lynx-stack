@@ -61,17 +61,35 @@ This can be verified in three ways:
 
 #### 2. Add/Remove it from the preset
 
-If it's part of a core Tailwind plugin:
+##### 2.1 If it's part of a core Tailwind plugin:
 
-- Add it to `corePlugins` in `src/lynx.ts`
+- Add it to `DEFAULT_CORE_PLUGINS` array in `src/core.ts`
 - Add the property to `supportedProperties` in `src/__tests__/config.test.ts`
 - Add the utility mapping to `cssPropertyValueToTailwindUtility`
 
-If it needs custom handling e.g. Lynx only support a partial set of the core plugin defined classes, or we need extensions e.g. `.linear`:
+##### 2.2 If it needs custom handling
+
+If it belongs to the Lynx core plugin set:
+
+_(e.g. plugins that provide Lynx-compatible support for Tailwind utilities, including partial core plugin coverage and platform-specific extensions)_
 
 - Create a new plugin in `src/plugins/lynx/`
-- Export it in `src/plugins/lynx/index.ts`
-- Add it to the plugins array in `src/core.ts`
+- Use shared plugin helpers and utils from `src/helpers.ts` and `src/plugin-utils/`
+- Export the plugin from `src/plugins/lynx/index.ts`
+- Add it to the plugin registry in `src/plugins/lynx/plugin-registry.ts`.
+  This ensures a stable sorting order for the core set.
+- It will be auto-included in `src/core.ts` based on registry order
+
+If it's a non-core / custom plugin:
+
+_(e.g. experimental, category-specific)_
+
+- These plugins require manual registration and ordering in `src/core.ts`.
+- Create a new category folder under `src/plugins/` (e.g. `src/plugins/experimental/`)
+- Add the plugin there, and optionally extract shared logic into `plugin-utils/`
+- Export the plugin in `src/plugins/{category}/index.ts`
+- Define a `plugin-registry.ts` in that folder to explicitly register plugins in the desired order
+- Import the registry in `src/core.ts` and include it in the appropriate position
 
 #### 3. Adding Tests
 
