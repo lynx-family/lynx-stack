@@ -1,5 +1,5 @@
 ---
-"@lynx-js/web-elements": minor
+"@lynx-js/web-elements": patch
 ---
 
 Add crossorigin attribute support to x-image component

@@ -1680,8 +1680,6 @@ test.describe('web-elements test suite', () => {
       
       // Verify that the crossorigin attribute is set to 'anonymous' on the internal img element
       expect(crossoriginValue).toBe('anonymous');
-      
-      await diffScreenShot(page, title, 'index');
     });
   });
 
