@@ -5,14 +5,6 @@ on:
         required: false
       LHCI_GITHUB_APP_TOKEN:
         required: false
-      TOS_AP_ACCESS_KEY:
-        required: false
-      TOS_AP_SECRET_KEY:
-        required: false
-      TOS_AP_ENDPOINT:
-        required: false
-      TOS_AP_REGION:
-        required: false
     inputs:
       runs-on:
         required: true
@@ -44,11 +36,6 @@ jobs:
     container:
       image: ${{ inputs.is-web && 'mcr.microsoft.com/playwright:v1.54.1-noble' || null }}
       env:
-        ACCESS_KEY: ${{ secrets.TOS_AP_ACCESS_KEY }}
-        SECRET_KEY: ${{ secrets.TOS_AP_SECRET_KEY }}
-        ENDPOINT: ${{ secrets.TOS_AP_ENDPOINT }}
-        BUCKET_NAME: actions
-        REGION: ${{ secrets.TOS_AP_REGION }}
         CI: 1
         TURBO_TELEMETRY_DISABLED: 1
     steps:
