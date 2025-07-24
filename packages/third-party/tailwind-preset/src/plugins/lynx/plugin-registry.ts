@@ -57,6 +57,9 @@ export const LYNX_PLUGIN_ENTRIES: readonly LynxPluginEntry[] = [
 
   ['backgroundClip', P.backgroundClip],
   ['boxShadow', P.boxShadow],
+  ['blur', P.blur],
+  ['grayscale', P.grayscale],
+  ['filter', P.filter],
 
   ['transitionProperty', P.transitionProperty],
   ['transitionDelay', P.transitionDelay],

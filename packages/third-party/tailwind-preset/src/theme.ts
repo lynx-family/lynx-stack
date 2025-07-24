@@ -121,4 +121,12 @@ export const lynxTheme: Partial<LynxThemeConfig> = {
     out: 'cubic-bezier(0, 0, 0.2, 1)',
     'in-out': 'cubic-bezier(0.4, 0, 0.2, 1)',
   },
+  grayscale: {
+    none: '',
+    0: '0',
+    25: '25%',
+    50: '50%',
+    75: '75%',
+    DEFAULT: '100%',
+  },
 };

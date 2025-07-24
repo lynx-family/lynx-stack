@@ -33,3 +33,6 @@ export { transitionProperty } from './transitionProperty.js';
 export { transitionDuration } from './transitionDuration.js';
 export { transitionDelay } from './transitionDelay.js';
 export { transitionTimingFunction } from './transitionTimingFunction.js';
+export { filter } from './filter.js';
+export { blur } from './blur.js';
+export { grayscale } from './grayscale.js';
