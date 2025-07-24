@@ -166,7 +166,7 @@
     "api-extractor": "api-extractor run --verbose"
   },
   "dependencies": {
-    "preact": "npm:@hongzhiyuan/preact@10.24.0-319c684e"
+    "preact": "npm:@hongzhiyuan/preact@10.24.0-3d3cc198"
   },
   "devDependencies": {
     "@lynx-js/types": "3.3.0",

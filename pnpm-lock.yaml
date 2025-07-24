@@ -199,8 +199,8 @@ importers:
   packages/react:
     dependencies:
       preact:
-        specifier: npm:@hongzhiyuan/preact@10.24.0-319c684e
-        version: '@hongzhiyuan/preact@10.24.0-319c684e'
+        specifier: npm:@hongzhiyuan/preact@10.24.0-3d3cc198
+        version: '@hongzhiyuan/preact@10.24.0-3d3cc198'
     devDependencies:
       '@lynx-js/types':
         specifier: 3.3.0
@@ -219,7 +219,7 @@ importers:
         version: link:..
       '@prefresh/core':
         specifier: ^1.5.5
-        version: 1.5.5(preact@10.23.2)
+        version: 1.5.5(preact@10.24.0)
       '@prefresh/utils':
         specifier: ^1.2.1
         version: 1.2.1
@@ -2020,8 +2020,8 @@ packages:
     resolution: {integrity: sha512-0J+zgWxHN+xXONWIyPWKFMgVuJoZuGiIFu8yxk7RJjxkzpGmyja5wRFqZIVtjDVOQpV+Rw0iOAjYPE2eQyjr0w==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@hongzhiyuan/preact@10.24.0-319c684e':
-    resolution: {integrity: sha512-weWzMUnmXk7gynEpOo/iIyfq95pRoFO2+18eiwD0hk/TeIQUeHbyG4W/S3lCEjB54jvft/itXwhkF+vz623BEg==}
+  '@hongzhiyuan/preact@10.24.0-3d3cc198':
+    resolution: {integrity: sha512-5ZZjRrMIbXgwIjActZvJKs5hnC2j0UoU6bYUqcC73bi01ZaBOueSvLR0lELsGP2+d2IJNGKQJ6bp8pE6CwtP0A==}
 
   '@humanfs/core@0.19.1':
     resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
@@ -6665,8 +6665,8 @@ packages:
     resolution: {integrity: sha512-3Ybi1tAuwAP9s0r1UQ2J4n5Y0G05bJkpUIO0/bI9MhwmD70S5aTWbXGBwxHrelT+XM1k6dM0pk+SwNkpTRN7Pg==}
     engines: {node: ^10 || ^12 || >=14}
 
-  preact@10.23.2:
-    resolution: {integrity: sha512-kKYfePf9rzKnxOAKDpsWhg/ysrHPqT+yQ7UW4JjdnqjFIeNUnNcEJvhuA8fDenxAGWzUqtd51DfVg7xp/8T9NA==}
+  preact@10.24.0:
+    resolution: {integrity: sha512-aK8Cf+jkfyuZ0ZZRG9FbYqwmEiGQ4y/PUO4SuTWoyWL244nZZh7bd5h2APd4rSNDYTBNghg1L+5iJN3Skxtbsw==}
 
   prelude-ls@1.2.1:
     resolution: {integrity: sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==}
@@ -9048,7 +9048,7 @@ snapshots:
       '@eslint/core': 0.14.0
       levn: 0.4.1
 
-  '@hongzhiyuan/preact@10.24.0-319c684e': {}
+  '@hongzhiyuan/preact@10.24.0-3d3cc198': {}
 
   '@humanfs/core@0.19.1': {}
 
@@ -9412,9 +9412,9 @@ snapshots:
 
   '@polka/url@1.0.0-next.25': {}
 
-  '@prefresh/core@1.5.5(preact@10.23.2)':
+  '@prefresh/core@1.5.5(preact@10.24.0)':
     dependencies:
-      preact: 10.23.2
+      preact: 10.24.0
 
   '@prefresh/utils@1.2.1': {}
 
@@ -14701,7 +14701,7 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
-  preact@10.23.2: {}
+  preact@10.24.0: {}
 
   prelude-ls@1.2.1: {}
 
