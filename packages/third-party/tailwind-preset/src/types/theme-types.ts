@@ -11,6 +11,7 @@ type LynxThemeOverrides = Pick<
   ThemeConfig,
   | 'aspectRatio'
   | 'boxShadow'
+  | 'grayscale'
   | 'gridAutoColumns'
   | 'gridAutoRows'
   | 'gridTemplateColumns'
