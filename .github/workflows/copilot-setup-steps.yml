@@ -55,3 +55,5 @@ jobs:
         if: steps.build.outcome == 'failure'
         run: |
           pnpm turbo build --summarize
+        env:
+          NODE_OPTIONS: --max-old-space-size=32768
