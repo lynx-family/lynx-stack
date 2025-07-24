@@ -23,7 +23,7 @@ type UtilityFn = (value: unknown) => CSSRuleObject | null;
 export function getModifierRepeaterMap(
   cssProperty: string,
   classPrefix: string,
-  modifierMap: Record<string, string>,
+  modifierMap: Record<string, string> | undefined,
   options?: {
     repeatedModifier?: string;
   } & Omit<RepeaterOptions, 'matchValue' | 'count'>,
@@ -33,7 +33,9 @@ export function getModifierRepeaterMap(
     ...repeaterOptions
   } = options ?? {};
 
-  const entries = Object.entries(modifierMap ?? {});
+  modifierMap = modifierMap ?? {};
+
+  const entries = Object.entries(modifierMap);
   const defaultValue = modifierMap['DEFAULT'] ?? '';
 
   const namedEntries = entries.filter(([modifier]) => modifier !== 'DEFAULT');

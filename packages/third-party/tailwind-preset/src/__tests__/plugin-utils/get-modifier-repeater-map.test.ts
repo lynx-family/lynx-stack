@@ -77,4 +77,23 @@ describe('getModifierRepeaterMap', () => {
       [cssProp]: '300ms 300ms 300ms',
     });
   });
+
+  it('returns only base utility when modifierMap is undefined', () => {
+    const map = getModifierRepeaterMap(
+      cssProp,
+      'duration',
+      undefined,
+      {
+        repeatedModifier: 'n',
+      },
+    );
+    expect(Object.keys(map)).toEqual(['duration']); // base only
+  });
+
+  it('handles empty modifierMap and ensures entries line is covered', () => {
+    const map = getModifierRepeaterMap(cssProp, 'duration', {}, {
+      repeatedModifier: 'n',
+    });
+    expect(Object.keys(map)).toEqual(['duration']); // base only
+  });
 });
