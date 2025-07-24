@@ -17,4 +17,11 @@ export default defineConfig({
   performance: {
     profile: enableBundleAnalysis,
   },
+  tools: {
+    rspack: {
+      optimization: {
+        runtimeChunk: true,
+      },
+    },
+  },
 });
