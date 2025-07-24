@@ -5,7 +5,7 @@
 import { updateWorkletRefInitValueChanges } from '@lynx-js/react/worklet-runtime/bindings';
 
 import type { PatchList, PatchOptions } from './commit.js';
-import { setMainThreadHydrationFinished } from './isMainThreadHydrationFinished.js';
+import { setMainThreadHydrating } from './isMainThreadHydrating.js';
 import { snapshotPatchApply } from './snapshotPatchApply.js';
 import { LifecycleConstant } from '../../lifecycleConstant.js';
 import { markTiming, setPipeline } from '../../lynx/performance.js';
@@ -31,21 +31,26 @@ function updateMainThread(
 
   markTiming('parseChangesEnd');
   markTiming('patchChangesStart');
-
-  for (const { snapshotPatch, workletRefInitValuePatch } of patchList) {
-    updateWorkletRefInitValueChanges(workletRefInitValuePatch);
-    __pendingListUpdates.clear();
-    if (snapshotPatch) {
-      snapshotPatchApply(snapshotPatch);
-    }
-    __pendingListUpdates.flush();
-    // console.debug('********** Lepus updatePatch:');
-    // printSnapshotInstance(snapshotInstanceManager.values.get(-1)!);
-  }
-  markTiming('patchChangesEnd');
-  markTiming('mtsRenderEnd');
   if (patchOptions.isHydration) {
-    setMainThreadHydrationFinished(true);
+    setMainThreadHydrating(true);
+  }
+  try {
+    for (const { snapshotPatch, workletRefInitValuePatch } of patchList) {
+      updateWorkletRefInitValueChanges(workletRefInitValuePatch);
+      __pendingListUpdates.clear();
+      if (snapshotPatch) {
+        snapshotPatchApply(snapshotPatch);
+      }
+      __pendingListUpdates.flush();
+      // console.debug('********** Lepus updatePatch:');
+      // printSnapshotInstance(snapshotInstanceManager.values.get(-1)!);
+    }
+  } finally {
+    markTiming('patchChangesEnd');
+    markTiming('mtsRenderEnd');
+    if (patchOptions.isHydration) {
+      setMainThreadHydrating(false);
+    }
   }
   applyRefQueue();
   if (patchOptions.pipelineOptions) {

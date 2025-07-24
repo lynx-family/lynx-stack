@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { processGesture } from '../gesture/processGesture.js';
 import type { GestureKind } from '../gesture/types.js';
-import { isMainThreadHydrationFinished } from '../lifecycle/patch/isMainThreadHydrationFinished.js';
+import { isMainThreadHydrating } from '../lifecycle/patch/isMainThreadHydrating.js';
 import { SnapshotInstance } from '../snapshot.js';
 
 export function updateGesture(
@@ -22,7 +22,7 @@ export function updateGesture(
   const value = snapshot.__values![expIndex] as GestureKind;
 
   if (workletType === 'main-thread') {
-    processGesture(snapshot.__elements[elementIndex]!, value, oldValue as GestureKind, !isMainThreadHydrationFinished);
+    processGesture(snapshot.__elements[elementIndex]!, value, oldValue as GestureKind, isMainThreadHydrating);
   }
   if (__PROFILE__) {
     console.profileEnd();
