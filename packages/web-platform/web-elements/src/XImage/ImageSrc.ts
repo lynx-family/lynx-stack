@@ -14,7 +14,12 @@ import {
 export class ImageSrc
   implements InstanceType<AttributeReactiveClass<typeof HTMLElement>>
 {
-  static observedAttributes = ['src', 'placeholder', 'blur-radius', 'crossorigin'];
+  static observedAttributes = [
+    'src',
+    'placeholder',
+    'blur-radius',
+    'crossorigin',
+  ];
   #dom: HTMLElement;
 
   #getImg = genDomGetter<HTMLImageElement>(() => this.#dom.shadowRoot!, '#img');
