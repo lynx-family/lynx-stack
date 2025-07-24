@@ -268,7 +268,7 @@ pub fn jsx_is_children_full_dynamic(n: &JSXElement) -> bool {
         // } else {
         //   true
         // }
-        matches!(
+        !matches!(
           child,
           JSXElementChild::JSXExprContainer(JSXExprContainer {
             expr: JSXExpr::JSXEmptyExpr(_),
