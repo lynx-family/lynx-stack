@@ -61,34 +61,32 @@ This can be verified in three ways:
 
 #### 2. Add/Remove it from the preset
 
-##### 2.1 If it's part of a core Tailwind plugin:
+##### 2.1 If enabling a Tailwind core plugin
 
 - Add it to `DEFAULT_CORE_PLUGINS` array in `src/core.ts`
-- Add the property to `supportedProperties` in `src/__tests__/config.test.ts`
-- Add the utility mapping to `cssPropertyValueToTailwindUtility`
 
-##### 2.2 If it needs custom handling
+##### 2.2 If it requires custom handling
 
-If it belongs to the Lynx core plugin set:
+###### Lynx core plugins
 
-_(e.g. plugins that provide Lynx-compatible support for Tailwind utilities, including partial core plugin coverage and platform-specific extensions)_
+For plugins that are considered **part of the Lynx core preset** — either implementing Tailwind core utilities or providing Lynx-specific functionality
 
 - Create a new plugin in `src/plugins/lynx/`
-- Use shared plugin helpers and utils from `src/helpers.ts` and `src/plugin-utils/`
-- Export the plugin from `src/plugins/lynx/index.ts`
-- Add it to the plugin registry in `src/plugins/lynx/plugin-registry.ts`.
-  This ensures a stable sorting order for the core set.
-- It will be auto-included in `src/core.ts` based on registry order
+- Use shared helpers from `src/helpers.ts` and `src/plugin-utils/` where applicable
+- Export it from `src/plugins/lynx/index.ts`
+- Register it in `src/plugins/lynx/plugin-registry.ts`\
+  _(This ensures a stable sorting order for the core set)_
+- It will be automatically included in `src/core.ts` via the Lynx plugin registry
 
-If it's a non-core / custom plugin:
+###### Non-core / Custom plugin categories
 
-_(e.g. experimental, category-specific)_
+For plugins that are **not part of the Lynx core preset** — such as experimental features, app-specific utilities, or standalone plugin groups:
 
-- These plugins require manual registration and ordering in `src/core.ts`.
+- These plugins require explicit registration and ordering
 - Create a new category folder under `src/plugins/` (e.g. `src/plugins/experimental/`)
-- Add the plugin there, and optionally extract shared logic into `plugin-utils/`
-- Export the plugin in `src/plugins/{category}/index.ts`
-- Define a `plugin-registry.ts` in that folder to explicitly register plugins in the desired order
+- Add the plugin in that folder, and optionally extract shared logic into `plugin-utils/`
+- Export the plugin from `src/plugins/{category}/index.ts`
+- Define a `plugin-registry.ts` in the same folder to control plugin order
 - Import the registry in `src/core.ts` and include it in the appropriate position
 
 #### 3. Adding Tests
