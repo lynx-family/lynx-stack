@@ -67,3 +67,58 @@ export function maybePromise<T>(value: unknown): value is Promise<T> {
 export function getDisplayName(type: ComponentClass): string {
   return type.displayName ?? type.name;
 }
+
+export function hook<T, K extends keyof T>(
+  object: T,
+  key: K,
+  fn: Required<T>[K] extends (...args: infer P) => infer Q ? ((old?: T[K], ...args: P) => Q)
+    : never,
+): void {
+  const oldFn = object[key];
+  object[key] = function(this: T, ...args: unknown[]) {
+    return fn.call(this, oldFn, ...args);
+  } as T[K];
+}
+
+export function isComponentClass(type: unknown): type is ComponentClass {
+  // @ts-expect-error type assertion
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+  return 'prototype' in type && type.prototype.render;
+}
+
+/**
+ * `??=` for Map.
+ */
+export const nullishCoalescingMapSet = <K, V>(
+  map: {
+    has(key: K): boolean;
+    get(key: K): V | undefined;
+    set(key: K, value: V): unknown;
+  },
+  key: K,
+  getValue: () => V,
+): V => {
+  if (map.has(key)) {
+    return map.get(key)!;
+  } else {
+    const value = getValue();
+    map.set(key, value);
+    return value;
+  }
+};
+
+export const mapGetAndDelete = <K, V>(
+  map: {
+    has(key: K): boolean;
+    get(key: K): V | undefined;
+    delete(key: K): boolean;
+  },
+  key: K,
+): V | undefined => {
+  let v: V | undefined;
+  if (map.has(key)) {
+    v = map.get(key);
+    map.delete(key);
+  }
+  return v;
+};
