@@ -119,7 +119,7 @@ impl VisitMut for WorkletVisitor {
       definite: false,
       type_ann: None,
       is_static: n.as_method().unwrap().is_static,
-      accessibility: n.as_method().unwrap().accessibility.clone(),
+      accessibility: n.as_method().unwrap().accessibility,
       is_optional: n.as_method().unwrap().is_optional,
       is_override: n.as_method().unwrap().is_override,
       readonly: false,

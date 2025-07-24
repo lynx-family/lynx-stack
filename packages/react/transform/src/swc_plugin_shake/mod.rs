@@ -167,14 +167,13 @@ impl VisitMut for ShakeVisitor {
    */
   fn visit_mut_call_expr(&mut self, n: &mut CallExpr) {
     if let Some(fn_name) = n.callee.as_expr().and_then(|s| s.as_ident()) {
-      if self.import_ids.contains(&fn_name.to_id().into()) {
-        if self
+      if self.import_ids.contains(&fn_name.to_id())
+        && self
           .opts
           .remove_call_params
           .contains(&fn_name.sym.to_string())
-        {
-          n.args.clear();
-        }
+      {
+        n.args.clear();
       }
     }
     n.visit_mut_children_with(self);
@@ -267,9 +266,9 @@ fn mark_used(used: &mut Vec<String>, add: &Vec<String>, scannd_map: &HashMap<Str
 fn get_class_member_name(c: &ClassMember) -> Option<String> {
   match c {
     ClassMember::Constructor(_) => Some("constructor".into()),
-    ClassMember::Method(m) => m.key.as_ident().and_then(|i| Some(i.sym.to_string())),
+    ClassMember::Method(m) => m.key.as_ident().map(|i| i.sym.to_string()),
     ClassMember::PrivateMethod(m) => Some(m.key.name.to_string()),
-    ClassMember::ClassProp(m) => m.key.as_ident().and_then(|i| Some(i.sym.to_string())),
+    ClassMember::ClassProp(m) => m.key.as_ident().map(|i| i.sym.to_string()),
     ClassMember::PrivateProp(m) => Some(m.key.name.to_string()),
     ClassMember::TsIndexSignature(_) => None,
     ClassMember::Empty(_) => None,
@@ -278,7 +277,7 @@ fn get_class_member_name(c: &ClassMember) -> Option<String> {
     // https://github.com/tc39/proposal-grouped-and-auto-accessors
     ClassMember::AutoAccessor(accessor) => match &accessor.key {
       Key::Private(name) => Some(name.name.to_string()),
-      Key::Public(name) => name.as_ident().and_then(|i| Some(i.sym.to_string())),
+      Key::Public(name) => name.as_ident().map(|i| i.sym.to_string()),
     },
   }
 }

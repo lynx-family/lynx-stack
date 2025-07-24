@@ -98,16 +98,15 @@ pub fn jsx_attr_value(value: Option<JSXAttrValue>) -> Box<Expr> {
 
 pub fn jsx_attr_to_prop(attr: &JSXAttr) -> PropOrSpread {
   let id = jsx_attr_name(&attr.name);
-  let prop = PropOrSpread::Prop(Box::new(Prop::KeyValue(KeyValueProp {
+
+  PropOrSpread::Prop(Box::new(Prop::KeyValue(KeyValueProp {
     key: PropName::Str(Str {
       span: attr.span,
       raw: None,
       value: id,
     }),
     value: jsx_attr_value(attr.value.clone()),
-  })));
-
-  prop
+  })))
 }
 
 pub fn jsx_props_to_obj(jsx: &JSXElement) -> Option<ObjectLit> {
@@ -149,7 +148,7 @@ pub fn jsx_text_to_str(t: &Atom) -> Atom {
     } else {
       SPACE_END.replace_all(&line, "")
     };
-    if line.len() == 0 {
+    if line.is_empty() {
       continue;
     }
     if i != 0 && !buf.is_empty() {
@@ -163,29 +162,26 @@ pub fn jsx_text_to_str(t: &Atom) -> Atom {
 pub fn jsx_children_to_expr(children: Vec<JSXElementChild>) -> Expr {
   let children: Vec<_> = children
     .into_iter()
-    .map(|child| {
-      let child_expr = match child {
-        JSXElementChild::JSXText(t) => {
-          let s = jsx_text_to_str(&t.value);
-          if s.is_empty() {
-            None
-          } else {
-            Some(Expr::Lit(Lit::Str(Str {
-              span: DUMMY_SP,
-              value: s,
-              raw: None,
-            })))
-          }
+    .map(|child| match child {
+      JSXElementChild::JSXText(t) => {
+        let s = jsx_text_to_str(&t.value);
+        if s.is_empty() {
+          None
+        } else {
+          Some(Expr::Lit(Lit::Str(Str {
+            span: DUMMY_SP,
+            value: s,
+            raw: None,
+          })))
         }
-        JSXElementChild::JSXExprContainer(JSXExprContainer { expr, .. }) => match expr {
-          JSXExpr::Expr(expr) => Some(*expr),
-          JSXExpr::JSXEmptyExpr(_) => None,
-        },
-        JSXElementChild::JSXElement(jsx) => Some(Expr::JSXElement(jsx)),
-        JSXElementChild::JSXFragment(jsx) => Some(Expr::JSXFragment(jsx)),
-        JSXElementChild::JSXSpreadChild(_) => None,
-      };
-      child_expr
+      }
+      JSXElementChild::JSXExprContainer(JSXExprContainer { expr, .. }) => match expr {
+        JSXExpr::Expr(expr) => Some(*expr),
+        JSXExpr::JSXEmptyExpr(_) => None,
+      },
+      JSXElementChild::JSXElement(jsx) => Some(Expr::JSXElement(jsx)),
+      JSXElementChild::JSXFragment(jsx) => Some(Expr::JSXFragment(jsx)),
+      JSXElementChild::JSXSpreadChild(_) => None,
     })
     .filter(|x| x.is_some())
     .collect();
@@ -214,7 +210,7 @@ pub fn jsx_is_custom(jsx: &JSXElement) -> bool {
       if s.value.as_ref() == "page" {
         return true;
       }
-      return false;
+      false
     }
     _ => true,
   }
@@ -254,7 +250,7 @@ pub fn jsx_is_list_item(jsx: &JSXElement) -> bool {
 }
 
 pub fn jsx_is_children_full_dynamic(n: &JSXElement) -> bool {
-  n.children.len() > 0
+  !n.children.is_empty()
     && n
       .children
       .iter()
@@ -271,20 +267,8 @@ pub fn jsx_is_children_full_dynamic(n: &JSXElement) -> bool {
         }
       })
       .all(|child| match child {
-        JSXElementChild::JSXText(text) => {
-          if jsx_text_to_str(&text.value).is_empty() {
-            true
-          } else {
-            false
-          }
-        }
-        JSXElementChild::JSXElement(element) => {
-          if jsx_is_custom(&element) {
-            true
-          } else {
-            false
-          }
-        }
+        JSXElementChild::JSXText(text) => jsx_text_to_str(&text.value).is_empty(),
+        JSXElementChild::JSXElement(element) => jsx_is_custom(element),
         JSXElementChild::JSXFragment(_) => false,
         JSXElementChild::JSXExprContainer(JSXExprContainer {
           expr: JSXExpr::Expr(_),

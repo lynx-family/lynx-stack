@@ -71,7 +71,7 @@ impl ExtractStrVisitor {
       select_str_vec: vec![],
       extracted_str_arr: opts.extracted_str_arr,
       arr_name: IdentName::new("_EXTRACT_STR".into(), DUMMY_SP).into(),
-      is_found_str_flag: false.into(),
+      is_found_str_flag: false,
     }
   }
 }
@@ -79,11 +79,8 @@ impl ExtractStrVisitor {
 impl VisitMut for ExtractStrVisitor {
   fn visit_mut_module(&mut self, n: &mut Module) {
     n.visit_mut_children_with(self);
-    match &self.opts.extracted_str_arr {
-      Some(_) => {
-        return;
-      }
-      None => {}
+    if self.opts.extracted_str_arr.is_some() {
+      return;
     }
     let str_arr = self
       .select_str_vec
@@ -133,7 +130,7 @@ impl VisitMut for ExtractStrVisitor {
                 }
               }
 
-              if let Some(first_arg) = args.get(0) {
+              if let Some(first_arg) = args.first() {
                 *expr = (*first_arg.expr).clone();
               } else {
                 *expr = Expr::Ident(IdentName::new("__EXTRACT_STR_FLAG__".into(), DUMMY_SP).into());

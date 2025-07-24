@@ -249,10 +249,8 @@ impl VisitMut for ExtractingIdentsCollector {
   noop_visit_mut_type!();
 
   fn visit_mut_this_expr(&mut self, n: &mut ThisExpr) {
-    if self.member_expr_depth > 0 {
-      if !self.scope_env.last().unwrap().is_inner_fn_scope {
-        self.add_if_needed(Expr::This(n.clone()).into(), &Expr::This(n.clone()).into());
-      }
+    if self.member_expr_depth > 0 && !self.scope_env.last().unwrap().is_inner_fn_scope {
+      self.add_if_needed(Expr::This(*n).into(), &Expr::This(*n).into());
     }
   }
 
@@ -323,11 +321,8 @@ impl VisitMut for ExtractingIdentsCollector {
    * let a = { _SHOULD_NOT_BE_EXTRACTED_: 1 };
    */
   fn visit_mut_key_value_prop(&mut self, n: &mut KeyValueProp) {
-    match &n.key {
-      PropName::Computed(_) => {
-        n.key.visit_mut_with(self);
-      }
-      _ => {}
+    if let PropName::Computed(_) = &n.key {
+      n.key.visit_mut_with(self);
     }
     n.value.visit_mut_with(self);
   }
@@ -339,8 +334,8 @@ impl VisitMut for ExtractingIdentsCollector {
   fn visit_mut_call_expr(&mut self, n: &mut CallExpr) {
     if !n.callee.is_expr()
       || !n.callee.as_expr().unwrap().is_ident()
-      || !(n.callee.as_expr().unwrap().as_ident().unwrap().sym == "runOnBackground")
-      || n.args.len() < 1
+      || (n.callee.as_expr().unwrap().as_ident().unwrap().sym != "runOnBackground")
+      || n.args.is_empty()
     {
       n.visit_mut_children_with(self);
       return;

@@ -14,10 +14,10 @@ pub fn transform_raw_u16_inline_style_ptr(ptr: *const u16, len: usize) -> Option
     let slice = core::slice::from_raw_parts(ptr, len);
     // Call the tokenize function with our data and callback
     let (transformed_inline_style, _) =
-      transformer::transformer::transform_inline_style_string(&slice);
+      transformer::transformer::transform_inline_style_string(slice);
     if !transformed_inline_style.is_empty() {
       return Some(js_sys::JsString::from_char_code(
-        &transformed_inline_style.as_slice(),
+        transformed_inline_style.as_slice(),
       ));
     }
   }

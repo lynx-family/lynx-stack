@@ -144,7 +144,7 @@ pub fn query_transform_rules<'a>(
       }
       current_offset += 1;
     }
-    let value_num: usize = (ii + 1) / 2; // we will have 3 values, but the last one is optional
+    let value_num: usize = ii.div_ceil(2); // we will have 3 values, but the last one is optional
     match value_num {
       0 => {
         // if we have no value, we will ignore it
@@ -309,7 +309,7 @@ pub fn query_transform_rules<'a>(
   (result, result_children)
 }
 
-impl<'a> Transformer for TransformerData<'a> {
+impl Transformer for TransformerData<'_> {
   fn on_declaration(
     &mut self,
     name_start: usize,
@@ -319,10 +319,10 @@ impl<'a> Transformer for TransformerData<'a> {
     is_important: bool,
   ) {
     let (result, result_children) = query_transform_rules(
-      &self.source,
+      self.source,
       name_start,
       name_end,
-      &self.source,
+      self.source,
       value_start,
       value_end,
     );
@@ -664,10 +664,10 @@ mod tests {
     let value = str_to_u16_slice!("row");
     let (result, _) = query_transform_rules(name, 0, name.len(), value, 0, value.len());
     assert_eq!(
-      String::from_utf16_lossy(&result[0].0),
+      String::from_utf16_lossy(result[0].0),
       "--lynx-linear-orientation"
     );
-    assert_eq!(String::from_utf16_lossy(&result[0].3), "horizontal");
+    assert_eq!(String::from_utf16_lossy(result[0].3), "horizontal");
   }
 
   #[test]

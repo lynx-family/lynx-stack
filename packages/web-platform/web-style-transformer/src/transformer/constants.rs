@@ -24,7 +24,7 @@ pub const COLOR_STR_U16: &[u16] = str_to_u16_slice!("color");
 
 pub const LINEAR_GRADIENT_STR_U16: &[u16] = str_to_u16_slice!("linear-gradient");
 
-pub const COLOR_APPENDIX_FOR_GRADIENT: &'static [&'static [&'static [u16]; 2]] = &[
+pub const COLOR_APPENDIX_FOR_GRADIENT: &[&[&[u16]; 2]] = &[
   &[str_to_u16_slice!("color"), str_to_u16_slice!("transparent")],
   &[
     str_to_u16_slice!("-webkit-background-clip"),
@@ -36,7 +36,7 @@ pub const COLOR_APPENDIX_FOR_GRADIENT: &'static [&'static [&'static [u16]; 2]] =
   ],
 ];
 
-pub const COLOR_APPENDIX_FOR_NORMAL_COLOR: &'static [&'static [&'static [u16]; 2]] = &[
+pub const COLOR_APPENDIX_FOR_NORMAL_COLOR: &[&[&[u16]; 2]] = &[
   &[
     str_to_u16_slice!("--lynx-text-bg-color"),
     str_to_u16_slice!("initial"),
@@ -98,13 +98,13 @@ pub const LINEAR_WEIGHT_BASIS_CSS_VAR_NAME: &[u16] =
 
 pub const LYNX_TEXT_BG_COLOR_STR_U16: &[u16] = str_to_u16_slice!("--lynx-text-bg-color");
 
-pub const FLEX_NONE_TRANSFORMED_VALUES: &'static [&'static [&'static [u16]; 2]] = &[
+pub const FLEX_NONE_TRANSFORMED_VALUES: &[&[&[u16]; 2]] = &[
   &[FLEX_SHRINK_CSS_VAR_NAME, str_to_u16_slice!("0")],
   &[FLEX_GROW_CSS_VAR_NAME, str_to_u16_slice!("0")],
   &[FLEX_BASIS_CSS_VAR_NAME, str_to_u16_slice!("auto")],
 ];
 
-pub const FLEX_AUTO_TRANSFORMED_VALUES: &'static [&'static [&'static [u16]; 2]] = &[
+pub const FLEX_AUTO_TRANSFORMED_VALUES: &[&[&[u16]; 2]] = &[
   /*
    * --flex-shrink:1;
    * --flex-grow:1;
@@ -115,8 +115,7 @@ pub const FLEX_AUTO_TRANSFORMED_VALUES: &'static [&'static [&'static [u16]; 2]] 
   &[FLEX_BASIS_CSS_VAR_NAME, str_to_u16_slice!("auto")],
 ];
 
-pub const FLEX_SINGLE_VALUE_USE_GROW_TRANSFORMED_DEFAULT_VALUES: &'static [&'static [&'static [u16];
-                     2]] = &[
+pub const FLEX_SINGLE_VALUE_USE_GROW_TRANSFORMED_DEFAULT_VALUES: &[&[&[u16]; 2]] = &[
   /*
    * flex: <flex-grow> 1 0
    */
@@ -124,8 +123,7 @@ pub const FLEX_SINGLE_VALUE_USE_GROW_TRANSFORMED_DEFAULT_VALUES: &'static [&'sta
   &[FLEX_BASIS_CSS_VAR_NAME, str_to_u16_slice!("0%")],
 ];
 
-pub const FLEX_SINGLE_VALUE_USE_BASIS_TRANSFORMED_DEFAULT_VALUES: &'static [&'static [&'static [u16];
-                     2]] = &[
+pub const FLEX_SINGLE_VALUE_USE_BASIS_TRANSFORMED_DEFAULT_VALUES: &[&[&[u16]; 2]] = &[
   /*
    * flex: 1 1 <flex-basis>
    */

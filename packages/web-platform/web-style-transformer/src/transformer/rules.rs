@@ -239,7 +239,7 @@ lazy_static::lazy_static! {
 #[macro_export]
 macro_rules! get_rename_rule_value {
   ($name_slice:expr, $start:expr, $end:expr) => {
-    crate::transformer::rules::RENAME_RULE
+    $crate::transformer::rules::RENAME_RULE
       .get(&$name_slice[$start..$end])
       .copied()
   };
@@ -249,7 +249,7 @@ macro_rules! get_rename_rule_value {
 macro_rules! get_replace_rule_value {
   ($name_slice:expr, $name_start:expr, $name_end:expr, $value_slice:expr, $value_start:expr, $value_end:expr) => {
     if let Some(sub_rule) =
-      crate::transformer::rules::REPLACE_RULE.get(&$name_slice[$name_start..$name_end])
+      $crate::transformer::rules::REPLACE_RULE.get(&$name_slice[$name_start..$name_end])
     {
       sub_rule
         .get(&$value_slice[$value_start..$value_end])

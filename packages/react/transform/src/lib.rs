@@ -200,11 +200,8 @@ impl napi::bindgen_prelude::FromNapiValue for IsModuleConfig {
     }
 
     let str_val = <&str>::from_napi_value(env, napi_val);
-    if str_val.is_ok() {
-      match str_val.unwrap() {
-        "unknown" => return Ok(IsModuleConfig(IsModule::Unknown)),
-        _ => {}
-      }
+    if str_val.is_ok() && str_val.unwrap() == "unknown" {
+      return Ok(IsModuleConfig(IsModule::Unknown));
     }
 
     Err(napi::bindgen_prelude::error!(
@@ -451,7 +448,7 @@ fn transform_react_lynx_inner(
           import_source: snapshot_plugin_config
             .jsx_import_source
             .clone()
-            .map(|s| Atom::from(s)),
+            .map(Atom::from),
           pragma: None,
           pragma_frag: None,
           // We may want `main-thread:foo={fooMainThreadFunc}` to work
@@ -638,7 +635,7 @@ fn transform_react_lynx_inner(
       PrintArgs {
         output: None,
         source_root: "".into(), // TODO: add root
-        source_file_name: options.source_file_name.as_ref().map(String::as_str),
+        source_file_name: options.source_file_name.as_deref(),
         source_map_url: None,
         output_path: None,
         inline_sources_content: options.inline_sources_content.unwrap_or(true),
@@ -650,7 +647,7 @@ fn transform_react_lynx_inner(
         orig: None,
         comments: Some(&comments),
         emit_source_map_columns: options.source_map_columns.unwrap_or(true),
-        preamble: "".into(),
+        preamble: "",
         codegen_config: codegen::Config::default()
           .with_target(EsVersion::latest())
           .with_minify(false)
@@ -824,7 +821,7 @@ mod wasm {
     // let env = Env::from_raw(raw_env);
     let mut exports = JsObject::from_raw_unchecked(raw_env, raw_exports);
 
-    #[cfg_attr(rustfmt, rustfmt_skip)]
+    #[rustfmt::skip]
     {
       let _ = exports.create_named_method("transformReactLynxSync", crate::__napi__transform_react_lynx_sync);
       let _ = exports.create_named_method("transformBundleResultSync", crate::__napi__transform_bundle_result_sync);

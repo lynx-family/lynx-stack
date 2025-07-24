@@ -181,12 +181,7 @@ where
           span: import_decl.src.span,
           raw: None,
           // TODO(wangqingyu): deal with src that already have query(`?`)
-          value: format!(
-            "{}?cssId={}",
-            import_decl.src.value.to_string(),
-            self.css_id.to_string()
-          )
-          .into(),
+          value: format!("{}?cssId={}", import_decl.src.value, self.css_id).into(),
         });
         has_css_import = true;
       }

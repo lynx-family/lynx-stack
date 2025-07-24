@@ -39,7 +39,7 @@ fn jsx_list_item_deferred(n: &JSXElement) -> bool {
     return false;
   }
 
-  return n.opening.attrs.iter().any(|attr| {
+  n.opening.attrs.iter().any(|attr| {
     if let JSXAttrOrSpread::JSXAttr(attr) = attr {
       if let JSXAttrName::Ident(ident) = &attr.name {
         ident.sym == "defer"
@@ -56,7 +56,7 @@ fn jsx_list_item_deferred(n: &JSXElement) -> bool {
     } else {
       false
     }
-  });
+  })
 }
 
 impl<C> VisitMut for ListVisitor<C>
@@ -76,7 +76,7 @@ where
   fn visit_mut_jsx_element(&mut self, n: &mut JSXElement) {
     n.visit_mut_children_with(self);
 
-    if jsx_list_item_deferred(&n) {
+    if jsx_list_item_deferred(n) {
       let mut key: Option<JSXAttrOrSpread> = None;
       let mut defer: Option<JSXAttrOrSpread> = None;
 
@@ -168,16 +168,13 @@ where
 
   fn visit_mut_module_items(&mut self, n: &mut Vec<ModuleItem>) {
     let mut new_items: Vec<ModuleItem> = vec![];
-    for (_i, item) in n.iter_mut().enumerate() {
+    for item in n.iter_mut() {
       item.visit_mut_with(self);
       new_items.push(item.take());
     }
 
-    match &self.runtime_components_module_item {
-      Some(module_item) => {
-        new_items.insert(0, module_item.clone());
-      }
-      None => {}
+    if let Some(module_item) = &self.runtime_components_module_item {
+      new_items.insert(0, module_item.clone());
     }
 
     *n = new_items;

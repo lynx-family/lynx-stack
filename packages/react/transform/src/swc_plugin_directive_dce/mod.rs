@@ -67,20 +67,18 @@ impl DirectiveDCEVisitor {
         Stmt::Expr(ExprStmt { expr, span }) => match &**expr {
           Expr::Lit(Lit::Str(str)) => match str.value.to_string().as_str() {
             "use js only" | "background only" | "background-only" => {
-              return (self.opts.target == TransformTarget::LEPUS, Some(*span));
+              (self.opts.target == TransformTarget::LEPUS, Some(*span))
             }
             // directive "main thread" is already handled by `worklet_plugin`, do nothing here
-            "use lepus only" => {
-              return (self.opts.target == TransformTarget::JS, Some(*span));
-            }
-            _ => return (false, None),
+            "use lepus only" => (self.opts.target == TransformTarget::JS, Some(*span)),
+            _ => (false, None),
           },
-          _ => return (false, None),
+          _ => (false, None),
         },
-        _ => return (false, None),
+        _ => (false, None),
       }
     } else {
-      return (false, None);
+      (false, None)
     }
   }
 }

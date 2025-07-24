@@ -170,17 +170,14 @@ impl Emitter for EsbuildEmitter {
           suggestion: None,
         };
 
-        match sm.span_to_lines(*primary_span) {
-          Ok(FileLines { lines, file }) => {
-            lines.iter().for_each(|line| {
-              if line.line_index + 1 == loc.line {
-                if let Some(line_text) = file.get_line(line.line_index) {
-                  location.line_text = Some(line_text.to_string());
-                }
+        if let Ok(FileLines { lines, file }) = sm.span_to_lines(*primary_span) {
+          lines.iter().for_each(|line| {
+            if line.line_index + 1 == loc.line {
+              if let Some(line_text) = file.get_line(line.line_index) {
+                location.line_text = Some(line_text.to_string());
               }
-            });
-          }
-          Err(_) => {}
+            }
+          });
         }
 
         Some(location)
