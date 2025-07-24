@@ -1,5 +1,5 @@
 #![deny(clippy::all)]
-#![allow(clippy::boxed_local, clippy::borrowed_box)]
+#![allow(clippy::boxed_local, clippy::borrowed_box, clippy::deprecated_cfg_attr)]
 
 #[macro_use]
 extern crate napi_derive;
@@ -822,7 +822,7 @@ mod wasm {
     // let env = Env::from_raw(raw_env);
     let mut exports = JsObject::from_raw_unchecked(raw_env, raw_exports);
 
-    #[rustfmt::skip]
+    #[cfg_attr(rustfmt, rustfmt_skip)]
     {
       let _ = exports.create_named_method("transformReactLynxSync", crate::__napi__transform_react_lynx_sync);
       let _ = exports.create_named_method("transformBundleResultSync", crate::__napi__transform_bundle_result_sync);
