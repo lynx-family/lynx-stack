@@ -74,3 +74,19 @@ jobs:
           cache: false
       - name: Format
         run: cargo fmt --check
+
+  clippy:
+    runs-on: lynx-ubuntu-24.04-medium
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        with:
+          persist-credentials: false
+      - uses: actions-rust-lang/setup-rust-toolchain@fb51252c7ba57d633bc668f941da052e410add48 # v1
+        with:
+          components: clippy
+          cache: false
+      - name: Clippy
+        run: cargo clippy
