@@ -9,19 +9,24 @@ import type { ForwardRefExoticComponent, PropsWithChildren, RefAttributes } from
 // no matter if we use "@lynx-js/react" here
 import { forwardRef, useEffect, useRef } from '@lynx-js/react';
 import { __root, snapshotManager, updateSpread } from '@lynx-js/react/internal';
+import type { SnapshotInstance } from '@lynx-js/react/internal';
 
 let pageMounted = false;
 
 const Page: ForwardRefExoticComponent<Omit<PropsWithChildren, 'ref'> & RefAttributes<unknown>> =
   /* @__PURE__ */ (function() {
     if (__LEPUS__) {
-      snapshotManager.values.get('root')!.update![0] = (snapshot, index, oldValue) => {
+      snapshotManager.values.get('root')!.update![0] = (
+        snapshot: SnapshotInstance,
+        index: number,
+        oldValue: Record<string, unknown>,
+      ) => {
         /* v8 ignore start */
         if (__JS__ && !__DEV__) {
           return;
         }
         /* v8 ignore stop */
-        updateSpread(snapshot, index, oldValue as Record<string, unknown>, 0);
+        updateSpread(snapshot, index, oldValue, 0);
       };
     }
 

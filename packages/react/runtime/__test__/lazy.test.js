@@ -2,6 +2,7 @@ import '../lazy/import.js';
 
 import { describe, expect, test, vi } from 'vitest';
 import * as ReactExports from '../lazy/react.js';
+import * as ReactCompatExports from '../lazy/compat.js';
 import * as ReactLepusExports from '../lazy/react-lepus.js';
 import * as ReactInternalExports from '../lazy/internal.js';
 import * as ReactJSXRuntimeExports from '../lazy/jsx-runtime.js';
@@ -17,6 +18,19 @@ describe('Lazy Exports', () => {
 
     expect(
       new Set(Object.keys(ReactExports)),
+    ).toStrictEqual(
+      new Set(Object.keys(realAPIs)),
+    );
+  });
+
+  test('export APIs from "react/compat"', async () => {
+    const realAPIs = Object.assign(
+      {},
+      await import('@lynx-js/react/compat'),
+    );
+
+    expect(
+      new Set(Object.keys(ReactCompatExports)),
     ).toStrictEqual(
       new Set(Object.keys(realAPIs)),
     );
