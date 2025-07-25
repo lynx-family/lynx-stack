@@ -1,5 +1,20 @@
 # @lynx-js/react-rsbuild-plugin
 
+## 0.10.9
+
+### Patch Changes
+
+- Be compat with `@lynx-js/react` v0.112.0 ([#1323](https://github.com/lynx-family/lynx-stack/pull/1323))
+
+- Fix not having profile in development by default. ([#1306](https://github.com/lynx-family/lynx-stack/pull/1306))
+
+- Updated dependencies [[`fe38de5`](https://github.com/lynx-family/lynx-stack/commit/fe38de505b87b768035e3a833bdf8415dc4023ac), [`7cd5ea2`](https://github.com/lynx-family/lynx-stack/commit/7cd5ea2cebf12aa982ddc048dec4c5c7ed6bc1d6), [`2be5349`](https://github.com/lynx-family/lynx-stack/commit/2be534984d68d2a21d53bc04d7818f9d30d4ef0f)]:
+  - @lynx-js/react-webpack-plugin@0.6.19
+  - @lynx-js/css-extract-webpack-plugin@0.6.1
+  - @lynx-js/react-alias-rsbuild-plugin@0.10.9
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/react-refresh-webpack-plugin@0.3.4
+
 ## 0.10.8
 
 ### Patch Changes

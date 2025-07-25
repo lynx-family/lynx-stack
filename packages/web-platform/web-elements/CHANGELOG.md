@@ -1,5 +1,20 @@
 # @lynx-js/web-elements
 
+## 0.8.2
+
+### Patch Changes
+
+- Add crossorigin attribute support to x-image component ([#1340](https://github.com/lynx-family/lynx-stack/pull/1340))
+
+  - Added `crossorigin` to the `observedAttributes` array in `ImageSrc.ts`
+  - Implemented `#handleCrossorigin` handler using the `bindToAttribute` helper to forward the crossorigin attribute from the custom element to the internal `<img>` element
+  - Added comprehensive test coverage to verify the attribute is properly passed through to the shadow DOM
+
+  This enables CORS-enabled image loading when using `<x-image crossorigin="anonymous">` or similar configurations.
+
+- Updated dependencies []:
+  - @lynx-js/web-elements-template@0.8.2
+
 ## 0.8.1
 
 ### Patch Changes

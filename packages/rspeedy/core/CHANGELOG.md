@@ -1,5 +1,11 @@
 # @lynx-js/rspeedy
 
+## 0.10.3
+
+### Patch Changes
+
+- Should be able to override `performance.profile` when `DEBUG=rspeedy`. ([#1307](https://github.com/lynx-family/lynx-stack/pull/1307))
+
 ## 0.10.2
 
 ### Patch Changes

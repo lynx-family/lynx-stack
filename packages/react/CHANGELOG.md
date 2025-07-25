@@ -1,5 +1,32 @@
 # @lynx-js/react
 
+## 0.112.0
+
+### Minor Changes
+
+- feat: Force synchronous rendering for background initial renders to support Suspense fallbacks ([#1323](https://github.com/lynx-family/lynx-stack/pull/1323))
+
+### Patch Changes
+
+- fix: Ensure useEffect callbacks execute before event handlers from the same render cycle ([#1348](https://github.com/lynx-family/lynx-stack/pull/1348))
+
+- Enable rendering of the `Suspense` fallback on initial render. ([#1285](https://github.com/lynx-family/lynx-stack/pull/1285))
+
+- Remove and insert `list-item`s whose `item-key` have been changed. ([#1299](https://github.com/lynx-family/lynx-stack/pull/1299))
+
+  For example:
+
+  ```diff
+  -<list-item key={key /* "key1" */} item-key={itemKey /* "0xAFDFDA" */}>
+  +<list-item key={key /* "key1" */} item-key={itemKey /* "0xAFDFDB" */}>
+    ...
+  </list-item>
+  ```
+
+  the item-key has been changed from `0xAFDFDA` to `0xAFDFDB`, but the key remains the same. ReactLynx will think the item is the same and will not remove and insert it, but list in Lynx Engine will think the item is different and will expect it to be removed and inserted.
+
+- fix: Prevent "cannot set property 'current' of undefined" error thrown by MainThreadRef on engine data updates ([#1342](https://github.com/lynx-family/lynx-stack/pull/1342))
+
 ## 0.111.2
 
 ### Patch Changes
