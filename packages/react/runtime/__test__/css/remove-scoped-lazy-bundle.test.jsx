@@ -5,6 +5,10 @@ import { expect, it } from 'vitest';
 
 import { SnapshotInstance } from '../../src/snapshot';
 
+const __SNAPSHOT__ = (snapshot) => {
+  return snapshot.type;
+};
+
 const prevEntryName = globalThis.globDynamicComponentEntry;
 globalThis.globDynamicComponentEntry = 'FOO';
 const snapshot1 = __SNAPSHOT__(

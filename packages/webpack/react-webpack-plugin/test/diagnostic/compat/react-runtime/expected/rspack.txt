@@ -1,11 +1,12 @@
 WARNING in ./compat/react-runtime/index.jsx
-⚠ ModuleWarning: DEPRECATED: lynx-key is changed to key
-╭─[<LINE:COLUMN>]
-3  class App extends Component {
-4    render() {
-5      return <view lynx-key="foo"></view>
-·                  ────┬───
-·                      ╰── DEPRECATED: lynx-key is changed to key
-6    }
-7  }
-╰────
+⚠ ModuleWarning:   ! DEPRECATED: lynx-key is changed to key
+,-[<LINE:COLUMN>]
+2 |
+3 | class App extends Component {
+4 |   render() {
+5 |     return <view lynx-key="foo"></view>
+:                  ^^^^^^^^
+6 |   }
+7 | }
+`----
+

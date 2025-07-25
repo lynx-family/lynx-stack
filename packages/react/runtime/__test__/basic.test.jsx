@@ -10,6 +10,10 @@ import { SnapshotInstance, snapshotInstanceManager } from '../src/snapshot';
 
 const HOLE = null;
 
+const __SNAPSHOT__ = (snapshot) => {
+  return snapshot.type;
+};
+
 beforeEach(() => {
   snapshotInstanceManager.clear();
 });
