@@ -105,10 +105,10 @@ function buildSetStateProfileMarkArgs(
   currentState: Record<string, unknown>,
   nextState: Record<string, unknown>,
 ): Record<string, string> {
-  const EMPYT_OBJ = {};
+  const EMPTY_OBJ = {};
 
-  currentState ??= EMPYT_OBJ;
-  nextState ??= EMPYT_OBJ;
+  currentState ??= EMPTY_OBJ;
+  nextState ??= EMPTY_OBJ;
 
   return {
     'current state keys': JSON.stringify(Object.keys(currentState)),
