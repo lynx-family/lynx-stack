@@ -4,7 +4,7 @@
   "tasks": {
     "build": {
       "inputs": ["src/**/*.rs", "Cargo.toml", "build.js"],
-      "outputs": ["swc_plugin_compat.wasm"]
+      "outputs": ["swc_plugin_reactlynx_compat.wasm"]
     }
   }
 }
