@@ -1,5 +1,13 @@
 # @lynx-js/react-webpack-plugin
 
+## 0.6.19
+
+### Patch Changes
+
+- Be compat with `@lynx-js/react` v0.112.0 ([#1323](https://github.com/lynx-family/lynx-stack/pull/1323))
+
+- Fix `REACT_PROFILE` not taking effect. ([#1306](https://github.com/lynx-family/lynx-stack/pull/1306))
+
 ## 0.6.18
 
 ### Patch Changes

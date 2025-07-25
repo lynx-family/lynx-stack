@@ -1,5 +1,11 @@
 # @lynx-js/testing-environment
 
+## 0.1.4
+
+### Patch Changes
+
+- Fix the thread switching bug in `lynx.getCoreContext` and `lynx.getJSContext`. ([#1244](https://github.com/lynx-family/lynx-stack/pull/1244))
+
 ## 0.1.3
 
 ### Patch Changes
