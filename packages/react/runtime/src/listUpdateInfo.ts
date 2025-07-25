@@ -4,7 +4,6 @@
 
 import { hydrate } from './hydrate.js';
 import { componentAtIndexFactory, enqueueComponentFactory } from './list.js';
-import type { PlatformInfo } from './snapshot/platformInfo.js';
 import type { SnapshotInstance } from './snapshot.js';
 
 export interface ListUpdateInfo {
@@ -14,7 +13,7 @@ export interface ListUpdateInfo {
     existingNode?: SnapshotInstance,
   ): void;
   onRemoveChild(child: SnapshotInstance): void;
-  onSetAttribute(child: SnapshotInstance, attr: PlatformInfo, oldAttr?: PlatformInfo): void;
+  onSetAttribute(child: SnapshotInstance, attr: any, oldAttr: any): void;
 }
 
 // class ListUpdateInfoDiffing implements ListUpdateInfo {
@@ -122,12 +121,8 @@ export class ListUpdateInfoRecording implements ListUpdateInfo {
     this.removeChild.add(child);
   }
 
-  onSetAttribute(child: SnapshotInstance, attr: PlatformInfo, oldAttr?: PlatformInfo): void {
-    if (!oldAttr || attr['item-key'] === oldAttr['item-key']) {
-      this.platformInfoUpdate.set(child, attr);
-    } else {
-      this.onInsertBefore(child, child.nextSibling ?? undefined);
-    }
+  onSetAttribute(child: SnapshotInstance, attr: any, _oldAttr: any): void {
+    this.platformInfoUpdate.set(child, attr);
   }
 
   private __toAttribute(): ListOperations {
