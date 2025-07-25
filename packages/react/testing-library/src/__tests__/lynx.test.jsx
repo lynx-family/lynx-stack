@@ -1,4 +1,4 @@
-import { describe } from 'vitest';
+import { describe, vi } from 'vitest';
 
 describe('lynx global API', () => {
   it('getJSModule should work', () => {

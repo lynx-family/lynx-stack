@@ -26,8 +26,9 @@ import { applyCSS } from './css.js'
 import { applyEntry } from './entry.js'
 import { applyGenerator } from './generator.js'
 import { applyLazy } from './lazy.js'
-import { applyLoaders } from './loaders.js'
+import { applyLoaders, applyTestingEnvLoaders } from './loaders.js'
 import { applyRefresh } from './refresh.js'
+import { applyRstest } from './rstest.js'
 import { applySplitChunksRule } from './splitChunks.js'
 import { applySWC } from './swc.js'
 import { applyUseSyncExternalStore } from './useSyncExternalStore.js'
@@ -366,12 +367,23 @@ export function pluginReactLynx(
     name: 'lynx:react',
     pre: ['lynx:rsbuild:plugin-api'],
     async setup(api) {
+      const isRstest = api.context.callerName === 'rstest'
+
+      if (isRstest) {
+        applyRstest(api)
+      }
       await applyAlias(api, resolvedOptions.experimental_isLazyBundle)
-      applyCSS(api, resolvedOptions)
+      if (!isRstest) {
+        applyCSS(api, resolvedOptions)
+      }
       applyEntry(api, resolvedOptions)
       applyBackgroundOnly(api)
       applyGenerator(api, resolvedOptions)
-      applyLoaders(api, resolvedOptions)
+      if (isRstest) {
+        applyTestingEnvLoaders(api, resolvedOptions)
+      } else {
+        applyLoaders(api, resolvedOptions)
+      }
       applyRefresh(api)
       applySplitChunksRule(api)
       applySWC(api)

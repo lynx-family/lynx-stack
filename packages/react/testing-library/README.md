@@ -12,17 +12,12 @@ Setup vitest:
 
 ```js
 // vitest.config.js
-import { defineConfig, mergeConfig } from 'vitest/config';
-import { createVitestConfig } from '@lynx-js/react/testing-library/vitest-config';
+import { defineConfig } from 'vitest/config';
+import { vitestTestingLibraryPlugin } from '@lynx-js/react/testing-library/plugins';
 
-const defaultConfig = createVitestConfig();
-const config = defineConfig({
-  test: {
-    // ...
-  },
+export default defineConfig({
+  plugins: [vitestTestingLibraryPlugin()],
 });
-
-export default mergeConfig(defaultConfig, config);
 ```
 
 Then you can start writing tests and run them with vitest!

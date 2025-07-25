@@ -96,9 +96,15 @@
       "default": "./testing-library/dist/pure.js"
     },
     "./testing-library/vitest-config": {
-      "types": "./testing-library/types/vitest-config.d.ts",
+      "types": "./testing-library/dist/vitest.config.d.ts",
       "default": "./testing-library/dist/vitest.config.js"
     },
+    "./testing-library/plugins": {
+      "types": "./testing-library/dist/plugins/index.d.ts",
+      "default": "./testing-library/dist/plugins/index.js"
+    },
+    "./testing-library/setupFiles/vitest": "./testing-library/dist/setupFiles/vitest.js",
+    "./testing-library/setupFiles/rstest": "./testing-library/dist/setupFiles/rstest.js",
     "./package.json": "./package.json"
   },
   "types": "./types/react.d.ts",
