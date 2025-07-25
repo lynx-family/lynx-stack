@@ -3,7 +3,9 @@
 // LICENSE file in the root directory of this source tree.
 import type { LynxThemeConfig } from './types/theme-types.js';
 
-export const lynxTheme: Partial<LynxThemeConfig> = {
+export const lynxTheme: Partial<LynxThemeConfig> & {
+  extend?: Partial<LynxThemeConfig>;
+} = {
   boxShadow: {
     sm: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
     DEFAULT:
@@ -102,31 +104,18 @@ export const lynxTheme: Partial<LynxThemeConfig> = {
     'background-color': 'background-color',
     'border-color': 'border-color',
   },
-  transitionDuration: {
-    DEFAULT: '150ms',
-    0: '0s',
-    75: '75ms',
-    100: '100ms',
-    150: '150ms',
-    200: '200ms',
-    300: '300ms',
-    500: '500ms',
-    700: '700ms',
-    1000: '1000ms',
-  },
-  transitionTimingFunction: {
-    DEFAULT: 'cubic-bezier(0.4, 0, 0.2, 1)',
-    linear: 'linear',
-    in: 'cubic-bezier(0.4, 0, 1, 1)',
-    out: 'cubic-bezier(0, 0, 0.2, 1)',
-    'in-out': 'cubic-bezier(0.4, 0, 0.2, 1)',
-  },
-  grayscale: {
-    none: '',
-    0: '0',
-    25: '25%',
-    50: '50%',
-    75: '75%',
-    DEFAULT: '100%',
+  extend: {
+    transitionDuration: {
+      DEFAULT: '150ms',
+    },
+    transitionTimingFunction: {
+      DEFAULT: 'cubic-bezier(0.4, 0, 0.2, 1)',
+    },
+    grayscale: {
+      none: '',
+      25: '25%',
+      50: '50%',
+      75: '75%',
+    },
   },
 };
