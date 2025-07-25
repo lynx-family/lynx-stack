@@ -4,6 +4,7 @@
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import type { RsbuildPlugin } from '@rsbuild/core'
 import { Command } from 'commander'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
@@ -343,6 +344,49 @@ describe('CLI - dev', () => {
         ignorePermissionErrors: true,
       },
     )
+  })
+
+  test('dev with --mode=production', async () => {
+    const core = await import('@rsbuild/core')
+    const chokidar = await import('chokidar')
+
+    vi.mocked(chokidar.default.watch).mockClear()
+
+    const close = vi.fn(() => {
+      return Promise.resolve()
+    })
+
+    const plugins: string[] = []
+
+    vi.mocked(core.createRsbuild).mockImplementation(() =>
+      Promise.resolve({
+        // @ts-expect-error mock
+        createDevServer: vi.fn(() =>
+          Promise.resolve({
+            listen: () => ({ server: { close } }),
+          })
+        ),
+        addPlugins: vi.fn().mockImplementation((p: RsbuildPlugin[]) => {
+          plugins.push(...p.filter(p => Boolean(p)).map(p => p.name))
+        }),
+        isPluginExists: vi.fn().mockImplementation((name: string) =>
+          plugins.includes(name)
+        ),
+        inspectConfig: vi.fn(),
+      })
+    )
+
+    const program = new Command('test')
+    await dev.call(
+      program,
+      join(fixturesRoot, 'hello-world'),
+      {
+        mode: 'production',
+      },
+    )
+
+    expect(core.createRsbuild).toBeCalledTimes(1)
+    expect(plugins).toContain('lynx:rsbuild:dev')
   })
 
   // TODO: re-enable this flaky test

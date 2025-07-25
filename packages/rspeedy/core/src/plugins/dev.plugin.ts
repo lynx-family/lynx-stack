@@ -77,15 +77,24 @@ export function pluginDev(
             client: {
               // Lynx cannot use `location.hostname`.
               host: hostname,
+              port: '<port>',
             },
           },
+          // When using `rspeedy dev --mode production`
+          // Rsbuild would use `output.assetPrefix` instead of `dev.assetPrefix`
+          output: { assetPrefix },
         } as RsbuildConfig)
       })
 
       const require = createRequire(import.meta.url)
 
-      api.modifyBundlerChain((chain, { isProd, environment }) => {
-        if (isProd) {
+      api.modifyBundlerChain((chain, { isDev, environment }) => {
+        // We should modify public path in 3 cases:
+        //   1. `rspeedy dev`
+        //   2. `rspeedy dev --mode=production`
+        //   3. `rspeedy build --mode=development`
+        const { action } = api.context
+        if (action !== 'dev' && !isDev) {
           return
         }
         const rsbuildPath = require.resolve('@rsbuild/core')
