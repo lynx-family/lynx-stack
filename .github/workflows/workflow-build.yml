@@ -107,6 +107,9 @@ jobs:
       - name: Build
         id: build
         run: |
+          echo '===='
+          echo $NODE_OPTIONS
+          echo '===='
           pnpm turbo build --summarize
         env:
           NODE_OPTIONS: --max-old-space-size=32768
