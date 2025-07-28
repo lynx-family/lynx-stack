@@ -5,6 +5,7 @@ import { Element } from './api/element.js';
 import type { ClosureValueType, Worklet, WorkletRefImpl } from './bindings/types.js';
 import { initRunOnBackgroundDelay } from './delayRunOnBackground.js';
 import { delayExecUntilJsReady, initEventDelay } from './delayWorkletEvent.js';
+import { initEomImpl } from './eomImpl.js';
 import { hydrateCtx } from './hydrate.js';
 import { JsFunctionLifecycleManager, isRunOnBackgroundEnabled } from './jsFunctionLifecycle.js';
 import { profile } from './utils/profile.js';
@@ -17,6 +18,7 @@ function initWorklet(): void {
     _runOnBackgroundDelayImpl: initRunOnBackgroundDelay(),
     _hydrateCtx: hydrateCtx,
     _eventDelayImpl: initEventDelay(),
+    _eomImpl: initEomImpl(),
   };
 
   if (isRunOnBackgroundEnabled()) {
