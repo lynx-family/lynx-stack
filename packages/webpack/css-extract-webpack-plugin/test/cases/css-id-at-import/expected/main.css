@@ -96,11 +96,8 @@ body {
 
 }
 
-@cssId "1003" "common.css" {
 .bg {
   color: red;
-}
-
 }
 
 @cssId "1003" "db.css" {

@@ -25,9 +25,8 @@ export async function pitch(
 
   const callback = this.async();
 
-  // @ts-expect-error compatible with rspack < 1.4.9
   // See: https://github.com/web-infra-dev/rspack/pull/7878
-  const parseMeta = this.__internal__parseMeta as Record<string, string>;
+  const parseMeta = this.__internal__parseMeta;
 
   try {
     // Rspack does not return error in `importModule`.
@@ -55,24 +54,13 @@ export async function pitch(
     this: LoaderContext<LoaderOptions>,
     dependencies: Dep[],
   ) {
-    const deps = JSON.stringify(dependencies.map(dep => ({
-      ...dep,
-      content: dep.content.toString('utf-8'),
-      sourceMap: dep.sourceMap?.toString('utf-8'),
-    })));
-
-    // `this.__internal__setParseMeta` has been added in rspack 1.4.9
-    // See: https://github.com/web-infra-dev/rspack/pull/11083
-    if (typeof this.__internal__setParseMeta === 'function') {
-      this.__internal__setParseMeta(
-        this._compiler.webpack.CssExtractRspackPlugin.pluginName,
-        deps,
-      );
-    } else {
-      parseMeta[
-        this._compiler.webpack.CssExtractRspackPlugin.pluginName
-      ] = deps;
-    }
+    parseMeta[this._compiler.webpack.CssExtractRspackPlugin.pluginName] = JSON
+      .stringify(dependencies
+        .map(dep => ({
+          ...dep,
+          content: dep.content.toString('utf-8'),
+          sourceMap: dep.sourceMap?.toString('utf-8'),
+        })));
   }
 }
 

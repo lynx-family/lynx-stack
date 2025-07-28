@@ -1,4 +1,4 @@
-@import "./common.css";
+@import "./common.css?common";
 @import "./da.css";
 
 .d {
