@@ -6,11 +6,10 @@ import { startTransition, useTransition } from 'preact/compat';
 /* eslint-disable-next-line import/default */
 import ReactLynx from '@lynx-js/react';
 
-export default {
-  ...ReactLynx,
+export default /*#__PURE__*/ Object.assign({}, ReactLynx, {
   startTransition,
   useTransition,
-};
+});
 
 export * from '@lynx-js/react';
 export { startTransition, useTransition };
