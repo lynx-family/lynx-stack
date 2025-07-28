@@ -12,7 +12,6 @@
     "path": "../worklet-runtime/tsconfig.json",
   }],
   "include": [
-    "compat",
     "debug",
     "jsx-dev-runtime",
     "jsx-runtime",
