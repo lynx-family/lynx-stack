@@ -17,7 +17,7 @@ vi.mock('node:module', async (importOriginal) => {
     createRequire: vi.fn().mockImplementation((path: string | URL) => {
       const originalRequire = originalCreateRequire(path)
       const mockedRequire = (id: string) => {
-        if (/\/?packages\/react\/.*package\.json$/.test(id)) {
+        if (/[\\/](?:packages[\\/])?react[\\/]*package\.json$/.test(id)) {
           return {}
         } else {
           // eslint-disable-next-line
