@@ -1,2 +1,2 @@
-export * from './dist/index.js';
-export { memory } from './dist/index_bg.wasm';
+export * from './dist/standard.js';
+export { memory } from './dist/standard_bg.wasm';

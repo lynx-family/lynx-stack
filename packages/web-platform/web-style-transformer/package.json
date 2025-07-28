@@ -23,8 +23,13 @@
     "README.md"
   ],
   "scripts": {
-    "build": "wasm-pack build --target bundler --out-dir dist --out-name index --mode no-install && node -e \"require('fs').rmSync('dist/.gitignore', { force: true })\"",
+    "build": "pnpm run build:standard && pnpm run build:legacy",
+    "build:legacy": "RUSTFLAGS=-Cstrip=symbols wasm-pack build --target bundler --out-dir dist --out-name legacy --mode no-install && node -e \"require('fs').rmSync('dist/.gitignore', { force: true })\"",
+    "build:standard": "wasm-pack build --target bundler --out-dir dist --out-name standard --mode no-install && node -e \"require('fs').rmSync('dist/.gitignore', { force: true })\"",
     "build:wasm-bindgen": "wasm-bindgen --version || cargo install wasm-bindgen-cli",
     "build:wasm-pack": "wasm-pack --version || cargo install wasm-pack"
+  },
+  "dependencies": {
+    "wasm-feature-detect": "^1.8.0"
   }
 }
