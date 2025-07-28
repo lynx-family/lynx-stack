@@ -1,6 +1,4 @@
 export let wasm;
-export function initWasm() {
-  return import('./standard.js').then((module) => {
-    wasm = module;
-  });
+export async function initWasm() {
+  wasm = await import('./standard.js');
 }
