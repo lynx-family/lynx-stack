@@ -39,12 +39,8 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
       const reactLynxPkg = require.resolve('@lynx-js/react/package.json', {
         paths: [rootPath ?? api.context.rootPath],
       })
-      const reactLynxPkgContent = require(reactLynxPkg) as { version?: string }
-      const version = reactLynxPkgContent?.version
-
-      if (!version) {
-        throw new Error('version field not found in @lynx-js/react package')
-      }
+      const reactLynxPkgContent = require(reactLynxPkg) as { version: string }
+      const version = reactLynxPkgContent.version
 
       const reactLynxDir = path.dirname(reactLynxPkg)
       const resolve = createLazyResolver(
