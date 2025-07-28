@@ -54,4 +54,20 @@ function delayRunOnBackground(fnObj: JsFnHandle, fn: (fnId: number, execId: numb
   globalThis.lynxWorkletImpl?._runOnBackgroundDelayImpl.delayRunOnBackground(fnObj, fn);
 }
 
-export { runWorkletCtx, updateWorkletRef, updateWorkletRefInitValueChanges, registerWorklet, delayRunOnBackground };
+/**
+ * Set whether EOM operations should flush the element tree.
+ *
+ * @internal
+ */
+function setEomShouldFlushElementTree(value: boolean) {
+  globalThis.lynxWorkletImpl?._eomImpl.setShouldFlush(value);
+}
+
+export {
+  runWorkletCtx,
+  updateWorkletRef,
+  updateWorkletRefInitValueChanges,
+  registerWorklet,
+  delayRunOnBackground,
+  setEomShouldFlushElementTree,
+};

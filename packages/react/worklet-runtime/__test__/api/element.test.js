@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { Element } from '../../src/api/element';
+import { Element, setShouldFlush } from '../../src/api/element';
 import { initWorklet } from '../../src/workletRuntime';
 
 beforeEach(() => {
@@ -27,6 +27,7 @@ afterEach(() => {
   delete globalThis.lynxWorkletImpl;
   vi.useRealTimers();
   vi.clearAllMocks();
+  setShouldFlush(true);
 });
 
 describe('Element', () => {
@@ -139,6 +140,19 @@ describe('Element', () => {
     element.setStyleProperty('color', 'blue');
     element.setStyleProperties({ margin: '10px' });
     expect(globalThis.__FlushElementTree).not.toHaveBeenCalled();
+    await vi.runAllTimersAsync();
+    expect(globalThis.__FlushElementTree).toHaveBeenCalledTimes(1);
+  });
+
+  it('should not flush when shouldFlush is false', async () => {
+    const element = new Element('element-instance');
+    setShouldFlush(false);
+    element.setAttribute('a', '1');
+    await vi.runAllTimersAsync();
+    expect(globalThis.__FlushElementTree).not.toHaveBeenCalled();
+
+    setShouldFlush(true);
+    element.setAttribute('b', '2');
     await vi.runAllTimersAsync();
     expect(globalThis.__FlushElementTree).toHaveBeenCalledTimes(1);
   });
