@@ -267,7 +267,7 @@ const config = {
     ],
   },
   experiments: {
-    css: true,
+    futureDefaults: true,
   },
 };
 

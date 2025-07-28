@@ -8,6 +8,13 @@ const config: RslibConfig = defineConfig({
   output: {
     sourceMap: true,
   },
+  tools: {
+    rspack: {
+      output: {
+        wasmLoading: 'async-node',
+      },
+    },
+  },
 });
 
 export default config;
