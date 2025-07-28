@@ -21,7 +21,7 @@ vi.mock('node:module', async (importOriginal) => {
       const originalRequire = originalCreateRequire(path)
       const mockedRequire = (id: string) => {
         if (/\/?(?:packages\/)?react\/*package\.json$/.test(id)) {
-          return { version: '0.112.0' }
+          return { version: '0.112.0-canary-20250728-1f7b2d07' }
         } else {
           // eslint-disable-next-line
           return originalRequire(id)
@@ -34,7 +34,7 @@ vi.mock('node:module', async (importOriginal) => {
 })
 
 describe('@lynx-js/react/compat - alias', () => {
-  test('alias with @lynx-js/react >= 0.112.0', async () => {
+  test('alias with @lynx-js/react@0.112.0-canary-20250728-1f7b2d07', async () => {
     vi.stubEnv('NODE_ENV', 'production')
 
     const { pluginReactAlias } = await import('../../src/index.js')
