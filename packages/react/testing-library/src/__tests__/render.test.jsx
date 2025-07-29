@@ -47,3 +47,211 @@ test('renders options.wrapper around node', async () => {
     </view>
   `);
 });
+
+describe('dynamic key in snapshot', () => {
+  test('[FIXME] multiple slots 0', () => {
+    const Comp = () => (
+      <view>
+        <view className='foo' key={`foo`}>
+          <view>
+            {<text>foo</text>}
+          </view>
+          <view>
+            {<text>bar</text>}
+          </view>
+        </view>
+      </view>
+    );
+
+    const { container } = render(<Comp />);
+
+    expect(container).toMatchInlineSnapshot(`
+      <page>
+        <view>
+          <wrapper>
+            <view
+              class="foo"
+            >
+              <view>
+                <text>
+                  foo
+                </text>
+                <text>
+                  bar
+                </text>
+              </view>
+              <view />
+            </view>
+          </wrapper>
+        </view>
+      </page>
+    `);
+  });
+
+  test('multiple slots 1', () => {
+    const Comp = () => (
+      <view>
+        <text>Hello {null}</text>
+        <view className='foo' key={`foo`}>
+          <view>
+            {<text>foo</text>}
+          </view>
+          <view>
+            {<text>bar</text>}
+          </view>
+        </view>
+      </view>
+    );
+
+    const { container } = render(<Comp />);
+
+    expect(container).toMatchInlineSnapshot(`
+      <page>
+        <view>
+          <text>
+            Hello 
+            <wrapper />
+          </text>
+          <wrapper>
+            <view
+              class="foo"
+            >
+              <view>
+                <text>
+                  foo
+                </text>
+              </view>
+              <view>
+                <text>
+                  bar
+                </text>
+              </view>
+            </view>
+          </wrapper>
+        </view>
+      </page>
+    `);
+  });
+
+  test('[FIXME] multiple slots 2', () => {
+    const Comp = () => (
+      <view>
+        <view className='foo' key={`foo`}>
+          <view>
+            {<text>foo</text>}
+          </view>
+          <view>
+            {<text>bar</text>}
+          </view>
+        </view>
+        <text>Hello {null}</text>
+      </view>
+    );
+
+    const { container } = render(<Comp />);
+
+    expect(container).toMatchInlineSnapshot(`
+      <page>
+        <view>
+          <wrapper>
+            <view
+              class="foo"
+            >
+              <view>
+                <text>
+                  foo
+                </text>
+              </view>
+              <view>
+                <text>
+                  bar
+                </text>
+              </view>
+            </view>
+          </wrapper>
+          <text>
+            Hello 
+            <wrapper />
+          </text>
+        </view>
+      </page>
+    `);
+  });
+
+  test('multiple slots 3', () => {
+    const Comp = () => (
+      <view className='foo' key={`foo`}>
+        <view>
+          <view>
+            {<text>foo</text>}
+          </view>
+          <view>
+            {<text>bar</text>}
+          </view>
+        </view>
+      </view>
+    );
+
+    const { container } = render(<Comp />);
+
+    expect(container).toMatchInlineSnapshot(`
+      <page>
+        <view
+          class="foo"
+        >
+          <view>
+            <view>
+              <text>
+                foo
+              </text>
+            </view>
+            <view>
+              <text>
+                bar
+              </text>
+            </view>
+          </view>
+        </view>
+      </page>
+    `);
+  });
+
+  test('[FIXME] multiple keys', () => {
+    const Comp = () => (
+      <view>
+        <view className='foo' key={`foo`}>
+          <view>
+            {<text>foo</text>}
+          </view>
+          <view key={`bar`}>
+            {<text>bar</text>}
+          </view>
+        </view>
+      </view>
+    );
+
+    const { container } = render(<Comp />);
+
+    expect(container).toMatchInlineSnapshot(`
+      <page>
+        <view>
+          <wrapper>
+            <view
+              class="foo"
+            >
+              <view>
+                <text>
+                  foo
+                </text>
+                <text>
+                  bar
+                </text>
+              </view>
+              <view />
+            </view>
+          </wrapper>
+        </view>
+      </page>
+    `);
+  });
+});

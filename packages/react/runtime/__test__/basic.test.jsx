@@ -367,3 +367,96 @@ describe('setAttribute', () => {
     `);
   });
 });
+
+describe('dynamic key in snapshot', () => {
+  it('[FIXME] multiple slots 0', () => {
+    const snapshot = __SNAPSHOT__(
+      <view>
+        <view className='foo' key={`foo`}>
+          <view>
+            {<text>foo</text>}
+          </view>
+          <view>
+            {<text>bar</text>}
+          </view>
+        </view>
+      </view>,
+    );
+
+    const a = new SnapshotInstance(snapshot);
+    a.ensureElements();
+
+    expect(a.__element_root).toMatchInlineSnapshot(`
+      <view>
+        <wrapper>
+          <view
+            class="foo"
+          >
+            <view />
+            <view />
+          </view>
+        </wrapper>
+      </view>
+    `);
+  });
+
+  it('multiple slots 2', () => {
+    const snapshot = __SNAPSHOT__(
+      <view className='foo' key={`foo`}>
+        <view>
+          <view>
+            {<text>foo</text>}
+          </view>
+          <view>
+            {<text>bar</text>}
+          </view>
+        </view>
+      </view>,
+    );
+
+    const a = new SnapshotInstance(snapshot);
+    a.ensureElements();
+
+    expect(a.__element_root).toMatchInlineSnapshot(`
+      <view
+        class="foo"
+      >
+        <view>
+          <wrapper />
+          <wrapper />
+        </view>
+      </view>
+    `);
+  });
+
+  it('multiple slots 3', () => {
+    const snapshot = __SNAPSHOT__(
+      <view>
+        <text>Hello {HOLE}</text>
+        <view className='foo' key={`foo`}>
+          <view>
+            {<text>foo</text>}
+          </view>
+          <view>
+            {<text>bar</text>}
+          </view>
+        </view>
+      </view>,
+    );
+
+    const a = new SnapshotInstance(snapshot);
+    a.ensureElements();
+
+    expect(a.__element_root).toMatchInlineSnapshot(`
+      <view>
+        <text>
+          <raw-text
+            text="Hello "
+          />
+          <wrapper />
+        </text>
+        <wrapper />
+      </view>
+    `);
+  });
+});
