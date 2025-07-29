@@ -96,7 +96,7 @@ jobs:
             turbo-v4-${{ runner.os }}-${{ hashFiles('**/packages/**/src/**/*.rs') }}-
             turbo-v4-${{ runner.os }}-
       - name: Install wasm-bindgen and wasm-pack
-        uses: taiki-e/install-action@d188da0a65bc6c80011567688127bddc8be0ca24 # v2
+        uses: taiki-e/install-action@bbdef1c33cb8ed1fd122d68d8374ac79998d6960 # v2
         with:
           tool: wasm-bindgen,wasm-pack
       - name: Install
