@@ -1,14 +1,14 @@
 use crate::*;
 use crate::{char_code_definitions, types::*, utils::*};
 
-const URL_STR: [u16; 3] = ['u' as u16, 'r' as u16, 'l' as u16];
-/*
+const URL_STR: [u32; 3] = ['u' as u32, 'r' as u32, 'l' as u32];
+/**
  * this code forked from css-tree
  */
 
 // § 4.3.3. Consume a numeric token
-pub fn consume_numeric_token(source: &[u16], offset: &mut usize, token_type: &mut u16) {
-  let source_length = source.len();
+pub fn consume_numeric_token(source: &js_sys::JsString, offset: &mut u32, token_type: &mut u16) {
+  let source_length = source.length();
   // Consume a number and let number be the result.
   *offset = consume_number(source, *offset);
 
@@ -39,9 +39,9 @@ pub fn consume_numeric_token(source: &[u16], offset: &mut usize, token_type: &mu
 }
 
 // § 4.3.4. Consume an ident-like token
-pub fn consume_ident_like_token(source: &[u16], offset: &mut usize, token_type: &mut u16) {
+pub fn consume_ident_like_token(source: &js_sys::JsString, offset: &mut u32, token_type: &mut u16) {
   let name_start_offset = *offset;
-  let source_length = source.len();
+  let source_length = source.length();
 
   // Consume a name, and let string be the result.
   *offset = consume_name(source, *offset);
@@ -83,12 +83,12 @@ pub fn consume_ident_like_token(source: &[u16], offset: &mut usize, token_type: 
 }
 
 pub fn consume_string_token(
-  source: &[u16],
-  ending_code_point: u16,
-  offset: &mut usize,
+  source: &js_sys::JsString,
+  ending_code_point: u32,
+  offset: &mut u32,
   token_type: &mut u16,
 ) {
-  let source_length = source.len();
+  let source_length = source.length();
   let mut ending_code_point = ending_code_point;
   // This algorithm may be called with an ending code point, which denotes the code point
   // that ends the string. If an ending code point is not specified,
@@ -104,8 +104,8 @@ pub fn consume_string_token(
     if (*offset) >= source_length {
       return;
     }
-    let code = source[*offset];
-    let char_code = char_code_category!(code as usize);
+    let code = source.char_code_at(*offset) as u32;
+    let char_code = char_code_category!(code);
     // ending code point
     if char_code == ending_code_point {
       // Return the <string-token>.
@@ -131,7 +131,7 @@ pub fn consume_string_token(
       }
 
       // U+005C REVERSE SOLIDUS (\)
-      0x005C_u16 => {
+      0x005C => {
         // If the next input code point is EOF, do nothing.
         if *offset == source_length - 1 {
           *offset += 1;
@@ -162,8 +162,8 @@ pub fn consume_string_token(
 // This algorithm also assumes that it’s being called to consume an "unquoted" value, like url(foo).
 // A quoted value, like url("foo"), is parsed as a <function-token>. Consume an ident-like token
 // automatically handles this distinction; this algorithm shouldn’t be called directly otherwise.
-pub fn consume_url_token(source: &[u16], offset: &mut usize, token_type: &mut u16) {
-  let source_length = source.len();
+pub fn consume_url_token(source: &js_sys::JsString, offset: &mut u32, token_type: &mut u16) {
+  let source_length = source.length();
   // Initially create a <url-token> with its value set to the empty string.
   *token_type = URL_TOKEN;
 
@@ -175,9 +175,9 @@ pub fn consume_url_token(source: &[u16], offset: &mut usize, token_type: &mut u1
     if (*offset) >= source_length {
       return;
     }
-    let code = source[*offset];
+    let code = source.char_code_at(*offset) as u32;
 
-    match char_code_category!(code as usize) {
+    match char_code_category!(code) {
       // U+0029 RIGHT PARENTHESIS ())
       0x0029 => {
         // Return the <url-token>.
@@ -251,17 +251,17 @@ pub fn consume_url_token(source: &[u16], offset: &mut usize, token_type: &mut u1
 }
 
 pub trait Parser {
-  fn on_token(&mut self, token_type: u16, start: usize, end: usize);
+  fn on_token(&mut self, token_type: u16, start: u32, end: u32);
 }
 
-pub fn tokenize<T: Parser>(source: &[u16], parser: &mut T) {
-  let source_length = source.len();
-  let mut start: usize = is_bom!(get_char_code!(source, source_length, 0));
+pub fn tokenize<T: Parser>(source: &js_sys::JsString, parser: &mut T) {
+  let source_length = source.length();
+  let mut start: u32 = is_bom!(get_char_code!(source, source_length, 0));
   let mut offset = start;
   let mut token_type: u16 = EOF_TOKEN;
   while offset < source_length {
-    let code = source[offset];
-    match char_code_category!(code as usize) {
+    let code = source.char_code_at(offset) as u32;
+    match char_code_category!(code) {
       // whitespace
       char_code_definitions::WHITE_SPACE_CATEGORY => {
         // Consume as much whitespace as possible. Return a <whitespace-token>.
@@ -405,7 +405,9 @@ pub fn tokenize<T: Parser>(source: &[u16], parser: &mut T) {
           // implement of the indexOf function
           let mut is_found = false;
           for ii in offset + 2..source_length - 1 {
-            if source[ii] == ('*' as u16) && source[ii + 1] == ('/' as u16) {
+            if source.char_code_at(ii) == ('*' as u16 as f64)
+              && source.char_code_at(ii + 1) == ('/' as u16 as f64)
+            {
               is_found = true;
               offset = ii;
               break;

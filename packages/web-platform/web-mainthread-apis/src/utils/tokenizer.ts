@@ -1,26 +1,18 @@
 import { wasm } from '@lynx-js/web-style-transformer';
-let HEAPU16: Uint16Array | undefined;
-
-const stringToUTF16 = (str: string) => {
-  const len = str.length;
-  const ptr = wasm.malloc(len << 1);
-  if (!HEAPU16 || HEAPU16.byteLength == 0) {
-    HEAPU16 = new Uint16Array(wasm.memory.buffer);
-  }
-  for (let i = 0; i < len; i++) {
-    HEAPU16[(ptr >> 1) + i] = str.charCodeAt(i);
-  }
-  return { ptr, len };
-};
 export function transformInlineStyleString(str: string): string {
-  const { ptr, len } = stringToUTF16(str);
+  console.log(0, str);
+  // const { ptr, len } = stringToUTF16(str);
   try {
-    const transformedStyle = wasm.transform_raw_u16_inline_style_ptr(ptr, len)
-      ?? str;
-    wasm.free(ptr, len << 1);
-    return transformedStyle;
+    console.log('start parse', str);
+    const res = wasm.transform_inline_style(str) ?? str;
+
+    // const transformedStyle = wasm.transform_raw_u16_inline_style_ptr(ptr, len)
+    //   ?? str;
+    // wasm.free(ptr, len << 1);
+    console.log('return-value', res);
+    return res;
   } catch (e) {
-    wasm.free(ptr, len << 1);
+    // wasm.free(ptr, len << 1);
     throw e;
   }
 }
@@ -31,18 +23,22 @@ export function transformParsedStyles(
   let childStyle: [string, string][] = [];
   let transformedStyle: [string, string][] = [];
   for (const [property, value] of styles) {
-    const { ptr: propertyPtr, len: propertyLen } = stringToUTF16(property);
-    const { ptr: valuePtr, len: valueLen } = stringToUTF16(value);
+    // const { ptr: propertyPtr, len: propertyLen } = stringToUTF16(property);
+    // const { ptr: valuePtr, len: valueLen } = stringToUTF16(value);
     try {
       const transformedResult = wasm
         .transform_raw_u16_inline_style_ptr_parsed(
-          propertyPtr,
-          propertyLen,
-          valuePtr,
-          valueLen,
+          // propertyPtr,
+          // propertyLen,
+          property,
+          property.length,
+          // valuePtr,
+          // valueLen,
+          value,
+          value.length,
         );
-      wasm.free(propertyPtr, propertyLen << 1);
-      wasm.free(valuePtr, valueLen << 1);
+      // wasm.free(propertyPtr, propertyLen << 1);
+      // wasm.free(valuePtr, valueLen << 1);
       if (transformedResult) {
         const [transformedStyleForCurrent, childStyleForCurrent] =
           transformedResult;
@@ -55,8 +51,8 @@ export function transformParsedStyles(
         transformedStyle.push([property, value]);
       }
     } catch (e) {
-      wasm.free(propertyPtr, propertyLen << 1);
-      wasm.free(valuePtr, valueLen << 1);
+      // wasm.free(propertyPtr, propertyLen << 1);
+      // wasm.free(valuePtr, valueLen << 1);
       throw e;
     }
   }

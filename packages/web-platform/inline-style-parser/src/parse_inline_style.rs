@@ -5,25 +5,25 @@ use crate::{
   utils::cmp_str,
 };
 
-const IMPORTANT_STR: [u16; 9] = [
-  'i' as u16, 'm' as u16, 'p' as u16, 'o' as u16, 'r' as u16, 't' as u16, 'a' as u16, 'n' as u16,
-  't' as u16,
+const IMPORTANT_STR: [u32; 9] = [
+  'i' as u32, 'm' as u32, 'p' as u32, 'o' as u32, 'r' as u32, 't' as u32, 'a' as u32, 'n' as u32,
+  't' as u32,
 ];
 
 pub struct ParserState<'a, 'b, T: Transformer> {
   transformer: &'b mut T,
-  source: &'a [u16],
+  source: &'a js_sys::JsString,
   status: usize,
-  name_start: usize,
-  name_end: usize,
-  value_start: usize,
-  value_end: usize,
+  name_start: u32,
+  name_end: u32,
+  value_start: u32,
+  value_end: u32,
   is_important: bool,
   prev_token_type: u16,
 }
 
 impl<T: Transformer> Parser for ParserState<'_, '_, T> {
-  fn on_token(&mut self, token_type: u16, start: usize, end: usize) {
+  fn on_token(&mut self, token_type: u16, start: u32, end: u32) {
     //https://drafts.csswg.org/css-syntax-3/#consume-declaration
     // on_token(type, start, offset);
     /*
@@ -79,7 +79,9 @@ impl<T: Transformer> Parser for ParserState<'_, '_, T> {
       if self.value_end == 0 {
         self.value_end = start;
       }
-      while is_white_space!(self.source[self.value_end - 1]) && self.value_end > self.value_start {
+      while is_white_space!(self.source.char_code_at(self.value_end - 1) as u32)
+        && self.value_end > self.value_start
+      {
         self.value_end -= 1;
       }
       self.transformer.on_declaration(
@@ -130,15 +132,15 @@ impl<T: Transformer> Parser for ParserState<'_, '_, T> {
 pub trait Transformer {
   fn on_declaration(
     &mut self,
-    name_start: usize,
-    name_end: usize,
-    value_start: usize,
-    value_end: usize,
+    name_start: u32,
+    name_end: u32,
+    value_start: u32,
+    value_end: u32,
     is_important: bool,
   );
 }
 
-pub fn parse_inline_style<T: Transformer>(source: &[u16], transformer: &mut T) {
+pub fn parse_inline_style<'a, T: Transformer>(source: &js_sys::JsString, transformer: &mut T) {
   let mut parser = ParserState {
     transformer,
     source,
@@ -152,6 +154,6 @@ pub fn parse_inline_style<T: Transformer>(source: &[u16], transformer: &mut T) {
   };
   tokenize::tokenize(source, &mut parser);
   if parser.prev_token_type != SEMICOLON_TOKEN {
-    parser.on_token(SEMICOLON_TOKEN, source.len(), source.len());
+    parser.on_token(SEMICOLON_TOKEN, source.length(), source.length());
   }
 }

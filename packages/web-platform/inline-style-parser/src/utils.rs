@@ -1,19 +1,19 @@
 use crate::*;
 
-pub fn cmp_str(test_str: &[u16], start: usize, end: usize, reference_str: &[u16]) -> bool {
-  if (end - start) != reference_str.len() {
+pub fn cmp_str(test_str: &js_sys::JsString, start: u32, end: u32, reference_str: &[u32]) -> bool {
+  if (end - start) as usize != reference_str.len() {
     return false;
   }
-  if end > test_str.len() {
+  if end > test_str.length() {
     return false;
   }
   for i in start..end {
     let reference_str_offset = i - start;
-    if reference_str_offset >= reference_str.len() || i >= test_str.len() {
+    if reference_str_offset as usize >= reference_str.len() || i >= test_str.length() {
       return false;
     }
-    let reference_code = reference_str[reference_str_offset];
-    let mut test_code = test_str[i];
+    let reference_code = reference_str[reference_str_offset as usize];
+    let mut test_code = test_str.char_code_at(i as u32) as u32;
     // testCode.toLowerCase() for A..Z
     if is_uppercase_letter!(test_code) {
       test_code |= 32;
@@ -25,10 +25,10 @@ pub fn cmp_str(test_str: &[u16], start: usize, end: usize, reference_str: &[u16]
   true
 }
 
-pub fn find_white_space_end(source: &[u16], offset: usize) -> usize {
+pub fn find_white_space_end(source: &js_sys::JsString, offset: u32) -> u32 {
   let mut offset = offset;
-  while offset < source.len() {
-    let code = source[offset];
+  while offset < source.length() {
+    let code = source.char_code_at(offset) as u32;
     if !is_white_space!(code) {
       break;
     }
@@ -37,10 +37,10 @@ pub fn find_white_space_end(source: &[u16], offset: usize) -> usize {
   offset
 }
 
-pub fn find_decimal_number_end(source: &[u16], offset: usize) -> usize {
+pub fn find_decimal_number_end(source: &js_sys::JsString, offset: u32) -> u32 {
   let mut offset = offset;
-  while offset < source.len() {
-    let code = source[offset];
+  while offset < source.length() {
+    let code = source.char_code_at(offset) as u32;
     if !is_digit!(code) {
       break;
     }
@@ -50,11 +50,11 @@ pub fn find_decimal_number_end(source: &[u16], offset: usize) -> usize {
 }
 
 // § 4.3.7. Consume an escaped code point
-pub fn consume_escaped(source: &[u16], offset: usize) -> usize {
+pub fn consume_escaped(source: &js_sys::JsString, offset: u32) -> u32 {
   // It assumes that the U+005C REVERSE SOLIDUS (\) has already been consumed and
   // that the next input code point has already been verified to be part of a valid escape.
   let mut offset = offset + 2;
-  let source_length = source.len();
+  let source_length = source.length();
   // hex digit
   if is_hex_digit!(get_char_code!(source, source_length, offset - 1)) {
     // It assumes that the U+005C REVERSE SOLIDUS (\) has already been consumed and
@@ -67,7 +67,7 @@ pub fn consume_escaped(source: &[u16], offset: usize) -> usize {
       offset += 1;
     }
     // If the next input code point is whitespace, consume it as well.
-    let code = get_char_code!(source, source_length, offset);
+    let code = get_char_code!(source, source_length, offset) as u32;
     if is_white_space!(code) {
       offset += get_new_line_length!(source, source_length, offset, code);
     }
@@ -78,13 +78,13 @@ pub fn consume_escaped(source: &[u16], offset: usize) -> usize {
 // §4.3.11. Consume a name
 // Note: This algorithm does not do the verification of the first few code points that are necessary
 // to ensure the returned code points would constitute an <ident-token>. If that is the intended use,
-pub fn consume_name(source: &[u16], offset: usize) -> usize {
+pub fn consume_name(source: &js_sys::JsString, offset: u32) -> u32 {
   let mut offset = offset;
   // Let result initially be an empty string.
   // Repeatedly consume the next input code point from the stream:
-  let source_length = source.len();
+  let source_length = source.length();
   while offset < source_length {
-    let code = source[offset];
+    let code = source.char_code_at(offset) as u32;
     if is_name!(code) {
       // Append the code point to result.
       offset += 1;
@@ -107,27 +107,28 @@ pub fn consume_name(source: &[u16], offset: usize) -> usize {
 }
 
 // §4.3.12. Consume a number
-pub fn consume_number(source: &[u16], offset: usize) -> usize {
+pub fn consume_number(source: &js_sys::JsString, offset: u32) -> u32 {
   let mut offset = offset;
-  let source_length = source.len();
+  let source_length = source.length();
   if offset < source_length {
-    let mut code: u16 = source[offset];
+    // let mut code: u16 = source[offset];
+    let mut code = source.char_code_at(offset) as u32;
     // 2. If the next input code point is U+002B PLUS SIGN (+) or U+002D HYPHEN-MINUS (-),
     // consume it and append it to repr.
-    if code == 0x002B || code == 0x002D {
+    if code == 0x002B4 || code == 0x002D {
       offset += 1;
     }
     if offset < source_length {
-      code = source[offset];
+      code = source.char_code_at(offset) as u32;
 
       // 3. While the next input code point is a digit, consume it and append it to repr.
       if is_digit!(code) {
         offset = find_decimal_number_end(source, offset + 1);
       }
       if offset + 1 < source_length {
-        code = source[offset];
+        code = source.char_code_at(offset) as u32;
         // 4. If the next 2 input code points are U+002E FULL STOP (.) followed by a digit, then:
-        if code == 0x002E && is_digit!(source[offset + 1]) {
+        if code == 0x002E && is_digit!(source.char_code_at(offset + 1) as u32) {
           // 4.1 Consume them.
           // 4.2 Append them to repr.
           offset += 2;
@@ -142,16 +143,16 @@ pub fn consume_number(source: &[u16], offset: usize) -> usize {
       }
     }
 
-    if cmp_char!(source, source_length, offset, 101_u16 /* e */) != 0 {
-      let mut sign: usize = 0;
+    if cmp_char!(source, source_length, offset, 101 /* e */) != 0 {
+      let mut sign = 0;
       if offset + 1 < source_length {
-        code = source[offset + 1];
+        code = source.char_code_at(offset + 1) as u32;
         let mut is_nan = false;
         // ... optionally followed by U+002D HYPHEN-MINUS (-) or U+002B PLUS SIGN (+) ...
         if code == 0x002D || code == 0x002B {
           sign = 1;
           if offset + 2 < source_length {
-            code = source[offset + 2];
+            code = source.char_code_at(offset + 2) as u32;
           } else {
             is_nan = true;
           }
@@ -178,12 +179,12 @@ pub fn consume_number(source: &[u16], offset: usize) -> usize {
 // § 4.3.14. Consume the remnants of a bad url
 // ... its sole use is to consume enough of the input stream to reach a recovery point
 // where normal tokenizing can resume.
-pub fn consume_bad_url_remnants(source: &[u16], offset: usize) -> usize {
-  let source_length = source.len();
+pub fn consume_bad_url_remnants(source: &js_sys::JsString, offset: u32) -> u32 {
+  let source_length = source.length();
   let mut offset = offset;
   // Repeatedly consume the next input code point from the stream:
   while offset < source_length {
-    let code = source[offset];
+    let code = source.char_code_at(offset) as u32;
     // U+0029 RIGHT PARENTHESIS ())
     // EOF
     if code == 0x0029 {
