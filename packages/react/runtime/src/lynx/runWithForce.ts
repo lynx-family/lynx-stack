@@ -16,9 +16,9 @@ export function runWithForce(cb: () => void): void {
 
   const oldDiff = options[DIFF];
 
-  options[DIFF] = (vnode: PatchedVNode, oldVNode) => {
+  options[DIFF] = (vnode: PatchedVNode) => {
     if (oldDiff) {
-      oldDiff(vnode, oldVNode);
+      oldDiff(vnode);
     }
 
     // when `options[DIFF]` is called, a newVnode is passed in

@@ -147,11 +147,11 @@ export function setupComponentStack(): void {
     if (oldDiffed) oldDiffed(vnode);
   };
 
-  options[DIFF] = (vnode, oldVNode) => {
+  options[DIFF] = vnode => {
     if (isPossibleOwner(vnode)) {
       renderStack.push(vnode);
     }
-    if (oldDiff) oldDiff(vnode, oldVNode);
+    if (oldDiff) oldDiff(vnode);
   };
 
   options[ROOT] = (vnode, parent) => {

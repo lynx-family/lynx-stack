@@ -117,7 +117,7 @@ function markTiming(timestampKey: typeof PerformanceTimingKeys[number], force?: 
 
 function initTimingAPI(): void {
   const oldDiff = options[DIFF];
-  options[DIFF] = (vnode: VNode, oldVNode: VNode) => {
+  options[DIFF] = (vnode: VNode) => {
     // check `__globalSnapshotPatch` to make sure this only runs after hydrate
     if (__JS__ && __globalSnapshotPatch) {
       if (!globalPipelineOptions) {
@@ -128,7 +128,7 @@ function initTimingAPI(): void {
         markTimingLegacy('updateDiffVdomStart');
       }
     }
-    oldDiff?.(vnode, oldVNode);
+    oldDiff?.(vnode);
   };
 }
 

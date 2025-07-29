@@ -9,13 +9,13 @@ import { getDisplayName } from '../utils.js';
 
 export function initProfileHook(): void {
   const oldDiff = options[DIFF];
-  options[DIFF] = function(vnode: VNode, oldVNode: VNode) {
+  options[DIFF] = function(vnode: VNode) {
     // This __PROFILE__ is used for DCE testing
     if (__PROFILE__ && typeof vnode.type === 'function') {
       // We only add profiling trace for Component
       console.profile(`diff::${getDisplayName(vnode.type as ComponentClass)}`);
     }
-    oldDiff?.(vnode, oldVNode);
+    oldDiff?.(vnode);
   };
   const oldDiffed = options[DIFFED];
   options[DIFFED] = function(vnode) {
