@@ -29,5 +29,8 @@
   },
   "dependencies": {
     "wasm-feature-detect": "^1.8.0"
+  },
+  "devDependencies": {
+    "binaryen": "^123.0.0"
   }
 }

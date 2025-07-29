@@ -19,3 +19,9 @@ execSync(
   },
 );
 fs.rmSync(path.join(packageRoot, 'dist', '.gitignore'), { force: true });
+
+// Execute the wasm-opt command to ensure it works
+execSync('wasm-opt --version', {
+  stdio: 'inherit',
+  cwd: packageRoot,
+});
