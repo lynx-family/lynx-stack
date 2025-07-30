@@ -49,6 +49,7 @@ export default tseslint.config(
       'eslint.config.js',
       'vitest.config.ts',
       '**/rslib.config.ts',
+      '**/rstest.config.ts',
 
       // Ignored packages
       'packages/**/vitest.config.ts',

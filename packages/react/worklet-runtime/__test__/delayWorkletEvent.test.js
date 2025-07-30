@@ -1,7 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 import { clearDelayedWorklets, delayExecUntilJsReady, runDelayedWorklet } from '../src/delayWorkletEvent';
 import { updateWorkletRefInitValueChanges } from '../src/workletRef';
@@ -12,17 +12,17 @@ beforeEach(() => {
     lynxSdkVersion: '2.16',
   };
   initWorklet();
-  vi.useFakeTimers();
+  rs.useFakeTimers();
 });
 
 afterEach(() => {
   delete globalThis.lynxWorkletImpl;
-  vi.useRealTimers();
+  rs.useRealTimers();
 });
 
 describe('DelayWorkletEvent', () => {
   it('should delay', () => {
-    const fn = vi.fn(function() {
+    const fn = rs.fn(function() {
       const { wv } = this._c;
       expect(wv.current).toBe(333);
     });
@@ -55,14 +55,14 @@ describe('DelayWorkletEvent', () => {
 
     updateWorkletRefInitValueChanges([[178, 333]]);
     runDelayedWorklet(worklet, 'element');
-    vi.runAllTimers();
+    rs.runAllTimers();
     expect(fn).toBeCalledTimes(2);
     expect(fn).toHaveBeenNthCalledWith(1, expect.anything(), 1);
     expect(fn).toHaveBeenNthCalledWith(2, expect.anything(), 2);
   });
 
   it('should clear delayed worklets', () => {
-    const fn = vi.fn();
+    const fn = rs.fn();
     globalThis.registerWorklet('main-thread', '1', fn);
 
     const event = {
@@ -79,7 +79,7 @@ describe('DelayWorkletEvent', () => {
     };
 
     runDelayedWorklet(worklet, 'element');
-    vi.runAllTimers();
+    rs.runAllTimers();
     expect(fn).not.toBeCalled();
   });
 });

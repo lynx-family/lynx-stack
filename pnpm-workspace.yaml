@@ -32,6 +32,9 @@ catalogs:
     "@rspack/core": "1.4.8"
     "@rspack/test-tools": "1.4.8"
 
+  rstest:
+    "@rstest/core": "0.0.9"
+
 overrides:
   "@rspack/core": "$@rspack/core"
   "@rsbuild/core>@rspack/core": "$@rspack/core"
