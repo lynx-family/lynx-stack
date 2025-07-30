@@ -30,9 +30,9 @@ function injectTt(): void {
   tt.publishEvent = delayedPublishEvent;
   tt.publicComponentEvent = delayedPublicComponentEvent;
   tt.callDestroyLifetimeFun = () => {
+    removeCtxNotFoundEventListener();
     destroyWorklet();
     destroyBackground();
-    removeCtxNotFoundEventListener();
   };
   tt.updateGlobalProps = updateGlobalProps;
   tt.updateCardData = updateCardData;
