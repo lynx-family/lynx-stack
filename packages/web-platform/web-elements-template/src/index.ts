@@ -245,6 +245,7 @@ export const templateXSwiper = `<style>
     scrollbar-width: none;
     scroll-snap-align: start;
     scroll-snap-type: inherit;
+    width: 100%;
   }
   div::-webkit-scrollbar {
     display: none;
