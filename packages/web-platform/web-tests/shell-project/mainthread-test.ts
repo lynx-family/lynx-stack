@@ -4,7 +4,7 @@
 
 import { createMainThreadGlobalThis } from '@lynx-js/web-mainthread-apis';
 import { initOffscreenDocument } from '@lynx-js/offscreen-document/main';
-import { initWasm } from '@lynx-js/web-mainthread-apis/node_modules/@lynx-js/web-style-transformer';
+import { initWasm } from '@lynx-js/web-style-transformer';
 await initWasm();
 import {
   _onEvent,

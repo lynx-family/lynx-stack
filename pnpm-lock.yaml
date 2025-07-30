@@ -840,6 +840,9 @@ importers:
       '@lynx-js/web-platform-rsbuild-plugin':
         specifier: workspace:*
         version: link:../web-rsbuild-plugin
+      '@lynx-js/web-style-transformer':
+        specifier: workspace:*
+        version: link:../web-style-transformer
       '@lynx-js/web-worker-rpc':
         specifier: workspace:*
         version: link:../web-worker-rpc
