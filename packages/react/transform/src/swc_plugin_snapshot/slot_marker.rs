@@ -208,7 +208,20 @@ mod tests {
         <view><list><list-item/><list-item/></list>a<view><A/></view></view>;
         <view key={hello}>hello</view>;
         <view key={hello}>{hello}</view>;
+
+        <view><text key="hello">{hello}</text></view>;
+        <view><text key={"hello"}>{hello}</text></view>;
+        <view><text key={`hello`}>{hello}</text></view>;
+        <view><text key={123}>{hello}</text></view>;
+        <view><text key={true}>{hello}</text></view>;
+        <view><text key={null}>{hello}</text></view>;
+        
         <view><text key={hello}>{hello}</text></view>;
+        <view><text key={`hello, ${world}`}>{hello}</text></view>;
+        <view><text key={getId()}>{hello}</text></view>;
+        <view><text key={index + 1}>{hello}</text></view>;
+        <view><text key={condition ? 'a' : 'b'}>{hello}</text></view>;
+
         <view><text>Hello, ReactLynx, {hello}</text><text key={hello}>{hello}</text></view>;
         "#
   );

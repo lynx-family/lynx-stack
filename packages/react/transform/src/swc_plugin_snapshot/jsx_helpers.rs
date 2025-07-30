@@ -220,17 +220,21 @@ pub fn jsx_has_dynamic_key(jsx: &JSXElement) -> bool {
   jsx.opening.attrs.iter().any(|attr| {
     if let JSXAttrOrSpread::JSXAttr(JSXAttr {
       name: JSXAttrName::Ident(ident),
-      value,
+      value:
+        Some(JSXAttrValue::JSXExprContainer(JSXExprContainer {
+          expr: JSXExpr::Expr(expr),
+          ..
+        })),
       ..
     }) = attr
     {
       if ident.sym == atom!("key") {
-        if let Some(JSXAttrValue::JSXExprContainer(JSXExprContainer {
-          expr: JSXExpr::Expr(_),
-          ..
-        })) = value
-        {
-          return true;
+        match expr.as_ref() {
+          Expr::Lit(_) => return false,
+          Expr::Tpl(tpl) => {
+            return !tpl.exprs.is_empty();
+          }
+          _ => return true,
         }
       }
     }
