@@ -59,6 +59,8 @@ import {
   lynxDisposedAttribute,
   type SSRHydrateInfo,
   type SSRDehydrateHooks,
+  type ElementTemplateData,
+  type ElementFromBinaryPAPI,
 } from '@lynx-js/web-constants';
 import { globalMuteableVars } from '@lynx-js/web-constants';
 import { createMainThreadLynx } from './createMainThreadLynx.js';
@@ -144,12 +146,13 @@ export interface MainThreadRuntimeConfig {
   callbacks: MainThreadRuntimeCallbacks;
   styleInfo: StyleInfo;
   customSections: LynxTemplate['customSections'];
+  elementTemplate: LynxTemplate['elementTemplate'];
   lepusCode: Record<string, LynxJSModule>;
   browserConfig: BrowserConfig;
   tagMap: Record<string, string>;
   rootDom:
     & Pick<Element, 'append' | 'addEventListener'>
-    & Partial<Pick<Element, 'querySelectorAll'>>;
+    & Partial<Pick<ShadowRoot, 'querySelectorAll' | 'cloneNode'>>;
   jsContext: LynxContextEventTarget;
   ssrHydrateInfo?: SSRHydrateInfo;
   ssrHooks?: SSRDehydrateHooks;
@@ -677,9 +680,90 @@ export function createMainThreadGlobalThis(
     return pageElement;
   };
 
+  const templateIdToTemplate: Record<string, HTMLTemplateElement> = {};
+
+  const createElementForElementTemplateData = (
+    data: ElementTemplateData,
+    parentComponentUniId: number,
+  ): WebFiberElementImpl => {
+    const element = __CreateElement(data.type, parentComponentUniId);
+    __SetID(element, data.id);
+    __SetClasses(element, data.class.join(' '));
+    for (const [key, value] of Object.entries(data.attributes)) {
+      __SetAttribute(element, key, value);
+    }
+    for (const [key, value] of Object.entries(data.builtinAttributes)) {
+      __SetAttribute(element, key, value);
+    }
+    for (const childData of data.children) {
+      __AppendElement(
+        element,
+        createElementForElementTemplateData(childData, parentComponentUniId),
+      );
+    }
+    return element;
+  };
+
+  const applyEventsForElementTemplate: (
+    data: ElementTemplateData,
+    element: WebFiberElementImpl,
+  ) => void = (data, element) => {
+    for (const event of data.events) {
+      const { type, name, value } = event;
+      __AddEvent(element, type, name, value);
+    }
+    for (let ii = 0; ii < data.children.length; ii++) {
+      const childData = data.children[ii];
+      const childElement = element.children[ii] as WebFiberElementImpl;
+      if (childData && childElement) {
+        applyEventsForElementTemplate(childData, childElement);
+      }
+    }
+  };
+
+  const __ElementFromBinary: ElementFromBinaryPAPI = (
+    templateId,
+    parentComponentUniId,
+  ) => {
+    const elementTemplateData = config.elementTemplate[templateId];
+    if (elementTemplateData) {
+      let clonedElements: WebFiberElementImpl[];
+      if (templateIdToTemplate[templateId]) {
+        clonedElements = Array.from(
+          (templateIdToTemplate[templateId].content.cloneNode(
+            true,
+          ) as DocumentFragment).children,
+        ) as unknown as WebFiberElementImpl[];
+      } else {
+        clonedElements = elementTemplateData.map(data =>
+          createElementForElementTemplateData(data, parentComponentUniId)
+        );
+        if (rootDom.cloneNode) {
+          const template = callbacks.createElement(
+            'template',
+          ) as unknown as HTMLTemplateElement;
+          template.content.append(...clonedElements as unknown as Node[]);
+          templateIdToTemplate[templateId] = template;
+          rootDom.append(template);
+          return __ElementFromBinary(templateId, parentComponentUniId);
+        }
+      }
+      for (let ii = 0; ii < clonedElements.length; ii++) {
+        const data = elementTemplateData[ii];
+        const element = clonedElements[ii];
+        if (data && element) {
+          applyEventsForElementTemplate(data, element);
+        }
+      }
+      return clonedElements;
+    }
+    return [];
+  };
+
   let release = '';
   const isCSSOG = !pageConfig.enableCSSSelector;
   const mtsGlobalThis: MainThreadGlobalThis = {
+    __ElementFromBinary,
     __GetTemplateParts: rootDom.querySelectorAll
       ? __GetTemplateParts
       : undefined,

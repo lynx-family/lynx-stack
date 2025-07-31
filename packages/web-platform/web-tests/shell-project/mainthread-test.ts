@@ -1,7 +1,10 @@
 // Copyright 2023 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-
+import {
+  customSections,
+  elementTemplate,
+} from '../resources/web-core.main-thread.json' with { type: 'json' };
 import { createMainThreadGlobalThis } from '@lynx-js/web-mainthread-apis';
 import { initOffscreenDocument } from '@lynx-js/offscreen-document/main';
 import { initWasm } from '@lynx-js/web-style-transformer';
@@ -111,7 +114,9 @@ function initializeMainThreadTest() {
       // @ts-expect-error
       root: '',
     },
-    customSections: {},
+    customSections,
+    // @ts-expect-error
+    elementTemplate,
     browserConfig: {
       pixelRatio: 0,
       pixelWidth: 0,

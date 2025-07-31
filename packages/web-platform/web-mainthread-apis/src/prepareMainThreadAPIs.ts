@@ -82,8 +82,14 @@ export function prepareMainThreadAPIs(
       tagMap,
       initI18nResources,
     } = config;
-    const { styleInfo, pageConfig, customSections, cardType, lepusCode } =
-      template;
+    const {
+      styleInfo,
+      pageConfig,
+      customSections,
+      cardType,
+      lepusCode,
+      elementTemplate,
+    } = template;
     markTimingInternal('decode_start');
     await initWasmPromise;
     const lepusCodeEntries = await Promise.all(
@@ -114,6 +120,7 @@ export function prepareMainThreadAPIs(
       tagMap,
       browserConfig,
       customSections,
+      elementTemplate,
       globalProps,
       pageConfig,
       styleInfo,
