@@ -311,6 +311,7 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
                 to: newIndex,
                 // no flush
                 flush: false,
+                type: b.type,
               });
             }
 
