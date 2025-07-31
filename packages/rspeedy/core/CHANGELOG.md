@@ -1,5 +1,28 @@
 # @lynx-js/rspeedy
 
+## 0.10.3
+
+### Patch Changes
+
+- Should be able to override `performance.profile` when `DEBUG=rspeedy`. ([#1307](https://github.com/lynx-family/lynx-stack/pull/1307))
+
+## 0.10.2
+
+### Patch Changes
+
+- Bump Rsbuild v1.4.6 with Rspack v1.4.8. ([#1282](https://github.com/lynx-family/lynx-stack/pull/1282))
+
+## 0.10.1
+
+### Patch Changes
+
+- Fix `rspeedy build --mode development` failed. ([#1252](https://github.com/lynx-family/lynx-stack/pull/1252))
+
+- Bump Rsbuild v1.4.5 with Rspack v1.4.5 ([#1239](https://github.com/lynx-family/lynx-stack/pull/1239))
+
+- Updated dependencies [[`0a3c89d`](https://github.com/lynx-family/lynx-stack/commit/0a3c89d5776009d1f32d444e77be834fa2b79645)]:
+  - @lynx-js/webpack-dev-transport@0.2.0
+
 ## 0.10.0
 
 ### Minor Changes

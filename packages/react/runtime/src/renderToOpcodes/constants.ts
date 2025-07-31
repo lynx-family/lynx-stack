@@ -7,12 +7,14 @@ export const DIFFED = 'diffed';
 export const COMMIT = '__c';
 export const SKIP_EFFECTS = '__s';
 export const CATCH_ERROR = '__e';
+export const ROOT = '__';
 
 // VNode properties
 export const COMPONENT = '__c';
 export const CHILDREN = '__k';
 export const PARENT = '__';
 export const MASK = '__m';
+export const DOM = '__e';
 
 // Component properties
 export const VNODE = '__v';

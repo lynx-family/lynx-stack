@@ -1,5 +1,82 @@
 # @lynx-js/react
 
+## 0.112.0
+
+### Minor Changes
+
+- feat: Force synchronous rendering for background initial renders to support Suspense fallbacks ([#1323](https://github.com/lynx-family/lynx-stack/pull/1323))
+
+- Introduces `@lynx-js/react/compat` submodule exporting Preact implementations of: ([#1316](https://github.com/lynx-family/lynx-stack/pull/1316))
+
+  - `startTransition`
+  - `useTransition`
+
+### Patch Changes
+
+- fix: Ensure useEffect callbacks execute before event handlers from the same render cycle ([#1348](https://github.com/lynx-family/lynx-stack/pull/1348))
+
+- Enable rendering of the `Suspense` fallback on initial render. ([#1285](https://github.com/lynx-family/lynx-stack/pull/1285))
+
+- fix: Prevent "cannot set property 'current' of undefined" error thrown by MainThreadRef on engine data updates ([#1342](https://github.com/lynx-family/lynx-stack/pull/1342))
+
+## 0.111.2
+
+### Patch Changes
+
+- Optimize `componentAtIndex` by a few hundreds microseconds: avoiding manipulate `__pendingListUpdates` unless SnapshotInstance tree is changed ([#1201](https://github.com/lynx-family/lynx-stack/pull/1201))
+
+- Support alog of component rendering on production for better error reporting. Enable it by using `REACT_ALOG=true rspeedy dev/build` or defining `__ALOG__` to `true` in `lynx.config.js`: ([#1164](https://github.com/lynx-family/lynx-stack/pull/1164))
+
+  ```js
+  export default defineConfig({
+    // ...
+    source: {
+      define: {
+        __ALOG__: true,
+      },
+    },
+  });
+  ```
+
+- Make `preact/debug` work with `@lynx-js/react`. ([#1222](https://github.com/lynx-family/lynx-stack/pull/1222))
+
+- Introduce `@lynx-js/react/debug` which would include debugging warnings and error messages for common mistakes found. ([#1250](https://github.com/lynx-family/lynx-stack/pull/1250))
+
+  Add the import to `@lynx-js/react/debug` at the first line of the entry:
+
+  ```js
+  import '@lynx-js/react/debug';
+  import { root } from '@lynx-js/react';
+
+  import { App } from './App.jsx';
+
+  root.render(<App />);
+  ```
+
+- `<list-item/>` deferred now accepts an object with `unmountRecycled` property to control unmounting behavior when the item is recycled. ([#1302](https://github.com/lynx-family/lynx-stack/pull/1302))
+
+  For example, you can use it like this:
+
+  ```jsx
+  <list-item defer={{ unmountRecycled: true }} item-key='1'>
+    <WillBeUnmountIfRecycled />
+  </list-item>;
+  ```
+
+  Now the component will be unmounted when it is recycled, which can help with performance in certain scenarios.
+
+- Avoid some unexpected `__SetAttribute` in hydrate when `undefined` is passed as an attribute value to intrinsic elements, for example: ([#1318](https://github.com/lynx-family/lynx-stack/pull/1318))
+
+  ```jsx
+  <image async-mode={undefined} />;
+  ```
+
+## 0.111.1
+
+### Patch Changes
+
+- Wrap the main thread `renderPage` in preact `act` to ensure that the effects are flushed. ([#1170](https://github.com/lynx-family/lynx-stack/pull/1170))
+
 ## 0.111.0
 
 ### Minor Changes

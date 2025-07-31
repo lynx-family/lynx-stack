@@ -1,5 +1,19 @@
 # @lynx-js/web-style-transformer
 
+## 0.3.3
+
+### Patch Changes
+
+- Fix `index_bg.wasm` not found when publishing. ([#1277](https://github.com/lynx-family/lynx-stack/pull/1277))
+
+## 0.3.2
+
+### Patch Changes
+
+- refactor: improve `linear-weight-sum` performance ([#1216](https://github.com/lynx-family/lynx-stack/pull/1216))
+
+- perf: use rust implemented style transformer ([#1094](https://github.com/lynx-family/lynx-stack/pull/1094))
+
 ## 0.3.1
 
 ### Patch Changes

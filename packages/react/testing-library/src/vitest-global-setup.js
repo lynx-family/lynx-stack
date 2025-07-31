@@ -35,9 +35,6 @@ globalThis.onInitWorkletRuntime = () => {
     onInitWorkletRuntime();
   }
 
-  if (process.env.DEBUG) {
-    console.log('initWorkletRuntime');
-  }
   lynx.setTimeout = setTimeout;
   lynx.setInterval = setInterval;
   lynx.clearTimeout = clearTimeout;
@@ -52,10 +49,7 @@ globalThis.onInitWorkletRuntime = () => {
 
 globalThis.onInjectMainThreadGlobals = (target) => {
   if (onInjectMainThreadGlobals) {
-    onInjectMainThreadGlobals();
-  }
-  if (process.env.DEBUG) {
-    console.log('onInjectMainThreadGlobals');
+    onInjectMainThreadGlobals(target);
   }
 
   snapshotInstanceManager.clear();
@@ -88,10 +82,7 @@ globalThis.onInjectMainThreadGlobals = (target) => {
 };
 globalThis.onInjectBackgroundThreadGlobals = (target) => {
   if (onInjectBackgroundThreadGlobals) {
-    onInjectBackgroundThreadGlobals();
-  }
-  if (process.env.DEBUG) {
-    console.log('onInjectBackgroundThreadGlobals');
+    onInjectBackgroundThreadGlobals(target);
   }
 
   backgroundSnapshotInstanceManager.clear();
@@ -145,9 +136,6 @@ globalThis.onResetLynxTestingEnv = () => {
   if (onResetLynxTestingEnv) {
     onResetLynxTestingEnv();
   }
-  if (process.env.DEBUG) {
-    console.log('onResetLynxTestingEnv');
-  }
 
   flushDelayedLifecycleEvents();
   destroyWorklet();
@@ -161,9 +149,6 @@ globalThis.onSwitchedToMainThread = () => {
   if (onSwitchedToMainThread) {
     onSwitchedToMainThread();
   }
-  if (process.env.DEBUG) {
-    console.log('onSwitchedToMainThread');
-  }
 
   setRoot(globalThis.__root);
   options.document = globalThis._document;
@@ -171,9 +156,6 @@ globalThis.onSwitchedToMainThread = () => {
 globalThis.onSwitchedToBackgroundThread = () => {
   if (onSwitchedToBackgroundThread) {
     onSwitchedToBackgroundThread();
-  }
-  if (process.env.DEBUG) {
-    console.log('onSwitchedToBackgroundThread');
   }
 
   setRoot(globalThis.__root);

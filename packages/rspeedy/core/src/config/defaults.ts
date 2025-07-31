@@ -2,13 +2,24 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { mergeRsbuildConfig } from '@rsbuild/core'
+import type { RsbuildMode } from '@rsbuild/core'
 
+import { isDebug } from '../debug.js'
 import type { Filename } from './output/filename.js'
 
 import type { Config } from './index.js'
 
 export function applyDefaultRspeedyConfig(config: Config): Config {
-  const ret = mergeRsbuildConfig({
+  return mergeRsbuildConfig({
+    mode: ((): RsbuildMode => {
+      if (config.mode) {
+        return config.mode
+      }
+      const nodeEnv = process.env['NODE_ENV']
+      return nodeEnv === 'production' || nodeEnv === 'development'
+        ? nodeEnv
+        : 'none'
+    })(),
     output: {
       // We are applying the default filename to the config
       // since some plugin(e.g.: `@lynx-js/qrcode-rsbuild-plugin`) will read
@@ -19,6 +30,10 @@ export function applyDefaultRspeedyConfig(config: Config): Config {
       inlineScripts: true,
     },
 
+    performance: {
+      profile: isDebug() ? true : undefined,
+    },
+
     tools: {
       rsdoctor: {
         experiments: {
@@ -27,8 +42,6 @@ export function applyDefaultRspeedyConfig(config: Config): Config {
       },
     },
   }, config)
-
-  return ret
 }
 
 const DEFAULT_FILENAME = '[name].[platform].bundle'

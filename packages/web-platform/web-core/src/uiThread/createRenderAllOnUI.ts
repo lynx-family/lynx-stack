@@ -1,3 +1,7 @@
+// Copyright 2023 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+
 import {
   type StartMainThreadContextConfig,
   type RpcCallType,
@@ -9,9 +13,12 @@ import {
   I18nResources,
   type InitI18nResources,
   type Cloneable,
+  lynxUniqueIdAttribute,
+  type SSRDumpInfo,
 } from '@lynx-js/web-constants';
 import { Rpc } from '@lynx-js/web-worker-rpc';
 import { dispatchLynxViewEvent } from '../utils/dispatchLynxViewEvent.js';
+import { createExposureMonitor } from './crossThreadHandlers/createExposureMonitor.js';
 
 const {
   prepareMainThreadAPIs,
@@ -27,8 +34,9 @@ export function createRenderAllOnUI(
   ) => void,
   flushMarkTimingInternal: () => void,
   callbacks: {
-    onError?: (err: Error, release: string) => void;
+    onError?: (err: Error, release: string, fileName: string) => void;
   },
+  ssrDumpInfo: SSRDumpInfo | undefined,
 ) {
   if (!globalThis.module) {
     Object.assign(globalThis, { module: {} });
@@ -43,15 +51,16 @@ export function createRenderAllOnUI(
     );
   };
   const i18nResources = new I18nResources();
+  const { exposureChangedCallback } = createExposureMonitor(shadowRoot);
   const { startMainThread } = prepareMainThreadAPIs(
     mainToBackgroundRpc,
     shadowRoot,
     document.createElement.bind(document),
-    () => {},
+    exposureChangedCallback,
     markTimingInternal,
     flushMarkTimingInternal,
     (err, _, release) => {
-      callbacks.onError?.(err, release);
+      callbacks.onError?.(err, release, 'lepus.js');
     },
     triggerI18nResourceFallback,
     (initI18nResources: InitI18nResources) => {
@@ -61,8 +70,49 @@ export function createRenderAllOnUI(
   );
   let mtsGlobalThis!: MainThreadGlobalThis;
   const start = async (configs: StartMainThreadContextConfig) => {
-    const mainThreadRuntime = startMainThread(configs);
-    mtsGlobalThis = await mainThreadRuntime;
+    if (ssrDumpInfo) {
+      const lynxUniqueIdToElement: WeakRef<HTMLElement>[] = [];
+      const allLynxElements = shadowRoot.querySelectorAll<HTMLElement>(
+        `[${lynxUniqueIdAttribute}]`,
+      );
+      const length = allLynxElements.length;
+      for (let ii = 0; ii < length; ii++) {
+        const element = allLynxElements[ii]! as HTMLElement;
+        const lynxUniqueId = Number(
+          element.getAttribute(lynxUniqueIdAttribute)!,
+        );
+        lynxUniqueIdToElement[lynxUniqueId] = new WeakRef<HTMLElement>(element);
+      }
+      const hydrateStyleElement = shadowRoot.querySelector(
+        `style:nth-of-type(2)`,
+      ) as HTMLStyleElement | null;
+      const styleSheet = hydrateStyleElement?.sheet;
+      const lynxUniqueIdToStyleRulesIndex: number[] = [];
+      const cssRulesLength = styleSheet?.cssRules.length ?? 0;
+      for (let ii = 0; ii < cssRulesLength; ii++) {
+        const cssRule = styleSheet?.cssRules[ii];
+        if (cssRule?.constructor.name === 'CSSStyleRule') {
+          const lynxUniqueId = parseFloat(
+            (cssRule as CSSStyleRule).selectorText.substring(
+              lynxUniqueIdAttribute.length + 3, // skip `[`, `="`
+            ),
+          );
+          if (lynxUniqueId !== undefined && !isNaN(lynxUniqueId)) {
+            lynxUniqueIdToStyleRulesIndex[lynxUniqueId] = ii;
+          }
+        }
+      }
+
+      mtsGlobalThis = await startMainThread(configs, {
+        // @ts-expect-error
+        lynxUniqueIdToElement: lynxUniqueIdToElement,
+        lynxUniqueIdToStyleRulesIndex,
+        ...ssrDumpInfo,
+        cardStyleElement: hydrateStyleElement,
+      });
+    } else {
+      mtsGlobalThis = await startMainThread(configs);
+    }
   };
   const updateDataMainThread: RpcCallType<typeof updateDataEndpoint> = async (
     ...args

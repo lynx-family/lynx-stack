@@ -172,10 +172,12 @@ class ReactWebpackPlugin {
       // We enable profile by default in development.
       // It can also be disabled by environment variable `REACT_PROFILE=false`
       __PROFILE__: JSON.stringify(
-        options.profile
-          ?? process.env['REACT_PROFILE']
+        process.env['REACT_PROFILE']
+          ?? options.profile
           ?? compiler.options.mode === 'development',
       ),
+      // User can enable ALog by environment variable `REACT_ALOG=true`
+      __ALOG__: JSON.stringify(Boolean(process.env['REACT_ALOG'])),
       __EXTRACT_STR__: JSON.stringify(Boolean(options.extractStr)),
       __FIRST_SCREEN_SYNC_TIMING__: JSON.stringify(
         options.firstScreenSyncTiming,

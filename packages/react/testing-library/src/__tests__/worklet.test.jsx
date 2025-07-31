@@ -290,9 +290,9 @@ describe('worklet', () => {
             const resp = await runOnMainThread(() => {
               'main thread';
               console.log('run on main thread');
-              return 'Hello from main thread';
+              return `Hello from main thread, __MAIN_THREAD__: ${__MAIN_THREAD__}`;
             })();
-            expect(resp).toMatchInlineSnapshot(`"Hello from main thread"`);
+            expect(resp).toMatchInlineSnapshot(`"Hello from main thread, __MAIN_THREAD__: true"`);
           }}
         >
           <text>Hello Main Thread Script</text>
@@ -325,7 +325,7 @@ describe('worklet', () => {
             const resp = await runOnBackground(() => {
               console.log('run on background');
               cb();
-              return 'Hello from background';
+              return `Hello from background, __MAIN_THREAD__: ${__MAIN_THREAD__}`;
             })();
             globalThis.receiveRunOnBackgroundResp(resp);
           }}
@@ -385,7 +385,7 @@ describe('worklet', () => {
       .toMatchInlineSnapshot(`
         [
           [
-            "Hello from background",
+            "Hello from background, __MAIN_THREAD__: false",
           ],
         ]
       `);
@@ -486,5 +486,80 @@ describe('worklet', () => {
         ],
       ]
     `);
+  });
+
+  it('nest runOnMainThread->runOnBackground works', async () => {
+    vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
+    const callLepusMethodCalls = lynx.getNativeApp().callLepusMethod.mock.calls;
+    expect(callLepusMethodCalls).toMatchInlineSnapshot(`[]`);
+    const Comp = () => {
+      return (
+        <view
+          bindtap={async (e) => {
+            const resp = await runOnMainThread(() => {
+              'main thread';
+              console.log('run on main thread');
+              runOnBackground(() => {
+                console.log('run on background thread');
+              })();
+              return `Hello from main thread, __MAIN_THREAD__: ${__MAIN_THREAD__}`;
+            })();
+            expect(resp).toMatchInlineSnapshot(`"Hello from main thread, __MAIN_THREAD__: true"`);
+          }}
+        >
+          <text>Hello Main Thread Script</text>
+        </view>
+      );
+    };
+
+    const { container } = render(<Comp />, {
+      enableMainThread: true,
+      enableBackgroundThread: true,
+    });
+    fireEvent.tap(container.firstChild, {
+      key: 'value',
+    });
+  });
+
+  it('nest runOnBackground->runOnMainThread works', async () => {
+    globalThis.receiveRunOnBackgroundResp = vi.fn();
+    const Comp = () => {
+      return (
+        <view
+          main-thread:bindtap={async (e) => {
+            'main thread';
+            const resp = await runOnBackground(() => {
+              console.log('run on background');
+              runOnMainThread(() => {
+                console.log('run on main thread');
+              })();
+              return `Hello from background, __MAIN_THREAD__: ${__MAIN_THREAD__}`;
+            })();
+            globalThis.receiveRunOnBackgroundResp(resp);
+          }}
+        >
+          <text>Hello Main Thread Script</text>
+        </view>
+      );
+    };
+    const { container } = render(<Comp />, {
+      enableMainThread: true,
+      enableBackgroundThread: true,
+    });
+    fireEvent.tap(container.firstChild, {
+      key: 'value',
+    });
+    // wait for runOnBackground to finish
+    await waitSchedule();
+    expect(globalThis.receiveRunOnBackgroundResp).toBeCalledTimes(1);
+    expect(globalThis.receiveRunOnBackgroundResp.mock.calls)
+      .toMatchInlineSnapshot(`
+        [
+          [
+            "Hello from background, __MAIN_THREAD__: false",
+          ],
+        ]
+      `);
+    vi.resetAllMocks();
   });
 });

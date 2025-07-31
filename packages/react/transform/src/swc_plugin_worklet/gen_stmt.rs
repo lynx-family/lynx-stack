@@ -128,7 +128,7 @@ impl StmtGen {
       props.push(
         Prop::KeyValue(KeyValueProp {
           key: Ident::from("_jsFn").into(),
-          value: value,
+          value,
         })
         .into(),
       );
@@ -183,22 +183,22 @@ impl StmtGen {
     if target == TransformTarget::LEPUS {
       named_imports.insert("loadWorkletRuntime".into());
       quote!("loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal($type_, $hash, $fn_)" as Stmt,
-        type_: Expr = Expr::Lit(worklet_type.type_str().into()).into(),
+        type_: Expr = Expr::Lit(worklet_type.type_str().into()),
         hash: Expr = hash,
         fn_: Expr = Expr::Fn(FnExpr {
               ident: None,
               function: function_to_register,
-            }).into(),
+            }),
       )
     } else if mode == TransformMode::Development {
       named_imports.insert("registerWorkletOnBackground".into());
       quote!("registerWorkletOnBackground($type_, $hash, $fn_)" as Stmt,
-        type_: Expr = Expr::Lit(worklet_type.type_str().into()).into(),
+        type_: Expr = Expr::Lit(worklet_type.type_str().into()),
         hash: Expr = hash,
         fn_: Expr = Expr::Fn(FnExpr {
               ident: None,
               function: function_to_register,
-            }).into(),
+            }),
       )
     } else {
       EmptyStmt { span: DUMMY_SP }.into()
@@ -232,7 +232,7 @@ impl StmtGen {
         .map(|(k, _)| Ident::from(k.clone()))
         .collect();
       stmts.push(StmtGen::gen_destructure_stmt(
-        Ident::new("_jsFn".into(), DUMMY_SP, Default::default()).into(),
+        Ident::new("_jsFn".into(), DUMMY_SP, Default::default()),
         fn_ids,
       ));
     }
@@ -240,7 +240,7 @@ impl StmtGen {
     // let { y1, y2, y3, y4, y8, y5, y6, y7 } = this["_c"];
     if !extracted_idents.is_empty() {
       stmts.push(StmtGen::gen_destructure_stmt(
-        Ident::new("_c".into(), DUMMY_SP, Default::default()).into(),
+        Ident::new("_c".into(), DUMMY_SP, Default::default()),
         extracted_idents,
       ));
     }

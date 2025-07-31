@@ -3,7 +3,12 @@
 // LICENSE file in the root directory of this source tree.
 import type { Config } from 'tailwindcss';
 
-import { DEFAULT_CORE_PLUGINS, LYNX_PLUGIN_MAP, toEnabledSet } from './core.js';
+import {
+  DEFAULT_CORE_PLUGINS,
+  LYNX_PLUGIN_MAP,
+  ORDERED_LYNX_PLUGIN_NAMES,
+  toEnabledSet,
+} from './core.js';
 import type { LynxPluginName, LynxPluginsOption } from './core.js';
 import { lynxTheme } from './theme.js';
 
@@ -26,10 +31,12 @@ function createLynxPreset({
   const defaultPluginName: LynxPluginName = 'defaults';
 
   const plugins: Config['plugins'] = [LYNX_PLUGIN_MAP[defaultPluginName]];
-  for (const name of enabled) {
-    plugins.push(LYNX_PLUGIN_MAP[name]);
-    if (debug) {
-      console.debug(`[Lynx] enabled plugin: ${name}`);
+
+  for (const name of ORDERED_LYNX_PLUGIN_NAMES) {
+    if (name === 'defaults') continue; // already pushed
+    if (enabled.has(name)) {
+      plugins.push(LYNX_PLUGIN_MAP[name]);
+      if (debug) console.debug(`[Lynx] enabled plugin: ${name}`);
     }
   }
 

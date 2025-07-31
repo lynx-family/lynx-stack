@@ -97,6 +97,7 @@ export class WebEncodePlugin {
                 root: encodeOptions.lepusCode.root,
               },
               customSections: encodeOptions.customSections,
+              elementTemplate: encodeOptions['elementTemplate'],
             })),
             debugInfo: '',
           };

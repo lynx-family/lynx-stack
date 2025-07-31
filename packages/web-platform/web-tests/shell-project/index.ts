@@ -11,10 +11,18 @@ const searchParams = new URLSearchParams(document.location.search);
 const casename = searchParams.get('casename');
 const casename2 = searchParams.get('casename2');
 const hasdir = searchParams.get('hasdir') === 'true';
+const isSSR = document.location.pathname.includes('ssr');
 
 if (casename) {
-  const dir = `/dist/${casename}${hasdir ? `/${casename}` : ''}`;
-  const dir2 = `/dist/${casename2}${hasdir ? `/${casename2}` : ''}`;
+  const dir = `/dist/${isSSR ? 'ssr/' : ''}${casename}${
+    hasdir ? `/${casename}` : ''
+  }`;
+  const dir2 = `/dist/${isSSR ? 'ssr/' : ''}${casename2}${
+    hasdir ? `/${casename2}` : ''
+  }`;
+  const lynxView = isSSR
+    ? document.querySelector('lynx-view')!
+    : undefined;
   lynxViewTests(lynxView => {
     lynxView.setAttribute('url', `${dir}/index.web.json`);
     ENABLE_MULTI_THREAD
@@ -42,6 +50,7 @@ if (casename) {
             enableRemoveCSSScope: true,
             defaultDisplayLinear: true,
             defaultOverflowVisible: true,
+            enableJSDataProcessor: false,
           },
           customSections: {},
           lepusCode: {
@@ -62,26 +71,13 @@ if (casename) {
         return template;
       };
     }
-    lynxView.addEventListener('error', (e) => {
-      console.log(e);
-      // these two issues have been added to the fix plan and skip for now.
-      if (
-        ![
-          'config-mode-dev-with-all-in-one',
-          'basic-element-x-textarea-input-filter',
-        ].includes(casename)
-      ) {
-        lynxView.setAttribute('style', 'display:none');
-        lynxView.innerHTML = '';
-      }
-    });
-  });
+  }, lynxView);
   if (casename2) {
     lynxViewTests(lynxView2 => {
       lynxView2.id = 'lynxview2';
       lynxView2.setAttribute('url', `${dir2}/index.web.json`);
       lynxView2.setAttribute('lynx-group-id', '2');
-    });
+    }, undefined);
   }
 } else {
   console.warn('cannot find casename');

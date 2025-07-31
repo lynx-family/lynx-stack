@@ -5,6 +5,7 @@ import { createRequire } from 'node:module'
 import path from 'node:path'
 
 import type { RsbuildPlugin } from '@rsbuild/core'
+import gte from 'semver/functions/gte.js'
 import type { ResolveResult } from 'unrs-resolver'
 
 export interface Options {
@@ -35,11 +36,13 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
 
       const require = createRequire(import.meta.url)
 
-      const reactLynxDir = path.dirname(
-        require.resolve('@lynx-js/react/package.json', {
-          paths: [rootPath ?? api.context.rootPath],
-        }),
-      )
+      const reactLynxPkg = require.resolve('@lynx-js/react/package.json', {
+        paths: [rootPath ?? api.context.rootPath],
+      })
+      const reactLynxPkgContent = require(reactLynxPkg) as { version: string }
+      const version = reactLynxPkgContent.version
+
+      const reactLynxDir = path.dirname(reactLynxPkg)
       const resolve = createLazyResolver(
         reactLynxDir,
         lazy ? ['lazy', 'import'] : ['import'],
@@ -53,7 +56,7 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
         })
       })
 
-      api.modifyBundlerChain(async chain => {
+      api.modifyBundlerChain(async (chain, { isProd }) => {
         const [
           jsxRuntimeBackground,
           jsxRuntimeMainThread,
@@ -61,6 +64,7 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
           jsxDevRuntimeMainThread,
           reactLepusBackground,
           reactLepusMainThread,
+          reactCompat,
         ] = await Promise.all([
           resolve('@lynx-js/react/jsx-runtime'),
           resolve('@lynx-js/react/lepus/jsx-runtime'),
@@ -68,6 +72,9 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
           resolve('@lynx-js/react/lepus/jsx-dev-runtime'),
           resolve('@lynx-js/react'),
           resolve('@lynx-js/react/lepus'),
+          gte(version, '0.111.9999')
+            ? resolve('@lynx-js/react/compat')
+            : Promise.resolve(null),
         ])
 
         const jsxRuntime = {
@@ -117,6 +124,8 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
         // react-transform may add imports of the following entries
         // We need to add aliases for that
         const transformedEntries = [
+          // TODO: add `debug` after bump peerDependencies['@lynx-js/react'] to 0.111.1
+          // 'debug',
           'experimental/lazy/import',
           'internal',
           'legacy-react-runtime',
@@ -137,6 +146,10 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
             ),
         )
 
+        if (isProd) {
+          chain.resolve.alias.set('@lynx-js/react/debug$', false)
+        }
+
         chain
           .resolve
           .alias
@@ -148,6 +161,16 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
             '@lynx-js/react$',
             reactLepus.background,
           )
+
+        if (reactCompat) {
+          chain
+            .resolve
+            .alias
+            .set(
+              '@lynx-js/react/compat$',
+              reactCompat,
+            )
+        }
 
         const preactEntries = [
           'preact',

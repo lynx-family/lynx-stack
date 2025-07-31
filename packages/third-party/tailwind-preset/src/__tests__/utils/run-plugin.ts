@@ -50,18 +50,9 @@ export function runPlugin(
     config: vi.fn().mockImplementation(
       (_key: string, def?: unknown): unknown => cfg[_key] ?? def,
     ),
-    theme: (<T = unknown>(
-      path?: string,
-      def?: T,
-    ): T => {
-      if (!path) return def as T;
-      const value = themeVals[path];
-      return value === undefined ? (def as T) : (value as T);
-    }) as RuntimePluginAPI['theme'],
-
     /* prefix that honours cfg.prefix */
     prefix: (cls: string) => `${prefixValue}${cls}`,
-  });
+  }, themeVals);
 
   /* Execute the plugin */
   resolvePluginHandler(plugin)(api);

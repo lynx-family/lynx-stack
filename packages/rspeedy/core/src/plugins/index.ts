@@ -18,7 +18,6 @@ async function applyDebugPlugins(
     import('./inspect.plugin.js').then(({ pluginInspect }) =>
       pluginInspect(config)
     ),
-    import('./stats.plugin.js').then(({ pluginStats }) => pluginStats()),
   ])
 
   rsbuildInstance.addPlugins(await Promise.all(debugPlugins))
@@ -81,8 +80,7 @@ export async function applyDefaultPlugins(
     }),
   ]
 
-  // TODO: replace with `isDev()` helper
-  if (process.env['NODE_ENV'] === 'development') {
+  if (config.mode === 'development') {
     debug('apply Rspeedy default development plugins')
     promises.push(applyDefaultDevPlugins(rsbuildInstance, config))
   }

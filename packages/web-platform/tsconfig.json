@@ -16,7 +16,6 @@
     { "path": "./web-elements-template/tsconfig.json" },
     { "path": "./web-elements-reactive/tsconfig.json" },
     { "path": "./web-elements/tsconfig.json" },
-    { "path": "./web-style-transformer/tsconfig.json" },
     { "path": "./web-constants/tsconfig.json" },
     { "path": "./web-worker-rpc/tsconfig.json" },
     { "path": "./web-mainthread-apis/tsconfig.json" },

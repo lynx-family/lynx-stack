@@ -7,6 +7,8 @@ import {
   cssIdAttribute,
   lynxComponentConfigAttribute,
   lynxDatasetAttribute,
+  lynxElementTemplateMarkerAttribute,
+  lynxPartIdAttribute,
   lynxTagAttribute,
   lynxUniqueIdAttribute,
   type AddClassPAPI,
@@ -27,8 +29,11 @@ import {
   type GetIDPAPI,
   type GetParentPAPI,
   type GetTagPAPI,
+  type GetTemplatePartsPAPI,
   type InsertElementBeforePAPI,
   type LastElementPAPI,
+  type MarkPartElementPAPI,
+  type MarkTemplateElementPAPI,
   type NextElementPAPI,
   type RemoveElementPAPI,
   type ReplaceElementPAPI,
@@ -40,6 +45,7 @@ import {
   type SetIDPAPI,
   type SetInlineStylesPAPI,
   type UpdateComponentIDPAPI,
+  type WebFiberElementImpl,
 } from '@lynx-js/web-constants';
 import { queryCSSProperty } from './style/cssPropertyMap.js';
 import {
@@ -64,7 +70,7 @@ export const __FirstElement: FirstElementPAPI = /*#__PURE__*/ (
 
 export const __GetChildren: GetChildrenPAPI = /*#__PURE__*/ (
   element,
-) => element.children;
+) => element.children ? [...element.children] : null;
 
 export const __GetParent: GetParentPAPI = /*#__PURE__*/ (
   element,
@@ -304,16 +310,56 @@ export const __SetInlineStyles: SetInlineStylesPAPI = /*#__PURE__*/ (
   value,
 ) => {
   if (!value) return;
-  const { transformedStyle } = typeof value === 'string'
-    ? transformInlineStyleString(value)
-    : transformParsedStyles(
-      Object.entries(value).map(([k, value]) => [
-        hyphenateStyleName(k),
-        value,
-      ]),
+  if (typeof value === 'string') {
+    element.setAttribute('style', transformInlineStyleString(value));
+  } else {
+    const { transformedStyle } = transformParsedStyles(
+      Object.entries(value).map(([k, value]) =>
+        [
+          hyphenateStyleName(k),
+          value?.toString?.() ?? '',
+        ] as [string, string]
+      ),
     );
-  const transformedStyleStr = transformedStyle.map((
-    [property, value],
-  ) => `${property}:${value};`).join('');
-  element.setAttribute('style', transformedStyleStr);
+    const transformedStyleStr = transformedStyle.map((
+      [property, value],
+    ) => `${property}:${value};`).join('');
+    element.setAttribute('style', transformedStyleStr);
+  }
+};
+
+export const __GetTemplateParts: GetTemplatePartsPAPI = (
+  templateElement,
+) => {
+  const isTemplate =
+    templateElement.getAttribute(lynxElementTemplateMarkerAttribute)
+      !== null;
+  if (!isTemplate) {
+    return {};
+  }
+  const templateUniqueId = __GetElementUniqueID(templateElement);
+  const parts: Record<string, WebFiberElementImpl> = {};
+  const partElements = templateElement.querySelectorAll!(
+    `[${lynxUniqueIdAttribute}="${templateUniqueId}"] [${lynxPartIdAttribute}]:not([${lynxUniqueIdAttribute}="${templateUniqueId}"] [${lynxElementTemplateMarkerAttribute}] [${lynxPartIdAttribute}])`,
+  );
+  for (const partElement of partElements) {
+    const partId = partElement.getAttribute(lynxPartIdAttribute);
+    if (partId) {
+      parts[partId] = partElement as WebFiberElementImpl;
+    }
+  }
+  return parts;
+};
+
+export const __MarkTemplateElement: MarkTemplateElementPAPI = (
+  element,
+) => {
+  element.setAttribute(lynxElementTemplateMarkerAttribute, '');
+};
+
+export const __MarkPartElement: MarkPartElementPAPI = (
+  element,
+  partId,
+) => {
+  element.setAttribute(lynxPartIdAttribute, partId);
 };

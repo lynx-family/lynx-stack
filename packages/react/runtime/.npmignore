@@ -1,4 +1,8 @@
 *
+!compat/*
+!compat/**
+!debug/*
+!debug/**
 !jsx-dev-runtime/*
 !jsx-runtime/*
 !lazy/*
@@ -7,5 +11,3 @@
 !lepus/*
 !lib/**
 !lib/*
-!src/**
-!src/*

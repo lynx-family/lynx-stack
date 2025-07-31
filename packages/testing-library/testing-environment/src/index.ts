@@ -9,6 +9,7 @@ import EventEmitter from 'events';
 import { JSDOM } from 'jsdom';
 import { createGlobalThis, LynxGlobalThis } from './lynx/GlobalThis.js';
 import { initElementTree } from './lynx/ElementPAPI.js';
+import { Console } from 'console';
 export { initElementTree } from './lynx/ElementPAPI.js';
 export type { LynxElement } from './lynx/ElementPAPI.js';
 export type { LynxGlobalThis } from './lynx/GlobalThis.js';
@@ -142,16 +143,25 @@ function createPolyfills() {
     type,
     data,
   }) => {
-    const isMainThread = __MAIN_THREAD__;
-    lynxTestingEnv.switchToBackgroundThread();
+    const origin = __MAIN_THREAD__ ? 'CoreContext' : 'JSContext';
+    // Switch to another thread
+    if (origin === 'CoreContext') {
+      lynxTestingEnv.switchToBackgroundThread();
+    } else {
+      lynxTestingEnv.switchToMainThread();
+    }
 
     // Ensure the code is running on the background thread
     ee.emit(type, {
       data: data,
+      origin,
     });
 
-    if (isMainThread) {
+    // Finish executing, restore the original thread state
+    if (origin === 'CoreContext') {
       lynxTestingEnv.switchToMainThread();
+    } else {
+      lynxTestingEnv.switchToBackgroundThread();
     }
   };
   // @ts-ignore
@@ -165,14 +175,11 @@ function createPolyfills() {
 
   function __LoadLepusChunk(
     chunkName: string,
-    options,
+    _options,
   ) {
     const isBackground = !__MAIN_THREAD__;
     globalThis.lynxTestingEnv.switchToMainThread();
 
-    if (process.env['DEBUG']) {
-      console.log('__LoadLepusChunk', chunkName, options);
-    }
     let ans;
     if (chunkName === 'worklet-runtime') {
       ans = globalThis.onInitWorkletRuntime?.();
@@ -197,6 +204,18 @@ function createPolyfills() {
   };
 }
 
+function createPreconfiguredConsole() {
+  const console = new Console(
+    process.stdout,
+    process.stderr,
+  );
+  console.profile = () => {};
+  console.profileEnd = () => {};
+  // @ts-expect-error Lynx has console.alog
+  console.alog = () => {};
+  return console;
+}
+
 function injectMainThreadGlobals(target?: any, polyfills?: any) {
   __injectElementApi(target);
 
@@ -212,6 +231,7 @@ function injectMainThreadGlobals(target?: any, polyfills?: any) {
 
   target.__DEV__ = true;
   target.__PROFILE__ = true;
+  target.__ALOG__ = true;
   target.__JS__ = false;
   target.__LEPUS__ = true;
   target.__BACKGROUND__ = false;
@@ -224,6 +244,18 @@ function injectMainThreadGlobals(target?: any, polyfills?: any) {
   target.lynx = {
     performance,
     getCoreContext: (() => CoreContext),
+    /*
+
+    background thread -> main thread:
+    lynx.getJSContext().addEventListener("message", (e: Event) => {
+      console.log('message', e)
+      });
+    main thread -> background thread:
+    lynx.getJSContext().postMessage({
+      type: 'message',
+      data: [3, 4, 5]
+    });
+    */
     getJSContext: (() => JsContext),
     reportError: (e: Error) => {
       throw e;
@@ -232,8 +264,7 @@ function injectMainThreadGlobals(target?: any, polyfills?: any) {
   target.requestAnimationFrame = setTimeout;
   target.cancelAnimationFrame = clearTimeout;
 
-  target.console.profile = () => {};
-  target.console.profileEnd = () => {};
+  target.console = createPreconfiguredConsole();
 
   target.__LoadLepusChunk = __LoadLepusChunk;
 
@@ -283,6 +314,7 @@ function injectBackgroundThreadGlobals(target?: any, polyfills?: any) {
 
   target.__DEV__ = true;
   target.__PROFILE__ = true;
+  target.__ALOG__ = true;
   target.__JS__ = true;
   target.__LEPUS__ = false;
   target.__BACKGROUND__ = true;
@@ -321,6 +353,17 @@ function injectBackgroundThreadGlobals(target?: any, polyfills?: any) {
         },
       };
     }),
+    /*
+    main thread -> background thread:
+    lynx.getCoreContext().addEventListener("message", (e: Event) => {
+      console.log('message', e)
+    });
+    background thread -> main thread:
+    lynx.getCoreContext().postMessage({
+      type: 'message',
+      data: [1, 2, 3]
+    });
+    */
     getCoreContext: (() => CoreContext),
     getJSContext: (() => JsContext),
     getJSModule: (moduleName) => {
@@ -337,8 +380,7 @@ function injectBackgroundThreadGlobals(target?: any, polyfills?: any) {
   target.requestAnimationFrame = setTimeout;
   target.cancelAnimationFrame = clearTimeout;
 
-  target.console.profile = () => {};
-  target.console.profileEnd = () => {};
+  target.console = createPreconfiguredConsole();
 
   // TODO: user-configurable
   target.SystemInfo = {

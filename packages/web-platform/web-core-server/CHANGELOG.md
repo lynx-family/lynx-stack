@@ -1,5 +1,35 @@
 # @lynx-js/web-core-server
 
+## 0.15.3
+
+## 0.15.2
+
+### Patch Changes
+
+- feat: support SSR for all-on-ui ([#1029](https://github.com/lynx-family/lynx-stack/pull/1029))
+
+- feat: move SSR hydrate essential info to the ssr attribute ([#1292](https://github.com/lynx-family/lynx-stack/pull/1292))
+
+  We found that in browser there is no simple tool to decode a base64 string
+
+  Therefore we move the data to `ssr` attribute
+
+  Also fix some ssr issues
+
+- feat: dump the event info on ssr stage ([#1237](https://github.com/lynx-family/lynx-stack/pull/1237))
+
+- feat: mark template elements for SSR and update part ID handling ([#1286](https://github.com/lynx-family/lynx-stack/pull/1286))
+
+## 0.15.1
+
+## 0.15.0
+
+### Patch Changes
+
+- feat: support to dump the css og system's style ([#1272](https://github.com/lynx-family/lynx-stack/pull/1272))
+
+- perf: use rust implemented style transformer ([#1094](https://github.com/lynx-family/lynx-stack/pull/1094))
+
 ## 0.14.2
 
 ### Patch Changes

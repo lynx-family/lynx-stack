@@ -1,4 +1,5 @@
 #![deny(clippy::all)]
+#![allow(clippy::boxed_local, clippy::borrowed_box, clippy::deprecated_cfg_attr)]
 
 #[macro_use]
 extern crate napi_derive;
@@ -195,16 +196,13 @@ impl napi::bindgen_prelude::FromNapiValue for IsModuleConfig {
     napi_val: napi::bindgen_prelude::sys::napi_value,
   ) -> napi::bindgen_prelude::Result<Self> {
     let bool_val = <bool>::from_napi_value(env, napi_val);
-    if bool_val.is_ok() {
-      return Ok(IsModuleConfig(IsModule::Bool(bool_val.unwrap())));
+    if let Ok(bool_val) = bool_val {
+      return Ok(IsModuleConfig(IsModule::Bool(bool_val)));
     }
 
     let str_val = <&str>::from_napi_value(env, napi_val);
-    if str_val.is_ok() {
-      match str_val.unwrap() {
-        "unknown" => return Ok(IsModuleConfig(IsModule::Unknown)),
-        _ => {}
-      }
+    if str_val.is_ok() && str_val.unwrap() == "unknown" {
+      return Ok(IsModuleConfig(IsModule::Unknown));
     }
 
     Err(napi::bindgen_prelude::error!(
@@ -327,7 +325,7 @@ fn transform_react_lynx_inner(
   options: TransformNodiffOptions,
 ) -> TransformNodiffOutput {
   let content_hash = match options.mode {
-    Some(val) if val == TransformMode::Test => "test".into(),
+    Some(TransformMode::Test) => "test".into(),
     _ => calc_hash(code.as_str()),
   };
   let comments = SingleThreadedComments::default();
@@ -451,7 +449,7 @@ fn transform_react_lynx_inner(
           import_source: snapshot_plugin_config
             .jsx_import_source
             .clone()
-            .map(|s| Atom::from(s)),
+            .map(Atom::from),
           pragma: None,
           pragma_frag: None,
           // We may want `main-thread:foo={fooMainThreadFunc}` to work
@@ -638,7 +636,7 @@ fn transform_react_lynx_inner(
       PrintArgs {
         output: None,
         source_root: "".into(), // TODO: add root
-        source_file_name: options.source_file_name.as_ref().map(String::as_str),
+        source_file_name: options.source_file_name.as_deref(),
         source_map_url: None,
         output_path: None,
         inline_sources_content: options.inline_sources_content.unwrap_or(true),
@@ -650,7 +648,7 @@ fn transform_react_lynx_inner(
         orig: None,
         comments: Some(&comments),
         emit_source_map_columns: options.source_map_columns.unwrap_or(true),
-        preamble: "".into(),
+        preamble: "",
         codegen_config: codegen::Config::default()
           .with_target(EsVersion::latest())
           .with_minify(false)

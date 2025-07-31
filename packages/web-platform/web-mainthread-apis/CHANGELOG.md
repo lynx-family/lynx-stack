@@ -1,5 +1,65 @@
 # @lynx-js/web-mainthread-apis
 
+## 0.15.3
+
+### Patch Changes
+
+- Updated dependencies [[`0da5ef0`](https://github.com/lynx-family/lynx-stack/commit/0da5ef03e41f20e9f8019c6dc03cb4a38ab18854)]:
+  - @lynx-js/web-constants@0.15.3
+
+## 0.15.2
+
+### Patch Changes
+
+- feat: support SSR for all-on-ui ([#1029](https://github.com/lynx-family/lynx-stack/pull/1029))
+
+- feat: move SSR hydrate essential info to the ssr attribute ([#1292](https://github.com/lynx-family/lynx-stack/pull/1292))
+
+  We found that in browser there is no simple tool to decode a base64 string
+
+  Therefore we move the data to `ssr` attribute
+
+  Also fix some ssr issues
+
+- feat: support \_\_MarkTemplateElement, \_\_MarkPartElement and \_\_GetTemplateParts for all-on-ui ([#1275](https://github.com/lynx-family/lynx-stack/pull/1275))
+
+- feat: mark template elements for SSR and update part ID handling ([#1286](https://github.com/lynx-family/lynx-stack/pull/1286))
+
+- Updated dependencies [[`1443e46`](https://github.com/lynx-family/lynx-stack/commit/1443e468a353363e29aab0d90cd8b91c232a5525), [`5062128`](https://github.com/lynx-family/lynx-stack/commit/5062128c68e21abcf276ebcb40d7cc8f6e54244b)]:
+  - @lynx-js/web-constants@0.15.2
+
+## 0.15.1
+
+### Patch Changes
+
+- Updated dependencies [[`e59138b`](https://github.com/lynx-family/lynx-stack/commit/e59138b3c2285ce83a2927ee046671b9015acdfd)]:
+  - @lynx-js/web-style-transformer@0.3.3
+  - @lynx-js/web-constants@0.15.1
+
+## 0.15.0
+
+### Minor Changes
+
+- refactor: move exposure system to web-core ([#1254](https://github.com/lynx-family/lynx-stack/pull/1254))
+
+  **THIS IS A BREAKING CHANGE**
+
+  **You'll need to upgrade your @lynx-js/web-elements to >= 0.8.0**
+
+  For SSR and better performance, we moved the lynx's exposure system from web-element to web-core.
+
+  Before this commit, we create Intersection observers by creating HTMLElements.
+
+  After this commit, we will create such Intersection observers after dom stabled.
+
+  Also, the setInterval for exposure has been removed, now we use an on time lazy timer for such features.
+
+### Patch Changes
+
+- Updated dependencies [[`16f402f`](https://github.com/lynx-family/lynx-stack/commit/16f402f557ba12ec34a35a1b9b00115bf576c20f), [`60095d7`](https://github.com/lynx-family/lynx-stack/commit/60095d741ae969e76a8faeb669a0fbe7e6e81f7c), [`224c653`](https://github.com/lynx-family/lynx-stack/commit/224c653f370d807281fa0a9ffbb4f4dd5c9d308e)]:
+  - @lynx-js/web-style-transformer@0.3.2
+  - @lynx-js/web-constants@0.15.0
+
 ## 0.14.2
 
 ### Patch Changes

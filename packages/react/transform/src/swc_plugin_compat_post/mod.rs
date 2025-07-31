@@ -64,9 +64,8 @@ impl CompatPostVisitor {
 
 impl VisitMut for CompatPostVisitor {
   fn visit_mut_module(&mut self, n: &mut Module) {
-    match &mut self.inject_plugin {
-      Some(ref mut inject_plugin) => n.visit_mut_with(inject_plugin),
-      None => {}
+    if let Some(ref mut inject_plugin) = &mut self.inject_plugin {
+      n.visit_mut_with(inject_plugin)
     }
   }
 }

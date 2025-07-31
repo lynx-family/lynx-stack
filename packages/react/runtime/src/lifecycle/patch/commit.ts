@@ -95,7 +95,7 @@ function replaceCommitHook(): void {
       if (backgroundSnapshotInstancesToRemove.length) {
         setTimeout(() => {
           backgroundSnapshotInstancesToRemove.forEach(id => {
-            backgroundSnapshotInstanceManager.values.delete(id);
+            backgroundSnapshotInstanceManager.values.get(id)?.tearDown();
           });
         }, 10000);
       }
@@ -155,9 +155,10 @@ function commitPatchUpdate(patchList: PatchList, patchOptions: Omit<PatchOptions
 } {
   // console.debug('********** JS update:');
   // printSnapshotInstance(
-  //   (backgroundSnapshotInstanceManager.values.get(1) || backgroundSnapshotInstanceManager.values.get(-1))!,
+  //   (backgroundSnapshotInstanceManager.values.get(1) ?? backgroundSnapshotInstanceManager.values.get(-1))!,
   // );
-  // console.debug('commitPatchUpdate: ', JSON.stringify(patchList));
+  // console.debug('commitPatchUpdate:', prettyFormatSnapshotPatch(patchList.patchList[0]?.snapshotPatch));
+
   if (__PROFILE__) {
     console.profile('commitChanges');
   }

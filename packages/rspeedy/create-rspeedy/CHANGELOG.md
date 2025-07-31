@@ -1,5 +1,19 @@
 # create-rspeedy
 
+## 0.10.3
+
+## 0.10.2
+
+### Patch Changes
+
+- Add `import '@lynx-js/react/debug'` for all templates. ([#1250](https://github.com/lynx-family/lynx-stack/pull/1250))
+
+## 0.10.1
+
+### Patch Changes
+
+- Fix missing color in nested `<text>`. ([#1233](https://github.com/lynx-family/lynx-stack/pull/1233))
+
 ## 0.10.0
 
 ## 0.9.11

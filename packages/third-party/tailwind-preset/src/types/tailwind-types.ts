@@ -29,8 +29,4 @@ export type {
   ResolvableTo,
 };
 
-export type StrictThemeConfig =
-  & ThemeConfig
-  & Record<string, ResolvableTo<KeyValuePair<string, string>> | undefined>;
-
 export type Plugin = PluginsConfig[number];

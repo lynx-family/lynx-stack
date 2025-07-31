@@ -28,17 +28,13 @@ impl Visit for TransformVisitor {
 
   fn visit_call_expr(&mut self, n: &CallExpr) {
     // check if this call is createSnapshotInstance()
-    match &n.callee {
-      Callee::Expr(callee) => match &**callee {
-        Expr::Ident(ident) => {
-          if ident.sym == *"createSnapshotInstance" {
-            self.has_jsx = true;
-            return;
-          }
+    if let Callee::Expr(callee) = &n.callee {
+      if let Expr::Ident(ident) = &**callee {
+        if ident.sym == *"createSnapshotInstance" {
+          self.has_jsx = true;
+          return;
         }
-        _ => {}
-      },
-      _ => {}
+      }
     }
 
     n.visit_children_with(self);

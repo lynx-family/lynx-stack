@@ -20,7 +20,7 @@ pub fn get_string_inline_style_from_literal(expr: &Expr, span: &Span) -> Option<
       serde_json::Value::Object(map) => Some(
         map
           .into_iter()
-          .map(|(k, v)| match &v {
+          .flat_map(|(k, v)| match &v {
             serde_json::Value::Number(v) => Ok(format!(
               "{}:{}",
               k.from_case(Case::Camel).to_case(Case::Kebab),
@@ -35,9 +35,8 @@ pub fn get_string_inline_style_from_literal(expr: &Expr, span: &Span) -> Option<
             serde_json::Value::Null
             | serde_json::Value::Bool(_)
             | serde_json::Value::Array(_)
-            | serde_json::Value::Object(_) => return Err(()),
+            | serde_json::Value::Object(_) => Err(()),
           })
-          .flat_map(|x| x)
           .collect::<Vec<_>>()
           .join(";"),
       ),

@@ -156,7 +156,7 @@ pub fn transform_bundle_result_inner(
       PrintArgs {
         output: None,
         source_root: "".into(), // TODO: add root
-        source_file_name: options.source_file_name.as_ref().map(String::as_str),
+        source_file_name: options.source_file_name.as_deref(),
         source_map_url: None,
         output_path: None,
         inline_sources_content: true,
@@ -168,7 +168,7 @@ pub fn transform_bundle_result_inner(
         orig: None,
         comments: Some(&comments),
         emit_source_map_columns: true,
-        preamble: "".into(),
+        preamble: "",
         codegen_config: codegen::Config::default()
           .with_target(EsVersion::latest())
           .with_minify(options.minify.unwrap_or(false))

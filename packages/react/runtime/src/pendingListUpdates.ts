@@ -5,14 +5,25 @@
 import type { ListUpdateInfo } from './listUpdateInfo.js';
 
 export const __pendingListUpdates = {
-  values: {} as Record<number, ListUpdateInfo>,
+  values: {} as Record<number, ListUpdateInfo> | null,
   clear(): void {
     this.values = {};
   },
   flush(): void {
-    Object.values(this.values).forEach(update => {
-      update.flush();
-    });
-    this.clear();
+    if (this.values) {
+      Object.values(this.values).forEach(update => {
+        update.flush();
+      });
+      this.clear();
+    }
+  },
+  runWithoutUpdates(cb: () => void): void {
+    const old = this.values;
+    this.values = null as unknown as Record<number, ListUpdateInfo>;
+    try {
+      cb();
+    } finally {
+      this.values = old;
+    }
   },
 };

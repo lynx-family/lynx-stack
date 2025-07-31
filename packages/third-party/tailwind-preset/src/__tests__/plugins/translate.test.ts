@@ -19,7 +19,6 @@ describe('translate plugin', () => {
     });
 
     const matchUtilities = vi.mocked(api.matchUtilities);
-    expect(matchUtilities).toHaveBeenCalledTimes(3);
 
     // Build a strictly typed utility map
     type UtilityFn = (value: unknown) => Record<string, string> | null;

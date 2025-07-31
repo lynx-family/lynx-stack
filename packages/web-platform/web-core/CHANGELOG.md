@@ -1,5 +1,86 @@
 # @lynx-js/web-core
 
+## 0.15.3
+
+### Patch Changes
+
+- fix: improve compatibility with legacy template ([#1337](https://github.com/lynx-family/lynx-stack/pull/1337))
+
+  avoid "object Object" error for old version rspeedy outputs
+
+- Updated dependencies [[`0da5ef0`](https://github.com/lynx-family/lynx-stack/commit/0da5ef03e41f20e9f8019c6dc03cb4a38ab18854)]:
+  - @lynx-js/web-constants@0.15.3
+  - @lynx-js/web-mainthread-apis@0.15.3
+  - @lynx-js/web-worker-runtime@0.15.3
+  - @lynx-js/web-worker-rpc@0.15.3
+
+## 0.15.2
+
+### Patch Changes
+
+- feat: support SSR for all-on-ui ([#1029](https://github.com/lynx-family/lynx-stack/pull/1029))
+
+- feat: move SSR hydrate essential info to the ssr attribute ([#1292](https://github.com/lynx-family/lynx-stack/pull/1292))
+
+  We found that in browser there is no simple tool to decode a base64 string
+
+  Therefore we move the data to `ssr` attribute
+
+  Also fix some ssr issues
+
+- feat: support \_\_MarkTemplateElement, \_\_MarkPartElement and \_\_GetTemplateParts for all-on-ui ([#1275](https://github.com/lynx-family/lynx-stack/pull/1275))
+
+- feat: mark template elements for SSR and update part ID handling ([#1286](https://github.com/lynx-family/lynx-stack/pull/1286))
+
+- Updated dependencies [[`cebda59`](https://github.com/lynx-family/lynx-stack/commit/cebda592ac5c7d152c877c2ac5ec403d477077e1), [`1443e46`](https://github.com/lynx-family/lynx-stack/commit/1443e468a353363e29aab0d90cd8b91c232a5525), [`5062128`](https://github.com/lynx-family/lynx-stack/commit/5062128c68e21abcf276ebcb40d7cc8f6e54244b), [`f656b7f`](https://github.com/lynx-family/lynx-stack/commit/f656b7f0d390d69c0da0d11a6c9b3f66ae877ac8)]:
+  - @lynx-js/web-mainthread-apis@0.15.2
+  - @lynx-js/web-constants@0.15.2
+  - @lynx-js/web-worker-runtime@0.15.2
+  - @lynx-js/web-worker-rpc@0.15.2
+
+## 0.15.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-mainthread-apis@0.15.1
+  - @lynx-js/web-worker-runtime@0.15.1
+  - @lynx-js/web-constants@0.15.1
+  - @lynx-js/web-worker-rpc@0.15.1
+
+## 0.15.0
+
+### Minor Changes
+
+- refactor: move exposure system to web-core ([#1254](https://github.com/lynx-family/lynx-stack/pull/1254))
+
+  **THIS IS A BREAKING CHANGE**
+
+  **You'll need to upgrade your @lynx-js/web-elements to >= 0.8.0**
+
+  For SSR and better performance, we moved the lynx's exposure system from web-element to web-core.
+
+  Before this commit, we create Intersection observers by creating HTMLElements.
+
+  After this commit, we will create such Intersection observers after dom stabled.
+
+  Also, the setInterval for exposure has been removed, now we use an on time lazy timer for such features.
+
+### Patch Changes
+
+- refactor: improve `linear-weight-sum` performance ([#1216](https://github.com/lynx-family/lynx-stack/pull/1216))
+
+- feat: lynx-view error event adds a new parameter: `e.detail.fileName`, which will be determined by the file location where the error occurred, either `lepus.js` or `app-service.js`. ([#1242](https://github.com/lynx-family/lynx-stack/pull/1242))
+
+- perf: use rust implemented style transformer ([#1094](https://github.com/lynx-family/lynx-stack/pull/1094))
+
+- Updated dependencies [[`7b75469`](https://github.com/lynx-family/lynx-stack/commit/7b75469d05dd2ec78bf6e1e54b94c8dff938eb40), [`f54a7aa`](https://github.com/lynx-family/lynx-stack/commit/f54a7aa539ad56ccd1e7e1b49d7ee59e742fe493), [`224c653`](https://github.com/lynx-family/lynx-stack/commit/224c653f370d807281fa0a9ffbb4f4dd5c9d308e)]:
+  - @lynx-js/offscreen-document@0.1.3
+  - @lynx-js/web-worker-runtime@0.15.0
+  - @lynx-js/web-mainthread-apis@0.15.0
+  - @lynx-js/web-constants@0.15.0
+  - @lynx-js/web-worker-rpc@0.15.0
+
 ## 0.14.2
 
 ### Patch Changes

@@ -95,6 +95,9 @@ jobs:
             env:
               - ENABLE_SSR=true
               - TEST_FP_ONLY=true
+          - name: SSR-ALL-ON-UI
+            env:
+              - ENABLE_SSR=true
     with:
       runs-on: lynx-ubuntu-24.04-xlarge
       is-web: true
@@ -147,10 +150,12 @@ jobs:
         cd create-rspeedy-regression
         pnpm install --registry=http://localhost:4873
         pnpm run build
+        pnpm run build --mode development
         npx --registry http://localhost:4873 create-rspeedy-canary@latest --template react-vitest-rltl --dir create-rspeedy-regression-vitest-rltl
         cd create-rspeedy-regression-vitest-rltl
         pnpm install --registry=http://localhost:4873
         pnpm run build
+        pnpm run build --mode development
         pnpm run test
   test-react:
     needs: build

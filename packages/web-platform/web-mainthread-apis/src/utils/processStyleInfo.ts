@@ -5,13 +5,13 @@
 import {
   type OneInfo,
   type StyleInfo,
-  type CssInJsInfo,
+  type CssOGInfo,
   type PageConfig,
   type CSSRule,
   cssIdAttribute,
   lynxTagAttribute,
 } from '@lynx-js/web-constants';
-import { transformLynxStyles } from '@lynx-js/web-style-transformer';
+import { transformParsedStyles } from './tokenizer.js';
 
 export function flattenStyleInfo(
   styleInfo: StyleInfo,
@@ -30,7 +30,7 @@ export function flattenStyleInfo(
             ...(enableCSSSelector
               ? flatInfo.rules
               // when enableCSSSelector is false, need to make a shallow copy of rules.sel
-              // otherwise updating `oneCssInfo.sel` in `genCssInJsInfo()` will affect other imported cssInfo
+              // otherwise updating `oneCssInfo.sel` in `genCssOGInfo()` will affect other imported cssInfo
               : flatInfo.rules.map(i => ({ ...i }))),
           );
         }
@@ -51,7 +51,7 @@ export function transformToWebCss(styleInfo: StyleInfo) {
   for (const cssInfos of Object.values(styleInfo)) {
     for (const rule of cssInfos.rules) {
       const { sel: selectors, decl: declarations } = rule;
-      const { transformedStyle, childStyle } = transformLynxStyles(
+      const { transformedStyle, childStyle } = transformParsedStyles(
         declarations,
       );
       rule.decl = transformedStyle;
@@ -123,10 +123,10 @@ export function genCssContent(
 /**
  * generate the css-in-js data
  */
-export function genCssInJsInfo(styleInfo: StyleInfo): CssInJsInfo {
+export function genCssOGInfo(styleInfo: StyleInfo): CssOGInfo {
   return Object.fromEntries(
     Object.entries(styleInfo).map(([cssId, cssInfos]) => {
-      const oneCssInJsInfo: Record<string, [string, string][]> = {};
+      const oneCssOGInfo: Record<string, [string, string][]> = {};
       cssInfos.rules = cssInfos.rules.filter(oneCssInfo => {
         oneCssInfo.sel = oneCssInfo.sel.filter(selectorList => {
           const [
@@ -143,11 +143,11 @@ export function genCssInJsInfo(styleInfo: StyleInfo): CssInJsInfo {
             && combinator.length === 0
           ) {
             const selectorName = classSelectors[0]!.substring(1);
-            const currentDeclarations = oneCssInJsInfo[selectorName];
+            const currentDeclarations = oneCssOGInfo[selectorName];
             if (currentDeclarations) {
               currentDeclarations.push(...oneCssInfo.decl);
             } else {
-              oneCssInJsInfo[selectorName] = oneCssInfo.decl;
+              oneCssOGInfo[selectorName] = oneCssInfo.decl;
             }
             return false; // remove this selector from style info
           }
@@ -155,7 +155,7 @@ export function genCssInJsInfo(styleInfo: StyleInfo): CssInJsInfo {
         });
         return oneCssInfo.sel.length > 0;
       });
-      return [cssId, oneCssInJsInfo];
+      return [cssId, oneCssOGInfo];
     }),
   );
 }

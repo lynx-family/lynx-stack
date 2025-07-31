@@ -8,7 +8,7 @@ import {
   type StyleInfo,
   type FlushElementTreeOptions,
   type Cloneable,
-  type CssInJsInfo,
+  type CssOGInfo,
   type BrowserConfig,
   lynxUniqueIdAttribute,
   type publishEventEndpoint,
@@ -53,18 +53,19 @@ import {
   type SetCSSIdPAPI,
   type AddClassPAPI,
   type SetClassesPAPI,
-  type GetTemplatePartsPAPI,
   type GetPageElementPAPI,
   type MinimalRawEventObject,
   type I18nResourceTranslationOptions,
   lynxDisposedAttribute,
+  type SSRHydrateInfo,
+  type SSRDehydrateHooks,
 } from '@lynx-js/web-constants';
 import { globalMuteableVars } from '@lynx-js/web-constants';
 import { createMainThreadLynx } from './createMainThreadLynx.js';
 import {
   flattenStyleInfo,
   genCssContent,
-  genCssInJsInfo,
+  genCssOGInfo,
   transformToWebCss,
 } from './utils/processStyleInfo.js';
 import {
@@ -86,8 +87,11 @@ import {
   __GetID,
   __GetParent,
   __GetTag,
+  __GetTemplateParts,
   __InsertElementBefore,
   __LastElement,
+  __MarkPartElement,
+  __MarkTemplateElement,
   __NextElement,
   __RemoveElement,
   __ReplaceElement,
@@ -101,13 +105,27 @@ import {
   __UpdateComponentID,
 } from './pureElementPAPIs.js';
 import { createCrossThreadEvent } from './utils/createCrossThreadEvent.js';
-import { decodeCssInJs } from './utils/decodeCssInJs.js';
+import { decodeCssOG } from './utils/decodeCssOG.js';
+
+const exposureRelatedAttributes = new Set<string>([
+  'exposure-id',
+  'exposure-area',
+  'exposure-screen-margin-top',
+  'exposure-screen-margin-right',
+  'exposure-screen-margin-bottom',
+  'exposure-screen-margin-left',
+  'exposure-ui-margin-top',
+  'exposure-ui-margin-right',
+  'exposure-ui-margin-bottom',
+  'exposure-ui-margin-left',
+]);
 
 export interface MainThreadRuntimeCallbacks {
   mainChunkReady: () => void;
   flushElementTree: (
     options: FlushElementTreeOptions,
     timingFlags: string[],
+    exposureChangedElements: WebFiberElementImpl[],
   ) => void;
   _ReportError: RpcCallType<typeof reportErrorEndpoint>;
   __OnLifecycleEvent: (lifeCycleEvent: Cloneable) => void;
@@ -129,15 +147,17 @@ export interface MainThreadRuntimeConfig {
   lepusCode: Record<string, LynxJSModule>;
   browserConfig: BrowserConfig;
   tagMap: Record<string, string>;
-  rootDom: Pick<Element, 'append' | 'addEventListener'>;
+  rootDom:
+    & Pick<Element, 'append' | 'addEventListener'>
+    & Partial<Pick<Element, 'querySelectorAll'>>;
   jsContext: LynxContextEventTarget;
+  ssrHydrateInfo?: SSRHydrateInfo;
+  ssrHooks?: SSRDehydrateHooks;
 }
 
 export function createMainThreadGlobalThis(
   config: MainThreadRuntimeConfig,
 ): MainThreadGlobalThis {
-  let pageElement!: WebFiberElementImpl;
-  let uniqueIdInc = 1;
   let timingFlags: string[] = [];
   let renderPage: MainThreadGlobalThis['renderPage'];
   const {
@@ -148,16 +168,25 @@ export function createMainThreadGlobalThis(
     rootDom,
     globalProps,
     styleInfo,
+    ssrHydrateInfo,
+    ssrHooks,
   } = config;
-  const lynxUniqueIdToElement: WeakRef<WebFiberElementImpl>[] = [];
+  const lynxUniqueIdToElement: WeakRef<WebFiberElementImpl>[] =
+    ssrHydrateInfo?.lynxUniqueIdToElement ?? [];
+  const lynxUniqueIdToStyleRulesIndex: number[] =
+    ssrHydrateInfo?.lynxUniqueIdToStyleRulesIndex ?? [];
   const elementToRuntimeInfoMap: WeakMap<WebFiberElementImpl, LynxRuntimeInfo> =
     new WeakMap();
-  const lynxUniqueIdToStyleRulesIndex: number[] = [];
+
+  let pageElement: WebFiberElementImpl | undefined = lynxUniqueIdToElement[1]
+    ?.deref();
+  let uniqueIdInc = lynxUniqueIdToElement.length || 1;
   /**
    * for "update" the globalThis.val in the main thread
    */
   const varsUpdateHandlers: (() => void)[] = [];
   const lynxGlobalBindingValues: Record<string, any> = {};
+  const exposureChangedElements = new Set<WebFiberElementImpl>();
 
   /**
    * now create the style content
@@ -172,19 +201,25 @@ export function createMainThreadGlobalThis(
     pageConfig.enableCSSSelector,
   );
   transformToWebCss(styleInfo);
-  const cssInJsInfo: CssInJsInfo = pageConfig.enableCSSSelector
+  const cssOGInfo: CssOGInfo = pageConfig.enableCSSSelector
     ? {}
-    : genCssInJsInfo(styleInfo);
-  const cardStyleElement = callbacks.createElement('style');
-  cardStyleElement.innerHTML = genCssContent(
-    styleInfo,
-    pageConfig,
-  );
-  // @ts-expect-error
-  rootDom.append(cardStyleElement);
+    : genCssOGInfo(styleInfo);
+  let cardStyleElement: HTMLStyleElement;
+  if (ssrHydrateInfo?.cardStyleElement) {
+    cardStyleElement = ssrHydrateInfo.cardStyleElement;
+  } else {
+    cardStyleElement = callbacks.createElement(
+      'style',
+    ) as unknown as HTMLStyleElement;
+    cardStyleElement.innerHTML = genCssContent(
+      styleInfo,
+      pageConfig,
+    );
+    rootDom.append(cardStyleElement);
+  }
   const cardStyleElementSheet =
     (cardStyleElement as unknown as HTMLStyleElement).sheet!;
-  const updateCSSInJsStyle: (
+  const updateCssOGStyle: (
     uniqueId: number,
     newStyles: string,
   ) => void = (uniqueId, newStyles) => {
@@ -288,6 +323,12 @@ export function createMainThreadGlobalThis(
         element.removeEventListener(eventName, currentRegisteredHandler, {
           capture: isCapture,
         });
+        // remove the exposure id if the exposure-id is a placeholder value
+        const isExposure = eventName === 'uiappear'
+          || eventName === 'uidisappear';
+        if (isExposure && element.getAttribute('exposure-id') === '-1') {
+          mtsGlobalThis.__SetAttribute(element, 'exposure-id', null);
+        }
       }
     } else {
       /**
@@ -300,6 +341,12 @@ export function createMainThreadGlobalThis(
         element.addEventListener(htmlEventName, currentRegisteredHandler, {
           capture: isCapture,
         });
+        // add exposure id if no exposure-id is set
+        const isExposure = eventName === 'uiappear'
+          || eventName === 'uidisappear';
+        if (isExposure && element.getAttribute('exposure-id') === null) {
+          mtsGlobalThis.__SetAttribute(element, 'exposure-id', '-1');
+        }
       }
     }
     if (newEventHandler) {
@@ -435,6 +482,7 @@ export function createMainThreadGlobalThis(
     page.setAttribute(cssIdAttribute, cssID + '');
     page.setAttribute(parentComponentUniqueIdAttribute, '0');
     page.setAttribute(componentIdAttribute, componentID);
+    __MarkTemplateElement(page);
     if (pageConfig.defaultDisplayLinear === false) {
       page.setAttribute(lynxDefaultDisplayLinearAttribute, 'false');
     }
@@ -510,6 +558,10 @@ export function createMainThreadGlobalThis(
       if (key === __lynx_timing_flag && value) {
         timingFlags.push(value as string);
       }
+      if (exposureRelatedAttributes.has(key)) {
+        // if the attribute is related to exposure, we need to mark the element as changed
+        exposureChangedElements.add(element);
+      }
     }
   };
 
@@ -558,12 +610,12 @@ export function createMainThreadGlobalThis(
       ((element.getAttribute('class') ?? '') + ' ' + className)
         .trim();
     element.setAttribute('class', newClassName);
-    const newStyleStr = decodeCssInJs(
+    const newStyleStr = decodeCssOG(
       newClassName,
-      cssInJsInfo,
+      cssOGInfo,
       element.getAttribute(cssIdAttribute),
     );
-    updateCSSInJsStyle(
+    updateCssOGStyle(
       Number(element.getAttribute(lynxUniqueIdAttribute)),
       newStyleStr,
     );
@@ -574,12 +626,12 @@ export function createMainThreadGlobalThis(
     classNames,
   ) => {
     __SetClasses(element, classNames);
-    const newStyleStr = decodeCssInJs(
+    const newStyleStr = decodeCssOG(
       classNames ?? '',
-      cssInJsInfo,
+      cssOGInfo,
       element.getAttribute(cssIdAttribute),
     );
-    updateCSSInJsStyle(
+    updateCssOGStyle(
       Number(element.getAttribute(lynxUniqueIdAttribute)),
       newStyleStr ?? '',
     );
@@ -612,11 +664,13 @@ export function createMainThreadGlobalThis(
       // @ts-expect-error
       rootDom.append(pageElement);
     }
-    callbacks.flushElementTree(options, timingFlagsCopied);
-  };
-
-  const __GetTemplateParts: GetTemplatePartsPAPI = () => {
-    return undefined;
+    const exposureChangedElementsArray = Array.from(exposureChangedElements);
+    exposureChangedElements.clear();
+    callbacks.flushElementTree(
+      options,
+      timingFlagsCopied,
+      exposureChangedElementsArray,
+    );
   };
 
   const __GetPageElement: GetPageElementPAPI = () => {
@@ -626,7 +680,12 @@ export function createMainThreadGlobalThis(
   let release = '';
   const isCSSOG = !pageConfig.enableCSSSelector;
   const mtsGlobalThis: MainThreadGlobalThis = {
-    __AddEvent,
+    __GetTemplateParts: rootDom.querySelectorAll
+      ? __GetTemplateParts
+      : undefined,
+    __MarkTemplateElement,
+    __MarkPartElement,
+    __AddEvent: ssrHooks?.__AddEvent ?? __AddEvent,
     __GetEvent,
     __GetEvents,
     __SetEvents,
@@ -677,7 +736,6 @@ export function createMainThreadGlobalThis(
     __SetInlineStyles,
     __LoadLepusChunk,
     __GetPageElement,
-    __GetTemplateParts,
     __globalProps: globalProps,
     SystemInfo: {
       ...systemInfo,

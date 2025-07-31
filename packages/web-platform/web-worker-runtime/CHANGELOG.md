@@ -1,5 +1,91 @@
 # @lynx-js/web-worker-runtime
 
+## 0.15.3
+
+### Patch Changes
+
+- Updated dependencies [[`0da5ef0`](https://github.com/lynx-family/lynx-stack/commit/0da5ef03e41f20e9f8019c6dc03cb4a38ab18854)]:
+  - @lynx-js/web-constants@0.15.3
+  - @lynx-js/web-mainthread-apis@0.15.3
+  - @lynx-js/web-worker-rpc@0.15.3
+
+## 0.15.2
+
+### Patch Changes
+
+- Updated dependencies [[`cebda59`](https://github.com/lynx-family/lynx-stack/commit/cebda592ac5c7d152c877c2ac5ec403d477077e1), [`1443e46`](https://github.com/lynx-family/lynx-stack/commit/1443e468a353363e29aab0d90cd8b91c232a5525), [`5062128`](https://github.com/lynx-family/lynx-stack/commit/5062128c68e21abcf276ebcb40d7cc8f6e54244b), [`f656b7f`](https://github.com/lynx-family/lynx-stack/commit/f656b7f0d390d69c0da0d11a6c9b3f66ae877ac8)]:
+  - @lynx-js/web-mainthread-apis@0.15.2
+  - @lynx-js/web-constants@0.15.2
+  - @lynx-js/web-worker-rpc@0.15.2
+
+## 0.15.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-mainthread-apis@0.15.1
+  - @lynx-js/web-constants@0.15.1
+  - @lynx-js/web-worker-rpc@0.15.1
+
+## 0.15.0
+
+### Minor Changes
+
+- refactor: move exposure system to web-core ([#1254](https://github.com/lynx-family/lynx-stack/pull/1254))
+
+  **THIS IS A BREAKING CHANGE**
+
+  **You'll need to upgrade your @lynx-js/web-elements to >= 0.8.0**
+
+  For SSR and better performance, we moved the lynx's exposure system from web-element to web-core.
+
+  Before this commit, we create Intersection observers by creating HTMLElements.
+
+  After this commit, we will create such Intersection observers after dom stabled.
+
+  Also, the setInterval for exposure has been removed, now we use an on time lazy timer for such features.
+
+### Patch Changes
+
+- feat: add `napiModulesPath` to bundle napiModules into worker runtime. ([#1134](https://github.com/lynx-family/lynx-stack/pull/1134))
+
+  Usage:
+
+  ```ts
+  import { pluginWebPlatform } from '@lynx-js/web-platform-rsbuild-plugin';
+  import { defineConfig } from '@rsbuild/core';
+
+  export default defineConfig({
+    plugins: [
+      pluginWebPlatform({
+        // replace with your actual napi-modules file path
+        napiModulesPath: path.resolve(__dirname, './index.napi-modules.ts'),
+      }),
+    ],
+  });
+  ```
+
+  `napi-modules.ts` example:
+
+  ```ts
+  // index.napi-modules.ts
+  export default {
+    custom_module: function(NapiModules, NapiModulesCall) {
+      return {
+        async test(name) {
+          console.log('CustomModule', NapiModules, NapiModulesCall);
+        },
+      };
+    },
+  };
+  ```
+
+- Updated dependencies [[`7b75469`](https://github.com/lynx-family/lynx-stack/commit/7b75469d05dd2ec78bf6e1e54b94c8dff938eb40), [`224c653`](https://github.com/lynx-family/lynx-stack/commit/224c653f370d807281fa0a9ffbb4f4dd5c9d308e)]:
+  - @lynx-js/offscreen-document@0.1.3
+  - @lynx-js/web-mainthread-apis@0.15.0
+  - @lynx-js/web-constants@0.15.0
+  - @lynx-js/web-worker-rpc@0.15.0
+
 ## 0.14.2
 
 ### Patch Changes

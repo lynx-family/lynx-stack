@@ -1,5 +1,18 @@
 # @lynx-js/web-elements-template
 
+## 0.8.2
+
+## 0.8.1
+
+### Patch Changes
+
+- fix: indicator dots' bg-color on safari 26 ([#1298](https://github.com/lynx-family/lynx-stack/pull/1298))
+
+  https://bugs.webkit.org/show_bug.cgi?id=296048
+  The animation name should be defined in the template
+
+## 0.8.0
+
 ## 0.7.7
 
 ## 0.7.6
