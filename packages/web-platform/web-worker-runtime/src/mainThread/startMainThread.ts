@@ -27,7 +27,9 @@ export async function startMainThreadWorker(
   uiThreadPort: MessagePort,
   backgroundThreadPort: MessagePort,
 ) {
-  const { prepareMainThreadAPIs } = await import('@lynx-js/web-mainthread-apis');
+  const { prepareMainThreadAPIs } = await import(
+    '@lynx-js/web-mainthread-apis'
+  );
   const uiThreadRpc = new Rpc(uiThreadPort, 'main-to-ui');
   const backgroundThreadRpc = new Rpc(backgroundThreadPort, 'main-to-bg');
   const { markTimingInternal, flushMarkTimingInternal } =
