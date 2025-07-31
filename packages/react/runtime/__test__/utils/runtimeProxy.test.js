@@ -17,6 +17,7 @@ describe('runtimeProxy', () => {
     globalEnvManager.switchToBackground();
     lynx.getCoreContext().dispatchEvent({ type: 'event1', data: 'test' });
     expect(event).toBeCalledWith({ type: 'event1', data: 'test' });
+    lynx.getJSContext().removeEventListener('event1', event);
   });
 
   it('should not trigger event when context mismatch', () => {
@@ -24,6 +25,7 @@ describe('runtimeProxy', () => {
     lynx.getJSContext().addEventListener('event1', event);
     lynx.getJSContext().dispatchEvent({ type: 'event1', data: 'test' });
     expect(event).not.toBeCalled();
+    lynx.getJSContext().removeEventListener('event1', event);
   });
 
   it('should throw when dispatch event to the same context', () => {
