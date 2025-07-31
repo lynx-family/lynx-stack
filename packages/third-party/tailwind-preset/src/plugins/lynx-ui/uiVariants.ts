@@ -1,6 +1,28 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+
+/**
+ * uiVariants
+ * -----------------------------------------------------------------------------
+ * A plugin for generating class-based Tailwind variants based on component state,
+ * structure, or configuration — using a unified `ui-*` class prefix (customizable).
+ *
+ * This is inspired by stateful or structural variants commonly expressed via
+ * `data-*` or `aria-*` attributes in Headless UI / Radix UI, but adapted to
+ * Lynx platform where attribute selectors are not available.
+ *
+ * For example, instead of `[data-state="open"]`, we use `.ui-open:*`.
+ *
+ * Example:
+ *  <div class="ui-open:bg-blue-500 ui-side-left:border-l" />
+ *
+ * Supports:
+ * - State-like values: `open`, `checked`, `disabled`
+ * - Structural roles: `side`, `align`, etc.
+ * - Custom mappings via object syntax
+ */
+
 import { createPlugin } from '../../helpers.js';
 import type { PluginWithOptions } from '../../helpers.js';
 import type { KeyValuePairOrList } from '../../types/plugin-types.js';
@@ -14,12 +36,10 @@ const DEFAULT_PREFIXES = {
     'active',
     'disabled',
     'readonly',
-
     'checked',
     'selected',
     'indeterminate',
-    'invalid', // ?
-
+    'invalid',
     'open',
     'leaving',
     'entering',
@@ -36,7 +56,7 @@ type PrefixConfig =
   | Record<string, KeyValuePairOrList>
   | ((defaults: DefaultPrefixMap) => Record<string, KeyValuePairOrList>);
 
-interface StateVariantsOptions {
+interface UIVariantsOptions {
   /**
    * Configures state-based variant prefixes.
    *
@@ -61,13 +81,12 @@ interface StateVariantsOptions {
  * Plugin definition
  * -------------------------------------------------------------------------- */
 
-const stateVariants: PluginWithOptions<StateVariantsOptions> = createPlugin
+const uiVariants: PluginWithOptions<UIVariantsOptions> = createPlugin
   .withOptions<
-    StateVariantsOptions
+    UIVariantsOptions
   >(
-    (options?: StateVariantsOptions) => ({ matchVariant }) => {
-      options = options ?? {} as StateVariantsOptions;
-
+    (options?: UIVariantsOptions) => ({ matchVariant }) => {
+      options = options ?? {};
       const resolvedPrefixes = normalizePrefixes(options?.prefixes);
 
       const entries: [string, KeyValuePairOrList][] = Object.entries(
@@ -100,8 +119,8 @@ const stateVariants: PluginWithOptions<StateVariantsOptions> = createPlugin
     },
   );
 
-export type { StateVariantsOptions };
-export { stateVariants };
+export type { UIVariantsOptions };
+export { uiVariants };
 
 function normalizePrefixes(
   input?: PrefixConfig,

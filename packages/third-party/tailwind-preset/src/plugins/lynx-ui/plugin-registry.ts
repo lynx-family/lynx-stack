@@ -1,7 +1,7 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type { StateVariantsOptions } from './stateVariants.js';
+import type { UIVariantsOptions } from './uiVariants.js';
 import type { PluginWithOptions } from '../../helpers.js';
 
 import * as P from './index.js';
@@ -12,17 +12,17 @@ type Entry<K extends LynxUIPluginName> = readonly [
 ];
 
 interface LynxUIPluginOptionsMap {
-  stateVariants: StateVariantsOptions;
+  uiVariants: UIVariantsOptions;
 }
 type LynxUIPluginName = keyof LynxUIPluginOptionsMap;
 
 export const LYNX_UI_PLUGIN_ENTRIES: readonly [
-  Entry<'stateVariants'>,
+  Entry<'uiVariants'>,
   // LynxUIPluginEntry<'anotherPlugin'>
 ] = [
   [
-    'stateVariants',
-    P.stateVariants,
+    'uiVariants',
+    P.uiVariants,
   ],
   // ['anotherPlugin', P.anotherPlugin],
 ] as const;

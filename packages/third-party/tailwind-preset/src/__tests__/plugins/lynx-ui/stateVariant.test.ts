@@ -4,7 +4,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { MockInstance } from 'vitest';
 
-import { stateVariants } from '../../../plugins/lynx-ui/stateVariants.js';
+import { uiVariants } from '../../../plugins/lynx-ui/uiVariants.js';
 import { runPlugin } from '../../utils/run-plugin.js';
 
 type VariantFunction = (
@@ -23,9 +23,9 @@ export function extractVariants(
   );
 }
 
-describe('stateVariants plugin', () => {
+describe('uiVariants plugin', () => {
   it('registers variants with default prefix ui', () => {
-    const plugin = stateVariants({});
+    const plugin = uiVariants({});
     const { api } = runPlugin(plugin);
     const variants = extractVariants(vi.mocked(api.matchVariant));
 
@@ -39,7 +39,7 @@ describe('stateVariants plugin', () => {
   });
 
   it('registers variants from array of known prefixes', () => {
-    const plugin = stateVariants({ prefixes: ['ui', 'ui-side'] });
+    const plugin = uiVariants({ prefixes: ['ui', 'ui-side'] });
     const { api } = runPlugin(plugin);
     const variants = extractVariants(vi.mocked(api.matchVariant));
 
@@ -50,7 +50,7 @@ describe('stateVariants plugin', () => {
   });
 
   it('ignores unknown prefix when using array syntax', () => {
-    const plugin = stateVariants({ prefixes: ['unknown'] });
+    const plugin = uiVariants({ prefixes: ['unknown'] });
     const { api } = runPlugin(plugin);
     const variants = extractVariants(vi.mocked(api.matchVariant));
 
@@ -62,7 +62,7 @@ describe('stateVariants plugin', () => {
   });
 
   it('allows function-based prefixes config with default inheritance', () => {
-    const plugin = stateVariants({
+    const plugin = uiVariants({
       prefixes: (defaults) => ({
         custom: [...defaults.ui, 'custom-state'],
         'custom-side': ['left', 'right'],
@@ -82,7 +82,7 @@ describe('stateVariants plugin', () => {
   });
 
   it('ignores non-string values', () => {
-    const plugin = stateVariants({});
+    const plugin = uiVariants({});
     const { api } = runPlugin(plugin);
     const variants = extractVariants(vi.mocked(api.matchVariant));
 
@@ -93,7 +93,7 @@ describe('stateVariants plugin', () => {
   });
 
   it('supports modifier syntax', () => {
-    const { api } = runPlugin(stateVariants);
+    const { api } = runPlugin(uiVariants);
     const variants = extractVariants(vi.mocked(api.matchVariant));
 
     const ui = variants['ui'];
@@ -103,7 +103,7 @@ describe('stateVariants plugin', () => {
   });
 
   it('registers variants from object prefixes with array/string map', () => {
-    const plugin = stateVariants({
+    const plugin = uiVariants({
       prefixes: {
         x: ['one', 'two'],
         y: { 3: 'three', 4: 'four' },
@@ -122,7 +122,7 @@ describe('stateVariants plugin', () => {
   });
 
   it('uses default options when options are undefined', () => {
-    const plugin = stateVariants();
+    const plugin = uiVariants();
     const { api } = runPlugin(plugin);
     const variants = extractVariants(vi.mocked(api.matchVariant));
 
@@ -138,7 +138,7 @@ describe('stateVariants plugin', () => {
       e: {},
     };
 
-    const plugin = stateVariants({
+    const plugin = uiVariants({
       prefixes: {
         test: unsafeMap as unknown as Record<string, string>, // intentional unsafe
       },
@@ -156,7 +156,7 @@ describe('stateVariants plugin', () => {
   });
 
   it('returns empty string when mapped value is undefined', () => {
-    const plugin = stateVariants({
+    const plugin = uiVariants({
       prefixes: {
         z: {
           a: 'alpha',
