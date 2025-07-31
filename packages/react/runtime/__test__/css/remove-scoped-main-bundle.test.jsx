@@ -5,10 +5,6 @@ import { expect, it } from 'vitest';
 
 import { SnapshotInstance } from '../../src/snapshot';
 
-const __SNAPSHOT__ = (snapshot) => {
-  return snapshot.type;
-};
-
 const snapshot1 = __SNAPSHOT__(
   <view>
     <text>Hello, World</text>

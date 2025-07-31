@@ -44,7 +44,7 @@ export const createVitestConfig = async (options) => {
         }
 
         const { transformReactLynx } = require(
-          '@lynx-js/react-transform',
+          '@lynx-js/react/transform',
         );
         // relativePath should be stable between different runs with different cwd
         const relativePath = normalizeSlashes(path.relative(

@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import type { LoaderContext } from '@rspack/core';
 
-import type { TransformReactLynxOptions } from '@lynx-js/react-transform';
+import type { TransformReactLynxOptions } from '@lynx-js/react/transform';
 import type {
   DefineDceVisitorConfig,
   JsxTransformerConfig,

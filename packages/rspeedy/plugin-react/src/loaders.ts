@@ -16,7 +16,6 @@ import type { CompatVisitorConfig } from '@lynx-js/swc-plugin-reactlynx-compat'
 
 import type { PluginReactLynxOptions } from './pluginReactLynx.js'
 
-
 const require = createRequire(import.meta.url)
 
 // TODO(BitterGourd): Rename and Refactor
@@ -156,7 +155,7 @@ function getMainThreadSwcLoaderOptions(
     },
   }
 
-  // When Passing to SWC, the swc-plugin-compat Must Be Placed Before swc-plugin-react-lyn
+  // When Passing to SWC, the swc-plugin-reactlynx-compat Must Be Placed Before swc-plugin-reactlynx
   if (mainThreadCompatOptions) {
     swcLoaderOptions.jsc.experimental.plugins.unshift([
       require.resolve('@lynx-js/react/transform/swc-plugin-reactlynx-compat'),
@@ -189,7 +188,7 @@ function getBackgroundSwcLoaderOptions(
     },
   }
 
-  // When Passing to SWC, the swc-plugin-compat Must Be Placed Before swc-plugin-react-lyn
+  // When Passing to SWC, the swc-plugin-reactlynx-compat Must Be Placed Before swc-plugin-reactlynx
   if (backgroundCompatOptions) {
     swcLoaderOptions.jsc.experimental.plugins.unshift([
       require.resolve('@lynx-js/react/transform/swc-plugin-reactlynx-compat'),

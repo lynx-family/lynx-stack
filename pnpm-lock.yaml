@@ -192,9 +192,6 @@ importers:
       '@lynx-js/react':
         specifier: workspace:*
         version: link:..
-      '@lynx-js/react-transform':
-        specifier: workspace:*
-        version: link:../transform
       '@types/react':
         specifier: ^18.3.23
         version: 18.3.23
@@ -222,9 +219,6 @@ importers:
       '@lynx-js/react':
         specifier: workspace:*
         version: link:..
-      '@lynx-js/react-transform':
-        specifier: workspace:*
-        version: link:../transform
       '@lynx-js/testing-environment':
         specifier: workspace:*
         version: link:../../testing-library/testing-environment
@@ -962,9 +956,6 @@ importers:
       '@lynx-js/react':
         specifier: workspace:*
         version: link:../../react
-      '@lynx-js/react-transform':
-        specifier: workspace:*
-        version: link:../../react/transform
       '@lynx-js/swc-plugin-reactlynx':
         specifier: workspace:*
         version: link:../../react/transform/swc-plugin-reactlynx
