@@ -1,11 +1,9 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import path from 'node:path';
-
 import type { LoaderContext } from '@rspack/core';
 
-import type { TransformReactLynxOptions } from '@lynx-js/react-transform';
+import type { TransformReactLynxOptions } from '@lynx-js/react/transform';
 import type {
   DefineDceVisitorConfig,
   JsxTransformerConfig,
@@ -79,17 +77,9 @@ export interface ReactLoaderOptions {
   transformPath?: string | undefined;
 }
 
-function normalizeSlashes(file: string) {
-  return file.replaceAll(path.win32.sep, '/');
-}
-
 function getCommonOptions(
   this: LoaderContext<ReactLoaderOptions>,
 ) {
-  const filename = normalizeSlashes(
-    path.relative(this.rootContext, this.resourcePath),
-  );
-
   const {
     compat,
     enableRemoveCSSScope,
@@ -134,12 +124,8 @@ function getCommonOptions(
         darkMode: false,
       }
       : false,
-    // Ensure that swc get a full absolute path so that it will generate
-    // absolute path in the `source` param of `jsxDev(type, props, key, isStatic, source, self)`
-    filename: this.resourcePath,
     cssScope: {
       mode: getCSSScopeMode(enableRemoveCSSScope),
-      filename,
     },
     // Ensure that Webpack will get a full absolute path in the sourcemap
     // so that it can properly map the module back to its internal cached
@@ -151,8 +137,6 @@ function getCommonOptions(
     sourceMapColumns: this.sourceMap && !this.hot,
     inlineSourcesContent: inlineSourcesContent ?? !this.hot,
     snapshot: {
-      // TODO: config
-      preserveJsx: false,
       // In standalone lazy bundle mode, we do not support HMR now.
       target: this.hot && !isDynamicComponent
         // Using `MIX` when HMR is enabled.
@@ -160,7 +144,6 @@ function getCommonOptions(
         ? 'MIXED'
         : 'JS',
       runtimePkg: RUNTIME_PKG,
-      filename,
       isDynamicComponent: isDynamicComponent ?? false,
     },
     syntaxConfig: {
@@ -173,7 +156,6 @@ function getCommonOptions(
     },
     // TODO: config
     worklet: {
-      filename: filename,
       runtimePkg: RUNTIME_PKG,
       target: 'MIXED',
     },

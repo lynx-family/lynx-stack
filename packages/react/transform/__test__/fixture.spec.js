@@ -60,7 +60,6 @@ export class A extends Component {
     // eslint-disable-next-line unicorn/consistent-function-scoping
     const __cfg = (jsx) => ({
       mode: 'test',
-      filename: '',
       sourcemap: false,
       cssScope: false,
       jsx,
@@ -76,7 +75,7 @@ export class A extends Component {
       "import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
       import * as ReactLynx from "@lynx-js/react";
       import { Component } from "@lynx-js/react/legacy-react-runtime";
-      const __snapshot_da39a_test_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_test_1", function() {
+      const __snapshot_05fe4_test_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_05fe4_test_1", function() {
           const pageId = ReactLynx.__pageId;
           const el = __CreateView(pageId);
           return [
@@ -85,7 +84,7 @@ export class A extends Component {
       }, null, null, undefined, globDynamicComponentEntry, null);
       export class A extends Component {
           render() {
-              return /*#__PURE__*/ _jsx(__snapshot_da39a_test_1, {});
+              return /*#__PURE__*/ _jsx(__snapshot_05fe4_test_1, {});
           }
       }
       "
@@ -96,7 +95,7 @@ export class A extends Component {
       "import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
       import * as ReactLynx from "@lynx-js/react";
       import { Component } from "@lynx-js/react/legacy-react-runtime";
-      const __snapshot_da39a_test_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_test_1", function() {
+      const __snapshot_05fe4_test_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_05fe4_test_1", function() {
           const pageId = ReactLynx.__pageId;
           const el = __CreateView(pageId);
           return [
@@ -105,7 +104,7 @@ export class A extends Component {
       }, null, null, undefined, globDynamicComponentEntry, null);
       export class A extends Component {
           render() {
-              return /*#__PURE__*/ _jsx(__snapshot_da39a_test_1, {});
+              return /*#__PURE__*/ _jsx(__snapshot_05fe4_test_1, {});
           }
       }
       "
@@ -116,8 +115,6 @@ export class A extends Component {
 describe('jsx', () => {
   it('should allow JSXNamespace', async () => {
     const result = await transformReactLynx('const jsx = <Foo main-thread:foo={foo} />', {
-      filename: '',
-      sourceFileName: '',
       defineDCE: true,
       sourcemap: false,
       compat: false,
@@ -173,12 +170,10 @@ import { Component } from "@lynx-js/react-runtime";
 Component, View
 `,
       {
-        filename: '',
         sourcemap: false,
         cssScope: false,
         snapshot: {
           runtimePkg: '@lynx-js/react-runtime',
-          filename: '',
           target: 'MIXED',
         },
         directiveDCE: false,
@@ -244,12 +239,10 @@ Component, View
 
   it('should not warn JSXSpread when not enable addComponentElement', async () => {
     const cfg = {
-      filename: '',
       sourcemap: false,
       cssScope: false,
       snapshot: {
         runtimePkg: '@lynx-js/react-runtime',
-        filename: '',
         target: 'MIXED',
       },
       directiveDCE: false,
@@ -307,9 +300,9 @@ Component, View
       expect(result.errors).toMatchInlineSnapshot(`[]`);
       expect(result.code).toMatchInlineSnapshot(`
         "/*#__PURE__*/ import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
-        import * as ReactLynx from "@lynx-js/react";
+        import * as ReactLynx from "@lynx-js/react-runtime";
         import * as ReactLynx1 from "@lynx-js/react/internal";
-        const __snapshot_da39a_4da58493_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_4da58493_1", function() {
+        const __snapshot_05fe4_4da58493_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_05fe4_4da58493_1", function() {
             const pageId = ReactLynx.__pageId;
             const el = __CreateView(pageId);
             return [
@@ -320,7 +313,7 @@ Component, View
         ], ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry, [
             0
         ]);
-        /*#__PURE__*/ ReactLynx1.wrapWithLynxComponent((__c, __spread)=>/*#__PURE__*/ _jsx(__snapshot_da39a_4da58493_1, {
+        /*#__PURE__*/ ReactLynx1.wrapWithLynxComponent((__c, __spread)=>/*#__PURE__*/ _jsx(__snapshot_05fe4_4da58493_1, {
                 values: [
                     {
                         ...__spread,
@@ -338,12 +331,10 @@ Component, View
 
   // eslint-disable-next-line unicorn/consistent-function-scoping
   const __cfg = () => ({
-    filename: '',
     sourcemap: false,
     cssScope: false,
     snapshot: {
       runtimePkg: '@lynx-js/react-runtime',
-      filename: '',
       target: 'MIXED',
     },
     directiveDCE: false,
@@ -430,7 +421,6 @@ Component, View
 describe('syntaxConfig', () => {
   it('should allow C-style type cast in .ts', async () => {
     const result = await transformReactLynx(`const p = <any>Promise.all([]);`, {
-      filename: '',
       sourcemap: false,
       syntaxConfig: {
         syntax: 'typescript',
@@ -452,7 +442,6 @@ describe('syntaxConfig', () => {
 
   it('should throw when using TS feature as TSX', async () => {
     const result = await transformReactLynx(`const p = <any>Promise.all([]);`, {
-      filename: '',
       sourcemap: false,
       syntaxConfig: {
         syntax: 'typescript',
@@ -483,7 +472,6 @@ describe('syntaxConfig', () => {
 
   it('should allow tsx-style type cast in .tsx', async () => {
     const result = await transformReactLynx(`const foo = <T,>(v: T) => v;foo`, {
-      filename: '',
       sourcemap: false,
       syntaxConfig: {
         syntax: 'typescript',
@@ -508,7 +496,6 @@ describe('syntaxConfig', () => {
 
   it('should compile when using with', async () => {
     const result = await transformReactLynx(`with(x) {y}`, {
-      filename: '',
       sourcemap: false,
       syntaxConfig: {
         syntax: 'ecmascript',
@@ -522,7 +509,6 @@ describe('syntaxConfig', () => {
       shake: false,
       compat: false,
       worklet: {
-        filename: 'filename',
         target: 'LEPUS',
         minSdkVersion: '2.14',
         runtimePkg: '@lynx-js/react',
@@ -557,7 +543,6 @@ class X {
 }
 `,
       {
-        filename: '',
         sourcemap: false,
         cssScope: false,
         snapshot: false,
@@ -637,7 +622,6 @@ export default class App extends Component {
 }
 `,
       {
-        filename: '',
         sourcemap: false,
         cssScope: false,
         snapshot: false,
@@ -662,7 +646,7 @@ export default class App extends Component {
       "import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
       import * as ReactLynx from "@lynx-js/react";
       let c = 1;
-      const __snapshot_da39a_fdcd539e_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_fdcd539e_1", function() {
+      const __snapshot_05fe4_fdcd539e_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_05fe4_fdcd539e_1", function() {
           const pageId = ReactLynx.__pageId;
           const el = __CreateView(pageId);
           return [
@@ -672,7 +656,7 @@ export default class App extends Component {
       export default class App extends Component {
           a() {}
           render() {
-              return /*#__PURE__*/ _jsx(__snapshot_da39a_fdcd539e_1, {});
+              return /*#__PURE__*/ _jsx(__snapshot_05fe4_fdcd539e_1, {});
           }
           state = ((()=>{
               if (!__LEPUS__) this.a();
@@ -699,7 +683,6 @@ describe('dynamic import', () => {
 })();
 `,
       {
-        filename: '',
         sourcemap: false,
         parserConfig: {
           tsx: true,
@@ -779,7 +762,6 @@ function X() {
 X();
 `,
       {
-        filename: '',
         sourcemap: false,
         cssScope: false,
         snapshot: false,
@@ -849,7 +831,6 @@ X4();
 X5();
 `,
       {
-        filename: '',
         sourcemap: false,
         cssScope: false,
         snapshot: false,
@@ -907,7 +888,6 @@ function X() {
 X();
 `,
       {
-        filename: '',
         sourcemap: false,
         cssScope: false,
         snapshot: false,
@@ -951,7 +931,6 @@ function X() {
 X();
 `,
       {
-        filename: '',
         sourcemap: false,
         cssScope: false,
         snapshot: false,
@@ -993,7 +972,6 @@ function X() {
 X();
 `,
       {
-        filename: '',
         sourcemap: false,
         cssScope: false,
         snapshot: false,
@@ -1036,7 +1014,6 @@ function X() {
 X();
 `,
       {
-        filename: '',
         sourcemap: false,
         cssScope: false,
         snapshot: false,
@@ -1087,7 +1064,6 @@ class X extends Component {
 <X/>;
 `,
       {
-        filename: '',
         sourcemap: false,
         cssScope: false,
         snapshot: false,
@@ -1109,7 +1085,7 @@ class X extends Component {
     ).toMatchInlineSnapshot(`
       "import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
       import * as ReactLynx from "@lynx-js/react";
-      const __snapshot_da39a_6525c76e_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_6525c76e_1", function() {
+      const __snapshot_05fe4_6525c76e_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_05fe4_6525c76e_1", function() {
           const pageId = ReactLynx.__pageId;
           const el = __CreateView(pageId);
           return [
@@ -1119,7 +1095,7 @@ class X extends Component {
       class X extends Component {
           constructor(){}
           render() {
-              return /*#__PURE__*/ _jsx(__snapshot_da39a_6525c76e_1, {});
+              return /*#__PURE__*/ _jsx(__snapshot_05fe4_6525c76e_1, {});
           }
       }
       /*#__PURE__*/ _jsx(X, {});
@@ -1139,7 +1115,6 @@ describe('worklet', () => {
   }
   `,
         {
-          filename: '',
           sourcemap: false,
           cssScope: false,
           snapshot: false,
@@ -1152,10 +1127,8 @@ describe('worklet', () => {
           },
           shake: false,
           compat: true,
-
           worklet: {
             target,
-            filename: '',
             runtimePkg: '@lynx-js/react',
           },
         },
@@ -1173,10 +1146,10 @@ describe('worklet', () => {
                       }
                   }
               },
-              _wkltId: "da39:b88d3c29:1"
+              _wkltId: "05fe:b88d3c29:1"
           };
-          loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "da39:b88d3c29:1", function(event) {
-              const getCurrentDelta = lynxWorkletImpl._workletMap["da39:b88d3c29:1"].bind(this);
+          loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "05fe:b88d3c29:1", function(event) {
+              const getCurrentDelta = lynxWorkletImpl._workletMap["05fe:b88d3c29:1"].bind(this);
               let { foo } = this["_c"];
               "main thread";
               return foo.bar.baz;
@@ -1193,7 +1166,7 @@ describe('worklet', () => {
                       }
                   }
               },
-              _wkltId: "da39:b88d3c29:1"
+              _wkltId: "05fe:b88d3c29:1"
           };
           "
         `);
@@ -1209,10 +1182,10 @@ describe('worklet', () => {
                       }
                   }
               },
-              _wkltId: "da39:b88d3c29:1"
+              _wkltId: "05fe:b88d3c29:1"
           };
-          loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "da39:b88d3c29:1", function(event) {
-              const getCurrentDelta = lynxWorkletImpl._workletMap["da39:b88d3c29:1"].bind(this);
+          loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "05fe:b88d3c29:1", function(event) {
+              const getCurrentDelta = lynxWorkletImpl._workletMap["05fe:b88d3c29:1"].bind(this);
               let { foo } = this["_c"];
               "main thread";
               return foo.bar.baz;
@@ -1232,7 +1205,6 @@ export function foo(event) {
 }
 `,
       {
-        filename: '',
         sourcemap: false,
         cssScope: false,
         snapshot: false,
@@ -1248,7 +1220,6 @@ export function foo(event) {
 
         worklet: {
           target: 'LEPUS',
-          filename: '',
           runtimePkg: '@lynx-js/react',
         },
       },
@@ -1273,10 +1244,10 @@ export function foo(event) {
                   }
               }
           },
-          _wkltId: "da39:21759364:1"
+          _wkltId: "05fe:21759364:1"
       };
-      loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "da39:21759364:1", function(event) {
-          const foo = lynxWorkletImpl._workletMap["da39:21759364:1"].bind(this);
+      loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "05fe:21759364:1", function(event) {
+          const foo = lynxWorkletImpl._workletMap["05fe:21759364:1"].bind(this);
           let { bar, qux } = this["_c"];
           "main thread";
           return bar.baz['qux'] || bar.qux['baz'] || qux.bar.baz;
@@ -1299,7 +1270,6 @@ function bar() {
 console.log(bar)
 `,
       {
-        filename: '',
         sourcemap: false,
         cssScope: false,
         snapshot: false,
@@ -1312,10 +1282,8 @@ console.log(bar)
         },
         shake: false,
         compat: true,
-
         worklet: {
           target: 'LEPUS',
-          filename: '',
           runtimePkg: '@lynx-js/react',
         },
       },
@@ -1325,22 +1293,22 @@ console.log(bar)
       "import { loadWorkletRuntime as __loadWorkletRuntime } from "@lynx-js/react";
       var loadWorkletRuntime = __loadWorkletRuntime;
       let foo = {
-          _wkltId: "da39:2ec866b7:1"
+          _wkltId: "05fe:2ec866b7:1"
       };
       let bar = {
           _c: {
               foo
           },
-          _wkltId: "da39:2ec866b7:2"
+          _wkltId: "05fe:2ec866b7:2"
       };
       console.log(bar);
-      loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "da39:2ec866b7:1", function() {
-          const foo = lynxWorkletImpl._workletMap["da39:2ec866b7:1"].bind(this);
+      loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "05fe:2ec866b7:1", function() {
+          const foo = lynxWorkletImpl._workletMap["05fe:2ec866b7:1"].bind(this);
           "main thread";
           return null;
       });
-      loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "da39:2ec866b7:2", function() {
-          const bar = lynxWorkletImpl._workletMap["da39:2ec866b7:2"].bind(this);
+      loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "05fe:2ec866b7:2", function() {
+          const bar = lynxWorkletImpl._workletMap["05fe:2ec866b7:2"].bind(this);
           let { foo } = this["_c"];
           "main thread";
           foo();
@@ -1361,7 +1329,6 @@ function getCurrentDelta(event) {
 }
 `,
       {
-        filename: '',
         sourcemap: false,
         cssScope: false,
         snapshot: false,
@@ -1377,7 +1344,6 @@ function getCurrentDelta(event) {
 
         worklet: {
           target: 'LEPUS',
-          filename: '',
           runtimePkg: '@lynx-js/react',
         },
       },
@@ -1386,8 +1352,8 @@ function getCurrentDelta(event) {
     expect(code).toMatchInlineSnapshot(`
       "import { loadWorkletRuntime as __loadWorkletRuntime } from "@lynx-js/react";
       var loadWorkletRuntime = __loadWorkletRuntime;
-      loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "da39:b69521f0:1", function(event) {
-          lynxWorkletImpl._workletMap["da39:b69521f0:1"].bind(this);
+      loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "05fe:b69521f0:1", function(event) {
+          lynxWorkletImpl._workletMap["05fe:b69521f0:1"].bind(this);
           let { foo, a, b } = this["_c"];
           "main thread";
           if (foo(a)) foo(b);

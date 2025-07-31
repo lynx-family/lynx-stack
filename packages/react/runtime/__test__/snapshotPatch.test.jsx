@@ -20,10 +20,6 @@ import {
 
 const HOLE = null;
 
-const __SNAPSHOT__ = (snapshot) => {
-  return snapshot.type;
-};
-
 beforeEach(() => {
   backgroundSnapshotInstanceManager.clear();
   backgroundSnapshotInstanceManager.nextId = 0;
@@ -85,10 +81,10 @@ describe('createElement', () => {
     expect(patch).toMatchInlineSnapshot(`
       [
         0,
-        "__Card__:__snapshot_a94a8_test_1",
+        "__Card__:__snapshot_05fe4_test_1",
         1,
         0,
-        "__Card__:__snapshot_a94a8_test_2",
+        "__Card__:__snapshot_05fe4_test_2",
         2,
       ]
     `);
@@ -135,10 +131,10 @@ describe('insertBefore', () => {
     expect(patch).toMatchInlineSnapshot(`
       [
         0,
-        "__Card__:__snapshot_a94a8_test_1",
+        "__Card__:__snapshot_05fe4_test_1",
         1,
         0,
-        "__Card__:__snapshot_a94a8_test_2",
+        "__Card__:__snapshot_05fe4_test_2",
         2,
         1,
         1,
@@ -182,13 +178,13 @@ describe('insertBefore', () => {
     expect(patch).toMatchInlineSnapshot(`
       [
         0,
-        "__Card__:__snapshot_a94a8_test_1",
+        "__Card__:__snapshot_05fe4_test_1",
         1,
         0,
-        "__Card__:__snapshot_a94a8_test_2",
+        "__Card__:__snapshot_05fe4_test_2",
         2,
         0,
-        "__Card__:__snapshot_a94a8_test_3",
+        "__Card__:__snapshot_05fe4_test_3",
         3,
         1,
         1,
@@ -241,10 +237,10 @@ describe('insertBefore', () => {
     expect(patch).toMatchInlineSnapshot(`
       [
         0,
-        "__Card__:__snapshot_a94a8_test_1",
+        "__Card__:__snapshot_05fe4_test_1",
         1,
         0,
-        "__Card__:__snapshot_a94a8_test_2",
+        "__Card__:__snapshot_05fe4_test_2",
         2,
         1,
         1,
@@ -499,7 +495,7 @@ describe('setAttribute', () => {
     expect(patch).toMatchInlineSnapshot(`
       [
         0,
-        "__Card__:__snapshot_a94a8_test_4",
+        "__Card__:__snapshot_05fe4_test_4",
         1,
         3,
         1,
@@ -535,7 +531,7 @@ describe('setAttribute', () => {
     expect(patch).toMatchInlineSnapshot(`
       [
         0,
-        "__Card__:__snapshot_a94a8_test_4",
+        "__Card__:__snapshot_05fe4_test_4",
         1,
         4,
         1,
@@ -569,7 +565,7 @@ describe('setAttribute', () => {
     expect(patch).toMatchInlineSnapshot(`
       [
         0,
-        "__Card__:__snapshot_a94a8_test_4",
+        "__Card__:__snapshot_05fe4_test_4",
         1,
         4,
         1,
@@ -605,7 +601,7 @@ describe('setAttribute', () => {
     expect(patch).toMatchInlineSnapshot(`
       [
         0,
-        "__Card__:__snapshot_a94a8_test_4",
+        "__Card__:__snapshot_05fe4_test_4",
         1,
         4,
         100,
@@ -651,7 +647,7 @@ describe('setAttribute', () => {
     expect(patch).toMatchInlineSnapshot(`
       [
         0,
-        "__Card__:__snapshot_a94a8_test_4",
+        "__Card__:__snapshot_05fe4_test_4",
         1,
         3,
         3,

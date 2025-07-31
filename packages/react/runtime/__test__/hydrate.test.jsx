@@ -5,10 +5,6 @@ import { backgroundSnapshotInstanceManager, SnapshotInstance, snapshotInstanceMa
 
 const HOLE = null;
 
-const __SNAPSHOT__ = (snapshot) => {
-  return snapshot.type;
-};
-
 beforeEach(() => {
   backgroundSnapshotInstanceManager.clear();
   backgroundSnapshotInstanceManager.nextId = 0;
@@ -124,24 +120,24 @@ describe('dual-runtime hydrate', () => {
           0,
           "~id",
           0,
-          "__Card__:__snapshot_a94a8_test_3",
+          "__Card__:__snapshot_05fe4_test_3",
           3,
           0,
-          "__Card__:__snapshot_a94a8_test_4",
+          "__Card__:__snapshot_05fe4_test_4",
           7,
           1,
           3,
           7,
           undefined,
           0,
-          "__Card__:__snapshot_a94a8_test_4",
+          "__Card__:__snapshot_05fe4_test_4",
           8,
           1,
           3,
           8,
           undefined,
           0,
-          "__Card__:__snapshot_a94a8_test_2",
+          "__Card__:__snapshot_05fe4_test_2",
           9,
           4,
           9,
@@ -157,7 +153,7 @@ describe('dual-runtime hydrate', () => {
           3,
           -3,
           0,
-          "__Card__:__snapshot_a94a8_test_2",
+          "__Card__:__snapshot_05fe4_test_2",
           6,
           4,
           6,
@@ -251,14 +247,14 @@ describe('dual-runtime hydrate', () => {
     expect(hydrate({ 'id': -1, 'type': 'root' }, aa)).toMatchInlineSnapshot(`
       [
         0,
-        "__Card__:__snapshot_a94a8_test_2",
+        "__Card__:__snapshot_05fe4_test_2",
         2,
         1,
         -1,
         2,
         undefined,
         0,
-        "__Card__:__snapshot_a94a8_test_3",
+        "__Card__:__snapshot_05fe4_test_3",
         3,
         1,
         -1,
@@ -314,7 +310,7 @@ describe('dual-runtime hydrate - with slot (multi-children)', () => {
         -2,
         -5,
         0,
-        "__Card__:__snapshot_a94a8_test_8",
+        "__Card__:__snapshot_05fe4_test_8",
         6,
         1,
         -3,

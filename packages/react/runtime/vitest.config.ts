@@ -14,12 +14,13 @@ function transformReactLynxPlugin(): Plugin {
     enforce: 'pre',
     async transform(sourceText, sourcePath) {
       const { transformReactLynx } = require(
-        '@lynx-js/react-transform',
-      ) as typeof import('@lynx-js/react-transform');
+        '@lynx-js/react/transform',
+      ) as typeof import('@lynx-js/react/transform');
       const relativePath = path.basename(sourcePath);
 
       const isTS = /\.[mc]?ts$/.exec(relativePath);
-      const syntax = isTS ? 'typescript' : 'ecmascript';
+      const isTSX = /\.tsx$/.exec(relativePath);
+      const syntax = (isTS || isTSX) ? 'typescript' : 'ecmascript';
       const syntaxConfig = {
         syntax,
         decorators: true,
@@ -29,17 +30,13 @@ function transformReactLynxPlugin(): Plugin {
 
       const result = await transformReactLynx(sourceText, {
         mode: 'test',
-        filename: relativePath,
         sourcemap: true,
         snapshot: {
-          preserveJsx: true,
           runtimePkg,
           jsxImportSource: '@lynx-js/react',
-          filename: 'test',
           target: 'MIXED',
         },
         syntaxConfig,
-        // snapshot: true,
         directiveDCE: false,
         defineDCE: false,
         shake: false,

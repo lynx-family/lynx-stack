@@ -36,8 +36,6 @@ pub struct WorkletVisitorConfig {
   /// This configuration will take effect together with the default lepus global identifier list.
   pub custom_global_ident_names: Option<Vec<String>>,
   /// @internal
-  pub filename: String,
-  /// @internal
   pub target: TransformTarget,
   pub runtime_pkg: String,
 }
@@ -45,7 +43,6 @@ pub struct WorkletVisitorConfig {
 impl Default for WorkletVisitorConfig {
   fn default() -> Self {
     WorkletVisitorConfig {
-      filename: "index.js".into(),
       target: TransformTarget::LEPUS,
       custom_global_ident_names: None,
       runtime_pkg: "NoDiff".into(),
@@ -56,6 +53,7 @@ impl Default for WorkletVisitorConfig {
 pub struct WorkletVisitor {
   mode: TransformMode,
   content_hash: String,
+  filename: String,
   cfg: WorkletVisitorConfig,
   stmts_to_insert_at_top_level: Vec<Stmt>,
   named_imports: HashSet<String>,
@@ -64,7 +62,11 @@ pub struct WorkletVisitor {
 
 impl Default for WorkletVisitor {
   fn default() -> Self {
-    WorkletVisitor::new(TransformMode::Production, WorkletVisitorConfig::default())
+    WorkletVisitor::new(
+      TransformMode::Production,
+      "test.js".into(),
+      WorkletVisitorConfig::default(),
+    )
   }
 }
 
@@ -90,7 +92,7 @@ impl VisitMut for WorkletVisitor {
     });
     n.visit_mut_with(&mut collector);
 
-    let hash = self.hasher.gen(&self.cfg.filename, &self.content_hash);
+    let hash = self.hasher.gen(&self.filename, &self.content_hash);
     let (worklet_object_expr, register_worklet_stmt) = StmtGen::transform_worklet(
       self.mode,
       worklet_type.unwrap(),
@@ -149,7 +151,7 @@ impl VisitMut for WorkletVisitor {
     });
     n.visit_mut_with(&mut collector);
 
-    let hash = self.hasher.gen(&self.cfg.filename, &self.content_hash);
+    let hash = self.hasher.gen(&self.filename, &self.content_hash);
     let (worklet_object_expr, register_worklet_stmt) = StmtGen::transform_worklet(
       self.mode,
       worklet_type.unwrap(),
@@ -195,7 +197,7 @@ impl VisitMut for WorkletVisitor {
         });
         n.visit_mut_with(&mut collector);
 
-        let hash = self.hasher.gen(&self.cfg.filename, &self.content_hash);
+        let hash = self.hasher.gen(&self.filename, &self.content_hash);
         let (worklet_object_expr, register_worklet_stmt) = StmtGen::transform_worklet(
           self.mode,
           worklet_type.unwrap(),
@@ -249,7 +251,7 @@ impl VisitMut for WorkletVisitor {
         });
         n.visit_mut_with(&mut collector);
 
-        let hash = self.hasher.gen(&self.cfg.filename, &self.content_hash);
+        let hash = self.hasher.gen(&self.filename, &self.content_hash);
         let (worklet_object_expr, register_worklet_stmt) = StmtGen::transform_worklet(
           self.mode,
           worklet_type.unwrap(),
@@ -320,7 +322,7 @@ impl VisitMut for WorkletVisitor {
       .unwrap()
       .visit_mut_with(&mut collector);
 
-    let hash = self.hasher.gen(&self.cfg.filename, &self.content_hash);
+    let hash = self.hasher.gen(&self.filename, &self.content_hash);
     let (worklet_object_expr, register_worklet_stmt) = StmtGen::transform_worklet(
       self.mode,
       worklet_type.unwrap(),
@@ -444,10 +446,16 @@ impl WorkletVisitor {
     self
   }
 
-  pub fn new(mode: TransformMode, cfg: WorkletVisitorConfig) -> Self {
+  pub fn with_filename(mut self, filename: String) -> Self {
+    self.filename = filename;
+    self
+  }
+
+  pub fn new(mode: TransformMode, filename: String, cfg: WorkletVisitorConfig) -> Self {
     WorkletVisitor {
       mode,
       content_hash: "test".into(),
+      filename,
       cfg,
       stmts_to_insert_at_top_level: vec![],
       hasher: WorkletHash::new(),
@@ -494,8 +502,8 @@ mod tests {
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
+        "index.js".into(),
         WorkletVisitorConfig {
-          filename: "index.js".into(),
           target: TransformTarget::LEPUS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
@@ -523,8 +531,8 @@ function worklet(event: Event) {
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
+        "index.js".into(),
         WorkletVisitorConfig {
-          filename: "index.js".into(),
           target: TransformTarget::LEPUS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
@@ -552,8 +560,8 @@ function worklet(event: Event) {
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
+        "index.js".into(),
         WorkletVisitorConfig {
-          filename: "index.js".into(),
           target: TransformTarget::MIXED,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
@@ -581,8 +589,8 @@ function worklet(event: Event) {
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
+        "index.js".into(),
         WorkletVisitorConfig {
-          filename: "index.js".into(),
           target: TransformTarget::JS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
@@ -610,8 +618,8 @@ function worklet(event: Event) {
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
+        "index.js".into(),
         WorkletVisitorConfig {
-          filename: "index.js".into(),
           target: TransformTarget::LEPUS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
@@ -649,8 +657,8 @@ function X(event) {
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
+        "index.js".into(),
         WorkletVisitorConfig {
-          filename: "index.js".into(),
           target: TransformTarget::JS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
@@ -688,8 +696,8 @@ function X(event) {
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
+        "index.js".into(),
         WorkletVisitorConfig {
-          filename: "index.js".into(),
           target: TransformTarget::LEPUS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
@@ -719,8 +727,8 @@ function Y(event) {
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
+        "index.js".into(),
         WorkletVisitorConfig {
-          filename: "index.js".into(),
           target: TransformTarget::LEPUS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
@@ -752,8 +760,8 @@ function App() {
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
+        "index.js".into(),
         WorkletVisitorConfig {
-          filename: "index.js".into(),
           target: TransformTarget::LEPUS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
@@ -779,8 +787,8 @@ let X = (event) => {
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
+        "index.js".into(),
         WorkletVisitorConfig {
-          filename: "index.js".into(),
           target: TransformTarget::LEPUS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
@@ -806,8 +814,8 @@ let X = function (event) {
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
+        "index.js".into(),
         WorkletVisitorConfig {
-          filename: "index.js".into(),
           target: TransformTarget::LEPUS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
@@ -837,8 +845,8 @@ class App extends Component {
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
+        "index.js".into(),
         WorkletVisitorConfig {
-          filename: "index.js".into(),
           target: TransformTarget::JS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
@@ -868,8 +876,8 @@ class App extends Component {
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
+        "index.js".into(),
         WorkletVisitorConfig {
-          filename: "index.js".into(),
           target: TransformTarget::LEPUS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
@@ -898,8 +906,8 @@ class App extends Component {
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
+        "index.js".into(),
         WorkletVisitorConfig {
-          filename: "index.js".into(),
           target: TransformTarget::JS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
@@ -928,8 +936,8 @@ class App extends Component {
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
+        "index.js".into(),
         WorkletVisitorConfig {
-          filename: "index.js".into(),
           target: TransformTarget::LEPUS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
@@ -959,8 +967,8 @@ class App extends Component {
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
+        "index.js".into(),
         WorkletVisitorConfig {
-          filename: "index.js".into(),
           target: TransformTarget::JS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
@@ -990,8 +998,8 @@ class App extends Component {
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
+        "index.js".into(),
         WorkletVisitorConfig {
-          filename: "index.js".into(),
           target: TransformTarget::LEPUS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
@@ -1020,8 +1028,8 @@ class App extends Component {
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
+        "index.js".into(),
         WorkletVisitorConfig {
-          filename: "index.js".into(),
           target: TransformTarget::JS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
@@ -1050,8 +1058,8 @@ class App extends Component {
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
+        "index.js".into(),
         WorkletVisitorConfig {
-          filename: "index.js".into(),
           target: TransformTarget::LEPUS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
@@ -1082,8 +1090,8 @@ function X() {
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
+        "index.js".into(),
         WorkletVisitorConfig {
-          filename: "index.js".into(),
           target: TransformTarget::LEPUS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
@@ -1119,8 +1127,8 @@ function A() {
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
+        "index.js".into(),
         WorkletVisitorConfig {
-          filename: "index.js".into(),
           target: TransformTarget::JS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
@@ -1155,8 +1163,8 @@ class Bpp extends Component {
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
+        "index.js".into(),
         WorkletVisitorConfig {
-          filename: "index.js".into(),
           target: TransformTarget::JS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
@@ -1185,8 +1193,8 @@ class App extends Component {
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
+        "index.js".into(),
         WorkletVisitorConfig {
-          filename: "index.js".into(),
           target: TransformTarget::LEPUS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
@@ -1213,8 +1221,8 @@ class App extends Component {
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
+        "index.js".into(),
         WorkletVisitorConfig {
-          filename: "index.js".into(),
           target: TransformTarget::LEPUS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
@@ -1243,8 +1251,8 @@ class App extends Component {
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
+        "index.js".into(),
         WorkletVisitorConfig {
-          filename: "index.js".into(),
           target: TransformTarget::JS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
@@ -1273,8 +1281,8 @@ class App extends Component {
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
+        "index.js".into(),
         WorkletVisitorConfig {
-          filename: "index.js".into(),
           target: TransformTarget::LEPUS,
           custom_global_ident_names: Some(vec!["myCustomGlobal".to_string()]),
           runtime_pkg: "@lynx-js/react".into(),
@@ -1304,8 +1312,8 @@ class App extends Component {
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
+        "index.js".into(),
         WorkletVisitorConfig {
-          filename: "index.ts".into(),
           target: TransformTarget::LEPUS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
@@ -1336,8 +1344,8 @@ class App extends Component {
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
+        "index.js".into(),
         WorkletVisitorConfig {
-          filename: "index.ts".into(),
           target: TransformTarget::JS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
@@ -1365,8 +1373,8 @@ class App extends Component {
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
+        "index.js".into(),
         WorkletVisitorConfig {
-          filename: "index.ts".into(),
           target: TransformTarget::LEPUS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
@@ -1394,8 +1402,8 @@ class App extends Component {
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
+        "index.js".into(),
         WorkletVisitorConfig {
-          filename: "index.ts".into(),
           target: TransformTarget::JS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
@@ -1434,8 +1442,8 @@ class App extends Component {
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
+        "index.js".into(),
         WorkletVisitorConfig {
-          filename: "index.ts".into(),
           target: TransformTarget::LEPUS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
@@ -1474,8 +1482,8 @@ class App extends Component {
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
+        "index.js".into(),
         WorkletVisitorConfig {
-          filename: "index.ts".into(),
           target: TransformTarget::LEPUS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
@@ -1503,8 +1511,8 @@ class App extends Component {
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
+        "index.js".into(),
         WorkletVisitorConfig {
-          filename: "index.ts".into(),
           target: TransformTarget::LEPUS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
@@ -1531,8 +1539,8 @@ class App extends Component {
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
+        "index.js".into(),
         WorkletVisitorConfig {
-          filename: "index.ts".into(),
           target: TransformTarget::JS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
@@ -1559,8 +1567,8 @@ class App extends Component {
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
+        "index.js".into(),
         WorkletVisitorConfig {
-          filename: "index.ts".into(),
           target: TransformTarget::JS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
@@ -1611,8 +1619,8 @@ class App extends Component {
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
+        "index.js".into(),
         WorkletVisitorConfig {
-          filename: "index.ts".into(),
           target: TransformTarget::JS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
@@ -1638,8 +1646,8 @@ class App extends Component {
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
+        "index.ts".into(),
         WorkletVisitorConfig {
-          filename: "index.ts".into(),
           target: TransformTarget::LEPUS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
@@ -1665,8 +1673,8 @@ class App extends Component {
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
+        "index.js".into(),
         WorkletVisitorConfig {
-          filename: "index.ts".into(),
           target: TransformTarget::JS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
@@ -1703,8 +1711,8 @@ class App extends Component {
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
+        "index.js".into(),
         WorkletVisitorConfig {
-          filename: "index.ts".into(),
           target: TransformTarget::JS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
@@ -1744,8 +1752,8 @@ class App extends Component {
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
+        "index.ts".into(),
         WorkletVisitorConfig {
-          filename: "index.ts".into(),
           target: TransformTarget::LEPUS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
@@ -1785,8 +1793,8 @@ class App extends Component {
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
+        "index.js".into(),
         WorkletVisitorConfig {
-          filename: "index.ts".into(),
           target: TransformTarget::JS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
@@ -1828,8 +1836,8 @@ class App extends Component {
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
+        "index.ts".into(),
         WorkletVisitorConfig {
-          filename: "index.ts".into(),
           target: TransformTarget::LEPUS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
@@ -1871,8 +1879,8 @@ class App extends Component {
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
+        "index.js".into(),
         WorkletVisitorConfig {
-          filename: "index.ts".into(),
           target: TransformTarget::JS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
@@ -1977,8 +1985,8 @@ class App extends Component {
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
+        "index.ts".into(),
         WorkletVisitorConfig {
-          filename: "index.ts".into(),
           target: TransformTarget::LEPUS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
@@ -2083,8 +2091,8 @@ class App extends Component {
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
+        "index.js".into(),
         WorkletVisitorConfig {
-          filename: "index.ts".into(),
           target: TransformTarget::JS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
@@ -2113,8 +2121,8 @@ class App extends Component {
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
+        "index.ts".into(),
         WorkletVisitorConfig {
-          filename: "index.ts".into(),
           target: TransformTarget::LEPUS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
@@ -2142,8 +2150,8 @@ class App extends Component {
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
+        "index.ts".into(),
         WorkletVisitorConfig {
-          filename: "index.ts".into(),
           target: TransformTarget::LEPUS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
@@ -2171,8 +2179,8 @@ class App extends Component {
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(WorkletVisitor::new(
         TransformMode::Test,
+        "index.js".into(),
         WorkletVisitorConfig {
-          filename: "index.ts".into(),
           target: TransformTarget::JS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),

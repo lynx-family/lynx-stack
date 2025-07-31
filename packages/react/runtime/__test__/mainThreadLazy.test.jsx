@@ -24,7 +24,7 @@ describe('mainThreadLazy', () => {
     expect(renderToString(<Lazy />)).toMatchInlineSnapshot(`
       [
         0,
-        <__Card__:__snapshot_a94a8_test_1 />,
+        <__Card__:__snapshot_05fe4_test_1 />,
         1,
       ]
     `);

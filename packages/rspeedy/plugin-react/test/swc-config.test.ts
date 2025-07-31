@@ -58,7 +58,6 @@ describe('SWC configuration', () => {
                   "<WORKSPACE>/packages/react/transform/swc-plugin-reactlynx/swc_plugin_reactlynx.wasm",
                   {
                     "cssScope": {
-                      "filename": "test.js",
                       "mode": "none",
                     },
                     "defineDCE": {
@@ -78,19 +77,15 @@ describe('SWC configuration', () => {
                       "layer": "react:background",
                       "runtimePkg": "@lynx-js/react/internal",
                     },
-                    "filename": "test.js",
                     "mode": "development",
                     "shake": false,
                     "snapshot": {
-                      "filename": "test.js",
                       "isDynamicComponent": false,
                       "jsxImportSource": "@lynx-js/react",
-                      "preserveJsx": false,
                       "runtimePkg": "@lynx-js/react/internal",
                       "target": "MIXED",
                     },
                     "worklet": {
-                      "filename": "test.js",
                       "runtimePkg": "@lynx-js/react/internal",
                       "target": "JS",
                     },

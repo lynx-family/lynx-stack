@@ -6,7 +6,12 @@
       "dependsOn": [
         "@lynx-js/swc-plugin-reactlynx#build",
         "@lynx-js/swc-plugin-reactlynx-compat#build"
-      ]
+      ],
+      "inputs": [
+        "main.js",
+        "index.d.ts"
+      ],
+      "outputs": ["dist/**"]
     }
   }
 }

@@ -1,4 +1,4 @@
-const __snapshot_da39a_test_1 = require('@lynx-js/react/internal').createSnapshot("__snapshot_da39a_test_1", function() {
+const __snapshot_2d408_test_1 = require('@lynx-js/react/internal').createSnapshot("__snapshot_2d408_test_1", function() {
     const pageId = require('@lynx-js/react/internal').__pageId;
     const el = __CreateView(pageId);
     return [
@@ -9,7 +9,7 @@ const __snapshot_da39a_test_1 = require('@lynx-js/react/internal').createSnapsho
 ], require('@lynx-js/react/internal').__DynamicPartChildren_0, undefined, globDynamicComponentEntry, [
     0
 ]);
-<__snapshot_da39a_test_1 values={[
+<__snapshot_2d408_test_1 values={[
     {
         ...{
             style: {
@@ -19,4 +19,4 @@ const __snapshot_da39a_test_1 = require('@lynx-js/react/internal').createSnapsho
         "main-thread:bindtap": xxx,
         __spread: true
     }
-]}>{[]}</__snapshot_da39a_test_1>;
+]}>{[]}</__snapshot_2d408_test_1>;

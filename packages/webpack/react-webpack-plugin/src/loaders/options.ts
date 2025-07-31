@@ -80,20 +80,15 @@ function getCommonOptions(
     defineDCE,
   } = options;
 
-  const filename = 'test.js';
-
   const commonOptions = {
     // We need to set `mode: 'development'` for HMR to work
     mode: isDev ? 'development' : 'production',
     // Ensure that swc get a full absolute path so that it will generate
     // absolute path in the `source` param of `jsxDev(type, props, key, isStatic, source, self)`
-    filename,
     cssScope: {
       mode: getCSSScopeMode(enableRemoveCSSScope),
-      filename,
     },
     snapshot: {
-      preserveJsx: false,
       // In standalone lazy bundle mode, we do not support HMR now.
       target: isDev && !isDynamicComponent
         // Using `MIX` when HMR is enabled.
@@ -101,11 +96,9 @@ function getCommonOptions(
         ? 'MIXED'
         : 'JS',
       runtimePkg: RUNTIME_PKG,
-      filename,
       isDynamicComponent: isDynamicComponent ?? false,
     },
     worklet: {
-      filename: filename,
       runtimePkg: RUNTIME_PKG,
       target: 'MIXED',
     },

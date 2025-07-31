@@ -8,14 +8,11 @@ import { transformReactLynx } from '../../main.js';
 /** @type {import('../../index.d.ts').TransformNodiffOptions} */
 const defaultOptions = {
   mode: 'test',
-  filename: 'test.js',
   sourcemap: false,
   snapshot: {
-    preserveJsx: false,
     runtimePkg: '@lynx-js/react',
     jsxImportSource: '@lynx-js/react',
     target: 'MIXED',
-    filename: 'test.js',
   },
   directiveDCE: false,
   defineDCE: false,
@@ -77,7 +74,6 @@ bar, styles, styles0, styles1
           ...defaultOptions,
           cssScope: {
             mode,
-            filename: defaultOptions.filename,
           },
         },
       );
@@ -103,7 +99,6 @@ bar, styles, styles0, styles1
           ...defaultOptions,
           cssScope: {
             mode,
-            filename: defaultOptions.filename,
           },
         },
       );
@@ -133,7 +128,6 @@ Foo, App
           ...defaultOptions,
           cssScope: {
             mode,
-            filename: defaultOptions.filename,
           },
         },
       );
@@ -167,7 +161,6 @@ Foo, App
           },
           cssScope: {
             mode,
-            filename: defaultOptions.filename,
           },
         },
       );
@@ -194,7 +187,6 @@ bar, App
           ...defaultOptions,
           cssScope: {
             mode,
-            filename: defaultOptions.filename,
           },
         },
       );

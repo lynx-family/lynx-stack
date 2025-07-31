@@ -1,8 +1,6 @@
 export interface CssScopeVisitorConfig {
   /** @public */
   mode: 'all' | 'none' | 'modules';
-  /** @public */
-  filename: string;
 }
 /**
  * {@inheritdoc PluginReactLynxOptions.defineDCE}
@@ -193,13 +191,9 @@ export interface ShakeVisitorConfig {
 /** @internal */
 export interface JsxTransformerConfig {
   /** @internal */
-  preserveJsx: boolean;
-  /** @internal */
   runtimePkg: string;
   /** @internal */
   jsxImportSource?: string;
-  /** @internal */
-  filename: string;
   /** @internal */
   target: 'LEPUS' | 'JS' | 'MIXED';
   /** @internal */
@@ -216,8 +210,6 @@ export interface WorkletVisitorConfig {
    */
   customGlobalIdentNames?: Array<string>;
   /** @internal */
-  filename: string;
-  /** @internal */
   target: 'LEPUS' | 'JS' | 'MIXED';
   runtimePkg: string;
 }
@@ -228,7 +220,6 @@ export interface SwcPluginReactLynxOptions {
    * This is used internally to make sure the test output is consistent.
    */
   mode?: 'production' | 'development' | 'test';
-  filename: string;
   cssScope: boolean | CssScopeVisitorConfig;
   snapshot?: boolean | JsxTransformerConfig;
   shake: boolean | ShakeVisitorConfig;
