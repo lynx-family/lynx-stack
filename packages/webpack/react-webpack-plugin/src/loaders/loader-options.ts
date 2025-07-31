@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import type { LoaderContext } from '@rspack/core';
 
-import type { TransformReactLynxOptions } from '@lynx-js/react-transform';
+import type { TransformReactLynxOptions } from '@lynx-js/react/transform';
 import type {
   DefineDceVisitorConfig,
   JsxTransformerConfig,
@@ -137,8 +137,6 @@ function getCommonOptions(
     sourceMapColumns: this.sourceMap && !this.hot,
     inlineSourcesContent: inlineSourcesContent ?? !this.hot,
     snapshot: {
-      // TODO: config
-      preserveJsx: false,
       // In standalone lazy bundle mode, we do not support HMR now.
       target: this.hot && !isDynamicComponent
         // Using `MIX` when HMR is enabled.

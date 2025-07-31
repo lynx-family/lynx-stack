@@ -300,7 +300,7 @@ Component, View
       expect(result.errors).toMatchInlineSnapshot(`[]`);
       expect(result.code).toMatchInlineSnapshot(`
         "/*#__PURE__*/ import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
-        import * as ReactLynx from "@lynx-js/react";
+        import * as ReactLynx from "@lynx-js/react-runtime";
         import * as ReactLynx1 from "@lynx-js/react/internal";
         const __snapshot_05fe4_4da58493_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_05fe4_4da58493_1", function() {
             const pageId = ReactLynx.__pageId;

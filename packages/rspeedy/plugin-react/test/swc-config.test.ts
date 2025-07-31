@@ -82,7 +82,6 @@ describe('SWC configuration', () => {
                     "snapshot": {
                       "isDynamicComponent": false,
                       "jsxImportSource": "@lynx-js/react",
-                      "preserveJsx": false,
                       "runtimePkg": "@lynx-js/react/internal",
                       "target": "MIXED",
                     },
