@@ -12,12 +12,12 @@
         "RSPEEDY_BUNDLE_ANALYSIS"
       ],
       "inputs": [
-        "register",
-        "src",
+        "register/**",
+        "src/**",
         "rslib.config.ts"
       ],
       "outputs": [
-        "dist"
+        "dist/**"
       ]
     }
   }

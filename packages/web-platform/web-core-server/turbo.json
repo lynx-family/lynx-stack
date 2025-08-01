@@ -8,10 +8,10 @@
         "^build"
       ],
       "inputs": [
-        "src"
+        "src/**"
       ],
       "outputs": [
-        "dist"
+        "dist/**"
       ]
     }
   }
