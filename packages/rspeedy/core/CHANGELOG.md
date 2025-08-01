@@ -1,5 +1,11 @@
 # @lynx-js/rspeedy
 
+## 0.10.4
+
+### Patch Changes
+
+- Bump Rsbuild v1.4.12 with Rspack v1.4.11. ([#1326](https://github.com/lynx-family/lynx-stack/pull/1326))
+
 ## 0.10.3
 
 ### Patch Changes

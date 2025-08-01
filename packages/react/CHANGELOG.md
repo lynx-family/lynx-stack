@@ -1,5 +1,13 @@
 # @lynx-js/react
 
+## 0.112.1
+
+### Patch Changes
+
+- Fix crash caused by not removing event listeners during destroy. ([#1379](https://github.com/lynx-family/lynx-stack/pull/1379))
+
+- Fix missing "type" in "update-list-info" in hydrate ([#1392](https://github.com/lynx-family/lynx-stack/pull/1392))
+
 ## 0.112.0
 
 ### Minor Changes

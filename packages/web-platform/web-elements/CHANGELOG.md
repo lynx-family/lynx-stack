@@ -1,5 +1,14 @@
 # @lynx-js/web-elements
 
+## 0.8.3
+
+### Patch Changes
+
+- feat: support color style for x-textarea ([#1382](https://github.com/lynx-family/lynx-stack/pull/1382))
+
+- Updated dependencies []:
+  - @lynx-js/web-elements-template@0.8.3
+
 ## 0.8.2
 
 ### Patch Changes
