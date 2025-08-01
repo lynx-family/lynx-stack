@@ -102,4 +102,4 @@ createLynxPreset({
 
 #### Available Plugins
 
-- [uiVariants](./docs/plugins/lynx-ui/uiVariants.md) — Class-based variants for expressing component state or structure using `ui-*` prefixes (e.g. `.ui-open:`, `.ui-side-left:`).
+- [uiVariants](https://github.com/lynx-family/lynx-stack/tree/main/packages/third-party/tailwind-preset/docs/plugins/lynx-ui/uiVariants.md) — Class-based variants for expressing component state or structure using `ui-*` prefixes (e.g. `.ui-open:`, `.ui-side-left:`).
