@@ -5,10 +5,10 @@ import { assertType, describe, expectTypeOf, test } from 'vitest';
 
 import {
   Component,
-  forwardRef,
   Fragment,
-  memo,
   Suspense,
+  forwardRef,
+  memo,
   useMainThreadRef,
   useRef,
 } from '@lynx-js/react';

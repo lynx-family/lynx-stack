@@ -12,7 +12,7 @@ test('App', async () => {
 
   render(
     <App
-      onMounted={() => {
+      onRender={() => {
         cb(`__MAIN_THREAD__: ${__MAIN_THREAD__}`)
       }}
     />,
