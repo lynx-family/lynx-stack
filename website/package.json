@@ -38,8 +38,8 @@
     "@rspress/plugin-client-redirects": "2.0.0-beta.22",
     "@rspress/shared": "2.0.0-beta.22",
     "@shikijs/transformers": "3.8.1",
-    "@types/react": "npm:@types/react@^19.1.8",
-    "@types/react-dom": "^19.1.6",
+    "@types/react": "npm:@types/react@^19.1.9",
+    "@types/react-dom": "^19.1.7",
     "change-case": "^5.4.4",
     "rspress": "2.0.0-beta.21",
     "tailwindcss": "^3.4.17"
