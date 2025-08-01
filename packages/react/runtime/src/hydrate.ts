@@ -300,7 +300,7 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
           beforeChildNodes,
           afterChildNodes,
           (a, b) => a.type === b.type,
-          (a, b, oldIndex, newIndex) => {
+          (a, b, _oldIndex, newIndex) => {
             if (
               JSON.stringify(a.__listItemPlatformInfo)
                 !== JSON.stringify(b.__listItemPlatformInfo)
@@ -315,16 +315,9 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
               });
             }
 
-            // Mark list-item which is rendered (has `__elements`) as DELETE
-            // so list platform will call `enqueueComponent` on it
-            // and will call `componentAtIndex` on the inserted one
-            // In this way:
-            //  1. we make sure `<list/>` for hydrate is like a leaf node
-            //  2. we avoid hydrate so modifying recycleMap can be avoid
-            //  3. the delete list-item is recycled for later use, so no waste
             if (a.__elements) {
-              removals.push(oldIndex);
-              insertions.push(newIndex);
+              // transfer a's elements to b
+              hydrate(a, b, options);
             }
           },
         );
