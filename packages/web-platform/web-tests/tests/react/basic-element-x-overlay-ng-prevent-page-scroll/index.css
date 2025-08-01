@@ -1,0 +1,91 @@
+.test-card {
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+.h1 {
+  font-size: 18px;
+  margin: 15px 0;
+  color: #333;
+}
+
+.box {
+  padding: 15px;
+  background-color: #f5f5f5;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.desc {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 15px;
+}
+
+.button {
+  height: 40px;
+  background-color: #007aff;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.button-text {
+  color: white;
+  font-size: 14px;
+}
+
+.log-container {
+  background-color: #f5f5f5;
+  padding: 10px;
+  border-radius: 4px;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.log-item {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 5px;
+}
+
+.overlay-container {
+  background-color: white;
+  border-radius: 10px;
+  width: 80%;
+  margin: 100px auto;
+  overflow: hidden;
+}
+
+.overlay-header {
+  height: 44px;
+  background-color: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid #eee;
+}
+
+.overlay-title {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.overlay-content {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.dialog-overlay {
+  background-color: rgba(0, 0, 0, 0.5);
+}
