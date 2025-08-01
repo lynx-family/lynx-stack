@@ -1,11 +1,11 @@
 use crate::*;
-pub const EOF_CATEGORY: u16 = 0x80;
-pub const WHITE_SPACE_CATEGORY: u16 = 0x82;
-pub const DIGIT_CATEGORY: u16 = 0x83;
-pub const NAME_START_CATEGORY: u16 = 0x84;
-pub const NON_PRINTABLE_CATEGORY: u16 = 0x85;
+pub const EOF_CATEGORY: u32 = 0x80;
+pub const WHITE_SPACE_CATEGORY: u32 = 0x82;
+pub const DIGIT_CATEGORY: u32 = 0x83;
+pub const NAME_START_CATEGORY: u32 = 0x84;
+pub const NON_PRINTABLE_CATEGORY: u32 = 0x85;
 
-const fn category_map_value_const(code: u16) -> u16 {
+const fn category_map_value_const(code: u32) -> u32 {
   if code == 0 {
     EOF_CATEGORY
   } else if is_white_space!(code) {
@@ -21,17 +21,17 @@ const fn category_map_value_const(code: u16) -> u16 {
   }
 }
 
-const fn initialize_category_array() -> [u16; 0x80] {
-  let mut arr = [0u16; 0x80];
-  let mut i = 0;
+const fn initialize_category_array() -> [u32; 0x80] {
+  let mut arr = [0u32; 0x80];
+  let mut i = 0u32;
   while i < 0x80 {
-    arr[i] = category_map_value_const(i as u16);
+    arr[i as usize] = category_map_value_const(i);
     i += 1;
   }
   arr
 }
 
-pub const CATEGORY: [u16; 0x80] = initialize_category_array();
+pub const CATEGORY: [u32; 0x80] = initialize_category_array();
 // Character category constants
 
 // Public character check macros (mirroring C macros)
@@ -40,7 +40,7 @@ pub const CATEGORY: [u16; 0x80] = initialize_category_array();
 #[macro_export]
 macro_rules! is_digit {
   ($code:expr) => {
-    ($code >= 0x0030_u16) && ($code <= 0x0039_u16)
+    ($code >= 0x0030) && ($code <= 0x0039)
   };
 }
 
@@ -119,7 +119,7 @@ macro_rules! is_non_printable {
 #[macro_export]
 macro_rules! is_newline {
   ($code:expr) => {
-    ($code == 0x000A_u16) || ($code == 0x000D_u16) || ($code == 0x000C_u16)
+    ($code == 0x000A) || ($code == 0x000D) || ($code == 0x000C)
   };
 }
 
@@ -127,7 +127,7 @@ macro_rules! is_newline {
 #[macro_export]
 macro_rules! is_white_space {
   ($code:expr) => {
-    (is_newline!($code) || $code == 0x0009_u16 || $code == 0x0020_u16)
+    (is_newline!($code) || $code == 0x0009 || $code == 0x0020)
   };
 }
 
@@ -146,9 +146,9 @@ macro_rules! is_valid_escape {
 macro_rules! is_bom {
   ($code:expr) => {
     if $code == 0xFEFF || $code == 0xFFFE {
-      1usize
+      1
     } else {
-      0usize
+      0
     }
   };
 }
@@ -214,10 +214,9 @@ macro_rules! char_code_category {
 macro_rules! cmp_char {
   ($test_str:expr, $test_str_length:expr, $offset:expr, $reference_code:expr) => {{
     if ($offset < $test_str_length) {
-      let code = $test_str[$offset];
+      let code = $test_str.char_code_at($offset) as u32;
       // code.toLowerCase() for A..Z
-      if code == $reference_code || (is_uppercase_letter!(code) && ((code | 32) == $reference_code))
-      {
+      if code == $reference_code || (is_uppercase_letter!(code) && (code == $reference_code)) {
         1usize //true
       } else {
         0usize //false
@@ -232,7 +231,7 @@ macro_rules! cmp_char {
 macro_rules! get_char_code {
   ($source:expr, $source_length:expr, $offset:expr) => {
     if $offset < $source_length {
-      $source[$offset]
+      $source.char_code_at($offset) as u32
     } else {
       0 // EOF
     }
