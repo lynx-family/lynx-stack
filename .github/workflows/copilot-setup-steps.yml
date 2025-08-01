@@ -57,3 +57,7 @@ jobs:
           pnpm turbo build --summarize
         env:
           NODE_OPTIONS: --max-old-space-size=32768
+      - name: Test essential runtime dependencies
+        run: |
+          pnpm dprint fmt
+          pnpm changeset --help
