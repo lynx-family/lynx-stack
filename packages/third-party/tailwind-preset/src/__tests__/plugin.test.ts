@@ -6,6 +6,13 @@ import { describe, expect, it, vi } from 'vitest';
 import { runPlugin } from './utils/run-plugin.js';
 import * as lynxPlugins from '../plugins/lynx/index.js';
 
+it('resolves plugin object with handler', () => {
+  const handler = vi.fn();
+  const plugin = { handler };
+  runPlugin(plugin);
+  expect(handler).toHaveBeenCalledWith(expect.any(Object));
+});
+
 describe('Lynx plugin coverage sanity check', () => {
   for (const [name, plugin] of Object.entries(lynxPlugins)) {
     it(`${name} registers utilities`, () => {

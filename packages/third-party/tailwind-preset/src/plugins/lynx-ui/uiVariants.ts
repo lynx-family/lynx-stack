@@ -102,10 +102,9 @@ const uiVariants: PluginWithOptions<UIVariantsOptions> = createPlugin
 
         matchVariant(
           prefix,
-          (value: unknown, { modifier }: { modifier?: string | null } = {}) => {
-            if (typeof value !== 'string') return '';
+          (value: string, { modifier }: { modifier?: string | null } = {}) => {
             const mapped = valueMap[value];
-            if (typeof mapped !== 'string') return '';
+            if (!mapped || typeof mapped !== 'string') return '';
             const selector = `&.${prefix}-${mapped}`;
             return (modifier && typeof modifier === 'string')
               ? `${selector}\\/${modifier}`
