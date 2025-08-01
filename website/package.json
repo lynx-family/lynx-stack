@@ -15,8 +15,8 @@
   },
   "dependencies": {
     "@rstack-dev/doc-ui": "1.10.8",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
   },
   "devDependencies": {
     "@lynx-js/chunk-loading-webpack-plugin": "workspace:*",
