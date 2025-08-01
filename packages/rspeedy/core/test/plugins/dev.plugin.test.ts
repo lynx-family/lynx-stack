@@ -341,6 +341,23 @@ describe('Plugins - Dev', () => {
     expect(config.output?.publicPath).toBe('/')
   })
 
+  test('assetPrefix with mode production', async () => {
+    const rsbuild = await createStubRspeedy({
+      mode: 'production',
+    })
+
+    // dev.plugin.js will not be applied by default in production mode
+    rsbuild.addPlugins([
+      await import('../../src/plugins/dev.plugin.js').then(
+        ({ pluginDev }) => pluginDev(),
+      ),
+    ])
+
+    const config = await rsbuild.unwrapConfig()
+
+    expect(config.output?.publicPath).not.toBe('/')
+  })
+
   // The result of this test is not correct, since Rsbuild is using `context.devServer?.port || DEFAULT_PORT`
   // See: https://github.com/web-infra-dev/rsbuild/blob/4494b4bbf77f6e45d7d38fbaaa188a941227505d/packages/core/src/plugins/output.ts#L29
   // TODO: Fix this test after https://github.com/web-infra-dev/rsbuild/pull/4578 landed
