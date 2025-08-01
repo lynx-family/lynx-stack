@@ -7,10 +7,10 @@
         "build:wasm-bindgen"
       ],
       "inputs": [
-        "src"
+        "src/**"
       ],
       "outputs": [
-        "dist"
+        "dist/**"
       ]
     },
     "build:wasm-bindgen": {
