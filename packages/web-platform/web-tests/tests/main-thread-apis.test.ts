@@ -19,7 +19,7 @@ test.describe('main thread api tests', () => {
     await page.goto(`/main-thread-test.html`, {
       waitUntil: 'domcontentloaded',
     });
-    await wait(100);
+    await wait(200);
   });
 
   test.afterEach(async ({ page }) => {
