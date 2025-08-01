@@ -72,7 +72,7 @@ jobs:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
     with:
-      runs-on: lynx-ubuntu-24.04-xlarge
+      runs-on: lynx-custom-container
       is-web: true
       run: |
         export NODE_OPTIONS="--max-old-space-size=32768"
@@ -99,7 +99,7 @@ jobs:
             env:
               - ENABLE_SSR=true
     with:
-      runs-on: lynx-ubuntu-24.04-xlarge
+      runs-on: lynx-custom-container
       is-web: true
       codecov-flags: "e2e"
       run: |

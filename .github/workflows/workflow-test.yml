@@ -33,6 +33,11 @@ jobs:
     timeout-minutes: 30
     runs-on: ${{ inputs.runs-on }}
     permissions: {}
+    container:
+      image: ${{ inputs.is-web && 'mcr.microsoft.com/playwright:v1.54.2-noble' || null }}
+      env:
+        CI: 1
+        TURBO_TELEMETRY_DISABLED: 1
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:
@@ -57,10 +62,6 @@ jobs:
       - name: Build
         run: |
           pnpm turbo build --summarize
-      - uses: ./.github/actions/setup-playwright
-        if: ${{ inputs.is-web }}
-        with:
-          working-directory: packages/web-platform/web-tests
       - name: Test # zizmor: ignore[template-injection] The inputs.run is provided by us.
         id: test
         env:
