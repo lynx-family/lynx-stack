@@ -708,6 +708,8 @@ export function createMainThreadGlobalThis(
     data: ElementTemplateData,
     element: WebFiberElementImpl,
   ) => void = (data, element) => {
+    const uniqueId = uniqueIdInc++;
+    element.setAttribute(lynxUniqueIdAttribute, uniqueId + '');
     for (const event of data.events) {
       const { type, name, value } = event;
       __AddEvent(element, type, name, value);
