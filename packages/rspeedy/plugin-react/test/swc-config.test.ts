@@ -71,6 +71,12 @@ describe('SWC configuration', () => {
               "useDefineForClassFields": false,
             },
           },
+          "rspackExperiments": {
+            "collectTypeScriptInfo": {
+              "exportedEnum": false,
+              "typeExports": true,
+            },
+          },
         }
       `)
   })
