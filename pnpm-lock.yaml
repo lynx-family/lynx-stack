@@ -199,8 +199,8 @@ importers:
   packages/react:
     dependencies:
       preact:
-        specifier: npm:@hongzhiyuan/preact@10.24.0-319c684e
-        version: '@hongzhiyuan/preact@10.24.0-319c684e'
+        specifier: npm:@hongzhiyuan/preact@10.24.0-27dc9d8f
+        version: '@hongzhiyuan/preact@10.24.0-27dc9d8f'
     devDependencies:
       '@lynx-js/types':
         specifier: 3.3.0
@@ -2037,8 +2037,8 @@ packages:
     resolution: {integrity: sha512-0J+zgWxHN+xXONWIyPWKFMgVuJoZuGiIFu8yxk7RJjxkzpGmyja5wRFqZIVtjDVOQpV+Rw0iOAjYPE2eQyjr0w==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@hongzhiyuan/preact@10.24.0-319c684e':
-    resolution: {integrity: sha512-weWzMUnmXk7gynEpOo/iIyfq95pRoFO2+18eiwD0hk/TeIQUeHbyG4W/S3lCEjB54jvft/itXwhkF+vz623BEg==}
+  '@hongzhiyuan/preact@10.24.0-27dc9d8f':
+    resolution: {integrity: sha512-NpUD1p4NIh+vpN5+YMvtF8CqtO7tS7VwTKxpdoI58Fp3SOmtv0Xr9Bzg+vWitn1K/jBscsonqDX4qZ4qvVd2PA==}
 
   '@humanfs/core@0.19.1':
     resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
@@ -9073,7 +9073,7 @@ snapshots:
       '@eslint/core': 0.14.0
       levn: 0.4.1
 
-  '@hongzhiyuan/preact@10.24.0-319c684e': {}
+  '@hongzhiyuan/preact@10.24.0-27dc9d8f': {}
 
   '@humanfs/core@0.19.1': {}
 

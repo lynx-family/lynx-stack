@@ -18,6 +18,8 @@ declare module 'preact' {
       oldVNode?: VNode<any>,
       errorInfo?: ErrorInfo,
     ): void;
+    /** root */
+    __?(vnode: VNode, parentDom: any): void;
   }
 
   interface VNode {
