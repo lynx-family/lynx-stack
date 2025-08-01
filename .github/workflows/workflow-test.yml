@@ -62,10 +62,6 @@ jobs:
       - name: Build
         run: |
           pnpm turbo build --summarize
-      # - uses: ./.github/actions/setup-playwright
-      #   if: ${{ inputs.is-web }}
-      #   with:
-      #     working-directory: packages/web-platform/web-tests
       - name: Test # zizmor: ignore[template-injection] The inputs.run is provided by us.
         id: test
         env:
@@ -93,7 +89,7 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: playwright-report
-          path: .turbo #temporary
+          path: packages/web-platform/web-tests/playwright-report
           if-no-files-found: error
           retention-days: 1
           overwrite: true
