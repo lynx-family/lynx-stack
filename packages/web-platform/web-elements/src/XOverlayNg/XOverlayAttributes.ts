@@ -11,6 +11,9 @@ import {
   genDomGetter,
 } from '@lynx-js/web-elements-reactive';
 
+let overlayFullScreenCount = 0;
+let overlayFullScreenOriginOverflow = '';
+
 export class XOverlayAttributes
   implements InstanceType<AttributeReactiveClass<typeof XOverlayNg>>
 {
@@ -48,16 +51,33 @@ export class XOverlayAttributes
     }
   }
 
+  #addFullScreen() {
+    if (!overlayFullScreenCount) {
+      overlayFullScreenOriginOverflow = document.body.style.overflow;
+    }
+    overlayFullScreenCount += 1;
+    document.body.style.overflow = 'hidden';
+  }
+
+  #removeFullScreen() {
+    overlayFullScreenCount -= 1;
+    if (!overlayFullScreenCount) {
+      document.body.style.overflow = overlayFullScreenOriginOverflow;
+    }
+  }
+
   @registerAttributeHandler('visible', false)
   #handleVisible(newVal: string | null) {
     this.#visible = newVal !== null;
     if (this.#useModernDialog) {
       if (this.#visible) {
+        this.#addFullScreen();
         this.#getDialogDom().showModal();
         this.#dom.dispatchEvent(
           new CustomEvent('showoverlay', commonComponentEventSetting),
         );
       } else {
+        this.#removeFullScreen();
         this.#getDialogDom().close();
         this.#dom.dispatchEvent(
           new CustomEvent('dismissoverlay', commonComponentEventSetting),
@@ -91,5 +111,9 @@ export class XOverlayAttributes
     if (!this.#useModernDialog) {
       this.#getDialogDom().style.display = 'none';
     }
+  }
+
+  dispose(): void {
+    this.#removeFullScreen();
   }
 }
