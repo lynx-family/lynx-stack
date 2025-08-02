@@ -199,6 +199,10 @@ export function applyEntry(
 
     let finalFirstScreenSyncTiming = firstScreenSyncTiming
 
+    const rsbuildConfig = api.getRsbuildConfig()
+    const enableChunkSplitting =
+      rsbuildConfig.performance?.chunkSplit?.strategy !== 'all-in-one'
+
     if (isLynx) {
       let inlineScripts
       if (experimental_isLazyBundle) {
@@ -236,7 +240,10 @@ export function applyEntry(
         }])
         .end()
         .plugin(`${LynxEncodePlugin.name}`)
-        .use(LynxEncodePlugin, [{ inlineScripts }])
+        .use(LynxEncodePlugin, [{
+          inlineScripts,
+          lynxCoreInjectCache: enableChunkSplitting,
+        }])
         .end()
     }
 
@@ -247,12 +254,11 @@ export function applyEntry(
         .end()
     }
 
-    const rsbuildConfig = api.getRsbuildConfig()
     const userConfig = api.getRsbuildConfig('original')
 
     let extractStr = originalExtractStr
     if (
-      rsbuildConfig.performance?.chunkSplit?.strategy !== 'all-in-one'
+      enableChunkSplitting
       && originalExtractStr
     ) {
       logger.warn(

@@ -27,6 +27,7 @@
   "types": "./lib/index.d.ts",
   "files": [
     "lib",
+    "static",
     "!lib/**/*.js.map",
     "CHANGELOG.md",
     "README.md"
