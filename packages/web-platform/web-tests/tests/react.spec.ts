@@ -2823,6 +2823,86 @@ test.describe('reactlynx3 tests', () => {
           expect(await page.getByText('目前计数为 10').count()).toBe(1);
         },
       );
+      test('x-overlay-ng-prevent-page-scroll', async ({ page }, { title }) => {
+        await goto(page, 'basic-element-x-overlay-ng-prevent-page-scroll');
+        await wait(100);
+
+        // 基础滚动锁定测试
+        await test.step('single overlay scroll lock', async () => {
+          // 记录初始overflow状态
+          const initialOverflow = await page.evaluate(() =>
+            document.body.style.overflow
+          );
+
+          // 打开第一层弹层
+          await page.locator('#openOverlay1').click();
+          await wait(100);
+          expect(await page.evaluate(() => document.body.style.overflow)).toBe(
+            'hidden',
+          );
+
+          // 关闭第一层弹层
+          await page.locator('#closeOverlay1').click();
+          await wait(100);
+          expect(await page.evaluate(() => document.body.style.overflow)).toBe(
+            initialOverflow,
+          );
+        });
+
+        // 嵌套弹层滚动锁定测试
+        await test.step('nested overlays scroll lock', async () => {
+          // 打开第一层弹层
+          await page.locator('#openOverlay1').click();
+          await wait(100);
+          expect(await page.evaluate(() => document.body.style.overflow)).toBe(
+            'hidden',
+          );
+
+          // 打开第二层弹层
+          await page.locator('#openOverlay2').click();
+          await wait(100);
+          expect(await page.evaluate(() => document.body.style.overflow)).toBe(
+            'hidden',
+          );
+
+          // 关闭第二层弹层 - 仍保持锁定
+          await page.locator('#closeOverlay2').click();
+          await wait(100);
+          expect(await page.evaluate(() => document.body.style.overflow)).toBe(
+            'hidden',
+          );
+
+          // 关闭第一层弹层 - 恢复滚动
+          await page.locator('#closeOverlay1').click();
+          await wait(100);
+          expect(await page.evaluate(() => document.body.style.overflow)).not
+            .toBe('hidden');
+        });
+
+        // 非顺序关闭弹层测试
+        await test.step('non-sequential close scroll restoration', async () => {
+          // 打开第一层弹层
+          await page.locator('#openOverlay1').click();
+          await wait(100);
+
+          // 打开第二层弹层
+          await page.locator('#openOverlay2').click();
+          await wait(100);
+
+          // 直接关闭第一层弹层
+          await page.locator('#closeOverlay1').click();
+          await wait(100);
+          expect(await page.evaluate(() => document.body.style.overflow)).toBe(
+            'hidden',
+          );
+
+          // 关闭第二层弹层 - 恢复滚动
+          await page.locator('#closeOverlay2').click();
+          await wait(100);
+          expect(await page.evaluate(() => document.body.style.overflow)).not
+            .toBe('hidden');
+        });
+      });
     });
     test.describe('x-refresh-view', () => {
       test(
