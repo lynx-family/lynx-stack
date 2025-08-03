@@ -40,7 +40,7 @@ const state = {
 export const initialize = function initialize(
   data,
 ) {
-  state.options = data.options
+  state.options = data.options ?? { resolve: true, load: true }
   state.port = data.port
   data.port.on('message', onMessage)
 }
