@@ -119,9 +119,10 @@ export async function loadConfig(
   // Note that we are using `pathToFileURL` since absolute paths must be valid file:// URLs on Windows.
   const specifier = pathToFileURL(configPath).toString()
 
-  const unregister = shouldUseNativeImport(configPath)
-    ? /** noop */ () => void 0
-    : register()
+  const unregister = register({
+    load: !shouldUseNativeImport(configPath),
+    resolve: true,
+  })
 
   try {
     const [exports, { validate }] = await Promise.all([
