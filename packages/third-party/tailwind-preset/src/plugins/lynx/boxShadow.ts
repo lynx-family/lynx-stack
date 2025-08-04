@@ -7,11 +7,7 @@ import {
   // parseBoxShadowValue,
   // formatBoxShadowValue,
 } from '../../helpers.js';
-import type {
-  CSSRuleObject,
-  KeyValuePair,
-  Plugin,
-} from '../../types/tailwind-types.js';
+import type { CSSRuleObject, Plugin } from '../../types/tailwind-types.js';
 
 // const transparentShadow = `0 0 0 0 transparent`;
 
@@ -61,7 +57,7 @@ export const boxShadow: Plugin = (() => {
         },
       },
       {
-        values: theme('boxShadow') as KeyValuePair<string, string>,
+        values: theme('boxShadow'),
         type: ['shadow'],
       },
     );

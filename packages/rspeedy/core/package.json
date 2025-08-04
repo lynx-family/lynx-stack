@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/rspeedy",
-  "version": "0.10.1",
+  "version": "0.10.5",
   "description": "A webpack/rspack-based frontend toolchain for Lynx",
   "keywords": [
     "webpack",
@@ -56,8 +56,8 @@
     "@lynx-js/webpack-dev-transport": "workspace:^",
     "@lynx-js/websocket": "workspace:^",
     "@rsbuild/core": "catalog:rsbuild",
-    "@rsbuild/plugin-css-minimizer": "1.0.2",
-    "@rsdoctor/rspack-plugin": "1.1.8"
+    "@rsbuild/plugin-css-minimizer": "1.0.3",
+    "@rsdoctor/rspack-plugin": "1.1.10"
   },
   "devDependencies": {
     "@lynx-js/vitest-setup": "workspace:*",

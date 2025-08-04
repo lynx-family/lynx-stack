@@ -17,8 +17,9 @@ const wait = async (ms: number) => {
 test.describe('main thread api tests', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto(`/main-thread-test.html`, {
-      waitUntil: 'load',
+      waitUntil: 'domcontentloaded',
     });
+    await wait(200);
   });
 
   test.afterEach(async ({ page }) => {
@@ -1270,4 +1271,64 @@ test.describe('main thread api tests', () => {
       expect(result.targetPartExist).toBe(true);
     },
   );
+
+  test.describe('__ElementFromBinary', () => {
+    test('should create a basic element from template', async ({ page }) => {
+      const result = await page.evaluate(() => {
+        const element = globalThis.__ElementFromBinary('test-template', 0)[0];
+        return {
+          tag: globalThis.__GetTag(element),
+        };
+      });
+      expect(result.tag).toBe('view');
+    });
+
+    test('should apply attributes from template', async ({ page }) => {
+      const result = await page.evaluate(() => {
+        const element = globalThis.__ElementFromBinary('test-template', 0)[0];
+        return globalThis.__GetAttributes(element);
+      });
+      expect(result.attr1).toBe('value1');
+    });
+
+    test('should apply classes from template', async ({ page }) => {
+      const result = await page.evaluate(() => {
+        const element = globalThis.__ElementFromBinary('test-template', 0)[0];
+        return globalThis.__GetClasses(element);
+      });
+      expect(result).toEqual(['class1', 'class2']);
+    });
+
+    test('should apply id from template', async ({ page }) => {
+      const result = await page.evaluate(() => {
+        const element = globalThis.__ElementFromBinary('test-template', 0)[0];
+        return globalThis.__GetID(element);
+      });
+      expect(result).toBe('id-1');
+    });
+
+    test('should create child elements from template', async ({ page }) => {
+      const result = await page.evaluate(() => {
+        const element = globalThis.__ElementFromBinary('test-template', 0)[0];
+        const child = globalThis.__FirstElement(element);
+        return {
+          childTag: globalThis.__GetTag(child),
+          value: globalThis.__GetAttributes(child).value,
+        };
+      });
+      expect(result.childTag).toBe('text');
+      expect(result.value).toBe('Hello from template');
+    });
+
+    test('should apply events from template', async ({ page }) => {
+      const result = await page.evaluate(() => {
+        const element = globalThis.__ElementFromBinary('test-template', 0)[0];
+        const events = globalThis.__GetEvents(element);
+        return events;
+      });
+      expect(result.length).toBe(1);
+      expect(result[0].name).toBe('tap');
+      expect(result[0].type).toBe('bindEvent');
+    });
+  });
 });

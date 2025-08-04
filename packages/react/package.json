@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/react",
-  "version": "0.111.1",
+  "version": "0.112.1",
   "description": "ReactLynx is a framework for developing Lynx applications with familiar React.",
   "repository": {
     "type": "git",
@@ -13,6 +13,11 @@
       "types": "./types/react.d.ts",
       "lazy": "./runtime/lazy/react.js",
       "default": "./runtime/lib/index.js"
+    },
+    "./compat": {
+      "types": "./runtime/compat/index.d.ts",
+      "lazy": "./runtime/lazy/compat.js",
+      "default": "./runtime/compat/index.js"
     },
     "./debug": {
       "types": "./runtime/debug/index.d.ts",
@@ -104,6 +109,9 @@
   "types": "./types/react.d.ts",
   "typesVersions": {
     "*": {
+      "compat": [
+        "./runtime/compat/index.d.ts"
+      ],
       "experimental/lazy/import": [
         "./runtime/lazy/import.d.ts"
       ],
@@ -166,7 +174,7 @@
     "api-extractor": "api-extractor run --verbose"
   },
   "dependencies": {
-    "preact": "npm:@hongzhiyuan/preact@10.24.0-319c684e"
+    "preact": "npm:@hongzhiyuan/preact@10.24.0-27dc9d8f"
   },
   "devDependencies": {
     "@lynx-js/types": "3.3.0",

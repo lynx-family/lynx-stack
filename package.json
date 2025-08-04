@@ -18,7 +18,7 @@
     "@eslint/js": "^9.31.0",
     "@eslint/markdown": "^6.6.0",
     "@microsoft/api-extractor": "catalog:",
-    "@rslib/core": "^0.10.5",
+    "@rslib/core": "^0.11.1",
     "@rspack/core": "catalog:rspack",
     "@svitejs/changesets-changelog-github-compact": "^1.2.0",
     "@tsconfig/node20": "^20.1.6",
@@ -40,7 +40,7 @@
     "lint-staged": "^16.1.2",
     "sort-package-json": "^3.4.0",
     "ts-patch": "^3.3.0",
-    "turbo": "^2.5.4",
+    "turbo": "^2.5.5",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.37.0",
     "vitest": "^3.2.4"

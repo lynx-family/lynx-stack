@@ -71,9 +71,6 @@ export const createVitestConfig = async (options) => {
         if (
           id.endsWith('.css') || id.endsWith('.less') || id.endsWith('.scss')
         ) {
-          if (process.env['DEBUG']) {
-            console.log('ignoring css file', id);
-          }
           return '';
         }
 

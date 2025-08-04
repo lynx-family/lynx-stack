@@ -1,5 +1,71 @@
 # @lynx-js/web-core
 
+## 0.15.4
+
+### Patch Changes
+
+- feat: support `__ElementFromBinary` ([#1391](https://github.com/lynx-family/lynx-stack/pull/1391))
+
+- fix: crash on chrome<96 ([#1361](https://github.com/lynx-family/lynx-stack/pull/1361))
+
+  https://github.com/wasm-bindgen/wasm-bindgen/issues/4211#issuecomment-2505965903
+
+  https://github.com/WebAssembly/binaryen/issues/7358
+
+  The rust toolchain enables WASM feature `reference types` by default.
+
+  However this feature is not supported by chromium lower than version 96
+
+  Therefore we found a workaround for it.
+
+  In this implementation we detect if browser supports `reference types` first.
+
+  If user's browser supported it, we load the wasm file with `reference types` on, otherwise we load the wasm file with `reference types` off.
+
+- Updated dependencies [[`22ca433`](https://github.com/lynx-family/lynx-stack/commit/22ca433eb96b39724c6eb47ce0a938d291bbdef2), [`8645d12`](https://github.com/lynx-family/lynx-stack/commit/8645d1240ecb2005da52ab2ffeb10a5d08cc9cc2), [`143e481`](https://github.com/lynx-family/lynx-stack/commit/143e481b4353b3c3d2e8d9cc4f201442ca56f097)]:
+  - @lynx-js/web-mainthread-apis@0.15.4
+  - @lynx-js/web-constants@0.15.4
+  - @lynx-js/web-worker-runtime@0.15.4
+  - @lynx-js/web-worker-rpc@0.15.4
+
+## 0.15.3
+
+### Patch Changes
+
+- fix: improve compatibility with legacy template ([#1337](https://github.com/lynx-family/lynx-stack/pull/1337))
+
+  avoid "object Object" error for old version rspeedy outputs
+
+- Updated dependencies [[`0da5ef0`](https://github.com/lynx-family/lynx-stack/commit/0da5ef03e41f20e9f8019c6dc03cb4a38ab18854)]:
+  - @lynx-js/web-constants@0.15.3
+  - @lynx-js/web-mainthread-apis@0.15.3
+  - @lynx-js/web-worker-runtime@0.15.3
+  - @lynx-js/web-worker-rpc@0.15.3
+
+## 0.15.2
+
+### Patch Changes
+
+- feat: support SSR for all-on-ui ([#1029](https://github.com/lynx-family/lynx-stack/pull/1029))
+
+- feat: move SSR hydrate essential info to the ssr attribute ([#1292](https://github.com/lynx-family/lynx-stack/pull/1292))
+
+  We found that in browser there is no simple tool to decode a base64 string
+
+  Therefore we move the data to `ssr` attribute
+
+  Also fix some ssr issues
+
+- feat: support \_\_MarkTemplateElement, \_\_MarkPartElement and \_\_GetTemplateParts for all-on-ui ([#1275](https://github.com/lynx-family/lynx-stack/pull/1275))
+
+- feat: mark template elements for SSR and update part ID handling ([#1286](https://github.com/lynx-family/lynx-stack/pull/1286))
+
+- Updated dependencies [[`cebda59`](https://github.com/lynx-family/lynx-stack/commit/cebda592ac5c7d152c877c2ac5ec403d477077e1), [`1443e46`](https://github.com/lynx-family/lynx-stack/commit/1443e468a353363e29aab0d90cd8b91c232a5525), [`5062128`](https://github.com/lynx-family/lynx-stack/commit/5062128c68e21abcf276ebcb40d7cc8f6e54244b), [`f656b7f`](https://github.com/lynx-family/lynx-stack/commit/f656b7f0d390d69c0da0d11a6c9b3f66ae877ac8)]:
+  - @lynx-js/web-mainthread-apis@0.15.2
+  - @lynx-js/web-constants@0.15.2
+  - @lynx-js/web-worker-runtime@0.15.2
+  - @lynx-js/web-worker-rpc@0.15.2
+
 ## 0.15.1
 
 ### Patch Changes

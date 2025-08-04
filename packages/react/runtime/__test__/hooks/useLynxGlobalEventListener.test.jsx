@@ -28,6 +28,7 @@ describe('useLynxGlobalEventListener', () => {
     BackgroundSnapshotInstance.prototype.toJSON = backgroundSnapshotInstanceToJSON;
 
     const lynx = {
+      ...globalThis.lynx,
       getJSModule: (moduleName) => {
         if (moduleName === 'GlobalEventEmitter') {
           return ee;
@@ -107,6 +108,7 @@ describe('useLynxGlobalEventListener', () => {
       removeListener: vi.fn(),
     };
     vi.stubGlobal('lynx', {
+      ...globalThis.lynx,
       getJSModule: (moduleName) => {
         if (moduleName === 'GlobalEventEmitter') {
           return fakeEE;

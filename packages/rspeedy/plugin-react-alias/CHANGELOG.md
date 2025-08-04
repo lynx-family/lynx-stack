@@ -1,5 +1,19 @@
 # @lynx-js/react-alias-rsbuild-plugin
 
+## 0.10.10
+
+## 0.10.9
+
+### Patch Changes
+
+- Add alias for `@lynx-js/react/compat`. ([#1316](https://github.com/lynx-family/lynx-stack/pull/1316))
+
+## 0.10.8
+
+### Patch Changes
+
+- Support `@lynx-js/react/debug`. ([#1250](https://github.com/lynx-family/lynx-stack/pull/1250))
+
 ## 0.10.7
 
 ## 0.10.6

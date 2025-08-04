@@ -67,20 +67,18 @@ impl DirectiveDCEVisitor {
         Stmt::Expr(ExprStmt { expr, span }) => match &**expr {
           Expr::Lit(Lit::Str(str)) => match str.value.to_string().as_str() {
             "use js only" | "background only" | "background-only" => {
-              return (self.opts.target == TransformTarget::LEPUS, Some(*span));
+              (self.opts.target == TransformTarget::LEPUS, Some(*span))
             }
             // directive "main thread" is already handled by `worklet_plugin`, do nothing here
-            "use lepus only" => {
-              return (self.opts.target == TransformTarget::JS, Some(*span));
-            }
-            _ => return (false, None),
+            "use lepus only" => (self.opts.target == TransformTarget::JS, Some(*span)),
+            _ => (false, None),
           },
-          _ => return (false, None),
+          _ => (false, None),
         },
-        _ => return (false, None),
+        _ => (false, None),
       }
     } else {
-      return (false, None);
+      (false, None)
     }
   }
 }
@@ -94,10 +92,10 @@ impl VisitMut for DirectiveDCEVisitor {
           None => {}
           Some(stmt) => {
             let (_, span) = self.should_eliminate(stmt);
-            if span.is_some() {
+            if let Some(span) = span {
               HANDLER.with(|handler| {
                 handler
-                  .struct_span_warn(span.unwrap(), "directive inside constructor is not allowed")
+                  .struct_span_warn(span, "directive inside constructor is not allowed")
                   .emit();
               });
             }
@@ -132,10 +130,10 @@ impl VisitMut for DirectiveDCEVisitor {
           None => {}
           Some(stmt) => {
             let (_, span) = self.should_eliminate(stmt);
-            if span.is_some() {
+            if let Some(span) = span {
               HANDLER.with(|handler| {
                 handler
-                  .struct_span_warn(span.unwrap(), "directive inside getter/setter is ignored")
+                  .struct_span_warn(span, "directive inside getter/setter is ignored")
                   .emit();
               });
             }

@@ -1,5 +1,17 @@
 # @lynx-js/template-webpack-plugin
 
+## 0.8.3
+
+### Patch Changes
+
+- feat: support elementTemplate for web ([#1374](https://github.com/lynx-family/lynx-stack/pull/1374))
+
+## 0.8.2
+
+### Patch Changes
+
+- Fix the `Syntax Error: expecting ';'` error of chunk splitting ([#1279](https://github.com/lynx-family/lynx-stack/pull/1279))
+
 ## 0.8.1
 
 ### Patch Changes

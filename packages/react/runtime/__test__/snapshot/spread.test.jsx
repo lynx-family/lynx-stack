@@ -600,4 +600,52 @@ describe('spreadUpdate', () => {
       </page>
     `);
   });
+
+  it('circular reference', async () => {
+    await import('../../src/lynx');
+    let patch;
+    let setSpread_;
+
+    const a = {};
+    a.a = a;
+
+    function Foo(props) {
+      return props.children;
+    }
+
+    function Bar() {
+      const [spread, setSpread] = useState({});
+      setSpread_ = setSpread;
+      return <text {...spread}>1</text>;
+    }
+
+    function Comp() {
+      return (
+        <Foo>
+          <Bar />
+        </Foo>
+      );
+    }
+
+    globalEnvManager.switchToMainThread();
+    render(<Comp />, scratch);
+
+    globalEnvManager.switchToBackground();
+    render(<Comp />, scratchBackground);
+
+    initGlobalSnapshotPatch();
+    setSpread_(a);
+
+    expect(() => render(<Comp />, scratchBackground)).toThrowErrorMatchingInlineSnapshot(`
+      [TypeError: Converting circular structure to JSON
+          --> starting at object with constructor 'Object'
+          --- property 'a' closes the circle
+
+        in Bar
+        in Comp
+      ]
+    `);
+    patch = takeGlobalSnapshotPatch();
+    expect(patch).toMatchInlineSnapshot(`[]`);
+  });
 });

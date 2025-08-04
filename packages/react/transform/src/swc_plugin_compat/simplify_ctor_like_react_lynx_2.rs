@@ -32,34 +32,28 @@ impl CtorSimplifyVisitor {
 
 impl Visit for CtorSimplifyVisitor {
   fn visit_constructor(&mut self, n: &Constructor) {
-    match &n.body {
-      Some(body) => {
-        for stmt in &body.stmts {
-          let re = Regex::new(r"^__[A-Z_]+__$").unwrap();
-          match stmt {
-            Stmt::If(stmt_if) => {
-              let mut test_ident = &Ident::dummy();
+    if let Some(body) = &n.body {
+      let re = Regex::new(r"^__[A-Z_]+__$").unwrap();
+      for stmt in &body.stmts {
+        if let Stmt::If(stmt_if) = stmt {
+          let mut test_ident = &Ident::dummy();
 
-              if stmt_if.test.is_ident() {
-                // __IDENT__
-                test_ident = stmt_if.test.as_ident().unwrap();
-              } else if stmt_if.test.is_unary() {
-                let stmt_if_test_unary = stmt_if.test.as_unary().unwrap();
-                if stmt_if_test_unary.op == UnaryOp::Bang && stmt_if_test_unary.arg.is_ident() {
-                  // !__IDENT__
-                  test_ident = stmt_if_test_unary.arg.as_ident().unwrap();
-                }
-              }
-
-              if let Some(_) = re.captures(test_ident.sym.as_str()) {
-                self.remain_stmts.push(stmt.clone())
-              }
+          if stmt_if.test.is_ident() {
+            // __IDENT__
+            test_ident = stmt_if.test.as_ident().unwrap();
+          } else if stmt_if.test.is_unary() {
+            let stmt_if_test_unary = stmt_if.test.as_unary().unwrap();
+            if stmt_if_test_unary.op == UnaryOp::Bang && stmt_if_test_unary.arg.is_ident() {
+              // !__IDENT__
+              test_ident = stmt_if_test_unary.arg.as_ident().unwrap();
             }
-            _ => {}
+          }
+
+          if re.captures(test_ident.sym.as_str()).is_some() {
+            self.remain_stmts.push(stmt.clone())
           }
         }
       }
-      None => {}
     }
     self.in_constructor = true;
     self.current_ctor_bindings = Some(collect_decls(n));
@@ -71,23 +65,17 @@ impl Visit for CtorSimplifyVisitor {
   fn visit_class_prop(&mut self, n: &ClassProp) {
     // if this is state = { ... }
     if !n.is_static {
-      match &n.key {
-        PropName::Ident(key) => {
-          if key.sym.to_string() == "state" {
-            match &n.value {
-              Some(value) => {
-                if value.is_object() {
-                  self.is_target_object = true;
-                  n.visit_children_with(self);
-                  self.is_target_object = false;
-                  return;
-                }
-              }
-              _ => {}
+      if let PropName::Ident(key) = &n.key {
+        if key.sym == "state" {
+          if let Some(value) = &n.value {
+            if value.is_object() {
+              self.is_target_object = true;
+              n.visit_children_with(self);
+              self.is_target_object = false;
+              return;
             }
           }
         }
-        _ => {}
       }
     }
 
@@ -96,30 +84,23 @@ impl Visit for CtorSimplifyVisitor {
 
   fn visit_assign_expr(&mut self, n: &AssignExpr) {
     if self.in_constructor {
-      match &n {
-        AssignExpr {
-          op: AssignOp::Assign,
-          left: AssignTarget::Simple(left),
-          right,
-          ..
-        } => match left {
-          SimpleAssignTarget::Member(member) => {
-            if member.obj.is_this() {
-              if let MemberProp::Ident(key) = &member.prop {
-                if key.sym.to_string() == "state" {
-                  if right.is_object() {
-                    self.is_target_object = true;
-                    n.visit_children_with(self);
-                    self.is_target_object = false;
-                    return;
-                  }
-                }
-              }
+      if let AssignExpr {
+        op: AssignOp::Assign,
+        left: AssignTarget::Simple(SimpleAssignTarget::Member(member)),
+        right,
+        ..
+      } = &n
+      {
+        if member.obj.is_this() {
+          if let MemberProp::Ident(key) = &member.prop {
+            if key.sym == "state" && right.is_object() {
+              self.is_target_object = true;
+              n.visit_children_with(self);
+              self.is_target_object = false;
+              return;
             }
           }
-          _ => {}
-        },
-        _ => {}
+        }
       }
     }
 

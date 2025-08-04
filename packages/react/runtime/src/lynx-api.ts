@@ -1,7 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { render } from 'preact';
+import { options, render } from 'preact';
 import { createContext, createElement } from 'preact/compat';
 import { useState } from 'preact/hooks';
 import type { Consumer, FC, ReactNode } from 'react';
@@ -82,12 +82,24 @@ export interface Root {
  */
 export const root: Root = {
   render: (jsx: ReactNode): void => {
+    /* v8 ignore next 2 */
     if (__MAIN_THREAD__) {
       __root.__jsx = jsx;
     } else {
       __root.__jsx = jsx;
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      render(jsx, __root as any);
+      let preactProcess: (() => void) | undefined = undefined;
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      const oldDebounceRendering = options.debounceRendering;
+      options.debounceRendering = (cb) => {
+        preactProcess = cb;
+      };
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+        render(jsx, __root as any);
+        (preactProcess as (() => void) | undefined)?.();
+      } finally {
+        options.debounceRendering = oldDebounceRendering!;
+      }
       if (__FIRST_SCREEN_SYNC_TIMING__ === 'immediately') {
         // This is for cases where `root.render()` is called asynchronously,
         // `firstScreen` message might have been reached.
@@ -97,6 +109,7 @@ export const root: Root = {
       }
     }
   },
+  /* v8 ignore next 3 */
   registerDataProcessors: (dataProcessorDefinition: DataProcessorDefinition): void => {
     lynx.registerDataProcessors(dataProcessorDefinition);
   },

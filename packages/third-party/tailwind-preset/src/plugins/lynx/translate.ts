@@ -5,10 +5,7 @@
 import { cssTransformValue, cssTransformVarMap } from './transform.js';
 import { createPlugin } from '../../helpers.js';
 import type { Plugin } from '../../helpers.js';
-import type {
-  CSSRuleObject,
-  KeyValuePair,
-} from '../../types/tailwind-types.js';
+import type { CSSRuleObject } from '../../types/tailwind-types.js';
 
 /**
  * Base on https://github.com/tailwindlabs/tailwindcss/blob/d1f066d97a30539c1c86aa987c75b6d84ef29609/src/corePlugins.js#L476
@@ -29,7 +26,7 @@ export const translate: Plugin = createPlugin(({ matchUtilities, theme }) => {
     },
     {
       supportsNegativeValues: true,
-      values: theme('translate') as KeyValuePair,
+      values: theme('translate'),
     },
   );
   matchUtilities(
@@ -47,7 +44,7 @@ export const translate: Plugin = createPlugin(({ matchUtilities, theme }) => {
     },
     {
       supportsNegativeValues: true,
-      values: theme('translate') as KeyValuePair,
+      values: theme('translate'),
     },
   );
   matchUtilities(
@@ -65,7 +62,7 @@ export const translate: Plugin = createPlugin(({ matchUtilities, theme }) => {
     },
     {
       supportsNegativeValues: true,
-      values: theme('translate') as KeyValuePair,
+      values: theme('translate'),
     },
   );
 });

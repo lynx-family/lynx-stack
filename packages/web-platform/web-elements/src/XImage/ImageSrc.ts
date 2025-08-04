@@ -14,7 +14,12 @@ import {
 export class ImageSrc
   implements InstanceType<AttributeReactiveClass<typeof HTMLElement>>
 {
-  static observedAttributes = ['src', 'placeholder', 'blur-radius'];
+  static observedAttributes = [
+    'src',
+    'placeholder',
+    'blur-radius',
+    'crossorigin',
+  ];
   #dom: HTMLElement;
 
   #getImg = genDomGetter<HTMLImageElement>(() => this.#dom.shadowRoot!, '#img');
@@ -38,6 +43,9 @@ export class ImageSrc
     undefined,
     true,
   );
+
+  @registerAttributeHandler('crossorigin', true)
+  #handleCrossorigin = bindToAttribute(this.#getImg, 'crossorigin');
 
   #onImageError = () => {
     const currentSrc = this.#getImg().src;

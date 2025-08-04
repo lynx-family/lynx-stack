@@ -5,7 +5,7 @@
 import { onWorkletCtxUpdate, runWorkletCtx, updateWorkletRef as update } from '@lynx-js/react/worklet-runtime/bindings';
 import type { Element, Worklet, WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bindings';
 
-import { isMainThreadHydrationFinished } from '../lifecycle/patch/isMainThreadHydrationFinished.js';
+import { isMainThreadHydrating } from '../lifecycle/patch/isMainThreadHydrating.js';
 import type { SnapshotInstance } from '../snapshot.js';
 
 let mtRefQueue: (WorkletRefImpl<Element> | Worklet | Element)[] = [];
@@ -67,7 +67,7 @@ export function updateWorkletRef(
     onWorkletCtxUpdate(
       value as Worklet,
       oldValue as Worklet | undefined,
-      !isMainThreadHydrationFinished,
+      isMainThreadHydrating,
       element,
     );
     addToRefQueue(value as Worklet, element);

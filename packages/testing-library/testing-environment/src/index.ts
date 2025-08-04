@@ -143,16 +143,25 @@ function createPolyfills() {
     type,
     data,
   }) => {
-    const isMainThread = __MAIN_THREAD__;
-    lynxTestingEnv.switchToBackgroundThread();
+    const origin = __MAIN_THREAD__ ? 'CoreContext' : 'JSContext';
+    // Switch to another thread
+    if (origin === 'CoreContext') {
+      lynxTestingEnv.switchToBackgroundThread();
+    } else {
+      lynxTestingEnv.switchToMainThread();
+    }
 
     // Ensure the code is running on the background thread
     ee.emit(type, {
       data: data,
+      origin,
     });
 
-    if (isMainThread) {
+    // Finish executing, restore the original thread state
+    if (origin === 'CoreContext') {
       lynxTestingEnv.switchToMainThread();
+    } else {
+      lynxTestingEnv.switchToBackgroundThread();
     }
   };
   // @ts-ignore
@@ -166,14 +175,11 @@ function createPolyfills() {
 
   function __LoadLepusChunk(
     chunkName: string,
-    options,
+    _options,
   ) {
     const isBackground = !__MAIN_THREAD__;
     globalThis.lynxTestingEnv.switchToMainThread();
 
-    if (process.env['DEBUG']) {
-      console.log('__LoadLepusChunk', chunkName, options);
-    }
     let ans;
     if (chunkName === 'worklet-runtime') {
       ans = globalThis.onInitWorkletRuntime?.();
@@ -238,6 +244,18 @@ function injectMainThreadGlobals(target?: any, polyfills?: any) {
   target.lynx = {
     performance,
     getCoreContext: (() => CoreContext),
+    /*
+
+    background thread -> main thread:
+    lynx.getJSContext().addEventListener("message", (e: Event) => {
+      console.log('message', e)
+      });
+    main thread -> background thread:
+    lynx.getJSContext().postMessage({
+      type: 'message',
+      data: [3, 4, 5]
+    });
+    */
     getJSContext: (() => JsContext),
     reportError: (e: Error) => {
       throw e;
@@ -335,6 +353,17 @@ function injectBackgroundThreadGlobals(target?: any, polyfills?: any) {
         },
       };
     }),
+    /*
+    main thread -> background thread:
+    lynx.getCoreContext().addEventListener("message", (e: Event) => {
+      console.log('message', e)
+    });
+    background thread -> main thread:
+    lynx.getCoreContext().postMessage({
+      type: 'message',
+      data: [1, 2, 3]
+    });
+    */
     getCoreContext: (() => CoreContext),
     getJSContext: (() => JsContext),
     getJSModule: (moduleName) => {

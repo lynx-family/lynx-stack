@@ -5,17 +5,32 @@ import { describe, expect, it } from 'vitest';
 
 import {
   LYNX_PLUGIN_MAP,
+  ORDERED_LYNX_UI_PLUGIN_NAMES,
   getReplaceablePlugins,
   isPluginReplaceable,
+  resolveUIPluginEntries,
+  toEnabledLynxUIPluginSet,
   toEnabledSet,
 } from '../core.js';
+import type { LynxUIPluginsOption } from '../core.js';
+
+const firstUIPlugin = ORDERED_LYNX_UI_PLUGIN_NAMES[0]!;
+
+function resolvePluginEntriesForTest(input: Record<string, unknown>) {
+  return resolveUIPluginEntries(input as unknown as LynxUIPluginsOption);
+}
 
 describe('core plugin utilities', () => {
-  it('toEnabledSet handles boolean', () => {
+  it('toEnabledSet handles true (enables all)', () => {
     const enabled = toEnabledSet(true);
     expect([...enabled] as string[]).toEqual(
       expect.arrayContaining(getReplaceablePlugins() as string[]),
     );
+  });
+  it('toEnabledSet handles false (disables all)', () => {
+    const set = toEnabledSet(false);
+    expect(set.size).toBe(0);
+    expect([...set]).toEqual([]);
   });
 
   it('toEnabledSet handles allowed array', () => {
@@ -52,4 +67,65 @@ describe('core plugin utilities', () => {
       expect(typeof plugin.handler).toBe('function');
     }
   });
+});
+
+describe('lynx-ui plugin helpers', () => {
+  it('toEnabledLynxUIPluginSet handles true', () => {
+    const set = toEnabledLynxUIPluginSet(true);
+    expect([...set]).toEqual(
+      expect.arrayContaining([...ORDERED_LYNX_UI_PLUGIN_NAMES]),
+    );
+  });
+
+  it('toEnabledLynxUIPluginSet handles false', () => {
+    const set = toEnabledLynxUIPluginSet(false);
+    expect(set.size).toBe(0);
+  });
+
+  it('toEnabledLynxUIPluginSet handles array form', () => {
+    const subset = ORDERED_LYNX_UI_PLUGIN_NAMES.slice(0, 2);
+    const set = toEnabledLynxUIPluginSet(subset);
+    expect([...set]).toEqual(subset);
+  });
+
+  it.each([
+    [{ [firstUIPlugin]: true }, true],
+    [{ [firstUIPlugin]: false }, false],
+  ])(
+    'toEnabledLynxUIPluginSet handles object form %j',
+    (input, expectedHas) => {
+      const set = toEnabledLynxUIPluginSet(input);
+      expect(set.has(firstUIPlugin)).toBe(expectedHas);
+    },
+  );
+
+  it('resolveUIPluginEntries handles true', () => {
+    const entries = resolveUIPluginEntries(true);
+    expect(entries).toEqual(
+      ORDERED_LYNX_UI_PLUGIN_NAMES.map((n) => [n, {}]),
+    );
+  });
+
+  it('resolveUIPluginEntries handles false', () => {
+    const entries = resolveUIPluginEntries(false);
+    expect(entries).toEqual([]);
+  });
+
+  it('resolveUIPluginEntries handles array form', () => {
+    const subset = ORDERED_LYNX_UI_PLUGIN_NAMES.slice(0, 2);
+    const entries = resolveUIPluginEntries(subset);
+    expect(entries).toEqual(subset.map((n) => [n, {}]));
+  });
+
+  it.each([
+    [{ [firstUIPlugin]: false }, []],
+    [{ [firstUIPlugin]: true }, [[firstUIPlugin, {}]]],
+    [{ [firstUIPlugin]: { foo: 'bar' } }, [[firstUIPlugin, { foo: 'bar' }]]],
+  ])(
+    'resolveUIPluginEntries handles object form: %j → %j',
+    (input, expected) => {
+      const entries = resolvePluginEntriesForTest(input);
+      expect(entries).toEqual(expected);
+    },
+  );
 });

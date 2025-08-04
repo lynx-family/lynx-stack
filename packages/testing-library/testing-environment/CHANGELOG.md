@@ -1,5 +1,30 @@
 # @lynx-js/testing-environment
 
+## 0.1.4
+
+### Patch Changes
+
+- Fix the thread switching bug in `lynx.getCoreContext` and `lynx.getJSContext`. ([#1244](https://github.com/lynx-family/lynx-stack/pull/1244))
+
+## 0.1.3
+
+### Patch Changes
+
+- Support alog of component rendering on production for better error reporting. Enable it by using `REACT_ALOG=true rspeedy dev/build` or defining `__ALOG__` to `true` in `lynx.config.js`: ([#1164](https://github.com/lynx-family/lynx-stack/pull/1164))
+
+  ```js
+  export default defineConfig({
+    // ...
+    source: {
+      define: {
+        __ALOG__: true,
+      },
+    },
+  });
+  ```
+
+- Supports `console.alog` and use different `console` object in main thread and background thread. ([#1164](https://github.com/lynx-family/lynx-stack/pull/1164))
+
 ## 0.1.2
 
 ### Patch Changes

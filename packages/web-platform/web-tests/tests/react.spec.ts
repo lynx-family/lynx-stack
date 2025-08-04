@@ -3872,6 +3872,14 @@ test.describe('reactlynx3 tests', () => {
           expect(result).toBe('foobar');
         },
       );
+      test(
+        'basic-element-x-textarea-color',
+        async ({ page }, { title }) => {
+          await goto(page, title);
+          await wait(500);
+          await diffScreenShot(page, 'x-textarea', title, 'initial');
+        },
+      );
     });
     test.describe('x-audio-tt', () => {
       test('basic-element-x-audio-tt-play', async ({ page }, { title }) => {

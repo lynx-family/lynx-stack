@@ -1,5 +1,29 @@
 # @lynx-js/rspeedy
 
+## 0.10.5
+
+### Patch Changes
+
+- Should support using `.js` extensions when loading configuration with Node.js [builtin type stripping](https://nodejs.org/api/typescript.html#type-stripping). ([#1407](https://github.com/lynx-family/lynx-stack/pull/1407))
+
+## 0.10.4
+
+### Patch Changes
+
+- Bump Rsbuild v1.4.12 with Rspack v1.4.11. ([#1326](https://github.com/lynx-family/lynx-stack/pull/1326))
+
+## 0.10.3
+
+### Patch Changes
+
+- Should be able to override `performance.profile` when `DEBUG=rspeedy`. ([#1307](https://github.com/lynx-family/lynx-stack/pull/1307))
+
+## 0.10.2
+
+### Patch Changes
+
+- Bump Rsbuild v1.4.6 with Rspack v1.4.8. ([#1282](https://github.com/lynx-family/lynx-stack/pull/1282))
+
 ## 0.10.1
 
 ### Patch Changes

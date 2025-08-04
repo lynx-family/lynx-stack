@@ -17,8 +17,9 @@ import type {
 import type {
   Bound,
   BoundedPluginCreator,
-  OptionsFn,
-  PluginFn,
+  CreatePluginFunction,
+  PluginWithConfig,
+  PluginWithOptions,
   UtilityPluginOptions,
   UtilityVariations,
 } from './types/plugin-types.js';
@@ -34,82 +35,72 @@ import type {
 /**
  * Wraps a Tailwind PluginCreator and auto-binds all function properties of the API.
  */
-function createPlugin(
+function createPluginImpl(
   fn: BoundedPluginCreator,
   cfg?: Partial<Config>,
-): { handler: PluginCreator; config?: Partial<Config> | undefined } {
+): PluginWithConfig {
   return {
     handler: (api: PluginAPI) => fn(autoBind(api)),
     config: cfg,
   };
 }
 
-function isCorePluginDisabled(api: PluginAPI, key: string): boolean {
-  return api.config<boolean>(`corePlugins.${key}`) === false;
-}
-
-function createPluginWithName(
-  name: string,
-  fn: BoundedPluginCreator,
-  cfg?: Partial<Config>,
-): { handler: PluginCreator; config?: Partial<Config> | undefined } {
-  return {
-    handler: (api: PluginAPI) => {
-      if (isCorePluginDisabled(api, name)) return;
-      fn(autoBind(api));
-    },
-    config: { ...cfg, name },
-  };
-}
-
-function basePlugin(
-  pluginFn: PluginCreator,
-  cfg?: Partial<Config>,
-): { handler: PluginCreator; config?: Partial<Config> | undefined } {
-  return { handler: pluginFn, config: cfg };
-}
-
-function pluginImpl(
-  pluginFn: BoundedPluginCreator,
-  cfg?: Partial<Config>,
-): { handler: PluginCreator; config?: Partial<Config> | undefined } {
-  const wrapped: PluginCreator = (api: PluginAPI) => pluginFn(autoBind(api));
-  return basePlugin(wrapped, cfg);
-}
+createPluginImpl.withOptions = withOptions;
+const createPlugin: CreatePluginFunction = createPluginImpl;
 
 function withOptions<T>(
-  factory: (options: T) => BoundedPluginCreator,
-  cfgFactory?: (options: T) => Partial<Config>,
-): OptionsFn<T> {
-  const optionsFn: OptionsFn<T> = ((options: T) =>
-    basePlugin(
-      (api: PluginAPI) => factory(options)(autoBind(api)),
-      cfgFactory?.(options),
-    )) as OptionsFn<T>;
-
-  optionsFn.__isOptionsFunction = true as const;
-  return optionsFn;
+  pluginFn: (options?: T) => BoundedPluginCreator,
+  configFn: (options?: T) => Partial<Config> = () => ({}),
+): PluginWithOptions<T> {
+  const optionsFunction = function(options?: T) {
+    return {
+      __options: options,
+      handler: (api: PluginAPI) => pluginFn(options)(autoBind(api)),
+      config: configFn(options),
+    };
+  };
+  optionsFunction.__isOptionsFunction = true as const;
+  // Expose plugin dependencies so that `object-hash` returns a different
+  // value if anything here changes, to ensure a rebuild is triggered.
+  // Follows Tailwind v3 original implementation
+  optionsFunction.__pluginFunction = pluginFn;
+  optionsFunction.__configFunction = configFn;
+  return optionsFunction as PluginWithOptions<T>;
 }
 
-pluginImpl.withOptions = withOptions;
-
-export const plugin: PluginFn = pluginImpl;
+/**
+ * Type guard
+ */
+function isPluginWithOptions<T = unknown>(
+  plugin: unknown,
+): plugin is PluginWithOptions<T> {
+  return (
+    typeof plugin === 'function'
+    && '__isOptionsFunction' in plugin
+    && (plugin as Record<string, unknown>)['__isOptionsFunction'] === true
+  );
+}
 
 /**
- * Auto-binds all function-valued properties to the original object.
+ * Returns a shallow clone of the object where all function values
+ * are bound with `this` set to `undefined`,
+ * so that destructuring is safe and ESLint `unbound-method` rule won't trigger.
+ *
+ * This is only safe for objects whose function values are `this`-independent
+ *
+ * E.g. Use this when passing a `PluginAPI` to a plugin handler to ensure functions like
+ * `theme()` or `matchUtilities()` can be safely destructured and called.
  */
 function autoBind<T extends object>(obj: T): Bound<T> {
-  const result = {} as Bound<T>;
+  return Object.fromEntries(
+    Object.entries(obj).map(([k, v]) =>
+      isFunction(v) ? [k, v.bind(undefined)] : [k, v]
+    ),
+  ) as Bound<T>;
+}
 
-  for (const key of Object.keys(obj) as Array<keyof T>) {
-    const value = obj[key];
-
-    result[key] = (typeof value === 'function'
-      ? (value.bind(obj) as Bound<T>[typeof key])
-      : value) as Bound<T>[typeof key];
-  }
-
-  return result;
+function isFunction(value: unknown): value is (...args: unknown[]) => unknown {
+  return typeof value === 'function';
 }
 
 /* ─────────────────────── re-export Tailwind utility helper ───────────────── */
@@ -126,10 +117,10 @@ function createUtilityPlugin(
   return _createUtilityPlugin(themeKey, utilityVariations as unknown, options);
 }
 
-export { createUtilityPlugin, createPlugin, createPluginWithName, autoBind };
-export type { Plugin };
+export { createUtilityPlugin, createPlugin, autoBind, isPluginWithOptions };
+export type { Plugin, PluginWithOptions };
 
-/* ──────────────── 100 % typed exports for transform/shadow utils ─────────── */
+/* ──────────────── typed exports for transform/shadow utils ─────────── */
 
 export const transformThemeValue: (key: ThemeKey) => ValueTransformer =
   _transformThemeValue;

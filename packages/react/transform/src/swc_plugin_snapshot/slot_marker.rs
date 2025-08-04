@@ -63,7 +63,7 @@ impl VisitMut for WrapperMarker {
       return;
     }
 
-    if n.len() == 0 {
+    if n.is_empty() {
       return;
     }
 
@@ -76,21 +76,13 @@ impl VisitMut for WrapperMarker {
       match child {
         JSXElementChild::JSXText(ref text) => {
           if jsx_text_to_str(&text.value).is_empty() {
-            if current_chunk.len() == 0 {
-              should_merge = true;
-            } else {
-              should_merge = false;
-            }
+            should_merge = current_chunk.is_empty();
           } else {
             should_merge = true;
           }
         }
         JSXElementChild::JSXElement(ref element) => {
-          if jsx_is_custom(element) || jsx_has_dynamic_key(element) {
-            should_merge = false;
-          } else {
-            should_merge = true;
-          }
+          should_merge = !(jsx_is_custom(element) || jsx_has_dynamic_key(element));
         }
         JSXElementChild::JSXExprContainer(JSXExprContainer {
           expr: JSXExpr::Expr(ref _expr),
@@ -111,7 +103,7 @@ impl VisitMut for WrapperMarker {
       }
 
       if should_merge {
-        if current_chunk.len() > 0 {
+        if !current_chunk.is_empty() {
           let child = JSXElementChild::JSXElement(Box::new({
             let mut el = WRAPPER_NODE_2.clone();
             el.children = current_chunk.take();
@@ -128,7 +120,7 @@ impl VisitMut for WrapperMarker {
       }
     }
 
-    if current_chunk.len() > 0 {
+    if !current_chunk.is_empty() {
       let child = JSXElementChild::JSXElement(Box::new({
         let mut el = WRAPPER_NODE_2.clone();
         el.children = current_chunk.take();
@@ -142,23 +134,21 @@ impl VisitMut for WrapperMarker {
   }
 
   fn visit_mut_jsx_element(&mut self, n: &mut JSXElement) {
-    if jsx_is_custom(&n) {
+    if jsx_is_custom(n) {
       // always ignore top level custom element
     } else {
       // let is_children_full_static = jsx_is_children_full_static(&n);
       // let is_list = jsx_is_list(&n) || !is_children_full_static;
       // let is_children_full_dynamic = is_list || jsx_is_children_full_dynamic(&n);
 
-      let is_list = jsx_is_list(&n);
-      let is_children_full_dynamic = is_list || jsx_is_children_full_dynamic(&n);
+      let is_list = jsx_is_list(n);
+      let is_children_full_dynamic = is_list || jsx_is_children_full_dynamic(n);
 
-      if is_list {
-        if n.children.len() > 0 {
-          n.children = vec![JSXElementChild::JSXExprContainer(JSXExprContainer {
-            span: DUMMY_SP,
-            expr: JSXExpr::Expr(Box::new(jsx_children_to_expr(n.children.take()))),
-          })];
-        }
+      if is_list && !n.children.is_empty() {
+        n.children = vec![JSXElementChild::JSXExprContainer(JSXExprContainer {
+          span: DUMMY_SP,
+          expr: JSXExpr::Expr(Box::new(jsx_children_to_expr(n.children.take()))),
+        })];
       }
 
       if is_children_full_dynamic {

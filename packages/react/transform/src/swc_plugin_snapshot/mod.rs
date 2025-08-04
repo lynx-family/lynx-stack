@@ -272,89 +272,82 @@ where
   fn static_stmt_from_jsx_element(&mut self, n: &JSXElement, el: Ident) -> Stmt {
     let mut static_stmt: Stmt = Stmt::Empty(EmptyStmt { span: DUMMY_SP });
 
-    match *jsx_name(n.opening.name.clone()) {
-      Expr::Lit(lit) => {
-        match lit {
-          Lit::Str(str) => match str.value.as_ref() {
-            "view" => {
-              static_stmt = quote!(
-                r#"const $element = __CreateView($page_id)"# as Stmt,
-                element = el.clone(),
-                page_id = self.page_id.clone(),
-              );
-            }
-            "scroll-view" => {
-              static_stmt = quote!(
-                r#"const $element = __CreateScrollView($page_id)"# as Stmt,
-                element = el.clone(),
-                page_id = self.page_id.clone(),
-              );
-            }
-            "x-scroll-view" => {
-              static_stmt = quote!(
-                r#"const $element = __CreateScrollView($page_id, { tag: "x-scroll-view" })"#
+    if let Expr::Lit(Lit::Str(str)) = *jsx_name(n.opening.name.clone()) {
+      match str.value.as_ref() {
+        "view" => {
+          static_stmt = quote!(
+            r#"const $element = __CreateView($page_id)"# as Stmt,
+            element = el.clone(),
+            page_id = self.page_id.clone(),
+          );
+        }
+        "scroll-view" => {
+          static_stmt = quote!(
+            r#"const $element = __CreateScrollView($page_id)"# as Stmt,
+            element = el.clone(),
+            page_id = self.page_id.clone(),
+          );
+        }
+        "x-scroll-view" => {
+          static_stmt = quote!(
+            r#"const $element = __CreateScrollView($page_id, { tag: "x-scroll-view" })"# as Stmt,
+            element = el.clone(),
+            page_id = self.page_id.clone(),
+          );
+        }
+        "image" => {
+          static_stmt = quote!(
+            r#"const $element = __CreateImage($page_id)"# as Stmt,
+            element = el.clone(),
+            page_id = self.page_id.clone(),
+          );
+        }
+        "text" => {
+          static_stmt = quote!(
+            r#"const $element = __CreateText($page_id)"# as Stmt,
+            element = el.clone(),
+            page_id = self.page_id.clone(),
+          );
+        }
+        "wrapper" => {
+          static_stmt = quote!(
+            r#"const $element = __CreateWrapperElement($page_id)"# as Stmt,
+            element = el.clone(),
+            page_id = self.page_id.clone(),
+          );
+        }
+        "list" => {
+          static_stmt = quote!(
+              r#"const $element = $runtime_id.snapshotCreateList($page_id, $si_id, $element_index)"#
                   as Stmt,
-                element = el.clone(),
-                page_id = self.page_id.clone(),
-              );
-            }
-            "image" => {
-              static_stmt = quote!(
-                r#"const $element = __CreateImage($page_id)"# as Stmt,
-                element = el.clone(),
-                page_id = self.page_id.clone(),
-              );
-            }
-            "text" => {
-              static_stmt = quote!(
-                r#"const $element = __CreateText($page_id)"# as Stmt,
-                element = el.clone(),
-                page_id = self.page_id.clone(),
-              );
-            }
-            "wrapper" => {
-              static_stmt = quote!(
-                r#"const $element = __CreateWrapperElement($page_id)"# as Stmt,
-                element = el.clone(),
-                page_id = self.page_id.clone(),
-              );
-            }
-            "list" => {
-              static_stmt = quote!(
-                  r#"const $element = $runtime_id.snapshotCreateList($page_id, $si_id, $element_index)"#
-                      as Stmt,
-                  element = el.clone(),
-                  runtime_id: Expr = self.runtime_id.clone(),
-                  page_id = self.page_id.clone(),
-                  si_id = self.si_id.clone(),
-                  element_index: Expr = Expr::Lit(Lit::Num(Number { span: DUMMY_SP, value: self.element_index as f64, raw: None })),
-              );
-            }
-            _ => {
-              static_stmt = quote!(
-                  r#"const $element = __CreateElement($name, $page_id)"# as Stmt,
-                  element = el.clone(),
-                  name: Expr = Expr::Lit(Lit::Str(str)),
-                  page_id = self.page_id.clone(),
-              );
-            }
-          },
-          _ => {}
-        };
-      }
-      _ => {}
+              element = el.clone(),
+              runtime_id: Expr = self.runtime_id.clone(),
+              page_id = self.page_id.clone(),
+              si_id = self.si_id.clone(),
+              element_index: Expr = Expr::Lit(Lit::Num(Number { span: DUMMY_SP, value: self.element_index as f64, raw: None })),
+          );
+        }
+        _ => {
+          static_stmt = quote!(
+              r#"const $element = __CreateElement($name, $page_id)"# as Stmt,
+              element = el.clone(),
+              name: Expr = Expr::Lit(Lit::Str(str)),
+              page_id = self.page_id.clone(),
+          );
+        }
+      };
     }
 
     static_stmt
   }
 }
 
-impl<'a, V> VisitMut for DynamicPartExtractor<'a, V>
+impl<V> VisitMut for DynamicPartExtractor<'_, V>
 where
   V: VisitMut,
 {
   fn visit_mut_jsx_element(&mut self, n: &mut JSXElement) {
-    if jsx_is_internal_slot(&n) {
+    if jsx_is_internal_slot(n) {
       if self.dynamic_part_count > 1 {
         n.visit_mut_children_with(self.dynamic_part_visitor);
         self.dynamic_parts.push(DynamicPart::Slot(
@@ -367,7 +360,7 @@ where
       }
     }
 
-    if !jsx_is_custom(&n) {
+    if !jsx_is_custom(n) {
       match Lazy::<Ident>::get(&self.page_id) {
         Some(_) => {}
         None => {
@@ -407,7 +400,7 @@ where
           for attr in &mut n.opening.attrs {
             if let JSXAttrOrSpread::JSXAttr(attr) = attr {
               let name = jsx_attr_name(&attr.name.clone()).to_string();
-              if name == "flatten".to_string() {
+              if name == *"flatten" {
                 attr.value = Some(JSXAttrValue::Lit(false.into()));
                 has_origin_flatten = true;
               }
@@ -428,7 +421,7 @@ where
           JSXAttrOrSpread::JSXAttr(_) => false,
         });
 
-      if jsx_is_list_item(&n) {
+      if jsx_is_list_item(n) {
         if has_spread_element {
         } else {
           let mut list_item_platform_info: Vec<JSXAttr> = vec![];
@@ -459,7 +452,7 @@ where
 
             true
           });
-          if list_item_platform_info.len() > 0 {
+          if !list_item_platform_info.is_empty() {
             self.dynamic_parts.push(DynamicPart::Attr(
               Expr::Object(ObjectLit {
                 span: DUMMY_SP,
@@ -528,18 +521,13 @@ where
           .for_each(|attr_or_spread| match attr_or_spread {
             JSXAttrOrSpread::SpreadElement(_) => todo!(),
             JSXAttrOrSpread::JSXAttr(JSXAttr { name, value, .. }) => {
-              if let Some(JSXAttrValue::Lit(lit)) = value {
-                match lit {
-                  Lit::Str(s) => {
-                    let transformed_value = transform_jsx_attr_str(&s.value);
-                    *value = Some(JSXAttrValue::Lit(Lit::Str(Str {
-                      span: s.span,
-                      raw: None,
-                      value: transformed_value.into(),
-                    })));
-                  }
-                  _ => {}
-                }
+              if let Some(JSXAttrValue::Lit(Lit::Str(s))) = value {
+                let transformed_value = transform_jsx_attr_str(&s.value);
+                *value = Some(JSXAttrValue::Lit(Lit::Str(Str {
+                  span: s.span,
+                  raw: None,
+                  value: transformed_value.into(),
+                })));
               }
 
               match name {
@@ -806,19 +794,16 @@ where
           });
       }
 
-      match &self.parent_element {
-        Some(parent_el) => {
-          self.static_stmts.push(RefCell::new(quote!(
-              r#"__AppendElement($parent, $child)"# as Stmt,
-              parent: Ident = parent_el.clone(),
-              child: Ident = el.clone(),
-          )));
-        }
-        None => {}
+      if let Some(parent_el) = &self.parent_element {
+        self.static_stmts.push(RefCell::new(quote!(
+            r#"__AppendElement($parent, $child)"# as Stmt,
+            parent: Ident = parent_el.clone(),
+            child: Ident = el.clone(),
+        )));
       };
 
-      let is_list = jsx_is_list(&n);
-      let is_children_full_dynamic = is_list || jsx_is_children_full_dynamic(&n);
+      let is_list = jsx_is_list(n);
+      let is_children_full_dynamic = is_list || jsx_is_children_full_dynamic(n);
 
       if !is_children_full_dynamic {
         self.element_index += 1;
@@ -892,59 +877,56 @@ where
         self.element_index += 1;
       }
 
-      match self.parent_element {
-        None => {
-          let elements = Expr::Array(ArrayLit {
-            span: DUMMY_SP,
-            elems: (0..self.element_ids.len())
-              .step_by(1)
-              .map(|e| e as i32)
-              .map(|e| {
-                Some(ExprOrSpread {
-                  spread: None,
-                  expr: Box::new(Expr::Ident(self.element_ids[&e].clone())),
-                })
+      if self.parent_element.is_none() {
+        let elements = Expr::Array(ArrayLit {
+          span: DUMMY_SP,
+          elems: (0..self.element_ids.len())
+            .step_by(1)
+            .map(|e| e as i32)
+            .map(|e| {
+              Some(ExprOrSpread {
+                spread: None,
+                expr: Box::new(Expr::Ident(self.element_ids[&e].clone())),
               })
-              .collect(),
-          });
+            })
+            .collect(),
+        });
 
-          self.static_stmts.push(RefCell::new(quote!(
-            r#"return $elements;"# as Stmt,
-            elements: Expr = elements,
-          )));
+        self.static_stmts.push(RefCell::new(quote!(
+          r#"return $elements;"# as Stmt,
+          elements: Expr = elements,
+        )));
 
-          self.snapshot_creator = Some(Function {
-            ctxt: SyntaxContext::default(),
-            params: match Lazy::<Ident>::get(&self.si_id) {
-              Some(_) => vec![Param {
-                span: DUMMY_SP,
-                decorators: vec![],
-                pat: Pat::Ident(BindingIdent {
-                  id: self.si_id.take(),
-                  type_ann: None,
-                }),
-              }],
-              None => vec![],
-            },
-            decorators: vec![],
-            span: DUMMY_SP,
-            body: Some(BlockStmt {
-              ctxt: SyntaxContext::default(),
+        self.snapshot_creator = Some(Function {
+          ctxt: SyntaxContext::default(),
+          params: match Lazy::<Ident>::get(&self.si_id) {
+            Some(_) => vec![Param {
               span: DUMMY_SP,
-              stmts: self
-                .static_stmts
-                .take()
-                .into_iter()
-                .map(|mut stmt| stmt.get_mut().take())
-                .collect(),
-            }),
-            is_generator: false,
-            is_async: false,
-            type_params: None,
-            return_type: None,
-          });
-        }
-        _ => {}
+              decorators: vec![],
+              pat: Pat::Ident(BindingIdent {
+                id: self.si_id.take(),
+                type_ann: None,
+              }),
+            }],
+            None => vec![],
+          },
+          decorators: vec![],
+          span: DUMMY_SP,
+          body: Some(BlockStmt {
+            ctxt: SyntaxContext::default(),
+            span: DUMMY_SP,
+            stmts: self
+              .static_stmts
+              .take()
+              .into_iter()
+              .map(|mut stmt| stmt.get_mut().take())
+              .collect(),
+          }),
+          is_generator: false,
+          is_async: false,
+          type_params: None,
+          return_type: None,
+        });
       };
     } else {
       n.visit_mut_children_with(self.dynamic_part_visitor);
@@ -975,15 +957,12 @@ where
           t: Expr = t.into(),
       )));
 
-      match &self.parent_element {
-        Some(parent_el) => {
-          self.static_stmts.push(RefCell::new(quote!(
-              r#"__AppendElement($parent, $child)"# as Stmt,
-              parent: Ident = parent_el.clone(),
-              child: Ident = el.clone(),
-          )));
-        }
-        None => {}
+      if let Some(parent_el) = &self.parent_element {
+        self.static_stmts.push(RefCell::new(quote!(
+            r#"__AppendElement($parent, $child)"# as Stmt,
+            parent: Ident = parent_el.clone(),
+            child: Ident = el.clone(),
+        )));
       };
 
       self.element_index += 1;
@@ -1151,25 +1130,22 @@ where
               ));
             }
 
-            match &mut node.opening.name {
-              JSXElementName::Ident(_ident) => {
-                node.opening.name = JSXElementName::JSXMemberExpr(JSXMemberExpr {
-                  obj: JSXObject::Ident(self.runtime_components_ident.clone()),
-                  prop: private_ident!("Page").into(),
-                  span: node.opening.span,
-                });
+            if let JSXElementName::Ident(_ident) = &mut node.opening.name {
+              node.opening.name = JSXElementName::JSXMemberExpr(JSXMemberExpr {
+                obj: JSXObject::Ident(self.runtime_components_ident.clone()),
+                prop: private_ident!("Page").into(),
+                span: node.opening.span,
+              });
 
-                if let Some(JSXClosingElement { name, .. }) = &mut node.closing {
-                  if let JSXElementName::Ident(ident) = name {
-                    *name = JSXElementName::JSXMemberExpr(JSXMemberExpr {
-                      obj: JSXObject::Ident(self.runtime_components_ident.clone()),
-                      prop: private_ident!("Page").into(),
-                      span: ident.span(),
-                    });
-                  }
+              if let Some(JSXClosingElement { name, .. }) = &mut node.closing {
+                if let JSXElementName::Ident(ident) = name {
+                  *name = JSXElementName::JSXMemberExpr(JSXMemberExpr {
+                    obj: JSXObject::Ident(self.runtime_components_ident.clone()),
+                    prop: private_ident!("Page").into(),
+                    span: ident.span(),
+                  });
                 }
               }
-              _ => {}
             }
             return node.visit_mut_children_with(self);
           }
@@ -1207,7 +1183,7 @@ where
     };
     node.visit_mut_with(&mut wrap_dynamic_part);
 
-    let target = self.cfg.target.clone();
+    let target = self.cfg.target;
     let runtime_id = self.runtime_id.clone();
     let mut dynamic_part_extractor = DynamicPartExtractor::new(
       self.runtime_id.clone(),
@@ -1225,15 +1201,12 @@ where
     let mut snapshot_refs_and_spread_index: Vec<Option<ExprOrSpread>> = vec![];
     let mut snapshot_slot_def: Vec<Option<ExprOrSpread>> = vec![];
 
-    match dynamic_part_extractor.key {
-      Some(key) => {
-        snapshot_attrs.push(JSXAttrOrSpread::JSXAttr(JSXAttr {
-          span: DUMMY_SP,
-          name: JSXAttrName::Ident(IdentName::new("key".into(), DUMMY_SP)),
-          value: Some(key),
-        }));
-      }
-      None => {}
+    if let Some(key) = dynamic_part_extractor.key {
+      snapshot_attrs.push(JSXAttrOrSpread::JSXAttr(JSXAttr {
+        span: DUMMY_SP,
+        name: JSXAttrName::Ident(IdentName::new("key".into(), DUMMY_SP)),
+        value: Some(key),
+      }));
     }
 
     let (dynamic_part_attr, dynamic_part_children): (Vec<_>, Vec<_>) = dynamic_part_extractor
@@ -1292,9 +1265,9 @@ where
               }
               snapshot_dynamic_part_def.push(Some(ExprOrSpread {
                 spread: None,
-                expr: Box::new((&dynamic_part).to_updater(
+                expr: Box::new(dynamic_part.to_updater(
                   runtime_id.clone(),
-                  target.clone(),
+                  target,
                   snapshot_dynamic_part_def.len() as i32,
                 )),
               }));
@@ -1546,17 +1519,14 @@ where
 
   fn visit_mut_module_items(&mut self, n: &mut Vec<ModuleItem>) {
     let mut new_items: Vec<ModuleItem> = vec![];
-    for (_i, item) in n.iter_mut().enumerate() {
+    for item in n.iter_mut() {
       item.visit_mut_with(self);
       new_items.extend(self.current_snapshot_defs.take());
       new_items.push(item.take());
     }
 
-    match &self.runtime_components_module_item {
-      Some(module_item) => {
-        new_items.insert(0, module_item.clone());
-      }
-      None => {}
+    if let Some(module_item) = &self.runtime_components_module_item {
+      new_items.insert(0, module_item.clone());
     }
 
     *n = new_items;
@@ -1569,39 +1539,31 @@ where
       self.parse_directives(span);
     }
 
-    if matches!(self.cfg.is_dynamic_component, Some(true)) && self.css_id_value == None {
+    if matches!(self.cfg.is_dynamic_component, Some(true)) && self.css_id_value.is_none() {
       self.css_id_value = Some(Expr::Lit(Lit::Num(0.into())));
     }
 
     n.visit_mut_children_with(self);
-    match Lazy::<Expr>::get(&self.runtime_id) {
-      Some(runtime_id) => {
-        match runtime_id {
-          Expr::Ident(runtime_id) => {
-            prepend_stmt(
-              &mut n.body,
-              ModuleItem::ModuleDecl(ModuleDecl::Import(ImportDecl {
-                span: DUMMY_SP,
-                specifiers: vec![ImportSpecifier::Namespace(ImportStarAsSpecifier {
-                  span: DUMMY_SP,
-                  local: runtime_id.clone(),
-                })],
-                src: Box::new(Str {
-                  span: DUMMY_SP,
-                  raw: None,
-                  value: self.cfg.runtime_pkg.clone().into(),
-                }),
-                type_only: Default::default(),
-                // asserts: Default::default(),
-                with: Default::default(),
-                phase: ImportPhase::Evaluation,
-              })),
-            );
-          }
-          _ => {}
-        };
-      }
-      None => {}
+    if let Some(Expr::Ident(runtime_id)) = Lazy::<Expr>::get(&self.runtime_id) {
+      prepend_stmt(
+        &mut n.body,
+        ModuleItem::ModuleDecl(ModuleDecl::Import(ImportDecl {
+          span: DUMMY_SP,
+          specifiers: vec![ImportSpecifier::Namespace(ImportStarAsSpecifier {
+            span: DUMMY_SP,
+            local: runtime_id.clone(),
+          })],
+          src: Box::new(Str {
+            span: DUMMY_SP,
+            raw: None,
+            value: self.cfg.runtime_pkg.clone().into(),
+          }),
+          type_only: Default::default(),
+          // asserts: Default::default(),
+          with: Default::default(),
+          phase: ImportPhase::Evaluation,
+        })),
+      );
     }
   }
 
@@ -1612,16 +1574,14 @@ where
         let callee_expr = n.callee.as_expr().unwrap();
         if callee_expr.is_ident_ref_to("__SNAPSHOT__") {
           let callee_ident = callee_expr.as_ident().unwrap();
-          if callee_ident.to_id().1.has_mark(self.unresolved_mark) {
-            if n.args.len() == 1 {
-              let arg = &mut n.args[0];
-              if arg.expr.is_jsx_element() {
-                let jsx = arg.expr.as_mut_jsx_element().unwrap();
-                self.current_snapshot_id = None;
-                self.visit_mut_jsx_element(jsx);
-                if self.current_snapshot_id.is_some() {
-                  *node = Expr::Ident(self.current_snapshot_id.take().unwrap());
-                }
+          if callee_ident.to_id().1.has_mark(self.unresolved_mark) && n.args.len() == 1 {
+            let arg = &mut n.args[0];
+            if arg.expr.is_jsx_element() {
+              let jsx = arg.expr.as_mut_jsx_element().unwrap();
+              self.current_snapshot_id = None;
+              self.visit_mut_jsx_element(jsx);
+              if self.current_snapshot_id.is_some() {
+                *node = Expr::Ident(self.current_snapshot_id.take().unwrap());
               }
             }
           }

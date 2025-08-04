@@ -1,32 +1,6 @@
-// @ts-ignore the wasm module built later than the ts code
-import init from '@lynx-js/web-style-transformer';
-let wasm: Awaited<ReturnType<typeof init>>;
+import { wasm } from '@lynx-js/web-style-transformer';
 let HEAPU16: Uint16Array | undefined;
-var ENVIRONMENT_IS_NODE = typeof process == 'object'
-  && typeof process.versions == 'object'
-  && typeof process.versions.node == 'string';
-export const initTokenizer = async () => {
-  // initialize wasm module in node.js environment
-  if (ENVIRONMENT_IS_NODE) {
-    const path = await import(/* webpackIgnore:true */ 'node:path');
-    const fs = await import(/* webpackIgnore:true */ 'node:fs/promises');
-    const wasmModuleBuffer = await fs.readFile(
-      path.join(
-        import.meta.dirname,
-        '..',
-        '..',
-        'node_modules',
-        '@lynx-js',
-        'web-style-transformer',
-        'dist',
-        'index_bg.wasm',
-      ),
-    );
-    wasm = await init(wasmModuleBuffer);
-  } else {
-    wasm = await init();
-  }
-};
+
 const stringToUTF16 = (str: string) => {
   const len = str.length;
   const ptr = wasm.malloc(len << 1);

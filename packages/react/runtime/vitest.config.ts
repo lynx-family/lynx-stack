@@ -60,6 +60,7 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
+      '@lynx-js/react/compat': path.resolve(__dirname, './compat/index.js'),
       '@lynx-js/react/worklet-runtime/bindings': path.resolve(__dirname, '../worklet-runtime/lib/bindings/index.js'),
       '@lynx-js/react/runtime-components': path.resolve(__dirname, '../components/src/index.ts'),
       '@lynx-js/react/internal': path.resolve(__dirname, './src/internal.ts'),
@@ -83,9 +84,9 @@ export default defineConfig({
         '__test__/utils/**',
         'lib/**',
         'src/index.ts',
-        'src/lynx-api.ts',
         'src/lynx.ts',
         'src/root.ts',
+        'src/debug/component-stack.ts',
         'src/debug/debug.ts',
         'src/lynx/calledByNative.ts',
         'src/lynx/component.ts',

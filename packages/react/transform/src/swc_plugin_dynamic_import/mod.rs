@@ -69,7 +69,7 @@ where
 
 fn is_import_call_str_lit(call_expr: &CallExpr) -> (bool, bool, &str) {
   match &call_expr.callee {
-    Callee::Import(_) if call_expr.args.len() >= 1 => match &*call_expr.args[0].expr {
+    Callee::Import(_) if !call_expr.args.is_empty() => match &*call_expr.args[0].expr {
       Expr::Lit(Lit::Str(Str { value, .. })) => (true, true, value),
       Expr::Lit(_) => (true, false, ""),
       _ => (false, false, ""),
@@ -80,10 +80,9 @@ fn is_import_call_str_lit(call_expr: &CallExpr) -> (bool, bool, &str) {
 
 fn is_import_call_tpl(call_expr: &CallExpr) -> bool {
   match &call_expr.callee {
-    Callee::Import(_) if call_expr.args.len() >= 1 => match &*call_expr.args[0].expr {
-      Expr::Tpl(_) => true,
-      _ => false,
-    },
+    Callee::Import(_) if !call_expr.args.is_empty() => {
+      matches!(&*call_expr.args[0].expr, Expr::Tpl(_))
+    }
     _ => false,
   }
 }
@@ -119,12 +118,14 @@ where
       return;
     }
 
-    if call_expr.args.len() == 0 {
+    if call_expr.args.is_empty() {
       HANDLER.with(|handler| {
         handler
           .struct_span_err(
             call_expr.span,
-            format!("`import()` with no argument is not allowed").as_str(),
+            "`import()` with no argument is not allowed"
+              .to_string()
+              .as_str(),
           )
           .emit()
       });
@@ -153,7 +154,9 @@ where
         handler
           .struct_span_err(
             call_expr.span,
-            format!("`import(...)` call with non-string literal module id is not allowed").as_str(),
+            "`import(...)` call with non-string literal module id is not allowed"
+              .to_string()
+              .as_str(),
           )
           .emit()
       });
@@ -174,7 +177,9 @@ where
           handler
             .struct_span_err(
               call_expr.span,
-              format!("`import(\"...\", ...)` with invalid options is not allowed").as_str(),
+              "`import(\"...\", ...)` with invalid options is not allowed"
+                .to_string()
+                .as_str(),
             )
             .emit()
         });
@@ -208,7 +213,7 @@ where
   fn visit_mut_module(&mut self, n: &mut Module) {
     n.visit_mut_children_with(self);
 
-    if self.named_imports.len() > 0 {
+    if !self.named_imports.is_empty() {
       prepend_stmt(
         &mut n.body,
         ModuleItem::ModuleDecl(ModuleDecl::Import(ImportDecl {

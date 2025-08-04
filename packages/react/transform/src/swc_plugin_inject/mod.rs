@@ -118,7 +118,9 @@ impl VisitMut for InjectVisitor {
   fn visit_mut_expr(&mut self, n: &mut Expr) {
     if let Expr::Ident(i) = n {
       if i.to_id().1.has_mark(self.unresolved_mark) {
-        if !self.inject_exprs.contains_key(&i.sym.to_string()) {
+        if let std::collections::hash_map::Entry::Vacant(e) =
+          self.inject_exprs.entry(i.sym.to_string())
+        {
           // if we can't find the inject_expr, we need to parse / create it
           if let Some(inject) = self.opts.inject.get(&i.sym.to_string()) {
             match &inject {
@@ -126,7 +128,7 @@ impl VisitMut for InjectVisitor {
                 let expr = parse_define(inject);
                 match expr {
                   Ok(expr) => {
-                    self.inject_exprs.insert(i.sym.to_string(), expr);
+                    e.insert(expr);
                   }
                   Err(e) => {
                     HANDLER.with(|handler| {
@@ -143,9 +145,7 @@ impl VisitMut for InjectVisitor {
               }
               InjectAs::ImportDefault(pkg_name) => {
                 let ii = private_ident!(i.sym.clone());
-                self
-                  .inject_exprs
-                  .insert(i.sym.to_string(), Box::new(Expr::Ident(ii.clone())));
+                e.insert(Box::new(Expr::Ident(ii.clone())));
                 self.imports.push((
                   pkg_name.to_string(),
                   ImportSpecifier::Default(ImportDefaultSpecifier {
@@ -156,9 +156,7 @@ impl VisitMut for InjectVisitor {
               }
               InjectAs::ImportStarAs(pkg_name) => {
                 let ii = private_ident!(i.sym.clone());
-                self
-                  .inject_exprs
-                  .insert(i.sym.to_string(), Box::new(Expr::Ident(ii.clone())));
+                e.insert(Box::new(Expr::Ident(ii.clone())));
                 self.imports.push((
                   pkg_name.to_string(),
                   ImportSpecifier::Namespace(ImportStarAsSpecifier {
@@ -169,9 +167,7 @@ impl VisitMut for InjectVisitor {
               }
               InjectAs::ImportNamed(pkg_name, imported) => {
                 let ii = private_ident!(i.sym.clone());
-                self
-                  .inject_exprs
-                  .insert(i.sym.to_string(), Box::new(Expr::Ident(ii.clone())));
+                e.insert(Box::new(Expr::Ident(ii.clone())));
                 self.imports.push((
                   pkg_name.to_string(),
                   ImportSpecifier::Named(ImportNamedSpecifier {
@@ -202,7 +198,7 @@ impl VisitMut for InjectVisitor {
     n.visit_mut_children_with(self);
 
     // TODO(hongzhiyuan.hzy): groupBy `src`
-    if self.imports.len() > 0 {
+    if !self.imports.is_empty() {
       self.imports.take().into_iter().rev().for_each(|import| {
         prepend_stmt(
           &mut n.body,
@@ -237,7 +233,7 @@ fn parse_define(define: &str) -> PResult<Box<Expr>> {
   );
   let mut parser = Parser::new_from(lexer);
 
-  return parser.parse_expr();
+  parser.parse_expr()
 }
 
 #[cfg(test)]
