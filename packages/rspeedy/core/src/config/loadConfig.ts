@@ -119,10 +119,18 @@ export async function loadConfig(
   // Note that we are using `pathToFileURL` since absolute paths must be valid file:// URLs on Windows.
   const specifier = pathToFileURL(configPath).toString()
 
-  const unregister = register({
-    load: !shouldUseNativeImport(configPath),
-    resolve: true,
-  })
+  let unregister: () => void
+
+  if (hasNativeTSSupport()) {
+    unregister = () => {
+      // No-op: Native TypeScript support handles module loading
+    }
+  } else {
+    unregister = register({
+      load: !shouldUseNativeImport(configPath),
+      resolve: true,
+    })
+  }
 
   try {
     const [exports, { validate }] = await Promise.all([
@@ -191,11 +199,3 @@ function isJavaScriptPath(configPath: string): boolean {
 export function TEST_ONLY_hasNativeTSSupport(): boolean {
   return hasNativeTSSupport()
 }
-
-/**
- * Check if the current environment has native TypeScript support.
- * This includes Deno (which has built-in TS support) and Node.js with TypeScript flags.
- *
- * @public
- */
-export { hasNativeTSSupport }

@@ -49,12 +49,6 @@ function tryGetPackageFolderFor(
 export function tryStartLocalRspeedy(
   root: string = process.cwd(),
 ): false | Promise<void> {
-  // Check for Deno environment and automatically use unmanaged mode
-  // @ts-expect-error - Deno global isn't be defined in Node.js
-  if (typeof Deno !== 'undefined' || process.versions?.deno) {
-    return false
-  }
-
   if (process.argv.includes(Constants.unmanagedParameterLongName)) {
     logger.info(
       `Bypassing the Rspeedy version selector because ${
