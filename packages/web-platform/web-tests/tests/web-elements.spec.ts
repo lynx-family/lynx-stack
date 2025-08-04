@@ -1681,6 +1681,20 @@ test.describe('web-elements test suite', () => {
       // Verify that the crossorigin attribute is set to 'anonymous' on the internal img element
       expect(crossoriginValue).toBe('anonymous');
     });
+    test('referrerpolicy', async ({ page }, { titlePath }) => {
+      const title = getTitle(titlePath);
+      await gotoWebComponentPage(page, title);
+
+      // Assert that the referrerpolicy attribute value is passed to the <img> in the shadow tree
+      const referrerpolicyValue = await page.evaluate(() => {
+        const xImage = document.querySelector('#test-referrerpolicy');
+        const img = xImage?.shadowRoot?.querySelector('#img');
+        return img?.getAttribute('referrerpolicy');
+      });
+
+      // Verify that the referrerpolicy attribute is set to 'no-referrer' on the internal img element
+      expect(referrerpolicyValue).toBe('no-referrer');
+    });
   });
 
   test.describe('x-list', () => {
