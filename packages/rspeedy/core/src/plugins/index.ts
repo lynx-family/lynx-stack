@@ -23,19 +23,6 @@ async function applyDebugPlugins(
   rsbuildInstance.addPlugins(await Promise.all(debugPlugins))
 }
 
-export async function applyDefaultDevPlugins(
-  rsbuildInstance: RsbuildInstance,
-  config: Config,
-): Promise<void> {
-  const devPlugins = Object.freeze<Promise<RsbuildPlugin>[]>([
-    import('./dev.plugin.js').then(({ pluginDev }) =>
-      pluginDev(config.dev, config.server)
-    ),
-  ])
-
-  rsbuildInstance.addPlugins(await Promise.all(devPlugins))
-}
-
 export async function applyDefaultPlugins(
   rsbuildInstance: RsbuildInstance,
   config: Config,
@@ -45,6 +32,10 @@ export async function applyDefaultPlugins(
 
     import('./chunkLoading.plugin.js').then(({ pluginChunkLoading }) =>
       pluginChunkLoading()
+    ),
+
+    import('./dev.plugin.js').then(({ pluginDev }) =>
+      pluginDev(config.dev, config.server)
     ),
 
     import('./minify.plugin.js').then(({ pluginMinify }) =>
@@ -79,11 +70,6 @@ export async function applyDefaultPlugins(
       rsbuildInstance.addPlugins(plugins)
     }),
   ]
-
-  if (config.mode === 'development') {
-    debug('apply Rspeedy default development plugins')
-    promises.push(applyDefaultDevPlugins(rsbuildInstance, config))
-  }
 
   if (isDebug()) {
     debug('apply Rspeedy default debug plugins')

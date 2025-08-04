@@ -59,12 +59,6 @@ export async function dev(
 
     const rspeedy = await createRspeedy(createRspeedyOptions)
 
-    // When using `rspeedy dev --mode=production`, the `lynx:rsbuild:dev` plugin will not be loaded.
-    if (!rspeedy.isPluginExists('lynx:rsbuild:dev')) {
-      const { applyDefaultDevPlugins } = await import('../plugins/index.js')
-      await applyDefaultDevPlugins(rspeedy, rspeedyConfig)
-    }
-
     const server = await rspeedy.createDevServer()
 
     const { server: { close } } = await server.listen()

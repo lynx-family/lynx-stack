@@ -20,6 +20,9 @@ export function pluginDev(
 ): RsbuildPlugin {
   return {
     name: 'lynx:rsbuild:dev',
+    apply(config, { action }) {
+      return action === 'dev' || config.mode === 'development'
+    },
     async setup(api) {
       const hostname = server?.host ?? await findIp('v4')
 
