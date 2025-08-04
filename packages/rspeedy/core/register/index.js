@@ -13,6 +13,16 @@ import module from 'node:module'
  * @returns - The `unregister` function.
  */
 export function register(options) {
+  // Check for Deno environment first
+  // @ts-expect-error - Deno global isn't defined in Node.js
+  if (typeof Deno !== 'undefined' || process.versions?.deno) {
+    // Deno doesn't support module.register(), but it has native TypeScript support
+    // Return a no-op unregister function
+    return function unregister() {
+      // No-op for Deno
+    }
+  }
+
   // eslint-disable-next-line n/no-unsupported-features/node-builtins
   if (!module.register) {
     throw new Error(
