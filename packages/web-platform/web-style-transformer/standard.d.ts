@@ -25,12 +25,3 @@ export function transform_raw_u16_inline_style_ptr_parsed(
   value_ptr: string,
   value_len: number,
 ): Array<any> | undefined;
-export function malloc(size: number): number;
-/**
- * Frees the allocated memory at the given pointer with the specified size.
- *
- * # Safety
- * The caller must ensure that `ptr` was allocated with the same size and alignment using `malloc`,
- * and that it is not used after being freed. Passing an invalid pointer or incorrect size may cause undefined behavior.
- */
-export function free(ptr: number, size: number): void;

@@ -15,10 +15,10 @@ use crate::transformer::constants::{
 use crate::{get_rename_rule_value, get_replace_rule_value};
 
 pub struct TransformerData<'a> {
-  source: &'a js_sys::JsString,
-  transformed_source: Vec<String>,
-  offset: u32,                        // current the tail offset of the original source
-  extra_children_styles: Vec<String>, // used to store the extra styles for children elements
+  source: &'a str,
+  transformed_source: Vec<&'a str>,
+  offset: usize,                       // current the tail offset of the original source
+  extra_children_styles: Vec<&'a str>, // used to store the extra styles for children elements
 }
 
 // append ';' at the end of each declaration except the last one
@@ -26,9 +26,9 @@ macro_rules! append_separator {
   ($transformed_source:expr, $decl_index:expr, $total_len:expr, $is_important:expr) => {
     if $decl_index < $total_len - 1 {
       if $is_important {
-        $transformed_source.push(String::from(IMPORTANT_STR_U16));
+        $transformed_source.push(IMPORTANT_STR_U16);
       }
-      $transformed_source.push(String::from(";"));
+      $transformed_source.push(";");
     }
   };
 }
@@ -66,10 +66,10 @@ macro_rules! push_u16_decl_pairs {
 type CSSPair = (String, u32, u32, String, u32, u32);
 
 pub fn query_transform_rules<'a>(
-  name: &js_sys::JsString,
+  name: &'a str,
   name_start: u32,
   name_end: u32,
-  value: &js_sys::JsString,
+  value: &'a str,
   value_start: u32,
   value_end: u32,
 ) -> (Vec<CSSPair>, Vec<CSSPair>) {
@@ -335,8 +335,7 @@ impl Transformer for TransformerData<'_> {
       // Append content before the declaration name
       self
         .transformed_source
-        .push(String::from(self.source.slice(self.offset, name_start)));
-      // .push(&String::from(self.source.slice(self.offset, name_start)));
+        .push(&self.source[self.offset..name_start]);
 
       let result_len = result.len();
       for (
@@ -387,7 +386,7 @@ impl Transformer for TransformerData<'_> {
   }
 }
 
-pub fn transform_inline_style_string<'a>(source: &'a js_sys::JsString) -> String {
+pub fn transform_inline_style_string<'a>(source: &str) -> String {
   let mut transformer: TransformerData<'a> = TransformerData {
     source,
     transformed_source: Vec::new(),
@@ -395,20 +394,17 @@ pub fn transform_inline_style_string<'a>(source: &'a js_sys::JsString) -> String
     extra_children_styles: Vec::new(),
   };
   parse_inline_style::parse_inline_style(source, &mut transformer);
-  // if transformer.offset != 0 {
-  //   // append the remaining part of the source
-  //   transformer
-  //     .transformed_source
-  //     .extend_from_slice(&source[transformer.offset..]);
-  // }
-  // String::from_utf16(&transformer.transformed_source).unwrap()
-  // console::log_1(&transformer.transformed_source);
+  if transformer.offset != 0 {
+    // append the remaining part of the source
+    transformer
+      .transformed_source
+      .push(&source[transformer.offset..]);
+  }
   transformer
     .transformed_source
     .iter()
     .flat_map(|s| s.chars())
     .collect()
-  // transformer.transformed_source
 }
 
 #[cfg(test)]

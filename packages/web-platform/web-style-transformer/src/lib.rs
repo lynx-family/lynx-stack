@@ -1,6 +1,5 @@
 use js_sys::JsString;
 use wasm_bindgen::prelude::*;
-use web_sys::console;
 
 pub mod transformer;
 
@@ -12,57 +11,14 @@ pub mod transformer;
 /// The caller must ensure that `ptr` is valid and points to a slice of `u16` of length `len`.
 /// This is a contract with the JavaScript side. Passing an invalid pointer or incorrect length may cause undefined behavior.
 #[wasm_bindgen]
-// 将参数从 (ptr: *const u16, len: usize) 改为直接接收 JsString
-pub fn transform_inline_style(source: js_sys::JsString) -> Option<JsString> {
-  // 将JsString转换为Rust字符串
-  // let rust_str = input.as_string()?;
-
-  // // 编码为UTF-16字节数组
-  // let utf16_bytes: Vec<u16> = rust_str.encode_utf16().collect();
-
-  // console::log_1(&js_sys::JsString::from(input.length().to_string()));
-  // console::log_1(&js_sys::JsString::from(input.char_code_at(1).to_string()));
-
-  // 调用转换函数
-  let transformed_inline_style = transformer::transform::transform_inline_style_string(&source);
-  // console::log_1(&transformed_inline_style.to_string());
-
-  Some(js_sys::JsString::from(transformed_inline_style))
-  // console::log_1(&js_sys::JsString::from("111"));
-  // if !transformed_inline_style.is_empty() {
-  //   return Some(js_sys::JsString::from_char_code(
-  //     &transformed_inline_style.as_slice(),
-  //   ));
-  // }
-  // None
-
-  // // 3. 将结果转换回 JsString 并返回
-  // // Some(js_sys::JsString::from(transformed_str))
-  // Some(js_sys::JsString::from("QQQ"))
-
-  // let utf16_vec: Vec<u16> = input_str.encode_utf16().collect();
-  // let mut utf16_array = [0u16; 10]; // 定义一个长度为10的数组
-  // let len = utf16_vec.len().min(utf16_array.len());
-  // utf16_array[..len].copy_from_slice(&utf16_vec[..len]);
+pub fn transform_inline_style(source: String) -> Option<JsString> {
+  unsafe {
+    let transformed_inline_style = transformer::transform::transform_inline_style_string(&source);
+    return Some(js_sys::JsString::from(transformed_inline_style));
+  }
+  None
 }
 
-// #[wasm_bindgen]
-// pub fn transform_raw_u16_inline_style_ptr(ptr: *const u16, len: usize) -> Option<js_sys::JsString> {
-//   // Safety: We assume the pointer is valid and points to a slice of u16
-//   // of length `len`. This is a contract with the JavaScript side.
-//   unsafe {
-//     let slice = core::slice::from_raw_parts(ptr, len);
-//     // Call the tokenize function with our data and callback
-//     let (transformed_inline_style, _) =
-//       transformer::transformer::transform_inline_style_string(&slice);
-//     if !transformed_inline_style.is_empty() {
-//       return Some(js_sys::JsString::from_char_code(
-//         &transformed_inline_style.as_slice(),
-//       ));
-//     }
-//   }
-//   None
-// }
 macro_rules! push_parsed_result_to_js_array {
   ($source:expr) => {{
     let target = js_sys::Array::new();
@@ -115,25 +71,4 @@ pub fn transform_raw_u16_inline_style_ptr_parsed(
     }
     Some(ret)
   }
-}
-
-#[wasm_bindgen]
-pub fn malloc(size: usize) -> *mut u8 {
-  // Allocate memory on the heap
-  let layout = std::alloc::Layout::from_size_align(size, 16).unwrap();
-  unsafe { std::alloc::alloc(layout) }
-}
-
-/// Frees the allocated memory at the given pointer with the specified size.
-///
-/// # Safety
-/// The caller must ensure that `ptr` was allocated with the same size and alignment using `malloc`,
-/// and that it is not used after being freed. Passing an invalid pointer or incorrect size may cause undefined behavior.
-#[wasm_bindgen]
-pub unsafe fn free(ptr: *mut u8, size: usize) {
-  // Free the allocated memory
-  // We need to reconstruct the Layout that was used for allocation.
-  // Assuming align is 1 as used in malloc.
-  let layout = std::alloc::Layout::from_size_align(size, 16).unwrap();
-  unsafe { std::alloc::dealloc(ptr, layout) }
 }

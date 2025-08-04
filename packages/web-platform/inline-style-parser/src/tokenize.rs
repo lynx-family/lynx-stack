@@ -6,38 +6,6 @@ const URL_STR: [u32; 3] = ['u' as u32, 'r' as u32, 'l' as u32];
  * this code forked from css-tree
  */
 
-// § 4.3.3. Consume a numeric token
-pub fn consume_numeric_token(source: &js_sys::JsString, offset: &mut u32, token_type: &mut u16) {
-  let source_length = source.length();
-  // Consume a number and let number be the result.
-  *offset = consume_number(source, *offset);
-
-  // If the next 3 input code points would start an identifier, then:
-  if is_identifier_start!(
-    get_char_code!(source, source_length, *offset),
-    get_char_code!(source, source_length, *offset + 1),
-    get_char_code!(source, source_length, *offset + 2)
-  ) {
-    // Create a <dimension-token> with the same value and type flag as number, and a unit set initially to the empty string.
-    // Consume a name. Set the <dimension-token>’s unit to the returned value.
-    // Return the <dimension-token>.
-    *token_type = DIMENSION_TOKEN;
-    *offset = consume_name(source, *offset);
-    return;
-  }
-
-  // Otherwise, if the next input code point is U+0025 PERCENTAGE SIGN (%), consume it.
-  if get_char_code!(source, source_length, *offset) == 0x0025 {
-    // Create a <percentage-token> with the same value as number, and return it.
-    *token_type = PERCENTAGE_TOKEN;
-    (*offset) += 1;
-    return;
-  }
-
-  // Otherwise, create a <number-token> with the same value and type flag as number, and return it.
-  *token_type = NUMBER_TOKEN;
-}
-
 // § 4.3.4. Consume an ident-like token
 pub fn consume_ident_like_token(source: &js_sys::JsString, offset: &mut u32, token_type: &mut u16) {
   let name_start_offset = *offset;
@@ -82,81 +50,6 @@ pub fn consume_ident_like_token(source: &js_sys::JsString, offset: &mut u32, tok
   *token_type = IDENT_TOKEN;
 }
 
-pub fn consume_string_token(
-  source: &js_sys::JsString,
-  ending_code_point: u32,
-  offset: &mut u32,
-  token_type: &mut u16,
-) {
-  let source_length = source.length();
-  let mut ending_code_point = ending_code_point;
-  // This algorithm may be called with an ending code point, which denotes the code point
-  // that ends the string. If an ending code point is not specified,
-  // the current input code point is used.
-  if ending_code_point == 0 {
-    ending_code_point = get_char_code!(source, source_length, *offset);
-    *offset += 1;
-  }
-
-  // Initially create a <string-token> with its value set to the empty string.
-  *token_type = STRING_TOKEN;
-  loop {
-    if (*offset) >= source_length {
-      return;
-    }
-    let code = source.char_code_at(*offset) as u32;
-    let char_code = char_code_category!(code);
-    // ending code point
-    if char_code == ending_code_point {
-      // Return the <string-token>.
-      (*offset) += 1;
-      return;
-
-      // EOF
-      // EofCategory:
-      // This is a parse error. Return the <string-token>.
-      // return;
-    }
-
-    match char_code {
-      // newline
-      char_code_definitions::WHITE_SPACE_CATEGORY => {
-        if is_newline!(code) {
-          // This is a parse error. Reconsume the current input code point,
-          // create a <bad-string-token>, and return it.
-          *offset += get_new_line_length!(source, source_length, *offset, code);
-          *token_type = BAD_STRING_TOKEN;
-          return;
-        }
-      }
-
-      // U+005C REVERSE SOLIDUS (\)
-      0x005C => {
-        // If the next input code point is EOF, do nothing.
-        if *offset == source_length - 1 {
-          *offset += 1;
-          continue;
-        }
-
-        let next_code = get_char_code!(source, source_length, (*offset) + 1);
-
-        // Otherwise, if the next input code point is a newline, consume it.
-        if is_newline!(next_code) {
-          *offset += get_new_line_length!(source, source_length, (*offset) + 1, next_code);
-        } else if is_valid_escape!(code, next_code) {
-          // Otherwise, (the stream starts with a valid escape) consume
-          // an escaped code point and append the returned code point to
-          // the <string-token>’s value.
-          *offset = consume_escaped(source, *offset) - 1;
-        }
-      }
-      _ => {} // anything else
-              // Append the current input code point to the <string-token>’s value.
-    }
-
-    *offset += 1;
-  }
-}
 // § 4.3.6. Consume a url token
 // Note: This algorithm assumes that the initial "url(" has already been consumed.
 // This algorithm also assumes that it’s being called to consume an "unquoted" value, like url(foo).
@@ -251,92 +144,100 @@ pub fn consume_url_token(source: &js_sys::JsString, offset: &mut u32, token_type
 }
 
 pub trait Parser {
-  fn on_token(&mut self, token_type: u16, start: u32, end: u32);
+  fn on_token(&mut self, token_type: u16, start: usize, end: usize);
 }
 
-pub fn tokenize<T: Parser>(source: &js_sys::JsString, parser: &mut T) {
-  let source_length = source.length();
-  let mut start: u32 = is_bom!(get_char_code!(source, source_length, 0));
+pub fn tokenize<T: Parser>(source: &str, parser: &mut T) {
+  let source_length = source.len();
+  let mut start: usize = is_bom!(get_char_code!(source, source_length, 0));
   let mut offset = start;
   let mut token_type: u16 = EOF_TOKEN;
-  while offset < source_length {
-    let code = source.char_code_at(offset) as u32;
+
+  let mut chars = source.chars().peekable();
+
+  while let Some(c) = chars.next() {
+    let code = c as u32;
+    // The cloned iterator is used to view subsequent characters without affecting the original iterator
     match char_code_category!(code) {
       // whitespace
       char_code_definitions::WHITE_SPACE_CATEGORY => {
         // Consume as much whitespace as possible. Return a <whitespace-token>.
         token_type = WHITESPACE_TOKEN;
-        offset = find_white_space_end(source, offset + 1);
+        offset = find_white_space_end(&mut chars, offset + 1);
       }
       // U+0022 QUOTATION MARK (")
       0x0022 => {
         // Consume a string token and return it.
-        consume_string_token(source, 0, &mut offset, &mut token_type);
-      }
-      // U+0023 NUMBER SIGN (#)
-      0x0023 => {
-        // If the next input code point is a name code point or the next two input code points are a valid escape, then:
-        if is_name!(get_char_code!(source, source_length, offset + 1))
-          || is_valid_escape!(
-            get_char_code!(source, source_length, offset + 1),
-            get_char_code!(source, source_length, offset + 2)
-          )
-        {
-          // Create a <hash-token>.
-          token_type = HASH_TOKEN;
-
-          // If the next 3 input code points would start an identifier, set the <hash-token>’s type flag to "id".
-          // if (is_identifier_start!(get_char_code!(source, source_length, offset + 1), get_char_code!(source, source_length, offset + 2), get_char_code!(source, source_length, offset + 3))) {
-          //     // TODO: set id flag
-          // }
-
-          // Consume a name, and set the <hash-token>’s value to the returned string.
-          offset = consume_name(source, offset + 1);
-
-          // Return the <hash-token>.
-        } else {
-          // Otherwise, return a <delim-token> with its value set to the current input code point.
-          token_type = DELIM_TOKEN;
-          offset += 1;
-        }
+        consume_string_token(&mut chars, code, &mut offset, &mut token_type);
       }
       // U+0027 APOSTROPHE (')
       0x0027 => {
         // Consume a string token and return it.
-        consume_string_token(source, 0, &mut offset, &mut token_type);
+        consume_string_token(&mut chars, 0, &mut offset, &mut token_type);
       }
+      // U+0023 NUMBER SIGN (#)
+      0x0023 => {
+        // If the next input code point is a name code point or the next two input code points are a valid escape, then:
+        let mut chars_clone = chars.clone();
+        if let Some(next_c) = chars_clone.next() {
+          let next_code = next_c as u32;
+          let next_next_c = chars_clone.peek();
+          if is_name!(next_code)
+            || (next_next_c.is_some()
+              && is_valid_escape!(next_code, (*next_next_c.unwrap()) as u32))
+          {
+            // Create a <hash-token>.
+            token_type = HASH_TOKEN;
 
+            // If the next 3 input code points would start an identifier, set the <hash-token>’s type flag to "id".
+            // if (is_identifier_start!(get_char_code!(source, source_length, offset + 1), get_char_code!(source, source_length, offset + 2), get_char_code!(source, source_length, offset + 3))) {
+            //     // TODO: set id flag
+            // }
+
+            // Consume a name, and set the <hash-token>’s value to the returned string.
+            chars.next();
+            offset = consume_name(&mut chars, offset + 1);
+
+            // Return the <hash-token>.
+          } else {
+            // Otherwise, return a <delim-token> with its value set to the current input code point.
+            token_type = DELIM_TOKEN;
+            offset += c.len_utf8();
+          }
+        }
+      }
       // U+0028 LEFT PARENTHESIS (()
       0x0028 => {
         // Return a <(-token>.
         token_type = LEFT_PARENTHESES_TOKEN;
-        offset += 1;
+        offset += c.len_utf8();
       }
-
       // U+0029 RIGHT PARENTHESIS ())
       0x0029 => {
         // Return a <)-token>.
         token_type = RIGHT_PARENTHESES_TOKEN;
-        offset += 1;
+        offset += c.len_utf8();
       }
-
       // U+002B PLUS SIGN (+)
       0x002B => {
         // If the input stream starts with a number, ...
-        if is_number_start!(
-          code,
-          get_char_code!(source, source_length, offset + 1),
-          get_char_code!(source, source_length, offset + 2)
-        ) {
+        if is_number_start!(chars, code) {
           // ... reconsume the current input code point, consume a numeric token, and return it.
-          consume_numeric_token(source, &mut offset, &mut token_type);
+          consume_numeric_token(&mut chars, &mut offset, &mut token_type, c);
         } else {
           // Otherwise, return a <delim-token> with its value set to the current input code point.
           token_type = DELIM_TOKEN;
-          offset += 1;
+          offset += c.len_utf8();
         }
       }
+    }
+    parser.on_token(token_type, start, offset);
+    start = offset;
+  }
 
+  while offset < source_length {
+    let code = source.char_code_at(offset) as u32;
+    match char_code_category!(code) {
       // U+002C COMMA (,)
       0x002C => {
         // Return a <comma-token>.

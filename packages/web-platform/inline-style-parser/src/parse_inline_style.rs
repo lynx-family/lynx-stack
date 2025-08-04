@@ -12,18 +12,18 @@ const IMPORTANT_STR: [u32; 9] = [
 
 pub struct ParserState<'a, 'b, T: Transformer> {
   transformer: &'b mut T,
-  source: &'a js_sys::JsString,
+  source: &'a str,
   status: usize,
-  name_start: u32,
-  name_end: u32,
-  value_start: u32,
-  value_end: u32,
+  name_start: usize,
+  name_end: usize,
+  value_start: usize,
+  value_end: usize,
   is_important: bool,
   prev_token_type: u16,
 }
 
 impl<T: Transformer> Parser for ParserState<'_, '_, T> {
-  fn on_token(&mut self, token_type: u16, start: u32, end: u32) {
+  fn on_token(&mut self, token_type: u16, start: usize, end: usize) {
     //https://drafts.csswg.org/css-syntax-3/#consume-declaration
     // on_token(type, start, offset);
     /*
@@ -132,15 +132,15 @@ impl<T: Transformer> Parser for ParserState<'_, '_, T> {
 pub trait Transformer {
   fn on_declaration(
     &mut self,
-    name_start: u32,
-    name_end: u32,
-    value_start: u32,
-    value_end: u32,
+    name_start: usize,
+    name_end: usize,
+    value_start: usize,
+    value_end: usize,
     is_important: bool,
   );
 }
 
-pub fn parse_inline_style<'a, T: Transformer>(source: &js_sys::JsString, transformer: &mut T) {
+pub fn parse_inline_style<'a, T: Transformer>(source: &str, transformer: &mut T) {
   let mut parser = ParserState {
     transformer,
     source,
@@ -154,6 +154,6 @@ pub fn parse_inline_style<'a, T: Transformer>(source: &js_sys::JsString, transfo
   };
   tokenize::tokenize(source, &mut parser);
   if parser.prev_token_type != SEMICOLON_TOKEN {
-    parser.on_token(SEMICOLON_TOKEN, source.length(), source.length());
+    parser.on_token(SEMICOLON_TOKEN, source.len(), source.len());
   }
 }
