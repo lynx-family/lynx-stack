@@ -27,10 +27,7 @@
     },
     "//#build": {
       "cache": false,
-      "dependsOn": [],
-      "inputs": [
-        "**"
-      ]
+      "dependsOn": []
     }
   }
 }
