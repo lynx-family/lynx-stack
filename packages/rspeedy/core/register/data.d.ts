@@ -6,7 +6,7 @@ import type { MessagePort } from 'node:worker_threads'
 
 export interface Data {
   port: MessagePort
-  options: Options
+  options?: Options
 }
 
 export interface Options {

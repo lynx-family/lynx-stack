@@ -16,7 +16,7 @@
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@lynx-js/rspeedy": "workspace:*",
     "@lynx-js/types": "3.3.0",
-    "@rsbuild/plugin-type-check": "1.2.3",
+    "@rsbuild/plugin-type-check": "1.2.4",
     "@testing-library/jest-dom": "^6.6.3",
     "@types/react": "^18.3.23",
     "jsdom": "^26.1.0",
