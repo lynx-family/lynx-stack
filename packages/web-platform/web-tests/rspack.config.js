@@ -203,7 +203,7 @@ const config = {
       });
       return middlewares;
     },
-    watchFiles: ['./dist/**/*', './node_modules/@lynx-js/**/*'],
+    watchFiles: ['./node_modules/@lynx-js/**/*'],
     static: [
       {
         directory: path.join(__dirname, 'resources'),
