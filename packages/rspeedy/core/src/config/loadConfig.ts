@@ -153,6 +153,12 @@ function shouldUseNativeImport(configPath: string): boolean {
 }
 
 function hasNativeTSSupport(): boolean {
+  // Deno has native TypeScript support
+  // @ts-expect-error - Deno global may not be defined in Node.js
+  if (typeof Deno !== 'undefined' || process.versions?.deno) {
+    return true
+  }
+
   // eslint-disable-next-line n/no-unsupported-features/node-builtins
   if (process.features.typescript) {
     // This is added in Node.js v22.10.
@@ -185,3 +191,11 @@ function isJavaScriptPath(configPath: string): boolean {
 export function TEST_ONLY_hasNativeTSSupport(): boolean {
   return hasNativeTSSupport()
 }
+
+/**
+ * Check if the current environment has native TypeScript support.
+ * This includes Deno (which has built-in TS support) and Node.js with TypeScript flags.
+ *
+ * @public
+ */
+export { hasNativeTSSupport }
