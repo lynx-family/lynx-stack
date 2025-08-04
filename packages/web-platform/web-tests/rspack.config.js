@@ -203,7 +203,9 @@ const config = {
       });
       return middlewares;
     },
-    watchFiles: ['./node_modules/@lynx-js/**/*'],
+    watchFiles: isCI
+      ? undefined
+      : ['./node_modules/@lynx-js/**/*'],
     static: [
       {
         directory: path.join(__dirname, 'resources'),
