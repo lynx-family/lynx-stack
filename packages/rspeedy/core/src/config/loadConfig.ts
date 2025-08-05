@@ -119,10 +119,18 @@ export async function loadConfig(
   // Note that we are using `pathToFileURL` since absolute paths must be valid file:// URLs on Windows.
   const specifier = pathToFileURL(configPath).toString()
 
-  const unregister = register({
-    load: !shouldUseNativeImport(configPath),
-    resolve: true,
-  })
+  let unregister: () => void
+
+  if (shouldUseNativeImport(configPath)) {
+    unregister = () => {
+      // No-op: Native TypeScript support handles module loading
+    }
+  } else {
+    unregister = register({
+      load: !hasNativeTSSupport(),
+      resolve: true,
+    })
+  }
 
   try {
     const [exports, { validate }] = await Promise.all([
@@ -149,10 +157,12 @@ export async function loadConfig(
 }
 
 function shouldUseNativeImport(configPath: string): boolean {
-  return isJavaScriptPath(configPath) || hasNativeTSSupport()
+  return isJavaScriptPath(configPath) || isDeno()
 }
 
 function hasNativeTSSupport(): boolean {
+  if (isDeno()) return true
+
   // eslint-disable-next-line n/no-unsupported-features/node-builtins
   if (process.features.typescript) {
     // This is added in Node.js v22.10.
@@ -180,6 +190,14 @@ function hasNativeTSSupport(): boolean {
 function isJavaScriptPath(configPath: string): boolean {
   const ext = extname(configPath)
   return ['.js', '.mjs', '.cjs'].includes(ext)
+}
+
+function isDeno(): boolean {
+  // @ts-expect-error - Deno global isn't defined in Node.js
+  if (typeof Deno !== 'undefined' || process.versions?.deno) {
+    return true
+  }
+  return false
 }
 
 export function TEST_ONLY_hasNativeTSSupport(): boolean {

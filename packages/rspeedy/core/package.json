@@ -80,7 +80,7 @@
     "webpack": "^5.99.9"
   },
   "peerDependencies": {
-    "typescript": "5.1.6 - 5.8.x"
+    "typescript": "5.1.6 - 5.9.x"
   },
   "peerDependenciesMeta": {
     "typescript": {
