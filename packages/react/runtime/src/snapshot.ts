@@ -338,29 +338,8 @@ export class SnapshotInstance {
         child.ensureElements();
 
         if (slot.length === 1) {
-          const [type, elementIndex] = slot[0]!;
-          switch (type) {
-            case DynamicPartType.Slot: {
-              __ReplaceElement(child.__element_root!, elements[elementIndex]!);
-              elements[elementIndex] = child.__element_root!;
-              break;
-            }
-            /* v8 ignore start */
-            case DynamicPartType.MultiChildren: {
-              if (__GetTag(elements[elementIndex]!) === 'wrapper') {
-                __ReplaceElement(child.__element_root!, elements[elementIndex]!);
-              } else {
-                __AppendElement(elements[elementIndex]!, child.__element_root!);
-              }
-              break;
-            }
-            /* v8 ignore end */
-            case DynamicPartType.Children:
-            case DynamicPartType.ListChildren: {
-              __AppendElement(elements[elementIndex]!, child.__element_root!);
-              break;
-            }
-          }
+          const [_, elementIndex] = slot[0]!;
+          __AppendElement(elements[elementIndex]!, child.__element_root!);
         } else if (slot.length > 1) {
           const [type, elementIndex] = slot[index]!;
           switch (type) {
