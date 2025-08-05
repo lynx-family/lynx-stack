@@ -121,13 +121,13 @@ export async function loadConfig(
 
   let unregister: () => void
 
-  if (hasNativeTSSupport()) {
+  if (shouldUseNativeImport(configPath)) {
     unregister = () => {
       // No-op: Native TypeScript support handles module loading
     }
   } else {
     unregister = register({
-      load: !shouldUseNativeImport(configPath),
+      load: !hasNativeTSSupport(),
       resolve: true,
     })
   }
@@ -157,15 +157,11 @@ export async function loadConfig(
 }
 
 function shouldUseNativeImport(configPath: string): boolean {
-  return isJavaScriptPath(configPath) || hasNativeTSSupport()
+  return isJavaScriptPath(configPath) || isDeno()
 }
 
 function hasNativeTSSupport(): boolean {
-  // Deno has native TypeScript support
-  // @ts-expect-error - Deno global may not be defined in Node.js
-  if (typeof Deno !== 'undefined' || process.versions?.deno) {
-    return true
-  }
+  if (isDeno()) return true
 
   // eslint-disable-next-line n/no-unsupported-features/node-builtins
   if (process.features.typescript) {
@@ -194,6 +190,14 @@ function hasNativeTSSupport(): boolean {
 function isJavaScriptPath(configPath: string): boolean {
   const ext = extname(configPath)
   return ['.js', '.mjs', '.cjs'].includes(ext)
+}
+
+function isDeno(): boolean {
+  // @ts-expect-error - Deno global isn't defined in Node.js
+  if (typeof Deno !== 'undefined' || process.versions?.deno) {
+    return true
+  }
+  return false
 }
 
 export function TEST_ONLY_hasNativeTSSupport(): boolean {

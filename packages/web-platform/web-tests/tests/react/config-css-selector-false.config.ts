@@ -5,7 +5,7 @@ import { glob } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from '@lynx-js/rspeedy';
-import { commonConfig } from './commonConfig.ts';
+import { commonConfig } from './commonConfig.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
