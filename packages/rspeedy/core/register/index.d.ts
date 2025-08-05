@@ -4,4 +4,4 @@
 
 import type { Options } from './data.js'
 
-export function register(options?: Options): () => void
+export function register(options: Options): () => void
