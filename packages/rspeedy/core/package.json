@@ -56,7 +56,7 @@
     "@lynx-js/webpack-dev-transport": "workspace:^",
     "@lynx-js/websocket": "workspace:^",
     "@rsbuild/core": "catalog:rsbuild",
-    "@rsbuild/plugin-css-minimizer": "1.0.3",
+    "@rsbuild/plugin-css-minimizer": "1.0.2",
     "@rsdoctor/rspack-plugin": "1.1.10"
   },
   "devDependencies": {
