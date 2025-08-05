@@ -31,6 +31,7 @@ export interface RuntimePluginAPI extends PluginAPI {
  */
 export function mockPluginAPI(
   overrides: Partial<RuntimePluginAPI> = {},
+  themeVals: Record<string, unknown> = {},
 ): RuntimePluginAPI {
   const base: RuntimePluginAPI = {
     matchUtilities: vi.fn(),
@@ -42,10 +43,23 @@ export function mockPluginAPI(
     matchVariant: vi.fn(),
     corePlugins: vi.fn().mockReturnValue(true),
     config: vi.fn((_key: string, def?: unknown) => def),
-    theme: vi.fn(<TDefaultValue>(
-      _path?: string,
-      defaultValue?: TDefaultValue,
-    ) => defaultValue as TDefaultValue),
+    theme: (<T = unknown>(path?: string, defaultValue?: T): T => {
+      if (!path) return defaultValue as T;
+      const keys = path.split('.');
+      let current: unknown = themeVals;
+      for (const key of keys) {
+        if (
+          typeof current === 'object'
+          && current !== null
+          && key in current
+        ) {
+          current = (current as Record<string, unknown>)[key];
+        } else {
+          return defaultValue as T;
+        }
+      }
+      return current as T;
+    }) as RuntimePluginAPI['theme'],
     prefix: (className) => `tw-${className}`,
     e: (className) => className.replace(/[^a-z0-9-]/gi, (c) => `\\${c}`),
     variants: () => [],

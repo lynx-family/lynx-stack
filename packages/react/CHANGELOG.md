@@ -1,5 +1,32 @@
 # @lynx-js/react
 
+## 0.112.1
+
+### Patch Changes
+
+- Fix crash caused by not removing event listeners during destroy. ([#1379](https://github.com/lynx-family/lynx-stack/pull/1379))
+
+- Fix missing "type" in "update-list-info" in hydrate ([#1392](https://github.com/lynx-family/lynx-stack/pull/1392))
+
+## 0.112.0
+
+### Minor Changes
+
+- feat: Force synchronous rendering for background initial renders to support Suspense fallbacks ([#1323](https://github.com/lynx-family/lynx-stack/pull/1323))
+
+- Introduces `@lynx-js/react/compat` submodule exporting Preact implementations of: ([#1316](https://github.com/lynx-family/lynx-stack/pull/1316))
+
+  - `startTransition`
+  - `useTransition`
+
+### Patch Changes
+
+- fix: Ensure useEffect callbacks execute before event handlers from the same render cycle ([#1348](https://github.com/lynx-family/lynx-stack/pull/1348))
+
+- Enable rendering of the `Suspense` fallback on initial render. ([#1285](https://github.com/lynx-family/lynx-stack/pull/1285))
+
+- fix: Prevent "cannot set property 'current' of undefined" error thrown by MainThreadRef on engine data updates ([#1342](https://github.com/lynx-family/lynx-stack/pull/1342))
+
 ## 0.111.2
 
 ### Patch Changes

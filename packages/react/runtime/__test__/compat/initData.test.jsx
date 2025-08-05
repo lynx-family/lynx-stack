@@ -24,6 +24,7 @@ describe('initData', () => {
     globalEnvManager.switchToBackground();
 
     const lynx = {
+      ...globalThis.lynx,
       getJSModule: (moduleName) => {
         if (moduleName === 'GlobalEventEmitter') {
           return ee;

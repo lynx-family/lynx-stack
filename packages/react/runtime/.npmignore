@@ -1,4 +1,6 @@
 *
+!compat/*
+!compat/**
 !debug/*
 !debug/**
 !jsx-dev-runtime/*

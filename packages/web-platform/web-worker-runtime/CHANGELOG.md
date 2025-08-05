@@ -1,5 +1,25 @@
 # @lynx-js/web-worker-runtime
 
+## 0.15.4
+
+### Patch Changes
+
+- optimize IO for all-on-ui: make startMainThreadWorker async and defer import ([#1385](https://github.com/lynx-family/lynx-stack/pull/1385))
+
+- Updated dependencies [[`22ca433`](https://github.com/lynx-family/lynx-stack/commit/22ca433eb96b39724c6eb47ce0a938d291bbdef2), [`143e481`](https://github.com/lynx-family/lynx-stack/commit/143e481b4353b3c3d2e8d9cc4f201442ca56f097)]:
+  - @lynx-js/web-mainthread-apis@0.15.4
+  - @lynx-js/web-constants@0.15.4
+  - @lynx-js/web-worker-rpc@0.15.4
+
+## 0.15.3
+
+### Patch Changes
+
+- Updated dependencies [[`0da5ef0`](https://github.com/lynx-family/lynx-stack/commit/0da5ef03e41f20e9f8019c6dc03cb4a38ab18854)]:
+  - @lynx-js/web-constants@0.15.3
+  - @lynx-js/web-mainthread-apis@0.15.3
+  - @lynx-js/web-worker-rpc@0.15.3
+
 ## 0.15.2
 
 ### Patch Changes

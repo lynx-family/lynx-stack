@@ -31,8 +31,8 @@ import { registerCallLepusMethodHandler } from './crossThreadHandlers/registerCa
 import { registerGetCustomSectionHandler } from './crossThreadHandlers/registerGetCustomSectionHandler.js';
 import { createMainThreadGlobalThis } from './createMainThreadGlobalThis.js';
 import { createExposureService } from './utils/createExposureService.js';
-import { initTokenizer } from './utils/tokenizer.js';
-const initTokenizerPromise = initTokenizer();
+import { initWasm } from '@lynx-js/web-style-transformer';
+const initWasmPromise = initWasm();
 
 const moduleCache: Record<string, LynxJSModule> = {};
 export function prepareMainThreadAPIs(
@@ -82,10 +82,16 @@ export function prepareMainThreadAPIs(
       tagMap,
       initI18nResources,
     } = config;
-    const { styleInfo, pageConfig, customSections, cardType, lepusCode } =
-      template;
+    const {
+      styleInfo,
+      pageConfig,
+      customSections,
+      cardType,
+      lepusCode,
+      elementTemplate,
+    } = template;
     markTimingInternal('decode_start');
-    await initTokenizerPromise;
+    await initWasmPromise;
     const lepusCodeEntries = await Promise.all(
       Object.entries(lepusCode).map(async ([name, url]) => {
         const cachedModule = moduleCache[url];
@@ -114,6 +120,7 @@ export function prepareMainThreadAPIs(
       tagMap,
       browserConfig,
       customSections,
+      elementTemplate,
       globalProps,
       pageConfig,
       styleInfo,

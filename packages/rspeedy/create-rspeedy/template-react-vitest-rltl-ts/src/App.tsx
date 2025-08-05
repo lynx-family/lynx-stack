@@ -17,8 +17,8 @@ export function App(props: {
 
   const onTap = useCallback(() => {
     'background only'
-    setAlterLogo(!alterLogo)
-  }, [alterLogo])
+    setAlterLogo(prevAlterLogo => !prevAlterLogo)
+  }, [])
 
   return (
     <view>

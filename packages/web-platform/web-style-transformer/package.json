@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/web-style-transformer",
-  "version": "0.3.3",
+  "version": "0.15.4",
   "private": false,
   "repository": {
     "type": "git",
@@ -10,20 +10,26 @@
   "license": "Apache-2.0",
   "sideEffects": false,
   "type": "module",
-  "main": "dist/index.js",
+  "main": "index.js",
   "typings": "index.d.ts",
   "files": [
     "dist",
     "!dist/**/*.js.map",
-    "index.d.ts",
+    "*.d.ts",
+    "*.js",
     "LICENSE.txt",
     "Notice.txt",
     "CHANGELOG.md",
     "README.md"
   ],
   "scripts": {
-    "build": "wasm-pack build --target web --out-dir dist --out-name index --mode no-install && node -e \"require('fs').rmSync('dist/.gitignore', { force: true })\"",
-    "build:wasm-bindgen": "wasm-bindgen --version || cargo install wasm-bindgen-cli",
-    "build:wasm-pack": "wasm-pack --version || cargo install wasm-pack"
+    "build": "node scripts/build.js",
+    "build:wasm-bindgen": "wasm-bindgen --version || cargo install wasm-bindgen-cli"
+  },
+  "dependencies": {
+    "wasm-feature-detect": "^1.8.0"
+  },
+  "devDependencies": {
+    "binaryen": "^123.0.0"
   }
 }

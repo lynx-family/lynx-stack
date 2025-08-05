@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/testing-environment",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "A subset of a Lynx environment to be useful for testing",
   "keywords": [
     "Lynx",
@@ -51,7 +51,7 @@
     "dev": "rslib build --watch"
   },
   "devDependencies": {
-    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/jest-dom": "^6.6.4",
     "@types/jsdom": "^21.1.7",
     "rsbuild-plugin-publint": "0.3.2"
   }

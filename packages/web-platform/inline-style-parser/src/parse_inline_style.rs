@@ -22,7 +22,7 @@ pub struct ParserState<'a, 'b, T: Transformer> {
   prev_token_type: u16,
 }
 
-impl<'a, 'b, T: Transformer> Parser for ParserState<'a, 'b, T> {
+impl<T: Transformer> Parser for ParserState<'_, '_, T> {
   fn on_token(&mut self, token_type: u16, start: usize, end: usize) {
     //https://drafts.csswg.org/css-syntax-3/#consume-declaration
     // on_token(type, start, offset);
@@ -138,7 +138,7 @@ pub trait Transformer {
   );
 }
 
-pub fn parse_inline_style<'a, T: Transformer>(source: &[u16], transformer: &'a mut T) {
+pub fn parse_inline_style<T: Transformer>(source: &[u16], transformer: &mut T) {
   let mut parser = ParserState {
     transformer,
     source,

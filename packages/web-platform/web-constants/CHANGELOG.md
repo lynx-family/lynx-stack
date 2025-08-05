@@ -1,5 +1,25 @@
 # @lynx-js/web-constants
 
+## 0.15.4
+
+### Patch Changes
+
+- feat: support `__ElementFromBinary` ([#1391](https://github.com/lynx-family/lynx-stack/pull/1391))
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.15.4
+
+## 0.15.3
+
+### Patch Changes
+
+- fix: improve compatibility with legacy template ([#1337](https://github.com/lynx-family/lynx-stack/pull/1337))
+
+  avoid "object Object" error for old version rspeedy outputs
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.15.3
+
 ## 0.15.2
 
 ### Patch Changes

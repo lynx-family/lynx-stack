@@ -5,8 +5,8 @@ import { options } from 'preact';
 import type { VNode } from 'preact';
 
 import { __globalSnapshotPatch } from '../lifecycle/patch/snapshotPatch.js';
-import { DIFF } from '../renderToOpcodes/constants.js';
-import { isSdkVersionGt } from '../utils.js';
+import { RENDER_COMPONENT, ROOT } from '../renderToOpcodes/constants.js';
+import { hook, isSdkVersionGt } from '../utils.js';
 
 const PerformanceTimingKeys = [
   'updateSetStateTrigger',
@@ -116,8 +116,8 @@ function markTiming(timestampKey: typeof PerformanceTimingKeys[number], force?: 
 }
 
 function initTimingAPI(): void {
-  const oldDiff = options[DIFF];
-  options[DIFF] = (vnode: VNode) => {
+  // eslint-disable-next-line unicorn/consistent-function-scoping
+  const helper = () => {
     // check `__globalSnapshotPatch` to make sure this only runs after hydrate
     if (__JS__ && __globalSnapshotPatch) {
       if (!globalPipelineOptions) {
@@ -128,8 +128,25 @@ function initTimingAPI(): void {
         markTimingLegacy('updateDiffVdomStart');
       }
     }
-    oldDiff?.(vnode);
   };
+
+  hook(options, RENDER_COMPONENT, (old, vnode: VNode, c) => {
+    helper();
+    /* v8 ignore start */
+    if (old) {
+      old(vnode, c);
+    }
+    /* v8 ignore stop */
+  });
+
+  hook(options, ROOT, (old, vnode: VNode, parentDom) => {
+    helper();
+    /* v8 ignore start */
+    if (old) {
+      old(vnode, parentDom);
+    }
+    /* v8 ignore stop */
+  });
 }
 
 /**

@@ -2,7 +2,7 @@ use crate::*;
 use crate::{char_code_definitions, types::*, utils::*};
 
 const URL_STR: [u16; 3] = ['u' as u16, 'r' as u16, 'l' as u16];
-/**
+/*
  * this code forked from css-tree
  */
 
@@ -95,7 +95,7 @@ pub fn consume_string_token(
   // the current input code point is used.
   if ending_code_point == 0 {
     ending_code_point = get_char_code!(source, source_length, *offset);
-    *offset = (*offset) + 1;
+    *offset += 1;
   }
 
   // Initially create a <string-token> with its value set to the empty string.
@@ -359,7 +359,7 @@ pub fn tokenize<T: Parser>(source: &[u16], parser: &mut T) {
             && get_char_code!(source, source_length, offset + 2) == 0x003E
           {
             token_type = CDC_TOKEN;
-            offset = offset + 3;
+            offset += 3;
           } else {
             // Otherwise, if the input stream starts with an identifier, ...
             if is_identifier_start!(
@@ -445,7 +445,7 @@ pub fn tokenize<T: Parser>(source: &[u16], parser: &mut T) {
         {
           // ... consume them and return a <CDO-token>.
           token_type = CDO_TOKEN;
-          offset = offset + 4;
+          offset += 4;
         } else {
           // Otherwise, return a <delim-token> with its value set to the current input code point.
           token_type = DELIM_TOKEN;

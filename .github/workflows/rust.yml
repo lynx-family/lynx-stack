@@ -40,7 +40,7 @@ jobs:
         with:
           cache-key: test-${{ runner.os }}
       - name: Install llvm-cov and nextest
-        uses: taiki-e/install-action@d188da0a65bc6c80011567688127bddc8be0ca24 # v2
+        uses: taiki-e/install-action@bbdef1c33cb8ed1fd122d68d8374ac79998d6960 # v2
         with:
           tool: cargo-llvm-cov,cargo-nextest
       - name: Test
@@ -74,3 +74,19 @@ jobs:
           cache: false
       - name: Format
         run: cargo fmt --check
+
+  clippy:
+    runs-on: lynx-ubuntu-24.04-medium
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        with:
+          persist-credentials: false
+      - uses: actions-rust-lang/setup-rust-toolchain@fb51252c7ba57d633bc668f941da052e410add48 # v1
+        with:
+          components: clippy
+          cache: false
+      - name: Clippy
+        run: cargo clippy -- -D warnings

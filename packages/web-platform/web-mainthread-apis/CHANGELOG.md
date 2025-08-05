@@ -1,5 +1,38 @@
 # @lynx-js/web-mainthread-apis
 
+## 0.15.4
+
+### Patch Changes
+
+- feat: support `__ElementFromBinary` ([#1391](https://github.com/lynx-family/lynx-stack/pull/1391))
+
+- fix: crash on chrome<96 ([#1361](https://github.com/lynx-family/lynx-stack/pull/1361))
+
+  https://github.com/wasm-bindgen/wasm-bindgen/issues/4211#issuecomment-2505965903
+
+  https://github.com/WebAssembly/binaryen/issues/7358
+
+  The rust toolchain enables WASM feature `reference types` by default.
+
+  However this feature is not supported by chromium lower than version 96
+
+  Therefore we found a workaround for it.
+
+  In this implementation we detect if browser supports `reference types` first.
+
+  If user's browser supported it, we load the wasm file with `reference types` on, otherwise we load the wasm file with `reference types` off.
+
+- Updated dependencies [[`22ca433`](https://github.com/lynx-family/lynx-stack/commit/22ca433eb96b39724c6eb47ce0a938d291bbdef2)]:
+  - @lynx-js/web-constants@0.15.4
+  - @lynx-js/web-style-transformer@0.15.4
+
+## 0.15.3
+
+### Patch Changes
+
+- Updated dependencies [[`0da5ef0`](https://github.com/lynx-family/lynx-stack/commit/0da5ef03e41f20e9f8019c6dc03cb4a38ab18854)]:
+  - @lynx-js/web-constants@0.15.3
+
 ## 0.15.2
 
 ### Patch Changes

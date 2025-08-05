@@ -1,3 +1,4 @@
+#![allow(clippy::manual_range_contains)]
 mod char_code_definitions;
 pub mod parse_inline_style;
 mod tokenize;
@@ -733,73 +734,73 @@ mod tests {
     let source: Vec<u16> = "#id".encode_utf16().collect();
     let mut collector = TokenCollector::new();
     tokenize::tokenize(&source, &mut collector);
-    assert!(collector.tokens.len() > 0);
+    assert!(!collector.tokens.is_empty());
 
     // Test hash token without name following
     let source: Vec<u16> = "#123".encode_utf16().collect();
     let mut collector = TokenCollector::new();
     tokenize::tokenize(&source, &mut collector);
-    assert!(collector.tokens.len() > 0);
+    assert!(!collector.tokens.is_empty());
 
     // Test at-keyword token
     let source: Vec<u16> = "@media".encode_utf16().collect();
     let mut collector = TokenCollector::new();
     tokenize::tokenize(&source, &mut collector);
-    assert!(collector.tokens.len() > 0);
+    assert!(!collector.tokens.is_empty());
 
     // Test at-keyword without identifier
     let source: Vec<u16> = "@123".encode_utf16().collect();
     let mut collector = TokenCollector::new();
     tokenize::tokenize(&source, &mut collector);
-    assert!(collector.tokens.len() > 0);
+    assert!(!collector.tokens.is_empty());
 
     // Test escaped identifier
     let source: Vec<u16> = "\\61 bc".encode_utf16().collect(); // \61 = 'a', so "abc"
     let mut collector = TokenCollector::new();
     tokenize::tokenize(&source, &mut collector);
-    assert!(collector.tokens.len() > 0);
+    assert!(!collector.tokens.is_empty());
 
     // Test invalid escape
     let source: Vec<u16> = "\\".encode_utf16().collect();
     let mut collector = TokenCollector::new();
     tokenize::tokenize(&source, &mut collector);
-    assert!(collector.tokens.len() > 0);
+    assert!(!collector.tokens.is_empty());
 
     // Test delim tokens
     let source: Vec<u16> = "!@#$%^&*".encode_utf16().collect();
     let mut collector = TokenCollector::new();
     tokenize::tokenize(&source, &mut collector);
-    assert!(collector.tokens.len() > 0);
+    assert!(!collector.tokens.is_empty());
 
     // Test CDC token
     let source: Vec<u16> = "-->".encode_utf16().collect();
     let mut collector = TokenCollector::new();
     tokenize::tokenize(&source, &mut collector);
-    assert!(collector.tokens.len() > 0);
+    assert!(!collector.tokens.is_empty());
 
     // Test CDO token
     let source: Vec<u16> = "<!--".encode_utf16().collect();
     let mut collector = TokenCollector::new();
     tokenize::tokenize(&source, &mut collector);
-    assert!(collector.tokens.len() > 0);
+    assert!(!collector.tokens.is_empty());
 
     // Test various bracket tokens
     let source: Vec<u16> = "[]{}()".encode_utf16().collect();
     let mut collector = TokenCollector::new();
     tokenize::tokenize(&source, &mut collector);
-    assert!(collector.tokens.len() > 0);
+    assert!(!collector.tokens.is_empty());
 
     // Test comma token
     let source: Vec<u16> = ",".encode_utf16().collect();
     let mut collector = TokenCollector::new();
     tokenize::tokenize(&source, &mut collector);
-    assert!(collector.tokens.len() > 0);
+    assert!(!collector.tokens.is_empty());
 
     // Test colon and semicolon
     let source: Vec<u16> = ":;".encode_utf16().collect();
     let mut collector = TokenCollector::new();
     tokenize::tokenize(&source, &mut collector);
-    assert!(collector.tokens.len() > 0);
+    assert!(!collector.tokens.is_empty());
   }
 
   #[test]
@@ -837,25 +838,25 @@ mod tests {
     let source: Vec<u16> = "\"hello\\".encode_utf16().collect();
     let mut collector = TokenCollector::new();
     tokenize(&source, &mut collector);
-    assert!(collector.tokens.len() > 0);
+    assert!(!collector.tokens.is_empty());
 
     // Test string with escaped newline
     let source: Vec<u16> = "\"hello\\\nworld\"".encode_utf16().collect();
     let mut collector = TokenCollector::new();
     tokenize(&source, &mut collector);
-    assert!(collector.tokens.len() > 0);
+    assert!(!collector.tokens.is_empty());
 
     // Test string with valid escape
     let source: Vec<u16> = "\"hello\\41world\"".encode_utf16().collect(); // \41 = 'A'
     let mut collector = TokenCollector::new();
     tokenize(&source, &mut collector);
-    assert!(collector.tokens.len() > 0);
+    assert!(!collector.tokens.is_empty());
 
     // Test unclosed string at EOF
     let source: Vec<u16> = "\"unclosed".encode_utf16().collect();
     let mut collector = TokenCollector::new();
     tokenize(&source, &mut collector);
-    assert!(collector.tokens.len() > 0);
+    assert!(!collector.tokens.is_empty());
   }
 
   #[test]
@@ -893,49 +894,49 @@ mod tests {
     let mut collector = TokenCollector::new();
     tokenize(&source, &mut collector);
     // Just check that tokens are produced
-    assert!(collector.tokens.len() > 0);
+    assert!(!collector.tokens.is_empty());
 
     // Test url with left parenthesis - may or may not produce BAD_URL_TOKEN
     let source: Vec<u16> = "url(te(st.png)".encode_utf16().collect();
     let mut collector = TokenCollector::new();
     tokenize(&source, &mut collector);
-    assert!(collector.tokens.len() > 0);
+    assert!(!collector.tokens.is_empty());
 
     // Test url with non-printable character - may or may not produce BAD_URL_TOKEN
     let source: Vec<u16> = "url(te\x08st.png)".encode_utf16().collect();
     let mut collector = TokenCollector::new();
     tokenize(&source, &mut collector);
-    assert!(collector.tokens.len() > 0);
+    assert!(!collector.tokens.is_empty());
 
     // Test url with whitespace and bad ending - may or may not produce BAD_URL_TOKEN
     let source: Vec<u16> = "url(test.png bad)".encode_utf16().collect();
     let mut collector = TokenCollector::new();
     tokenize(&source, &mut collector);
-    assert!(collector.tokens.len() > 0);
+    assert!(!collector.tokens.is_empty());
 
     // Test url with valid escape
     let source: Vec<u16> = "url(te\\41st.png)".encode_utf16().collect();
     let mut collector = TokenCollector::new();
     tokenize(&source, &mut collector);
-    assert!(collector.tokens.len() > 0);
+    assert!(!collector.tokens.is_empty());
 
     // Test url with invalid escape - may or may not produce BAD_URL_TOKEN
     let source: Vec<u16> = "url(te\\)st.png)".encode_utf16().collect();
     let mut collector = TokenCollector::new();
     tokenize(&source, &mut collector);
-    assert!(collector.tokens.len() > 0);
+    assert!(!collector.tokens.is_empty());
 
     // Test url ending at EOF
     let source: Vec<u16> = "url(test.png".encode_utf16().collect();
     let mut collector = TokenCollector::new();
     tokenize(&source, &mut collector);
-    assert!(collector.tokens.len() > 0);
+    assert!(!collector.tokens.is_empty());
 
     // Test url with whitespace at end
     let source: Vec<u16> = "url(test.png   )".encode_utf16().collect();
     let mut collector = TokenCollector::new();
     tokenize(&source, &mut collector);
-    assert!(collector.tokens.len() > 0);
+    assert!(!collector.tokens.is_empty());
   }
 
   #[test]
@@ -1192,25 +1193,25 @@ mod tests {
     let source: Vec<u16> = "12.34e56".encode_utf16().collect();
     let mut collector = TokenCollector::new();
     tokenize(&source, &mut collector);
-    assert!(collector.tokens.len() > 0);
+    assert!(!collector.tokens.is_empty());
 
     // Test dimension with hyphen
     let source: Vec<u16> = "12px-test".encode_utf16().collect();
     let mut collector = TokenCollector::new();
     tokenize(&source, &mut collector);
-    assert!(collector.tokens.len() > 0);
+    assert!(!collector.tokens.is_empty());
 
     // Test escaped hex with whitespace
     let source: Vec<u16> = "\\41 test".encode_utf16().collect();
     let mut collector = TokenCollector::new();
     tokenize(&source, &mut collector);
-    assert!(collector.tokens.len() > 0);
+    assert!(!collector.tokens.is_empty());
 
     // Test CRLF line ending
     let source: Vec<u16> = "test\r\nvalue".encode_utf16().collect();
     let mut collector = TokenCollector::new();
     tokenize(&source, &mut collector);
-    assert!(collector.tokens.len() > 0);
+    assert!(!collector.tokens.is_empty());
 
     // Test consume_name with escape at boundary
     let name_with_escape: Vec<u16> = "test\\41".encode_utf16().collect();

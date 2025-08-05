@@ -16,7 +16,7 @@ pub fn cmp_str(test_str: &[u16], start: usize, end: usize, reference_str: &[u16]
     let mut test_code = test_str[i];
     // testCode.toLowerCase() for A..Z
     if is_uppercase_letter!(test_code) {
-      test_code = test_code | 32;
+      test_code |= 32;
     }
     if test_code != reference_code {
       return false;

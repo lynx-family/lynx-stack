@@ -1,5 +1,39 @@
 # @lynx-js/tailwind-preset
 
+## 0.2.0
+
+### Minor Changes
+
+- Add support for Lynx UI plugin system with configurable options. ([#1363](https://github.com/lynx-family/lynx-stack/pull/1363))
+
+  - Introduced `lynxUIPlugins` option in `createLynxPreset`, allowing userland opt-in to Lynx UI specific plugins.
+
+  - Implemented `uiVariants` plugin as the first UI plugin, supporting `ui-*` variant prefixes (e.g. `ui-checked`, `ui-open`) with customizable mappings.
+
+## 0.1.2
+
+### Patch Changes
+
+- Improve transform transition compatibility with Lynx versions that do not support animating CSS variables. ([#1320](https://github.com/lynx-family/lynx-stack/pull/1320))
+
+  - Added Lynx specific solo transform utilities that avoid CSS variables: `solo-translate-x-*`, `solo-scale-*`, `solo-rotate-*` etc. These utilities are implemented without CSS variables using raw transform functions such as `translateX()`, `scale()` and `rotate()`. They are mutually exclusive and cannot be combined with normal transform utilities.
+
+  - Enabled arbitrary values for `transform-[...]`: e.g. `transform-[translateX(20px)_rotate(10deg)]`, following Tailwind v4 behavior.
+
+- Fix `scale-*` utilities not supporting negative values. Now supports `-scale-x-100`, `-scale-y-50` as expected. ([#1320](https://github.com/lynx-family/lynx-stack/pull/1320))
+
+- Add filter utilities: `blur-*`, `grayscale-*`. ([#1345](https://github.com/lynx-family/lynx-stack/pull/1345))
+
+  - Note: On Lynx, filter functions are mutually exclusive, only one can be active at a time.
+
+- Introduce scoped timing utilities with auto-derived repeat count for grouped transition properties, working around Lynx's lack of automatic value expansion. ([#1324](https://github.com/lynx-family/lynx-stack/pull/1324))
+
+  - Scoped utilities like `duration-colors-*`, `ease-colors-*`, and `delay-colors-*` are generated when `transitionProperty.colors` contains multiple properties.
+
+  - Scoped utilities like `duration-n-*`, `ease-n-*`,`delay-n-*` are generated when the `transitionProperty.DEFAULT` group contains multiple properties.
+
+  - For single-property transitions (e.g., `transition-opacity`, `transition-transform`), you must use Tailwind's default `duration-*`, `ease-*`, and `delay-*` utilities, no scoped timing utilities will be generated in these cases.
+
 ## 0.1.1
 
 ### Patch Changes

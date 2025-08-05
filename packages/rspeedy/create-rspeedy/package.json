@@ -1,6 +1,6 @@
 {
   "name": "create-rspeedy",
-  "version": "0.10.2",
+  "version": "0.10.5",
   "description": "Create Rspeedy-powered ReactLynx apps with one command",
   "keywords": [
     "webpack",
@@ -42,7 +42,7 @@
     "@lynx-js/react": "workspace:^",
     "@lynx-js/react-rsbuild-plugin": "workspace:^",
     "@lynx-js/rspeedy": "workspace:^",
-    "@rsbuild/plugin-type-check": "1.2.3"
+    "@rsbuild/plugin-type-check": "1.2.4"
   },
   "engines": {
     "node": ">=18"

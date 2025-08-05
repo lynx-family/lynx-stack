@@ -17,7 +17,7 @@ export const soloTranslate: Plugin = createPlugin(
           'transform',
           'translateY',
         ),
-        'solo-translate-z': (value: string) => {
+        'solo-translate-z': (value: unknown) => {
           // Prevent use of percent values for translateZ
           if (typeof value === 'string' && value.includes('%')) return null;
           return createFunctionCallUtility('transform', 'translateZ')(value);

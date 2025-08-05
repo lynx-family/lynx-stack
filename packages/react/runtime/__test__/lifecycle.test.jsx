@@ -43,14 +43,14 @@ describe('useEffect', () => {
 
     render(<Comp />, __root);
 
-    await waitSchedule();
+    await Promise.resolve().then(() => {});
 
     expect(callback).toHaveBeenCalledTimes(1);
     expect(cleanUp).toHaveBeenCalledTimes(0);
 
     render(<Comp />, __root);
 
-    await waitSchedule();
+    await Promise.resolve().then(() => {});
 
     expect(callback).toHaveBeenCalledTimes(2);
     expect(cleanUp).toHaveBeenCalledTimes(1);

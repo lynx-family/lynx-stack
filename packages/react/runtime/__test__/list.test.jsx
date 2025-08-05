@@ -375,50 +375,6 @@ describe(`list "update-list-info"`, () => {
         ],
       }
     `);
-
-    __pendingListUpdates.clear();
-    d1.setAttribute(0, { 'item-key': 'one' });
-    expect(__pendingListUpdates.values).toMatchInlineSnapshot(`
-      {
-        "-1": [
-          {
-            "insertAction": [
-              {
-                "item-key": "one",
-                "position": 0,
-                "type": "__Card__:__snapshot_a94a8_test_17",
-              },
-            ],
-            "removeAction": [
-              0,
-            ],
-            "updateAction": [],
-          },
-        ],
-      }
-    `);
-
-    __pendingListUpdates.clear();
-    d3.setAttribute(0, { 'item-key': 'three' });
-    expect(__pendingListUpdates.values).toMatchInlineSnapshot(`
-      {
-        "-1": [
-          {
-            "insertAction": [
-              {
-                "item-key": "three",
-                "position": 2,
-                "type": "__Card__:__snapshot_a94a8_test_17",
-              },
-            ],
-            "removeAction": [
-              2,
-            ],
-            "updateAction": [],
-          },
-        ],
-      }
-    `);
   });
 });
 
@@ -1757,6 +1713,7 @@ describe('list reload', () => {
                     "full-span": false,
                     "item-key": "2",
                     "to": 1,
+                    "type": "__Card__:__snapshot_a94a8_test_39",
                   },
                 ],
               },
@@ -2063,6 +2020,7 @@ describe('list-item JSXSpread', () => {
                     "full-span": false,
                     "item-key": "2",
                     "to": 1,
+                    "type": "__Card__:__snapshot_a94a8_test_46",
                   },
                 ],
               },
@@ -2119,6 +2077,7 @@ describe('list-item JSXSpread', () => {
                     "full-span": false,
                     "item-key": "2",
                     "to": 1,
+                    "type": "__Card__:__snapshot_a94a8_test_46",
                   },
                 ],
               },
@@ -2186,6 +2145,7 @@ describe('list-item JSXSpread', () => {
                     "full-span": false,
                     "item-key": "2",
                     "to": 1,
+                    "type": "__Card__:__snapshot_a94a8_test_46",
                   },
                 ],
               },

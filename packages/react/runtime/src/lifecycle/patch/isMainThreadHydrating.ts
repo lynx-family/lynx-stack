@@ -3,11 +3,11 @@
 // LICENSE file in the root directory of this source tree.
 import { onHydrationFinished } from '@lynx-js/react/worklet-runtime/bindings';
 
-export let isMainThreadHydrationFinished = false;
+export let isMainThreadHydrating = false;
 
-export function setMainThreadHydrationFinished(isFinished: boolean): void {
-  if (isFinished && !isMainThreadHydrationFinished) {
+export function setMainThreadHydrating(isHydrating: boolean): void {
+  if (!isHydrating && isMainThreadHydrating) {
     onHydrationFinished();
   }
-  isMainThreadHydrationFinished = isFinished;
+  isMainThreadHydrating = isHydrating;
 }
