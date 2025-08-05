@@ -49,7 +49,7 @@ test('renders options.wrapper around node', async () => {
 });
 
 describe('dynamic key in snapshot', () => {
-  test('[FIXME] multiple slots 0', () => {
+  test('multiple slots 0', () => {
     const Comp = () => (
       <view>
         <view className='foo' key={`foo`}>
@@ -76,11 +76,12 @@ describe('dynamic key in snapshot', () => {
                 <text>
                   foo
                 </text>
+              </view>
+              <view>
                 <text>
                   bar
                 </text>
               </view>
-              <view />
             </view>
           </wrapper>
         </view>
@@ -216,7 +217,7 @@ describe('dynamic key in snapshot', () => {
     `);
   });
 
-  test('[FIXME] multiple keys', () => {
+  test('multiple keys', () => {
     const Comp = () => (
       <view>
         <view className='foo' key={`foo`}>
@@ -243,11 +244,12 @@ describe('dynamic key in snapshot', () => {
                 <text>
                   foo
                 </text>
+              </view>
+              <view>
                 <text>
                   bar
                 </text>
               </view>
-              <view />
             </view>
           </wrapper>
         </view>

@@ -337,29 +337,59 @@ export class SnapshotInstance {
       while (child) {
         child.ensureElements();
 
-        const [type, elementIndex] = slot[index]!;
-        switch (type) {
-          case DynamicPartType.Slot: {
-            __ReplaceElement(child.__element_root!, elements[elementIndex]!);
-            elements[elementIndex] = child.__element_root!;
-            index++;
-            break;
-          }
-          /* v8 ignore start */
-          case DynamicPartType.MultiChildren: {
-            if (__GetTag(elements[elementIndex]!) === 'wrapper') {
+        if (slot.length === 1) {
+          const [type, elementIndex] = slot[0]!;
+          switch (type) {
+            case DynamicPartType.Slot: {
               __ReplaceElement(child.__element_root!, elements[elementIndex]!);
-            } else {
-              __AppendElement(elements[elementIndex]!, child.__element_root!);
+              elements[elementIndex] = child.__element_root!;
+              break;
             }
-            index++;
-            break;
+            /* v8 ignore start */
+            case DynamicPartType.MultiChildren: {
+              if (__GetTag(elements[elementIndex]!) === 'wrapper') {
+                __ReplaceElement(child.__element_root!, elements[elementIndex]!);
+              } else {
+                __AppendElement(elements[elementIndex]!, child.__element_root!);
+              }
+              break;
+            }
+            /* v8 ignore end */
+            case DynamicPartType.Children:
+            case DynamicPartType.ListChildren: {
+              __AppendElement(elements[elementIndex]!, child.__element_root!);
+              break;
+            }
           }
-          /* v8 ignore end */
-          case DynamicPartType.Children:
-          case DynamicPartType.ListChildren: {
-            __AppendElement(elements[elementIndex]!, child.__element_root!);
-            break;
+        } else if (slot.length > 1) {
+          const [type, elementIndex] = slot[index]!;
+          switch (type) {
+            case DynamicPartType.Slot: {
+              __ReplaceElement(child.__element_root!, elements[elementIndex]!);
+              elements[elementIndex] = child.__element_root!;
+              index++;
+              break;
+            }
+            /* v8 ignore start */
+            case DynamicPartType.MultiChildren: {
+              if (__GetTag(elements[elementIndex]!) === 'wrapper') {
+                __ReplaceElement(child.__element_root!, elements[elementIndex]!);
+              } else {
+                __AppendElement(elements[elementIndex]!, child.__element_root!);
+              }
+              index++;
+              break;
+            }
+            /* v8 ignore end */
+            case DynamicPartType.Children: {
+              __AppendElement(elements[elementIndex]!, child.__element_root!);
+              index++;
+              break;
+            }
+            case DynamicPartType.ListChildren: {
+              __AppendElement(elements[elementIndex]!, child.__element_root!);
+              break;
+            }
           }
         }
 
@@ -552,19 +582,25 @@ export class SnapshotInstance {
       const index = this.__current_slot_index++;
       const [s, elementIndex] = __snapshot_def.slot[index]!;
 
-      if (s === DynamicPartType.Slot) {
-        __ReplaceElement(newNode.__element_root!, __elements[elementIndex]!);
-        __elements[elementIndex] = newNode.__element_root!;
-
-        /* v8 ignore start */
-      } else if (s === DynamicPartType.MultiChildren) {
-        if (__GetTag(__elements[elementIndex]!) === 'wrapper') {
+      switch (s) {
+        case DynamicPartType.Slot: {
           __ReplaceElement(newNode.__element_root!, __elements[elementIndex]!);
-        } else {
+          __elements[elementIndex] = newNode.__element_root!;
+          break;
+        }
+        case DynamicPartType.Children: {
           __AppendElement(__elements[elementIndex]!, newNode.__element_root!);
+          break;
+        }
+        case DynamicPartType.MultiChildren: {
+          if (__GetTag(__elements[elementIndex]!) === 'wrapper') {
+            __ReplaceElement(newNode.__element_root!, __elements[elementIndex]!);
+          } else {
+            __AppendElement(__elements[elementIndex]!, newNode.__element_root!);
+          }
+          break;
         }
       }
-      /* v8 ignore end */
     }
   }
 
