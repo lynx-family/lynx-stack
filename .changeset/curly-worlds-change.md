@@ -7,4 +7,4 @@
 
 fix: load main-thread chunk in ESM format
 
-github.com/nodejs/node/issues/59362
+See [nodejs/node#59362](https://github.com/nodejs/node/issues/59362) for more details.
