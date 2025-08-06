@@ -12,7 +12,7 @@ import type {
   SidebarDivider,
   SidebarItem,
   SidebarSectionHeader,
-} from '@rspress/shared';
+} from '@rspress/core';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.dirname(__dirname);

@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { createElement, lazy } from 'preact/compat';
+import { Suspense, createElement, lazy } from 'preact/compat';
 import type { FC } from 'react';
 
 import './lynx.js';
@@ -10,7 +10,6 @@ import './lynx.js';
 import { factory as factory2 } from './compat/componentIs.js';
 import { useMemo } from './hooks/react.js';
 import { loadLazyBundle } from './lynx/lazy-bundle.js';
-import { Suspense } from './lynx/suspense.js';
 import { __root } from './root.js';
 import { DynamicPartType } from './snapshot/dynamicPartType.js';
 import { snapshotCreateList } from './snapshot/list.js';
