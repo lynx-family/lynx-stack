@@ -291,7 +291,7 @@ describe('triggerDataUpdated', () => {
           [
             "rLynxChange",
             {
-              "data": "{"patchList":[{"id":7,"snapshotPatch":[3,-6,0,"update"]}]}",
+              "data": "{"patchList":[{"id":7,"snapshotPatch":[3,-7,0,"update"]}]}",
               "patchOptions": {
                 "flowIds": [
                   666,
@@ -490,7 +490,7 @@ describe('triggerDataUpdated', () => {
           [
             "rLynxChange",
             {
-              "data": "{"patchList":[{"id":12,"snapshotPatch":[3,-5,0,"update"]}]}",
+              "data": "{"patchList":[{"id":12,"snapshotPatch":[3,-6,0,"update"]}]}",
               "patchOptions": {
                 "flowIds": [
                   666,

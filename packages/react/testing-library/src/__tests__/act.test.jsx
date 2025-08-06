@@ -45,17 +45,8 @@ test('render calls useEffect immediately', async () => {
     });
     expect(container).toMatchInlineSnapshot(`<page />`);
 
-    // this is a different behavior from the testing library and real Lynx environment
-    // in the testing library, `useEffect` will be called since we are using `render`
-    // in the real Lynx environment, `useEffect` will not be called since we are not using `renderToString`
-    expect(cb).toBeCalledTimes(1);
-    expect(cb.mock.calls).toMatchInlineSnapshot(`
-      [
-        [
-          "__MAIN_THREAD__: true",
-        ],
-      ]
-    `);
+    expect(cb).toBeCalledTimes(0);
+    expect(cb.mock.calls).toMatchInlineSnapshot(`[]`);
 
     unmount();
     cb.mockClear();
@@ -72,12 +63,9 @@ test('render calls useEffect immediately', async () => {
       </page>
     `);
 
-    expect(cb).toBeCalledTimes(2);
+    expect(cb).toBeCalledTimes(1);
     expect(cb.mock.calls).toMatchInlineSnapshot(`
       [
-        [
-          "__MAIN_THREAD__: true",
-        ],
         [
           "__MAIN_THREAD__: false",
         ],
