@@ -15,10 +15,7 @@ import type {
 } from '@rsbuild/core'
 import { describe, expect, test, vi } from 'vitest'
 
-import {
-  CssExtractRspackPlugin,
-  CssExtractWebpackPlugin,
-} from '@lynx-js/css-extract-webpack-plugin'
+import { CssExtractRspackPlugin } from '@lynx-js/css-extract-webpack-plugin'
 import { LAYERS } from '@lynx-js/react-webpack-plugin'
 import { createRspeedy } from '@lynx-js/rspeedy'
 
@@ -614,42 +611,6 @@ describe('Plugins - CSS', () => {
       expect({ module: { rules: [mainThreadRule] } }).not.toHaveLoader(
         CssExtractRspackPlugin.loader,
       )
-    })
-  })
-
-  describe('Webpack', () => {
-    test('Use css-loader with CssExtractWebpackPlugin.loader', async () => {
-      const { webpackProvider } = await import('@rsbuild/webpack')
-      const rsbuild = await createRsbuild({
-        rsbuildConfig: {
-          provider: webpackProvider,
-          plugins: [pluginReactLynx(), pluginStubRspeedyAPI()],
-        },
-      })
-
-      const [config] = await rsbuild.initConfigs()
-
-      // Disable `experiments.css`
-      expect(config?.experiments?.css).toBe(undefined)
-
-      expect(config).toHaveLoader(/css-loader/)
-      expect(config).toHaveLoader(CssExtractWebpackPlugin.loader)
-      expect(config).not.toHaveLoader(CssExtractRspackPlugin.loader)
-    })
-
-    test('Do not have lightningcss-loader', async () => {
-      const { webpackProvider } = await import('@rsbuild/webpack')
-      const rsbuild = await createRsbuild({
-        rsbuildConfig: {
-          provider: webpackProvider,
-          plugins: [pluginReactLynx(), pluginStubRspeedyAPI()],
-        },
-      })
-
-      const [config] = await rsbuild.initConfigs()
-
-      // Has `lightningcss-loader`
-      expect(config).not.toHaveLoader('builtin:lightningcss-loader')
     })
   })
 

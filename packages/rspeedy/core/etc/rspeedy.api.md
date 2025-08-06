@@ -68,8 +68,6 @@ export interface Config {
     output?: Output | undefined;
     performance?: Performance | undefined;
     plugins?: RsbuildPlugins | undefined;
-    // @alpha
-    provider?: RsbuildConfig['provider'];
     server?: Server | undefined;
     source?: Source | undefined;
     tools?: Tools | undefined;
