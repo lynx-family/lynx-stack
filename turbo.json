@@ -31,7 +31,8 @@
       "inputs": [
         "**/*.{ts,tsx}",
         ".github/**",
-        "!node_modules/**"
+        "!node_modules/**",
+        "!**/*.d.ts"
       ]
     }
   }
