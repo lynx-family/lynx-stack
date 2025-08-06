@@ -29,7 +29,8 @@
       "cache": false,
       "dependsOn": [],
       "inputs": [
-        "**/*.{ts,tsx}"
+        "**/*.{ts,tsx}",
+        "!node_modules/**"
       ]
     }
   }
