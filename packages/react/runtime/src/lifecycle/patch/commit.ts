@@ -31,6 +31,7 @@ import { takeWorkletRefInitValuePatch } from '../../worklet/workletRefPool.js';
 import { getReloadVersion } from '../pass.js';
 import type { SnapshotPatch } from './snapshotPatch.js';
 import { takeGlobalSnapshotPatch } from './snapshotPatch.js';
+import { isRendering } from '../isRendering.js';
 
 let globalFlushOptions: FlushOptions = {};
 function takeGlobalFlushOptions() {
@@ -101,6 +102,8 @@ function replaceCommitHook(): void {
         commitQueue.length = 0;
         return;
       }
+
+    isRendering.value = false;
 
       // Mark the end of virtual DOM diffing phase for performance tracking
       markTimingLegacy('updateDiffVdomEnd');

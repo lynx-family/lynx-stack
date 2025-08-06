@@ -79,3 +79,15 @@ export function hook<T, K extends keyof T>(
     return fn.call(this, oldFn, ...args);
   } as T[K];
 }
+
+export const lynxQueueMicrotask: typeof lynx.queueMicrotask = /* @__PURE__ */ (() => {
+  if (lynx.queueMicrotask) {
+    return fn => lynx.queueMicrotask(fn);
+  } else if (globalThis.Promise) {
+    const realResolvedPromise = globalThis.Promise.resolve();
+    return fn => void realResolvedPromise.then(fn);
+    /* v8 ignore next 3 */
+  } else {
+    return setTimeout;
+  }
+})();
