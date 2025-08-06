@@ -46,5 +46,18 @@ export default defineConfig({
       FORCE_COLOR: '0',
       NODE_ENV: 'test',
     },
+
+    projects: [
+      'examples/*/vitest.config.ts',
+      'packages/react/*/vitest.config.ts',
+      'packages/rspeedy/*/vitest.config.ts',
+      'packages/testing-library/*/vitest.config.mts',
+      'packages/testing-library/examples/*/vitest.config.ts',
+      'packages/third-party/*/vitest.config.ts',
+      'packages/tools/*/vitest.config.ts',
+      'packages/use-sync-external-store/vitest.config.ts',
+      'packages/web-platform/*/vitest.config.ts',
+      'packages/webpack/*/vitest.config.ts',
+    ],
   },
 });
