@@ -30,6 +30,7 @@
       "dependsOn": [],
       "inputs": [
         "**/*.{ts,tsx}",
+        ".github/**",
         "!node_modules/**"
       ]
     }
