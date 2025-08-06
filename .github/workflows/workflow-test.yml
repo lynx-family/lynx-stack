@@ -64,7 +64,7 @@ jobs:
       - name: Test # zizmor: ignore[template-injection] The inputs.run is provided by us.
         id: test
         env:
-          NODE_OPTIONS: --max-old-space-size=8192
+          NODE_OPTIONS: --max-old-space-size=16384
           GITHUB_SHA: ${{ github.event.pull_request.head.sha }}
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
