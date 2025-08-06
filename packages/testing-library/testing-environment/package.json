@@ -51,7 +51,7 @@
     "dev": "rslib build --watch"
   },
   "devDependencies": {
-    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/jest-dom": "^6.6.4",
     "@types/jsdom": "^21.1.7",
     "rsbuild-plugin-publint": "0.3.2"
   }

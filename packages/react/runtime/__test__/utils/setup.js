@@ -17,8 +17,12 @@ function inject() {
 inject();
 
 afterEach((context) => {
-  if (context.task.name.includes('preact/debug')) {
+  const skippedTasks = [
     // Skip preact/debug tests since it would throw errors and abort the rendering process
+    'preact/debug',
+    'should remove event listener when throw in cleanup',
+  ];
+  if (skippedTasks.some(task => context.task.name.includes(task))) {
     return;
   }
 

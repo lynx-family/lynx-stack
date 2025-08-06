@@ -10,9 +10,9 @@ import module from 'node:module'
 /**
  * Register the ESM loader for TypeScript.
  *
- * @returns {() => void} - The `unregister` function.
+ * @returns - The `unregister` function.
  */
-export function register() {
+export function register(options) {
   // eslint-disable-next-line n/no-unsupported-features/node-builtins
   if (!module.register) {
     throw new Error(
@@ -35,6 +35,7 @@ export function register() {
     {
       parentURL: import.meta.url,
       data: {
+        options,
         port: port2,
       },
       transferList: [port2],

@@ -8,6 +8,12 @@ import type {
   ValueType,
 } from './tailwind-types.js';
 
+/** A flat structure of possible variant values, either list or key-value form. */
+type KeyValuePairOrList =
+  | Record<string, string>
+  | string[]
+  | ReadonlyArray<string>;
+
 /** Anything that is legal on the right-hand side of a CSS-in-JS object. */
 type CSSStatic =
   | string // "rotate(45deg)"
@@ -53,34 +59,38 @@ type Bound<T> = {
 
 type BoundedPluginCreator = (api: Bound<PluginAPI>) => void;
 
-interface OptionsFn<T> {
-  (options: T): { handler: PluginCreator; config?: Partial<Config> };
+interface PluginWithConfig {
+  handler: PluginCreator;
+  config?: Partial<Config> | undefined;
+}
+
+interface PluginWithOptions<T> {
+  (options?: T): PluginWithConfig;
   __isOptionsFunction: true;
 }
 
-interface PluginFn {
+interface CreatePluginFunction {
   (
     pluginFn: BoundedPluginCreator,
     cfg?: Partial<Config>,
-  ): { handler: PluginCreator; config?: Partial<Config> | undefined };
+  ): PluginWithConfig;
   withOptions<T>(
-    factory: (opts: T) => BoundedPluginCreator,
-    cfgFactory?: (opts: T) => Partial<Config>,
-  ): {
-    (opts: T): { handler: PluginCreator; config?: Partial<Config> | undefined };
-    __isOptionsFunction: true;
-  };
+    pluginFn: (options?: T) => BoundedPluginCreator,
+    configFn?: (options?: T) => Partial<Config>,
+  ): PluginWithOptions<T>;
 }
 
 export type {
   CSSStatic,
+  KeyValuePairOrList,
   PropertyEntry,
   UtilityEntry,
   UtilityGroup,
   UtilityVariations,
   UtilityPluginOptions,
   BoundedPluginCreator,
-  OptionsFn,
-  PluginFn,
   Bound,
+  CreatePluginFunction,
+  PluginWithConfig,
+  PluginWithOptions,
 };

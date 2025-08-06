@@ -4,8 +4,7 @@
   "tasks": {
     "build": {
       "dependsOn": [
-        "build:wasm-bindgen",
-        "build:wasm-pack"
+        "build:wasm-bindgen"
       ],
       "inputs": [
         "src"
@@ -15,11 +14,6 @@
       ]
     },
     "build:wasm-bindgen": {
-      "dependsOn": [],
-      "inputs": [],
-      "outputs": []
-    },
-    "build:wasm-pack": {
       "dependsOn": [],
       "inputs": [],
       "outputs": []

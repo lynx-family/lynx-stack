@@ -37,10 +37,10 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "22"
-      - name: Install wasm-bindgen and wasm-pack
+      - name: Install wasm-bindgen
         uses: taiki-e/install-action@bbdef1c33cb8ed1fd122d68d8374ac79998d6960 # v2
         with:
-          tool: wasm-bindgen,wasm-pack
+          tool: wasm-bindgen
       - name: Install
         run: |
           npm install -g corepack@latest

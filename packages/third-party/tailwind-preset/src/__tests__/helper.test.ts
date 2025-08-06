@@ -6,9 +6,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   autoBind,
   createPlugin,
-  createPluginWithName,
   createUtilityPlugin,
-  plugin,
   transformThemeValue,
 } from '../helpers.js';
 import type { RuntimePluginAPI } from './utils/mock-api.js';
@@ -24,16 +22,8 @@ describe('helpers.ts', () => {
     expect(typeof createPlugin).toBe('function');
   });
 
-  it('should expose createPluginWithName as a function', () => {
-    expect(typeof createPluginWithName).toBe('function');
-  });
-
-  it('should expose plugin as a function', () => {
-    expect(typeof plugin).toBe('function');
-  });
-
-  it('plugin exposes withOptions as a function', () => {
-    expect(typeof plugin.withOptions).toBe('function');
+  it('createPlugin exposes withOptions as a function', () => {
+    expect(typeof createPlugin.withOptions).toBe('function');
   });
 
   it('should expose createUtilityPlugin as a function', () => {
@@ -43,7 +33,9 @@ describe('helpers.ts', () => {
   it('should expose transformThemeValue as a function', () => {
     expect(typeof transformThemeValue).toBe('function');
   });
+});
 
+describe('createPlugin', () => {
   /* ------------------------------------------------------------------ *
    *  createPlugin                                                      *
    * ------------------------------------------------------------------ */
@@ -60,56 +52,18 @@ describe('helpers.ts', () => {
   });
 
   /* ------------------------------------------------------------------ *
-   *  createPluginWithName                                              *
+   *  createPlugin.withOptions()                                 *
    * ------------------------------------------------------------------ */
-  it('createPluginWithName should NOT invoke the function when the core plugin is disabled', () => {
-    const mockFn = vi.fn();
-    const pluginObj = createPluginWithName('myPlugin', mockFn);
 
-    const api = mockPluginAPI({
-      config: vi.fn((key?: string) =>
-        key === 'corePlugins.myPlugin' ? false : undefined
-      ),
-    });
-
-    pluginObj.handler(api);
-    expect(mockFn).not.toHaveBeenCalled();
-  });
-
-  it('createPluginWithName should invoke the function when the core plugin is enabled', () => {
-    const mockFn = vi.fn();
-    const pluginObj = createPluginWithName('myPlugin', mockFn);
-
-    const api = mockPluginAPI({
-      config: vi.fn((key?: string) =>
-        key === 'corePlugins.myPlugin' ? true : undefined
-      ),
-    });
-
-    pluginObj.handler(api);
-    expect(mockFn).toHaveBeenCalled();
-  });
-
-  /* ------------------------------------------------------------------ *
-   *  plugin() and plugin.withOptions()                                 *
-   * ------------------------------------------------------------------ */
-  it('plugin should call the bound plugin function with the API', () => {
-    const mockFn = vi.fn();
-    const pluginObj = plugin(mockFn);
-
-    pluginObj.handler(mockPluginAPI());
-    expect(mockFn).toHaveBeenCalled();
-  });
-
-  it('plugin.withOptions should call the factory and return a plugin that works', () => {
-    const pluginFactory = vi.fn((options: { foo: number }) => {
+  it('createPlugin.withOptions should call the factory and return a plugin that works', () => {
+    const pluginFactory = vi.fn((options?: { foo: number }) => {
       return vi.fn((api: Bound<PluginAPI>) => {
-        expect(options.foo).toBe(1);
+        expect(options?.foo).toBe(1);
         expect(typeof api.config).toBe('function');
       });
     });
 
-    const optionsPlugin = plugin.withOptions(pluginFactory);
+    const optionsPlugin = createPlugin.withOptions(pluginFactory);
     expect(optionsPlugin.__isOptionsFunction).toBe(true);
 
     const result = optionsPlugin({ foo: 1 });
@@ -118,15 +72,32 @@ describe('helpers.ts', () => {
     expect(pluginFactory).toHaveBeenCalledWith({ foo: 1 });
   });
 
-  it('plugin.withOptions passes options to cfgFactory and attaches config', () => {
+  it('createPlugin.withOptions passes options to cfgFactory and attaches config', () => {
     const pluginFactory = vi.fn(() => vi.fn());
-    const cfgFactory = vi.fn((opt: { env: string }) => ({ env: opt.env }));
+    const cfgFactory = vi.fn((opt?: { env: string }) => ({ env: opt?.env }));
 
-    const optionsPlugin = plugin.withOptions(pluginFactory, cfgFactory);
+    const optionsPlugin = createPlugin.withOptions(pluginFactory, cfgFactory);
     const result = optionsPlugin({ env: 'test' });
+
+    result.handler(mockPluginAPI());
 
     expect(result.config).toEqual({ env: 'test' });
     expect(cfgFactory).toHaveBeenCalledWith({ env: 'test' });
+  });
+
+  it('createPlugin.withOptions works when no options are passed', () => {
+    const pluginFactory = vi.fn(() => vi.fn());
+    const configFactory = vi.fn(() => ({ foo: 'bar' }));
+
+    const plugin = createPlugin.withOptions(pluginFactory, configFactory);
+    const result = plugin(); // no options passed
+    result.handler(mockPluginAPI());
+
+    expect(result.handler).toBeInstanceOf(Function);
+    expect(result.config).toEqual({ foo: 'bar' });
+
+    expect(pluginFactory).toHaveBeenCalledWith(undefined);
+    expect(configFactory).toHaveBeenCalledWith(undefined);
   });
 });
 

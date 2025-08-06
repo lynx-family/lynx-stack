@@ -67,3 +67,15 @@ export function maybePromise<T>(value: unknown): value is Promise<T> {
 export function getDisplayName(type: ComponentClass): string {
   return type.displayName ?? type.name;
 }
+
+export function hook<T, K extends keyof T>(
+  object: T,
+  key: K,
+  fn: Required<T>[K] extends (...args: infer P) => infer Q ? ((old?: T[K], ...args: P) => Q)
+    : never,
+): void {
+  const oldFn = object[key];
+  object[key] = function(this: T, ...args: unknown[]) {
+    return fn.call(this, oldFn, ...args);
+  } as T[K];
+}

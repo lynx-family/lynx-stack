@@ -1,5 +1,11 @@
 # @lynx-js/web-core-server
 
+## 0.15.4
+
+### Patch Changes
+
+- refactor: bundle web-core-server ([#819](https://github.com/lynx-family/lynx-stack/pull/819))
+
 ## 0.15.3
 
 ## 0.15.2

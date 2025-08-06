@@ -39,6 +39,12 @@ describe('Plugins - SWC', () => {
               "legacyDecorator": false,
             },
           },
+          "rspackExperiments": {
+            "collectTypeScriptInfo": {
+              "exportedEnum": false,
+              "typeExports": true,
+            },
+          },
         }
       `)
   })
@@ -72,6 +78,12 @@ describe('Plugins - SWC', () => {
             "transform": {
               "decoratorVersion": "2022-03",
               "legacyDecorator": false,
+            },
+          },
+          "rspackExperiments": {
+            "collectTypeScriptInfo": {
+              "exportedEnum": false,
+              "typeExports": true,
             },
           },
         }
@@ -126,6 +138,12 @@ describe('Plugins - SWC', () => {
             },
           },
           "minify": true,
+          "rspackExperiments": {
+            "collectTypeScriptInfo": {
+              "exportedEnum": false,
+              "typeExports": true,
+            },
+          },
         }
       `)
   })

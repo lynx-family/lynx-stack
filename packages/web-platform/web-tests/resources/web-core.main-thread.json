@@ -26,5 +26,43 @@
     "enableParallelElement": true,
     "enableRemoveCSSScope": true,
     "targetSdkVersion": "2.10"
+  },
+  "elementTemplate": {
+    "test-template": [
+      {
+        "id": "id-1",
+        "type": "view",
+        "class": [
+          "class1",
+          "class2"
+        ],
+        "idSelector": "template-view",
+        "attributes": {
+          "attr1": "value1"
+        },
+        "builtinAttributes": {},
+        "children": [
+          {
+            "id": "id-2",
+            "type": "text",
+            "class": [],
+            "idSelector": "",
+            "attributes": {
+              "value": "Hello from template"
+            },
+            "builtinAttributes": {},
+            "children": [],
+            "events": []
+          }
+        ],
+        "events": [
+          {
+            "type": "bindEvent",
+            "name": "tap",
+            "value": "templateTap"
+          }
+        ]
+      }
+    ]
   }
 }

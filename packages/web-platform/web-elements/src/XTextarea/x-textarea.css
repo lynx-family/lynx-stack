@@ -28,6 +28,7 @@ x-textarea::part(textarea), x-textarea::part(form) {
   text-align: inherit;
   outline: inherit;
   background-color: inherit;
+  color: inherit;
 }
 x-textarea::part(textarea) {
   --placeholder-color: grey;

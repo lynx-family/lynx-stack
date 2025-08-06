@@ -82,8 +82,14 @@ export function prepareMainThreadAPIs(
       tagMap,
       initI18nResources,
     } = config;
-    const { styleInfo, pageConfig, customSections, cardType, lepusCode } =
-      template;
+    const {
+      styleInfo,
+      pageConfig,
+      customSections,
+      cardType,
+      lepusCode,
+      elementTemplate,
+    } = template;
     markTimingInternal('decode_start');
     await initWasmPromise;
     const lepusCodeEntries = await Promise.all(
@@ -92,10 +98,12 @@ export function prepareMainThreadAPIs(
         if (cachedModule) {
           return [name, cachedModule] as [string, LynxJSModule];
         } else {
-          Object.assign(globalThis, { module: {} });
-          await import(/* webpackIgnore: true */ url);
-          const module = globalThis.module as LynxJSModule;
-          Object.assign(globalThis, { module: {} });
+          const { default: evaluateModule } = await import(
+            /* webpackIgnore: true */ url
+          );
+          const module: LynxJSModule = {
+            exports: evaluateModule,
+          };
           moduleCache[url] = module;
           return [name, module] as [string, LynxJSModule];
         }
@@ -114,6 +122,7 @@ export function prepareMainThreadAPIs(
       tagMap,
       browserConfig,
       customSections,
+      elementTemplate,
       globalProps,
       pageConfig,
       styleInfo,
