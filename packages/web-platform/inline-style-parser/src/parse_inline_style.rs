@@ -5,14 +5,14 @@ use crate::{
   utils::cmp_str,
 };
 
-const IMPORTANT_STR: [u16; 9] = [
-  'i' as u16, 'm' as u16, 'p' as u16, 'o' as u16, 'r' as u16, 't' as u16, 'a' as u16, 'n' as u16,
-  't' as u16,
+const IMPORTANT_STR: [u32; 9] = [
+  'i' as u32, 'm' as u32, 'p' as u32, 'o' as u32, 'r' as u32, 't' as u32, 'a' as u32, 'n' as u32,
+  't' as u32,
 ];
 
 pub struct ParserState<'a, 'b, T: Transformer> {
   transformer: &'b mut T,
-  source: &'a [u16],
+  source: &'a str,
   status: usize,
   name_start: usize,
   name_end: usize,
@@ -79,7 +79,9 @@ impl<T: Transformer> Parser for ParserState<'_, '_, T> {
       if self.value_end == 0 {
         self.value_end = start;
       }
-      while is_white_space!(self.source[self.value_end - 1]) && self.value_end > self.value_start {
+      while is_white_space!(self.source.char_code_at(self.value_end - 1) as u32)
+        && self.value_end > self.value_start
+      {
         self.value_end -= 1;
       }
       self.transformer.on_declaration(
@@ -138,7 +140,7 @@ pub trait Transformer {
   );
 }
 
-pub fn parse_inline_style<T: Transformer>(source: &[u16], transformer: &mut T) {
+pub fn parse_inline_style<'a, T: Transformer>(source: &str, transformer: &mut T) {
   let mut parser = ParserState {
     transformer,
     source,

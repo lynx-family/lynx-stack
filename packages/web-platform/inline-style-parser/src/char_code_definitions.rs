@@ -1,11 +1,11 @@
 use crate::*;
-pub const EOF_CATEGORY: u16 = 0x80;
-pub const WHITE_SPACE_CATEGORY: u16 = 0x82;
-pub const DIGIT_CATEGORY: u16 = 0x83;
-pub const NAME_START_CATEGORY: u16 = 0x84;
-pub const NON_PRINTABLE_CATEGORY: u16 = 0x85;
+pub const EOF_CATEGORY: u32 = 0x80;
+pub const WHITE_SPACE_CATEGORY: u32 = 0x82;
+pub const DIGIT_CATEGORY: u32 = 0x83;
+pub const NAME_START_CATEGORY: u32 = 0x84;
+pub const NON_PRINTABLE_CATEGORY: u32 = 0x85;
 
-const fn category_map_value_const(code: u16) -> u16 {
+const fn category_map_value_const(code: u32) -> u32 {
   if code == 0 {
     EOF_CATEGORY
   } else if is_white_space!(code) {
@@ -21,17 +21,17 @@ const fn category_map_value_const(code: u16) -> u16 {
   }
 }
 
-const fn initialize_category_array() -> [u16; 0x80] {
-  let mut arr = [0u16; 0x80];
-  let mut i = 0;
+const fn initialize_category_array() -> [u32; 0x80] {
+  let mut arr = [0u32; 0x80];
+  let mut i = 0u32;
   while i < 0x80 {
-    arr[i] = category_map_value_const(i as u16);
+    arr[i as usize] = category_map_value_const(i);
     i += 1;
   }
   arr
 }
 
-pub const CATEGORY: [u16; 0x80] = initialize_category_array();
+pub const CATEGORY: [u32; 0x80] = initialize_category_array();
 // Character category constants
 
 // Public character check macros (mirroring C macros)
@@ -40,7 +40,7 @@ pub const CATEGORY: [u16; 0x80] = initialize_category_array();
 #[macro_export]
 macro_rules! is_digit {
   ($code:expr) => {
-    ($code >= 0x0030_u16) && ($code <= 0x0039_u16)
+    ($code >= 0x0030) && ($code <= 0x0039)
   };
 }
 
@@ -119,7 +119,7 @@ macro_rules! is_non_printable {
 #[macro_export]
 macro_rules! is_newline {
   ($code:expr) => {
-    ($code == 0x000A_u16) || ($code == 0x000D_u16) || ($code == 0x000C_u16)
+    ($code == 0x000A) || ($code == 0x000D) || ($code == 0x000C)
   };
 }
 
@@ -127,7 +127,7 @@ macro_rules! is_newline {
 #[macro_export]
 macro_rules! is_white_space {
   ($code:expr) => {
-    (is_newline!($code) || $code == 0x0009_u16 || $code == 0x0020_u16)
+    (is_newline!($code) || $code == 0x0009 || $code == 0x0020)
   };
 }
 
@@ -146,9 +146,9 @@ macro_rules! is_valid_escape {
 macro_rules! is_bom {
   ($code:expr) => {
     if $code == 0xFEFF || $code == 0xFFFE {
-      1usize
+      1
     } else {
-      0usize
+      0
     }
   };
 }
@@ -156,44 +156,76 @@ macro_rules! is_bom {
 // Check if three code points would start an identifier.
 #[macro_export]
 macro_rules! is_identifier_start {
-  ($first:expr, $second:expr, $third:expr) => {
+  ($chars, $code) => {{
+    let mut chars_clone = chars.clone();
+    let next_c = chars_clone.next();
+    let next_next_c = chars_clone.next();
     /* Look at the first code point:
        U+002D HYPHEN-MINUS */
-    if $first == 0x002D {
+    if $code == 0x002D {
       /* If the second code point is a name-start code point, return true. */
       /* or the second and third code points are a valid escape, return true. Otherwise, return false. */
-      is_name_start!($second) || ($second == 0x002D) || is_valid_escape!($second, $third)
+      is_name_start!($next_c.unwrap()) || ($next_c.unwrap() == 0x002D) || is_valid_escape!($next_c.unwrap(), $next_next_c.unwrap())
     /* name-start code point */
-    } else if is_name_start!($first) {
+    } else if is_name_start!($code) {
       true
     /*U+005C REVERSE SOLIDUS (\)*/
-    } else if $first == 0x005C {
+    } else if $code == 0x005C {
       /* If the second code point is a name-start code point, return true. Otherwise, return false.*/
-      is_valid_escape!($first, $second)
+      is_valid_escape!($code, $next_c.unwrap())
     } else {
       false
     }
-  };
+  }};
 }
+
+// // Check if three code points would start an identifier.
+// #[macro_export]
+// macro_rules! is_identifier_start {
+//   ($first:expr, $second:expr, $third:expr) => {
+//     /* Look at the first code point:
+//        U+002D HYPHEN-MINUS */
+//     if $first == 0x002D {
+//       /* If the second code point is a name-start code point, return true. */
+//       /* or the second and third code points are a valid escape, return true. Otherwise, return false. */
+//       is_name_start!($second) || ($second == 0x002D) || is_valid_escape!($second, $third)
+//     /* name-start code point */
+//     } else if is_name_start!($first) {
+//       true
+//     /*U+005C REVERSE SOLIDUS (\)*/
+//     } else if $first == 0x005C {
+//       /* If the second code point is a name-start code point, return true. Otherwise, return false.*/
+//       is_valid_escape!($first, $second)
+//     } else {
+//       false
+//     }
+//   };
+// }
 
 // Check if three code points would start a number.
 #[macro_export]
 macro_rules! is_number_start {
-  ($first:expr, $second:expr, $third:expr) => {
-    if $first == 0x002B || $first == 0x002D {
+  ($chars:expr, $code:expr) => {{
+    let mut chars_clone = chars.clone();
+    let next_c = chars_clone.next();
+    let next_next_c = chars_clone.next();
+
+    if $code == 0x002B || $code == 0x002D {
       // U+002B PLUS SIGN (+) or U+002D HYPHEN-MINUS (-)
-      if is_digit!($second) {
+      if next_c.is_some() && is_digit!(next_c as u32) {
         true
       } else {
-        ($second == 0x002E) && is_digit!($third) // U+002E FULL STOP (.)
+        (next_c.is_some() && next_c as u32 == 0x002E)
+          && next_next_c.is_some()
+          && is_digit!(next_next_c as u32) // U+002E FULL STOP (.)
       }
-    } else if $first == 0x002E {
+    } else if code == 0x002E {
       // U+002E FULL STOP (.)
-      is_digit!($second)
+      next_c.is_some() && is_digit!(next_c as u32)
     } else {
-      is_digit!($first)
+      is_digit!(code)
     }
-  };
+  }};
 }
 
 // Get the category of a character code.
@@ -212,18 +244,17 @@ macro_rules! char_code_category {
 
 #[macro_export]
 macro_rules! cmp_char {
-  ($test_str:expr, $test_str_length:expr, $offset:expr, $reference_code:expr) => {{
-    if ($offset < $test_str_length) {
-      let code = $test_str[$offset];
+  ($test_str:expr, $reference_code:expr) => {{
+    if ($test_str.is_some()) {
+      let code = $test_str.unwrap() as u32;
       // code.toLowerCase() for A..Z
-      if code == $reference_code || (is_uppercase_letter!(code) && ((code | 32) == $reference_code))
-      {
+      if code == $reference_code || (is_uppercase_letter!(code) && (code == $reference_code)) {
         1usize //true
       } else {
         0usize //false
       }
     } else {
-      0usize //false
+      0usize
     }
   }};
 }
@@ -232,20 +263,33 @@ macro_rules! cmp_char {
 macro_rules! get_char_code {
   ($source:expr, $source_length:expr, $offset:expr) => {
     if $offset < $source_length {
-      $source[$offset]
+      $source.char_code_at($offset) as u32
     } else {
       0 // EOF
     }
   };
 }
 
+// #[macro_export]
+// macro_rules! get_new_line_length {
+//     ($source:expr, $source_length:expr, $offset:expr, $code:expr) => {
+//         if $code == 13 /* \r */ && get_char_code!($source, $source_length, $offset + 1) == 10 /* \n */ {
+//             2
+//         } else {
+//             1
+//         }
+//     }
+// }
 #[macro_export]
 macro_rules! get_new_line_length {
-    ($source:expr, $source_length:expr, $offset:expr, $code:expr) => {
-        if $code == 13 /* \r */ && get_char_code!($source, $source_length, $offset + 1) == 10 /* \n */ {
-            2
-        } else {
-            1
-        }
+  ($chars:expr, $code:expr) => {{
+    // Checks if the current char is \r (13) and the next char is \n (10)
+    if $code == 13 && $chars.peek().map_or(false, |&c| c as u32 == 10) {
+      // Consume \n char
+      $chars.next();
+      2
+    } else {
+      1
     }
+  }};
 }

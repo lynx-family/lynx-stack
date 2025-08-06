@@ -12,10 +12,10 @@ mod tests {
 
   #[derive(Debug, PartialEq)]
   struct Declaration {
-    name_start: usize,
-    name_end: usize,
-    value_start: usize,
-    value_end: usize,
+    name_start: u32,
+    name_end: u32,
+    value_start: u32,
+    value_end: u32,
     is_important: bool,
   }
 
@@ -30,22 +30,22 @@ mod tests {
       }
     }
 
-    fn get_name(&self, source: &[u16], decl: &Declaration) -> String {
-      String::from_utf16_lossy(&source[decl.name_start..decl.name_end])
+    fn get_name(&self, source: &js_sys::JsString, decl: &Declaration) -> js_sys::JsString {
+      js_sys::JsString::from(source.slice(decl.name_start, decl.name_end))
     }
 
-    fn get_value(&self, source: &[u16], decl: &Declaration) -> String {
-      String::from_utf16_lossy(&source[decl.value_start..decl.value_end])
+    fn get_value(&self, source: &js_sys::JsString, decl: &Declaration) -> js_sys::JsString {
+      js_sys::JsString::from(source.slice(decl.value_start, decl.value_end))
     }
   }
 
   impl Transformer for TestTransformer {
     fn on_declaration(
       &mut self,
-      name_start: usize,
-      name_end: usize,
-      value_start: usize,
-      value_end: usize,
+      name_start: u32,
+      name_end: u32,
+      value_start: u32,
+      value_end: u32,
       is_important: bool,
     ) {
       self.declarations.push(Declaration {
@@ -58,8 +58,8 @@ mod tests {
     }
   }
 
-  fn parse_css(css: &str) -> (TestTransformer, Vec<u16>) {
-    let source: Vec<u16> = css.encode_utf16().collect();
+  fn parse_css(css: &str) -> (TestTransformer, js_sys::JsString) {
+    let source = js_sys::JsString::from(css);
     let mut transformer = TestTransformer::new();
     parse_inline_style(&source, &mut transformer);
     (transformer, source)
@@ -482,8 +482,7 @@ mod tests {
   #[test]
   fn test_bom_handling() {
     // Test with Byte Order Mark
-    let css_with_bom = "\u{FEFF}color: red;";
-    let source: Vec<u16> = css_with_bom.encode_utf16().collect();
+    let source = js_sys::JsString::from("\u{FEFF}color: red;");
     let mut transformer = TestTransformer::new();
     parse_inline_style(&source, &mut transformer);
 
@@ -610,22 +609,22 @@ mod tests {
     use crate::utils::*;
 
     // Test cmp_str function
-    let test_str: Vec<u16> = "hello".encode_utf16().collect();
-    let reference: Vec<u16> = "hello".encode_utf16().collect();
+    let test_str = js_sys::JsString::from("hello");
+    let reference: Vec<u32> = "hello".chars().map(|c| c as u32).collect();
     assert!(cmp_str(&test_str, 0, 5, &reference));
 
-    let reference2: Vec<u16> = "world".encode_utf16().collect();
+    let reference2: Vec<u32> = "world".chars().map(|c| c as u32).collect();
     assert!(!cmp_str(&test_str, 0, 5, &reference2));
 
     // Test case insensitive comparison
-    let test_str_upper: Vec<u16> = "HELLO".encode_utf16().collect();
-    let reference_lower: Vec<u16> = "hello".encode_utf16().collect();
+    let test_str_upper = js_sys::JsString::from("HELLO");
+    let reference_lower: Vec<u32> = "hello".chars().map(|c| c as u32).collect();
     assert!(cmp_str(&test_str_upper, 0, 5, &reference_lower));
 
     // Test partial string comparison
-    let test_str_long: Vec<u16> = "hello world".encode_utf16().collect();
+    let test_str_long = js_sys::JsString::from("hello world");
     assert!(cmp_str(&test_str_long, 0, 5, &reference));
-    let world_ref: Vec<u16> = "world".encode_utf16().collect();
+    let world_ref: Vec<u32> = "world".chars().map(|c| c as u32).collect();
     assert!(cmp_str(&test_str_long, 6, 11, &world_ref));
 
     // Test out of bounds
@@ -633,78 +632,78 @@ mod tests {
     assert!(!cmp_str(&test_str, 0, 3, &reference)); // different lengths
 
     // Test find_white_space_end
-    let whitespace_str: Vec<u16> = "   hello".encode_utf16().collect();
+    let whitespace_str = js_sys::JsString::from("   hello");
     assert_eq!(find_white_space_end(&whitespace_str, 0), 3);
 
-    let no_whitespace: Vec<u16> = "hello".encode_utf16().collect();
+    let no_whitespace = js_sys::JsString::from("hello");
     assert_eq!(find_white_space_end(&no_whitespace, 0), 0);
 
-    let all_whitespace: Vec<u16> = "   ".encode_utf16().collect();
+    let all_whitespace = js_sys::JsString::from("   ");
     assert_eq!(find_white_space_end(&all_whitespace, 0), 3);
 
     // Test find_decimal_number_end
-    let number_str: Vec<u16> = "123abc".encode_utf16().collect();
+    let number_str = js_sys::JsString::from("123abc");
     assert_eq!(find_decimal_number_end(&number_str, 0), 3);
 
-    let no_number: Vec<u16> = "abc123".encode_utf16().collect();
+    let no_number = js_sys::JsString::from("abc123");
     assert_eq!(find_decimal_number_end(&no_number, 0), 0);
 
-    let all_numbers: Vec<u16> = "123456".encode_utf16().collect();
+    let all_numbers = js_sys::JsString::from("123456");
     assert_eq!(find_decimal_number_end(&all_numbers, 0), 6);
 
     // Test consume_number
-    let simple_number: Vec<u16> = "123".encode_utf16().collect();
+    let simple_number = js_sys::JsString::from("123");
     assert_eq!(consume_number(&simple_number, 0), 3);
 
-    let signed_number: Vec<u16> = "+123".encode_utf16().collect();
+    let signed_number = js_sys::JsString::from("+123");
     assert_eq!(consume_number(&signed_number, 0), 4);
 
-    let negative_number: Vec<u16> = "-123".encode_utf16().collect();
+    let negative_number = js_sys::JsString::from("-123");
     assert_eq!(consume_number(&negative_number, 0), 4);
 
-    let decimal_number: Vec<u16> = "123.456".encode_utf16().collect();
+    let decimal_number = js_sys::JsString::from("123.456");
     assert_eq!(consume_number(&decimal_number, 0), 7);
 
-    let scientific_number: Vec<u16> = "123e456".encode_utf16().collect();
+    let scientific_number = js_sys::JsString::from("123e456");
     assert_eq!(consume_number(&scientific_number, 0), 7);
 
-    let scientific_signed: Vec<u16> = "123e+456".encode_utf16().collect();
+    let scientific_signed = js_sys::JsString::from("123e+456");
     assert_eq!(consume_number(&scientific_signed, 0), 8);
 
-    let scientific_negative: Vec<u16> = "123e-456".encode_utf16().collect();
+    let scientific_negative = js_sys::JsString::from("123e-456");
     assert_eq!(consume_number(&scientific_negative, 0), 8);
 
     // Test consume_name
-    let simple_name: Vec<u16> = "hello".encode_utf16().collect();
+    let simple_name = js_sys::JsString::from("hello");
     assert_eq!(consume_name(&simple_name, 0), 5);
 
-    let hyphenated_name: Vec<u16> = "hello-world".encode_utf16().collect();
+    let hyphenated_name = js_sys::JsString::from("hello-world");
     assert_eq!(consume_name(&hyphenated_name, 0), 11);
 
-    let name_with_digits: Vec<u16> = "hello123".encode_utf16().collect();
+    let name_with_digits = js_sys::JsString::from("hello123");
     assert_eq!(consume_name(&name_with_digits, 0), 8);
 
-    let name_with_underscore: Vec<u16> = "_hello".encode_utf16().collect();
+    let name_with_underscore = js_sys::JsString::from("_hello");
     assert_eq!(consume_name(&name_with_underscore, 0), 6);
 
     // Test consume_escaped
-    let escaped_char: Vec<u16> = "\\41 ".encode_utf16().collect(); // \41 = 'A'
+    let escaped_char = js_sys::JsString::from("\\41 "); // \41 = 'A'
     assert_eq!(consume_escaped(&escaped_char, 0), 4); // includes whitespace consumption
 
-    let escaped_simple: Vec<u16> = "\\A".encode_utf16().collect();
+    let escaped_simple = js_sys::JsString::from("\\A");
     assert_eq!(consume_escaped(&escaped_simple, 0), 2);
 
-    let escaped_hex: Vec<u16> = "\\41424344".encode_utf16().collect();
+    let escaped_hex = js_sys::JsString::from("\\41424344");
     assert_eq!(consume_escaped(&escaped_hex, 0), 7); // max 6 hex digits after \
 
     // Test consume_bad_url_remnants
-    let bad_url: Vec<u16> = "test)".encode_utf16().collect();
+    let bad_url = js_sys::JsString::from("test)");
     assert_eq!(consume_bad_url_remnants(&bad_url, 0), 5);
 
-    let bad_url_no_close: Vec<u16> = "test".encode_utf16().collect();
+    let bad_url_no_close = js_sys::JsString::from("test");
     assert_eq!(consume_bad_url_remnants(&bad_url_no_close, 0), 4);
 
-    let bad_url_with_escape: Vec<u16> = "te\\)st)".encode_utf16().collect();
+    let bad_url_with_escape = js_sys::JsString::from("te\\)st)");
     assert_eq!(consume_bad_url_remnants(&bad_url_with_escape, 0), 7);
   }
 
@@ -715,7 +714,7 @@ mod tests {
     use crate::tokenize::{self, Parser};
 
     struct TokenCollector {
-      tokens: Vec<(u16, usize, usize)>,
+      tokens: Vec<(u16, u32, u32)>,
     }
 
     impl TokenCollector {
@@ -725,79 +724,79 @@ mod tests {
     }
 
     impl Parser for TokenCollector {
-      fn on_token(&mut self, token_type: u16, start: usize, end: usize) {
+      fn on_token(&mut self, token_type: u16, start: u32, end: u32) {
         self.tokens.push((token_type, start, end));
       }
     }
 
     // Test hash token with name following
-    let source: Vec<u16> = "#id".encode_utf16().collect();
+    let source = js_sys::JsString::from("#id");
     let mut collector = TokenCollector::new();
     tokenize::tokenize(&source, &mut collector);
     assert!(!collector.tokens.is_empty());
 
     // Test hash token without name following
-    let source: Vec<u16> = "#123".encode_utf16().collect();
+    let source = js_sys::JsString::from("#123");
     let mut collector = TokenCollector::new();
     tokenize::tokenize(&source, &mut collector);
     assert!(!collector.tokens.is_empty());
 
     // Test at-keyword token
-    let source: Vec<u16> = "@media".encode_utf16().collect();
+    let source = js_sys::JsString::from("@media");
     let mut collector = TokenCollector::new();
     tokenize::tokenize(&source, &mut collector);
     assert!(!collector.tokens.is_empty());
 
     // Test at-keyword without identifier
-    let source: Vec<u16> = "@123".encode_utf16().collect();
+    let source = js_sys::JsString::from("@123");
     let mut collector = TokenCollector::new();
     tokenize::tokenize(&source, &mut collector);
     assert!(!collector.tokens.is_empty());
 
     // Test escaped identifier
-    let source: Vec<u16> = "\\61 bc".encode_utf16().collect(); // \61 = 'a', so "abc"
+    let source = js_sys::JsString::from("\\61 bc"); // \61 = 'a', so "abc"
     let mut collector = TokenCollector::new();
     tokenize::tokenize(&source, &mut collector);
     assert!(!collector.tokens.is_empty());
 
     // Test invalid escape
-    let source: Vec<u16> = "\\".encode_utf16().collect();
+    let source = js_sys::JsString::from("\\");
     let mut collector = TokenCollector::new();
     tokenize::tokenize(&source, &mut collector);
     assert!(!collector.tokens.is_empty());
 
     // Test delim tokens
-    let source: Vec<u16> = "!@#$%^&*".encode_utf16().collect();
+    let source = js_sys::JsString::from("!@#$%^&*");
     let mut collector = TokenCollector::new();
     tokenize::tokenize(&source, &mut collector);
     assert!(!collector.tokens.is_empty());
 
     // Test CDC token
-    let source: Vec<u16> = "-->".encode_utf16().collect();
+    let source = js_sys::JsString::from("-->");
     let mut collector = TokenCollector::new();
     tokenize::tokenize(&source, &mut collector);
     assert!(!collector.tokens.is_empty());
 
     // Test CDO token
-    let source: Vec<u16> = "<!--".encode_utf16().collect();
+    let source = js_sys::JsString::from("<!--");
     let mut collector = TokenCollector::new();
     tokenize::tokenize(&source, &mut collector);
     assert!(!collector.tokens.is_empty());
 
     // Test various bracket tokens
-    let source: Vec<u16> = "[]{}()".encode_utf16().collect();
+    let source = js_sys::JsString::from("[]{}()");
     let mut collector = TokenCollector::new();
     tokenize::tokenize(&source, &mut collector);
     assert!(!collector.tokens.is_empty());
 
     // Test comma token
-    let source: Vec<u16> = ",".encode_utf16().collect();
+    let source = js_sys::JsString::from(",");
     let mut collector = TokenCollector::new();
     tokenize::tokenize(&source, &mut collector);
     assert!(!collector.tokens.is_empty());
 
     // Test colon and semicolon
-    let source: Vec<u16> = ":;".encode_utf16().collect();
+    let source = js_sys::JsString::from(":;");
     let mut collector = TokenCollector::new();
     tokenize::tokenize(&source, &mut collector);
     assert!(!collector.tokens.is_empty());
@@ -809,7 +808,7 @@ mod tests {
     use crate::types::*;
 
     struct TokenCollector {
-      tokens: Vec<(u16, usize, usize)>,
+      tokens: Vec<(u16, u32, u32)>,
     }
 
     impl TokenCollector {
@@ -819,13 +818,13 @@ mod tests {
     }
 
     impl Parser for TokenCollector {
-      fn on_token(&mut self, token_type: u16, start: usize, end: usize) {
+      fn on_token(&mut self, token_type: u16, start: u32, end: u32) {
         self.tokens.push((token_type, start, end));
       }
     }
 
     // Test string with newline (should produce bad string)
-    let source: Vec<u16> = "\"hello\nworld\"".encode_utf16().collect();
+    let source = js_sys::JsString::from("\"hello\nworld\"");
     let mut collector = TokenCollector::new();
     tokenize(&source, &mut collector);
     // Should contain BAD_STRING_TOKEN
@@ -835,25 +834,25 @@ mod tests {
       .any(|(token_type, _, _)| *token_type == BAD_STRING_TOKEN));
 
     // Test string with escape at end of input
-    let source: Vec<u16> = "\"hello\\".encode_utf16().collect();
+    let source = js_sys::JsString::from("\"hello\\");
     let mut collector = TokenCollector::new();
     tokenize(&source, &mut collector);
     assert!(!collector.tokens.is_empty());
 
     // Test string with escaped newline
-    let source: Vec<u16> = "\"hello\\\nworld\"".encode_utf16().collect();
+    let source = js_sys::JsString::from("\"hello\\\nworld\"");
     let mut collector = TokenCollector::new();
     tokenize(&source, &mut collector);
     assert!(!collector.tokens.is_empty());
 
     // Test string with valid escape
-    let source: Vec<u16> = "\"hello\\41world\"".encode_utf16().collect(); // \41 = 'A'
+    let source = js_sys::JsString::from("\"hello\\41world\""); // \41 = 'A'
     let mut collector = TokenCollector::new();
     tokenize(&source, &mut collector);
     assert!(!collector.tokens.is_empty());
 
     // Test unclosed string at EOF
-    let source: Vec<u16> = "\"unclosed".encode_utf16().collect();
+    let source = js_sys::JsString::from("\"unclosed");
     let mut collector = TokenCollector::new();
     tokenize(&source, &mut collector);
     assert!(!collector.tokens.is_empty());
@@ -865,7 +864,7 @@ mod tests {
     use crate::types::*;
 
     struct TokenCollector {
-      tokens: Vec<(u16, usize, usize)>,
+      tokens: Vec<(u16, u32, u32)>,
     }
 
     impl TokenCollector {
@@ -875,13 +874,13 @@ mod tests {
     }
 
     impl Parser for TokenCollector {
-      fn on_token(&mut self, token_type: u16, start: usize, end: usize) {
+      fn on_token(&mut self, token_type: u16, start: u32, end: u32) {
         self.tokens.push((token_type, start, end));
       }
     }
 
     // Test url with quoted content (should be function token)
-    let source: Vec<u16> = "url(\"test.png\")".encode_utf16().collect();
+    let source = js_sys::JsString::from("url(\"test.png\")");
     let mut collector = TokenCollector::new();
     tokenize(&source, &mut collector);
     assert!(collector
@@ -890,50 +889,50 @@ mod tests {
       .any(|(token_type, _, _)| *token_type == FUNCTION_TOKEN));
 
     // Test url with bad characters - may or may not produce BAD_URL_TOKEN depending on implementation
-    let source: Vec<u16> = "url(te\"st.png)".encode_utf16().collect();
+    let source = js_sys::JsString::from("url(te\"st.png)");
     let mut collector = TokenCollector::new();
     tokenize(&source, &mut collector);
     // Just check that tokens are produced
     assert!(!collector.tokens.is_empty());
 
     // Test url with left parenthesis - may or may not produce BAD_URL_TOKEN
-    let source: Vec<u16> = "url(te(st.png)".encode_utf16().collect();
+    let source = js_sys::JsString::from("url(te(st.png)");
     let mut collector = TokenCollector::new();
     tokenize(&source, &mut collector);
     assert!(!collector.tokens.is_empty());
 
     // Test url with non-printable character - may or may not produce BAD_URL_TOKEN
-    let source: Vec<u16> = "url(te\x08st.png)".encode_utf16().collect();
+    let source = js_sys::JsString::from("url(te\x08st.png)");
     let mut collector = TokenCollector::new();
     tokenize(&source, &mut collector);
     assert!(!collector.tokens.is_empty());
 
     // Test url with whitespace and bad ending - may or may not produce BAD_URL_TOKEN
-    let source: Vec<u16> = "url(test.png bad)".encode_utf16().collect();
+    let source = js_sys::JsString::from("url(test.png bad)");
     let mut collector = TokenCollector::new();
     tokenize(&source, &mut collector);
     assert!(!collector.tokens.is_empty());
 
     // Test url with valid escape
-    let source: Vec<u16> = "url(te\\41st.png)".encode_utf16().collect();
+    let source = js_sys::JsString::from("url(te\\41st.png)");
     let mut collector = TokenCollector::new();
     tokenize(&source, &mut collector);
     assert!(!collector.tokens.is_empty());
 
     // Test url with invalid escape - may or may not produce BAD_URL_TOKEN
-    let source: Vec<u16> = "url(te\\)st.png)".encode_utf16().collect();
+    let source = js_sys::JsString::from("url(te\\)st.png)");
     let mut collector = TokenCollector::new();
     tokenize(&source, &mut collector);
     assert!(!collector.tokens.is_empty());
 
     // Test url ending at EOF
-    let source: Vec<u16> = "url(test.png".encode_utf16().collect();
+    let source = js_sys::JsString::from("url(test.png");
     let mut collector = TokenCollector::new();
     tokenize(&source, &mut collector);
     assert!(!collector.tokens.is_empty());
 
     // Test url with whitespace at end
-    let source: Vec<u16> = "url(test.png   )".encode_utf16().collect();
+    let source = js_sys::JsString::from("url(test.png   )");
     let mut collector = TokenCollector::new();
     tokenize(&source, &mut collector);
     assert!(!collector.tokens.is_empty());
@@ -945,7 +944,7 @@ mod tests {
     use crate::types::*;
 
     struct TokenCollector {
-      tokens: Vec<(u16, usize, usize)>,
+      tokens: Vec<(u16, u32, u32)>,
     }
 
     impl TokenCollector {
@@ -955,13 +954,13 @@ mod tests {
     }
 
     impl Parser for TokenCollector {
-      fn on_token(&mut self, token_type: u16, start: usize, end: usize) {
+      fn on_token(&mut self, token_type: u16, start: u32, end: u32) {
         self.tokens.push((token_type, start, end));
       }
     }
 
     // Test dimension token (number with unit)
-    let source: Vec<u16> = "123px".encode_utf16().collect();
+    let source = js_sys::JsString::from("123px");
     let mut collector = TokenCollector::new();
     tokenize(&source, &mut collector);
     assert!(collector
@@ -970,7 +969,7 @@ mod tests {
       .any(|(token_type, _, _)| *token_type == DIMENSION_TOKEN));
 
     // Test percentage token
-    let source: Vec<u16> = "123%".encode_utf16().collect();
+    let source = js_sys::JsString::from("123%");
     let mut collector = TokenCollector::new();
     tokenize(&source, &mut collector);
     assert!(collector
@@ -979,7 +978,7 @@ mod tests {
       .any(|(token_type, _, _)| *token_type == PERCENTAGE_TOKEN));
 
     // Test number with decimal
-    let source: Vec<u16> = "123.456".encode_utf16().collect();
+    let source = js_sys::JsString::from("123.456");
     let mut collector = TokenCollector::new();
     tokenize(&source, &mut collector);
     assert!(collector
@@ -988,7 +987,7 @@ mod tests {
       .any(|(token_type, _, _)| *token_type == NUMBER_TOKEN));
 
     // Test scientific notation
-    let source: Vec<u16> = "123e45".encode_utf16().collect();
+    let source = js_sys::JsString::from("123e45");
     let mut collector = TokenCollector::new();
     tokenize(&source, &mut collector);
     assert!(collector
@@ -997,7 +996,7 @@ mod tests {
       .any(|(token_type, _, _)| *token_type == NUMBER_TOKEN));
 
     // Test signed scientific notation
-    let source: Vec<u16> = "123e+45".encode_utf16().collect();
+    let source = js_sys::JsString::from("123e+45");
     let mut collector = TokenCollector::new();
     tokenize(&source, &mut collector);
     assert!(collector
@@ -1006,7 +1005,7 @@ mod tests {
       .any(|(token_type, _, _)| *token_type == NUMBER_TOKEN));
 
     // Test negative scientific notation
-    let source: Vec<u16> = "123e-45".encode_utf16().collect();
+    let source = js_sys::JsString::from("123e-45");
     let mut collector = TokenCollector::new();
     tokenize(&source, &mut collector);
     assert!(collector
@@ -1015,7 +1014,7 @@ mod tests {
       .any(|(token_type, _, _)| *token_type == NUMBER_TOKEN));
 
     // Test plus sign starting number
-    let source: Vec<u16> = "+123".encode_utf16().collect();
+    let source = js_sys::JsString::from("+123");
     let mut collector = TokenCollector::new();
     tokenize(&source, &mut collector);
     assert!(collector
@@ -1024,7 +1023,7 @@ mod tests {
       .any(|(token_type, _, _)| *token_type == NUMBER_TOKEN));
 
     // Test minus sign starting number
-    let source: Vec<u16> = "-123".encode_utf16().collect();
+    let source = js_sys::JsString::from("-123");
     let mut collector = TokenCollector::new();
     tokenize(&source, &mut collector);
     assert!(collector
@@ -1033,7 +1032,7 @@ mod tests {
       .any(|(token_type, _, _)| *token_type == NUMBER_TOKEN));
 
     // Test period starting number
-    let source: Vec<u16> = ".123".encode_utf16().collect();
+    let source = js_sys::JsString::from(".123");
     let mut collector = TokenCollector::new();
     tokenize(&source, &mut collector);
     assert!(collector
@@ -1042,7 +1041,7 @@ mod tests {
       .any(|(token_type, _, _)| *token_type == NUMBER_TOKEN));
 
     // Test plus period starting number
-    let source: Vec<u16> = "+.123".encode_utf16().collect();
+    let source = js_sys::JsString::from("+.123");
     let mut collector = TokenCollector::new();
     tokenize(&source, &mut collector);
     assert!(collector
@@ -1057,7 +1056,7 @@ mod tests {
     use crate::types::*;
 
     struct TokenCollector {
-      tokens: Vec<(u16, usize, usize)>,
+      tokens: Vec<(u16, u32, u32)>,
     }
 
     impl TokenCollector {
@@ -1067,13 +1066,13 @@ mod tests {
     }
 
     impl Parser for TokenCollector {
-      fn on_token(&mut self, token_type: u16, start: usize, end: usize) {
+      fn on_token(&mut self, token_type: u16, start: u32, end: u32) {
         self.tokens.push((token_type, start, end));
       }
     }
 
     // Test complete comment
-    let source: Vec<u16> = "/* comment */".encode_utf16().collect();
+    let source = js_sys::JsString::from("/* comment */");
     let mut collector = TokenCollector::new();
     tokenize(&source, &mut collector);
     assert!(collector
@@ -1082,7 +1081,7 @@ mod tests {
       .any(|(token_type, _, _)| *token_type == COMMENT_TOKEN));
 
     // Test unclosed comment at EOF
-    let source: Vec<u16> = "/* unclosed comment".encode_utf16().collect();
+    let source = js_sys::JsString::from("/* unclosed comment");
     let mut collector = TokenCollector::new();
     tokenize(&source, &mut collector);
     assert!(collector
@@ -1091,7 +1090,7 @@ mod tests {
       .any(|(token_type, _, _)| *token_type == COMMENT_TOKEN));
 
     // Test forward slash without comment
-    let source: Vec<u16> = "/not-comment".encode_utf16().collect();
+    let source = js_sys::JsString::from("/not-comment");
     let mut collector = TokenCollector::new();
     tokenize(&source, &mut collector);
     assert!(collector
@@ -1105,46 +1104,46 @@ mod tests {
     use crate::utils::*;
 
     // Test cmp_char macro
-    let source: Vec<u16> = "Hello".encode_utf16().collect();
-    assert_eq!(cmp_char!(source, 5, 0, 'h' as u16), 1); // Should match (case insensitive)
-    assert_eq!(cmp_char!(source, 5, 0, 'H' as u16), 1); // Should match
-    assert_eq!(cmp_char!(source, 5, 0, 'x' as u16), 0); // Should not match
-    assert_eq!(cmp_char!(source, 5, 10, 'H' as u16), 0); // Out of bounds
+    let source = js_sys::JsString::from("Hello");
+    assert_eq!(cmp_char!(source, 5, 0, 'h' as u32), 1); // Should match (case insensitive)
+    assert_eq!(cmp_char!(source, 5, 0, 'H' as u32), 1); // Should match
+    assert_eq!(cmp_char!(source, 5, 0, 'x' as u32), 0); // Should not match
+    assert_eq!(cmp_char!(source, 5, 10, 'H' as u32), 0); // Out of bounds
 
     // Test get_char_code macro
-    assert_eq!(get_char_code!(source, 5, 0), 'H' as u16);
+    assert_eq!(get_char_code!(source, 5, 0), 'H' as u32);
     assert_eq!(get_char_code!(source, 5, 10), 0); // EOF for out of bounds
 
     // Test get_new_line_length macro
-    let crlf: Vec<u16> = "\r\n".encode_utf16().collect();
+    let crlf = js_sys::JsString::from("\r\n");
     assert_eq!(get_new_line_length!(crlf, 2, 0, 13), 2); // \r\n is 2 chars
-    let lf: Vec<u16> = "\n".encode_utf16().collect();
+    let lf = js_sys::JsString::from("\n");
     assert_eq!(get_new_line_length!(lf, 1, 0, 10), 1); // \n is 1 char
 
     // Test edge cases in consume_number with incomplete scientific notation
-    let incomplete_sci: Vec<u16> = "123e".encode_utf16().collect();
+    let incomplete_sci = js_sys::JsString::from("123e");
     assert_eq!(consume_number(&incomplete_sci, 0), 3); // Just the "123" part
 
-    let incomplete_sci_sign: Vec<u16> = "123e+".encode_utf16().collect();
+    let incomplete_sci_sign = js_sys::JsString::from("123e+");
     assert_eq!(consume_number(&incomplete_sci_sign, 0), 3); // Just the "123" part
 
     // Test single plus/minus not followed by digit
-    let just_plus: Vec<u16> = "+".encode_utf16().collect();
+    let just_plus = js_sys::JsString::from("+");
     assert_eq!(consume_number(&just_plus, 0), 1);
 
-    let just_minus: Vec<u16> = "-".encode_utf16().collect();
+    let just_minus = js_sys::JsString::from("-");
     assert_eq!(consume_number(&just_minus, 0), 1);
 
     // Test empty consume_name
-    let empty: Vec<u16> = "".encode_utf16().collect();
+    let empty = js_sys::JsString::from("");
     assert_eq!(consume_name(&empty, 0), 0);
 
     // Test consume_escaped with short input
-    let short: Vec<u16> = "\\A".encode_utf16().collect();
+    let short = js_sys::JsString::from("\\A");
     assert_eq!(consume_escaped(&short, 0), 2);
 
     // Test consume_escaped with non-hex
-    let non_hex: Vec<u16> = "\\G".encode_utf16().collect();
+    let non_hex = js_sys::JsString::from("\\G");
     assert_eq!(consume_escaped(&non_hex, 0), 2);
   }
 
@@ -1155,7 +1154,7 @@ mod tests {
     use crate::utils::*;
 
     struct TokenCollector {
-      tokens: Vec<(u16, usize, usize)>,
+      tokens: Vec<(u16, u32, u32)>,
     }
 
     impl TokenCollector {
@@ -1165,7 +1164,7 @@ mod tests {
     }
 
     impl Parser for TokenCollector {
-      fn on_token(&mut self, token_type: u16, start: usize, end: usize) {
+      fn on_token(&mut self, token_type: u16, start: u32, end: u32) {
         self.tokens.push((token_type, start, end));
       }
     }
@@ -1176,49 +1175,50 @@ mod tests {
     assert_eq!(char_code_category!(0x0020), WHITE_SPACE_CATEGORY);
 
     // Test more cmp_str edge cases
-    let empty_str: Vec<u16> = "".encode_utf16().collect();
-    let test_str: Vec<u16> = "test".encode_utf16().collect();
-    assert!(!cmp_str(&empty_str, 0, 0, &test_str)); // Empty vs non-empty
-    assert!(!cmp_str(&test_str, 5, 5, &test_str)); // start > length
+    let empty_str = js_sys::JsString::from("");
+    let test_str = js_sys::JsString::from("test");
+    let test_str_reference: Vec<u32> = "test".chars().map(|c| c as u32).collect();
+    assert!(!cmp_str(&empty_str, 0, 0, &test_str_reference)); // Empty vs non-empty
+    assert!(!cmp_str(&test_str, 5, 5, &test_str_reference)); // start > length
 
     // Test find_white_space_end with edge case
-    let str_with_tab: Vec<u16> = "\t\ttest".encode_utf16().collect();
+    let str_with_tab = js_sys::JsString::from("\t\ttest");
     assert_eq!(find_white_space_end(&str_with_tab, 0), 2);
 
     // Test scientific notation edge cases that might not be covered
-    let sci_no_digits: Vec<u16> = "123e+abc".encode_utf16().collect();
+    let sci_no_digits = js_sys::JsString::from("123e+abc");
     assert_eq!(consume_number(&sci_no_digits, 0), 3); // Should stop at "123"
 
     // Test tokenizer with specific sequences that might hit uncovered branches
-    let source: Vec<u16> = "12.34e56".encode_utf16().collect();
+    let source = js_sys::JsString::from("12.34e56");
     let mut collector = TokenCollector::new();
     tokenize(&source, &mut collector);
     assert!(!collector.tokens.is_empty());
 
     // Test dimension with hyphen
-    let source: Vec<u16> = "12px-test".encode_utf16().collect();
+    let source = js_sys::JsString::from("12px-test");
     let mut collector = TokenCollector::new();
     tokenize(&source, &mut collector);
     assert!(!collector.tokens.is_empty());
 
     // Test escaped hex with whitespace
-    let source: Vec<u16> = "\\41 test".encode_utf16().collect();
+    let source = js_sys::JsString::from("\\41 test");
     let mut collector = TokenCollector::new();
     tokenize(&source, &mut collector);
     assert!(!collector.tokens.is_empty());
 
     // Test CRLF line ending
-    let source: Vec<u16> = "test\r\nvalue".encode_utf16().collect();
+    let source = js_sys::JsString::from("test\r\nvalue");
     let mut collector = TokenCollector::new();
     tokenize(&source, &mut collector);
     assert!(!collector.tokens.is_empty());
 
     // Test consume_name with escape at boundary
-    let name_with_escape: Vec<u16> = "test\\41".encode_utf16().collect();
+    let name_with_escape = js_sys::JsString::from("test\\41");
     assert_eq!(consume_name(&name_with_escape, 0), 7);
 
     // Test consume_bad_url_remnants with just closing paren
-    let just_paren: Vec<u16> = ")".encode_utf16().collect();
+    let just_paren = js_sys::JsString::from(")");
     assert_eq!(consume_bad_url_remnants(&just_paren, 0), 1);
 
     // Test more character classification edge cases
@@ -1227,18 +1227,18 @@ mod tests {
     assert!(is_non_printable!(0x001F)); // INFORMATION SEPARATOR ONE
 
     // Test char code comparison edge cases
-    let test_str: Vec<u16> = "test".encode_utf16().collect();
-    assert_eq!(cmp_char!(&test_str, 4, 0, 't' as u16), 1); // exact match
+    let test_str = js_sys::JsString::from("test");
+    assert_eq!(cmp_char!(&test_str, 4, 0, 't' as u32), 1); // exact match
 
-    let test_str_upper: Vec<u16> = "Test".encode_utf16().collect();
-    assert_eq!(cmp_char!(&test_str_upper, 4, 0, 't' as u16), 1); // case insensitive (T -> t)
-    assert_eq!(cmp_char!(&test_str, 4, 5, 't' as u16), 0); // out of bounds
+    let test_str_upper = js_sys::JsString::from("Test");
+    assert_eq!(cmp_char!(&test_str_upper, 4, 0, 't' as u32), 1); // case insensitive (T -> t)
+    assert_eq!(cmp_char!(&test_str, 4, 5, 't' as u32), 0); // out of bounds
 
     // Test get_new_line_length with different combinations
-    let cr_only: Vec<u16> = "\r".encode_utf16().collect();
+    let cr_only = js_sys::JsString::from("\r");
     assert_eq!(get_new_line_length!(cr_only, 1, 0, 13), 1); // CR only
 
-    let lf_only: Vec<u16> = "\n".encode_utf16().collect();
+    let lf_only = js_sys::JsString::from("\n");
     assert_eq!(get_new_line_length!(lf_only, 1, 0, 10), 1); // LF only
   }
 }
