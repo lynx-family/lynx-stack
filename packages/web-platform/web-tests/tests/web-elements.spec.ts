@@ -2482,6 +2482,28 @@ test.describe('web-elements test suite', () => {
     );
 
     test(
+      'attribute-autocomplete',
+      async ({ page }, { titlePath, title: simpleTitle }) => {
+        const title = getTitle(titlePath);
+        await gotoWebComponentPage(page, title);
+
+        // Test that autocomplete attribute is passed to the input element in shadow tree
+        const autocompleteValue = await page.locator('#target').evaluate(
+          (dom) => {
+            const shadowRoot = dom.shadowRoot;
+            if (!shadowRoot) return null;
+            const input = shadowRoot.querySelector(
+              '#input',
+            ) as HTMLInputElement;
+            return input ? input.getAttribute('autocomplete') : null;
+          },
+        );
+
+        expect(autocompleteValue).toBe('username');
+      },
+    );
+
+    test(
       'type-value-do-not-show-input',
       async ({ page }, { titlePath, title: simpleTitle }) => {
         const title = getTitle(titlePath);
