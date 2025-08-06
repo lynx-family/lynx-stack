@@ -13,7 +13,6 @@ const ssrIDMap = new Map();
 
 beforeAll(() => {
   globalEnvManager.switchToMainThread();
-  globalThis.__TESTING_FORCE_RENDER_TO_OPCODE__ = true;
 
   let ssrID = 666;
   options.onCreateElement = element => {
