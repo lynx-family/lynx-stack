@@ -17,6 +17,7 @@ import { setupLynxEnv } from './lynx/env.js';
 import { injectLepusMethods } from './lynx/injectLepusMethods.js';
 import { initTimingAPI } from './lynx/performance.js';
 import { injectTt } from './lynx/tt.js';
+import { lynxQueueMicrotask } from './utils.js';
 
 export { runWithForce } from './lynx/runWithForce.js';
 
@@ -53,12 +54,7 @@ if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
 if (__BACKGROUND__) {
   // Trick Preact and TypeScript to accept our custom document adapter.
   options.document = document as unknown as Document;
-  if (lynx.queueMicrotask) {
-    options.requestAnimationFrame = callback => lynx.queueMicrotask(callback);
-  } else if (globalThis.Promise) {
-    const realResolvedPromise = globalThis.Promise.resolve();
-    options.requestAnimationFrame = callback => void realResolvedPromise.then(callback);
-  }
+  options.requestAnimationFrame = lynxQueueMicrotask;
   setupBackgroundDocument();
   injectTt();
   addCtxNotFoundEventListener();
