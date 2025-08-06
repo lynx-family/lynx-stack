@@ -11,7 +11,7 @@
         "rslib.config.ts"
       ],
       "outputs": [
-        "dist/**"
+        "dist"
       ]
     }
   }

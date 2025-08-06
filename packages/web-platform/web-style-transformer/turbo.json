@@ -10,7 +10,7 @@
         "src/**"
       ],
       "outputs": [
-        "dist/**"
+        "dist"
       ]
     },
     "build:wasm-bindgen": {
