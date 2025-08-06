@@ -51,7 +51,6 @@ export class BackgroundSnapshotInstance {
   private __lastChild: BackgroundSnapshotInstance | null = null;
   private __previousSibling: BackgroundSnapshotInstance | null = null;
   private __nextSibling: BackgroundSnapshotInstance | null = null;
-  private __removed_from_tree?: boolean;
 
   get parentNode(): BackgroundSnapshotInstance | null {
     return this.__parent;
@@ -69,28 +68,25 @@ export class BackgroundSnapshotInstance {
     return child.parentNode === this;
   }
 
+  // TODO: write tests for this
   // This will be called in `lazy`/`Suspense`.
+  // We currently ignore this since we did not find a way to test.
+  /* v8 ignore start */
   appendChild(child: BackgroundSnapshotInstance): void {
     return this.insertBefore(child);
   }
+  /* v8 ignore stop */
 
   insertBefore(
     node: BackgroundSnapshotInstance,
     beforeNode?: BackgroundSnapshotInstance,
   ): void {
-    if (node.__removed_from_tree) {
-      node.__removed_from_tree = false;
-      // This is only called by `lazy`/`Suspense` through `appendChild` so beforeNode is always undefined.
-      /* v8 ignore next */
-      reconstructInstanceTree([node], this.__id, beforeNode?.__id);
-    } else {
-      __globalSnapshotPatch?.push(
-        SnapshotOperation.InsertBefore,
-        this.__id,
-        node.__id,
-        beforeNode?.__id,
-      );
-    }
+    __globalSnapshotPatch?.push(
+      SnapshotOperation.InsertBefore,
+      this.__id,
+      node.__id,
+      beforeNode?.__id,
+    );
 
     // If the node already has a parent, remove it from its current parent
     const p = node.__parent;
@@ -141,7 +137,6 @@ export class BackgroundSnapshotInstance {
       this.__id,
       node.__id,
     );
-    node.__removed_from_tree = true;
 
     if (node.__parent !== this) {
       throw new Error('The node to be removed is not a child of this node.');
@@ -366,6 +361,24 @@ export function hydrate(
 ): SnapshotPatch {
   initGlobalSnapshotPatch();
 
+  const helper2 = (afters: BackgroundSnapshotInstance[], parentId: number, targetId?: number) => {
+    for (const child of afters) {
+      const id = child.__id;
+      __globalSnapshotPatch!.push(SnapshotOperation.CreateElement, child.type, id);
+      const values = child.__values;
+      if (values) {
+        child.__values = undefined;
+        child.setAttribute('values', values);
+      }
+      const extraProps = child.__extraProps;
+      for (const key in extraProps) {
+        child.setAttribute(key, extraProps[key]);
+      }
+      helper2(child.childNodes, id);
+      __globalSnapshotPatch!.push(SnapshotOperation.InsertBefore, parentId, id, targetId);
+    }
+  };
+
   const helper = (
     before: SerializedSnapshotInstance,
     after: BackgroundSnapshotInstance,
@@ -475,7 +488,7 @@ export function hydrate(
             beforeChildNodes,
             diffResult,
             (node, target) => {
-              reconstructInstanceTree([node], before.id, target?.id);
+              helper2([node], before.id, target?.id);
               return undefined as unknown as SerializedSnapshotInstance;
             },
             node => {
@@ -505,22 +518,4 @@ export function hydrate(
   // Hydration should not trigger ref updates. They were incorrectly triggered when using `setAttribute` to add values to the patch list.
   clearQueuedRefs();
   return takeGlobalSnapshotPatch()!;
-}
-
-function reconstructInstanceTree(afters: BackgroundSnapshotInstance[], parentId: number, targetId?: number): void {
-  for (const child of afters) {
-    const id = child.__id;
-    __globalSnapshotPatch!.push(SnapshotOperation.CreateElement, child.type, id);
-    const values = child.__values;
-    if (values) {
-      child.__values = undefined;
-      child.setAttribute('values', values);
-    }
-    const extraProps = child.__extraProps;
-    for (const key in extraProps) {
-      child.setAttribute(key, extraProps[key]);
-    }
-    reconstructInstanceTree(child.childNodes, id);
-    __globalSnapshotPatch!.push(SnapshotOperation.InsertBefore, parentId, id, targetId);
-  }
 }
