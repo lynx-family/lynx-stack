@@ -17,9 +17,6 @@ packages:
   - packages/webpack/*
   - website
 
-configDependencies:
-  "@pnpm/plugin-trusted-deps": 0.1.0+sha512-OK05vSZpezQHcS7Y0T5A25QXDbBRtRq52s76eOkMgp9v8ifNrIR8pjIGqrUFUn0PwKLt2i+U1LPYB+RWi1xjaQ==
-
 # From `@pnpm/plugin-better-defaults`
 enablePrePostScripts: false
 ignorePatchFailures: false
