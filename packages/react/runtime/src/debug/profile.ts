@@ -35,7 +35,7 @@ export function initProfileHook(): void {
   // attach a flowId to the component instance.
   // This allows us to trace the flow of its diffing, committing and patching.
   {
-    const sFlowID = Symbol.for('FLOW_ID');
+    const sFlowID = Symbol('FLOW_ID');
     type PatchedComponent = Component & { [sFlowID]?: number };
 
     if (__BACKGROUND__) {
