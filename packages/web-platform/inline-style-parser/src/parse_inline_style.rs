@@ -19,11 +19,11 @@ pub struct ParserState<'a, 'b, T: Transformer> {
   value_start: usize,
   value_end: usize,
   is_important: bool,
-  prev_token_type: u16,
+  prev_token_type: u8,
 }
 
 impl<T: Transformer> Parser for ParserState<'_, '_, T> {
-  fn on_token(&mut self, token_type: u16, start: usize, end: usize) {
+  fn on_token(&mut self, token_type: u8, start: usize, end: usize) {
     //https://drafts.csswg.org/css-syntax-3/#consume-declaration
     // on_token(type, start, offset);
     /*

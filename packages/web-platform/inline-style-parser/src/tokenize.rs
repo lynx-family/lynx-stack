@@ -7,7 +7,7 @@ const URL_STR: [u16; 3] = ['u' as u16, 'r' as u16, 'l' as u16];
  */
 
 // § 4.3.3. Consume a numeric token
-pub fn consume_numeric_token(source: &[u16], offset: &mut usize, token_type: &mut u16) {
+pub fn consume_numeric_token(source: &[u16], offset: &mut usize, token_type: &mut u8) {
   let source_length = source.len();
   // Consume a number and let number be the result.
   *offset = consume_number(source, *offset);
@@ -39,7 +39,7 @@ pub fn consume_numeric_token(source: &[u16], offset: &mut usize, token_type: &mu
 }
 
 // § 4.3.4. Consume an ident-like token
-pub fn consume_ident_like_token(source: &[u16], offset: &mut usize, token_type: &mut u16) {
+pub fn consume_ident_like_token(source: &[u16], offset: &mut usize, token_type: &mut u8) {
   let name_start_offset = *offset;
   let source_length = source.len();
 
@@ -86,7 +86,7 @@ pub fn consume_string_token(
   source: &[u16],
   ending_code_point: u16,
   offset: &mut usize,
-  token_type: &mut u16,
+  token_type: &mut u8,
 ) {
   let source_length = source.len();
   let mut ending_code_point = ending_code_point;
@@ -105,7 +105,7 @@ pub fn consume_string_token(
       return;
     }
     let code = source[*offset];
-    let char_code = char_code_category(code);
+    let char_code = char_code_category(source[*offset]);
     // ending code point
     if char_code == ending_code_point {
       // Return the <string-token>.
@@ -162,7 +162,7 @@ pub fn consume_string_token(
 // This algorithm also assumes that it’s being called to consume an "unquoted" value, like url(foo).
 // A quoted value, like url("foo"), is parsed as a <function-token>. Consume an ident-like token
 // automatically handles this distinction; this algorithm shouldn’t be called directly otherwise.
-pub fn consume_url_token(source: &[u16], offset: &mut usize, token_type: &mut u16) {
+pub fn consume_url_token(source: &[u16], offset: &mut usize, token_type: &mut u8) {
   let source_length = source.len();
   // Initially create a <url-token> with its value set to the empty string.
   *token_type = URL_TOKEN;
@@ -250,14 +250,14 @@ pub fn consume_url_token(source: &[u16], offset: &mut usize, token_type: &mut u1
 }
 
 pub trait Parser {
-  fn on_token(&mut self, token_type: u16, start: usize, end: usize);
+  fn on_token(&mut self, token_type: u8, start: usize, end: usize);
 }
 
 pub fn tokenize<T: Parser>(source: &[u16], parser: &mut T) {
   let source_length = source.len();
   let mut start: usize = is_bom(get_char_code(source, source_length, 0));
   let mut offset = start;
-  let mut token_type: u16 = EOF_TOKEN;
+  let mut token_type: u8 = EOF_TOKEN;
   while offset < source_length {
     let code = source[offset];
     match char_code_category(code) {
