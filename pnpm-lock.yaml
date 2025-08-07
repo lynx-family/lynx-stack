@@ -350,8 +350,8 @@ importers:
         specifier: ^1.3.3
         version: 1.3.3
       ts-blank-space:
-        specifier: ^0.6.1
-        version: 0.6.1
+        specifier: ^0.6.2
+        version: 0.6.2
       type-fest:
         specifier: ^4.41.0
         version: 4.41.0
@@ -7645,8 +7645,8 @@ packages:
     peerDependencies:
       typescript: '>=4.8.4'
 
-  ts-blank-space@0.6.1:
-    resolution: {integrity: sha512-LcM3W5HEyzTaXUeQITV8ploUOGe+zuuoFYsCfPscFLhx3bZn2sSfHMKxsULVG/zA7an9UhReiHv4Kk/6QzlpXQ==}
+  ts-blank-space@0.6.2:
+    resolution: {integrity: sha512-hZjcHdHrveEKI67v8OzI90a1bizgoDkY7ekE4fH89qJhZgxvmjfBOv98aibCU7OpKbvV3R9p/qd3DrzZqT1cFQ==}
     engines: {node: '>=18.0.0'}
 
   ts-checker-rspack-plugin@1.1.4:
@@ -7767,11 +7767,6 @@ packages:
 
   typescript@5.8.2:
     resolution: {integrity: sha512-aJn6wq13/afZp/jT9QZmwEjDqqvSGp1VT5GVg+f/t6/oVyrgXM6BY1h9BRh/O5p3PlUPAe+WuiEZOmb/49RqoQ==}
-    engines: {node: '>=14.17'}
-    hasBin: true
-
-  typescript@5.8.3:
-    resolution: {integrity: sha512-p1diW6TqL9L07nNxvRMM7hMMw4c5XOo/1ibL4aAIGmSAt9slTE1Xgw5KWuof2uTOvCg9BY7ZRi+GaF+7sfgPeQ==}
     engines: {node: '>=14.17'}
     hasBin: true
 
@@ -15731,9 +15726,9 @@ snapshots:
     dependencies:
       typescript: 5.9.2
 
-  ts-blank-space@0.6.1:
+  ts-blank-space@0.6.2:
     dependencies:
-      typescript: 5.8.3
+      typescript: 5.9.2
 
   ts-checker-rspack-plugin@1.1.4(@rspack/core@1.4.11(@swc/helpers@0.5.17))(typescript@5.9.2):
     dependencies:
@@ -15872,8 +15867,6 @@ snapshots:
       - supports-color
 
   typescript@5.8.2: {}
-
-  typescript@5.8.3: {}
 
   typescript@5.9.2: {}
 
