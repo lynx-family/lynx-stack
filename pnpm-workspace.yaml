@@ -21,11 +21,11 @@ configDependencies:
   "@pnpm/plugin-better-defaults": 0.1.0+sha512-aWj7Jv9NcNs/OoazrxP6QspLgKRZ2PHj6wPris6ZCEqmXw+Z8zK59KLzl9NBFGRCO4PNA9pwDWLu+8N3NiqUAQ==
   "@pnpm/plugin-trusted-deps": 0.1.0+sha512-OK05vSZpezQHcS7Y0T5A25QXDbBRtRq52s76eOkMgp9v8ifNrIR8pjIGqrUFUn0PwKLt2i+U1LPYB+RWi1xjaQ==
 
-# ReactLynx testing library needs this
-# TODO: remove hoist
-hoistPattern:
-  - "@lynx-js/react"
-  - "preact"
+# This is enabled in @pnpm/plugin-better-defaults, but we want to disable it for now.
+#
+# ReactLynx depends on hoisting `preact` and `@lynx-js/react`
+# We also have some snapshot tests which contains paths to local store
+enableGlobalVirtualStore: false
 
 # Default catalogs
 catalog:
