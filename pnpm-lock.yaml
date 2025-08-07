@@ -25,9 +25,7 @@ overrides:
   '@rspack/core': 1.4.11
   '@rsbuild/core>@rspack/core': 1.4.11
 
-packageExtensionsChecksum: sha256-uz2k+S2IvFVuUuE9nutTHwJmVdR9ZEetJ9YMskYLPKY=
-
-pnpmfileChecksum: sha256-XfWakJsG8L5cj/Avjko3QQ4pF1nRoaPUh9HVqiRagpo=
+pnpmfileChecksum: sha256-ZfwGjIvQgPR9mEJg5iihJauZ5iv1Ogj5lI/dgVj7pgI=
 
 patchedDependencies:
   '@napi-rs/cli@2.18.4':
@@ -133,7 +131,7 @@ importers:
         version: 3.4.0
       ts-patch:
         specifier: ^3.3.0
-        version: 3.3.0(typescript@5.9.2)
+        version: 3.3.0
       turbo:
         specifier: ^2.5.5
         version: 2.5.5
@@ -7674,8 +7672,6 @@ packages:
   ts-patch@3.3.0:
     resolution: {integrity: sha512-zAOzDnd5qsfEnjd9IGy1IRuvA7ygyyxxdxesbhMdutt8AHFjD8Vw8hU2rMF89HX1BKRWFYqKHrO8Q6lw0NeUZg==}
     hasBin: true
-    peerDependencies:
-      typescript: '*'
 
   tsconfig-paths@3.15.0:
     resolution: {integrity: sha512-2Ac2RgzDe/cn48GvOe3M+o82pEFewD3UPbyoUHHdKasHwJKjds4fLXWf/Ux5kATBKN20oaFGu+jbElp1pos0mg==}
@@ -15761,7 +15757,7 @@ snapshots:
 
   ts-interface-checker@0.1.13: {}
 
-  ts-patch@3.3.0(typescript@5.9.2):
+  ts-patch@3.3.0:
     dependencies:
       chalk: 4.1.2
       global-prefix: 4.0.0
@@ -15769,7 +15765,6 @@ snapshots:
       resolve: 1.22.8
       semver: 7.7.2
       strip-ansi: 6.0.1
-      typescript: 5.9.2
 
   tsconfig-paths@3.15.0:
     dependencies:
