@@ -512,6 +512,13 @@ test.describe('reactlynx3 tests', () => {
         'animationstart animationiteration animationend animationstart animationiteration animationend',
       );
     });
+    test('api-get-path-info', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(500);
+      expect(await page.locator('#result').getAttribute('style')).toContain(
+        'green',
+      );
+    });
     test('api-getJSModule', async ({ page }, { title }) => {
       await goto(page, title);
       await wait(1000);
