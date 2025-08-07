@@ -2,7 +2,6 @@
 "@lynx-js/web-constants": patch
 "@lynx-js/web-core": patch
 "@lynx-js/web-worker-runtime": patch
-"@lynx-js/web-tests": patch
 ---
 
 feat: support path() for `createQuerySelector`
