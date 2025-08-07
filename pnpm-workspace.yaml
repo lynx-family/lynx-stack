@@ -39,12 +39,18 @@ catalogs:
 overrides:
   "@rspack/core": "$@rspack/core"
   "@rsbuild/core>@rspack/core": "$@rspack/core"
-  "path-serializer": "^0.5.0"
 
 patchedDependencies:
   "@napi-rs/cli@2.18.4": "patches/@napi-rs__cli@2.18.4.patch"
   "@rollup/plugin-typescript": "patches/@rollup__plugin-typescript.patch"
-  "webpack": patches/webpack.patch
+  "webpack@5.101.0": patches/webpack@5.101.0.patch
+
+# Avoid the `Error: Cannot find module 'typescript'` error when using `enableGlobalVirtualStore: true`
+# See: https://pnpm.io/settings#enableglobalvirtualstore
+packageExtensions:
+  ts-patch:
+    peerDependencies:
+      typescript: "*"
 
 strictDepBuilds: true
 

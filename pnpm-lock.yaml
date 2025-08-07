@@ -24,7 +24,10 @@ catalogs:
 overrides:
   '@rspack/core': 1.4.11
   '@rsbuild/core>@rspack/core': 1.4.11
-  path-serializer: ^0.5.0
+
+packageExtensionsChecksum: sha256-uz2k+S2IvFVuUuE9nutTHwJmVdR9ZEetJ9YMskYLPKY=
+
+pnpmfileChecksum: sha256-XfWakJsG8L5cj/Avjko3QQ4pF1nRoaPUh9HVqiRagpo=
 
 patchedDependencies:
   '@napi-rs/cli@2.18.4':
@@ -33,9 +36,9 @@ patchedDependencies:
   '@rollup/plugin-typescript':
     hash: 926ba262ec682d27369f1a8648a0dfb657fb5f1b28539ca3628d292276c91c3d
     path: patches/@rollup__plugin-typescript.patch
-  webpack:
+  webpack@5.101.0:
     hash: 1502dd7b26be82d88e360373ead2cb9162b8b6564a525f09fa3620a2afd043d8
-    path: patches/webpack.patch
+    path: patches/webpack@5.101.0.patch
 
 importers:
 
@@ -130,7 +133,7 @@ importers:
         version: 3.4.0
       ts-patch:
         specifier: ^3.3.0
-        version: 3.3.0
+        version: 3.3.0(typescript@5.9.2)
       turbo:
         specifier: ^2.5.5
         version: 2.5.5
@@ -7671,6 +7674,8 @@ packages:
   ts-patch@3.3.0:
     resolution: {integrity: sha512-zAOzDnd5qsfEnjd9IGy1IRuvA7ygyyxxdxesbhMdutt8AHFjD8Vw8hU2rMF89HX1BKRWFYqKHrO8Q6lw0NeUZg==}
     hasBin: true
+    peerDependencies:
+      typescript: '*'
 
   tsconfig-paths@3.15.0:
     resolution: {integrity: sha512-2Ac2RgzDe/cn48GvOe3M+o82pEFewD3UPbyoUHHdKasHwJKjds4fLXWf/Ux5kATBKN20oaFGu+jbElp1pos0mg==}
@@ -9804,8 +9809,8 @@ snapshots:
       pretty-format: 29.7.0
       rimraf: 5.0.10
       source-map: 0.7.6
-      terser-webpack-plugin: 5.3.14(webpack@5.99.9(patch_hash=1502dd7b26be82d88e360373ead2cb9162b8b6564a525f09fa3620a2afd043d8))
-      webpack: 5.99.9(patch_hash=1502dd7b26be82d88e360373ead2cb9162b8b6564a525f09fa3620a2afd043d8)
+      terser-webpack-plugin: 5.3.14(webpack@5.99.9)
+      webpack: 5.99.9
       webpack-merge: 6.0.1
       webpack-sources: 3.3.3
     transitivePeerDependencies:
@@ -15618,14 +15623,14 @@ snapshots:
       terser: 5.31.6
       webpack: 5.101.0(patch_hash=1502dd7b26be82d88e360373ead2cb9162b8b6564a525f09fa3620a2afd043d8)
 
-  terser-webpack-plugin@5.3.14(webpack@5.99.9(patch_hash=1502dd7b26be82d88e360373ead2cb9162b8b6564a525f09fa3620a2afd043d8)):
+  terser-webpack-plugin@5.3.14(webpack@5.99.9):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.29
       jest-worker: 27.5.1
       schema-utils: 4.3.2
       serialize-javascript: 6.0.2
       terser: 5.31.6
-      webpack: 5.99.9(patch_hash=1502dd7b26be82d88e360373ead2cb9162b8b6564a525f09fa3620a2afd043d8)
+      webpack: 5.99.9
 
   terser@5.31.6:
     dependencies:
@@ -15756,7 +15761,7 @@ snapshots:
 
   ts-interface-checker@0.1.13: {}
 
-  ts-patch@3.3.0:
+  ts-patch@3.3.0(typescript@5.9.2):
     dependencies:
       chalk: 4.1.2
       global-prefix: 4.0.0
@@ -15764,6 +15769,7 @@ snapshots:
       resolve: 1.22.8
       semver: 7.7.2
       strip-ansi: 6.0.1
+      typescript: 5.9.2
 
   tsconfig-paths@3.15.0:
     dependencies:
@@ -16270,7 +16276,7 @@ snapshots:
       - esbuild
       - uglify-js
 
-  webpack@5.99.9(patch_hash=1502dd7b26be82d88e360373ead2cb9162b8b6564a525f09fa3620a2afd043d8):
+  webpack@5.99.9:
     dependencies:
       '@types/eslint-scope': 3.7.7
       '@types/estree': 1.0.8
@@ -16293,7 +16299,7 @@ snapshots:
       neo-async: 2.6.2
       schema-utils: 4.3.2
       tapable: 2.2.2
-      terser-webpack-plugin: 5.3.14(webpack@5.99.9(patch_hash=1502dd7b26be82d88e360373ead2cb9162b8b6564a525f09fa3620a2afd043d8))
+      terser-webpack-plugin: 5.3.14(webpack@5.99.9)
       watchpack: 2.4.2
       webpack-sources: 3.3.3
     transitivePeerDependencies:
