@@ -8,15 +8,14 @@ const URL_STR: [u16; 3] = ['u' as u16, 'r' as u16, 'l' as u16];
 
 // § 4.3.3. Consume a numeric token
 pub fn consume_numeric_token(source: &[u16], offset: &mut usize, token_type: &mut u8) {
-  let source_length = source.len();
   // Consume a number and let number be the result.
   *offset = consume_number(source, *offset);
 
   // If the next 3 input code points would start an identifier, then:
   if is_identifier_start(
-    get_char_code(source, source_length, *offset),
-    get_char_code(source, source_length, *offset + 1),
-    get_char_code(source, source_length, *offset + 2),
+    get_char_code(source, *offset),
+    get_char_code(source, *offset + 1),
+    get_char_code(source, *offset + 2),
   ) {
     // Create a <dimension-token> with the same value and type flag as number, and a unit set initially to the empty string.
     // Consume a name. Set the <dimension-token>’s unit to the returned value.
@@ -27,7 +26,7 @@ pub fn consume_numeric_token(source: &[u16], offset: &mut usize, token_type: &mu
   }
 
   // Otherwise, if the next input code point is U+0025 PERCENTAGE SIGN (%), consume it.
-  if get_char_code(source, source_length, *offset) == 0x0025 {
+  if get_char_code(source, *offset) == 0x0025 {
     // Create a <percentage-token> with the same value as number, and return it.
     *token_type = PERCENTAGE_TOKEN;
     (*offset) += 1;
@@ -41,15 +40,13 @@ pub fn consume_numeric_token(source: &[u16], offset: &mut usize, token_type: &mu
 // § 4.3.4. Consume an ident-like token
 pub fn consume_ident_like_token(source: &[u16], offset: &mut usize, token_type: &mut u8) {
   let name_start_offset = *offset;
-  let source_length = source.len();
-
   // Consume a name, and let string be the result.
   *offset = consume_name(source, *offset);
 
   // If string’s value is an ASCII case-insensitive match for "url",
   // and the next input code point is U+0028 LEFT PARENTHESIS ((), consume it.
   if cmp_str(source, name_start_offset, *offset, &URL_STR)
-    && get_char_code(source, source_length, *offset) == 0x0028
+    && get_char_code(source, *offset) == 0x0028
   {
     // While the next two input code points are whitespace, consume the next input code point.
     *offset = find_white_space_end(source, (*offset) + 1);
@@ -57,9 +54,7 @@ pub fn consume_ident_like_token(source: &[u16], offset: &mut usize, token_type: 
     // If the next one or two input code points are U+0022 QUOTATION MARK ("), U+0027 APOSTROPHE ('),
     // or whitespace followed by U+0022 QUOTATION MARK (") or U+0027 APOSTROPHE ('),
     // then create a <function-token> with its value set to string and return it.
-    if get_char_code(source, source_length, *offset) == 0x0022
-      || get_char_code(source, source_length, *offset) == 0x0027
-    {
+    if get_char_code(source, *offset) == 0x0022 || get_char_code(source, *offset) == 0x0027 {
       *token_type = FUNCTION_TOKEN;
       *offset = name_start_offset + 4;
       return;
@@ -72,7 +67,7 @@ pub fn consume_ident_like_token(source: &[u16], offset: &mut usize, token_type: 
 
   // Otherwise, if the next input code point is U+0028 LEFT PARENTHESIS ((), consume it.
   // Create a <function-token> with its value set to string and return it.
-  if get_char_code(source, source_length, *offset) == 0x0028 {
+  if get_char_code(source, *offset) == 0x0028 {
     *token_type = FUNCTION_TOKEN;
     (*offset) += 1;
     return;
@@ -94,7 +89,7 @@ pub fn consume_string_token(
   // that ends the string. If an ending code point is not specified,
   // the current input code point is used.
   if ending_code_point == 0 {
-    ending_code_point = get_char_code(source, source_length, *offset);
+    ending_code_point = get_char_code(source, *offset);
     *offset += 1;
   }
 
@@ -104,8 +99,8 @@ pub fn consume_string_token(
     if (*offset) >= source_length {
       return;
     }
-    let code = source[*offset];
-    let char_code = char_code_category(source[*offset]);
+    let code: u16 = get_char_code(source, *offset);
+    let char_code = char_code_category(code);
     // ending code point
     if char_code == ending_code_point {
       // Return the <string-token>.
@@ -124,7 +119,7 @@ pub fn consume_string_token(
         if is_newline(code) {
           // This is a parse error. Reconsume the current input code point,
           // create a <bad-string-token>, and return it.
-          *offset += get_new_line_length(source, source_length, *offset, code);
+          *offset += get_new_line_length(source, *offset, code);
           *token_type = BAD_STRING_TOKEN;
           return;
         }
@@ -138,11 +133,11 @@ pub fn consume_string_token(
           continue;
         }
 
-        let next_code = get_char_code(source, source_length, (*offset) + 1);
+        let next_code = get_char_code(source, (*offset) + 1);
 
         // Otherwise, if the next input code point is a newline, consume it.
         if is_newline(next_code) {
-          *offset += get_new_line_length(source, source_length, (*offset) + 1, next_code);
+          *offset += get_new_line_length(source, (*offset) + 1, next_code);
         } else if is_valid_escape(code, next_code) {
           // Otherwise, (the stream starts with a valid escape) consume
           // an escaped code point and append the returned code point to
@@ -175,7 +170,7 @@ pub fn consume_url_token(source: &[u16], offset: &mut usize, token_type: &mut u8
     if (*offset) >= source_length {
       return;
     }
-    let code = source[*offset];
+    let code = get_char_code(source, *offset);
 
     match char_code_category(code) {
       // U+0029 RIGHT PARENTHESIS ())
@@ -197,7 +192,7 @@ pub fn consume_url_token(source: &[u16], offset: &mut usize, token_type: &mut u8
         // If the next input code point is U+0029 RIGHT PARENTHESIS ()) or EOF,
         // consume it and return the <url-token>
         // (if EOF was encountered, this is a parse error);
-        if get_char_code(source, source_length, *offset) == 0x0029 || (*offset) >= source_length {
+        if get_char_code(source, *offset) == 0x0029 || (*offset) >= source_length {
           if (*offset) < source_length {
             (*offset) += 1;
           }
@@ -227,7 +222,7 @@ pub fn consume_url_token(source: &[u16], offset: &mut usize, token_type: &mut u8
       0x005C => {
         // If the stream starts with a valid escape, consume an escaped code point and
         // append the returned code point to the <url-token>’s value.
-        if is_valid_escape(code, get_char_code(source, source_length, (*offset) + 1)) {
+        if is_valid_escape(code, get_char_code(source, (*offset) + 1)) {
           *offset = consume_escaped(source, *offset) - 1;
           *offset += 1;
           continue;
@@ -255,7 +250,7 @@ pub trait Parser {
 
 pub fn tokenize<T: Parser>(source: &[u16], parser: &mut T) {
   let source_length = source.len();
-  let mut start: usize = is_bom(get_char_code(source, source_length, 0));
+  let mut start: usize = is_bom(get_char_code(source, 0));
   let mut offset = start;
   let mut token_type: u8 = EOF_TOKEN;
   while offset < source_length {
@@ -275,17 +270,17 @@ pub fn tokenize<T: Parser>(source: &[u16], parser: &mut T) {
       // U+0023 NUMBER SIGN (#)
       0x0023 => {
         // If the next input code point is a name code point or the next two input code points are a valid escape, then:
-        if is_name(get_char_code(source, source_length, offset + 1))
+        if is_name(get_char_code(source, offset + 1))
           || is_valid_escape(
-            get_char_code(source, source_length, offset + 1),
-            get_char_code(source, source_length, offset + 2),
+            get_char_code(source, offset + 1),
+            get_char_code(source, offset + 2),
           )
         {
           // Create a <hash-token>.
           token_type = HASH_TOKEN;
 
           // If the next 3 input code points would start an identifier, set the <hash-token>’s type flag to "id".
-          // if (is_identifier_start(get_char_code(source, source_length, offset + 1), get_char_code(source, source_length, offset + 2), get_char_code(source, source_length, offset + 3))) {
+          // if (is_identifier_start(get_char_code(source,  offset + 1), get_char_code(source,  offset + 2), get_char_code(source,  offset + 3))) {
           //     // TODO: set id flag
           // }
 
@@ -324,8 +319,8 @@ pub fn tokenize<T: Parser>(source: &[u16], parser: &mut T) {
         // If the input stream starts with a number, ...
         if is_number_start(
           code,
-          get_char_code(source, source_length, offset + 1),
-          get_char_code(source, source_length, offset + 2),
+          get_char_code(source, offset + 1),
+          get_char_code(source, offset + 2),
         ) {
           // ... reconsume the current input code point, consume a numeric token, and return it.
           consume_numeric_token(source, &mut offset, &mut token_type);
@@ -348,14 +343,14 @@ pub fn tokenize<T: Parser>(source: &[u16], parser: &mut T) {
         // If the input stream starts with a number, reconsume the current input code point, consume a numeric token, and return it.
         if is_number_start(
           code,
-          get_char_code(source, source_length, offset + 1),
-          get_char_code(source, source_length, offset + 2),
+          get_char_code(source, offset + 1),
+          get_char_code(source, offset + 2),
         ) {
           consume_numeric_token(source, &mut offset, &mut token_type);
         } else {
           // Otherwise, if the next 2 input code points are U+002D HYPHEN-MINUS U+003E GREATER-THAN SIGN (->), consume them and return a <CDC-token>.
-          if get_char_code(source, source_length, offset + 1) == 0x002D
-            && get_char_code(source, source_length, offset + 2) == 0x003E
+          if get_char_code(source, offset + 1) == 0x002D
+            && get_char_code(source, offset + 2) == 0x003E
           {
             token_type = CDC_TOKEN;
             offset += 3;
@@ -363,8 +358,8 @@ pub fn tokenize<T: Parser>(source: &[u16], parser: &mut T) {
             // Otherwise, if the input stream starts with an identifier, ...
             if is_identifier_start(
               code,
-              get_char_code(source, source_length, offset + 1),
-              get_char_code(source, source_length, offset + 2),
+              get_char_code(source, offset + 1),
+              get_char_code(source, offset + 2),
             ) {
               // ... reconsume the current input code point, consume an ident-like token, and return it.
               consume_ident_like_token(source, &mut offset, &mut token_type);
@@ -382,8 +377,8 @@ pub fn tokenize<T: Parser>(source: &[u16], parser: &mut T) {
         // If the input stream starts with a number, ...
         if is_number_start(
           code,
-          get_char_code(source, source_length, offset + 1),
-          get_char_code(source, source_length, offset + 2),
+          get_char_code(source, offset + 1),
+          get_char_code(source, offset + 2),
         ) {
           // ... reconsume the current input code point, consume a numeric token, and return it.
           consume_numeric_token(source, &mut offset, &mut token_type);
@@ -397,7 +392,7 @@ pub fn tokenize<T: Parser>(source: &[u16], parser: &mut T) {
       // U+002F SOLIDUS (/)
       0x002F => {
         // If the next two input code point are U+002F SOLIDUS (/) followed by a U+002A ASTERISK (*),
-        if get_char_code(source, source_length, offset + 1) == 0x002A {
+        if get_char_code(source, offset + 1) == 0x002A {
           // ... consume them and all following code points up to and including the first U+002A ASTERISK (*)
           // followed by a U+002F SOLIDUS (/), or up to an EOF code point.
           token_type = COMMENT_TOKEN;
@@ -438,9 +433,9 @@ pub fn tokenize<T: Parser>(source: &[u16], parser: &mut T) {
       // U+003C LESS-THAN SIGN (<)
       0x003C => {
         // If the next 3 input code points are U+0021 EXCLAMATION MARK U+002D HYPHEN-MINUS U+002D HYPHEN-MINUS (!--), ...
-        if get_char_code(source, source_length, offset + 1) == 0x0021
-          && get_char_code(source, source_length, offset + 2) == 0x002D
-          && get_char_code(source, source_length, offset + 3) == 0x002D
+        if get_char_code(source, offset + 1) == 0x0021
+          && get_char_code(source, offset + 2) == 0x002D
+          && get_char_code(source, offset + 3) == 0x002D
         {
           // ... consume them and return a <CDO-token>.
           token_type = CDO_TOKEN;
@@ -456,9 +451,9 @@ pub fn tokenize<T: Parser>(source: &[u16], parser: &mut T) {
       0x0040 => {
         // If the next 3 input code points would start an identifier, ...
         if is_identifier_start(
-          get_char_code(source, source_length, offset + 1),
-          get_char_code(source, source_length, offset + 2),
-          get_char_code(source, source_length, offset + 3),
+          get_char_code(source, offset + 1),
+          get_char_code(source, offset + 2),
+          get_char_code(source, offset + 3),
         ) {
           // ... consume a name, create an <at-keyword-token> with its value set to the returned value, and return it.
           token_type = AT_KEYWORD_TOKEN;
@@ -480,7 +475,7 @@ pub fn tokenize<T: Parser>(source: &[u16], parser: &mut T) {
       // U+005C REVERSE SOLIDUS (\)
       0x005C => {
         // If the input stream starts with a valid escape, ...
-        if is_valid_escape(code, get_char_code(source, source_length, offset + 1)) {
+        if is_valid_escape(code, get_char_code(source, offset + 1)) {
           // ... reconsume the current input code point, consume an ident-like token, and return it.
           consume_ident_like_token(source, &mut offset, &mut token_type);
         } else {

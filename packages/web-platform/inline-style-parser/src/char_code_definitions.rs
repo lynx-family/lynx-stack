@@ -4,33 +4,6 @@ pub const DIGIT_CATEGORY: u16 = 0x83;
 pub const NAME_START_CATEGORY: u16 = 0x84;
 pub const NON_PRINTABLE_CATEGORY: u16 = 0x85;
 
-const fn category_map_value_const(code: u16) -> u16 {
-  if code == 0 {
-    EOF_CATEGORY
-  } else if is_white_space(code) {
-    WHITE_SPACE_CATEGORY
-  } else if is_digit(code) {
-    DIGIT_CATEGORY
-  } else if is_name_start(code) {
-    NAME_START_CATEGORY
-  } else if is_non_printable(code) {
-    NON_PRINTABLE_CATEGORY
-  } else {
-    code
-  }
-}
-
-const fn initialize_category_array() -> [u16; 0x80] {
-  let mut arr = [0u16; 0x80];
-  let mut i = 0;
-  while i < 0x80 {
-    arr[i] = category_map_value_const(i as u16);
-    i += 1;
-  }
-  arr
-}
-
-pub const CATEGORY: [u16; 0x80] = initialize_category_array();
 // Character category constants
 
 // Public character check macros (mirroring C macros)
@@ -165,12 +138,18 @@ pub fn is_number_start(first: u16, second: u16, third: u16) -> bool {
 // Get the category of a character code.
 #[inline(always)]
 pub fn char_code_category(char_code: u16) -> u16 {
-  if let Some(category) = crate::char_code_definitions::CATEGORY.get(char_code as usize) {
-    *category
-  } else {
-    // For char_code >= 0x80, it's considered NameStart_Category.
-    // This aligns with CSS syntax where non-ASCII characters are name-start characters.
-    crate::char_code_definitions::NAME_START_CATEGORY
+  match char_code {
+    0 => EOF_CATEGORY,
+    c if c >= 0x80 => {
+      // For char_code >= 0x80, it's considered NameStart_Category.
+      // This aligns with CSS syntax where non-ASCII characters are name-start characters.
+      NAME_START_CATEGORY
+    }
+    c if is_white_space(c) => WHITE_SPACE_CATEGORY,
+    c if is_digit(c) => DIGIT_CATEGORY,
+    c if is_name_start(c) => NAME_START_CATEGORY,
+    c if is_non_printable(c) => NON_PRINTABLE_CATEGORY,
+    _ => char_code,
   }
 }
 
@@ -195,8 +174,8 @@ pub fn cmp_char(
 }
 
 #[inline(always)]
-pub fn get_char_code(source: &[u16], source_length: usize, offset: usize) -> u16 {
-  if offset < source_length {
+pub fn get_char_code(source: &[u16], offset: usize) -> u16 {
+  if offset < source.len() {
     source[offset]
   } else {
     0 // EOF
@@ -204,13 +183,8 @@ pub fn get_char_code(source: &[u16], source_length: usize, offset: usize) -> u16
 }
 
 #[inline(always)]
-pub fn get_new_line_length(
-  source: &[u16],
-  source_length: usize,
-  offset: usize,
-  code: u16,
-) -> usize {
-  if code == 13 /* \r */ && get_char_code(source, source_length, offset + 1) == 10
+pub fn get_new_line_length(source: &[u16], offset: usize, code: u16) -> usize {
+  if code == 13 /* \r */ && get_char_code(source, offset + 1) == 10
   /* \n */
   {
     2
