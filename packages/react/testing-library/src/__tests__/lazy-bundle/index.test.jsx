@@ -34,12 +34,14 @@ describe('lazy bundle', () => {
     );
 
     expect(container.firstChild).toMatchInlineSnapshot(`
-    <view>
-      <text>
-        loading...
-      </text>
-    </view>
-  `);
+      <view>
+        <wrapper>
+          <text>
+            loading...
+          </text>
+        </wrapper>
+      </view>
+    `);
 
     await waitForElementToBeRemoved(() => screen.getByText('loading...'), {
       timeout: 50_000,
@@ -47,12 +49,14 @@ describe('lazy bundle', () => {
 
     expect(container.firstChild).toMatchInlineSnapshot(`
       <view>
-        <text>
-          Hello from LazyComponent
-        </text>
-        <text>
-          Hello from LazyComponent
-        </text>
+        <wrapper>
+          <text>
+            Hello from LazyComponent
+          </text>
+          <text>
+            Hello from LazyComponent
+          </text>
+        </wrapper>
       </view>
     `);
   });
