@@ -1,15 +1,42 @@
 <!DOCTYPE html>
-<html lang="en">
+<!-- Copyright 2024 The Lynx Authors. All rights reserved.
+ Licensed under the Apache License Version 2.0 that can be found in the
+ LICENSE file in the root directory of this source tree. -->
+<html>
   <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>X-Input Autocomplete Attribute Test</title>
-    <link rel="stylesheet" href="../../common.css" />
-    <script type="module" src="../../../resources/elements.js"></script>
+    <meta charset="utf-8">
+    <title>web playground</title>
+    <meta content="yes" name="apple-mobile-web-app-capable">
+    <meta content="default" name="apple-mobile-web-app-status-bar-style">
+    <meta content="telephone=no" name="format-detection">
+    <meta content="portrait" name="screen-orientation">
+    <meta
+      content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"
+      name="viewport"
+    >
+    <meta content="portrait" name="x5-orientation" />
+
+    <link
+      href="/node_modules/@lynx-js/web-elements/index.css"
+      rel="stylesheet"
+    />
+    <link
+      href="/web-elements.css"
+      rel="stylesheet"
+    />
+
+    <style>
+    @import url("../../common.css");
+    </style>
   </head>
+
   <body>
-    <div id="container">
-      <x-input id="target" autocomplete="username"></x-input>
-    </div>
+    <script src="/web-elements.js" defer></script>
+    <x-view class="page">
+      <x-input
+        autocomplete="username"
+        style="height: 50px; width: 200px"
+      ></x-input>
+    </x-view>
   </body>
 </html>
