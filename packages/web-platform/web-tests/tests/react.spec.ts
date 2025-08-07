@@ -548,6 +548,15 @@ test.describe('reactlynx3 tests', () => {
         await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
       },
     );
+    test(
+      'api-nativemodules-call-delay',
+      async ({ page }, { title }) => {
+        await goto(page, title);
+        await wait(3000);
+        const target = page.locator('#target');
+        await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
+      },
+    );
     test('api-SelectorQuery', async ({ page }, { title }) => {
       await goto(page, title);
       await wait(500);

@@ -188,7 +188,12 @@ export class LynxView extends HTMLElement {
     }
   }
 
-  #cachedNativeModulesCall?: Parameters<NativeModulesCall>[] = [];
+  #cachedNativeModulesCall: Array<
+    {
+      args: [name: string, data: any, moduleName: string];
+      resolve: (ret: unknown) => void;
+    }
+  > = [];
   #onNativeModulesCall?: NativeModulesCall;
   /**
    * @param
@@ -201,7 +206,7 @@ export class LynxView extends HTMLElement {
     this.#onNativeModulesCall = handler;
     if (this.#cachedNativeModulesCall) {
       for (const callInfo of this.#cachedNativeModulesCall) {
-        handler.apply(undefined, callInfo);
+        callInfo.resolve(handler.apply(undefined, callInfo.args));
       }
     }
   }
@@ -443,10 +448,10 @@ export class LynxView extends HTMLElement {
               ) => {
                 if (this.#onNativeModulesCall) {
                   return this.#onNativeModulesCall(...args);
-                } else if (this.#cachedNativeModulesCall) {
-                  this.#cachedNativeModulesCall.push(args);
                 } else {
-                  this.#cachedNativeModulesCall = [args];
+                  return new Promise(resolve => {
+                    this.#cachedNativeModulesCall.push({ args, resolve });
+                  });
                 }
               },
               napiModulesCall: (...args) => {
