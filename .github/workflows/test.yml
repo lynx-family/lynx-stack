@@ -248,7 +248,7 @@ jobs:
       - test-vitest
       - website
     if: always()
-    runs-on: lynx-ubuntu-24.04-medium
+    runs-on: ubuntu-latest
     name: Done
     steps:
       - run: exit 1
