@@ -60,6 +60,12 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
+      'preact/compat': require.resolve('preact/compat'),
+      'preact/debug': require.resolve('preact/debug'),
+      'preact/hooks': require.resolve('preact/hooks'),
+      'preact/jsx-runtime': require.resolve('preact/jsx-runtime'),
+      'preact/jsx-dev-runtime': require.resolve('preact/jsx-dev-runtime'),
+      'preact': require.resolve('preact'),
       '@lynx-js/react/compat': path.resolve(__dirname, './compat/index.js'),
       '@lynx-js/react/worklet-runtime/bindings': path.resolve(__dirname, '../worklet-runtime/lib/bindings/index.js'),
       '@lynx-js/react/runtime-components': path.resolve(__dirname, '../components/src/index.ts'),
