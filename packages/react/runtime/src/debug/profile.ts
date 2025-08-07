@@ -145,7 +145,7 @@ export function initProfileHook(): void {
   });
 
   if (__BACKGROUND__) {
-    const sPatchLength = Symbol.for('PATCH_LENGTH');
+    const sPatchLength = Symbol('PATCH_LENGTH');
 
     type PatchedVNode = VNode & { [sPatchLength]?: number };
 
