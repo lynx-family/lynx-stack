@@ -204,11 +204,10 @@ export class LynxView extends HTMLElement {
   }
   set onNativeModulesCall(handler: NativeModulesCall) {
     this.#onNativeModulesCall = handler;
-    if (this.#cachedNativeModulesCall) {
-      for (const callInfo of this.#cachedNativeModulesCall) {
-        callInfo.resolve(handler.apply(undefined, callInfo.args));
-      }
-   this.#cachedNativeModulesCall.clear()
+    for (const callInfo of this.#cachedNativeModulesCall) {
+      callInfo.resolve(handler.apply(undefined, callInfo.args));
+    }
+    this.#cachedNativeModulesCall = [];
   }
 
   #nativeModulesMap: NativeModulesMap = {};
