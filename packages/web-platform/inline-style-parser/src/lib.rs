@@ -715,7 +715,7 @@ mod tests {
     use crate::tokenize::{self, Parser};
 
     struct TokenCollector {
-      tokens: Vec<(u16, usize, usize)>,
+      tokens: Vec<(u8, usize, usize)>,
     }
 
     impl TokenCollector {
@@ -725,7 +725,7 @@ mod tests {
     }
 
     impl Parser for TokenCollector {
-      fn on_token(&mut self, token_type: u16, start: usize, end: usize) {
+      fn on_token(&mut self, token_type: u8, start: usize, end: usize) {
         self.tokens.push((token_type, start, end));
       }
     }
@@ -809,7 +809,7 @@ mod tests {
     use crate::types::*;
 
     struct TokenCollector {
-      tokens: Vec<(u16, usize, usize)>,
+      tokens: Vec<(u8, usize, usize)>,
     }
 
     impl TokenCollector {
@@ -819,7 +819,7 @@ mod tests {
     }
 
     impl Parser for TokenCollector {
-      fn on_token(&mut self, token_type: u16, start: usize, end: usize) {
+      fn on_token(&mut self, token_type: u8, start: usize, end: usize) {
         self.tokens.push((token_type, start, end));
       }
     }
@@ -865,7 +865,7 @@ mod tests {
     use crate::types::*;
 
     struct TokenCollector {
-      tokens: Vec<(u16, usize, usize)>,
+      tokens: Vec<(u8, usize, usize)>,
     }
 
     impl TokenCollector {
@@ -875,7 +875,7 @@ mod tests {
     }
 
     impl Parser for TokenCollector {
-      fn on_token(&mut self, token_type: u16, start: usize, end: usize) {
+      fn on_token(&mut self, token_type: u8, start: usize, end: usize) {
         self.tokens.push((token_type, start, end));
       }
     }
@@ -945,7 +945,7 @@ mod tests {
     use crate::types::*;
 
     struct TokenCollector {
-      tokens: Vec<(u16, usize, usize)>,
+      tokens: Vec<(u8, usize, usize)>,
     }
 
     impl TokenCollector {
@@ -955,7 +955,7 @@ mod tests {
     }
 
     impl Parser for TokenCollector {
-      fn on_token(&mut self, token_type: u16, start: usize, end: usize) {
+      fn on_token(&mut self, token_type: u8, start: usize, end: usize) {
         self.tokens.push((token_type, start, end));
       }
     }
@@ -1057,7 +1057,7 @@ mod tests {
     use crate::types::*;
 
     struct TokenCollector {
-      tokens: Vec<(u16, usize, usize)>,
+      tokens: Vec<(u8, usize, usize)>,
     }
 
     impl TokenCollector {
@@ -1067,7 +1067,7 @@ mod tests {
     }
 
     impl Parser for TokenCollector {
-      fn on_token(&mut self, token_type: u16, start: usize, end: usize) {
+      fn on_token(&mut self, token_type: u8, start: usize, end: usize) {
         self.tokens.push((token_type, start, end));
       }
     }
@@ -1113,14 +1113,14 @@ mod tests {
     assert_eq!(cmp_char(&source, 5, 10, 'H' as u16), 0); // Out of bounds
 
     // Test get_char_code macro
-    assert_eq!(get_char_code(&source, 5, 0), 'H' as u16);
-    assert_eq!(get_char_code(&source, 5, 10), 0); // EOF for out of bounds
+    assert_eq!(get_char_code(&source, 0), 'H' as u16);
+    assert_eq!(get_char_code(&source, 10), 0); // EOF for out of bounds
 
     // Test get_new_line_length
     let crlf: Vec<u16> = "\r\n".encode_utf16().collect();
-    assert_eq!(get_new_line_length(&crlf, 2, 0, 13), 2); // \r\n is 2 chars
+    assert_eq!(get_new_line_length(&crlf, 0, 13), 2); // \r\n is 2 chars
     let lf: Vec<u16> = "\n".encode_utf16().collect();
-    assert_eq!(get_new_line_length(&lf, 1, 0, 10), 1); // \n is 1 char
+    assert_eq!(get_new_line_length(&lf, 0, 10), 1); // \n is 1 char
 
     // Test edge cases in consume_number with incomplete scientific notation
     let incomplete_sci: Vec<u16> = "123e".encode_utf16().collect();
@@ -1156,7 +1156,7 @@ mod tests {
     use crate::utils::*;
 
     struct TokenCollector {
-      tokens: Vec<(u16, usize, usize)>,
+      tokens: Vec<(u8, usize, usize)>,
     }
 
     impl TokenCollector {
@@ -1166,7 +1166,7 @@ mod tests {
     }
 
     impl Parser for TokenCollector {
-      fn on_token(&mut self, token_type: u16, start: usize, end: usize) {
+      fn on_token(&mut self, token_type: u8, start: usize, end: usize) {
         self.tokens.push((token_type, start, end));
       }
     }
@@ -1237,9 +1237,9 @@ mod tests {
 
     // Test get_new_line_length with different combinations
     let cr_only: Vec<u16> = "\r".encode_utf16().collect();
-    assert_eq!(get_new_line_length(&cr_only, 1, 0, 13), 1); // CR only
+    assert_eq!(get_new_line_length(&cr_only, 0, 13), 1); // CR only
 
     let lf_only: Vec<u16> = "\n".encode_utf16().collect();
-    assert_eq!(get_new_line_length(&lf_only, 1, 0, 10), 1); // LF only
+    assert_eq!(get_new_line_length(&lf_only, 0, 10), 1); // LF only
   }
 }

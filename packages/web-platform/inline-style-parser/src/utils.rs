@@ -56,20 +56,20 @@ pub fn consume_escaped(source: &[u16], offset: usize) -> usize {
   let mut offset = offset + 2;
   let source_length = source.len();
   // hex digit
-  if is_hex_digit(get_char_code(source, source_length, offset - 1)) {
+  if is_hex_digit(get_char_code(source, offset - 1)) {
     // It assumes that the U+005C REVERSE SOLIDUS (\) has already been consumed and
     // that the next input code point has already been verified to be part of a valid escape.
     let max_offset = core::cmp::min(offset + 5, source_length);
     while offset < max_offset {
-      if !is_hex_digit(get_char_code(source, source_length, offset)) {
+      if !is_hex_digit(get_char_code(source, offset)) {
         break;
       }
       offset += 1;
     }
     // If the next input code point is whitespace, consume it as well.
-    let code = get_char_code(source, source_length, offset);
+    let code = get_char_code(source, offset);
     if is_white_space(code) {
-      offset += get_new_line_length(source, source_length, offset, code);
+      offset += get_new_line_length(source, offset, code);
     }
   }
 
@@ -92,7 +92,7 @@ pub fn consume_name(source: &[u16], offset: usize) -> usize {
     }
 
     // the stream starts with a valid escape
-    if is_valid_escape(code, get_char_code(source, source_length, offset + 1)) {
+    if is_valid_escape(code, get_char_code(source, offset + 1)) {
       // Consume an escaped code point. Append the returned code point to result.
       offset = consume_escaped(source, offset) - 1;
       offset += 1;
@@ -190,7 +190,7 @@ pub fn consume_bad_url_remnants(source: &[u16], offset: usize) -> usize {
       return offset + 1;
     }
 
-    if is_valid_escape(code, get_char_code(source, source_length, offset + 1)) {
+    if is_valid_escape(code, get_char_code(source, offset + 1)) {
       // Consume an escaped code point.
       // Note: This allows an escaped right parenthesis ("\)") to be encountered
       // without ending the <bad-url-token>. This is otherwise identical to
