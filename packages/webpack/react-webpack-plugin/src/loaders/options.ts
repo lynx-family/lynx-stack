@@ -14,12 +14,12 @@ import type {
 } from '@lynx-js/react/transform';
 
 const PLUGIN_NAME = 'react:webpack';
-const JSX_IMPORT_SOURCE = {
+export const JSX_IMPORT_SOURCE = {
   MAIN_THREAD: '@lynx-js/react/lepus',
   BACKGROUND: '@lynx-js/react',
 };
 const PUBLIC_RUNTIME_PKG = '@lynx-js/react';
-const RUNTIME_PKG = '@lynx-js/react/internal';
+export const RUNTIME_PKG = '@lynx-js/react/internal';
 const OLD_RUNTIME_PKG = '@lynx-js/react-runtime';
 const COMPONENT_PKG = '@lynx-js/react-components';
 
