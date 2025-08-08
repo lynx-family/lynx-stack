@@ -366,6 +366,9 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
           updateAction,
         };
 
+        if (__PROFILE__) {
+          console.profile(`[hydrate] update-list-info: ${JSON.stringify(info)}`);
+        }
         const listElement = before.__elements![elementIndex]!;
         __SetAttribute(listElement, 'update-list-info', info);
         const [componentAtIndex, componentAtIndexes] = componentAtIndexFactory(afterChildNodes, hydrate);
@@ -379,6 +382,10 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
         // The `before` & `after` target to the same list element, so we need to
         // avoid the newly created list's (behind snapshot instance `after`) "update-list-info" being recorded.
         __pendingListUpdates.clear(after.__id);
+
+        if (__PROFILE__) {
+          console.profileEnd();
+        }
       }
     }
   });
