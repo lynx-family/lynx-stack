@@ -28,7 +28,7 @@ pub fn cmp_str(test_str: &[u16], start: usize, end: usize, reference_str: &[u16]
 pub fn find_white_space_end(source: &[u16], offset: usize) -> usize {
   let mut offset = offset;
   while offset < source.len() {
-    let code = source[offset];
+    let code = get_char_code(source, offset);
     if !is_white_space(code) {
       break;
     }
@@ -40,7 +40,7 @@ pub fn find_white_space_end(source: &[u16], offset: usize) -> usize {
 pub fn find_decimal_number_end(source: &[u16], offset: usize) -> usize {
   let mut offset = offset;
   while offset < source.len() {
-    let code = source[offset];
+    let code = get_char_code(source, offset);
     if !is_digit(code) {
       break;
     }
@@ -84,7 +84,7 @@ pub fn consume_name(source: &[u16], offset: usize) -> usize {
   // Repeatedly consume the next input code point from the stream:
   let source_length = source.len();
   while offset < source_length {
-    let code = source[offset];
+    let code = get_char_code(source, offset);
     if is_name(code) {
       // Append the code point to result.
       offset += 1;
@@ -111,21 +111,21 @@ pub fn consume_number(source: &[u16], offset: usize) -> usize {
   let mut offset = offset;
   let source_length = source.len();
   if offset < source_length {
-    let mut code: u16 = source[offset];
+    let mut code: u16 = get_char_code(source, offset);
     // 2. If the next input code point is U+002B PLUS SIGN (+) or U+002D HYPHEN-MINUS (-),
     // consume it and append it to repr.
     if code == 0x002B || code == 0x002D {
       offset += 1;
     }
     if offset < source_length {
-      code = source[offset];
+      code = get_char_code(source, offset);
 
       // 3. While the next input code point is a digit, consume it and append it to repr.
       if is_digit(code) {
         offset = find_decimal_number_end(source, offset + 1);
       }
       if offset + 1 < source_length {
-        code = source[offset];
+        code = get_char_code(source, offset);
         // 4. If the next 2 input code points are U+002E FULL STOP (.) followed by a digit, then:
         if code == 0x002E && is_digit(source[offset + 1]) {
           // 4.1 Consume them.
@@ -183,7 +183,7 @@ pub fn consume_bad_url_remnants(source: &[u16], offset: usize) -> usize {
   let mut offset = offset;
   // Repeatedly consume the next input code point from the stream:
   while offset < source_length {
-    let code = source[offset];
+    let code = get_char_code(source, offset);
     // U+0029 RIGHT PARENTHESIS ())
     // EOF
     if code == 0x0029 {
