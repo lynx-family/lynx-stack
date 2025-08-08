@@ -1,9 +1,15 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-export class Element {
-  private static willFlush = false;
 
+let willFlush = false;
+let shouldFlush = true;
+
+export function setShouldFlush(value: boolean): void {
+  shouldFlush = value;
+}
+
+export class Element {
   // @ts-expect-error set in constructor
   private readonly element: ElementNode;
 
@@ -76,12 +82,12 @@ export class Element {
   }
 
   private flushElementTree() {
-    if (Element.willFlush) {
+    if (willFlush || !shouldFlush) {
       return;
     }
-    Element.willFlush = true;
+    willFlush = true;
     void Promise.resolve().then(() => {
-      Element.willFlush = false;
+      willFlush = false;
       __FlushElementTree();
     });
   }
