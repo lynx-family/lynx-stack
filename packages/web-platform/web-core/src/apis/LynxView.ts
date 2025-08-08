@@ -445,8 +445,8 @@ export class LynxView extends HTMLElement {
               nativeModulesCall: (
                 ...args: [name: string, data: any, moduleName: string]
               ) => {
-                if (this.#onNativeModulesCall) {
-                  return this.#onNativeModulesCall(...args);
+                if (this.onNativeModulesCall) {
+                  return this.onNativeModulesCall(...args);
                 } else {
                   return new Promise(resolve => {
                     this.#cachedNativeModulesCall.push({ args, resolve });
@@ -454,7 +454,7 @@ export class LynxView extends HTMLElement {
                 }
               },
               napiModulesCall: (...args) => {
-                return this.#onNapiModulesCall?.(...args);
+                return this.onNapiModulesCall?.(...args);
               },
               onError: (error: Error, release: string, fileName: string) => {
                 this.dispatchEvent(

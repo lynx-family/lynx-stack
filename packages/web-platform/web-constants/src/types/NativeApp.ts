@@ -99,7 +99,7 @@ export const enum ErrorCode {
 
 export interface InvokeCallbackRes {
   code: ErrorCode;
-  data?: string;
+  data?: unknown;
 }
 
 export interface NativeApp {
@@ -148,6 +148,15 @@ export interface NativeApp {
     params: object,
     callback: (ret: InvokeCallbackRes) => void,
     root_unique_id: number,
+  ) => void;
+
+  getPathInfo: (
+    type: IdentifierType,
+    identifier: string,
+    component_id: string,
+    first_only: boolean,
+    callback: (ret: InvokeCallbackRes) => void,
+    root_unique_id?: number,
   ) => void;
 
   setCard(tt: NativeTTObject): void;
