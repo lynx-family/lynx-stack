@@ -55,7 +55,7 @@ pub fn jsonify(e: Expr) -> Value {
 
 pub fn calc_hash(s: &str) -> String {
   let mut hasher = Sha1::new();
-  hasher.update(s.as_bytes());
+  hasher.update(s.replace("\\", "/").as_bytes());
   let sum = hasher.finalize();
 
   hex::encode(sum)[0..5].to_string()
