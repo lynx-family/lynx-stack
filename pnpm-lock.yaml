@@ -196,8 +196,8 @@ importers:
         specifier: ^18.3.23
         version: 18.3.23
       rsbuild-plugin-tailwindcss:
-        specifier: 0.2.2
-        version: 0.2.2(@rsbuild/core@1.4.14)(tailwindcss@3.4.17)
+        specifier: 0.2.3
+        version: 0.2.3(@rsbuild/core@1.4.14)(tailwindcss@3.4.17)
       tailwindcss:
         specifier: ^3.4.17
         version: 3.4.17
@@ -344,8 +344,8 @@ importers:
         specifier: ^1.1.1
         version: 1.1.1
       rsbuild-plugin-publint:
-        specifier: 0.3.2
-        version: 0.3.2(@rsbuild/core@1.4.13)
+        specifier: 0.3.3
+        version: 0.3.3(@rsbuild/core@1.4.13)
       tiny-invariant:
         specifier: ^1.3.3
         version: 1.3.3
@@ -460,14 +460,14 @@ importers:
         specifier: catalog:rsbuild
         version: 1.4.13
       '@rsbuild/plugin-sass':
-        specifier: 1.3.3
-        version: 1.3.3(@rsbuild/core@1.4.13)
+        specifier: 1.3.4
+        version: 1.3.4(@rsbuild/core@1.4.13)
       '@rsbuild/plugin-typed-css-modules':
-        specifier: 1.0.2
-        version: 1.0.2(@rsbuild/core@1.4.13)
+        specifier: 1.0.3
+        version: 1.0.3(@rsbuild/core@1.4.13)
       '@rsbuild/plugin-webpack-swc':
-        specifier: 1.1.1
-        version: 1.1.1(@rsbuild/core@1.4.13)
+        specifier: 1.1.2
+        version: 1.1.2(@rsbuild/core@1.4.13)
       tailwindcss:
         specifier: ^3.4.17
         version: 3.4.17
@@ -533,11 +533,11 @@ importers:
         specifier: workspace:*
         version: link:../../web-platform/web-elements
       '@rsbuild/plugin-less':
-        specifier: 1.3.1
-        version: 1.3.1(@rsbuild/core@1.4.14)
+        specifier: 1.3.2
+        version: 1.3.2(@rsbuild/core@1.4.14)
       '@rsbuild/plugin-sass':
-        specifier: 1.3.3
-        version: 1.3.3(@rsbuild/core@1.4.14)
+        specifier: 1.3.4
+        version: 1.3.4(@rsbuild/core@1.4.14)
       commander:
         specifier: ^13.1.0
         version: 13.1.0
@@ -551,8 +551,8 @@ importers:
         specifier: ^1.1.1
         version: 1.1.1
       rsbuild-plugin-tailwindcss:
-        specifier: 0.2.2
-        version: 0.2.2(@rsbuild/core@1.4.14)(tailwindcss@3.4.17)
+        specifier: 0.2.3
+        version: 0.2.3(@rsbuild/core@1.4.14)(tailwindcss@3.4.17)
       rslog:
         specifier: ^1.2.11
         version: 1.2.11
@@ -601,8 +601,8 @@ importers:
         specifier: ^21.1.7
         version: 21.1.7
       rsbuild-plugin-publint:
-        specifier: 0.3.2
-        version: 0.3.2(@rsbuild/core@1.4.14)
+        specifier: 0.3.3
+        version: 0.3.3(@rsbuild/core@1.4.14)
 
   packages/third-party/tailwind-preset:
     devDependencies:
@@ -1180,14 +1180,14 @@ importers:
         specifier: ^7.30.7
         version: 7.30.7(@types/node@22.15.33)
       '@rsbuild/plugin-sass':
-        specifier: 1.3.3
-        version: 1.3.3(@rsbuild/core@1.4.14)
+        specifier: 1.3.4
+        version: 1.3.4(@rsbuild/core@1.4.14)
       '@rsbuild/plugin-type-check':
         specifier: 1.2.4
         version: 1.2.4(@rsbuild/core@1.4.14)(@rspack/core@1.4.11(@swc/helpers@0.5.17))(typescript@5.9.2)
       '@rsbuild/plugin-typed-css-modules':
-        specifier: 1.0.2
-        version: 1.0.2(@rsbuild/core@1.4.14)
+        specifier: 1.0.3
+        version: 1.0.3(@rsbuild/core@1.4.14)
       '@rspress/core':
         specifier: 2.0.0-beta.25
         version: 2.0.0-beta.25(@types/react@19.1.8)(acorn@8.15.0)(webpack@5.101.0(patch_hash=1502dd7b26be82d88e360373ead2cb9162b8b6564a525f09fa3620a2afd043d8))
@@ -2474,8 +2474,8 @@ packages:
       '@rsbuild/core':
         optional: true
 
-  '@rsbuild/plugin-less@1.3.1':
-    resolution: {integrity: sha512-RFzm23VAM9qRO2xrLh1vkZktvSseA1A+DSy+AenM9PNrqO89c+qa6L0R+5AdtbNoao1VXFa4Ixz6yNTe/Bis2A==}
+  '@rsbuild/plugin-less@1.3.2':
+    resolution: {integrity: sha512-MmluLKJA0sFujCWUvB5fHIPe6PSRvrGWmlK9cOuRgOPfSPB8gQO8i2+auQXbHdG9u95LpTPoTcXEXnQ2v7tp7A==}
     peerDependencies:
       '@rsbuild/core': 1.x
 
@@ -2484,8 +2484,8 @@ packages:
     peerDependencies:
       '@rsbuild/core': 1.x
 
-  '@rsbuild/plugin-sass@1.3.3':
-    resolution: {integrity: sha512-TcfhLm/SWTTlCFIED/usH/aiHUB5qqTZ1YwFK0gAtaDNuQFSLiRq2OGZ3c934hYyKB95ckgj1o+gDcQvZbaumg==}
+  '@rsbuild/plugin-sass@1.3.4':
+    resolution: {integrity: sha512-V1xj2r3t7RTwl7L2u9/HQDQEe1InNUwYU7Y5n4fFr64sbtzaV5xXwHZtJAx9Ajj2lXIwrixb4S4Jomz+UyA7Ag==}
     peerDependencies:
       '@rsbuild/core': 1.x
 
@@ -2497,16 +2497,16 @@ packages:
       '@rsbuild/core':
         optional: true
 
-  '@rsbuild/plugin-typed-css-modules@1.0.2':
-    resolution: {integrity: sha512-QX376pBXWeBrZBvYLP2HGGrHiWA5O0SDHwRoBNto5BqYDXhi6y+Eol2Hb/cY+h2ARKZVanMfUiJRABULOJ/FCQ==}
+  '@rsbuild/plugin-typed-css-modules@1.0.3':
+    resolution: {integrity: sha512-eW1NyAbTU88KzXDU/YJj0/KLgq1KCtF0yUnPZ+E3OQ+jrFDV4h4rwcZWyElaHxO3zb7WaAY9xOkhPvlC2o4VGw==}
     peerDependencies:
-      '@rsbuild/core': 1.x || ^1.0.1-beta.0
+      '@rsbuild/core': 1.x
     peerDependenciesMeta:
       '@rsbuild/core':
         optional: true
 
-  '@rsbuild/plugin-webpack-swc@1.1.1':
-    resolution: {integrity: sha512-7FIBkHWBaSHvaHyReWWQ7K5GzPIjZ1IcpPSwmNU+IVtMLt7gLGuUkxuPnWllGC7JdwM/PV2GEHxNhmjozgHrVA==}
+  '@rsbuild/plugin-webpack-swc@1.1.2':
+    resolution: {integrity: sha512-frvZXLTqyRpDWrN5S4KJelrxDkCCreJmDNLMdncgl9+KXHsMF423WT0F5VXrAG5chumk6/NAUNkK0198ntIzcQ==}
     peerDependencies:
       '@rsbuild/core': 1.x
 
@@ -3954,9 +3954,6 @@ packages:
 
   core-js-compat@3.41.0:
     resolution: {integrity: sha512-RFsU9LySVue9RTwdDVX/T0e2Y6jRYWXERKElIjpuEOEnxaXffI0X7RUwVzfYLfzuLXSNJDYoRYUAmRUcyln20A==}
-
-  core-js@3.42.0:
-    resolution: {integrity: sha512-Sz4PP4ZA+Rq4II21qkNqOEDTDrCvcANId3xpIgB34NDkWc3UduWj2dqEtN9yZIq8Dk3HyPI33x9sqqU5C8sr0g==}
 
   core-js@3.44.0:
     resolution: {integrity: sha512-aFCtd4l6GvAXwVEh3XbbVqJGHDJt0OZRa+5ePGx3LLwi12WfexqQxcsohb2wgsa/92xtl19Hd66G/L+TaAxDMw==}
@@ -6938,16 +6935,16 @@ packages:
       typescript:
         optional: true
 
-  rsbuild-plugin-publint@0.3.2:
-    resolution: {integrity: sha512-vFqPvierA+ePsVouf05RDIMbsPoylDxveLTK+FS8mFxpFij9mM7uHl/8YQCbGOPpoY1qeykfkIEKZroXMuSU3A==}
+  rsbuild-plugin-publint@0.3.3:
+    resolution: {integrity: sha512-4vNUgeB8TGuHjT9tqtaQ82gUVIc9qj/5PR+rqOh679etcAriYs+g9wgYajt14hQUoZ5CvAdpBG9P0QKoGqRqQQ==}
     peerDependencies:
       '@rsbuild/core': 1.x
     peerDependenciesMeta:
       '@rsbuild/core':
         optional: true
 
-  rsbuild-plugin-tailwindcss@0.2.2:
-    resolution: {integrity: sha512-vpIwzRovx63TrKWPBBIGYjyb6D1cLBFGoZUNRaT3oeHm1CQ89wMvn9VOgCPM975gV5aD4MHlKh4ayShtbWlvuw==}
+  rsbuild-plugin-tailwindcss@0.2.3:
+    resolution: {integrity: sha512-UUARLNjMHLNQXvZ7JTVXES41KznawRIJKULt+ZLDBvzOV7buE0BrBYOSlP+r+7SYn8kcvtwdM9TANpOlNwHvZQ==}
     peerDependencies:
       '@rsbuild/core': ^1.1.0
       tailwindcss: ^3.1.0
@@ -9490,7 +9487,7 @@ snapshots:
       - lightningcss
       - webpack
 
-  '@rsbuild/plugin-less@1.3.1(@rsbuild/core@1.4.14)':
+  '@rsbuild/plugin-less@1.3.2(@rsbuild/core@1.4.14)':
     dependencies:
       '@rsbuild/core': 1.4.14
       deepmerge: 4.3.1
@@ -9504,7 +9501,7 @@ snapshots:
     transitivePeerDependencies:
       - webpack-hot-middleware
 
-  '@rsbuild/plugin-sass@1.3.3(@rsbuild/core@1.4.13)':
+  '@rsbuild/plugin-sass@1.3.4(@rsbuild/core@1.4.13)':
     dependencies:
       '@rsbuild/core': 1.4.13
       deepmerge: 4.3.1
@@ -9513,7 +9510,7 @@ snapshots:
       reduce-configs: 1.1.0
       sass-embedded: 1.89.2
 
-  '@rsbuild/plugin-sass@1.3.3(@rsbuild/core@1.4.14)':
+  '@rsbuild/plugin-sass@1.3.4(@rsbuild/core@1.4.14)':
     dependencies:
       '@rsbuild/core': 1.4.14
       deepmerge: 4.3.1
@@ -9534,20 +9531,20 @@ snapshots:
       - '@rspack/core'
       - typescript
 
-  '@rsbuild/plugin-typed-css-modules@1.0.2(@rsbuild/core@1.4.13)':
+  '@rsbuild/plugin-typed-css-modules@1.0.3(@rsbuild/core@1.4.13)':
     optionalDependencies:
       '@rsbuild/core': 1.4.13
 
-  '@rsbuild/plugin-typed-css-modules@1.0.2(@rsbuild/core@1.4.14)':
+  '@rsbuild/plugin-typed-css-modules@1.0.3(@rsbuild/core@1.4.14)':
     optionalDependencies:
       '@rsbuild/core': 1.4.14
 
-  '@rsbuild/plugin-webpack-swc@1.1.1(@rsbuild/core@1.4.13)':
+  '@rsbuild/plugin-webpack-swc@1.1.2(@rsbuild/core@1.4.13)':
     dependencies:
       '@modern-js/swc-plugins': 0.6.11(@swc/helpers@0.5.17)
       '@rsbuild/core': 1.4.13
       '@swc/helpers': 0.5.17
-      core-js: 3.42.0
+      core-js: 3.44.0
       deepmerge: 4.3.1
       lodash: 4.17.21
       picocolors: 1.1.1
@@ -11316,8 +11313,6 @@ snapshots:
   core-js-compat@3.41.0:
     dependencies:
       browserslist: 4.24.4
-
-  core-js@3.42.0: {}
 
   core-js@3.44.0: {}
 
@@ -14943,21 +14938,21 @@ snapshots:
       '@microsoft/api-extractor': 7.52.10(@types/node@22.15.33)
       typescript: 5.9.2
 
-  rsbuild-plugin-publint@0.3.2(@rsbuild/core@1.4.13):
+  rsbuild-plugin-publint@0.3.3(@rsbuild/core@1.4.13):
     dependencies:
       picocolors: 1.1.1
       publint: 0.3.12
     optionalDependencies:
       '@rsbuild/core': 1.4.13
 
-  rsbuild-plugin-publint@0.3.2(@rsbuild/core@1.4.14):
+  rsbuild-plugin-publint@0.3.3(@rsbuild/core@1.4.14):
     dependencies:
       picocolors: 1.1.1
       publint: 0.3.12
     optionalDependencies:
       '@rsbuild/core': 1.4.14
 
-  rsbuild-plugin-tailwindcss@0.2.2(@rsbuild/core@1.4.14)(tailwindcss@3.4.17):
+  rsbuild-plugin-tailwindcss@0.2.3(@rsbuild/core@1.4.14)(tailwindcss@3.4.17):
     dependencies:
       tailwindcss: 3.4.17
     optionalDependencies:
