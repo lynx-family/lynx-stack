@@ -254,7 +254,7 @@ pub fn tokenize<T: Parser>(source: &[u16], parser: &mut T) {
   let mut offset = start;
   let mut token_type: u8 = EOF_TOKEN;
   while offset < source_length {
-    let code = source[offset];
+    let code = get_char_code(source, offset);
     match char_code_category(code) {
       // whitespace
       char_code_definitions::WHITE_SPACE_CATEGORY => {
@@ -399,7 +399,9 @@ pub fn tokenize<T: Parser>(source: &[u16], parser: &mut T) {
           // implement of the indexOf function
           let mut is_found = false;
           for ii in offset + 2..source_length - 1 {
-            if source[ii] == ('*' as u16) && source[ii + 1] == ('/' as u16) {
+            if get_char_code(source, ii) == ('*' as u16)
+              && get_char_code(source, ii + 1) == ('/' as u16)
+            {
               is_found = true;
               offset = ii;
               break;
