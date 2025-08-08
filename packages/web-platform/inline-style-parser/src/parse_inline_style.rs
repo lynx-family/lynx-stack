@@ -1,5 +1,5 @@
 use crate::{
-  char_code_definitions::is_white_space,
+  char_code_definitions::{get_char_code, is_white_space},
   tokenize::{self, Parser},
   types::*,
   utils::cmp_str,
@@ -19,11 +19,11 @@ pub struct ParserState<'a, 'b, T: Transformer> {
   value_start: usize,
   value_end: usize,
   is_important: bool,
-  prev_token_type: u16,
+  prev_token_type: u8,
 }
 
 impl<T: Transformer> Parser for ParserState<'_, '_, T> {
-  fn on_token(&mut self, token_type: u16, start: usize, end: usize) {
+  fn on_token(&mut self, token_type: u8, start: usize, end: usize) {
     //https://drafts.csswg.org/css-syntax-3/#consume-declaration
     // on_token(type, start, offset);
     /*
@@ -79,7 +79,9 @@ impl<T: Transformer> Parser for ParserState<'_, '_, T> {
       if self.value_end == 0 {
         self.value_end = start;
       }
-      while is_white_space(self.source[self.value_end - 1]) && self.value_end > self.value_start {
+      while is_white_space(get_char_code(self.source, self.value_end - 1))
+        && self.value_end > self.value_start
+      {
         self.value_end -= 1;
       }
       self.transformer.on_declaration(
