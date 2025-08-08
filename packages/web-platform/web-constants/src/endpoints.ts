@@ -124,6 +124,17 @@ export const setNativePropsEndpoint = createRpcEndpoint<
   void
 >('__setNativeProps', false, true);
 
+export const getPathInfoEndpoint = createRpcEndpoint<
+  [
+    type: IdentifierType,
+    identifier: string,
+    component_id: string,
+    first_only: boolean,
+    root_unique_id?: number | undefined,
+  ],
+  InvokeCallbackRes
+>('__getPathInfo', false, true);
+
 export const nativeModulesCallEndpoint = createRpcEndpoint<
   [name: string, data: Cloneable, moduleName: string],
   any

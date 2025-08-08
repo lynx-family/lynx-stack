@@ -25,8 +25,6 @@ overrides:
   '@rspack/core': 1.4.11
   '@rsbuild/core>@rspack/core': 1.4.11
 
-pnpmfileChecksum: sha256-ZfwGjIvQgPR9mEJg5iihJauZ5iv1Ogj5lI/dgVj7pgI=
-
 patchedDependencies:
   '@napi-rs/cli@2.18.4':
     hash: ba947eb1c48b2a85834e99f92cbbae896722ce61fd5ae67507a3be9041959ebd
