@@ -25,7 +25,7 @@ jobs:
           - path: ./packages/rspeedy/core
             name: rspeedy
             key: RELATIVE_CI_PROJECT_RSPEEDY_CORE_KEY
-    runs-on: lynx-ubuntu-24.04-medium
+    runs-on: lynx-ubuntu-24.04-medium-verify
     name: Upload ${{ matrix.project.name }}
     env:
       RELATIVE_CI_PROJECT_EXAMPLES_REACT_KEY: ${{ secrets.RELATIVE_CI_PROJECT_EXAMPLES_REACT_KEY }}

@@ -30,7 +30,7 @@ jobs:
     needs: build
     uses: ./.github/workflows/workflow-bundle-analysis.yml
   code-style-check:
-    runs-on: lynx-ubuntu-24.04-medium
+    runs-on: lynx-ubuntu-24.04-medium-verify
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
@@ -60,7 +60,7 @@ jobs:
     uses: ./.github/workflows/workflow-test.yml
     permissions: {}
     with:
-      runs-on: lynx-ubuntu-24.04-medium
+      runs-on: lynx-ubuntu-24.04-medium-verify
       run: pnpm eslint .
 
   lighthouse:
@@ -113,7 +113,7 @@ jobs:
     uses: ./.github/workflows/workflow-test.yml
 
     with:
-      runs-on: lynx-ubuntu-24.04-medium
+      runs-on: lynx-ubuntu-24.04-medium-verify
       run: |
         pnpm turbo api-extractor -- --local
         if test "$(git diff -- './packages/**/*.api.md' --name-only | wc -l)" -gt 0 ; then
@@ -137,7 +137,7 @@ jobs:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
     with:
-      runs-on: lynx-ubuntu-24.04-medium
+      runs-on: lynx-ubuntu-24.04-medium-verify
       run: |
         pnpm dlx @pnpm/registry-mock prepare
         pnpm dlx @pnpm/registry-mock &
@@ -165,7 +165,7 @@ jobs:
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
-      runs-on: lynx-ubuntu-24.04-medium
+      runs-on: lynx-ubuntu-24.04-medium-verify
       run: >
         pnpm
         --filter @lynx-js/react-runtime
@@ -193,10 +193,10 @@ jobs:
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
-      runs-on: lynx-ubuntu-24.04-medium
+      runs-on: lynx-ubuntu-24.04-medium-verify
       run: pnpm -r run test:type
   test-typos:
-    runs-on: lynx-ubuntu-24.04-medium
+    runs-on: lynx-ubuntu-24.04-medium-verify
     steps:
       - uses: taiki-e/checkout-action@b13d20b7cda4e2f325ef19895128f7ff735c0b3d # v1.3.1
       - uses: crate-ci/typos@392b78fe18a52790c53f42456e46124f77346842 # v1.34.0

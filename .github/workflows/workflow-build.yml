@@ -9,7 +9,7 @@ env:
 jobs:
   get-merge-base:
     permissions: {}
-    runs-on: lynx-ubuntu-24.04-medium
+    runs-on: lynx-ubuntu-24.04-medium-verify
     timeout-minutes: 5
     env:
       # We have 2 cases:

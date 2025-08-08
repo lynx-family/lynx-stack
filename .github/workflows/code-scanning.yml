@@ -17,7 +17,7 @@ jobs:
     #   - https://gh.io/supported-runners-and-hardware-resources
     #   - https://gh.io/using-larger-runners (GitHub.com only)
     # Consider using larger runners or machines with greater resources for possible analysis time improvements.
-    runs-on: lynx-ubuntu-24.04-medium
+    runs-on: lynx-ubuntu-24.04-medium-verify
     permissions:
       # required for all workflows
       security-events: write
@@ -88,7 +88,7 @@ jobs:
 
   zizmor:
     timeout-minutes: 10
-    runs-on: lynx-ubuntu-24.04-medium
+    runs-on: lynx-ubuntu-24.04-medium-verify
     permissions:
       security-events: write
     steps:

@@ -13,7 +13,7 @@ jobs:
     # Error: Event merge_group is not supported by CodSpeed
     # Error: unknown variant `merge_group`, expected one of `push`, `pull_request`, `workflow_dispatch`, `schedule`, `local` at line 1 column 13
     if: github.event_name != 'merge_group'
-    runs-on: lynx-ubuntu-24.04-xlarge
+    runs-on: lynx-ubuntu-24.04-medium-verify
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:
