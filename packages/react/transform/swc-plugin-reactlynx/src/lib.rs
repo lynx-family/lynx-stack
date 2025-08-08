@@ -72,8 +72,7 @@ impl<'de> Deserialize<'de> for TransformMode {
       "development" => Ok(TransformMode::Development),
       "test" => Ok(TransformMode::Test),
       _ => Err(serde::de::Error::custom(format!(
-        "value `{}` does not match any variant of TransformMode",
-        s
+        "value `{s}` does not match any variant of TransformMode"
       ))),
     }
   }

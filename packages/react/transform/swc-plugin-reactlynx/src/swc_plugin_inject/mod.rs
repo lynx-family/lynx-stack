@@ -87,8 +87,7 @@ impl<'de> Deserialize<'de> for InjectAs {
         Ok(InjectAs::ImportNamed(module.to_string(), alias.to_string()))
       }
       _ => Err(serde::de::Error::custom(format!(
-        "value `{}` does not match any variant of InjectAs",
-        variant
+        "value `{variant}` does not match any variant of InjectAs"
       ))),
     }
   }

@@ -42,8 +42,7 @@ impl<'de> Deserialize<'de> for CSSScope {
       "none" => Ok(CSSScope::None),
       "modules" => Ok(CSSScope::Modules),
       _ => Err(serde::de::Error::custom(format!(
-        "value `{}` does not match any variant of CSSScope",
-        s
+        "value `{s}` does not match any variant of CSSScope"
       ))),
     }
   }

@@ -1199,10 +1199,10 @@ where
       .enumerate()
       .map(|(index, dynamic_part)| {
         (
-          JSXAttrName::Ident(IdentName::new(format!("__{}", index).into(), DUMMY_SP)),
-          JSXAttrName::Ident(IdentName::new(format!("_c{}", index).into(), DUMMY_SP)),
+          JSXAttrName::Ident(IdentName::new(format!("__{index}").into(), DUMMY_SP)),
+          JSXAttrName::Ident(IdentName::new(format!("_c{index}").into(), DUMMY_SP)),
           JSXElementName::Ident(Ident::new(
-            format!("s{}", index).into(),
+            format!("s{index}").into(),
             DUMMY_SP,
             SyntaxContext::default(),
           )),
