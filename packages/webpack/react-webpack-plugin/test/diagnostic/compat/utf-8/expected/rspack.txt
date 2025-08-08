@@ -1,24 +1,34 @@
-WARNING in ./compat/utf-8/index.jsx <LINE:COLUMN>-48
-⚠ ModuleWarning: DEPRECATED: old package "@lynx-js/react-components" is removed
-╭─[<LINE:COLUMN>]
-1  import { Text } from '@lynx-js/react-components'
-· ────────────────────────┬───────────────────────
-·                         ╰── DEPRECATED: old package "@lynx-js/react-components" is removed
-2
-3  function App() {
-╰────
+WARNING in ./compat/utf-8/index.jsx
+⚠ ModuleWarning:   ! DEPRECATED: old package "@lynx-js/react-components" is removed
+,-[<LINE:COLUMN>]
+1 | import { Text } from '@lynx-js/react-components'
+: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2 |
+3 | function App() {
+4 |   return <Text>你好，世界</Text>
+`----
+
 
 WARNING in ./compat/utf-8/index.jsx
-⚠ Module Warning (from <ROOT>/packages/webpack/react-webpack-plugin/lib/loaders/background.js??ruleSet[1].rules[0].use[1]):
-DEPRECATED: old JSXElementName "Text" is changed to "text"
+⚠ ModuleWarning:   ! DEPRECATED: old JSXElementName "Text" is changed to "text"
+,-[<LINE:COLUMN>]
+1 | import { Text } from '@lynx-js/react-components'
+2 |
+3 | function App() {
+4 |   return <Text>你好，世界</Text>
+:           ^^^^
+5 | }
+`----
 
-WARNING in ./compat/utf-8/index.jsx <LINE:COLUMN>-14
-⚠ ModuleWarning: DEPRECATED: old JSXElementName "Text" is changed to "text"
-╭─[<LINE:COLUMN>]
-2
-3  function App() {
-4    return <Text>你好，世界</Text>
-·           ──┬─
-·             ╰── DEPRECATED: old JSXElementName "Text" is changed to "text"
-5  }
-╰────
+
+WARNING in ./compat/utf-8/index.jsx
+⚠ ModuleWarning:   ! DEPRECATED: old JSXElementName "Text" is changed to "text"
+,-[<LINE:COLUMN>]
+1 | import { Text } from '@lynx-js/react-components'
+2 |
+3 | function App() {
+4 |   return <Text>你好，世界</Text>
+:                            ^^^^
+5 | }
+`----
+

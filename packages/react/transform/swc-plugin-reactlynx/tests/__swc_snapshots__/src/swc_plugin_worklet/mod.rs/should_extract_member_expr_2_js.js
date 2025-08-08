@@ -1,0 +1,29 @@
+let onTapLepus = {
+    _c: {
+        aaaa,
+        bbbb,
+        eeee,
+        ffff
+    },
+    _wkltId: "a77b:test:1",
+    ...{
+        aaaa: this.aaaa,
+        bbbb: {
+            cccc: {
+                dddd: this.bbbb.cccc.dddd
+            }
+        },
+        eeee: this.eeee,
+        ffff: this.ffff,
+        hhhh: {
+            'iiii': this.hhhh['iiii'],
+            kkkk: this.hhhh.kkkk
+        },
+        llll: this.llll,
+        mmmm: {
+            nnnn: {
+                'oooo': this.mmmm.nnnn['oooo']
+            }
+        }
+    }
+};

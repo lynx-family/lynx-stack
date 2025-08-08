@@ -5,6 +5,7 @@
 const defaultChildren = <text>it works</text>;
 
 // `createSuspender()` is forked from `preact` unit test
+/* v8 ignore start */
 export function createSuspender() {
   const deferred = Promise.withResolvers();
   let resolved;
@@ -24,3 +25,4 @@ export function createSuspender() {
     Suspender,
   };
 }
+/* v8 ignore stop */
