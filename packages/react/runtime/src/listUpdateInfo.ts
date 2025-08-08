@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { profileEnd, profileStart } from './debug/utils.js';
 import { hydrate } from './hydrate.js';
 import { componentAtIndexFactory, enqueueComponentFactory } from './list.js';
 import type { SnapshotInstance } from './snapshot.js';
@@ -82,6 +83,16 @@ export class ListUpdateInfoRecording implements ListUpdateInfo {
     //   __SetAttribute(listElement, "update-list-info", pendingAttribute);
     //   __FlushElementTree(listElement);
     // });
+    if (__PROFILE__) {
+      const listID = __GetElementUniqueID(this.list.__elements[elementIndex]!);
+      profileStart(`[flush] update-list-info`, {
+        args: {
+          'list id': String(listID),
+          'update list info': JSON.stringify(this.__toAttribute()),
+        },
+      });
+    }
+
     __SetAttribute(listElement, 'update-list-info', this.__toAttribute());
     const [componentAtIndex, componentAtIndexes] = componentAtIndexFactory(this.list.childNodes, hydrate);
     __UpdateListCallbacks(
@@ -90,6 +101,10 @@ export class ListUpdateInfoRecording implements ListUpdateInfo {
       enqueueComponentFactory(),
       componentAtIndexes,
     );
+
+    if (__PROFILE__) {
+      profileEnd();
+    }
     return this.list.__id;
   }
 
