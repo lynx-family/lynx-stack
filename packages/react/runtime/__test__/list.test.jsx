@@ -2809,7 +2809,6 @@ describe('list componentAtIndexes', () => {
 describe('list-item with "defer" attribute', () => {
   beforeEach(() => {
     globalEnvManager.resetEnv();
-    globalThis.__TESTING_FORCE_RENDER_TO_OPCODE__ = true;
     elementTree.clear();
     vi.useFakeTimers();
   });

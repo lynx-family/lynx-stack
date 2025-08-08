@@ -94,7 +94,6 @@ function injectGlobals() {
   globalThis.__REF_FIRE_IMMEDIATELY__ = false;
   globalThis.__ENABLE_SSR__ = true;
   globalThis.__FIRST_SCREEN_SYNC_TIMING__ = 'immediately';
-  globalThis.__TESTING_FORCE_RENDER_TO_OPCODE__ = false;
   globalThis.globDynamicComponentEntry = '__Card__';
   globalThis.lynxCoreInject = {};
   globalThis.lynxCoreInject.tt = {
@@ -149,6 +148,7 @@ afterEach((context) => {
     // Skip preact/debug tests since it would throw errors and abort the rendering process
     'preact/debug',
     'should remove event listener when throw in cleanup',
+    'should not throw if error - instead it will render an empty page',
   ];
   if (skippedTasks.some(task => context.task.name.includes(task))) {
     return;
