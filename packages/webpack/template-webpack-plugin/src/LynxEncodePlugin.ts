@@ -1,6 +1,8 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import fs from 'node:fs/promises';
+import { createRequire } from 'node:module';
 
 import type { Compiler } from 'webpack';
 
@@ -24,6 +26,7 @@ type InlineChunkConfig = boolean | InlineChunkTest | {
  */
 export interface LynxEncodePluginOptions {
   inlineScripts?: InlineChunkConfig | undefined;
+  lynxCoreInjectCache?: boolean | undefined;
 }
 
 /**
@@ -70,6 +73,7 @@ export class LynxEncodePlugin {
   static defaultOptions: Readonly<Required<LynxEncodePluginOptions>> = Object
     .freeze<Required<LynxEncodePluginOptions>>({
       inlineScripts: true,
+      lynxCoreInjectCache: false,
     });
   /**
    * The entry point of a webpack plugin.
@@ -144,6 +148,15 @@ export class LynxEncodePluginImpl {
             },
             [{}, {}] as [Record<string, string>, Record<string, string>],
           );
+
+        if (this.options.lynxCoreInjectCache) {
+          const lynxCoreInjectCacheScriptName = 'lynx-core-inject-cache.js';
+          const require = createRequire(import.meta.url);
+          inlinedManifest[lynxCoreInjectCacheScriptName] = await fs.readFile(
+            require.resolve('../static/' + lynxCoreInjectCacheScriptName),
+            'utf-8',
+          );
+        }
 
         let publicPath = '/';
         if (typeof compilation?.outputOptions.publicPath === 'function') {

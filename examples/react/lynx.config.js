@@ -16,5 +16,25 @@ export default defineConfig({
   ],
   performance: {
     profile: enableBundleAnalysis,
+    chunkSplit: {
+      strategy: 'split-by-experience'
+    },
   },
+  // output: {
+  //   inlineScripts: false
+  // },
+  // tools: {
+  //   rspack: {
+  //     optimization: {
+  //       runtimeChunk: {
+  //         name: entrypoint => {
+  //           if (entrypoint.name.includes('main-thread')) {
+  //             return ''
+  //           }
+  //           return entrypoint.name
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
 });

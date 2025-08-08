@@ -4,7 +4,7 @@
     "rootDir": ".",
     "noEmit": true,
   },
-  "include": ["src", "test", "vitest.config.ts"],
+  "include": ["src", "test", "vitest.config.ts", "static"],
   "references": [
     { "path": "../webpack-runtime-globals/tsconfig.build.json" },
   ],
