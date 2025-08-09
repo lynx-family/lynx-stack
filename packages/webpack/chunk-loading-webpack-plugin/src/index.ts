@@ -85,3 +85,5 @@ export class ChunkLoadingWebpackPlugin {
     );
   }
 }
+
+export { CommonJsChunkFormatPlugin } from './CommonJsChunkFormatPlugin.js';

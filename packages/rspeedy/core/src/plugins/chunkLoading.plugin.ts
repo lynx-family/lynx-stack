@@ -4,7 +4,10 @@
 
 import type { RsbuildPlugin } from '@rsbuild/core'
 
-import { ChunkLoadingWebpackPlugin } from '@lynx-js/chunk-loading-webpack-plugin'
+import {
+  ChunkLoadingWebpackPlugin,
+  CommonJsChunkFormatPlugin,
+} from '@lynx-js/chunk-loading-webpack-plugin'
 
 import { isLynx } from '../utils/is-lynx.js'
 import { isWeb } from '../utils/is-web.js'
@@ -27,6 +30,9 @@ export function pluginChunkLoading(): RsbuildPlugin {
           chain
           .plugin('lynx:chunk-loading')
             .use(ChunkLoadingWebpackPlugin)
+          .end()
+          .plugin('lynx:commonjs-chunk-format')
+            .use(CommonJsChunkFormatPlugin)
           .end()
           .output
             .chunkLoading('lynx')
