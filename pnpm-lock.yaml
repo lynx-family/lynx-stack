@@ -356,11 +356,11 @@ importers:
         specifier: ^4.41.0
         version: 4.41.0
       typia:
-        specifier: 9.6.1
-        version: 9.6.1(typescript@5.9.2)
+        specifier: 9.7.1
+        version: 9.7.1(typescript@5.9.2)
       typia-rspack-plugin:
-        specifier: 2.2.0
-        version: 2.2.0(typescript@5.9.2)(typia@9.6.1(typescript@5.9.2))
+        specifier: 2.2.1
+        version: 2.2.1(typescript@5.9.2)(typia@9.7.1(typescript@5.9.2))
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/debug@4.1.12)(@types/node@22.15.33)(@vitest/ui@3.2.4)(jsdom@26.1.0)(sass-embedded@1.89.2)(terser@5.31.6)
@@ -475,11 +475,11 @@ importers:
         specifier: ^4.41.0
         version: 4.41.0
       typia:
-        specifier: 9.6.1
-        version: 9.6.1(typescript@5.9.2)
+        specifier: 9.7.1
+        version: 9.7.1(typescript@5.9.2)
       typia-rspack-plugin:
-        specifier: 2.2.0
-        version: 2.2.0(typescript@5.9.2)(typia@9.6.1(typescript@5.9.2))
+        specifier: 2.2.1
+        version: 2.2.1(typescript@5.9.2)(typia@9.7.1(typescript@5.9.2))
 
   packages/rspeedy/plugin-react-alias:
     dependencies:
@@ -2764,8 +2764,8 @@ packages:
   '@rushstack/ts-command-line@5.0.2':
     resolution: {integrity: sha512-+AkJDbu1GFMPIU8Sb7TLVXDv/Q7Mkvx+wAjEl8XiXVVq+p1FmWW6M3LYpJMmoHNckSofeMecgWg5lfMwNAAsEQ==}
 
-  '@samchon/openapi@4.6.0':
-    resolution: {integrity: sha512-h6NunOljbRJ1qiPIJCIckF0k3n3jBJZSSCFy/AjbmHSrAFwMeewHkWtTwQrZztVzcD0LsSQgTGRvPX1bclnVuA==}
+  '@samchon/openapi@4.7.1':
+    resolution: {integrity: sha512-+rkMlSKMt7l3KGWJVWUle1CXEm0vA8FIF2rufHl+T1gN/gGrTEhL1gDK3FHYf8Nl5XReK0r1vL6Q2QTMwQN7xQ==}
 
   '@selderee/plugin-htmlparser2@0.11.0':
     resolution: {integrity: sha512-P33hHGdldxGabLFjPPpaTxVolMrzrcegejx+0GxjrIb9Zv48D8yAIA/QTDR2dFl7Uz7urX8aX6+5bCZslr+gWQ==}
@@ -7770,15 +7770,15 @@ packages:
     engines: {node: '>=14.17'}
     hasBin: true
 
-  typia-rspack-plugin@2.2.0:
-    resolution: {integrity: sha512-6QCDFQSB0S5tiZ8/Rs5+KhPsN7/ktYMVeD5ff1F9IBAGaxx6C8uxGeBLfaZ3ToVxnLK2uDuRAv/mwAUyCgh7dQ==}
+  typia-rspack-plugin@2.2.1:
+    resolution: {integrity: sha512-FTwlaxy0oGCx9Oenb844OLXowr3ITzQE7CkUMpaSmMQAIExEkuKvMV0xpv+AtOxRl2RbbugN9YDgyHBYlpGFtw==}
     engines: {node: '>=18'}
     peerDependencies:
       typescript: '*'
       typia: '*'
 
-  typia@9.6.1:
-    resolution: {integrity: sha512-AXW1SeeGeOdG92tyTll+9kr4w/AsD+LgwNZK3RL4A5ZMjqvoVmdv0slPNWxV5B+obCCotgIWhBbNrft8nUPOog==}
+  typia@9.7.1:
+    resolution: {integrity: sha512-HY9hhvAPhFvFHfjA3Ny1DmucUyrbsFalt+wr58oBJyNBFUxE6nTF8aJSpLOv1Bav6dZslNh39MEez0s7qLB1jw==}
     hasBin: true
     peerDependencies:
       typescript: '>=4.8.0 <5.10.0'
@@ -9978,7 +9978,7 @@ snapshots:
     transitivePeerDependencies:
       - '@types/node'
 
-  '@samchon/openapi@4.6.0': {}
+  '@samchon/openapi@4.7.1': {}
 
   '@selderee/plugin-htmlparser2@0.11.0':
     dependencies:
@@ -15837,15 +15837,15 @@ snapshots:
 
   typescript@5.9.2: {}
 
-  typia-rspack-plugin@2.2.0(typescript@5.9.2)(typia@9.6.1(typescript@5.9.2)):
+  typia-rspack-plugin@2.2.1(typescript@5.9.2)(typia@9.7.1(typescript@5.9.2)):
     dependencies:
       typescript: 5.9.2
-      typia: 9.6.1(typescript@5.9.2)
+      typia: 9.7.1(typescript@5.9.2)
       unplugin: 2.3.5
 
-  typia@9.6.1(typescript@5.9.2):
+  typia@9.7.1(typescript@5.9.2):
     dependencies:
-      '@samchon/openapi': 4.6.0
+      '@samchon/openapi': 4.7.1
       '@standard-schema/spec': 1.0.0
       commander: 10.0.1
       comment-json: 4.2.5
