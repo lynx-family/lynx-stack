@@ -37,7 +37,7 @@
     "test": "pnpm -w run test --project rspeedy/react-alias"
   },
   "dependencies": {
-    "unrs-resolver": "1.9.2"
+    "unrs-resolver": "1.11.1"
   },
   "devDependencies": {
     "@lynx-js/react": "workspace:*",
