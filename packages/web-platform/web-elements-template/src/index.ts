@@ -165,6 +165,7 @@ export const templateXOverlayNg = `<style>
     bottom: 0;
     position: fixed;
     overscroll-behavior: contain;
+    scrollbar-width: none;
   }
   #dialog::backdrop {
     background-color: transparent;
@@ -181,10 +182,10 @@ export const templateXOverlayNg = `<style>
   }
 </style>
 <dialog id="dialog" part="dialog">
-  <div className="overlay-inner">
+  <div class="overlay-inner">
     <slot></slot>
   </div>
-  <div className="overlay-placeholder" />
+  <div class="overlay-placeholder" />
 </dialog>`;
 
 export const templateXRefreshView = `<style>
