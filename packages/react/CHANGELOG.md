@@ -1,5 +1,49 @@
 # @lynx-js/react
 
+## 0.112.2
+
+### Patch Changes
+
+- Supports `recyclable` attribute in `<list-item>` to control whether the list item is recyclable. The `recyclable` attribute depends on Lynx Engine 3.4 or later. ([#1388](https://github.com/lynx-family/lynx-stack/pull/1388))
+
+  ```jsx
+  <list-item recyclable={false} />;
+  ```
+
+- feat: Support using a host element as direct child of Suspense ([#1455](https://github.com/lynx-family/lynx-stack/pull/1455))
+
+- Add profile in production build: ([#1336](https://github.com/lynx-family/lynx-stack/pull/1336))
+
+  1. `diff:__COMPONENT_NAME__`: how long ReactLynx diff took.
+  2. `render:__COMPONENT_NAME__`: how long your render function took.
+  3. `setState`: an instant trace event, indicate when your setState was called.
+
+  NOTE: `__COMPONENT_NAME__` may be unreadable when minified, setting `displayName` may help.
+
+- Add `onBackgroundSnapshotInstanceUpdateId` event on dev for Preact Devtools to keep the correct snapshotInstanceId info. ([#1173](https://github.com/lynx-family/lynx-stack/pull/1173))
+
+- fix: Prevent error when spreading component props onto an element ([#1459](https://github.com/lynx-family/lynx-stack/pull/1459))
+
+- fix: Correctly check for the existence of background functions in MTS ([#1416](https://github.com/lynx-family/lynx-stack/pull/1416))
+
+  ```ts
+  function handleTap() {
+    'main thread';
+    // The following check always returned false before this fix
+    if (myHandleTap) {
+      runOnBackground(myHandleTap)();
+    }
+  }
+  ```
+
+## 0.112.1
+
+### Patch Changes
+
+- Fix crash caused by not removing event listeners during destroy. ([#1379](https://github.com/lynx-family/lynx-stack/pull/1379))
+
+- Fix missing "type" in "update-list-info" in hydrate ([#1392](https://github.com/lynx-family/lynx-stack/pull/1392))
+
 ## 0.112.0
 
 ### Minor Changes

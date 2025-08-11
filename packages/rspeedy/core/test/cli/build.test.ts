@@ -136,7 +136,11 @@ describe('CLI - build', () => {
       Promise.resolve({
         isPluginExists: vi.fn(),
         addPlugins: vi.fn(),
-        build: vi.fn(),
+        build: vi.fn(() =>
+          Promise.resolve({
+            close: vi.fn(),
+          })
+        ),
         inspectConfig: vi.fn(),
       })
     )

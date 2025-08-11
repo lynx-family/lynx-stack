@@ -437,7 +437,8 @@ where
                     | "sticky-bottom"
                     | "estimated-height"
                     | "estimated-height-px"
-                    | "estimated-main-axis-size-px" => {
+                    | "estimated-main-axis-size-px"
+                    | "recyclable" => {
                       list_item_platform_info.push(attr.clone());
                       return false;
                     }

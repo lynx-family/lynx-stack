@@ -12,13 +12,12 @@ vi.stubGlobal("__RenderContent", (vnode) => {
 const callLepusMethod = vi.fn((_, __, callback) => {
   callback();
 });
-vi.stubGlobal("lynx", {
-  getNativeApp() {
-    return {
-      callLepusMethod,
-    };
-  },
-});
+
+lynx.getNativeApp = () => {
+  return {
+    callLepusMethod,
+  };
+};
 
 root.render(
   <page>

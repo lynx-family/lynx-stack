@@ -3,8 +3,17 @@
 // LICENSE file in the root directory of this source tree.
 import { describe, expect, it, vi } from 'vitest';
 
-import { LYNX_PLUGIN_MAP, getReplaceablePlugins } from '../core.js';
+import {
+  LYNX_PLUGIN_MAP,
+  LYNX_UI_PLUGIN_MAP,
+  ORDERED_LYNX_UI_PLUGIN_NAMES,
+  getReplaceablePlugins,
+} from '../core.js';
+import type { LynxUIPluginOptionsMap } from '../core.js';
 import preset, { createLynxPreset } from '../lynx.js';
+
+const firstUIPlugin = ORDERED_LYNX_UI_PLUGIN_NAMES[0]!;
+type FirstUIPluginOptions = LynxUIPluginOptionsMap[typeof firstUIPlugin];
 
 describe('createLynxPreset', () => {
   it('returns a valid Tailwind config structure by default', () => {
@@ -49,5 +58,98 @@ describe('default export (preset)', () => {
     expect(preset).toHaveProperty('plugins');
     expect(preset).toHaveProperty('corePlugins');
     expect(preset).toHaveProperty('theme');
+  });
+});
+
+describe('createLynxPreset - Lynx UI plugin behavior', () => {
+  const firstUIPlugin = ORDERED_LYNX_UI_PLUGIN_NAMES[0]!;
+
+  it('includes UI plugin if enabled (true)', () => {
+    const spy = Object.assign(vi.fn(), { __isOptionsFunction: true as const });
+    const original = LYNX_UI_PLUGIN_MAP[firstUIPlugin];
+
+    // Mock the plugin function
+    LYNX_UI_PLUGIN_MAP[firstUIPlugin] = spy;
+
+    createLynxPreset({
+      lynxUIPlugins: { [firstUIPlugin]: true },
+    });
+
+    expect(spy).toHaveBeenCalledWith({});
+    LYNX_UI_PLUGIN_MAP[firstUIPlugin] = original; // restore
+  });
+
+  it('includes UI plugin if enabled with options', () => {
+    const spy = Object.assign(vi.fn(), { __isOptionsFunction: true as const });
+    const original = LYNX_UI_PLUGIN_MAP[firstUIPlugin];
+    const mockOptions: FirstUIPluginOptions = { prefixes: ['bar'] };
+
+    LYNX_UI_PLUGIN_MAP[firstUIPlugin] = spy;
+
+    createLynxPreset({
+      lynxUIPlugins: { [firstUIPlugin]: mockOptions },
+    });
+
+    expect(spy).toHaveBeenCalledWith(mockOptions);
+    LYNX_UI_PLUGIN_MAP[firstUIPlugin] = original;
+  });
+
+  it('does not include UI plugin if disabled', () => {
+    const spy = Object.assign(vi.fn(), { __isOptionsFunction: true as const });
+    const original = LYNX_UI_PLUGIN_MAP[firstUIPlugin];
+
+    LYNX_UI_PLUGIN_MAP[firstUIPlugin] = spy;
+
+    createLynxPreset({
+      lynxUIPlugins: { [firstUIPlugin]: false },
+    });
+
+    expect(spy).not.toHaveBeenCalled();
+    LYNX_UI_PLUGIN_MAP[firstUIPlugin] = original;
+  });
+
+  it('does not include UI plugin if global UI plugins disabled', () => {
+    const spy = Object.assign(vi.fn(), { __isOptionsFunction: true as const });
+    const original = LYNX_UI_PLUGIN_MAP[firstUIPlugin];
+
+    LYNX_UI_PLUGIN_MAP[firstUIPlugin] = spy;
+
+    createLynxPreset({ lynxUIPlugins: false });
+
+    expect(spy).not.toHaveBeenCalled();
+    LYNX_UI_PLUGIN_MAP[firstUIPlugin] = original;
+  });
+
+  it('includes UI plugin when lynxUIPlugins = true (default options)', () => {
+    const spy = Object.assign(vi.fn(), { __isOptionsFunction: true as const });
+    const original = LYNX_UI_PLUGIN_MAP[firstUIPlugin];
+
+    LYNX_UI_PLUGIN_MAP[firstUIPlugin] = spy;
+
+    createLynxPreset({ lynxUIPlugins: true });
+
+    expect(spy).toHaveBeenCalledWith({});
+    LYNX_UI_PLUGIN_MAP[firstUIPlugin] = original;
+  });
+
+  it('prints debug info when UI plugin is enabled and debug is true', () => {
+    const spy = Object.assign(vi.fn(), { __isOptionsFunction: true as const });
+    Object.assign(spy, { __isOptionsFunction: true });
+
+    const original = LYNX_UI_PLUGIN_MAP[firstUIPlugin];
+    LYNX_UI_PLUGIN_MAP[firstUIPlugin] = spy;
+
+    const debugSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
+
+    createLynxPreset({
+      lynxUIPlugins: { [firstUIPlugin]: true },
+      debug: true,
+    });
+
+    expect(debugSpy).toHaveBeenCalledWith(
+      `[Lynx] enabled UI plugin: ${firstUIPlugin}`,
+    );
+    LYNX_UI_PLUGIN_MAP[firstUIPlugin] = original;
+    debugSpy.mockRestore();
   });
 });

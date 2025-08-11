@@ -1,20 +1,20 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { createRsbuild } from '@rsbuild/core'
 import { describe, expect, test } from 'vitest'
 
 import { WebEncodePlugin } from '@lynx-js/template-webpack-plugin'
 import type { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'
 
+import { createStubRspeedy as createRspeedy } from './createRspeedy.js'
 import { pluginStubRspeedyAPI } from './stub-rspeedy-api.plugin.js'
 
 describe('Web', () => {
   test('should not have template plugin for web', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
-    const rsbuild = await createRsbuild({
-      rsbuildConfig: {
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
         environments: {
           web: {},
         },
@@ -30,15 +30,15 @@ describe('Web', () => {
     expect(config).not.toBe(undefined)
 
     expect(
-      config?.plugins?.some(p => p?.constructor.name === 'LynxTemplatePlugin'),
+      config?.plugins?.some(p => p?.constructor.name === 'LynxEncodePlugin'),
     ).toBeFalsy()
   })
 
   test('should not have runtime wrapper plugin for web', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
-    const rsbuild = await createRsbuild({
-      rsbuildConfig: {
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
         environments: {
           web: {},
         },
@@ -63,8 +63,8 @@ describe('Web', () => {
   test('should have template plugin for lynx but not for web', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
-    const rsbuild = await createRsbuild({
-      rsbuildConfig: {
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
         environments: {
           lynx: {
             source: {
@@ -95,14 +95,24 @@ describe('Web', () => {
       webConfig?.plugins?.some(p =>
         p?.constructor.name === 'LynxTemplatePlugin'
       ),
+    ).toBeTruthy()
+
+    expect(
+      lynxConfig?.plugins?.some(p =>
+        p?.constructor.name === 'LynxEncodePlugin'
+      ),
+    ).toBeTruthy()
+
+    expect(
+      webConfig?.plugins?.some(p => p?.constructor.name === 'LynxEncodePlugin'),
     ).toBeFalsy()
   })
 
   test('should have web plugin for web but not for lynx and others', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
-    const rsbuild = await createRsbuild({
-      rsbuildConfig: {
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
         environments: {
           lynx: {
             source: {
@@ -146,8 +156,8 @@ describe('Web', () => {
   test('all-in-one-public-path-not-auto', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
-    const rsbuild = await createRsbuild({
-      rsbuildConfig: {
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
         source: {
           entry: {
             main: new URL('./fixtures/basic.tsx', import.meta.url).pathname,
@@ -186,8 +196,8 @@ describe('Web', () => {
   test('should have two bundle for lynx and web', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
-    const rsbuild = await createRsbuild({
-      rsbuildConfig: {
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
         source: {
           entry: {
             main: new URL('./fixtures/basic.tsx', import.meta.url).pathname,

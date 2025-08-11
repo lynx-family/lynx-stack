@@ -2,6 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { useI18n, useLang } from '@rspress/core/runtime';
+import { HomeLayout as BaseHomeLayout } from '@rspress/core/theme';
 import {
   containerStyle,
   descStyle,
@@ -10,8 +12,6 @@ import {
   titleStyle,
 } from '@rstack-dev/doc-ui/section-style';
 import { ToolStack } from '@rstack-dev/doc-ui/tool-stack';
-import { useI18n, useLang } from 'rspress/runtime';
-import { HomeLayout as BaseHomeLayout } from 'rspress/theme';
 
 import { MeteorsBackground } from './meteors-background.js';
 

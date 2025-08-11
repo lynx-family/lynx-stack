@@ -315,6 +315,8 @@ function transformSpread(
       }
     } else if (typeof value === 'function') {
       result[key] = `${snapshot.__id}:${index}:${key}`;
+    } else if (key === '__self' || key === '__source') {
+      // for react debug tools
     } else {
       if (!hasNoFlattenAttributes && noFlattenAttributes.has(key)) {
         hasNoFlattenAttributes = true;

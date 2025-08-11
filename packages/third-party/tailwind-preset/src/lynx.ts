@@ -6,10 +6,17 @@ import type { Config } from 'tailwindcss';
 import {
   DEFAULT_CORE_PLUGINS,
   LYNX_PLUGIN_MAP,
+  LYNX_UI_PLUGIN_MAP,
   ORDERED_LYNX_PLUGIN_NAMES,
+  resolveUIPluginEntries,
+  toEnabledLynxUIPluginSet,
   toEnabledSet,
 } from './core.js';
-import type { LynxPluginName, LynxPluginsOption } from './core.js';
+import type {
+  LynxPluginName,
+  LynxPluginsOption,
+  LynxUIPluginsOption,
+} from './core.js';
 import { lynxTheme } from './theme.js';
 
 /**
@@ -19,24 +26,37 @@ import { lynxTheme } from './theme.js';
 
 function createLynxPreset({
   lynxPlugins = true,
+  lynxUIPlugins = false,
   debug = false,
   theme,
 }: {
   lynxPlugins?: LynxPluginsOption;
+  lynxUIPlugins?: LynxUIPluginsOption;
   debug?: boolean;
   theme?: Config['theme'];
 } = {}): Partial<Config> {
-  const enabled = toEnabledSet(lynxPlugins);
+  const coreSetEnabled = toEnabledSet(lynxPlugins);
+  const uiSetEnabled = toEnabledLynxUIPluginSet(lynxUIPlugins);
 
   const defaultPluginName: LynxPluginName = 'defaults';
 
   const plugins: Config['plugins'] = [LYNX_PLUGIN_MAP[defaultPluginName]];
 
+  // Lynx Core Plugins
   for (const name of ORDERED_LYNX_PLUGIN_NAMES) {
     if (name === 'defaults') continue; // already pushed
-    if (enabled.has(name)) {
+    if (coreSetEnabled.has(name)) {
       plugins.push(LYNX_PLUGIN_MAP[name]);
-      if (debug) console.debug(`[Lynx] enabled plugin: ${name}`);
+      if (debug) console.debug(`[Lynx] enabled core plugin: ${name}`);
+    }
+  }
+
+  // Lynx UI Plugins
+  for (const [name, options] of resolveUIPluginEntries(lynxUIPlugins)) {
+    if (uiSetEnabled.has(name)) {
+      const fn = LYNX_UI_PLUGIN_MAP[name];
+      plugins.push(fn(options));
+      if (debug) console.debug(`[Lynx] enabled UI plugin: ${name}`);
     }
   }
 

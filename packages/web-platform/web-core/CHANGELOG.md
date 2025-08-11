@@ -1,5 +1,57 @@
 # @lynx-js/web-core
 
+## 0.15.5
+
+### Patch Changes
+
+- fix: load main-thread chunk in ESM format ([#1437](https://github.com/lynx-family/lynx-stack/pull/1437))
+
+  See [nodejs/node#59362](https://github.com/nodejs/node/issues/59362) for more details.
+
+- feat: support path() for `createQuerySelector` ([#1456](https://github.com/lynx-family/lynx-stack/pull/1456))
+
+  - Added `getPathInfo` API to `NativeApp` and its cross-thread handler for retrieving the path from a DOM node to the root.
+  - Implemented endpoint and handler registration in both background and UI threads.
+  - Implemented `nativeApp.getPathInfo()`
+
+- fix: when `onNativeModulesCall` is delayed in mounting, the NativeModules execution result may be undefined. ([#1457](https://github.com/lynx-family/lynx-stack/pull/1457))
+
+- fix: `onNativeModulesCall` && `onNapiModulesCall` use getter to get. ([#1466](https://github.com/lynx-family/lynx-stack/pull/1466))
+
+- Updated dependencies [[`29434ae`](https://github.com/lynx-family/lynx-stack/commit/29434aec853f14242f521316429cf07a93b8c371), [`fb7096b`](https://github.com/lynx-family/lynx-stack/commit/fb7096bb3c79166cd619a407095b8206eccb7918)]:
+  - @lynx-js/web-mainthread-apis@0.15.5
+  - @lynx-js/web-constants@0.15.5
+  - @lynx-js/web-worker-runtime@0.15.5
+  - @lynx-js/web-worker-rpc@0.15.5
+
+## 0.15.4
+
+### Patch Changes
+
+- feat: support `__ElementFromBinary` ([#1391](https://github.com/lynx-family/lynx-stack/pull/1391))
+
+- fix: crash on chrome<96 ([#1361](https://github.com/lynx-family/lynx-stack/pull/1361))
+
+  https://github.com/wasm-bindgen/wasm-bindgen/issues/4211#issuecomment-2505965903
+
+  https://github.com/WebAssembly/binaryen/issues/7358
+
+  The rust toolchain enables WASM feature `reference types` by default.
+
+  However this feature is not supported by chromium lower than version 96
+
+  Therefore we found a workaround for it.
+
+  In this implementation we detect if browser supports `reference types` first.
+
+  If user's browser supported it, we load the wasm file with `reference types` on, otherwise we load the wasm file with `reference types` off.
+
+- Updated dependencies [[`22ca433`](https://github.com/lynx-family/lynx-stack/commit/22ca433eb96b39724c6eb47ce0a938d291bbdef2), [`8645d12`](https://github.com/lynx-family/lynx-stack/commit/8645d1240ecb2005da52ab2ffeb10a5d08cc9cc2), [`143e481`](https://github.com/lynx-family/lynx-stack/commit/143e481b4353b3c3d2e8d9cc4f201442ca56f097)]:
+  - @lynx-js/web-mainthread-apis@0.15.4
+  - @lynx-js/web-constants@0.15.4
+  - @lynx-js/web-worker-runtime@0.15.4
+  - @lynx-js/web-worker-rpc@0.15.4
+
 ## 0.15.3
 
 ### Patch Changes

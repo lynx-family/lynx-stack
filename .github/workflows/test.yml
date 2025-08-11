@@ -72,7 +72,7 @@ jobs:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
     with:
-      runs-on: lynx-ubuntu-24.04-xlarge
+      runs-on: lynx-custom-container
       is-web: true
       run: |
         export NODE_OPTIONS="--max-old-space-size=32768"
@@ -99,12 +99,11 @@ jobs:
             env:
               - ENABLE_SSR=true
     with:
-      runs-on: lynx-ubuntu-24.04-xlarge
+      runs-on: lynx-custom-container
       is-web: true
       codecov-flags: "e2e"
       run: |
-        export ${{ join(matrix.config.env, ' ') }}
-        export NODE_OPTIONS="--max-old-space-size=32768"
+        export NODE_OPTIONS="--max-old-space-size=32768" ${{ join(matrix.config.env, ' ') }}
         export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
         pnpm --filter @lynx-js/web-tests run test --reporter='github,dot,junit,html'
         pnpm --filter @lynx-js/web-tests run coverage:ci
@@ -146,16 +145,18 @@ jobs:
         node packages/tools/canary-release/snapshot.js
         pnpm --recursive publish --no-git-checks --access public --registry=http://localhost:4873
         cd `mktemp -d`
-        npx --registry http://localhost:4873 create-rspeedy-canary@latest --template react --dir create-rspeedy-regression
+        npx --registry http://localhost:4873 create-rspeedy-canary@latest --template react --dir create-rspeedy-regression --tools eslint
         cd create-rspeedy-regression
         pnpm install --registry=http://localhost:4873
         pnpm run build
         pnpm run build --mode development
-        npx --registry http://localhost:4873 create-rspeedy-canary@latest --template react-vitest-rltl --dir create-rspeedy-regression-vitest-rltl
+        pnpm run lint
+        npx --registry http://localhost:4873 create-rspeedy-canary@latest --template react-vitest-rltl --dir create-rspeedy-regression-vitest-rltl --tools eslint
         cd create-rspeedy-regression-vitest-rltl
         pnpm install --registry=http://localhost:4873
         pnpm run build
         pnpm run build --mode development
+        pnpm run lint
         pnpm run test
   test-react:
     needs: build
@@ -246,7 +247,7 @@ jobs:
       - test-vitest
       - website
     if: always()
-    runs-on: lynx-ubuntu-24.04-medium
+    runs-on: ubuntu-latest
     name: Done
     steps:
       - run: exit 1

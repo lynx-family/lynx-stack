@@ -11,7 +11,7 @@
       "@/*": ["./src/*"],
     },
   },
-  "include": ["src", "lynx.config.js", "test"],
+  "include": ["src", "lynx.config.js", "test", "vitest.config.ts", "tailwind.config.ts"],
   "exclude": ["dist/"],
   "references": [
     { "path": "../../packages/react/tsconfig.json" },

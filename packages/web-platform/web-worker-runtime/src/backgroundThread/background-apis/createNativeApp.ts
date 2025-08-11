@@ -28,6 +28,7 @@ import { createJSObjectDestructionObserver } from './crossThreadHandlers/createJ
 import type { TimingSystem } from './createTimingSystem.js';
 import { registerUpdateGlobalPropsHandler } from './crossThreadHandlers/registerUpdateGlobalPropsHandler.js';
 import { registerUpdateI18nResource } from './crossThreadHandlers/registerUpdateI18nResource.js';
+import { createGetPathInfo } from './crossThreadHandlers/createGetPathInfo.js';
 
 let nativeAppCount = 0;
 const sharedData: Record<string, unknown> = {};
@@ -133,6 +134,7 @@ export async function createNativeApp(
     },
     callLepusMethod,
     setNativeProps,
+    getPathInfo: createGetPathInfo(uiThreadRpc),
     invokeUIMethod: createInvokeUIMethod(uiThreadRpc),
     setCard(tt) {
       registerPublicComponentEventHandler(

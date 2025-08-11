@@ -1,5 +1,15 @@
 # @lynx-js/tailwind-preset
 
+## 0.2.0
+
+### Minor Changes
+
+- Add support for Lynx UI plugin system with configurable options. ([#1363](https://github.com/lynx-family/lynx-stack/pull/1363))
+
+  - Introduced `lynxUIPlugins` option in `createLynxPreset`, allowing userland opt-in to Lynx UI specific plugins.
+
+  - Implemented `uiVariants` plugin as the first UI plugin, supporting `ui-*` variant prefixes (e.g. `ui-checked`, `ui-open`) with customizable mappings.
+
 ## 0.1.2
 
 ### Patch Changes

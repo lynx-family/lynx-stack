@@ -1,5 +1,13 @@
 # @lynx-js/react-alias-rsbuild-plugin
 
+## 0.10.11
+
+### Patch Changes
+
+- Fix the `Package subpath './compat' is not defined by "exports"` error. ([#1460](https://github.com/lynx-family/lynx-stack/pull/1460))
+
+## 0.10.10
+
 ## 0.10.9
 
 ### Patch Changes

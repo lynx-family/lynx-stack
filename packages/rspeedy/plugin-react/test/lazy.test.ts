@@ -3,20 +3,18 @@
 // LICENSE file in the root directory of this source tree.
 import path from 'node:path'
 
-import { createRsbuild } from '@rsbuild/core'
 import type { Rspack } from '@rsbuild/core'
 import { describe, expect, test, vi } from 'vitest'
 
-import { createRspeedy } from '@lynx-js/rspeedy'
-
+import { createStubRspeedy as createRspeedy } from './createRspeedy.js'
 import { pluginStubRspeedyAPI } from './stub-rspeedy-api.plugin.js'
 
 describe('Lazy', () => {
   test('alias for react', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
-    const rsbuild = await createRsbuild({
-      rsbuildConfig: {
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
         plugins: [
           pluginReactLynx({
             experimental_isLazyBundle: true,
@@ -55,8 +53,8 @@ describe('Lazy', () => {
   test('output.library', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
-    const rsbuild = await createRsbuild({
-      rsbuildConfig: {
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
         plugins: [
           pluginReactLynx({
             experimental_isLazyBundle: true,

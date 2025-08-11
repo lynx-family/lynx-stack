@@ -22,12 +22,14 @@ import { createMarkTimingInternal } from './crossThreadHandlers/createMainthread
 import { OffscreenDocument } from '@lynx-js/offscreen-document/webworker';
 import { _onEvent } from '@lynx-js/offscreen-document/webworker';
 import { registerUpdateDataHandler } from './crossThreadHandlers/registerUpdateDataHandler.js';
-const { prepareMainThreadAPIs } = await import('@lynx-js/web-mainthread-apis');
 
-export function startMainThreadWorker(
+export async function startMainThreadWorker(
   uiThreadPort: MessagePort,
   backgroundThreadPort: MessagePort,
 ) {
+  const { prepareMainThreadAPIs } = await import(
+    '@lynx-js/web-mainthread-apis'
+  );
   const uiThreadRpc = new Rpc(uiThreadPort, 'main-to-ui');
   const backgroundThreadRpc = new Rpc(backgroundThreadPort, 'main-to-bg');
   const { markTimingInternal, flushMarkTimingInternal } =

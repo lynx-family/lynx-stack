@@ -5,7 +5,11 @@ import { ListUpdateInfoRecording } from '../listUpdateInfo.js';
 import { __pendingListUpdates } from '../pendingListUpdates.js';
 import { SnapshotInstance } from '../snapshot.js';
 
-const platformInfoVirtualAttributes: Set<string> = /* @__PURE__ */ new Set<string>(['reuse-identifier']);
+const platformInfoVirtualAttributes: Set<string> = /* @__PURE__ */ new Set<string>([
+  'reuse-identifier',
+  'recyclable',
+]);
+
 const platformInfoAttributes: Set<string> = /* @__PURE__ */ new Set<string>([
   'reuse-identifier',
   'full-span',
@@ -15,6 +19,7 @@ const platformInfoAttributes: Set<string> = /* @__PURE__ */ new Set<string>([
   'estimated-height',
   'estimated-height-px',
   'estimated-main-axis-size-px',
+  'recyclable',
 ]);
 
 export interface PlatformInfo {
@@ -26,6 +31,7 @@ export interface PlatformInfo {
   'estimated-height'?: number;
   'estimated-height-px'?: number;
   'estimated-main-axis-size-px'?: number;
+  'recyclable'?: boolean;
 }
 
 function updateListItemPlatformInfo(
