@@ -106,6 +106,7 @@ import {
   __SetInlineStyles,
   __UpdateComponentID,
   __UpdateComponentInfo,
+  __GetAttributeByName,
 } from './pureElementPAPIs.js';
 import { createCrossThreadEvent } from './utils/createCrossThreadEvent.js';
 import { decodeCssOG } from './utils/decodeCssOG.js';
@@ -820,6 +821,7 @@ export function createMainThreadGlobalThis(
     __SwapElement,
     __UpdateListCallbacks,
     __GetConfig: __GetElementConfig,
+    __GetAttributeByName,
     __GetClasses,
     __AddClass: isCSSOG ? __AddClassForCSSOG : __AddClass,
     __SetClasses: isCSSOG ? __SetClassesForCSSOG : __SetClasses,

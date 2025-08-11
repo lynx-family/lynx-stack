@@ -417,6 +417,16 @@ test.describe('main thread api tests', () => {
     expect(ret.test).toBe('test-value');
   });
 
+  test('__GetAttributeByName', async ({ page }, { title }) => {
+    const ret = await page.evaluate(() => {
+      const page = globalThis.__CreatePage('page', 0);
+      globalThis.__SetAttribute(page, 'test-attr', 'val');
+      globalThis.__FlushElementTree();
+      return globalThis.__GetAttributeByName(page, 'test-attr');
+    });
+    expect(ret).toBe('val');
+  });
+
   test('__SetDataset', async ({ page }, { title }) => {
     const ret = await page.evaluate(() => {
       let root = globalThis.__CreatePage('page', 0);
