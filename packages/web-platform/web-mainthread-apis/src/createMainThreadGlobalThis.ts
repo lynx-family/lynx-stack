@@ -705,6 +705,7 @@ export function createMainThreadGlobalThis(
         createElementForElementTemplateData(childData, parentComponentUniId),
       );
     }
+    data.dataset !== undefined && __SetDataset(element, data.dataset);
     return element;
   };
 

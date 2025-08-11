@@ -1346,6 +1346,14 @@ test.describe('main thread api tests', () => {
       expect(result.targetPartLength).toBe(1);
       expect(result.targetPartExist).toBe(true);
     });
+
+    test('should apply dataset from template', async ({ page }) => {
+      const result = await page.evaluate(() => {
+        const element = globalThis.__ElementFromBinary('test-template', 0)[0];
+        return globalThis.__GetAttributes(element)['data-customdata'];
+      });
+      expect(result).toBe('customdata');
+    });
   });
 
   test('__UpdateComponentInfo', async ({ page }, { title }) => {
