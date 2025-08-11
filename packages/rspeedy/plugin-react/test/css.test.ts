@@ -7,7 +7,6 @@ import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { isRegExp } from 'node:util/types'
 
-import { createRsbuild } from '@rsbuild/core'
 import type {
   CSSLoaderOptions,
   PostCSSLoaderOptions,
@@ -17,8 +16,8 @@ import { describe, expect, test, vi } from 'vitest'
 
 import { CssExtractRspackPlugin } from '@lynx-js/css-extract-webpack-plugin'
 import { LAYERS } from '@lynx-js/react-webpack-plugin'
-import { createRspeedy } from '@lynx-js/rspeedy'
 
+import { createStubRspeedy as createRspeedy } from './createRspeedy.js'
 import { getLoaderOptions } from './getLoaderOptions.js'
 import { pluginStubRspeedyAPI } from './stub-rspeedy-api.plugin.js'
 import { pluginReactLynx } from '../src/pluginReactLynx.js'
@@ -28,8 +27,8 @@ const SASS_REGEXP = /\.s(?:a|c)ss$/.toString()
 
 describe('Plugins - CSS', () => {
   test('Use css-loader and CssExtractRspackPlugin.loader', async () => {
-    const rsbuild = await createRsbuild({
-      rsbuildConfig: {
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
         plugins: [pluginReactLynx(), pluginStubRspeedyAPI()],
       },
     })
@@ -47,13 +46,13 @@ describe('Plugins - CSS', () => {
   })
 
   test('Add custom postcss plugins', async () => {
-    const rsbuild = await createRsbuild(
+    const rsbuild = await createRspeedy(
       {
         cwd: path.resolve(
           path.dirname(fileURLToPath(import.meta.url)),
           'fixtures/postcss',
         ),
-        rsbuildConfig: {
+        rspeedyConfig: {
           plugins: [pluginReactLynx(), pluginStubRspeedyAPI()],
         },
       },
@@ -80,8 +79,8 @@ describe('Plugins - CSS', () => {
   })
 
   test('Remove lightningcss-loader', async () => {
-    const rsbuild = await createRsbuild({
-      rsbuildConfig: {
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
         environments: { lynx: {} },
         plugins: [pluginReactLynx(), pluginStubRspeedyAPI()],
       },
@@ -94,8 +93,8 @@ describe('Plugins - CSS', () => {
   })
 
   test('Not removing lightningcss-loader when using web', async () => {
-    const rsbuild = await createRsbuild({
-      rsbuildConfig: {
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
         environments: {
           web: {},
         },
@@ -124,8 +123,8 @@ describe('Plugins - CSS', () => {
   })
 
   test('Not removing lightningcss-loader when using web and lynx', async () => {
-    const rsbuild = await createRsbuild({
-      rsbuildConfig: {
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
         environments: {
           lynx: {},
           web: {
@@ -169,8 +168,8 @@ describe('Plugins - CSS', () => {
 
   describe('Layers', () => {
     test('Use ignore-css-loader for background layer', async () => {
-      const rsbuild = await createRsbuild({
-        rsbuildConfig: {
+      const rsbuild = await createRspeedy({
+        rspeedyConfig: {
           plugins: [pluginReactLynx(), pluginStubRspeedyAPI()],
         },
       })
@@ -200,8 +199,8 @@ describe('Plugins - CSS', () => {
 
     test('Use sass-loader for background layer', async () => {
       const { pluginSass } = await import('@rsbuild/plugin-sass')
-      const rsbuild = await createRsbuild({
-        rsbuildConfig: {
+      const rsbuild = await createRspeedy({
+        rspeedyConfig: {
           plugins: [
             pluginReactLynx(),
             pluginSass(),
@@ -231,8 +230,8 @@ describe('Plugins - CSS', () => {
     })
 
     test('Use css-loader for main-thread layer', async () => {
-      const rsbuild = await createRsbuild({
-        rsbuildConfig: {
+      const rsbuild = await createRspeedy({
+        rspeedyConfig: {
           plugins: [pluginReactLynx(), pluginStubRspeedyAPI()],
         },
       })
@@ -267,8 +266,8 @@ describe('Plugins - CSS', () => {
     })
 
     test('Use css-loader for main-thread layer with cssModule: true', async () => {
-      const rsbuild = await createRsbuild({
-        rsbuildConfig: {
+      const rsbuild = await createRspeedy({
+        rspeedyConfig: {
           tools: {
             cssLoader: {
               modules: true,
@@ -307,8 +306,8 @@ describe('Plugins - CSS', () => {
     })
 
     test('Use css-loader for main-thread layer with cssModule: "local"', async () => {
-      const rsbuild = await createRsbuild({
-        rsbuildConfig: {
+      const rsbuild = await createRspeedy({
+        rspeedyConfig: {
           tools: {
             cssLoader: {
               modules: 'local',
@@ -353,8 +352,8 @@ describe('Plugins - CSS', () => {
 
     test('Not use lightningcss-loader for background layer', async () => {
       const { pluginSass } = await import('@rsbuild/plugin-sass')
-      const rsbuild = await createRsbuild({
-        rsbuildConfig: {
+      const rsbuild = await createRspeedy({
+        rspeedyConfig: {
           environments: { lynx: {} },
           plugins: [
             pluginReactLynx(),
@@ -387,8 +386,8 @@ describe('Plugins - CSS', () => {
       const { pluginTypedCSSModules } = await import(
         '@rsbuild/plugin-typed-css-modules'
       )
-      const rsbuild = await createRsbuild({
-        rsbuildConfig: {
+      const rsbuild = await createRspeedy({
+        rspeedyConfig: {
           plugins: [
             pluginTypedCSSModules(),
             pluginReactLynx(),
@@ -417,8 +416,8 @@ describe('Plugins - CSS', () => {
     })
 
     test('Use CssExtractRspackPlugin.loader for main-thread layer', async () => {
-      const rsbuild = await createRsbuild({
-        rsbuildConfig: {
+      const rsbuild = await createRspeedy({
+        rspeedyConfig: {
           plugins: [pluginReactLynx(), pluginStubRspeedyAPI()],
         },
       })
@@ -444,8 +443,8 @@ describe('Plugins - CSS', () => {
 
     test('Use sass-loader for main-thread layer', async () => {
       const { pluginSass } = await import('@rsbuild/plugin-sass')
-      const rsbuild = await createRsbuild({
-        rsbuildConfig: {
+      const rsbuild = await createRspeedy({
+        rspeedyConfig: {
           plugins: [
             pluginReactLynx(),
             pluginSass(),
@@ -479,8 +478,8 @@ describe('Plugins - CSS', () => {
       const { pluginTypedCSSModules } = await import(
         '@rsbuild/plugin-typed-css-modules'
       )
-      const rsbuild = await createRsbuild({
-        rsbuildConfig: {
+      const rsbuild = await createRspeedy({
+        rspeedyConfig: {
           environments: { lynx: {} },
           plugins: [
             pluginReactLynx(),
@@ -514,8 +513,8 @@ describe('Plugins - CSS', () => {
 
     test('Not use lightningcss-loader for main-thread layer', async () => {
       const { pluginSass } = await import('@rsbuild/plugin-sass')
-      const rsbuild = await createRsbuild({
-        rsbuildConfig: {
+      const rsbuild = await createRspeedy({
+        rspeedyConfig: {
           environments: { lynx: {} },
           plugins: [
             pluginReactLynx(),
@@ -548,8 +547,8 @@ describe('Plugins - CSS', () => {
 
   describe('Inline CSS', () => {
     test('Use css-loader only', async () => {
-      const rsbuild = await createRsbuild({
-        rsbuildConfig: {
+      const rsbuild = await createRspeedy({
+        rspeedyConfig: {
           plugins: [pluginReactLynx(), pluginStubRspeedyAPI()],
         },
       })
@@ -580,8 +579,8 @@ describe('Plugins - CSS', () => {
 
     test('Use sass-loader and css-loader only', async () => {
       const { pluginSass } = await import('@rsbuild/plugin-sass')
-      const rsbuild = await createRsbuild({
-        rsbuildConfig: {
+      const rsbuild = await createRspeedy({
+        rspeedyConfig: {
           plugins: [pluginReactLynx(), pluginSass(), pluginStubRspeedyAPI()],
         },
       })

@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 import { createRsbuild } from '@rsbuild/core'
 import type { RsbuildPlugin } from '@rsbuild/core'
@@ -22,6 +23,7 @@ describe('React - alias', () => {
           }),
         ],
       },
+      cwd: path.dirname(fileURLToPath(import.meta.url)),
     })
 
     const [config] = await rsbuild.initConfigs()
@@ -162,6 +164,7 @@ describe('React - alias', () => {
           }),
         ],
       },
+      cwd: path.dirname(fileURLToPath(import.meta.url)),
     })
 
     const [config] = await rsbuild.initConfigs()
@@ -246,6 +249,7 @@ describe('React - alias', () => {
           } satisfies RsbuildPlugin,
         ],
       },
+      cwd: path.dirname(fileURLToPath(import.meta.url)),
     })
 
     await rsbuild.initConfigs()

@@ -758,6 +758,216 @@ describe('Plugins - Output', () => {
         `)
     })
   })
+
+  describe('output.filename.*', () => {
+    test('js: string', async () => {
+      const rsbuild = await createStubRspeedy({
+        output: {
+          filename: {
+            js: 'static/js/foo.[fullhash].js',
+          },
+        },
+      })
+
+      const config = await rsbuild.unwrapConfig()
+
+      expect(config.output?.filename).toMatchInlineSnapshot(
+        `"static/js/static/js/foo.[fullhash].js"`,
+      )
+    })
+
+    test('js: function', async () => {
+      const rsbuild = await createStubRspeedy({
+        output: {
+          filename: {
+            js: (pathData) => {
+              return pathData.filename + '.js'
+            },
+          },
+        },
+      })
+
+      const config = await rsbuild.unwrapConfig()
+
+      expect(config.output?.filename).toStrictEqual(expect.any(Function))
+    })
+
+    test('css: string', async () => {
+      const rsbuild = await createStubRspeedy({
+        output: {
+          filename: {
+            css: 'static/css/foo.[fullhash].css',
+          },
+        },
+      })
+
+      const config = await rsbuild.unwrapConfig()
+
+      expect(
+        config.plugins?.find(p =>
+          p && p.constructor.name === 'CssExtractRspackPlugin'
+        ),
+      ).toHaveProperty(
+        'options',
+        expect.objectContaining({
+          filename: '.rspeedy/static/css/foo.[fullhash].css',
+          chunkFilename: '.rspeedy/async/static/css/foo.[fullhash].css',
+        }),
+      )
+    })
+
+    test('css with output.distPath.css', async () => {
+      const rsbuild = await createStubRspeedy({
+        output: {
+          distPath: {
+            css: '',
+          },
+          filename: {
+            css: 'foo.[fullhash].css',
+          },
+        },
+      })
+
+      const config = await rsbuild.unwrapConfig()
+
+      expect(
+        config.plugins?.find(p =>
+          p && p.constructor.name === 'CssExtractRspackPlugin'
+        ),
+      ).toHaveProperty(
+        'options',
+        expect.objectContaining({
+          filename: 'foo.[fullhash].css',
+          chunkFilename: 'async/foo.[fullhash].css',
+        }),
+      )
+    })
+
+    test('css: function', async () => {
+      const rsbuild = await createStubRspeedy({
+        output: {
+          filename: {
+            css: (pathData) => {
+              return pathData.filename + '.css'
+            },
+          },
+        },
+      })
+
+      const config = await rsbuild.unwrapConfig()
+
+      expect(
+        config.plugins?.find(p =>
+          p && p.constructor.name === 'CssExtractRspackPlugin'
+        ),
+      ).toHaveProperty(
+        'options',
+        expect.objectContaining({
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          filename: expect.any(Function),
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          chunkFilename: expect.any(Function),
+        }),
+      )
+    })
+
+    test.each([
+      ['svg', 'svg'],
+      ['image', 'png'],
+      ['media', 'mp4'],
+      ['font', 'ttf'],
+      ['assets', 'txt'],
+    ])('%s: string', async (type, ext) => {
+      const rsbuild = await createStubRspeedy({
+        output: {
+          filename: {
+            [type]: `foo.[fullhash].${ext}`,
+          },
+        },
+        source: {
+          assetsInclude: /\.txt$/,
+        },
+      })
+
+      const config = await rsbuild.unwrapConfig()
+
+      const rule = config.module?.rules?.find(rule =>
+        rule && rule !== '...' && rule.test
+        && (rule.test as RegExp).test(`foo.${ext}`)
+      ) as Rspack.RuleSetRule
+
+      expect(rule).not.toBeUndefined()
+      expect(rule.oneOf).toHaveLength(4)
+      const ruleWithGenerator = rule.oneOf?.filter((
+        rule,
+      ): rule is Rspack.RuleSetRule =>
+        !!(typeof rule === 'object' && rule?.generator)
+      )
+      expect(ruleWithGenerator).toHaveLength(2)
+      expect(
+        ruleWithGenerator?.every(rule =>
+          rule.generator?.['filename']
+            === `static/${type}/foo.[fullhash].${ext}`
+        ),
+      ).toBe(true)
+    })
+
+    test.each([
+      ['svg', 'svg'],
+      ['image', 'png'],
+      ['media', 'mp4'],
+      ['font', 'ttf'],
+      ['assets', 'txt'],
+    ])('%s: function', async (type, ext) => {
+      const rsbuild = await createStubRspeedy({
+        output: {
+          filename: {
+            [type]: () => {
+              return `foo.${ext}`
+            },
+          },
+        },
+        source: {
+          assetsInclude: /\.txt$/,
+        },
+      })
+
+      const config = await rsbuild.unwrapConfig()
+
+      const rule = config.module?.rules?.find(rule =>
+        rule && rule !== '...' && rule.test
+        && (rule.test as RegExp).test(`foo.${ext}`)
+      ) as Rspack.RuleSetRule
+
+      expect(rule).not.toBeUndefined()
+      expect(rule.oneOf).toHaveLength(4)
+      const ruleWithGenerator = rule.oneOf?.filter((
+        rule,
+      ): rule is Rspack.RuleSetRule =>
+        !!(typeof rule === 'object' && rule?.generator)
+      )
+      expect(ruleWithGenerator).toHaveLength(2)
+      expect(
+        ruleWithGenerator?.every(rule =>
+          typeof rule.generator?.['filename'] === 'function'
+        ),
+      ).toBe(true)
+    })
+
+    test('wasm: string', async () => {
+      const rsbuild = await createStubRspeedy({
+        output: {
+          filename: { wasm: 'foo.[fullhash].wasm' },
+        },
+      })
+
+      const config = await rsbuild.unwrapConfig()
+
+      expect(config.output?.webassemblyModuleFilename).toMatchInlineSnapshot(
+        `"static/wasm/foo.[fullhash].wasm"`,
+      )
+    })
+  })
 })
 
 function getAssetRules(config: Rspack.Configuration) {

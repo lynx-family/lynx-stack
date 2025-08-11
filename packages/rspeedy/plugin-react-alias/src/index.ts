@@ -39,14 +39,14 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
       const reactLynxPkg = require.resolve('@lynx-js/react/package.json', {
         paths: [rootPath ?? api.context.rootPath],
       })
-      const reactLynxPkgContent = require(reactLynxPkg) as { version: string }
-      const version = reactLynxPkgContent.version
+      const { version } = require(reactLynxPkg) as { version: string }
 
       const reactLynxDir = path.dirname(reactLynxPkg)
       const resolve = createLazyResolver(
-        reactLynxDir,
+        rootPath ?? api.context.rootPath,
         lazy ? ['lazy', 'import'] : ['import'],
       )
+      const resolvePreact = createLazyResolver(reactLynxDir, ['import'])
 
       api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
         return mergeRsbuildConfig(config, {
@@ -190,7 +190,7 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
         ]
         await Promise.all(
           preactEntries.map(entry =>
-            resolve(entry).then(value => {
+            resolvePreact(entry).then(value => {
               chain
                 .resolve
                 .alias
