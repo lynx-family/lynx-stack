@@ -19,6 +19,7 @@ export class ImageSrc
     'placeholder',
     'blur-radius',
     'crossorigin',
+    'referrerpolicy',
   ];
   #dom: HTMLElement;
 
@@ -46,6 +47,9 @@ export class ImageSrc
 
   @registerAttributeHandler('crossorigin', true)
   #handleCrossorigin = bindToAttribute(this.#getImg, 'crossorigin');
+
+  @registerAttributeHandler('referrerpolicy', true)
+  #handleReferrerpolicy = bindToAttribute(this.#getImg, 'referrerpolicy');
 
   #onImageError = () => {
     const currentSrc = this.#getImg().src;

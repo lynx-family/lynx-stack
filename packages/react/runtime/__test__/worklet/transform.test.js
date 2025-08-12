@@ -20,6 +20,7 @@ describe('WorkletJsFnTransform', () => {
     result = transformToWorklet(fn);
     expect(result._fn).toBe(fn);
     expect(result._jsFnId).toEqual(2);
+    expect(JSON.stringify(result)).toBe('{"_jsFnId":2,"_fn":"[BackgroundFunction]"}');
   });
 
   it('should raise error when argument is not a function', () => {

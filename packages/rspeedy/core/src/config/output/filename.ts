@@ -2,6 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import type { Rspack } from '@rsbuild/core'
+
 /**
  * {@inheritdoc Output.filename}
  *
@@ -118,8 +120,31 @@ export interface Filename {
    *
    * - Development: `'[name].js'`
    * - Production: `'[name].[contenthash:8].js'`
+   *
+   * @example
+   *
+   * - Using a function to dynamically set the filename based on the file information:
+   *
+   * ```js
+   * import { defineConfig } from '@lynx-js/rspeedy'
+   *
+   * export default defineConfig({
+   *   output: {
+   *     filename: {
+   *       js: (pathData, assetInfo) => {
+   *         console.log(pathData); // You can check the contents of pathData here
+   *
+   *         if (pathData.chunk?.name === 'index') {
+   *           return isProd ? '[name].[contenthash:8].js' : '[name].js';
+   *         }
+   *         return '/some-path/[name].js';
+   *       },
+   *     },
+   *   },
+   * })
+   * ```
    */
-  js?: string | undefined
+  js?: Rspack.Filename | undefined
 
   /**
    * The name of the CSS files.
@@ -129,8 +154,31 @@ export interface Filename {
    * Default values:
    *
    * - `'[name].css'`
+   *
+   * @example
+   *
+   * - Using a function to dynamically set the filename based on the file information:
+   *
+   * ```js
+   * import { defineConfig } from '@lynx-js/rspeedy'
+   *
+   * export default defineConfig({
+   *   output: {
+   *     filename: {
+   *       css: (pathData, assetInfo) => {
+   *         console.log(pathData); // You can check the contents of pathData here
+   *
+   *         if (pathData.chunk?.name === 'index') {
+   *           return isProd ? '[name].[contenthash:8].css' : '[name].css';
+   *         }
+   *         return '/some-path/[name].css';
+   *       },
+   *     },
+   *   },
+   * })
+   * ```
    */
-  css?: string | undefined
+  css?: Rspack.CssFilename | undefined
 
   /**
    * The name of the SVG images.
@@ -141,7 +189,7 @@ export interface Filename {
    *
    * - `'[name].[contenthash:8].svg'`
    */
-  svg?: string | undefined
+  svg?: Rspack.AssetModuleFilename | undefined
 
   /**
    * The name of the font files.
@@ -152,7 +200,7 @@ export interface Filename {
    *
    * - `'[name].[contenthash:8][ext]'`
    */
-  font?: string | undefined
+  font?: Rspack.AssetModuleFilename | undefined
 
   /**
    * The name of non-SVG images.
@@ -163,7 +211,7 @@ export interface Filename {
    *
    * - `'[name].[contenthash:8][ext]'`
    */
-  image?: string | undefined
+  image?: Rspack.AssetModuleFilename | undefined
 
   /**
    * The name of media assets, such as video.
@@ -174,5 +222,27 @@ export interface Filename {
    *
    * - `'[name].[contenthash:8][ext]'`
    */
-  media?: string | undefined
+  media?: Rspack.AssetModuleFilename | undefined
+
+  /**
+   * The name of WebAssembly files.
+   *
+   * @remarks
+   *
+   * Default values:
+   *
+   * - `'[hash].module.wasm'`
+   */
+  wasm?: Rspack.WebassemblyModuleFilename
+
+  /**
+   * The name of other assets, except for above (image, svg, font, html, wasm...)
+   *
+   * @remarks
+   *
+   * Default values:
+   *
+   * - `'[name].[contenthash:8][ext]'`
+   */
+  assets?: Rspack.AssetModuleFilename
 }

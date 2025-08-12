@@ -18,32 +18,6 @@ import type { Tools } from './tools/index.js'
  */
 export interface Config {
   /**
-   * The Rsbuild provider.
-   *
-   * @example
-   * You can switch from Rspack to Webpack by:
-   *
-   * - Use `webpackProvider` from `@rsbuild/webpack`
-   * - Add `pluginSwc` from `@rsbuild/plugin-webpack-swc` for TypeScript transpilation
-   *
-   * ```ts
-   * import { defineConfig } from '@lynx-js/rspeedy'
-   * import { webpackProvider } from '@rsbuild/webpack'
-   * import { pluginSwc } from '@rsbuild/plugin-webpack-swc'
-   *
-   * export default defineConfig({
-   *   provider: webpackProvider,
-   *   plugins: [
-   *     pluginSwc(),
-   *   ],
-   * })
-   * ```
-   *
-   * @alpha
-   */
-  provider?: RsbuildConfig['provider']
-
-  /**
    * The {@link Dev} option is used to control the behavior related with development. Including: HMR, DevServer, etc.
    */
   dev?: Dev | undefined

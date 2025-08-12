@@ -16,7 +16,6 @@ export function toRsbuildConfig(
   config: Config,
 ): UndefinedOnPartialDeep<RsbuildConfig> {
   return {
-    provider: config.provider,
     dev: {
       watchFiles: config.dev?.watchFiles,
       // We expect to use different default writeToDisk with Rsbuild

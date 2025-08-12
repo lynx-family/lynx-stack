@@ -16,7 +16,7 @@ import {
 export class XInputAttribute
   implements InstanceType<AttributeReactiveClass<typeof HTMLElement>>
 {
-  static observedAttributes = ['value', 'disabled'];
+  static observedAttributes = ['value', 'disabled', 'autocomplete'];
   #dom: HTMLElement;
 
   #getInputElement = genDomGetter<HTMLInputElement>(
@@ -44,6 +44,12 @@ export class XInputAttribute
     this.#getInputElement,
     'disabled',
     (value) => (value !== null ? '' : null),
+  );
+
+  @registerAttributeHandler('autocomplete', true)
+  #handleAutocomplete = bindToAttribute(
+    this.#getInputElement,
+    'autocomplete',
   );
 
   constructor(dom: HTMLElement) {

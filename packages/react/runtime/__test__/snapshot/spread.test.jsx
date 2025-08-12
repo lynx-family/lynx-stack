@@ -648,4 +648,35 @@ describe('spreadUpdate', () => {
     patch = takeGlobalSnapshotPatch();
     expect(patch).toMatchInlineSnapshot(`[]`);
   });
+
+  it('should remove __self and __source when spreading props onto element', async function() {
+    let componentProps;
+    function Child(props) {
+      componentProps = JSON.stringify(props);
+      return <text {...props}>1</text>;
+    }
+
+    function Comp() {
+      const [spread, setSpread] = useState({
+        id: 'id_str',
+      });
+      return (
+        <view>
+          <Child {...spread} key='key' data-outside={'outside'} __self={'self'} __source={'source'} />
+        </view>
+      );
+    }
+
+    globalEnvManager.switchToBackground();
+    initGlobalSnapshotPatch();
+    render(<Comp />, scratchBackground);
+
+    const patchStr = JSON.stringify(takeGlobalSnapshotPatch());
+    expect(patchStr).not.toContain('source');
+    expect(patchStr).not.toContain('self');
+    expect(patchStr).toContain('outside');
+    expect(componentProps).toContain('source');
+    expect(componentProps).toContain('self');
+    expect(componentProps).toContain('outside');
+  });
 });

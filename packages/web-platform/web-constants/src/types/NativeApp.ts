@@ -99,7 +99,7 @@ export const enum ErrorCode {
 
 export interface InvokeCallbackRes {
   code: ErrorCode;
-  data?: string;
+  data?: unknown;
 }
 
 export interface NativeApp {
@@ -150,6 +150,15 @@ export interface NativeApp {
     root_unique_id: number,
   ) => void;
 
+  getPathInfo: (
+    type: IdentifierType,
+    identifier: string,
+    component_id: string,
+    first_only: boolean,
+    callback: (ret: InvokeCallbackRes) => void,
+    root_unique_id?: number,
+  ) => void;
+
   setCard(tt: NativeTTObject): void;
 
   // Timing related
@@ -170,6 +179,21 @@ export interface NativeApp {
    * Support from Lynx 3.0
    */
   profileEnd: () => void;
+
+  /***
+   * Support from Lynx 3.0
+   */
+  profileMark: () => void;
+
+  /**
+   * Support from Lynx 3.0
+   */
+  profileFlowId: () => number;
+
+  /**
+   * Support from Lynx 2.18
+   */
+  isProfileRecording: () => boolean;
 
   triggerComponentEvent(id: string, params: {
     eventDetail: CloneableObject;

@@ -19,6 +19,7 @@ import { registerDispatchLynxViewEventHandler } from './crossThreadHandlers/regi
 import { registerTriggerElementMethodEndpointHandler } from './crossThreadHandlers/registerTriggerElementMethodEndpointHandler.js';
 import type { StartUIThreadCallbacks } from './startUIThread.js';
 import { registerReportErrorHandler } from './crossThreadHandlers/registerReportErrorHandler.js';
+import { registerGetPathInfoHandler } from './crossThreadHandlers/registerGetPathInfoHandler.js';
 
 export function startBackground(
   backgroundRpc: Rpc,
@@ -48,6 +49,10 @@ export function startBackground(
   registerNapiModulesCallHandler(
     backgroundRpc,
     callbacks.napiModulesCall,
+  );
+  registerGetPathInfoHandler(
+    backgroundRpc,
+    shadowRoot,
   );
   registerDispatchLynxViewEventHandler(backgroundRpc, shadowRoot);
   registerTriggerElementMethodEndpointHandler(backgroundRpc, shadowRoot);

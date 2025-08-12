@@ -45,7 +45,7 @@ export function App() {
             to see updates!
           </text>
         </view>
-        <view style={{ flex: 1 }}></view>
+        <view style={{ flex: 1 }} />
       </view>
     </view>
   )

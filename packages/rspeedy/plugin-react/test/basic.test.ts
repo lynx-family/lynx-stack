@@ -9,8 +9,7 @@ import { fileURLToPath } from 'node:url'
 
 import { describe, expect, test, vi } from 'vitest'
 
-import { createRspeedy } from '@lynx-js/rspeedy'
-
+import { createStubRspeedy as createRspeedy } from './createRspeedy.js'
 import { pluginStubRspeedyAPI } from './stub-rspeedy-api.plugin.js'
 
 vi

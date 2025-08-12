@@ -33,14 +33,28 @@ if (casename) {
       lynxView.setAttribute('lynx-group-id', '2');
     }
     lynxView.injectStyleRules = [`.injected-style-rules{background:green}`];
-    lynxView.onNativeModulesCall = (name, data, moduleName) => {
-      if (name === 'getColor' && moduleName === 'CustomModule') {
-        return data.color;
-      }
-      if (name === 'getColor' && moduleName === 'bridge') {
-        return data.color;
-      }
-    };
+    if (casename === 'api-nativemodules-call-delay') {
+      setTimeout(() => {
+        lynxView.onNativeModulesCall = (name, data, moduleName) => {
+          if (name === 'getColor' && moduleName === 'CustomModule') {
+            return data.color;
+          }
+          if (name === 'getColor' && moduleName === 'bridge') {
+            return data.color;
+          }
+        };
+      }, 2500);
+    } else {
+      lynxView.onNativeModulesCall = (name, data, moduleName) => {
+        if (name === 'getColor' && moduleName === 'CustomModule') {
+          return data.color;
+        }
+        if (name === 'getColor' && moduleName === 'bridge') {
+          return data.color;
+        }
+      };
+    }
+
     if (casename.includes('custom-template-loader')) {
       lynxView.customTemplateLoader = async () => {
         const template: LynxTemplate = {

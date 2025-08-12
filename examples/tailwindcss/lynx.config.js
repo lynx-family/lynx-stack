@@ -1,7 +1,8 @@
-import { defineConfig } from '@lynx-js/rspeedy';
+import { pluginTailwindCSS } from 'rsbuild-plugin-tailwindcss';
+
 import { pluginQRCode } from '@lynx-js/qrcode-rsbuild-plugin';
 import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin';
-import { pluginTailwindCSS } from 'rsbuild-plugin-tailwindcss';
+import { defineConfig } from '@lynx-js/rspeedy';
 
 export default defineConfig({
   plugins: [

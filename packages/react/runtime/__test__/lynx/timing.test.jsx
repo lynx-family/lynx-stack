@@ -100,6 +100,9 @@ describe('setState timing api', () => {
       {
         "data": "{"patchList":[{"id":3,"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_2",3,0,null,4,3,4,0,1,1,3,4,null,1,-2,3,null]}],"flushOptions":{"__lynx_timing_flag":"__lynx_timing_actual_fmp"}}",
         "patchOptions": {
+          "flowIds": [
+            666,
+          ],
           "pipelineOptions": {
             "dsl": "reactLynx",
             "needTimestamps": false,
@@ -179,6 +182,9 @@ describe('attribute timing api', () => {
       {
         "data": "{"patchList":[{"id":6,"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_4",3,4,3,[{"__ltf":"__lynx_timing_actual_fmp"}],0,null,4,3,4,0,1,1,3,4,null,1,-2,3,null]}]}",
         "patchOptions": {
+          "flowIds": [
+            666,
+          ],
           "pipelineOptions": {
             "dsl": "reactLynx",
             "needTimestamps": true,
@@ -368,6 +374,9 @@ describe('attribute timing api', () => {
       {
         "data": "{"patchList":[{"id":9,"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_6",3,4,3,[{"__ltf":"__lynx_timing_actual_fmp"}],0,null,4,3,4,0,1,1,3,4,null,1,-2,3,null]}]}",
         "patchOptions": {
+          "flowIds": [
+            666,
+          ],
           "pipelineOptions": {
             "dsl": "reactLynx",
             "needTimestamps": true,
@@ -540,6 +549,9 @@ describe('attribute timing api', () => {
         {
           "data": "{"patchList":[{"id":14,"snapshotPatch":[3,-2,1,444]}]}",
           "patchOptions": {
+            "flowIds": [
+              666,
+            ],
             "pipelineOptions": {
               "dsl": "reactLynx",
               "needTimestamps": false,
@@ -706,6 +718,9 @@ describe('attribute timing api', () => {
         {
           "data": "{"patchList":[{"id":17,"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_15",3,4,3,[{"xxx":333,"__lynx_timing_flag":"__lynx_timing_actual_fmp"}],0,null,4,3,4,0,1,1,3,4,null,1,-2,3,null]}]}",
           "patchOptions": {
+            "flowIds": [
+              666,
+            ],
             "pipelineOptions": {
               "dsl": "reactLynx",
               "needTimestamps": true,
@@ -819,6 +834,9 @@ describe('attribute timing api', () => {
         {
           "data": "{"patchList":[{"id":18,"snapshotPatch":[3,3,0,{"xxx":666,"__lynx_timing_flag":"__lynx_timing_actual_fmp"}]}]}",
           "patchOptions": {
+            "flowIds": [
+              666,
+            ],
             "pipelineOptions": {
               "dsl": "reactLynx",
               "needTimestamps": false,

@@ -13,6 +13,9 @@ export function createPerformanceApis(timingSystem: TimingSystem): Pick<
   | 'bindPipelineIdWithTimingFlag'
   | 'profileStart'
   | 'profileEnd'
+  | 'profileMark'
+  | 'profileFlowId'
+  | 'isProfileRecording'
 > {
   let inc = 0;
   const performanceApis = {
@@ -47,6 +50,17 @@ export function createPerformanceApis(timingSystem: TimingSystem): Pick<
     },
     profileEnd: () => {
       console.error('NYI: profileEnd. This is an issue of lynx-core.');
+    },
+    profileMark: () => {
+      console.error('NYI: profileMark. This is an issue of lynx-core.');
+    },
+    profileFlowId: () => {
+      console.error('NYI: profileFlowId. This is an issue of lynx-core.');
+      return 0;
+    },
+    isProfileRecording: () => {
+      console.error('NYI: isProfileRecording. This is an issue of lynx-core.');
+      return false;
     },
   };
   return performanceApis;

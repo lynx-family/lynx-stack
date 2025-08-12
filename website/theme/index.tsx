@@ -9,4 +9,4 @@ export { HomeLayout };
 
 // The eslint-plugin-import cannot resolve `@rspress/core`
 // eslint-disable-next-line import/export
-export * from 'rspress/theme';
+export * from '@rspress/core/theme';

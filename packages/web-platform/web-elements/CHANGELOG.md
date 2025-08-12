@@ -1,5 +1,18 @@
 # @lynx-js/web-elements
 
+## 0.8.4
+
+### Patch Changes
+
+- feat: add autocomplete attribute support for x-input component ([#1444](https://github.com/lynx-family/lynx-stack/pull/1444))
+
+  Implements autocomplete attribute forwarding from the x-input custom element to the internal HTML input element in the shadow DOM. This enables standard browser autocomplete functionality for x-input elements.
+
+- Add referrerpolicy attribute support to x-image web component ([#1420](https://github.com/lynx-family/lynx-stack/pull/1420))
+
+- Updated dependencies []:
+  - @lynx-js/web-elements-template@0.8.4
+
 ## 0.8.3
 
 ### Patch Changes

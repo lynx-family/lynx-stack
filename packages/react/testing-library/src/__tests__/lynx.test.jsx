@@ -6,11 +6,11 @@ describe('lynx global API', () => {
     lynx.getJSModule('GlobalEventEmitter')
       .addListener('onDataChanged', cb);
 
-    lynx.getJSModule('GlobalEventEmitter').emit('onDataChanged', {
+    lynx.getJSModule('GlobalEventEmitter').emit('onDataChanged', [{
       data: {
         foo: 'bar',
       },
-    });
+    }]);
     expect(cb).toBeCalledTimes(1);
     expect(cb.mock.calls).toMatchInlineSnapshot(`
       [

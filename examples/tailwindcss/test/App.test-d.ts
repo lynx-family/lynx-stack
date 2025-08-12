@@ -1,7 +1,10 @@
 import { assertType, describe, test } from 'vitest';
-import type { JSX } from '@lynx-js/react';
+
 import { App } from '@/App.js';
 import { cn } from '@/utils.js';
+import type { JSX } from '@lynx-js/react';
+
+const handler = (prev: boolean): boolean => !prev;
 
 describe('App Component Type Tests', () => {
   test('App should return JSX.Element', () => {
@@ -10,14 +13,13 @@ describe('App Component Type Tests', () => {
   });
 
   test('bindtap handler should toggle boolean state', () => {
-    const handler = (prev: boolean): boolean => !prev;
     assertType<(prev: boolean) => boolean>(handler);
   });
 });
 
 describe('cn utility', () => {
   test('cn() returns string', () => {
-    const result = cn('a', 'b', false && 'c');
+    const result = cn('a', 'b', 'c');
     assertType<string>(result);
   });
 });

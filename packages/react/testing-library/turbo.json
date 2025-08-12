@@ -8,7 +8,7 @@
         "@lynx-js/testing-environment#build"
       ],
       "inputs": [
-        "src"
+        "src/**"
       ],
       "outputs": ["dist/**"]
     }

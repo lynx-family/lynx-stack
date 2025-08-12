@@ -9,7 +9,7 @@
     "checkJs": true,
     "isolatedDeclarations": false,
   },
-  "include": ["src", "lynx.config.js", "test"],
+  "include": ["src", "lynx.config.js", "test", "vitest.config.ts"],
   "references": [
     { "path": "../../packages/react/tsconfig.json" },
     { "path": "../../packages/rspeedy/core/tsconfig.build.json" },

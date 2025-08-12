@@ -1,5 +1,5 @@
 use inline_style_parser::parse_inline_style::Transformer;
-use inline_style_parser::{is_newline, is_white_space, parse_inline_style};
+use inline_style_parser::{char_code_definitions::is_white_space, parse_inline_style};
 
 use crate::str_to_u16_slice;
 use crate::transformer::constants::{
@@ -136,7 +136,7 @@ pub fn query_transform_rules<'a>(
     let mut ii = 0;
     while current_offset < value_end && ii < val_fields.len() {
       let code = value[current_offset];
-      if (ii % 2 == 0 && !is_white_space!(code)) || (ii % 2 == 1 && is_white_space!(code)) {
+      if (ii % 2 == 0 && !is_white_space(code)) || (ii % 2 == 1 && is_white_space(code)) {
         val_fields[ii] = current_offset;
         ii += 1;
       }

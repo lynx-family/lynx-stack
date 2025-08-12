@@ -7,7 +7,7 @@
         "build:wasm-bindgen"
       ],
       "inputs": [
-        "src"
+        "src/**"
       ],
       "outputs": [
         "dist"
