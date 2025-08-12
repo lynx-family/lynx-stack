@@ -647,6 +647,34 @@ describe('Config', () => {
 
       expect(encodePlugin).toHaveProperty('options', { inlineScripts: true })
     })
+
+    test('output.inlineScripts defaults to `false`, when chunkSplit strategy is not `all-in-one`', async () => {
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+      const rsbuild = await createRspeedy({
+        rspeedyConfig: {
+          plugins: [
+            pluginReactLynx(),
+            pluginStubRspeedyAPI(),
+          ],
+          environments: {
+            lynx: {},
+          },
+          performance: {
+            chunkSplit: {
+              strategy: 'split-by-size',
+            },
+          },
+        },
+      })
+
+      const [config] = await rsbuild.initConfigs()
+
+      const encodePlugin = config?.plugins?.find(p =>
+        p && p.constructor.name === 'LynxEncodePlugin'
+      )
+
+      expect(encodePlugin).toHaveProperty('options', { inlineScripts: false })
+    })
   })
 
   describe('Output Filename', () => {
