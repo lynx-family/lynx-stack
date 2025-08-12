@@ -208,6 +208,7 @@ describe('Plugins - Terminal', () => {
 
       // @ts-expect-error xxx
       resolve('bar')
+      await Promise.resolve()
 
       await expect.poll(() => renderUnicodeCompact).toBeCalledTimes(2)
       expect(renderUnicodeCompact).toBeCalledWith(
@@ -500,11 +501,15 @@ async function usingDevServer(rsbuild: RsbuildInstance) {
   return {
     port,
     urls,
-    async waitDevCompileDone(timeout?: number) {
-      await vi.waitUntil(() => done, { timeout: timeout ?? 5000 })
+    async waitDevCompileDone() {
+      await vi.waitUntil(() => done, {
+        timeout: process.env['CI'] ? 50_000 : 5_000,
+      })
     },
-    async waitDevCompileSuccess(timeout?: number) {
-      await vi.waitUntil(() => !hasErrors, { timeout: timeout ?? 5000 })
+    async waitDevCompileSuccess() {
+      await vi.waitUntil(() => !hasErrors, {
+        timeout: process.env['CI'] ? 50_000 : 5_000,
+      })
     },
     hasErrors,
     async [Symbol.asyncDispose]() {
