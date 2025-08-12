@@ -465,9 +465,6 @@ importers:
       '@rsbuild/plugin-typed-css-modules':
         specifier: 1.0.3
         version: 1.0.3(@rsbuild/core@1.4.15)
-      '@rsbuild/plugin-webpack-swc':
-        specifier: 1.1.2
-        version: 1.1.2(@rsbuild/core@1.4.15)
       tailwindcss:
         specifier: ^3.4.17
         version: 3.4.17
@@ -2205,63 +2202,6 @@ packages:
   '@microsoft/tsdoc@0.15.1':
     resolution: {integrity: sha512-4aErSrCR/On/e5G2hDP0wjooqDdauzEbIq8hIkIe5pXV0rtWJZvdCEKL0ykZxex+IxIwBp0eGeV48hQN07dXtw==}
 
-  '@modern-js/swc-plugins-darwin-arm64@0.6.11':
-    resolution: {integrity: sha512-UMH0bo20vcD10//F7KaINLfuHawQBVcWCCyJvkYOiBt7e1tUjeybKu+y6eNq1USyFVElEMul8ytnYdwAS9sY+w==}
-    engines: {node: '>=14.12'}
-    cpu: [arm64]
-    os: [darwin]
-
-  '@modern-js/swc-plugins-darwin-x64@0.6.11':
-    resolution: {integrity: sha512-qLcXAnM/IGcZX7B0MvxSdZjvgGofhOtHaEdj8CFkt75CzriBMu7lrGsRP4+paXbFAgM4vp7ZV7julaFrrDCoZw==}
-    engines: {node: '>=14.12'}
-    cpu: [x64]
-    os: [darwin]
-
-  '@modern-js/swc-plugins-linux-arm64-gnu@0.6.11':
-    resolution: {integrity: sha512-3WcTpQqJp7RM/i8lLe+GjOCx17ljKdPbxlIY4LkJe+SQXATd3YducTtNqsEAdBA8Au907rI1ImuhN0kxvR97jQ==}
-    engines: {node: '>=14.12'}
-    cpu: [arm64]
-    os: [linux]
-
-  '@modern-js/swc-plugins-linux-arm64-musl@0.6.11':
-    resolution: {integrity: sha512-RFE3xJWbABM8ZzPMVqlr3qovgnwamgpGjGN15rJ4tVqieO2FORQ14xSQE1ROBun6kIADUD+TxnepTlGb7EJg0w==}
-    engines: {node: '>=14.12'}
-    cpu: [arm64]
-    os: [linux]
-
-  '@modern-js/swc-plugins-linux-x64-gnu@0.6.11':
-    resolution: {integrity: sha512-vSDF5aznEtnS0kHFm7UXHHaFzEZEyTV+CTQOVEp84hU5+HW1fMR+MFmbeCJnqXpB+R8Kg93SL4KWePGzm2ZNWw==}
-    engines: {node: '>=14.12'}
-    cpu: [x64]
-    os: [linux]
-
-  '@modern-js/swc-plugins-linux-x64-musl@0.6.11':
-    resolution: {integrity: sha512-jfwQeuSmHbgvw9fjFRi5ZkLWejF8WZkYew0MGHqkSyLYZU+p7RgGo+tSpT4CK+b6p9qzh8LxoFpYjx6YycCY/w==}
-    engines: {node: '>=14.12'}
-    cpu: [x64]
-    os: [linux]
-
-  '@modern-js/swc-plugins-win32-arm64-msvc@0.6.11':
-    resolution: {integrity: sha512-MWbuMTdGZ81Xce+OmnM3xsKKQIHmp9Eq0FlueRIPQdSLCO6IogIjALsMum4Vd1tRnEosKXj0xcuD4IsAWgtW6w==}
-    engines: {node: '>=14.12'}
-    cpu: [arm64]
-    os: [win32]
-
-  '@modern-js/swc-plugins-win32-x64-msvc@0.6.11':
-    resolution: {integrity: sha512-UH4BeAjfs7Z6sZQOaFjgOB9h99qAPRtRFbmkQ+77FDlwNdjii0xPJvdNPCxAJITnqHjHSqrbz9rFDSrWnI9eKg==}
-    engines: {node: '>=14.12'}
-    cpu: [x64]
-    os: [win32]
-
-  '@modern-js/swc-plugins@0.6.11':
-    resolution: {integrity: sha512-bXwjeFa5mg1hD6zzSHzw94FMNFb9SV458g76zWYfXRw7wMjp97NYl6n3dOTOixdngC0JqZctSbP4mJwSZ0p3Gw==}
-    engines: {node: '>=14.17.6'}
-    peerDependencies:
-      '@swc/helpers': '>=0.5.3'
-    peerDependenciesMeta:
-      '@swc/helpers':
-        optional: true
-
   '@module-federation/error-codes@0.17.1':
     resolution: {integrity: sha512-n6Elm4qKSjwAPxLUGtwnl7qt4y1dxB8OpSgVvXBIzqI9p27a3ZXshLPLnumlpPg1Qudaj8sLnSnFtt9yGpt5yQ==}
 
@@ -2581,11 +2521,6 @@ packages:
     peerDependenciesMeta:
       '@rsbuild/core':
         optional: true
-
-  '@rsbuild/plugin-webpack-swc@1.1.2':
-    resolution: {integrity: sha512-frvZXLTqyRpDWrN5S4KJelrxDkCCreJmDNLMdncgl9+KXHsMF423WT0F5VXrAG5chumk6/NAUNkK0198ntIzcQ==}
-    peerDependencies:
-      '@rsbuild/core': 1.x
 
   '@rsdoctor/client@1.1.10':
     resolution: {integrity: sha512-0UHvH1VEumODIJ7RaC0mlD+gUa4kOSq1U1V/Bd3FFjOB2Hwmkd0oLaEn+UgaruggFI2TnZ0/9Aw/2kvLo5HMXw==}
@@ -4031,9 +3966,6 @@ packages:
 
   core-js-compat@3.41.0:
     resolution: {integrity: sha512-RFsU9LySVue9RTwdDVX/T0e2Y6jRYWXERKElIjpuEOEnxaXffI0X7RUwVzfYLfzuLXSNJDYoRYUAmRUcyln20A==}
-
-  core-js@3.44.0:
-    resolution: {integrity: sha512-aFCtd4l6GvAXwVEh3XbbVqJGHDJt0OZRa+5ePGx3LLwi12WfexqQxcsohb2wgsa/92xtl19Hd66G/L+TaAxDMw==}
 
   core-js@3.45.0:
     resolution: {integrity: sha512-c2KZL9lP4DjkN3hk/an4pWn5b5ZefhRJnAc42n6LJ19kSnbeRbdQZE5dSeE2LBol1OwJD3X1BQvFTAsa8ReeDA==}
@@ -9360,42 +9292,6 @@ snapshots:
 
   '@microsoft/tsdoc@0.15.1': {}
 
-  '@modern-js/swc-plugins-darwin-arm64@0.6.11':
-    optional: true
-
-  '@modern-js/swc-plugins-darwin-x64@0.6.11':
-    optional: true
-
-  '@modern-js/swc-plugins-linux-arm64-gnu@0.6.11':
-    optional: true
-
-  '@modern-js/swc-plugins-linux-arm64-musl@0.6.11':
-    optional: true
-
-  '@modern-js/swc-plugins-linux-x64-gnu@0.6.11':
-    optional: true
-
-  '@modern-js/swc-plugins-linux-x64-musl@0.6.11':
-    optional: true
-
-  '@modern-js/swc-plugins-win32-arm64-msvc@0.6.11':
-    optional: true
-
-  '@modern-js/swc-plugins-win32-x64-msvc@0.6.11':
-    optional: true
-
-  '@modern-js/swc-plugins@0.6.11(@swc/helpers@0.5.17)':
-    optionalDependencies:
-      '@modern-js/swc-plugins-darwin-arm64': 0.6.11
-      '@modern-js/swc-plugins-darwin-x64': 0.6.11
-      '@modern-js/swc-plugins-linux-arm64-gnu': 0.6.11
-      '@modern-js/swc-plugins-linux-arm64-musl': 0.6.11
-      '@modern-js/swc-plugins-linux-x64-gnu': 0.6.11
-      '@modern-js/swc-plugins-linux-x64-musl': 0.6.11
-      '@modern-js/swc-plugins-win32-arm64-msvc': 0.6.11
-      '@modern-js/swc-plugins-win32-x64-msvc': 0.6.11
-      '@swc/helpers': 0.5.17
-
   '@module-federation/error-codes@0.17.1': {}
 
   '@module-federation/runtime-core@0.17.1':
@@ -9674,17 +9570,6 @@ snapshots:
   '@rsbuild/plugin-typed-css-modules@1.0.3(@rsbuild/core@1.4.15)':
     optionalDependencies:
       '@rsbuild/core': 1.4.15
-
-  '@rsbuild/plugin-webpack-swc@1.1.2(@rsbuild/core@1.4.15)':
-    dependencies:
-      '@modern-js/swc-plugins': 0.6.11(@swc/helpers@0.5.17)
-      '@rsbuild/core': 1.4.15
-      '@swc/helpers': 0.5.17
-      core-js: 3.44.0
-      deepmerge: 4.3.1
-      lodash: 4.17.21
-      picocolors: 1.1.1
-      semver: 7.7.2
 
   '@rsdoctor/client@1.1.10': {}
 
@@ -11449,8 +11334,6 @@ snapshots:
   core-js-compat@3.41.0:
     dependencies:
       browserslist: 4.24.4
-
-  core-js@3.44.0: {}
 
   core-js@3.45.0: {}
 
