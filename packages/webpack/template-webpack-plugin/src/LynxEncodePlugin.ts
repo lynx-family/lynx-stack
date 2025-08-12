@@ -187,18 +187,11 @@ export class LynxEncodePluginImpl {
           // ```
           '/app-service.js': [
             this.#appServiceBanner(),
-            Object.keys(externalManifest).map(name =>
-              `lynx.requireModuleAsync('${
-                this.#formatJSName(name, publicPath)
-              }')`
-            ).join(','),
-            ';module.exports=',
-            Object.keys(inlinedManifest).map(name =>
-              `lynx.requireModule('${
-                this.#formatJSName(name, '/')
-              }',globDynamicComponentEntry?globDynamicComponentEntry:'__Card__')`
-            ).join(','),
-            ';',
+            this.#appServiceContent(
+              externalManifest,
+              inlinedManifest,
+              publicPath,
+            ),
             this.#appServiceFooter(),
           ].join(''),
           ...Object.fromEntries(
@@ -239,6 +232,40 @@ export class LynxEncodePluginImpl {
 
     return loadScriptBanner + amdBanner;
   }
+
+  #appServiceContent(
+    externalManifest: Record<string, string>,
+    inlinedManifest: Record<string, string>,
+    publicPath: string,
+  ): string {
+    const parts = [];
+
+    const externalKeys = Object.keys(externalManifest);
+    if (externalKeys.length > 0) {
+      const externalRequires = externalKeys
+        .map(name =>
+          `lynx.requireModuleAsync('${this.#formatJSName(name, publicPath)}')`
+        )
+        .join(',');
+      parts.push(externalRequires, ';');
+    }
+
+    const inlinedKeys = Object.keys(inlinedManifest);
+    if (inlinedKeys.length > 0) {
+      parts.push('module.exports=');
+      const inlinedRequires = inlinedKeys
+        .map(name =>
+          `lynx.requireModule('${
+            this.#formatJSName(name, '/')
+          }',globDynamicComponentEntry?globDynamicComponentEntry:'__Card__')`
+        )
+        .join(',');
+      parts.push(inlinedRequires, ';');
+    }
+
+    return parts.join('');
+  }
+
   #appServiceFooter(): string {
     const loadScriptFooter = `}return{init:n}})()`;
 
