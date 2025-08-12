@@ -45,7 +45,7 @@
     "@microsoft/api-extractor": "catalog:",
     "@rspack/core": "catalog:rspack",
     "css-loader": "^7.1.2",
-    "mini-css-extract-plugin": "^2.9.3",
+    "mini-css-extract-plugin": "^2.9.4",
     "webpack": "^5.101.1"
   },
   "peerDependencies": {
