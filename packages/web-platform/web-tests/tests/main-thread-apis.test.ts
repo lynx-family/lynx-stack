@@ -1330,5 +1330,21 @@ test.describe('main thread api tests', () => {
       expect(result[0].name).toBe('tap');
       expect(result[0].type).toBe('bindEvent');
     });
+
+    test('should mark part element', async ({ page }) => {
+      test.skip(ENABLE_MULTI_THREAD, 'NYI for multi-thread');
+      const result = await page.evaluate(() => {
+        const element = globalThis.__ElementFromBinary('test-template', 0)[0];
+        const child = globalThis.__FirstElement(element);
+        return {
+          targetPartLength:
+            Object.keys(globalThis.__GetTemplateParts(element)).length,
+          targetPartExist: globalThis.__GetTemplateParts(element)['id-2']
+            === child,
+        };
+      });
+      expect(result.targetPartLength).toBe(1);
+      expect(result.targetPartExist).toBe(true);
+    });
   });
 });

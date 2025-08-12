@@ -9,12 +9,12 @@ import type { StyleInfo } from './StyleInfo.js';
 export type ElementTemplateData = {
   id: string;
   type: string;
-  class: string[];
-  idSelector: string;
-  attributes: Record<string, string>;
-  builtinAttributes: Record<string, string>;
-  children: ElementTemplateData[];
-  events: { type: LynxEventType; name: string; value: string }[];
+  idSelector?: string;
+  class?: string[];
+  attributes?: Record<string, string>;
+  builtinAttributes?: Record<string, string>;
+  children?: ElementTemplateData[];
+  events?: { type: LynxEventType; name: string; value: string }[];
 };
 
 export interface LynxTemplate {
