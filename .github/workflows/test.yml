@@ -222,6 +222,7 @@ jobs:
         --reporter=dot
         --reporter=junit
         --outputFile=test-report.junit.xml
+        --expect.poll.timeout=5000
         --testTimeout=50000
         --hookTimeout=50000
         --coverage

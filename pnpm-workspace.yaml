@@ -22,7 +22,6 @@ enablePrePostScripts: false
 ignorePatchFailures: false
 optimisticRepeatInstall: true
 resolutionMode: "lowest-direct"
-verifyDepsBeforeRun: "install"
 
 # Default catalogs
 catalog:
