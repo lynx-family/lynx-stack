@@ -1,13 +1,13 @@
 use crate::*;
 use crate::{char_code_definitions::*, types::*, utils::*};
 
-const URL_STR: [u16; 3] = ['u' as u16, 'r' as u16, 'l' as u16];
+const URL_STR: [u8; 3] = ['u' as u8, 'r' as u8, 'l' as u8];
 /*
  * this code forked from css-tree
  */
 
 // § 4.3.3. Consume a numeric token
-pub fn consume_numeric_token(source: &[u16], offset: &mut usize, token_type: &mut u8) {
+pub fn consume_numeric_token(source: &[u8], offset: &mut usize, token_type: &mut u8) {
   // Consume a number and let number be the result.
   *offset = consume_number(source, *offset);
 
@@ -38,7 +38,7 @@ pub fn consume_numeric_token(source: &[u16], offset: &mut usize, token_type: &mu
 }
 
 // § 4.3.4. Consume an ident-like token
-pub fn consume_ident_like_token(source: &[u16], offset: &mut usize, token_type: &mut u8) {
+pub fn consume_ident_like_token(source: &[u8], offset: &mut usize, token_type: &mut u8) {
   let name_start_offset = *offset;
   // Consume a name, and let string be the result.
   *offset = consume_name(source, *offset);
@@ -78,8 +78,8 @@ pub fn consume_ident_like_token(source: &[u16], offset: &mut usize, token_type: 
 }
 
 pub fn consume_string_token(
-  source: &[u16],
-  ending_code_point: u16,
+  source: &[u8],
+  ending_code_point: u8,
   offset: &mut usize,
   token_type: &mut u8,
 ) {
@@ -99,7 +99,7 @@ pub fn consume_string_token(
     if (*offset) >= source_length {
       return;
     }
-    let code: u16 = get_char_code(source, *offset);
+    let code: u8 = get_char_code(source, *offset);
     let char_code = char_code_category(code);
     // ending code point
     if char_code == ending_code_point {
@@ -126,7 +126,7 @@ pub fn consume_string_token(
       }
 
       // U+005C REVERSE SOLIDUS (\)
-      0x005C_u16 => {
+      0x005C_u8 => {
         // If the next input code point is EOF, do nothing.
         if *offset == source_length - 1 {
           *offset += 1;
@@ -157,7 +157,7 @@ pub fn consume_string_token(
 // This algorithm also assumes that it’s being called to consume an "unquoted" value, like url(foo).
 // A quoted value, like url("foo"), is parsed as a <function-token>. Consume an ident-like token
 // automatically handles this distinction; this algorithm shouldn’t be called directly otherwise.
-pub fn consume_url_token(source: &[u16], offset: &mut usize, token_type: &mut u8) {
+pub fn consume_url_token(source: &[u8], offset: &mut usize, token_type: &mut u8) {
   let source_length = source.len();
   // Initially create a <url-token> with its value set to the empty string.
   *token_type = URL_TOKEN;
@@ -248,9 +248,9 @@ pub trait Parser {
   fn on_token(&mut self, token_type: u8, start: usize, end: usize);
 }
 
-pub fn tokenize<T: Parser>(source: &[u16], parser: &mut T) {
+pub fn tokenize<T: Parser>(source: &[u8], parser: &mut T) {
   let source_length = source.len();
-  let mut start: usize = is_bom(get_char_code(source, 0));
+  let mut start: usize = is_bom(source, 0);
   let mut offset = start;
   let mut token_type: u8 = EOF_TOKEN;
   while offset < source_length {
@@ -399,8 +399,8 @@ pub fn tokenize<T: Parser>(source: &[u16], parser: &mut T) {
           // implement of the indexOf function
           let mut is_found = false;
           for ii in offset + 2..source_length - 1 {
-            if get_char_code(source, ii) == ('*' as u16)
-              && get_char_code(source, ii + 1) == ('/' as u16)
+            if get_char_code(source, ii) == ('*' as u8)
+              && get_char_code(source, ii + 1) == ('/' as u8)
             {
               is_found = true;
               offset = ii;

@@ -1,6 +1,6 @@
 use crate::char_code_definitions::*;
 
-pub fn cmp_str(test_str: &[u16], start: usize, end: usize, reference_str: &[u16]) -> bool {
+pub fn cmp_str(test_str: &[u8], start: usize, end: usize, reference_str: &[u8]) -> bool {
   if (end - start) != reference_str.len() {
     return false;
   }
@@ -25,7 +25,7 @@ pub fn cmp_str(test_str: &[u16], start: usize, end: usize, reference_str: &[u16]
   true
 }
 
-pub fn find_white_space_end(source: &[u16], offset: usize) -> usize {
+pub fn find_white_space_end(source: &[u8], offset: usize) -> usize {
   let mut offset = offset;
   while offset < source.len() {
     let code = get_char_code(source, offset);
@@ -37,7 +37,7 @@ pub fn find_white_space_end(source: &[u16], offset: usize) -> usize {
   offset
 }
 
-pub fn find_decimal_number_end(source: &[u16], offset: usize) -> usize {
+pub fn find_decimal_number_end(source: &[u8], offset: usize) -> usize {
   let mut offset = offset;
   while offset < source.len() {
     let code = get_char_code(source, offset);
@@ -50,7 +50,7 @@ pub fn find_decimal_number_end(source: &[u16], offset: usize) -> usize {
 }
 
 // § 4.3.7. Consume an escaped code point
-pub fn consume_escaped(source: &[u16], offset: usize) -> usize {
+pub fn consume_escaped(source: &[u8], offset: usize) -> usize {
   // It assumes that the U+005C REVERSE SOLIDUS (\) has already been consumed and
   // that the next input code point has already been verified to be part of a valid escape.
   let mut offset = offset + 2;
@@ -78,7 +78,7 @@ pub fn consume_escaped(source: &[u16], offset: usize) -> usize {
 // §4.3.11. Consume a name
 // Note: This algorithm does not do the verification of the first few code points that are necessary
 // to ensure the returned code points would constitute an <ident-token>. If that is the intended use,
-pub fn consume_name(source: &[u16], offset: usize) -> usize {
+pub fn consume_name(source: &[u8], offset: usize) -> usize {
   let mut offset = offset;
   // Let result initially be an empty string.
   // Repeatedly consume the next input code point from the stream:
@@ -107,11 +107,11 @@ pub fn consume_name(source: &[u16], offset: usize) -> usize {
 }
 
 // §4.3.12. Consume a number
-pub fn consume_number(source: &[u16], offset: usize) -> usize {
+pub fn consume_number(source: &[u8], offset: usize) -> usize {
   let mut offset = offset;
   let source_length = source.len();
   if offset < source_length {
-    let mut code: u16 = get_char_code(source, offset);
+    let mut code: u8 = get_char_code(source, offset);
     // 2. If the next input code point is U+002B PLUS SIGN (+) or U+002D HYPHEN-MINUS (-),
     // consume it and append it to repr.
     if code == 0x002B || code == 0x002D {
@@ -142,7 +142,7 @@ pub fn consume_number(source: &[u16], offset: usize) -> usize {
       }
     }
 
-    if cmp_char(source, source_length, offset, 101_u16 /* e */) != 0 {
+    if cmp_char(source, source_length, offset, 101_u8 /* e */) != 0 {
       let mut sign: usize = 0;
       if offset + 1 < source_length {
         code = source[offset + 1];
@@ -178,7 +178,7 @@ pub fn consume_number(source: &[u16], offset: usize) -> usize {
 // § 4.3.14. Consume the remnants of a bad url
 // ... its sole use is to consume enough of the input stream to reach a recovery point
 // where normal tokenizing can resume.
-pub fn consume_bad_url_remnants(source: &[u16], offset: usize) -> usize {
+pub fn consume_bad_url_remnants(source: &[u8], offset: usize) -> usize {
   let source_length = source.len();
   let mut offset = offset;
   // Repeatedly consume the next input code point from the stream:

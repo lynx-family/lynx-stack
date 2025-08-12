@@ -5,14 +5,13 @@ use crate::{
   utils::cmp_str,
 };
 
-const IMPORTANT_STR: [u16; 9] = [
-  'i' as u16, 'm' as u16, 'p' as u16, 'o' as u16, 'r' as u16, 't' as u16, 'a' as u16, 'n' as u16,
-  't' as u16,
+const IMPORTANT_STR: [u8; 9] = [
+  'i' as u8, 'm' as u8, 'p' as u8, 'o' as u8, 'r' as u8, 't' as u8, 'a' as u8, 'n' as u8, 't' as u8,
 ];
 
 pub struct ParserState<'a, 'b, T: Transformer> {
   transformer: &'b mut T,
-  source: &'a [u16],
+  source: &'a [u8],
   status: usize,
   name_start: usize,
   name_end: usize,
@@ -140,7 +139,7 @@ pub trait Transformer {
   );
 }
 
-pub fn parse_inline_style<T: Transformer>(source: &[u16], transformer: &mut T) {
+pub fn parse_inline_style<T: Transformer>(source: &[u8], transformer: &mut T) {
   let mut parser = ParserState {
     transformer,
     source,
