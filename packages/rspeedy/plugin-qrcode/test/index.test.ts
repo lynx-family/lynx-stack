@@ -507,9 +507,10 @@ async function usingDevServer(rsbuild: RsbuildInstance) {
       })
     },
     async waitDevCompileSuccess() {
-      await vi.waitUntil(() => !hasErrors, {
+      await vi.waitUntil(() => done && !hasErrors, {
         timeout: process.env['CI'] ? 50_000 : 5_000,
       })
+    },
     },
     hasErrors,
     async [Symbol.asyncDispose]() {
