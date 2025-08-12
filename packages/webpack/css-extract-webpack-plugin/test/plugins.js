@@ -4,65 +4,28 @@
 import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin';
 
 /**
- * @param {Object} encodeOptions
+ * Use `JSON.stringify` to mock the encode of `@lynx-js/tasm` to help better testing.
  *
- * @returns {import('@rspack/core').RspackPluginInstance}
+ * @returns {import('webpack').WebpackPluginInstance}
  */
-export const mockLynxTemplatePlugin = (encodeOptions = {}) => {
+export const mockLynxEncodePlugin = () => {
   return {
-    name: 'MockLynxTemplatePlugin',
+    name: 'MockLynxEncodePlugin',
     apply(compiler) {
+      compiler.options.entry;
       compiler.hooks.thisCompilation.tap(
-        'MockLynxTemplatePlugin',
+        'MockLynxEncodePlugin',
         (compilation) => {
           const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(
-            // @ts-expect-error
             compilation,
           );
           hooks.encode.tapPromise(
-            'MockLynxTemplatePlugin',
+            'MockLynxEncodePlugin',
             (args) => {
               const buffer = Buffer.from(JSON.stringify(args.encodeOptions));
               return Promise.resolve({
                 buffer,
                 debugInfo: '',
-              });
-            },
-          );
-          compilation.hooks.processAssets.tap(
-            {
-              name: 'MockLynxTemplatePlugin',
-              stage: compiler.webpack.Compilation
-                .PROCESS_ASSETS_STAGE_OPTIMIZE_HASH,
-            },
-            (assets) => {
-              hooks.beforeEmit.promise({
-                finalEncodeOptions: {
-                  'compilerOptions': {
-                    'enableRemoveCSSScope': false,
-                  },
-                  'sourceContent': {
-                    'dsl': 'react_nodiff',
-                    'appType': 'card',
-                    'config': {
-                      'lepusStrict': true,
-                    },
-                  },
-                  'manifest': {},
-                  'lepusCode': {
-                    'root': undefined,
-                    'lepusChunk': {},
-                  },
-                  'customSections': {},
-                  ...encodeOptions,
-                },
-                // @ts-expect-error `info` field is not needed by css extract plugin.
-                'cssChunks': Object.entries(assets).filter(([filename]) =>
-                  filename.endsWith('.css')
-                ).map(([filename, source]) => ({
-                  'name': filename,
-                  'source': source,
-                })),
               });
             },
           );
@@ -73,8 +36,27 @@ export const mockLynxTemplatePlugin = (encodeOptions = {}) => {
 };
 
 /**
- * @type {import('@rspack/core').RspackPluginInstance[]}
+ * @param {{
+ *  lynxTemplatePluginOptions?: Partial<LynxTemplatePlugin['options']>
+ * }} options
+ * @returns {import('webpack').WebpackPluginInstance[]}
+ */
+export function getPlugins({
+  lynxTemplatePluginOptions,
+}) {
+  return [
+    mockLynxEncodePlugin(),
+    new LynxTemplatePlugin({
+      ...LynxTemplatePlugin.defaultOptions,
+      ...lynxTemplatePluginOptions,
+    }),
+  ];
+}
+
+/**
+ * @type {import('webpack').WebpackPluginInstance[]}
  */
 export const plugins = [
-  mockLynxTemplatePlugin(),
+  mockLynxEncodePlugin(),
+  new LynxTemplatePlugin(),
 ];

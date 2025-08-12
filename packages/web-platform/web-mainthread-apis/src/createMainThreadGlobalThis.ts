@@ -688,14 +688,14 @@ export function createMainThreadGlobalThis(
   ): WebFiberElementImpl => {
     const element = __CreateElement(data.type, parentComponentUniId);
     __SetID(element, data.id);
-    __SetClasses(element, data.class.join(' '));
-    for (const [key, value] of Object.entries(data.attributes)) {
+    data.class && __SetClasses(element, data.class.join(' '));
+    for (const [key, value] of Object.entries(data.attributes || {})) {
       __SetAttribute(element, key, value);
     }
-    for (const [key, value] of Object.entries(data.builtinAttributes)) {
+    for (const [key, value] of Object.entries(data.builtinAttributes || {})) {
       __SetAttribute(element, key, value);
     }
-    for (const childData of data.children) {
+    for (const childData of data.children || []) {
       __AppendElement(
         element,
         createElementForElementTemplateData(childData, parentComponentUniId),
@@ -710,12 +710,12 @@ export function createMainThreadGlobalThis(
   ) => void = (data, element) => {
     const uniqueId = uniqueIdInc++;
     element.setAttribute(lynxUniqueIdAttribute, uniqueId + '');
-    for (const event of data.events) {
+    for (const event of data.events || []) {
       const { type, name, value } = event;
       __AddEvent(element, type, name, value);
     }
-    for (let ii = 0; ii < data.children.length; ii++) {
-      const childData = data.children[ii];
+    for (let ii = 0; ii < (data.children || []).length; ii++) {
+      const childData = (data.children || [])[ii];
       const childElement = element.children[ii] as WebFiberElementImpl;
       if (childData && childElement) {
         applyEventsForElementTemplate(childData, childElement);
