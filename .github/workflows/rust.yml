@@ -33,14 +33,14 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
         with:
           persist-credentials: false
       - uses: actions-rust-lang/setup-rust-toolchain@fb51252c7ba57d633bc668f941da052e410add48 # v1
         with:
           cache-key: test-${{ runner.os }}
       - name: Install llvm-cov and nextest
-        uses: taiki-e/install-action@bbdef1c33cb8ed1fd122d68d8374ac79998d6960 # v2
+        uses: taiki-e/install-action@3839ec485e8ef50e4a86e9cd116260b68a412c07 # v2
         with:
           tool: cargo-llvm-cov,cargo-nextest
       - name: Test
@@ -65,7 +65,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
         with:
           persist-credentials: false
       - uses: actions-rust-lang/setup-rust-toolchain@fb51252c7ba57d633bc668f941da052e410add48 # v1
@@ -81,7 +81,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
         with:
           persist-credentials: false
       - uses: actions-rust-lang/setup-rust-toolchain@fb51252c7ba57d633bc668f941da052e410add48 # v1

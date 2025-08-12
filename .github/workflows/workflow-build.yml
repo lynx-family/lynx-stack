@@ -20,7 +20,7 @@ jobs:
     outputs:
       merge-base: ${{ steps.merge-base.outputs.merge-base }}
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
         with:
           ref: ${{ env.HEAD_REF }}
           repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
@@ -76,7 +76,7 @@ jobs:
     timeout-minutes: 30
     needs: get-merge-base
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
         with:
           persist-credentials: false
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
@@ -96,7 +96,7 @@ jobs:
             turbo-v4-${{ runner.os }}-${{ hashFiles('**/packages/**/src/**/*.rs') }}-
             turbo-v4-${{ runner.os }}-
       - name: Install wasm-bindgen
-        uses: taiki-e/install-action@bbdef1c33cb8ed1fd122d68d8374ac79998d6960 # v2
+        uses: taiki-e/install-action@3839ec485e8ef50e4a86e9cd116260b68a412c07 # v2
         with:
           tool: wasm-bindgen
       - name: Install

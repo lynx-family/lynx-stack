@@ -5,13 +5,13 @@
 */
 import rspack from '@rspack/core'
 import { CssExtractRspackPlugin } from '../../../../src'
-import { mockLynxTemplatePlugin } from '../../../../test/plugins.js'
+import { getPlugins } from '../../../../test/plugins.js'
 import path from 'node:path'
 
 /** @type {import('webpack').Configuration} */
 export default {
   output: {
-    publicPath: './',
+    publicPath: 'http://localhost:3000/',
     pathinfo: false,
   },
   optimization: {
@@ -34,8 +34,8 @@ export default {
     css: false,
   },
   plugins: [
-    mockLynxTemplatePlugin({
-      "compilerOptions": {
+    ...getPlugins({
+      lynxTemplatePluginOptions: {
         enableCSSSelector: true,
         enableRemoveCSSScope: true,
       }

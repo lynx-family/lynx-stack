@@ -50,7 +50,9 @@
             "attributes": {
               "value": "Hello from template"
             },
-            "builtinAttributes": {},
+            "builtinAttributes": {
+              "dirtyID": "id-2"
+            },
             "children": [],
             "events": []
           }
