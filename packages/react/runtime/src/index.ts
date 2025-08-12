@@ -9,9 +9,7 @@ import {
   Component,
   Fragment,
   PureComponent,
-  cloneElement,
   createContext,
-  createElement,
   createRef,
   forwardRef,
   isValidElement,
@@ -20,6 +18,8 @@ import {
   useSyncExternalStore,
 } from 'preact/compat';
 
+import { cloneElement } from './cloneElement.js';
+import { createElement } from './createElement.js';
 import {
   useCallback,
   useContext,
@@ -72,6 +72,7 @@ export default {
   forwardRef,
   Suspense,
   lazy,
+  cloneElement,
   createElement,
 };
 
