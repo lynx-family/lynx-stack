@@ -648,6 +648,34 @@ describe('Config', () => {
       expect(encodePlugin).toHaveProperty('options', { inlineScripts: true })
     })
 
+    test('output.inlineScripts defaults to `true`, when chunkSplit strategy is `all-in-one`', async () => {
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+      const rsbuild = await createRspeedy({
+        rspeedyConfig: {
+          plugins: [
+            pluginReactLynx(),
+            pluginStubRspeedyAPI(),
+          ],
+          environments: {
+            lynx: {},
+          },
+          performance: {
+            chunkSplit: {
+              strategy: 'all-in-one',
+            },
+          },
+        },
+      })
+
+      const [config] = await rsbuild.initConfigs()
+
+      const encodePlugin = config?.plugins?.find(p =>
+        p && p.constructor.name === 'LynxEncodePlugin'
+      )
+
+      expect(encodePlugin).toHaveProperty('options', { inlineScripts: true })
+    })
+
     test('output.inlineScripts defaults to `false`, when chunkSplit strategy is not `all-in-one`', async () => {
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
       const rsbuild = await createRspeedy({
@@ -674,6 +702,50 @@ describe('Config', () => {
       )
 
       expect(encodePlugin).toHaveProperty('options', { inlineScripts: false })
+    })
+
+    test('output.inlineScripts: function, when chunkSplit strategy is not `all-in-one`', async () => {
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+      const rsbuild = await createRspeedy({
+        rspeedyConfig: {
+          output: {
+            inlineScripts: ({ name, size }) => {
+              return name.includes('background') && size > 1000
+            },
+          },
+          plugins: [
+            pluginReactLynx(),
+            pluginStubRspeedyAPI(),
+          ],
+          environments: {
+            lynx: {},
+          },
+          performance: {
+            chunkSplit: {
+              strategy: 'split-by-size',
+            },
+          },
+        },
+      })
+
+      const [config] = await rsbuild.initConfigs()
+
+      const LynxEncodePlugin = config?.plugins?.find((
+        p,
+      ): p is LynxEncodePlugin => p?.constructor.name === 'LynxEncodePlugin')
+
+      expect(LynxEncodePlugin).toBeDefined()
+
+      // @ts-expect-error private field
+      const { inlineScripts } = LynxEncodePlugin?.options ?? {}
+
+      expect(typeof inlineScripts).toBe('function')
+      // eslint-disable-next-line @typescript-eslint/no-base-to-string
+      expect(inlineScripts?.toString()).toMatchInlineSnapshot(`
+        "({ name, size }) => {
+                      return name.includes("background") && size > 1e3;
+                    }"
+      `)
     })
   })
 
