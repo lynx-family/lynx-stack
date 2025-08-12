@@ -511,7 +511,6 @@ async function usingDevServer(rsbuild: RsbuildInstance) {
         timeout: process.env['CI'] ? 50_000 : 5_000,
       })
     },
-    },
     hasErrors,
     async [Symbol.asyncDispose]() {
       return await server.close()
