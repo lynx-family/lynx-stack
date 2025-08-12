@@ -15,7 +15,7 @@ export default {
     'pages/main': './index.js',
   },
   output: {
-    publicPath: './',
+    publicPath: 'http://localhost:3000/',
     pathinfo: false,
   },
   module: {
