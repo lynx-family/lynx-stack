@@ -36,7 +36,7 @@ lazy_static::lazy_static! {
       (
         "direction",
           HashMap::from([
-            ("rtl", &[("direction", "rtl")] as &'static [(&'static str, &'static str)]),
+            ("lynx-rtl", &[("direction", "rtl")] as &'static [(&'static str, &'static str)]),
           ]),
       ),
       (
