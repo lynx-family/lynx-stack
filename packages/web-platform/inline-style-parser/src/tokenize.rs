@@ -533,3 +533,45 @@ pub fn tokenize<T: Parser>(source: &[u8], parser: &mut T) {
     start = offset;
   }
 }
+
+mod test {
+  use crate::tokenize::*;
+
+  struct TokenStreamRecorder {
+    tokens: Vec<(u8, usize, usize)>,
+  }
+  impl TokenStreamRecorder {
+    fn new() -> Self {
+      TokenStreamRecorder { tokens: Vec::new() }
+    }
+  }
+  impl Parser for TokenStreamRecorder {
+    fn on_token(&mut self, token_type: u8, start: usize, end: usize) {
+      self.tokens.push((token_type, start, end));
+    }
+  }
+
+  #[test]
+  fn test_bom_0() {
+    let source = "\u{FEFF}".as_bytes();
+    let mut parser = TokenStreamRecorder::new();
+    tokenize(source, &mut parser);
+    assert_eq!(parser.tokens.len(), 1);
+  }
+
+  #[test]
+  fn test_bom_1() {
+    let source = "\u{FEFF}@a;".as_bytes();
+    let mut parser = TokenStreamRecorder::new();
+    tokenize(source, &mut parser);
+    assert_eq!(parser.tokens, [(3, 3, 5), (17, 5, 6),])
+  }
+
+  #[test]
+  fn test_bom_le() {
+    let source = "\u{FFFE}@a;".as_bytes();
+    let mut parser = TokenStreamRecorder::new();
+    tokenize(source, &mut parser);
+    assert_eq!(parser.tokens, [(3, 3, 5), (17, 5, 6),]);
+  }
+}

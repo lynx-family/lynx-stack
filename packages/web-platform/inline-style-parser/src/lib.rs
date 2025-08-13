@@ -567,11 +567,6 @@ mod tests {
     assert!(!is_valid_escape(0x005C, 0x000A)); // \newline
     assert!(!is_valid_escape(0x0041, 0x0041)); // AA
 
-    // Test BOM
-    assert_eq!(is_bom("\u{FEFF}".as_bytes(), 0), 3);
-    assert_eq!(is_bom("\u{FEFF}".as_bytes(), 0), 3);
-    assert_eq!(is_bom("\u{0041}".as_bytes(), 0), 0);
-
     // Test identifier start
     assert!(is_identifier_start(0x0041, 0x0042, 0x0043)); // ABC
     assert!(is_identifier_start(0x002D, 0x0041, 0x0042)); // -AB
@@ -1242,4 +1237,7 @@ mod tests {
     let lf_only: &[u8] = "\n".as_bytes();
     assert_eq!(get_new_line_length(lf_only, 0, 10), 1); // LF only
   }
+
+  #[test]
+  fn bom_be() {}
 }

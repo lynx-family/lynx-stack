@@ -90,7 +90,10 @@ pub const fn is_valid_escape(first: u8, second: u8) -> bool {
 #[inline(always)]
 pub fn get_start_offset(source: &[u8]) -> usize {
   let bom = "\u{FEFF}".as_bytes();
-  if bom.len() < source.len() && (&source[0..bom.len()] == "\u{FEFF}".as_bytes()) {
+  let bom_le = "\u{FFFE}".as_bytes();
+  if bom.len() < source.len()
+    && (&source[0..bom.len()] == bom || &source[0..bom_le.len()] == bom_le)
+  {
     3usize // BOM found
   } else {
     0usize
