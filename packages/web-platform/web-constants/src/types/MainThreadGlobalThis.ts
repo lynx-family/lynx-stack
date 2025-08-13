@@ -163,6 +163,17 @@ export type UpdateComponentIDPAPI = (
   componentID: string,
 ) => void;
 
+export type UpdateComponentInfoPAPI = (
+  element: WebFiberElementImpl,
+  params: {
+    componentID?: string;
+    name?: string;
+    path?: string;
+    entry?: string;
+    cssID?: number;
+  },
+) => void;
+
 export type GetClassesPAPI = (
   element: WebFiberElementImpl,
 ) => string[];
@@ -323,6 +334,7 @@ export interface MainThreadGlobalThis {
   __SetDataset: SetDatasetPAPI;
   __SetID: SetIDPAPI;
   __UpdateComponentID: UpdateComponentIDPAPI;
+  __UpdateComponentInfo: UpdateComponentInfoPAPI;
   __GetClasses: GetClassesPAPI;
   __CreateView: CreateViewPAPI;
   __SwapElement: SwapElementPAPI;
