@@ -6,7 +6,8 @@
   "scripts": {
     "build": "rspeedy build",
     "dev": "rspeedy dev",
-    "test": "vitest"
+    "test": "vitest",
+    "test:type": "vitest --typecheck.only"
   },
   "dependencies": {
     "@lynx-js/react": "workspace:*"
