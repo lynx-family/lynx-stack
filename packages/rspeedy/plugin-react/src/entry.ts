@@ -211,8 +211,8 @@ export function applyEntry(
         // TODO: support inlineScripts in lazyBundle
         inlineScripts = true
       } else {
-        // environment.config.output?.inlineScripts is guaranteed to have a value
         inlineScripts = environment.config.output?.inlineScripts
+          ?? !enableChunkSplitting
       }
 
       if (inlineScripts !== true) {
