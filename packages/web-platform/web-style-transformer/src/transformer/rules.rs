@@ -3,7 +3,7 @@ use std::collections::HashMap;
 
 lazy_static::lazy_static! {
   pub static ref RENAME_RULE: HashMap<&'static str, &'static str> = {
-    let map = HashMap::from([
+    HashMap::from([
       ("linear-weight", "--lynx-linear-weight"),
       ("flex-direction", "--flex-direction"),
       ("flex-wrap", "--flex-wrap"),
@@ -12,8 +12,7 @@ lazy_static::lazy_static! {
       ("flex-basis", "--flex-basis"),
       ("list-main-axis-gap", "--list-main-axis-gap"),
       ("list-cross-axis-gap", "--list-cross-axis-gap"),
-    ]);
-    map
+    ])
   };
 
   pub static ref REPLACE_RULE: HashMap<&'static str, HashMap<&'static str, &'static [(&'static str, &'static str)]>> = {
