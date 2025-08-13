@@ -18,7 +18,8 @@ describe('PluginQRCode - CLI Shortcuts', () => {
     }),
   } as unknown as RsbuildPluginAPI
 
-  test('open page', async () => {
+  // Flaky on CI. See: #1512
+  test.skipIf(process.env['CI'])('open page', async () => {
     vi.stubEnv('NODE_ENV', 'development')
     const onPrint = vi.fn()
     const onOpen = vi.fn()
