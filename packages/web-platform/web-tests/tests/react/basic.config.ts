@@ -10,7 +10,7 @@ import { commonConfig } from './commonConfig.js';
 
 const reactBasicCases = await Array.fromAsync(glob(
   [
-    path.join(__dirname, 'basic-*', 'index.jsx'),
+    path.join(import.meta.dirname, 'basic-*', 'index.jsx'),
   ],
 ));
 
