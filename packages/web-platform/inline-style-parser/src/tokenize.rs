@@ -1,7 +1,6 @@
 use crate::*;
 use crate::{char_code_definitions::*, types::*, utils::*};
 
-const URL_STR: [u8; 3] = ['u' as u8, 'r' as u8, 'l' as u8];
 /*
  * this code forked from css-tree
  */
@@ -45,7 +44,7 @@ pub fn consume_ident_like_token(source: &[u8], offset: &mut usize, token_type: &
 
   // If string’s value is an ASCII case-insensitive match for "url",
   // and the next input code point is U+0028 LEFT PARENTHESIS ((), consume it.
-  if cmp_str(source, name_start_offset, *offset, &URL_STR)
+  if cmp_str(source, name_start_offset, *offset, "url".as_bytes())
     && get_char_code(source, *offset) == 0x0028
   {
     // While the next two input code points are whitespace, consume the next input code point.
@@ -250,7 +249,7 @@ pub trait Parser {
 
 pub fn tokenize<T: Parser>(source: &[u8], parser: &mut T) {
   let source_length = source.len();
-  let mut start: usize = is_bom(source, 0);
+  let mut start: usize = get_start_offset(source);
   let mut offset = start;
   let mut token_type: u8 = EOF_TOKEN;
   while offset < source_length {

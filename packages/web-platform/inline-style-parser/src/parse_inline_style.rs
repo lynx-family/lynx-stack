@@ -5,9 +5,7 @@ use crate::{
   utils::cmp_str,
 };
 
-const IMPORTANT_STR: [u8; 9] = [
-  'i' as u8, 'm' as u8, 'p' as u8, 'o' as u8, 'r' as u8, 't' as u8, 'a' as u8, 'n' as u8, 't' as u8,
-];
+const IMPORTANT_STR: &[u8] = "important".as_bytes();
 
 pub struct ParserState<'a, 'b, T: Transformer> {
   transformer: &'b mut T,

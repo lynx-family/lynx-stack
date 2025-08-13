@@ -88,11 +88,9 @@ pub const fn is_valid_escape(first: u8, second: u8) -> bool {
 
 // Check for Byte Order Mark
 #[inline(always)]
-pub fn is_bom(source: &[u8], offset: usize) -> usize {
-  if offset + 2 < source.len()
-    && (source[offset..offset + 3] == [0xEF, 0xBB, 0xBF]
-      || source[offset..offset + 3] == [0xEF, 0xBF, 0xBE])
-  {
+pub fn get_start_offset(source: &[u8]) -> usize {
+  let bom = "\u{FEFF}".as_bytes();
+  if bom.len() < source.len() && (&source[0..bom.len()] == "\u{FEFF}".as_bytes()) {
     3usize // BOM found
   } else {
     0usize
