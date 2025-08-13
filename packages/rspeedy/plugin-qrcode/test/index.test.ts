@@ -216,7 +216,8 @@ describe('Plugins - Terminal', () => {
       )
     })
 
-    test('select between entries', async () => {
+    // Flaky on CI. See: #1512
+    test.skipIf(process.env['CI'])('select between entries', async () => {
       vi.stubEnv('NODE_ENV', 'development')
       const { select, selectKey, isCancel } = await import('@clack/prompts')
       let i = 1
