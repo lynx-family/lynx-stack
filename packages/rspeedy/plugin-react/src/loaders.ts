@@ -4,6 +4,7 @@
 import { createRequire } from 'node:module'
 
 import type { RsbuildPluginAPI, Rspack } from '@rsbuild/core'
+import merge from 'lodash.merge'
 
 import {
   LAYERS,
@@ -127,13 +128,10 @@ function getMainThreadSwcLoaderOptions(
   mainThreadTransformOptions: SwcPluginReactLynxOptions,
   mainThreadCompatOptions: CompatVisitorConfig | false,
 ): Rspack.SwcLoaderOptions {
-  const swcLoaderOptions = {
-    ...options,
+  const swcLoaderOptions = merge({}, options, {
     jsc: {
-      ...options.jsc,
       target: 'es2019',
       experimental: {
-        ...options.jsc?.experimental,
         plugins: [
           ...(options.jsc?.experimental?.plugins ?? []),
           [
@@ -143,7 +141,7 @@ function getMainThreadSwcLoaderOptions(
         ],
       },
     },
-  }
+  })
 
   // When Passing to SWC, the swc-plugin-reactlynx-compat Must Be Placed Before swc-plugin-reactlynx
   if (mainThreadCompatOptions) {
@@ -161,12 +159,9 @@ function getBackgroundSwcLoaderOptions(
   backgroundTransformOptions: SwcPluginReactLynxOptions,
   backgroundCompatOptions: CompatVisitorConfig | false,
 ): Rspack.SwcLoaderOptions {
-  const swcLoaderOptions = {
-    ...options,
+  const swcLoaderOptions = merge({}, options, {
     jsc: {
-      ...options.jsc,
       experimental: {
-        ...options.jsc?.experimental,
         plugins: [
           ...(options.jsc?.experimental?.plugins ?? []),
           [
@@ -176,7 +171,7 @@ function getBackgroundSwcLoaderOptions(
         ],
       },
     },
-  }
+  })
 
   // When Passing to SWC, the swc-plugin-reactlynx-compat Must Be Placed Before swc-plugin-reactlynx
   if (backgroundCompatOptions) {

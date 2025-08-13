@@ -451,6 +451,12 @@ importers:
       '@rsbuild/plugin-typed-css-modules':
         specifier: 1.0.3
         version: 1.0.3(@rsbuild/core@1.4.15)
+      '@types/lodash.merge':
+        specifier: ^4.6.9
+        version: 4.6.9
+      lodash.merge:
+        specifier: ^4.6.2
+        version: 4.6.2
       tailwindcss:
         specifier: ^3.4.17
         version: 3.4.17
@@ -2837,6 +2843,12 @@ packages:
 
   '@types/loader-utils@2.0.6':
     resolution: {integrity: sha512-cgu0Xefgq9O5FjFR78jgI6X31aPjDWCaJ6LCfRtlj6BtyVVWiXagysSYlPACwGKAzRwsFLjKXcj4iGfcVt6cLw==}
+
+  '@types/lodash.merge@4.6.9':
+    resolution: {integrity: sha512-23sHDPmzd59kUgWyKGiOMO2Qb9YtqRO/x4IhkgNUiPQ1+5MUVqi6bCZeq9nBJ17msjIMbEIO5u+XW4Kz6aGUhQ==}
+
+  '@types/lodash@4.17.20':
+    resolution: {integrity: sha512-H3MHACvFUEiujabxhaI/ImO6gUrd8oOurg7LQtS7mbwIXA/cUqWrvBsaeJ23aZEPk1TAYkurjfMbSELfoCXlGA==}
 
   '@types/mdast@4.0.4':
     resolution: {integrity: sha512-kGaNbPh1k7AFzgpud/gMdvIm5xuECykRR+JnWKQno9TAXVa6WIVCGTPvYGekIDL4uwCZQSYbUxNBSb1aUo79oA==}
@@ -9996,6 +10008,12 @@ snapshots:
     dependencies:
       '@types/node': 22.17.1
       '@types/webpack': 4.41.40
+
+  '@types/lodash.merge@4.6.9':
+    dependencies:
+      '@types/lodash': 4.17.20
+
+  '@types/lodash@4.17.20': {}
 
   '@types/mdast@4.0.4':
     dependencies:
