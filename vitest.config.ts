@@ -2,6 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import os from 'node:os';
+
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
@@ -45,6 +47,27 @@ export default defineConfig({
       NO_COLOR: '1',
       FORCE_COLOR: '0',
       NODE_ENV: 'test',
+    },
+
+    pool: 'forks',
+    poolOptions: {
+      forks: {
+        maxForks: (() =>
+          Math.floor(((cpuCount, envCPULimit) => {
+            if (envCPULimit) {
+              return envCPULimit / 2;
+            } else {
+              if (cpuCount <= 32) {
+                return cpuCount / 2;
+              } else {
+                return 16 + (cpuCount - 32) / 6;
+              }
+            }
+          })(
+            os.availableParallelism(),
+            Number.parseFloat(process.env['cpu_limit'] ?? '0'),
+          )))(),
+      },
     },
 
     projects: [
