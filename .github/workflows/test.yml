@@ -218,8 +218,41 @@ jobs:
       runs-on: ${{ matrix.runs-on.label }}
       run: >
         pnpm run test
+        --project='react/*'
         --reporter=github-actions
-        --reporter=dot
+        --reporter=verbose
+        --reporter=junit
+        --outputFile=test-report.junit.xml
+        --expect.poll.timeout=5000
+        --testTimeout=50000
+        --hookTimeout=50000
+        --coverage
+        --coverage.reporter='json'
+        --coverage.reporter='text'
+        --no-cache
+        --logHeapUsage
+        --silent
+
+        pnpm run test
+        --project='rspeedy/*'
+        --reporter=github-actions
+        --reporter=verbose
+        --reporter=junit
+        --outputFile=test-report.junit.xml
+        --expect.poll.timeout=5000
+        --testTimeout=50000
+        --hookTimeout=50000
+        --coverage
+        --coverage.reporter='json'
+        --coverage.reporter='text'
+        --no-cache
+        --logHeapUsage
+        --silent
+
+        pnpm run test
+        --project='webpack/*'
+        --reporter=github-actions
+        --reporter=verbose
         --reporter=junit
         --outputFile=test-report.junit.xml
         --expect.poll.timeout=5000
