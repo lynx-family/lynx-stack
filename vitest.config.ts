@@ -52,21 +52,13 @@ export default defineConfig({
     pool: 'forks',
     poolOptions: {
       forks: {
-        maxForks: (() =>
-          Math.floor(((cpuCount, envCPULimit) => {
-            if (envCPULimit) {
-              return envCPULimit / 2;
-            } else {
-              if (cpuCount <= 32) {
-                return cpuCount / 2;
-              } else {
-                return 16 + (cpuCount - 32) / 6;
-              }
-            }
-          })(
-            os.availableParallelism(),
-            Number.parseFloat(process.env['cpu_limit'] ?? '0'),
-          )))(),
+        minForks: 1,
+        maxForks: ((cpuCount) =>
+          Math.floor(
+            cpuCount <= 32
+              ? cpuCount / 2
+              : 16 + (cpuCount - 32) / 6,
+          ))(os.availableParallelism()),
       },
     },
 
