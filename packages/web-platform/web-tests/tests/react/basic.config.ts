@@ -22,9 +22,6 @@ const config: Config = mergeRspeedyConfig(commonConfig(), {
         publicPath: '/dist/',
       }];
     })),
-    define: {
-      'process.env.PORT': JSON.stringify(process.env['PORT'] ?? 3080),
-    },
   },
 });
 
