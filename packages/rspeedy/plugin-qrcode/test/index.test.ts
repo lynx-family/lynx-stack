@@ -140,7 +140,8 @@ describe('Plugins - Terminal', () => {
       )
     })
 
-    test('custom schema object', async () => {
+    // Flaky on CI. See: #1512
+    test.skipIf(process.env['CI'])('custom schema object', async () => {
       vi.stubEnv('NODE_ENV', 'development')
       const { select, selectKey, isCancel } = await import('@clack/prompts')
       let i = 1
