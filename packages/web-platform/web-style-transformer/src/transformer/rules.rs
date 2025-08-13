@@ -195,7 +195,25 @@ lazy_static::lazy_static! {
               ("--align-self-column", "stretch"),
             ]),
           ])
-      )]
+        ),
+        (
+          "justify-content",
+            HashMap::from([
+            ("start", &[
+              ("justify-content", "flex-start"),
+            ] as &'static [(&'static str, &'static str)]),
+            ("end", &[
+              ("justify-content", "flex-end"),
+            ]),
+            ("left", &[
+              ("justify-content", "--lynx-invalid-invalid-invalid"),
+            ]),
+            ("right", &[
+              ("justify-content", "--lynx-invalid-invalid-invalid"),
+            ])
+          ])
+        )
+      ]
     )
   };
 }
