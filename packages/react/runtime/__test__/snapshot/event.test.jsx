@@ -988,7 +988,6 @@ describe('event in spread', () => {
 describe('event when firstScreenSyncTiming is jsReady', () => {
   beforeAll(() => {
     globalThis.__FIRST_SCREEN_SYNC_TIMING__ = 'jsReady';
-    globalThis.__TESTING_FORCE_RENDER_TO_OPCODE__ = false;
   });
 
   afterAll(() => {
@@ -1188,7 +1187,6 @@ describe('event when firstScreenSyncTiming is jsReady', () => {
 describe('call `root.render()` async', () => {
   beforeAll(() => {
     // globalThis.__FIRST_SCREEN_SYNC_TIMING__ = 'jsReady';
-    globalThis.__TESTING_FORCE_RENDER_TO_OPCODE__ = false;
   });
 
   afterAll(() => {

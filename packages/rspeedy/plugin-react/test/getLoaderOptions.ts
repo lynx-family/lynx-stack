@@ -37,7 +37,7 @@ export function getLoaderOptions<T>(
       return null
     }
 
-    const oneOfRule = rule.oneOf?.find(getRuleOptions)
+    const oneOfRule = rule.oneOf?.find(rule => getRuleOptions(rule))
     if (oneOfRule) {
       const useOptions = getRuleOptions(oneOfRule)
       if (useOptions) {

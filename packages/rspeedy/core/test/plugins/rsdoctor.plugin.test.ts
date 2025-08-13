@@ -30,7 +30,10 @@ describe('Plugins - Rsdoctor', () => {
 
     expect(options.supports.banner).toBe(true)
 
-    expect(options.experiments?.enableNativePlugin).toBe(true)
+    expect(options.experiments?.enableNativePlugin).toStrictEqual({
+      'chunkGraph': true,
+      'moduleGraph': true,
+    })
   })
 
   test('experiments.enableNativePlugin: false', async () => {
@@ -55,7 +58,10 @@ describe('Plugins - Rsdoctor', () => {
         && plugin?.['isRsdoctorPlugin'] === true),
     ) as RsdoctorRspackPlugin<[]>
 
-    expect(options.experiments?.enableNativePlugin).toBe(false)
+    expect(options.experiments?.enableNativePlugin).toStrictEqual({
+      'chunkGraph': false,
+      'moduleGraph': false,
+    })
   })
 
   test('linter.rules.ecma-version-check', async () => {

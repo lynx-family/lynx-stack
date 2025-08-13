@@ -67,7 +67,15 @@ describe('suspense', () => {
       expect(__root.__element_root).toMatchInlineSnapshot(`
         <page
           cssId="default-entry-from-native:0"
-        />
+        >
+          <wrapper>
+            <text>
+              <raw-text
+                text="loading"
+              />
+            </text>
+          </wrapper>
+        </page>
       `);
     }
 
@@ -208,7 +216,15 @@ describe('suspense', () => {
       expect(__root.__element_root).toMatchInlineSnapshot(`
         <page
           cssId="default-entry-from-native:0"
-        />
+        >
+          <wrapper>
+            <text>
+              <raw-text
+                text="loading"
+              />
+            </text>
+          </wrapper>
+        </page>
       `);
     }
 
@@ -264,7 +280,7 @@ describe('suspense', () => {
             "type": "div",
           },
           {
-            "childId": 2,
+            "childId": -3,
             "op": "RemoveChild",
             "parentId": -1,
           },
@@ -331,7 +347,7 @@ describe('suspense', () => {
       expect(prettyFormatSnapshotPatch(data)).toMatchInlineSnapshot(`
         [
           {
-            "id": 2,
+            "id": -3,
             "op": "CreateElement",
             "type": "wrapper",
           },
@@ -351,11 +367,11 @@ describe('suspense', () => {
             "beforeId": null,
             "childId": 3,
             "op": "InsertBefore",
-            "parentId": 2,
+            "parentId": -3,
           },
           {
             "beforeId": null,
-            "childId": 2,
+            "childId": -3,
             "op": "InsertBefore",
             "parentId": -1,
           },
@@ -377,7 +393,7 @@ describe('suspense', () => {
           },
           {
             "beforeId": null,
-            "childId": 2,
+            "childId": -3,
             "op": "InsertBefore",
             "parentId": -1,
           },
@@ -459,6 +475,7 @@ describe('suspense', () => {
           -1,
           -2,
           -3,
+          -4,
         ]
       `);
     }
@@ -547,9 +564,9 @@ describe('suspense', () => {
       vi.runAllTimers();
       expect([...backgroundSnapshotInstanceManager.values.keys()]).toMatchInlineSnapshot(`
         [
-          2,
           3,
           -1,
+          -3,
           4,
           7,
         ]
@@ -579,7 +596,6 @@ describe('suspense', () => {
         [
           -1,
           -2,
-          -3,
           4,
         ]
       `);
@@ -823,7 +839,9 @@ describe('suspense', () => {
       expect(__root.__element_root).toMatchInlineSnapshot(`
         <page
           cssId="default-entry-from-native:0"
-        />
+        >
+          <wrapper />
+        </page>
       `);
     }
 
@@ -978,7 +996,22 @@ describe('suspense', () => {
         <page
           cssId="default-entry-from-native:0"
         >
-          <view />
+          <view>
+            <wrapper>
+              <text>
+                <raw-text
+                  text="loading 1"
+                />
+              </text>
+            </wrapper>
+            <wrapper>
+              <text>
+                <raw-text
+                  text="loading 2"
+                />
+              </text>
+            </wrapper>
+          </view>
         </page>
       `);
     }
@@ -1186,7 +1219,19 @@ describe('suspense', () => {
       expect(__root.__element_root).toMatchInlineSnapshot(`
         <page
           cssId="default-entry-from-native:0"
-        />
+        >
+          <wrapper>
+            <view>
+              <wrapper>
+                <text>
+                  <raw-text
+                    text="loading inner"
+                  />
+                </text>
+              </wrapper>
+            </view>
+          </wrapper>
+        </page>
       `);
     }
 
@@ -1328,7 +1373,15 @@ describe('suspense', () => {
       expect(__root.__element_root).toMatchInlineSnapshot(`
         <page
           cssId="default-entry-from-native:0"
-        />
+        >
+          <wrapper>
+            <text>
+              <raw-text
+                text="loading"
+              />
+            </text>
+          </wrapper>
+        </page>
       `);
     }
 
@@ -1495,7 +1548,15 @@ describe('suspense', () => {
       expect(__root.__element_root).toMatchInlineSnapshot(`
         <page
           cssId="default-entry-from-native:0"
-        />
+        >
+          <wrapper>
+            <text>
+              <raw-text
+                text="loading"
+              />
+            </text>
+          </wrapper>
+        </page>
       `);
     }
 

@@ -974,6 +974,7 @@ describe('element ref in spread', () => {
     const ref2 = createRef();
     let spread1 = {};
     const spread2 = { ref: ref2 };
+    const spread3 = { ref: undefined };
 
     class Comp extends Component {
       x = 'x';
@@ -982,6 +983,7 @@ describe('element ref in spread', () => {
           <view>
             <view {...spread1} />
             <view {...spread2} />
+            <view {...spread3} />
           </view>
         );
       }
@@ -1000,6 +1002,7 @@ describe('element ref in spread', () => {
             <view
               react-ref--2-1={1}
             />
+            <view />
           </view>
         </page>
       `);
@@ -1010,7 +1013,7 @@ describe('element ref in spread', () => {
               "rLynxFirstScreen",
               {
                 "jsReadyEventIdSwap": {},
-                "root": "{"id":-1,"type":"root","children":[{"id":-2,"type":"__Card__:__snapshot_a94a8_test_19","values":[{},{"ref":"react-ref--2-1"}]}]}",
+                "root": "{"id":-1,"type":"root","children":[{"id":-2,"type":"__Card__:__snapshot_a94a8_test_19","values":[{},{"ref":"react-ref--2-1"},{}]}]}",
               },
             ],
           ],
@@ -1082,6 +1085,7 @@ describe('element ref in spread', () => {
             <view
               react-ref--2-1={1}
             />
+            <view />
           </view>
         </page>
       `);

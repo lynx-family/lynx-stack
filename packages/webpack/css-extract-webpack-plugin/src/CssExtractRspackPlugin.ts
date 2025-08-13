@@ -177,9 +177,17 @@ class CssExtractRspackPluginImpl {
             }, {});
 
             try {
+              const {
+                compilerOptions: {
+                  // remove the `templateDebugUrl` to avoid "emit different content to the same filename" error while chunk splitting is enabled, see #1481
+                  templateDebugUrl,
+                  ...restCompilerOptions
+                },
+              } = args.finalEncodeOptions;
               const { buffer } = await hooks.encode.promise({
                 encodeOptions: {
                   ...args.finalEncodeOptions,
+                  compilerOptions: restCompilerOptions,
                   css,
                   lepusCode: {
                     root: undefined,
