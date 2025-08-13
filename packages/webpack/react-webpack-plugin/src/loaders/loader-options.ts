@@ -8,8 +8,8 @@ import type {
   DefineDceVisitorConfig,
   JsxTransformerConfig,
   ShakeVisitorConfig,
-} from '@lynx-js/swc-plugin-reactlynx';
-import type { CompatVisitorConfig } from '@lynx-js/swc-plugin-reactlynx-compat';
+} from '@lynx-js/react/transform/swc-plugin-reactlynx';
+import type { CompatVisitorConfig } from '@lynx-js/react/transform/swc-plugin-reactlynx-compat';
 
 const JSX_IMPORT_SOURCE = {
   MAIN_THREAD: '@lynx-js/react/lepus',

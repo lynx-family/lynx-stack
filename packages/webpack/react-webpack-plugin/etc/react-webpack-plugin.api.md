@@ -4,13 +4,13 @@
 
 ```ts
 
-import type { CompatVisitorConfig } from '@lynx-js/swc-plugin-reactlynx-compat';
+import type { CompatVisitorConfig } from '@lynx-js/react/transform/swc-plugin-reactlynx-compat';
 import type { Compiler } from '@rspack/core';
-import type { DefineDceVisitorConfig } from '@lynx-js/swc-plugin-reactlynx';
-import { ExtractStrConfig } from '@lynx-js/swc-plugin-reactlynx';
-import type { JsxTransformerConfig } from '@lynx-js/swc-plugin-reactlynx';
-import type { ShakeVisitorConfig } from '@lynx-js/swc-plugin-reactlynx';
-import type { SwcPluginReactLynxOptions } from '@lynx-js/swc-plugin-reactlynx';
+import type { DefineDceVisitorConfig } from '@lynx-js/react/transform/swc-plugin-reactlynx';
+import { ExtractStrConfig } from '@lynx-js/react/transform/swc-plugin-reactlynx';
+import type { JsxTransformerConfig } from '@lynx-js/react/transform/swc-plugin-reactlynx';
+import type { ShakeVisitorConfig } from '@lynx-js/react/transform/swc-plugin-reactlynx';
+import type { SwcPluginReactLynxOptions } from '@lynx-js/react/transform/swc-plugin-reactlynx';
 
 export { ExtractStrConfig }
 

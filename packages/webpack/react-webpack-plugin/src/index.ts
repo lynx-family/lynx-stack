@@ -10,7 +10,7 @@
 
 export { ReactWebpackPlugin } from './ReactWebpackPlugin.js';
 export type { ReactWebpackPluginOptions } from './ReactWebpackPlugin.js';
-export type { ExtractStrConfig } from '@lynx-js/swc-plugin-reactlynx';
+export type { ExtractStrConfig } from '@lynx-js/react/transform/swc-plugin-reactlynx';
 
 export { LAYERS } from './layer.js';
 

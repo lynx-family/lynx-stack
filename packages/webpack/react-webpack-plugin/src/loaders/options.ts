@@ -6,8 +6,8 @@ import type {
   JsxTransformerConfig,
   ShakeVisitorConfig,
   SwcPluginReactLynxOptions,
-} from '@lynx-js/swc-plugin-reactlynx';
-import type { CompatVisitorConfig } from '@lynx-js/swc-plugin-reactlynx-compat';
+} from '@lynx-js/react/transform/swc-plugin-reactlynx';
+import type { CompatVisitorConfig } from '@lynx-js/react/transform/swc-plugin-reactlynx-compat';
 
 import { LAYERS } from '../layer.js';
 

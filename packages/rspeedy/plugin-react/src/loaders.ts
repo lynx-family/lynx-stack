@@ -6,14 +6,14 @@ import { createRequire } from 'node:module'
 import type { RsbuildPluginAPI, Rspack } from '@rsbuild/core'
 import merge from 'lodash.merge'
 
+import type { SwcPluginReactLynxOptions } from '@lynx-js/react/transform/swc-plugin-reactlynx'
+import type { CompatVisitorConfig } from '@lynx-js/react/transform/swc-plugin-reactlynx-compat'
 import {
   LAYERS,
   getBackgroundTransformOptions,
   getCompatOptions,
   getMainThreadTransformOptions,
 } from '@lynx-js/react-webpack-plugin'
-import type { SwcPluginReactLynxOptions } from '@lynx-js/swc-plugin-reactlynx'
-import type { CompatVisitorConfig } from '@lynx-js/swc-plugin-reactlynx-compat'
 
 import type { PluginReactLynxOptions } from './pluginReactLynx.js'
 
