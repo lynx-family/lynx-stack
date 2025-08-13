@@ -20,7 +20,6 @@ beforeAll(() => {
   injectUpdateMainThread();
   replaceCommitHook();
 
-  globalThis.__TESTING_FORCE_RENDER_TO_OPCODE__ = true;
   globalThis.lynxWorkletImpl = {
     _refImpl: {
       updateWorkletRef: vi.fn(),

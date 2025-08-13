@@ -23,8 +23,6 @@ beforeAll(() => {
 
   replaceCommitHook();
   injectUpdateMainThread();
-
-  globalThis.__TESTING_FORCE_RENDER_TO_OPCODE__ = true;
 });
 
 beforeEach(() => {

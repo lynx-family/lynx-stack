@@ -693,6 +693,9 @@ export function createMainThreadGlobalThis(
       __SetAttribute(element, key, value);
     }
     for (const [key, value] of Object.entries(data.builtinAttributes || {})) {
+      if (key === 'dirtyID' && value === data.id) {
+        __MarkPartElement(element, value);
+      }
       __SetAttribute(element, key, value);
     }
     for (const childData of data.children || []) {
@@ -757,6 +760,7 @@ export function createMainThreadGlobalThis(
           applyEventsForElementTemplate(data, element);
         }
       }
+      clonedElements.forEach(__MarkTemplateElement);
       return clonedElements;
     }
     return [];

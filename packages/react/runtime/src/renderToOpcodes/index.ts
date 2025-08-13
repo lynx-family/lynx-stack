@@ -307,7 +307,7 @@ function _renderToString(
     }
   }
 
-  if (typeof children === 'string') {
+  if (typeof children === 'string' || typeof children === 'number') {
     // single text child
     opcodes.push(__OpText, children);
   } else if (children != null && children !== false && children !== true) {
