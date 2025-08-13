@@ -85,21 +85,18 @@ export function applyLoaders(
       .uses
         .merge(uses)
       .end()
-      .when(uses[CHAIN_ID.USE.SWC] !== undefined, rule => {
-        rule.uses.delete(CHAIN_ID.USE.SWC)
-        const swcLoaderRule = uses[CHAIN_ID.USE.SWC]!
-          .entries() as Rspack.RuleSetRule
 
-        const swcLoaderOptions = getBackgroundSwcLoaderOptions(
-          swcLoaderRule.options as Rspack.SwcLoaderOptions, 
-          backgroundTransformOptions, 
-          backgroundCompatOptions,
-        )
+    backgroundRule.uses.delete(CHAIN_ID.USE.SWC)
+    const swcLoaderRule = uses[CHAIN_ID.USE.SWC]!
+      .entries() as Rspack.RuleSetRule
 
-        rule.use(CHAIN_ID.USE.SWC)
-          .merge(swcLoaderRule)
-          .options(swcLoaderOptions)
-      })
+    backgroundRule.use(CHAIN_ID.USE.SWC)
+      .merge(swcLoaderRule)
+      .options(getBackgroundSwcLoaderOptions(
+        swcLoaderRule.options as Rspack.SwcLoaderOptions,
+        backgroundTransformOptions,
+        backgroundCompatOptions,
+      ))
 
     const mainThreadRule = rule.oneOf(LAYERS.MAIN_THREAD)
 
@@ -109,22 +106,15 @@ export function applyLoaders(
       .uses
         .merge(uses)
       .end()
-      // If we have swc-loader, replace it with different options.
-      .when(uses[CHAIN_ID.USE.SWC] !== undefined, rule => {
-        rule.uses.delete(CHAIN_ID.USE.SWC)
-        const swcLoaderRule = uses[CHAIN_ID.USE.SWC]!
-          .entries() as Rspack.RuleSetRule
 
-        const swcLoaderOptions = getMainThreadSwcLoaderOptions(
-          swcLoaderRule.options as Rspack.SwcLoaderOptions, 
-          mainThreadTransformOptions, 
-          mainThreadCompatOptions,
-        )
-
-        rule.use(CHAIN_ID.USE.SWC)
-          .merge(swcLoaderRule)
-          .options(swcLoaderOptions)
-      })
+    mainThreadRule.uses.delete(CHAIN_ID.USE.SWC)
+    mainThreadRule.use(CHAIN_ID.USE.SWC)
+      .merge(swcLoaderRule)
+      .options(getMainThreadSwcLoaderOptions(
+        swcLoaderRule.options as Rspack.SwcLoaderOptions,
+        mainThreadTransformOptions,
+        mainThreadCompatOptions,
+      ))
 
     // Clear the Rsbuild default loader.
     // Otherwise, the JSX will be transformed by the `builtin:swc-loader`.
