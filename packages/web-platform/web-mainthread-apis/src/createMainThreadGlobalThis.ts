@@ -105,6 +105,7 @@ import {
   __SetID,
   __SetInlineStyles,
   __UpdateComponentID,
+  __UpdateComponentInfo,
 } from './pureElementPAPIs.js';
 import { createCrossThreadEvent } from './utils/createCrossThreadEvent.js';
 import { decodeCssOG } from './utils/decodeCssOG.js';
@@ -804,6 +805,7 @@ export function createMainThreadGlobalThis(
     __SetDataset,
     __SetID,
     __UpdateComponentID,
+    __UpdateComponentInfo,
     __CreateElement,
     __CreateView,
     __CreateText,

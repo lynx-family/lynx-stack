@@ -1347,4 +1347,32 @@ test.describe('main thread api tests', () => {
       expect(result.targetPartExist).toBe(true);
     });
   });
+
+  test('__UpdateComponentInfo', async ({ page }, { title }) => {
+    const ret = await page.evaluate(() => {
+      let ele = globalThis.__CreateComponent(
+        0,
+        'id1',
+        0,
+        'test_entry',
+        'name1',
+        'path',
+        {},
+      );
+      globalThis.__UpdateComponentInfo(ele, {
+        componentID: 'id2',
+        cssID: 8,
+        name: 'name2',
+      });
+      globalThis.__UpdateComponentInfo(ele, 'id1');
+      return {
+        id: globalThis.__GetComponentID(ele),
+        cssID: globalThis.__GetAttributes(ele)['l-css-id'],
+        name: globalThis.__GetAttributes(ele).name,
+      };
+    });
+    expect(ret.id).toBe('id2');
+    expect(ret.cssID).toBe('8');
+    expect(ret.name).toBe('name2');
+  });
 });
