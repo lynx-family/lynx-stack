@@ -398,9 +398,7 @@ pub fn tokenize<T: Parser>(source: &[u8], parser: &mut T) {
           // implement of the indexOf function
           let mut is_found = false;
           for ii in offset + 2..source_length - 1 {
-            if get_char_code(source, ii) == ('*' as u8)
-              && get_char_code(source, ii + 1) == ('/' as u8)
-            {
+            if get_char_code(source, ii) == b'*' && get_char_code(source, ii + 1) == b'/' {
               is_found = true;
               offset = ii;
               break;
