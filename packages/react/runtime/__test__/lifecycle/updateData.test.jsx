@@ -864,3 +864,115 @@ describe('triggerDataUpdated when jsReady is enabled', () => {
     }
   });
 });
+
+describe('flush pending `renderComponent` before hydrate', () => {
+  beforeEach(() => {
+    globalThis.__FIRST_SCREEN_SYNC_TIMING__ = 'jsReady';
+  });
+
+  afterEach(() => {
+    globalThis.__FIRST_SCREEN_SYNC_TIMING__ = 'immediately';
+  });
+
+  it('should not send triggerDataUpdated when updateData after hydration', async function() {
+    function Comp() {
+      const initData = useInitData();
+
+      return <text>{initData.msg}</text>;
+    }
+
+    // main thread render
+    {
+      __root.__jsx = <Comp />;
+      renderPage({ msg: 'init' });
+      expect(__root.__element_root).toMatchInlineSnapshot(`
+        <page
+          cssId="default-entry-from-native:0"
+        >
+          <text>
+            <raw-text
+              text="init"
+            />
+          </text>
+        </page>
+      `);
+    }
+
+    // main thread updatePage
+    {
+      __root.__jsx = <Comp />;
+      updatePage({ msg: 'update' });
+      expect(__root.__element_root).toMatchInlineSnapshot(`
+        <page
+          cssId="default-entry-from-native:0"
+        >
+          <text>
+            <raw-text
+              text="update"
+            />
+          </text>
+        </page>
+      `);
+    }
+
+    // background render
+    {
+      globalEnvManager.switchToBackground();
+      render(<Comp />, __root);
+    }
+
+    // LifecycleConstant.jsReady
+    {
+      globalEnvManager.switchToMainThread();
+      rLynxJSReady();
+    }
+
+    // background updateCardData
+    {
+      globalEnvManager.switchToBackground();
+      lynxCoreInject.tt.updateCardData({ msg: 'update' });
+    }
+
+    // hydrate
+    {
+      globalEnvManager.switchToBackground();
+      // LifecycleConstant.firstScreen
+      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+    }
+
+    // rLynxChange
+    {
+      globalEnvManager.switchToMainThread();
+      globalThis.__OnLifecycleEvent.mockClear();
+      const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
+      globalThis[rLynxChange[0]](rLynxChange[1]);
+      expect(rLynxChange[1]).toMatchInlineSnapshot(`
+        {
+          "data": "{"patchList":[{"snapshotPatch":[],"id":24}]}",
+          "patchOptions": {
+            "isHydration": true,
+            "pipelineOptions": {
+              "dsl": "reactLynx",
+              "needTimestamps": true,
+              "pipelineID": "pipelineID",
+              "pipelineOrigin": "reactLynxHydrate",
+              "stage": "hydrate",
+            },
+            "reloadVersion": 0,
+          },
+        }
+      `);
+      expect(__root.__element_root).toMatchInlineSnapshot(`
+        <page
+          cssId="default-entry-from-native:0"
+        >
+          <text>
+            <raw-text
+              text="update"
+            />
+          </text>
+        </page>
+      `);
+    }
+  });
+});
