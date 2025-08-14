@@ -1,16 +1,17 @@
-import { defineConfig, type rsbuild } from '@rslib/core';
+import { defineConfig } from '@rslib/core';
 
 export default defineConfig({
   lib: [
     {
       format: 'esm',
       syntax: 'es2022',
-      dts: false,
+      dts: true,
       bundle: true,
       source: {
         entry: {
           'pure': './src/pure.jsx',
-          'env/vitest': './src/env/vitest.ts',
+          'env/index': './src/env/index.ts',
+          'plugins/index': './src/plugins/index.ts',
         },
       },
       output: {
@@ -29,9 +30,13 @@ export default defineConfig({
       bundle: false,
       source: {
         entry: {
-          'index': './src/index.jsx',
-          'vitest.config': './src/vitest.config.js',
-          'vitest-global-setup': './src/vitest-global-setup.js',
+          'index': [
+            './src/index.jsx',
+            './src/vitest.config.ts',
+            './src/env/vitest.ts',
+            './src/env/rstest.ts',
+            './src/setupFiles/**/*.js',
+          ],
         },
       },
       output: {

@@ -1,4 +1,3 @@
 *
-!dist/*
-!dist/env/*
+!dist/**/*
 !types/*

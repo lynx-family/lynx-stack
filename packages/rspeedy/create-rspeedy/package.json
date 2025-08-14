@@ -42,7 +42,8 @@
     "@lynx-js/react": "workspace:^",
     "@lynx-js/react-rsbuild-plugin": "workspace:^",
     "@lynx-js/rspeedy": "workspace:^",
-    "@rsbuild/plugin-type-check": "1.2.4"
+    "@rsbuild/plugin-type-check": "1.2.4",
+    "@rstest/core": "catalog:rstest"
   },
   "engines": {
     "node": ">=18"
