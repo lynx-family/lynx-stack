@@ -417,6 +417,16 @@ test.describe('main thread api tests', () => {
     expect(ret.test).toBe('test-value');
   });
 
+  test('__GetAttributeByName', async ({ page }, { title }) => {
+    const ret = await page.evaluate(() => {
+      const page = globalThis.__CreatePage('page', 0);
+      globalThis.__SetAttribute(page, 'test-attr', 'val');
+      globalThis.__FlushElementTree();
+      return globalThis.__GetAttributeByName(page, 'test-attr');
+    });
+    expect(ret).toBe('val');
+  });
+
   test('__SetDataset', async ({ page }, { title }) => {
     const ret = await page.evaluate(() => {
       let root = globalThis.__CreatePage('page', 0);
@@ -1346,5 +1356,41 @@ test.describe('main thread api tests', () => {
       expect(result.targetPartLength).toBe(1);
       expect(result.targetPartExist).toBe(true);
     });
+
+    test('should apply dataset from template', async ({ page }) => {
+      const result = await page.evaluate(() => {
+        const element = globalThis.__ElementFromBinary('test-template', 0)[0];
+        return globalThis.__GetAttributes(element)['data-customdata'];
+      });
+      expect(result).toBe('customdata');
+    });
+  });
+
+  test('__UpdateComponentInfo', async ({ page }, { title }) => {
+    const ret = await page.evaluate(() => {
+      let ele = globalThis.__CreateComponent(
+        0,
+        'id1',
+        0,
+        'test_entry',
+        'name1',
+        'path',
+        {},
+      );
+      globalThis.__UpdateComponentInfo(ele, {
+        componentID: 'id2',
+        cssID: 8,
+        name: 'name2',
+      });
+      globalThis.__UpdateComponentInfo(ele, 'id1');
+      return {
+        id: globalThis.__GetComponentID(ele),
+        cssID: globalThis.__GetAttributes(ele)['l-css-id'],
+        name: globalThis.__GetAttributes(ele).name,
+      };
+    });
+    expect(ret.id).toBe('id2');
+    expect(ret.cssID).toBe('8');
+    expect(ret.name).toBe('name2');
   });
 });

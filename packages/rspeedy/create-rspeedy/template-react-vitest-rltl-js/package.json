@@ -15,7 +15,7 @@
     "@lynx-js/qrcode-rsbuild-plugin": "workspace:*",
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@lynx-js/rspeedy": "workspace:*",
-    "@testing-library/jest-dom": "^6.6.4",
+    "@testing-library/jest-dom": "^6.7.0",
     "jsdom": "^26.1.0",
     "vitest": "^3.2.4"
   },

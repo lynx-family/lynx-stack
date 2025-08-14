@@ -23,8 +23,6 @@ beforeAll(() => {
 
   replaceCommitHook();
   injectUpdateMainThread();
-
-  globalThis.__TESTING_FORCE_RENDER_TO_OPCODE__ = true;
 });
 
 beforeEach(() => {
@@ -1068,12 +1066,9 @@ describe('reload', () => {
       updatePage({ text: 'Enjoy' }, { reloadTemplate: true });
     }
 
-    // list render item 1 & 2
+    // The rendered two items should be updated by `updatePage`
+    // without componentAtIndex
     {
-      elementTree.triggerEnqueueComponent(__root.childNodes[0].__elements[0], signs[0]);
-      elementTree.triggerEnqueueComponent(__root.childNodes[0].__elements[0], signs[1]);
-      signs[0] = elementTree.triggerComponentAtIndex(__root.childNodes[0].__elements[0], 0);
-      signs[1] = elementTree.triggerComponentAtIndex(__root.childNodes[0].__elements[0], 1);
       expect(__root.__element_root).toMatchInlineSnapshot(`
         <page
           cssId="default-entry-from-native:0"
@@ -1103,22 +1098,8 @@ describe('reload', () => {
                   "updateAction": [],
                 },
                 {
-                  "insertAction": [
-                    {
-                      "item-key": 0,
-                      "position": 0,
-                      "type": "__Card__:__snapshot_a94a8_test_8",
-                    },
-                    {
-                      "item-key": 1,
-                      "position": 1,
-                      "type": "__Card__:__snapshot_a94a8_test_8",
-                    },
-                  ],
-                  "removeAction": [
-                    0,
-                    1,
-                  ],
+                  "insertAction": [],
+                  "removeAction": [],
                   "updateAction": [],
                 },
               ]
