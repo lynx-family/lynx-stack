@@ -534,6 +534,7 @@ pub fn tokenize<T: Parser>(source: &[u8], parser: &mut T) {
   }
 }
 
+#[cfg(test)]
 mod test {
   use crate::tokenize::*;
 
