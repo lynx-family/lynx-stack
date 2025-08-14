@@ -14,9 +14,12 @@ export type { PluginReactLynxOptions } from './pluginReactLynx.js'
 export type {
   AddComponentElementConfig,
   CompatVisitorConfig,
+} from '@lynx-js/react/transform/swc-plugin-reactlynx-compat'
+
+export type {
   DefineDceVisitorConfig,
   ExtractStrConfig,
   ShakeVisitorConfig,
-} from '@lynx-js/react-transform'
+} from '@lynx-js/react/transform/swc-plugin-reactlynx'
 
 export { LAYERS } from '@lynx-js/react-webpack-plugin'

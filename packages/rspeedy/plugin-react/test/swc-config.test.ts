@@ -4,7 +4,7 @@
 import type { RsbuildPluginAPI, Rspack } from '@rsbuild/core'
 import { assert, describe, expect, test, vi } from 'vitest'
 
-import { LAYERS, ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'
+import { LAYERS } from '@lynx-js/react-webpack-plugin'
 
 import { createStubRspeedy as createRspeedy } from './createRspeedy.js'
 import { getLoaderOptions } from './getLoaderOptions.js'
@@ -47,11 +47,51 @@ describe('SWC configuration', () => {
     expect(getLoaderOptions(config, 'builtin:swc-loader'))
       .toMatchInlineSnapshot(`
         {
+          "inlineSourcesContent": true,
           "isModule": "unknown",
           "jsc": {
             "experimental": {
               "cacheRoot": "<WORKSPACE>/packages/rspeedy/plugin-react/test/node_modules/.cache/.swc",
               "keepImportAttributes": true,
+              "plugins": [
+                [
+                  "<WORKSPACE>/packages/react/transform/swc-plugin-reactlynx/swc_plugin_reactlynx.wasm",
+                  {
+                    "cssScope": {
+                      "mode": "none",
+                    },
+                    "defineDCE": {
+                      "define": {
+                        "__BACKGROUND__": "true",
+                        "__JS__": "true",
+                        "__LEPUS__": "false",
+                        "__MAIN_THREAD__": "false",
+                        "__REACTLYNX2__": "false",
+                        "__REACTLYNX3__": "true",
+                      },
+                    },
+                    "directiveDCE": {
+                      "target": "JS",
+                    },
+                    "dynamicImport": {
+                      "layer": "react__background",
+                      "runtimePkg": "@lynx-js/react/internal",
+                    },
+                    "mode": "development",
+                    "shake": false,
+                    "snapshot": {
+                      "isDynamicComponent": false,
+                      "jsxImportSource": "@lynx-js/react",
+                      "runtimePkg": "@lynx-js/react/internal",
+                      "target": "MIXED",
+                    },
+                    "worklet": {
+                      "runtimePkg": "@lynx-js/react/internal",
+                      "target": "JS",
+                    },
+                  },
+                ],
+              ],
             },
             "externalHelpers": true,
             "output": {
@@ -68,6 +108,11 @@ describe('SWC configuration', () => {
               "legacyDecorator": false,
               "optimizer": {
                 "simplify": true,
+              },
+              "react": {
+                "importSource": "@lynx-js/react",
+                "runtime": "automatic",
+                "throwIfNamespace": false,
               },
               "useDefineForClassFields": false,
             },
@@ -169,12 +214,6 @@ describe('SWC configuration', () => {
     expect({ module: { rules: [backgroundRules] } }).toHaveLoader(
       'builtin:swc-loader',
     )
-    expect({ module: { rules: [backgroundRules] } }).toHaveLoader(
-      ReactWebpackPlugin.loaders.BACKGROUND,
-    )
-    expect({ module: { rules: [backgroundRules] } }).not.toHaveLoader(
-      ReactWebpackPlugin.loaders.MAIN_THREAD,
-    )
 
     const mainThreadRules = swcRule.oneOf.find(rule =>
       rule.issuerLayer === LAYERS.MAIN_THREAD
@@ -182,12 +221,6 @@ describe('SWC configuration', () => {
     expect(mainThreadRules).not.toBeUndefined()
     expect({ module: { rules: [mainThreadRules] } }).toHaveLoader(
       'builtin:swc-loader',
-    )
-    expect({ module: { rules: [mainThreadRules] } }).toHaveLoader(
-      ReactWebpackPlugin.loaders.MAIN_THREAD,
-    )
-    expect({ module: { rules: [mainThreadRules] } }).not.toHaveLoader(
-      ReactWebpackPlugin.loaders.BACKGROUND,
     )
   })
 
@@ -218,12 +251,6 @@ describe('SWC configuration', () => {
     expect(mainThreadRule).not.toBeUndefined()
     expect({ module: { rules: [mainThreadRule] } }).toHaveLoader(
       'builtin:swc-loader',
-    )
-    expect({ module: { rules: [mainThreadRule] } }).toHaveLoader(
-      ReactWebpackPlugin.loaders.MAIN_THREAD,
-    )
-    expect({ module: { rules: [mainThreadRule] } }).not.toHaveLoader(
-      ReactWebpackPlugin.loaders.BACKGROUND,
     )
     const mainThreadLoaderOptions = getLoaderOptions<Rspack.SwcLoaderOptions>({
       module: {
@@ -268,12 +295,6 @@ describe('SWC configuration', () => {
     expect({ module: { rules: [backgroundRule] } }).toHaveLoader(
       'builtin:swc-loader',
     )
-    expect({ module: { rules: [backgroundRule] } }).toHaveLoader(
-      ReactWebpackPlugin.loaders.BACKGROUND,
-    )
-    expect({ module: { rules: [backgroundRule] } }).not.toHaveLoader(
-      ReactWebpackPlugin.loaders.MAIN_THREAD,
-    )
 
     const backgroundLoaderOptions = getLoaderOptions<Rspack.SwcLoaderOptions>({
       module: {
@@ -288,12 +309,6 @@ describe('SWC configuration', () => {
     expect(mainThreadRule).not.toBeUndefined()
     expect({ module: { rules: [mainThreadRule] } }).toHaveLoader(
       'builtin:swc-loader',
-    )
-    expect({ module: { rules: [mainThreadRule] } }).toHaveLoader(
-      ReactWebpackPlugin.loaders.MAIN_THREAD,
-    )
-    expect({ module: { rules: [mainThreadRule] } }).not.toHaveLoader(
-      ReactWebpackPlugin.loaders.BACKGROUND,
     )
     const mainThreadLoaderOptions = getLoaderOptions<Rspack.SwcLoaderOptions>({
       module: {

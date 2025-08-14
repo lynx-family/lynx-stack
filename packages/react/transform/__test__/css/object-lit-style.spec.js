@@ -15,8 +15,8 @@ describe.skip('Parse Object Literal Style', () => {
     expect(result.code).toContain(`__AddInlineStyle(el, 27, '100px');`);
     expect(result.code).not.toContain(`width: '100px'`);
     expect(result.code).not.toContain(`'height': 8000`);
-    expect(result.warnings).toEqual([]);
-    expect(result.errors).toEqual([]);
+    expect(result.warnings).toMatchInlineSnapshot(`[]`);
+    expect(result.errors).toMatchInlineSnapshot(`[]`);
   });
 
   it('should parse object literal style with different cases', async () => {
@@ -29,8 +29,8 @@ describe.skip('Parse Object Literal Style', () => {
     expect(result.code).not.toContain(`flex-direction`);
     expect(result.code).not.toContain(`flexShrink`);
     expect(result.code).not.toContain(`flex-hrink`);
-    expect(result.warnings).toEqual([]);
-    expect(result.errors).toEqual([]);
+    expect(result.warnings).toMatchInlineSnapshot(`[]`);
+    expect(result.errors).toMatchInlineSnapshot(`[]`);
   });
 
   it('should parse object literal style with in order', async () => {
@@ -44,8 +44,8 @@ describe.skip('Parse Object Literal Style', () => {
       result.code.indexOf(`__AddInlineStyle(el, 49, 'column')`)
         < result.code.indexOf(`__AddInlineStyle(el, 49, 'line')`),
     );
-    expect(result.warnings).toEqual([]);
-    expect(result.errors).toEqual([]);
+    expect(result.warnings).toMatchInlineSnapshot(`[]`);
+    expect(result.errors).toMatchInlineSnapshot(`[]`);
   });
 
   it('should parse object literal style with multiple elements', async () => {
@@ -86,21 +86,17 @@ let jsx = <view style={{
 }}/>`,
       {
         mode: 'test',
-        pluginName: '',
-        filename: '',
         sourcemap: false,
         cssScope: false,
-        jsx: {
+        snapshot: {
           runtimePkg: '@lynx-js/react-runtime',
           target: 'MIXED',
-          filename: '',
         },
         directiveDCE: false,
         defineDCE: false,
         shake: false,
         compat: false,
         worklet: false,
-        refresh: false,
       },
     );
     expect(result.code).toMatchInlineSnapshot(`
@@ -149,21 +145,17 @@ let jsx = <view style={{
 }}/>`,
       {
         mode: 'test',
-        pluginName: '',
-        filename: '',
         sourcemap: false,
         cssScope: false,
-        jsx: {
+        snapshot: {
           runtimePkg: '@lynx-js/react-runtime',
           target: 'MIXED',
-          filename: '',
         },
         directiveDCE: false,
         defineDCE: false,
         shake: false,
         compat: false,
         worklet: false,
-        refresh: false,
       },
     );
     expect(result.code).toMatchInlineSnapshot(`
@@ -208,21 +200,17 @@ let height = '100px';
 let jsx = <view style={{ height, width }}/>`,
       {
         mode: 'test',
-        pluginName: '',
-        filename: '',
         sourcemap: false,
         cssScope: false,
-        jsx: {
+        snapshot: {
           runtimePkg: '@lynx-js/react-runtime',
           target: 'MIXED',
-          filename: '',
         },
         directiveDCE: false,
         defineDCE: false,
         shake: false,
         compat: false,
         worklet: false,
-        refresh: false,
       },
     );
     expect(result.code).toMatchInlineSnapshot(`
@@ -258,8 +246,6 @@ let jsx = <view style={{ height, width }}/>`,
   });
 
   it('should fallback to SetInlineStyles when have unknown CSS property', async () => {
-    const { formatMessages } = await import('esbuild');
-
     const result = await transformReactLynx(
       `<view style={{ width: '100px', invalid: false, height: '200rpx', invalidProperty: 'auto' }}/>`,
     );
@@ -269,14 +255,11 @@ let jsx = <view style={{ height, width }}/>`,
     expect(result.code).toContain(`width: '100px'`);
     expect(result.code).toContain(`invalid: false`);
     expect(result.code).toContain(`height: '200rpx'`);
-    expect(
-      await formatMessages(result.warnings, { kind: 'warning', color: false }),
-    ).toMatchInlineSnapshot(`[]`);
+    expect(result.warnings).toMatchInlineSnapshot(`[]`);
+    expect(result.errors).toMatchInlineSnapshot(`[]`);
   });
 
   it('should fallback to SetInlineStyles when have computed CSS property', async () => {
-    const { formatMessages } = await import('esbuild');
-
     const result = await transformReactLynx(
       `<view style={{ width: value, [key]: false, height: '200rpx' }}/>`,
     );
@@ -286,8 +269,7 @@ let jsx = <view style={{ height, width }}/>`,
     expect(result.code).toContain(`width: value`);
     expect(result.code).toContain(`[key]: false`);
     expect(result.code).toContain(`height: '200rpx'`);
-    expect(
-      await formatMessages(result.warnings, { kind: 'warning', color: false }),
-    ).toMatchInlineSnapshot(`[]`);
+    expect(result.warnings).toMatchInlineSnapshot(`[]`);
+    expect(result.errors).toMatchInlineSnapshot(`[]`);
   });
 });
