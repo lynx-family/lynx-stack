@@ -7,7 +7,8 @@ import { fileURLToPath } from 'node:url'
 import { describe, expect, test, vi } from 'vitest'
 
 import { LAYERS } from '@lynx-js/react-webpack-plugin'
-import { createRspeedy } from '@lynx-js/rspeedy'
+
+import { createStubRspeedy as createRspeedy } from './createRspeedy.js'
 
 vi
   .stubEnv('USE_RSPACK', 'true')

@@ -1,6 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import type { Rspack } from '@rsbuild/core'
 import { assertType, describe, test } from 'vitest'
 
 import type { Config } from '../../src/index.js'
@@ -148,6 +149,138 @@ describe('Config - Output', () => {
   test('output.filename', () => {
     assertType<Output>({
       filename: '[id].js',
+    })
+
+    assertType<Output>({
+      filename: {
+        js: '[id].js',
+      },
+    })
+
+    assertType<Output>({
+      filename: {
+        js: (pathData, assetInfo) => {
+          assertType<string | undefined>(pathData.filename)
+          assertType<string | undefined>(pathData.hash)
+          assertType<Rspack.AssetInfo | undefined>(assetInfo)
+          return pathData.filename + '.js'
+        },
+      },
+    })
+
+    assertType<Output>({
+      filename: {
+        css: '[id].css',
+      },
+    })
+
+    assertType<Output>({
+      filename: {
+        css: (pathData, assetInfo) => {
+          assertType<string | undefined>(pathData.filename)
+          assertType<string | undefined>(pathData.hash)
+          assertType<Rspack.AssetInfo | undefined>(assetInfo)
+          return pathData.filename + '.css'
+        },
+      },
+    })
+
+    assertType<Output>({
+      filename: {
+        svg: '[id].svg',
+      },
+    })
+
+    assertType<Output>({
+      filename: {
+        svg: (pathData, assetInfo) => {
+          assertType<string | undefined>(pathData.filename)
+          assertType<string | undefined>(pathData.hash)
+          assertType<Rspack.AssetInfo | undefined>(assetInfo)
+          return pathData.filename + '.svg'
+        },
+      },
+    })
+
+    assertType<Output>({
+      filename: {
+        font: '[id].font.ttf',
+      },
+    })
+
+    assertType<Output>({
+      filename: {
+        font: (pathData, assetInfo) => {
+          assertType<string | undefined>(pathData.filename)
+          assertType<string | undefined>(pathData.hash)
+          assertType<Rspack.AssetInfo | undefined>(assetInfo)
+          return pathData.filename + '.font.ttf'
+        },
+      },
+    })
+
+    assertType<Output>({
+      filename: {
+        image: '[id].image[ext]',
+      },
+    })
+
+    assertType<Output>({
+      filename: {
+        image: (pathData, assetInfo) => {
+          assertType<string | undefined>(pathData.filename)
+          assertType<string | undefined>(pathData.hash)
+          assertType<Rspack.AssetInfo | undefined>(assetInfo)
+          return pathData.filename + '.image[ext]'
+        },
+      },
+    })
+
+    assertType<Output>({
+      filename: {
+        media: '[id].media[ext]',
+      },
+    })
+
+    assertType<Output>({
+      filename: {
+        media: (pathData, assetInfo) => {
+          assertType<string | undefined>(pathData.filename)
+          assertType<string | undefined>(pathData.hash)
+          assertType<Rspack.AssetInfo | undefined>(assetInfo)
+          return pathData.filename + '.media[ext]'
+        },
+      },
+    })
+
+    assertType<Output>({
+      filename: {
+        wasm: '[id].wasm',
+      },
+    })
+
+    assertType<Output>({
+      filename: {
+        // @ts-expect-error wasm does not support function
+        wasm: () => 'foo',
+      },
+    })
+
+    assertType<Output>({
+      filename: {
+        assets: '[id].assets[ext]',
+      },
+    })
+
+    assertType<Output>({
+      filename: {
+        assets: (pathData, assetInfo) => {
+          assertType<string | undefined>(pathData.filename)
+          assertType<string | undefined>(pathData.hash)
+          assertType<Rspack.AssetInfo | undefined>(assetInfo)
+          return pathData.filename + '.assets[ext]'
+        },
+      },
     })
   })
 

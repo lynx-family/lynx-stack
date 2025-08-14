@@ -5,13 +5,13 @@
 */
 import { DefinePlugin } from 'webpack'
 import { CssExtractWebpackPlugin } from '../../../../src'
-import { mockLynxTemplatePlugin } from '../../../../test/plugins.js'
+import { getPlugins } from '../../../../test/plugins.js'
 import path from 'node:path'
 
 /** @type {import('webpack').Configuration} */
 export default {
   output: {
-    publicPath: './',
+    publicPath: 'http://localhost:3000/',
     pathinfo: false,
   },
   module: {
@@ -28,8 +28,8 @@ export default {
     ],
   },
   plugins: [
-    mockLynxTemplatePlugin({
-      "compilerOptions": {
+    ...getPlugins({
+      lynxTemplatePluginOptions: {
         enableCSSSelector: true,
         enableRemoveCSSScope: true,
       }

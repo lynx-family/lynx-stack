@@ -105,6 +105,8 @@ import {
   __SetID,
   __SetInlineStyles,
   __UpdateComponentID,
+  __UpdateComponentInfo,
+  __GetAttributeByName,
 } from './pureElementPAPIs.js';
 import { createCrossThreadEvent } from './utils/createCrossThreadEvent.js';
 import { decodeCssOG } from './utils/decodeCssOG.js';
@@ -688,19 +690,23 @@ export function createMainThreadGlobalThis(
   ): WebFiberElementImpl => {
     const element = __CreateElement(data.type, parentComponentUniId);
     __SetID(element, data.id);
-    __SetClasses(element, data.class.join(' '));
-    for (const [key, value] of Object.entries(data.attributes)) {
+    data.class && __SetClasses(element, data.class.join(' '));
+    for (const [key, value] of Object.entries(data.attributes || {})) {
       __SetAttribute(element, key, value);
     }
-    for (const [key, value] of Object.entries(data.builtinAttributes)) {
+    for (const [key, value] of Object.entries(data.builtinAttributes || {})) {
+      if (key === 'dirtyID' && value === data.id) {
+        __MarkPartElement(element, value);
+      }
       __SetAttribute(element, key, value);
     }
-    for (const childData of data.children) {
+    for (const childData of data.children || []) {
       __AppendElement(
         element,
         createElementForElementTemplateData(childData, parentComponentUniId),
       );
     }
+    data.dataset !== undefined && __SetDataset(element, data.dataset);
     return element;
   };
 
@@ -710,12 +716,12 @@ export function createMainThreadGlobalThis(
   ) => void = (data, element) => {
     const uniqueId = uniqueIdInc++;
     element.setAttribute(lynxUniqueIdAttribute, uniqueId + '');
-    for (const event of data.events) {
+    for (const event of data.events || []) {
       const { type, name, value } = event;
       __AddEvent(element, type, name, value);
     }
-    for (let ii = 0; ii < data.children.length; ii++) {
-      const childData = data.children[ii];
+    for (let ii = 0; ii < (data.children || []).length; ii++) {
+      const childData = (data.children || [])[ii];
       const childElement = element.children[ii] as WebFiberElementImpl;
       if (childData && childElement) {
         applyEventsForElementTemplate(childData, childElement);
@@ -757,6 +763,7 @@ export function createMainThreadGlobalThis(
           applyEventsForElementTemplate(data, element);
         }
       }
+      clonedElements.forEach(__MarkTemplateElement);
       return clonedElements;
     }
     return [];
@@ -800,6 +807,7 @@ export function createMainThreadGlobalThis(
     __SetDataset,
     __SetID,
     __UpdateComponentID,
+    __UpdateComponentInfo,
     __CreateElement,
     __CreateView,
     __CreateText,
@@ -814,6 +822,7 @@ export function createMainThreadGlobalThis(
     __SwapElement,
     __UpdateListCallbacks,
     __GetConfig: __GetElementConfig,
+    __GetAttributeByName,
     __GetClasses,
     __AddClass: isCSSOG ? __AddClassForCSSOG : __AddClass,
     __SetClasses: isCSSOG ? __SetClassesForCSSOG : __SetClasses,

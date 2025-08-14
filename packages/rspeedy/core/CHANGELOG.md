@@ -1,5 +1,21 @@
 # @lynx-js/rspeedy
 
+## 0.10.6
+
+### Patch Changes
+
+- Remove the experimental `provider` option. ([#1432](https://github.com/lynx-family/lynx-stack/pull/1432))
+
+- Add `output.filename.wasm` and `output.filename.assets` options. ([#1449](https://github.com/lynx-family/lynx-stack/pull/1449))
+
+- fix deno compatibility ([#1412](https://github.com/lynx-family/lynx-stack/pull/1412))
+
+- Should call the `api.onCloseBuild` hook after the build finished. ([#1446](https://github.com/lynx-family/lynx-stack/pull/1446))
+
+- Bump Rsbuild v1.4.15. ([#1423](https://github.com/lynx-family/lynx-stack/pull/1423))
+
+- Support using function in `output.filename.*`. ([#1449](https://github.com/lynx-family/lynx-stack/pull/1449))
+
 ## 0.10.5
 
 ### Patch Changes

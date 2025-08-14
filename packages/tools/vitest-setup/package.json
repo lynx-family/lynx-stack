@@ -17,9 +17,9 @@
   "main": "index.ts",
   "types": "index.ts",
   "devDependencies": {
-    "path-serializer": "^0.5.0",
+    "path-serializer": "^0.5.1",
     "vitest": "^3.2.4",
-    "webpack": "^5.101.0"
+    "webpack": "^5.101.1"
   },
   "engines": {
     "node": ">=18"

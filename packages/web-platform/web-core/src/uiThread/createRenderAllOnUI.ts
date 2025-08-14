@@ -68,7 +68,11 @@ export function createRenderAllOnUI(
       return i18nResources;
     },
   );
-  let mtsGlobalThis!: MainThreadGlobalThis;
+  let mtsGlobalThis: MainThreadGlobalThis | undefined;
+  const pendingUpdateCalls: Parameters<
+    RpcCallType<typeof updateDataEndpoint>
+  >[] = [];
+
   const start = async (configs: StartMainThreadContextConfig) => {
     if (ssrDumpInfo) {
       const lynxUniqueIdToElement: WeakRef<HTMLElement>[] = [];
@@ -113,11 +117,22 @@ export function createRenderAllOnUI(
     } else {
       mtsGlobalThis = await startMainThread(configs);
     }
+
+    // Process any pending update calls that were queued while mtsGlobalThis was undefined
+    for (const args of pendingUpdateCalls) {
+      mtsGlobalThis.updatePage?.(...args);
+    }
+    pendingUpdateCalls.length = 0;
   };
   const updateDataMainThread: RpcCallType<typeof updateDataEndpoint> = async (
     ...args
   ) => {
-    mtsGlobalThis.updatePage?.(...args);
+    if (mtsGlobalThis) {
+      mtsGlobalThis.updatePage?.(...args);
+    } else {
+      // Cache the call if mtsGlobalThis is not yet initialized
+      pendingUpdateCalls.push(args);
+    }
   };
   const updateI18nResourcesMainThread = (data: Cloneable) => {
     i18nResources.setData(data as InitI18nResources);

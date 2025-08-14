@@ -182,15 +182,17 @@ export interface ExposedAPI {
 
 // @public
 export interface Filename {
+    assets?: Rspack.AssetModuleFilename;
     bundle?: string | undefined;
-    css?: string | undefined;
-    font?: string | undefined;
-    image?: string | undefined;
-    js?: string | undefined;
-    media?: string | undefined;
-    svg?: string | undefined;
+    css?: Rspack.CssFilename | undefined;
+    font?: Rspack.AssetModuleFilename | undefined;
+    image?: Rspack.AssetModuleFilename | undefined;
+    js?: Rspack.Filename | undefined;
+    media?: Rspack.AssetModuleFilename | undefined;
+    svg?: Rspack.AssetModuleFilename | undefined;
     // @deprecated
     template?: string | undefined;
+    wasm?: Rspack.WebassemblyModuleFilename;
 }
 
 // @public

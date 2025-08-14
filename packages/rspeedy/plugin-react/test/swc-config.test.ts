@@ -1,12 +1,12 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { createRsbuild } from '@rsbuild/core'
 import type { RsbuildPluginAPI, Rspack } from '@rsbuild/core'
 import { assert, describe, expect, test, vi } from 'vitest'
 
 import { LAYERS, ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'
 
+import { createStubRspeedy as createRspeedy } from './createRspeedy.js'
 import { getLoaderOptions } from './getLoaderOptions.js'
 import { pluginStubRspeedyAPI } from './stub-rspeedy-api.plugin.js'
 
@@ -17,8 +17,8 @@ describe('SWC configuration', () => {
   test('defaults', async () => {
     vi.stubEnv('NODE_ENV', 'development')
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
-    const rsbuild = await createRsbuild({
-      rsbuildConfig: {
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
         plugins: [
           {
             name: 'test:swc',
@@ -50,7 +50,7 @@ describe('SWC configuration', () => {
           "isModule": "unknown",
           "jsc": {
             "experimental": {
-              "cacheRoot": "<WORKSPACE>/node_modules/.cache/.swc",
+              "cacheRoot": "<WORKSPACE>/packages/rspeedy/plugin-react/test/node_modules/.cache/.swc",
               "keepImportAttributes": true,
             },
             "externalHelpers": true,
@@ -62,6 +62,7 @@ describe('SWC configuration', () => {
               "syntax": "typescript",
               "tsx": false,
             },
+            "target": "es2019",
             "transform": {
               "decoratorVersion": "2022-03",
               "legacyDecorator": false,
@@ -84,8 +85,8 @@ describe('SWC configuration', () => {
   test('with tools.swc', async () => {
     vi.stubEnv('NODE_ENV', 'production')
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
-    const rsbuild = await createRsbuild({
-      rsbuildConfig: {
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
         tools: {
           swc: {
             jsc: {
@@ -119,8 +120,8 @@ describe('SWC configuration', () => {
   test('layers', async () => {
     vi.stubEnv('NODE_ENV', 'development')
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
-    const rsbuild = await createRsbuild({
-      rsbuildConfig: {
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
         plugins: [
           pluginStubRspeedyAPI(),
           pluginReactLynx(),
@@ -192,8 +193,8 @@ describe('SWC configuration', () => {
 
   test('layers - main-thread default target', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
-    const rsbuild = await createRsbuild({
-      rsbuildConfig: {
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
         plugins: [
           pluginStubRspeedyAPI(),
           pluginReactLynx(),
@@ -234,8 +235,8 @@ describe('SWC configuration', () => {
 
   test('layers - main-thread custom target', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
-    const rsbuild = await createRsbuild({
-      rsbuildConfig: {
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
         tools: {
           swc: {
             jsc: {
@@ -279,7 +280,7 @@ describe('SWC configuration', () => {
         rules: [backgroundRule],
       },
     }, 'builtin:swc-loader')
-    expect(backgroundLoaderOptions.jsc.target).toBe('es2022')
+    expect(backgroundLoaderOptions.jsc.target).toBe('es2019')
 
     const mainThreadRule = swcRule.oneOf.find(rule =>
       rule.issuerLayer === LAYERS.MAIN_THREAD
@@ -304,8 +305,8 @@ describe('SWC configuration', () => {
 
   test('`include` defaults to all js file if not configured by user', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
-    const rsbuild = await createRsbuild({
-      rsbuildConfig: {
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
         source: {
           include: [],
         },

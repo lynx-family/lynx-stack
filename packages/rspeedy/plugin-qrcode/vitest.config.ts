@@ -4,11 +4,6 @@ import type { UserWorkspaceConfig } from 'vitest/config'
 const config: UserWorkspaceConfig = defineProject({
   test: {
     name: 'rspeedy/qrcode',
-    expect: {
-      poll: {
-        timeout: 3000,
-      },
-    },
   },
 })
 
