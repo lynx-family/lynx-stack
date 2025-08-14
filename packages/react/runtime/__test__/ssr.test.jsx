@@ -1,5 +1,3 @@
-/** @jsxImportSource ../lepus */
-
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { globalEnvManager } from './utils/envManager';

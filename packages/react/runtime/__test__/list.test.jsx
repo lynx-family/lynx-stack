@@ -1,4 +1,3 @@
-/** @jsxImportSource ../lepus */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { elementTree, nativeMethodQueue } from './utils/nativeMethod';
@@ -3502,7 +3501,7 @@ describe('list-item with "defer" attribute', () => {
               "rLynxPublishEvent",
               {
                 "data": {},
-                "handlerName": "-6:__extraProps:onComponentAtIndex",
+                "handlerName": "-4:__extraProps:onComponentAtIndex",
               },
             ],
           ],
@@ -3511,7 +3510,7 @@ describe('list-item with "defer" attribute', () => {
               "rLynxPublishEvent",
               {
                 "data": {},
-                "handlerName": "-4:__extraProps:onRecycleComponent",
+                "handlerName": "-3:__extraProps:onRecycleComponent",
               },
             ],
           ],
