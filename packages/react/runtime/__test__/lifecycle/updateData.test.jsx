@@ -8,6 +8,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 import { replaceCommitHook } from '../../src/lifecycle/patch/commit';
 import { deinitGlobalSnapshotPatch } from '../../src/lifecycle/patch/snapshotPatch';
 import { InitDataConsumer, InitDataProvider, useInitData, withInitDataInState } from '../../src/lynx-api';
+import { useState } from '../../src/index';
 import { __root } from '../../src/root';
 import { globalEnvManager } from '../utils/envManager';
 import { elementTree, waitSchedule } from '../utils/nativeMethod';
@@ -860,6 +861,233 @@ describe('triggerDataUpdated when jsReady is enabled', () => {
             {},
           ],
         ]
+      `);
+    }
+  });
+});
+
+describe('flush pending `renderComponent` before hydrate', () => {
+  beforeEach(() => {
+    globalThis.__FIRST_SCREEN_SYNC_TIMING__ = 'jsReady';
+  });
+
+  afterEach(() => {
+    globalThis.__FIRST_SCREEN_SYNC_TIMING__ = 'immediately';
+  });
+
+  it('`updateCardData` before hydrate should take effects', async function() {
+    function Comp() {
+      const initData = useInitData();
+
+      return <text>{initData.msg}</text>;
+    }
+
+    // main thread render
+    {
+      __root.__jsx = <Comp />;
+      renderPage({ msg: 'init' });
+      expect(__root.__element_root).toMatchInlineSnapshot(`
+        <page
+          cssId="default-entry-from-native:0"
+        >
+          <text>
+            <raw-text
+              text="init"
+            />
+          </text>
+        </page>
+      `);
+    }
+
+    // main thread updatePage
+    {
+      __root.__jsx = <Comp />;
+      updatePage({ msg: 'update' });
+      expect(__root.__element_root).toMatchInlineSnapshot(`
+        <page
+          cssId="default-entry-from-native:0"
+        >
+          <text>
+            <raw-text
+              text="update"
+            />
+          </text>
+        </page>
+      `);
+    }
+
+    // reset back
+    // lynx.__initData is shared between main thread and background IN TEST
+    // so we should reset it
+    lynx.__initData.msg = 'init';
+
+    // background render
+    {
+      globalEnvManager.switchToBackground();
+      render(<Comp />, __root);
+    }
+
+    // LifecycleConstant.jsReady
+    {
+      globalEnvManager.switchToMainThread();
+      rLynxJSReady();
+    }
+
+    // background updateCardData
+    {
+      globalEnvManager.switchToBackground();
+
+      const spy = vi.spyOn(Component.prototype, 'setState');
+      lynxCoreInject.tt.updateCardData({ msg: 'update' });
+      expect(spy).toBeCalled();
+      spy.mockRestore();
+    }
+
+    // hydrate
+    {
+      globalEnvManager.switchToBackground();
+      // LifecycleConstant.firstScreen
+      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+    }
+
+    // rLynxChange
+    {
+      globalEnvManager.switchToMainThread();
+      globalThis.__OnLifecycleEvent.mockClear();
+      const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
+      globalThis[rLynxChange[0]](rLynxChange[1]);
+      expect(rLynxChange[1]).toMatchInlineSnapshot(`
+        {
+          "data": "{"patchList":[{"snapshotPatch":[],"id":24}]}",
+          "patchOptions": {
+            "isHydration": true,
+            "pipelineOptions": {
+              "dsl": "reactLynx",
+              "needTimestamps": true,
+              "pipelineID": "pipelineID",
+              "pipelineOrigin": "reactLynxHydrate",
+              "stage": "hydrate",
+            },
+            "reloadVersion": 0,
+          },
+        }
+      `);
+      expect(__root.__element_root).toMatchInlineSnapshot(`
+        <page
+          cssId="default-entry-from-native:0"
+        >
+          <text>
+            <raw-text
+              text="update"
+            />
+          </text>
+        </page>
+      `);
+    }
+  });
+
+  it('throw in process will not prevent hydrate', async function() {
+    let _setShouldThrow;
+    function Comp({ isBackground }) {
+      const [shouldThrow, setShouldThrow] = useState();
+
+      _setShouldThrow = setShouldThrow;
+
+      if (shouldThrow) {
+        throw new Error('initData.shouldThrow is true');
+      }
+
+      return <text>isBackground: {`${isBackground}`}</text>;
+    }
+
+    // main thread render
+    {
+      __root.__jsx = <Comp />;
+      renderPage({});
+      expect(__root.__element_root).toMatchInlineSnapshot(`
+        <page
+          cssId="default-entry-from-native:0"
+        >
+          <text>
+            <raw-text
+              text="isBackground: "
+            />
+            <wrapper>
+              <raw-text
+                text="undefined"
+              />
+            </wrapper>
+          </text>
+        </page>
+      `);
+    }
+
+    // background render
+    {
+      globalEnvManager.switchToBackground();
+      render(<Comp isBackground={true} />, __root);
+      _setShouldThrow(true);
+    }
+
+    // LifecycleConstant.jsReady
+    {
+      globalEnvManager.switchToMainThread();
+      rLynxJSReady();
+    }
+
+    // hydrate
+    {
+      globalEnvManager.switchToBackground();
+      // LifecycleConstant.firstScreen
+      const spy = vi.spyOn(lynx, 'reportError');
+      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      expect(spy.mock.calls).toMatchInlineSnapshot(`
+        [
+          [
+            [Error: initData.shouldThrow is true],
+          ],
+        ]
+      `);
+      spy.mockRestore();
+    }
+
+    // rLynxChange
+    {
+      globalEnvManager.switchToMainThread();
+      globalThis.__OnLifecycleEvent.mockClear();
+      const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
+      globalThis[rLynxChange[0]](rLynxChange[1]);
+      expect(rLynxChange[1]).toMatchInlineSnapshot(`
+        {
+          "data": "{"patchList":[{"snapshotPatch":[3,-3,0,"true"],"id":26}]}",
+          "patchOptions": {
+            "isHydration": true,
+            "pipelineOptions": {
+              "dsl": "reactLynx",
+              "needTimestamps": true,
+              "pipelineID": "pipelineID",
+              "pipelineOrigin": "reactLynxHydrate",
+              "stage": "hydrate",
+            },
+            "reloadVersion": 0,
+          },
+        }
+      `);
+      expect(__root.__element_root).toMatchInlineSnapshot(`
+        <page
+          cssId="default-entry-from-native:0"
+        >
+          <text>
+            <raw-text
+              text="isBackground: "
+            />
+            <wrapper>
+              <raw-text
+                text="true"
+              />
+            </wrapper>
+          </text>
+        </page>
       `);
     }
   });

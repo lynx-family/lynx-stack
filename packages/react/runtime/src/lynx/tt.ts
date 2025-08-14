@@ -1,7 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { render } from 'preact';
+import { process, render } from 'preact';
 
 import { LifecycleConstant, NativeUpdateDataType } from '../lifecycleConstant.js';
 import type { FirstScreenData } from '../lifecycleConstant.js';
@@ -70,6 +70,12 @@ function onLifecycleEvent([type, data]: [LifecycleConstant, unknown]) {
 function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
   switch (type) {
     case LifecycleConstant.firstScreen: {
+      let processErr;
+      try {
+        process();
+      } catch (e) {
+        processErr = e;
+      }
       const { root: lepusSide, jsReadyEventIdSwap } = data as FirstScreenData;
       if (__PROFILE__) {
         profileStart('ReactLynx::hydrate');
@@ -126,6 +132,10 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
         });
       });
       runDelayedUiOps();
+
+      if (processErr) {
+        throw processErr;
+      }
       break;
     }
     case LifecycleConstant.globalEventFromLepus: {
