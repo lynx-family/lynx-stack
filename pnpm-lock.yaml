@@ -672,8 +672,8 @@ importers:
         version: link:../web-worker-runtime
     devDependencies:
       '@lynx-js/lynx-core':
-        specifier: 0.1.2
-        version: 0.1.2
+        specifier: 0.1.3
+        version: 0.1.3
       '@lynx-js/web-elements':
         specifier: workspace:*
         version: link:../web-elements
@@ -722,8 +722,8 @@ importers:
   packages/web-platform/web-explorer:
     devDependencies:
       '@lynx-js/lynx-core':
-        specifier: 0.1.2
-        version: 0.1.2
+        specifier: 0.1.3
+        version: 0.1.3
       '@lynx-js/web-core':
         specifier: workspace:*
         version: link:../web-core
@@ -796,8 +796,8 @@ importers:
   packages/web-platform/web-tests:
     devDependencies:
       '@lynx-js/lynx-core':
-        specifier: 0.1.2
-        version: 0.1.2
+        specifier: 0.1.3
+        version: 0.1.3
       '@lynx-js/offscreen-document':
         specifier: workspace:*
         version: link:../offscreen-document
@@ -883,8 +883,8 @@ importers:
         version: link:../web-worker-rpc
     devDependencies:
       '@lynx-js/lynx-core':
-        specifier: 0.1.2
-        version: 0.1.2
+        specifier: 0.1.3
+        version: 0.1.3
 
   packages/webpack/chunk-loading-webpack-plugin:
     dependencies:
@@ -2112,8 +2112,8 @@ packages:
   '@leichtgewicht/ip-codec@2.0.5':
     resolution: {integrity: sha512-Vo+PSpZG2/fmgmiNzYK9qWRh8h/CHrwD0mo1h1DzL4yzHNSfWYujGTYsWGreD000gcgmZ7K4Ys6Tx9TxtsKdDw==}
 
-  '@lynx-js/lynx-core@0.1.2':
-    resolution: {integrity: sha512-/oqDTnxbfmc/Haz0rUNC95lqQ082wEdMVzYfPo8ySr0WDtK+64Odo2k47s9uVmsIoX0h09GLsg4NMoWC0kjyPQ==}
+  '@lynx-js/lynx-core@0.1.3':
+    resolution: {integrity: sha512-uWzKKYJUK4Q09ZRZxWSAFINnmZb9piWPbvWF9SkLn+3snBl9u/BJa4ekPRcKWAhBmpbtxWH1x27fxe3Q3p5l3Q==}
 
   '@lynx-js/tasm@0.0.5':
     resolution: {integrity: sha512-E5ZTtNQslv0zGMqtEo/GULHM0XiyvkuL4K8SxP8R9n0WnInppIiekIP5Rzvt+oex7Sg8ngtm/ToUDiZ0NQ9+Qg==}
@@ -9111,7 +9111,7 @@ snapshots:
 
   '@leichtgewicht/ip-codec@2.0.5': {}
 
-  '@lynx-js/lynx-core@0.1.2': {}
+  '@lynx-js/lynx-core@0.1.3': {}
 
   '@lynx-js/tasm@0.0.5': {}
 
