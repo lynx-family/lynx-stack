@@ -1286,6 +1286,25 @@ test.describe('reactlynx3 tests', () => {
         await diffScreenShot(page, title, 'blue');
       },
     );
+    test(
+      'api-global-disallowed-vars',
+      async ({ page }, { title }) => {
+        let mts = false;
+        let bts = false;
+        page.on('console', (message) => {
+          if (message.text() === 'main thread: undefined, undefined') {
+            mts = true;
+          }
+          if (message.text() === 'background thread: undefined, undefined') {
+            bts = true;
+          }
+        });
+        await goto(page, title);
+        await wait(200);
+        !isSSR && expect(mts).toBe(true);
+        expect(bts).toBe(true);
+      },
+    );
   });
 
   test.describe('configs', () => {

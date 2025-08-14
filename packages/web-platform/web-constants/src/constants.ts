@@ -51,3 +51,5 @@ export const inShadowRootStyles: string[] = [
     overflow: visible;
   }`,
 ];
+
+export const globalDisallowedVars = ['navigator', 'postMessage'];
