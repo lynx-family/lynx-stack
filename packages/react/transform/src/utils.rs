@@ -11,7 +11,9 @@ pub fn jsonify(e: Expr) -> Value {
         .into_iter()
         .map(|v| match v {
           PropOrSpread::Prop(p) if p.is_key_value() => p.key_value().unwrap(),
-          _ => unreachable!(),
+          _ => unreachable!(
+            "Unexpected property name type in JSON conversion - expected Ident, Str, or Num"
+          ),
         })
         .map(|p: KeyValueProp| {
           let value = jsonify(*p.value);
@@ -19,7 +21,9 @@ pub fn jsonify(e: Expr) -> Value {
             PropName::Str(s) => s.value.to_string(),
             PropName::Ident(id) => id.sym.to_string(),
             PropName::Num(n) => format!("{}", n.value),
-            _ => unreachable!(),
+            _ => unreachable!(
+              "Unexpected property name type in JSON conversion - expected Ident, Str, or Num"
+            ),
           };
           (key, value)
         })
@@ -49,7 +53,10 @@ pub fn jsonify(e: Expr) -> Value {
       }) => value.to_string(),
       _ => String::new(),
     }),
-    _ => unreachable!("jsonify: Expr {:?} cannot be converted to json", e),
+    _ => unreachable!(
+      "Unexpected expression type in JSON conversion - cannot convert {:?} to JSON",
+      e
+    ),
   }
 }
 

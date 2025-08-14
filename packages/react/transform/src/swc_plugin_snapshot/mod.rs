@@ -592,8 +592,8 @@ where
                           expr: JSXExpr::JSXEmptyExpr(_),
                           ..
                         })) => {}
-                        Some(JSXAttrValue::JSXElement(_)) => unreachable!(),
-                        Some(JSXAttrValue::JSXFragment(_)) => unreachable!(),
+                        Some(JSXAttrValue::JSXElement(_)) => unreachable!("Unexpected JSXElement in JSX attribute value - not supported"),
+                        Some(JSXAttrValue::JSXFragment(_)) => unreachable!("Unexpected JSXFragment in JSX attribute value - not supported"),
                       };
                     }
                     AttrName::Dataset(name) => {
@@ -630,8 +630,8 @@ where
                           expr: JSXExpr::JSXEmptyExpr(_),
                           ..
                         })) => {}
-                        Some(JSXAttrValue::JSXElement(_)) => unreachable!(),
-                        Some(JSXAttrValue::JSXFragment(_)) => unreachable!(),
+                        Some(JSXAttrValue::JSXElement(_)) => unreachable!("Unexpected JSXElement in JSX attribute value - not supported"),
+                        Some(JSXAttrValue::JSXFragment(_)) => unreachable!("Unexpected JSXFragment in JSX attribute value - not supported"),
                       };
                     }
                     AttrName::Event(..) | AttrName::Ref => {
@@ -696,8 +696,8 @@ where
                           expr: JSXExpr::JSXEmptyExpr(_),
                           ..
                         })) => {}
-                        Some(JSXAttrValue::JSXElement(_)) => unreachable!(),
-                        Some(JSXAttrValue::JSXFragment(_)) => unreachable!(),
+                        Some(JSXAttrValue::JSXElement(_)) => unreachable!("Unexpected JSXElement in JSX attribute value - not supported"),
+                        Some(JSXAttrValue::JSXFragment(_)) => unreachable!("Unexpected JSXFragment in JSX attribute value - not supported"),
                       };
                     }
                     AttrName::Class => {
@@ -735,8 +735,8 @@ where
                           expr: JSXExpr::JSXEmptyExpr(_),
                           ..
                         })) => {}
-                        Some(JSXAttrValue::JSXElement(_)) => unreachable!(),
-                        Some(JSXAttrValue::JSXFragment(_)) => unreachable!(),
+                        Some(JSXAttrValue::JSXElement(_)) => unreachable!("Unexpected JSXElement in JSX attribute value - not supported"),
+                        Some(JSXAttrValue::JSXFragment(_)) => unreachable!("Unexpected JSXFragment in JSX attribute value - not supported"),
                       };
                     }
                     AttrName::ID => {
@@ -764,11 +764,11 @@ where
                           expr: JSXExpr::JSXEmptyExpr(_),
                           ..
                         })) => {}
-                        Some(JSXAttrValue::JSXElement(_)) => unreachable!(),
-                        Some(JSXAttrValue::JSXFragment(_)) => unreachable!(),
+                        Some(JSXAttrValue::JSXElement(_)) => unreachable!("Unexpected JSXElement in JSX attribute value - not supported"),
+                        Some(JSXAttrValue::JSXFragment(_)) => unreachable!("Unexpected JSXFragment in JSX attribute value - not supported"),
                       };
                     }
-                    AttrName::ListItemPlatformInfo => unreachable!(),
+                    AttrName::ListItemPlatformInfo => unreachable!("Unexpected ListItemPlatformInfo attribute in static JSX processing"),
                     AttrName::WorkletEvent(..) | AttrName::WorkletRef(..) => {
                       unreachable!("A worklet event should have an attribute namespace.")
                     }
@@ -1476,7 +1476,9 @@ where
         call.span = pure_span;
         Expr::Call(call)
       }
-      _ => unreachable!(),
+      _ => {
+        unreachable!("Unexpected expression type in snapshot creation - expected Call expression")
+      }
     };
 
     let snapshot_def = ModuleItem::Stmt(quote!(
