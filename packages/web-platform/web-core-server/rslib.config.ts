@@ -6,6 +6,10 @@ const config: RslibConfig = defineConfig({
     { format: 'esm', syntax: ['esnext'], dts: true },
   ],
   output: {
+    filename: {
+      // See: https://github.com/web-infra-dev/rslib/issues/1167
+      wasm: '[contenthash:8].module.wasm',
+    },
     sourceMap: true,
   },
   tools: {
