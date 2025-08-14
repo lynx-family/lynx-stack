@@ -1093,23 +1093,15 @@ where
               break;
             }
             let val = words.next();
-            match pragma {
-              // Some("@jsxImportSource") => {
-              //   if let Some(src) = val {
-              //     self.cfg.runtime_pkg = src.into();
-              //   }
-              // }
-              Some("@jsxCSSId") => {
-                if let Some(css_id) = val {
-                  self.css_id_value = Some(Expr::Lit(Lit::Num(
-                    css_id
-                      .parse::<f64>()
-                      .expect("should have numeric cssId")
-                      .into(),
-                  )));
-                }
+            if let Some("@jsxCSSId") = pragma {
+              if let Some(css_id) = val {
+                self.css_id_value = Some(Expr::Lit(Lit::Num(
+                  css_id
+                    .parse::<f64>()
+                    .expect("should have numeric cssId")
+                    .into(),
+                )));
               }
-              _ => {}
             }
           }
         }
@@ -1232,10 +1224,10 @@ where
       .enumerate()
       .map(|(index, dynamic_part)| {
         (
-          JSXAttrName::Ident(IdentName::new(format!("__{}", index).into(), DUMMY_SP)),
-          JSXAttrName::Ident(IdentName::new(format!("_c{}", index).into(), DUMMY_SP)),
+          JSXAttrName::Ident(IdentName::new(format!("__{index}").into(), DUMMY_SP)),
+          JSXAttrName::Ident(IdentName::new(format!("_c{index}").into(), DUMMY_SP)),
           JSXElementName::Ident(Ident::new(
-            format!("s{}", index).into(),
+            format!("s{index}").into(),
             DUMMY_SP,
             SyntaxContext::default(),
           )),
