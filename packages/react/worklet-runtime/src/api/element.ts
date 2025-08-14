@@ -1,6 +1,9 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { Animation } from './animation/animation.js';
+import { KeyframeEffect } from './animation/effect.js';
+
 export class Element {
   private static willFlush = false;
 
@@ -52,6 +55,14 @@ export class Element {
     return __QuerySelectorAll(this.element, selector, {}).map((element) => {
       return new Element(element);
     });
+  }
+
+  public animate(
+    keyframes: Record<string, number | string>[],
+    options?: number | Record<string, number | string>,
+  ): Animation {
+    const normalizedOptions = typeof options === 'number' ? { duration: options } : options ?? {};
+    return new Animation(new KeyframeEffect(this, keyframes, normalizedOptions));
   }
 
   public invoke(
