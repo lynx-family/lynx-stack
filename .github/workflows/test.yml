@@ -182,7 +182,6 @@ jobs:
         --logHeapUsage
         --silent
   test-rust:
-    needs: build
     uses: ./.github/workflows/rust.yml
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
