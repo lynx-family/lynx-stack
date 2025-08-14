@@ -4,8 +4,6 @@ pub mod transformer;
 
 #[wasm_bindgen]
 pub fn transform_raw_u16_inline_style_ptr(str: &str) -> Option<String> {
-  // Safety: We assume the pointer is valid and points to a slice of u16
-  // of length `len`. This is a contract with the JavaScript side.
   let (transformed_inline_style, _) = transformer::transform::transform_inline_style_string(str);
   if !transformed_inline_style.is_empty() {
     Some(transformed_inline_style)
@@ -16,7 +14,6 @@ pub fn transform_raw_u16_inline_style_ptr(str: &str) -> Option<String> {
 
 #[wasm_bindgen]
 pub fn transform_raw_u16_inline_style_ptr_parsed(name: &str, value: &str) -> Option<js_sys::Array> {
-  // Call the tokenize function with our data and callback
   let (result, children_result) = transformer::transform::query_transform_rules(name, value);
   if result.is_empty() && children_result.is_empty() {
     // if there are no results, we return None
