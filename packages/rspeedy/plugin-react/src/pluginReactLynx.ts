@@ -12,15 +12,16 @@ import { createRequire } from 'node:module'
 
 import type { RsbuildPlugin } from '@rsbuild/core'
 
+import { pluginReactAlias } from '@lynx-js/react-alias-rsbuild-plugin'
 import type {
   CompatVisitorConfig,
   DefineDceVisitorConfig,
   ExtractStrConfig,
   ShakeVisitorConfig,
 } from '@lynx-js/react-transform'
+import { LAYERS } from '@lynx-js/react-webpack-plugin'
 import type { ExposedAPI } from '@lynx-js/rspeedy'
 
-import { applyAlias } from './alias.js'
 import { applyBackgroundOnly } from './backgroundOnly.js'
 import { applyCSS } from './css.js'
 import { applyEntry } from './entry.js'
@@ -323,7 +324,7 @@ export interface PluginReactLynxOptions {
  */
 export function pluginReactLynx(
   userOptions?: PluginReactLynxOptions,
-): RsbuildPlugin {
+): RsbuildPlugin[] {
   validateConfig(userOptions)
 
   const engineVersion = userOptions?.engineVersion
@@ -362,73 +363,78 @@ export function pluginReactLynx(
     engineVersion,
   })
 
-  return {
-    name: 'lynx:react',
-    pre: ['lynx:rsbuild:plugin-api'],
-    async setup(api) {
-      await applyAlias(api, resolvedOptions.experimental_isLazyBundle)
-      applyCSS(api, resolvedOptions)
-      applyEntry(api, resolvedOptions)
-      applyBackgroundOnly(api)
-      applyGenerator(api, resolvedOptions)
-      applyLoaders(api, resolvedOptions)
-      applyRefresh(api)
-      applySplitChunksRule(api)
-      applySWC(api)
-      applyUseSyncExternalStore(api)
+  return [
+    pluginReactAlias({
+      lazy: resolvedOptions.experimental_isLazyBundle,
+      LAYERS,
+    }),
+    {
+      name: 'lynx:react',
+      pre: ['lynx:rsbuild:plugin-api'],
+      setup(api) {
+        applyCSS(api, resolvedOptions)
+        applyEntry(api, resolvedOptions)
+        applyBackgroundOnly(api)
+        applyGenerator(api, resolvedOptions)
+        applyLoaders(api, resolvedOptions)
+        applyRefresh(api)
+        applySplitChunksRule(api)
+        applySWC(api)
+        applyUseSyncExternalStore(api)
 
-      api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
-        const userConfig = api.getRsbuildConfig('original')
-        if (typeof userConfig.source?.include === 'undefined') {
-          config = mergeRsbuildConfig(config, {
-            source: {
-              include: [
-                /\.(?:js|mjs|cjs)$/,
-              ],
+        api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
+          const userConfig = api.getRsbuildConfig('original')
+          if (typeof userConfig.source?.include === 'undefined') {
+            config = mergeRsbuildConfig(config, {
+              source: {
+                include: [
+                  /\.(?:js|mjs|cjs)$/,
+                ],
+              },
+            })
+          }
+
+          // This is used for compat with `@lynx-js/rspeedy` <= 0.9.6
+          // where the default value of `output.inlineScripts` is `false`.
+          // TODO: remove this when required Rspeedy version bumped to ^0.9.7
+          if (typeof userConfig.output?.inlineScripts === 'undefined') {
+            config = mergeRsbuildConfig(config, {
+              output: {
+                inlineScripts: true,
+              },
+            })
+          }
+
+          // This is used to avoid the IIFE in main-thread.js, which would cause memory leak.
+          // TODO: remove this when required Rspeedy version bumped to ^0.10.0
+          config = mergeRsbuildConfig({
+            tools: {
+              rspack: { output: { iife: false } },
             },
-          })
+          }, config)
+
+          return config
+        })
+
+        if (resolvedOptions.experimental_isLazyBundle) {
+          applyLazy(api)
         }
 
-        // This is used for compat with `@lynx-js/rspeedy` <= 0.9.6
-        // where the default value of `output.inlineScripts` is `false`.
-        // TODO: remove this when required Rspeedy version bumped to ^0.9.7
-        if (typeof userConfig.output?.inlineScripts === 'undefined') {
-          config = mergeRsbuildConfig(config, {
-            output: {
-              inlineScripts: true,
-            },
-          })
-        }
+        const rspeedyAPIs = api.useExposed<ExposedAPI>(
+          Symbol.for('rspeedy.api'),
+        )!
 
-        // This is used to avoid the IIFE in main-thread.js, which would cause memory leak.
-        // TODO: remove this when required Rspeedy version bumped to ^0.10.0
-        config = mergeRsbuildConfig({
-          tools: {
-            rspack: { output: { iife: false } },
-          },
-        }, config)
+        const require = createRequire(import.meta.url)
 
-        return config
-      })
+        const { version } = require('../package.json') as { version: string }
 
-      if (resolvedOptions.experimental_isLazyBundle) {
-        applyLazy(api)
-      }
-
-      const rspeedyAPIs = api.useExposed<ExposedAPI>(
-        Symbol.for('rspeedy.api'),
-      )!
-
-      const require = createRequire(import.meta.url)
-
-      const { version } = require('../package.json') as { version: string }
-
-      rspeedyAPIs.debug(() => {
-        const webpackPluginPath = require.resolve(
-          '@lynx-js/react-webpack-plugin',
-        )
-        return `Using @lynx-js/react-webpack-plugin v${version} at ${webpackPluginPath}`
-      })
+        rspeedyAPIs.debug(() => {
+          const webpackPluginPath = require.resolve(
+            '@lynx-js/react-webpack-plugin',
+          )
+          return `Using @lynx-js/react-webpack-plugin v${version} at ${webpackPluginPath}`
+        })
+      },
     },
-  }
+  ]
 }
