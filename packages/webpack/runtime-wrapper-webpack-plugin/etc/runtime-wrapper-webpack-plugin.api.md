@@ -16,6 +16,7 @@ export class RuntimeWrapperWebpackPlugin {
 
 // @public
 export interface RuntimeWrapperWebpackPluginOptions {
+    backgroundChunks: string[];
     bannerType: (filename: string) => 'script' | 'bundle';
     experimental_isLazyBundle?: boolean;
     injectVars?: ((vars: string[]) => string[]) | string[];

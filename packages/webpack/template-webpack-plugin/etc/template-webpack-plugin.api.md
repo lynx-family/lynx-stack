@@ -87,6 +87,7 @@ export class LynxEncodePlugin {
 
 // @public
 export interface LynxEncodePluginOptions {
+    enableEventsCacheManifest?: boolean | undefined;
     // Warning: (ae-forgotten-export) The symbol "InlineChunkConfig" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)

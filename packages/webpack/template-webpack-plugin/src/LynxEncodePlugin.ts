@@ -1,6 +1,9 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import fs from 'node:fs/promises';
+import { createRequire } from 'node:module';
+import path from 'node:path';
 
 import type { Compiler } from 'webpack';
 
@@ -24,6 +27,14 @@ type InlineChunkConfig = boolean | InlineChunkTest | {
  */
 export interface LynxEncodePluginOptions {
   inlineScripts?: InlineChunkConfig | undefined;
+  /**
+   * Whether to cache events until the background script is fully loaded.
+   *
+   * It is required when chunk splitting is enabled.
+   *
+   * @defaultValue false
+   */
+  enableEventsCacheManifest?: boolean | undefined;
 }
 
 /**
@@ -70,6 +81,7 @@ export class LynxEncodePlugin {
   static defaultOptions: Readonly<Required<LynxEncodePluginOptions>> = Object
     .freeze<Required<LynxEncodePluginOptions>>({
       inlineScripts: true,
+      enableEventsCacheManifest: false,
     });
   /**
    * The entry point of a webpack plugin.
@@ -144,6 +156,39 @@ export class LynxEncodePluginImpl {
             },
             [{}, {}] as [Record<string, string>, Record<string, string>],
           );
+
+        if (this.options.enableEventsCacheManifest) {
+          let backgroundScriptName = null;
+          for (const entrypoint of compilation.entrypoints.values()) {
+            for (const file of entrypoint.getEntrypointChunk().files) {
+              if (file.endsWith('.js') && manifest[file]) {
+                backgroundScriptName = file;
+                break;
+              }
+            }
+            if (backgroundScriptName) break;
+          }
+
+          const enableEventsCacheManifestScriptName = 'events-cache.js';
+          const require = createRequire(import.meta.url);
+          const enableEventsCacheManifestScript = await fs.readFile(
+            require.resolve('../static/' + enableEventsCacheManifestScriptName),
+            'utf-8',
+          );
+          if (backgroundScriptName === null) {
+            compilation.errors.push(
+              new compiler.webpack.WebpackError(
+                `LynxEncodePlugin: ${enableEventsCacheManifestScriptName} is not injected because no background script found.`,
+              ),
+            );
+          } else {
+            inlinedManifest[enableEventsCacheManifestScriptName] =
+              enableEventsCacheManifestScript.replace(
+                'background.js',
+                path.posix.basename(backgroundScriptName),
+              );
+          }
+        }
 
         let publicPath = '/';
         if (typeof compilation?.outputOptions.publicPath === 'function') {

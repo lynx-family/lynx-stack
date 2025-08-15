@@ -2,7 +2,11 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { BannerPlugin, Compiler } from 'webpack';
+import type {
+  BannerPlugin,
+  Compiler,
+  RuntimeGlobals as WebpackRuntimeGlobals,
+} from 'webpack';
 
 import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
@@ -42,6 +46,12 @@ interface RuntimeWrapperWebpackPluginOptions {
    * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.experimental_isLazyBundle}
    */
   experimental_isLazyBundle?: boolean;
+  /**
+   * The background entry chunks of the app.
+   *
+   * @example ['.rspeedy/main/background.[contenthash:8].js']
+   */
+  backgroundChunks: string[];
 }
 
 const defaultInjectVars = [
@@ -110,6 +120,7 @@ class RuntimeWrapperWebpackPlugin {
     bannerType: () => 'script',
     injectVars: defaultInjectVars,
     experimental_isLazyBundle: false,
+    backgroundChunks: [],
   });
 
   /**
@@ -151,7 +162,21 @@ class RuntimeWrapperWebpackPluginImpl {
     if (typeof options.injectVars === 'function') {
       injectStr = options.injectVars(defaultInjectVars).join(',');
     }
-    const iife = compiler.options.output.iife ?? true;
+
+    compiler.hooks.environment.tap(
+      this.name,
+      () => {
+        if (
+          compiler.options.optimization.splitChunks
+          && compiler.options.output.iife
+        ) {
+          compiler.options.output.iife = false;
+          console.warn(
+            '`iife` is changed to `false` because it is only supported in `all-in-one` chunkSplit strategy, please set `performance.chunkSplit.strategy` to `all-in-one` to use `iife`.',
+          );
+        }
+      },
+    );
 
     // banner
     new BannerPlugin({
@@ -169,7 +194,7 @@ class RuntimeWrapperWebpackPluginImpl {
             overrideRuntimePromise: true,
             moduleId: '[name].js',
             targetSdkVersion,
-            iife,
+            iife: compiler.options.output.iife ?? false,
           })
           // In standalone lazy bundle mode, the lazy bundle will
           // also has chunk.id "main", it will be conflict with the
@@ -187,11 +212,19 @@ class RuntimeWrapperWebpackPluginImpl {
       test: test!,
       footer: true,
       raw: true,
-      banner: ({ filename }) => {
+      banner: ({ filename, chunk }) => {
+        const generateAmdFooter = typeof chunk.filenameTemplate === 'string'
+            && this.options.backgroundChunks.includes(chunk.filenameTemplate)
+          ? amdFooterBTSEntry
+          : amdFooter;
         const footer = this.#getBannerType(filename) === 'script'
           ? loadScriptFooter
           : loadBundleFooter;
-        return amdFooter('[name].js', iife) + footer;
+        return generateAmdFooter(
+          '[name].js',
+          compiler.options.output.iife ?? false,
+          compiler.webpack.RuntimeGlobals,
+        ) + footer;
       },
     }).apply(compiler);
   }
@@ -285,6 +318,26 @@ ${iifeWrapper}
 
 const amdFooter = (moduleId: string, iife: boolean) => `
 ${iife ? '' : '})();'}
+    });
+    return tt.require("${moduleId}");`;
+
+const amdFooterBTSEntry = (
+  moduleId: string,
+  iife: boolean,
+  runtimeGlobals: typeof WebpackRuntimeGlobals,
+) => `
+${
+  iife ? '' : `
+
+// __webpack_exports__ will be a Promise when chunk splitting is enabled.
+// in this case, we should wait for the Promise to resolve before
+// sending any native events to BTS
+// We export the __webpack_exports__ here and the exports will be used
+// by a cache layer to wait for the Promise to resolve
+module.exports = ${runtimeGlobals.exports};
+
+})();`
+}
     });
     return tt.require("${moduleId}");`;
 
