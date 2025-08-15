@@ -9,18 +9,20 @@ import { createElement as mainThreadCreateElement } from '../lepus/index.js';
 
 export const createElement: typeof import('preact/compat').createElement = /*#__PURE__*/ (() => {
   if (process.env['NODE_ENV'] === 'test') {
-    return function<P>(type: ComponentType<P>, props: Attributes & P, children: ComponentChildren[]) {
+    return function<P>(type: ComponentType<P>, props: Attributes & P, ...children: ComponentChildren[]) {
+      children ??= [];
       if (__BACKGROUND__) {
-        return preactCreateElement(type, props, children);
+        return preactCreateElement(type, props, ...children);
       } else {
-        return mainThreadCreateElement(type, props, children);
+        return mainThreadCreateElement(type, props, ...children);
       }
     } as typeof import('preact/compat').createElement;
+    /* v8 ignore start */
   }
-
   if (__BACKGROUND__) {
     return preactCreateElement;
   } else {
     return mainThreadCreateElement;
   }
+  /* v8 ignore stop */
 })();

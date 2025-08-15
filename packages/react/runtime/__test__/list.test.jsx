@@ -3501,7 +3501,7 @@ describe('list-item with "defer" attribute', () => {
               "rLynxPublishEvent",
               {
                 "data": {},
-                "handlerName": "-4:__extraProps:onComponentAtIndex",
+                "handlerName": "-3:__extraProps:onComponentAtIndex",
               },
             ],
           ],
@@ -3510,7 +3510,7 @@ describe('list-item with "defer" attribute', () => {
               "rLynxPublishEvent",
               {
                 "data": {},
-                "handlerName": "-3:__extraProps:onRecycleComponent",
+                "handlerName": "-2:__extraProps:onRecycleComponent",
               },
             ],
           ],
