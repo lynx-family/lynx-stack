@@ -181,7 +181,9 @@ describe('Plugins - Dev', () => {
       },
     })
 
-    const config = await rsbuild.unwrapConfig()
+    const config = await rsbuild.unwrapConfig({
+      action: 'build',
+    })
 
     expect(config.output?.publicPath).toBe('/')
   })
