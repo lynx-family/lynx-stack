@@ -4,9 +4,8 @@
 
 import type { FC, ReactNode, RefCallback } from 'react';
 
-import { cloneElement as _cloneElement, useCallback, useRef, useState } from '@lynx-js/react';
+import { cloneElement, useCallback, useRef, useState } from '@lynx-js/react';
 import type { SnapshotInstance } from '@lynx-js/react/internal';
-import { cloneElement as _cloneElementMainThread } from '@lynx-js/react/lepus';
 
 export interface DeferredListItemProps {
   defer?: boolean | { unmountRecycled?: boolean };
@@ -15,8 +14,6 @@ export interface DeferredListItemProps {
 }
 
 export const DeferredListItem: FC<DeferredListItemProps> = ({ defer, renderListItem, renderChildren }) => {
-  const __cloneElement = __MAIN_THREAD__ ? _cloneElementMainThread : _cloneElement;
-
   const initialDeferRef = useRef(defer);
   const prevDeferRef = useRef(defer);
   const [isReady, setIsReady] = useState(!defer);
@@ -50,7 +47,7 @@ export const DeferredListItem: FC<DeferredListItemProps> = ({ defer, renderListI
   }
 
   return initialDeferRef.current
-    ? __cloneElement(renderListItem(isReady ? renderChildren() : null), {
+    ? cloneElement(renderListItem(isReady ? renderChildren() : null), {
       isReady: +isReady, // hack: preact specially handled boolean props
       ref: onGetSnapshotInstance,
     })
