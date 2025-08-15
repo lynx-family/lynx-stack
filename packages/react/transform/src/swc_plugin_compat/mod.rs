@@ -938,7 +938,7 @@ where
         } else {
           props_key[2..].to_lowercase()
         };
-        return Some(format!("{}{}", prefix, suffix));
+        return Some(format!("{prefix}{suffix}"));
       }
       None
     }
@@ -949,11 +949,8 @@ where
           handler
             .struct_span_warn(
               n.span,
-              format!(
-                "DEPRECATED: old event props \"{}\" is changed to \"{}\"",
-                old_name, new_name
-              )
-              .as_str(),
+              format!("DEPRECATED: old event props \"{old_name}\" is changed to \"{new_name}\"",)
+                .as_str(),
             )
             .emit()
         });
