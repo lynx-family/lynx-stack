@@ -60,7 +60,7 @@ jobs:
           files: target/nextest/ci/test-report.junit.xml
 
   rustfmt:
-    runs-on: lynx-ubuntu-24.04-medium
+    runs-on: lynx-ubuntu-24.04-medium-verify
     timeout-minutes: 10
     permissions:
       contents: read
@@ -76,7 +76,7 @@ jobs:
         run: cargo fmt --check
 
   clippy:
-    runs-on: lynx-ubuntu-24.04-medium
+    runs-on: lynx-ubuntu-24.04-medium-verify
     timeout-minutes: 10
     permissions:
       contents: read

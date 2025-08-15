@@ -10,7 +10,7 @@ env:
   TURBO_TELEMETRY_DISABLED: 1
 jobs:
   build:
-    runs-on: lynx-ubuntu-24.04-medium
+    runs-on: lynx-ubuntu-24.04-medium-verify
     timeout-minutes: 10
     strategy:
       matrix:
