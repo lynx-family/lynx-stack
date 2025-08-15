@@ -17,6 +17,12 @@ packages:
   - packages/webpack/*
   - website
 
+# From `@pnpm/plugin-better-defaults`
+enablePrePostScripts: false
+ignorePatchFailures: false
+optimisticRepeatInstall: true
+resolutionMode: "lowest-direct"
+
 # Default catalogs
 catalog:
   "@microsoft/api-extractor": "7.52.10"
@@ -24,7 +30,7 @@ catalog:
 catalogs:
   # Rsbuild monorepo packages
   rsbuild:
-    "@rsbuild/core": "1.4.13"
+    "@rsbuild/core": "1.4.15"
 
   # Rspack monorepo packages
   rspack:
@@ -35,7 +41,6 @@ catalogs:
 overrides:
   "@rspack/core": "$@rspack/core"
   "@rsbuild/core>@rspack/core": "$@rspack/core"
-  "path-serializer": "^0.5.0"
 
 patchedDependencies:
   "@napi-rs/cli@2.18.4": "patches/@napi-rs__cli@2.18.4.patch"
@@ -49,6 +54,7 @@ onlyBuiltDependencies:
 
 ignoredBuiltDependencies:
   - "@biomejs/biome"
+  - "@parcel/watcher"
   - "@swc/core"
   - core-js
   - unrs-resolver

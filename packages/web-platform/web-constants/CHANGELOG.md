@@ -1,5 +1,22 @@
 # @lynx-js/web-constants
 
+## 0.15.5
+
+### Patch Changes
+
+- fix: load main-thread chunk in ESM format ([#1437](https://github.com/lynx-family/lynx-stack/pull/1437))
+
+  See [nodejs/node#59362](https://github.com/nodejs/node/issues/59362) for more details.
+
+- feat: support path() for `createQuerySelector` ([#1456](https://github.com/lynx-family/lynx-stack/pull/1456))
+
+  - Added `getPathInfo` API to `NativeApp` and its cross-thread handler for retrieving the path from a DOM node to the root.
+  - Implemented endpoint and handler registration in both background and UI threads.
+  - Implemented `nativeApp.getPathInfo()`
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.15.5
+
 ## 0.15.4
 
 ### Patch Changes

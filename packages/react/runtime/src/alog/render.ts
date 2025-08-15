@@ -13,13 +13,19 @@ export function initRenderAlog(): void {
   options[DIFFED] = function(vnode: VNode & { [DOM]: SnapshotInstance }) {
     // Only log on component vnode
     if (typeof vnode.type === 'function') {
+      const threadName = __MAIN_THREAD__ ? 'MainThread' : 'BackgroundThread';
       const displayName = getDisplayName(vnode.type as ComponentClass);
       // log the component render into Alog
-      console.alog?.(
-        `[${__MAIN_THREAD__ ? 'MainThread' : 'BackgroundThread'} Component Render] name: ${displayName}, uniqID: ${
-          vnode[DOM]?.type
-        }, __id: ${vnode[DOM]?.__id}`,
-      );
+      if (__MAIN_THREAD__) {
+        console.alog?.(
+          `[${threadName} Component Render] name: ${displayName}`,
+        );
+      } else if (__BACKGROUND__) {
+        const dom = vnode[DOM];
+        console.alog?.(
+          `[${threadName} Component Render] name: ${displayName}, uniqID: ${dom?.type}, __id: ${dom?.__id}`,
+        );
+      }
     }
     oldAfterDiff?.(vnode);
   };

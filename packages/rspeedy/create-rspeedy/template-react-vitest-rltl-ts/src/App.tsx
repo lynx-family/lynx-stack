@@ -6,14 +6,14 @@ import lynxLogo from './assets/lynx-logo.png'
 import reactLynxLogo from './assets/react-logo.png'
 
 export function App(props: {
-  onMounted?: () => void
+  onRender?: () => void
 }) {
   const [alterLogo, setAlterLogo] = useState(false)
 
   useEffect(() => {
     console.info('Hello, ReactLynx')
-    props.onMounted?.()
   }, [])
+  props.onRender?.()
 
   const onTap = useCallback(() => {
     'background only'
@@ -48,7 +48,7 @@ export function App(props: {
             to see updates!
           </text>
         </view>
-        <view style={{ flex: 1 }}></view>
+        <view style={{ flex: 1 }} />
       </view>
     </view>
   )

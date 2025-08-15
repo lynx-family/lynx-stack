@@ -33,7 +33,7 @@ const Page: ForwardRefExoticComponent<Omit<PropsWithChildren, 'ref'> & RefAttrib
         } = props;
 
         __root.setAttribute('values', [{
-          ref,
+          ...ref ? { ref } : undefined,
           ...restProps,
           __spread: true,
         }]);

@@ -88,7 +88,7 @@ export interface LynxGlobalThis {
 
 // @public
 export class LynxTestingEnv {
-    constructor();
+    constructor(jsdom?: JSDOM);
     backgroundThread: LynxGlobalThis;
     // (undocumented)
     clearGlobal(): void;

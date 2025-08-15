@@ -50,7 +50,9 @@
             "attributes": {
               "value": "Hello from template"
             },
-            "builtinAttributes": {},
+            "builtinAttributes": {
+              "dirtyID": "id-2"
+            },
             "children": [],
             "events": []
           }
@@ -61,7 +63,10 @@
             "name": "tap",
             "value": "templateTap"
           }
-        ]
+        ],
+        "dataset": {
+          "customdata": "customdata"
+        }
       }
     ]
   }

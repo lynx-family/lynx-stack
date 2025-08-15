@@ -23,8 +23,6 @@ beforeAll(() => {
 
   replaceCommitHook();
   injectUpdateMainThread();
-
-  globalThis.__TESTING_FORCE_RENDER_TO_OPCODE__ = true;
 });
 
 beforeEach(() => {
@@ -127,6 +125,9 @@ describe('reload', () => {
         {
           "data": "{"patchList":[{"id":3,"snapshotPatch":[3,-5,0,{"dataX2":"WorldX2"},3,-8,0,"update",3,-6,0,{"attr":{"dataX2":"WorldX2"}}]}]}",
           "patchOptions": {
+            "flowIds": [
+              666,
+            ],
             "reloadVersion": 0,
           },
         }
@@ -235,6 +236,9 @@ describe('reload', () => {
         {
           "data": "{"patchList":[{"id":4,"snapshotPatch":[3,-8,0,"???"]}]}",
           "patchOptions": {
+            "flowIds": [
+              666,
+            ],
             "reloadVersion": 0,
           },
         }
@@ -384,6 +388,9 @@ describe('reload', () => {
         {
           "data": "{"patchList":[{"id":8,"snapshotPatch":[3,-16,0,"update"]}]}",
           "patchOptions": {
+            "flowIds": [
+              666,
+            ],
             "reloadVersion": 2,
           },
         }
@@ -530,6 +537,9 @@ describe('reload', () => {
         {
           "data": "{"patchList":[{"id":11,"snapshotPatch":[3,-5,0,{"dataX2":"WorldX2"},3,-8,0,"update",3,-6,0,{"attr":{"dataX2":"WorldX2"}}]}]}",
           "patchOptions": {
+            "flowIds": [
+              666,
+            ],
             "reloadVersion": 2,
           },
         }
@@ -642,6 +652,9 @@ describe('reload', () => {
         {
           "data": "{"patchList":[{"id":12,"snapshotPatch":[3,-8,0,"???"]}]}",
           "patchOptions": {
+            "flowIds": [
+              666,
+            ],
             "reloadVersion": 2,
           },
         }
@@ -795,6 +808,9 @@ describe('reload', () => {
         {
           "data": "{"patchList":[{"id":16,"snapshotPatch":[3,-17,0,"update"]}]}",
           "patchOptions": {
+            "flowIds": [
+              666,
+            ],
             "reloadVersion": 4,
           },
         }
@@ -980,6 +996,9 @@ describe('reload', () => {
             {
               "data": "{"patchList":[{"id":19,"snapshotPatch":[3,-6,0,"d",3,-7,0,"e",3,-8,0,"f"]}]}",
               "patchOptions": {
+                "flowIds": [
+                  666,
+                ],
                 "reloadVersion": 4,
               },
             },
@@ -1047,12 +1066,9 @@ describe('reload', () => {
       updatePage({ text: 'Enjoy' }, { reloadTemplate: true });
     }
 
-    // list render item 1 & 2
+    // The rendered two items should be updated by `updatePage`
+    // without componentAtIndex
     {
-      elementTree.triggerEnqueueComponent(__root.childNodes[0].__elements[0], signs[0]);
-      elementTree.triggerEnqueueComponent(__root.childNodes[0].__elements[0], signs[1]);
-      signs[0] = elementTree.triggerComponentAtIndex(__root.childNodes[0].__elements[0], 0);
-      signs[1] = elementTree.triggerComponentAtIndex(__root.childNodes[0].__elements[0], 1);
       expect(__root.__element_root).toMatchInlineSnapshot(`
         <page
           cssId="default-entry-from-native:0"
@@ -1082,22 +1098,8 @@ describe('reload', () => {
                   "updateAction": [],
                 },
                 {
-                  "insertAction": [
-                    {
-                      "item-key": 0,
-                      "position": 0,
-                      "type": "__Card__:__snapshot_a94a8_test_8",
-                    },
-                    {
-                      "item-key": 1,
-                      "position": 1,
-                      "type": "__Card__:__snapshot_a94a8_test_8",
-                    },
-                  ],
-                  "removeAction": [
-                    0,
-                    1,
-                  ],
+                  "insertAction": [],
+                  "removeAction": [],
                   "updateAction": [],
                 },
               ]

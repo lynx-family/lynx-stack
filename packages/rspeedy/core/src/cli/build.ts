@@ -29,7 +29,9 @@ export async function build(
 
     const rspeedy = await createRspeedy(createRspeedyOptions)
 
-    await rspeedy.build()
+    // TODO: support `rspeedy build --watch`
+    const { close } = await rspeedy.build()
+    await close()
   } catch (error) {
     logger.error(error)
     if (shouldExit) {

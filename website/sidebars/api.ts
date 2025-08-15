@@ -11,7 +11,7 @@ import {
   ApiModel,
 } from '@microsoft/api-extractor-model';
 import type { ApiItem } from '@microsoft/api-extractor-model';
-import type { SidebarGroup } from '@rspress/shared';
+import type { SidebarGroup } from '@rspress/core';
 import { pascalCase } from 'change-case';
 
 function transformSingle(

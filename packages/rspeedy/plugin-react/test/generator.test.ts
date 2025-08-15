@@ -1,17 +1,17 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { createRsbuild } from '@rsbuild/core'
 import { expect, test } from 'vitest'
 
 import { LAYERS } from '@lynx-js/react-webpack-plugin'
 
+import { createStubRspeedy as createRspeedy } from './createRspeedy.js'
 import { pluginStubRspeedyAPI } from './stub-rspeedy-api.plugin.js'
 
 test('json generator in main-thread layer', async () => {
   const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
-  const rsbuild = await createRsbuild({
-    rsbuildConfig: {
+  const rsbuild = await createRspeedy({
+    rspeedyConfig: {
       plugins: [
         pluginStubRspeedyAPI(),
         pluginReactLynx(),
@@ -41,8 +41,8 @@ test('json generator in main-thread layer', async () => {
 
 test('json generator in dual-thread layer when extractStr is enabled', async () => {
   const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
-  const rsbuild = await createRsbuild({
-    rsbuildConfig: {
+  const rsbuild = await createRspeedy({
+    rspeedyConfig: {
       plugins: [
         pluginStubRspeedyAPI(),
         pluginReactLynx({

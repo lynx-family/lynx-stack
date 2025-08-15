@@ -512,6 +512,13 @@ test.describe('reactlynx3 tests', () => {
         'animationstart animationiteration animationend animationstart animationiteration animationend',
       );
     });
+    test('api-get-path-info', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(500);
+      expect(await page.locator('#result').getAttribute('style')).toContain(
+        'green',
+      );
+    });
     test('api-getJSModule', async ({ page }, { title }) => {
       await goto(page, title);
       await wait(1000);
@@ -544,6 +551,15 @@ test.describe('reactlynx3 tests', () => {
       async ({ page }, { title }) => {
         await goto(page, title);
         await wait(200);
+        const target = page.locator('#target');
+        await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
+      },
+    );
+    test(
+      'api-nativemodules-call-delay',
+      async ({ page }, { title }) => {
+        await goto(page, title);
+        await wait(3000);
         const target = page.locator('#target');
         await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
       },

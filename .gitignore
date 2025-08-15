@@ -29,6 +29,8 @@ coverage
 # Vitest
 tsconfig.vitest-temp.json
 .rollup.cache
+vitest.config.ts.timestamp-*
+vitest.config.js.timestamp-*
 # Created by https://www.toptal.com/developers/gitignore/api/macos
 # Edit at https://www.toptal.com/developers/gitignore?templates=macos
 

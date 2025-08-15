@@ -847,7 +847,7 @@ mod tests {
 
     // println!("{:?}", serde_json::to_string(&s));
 
-    assert_eq!(s.typescript(), true);
-    assert_eq!(s.decorators(), false); // default to false
+    assert!(s.typescript());
+    assert!(!s.decorators()); // default to false
   }
 }

@@ -10,6 +10,7 @@ import { JSDOM } from 'jsdom';
 import { createGlobalThis, LynxGlobalThis } from './lynx/GlobalThis.js';
 import { initElementTree } from './lynx/ElementPAPI.js';
 import { Console } from 'console';
+import { GlobalEventEmitter } from './lynx/GlobalEventEmitter.js';
 export { initElementTree } from './lynx/ElementPAPI.js';
 export type { LynxElement } from './lynx/ElementPAPI.js';
 export type { LynxGlobalThis } from './lynx/GlobalThis.js';
@@ -335,11 +336,7 @@ function injectBackgroundThreadGlobals(target?: any, polyfills?: any) {
     UNIQUE_ID, // element_id
   }
 
-  const globalEventEmitter = new EventEmitter();
-  // @ts-ignore
-  globalEventEmitter.trigger = globalEventEmitter.emit;
-  // @ts-ignore
-  globalEventEmitter.toggle = globalEventEmitter.emit;
+  const globalEventEmitter = new GlobalEventEmitter();
   target.lynx = {
     getNativeApp: () => app,
     performance,
@@ -408,7 +405,7 @@ function injectBackgroundThreadGlobals(target?: any, polyfills?: any) {
  * ```ts
  * import { LynxTestingEnv } from '@lynx-js/testing-environment';
  *
- * const lynxTestingEnv = new LynxTestingEnv();
+ * const lynxTestingEnv = new LynxTestingEnv(new JSDOM());
  *
  * lynxTestingEnv.switchToMainThread();
  * // use the main thread Element PAPI
@@ -430,7 +427,7 @@ export class LynxTestingEnv {
    * ```ts
    * import { LynxTestingEnv } from '@lynx-js/testing-environment';
    *
-   * const lynxTestingEnv = new LynxTestingEnv();
+   * const lynxTestingEnv = new LynxTestingEnv(new JSDOM());
    *
    * lynxTestingEnv.switchToBackgroundThread();
    * // use the background thread global object
@@ -446,7 +443,7 @@ export class LynxTestingEnv {
    * ```ts
    * import { LynxTestingEnv } from '@lynx-js/testing-environment';
    *
-   * const lynxTestingEnv = new LynxTestingEnv();
+   * const lynxTestingEnv = new LynxTestingEnv(new JSDOM());
    *
    * lynxTestingEnv.switchToMainThread();
    * // use the main thread global object
@@ -456,8 +453,17 @@ export class LynxTestingEnv {
    * ```
    */
   mainThread: LynxGlobalThis & ElementTreeGlobals;
-  jsdom: JSDOM = global.jsdom;
-  constructor() {
+  jsdom: JSDOM;
+  constructor(jsdom?: JSDOM) {
+    // Prefer explicit instance; fall back to test runner-provided global.
+    this.jsdom = jsdom ?? global.jsdom;
+    if (!this.jsdom) {
+      throw new Error(
+        'LynxTestingEnv requires a JSDOM instance. Pass one to the constructor, '
+          + 'or ensure your test runner sets global.jsdom (e.g., via a setup file).',
+      );
+    }
+
     this.backgroundThread = createGlobalThis() as any;
     this.mainThread = createGlobalThis() as any;
 

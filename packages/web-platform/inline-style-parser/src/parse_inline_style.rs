@@ -1,5 +1,5 @@
 use crate::{
-  is_newline, is_white_space,
+  char_code_definitions::is_white_space,
   tokenize::{self, Parser},
   types::*,
   utils::cmp_str,
@@ -79,7 +79,7 @@ impl<T: Transformer> Parser for ParserState<'_, '_, T> {
       if self.value_end == 0 {
         self.value_end = start;
       }
-      while is_white_space!(self.source[self.value_end - 1]) && self.value_end > self.value_start {
+      while is_white_space(self.source[self.value_end - 1]) && self.value_end > self.value_start {
         self.value_end -= 1;
       }
       self.transformer.on_declaration(

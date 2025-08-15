@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { componentAtIndexFactory, enqueueComponentFactory } from './list.js';
+import { componentAtIndexFactory, enqueueComponentFactory, gRecycleMap, gSignMap } from './list.js';
 import { __pendingListUpdates } from './pendingListUpdates.js';
 import { DynamicPartType } from './snapshot/dynamicPartType.js';
 import { unref } from './snapshot/ref.js';
@@ -296,11 +296,15 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
         const insertions: number[] = [];
         const updateAction: any[] = [];
 
+        const listID = __GetElementUniqueID(before.__elements![elementIndex]!);
+        const signMap = gSignMap[listID]!;
+        const recycleMap = gRecycleMap[listID]!;
+
         const diffResult = diffArrayLepus(
           beforeChildNodes,
           afterChildNodes,
           (a, b) => a.type === b.type,
-          (a, b, oldIndex, newIndex) => {
+          (a, b, _oldIndex, newIndex) => {
             if (
               JSON.stringify(a.__listItemPlatformInfo)
                 !== JSON.stringify(b.__listItemPlatformInfo)
@@ -315,16 +319,21 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
               });
             }
 
-            // Mark list-item which is rendered (has `__elements`) as DELETE
-            // so list platform will call `enqueueComponent` on it
-            // and will call `componentAtIndex` on the inserted one
-            // In this way:
-            //  1. we make sure `<list/>` for hydrate is like a leaf node
-            //  2. we avoid hydrate so modifying recycleMap can be avoid
-            //  3. the delete list-item is recycled for later use, so no waste
             if (a.__elements) {
-              removals.push(oldIndex);
-              insertions.push(newIndex);
+              // transfer a's elements to b
+              hydrate(a, b, options);
+
+              // if a list-item has `elements`, it may be:
+              //   - `enqueueComponent` already called on it: so we need to update the `signMap` and the `recycleMap`
+              //   - `enqueueComponent` not called on it: update the `signMap`
+              const listItemID = __GetElementUniqueID(a.__element_root!);
+              if (signMap.has(listItemID)) {
+                signMap.set(listItemID, b);
+              }
+              if (recycleMap.has(a.type)) {
+                const recycleSignMap = recycleMap.get(a.type)!;
+                recycleSignMap.set(listItemID, b);
+              }
             }
           },
         );

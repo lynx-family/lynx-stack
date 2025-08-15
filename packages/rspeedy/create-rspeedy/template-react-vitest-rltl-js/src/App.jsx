@@ -10,8 +10,8 @@ export function App(props) {
 
   useEffect(() => {
     console.info('Hello, ReactLynx')
-    props.onMounted?.()
   }, [])
+  props.onRender?.()
 
   const onTap = useCallback(() => {
     'background only'
@@ -46,7 +46,7 @@ export function App(props) {
             to see updates!
           </text>
         </view>
-        <view style={{ flex: 1 }}></view>
+        <view style={{ flex: 1 }} />
       </view>
     </view>
   )
