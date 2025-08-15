@@ -49,7 +49,7 @@ test('renders options.wrapper around node', async () => {
 });
 
 describe('dynamic key in snapshot', () => {
-  test('[FIXME] multiple slots 0', () => {
+  test('multiple slots 0', () => {
     const Comp = () => (
       <view>
         <view className='foo' key={`foo`}>
@@ -68,21 +68,22 @@ describe('dynamic key in snapshot', () => {
     expect(container).toMatchInlineSnapshot(`
       <page>
         <view>
-          <wrapper>
-            <view
-              class="foo"
-            >
+          <view
+            class="foo"
+          >
+            <wrapper>
               <view>
                 <text>
                   foo
                 </text>
+              </view>
+              <view>
                 <text>
                   bar
                 </text>
               </view>
-              <view />
-            </view>
-          </wrapper>
+            </wrapper>
+          </view>
         </view>
       </page>
     `);
@@ -112,10 +113,10 @@ describe('dynamic key in snapshot', () => {
             Hello 
             <wrapper />
           </text>
-          <wrapper>
-            <view
-              class="foo"
-            >
+          <view
+            class="foo"
+          >
+            <wrapper>
               <view>
                 <text>
                   foo
@@ -126,14 +127,14 @@ describe('dynamic key in snapshot', () => {
                   bar
                 </text>
               </view>
-            </view>
-          </wrapper>
+            </wrapper>
+          </view>
         </view>
       </page>
     `);
   });
 
-  test('[FIXME] multiple slots 2', () => {
+  test('multiple slots 2', () => {
     const Comp = () => (
       <view>
         <view className='foo' key={`foo`}>
@@ -153,10 +154,10 @@ describe('dynamic key in snapshot', () => {
     expect(container).toMatchInlineSnapshot(`
       <page>
         <view>
-          <wrapper>
-            <view
-              class="foo"
-            >
+          <view
+            class="foo"
+          >
+            <wrapper>
               <view>
                 <text>
                   foo
@@ -167,8 +168,8 @@ describe('dynamic key in snapshot', () => {
                   bar
                 </text>
               </view>
-            </view>
-          </wrapper>
+            </wrapper>
+          </view>
           <text>
             Hello 
             <wrapper />
@@ -199,24 +200,26 @@ describe('dynamic key in snapshot', () => {
         <view
           class="foo"
         >
-          <view>
+          <wrapper>
             <view>
-              <text>
-                foo
-              </text>
+              <view>
+                <text>
+                  foo
+                </text>
+              </view>
+              <view>
+                <text>
+                  bar
+                </text>
+              </view>
             </view>
-            <view>
-              <text>
-                bar
-              </text>
-            </view>
-          </view>
+          </wrapper>
         </view>
       </page>
     `);
   });
 
-  test('[FIXME] multiple keys', () => {
+  test('multiple keys', () => {
     const Comp = () => (
       <view>
         <view className='foo' key={`foo`}>
@@ -235,21 +238,22 @@ describe('dynamic key in snapshot', () => {
     expect(container).toMatchInlineSnapshot(`
       <page>
         <view>
-          <wrapper>
-            <view
-              class="foo"
-            >
+          <view
+            class="foo"
+          >
+            <wrapper>
               <view>
                 <text>
                   foo
                 </text>
+              </view>
+              <view>
                 <text>
                   bar
                 </text>
               </view>
-              <view />
-            </view>
-          </wrapper>
+            </wrapper>
+          </view>
         </view>
       </page>
     `);
