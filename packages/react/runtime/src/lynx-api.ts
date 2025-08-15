@@ -87,19 +87,8 @@ export const root: Root = {
       __root.__jsx = jsx;
     } else {
       __root.__jsx = jsx;
-      let preactProcess: (() => void) | undefined = undefined;
-      // eslint-disable-next-line @typescript-eslint/unbound-method
-      const oldDebounceRendering = options.debounceRendering;
-      options.debounceRendering = (cb) => {
-        preactProcess = cb;
-      };
-      try {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-        render(jsx, __root as any);
-        (preactProcess as (() => void) | undefined)?.();
-      } finally {
-        options.debounceRendering = oldDebounceRendering!;
-      }
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      render(jsx, __root as any);
       if (__FIRST_SCREEN_SYNC_TIMING__ === 'immediately') {
         // This is for cases where `root.render()` is called asynchronously,
         // `firstScreen` message might have been reached.
