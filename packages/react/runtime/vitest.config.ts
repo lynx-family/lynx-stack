@@ -58,9 +58,6 @@ export default defineConfig({
   plugins: [
     transformReactLynxPlugin(),
   ],
-  define: {
-    '__REACT_LYNX_RUNTIME_TEST__': JSON.stringify(true),
-  },
   resolve: {
     alias: {
       '@lynx-js/react/compat': path.resolve(__dirname, './compat/index.js'),

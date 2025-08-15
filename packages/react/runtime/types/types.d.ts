@@ -12,7 +12,6 @@ declare global {
   declare const __DISABLE_CREATE_SELECTOR_QUERY_INCOMPATIBLE_WARNING__: boolean;
   declare const __REF_FIRE_IMMEDIATELY__: boolean;
   declare const __TESTING_FORCE_RENDER_TO_OPCODE__: boolean;
-  declare const __REACT_LYNX_RUNTIME_TEST__: boolean;
   declare const __FIRST_SCREEN_SYNC_TIMING__: 'immediately' | 'jsReady';
   declare const __DEV__: boolean;
   declare const __JS__: boolean;
