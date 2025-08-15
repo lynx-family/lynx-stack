@@ -244,9 +244,9 @@ export class LynxEncodePluginImpl {
     if (externalKeys.length > 0) {
       const externalRequires = externalKeys
         .map(name =>
-          `lynx.requireModuleAsync('${
+          `lynx.requireModuleAsync(${
             JSON.stringify(this.#formatJSName(name, publicPath))
-          }')`
+          })`
         )
         .join(',');
       parts.push(externalRequires, ';');
@@ -257,9 +257,9 @@ export class LynxEncodePluginImpl {
       parts.push('module.exports=');
       const inlinedRequires = inlinedKeys
         .map(name =>
-          `lynx.requireModule('${
+          `lynx.requireModule(${
             JSON.stringify(this.#formatJSName(name, '/'))
-          }',globDynamicComponentEntry?globDynamicComponentEntry:'__Card__')`
+          },globDynamicComponentEntry?globDynamicComponentEntry:'__Card__')`
         )
         .join(',');
       parts.push(inlinedRequires, ';');

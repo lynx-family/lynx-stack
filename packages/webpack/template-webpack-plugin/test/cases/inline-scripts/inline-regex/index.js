@@ -63,6 +63,6 @@ it('should generate correct bar template', async () => {
 
   expect(manifest).not.toHaveProperty('/bar:background.rspack.bundle.js');
   expect(manifest['/app-service.js']).toContain(
-    `lynx.requireModuleAsync('/bar:background.rspack.bundle.js')`,
+    `lynx.requireModuleAsync(\"/bar:background.rspack.bundle.js\")`,
   );
 });
