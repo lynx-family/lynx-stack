@@ -481,7 +481,9 @@ where
         call.span = pure_span;
         Expr::Call(call)
       }
-      _ => unreachable!(),
+      _ => unreachable!(
+        "Unexpected expression type in wrap_with_lynx_component_helper - expected Call expression"
+      ),
     };
 
     wrap_call
@@ -655,8 +657,12 @@ where
             span: DUMMY_SP,
           })
         }
-        JSXElementName::JSXMemberExpr(_) => unreachable!(),
-        JSXElementName::JSXNamespacedName(_) => unreachable!(),
+        JSXElementName::JSXMemberExpr(_) => {
+          unreachable!("Unexpected JSXMemberExpr in component is polyfill - expected Ident")
+        }
+        JSXElementName::JSXNamespacedName(_) => {
+          unreachable!("Unexpected JSXNamespacedName in component is polyfill - expected Ident")
+        }
       }
       if !self.opts.disable_deprecated_warning {
         HANDLER.with(|handler| {

@@ -143,7 +143,7 @@ impl ExtractingIdentsCollector {
     let name_prop: PropName = match &**name {
       Expr::Ident(id) => PropName::Ident(id.clone().into()),
       Expr::Lit(Lit::Str(str)) => PropName::Str(str.clone()),
-      _ => unreachable!(),
+      _ => unreachable!("Unexpected property name type - expected Ident or Str"),
     };
     let props = &mut root.as_mut_object().unwrap().props;
     let prop = Self::find_prop(props, &name_prop);
@@ -185,7 +185,7 @@ impl ExtractingIdentsCollector {
           return;
         }
         Prop::KeyValue(kv) => &mut kv.value,
-        _ => unreachable!(),
+        _ => unreachable!("Unexpected property name type - expected Ident or Str"),
       };
       if new_root.is_object() {
         Self::add_inner(expr_to_extract, new_root, &path[1..]);
@@ -197,7 +197,7 @@ impl ExtractingIdentsCollector {
     let name_str: &str = match name {
       PropName::Ident(id) => &id.sym,
       PropName::Str(str) => &str.value,
-      _ => unreachable!(),
+      _ => unreachable!("Unexpected property name type - expected Ident or Str"),
     };
     props
       .iter_mut()
