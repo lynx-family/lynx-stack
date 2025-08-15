@@ -1,5 +1,11 @@
 # @lynx-js/web-core-server
 
+## 0.15.6
+
+### Patch Changes
+
+- refactor: use utf-8 string ([#1473](https://github.com/lynx-family/lynx-stack/pull/1473))
+
 ## 0.15.5
 
 ### Patch Changes
