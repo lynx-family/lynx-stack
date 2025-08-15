@@ -27,11 +27,12 @@ export async function loadTemplate(
   }
   templateName += Math.random().toString(36).substring(2, 7);
   const decodedTemplate: LynxTemplate = templateCache.get(rawTemplate)
-    ?? await generateTemplate(
-      rawTemplate,
+    ?? await generateTemplate({
+      template: rawTemplate,
       createJsModuleUrl,
-      templateName + '-lepusCode',
-    );
+      templateName: templateName + '-lepusCode',
+      isDynamicComponent: false,
+    });
   templateCache.set(rawTemplate, decodedTemplate);
   /**
    * This will cause a memory leak, which is expected.

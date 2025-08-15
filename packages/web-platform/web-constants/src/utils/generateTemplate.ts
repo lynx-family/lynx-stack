@@ -72,6 +72,7 @@ const mainThreadInjectVars = [
   '__MarkTemplateElement',
   '__GetPageElement',
   '__ElementFromBinary',
+  '__QueryComponent',
 ];
 
 const backgroundInjectVars = [
@@ -93,6 +94,8 @@ const generateModuleContent = (
   injectWithBind: readonly string[],
   muteableVars: readonly string[],
   isESM: boolean,
+  isDynamicComponent: boolean,
+  source?: string,
 ) =>
   [
     '//# allFunctionsCalledOnLoad\n',
@@ -105,14 +108,16 @@ const generateModuleContent = (
     ...injectWithBind.map(nm =>
       `const ${nm} = lynx_runtime.${nm}?.bind(lynx_runtime);`
     ),
-    ';var globDynamicComponentEntry = \'__Card__\';',
+    isDynamicComponent
+      ? `;var globDynamicComponentEntry = '${source}';`
+      : ';var globDynamicComponentEntry = \'__Card__\';',
     'var {__globalProps} = lynx;',
     'lynx_runtime._updateVars=()=>{',
     ...muteableVars.map(nm =>
       `${nm} = lynx_runtime.__lynxGlobalBindingValues.${nm};`
     ),
     '};\n',
-    content,
+    (isDynamicComponent && isESM) ? `return ${content}` : content,
     '\n return module.exports;}',
   ].join('');
 
@@ -123,7 +128,9 @@ async function generateJavascriptUrl<T extends Record<string, string | {}>>(
   muteableVars: readonly string[],
   createJsModuleUrl: (content: string, name: string) => Promise<string>,
   isESM: boolean,
+  isDynamicComponent: boolean,
   templateName?: string,
+  source?: string,
 ): Promise<T> {
   const processEntry = async ([name, content]: [string, string]) => [
     name,
@@ -134,6 +141,8 @@ async function generateJavascriptUrl<T extends Record<string, string | {}>>(
         injectWithBind,
         muteableVars,
         isESM,
+        isDynamicComponent,
+        source,
       ),
       `${templateName}-${name.replaceAll('/', '')}.js`,
     ),
@@ -148,11 +157,21 @@ async function generateJavascriptUrl<T extends Record<string, string | {}>>(
 }
 
 export async function generateTemplate(
-  template: LynxTemplate,
-  createJsModuleUrl:
-    | ((content: string, name: string) => Promise<string>)
-    | ((content: string) => string),
-  templateName?: string,
+  {
+    template,
+    createJsModuleUrl,
+    templateName,
+    isDynamicComponent = false,
+    source,
+  }: {
+    template: LynxTemplate;
+    createJsModuleUrl:
+      | ((content: string, name: string) => Promise<string>)
+      | ((content: string) => string);
+    templateName?: string;
+    isDynamicComponent?: boolean;
+    source?: string;
+  },
 ): Promise<LynxTemplate> {
   return {
     ...template,
@@ -163,7 +182,9 @@ export async function generateTemplate(
       globalMuteableVars,
       createJsModuleUrl as (content: string, name: string) => Promise<string>,
       true,
+      isDynamicComponent,
       templateName,
+      source,
     ),
     manifest: await generateJavascriptUrl(
       template.manifest,
@@ -172,7 +193,9 @@ export async function generateTemplate(
       [],
       createJsModuleUrl as (content: string, name: string) => Promise<string>,
       false,
+      isDynamicComponent,
       templateName,
+      source,
     ),
   };
 }
