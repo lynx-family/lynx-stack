@@ -15,6 +15,7 @@ export default defineConfig({
       jsOptions: {
         minimizerOptions: {
           mangle: false,
+          minify: false,
         },
       },
     },
@@ -28,7 +29,6 @@ export default defineConfig({
         './cases/001-fib/index.ts',
       ],
       '002-hello-reactLynx': [
-        'event-target-polyfill',
         './src/patchProfile.ts',
         './cases/002-hello-reactLynx/index.tsx',
       ],

@@ -4,37 +4,66 @@
 
 import { hook } from './hook.js';
 
-if (__BACKGROUND__) {
-  // eslint-disable-next-line no-global-assign
-  console = { ...console };
-}
-
 const PREFIX = __REPO_FILEPATH__.split('/').slice(0, -2).join('/');
 const ignored: Record<string, boolean> = {};
 const stack: string[] = [];
+let depth = 0;
 
-hook(console, 'profile', (old, name) => {
-  old!(name);
-  if (
-    (ignored[name!] ??= name === 'commitChanges'
-      || name!.startsWith('ReactLynx::diff::'))
-  ) {
-    stack.push('__IGNORED__');
-  } else {
-    stack.push(name!);
+if (typeof Codspeed !== 'undefined') {
+  function shouldIgnoreBenchmark(name: string | undefined) {
+    if (
+      !name
+      || name === 'ReactLynx::commit'
+      || name === 'ReactLynx::commitChanges'
+      || name === 'ReactLynx::transferRoot'
+      || name === 'ReactLynx::BSI::setAttribute'
+      || name.startsWith('OnLifecycleEvent::')
+      || name.startsWith('ReactLynx::diff::')
+      || name.startsWith('ReactLynx::render::')
+    ) {
+      return true;
+    }
+    return false;
   }
-  Codspeed.startBenchmark();
-});
 
-hook(console, 'profileEnd', (old) => {
-  Codspeed.stopBenchmark();
-  const name = stack.pop();
-  if (name === '__IGNORED__') {
-    Codspeed.zeroStats();
-  } else {
-    Codspeed.setExecutedBenchmark(
-      `${PREFIX}::${__webpack_chunkname__}-${name!}`,
-    );
-  }
-  old!();
-});
+  hook(lynx.performance, 'profileStart', (old, name, option) => {
+    old!.call(lynx.performance, name, option);
+    if ((ignored[name] ??= shouldIgnoreBenchmark(name))) {
+      stack.push('__IGNORED__');
+    } else {
+      stack.push(name);
+      depth++;
+      if (depth > 1) {
+        console.log(
+          `Benchmark ${name} is ignored because it is nested, the stack: ${
+            stack.join(', ')
+          }`,
+        );
+      } else {
+        Codspeed.startBenchmark();
+      }
+    }
+  });
+
+  hook(lynx.performance, 'profileEnd', (old) => {
+    const name = stack.pop()!;
+    if (name === '__IGNORED__') {
+      // Codspeed.zeroStats();
+    } else {
+      if (depth > 1) {
+        // ignored
+      } else {
+        Codspeed.stopBenchmark();
+        Codspeed.setExecutedBenchmark(
+          `${PREFIX}::${__webpack_chunkname__}-${
+            name
+              .replace(/^ReactLynx::/, '')
+              .replace(/::/g, '__')
+          }`,
+        );
+      }
+      depth--;
+    }
+    old!.call(lynx.performance);
+  });
+}

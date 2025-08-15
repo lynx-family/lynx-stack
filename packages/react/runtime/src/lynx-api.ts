@@ -7,6 +7,7 @@ import { useState } from 'preact/hooks';
 import type { Consumer, FC, ReactNode } from 'react';
 
 import { factory, withInitDataInState } from './compat/initData.js';
+import { profileEnd, profileStart } from './debug/utils.js';
 import { useLynxGlobalEventListener } from './hooks/useLynxGlobalEventListener.js';
 import { LifecycleConstant } from './lifecycleConstant.js';
 import { flushDelayedLifecycleEvents } from './lynx/tt.js';
@@ -94,8 +95,14 @@ export const root: Root = {
         preactProcess = cb;
       };
       try {
+        if (__PROFILE__) {
+          profileStart('ReactLynx::renderBackground');
+        }
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         render(jsx, __root as any);
+        if (__PROFILE__) {
+          profileEnd();
+        }
         (preactProcess as (() => void) | undefined)?.();
       } finally {
         options.debounceRendering = oldDebounceRendering!;
