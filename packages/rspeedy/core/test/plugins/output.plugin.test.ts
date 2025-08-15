@@ -971,7 +971,7 @@ describe('Plugins - Output', () => {
 })
 
 function getAssetRules(config: Rspack.Configuration) {
-  return config.module?.rules?.flatMap(isAssetRule)
+  return config.module?.rules?.flatMap(rule => isAssetRule(rule))
 
   function isAssetRule(
     rule: Rspack.RuleSetRule | boolean | null | undefined | 0 | '' | '...',
@@ -984,7 +984,7 @@ function getAssetRules(config: Rspack.Configuration) {
       return []
     }
 
-    const oneOfRule = rule.oneOf?.filter(isAssetRule)
+    const oneOfRule = rule.oneOf?.filter(rule => isAssetRule(rule))
     if (oneOfRule) {
       return oneOfRule.filter(rule => !!rule)
     }

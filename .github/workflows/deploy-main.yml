@@ -38,7 +38,7 @@ jobs:
         with:
           node-version: "22"
       - name: Install wasm-bindgen
-        uses: taiki-e/install-action@3839ec485e8ef50e4a86e9cd116260b68a412c07 # v2
+        uses: taiki-e/install-action@4351b0c7eac445cb6f5a730526fcaef1473d3ea6 # v2
         with:
           tool: wasm-bindgen
       - name: Install

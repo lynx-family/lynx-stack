@@ -40,7 +40,7 @@ jobs:
         with:
           cache-key: test-${{ runner.os }}
       - name: Install llvm-cov and nextest
-        uses: taiki-e/install-action@3839ec485e8ef50e4a86e9cd116260b68a412c07 # v2
+        uses: taiki-e/install-action@4351b0c7eac445cb6f5a730526fcaef1473d3ea6 # v2
         with:
           tool: cargo-llvm-cov,cargo-nextest
       - name: Test
@@ -89,4 +89,4 @@ jobs:
           components: clippy
           cache: false
       - name: Clippy
-        run: cargo clippy -- -D warnings
+        run: cargo clippy --tests -- -D warnings

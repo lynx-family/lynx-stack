@@ -58,7 +58,7 @@
   },
   "devDependencies": {
     "@microsoft/api-extractor": "catalog:",
-    "webpack": "^5.101.0"
+    "webpack": "^5.101.2"
   },
   "engines": {
     "node": ">=18"

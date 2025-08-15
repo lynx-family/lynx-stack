@@ -18,6 +18,7 @@ import {
   type AppendElementPAPI,
   type ElementIsEqualPAPI,
   type FirstElementPAPI,
+  type GetAttributeByNamePAPI,
   type GetAttributesPAPI,
   type GetChildrenPAPI,
   type GetClassesPAPI,
@@ -45,6 +46,7 @@ import {
   type SetIDPAPI,
   type SetInlineStylesPAPI,
   type UpdateComponentIDPAPI,
+  type UpdateComponentInfoPAPI,
   type WebFiberElementImpl,
 } from '@lynx-js/web-constants';
 import { queryCSSProperty } from './style/cssPropertyMap.js';
@@ -198,6 +200,11 @@ export const __GetElementConfig: GetElementConfigPAPI = /*#__PURE__*/ (
     : {};
 };
 
+export const __GetAttributeByName: GetAttributeByNamePAPI = /*#__PURE__*/ (
+  element,
+  name,
+) => element.getAttribute(name);
+
 export const __GetElementUniqueID: GetElementUniqueIDPAPI = /*#__PURE__*/ (
   element,
 ) => (
@@ -246,6 +253,17 @@ export const __UpdateComponentID: UpdateComponentIDPAPI = /*#__PURE__*/ (
 export const __GetClasses: GetClassesPAPI = /*#__PURE__*/ (element) => (
   (element.getAttribute('class') ?? '').split(' ').filter(e => e)
 );
+
+export const __UpdateComponentInfo: UpdateComponentInfoPAPI = /*#__PURE__*/ (
+  element,
+  params,
+) => {
+  params.componentID !== undefined
+    && __UpdateComponentID(element, params.componentID);
+  params.cssID !== undefined
+    && element.setAttribute(cssIdAttribute, params.cssID + '');
+  params.name !== undefined && element.setAttribute('name', params.name);
+};
 
 export const __SetCSSId: SetCSSIdPAPI = /*#__PURE__*/ (
   elements,

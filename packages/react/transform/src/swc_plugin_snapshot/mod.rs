@@ -327,6 +327,13 @@ where
               element_index: Expr = Expr::Lit(Lit::Num(Number { span: DUMMY_SP, value: self.element_index as f64, raw: None })),
           );
         }
+        "frame" => {
+          static_stmt = quote!(
+            r#"const $element = __CreateFrame($page_id)"# as Stmt,
+            element = el.clone(),
+            page_id = self.page_id.clone(),
+          );
+        }
         _ => {
           static_stmt = quote!(
               r#"const $element = __CreateElement($name, $page_id)"# as Stmt,
@@ -1086,23 +1093,15 @@ where
               break;
             }
             let val = words.next();
-            match pragma {
-              // Some("@jsxImportSource") => {
-              //   if let Some(src) = val {
-              //     self.cfg.runtime_pkg = src.into();
-              //   }
-              // }
-              Some("@jsxCSSId") => {
-                if let Some(css_id) = val {
-                  self.css_id_value = Some(Expr::Lit(Lit::Num(
-                    css_id
-                      .parse::<f64>()
-                      .expect("should have numeric cssId")
-                      .into(),
-                  )));
-                }
+            if let Some("@jsxCSSId") = pragma {
+              if let Some(css_id) = val {
+                self.css_id_value = Some(Expr::Lit(Lit::Num(
+                  css_id
+                    .parse::<f64>()
+                    .expect("should have numeric cssId")
+                    .into(),
+                )));
               }
-              _ => {}
             }
           }
         }
@@ -1225,10 +1224,10 @@ where
       .enumerate()
       .map(|(index, dynamic_part)| {
         (
-          JSXAttrName::Ident(IdentName::new(format!("__{}", index).into(), DUMMY_SP)),
-          JSXAttrName::Ident(IdentName::new(format!("_c{}", index).into(), DUMMY_SP)),
+          JSXAttrName::Ident(IdentName::new(format!("__{index}").into(), DUMMY_SP)),
+          JSXAttrName::Ident(IdentName::new(format!("_c{index}").into(), DUMMY_SP)),
           JSXElementName::Ident(Ident::new(
-            format!("s{}", index).into(),
+            format!("s{index}").into(),
             DUMMY_SP,
             SyntaxContext::default(),
           )),
@@ -1652,6 +1651,7 @@ mod tests {
     r#"
     <view>
       <text>!!!</text>
+      <frame/>
     </view>
     "#
   );

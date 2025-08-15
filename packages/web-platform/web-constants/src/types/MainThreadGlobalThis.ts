@@ -163,6 +163,17 @@ export type UpdateComponentIDPAPI = (
   componentID: string,
 ) => void;
 
+export type UpdateComponentInfoPAPI = (
+  element: WebFiberElementImpl,
+  params: {
+    componentID?: string;
+    name?: string;
+    path?: string;
+    entry?: string;
+    cssID?: number;
+  },
+) => void;
+
 export type GetClassesPAPI = (
   element: WebFiberElementImpl,
 ) => string[];
@@ -285,6 +296,11 @@ export type ElementFromBinaryPAPI = (
   parentComponentUniId: number,
 ) => WebFiberElementImpl[];
 
+export type GetAttributeByNamePAPI = (
+  element: WebFiberElementImpl,
+  name: string,
+) => string | null;
+
 export interface MainThreadGlobalThis {
   __ElementFromBinary: ElementFromBinaryPAPI;
 
@@ -323,6 +339,7 @@ export interface MainThreadGlobalThis {
   __SetDataset: SetDatasetPAPI;
   __SetID: SetIDPAPI;
   __UpdateComponentID: UpdateComponentIDPAPI;
+  __UpdateComponentInfo: UpdateComponentInfoPAPI;
   __GetClasses: GetClassesPAPI;
   __CreateView: CreateViewPAPI;
   __SwapElement: SwapElementPAPI;
@@ -343,6 +360,7 @@ export interface MainThreadGlobalThis {
   __SetInlineStyles: SetInlineStylesPAPI;
   __SetCSSId: SetCSSIdPAPI;
   __GetPageElement: GetPageElementPAPI;
+  __GetAttributeByName: GetAttributeByNamePAPI;
   __globalProps: unknown;
   SystemInfo: typeof systemInfo;
   globalThis?: MainThreadGlobalThis;
