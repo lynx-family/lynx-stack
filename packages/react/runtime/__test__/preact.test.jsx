@@ -351,11 +351,11 @@ describe('document - background', () => {
     );
     expect(scratch).toMatchInlineSnapshot(`
       <root>
-        <__Card__:__snapshot_a94a8_test_13
+        <__Card__:__snapshot_a94a8_test_14
           0="world"
         >
           "Hello"
-        </__Card__:__snapshot_a94a8_test_13>
+        </__Card__:__snapshot_a94a8_test_14>
       </root>
     `);
 
@@ -378,14 +378,14 @@ describe('document - background', () => {
     );
     expect(scratch).toMatchInlineSnapshot(`
       <root>
-        <__Card__:__snapshot_a94a8_test_14>
-          <__Card__:__snapshot_a94a8_test_15>
-            "Hello"
-          </__Card__:__snapshot_a94a8_test_15>
+        <__Card__:__snapshot_a94a8_test_15>
           <__Card__:__snapshot_a94a8_test_16>
-            "World"
+            "Hello"
           </__Card__:__snapshot_a94a8_test_16>
-        </__Card__:__snapshot_a94a8_test_14>
+          <__Card__:__snapshot_a94a8_test_17>
+            "World"
+          </__Card__:__snapshot_a94a8_test_17>
+        </__Card__:__snapshot_a94a8_test_15>
       </root>
     `);
     expect([...backgroundSnapshotInstanceManager.values.keys()])
@@ -414,17 +414,17 @@ describe('document - background', () => {
     render(jsx('Hello!'), scratch);
     expect(scratch).toMatchInlineSnapshot(`
       <root>
-        <__Card__:__snapshot_a94a8_test_17>
+        <__Card__:__snapshot_a94a8_test_18>
           "Hello!"
-        </__Card__:__snapshot_a94a8_test_17>
+        </__Card__:__snapshot_a94a8_test_18>
       </root>
     `);
     render(jsx('Hello!!'), scratch);
     expect(scratch).toMatchInlineSnapshot(`
       <root>
-        <__Card__:__snapshot_a94a8_test_17>
+        <__Card__:__snapshot_a94a8_test_18>
           "Hello!!"
-        </__Card__:__snapshot_a94a8_test_17>
+        </__Card__:__snapshot_a94a8_test_18>
       </root>
     `);
   });
@@ -481,7 +481,7 @@ describe('document - background', () => {
     render(jsx('Hello'), scratch);
     expect(scratch).toMatchInlineSnapshot(`
       <root>
-        <__Card__:__snapshot_a94a8_test_22
+        <__Card__:__snapshot_a94a8_test_25
           0="Hello"
         />
       </root>
@@ -489,7 +489,7 @@ describe('document - background', () => {
     render(jsx(null), scratch);
     expect(scratch).toMatchInlineSnapshot(`
       <root>
-        <__Card__:__snapshot_a94a8_test_22
+        <__Card__:__snapshot_a94a8_test_25
           0={null}
         />
       </root>
@@ -504,7 +504,7 @@ describe('document - background', () => {
     render(jsx(vi.fn()), scratch);
     expect(scratch).toMatchInlineSnapshot(`
       <root>
-        <__Card__:__snapshot_a94a8_test_22
+        <__Card__:__snapshot_a94a8_test_25
           0={[MockFunction spy]}
         />
       </root>
@@ -514,7 +514,7 @@ describe('document - background', () => {
     render(jsx(vi.fn()), scratch);
     expect(scratch).toMatchInlineSnapshot(`
       <root>
-        <__Card__:__snapshot_a94a8_test_22
+        <__Card__:__snapshot_a94a8_test_25
           0={[MockFunction spy]}
         />
       </root>
@@ -599,16 +599,16 @@ describe('document - background', () => {
     await Promise.resolve();
     expect(scratch).toMatchInlineSnapshot(`
       <root>
-        <__Card__:__snapshot_a94a8_test_24>
+        <__Card__:__snapshot_a94a8_test_27>
           "foo"
-        </__Card__:__snapshot_a94a8_test_24>
+        </__Card__:__snapshot_a94a8_test_27>
       </root>
     `);
 
     await Promise.resolve();
     expect(scratch).toMatchInlineSnapshot(`
       <root>
-        <__Card__:__snapshot_a94a8_test_23
+        <__Card__:__snapshot_a94a8_test_26
           0="bar"
         />
       </root>
@@ -647,26 +647,26 @@ describe('document - dual-runtime', () => {
     BackgroundSnapshotInstance.prototype.toJSON = backgroundSnapshotInstanceToJSON;
     expect(backgroundRoot).toMatchInlineSnapshot(`
       <root>
-        <__Card__:__snapshot_a94a8_test_26>
-          <__Card__:__snapshot_a94a8_test_27>
+        <__Card__:__snapshot_a94a8_test_29>
+          <__Card__:__snapshot_a94a8_test_30>
             "W"
-          </__Card__:__snapshot_a94a8_test_27>
-          <__Card__:__snapshot_a94a8_test_27>
+          </__Card__:__snapshot_a94a8_test_30>
+          <__Card__:__snapshot_a94a8_test_30>
             "0"
-          </__Card__:__snapshot_a94a8_test_27>
-          <__Card__:__snapshot_a94a8_test_27>
+          </__Card__:__snapshot_a94a8_test_30>
+          <__Card__:__snapshot_a94a8_test_30>
             "r"
-          </__Card__:__snapshot_a94a8_test_27>
-          <__Card__:__snapshot_a94a8_test_27>
+          </__Card__:__snapshot_a94a8_test_30>
+          <__Card__:__snapshot_a94a8_test_30>
             "l"
-          </__Card__:__snapshot_a94a8_test_27>
-          <__Card__:__snapshot_a94a8_test_27>
+          </__Card__:__snapshot_a94a8_test_30>
+          <__Card__:__snapshot_a94a8_test_30>
             "d"
-          </__Card__:__snapshot_a94a8_test_27>
-          <__Card__:__snapshot_a94a8_test_27>
+          </__Card__:__snapshot_a94a8_test_30>
+          <__Card__:__snapshot_a94a8_test_30>
             "_"
-          </__Card__:__snapshot_a94a8_test_27>
-        </__Card__:__snapshot_a94a8_test_26>
+          </__Card__:__snapshot_a94a8_test_30>
+        </__Card__:__snapshot_a94a8_test_29>
       </root>
     `);
     delete BackgroundSnapshotInstance.prototype.toJSON;
@@ -675,35 +675,35 @@ describe('document - dual-runtime', () => {
       .toMatchInlineSnapshot(`
         [
           3,
-          -68,
+          -88,
           "k",
           "0",
           3,
-          -69,
+          -89,
           0,
           "0",
           0,
-          "__Card__:__snapshot_a94a8_test_27",
-          93,
+          "__Card__:__snapshot_a94a8_test_30",
+          117,
           3,
-          93,
+          117,
           "k",
           "_",
           0,
           null,
-          94,
+          118,
           4,
-          94,
+          118,
           [
             "_",
           ],
           1,
-          93,
-          94,
+          117,
+          118,
           undefined,
           1,
-          -65,
-          93,
+          -85,
+          117,
           undefined,
         ]
       `);
@@ -714,33 +714,33 @@ describe('document - dual-runtime', () => {
     expect(takeGlobalSnapshotPatch()).toMatchInlineSnapshot(`
       [
         2,
-        -65,
-        -68,
+        -85,
+        -88,
         2,
-        -65,
-        93,
+        -85,
+        117,
         0,
-        "__Card__:__snapshot_a94a8_test_27",
-        95,
+        "__Card__:__snapshot_a94a8_test_30",
+        119,
         3,
-        95,
+        119,
         "k",
         "1",
         0,
         null,
-        96,
+        120,
         3,
-        96,
+        120,
         0,
         "1",
         1,
-        95,
-        96,
+        119,
+        120,
         undefined,
         1,
-        -65,
-        95,
-        -70,
+        -85,
+        119,
+        -90,
       ]
     `);
 
@@ -773,7 +773,7 @@ describe('document - dual-runtime', () => {
     BackgroundSnapshotInstance.prototype.toJSON = backgroundSnapshotInstanceToJSON;
     expect(backgroundRoot).toMatchInlineSnapshot(`
       <root>
-        <__Card__:__snapshot_a94a8_test_28 />
+        <__Card__:__snapshot_a94a8_test_31 />
       </root>
     `);
     delete BackgroundSnapshotInstance.prototype.toJSON;
