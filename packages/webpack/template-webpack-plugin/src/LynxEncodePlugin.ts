@@ -238,13 +238,15 @@ export class LynxEncodePluginImpl {
     inlinedManifest: Record<string, string>,
     publicPath: string,
   ): string {
-    const parts = [];
+    const parts: string[] = [];
 
     const externalKeys = Object.keys(externalManifest);
     if (externalKeys.length > 0) {
       const externalRequires = externalKeys
         .map(name =>
-          `lynx.requireModuleAsync('${this.#formatJSName(name, publicPath)}')`
+          `lynx.requireModuleAsync('${
+            JSON.stringify(this.#formatJSName(name, publicPath))
+          }')`
         )
         .join(',');
       parts.push(externalRequires, ';');
@@ -256,7 +258,7 @@ export class LynxEncodePluginImpl {
       const inlinedRequires = inlinedKeys
         .map(name =>
           `lynx.requireModule('${
-            this.#formatJSName(name, '/')
+            JSON.stringify(this.#formatJSName(name, '/'))
           }',globDynamicComponentEntry?globDynamicComponentEntry:'__Card__')`
         )
         .join(',');
@@ -275,7 +277,10 @@ export class LynxEncodePluginImpl {
   }
 
   #formatJSName(name: string, publicPath: string): string {
-    return publicPath + name;
+    const base = !publicPath || publicPath === 'auto' ? '/' : publicPath;
+    const prefixed = base.endsWith('/') ? base : `${base}/`;
+    const trimmed = name.startsWith('/') ? name.slice(1) : name;
+    return `${prefixed}${trimmed}`;
   }
 
   #shouldInlineScript(name: string, size: number): boolean {
