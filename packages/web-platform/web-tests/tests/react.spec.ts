@@ -348,6 +348,20 @@ test.describe('reactlynx3 tests', () => {
       await wait(100);
       expect(eventHandlerTriggered).toBe(true);
     });
+    test('basic-mts-systeminfo', async ({ page }, { title }) => {
+      let eventHandlerTriggered = false;
+      page.on('console', (message) => {
+        if (message.text() === 'hello world') {
+          eventHandlerTriggered = true;
+        }
+      });
+      await goto(page, title);
+      await wait(100);
+      const target = page.locator('#target');
+      await target.click();
+      await wait(100);
+      expect(eventHandlerTriggered).toBe(true);
+    });
 
     test(
       'basic-mts-bindtouchstart',
