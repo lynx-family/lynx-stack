@@ -38,7 +38,7 @@ const mtcProps = {
     g: () => {},
     h: 123,
     i: { x: 1, y: 2 },
-  }
+  },
 };
 function RealMTC(props) {
   const foo = true;
@@ -75,26 +75,26 @@ it('pickJSXFromProps', () => {
       ],
       {
         "children": {
-          "$$typeof": Symbol(mtc-slot),
+          "$$typeof": "__MTC_SLOT__",
           "i": 5,
         },
         "p1": {
-          "$$typeof": Symbol(mtc-slot),
+          "$$typeof": "__MTC_SLOT__",
           "i": 0,
         },
         "p2": {
           "x1": {
-            "$$typeof": Symbol(mtc-slot),
+            "$$typeof": "__MTC_SLOT__",
             "i": 1,
           },
         },
         "p3": [
           {
-            "$$typeof": Symbol(mtc-slot),
+            "$$typeof": "__MTC_SLOT__",
             "i": 2,
           },
           {
-            "$$typeof": Symbol(mtc-slot),
+            "$$typeof": "__MTC_SLOT__",
             "i": 3,
           },
         ],
@@ -115,5 +115,8 @@ it('pickJSXFromProps', () => {
         },
       },
     ]
+  `);
+  expect(JSON.stringify(result[1])).toMatchInlineSnapshot(`
+    "{"p1":{"$$typeof":"__MTC_SLOT__","i":0},"p2":{"x1":{"$$typeof":"__MTC_SLOT__","i":1}},"p3":[{"$$typeof":"__MTC_SLOT__","i":2},{"$$typeof":"__MTC_SLOT__","i":3}],"children":{"$$typeof":"__MTC_SLOT__","i":5},"p5":{"a":1,"b":"string","c":null,"e":true,"f":false,"h":123,"i":{"x":1,"y":2}}}"
   `);
 });

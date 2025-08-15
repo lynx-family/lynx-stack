@@ -3,10 +3,14 @@
 // LICENSE file in the root directory of this source tree.
 import type { VNode } from 'preact';
 
-type JSXRecord = Record<string, {
-  $$typeof: symbol;
+const MTC_TYPE = '__MTC_SLOT__' as const;
+
+type MTCFactory = (...args: any[]) => MTCPlaceholder;
+type MTCPlaceholder = {
+  $$typeof: typeof MTC_TYPE;
   i: number;
-}>;
+};
+type MTCPayload = Record<string, MTCPlaceholder | MTCFactory>;
 
 function isPreactVnode(value: any): value is VNode {
   return (
@@ -15,7 +19,7 @@ function isPreactVnode(value: any): value is VNode {
   );
 }
 
-export function pickJSXFromProps(props: Record<string, any>): [VNode[], JSXRecord] {
+export function pickJSXFromProps(props: Record<string, any>): [VNode[], MTCPayload] {
   const jsxs: VNode[] = [];
   let index = 0;
 
@@ -27,7 +31,7 @@ export function pickJSXFromProps(props: Record<string, any>): [VNode[], JSXRecor
     if (isPreactVnode(item)) {
       jsxs.push(item);
       const placeholder = {
-        $$typeof: Symbol.for('mtc-slot'),
+        $$typeof: MTC_TYPE,
         i: index,
       };
       index++;
@@ -41,7 +45,7 @@ export function pickJSXFromProps(props: Record<string, any>): [VNode[], JSXRecor
         const wrapperFunction = (...args: any[]) => {
           item(...args);
           return {
-            $$typeof: Symbol.for('mtc-slot'),
+            $$typeof: MTC_TYPE,
             i: index,
           };
         };
