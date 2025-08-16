@@ -8,6 +8,7 @@ import type { FirstScreenData } from '../lifecycleConstant.js';
 import { PerformanceTimingFlags, PipelineOrigins, beginPipeline, markTiming } from './performance.js';
 import { BackgroundSnapshotInstance, hydrate } from '../backgroundSnapshot.js';
 import { runWithForce } from './runWithForce.js';
+import { profileEnd, profileStart } from '../debug/utils.js';
 import { destroyBackground } from '../lifecycle/destroy.js';
 import { delayedEvents, delayedPublishEvent } from '../lifecycle/event/delayEvents.js';
 import { delayLifecycleEvent, delayedLifecycleEvents } from '../lifecycle/event/delayLifecycleEvents.js';
@@ -52,7 +53,7 @@ function onLifecycleEvent([type, data]: [LifecycleConstant, unknown]) {
   }
 
   if (__PROFILE__) {
-    console.profile(`OnLifecycleEvent::${type}`);
+    profileStart(`OnLifecycleEvent::${type}`);
   }
 
   try {
@@ -62,7 +63,7 @@ function onLifecycleEvent([type, data]: [LifecycleConstant, unknown]) {
   }
 
   if (__PROFILE__) {
-    console.profileEnd();
+    profileEnd();
   }
 }
 
@@ -71,7 +72,7 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
     case LifecycleConstant.firstScreen: {
       const { root: lepusSide, jsReadyEventIdSwap } = data as FirstScreenData;
       if (__PROFILE__) {
-        console.profile('hydrate');
+        profileStart('ReactLynx::hydrate');
       }
       beginPipeline(true, PipelineOrigins.reactLynxHydrate, PerformanceTimingFlags.reactLynxHydrate);
       markTiming('hydrateParseSnapshotStart');
@@ -83,7 +84,7 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
         __root as BackgroundSnapshotInstance,
       );
       if (__PROFILE__) {
-        console.profileEnd();
+        profileEnd();
       }
       markTiming('diffVdomEnd');
 
@@ -109,9 +110,6 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
 
       // console.debug("********** After hydration:");
       // printSnapshotInstance(__root as BackgroundSnapshotInstance);
-      if (__PROFILE__) {
-        console.profile('commitChanges');
-      }
       const commitTaskId = genCommitTaskId();
       const patchList: PatchList = {
         patchList: [{ snapshotPatch, id: commitTaskId }],
