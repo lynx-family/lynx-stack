@@ -66,12 +66,48 @@ it('pickJSXFromProps', () => {
   expect(result).toMatchInlineSnapshot(`
     [
       [
-        <BTC1 />,
-        <BTC2 />,
-        <BTC3 />,
-        <BTC5 />,
-        <BTC4 />,
-        <BTC6 />,
+        [
+          <BTC1 />,
+          {
+            "$$typeof": "__MTC_SLOT__",
+            "i": 0,
+          },
+        ],
+        [
+          <BTC2 />,
+          {
+            "$$typeof": "__MTC_SLOT__",
+            "i": 1,
+          },
+        ],
+        [
+          <BTC3 />,
+          {
+            "$$typeof": "__MTC_SLOT__",
+            "i": 2,
+          },
+        ],
+        [
+          <BTC5 />,
+          {
+            "$$typeof": "__MTC_SLOT__",
+            "i": 3,
+          },
+        ],
+        [
+          <BTC4 />,
+          {
+            "$$typeof": "__MTC_SLOT__",
+            "i": 4,
+          },
+        ],
+        [
+          <BTC6 />,
+          {
+            "$$typeof": "__MTC_SLOT__",
+            "i": 5,
+          },
+        ],
       ],
       {
         "children": {

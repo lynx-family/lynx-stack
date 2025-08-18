@@ -6,10 +6,10 @@ import type { VNode } from 'preact';
 const MTC_TYPE = '__MTC_SLOT__' as const;
 
 type MTCFactory = (...args: any[]) => MTCPlaceholder;
-type MTCPlaceholder = {
+interface MTCPlaceholder {
   $$typeof: typeof MTC_TYPE;
   i: number;
-};
+}
 type MTCPayload = Record<string, MTCPlaceholder | MTCFactory>;
 
 function isPreactVnode(value: any): value is VNode {
@@ -19,8 +19,8 @@ function isPreactVnode(value: any): value is VNode {
   );
 }
 
-export function pickJSXFromProps(props: Record<string, any>): [VNode[], MTCPayload] {
-  const jsxs: VNode[] = [];
+export function pickJSXFromProps(props: Record<string, any>): [[VNode, any][], MTCPayload] {
+  const jsxs: [VNode, any][] = [];
   let index = 0;
 
   function traverse(item: any): any {
@@ -29,25 +29,26 @@ export function pickJSXFromProps(props: Record<string, any>): [VNode[], MTCPaylo
     }
 
     if (isPreactVnode(item)) {
-      jsxs.push(item);
       const placeholder = {
         $$typeof: MTC_TYPE,
         i: index,
       };
       index++;
+      jsxs.push([item, placeholder]);
       return placeholder;
     }
 
     if (typeof item === 'function') {
       const jsx = item();
       if (isPreactVnode(jsx)) {
-        jsxs.push(jsx);
+        const placeholder = {
+          $$typeof: MTC_TYPE,
+          i: index,
+        };
+        jsxs.push([jsx, placeholder]);
         const wrapperFunction = (...args: any[]) => {
           item(...args);
-          return {
-            $$typeof: MTC_TYPE,
-            i: index,
-          };
+          return placeholder;
         };
         index++;
         return wrapperFunction;

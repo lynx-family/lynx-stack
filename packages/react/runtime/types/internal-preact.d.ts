@@ -2,6 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import 'preact';
+import type { SnapshotInstance } from '../src/snapshot.js';
+import type { BackgroundSnapshotInstance } from '../src/backgroundSnapshot.js';
 
 declare module 'preact' {
   interface Options {
@@ -25,6 +27,8 @@ declare module 'preact' {
   interface VNode {
     /** _component */
     __c?: Component | null;
+    /** _dom */
+    __e?: BackgroundSnapshotInstance | SnapshotInstance;
   }
 
   interface Component<P = {}, S = {}> {
