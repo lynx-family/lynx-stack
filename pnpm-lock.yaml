@@ -340,6 +340,9 @@ importers:
       picocolors:
         specifier: ^1.1.1
         version: 1.1.1
+      rsbuild-plugin-arethetypeswrong:
+        specifier: 0.1.1
+        version: 0.1.1(@rsbuild/core@1.4.15)(typescript@5.9.2)
       rsbuild-plugin-publint:
         specifier: 0.3.3
         version: 0.3.3(@rsbuild/core@1.4.15)
@@ -6928,6 +6931,16 @@ packages:
 
   rrweb-cssom@0.8.0:
     resolution: {integrity: sha512-guoltQEx+9aMf2gDZ0s62EcV8lsXR+0w8915TC3ITdn2YueuNjdAYh/levpU9nFaoChh9RUS5ZdQMrKfVEN9tw==}
+
+  rsbuild-plugin-arethetypeswrong@0.1.1:
+    resolution: {integrity: sha512-5N16/v3NfXJpmhg7lL/lrWeXI+ejOiQDBD1Fyj3zBCEccV0WxET4pI4hINXFYBCGRef12rzoRxPORAVIOFEcJg==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      '@rsbuild/core': '*'
+      typescript: '*'
+    peerDependenciesMeta:
+      '@rsbuild/core':
+        optional: true
 
   rsbuild-plugin-dts@0.12.1:
     resolution: {integrity: sha512-NXY04mekD3e1FzRKxcP5c8/idjWcnNyDcdXh4VcF10F7UxsgqT/rIOV8FT1aT+JjFncAD2mXboPq20wkqJTiIw==}
@@ -14935,6 +14948,12 @@ snapshots:
       fsevents: 2.3.3
 
   rrweb-cssom@0.8.0: {}
+
+  rsbuild-plugin-arethetypeswrong@0.1.1(@rsbuild/core@1.4.15)(typescript@5.9.2):
+    dependencies:
+      typescript: 5.9.2
+    optionalDependencies:
+      '@rsbuild/core': 1.4.15
 
   rsbuild-plugin-dts@0.12.1(@microsoft/api-extractor@7.52.10(@types/node@22.17.1))(@rsbuild/core@1.5.0-beta.3)(typescript@5.9.2):
     dependencies:
