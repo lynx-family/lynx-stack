@@ -22,5 +22,15 @@
 ]}</list></internal-slot>a<internal-slot><view><A/></view></internal-slot></view>;
 <view key={hello}>hello</view>;
 <internal-slot><view key={hello}>{hello}</view></internal-slot>;
+<view><internal-slot><text key="hello">{hello}</text></internal-slot></view>;
+<view><internal-slot><text key={"hello"}>{hello}</text></internal-slot></view>;
+<view><internal-slot><text key={`hello`}>{hello}</text></internal-slot></view>;
+<view><internal-slot><text key={123}>{hello}</text></internal-slot></view>;
+<view><internal-slot><text key={true}>{hello}</text></internal-slot></view>;
+<view><internal-slot><text key={null}>{hello}</text></internal-slot></view>;
 <view><internal-slot><wrapper><text key={hello}>{hello}</text></wrapper></internal-slot></view>;
+<view><internal-slot><wrapper><text key={`hello, ${world}`}>{hello}</text></wrapper></internal-slot></view>;
+<view><internal-slot><wrapper><text key={getId()}>{hello}</text></wrapper></internal-slot></view>;
+<view><internal-slot><wrapper><text key={index + 1}>{hello}</text></wrapper></internal-slot></view>;
+<view><internal-slot><wrapper><text key={condition ? 'a' : 'b'}>{hello}</text></wrapper></internal-slot></view>;
 <view><text>Hello, ReactLynx, <internal-slot><wrapper>{hello}</wrapper></internal-slot></text><internal-slot><wrapper><text key={hello}>{hello}</text></wrapper></internal-slot></view>;
