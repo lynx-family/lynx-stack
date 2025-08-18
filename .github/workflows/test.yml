@@ -138,8 +138,8 @@ jobs:
     with:
       runs-on: lynx-ubuntu-24.04-medium
       run: |
-        pnpm dlx @pnpm/registry-mock prepare
-        pnpm dlx @pnpm/registry-mock &
+        pnpm dlx @pnpm/registry-mock@4 prepare
+        pnpm dlx @pnpm/registry-mock@4 &
         printf '\n//localhost:4873/:_authToken="this-is-a-fake-token"\n' >> ~/.npmrc
         pnpm changeset version --snapshot regression
         node packages/tools/canary-release/snapshot.js
