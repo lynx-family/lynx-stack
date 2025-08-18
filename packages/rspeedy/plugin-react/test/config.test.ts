@@ -1924,12 +1924,7 @@ describe('Config', () => {
           "main__main-thread",
           "main",
         ],
-        "cssPlugins": [
-          {
-            "name": "remove-function-whitespace",
-            "phaseStandard": [Function],
-          },
-        ],
+        "cssPlugins": [],
         "customCSSInheritanceList": undefined,
         "debugInfoOutside": true,
         "defaultDisplayLinear": true,
