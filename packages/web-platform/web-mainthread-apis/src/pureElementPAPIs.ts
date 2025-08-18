@@ -18,6 +18,7 @@ import {
   type AppendElementPAPI,
   type ElementIsEqualPAPI,
   type FirstElementPAPI,
+  type GetAttributeByNamePAPI,
   type GetAttributesPAPI,
   type GetChildrenPAPI,
   type GetClassesPAPI,
@@ -198,6 +199,11 @@ export const __GetElementConfig: GetElementConfigPAPI = /*#__PURE__*/ (
     ? JSON.parse(decodeURIComponent(currentComponentConfigString))
     : {};
 };
+
+export const __GetAttributeByName: GetAttributeByNamePAPI = /*#__PURE__*/ (
+  element,
+  name,
+) => element.getAttribute(name);
 
 export const __GetElementUniqueID: GetElementUniqueIDPAPI = /*#__PURE__*/ (
   element,

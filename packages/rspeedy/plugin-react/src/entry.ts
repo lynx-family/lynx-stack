@@ -197,6 +197,12 @@ export function applyEntry(
         .end()
     })
 
+    const rsbuildConfig = api.getRsbuildConfig()
+    const userConfig = api.getRsbuildConfig('original')
+
+    const enableChunkSplitting =
+      rsbuildConfig.performance?.chunkSplit?.strategy !== 'all-in-one'
+
     let finalFirstScreenSyncTiming = firstScreenSyncTiming
 
     if (isLynx) {
@@ -205,7 +211,8 @@ export function applyEntry(
         // TODO: support inlineScripts in lazyBundle
         inlineScripts = true
       } else {
-        inlineScripts = environment.config.output?.inlineScripts ?? true
+        inlineScripts = environment.config.output?.inlineScripts
+          ?? !enableChunkSplitting
       }
 
       if (inlineScripts !== true) {
@@ -247,14 +254,8 @@ export function applyEntry(
         .end()
     }
 
-    const rsbuildConfig = api.getRsbuildConfig()
-    const userConfig = api.getRsbuildConfig('original')
-
     let extractStr = originalExtractStr
-    if (
-      rsbuildConfig.performance?.chunkSplit?.strategy !== 'all-in-one'
-      && originalExtractStr
-    ) {
+    if (enableChunkSplitting && originalExtractStr) {
       logger.warn(
         '`extractStr` is changed to `false` because it is only supported in `all-in-one` chunkSplit strategy, please set `performance.chunkSplit.strategy` to `all-in-one` to use `extractStr.`',
       )

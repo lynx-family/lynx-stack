@@ -27,6 +27,7 @@ const mainThreadInjectVars = [
   '__UpdateComponentID',
   '__UpdateComponentInfo',
   '__GetConfig',
+  '__GetAttributeByName',
   '__UpdateListCallbacks',
   '__AppendElement',
   '__ElementIsEqual',

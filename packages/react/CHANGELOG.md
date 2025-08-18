@@ -1,5 +1,17 @@
 # @lynx-js/react
 
+## 0.112.3
+
+### Patch Changes
+
+- fix css transform error in testing library ([#1500](https://github.com/lynx-family/lynx-stack/pull/1500))
+
+- fix the type error of `wrapper` option in testing library's `render` and `renderHook` function ([#1502](https://github.com/lynx-family/lynx-stack/pull/1502))
+
+- Introduce recursive hydration for lists to prevent double remove/insert on moves. ([#1401](https://github.com/lynx-family/lynx-stack/pull/1401))
+
+- Handle `<frame/>` correctly. ([#1497](https://github.com/lynx-family/lynx-stack/pull/1497))
+
 ## 0.112.2
 
 ### Patch Changes

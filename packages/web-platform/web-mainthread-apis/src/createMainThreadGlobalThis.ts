@@ -106,6 +106,7 @@ import {
   __SetInlineStyles,
   __UpdateComponentID,
   __UpdateComponentInfo,
+  __GetAttributeByName,
 } from './pureElementPAPIs.js';
 import { createCrossThreadEvent } from './utils/createCrossThreadEvent.js';
 import { decodeCssOG } from './utils/decodeCssOG.js';
@@ -705,6 +706,7 @@ export function createMainThreadGlobalThis(
         createElementForElementTemplateData(childData, parentComponentUniId),
       );
     }
+    data.dataset !== undefined && __SetDataset(element, data.dataset);
     return element;
   };
 
@@ -769,6 +771,10 @@ export function createMainThreadGlobalThis(
 
   let release = '';
   const isCSSOG = !pageConfig.enableCSSSelector;
+  const SystemInfo = {
+    ...systemInfo,
+    ...config.browserConfig,
+  };
   const mtsGlobalThis: MainThreadGlobalThis = {
     __ElementFromBinary,
     __GetTemplateParts: rootDom.querySelectorAll
@@ -820,6 +826,7 @@ export function createMainThreadGlobalThis(
     __SwapElement,
     __UpdateListCallbacks,
     __GetConfig: __GetElementConfig,
+    __GetAttributeByName,
     __GetClasses,
     __AddClass: isCSSOG ? __AddClassForCSSOG : __AddClass,
     __SetClasses: isCSSOG ? __SetClassesForCSSOG : __SetClasses,
@@ -829,11 +836,8 @@ export function createMainThreadGlobalThis(
     __LoadLepusChunk,
     __GetPageElement,
     __globalProps: globalProps,
-    SystemInfo: {
-      ...systemInfo,
-      ...config.browserConfig,
-    },
-    lynx: createMainThreadLynx(config),
+    SystemInfo,
+    lynx: createMainThreadLynx(config, SystemInfo),
     _ReportError: (err, _) => callbacks._ReportError(err, _, release),
     _SetSourceMapRelease: (errInfo) => release = errInfo?.release,
     __OnLifecycleEvent: callbacks.__OnLifecycleEvent,

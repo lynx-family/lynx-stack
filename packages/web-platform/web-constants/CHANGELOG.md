@@ -1,5 +1,22 @@
 # @lynx-js/web-constants
 
+## 0.15.6
+
+### Patch Changes
+
+- fix: systeminfo in mts function ([#1537](https://github.com/lynx-family/lynx-stack/pull/1537))
+
+- feat: add MTS API: \_\_UpdateComponentInfo ([#1485](https://github.com/lynx-family/lynx-stack/pull/1485))
+
+- fix: `__ElementFromBinary` needs to correctly apply the dataset in elementTemplate to the Element ([#1487](https://github.com/lynx-family/lynx-stack/pull/1487))
+
+- fix: all attributes except `id` and `type` under ElementTemplateData are optional. ([#1483](https://github.com/lynx-family/lynx-stack/pull/1483))
+
+- feat: add MTS API \_\_GetAttributeByName ([#1486](https://github.com/lynx-family/lynx-stack/pull/1486))
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.15.6
+
 ## 0.15.5
 
 ### Patch Changes

@@ -15,6 +15,7 @@ export type ElementTemplateData = {
   builtinAttributes?: Record<string, string>;
   children?: ElementTemplateData[];
   events?: { type: LynxEventType; name: string; value: string }[];
+  dataset?: Record<string, string>;
 };
 
 export interface LynxTemplate {

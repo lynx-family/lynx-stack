@@ -592,8 +592,8 @@ where
                           expr: JSXExpr::JSXEmptyExpr(_),
                           ..
                         })) => {}
-                        Some(JSXAttrValue::JSXElement(_)) => unreachable!(),
-                        Some(JSXAttrValue::JSXFragment(_)) => unreachable!(),
+                        Some(JSXAttrValue::JSXElement(_)) => unreachable!("Unexpected JSXElement in JSX attribute value - not supported"),
+                        Some(JSXAttrValue::JSXFragment(_)) => unreachable!("Unexpected JSXFragment in JSX attribute value - not supported"),
                       };
                     }
                     AttrName::Dataset(name) => {
@@ -630,8 +630,8 @@ where
                           expr: JSXExpr::JSXEmptyExpr(_),
                           ..
                         })) => {}
-                        Some(JSXAttrValue::JSXElement(_)) => unreachable!(),
-                        Some(JSXAttrValue::JSXFragment(_)) => unreachable!(),
+                        Some(JSXAttrValue::JSXElement(_)) => unreachable!("Unexpected JSXElement in JSX attribute value - not supported"),
+                        Some(JSXAttrValue::JSXFragment(_)) => unreachable!("Unexpected JSXFragment in JSX attribute value - not supported"),
                       };
                     }
                     AttrName::Event(..) | AttrName::Ref => {
@@ -696,8 +696,8 @@ where
                           expr: JSXExpr::JSXEmptyExpr(_),
                           ..
                         })) => {}
-                        Some(JSXAttrValue::JSXElement(_)) => unreachable!(),
-                        Some(JSXAttrValue::JSXFragment(_)) => unreachable!(),
+                        Some(JSXAttrValue::JSXElement(_)) => unreachable!("Unexpected JSXElement in JSX attribute value - not supported"),
+                        Some(JSXAttrValue::JSXFragment(_)) => unreachable!("Unexpected JSXFragment in JSX attribute value - not supported"),
                       };
                     }
                     AttrName::Class => {
@@ -735,8 +735,8 @@ where
                           expr: JSXExpr::JSXEmptyExpr(_),
                           ..
                         })) => {}
-                        Some(JSXAttrValue::JSXElement(_)) => unreachable!(),
-                        Some(JSXAttrValue::JSXFragment(_)) => unreachable!(),
+                        Some(JSXAttrValue::JSXElement(_)) => unreachable!("Unexpected JSXElement in JSX attribute value - not supported"),
+                        Some(JSXAttrValue::JSXFragment(_)) => unreachable!("Unexpected JSXFragment in JSX attribute value - not supported"),
                       };
                     }
                     AttrName::ID => {
@@ -764,11 +764,11 @@ where
                           expr: JSXExpr::JSXEmptyExpr(_),
                           ..
                         })) => {}
-                        Some(JSXAttrValue::JSXElement(_)) => unreachable!(),
-                        Some(JSXAttrValue::JSXFragment(_)) => unreachable!(),
+                        Some(JSXAttrValue::JSXElement(_)) => unreachable!("Unexpected JSXElement in JSX attribute value - not supported"),
+                        Some(JSXAttrValue::JSXFragment(_)) => unreachable!("Unexpected JSXFragment in JSX attribute value - not supported"),
                       };
                     }
-                    AttrName::ListItemPlatformInfo => unreachable!(),
+                    AttrName::ListItemPlatformInfo => unreachable!("Unexpected ListItemPlatformInfo attribute in static JSX processing"),
                     AttrName::WorkletEvent(..) | AttrName::WorkletRef(..) => {
                       unreachable!("A worklet event should have an attribute namespace.")
                     }
@@ -1093,23 +1093,15 @@ where
               break;
             }
             let val = words.next();
-            match pragma {
-              // Some("@jsxImportSource") => {
-              //   if let Some(src) = val {
-              //     self.cfg.runtime_pkg = src.into();
-              //   }
-              // }
-              Some("@jsxCSSId") => {
-                if let Some(css_id) = val {
-                  self.css_id_value = Some(Expr::Lit(Lit::Num(
-                    css_id
-                      .parse::<f64>()
-                      .expect("should have numeric cssId")
-                      .into(),
-                  )));
-                }
+            if let Some("@jsxCSSId") = pragma {
+              if let Some(css_id) = val {
+                self.css_id_value = Some(Expr::Lit(Lit::Num(
+                  css_id
+                    .parse::<f64>()
+                    .expect("should have numeric cssId")
+                    .into(),
+                )));
               }
-              _ => {}
             }
           }
         }
@@ -1232,10 +1224,10 @@ where
       .enumerate()
       .map(|(index, dynamic_part)| {
         (
-          JSXAttrName::Ident(IdentName::new(format!("__{}", index).into(), DUMMY_SP)),
-          JSXAttrName::Ident(IdentName::new(format!("_c{}", index).into(), DUMMY_SP)),
+          JSXAttrName::Ident(IdentName::new(format!("__{index}").into(), DUMMY_SP)),
+          JSXAttrName::Ident(IdentName::new(format!("_c{index}").into(), DUMMY_SP)),
           JSXElementName::Ident(Ident::new(
-            format!("s{}", index).into(),
+            format!("s{index}").into(),
             DUMMY_SP,
             SyntaxContext::default(),
           )),
@@ -1476,7 +1468,9 @@ where
         call.span = pure_span;
         Expr::Call(call)
       }
-      _ => unreachable!(),
+      _ => {
+        unreachable!("Unexpected expression type in snapshot creation - expected Call expression")
+      }
     };
 
     let snapshot_def = ModuleItem::Stmt(quote!(

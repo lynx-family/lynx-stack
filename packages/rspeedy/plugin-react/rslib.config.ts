@@ -1,4 +1,6 @@
 import { defineConfig } from '@rslib/core'
+import { pluginAreTheTypesWrong } from 'rsbuild-plugin-arethetypeswrong'
+import { pluginPublint } from 'rsbuild-plugin-publint'
 import { TypiaRspackPlugin } from 'typia-rspack-plugin'
 
 export default defineConfig({
@@ -19,6 +21,17 @@ export default defineConfig({
       '@rsbuild/core',
     ],
   },
+  plugins: [
+    pluginAreTheTypesWrong({
+      enable: Boolean(process.env['CI']),
+      areTheTypesWrongOptions: {
+        ignoreRules: [
+          'cjs-resolves-to-esm',
+        ],
+      },
+    }),
+    pluginPublint(),
+  ],
   tools: {
     rspack: {
       plugins: [

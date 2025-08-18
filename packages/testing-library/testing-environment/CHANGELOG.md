@@ -1,5 +1,11 @@
 # @lynx-js/testing-environment
 
+## 0.1.6
+
+### Patch Changes
+
+- Fix that `lynxTestingEnv.jsdom` cannot be initialized correctly when `global.jsdom` is not defined. ([#1422](https://github.com/lynx-family/lynx-stack/pull/1422))
+
 ## 0.1.5
 
 ### Patch Changes

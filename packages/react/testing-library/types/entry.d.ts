@@ -9,7 +9,6 @@
 
 import { queries, Queries, BoundFunction } from '@testing-library/dom';
 import { LynxElement, type ElementTree, type LynxTestingEnv } from '@lynx-js/testing-environment';
-import { ComponentChild, ComponentType } from 'preact';
 import { act } from 'preact/test-utils';
 export * from '@testing-library/dom';
 export { ElementTree, LynxTestingEnv, act };
@@ -69,7 +68,7 @@ export interface RenderOptions<Q extends Queries = typeof queries> {
    * export { customRender as render }
    * ```
    */
-  wrapper?: ComponentChild;
+  wrapper?: React.JSXElementConstructor<{ children: React.ReactNode }> | undefined;
   /**
    * Render your component in the main thread or not.
    *
@@ -95,7 +94,7 @@ export interface RenderOptions<Q extends Queries = typeof queries> {
  */
 export type RenderResult<Q extends Queries = typeof queries> = {
   container: LynxElement;
-  rerender: (ui: ComponentChild) => void;
+  rerender: (ui: React.ReactNode) => void;
   unmount: () => boolean;
 } & { [P in keyof Q]: BoundFunction<Q[P]> };
 
@@ -132,7 +131,7 @@ export type RenderResult<Q extends Queries = typeof queries> = {
  * @public
  */
 export function render<Q extends Queries>(
-  ui: ComponentChild,
+  ui: React.ReactNode,
   options?: RenderOptions<Q>,
 ): RenderResult<Q>;
 /**
@@ -213,7 +212,7 @@ export interface RenderHookOptions<Props> {
    * export { customRender as renderHook }
    * ```
    */
-  wrapper?: ComponentType<{ children: LynxElement }>;
+  wrapper?: React.JSXElementConstructor<{ children: React.ReactNode }> | undefined;
 }
 
 /**
