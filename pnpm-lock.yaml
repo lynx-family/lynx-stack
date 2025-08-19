@@ -207,6 +207,12 @@ importers:
         specifier: ^8.5.6
         version: 8.5.6
 
+  packages/postcss/postcss-scoped-css:
+    devDependencies:
+      postcss:
+        specifier: ^8.5.6
+        version: 8.5.6
+
   packages/react:
     dependencies:
       preact:
