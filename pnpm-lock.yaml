@@ -201,6 +201,12 @@ importers:
 
   packages/background-only: {}
 
+  packages/postcss/postcss-remove-unsupported:
+    devDependencies:
+      postcss:
+        specifier: ^8.5.6
+        version: 8.5.6
+
   packages/react:
     dependencies:
       preact:

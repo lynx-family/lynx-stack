@@ -1,0 +1,25 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "extends": [
+    "//"
+  ],
+  "tasks": {
+    "api-extractor": {
+      "dependsOn": ["build"],
+      "inputs": [
+        "dist/**"
+      ],
+      "outputs": []
+    },
+    "build": {
+      "dependsOn": [],
+      "inputs": [
+        "src/**",
+        "rslib.config.ts"
+      ],
+      "outputs": [
+        "dist"
+      ]
+    }
+  }
+}

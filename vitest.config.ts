@@ -64,6 +64,7 @@ export default defineConfig({
 
     projects: [
       'examples/*/vitest.config.ts',
+      'packages/postcss/*/vitest.config.ts',
       'packages/react/*/vitest.config.ts',
       'packages/rspeedy/*/vitest.config.ts',
       'packages/testing-library/*/vitest.config.mts',

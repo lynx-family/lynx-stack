@@ -1,6 +1,7 @@
 packages:
   - examples/*
   - packages/background-only
+  - packages/postcss/*
   - packages/react
   - packages/react/refresh
   - packages/react/runtime
