@@ -101,22 +101,6 @@ export const snapshotManager: {
       },
     ],
     [
-      'ignore',
-      {
-        create() {
-          /* v8 ignore start */
-          if (__JS__ && !__DEV__) {
-            return [];
-          }
-          /* v8 ignore stop */
-          return [__CreateWrapperElement(__pageId)];
-        },
-        update: [],
-        slot: [],
-        isListHolder: false,
-      },
-    ],
-    [
       null as unknown as string,
       {
         create() {
@@ -321,10 +305,6 @@ export class SnapshotInstance {
     id ??= snapshotInstanceManager.nextId -= 1;
     this.__id = id;
     snapshotInstanceManager.values.set(id, this);
-    if (type === 'ignore') {
-      this.insertBefore = () => {};
-      this.removeChild = () => {};
-    }
   }
 
   ensureElements(): void {
