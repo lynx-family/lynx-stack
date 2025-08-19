@@ -14,7 +14,6 @@ import { createElement, cloneElement } from '../lepus';
 import { Suspense } from 'preact/compat';
 import { createSuspender } from './createSuspender';
 import { __root } from '../src/root';
-import { renderMainThread } from '../src/lifecycle/render';
 
 describe('renderToOpcodes', () => {
   beforeAll(() => {
@@ -145,9 +144,11 @@ describe('renderToOpcodes', () => {
   });
 
   it('should render with attr', () => {
+    const random = Math.random();
+
     function App() {
       return (
-        <view key={Math.random()}>
+        <view random={random}>
           <text>Hello World</text>
           <raw-text text={'Hello World'.toLowerCase()} />
         </view>
@@ -167,6 +168,7 @@ describe('renderToOpcodes', () => {
         2,
         "values",
         [
+          ${random},
           "hello world",
         ],
         1,

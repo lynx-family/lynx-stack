@@ -60,7 +60,7 @@ export function createExposureMonitor(
       if (isIntersecting && !exposedElements.has(target)) {
         sendExposureEvent(target, true, target.getAttribute('exposure-id'));
         exposedElements.add(target);
-      } else {
+      } else if (!isIntersecting && exposedElements.has(target)) {
         sendExposureEvent(target, false, target.getAttribute('exposure-id'));
         exposedElements.delete(target);
       }
