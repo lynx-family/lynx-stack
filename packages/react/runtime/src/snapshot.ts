@@ -15,14 +15,15 @@
  */
 
 import { render } from 'preact';
-import type { ContainerNode, VNode } from 'preact';
+import type { Attributes, ContainerNode, VNode } from 'preact';
+import { cloneElement } from 'preact/compat';
+import { jsx as createVNode } from 'preact/jsx-runtime';
 
 import type { Worklet, WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bindings';
 
 import type { BackgroundSnapshotInstance } from './backgroundSnapshot.js';
 import { SnapshotOperation, __globalSnapshotPatch } from './lifecycle/patch/snapshotPatch.js';
 import { ListUpdateInfoRecording } from './listUpdateInfo.js';
-import { createVNode } from './mtc/createVNode.js';
 import { mtcComponentTypes } from './mtc/mtcComponentTypes.js';
 import { mtcComponentVNodes } from './mtc/mtcComponentVNodes.js';
 import { __pendingListUpdates } from './pendingListUpdates.js';
@@ -686,7 +687,7 @@ export class SnapshotInstance {
   }
 }
 
-interface MTCProps {
+interface MTCProps extends Attributes {
   __MTCProps: {
     componentTypeId: string;
     componentInstanceId: string;
@@ -702,12 +703,12 @@ function renderMTC(snapshotInstance: SnapshotInstance, props: MTCProps) {
   const instanceId = props.__MTCProps.componentInstanceId;
   if (mtcComponentVNodes.has(instanceId)) {
     const vnode = mtcComponentVNodes.get(instanceId)!;
-    // @ts-expect-error props type
-    vnode.props = props;
-    render(vnode, snapshotInstance as unknown as ContainerNode);
+    const newVnode = cloneElement(vnode, props);
+    render(newVnode, snapshotInstance as unknown as ContainerNode);
+    mtcComponentVNodes.set(instanceId, newVnode);
   } else {
     const type = mtcComponentTypes.get(props.__MTCProps.componentTypeId)!;
-    const vnode = createVNode(type, props) as unknown as VNode;
+    const vnode = createVNode(type, props) as VNode;
     mtcComponentVNodes.set(instanceId, vnode);
     render(vnode, snapshotInstance as unknown as ContainerNode);
     (vnode.__e! as SnapshotInstance).__onDestroy = () => {

@@ -4,7 +4,7 @@
 import type { VNode } from 'preact';
 import { createElement as createElementBackground } from 'preact/compat';
 
-import { createVNode } from './createVNode.js';
+import { createElementVNode } from './createVNode.js';
 import type { BackgroundSnapshotInstance } from '../backgroundSnapshot.js';
 import { snapshotInstanceManager } from '../snapshot.js';
 import type { SnapshotInstance } from '../snapshot.js';
@@ -13,10 +13,10 @@ export function renderMTCSlot(btc: { $$typeof: string; i: number }): unknown {
   if (!btc || btc.$$typeof !== '__MTC_SLOT__') {
     return btc;
   }
-  const vnode = createVNode('wrapper', {
-    'mtc:ref': (bsi: SnapshotInstance) => {
-      if (bsi) {
-        bsi.insertBefore(snapshotInstanceManager.values.get(btc.i)!);
+  const vnode = createElementVNode('wrapper', {
+    'mtc:ref': (si: SnapshotInstance) => {
+      if (si) {
+        si.insertBefore(snapshotInstanceManager.values.get(btc.i)!);
       }
     },
   });
