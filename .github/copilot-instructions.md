@@ -22,8 +22,8 @@ This repository contains the **core JavaScript stack** of Lynx, including ReactL
 pnpm install --frozen-lockfile
 
 # Verify toolchain
-node --version  # Must be 22+
-pnpm --version  # Should be 10.14.0+
+node --version  # Required
+pnpm --version  # Required
 rustc --version  # Required for native bindings
 ```
 
@@ -186,8 +186,8 @@ The CI runs these checks (replicate locally for confidence):
 
 ### Required Tools
 
-- **Node.js 22+** (specified in .nvmrc)
-- **pnpm 10.14.0+** (lockfile format dependency)
+- **Node.js** (specified in .nvmrc)
+- **pnpm** (specified in package.json, see `packageManager` field)
 - **Rust** (for native bindings compilation)
 - **wasm-bindgen** (for WebAssembly builds)
 
@@ -205,15 +205,6 @@ TURBO_TELEMETRY_DISABLED=1    # Disables telemetry
 NODE_OPTIONS="--max-old-space-size=32768"  # For large builds
 DEBUG=rspeedy                 # Enable debug logging
 ```
-
-## Key Dependencies & Versions
-
-- **TypeScript**: 5.9.2 (strict configuration)
-- **React types**: ^18.3.23
-- **Vitest**: ^3.2.4 (test runner)
-- **Rspack**: 1.4.11 (build tool)
-- **Turbo**: ^2.5.5 (monorepo orchestration)
-- **API Extractor**: 7.52.10 (documentation generation)
 
 ## Trust These Instructions
 
@@ -255,3 +246,21 @@ These instructions were generated through comprehensive analysis and testing of 
 - Contains performance-critical rendering code
 
 Remember: This is a complex, multi-language monorepo. Always allow extra time for builds and tests, and follow the exact command sequences provided.
+
+## Submit knowledge updates
+
+When you learn new patterns or best practices while working on the `lynx-stack` project, you should update or create one or more ".github/*.instructions.md" files, adding natural language instructions to the file(s).
+
+Whitespace between instructions is ignored, so the instructions can be written as a single paragraph, each on a new line, or separated by blank lines for legibility.
+
+Specify what files or directories the instructions apply to by adding applyTo frontmatter to the Markdown files, using glob syntax.
+
+Specify what files or directories the instructions apply to by adding applyTo frontmatter to the Markdown files, using glob syntax. For example:
+
+```markdown
+---
+applyTo: "packages/**"
+---
+
+Add custom instructions here
+```
