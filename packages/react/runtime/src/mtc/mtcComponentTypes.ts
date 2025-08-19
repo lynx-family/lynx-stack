@@ -6,6 +6,7 @@ import type { FunctionalComponent } from 'preact';
 
 export const mtcComponentTypes: Map<string, FunctionalComponent> = new Map();
 
-export function registerMTC(id: string, MTC: FunctionalComponent): void {
+export function registerMTC(id: string, MTC: FunctionalComponent): FunctionalComponent {
   mtcComponentTypes.set(id, MTC);
+  return MTC;
 }
