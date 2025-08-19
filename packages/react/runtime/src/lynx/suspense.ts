@@ -3,23 +3,20 @@
 // LICENSE file in the root directory of this source tree.
 
 import type { FunctionComponent, VNode } from 'preact';
-import { Suspense as PreactSuspense, createElement as createElementBackground } from 'preact/compat';
+import { Suspense as PreactSuspense } from 'preact/compat';
 import { useRef } from 'preact/hooks';
 
-import { createElement as createElementMainThread } from '@lynx-js/react/lepus';
-
 import type { BackgroundSnapshotInstance } from '../backgroundSnapshot.js';
+import { createElement } from '../createElement.js';
 import { globalBackgroundSnapshotInstancesToRemove } from '../lifecycle/patch/commit.js';
 
 export const Suspense: FunctionComponent<{ children: VNode | VNode[]; fallback: VNode }> = (
   { children, fallback },
 ) => {
-  const __createElement =
-    (__MAIN_THREAD__ ? createElementMainThread : createElementBackground) as typeof createElementBackground;
   const childrenRef = useRef<BackgroundSnapshotInstance>();
 
   // @ts-expect-error wrapper is a valid element type
-  const newChildren = __createElement('wrapper', {
+  const newChildren = createElement('wrapper', {
     ref: (bsi: BackgroundSnapshotInstance) => {
       if (bsi) {
         childrenRef.current = bsi;
@@ -28,7 +25,7 @@ export const Suspense: FunctionComponent<{ children: VNode | VNode[]; fallback: 
   }, children);
 
   // @ts-expect-error wrapper is a valid element type
-  const newFallback = __createElement('wrapper', {
+  const newFallback = createElement('wrapper', {
     ref: (bsi: BackgroundSnapshotInstance) => {
       if (bsi && childrenRef.current) {
         const i = globalBackgroundSnapshotInstancesToRemove.indexOf(childrenRef.current.__id);
@@ -40,5 +37,5 @@ export const Suspense: FunctionComponent<{ children: VNode | VNode[]; fallback: 
     },
   }, fallback);
 
-  return __createElement(PreactSuspense, { fallback: newFallback }, newChildren);
+  return createElement(PreactSuspense, { fallback: newFallback }, newChildren);
 };

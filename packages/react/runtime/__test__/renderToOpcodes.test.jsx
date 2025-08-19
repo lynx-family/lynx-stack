@@ -14,7 +14,6 @@ import { createElement, cloneElement } from '../lepus';
 import { Suspense } from 'preact/compat';
 import { createSuspender } from './createSuspender';
 import { __root } from '../src/root';
-import { renderMainThread } from '../src/lifecycle/render';
 
 describe('renderToOpcodes', () => {
   beforeAll(() => {

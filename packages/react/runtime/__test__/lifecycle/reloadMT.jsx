@@ -4,8 +4,6 @@
 // LICENSE file in the root directory of this source tree.
 */
 
-/** @jsxImportSource ../../lepus */
-
 import { useState } from '../../src/index';
 
 function SubCompMT(props) {
