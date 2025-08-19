@@ -390,8 +390,8 @@ importers:
   packages/rspeedy/plugin-qrcode:
     devDependencies:
       '@clack/prompts':
-        specifier: 1.0.0-alpha.3
-        version: 1.0.0-alpha.3
+        specifier: 1.0.0-alpha.4
+        version: 1.0.0-alpha.4
       '@lynx-js/rspeedy':
         specifier: workspace:*
         version: link:../core
@@ -1578,11 +1578,11 @@ packages:
   '@changesets/write@0.4.0':
     resolution: {integrity: sha512-CdTLvIOPiCNuH71pyDu3rA+Q0n65cmAbXnwWH84rKGiFumFzkmHNT8KHTMEchcxN+Kl8I54xGUhJ7l3E7X396Q==}
 
-  '@clack/core@1.0.0-alpha.3':
-    resolution: {integrity: sha512-al3c2RSTesNLPVyEi4qJMmQigCbxKPRl35nxbbRLJLoYEE3JuHlZIi7oXchZ/LVegGSlsQUzPqNH5vrHpoKDxg==}
+  '@clack/core@1.0.0-alpha.4':
+    resolution: {integrity: sha512-VCtU+vjyKPMSakVrB9q1bOnXN7QW/w4+YQDQCOF59GrzydW+169i0fVx/qzRRXJgt8KGj/pZZ/JxXroFZIDByg==}
 
-  '@clack/prompts@1.0.0-alpha.3':
-    resolution: {integrity: sha512-t0nEprDU45jP9Ipp+kEXml9FZ49Xr3BpUUJ0rqrSVguOPrfh4AOBpj8Swx29pZjs8t1tVTvFSyMTvVdQzbmqng==}
+  '@clack/prompts@1.0.0-alpha.4':
+    resolution: {integrity: sha512-KnmtDF2xQGoI5AlBme9akHtvCRV0RKAARUXHBQO2tMwnY8B08/4zPWigT7uLK25UPrMCEqnyQPkKRjNdhPbf8g==}
 
   '@codspeed/core@4.0.1':
     resolution: {integrity: sha512-fJ53arfgtzCDZa8DuGJhpTZ3Ll9A1uW5nQ2jSJnfO4Hl5MRD2cP8P4vPvIUAGbdbjwCxR1jat6cW8OloMJkJXw==}
@@ -8723,14 +8723,14 @@ snapshots:
       human-id: 4.1.1
       prettier: 2.8.8
 
-  '@clack/core@1.0.0-alpha.3':
+  '@clack/core@1.0.0-alpha.4':
     dependencies:
       picocolors: 1.1.1
       sisteransi: 1.0.5
 
-  '@clack/prompts@1.0.0-alpha.3':
+  '@clack/prompts@1.0.0-alpha.4':
     dependencies:
-      '@clack/core': 1.0.0-alpha.3
+      '@clack/core': 1.0.0-alpha.4
       picocolors: 1.1.1
       sisteransi: 1.0.5
 
