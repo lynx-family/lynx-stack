@@ -27,7 +27,6 @@
     "build": "rslib build",
     "test": "vitest"
   },
-  "dependencies": {},
   "devDependencies": {
     "postcss": "^8.5.6"
   },
