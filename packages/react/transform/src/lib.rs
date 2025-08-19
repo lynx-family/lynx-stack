@@ -15,6 +15,7 @@ mod swc_plugin_dynamic_import;
 mod swc_plugin_extract_str;
 mod swc_plugin_inject;
 mod swc_plugin_list;
+mod swc_plugin_mtc;
 mod swc_plugin_refresh;
 mod swc_plugin_shake;
 mod swc_plugin_snapshot;
