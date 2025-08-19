@@ -216,6 +216,7 @@ where
           expr: JSXExpr::Expr(Box::new(Expr::Ident(Ident::from("transformedProps")))),
         })),
       }),
+      // _mtcId
       JSXAttrOrSpread::JSXAttr(JSXAttr {
         span: DUMMY_SP,
         name: JSXAttrName::Ident(IdentName::from("_mtcId")),

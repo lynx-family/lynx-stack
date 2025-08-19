@@ -4,8 +4,8 @@
 
 import type { FunctionalComponent } from 'preact';
 
-export const gMTCRegistry: Map<string, FunctionalComponent> = new Map();
+export const mtcComponentTypes: Map<string, FunctionalComponent> = new Map();
 
 export function registerMTC(id: string, MTC: FunctionalComponent): void {
-  gMTCRegistry.set(id, MTC);
+  mtcComponentTypes.set(id, MTC);
 }
