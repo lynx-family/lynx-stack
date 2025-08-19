@@ -967,6 +967,22 @@ test.describe('reactlynx3 tests', () => {
     test.describe('api-exposure', () => {
       const module = 'exposure';
       test.fixme(isSSR, 'TODO: migrate exposure from web-elements to runtime');
+
+      test(
+        'api-exposure-no-fake-disappear',
+        async ({ page }, { title }) => {
+          await goto(page, title);
+          await wait(300);
+          await expect(page.locator('#control')).toHaveCSS(
+            'background-color',
+            'rgb(0, 128, 0)', // green
+          );
+          await expect(page.locator('#target')).toHaveCSS(
+            'background-color',
+            'rgb(0, 128, 0)', // green
+          );
+        },
+      );
       test(
         'api-exposure-area',
         async ({ page }, { title }) => {
