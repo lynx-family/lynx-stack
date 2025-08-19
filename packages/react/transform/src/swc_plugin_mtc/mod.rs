@@ -1,5 +1,5 @@
 use once_cell::sync::Lazy;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use swc_core::{
   common::{comments::Comments, Span, SyntaxContext, DUMMY_SP},
   ecma::{
@@ -10,17 +10,18 @@ use swc_core::{
   quote,
 };
 
-use crate::{target::TransformTarget, TransformMode};
+use crate::{target::TransformTarget, utils::calc_hash, TransformMode};
 
 #[napi(object)]
 #[derive(Clone, Debug)]
 pub struct MTCVisitorConfig {
   pub target: TransformTarget,
+  pub filename: String,
 }
 
 impl MTCVisitorConfig {
-  pub fn new(target: TransformTarget) -> Self {
-    Self { target }
+  pub fn new(target: TransformTarget, filename: String) -> Self {
+    Self { target, filename }
   }
 }
 
@@ -28,9 +29,12 @@ pub struct MTCVisitor<C>
 where
   C: Comments + Clone,
 {
-  config: MTCVisitorConfig,
   is_mtc: bool,
-  functions_to_transform: Vec<String>,
+  cfg: MTCVisitorConfig,
+  content_hash: String,
+  filename_hash: String,
+  mtc_counter: u32,
+  functions_to_transform: HashMap<String, String>,
   runtime_id: Lazy<Expr>,
   comments: Option<C>,
 }
@@ -39,11 +43,12 @@ impl<C> MTCVisitor<C>
 where
   C: Comments + Clone,
 {
-  pub fn new(config: MTCVisitorConfig, mode: TransformMode, comments: Option<C>) -> Self {
+  pub fn new(cfg: MTCVisitorConfig, mode: TransformMode, comments: Option<C>) -> Self {
     Self {
-      config,
+      filename_hash: calc_hash(&cfg.filename.clone()),
+      comments,
       is_mtc: false,
-      functions_to_transform: Vec::new(),
+      functions_to_transform: HashMap::new(),
       runtime_id: match mode {
         TransformMode::Development => {
           Lazy::new(|| quote!("require('@lynx-js/react/internal')" as Expr))
@@ -52,8 +57,15 @@ where
           Lazy::new(|| Expr::Ident(private_ident!("ReactLynx")))
         }
       },
-      comments,
+      mtc_counter: 0,
+      content_hash: "test".into(),
+      cfg,
     }
+  }
+
+  pub fn with_content_hash(mut self, content_hash: String) -> Self {
+    self.content_hash = content_hash;
+    self
   }
 
   fn check_main_thread_directive(&self, module: &Module) -> bool {
@@ -72,15 +84,23 @@ where
     }
   }
 
-  fn collect_exported_functions(&self, module: &Module) -> Vec<String> {
-    let mut functions = Vec::new();
+  fn gen_mtc_uid(&mut self) -> String {
+    self.mtc_counter += 1;
+    format!(
+      "$$mtc_{}_{}_{}",
+      self.filename_hash, self.content_hash, self.mtc_counter
+    )
+  }
+
+  fn collect_exported_functions(&mut self, module: &Module) -> HashMap<String, String> {
+    let mut functions = HashMap::new();
 
     for item in &module.body {
       match item {
         // ExportDeclaration: export function Foo() {}
         ModuleItem::ModuleDecl(ModuleDecl::ExportDecl(export_decl)) => {
           if let Decl::Fn(fn_decl) = &export_decl.decl {
-            functions.push(fn_decl.ident.sym.to_string());
+            functions.insert(fn_decl.ident.sym.to_string(), self.gen_mtc_uid());
           }
         }
 
@@ -91,7 +111,7 @@ where
             for spec in &named_export.specifiers {
               if let ExportSpecifier::Named(named_spec) = spec {
                 if let ModuleExportName::Ident(ident) = &named_spec.orig {
-                  functions.push(ident.sym.to_string());
+                  functions.insert(ident.sym.to_string(), self.gen_mtc_uid());
                 }
               }
             }
@@ -108,7 +128,7 @@ where
   }
 
   fn remove_exported_functions(&self, module: &mut Module) {
-    let functions_set: HashSet<_> = self.functions_to_transform.iter().collect();
+    let functions_set: HashSet<_> = self.functions_to_transform.keys().collect();
 
     let mut new_items = Vec::new();
 
@@ -141,14 +161,16 @@ where
     format!("$$mtc_{}", original_name)
   }
 
-  fn create_register_export(&self, fn_name: &str) -> ModuleItem {
+  fn create_register_export(&self, fn_name: &str, mtc_uid: &str) -> ModuleItem {
     let internal_fn_name = self.generate_internal_mtc_name(fn_name);
 
     let mut register_mtc_call = quote!(
         r#"$runtime_id.registerMTC(
+             $mtc_uid,
              $internal_fn_name,
         )"# as Expr,
         runtime_id: Expr = self.runtime_id.clone(),
+        mtc_uid: Expr = Expr::Lit(Lit::Str(mtc_uid.into())),
         internal_fn_name: Expr =  Expr::Ident(internal_fn_name.into()),
     );
 
@@ -171,7 +193,7 @@ where
     export_stmt
   }
 
-  fn transform_mtc_in_background(&mut self, fn_decl: &mut FnDecl) {
+  fn transform_mtc_in_background(&self, fn_decl: &mut FnDecl, mtc_uid: &str) {
     let props_identifier = if let Some(param) = fn_decl.function.params.first() {
       match &param.pat {
         Pat::Ident(ident) => ident.id.clone(),
@@ -183,7 +205,7 @@ where
     };
 
     let mtc_container = JSXElementName::Ident(Ident::from("mtc-container"));
-    let mtc_slot = JSXElementName::Ident(Ident::from("mtc-slot"));
+    // let mtc_slot = JSXElementName::Ident(Ident::from("mtc-slot"));
     let mtc_container_attrs = vec![
       // _p={transformedProps}
       JSXAttrOrSpread::JSXAttr(JSXAttr {
@@ -194,52 +216,57 @@ where
           expr: JSXExpr::Expr(Box::new(Expr::Ident(Ident::from("transformedProps")))),
         })),
       }),
-    ];
-    let mtc_slot_expr = Expr::Call(CallExpr {
-      span: DUMMY_SP,
-      callee: Callee::Expr(Box::new(Expr::Member(MemberExpr {
+      JSXAttrOrSpread::JSXAttr(JSXAttr {
         span: DUMMY_SP,
-        obj: Box::new(Expr::Ident(Ident::from("jsxs"))),
-        prop: MemberProp::Ident(IdentName::from("map")),
-      }))),
-      args: vec![ExprOrSpread {
-        spread: None,
-        expr: Box::new(Expr::Arrow(ArrowExpr {
-          span: DUMMY_SP,
-          params: vec![Pat::Ident(BindingIdent {
-            id: Ident::from("jsx"),
-            type_ann: None,
-          })],
-          body: Box::new(BlockStmtOrExpr::Expr(Box::new(Expr::JSXElement(Box::new(
-            JSXElement {
-              span: DUMMY_SP,
-              opening: JSXOpeningElement {
-                span: DUMMY_SP,
-                name: mtc_slot.clone(),
-                attrs: vec![],
-                self_closing: false,
-                type_args: None,
-              },
-              children: vec![JSXElementChild::JSXExprContainer(JSXExprContainer {
-                span: DUMMY_SP,
-                expr: JSXExpr::Expr(Box::new(Expr::Ident(Ident::from("jsx")))),
-              })],
-              closing: Some(JSXClosingElement {
-                span: DUMMY_SP,
-                name: mtc_slot,
-              }),
-            },
-          ))))),
-          is_async: false,
-          is_generator: false,
-          type_params: None,
-          return_type: None,
-          ctxt: SyntaxContext::default(),
-        })),
-      }],
-      type_args: None,
-      ctxt: SyntaxContext::default(),
-    });
+        name: JSXAttrName::Ident(IdentName::from("_mtcId")),
+        value: Some(JSXAttrValue::Lit(Lit::Str(mtc_uid.into()))),
+      }),
+    ];
+    // let mtc_slot_expr = Expr::Call(CallExpr {
+    //   span: DUMMY_SP,
+    //   callee: Callee::Expr(Box::new(Expr::Member(MemberExpr {
+    //     span: DUMMY_SP,
+    //     obj: Box::new(Expr::Ident(Ident::from("jsxs"))),
+    //     prop: MemberProp::Ident(IdentName::from("map")),
+    //   }))),
+    //   args: vec![ExprOrSpread {
+    //     spread: None,
+    //     expr: Box::new(Expr::Arrow(ArrowExpr {
+    //       span: DUMMY_SP,
+    //       params: vec![Pat::Ident(BindingIdent {
+    //         id: Ident::from("jsx"),
+    //         type_ann: None,
+    //       })],
+    //       body: Box::new(BlockStmtOrExpr::Expr(Box::new(Expr::JSXElement(Box::new(
+    //         JSXElement {
+    //           span: DUMMY_SP,
+    //           opening: JSXOpeningElement {
+    //             span: DUMMY_SP,
+    //             name: mtc_slot.clone(),
+    //             attrs: vec![],
+    //             self_closing: false,
+    //             type_args: None,
+    //           },
+    //           children: vec![JSXElementChild::JSXExprContainer(JSXExprContainer {
+    //             span: DUMMY_SP,
+    //             expr: JSXExpr::Expr(Box::new(Expr::Ident(Ident::from("jsx")))),
+    //           })],
+    //           closing: Some(JSXClosingElement {
+    //             span: DUMMY_SP,
+    //             name: mtc_slot,
+    //           }),
+    //         },
+    //       ))))),
+    //       is_async: false,
+    //       is_generator: false,
+    //       type_params: None,
+    //       return_type: None,
+    //       ctxt: SyntaxContext::default(),
+    //     })),
+    //   }],
+    //   type_args: None,
+    //   ctxt: SyntaxContext::default(),
+    // });
 
     let mtc_jsx = JSXElement {
       span: DUMMY_SP,
@@ -252,7 +279,11 @@ where
       },
       children: vec![JSXElementChild::JSXExprContainer(JSXExprContainer {
         span: DUMMY_SP,
-        expr: JSXExpr::Expr(Box::new(mtc_slot_expr)),
+        expr: JSXExpr::Expr(Box::new(quote!(
+          "$runtime_id.renderFakeMTCSlot($jsxs)" as Expr,
+          runtime_id: Expr = self.runtime_id.clone(),
+          jsxs: Expr = Expr::Ident(Ident::from("jsxs")),
+        ))),
       })],
       closing: Some(JSXClosingElement {
         span: DUMMY_SP,
@@ -285,11 +316,10 @@ where
   C: Comments + Clone,
 {
   fn visit_mut_module(&mut self, module: &mut Module) {
-    self.is_mtc = self.check_main_thread_directive(module);
-
-    self.remove_main_thread_directive(module);
-
-    if !self.is_mtc {
+    if self.check_main_thread_directive(module) {
+      self.is_mtc = true;
+      self.remove_main_thread_directive(module);
+    } else {
       return;
     }
 
@@ -299,33 +329,36 @@ where
       return;
     }
 
-    if self.config.target == TransformTarget::LEPUS {
+    if self.cfg.target == TransformTarget::LEPUS {
       self.remove_exported_functions(module);
     }
 
     module.visit_mut_children_with(self);
 
-    if self.config.target == TransformTarget::LEPUS {
-      for fn_name in &self.functions_to_transform.clone() {
-        let new_export = self.create_register_export(fn_name);
+    if self.cfg.target == TransformTarget::LEPUS {
+      for (fn_name, mtc_uid) in &self.functions_to_transform {
+        let new_export = self.create_register_export(fn_name, mtc_uid);
         module.body.push(new_export);
       }
     }
+
+    self.is_mtc = false;
+    self.mtc_counter = 0;
+    self.functions_to_transform = HashMap::new();
   }
 
   fn visit_mut_fn_decl(&mut self, fn_decl: &mut FnDecl) {
-    if self.is_mtc
-      && self
-        .functions_to_transform
-        .contains(&fn_decl.ident.sym.to_string())
-    {
-      match self.config.target {
-        TransformTarget::JS | TransformTarget::MIXED => {
-          self.transform_mtc_in_background(fn_decl);
-        }
-        TransformTarget::LEPUS => {
-          let internal_fn_name = self.generate_internal_mtc_name(&fn_decl.ident.sym);
-          fn_decl.ident.sym = internal_fn_name.into();
+    if self.is_mtc {
+      let fn_name = fn_decl.ident.sym.to_string();
+      if let Some(mtc_uid) = self.functions_to_transform.get(&fn_name) {
+        match self.cfg.target {
+          TransformTarget::JS | TransformTarget::MIXED => {
+            self.transform_mtc_in_background(fn_decl, mtc_uid);
+          }
+          TransformTarget::LEPUS => {
+            let internal_fn_name = self.generate_internal_mtc_name(&fn_decl.ident.sym);
+            fn_decl.ident.sym = internal_fn_name.into();
+          }
         }
       }
     }
@@ -358,7 +391,7 @@ mod tests {
       (
         resolver(unresolved_mark, top_level_mark, true),
         visit_mut_pass(MTCVisitor::new(
-          MTCVisitorConfig::new(TransformTarget::JS),
+          MTCVisitorConfig::new(TransformTarget::JS, "test.js".into()),
           TransformMode::Development,
           Some(t.comments.clone()),
         )),
@@ -368,12 +401,17 @@ mod tests {
     // Input codes
     r#"
 "main thread"
-function RealMTC(props) {
+function FakeMTC(props) {
     return <view>
       { props.p3 }
     </view>
 }
-export { RealMTC }
+function FakeMTC2(props) {
+    return <view>
+      { props.p3 }
+    </view>
+}
+export { FakeMTC, FakeMTC2 }
     "#
   );
 
@@ -389,7 +427,7 @@ export { RealMTC }
       (
         resolver(unresolved_mark, top_level_mark, true),
         visit_mut_pass(MTCVisitor::new(
-          MTCVisitorConfig::new(TransformTarget::LEPUS),
+          MTCVisitorConfig::new(TransformTarget::LEPUS, "test.js".into()),
           TransformMode::Development,
           Some(t.comments.clone()),
         )),
@@ -420,7 +458,7 @@ export { RealMTC }
       (
         resolver(unresolved_mark, top_level_mark, true),
         visit_mut_pass(MTCVisitor::new(
-          MTCVisitorConfig::new(TransformTarget::LEPUS),
+          MTCVisitorConfig::new(TransformTarget::LEPUS, "test.js".into()),
           TransformMode::Development,
           Some(t.comments.clone()),
         )),
@@ -450,7 +488,7 @@ export { RealMTC }
       (
         resolver(unresolved_mark, top_level_mark, true),
         visit_mut_pass(MTCVisitor::new(
-          MTCVisitorConfig::new(TransformTarget::LEPUS),
+          MTCVisitorConfig::new(TransformTarget::LEPUS, "test.js".into()),
           TransformMode::Development,
           Some(t.comments.clone()),
         )),
@@ -480,7 +518,7 @@ export function RealMTC(props) {
       (
         resolver(unresolved_mark, top_level_mark, true),
         visit_mut_pass(MTCVisitor::new(
-          MTCVisitorConfig::new(TransformTarget::LEPUS),
+          MTCVisitorConfig::new(TransformTarget::LEPUS, "test.js".into()),
           TransformMode::Development,
           Some(t.comments.clone()),
         )),
@@ -516,7 +554,7 @@ export { RealMTC, RealMTC2 }
       (
         resolver(unresolved_mark, top_level_mark, true),
         visit_mut_pass(MTCVisitor::new(
-          MTCVisitorConfig::new(TransformTarget::LEPUS),
+          MTCVisitorConfig::new(TransformTarget::LEPUS, "test.js".into()),
           TransformMode::Development,
           Some(t.comments.clone()),
         )),
