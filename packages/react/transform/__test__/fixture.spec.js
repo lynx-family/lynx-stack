@@ -1651,3 +1651,111 @@ function getCurrentDelta(event) {
     `);
   });
 });
+
+describe('MTC', () => {
+  for (const target of ['LEPUS', 'JS', 'MIXED']) {
+    it('transform MTC', async () => {
+      const { code } = await transformReactLynx(
+        `\
+"main thread"
+export function MTC(props) {
+    return <view>
+      { props.p3 }
+    </view>
+}
+  `,
+        {
+          pluginName: '',
+          filename: '',
+          sourcemap: false,
+          cssScope: false,
+          jsx: false,
+          directiveDCE: true,
+          defineDCE: {
+            define: {
+              __LEPUS__: 'true',
+              __JS__: 'false',
+            },
+          },
+          shake: false,
+          compat: true,
+          refresh: false,
+          worklet: false,
+          mtc: {
+            target,
+            filename: '',
+          },
+        },
+      );
+
+      if (target === 'LEPUS') {
+        expect(code).toMatchInlineSnapshot(`
+          "import * as ReactLynx from "@lynx-js/react";
+          /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_87544_1", function() {
+              const pageId = ReactLynx.__pageId;
+              const el = __CreateView(pageId);
+              return [
+                  el
+              ];
+          }, null, ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null);
+          export const MTC = /*#__PURE__*/ ReactLynx.registerMTC("$$mtc_da39a_87544_1", $$mtc_MTC);
+          "
+        `);
+      } else if (target === 'JS') {
+        expect(code).toMatchInlineSnapshot(`
+          "import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
+          import * as ReactLynx from "@lynx-js/react";
+          const __snapshot_da39a_87544_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_87544_1", function() {
+              const pageId = ReactLynx.__pageId;
+              const el = __CreateElement("mtc-container", pageId);
+              __SetAttribute(el, "_mtcId", "$$mtc_da39a_87544_1");
+              return [
+                  el
+              ];
+          }, [
+              function(ctx) {
+                  if (ctx.__elements) __SetAttribute(ctx.__elements[0], "_p", ctx.__values[0]);
+              }
+          ], ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null);
+          export function MTC(props) {
+              const [jsxs, transformedProps] = ReactLynx.pickJSXfromProps(props);
+              return /*#__PURE__*/ _jsx(__snapshot_da39a_87544_1, {
+                  values: [
+                      transformedProps
+                  ],
+                  children: ReactLynx.renderFakeMTCSlot(jsxs)
+              });
+          }
+          "
+        `);
+      } else if (target === 'MIXED') {
+        expect(code).toMatchInlineSnapshot(`
+          "import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
+          import * as ReactLynx from "@lynx-js/react";
+          const __snapshot_da39a_87544_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_87544_1", function() {
+              const pageId = ReactLynx.__pageId;
+              const el = __CreateElement("mtc-container", pageId);
+              __SetAttribute(el, "_mtcId", "$$mtc_da39a_87544_1");
+              return [
+                  el
+              ];
+          }, [
+              function(ctx) {
+                  if (ctx.__elements) __SetAttribute(ctx.__elements[0], "_p", ctx.__values[0]);
+              }
+          ], ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null);
+          export function MTC(props) {
+              const [jsxs, transformedProps] = ReactLynx.pickJSXfromProps(props);
+              return /*#__PURE__*/ _jsx(__snapshot_da39a_87544_1, {
+                  values: [
+                      transformedProps
+                  ],
+                  children: ReactLynx.renderFakeMTCSlot(jsxs)
+              });
+          }
+          "
+        `);
+      }
+    });
+  }
+});

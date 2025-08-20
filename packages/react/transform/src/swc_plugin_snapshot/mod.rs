@@ -24,10 +24,7 @@ mod attr_name;
 pub mod jsx_helpers;
 mod slot_marker;
 
-use crate::{
-  css::get_string_inline_style_from_literal, target::TransformTarget, utils::calc_hash,
-  TransformMode,
-};
+use crate::{css::get_string_inline_style_from_literal, target::TransformTarget, utils::calc_hash};
 
 use self::{
   attr_name::AttrName,
@@ -1019,7 +1016,7 @@ where
   filename_hash: String,
   content_hash: String,
   unresolved_mark: Mark,
-  runtime_id: Lazy<Expr>,
+  runtime_id: Expr,
   runtime_components_ident: Ident,
   runtime_components_module_item: Option<ModuleItem>,
   css_id_value: Option<Expr>,
@@ -1044,20 +1041,12 @@ where
     comments: Option<C>,
     _top_level_mark: Mark,
     unresolved_mark: Mark,
-    mode: TransformMode,
+    runtime_id: Expr,
   ) -> Self {
     JSXTransformer {
       filename_hash: calc_hash(&cfg.filename.clone()),
       content_hash: "test".into(),
-      runtime_id: match mode {
-        TransformMode::Development => {
-          // We should find a way to use `cfg.runtime_pkg`
-          Lazy::new(|| quote!("require('@lynx-js/react/internal')" as Expr))
-        }
-        TransformMode::Production | TransformMode::Test => {
-          Lazy::new(|| Expr::Ident(private_ident!("ReactLynx")))
-        }
-      },
+      runtime_id,
       runtime_components_ident: private_ident!("ReactLynxRuntimeComponents"),
       runtime_components_module_item: None,
       cfg,
@@ -1552,7 +1541,7 @@ where
     }
 
     n.visit_mut_children_with(self);
-    if let Some(Expr::Ident(runtime_id)) = Lazy::<Expr>::get(&self.runtime_id) {
+    if let Expr::Ident(runtime_id) = self.runtime_id.clone() {
       prepend_stmt(
         &mut n.body,
         ModuleItem::ModuleDecl(ModuleDecl::Import(ImportDecl {
@@ -1617,6 +1606,7 @@ where
 
 #[cfg(test)]
 mod tests {
+  use super::*;
   use swc_core::{
     common::{comments::SingleThreadedComments, Mark},
     ecma::{
@@ -1626,8 +1616,8 @@ mod tests {
     },
   };
 
+  use crate::swc_plugin_snapshot::JSXTransformer;
   use crate::target::TransformTarget;
-  use crate::{swc_plugin_snapshot::JSXTransformer, TransformMode};
 
   test!(
     module,
@@ -1650,7 +1640,7 @@ mod tests {
           Some(t.comments.clone()),
           top_level_mark,
           unresolved_mark,
-          TransformMode::Test,
+          Expr::Ident(private_ident!("ReactLynx")),
         )),
       )
     },
@@ -1685,7 +1675,7 @@ mod tests {
           Some(t.comments.clone()),
           top_level_mark,
           unresolved_mark,
-          TransformMode::Test,
+          Expr::Ident(private_ident!("ReactLynx")),
         )),
       )
     },
@@ -1715,7 +1705,7 @@ mod tests {
           Some(t.comments.clone()),
           top_level_mark,
           unresolved_mark,
-          TransformMode::Test,
+          Expr::Ident(private_ident!("ReactLynx")),
         )),
       )
     },
@@ -1746,7 +1736,7 @@ mod tests {
       Some(t.comments.clone()),
       Mark::new(),
       Mark::new(),
-      TransformMode::Test,
+      Expr::Ident(private_ident!("ReactLynx")),
     )),
     basic_component,
     // Input codes
@@ -1772,7 +1762,7 @@ mod tests {
       Some(t.comments.clone()),
       Mark::new(),
       Mark::new(),
-      TransformMode::Test,
+      Expr::Ident(private_ident!("ReactLynx")),
     )),
     page_component,
     // Input codes
@@ -1801,7 +1791,7 @@ mod tests {
       Some(t.comments.clone()),
       Mark::new(),
       Mark::new(),
-      TransformMode::Development,
+      quote!("require('@lynx-js/react/internal')" as Expr),
     )),
     page_element_dev,
     // Input codes
@@ -1830,7 +1820,7 @@ mod tests {
       Some(t.comments.clone()),
       Mark::new(),
       Mark::new(),
-      TransformMode::Test,
+      Expr::Ident(private_ident!("ReactLynx")),
     )),
     page_element,
     // Input codes
@@ -1859,7 +1849,7 @@ mod tests {
       Some(t.comments.clone()),
       Mark::new(),
       Mark::new(),
-      TransformMode::Test
+      Expr::Ident(private_ident!("ReactLynx"))
     )),
     basic_component_with_static_sibling,
     // Input codes
@@ -1890,7 +1880,7 @@ mod tests {
           None,
           top_level_mark,
           unresolved_mark,
-          TransformMode::Test,
+          Expr::Ident(private_ident!("ReactLynx")),
         )),
         react::react::<&SingleThreadedComments>(
           t.cm.clone(),
@@ -1940,7 +1930,7 @@ mod tests {
           None,
           top_level_mark,
           unresolved_mark,
-          TransformMode::Test,
+          Expr::Ident(private_ident!("ReactLynx")),
         )),
         react::react::<&SingleThreadedComments>(
           t.cm.clone(),
@@ -1986,7 +1976,7 @@ mod tests {
       Some(t.comments.clone()),
       Mark::new(),
       Mark::new(),
-      TransformMode::Test
+      Expr::Ident(private_ident!("ReactLynx"))
     )),
     basic_expr_container,
     // Input codes
@@ -2012,7 +2002,7 @@ mod tests {
       Some(t.comments.clone()),
       Mark::new(),
       Mark::new(),
-      TransformMode::Test
+      Expr::Ident(private_ident!("ReactLynx"))
     )),
     basic_expr_container_with_static_sibling,
     // Input codes
@@ -2039,7 +2029,7 @@ mod tests {
       Some(t.comments.clone()),
       Mark::new(),
       Mark::new(),
-      TransformMode::Test
+      Expr::Ident(private_ident!("ReactLynx"))
     )),
     should_inject_implicit_flatten,
     // Input codes
@@ -2076,7 +2066,7 @@ mod tests {
       Some(t.comments.clone()),
       Mark::new(),
       Mark::new(),
-      TransformMode::Test
+      Expr::Ident(private_ident!("ReactLynx"))
     )),
     basic_list,
     // Input codes
@@ -2105,7 +2095,7 @@ mod tests {
       Some(t.comments.clone()),
       Mark::new(),
       Mark::new(),
-      TransformMode::Test
+      Expr::Ident(private_ident!("ReactLynx"))
     )),
     basic_list_with_fragment,
     // Input codes
@@ -2143,7 +2133,7 @@ mod tests {
           None,
           top_level_mark,
           unresolved_mark,
-          TransformMode::Test,
+          Expr::Ident(private_ident!("ReactLynx")),
         )),
       )
     },
@@ -2177,7 +2167,7 @@ mod tests {
       Some(t.comments.clone()),
       Mark::new(),
       Mark::new(),
-      TransformMode::Test
+      Expr::Ident(private_ident!("ReactLynx"))
     )),
     should_static_extract_inline_style,
     // Input codes
@@ -2211,7 +2201,7 @@ mod tests {
       Some(t.comments.clone()),
       Mark::new(),
       Mark::new(),
-      TransformMode::Test
+      Expr::Ident(private_ident!("ReactLynx"))
     )),
     should_static_extract_dynamic_inline_style,
     // Input codes
@@ -2238,7 +2228,7 @@ mod tests {
       Some(t.comments.clone()),
       Mark::new(),
       Mark::new(),
-      TransformMode::Test
+      Expr::Ident(private_ident!("ReactLynx"))
     )),
     should_extract_css_id_without_css_id,
     // Input codes
@@ -2265,7 +2255,7 @@ mod tests {
       Some(t.comments.clone()),
       Mark::new(),
       Mark::new(),
-      TransformMode::Test
+      Expr::Ident(private_ident!("ReactLynx"))
     )),
     should_extract_css_id,
     // Input codes
@@ -2296,7 +2286,7 @@ mod tests {
       Some(t.comments.clone()),
       Mark::new(),
       Mark::new(),
-      TransformMode::Test
+      Expr::Ident(private_ident!("ReactLynx"))
     )),
     should_extract_css_id_dynamic_component,
     // Input codes
@@ -2327,7 +2317,7 @@ mod tests {
       Some(t.comments.clone()),
       Mark::new(),
       Mark::new(),
-      TransformMode::Test
+      Expr::Ident(private_ident!("ReactLynx"))
     )),
     should_extract_css_id_dynamic_component_without_css_id,
     // Input codes
@@ -2358,7 +2348,7 @@ mod tests {
           None,
           top_level_mark,
           unresolved_mark,
-          TransformMode::Test,
+          Expr::Ident(private_ident!("ReactLynx")),
         )),
         react::react::<&SingleThreadedComments>(
           t.cm.clone(),
@@ -2406,7 +2396,7 @@ mod tests {
         None,
         top_level_mark,
         unresolved_mark,
-        TransformMode::Test,
+        Expr::Ident(private_ident!("ReactLynx")),
       ))
     },
     inline_style_literal,
@@ -2435,7 +2425,7 @@ mod tests {
         None,
         top_level_mark,
         unresolved_mark,
-        TransformMode::Test,
+        Expr::Ident(private_ident!("ReactLynx")),
       ))
     },
     inline_style_literal_unknown_property,
@@ -2464,7 +2454,7 @@ mod tests {
         None,
         top_level_mark,
         unresolved_mark,
-        TransformMode::Test,
+        Expr::Ident(private_ident!("ReactLynx")),
       ))
     },
     empty_module,
@@ -2493,7 +2483,7 @@ mod tests {
         None,
         top_level_mark,
         unresolved_mark,
-        TransformMode::Development,
+        quote!("require('@lynx-js/react/internal')" as Expr),
       ))
     },
     mode_development_spread,
@@ -2524,7 +2514,7 @@ mod tests {
           None,
           top_level_mark,
           unresolved_mark,
-          TransformMode::Development,
+          quote!("require('@lynx-js/react/internal')" as Expr),
         )),
         react::react::<&SingleThreadedComments>(
           t.cm.clone(),
@@ -2579,7 +2569,7 @@ mod tests {
           None,
           top_level_mark,
           unresolved_mark,
-          TransformMode::Development,
+          quote!("require('@lynx-js/react/internal')" as Expr),
         )),
         react::react::<&SingleThreadedComments>(
           t.cm.clone(),
@@ -2636,7 +2626,7 @@ mod tests {
           None,
           top_level_mark,
           unresolved_mark,
-          TransformMode::Development,
+          quote!("require('@lynx-js/react/internal')" as Expr),
         )),
         react::react::<&SingleThreadedComments>(
           t.cm.clone(),
@@ -2693,7 +2683,7 @@ mod tests {
           None,
           top_level_mark,
           unresolved_mark,
-          TransformMode::Development,
+          quote!("require('@lynx-js/react/internal')" as Expr),
         )),
         react::react::<&SingleThreadedComments>(
           t.cm.clone(),
@@ -2748,7 +2738,7 @@ mod tests {
           None,
           top_level_mark,
           unresolved_mark,
-          TransformMode::Development,
+          quote!("require('@lynx-js/react/internal')" as Expr),
         )),
         react::react::<&SingleThreadedComments>(
           t.cm.clone(),
@@ -2797,7 +2787,7 @@ mod tests {
       Some(t.comments.clone()),
       Mark::new(),
       Mark::new(),
-      TransformMode::Test,
+      Expr::Ident(private_ident!("ReactLynx")),
     )),
     should_escape_newline_character,
     // Input codes
@@ -2850,7 +2840,7 @@ aaaaa
       Some(t.comments.clone()),
       Mark::new(),
       Mark::new(),
-      TransformMode::Test,
+      Expr::Ident(private_ident!("ReactLynx")),
     )),
     should_wrap_dynamic_key,
     // Input codes

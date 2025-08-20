@@ -3,4 +3,4 @@ function $$mtc_RealMTC(props) {
       {props.p3}
     </view>;
 }
-export const RealMTC = /*#__PURE__*/ require('@lynx-js/react/internal').registerMTC("$$mtc_2d408_test_1", $$mtc_RealMTC);
+export const RealMTC = /*#__PURE__*/ ReactLynx.registerMTC("$$mtc_2d408_test_1", $$mtc_RealMTC);

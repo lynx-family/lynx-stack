@@ -28,6 +28,7 @@ use std::vec;
 
 use napi::{bindgen_prelude::AsyncTask, Either, Env, Task};
 
+use once_cell::sync::Lazy;
 use rustc_hash::FxBuildHasher;
 
 use swc_core::{
@@ -57,8 +58,10 @@ use swc_core::{
       optimization::{simplifier, simplify},
       react, typescript,
     },
+    utils::private_ident,
     visit::visit_mut_pass,
   },
+  quote,
 };
 
 // currently `use xxx as yyy` is not supported by napi-rs
@@ -70,6 +73,7 @@ use swc_plugin_define_dce::DefineDCEVisitorConfig;
 use swc_plugin_directive_dce::{DirectiveDCEVisitor, DirectiveDCEVisitorConfig};
 use swc_plugin_dynamic_import::{DynamicImportVisitor, DynamicImportVisitorConfig};
 use swc_plugin_inject::{InjectVisitor, InjectVisitorConfig};
+use swc_plugin_mtc::{MTCVisitor, MTCVisitorConfig};
 use swc_plugin_refresh::{RefreshVisitor, RefreshVisitorConfig};
 use swc_plugin_shake::{ShakeVisitor, ShakeVisitorConfig};
 use swc_plugin_snapshot::{JSXTransformer, JSXTransformerConfig};
@@ -258,6 +262,8 @@ pub struct TransformNodiffOptions {
   pub dynamic_import: Option<Either<bool, DynamicImportVisitorConfig>>,
   /// @internal
   pub inject: Option<Either<bool, InjectVisitorConfig>>,
+  /// @internal
+  pub mtc: Option<MTCVisitorConfig>,
 }
 
 impl Default for TransformNodiffOptions {
@@ -282,6 +288,7 @@ impl Default for TransformNodiffOptions {
       worklet: Either::A(false),
       dynamic_import: Some(Either::B(Default::default())),
       inject: Some(Either::A(false)),
+      mtc: None,
     }
   }
 }
@@ -364,6 +371,15 @@ fn transform_react_lynx_inner(
 
     let unresolved_mark = Mark::new();
     let top_level_mark = Mark::new();
+
+    let runtime_id: Lazy<Expr> = match options.mode.unwrap_or(TransformMode::Production) {
+      TransformMode::Development => {
+        Lazy::new(|| quote!("require('@lynx-js/react/internal')" as Expr))
+      }
+      TransformMode::Production | TransformMode::Test => {
+        Lazy::new(|| Expr::Ident(private_ident!("ReactLynx")))
+      }
+    };
 
     let simplify_pass_1 = Optional::new(
       simplifier(
@@ -473,7 +489,7 @@ fn transform_react_lynx_inner(
           Some(&comments),
           top_level_mark,
           unresolved_mark,
-          options.mode.unwrap_or(TransformMode::Production),
+          runtime_id.clone(),
         )
         .with_content_hash(content_hash.clone()),
       ),
@@ -548,6 +564,15 @@ fn transform_react_lynx_inner(
       ),
     };
 
+    let mtc_plugin = visit_mut_pass(
+      MTCVisitor::new(
+        options.mtc.unwrap_or_default(),
+        Some(&comments),
+        runtime_id.clone(),
+      )
+      .with_content_hash(content_hash.clone()),
+    );
+
     let worklet_plugin = match options.worklet {
       Either::A(config) => Optional::new(
         visit_mut_pass(WorkletVisitor::default().with_content_hash(content_hash)),
@@ -603,15 +628,14 @@ fn transform_react_lynx_inner(
         unresolved_mark,
         top_level_mark,
       ),
+      mtc_plugin,
       dynamic_import_plugin,
       refresh_plugin,
       compat_plugin,
       worklet_plugin,
       css_scope_plugin,
       (list_plugin, snapshot_plugin),
-      directive_dce_plugin,
-      define_dce_plugin,
-      simplify_pass_1, // do simplify after DCE above to make shake below works better
+      (directive_dce_plugin, define_dce_plugin, simplify_pass_1), // do simplify after DCE above to make shake below works better
       (
         shake_plugin,
         simplify_pass,
@@ -848,7 +872,7 @@ mod tests {
 
     // println!("{:?}", serde_json::to_string(&s));
 
-    assert_eq!(s.typescript(), true);
-    assert_eq!(s.decorators(), false); // default to false
+    assert!(s.typescript());
+    assert!(!s.decorators()); // default to false
   }
 }

@@ -177,6 +177,10 @@ function getCommonOptions(
       runtimePkg: RUNTIME_PKG,
       target: 'MIXED',
     },
+    mtc: {
+      filename: filename,
+      target: 'MIXED',
+    },
     directiveDCE: false,
     defineDCE,
     refresh: false,
@@ -264,6 +268,10 @@ export function getMainThreadTransformOptions(
     directiveDCE: {
       target: 'LEPUS',
     },
+    mtc: {
+      ...commonOptions.mtc,
+      target: 'LEPUS',
+    },
   };
 }
 
@@ -306,6 +314,10 @@ export function getBackgroundTransformOptions(
       target: 'JS',
     },
     directiveDCE: {
+      target: 'JS',
+    },
+    mtc: {
+      ...commonOptions.mtc,
       target: 'JS',
     },
   };

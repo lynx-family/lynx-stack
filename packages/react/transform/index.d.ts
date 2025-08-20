@@ -461,6 +461,12 @@ export interface ExtractStrConfig {
 export interface InjectVisitorConfig {
   inject: Record<string, ['expr', string] | ['importDefault', string] | ['importStarAs', string] | ['importNamed', string, string]>
 }
+export interface MtcVisitorConfig {
+  /** @internal */
+  filename: string
+  /** @internal */
+  target: 'LEPUS' | 'JS' | 'MIXED'
+}
 export interface RefreshVisitorConfig {
   library?: Array<string>
 }
@@ -607,6 +613,8 @@ export interface TransformNodiffOptions {
   dynamicImport?: boolean | DynamicImportVisitorConfig
   /** @internal */
   inject?: boolean | InjectVisitorConfig
+  /** @internal */
+  mtc?: MtcVisitorConfig
 }
 export interface TransformNodiffOutput {
   code: string
