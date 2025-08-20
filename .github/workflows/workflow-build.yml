@@ -88,6 +88,10 @@ jobs:
         with:
           key: build
           save-if: ${{ github.ref_name == 'main' }}
+      - name: Python Setup
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
       - name: TurboCache
         uses: lynx-infra/cache@5c6160a6a4c7fca80a2f3057bb9dfc9513fcb732
         with:
