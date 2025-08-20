@@ -1698,6 +1698,7 @@ export function MTC(props) {
                   el
               ];
           }, null, ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null);
+          
           export const MTC = /*#__PURE__*/ ReactLynx.registerMTC("$$mtc_da39a_87544_1", $$mtc_MTC);
           "
         `);
