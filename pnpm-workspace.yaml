@@ -25,7 +25,7 @@ resolutionMode: "lowest-direct"
 
 # Default catalogs
 catalog:
-  "@microsoft/api-extractor": "7.52.10"
+  "@microsoft/api-extractor": "7.52.11"
 
 catalogs:
   # Rsbuild monorepo packages
