@@ -18,8 +18,9 @@ export function setupLynxEnv(): void {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     globalThis.SystemInfo = lynx.SystemInfo ?? {};
 
-    lynx.reportError = function(e: Error) {
-      _ReportError(e, {
+    lynx.reportError = function(e: Error | string) {
+      const error = e instanceof Error ? e : new Error(JSON.stringify(e));
+      _ReportError(error, {
         errorCode: 1101, // ErrCode::LYNX_ERROR_CODE_LEPUS in Lynx/base/debug/error_code.h
       });
     };
