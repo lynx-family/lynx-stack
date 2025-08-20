@@ -226,8 +226,8 @@ importers:
         specifier: workspace:*
         version: link:..
       '@prefresh/core':
-        specifier: ^1.5.5
-        version: 1.5.5(preact@10.23.2)
+        specifier: ^1.5.7
+        version: 1.5.7(preact@10.23.2)
       '@prefresh/utils':
         specifier: ^1.2.1
         version: 1.2.1
@@ -2355,10 +2355,10 @@ packages:
   '@polka/url@1.0.0-next.25':
     resolution: {integrity: sha512-j7P6Rgr3mmtdkeDGTe0E/aYyWEWVtc5yFXtHCRHs28/jptDEWfaVOc5T7cblqy1XKPPfCxJc/8DwQ5YgLOZOVQ==}
 
-  '@prefresh/core@1.5.5':
-    resolution: {integrity: sha512-H6GTXUl4V4fe3ijz7yhSa/mZ+pGSOh7XaJb6uP/sQsagBx9yl0D1HKDaeoMQA8Ad2Xm27LqvbitMGSdY9UFSKQ==}
+  '@prefresh/core@1.5.7':
+    resolution: {integrity: sha512-AsyeitiPwG7UkT0mqgKzIDuydmYSKtBlzXEb5ymzskvxewcmVGRjQkcHDy6PCNBT7soAyHpQ0mPgXX4IeyOlUg==}
     peerDependencies:
-      preact: ^10.0.0
+      preact: ^10.0.0 || ^11.0.0-0
 
   '@prefresh/utils@1.2.1':
     resolution: {integrity: sha512-vq/sIuN5nYfYzvyayXI4C2QkprfNaHUQ9ZX+3xLD8nL3rWyzpxOm1+K7RtMbhd+66QcaISViK7amjnheQ/4WZw==}
@@ -9450,7 +9450,7 @@ snapshots:
 
   '@polka/url@1.0.0-next.25': {}
 
-  '@prefresh/core@1.5.5(preact@10.23.2)':
+  '@prefresh/core@1.5.7(preact@10.23.2)':
     dependencies:
       preact: 10.23.2
 
