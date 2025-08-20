@@ -1,5 +1,5 @@
 {
-  "$schema": "https://turbo.build/schema.json",
+  "$schema": "https://turborepo.com/schema.json",
   "globalPassThroughEnv": [
     "CI",
     "COREPACK_INTEGRITY_KEYS",
@@ -24,6 +24,15 @@
     "test": {
       "dependsOn": [],
       "cache": false
+    },
+    "//#_internal:cargo:version": {
+      "env": ["GITHUB_SHA"],
+      "dependsOn": [],
+      "inputs": [
+        "rust-toolchain",
+        "rust-toolchain.toml"
+      ],
+      "outputs": []
     },
     "//#build": {
       "cache": false,
