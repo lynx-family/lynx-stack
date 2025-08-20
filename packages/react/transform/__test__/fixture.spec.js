@@ -1690,15 +1690,20 @@ export function MTC(props) {
 
       if (target === 'LEPUS') {
         expect(code).toMatchInlineSnapshot(`
-          "import * as ReactLynx from "@lynx-js/react";
-          /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_87544_1", function() {
+          "import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
+          import * as ReactLynx from "@lynx-js/react";
+          const __snapshot_da39a_87544_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_87544_1", function() {
               const pageId = ReactLynx.__pageId;
               const el = __CreateView(pageId);
               return [
                   el
               ];
           }, null, ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null);
-          
+          function $$mtc_MTC(props) {
+              return /*#__PURE__*/ _jsx(__snapshot_da39a_87544_1, {
+                  children: props.p3
+              });
+          }
           export const MTC = /*#__PURE__*/ ReactLynx.registerMTC("$$mtc_da39a_87544_1", $$mtc_MTC);
           "
         `);
@@ -1719,7 +1724,7 @@ export function MTC(props) {
               }
           ], ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null);
           export function MTC(props) {
-              const [jsxs, transformedProps] = ReactLynx.pickJSXfromProps(props);
+              const [jsxs, transformedProps] = ReactLynx.pickJSXFromProps(props);
               return /*#__PURE__*/ _jsx(__snapshot_da39a_87544_1, {
                   values: [
                       transformedProps
@@ -1746,7 +1751,7 @@ export function MTC(props) {
               }
           ], ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null);
           export function MTC(props) {
-              const [jsxs, transformedProps] = ReactLynx.pickJSXfromProps(props);
+              const [jsxs, transformedProps] = ReactLynx.pickJSXFromProps(props);
               return /*#__PURE__*/ _jsx(__snapshot_da39a_87544_1, {
                   values: [
                       transformedProps
