@@ -1,5 +1,11 @@
 # @lynx-js/rspeedy
 
+## 0.10.7
+
+### Patch Changes
+
+- `output.inlineScripts` defaults to `false` when chunkSplit strategy is not `'all-in-one'` ([#1504](https://github.com/lynx-family/lynx-stack/pull/1504))
+
 ## 0.10.6
 
 ### Patch Changes

@@ -33,14 +33,14 @@ jobs:
     runs-on: lynx-ubuntu-24.04-medium
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
         with:
           # We need full history for changeset status check
           fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: "22"
+          node-version: "24"
       - name: Install
         run: |
           npm install -g corepack@latest
@@ -138,8 +138,8 @@ jobs:
     with:
       runs-on: lynx-ubuntu-24.04-medium
       run: |
-        pnpm dlx @pnpm/registry-mock prepare
-        pnpm dlx @pnpm/registry-mock &
+        pnpm dlx @pnpm/registry-mock@4 prepare
+        pnpm dlx @pnpm/registry-mock@4 &
         printf '\n//localhost:4873/:_authToken="this-is-a-fake-token"\n' >> ~/.npmrc
         pnpm changeset version --snapshot regression
         node packages/tools/canary-release/snapshot.js
@@ -182,7 +182,6 @@ jobs:
         --logHeapUsage
         --silent
   test-rust:
-    needs: build
     uses: ./.github/workflows/rust.yml
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
@@ -198,7 +197,7 @@ jobs:
     runs-on: lynx-ubuntu-24.04-medium
     steps:
       - uses: taiki-e/checkout-action@b13d20b7cda4e2f325ef19895128f7ff735c0b3d # v1.3.1
-      - uses: crate-ci/typos@52bd719c2c91f9d676e2aa359fc8e0db8925e6d8 # v1.35.3
+      - uses: crate-ci/typos@a4c3e43aea0a9e9b9e6578d2731ebd9a27e8f6cd # v1.35.5
         with:
           files: .
   test-vitest:

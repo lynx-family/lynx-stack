@@ -1,5 +1,11 @@
 # @lynx-js/template-webpack-plugin
 
+## 0.8.4
+
+### Patch Changes
+
+- Fix invalid `module.exports=;` syntax in app-service.js. ([#1501](https://github.com/lynx-family/lynx-stack/pull/1501))
+
 ## 0.8.3
 
 ### Patch Changes

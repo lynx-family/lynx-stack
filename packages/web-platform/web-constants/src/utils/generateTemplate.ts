@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { globalMuteableVars } from '../constants.js';
+import { globalDisallowedVars, globalMuteableVars } from '../constants.js';
 import type { LynxTemplate } from '../types/LynxModule.js';
 
 const mainThreadInjectVars = [
@@ -27,6 +27,7 @@ const mainThreadInjectVars = [
   '__UpdateComponentID',
   '__UpdateComponentInfo',
   '__GetConfig',
+  '__GetAttributeByName',
   '__UpdateListCallbacks',
   '__AppendElement',
   '__ElementIsEqual',
@@ -91,6 +92,7 @@ const generateModuleContent = (
   injectVars: readonly string[],
   injectWithBind: readonly string[],
   muteableVars: readonly string[],
+  globalDisallowedVars: readonly string[],
   isESM: boolean,
 ) =>
   [
@@ -105,6 +107,9 @@ const generateModuleContent = (
       `const ${nm} = lynx_runtime.${nm}?.bind(lynx_runtime);`
     ),
     ';var globDynamicComponentEntry = \'__Card__\';',
+    globalDisallowedVars.length !== 0
+      ? `var ${globalDisallowedVars.join('=')}=undefined;`
+      : '',
     'var {__globalProps} = lynx;',
     'lynx_runtime._updateVars=()=>{',
     ...muteableVars.map(nm =>
@@ -120,6 +125,7 @@ async function generateJavascriptUrl<T extends Record<string, string | {}>>(
   injectVars: string[],
   injectWithBind: string[],
   muteableVars: readonly string[],
+  globalDisallowedVars: readonly string[],
   createJsModuleUrl: (content: string, name: string) => Promise<string>,
   isESM: boolean,
   templateName?: string,
@@ -132,6 +138,7 @@ async function generateJavascriptUrl<T extends Record<string, string | {}>>(
         injectVars.concat(muteableVars),
         injectWithBind,
         muteableVars,
+        globalDisallowedVars,
         isESM,
       ),
       `${templateName}-${name.replaceAll('/', '')}.js`,
@@ -160,6 +167,7 @@ export async function generateTemplate(
       mainThreadInjectVars,
       [],
       globalMuteableVars,
+      templateName ? [] : globalDisallowedVars,
       createJsModuleUrl as (content: string, name: string) => Promise<string>,
       true,
       templateName,
@@ -169,6 +177,7 @@ export async function generateTemplate(
       backgroundInjectVars,
       backgroundInjectWithBind,
       [],
+      templateName ? [] : globalDisallowedVars,
       createJsModuleUrl as (content: string, name: string) => Promise<string>,
       false,
       templateName,

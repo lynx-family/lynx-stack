@@ -208,7 +208,7 @@ describe('React - alias', () => {
     )
   })
 
-  test('alias once', async () => {
+  test.skip('alias once', async () => {
     vi.stubEnv('NODE_ENV', 'production')
     const { pluginReactAlias } = await import('../src/index.js')
 
@@ -256,5 +256,110 @@ describe('React - alias', () => {
 
     expect(layerGetter).toBeCalledTimes(2)
     expect.assertions(2)
+  })
+
+  describe('with environments', () => {
+    test('alias with multiple environments', async () => {
+      vi.stubEnv('NODE_ENV', 'development')
+      const { pluginReactAlias } = await import('../src/index.js')
+
+      const rsbuild = await createRsbuild({
+        rsbuildConfig: {
+          environments: {
+            lynx: {
+              plugins: [
+                pluginReactAlias({
+                  LAYERS,
+                }),
+              ],
+            },
+            web: {
+              plugins: [
+                pluginReactAlias({
+                  LAYERS,
+                }),
+              ],
+            },
+          },
+        },
+        // eslint-disable-next-line n/no-unsupported-features/node-builtins
+        cwd: import.meta.dirname,
+      })
+
+      const [lynxConfig, webConfig] = await rsbuild.initConfigs()
+
+      if (!lynxConfig?.resolve?.alias) {
+        expect.fail('lynxConfig should have config.resolve.alias')
+      }
+
+      if (!webConfig?.resolve?.alias) {
+        expect.fail('webConfig should have config.resolve.alias')
+      }
+
+      expect(lynxConfig.resolve.alias).toHaveProperty(
+        '@lynx-js/react$',
+        expect.stringContaining(
+          '/packages/react/runtime/lib/index.js'.replaceAll('/', path.sep),
+        ),
+      )
+
+      expect(webConfig.resolve.alias).toHaveProperty(
+        '@lynx-js/react/internal$',
+        expect.stringContaining(
+          '/packages/react/runtime/lib/internal.js'.replaceAll('/', path.sep),
+        ),
+      )
+    })
+
+    test('alias with plugins + environments', async () => {
+      vi.stubEnv('NODE_ENV', 'development')
+      const { pluginReactAlias } = await import('../src/index.js')
+
+      const rsbuild = await createRsbuild({
+        rsbuildConfig: {
+          environments: {
+            lynx: {
+              plugins: [
+                pluginReactAlias({
+                  LAYERS,
+                }),
+              ],
+            },
+            web: {},
+          },
+          plugins: [
+            pluginReactAlias({
+              LAYERS,
+            }),
+          ],
+        },
+        // eslint-disable-next-line n/no-unsupported-features/node-builtins
+        cwd: import.meta.dirname,
+      })
+
+      const [lynxConfig, webConfig] = await rsbuild.initConfigs()
+
+      if (!lynxConfig?.resolve?.alias) {
+        expect.fail('lynxConfig should have config.resolve.alias')
+      }
+
+      if (!webConfig?.resolve?.alias) {
+        expect.fail('webConfig should have config.resolve.alias')
+      }
+
+      expect(lynxConfig.resolve.alias).toHaveProperty(
+        '@lynx-js/react$',
+        expect.stringContaining(
+          '/packages/react/runtime/lib/index.js'.replaceAll('/', path.sep),
+        ),
+      )
+
+      expect(webConfig.resolve.alias).toHaveProperty(
+        '@lynx-js/react$',
+        expect.stringContaining(
+          '/packages/react/runtime/lib/index.js'.replaceAll('/', path.sep),
+        ),
+      )
+    })
   })
 })

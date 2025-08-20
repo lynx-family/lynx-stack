@@ -1,5 +1,19 @@
 # @lynx-js/react-rsbuild-plugin
 
+## 0.10.12
+
+### Patch Changes
+
+- `output.inlineScripts` defaults to `false` when chunkSplit strategy is not `'all-in-one'` ([#1504](https://github.com/lynx-family/lynx-stack/pull/1504))
+
+- Updated dependencies [[`51a0b19`](https://github.com/lynx-family/lynx-stack/commit/51a0b19078cb18c13f4f3e2ca4f471aa4ddeaa05), [`b391ef5`](https://github.com/lynx-family/lynx-stack/commit/b391ef5c6dd0a0945e68b38f40807df7e1ef672e)]:
+  - @lynx-js/template-webpack-plugin@0.8.4
+  - @lynx-js/css-extract-webpack-plugin@0.6.2
+  - @lynx-js/react-alias-rsbuild-plugin@0.10.12
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/react-refresh-webpack-plugin@0.3.4
+  - @lynx-js/react-webpack-plugin@0.6.19
+
 ## 0.10.11
 
 ### Patch Changes

@@ -287,8 +287,12 @@ pub fn jsx_is_children_full_dynamic(n: &JSXElement) -> bool {
         JSXElementChild::JSXExprContainer(JSXExprContainer {
           expr: JSXExpr::JSXEmptyExpr(_),
           ..
-        }) => unreachable!(),
-        JSXElementChild::JSXSpreadChild(_) => unreachable!(),
+        }) => unreachable!(
+          "Unexpected JSXEmptyExpr in jsx_is_children_full_dynamic - should be filtered out"
+        ),
+        JSXElementChild::JSXSpreadChild(_) => {
+          unreachable!("Unexpected JSXSpreadChild in jsx_is_children_full_dynamic - not supported")
+        }
       })
 }
 
@@ -374,7 +378,7 @@ pub fn transform_jsx_attr_str(v: &str) -> String {
 //           expr: JSXExpr::JSXEmptyExpr(_),
 //           ..
 //         }) => unreachable!(),
-//         JSXElementChild::JSXSpreadChild(_) => unreachable!(),
+//         JSXElementChild::JSXSpreadChild(_) => unreachable!("Unexpected JSXSpreadChild in jsx_is_children_full_dynamic - not supported"),
 //       })
 //   }
 // }

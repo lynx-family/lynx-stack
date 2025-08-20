@@ -296,6 +296,11 @@ export type ElementFromBinaryPAPI = (
   parentComponentUniId: number,
 ) => WebFiberElementImpl[];
 
+export type GetAttributeByNamePAPI = (
+  element: WebFiberElementImpl,
+  name: string,
+) => string | null;
+
 export interface MainThreadGlobalThis {
   __ElementFromBinary: ElementFromBinaryPAPI;
 
@@ -355,6 +360,7 @@ export interface MainThreadGlobalThis {
   __SetInlineStyles: SetInlineStylesPAPI;
   __SetCSSId: SetCSSIdPAPI;
   __GetPageElement: GetPageElementPAPI;
+  __GetAttributeByName: GetAttributeByNamePAPI;
   __globalProps: unknown;
   SystemInfo: typeof systemInfo;
   globalThis?: MainThreadGlobalThis;
