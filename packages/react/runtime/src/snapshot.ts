@@ -111,7 +111,7 @@ export const snapshotManager: {
           /* v8 ignore stop */
           return [__CreateWrapperElement(__pageId)];
         },
-        update: [],
+        update: [() => {}],
         slot: __DynamicPartChildren_0,
         isListHolder: false,
       },
@@ -537,6 +537,7 @@ export class SnapshotInstance {
   }
 
   insertBefore(newNode: SnapshotInstance, existingNode?: SnapshotInstance): void {
+    console.log('yra insertBefore', this.__id, newNode.__id);
     const __snapshot_def = this.__snapshot_def;
     if (__snapshot_def.isListHolder) {
       if (__pendingListUpdates.values) {
@@ -693,6 +694,7 @@ interface MTCProps extends Attributes {
 }
 
 function renderMTC(snapshotInstance: SnapshotInstance, props: MTCProps) {
+  console.log('yra renderMTC', snapshotInstance.__id, props);
   if (snapshotInstance.__elements === undefined) {
     return;
   }
@@ -704,11 +706,19 @@ function renderMTC(snapshotInstance: SnapshotInstance, props: MTCProps) {
     mtcComponentVNodes.set(instanceId, newVnode);
   } else {
     const type = mtcComponentTypes.get(props.__MTCProps.componentTypeId)!;
-    const vnode = createVNode(type, props) as VNode;
+    const vnode = createVNode('wrapper', { children: createVNode(type, props) }) as VNode;
     mtcComponentVNodes.set(instanceId, vnode);
-    render(vnode, snapshotInstance as unknown as ContainerNode);
-    (vnode.__e! as SnapshotInstance).__onDestroy = () => {
-      mtcComponentVNodes.delete(instanceId);
-    };
+    const wrapper = new SnapshotInstance('wrapper');
+    // @ts-ignore
+    wrapper.nodeType = 1;
+    render(vnode, wrapper as unknown as ContainerNode);
+    wrapper.ensureElements();
+    console.log('yra renderMTC render-1', vnode.__e, vnode.__e !== undefined);
+    if (vnode.__e) {
+      snapshotInstance.insertBefore(vnode.__e as SnapshotInstance);
+      (vnode.__e as SnapshotInstance).__onDestroy = () => {
+        mtcComponentVNodes.delete(instanceId);
+      };
+    }
   }
 }

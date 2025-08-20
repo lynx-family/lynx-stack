@@ -13,6 +13,8 @@ export function createElementVNode(
   const r = {
     props: props,
     ref: props['mtc:ref'],
+    type: type,
+    constructor: undefined,
 
     __k: null,
     __: null,
