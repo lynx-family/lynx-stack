@@ -1,5 +1,4 @@
 use napi_derive::napi;
-use once_cell::sync::Lazy;
 use std::collections::{HashMap, HashSet};
 use swc_core::{
   common::{comments::Comments, Span, SyntaxContext, DUMMY_SP},
@@ -341,6 +340,26 @@ where
     self.is_mtc = false;
     self.mtc_counter = 0;
     self.functions_to_transform = HashMap::new();
+  }
+
+  fn visit_mut_jsx_expr_container(&mut self, jsx_expr: &mut JSXExprContainer) {
+    if !self.is_mtc || self.cfg.target != TransformTarget::LEPUS {
+      return;
+    }
+
+    if let JSXExpr::Expr(expr) = &mut jsx_expr.expr {
+      let render_mtc_slot_call = quote!(
+          r#"$runtime_id.renderMTCSlot(
+             $origin_expr,
+        )"# as Expr,
+          runtime_id: Expr = self.runtime_id.clone(),
+          origin_expr: Expr = *expr.clone(),
+      );
+
+      jsx_expr.expr = JSXExpr::Expr(Box::new(render_mtc_slot_call));
+    }
+
+    jsx_expr.visit_mut_children_with(self);
   }
 
   fn visit_mut_fn_decl(&mut self, fn_decl: &mut FnDecl) {
