@@ -101,6 +101,22 @@ export const snapshotManager: {
       },
     ],
     [
+      'mtc-container',
+      {
+        create() {
+          /* v8 ignore start */
+          if (__JS__ && !__DEV__) {
+            return [];
+          }
+          /* v8 ignore stop */
+          return [__CreateWrapperElement(__pageId)];
+        },
+        update: [],
+        slot: __DynamicPartChildren_0,
+        isListHolder: false,
+      },
+    ],
+    [
       null as unknown as string,
       {
         create() {
