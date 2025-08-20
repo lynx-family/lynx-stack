@@ -600,6 +600,37 @@ export function FakeMTC({p3, children}) {
       (
         resolver(unresolved_mark, top_level_mark, true),
         visit_mut_pass(MTCVisitor::new(
+          MTCVisitorConfig::new(TransformTarget::LEPUS, "test.js".into()),
+          Some(t.comments.clone()),
+          Expr::Ident(private_ident!("ReactLynx")),
+        )),
+      )
+    },
+    main_thread_nested_jsx_expr_container,
+    // Input codes
+    r#"
+"main thread"
+export function FakeMTC({p3, children}) {
+    return <view>
+      <view>123 + {p3}</view>
+      { children }
+    </view>
+}
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    |t| {
+      let unresolved_mark = Mark::new();
+      let top_level_mark = Mark::new();
+      (
+        resolver(unresolved_mark, top_level_mark, true),
+        visit_mut_pass(MTCVisitor::new(
           MTCVisitorConfig::new(TransformTarget::JS, "test.js".into()),
           Some(t.comments.clone()),
           Expr::Ident(private_ident!("ReactLynx")),

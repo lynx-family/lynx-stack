@@ -1701,7 +1701,7 @@ export function MTC(props) {
           }, null, ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null);
           function $$mtc_MTC(props) {
               return /*#__PURE__*/ _jsx(__snapshot_da39a_87544_1, {
-                  children: props.p3
+                  children: ReactLynx.renderMTCSlot(props.p3)
               });
           }
           export const MTC = /*#__PURE__*/ ReactLynx.registerMTC("$$mtc_da39a_87544_1", $$mtc_MTC);
