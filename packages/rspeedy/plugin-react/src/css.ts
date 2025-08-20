@@ -12,7 +12,6 @@ import type {
   CssExtractWebpackPluginOptions,
 } from '@lynx-js/css-extract-webpack-plugin'
 import { LAYERS } from '@lynx-js/react-webpack-plugin'
-import { CSSPlugins } from '@lynx-js/template-webpack-plugin'
 
 import type { PluginReactLynxOptions } from './pluginReactLynx.js'
 
@@ -154,9 +153,7 @@ export function applyCSS(
               enableCSSSelector,
               enableCSSInvalidation,
               targetSdkVersion,
-              cssPlugins: [
-                CSSPlugins.parserPlugins.removeFunctionWhiteSpace(),
-              ],
+              cssPlugins: [],
             } as CssExtractWebpackPluginOptions | CssExtractRspackPluginOptions,
           ]
         })

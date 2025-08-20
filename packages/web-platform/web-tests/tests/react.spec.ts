@@ -967,6 +967,22 @@ test.describe('reactlynx3 tests', () => {
     test.describe('api-exposure', () => {
       const module = 'exposure';
       test.fixme(isSSR, 'TODO: migrate exposure from web-elements to runtime');
+
+      test(
+        'api-exposure-no-fake-disappear',
+        async ({ page }, { title }) => {
+          await goto(page, title);
+          await wait(300);
+          await expect(page.locator('#control')).toHaveCSS(
+            'background-color',
+            'rgb(0, 128, 0)', // green
+          );
+          await expect(page.locator('#target')).toHaveCSS(
+            'background-color',
+            'rgb(0, 128, 0)', // green
+          );
+        },
+      );
       test(
         'api-exposure-area',
         async ({ page }, { title }) => {
@@ -1284,6 +1300,25 @@ test.describe('reactlynx3 tests', () => {
         });
         await wait(500);
         await diffScreenShot(page, title, 'blue');
+      },
+    );
+    test(
+      'api-global-disallowed-vars',
+      async ({ page }, { title }) => {
+        let mts = false;
+        let bts = false;
+        page.on('console', (message) => {
+          if (message.text() === 'main thread: undefined, undefined') {
+            mts = true;
+          }
+          if (message.text() === 'background thread: undefined, undefined') {
+            bts = true;
+          }
+        });
+        await goto(page, title);
+        await wait(200);
+        !isSSR && expect(mts).toBe(true);
+        expect(bts).toBe(true);
       },
     );
   });

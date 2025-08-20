@@ -1,7 +1,9 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { describe, expect, test } from 'vitest'
+import path from 'node:path'
+
+import { describe, expect, test, vi } from 'vitest'
 
 import { WebEncodePlugin } from '@lynx-js/template-webpack-plugin'
 import type { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'
@@ -241,5 +243,101 @@ describe('Web', () => {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       )?.options?.filename,
     ).toMatchInlineSnapshot('"main.lynx.bundle"')
+  })
+
+  test('plugins with multiple environments', async () => {
+    vi.stubEnv('NODE_ENV', 'development')
+    const { pluginReactLynx } = await import('../src/index.js')
+
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
+        environments: {
+          lynx: {
+            plugins: [
+              pluginReactLynx(),
+            ],
+          },
+          web: {
+            plugins: [
+              pluginReactLynx(),
+            ],
+          },
+        },
+      },
+      // eslint-disable-next-line n/no-unsupported-features/node-builtins
+      cwd: import.meta.dirname,
+    })
+
+    const [lynxConfig, webConfig] = await rsbuild.initConfigs()
+
+    if (!lynxConfig?.resolve?.alias) {
+      expect.fail('lynxConfig should have config.resolve.alias')
+    }
+
+    if (!webConfig?.resolve?.alias) {
+      expect.fail('webConfig should have config.resolve.alias')
+    }
+
+    expect(lynxConfig.resolve.alias).toHaveProperty(
+      '@lynx-js/react$',
+      expect.stringContaining(
+        '/packages/react/runtime/lib/index.js'.replaceAll('/', path.sep),
+      ),
+    )
+
+    expect(webConfig.resolve.alias).toHaveProperty(
+      '@lynx-js/react/internal$',
+      expect.stringContaining(
+        '/packages/react/runtime/lib/internal.js'.replaceAll('/', path.sep),
+      ),
+    )
+  })
+
+  // TODO: stack overflow, should be fixed in the later PRs
+  test.skip('alias with plugins + environments', async () => {
+    vi.stubEnv('NODE_ENV', 'development')
+    const { pluginReactLynx } = await import('../src/index.js')
+
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
+        environments: {
+          lynx: {
+            plugins: [
+              pluginReactLynx(),
+            ],
+          },
+          web: {},
+        },
+        plugins: [
+          pluginReactLynx(),
+        ],
+      },
+      // eslint-disable-next-line n/no-unsupported-features/node-builtins
+      cwd: import.meta.dirname,
+    })
+
+    const [lynxConfig, webConfig] = await rsbuild.initConfigs()
+
+    if (!lynxConfig?.resolve?.alias) {
+      expect.fail('lynxConfig should have config.resolve.alias')
+    }
+
+    if (!webConfig?.resolve?.alias) {
+      expect.fail('webConfig should have config.resolve.alias')
+    }
+
+    expect(lynxConfig.resolve.alias).toHaveProperty(
+      '@lynx-js/react$',
+      expect.stringContaining(
+        '/packages/react/runtime/lib/index.js'.replaceAll('/', path.sep),
+      ),
+    )
+
+    expect(webConfig.resolve.alias).toHaveProperty(
+      '@lynx-js/react$',
+      expect.stringContaining(
+        '/packages/react/runtime/lib/index.js'.replaceAll('/', path.sep),
+      ),
+    )
   })
 })

@@ -47,7 +47,7 @@ export interface ExtractStrConfig {
 export { LAYERS }
 
 // @public
-export function pluginReactLynx(userOptions?: PluginReactLynxOptions): RsbuildPlugin;
+export function pluginReactLynx(userOptions?: PluginReactLynxOptions): RsbuildPlugin[];
 
 // @public
 export interface PluginReactLynxOptions {

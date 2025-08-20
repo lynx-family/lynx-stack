@@ -48,5 +48,4 @@ const __snapshot_da39a_test_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapsh
         5
     ]
 ], undefined, globDynamicComponentEntry, null);
-<__snapshot_da39a_test_1><wrapper>{hello}</wrapper><wrapper><__snapshot_da39a_test_2 key={hello}>{hello}</__snapshot_da39a_test_2>
-      </wrapper><__snapshot_da39a_test_3 key="hello">{hello}</__snapshot_da39a_test_3></__snapshot_da39a_test_1>;
+<__snapshot_da39a_test_1><wrapper>{hello}</wrapper><__snapshot_da39a_test_2 key={hello}>{hello}</__snapshot_da39a_test_2><__snapshot_da39a_test_3 key="hello">{hello}</__snapshot_da39a_test_3></__snapshot_da39a_test_1>;

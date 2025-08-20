@@ -15,7 +15,9 @@ describe('Plugins - Output', () => {
   test('defaults', async () => {
     const rsbuild = await createStubRspeedy({})
 
-    const config = await rsbuild.unwrapConfig()
+    const config = await rsbuild.unwrapConfig({
+      action: 'build',
+    })
 
     expect(config.output).toMatchSnapshot()
   })
@@ -24,7 +26,9 @@ describe('Plugins - Output', () => {
     vi.stubEnv('NODE_ENV', 'production')
     const rsbuild = await createStubRspeedy({})
 
-    const config = await rsbuild.unwrapConfig()
+    const config = await rsbuild.unwrapConfig({
+      action: 'build',
+    })
 
     expect(config.output).toMatchSnapshot()
   })
@@ -36,7 +40,9 @@ describe('Plugins - Output', () => {
       },
     })
 
-    const config = await rsbuild.unwrapConfig()
+    const config = await rsbuild.unwrapConfig({
+      action: 'build',
+    })
     expect(config.output).toMatchSnapshot()
   })
 
@@ -49,7 +55,9 @@ describe('Plugins - Output', () => {
       },
     })
 
-    const config = await rsbuild.unwrapConfig()
+    const config = await rsbuild.unwrapConfig({
+      action: 'build',
+    })
     expect(config.output).toMatchSnapshot()
   })
 
@@ -61,7 +69,9 @@ describe('Plugins - Output', () => {
       },
     })
 
-    const config = await rsbuild.unwrapConfig()
+    const config = await rsbuild.unwrapConfig({
+      action: 'build',
+    })
 
     expect(config.output?.publicPath).toBe('https://foo.example.com/')
 
