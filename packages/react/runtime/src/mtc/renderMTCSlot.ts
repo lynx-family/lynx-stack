@@ -25,8 +25,8 @@ export function renderMTCSlot(btc: { $$typeof: string; i: number }): unknown {
 
 export function renderFakeMTCSlot(jsxs: [VNode, { i: number }][]): VNode[] {
   return jsxs.map(([jsx, placeholder]) => (
-    // @ts-expect-error wrapper is a valid element type
-    createElementBackground('wrapper', {
+    // @ts-expect-error ignore is a valid element type
+    createElementBackground('ignore', {
       ref: (bsi: BackgroundSnapshotInstance) => {
         if (bsi) {
           placeholder.i = bsi.childNodes[0]!.__id;

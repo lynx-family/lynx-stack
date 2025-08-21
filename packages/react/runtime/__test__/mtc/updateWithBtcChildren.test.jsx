@@ -142,7 +142,7 @@ describe('MTC updating - main thread side', () => {
             {
               "id": 4,
               "op": "CreateElement",
-              "type": "wrapper",
+              "type": "ignore",
             },
             {
               "id": 5,
@@ -504,7 +504,7 @@ describe('MTC updating - main thread side', () => {
             {
               "id": 4,
               "op": "CreateElement",
-              "type": "wrapper",
+              "type": "ignore",
             },
             {
               "id": 5,
@@ -570,7 +570,7 @@ describe('MTC updating - main thread side', () => {
             {
               "id": 10,
               "op": "CreateElement",
-              "type": "wrapper",
+              "type": "ignore",
             },
             {
               "id": 11,

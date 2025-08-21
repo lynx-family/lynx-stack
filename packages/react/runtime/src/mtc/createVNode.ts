@@ -6,6 +6,8 @@ import type { Attributes, VNode } from 'preact';
 
 import { SnapshotInstance } from '../snapshot.js';
 
+let vnodeId = -100000;
+
 export function createElementVNode(
   type: string,
   props: Attributes & { 'mtc:ref'?: (si: SnapshotInstance) => void },
@@ -24,6 +26,7 @@ export function createElementVNode(
     __c: null,
     __i: -1,
     __u: 0,
+    __v: --vnodeId,
   };
 
   return r as unknown as VNode;
