@@ -215,7 +215,7 @@ where
   }
 
   fn transform_mtc_in_background(&self, fn_decl: &mut FnDecl, mtc_uid: &str) {
-    let mtc_container = JSXElementName::Ident(Ident::from("mtc-container"));
+    // let mtc_container = JSXElementName::Ident(Ident::from("mtc-container"));
 
     let props_identifier = if let Some(param) = fn_decl.function.params.first_mut() {
       match &param.pat {
@@ -245,46 +245,52 @@ where
       Ident::new("props".into(), DUMMY_SP, SyntaxContext::default())
     };
 
-    let mtc_container_attrs = vec![
-      // _p={transformedProps}
-      JSXAttrOrSpread::JSXAttr(JSXAttr {
-        span: DUMMY_SP,
-        name: JSXAttrName::Ident(IdentName::from("_p")),
-        value: Some(JSXAttrValue::JSXExprContainer(JSXExprContainer {
-          span: DUMMY_SP,
-          expr: JSXExpr::Expr(Box::new(Expr::Ident(Ident::from("transformedProps")))),
-        })),
-      }),
-      // _mtcId
-      JSXAttrOrSpread::JSXAttr(JSXAttr {
-        span: DUMMY_SP,
-        name: JSXAttrName::Ident(IdentName::from("_mtcId")),
-        value: Some(JSXAttrValue::Lit(Lit::Str(mtc_uid.into()))),
-      }),
-    ];
+    // let mtc_container_attrs = vec![
+    //   // _p={transformedProps}
+    //   JSXAttrOrSpread::JSXAttr(JSXAttr {
+    //     span: DUMMY_SP,
+    //     name: JSXAttrName::Ident(IdentName::from("_p")),
+    //     value: Some(JSXAttrValue::JSXExprContainer(JSXExprContainer {
+    //       span: DUMMY_SP,
+    //       expr: JSXExpr::Expr(Box::new(Expr::Ident(Ident::from("transformedProps")))),
+    //     })),
+    //   }),
+    //   // _mtcId
+    //   // JSXAttrOrSpread::JSXAttr(JSXAttr {
+    //   //   span: DUMMY_SP,
+    //   //   name: JSXAttrName::Ident(IdentName::from("_mtcId")),
+    //   //   value: Some(JSXAttrValue::Lit(Lit::Str(mtc_uid.into()))),
+    //   // }),
+    // ];
 
-    let mtc_jsx = JSXElement {
-      span: DUMMY_SP,
-      opening: JSXOpeningElement {
-        span: DUMMY_SP,
-        name: mtc_container.clone(),
-        attrs: mtc_container_attrs,
-        self_closing: false,
-        type_args: None,
-      },
-      children: vec![JSXElementChild::JSXExprContainer(JSXExprContainer {
-        span: DUMMY_SP,
-        expr: JSXExpr::Expr(Box::new(quote!(
-          "$runtime_id.renderFakeMTCSlot($jsxs)" as Expr,
-          runtime_id: Expr = self.runtime_id.clone(),
-          jsxs: Expr = Expr::Ident(Ident::from("jsxs")),
-        ))),
-      })],
-      closing: Some(JSXClosingElement {
-        span: DUMMY_SP,
-        name: mtc_container,
-      }),
-    };
+    // let mtc_jsx = JSXElement {
+    //   span: DUMMY_SP,
+    //   opening: JSXOpeningElement {
+    //     span: DUMMY_SP,
+    //     name: mtc_container.clone(),
+    //     attrs: mtc_container_attrs,
+    //     self_closing: false,
+    //     type_args: None,
+    //   },
+    //   children: vec![JSXElementChild::JSXExprContainer(JSXExprContainer {
+    //     span: DUMMY_SP,
+    //     expr: JSXExpr::Expr(Box::new(quote!(
+    //       "$runtime_id.renderFakeMTCSlot($jsxs)" as Expr,
+    //       runtime_id: Expr = self.runtime_id.clone(),
+    //       jsxs: Expr = Expr::Ident(Ident::from("jsxs")),
+    //     ))),
+    //   })],
+    //   closing: Some(JSXClosingElement {
+    //     span: DUMMY_SP,
+    //     name: mtc_container,
+    //   }),
+    // };
+
+    let render_fake_mtc_slot = quote!(
+        r#"$runtime_id.renderFakeMTCSlot($jsxs)"# as Expr,
+        runtime_id: Expr = self.runtime_id.clone(),
+        jsxs: Expr = Expr::Ident(Ident::from("jsxs")),
+    );
 
     let new_body = BlockStmt {
       span: DUMMY_SP,
@@ -295,8 +301,18 @@ where
           props = props_identifier
         ),
         quote!(
-          "return $mtc_jsx" as Stmt,
-          mtc_jsx: Expr = Expr::JSXElement(Box::new(mtc_jsx)),
+          "transformedProps.__MTCProps = {
+            componentTypeId: $component_type_id,
+          }" as Stmt,
+          component_type_id: Expr = Expr::Lit(Lit::Str(mtc_uid.into()))
+        ),
+        quote!(
+          "return (
+            createElement('mtc-container', {
+              values: [transformedProps],
+            }, $render_fake_mtc_slot)
+          );" as Stmt,
+          render_fake_mtc_slot: Expr = render_fake_mtc_slot
         ),
       ],
       ctxt: SyntaxContext::default(),

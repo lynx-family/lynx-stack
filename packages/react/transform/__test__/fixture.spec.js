@@ -1709,55 +1709,33 @@ export function MTC(props) {
         `);
       } else if (target === 'JS') {
         expect(code).toMatchInlineSnapshot(`
-          "import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
-          import * as ReactLynx from "@lynx-js/react";
-          const __snapshot_da39a_87544_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_87544_1", function() {
-              const pageId = ReactLynx.__pageId;
-              const el = __CreateElement("mtc-container", pageId);
-              __SetAttribute(el, "_mtcId", "$$mtc_da39a_87544_1");
-              return [
-                  el
-              ];
-          }, [
-              function(ctx) {
-                  if (ctx.__elements) __SetAttribute(ctx.__elements[0], "_p", ctx.__values[0]);
-              }
-          ], ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null);
+          "import * as ReactLynx from "@lynx-js/react";
           export function MTC(props) {
               const [jsxs, transformedProps] = ReactLynx.pickJSXFromProps(props);
-              return /*#__PURE__*/ _jsx(__snapshot_da39a_87544_1, {
+              transformedProps.__MTCProps = {
+                  componentTypeId: "$$mtc_da39a_87544_1"
+              };
+              return createElement('mtc-container', {
                   values: [
                       transformedProps
-                  ],
-                  children: ReactLynx.renderFakeMTCSlot(jsxs)
-              });
+                  ]
+              }, ReactLynx.renderFakeMTCSlot(jsxs));
           }
           "
         `);
       } else if (target === 'MIXED') {
         expect(code).toMatchInlineSnapshot(`
-          "import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
-          import * as ReactLynx from "@lynx-js/react";
-          const __snapshot_da39a_87544_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_87544_1", function() {
-              const pageId = ReactLynx.__pageId;
-              const el = __CreateElement("mtc-container", pageId);
-              __SetAttribute(el, "_mtcId", "$$mtc_da39a_87544_1");
-              return [
-                  el
-              ];
-          }, [
-              function(ctx) {
-                  if (ctx.__elements) __SetAttribute(ctx.__elements[0], "_p", ctx.__values[0]);
-              }
-          ], ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null);
+          "import * as ReactLynx from "@lynx-js/react";
           export function MTC(props) {
               const [jsxs, transformedProps] = ReactLynx.pickJSXFromProps(props);
-              return /*#__PURE__*/ _jsx(__snapshot_da39a_87544_1, {
+              transformedProps.__MTCProps = {
+                  componentTypeId: "$$mtc_da39a_87544_1"
+              };
+              return createElement('mtc-container', {
                   values: [
                       transformedProps
-                  ],
-                  children: ReactLynx.renderFakeMTCSlot(jsxs)
-              });
+                  ]
+              }, ReactLynx.renderFakeMTCSlot(jsxs));
           }
           "
         `);
