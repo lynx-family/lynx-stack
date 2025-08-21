@@ -38,6 +38,10 @@ catalogs:
     "@rspack/core": "1.4.11"
     "@rspack/test-tools": "1.4.11"
 
+  # Rstest monorepo packages
+  rstest:
+    "@rstest/core": "0.0.10"
+
 overrides:
   "@rspack/core": "$@rspack/core"
   "@rsbuild/core>@rspack/core": "$@rspack/core"

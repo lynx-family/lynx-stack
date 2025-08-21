@@ -158,6 +158,12 @@ jobs:
         pnpm run build --mode development
         pnpm run lint
         pnpm run test
+        npx --registry http://localhost:4873 create-rspeedy-canary@latest --template react-rstest-rltl --dir create-rspeedy-regression-rstest-rltl
+        cd create-rspeedy-regression-rstest-rltl
+        pnpm install --registry=http://localhost:4873
+        pnpm run build
+        pnpm run build --mode development
+        pnpm run test
   test-react:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
@@ -181,6 +187,23 @@ jobs:
         --no-cache
         --logHeapUsage
         --silent
+  test-rstest:
+    needs: build
+    uses: ./.github/workflows/workflow-test.yml
+    strategy:
+      matrix:
+        runs-on:
+          - name: Ubuntu
+            label: lynx-ubuntu-24.04-medium
+          - name: Windows
+            label: lynx-windows-2022-large
+    name: Rstest (${{ matrix.runs-on.name }})
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    with:
+      runs-on: ${{ matrix.runs-on.label }}
+      run: |
+        pnpm -r run rstest --testTimeout=50000
   test-rust:
     uses: ./.github/workflows/rust.yml
     secrets:
@@ -241,6 +264,7 @@ jobs:
       - test-api
       - test-publish
       - test-react
+      - test-rstest
       - test-rust
       - test-type
       - test-typos

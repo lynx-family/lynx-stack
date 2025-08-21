@@ -22,6 +22,7 @@
     "@rsbuild/core": "catalog:rsbuild",
     "@rslib/core": "^0.12.2",
     "@rspack/core": "catalog:rspack",
+    "@rstest/core": "catalog:rstest",
     "@svitejs/changesets-changelog-github-compact": "^1.2.0",
     "@tsconfig/node20": "^20.1.6",
     "@tsconfig/strictest": "^2.0.5",

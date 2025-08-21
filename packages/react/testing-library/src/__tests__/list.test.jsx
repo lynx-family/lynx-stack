@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { act } from 'preact/test-utils';
-import { describe, expect } from 'vitest';
+import { describe, expect, vi } from 'vitest';
 
 import { Component, useState } from '@lynx-js/react';
 
@@ -31,7 +31,7 @@ describe('list', () => {
     expect(container).toMatchInlineSnapshot(`
       <page>
         <list
-          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_2","item-key":0},{"position":1,"type":"__Card__:__snapshot_a9e46_test_2","item-key":1},{"position":2,"type":"__Card__:__snapshot_a9e46_test_2","item-key":2}],"removeAction":[],"updateAction":[]}]"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_d0c07_test_2","item-key":0},{"position":1,"type":"__Card__:__snapshot_d0c07_test_2","item-key":1},{"position":2,"type":"__Card__:__snapshot_d0c07_test_2","item-key":2}],"removeAction":[],"updateAction":[]}]"
         />
       </page>
     `);
@@ -42,7 +42,7 @@ describe('list', () => {
     expect(container).toMatchInlineSnapshot(`
       <page>
         <list
-          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_2","item-key":0},{"position":1,"type":"__Card__:__snapshot_a9e46_test_2","item-key":1},{"position":2,"type":"__Card__:__snapshot_a9e46_test_2","item-key":2}],"removeAction":[],"updateAction":[]}]"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_d0c07_test_2","item-key":0},{"position":1,"type":"__Card__:__snapshot_d0c07_test_2","item-key":1},{"position":2,"type":"__Card__:__snapshot_d0c07_test_2","item-key":2}],"removeAction":[],"updateAction":[]}]"
         >
           <list-item
             item-key="0"
@@ -61,7 +61,7 @@ describe('list', () => {
     expect(container).toMatchInlineSnapshot(`
       <page>
         <list
-          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_2","item-key":0},{"position":1,"type":"__Card__:__snapshot_a9e46_test_2","item-key":1},{"position":2,"type":"__Card__:__snapshot_a9e46_test_2","item-key":2}],"removeAction":[],"updateAction":[]}]"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_d0c07_test_2","item-key":0},{"position":1,"type":"__Card__:__snapshot_d0c07_test_2","item-key":1},{"position":2,"type":"__Card__:__snapshot_d0c07_test_2","item-key":2}],"removeAction":[],"updateAction":[]}]"
         >
           <list-item
             item-key="0"
@@ -91,7 +91,7 @@ describe('list', () => {
     expect(container).toMatchInlineSnapshot(`
       <page>
         <list
-          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_2","item-key":0},{"position":1,"type":"__Card__:__snapshot_a9e46_test_2","item-key":1},{"position":2,"type":"__Card__:__snapshot_a9e46_test_2","item-key":2}],"removeAction":[],"updateAction":[]}]"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_d0c07_test_2","item-key":0},{"position":1,"type":"__Card__:__snapshot_d0c07_test_2","item-key":1},{"position":2,"type":"__Card__:__snapshot_d0c07_test_2","item-key":2}],"removeAction":[],"updateAction":[]}]"
         >
           <list-item
             item-key="0"
@@ -121,7 +121,7 @@ describe('list', () => {
     expect(container).toMatchInlineSnapshot(`
       <page>
         <list
-          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_2","item-key":0},{"position":1,"type":"__Card__:__snapshot_a9e46_test_2","item-key":1},{"position":2,"type":"__Card__:__snapshot_a9e46_test_2","item-key":2}],"removeAction":[],"updateAction":[]}]"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_d0c07_test_2","item-key":0},{"position":1,"type":"__Card__:__snapshot_d0c07_test_2","item-key":1},{"position":2,"type":"__Card__:__snapshot_d0c07_test_2","item-key":2}],"removeAction":[],"updateAction":[]}]"
         >
           <list-item
             item-key="2"
@@ -203,7 +203,7 @@ describe('list', () => {
         >
           <list
             style="width:100%;height:100%"
-            update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_7","item-key":"0","full-span":true},{"position":1,"type":"__Card__:__snapshot_a9e46_test_7","item-key":"1","full-span":true},{"position":2,"type":"__Card__:__snapshot_a9e46_test_7","item-key":"2","full-span":true},{"position":3,"type":"__Card__:__snapshot_a9e46_test_7","item-key":"3","full-span":true},{"position":4,"type":"__Card__:__snapshot_a9e46_test_7","item-key":"4","full-span":true},{"position":5,"type":"__Card__:__snapshot_a9e46_test_7","item-key":"5","full-span":true}],"removeAction":[],"updateAction":[]}]"
+            update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_d0c07_test_7","item-key":"0","full-span":true},{"position":1,"type":"__Card__:__snapshot_d0c07_test_7","item-key":"1","full-span":true},{"position":2,"type":"__Card__:__snapshot_d0c07_test_7","item-key":"2","full-span":true},{"position":3,"type":"__Card__:__snapshot_d0c07_test_7","item-key":"3","full-span":true},{"position":4,"type":"__Card__:__snapshot_d0c07_test_7","item-key":"4","full-span":true},{"position":5,"type":"__Card__:__snapshot_d0c07_test_7","item-key":"5","full-span":true}],"removeAction":[],"updateAction":[]}]"
           />
         </view>
       </page>
@@ -395,7 +395,95 @@ describe('list', () => {
     expect(list).toMatchInlineSnapshot(`
       <list
         style="width:100%;height:100%"
-        update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_7","item-key":"0","full-span":true},{"position":1,"type":"__Card__:__snapshot_a9e46_test_7","item-key":"1","full-span":true},{"position":2,"type":"__Card__:__snapshot_a9e46_test_7","item-key":"2","full-span":true},{"position":3,"type":"__Card__:__snapshot_a9e46_test_7","item-key":"3","full-span":true},{"position":4,"type":"__Card__:__snapshot_a9e46_test_7","item-key":"4","full-span":true},{"position":5,"type":"__Card__:__snapshot_a9e46_test_7","item-key":"5","full-span":true}],"removeAction":[],"updateAction":[]},{"insertAction":[],"removeAction":[3],"updateAction":[]}]"
+        update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_d0c07_test_7","item-key":"0","full-span":true},{"position":1,"type":"__Card__:__snapshot_d0c07_test_7","item-key":"1","full-span":true},{"position":2,"type":"__Card__:__snapshot_d0c07_test_7","item-key":"2","full-span":true},{"position":3,"type":"__Card__:__snapshot_d0c07_test_7","item-key":"3","full-span":true},{"position":4,"type":"__Card__:__snapshot_d0c07_test_7","item-key":"4","full-span":true},{"position":5,"type":"__Card__:__snapshot_d0c07_test_7","item-key":"5","full-span":true}],"removeAction":[],"updateAction":[]},{"insertAction":[],"removeAction":[3],"updateAction":[]}]"
+      >
+        <list-item
+          full-span="true"
+          item-key="4"
+        >
+          <wrapper>
+            <view>
+              <text>
+                4
+              </text>
+              <text>
+                4
+              </text>
+            </view>
+            <view>
+              <text>
+                hello
+              </text>
+            </view>
+          </wrapper>
+        </list-item>
+        <list-item
+          full-span="true"
+          item-key="5"
+        >
+          <wrapper>
+            <view>
+              <text>
+                5
+              </text>
+              <text>
+                5
+              </text>
+            </view>
+            <view>
+              <text>
+                hello
+              </text>
+            </view>
+          </wrapper>
+        </list-item>
+        <list-item
+          full-span="true"
+          item-key="2"
+        >
+          <wrapper>
+            <view>
+              <text>
+                2
+              </text>
+              <text>
+                2
+              </text>
+            </view>
+            <view>
+              <text>
+                hello
+              </text>
+            </view>
+          </wrapper>
+        </list-item>
+        <list-item
+          full-span="true"
+          item-key="1"
+        >
+          <wrapper>
+            <view>
+              <text>
+                1
+              </text>
+              <text>
+                1
+              </text>
+            </view>
+            <view>
+              <text>
+                hello
+              </text>
+            </view>
+          </wrapper>
+        </list-item>
+      </list>
+    `);
+
+    expect(list).toMatchInlineSnapshot(`
+      <list
+        style="width:100%;height:100%"
+        update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_d0c07_test_7","item-key":"0","full-span":true},{"position":1,"type":"__Card__:__snapshot_d0c07_test_7","item-key":"1","full-span":true},{"position":2,"type":"__Card__:__snapshot_d0c07_test_7","item-key":"2","full-span":true},{"position":3,"type":"__Card__:__snapshot_d0c07_test_7","item-key":"3","full-span":true},{"position":4,"type":"__Card__:__snapshot_d0c07_test_7","item-key":"4","full-span":true},{"position":5,"type":"__Card__:__snapshot_d0c07_test_7","item-key":"5","full-span":true}],"removeAction":[],"updateAction":[]},{"insertAction":[],"removeAction":[3],"updateAction":[]}]"
       >
         <list-item
           full-span="true"
@@ -511,7 +599,7 @@ describe('list - deferred <list-item/> should render as normal', () => {
         <list
           custom-list-name="list-container"
           style="height: 700rpx; width: 700rpx; background-color: #f0f0f0;"
-          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_13","item-key":"x"},{"position":1,"type":"__Card__:__snapshot_a9e46_test_15","item-key":"0"},{"position":2,"type":"__Card__:__snapshot_a9e46_test_15","item-key":"1"},{"position":3,"type":"__Card__:__snapshot_a9e46_test_15","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_d0c07_test_13","item-key":"x"},{"position":1,"type":"__Card__:__snapshot_d0c07_test_15","item-key":"0"},{"position":2,"type":"__Card__:__snapshot_d0c07_test_15","item-key":"1"},{"position":3,"type":"__Card__:__snapshot_d0c07_test_15","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
         />
       </page>
     `);
@@ -535,7 +623,7 @@ describe('list - deferred <list-item/> should render as normal', () => {
         <list
           custom-list-name="list-container"
           style="height: 700rpx; width: 700rpx; background-color: #f0f0f0;"
-          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_13","item-key":"x"},{"position":1,"type":"__Card__:__snapshot_a9e46_test_15","item-key":"0"},{"position":2,"type":"__Card__:__snapshot_a9e46_test_15","item-key":"1"},{"position":3,"type":"__Card__:__snapshot_a9e46_test_15","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_d0c07_test_13","item-key":"x"},{"position":1,"type":"__Card__:__snapshot_d0c07_test_15","item-key":"0"},{"position":2,"type":"__Card__:__snapshot_d0c07_test_15","item-key":"1"},{"position":3,"type":"__Card__:__snapshot_d0c07_test_15","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
         />
       </page>
     `);
@@ -547,7 +635,7 @@ describe('list - deferred <list-item/> should render as normal', () => {
         <list
           custom-list-name="list-container"
           style="height: 700rpx; width: 700rpx; background-color: #f0f0f0;"
-          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_13","item-key":"x"},{"position":1,"type":"__Card__:__snapshot_a9e46_test_15","item-key":"0"},{"position":2,"type":"__Card__:__snapshot_a9e46_test_15","item-key":"1"},{"position":3,"type":"__Card__:__snapshot_a9e46_test_15","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_d0c07_test_13","item-key":"x"},{"position":1,"type":"__Card__:__snapshot_d0c07_test_15","item-key":"0"},{"position":2,"type":"__Card__:__snapshot_d0c07_test_15","item-key":"1"},{"position":3,"type":"__Card__:__snapshot_d0c07_test_15","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
         >
           <list-item
             item-key="x"
@@ -658,7 +746,7 @@ describe('list - deferred <list-item/> should render as normal', () => {
         <list
           custom-list-name="list-container"
           style="height: 700rpx; width: 700rpx; background-color: #f0f0f0;"
-          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_18","item-key":"x"},{"position":1,"type":"__Card__:__snapshot_a9e46_test_20","item-key":"0"},{"position":2,"type":"__Card__:__snapshot_a9e46_test_20","item-key":"1"},{"position":3,"type":"__Card__:__snapshot_a9e46_test_20","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_d0c07_test_18","item-key":"x"},{"position":1,"type":"__Card__:__snapshot_d0c07_test_20","item-key":"0"},{"position":2,"type":"__Card__:__snapshot_d0c07_test_20","item-key":"1"},{"position":3,"type":"__Card__:__snapshot_d0c07_test_20","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
         />
       </page>
     `);
@@ -716,7 +804,7 @@ describe('list - deferred <list-item/> should render as normal', () => {
         <list
           custom-list-name="list-container"
           style="height: 700rpx; width: 700rpx; background-color: #f0f0f0;"
-          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_23","item-key":"0"},{"position":1,"type":"__Card__:__snapshot_a9e46_test_23","item-key":"1"},{"position":2,"type":"__Card__:__snapshot_a9e46_test_23","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_d0c07_test_23","item-key":"0"},{"position":1,"type":"__Card__:__snapshot_d0c07_test_23","item-key":"1"},{"position":2,"type":"__Card__:__snapshot_d0c07_test_23","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
         />
       </page>
     `);
@@ -736,7 +824,7 @@ describe('list - deferred <list-item/> should render as normal', () => {
         <list
           custom-list-name="list-container"
           style="height: 700rpx; width: 700rpx; background-color: #f0f0f0;"
-          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_23","item-key":"0"},{"position":1,"type":"__Card__:__snapshot_a9e46_test_23","item-key":"1"},{"position":2,"type":"__Card__:__snapshot_a9e46_test_23","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_d0c07_test_23","item-key":"0"},{"position":1,"type":"__Card__:__snapshot_d0c07_test_23","item-key":"1"},{"position":2,"type":"__Card__:__snapshot_d0c07_test_23","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
         />
       </page>
     `);
@@ -755,7 +843,7 @@ describe('list - deferred <list-item/> should render as normal', () => {
         <list
           custom-list-name="list-container"
           style="height: 700rpx; width: 700rpx; background-color: #f0f0f0;"
-          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_23","item-key":"0"},{"position":1,"type":"__Card__:__snapshot_a9e46_test_23","item-key":"1"},{"position":2,"type":"__Card__:__snapshot_a9e46_test_23","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_d0c07_test_23","item-key":"0"},{"position":1,"type":"__Card__:__snapshot_d0c07_test_23","item-key":"1"},{"position":2,"type":"__Card__:__snapshot_d0c07_test_23","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
         >
           <list-item
             item-key="2"

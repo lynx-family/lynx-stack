@@ -6,6 +6,7 @@
   "scripts": {
     "build": "rspeedy build",
     "dev": "rspeedy dev",
+    "rstest": "rstest",
     "test": "vitest",
     "test:type": "vitest --typecheck.only"
   },

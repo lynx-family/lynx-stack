@@ -2232,6 +2232,75 @@ describe('Config', () => {
       expect(ReactLynxWebpackPlugin?.options.profile).toBe(false)
     })
   })
+
+  describe('callerName: rstest', async () => {
+    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
+        plugins: [
+          pluginReactLynx(),
+        ],
+      },
+      callerName: 'rstest',
+    })
+    const [config] = await rsbuild.initConfigs()
+    interface Rule {
+      test?: RegExp
+      use?: Array<{ loader: string }>
+      [key: string]: unknown
+    }
+
+    const rules = config?.module?.rules as Rule[] | undefined
+
+    test('css rules should be rsbuild default', () => {
+      expect(
+        rules?.filter((rule: Rule) =>
+          rule
+          && typeof rule === 'object'
+          && rule.test
+          && rule.test.toString() === (/\.css$/).toString()
+        ).map((rule: Rule) =>
+          (rule?.use?.map((u: { loader: string }) => u.loader)) ?? []
+        ),
+      ).toMatchInlineSnapshot(`
+        [
+          [
+            "<WORKSPACE>/node_modules/<PNPM_INNER>/@rspack/core/dist/cssExtractLoader.js",
+            "<WORKSPACE>/node_modules/<PNPM_INNER>/@rsbuild/core/compiled/css-loader/index.js",
+            "builtin:lightningcss-loader",
+          ],
+          [
+            "<WORKSPACE>/node_modules/<PNPM_INNER>/@rsbuild/core/compiled/css-loader/index.js",
+            "builtin:lightningcss-loader",
+          ],
+          [],
+        ]
+      `)
+    })
+    test('js loaders should be testing loaders', () => {
+      expect(
+        rules?.filter((rule: Rule) =>
+          rule
+          && typeof rule === 'object'
+          && rule.test
+          && rule.test.toString()
+            === (/\.(?:js|jsx|mjs|cjs|ts|tsx|mts|cts)$/).toString()
+        ).map((rule: Rule) =>
+          (rule?.use?.map((u: { loader: string }) => u.loader)) ?? []
+        ),
+      ).toMatchInlineSnapshot(`
+        [
+          [
+            "builtin:swc-loader",
+            "<WORKSPACE>/packages/webpack/react-webpack-plugin/lib/loaders/testing.js",
+          ],
+          [],
+          [],
+        ]
+      `)
+    })
+  })
 })
 
 describe('MPA Config', () => {

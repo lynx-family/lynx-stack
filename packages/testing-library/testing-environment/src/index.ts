@@ -5,11 +5,10 @@
  * notably the {@link https://lynxjs.org/api/engine/element-api | Element PAPI} and {@link https://lynxjs.org/guide/spec#dual-threaded-model | Dual-threaded Model} for use with Node.js.
  */
 
-import EventEmitter from 'events';
+import EventEmitter from 'node:events';
 import { JSDOM } from 'jsdom';
 import { createGlobalThis, LynxGlobalThis } from './lynx/GlobalThis.js';
 import { initElementTree } from './lynx/ElementPAPI.js';
-import { Console } from 'console';
 import { GlobalEventEmitter } from './lynx/GlobalEventEmitter.js';
 export { initElementTree } from './lynx/ElementPAPI.js';
 export type { LynxElement } from './lynx/ElementPAPI.js';
@@ -205,18 +204,6 @@ function createPolyfills() {
   };
 }
 
-function createPreconfiguredConsole() {
-  const console = new Console(
-    process.stdout,
-    process.stderr,
-  );
-  console.profile = () => {};
-  console.profileEnd = () => {};
-  // @ts-expect-error Lynx has console.alog
-  console.alog = () => {};
-  return console;
-}
-
 function injectMainThreadGlobals(target?: any, polyfills?: any) {
   __injectElementApi(target);
 
@@ -265,7 +252,10 @@ function injectMainThreadGlobals(target?: any, polyfills?: any) {
   target.requestAnimationFrame = setTimeout;
   target.cancelAnimationFrame = clearTimeout;
 
-  target.console = createPreconfiguredConsole();
+  target.console.profile = console.profile = () => {};
+  target.console.profileEnd = console.profileEnd = () => {};
+  // @ts-expect-error Lynx has console.alog
+  target.console.alog = console.alog = () => {};
 
   target.__LoadLepusChunk = __LoadLepusChunk;
 
@@ -377,7 +367,10 @@ function injectBackgroundThreadGlobals(target?: any, polyfills?: any) {
   target.requestAnimationFrame = setTimeout;
   target.cancelAnimationFrame = clearTimeout;
 
-  target.console = createPreconfiguredConsole();
+  target.console.profile = console.profile = () => {};
+  target.console.profileEnd = console.profileEnd = () => {};
+  // @ts-expect-error Lynx has console.alog
+  target.console.alog = console.alog = () => {};
 
   // TODO: user-configurable
   target.SystemInfo = {

@@ -20,15 +20,15 @@ import type {
   ShakeVisitorConfig,
 } from '@lynx-js/react-transform'
 import { LAYERS } from '@lynx-js/react-webpack-plugin'
-import type { ExposedAPI } from '@lynx-js/rspeedy'
 
 import { applyBackgroundOnly } from './backgroundOnly.js'
 import { applyCSS } from './css.js'
 import { applyEntry } from './entry.js'
 import { applyGenerator } from './generator.js'
 import { applyLazy } from './lazy.js'
-import { applyLoaders } from './loaders.js'
+import { applyLoaders, applyTestingLoaders } from './loaders.js'
 import { applyRefresh } from './refresh.js'
+import { applyRstest } from './rstest.js'
 import { applySplitChunksRule } from './splitChunks.js'
 import { applySWC } from './swc.js'
 import { applyUseSyncExternalStore } from './useSyncExternalStore.js'
@@ -372,11 +372,22 @@ export function pluginReactLynx(
       name: 'lynx:react',
       pre: ['lynx:rsbuild:plugin-api'],
       setup(api) {
-        applyCSS(api, resolvedOptions)
+        const isRstest = api.context.callerName === 'rstest'
+
+        if (isRstest) {
+          applyRstest(api)
+        }
+        if (!isRstest) {
+          applyCSS(api, resolvedOptions)
+        }
         applyEntry(api, resolvedOptions)
         applyBackgroundOnly(api)
         applyGenerator(api, resolvedOptions)
-        applyLoaders(api, resolvedOptions)
+        if (isRstest) {
+          applyTestingLoaders(api, resolvedOptions)
+        } else {
+          applyLoaders(api, resolvedOptions)
+        }
         applyRefresh(api)
         applySplitChunksRule(api)
         applySWC(api)
@@ -420,20 +431,16 @@ export function pluginReactLynx(
           applyLazy(api)
         }
 
-        const rspeedyAPIs = api.useExposed<ExposedAPI>(
-          Symbol.for('rspeedy.api'),
-        )!
-
         const require = createRequire(import.meta.url)
 
         const { version } = require('../package.json') as { version: string }
 
-        rspeedyAPIs.debug(() => {
-          const webpackPluginPath = require.resolve(
-            '@lynx-js/react-webpack-plugin',
-          )
-          return `Using @lynx-js/react-webpack-plugin v${version} at ${webpackPluginPath}`
-        })
+        const webpackPluginPath = require.resolve(
+          '@lynx-js/react-webpack-plugin',
+        )
+        api.logger?.debug(
+          `Using @lynx-js/react-webpack-plugin v${version} at ${webpackPluginPath}`,
+        )
       },
     },
   ]

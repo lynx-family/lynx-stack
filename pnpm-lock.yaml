@@ -20,6 +20,10 @@ catalogs:
     '@rspack/test-tools':
       specifier: 1.4.11
       version: 1.4.11
+  rstest:
+    '@rstest/core':
+      specifier: 0.0.10
+      version: 0.0.10
 
 overrides:
   '@rspack/core': 1.4.11
@@ -64,6 +68,9 @@ importers:
       '@rspack/core':
         specifier: 1.4.11
         version: 1.4.11(@swc/helpers@0.5.17)
+      '@rstest/core':
+        specifier: catalog:rstest
+        version: 0.0.10(jsdom@26.1.0)
       '@svitejs/changesets-changelog-github-compact':
         specifier: ^1.2.0
         version: 1.2.0
@@ -255,9 +262,15 @@ importers:
       '@lynx-js/react':
         specifier: workspace:*
         version: link:..
+      '@lynx-js/react-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../rspeedy/plugin-react
       '@lynx-js/testing-environment':
         specifier: workspace:*
         version: link:../../testing-library/testing-environment
+      '@rsbuild/core':
+        specifier: catalog:rsbuild
+        version: 1.4.15
       '@testing-library/dom':
         specifier: ^10.4.1
         version: 10.4.1
@@ -389,6 +402,9 @@ importers:
       '@rsbuild/plugin-type-check':
         specifier: 1.2.4
         version: 1.2.4(@rsbuild/core@1.4.15)(@rspack/core@1.4.11(@swc/helpers@0.5.17))(typescript@5.9.2)
+      '@rstest/core':
+        specifier: catalog:rstest
+        version: 0.0.10(jsdom@26.1.0)
 
   packages/rspeedy/plugin-qrcode:
     devDependencies:
@@ -437,6 +453,9 @@ importers:
       background-only:
         specifier: workspace:^
         version: link:../../background-only
+      tiny-invariant:
+        specifier: ^1.3.3
+        version: 1.3.3
     devDependencies:
       '@lynx-js/react':
         specifier: workspace:*
@@ -2493,6 +2512,11 @@ packages:
     engines: {node: '>=16.10.0'}
     hasBin: true
 
+  '@rsbuild/core@1.4.9':
+    resolution: {integrity: sha512-LvF0YQ2IQf6ddDQQCkWxgPxHJFrZT8bvwwsHYo8K9g8KJTlrrstMV85lU3DROaH5tm98jN3zYZIOCbqQzklx5g==}
+    engines: {node: '>=16.10.0'}
+    hasBin: true
+
   '@rsbuild/core@1.5.0-beta.4':
     resolution: {integrity: sha512-h1jqpjZunalsdxTcJCbY8DovLu6F4MQgsYdZyxDjUp0xuggQayi1tpcE6MhLs3WWa077g+LZ2Am4gKt/pl/W9Q==}
     engines: {node: '>=18.12.0'}
@@ -2760,6 +2784,19 @@ packages:
   '@rstack-dev/doc-ui@1.10.10':
     resolution: {integrity: sha512-ShZpNViiBKMYIT28vFmYP/SPp/oxhP4fCXTVYWWatas6AxJ1AIMunnWAl930u2YnP4D7UgxHopleMx/cLGhTwA==}
 
+  '@rstest/core@0.0.10':
+    resolution: {integrity: sha512-ytJ9LTCWARtBbt/+4RLV/lRgPCoXto0pazQ5lRdtv6M2gUvCZnIJKW2J2ioqQaVv0LXn5gqCCopoQYYFFE7eBQ==}
+    engines: {node: '>=18.0.0'}
+    hasBin: true
+    peerDependencies:
+      happy-dom: '*'
+      jsdom: '*'
+    peerDependenciesMeta:
+      happy-dom:
+        optional: true
+      jsdom:
+        optional: true
+
   '@rtsao/scc@1.1.0':
     resolution: {integrity: sha512-zt6OdqaDoOnJ1ZYsCYGt9YmWzDXl4vQdKTyJev62gFhRGKdx7mcT54V9KIjg+d2wi9EXsPvAPKe7i7WjfVWB8g==}
 
@@ -2840,8 +2877,8 @@ packages:
   '@sinclair/typebox@0.27.8':
     resolution: {integrity: sha512-+Fj43pSMwJs4KRrH/938Uf+uAELIgVBmQzg/q1YG10djyfA3TnrU8N8XzqCh/okZdszqBQTZf96idMfE5lnwTA==}
 
-  '@sinclair/typebox@0.34.37':
-    resolution: {integrity: sha512-2TRuQVgQYfy+EzHRTIvkhv2ADEouJ2xNS/Vq+W5EuuewBdOrvATvljZTxHWZSTYr2sTjTHpGvucaGAt67S2akw==}
+  '@sinclair/typebox@0.34.38':
+    resolution: {integrity: sha512-HpkxMmc2XmZKhvaKIZZThlHmx1L0I/V1hWK1NubtlFnr6ZqdiOpV72TKudZUNQjZNsyDBay72qFEhEvb+bcwcA==}
 
   '@socket.io/component-emitter@3.1.2':
     resolution: {integrity: sha512-9BCxFwvbGg/RsZK9tjXd8s4UcwR0MWeFQ1XEKIQVVvAGJyINdrqKMcTRyLoK8Rse1GjzLV9cwjWV1olXRWEXVA==}
@@ -3663,6 +3700,9 @@ packages:
     resolution: {integrity: sha512-/hls/a309aZCc0itqP6uhoR+5DsKSlJVfB8Opd2BY9Ndghs84IScTunlyidyF4r2Xe3lQttnfBNIDjaNpj6mTw==}
     hasBin: true
 
+  birpc@2.5.0:
+    resolution: {integrity: sha512-VSWO/W6nNQdyP520F1mhf+Lc2f8pjGQOtoHHm7Ze8Go1kX7akpVIrtTa0fn+HB0QJEDVacl6aO08YE0PgXfdnQ==}
+
   bl@4.1.0:
     resolution: {integrity: sha512-1W07cM9gS6DcLperZfFSj+bWLtaPGSOHWhPiGzXmvVJbRLdG82sH/Kn8EtW1VqWVA54AKf2h5k5BbnIbwF3h6w==}
 
@@ -3769,9 +3809,9 @@ packages:
   ccount@2.0.1:
     resolution: {integrity: sha512-eyrF0jiFpY+3drT6383f1qhkbGsLSifNAjA61IUjZjmLCWjItY6LB9ft9YhoDgwfmclB2zhu51Lc7+95b8NRAg==}
 
-  chai@5.2.0:
-    resolution: {integrity: sha512-mCuXncKXk5iCLhfhwTc0izo0gtEmpz5CtG2y8GiOINBlMVS6v8TMRc5TaLWKS6692m9+dVVfzgeVxR5UxWHTYw==}
-    engines: {node: '>=12'}
+  chai@5.2.1:
+    resolution: {integrity: sha512-5nFxhUrX0PqtyogoYOA8IPswy5sZFTOsBFl/9bNsmDLgsxYTzSZQJDPppDnZPTQbzSEm0hqGjWPzRemQCYbD6A==}
+    engines: {node: '>=18'}
 
   chalk@4.1.2:
     resolution: {integrity: sha512-oKnbhFyRIXpUuez8iBMmyEa4nbj4IOQyuhc/wy9kY7/WVPcwIO9VA668Pu8RkO7+0G76SLROeyw9CpQ061i4mA==}
@@ -3983,6 +4023,9 @@ packages:
 
   core-js-compat@3.45.0:
     resolution: {integrity: sha512-gRoVMBawZg0OnxaVv3zpqLLxaHmsubEGyTnqdpI/CEBvX4JadI1dMSHxagThprYRtSVbuQxvi6iUatdPxohHpA==}
+
+  core-js@3.44.0:
+    resolution: {integrity: sha512-aFCtd4l6GvAXwVEh3XbbVqJGHDJt0OZRa+5ePGx3LLwi12WfexqQxcsohb2wgsa/92xtl19Hd66G/L+TaAxDMw==}
 
   core-js@3.45.0:
     resolution: {integrity: sha512-c2KZL9lP4DjkN3hk/an4pWn5b5ZefhRJnAc42n6LJ19kSnbeRbdQZE5dSeE2LBol1OwJD3X1BQvFTAsa8ReeDA==}
@@ -9086,7 +9129,7 @@ snapshots:
 
   '@jest/schemas@30.0.5':
     dependencies:
-      '@sinclair/typebox': 0.34.37
+      '@sinclair/typebox': 0.34.38
 
   '@jest/transform@29.7.0':
     dependencies:
@@ -9540,6 +9583,14 @@ snapshots:
       '@rspack/lite-tapable': 1.0.1
       '@swc/helpers': 0.5.17
       core-js: 3.45.0
+      jiti: 2.5.1
+
+  '@rsbuild/core@1.4.9':
+    dependencies:
+      '@rspack/core': 1.4.11(@swc/helpers@0.5.17)
+      '@rspack/lite-tapable': 1.0.1
+      '@swc/helpers': 0.5.17
+      core-js: 3.44.0
       jiti: 2.5.1
 
   '@rsbuild/core@1.5.0-beta.4':
@@ -10002,6 +10053,20 @@ snapshots:
       - react
       - react-dom
 
+  '@rstest/core@0.0.10(jsdom@26.1.0)':
+    dependencies:
+      '@rsbuild/core': 1.4.9
+      '@types/chai': 5.2.2
+      '@vitest/expect': 3.2.4
+      '@vitest/snapshot': 3.2.4
+      birpc: 2.5.0
+      chai: 5.2.1
+      pathe: 2.0.3
+      std-env: 3.9.0
+      tinypool: 1.1.1
+    optionalDependencies:
+      jsdom: 26.1.0
+
   '@rtsao/scc@1.1.0': {}
 
   '@rushstack/node-core-library@4.0.2(@types/node@24.3.0)':
@@ -10121,7 +10186,7 @@ snapshots:
 
   '@sinclair/typebox@0.27.8': {}
 
-  '@sinclair/typebox@0.34.37': {}
+  '@sinclair/typebox@0.34.38': {}
 
   '@socket.io/component-emitter@3.1.2': {}
 
@@ -10657,7 +10722,7 @@ snapshots:
       '@types/chai': 5.2.2
       '@vitest/spy': 3.2.4
       '@vitest/utils': 3.2.4
-      chai: 5.2.0
+      chai: 5.2.1
       tinyrainbow: 2.0.0
 
   '@vitest/mocker@3.2.4(vite@5.4.2(@types/node@24.3.0)(sass-embedded@1.90.0)(sass@1.90.0)(terser@5.31.6))':
@@ -11040,6 +11105,8 @@ snapshots:
 
   binaryen@123.0.0: {}
 
+  birpc@2.5.0: {}
+
   bl@4.1.0:
     dependencies:
       buffer: 5.7.1
@@ -11164,7 +11231,7 @@ snapshots:
 
   ccount@2.0.1: {}
 
-  chai@5.2.0:
+  chai@5.2.1:
     dependencies:
       assertion-error: 2.0.1
       check-error: 2.1.1
@@ -11359,6 +11426,8 @@ snapshots:
   core-js-compat@3.45.0:
     dependencies:
       browserslist: 4.25.2
+
+  core-js@3.44.0: {}
 
   core-js@3.45.0: {}
 
@@ -16141,7 +16210,7 @@ snapshots:
       '@vitest/snapshot': 3.2.4
       '@vitest/spy': 3.2.4
       '@vitest/utils': 3.2.4
-      chai: 5.2.0
+      chai: 5.2.1
       debug: 4.4.1
       expect-type: 1.2.1
       magic-string: 0.30.17
