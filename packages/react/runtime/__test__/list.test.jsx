@@ -13,7 +13,7 @@ const HOLE = null;
 
 beforeEach(() => {
   // snapshotManager.values.clear();
-  __pendingListUpdates.clear();
+  __pendingListUpdates.clearAttachedLists();
   snapshotInstanceManager.clear();
   snapshotInstanceManager.nextId = 0;
 });
@@ -257,7 +257,7 @@ describe(`list "update-list-info"`, () => {
     `);
 
     {
-      __pendingListUpdates.clear();
+      __pendingListUpdates.clearAttachedLists();
       const d4 = new SnapshotInstance(s3);
       const d5 = new SnapshotInstance(s3);
       const d6 = new SnapshotInstance(s4);
@@ -300,7 +300,7 @@ describe(`list "update-list-info"`, () => {
     }
 
     {
-      __pendingListUpdates.clear();
+      __pendingListUpdates.clearAttachedLists();
       b.insertBefore(d3); // move
       expect(__pendingListUpdates.values).toMatchInlineSnapshot(`
         {
@@ -346,7 +346,7 @@ describe(`list "update-list-info"`, () => {
     b.insertBefore(d1);
     b.insertBefore(d2);
     b.insertBefore(d3);
-    __pendingListUpdates.clear();
+    __pendingListUpdates.clearAttachedLists();
 
     d1.setAttribute(0, { 'item-key': 1 });
     d3.setAttribute(0, { 'item-key': 3 });
@@ -2067,7 +2067,7 @@ describe('list bug', () => {
     `);
 
     {
-      __pendingListUpdates.clear();
+      __pendingListUpdates.clearAttachedLists();
       b.insertBefore(d3); // move
       expect(__pendingListUpdates.values).toMatchInlineSnapshot(`
         {
@@ -2109,7 +2109,7 @@ describe('list bug', () => {
     }
 
     {
-      __pendingListUpdates.clear();
+      __pendingListUpdates.clearAttachedLists();
       b.removeChild(d3); // move
       expect(__pendingListUpdates.values).toMatchInlineSnapshot(`
         {
@@ -3545,5 +3545,305 @@ describe('list-item with "defer" attribute', () => {
     expect(() => elementTree.triggerComponentAtIndex(listRef, 0)).toThrowErrorMatchingInlineSnapshot(
       `[Error: Unsupported: \`<list-item/>\` with \`defer={true}\` must be used with \`<list custom-list-name="list-container"/>\`]`,
     );
+  });
+});
+
+describe('nested list', () => {
+  const s = __SNAPSHOT__(
+    <view>
+      <text>Hello</text>
+      {HOLE}
+    </view>,
+  );
+
+  it('nested list should work', () => {
+    const s1 = __SNAPSHOT__(
+      <view>
+        <text>s1</text>
+        <list>{HOLE}</list>
+      </view>,
+    );
+    const s2 = __SNAPSHOT__(
+      <list-item>
+        <text>s2</text>
+        <list>{HOLE}</list>
+      </list-item>,
+    );
+    const s3 = __SNAPSHOT__(
+      <list-item>
+        <text>s3</text>
+      </list-item>,
+    );
+
+    const a = new SnapshotInstance(s);
+
+    const b = new SnapshotInstance(s1);
+    a.insertBefore(b);
+    b.ensureElements();
+    const parentListRef = b.__elements[3];
+
+    const c1 = new SnapshotInstance(s2);
+    const c2 = new SnapshotInstance(s2);
+    const c3 = new SnapshotInstance(s2);
+    b.insertBefore(c1);
+    b.insertBefore(c2);
+    b.insertBefore(c3);
+
+    const d1 = new SnapshotInstance(s3);
+    c1.insertBefore(d1);
+
+    const d2 = new SnapshotInstance(s3);
+    c2.insertBefore(d2);
+
+    const d3 = new SnapshotInstance(s3);
+    c3.insertBefore(d3);
+
+    expect(__pendingListUpdates.values).toMatchInlineSnapshot(`
+      {
+        "-2": [
+          {
+            "insertAction": [
+              {
+                "position": 0,
+                "type": "__Card__:__snapshot_a94a8_test_69",
+              },
+              {
+                "position": 1,
+                "type": "__Card__:__snapshot_a94a8_test_69",
+              },
+              {
+                "position": 2,
+                "type": "__Card__:__snapshot_a94a8_test_69",
+              },
+            ],
+            "removeAction": [],
+            "updateAction": [],
+          },
+        ],
+        "-3": [
+          {
+            "insertAction": [
+              {
+                "position": 0,
+                "type": "__Card__:__snapshot_a94a8_test_70",
+              },
+            ],
+            "removeAction": [],
+            "updateAction": [],
+          },
+        ],
+        "-4": [
+          {
+            "insertAction": [
+              {
+                "position": 0,
+                "type": "__Card__:__snapshot_a94a8_test_70",
+              },
+            ],
+            "removeAction": [],
+            "updateAction": [],
+          },
+        ],
+        "-5": [
+          {
+            "insertAction": [
+              {
+                "position": 0,
+                "type": "__Card__:__snapshot_a94a8_test_70",
+              },
+            ],
+            "removeAction": [],
+            "updateAction": [],
+          },
+        ],
+      }
+    `);
+    expect(parentListRef).toMatchInlineSnapshot(`<list />`);
+
+    __pendingListUpdates.flush();
+    // children list should not be cleared
+    expect(__pendingListUpdates.values).toMatchInlineSnapshot(`
+      {
+        "-3": [
+          {
+            "insertAction": [
+              {
+                "position": 0,
+                "type": "__Card__:__snapshot_a94a8_test_70",
+              },
+            ],
+            "removeAction": [],
+            "updateAction": [],
+          },
+        ],
+        "-4": [
+          {
+            "insertAction": [
+              {
+                "position": 0,
+                "type": "__Card__:__snapshot_a94a8_test_70",
+              },
+            ],
+            "removeAction": [],
+            "updateAction": [],
+          },
+        ],
+        "-5": [
+          {
+            "insertAction": [
+              {
+                "position": 0,
+                "type": "__Card__:__snapshot_a94a8_test_70",
+              },
+            ],
+            "removeAction": [],
+            "updateAction": [],
+          },
+        ],
+      }
+    `);
+
+    expect(elementTree.triggerComponentAtIndex(parentListRef, 0)).toMatchInlineSnapshot(`4`);
+    expect(elementTree.triggerComponentAtIndex(parentListRef, 1)).toMatchInlineSnapshot(`8`);
+    expect(elementTree.triggerComponentAtIndex(parentListRef, 2)).toMatchInlineSnapshot(`12`);
+
+    __pendingListUpdates.flush();
+    // all lists should be cleared
+    expect(__pendingListUpdates.values).toMatchInlineSnapshot(`{}`);
+
+    const childListRef1 = c1.__elements[3];
+    const childListRef2 = c2.__elements[3];
+    const childListRef3 = c3.__elements[3];
+    expect(elementTree.triggerComponentAtIndex(childListRef1, 0)).toMatchInlineSnapshot(`16`);
+    expect(elementTree.triggerComponentAtIndex(childListRef2, 0)).toMatchInlineSnapshot(`19`);
+    expect(elementTree.triggerComponentAtIndex(childListRef3, 0)).toMatchInlineSnapshot(`22`);
+
+    expect(elementTree).toMatchInlineSnapshot(`
+      "<view>
+        <text>
+          <raw-text
+            text="s1"
+          />
+        </text>
+        <list
+          update-list-info={
+            Array [
+              Object {
+                "insertAction": Array [
+                  Object {
+                    "position": 0,
+                    "type": "__Card__:__snapshot_a94a8_test_69",
+                  },
+                  Object {
+                    "position": 1,
+                    "type": "__Card__:__snapshot_a94a8_test_69",
+                  },
+                  Object {
+                    "position": 2,
+                    "type": "__Card__:__snapshot_a94a8_test_69",
+                  },
+                ],
+                "removeAction": Array [],
+                "updateAction": Array [],
+              },
+            ]
+          }
+        >
+          <list-item>
+            <text>
+              <raw-text
+                text="s2"
+              />
+            </text>
+            <list
+              update-list-info={
+                Array [
+                  Object {
+                    "insertAction": Array [
+                      Object {
+                        "position": 0,
+                        "type": "__Card__:__snapshot_a94a8_test_70",
+                      },
+                    ],
+                    "removeAction": Array [],
+                    "updateAction": Array [],
+                  },
+                ]
+              }
+            >
+              <list-item>
+                <text>
+                  <raw-text
+                    text="s3"
+                  />
+                </text>
+              </list-item>
+            </list>
+          </list-item>
+          <list-item>
+            <text>
+              <raw-text
+                text="s2"
+              />
+            </text>
+            <list
+              update-list-info={
+                Array [
+                  Object {
+                    "insertAction": Array [
+                      Object {
+                        "position": 0,
+                        "type": "__Card__:__snapshot_a94a8_test_70",
+                      },
+                    ],
+                    "removeAction": Array [],
+                    "updateAction": Array [],
+                  },
+                ]
+              }
+            >
+              <list-item>
+                <text>
+                  <raw-text
+                    text="s3"
+                  />
+                </text>
+              </list-item>
+            </list>
+          </list-item>
+          <list-item>
+            <text>
+              <raw-text
+                text="s2"
+              />
+            </text>
+            <list
+              update-list-info={
+                Array [
+                  Object {
+                    "insertAction": Array [
+                      Object {
+                        "position": 0,
+                        "type": "__Card__:__snapshot_a94a8_test_70",
+                      },
+                    ],
+                    "removeAction": Array [],
+                    "updateAction": Array [],
+                  },
+                ]
+              }
+            >
+              <list-item>
+                <text>
+                  <raw-text
+                    text="s3"
+                  />
+                </text>
+              </list-item>
+            </list>
+          </list-item>
+        </list>
+      </view>"
+    `);
   });
 });
