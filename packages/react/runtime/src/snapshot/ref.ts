@@ -76,8 +76,10 @@ function updateRef(
   let ref;
   if (!value) {
     // do nothing
+    snapshot.__values![expIndex] = undefined;
   } else if (typeof value === 'string') {
     ref = value;
+    snapshot.__values![expIndex] = ref;
   } else if ((typeof value === 'object' && 'current' in value) || typeof value === 'function') {
     const element = snapshot.__elements[elementIndex]! as Element;
     addToRefQueue(value as any, new MTCElement(element));
@@ -86,9 +88,9 @@ function updateRef(
     ref = 'react-ref-mtc';
   } else {
     ref = `react-ref-${snapshot.__id}-${expIndex}`;
+    snapshot.__values![expIndex] = ref;
   }
 
-  snapshot.__values![expIndex] = ref;
   if (snapshot.__elements && oldValue !== ref) {
     if (oldValue) {
       __SetAttribute(snapshot.__elements[elementIndex]!, oldValue, undefined);
