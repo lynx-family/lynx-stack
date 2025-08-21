@@ -257,7 +257,7 @@ class ReactWebpackPlugin {
           if (
             lepusCode.root?.source.source().toString()?.includes(
               'registerWorkletInternal',
-            )
+            ) || true
           ) {
             const path = compiler.options.mode === 'development'
               ? '@lynx-js/react/worklet-dev-runtime'

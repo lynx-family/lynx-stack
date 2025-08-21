@@ -52,6 +52,11 @@ function runWorklet(ctx: Worklet, params: ClosureValueType[]): unknown {
     console.warn('Worklet: Invalid worklet object: ' + JSON.stringify(ctx));
     return;
   }
+  if (ctx._workletType === 'mtc') {
+    // @ts-ignore
+    globalThis.runMTCEvent(ctx, params);
+    return;
+  }
   if ('_lepusWorkletHash' in ctx) {
     delayExecUntilJsReady(ctx._lepusWorkletHash, params);
     return;

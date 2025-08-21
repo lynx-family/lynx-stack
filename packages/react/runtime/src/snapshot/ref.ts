@@ -3,8 +3,9 @@
 // LICENSE file in the root directory of this source tree.
 import type { Element, Worklet, WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bindings';
 
+import { Element as MTCElement } from '../mtc/api/element.js';
 import type { SnapshotInstance } from '../snapshot.js';
-import { workletUnRef } from './workletRef.js';
+import { addToRefQueue, workletUnRef } from './workletRef.js';
 import { RefProxy } from '../lifecycle/ref/delay.js';
 
 const refsToClear: Ref[] = [];
@@ -58,21 +59,41 @@ function applyRef(ref: Ref, value: null | [snapshotInstanceId: number, expIndex:
 function updateRef(
   snapshot: SnapshotInstance,
   expIndex: number,
-  oldValue: string | null,
+  oldValue: string | { current: any | null } | ((ref: any) => void) | null,
   elementIndex: number,
 ): void {
-  const value: unknown = snapshot.__values![expIndex];
-  let ref;
-  if (typeof value === 'string') {
-    ref = value;
-  } else {
-    ref = `react-ref-${snapshot.__id}-${expIndex}`;
+  if (!snapshot.__elements) {
+    return;
   }
 
-  snapshot.__values![expIndex] = ref;
+  if (oldValue && snapshot.__worklet_ref_set?.has(oldValue as any)) {
+    workletUnRef(oldValue as any);
+    snapshot.__worklet_ref_set?.delete(oldValue as any);
+  }
+
+  const value: unknown = snapshot.__values![expIndex];
+  // console.log('yra updateRef', value);
+  let ref;
+  if (!value) {
+    // do nothing
+    snapshot.__values![expIndex] = undefined;
+  } else if (typeof value === 'string') {
+    ref = value;
+    snapshot.__values![expIndex] = ref;
+  } else if ((typeof value === 'object' && 'current' in value) || typeof value === 'function') {
+    const element = snapshot.__elements[elementIndex]! as Element;
+    addToRefQueue(value as any, new MTCElement(element));
+    snapshot.__worklet_ref_set ??= new Set();
+    snapshot.__worklet_ref_set.add(value as any);
+    ref = 'react-ref-mtc';
+  } else {
+    ref = `react-ref-${snapshot.__id}-${expIndex}`;
+    snapshot.__values![expIndex] = ref;
+  }
+
   if (snapshot.__elements && oldValue !== ref) {
     if (oldValue) {
-      __SetAttribute(snapshot.__elements[elementIndex]!, oldValue, undefined);
+      __SetAttribute(snapshot.__elements[elementIndex]!, oldValue as any, undefined);
     }
     if (ref) {
       __SetAttribute(snapshot.__elements[elementIndex]!, ref, 1);

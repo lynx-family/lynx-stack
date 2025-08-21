@@ -14,11 +14,18 @@
  * optimized update instructions, avoiding full virtual DOM diffing.
  */
 
+import { render } from 'preact';
+import type { Attributes, ContainerNode, VNode } from 'preact';
+import { cloneElement } from 'preact/compat';
+import { jsx as createVNode } from 'preact/jsx-runtime';
+
 import type { Worklet, WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bindings';
 
 import type { BackgroundSnapshotInstance } from './backgroundSnapshot.js';
 import { SnapshotOperation, __globalSnapshotPatch } from './lifecycle/patch/snapshotPatch.js';
 import { ListUpdateInfoRecording } from './listUpdateInfo.js';
+import { mtcComponentTypes } from './mtc/mtcComponentTypes.js';
+import { mtcComponentVNodes } from './mtc/mtcComponentVNodes.js';
 import { __pendingListUpdates } from './pendingListUpdates.js';
 import { DynamicPartType } from './snapshot/dynamicPartType.js';
 import { snapshotDestroyList } from './snapshot/list.js';
@@ -43,6 +50,7 @@ export interface Snapshot {
 
 export let __page: FiberElement;
 export let __pageId = 0;
+
 export function setupPage(page: FiberElement): void {
   __page = page;
   __pageId = __GetElementUniqueID(page);
@@ -89,6 +97,38 @@ export const snapshotManager: {
         },
         update: [],
         slot: __DynamicPartChildren_0,
+        isListHolder: false,
+      },
+    ],
+    [
+      'mtc-container',
+      {
+        create() {
+          /* v8 ignore start */
+          if (__JS__ && !__DEV__) {
+            return [];
+          }
+          /* v8 ignore stop */
+          return [__CreateWrapperElement(__pageId)];
+        },
+        update: [() => {}],
+        slot: __DynamicPartChildren_0,
+        isListHolder: false,
+      },
+    ],
+    [
+      'ignore',
+      {
+        create() {
+          /* v8 ignore start */
+          if (__JS__ && !__DEV__) {
+            return [];
+          }
+          /* v8 ignore stop */
+          return [__CreateWrapperElement(__pageId)];
+        },
+        update: [],
+        slot: [],
         isListHolder: false,
       },
     ],
@@ -285,6 +325,7 @@ export class SnapshotInstance {
   __worklet_ref_set?: Set<WorkletRefImpl<any> | Worklet>;
   __listItemPlatformInfo?: PlatformInfo;
   __extraProps?: Record<string, unknown> | undefined;
+  __onDestroy?: () => void;
 
   constructor(public type: string, id?: number) {
     this.__snapshot_def = snapshotManager.values.get(type)!;
@@ -296,6 +337,10 @@ export class SnapshotInstance {
     id ??= snapshotInstanceManager.nextId -= 1;
     this.__id = id;
     snapshotInstanceManager.values.set(id, this);
+    if (type === 'ignore') {
+      this.insertBefore = () => {};
+      this.removeChild = () => {};
+    }
   }
 
   ensureElements(): void {
@@ -335,34 +380,35 @@ export class SnapshotInstance {
       let index = 0;
       let child = this.__firstChild;
       while (child) {
-        child.ensureElements();
+        if (child.__elements === undefined) {
+          child.ensureElements();
 
-        const [type, elementIndex] = slot[index]!;
-        switch (type) {
-          case DynamicPartType.Slot: {
-            __ReplaceElement(child.__element_root!, elements[elementIndex]!);
-            elements[elementIndex] = child.__element_root!;
-            index++;
-            break;
-          }
-          /* v8 ignore start */
-          case DynamicPartType.MultiChildren: {
-            if (__GetTag(elements[elementIndex]!) === 'wrapper') {
+          const [type, elementIndex] = slot[index]!;
+          switch (type) {
+            case DynamicPartType.Slot: {
               __ReplaceElement(child.__element_root!, elements[elementIndex]!);
-            } else {
-              __AppendElement(elements[elementIndex]!, child.__element_root!);
+              elements[elementIndex] = child.__element_root!;
+              index++;
+              break;
             }
-            index++;
-            break;
-          }
-          /* v8 ignore end */
-          case DynamicPartType.Children:
-          case DynamicPartType.ListChildren: {
-            __AppendElement(elements[elementIndex]!, child.__element_root!);
-            break;
+            /* v8 ignore start */
+            case DynamicPartType.MultiChildren: {
+              if (__GetTag(elements[elementIndex]!) === 'wrapper') {
+                __ReplaceElement(child.__element_root!, elements[elementIndex]!);
+              } else {
+                __AppendElement(elements[elementIndex]!, child.__element_root!);
+              }
+              index++;
+              break;
+            }
+            /* v8 ignore end */
+            case DynamicPartType.Children:
+            case DynamicPartType.ListChildren: {
+              __AppendElement(elements[elementIndex]!, child.__element_root!);
+              break;
+            }
           }
         }
-
         child = child.__nextSibling;
       }
     }
@@ -410,6 +456,7 @@ export class SnapshotInstance {
 
   tearDown(): void {
     traverseSnapshotInstance(this, v => {
+      v.__onDestroy?.();
       v.__parent = null;
       v.__previousSibling = null;
       v.__nextSibling = null;
@@ -510,6 +557,7 @@ export class SnapshotInstance {
   }
 
   insertBefore(newNode: SnapshotInstance, existingNode?: SnapshotInstance): void {
+    // console.log('yra insertBefore', this.__id, newNode.__id);
     const __snapshot_def = this.__snapshot_def;
     if (__snapshot_def.isListHolder) {
       if (__pendingListUpdates.values) {
@@ -579,6 +627,7 @@ export class SnapshotInstance {
 
       this.__removeChild(child);
       traverseSnapshotInstance(child, v => {
+        v.__onDestroy?.();
         snapshotInstanceManager.values.delete(v.__id);
       });
       // mark this child as deleted
@@ -598,6 +647,7 @@ export class SnapshotInstance {
 
     this.__removeChild(child);
     traverseSnapshotInstance(child, v => {
+      v.__onDestroy?.();
       v.__parent = null;
       v.__previousSibling = null;
       v.__nextSibling = null;
@@ -646,8 +696,49 @@ export class SnapshotInstance {
 
   callUpdateIfNotDirectOrDeepEqual(index: number, oldValue: any, newValue: any): void {
     if (isDirectOrDeepEqual(oldValue, newValue)) {}
-    else {
+    else if (newValue?.__MTCProps) {
+      renderMTC(this, newValue as MTCProps);
+    } else {
       this.__snapshot_def.update![index]!(this, index, oldValue);
+    }
+  }
+}
+
+interface MTCProps extends Attributes {
+  __MTCProps: {
+    componentTypeId: string;
+    componentInstanceId: string;
+  };
+
+  [key: string]: any;
+}
+
+function renderMTC(snapshotInstance: SnapshotInstance, props: MTCProps) {
+  // console.log('yra renderMTC', snapshotInstance.__id, props);
+  if (snapshotInstance.__elements === undefined) {
+    return;
+  }
+  const instanceId = props.__MTCProps.componentInstanceId;
+  if (mtcComponentVNodes.has(instanceId)) {
+    const vnode = mtcComponentVNodes.get(instanceId)!;
+    const newVnode = cloneElement(vnode, props);
+    render(newVnode, snapshotInstance as unknown as ContainerNode);
+    mtcComponentVNodes.set(instanceId, newVnode);
+  } else {
+    const type = mtcComponentTypes.get(props.__MTCProps.componentTypeId)!;
+    const vnode = createVNode('wrapper', { children: createVNode(type, props) }) as VNode;
+    mtcComponentVNodes.set(instanceId, vnode);
+    const wrapper = new SnapshotInstance('wrapper');
+    // @ts-ignore
+    wrapper.nodeType = 1;
+    render(vnode, wrapper as unknown as ContainerNode);
+    wrapper.ensureElements();
+    // console.log('yra renderMTC render-1', vnode.__e, vnode.__e !== undefined);
+    if (vnode.__e) {
+      snapshotInstance.insertBefore(vnode.__e as SnapshotInstance);
+      (vnode.__e as SnapshotInstance).__onDestroy = () => {
+        mtcComponentVNodes.delete(instanceId);
+      };
     }
   }
 }

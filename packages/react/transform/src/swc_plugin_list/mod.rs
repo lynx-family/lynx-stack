@@ -188,13 +188,13 @@ mod tests {
       transforms::testing::test,
       visit::visit_mut_pass,
     },
+    quote,
   };
 
   use super::ListVisitor;
   use crate::{
     swc_plugin_snapshot::{JSXTransformer, JSXTransformerConfig},
     target::TransformTarget,
-    TransformMode,
   };
 
   test!(
@@ -318,7 +318,7 @@ mod tests {
           None,
           top_level_mark,
           unresolved_mark,
-          TransformMode::Development,
+          quote!("require('@lynx-js/react/internal')" as Expr),
         )),
       )
     },

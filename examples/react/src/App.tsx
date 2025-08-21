@@ -1,52 +1,37 @@
-import { useCallback, useEffect, useState } from '@lynx-js/react';
+import { useEffect, useState } from '@lynx-js/react';
 
-import './App.css';
-import arrow from './assets/arrow.png';
-import lynxLogo from './assets/lynx-logo.png';
-import reactLynxLogo from './assets/react-logo.png';
+import { MTC } from './MTC.js';
+
+function BTC(props: { text: string }) {
+  return <text>{props.text}</text>;
+}
 
 export function App() {
-  const [alterLogo, setAlterLogo] = useState(false);
+  const [text1, setText1] = useState('123');
+  const [text2, setText2] = useState('456');
+  const [showMTC1, setShowMTC1] = useState(true);
 
-  useEffect(() => {
-    console.info('Hello, ReactLynx');
-  }, []);
+  const btc1 = <BTC text={text1} />;
+  const btc2 = <BTC text={text2} />;
 
-  const onTap = useCallback(() => {
-    'background-only';
-    setAlterLogo(prevAlterLogo => !prevAlterLogo);
-  }, []);
+  // useEffect(() => {
+  //   setTimeout(() => {
+  //     setText1('Hello ');
+  //     setText2('World!');
+  //   }, 2000);
+  // }, []);
 
   return (
     <view>
-      <view className='Background' />
-      <view className='App'>
-        <view className='Banner'>
-          <view className='Logo' bindtap={onTap}>
-            {alterLogo
-              ? <image src={reactLynxLogo} className='Logo--react' />
-              : <image src={lynxLogo} className='Logo--lynx' />}
-          </view>
-          <text className='Title'>React</text>
-          <text className='Subtitle'>on Lynx</text>
-        </view>
-        <view className='Content'>
-          <image src={arrow} className='Arrow' />
-          <text className='Description'>Tap the logo and have fun!</text>
-          <text className='Hint'>
-            Edit<text
-              style={{
-                fontStyle: 'italic',
-                color: 'rgba(255, 255, 255, 0.85)',
-              }}
-            >
-              {' src/App.tsx '}
-            </text>
-            to see updates!
-          </text>
-        </view>
-        <view style={{ flex: 1 }}></view>
-      </view>
+      <text
+        style={{ 'fontSize': '30px' }}
+        bindtap={() => {
+          setShowMTC1(!showMTC1);
+        }}
+      >
+        MTC show={showMTC1.toString()}
+      </text>
+      {showMTC1 && <MTC btc1={btc1} btc2={btc2} />}
     </view>
   );
 }

@@ -61,3 +61,10 @@ export { transformToWorklet } from './worklet/transformToWorklet.js';
 export { registerWorkletOnBackground } from './worklet/hmr.js';
 
 export { loadWorkletRuntime } from '@lynx-js/react/worklet-runtime/bindings';
+
+export { registerMTC } from './mtc/mtcComponentTypes.js';
+export { renderFakeMTCSlot, renderMTCSlot } from './mtc/renderMTCSlot.js';
+export { pickJSXFromProps } from './mtc/pickJSXFromProps.js';
+export { genMTCInstanceId } from './mtc/genMTCIntanceId.js';
+export { useMemo };
+export { createElement };

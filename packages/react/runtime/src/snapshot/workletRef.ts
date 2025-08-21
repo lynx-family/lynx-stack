@@ -2,33 +2,46 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import type { RefCallback, RefObject } from 'preact';
+
 import { onWorkletCtxUpdate, runWorkletCtx, updateWorkletRef as update } from '@lynx-js/react/worklet-runtime/bindings';
 import type { Element, Worklet, WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bindings';
 
 import { isMainThreadHydrating } from '../lifecycle/patch/isMainThreadHydrating.js';
 import type { SnapshotInstance } from '../snapshot.js';
 
-let mtRefQueue: (WorkletRefImpl<Element> | Worklet | Element)[] = [];
+type Ref = WorkletRefImpl<Element> | Worklet | RefObject<Element> | RefCallback<Element>;
+
+let mtRefQueue: (Ref | Element)[] = [];
 
 export function applyRefQueue(): void {
   const queue = mtRefQueue;
   mtRefQueue = [];
   for (let i = 0; i < queue.length; i += 2) {
-    const worklet = queue[i] as Worklet | WorkletRefImpl<Element>;
+    const worklet = queue[i] as Ref;
     const element = queue[i + 1] as Element;
     if ('_wvid' in worklet) {
       update(worklet as WorkletRefImpl<Element>, element);
     } else if ('_wkltId' in worklet) {
       worklet._unmount = runWorkletCtx(worklet, [{ elementRefptr: element }]) as () => void;
+    } else if ('current' in worklet) {
+      worklet.current = element;
+    } else if (typeof worklet === 'function') {
+      // @ts-ignore
+      worklet._unmount = worklet(element);
+    } else {
+      // @ts-ignore
+      worklet(element);
     }
   }
 }
 
-function addToRefQueue(worklet: Worklet | WorkletRefImpl<Element>, element: Element): void {
+export function addToRefQueue(worklet: Ref, element: Element): void {
   mtRefQueue.push(worklet, element);
 }
 
-export function workletUnRef(value: Worklet | WorkletRefImpl<Element>): void {
+export function workletUnRef(value: Ref): void {
+  // console.log('yra workletUnRef', value);
   if ('_wvid' in value) {
     update(value as WorkletRefImpl<Element>, null);
   } else if ('_wkltId' in value) {
@@ -36,6 +49,16 @@ export function workletUnRef(value: Worklet | WorkletRefImpl<Element>): void {
       (value._unmount as () => void)();
     } else {
       runWorkletCtx(value, [null]);
+    }
+  } else if ('current' in value) {
+    value.current = null;
+  } else if (typeof value === 'function') {
+    // @ts-ignore
+    if (typeof value._unmount == 'function') {
+      // @ts-ignore
+      (value._unmount as () => void)();
+    } else {
+      value(null);
     }
   }
 }

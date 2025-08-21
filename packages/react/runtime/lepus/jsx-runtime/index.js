@@ -3,19 +3,22 @@
 // LICENSE file in the root directory of this source tree.
 import { SnapshotInstance } from '@lynx-js/react/internal';
 
+let vnodeId = -100000;
+
 function createVNode(type, props, _key) {
   if (typeof type === 'string') {
     const r = new SnapshotInstance(type);
 
     r.props = props;
 
+    r.constructor = undefined;
     r.__k = null;
     r.__ = null;
     r.__b = 0;
     r.__e = null;
     r.__d = undefined;
     r.__c = null;
-    // r.__v = --vnodeId;
+    r.__v = --vnodeId;
     r.__i = -1;
     r.__u = 0;
 
@@ -47,6 +50,7 @@ function createVNode(type, props, _key) {
     return {
       type,
       props: normalizedProps,
+      constructor: undefined,
 
       __k: null,
       __: null,
@@ -55,7 +59,7 @@ function createVNode(type, props, _key) {
       __d: void 0,
       __c: null,
       constructor: void 0,
-      // __v: --vnodeId,
+      __v: --vnodeId,
       __i: -1,
       __u: 0,
     };
