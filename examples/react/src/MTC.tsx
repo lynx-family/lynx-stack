@@ -5,6 +5,7 @@ import {
   renderFakeMTCSlot,
   renderMTCSlot,
 } from '@lynx-js/react/internal';
+import { MainThread } from '@lynx-js/types';
 
 const componentInstanceId = 1;
 
@@ -14,6 +15,16 @@ if (__MAIN_THREAD__) {
   function $$mtc_RealMTC(props) {
     return (
       <view>
+        <text
+          bindtap={(e: MainThread.TouchEvent) => {
+            console.log('click');
+            e.currentTarget.setStyleProperties({
+              'background-color': 'red',
+            });
+          }}
+        >
+          MTC
+        </text>
         {renderMTCSlot(props.btc1)}
         {renderMTCSlot(props.btc2)}
       </view>

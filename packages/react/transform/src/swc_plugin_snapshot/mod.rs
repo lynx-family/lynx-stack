@@ -1279,11 +1279,7 @@ where
               snapshot_values.push(Some(ExprOrSpread {
                 spread: None,
                 expr: Box::new(if let AttrName::Event(_, _) = attr_name {
-                  if target == TransformTarget::LEPUS {
-                    quote!("1" as Expr)
-                  } else {
-                    value
-                  }
+                  value
                 } else if let AttrName::Ref = attr_name {
                   if target == TransformTarget::LEPUS {
                     quote!("1" as Expr)

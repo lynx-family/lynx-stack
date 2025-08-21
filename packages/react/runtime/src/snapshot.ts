@@ -713,7 +713,7 @@ function renderMTC(snapshotInstance: SnapshotInstance, props: MTCProps) {
     wrapper.nodeType = 1;
     render(vnode, wrapper as unknown as ContainerNode);
     wrapper.ensureElements();
-    console.log('yra renderMTC render-1', vnode.__e, vnode.__e !== undefined);
+    // console.log('yra renderMTC render-1', vnode.__e, vnode.__e !== undefined);
     if (vnode.__e) {
       snapshotInstance.insertBefore(vnode.__e as SnapshotInstance);
       (vnode.__e as SnapshotInstance).__onDestroy = () => {
