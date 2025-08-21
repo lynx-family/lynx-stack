@@ -5,7 +5,7 @@
 import type { Worklet } from '@lynx-js/react/worklet-runtime/bindings';
 import type { BaseEvent } from '@lynx-js/types';
 
-import { Element } from '../../../worklet-runtime/src/api/element.js';
+import { Element } from '../mtc/api/element.js';
 import { SnapshotInstance } from '../snapshot.js';
 
 const mtcEvents: Map<string, ((e: BaseEvent) => void)> = /*#__PURE__*/ new Map();

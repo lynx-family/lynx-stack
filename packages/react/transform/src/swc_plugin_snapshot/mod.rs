@@ -1282,7 +1282,7 @@ where
                   value
                 } else if let AttrName::Ref = attr_name {
                   if target == TransformTarget::LEPUS {
-                    quote!("1" as Expr)
+                    value
                   } else {
                     quote!(
                       "$runtime_id.transformRef($value)" as Expr,

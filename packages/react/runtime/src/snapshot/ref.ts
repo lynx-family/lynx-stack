@@ -3,8 +3,9 @@
 // LICENSE file in the root directory of this source tree.
 import type { Element, Worklet, WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bindings';
 
+import { Element as MTCElement } from '../mtc/api/element.js';
 import type { SnapshotInstance } from '../snapshot.js';
-import { workletUnRef } from './workletRef.js';
+import { addToRefQueue, workletUnRef } from './workletRef.js';
 import { RefProxy } from '../lifecycle/ref/delay.js';
 
 const refsToClear: Ref[] = [];
@@ -61,10 +62,28 @@ function updateRef(
   oldValue: string | null,
   elementIndex: number,
 ): void {
+  if (!snapshot.__elements) {
+    return;
+  }
+
+  if (oldValue && snapshot.__worklet_ref_set?.has(oldValue)) {
+    workletUnRef(oldValue);
+    snapshot.__worklet_ref_set?.delete(oldValue);
+  }
+
   const value: unknown = snapshot.__values![expIndex];
+  console.log('yra updateRef', value);
   let ref;
-  if (typeof value === 'string') {
+  if (!value) {
+    // do nothing
+  } else if (typeof value === 'string') {
     ref = value;
+  } else if ((typeof value === 'object' && 'current' in value) || typeof value === 'function') {
+    const element = snapshot.__elements[elementIndex]! as Element;
+    addToRefQueue(value as any, new MTCElement(element));
+    snapshot.__worklet_ref_set ??= new Set();
+    snapshot.__worklet_ref_set.add(value);
+    ref = 'react-ref-mtc';
   } else {
     ref = `react-ref-${snapshot.__id}-${expIndex}`;
   }
