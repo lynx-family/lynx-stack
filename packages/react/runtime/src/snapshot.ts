@@ -338,7 +338,6 @@ export class SnapshotInstance {
     this.__id = id;
     snapshotInstanceManager.values.set(id, this);
     if (type === 'ignore') {
-      this.insertBefore2 = this.insertBefore;
       this.insertBefore = () => {};
       this.removeChild = () => {};
     }

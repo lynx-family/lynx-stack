@@ -59,16 +59,16 @@ function applyRef(ref: Ref, value: null | [snapshotInstanceId: number, expIndex:
 function updateRef(
   snapshot: SnapshotInstance,
   expIndex: number,
-  oldValue: string | null,
+  oldValue: string | { current: any | null } | ((ref: any) => void) | null,
   elementIndex: number,
 ): void {
   if (!snapshot.__elements) {
     return;
   }
 
-  if (oldValue && snapshot.__worklet_ref_set?.has(oldValue)) {
-    workletUnRef(oldValue);
-    snapshot.__worklet_ref_set?.delete(oldValue);
+  if (oldValue && snapshot.__worklet_ref_set?.has(oldValue as any)) {
+    workletUnRef(oldValue as any);
+    snapshot.__worklet_ref_set?.delete(oldValue as any);
   }
 
   const value: unknown = snapshot.__values![expIndex];
@@ -84,7 +84,7 @@ function updateRef(
     const element = snapshot.__elements[elementIndex]! as Element;
     addToRefQueue(value as any, new MTCElement(element));
     snapshot.__worklet_ref_set ??= new Set();
-    snapshot.__worklet_ref_set.add(value);
+    snapshot.__worklet_ref_set.add(value as any);
     ref = 'react-ref-mtc';
   } else {
     ref = `react-ref-${snapshot.__id}-${expIndex}`;
@@ -93,7 +93,7 @@ function updateRef(
 
   if (snapshot.__elements && oldValue !== ref) {
     if (oldValue) {
-      __SetAttribute(snapshot.__elements[elementIndex]!, oldValue, undefined);
+      __SetAttribute(snapshot.__elements[elementIndex]!, oldValue as any, undefined);
     }
     if (ref) {
       __SetAttribute(snapshot.__elements[elementIndex]!, ref, 1);

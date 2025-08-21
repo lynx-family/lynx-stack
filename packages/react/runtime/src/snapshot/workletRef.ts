@@ -27,8 +27,10 @@ export function applyRefQueue(): void {
     } else if ('current' in worklet) {
       worklet.current = element;
     } else if (typeof worklet === 'function') {
+      // @ts-ignore
       worklet._unmount = worklet(element);
     } else {
+      // @ts-ignore
       worklet(element);
     }
   }
@@ -51,7 +53,9 @@ export function workletUnRef(value: Ref): void {
   } else if ('current' in value) {
     value.current = null;
   } else if (typeof value === 'function') {
+    // @ts-ignore
     if (typeof value._unmount == 'function') {
+      // @ts-ignore
       (value._unmount as () => void)();
     } else {
       value(null);
