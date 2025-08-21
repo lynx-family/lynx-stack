@@ -2,14 +2,18 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { BaseEvent } from '@lynx-js/types';
+import type { Worklet } from '@lynx-js/react/worklet-runtime/bindings';
+import type { BaseEvent } from '@lynx-js/types';
 
 import { Element } from '../../../worklet-runtime/src/api/element.js';
 import { SnapshotInstance } from '../snapshot.js';
 
-const mtcEvents: Map<number, (e: unknown) => void> = /*#__PURE__*/ new Map();
+const mtcEvents: Map<string, ((e: BaseEvent) => void)> = /*#__PURE__*/ new Map();
 
-function registerMTCEvent(id: string, callback: undefined | ((e: BaseEvent) => void)): unknown {
+function registerMTCEvent(
+  id: string,
+  callback: undefined | ((e: BaseEvent) => void),
+): Record<string, unknown> | undefined {
   if (!callback) {
     mtcEvents.delete(id);
     return undefined;
@@ -24,14 +28,14 @@ function registerMTCEvent(id: string, callback: undefined | ((e: BaseEvent) => v
   };
 }
 
-globalThis.runWorklet = (w, e: [BaseEvent]) => {
+// @ts-ignore
+globalThis.runWorklet = (ctx: Worklet, e: [any]) => {
   const event = {
     ...e[0],
     target: new Element(e[0].target.elementRefptr),
     currentTarget: new Element(e[0].currentTarget.elementRefptr),
-  };
-  console.log('yra runWorklet', w, event);
-  mtcEvents.get(w._wkltId)(event);
+  } as BaseEvent;
+  mtcEvents.get(ctx._wkltId)!(event);
 };
 
 function updateEvent(
@@ -45,15 +49,15 @@ function updateEvent(
 ): void {
   const value = snapshot.__values![expIndex];
   const eventId = `${snapshot.__id}:${expIndex}:${spreadKey}`;
-  let event;
+  let event: string | Record<string, unknown> | undefined;
   if (!value) {
     event = undefined;
     registerMTCEvent(eventId, undefined);
-  } else if (typeof value === 'string' || (typeof value === 'object' && value.type === 'worklet')) {
-    event = value;
+  } else if (typeof value === 'string' || (typeof value === 'object' && 'type' in value && value.type === 'worklet')) {
+    event = value as Record<string, unknown>;
   } else if (typeof value === 'function') {
     // TODO: should unregister old event
-    event = registerMTCEvent(eventId, value);
+    event = registerMTCEvent(eventId, value as ((e: BaseEvent) => void));
   } else {
     event = eventId;
   }
