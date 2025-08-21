@@ -5,7 +5,7 @@ function FakeMTC(props) {
         componentTypeId: "$$mtc_2d408_test_1",
         componentInstanceId
     };
-    return createElement('mtc-container', {
+    return ReactLynx._jsx('mtc-container', {
         values: [
             transformedProps
         ]
@@ -18,7 +18,7 @@ function FakeMTC2(props) {
         componentTypeId: "$$mtc_2d408_test_2",
         componentInstanceId
     };
-    return createElement('mtc-container', {
+    return ReactLynx._jsx('mtc-container', {
         values: [
             transformedProps
         ]

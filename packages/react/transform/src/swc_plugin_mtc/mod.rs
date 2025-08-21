@@ -313,10 +313,11 @@ where
         ),
         quote!(
           "return (
-            createElement('mtc-container', {
+            $runtime_id.createElement('mtc-container', {
               values: [transformedProps],
             }, $render_fake_mtc_slot)
           );" as Stmt,
+          runtime_id: Expr = self.runtime_id.clone(),
           render_fake_mtc_slot: Expr = render_fake_mtc_slot
         ),
       ],

@@ -1717,7 +1717,7 @@ export function MTC(props) {
                   componentTypeId: "$$mtc_da39a_87544_1",
                   componentInstanceId
               };
-              return createElement('mtc-container', {
+              return ReactLynx.createElement('mtc-container', {
                   values: [
                       transformedProps
                   ]
@@ -1735,7 +1735,7 @@ export function MTC(props) {
                   componentTypeId: "$$mtc_da39a_87544_1",
                   componentInstanceId
               };
-              return createElement('mtc-container', {
+              return ReactLynx.createElement('mtc-container', {
                   values: [
                       transformedProps
                   ]
