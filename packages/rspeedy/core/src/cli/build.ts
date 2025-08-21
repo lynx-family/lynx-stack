@@ -13,6 +13,7 @@ import { isCI } from '../utils/is-ci.js'
 
 export type BuildOptions = CommonOptions & {
   environment?: string[] | undefined
+  watch?: boolean | undefined
 }
 
 export async function build(
@@ -23,15 +24,24 @@ export async function build(
   // We always exit on CI since `sass-embedded` will have child_processes that never exit.
   // Otherwise, we do not exit when Rsdoctor is enabled.
   const shouldExit = process.env['RSDOCTOR'] !== 'true' || isCI()
+  const isWatch = buildOptions.watch ?? false
 
   try {
     const { createRspeedyOptions } = await init(cwd, buildOptions)
 
     const rspeedy = await createRspeedy(createRspeedyOptions)
 
-    // TODO: support `rspeedy build --watch`
-    const { close } = await rspeedy.build()
-    await close()
+    const { close } = await rspeedy.build({
+      watch: isWatch,
+    })
+
+    if (isWatch) {
+      process.on('SIGINT', () => {
+        close().catch((e) => logger.error('close error', e))
+      })
+    } else {
+      await close()
+    }
   } catch (error) {
     logger.error(error)
     if (shouldExit) {
@@ -40,7 +50,7 @@ export async function build(
     }
   }
 
-  if (shouldExit) {
+  if (shouldExit && !isWatch) {
     exit()
   }
 }
