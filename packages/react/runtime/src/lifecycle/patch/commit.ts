@@ -31,8 +31,6 @@ import { takeWorkletRefInitValuePatch } from '../../worklet/workletRefPool.js';
 import { getReloadVersion } from '../pass.js';
 import type { SnapshotPatch } from './snapshotPatch.js';
 import { takeGlobalSnapshotPatch } from './snapshotPatch.js';
-import { prettyFormatSnapshotPatch } from '../../debug/formatPatch.js';
-import { printSnapshotInstance } from '../../debug/printSnapshot.js';
 
 let globalFlushOptions: FlushOptions = {};
 function takeGlobalFlushOptions() {
@@ -176,11 +174,11 @@ function commitPatchUpdate(patchList: PatchList, patchOptions: GlobalPatchOption
   data: string;
   patchOptions: PatchOptions;
 } {
-  console.debug('********** JS update:');
-  printSnapshotInstance(
-    (backgroundSnapshotInstanceManager.values.get(1) ?? backgroundSnapshotInstanceManager.values.get(-1))!,
-  );
-  console.debug('commitPatchUpdate:', prettyFormatSnapshotPatch(patchList.patchList[0]?.snapshotPatch));
+  // console.debug('********** JS update:');
+  // printSnapshotInstance(
+  //   (backgroundSnapshotInstanceManager.values.get(1) ?? backgroundSnapshotInstanceManager.values.get(-1))!,
+  // );
+  // console.debug('commitPatchUpdate:', prettyFormatSnapshotPatch(patchList.patchList[0]?.snapshotPatch));
 
   if (__PROFILE__) {
     console.profile('commitChanges');

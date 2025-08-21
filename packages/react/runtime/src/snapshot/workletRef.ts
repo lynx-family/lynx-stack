@@ -41,7 +41,7 @@ export function addToRefQueue(worklet: Ref, element: Element): void {
 }
 
 export function workletUnRef(value: Ref): void {
-  console.log('yra workletUnRef', value);
+  // console.log('yra workletUnRef', value);
   if ('_wvid' in value) {
     update(value as WorkletRefImpl<Element>, null);
   } else if ('_wkltId' in value) {

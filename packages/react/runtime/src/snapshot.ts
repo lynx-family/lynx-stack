@@ -557,7 +557,7 @@ export class SnapshotInstance {
   }
 
   insertBefore(newNode: SnapshotInstance, existingNode?: SnapshotInstance): void {
-    console.log('yra insertBefore', this.__id, newNode.__id);
+    // console.log('yra insertBefore', this.__id, newNode.__id);
     const __snapshot_def = this.__snapshot_def;
     if (__snapshot_def.isListHolder) {
       if (__pendingListUpdates.values) {
@@ -714,7 +714,7 @@ interface MTCProps extends Attributes {
 }
 
 function renderMTC(snapshotInstance: SnapshotInstance, props: MTCProps) {
-  console.log('yra renderMTC', snapshotInstance.__id, props);
+  // console.log('yra renderMTC', snapshotInstance.__id, props);
   if (snapshotInstance.__elements === undefined) {
     return;
   }

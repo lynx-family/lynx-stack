@@ -72,7 +72,7 @@ function updateRef(
   }
 
   const value: unknown = snapshot.__values![expIndex];
-  console.log('yra updateRef', value);
+  // console.log('yra updateRef', value);
   let ref;
   if (!value) {
     // do nothing

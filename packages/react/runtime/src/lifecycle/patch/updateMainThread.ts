@@ -7,12 +7,11 @@ import { updateWorkletRefInitValueChanges } from '@lynx-js/react/worklet-runtime
 import type { PatchList, PatchOptions } from './commit.js';
 import { setMainThreadHydrating } from './isMainThreadHydrating.js';
 import { snapshotPatchApply } from './snapshotPatchApply.js';
-import { printSnapshotInstance } from '../../debug/printSnapshot.js';
 import { LifecycleConstant } from '../../lifecycleConstant.js';
 import { markTiming, setPipeline } from '../../lynx/performance.js';
 import { __pendingListUpdates } from '../../pendingListUpdates.js';
 import { applyRefQueue } from '../../snapshot/workletRef.js';
-import { __page, snapshotInstanceManager } from '../../snapshot.js';
+import { __page } from '../../snapshot.js';
 import { getReloadVersion } from '../pass.js';
 
 function updateMainThread(
@@ -52,8 +51,8 @@ function updateMainThread(
         snapshotPatchApply(snapshotPatch);
       }
       __pendingListUpdates.flush();
-      console.debug('********** Lepus updatePatch:');
-      printSnapshotInstance(snapshotInstanceManager.values.get(-1)!);
+      // console.debug('********** Lepus updatePatch:');
+      // printSnapshotInstance(snapshotInstanceManager.values.get(-1)!);
     }
   } finally {
     markTiming('patchChangesEnd');

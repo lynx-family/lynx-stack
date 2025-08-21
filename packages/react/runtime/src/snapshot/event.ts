@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { loadWorkletRuntime } from '@lynx-js/react/worklet-runtime/bindings';
 import type { Worklet } from '@lynx-js/react/worklet-runtime/bindings';
 import type { BaseEvent } from '@lynx-js/types';
 
@@ -14,6 +15,20 @@ function registerMTCEvent(
   id: string,
   callback: undefined | ((e: BaseEvent) => void),
 ): Record<string, unknown> | undefined {
+  if (!globalThis.lynxWorkletImpl) {
+    // @ts-ignore
+    loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry);
+    // @ts-ignore
+    globalThis.runMTCEvent = (ctx: Worklet, e: [any]) => {
+      const event = {
+        ...e[0],
+        target: new Element(e[0].target.elementRefptr),
+        currentTarget: new Element(e[0].currentTarget.elementRefptr),
+      } as BaseEvent;
+      mtcEvents.get(ctx._wkltId)!(event);
+    };
+  }
+
   if (!callback) {
     mtcEvents.delete(id);
     return undefined;
@@ -27,16 +42,6 @@ function registerMTCEvent(
     },
   };
 }
-
-// @ts-ignore
-globalThis.runWorklet = (ctx: Worklet, e: [any]) => {
-  const event = {
-    ...e[0],
-    target: new Element(e[0].target.elementRefptr),
-    currentTarget: new Element(e[0].currentTarget.elementRefptr),
-  } as BaseEvent;
-  mtcEvents.get(ctx._wkltId)!(event);
-};
 
 function updateEvent(
   snapshot: SnapshotInstance,
