@@ -14,12 +14,12 @@ export function App() {
   const btc1 = <BTC text={text1} />;
   const btc2 = <BTC text={text2} />;
 
-  useEffect(() => {
-    setTimeout(() => {
-      setText1('Hello ');
-      setText2('World!');
-    }, 2000);
-  }, []);
+  // useEffect(() => {
+  //   setTimeout(() => {
+  //     setText1('Hello ');
+  //     setText2('World!');
+  //   }, 2000);
+  // }, []);
 
   return (
     <view>
