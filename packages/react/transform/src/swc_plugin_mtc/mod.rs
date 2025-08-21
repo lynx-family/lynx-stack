@@ -296,6 +296,10 @@ where
       span: DUMMY_SP,
       stmts: vec![
         quote!(
+          "const componentInstanceId = $runtime_id.useMemo($runtime_id.genMTCInstanceId, []);" as Stmt,
+          runtime_id: Expr = self.runtime_id.clone(),
+        ),
+        quote!(
           "const [jsxs, transformedProps] = $runtime_id.pickJSXFromProps($props);" as Stmt,
           runtime_id: Expr = self.runtime_id.clone(),
           props = props_identifier
@@ -303,7 +307,8 @@ where
         quote!(
           "transformedProps.__MTCProps = {
             componentTypeId: $component_type_id,
-          }" as Stmt,
+            componentInstanceId,
+          };" as Stmt,
           component_type_id: Expr = Expr::Lit(Lit::Str(mtc_uid.into()))
         ),
         quote!(

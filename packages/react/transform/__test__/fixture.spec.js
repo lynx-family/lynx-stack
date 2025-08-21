@@ -1711,9 +1711,11 @@ export function MTC(props) {
         expect(code).toMatchInlineSnapshot(`
           "import * as ReactLynx from "@lynx-js/react";
           export function MTC(props) {
+              const componentInstanceId = ReactLynx.useMemo(ReactLynx.genMTCInstanceId, []);
               const [jsxs, transformedProps] = ReactLynx.pickJSXFromProps(props);
               transformedProps.__MTCProps = {
-                  componentTypeId: "$$mtc_da39a_87544_1"
+                  componentTypeId: "$$mtc_da39a_87544_1",
+                  componentInstanceId
               };
               return createElement('mtc-container', {
                   values: [
@@ -1727,9 +1729,11 @@ export function MTC(props) {
         expect(code).toMatchInlineSnapshot(`
           "import * as ReactLynx from "@lynx-js/react";
           export function MTC(props) {
+              const componentInstanceId = ReactLynx.useMemo(ReactLynx.genMTCInstanceId, []);
               const [jsxs, transformedProps] = ReactLynx.pickJSXFromProps(props);
               transformedProps.__MTCProps = {
-                  componentTypeId: "$$mtc_da39a_87544_1"
+                  componentTypeId: "$$mtc_da39a_87544_1",
+                  componentInstanceId
               };
               return createElement('mtc-container', {
                   values: [
