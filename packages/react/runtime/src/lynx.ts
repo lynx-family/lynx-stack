@@ -17,6 +17,8 @@ import { setupLynxEnv } from './lynx/env.js';
 import { injectLepusMethods } from './lynx/injectLepusMethods.js';
 import { initTimingAPI } from './lynx/performance.js';
 import { injectTt } from './lynx/tt.js';
+import { COMMIT } from './renderToOpcodes/constants.js';
+import { hook } from './utils.js';
 
 export { runWithForce } from './lynx/runWithForce.js';
 
@@ -30,6 +32,18 @@ if (__MAIN_THREAD__ && typeof globalThis.processEvalResult === 'undefined') {
 
 if (__MAIN_THREAD__) {
   options.document = document as unknown as Document;
+  hook(
+    options,
+    COMMIT,
+    (
+      originalPreactCommit, // This is actually not used since Preact use `hooks._commit` for callbacks of `useLayoutEffect`.
+      vnode,
+      commitQueue,
+    ) => {
+      originalPreactCommit?.(vnode, commitQueue);
+      __FlushElementTree();
+    },
+  );
   setupDocument();
   injectCalledByNative();
   injectUpdateMainThread();

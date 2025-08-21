@@ -68,6 +68,10 @@
       "types": "./components/lib/index.d.ts",
       "default": "./components/lib/index.js"
     },
+    "./signals": {
+      "types": "./runtime/signals/index.d.ts",
+      "default": "./runtime/signals/index.js"
+    },
     "./transform": {
       "require": "./transform/cjs/main.cjs",
       "import": {
@@ -142,6 +146,9 @@
       "runtime-components": [
         "./components/lib/index.d.ts"
       ],
+      "signals": [
+        "./runtime/signals/index.d.ts"
+      ],
       "worklet-runtime": [
         "./worklet-runtime/lib/index.d.ts"
       ],
@@ -174,7 +181,8 @@
     "api-extractor": "api-extractor run --verbose"
   },
   "dependencies": {
-    "preact": "npm:@hongzhiyuan/preact@10.24.0-00213bad"
+    "preact": "npm:@hongzhiyuan/preact@10.24.0-00213bad",
+    "@preact/signals": "1.3.2"
   },
   "devDependencies": {
     "@lynx-js/types": "3.3.0",

@@ -203,6 +203,9 @@ importers:
 
   packages/react:
     dependencies:
+      '@preact/signals':
+        specifier: 1.3.2
+        version: 1.3.2(@hongzhiyuan/preact@10.24.0-00213bad)
       preact:
         specifier: npm:@hongzhiyuan/preact@10.24.0-00213bad
         version: '@hongzhiyuan/preact@10.24.0-00213bad'
@@ -2321,6 +2324,14 @@ packages:
 
   '@polka/url@1.0.0-next.25':
     resolution: {integrity: sha512-j7P6Rgr3mmtdkeDGTe0E/aYyWEWVtc5yFXtHCRHs28/jptDEWfaVOc5T7cblqy1XKPPfCxJc/8DwQ5YgLOZOVQ==}
+
+  '@preact/signals-core@1.12.0':
+    resolution: {integrity: sha512-etWpENXm469RHMWIZGblgWrapbIGcRcbccEGGaLkFez3PjlI3XkBrUtSiNFsIfV/DN16PxMOxbWAZUIaLFyJDg==}
+
+  '@preact/signals@1.3.2':
+    resolution: {integrity: sha512-naxcJgUJ6BTOROJ7C3QML7KvwKwCXQJYTc5L/b0eEsdYgPB6SxwoQ1vDGcS0Q7GVjAenVq/tXrybVdFShHYZWg==}
+    peerDependencies:
+      preact: 10.x
 
   '@prefresh/core@1.5.5':
     resolution: {integrity: sha512-H6GTXUl4V4fe3ijz7yhSa/mZ+pGSOh7XaJb6uP/sQsagBx9yl0D1HKDaeoMQA8Ad2Xm27LqvbitMGSdY9UFSKQ==}
@@ -9388,6 +9399,13 @@ snapshots:
       playwright: 1.54.2
 
   '@polka/url@1.0.0-next.25': {}
+
+  '@preact/signals-core@1.12.0': {}
+
+  '@preact/signals@1.3.2(@hongzhiyuan/preact@10.24.0-00213bad)':
+    dependencies:
+      '@preact/signals-core': 1.12.0
+      preact: '@hongzhiyuan/preact@10.24.0-00213bad'
 
   '@prefresh/core@1.5.5(preact@10.23.2)':
     dependencies:
