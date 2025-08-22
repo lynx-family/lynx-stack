@@ -1074,8 +1074,8 @@ importers:
         specifier: workspace:*
         version: link:../../tools/css-serializer
       '@lynx-js/tasm':
-        specifier: 0.0.5
-        version: 0.0.5
+        specifier: 0.0.17
+        version: 0.0.17
       '@lynx-js/webpack-runtime-globals':
         specifier: workspace:^
         version: link:../webpack-runtime-globals
@@ -2179,8 +2179,8 @@ packages:
   '@lynx-js/lynx-core@0.1.3':
     resolution: {integrity: sha512-uWzKKYJUK4Q09ZRZxWSAFINnmZb9piWPbvWF9SkLn+3snBl9u/BJa4ekPRcKWAhBmpbtxWH1x27fxe3Q3p5l3Q==}
 
-  '@lynx-js/tasm@0.0.5':
-    resolution: {integrity: sha512-E5ZTtNQslv0zGMqtEo/GULHM0XiyvkuL4K8SxP8R9n0WnInppIiekIP5Rzvt+oex7Sg8ngtm/ToUDiZ0NQ9+Qg==}
+  '@lynx-js/tasm@0.0.17':
+    resolution: {integrity: sha512-SiLmx6ScI8lrmVvpOq95MlbaLSWDOA5aJ6P9/60dxZoWomRXP4kGH/oGr47Gqnd35u5FyPHf6KicPIc09rnIXw==}
 
   '@lynx-js/types@3.3.0':
     resolution: {integrity: sha512-URUszZQBFGumpNDXm4FoLMMSSZAgH+NBvBOaERe8UWrnH0XB9Z8N2sAj28jfg57G+eZpRasbvu/ZR6NzFe5feQ==}
@@ -9206,7 +9206,7 @@ snapshots:
 
   '@lynx-js/lynx-core@0.1.3': {}
 
-  '@lynx-js/tasm@0.0.5': {}
+  '@lynx-js/tasm@0.0.17': {}
 
   '@lynx-js/types@3.3.0':
     dependencies:
