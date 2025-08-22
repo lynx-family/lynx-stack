@@ -16,7 +16,7 @@
 
 import { render } from 'preact';
 import type { Attributes, ContainerNode, VNode } from 'preact';
-import { cloneElement } from 'preact/compat';
+import { cloneElement, unmountComponentAtNode } from 'preact/compat';
 import { jsx as createVNode } from 'preact/jsx-runtime';
 
 import type { Worklet, WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bindings';
@@ -737,6 +737,9 @@ function renderMTC(snapshotInstance: SnapshotInstance, props: MTCProps) {
     if (vnode.__e) {
       snapshotInstance.insertBefore(vnode.__e as SnapshotInstance);
       (vnode.__e as SnapshotInstance).__onDestroy = () => {
+        wrapper.insertBefore(vnode.__e as SnapshotInstance);
+        unmountComponentAtNode(wrapper as unknown as ContainerNode);
+        // TODO: destroy wrapper
         mtcComponentVNodes.delete(instanceId);
       };
     }
