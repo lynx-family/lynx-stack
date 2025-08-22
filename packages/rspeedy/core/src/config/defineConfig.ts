@@ -24,6 +24,19 @@ import type { Config } from './index.js'
  *
  * @public
  */
-export function defineConfig(config: Config): Config {
+export type ConfigExport =
+  | Config
+  | Promise<Config>
+  | (() => Config)
+  | (() => Promise<Config>)
+export function defineConfig(config: Config): Config
+export function defineConfig(config: () => Config): () => Config
+export function defineConfig(config: Promise<Config>): Promise<Config>
+export function defineConfig(
+  config: () => Promise<Config>,
+): () => Promise<Config>
+export function defineConfig(
+  config: ConfigExport,
+): ConfigExport {
   return config
 }
