@@ -1,5 +1,7 @@
 import type { RslibConfig } from '@rslib/core';
 import { defineConfig } from '@rslib/core';
+import { pluginAreTheTypesWrong } from 'rsbuild-plugin-arethetypeswrong';
+import { pluginPublint } from 'rsbuild-plugin-publint';
 
 const config: RslibConfig = defineConfig({
   lib: [
@@ -12,6 +14,17 @@ const config: RslibConfig = defineConfig({
     },
     sourceMap: true,
   },
+  plugins: [
+    pluginAreTheTypesWrong({
+      enable: Boolean(process.env['CI']),
+      areTheTypesWrongOptions: {
+        ignoreRules: [
+          'cjs-resolves-to-esm',
+        ],
+      },
+    }),
+    pluginPublint(),
+  ],
   tools: {
     rspack: {
       output: {

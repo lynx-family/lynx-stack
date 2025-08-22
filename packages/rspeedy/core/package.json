@@ -54,12 +54,13 @@
     "test:type": "vitest --typecheck.only"
   },
   "dependencies": {
+    "@lynx-js/cache-events-webpack-plugin": "workspace:^",
     "@lynx-js/chunk-loading-webpack-plugin": "workspace:^",
     "@lynx-js/webpack-dev-transport": "workspace:^",
     "@lynx-js/websocket": "workspace:^",
     "@rsbuild/core": "catalog:rsbuild",
     "@rsbuild/plugin-css-minimizer": "1.0.3",
-    "@rsdoctor/rspack-plugin": "1.2.2"
+    "@rsdoctor/rspack-plugin": "1.2.3"
   },
   "devDependencies": {
     "@lynx-js/vitest-setup": "workspace:*",
@@ -80,7 +81,7 @@
     "typia": "9.7.1",
     "typia-rspack-plugin": "2.2.1",
     "vitest": "^3.2.4",
-    "webpack": "^5.101.2"
+    "webpack": "^5.101.3"
   },
   "peerDependencies": {
     "typescript": "5.1.6 - 5.9.x"

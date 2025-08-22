@@ -4,7 +4,7 @@ Contributions are always welcome, no matter how large or small!
 
 ## Developing
 
-_Node_: Check that Node is [installed](https://nodejs.org/en/download/) with version `>= 22`. You can check this with `node -v`.
+_Node_: Check that Node is [installed](https://nodejs.org/en/download/) with version `>= 24`. You can check this with `node -v`.
 
 _pnpm_: Make sure that pnpm is available. You can use `corepack enable` to automatically setup pnpm.
 

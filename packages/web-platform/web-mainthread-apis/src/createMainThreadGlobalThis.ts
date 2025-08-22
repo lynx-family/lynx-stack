@@ -61,6 +61,7 @@ import {
   type SSRDehydrateHooks,
   type ElementTemplateData,
   type ElementFromBinaryPAPI,
+  globalDisallowedVars,
 } from '@lynx-js/web-constants';
 import { globalMuteableVars } from '@lynx-js/web-constants';
 import { createMainThreadLynx } from './createMainThreadLynx.js';
@@ -858,6 +859,9 @@ export function createMainThreadGlobalThis(
   };
   mtsGlobalThis.globalThis = new Proxy(mtsGlobalThis, {
     get: (target, prop) => {
+      if (typeof prop === 'string' && globalDisallowedVars.includes(prop)) {
+        return undefined;
+      }
       if (prop === 'globalThis') {
         return target;
       }

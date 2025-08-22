@@ -64,16 +64,16 @@ export interface LynxElement extends HTMLElement {
  */
 export const initElementTree = () => {
   let uiSignNext = 0;
-  const uniqueId2Element = new Map<number, LynxElement>();
 
   return new (class ElementTree {
+    uniqueId2Element = new Map<number, LynxElement>();
     root: LynxElement | undefined;
     countElement(
       element: LynxElement,
       parentComponentUniqueId: number,
     ) {
       element.$$uiSign = uiSignNext++;
-      uniqueId2Element.set(element.$$uiSign, element);
+      this.uniqueId2Element.set(element.$$uiSign, element);
       element.parentComponentUniqueId = parentComponentUniqueId;
     }
     __CreatePage(_tag: string, parentComponentUniqueId: number) {
@@ -463,7 +463,7 @@ export const initElementTree = () => {
       return this.toTree();
     }
     __GetElementByUniqueId(uniqueId: number) {
-      return uniqueId2Element.get(uniqueId);
+      return this.uniqueId2Element.get(uniqueId);
     }
   })();
 };

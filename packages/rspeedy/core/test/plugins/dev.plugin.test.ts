@@ -181,7 +181,9 @@ describe('Plugins - Dev', () => {
       },
     })
 
-    const config = await rsbuild.unwrapConfig()
+    const config = await rsbuild.unwrapConfig({
+      action: 'build',
+    })
 
     expect(config.output?.publicPath).toBe('/')
   })
@@ -339,6 +341,23 @@ describe('Plugins - Dev', () => {
 
     expect(typeof config.output?.publicPath).toBe('string')
     expect(config.output?.publicPath).toBe('/')
+  })
+
+  test('assetPrefix with mode production', async () => {
+    const rsbuild = await createStubRspeedy({
+      mode: 'production',
+    })
+
+    // dev.plugin.js will not be applied by default in production mode
+    rsbuild.addPlugins([
+      await import('../../src/plugins/dev.plugin.js').then(
+        ({ pluginDev }) => pluginDev(),
+      ),
+    ])
+
+    const config = await rsbuild.unwrapConfig()
+
+    expect(config.output?.publicPath).not.toBe('/')
   })
 
   // The result of this test is not correct, since Rsbuild is using `context.devServer?.port || DEFAULT_PORT`

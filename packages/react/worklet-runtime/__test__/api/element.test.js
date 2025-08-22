@@ -3,7 +3,8 @@
 // LICENSE file in the root directory of this source tree.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { Element } from '../../src/api/element';
+import { AnimationOperation } from '../../src/api/animation/animation';
+import { Element, setShouldFlush } from '../../src/api/element';
 import { initWorklet } from '../../src/workletRuntime';
 
 beforeEach(() => {
@@ -21,12 +22,14 @@ beforeEach(() => {
   globalThis.__QuerySelectorAll = vi.fn();
   globalThis.__InvokeUIMethod = vi.fn();
   globalThis.__FlushElementTree = vi.fn();
+  globalThis.__ElementAnimate = vi.fn();
 });
 
 afterEach(() => {
   delete globalThis.lynxWorkletImpl;
   vi.useRealTimers();
   vi.clearAllMocks();
+  setShouldFlush(true);
 });
 
 describe('Element', () => {
@@ -139,6 +142,88 @@ describe('Element', () => {
     element.setStyleProperty('color', 'blue');
     element.setStyleProperties({ margin: '10px' });
     expect(globalThis.__FlushElementTree).not.toHaveBeenCalled();
+    await vi.runAllTimersAsync();
+    expect(globalThis.__FlushElementTree).toHaveBeenCalledTimes(1);
+  });
+
+  it('should start animation when created', () => {
+    const element = new Element('element-instance');
+    const animation = element.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 1000 });
+    expect(globalThis.__ElementAnimate).toHaveBeenCalledWith('element-instance', [
+      AnimationOperation.START,
+      animation.id,
+      [{ opacity: 0 }, { opacity: 1 }],
+      { duration: 1000 },
+    ]);
+  });
+
+  it('should start animation when pass number as option', () => {
+    const element = new Element('element-instance');
+    const animation = element.animate([{ opacity: 0 }, { opacity: 1 }], 1000);
+    expect(globalThis.__ElementAnimate).toHaveBeenCalledWith('element-instance', [
+      AnimationOperation.START,
+      animation.id,
+      [{ opacity: 0 }, { opacity: 1 }],
+      { duration: 1000 },
+    ]);
+  });
+
+  it('animation should work even if no options', () => {
+    const element = new Element('element-instance');
+    const animation = element.animate([{ opacity: 0 }, { opacity: 1 }]);
+    expect(globalThis.__ElementAnimate).toHaveBeenCalledWith('element-instance', [
+      AnimationOperation.START,
+      animation.id,
+      [{ opacity: 0 }, { opacity: 1 }],
+      {},
+    ]);
+  });
+
+  it('should cancel animation when canceled', () => {
+    const element = new Element('element-instance');
+    const animation = element.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 1000 });
+    animation.cancel();
+    expect(globalThis.__ElementAnimate).toHaveBeenCalledWith('element-instance', [
+      AnimationOperation.CANCEL,
+      animation.id,
+    ]);
+  });
+
+  it('should pause animation when paused', () => {
+    const element = new Element('element-instance');
+    const animation = element.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 1000 });
+    animation.pause();
+    expect(globalThis.__ElementAnimate).toHaveBeenCalledWith('element-instance', [
+      AnimationOperation.PAUSE,
+      animation.id,
+    ]);
+  });
+
+  it('should play animation when played', () => {
+    const element = new Element('element-instance');
+    const animation = element.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 1000 });
+    expect(globalThis.__ElementAnimate).toHaveBeenCalledWith('element-instance', [
+      AnimationOperation.START,
+      animation.id,
+      [{ opacity: 0 }, { opacity: 1 }],
+      { duration: 1000 },
+    ]);
+    animation.play();
+    expect(globalThis.__ElementAnimate).toHaveBeenCalledWith('element-instance', [
+      AnimationOperation.PLAY,
+      animation.id,
+    ]);
+  });
+
+  it('should not flush when shouldFlush is false', async () => {
+    const element = new Element('element-instance');
+    setShouldFlush(false);
+    element.setAttribute('a', '1');
+    await vi.runAllTimersAsync();
+    expect(globalThis.__FlushElementTree).not.toHaveBeenCalled();
+
+    setShouldFlush(true);
+    element.setAttribute('b', '2');
     await vi.runAllTimersAsync();
     expect(globalThis.__FlushElementTree).toHaveBeenCalledTimes(1);
   });

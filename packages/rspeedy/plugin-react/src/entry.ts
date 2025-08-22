@@ -15,7 +15,6 @@ import { LAYERS, ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'
 import type { ExposedAPI } from '@lynx-js/rspeedy'
 import { RuntimeWrapperWebpackPlugin } from '@lynx-js/runtime-wrapper-webpack-plugin'
 import {
-  CSSPlugins,
   LynxEncodePlugin,
   LynxTemplatePlugin,
   WebEncodePlugin,
@@ -190,9 +189,7 @@ export function applyEntry(
           targetSdkVersion,
 
           experimental_isLazyBundle,
-          cssPlugins: [
-            CSSPlugins.parserPlugins.removeFunctionWhiteSpace(),
-          ],
+          cssPlugins: [],
         }])
         .end()
     })
@@ -203,8 +200,6 @@ export function applyEntry(
     const enableChunkSplitting =
       rsbuildConfig.performance?.chunkSplit?.strategy !== 'all-in-one'
 
-    let finalFirstScreenSyncTiming = firstScreenSyncTiming
-
     if (isLynx) {
       let inlineScripts
       if (experimental_isLazyBundle) {
@@ -213,10 +208,6 @@ export function applyEntry(
       } else {
         inlineScripts = environment.config.output?.inlineScripts
           ?? !enableChunkSplitting
-      }
-
-      if (inlineScripts !== true) {
-        finalFirstScreenSyncTiming = 'jsReady'
       }
 
       chain
@@ -268,7 +259,7 @@ export function applyEntry(
       .use(ReactWebpackPlugin, [{
         disableCreateSelectorQueryIncompatibleWarning: compat
           ?.disableCreateSelectorQueryIncompatibleWarning ?? false,
-        firstScreenSyncTiming: finalFirstScreenSyncTiming,
+        firstScreenSyncTiming,
         enableSSR,
         mainThreadChunks,
         extractStr,

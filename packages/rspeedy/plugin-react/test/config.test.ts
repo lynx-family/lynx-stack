@@ -595,7 +595,7 @@ describe('Config', () => {
       // @ts-expect-error private field
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const { firstScreenSyncTiming } = ReactWebpackPlugin?.options ?? {}
-      expect(firstScreenSyncTiming).toBe('jsReady')
+      expect(firstScreenSyncTiming).toBe('immediately')
     })
 
     test('environments.lynx.output.inlineScripts: false', async () => {
@@ -1924,12 +1924,7 @@ describe('Config', () => {
           "main__main-thread",
           "main",
         ],
-        "cssPlugins": [
-          {
-            "name": "remove-function-whitespace",
-            "phaseStandard": [Function],
-          },
-        ],
+        "cssPlugins": [],
         "customCSSInheritanceList": undefined,
         "debugInfoOutside": true,
         "defaultDisplayLinear": true,

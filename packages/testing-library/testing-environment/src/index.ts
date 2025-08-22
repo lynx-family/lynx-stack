@@ -8,7 +8,7 @@
 import EventEmitter from 'events';
 import { JSDOM } from 'jsdom';
 import { createGlobalThis, LynxGlobalThis } from './lynx/GlobalThis.js';
-import { initElementTree } from './lynx/ElementPAPI.js';
+import { initElementTree, type LynxElement } from './lynx/ElementPAPI.js';
 import { Console } from 'console';
 import { GlobalEventEmitter } from './lynx/GlobalEventEmitter.js';
 export { initElementTree } from './lynx/ElementPAPI.js';
@@ -277,13 +277,18 @@ const IGNORE_LIST_GLOBALS = [
   'global',
 ];
 
+interface NodeSelectToken {
+  type: IdentifierType;
+  identifier: string;
+}
+
 class NodesRef {
   // @ts-ignore
-  private readonly _nodeSelectToken: any;
+  private readonly _nodeSelectToken: NodeSelectToken;
   // @ts-ignore
   private readonly _selectorQuery: any;
 
-  constructor(selectorQuery: any, nodeSelectToken: any) {
+  constructor(selectorQuery: any, nodeSelectToken: NodeSelectToken) {
     this._nodeSelectToken = nodeSelectToken;
     this._selectorQuery = selectorQuery;
   }
@@ -296,9 +301,31 @@ class NodesRef {
   fields() {
     throw new Error('not implemented');
   }
-  setNativeProps() {
-    throw new Error('not implemented');
+  setNativeProps(props: Record<string, any>) {
+    return {
+      exec: () => {
+        const element = elementTree.uniqueId2Element.get(
+          Number(this._nodeSelectToken.identifier),
+        );
+        if (!element) {
+          throw new Error(
+            `[NodesRef.setNativeProps] Element not found for identifier=${this._nodeSelectToken.identifier}`,
+          );
+        }
+        if (element) {
+          for (const key in props) {
+            element.setAttributeNS(null, key, props[key]);
+          }
+        }
+      },
+    };
   }
+}
+
+const enum IdentifierType {
+  ID_SELECTOR, // css selector
+  REF_ID, // for react ref
+  UNIQUE_ID, // element_id
 }
 
 function injectBackgroundThreadGlobals(target?: any, polyfills?: any) {
@@ -330,12 +357,6 @@ function injectBackgroundThreadGlobals(target?: any, polyfills?: any) {
     },
   };
 
-  const enum IdentifierType {
-    ID_SELECTOR, // css selector
-    REF_ID, // for react ref
-    UNIQUE_ID, // element_id
-  }
-
   const globalEventEmitter = new GlobalEventEmitter();
   target.lynx = {
     getNativeApp: () => app,
@@ -346,6 +367,20 @@ function injectBackgroundThreadGlobals(target?: any, polyfills?: any) {
           return new NodesRef({}, {
             type: IdentifierType.UNIQUE_ID,
             identifier: uniqueId.toString(),
+          });
+        },
+        select: function(selector: string) {
+          const el = lynxTestingEnv.jsdom.window.document.querySelector(
+            selector,
+          ) as LynxElement;
+          if (!el) {
+            throw new Error(
+              `[createSelectorQuery.select] No element matches selector: ${selector}`,
+            );
+          }
+          return new NodesRef({}, {
+            type: IdentifierType.ID_SELECTOR,
+            identifier: el.$$uiSign.toString(),
           });
         },
       };

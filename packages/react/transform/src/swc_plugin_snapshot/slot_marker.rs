@@ -82,7 +82,7 @@ impl VisitMut for WrapperMarker {
           }
         }
         JSXElementChild::JSXElement(ref element) => {
-          should_merge = !(jsx_is_custom(element) || jsx_has_dynamic_key(element));
+          should_merge = !jsx_is_custom(element);
         }
         JSXElementChild::JSXExprContainer(JSXExprContainer {
           expr: JSXExpr::Expr(ref _expr),
@@ -143,8 +143,9 @@ impl VisitMut for WrapperMarker {
 
       let is_list = jsx_is_list(n);
       let is_children_full_dynamic = is_list || jsx_is_children_full_dynamic(n);
+      let has_dynamic_key = jsx_has_dynamic_key(n);
 
-      if is_list && !n.children.is_empty() {
+      if (is_list || has_dynamic_key) && !n.children.is_empty() {
         n.children = vec![JSXElementChild::JSXExprContainer(JSXExprContainer {
           span: DUMMY_SP,
           expr: JSXExpr::Expr(Box::new(jsx_children_to_expr(n.children.take()))),

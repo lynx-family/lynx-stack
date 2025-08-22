@@ -7,23 +7,25 @@
   "license": "Apache-2.0",
   "type": "module",
   "scripts": {
+    "_internal:cargo:version": "cargo --version",
     "build": "tsc --build",
     "prepare": "husky && ts-patch install",
     "test": "vitest"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
-    "@changesets/cli": "^2.29.5",
+    "@changesets/cli": "^2.29.6",
     "@codspeed/vitest-plugin": "^4.0.1",
     "@eslint/js": "^9.33.0",
     "@eslint/markdown": "^7.1.0",
     "@microsoft/api-extractor": "catalog:",
-    "@rslib/core": "^0.12.1",
+    "@rsbuild/core": "catalog:rsbuild",
+    "@rslib/core": "^0.12.2",
     "@rspack/core": "catalog:rspack",
     "@svitejs/changesets-changelog-github-compact": "^1.2.0",
     "@tsconfig/node20": "^20.1.6",
     "@tsconfig/strictest": "^2.0.5",
-    "@types/node": "^22.17.1",
+    "@types/node": "^24.3.0",
     "@vitest/coverage-v8": "^3.2.4",
     "@vitest/eslint-plugin": "^1.3.4",
     "@vitest/ui": "^3.2.4",
@@ -42,13 +44,13 @@
     "lint-staged": "^16.1.5",
     "sort-package-json": "^3.4.0",
     "ts-patch": "^3.3.0",
-    "turbo": "^2.5.5",
+    "turbo": "^2.5.6",
     "typescript": "^5.9.2",
     "typescript-eslint": "^8.39.1",
     "vitest": "^3.2.4"
   },
-  "packageManager": "pnpm@10.14.0",
+  "packageManager": "pnpm@10.15.0",
   "engines": {
-    "node": ">=22"
+    "node": "^22 || ^24"
   }
 }
