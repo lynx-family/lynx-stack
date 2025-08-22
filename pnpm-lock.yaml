@@ -162,8 +162,8 @@ importers:
         specifier: 3.3.0
         version: 3.3.0
       '@types/react':
-        specifier: ^18.3.23
-        version: 18.3.23
+        specifier: ^19.1.11
+        version: 19.1.11
 
   examples/tailwindcss:
     dependencies:
@@ -193,8 +193,8 @@ importers:
         specifier: 3.3.0
         version: 3.3.0
       '@types/react':
-        specifier: ^18.3.23
-        version: 18.3.23
+        specifier: ^19.1.11
+        version: 19.1.11
       rsbuild-plugin-tailwindcss:
         specifier: 0.2.3
         version: 0.2.3(@rsbuild/core@1.4.15)(tailwindcss@3.4.17)
@@ -217,8 +217,8 @@ importers:
         specifier: 'catalog:'
         version: 7.52.11(@types/node@24.3.0)
       '@types/react':
-        specifier: ^18.3.23
-        version: 18.3.23
+        specifier: ^19.1.11
+        version: 19.1.11
 
   packages/react/refresh:
     devDependencies:
@@ -244,8 +244,8 @@ importers:
         specifier: 3.3.0
         version: 3.3.0
       '@types/react':
-        specifier: ^18.3.23
-        version: 18.3.23
+        specifier: ^19.1.11
+        version: 19.1.11
       pretty-format:
         specifier: ^30.0.5
         version: 30.0.5
@@ -789,8 +789,8 @@ importers:
         specifier: catalog:rsbuild
         version: 1.4.15
       '@types/loader-utils':
-        specifier: ^2.0.6
-        version: 2.0.6
+        specifier: ^3.0.0
+        version: 3.0.0
       '@types/webpack':
         specifier: ^5.28.5
         version: 5.28.5
@@ -1221,19 +1221,19 @@ importers:
         version: 1.0.3(@rsbuild/core@1.4.15)
       '@rspress/core':
         specifier: 2.0.0-beta.28
-        version: 2.0.0-beta.28(@types/react@19.1.10)(acorn@8.15.0)
+        version: 2.0.0-beta.28(@types/react@19.1.11)(acorn@8.15.0)
       '@rspress/plugin-client-redirects':
         specifier: 2.0.0-beta.28
-        version: 2.0.0-beta.28(@rspress/core@2.0.0-beta.28(@types/react@19.1.10)(acorn@8.15.0))
+        version: 2.0.0-beta.28(@rspress/core@2.0.0-beta.28(@types/react@19.1.11)(acorn@8.15.0))
       '@shikijs/transformers':
         specifier: 3.11.0
         version: 3.11.0
       '@types/react':
         specifier: npm:@types/react@^19.1.10
-        version: 19.1.10
+        version: 19.1.11
       '@types/react-dom':
         specifier: ^19.1.7
-        version: 19.1.7(@types/react@19.1.10)
+        version: 19.1.7(@types/react@19.1.11)
       change-case:
         specifier: ^5.4.4
         version: 5.4.4
@@ -3077,8 +3077,8 @@ packages:
   '@types/jsonfile@6.1.4':
     resolution: {integrity: sha512-D5qGUYwjvnNNextdU59/+fI+spnwtTFmyQP0h+PfIOSkNfpU6AOICUOkm4i0OnSk+NyjdPJrxCDro0sJsWlRpQ==}
 
-  '@types/loader-utils@2.0.6':
-    resolution: {integrity: sha512-cgu0Xefgq9O5FjFR78jgI6X31aPjDWCaJ6LCfRtlj6BtyVVWiXagysSYlPACwGKAzRwsFLjKXcj4iGfcVt6cLw==}
+  '@types/loader-utils@3.0.0':
+    resolution: {integrity: sha512-oOi4OGpiLUbb+Q/cN9FIkkDFgOpOGZ2cUAzb5i03wrGstnG6Syx1WDMhSiB5rcP10XX7cw7Uev8mv++/aplnNg==}
 
   '@types/mdast@4.0.4':
     resolution: {integrity: sha512-kGaNbPh1k7AFzgpud/gMdvIm5xuECykRR+JnWKQno9TAXVa6WIVCGTPvYGekIDL4uwCZQSYbUxNBSb1aUo79oA==}
@@ -3104,9 +3104,6 @@ packages:
   '@types/object.groupby@1.0.4':
     resolution: {integrity: sha512-n5gXvoz1nuDLLLMgTl82b5VCkSlqt2zfBkSWxoCmMS/j+hN6W7BuPlpOm68B/RRluy2bYo67KOtMQ28cySqeYw==}
 
-  '@types/prop-types@15.7.13':
-    resolution: {integrity: sha512-hCZTSvwbzWGvhqxp/RqVqwU999pBf2vp7hzIjiYOsl8wqOmUxkQ6ddw1cV3l8811+kdUFus/q4d1Y3E3SyEifA==}
-
   '@types/qs@6.9.15':
     resolution: {integrity: sha512-uXHQKES6DQKKCLh441Xv/dwxOq1TVS3JPUMlEqoEglvlhR6Mxnlew/Xq/LRVHpLyk7iK3zODe1qYHIMltO7XGg==}
 
@@ -3118,11 +3115,8 @@ packages:
     peerDependencies:
       '@types/react': ^19.0.0
 
-  '@types/react@18.3.23':
-    resolution: {integrity: sha512-/LDXMQh55EzZQ0uVAZmKKhfENivEvWz6E+EYzh+/MCjMhNsotd+ZHhBGIjFDTi6+fz0OhQQQLbTgdQIxxCsC0w==}
-
-  '@types/react@19.1.10':
-    resolution: {integrity: sha512-EhBeSYX0Y6ye8pNebpKrwFJq7BoQ8J5SO6NlvNwwHjSj6adXJViPQrKlsyPw7hLBLvckEMO1yxeGdR82YBBlDg==}
+  '@types/react@19.1.11':
+    resolution: {integrity: sha512-lr3jdBw/BGj49Eps7EvqlUaoeA0xpj3pc0RoJkHpYaCHkVK7i28dKyImLQb3JVlqs3aYSXf7qYuWOW/fgZnTXQ==}
 
   '@types/retry@0.12.2':
     resolution: {integrity: sha512-XISRgDJ2Tc5q4TRqvgJtzsRkFYNJzZrhTdtMoGVBttwzzQJkPnS3WWTFc7kuDRoPtPakl+T+OfdEUjYJj7Jbow==}
@@ -3142,14 +3136,8 @@ packages:
   '@types/sockjs@0.3.36':
     resolution: {integrity: sha512-MK9V6NzAS1+Ud7JV9lJLFqW85VbC9dq3LmwZCuBe4wBDgKC0Kj/jd8Xl+nSviU+Qc3+m7umHHyHg//2KSa0a0Q==}
 
-  '@types/source-list-map@0.1.6':
-    resolution: {integrity: sha512-5JcVt1u5HDmlXkwOD2nslZVllBBc7HDuOICfiZah2Z0is8M8g+ddAEawbmd3VjedfDHBzxCaXLs07QEmb7y54g==}
-
   '@types/stack-utils@2.0.3':
     resolution: {integrity: sha512-9aEbYZ3TbYMznPdcdr3SmIrLXwC/AKZXQeCf9Pgao5CKb8CyHuEX5jzWPTkvregvhRJHcpRO6BFoGW9ycaOkYw==}
-
-  '@types/tapable@1.0.12':
-    resolution: {integrity: sha512-bTHG8fcxEqv1M9+TD14P8ok8hjxoOCkfKc8XXLaaD05kI7ohpeI956jtDOD3XHKBQrlyPughUtzm1jtVhHpA5Q==}
 
   '@types/tapable@2.2.7':
     resolution: {integrity: sha512-D6QzACV9vNX3r8HQQNTOnpG+Bv1rko+yEA82wKs3O9CQ5+XW7HI7TED17/UE7+5dIxyxZIWTxKbsBeF6uKFCwA==}
@@ -3157,20 +3145,11 @@ packages:
   '@types/tough-cookie@4.0.5':
     resolution: {integrity: sha512-/Ad8+nIOV7Rl++6f1BdKxFSMgmoqEoYbHRpPcx3JEfv8VRsQe9Z4mCXeJBzxs7mbHY/XOZZuXlRNfhpVPbs6ZA==}
 
-  '@types/uglify-js@3.17.5':
-    resolution: {integrity: sha512-TU+fZFBTBcXj/GpDpDaBmgWk/gn96kMZ+uocaFUlV2f8a6WdMzzI44QBCmGcCiYR0Y6ZlNRiyUyKKt5nl/lbzQ==}
-
   '@types/unist@2.0.11':
     resolution: {integrity: sha512-CmBKiL6NNo/OqgmMn95Fk9Whlp2mtvIv+KNpQKN2F4SjvrEesubTRWGYSg+BnWZOnlCaSTU1sMpsBOzgbYhnsA==}
 
   '@types/unist@3.0.3':
     resolution: {integrity: sha512-ko/gIFJRv177XgZsZcBwnqJN5x/Gien8qNOn0D5bQU/zAzVf9Zt3BlcUiLqhV9y4ARk0GbT3tnUiPNgnTXzc/Q==}
-
-  '@types/webpack-sources@3.2.3':
-    resolution: {integrity: sha512-4nZOdMwSPHZ4pTEZzSp0AsTM4K7Qmu40UKW4tJDiOVs20UzYF9l+qUe4s0ftfN0pin06n+5cWWDJXH+sbhAiDw==}
-
-  '@types/webpack@4.41.40':
-    resolution: {integrity: sha512-u6kMFSBM9HcoTpUXnL6mt2HSzftqb3JgYV6oxIgL2dl6sX6aCa5k6SOkzv5DuZjBTPUE/dJltKtwwuqrkZHpfw==}
 
   '@types/webpack@5.28.5':
     resolution: {integrity: sha512-wR87cgvxj3p6D0Crt1r5avwqffqPXUkNlnQ1mjU93G7gCuFjufZR4I6j8cz5g1F1tTYpfOOFvly+cmIQwL9wvw==}
@@ -9276,13 +9255,13 @@ snapshots:
   '@mdx-js/react@2.3.0(react@19.1.1)':
     dependencies:
       '@types/mdx': 2.0.13
-      '@types/react': 18.3.23
+      '@types/react': 19.1.11
       react: 19.1.1
 
-  '@mdx-js/react@3.1.0(@types/react@19.1.10)(react@19.1.1)':
+  '@mdx-js/react@3.1.0(@types/react@19.1.11)(react@19.1.1)':
     dependencies:
       '@types/mdx': 2.0.13
-      '@types/react': 19.1.10
+      '@types/react': 19.1.11
       react: 19.1.1
 
   '@microsoft/api-documenter@7.23.38(@types/node@24.3.0)':
@@ -9895,10 +9874,10 @@ snapshots:
       - utf-8-validate
       - webpack-cli
 
-  '@rspress/core@2.0.0-beta.28(@types/react@19.1.10)(acorn@8.15.0)':
+  '@rspress/core@2.0.0-beta.28(@types/react@19.1.11)(acorn@8.15.0)':
     dependencies:
       '@mdx-js/mdx': 3.1.0(acorn@8.15.0)
-      '@mdx-js/react': 3.1.0(@types/react@19.1.10)(react@19.1.1)
+      '@mdx-js/react': 3.1.0(@types/react@19.1.11)(react@19.1.1)
       '@rsbuild/core': 1.4.15
       '@rsbuild/plugin-react': 1.3.5(@rsbuild/core@1.4.15)
       '@rspress/mdx-rs': 0.6.6
@@ -9972,9 +9951,9 @@ snapshots:
       '@rspress/mdx-rs-win32-arm64-msvc': 0.6.6
       '@rspress/mdx-rs-win32-x64-msvc': 0.6.6
 
-  '@rspress/plugin-client-redirects@2.0.0-beta.28(@rspress/core@2.0.0-beta.28(@types/react@19.1.10)(acorn@8.15.0))':
+  '@rspress/plugin-client-redirects@2.0.0-beta.28(@rspress/core@2.0.0-beta.28(@types/react@19.1.11)(acorn@8.15.0))':
     dependencies:
-      '@rspress/core': 2.0.0-beta.28(@types/react@19.1.10)(acorn@8.15.0)
+      '@rspress/core': 2.0.0-beta.28(@types/react@19.1.11)(acorn@8.15.0)
 
   '@rspress/runtime@2.0.0-beta.28':
     dependencies:
@@ -10368,10 +10347,15 @@ snapshots:
     dependencies:
       '@types/node': 24.3.0
 
-  '@types/loader-utils@2.0.6':
+  '@types/loader-utils@3.0.0':
     dependencies:
       '@types/node': 24.3.0
-      '@types/webpack': 4.41.40
+      webpack: 5.101.3
+    transitivePeerDependencies:
+      - '@swc/core'
+      - esbuild
+      - uglify-js
+      - webpack-cli
 
   '@types/mdast@4.0.4':
     dependencies:
@@ -10395,22 +10379,15 @@ snapshots:
 
   '@types/object.groupby@1.0.4': {}
 
-  '@types/prop-types@15.7.13': {}
-
   '@types/qs@6.9.15': {}
 
   '@types/range-parser@1.2.7': {}
 
-  '@types/react-dom@19.1.7(@types/react@19.1.10)':
+  '@types/react-dom@19.1.7(@types/react@19.1.11)':
     dependencies:
-      '@types/react': 19.1.10
+      '@types/react': 19.1.11
 
-  '@types/react@18.3.23':
-    dependencies:
-      '@types/prop-types': 15.7.13
-      csstype: 3.1.3
-
-  '@types/react@19.1.10':
+  '@types/react@19.1.11':
     dependencies:
       csstype: 3.1.3
 
@@ -10437,11 +10414,7 @@ snapshots:
     dependencies:
       '@types/node': 24.3.0
 
-  '@types/source-list-map@0.1.6': {}
-
   '@types/stack-utils@2.0.3': {}
-
-  '@types/tapable@1.0.12': {}
 
   '@types/tapable@2.2.7':
     dependencies:
@@ -10449,28 +10422,9 @@ snapshots:
 
   '@types/tough-cookie@4.0.5': {}
 
-  '@types/uglify-js@3.17.5':
-    dependencies:
-      source-map: 0.6.1
-
   '@types/unist@2.0.11': {}
 
   '@types/unist@3.0.3': {}
-
-  '@types/webpack-sources@3.2.3':
-    dependencies:
-      '@types/node': 24.3.0
-      '@types/source-list-map': 0.1.6
-      source-map: 0.7.6
-
-  '@types/webpack@4.41.40':
-    dependencies:
-      '@types/node': 24.3.0
-      '@types/tapable': 1.0.12
-      '@types/uglify-js': 3.17.5
-      '@types/webpack-sources': 3.2.3
-      anymatch: 3.1.3
-      source-map: 0.6.1
 
   '@types/webpack@5.28.5':
     dependencies:
