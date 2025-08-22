@@ -5,7 +5,7 @@ export function FakeMTC(customPropsName) {
         componentTypeId: "$$mtc_2d408_test_1",
         componentInstanceId
     };
-    return ReactLynx._jsx('mtc-container', {
+    return ReactLynx.createElement('mtc-container', {
         values: [
             transformedProps
         ]

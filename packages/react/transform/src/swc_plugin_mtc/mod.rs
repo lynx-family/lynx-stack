@@ -40,15 +40,15 @@ pub struct MTCVisitor<C>
 where
   C: Comments + Clone,
 {
-  is_mtc: bool,
   cfg: MTCVisitorConfig,
   content_hash: String,
   filename_hash: String,
-  mtc_counter: u32,
-  functions_to_transform: HashMap<String, String>,
-  functions_to_expr: HashMap<String, Ident>,
   runtime_id: Expr,
   comments: Option<C>,
+  is_mtc_module: bool,
+  mtc_counter: u32,
+  mtc_collecter: HashMap<String, String>,
+  mtc_sym_to_expr: HashMap<String, Ident>,
 }
 
 impl<C> MTCVisitor<C>
@@ -59,9 +59,9 @@ where
     Self {
       filename_hash: calc_hash(&cfg.filename.clone()),
       comments,
-      is_mtc: false,
-      functions_to_transform: HashMap::new(),
-      functions_to_expr: HashMap::new(),
+      is_mtc_module: false,
+      mtc_collecter: HashMap::new(),
+      mtc_sym_to_expr: HashMap::new(),
       runtime_id,
       cfg,
       mtc_counter: 0,
@@ -98,18 +98,18 @@ where
     )
   }
 
-  fn collect_exported_functions(&mut self, module: &Module) -> HashMap<String, String> {
-    let mut functions = HashMap::new();
+  fn collect_mtc_collecter(&mut self, module: &Module) -> HashMap<String, String> {
+    let mut mtcs = HashMap::new();
 
     for item in &module.body {
       match item {
         // ExportDeclaration: export function Foo() {}
         ModuleItem::ModuleDecl(ModuleDecl::ExportDecl(export_decl)) => {
           if let Decl::Fn(fn_decl) = &export_decl.decl {
-            functions.insert(fn_decl.ident.sym.to_string(), self.gen_mtc_uid());
-            self.functions_to_expr.insert(
+            mtcs.insert(fn_decl.ident.sym.to_string(), self.gen_mtc_uid());
+            self.mtc_sym_to_expr.insert(
               fn_decl.ident.sym.to_string(),
-              self.generate_internal_mtc_name(&fn_decl.ident.sym),
+              self.generate_internal_mtc_ident(&fn_decl.ident.sym),
             );
           }
         }
@@ -121,10 +121,10 @@ where
             for spec in &named_export.specifiers {
               if let ExportSpecifier::Named(named_spec) = spec {
                 if let ModuleExportName::Ident(ident) = &named_spec.orig {
-                  functions.insert(ident.sym.to_string(), self.gen_mtc_uid());
-                  self.functions_to_expr.insert(
+                  mtcs.insert(ident.sym.to_string(), self.gen_mtc_uid());
+                  self.mtc_sym_to_expr.insert(
                     ident.sym.to_string(),
-                    self.generate_internal_mtc_name(&ident.sym),
+                    self.generate_internal_mtc_ident(&ident.sym),
                   );
                 }
               }
@@ -138,11 +138,11 @@ where
       }
     }
 
-    functions
+    mtcs
   }
 
   fn remove_exported_functions(&self, module: &mut Module) {
-    let functions_set: HashSet<_> = self.functions_to_transform.keys().collect();
+    let functions_set: HashSet<_> = self.mtc_collecter.keys().collect();
 
     let mut new_items = Vec::new();
 
@@ -171,7 +171,7 @@ where
     module.body.extend(new_items);
   }
 
-  fn generate_internal_mtc_name(&self, original_name: &str) -> Ident {
+  fn generate_internal_mtc_ident(&self, original_name: &str) -> Ident {
     Ident::new(
       format!("$$mtc_{}", original_name).into(),
       DUMMY_SP,
@@ -180,7 +180,7 @@ where
   }
 
   fn create_register_export(&self, fn_name: &str, mtc_uid: &str) -> ModuleItem {
-    let internal_fn_name = self.generate_internal_mtc_name(fn_name);
+    let internal_mtc_ident = self.generate_internal_mtc_ident(fn_name);
 
     let mut register_mtc_call = quote!(
         r#"$runtime_id.registerMTC(
@@ -189,10 +189,10 @@ where
         )"# as Expr,
         runtime_id: Expr = self.runtime_id.clone(),
         mtc_uid: Expr = Expr::Lit(Lit::Str(mtc_uid.into())),
-        internal_fn_name: Ident =  self.functions_to_expr
+        internal_fn_name: Ident =  self.mtc_sym_to_expr
           .get(fn_name)
           .cloned()
-          .unwrap_or_else(|| internal_fn_name.clone())
+          .unwrap_or_else(|| internal_mtc_ident.clone())
     );
 
     register_mtc_call = match register_mtc_call {
@@ -215,8 +215,6 @@ where
   }
 
   fn transform_mtc_in_background(&self, fn_decl: &mut FnDecl, mtc_uid: &str) {
-    // let mtc_container = JSXElementName::Ident(Ident::from("mtc-container"));
-
     let props_identifier = if let Some(param) = fn_decl.function.params.first_mut() {
       match &param.pat {
         Pat::Ident(ident) => ident.id.clone(),
@@ -244,47 +242,6 @@ where
       // TODO: handle pure MTC
       Ident::new("props".into(), DUMMY_SP, SyntaxContext::default())
     };
-
-    // let mtc_container_attrs = vec![
-    //   // _p={transformedProps}
-    //   JSXAttrOrSpread::JSXAttr(JSXAttr {
-    //     span: DUMMY_SP,
-    //     name: JSXAttrName::Ident(IdentName::from("_p")),
-    //     value: Some(JSXAttrValue::JSXExprContainer(JSXExprContainer {
-    //       span: DUMMY_SP,
-    //       expr: JSXExpr::Expr(Box::new(Expr::Ident(Ident::from("transformedProps")))),
-    //     })),
-    //   }),
-    //   // _mtcId
-    //   // JSXAttrOrSpread::JSXAttr(JSXAttr {
-    //   //   span: DUMMY_SP,
-    //   //   name: JSXAttrName::Ident(IdentName::from("_mtcId")),
-    //   //   value: Some(JSXAttrValue::Lit(Lit::Str(mtc_uid.into()))),
-    //   // }),
-    // ];
-
-    // let mtc_jsx = JSXElement {
-    //   span: DUMMY_SP,
-    //   opening: JSXOpeningElement {
-    //     span: DUMMY_SP,
-    //     name: mtc_container.clone(),
-    //     attrs: mtc_container_attrs,
-    //     self_closing: false,
-    //     type_args: None,
-    //   },
-    //   children: vec![JSXElementChild::JSXExprContainer(JSXExprContainer {
-    //     span: DUMMY_SP,
-    //     expr: JSXExpr::Expr(Box::new(quote!(
-    //       "$runtime_id.renderFakeMTCSlot($jsxs)" as Expr,
-    //       runtime_id: Expr = self.runtime_id.clone(),
-    //       jsxs: Expr = Expr::Ident(Ident::from("jsxs")),
-    //     ))),
-    //   })],
-    //   closing: Some(JSXClosingElement {
-    //     span: DUMMY_SP,
-    //     name: mtc_container,
-    //   }),
-    // };
 
     let render_fake_mtc_slot = quote!(
         r#"$runtime_id.renderFakeMTCSlot($jsxs)"# as Expr,
@@ -334,15 +291,15 @@ where
 {
   fn visit_mut_module(&mut self, module: &mut Module) {
     if self.check_main_thread_directive(module) {
-      self.is_mtc = true;
+      self.is_mtc_module = true;
       self.remove_main_thread_directive(module);
     } else {
       return;
     }
 
-    self.functions_to_transform = self.collect_exported_functions(module);
+    self.mtc_collecter = self.collect_mtc_collecter(module);
 
-    if self.functions_to_transform.is_empty() {
+    if self.mtc_collecter.is_empty() {
       return;
     }
 
@@ -353,19 +310,19 @@ where
     module.visit_mut_children_with(self);
 
     if self.cfg.target == TransformTarget::LEPUS {
-      for (fn_name, mtc_uid) in &self.functions_to_transform {
-        let new_export = self.create_register_export(fn_name, mtc_uid);
-        module.body.push(new_export);
+      for (mtc_name, mtc_uid) in &self.mtc_collecter {
+        let mtc_export = self.create_register_export(mtc_name, mtc_uid);
+        module.body.push(mtc_export);
       }
     }
 
-    self.is_mtc = false;
+    self.is_mtc_module = false;
     self.mtc_counter = 0;
-    self.functions_to_transform = HashMap::new();
+    self.mtc_collecter = HashMap::new();
   }
 
   fn visit_mut_jsx_expr_container(&mut self, jsx_expr: &mut JSXExprContainer) {
-    if !self.is_mtc || self.cfg.target != TransformTarget::LEPUS {
+    if !self.is_mtc_module || self.cfg.target != TransformTarget::LEPUS {
       return;
     }
 
@@ -385,21 +342,21 @@ where
   }
 
   fn visit_mut_fn_decl(&mut self, fn_decl: &mut FnDecl) {
-    if self.is_mtc {
-      let fn_name = fn_decl.ident.sym.to_string();
-      if let Some(mtc_uid) = self.functions_to_transform.get(&fn_name) {
+    if self.is_mtc_module {
+      let mtc_name = fn_decl.ident.sym.to_string();
+      if let Some(mtc_uid) = self.mtc_collecter.get(&mtc_name) {
         match self.cfg.target {
           TransformTarget::JS | TransformTarget::MIXED => {
             self.transform_mtc_in_background(fn_decl, mtc_uid);
           }
           TransformTarget::LEPUS => {
-            let internal_fn_name = self.generate_internal_mtc_name(&fn_decl.ident.sym);
+            let internal_mtc_ident = self.generate_internal_mtc_ident(&fn_decl.ident.sym);
 
             fn_decl.ident = self
-              .functions_to_expr
-              .get(&fn_name)
+              .mtc_sym_to_expr
+              .get(&mtc_name)
               .cloned()
-              .unwrap_or_else(|| internal_fn_name.clone())
+              .unwrap_or_else(|| internal_mtc_ident.clone())
           }
         }
       }

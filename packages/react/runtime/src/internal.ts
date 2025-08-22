@@ -66,5 +66,6 @@ export { registerMTC } from './mtc/mtcComponentTypes.js';
 export { renderFakeMTCSlot, renderMTCSlot } from './mtc/renderMTCSlot.js';
 export { pickJSXFromProps } from './mtc/pickJSXFromProps.js';
 export { genMTCInstanceId } from './mtc/genMTCIntanceId.js';
+export { registerBgAction } from './mtc/registerBgAction.js';
 export { useMemo };
 export { createElement };
