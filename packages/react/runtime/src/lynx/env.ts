@@ -1,6 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { profileEnd, profileStart } from '../debug/utils.js';
 import type { DataProcessorDefinition, InitData, InitDataRaw } from '../lynx-api.js';
 
 export function setupLynxEnv(): void {
@@ -51,7 +52,7 @@ export function setupLynxEnv(): void {
       let hasDefaultDataProcessorExecuted = false;
       globalThis.processData = (data, processorName) => {
         if (__PROFILE__) {
-          console.profile('processData');
+          profileStart('processData');
         }
 
         let r: InitData | InitDataRaw;
@@ -70,7 +71,7 @@ export function setupLynxEnv(): void {
         }
 
         if (__PROFILE__) {
-          console.profileEnd();
+          profileEnd();
         }
 
         if (hasDefaultDataProcessorExecuted === false) {
