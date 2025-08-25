@@ -19,7 +19,11 @@ function isPreactVnode(value: any): value is VNode {
   );
 }
 
-export function pickJSXFromProps(props: Record<string, any>): [[VNode, any][], MTCPayload] {
+export function pickJSXFromProps(props?: Record<string, any>): [[VNode, any][], MTCPayload] {
+  if (!props) {
+    return [[], {}];
+  }
+
   const jsxs: [VNode, any][] = [];
   let index = 0;
 

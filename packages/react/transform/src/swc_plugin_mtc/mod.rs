@@ -217,7 +217,7 @@ where
   fn transform_mtc_in_background(&self, fn_decl: &mut FnDecl, mtc_uid: &str) {
     let props_identifier = if let Some(param) = fn_decl.function.params.first_mut() {
       match &param.pat {
-        Pat::Ident(ident) => ident.id.clone(),
+        Pat::Ident(ident) => Some(ident.id.clone()),
         Pat::Object(_) => {
           let props_ident = Ident::new("props".into(), DUMMY_SP, SyntaxContext::default());
 
@@ -227,7 +227,7 @@ where
             type_ann: None,
           });
 
-          props_ident
+          Some(props_ident)
         }
         _ => {
           let props_ident = Ident::new("props".into(), DUMMY_SP, SyntaxContext::default());
@@ -235,12 +235,12 @@ where
             id: props_ident.clone(),
             type_ann: None,
           });
-          props_ident
+
+          Some(props_ident)
         }
       }
     } else {
-      // TODO: handle pure MTC
-      Ident::new("props".into(), DUMMY_SP, SyntaxContext::default())
+      None
     };
 
     let render_fake_mtc_slot = quote!(
@@ -249,6 +249,18 @@ where
         jsxs: Expr = Expr::Ident(Ident::from("jsxs")),
     );
 
+    let pick_jsx_from_props_call = match props_identifier {
+      Some(props) => quote!(
+          r#"const [jsxs, transformedProps] = $runtime_id.pickJSXFromProps($props)"# as Stmt,
+          runtime_id: Expr = self.runtime_id.clone(),
+          props = props
+      ),
+      None => quote!(
+          r#"const [jsxs, transformedProps] = $runtime_id.pickJSXFromProps()"# as Stmt,
+          runtime_id: Expr = self.runtime_id.clone(),
+      ),
+    };
+
     let new_body = BlockStmt {
       span: DUMMY_SP,
       stmts: vec![
@@ -256,11 +268,7 @@ where
           "const componentInstanceId = $runtime_id.useMemo($runtime_id.genMTCInstanceId, []);" as Stmt,
           runtime_id: Expr = self.runtime_id.clone(),
         ),
-        quote!(
-          "const [jsxs, transformedProps] = $runtime_id.pickJSXFromProps($props);" as Stmt,
-          runtime_id: Expr = self.runtime_id.clone(),
-          props = props_identifier
-        ),
+        pick_jsx_from_props_call,
         quote!(
           "transformedProps.__MTCProps = {
             componentTypeId: $component_type_id,
