@@ -2,4 +2,4 @@
 "@lynx-js/rspeedy": patch
 ---
 
-support `rspeedy build --watch`
+Support `rspeedy build --watch`
