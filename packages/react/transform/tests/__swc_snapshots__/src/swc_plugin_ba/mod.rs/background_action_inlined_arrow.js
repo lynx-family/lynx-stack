@@ -1,7 +1,9 @@
 function BTC() {
-    const ba = (e)=>{
-        'use background';
-        console.log("background action", e);
+    const ba = {
+        __type: "$$mtc_ba",
+        __runtimeId: ReactLynx.registerBgAction((e)=>{
+            console.log("background action", e);
+        })
     };
     return <MTC onClick={ba}/>;
 }

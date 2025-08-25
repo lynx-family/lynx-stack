@@ -1755,8 +1755,12 @@ function ba(e) {
     'use background';
     console.log("background action", e);
 }
+const ba2 = (e, f) => {
+    'use background';
+    console.log("background action", e, f);
+}
 export function BTC() {
-    return <MTC onClick={ba}/>;
+    return <MTC onClick={ba} onMouseEnter={ba2}/>;
 }
 `,
         {
@@ -1785,21 +1789,28 @@ export function BTC() {
 
       if (target === 'LEPUS') {
         expect(code).toMatchInlineSnapshot(`
-        "import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
-        import * as ReactLynx from "@lynx-js/react";
-        const ba = {
-            __type: "$$mtc_ba",
-            __runtimeId: ReactLynx.registerBgAction(function(e) {
-                console.log("background action", e);
-            })
-        };
-        export function BTC() {
-            return /*#__PURE__*/ _jsx(MTC, {
-                onClick: ba
-            });
-        }
-        "
-      `);
+          "import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
+          import * as ReactLynx from "@lynx-js/react";
+          const ba = {
+              __type: "$$mtc_ba",
+              __runtimeId: ReactLynx.registerBgAction(function(e) {
+                  console.log("background action", e);
+              })
+          };
+          const ba2 = {
+              __type: "$$mtc_ba",
+              __runtimeId: ReactLynx.registerBgAction((e, f)=>{
+                  console.log("background action", e, f);
+              })
+          };
+          export function BTC() {
+              return /*#__PURE__*/ _jsx(MTC, {
+                  onClick: ba,
+                  onMouseEnter: ba2
+              });
+          }
+          "
+        `);
       } else if (target === 'JS') {
         expect(code).toMatchInlineSnapshot(`
           "import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
@@ -1810,9 +1821,16 @@ export function BTC() {
                   console.log("background action", e);
               })
           };
+          const ba2 = {
+              __type: "$$mtc_ba",
+              __runtimeId: ReactLynx.registerBgAction((e, f)=>{
+                  console.log("background action", e, f);
+              })
+          };
           export function BTC() {
               return /*#__PURE__*/ _jsx(MTC, {
-                  onClick: ba
+                  onClick: ba,
+                  onMouseEnter: ba2
               });
           }
           "
@@ -1827,9 +1845,16 @@ export function BTC() {
                   console.log("background action", e);
               })
           };
+          const ba2 = {
+              __type: "$$mtc_ba",
+              __runtimeId: ReactLynx.registerBgAction((e, f)=>{
+                  console.log("background action", e, f);
+              })
+          };
           export function BTC() {
               return /*#__PURE__*/ _jsx(MTC, {
-                  onClick: ba
+                  onClick: ba,
+                  onMouseEnter: ba2
               });
           }
           "
