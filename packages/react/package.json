@@ -91,6 +91,10 @@
       "types": "./worklet-runtime/lib/bindings/index.d.ts",
       "default": "./worklet-runtime/lib/bindings/index.js"
     },
+    "./worklet-runtime/api": {
+      "types": "./worklet-runtime/lib/api/index.d.ts",
+      "default": "./worklet-runtime/lib/api/index.js"
+    },
     "./legacy-react-runtime": {
       "types": "./runtime/lib/legacy-react-runtime/index.d.ts",
       "lazy": "./runtime/lazy/legacy-react-runtime.js",
@@ -157,6 +161,9 @@
       ],
       "worklet-runtime/bindings": [
         "./worklet-runtime/lib/bindings/index.d.ts"
+      ],
+      "worklet-runtime/api": [
+        "./worklet-runtime/lib/api/index.d.ts"
       ],
       "legacy-react-runtime": [
         "./runtime/lib/legacy-react-runtime/index.d.ts"

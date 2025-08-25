@@ -12,6 +12,10 @@
     "./bindings": {
       "types": "./lib/bindings/index.d.ts",
       "default": "./lib/bindings/index.js"
+    },
+    "./api": {
+      "types": "./lib/api/index.d.ts",
+      "default": "./lib/api/index.js"
     }
   },
   "main": "src/index.ts",
@@ -21,6 +25,9 @@
     "*": {
       "bindings": [
         "./lib/bindings/index.d.ts"
+      ],
+      "api": [
+        "./lib/api/index.d.ts"
       ]
     }
   },
