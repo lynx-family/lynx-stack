@@ -6,6 +6,11 @@ function BTC(props: { text: string }) {
   return <text>{props.text}</text>;
 }
 
+function ba(e) {
+  'use background';
+  console.log('ba', e);
+}
+
 export function App() {
   const [text1, setText1] = useState('123');
   const [text2, setText2] = useState('456');
@@ -31,7 +36,7 @@ export function App() {
       >
         MTC show={showMTC1.toString()}
       </text>
-      {showMTC1 && <MTC btc1={btc1} btc2={btc2} />}
+      {showMTC1 && <MTC btc1={btc1} btc2={btc2} ba={ba} />}
     </view>
   );
 }

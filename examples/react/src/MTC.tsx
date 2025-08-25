@@ -47,6 +47,8 @@ export function MTC(props: any) {
         // });
         // color.value = 'red';
 
+        props.ba()
+
         batch(() => {
           color.value = 'red';
 
