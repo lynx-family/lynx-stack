@@ -1,5 +1,17 @@
 # @lynx-js/web-core
 
+## 0.15.7
+
+### Patch Changes
+
+- fix: fake uidisappear event ([#1539](https://github.com/lynx-family/lynx-stack/pull/1539))
+
+- Updated dependencies [[`70863fb`](https://github.com/lynx-family/lynx-stack/commit/70863fbc311d8885ebda40855668097b0631f521)]:
+  - @lynx-js/web-mainthread-apis@0.15.7
+  - @lynx-js/web-constants@0.15.7
+  - @lynx-js/web-worker-runtime@0.15.7
+  - @lynx-js/web-worker-rpc@0.15.7
+
 ## 0.15.6
 
 ### Patch Changes

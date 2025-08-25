@@ -1,5 +1,12 @@
 # @lynx-js/react-webpack-plugin
 
+## 0.6.20
+
+### Patch Changes
+
+- Updated dependencies [[`aaca8f9`](https://github.com/lynx-family/lynx-stack/commit/aaca8f91d177061c7b0430cc5cb21a3602897534)]:
+  - @lynx-js/webpack-runtime-globals@0.0.6
+
 ## 0.6.19
 
 ### Patch Changes

@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/qrcode-rsbuild-plugin",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "A rsbuild plugin for printing QRCode in terminal",
   "keywords": [
     "rsbuild",
