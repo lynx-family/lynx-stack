@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "composite": true,
+  },
+  "references": [
+    /** packages-start */
+    { "path": "./postcss-remove-unsupported/tsconfig.json" },
+    { "path": "./postcss-scoped-css/tsconfig.json" },
+    /** packages-end */
+  ],
+  "include": [],
+}

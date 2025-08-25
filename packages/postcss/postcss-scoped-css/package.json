@@ -1,0 +1,41 @@
+{
+  "name": "@lynx-js/postcss-scoped-css",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A PostCSS plugin to use scoped CSS in Lynx.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/postcss/postcss-scoped-css"
+  },
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist/",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "api-extractor": "api-extractor run --verbose",
+    "build": "rslib build",
+    "test": "vitest"
+  },
+  "devDependencies": {
+    "postcss": "^8.5.6"
+  },
+  "peerDependencies": {
+    "postcss": "^8"
+  },
+  "peerDependenciesMeta": {
+    "postcss": {
+      "optional": true
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "noEmit": true,
+  },
+  "include": [
+    "src",
+    "test",
+    "rslib.config.ts",
+    "vitest.config.ts",
+  ],
+}
