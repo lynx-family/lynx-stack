@@ -22,6 +22,7 @@
     "npm",
     "nvm",
     "github-actions",
+    "custom.regex",
   ],
 
   "labels": ["bot:renovate"],
@@ -139,6 +140,18 @@
         "/^@types/*/",
       ],
     },
+    {
+      "groupName": "playwright",
+      "groupSlug": "playwright",
+      "addLabels": ["platform:Web"],
+      "matchManagers": ["npm", "github-actions", "custom.regex"],
+      "matchPackageNames": [
+        "@playwright/core",
+        "/^mcr\\.microsoft\\.com/playwright$/"
+      ],
+      "matchDatasources": ["docker"],
+      "rangeStrategy": "bump"
+    },
   ],
   "postUpdateOptions": [
     "pnpmDedupe",
@@ -149,5 +162,17 @@
 
     // Rspress not compatible
     "@microsoft/api-documenter",
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/^\\.github/workflows/.*\\.ya?ml$/"],
+      "matchStrings": [
+        "mcr\\.microsoft\\.com/playwright:(?<currentValue>[^'\"\\s}]+)"
+      ],
+      "datasourceTemplate": "docker",
+      "depNameTemplate": "mcr.microsoft.com/playwright",
+      "versioningTemplate": "regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)(?:-(?<prerelease>.+))?$",
+    },
   ],
 }
