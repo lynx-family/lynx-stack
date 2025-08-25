@@ -1,13 +1,12 @@
 {
   "styleInfo": {},
   "lepusCode": {
-    "root": "self.runtime = lynx_runtime;self.__lynx_worker_type = 'main'; globalThis.registerDataProcessor='pass'; self.registerDataProcessor = registerDataProcessor;",
+    "root": "self.parent.runtime = globalThis;self.parent.__lynx_worker_type = 'main'; globalThis.registerDataProcessor='pass'; self.registerDataProcessor = registerDataProcessor;",
     "manifest-chunk.js": "module.exports = 'hello';",
-    "manifest-chunk2.js": "module.exports = 'world';",
-    "obj-chunk": {}
+    "manifest-chunk2.js": "module.exports = 'world';"
   },
   "manifest": {
-    "/app-service.js": "self.runtime = lynx_runtime; self.__lynx_worker_type = 'background'",
+    "/app-service.js": "globalThis.runtime = lynxCoreInject.tt; globalThis.__lynx_worker_type = 'background'",
     "/manifest-chunk.js": "module.exports = 'hello';",
     "/manifest-chunk2.js": "module.exports = 'world';"
   },
