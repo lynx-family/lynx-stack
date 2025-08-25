@@ -22,7 +22,14 @@ import { createExposureMonitor } from './crossThreadHandlers/createExposureMonit
 
 const {
   prepareMainThreadAPIs,
-} = await import('@lynx-js/web-mainthread-apis');
+} = await import(
+  /* webpackChunkName: "web-core-main-thread-apis" */
+  /* webpackMode: "lazy-once" */
+  /* webpackPreload: true */
+  /* webpackPrefetch: true */
+  /* webpackFetchPriority: "high" */
+  '@lynx-js/web-mainthread-apis'
+);
 
 export function createRenderAllOnUI(
   mainToBackgroundRpc: Rpc,
