@@ -1,6 +1,8 @@
 packages:
+  - benchmark/react
   - examples/*
   - packages/background-only
+  - packages/lynx/*
   - packages/react
   - packages/react/refresh
   - packages/react/runtime
