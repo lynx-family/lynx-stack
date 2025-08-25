@@ -3,13 +3,13 @@
 // LICENSE file in the root directory of this source tree.
 import { describe, expectTypeOf, test } from 'vitest'
 
+import type { ConfigExport } from '../../src/config/defineConfig.js'
 import { defineConfig } from '../../src/index.js'
-import type { Config } from '../../src/index.js'
 
 describe('Config - defineConfig', () => {
   test('defineConfig type check', () => {
-    expectTypeOf(defineConfig).parameter(0).toEqualTypeOf<Config>()
+    expectTypeOf(defineConfig).parameter(0).toEqualTypeOf<ConfigExport>()
 
-    expectTypeOf(defineConfig).returns.toEqualTypeOf<Config>()
+    expectTypeOf(defineConfig).returns.toEqualTypeOf<ConfigExport>()
   })
 })
