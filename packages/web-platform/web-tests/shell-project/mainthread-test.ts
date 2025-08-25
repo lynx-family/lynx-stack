@@ -1,10 +1,9 @@
 // Copyright 2023 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import {
-  customSections,
-  elementTemplate,
-} from '../resources/web-core.main-thread.json' with { type: 'json' };
+import * as lynxTemplate from '../resources/web-core.main-thread.json' with {
+  type: 'json',
+};
 import { createMainThreadGlobalThis } from '@lynx-js/web-mainthread-apis';
 import { initOffscreenDocument } from '@lynx-js/offscreen-document/main';
 import { initWasm } from '@lynx-js/web-style-transformer';
@@ -35,12 +34,12 @@ const div: HTMLElement = document.createElement('div');
 div.id = 'root';
 const shadowRoot = div.attachShadow({ mode: 'open' });
 document.body.appendChild(div);
-const docu = ENABLE_MULTI_THREAD
+const docu: Document = ENABLE_MULTI_THREAD
   ? new OffscreenDocument({
     onCommit(operations) {
       elementOperations = operations;
     },
-  })
+  }) as unknown as Document
   : document;
 const { decodeOperation } = ENABLE_MULTI_THREAD
   ? initOffscreenDocument({
@@ -102,6 +101,18 @@ function genDomElementTree() {
 
 function initializeMainThreadTest() {
   runtime = createMainThreadGlobalThis({
+    document: docu,
+    mtsRealm: {
+      globalWindow: globalThis,
+      loadScript: async (url: string) => {
+        throw new Error('loadScript is not supported in main thread');
+      },
+      loadScriptSync: () => {
+        throw new Error('loadScriptSync is not supported in main thread');
+      },
+    },
+    // @ts-expect-error
+    lynxTemplate,
     tagMap: {
       'page': 'div',
       'view': 'x-view',
@@ -110,13 +121,6 @@ function initializeMainThreadTest() {
       'list': 'x-list',
       'svg': 'x-svg',
     },
-    lepusCode: {
-      // @ts-expect-error
-      root: '',
-    },
-    customSections,
-    // @ts-expect-error
-    elementTemplate,
     browserConfig: {
       pixelRatio: 0,
       pixelWidth: 0,
@@ -156,12 +160,10 @@ function initializeMainThreadTest() {
           publicComponentEvent: { componentId, hname, ev },
         });
       },
-      createElement: docu.createElement.bind(docu),
       _I18nResourceTranslation: () => {},
     },
   });
   const originalGlobalThis = globalThis;
-  Object.assign(globalThis, runtime);
   // @ts-ignore
   globalThis = originalGlobalThis;
   Object.assign(globalThis, {
