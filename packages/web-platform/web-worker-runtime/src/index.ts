@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { systemInfo } from '@lynx-js/web-constants';
 import { startBackgroundThread } from './backgroundThread/index.js';
 
 export interface WorkerStartMessage {
@@ -31,4 +32,5 @@ globalThis.onmessage = async (ev) => {
 };
 Object.assign(globalThis, {
   module: { exports: null },
+  SystemInfo: systemInfo,
 });

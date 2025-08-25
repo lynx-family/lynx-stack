@@ -37,6 +37,7 @@ export interface LynxTemplate {
     [key: string]: string;
   };
   elementTemplate: Record<string, ElementTemplateData[]>;
+  version?: number;
 }
 
 export interface LynxJSModule {

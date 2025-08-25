@@ -30,13 +30,6 @@ export const lynxDefaultOverflowVisibleAttribute =
 
 export const __lynx_timing_flag = '__lynx_timing_flag' as const;
 
-export const globalMuteableVars = [
-  'registerDataProcessor',
-  'registerWorkletInternal',
-  'lynxWorkletImpl',
-  'runWorklet',
-] as const;
-
 export const systemInfo = {
   platform: 'web',
   lynxSdkVersion: '3.0',
@@ -51,5 +44,3 @@ export const inShadowRootStyles: string[] = [
     overflow: visible;
   }`,
 ];
-
-export const globalDisallowedVars = ['navigator', 'postMessage'];
