@@ -1654,7 +1654,7 @@ function getCurrentDelta(event) {
 
 describe('MTC', () => {
   for (const target of ['LEPUS', 'JS', 'MIXED']) {
-    it('transform MTC', async () => {
+    it(`transform MTC: ${target}`, async () => {
       const { code } = await transformReactLynx(
         `\
 "main thread"
@@ -1683,7 +1683,7 @@ export function MTC(props) {
           worklet: false,
           mtc: {
             target,
-            filename: '',
+            filename: 'test.js',
           },
         },
       );
@@ -1704,7 +1704,7 @@ export function MTC(props) {
                   children: ReactLynx.renderMTCSlot(props.p3)
               });
           }
-          export const MTC = /*#__PURE__*/ ReactLynx.registerMTC("$$mtc_da39a_87544_1", $$mtc_MTC);
+          export const MTC = /*#__PURE__*/ ReactLynx.registerMTC("$$mtc_2d408_87544_1", $$mtc_MTC);
           "
         `);
       } else if (target === 'JS') {
@@ -1714,7 +1714,7 @@ export function MTC(props) {
               const componentInstanceId = ReactLynx.useMemo(ReactLynx.genMTCInstanceId, []);
               const [jsxs, transformedProps] = ReactLynx.pickJSXFromProps(props);
               transformedProps.__MTCProps = {
-                  componentTypeId: "$$mtc_da39a_87544_1",
+                  componentTypeId: "$$mtc_2d408_87544_1",
                   componentInstanceId
               };
               return ReactLynx.createElement('mtc-container', {
@@ -1732,7 +1732,7 @@ export function MTC(props) {
               const componentInstanceId = ReactLynx.useMemo(ReactLynx.genMTCInstanceId, []);
               const [jsxs, transformedProps] = ReactLynx.pickJSXFromProps(props);
               transformedProps.__MTCProps = {
-                  componentTypeId: "$$mtc_da39a_87544_1",
+                  componentTypeId: "$$mtc_2d408_87544_1",
                   componentInstanceId
               };
               return ReactLynx.createElement('mtc-container', {
@@ -1740,6 +1740,97 @@ export function MTC(props) {
                       transformedProps
                   ]
               }, ReactLynx.renderFakeMTCSlot(jsxs));
+          }
+          "
+        `);
+      }
+    });
+  }
+
+  for (const target of ['LEPUS', 'JS', 'MIXED']) {
+    it(`transform background action: ${target}`, async () => {
+      const { code } = await transformReactLynx(
+        `\
+function ba(e) {
+    'use background';
+    console.log("background action", e);
+}
+export function BTC() {
+    return <MTC onClick={ba}/>;
+}
+`,
+        {
+          pluginName: '',
+          filename: '',
+          sourcemap: false,
+          cssScope: false,
+          jsx: false,
+          directiveDCE: true,
+          defineDCE: {
+            define: {
+              __LEPUS__: 'true',
+              __JS__: 'false',
+            },
+          },
+          shake: false,
+          compat: true,
+          refresh: false,
+          worklet: false,
+          mtc: {
+            target,
+            filename: 'test.js',
+          },
+        },
+      );
+
+      if (target === 'LEPUS') {
+        expect(code).toMatchInlineSnapshot(`
+        "import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
+        import * as ReactLynx from "@lynx-js/react";
+        const ba = {
+            __type: "$$mtc_ba",
+            __runtimeId: ReactLynx.registerBgAction(function(e) {
+                console.log("background action", e);
+            })
+        };
+        export function BTC() {
+            return /*#__PURE__*/ _jsx(MTC, {
+                onClick: ba
+            });
+        }
+        "
+      `);
+      } else if (target === 'JS') {
+        expect(code).toMatchInlineSnapshot(`
+          "import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
+          import * as ReactLynx from "@lynx-js/react";
+          const ba = {
+              __type: "$$mtc_ba",
+              __runtimeId: ReactLynx.registerBgAction(function(e) {
+                  console.log("background action", e);
+              })
+          };
+          export function BTC() {
+              return /*#__PURE__*/ _jsx(MTC, {
+                  onClick: ba
+              });
+          }
+          "
+        `);
+      } else if (target === 'MIXED') {
+        expect(code).toMatchInlineSnapshot(`
+          "import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
+          import * as ReactLynx from "@lynx-js/react";
+          const ba = {
+              __type: "$$mtc_ba",
+              __runtimeId: ReactLynx.registerBgAction(function(e) {
+                  console.log("background action", e);
+              })
+          };
+          export function BTC() {
+              return /*#__PURE__*/ _jsx(MTC, {
+                  onClick: ba
+              });
           }
           "
         `);

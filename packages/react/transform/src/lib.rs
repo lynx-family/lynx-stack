@@ -6,6 +6,7 @@ extern crate napi_derive;
 mod bundle;
 mod css;
 mod esbuild;
+mod swc_plugin_ba;
 mod swc_plugin_compat;
 mod swc_plugin_compat_post;
 mod swc_plugin_css_scope;
@@ -66,6 +67,7 @@ use swc_core::{
 
 // currently `use xxx as yyy` is not supported by napi-rs
 // So we have to use different name
+use swc_plugin_ba::BaVisitor;
 use swc_plugin_compat::{CompatVisitor, CompatVisitorConfig};
 use swc_plugin_compat_post::CompatPostVisitor;
 use swc_plugin_css_scope::{CSSScopeVisitor, CSSScopeVisitorConfig};
@@ -564,6 +566,8 @@ fn transform_react_lynx_inner(
       ),
     };
 
+    let ba_plugin = visit_mut_pass(BaVisitor::new(runtime_id.clone()));
+
     let mtc_plugin = visit_mut_pass(
       MTCVisitor::new(
         options.mtc.unwrap_or_default(),
@@ -628,7 +632,7 @@ fn transform_react_lynx_inner(
         unresolved_mark,
         top_level_mark,
       ),
-      mtc_plugin,
+      (ba_plugin, mtc_plugin),
       dynamic_import_plugin,
       refresh_plugin,
       compat_plugin,
