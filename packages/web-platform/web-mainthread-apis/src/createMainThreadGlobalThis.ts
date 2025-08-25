@@ -16,7 +16,6 @@ import {
   type reportErrorEndpoint,
   type RpcCallType,
   type LynxContextEventTarget,
-  type LynxJSModule,
   systemInfo,
   type AddEventPAPI,
   type GetEventsPAPI,
@@ -61,9 +60,8 @@ import {
   type SSRDehydrateHooks,
   type ElementTemplateData,
   type ElementFromBinaryPAPI,
-  globalDisallowedVars,
+  type JSRealm,
 } from '@lynx-js/web-constants';
-import { globalMuteableVars } from '@lynx-js/web-constants';
 import { createMainThreadLynx } from './createMainThreadLynx.js';
 import {
   flattenStyleInfo,
@@ -137,7 +135,6 @@ export interface MainThreadRuntimeCallbacks {
   markTiming: (pipelineId: string, timingKey: string) => void;
   publishEvent: RpcCallType<typeof publishEventEndpoint>;
   publicComponentEvent: RpcCallType<typeof publicComponentEventEndpoint>;
-  createElement: (tag: string) => WebFiberElementImpl;
   _I18nResourceTranslation: (
     options: I18nResourceTranslationOptions,
   ) => unknown | undefined;
@@ -148,9 +145,7 @@ export interface MainThreadRuntimeConfig {
   globalProps: unknown;
   callbacks: MainThreadRuntimeCallbacks;
   styleInfo: StyleInfo;
-  customSections: LynxTemplate['customSections'];
-  elementTemplate: LynxTemplate['elementTemplate'];
-  lepusCode: Record<string, LynxJSModule>;
+  lynxTemplate: LynxTemplate;
   browserConfig: BrowserConfig;
   tagMap: Record<string, string>;
   rootDom:
@@ -159,24 +154,28 @@ export interface MainThreadRuntimeConfig {
   jsContext: LynxContextEventTarget;
   ssrHydrateInfo?: SSRHydrateInfo;
   ssrHooks?: SSRDehydrateHooks;
+  mtsRealm: JSRealm;
+  document: Document;
 }
 
 export function createMainThreadGlobalThis(
   config: MainThreadRuntimeConfig,
 ): MainThreadGlobalThis {
   let timingFlags: string[] = [];
-  let renderPage: MainThreadGlobalThis['renderPage'];
   const {
     callbacks,
     tagMap,
     pageConfig,
-    lepusCode,
+    lynxTemplate,
     rootDom,
     globalProps,
     styleInfo,
     ssrHydrateInfo,
     ssrHooks,
+    mtsRealm,
+    document,
   } = config;
+  const { elementTemplate, lepusCode } = lynxTemplate;
   const lynxUniqueIdToElement: WeakRef<WebFiberElementImpl>[] =
     ssrHydrateInfo?.lynxUniqueIdToElement ?? [];
   const lynxUniqueIdToStyleRulesIndex: number[] =
@@ -187,11 +186,6 @@ export function createMainThreadGlobalThis(
   let pageElement: WebFiberElementImpl | undefined = lynxUniqueIdToElement[1]
     ?.deref();
   let uniqueIdInc = lynxUniqueIdToElement.length || 1;
-  /**
-   * for "update" the globalThis.val in the main thread
-   */
-  const varsUpdateHandlers: (() => void)[] = [];
-  const lynxGlobalBindingValues: Record<string, any> = {};
   const exposureChangedElements = new Set<WebFiberElementImpl>();
 
   /**
@@ -214,7 +208,7 @@ export function createMainThreadGlobalThis(
   if (ssrHydrateInfo?.cardStyleElement) {
     cardStyleElement = ssrHydrateInfo.cardStyleElement;
   } else {
-    cardStyleElement = callbacks.createElement(
+    cardStyleElement = document.createElement(
       'style',
     ) as unknown as HTMLStyleElement;
     cardStyleElement.innerHTML = genCssContent(
@@ -292,7 +286,8 @@ export function createMainThreadGlobalThis(
           (crossThreadEvent as MainThreadScriptEvent).currentTarget!
             .elementRefptr = event.currentTarget;
         }
-        mtsGlobalThis.runWorklet?.(hname.value, [crossThreadEvent]);
+        (mtsRealm.globalWindow as typeof globalThis & MainThreadGlobalThis)
+          .runWorklet?.(hname.value, [crossThreadEvent]);
       }
     }
     return false;
@@ -436,7 +431,9 @@ export function createMainThreadGlobalThis(
   ) => {
     const uniqueId = uniqueIdInc++;
     const htmlTag = tagMap[tag] ?? tag;
-    const element = callbacks.createElement(htmlTag);
+    const element = document.createElement(
+      htmlTag,
+    ) as unknown as WebFiberElementImpl;
     lynxUniqueIdToElement[uniqueId] = new WeakRef(element);
     const parentComponentCssID = lynxUniqueIdToElement[parentComponentUniqueId]
       ?.deref()?.getAttribute(cssIdAttribute);
@@ -586,14 +583,15 @@ export function createMainThreadGlobalThis(
     runtimeInfo.enqueueComponent = enqueueComponent;
     elementToRuntimeInfoMap.set(element, runtimeInfo);
   };
-
   const __SwapElement: SwapElementPAPI = (
     childA,
     childB,
   ) => {
-    const temp = callbacks.createElement('div');
+    const temp = document.createElement('div');
+    // @ts-expect-error fixme
     childA.replaceWith(temp);
     childB.replaceWith(childA);
+    // @ts-expect-error fixme
     temp.replaceWith(childB);
   };
 
@@ -644,12 +642,12 @@ export function createMainThreadGlobalThis(
   };
 
   const __LoadLepusChunk: (path: string) => boolean = (path) => {
-    const lepusModule = lepusCode[`${path}`];
-    if (lepusModule) {
-      const entry = lepusModule.exports;
-      entry?.(mtsGlobalThis);
+    try {
+      path = lepusCode?.[path] ?? path;
+      mtsRealm.loadScriptSync(path);
       return true;
-    } else {
+    } catch (e) {
+      console.error(`failed to load lepus chunk ${path}`, e);
       return false;
     }
   };
@@ -734,7 +732,7 @@ export function createMainThreadGlobalThis(
     templateId,
     parentComponentUniId,
   ) => {
-    const elementTemplateData = config.elementTemplate[templateId];
+    const elementTemplateData = elementTemplate[templateId];
     if (elementTemplateData) {
       let clonedElements: WebFiberElementImpl[];
       if (templateIdToTemplate[templateId]) {
@@ -748,7 +746,7 @@ export function createMainThreadGlobalThis(
           createElementForElementTemplateData(data, parentComponentUniId)
         );
         if (rootDom.cloneNode) {
-          const template = callbacks.createElement(
+          const template = document.createElement(
             'template',
           ) as unknown as HTMLTemplateElement;
           template.content.append(...clonedElements as unknown as Node[]);
@@ -843,54 +841,22 @@ export function createMainThreadGlobalThis(
     _SetSourceMapRelease: (errInfo) => release = errInfo?.release,
     __OnLifecycleEvent: callbacks.__OnLifecycleEvent,
     __FlushElementTree,
-    __lynxGlobalBindingValues: lynxGlobalBindingValues,
     _I18nResourceTranslation: callbacks._I18nResourceTranslation,
     _AddEventListener: () => {},
-    set _updateVars(handler: () => void) {
-      varsUpdateHandlers.push(handler);
+    renderPage: undefined,
+  };
+  Object.assign(mtsRealm.globalWindow, mtsGlobalThis);
+  Object.defineProperty(mtsRealm.globalWindow, 'renderPage', {
+    get() {
+      return mtsGlobalThis.renderPage;
     },
-    set renderPage(foo: (data: unknown) => void) {
-      renderPage = foo;
+    set(v) {
+      mtsGlobalThis.renderPage = v;
       queueMicrotask(callbacks.mainChunkReady);
     },
-    get renderPage() {
-      return renderPage!;
-    },
-  };
-  mtsGlobalThis.globalThis = new Proxy(mtsGlobalThis, {
-    get: (target, prop) => {
-      if (typeof prop === 'string' && globalDisallowedVars.includes(prop)) {
-        return undefined;
-      }
-      if (prop === 'globalThis') {
-        return target;
-      }
-      // @ts-expect-error
-      return target[prop] ?? globalThis[prop];
-    },
-    set: (target, prop, value) => {
-      // @ts-expect-error
-      target[prop] = value;
-      return true;
-    },
-    ownKeys(target) {
-      return Reflect.ownKeys(target).filter((key) => key !== 'globalThis');
-    },
+    configurable: true,
+    enumerable: true,
   });
 
-  for (const nm of globalMuteableVars) {
-    Object.defineProperty(mtsGlobalThis, nm, {
-      get: () => {
-        return lynxGlobalBindingValues[nm];
-      },
-      set: (v: any) => {
-        lynxGlobalBindingValues[nm] = v;
-        for (const handler of varsUpdateHandlers) {
-          handler();
-        }
-      },
-    });
-  }
-
-  return mtsGlobalThis;
+  return mtsRealm.globalWindow as typeof globalThis & MainThreadGlobalThis;
 }

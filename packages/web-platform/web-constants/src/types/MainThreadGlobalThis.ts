@@ -381,11 +381,6 @@ export interface MainThreadGlobalThis {
   ) => unknown | undefined;
   // This is an empty implementation, just to avoid business call errors
   _AddEventListener: (...args: unknown[]) => void;
-  /**
-   * private fields
-   */
-  _updateVars: () => void;
-  __lynxGlobalBindingValues: Record<string, unknown>;
   // the following methods is assigned by the main thread user code
   renderPage: ((data: unknown) => void) | undefined;
   updatePage?: (data: Cloneable, options?: Record<string, string>) => void;

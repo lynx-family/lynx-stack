@@ -20,7 +20,7 @@ export function createMainThreadLynx(
     },
     __globalProps: config.globalProps,
     getCustomSectionSync(key: string) {
-      return config.customSections[key]?.content;
+      return config.lynxTemplate.customSections[key]?.content;
     },
     markPipelineTiming: config.callbacks.markTiming,
     SystemInfo,
