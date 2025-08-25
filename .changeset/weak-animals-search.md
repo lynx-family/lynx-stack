@@ -16,6 +16,7 @@ function startAnimation(ele: MainThread.Element) {
     duration: 3000,
   });
 
-  animation.start();
+  // Can also be paused
+  // animation.pause()
 }
 ```
