@@ -61,6 +61,10 @@ export function apply(program: Command): Command {
       '--environment <name...>',
       'specify the name of environment to build',
     )
+    .option(
+      '--watch',
+      'Enable watch mode to automatically rebuild on file changes',
+    )
     .action(
       (buildOptions: BuildOptions) =>
         import('./build.js').then(({ build }) =>

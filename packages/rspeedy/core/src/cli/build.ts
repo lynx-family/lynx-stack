@@ -2,8 +2,11 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import path from 'node:path'
+
 import { logger } from '@rsbuild/core'
 import type { Command } from 'commander'
+import color from 'picocolors'
 
 import type { CommonOptions } from './commands.js'
 import { exit } from './exit.js'
@@ -13,6 +16,55 @@ import { isCI } from '../utils/is-ci.js'
 
 export type BuildOptions = CommonOptions & {
   environment?: string[] | undefined
+  watch?: boolean | undefined
+}
+
+async function watchFiles(
+  files: string[],
+  callback: (
+    filePath: string,
+    startTime: number,
+    event: string,
+  ) => Promise<void>,
+) {
+  const chokidar = await import('chokidar')
+  const watcher = chokidar.default.watch(files, {
+    // do not trigger add for initial files
+    ignoreInitial: true,
+    // If watching fails due to read permissions, the errors will be suppressed silently.
+    ignorePermissionErrors: true,
+  })
+
+  const cb = debounce(
+    (event: string, filePath: string) => {
+      const startTime = Date.now()
+      void watcher.close().then(() => callback(filePath, startTime, event))
+    },
+    // set 300ms debounce to avoid restart frequently
+    300,
+  )
+
+  watcher.once('add', cb.bind(null, 'add'))
+  watcher.once('change', cb.bind(null, 'change'))
+  watcher.once('unlink', cb.bind(null, 'unlink'))
+}
+
+// biome-ignore lint/suspicious/noExplicitAny: Make TS happy
+function debounce<T extends (...args: any[]) => void>(
+  func: T,
+  wait: number,
+): (...args: Parameters<T>) => void {
+  let timeoutId: ReturnType<typeof setTimeout> | null = null
+
+  return (...args: Parameters<T>) => {
+    if (timeoutId !== null) {
+      clearTimeout(timeoutId)
+    }
+
+    timeoutId = setTimeout(() => {
+      func(...args)
+    }, wait)
+  }
 }
 
 export async function build(
@@ -23,15 +75,55 @@ export async function build(
   // We always exit on CI since `sass-embedded` will have child_processes that never exit.
   // Otherwise, we do not exit when Rsdoctor is enabled.
   const shouldExit = process.env['RSDOCTOR'] !== 'true' || isCI()
+  const isWatch = buildOptions.watch ?? false
 
+  let onBeforeRestart: (() => Promise<void>)[] = []
   try {
-    const { createRspeedyOptions } = await init(cwd, buildOptions)
+    const { rspeedyConfig, configPath, createRspeedyOptions } = await init(
+      cwd,
+      buildOptions,
+    )
+
+    if (isWatch) {
+      const watchedFiles = [configPath]
+
+      if (Array.isArray(rspeedyConfig.dev?.watchFiles)) {
+        watchedFiles.push(
+          ...rspeedyConfig.dev.watchFiles
+            .filter(item => item.type === 'reload-server')
+            .flatMap(item => item.paths),
+        )
+      } else if (rspeedyConfig.dev?.watchFiles?.type === 'reload-server') {
+        const { paths } = rspeedyConfig.dev.watchFiles
+        watchedFiles.push(...Array.isArray(paths) ? paths : [paths])
+      }
+
+      await watchFiles(
+        watchedFiles.map(filePath =>
+          path.isAbsolute(filePath) ? filePath : path.join(cwd, filePath)
+        ),
+        async (filename) => {
+          logger.info(`Restart because ${color.yellow(filename)} is changed.\n`)
+          const cleanup = onBeforeRestart.map(f => f())
+          onBeforeRestart = []
+
+          await Promise.all(cleanup)
+          await build.call(this, cwd, buildOptions)
+        },
+      )
+    }
 
     const rspeedy = await createRspeedy(createRspeedyOptions)
 
-    // TODO: support `rspeedy build --watch`
-    const { close } = await rspeedy.build()
-    await close()
+    const { close } = await rspeedy.build({
+      watch: isWatch,
+    })
+
+    if (isWatch) {
+      onBeforeRestart.push(close)
+    } else {
+      await close()
+    }
   } catch (error) {
     logger.error(error)
     if (shouldExit) {
@@ -40,7 +132,7 @@ export async function build(
     }
   }
 
-  if (shouldExit) {
+  if (shouldExit && !isWatch) {
     exit()
   }
 }
