@@ -1,5 +1,5 @@
 ---
-"@lynx-js/rspeedy": minor
+"@lynx-js/rspeedy": patch
 ---
 
-rspeedy Support Promise and function in defineConfig
+Support exporting `Promise` and function in `lynx.config.ts`.
