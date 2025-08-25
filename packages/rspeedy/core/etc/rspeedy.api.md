@@ -139,6 +139,15 @@ export interface Decorators {
 export function defineConfig(config: Config): Config;
 
 // @public
+export function defineConfig(config: () => Config): () => Config;
+
+// @public
+export function defineConfig(config: Promise<Config>): Promise<Config>;
+
+// @public
+export function defineConfig(config: () => Promise<Config>): () => Promise<Config>;
+
+// @public
 export interface Dev {
     assetPrefix?: string | boolean | undefined;
     client?: DevClient | undefined;

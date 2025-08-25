@@ -310,6 +310,36 @@ describe('Config - loadConfig', () => {
       )
     })
   })
+
+  test('load function config', async () => {
+    const cwd = join(__dirname, 'fixtures', 'custom')
+    const actual = await loadConfig({ cwd, configPath: './function.ts' })
+    const expected = await import(join(cwd, 'function.ts')) as {
+      default: () => Config
+    }
+    expect(actual.content).toStrictEqual(expected.default())
+  })
+
+  test('load promise config', async () => {
+    const cwd = join(__dirname, 'fixtures', 'custom')
+    const actual = await loadConfig({ cwd, configPath: './promise.ts' })
+    const expected = await import(join(cwd, 'promise.ts')) as {
+      default: Promise<Config>
+    }
+    expect(actual.content).toStrictEqual(await expected.default)
+  })
+
+  test('load function-promise config', async () => {
+    const cwd = join(__dirname, 'fixtures', 'custom')
+    const actual = await loadConfig({
+      cwd,
+      configPath: './function-promise.ts',
+    })
+    const expected = await import(join(cwd, 'function-promise.ts')) as {
+      default: () => Promise<Config>
+    }
+    expect(actual.content).toStrictEqual(await expected.default())
+  })
 })
 
 describe('hasNativeTSSupport', () => {

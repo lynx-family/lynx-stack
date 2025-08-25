@@ -149,7 +149,7 @@ export async function loadConfig(
 
     return {
       configPath,
-      content,
+      content: typeof content === 'function' ? await content() : await content,
     }
   } finally {
     unregister()
