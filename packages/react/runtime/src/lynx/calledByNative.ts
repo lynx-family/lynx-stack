@@ -125,7 +125,7 @@ function updatePage(data: Record<string, unknown> | undefined, options?: UpdateP
     setPipeline(options?.pipelineOptions);
     markTiming('updateDiffVdomStart');
     {
-      __pendingListUpdates.clear();
+      __pendingListUpdates.clearAttachedLists();
       renderMainThread();
       // As said by codename `jsReadyEventIdSwap`, this swap will only be used for event remap,
       // because ref & unref cause by previous render will be ignored
