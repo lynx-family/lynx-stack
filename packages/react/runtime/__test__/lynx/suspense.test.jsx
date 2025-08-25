@@ -101,33 +101,6 @@ describe('suspense', () => {
         <page
           cssId="default-entry-from-native:0"
         >
-          <wrapper />
-        </page>
-      `);
-
-      // rLynxChange callback
-      globalEnvManager.switchToBackground();
-      rLynxChange[2]();
-      vi.runAllTimers();
-    }
-
-    // render fallback
-    {
-      globalEnvManager.switchToBackground();
-      lynx.getNativeApp().callLepusMethod.mockClear();
-      await Promise.resolve().then(() => {});
-      expect(lynx.getNativeApp().callLepusMethod).toBeCalledTimes(1);
-
-      // rLynxChange
-      globalEnvManager.switchToMainThread();
-      globalThis.__OnLifecycleEvent.mockClear();
-      const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
-      globalThis[rLynxChange[0]](rLynxChange[1]);
-      expect(globalThis.__OnLifecycleEvent).not.toBeCalled();
-      expect(__root.__element_root).toMatchInlineSnapshot(`
-        <page
-          cssId="default-entry-from-native:0"
-        >
           <wrapper>
             <text>
               <raw-text
@@ -251,76 +224,6 @@ describe('suspense', () => {
           cssId="default-entry-from-native:0"
         >
           <wrapper>
-            <view
-              attr="an attr"
-            />
-          </wrapper>
-        </page>
-      `);
-
-      // rLynxChange callback
-      globalEnvManager.switchToBackground();
-      rLynxChange[2]();
-      vi.runAllTimers();
-    }
-
-    // render fallback
-    {
-      globalEnvManager.switchToBackground();
-      lynx.getNativeApp().callLepusMethod.mockClear();
-      await Promise.resolve().then(() => {});
-      expect(lynx.getNativeApp().callLepusMethod).toBeCalledTimes(1);
-      const data = JSON.parse(lynx.getNativeApp().callLepusMethod.mock.calls[0][1].data).patchList[0].snapshotPatch;
-      // A `PreventDestroy` op is inserted to keep the wrapper element alive
-      expect(prettyFormatSnapshotPatch(data)).toMatchInlineSnapshot(`
-        [
-          {
-            "id": 4,
-            "op": "CreateElement",
-            "type": "div",
-          },
-          {
-            "childId": -3,
-            "op": "RemoveChild",
-            "parentId": -1,
-          },
-          {
-            "id": 5,
-            "op": "CreateElement",
-            "type": "wrapper",
-          },
-          {
-            "id": 6,
-            "op": "CreateElement",
-            "type": "__Card__:__snapshot_a94a8_test_3",
-          },
-          {
-            "beforeId": null,
-            "childId": 6,
-            "op": "InsertBefore",
-            "parentId": 5,
-          },
-          {
-            "beforeId": null,
-            "childId": 5,
-            "op": "InsertBefore",
-            "parentId": -1,
-          },
-        ]
-      `);
-      vi.runAllTimers();
-
-      // rLynxChange
-      globalEnvManager.switchToMainThread();
-      globalThis.__OnLifecycleEvent.mockClear();
-      const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
-      globalThis[rLynxChange[0]](rLynxChange[1]);
-      expect(globalThis.__OnLifecycleEvent).not.toBeCalled();
-      expect(__root.__element_root).toMatchInlineSnapshot(`
-        <page
-          cssId="default-entry-from-native:0"
-        >
-          <wrapper>
             <text>
               <raw-text
                 text="loading"
@@ -347,7 +250,7 @@ describe('suspense', () => {
       expect(prettyFormatSnapshotPatch(data)).toMatchInlineSnapshot(`
         [
           {
-            "id": -3,
+            "id": 2,
             "op": "CreateElement",
             "type": "wrapper",
           },
@@ -367,16 +270,16 @@ describe('suspense', () => {
             "beforeId": null,
             "childId": 3,
             "op": "InsertBefore",
-            "parentId": -3,
+            "parentId": 2,
           },
           {
             "beforeId": null,
-            "childId": -3,
+            "childId": 2,
             "op": "InsertBefore",
             "parentId": -1,
           },
           {
-            "childId": 5,
+            "childId": -3,
             "op": "RemoveChild",
             "parentId": -1,
           },
@@ -393,7 +296,7 @@ describe('suspense', () => {
           },
           {
             "beforeId": null,
-            "childId": -3,
+            "childId": 2,
             "op": "InsertBefore",
             "parentId": -1,
           },
@@ -453,14 +356,16 @@ describe('suspense', () => {
     const { Suspender, suspended } = createSuspender();
 
     function Comp({ show }) {
-      return show && (
-        <Suspense fallback={<text>loading</text>}>
-          <view attr={`an attr`}>
-            <Suspender>
-              <text>foo</text>
-            </Suspender>
-          </view>
-        </Suspense>
+      return (
+        show && (
+          <Suspense fallback={<text>loading</text>}>
+            <view attr={`an attr`}>
+              <Suspender>
+                <text>foo</text>
+              </Suspender>
+            </view>
+          </Suspense>
+        )
       );
     }
 
@@ -490,26 +395,6 @@ describe('suspense', () => {
     {
       // LifecycleConstant.firstScreen
       lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
-      expect(lynx.getNativeApp().callLepusMethod).toBeCalledTimes(1);
-
-      // rLynxChange
-      globalEnvManager.switchToMainThread();
-      globalThis.__OnLifecycleEvent.mockClear();
-      const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
-      globalThis[rLynxChange[0]](rLynxChange[1]);
-      expect(globalThis.__OnLifecycleEvent).not.toBeCalled();
-
-      // rLynxChange callback
-      globalEnvManager.switchToBackground();
-      rLynxChange[2]();
-      vi.runAllTimers();
-    }
-
-    // render fallback
-    {
-      globalEnvManager.switchToBackground();
-      lynx.getNativeApp().callLepusMethod.mockClear();
-      await Promise.resolve().then(() => {});
       expect(lynx.getNativeApp().callLepusMethod).toBeCalledTimes(1);
 
       // rLynxChange
@@ -564,10 +449,10 @@ describe('suspense', () => {
       vi.runAllTimers();
       expect([...backgroundSnapshotInstanceManager.values.keys()]).toMatchInlineSnapshot(`
         [
+          2,
           3,
-          -1,
-          -3,
           4,
+          -1,
           7,
         ]
       `);
@@ -596,7 +481,6 @@ describe('suspense', () => {
         [
           -1,
           -2,
-          4,
         ]
       `);
 
@@ -606,8 +490,8 @@ describe('suspense', () => {
       vi.runAllTimers();
       expect([...backgroundSnapshotInstanceManager.values.keys()]).toMatchInlineSnapshot(`
         [
-          -1,
           4,
+          -1,
         ]
       `);
       expect(backgroundSnapshotInstanceManager.values.get(4).type).toBe('div');
@@ -634,14 +518,16 @@ describe('suspense', () => {
     const { Suspender, suspended } = createSuspender();
 
     function Comp({ show }) {
-      return show && (
-        <Suspense fallback={<text>loading</text>}>
-          <view attr={`an attr`}>
-            <Suspender>
-              <text>foo</text>
-            </Suspender>
-          </view>
-        </Suspense>
+      return (
+        show && (
+          <Suspense fallback={<text>loading</text>}>
+            <view attr={`an attr`}>
+              <Suspender>
+                <text>foo</text>
+              </Suspender>
+            </view>
+          </Suspense>
+        )
       );
     }
 
@@ -661,26 +547,6 @@ describe('suspense', () => {
     {
       // LifecycleConstant.firstScreen
       lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
-      expect(lynx.getNativeApp().callLepusMethod).toBeCalledTimes(1);
-
-      // rLynxChange
-      globalEnvManager.switchToMainThread();
-      globalThis.__OnLifecycleEvent.mockClear();
-      const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
-      globalThis[rLynxChange[0]](rLynxChange[1]);
-      expect(globalThis.__OnLifecycleEvent).not.toBeCalled();
-
-      // rLynxChange callback
-      globalEnvManager.switchToBackground();
-      rLynxChange[2]();
-      vi.runAllTimers();
-    }
-
-    // render fallback
-    {
-      globalEnvManager.switchToBackground();
-      lynx.getNativeApp().callLepusMethod.mockClear();
-      await Promise.resolve().then(() => {});
       expect(lynx.getNativeApp().callLepusMethod).toBeCalledTimes(1);
 
       // rLynxChange
@@ -867,39 +733,6 @@ describe('suspense', () => {
         <page
           cssId="default-entry-from-native:0"
         >
-          <wrapper>
-            <view
-              attr="an attr"
-            />
-          </wrapper>
-        </page>
-      `);
-
-      // rLynxChange callback
-      globalEnvManager.switchToBackground();
-      rLynxChange[2]();
-      vi.runAllTimers();
-    }
-
-    // render fallback
-    {
-      globalEnvManager.switchToBackground();
-      lynx.getNativeApp().callLepusMethod.mockClear();
-      await Promise.resolve().then(() => {});
-      expect(lynx.getNativeApp().callLepusMethod).toBeCalledTimes(1);
-      const data = JSON.parse(lynx.getNativeApp().callLepusMethod.mock.calls[0][1].data).patchList[0].snapshotPatch;
-      vi.runAllTimers();
-
-      // rLynxChange
-      globalEnvManager.switchToMainThread();
-      globalThis.__OnLifecycleEvent.mockClear();
-      const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
-      globalThis[rLynxChange[0]](rLynxChange[1]);
-      expect(globalThis.__OnLifecycleEvent).not.toBeCalled();
-      expect(__root.__element_root).toMatchInlineSnapshot(`
-        <page
-          cssId="default-entry-from-native:0"
-        >
           <wrapper />
         </page>
       `);
@@ -1039,38 +872,6 @@ describe('suspense', () => {
           cssId="default-entry-from-native:0"
         >
           <view>
-            <wrapper />
-            <wrapper />
-          </view>
-        </page>
-      `);
-
-      // rLynxChange callback
-      globalEnvManager.switchToBackground();
-      rLynxChange[2]();
-      vi.runAllTimers();
-    }
-
-    // render fallback
-    {
-      globalEnvManager.switchToBackground();
-      lynx.getNativeApp().callLepusMethod.mockClear();
-      await Promise.resolve().then(() => {});
-      expect(lynx.getNativeApp().callLepusMethod).toBeCalledTimes(2);
-
-      // rLynxChange
-      globalEnvManager.switchToMainThread();
-      globalThis.__OnLifecycleEvent.mockClear();
-      const rLynxChange1 = lynx.getNativeApp().callLepusMethod.mock.calls[0];
-      globalThis[rLynxChange1[0]](rLynxChange1[1]);
-      const rLynxChange2 = lynx.getNativeApp().callLepusMethod.mock.calls[1];
-      globalThis[rLynxChange2[0]](rLynxChange2[1]);
-      expect(globalThis.__OnLifecycleEvent).not.toBeCalled();
-      expect(__root.__element_root).toMatchInlineSnapshot(`
-        <page
-          cssId="default-entry-from-native:0"
-        >
-          <view>
             <wrapper>
               <text>
                 <raw-text
@@ -1091,8 +892,7 @@ describe('suspense', () => {
 
       // rLynxChange callback
       globalEnvManager.switchToBackground();
-      rLynxChange1[2]();
-      rLynxChange2[2]();
+      rLynxChange[2]();
       vi.runAllTimers();
     }
 
@@ -1245,37 +1045,6 @@ describe('suspense', () => {
     {
       // LifecycleConstant.firstScreen
       lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
-      expect(lynx.getNativeApp().callLepusMethod).toBeCalledTimes(1);
-
-      // rLynxChange
-      globalEnvManager.switchToMainThread();
-      globalThis.__OnLifecycleEvent.mockClear();
-      const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
-      globalThis[rLynxChange[0]](rLynxChange[1]);
-      expect(globalThis.__OnLifecycleEvent).not.toBeCalled();
-      expect(__root.__element_root).toMatchInlineSnapshot(`
-        <page
-          cssId="default-entry-from-native:0"
-        >
-          <wrapper>
-            <view>
-              <wrapper />
-            </view>
-          </wrapper>
-        </page>
-      `);
-
-      // rLynxChange callback
-      globalEnvManager.switchToBackground();
-      rLynxChange[2]();
-      vi.runAllTimers();
-    }
-
-    // render fallback
-    {
-      globalEnvManager.switchToBackground();
-      lynx.getNativeApp().callLepusMethod.mockClear();
-      await Promise.resolve().then(() => {});
       expect(lynx.getNativeApp().callLepusMethod).toBeCalledTimes(1);
 
       // rLynxChange
@@ -1534,9 +1303,7 @@ describe('suspense', () => {
     function Comp({ content }) {
       return (
         <Suspense fallback={<text>loading</text>}>
-          <Suspender>
-            {content}
-          </Suspender>
+          <Suspender>{content}</Suspender>
         </Suspense>
       );
     }
@@ -1570,33 +1337,6 @@ describe('suspense', () => {
     {
       // LifecycleConstant.firstScreen
       lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
-      expect(lynx.getNativeApp().callLepusMethod).toBeCalledTimes(1);
-
-      // rLynxChange
-      globalEnvManager.switchToMainThread();
-      globalThis.__OnLifecycleEvent.mockClear();
-      const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
-      globalThis[rLynxChange[0]](rLynxChange[1]);
-      expect(globalThis.__OnLifecycleEvent).not.toBeCalled();
-      expect(__root.__element_root).toMatchInlineSnapshot(`
-        <page
-          cssId="default-entry-from-native:0"
-        >
-          <wrapper />
-        </page>
-      `);
-
-      // rLynxChange callback
-      globalEnvManager.switchToBackground();
-      rLynxChange[2]();
-      vi.runAllTimers();
-    }
-
-    // render fallback
-    {
-      globalEnvManager.switchToBackground();
-      lynx.getNativeApp().callLepusMethod.mockClear();
-      await Promise.resolve().then(() => {});
       expect(lynx.getNativeApp().callLepusMethod).toBeCalledTimes(1);
 
       // rLynxChange
