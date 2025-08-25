@@ -1,5 +1,5 @@
 ---
-"@lynx-js/rspeedy": minor
+"@lynx-js/rspeedy": patch
 ---
 
 support `rspeedy build --watch`
