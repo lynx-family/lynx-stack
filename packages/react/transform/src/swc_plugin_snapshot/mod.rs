@@ -476,27 +476,16 @@ where
         }
       }
 
-      let mut has_key: bool = false;
       // pick key from n.opening.attrs
       n.opening
         .attrs
         .retain_mut(|attr_or_spread| match attr_or_spread {
           JSXAttrOrSpread::SpreadElement(_) => true,
-          JSXAttrOrSpread::JSXAttr(JSXAttr {
-            name, value, span, ..
-          }) => match name {
+          JSXAttrOrSpread::JSXAttr(JSXAttr { name, value, .. }) => match name {
             JSXAttrName::Ident(ident_name) => match ident_name.sym.as_ref() {
               "key" => {
-                has_key = true;
                 if self.parent_element.is_none() {
                   self.key = value.take();
-                } else {
-                  // warn about key not on root element
-                  HANDLER.with(|handler| {
-                    handler
-                      .struct_span_warn(*span, "key is not on root element of snapshot")
-                      .emit()
-                  });
                 }
                 false
               }
