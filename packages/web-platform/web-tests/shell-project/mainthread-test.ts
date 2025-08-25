@@ -105,7 +105,7 @@ function initializeMainThreadTest() {
     mtsRealm: {
       globalWindow: globalThis,
       loadScript: async (url: string) => {
-        await import(url);
+        throw new Error('loadScript is not supported in main thread');
       },
       loadScriptSync: () => {
         throw new Error('loadScriptSync is not supported in main thread');
