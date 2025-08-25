@@ -4,4 +4,6 @@
 
 import type { VNode } from 'preact';
 
-export const mtcComponentVNodes: Map<string, VNode> = new Map();
+import type { SnapshotInstance } from '../snapshot.js';
+
+export const mtcComponentVNodes: Map<string, [VNode, SnapshotInstance]> = new Map();

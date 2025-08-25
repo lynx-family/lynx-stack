@@ -719,16 +719,51 @@ function renderMTC(snapshotInstance: SnapshotInstance, props: MTCProps) {
     return;
   }
   const instanceId = props.__MTCProps.componentInstanceId;
+  // if (mtcComponentVNodes.has(instanceId)) {
+  //   const [vnode, wrapper, wrapperElement] = mtcComponentVNodes.get(instanceId)!;
+  //   const newVnode = cloneElement(vnode, props);
+  //   wrapper.insertBefore(wrapperElement);
+  //   const wrapperVNode = createVNode('wrapper', { children: newVnode }) as VNode;
+  //   render(wrapperVNode, wrapper as unknown as ContainerNode);
+  //   snapshotInstance.insertBefore(wrapperVNode.__e as SnapshotInstance);
+  //   mtcComponentVNodes.set(instanceId, [newVnode, wrapper, wrapperVNode.__e as SnapshotInstance]);
+  // } else {
+  //   const type = mtcComponentTypes.get(props.__MTCProps.componentTypeId)!;
+  //   const newProps = { ...props };
+  //   // const vnode = createVNode('wrapper', { children: createVNode(type, newProps) }) as VNode;
+  //   const vnode = createVNode(type, newProps) as VNode;
+  //   const wrapper = new SnapshotInstance('wrapper');
+  //   // @ts-ignore
+  //   wrapper.nodeType = 1;
+  //   const wrapperVNode = createVNode('wrapper', { children: vnode }) as VNode;
+  //   render(wrapperVNode, wrapper as unknown as ContainerNode);
+  //   wrapper.ensureElements();
+  //   // console.log('yra renderMTC render-1', vnode.__e, vnode.__e !== undefined);
+  //   if (vnode.__e) {
+  //     mtcComponentVNodes.set(instanceId, [vnode, wrapper, wrapperVNode.__e as SnapshotInstance]);
+  //     snapshotInstance.insertBefore(wrapperVNode.__e as SnapshotInstance);
+  //     (wrapperVNode.__e as SnapshotInstance).__onDestroy = () => {
+  //       wrapper.insertBefore(wrapperVNode.__e as SnapshotInstance);
+  //       unmountComponentAtNode(wrapper as unknown as ContainerNode);
+  //       // TODO: destroy wrapper
+  //       mtcComponentVNodes.delete(instanceId);
+  //     };
+  //   }
+  // }
   if (mtcComponentVNodes.has(instanceId)) {
-    const vnode = mtcComponentVNodes.get(instanceId)!;
+    const [vnode, wrapper] = mtcComponentVNodes.get(instanceId)!;
     const newVnode = cloneElement(vnode, props);
-    render(newVnode, snapshotInstance as unknown as ContainerNode);
-    mtcComponentVNodes.set(instanceId, newVnode);
+    wrapper.insertBefore(vnode.__e as SnapshotInstance);
+    render(newVnode, wrapper as unknown as ContainerNode);
+    snapshotInstance.insertBefore(newVnode.__e as SnapshotInstance);
+    mtcComponentVNodes.set(instanceId, [newVnode, wrapper]);
   } else {
     const type = mtcComponentTypes.get(props.__MTCProps.componentTypeId)!;
-    const vnode = createVNode('wrapper', { children: createVNode(type, props) }) as VNode;
-    mtcComponentVNodes.set(instanceId, vnode);
+    const newProps = { ...props };
+    // const vnode = createVNode('wrapper', { children: createVNode(type, newProps) }) as VNode;
+    const vnode = createVNode(type, newProps) as VNode;
     const wrapper = new SnapshotInstance('wrapper');
+    mtcComponentVNodes.set(instanceId, [vnode, wrapper]);
     // @ts-ignore
     wrapper.nodeType = 1;
     render(vnode, wrapper as unknown as ContainerNode);

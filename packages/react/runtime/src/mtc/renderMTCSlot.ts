@@ -16,7 +16,12 @@ export function renderMTCSlot(btc: { $$typeof: string; i: number }): unknown {
   const vnode = createElementVNode('wrapper', {
     'mtc:ref': (si: SnapshotInstance) => {
       if (si) {
-        si.insertBefore(snapshotInstanceManager.values.get(btc.i)!);
+        // TODO: refactor this
+        Promise.resolve().then(() => {
+          const child = snapshotInstanceManager.values.get(btc.i)!;
+          si.insertBefore(child);
+          __FlushElementTree();
+        });
       }
     },
   });
