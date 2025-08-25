@@ -35,6 +35,7 @@ export class WorkletExecIdMap extends IndexMap<Worklet> {
       }
       const obj = value as Record<string, unknown>;
       if ('_jsFnId' in obj && obj['_jsFnId'] === fnId) {
+        // @ts-ignore
         return obj as JsFnHandle;
       }
       for (const i in obj) {

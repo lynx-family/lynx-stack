@@ -14,12 +14,14 @@ export function transformToWorklet(obj: ((...args: any[]) => any) & { toJSON?: (
   const id = ++lastId;
   if (typeof obj !== 'function') {
     // We save the error message in the object, so that we can throw it later when the function is called on the main thread.
+    // @ts-ignore
     return {
       _jsFnId: id,
       _error: `Argument of runOnBackground should be a function, but got [${typeof obj}] instead`,
     };
   }
   obj.toJSON ??= () => '[BackgroundFunction]';
+  // @ts-ignore
   return {
     _jsFnId: id,
     _fn: obj,

@@ -32,6 +32,7 @@ import { snapshotDestroyList } from './snapshot/list.js';
 import type { PlatformInfo } from './snapshot/platformInfo.js';
 import { unref } from './snapshot/ref.js';
 import { isDirectOrDeepEqual } from './utils.js';
+import { transformMTCProps } from './mtc/props.js';
 
 /**
  * A snapshot definition that contains all the information needed to create and update elements
@@ -719,6 +720,7 @@ function renderMTC(snapshotInstance: SnapshotInstance, props: MTCProps) {
     return;
   }
   const instanceId = props.__MTCProps.componentInstanceId;
+  transformMTCProps(props);
   // if (mtcComponentVNodes.has(instanceId)) {
   //   const [vnode, wrapper, wrapperElement] = mtcComponentVNodes.get(instanceId)!;
   //   const newVnode = cloneElement(vnode, props);

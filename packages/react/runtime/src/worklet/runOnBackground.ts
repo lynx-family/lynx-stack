@@ -14,19 +14,25 @@ import { destroyTasks } from './destroy.js';
 import { WorkletExecIdMap } from './execMap.js';
 import { isRunOnBackgroundEnabled } from './functionality.js';
 import { onFunctionCall } from './functionCall.js';
+import { gBgActions } from '../mtc/registerBgAction.js';
+
+export interface MTCBackgroundFunctionCtx {
+  __type: '$$mtc_ba';
+  __runtimeId: number;
+}
 
 /**
  * @internal
  */
 interface RunOnBackgroundData {
-  obj: JsFnHandle;
+  obj: JsFnHandle | MTCBackgroundFunctionCtx;
   params: unknown[];
   resolveId: number;
 }
 
 let execIdMap: WorkletExecIdMap | undefined;
 
-function init() {
+export function init(): void {
   'background only';
   if (execIdMap) {
     return;
@@ -49,8 +55,14 @@ function init() {
 function runJSFunction(event: RuntimeProxy.Event): void {
   'background only';
   const data = JSON.parse(event.data as string) as RunOnBackgroundData;
-  const obj = execIdMap!.findJsFnHandle(data.obj._execId!, data.obj._jsFnId!);
-  const f = obj?._fn;
+  const fnCtx = data.obj;
+  let f: ((...params: unknown[]) => unknown) | undefined;
+  if (fnCtx.__type === '$$mtc_ba') {
+    f = gBgActions.get(fnCtx.__runtimeId) as ((...params: unknown[]) => unknown);
+  } else {
+    const obj = execIdMap!.findJsFnHandle(fnCtx._execId!, fnCtx._jsFnId!);
+    f = obj?._fn;
+  }
   if (!f) {
     throw new Error('runOnBackground: JS function not found: ' + JSON.stringify(data.obj));
   }
@@ -94,7 +106,7 @@ function registerWorkletCtx(ctx: Worklet): void {
  *     return 'hello';
  *   });
  *   const result = await fn();
-}
+ }
  * ```
  * @public
  */
@@ -105,39 +117,43 @@ function runOnBackground<R, Fn extends (...args: any[]) => R>(f: Fn): (...args: 
   if (__JS__) {
     throw new Error('runOnBackground can only be used on the main thread.');
   }
-  const obj = f as any as JsFnHandle;
-  if (obj._error) {
+  const obj = f as any as JsFnHandle | MTCBackgroundFunctionCtx;
+  if ('_error' in obj && obj._error) {
     throw new Error(obj._error);
   }
   return async (...params: ClosureValueType[]): Promise<R> => {
     return new Promise((resolve) => {
       const resolveId = onFunctionCall(resolve);
 
-      if (obj._isFirstScreen) {
+      if (obj.__type === undefined && obj._isFirstScreen) {
         delayRunOnBackground(obj, (fnId: number, execId: number) => {
-          dispatchRunBackgroundFunctionEvent(fnId, params, execId, resolveId);
+          dispatchRunBackgroundFunctionEvent(
+            {
+              __type: obj.__type,
+              _jsFnId: fnId,
+              _execId: execId,
+            },
+            params,
+            resolveId,
+          );
         });
         return;
       }
 
-      dispatchRunBackgroundFunctionEvent(obj._jsFnId!, params, obj._execId!, resolveId);
+      dispatchRunBackgroundFunctionEvent(obj, params, resolveId);
     });
   };
 }
 
 function dispatchRunBackgroundFunctionEvent(
-  fnId: number,
+  fnCtx: JsFnHandle | MTCBackgroundFunctionCtx,
   params: ClosureValueType[],
-  execId: number,
   resolveId: number,
 ): void {
   lynx.getJSContext!().dispatchEvent({
     type: WorkletEvents.runOnBackground,
     data: JSON.stringify({
-      obj: {
-        _jsFnId: fnId,
-        _execId: execId,
-      },
+      obj: fnCtx,
       params,
       resolveId,
     } as RunOnBackgroundData),
