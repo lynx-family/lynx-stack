@@ -1,5 +1,14 @@
 # @lynx-js/web-constants
 
+## 0.15.7
+
+### Patch Changes
+
+- fix: globalThis is never accessible in MTS ([#1531](https://github.com/lynx-family/lynx-stack/pull/1531))
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.15.7
+
 ## 0.15.6
 
 ### Patch Changes

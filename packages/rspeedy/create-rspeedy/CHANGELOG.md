@@ -1,5 +1,11 @@
 # create-rspeedy
 
+## 0.10.8
+
+### Patch Changes
+
+- Add `@lynx-js/preact-devtools` by default. ([#1593](https://github.com/lynx-family/lynx-stack/pull/1593))
+
 ## 0.10.7
 
 ## 0.10.6
