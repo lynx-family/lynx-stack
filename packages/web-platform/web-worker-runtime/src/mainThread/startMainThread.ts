@@ -16,12 +16,15 @@ import {
   updateI18nResourcesEndpoint,
   multiThreadExposureChangedEndpoint,
   lynxUniqueIdAttribute,
+  mtsQueryComponentEndpoint,
+  mtsQueryComponentTemplateEndpoint,
 } from '@lynx-js/web-constants';
 import { Rpc } from '@lynx-js/web-worker-rpc';
 import { createMarkTimingInternal } from './crossThreadHandlers/createMainthreadMarkTimingInternal.js';
 import { OffscreenDocument } from '@lynx-js/offscreen-document/webworker';
 import { _onEvent } from '@lynx-js/offscreen-document/webworker';
 import { registerUpdateDataHandler } from './crossThreadHandlers/registerUpdateDataHandler.js';
+import { executeTemplateEntry } from '@lynx-js/web-mainthread-apis';
 
 export async function startMainThreadWorker(
   uiThreadPort: MessagePort,
@@ -36,6 +39,8 @@ export async function startMainThreadWorker(
     createMarkTimingInternal(backgroundThreadRpc);
   const uiFlush = uiThreadRpc.createCall(flushElementTreeEndpoint);
   const reportError = uiThreadRpc.createCall(reportErrorEndpoint);
+  const triggerQueryComponent = (source: string) =>
+    uiThreadRpc.invoke(mtsQueryComponentEndpoint, [source]);
   const triggerI18nResourceFallback = (
     options: I18nResourceTranslationOptions,
   ) => {
@@ -52,6 +57,8 @@ export async function startMainThreadWorker(
   const sendMultiThreadExposureChangedEndpoint = uiThreadRpc.createCall(
     multiThreadExposureChangedEndpoint,
   );
+  // Indicates whether the template has been executed
+  const templateEntries: Record<string, boolean> = {};
   const { startMainThread } = prepareMainThreadAPIs(
     backgroundThreadRpc,
     docu,
@@ -72,16 +79,32 @@ export async function startMainThreadWorker(
       i18nResources.setData(initI18nResources);
       return i18nResources;
     },
+    triggerQueryComponent,
+    templateEntries,
   );
   uiThreadRpc.registerHandler(
     mainThreadStartEndpoint,
     (config) => {
-      startMainThread(config).then((runtime) => {
-        registerUpdateDataHandler(uiThreadRpc, runtime);
+      startMainThread(config).then(mtsGlobalThis => {
+        registerUpdateDataHandler(uiThreadRpc, mtsGlobalThis);
+        uiThreadRpc.registerHandler(
+          mtsQueryComponentTemplateEndpoint,
+          async (source, template) => {
+            if (templateEntries[source]) return;
+            executeTemplateEntry({
+              template,
+              rootDom: docu,
+              createElement: docu.createElement.bind(docu) as any,
+              source,
+              mtsGlobalThis,
+            });
+            templateEntries[source] = true;
+          },
+        );
       });
     },
   );
-  uiThreadRpc?.registerHandler(updateI18nResourcesEndpoint, data => {
+  uiThreadRpc.registerHandler(updateI18nResourcesEndpoint, data => {
     i18nResources.setData(data as InitI18nResources);
   });
 }

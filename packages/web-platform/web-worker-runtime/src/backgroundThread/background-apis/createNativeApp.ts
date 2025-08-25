@@ -16,6 +16,8 @@ import {
   I18nResource,
   reportErrorEndpoint,
   globalDisallowedVars,
+  type LynxTemplate,
+  btsQueryComponentEndpoint,
 } from '@lynx-js/web-constants';
 import { createInvokeUIMethod } from './crossThreadHandlers/createInvokeUIMethod.js';
 import { registerPublicComponentEventHandler } from './crossThreadHandlers/registerPublicComponentEventHandler.js';
@@ -33,6 +35,8 @@ import { createGetPathInfo } from './crossThreadHandlers/createGetPathInfo.js';
 
 let nativeAppCount = 0;
 const sharedData: Record<string, unknown> = {};
+const templateCache: Record<string, LynxTemplate | undefined> = {};
+let queryComponentId = 0;
 
 export async function createNativeApp(
   config: {
@@ -63,6 +67,9 @@ export async function createNativeApp(
   const selectComponent = uiThreadRpc.createCallbackify(
     selectComponentEndpoint,
     3,
+  );
+  const triggerQueryComponent = uiThreadRpc.createCall(
+    btsQueryComponentEndpoint,
   );
   const reportError = uiThreadRpc.createCall(reportErrorEndpoint);
   const createBundleInitReturnObj = (): BundleInitReturnObj => {
@@ -101,6 +108,15 @@ export async function createNativeApp(
   };
   const i18nResource = new I18nResource();
   let release = '';
+  const queryComponentCallbacks: Record<
+    string,
+    (
+      ret: { __hasReady: boolean } | {
+        code: number;
+        detail?: { schema: string };
+      },
+    ) => void
+  > = {};
   const nativeApp: NativeApp = {
     id: (nativeAppCount++).toString(),
     ...performanceApis,
@@ -126,8 +142,10 @@ export async function createNativeApp(
         callback(null, createBundleInitReturnObj());
       });
     },
-    loadScript: (sourceURL: string) => {
-      const manifestUrl = template.manifest[`/${sourceURL}`];
+    loadScript: (sourceURL: string, entryName?: string) => {
+      const manifestUrl = (entryName && entryName !== '__Card__')
+        ? templateCache[entryName]?.manifest[`/${sourceURL}`]
+        : template.manifest[`/${sourceURL}`];
       if (manifestUrl) sourceURL = manifestUrl;
       importScripts(sourceURL);
       return createBundleInitReturnObj();
@@ -142,6 +160,7 @@ export async function createNativeApp(
     setNativeProps,
     getPathInfo: createGetPathInfo(uiThreadRpc),
     invokeUIMethod: createInvokeUIMethod(uiThreadRpc),
+    tt: null,
     setCard(tt) {
       registerPublicComponentEventHandler(
         mainThreadRpc,
@@ -167,6 +186,7 @@ export async function createNativeApp(
       registerUpdateI18nResource(uiThreadRpc, mainThreadRpc, i18nResource, tt);
       timingSystem.registerGlobalEmitter(tt.GlobalEventEmitter);
       (tt.lynx.getCoreContext() as LynxCrossThreadContext).__start();
+      nativeApp.tt = tt;
     },
     triggerComponentEvent,
     selectComponent,
@@ -180,6 +200,34 @@ export async function createNativeApp(
     i18nResource,
     reportException: (err: Error, _: unknown) => reportError(err, _, release),
     __SetSourceMapRelease: (err: Error) => release = err.message,
+    queryComponent: (
+      source: string,
+      callback: (
+        ret: { __hasReady: boolean } | {
+          code: number;
+          detail?: { schema: string };
+        },
+      ) => void,
+    ) => {
+      queryComponentCallbacks[queryComponentId] = callback;
+      triggerQueryComponent(source, queryComponentId).then(
+        ({ template, source, id }) => {
+          const cb = queryComponentCallbacks[id];
+          delete queryComponentCallbacks[id];
+          if (!template) {
+            callback?.({ code: -1 });
+          } else {
+            templateCache[source] = template;
+            const exports =
+              (nativeApp.loadScript(template.manifest['/app-service.js'])).init;
+            const factory = exports.bind(exports);
+            factory({ tt: nativeApp.tt! });
+            cb?.({ __hasReady: true });
+          }
+        },
+      );
+      queryComponentId++;
+    },
   };
   return nativeApp;
 }

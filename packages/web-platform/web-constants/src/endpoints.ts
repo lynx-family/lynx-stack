@@ -11,7 +11,11 @@ import type { Cloneable, CloneableObject } from './types/Cloneable.js';
 import type { StartMainThreadContextConfig } from './types/MainThreadStartConfigs.js';
 import type { IdentifierType, InvokeCallbackRes } from './types/NativeApp.js';
 import type { ElementAnimationOptions } from './types/Element.js';
-import type { BackMainThreadContextConfig, MarkTiming } from './types/index.js';
+import type {
+  BackMainThreadContextConfig,
+  LynxTemplate,
+  MarkTiming,
+} from './types/index.js';
 
 export const postExposureEndpoint = createRpcEndpoint<
   [{ exposures: ExposureWorkerEvent[]; disExposures: ExposureWorkerEvent[] }],
@@ -240,3 +244,18 @@ export const dispatchI18nResourceEndpoint = createRpcEndpoint<
   [Cloneable],
   void
 >('dispatchI18nResource', false, false);
+
+export const mtsQueryComponentEndpoint = createRpcEndpoint<
+  [string],
+  LynxTemplate
+>('mtsQueryComponent', false, true);
+
+export const mtsQueryComponentTemplateEndpoint = createRpcEndpoint<
+  [string, LynxTemplate],
+  void
+>('mtsQueryComponentTemplate', false, false);
+
+export const btsQueryComponentEndpoint = createRpcEndpoint<
+  [string, number],
+  { template?: LynxTemplate; id: number; source: string }
+>('btsQueryComponent', false, true);

@@ -270,6 +270,7 @@ export type SetInlineStylesPAPI = (
 export type SetCSSIdPAPI = (
   elements: WebFiberElementImpl[],
   cssId: number | null,
+  entryName: string | undefined,
 ) => void;
 
 export type GetPageElementPAPI = () => WebFiberElementImpl | undefined;
@@ -381,6 +382,12 @@ export interface MainThreadGlobalThis {
   ) => unknown | undefined;
   // This is an empty implementation, just to avoid business call errors
   _AddEventListener: (...args: unknown[]) => void;
+  __QueryComponent: (source: string, result: any) => any;
+  // DSL runtime binding
+  processEvalResult?: (
+    callback: (schema: string) => void,
+    schema: string,
+  ) => void;
   /**
    * private fields
    */

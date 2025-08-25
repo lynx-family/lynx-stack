@@ -72,6 +72,7 @@ const mainThreadInjectVars = [
   '__MarkTemplateElement',
   '__GetPageElement',
   '__ElementFromBinary',
+  '__QueryComponent',
 ];
 
 const backgroundInjectVars = [
@@ -94,6 +95,8 @@ const generateModuleContent = (
   muteableVars: readonly string[],
   globalDisallowedVars: readonly string[],
   isESM: boolean,
+  isLazyComponent: boolean,
+  source?: string,
 ) =>
   [
     '//# allFunctionsCalledOnLoad\n',
@@ -106,7 +109,9 @@ const generateModuleContent = (
     ...injectWithBind.map(nm =>
       `const ${nm} = lynx_runtime.${nm}?.bind(lynx_runtime);`
     ),
-    ';var globDynamicComponentEntry = \'__Card__\';',
+    isLazyComponent
+      ? `;var globDynamicComponentEntry = '${source}';`
+      : ';var globDynamicComponentEntry = \'__Card__\';',
     globalDisallowedVars.length !== 0
       ? `var ${globalDisallowedVars.join('=')}=undefined;`
       : '',
@@ -116,7 +121,7 @@ const generateModuleContent = (
       `${nm} = lynx_runtime.__lynxGlobalBindingValues.${nm};`
     ),
     '};\n',
-    content,
+    (isLazyComponent && isESM) ? `return ${content}` : content,
     '\n return module.exports;}',
   ].join('');
 
@@ -128,7 +133,9 @@ async function generateJavascriptUrl<T extends Record<string, string | {}>>(
   globalDisallowedVars: readonly string[],
   createJsModuleUrl: (content: string, name: string) => Promise<string>,
   isESM: boolean,
+  isLazyComponent: boolean,
   templateName?: string,
+  source?: string,
 ): Promise<T> {
   const processEntry = async ([name, content]: [string, string]) => [
     name,
@@ -140,6 +147,8 @@ async function generateJavascriptUrl<T extends Record<string, string | {}>>(
         muteableVars,
         globalDisallowedVars,
         isESM,
+        isLazyComponent,
+        source,
       ),
       `${templateName}-${name.replaceAll('/', '')}.js`,
     ),
@@ -154,11 +163,21 @@ async function generateJavascriptUrl<T extends Record<string, string | {}>>(
 }
 
 export async function generateTemplate(
-  template: LynxTemplate,
-  createJsModuleUrl:
-    | ((content: string, name: string) => Promise<string>)
-    | ((content: string) => string),
-  templateName?: string,
+  {
+    template,
+    createJsModuleUrl,
+    templateName,
+    isLazyComponent = false,
+    source,
+  }: {
+    template: LynxTemplate;
+    createJsModuleUrl:
+      | ((content: string, name: string) => Promise<string>)
+      | ((content: string) => string);
+    templateName?: string;
+    isLazyComponent?: boolean;
+    source?: string;
+  },
 ): Promise<LynxTemplate> {
   return {
     ...template,
@@ -170,7 +189,9 @@ export async function generateTemplate(
       templateName ? [] : globalDisallowedVars,
       createJsModuleUrl as (content: string, name: string) => Promise<string>,
       true,
+      isLazyComponent,
       templateName,
+      source,
     ),
     manifest: await generateJavascriptUrl(
       template.manifest,
@@ -180,7 +201,9 @@ export async function generateTemplate(
       templateName ? [] : globalDisallowedVars,
       createJsModuleUrl as (content: string, name: string) => Promise<string>,
       false,
+      isLazyComponent,
       templateName,
+      source,
     ),
   };
 }

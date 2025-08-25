@@ -8,7 +8,6 @@ import {
   type StyleInfo,
   type FlushElementTreeOptions,
   type Cloneable,
-  type CssOGInfo,
   type BrowserConfig,
   lynxUniqueIdAttribute,
   type publishEventEndpoint,
@@ -65,12 +64,7 @@ import {
 } from '@lynx-js/web-constants';
 import { globalMuteableVars } from '@lynx-js/web-constants';
 import { createMainThreadLynx } from './createMainThreadLynx.js';
-import {
-  flattenStyleInfo,
-  genCssContent,
-  genCssOGInfo,
-  transformToWebCss,
-} from './utils/processStyleInfo.js';
+import { insertStyleElement } from './utils/processStyleInfo.js';
 import {
   __AddClass,
   __AddConfig,
@@ -141,6 +135,7 @@ export interface MainThreadRuntimeCallbacks {
   _I18nResourceTranslation: (
     options: I18nResourceTranslationOptions,
   ) => unknown | undefined;
+  __QueryComponent: (source: string) => void;
 }
 
 export interface MainThreadRuntimeConfig {
@@ -173,7 +168,6 @@ export function createMainThreadGlobalThis(
     lepusCode,
     rootDom,
     globalProps,
-    styleInfo,
     ssrHydrateInfo,
     ssrHooks,
   } = config;
@@ -194,37 +188,10 @@ export function createMainThreadGlobalThis(
   const lynxGlobalBindingValues: Record<string, any> = {};
   const exposureChangedElements = new Set<WebFiberElementImpl>();
 
-  /**
-   * now create the style content
-   * 1. flatten the styleInfo
-   * 2. transform the styleInfo to web css
-   * 3. generate the css in js info
-   * 4. create the style element
-   * 5. append the style element to the root dom
-   */
-  flattenStyleInfo(
-    styleInfo,
-    pageConfig.enableCSSSelector,
-  );
-  transformToWebCss(styleInfo);
-  const cssOGInfo: CssOGInfo = pageConfig.enableCSSSelector
-    ? {}
-    : genCssOGInfo(styleInfo);
-  let cardStyleElement: HTMLStyleElement;
-  if (ssrHydrateInfo?.cardStyleElement) {
-    cardStyleElement = ssrHydrateInfo.cardStyleElement;
-  } else {
-    cardStyleElement = callbacks.createElement(
-      'style',
-    ) as unknown as HTMLStyleElement;
-    cardStyleElement.innerHTML = genCssContent(
-      styleInfo,
-      pageConfig,
-    );
-    rootDom.append(cardStyleElement);
-  }
-  const cardStyleElementSheet =
-    (cardStyleElement as unknown as HTMLStyleElement).sheet!;
+  const { cssOGInfo, cardStyleElementSheet } = insertStyleElement({
+    ...config,
+    createElement: callbacks.createElement,
+  });
   const updateCssOGStyle: (
     uniqueId: number,
     newStyles: string,
@@ -837,6 +804,9 @@ export function createMainThreadGlobalThis(
     __LoadLepusChunk,
     __GetPageElement,
     __globalProps: globalProps,
+    __QueryComponent: (source: string) => {
+      callbacks.__QueryComponent(source);
+    },
     SystemInfo,
     lynx: createMainThreadLynx(config, SystemInfo),
     _ReportError: (err, _) => callbacks._ReportError(err, _, release),
