@@ -15,7 +15,6 @@ const templateUpgraders: templateUpgrader[] = [
       'clearInterval',
       'clearTimeout',
       'NativeModules',
-      'console',
       'Component',
       'ReactLynx',
       'nativeAppId',
@@ -55,9 +54,15 @@ const templateUpgraders: templateUpgrader[] = [
     template.manifest = Object.fromEntries(
       Object.entries(template.manifest).map(([key, value]) => [
         key,
-        `{init: (lynxCoreInject) => { var {${defaultInjectStr}} = lynxCoreInject.tt; const module = {exports:null}; ${value}; return module.exports; } }`,
+        `{init: (lynxCoreInject) => { var {${defaultInjectStr}} = lynxCoreInject.tt; const module = {exports:null}; ${value}\n return module.exports; } }`,
       ]),
     ) as typeof template.manifest;
+    template.lepusCode = Object.fromEntries(
+      Object.entries(template.lepusCode).map(([key, value]) => [
+        key,
+        `(()=>{${value}\n})();`,
+      ]),
+    ) as typeof template.lepusCode;
     template.version = 2;
     return template;
   },
