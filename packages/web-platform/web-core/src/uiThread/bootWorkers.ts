@@ -14,7 +14,6 @@ interface LynxViewRpc {
 const backgroundWorkerContextCount: number[] = [];
 const contextIdToBackgroundWorker: (Worker | undefined)[] = [];
 
-let preHeatedMainWorker = createMainWorker();
 export function bootWorkers(
   lynxGroupId: number | undefined,
   allOnUI?: boolean,
@@ -27,8 +26,7 @@ export function bootWorkers(
   if (allOnUI) {
     curMainWorker = createUIChannel();
   } else {
-    curMainWorker = preHeatedMainWorker;
-    preHeatedMainWorker = createMainWorker();
+    curMainWorker = createMainWorker();
   }
   const curBackgroundWorker = createBackgroundWorker(
     lynxGroupId,
@@ -124,6 +122,10 @@ function createBackgroundWorker(
 
 function createWebWorker(name: string): Worker {
   return new Worker(
+    /* webpackFetchPriority: "high" */
+    /* webpackChunkName: "web-core-worker-runtime" */
+    /* webpackPrefetch: true */
+    /* webpackPreload: true */
     new URL('@lynx-js/web-worker-runtime', import.meta.url),
     {
       type: 'module',
