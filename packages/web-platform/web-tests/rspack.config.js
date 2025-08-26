@@ -204,7 +204,7 @@ const config = {
       return middlewares;
     },
     watchFiles: isCI
-      ? undefined
+      ? []
       : ['./node_modules/@lynx-js/**/*'],
     static: [
       {

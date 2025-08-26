@@ -67,6 +67,7 @@ jobs:
     name: Build (${{ matrix.runs-on.name }})
     runs-on: ${{ matrix.runs-on.label }}
     strategy:
+      fail-fast: false
       matrix:
         runs-on:
           - label: lynx-ubuntu-24.04-xlarge

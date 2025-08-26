@@ -13,6 +13,7 @@ jobs:
     runs-on: lynx-ubuntu-24.04-medium
     timeout-minutes: 10
     strategy:
+      fail-fast: false
       matrix:
         project:
           - path: ./examples/react
