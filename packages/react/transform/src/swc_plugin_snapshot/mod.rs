@@ -1293,7 +1293,11 @@ where
                   }
                 } else if let AttrName::Ref = attr_name {
                   if target == TransformTarget::LEPUS {
-                    value
+                    if is_mtc_module {
+                      value
+                    } else {
+                      quote!("1" as Expr)
+                    }
                   } else {
                     quote!(
                       "$runtime_id.transformRef($value)" as Expr,
@@ -2713,6 +2717,121 @@ mod tests {
     basic_ref,
     // Input codes
     r#"
+    function Comp() {
+      const handleRef = () => {}
+      return (
+        <view>
+          <text ref={handleRef}>1</text>
+          <text bindtap={handleRef}>2</text>
+          <text ref={handleRef}>3</text>
+        </view>
+      )
+    }
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    |t| {
+      let top_level_mark = Mark::new();
+      let unresolved_mark = Mark::new();
+      (
+        visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
+          super::JSXTransformerConfig {
+            preserve_jsx: false,
+            target: TransformTarget::LEPUS,
+            ..Default::default()
+          },
+          t.cm.clone(),
+          None,
+          top_level_mark,
+          unresolved_mark,
+          quote!("require('@lynx-js/react/internal')" as Expr),
+        )),
+        react::react::<&SingleThreadedComments>(
+          t.cm.clone(),
+          None,
+          react::Options {
+            next: Some(false),
+            runtime: Some(react::Runtime::Automatic),
+            import_source: Some("@lynx-js/react".into()),
+            pragma: None,
+            pragma_frag: None,
+            throw_if_namespace: None,
+            development: Some(false),
+            refresh: None,
+            ..Default::default()
+          },
+          top_level_mark,
+          unresolved_mark,
+        ),
+      )
+    },
+    basic_ref_main_thread,
+    // Input codes
+    r#"
+    function Comp() {
+      const handleRef = () => {}
+      return (
+        <view>
+          <text ref={handleRef}>1</text>
+          <text bindtap={handleRef}>2</text>
+          <text ref={handleRef}>3</text>
+        </view>
+      )
+    }
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    |t| {
+      let top_level_mark = Mark::new();
+      let unresolved_mark = Mark::new();
+      (
+        visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
+          super::JSXTransformerConfig {
+            preserve_jsx: false,
+            target: TransformTarget::LEPUS,
+            ..Default::default()
+          },
+          t.cm.clone(),
+          None,
+          top_level_mark,
+          unresolved_mark,
+          quote!("require('@lynx-js/react/internal')" as Expr),
+        )),
+        react::react::<&SingleThreadedComments>(
+          t.cm.clone(),
+          None,
+          react::Options {
+            next: Some(false),
+            runtime: Some(react::Runtime::Automatic),
+            import_source: Some("@lynx-js/react".into()),
+            pragma: None,
+            pragma_frag: None,
+            throw_if_namespace: None,
+            development: Some(false),
+            refresh: None,
+            ..Default::default()
+          },
+          top_level_mark,
+          unresolved_mark,
+        ),
+      )
+    },
+    basic_ref_mtc,
+    // Input codes
+    r#"
+    "main thread";
     function Comp() {
       const handleRef = () => {}
       return (
