@@ -355,6 +355,10 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
         if (__PROFILE__) {
           console.profile(`[hydrate] update-list-info: ${JSON.stringify(info)}`);
         }
+        if (__ALOG__) {
+          console.alog(`[hydrate] update-list-info: ${JSON.stringify(info)}`);
+        }
+
         const listElement = before.__elements![elementIndex]!;
         __SetAttribute(listElement, 'update-list-info', info);
         const [componentAtIndex, componentAtIndexes] = componentAtIndexFactory(afterChildNodes, hydrate);
