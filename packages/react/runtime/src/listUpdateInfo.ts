@@ -82,6 +82,13 @@ export class ListUpdateInfoRecording implements ListUpdateInfo {
     //   __SetAttribute(listElement, "update-list-info", pendingAttribute);
     //   __FlushElementTree(listElement);
     // });
+    if (__PROFILE__) {
+      console.profile(`[flush] update-list-info: ${JSON.stringify(this.__toAttribute())}`);
+    }
+    if (__ALOG__) {
+      console.alog(`[flush] update-list-info: ${JSON.stringify(this.__toAttribute())}`);
+    }
+
     __SetAttribute(listElement, 'update-list-info', this.__toAttribute());
     const [componentAtIndex, componentAtIndexes] = componentAtIndexFactory(this.list.childNodes, hydrate);
     __UpdateListCallbacks(
@@ -90,6 +97,10 @@ export class ListUpdateInfoRecording implements ListUpdateInfo {
       enqueueComponentFactory(),
       componentAtIndexes,
     );
+
+    if (__PROFILE__) {
+      console.profileEnd();
+    }
     return this.list.__id;
   }
 
