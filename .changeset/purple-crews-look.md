@@ -2,4 +2,4 @@
 "@lynx-js/react": patch
 ---
 
-Add profile for list hydration
+Add profile and alog for list.
