@@ -1,3 +1,4 @@
+"main thread";
 export function FakeMTC(customPropsName) {
     const componentInstanceId = ReactLynx.useMemo(ReactLynx.genMTCInstanceId, []);
     const [jsxs, transformedProps] = ReactLynx.pickJSXFromProps(customPropsName);

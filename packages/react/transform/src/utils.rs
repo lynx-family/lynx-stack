@@ -60,3 +60,13 @@ pub fn calc_hash(s: &str) -> String {
 
   hex::encode(sum)[0..5].to_string()
 }
+
+pub fn check_main_thread_directive(module: &Module) -> bool {
+  match module.body.first() {
+    Some(ModuleItem::Stmt(Stmt::Expr(expr_stmt))) => match &*expr_stmt.expr {
+      Expr::Lit(Lit::Str(str_lit)) => str_lit.value.trim() == "main thread",
+      _ => false,
+    },
+    _ => false,
+  }
+}

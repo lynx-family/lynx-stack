@@ -1690,7 +1690,8 @@ export function MTC(props) {
 
       if (target === 'LEPUS') {
         expect(code).toMatchInlineSnapshot(`
-          "import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
+          ""main thread";
+          import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
           import * as ReactLynx from "@lynx-js/react";
           const __snapshot_da39a_87544_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_87544_1", function() {
               const pageId = ReactLynx.__pageId;
@@ -1709,7 +1710,8 @@ export function MTC(props) {
         `);
       } else if (target === 'JS') {
         expect(code).toMatchInlineSnapshot(`
-          "import * as ReactLynx from "@lynx-js/react";
+          ""main thread";
+          import * as ReactLynx from "@lynx-js/react";
           export function MTC(props) {
               const componentInstanceId = ReactLynx.useMemo(ReactLynx.genMTCInstanceId, []);
               const [jsxs, transformedProps] = ReactLynx.pickJSXFromProps(props);
@@ -1727,7 +1729,8 @@ export function MTC(props) {
         `);
       } else if (target === 'MIXED') {
         expect(code).toMatchInlineSnapshot(`
-          "import * as ReactLynx from "@lynx-js/react";
+          ""main thread";
+          import * as ReactLynx from "@lynx-js/react";
           export function MTC(props) {
               const componentInstanceId = ReactLynx.useMemo(ReactLynx.genMTCInstanceId, []);
               const [jsxs, transformedProps] = ReactLynx.pickJSXFromProps(props);

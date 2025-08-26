@@ -24,7 +24,11 @@ mod attr_name;
 pub mod jsx_helpers;
 mod slot_marker;
 
-use crate::{css::get_string_inline_style_from_literal, target::TransformTarget, utils::calc_hash};
+use crate::{
+  css::get_string_inline_style_from_literal,
+  target::TransformTarget,
+  utils::{calc_hash, check_main_thread_directive},
+};
 
 use self::{
   attr_name::AttrName,
@@ -1024,6 +1028,7 @@ where
   current_snapshot_defs: Vec<ModuleItem>,
   current_snapshot_id: Option<Ident>,
   comments: Option<C>,
+  is_mtc_module: bool,
 }
 
 impl<C> JSXTransformer<C>
@@ -1056,6 +1061,7 @@ where
       current_snapshot_defs: vec![],
       current_snapshot_id: None,
       comments,
+      is_mtc_module: false,
     }
   }
 
@@ -1182,6 +1188,7 @@ where
 
     let target = self.cfg.target;
     let runtime_id = self.runtime_id.clone();
+    let is_mtc_module = self.is_mtc_module;
     let mut dynamic_part_extractor = DynamicPartExtractor::new(
       self.runtime_id.clone(),
       wrap_dynamic_part.dynamic_part_count,
@@ -1279,7 +1286,11 @@ where
               snapshot_values.push(Some(ExprOrSpread {
                 spread: None,
                 expr: Box::new(if let AttrName::Event(_, _) = attr_name {
-                  value
+                  if target == TransformTarget::LEPUS && !is_mtc_module {
+                    quote!("1" as Expr)
+                  } else {
+                    value
+                  }
                 } else if let AttrName::Ref = attr_name {
                   if target == TransformTarget::LEPUS {
                     value
@@ -1526,6 +1537,8 @@ where
   }
 
   fn visit_mut_module(&mut self, n: &mut Module) {
+    self.is_mtc_module = check_main_thread_directive(n);
+
     self.parse_directives(n.span);
     for item in &n.body {
       let span = item.span();
@@ -2534,6 +2547,117 @@ mod tests {
     basic_event,
     // Input codes
     r#"
+    function Comp() {
+      const handleTap = () => {}
+      return (
+        <view>
+          <text bindtap={handleTap}>1</text>
+        </view>
+      )
+    }
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    |t| {
+      let top_level_mark = Mark::new();
+      let unresolved_mark = Mark::new();
+      (
+        visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
+          super::JSXTransformerConfig {
+            preserve_jsx: false,
+            target: TransformTarget::LEPUS,
+            ..Default::default()
+          },
+          t.cm.clone(),
+          None,
+          top_level_mark,
+          unresolved_mark,
+          quote!("require('@lynx-js/react/internal')" as Expr),
+        )),
+        react::react::<&SingleThreadedComments>(
+          t.cm.clone(),
+          None,
+          react::Options {
+            next: Some(false),
+            runtime: Some(react::Runtime::Automatic),
+            import_source: Some("@lynx-js/react".into()),
+            pragma: None,
+            pragma_frag: None,
+            throw_if_namespace: None,
+            development: Some(false),
+            refresh: None,
+            ..Default::default()
+          },
+          top_level_mark,
+          unresolved_mark,
+        ),
+      )
+    },
+    basic_event_main_thread,
+    // Input codes
+    r#"
+    function Comp() {
+      const handleTap = () => {}
+      return (
+        <view>
+          <text bindtap={handleTap}>1</text>
+        </view>
+      )
+    }
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    |t| {
+      let top_level_mark = Mark::new();
+      let unresolved_mark = Mark::new();
+      (
+        visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
+          super::JSXTransformerConfig {
+            preserve_jsx: false,
+            target: TransformTarget::LEPUS,
+            ..Default::default()
+          },
+          t.cm.clone(),
+          None,
+          top_level_mark,
+          unresolved_mark,
+          quote!("require('@lynx-js/react/internal')" as Expr),
+        )),
+        react::react::<&SingleThreadedComments>(
+          t.cm.clone(),
+          None,
+          react::Options {
+            next: Some(false),
+            runtime: Some(react::Runtime::Automatic),
+            import_source: Some("@lynx-js/react".into()),
+            pragma: None,
+            pragma_frag: None,
+            throw_if_namespace: None,
+            development: Some(false),
+            refresh: None,
+            ..Default::default()
+          },
+          top_level_mark,
+          unresolved_mark,
+        ),
+      )
+    },
+    basic_event_mtc,
+    // Input codes
+    r#"
+    "main thread";
     function Comp() {
       const handleTap = () => {}
       return (

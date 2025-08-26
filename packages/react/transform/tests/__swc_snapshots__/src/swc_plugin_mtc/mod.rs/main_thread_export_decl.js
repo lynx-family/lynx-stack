@@ -1,3 +1,4 @@
+"main thread";
 function $$mtc_RealMTC(props) {
     return <view>
       {ReactLynx.renderMTCSlot(props.p3)}

@@ -9,7 +9,10 @@ use swc_core::{
   quote,
 };
 
-use crate::{target::TransformTarget, utils::calc_hash};
+use crate::{
+  target::TransformTarget,
+  utils::{calc_hash, check_main_thread_directive},
+};
 
 #[napi(object)]
 #[derive(Clone, Debug)]
@@ -74,21 +77,11 @@ where
     self
   }
 
-  fn check_main_thread_directive(&self, module: &Module) -> bool {
-    match module.body.first() {
-      Some(ModuleItem::Stmt(Stmt::Expr(expr_stmt))) => match &*expr_stmt.expr {
-        Expr::Lit(Lit::Str(str_lit)) => str_lit.value.trim() == "main thread",
-        _ => false,
-      },
-      _ => false,
-    }
-  }
-
-  fn remove_main_thread_directive(&self, module: &mut Module) {
-    if self.check_main_thread_directive(module) {
-      module.body.remove(0);
-    }
-  }
+  // fn remove_main_thread_directive(&self, module: &mut Module) {
+  //   if self.check_main_thread_directive(module) {
+  //     module.body.remove(0);
+  //   }
+  // }
 
   fn gen_mtc_uid(&mut self) -> String {
     self.mtc_counter += 1;
@@ -298,9 +291,9 @@ where
   C: Comments + Clone,
 {
   fn visit_mut_module(&mut self, module: &mut Module) {
-    if self.check_main_thread_directive(module) {
+    if check_main_thread_directive(module) {
       self.is_mtc_module = true;
-      self.remove_main_thread_directive(module);
+      // self.remove_main_thread_directive(module);
     } else {
       return;
     }
