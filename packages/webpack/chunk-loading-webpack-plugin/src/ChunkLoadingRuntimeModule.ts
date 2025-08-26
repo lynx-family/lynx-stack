@@ -96,9 +96,13 @@ export function createChunkLoadingRuntimeModule(
     ): boolean {
       if (chunkGraph.getNumberOfEntryModules(chunk) > 0) return true;
 
-      return chunkGraph.getChunkModulesIterableBySourceType(chunk, 'javascript')
-        ? true
-        : false;
+      const chunkModules = chunkGraph.getChunkModulesIterableBySourceType(
+        chunk,
+        'javascript',
+      );
+
+      // Rspack returns an empty array instead of `undefined`.
+      return chunkModules?.[Symbol.iterator]().next().done !== true;
     }
   };
 }
