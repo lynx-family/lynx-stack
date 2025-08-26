@@ -11,7 +11,6 @@ import {
   type LynxJSModule,
   type NativeApp,
   type LynxCrossThreadContext,
-  systemInfo,
   type BackMainThreadContextConfig,
   I18nResource,
   reportErrorEndpoint,
@@ -47,7 +46,6 @@ export async function createNativeApp(
     template,
     nativeModulesMap,
     timingSystem,
-    browserConfig,
   } = config;
   const performanceApis = createPerformanceApis(
     timingSystem,
@@ -90,9 +88,6 @@ export async function createNativeApp(
               key !== 'globalThis'
             );
           },
-        });
-        Object.assign(lynxCoreInject.tt, {
-          SystemInfo: { ...systemInfo, ...browserConfig },
         });
         const ret = entry?.(lynxCoreInject.tt);
         return ret;

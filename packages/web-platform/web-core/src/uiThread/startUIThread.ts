@@ -44,7 +44,7 @@ export function startUIThread(
     mainThreadRpc,
     backgroundRpc,
     terminateWorkers,
-  } = bootWorkers(lynxGroupId, allOnUI);
+  } = bootWorkers(lynxGroupId, allOnUI, configs.browserConfig);
   const {
     markTiming,
     sendGlobalEvent,

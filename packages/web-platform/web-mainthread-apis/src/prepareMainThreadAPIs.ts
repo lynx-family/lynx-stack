@@ -169,7 +169,6 @@ export function prepareMainThreadAPIs(
             ),
             nativeModulesMap,
             napiModulesMap,
-            browserConfig,
           });
           if (!ssrHydrateInfo) {
             mtsGlobalThis.renderPage!(initData);

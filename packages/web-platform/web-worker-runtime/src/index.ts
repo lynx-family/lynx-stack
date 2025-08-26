@@ -8,11 +8,15 @@ export interface WorkerStartMessage {
   mode: 'main' | 'background';
   toPeerThread: MessagePort;
   toUIThread: MessagePort;
+  systemInfo?: Record<string, any>;
 }
 
 globalThis.onmessage = async (ev) => {
-  const { mode, toPeerThread, toUIThread } = ev
+  const { mode, toPeerThread, toUIThread, systemInfo } = ev
     .data as WorkerStartMessage;
+  if (!globalThis.SystemInfo) {
+    globalThis.SystemInfo = systemInfo;
+  }
   if (mode === 'main') {
     const { startMainThreadWorker } = await import(
       /* webpackChunkName: "web-worker-runtime-main-thread" */

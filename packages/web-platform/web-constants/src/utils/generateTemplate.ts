@@ -79,7 +79,6 @@ const backgroundInjectVars = [
   'globalThis',
   'lynx',
   'lynxCoreInject',
-  'SystemInfo',
 ];
 
 const backgroundInjectWithBind = [
