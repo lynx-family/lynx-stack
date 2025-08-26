@@ -26,7 +26,6 @@ const templateUpgraders: templateUpgrader[] = [
       'window',
       'document',
       'frames',
-      'self',
       'location',
       'navigator',
       'localStorage',
