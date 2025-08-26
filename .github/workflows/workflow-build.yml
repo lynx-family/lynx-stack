@@ -124,10 +124,10 @@ jobs:
           include-hidden-files: true
       - name: Setup Rust and retry build if failed
         if: steps.build.outcome == 'failure'
-        uses: actions-rust-lang/setup-rust-toolchain@fb51252c7ba57d633bc668f941da052e410add48 # v1
+        uses: ./.github/actions/rustup
         with:
-          target: wasm32-unknown-unknown
-          cache-key: test-${{ runner.os }}
+          key: build
+          save-if: ${{ github.ref_name == 'main' }}
       - name: Retry Build
         if: steps.build.outcome == 'failure'
         run: |
