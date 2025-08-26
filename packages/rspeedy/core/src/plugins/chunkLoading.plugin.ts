@@ -4,6 +4,7 @@
 
 import type { RsbuildPlugin } from '@rsbuild/core'
 
+import { LynxCacheEventsPlugin } from '@lynx-js/cache-events-webpack-plugin'
 import { ChunkLoadingWebpackPlugin } from '@lynx-js/chunk-loading-webpack-plugin'
 
 import { isLynx } from '../utils/is-lynx.js'
@@ -27,6 +28,9 @@ export function pluginChunkLoading(): RsbuildPlugin {
           chain
           .plugin('lynx:chunk-loading')
             .use(ChunkLoadingWebpackPlugin)
+          .end()
+          .plugin('lynx:cache-events')
+            .use(LynxCacheEventsPlugin)
           .end()
           .output
             .chunkLoading('lynx')

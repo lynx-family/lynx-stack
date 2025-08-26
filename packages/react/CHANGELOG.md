@@ -1,5 +1,35 @@
 # @lynx-js/react
 
+## 0.112.4
+
+### Patch Changes
+
+- fix `withInitDataInState` got wrong state in 2nd or more times `defaultDataProcessor`, now it will keep its own state. ([#1478](https://github.com/lynx-family/lynx-stack/pull/1478))
+
+- change `__CreateElement('raw-text')` to `__CreateRawText('')` to avoid `setNativeProps` not working ([#1570](https://github.com/lynx-family/lynx-stack/pull/1570))
+
+- Fix wrong render result when using expression as `key`. ([#1541](https://github.com/lynx-family/lynx-stack/pull/1541))
+
+  See [lynx-family/lynx-stack#1371](https://github.com/lynx-family/lynx-stack/issues/1371) for more details.
+
+- fix: `Cannot read properties of undefined` error when using `Suspense` ([#1569](https://github.com/lynx-family/lynx-stack/pull/1569))
+
+- Add `animate` API in Main Thread Script(MTS), so you can now control a CSS animation imperatively ([#1534](https://github.com/lynx-family/lynx-stack/pull/1534))
+
+  ```ts
+  import type { MainThread } from '@lynx-js/types';
+
+  function startAnimation(ele: MainThread.Element) {
+    'main thread';
+    const animation = ele.animate([{ opacity: 0 }, { opacity: 1 }], {
+      duration: 3000,
+    });
+
+    // Can also be paused
+    // animation.pause()
+  }
+  ```
+
 ## 0.112.3
 
 ### Patch Changes

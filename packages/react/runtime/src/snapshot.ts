@@ -101,7 +101,7 @@ export const snapshotManager: {
             return [];
           }
           /* v8 ignore stop */
-          return [__CreateElement('raw-text', __pageId)];
+          return [__CreateRawText('')];
         },
         update: [
           ctx => {

@@ -1,5 +1,21 @@
 # @lynx-js/rspeedy
 
+## 0.10.8
+
+### Patch Changes
+
+- Support caching Lynx native events when chunk splitting is enabled. ([#1370](https://github.com/lynx-family/lynx-stack/pull/1370))
+
+  When `performance.chunkSplit.strategy` is not `all-in-one`, Lynx native events are cached until the BTS chunk is fully loaded and are replayed when that chunk is ready. The `firstScreenSyncTiming` flag will no longer change to `jsReady` anymore.
+
+- Support exporting `Promise` and function in `lynx.config.ts`. ([#1590](https://github.com/lynx-family/lynx-stack/pull/1590))
+
+- Fix missing `publicPath` using when `rspeedy dev --mode production`. ([#1310](https://github.com/lynx-family/lynx-stack/pull/1310))
+
+- Updated dependencies [[`aaca8f9`](https://github.com/lynx-family/lynx-stack/commit/aaca8f91d177061c7b0430cc5cb21a3602897534)]:
+  - @lynx-js/cache-events-webpack-plugin@0.0.1
+  - @lynx-js/chunk-loading-webpack-plugin@0.3.1
+
 ## 0.10.7
 
 ### Patch Changes

@@ -19,6 +19,7 @@ export type FilterUnderscoreKeys<T> = {
 
 // @public (undocumented)
 export const initElementTree: () => {
+    uniqueId2Element: Map<number, LynxElement>;
     root: LynxElement | undefined;
     countElement(element: LynxElement, parentComponentUniqueId: number): void;
     __CreatePage(_tag: string, parentComponentUniqueId: number): LynxElement;

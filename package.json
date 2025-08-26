@@ -7,19 +7,20 @@
   "license": "Apache-2.0",
   "type": "module",
   "scripts": {
+    "_internal:cargo:version": "cargo --version",
     "build": "tsc --build",
     "prepare": "husky && ts-patch install",
     "test": "vitest"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
-    "@changesets/cli": "^2.29.5",
+    "@changesets/cli": "^2.29.6",
     "@codspeed/vitest-plugin": "^4.0.1",
     "@eslint/js": "^9.33.0",
     "@eslint/markdown": "^7.1.0",
     "@microsoft/api-extractor": "catalog:",
     "@rsbuild/core": "catalog:rsbuild",
-    "@rslib/core": "^0.12.1",
+    "@rslib/core": "^0.12.2",
     "@rspack/core": "catalog:rspack",
     "@svitejs/changesets-changelog-github-compact": "^1.2.0",
     "@tsconfig/node20": "^20.1.6",

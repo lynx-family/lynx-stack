@@ -1,5 +1,7 @@
 # @lynx-js/web-core-server
 
+## 0.15.7
+
 ## 0.15.6
 
 ### Patch Changes

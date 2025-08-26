@@ -1693,4 +1693,71 @@ describe('suspense', () => {
       vi.runAllTimers();
     }
   });
+
+  it('should render fallback and content correctly without hydrate', async () => {
+    const { Suspender, suspended } = createSuspender();
+
+    function Comp() {
+      return (
+        <Suspense fallback={<text>loading</text>}>
+          <Suspender>
+            <text>foo</text>
+          </Suspender>
+        </Suspense>
+      );
+    }
+
+    // background render
+    {
+      globalEnvManager.switchToBackground();
+      render(<Comp />, __root);
+    }
+
+    // render children
+    {
+      suspended.resolve();
+      lynx.getNativeApp().callLepusMethod.mockClear();
+      await Promise.resolve().then(() => {});
+    }
+
+    // first screen
+    {
+      globalEnvManager.switchToMainThread();
+      __root.__jsx = <Comp />;
+      renderPage();
+    }
+
+    // hydrate
+    {
+      // LifecycleConstant.firstScreen
+      globalEnvManager.switchToBackground();
+      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      expect(lynx.getNativeApp().callLepusMethod).toBeCalledTimes(1);
+
+      // rLynxChange
+      globalEnvManager.switchToMainThread();
+      globalThis.__OnLifecycleEvent.mockClear();
+      const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
+      globalThis[rLynxChange[0]](rLynxChange[1]);
+      expect(globalThis.__OnLifecycleEvent).not.toBeCalled();
+      expect(__root.__element_root).toMatchInlineSnapshot(`
+        <page
+          cssId="default-entry-from-native:0"
+        >
+          <wrapper>
+            <text>
+              <raw-text
+                text="foo"
+              />
+            </text>
+          </wrapper>
+        </page>
+      `);
+
+      // rLynxChange callback
+      globalEnvManager.switchToBackground();
+      rLynxChange[2]();
+      vi.runAllTimers();
+    }
+  });
 });
