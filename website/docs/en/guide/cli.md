@@ -98,6 +98,7 @@ Build the project in production mode
 
 Options:
   --environment <name...>  specify the name of environment to build
+  --watch                  Enable watch mode to automatically rebuild on file changes
   -c --config <config>     specify the configuration file, can be a relative or absolute path
   --env-mode <mode>        specify the env mode to load the .env.[mode] file
   --no-env                 disable loading `.env` files"
