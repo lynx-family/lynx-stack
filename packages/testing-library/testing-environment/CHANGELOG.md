@@ -1,5 +1,11 @@
 # @lynx-js/testing-environment
 
+## 0.1.7
+
+### Patch Changes
+
+- Support `lynx.createSelectorQuery().select()` and `setNativeProps` API ([#1570](https://github.com/lynx-family/lynx-stack/pull/1570))
+
 ## 0.1.6
 
 ### Patch Changes

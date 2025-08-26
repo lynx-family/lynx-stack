@@ -1,5 +1,15 @@
 # @lynx-js/web-mainthread-apis
 
+## 0.15.7
+
+### Patch Changes
+
+- fix: globalThis is never accessible in MTS ([#1531](https://github.com/lynx-family/lynx-stack/pull/1531))
+
+- Updated dependencies [[`70863fb`](https://github.com/lynx-family/lynx-stack/commit/70863fbc311d8885ebda40855668097b0631f521)]:
+  - @lynx-js/web-constants@0.15.7
+  - @lynx-js/web-style-transformer@0.15.7
+
 ## 0.15.6
 
 ### Patch Changes
