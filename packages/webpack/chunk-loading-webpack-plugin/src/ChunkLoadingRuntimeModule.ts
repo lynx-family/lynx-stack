@@ -101,8 +101,13 @@ export function createChunkLoadingRuntimeModule(
         'javascript',
       );
 
-      // Rspack returns an empty array instead of `undefined`.
-      return chunkModules?.[Symbol.iterator]().next().done !== true;
+      // Webpack would return `undefined` when no chunk module is found
+      if (!chunkModules) {
+        return false;
+      }
+
+      // Rspack would return an empty array instead of `undefined`.
+      return chunkModules[Symbol.iterator]().next().done !== true;
     }
   };
 }
