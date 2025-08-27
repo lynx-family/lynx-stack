@@ -60,6 +60,7 @@ function createIFrameRealm(parent: Node): JSRealm {
       script.src = url;
       script.fetchPriority = 'high';
       script.defer = true;
+      script.async = false;
       script.onload = () => resolve(iframeWindow?.module?.exports);
       script.onerror = (err) =>
         reject(new Error(`Failed to load script: ${url}`, { cause: err }));
