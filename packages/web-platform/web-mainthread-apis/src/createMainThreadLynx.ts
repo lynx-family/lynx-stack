@@ -8,15 +8,21 @@ export function createMainThreadLynx(
   config: MainThreadRuntimeConfig,
   SystemInfo: Record<string, any>,
 ): MainThreadLynx {
+  const requestAnimationFrameBrowserImpl = requestAnimationFrame;
+  const cancelAnimationFrameBrowserImpl = cancelAnimationFrame;
+  const setTimeoutBrowserImpl = setTimeout;
+  const clearTimeoutBrowserImpl = clearTimeout;
+  const setIntervalBrowserImpl = setInterval;
+  const clearIntervalBrowserImpl = clearInterval;
   return {
     getJSContext() {
       return config.jsContext;
     },
     requestAnimationFrame(cb: FrameRequestCallback) {
-      return requestAnimationFrame(cb);
+      return requestAnimationFrameBrowserImpl(cb);
     },
     cancelAnimationFrame(handler: number) {
-      return cancelAnimationFrame(handler);
+      return cancelAnimationFrameBrowserImpl(handler);
     },
     __globalProps: config.globalProps,
     getCustomSectionSync(key: string) {
@@ -24,5 +30,9 @@ export function createMainThreadLynx(
     },
     markPipelineTiming: config.callbacks.markTiming,
     SystemInfo,
+    setTimeout: setTimeoutBrowserImpl,
+    clearTimeout: clearTimeoutBrowserImpl,
+    setInterval: setIntervalBrowserImpl,
+    clearInterval: clearIntervalBrowserImpl,
   };
 }
