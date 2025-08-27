@@ -18,7 +18,7 @@
     "benchx_cli": "workspace:*",
     "empathic": "^2.0.0",
     "event-target-polyfill": "^0.0.4",
-    "magic-string": "^0.30.17",
+    "magic-string": "^0.30.18",
     "tinybench": "^5.0.0"
   },
   "devDependencies": {
