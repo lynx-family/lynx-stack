@@ -4,7 +4,7 @@
 
 import type { Bench } from 'tinybench';
 
-import { hook } from '../node_modules/@lynx-js/react/runtime/lib/utils.js';
+import { hook } from './hook.js';
 
 function withCodspeed(bench: Bench) {
   hook(bench, 'add', function(this: Bench, old, name, fn, fnOpts) {

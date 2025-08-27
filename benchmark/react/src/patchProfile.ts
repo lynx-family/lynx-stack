@@ -2,18 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-function hook<T, K extends keyof T>(
-  object: T,
-  key: K,
-  fn: Required<T>[K] extends (...args: infer P) => infer Q
-    ? ((old?: T[K], ...args: P) => Q)
-    : never,
-): void {
-  const oldFn = object[key];
-  object[key] = function(this: T, ...args: unknown[]) {
-    return fn.call(this, oldFn, ...args);
-  } as T[K];
-}
+import { hook } from './hook.js';
 
 if (__BACKGROUND__) {
   // eslint-disable-next-line no-global-assign
