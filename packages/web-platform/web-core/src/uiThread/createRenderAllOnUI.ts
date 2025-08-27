@@ -61,7 +61,7 @@ function createIFrameRealm(parent: Node): JSRealm {
       script.fetchPriority = 'high';
       script.defer = true;
       script.onload = () => resolve(iframeWindow?.module?.exports);
-      script.onerror = () => reject(new Error(`Failed to load script: ${url}`));
+  script.onerror = (err) => reject(new Error(`Failed to load script: ${url}`, { cause: err }));
       iframe.contentDocument!.head.appendChild(script);
     });
   };
