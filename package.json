@@ -7,7 +7,6 @@
   "license": "Apache-2.0",
   "type": "module",
   "scripts": {
-    "_internal:cargo:version": "cargo --version",
     "build": "tsc --build",
     "prepare": "husky && ts-patch install",
     "test": "vitest"

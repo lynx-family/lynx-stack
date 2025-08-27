@@ -4,7 +4,6 @@
   "tasks": {
     "build": {
       "dependsOn": [
-        "//#_internal:cargo:version",
         "build:wasm-bindgen"
       ],
       "inputs": [

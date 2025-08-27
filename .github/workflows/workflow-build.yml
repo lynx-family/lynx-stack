@@ -83,6 +83,11 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "24"
+      - name: Setup Rust
+        uses: ./.github/actions/rustup
+        with:
+          key: build
+          save-if: ${{ github.ref_name == 'main' }}
       - name: TurboCache
         uses: lynx-infra/cache@5c6160a6a4c7fca80a2f3057bb9dfc9513fcb732
         with:
@@ -122,15 +127,3 @@ jobs:
           retention-days: 1
           overwrite: true
           include-hidden-files: true
-      - name: Setup Rust and retry build if failed
-        if: steps.build.outcome == 'failure'
-        uses: ./.github/actions/rustup
-        with:
-          key: build
-          save-if: ${{ github.ref_name == 'main' }}
-      - name: Retry Build
-        if: steps.build.outcome == 'failure'
-        run: |
-          pnpm turbo build --summarize
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

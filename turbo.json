@@ -25,15 +25,6 @@
       "dependsOn": [],
       "cache": false
     },
-    "//#_internal:cargo:version": {
-      "env": ["GITHUB_SHA"],
-      "dependsOn": [],
-      "inputs": [
-        "rust-toolchain",
-        "rust-toolchain.toml"
-      ],
-      "outputs": []
-    },
     "//#build": {
       "cache": false,
       "dependsOn": [],
