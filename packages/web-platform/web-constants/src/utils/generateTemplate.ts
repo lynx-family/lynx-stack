@@ -54,7 +54,7 @@ const templateUpgraders: templateUpgrader[] = [
     template.manifest = Object.fromEntries(
       Object.entries(template.manifest).map(([key, value]) => [
         key,
-        `{init: (lynxCoreInject) => { var {${defaultInjectStr}} = lynxCoreInject.tt; const module = {exports:null}; ${value}\n return module.exports; } }`,
+        `{init: (lynxCoreInject) => { var {${defaultInjectStr}} = lynxCoreInject.tt; var module = {exports:null}; ${value}\n return module.exports; } }`,
       ]),
     ) as typeof template.manifest;
     template.lepusCode = Object.fromEntries(
