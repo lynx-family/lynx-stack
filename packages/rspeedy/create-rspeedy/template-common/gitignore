@@ -11,3 +11,6 @@ dist/
 .vscode/*
 !.vscode/extensions.json
 .idea
+
+# TypeScript
+*.tsbuildinfo
