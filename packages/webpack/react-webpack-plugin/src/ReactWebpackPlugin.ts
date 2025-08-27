@@ -265,7 +265,6 @@ class ReactWebpackPlugin {
             const runtimeFile = require.resolve(path);
             lepusCode.chunks.push({
               name: 'worklet-runtime',
-              // @ts-expect-error Rspack x Webpack sources not match
               source: new RawSource(fs.readFileSync(
                 runtimeFile,
                 'utf8',

@@ -1,5 +1,91 @@
 # @lynx-js/react
 
+## 0.112.4
+
+### Patch Changes
+
+- fix `withInitDataInState` got wrong state in 2nd or more times `defaultDataProcessor`, now it will keep its own state. ([#1478](https://github.com/lynx-family/lynx-stack/pull/1478))
+
+- change `__CreateElement('raw-text')` to `__CreateRawText('')` to avoid `setNativeProps` not working ([#1570](https://github.com/lynx-family/lynx-stack/pull/1570))
+
+- Fix wrong render result when using expression as `key`. ([#1541](https://github.com/lynx-family/lynx-stack/pull/1541))
+
+  See [lynx-family/lynx-stack#1371](https://github.com/lynx-family/lynx-stack/issues/1371) for more details.
+
+- fix: `Cannot read properties of undefined` error when using `Suspense` ([#1569](https://github.com/lynx-family/lynx-stack/pull/1569))
+
+- Add `animate` API in Main Thread Script(MTS), so you can now control a CSS animation imperatively ([#1534](https://github.com/lynx-family/lynx-stack/pull/1534))
+
+  ```ts
+  import type { MainThread } from '@lynx-js/types';
+
+  function startAnimation(ele: MainThread.Element) {
+    'main thread';
+    const animation = ele.animate([{ opacity: 0 }, { opacity: 1 }], {
+      duration: 3000,
+    });
+
+    // Can also be paused
+    // animation.pause()
+  }
+  ```
+
+## 0.112.3
+
+### Patch Changes
+
+- fix css transform error in testing library ([#1500](https://github.com/lynx-family/lynx-stack/pull/1500))
+
+- fix the type error of `wrapper` option in testing library's `render` and `renderHook` function ([#1502](https://github.com/lynx-family/lynx-stack/pull/1502))
+
+- Introduce recursive hydration for lists to prevent double remove/insert on moves. ([#1401](https://github.com/lynx-family/lynx-stack/pull/1401))
+
+- Handle `<frame/>` correctly. ([#1497](https://github.com/lynx-family/lynx-stack/pull/1497))
+
+## 0.112.2
+
+### Patch Changes
+
+- Supports `recyclable` attribute in `<list-item>` to control whether the list item is recyclable. The `recyclable` attribute depends on Lynx Engine 3.4 or later. ([#1388](https://github.com/lynx-family/lynx-stack/pull/1388))
+
+  ```jsx
+  <list-item recyclable={false} />;
+  ```
+
+- feat: Support using a host element as direct child of Suspense ([#1455](https://github.com/lynx-family/lynx-stack/pull/1455))
+
+- Add profile in production build: ([#1336](https://github.com/lynx-family/lynx-stack/pull/1336))
+
+  1. `diff:__COMPONENT_NAME__`: how long ReactLynx diff took.
+  2. `render:__COMPONENT_NAME__`: how long your render function took.
+  3. `setState`: an instant trace event, indicate when your setState was called.
+
+  NOTE: `__COMPONENT_NAME__` may be unreadable when minified, setting `displayName` may help.
+
+- Add `onBackgroundSnapshotInstanceUpdateId` event on dev for Preact Devtools to keep the correct snapshotInstanceId info. ([#1173](https://github.com/lynx-family/lynx-stack/pull/1173))
+
+- fix: Prevent error when spreading component props onto an element ([#1459](https://github.com/lynx-family/lynx-stack/pull/1459))
+
+- fix: Correctly check for the existence of background functions in MTS ([#1416](https://github.com/lynx-family/lynx-stack/pull/1416))
+
+  ```ts
+  function handleTap() {
+    'main thread';
+    // The following check always returned false before this fix
+    if (myHandleTap) {
+      runOnBackground(myHandleTap)();
+    }
+  }
+  ```
+
+## 0.112.1
+
+### Patch Changes
+
+- Fix crash caused by not removing event listeners during destroy. ([#1379](https://github.com/lynx-family/lynx-stack/pull/1379))
+
+- Fix missing "type" in "update-list-info" in hydrate ([#1392](https://github.com/lynx-family/lynx-stack/pull/1392))
+
 ## 0.112.0
 
 ### Minor Changes

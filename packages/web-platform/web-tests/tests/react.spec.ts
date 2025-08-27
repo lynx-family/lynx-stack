@@ -348,6 +348,20 @@ test.describe('reactlynx3 tests', () => {
       await wait(100);
       expect(eventHandlerTriggered).toBe(true);
     });
+    test('basic-mts-systeminfo', async ({ page }, { title }) => {
+      let eventHandlerTriggered = false;
+      page.on('console', (message) => {
+        if (message.text() === 'hello world') {
+          eventHandlerTriggered = true;
+        }
+      });
+      await goto(page, title);
+      await wait(100);
+      const target = page.locator('#target');
+      await target.click();
+      await wait(100);
+      expect(eventHandlerTriggered).toBe(true);
+    });
 
     test(
       'basic-mts-bindtouchstart',
@@ -512,6 +526,13 @@ test.describe('reactlynx3 tests', () => {
         'animationstart animationiteration animationend animationstart animationiteration animationend',
       );
     });
+    test('api-get-path-info', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(500);
+      expect(await page.locator('#result').getAttribute('style')).toContain(
+        'green',
+      );
+    });
     test('api-getJSModule', async ({ page }, { title }) => {
       await goto(page, title);
       await wait(1000);
@@ -544,6 +565,15 @@ test.describe('reactlynx3 tests', () => {
       async ({ page }, { title }) => {
         await goto(page, title);
         await wait(200);
+        const target = page.locator('#target');
+        await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
+      },
+    );
+    test(
+      'api-nativemodules-call-delay',
+      async ({ page }, { title }) => {
+        await goto(page, title);
+        await wait(3000);
         const target = page.locator('#target');
         await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
       },
@@ -690,7 +720,7 @@ test.describe('reactlynx3 tests', () => {
       });
       await wait(50);
       expect(message).toContain('fin');
-      expect(page.workers().length).toStrictEqual(1);
+      expect(page.workers().length).toStrictEqual(0);
     });
 
     test('api-error', async ({ page }, { title }) => {
@@ -856,43 +886,6 @@ test.describe('reactlynx3 tests', () => {
       await expect(offset).toBe(true);
     });
 
-    test('api-preheat', async ({ page }, { title }) => {
-      await goto(page, title);
-      const target = page.locator('#target');
-      await expect(target).toHaveCSS('background-color', 'rgb(255, 192, 203)'); // pink
-      expect(page.workers().length).toStrictEqual(ENABLE_MULTI_THREAD ? 3 : 2);
-    });
-
-    test('api-preheat-at-least-one', async ({ page }, { title }) => {
-      await goto(page, title);
-      const target = page.locator('#target');
-      await expect(target).toHaveCSS('background-color', 'rgb(255, 192, 203)'); // pink
-      expect(page.workers().length).toBe(ENABLE_MULTI_THREAD ? 3 : 2);
-      await page.evaluate(() => {
-        document.body.querySelector('lynx-view')?.remove();
-      });
-      await wait(100);
-      const threadStrategy = ENABLE_MULTI_THREAD ? 'multi-thread' : 'all-on-ui';
-      expect(page.workers().length).toBe(1);
-      await page.evaluate((threadStrategy) => {
-        const newView = document.createElement('lynx-view');
-        newView.setAttribute('style', 'height:50vh; width:100vw;');
-        newView.setAttribute('thread-strategy', threadStrategy);
-        newView.setAttribute('url', '/dist/api-preheat/main-thread.js');
-        document.body.append(newView);
-      }, threadStrategy);
-
-      await page.evaluate((threadStrategy) => {
-        const newView = document.createElement('lynx-view');
-        newView.setAttribute('style', 'height:50vh; width:100vw;');
-        newView.setAttribute('thread-strategy', threadStrategy);
-        newView.setAttribute('url', '/dist/api-preheat/main-thread.js');
-        document.body.append(newView);
-      }, threadStrategy);
-      await wait(500);
-      expect(page.workers().length).toBe(ENABLE_MULTI_THREAD ? 5 : 3);
-    });
-
     test('api-setSharedData', async ({ page }, { title }) => {
       await goto(page, title);
       await wait(100);
@@ -915,28 +908,44 @@ test.describe('reactlynx3 tests', () => {
     test('api-shared-context-worker-count', async ({ page }) => {
       await goto(page, 'api-setSharedData', 'api-getSharedData');
       await wait(100);
-      expect(page.workers().length).toBeLessThanOrEqual(4);
+      expect(page.workers().length).toBeLessThanOrEqual(3);
     });
 
     test('api-shared-context-worker-count-release', async ({ page }) => {
       await goto(page, 'api-setSharedData', 'api-getSharedData');
-      await wait(100);
-      expect(page.workers().length).toBeLessThanOrEqual(4);
-      await page.evaluate(() =>
-        document.body.querySelector('lynx-view')?.remove()
-      );
       await wait(100);
       expect(page.workers().length).toBeLessThanOrEqual(3);
       await page.evaluate(() =>
         document.body.querySelector('lynx-view')?.remove()
       );
       await wait(100);
-      expect(page.workers().length).toBeLessThanOrEqual(1);
+      expect(page.workers().length).toBeLessThanOrEqual(2);
+      await page.evaluate(() =>
+        document.body.querySelector('lynx-view')?.remove()
+      );
+      await wait(100);
+      expect(page.workers().length).toBeLessThanOrEqual(0);
     });
 
     test.describe('api-exposure', () => {
       const module = 'exposure';
       test.fixme(isSSR, 'TODO: migrate exposure from web-elements to runtime');
+
+      test(
+        'api-exposure-no-fake-disappear',
+        async ({ page }, { title }) => {
+          await goto(page, title);
+          await wait(300);
+          await expect(page.locator('#control')).toHaveCSS(
+            'background-color',
+            'rgb(0, 128, 0)', // green
+          );
+          await expect(page.locator('#target')).toHaveCSS(
+            'background-color',
+            'rgb(0, 128, 0)', // green
+          );
+        },
+      );
       test(
         'api-exposure-area',
         async ({ page }, { title }) => {
@@ -1254,6 +1263,25 @@ test.describe('reactlynx3 tests', () => {
         });
         await wait(500);
         await diffScreenShot(page, title, 'blue');
+      },
+    );
+    test(
+      'api-global-disallowed-vars',
+      async ({ page }, { title }) => {
+        let mts = false;
+        let bts = false;
+        page.on('console', (message) => {
+          if (message.text() === 'main thread: undefined, undefined') {
+            mts = true;
+          }
+          if (message.text() === 'background thread: undefined, undefined') {
+            bts = true;
+          }
+        });
+        await goto(page, title);
+        await wait(200);
+        !isSSR && expect(mts).toBe(true);
+        expect(bts).toBe(true);
       },
     );
   });

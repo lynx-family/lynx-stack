@@ -1,4 +1,5 @@
 import { defineConfig, type rsbuild } from '@rslib/core'
+import { pluginAreTheTypesWrong } from 'rsbuild-plugin-arethetypeswrong'
 import { pluginPublint } from 'rsbuild-plugin-publint'
 import { TypiaRspackPlugin } from 'typia-rspack-plugin'
 
@@ -52,10 +53,19 @@ export default defineConfig({
   ],
   output: {
     externals: [
-      '@lynx-js/rspeedy/register',
+      '#register',
     ],
   },
-  plugins: [pluginPublint()],
+  plugins: [
+    pluginAreTheTypesWrong({
+      areTheTypesWrongOptions: {
+        ignoreRules: [
+          'cjs-resolves-to-esm',
+        ],
+      },
+    }),
+    pluginPublint(),
+  ],
   source: {
     tsconfigPath: './tsconfig.build.json',
   },

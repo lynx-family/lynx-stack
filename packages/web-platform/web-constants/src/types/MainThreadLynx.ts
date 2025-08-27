@@ -1,3 +1,4 @@
+import type { systemInfo } from '../constants.js';
 import type { Cloneable } from './Cloneable.js';
 import type { LynxContextEventTarget } from './LynxContextEventTarget.js';
 export interface MainThreadLynx {
@@ -7,4 +8,5 @@ export interface MainThreadLynx {
   __globalProps: unknown;
   getCustomSectionSync: (key: string) => Cloneable;
   markPipelineTiming: (pipelineId: string, timingKey: string) => void;
+  SystemInfo: typeof systemInfo;
 }

@@ -1,5 +1,23 @@
 # @lynx-js/react-alias-rsbuild-plugin
 
+## 0.10.13
+
+### Patch Changes
+
+- Support using multiple times in different environments. ([#1498](https://github.com/lynx-family/lynx-stack/pull/1498))
+
+- Alias `@lynx-js/preact-devtools` to `false` to reduce an import of empty webpack module. ([#1593](https://github.com/lynx-family/lynx-stack/pull/1593))
+
+## 0.10.12
+
+## 0.10.11
+
+### Patch Changes
+
+- Fix the `Package subpath './compat' is not defined by "exports"` error. ([#1460](https://github.com/lynx-family/lynx-stack/pull/1460))
+
+## 0.10.10
+
 ## 0.10.9
 
 ### Patch Changes

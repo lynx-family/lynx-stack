@@ -68,11 +68,10 @@ export const createVitestConfig = async (options) => {
       enforce: 'pre',
       transform(sourceText, sourcePath) {
         const id = sourcePath;
-        if (
-          id.endsWith('.css') || id.endsWith('.less') || id.endsWith('.scss')
-        ) {
-          return '';
-        }
+        // Only transform JS files
+        // Using the same regex as rspack's `CHAIN_ID.RULE.JS` rule
+        const regex = /\.(?:js|jsx|mjs|cjs|ts|tsx|mts|cts)(\?.*)?$/;
+        if (!regex.test(id)) return null;
 
         const { transformReactLynxSync } = require(
           '@lynx-js/react/transform',

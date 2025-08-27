@@ -1,5 +1,17 @@
 # @lynx-js/css-extract-webpack-plugin
 
+## 0.6.2
+
+### Patch Changes
+
+- Fix "emit different content to the same filename" error ([#1482](https://github.com/lynx-family/lynx-stack/pull/1482))
+
+## 0.6.1
+
+### Patch Changes
+
+- Support Rspack v1.4.9. ([#1351](https://github.com/lynx-family/lynx-stack/pull/1351))
+
 ## 0.6.0
 
 ### Minor Changes

@@ -98,10 +98,12 @@ export function prepareMainThreadAPIs(
         if (cachedModule) {
           return [name, cachedModule] as [string, LynxJSModule];
         } else {
-          Object.assign(globalThis, { module: {} });
-          await import(/* webpackIgnore: true */ url);
-          const module = globalThis.module as LynxJSModule;
-          Object.assign(globalThis, { module: {} });
+          const { default: evaluateModule } = await import(
+            /* webpackIgnore: true */ url
+          );
+          const module: LynxJSModule = {
+            exports: evaluateModule,
+          };
           moduleCache[url] = module;
           return [name, module] as [string, LynxJSModule];
         }
@@ -167,7 +169,6 @@ export function prepareMainThreadAPIs(
             ),
             nativeModulesMap,
             napiModulesMap,
-            browserConfig,
           });
           if (!ssrHydrateInfo) {
             mtsGlobalThis.renderPage!(initData);

@@ -1,5 +1,26 @@
 # @lynx-js/template-webpack-plugin
 
+## 0.8.5
+
+### Patch Changes
+
+- Always inline the background script that contains rspack runtime module. ([#1582](https://github.com/lynx-family/lynx-stack/pull/1582))
+
+- Updated dependencies [[`aaca8f9`](https://github.com/lynx-family/lynx-stack/commit/aaca8f91d177061c7b0430cc5cb21a3602897534)]:
+  - @lynx-js/webpack-runtime-globals@0.0.6
+
+## 0.8.4
+
+### Patch Changes
+
+- Fix invalid `module.exports=;` syntax in app-service.js. ([#1501](https://github.com/lynx-family/lynx-stack/pull/1501))
+
+## 0.8.3
+
+### Patch Changes
+
+- feat: support elementTemplate for web ([#1374](https://github.com/lynx-family/lynx-stack/pull/1374))
+
 ## 0.8.2
 
 ### Patch Changes

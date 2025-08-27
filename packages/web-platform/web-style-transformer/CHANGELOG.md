@@ -1,5 +1,17 @@
 # @lynx-js/web-style-transformer
 
+## 0.15.7
+
+## 0.15.6
+
+### Patch Changes
+
+- refactor: use utf-8 string ([#1473](https://github.com/lynx-family/lynx-stack/pull/1473))
+
+## 0.15.5
+
+## 0.15.4
+
 ## 0.3.3
 
 ### Patch Changes

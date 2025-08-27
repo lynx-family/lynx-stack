@@ -140,6 +140,9 @@ describe('triggerDataUpdated', () => {
             {
               "data": "{"patchList":[{"id":3,"snapshotPatch":[3,-3,0,"update"]}],"flushOptions":{"triggerDataUpdated":true}}",
               "patchOptions": {
+                "flowIds": [
+                  666,
+                ],
                 "reloadVersion": 0,
               },
             },
@@ -277,6 +280,9 @@ describe('triggerDataUpdated', () => {
             {
               "data": "{"patchList":[{"id":6}],"flushOptions":{"triggerDataUpdated":true}}",
               "patchOptions": {
+                "flowIds": [
+                  666,
+                ],
                 "reloadVersion": 0,
               },
             },
@@ -285,8 +291,11 @@ describe('triggerDataUpdated', () => {
           [
             "rLynxChange",
             {
-              "data": "{"patchList":[{"id":7,"snapshotPatch":[3,-6,0,"update"]}]}",
+              "data": "{"patchList":[{"id":7,"snapshotPatch":[3,-7,0,"update"]}]}",
               "patchOptions": {
+                "flowIds": [
+                  666,
+                ],
                 "reloadVersion": 0,
               },
             },
@@ -297,6 +306,9 @@ describe('triggerDataUpdated', () => {
             {
               "data": "{"patchList":[{"id":8,"snapshotPatch":[3,-8,0,"update"]}]}",
               "patchOptions": {
+                "flowIds": [
+                  666,
+                ],
                 "reloadVersion": 0,
               },
             },
@@ -467,6 +479,9 @@ describe('triggerDataUpdated', () => {
             {
               "data": "{"patchList":[{"id":11}],"flushOptions":{"triggerDataUpdated":true}}",
               "patchOptions": {
+                "flowIds": [
+                  666,
+                ],
                 "reloadVersion": 0,
               },
             },
@@ -475,8 +490,11 @@ describe('triggerDataUpdated', () => {
           [
             "rLynxChange",
             {
-              "data": "{"patchList":[{"id":12,"snapshotPatch":[3,-5,0,"update"]}]}",
+              "data": "{"patchList":[{"id":12,"snapshotPatch":[3,-6,0,"update"]}]}",
               "patchOptions": {
+                "flowIds": [
+                  666,
+                ],
                 "reloadVersion": 0,
               },
             },
@@ -487,6 +505,9 @@ describe('triggerDataUpdated', () => {
             {
               "data": "{"patchList":[{"id":13,"snapshotPatch":[3,-7,0,"update"]}]}",
               "patchOptions": {
+                "flowIds": [
+                  666,
+                ],
                 "reloadVersion": 0,
               },
             },
@@ -628,6 +649,9 @@ describe('triggerDataUpdated', () => {
             {
               "data": "{"patchList":[{"id":16,"snapshotPatch":[3,-3,0,"update"]}],"flushOptions":{"triggerDataUpdated":true}}",
               "patchOptions": {
+                "flowIds": [
+                  666,
+                ],
                 "reloadVersion": 0,
               },
             },

@@ -41,6 +41,10 @@ it('manifest only contains /app-service.js', async () => {
   expect(manifest).toHaveProperty('/app-service.js');
 
   expect(manifest['/app-service.js']).toContain(
-    `lynx.requireModuleAsync('/foo:background.rspack.bundle.js')`,
+    `lynx.requireModuleAsync(\"/foo:background.rspack.bundle.js\")`,
+  );
+
+  expect(manifest['/app-service.js']).not.toContain(
+    `module.exports=;`,
   );
 });

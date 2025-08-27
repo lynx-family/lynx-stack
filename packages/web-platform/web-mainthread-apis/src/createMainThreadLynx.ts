@@ -6,6 +6,7 @@ import { type MainThreadRuntimeConfig } from './createMainThreadGlobalThis.js';
 
 export function createMainThreadLynx(
   config: MainThreadRuntimeConfig,
+  SystemInfo: Record<string, any>,
 ): MainThreadLynx {
   return {
     getJSContext() {
@@ -22,5 +23,6 @@ export function createMainThreadLynx(
       return config.customSections[key]?.content;
     },
     markPipelineTiming: config.callbacks.markTiming,
+    SystemInfo,
   };
 }

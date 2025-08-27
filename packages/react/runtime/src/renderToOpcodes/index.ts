@@ -17,6 +17,7 @@ import {
   COMMIT,
   COMPONENT,
   DIFF,
+  DIFF2,
   DIFFED,
   DIRTY,
   NEXT_STATE,
@@ -33,7 +34,7 @@ const isArray = /* @__PURE__ */ Array.isArray;
 const assign = /* @__PURE__ */ Object.assign;
 
 // Global state for the current render pass
-let beforeDiff, afterDiff, renderHook, ummountHook;
+let beforeDiff, beforeDiff2, afterDiff, renderHook, ummountHook;
 
 /**
  * Render Preact JSX + Components to an HTML string.
@@ -51,6 +52,7 @@ export function renderToString(vnode: any, context: any): any[] {
 
   // store options hooks once before each synchronous render call
   beforeDiff = options[DIFF];
+  beforeDiff2 = options[DIFF2];
   afterDiff = options[DIFFED];
   renderHook = options[RENDER];
   ummountHook = options.unmount;
@@ -183,6 +185,7 @@ function _renderToString(
 
   vnode[PARENT] = parent;
   if (beforeDiff) beforeDiff(vnode);
+  if (beforeDiff2) beforeDiff2(vnode, EMPTY_OBJ);
 
   let type = vnode.type,
     props = vnode.props,
@@ -304,7 +307,7 @@ function _renderToString(
     }
   }
 
-  if (typeof children === 'string') {
+  if (typeof children === 'string' || typeof children === 'number') {
     // single text child
     opcodes.push(__OpText, children);
   } else if (children != null && children !== false && children !== true) {

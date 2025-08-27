@@ -15,6 +15,7 @@
       ".vscode/settings.json",
       "tsconfig.json",
       "tsconfig.build.json",
+      "tsconfig.node.json",
       "api-extractor.json",
     ],
   },

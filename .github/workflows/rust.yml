@@ -33,14 +33,15 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
         with:
           persist-credentials: false
-      - uses: actions-rust-lang/setup-rust-toolchain@fb51252c7ba57d633bc668f941da052e410add48 # v1
+      - uses: ./.github/actions/rustup
         with:
-          cache-key: test-${{ runner.os }}
+          key: test
+          save-if: ${{ github.ref_name == 'main' }}
       - name: Install llvm-cov and nextest
-        uses: taiki-e/install-action@bbdef1c33cb8ed1fd122d68d8374ac79998d6960 # v2
+        uses: taiki-e/install-action@ad95d4e02e061d4390c4b66ef5ed56c7fee3d2ce # v2
         with:
           tool: cargo-llvm-cov,cargo-nextest
       - name: Test
@@ -65,7 +66,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
         with:
           persist-credentials: false
       - uses: actions-rust-lang/setup-rust-toolchain@fb51252c7ba57d633bc668f941da052e410add48 # v1
@@ -81,7 +82,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
         with:
           persist-credentials: false
       - uses: actions-rust-lang/setup-rust-toolchain@fb51252c7ba57d633bc668f941da052e410add48 # v1
@@ -89,4 +90,4 @@ jobs:
           components: clippy
           cache: false
       - name: Clippy
-        run: cargo clippy -- -D warnings
+        run: cargo clippy --tests -- -D warnings

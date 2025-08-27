@@ -20,42 +20,9 @@ describe('Plugins - chunkLoading', () => {
     ).toBeTruthy()
   })
 
-  test('Webpack defaults', async () => {
-    const { webpackProvider } = await import('@rsbuild/webpack')
-    const rspeedy = await createStubRspeedy({
-      provider: webpackProvider,
-    })
-
-    const config = await rspeedy.unwrapConfig()
-
-    expect(config.output?.chunkLoading).toBe('lynx')
-    expect(config.output?.chunkFormat).toBe('commonjs')
-    expect(
-      config.plugins?.some(plugin =>
-        plugin && plugin.constructor.name === 'ChunkLoadingWebpackPlugin'
-      ),
-    ).toBeTruthy()
-  })
-
   describe('Web', () => {
     test('Rspack', async () => {
       const rspeedy = await createStubRspeedy({
-        environments: {
-          web: {},
-        },
-      })
-
-      const config = await rspeedy.unwrapConfig()
-
-      expect(config.output?.chunkLoading).toBe('import-scripts')
-      expect(config.output?.chunkFormat).not.toBe('commonjs')
-      expect(config.output?.iife).not.toBe(false)
-    })
-
-    test('Webpack', async () => {
-      const { webpackProvider } = await import('@rsbuild/webpack')
-      const rspeedy = await createStubRspeedy({
-        provider: webpackProvider,
         environments: {
           web: {},
         },

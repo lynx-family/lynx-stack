@@ -369,7 +369,7 @@ describe('setAttribute', () => {
 });
 
 describe('dynamic key in snapshot', () => {
-  it('[FIXME] multiple slots 0', () => {
+  it('multiple slots 0', () => {
     const snapshot = __SNAPSHOT__(
       <view>
         <view className='foo' key={`foo`}>
@@ -388,14 +388,11 @@ describe('dynamic key in snapshot', () => {
 
     expect(a.__element_root).toMatchInlineSnapshot(`
       <view>
-        <wrapper>
-          <view
-            class="foo"
-          >
-            <view />
-            <view />
-          </view>
-        </wrapper>
+        <view
+          class="foo"
+        >
+          <wrapper />
+        </view>
       </view>
     `);
   });
@@ -421,10 +418,7 @@ describe('dynamic key in snapshot', () => {
       <view
         class="foo"
       >
-        <view>
-          <wrapper />
-          <wrapper />
-        </view>
+        <wrapper />
       </view>
     `);
   });
@@ -455,7 +449,11 @@ describe('dynamic key in snapshot', () => {
           />
           <wrapper />
         </text>
-        <wrapper />
+        <view
+          class="foo"
+        >
+          <wrapper />
+        </view>
       </view>
     `);
   });

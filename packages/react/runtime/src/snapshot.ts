@@ -101,7 +101,7 @@ export const snapshotManager: {
             return [];
           }
           /* v8 ignore stop */
-          return [__CreateElement('raw-text', __pageId)];
+          return [__CreateRawText('')];
         },
         update: [
           ctx => {
@@ -151,6 +151,17 @@ export const backgroundSnapshotInstanceManager: {
   updateId(id: number, newId: number) {
     const values = this.values;
     const si = values.get(id)!;
+    // For PreactDevtools, on first hydration,
+    // PreactDevtools can get the real snapshot instance id in main-thread
+    if (__DEV__) {
+      lynx.getJSModule('GlobalEventEmitter').emit('onBackgroundSnapshotInstanceUpdateId', [
+        {
+          backgroundSnapshotInstance: si,
+          oldId: id,
+          newId,
+        },
+      ]);
+    }
     values.delete(id);
     values.set(newId, si);
     si.__id = newId;

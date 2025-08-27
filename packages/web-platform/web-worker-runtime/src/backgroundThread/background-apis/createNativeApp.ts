@@ -11,10 +11,10 @@ import {
   type LynxJSModule,
   type NativeApp,
   type LynxCrossThreadContext,
-  systemInfo,
   type BackMainThreadContextConfig,
   I18nResource,
   reportErrorEndpoint,
+  globalDisallowedVars,
 } from '@lynx-js/web-constants';
 import { createInvokeUIMethod } from './crossThreadHandlers/createInvokeUIMethod.js';
 import { registerPublicComponentEventHandler } from './crossThreadHandlers/registerPublicComponentEventHandler.js';
@@ -28,6 +28,7 @@ import { createJSObjectDestructionObserver } from './crossThreadHandlers/createJ
 import type { TimingSystem } from './createTimingSystem.js';
 import { registerUpdateGlobalPropsHandler } from './crossThreadHandlers/registerUpdateGlobalPropsHandler.js';
 import { registerUpdateI18nResource } from './crossThreadHandlers/registerUpdateI18nResource.js';
+import { createGetPathInfo } from './crossThreadHandlers/createGetPathInfo.js';
 
 let nativeAppCount = 0;
 const sharedData: Record<string, unknown> = {};
@@ -45,7 +46,6 @@ export async function createNativeApp(
     template,
     nativeModulesMap,
     timingSystem,
-    browserConfig,
   } = config;
   const performanceApis = createPerformanceApis(
     timingSystem,
@@ -70,6 +70,11 @@ export async function createNativeApp(
         lynxCoreInject.tt.lynxCoreInject = lynxCoreInject;
         lynxCoreInject.tt.globalThis ??= new Proxy(lynxCoreInject, {
           get(target, prop) {
+            if (
+              typeof prop === 'string' && globalDisallowedVars.includes(prop)
+            ) {
+              return undefined;
+            }
             // @ts-expect-error
             return target[prop] ?? globalThis[prop];
           },
@@ -83,9 +88,6 @@ export async function createNativeApp(
               key !== 'globalThis'
             );
           },
-        });
-        Object.assign(lynxCoreInject.tt, {
-          SystemInfo: { ...systemInfo, ...browserConfig },
         });
         const ret = entry?.(lynxCoreInject.tt);
         return ret;
@@ -133,6 +135,7 @@ export async function createNativeApp(
     },
     callLepusMethod,
     setNativeProps,
+    getPathInfo: createGetPathInfo(uiThreadRpc),
     invokeUIMethod: createInvokeUIMethod(uiThreadRpc),
     setCard(tt) {
       registerPublicComponentEventHandler(

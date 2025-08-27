@@ -27,26 +27,19 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
   return {
     name: 'lynx:react-alias',
     setup(api) {
-      const hasAlias = api.useExposed<boolean>(S_PLUGIN_REACT_ALIAS)
-      if (hasAlias) {
-        // We make sure that only make aliased once
-        return
-      }
-      api.expose(S_PLUGIN_REACT_ALIAS, true)
-
       const require = createRequire(import.meta.url)
 
       const reactLynxPkg = require.resolve('@lynx-js/react/package.json', {
         paths: [rootPath ?? api.context.rootPath],
       })
-      const reactLynxPkgContent = require(reactLynxPkg) as { version: string }
-      const version = reactLynxPkgContent.version
+      const { version } = require(reactLynxPkg) as { version: string }
 
       const reactLynxDir = path.dirname(reactLynxPkg)
       const resolve = createLazyResolver(
-        reactLynxDir,
+        rootPath ?? api.context.rootPath,
         lazy ? ['lazy', 'import'] : ['import'],
       )
+      const resolvePreact = createLazyResolver(reactLynxDir, ['import'])
 
       api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
         return mergeRsbuildConfig(config, {
@@ -56,7 +49,14 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
         })
       })
 
-      api.modifyBundlerChain(async (chain, { isProd }) => {
+      api.modifyBundlerChain(async (chain, { isProd, environment }) => {
+        if (Object.hasOwn(environment, S_PLUGIN_REACT_ALIAS)) {
+          // This environment has already been processed
+          return
+        }
+        Object.defineProperty(environment, S_PLUGIN_REACT_ALIAS, {
+          value: true,
+        })
         const [
           jsxRuntimeBackground,
           jsxRuntimeMainThread,
@@ -148,6 +148,7 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
 
         if (isProd) {
           chain.resolve.alias.set('@lynx-js/react/debug$', false)
+          chain.resolve.alias.set('@lynx-js/preact-devtools$', false)
         }
 
         chain
@@ -190,7 +191,7 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
         ]
         await Promise.all(
           preactEntries.map(entry =>
-            resolve(entry).then(value => {
+            resolvePreact(entry).then(value => {
               chain
                 .resolve
                 .alias

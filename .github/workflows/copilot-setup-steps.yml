@@ -22,15 +22,15 @@ jobs:
     # You can define any steps you want, and they will run before the agent starts.
     # If you do not check out your code, Copilot will do this for you.
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
         with:
           fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: "22"
+          node-version: "24"
       - name: Install wasm-bindgen
-        uses: taiki-e/install-action@bbdef1c33cb8ed1fd122d68d8374ac79998d6960 # v2
+        uses: taiki-e/install-action@ad95d4e02e061d4390c4b66ef5ed56c7fee3d2ce # v2
         with:
           tool: wasm-bindgen
       - name: Install

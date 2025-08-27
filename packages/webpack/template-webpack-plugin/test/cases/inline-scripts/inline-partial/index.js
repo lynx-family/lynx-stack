@@ -23,9 +23,11 @@ it('should inline foo, but not inline bar', async () => {
   const { manifest } = JSON.parse(content);
 
   expect(manifest).toHaveProperty('/app-service.js');
-  expect(Object.keys(manifest).length).toBe(2);
+  expect(Object.keys(manifest).length).toBe(3);
   expect(manifest['/app-service.js']).toBeTruthy();
   expect(manifest['/foo.js']).toBeTruthy();
+  // it is inlined because rspack.bundle.js has rspack runtime module which needs to be loaded synchronously
+  expect(manifest['/rspack.bundle.js']).toBeTruthy();
 
   it('inlined scripts should not have syntax error', () => {
     eval(manifest['/app-service.js']);

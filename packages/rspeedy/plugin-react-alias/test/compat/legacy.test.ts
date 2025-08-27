@@ -1,6 +1,8 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import type { URL } from 'node:url'
 
 import { createRsbuild } from '@rsbuild/core'
@@ -44,6 +46,7 @@ describe('@lynx-js/react/compat - alias', () => {
           }),
         ],
       },
+      cwd: path.dirname(fileURLToPath(import.meta.url)),
     })
     const [config] = await rsbuild.initConfigs()
     expect(config?.resolve?.alias ?? {}).not.toHaveProperty(

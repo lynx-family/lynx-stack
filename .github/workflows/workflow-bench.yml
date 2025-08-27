@@ -15,17 +15,16 @@ jobs:
     if: github.event_name != 'merge_group'
     runs-on: lynx-ubuntu-24.04-xlarge
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
         with:
           persist-credentials: false
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: "22"
-      - name: Install
-        run: |
-          npm install -g corepack@latest
-          corepack enable
-          pnpm install --frozen-lockfile
+          node-version: "24"
+      - name: Python Setup
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.13"
       - name: TurboCache
         uses: lynx-infra/cache@5c6160a6a4c7fca80a2f3057bb9dfc9513fcb732
         with:
@@ -33,13 +32,26 @@ jobs:
           # We have to be strict here to make sure getting the cache of build-all
           key: turbo-v4-${{ runner.os }}-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ github.sha }}
           fail-on-cache-miss: true
+      - name: Install
+        run: |
+          npm install -g corepack@latest
+          corepack enable
+          pnpm install --frozen-lockfile
       - name: Build
         run: |
           pnpm turbo build
       - name: Prepare CodSpeed
         run: |
-          curl -fsSL https://github.com/CodSpeedHQ/runner/releases/download/v3.5.0/codspeed-runner-installer.sh | bash -s -- --quiet
+          curl -fsSL https://github.com/CodSpeedHQ/runner/releases/download/v3.8.0/codspeed-runner-installer.sh | bash -s -- --quiet
       - name: Run benchmark
         run: |
           . "$HOME/.cargo/env"
           codspeed run -- pnpm -r run --workspace-concurrency=1 bench
+      - name: React benchmark - Run perfetto
+        run: |
+          pnpm -r run --workspace-concurrency=1 perfetto
+      - name: React benchmark - Upload perfetto output
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: benchmark-react-ptrace-${{ github.sha }}
+          path: ./benchmark/react/dist/*.ptrace

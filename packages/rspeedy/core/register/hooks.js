@@ -12,11 +12,16 @@ import { URL } from 'node:url'
 import tsBlankSpace from 'ts-blank-space'
 
 /**
- * @type {{ active: boolean; port: import('worker_threads').MessagePort | null }}
+ * @typedef {import('./data').Options} Options
+ */
+
+/**
+ * @type {{ active: boolean; port: import('worker_threads').MessagePort | null; options: Options | null }}
  */
 const state = {
   active: true,
   port: null,
+  options: null,
 }
 
 /**
@@ -35,6 +40,7 @@ const state = {
 export const initialize = function initialize(
   data,
 ) {
+  state.options = data.options ?? { resolve: true, load: true }
   state.port = data.port
   data.port.on('message', onMessage)
 }
@@ -51,6 +57,10 @@ export const resolve = async function resolve(
   context,
   nextResolve,
 ) {
+  if (!state.options?.resolve) {
+    return nextResolve(specifier, context)
+  }
+
   try {
     return await nextResolve(specifier, context)
   } catch (err) {
@@ -81,6 +91,10 @@ export const resolve = async function resolve(
  * @type {import('module').LoadHook}
  */
 export const load = async function load(url, context, nextLoad) {
+  if (!state.options?.load) {
+    return nextLoad(url, context)
+  }
+
   const fullURL = parseURL(url)
 
   if (!fullURL) {

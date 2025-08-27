@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { globalMuteableVars } from '../constants.js';
+import { globalDisallowedVars, globalMuteableVars } from '../constants.js';
 import type { LynxTemplate } from '../types/LynxModule.js';
 
 const mainThreadInjectVars = [
@@ -25,7 +25,9 @@ const mainThreadInjectVars = [
   '__SetDataset',
   '__SetID',
   '__UpdateComponentID',
+  '__UpdateComponentInfo',
   '__GetConfig',
+  '__GetAttributeByName',
   '__UpdateListCallbacks',
   '__AppendElement',
   '__ElementIsEqual',
@@ -77,7 +79,6 @@ const backgroundInjectVars = [
   'globalThis',
   'lynx',
   'lynxCoreInject',
-  'SystemInfo',
 ];
 
 const backgroundInjectWithBind = [
@@ -85,73 +86,63 @@ const backgroundInjectWithBind = [
   'Component',
 ];
 
+const generateModuleContent = (
+  content: string,
+  injectVars: readonly string[],
+  injectWithBind: readonly string[],
+  muteableVars: readonly string[],
+  globalDisallowedVars: readonly string[],
+  isESM: boolean,
+) =>
+  [
+    '//# allFunctionsCalledOnLoad\n',
+    isESM ? 'export default ' : 'globalThis.module.exports =',
+    'function(lynx_runtime) {',
+    'const module= {exports:{}};let exports = module.exports;',
+    'var {',
+    injectVars.join(','),
+    '} = lynx_runtime;',
+    ...injectWithBind.map(nm =>
+      `const ${nm} = lynx_runtime.${nm}?.bind(lynx_runtime);`
+    ),
+    ';var globDynamicComponentEntry = \'__Card__\';',
+    globalDisallowedVars.length !== 0
+      ? `var ${globalDisallowedVars.join('=')}=undefined;`
+      : '',
+    'var {__globalProps} = lynx;',
+    'lynx_runtime._updateVars=()=>{',
+    ...muteableVars.map(nm =>
+      `${nm} = lynx_runtime.__lynxGlobalBindingValues.${nm};`
+    ),
+    '};\n',
+    content,
+    '\n return module.exports;}',
+  ].join('');
+
 async function generateJavascriptUrl<T extends Record<string, string | {}>>(
   obj: T,
   injectVars: string[],
   injectWithBind: string[],
   muteableVars: readonly string[],
-  createJsModuleUrl: (content: string) => string,
-): Promise<T>;
-async function generateJavascriptUrl<T extends Record<string, string | {}>>(
-  obj: T,
-  injectVars: string[],
-  injectWithBind: string[],
-  muteableVars: readonly string[],
+  globalDisallowedVars: readonly string[],
   createJsModuleUrl: (content: string, name: string) => Promise<string>,
-  templateName: string,
-): Promise<T>;
-async function generateJavascriptUrl<T extends Record<string, string | {}>>(
-  obj: T,
-  injectVars: string[],
-  injectWithBind: string[],
-  muteableVars: readonly string[],
-  createJsModuleUrl:
-    | ((content: string) => string)
-    | ((content: string, name: string) => Promise<string>),
+  isESM: boolean,
   templateName?: string,
 ): Promise<T> {
-  injectVars = injectVars.concat(muteableVars);
-  const generateModuleContent = (content: string) =>
-    [
-      '//# allFunctionsCalledOnLoad\n',
-      'globalThis.module.exports = function(lynx_runtime) {',
-      'const module= {exports:{}};let exports = module.exports;',
-      'var {',
-      injectVars.join(','),
-      '} = lynx_runtime;',
-      ...injectWithBind.map(nm =>
-        `const ${nm} = lynx_runtime.${nm}?.bind(lynx_runtime);`
+  const processEntry = async ([name, content]: [string, string]) => [
+    name,
+    await createJsModuleUrl(
+      generateModuleContent(
+        content,
+        injectVars.concat(muteableVars),
+        injectWithBind,
+        muteableVars,
+        globalDisallowedVars,
+        isESM,
       ),
-      ';var globDynamicComponentEntry = \'__Card__\';',
-      'var {__globalProps} = lynx;',
-      'lynx_runtime._updateVars=()=>{',
-      ...muteableVars.map(nm =>
-        `${nm} = lynx_runtime.__lynxGlobalBindingValues.${nm};`
-      ),
-      '};\n',
-      content,
-      '\n return module.exports;}',
-    ].join('');
-  if (!templateName) {
-    createJsModuleUrl;
-  }
-  const processEntry = templateName
-    ? async ([name, content]: [string, string]) => [
-      name,
-      await (createJsModuleUrl as (
-        content: string,
-        name: string,
-      ) => Promise<string>)(
-        generateModuleContent(content),
-        `${templateName}-${name.replaceAll('/', '')}.js`,
-      ),
-    ]
-    : async ([name, content]: [string, string]) => [
-      name,
-      await (createJsModuleUrl as (content: string) => string)(
-        generateModuleContent(content),
-      ),
-    ];
+      `${templateName}-${name.replaceAll('/', '')}.js`,
+    ),
+  ];
   return Promise.all(
     (Object.entries(obj).filter(([_, content]) =>
       typeof content === 'string'
@@ -163,40 +154,11 @@ async function generateJavascriptUrl<T extends Record<string, string | {}>>(
 
 export async function generateTemplate(
   template: LynxTemplate,
-  createJsModuleUrl: (content: string) => string,
-): Promise<LynxTemplate>;
-export async function generateTemplate(
-  template: LynxTemplate,
-  createJsModuleUrl: (content: string, name: string) => Promise<string>,
-  templateName: string,
-): Promise<LynxTemplate>;
-export async function generateTemplate(
-  template: LynxTemplate,
   createJsModuleUrl:
-    | ((content: string) => string)
-    | ((content: string, name: string) => Promise<string>),
+    | ((content: string, name: string) => Promise<string>)
+    | ((content: string) => string),
   templateName?: string,
 ): Promise<LynxTemplate> {
-  if (!templateName) {
-    return {
-      ...template,
-      lepusCode: await generateJavascriptUrl(
-        template.lepusCode,
-        mainThreadInjectVars,
-        [],
-        globalMuteableVars,
-        createJsModuleUrl as (content: string) => string,
-      ),
-      manifest: await generateJavascriptUrl(
-        template.manifest,
-        backgroundInjectVars,
-        backgroundInjectWithBind,
-        [],
-        createJsModuleUrl as (content: string) => string,
-      ),
-    };
-  }
-
   return {
     ...template,
     lepusCode: await generateJavascriptUrl(
@@ -204,7 +166,9 @@ export async function generateTemplate(
       mainThreadInjectVars,
       [],
       globalMuteableVars,
+      templateName ? [] : globalDisallowedVars,
       createJsModuleUrl as (content: string, name: string) => Promise<string>,
+      true,
       templateName,
     ),
     manifest: await generateJavascriptUrl(
@@ -212,7 +176,9 @@ export async function generateTemplate(
       backgroundInjectVars,
       backgroundInjectWithBind,
       [],
+      templateName ? [] : globalDisallowedVars,
       createJsModuleUrl as (content: string, name: string) => Promise<string>,
+      false,
       templateName,
     ),
   };

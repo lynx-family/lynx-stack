@@ -1,0 +1,31 @@
+{
+  "name": "@lynx-js/benchmark-react",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "bench": "pnpm run --sequential --stream --aggregate-output '/^bench:.*/'",
+    "bench:001-fib": "benchx_cli run dist/001-fib.lynx.bundle",
+    "bench:002-hello-reactLynx": "benchx_cli run dist/002-hello-reactLynx.lynx.bundle --wait-for-id=stop-benchmark-true",
+    "build": "rspeedy build",
+    "dev": "rspeedy dev",
+    "perfetto": "pnpm run --sequential --stream --aggregate-output '/^perfetto:.*/'",
+    "perfetto:001-fib": "benchx_cli -o dist/001-fib.ptrace run dist/001-fib.lynx.bundle --repeat=1",
+    "perfetto:002-hello-reactLynx": "benchx_cli -o dist/002-hello-reactLynx.ptrace run dist/002-hello-reactLynx.lynx.bundle --repeat=5 --wait-for-id=stop-benchmark-true"
+  },
+  "dependencies": {
+    "@lynx-js/react": "workspace:*",
+    "benchx_cli": "workspace:*",
+    "empathic": "^2.0.0",
+    "event-target-polyfill": "^0.0.4",
+    "magic-string": "^0.30.17",
+    "tinybench": "^5.0.0"
+  },
+  "devDependencies": {
+    "@lynx-js/qrcode-rsbuild-plugin": "workspace:*",
+    "@lynx-js/react-rsbuild-plugin": "workspace:*",
+    "@lynx-js/rspeedy": "workspace:*",
+    "@lynx-js/types": "3.3.0",
+    "@types/react": "^18.3.23"
+  }
+}

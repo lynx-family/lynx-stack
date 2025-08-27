@@ -1,5 +1,23 @@
 # create-rspeedy
 
+## 0.10.8
+
+### Patch Changes
+
+- Add `@lynx-js/preact-devtools` by default. ([#1593](https://github.com/lynx-family/lynx-stack/pull/1593))
+
+## 0.10.7
+
+## 0.10.6
+
+### Patch Changes
+
+- Support ESLint for ReactLynx templates ([#1274](https://github.com/lynx-family/lynx-stack/pull/1274))
+
+## 0.10.5
+
+## 0.10.4
+
 ## 0.10.3
 
 ## 0.10.2

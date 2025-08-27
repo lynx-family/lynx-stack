@@ -1,29 +1,26 @@
 use crate::{
-  is_newline, is_white_space,
+  char_code_definitions::{get_char_code, is_white_space},
   tokenize::{self, Parser},
   types::*,
   utils::cmp_str,
 };
 
-const IMPORTANT_STR: [u16; 9] = [
-  'i' as u16, 'm' as u16, 'p' as u16, 'o' as u16, 'r' as u16, 't' as u16, 'a' as u16, 'n' as u16,
-  't' as u16,
-];
+const IMPORTANT_STR: &[u8] = "important".as_bytes();
 
 pub struct ParserState<'a, 'b, T: Transformer> {
   transformer: &'b mut T,
-  source: &'a [u16],
+  source: &'a [u8],
   status: usize,
   name_start: usize,
   name_end: usize,
   value_start: usize,
   value_end: usize,
   is_important: bool,
-  prev_token_type: u16,
+  prev_token_type: u8,
 }
 
 impl<T: Transformer> Parser for ParserState<'_, '_, T> {
-  fn on_token(&mut self, token_type: u16, start: usize, end: usize) {
+  fn on_token(&mut self, token_type: u8, start: usize, end: usize) {
     //https://drafts.csswg.org/css-syntax-3/#consume-declaration
     // on_token(type, start, offset);
     /*
@@ -79,7 +76,9 @@ impl<T: Transformer> Parser for ParserState<'_, '_, T> {
       if self.value_end == 0 {
         self.value_end = start;
       }
-      while is_white_space!(self.source[self.value_end - 1]) && self.value_end > self.value_start {
+      while is_white_space(get_char_code(self.source, self.value_end - 1))
+        && self.value_end > self.value_start
+      {
         self.value_end -= 1;
       }
       self.transformer.on_declaration(
@@ -97,7 +96,7 @@ impl<T: Transformer> Parser for ParserState<'_, '_, T> {
       self.is_important = false;
     } else if self.status == 3
       && self.prev_token_type == DELIM_TOKEN
-      && cmp_str(self.source, start, end, &IMPORTANT_STR)
+      && cmp_str(self.source, start, end, IMPORTANT_STR)
     {
       // here we will have some bad caes: like
       // height: 1px !important 2px;
@@ -138,7 +137,7 @@ pub trait Transformer {
   );
 }
 
-pub fn parse_inline_style<T: Transformer>(source: &[u16], transformer: &mut T) {
+pub fn parse_inline_style<T: Transformer>(source: &[u8], transformer: &mut T) {
   let mut parser = ParserState {
     transformer,
     source,

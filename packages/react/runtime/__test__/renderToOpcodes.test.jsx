@@ -13,6 +13,7 @@ import { setupPage, SnapshotInstance, snapshotInstanceManager } from '../src/sna
 import { createElement, cloneElement } from '../lepus';
 import { Suspense } from 'preact/compat';
 import { createSuspender } from './createSuspender';
+import { __root } from '../src/root';
 
 describe('renderToOpcodes', () => {
   beforeAll(() => {
@@ -91,7 +92,7 @@ describe('renderToOpcodes', () => {
           "values": undefined,
         },
         3,
-        "1000",
+        1000,
         1,
         1,
       ]
@@ -135,7 +136,7 @@ describe('renderToOpcodes', () => {
           "values": undefined,
         },
         3,
-        "1",
+        1,
         1,
         1,
       ]
@@ -143,9 +144,11 @@ describe('renderToOpcodes', () => {
   });
 
   it('should render with attr', () => {
+    const random = Math.random();
+
     function App() {
       return (
-        <view key={Math.random()}>
+        <view random={random}>
           <text>Hello World</text>
           <raw-text text={'Hello World'.toLowerCase()} />
         </view>
@@ -165,6 +168,7 @@ describe('renderToOpcodes', () => {
         2,
         "values",
         [
+          ${random},
           "hello world",
         ],
         1,
@@ -283,7 +287,7 @@ describe('renderToOpcodes', () => {
           "values": undefined,
         },
         3,
-        "11111",
+        11111,
         1,
         1,
       ]
@@ -317,7 +321,7 @@ describe('renderToOpcodes', () => {
           "values": undefined,
         },
         3,
-        "12345",
+        12345,
         1,
         1,
       ]
@@ -1186,5 +1190,27 @@ describe('cloneElement', () => {
     const element = <Example color='red' />;
     const clone = cloneElement(element, { color: undefined });
     expect(clone.props.color).toBe('blue');
+  });
+});
+
+describe('renderMainThread', () => {
+  it('should not throw if error - instead it will render an empty page', () => {
+    function App() {
+      undefined();
+    }
+
+    __root.__jsx = (
+      <view>
+        <text>Hello World</text>
+        <App />
+      </view>
+    );
+
+    expect(() => renderPage()).not.toThrow();
+    expect(__root.__element_root).toMatchInlineSnapshot(`
+      <page
+        cssId="default-entry-from-native:0"
+      />
+    `);
   });
 });

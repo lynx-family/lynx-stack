@@ -136,7 +136,11 @@ describe('CLI - build', () => {
       Promise.resolve({
         isPluginExists: vi.fn(),
         addPlugins: vi.fn(),
-        build: vi.fn(),
+        build: vi.fn(() =>
+          Promise.resolve({
+            close: vi.fn(),
+          })
+        ),
         inspectConfig: vi.fn(),
       })
     )
@@ -268,6 +272,92 @@ describe('CLI - build', () => {
     await vi.runAllTimersAsync()
     expect(vi.mocked(gracefulExit)).toBeCalled()
     expect(vi.mocked(gracefulExit)).toBeCalledWith(1)
+  })
+
+  describe('watch mode', () => {
+    test('with watch=true, process should not exit', async () => {
+      vi.mock('exit-hook')
+      vi.useFakeTimers()
+
+      const core = await import('@rsbuild/core')
+      const closeMock = vi.fn().mockResolvedValue(undefined)
+
+      vi.mocked(core.createRsbuild).mockImplementation(() =>
+        // @ts-expect-error mock
+        Promise.resolve({
+          isPluginExists: vi.fn(),
+          addPlugins: vi.fn(),
+          build: vi.fn(() =>
+            Promise.resolve({
+              close: closeMock,
+            })
+          ),
+          inspectConfig: vi.fn(),
+        })
+      )
+
+      const { gracefulExit } = await import('exit-hook')
+      const processOnSpy = vi.spyOn(process, 'on')
+
+      const program = new Command('test')
+      await build.call(
+        program,
+        join(fixturesRoot, 'hello-world'),
+        { watch: true },
+      )
+
+      expect(closeMock).not.toHaveBeenCalled()
+      await vi.runAllTimersAsync()
+      expect(vi.mocked(gracefulExit)).not.toBeCalled()
+
+      // Simulate SIGINT
+      const sigintHandler = processOnSpy.mock.calls.find(call =>
+        call[0] === 'SIGINT'
+      )?.[1]
+      if (sigintHandler) {
+        sigintHandler()
+        expect(closeMock).toHaveBeenCalledTimes(1)
+      }
+
+      processOnSpy.mockRestore()
+    })
+
+    test('with watch=false, process should exit and close should be called', async () => {
+      vi.mock('exit-hook')
+      vi.useFakeTimers()
+
+      const core = await import('@rsbuild/core')
+      const closeMock = vi.fn().mockResolvedValue(undefined)
+
+      vi.mocked(core.createRsbuild).mockImplementation(() =>
+        // @ts-expect-error mock
+        Promise.resolve({
+          isPluginExists: vi.fn(),
+          addPlugins: vi.fn(),
+          build: vi.fn(() =>
+            Promise.resolve({
+              close: closeMock,
+            })
+          ),
+          inspectConfig: vi.fn(),
+        })
+      )
+
+      const { gracefulExit } = await import('exit-hook')
+      const processOnSpy = vi.spyOn(process, 'on')
+
+      const program = new Command('test')
+      await build.call(
+        program,
+        join(fixturesRoot, 'hello-world'),
+        { watch: false },
+      )
+
+      expect(closeMock).toHaveBeenCalledTimes(1)
+      await vi.runAllTimersAsync()
+      expect(vi.mocked(gracefulExit)).toBeCalledWith(0)
+      processOnSpy.mockRestore()
+    })
   })
 
   describe('mode', () => {

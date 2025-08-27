@@ -33,15 +33,20 @@ jobs:
     timeout-minutes: 30
     runs-on: ${{ inputs.runs-on }}
     permissions: {}
+    container:
+      image: ${{ inputs.is-web && 'mcr.microsoft.com/playwright:v1.55.0-noble' || null }}
+      env:
+        CI: 1
+        TURBO_TELEMETRY_DISABLED: 1
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
         with:
           # Codecov requires fetch-depth: 0
           fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: "22"
+          node-version: "24"
       - name: TurboCache
         uses: lynx-infra/cache@5c6160a6a4c7fca80a2f3057bb9dfc9513fcb732
         with:
@@ -57,14 +62,10 @@ jobs:
       - name: Build
         run: |
           pnpm turbo build --summarize
-      - uses: ./.github/actions/setup-playwright
-        if: ${{ inputs.is-web }}
-        with:
-          working-directory: packages/web-platform/web-tests
       - name: Test # zizmor: ignore[template-injection] The inputs.run is provided by us.
         id: test
         env:
-          NODE_OPTIONS: --max-old-space-size=8192
+          NODE_OPTIONS: --max-old-space-size=16384
           GITHUB_SHA: ${{ github.event.pull_request.head.sha }}
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -77,6 +78,7 @@ jobs:
           flags: ${{ inputs.codecov-flags }}
       - name: Upload test results to Codecov
         if: ${{ !cancelled() }}
+        continue-on-error: true
         uses: codecov/test-results-action@47f89e9acb64b76debcd5ea40642d25a4adced9f # v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}

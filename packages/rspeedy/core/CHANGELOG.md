@@ -1,5 +1,55 @@
 # @lynx-js/rspeedy
 
+## 0.10.8
+
+### Patch Changes
+
+- Support caching Lynx native events when chunk splitting is enabled. ([#1370](https://github.com/lynx-family/lynx-stack/pull/1370))
+
+  When `performance.chunkSplit.strategy` is not `all-in-one`, Lynx native events are cached until the BTS chunk is fully loaded and are replayed when that chunk is ready. The `firstScreenSyncTiming` flag will no longer change to `jsReady` anymore.
+
+- Support exporting `Promise` and function in `lynx.config.ts`. ([#1590](https://github.com/lynx-family/lynx-stack/pull/1590))
+
+- Fix missing `publicPath` using when `rspeedy dev --mode production`. ([#1310](https://github.com/lynx-family/lynx-stack/pull/1310))
+
+- Updated dependencies [[`aaca8f9`](https://github.com/lynx-family/lynx-stack/commit/aaca8f91d177061c7b0430cc5cb21a3602897534)]:
+  - @lynx-js/cache-events-webpack-plugin@0.0.1
+  - @lynx-js/chunk-loading-webpack-plugin@0.3.1
+
+## 0.10.7
+
+### Patch Changes
+
+- `output.inlineScripts` defaults to `false` when chunkSplit strategy is not `'all-in-one'` ([#1504](https://github.com/lynx-family/lynx-stack/pull/1504))
+
+## 0.10.6
+
+### Patch Changes
+
+- Remove the experimental `provider` option. ([#1432](https://github.com/lynx-family/lynx-stack/pull/1432))
+
+- Add `output.filename.wasm` and `output.filename.assets` options. ([#1449](https://github.com/lynx-family/lynx-stack/pull/1449))
+
+- fix deno compatibility ([#1412](https://github.com/lynx-family/lynx-stack/pull/1412))
+
+- Should call the `api.onCloseBuild` hook after the build finished. ([#1446](https://github.com/lynx-family/lynx-stack/pull/1446))
+
+- Bump Rsbuild v1.4.15. ([#1423](https://github.com/lynx-family/lynx-stack/pull/1423))
+
+- Support using function in `output.filename.*`. ([#1449](https://github.com/lynx-family/lynx-stack/pull/1449))
+
+## 0.10.5
+
+### Patch Changes
+
+- Should support using `.js` extensions when loading configuration with Node.js [builtin type stripping](https://nodejs.org/api/typescript.html#type-stripping). ([#1407](https://github.com/lynx-family/lynx-stack/pull/1407))
+
+## 0.10.4
+
+### Patch Changes
+
+- Bump Rsbuild v1.4.12 with Rspack v1.4.11. ([#1326](https://github.com/lynx-family/lynx-stack/pull/1326))
+
 ## 0.10.3
 
 ### Patch Changes

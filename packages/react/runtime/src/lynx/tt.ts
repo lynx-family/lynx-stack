@@ -209,7 +209,7 @@ function updateCardData(newData: Record<string, any>, options?: Record<string, a
 
   // COW when modify `lynx.__initData` to make sure Provider & Consumer works
   lynx.__initData = Object.assign({}, lynx.__initData, restNewData);
-  lynxCoreInject.tt.GlobalEventEmitter.emit('onDataChanged', undefined);
+  lynxCoreInject.tt.GlobalEventEmitter.emit('onDataChanged', [restNewData]);
 }
 
 export { injectTt, flushDelayedLifecycleEvents };
