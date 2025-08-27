@@ -38,20 +38,28 @@ const {
  */
 function createIFrameRealm(parent: Node): JSRealm {
   const iframe = document.createElement('iframe');
+  const iframeLoaded = new Promise<void>((resolve) => {
+    iframe.onload = () => resolve();
+  });
   iframe.style.display = 'none';
   iframe.src = 'about:blank';
   parent.appendChild(iframe);
   const iframeWindow = iframe.contentWindow! as unknown as typeof globalThis;
+  const iframeDocument = iframe.contentDocument!;
   Object.assign(iframeWindow, {
     module: {
       exports: undefined,
     },
   });
   const loadScript: (url: string) => Promise<unknown> = (url) => {
-    return new Promise((resolve, reject) => {
-      const script = document.createElement('script');
+    return new Promise(async (resolve, reject) => {
+      if (iframeDocument.readyState !== 'complete') {
+        await iframeLoaded;
+      }
+      const script = iframeDocument.createElement('script');
       script.src = url;
       script.fetchPriority = 'high';
+      script.defer = true;
       script.onload = () => resolve(iframeWindow?.module?.exports);
       script.onerror = () => reject(new Error(`Failed to load script: ${url}`));
       iframe.contentDocument!.head.appendChild(script);
@@ -62,7 +70,7 @@ function createIFrameRealm(parent: Node): JSRealm {
     xhr.open('GET', url, false); // Synchronous request
     xhr.send(null);
     if (xhr.status === 200) {
-      const script = document.createElement('script');
+      const script = iframe.contentDocument!.createElement('script');
       script.textContent = xhr.responseText;
       iframe.contentDocument!.head.appendChild(script);
       return iframeWindow?.module?.exports;

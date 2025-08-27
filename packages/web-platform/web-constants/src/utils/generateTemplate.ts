@@ -5,6 +5,7 @@
 import type { LynxTemplate } from '../types/LynxModule.js';
 
 const currentSupportedTemplateVersion = 2;
+const globalDisallowedVars = ['navigator', 'postMessage'];
 type templateUpgrader = (template: LynxTemplate) => LynxTemplate;
 const templateUpgraders: templateUpgrader[] = [
   (template) => {
@@ -72,8 +73,10 @@ const generateModuleContent = (
 ) =>
   [
     '//# allFunctionsCalledOnLoad\n',
-    'module.exports = ',
+    '"use strict";\n',
+    `(() => {const ${globalDisallowedVars.join('=')}=void 0;module.exports = `,
     content,
+    '\n})()',
   ].join('');
 
 async function generateJavascriptUrl<T extends Record<string, string | {}>>(
