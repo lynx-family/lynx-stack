@@ -59,8 +59,8 @@ importers:
         specifier: catalog:rsbuild
         version: 1.5.0
       '@rslib/core':
-        specifier: ^0.12.2
-        version: 0.12.2(@microsoft/api-extractor@7.52.11(@types/node@24.3.0))(typescript@5.9.2)
+        specifier: ^0.12.3
+        version: 0.12.3(@microsoft/api-extractor@7.52.11(@types/node@24.3.0))(typescript@5.9.2)
       '@rspack/core':
         specifier: 1.5.0
         version: 1.5.0(@swc/helpers@0.5.17)
@@ -2137,8 +2137,8 @@ packages:
   '@jridgewell/source-map@0.3.6':
     resolution: {integrity: sha512-1ZJTZebgqllO79ue2bm3rIGud/bOe0pP5BjSRCRxxYkEZS8STV7zN84UBbiYu7jy+eCKSnVIUgoWWE/tt+shMQ==}
 
-  '@jridgewell/sourcemap-codec@1.5.0':
-    resolution: {integrity: sha512-gv3ZRaISU3fjPAgNsriBRqGWQL6quFx04YMPW/zD8XMLsU32mhCCbfbO6KZFLjvYpCZ8zyDEgqsgf+PwPaM7GQ==}
+  '@jridgewell/sourcemap-codec@1.5.5':
+    resolution: {integrity: sha512-cYQ9310grqxueWbl+WuIUIaiUaDcj7WOq5fVhEljNVgRfOUhY9fy2zTvfoqWsnebh8Sl70VScFbICvJnLKB0Og==}
 
   '@jridgewell/trace-mapping@0.3.29':
     resolution: {integrity: sha512-uw6guiW/gcAGPDhLmd77/6lW8QLeiV5RUTsAX46Db6oLhGaVj4lhnPwb184s1bkc8kdVg/+h988dro8GRDpmYQ==}
@@ -2530,11 +2530,6 @@ packages:
     engines: {node: '>=18.12.0'}
     hasBin: true
 
-  '@rsbuild/core@1.5.0-beta.4':
-    resolution: {integrity: sha512-h1jqpjZunalsdxTcJCbY8DovLu6F4MQgsYdZyxDjUp0xuggQayi1tpcE6MhLs3WWa077g+LZ2Am4gKt/pl/W9Q==}
-    engines: {node: '>=18.12.0'}
-    hasBin: true
-
   '@rsbuild/plugin-check-syntax@1.3.0':
     resolution: {integrity: sha512-lHrd6hToPFVOGWr0U/Ox7pudHWdhPSFsr2riWpjNRlUuwiXdU2SYMROaVUCrLJvYFzJyEMsFOi1w59rBQCG2HQ==}
     peerDependencies:
@@ -2616,8 +2611,8 @@ packages:
   '@rsdoctor/utils@1.2.3':
     resolution: {integrity: sha512-HawWrcqXeqdhj4dKhdjJg4BXvstcQauYSRx0cnYH78f7z9PW60Smr6vYpByXC87rK3JKpa6CNiZi+qhI5yTAog==}
 
-  '@rslib/core@0.12.2':
-    resolution: {integrity: sha512-5DPVxmzzyoQlLqSt8Y/8kbYNtbJ0AEVUXd1hDFQ0Iq5Eb5XA4363PDeLdfeKJ1h93YqT7M9WZ3Cyhvosx1EimQ==}
+  '@rslib/core@0.12.3':
+    resolution: {integrity: sha512-36TFj8sm10liVBVgkwufDFqfQtxrzIjugA8TSg5FZzpl0ZyzrIptpeVowcXVlZ3SbgHJTqRqztgdbl4i8YsPoA==}
     engines: {node: '>=18.12.0'}
     hasBin: true
     peerDependencies:
@@ -5815,8 +5810,8 @@ packages:
     resolution: {integrity: sha512-h5bgJWpxJNswbU7qCrV0tIKQCaS3blPDrqKWx+QxzuzL1zGUzij9XCWLrSLsJPu5t+eWA/ycetzYAO5IOMcWAQ==}
     hasBin: true
 
-  magic-string@0.30.17:
-    resolution: {integrity: sha512-sNPKHvyjVf7gyjwS4xGTaW/mCnF8wnjtifKBEhxfZ7E/S8tQ0rssrwGNn6q8JH/ohItJfSQp9mBtQYuTlH5QnA==}
+  magic-string@0.30.18:
+    resolution: {integrity: sha512-yi8swmWbO17qHhwIBNeeZxTceJMeBvWJaId6dyvTSOwTipqeHhMhOrz6513r1sOKnpvQ7zkhlG8tPrpilwTxHQ==}
 
   magicast@0.3.5:
     resolution: {integrity: sha512-L0WhttDl+2BOsybvEOLK7fW3UA0OQ0IQ2d6Zl2x/a6vVRs3bAY0ECOSHHeL5jD+SbOpOCUEi0y1DgHEn9Qn1AQ==}
@@ -7010,8 +7005,8 @@ packages:
       '@rsbuild/core':
         optional: true
 
-  rsbuild-plugin-dts@0.12.2:
-    resolution: {integrity: sha512-qI7wwT7R6T5LzuwcBWt6dZYaS1Fv5Tg2D3OHbAX9MXYn2oJ3eJjdwXU2LcLALd1CpXUPaQCjOTHRMJzHT0++JQ==}
+  rsbuild-plugin-dts@0.12.3:
+    resolution: {integrity: sha512-FEZ+q+H1HezdNshEuYYtIoYlx/HQPjPhBT4u0X7d0pRyMDhD/LpD2GxmyIjJMfTvh2CaxoIMKRarvTOBL8GGYg==}
     engines: {node: '>=18.12.0'}
     peerDependencies:
       '@microsoft/api-extractor': ^7
@@ -9163,7 +9158,7 @@ snapshots:
 
   '@jridgewell/gen-mapping@0.3.12':
     dependencies:
-      '@jridgewell/sourcemap-codec': 1.5.0
+      '@jridgewell/sourcemap-codec': 1.5.5
       '@jridgewell/trace-mapping': 0.3.29
 
   '@jridgewell/resolve-uri@3.1.2': {}
@@ -9173,12 +9168,12 @@ snapshots:
       '@jridgewell/gen-mapping': 0.3.12
       '@jridgewell/trace-mapping': 0.3.29
 
-  '@jridgewell/sourcemap-codec@1.5.0': {}
+  '@jridgewell/sourcemap-codec@1.5.5': {}
 
   '@jridgewell/trace-mapping@0.3.29':
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
-      '@jridgewell/sourcemap-codec': 1.5.0
+      '@jridgewell/sourcemap-codec': 1.5.5
 
   '@jsonjoy.com/base64@1.1.2(tslib@2.8.1)':
     dependencies:
@@ -9589,14 +9584,6 @@ snapshots:
       core-js: 3.45.1
       jiti: 2.5.1
 
-  '@rsbuild/core@1.5.0-beta.4':
-    dependencies:
-      '@rspack/core': 1.5.0(@swc/helpers@0.5.17)
-      '@rspack/lite-tapable': 1.0.1
-      '@swc/helpers': 0.5.17
-      core-js: 3.45.1
-      jiti: 2.5.1
-
   '@rsbuild/plugin-check-syntax@1.3.0(@rsbuild/core@1.5.0)':
     dependencies:
       acorn: 8.15.0
@@ -9775,10 +9762,10 @@ snapshots:
       - supports-color
       - webpack
 
-  '@rslib/core@0.12.2(@microsoft/api-extractor@7.52.11(@types/node@24.3.0))(typescript@5.9.2)':
+  '@rslib/core@0.12.3(@microsoft/api-extractor@7.52.11(@types/node@24.3.0))(typescript@5.9.2)':
     dependencies:
-      '@rsbuild/core': 1.5.0-beta.4
-      rsbuild-plugin-dts: 0.12.2(@microsoft/api-extractor@7.52.11(@types/node@24.3.0))(@rsbuild/core@1.5.0-beta.4)(typescript@5.9.2)
+      '@rsbuild/core': 1.5.0
+      rsbuild-plugin-dts: 0.12.3(@microsoft/api-extractor@7.52.11(@types/node@24.3.0))(@rsbuild/core@1.5.0)(typescript@5.9.2)
       tinyglobby: 0.2.14
     optionalDependencies:
       '@microsoft/api-extractor': 7.52.11(@types/node@24.3.0)
@@ -10686,7 +10673,7 @@ snapshots:
       istanbul-lib-report: 3.0.1
       istanbul-lib-source-maps: 5.0.6
       istanbul-reports: 3.1.7
-      magic-string: 0.30.17
+      magic-string: 0.30.18
       magicast: 0.3.5
       std-env: 3.9.0
       test-exclude: 7.0.1
@@ -10717,7 +10704,7 @@ snapshots:
     dependencies:
       '@vitest/spy': 3.2.4
       estree-walker: 3.0.3
-      magic-string: 0.30.17
+      magic-string: 0.30.18
     optionalDependencies:
       vite: 5.4.2(@types/node@24.3.0)(sass-embedded@1.90.0)(sass@1.90.0)(terser@5.31.6)
 
@@ -10734,7 +10721,7 @@ snapshots:
   '@vitest/snapshot@3.2.4':
     dependencies:
       '@vitest/pretty-format': 3.2.4
-      magic-string: 0.30.17
+      magic-string: 0.30.18
       pathe: 2.0.3
 
   '@vitest/spy@3.2.4':
@@ -13527,9 +13514,9 @@ snapshots:
 
   lz-string@1.5.0: {}
 
-  magic-string@0.30.17:
+  magic-string@0.30.18:
     dependencies:
-      '@jridgewell/sourcemap-codec': 1.5.0
+      '@jridgewell/sourcemap-codec': 1.5.5
 
   magicast@0.3.5:
     dependencies:
@@ -15025,11 +15012,11 @@ snapshots:
     optionalDependencies:
       '@rsbuild/core': 1.5.0
 
-  rsbuild-plugin-dts@0.12.2(@microsoft/api-extractor@7.52.11(@types/node@24.3.0))(@rsbuild/core@1.5.0-beta.4)(typescript@5.9.2):
+  rsbuild-plugin-dts@0.12.3(@microsoft/api-extractor@7.52.11(@types/node@24.3.0))(@rsbuild/core@1.5.0)(typescript@5.9.2):
     dependencies:
       '@ast-grep/napi': 0.37.0
-      '@rsbuild/core': 1.5.0-beta.4
-      magic-string: 0.30.17
+      '@rsbuild/core': 1.5.0
+      magic-string: 0.30.18
       picocolors: 1.1.1
       tinyglobby: 0.2.14
       tsconfig-paths: 4.2.0
@@ -16175,7 +16162,7 @@ snapshots:
       chai: 5.2.0
       debug: 4.4.1
       expect-type: 1.2.1
-      magic-string: 0.30.17
+      magic-string: 0.30.18
       pathe: 2.0.3
       picomatch: 4.0.2
       std-env: 3.9.0
