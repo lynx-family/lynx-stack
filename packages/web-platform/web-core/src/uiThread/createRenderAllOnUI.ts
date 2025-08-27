@@ -61,7 +61,8 @@ function createIFrameRealm(parent: Node): JSRealm {
       script.fetchPriority = 'high';
       script.defer = true;
       script.onload = () => resolve(iframeWindow?.module?.exports);
-  script.onerror = (err) => reject(new Error(`Failed to load script: ${url}`, { cause: err }));
+      script.onerror = (err) =>
+        reject(new Error(`Failed to load script: ${url}`, { cause: err }));
       iframe.contentDocument!.head.appendChild(script);
     });
   };
@@ -75,7 +76,7 @@ function createIFrameRealm(parent: Node): JSRealm {
       iframe.contentDocument!.head.appendChild(script);
       return iframeWindow?.module?.exports;
     } else {
-      throw new Error(`Failed to load script: ${url}`);
+      throw new Error(`Failed to load script: ${url}`, { cause: xhr });
     }
   };
   return { globalWindow: iframeWindow, loadScript, loadScriptSync };
