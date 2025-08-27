@@ -140,6 +140,20 @@
       ],
     },
   ],
+
+  "customManagers": [
+    {
+      // See: https://docs.renovatebot.com/modules/datasource/git-refs/
+      "customType": "regex",
+      "managerFilePatterns": ["packages/lynx/benchx_cli/scripts/build.mjs"],
+      "matchStrings": ["const COMMIT = '(?<currentDigest>.*?)';"],
+      "currentValueTemplate": "develop",
+      "depNameTemplate": "lynx",
+      "packageNameTemplate": "https://github.com/lynx-family/lynx",
+      "datasourceTemplate": "git-refs",
+    },
+  ],
+
   "postUpdateOptions": [
     "pnpmDedupe",
   ],

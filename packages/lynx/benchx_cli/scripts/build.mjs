@@ -29,7 +29,8 @@ console.log('noop')
   process.exit(0);
 }
 
-const COMMIT = 'fd5f6d5a8f1c27cdeba51e55414c6e96f7ef5558';
+const COMMIT = 'f59e2ecac431a7f96ed0594501b1b4afb416ab95';
+const PICK_COMMIT = 'fd5f6d5a8f1c27cdeba51e55414c6e96f7ef5558';
 
 function checkCwd() {
   try {
@@ -89,12 +90,20 @@ source venv/bin/activate
 pip install .
 `.pipe(process.stdout);
 
-// hab sync .
+// prepare the lynx repo
 await $`
-git clone https://github.com/hzy/lynx
+git clone https://github.com/lynx-family/lynx
 cd lynx
 git fetch origin ${COMMIT}
 git checkout ${COMMIT}
+git remote add hzy https://github.com/hzy/lynx
+git fetch hzy ${PICK_COMMIT}
+git cherry-pick -n ${PICK_COMMIT}
+`.pipe(process.stdout);
+
+// hab sync .
+await $`
+cd lynx
 source tools/envsetup.sh
 ../habitat/venv/bin/hab sync .
 `.pipe(process.stdout);
