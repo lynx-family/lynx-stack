@@ -158,8 +158,8 @@ importers:
         specifier: ^0.0.4
         version: 0.0.4
       magic-string:
-        specifier: ^0.30.17
-        version: 0.30.17
+        specifier: ^0.30.18
+        version: 0.30.18
       tinybench:
         specifier: ^5.0.0
         version: 5.0.0
