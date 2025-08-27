@@ -74,7 +74,9 @@ const generateModuleContent = (
   [
     '//# allFunctionsCalledOnLoad\n',
     '"use strict";\n',
-    `(() => {const ${globalDisallowedVars.join('=')}=void 0;module.exports = `,
+    `(() => {const ${
+      globalDisallowedVars.join('=void 0,')
+    }=void 0;module.exports = `,
     content,
     '\n})()',
   ].join('');
