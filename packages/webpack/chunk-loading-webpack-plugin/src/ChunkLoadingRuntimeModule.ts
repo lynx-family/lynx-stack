@@ -96,9 +96,18 @@ export function createChunkLoadingRuntimeModule(
     ): boolean {
       if (chunkGraph.getNumberOfEntryModules(chunk) > 0) return true;
 
-      return chunkGraph.getChunkModulesIterableBySourceType(chunk, 'javascript')
-        ? true
-        : false;
+      const chunkModules = chunkGraph.getChunkModulesIterableBySourceType(
+        chunk,
+        'javascript',
+      );
+
+      // Webpack would return `undefined` when no chunk module is found
+      if (!chunkModules) {
+        return false;
+      }
+
+      // Rspack would return an empty array instead of `undefined`.
+      return chunkModules[Symbol.iterator]().next().done !== true;
     }
   };
 }
