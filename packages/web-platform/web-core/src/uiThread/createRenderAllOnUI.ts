@@ -46,11 +46,6 @@ function createIFrameRealm(parent: Node): JSRealm {
   parent.appendChild(iframe);
   const iframeWindow = iframe.contentWindow! as unknown as typeof globalThis;
   const iframeDocument = iframe.contentDocument!;
-  Object.assign(iframeWindow, {
-    module: {
-      exports: undefined,
-    },
-  });
   const loadScript: (url: string) => Promise<unknown> = (url) => {
     return new Promise(async (resolve, reject) => {
       if (iframeDocument.readyState !== 'complete') {
@@ -64,6 +59,8 @@ function createIFrameRealm(parent: Node): JSRealm {
       script.onload = () => resolve(iframeWindow?.module?.exports);
       script.onerror = (err) =>
         reject(new Error(`Failed to load script: ${url}`, { cause: err }));
+      // @ts-expect-error
+      iframeWindow.module = { exports: undefined };
       iframe.contentDocument!.head.appendChild(script);
     });
   };
@@ -74,6 +71,8 @@ function createIFrameRealm(parent: Node): JSRealm {
     if (xhr.status === 200) {
       const script = iframe.contentDocument!.createElement('script');
       script.textContent = xhr.responseText;
+      // @ts-expect-error
+      iframeWindow.module = { exports: undefined };
       iframe.contentDocument!.head.appendChild(script);
       return iframeWindow?.module?.exports;
     } else {
