@@ -117,7 +117,6 @@ jobs:
         env:
           NODE_OPTIONS: --max-old-space-size=32768
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-        continue-on-error: true
       - name: Upload turbo summary
         if: runner.debug == '1'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
