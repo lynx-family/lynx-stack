@@ -68,6 +68,7 @@ export interface Config {
     output?: Output | undefined;
     performance?: Performance | undefined;
     plugins?: RsbuildPlugins | undefined;
+    resolve?: Resolve | undefined;
     server?: Server | undefined;
     source?: Source | undefined;
     tools?: Tools | undefined;
@@ -259,6 +260,11 @@ export interface Performance {
     removeConsole?: boolean | ConsoleType[] | undefined;
 }
 
+// @public
+export interface Resolve {
+    alias?: Record<string, string | false | string[]> | undefined;
+}
+
 export { RsbuildPlugin }
 
 export { RsbuildPluginAPI }
@@ -295,6 +301,7 @@ export interface Server {
 
 // @public
 export interface Source {
+    // @deprecated
     alias?: Record<string, string | false | string[]> | undefined;
     assetsInclude?: Rspack.RuleSetCondition | undefined;
     decorators?: Decorators | undefined;

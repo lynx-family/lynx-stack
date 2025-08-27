@@ -7,6 +7,7 @@ import type { RsbuildConfig, RsbuildPlugins } from '@rsbuild/core'
 import type { Dev } from './dev/index.js'
 import type { Output } from './output/index.js'
 import type { Performance } from './performance/index.js'
+import type { Resolve } from './resolve/index.js'
 import type { Server } from './server/index.js'
 import type { Source } from './source/index.js'
 import type { Tools } from './tools/index.js'
@@ -132,9 +133,14 @@ export interface Config {
   output?: Output | undefined
 
   /**
-   * The {@link Performance} option is used to
+   * The {@link Performance} option is used to optimize the build-time and runtime performance.
    */
   performance?: Performance | undefined
+
+  /**
+   * The {@link Resolve} option is used to control the resolution behavior of Rspack.
+   */
+  resolve?: Resolve | undefined
 
   /**
    * The {@link Server} option changes the behavior of dev-server.

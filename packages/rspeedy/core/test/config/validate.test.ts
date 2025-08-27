@@ -1815,7 +1815,13 @@ describe('Config Validation', () => {
       ).toThrowErrorMatchingInlineSnapshot(`
         [Error: Invalid configuration.
 
-        Unknown property: \`$input.resolve\` in configuration
+        Unknown property: \`$input.resolve.aliasFields\` in configuration
+
+        Unknown property: \`$input.resolve.conditionNames\` in configuration
+
+        Unknown property: \`$input.resolve.extensions\` in configuration
+
+        Unknown property: \`$input.resolve.extensionAlias\` in configuration
         ]
       `)
 

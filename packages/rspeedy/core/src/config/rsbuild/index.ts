@@ -55,9 +55,11 @@ export function toRsbuildConfig(
       sourceMap: config.output?.sourceMap as SourceMap,
     },
     resolve: {
-      alias: config.source?.alias,
+      alias: config.resolve?.alias,
     },
     source: {
+      alias: config.source?.alias,
+
       assetsInclude: config.source?.assetsInclude,
 
       decorators: config.source?.decorators,

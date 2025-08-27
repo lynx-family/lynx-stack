@@ -1,0 +1,93 @@
+// Copyright 2025 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+
+/**
+ * {@inheritdoc Config.resolve}
+ *
+ * @public
+ */
+export interface Resolve {
+  // TODO(doc): update alias docs after supporting tsconfig-path-plugin
+  // TODO(tsconfig): update alias docs after supporting tsconfig-path-plugin
+  /**
+   * Create aliases to `import` or `require` certain modules more easily.
+   *
+   * @example
+   *
+   * A trailing `$` can also be added to the given object's keys to signify an exact match:
+   *
+   * ```js
+   * import { defineConfig } from '@lynx-js/rspeedy'
+   * export default defineConfig({
+   *   resolve: {
+   *     alias: {
+   *       xyz$: 'path/to/file.js',
+   *     },
+   *   },
+   * })
+   * ```
+   *
+   * which would yield these results:
+   *
+   * ```js
+   * import Test1 from 'xyz'; // Exact match, so path/to/file.js is resolved and imported
+   * import Test2 from 'xyz/file.js'; // Not an exact match, normal resolution takes place
+   * ```
+   *
+   * @example
+   *
+   * `resolve.alias` is useful to control how a npm package is resolved.
+   *
+   * - Change `react` to `@lynx-js/react`:
+   *
+   * ```js
+   * import { defineConfig } from '@lynx-js/rspeedy'
+   * import { createRequire } from 'module'
+   * const require = createRequire(import.meta.url)
+   * export default defineConfig({
+   *   resolve: {
+   *     alias: {
+   *       react: require.resolve('@lynx-js/react'),
+   *     },
+   *   },
+   * })
+   * ```
+   *
+   * This allows you to use some third-party libraries that directly uses `react` as dependencies in ReactLynx.
+   *
+   * - Force using the same version of `dayjs`:
+   *
+   * ```js
+   * import { defineConfig } from '@lynx-js/rspeedy'
+   * import { createRequire } from 'module'
+   * const require = createRequire(import.meta.url)
+   * export default defineConfig({
+   *   resolve: {
+   *     alias: {
+   *       dayjs: require.resolve('dayjs'),
+   *     },
+   *   },
+   * })
+   * ```
+   *
+   * Please note that this is dangerous, since all the `dayjs`(including the dependencies of a dependencies) is resolved to the version in the project.
+   * It may cause both compile-time and runtime errors due to version mismatch.
+   *
+   * @example
+   * Setting `resolve.alias` to `false` will ignore a module.
+   *
+   * ```js
+   * import { defineConfig } from '@lynx-js/rspeedy'
+   * export default defineConfig({
+   *   resolve: {
+   *     alias: {
+   *       'ignored-module': false,
+   *       './ignored-module': false,
+   *     },
+   *   },
+   * })
+   * ```
+   */
+  alias?: Record<string, string | false | string[]> | undefined
+}
