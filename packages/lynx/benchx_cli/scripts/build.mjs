@@ -103,12 +103,14 @@ source tools/envsetup.sh
 await $`
 cd lynx
 source tools/envsetup.sh
-gn gen --args='enable_unittests=true enable_trace="perfetto"' out/Default
+gn gen --args='enable_unittests=true enable_trace="perfetto" jsengine_type="quickjs"' out/Default
 ninja -C out/Default benchx_cli
 mkdir -p ../dist/bin
-cp out/Default/exe.unstripped/benchx_cli ../dist/bin/benchx_cli
-ls -lha out/Default/benchx_cli
-ls -lha out/Default/exe.unstripped/benchx_cli
+cp ${
+  process.platform === 'darwin'
+    ? 'out/Default/benchx_cli'
+    : 'out/Default/exe.unstripped/benchx_cli' // linux
+} ../dist/bin/benchx_cli
 git rev-parse HEAD > ../dist/bin/benchx_cli.commit
 rm -rf out
 `.pipe(process.stdout);
