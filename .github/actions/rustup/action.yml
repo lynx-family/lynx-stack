@@ -29,7 +29,7 @@ runs:
           if [[ "$RUNNER_OS" == "Windows" ]]; then
             echo "${CARGO_HOME:-$USERPROFILE/.cargo}/bin" | sed 's|/|\\|g' >> $GITHUB_PATH
           else
-            echo "${CARGO_HOME:-$HOME/.cargo}/bin" >> $GITHUB_PATH
+            printf '%s\n' "${CARGO_HOME:-$HOME/.cargo}/bin" >> "$GITHUB_PATH"
           fi
         fi
       env:
@@ -39,9 +39,15 @@ runs:
       id: get-toolchain
       shell: bash
       run: |
-        toolchain=$(cat rust-toolchain)
-        echo "toolchain=${toolchain}" >> $GITHUB_OUTPUT
-
+        set -euo pipefail
+        if [[ -f rust-toolchain.toml ]]; then
+          toolchain="$(grep -E '^\s*channel\s*=' rust-toolchain.toml | head -n1 | sed -E 's/.*=\s*"([^"]+)".*/\1/')"
+        elif [[ -f rust-toolchain ]]; then
+          toolchain="$(cat rust-toolchain)"
+        else
+          toolchain="stable"
+        fi
+        printf 'toolchain=%s\n' "${toolchain}" >> "$GITHUB_OUTPUT"
     - name: Restore rustup cache
       id: restore
       if: ${{ inputs.save-if == 'true' }}
@@ -56,14 +62,13 @@ runs:
       env:
         toolchain: ${{ steps.get-toolchain.outputs.toolchain }}
       run: |
-        rustup toolchain install $toolchain \
+        rustup toolchain install "$toolchain" \
           -c rustc \
           -c cargo \
           -c rust-std \
           -c clippy \
           -c rustfmt
-        rustup target add wasm32-unknown-unknown
-
+        rustup target add --toolchain "$toolchain" wasm32-unknown-unknown
     - name: Save rustup cache
       uses: lynx-infra/cache/save@5c6160a6a4c7fca80a2f3057bb9dfc9513fcb732
       if: ${{ inputs.save-if == 'true' && steps.restore.outputs.cache-hit != 'true' }}
