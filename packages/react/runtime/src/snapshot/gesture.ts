@@ -16,15 +16,9 @@ export function updateGesture(
   if (!snapshot.__elements) {
     return;
   }
-  if (__PROFILE__) {
-    console.profile('updateGesture');
-  }
   const value = snapshot.__values![expIndex] as GestureKind;
 
   if (workletType === 'main-thread') {
     processGesture(snapshot.__elements[elementIndex]!, value, oldValue as GestureKind, isMainThreadHydrating);
-  }
-  if (__PROFILE__) {
-    console.profileEnd();
   }
 }

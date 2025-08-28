@@ -23,10 +23,11 @@ import { increaseReloadVersion } from './pass.js';
 import { deinitGlobalSnapshotPatch } from './patch/snapshotPatch.js';
 import { shouldDelayUiOps } from './ref/delay.js';
 import { renderMainThread } from './render.js';
+import { profileEnd, profileStart } from '../debug/utils.js';
 
 function reloadMainThread(data: unknown, options: UpdatePageOption): void {
   if (__PROFILE__) {
-    console.profile('reloadTemplate');
+    profileStart('ReactLynx::reloadMainThread');
   }
 
   increaseReloadVersion();
@@ -64,14 +65,14 @@ function reloadMainThread(data: unknown, options: UpdatePageOption): void {
   __FlushElementTree(__page, options);
 
   if (__PROFILE__) {
-    console.profileEnd();
+    profileEnd();
   }
   return;
 }
 
 function reloadBackground(updateData: Record<string, any>): void {
   if (__PROFILE__) {
-    console.profile('reload');
+    profileStart('ReactLynx::reloadBackground');
   }
 
   deinitGlobalSnapshotPatch();
@@ -88,7 +89,7 @@ function reloadBackground(updateData: Record<string, any>): void {
   render(__root.__jsx, __root as any);
 
   if (__PROFILE__) {
-    console.profileEnd();
+    profileEnd();
   }
 }
 
