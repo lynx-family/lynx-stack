@@ -12,7 +12,8 @@
     "jsx-runtime",
     "lazy",
     "lepus",
-    "src"
+    "src",
+    "signals"
   ],
   "scripts": {
     "test": "vitest run --coverage"
