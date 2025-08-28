@@ -31,6 +31,7 @@ import { registerGetCustomSectionHandler } from './crossThreadHandlers/registerG
 import { createMainThreadGlobalThis } from './createMainThreadGlobalThis.js';
 import { createExposureService } from './utils/createExposureService.js';
 import { initWasm } from '@lynx-js/web-style-transformer';
+import { appendStyleElement } from './utils/processStyleInfo.js';
 const initWasmPromise = initWasm();
 
 export function prepareMainThreadAPIs(
@@ -95,6 +96,15 @@ export function prepareMainThreadAPIs(
       sendEventEndpoint: dispatchCoreContextOnBackgroundEndpoint,
     });
     const i18nResources = initialI18nResources(initI18nResources);
+
+    const { updateCssOGStyle } = appendStyleElement(
+      styleInfo,
+      pageConfig,
+      rootDom as unknown as Node,
+      document,
+      undefined,
+      ssrHydrateInfo,
+    );
     const mtsGlobalThis = createMainThreadGlobalThis({
       lynxTemplate: template,
       mtsRealm,
@@ -103,12 +113,12 @@ export function prepareMainThreadAPIs(
       browserConfig,
       globalProps,
       pageConfig,
-      styleInfo,
       rootDom,
       ssrHydrateInfo,
       ssrHooks,
       document,
       callbacks: {
+        updateCssOGStyle,
         mainChunkReady: () => {
           markTimingInternal('data_processor_start');
           let initData = config.initData;

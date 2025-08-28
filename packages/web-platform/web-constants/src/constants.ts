@@ -10,6 +10,8 @@ export const componentIdAttribute = 'l-comp-id' as const;
 
 export const parentComponentUniqueIdAttribute = 'l-p-comp-uid' as const;
 
+export const lynxEntryNameAttribute = 'l-e-name' as const;
+
 export const lynxTagAttribute = 'lynx-tag' as const;
 
 export const lynxDatasetAttribute = 'l-dset' as const;

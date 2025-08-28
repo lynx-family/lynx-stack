@@ -10,8 +10,12 @@ import {
   type CSSRule,
   cssIdAttribute,
   lynxTagAttribute,
+  type SSRHydrateInfo,
+  lynxUniqueIdAttribute,
+  lynxEntryNameAttribute,
 } from '@lynx-js/web-constants';
 import { transformParsedStyles } from './tokenizer.js';
+import { decodeCssOG } from './decodeCssOG.js';
 
 export function flattenStyleInfo(
   styleInfo: StyleInfo,
@@ -82,20 +86,26 @@ export function transformToWebCss(styleInfo: StyleInfo) {
 export function genCssContent(
   styleInfo: StyleInfo,
   pageConfig: PageConfig,
+  entryName?: string,
 ): string {
   function getExtraSelectors(
     cssId?: string,
   ) {
-    let suffix = '';
+    let suffix;
     if (!pageConfig.enableRemoveCSSScope) {
       if (cssId !== undefined) {
-        suffix += `[${cssIdAttribute}="${cssId}"]`;
+        suffix = `[${cssIdAttribute}="${cssId}"]`;
       } else {
         // To make sure the Specificity correct
-        suffix += `[${lynxTagAttribute}]`;
+        suffix = `[${lynxTagAttribute}]`;
       }
     } else {
-      suffix += `[${lynxTagAttribute}]`;
+      suffix = `[${lynxTagAttribute}]`;
+    }
+    if (entryName) {
+      suffix = `${suffix}[${lynxEntryNameAttribute}="${entryName}"]`;
+    } else {
+      suffix = `${suffix}:not([${lynxEntryNameAttribute}])`;
     }
     return suffix;
   }
@@ -158,4 +168,71 @@ export function genCssOGInfo(styleInfo: StyleInfo): CssOGInfo {
       return [cssId, oneCssOGInfo];
     }),
   );
+}
+
+export function appendStyleElement(
+  styleInfo: StyleInfo,
+  pageConfig: PageConfig,
+  rootDom: Node,
+  document: Document,
+  entryName?: string,
+  ssrHydrateInfo?: SSRHydrateInfo,
+) {
+  const lynxUniqueIdToStyleRulesIndex: number[] =
+    ssrHydrateInfo?.lynxUniqueIdToStyleRulesIndex ?? [];
+  /**
+   * now create the style content
+   * 1. flatten the styleInfo
+   * 2. transform the styleInfo to web css
+   * 3. generate the css in js info
+   * 4. create the style element
+   * 5. append the style element to the root dom
+   */
+  flattenStyleInfo(
+    styleInfo,
+    pageConfig.enableCSSSelector,
+  );
+  transformToWebCss(styleInfo);
+  const cssOGInfo: CssOGInfo = pageConfig.enableCSSSelector
+    ? {}
+    : genCssOGInfo(styleInfo);
+  let cardStyleElement: HTMLStyleElement;
+  if (ssrHydrateInfo?.cardStyleElement) {
+    cardStyleElement = ssrHydrateInfo.cardStyleElement;
+  } else {
+    cardStyleElement = document.createElement(
+      'style',
+    ) as unknown as HTMLStyleElement;
+    cardStyleElement.textContent = genCssContent(
+      styleInfo,
+      pageConfig,
+      entryName,
+    );
+    rootDom.appendChild(cardStyleElement);
+  }
+  const cardStyleElementSheet =
+    (cardStyleElement as unknown as HTMLStyleElement).sheet!;
+  const updateCssOGStyle: (
+    uniqueId: number,
+    newClassName: string,
+    cssID: string | null,
+  ) => void = (uniqueId, newClassName, cssID) => {
+    const newStyles = decodeCssOG(
+      newClassName,
+      cssOGInfo,
+      cssID,
+    );
+    if (lynxUniqueIdToStyleRulesIndex[uniqueId] !== undefined) {
+      const rule = cardStyleElementSheet
+        .cssRules[lynxUniqueIdToStyleRulesIndex[uniqueId]] as CSSStyleRule;
+      rule.style.cssText = newStyles;
+    } else {
+      const index = cardStyleElementSheet.insertRule(
+        `[${lynxUniqueIdAttribute}="${uniqueId}"]{${newStyles}}`,
+        cardStyleElementSheet.cssRules.length,
+      );
+      lynxUniqueIdToStyleRulesIndex[uniqueId] = index;
+    }
+  };
+  return { updateCssOGStyle };
 }

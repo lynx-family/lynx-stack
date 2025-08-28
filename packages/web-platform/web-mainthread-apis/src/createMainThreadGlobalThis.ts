@@ -5,10 +5,8 @@
 import {
   type LynxTemplate,
   type PageConfig,
-  type StyleInfo,
   type FlushElementTreeOptions,
   type Cloneable,
-  type CssOGInfo,
   type BrowserConfig,
   lynxUniqueIdAttribute,
   type publishEventEndpoint,
@@ -64,12 +62,6 @@ import {
 } from '@lynx-js/web-constants';
 import { createMainThreadLynx } from './createMainThreadLynx.js';
 import {
-  flattenStyleInfo,
-  genCssContent,
-  genCssOGInfo,
-  transformToWebCss,
-} from './utils/processStyleInfo.js';
-import {
   __AddClass,
   __AddConfig,
   __AddDataset,
@@ -108,7 +100,6 @@ import {
   __GetAttributeByName,
 } from './pureElementPAPIs.js';
 import { createCrossThreadEvent } from './utils/createCrossThreadEvent.js';
-import { decodeCssOG } from './utils/decodeCssOG.js';
 
 const exposureRelatedAttributes = new Set<string>([
   'exposure-id',
@@ -138,13 +129,17 @@ export interface MainThreadRuntimeCallbacks {
   _I18nResourceTranslation: (
     options: I18nResourceTranslationOptions,
   ) => unknown | undefined;
+  updateCssOGStyle: (
+    uniqueId: number,
+    newClassName: string,
+    cssID: string | null,
+  ) => void;
 }
 
 export interface MainThreadRuntimeConfig {
   pageConfig: PageConfig;
   globalProps: unknown;
   callbacks: MainThreadRuntimeCallbacks;
-  styleInfo: StyleInfo;
   lynxTemplate: LynxTemplate;
   browserConfig: BrowserConfig;
   tagMap: Record<string, string>;
@@ -169,7 +164,6 @@ export function createMainThreadGlobalThis(
     lynxTemplate,
     rootDom,
     globalProps,
-    styleInfo,
     ssrHydrateInfo,
     ssrHooks,
     mtsRealm,
@@ -178,8 +172,6 @@ export function createMainThreadGlobalThis(
   const { elementTemplate, lepusCode } = lynxTemplate;
   const lynxUniqueIdToElement: WeakRef<WebFiberElementImpl>[] =
     ssrHydrateInfo?.lynxUniqueIdToElement ?? [];
-  const lynxUniqueIdToStyleRulesIndex: number[] =
-    ssrHydrateInfo?.lynxUniqueIdToStyleRulesIndex ?? [];
   const elementToRuntimeInfoMap: WeakMap<WebFiberElementImpl, LynxRuntimeInfo> =
     new WeakMap();
 
@@ -187,54 +179,6 @@ export function createMainThreadGlobalThis(
     ?.deref();
   let uniqueIdInc = lynxUniqueIdToElement.length || 1;
   const exposureChangedElements = new Set<WebFiberElementImpl>();
-
-  /**
-   * now create the style content
-   * 1. flatten the styleInfo
-   * 2. transform the styleInfo to web css
-   * 3. generate the css in js info
-   * 4. create the style element
-   * 5. append the style element to the root dom
-   */
-  flattenStyleInfo(
-    styleInfo,
-    pageConfig.enableCSSSelector,
-  );
-  transformToWebCss(styleInfo);
-  const cssOGInfo: CssOGInfo = pageConfig.enableCSSSelector
-    ? {}
-    : genCssOGInfo(styleInfo);
-  let cardStyleElement: HTMLStyleElement;
-  if (ssrHydrateInfo?.cardStyleElement) {
-    cardStyleElement = ssrHydrateInfo.cardStyleElement;
-  } else {
-    cardStyleElement = document.createElement(
-      'style',
-    ) as unknown as HTMLStyleElement;
-    cardStyleElement.innerHTML = genCssContent(
-      styleInfo,
-      pageConfig,
-    );
-    rootDom.append(cardStyleElement);
-  }
-  const cardStyleElementSheet =
-    (cardStyleElement as unknown as HTMLStyleElement).sheet!;
-  const updateCssOGStyle: (
-    uniqueId: number,
-    newStyles: string,
-  ) => void = (uniqueId, newStyles) => {
-    if (lynxUniqueIdToStyleRulesIndex[uniqueId] !== undefined) {
-      const rule = cardStyleElementSheet
-        .cssRules[lynxUniqueIdToStyleRulesIndex[uniqueId]] as CSSStyleRule;
-      rule.style.cssText = newStyles;
-    } else {
-      const index = cardStyleElementSheet.insertRule(
-        `[${lynxUniqueIdAttribute}="${uniqueId}"]{${newStyles}}`,
-        cardStyleElementSheet.cssRules.length,
-      );
-      lynxUniqueIdToStyleRulesIndex[uniqueId] = index;
-    }
-  };
 
   const commonHandler = (event: Event) => {
     if (!event.currentTarget) {
@@ -614,14 +558,12 @@ export function createMainThreadGlobalThis(
       ((element.getAttribute('class') ?? '') + ' ' + className)
         .trim();
     element.setAttribute('class', newClassName);
-    const newStyleStr = decodeCssOG(
+    const cssId = element.getAttribute(cssIdAttribute);
+    const uniqueId = Number(element.getAttribute(lynxUniqueIdAttribute));
+    callbacks.updateCssOGStyle(
+      uniqueId,
       newClassName,
-      cssOGInfo,
-      element.getAttribute(cssIdAttribute),
-    );
-    updateCssOGStyle(
-      Number(element.getAttribute(lynxUniqueIdAttribute)),
-      newStyleStr,
+      cssId,
     );
   };
 
@@ -630,14 +572,12 @@ export function createMainThreadGlobalThis(
     classNames,
   ) => {
     __SetClasses(element, classNames);
-    const newStyleStr = decodeCssOG(
+    const cssId = element.getAttribute(cssIdAttribute);
+    const uniqueId = Number(element.getAttribute(lynxUniqueIdAttribute));
+    callbacks.updateCssOGStyle(
+      uniqueId,
       classNames ?? '',
-      cssOGInfo,
-      element.getAttribute(cssIdAttribute),
-    );
-    updateCssOGStyle(
-      Number(element.getAttribute(lynxUniqueIdAttribute)),
-      newStyleStr ?? '',
+      cssId,
     );
   };
 
