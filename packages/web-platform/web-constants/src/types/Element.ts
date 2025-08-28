@@ -77,7 +77,7 @@ export interface WebFiberElementImpl {
       capture?: boolean;
     },
   ) => void;
-  innerHTML: string;
+  textContent: string;
   readonly tagName: string;
   readonly firstElementChild: WebFiberElementImpl | null;
   readonly children: WebFiberElementImpl[];
