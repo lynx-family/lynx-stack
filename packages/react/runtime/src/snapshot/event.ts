@@ -18,16 +18,16 @@ function registerMTCEvent(
   if (!globalThis.lynxWorkletImpl) {
     // @ts-ignore
     loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry);
-    // @ts-ignore
-    globalThis.runMTCEvent = (ctx: Worklet, e: [any]) => {
-      const event = {
-        ...e[0],
-        target: new Element(e[0].target.elementRefptr),
-        currentTarget: new Element(e[0].currentTarget.elementRefptr),
-      } as BaseEvent;
-      mtcEvents.get(ctx._wkltId)!(event);
-    };
   }
+  // @ts-ignore
+  globalThis.runMTCEvent = (ctx: Worklet, e: [any]) => {
+    const event = {
+      ...e[0],
+      target: new Element(e[0].target.elementRefptr),
+      currentTarget: new Element(e[0].currentTarget.elementRefptr),
+    } as BaseEvent;
+    mtcEvents.get(ctx._wkltId)!(event);
+  };
 
   if (!callback) {
     mtcEvents.delete(id);
