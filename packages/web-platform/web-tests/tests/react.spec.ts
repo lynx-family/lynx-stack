@@ -1284,6 +1284,25 @@ test.describe('reactlynx3 tests', () => {
         expect(bts).toBe(true);
       },
     );
+    test(
+      'api-globalThis',
+      async ({ page }, { title }) => {
+        let mts = false;
+        let bts = false;
+        page.on('console', (message) => {
+          if (message.text() === 'mtsFoo 123') {
+            mts = true;
+          }
+          if (message.text() === 'btsFoo 123') {
+            bts = true;
+          }
+        });
+        await goto(page, title);
+        await wait(200);
+        !isSSR && expect(mts).toBe(true);
+        expect(bts).toBe(true);
+      },
+    );
   });
 
   test.describe('configs', () => {

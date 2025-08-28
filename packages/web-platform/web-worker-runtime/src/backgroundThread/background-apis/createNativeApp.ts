@@ -14,7 +14,6 @@ import {
   type BackMainThreadContextConfig,
   I18nResource,
   reportErrorEndpoint,
-  globalDisallowedVars,
 } from '@lynx-js/web-constants';
 import { createInvokeUIMethod } from './crossThreadHandlers/createInvokeUIMethod.js';
 import { registerPublicComponentEventHandler } from './crossThreadHandlers/registerPublicComponentEventHandler.js';
@@ -65,34 +64,7 @@ export async function createNativeApp(
   const reportError = uiThreadRpc.createCall(reportErrorEndpoint);
   const createBundleInitReturnObj = (): BundleInitReturnObj => {
     const entry = (globalThis.module as LynxJSModule).exports;
-    return {
-      init: (lynxCoreInject) => {
-        lynxCoreInject.tt.lynxCoreInject = lynxCoreInject;
-        lynxCoreInject.tt.globalThis ??= new Proxy(lynxCoreInject, {
-          get(target, prop) {
-            if (
-              typeof prop === 'string' && globalDisallowedVars.includes(prop)
-            ) {
-              return undefined;
-            }
-            // @ts-expect-error
-            return target[prop] ?? globalThis[prop];
-          },
-          set(target, prop, value) {
-            // @ts-expect-error
-            target[prop] = value;
-            return true;
-          },
-          ownKeys(target) {
-            return Reflect.ownKeys(target).filter((key) =>
-              key !== 'globalThis'
-            );
-          },
-        });
-        const ret = entry?.(lynxCoreInject.tt);
-        return ret;
-      },
-    };
+    return entry as unknown as BundleInitReturnObj;
   };
   const i18nResource = new I18nResource();
   let release = '';

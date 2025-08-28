@@ -16,6 +16,8 @@ import {
   updateI18nResourcesEndpoint,
   multiThreadExposureChangedEndpoint,
   lynxUniqueIdAttribute,
+  type JSRealm,
+  type MainThreadGlobalThis,
 } from '@lynx-js/web-constants';
 import { Rpc } from '@lynx-js/web-worker-rpc';
 import { createMarkTimingInternal } from './crossThreadHandlers/createMainthreadMarkTimingInternal.js';
@@ -31,6 +33,29 @@ const { prepareMainThreadAPIs } = await import(
   /* webpackFetchPriority: "high" */
   '@lynx-js/web-mainthread-apis'
 );
+function loadScriptSync(url: string): unknown {
+  importScripts(url);
+  return (globalThis as any).module?.exports;
+}
+
+function loadScript(url: string): Promise<unknown> {
+  return new Promise((resolve, reject) => {
+    fetch(url)
+      .then(() => {
+        importScripts(url);
+        resolve((globalThis as any).module?.exports);
+      }).catch(reject);
+  });
+}
+
+function createCurrentWorkerRealm(): JSRealm {
+  return {
+    globalWindow: globalThis,
+    loadScript,
+    loadScriptSync,
+  };
+}
+
 export async function startMainThreadWorker(
   uiThreadPort: MessagePort,
   backgroundThreadPort: MessagePort,
@@ -49,20 +74,25 @@ export async function startMainThreadWorker(
       options as CloneableObject,
     ]);
   };
-  const docu = new OffscreenDocument({
+  const document = new OffscreenDocument({
     onCommit: uiFlush,
   });
+  Object.assign(globalThis, {
+    document,
+  });
+  const mtsRealm = createCurrentWorkerRealm();
   const i18nResources = new I18nResources();
-  uiThreadRpc.registerHandler(postOffscreenEventEndpoint, docu[_onEvent]);
+  uiThreadRpc.registerHandler(postOffscreenEventEndpoint, document[_onEvent]);
   const sendMultiThreadExposureChangedEndpoint = uiThreadRpc.createCall(
     multiThreadExposureChangedEndpoint,
   );
   const { startMainThread } = prepareMainThreadAPIs(
     backgroundThreadRpc,
-    docu,
-    docu.createElement.bind(docu),
+    document, // rootDom
+    document,
+    mtsRealm,
     (exposureChangedElementUniqueIds) => {
-      docu.commit();
+      document.commit();
       sendMultiThreadExposureChangedEndpoint(
         exposureChangedElementUniqueIds
           .map(e => e.getAttribute(lynxUniqueIdAttribute))
@@ -80,10 +110,12 @@ export async function startMainThreadWorker(
   );
   uiThreadRpc.registerHandler(
     mainThreadStartEndpoint,
-    (config) => {
-      startMainThread(config).then((runtime) => {
-        registerUpdateDataHandler(uiThreadRpc, runtime);
-      });
+    async (config) => {
+      await startMainThread(config);
+      registerUpdateDataHandler(
+        uiThreadRpc,
+        globalThis as typeof globalThis & MainThreadGlobalThis,
+      );
     },
   );
   uiThreadRpc?.registerHandler(updateI18nResourcesEndpoint, data => {

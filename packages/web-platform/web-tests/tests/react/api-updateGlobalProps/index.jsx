@@ -9,7 +9,7 @@ function App() {
       style={{
         height: '100px',
         width: '100px',
-        backgroundColor: __globalProps.backgroundColor,
+        backgroundColor: lynx.__globalProps.backgroundColor,
       }}
     />
   );
