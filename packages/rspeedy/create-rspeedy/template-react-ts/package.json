@@ -15,7 +15,7 @@
     "@lynx-js/qrcode-rsbuild-plugin": "workspace:*",
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@lynx-js/rspeedy": "workspace:*",
-    "@lynx-js/types": "3.3.0",
+    "@lynx-js/types": "3.4.11",
     "@rsbuild/plugin-type-check": "1.2.4",
     "@types/react": "^18.3.23",
     "typescript": "~5.9.2"
