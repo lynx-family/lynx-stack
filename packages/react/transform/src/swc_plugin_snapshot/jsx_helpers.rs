@@ -253,47 +253,64 @@ pub fn jsx_is_list_item(jsx: &JSXElement) -> bool {
 }
 
 pub fn jsx_is_children_full_dynamic(n: &JSXElement) -> bool {
-  !n.children.is_empty()
-    && n
-      .children
-      .iter()
-      .filter(|child| {
-        // don't handle comment
-        // if let JSXElementChild::JSXExprContainer(JSXExprContainer {
-        //   expr: JSXExpr::JSXEmptyExpr(_),
-        //   ..
-        // }) = child
-        // {
-        //   false
-        // } else {
-        //   true
-        // }
-        !matches!(
-          child,
-          JSXElementChild::JSXExprContainer(JSXExprContainer {
-            expr: JSXExpr::JSXEmptyExpr(_),
-            ..
-          })
-        )
-      })
-      .all(|child| match child {
-        JSXElementChild::JSXText(text) => jsx_text_to_str(&text.value).is_empty(),
-        JSXElementChild::JSXElement(element) => jsx_is_custom(element),
-        JSXElementChild::JSXFragment(_) => false,
-        JSXElementChild::JSXExprContainer(JSXExprContainer {
-          expr: JSXExpr::Expr(_),
-          ..
-        }) => true,
-        JSXElementChild::JSXExprContainer(JSXExprContainer {
-          expr: JSXExpr::JSXEmptyExpr(_),
-          ..
-        }) => unreachable!(
-          "Unexpected JSXEmptyExpr in jsx_is_children_full_dynamic - should be filtered out"
-        ),
-        JSXElementChild::JSXSpreadChild(_) => {
-          unreachable!("Unexpected JSXSpreadChild in jsx_is_children_full_dynamic - not supported")
-        }
-      })
+  if n.children.is_empty() {
+    return false;
+  }
+
+  // A text node is considered empty if normalized string is empty (whitespace-only)
+  let is_text_empty = |text: &JSXText| jsx_text_to_str(&text.value).is_empty();
+
+  // Filter out:
+  // - Empty expression containers (JSXEmptyExpr)
+  // - Whitespace-only text
+  // - Spread children (unsupported)
+  // Keep:
+  // - JSXElement
+  // - JSXFragment
+  // - Expr containers with a real Expr
+  // - Non-empty text (will be treated as non-dynamic later)
+  let mut filtered = n.children.iter().filter(|child| match child {
+    JSXElementChild::JSXExprContainer(JSXExprContainer {
+      expr: JSXExpr::JSXEmptyExpr(_),
+      ..
+    }) => false,
+    JSXElementChild::JSXText(text) => !is_text_empty(text),
+    JSXElementChild::JSXSpreadChild(_) => {
+      unreachable!("Unexpected JSXSpreadChild in jsx_is_children_full_dynamic - not supported")
+    }
+    _ => true,
+  });
+
+  // Define “dynamic”:
+  // - Custom JSX elements => depends on jsx_is_custom
+  // - Expression containers with Expr(_) => true
+  // - Fragments => false
+  // - Non-empty text => false
+  let is_dynamic = |child: &JSXElementChild| -> bool {
+    match child {
+      JSXElementChild::JSXElement(element) => jsx_is_custom(element),
+      JSXElementChild::JSXExprContainer(JSXExprContainer {
+        expr: JSXExpr::Expr(_),
+        ..
+      }) => true,
+      JSXElementChild::JSXFragment(_) => false,
+      JSXElementChild::JSXText(_) => false,
+      // Any other cases we decided to drop earlier or are not dynamic
+      _ => false,
+    }
+  };
+
+  // No substantive children after filtering
+  let Some(first) = filtered.next() else {
+    return false;
+  };
+
+  let first_ok = is_dynamic(first);
+  if !first_ok {
+    return false;
+  }
+
+  filtered.all(is_dynamic)
 }
 
 // Copied from https://github.com/swc-project/swc/blob/main/crates/swc_ecma_transforms_react/src/jsx/mod.rs#L1423

@@ -211,6 +211,62 @@ mod tests {
         <view key={hello}>{hello}</view>;
         <view><text key={hello}>{hello}</text></view>;
         <view><text>Hello, ReactLynx, {hello}</text><text key={hello}>{hello}</text></view>;
+<view>
+  <text>!!!</text>
+  <A/>
+</view>;
+<view>
+  <text>!!!</text>
+  {a}
+</view>;
+        "#
+  );
+
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    |_| {
+      let unresolved_mark = Mark::new();
+      let top_level_mark = Mark::new();
+
+      (
+        resolver(unresolved_mark, top_level_mark, true),
+        visit_mut_pass(super::WrapperMarker {
+          current_is_children_full_dynamic: false,
+          dynamic_part_count: 0,
+        }),
+      )
+    },
+    should_not_wrap_dynamic_part,
+    r#" 
+<view className="parent">
+  <view className="child"/>
+  <view className="child"/>
+</view>;
+<view className="parent">
+  <view className="child">
+  </view>
+  <view className="child">
+  </view>
+</view>;
+<view className="parent">
+  <view className="child">
+    {/** foo */}
+  </view>
+  <view className="child">
+    {/** bar */}
+  </view>
+</view>;
+// TODO: fix the redundant <internal-slot> here
+<view className="parent">
+  <view className="child">{[].map(() => null)}</view>
+  <view className="child">{[].map(() => null)}</view>
+</view>;
+<view style={{ color: "red", 'height': "100px", flexShrink: 1 }}>
+</view>;
         "#
   );
 }
