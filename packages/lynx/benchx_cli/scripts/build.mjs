@@ -29,8 +29,8 @@ console.log('noop')
   process.exit(0);
 }
 
-const COMMIT = 'f59e2ecac431a7f96ed0594501b1b4afb416ab95';
-const PICK_COMMIT = 'fd5f6d5a8f1c27cdeba51e55414c6e96f7ef5558';
+const COMMIT = 'f557bc907f8eac7d45386d493dea9b808d98dd7d';
+const PICK_COMMIT = '471ebc337ca762e08de0d1e488e21ed79c8107c1';
 
 function checkCwd() {
   try {
@@ -112,7 +112,7 @@ source tools/envsetup.sh
 await $`
 cd lynx
 source tools/envsetup.sh
-gn gen --args='enable_unittests=true enable_trace="perfetto" jsengine_type="quickjs"' out/Default
+gn gen --args='enable_unittests=true enable_trace="perfetto" jsengine_type="quickjs" enable_frozen_mode=true' out/Default
 ninja -C out/Default benchx_cli
 mkdir -p ../dist/bin
 cp ${

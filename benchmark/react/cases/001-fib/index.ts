@@ -24,6 +24,18 @@ if (__MAIN_THREAD__) {
     return dp(n);
   }
 
+  function fib3(n: number): number {
+    if (n === 0) return 0;
+    if (n === 1) return 1;
+    let prev = 0, curr = 1;
+    for (let i = 2; i <= n; i++) {
+      const next = prev + curr;
+      prev = curr;
+      curr = next;
+    }
+    return curr;
+  }
+
   const bench = withCodspeed(
     new Bench({
       name: 'simple benchmark',
@@ -33,6 +45,9 @@ if (__MAIN_THREAD__) {
   );
 
   bench
+    .add(`${__REPO_FILEPATH__}::more faster fib(20)`, () => {
+      fib3(20);
+    })
     .add(`${__REPO_FILEPATH__}::faster fib(20)`, () => {
       fib2(20);
     })
