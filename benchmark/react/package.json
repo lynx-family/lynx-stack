@@ -10,8 +10,8 @@
     "build": "rspeedy build",
     "dev": "rspeedy dev",
     "perfetto": "pnpm run --sequential --stream --aggregate-output '/^perfetto:.*/'",
-    "perfetto:001-fib": "benchx_cli -o dist/001-fib.ptrace run dist/001-fib.lynx.bundle --repeat=1",
-    "perfetto:002-hello-reactLynx": "benchx_cli -o dist/002-hello-reactLynx.ptrace run dist/002-hello-reactLynx.lynx.bundle --repeat=5 --wait-for-id=stop-benchmark-true"
+    "perfetto:001-fib": "benchx_cli -o dist/001-fib.ptrace run dist/001-fib.lynx.bundle",
+    "perfetto:002-hello-reactLynx": "benchx_cli -o dist/002-hello-reactLynx.ptrace run dist/002-hello-reactLynx.lynx.bundle --wait-for-id=stop-benchmark-true"
   },
   "dependencies": {
     "@lynx-js/react": "workspace:*",
