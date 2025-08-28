@@ -37,7 +37,7 @@ export function runOnMainThread<R, Fn extends (...args: any[]) => R>(fn: Fn): (.
     return new Promise((resolve) => {
       onPostWorkletCtx(fn as any as Worklet);
       const resolveId = onFunctionCall(resolve);
-      lynx.getCoreContext!().dispatchEvent({
+      lynx.getCoreContext().dispatchEvent({
         type: WorkletEvents.runWorkletCtx,
         data: JSON.stringify({
           worklet: fn as any as Worklet,

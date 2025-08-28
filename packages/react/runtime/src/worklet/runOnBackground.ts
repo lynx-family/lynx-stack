@@ -33,12 +33,12 @@ function init() {
   }
 
   execIdMap = new WorkletExecIdMap();
-  lynx.getCoreContext!().addEventListener(WorkletEvents.runOnBackground, runJSFunction);
-  lynx.getCoreContext!().addEventListener(WorkletEvents.releaseBackgroundWorkletCtx, releaseBackgroundWorkletCtx);
+  lynx.getCoreContext().addEventListener(WorkletEvents.runOnBackground, runJSFunction);
+  lynx.getCoreContext().addEventListener(WorkletEvents.releaseBackgroundWorkletCtx, releaseBackgroundWorkletCtx);
 
   destroyTasks.push(() => {
-    lynx.getCoreContext!().removeEventListener(WorkletEvents.runOnBackground, runJSFunction);
-    lynx.getCoreContext!().removeEventListener(WorkletEvents.releaseBackgroundWorkletCtx, releaseBackgroundWorkletCtx);
+    lynx.getCoreContext().removeEventListener(WorkletEvents.runOnBackground, runJSFunction);
+    lynx.getCoreContext().removeEventListener(WorkletEvents.releaseBackgroundWorkletCtx, releaseBackgroundWorkletCtx);
     execIdMap = undefined;
   });
 }
@@ -55,7 +55,7 @@ function runJSFunction(event: RuntimeProxy.Event): void {
     throw new Error('runOnBackground: JS function not found: ' + JSON.stringify(data.obj));
   }
   const returnValue = f(...data.params);
-  lynx.getCoreContext!().dispatchEvent({
+  lynx.getCoreContext().dispatchEvent({
     type: WorkletEvents.FunctionCallRet,
     data: JSON.stringify({
       resolveId: data.resolveId,
@@ -131,7 +131,7 @@ function dispatchRunBackgroundFunctionEvent(
   execId: number,
   resolveId: number,
 ): void {
-  lynx.getJSContext!().dispatchEvent({
+  lynx.getJSContext().dispatchEvent({
     type: WorkletEvents.runOnBackground,
     data: JSON.stringify({
       obj: {
