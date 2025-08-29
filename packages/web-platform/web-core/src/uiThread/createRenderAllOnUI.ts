@@ -15,16 +15,13 @@ import {
   type Cloneable,
   lynxUniqueIdAttribute,
   type SSRDumpInfo,
-  loadTemplate,
-  type LynxTemplate,
-  queryComponentTemplateEndpoint,
+  type JSRealm,
+  type TemplateLoader,
 } from '@lynx-js/web-constants';
 import { Rpc } from '@lynx-js/web-worker-rpc';
 import { dispatchLynxViewEvent } from '../utils/dispatchLynxViewEvent.js';
 import { createExposureMonitor } from './crossThreadHandlers/createExposureMonitor.js';
 import type { StartUIThreadCallbacks } from './startUIThread.js';
-import { executeTemplateEntry } from '@lynx-js/web-mainthread-apis';
-import { registerQueryComponent } from './crossThreadHandlers/registerQueryComponent.js';
 
 const {
   prepareMainThreadAPIs,
@@ -89,8 +86,8 @@ function createIFrameRealm(parent: Node): JSRealm {
 
 export function createRenderAllOnUI(
   mainToBackgroundRpc: Rpc,
-  backgroundToUiRpc: Rpc,
   shadowRoot: ShadowRoot,
+  loadTemplate: TemplateLoader,
   markTimingInternal: (
     timingKey: string,
     pipelineId?: string,
@@ -114,34 +111,10 @@ export function createRenderAllOnUI(
   };
   const i18nResources = new I18nResources();
   const { exposureChangedCallback } = createExposureMonitor(shadowRoot);
-  let mtsGlobalThis: MainThreadGlobalThis | undefined;
-  const triggerBtsQueryComponentTemplate = backgroundToUiRpc.createCall(
-    queryComponentTemplateEndpoint,
-  );
-  // Indicates whether the template has been executed
-  const templateEntries: Record<string, boolean> = {};
-  const triggerQueryComponentTemplate = (
-    { source, template }: { source: string; template?: LynxTemplate },
-  ) => {
-    if (!template) return;
-    if (templateEntries[source]) return;
-    templateEntries[source] = true;
-    executeTemplateEntry({
-      template,
-      rootDom: shadowRoot,
-      createElement: document.createElement.bind(document),
-      source,
-      // The entry point of the call chain is `mtsGlobalThis.__QueryComponent`, so `mtsGlobalThis` must have been initialized
-      mtsGlobalThis: mtsGlobalThis!,
-    });
-    triggerBtsQueryComponentTemplate(source, template);
-  };
-  registerQueryComponent({
-    backgroundRpc: backgroundToUiRpc,
-    getTemplate: (source: string) =>
-      loadTemplate(source, true, callbacks.customTemplateLoader),
-    triggerQueryComponentTemplate,
-  });
+  const mtsRealm = createIFrameRealm(shadowRoot);
+  const mtsGlobalThis = mtsRealm.globalWindow as
+    & typeof globalThis
+    & MainThreadGlobalThis;
   const { startMainThread } = prepareMainThreadAPIs(
     mainToBackgroundRpc,
     shadowRoot,
@@ -158,10 +131,7 @@ export function createRenderAllOnUI(
       i18nResources.setData(initI18nResources);
       return i18nResources;
     },
-    (source: string) =>
-      loadTemplate(source, true, callbacks.customTemplateLoader).then(
-        template => triggerQueryComponentTemplate({ source, template }),
-      ),
+    loadTemplate,
   );
   const pendingUpdateCalls: Parameters<
     RpcCallType<typeof updateDataEndpoint>

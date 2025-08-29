@@ -445,6 +445,7 @@ test.describe('reactlynx3 tests', () => {
       async ({ page }, { title }) => {
         test.skip(isSSR, 'Lazy Component not support on SSR');
         await goto(page, title);
+        await wait(500);
         await expect(page.locator('#target1')).toHaveCSS(
           'background-color',
           'rgb(0, 128, 0)',
@@ -468,6 +469,7 @@ test.describe('reactlynx3 tests', () => {
       async ({ page }, { title }) => {
         test.skip(isSSR, 'Lazy Component not support on SSR');
         await goto(page, title);
+        await wait(500);
         const result = await page.locator('#fallback').first().innerText();
         expect(result).toBe('Loading...');
       },
@@ -477,6 +479,7 @@ test.describe('reactlynx3 tests', () => {
       async ({ page }, { title }) => {
         test.skip(isSSR, 'Lazy Component not support on SSR');
         await goto(page, title);
+        await wait(500);
         await expect(page.locator('#target')).toHaveCSS(
           'background-color',
           'rgb(255, 192, 203)',
@@ -489,6 +492,7 @@ test.describe('reactlynx3 tests', () => {
       async ({ page }, { title }) => {
         test.skip(isSSR, 'Lazy Component not support on SSR');
         await goto(page, title);
+        await wait(500);
         await expect(page.locator('#target1').nth(0)).toHaveCSS(
           'background-color',
           'rgb(0, 128, 0)',
@@ -525,6 +529,7 @@ test.describe('reactlynx3 tests', () => {
       async ({ page }, { title }) => {
         test.skip(isSSR, 'Lazy Component not support on SSR');
         await goto(page, title);
+        await wait(500);
         await expect(page.locator('#target1').nth(0)).toHaveCSS(
           'background-color',
           'rgb(0, 128, 0)',
@@ -561,6 +566,7 @@ test.describe('reactlynx3 tests', () => {
       async ({ page }, { title }) => {
         test.skip(isSSR, 'Lazy Component not support on SSR');
         await goto(page, title);
+        await wait(500);
         await expect(page.locator('.container').nth(0)).toHaveCSS(
           'background-color',
           'rgb(255, 0, 0)',
@@ -577,6 +583,7 @@ test.describe('reactlynx3 tests', () => {
       async ({ page }, { title }) => {
         test.skip(isSSR, 'Lazy Component not support on SSR');
         await goto(page, title);
+        await wait(500);
         await expect(page.locator('.container').nth(0)).toHaveCSS(
           'background-color',
           'rgb(255, 0, 0)',
@@ -594,6 +601,7 @@ test.describe('reactlynx3 tests', () => {
       async ({ page }, { title }) => {
         test.skip(isSSR, 'Lazy Component not support on SSR');
         await goto(page, title);
+        await wait(500);
         await expect(page.locator('.container').nth(0)).toHaveCSS(
           'background-color',
           'rgb(255, 0, 0)',
@@ -614,6 +622,7 @@ test.describe('reactlynx3 tests', () => {
       async ({ page }, { title }) => {
         test.skip(isSSR, 'Lazy Component not support on SSR');
         await goto(page, title);
+        await wait(500);
         await page.locator('#target').click();
         await wait(300);
         await expect(page.locator('#target1')).toHaveCSS(
@@ -640,6 +649,7 @@ test.describe('reactlynx3 tests', () => {
       async ({ page }, { title }) => {
         test.skip(isSSR, 'Lazy Component not support on SSR');
         await goto(page, title);
+        await wait(500);
         await page.locator('#target').click();
         await wait(300);
         await expect(page.locator('#target1').nth(0)).toHaveCSS(

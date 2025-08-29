@@ -247,10 +247,15 @@ export const dispatchI18nResourceEndpoint = createRpcEndpoint<
 
 export const queryComponentEndpoint = createRpcEndpoint<
   [string],
-  void
->('queryComponent', false, false);
+  { code: number; detail: { schema: string } }
+>('queryComponent', false, true);
 
-export const queryComponentTemplateEndpoint = createRpcEndpoint<
-  [string, LynxTemplate | undefined],
+export const updateBTSTemplateCacheEndpoint = createRpcEndpoint<
+  [/** url */ string, LynxTemplate],
   void
->('queryComponentTemplate', false, false);
+>('updateBTSTemplateCacheEndpoint', false, true);
+
+export const loadTemplateMultiThread = createRpcEndpoint<
+  [string],
+  LynxTemplate
+>('loadTemplateMultiThread', false, true);

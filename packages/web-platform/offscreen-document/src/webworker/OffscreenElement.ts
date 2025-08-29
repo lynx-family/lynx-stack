@@ -275,6 +275,10 @@ export class OffscreenElement extends EventTarget {
     super.addEventListener(type, callback, options);
   }
 
+  get textContent() {
+    return this[textContent];
+  }
+
   set textContent(text: string) {
     this[ancestorDocument][operations].push(
       OperationType.SetTextContent,

@@ -4,75 +4,24 @@
 
 import type { LynxTemplate } from '../types/LynxModule.js';
 
-const mainThreadInjectVars = [
-  'lynx',
-  'globalThis',
-  '_ReportError',
-  '_SetSourceMapRelease',
-  '__AddConfig',
-  '__AddDataset',
-  '__GetAttributes',
-  '__GetComponentID',
-  '__GetDataByKey',
-  '__GetDataset',
-  '__GetElementConfig',
-  '__GetElementUniqueID',
-  '__GetID',
-  '__GetTag',
-  '__SetAttribute',
-  '__SetConfig',
-  '__SetDataset',
-  '__SetID',
-  '__UpdateComponentID',
-  '__UpdateComponentInfo',
-  '__GetConfig',
-  '__GetAttributeByName',
-  '__UpdateListCallbacks',
-  '__AppendElement',
-  '__ElementIsEqual',
-  '__FirstElement',
-  '__GetChildren',
-  '__GetParent',
-  '__InsertElementBefore',
-  '__LastElement',
-  '__NextElement',
-  '__RemoveElement',
-  '__ReplaceElement',
-  '__ReplaceElements',
-  '__SwapElement',
-  '__CreateComponent',
-  '__CreateElement',
-  '__CreatePage',
-  '__CreateView',
-  '__CreateText',
-  '__CreateRawText',
-  '__CreateImage',
-  '__CreateScrollView',
-  '__CreateWrapperElement',
-  '__CreateList',
-  '__AddEvent',
-  '__GetEvent',
-  '__GetEvents',
-  '__SetEvents',
-  '__AddClass',
-  '__SetClasses',
-  '__GetClasses',
-  '__AddInlineStyle',
-  '__SetInlineStyles',
-  '__SetCSSId',
-  '__OnLifecycleEvent',
-  '__FlushElementTree',
-  '__LoadLepusChunk',
-  'SystemInfo',
-  '_I18nResourceTranslation',
-  '_AddEventListener',
-  '__GetTemplateParts',
-  '__MarkPartElement',
-  '__MarkTemplateElement',
-  '__GetPageElement',
-  '__ElementFromBinary',
-  '__QueryComponent',
-];
+const currentSupportedTemplateVersion = 2;
+const globalDisallowedVars = ['navigator', 'postMessage'];
+type templateUpgrader = (template: LynxTemplate) => LynxTemplate;
+const templateUpgraders: templateUpgrader[] = [
+  (template) => {
+    const defaultInjectStr = [
+      'Card',
+      'setTimeout',
+      'setInterval',
+      'clearInterval',
+      'clearTimeout',
+      'NativeModules',
+      'Component',
+      'ReactLynx',
+      'nativeAppId',
+      'Behavior',
+      'LynxJSBI',
+      'lynx',
 
       // BOM API
       'window',
@@ -105,77 +54,46 @@ const mainThreadInjectVars = [
     template.manifest = Object.fromEntries(
       Object.entries(template.manifest).map(([key, value]) => [
         key,
-        `{init: (lynxCoreInject) => { var {${defaultInjectStr}} = lynxCoreInject.tt; var module = {exports:null}; ${value}\n return module.exports; } }`,
+        `module.exports = {init: (lynxCoreInject) => { var {${defaultInjectStr}} = lynxCoreInject.tt; var module = {exports:{}}; var exports=module.exports; ${value}\n return module.exports; } }`,
       ]),
     ) as typeof template.manifest;
-    template.lepusCode = Object.fromEntries(
-      Object.entries(template.lepusCode).map(([key, value]) => [
-        key,
-        `(()=>{${value}\n})();`,
-      ]),
-    ) as typeof template.lepusCode;
+    const isLazyComponent = template.lepusCode.root.startsWith(
+      '(function (globDynamicComponentEntry',
+    );
     template.version = 2;
+    template.appType = isLazyComponent ? 'lazy' : 'card';
     return template;
   },
 ];
 
 const generateModuleContent = (
   content: string,
-  injectVars: readonly string[],
-  injectWithBind: readonly string[],
-  muteableVars: readonly string[],
-  globalDisallowedVars: readonly string[],
-  isESM: boolean,
-  isLazyComponent: boolean,
-  source?: string,
-) =>
-  [
+  appType: 'card' | 'lazy',
+) => {
+  return [
     '//# allFunctionsCalledOnLoad\n',
-    isESM ? 'export default ' : 'globalThis.module.exports =',
-    'function(lynx_runtime) {',
-    'const module= {exports:{}};let exports = module.exports;',
-    'var {',
-    injectVars.join(','),
-    '} = lynx_runtime;',
-    ...injectWithBind.map(nm =>
-      `const ${nm} = lynx_runtime.${nm}?.bind(lynx_runtime);`
-    ),
-    isLazyComponent
-      ? `;var globDynamicComponentEntry = '${source}';`
-      : ';var globDynamicComponentEntry = \'__Card__\';',
-    globalDisallowedVars.length !== 0
-      ? `var ${globalDisallowedVars.join('=')}=undefined;`
-      : '',
-    'var {__globalProps} = lynx;',
-    'lynx_runtime._updateVars=()=>{',
-    ...muteableVars.map(nm =>
-      `${nm} = lynx_runtime.__lynxGlobalBindingValues.${nm};`
-    ),
-    '};\n',
-    (isLazyComponent && isESM) ? `return ${content}` : content,
-    '\n return module.exports;}',
+    '"use strict";\n',
+    '(() => {const ',
+    globalDisallowedVars.join('=void 0,'),
+    '=void 0;\n',
+    appType === 'card' ? '' : 'module.exports=\n',
+    content,
+    '\n})()',
   ].join('');
+};
 
 async function generateJavascriptUrl<T extends Record<string, string | {}>>(
   obj: T,
   createJsModuleUrl: (content: string, name: string) => Promise<string>,
-  isESM: boolean,
-  isLazyComponent: boolean,
+  appType: 'card' | 'lazy',
   templateName?: string,
-  source?: string,
 ): Promise<T> {
   const processEntry = async ([name, content]: [string, string]) => [
     name,
     await createJsModuleUrl(
       generateModuleContent(
         content,
-        injectVars.concat(muteableVars),
-        injectWithBind,
-        muteableVars,
-        globalDisallowedVars,
-        isESM,
-        isLazyComponent,
-        source,
+        appType,
       ),
       `${templateName}-${name.replaceAll('/', '')}.js`,
     ),
@@ -190,21 +108,11 @@ async function generateJavascriptUrl<T extends Record<string, string | {}>>(
 }
 
 export async function generateTemplate(
-  {
-    template,
-    createJsModuleUrl,
-    templateName,
-    isLazyComponent = false,
-    source,
-  }: {
-    template: LynxTemplate;
-    createJsModuleUrl:
-      | ((content: string, name: string) => Promise<string>)
-      | ((content: string) => string);
-    templateName?: string;
-    isLazyComponent?: boolean;
-    source?: string;
-  },
+  template: LynxTemplate,
+  createJsModuleUrl:
+    | ((content: string, name: string) => Promise<string>)
+    | ((content: string) => string),
+  templateName?: string,
 ): Promise<LynxTemplate> {
   template.version = template.version ?? 1;
   if (template.version > currentSupportedTemplateVersion) {
@@ -224,18 +132,14 @@ export async function generateTemplate(
     lepusCode: await generateJavascriptUrl(
       template.lepusCode,
       createJsModuleUrl as (content: string, name: string) => Promise<string>,
-      true,
-      isLazyComponent,
+      template.appType!,
       templateName,
-      source,
     ),
     manifest: await generateJavascriptUrl(
       template.manifest,
       createJsModuleUrl as (content: string, name: string) => Promise<string>,
-      false,
-      isLazyComponent,
+      template.appType!,
       templateName,
-      source,
     ),
   };
 }

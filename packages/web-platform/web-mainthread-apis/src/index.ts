@@ -3,8 +3,4 @@
 // LICENSE file in the root directory of this source tree.
 
 export { prepareMainThreadAPIs } from './prepareMainThreadAPIs.js';
-export {
-  executeTemplateEntry,
-  insertStyleElement,
-} from './utils/processStyleInfo.js';
 export * from './createMainThreadGlobalThis.js';

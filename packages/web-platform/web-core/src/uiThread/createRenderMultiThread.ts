@@ -3,12 +3,11 @@
 // LICENSE file in the root directory of this source tree.
 
 import {
-  loadTemplate,
+  loadTemplateMultiThread,
   mainThreadStartEndpoint,
-  queryComponentTemplateEndpoint,
   updateDataEndpoint,
   updateI18nResourcesEndpoint,
-  type LynxTemplate,
+  type TemplateLoader,
 } from '@lynx-js/web-constants';
 import type { Rpc } from '@lynx-js/web-worker-rpc';
 import { registerReportErrorHandler } from './crossThreadHandlers/registerReportErrorHandler.js';
@@ -16,44 +15,18 @@ import { registerFlushElementTreeHandler } from './crossThreadHandlers/registerF
 import { registerDispatchLynxViewEventHandler } from './crossThreadHandlers/registerDispatchLynxViewEventHandler.js';
 import { createExposureMonitorForMultiThread } from './crossThreadHandlers/createExposureMonitor.js';
 import type { StartUIThreadCallbacks } from './startUIThread.js';
-import { registerQueryComponent } from './crossThreadHandlers/registerQueryComponent.js';
 
 export function createRenderMultiThread(
   mainThreadRpc: Rpc,
-  backgroundRpc: Rpc,
   shadowRoot: ShadowRoot,
+  loadTemplate: TemplateLoader,
   callbacks: StartUIThreadCallbacks,
 ) {
   registerReportErrorHandler(mainThreadRpc, 'lepus.js', callbacks.onError);
   registerFlushElementTreeHandler(mainThreadRpc, { shadowRoot });
   registerDispatchLynxViewEventHandler(mainThreadRpc, shadowRoot);
-  const triggerMtsQueryComponentTemplate = mainThreadRpc.createCall(
-    queryComponentTemplateEndpoint,
-  );
-  const triggerBtsQueryComponentTemplate = backgroundRpc.createCall(
-    queryComponentTemplateEndpoint,
-  );
-  // Indicates whether the template has been executed
-  const templateEntries: Record<string, boolean> = {};
-  const triggerQueryComponentTemplate = (
-    { source, template }: { source: string; template?: LynxTemplate },
-  ) => {
-    if (!template) return;
-    if (templateEntries[source]) return;
-    templateEntries[source] = true;
-    triggerMtsQueryComponentTemplate(source, template);
-    triggerBtsQueryComponentTemplate(source, template);
-  };
-  registerQueryComponent(
-    {
-      mainThreadRpc,
-      backgroundRpc,
-      getTemplate: (source: string) =>
-        loadTemplate(source, true, callbacks.customTemplateLoader),
-      triggerQueryComponentTemplate,
-    },
-  );
   createExposureMonitorForMultiThread(mainThreadRpc, shadowRoot);
+  mainThreadRpc.registerHandler(loadTemplateMultiThread, loadTemplate);
   const start = mainThreadRpc.createCall(mainThreadStartEndpoint);
   const updateDataMainThread = mainThreadRpc.createCall(updateDataEndpoint);
   const updateI18nResourcesMainThread = mainThreadRpc.createCall(
