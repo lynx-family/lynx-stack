@@ -14,9 +14,9 @@ import {
   type BackMainThreadContextConfig,
   I18nResource,
   reportErrorEndpoint,
-  globalDisallowedVars,
   type LynxTemplate,
   queryComponentEndpoint,
+  updateBTSTemplateCacheEndpoint,
 } from '@lynx-js/web-constants';
 import { createInvokeUIMethod } from './crossThreadHandlers/createInvokeUIMethod.js';
 import { registerPublicComponentEventHandler } from './crossThreadHandlers/registerPublicComponentEventHandler.js';
@@ -31,11 +31,9 @@ import type { TimingSystem } from './createTimingSystem.js';
 import { registerUpdateGlobalPropsHandler } from './crossThreadHandlers/registerUpdateGlobalPropsHandler.js';
 import { registerUpdateI18nResource } from './crossThreadHandlers/registerUpdateI18nResource.js';
 import { createGetPathInfo } from './crossThreadHandlers/createGetPathInfo.js';
-import { registerQueryComponentTemplate } from './crossThreadHandlers/registerQueryComponentTemplate.js';
 
 let nativeAppCount = 0;
 const sharedData: Record<string, unknown> = {};
-const templateCache: Record<string, LynxTemplate | undefined> = {};
 
 export async function createNativeApp(
   config: {
@@ -66,27 +64,24 @@ export async function createNativeApp(
     selectComponentEndpoint,
     3,
   );
-  const triggerQueryComponent = uiThreadRpc.createCall(
+  const queryComponent = mainThreadRpc.createCall(
     queryComponentEndpoint,
   );
   const reportError = uiThreadRpc.createCall(reportErrorEndpoint);
   const createBundleInitReturnObj = (): BundleInitReturnObj => {
     const entry = (globalThis.module as LynxJSModule).exports;
+    Object.assign(globalThis, { module: { exports: null } });
     return entry as unknown as BundleInitReturnObj;
   };
+  const templateCache = new Map<string, LynxTemplate>([['__Card__', template]]);
+  mainThreadRpc.registerHandler(
+    updateBTSTemplateCacheEndpoint,
+    (url, template) => {
+      templateCache.set(url, template);
+    },
+  );
   const i18nResource = new I18nResource();
   let release = '';
-  const queryComponentCallbacks: Record<
-    string,
-    Array<
-      (
-        ret: { __hasReady: boolean } | {
-          code: number;
-          detail?: { schema: string };
-        },
-      ) => void
-    >
-  > = {};
   const nativeApp: NativeApp = {
     id: (nativeAppCount++).toString(),
     ...performanceApis,
@@ -102,8 +97,11 @@ export async function createNativeApp(
     loadScriptAsync: function(
       sourceURL: string,
       callback: (message: string | null, exports?: BundleInitReturnObj) => void,
+      entryName?: string,
     ): void {
-      const manifestUrl = template.manifest[`/${sourceURL}`];
+      entryName = entryName ?? '__Card__';
+      const manifestUrl = templateCache.get(entryName!)
+        ?.manifest[`/${sourceURL}`];
       if (manifestUrl) sourceURL = manifestUrl;
       import(
         /* webpackIgnore: true */
@@ -113,10 +111,11 @@ export async function createNativeApp(
       });
     },
     loadScript: (sourceURL: string, entryName?: string) => {
-      const manifestUrl = (entryName && entryName !== '__Card__')
-        ? templateCache[entryName]?.manifest[`/${sourceURL}`]
-        : template.manifest[`/${sourceURL}`];
+      entryName = entryName ?? '__Card__';
+      const manifestUrl = templateCache.get(entryName!)
+        ?.manifest[`/${sourceURL}`];
       if (manifestUrl) sourceURL = manifestUrl;
+      Object.assign(globalThis, { module: { exports: null } });
       importScripts(sourceURL);
       return createBundleInitReturnObj();
     },
@@ -152,12 +151,6 @@ export async function createNativeApp(
         uiThreadRpc,
         tt,
       );
-      registerQueryComponentTemplate(
-        uiThreadRpc,
-        queryComponentCallbacks,
-        templateCache,
-        nativeApp,
-      );
       registerUpdateGlobalPropsHandler(uiThreadRpc, tt);
       registerUpdateI18nResource(uiThreadRpc, mainThreadRpc, i18nResource, tt);
       timingSystem.registerGlobalEmitter(tt.GlobalEventEmitter);
@@ -176,20 +169,14 @@ export async function createNativeApp(
     i18nResource,
     reportException: (err: Error, _: unknown) => reportError(err, _, release),
     __SetSourceMapRelease: (err: Error) => release = err.message,
-    queryComponent: (
-      source: string,
-      callback: (
-        ret: { __hasReady: boolean } | {
-          code: number;
-          detail?: { schema: string };
-        },
-      ) => void,
-    ) => {
-      if (!queryComponentCallbacks[source]) {
-        queryComponentCallbacks[source] = [];
+    queryComponent: (source, callback) => {
+      if (templateCache.has(source)) {
+        callback({ __hasReady: true });
+      } else {
+        queryComponent(source).then(res => {
+          callback?.(res);
+        });
       }
-      queryComponentCallbacks[source].push(callback);
-      triggerQueryComponent(source);
     },
   };
   return nativeApp;

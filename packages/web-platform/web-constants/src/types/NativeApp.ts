@@ -123,7 +123,7 @@ export interface NativeApp {
 
   cancelAnimationFrame: (id: number) => void;
 
-  loadScript: (sourceURL: string) => BundleInitReturnObj;
+  loadScript: (sourceURL: string, entryName?: string) => BundleInitReturnObj;
 
   loadScriptAsync(
     sourceURL: string,

@@ -6,7 +6,6 @@ import type { LynxView } from '../apis/createLynxView.js';
 import { bootWorkers } from './bootWorkers.js';
 import { createDispose } from './crossThreadHandlers/createDispose.js';
 import {
-  type LynxTemplate,
   type StartMainThreadContextConfig,
   type NapiModulesCall,
   type NativeModulesCall,
@@ -15,8 +14,10 @@ import {
   dispatchMarkTiming,
   flushMarkTiming,
   type SSRDumpInfo,
-  loadTemplate,
+  type TemplateLoader,
+  type MarkTimingInternal,
 } from '@lynx-js/web-constants';
+import { createTemplateLoader } from '../utils/loadTemplate.js';
 import { createUpdateData } from './crossThreadHandlers/createUpdateData.js';
 import { startBackground } from './startBackground.js';
 import { createRenderMultiThread } from './createRenderMultiThread.js';
@@ -26,7 +27,7 @@ export type StartUIThreadCallbacks = {
   nativeModulesCall: NativeModulesCall;
   napiModulesCall: NapiModulesCall;
   onError?: (err: Error, release: string, fileName: string) => void;
-  customTemplateLoader?: (url: string) => Promise<LynxTemplate>;
+  customTemplateLoader?: TemplateLoader;
 };
 
 export function startUIThread(
@@ -59,10 +60,10 @@ export function startUIThread(
     records: [],
     timeout: null,
   };
-  const markTimingInternal = (
-    timingKey: string,
-    pipelineId?: string,
-    timeStamp?: number,
+  const markTimingInternal: MarkTimingInternal = (
+    timingKey,
+    pipelineId,
+    timeStamp,
   ) => {
     dispatchMarkTiming({
       timingKey,
@@ -74,11 +75,15 @@ export function startUIThread(
   };
   const flushMarkTimingInternal = () =>
     flushMarkTiming(markTiming, cacheMarkTimings);
+  const templateLoader = createTemplateLoader(
+    callbacks.customTemplateLoader,
+    markTimingInternal,
+  );
   const { start, updateDataMainThread, updateI18nResourcesMainThread } = allOnUI
     ? createRenderAllOnUI(
       /* main-to-bg rpc*/ mainThreadRpc,
-      /* background-to-ui rpc*/ backgroundRpc,
       shadowRoot,
+      templateLoader,
       markTimingInternal,
       flushMarkTimingInternal,
       callbacks,
@@ -86,22 +91,18 @@ export function startUIThread(
     )
     : createRenderMultiThread(
       /* main-to-ui rpc*/ mainThreadRpc,
-      /* background-to-ui rpc*/ backgroundRpc,
       shadowRoot,
+      templateLoader,
       callbacks,
     );
   markTimingInternal('create_lynx_start', undefined, createLynxStartTiming);
-  markTimingInternal('load_template_start');
-  loadTemplate(templateUrl, false, callbacks.customTemplateLoader).then(
-    (template) => {
-      markTimingInternal('load_template_end');
-      flushMarkTimingInternal();
-      start({
-        ...configs,
-        template,
-      });
-    },
-  );
+  templateLoader(templateUrl).then((template) => {
+    flushMarkTimingInternal();
+    start({
+      ...configs,
+      template,
+    });
+  });
   return {
     updateData: createUpdateData(updateDataMainThread, updateDataBackground),
     dispose: createDispose(
