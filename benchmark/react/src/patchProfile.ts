@@ -9,19 +9,32 @@ if (__BACKGROUND__) {
   console = { ...console };
 }
 
+const PREFIX = __REPO_FILEPATH__.split('/').slice(0, -2).join('/');
+const ignored: Record<string, boolean> = {};
 const stack: string[] = [];
 
 hook(console, 'profile', (old, name) => {
   old!(name);
-  stack.push(name!);
+  if (
+    (ignored[name!] ??= name === 'commitChanges'
+      || name!.startsWith('ReactLynx::diff::'))
+  ) {
+    stack.push('__IGNORED__');
+  } else {
+    stack.push(name!);
+  }
   Codspeed.startBenchmark();
 });
 
 hook(console, 'profileEnd', (old) => {
   Codspeed.stopBenchmark();
   const name = stack.pop();
-  Codspeed.setExecutedBenchmark(
-    `${__webpack_public_path__}::${__webpack_chunkname__}-${name!}`,
-  );
+  if (name === '__IGNORED__') {
+    Codspeed.zeroStats();
+  } else {
+    Codspeed.setExecutedBenchmark(
+      `${PREFIX}::${__webpack_chunkname__}-${name!}`,
+    );
+  }
   old!();
 });

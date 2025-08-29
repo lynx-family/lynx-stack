@@ -8,6 +8,7 @@ declare const Codspeed: {
   startBenchmark(): void;
   stopBenchmark(): void;
   setExecutedBenchmark(name: string): void;
+  zeroStats(): void;
 };
 
 declare const __REPO_FILEPATH__: string;
