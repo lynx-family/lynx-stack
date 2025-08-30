@@ -103,7 +103,9 @@ export function genCssContent(
       suffix = `[${lynxTagAttribute}]`;
     }
     if (entryName) {
-      suffix = `${suffix}[${lynxEntryNameAttribute}="${entryName}"]`;
+      suffix = `${suffix}[${lynxEntryNameAttribute}=${
+        JSON.stringify(entryName)
+      }]`;
     } else {
       suffix = `${suffix}:not([${lynxEntryNameAttribute}])`;
     }
@@ -234,5 +236,17 @@ export function appendStyleElement(
       lynxUniqueIdToStyleRulesIndex[uniqueId] = index;
     }
   };
-  return { updateCssOGStyle };
+  const updateLazyComponentStyle = (
+    styleInfo: StyleInfo,
+    entryName: string,
+  ) => {
+    flattenStyleInfo(
+      styleInfo,
+      pageConfig.enableCSSSelector,
+    );
+    transformToWebCss(styleInfo);
+    const newStyleSheet = genCssContent(styleInfo, pageConfig, entryName);
+    cardStyleElement.textContent += newStyleSheet;
+  };
+  return { updateCssOGStyle, updateLazyComponentStyle };
 }
