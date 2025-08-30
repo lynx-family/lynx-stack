@@ -1,5 +1,11 @@
 # @lynx-js/offscreen-document
 
+## 0.1.4
+
+### Patch Changes
+
+- remove innerHTML, replace it by textContent ([#1622](https://github.com/lynx-family/lynx-stack/pull/1622))
+
 ## 0.1.3
 
 ### Patch Changes

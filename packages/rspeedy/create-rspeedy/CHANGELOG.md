@@ -1,5 +1,11 @@
 # create-rspeedy
 
+## 0.11.0
+
+### Patch Changes
+
+- Use TypeScript [Project References](https://www.typescriptlang.org/docs/handbook/project-references.html) in templates. ([#1612](https://github.com/lynx-family/lynx-stack/pull/1612))
+
 ## 0.10.8
 
 ### Patch Changes

@@ -1,5 +1,29 @@
 # @lynx-js/rspeedy
 
+## 0.11.0
+
+### Minor Changes
+
+- Deprecate `source.alias`, use `resolve.alias` instead. ([#1610](https://github.com/lynx-family/lynx-stack/pull/1610))
+
+  Note that `resolve.alias` has **lower** priority than the deprecated `source.alias`.
+
+- Bump Rsbuild v1.5.0 with Rspack v1.5.0. ([#1591](https://github.com/lynx-family/lynx-stack/pull/1591))
+
+- **BREAKING CHANGE**: Remove the `./register` exports from `@lynx-js/rspeedy`. ([#1547](https://github.com/lynx-family/lynx-stack/pull/1547))
+
+  This should not affect most users.
+
+### Patch Changes
+
+- Support `resolve.alias`. ([#1610](https://github.com/lynx-family/lynx-stack/pull/1610))
+
+- Support `rspeedy build --watch` ([#1579](https://github.com/lynx-family/lynx-stack/pull/1579))
+
+- Updated dependencies [[`d7d0b9b`](https://github.com/lynx-family/lynx-stack/commit/d7d0b9b94e219cd057c935d723775c82b10559a6), [`1952fc1`](https://github.com/lynx-family/lynx-stack/commit/1952fc1557e5abbdbdf4a2073fd3b6f64dd32c3c)]:
+  - @lynx-js/cache-events-webpack-plugin@0.0.2
+  - @lynx-js/chunk-loading-webpack-plugin@0.3.2
+
 ## 0.10.8
 
 ### Patch Changes
