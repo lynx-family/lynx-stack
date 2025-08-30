@@ -1,5 +1,11 @@
 # @lynx-js/react
 
+## 0.112.5
+
+### Patch Changes
+
+- Remove the "key is not on root element of snapshot" warning. ([#1558](https://github.com/lynx-family/lynx-stack/pull/1558))
+
 ## 0.112.4
 
 ### Patch Changes

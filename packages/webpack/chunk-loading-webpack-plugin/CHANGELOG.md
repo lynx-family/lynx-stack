@@ -1,5 +1,11 @@
 # @lynx-js/chunk-loading-webpack-plugin
 
+## 0.3.2
+
+### Patch Changes
+
+- Should not load initial CSS chunks. ([#1601](https://github.com/lynx-family/lynx-stack/pull/1601))
+
 ## 0.3.1
 
 ### Patch Changes

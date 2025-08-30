@@ -1,5 +1,11 @@
 # @lynx-js/cache-events-webpack-plugin
 
+## 0.0.2
+
+### Patch Changes
+
+- Fix that `__webpack_require__.lynx_ce` is incorrectly injected when lazy bundle is enabled. ([#1616](https://github.com/lynx-family/lynx-stack/pull/1616))
+
 ## 0.0.1
 
 ### Patch Changes

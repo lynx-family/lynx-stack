@@ -1,5 +1,29 @@
 # @lynx-js/web-worker-runtime
 
+## 0.16.0
+
+### Minor Changes
+
+- refactor: provide the mts a real globalThis ([#1589](https://github.com/lynx-family/lynx-stack/pull/1589))
+
+  Before this change, We create a function wrapper and a fake globalThis for Javascript code.
+
+  This caused some issues.
+
+  After this change, we will create an iframe for createing an isolated Javascript context.
+
+  This means the globalThis will be the real one.
+
+### Patch Changes
+
+- fix: the SystemInfo in bts should be assigned to the globalThis ([#1599](https://github.com/lynx-family/lynx-stack/pull/1599))
+
+- Updated dependencies [[`1a32dd8`](https://github.com/lynx-family/lynx-stack/commit/1a32dd886fe736c95639f67028cf7685377d9769), [`bb53d9a`](https://github.com/lynx-family/lynx-stack/commit/bb53d9a035f607e7c89952098d4ed77877a2e3c1), [`1a32dd8`](https://github.com/lynx-family/lynx-stack/commit/1a32dd886fe736c95639f67028cf7685377d9769), [`c1f8715`](https://github.com/lynx-family/lynx-stack/commit/c1f8715a81b2e69ff46fc363013626db4468c209)]:
+  - @lynx-js/web-mainthread-apis@0.16.0
+  - @lynx-js/web-constants@0.16.0
+  - @lynx-js/offscreen-document@0.1.4
+  - @lynx-js/web-worker-rpc@0.16.0
+
 ## 0.15.7
 
 ### Patch Changes
