@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 
 import {
   ApiDeclaredItem,
+  type ApiDocumentedItem,
   ApiItemKind,
   ApiModel,
 } from '@microsoft/api-extractor-model';
@@ -135,7 +136,10 @@ function transform(
       s.add(text);
 
       return {
-        text,
+        text:
+          isApiDocumentedItem(report) && report.tsdocComment?.deprecatedBlock
+            ? `~~${text}~~`
+            : text,
         link: link!,
         collapsed: depth < 3,
         // Force non-collapsible when no children
@@ -185,4 +189,8 @@ export function createAPI(options: {
     text,
     items: transform(apiModel, items, link, depth),
   };
+}
+
+function isApiDocumentedItem(apiItem: ApiItem): apiItem is ApiDocumentedItem {
+  return true;
 }
