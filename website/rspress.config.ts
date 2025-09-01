@@ -224,12 +224,12 @@ const SIDEBARS_ZH = {
     },
     {
       link: '/zh/api/rspeedy.config.environments',
-      text: 'Environments',
+      text: 'environments',
       collapsible: false,
     },
     {
       link: '/zh/api/rspeedy.config.mode',
-      text: 'Mode',
+      text: 'mode',
       collapsible: false,
     },
     ...createAPI({
@@ -281,7 +281,12 @@ const SIDEBARS_ZH = {
       ],
       collapsed: true,
       depth: 3,
-    }).items,
+    }).items.map(i => {
+      if ('items' in i) {
+        i.text = camelCase(i.text);
+      }
+      return i;
+    }),
   ],
 } satisfies Sidebar;
 
