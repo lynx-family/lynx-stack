@@ -176,7 +176,7 @@ export function createAPI(options: {
   const items = apiPackage.members[0]!.members.filter(({ displayName }) =>
     !s.has(displayName)
   );
-  const link = `${base}/${name}`;
+  const link = `/${base}/${name}`;
 
   return {
     collapsed,

@@ -429,7 +429,7 @@ export interface Source {
    *
    * - The `paths` field is used to configure {@link Source.alias | Path Aliases}.
    *
-   * - Sets the scope and rules for the {@link https://rsbuild.dev/plugins/list/plugin-type-check | Type Check Plugin}.
+   * - Sets the scope and rules for the {@link https://rsbuild.rs/guide/basic/typescript#type-checking | Type Check Plugin}.
    *
    * @example
    *
