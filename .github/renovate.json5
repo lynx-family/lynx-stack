@@ -176,5 +176,13 @@
 
     // Rspress not compatible
     "@microsoft/api-documenter",
+
+    // Not following SemVer
+    "stormslowly/rust-cache",
+
+    // TODO: remove this after drop napi-rs
+    "@emnapi/core",
+    "@emnapi/runtime",
+    "@napi-rs/cli",
   ],
 }
