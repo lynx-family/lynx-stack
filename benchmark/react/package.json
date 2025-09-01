@@ -7,11 +7,14 @@
     "bench": "pnpm run --sequential --stream --aggregate-output '/^bench:.*/'",
     "bench:001-fib": "benchx_cli run dist/001-fib.lynx.bundle",
     "bench:002-hello-reactLynx": "benchx_cli run dist/002-hello-reactLynx.lynx.bundle --wait-for-id=stop-benchmark-true",
+    "bench:003-hello-list": "benchx_cli run dist/003-hello-list.lynx.bundle --wait-for-id=stop-benchmark-true",
     "build": "rspeedy build",
     "dev": "rspeedy dev",
     "perfetto": "pnpm run --sequential --stream --aggregate-output '/^perfetto:.*/'",
     "perfetto:001-fib": "benchx_cli -o dist/001-fib.ptrace run dist/001-fib.lynx.bundle",
-    "perfetto:002-hello-reactLynx": "benchx_cli -o dist/002-hello-reactLynx.ptrace run dist/002-hello-reactLynx.lynx.bundle --wait-for-id=stop-benchmark-true"
+    "perfetto:002-hello-reactLynx": "benchx_cli -o dist/002-hello-reactLynx.ptrace run dist/002-hello-reactLynx.lynx.bundle --wait-for-id=stop-benchmark-true",
+    "perfetto:003-hello-list": "benchx_cli -o dist/003-hello-list.ptrace run dist/003-hello-list.lynx.bundle --wait-for-id=stop-benchmark-true",
+    "test": "echo 'No tests specified'"
   },
   "dependencies": {
     "@lynx-js/react": "workspace:*",
@@ -25,6 +28,7 @@
     "@lynx-js/qrcode-rsbuild-plugin": "workspace:*",
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@lynx-js/rspeedy": "workspace:*",
+    "@lynx-js/type-element-api": "0.0.2",
     "@lynx-js/types": "3.4.11",
     "@types/react": "^18.3.23"
   }

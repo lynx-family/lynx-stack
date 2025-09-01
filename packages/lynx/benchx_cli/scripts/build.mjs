@@ -30,7 +30,7 @@ console.log('noop')
 }
 
 const COMMIT = 'd6dd806293012c62e5104ad7ed2bed5c66f4f833';
-const PICK_COMMIT = '1524ac02060bfc2e354e1865c989bc6f7a9882b1';
+const PICK_COMMIT = '78493ae8581046275f6333ce16004666560ce058';
 
 function checkCwd() {
   try {

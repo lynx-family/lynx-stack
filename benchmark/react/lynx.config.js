@@ -32,6 +32,11 @@ export default defineConfig({
         './src/patchProfile.ts',
         './cases/002-hello-reactLynx/index.tsx',
       ],
+      '003-hello-list': [
+        './src/patchProfile.ts',
+        './src/patchUpdateListCallbacks.ts',
+        './cases/003-hello-list/index.tsx',
+      ],
     },
   },
   plugins: [

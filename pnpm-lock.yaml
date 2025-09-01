@@ -173,6 +173,9 @@ importers:
       '@lynx-js/rspeedy':
         specifier: workspace:*
         version: link:../../packages/rspeedy/core
+      '@lynx-js/type-element-api':
+        specifier: 0.0.2
+        version: 0.0.2
       '@lynx-js/types':
         specifier: 3.4.11
         version: 3.4.11
@@ -2233,6 +2236,9 @@ packages:
 
   '@lynx-js/tasm@0.0.18':
     resolution: {integrity: sha512-6Kl1eUxooceWcSLYnCtys38r9KPIouTam/fU81pzOrH/xIal60+WY47nj+MzDXq94i9jbUusM+IQSZAkeRistw==}
+
+  '@lynx-js/type-element-api@0.0.2':
+    resolution: {integrity: sha512-Unz3RHf2RM2vOWForwubjLYw9xbBP02ReuOL4KVLc3+0Vzryo8KbgqbhMUZCsJXHVmcaE2zXiE1AV/nqrBAoPA==}
 
   '@lynx-js/types@3.4.11':
     resolution: {integrity: sha512-k4mu4d2xmMqMIP1e7WGPdzO/k9x9W35b/OE/awalQUbcLlruFatagEOEM6TANK/VuRvEl0eLXQjhBnSwGkgt5w==}
@@ -9285,6 +9291,8 @@ snapshots:
       htm: 3.1.1
 
   '@lynx-js/tasm@0.0.18': {}
+
+  '@lynx-js/type-element-api@0.0.2': {}
 
   '@lynx-js/types@3.4.11':
     dependencies:

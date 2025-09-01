@@ -4,26 +4,12 @@
 
 import { root } from '@lynx-js/react';
 
+import RecursiveText from './RecursiveText.js';
 import { RunBenchmarkUntilHydrate } from '../../src/RunBenchmarkUntil.js';
-
-function F(props: { text: string }) {
-  const { text } = props;
-  const sliced = [...text];
-  const [first, ...rest] = sliced;
-
-  return (
-    sliced.length > 0 && (
-      <text>
-        {first}
-        <F text={rest.join('')} />
-      </text>
-    )
-  );
-}
 
 root.render(
   <>
-    <F text='Hello, ReactLynx 🎉!' />
+    <RecursiveText text='Hello, ReactLynx 🎉!' />
     <RunBenchmarkUntilHydrate />
   </>,
 );

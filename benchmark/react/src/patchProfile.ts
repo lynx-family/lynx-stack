@@ -2,9 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { hook } from './hook.js';
+import { PREFIX, hook } from './hook.js';
 
-const PREFIX = __REPO_FILEPATH__.split('/').slice(0, -2).join('/');
 const ignored: Record<string, boolean> = {};
 const stack: string[] = [];
 let depth = 0;
