@@ -140,6 +140,18 @@
         "/^@types/*/",
       ],
     },
+    {
+      "groupName": "Lynx Engine",
+      "groupSlug": "lynx-engine",
+      "matchManagers": "custom.regex",
+      "matchPackageNames": [
+        "lynx",
+      ],
+      // Schedule once a month on the first day of the month before 4 AM.
+      "schedule": [
+        "* 0-3 1 * *",
+      ],
+    },
   ],
 
   "customManagers": [
