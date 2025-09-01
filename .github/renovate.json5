@@ -143,9 +143,9 @@
     {
       "groupName": "Lynx Engine",
       "groupSlug": "lynx-engine",
-      "matchManagers": "custom.regex",
+      "matchManagers": ["custom.regex"],
       "matchPackageNames": [
-        "lynx",
+        "https://github.com/lynx-family/lynx",
       ],
       // Schedule once a month on the first day of the month before 4 AM.
       "schedule": [
