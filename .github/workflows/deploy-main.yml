@@ -48,7 +48,7 @@ jobs:
           corepack pnpm install --frozen-lockfile
       - name: build
         run: |
-          corepack pnpm turbo --filter !@lynx-js/web-tests build --summarize
+          corepack pnpm turbo --filter !@lynx-js/web-tests --filter !benchx_cli --filter "!@lynx-js/benchmark-*" build --summarize
       - name: Save Turbo Result
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
