@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 
 import {
   ApiDeclaredItem,
-  type ApiDocumentedItem,
+  ApiDocumentedItem,
   ApiItemKind,
   ApiModel,
 } from '@microsoft/api-extractor-model';
@@ -192,5 +192,5 @@ export function createAPI(options: {
 }
 
 function isApiDocumentedItem(apiItem: ApiItem): apiItem is ApiDocumentedItem {
-  return true;
+  return apiItem instanceof ApiDocumentedItem;
 }
