@@ -1774,6 +1774,11 @@ describe('list reload', () => {
     hydrate(b, bb);
     b.unRenderElements();
 
+    // Should only update `list-item` in the recycling pool
+    // Should not add the on-screen `list-item` to the recycling pool,
+    expect([...recycleSignMap.keys()]).toStrictEqual([__GetElementUniqueID(d3.__element_root)]);
+    expect(recycleSignMap.get(__GetElementUniqueID(d3.__element_root))).not.toBe(d3);
+
     // The one rendered <list-item/> should be removed
     expect(root).toMatchInlineSnapshot(`
       <view>
@@ -1940,7 +1945,6 @@ describe('list reload', () => {
     expect(signMap.get(__GetElementUniqueID(d1.__element_root))).toBe(d2_); // note: d1 is reused by d2_
     expect(signMap.get(__GetElementUniqueID(d2_.__element_root))).toBe(d2_);
     expect(signMap.get(__GetElementUniqueID(d3_.__element_root))).toBe(d3_);
-    expect(recycleSignMap.get(__GetElementUniqueID(d3_.__element_root))).toBe(d3_);
   });
 });
 
