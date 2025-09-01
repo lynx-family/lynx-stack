@@ -1,5 +1,5 @@
 function ba() {
-    'use background';
+    'background';
     console.log("background action");
 }
 function BTC() {

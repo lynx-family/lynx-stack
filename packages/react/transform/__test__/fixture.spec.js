@@ -1755,11 +1755,11 @@ export function MTC(props) {
       const { code } = await transformReactLynx(
         `\
 function ba(e) {
-    'use background';
+    'background';
     console.log("background action", e);
 }
 const ba2 = (e, f) => {
-    'use background';
+    'background';
     console.log("background action", e, f);
 }
 export function BTC() {

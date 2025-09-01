@@ -20,7 +20,7 @@ impl BaVisitor {
     match fn_decl.function.body.as_ref() {
       Some(block_stmt) => match block_stmt.stmts.first() {
         Some(Stmt::Expr(expr_stmt)) => match &*expr_stmt.expr {
-          Expr::Lit(Lit::Str(str_lit)) => str_lit.value.trim() == "use background",
+          Expr::Lit(Lit::Str(str_lit)) => str_lit.value.trim() == "background",
           _ => false,
         },
         _ => false,
@@ -33,7 +33,7 @@ impl BaVisitor {
     match fn_expr.function.body.as_ref() {
       Some(block_stmt) => match block_stmt.stmts.first() {
         Some(Stmt::Expr(expr_stmt)) => match &*expr_stmt.expr {
-          Expr::Lit(Lit::Str(str_lit)) => str_lit.value.trim() == "use background",
+          Expr::Lit(Lit::Str(str_lit)) => str_lit.value.trim() == "background",
           _ => false,
         },
         _ => false,
@@ -46,7 +46,7 @@ impl BaVisitor {
     match arrow.body.as_ref() {
       BlockStmtOrExpr::BlockStmt(block) => match block.stmts.first() {
         Some(Stmt::Expr(expr_stmt)) => match &*expr_stmt.expr {
-          Expr::Lit(Lit::Str(str_lit)) => str_lit.value.trim() == "use background",
+          Expr::Lit(Lit::Str(str_lit)) => str_lit.value.trim() == "background",
           _ => false,
         },
         _ => false,
@@ -59,7 +59,7 @@ impl BaVisitor {
     if let Some(ref mut body) = function.body {
       if let Some(Stmt::Expr(expr_stmt)) = body.stmts.first() {
         if let Expr::Lit(Lit::Str(str_lit)) = expr_stmt.expr.as_ref() {
-          if str_lit.value.trim() == "use background" {
+          if str_lit.value.trim() == "background" {
             body.stmts.remove(0);
           }
         }
@@ -70,7 +70,7 @@ impl BaVisitor {
   fn remove_ba_directive_from_block(&mut self, block: &mut BlockStmt) {
     if let Some(Stmt::Expr(expr_stmt)) = block.stmts.first() {
       if let Expr::Lit(Lit::Str(str_lit)) = expr_stmt.expr.as_ref() {
-        if str_lit.value.as_ref() == "use background" {
+        if str_lit.value.as_ref() == "background" {
           block.stmts.remove(0);
         }
       }
@@ -155,7 +155,7 @@ impl BaVisitor {
 
 impl VisitMut for BaVisitor {
   fn visit_mut_stmt(&mut self, stmt: &mut Stmt) {
-    // function ba(e) { 'use background'; }
+    // function ba(e) { 'background'; }
     if let Stmt::Decl(Decl::Fn(fn_decl)) = stmt {
       if self.check_ba_directive_fn_decl(fn_decl) {
         let ba_object = self.create_ba_object_from_fn(&fn_decl.function);
@@ -183,7 +183,7 @@ impl VisitMut for BaVisitor {
     if let Stmt::Decl(Decl::Var(var_decl)) = stmt {
       for declarator in &mut var_decl.decls {
         if let Some(init) = &mut declarator.init {
-          // // const ba = (e) => { 'use background'; }
+          // // const ba = (e) => { 'background'; }
           if let Expr::Arrow(arrow_expr) = init.as_mut() {
             if self.check_ba_directive_arrow(arrow_expr) {
               let ba_object = self.create_ba_object_from_arrow(arrow_expr);
@@ -192,7 +192,7 @@ impl VisitMut for BaVisitor {
               return;
             }
           }
-          // const ba = function(e) { 'use background'; }
+          // const ba = function(e) { 'background'; }
           else if let Expr::Fn(fn_expr) = init.as_mut() {
             if self.check_ba_directive_fn_expr(fn_expr) {
               **init = self.create_ba_object_from_fn(&fn_expr.function);
@@ -238,7 +238,7 @@ mod tests {
     // Input codes
     r#"
 function ba(e) {
-    'use background';
+    'background';
     console.log("background action", e);
 }
 function BTC() {
@@ -265,7 +265,7 @@ function BTC() {
     // Input codes
     r#"
 const ba = (e) => {
-    'use background';
+    'background';
     console.log("background action", e);
 }
 function BTC() {
@@ -292,7 +292,7 @@ function BTC() {
     // Input codes
     r#"
 const ba = function(e){
-    'use background';
+    'background';
     console.log("background action", e);
 }
 function BTC() {
@@ -320,7 +320,7 @@ function BTC() {
     r#"
 function BTC() {
     function ba(e){
-      'use background';
+      'background';
       console.log("background action", e);
     }
     return <MTC onClick={ba}/>;
@@ -347,7 +347,7 @@ function BTC() {
     r#"
 function BTC() {
     const ba = (e) => {
-      'use background';
+      'background';
       console.log("background action", e);
     }
     return <MTC onClick={ba}/>;
@@ -374,7 +374,7 @@ function BTC() {
     r#"
 function BTC() {
     const ba = function(e){
-      'use background';
+      'background';
       console.log("background action", e);
     }
     return <MTC onClick={ba}/>;

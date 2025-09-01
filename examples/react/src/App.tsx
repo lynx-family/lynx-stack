@@ -7,7 +7,7 @@ function BTC(props: { text: string }) {
 }
 
 function ba(e) {
-  'use background';
+  'background';
   console.log('ba', e);
 }
 
