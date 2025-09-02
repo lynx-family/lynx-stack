@@ -28,10 +28,8 @@ export const __pendingListUpdates = {
     }
   },
   flushWithId(id: number): void {
-    if (!this.values) return;
-    const clearedId = this.values[id]?.flush();
-    if (clearedId !== undefined) {
-      this.clear(clearedId);
+    if (this.values && this.values[id]?.flush() !== undefined) {
+      this.clear(id);
     }
   },
   runWithoutUpdates(cb: () => void): void {
