@@ -98,6 +98,10 @@ export class WebEncodePlugin {
               },
               customSections: encodeOptions.customSections,
               elementTemplate: encodeOptions['elementTemplate'],
+              appType: (encodeOptions['pageConfig'] as Record<string, unknown>)
+                  ?.['experimental_isLazyBundle']
+                ? 'lazy'
+                : 'card',
             })),
             debugInfo: '',
           };
