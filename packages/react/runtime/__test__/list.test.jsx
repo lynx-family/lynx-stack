@@ -3846,4 +3846,52 @@ describe('nested list', () => {
       </view>"
     `);
   });
+
+  it('should clear attached lists', () => {
+    const s1 = __SNAPSHOT__(
+      <view>
+        <text>s1</text>
+        <list>{HOLE}</list>
+      </view>,
+    );
+    const s2 = __SNAPSHOT__(
+      <list-item>
+        <text>s2</text>
+        <list>{HOLE}</list>
+      </list-item>,
+    );
+    const s3 = __SNAPSHOT__(
+      <list-item>
+        <text>s3</text>
+      </list-item>,
+    );
+
+    const a = new SnapshotInstance(s);
+
+    const b = new SnapshotInstance(s1);
+    a.insertBefore(b);
+    b.ensureElements();
+
+    const c1 = new SnapshotInstance(s2);
+    const c2 = new SnapshotInstance(s2);
+    const c3 = new SnapshotInstance(s2);
+    b.insertBefore(c1);
+    b.insertBefore(c2);
+    b.insertBefore(c3);
+
+    const d1 = new SnapshotInstance(s3);
+    c1.insertBefore(d1);
+
+    const d2 = new SnapshotInstance(s3);
+    c2.insertBefore(d2);
+
+    const d3 = new SnapshotInstance(s3);
+    c3.insertBefore(d3);
+
+    expect(Object.keys(__pendingListUpdates.values).length).toBe(4);
+
+    __pendingListUpdates.clearAttachedLists();
+    // should only clear the parent list
+    expect(Object.keys(__pendingListUpdates.values).length).toBe(3);
+  });
 });
