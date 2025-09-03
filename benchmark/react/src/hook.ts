@@ -16,3 +16,7 @@ export function hook<T, K extends keyof T>(
 }
 
 export const PREFIX = __REPO_FILEPATH__.split('/').slice(0, -2).join('/');
+
+export const isMainThread =
+  // @ts-expect-error safely check
+  typeof __CreatePage === 'function';
