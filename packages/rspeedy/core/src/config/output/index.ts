@@ -213,7 +213,7 @@ export interface Output {
    * Disable inlining of all media but not images.
    *
    * ```ts title="lynx.config.ts"
-* import { defineConfig } from '@lynx-js/rspeedy'
+   * import { defineConfig } from '@lynx-js/rspeedy'
    *
    * export default defineConfig({
    *   output: {
@@ -223,7 +223,7 @@ export interface Output {
    *     },
    *   },
    * })
-   *
+   * ```
    */
   dataUriLimit?: number | DataUriLimit | undefined
 
