@@ -802,6 +802,18 @@ describe('Config Validation', () => {
         { dataUriLimit: Number.NaN },
         { dataUriLimit: Number.POSITIVE_INFINITY },
         { dataUriLimit: Number.MAX_SAFE_INTEGER },
+        {
+          dataUriLimit: {},
+        },
+        {
+          dataUriLimit: {
+            assets: 0,
+            image: 10,
+            svg: 100,
+            font: 1000,
+            media: 10000,
+          },
+        },
         { cssModules: { auto: true } },
         { cssModules: { auto: false } },
         { cssModules: { auto: /module/ } },
@@ -1055,7 +1067,7 @@ describe('Config Validation', () => {
           [Error: Invalid configuration.
 
           Invalid config on \`$input.output.dataUriLimit\`.
-            - Expect to be (number | undefined)
+            - Expect to be (DataUriLimit | number | undefined)
             - Got: string
           ]
         `)
