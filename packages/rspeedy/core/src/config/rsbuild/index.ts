@@ -17,6 +17,7 @@ export function toRsbuildConfig(
 ): UndefinedOnPartialDeep<RsbuildConfig> {
   return {
     dev: {
+      lazyCompilation: false,
       watchFiles: config.dev?.watchFiles,
       // We expect to use different default writeToDisk with Rsbuild
       writeToDisk: config.dev?.writeToDisk ?? true,
