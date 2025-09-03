@@ -5,6 +5,7 @@
 ```ts
 
 import type { CreateRsbuildOptions } from '@rsbuild/core';
+import type { DataUriLimit } from '@rsbuild/core';
 import type { DistPathConfig } from '@rsbuild/core';
 import type { InlineChunkConfig } from '@rsbuild/core';
 import { logger } from '@rsbuild/core';
@@ -240,7 +241,7 @@ export interface Output {
     cleanDistPath?: boolean | undefined;
     copy?: Rspack.CopyRspackPluginOptions | Rspack.CopyRspackPluginOptions['patterns'] | undefined;
     cssModules?: CssModules | undefined;
-    dataUriLimit?: number | undefined;
+    dataUriLimit?: number | DataUriLimit | undefined;
     distPath?: DistPath | undefined;
     filename?: string | Filename | undefined;
     filenameHash?: boolean | string | undefined;

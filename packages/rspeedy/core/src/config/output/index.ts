@@ -1,7 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type { InlineChunkConfig, Rspack } from '@rsbuild/core'
+import type { DataUriLimit, InlineChunkConfig, Rspack } from '@rsbuild/core'
 
 import type { CssModules } from './css-modules.js'
 import type { DistPath } from './dist-path.js'
@@ -207,8 +207,25 @@ export interface Output {
    *   },
    * })
    * ```
+   *
+   * @example
+   *
+   * Disable inlining of all media but not images.
+   *
+   * ```ts title="lynx.config.ts"
+   * import { defineConfig } from '@byted-lynx/rspeedy'
+   *
+   * export default defineConfig({
+   *   output: {
+   *     dataUriLimit: {
+   *       image: 5000,
+   *       media: 0,
+   *     },
+   *   },
+   * })
+   * ```
    */
-  dataUriLimit?: number | undefined
+  dataUriLimit?: number | DataUriLimit | undefined
 
   /**
    * Set the directory of the dist files.
