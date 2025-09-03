@@ -405,14 +405,6 @@ export function pluginReactLynx(
             })
           }
 
-          // This is used to avoid the IIFE in main-thread.js, which would cause memory leak.
-          // TODO: remove this when required Rspeedy version bumped to ^0.10.0
-          config = mergeRsbuildConfig({
-            tools: {
-              rspack: { output: { iife: false } },
-            },
-          }, config)
-
           return config
         })
 
