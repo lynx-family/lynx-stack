@@ -3894,7 +3894,7 @@ describe('nested list', () => {
     // should only clear the parent list
     expect(Object.keys(__pendingListUpdates.values).length).toBe(3);
 
-    // list-item will recurively ensureElements
+    // list-item will recursively ensureElements
     // if a list-item contains a nested list as its child,
     // that nested list should be flushed during ensureElements
     c1.ensureElements();
