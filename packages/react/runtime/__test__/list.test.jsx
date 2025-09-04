@@ -1945,6 +1945,11 @@ describe('list reload', () => {
     expect(signMap.get(__GetElementUniqueID(d1.__element_root))).toBe(d2_); // note: d1 is reused by d2_
     expect(signMap.get(__GetElementUniqueID(d2_.__element_root))).toBe(d2_);
     expect(signMap.get(__GetElementUniqueID(d3_.__element_root))).toBe(d3_);
+    // d1 was enqueued as well, so it should be in the recycling pool
+    expect([...recycleSignMap.keys()]).toStrictEqual([
+      __GetElementUniqueID(d3.__element_root),
+      __GetElementUniqueID(d1.__element_root),
+    ]);
   });
 });
 
