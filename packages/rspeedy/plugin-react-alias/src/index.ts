@@ -151,13 +151,16 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
           chain.resolve.alias.set('@lynx-js/preact-devtools$', false)
         }
 
-        chain
-          .resolve
-          .alias
-          .set(
+        if (!chain.resolve.alias.has('react$')) {
+          chain.resolve.alias.set(
             'react$',
             reactLepus.background,
           )
+        }
+
+        chain
+          .resolve
+          .alias
           .set(
             '@lynx-js/react$',
             reactLepus.background,
