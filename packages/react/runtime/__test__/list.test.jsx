@@ -3847,7 +3847,7 @@ describe('nested list', () => {
     `);
   });
 
-  it('should clear attached lists', () => {
+  it('should clear attached lists & should flush during ensureElements', () => {
     const s1 = __SNAPSHOT__(
       <view>
         <text>s1</text>
@@ -3893,5 +3893,11 @@ describe('nested list', () => {
     __pendingListUpdates.clearAttachedLists();
     // should only clear the parent list
     expect(Object.keys(__pendingListUpdates.values).length).toBe(3);
+
+    // list-item will recurively ensureElements
+    // if a list-item contains a nested list as its child,
+    // that nested list should be flushed during ensureElements
+    c1.ensureElements();
+    expect(Object.keys(__pendingListUpdates.values).length).toBe(2);
   });
 });
