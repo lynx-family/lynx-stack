@@ -19,17 +19,160 @@ pub fn is_digit_only(source: &str) -> bool {
   true
 }
 
+/// Transform rpx units to calc() expressions using inline-style-parser
+/// Examples:
+/// - "1rpx" -> "calc(1 * var(--rpx))"
+/// - "-1rpx" -> "calc(-1 * var(--rpx))"
+/// - "5px 1rpx" -> "5px calc(1 * var(--rpx))"
+/// - "1RPX" -> "calc(1 * var(--rpx))" (case insensitive)
+/// - "url(image-1rpx.png)" -> "url(image-1rpx.png)" (unchanged)
+/// - "'text with 1rpx'" -> "'text with 1rpx'" (unchanged)
+pub fn transform_rpx_units(value: &str) -> Option<String> {
+  // Check case-insensitive for rpx
+  if !value
+    .as_bytes()
+    .windows(3)
+    .any(|w| (w[0] | 0x20) == b'r' && (w[1] | 0x20) == b'p' && (w[2] | 0x20) == b'x')
+  {
+    return None;
+  }
+
+  let source = value.as_bytes();
+  let mut transformer = RpxTransformer::new(value);
+  inline_style_parser::tokenize::tokenize(source, &mut transformer);
+
+  if transformer.has_changes() {
+    Some(transformer.get_result())
+  } else {
+    None
+  }
+}
+
+/// Transformer that processes CSS tokens and converts rpx dimensions to calc() expressions
+struct RpxTransformer<'a> {
+  source: &'a str,
+  result: String,
+  last_offset: usize,
+  has_rpx_changes: bool,
+}
+
+impl<'a> RpxTransformer<'a> {
+  fn new(source: &'a str) -> Self {
+    Self {
+      source,
+      result: String::with_capacity(source.len() * 2),
+      last_offset: 0,
+      has_rpx_changes: false,
+    }
+  }
+
+  fn has_changes(&self) -> bool {
+    self.has_rpx_changes
+  }
+
+  fn get_result(mut self) -> String {
+    // Append any remaining content
+    if self.last_offset < self.source.len() {
+      self.result.push_str(&self.source[self.last_offset..]);
+    }
+    self.result
+  }
+
+  fn append_before_token(&mut self, start: usize) {
+    if self.last_offset < start {
+      self.result.push_str(&self.source[self.last_offset..start]);
+    }
+  }
+}
+
+impl<'a> inline_style_parser::tokenize::Parser for RpxTransformer<'a> {
+  fn on_token(&mut self, token_type: u8, start: usize, end: usize) {
+    use inline_style_parser::types::*;
+
+    if token_type == DIMENSION_TOKEN {
+      let token_text = &self.source[start..end];
+
+      // Check if this dimension has rpx unit (case insensitive)
+      if token_text.len() >= 3 && token_text[token_text.len() - 3..].eq_ignore_ascii_case("rpx") {
+        // Find where the number ends and unit begins
+        let mut unit_start = end;
+        for (i, &byte) in token_text.as_bytes().iter().enumerate().rev() {
+          if byte.is_ascii_digit() || byte == b'.' || byte == b'-' || byte == b'+' {
+            unit_start = start + i + 1;
+            break;
+          }
+        }
+
+        let number_part = &self.source[start..unit_start];
+        let unit_part = &self.source[unit_start..end];
+
+        // Check if unit part is rpx (case insensitive) and we have a valid number
+        if unit_part.len() == 3 && unit_part.eq_ignore_ascii_case("rpx") && !number_part.is_empty()
+        {
+          // Append content before this token
+          self.append_before_token(start);
+
+          // Transform rpx to calc() expression
+          self
+            .result
+            .push_str(&format!("calc({} * var(--rpx))", number_part));
+          self.has_rpx_changes = true;
+          self.last_offset = end;
+          return;
+        }
+      }
+    }
+
+    // For all other tokens (including non-rpx dimensions), we don't need to do anything
+    // The content will be copied in get_result() or when we encounter the next rpx token
+  }
+}
+
 type CSSPair<'a> = (&'a str, &'a str);
 
-pub fn query_transform_rules<'a>(
+pub fn query_transform_rules(
+  name: &str,
+  value: &str,
+) -> (Vec<(String, String)>, Vec<(String, String)>) {
+  // Transform rpx units first
+  let transformed_value = transform_rpx_units(value);
+  let final_value = if let Some(ref transformed) = transformed_value {
+    transformed.as_str()
+  } else {
+    value
+  };
+
+  // Use the new function with original and transformed values
+  let (result, result_children) = query_transform_rules_with_original(name, value, final_value);
+
+  // Convert to owned strings
+  let owned_result = result
+    .into_iter()
+    .map(|(k, v)| (k.to_string(), v.to_string()))
+    .collect();
+  let owned_result_children = result_children
+    .into_iter()
+    .map(|(k, v)| (k.to_string(), v.to_string()))
+    .collect();
+
+  (owned_result, owned_result_children)
+}
+
+pub fn query_transform_rules_with_original<'a>(
   name: &'a str,
-  value: &'a str,
+  original_value: &'a str,
+  transformed_value: &'a str,
 ) -> (Vec<CSSPair<'a>>, Vec<CSSPair<'a>>) {
   let mut result: Vec<CSSPair<'a>> = Vec::new();
   let mut result_children: Vec<CSSPair<'a>> = Vec::new();
+
+  // Check if we need rpx transformation first (case-insensitive or already transformed)
+  let has_rpx =
+    original_value.to_ascii_lowercase().contains("rpx") || transformed_value.contains("var(--rpx)");
+
   if let Some(renamed_value) = get_rename_rule_value(name) {
-    result.push((renamed_value, value));
-  } else if let Some(replaced) = get_replace_rule_value(name, value) {
+    result.push((renamed_value, transformed_value));
+  } else if let Some(replaced) = get_replace_rule_value(name, original_value) {
     result.extend(replaced);
   }
   // now transform color
@@ -49,20 +192,20 @@ pub fn query_transform_rules<'a>(
   // compare the name is "color"
   else if name == "color" {
     // check if the value is starting with "linear-gradient"
-    let is_linear_gradient = value.starts_with("linear-gradient");
+    let is_linear_gradient = original_value.starts_with("linear-gradient");
     if is_linear_gradient {
       result.extend([
         ("color", "transparent"),
         ("-webkit-background-clip", "text"),
         ("background-clip", "text"),
-        ("--lynx-text-bg-color", value),
+        ("--lynx-text-bg-color", transformed_value),
       ]);
     } else {
       result.extend([
         ("--lynx-text-bg-color", "initial"),
         ("-webkit-background-clip", "initial"),
         ("background-clip", "initial"),
-        ("color", value),
+        ("color", transformed_value),
       ]);
     };
   }
@@ -74,9 +217,9 @@ pub fn query_transform_rules<'a>(
   else if name == "flex" {
     // we will use the value as flex-basis, flex-grow, flex-shrink
     let mut current_offset = 0;
-    let mut val_fields = [value.len(); 6]; // we will use 3 fields, but we will use 6 to avoid the need to check the length
+    let mut val_fields = [transformed_value.len(); 6]; // we will use 3 fields, but we will use 6 to avoid the need to check the length
     let mut ii = 0;
-    let value_in_bytes = value.as_bytes();
+    let value_in_bytes = transformed_value.as_bytes();
     while current_offset < value_in_bytes.len() && ii < val_fields.len() {
       let code = value_in_bytes[current_offset];
       if (ii % 2 == 0 && !is_white_space(code)) || (ii % 2 == 1 && is_white_space(code)) {
@@ -92,7 +235,7 @@ pub fn query_transform_rules<'a>(
         // we will not add any declaration
       }
       1 => {
-        if &value[val_fields[0]..val_fields[1]] == "none" {
+        if &transformed_value[val_fields[0]..val_fields[1]] == "none" {
           /*
            * --flex-shrink:0;
            * --flex-grow:0;
@@ -103,7 +246,7 @@ pub fn query_transform_rules<'a>(
             ("--flex-grow", "0"),
             ("--flex-basis", "auto"),
           ]);
-        } else if &value[val_fields[0]..val_fields[1]] == "auto" {
+        } else if &transformed_value[val_fields[0]..val_fields[1]] == "auto" {
           /*
            * --flex-shrink:1;
            * --flex-grow:1;
@@ -115,12 +258,15 @@ pub fn query_transform_rules<'a>(
             ("--flex-basis", "auto"),
           ]);
         } else {
-          let is_flex_grow = is_digit_only(value);
+          let is_flex_grow = is_digit_only(&transformed_value[val_fields[0]..val_fields[1]]);
           if is_flex_grow {
             // if we only have one pure number, we will use it as flex-grow
             // flex: <flex-grow> 1 0
             result.extend([
-              ("--flex-grow", &value[val_fields[0]..val_fields[1]]),
+              (
+                "--flex-grow",
+                &transformed_value[val_fields[0]..val_fields[1]],
+              ),
               ("--flex-shrink", "1"),
               ("--flex-basis", "0%"),
             ]);
@@ -130,22 +276,31 @@ pub fn query_transform_rules<'a>(
             result.extend([
               ("--flex-grow", "1"),
               ("--flex-shrink", "1"),
-              ("--flex-basis", &value[val_fields[0]..val_fields[1]]),
+              (
+                "--flex-basis",
+                &transformed_value[val_fields[0]..val_fields[1]],
+              ),
             ]);
           }
         }
       }
       2 => {
         // The first value must be a valid value for flex-grow.
-        result.push(("--flex-grow", &value[val_fields[0]..val_fields[1]]));
-        let is_flex_shrink = is_digit_only(&value[val_fields[2]..val_fields[3]]);
+        result.push((
+          "--flex-grow",
+          &transformed_value[val_fields[0]..val_fields[1]],
+        ));
+        let is_flex_shrink = is_digit_only(&transformed_value[val_fields[2]..val_fields[3]]);
         if is_flex_shrink {
           /*
           a valid value for flex-shrink: then, in all the browsers,
           the shorthand expands to flex: <flex-grow> <flex-shrink> 0%.
            */
           result.extend([
-            ("--flex-shrink", &value[val_fields[2]..val_fields[3]]),
+            (
+              "--flex-shrink",
+              &transformed_value[val_fields[2]..val_fields[3]],
+            ),
             ("--flex-basis", "0%"),
           ]);
         } else {
@@ -154,16 +309,28 @@ pub fn query_transform_rules<'a>(
            */
           result.extend([
             ("--flex-shrink", "1"),
-            ("--flex-basis", &value[val_fields[2]..val_fields[3]]),
+            (
+              "--flex-basis",
+              &transformed_value[val_fields[2]..val_fields[3]],
+            ),
           ]);
         }
       }
       3 => {
         // flex: <flex-grow> <flex-shrink> <flex-basis>
         result.extend([
-          ("--flex-grow", &value[val_fields[0]..val_fields[1]]),
-          ("--flex-shrink", &value[val_fields[2]..val_fields[3]]),
-          ("--flex-basis", &value[val_fields[4]..val_fields[5]]),
+          (
+            "--flex-grow",
+            &transformed_value[val_fields[0]..val_fields[1]],
+          ),
+          (
+            "--flex-shrink",
+            &transformed_value[val_fields[2]..val_fields[3]],
+          ),
+          (
+            "--flex-basis",
+            &transformed_value[val_fields[4]..val_fields[5]],
+          ),
         ]);
       }
       _ => {
@@ -176,16 +343,22 @@ pub fn query_transform_rules<'a>(
    linear-weight-sum: <value> --> --lynx-linear-weight-sum: <value>;
   */
   if name == "linear-weight-sum" {
-    result_children.push(("--lynx-linear-weight-sum", value));
+    result_children.push(("--lynx-linear-weight-sum", transformed_value));
   }
   /*
    * There is a special rule for linear-weight
    * linear-weight: 0; -->  do nothing
    * linear-weight: <value> --> --lynx-linear-weight: 0;
    */
-  if name == "linear-weight" && value != "0" {
+  if name == "linear-weight" && transformed_value != "0" {
     result.push(("--lynx-linear-weight-basis", "0"));
   }
+
+  // If no other rules matched but we have rpx, we still need to transform
+  if result.is_empty() && has_rpx {
+    result.push((name, transformed_value));
+  }
+
   (result, result_children)
 }
 
@@ -508,5 +681,300 @@ mod tests {
     let source = "linear-layout-gravity: start;";
     let result = transform_inline_style_string(source).0;
     assert_eq!(result, "--align-self-row:start;--align-self-column:start;");
+  }
+
+  // RPX transformation tests
+  #[test]
+  fn transform_rpx_basic() {
+    let source = "width: 1rpx;";
+    let result = transform_inline_style_string(source).0;
+    assert_eq!(result, "width:calc(1 * var(--rpx));");
+  }
+
+  #[test]
+  fn transform_rpx_negative() {
+    let source = "width: -1rpx;";
+    let result = transform_inline_style_string(source).0;
+    assert_eq!(result, "width:calc(-1 * var(--rpx));");
+  }
+
+  #[test]
+  fn transform_rpx_decimal() {
+    let source = "width: 1.5rpx;";
+    let result = transform_inline_style_string(source).0;
+    assert_eq!(result, "width:calc(1.5 * var(--rpx));");
+  }
+
+  #[test]
+  fn transform_rpx_mixed_values() {
+    let source = "margin: 5px 1rpx;";
+    let result = transform_inline_style_string(source).0;
+    assert_eq!(result, "margin:5px calc(1 * var(--rpx));");
+  }
+
+  #[test]
+  fn transform_rpx_multiple_values() {
+    let source = "margin: 1rpx 2rpx 3rpx 4rpx;";
+    let result = transform_inline_style_string(source).0;
+    assert_eq!(
+      result,
+      "margin:calc(1 * var(--rpx)) calc(2 * var(--rpx)) calc(3 * var(--rpx)) calc(4 * var(--rpx));"
+    );
+  }
+
+  #[test]
+  fn transform_rpx_in_url_should_not_transform() {
+    let source = "background-image: url(image-1rpx.png);";
+    let result = transform_inline_style_string(source).0;
+    assert_eq!(result, "background-image:url(image-1rpx.png);");
+  }
+
+  #[test]
+  fn transform_rpx_in_url_with_quotes() {
+    let source = "background-image: url('image-1rpx.png');";
+    let result = transform_inline_style_string(source).0;
+    assert_eq!(result, "background-image:url('image-1rpx.png');");
+  }
+
+  #[test]
+  fn transform_rpx_in_string_should_not_transform() {
+    let source = "content: 'text with 1rpx';";
+    let result = transform_inline_style_string(source).0;
+    assert_eq!(result, "content:'text with 1rpx';");
+  }
+
+  #[test]
+  fn transform_rpx_in_double_quotes_should_not_transform() {
+    let source = "content: \"text with 1rpx\";";
+    let result = transform_inline_style_string(source).0;
+    assert_eq!(result, "content:\"text with 1rpx\";");
+  }
+
+  #[test]
+  fn transform_rpx_zero() {
+    let source = "width: 0rpx;";
+    let result = transform_inline_style_string(source).0;
+    assert_eq!(result, "width:calc(0 * var(--rpx));");
+  }
+
+  #[test]
+  fn transform_rpx_large_number() {
+    let source = "width: 750rpx;";
+    let result = transform_inline_style_string(source).0;
+    assert_eq!(result, "width:calc(750 * var(--rpx));");
+  }
+
+  #[test]
+  fn transform_rpx_with_important() {
+    let source = "width: 1rpx !important;";
+    let result = transform_inline_style_string(source).0;
+    assert_eq!(result, "width:calc(1 * var(--rpx)) !important;");
+  }
+
+  #[test]
+  fn transform_rpx_with_rename_rule() {
+    let source = "flex-basis: 100rpx;";
+    let result = transform_inline_style_string(source).0;
+    assert_eq!(result, "--flex-basis:calc(100 * var(--rpx));");
+  }
+
+  #[test]
+  fn transform_rpx_with_color_gradient() {
+    let source = "color: linear-gradient(to right, red 1rpx, blue);";
+    let result = transform_inline_style_string(source).0;
+    assert_eq!(result, "color:transparent;-webkit-background-clip:text;background-clip:text;--lynx-text-bg-color:linear-gradient(to right, red calc(1 * var(--rpx)), blue);");
+  }
+
+  #[test]
+  fn transform_rpx_complex_url() {
+    let source = "background: url(data:image/svg+xml;base64,abc1rpxdef) 1rpx 2rpx;";
+    let result = transform_inline_style_string(source).0;
+    assert_eq!(result, "background:url(data:image/svg+xml;base64,abc1rpxdef) calc(1 * var(--rpx)) calc(2 * var(--rpx));");
+  }
+
+  #[test]
+  fn transform_rpx_no_rpx() {
+    let source = "width: 1px;";
+    let result = transform_inline_style_string(source).0;
+    assert_eq!(result, ""); // Should remain unchanged
+  }
+
+  #[test]
+  fn test_query_transform_rules_direct_rpx() {
+    // Test direct call to query_transform_rules with rpx
+    let (result, _) = query_transform_rules("width", "1rpx");
+    assert_eq!(result.len(), 1);
+    assert_eq!(result[0].0, "width");
+    assert_eq!(result[0].1, "calc(1 * var(--rpx))");
+  }
+
+  #[test]
+  fn test_query_transform_rules_direct_rpx_with_rename() {
+    // Test direct call to query_transform_rules with rpx and rename rule
+    let (result, _) = query_transform_rules("flex-basis", "100rpx");
+    assert_eq!(result.len(), 1);
+    assert_eq!(result[0].0, "--flex-basis");
+    assert_eq!(result[0].1, "calc(100 * var(--rpx))");
+  }
+
+  // Test the specific examples from the user requirements
+  #[test]
+  fn test_user_specific_examples() {
+    // Test: width: -1rpx; -> width: calc(-1 * var(--rpx));
+    let result = transform_rpx_units("-1rpx");
+    assert_eq!(result, Some("calc(-1 * var(--rpx))".to_string()));
+
+    // Test: margin: 5px 1rpx; -> margin: 5px calc(1 * var(--rpx));
+    let result = transform_rpx_units("5px 1rpx");
+    assert_eq!(result, Some("5px calc(1 * var(--rpx))".to_string()));
+
+    // Test: 1rpx -> calc(1 * var(--rpx))
+    let result = transform_rpx_units("1rpx");
+    assert_eq!(result, Some("calc(1 * var(--rpx))".to_string()));
+  }
+
+  // Test case insensitive rpx units
+  #[test]
+  fn test_rpx_case_insensitive() {
+    // Test uppercase RPX
+    let result = transform_rpx_units("1RPX");
+    assert_eq!(result, Some("calc(1 * var(--rpx))".to_string()));
+
+    // Test mixed case Rpx
+    let result = transform_rpx_units("2Rpx");
+    assert_eq!(result, Some("calc(2 * var(--rpx))".to_string()));
+
+    // Test mixed case rPx
+    let result = transform_rpx_units("3rPx");
+    assert_eq!(result, Some("calc(3 * var(--rpx))".to_string()));
+
+    // Test mixed case rpX
+    let result = transform_rpx_units("4rpX");
+    assert_eq!(result, Some("calc(4 * var(--rpx))".to_string()));
+
+    // Test with negative value
+    let result = transform_rpx_units("-1RPX");
+    assert_eq!(result, Some("calc(-1 * var(--rpx))".to_string()));
+
+    // Test with decimal value
+    let result = transform_rpx_units("1.5RpX");
+    assert_eq!(result, Some("calc(1.5 * var(--rpx))".to_string()));
+
+    // Test mixed case in complex value (CSS value only, not full declaration)
+    let result = transform_rpx_units("5px 1RPX");
+    assert_eq!(result, Some("5px calc(1 * var(--rpx))".to_string()));
+
+    // Test multiple mixed case values (CSS value only)
+    let result = transform_rpx_units("1RPX 2rpx 3Rpx 4rpX");
+    assert_eq!(
+      result,
+      Some(
+        "calc(1 * var(--rpx)) calc(2 * var(--rpx)) calc(3 * var(--rpx)) calc(4 * var(--rpx))"
+          .to_string()
+      )
+    );
+  }
+
+  // Test case insensitive rpx units should NOT be transformed in certain contexts
+  #[test]
+  fn test_rpx_case_insensitive_not_transformed() {
+    // Test URL with uppercase RPX - should not be transformed
+    let result = transform_rpx_units("url(image-1RPX.png)");
+    assert_eq!(result, None);
+
+    // Test URL with mixed case rpx - should not be transformed
+    let result = transform_rpx_units("url(background-2Rpx.jpg)");
+    assert_eq!(result, None);
+
+    // Test URL with quoted path containing RPX - should not be transformed
+    let result = transform_rpx_units("url('assets/icon-3rPx.svg')");
+    assert_eq!(result, None);
+
+    // Test URL with double quoted path containing rpX - should not be transformed
+    let result = transform_rpx_units("url(\"images/logo-4rpX.webp\")");
+    assert_eq!(result, None);
+
+    // Test single quoted string with RPX - should not be transformed
+    let result = transform_rpx_units("'text with 1RPX unit'");
+    assert_eq!(result, None);
+
+    // Test double quoted string with mixed case rpx - should not be transformed
+    let result = transform_rpx_units("\"content has 2Rpx value\"");
+    assert_eq!(result, None);
+
+    // Test complex URL with data URI containing RPX - should not be transformed
+    let result = transform_rpx_units("url(data:image/svg+xml;base64,abc1RPXdef)");
+    assert_eq!(result, None);
+
+    // Test URL with mixed case and complex path - should not be transformed
+    let result = transform_rpx_units("url(../assets/images/sprite-10RpX-icon.png)");
+    assert_eq!(result, None);
+
+    // Test string with escaped quotes containing rpx - should not be transformed
+    let result = transform_rpx_units("'escaped \\'quote\\' with 5rPx'");
+    assert_eq!(result, None);
+
+    // Test complex case: URL followed by valid RPX dimension - only RPX should be transformed
+    let result = transform_rpx_units("url(bg-1RPX.png) 2RPX");
+    assert_eq!(
+      result,
+      Some("url(bg-1RPX.png) calc(2 * var(--rpx))".to_string())
+    );
+
+    // Test complex case: string followed by valid rpx - only rpx should be transformed
+    let result = transform_rpx_units("'text-1Rpx' 3rPx");
+    assert_eq!(result, Some("'text-1Rpx' calc(3 * var(--rpx))".to_string()));
+  }
+
+  // Test edge cases with case insensitive rpx
+  #[test]
+  fn test_rpx_case_insensitive_edge_cases() {
+    // Test zero value with different cases
+    let result = transform_rpx_units("0RPX");
+    assert_eq!(result, Some("calc(0 * var(--rpx))".to_string()));
+
+    let result = transform_rpx_units("0Rpx");
+    assert_eq!(result, Some("calc(0 * var(--rpx))".to_string()));
+
+    // Test large numbers with different cases
+    let result = transform_rpx_units("750RPX");
+    assert_eq!(result, Some("calc(750 * var(--rpx))".to_string()));
+
+    let result = transform_rpx_units("999rPX");
+    assert_eq!(result, Some("calc(999 * var(--rpx))".to_string()));
+
+    // Test scientific notation (if supported) with different cases
+    let result = transform_rpx_units("1e2RPX");
+    assert_eq!(result, Some("calc(1e2 * var(--rpx))".to_string()));
+
+    // Test with plus sign
+    let result = transform_rpx_units("+5RpX");
+    assert_eq!(result, Some("calc(+5 * var(--rpx))".to_string()));
+
+    // Test mixed with other units - only RPX should be transformed
+    let result = transform_rpx_units("1px 2RPX 3em 4Rpx 5%");
+    assert_eq!(
+      result,
+      Some("1px calc(2 * var(--rpx)) 3em calc(4 * var(--rpx)) 5%".to_string())
+    );
+
+    // Test that partial matches don't get transformed
+    let result = transform_rpx_units("1rpxs"); // not a valid dimension
+    assert_eq!(result, None);
+
+    let result = transform_rpx_units("xrpx"); // not a valid dimension
+    assert_eq!(result, None);
+
+    // Test case where rpx is part of a larger identifier (should not transform)
+    let result = transform_rpx_units("background-1RPX-image");
+    assert_eq!(result, None);
+  }
+
+  // Integration test for uppercase RPX in full transform flow
+  #[test]
+  fn transform_rpx_uppercase_integration() {
+    let source = "width: 100RPX;";
+    let result = transform_inline_style_string(source).0;
+    assert_eq!(result, "width:calc(100 * var(--rpx));");
   }
 }

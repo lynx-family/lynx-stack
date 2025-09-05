@@ -50,6 +50,7 @@ export type INapiModulesCall = (
  * @property {NativeModulesCall} onNativeModulesCall [optional] the NativeModules value handler. Arguments will be cached before this property is assigned.
  * @property {"auto" | null} height [optional] (attribute: "height") set it to "auto" for height auto-sizing
  * @property {"auto" | null} width [optional] (attribute: "width") set it to "auto" for width auto-sizing
+ * @property {string} rpxLength [optional] (attribute: "rpx-length") the length of rpx, default is `this.getBoundingClientRect().width / 750`px
  * @property {NapiModulesMap} napiModulesMap [optional] the napiModule which is called in lynx-core. key is module-name, value is esm url.
  * @property {INapiModulesCall} onNapiModulesCall [optional] the NapiModule value handler.
  * @property {"false" | "true" | null} injectHeadLinks [optional] (attribute: "inject-head-links") @default true set it to "false" to disable injecting the <link href="" ref="stylesheet"> styles into shadowroot
@@ -85,6 +86,7 @@ export class LynxView extends HTMLElement {
     'url',
     'global-props',
     'init-data',
+    'rpx-length',
   ];
   /**
    * @private
@@ -96,6 +98,8 @@ export class LynxView extends HTMLElement {
 
   #connected = false;
   #url?: string;
+  #rpxLength?: string | null;
+  #rpxProxyStyleSheet?: CSSStyleSheet;
   /**
    * @public
    * @property the url of lynx view output entry file
@@ -106,6 +110,19 @@ export class LynxView extends HTMLElement {
   set url(val: string) {
     this.#url = val;
     this.#render();
+  }
+
+  get rpxLength(): string | null {
+    return this.#rpxLength ?? null;
+  }
+
+  set rpxLength(val: string | null) {
+    this.#rpxLength = val;
+    this.#rpxProxyStyleSheet?.deleteRule(0);
+    this.#rpxProxyStyleSheet?.insertRule(
+      `:host { --rpx: ${val}; }`,
+      this.#rpxProxyStyleSheet?.cssRules.length ?? 0,
+    );
   }
 
   #globalProps: Cloneable = {};
@@ -338,6 +355,9 @@ export class LynxView extends HTMLElement {
         case 'init-data':
           this.#initData = JSON.parse(newValue);
           break;
+        case 'rpx-length':
+          this.rpxLength = newValue;
+          break;
       }
     }
   }
@@ -375,6 +395,8 @@ export class LynxView extends HTMLElement {
    * @private
    */
   disconnectedCallback() {
+    this.#rpxProxyStyleSheet?.deleteRule(0);
+    this.#rpxProxyStyleSheet = undefined;
     this.#instance?.dispose();
     this.#instance = undefined;
     // under the all-on-ui strategy, when reload() triggers dsl flush, the previously removed pageElement will be used in __FlushElementTree.
@@ -501,6 +523,17 @@ export class LynxView extends HTMLElement {
               );
             }
           }
+
+          // create rpx proxy style sheet
+          const styleElement = document.createElement('style');
+          styleElement.dataset['role'] = 'rpx-proxy';
+          this.shadowRoot!.append(styleElement);
+          const styleSheet = styleElement.sheet!;
+          this.#rpxProxyStyleSheet = styleSheet;
+          styleSheet?.insertRule(
+            `:host { --rpx: ${this.rpxLength}; }`,
+            styleSheet?.cssRules.length ?? 0,
+          );
         }
       });
     }
@@ -510,8 +543,29 @@ export class LynxView extends HTMLElement {
    */
   connectedCallback() {
     this.#connected = true;
+    if (this.getAttribute('rpx-length')) {
+      this.rpxLength = this.getAttribute('rpx-length')!;
+    } else if (!this.#rpxLength) {
+      this.rpxLength = `${this.getBoundingClientRect().width / 750}px`;
+    }
     this.#render();
   }
+}
+
+try {
+  /**
+   * default define --rpx property
+   * 1rpx = 0.5px
+   */
+  window.CSS.registerProperty({
+    name: '--rpx',
+    syntax: '<length>',
+    inherits: true,
+    initialValue: '0.5px',
+  });
+} catch {
+  // FIXME
+  // ignore, there is no way to check if the property has been registered
 }
 
 if (customElements.get(LynxView.tag)) {

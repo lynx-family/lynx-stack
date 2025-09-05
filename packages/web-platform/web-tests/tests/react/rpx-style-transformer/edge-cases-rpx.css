@@ -1,0 +1,150 @@
+/* Copyright 2023 The Lynx Authors. All rights reserved.
+ * Licensed under the Apache License Version 2.0 that can be found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+/* RPX in URL should not be transformed */
+.url-background-rpx {
+  background-image: url("data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\"><text>background-1rpx</text></svg>");
+  width: 100rpx;
+  height: 50rpx;
+}
+
+/* RPX in string content should not be transformed */
+.string-content-rpx::before {
+  content: "This has 1rpx in text";
+  width: 100rpx;
+  height: 20rpx;
+}
+
+/* RPX in quoted font family should not be transformed */
+.font-family-rpx {
+  font-family: "Font-1rpx", sans-serif;
+  width: 100rpx;
+}
+
+/* Complex URL patterns */
+.complex-url-rpx {
+  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'><text>1rpx</text></svg>");
+  width: 100rpx;
+}
+
+/* Multiple URLs with rpx */
+.multiple-url-rpx {
+  background-image:
+    url("data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\"><text>image1-1rpx</text></svg>"),
+    url("data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\"><text>image2-2rpx</text></svg>");
+  width: 150rpx;
+  height: 75rpx;
+}
+
+/* RPX in CSS calc with other units */
+.calc-mixed-rpx {
+  width: calc(100rpx + 50px - 10em);
+  height: calc(50rpx * 2 + 10vh);
+  margin: calc(10rpx / 2);
+}
+
+/* RPX in complex selectors */
+.parent-rpx .child-rpx:nth-child(odd) {
+  width: 80rpx;
+  margin: 5rpx;
+}
+
+.parent-rpx .child-rpx:hover {
+  width: 90rpx;
+  padding: 8rpx;
+}
+
+/* RPX in attribute selectors */
+[data-width="100rpx"] {
+  width: 100rpx;
+  height: 50rpx;
+}
+
+/* RPX in CSS Grid */
+.grid-rpx {
+  display: grid;
+  grid-template-columns: 100rpx 200rpx 150rpx;
+  grid-template-rows: 50rpx 75rpx;
+  grid-gap: 10rpx;
+}
+
+/* RPX in CSS Flexbox */
+.flex-rpx {
+  display: flex;
+  flex-basis: 100rpx;
+  gap: 15rpx;
+  margin: 20rpx;
+}
+
+/* RPX in position properties */
+.positioned-rpx {
+  position: absolute;
+  top: 10rpx;
+  right: 20rpx;
+  bottom: 30rpx;
+  left: 40rpx;
+}
+
+/* RPX in border properties */
+.border-rpx {
+  border: 2rpx solid red;
+  border-radius: 5rpx;
+  border-spacing: 3rpx;
+}
+
+/* RPX in outline properties */
+.outline-rpx {
+  outline: 1rpx dashed blue;
+  outline-offset: 2rpx;
+}
+
+/* RPX in text properties */
+.text-rpx {
+  text-indent: 10rpx;
+  letter-spacing: 1rpx;
+  word-spacing: 2rpx;
+  text-shadow: 1rpx 2rpx 3rpx black;
+}
+
+/* RPX in list properties */
+.list-rpx {
+  list-style-position: inside;
+  padding-left: 20rpx;
+}
+
+/* RPX in table properties */
+.table-rpx {
+  border-collapse: separate;
+  border-spacing: 5rpx 10rpx;
+}
+
+/* RPX with CSS variables */
+.css-vars-rpx {
+  --border-width: 2rpx;
+  --margin-size: 15rpx;
+  --padding-size: 8rpx;
+
+  border-width: var(--border-width);
+  margin: var(--margin-size);
+  padding: var(--padding-size);
+}
+
+/* RPX in filter functions */
+.filter-rpx {
+  filter: drop-shadow(2rpx 4rpx 6rpx rgba(0, 0, 0, 0.3));
+}
+
+/* RPX in clip-path */
+.clip-path-rpx {
+  clip-path: inset(10rpx 20rpx 30rpx 40rpx);
+}
+
+/* Very large and very small rpx values */
+.extreme-values-rpx {
+  width: 99999rpx;
+  height: 0.0001rpx;
+  margin: -1000rpx;
+  padding: 0.5rpx;
+}
