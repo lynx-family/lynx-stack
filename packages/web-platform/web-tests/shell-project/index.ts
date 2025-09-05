@@ -10,6 +10,7 @@ const ENABLE_MULTI_THREAD = !!process.env.ENABLE_MULTI_THREAD;
 const searchParams = new URLSearchParams(document.location.search);
 const casename = searchParams.get('casename');
 const casename2 = searchParams.get('casename2');
+const rpxLength = searchParams.get('rpx-length');
 const hasdir = searchParams.get('hasdir') === 'true';
 const isSSR = document.location.pathname.includes('ssr');
 
@@ -24,6 +25,9 @@ if (casename) {
     ? document.querySelector('lynx-view')!
     : undefined;
   lynxViewTests(lynxView => {
+    if (rpxLength) {
+      lynxView.setAttribute('rpx-length', rpxLength);
+    }
     lynxView.setAttribute('url', `${dir}/index.web.json`);
     ENABLE_MULTI_THREAD
       ? lynxView.setAttribute('thread-strategy', 'multi-thread')
@@ -89,6 +93,9 @@ if (casename) {
   if (casename2) {
     lynxViewTests(lynxView2 => {
       lynxView2.id = 'lynxview2';
+      if (rpxLength) {
+        lynxView2.setAttribute('rpx-length', rpxLength);
+      }
       lynxView2.setAttribute('url', `${dir2}/index.web.json`);
       lynxView2.setAttribute('lynx-group-id', '2');
     }, undefined);
