@@ -24,3 +24,11 @@
 <internal-slot><view key={hello}>{hello}</view></internal-slot>;
 <view><internal-slot><text key={hello}>{hello}</text></internal-slot></view>;
 <view><text>Hello, ReactLynx, <internal-slot><wrapper>{hello}</wrapper></internal-slot></text><internal-slot><text key={hello}>{hello}</text></internal-slot></view>;
+<view>
+  <text>!!!</text>
+  <internal-slot><wrapper><A/>
+</wrapper></internal-slot></view>;
+<view>
+  <text>!!!</text>
+  <internal-slot><wrapper>{a}
+</wrapper></internal-slot></view>;
