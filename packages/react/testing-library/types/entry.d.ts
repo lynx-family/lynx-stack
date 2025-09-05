@@ -143,6 +143,7 @@ export type RenderResult<Q extends Queries = typeof queries> = {
   container: LynxElement;
   rerender: (ui: React.ReactNode) => void;
   unmount: () => boolean;
+  asFragment: () => DocumentFragment;
 } & { [P in keyof Q]: BoundFunction<Q[P]> };
 
 /**
