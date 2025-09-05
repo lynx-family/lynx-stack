@@ -59,19 +59,22 @@ export function createChunkLoadingRuntimeModule(
         ),
         '};',
         withOnload
-          ? JavaScriptRuntimeModule.generateChunkOnloadRuntime()
+          ? JavaScriptRuntimeModule.generateChunkOnloadRuntime(webpack)
           : '// no on chunks loaded',
         withLoading
-          ? JavaScriptRuntimeModule.generateInstallChunkRuntime(withOnload)
+          ? JavaScriptRuntimeModule.generateInstallChunkRuntime(
+            webpack,
+            withOnload,
+          )
           : '// no chunk install function needed',
         withLoading
-          ? JavaScriptRuntimeModule.generateChunkLoadingRuntime('true') // TODO: JS_MATCHER
+          ? JavaScriptRuntimeModule.generateChunkLoadingRuntime(webpack, 'true') // TODO: JS_MATCHER
           : '// no chunk loading',
         withHmr
-          ? JavaScriptRuntimeModule.generateHMRRuntime()
+          ? JavaScriptRuntimeModule.generateHMRRuntime(webpack)
           : '// no HMR',
         withHmrManifest
-          ? JavaScriptRuntimeModule.generateHMRManifestRuntime()
+          ? JavaScriptRuntimeModule.generateHMRManifestRuntime(webpack)
           : '// no HMR manifest',
       ]);
     }
