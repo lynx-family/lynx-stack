@@ -43,6 +43,7 @@ export function render(
     wrapper: WrapperComponent,
     enableMainThread = false,
     enableBackgroundThread = true,
+    isRerender = false,
   } = {},
 ) {
   if (!enableMainThread && !enableBackgroundThread) {
@@ -58,11 +59,14 @@ export function render(
   const compMainThread = cloneElement(comp);
   const compBackgroundThread = cloneElement(comp);
 
-  globalThis.lynxTestingEnv.switchToMainThread();
-  __root.__jsx = enableMainThread ? compMainThread : null;
-  act(() => {
-    renderPage();
-  });
+  // We should keep using current <page/> element on rerender
+  if (!isRerender) {
+    globalThis.lynxTestingEnv.switchToMainThread();
+    __root.__jsx = enableMainThread ? compMainThread : null;
+    act(() => {
+      renderPage();
+    });
+  }
   if (enableBackgroundThread) {
     globalThis.lynxTestingEnv.switchToBackgroundThread();
     act(() => {
@@ -75,13 +79,29 @@ export function render(
     container: lynxTestingEnv.mainThread.elementTree.root,
     unmount: cleanup,
     rerender: (rerenderUi) => {
-      lynxTestingEnv.reset();
-      return render(wrapUiIfNeeded(rerenderUi), {
+      // Intentionally do not return anything to avoid unnecessarily complicating the API.
+      // folks can use all the same utilities we return in the first place that are bound to
+      // the container
+      render(rerenderUi, {
         queries,
         wrapper: WrapperComponent,
         enableMainThread,
         enableBackgroundThread,
+        isRerender: true,
       });
+    },
+    asFragment: () => {
+      const { document } = lynxTestingEnv.jsdom.window;
+      const container = lynxTestingEnv.mainThread.elementTree.root;
+      if (typeof document.createRange === 'function') {
+        return document
+          .createRange()
+          .createContextualFragment(container.innerHTML);
+      } else {
+        const template = document.createElement('template');
+        template.innerHTML = container.innerHTML;
+        return template.content;
+      }
     },
     ...getQueriesForElement(lynxTestingEnv.mainThread.elementTree.root, queries),
   };
