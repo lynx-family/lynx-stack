@@ -47,7 +47,7 @@ Rsbuild 提供 [resolve.alias](../../api/rspeedy.resolve.alias) 配置项，对�
 
 `resolve.alias` 配置能突破这些限制，允许通过 JavaScript 代码动态设置别名。例如为所有依赖使用工作区版本的 `lodash-es`：
 
-```js title="lynx.config.ts"
+```ts title="lynx.config.ts" twoslash
 import { createRequire } from 'node:module';
 
 import { defineConfig } from '@lynx-js/rspeedy';

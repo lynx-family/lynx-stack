@@ -8,6 +8,8 @@ import { join } from 'node:path';
 import { pluginSass } from '@rsbuild/plugin-sass';
 import { defineConfig } from '@rspress/core';
 import type { Sidebar, UserConfig } from '@rspress/core';
+import { pluginLlms } from '@rspress/plugin-llms';
+import { pluginTwoslash } from '@rspress/plugin-twoslash';
 import {
   transformerNotationDiff,
   transformerNotationFocus,
@@ -757,6 +759,10 @@ const config: UserConfig = defineConfig({
       pluginSass(),
     ],
   },
+  plugins: [
+    pluginLlms(),
+    pluginTwoslash(),
+  ],
 });
 
 export default config;
