@@ -54,15 +54,9 @@ const templateUpgraders: templateUpgrader[] = [
     template.manifest = Object.fromEntries(
       Object.entries(template.manifest).map(([key, value]) => [
         key,
-        `{init: (lynxCoreInject) => { var {${defaultInjectStr}} = lynxCoreInject.tt; var module = {exports:null}; ${value}\n return module.exports; } }`,
+        `module.exports = {init: (lynxCoreInject) => { var {${defaultInjectStr}} = lynxCoreInject.tt; var module = {exports:{}}; var exports=module.exports; ${value}\n return module.exports; } }`,
       ]),
     ) as typeof template.manifest;
-    template.lepusCode = Object.fromEntries(
-      Object.entries(template.lepusCode).map(([key, value]) => [
-        key,
-        `(()=>{${value}\n})();`,
-      ]),
-    ) as typeof template.lepusCode;
     template.version = 2;
     return template;
   },
@@ -70,20 +64,24 @@ const templateUpgraders: templateUpgrader[] = [
 
 const generateModuleContent = (
   content: string,
-) =>
-  [
+  appType: 'card' | 'lazy',
+) => {
+  return [
     '//# allFunctionsCalledOnLoad\n',
     '"use strict";\n',
-    `(() => {const ${
-      globalDisallowedVars.join('=void 0,')
-    }=void 0;module.exports = `,
+    '(() => {const ',
+    globalDisallowedVars.join('=void 0,'),
+    '=void 0;\n',
+    appType === 'lazy' ? 'module.exports=\n' : '',
     content,
     '\n})()',
   ].join('');
+};
 
 async function generateJavascriptUrl<T extends Record<string, string | {}>>(
   obj: T,
   createJsModuleUrl: (content: string, name: string) => Promise<string>,
+  appType: 'card' | 'lazy',
   templateName?: string,
 ): Promise<T> {
   const processEntry = async ([name, content]: [string, string]) => [
@@ -91,6 +89,7 @@ async function generateJavascriptUrl<T extends Record<string, string | {}>>(
     await createJsModuleUrl(
       generateModuleContent(
         content,
+        appType,
       ),
       `${templateName}-${name.replaceAll('/', '')}.js`,
     ),
@@ -129,11 +128,13 @@ export async function generateTemplate(
     lepusCode: await generateJavascriptUrl(
       template.lepusCode,
       createJsModuleUrl as (content: string, name: string) => Promise<string>,
+      template.appType!,
       templateName,
     ),
     manifest: await generateJavascriptUrl(
       template.manifest,
       createJsModuleUrl as (content: string, name: string) => Promise<string>,
+      template.appType!,
       templateName,
     ),
   };

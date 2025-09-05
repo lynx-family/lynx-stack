@@ -98,6 +98,13 @@ export class WebEncodePlugin {
               },
               customSections: encodeOptions.customSections,
               elementTemplate: encodeOptions['elementTemplate'],
+              version: 1,
+              appType:
+                (encodeOptions['sourceContent'] as Record<string, unknown>)
+                    ?.['appType']
+                    === 'DynamicComponent'
+                  ? 'lazy'
+                  : 'card',
             })),
             debugInfo: '',
           };
