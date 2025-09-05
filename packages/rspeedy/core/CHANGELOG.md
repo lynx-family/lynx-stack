@@ -1,5 +1,28 @@
 # @lynx-js/rspeedy
 
+## 0.11.1
+
+### Patch Changes
+
+- Disable lazyCompilation by default. ([#1647](https://github.com/lynx-family/lynx-stack/pull/1647))
+
+- Bump Rsbuild v1.5.2 with Rspack v1.5.1. ([#1624](https://github.com/lynx-family/lynx-stack/pull/1624))
+
+- Add `output.dataUriLimit.*` for fine-grained control of asset inlining. ([#1648](https://github.com/lynx-family/lynx-stack/pull/1648))
+
+  ```js
+  import { defineConfig } from '@lynx-js/rspeedy'
+
+  export default defineConfig({
+    output: {
+      dataUriLimit: {
+        image: 5000,
+        media: 0,
+      },
+    },
+  })
+  ```
+
 ## 0.11.0
 
 ### Minor Changes

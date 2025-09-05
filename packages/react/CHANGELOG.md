@@ -1,5 +1,15 @@
 # @lynx-js/react
 
+## 0.112.6
+
+### Patch Changes
+
+- Support nested list. ([#1581](https://github.com/lynx-family/lynx-stack/pull/1581))
+
+- Should only recycle off-screen `list-item` in recursive hydration. ([#1641](https://github.com/lynx-family/lynx-stack/pull/1641))
+
+- fix `fireEvent` type error in testing library ([#1596](https://github.com/lynx-family/lynx-stack/pull/1596))
+
 ## 0.112.5
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @lynx-js/tailwind-preset
 
+## 0.2.1
+
+### Patch Changes
+
+- Extend the `uiVariants` plugin with additional states: `initial`, `closed`, `indeterminate`, and `invalid`. These can be used with the `ui-*` prefix (e.g., `ui-initial`, `ui-closed`, `ui-indeterminate`, `ui-invalid`). ([#1663](https://github.com/lynx-family/lynx-stack/pull/1663))
+
 ## 0.2.0
 
 ### Minor Changes

@@ -1,5 +1,14 @@
 # @lynx-js/web-elements
 
+## 0.8.5
+
+### Patch Changes
+
+- fix: register attr of width is set to height incorrectly ([#1649](https://github.com/lynx-family/lynx-stack/pull/1649))
+
+- Updated dependencies []:
+  - @lynx-js/web-elements-template@0.8.5
+
 ## 0.8.4
 
 ### Patch Changes
