@@ -263,6 +263,32 @@ describe('Config', () => {
     )
   })
 
+  test('user customized `react$` alias should work', async () => {
+    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
+        resolve: {
+          alias: {
+            react$: 'foo',
+          },
+        },
+        plugins: [
+          pluginReactLynx(),
+          pluginStubRspeedyAPI(),
+        ],
+      },
+    })
+
+    const [config] = await rsbuild.initConfigs()
+
+    if (!config?.resolve?.alias) {
+      expect.fail('should have config.resolve.alias')
+    }
+
+    expect(config.resolve?.alias).toHaveProperty('react$', 'foo')
+  })
+
   test('extensionAlias with tsConfig', async () => {
     vi.stubEnv('NODE_ENV', 'production')
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
