@@ -237,6 +237,7 @@ jobs:
     uses: ./.github/workflows/workflow-website.yml
   done:
     needs:
+      - benchmark
       - code-style-check
       - eslint
       - playwright-linux
