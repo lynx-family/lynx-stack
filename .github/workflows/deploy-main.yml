@@ -135,7 +135,7 @@ jobs:
           path: .turbo
       - name: build
         run: |
-          corepack pnpm turbo --filter !@lynx-js/web-tests build --summarize
+          corepack pnpm turbo --filter !@lynx-js/web-tests build --filter !benchx_cli --filter "!@lynx-js/benchmark-*" --summarize
       - name: Get current date
         id: date
         run: echo "::set-output name=date::$(date -u +'%Y-%m-%d %H:%M:%S')"
