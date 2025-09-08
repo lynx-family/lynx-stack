@@ -78,7 +78,7 @@ export interface Config {
 // @public
 export interface ConfigParams {
     command: string;
-    env: string;
+    env: 'production' | 'development' | 'test' | (string & Record<never, never>);
 }
 
 // @public
