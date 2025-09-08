@@ -319,3 +319,7 @@ export const templateXViewpageNg = `<style>
 <div id="content" part="content">
   <slot></slot>
 </div>`;
+
+export const templateXSvg = () => {
+  return `<img part="img" alt="" loading="lazy" id="img" /> `;
+};

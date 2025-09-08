@@ -8,3 +8,27 @@ x-svg {
   background: no-repeat center;
   background-size: 100% 100%;
 }
+
+x-svg::part(img) {
+  margin: inherit;
+  padding: inherit;
+  width: inherit;
+  height: inherit;
+  box-sizing: inherit;
+  flex: inherit;
+  min-width: inherit;
+  min-height: inherit;
+  border: inherit;
+  border-radius: inherit;
+  max-width: 100%;
+  max-height: 100%;
+  position: inherit;
+  top: inherit;
+  left: inherit;
+  right: inherit;
+  bottom: inherit;
+  transform: inherit;
+  opacity: inherit;
+  z-index: inherit;
+  filter: inherit;
+}

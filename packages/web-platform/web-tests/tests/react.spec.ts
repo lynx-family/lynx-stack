@@ -1968,6 +1968,14 @@ test.describe('reactlynx3 tests', () => {
         await goto(page, title);
         await diffScreenShot(page, 'svg', 'with-css');
       });
+
+      test(
+        'basic-element-svg-background-image',
+        async ({ page }, { title }) => {
+          await goto(page, title);
+          await diffScreenShot(page, 'svg', 'background-image');
+        },
+      );
     });
     test.describe('scroll-view', () => {
       const elementName = 'scroll-view';
