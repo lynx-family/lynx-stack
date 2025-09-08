@@ -2,7 +2,7 @@
 "@lynx-js/react-alias-rsbuild-plugin": patch
 ---
 
-Allow customization of the `react$` alias.
+Allow customization of the react$ alias.
 
 ```js
 import { defineConfig } from '@lynx-js/rspeedy';
