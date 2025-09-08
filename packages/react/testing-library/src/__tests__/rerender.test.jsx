@@ -5,7 +5,7 @@ import { useEffect, useState } from '@lynx-js/react';
 
 test('rerender will re-render the element', async () => {
   const Greeting = (props) => <text>{props.message}</text>;
-  const { container, rerender } = render(<Greeting message='hi' />);
+  const { container, rerender, asFragment } = render(<Greeting message='hi' />);
   expect(container).toMatchInlineSnapshot(`
     <page>
       <text>
@@ -16,15 +16,16 @@ test('rerender will re-render the element', async () => {
   expect(container.firstChild).toHaveTextContent('hi');
 
   {
-    const { container } = rerender(<Greeting message='hey' />);
+    rerender(<Greeting message='hey' />);
+    const container = asFragment();
     expect(container.firstChild).toHaveTextContent('hey');
 
     expect(container).toMatchInlineSnapshot(`
-      <page>
+      <DocumentFragment>
         <text>
           hey
         </text>
-      </page>
+      </DocumentFragment>
     `);
   }
 });
@@ -42,8 +43,8 @@ test('rerender will flush pending hooks effects', async () => {
     return value;
   };
 
-  const { rerender } = render(<Component />);
-  const { findByText } = rerender(<Component />);
+  const { rerender, findByText } = render(<Component />);
+  rerender(<Component />);
   vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
   const callLepusMethod = lynxTestingEnv.backgroundThread.lynx.getNativeApp().callLepusMethod;
   expect(callLepusMethod.mock.calls).toMatchInlineSnapshot(`[]`);
