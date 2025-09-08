@@ -518,8 +518,8 @@ importers:
         specifier: 1.4.0
         version: 1.4.0(@rsbuild/core@1.5.2)
       '@rsbuild/plugin-typed-css-modules':
-        specifier: 1.0.3
-        version: 1.0.3(@rsbuild/core@1.5.2)
+        specifier: 1.1.0
+        version: 1.1.0(@rsbuild/core@1.5.2)
       rsbuild-plugin-arethetypeswrong:
         specifier: 0.1.1
         version: 0.1.1(@rsbuild/core@1.5.2)(typescript@5.9.2)
@@ -1269,8 +1269,8 @@ importers:
         specifier: 1.2.4
         version: 1.2.4(@rsbuild/core@1.5.2)(@rspack/core@1.5.1(@swc/helpers@0.5.17))(typescript@5.9.2)
       '@rsbuild/plugin-typed-css-modules':
-        specifier: 1.0.3
-        version: 1.0.3(@rsbuild/core@1.5.2)
+        specifier: 1.1.0
+        version: 1.1.0(@rsbuild/core@1.5.2)
       '@rspress/core':
         specifier: 2.0.0-beta.28
         version: 2.0.0-beta.28(@types/react@19.1.10)(acorn@8.15.0)
@@ -2621,8 +2621,8 @@ packages:
       '@rsbuild/core':
         optional: true
 
-  '@rsbuild/plugin-typed-css-modules@1.0.3':
-    resolution: {integrity: sha512-eW1NyAbTU88KzXDU/YJj0/KLgq1KCtF0yUnPZ+E3OQ+jrFDV4h4rwcZWyElaHxO3zb7WaAY9xOkhPvlC2o4VGw==}
+  '@rsbuild/plugin-typed-css-modules@1.1.0':
+    resolution: {integrity: sha512-69P6p6uvBptI9J2QoWj3nfMExh00+ruhUAOwJHEKgo+chjf+OqPU3IrChrFllCGRziOyVjpXgxbyZgLGCS/KSg==}
     peerDependencies:
       '@rsbuild/core': 1.x
     peerDependenciesMeta:
@@ -9726,7 +9726,7 @@ snapshots:
       - '@rspack/core'
       - typescript
 
-  '@rsbuild/plugin-typed-css-modules@1.0.3(@rsbuild/core@1.5.2)':
+  '@rsbuild/plugin-typed-css-modules@1.1.0(@rsbuild/core@1.5.2)':
     optionalDependencies:
       '@rsbuild/core': 1.5.2
 
