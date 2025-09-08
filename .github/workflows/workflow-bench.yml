@@ -7,7 +7,7 @@ env:
 jobs:
   nodejs-benchmark:
     permissions: {}
-    timeout-minutes: 10
+    timeout-minutes: 30
     # CodSpeed does not support merge_group event.
     #
     # Error: Event merge_group is not supported by CodSpeed
