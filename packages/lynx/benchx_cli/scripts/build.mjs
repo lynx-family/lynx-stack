@@ -106,6 +106,7 @@ await $`
 cd lynx
 uv venv .venv
 source .venv/bin/activate
+uv pip install pyyaml
 source tools/envsetup.sh
 ../habitat/venv/bin/hab sync .
 `.pipe(process.stdout);
