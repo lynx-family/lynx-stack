@@ -57,6 +57,7 @@ export function toRsbuildConfig(
     },
     resolve: {
       alias: config.resolve?.alias,
+      dedupe: config.resolve?.dedupe,
     },
     source: {
       alias: config.source?.alias,

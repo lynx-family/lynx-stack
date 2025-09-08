@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest'
 
 import { createStubRspeedy } from '../../createStubRspeedy.js'
 
-describe('Config - Resolve', () => {
+describe('Config - Resolve.alias', () => {
   test('defaults', async () => {
     const rspeedy = await createStubRspeedy({})
 

@@ -580,6 +580,15 @@ describe('Config - toRsBuildConfig', () => {
         foo: 'baz',
       })
     })
+
+    test('transform resolve.dedupe', () => {
+      const rsbuildConfig = toRsbuildConfig({
+        resolve: {
+          dedupe: ['foo', 'bar', 'baz'],
+        },
+      })
+      expect(rsbuildConfig.resolve?.dedupe).toStrictEqual(['foo', 'bar', 'baz'])
+    })
   })
 
   describe('Source', () => {

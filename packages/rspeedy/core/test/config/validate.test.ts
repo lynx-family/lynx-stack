@@ -12,6 +12,7 @@ import type {
   Minify,
   Output,
   Performance,
+  Resolve,
   Server,
   Source,
   Tools,
@@ -1783,6 +1784,20 @@ describe('Config Validation', () => {
       cases.forEach(source => {
         expect(validate({ source })).toStrictEqual({ source })
       })
+
+      const resolveCases: Resolve[] = [
+        {},
+        { alias: {} },
+        { alias: { foo: 'bar', bar$: 'baz', baz: false } },
+        { alias: { foo: 'bar', bar$: ['baz'] } },
+        { dedupe: [] },
+        { dedupe: ['foo'] },
+        { dedupe: ['foo', 'bar', 'baz'] },
+      ]
+
+      resolveCases.forEach(resolve => {
+        expect(validate({ resolve })).toStrictEqual({ resolve })
+      })
     })
 
     test('invalid type', () => {
@@ -1896,6 +1911,44 @@ describe('Config Validation', () => {
         Invalid config on \`$input.source.tsconfigPath\`.
           - Expect to be (string | undefined)
           - Got: array
+        ]
+      `)
+
+      expect(() =>
+        validate({
+          resolve: {
+            dedupe: {},
+          },
+        })
+      ).toThrowErrorMatchingInlineSnapshot(`
+        [Error: Invalid configuration.
+
+        Invalid config on \`$input.resolve.dedupe\`.
+          - Expect to be (Array<string> | undefined)
+          - Got: object
+        ]
+      `)
+
+      expect(() =>
+        validate({
+          resolve: {
+            dedupe: [Symbol.for('foo'), 0, null],
+          },
+        })
+      ).toThrowErrorMatchingInlineSnapshot(`
+        [Error: Invalid configuration.
+
+        Invalid config on \`$input.resolve.dedupe[0]\`.
+          - Expect to be string
+          - Got: symbol
+
+        Invalid config on \`$input.resolve.dedupe[1]\`.
+          - Expect to be string
+          - Got: number
+
+        Invalid config on \`$input.resolve.dedupe[2]\`.
+          - Expect to be string
+          - Got: null
         ]
       `)
     })
