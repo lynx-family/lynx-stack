@@ -14,15 +14,14 @@ export interface ConfigParams {
    * The value of `process.env['NODE_ENV']`
    *
    * @remarks
-   *
-   * Possible values:
-   *
+   * Common values include (non-exhaustive):
    * - `'production'`
    *
    * - `'development'`
+   *
+   * - `'test'`
    */
-  env: string
-
+  env: 'production' | 'development' | 'test' | (string & Record<never, never>)
   /**
    * The CLI command of Rspeedy.
    *
