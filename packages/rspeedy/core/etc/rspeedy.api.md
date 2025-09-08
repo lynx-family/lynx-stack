@@ -264,6 +264,7 @@ export interface Performance {
 // @public
 export interface Resolve {
     alias?: Record<string, string | false | string[]> | undefined;
+    dedupe?: string[] | undefined;
 }
 
 export { RsbuildPlugin }
