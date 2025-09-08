@@ -34,6 +34,8 @@ export default defineConfig({
         'packages/webpack/test-tools/**',
         'packages/testing-library/test-environment/**',
         'packages/react/testing-library/**',
+        'packages/lynx/benchx_cli/**',
+        'benchmark/react/**',
       ],
     },
 

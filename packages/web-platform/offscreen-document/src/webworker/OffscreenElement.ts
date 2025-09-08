@@ -12,7 +12,7 @@ import { OperationType } from '../types/ElementOperation.js';
 export const ancestorDocument = Symbol('ancestorDocument');
 export const _attributes = Symbol('_attributes');
 export const _children = Symbol('_children');
-export const innerHTML = Symbol('innerHTML');
+export const textContent = Symbol('textContent');
 export const _cssRuleContents = Symbol('_cssRuleContents');
 export const uniqueId = Symbol('uniqueId');
 const _style = Symbol('_style');
@@ -22,7 +22,7 @@ type OffscreenStyleSheet = {
   insertRule: (rule: string, index: number) => number;
 };
 export class OffscreenElement extends EventTarget {
-  public [innerHTML]: string = '';
+  public [textContent]: string = '';
   private [_style]?: OffscreenCSSStyleDeclaration;
   private readonly [_attributes] = new Map<string, string>();
   private _parentElement: OffscreenElement | null = null;
@@ -275,16 +275,16 @@ export class OffscreenElement extends EventTarget {
     super.addEventListener(type, callback, options);
   }
 
-  set innerHTML(text: string) {
+  set textContent(text: string) {
     this[ancestorDocument][operations].push(
-      OperationType.SetInnerHTML,
+      OperationType.SetTextContent,
       this[uniqueId],
       text,
     );
     for (const child of this.children) {
       (child as OffscreenElement).remove();
     }
-    this[innerHTML] = text;
+    this[textContent] = text;
     if (this[_cssRuleContents]) {
       this[_cssRuleContents] = [];
     }

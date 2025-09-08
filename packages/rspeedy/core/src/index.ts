@@ -69,6 +69,9 @@ export { rspack } from '@rsbuild/core'
 // Rspack Types
 export type { Rspack } from '@rsbuild/core'
 
+// Resolve
+export type { Resolve } from './config/resolve/index.js'
+
 // Server
 export type { Server } from './config/server/index.js'
 

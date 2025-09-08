@@ -14,7 +14,7 @@ export const OperationType = {
   RemoveChild: 9,
   StyleDeclarationSetProperty: 10,
   StyleDeclarationRemoveProperty: 11,
-  SetInnerHTML: 12,
+  SetTextContent: 12,
   sheetInsertRule: 13,
   sheetRuleUpdateCssText: 14,
 } as const;
@@ -103,8 +103,8 @@ export const OperationType = {
 //   property: string;
 // }
 
-// export interface SetInnerHTMLOperation extends ElementOperationBase {
-//   type: IOperationType['SetInnerHTML'];
+// export interface SetTextContentOperation extends ElementOperationBase {
+//   type: IOperationType['SetTextContent'];
 //   text: string;
 // }
 
@@ -132,6 +132,6 @@ export const OperationType = {
 //   | RemoveChildOperation
 //   | StyleDeclarationSetPropertyOperation
 //   | StyleDeclarationRemovePropertyOperation
-//   | SetInnerHTMLOperation
+//   | SetTextContentOperation
 //   | SheetInsertRuleOperation
 //   | SheetRuleUpdateCssTextOperation;

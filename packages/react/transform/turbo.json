@@ -7,6 +7,7 @@
       "outputs": ["index.d.ts", "index.cjs", "*.node"]
     },
     "build:wasm": {
+      "dependsOn": [],
       "inputs": ["src/**/*.rs", "src/wasm.js", "build.rs", "Cargo.toml", "scripts/build_wasm.sh"],
       "outputs": ["dist/wasm.cjs"]
     },

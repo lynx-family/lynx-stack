@@ -5,11 +5,11 @@ import { root } from '@lynx-js/react';
 function App() {
   if (__MAIN_THREAD__) {
     console.log(
-      `main thread: ${globalThis.navigator}, ${globalThis.postMessage}`,
+      `main thread: ${navigator}, ${postMessage}`,
     );
   } else {
     console.log(
-      `background thread: ${globalThis.navigator}, ${globalThis.postMessage}`,
+      `background thread: ${navigator}, ${postMessage}`,
     );
   }
 

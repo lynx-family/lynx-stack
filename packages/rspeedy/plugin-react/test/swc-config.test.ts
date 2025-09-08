@@ -74,7 +74,7 @@ describe('SWC configuration', () => {
           },
           "rspackExperiments": {
             "collectTypeScriptInfo": {
-              "exportedEnum": false,
+              "exportedEnum": true,
               "typeExports": true,
             },
           },

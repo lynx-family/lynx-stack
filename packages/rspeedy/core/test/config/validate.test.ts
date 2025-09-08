@@ -43,6 +43,20 @@ describe('Config Validation', () => {
     `)
   })
 
+  describe('Config', () => {
+    test('valid type', () => {
+      const cases = [
+        {},
+        () => ({}),
+        new Promise(p => p({})),
+        () => new Promise(p => p({})),
+      ]
+      cases.forEach(config => {
+        expect(validate(config)).toStrictEqual(config)
+      })
+    })
+  })
+
   describe('Dev', () => {
     test('valid type', () => {
       const cases: Dev[] = [
@@ -788,6 +802,18 @@ describe('Config Validation', () => {
         { dataUriLimit: Number.NaN },
         { dataUriLimit: Number.POSITIVE_INFINITY },
         { dataUriLimit: Number.MAX_SAFE_INTEGER },
+        {
+          dataUriLimit: {},
+        },
+        {
+          dataUriLimit: {
+            assets: 0,
+            image: 10,
+            svg: 100,
+            font: 1000,
+            media: 10000,
+          },
+        },
         { cssModules: { auto: true } },
         { cssModules: { auto: false } },
         { cssModules: { auto: /module/ } },
@@ -1041,7 +1067,7 @@ describe('Config Validation', () => {
           [Error: Invalid configuration.
 
           Invalid config on \`$input.output.dataUriLimit\`.
-            - Expect to be (number | undefined)
+            - Expect to be (DataUriLimit | number | undefined)
             - Got: string
           ]
         `)
@@ -1801,7 +1827,13 @@ describe('Config Validation', () => {
       ).toThrowErrorMatchingInlineSnapshot(`
         [Error: Invalid configuration.
 
-        Unknown property: \`$input.resolve\` in configuration
+        Unknown property: \`$input.resolve.aliasFields\` in configuration
+
+        Unknown property: \`$input.resolve.conditionNames\` in configuration
+
+        Unknown property: \`$input.resolve.extensions\` in configuration
+
+        Unknown property: \`$input.resolve.extensionAlias\` in configuration
         ]
       `)
 

@@ -119,7 +119,7 @@ export function initOffscreenDocument(options: {
       RemoveChild,
       StyleDeclarationSetProperty,
       StyleDeclarationRemoveProperty,
-      SetInnerHTML,
+      SetTextContent,
       sheetInsertRule,
       sheetRuleUpdateCssText,
     } = OperationType;
@@ -213,8 +213,8 @@ export function initOffscreenDocument(options: {
               target.style.removeProperty(operations[offset++] as string);
             }
             break;
-          case SetInnerHTML:
-            target.innerHTML = operations[offset++] as string;
+          case SetTextContent:
+            target.textContent = operations[offset++] as string;
             break;
           case sheetInsertRule:
             {

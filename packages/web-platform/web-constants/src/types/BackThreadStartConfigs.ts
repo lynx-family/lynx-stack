@@ -6,7 +6,6 @@ import type { Cloneable } from './Cloneable.js';
 import type { LynxTemplate } from './LynxModule.js';
 import type { NapiModulesMap } from './NapiModules.js';
 import type { NativeModulesMap } from './NativeModules.js';
-import type { BrowserConfig } from './PageConfig.js';
 
 export interface BackMainThreadContextConfig {
   initData: unknown;
@@ -16,5 +15,4 @@ export interface BackMainThreadContextConfig {
   customSections: Record<string, Cloneable>;
   nativeModulesMap: NativeModulesMap;
   napiModulesMap: NapiModulesMap;
-  browserConfig: BrowserConfig;
 }

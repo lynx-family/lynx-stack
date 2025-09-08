@@ -112,6 +112,17 @@ describe('Config - Output', () => {
     assertType<Output>({
       dataUriLimit: Number.MAX_SAFE_INTEGER,
     })
+
+    assertType<Output>({
+      dataUriLimit: {},
+    })
+
+    assertType<Output>({
+      dataUriLimit: {
+        assets: 0,
+        image: Number.POSITIVE_INFINITY,
+      },
+    })
   })
 
   test('output.distPath', () => {

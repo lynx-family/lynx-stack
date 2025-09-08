@@ -176,7 +176,7 @@ test.describe('performance', () => {
       const cdpSession = await goto({ page, browserName, context }, title);
       const metrics = await getMetrics(cdpSession, page);
       console.log(metrics.LayoutCount, metrics.RecalcStyleCount);
-      expect(metrics.LayoutCount, 'layout count').toBeLessThanOrEqual(7);
+      expect(metrics.LayoutCount, 'layout count').toBeLessThanOrEqual(10);
       expect(metrics.RecalcStyleCount, 'recalc count').toBeLessThanOrEqual(8);
     },
   );

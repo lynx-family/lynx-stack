@@ -6,15 +6,30 @@ import type { ListUpdateInfo } from './listUpdateInfo.js';
 
 export const __pendingListUpdates = {
   values: {} as Record<number, ListUpdateInfo> | null,
-  clear(): void {
-    this.values = {};
+  clear(id: number): void {
+    if (this.values) {
+      delete this.values[id];
+    }
+  },
+  clearAttachedLists(): void {
+    if (this.values) {
+      Object.values(this.values)
+        .map(update => update.getAttachedListId())
+        .filter(id => id !== undefined)
+        .forEach(id => this.clear(id));
+    }
   },
   flush(): void {
     if (this.values) {
-      Object.values(this.values).forEach(update => {
-        update.flush();
-      });
-      this.clear();
+      Object.values(this.values)
+        .map(update => update.flush())
+        .filter(id => id !== undefined)
+        .forEach(id => this.clear(id));
+    }
+  },
+  flushWithId(id: number): void {
+    if (this.values && this.values[id]?.flush() !== undefined) {
+      this.clear(id);
     }
   },
   runWithoutUpdates(cb: () => void): void {

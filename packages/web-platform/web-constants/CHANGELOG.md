@@ -1,5 +1,37 @@
 # @lynx-js/web-constants
 
+## 0.16.0
+
+### Minor Changes
+
+- refactor: provide the mts a real globalThis ([#1589](https://github.com/lynx-family/lynx-stack/pull/1589))
+
+  Before this change, We create a function wrapper and a fake globalThis for Javascript code.
+
+  This caused some issues.
+
+  After this change, we will create an iframe for createing an isolated Javascript context.
+
+  This means the globalThis will be the real one.
+
+### Patch Changes
+
+- refactor: add `:not([l-e-name])` at the end of selector for lazy component ([#1622](https://github.com/lynx-family/lynx-stack/pull/1622))
+
+- fix: the SystemInfo in bts should be assigned to the globalThis ([#1599](https://github.com/lynx-family/lynx-stack/pull/1599))
+
+- Updated dependencies [[`c1f8715`](https://github.com/lynx-family/lynx-stack/commit/c1f8715a81b2e69ff46fc363013626db4468c209)]:
+  - @lynx-js/web-worker-rpc@0.16.0
+
+## 0.15.7
+
+### Patch Changes
+
+- fix: globalThis is never accessible in MTS ([#1531](https://github.com/lynx-family/lynx-stack/pull/1531))
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.15.7
+
 ## 0.15.6
 
 ### Patch Changes

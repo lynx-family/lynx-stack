@@ -8,6 +8,7 @@
 
 import { isValidElement } from 'preact';
 
+import { profileEnd, profileStart } from '../debug/utils.js';
 import { renderOpcodesInto } from '../opcodes.js';
 import { render as renderToString } from '../renderToOpcodes/index.js';
 import { __root } from '../root.js';
@@ -17,7 +18,7 @@ function renderMainThread(): void {
   let opcodes;
   try {
     if (__PROFILE__) {
-      console.profile('renderToString');
+      profileStart('ReactLynx::renderMainThread');
     }
     opcodes = renderToString(__root.__jsx, undefined);
   } catch (e) {
@@ -25,7 +26,7 @@ function renderMainThread(): void {
     opcodes = [];
   } finally {
     if (__PROFILE__) {
-      console.profileEnd();
+      profileEnd();
     }
   }
 
@@ -40,7 +41,7 @@ function renderMainThread(): void {
   }
 
   if (__PROFILE__) {
-    console.profile('renderOpcodesInto');
+    profileStart('ReactLynx::renderOpcodes');
   }
   // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   renderOpcodesInto(opcodes, __root as any);
@@ -48,7 +49,7 @@ function renderMainThread(): void {
     __root.__opcodes = opcodes;
   }
   if (__PROFILE__) {
-    console.profileEnd();
+    profileEnd();
   }
 }
 

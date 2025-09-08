@@ -332,7 +332,12 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
               }
               if (recycleMap.has(a.type)) {
                 const recycleSignMap = recycleMap.get(a.type)!;
-                recycleSignMap.set(listItemID, b);
+                // Should only update `list-item` in the recycling pool
+                // Because if an on-screen `list-item` is added to the recycling pool,
+                // it could cause a blank screen when reused next time, as it may still be visible.
+                if (recycleSignMap.has(listItemID)) {
+                  recycleSignMap.set(listItemID, b);
+                }
               }
             }
           },
@@ -373,9 +378,7 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
 
         // The `before` & `after` target to the same list element, so we need to
         // avoid the newly created list's (behind snapshot instance `after`) "update-list-info" being recorded.
-        if (__pendingListUpdates.values) {
-          delete __pendingListUpdates.values[after.__id];
-        }
+        __pendingListUpdates.clear(after.__id);
       }
     }
   });

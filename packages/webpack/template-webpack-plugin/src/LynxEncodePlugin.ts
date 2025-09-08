@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { Compiler } from 'webpack';
+import type { Chunk, Compiler } from 'webpack';
 
 import { LynxTemplatePlugin } from './LynxTemplatePlugin.js';
 
@@ -130,10 +130,20 @@ export class LynxEncodePluginImpl {
           .reduce(
             ([inlined, external], [name, content]) => {
               const assert = compilation.getAsset(name);
-              const shouldInline = this.#shouldInlineScript(
-                name,
-                assert!.source.size(),
-              );
+              let chunk: Chunk | null = null;
+              for (const c of compilation.chunks) {
+                if (c.files.has(name)) {
+                  chunk = c;
+                  break;
+                }
+              }
+              let shouldInline = true;
+              if (!chunk?.hasRuntime()) {
+                shouldInline = this.#shouldInlineScript(
+                  name,
+                  assert!.source.size(),
+                );
+              }
 
               if (shouldInline) {
                 inlined[name] = content;

@@ -4,9 +4,14 @@
 import { Animation } from './animation/animation.js';
 import { KeyframeEffect } from './animation/effect.js';
 
-export class Element {
-  private static willFlush = false;
+let willFlush = false;
+let shouldFlush = true;
 
+export function setShouldFlush(value: boolean): void {
+  shouldFlush = value;
+}
+
+export class Element {
   // @ts-expect-error set in constructor
   private readonly element: ElementNode;
 
@@ -87,12 +92,12 @@ export class Element {
   }
 
   private flushElementTree() {
-    if (Element.willFlush) {
+    if (willFlush || !shouldFlush) {
       return;
     }
-    Element.willFlush = true;
+    willFlush = true;
     void Promise.resolve().then(() => {
-      Element.willFlush = false;
+      willFlush = false;
       __FlushElementTree();
     });
   }

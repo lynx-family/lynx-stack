@@ -201,7 +201,7 @@ test.describe('web core tests', () => {
     await goto(page);
     const mainWorker = await getMainThreadWorker(page);
     const registerDataProcessor = await mainWorker.evaluate(() => {
-      return globalThis.registerDataProcessor;
+      return globalThis.runtime.registerDataProcessor;
     });
     expect(registerDataProcessor).toBe('pass');
   });

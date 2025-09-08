@@ -1,7 +1,7 @@
 import {
   _attributes,
   _children,
-  innerHTML,
+  textContent,
   _cssRuleContents,
   type OffscreenDocument,
   type OffscreenElement,
@@ -18,7 +18,7 @@ type ShadowrootTemplates =
   ) => string)
   | string;
 
-function getInnerHTMLImpl(
+function getTextContentImpl(
   buffer: string[],
   element: OffscreenElement,
   shadowrootTemplates: Record<string, ShadowrootTemplates>,
@@ -51,11 +51,11 @@ function getInnerHTMLImpl(
   if (element[_cssRuleContents]?.length) {
     buffer.push(...element[_cssRuleContents]);
   }
-  if (element[innerHTML]) {
-    buffer.push(element[innerHTML]);
+  if (element[textContent]) {
+    buffer.push(element[textContent]);
   } else {
     for (const child of element[_children]) {
-      getInnerHTMLImpl(
+      getTextContentImpl(
         buffer,
         child as OffscreenElement,
         shadowrootTemplates,
@@ -73,7 +73,7 @@ export function dumpHTMLString(
   shadowrootTemplates: Record<string, ShadowrootTemplates>,
 ): void {
   for (const child of element[_children]) {
-    getInnerHTMLImpl(
+    getTextContentImpl(
       buffer,
       child as OffscreenElement,
       shadowrootTemplates,

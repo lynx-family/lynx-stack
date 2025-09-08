@@ -8,7 +8,7 @@ import { pathToFileURL } from 'node:url'
 
 import color from 'picocolors'
 
-import { register } from '@lynx-js/rspeedy/register'
+import { register } from '#register'
 
 import { debug } from '../debug.js'
 
@@ -149,7 +149,7 @@ export async function loadConfig(
 
     return {
       configPath,
-      content,
+      content: typeof content === 'function' ? await content() : await content,
     }
   } finally {
     unregister()

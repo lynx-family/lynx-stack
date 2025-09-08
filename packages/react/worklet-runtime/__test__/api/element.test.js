@@ -4,7 +4,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AnimationOperation } from '../../src/api/animation/animation';
-import { Element } from '../../src/api/element';
+import { Element, setShouldFlush } from '../../src/api/element';
 import { initWorklet } from '../../src/workletRuntime';
 
 beforeEach(() => {
@@ -29,6 +29,7 @@ afterEach(() => {
   delete globalThis.lynxWorkletImpl;
   vi.useRealTimers();
   vi.clearAllMocks();
+  setShouldFlush(true);
 });
 
 describe('Element', () => {
@@ -212,5 +213,18 @@ describe('Element', () => {
       AnimationOperation.PLAY,
       animation.id,
     ]);
+  });
+
+  it('should not flush when shouldFlush is false', async () => {
+    const element = new Element('element-instance');
+    setShouldFlush(false);
+    element.setAttribute('a', '1');
+    await vi.runAllTimersAsync();
+    expect(globalThis.__FlushElementTree).not.toHaveBeenCalled();
+
+    setShouldFlush(true);
+    element.setAttribute('b', '2');
+    await vi.runAllTimersAsync();
+    expect(globalThis.__FlushElementTree).toHaveBeenCalledTimes(1);
   });
 });

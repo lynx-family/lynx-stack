@@ -5,6 +5,7 @@
 ```ts
 
 import type { CreateRsbuildOptions } from '@rsbuild/core';
+import type { DataUriLimit } from '@rsbuild/core';
 import type { DistPathConfig } from '@rsbuild/core';
 import type { InlineChunkConfig } from '@rsbuild/core';
 import { logger } from '@rsbuild/core';
@@ -68,6 +69,7 @@ export interface Config {
     output?: Output | undefined;
     performance?: Performance | undefined;
     plugins?: RsbuildPlugins | undefined;
+    resolve?: Resolve | undefined;
     server?: Server | undefined;
     source?: Source | undefined;
     tools?: Tools | undefined;
@@ -137,6 +139,15 @@ export interface Decorators {
 
 // @public
 export function defineConfig(config: Config): Config;
+
+// @public
+export function defineConfig(config: () => Config): () => Config;
+
+// @public
+export function defineConfig(config: Promise<Config>): Promise<Config>;
+
+// @public
+export function defineConfig(config: () => Promise<Config>): () => Promise<Config>;
 
 // @public
 export interface Dev {
@@ -230,7 +241,7 @@ export interface Output {
     cleanDistPath?: boolean | undefined;
     copy?: Rspack.CopyRspackPluginOptions | Rspack.CopyRspackPluginOptions['patterns'] | undefined;
     cssModules?: CssModules | undefined;
-    dataUriLimit?: number | undefined;
+    dataUriLimit?: number | DataUriLimit | undefined;
     distPath?: DistPath | undefined;
     filename?: string | Filename | undefined;
     filenameHash?: boolean | string | undefined;
@@ -248,6 +259,11 @@ export interface Performance {
     printFileSize?: PerformanceConfig['printFileSize'] | undefined;
     profile?: boolean | undefined;
     removeConsole?: boolean | ConsoleType[] | undefined;
+}
+
+// @public
+export interface Resolve {
+    alias?: Record<string, string | false | string[]> | undefined;
 }
 
 export { RsbuildPlugin }
@@ -286,6 +302,7 @@ export interface Server {
 
 // @public
 export interface Source {
+    // @deprecated
     alias?: Record<string, string | false | string[]> | undefined;
     assetsInclude?: Rspack.RuleSetCondition | undefined;
     decorators?: Decorators | undefined;

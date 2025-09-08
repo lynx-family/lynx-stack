@@ -1,5 +1,68 @@
 # @lynx-js/rspeedy
 
+## 0.11.1
+
+### Patch Changes
+
+- Disable lazyCompilation by default. ([#1647](https://github.com/lynx-family/lynx-stack/pull/1647))
+
+- Bump Rsbuild v1.5.2 with Rspack v1.5.1. ([#1624](https://github.com/lynx-family/lynx-stack/pull/1624))
+
+- Add `output.dataUriLimit.*` for fine-grained control of asset inlining. ([#1648](https://github.com/lynx-family/lynx-stack/pull/1648))
+
+  ```js
+  import { defineConfig } from '@lynx-js/rspeedy'
+
+  export default defineConfig({
+    output: {
+      dataUriLimit: {
+        image: 5000,
+        media: 0,
+      },
+    },
+  })
+  ```
+
+## 0.11.0
+
+### Minor Changes
+
+- Deprecate `source.alias`, use `resolve.alias` instead. ([#1610](https://github.com/lynx-family/lynx-stack/pull/1610))
+
+  Note that `resolve.alias` has **lower** priority than the deprecated `source.alias`.
+
+- Bump Rsbuild v1.5.0 with Rspack v1.5.0. ([#1591](https://github.com/lynx-family/lynx-stack/pull/1591))
+
+- **BREAKING CHANGE**: Remove the `./register` exports from `@lynx-js/rspeedy`. ([#1547](https://github.com/lynx-family/lynx-stack/pull/1547))
+
+  This should not affect most users.
+
+### Patch Changes
+
+- Support `resolve.alias`. ([#1610](https://github.com/lynx-family/lynx-stack/pull/1610))
+
+- Support `rspeedy build --watch` ([#1579](https://github.com/lynx-family/lynx-stack/pull/1579))
+
+- Updated dependencies [[`d7d0b9b`](https://github.com/lynx-family/lynx-stack/commit/d7d0b9b94e219cd057c935d723775c82b10559a6), [`1952fc1`](https://github.com/lynx-family/lynx-stack/commit/1952fc1557e5abbdbdf4a2073fd3b6f64dd32c3c)]:
+  - @lynx-js/cache-events-webpack-plugin@0.0.2
+  - @lynx-js/chunk-loading-webpack-plugin@0.3.2
+
+## 0.10.8
+
+### Patch Changes
+
+- Support caching Lynx native events when chunk splitting is enabled. ([#1370](https://github.com/lynx-family/lynx-stack/pull/1370))
+
+  When `performance.chunkSplit.strategy` is not `all-in-one`, Lynx native events are cached until the BTS chunk is fully loaded and are replayed when that chunk is ready. The `firstScreenSyncTiming` flag will no longer change to `jsReady` anymore.
+
+- Support exporting `Promise` and function in `lynx.config.ts`. ([#1590](https://github.com/lynx-family/lynx-stack/pull/1590))
+
+- Fix missing `publicPath` using when `rspeedy dev --mode production`. ([#1310](https://github.com/lynx-family/lynx-stack/pull/1310))
+
+- Updated dependencies [[`aaca8f9`](https://github.com/lynx-family/lynx-stack/commit/aaca8f91d177061c7b0430cc5cb21a3602897534)]:
+  - @lynx-js/cache-events-webpack-plugin@0.0.1
+  - @lynx-js/chunk-loading-webpack-plugin@0.3.1
+
 ## 0.10.7
 
 ### Patch Changes

@@ -10,8 +10,55 @@
 import { queries, Queries, BoundFunction } from '@testing-library/dom';
 import { LynxElement, type ElementTree, type LynxTestingEnv } from '@lynx-js/testing-environment';
 import { act } from 'preact/test-utils';
+import type { EventType, FireFunction, FireObject } from '@testing-library/dom';
 export * from '@testing-library/dom';
 export { ElementTree, LynxTestingEnv, act };
+
+declare type LynxEventType =
+  | 'focus'
+  | 'blur'
+  | 'scroll'
+  | 'wheel'
+  | 'tap'
+  | 'longtap'
+  | 'bgload'
+  | 'bgerror'
+  | 'touchstart'
+  | 'touchmove'
+  | 'touchcancel'
+  | 'touchend'
+  | 'longpress'
+  | 'transitionstart'
+  | 'transitioncancel'
+  | 'transitionend'
+  | 'animationstart'
+  | 'animationiteration'
+  | 'animationcancel'
+  | 'animationend'
+  | 'mousedown'
+  | 'mouseup'
+  | 'mousemove'
+  | 'mouseclick'
+  | 'mousedblclick'
+  | 'mouselongpress'
+  | 'keydown'
+  | 'keyup'
+  | 'layoutchange'
+  | 'scrolltoupper'
+  | 'scrolltolower'
+  | 'scrollend'
+  | 'contentsizechanged'
+  | 'scrolltoupperedge'
+  | 'scrolltoloweredge'
+  | 'scrolltonormalstate';
+
+declare type LynxFireObject = {
+  [K in LynxEventType]: FireObject[EventType];
+};
+
+declare const fireEvent: FireFunction & LynxFireObject;
+
+export { fireEvent, LynxEventType as EventType, LynxFireObject as FireObject };
 
 /**
  * The options for {@link render}.

@@ -127,9 +127,10 @@ export function withInitDataInState<P, S>(App: ComponentClass<P, S>): ComponentC
       if (!__LEPUS__) {
         lynx.getJSModule('GlobalEventEmitter').addListener(
           'onDataChanged',
-          this.h = () => {
+          this.h = (...args: unknown[]) => {
+            const [newData] = args as [S];
             globalFlushOptions.triggerDataUpdated = true;
-            this.setState(lynx.__initData as S);
+            this.setState(newData);
           },
         );
       }

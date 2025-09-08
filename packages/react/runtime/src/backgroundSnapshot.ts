@@ -10,6 +10,7 @@
 
 import type { Worklet } from '@lynx-js/react/worklet-runtime/bindings';
 
+import { profileEnd, profileStart } from './debug/utils.js';
 import { processGestureBackground } from './gesture/processGestureBagkround.js';
 import type { GestureKind } from './gesture/types.js';
 import { diffArrayAction, diffArrayLepus } from './hydrate.js';
@@ -212,7 +213,7 @@ export class BackgroundSnapshotInstance {
 
   setAttribute(key: string | number, value: unknown): void {
     if (__PROFILE__) {
-      console.profile('setAttribute');
+      profileStart('ReactLynx::BSI::setAttribute');
     }
     if (key === 'values') {
       if (__globalSnapshotPatch) {
@@ -260,7 +261,7 @@ export class BackgroundSnapshotInstance {
       }
       this.__values = value as unknown[];
       if (__PROFILE__) {
-        console.profileEnd();
+        profileEnd();
       }
       return;
     }
@@ -279,7 +280,7 @@ export class BackgroundSnapshotInstance {
       value,
     );
     if (__PROFILE__) {
-      console.profileEnd();
+      profileEnd();
     }
   }
 
@@ -510,7 +511,7 @@ export function hydrate(
 function reconstructInstanceTree(afters: BackgroundSnapshotInstance[], parentId: number, targetId?: number): void {
   for (const child of afters) {
     const id = child.__id;
-    __globalSnapshotPatch!.push(SnapshotOperation.CreateElement, child.type, id);
+    __globalSnapshotPatch?.push(SnapshotOperation.CreateElement, child.type, id);
     const values = child.__values;
     if (values) {
       child.__values = undefined;
@@ -521,6 +522,6 @@ function reconstructInstanceTree(afters: BackgroundSnapshotInstance[], parentId:
       child.setAttribute(key, extraProps[key]);
     }
     reconstructInstanceTree(child.childNodes, id);
-    __globalSnapshotPatch!.push(SnapshotOperation.InsertBefore, parentId, id, targetId);
+    __globalSnapshotPatch?.push(SnapshotOperation.InsertBefore, parentId, id, targetId);
   }
 }

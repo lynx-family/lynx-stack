@@ -7,6 +7,7 @@ import type { FC } from 'react';
 
 import './lynx.js';
 
+import { BackgroundSnapshotInstance } from './backgroundSnapshot.js';
 import { factory as factory2 } from './compat/componentIs.js';
 import { useMemo } from './hooks/react.js';
 import { loadLazyBundle } from './lynx/lazy-bundle.js';
@@ -17,7 +18,7 @@ import { SnapshotInstance, __page, __pageId, createSnapshot, snapshotManager } f
 
 export { __page, __pageId, __root };
 
-export { SnapshotInstance, snapshotCreateList, createSnapshot, snapshotManager };
+export { BackgroundSnapshotInstance, SnapshotInstance, snapshotCreateList, createSnapshot, snapshotManager };
 
 export const __DynamicPartSlot: DynamicPartType = DynamicPartType.Slot;
 export const __DynamicPartMultiChildren: DynamicPartType = DynamicPartType.MultiChildren;

@@ -4,7 +4,6 @@
 
 import {
   BackgroundThreadStartEndpoint,
-  type LynxJSModule,
   publishEventEndpoint,
   publicComponentEventEndpoint,
   postExposureEndpoint,
@@ -16,7 +15,6 @@ import {
   LynxCrossThreadContext,
   type RpcCallType,
   type reportErrorEndpoint,
-  type MainThreadGlobalThis,
   switchExposureServiceEndpoint,
   type I18nResourceTranslationOptions,
   getCacheI18nResourcesKey,
@@ -26,19 +24,21 @@ import {
   type Cloneable,
   type SSRHydrateInfo,
   type SSRDehydrateHooks,
+  type JSRealm,
 } from '@lynx-js/web-constants';
 import { registerCallLepusMethodHandler } from './crossThreadHandlers/registerCallLepusMethodHandler.js';
 import { registerGetCustomSectionHandler } from './crossThreadHandlers/registerGetCustomSectionHandler.js';
 import { createMainThreadGlobalThis } from './createMainThreadGlobalThis.js';
 import { createExposureService } from './utils/createExposureService.js';
 import { initWasm } from '@lynx-js/web-style-transformer';
+import { appendStyleElement } from './utils/processStyleInfo.js';
 const initWasmPromise = initWasm();
 
-const moduleCache: Record<string, LynxJSModule> = {};
 export function prepareMainThreadAPIs(
   backgroundThreadRpc: Rpc,
   rootDom: Document | ShadowRoot,
-  createElement: Document['createElement'],
+  document: Document,
+  mtsRealm: JSRealm,
   commitDocument: (
     exposureChangedElements: HTMLElement[],
   ) => Promise<void> | void,
@@ -71,7 +71,7 @@ export function prepareMainThreadAPIs(
   async function startMainThread(
     config: StartMainThreadContextConfig,
     ssrHydrateInfo?: SSRHydrateInfo,
-  ): Promise<MainThreadGlobalThis> {
+  ): Promise<void> {
     let isFp = true;
     const {
       globalProps,
@@ -87,50 +87,38 @@ export function prepareMainThreadAPIs(
       pageConfig,
       customSections,
       cardType,
-      lepusCode,
-      elementTemplate,
     } = template;
     markTimingInternal('decode_start');
     await initWasmPromise;
-    const lepusCodeEntries = await Promise.all(
-      Object.entries(lepusCode).map(async ([name, url]) => {
-        const cachedModule = moduleCache[url];
-        if (cachedModule) {
-          return [name, cachedModule] as [string, LynxJSModule];
-        } else {
-          const { default: evaluateModule } = await import(
-            /* webpackIgnore: true */ url
-          );
-          const module: LynxJSModule = {
-            exports: evaluateModule,
-          };
-          moduleCache[url] = module;
-          return [name, module] as [string, LynxJSModule];
-        }
-      }),
-    );
-    const lepusCodeLoaded = Object.fromEntries(lepusCodeEntries);
-    const entry = lepusCodeLoaded['root']!.exports;
     const jsContext = new LynxCrossThreadContext({
       rpc: backgroundThreadRpc,
       receiveEventEndpoint: dispatchJSContextOnMainThreadEndpoint,
       sendEventEndpoint: dispatchCoreContextOnBackgroundEndpoint,
     });
     const i18nResources = initialI18nResources(initI18nResources);
+
+    const { updateCssOGStyle } = appendStyleElement(
+      styleInfo,
+      pageConfig,
+      rootDom as unknown as Node,
+      document,
+      undefined,
+      ssrHydrateInfo,
+    );
     const mtsGlobalThis = createMainThreadGlobalThis({
+      lynxTemplate: template,
+      mtsRealm,
       jsContext,
       tagMap,
       browserConfig,
-      customSections,
-      elementTemplate,
       globalProps,
       pageConfig,
-      styleInfo,
-      lepusCode: lepusCodeLoaded,
       rootDom,
       ssrHydrateInfo,
       ssrHooks,
+      document,
       callbacks: {
+        updateCssOGStyle,
         mainChunkReady: () => {
           markTimingInternal('data_processor_start');
           let initData = config.initData;
@@ -169,7 +157,6 @@ export function prepareMainThreadAPIs(
             ),
             nativeModulesMap,
             napiModulesMap,
-            browserConfig,
           });
           if (!ssrHydrateInfo) {
             mtsGlobalThis.renderPage!(initData);
@@ -229,7 +216,6 @@ export function prepareMainThreadAPIs(
         markTiming: (a, b) => markTimingInternal(b, a),
         publishEvent,
         publicComponentEvent,
-        createElement,
         _I18nResourceTranslation: (options: I18nResourceTranslationOptions) => {
           const matchedInitI18nResources = i18nResources.data?.find(i =>
             getCacheI18nResourcesKey(i.options)
@@ -244,9 +230,8 @@ export function prepareMainThreadAPIs(
       },
     });
     markTimingInternal('decode_end');
-    entry!(mtsGlobalThis);
+    await mtsRealm.loadScript(template.lepusCode.root);
     jsContext.__start(); // start the jsContext after the runtime is created
-    return mtsGlobalThis;
   }
   return { startMainThread };
 }

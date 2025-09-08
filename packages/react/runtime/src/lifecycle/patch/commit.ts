@@ -31,8 +31,11 @@ import { takeWorkletRefInitValuePatch } from '../../worklet/workletRefPool.js';
 import { getReloadVersion } from '../pass.js';
 import type { SnapshotPatch } from './snapshotPatch.js';
 import { takeGlobalSnapshotPatch } from './snapshotPatch.js';
+import { profileEnd, profileStart } from '../../debug/utils.js';
+import { isRendering } from '../isRendering.js';
 
 let globalFlushOptions: FlushOptions = {};
+
 function takeGlobalFlushOptions() {
   const res = globalFlushOptions;
   globalFlushOptions = {};
@@ -77,6 +80,7 @@ interface PatchOptions {
  */
 export type GlobalPatchOptions = Omit<PatchOptions, 'reloadVersion'>;
 export let globalPatchOptions: GlobalPatchOptions = {};
+
 function takeGlobalPatchOptions(): GlobalPatchOptions {
   const res = globalPatchOptions;
   globalPatchOptions = {};
@@ -101,6 +105,8 @@ function replaceCommitHook(): void {
         commitQueue.length = 0;
         return;
       }
+
+      isRendering.value = false;
 
       // Mark the end of virtual DOM diffing phase for performance tracking
       markTimingLegacy('updateDiffVdomEnd');
@@ -181,7 +187,7 @@ function commitPatchUpdate(patchList: PatchList, patchOptions: GlobalPatchOption
   // console.debug('commitPatchUpdate:', prettyFormatSnapshotPatch(patchList.patchList[0]?.snapshotPatch));
 
   if (__PROFILE__) {
-    console.profile('commitChanges');
+    profileStart('ReactLynx::commitChanges');
   }
   markTiming('packChangesStart');
   const obj: {
@@ -200,7 +206,7 @@ function commitPatchUpdate(patchList: PatchList, patchOptions: GlobalPatchOption
     setPipeline(undefined);
   }
   if (__PROFILE__) {
-    console.profileEnd();
+    profileEnd();
   }
 
   return obj;

@@ -14,6 +14,7 @@ describe('Config - toRsBuildConfig', () => {
       })
       expect(rsbuildConfig.dev).toMatchInlineSnapshot(`
         {
+          "lazyCompilation": false,
           "progressBar": true,
           "watchFiles": undefined,
           "writeToDisk": true,
@@ -555,7 +556,7 @@ describe('Config - toRsBuildConfig', () => {
 
     test('transform empty resolve.alias', () => {
       const rsbuildConfig = toRsbuildConfig({
-        source: {
+        resolve: {
           alias: {},
         },
       })
@@ -564,9 +565,9 @@ describe('Config - toRsBuildConfig', () => {
       )
     })
 
-    test('transform source.alias', () => {
+    test('transform resolve.alias', () => {
       const rsbuildConfig = toRsbuildConfig({
-        source: {
+        resolve: {
           alias: {
             foo: 'bar',
           },
@@ -582,6 +583,33 @@ describe('Config - toRsBuildConfig', () => {
   })
 
   describe('Source', () => {
+    test('transform empty source.alias', () => {
+      const rsbuildConfig = toRsbuildConfig({
+        source: {
+          alias: {},
+        },
+      })
+      expect(rsbuildConfig.source?.alias).toStrictEqual(
+        {},
+      )
+    })
+
+    test('transform source.alias', () => {
+      const rsbuildConfig = toRsbuildConfig({
+        source: {
+          alias: {
+            foo: 'bar',
+          },
+        },
+      })
+      expect(rsbuildConfig.source?.alias).toStrictEqual(
+        { foo: 'bar' },
+      )
+      expect(rsbuildConfig.source?.alias).not.toStrictEqual({
+        foo: 'baz',
+      })
+    })
+
     test('source.decorators', () => {
       const rsbuildConfig = toRsbuildConfig({
         source: {

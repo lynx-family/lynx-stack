@@ -11,7 +11,7 @@ exports[`Plugins - Output > defaults - Production 1`] = `
   "path": "<WORKSPACE>/dist",
   "pathinfo": false,
   "publicPath": "/",
-  "webassemblyModuleFilename": "static/wasm/[hash].module.wasm",
+  "webassemblyModuleFilename": "static/wasm/[contenthash:8].module.wasm",
 }
 `;
 
@@ -26,7 +26,7 @@ exports[`Plugins - Output > defaults 1`] = `
   "path": "<WORKSPACE>/dist",
   "pathinfo": false,
   "publicPath": "/",
-  "webassemblyModuleFilename": "static/wasm/[hash].module.wasm",
+  "webassemblyModuleFilename": "static/wasm/[contenthash:8].module.wasm",
 }
 `;
 
@@ -41,7 +41,7 @@ exports[`Plugins - Output > output.filename 1`] = `
   "path": "<WORKSPACE>/dist",
   "pathinfo": false,
   "publicPath": "/",
-  "webassemblyModuleFilename": "static/wasm/[hash].module.wasm",
+  "webassemblyModuleFilename": "static/wasm/[contenthash:8].module.wasm",
 }
 `;
 
@@ -56,6 +56,6 @@ exports[`Plugins - Output > output.filename.js 1`] = `
   "path": "<WORKSPACE>/dist",
   "pathinfo": false,
   "publicPath": "/",
-  "webassemblyModuleFilename": "static/wasm/[hash].module.wasm",
+  "webassemblyModuleFilename": "static/wasm/[contenthash:8].module.wasm",
 }
 `;
