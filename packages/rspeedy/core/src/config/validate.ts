@@ -5,15 +5,15 @@
 import color from 'picocolors'
 import * as typia from 'typia'
 
-import type { ConfigExport } from './defineConfig.js'
+import type { Config } from './index.js'
 
 export const validateConfig: (
   input: unknown,
-) => typia.IValidation<ConfigExport> = typia.createValidateEquals<
-  ConfigExport
+) => typia.IValidation<Config> = typia.createValidateEquals<
+  Config
 >()
 
-export function validate(input: unknown, configPath?: string): ConfigExport {
+export function validate(input: unknown, configPath?: string): Config {
   const result = validateConfig(input)
 
   if (result.success) {
