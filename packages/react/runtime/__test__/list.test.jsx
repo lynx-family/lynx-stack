@@ -3032,6 +3032,113 @@ describe('list componentAtIndexes', () => {
       ]
     `);
   });
+
+  it('should update signMap before __FlushElementTree when no reuse occurs', () => {
+    const b = new SnapshotInstance(s0);
+    b.ensureElements();
+    const listRef = b.__elements[3];
+    const d0 = new SnapshotInstance(s1);
+    const d1 = new SnapshotInstance(s1);
+    const d2 = new SnapshotInstance(s1);
+    d0.setAttribute(0, { 'item-key': 'list-item-0' });
+    d1.setAttribute(0, { 'item-key': 'list-item-1' });
+    d2.setAttribute(0, { 'item-key': 'list-item-2' });
+    b.insertBefore(d0);
+    b.insertBefore(d1);
+    b.insertBefore(d2);
+    __pendingListUpdates.flush();
+
+    const mockFlushElementTree = vi.fn();
+    const mockSignMapSet = vi.fn();
+
+    const __originalFlushElementTree = globalThis.__FlushElementTree;
+    globalThis.__FlushElementTree = (_, options = {}) => {
+      mockFlushElementTree(options);
+    };
+
+    const listID = __GetElementUniqueID(listRef);
+    const signMap = gSignMap[listID];
+
+    const __originalSet = signMap.set;
+    signMap.set = (...args) => {
+      mockSignMapSet(...args);
+      return __originalSet.apply(signMap, args);
+    };
+
+    try {
+      elementTree.triggerComponentAtIndex(listRef, 0);
+
+      expect(mockSignMapSet).toHaveBeenCalled();
+      expect(mockFlushElementTree).toHaveBeenCalled();
+      expect(mockSignMapSet.mock.invocationCallOrder[0])
+        .toBeLessThan(mockFlushElementTree.mock.invocationCallOrder[0]);
+    } finally {
+      globalThis.__FlushElementTree = __originalFlushElementTree;
+      signMap.set = __originalSet;
+    }
+  });
+
+  it.only('should update signMap before __FlushElementTree when reuse occurs', () => {
+    const b = new SnapshotInstance(s0);
+    b.ensureElements();
+    const listRef = b.__elements[3];
+    const d0 = new SnapshotInstance(s1);
+    const d1 = new SnapshotInstance(s1);
+    const d2 = new SnapshotInstance(s1);
+    d0.setAttribute(0, { 'item-key': 'list-item-0' });
+    d1.setAttribute(0, { 'item-key': 'list-item-1' });
+    d2.setAttribute(0, { 'item-key': 'list-item-2' });
+    b.insertBefore(d0);
+    b.insertBefore(d1);
+    b.insertBefore(d2);
+    __pendingListUpdates.flush();
+
+    const mockFlushElementTree = vi.fn();
+    const mockSignMapSet = vi.fn();
+
+    const __originalFlushElementTree = globalThis.__FlushElementTree;
+    globalThis.__FlushElementTree = (_, options = {}) => {
+      mockFlushElementTree(options);
+    };
+
+    const listID = __GetElementUniqueID(listRef);
+    const signMap = gSignMap[listID];
+    const recycleMap = gRecycleMap[listID];
+
+    const __originalSet = signMap.set;
+    signMap.set = (...args) => {
+      mockSignMapSet(...args);
+      return __originalSet.apply(signMap, args);
+    };
+
+    {
+      const component = [];
+      component[0] = elementTree.triggerComponentAtIndex(listRef, 0);
+      component[1] = elementTree.triggerComponentAtIndex(listRef, 1);
+      elementTree.triggerEnqueueComponent(listRef, component[0]);
+      elementTree.triggerEnqueueComponent(listRef, component[1]);
+      expect(mockSignMapSet).toHaveBeenCalled();
+      expect(mockFlushElementTree).toHaveBeenCalled();
+      expect(mockSignMapSet.mock.invocationCallOrder[0])
+        .toBeLessThan(mockFlushElementTree.mock.invocationCallOrder[0]);
+
+      mockSignMapSet.mockClear();
+      mockFlushElementTree.mockClear();
+    }
+
+    try {
+      const recycleSignMap = recycleMap.get(s1);
+      expect(Array.from(recycleSignMap.keys()).length).toBe(2);
+      elementTree.triggerComponentAtIndex(listRef, 2);
+      expect(mockSignMapSet).toHaveBeenCalled();
+      expect(mockFlushElementTree).toHaveBeenCalled();
+      expect(mockSignMapSet.mock.invocationCallOrder[0])
+        .toBeLessThan(mockFlushElementTree.mock.invocationCallOrder[0]);
+    } finally {
+      globalThis.__FlushElementTree = __originalFlushElementTree;
+      signMap.set = __originalSet;
+    }
+  });
 });
 
 describe('list-item with "defer" attribute', () => {

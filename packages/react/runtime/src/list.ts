@@ -155,6 +155,7 @@ export function componentAtIndexFactory(
       }
       const root = childCtx.__element_root!;
       applyRefQueue();
+      signMap.set(sign, childCtx);
       if (!enableBatchRender) {
         const flushOptions: FlushOptions = {
           triggerLayout: true,
@@ -181,7 +182,6 @@ export function componentAtIndexFactory(
         }
         __FlushElementTree(root, flushOptions);
       }
-      signMap.set(sign, childCtx);
       return sign;
     }
 
@@ -190,6 +190,7 @@ export function componentAtIndexFactory(
     __AppendElement(list, root);
     const sign = __GetElementUniqueID(root);
     applyRefQueue();
+    signMap.set(sign, childCtx);
     if (!enableBatchRender) {
       __FlushElementTree(root, {
         triggerLayout: true,
@@ -202,7 +203,6 @@ export function componentAtIndexFactory(
         asyncFlush: true,
       });
     }
-    signMap.set(sign, childCtx);
     return sign;
   };
 
