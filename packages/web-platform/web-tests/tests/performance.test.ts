@@ -6,6 +6,8 @@ import type { Page, BrowserContext, CDPSession } from '@playwright/test';
 
 import { test, expect } from './coverage-fixture.js';
 
+const ENABLE_MULTI_THREAD = !!process.env['ENABLE_MULTI_THREAD'];
+const isSSR = !!process.env['ENABLE_SSR'];
 const isCI = !!process.env['CI'];
 
 const wait = async (ms: number) => {
@@ -63,6 +65,7 @@ const getMetrics = async (cdpSession: CDPSession, page: Page) => {
 };
 
 test.describe('performance', () => {
+  test.skip(isSSR || ENABLE_MULTI_THREAD, 'no difference for different mode');
   test.describe.configure({ mode: 'serial', retries: 5 });
   test('simple-one-div', async ({ page, browserName, context }, { title }) => {
     /**

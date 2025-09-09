@@ -205,7 +205,7 @@ const config = {
     },
     watchFiles: isCI
       ? []
-      : ['./node_modules/@lynx-js/**/*'],
+      : ['./node_modules/@lynx-js/**/*.js'],
     static: [
       {
         directory: path.join(__dirname, 'resources'),
@@ -236,6 +236,9 @@ const config = {
     hot: false,
   },
   watch: false,
+  watchOptions: {
+    ignored: isCI ? /.*/ : undefined,
+  },
   module: {
     rules: [
       {

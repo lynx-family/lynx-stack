@@ -6,6 +6,8 @@ import { test, expect } from './coverage-fixture.js';
 import type { Page, Worker } from '@playwright/test';
 
 const ENABLE_MULTI_THREAD = !!process.env.ENABLE_MULTI_THREAD;
+const isSSR = !!process.env['ENABLE_SSR'];
+
 const wait = async (ms: number) => {
   await new Promise((resolve) => {
     setTimeout(resolve, ms);
@@ -61,6 +63,7 @@ async function getBackgroundThreadWorker(
 }
 
 test.describe('web core tests', () => {
+  test.skip(isSSR, 'not support ssr');
   test('selectComponent', async ({ page, browserName }) => {
     // firefox not support
     test.skip(browserName === 'firefox');
