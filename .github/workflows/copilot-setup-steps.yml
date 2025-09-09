@@ -29,7 +29,6 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "24"
-      - uses: astral-sh/setup-uv@4959332f0f014c5280e7eac8b70c90cb574c9f9b # v6
       - uses: actions-rust-lang/setup-rust-toolchain@ac90e63697ac2784f4ecfe2964e1a285c304003a # v1
         with:
           target: wasm32-unknown-unknown
@@ -46,7 +45,7 @@ jobs:
       - name: Build
         id: build
         run: |
-          pnpm turbo build --summarize
+          pnpm turbo build --filter !benchx_cli --filter "!@lynx-js/benchmark-*" --summarize
         env:
           NODE_OPTIONS: --max-old-space-size=6144
       - name: Test essential runtime dependencies
