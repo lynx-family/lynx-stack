@@ -3033,7 +3033,7 @@ describe('list componentAtIndexes', () => {
     `);
   });
 
-  it('should update signMap before __FlushElementTree when no reuse occurs', () => {
+  it('should update signMap before __FlushElementTree', () => {
     const b = new SnapshotInstance(s0);
     b.ensureElements();
     const listRef = b.__elements[3];
@@ -3047,97 +3047,44 @@ describe('list componentAtIndexes', () => {
     b.insertBefore(d1);
     b.insertBefore(d2);
     __pendingListUpdates.flush();
-
-    const mockFlushElementTree = vi.fn();
-    const mockSignMapSet = vi.fn();
-
-    const __originalFlushElementTree = globalThis.__FlushElementTree;
-    globalThis.__FlushElementTree = (_, options = {}) => {
-      mockFlushElementTree(options);
-    };
-
-    const listID = __GetElementUniqueID(listRef);
-    const signMap = gSignMap[listID];
-
-    const __originalSet = signMap.set;
-    signMap.set = (...args) => {
-      mockSignMapSet(...args);
-      return __originalSet.apply(signMap, args);
-    };
-
-    try {
-      elementTree.triggerComponentAtIndex(listRef, 0);
-
-      expect(mockSignMapSet).toHaveBeenCalled();
-      expect(mockFlushElementTree).toHaveBeenCalled();
-      expect(mockSignMapSet.mock.invocationCallOrder[0])
-        .toBeLessThan(mockFlushElementTree.mock.invocationCallOrder[0]);
-    } finally {
-      globalThis.__FlushElementTree = __originalFlushElementTree;
-      signMap.set = __originalSet;
-    }
-  });
-
-  it('should update signMap before __FlushElementTree when reuse occurs', () => {
-    const b = new SnapshotInstance(s0);
-    b.ensureElements();
-    const listRef = b.__elements[3];
-    const d0 = new SnapshotInstance(s1);
-    const d1 = new SnapshotInstance(s1);
-    const d2 = new SnapshotInstance(s1);
-    d0.setAttribute(0, { 'item-key': 'list-item-0' });
-    d1.setAttribute(0, { 'item-key': 'list-item-1' });
-    d2.setAttribute(0, { 'item-key': 'list-item-2' });
-    b.insertBefore(d0);
-    b.insertBefore(d1);
-    b.insertBefore(d2);
-    __pendingListUpdates.flush();
-
-    const mockFlushElementTree = vi.fn();
-    const mockSignMapSet = vi.fn();
-
-    const __originalFlushElementTree = globalThis.__FlushElementTree;
-    globalThis.__FlushElementTree = (_, options = {}) => {
-      mockFlushElementTree(options);
-    };
 
     const listID = __GetElementUniqueID(listRef);
     const signMap = gSignMap[listID];
     const recycleMap = gRecycleMap[listID];
 
-    const __originalSet = signMap.set;
-    signMap.set = (...args) => {
-      mockSignMapSet(...args);
-      return __originalSet.apply(signMap, args);
-    };
-
     {
+      const flushElementTreeSpy = vi.spyOn(globalThis, '__FlushElementTree');
+      const signMapSetSpy = vi.spyOn(signMap, 'set');
+
       const component = [];
       component[0] = elementTree.triggerComponentAtIndex(listRef, 0);
       component[1] = elementTree.triggerComponentAtIndex(listRef, 1);
       elementTree.triggerEnqueueComponent(listRef, component[0]);
       elementTree.triggerEnqueueComponent(listRef, component[1]);
-      expect(mockSignMapSet).toHaveBeenCalled();
-      expect(mockFlushElementTree).toHaveBeenCalled();
-      expect(mockSignMapSet.mock.invocationCallOrder[0])
-        .toBeLessThan(mockFlushElementTree.mock.invocationCallOrder[0]);
+      // no reuse occurs
+      expect(signMapSetSpy).toHaveBeenCalled();
+      expect(flushElementTreeSpy).toHaveBeenCalled();
+      expect(signMapSetSpy.mock.invocationCallOrder[0])
+        .toBeLessThan(flushElementTreeSpy.mock.invocationCallOrder[0]);
 
-      mockSignMapSet.mockClear();
-      mockFlushElementTree.mockClear();
+      flushElementTreeSpy.mockRestore();
+      signMapSetSpy.mockRestore();
     }
 
-    try {
-      const recycleSignMap = recycleMap.get(s1);
-      expect(Array.from(recycleSignMap.keys()).length).toBe(2);
-      elementTree.triggerComponentAtIndex(listRef, 2);
-      expect(mockSignMapSet).toHaveBeenCalled();
-      expect(mockFlushElementTree).toHaveBeenCalled();
-      expect(mockSignMapSet.mock.invocationCallOrder[0])
-        .toBeLessThan(mockFlushElementTree.mock.invocationCallOrder[0]);
-    } finally {
-      globalThis.__FlushElementTree = __originalFlushElementTree;
-      signMap.set = __originalSet;
-    }
+    // re-spy
+    const flushElementTreeSpy = vi.spyOn(globalThis, '__FlushElementTree');
+    const signMapSetSpy = vi.spyOn(signMap, 'set');
+    const recycleSignMap = recycleMap.get(s1);
+    expect(Array.from(recycleSignMap.keys()).length).toBe(2);
+    // reuse occurs
+    elementTree.triggerComponentAtIndex(listRef, 2);
+    expect(signMapSetSpy).toHaveBeenCalled();
+    expect(flushElementTreeSpy).toHaveBeenCalled();
+    expect(signMapSetSpy.mock.invocationCallOrder[0])
+      .toBeLessThan(flushElementTreeSpy.mock.invocationCallOrder[0]);
+
+    flushElementTreeSpy.mockRestore();
+    signMapSetSpy.mockRestore();
   });
 });
 
