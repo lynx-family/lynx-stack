@@ -30,6 +30,6 @@
     "wasm-feature-detect": "^1.8.0"
   },
   "devDependencies": {
-    "binaryen": "^123.0.0"
+    "binaryen": "^124.0.0"
   }
 }
