@@ -4,6 +4,7 @@
   "tasks": {
     "build": {
       "env": ["ECOSYSTEM_CI"],
+      "passThroughEnv": ["ECOSYSTEM_CI"],
       "dependsOn": [],
       "inputs": ["scripts/build.mjs"],
       "outputs": ["dist/**"]
