@@ -3078,7 +3078,7 @@ describe('list componentAtIndexes', () => {
     }
   });
 
-  it.only('should update signMap before __FlushElementTree when reuse occurs', () => {
+  it('should update signMap before __FlushElementTree when reuse occurs', () => {
     const b = new SnapshotInstance(s0);
     b.ensureElements();
     const listRef = b.__elements[3];
