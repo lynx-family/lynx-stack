@@ -33,9 +33,16 @@ export interface ConfigParams {
    *
    * - `'dev'`
    *
+   * - `'inspect'`
+   *
    * - `'preview'`
    */
-  command: string
+  command:
+    | 'build'
+    | 'dev'
+    | 'inspect'
+    | 'preview'
+    | (string & Record<never, never>)
 }
 
 /**
