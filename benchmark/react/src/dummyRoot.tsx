@@ -4,4 +4,6 @@
 
 import { root } from '@lynx-js/react';
 
-root.render(<></>);
+runAfterLoadScript(() => {
+  root.render(<></>);
+});

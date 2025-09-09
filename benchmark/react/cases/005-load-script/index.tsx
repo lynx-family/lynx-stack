@@ -3,15 +3,10 @@
 // LICENSE file in the root directory of this source tree.
 
 import { root } from '@lynx-js/react';
-
-import RecursiveText from './RecursiveText.js';
-import { RunBenchmarkUntilHydrate } from '../../src/RunBenchmarkUntil.js';
+import '@lynx-js/react/experimental/lazy/import';
 
 runAfterLoadScript(() => {
   root.render(
-    <>
-      <RecursiveText text='Hello, ReactLynx 🎉!' />
-      <RunBenchmarkUntilHydrate />
-    </>,
+    <></>,
   );
 });
