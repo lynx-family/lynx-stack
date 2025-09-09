@@ -8,7 +8,6 @@ import {
   triggerComponentEventEndpoint,
   selectComponentEndpoint,
   type BundleInitReturnObj,
-  type LynxJSModule,
   type NativeApp,
   type LynxCrossThreadContext,
   type BackMainThreadContextConfig,
@@ -63,8 +62,10 @@ export async function createNativeApp(
   );
   const reportError = uiThreadRpc.createCall(reportErrorEndpoint);
   const createBundleInitReturnObj = (): BundleInitReturnObj => {
-    const entry = (globalThis.module as LynxJSModule).exports;
-    return entry as unknown as BundleInitReturnObj;
+    const ret = globalThis.module.exports ?? globalThis.__bundle__holder;
+    globalThis.module.exports = null;
+    globalThis.__bundle__holder = null;
+    return ret as unknown as BundleInitReturnObj;
   };
   const i18nResource = new I18nResource();
   let release = '';
@@ -86,6 +87,8 @@ export async function createNativeApp(
     ): void {
       const manifestUrl = template.manifest[`/${sourceURL}`];
       if (manifestUrl) sourceURL = manifestUrl;
+      globalThis.module.exports = null;
+      globalThis.__bundle__holder = null;
       import(
         /* webpackIgnore: true */
         sourceURL
@@ -96,6 +99,8 @@ export async function createNativeApp(
     loadScript: (sourceURL: string) => {
       const manifestUrl = template.manifest[`/${sourceURL}`];
       if (manifestUrl) sourceURL = manifestUrl;
+      globalThis.module.exports = null;
+      globalThis.__bundle__holder = null;
       importScripts(sourceURL);
       return createBundleInitReturnObj();
     },

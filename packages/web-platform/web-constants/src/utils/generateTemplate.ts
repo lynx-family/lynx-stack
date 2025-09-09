@@ -48,13 +48,18 @@ const templateUpgraders: templateUpgrader[] = [
       'requestAnimationFrame',
       'cancelAnimationFrame',
     ].join(',');
+    template.appType = template.lepusCode.root.startsWith(
+        '(function (globDynamicComponentEntry',
+      )
+      ? 'lazy'
+      : 'card';
     /**
      * The template version 1 has no module wrapper for bts code
      */
     template.manifest = Object.fromEntries(
       Object.entries(template.manifest).map(([key, value]) => [
         key,
-        `{init: (lynxCoreInject) => { var {${defaultInjectStr}} = lynxCoreInject.tt; var module = {exports:null}; ${value}\n return module.exports; } }`,
+        `module.exports={init: (lynxCoreInject) => { var {${defaultInjectStr}} = lynxCoreInject.tt; var module = {exports:null}; ${value}\n return module.exports; } }`,
       ]),
     ) as typeof template.manifest;
     template.lepusCode = Object.fromEntries(
@@ -70,13 +75,23 @@ const templateUpgraders: templateUpgrader[] = [
 
 const generateModuleContent = (
   content: string,
+  eager: boolean,
 ) =>
+  /**
+   * About the `allFunctionsCalledOnLoad` directive:
+   * https://v8.dev/blog/preparser#pife
+   * https://github.com/WICG/explicit-javascript-compile-hints-file-based?tab=readme-ov-file
+   * https://v8.dev/blog/explicit-compile-hints
+   * We should ensure the MTS code is parsed eagerly to avoid runtime parse delay.
+   * But for BTS code, we should not do this as it would increase the memory usage.
+   * JavaScript Engines, like V8, already had optimizations for code starts with "(function"
+   * to be parsed eagerly.
+   */
   [
-    '//# allFunctionsCalledOnLoad\n',
-    '"use strict";\n',
-    `(() => {const ${
-      globalDisallowedVars.join('=void 0,')
-    }=void 0;module.exports = `,
+    eager ? '//# allFunctionsCalledOnLoad' : '',
+    '\n(function() { "use strict"; const ',
+    globalDisallowedVars.join('=void 0,'),
+    '=void 0;\n',
     content,
     '\n})()',
   ].join('');
@@ -84,6 +99,7 @@ const generateModuleContent = (
 async function generateJavascriptUrl<T extends Record<string, string | {}>>(
   obj: T,
   createJsModuleUrl: (content: string, name: string) => Promise<string>,
+  eager: boolean,
   templateName?: string,
 ): Promise<T> {
   const processEntry = async ([name, content]: [string, string]) => [
@@ -91,6 +107,7 @@ async function generateJavascriptUrl<T extends Record<string, string | {}>>(
     await createJsModuleUrl(
       generateModuleContent(
         content,
+        eager,
       ),
       `${templateName}-${name.replaceAll('/', '')}.js`,
     ),
@@ -129,11 +146,13 @@ export async function generateTemplate(
     lepusCode: await generateJavascriptUrl(
       template.lepusCode,
       createJsModuleUrl as (content: string, name: string) => Promise<string>,
+      true,
       templateName,
     ),
     manifest: await generateJavascriptUrl(
       template.manifest,
       createJsModuleUrl as (content: string, name: string) => Promise<string>,
+      false,
       templateName,
     ),
   };
