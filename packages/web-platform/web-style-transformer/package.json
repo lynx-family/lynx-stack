@@ -24,7 +24,7 @@
   ],
   "scripts": {
     "build": "node scripts/build.js",
-    "build:wasm-bindgen": "wasm-bindgen --version || cargo install wasm-bindgen-cli"
+    "build:wasm-bindgen": "wasm-bindgen --version || cargo install wasm-bindgen-cli --version 0.2.101"
   },
   "dependencies": {
     "wasm-feature-detect": "^1.8.0"
