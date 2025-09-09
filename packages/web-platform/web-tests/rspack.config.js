@@ -210,22 +210,27 @@ const config = {
       {
         directory: path.join(__dirname, 'resources'),
         publicPath: '/resources',
+        watch: !isCI,
       },
       {
         directory: path.join(__dirname, 'tests', 'web-elements'),
         publicPath: '/web-element-tests',
+        watch: !isCI,
       },
       {
         directory: path.join(__dirname, 'node_modules'),
         publicPath: '/node_modules',
+        watch: !isCI,
       },
       {
         directory: path.join(__dirname, 'dist'),
         publicPath: '/dist',
+        watch: !isCI,
       },
       {
         directory: path.join(__dirname, 'tests', 'common.css'),
         publicPath: '/common.css',
+        watch: !isCI,
       },
     ],
     hot: false,
