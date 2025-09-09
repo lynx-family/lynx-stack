@@ -7,7 +7,12 @@ import path from 'node:path';
 
 import { $ } from 'zx';
 
-if (!process.env.CI) {
+if (
+  !process.env.CI
+  // rspack-ecosystem-ci would set this
+  // https://github.com/rspack-contrib/rspack-ecosystem-ci/blob/113d2338da254ca341313a4a54afe789b45b1508/utils.ts#L108
+  || process.env['ECOSYSTEM_CI']
+) {
   // eslint-disable-next-line n/no-process-exit
   process.exit(0);
 }
