@@ -9,7 +9,7 @@ export default defineConfig({
   },
   lib: [
     {
-      dts: true,
+      dts: { tsgo: true },
       format: 'esm',
     },
     {

@@ -45,6 +45,7 @@ export default defineConfig({
       format: 'esm',
       dts: {
         bundle: true,
+        tsgo: true,
       },
       source: {
         entry: {
