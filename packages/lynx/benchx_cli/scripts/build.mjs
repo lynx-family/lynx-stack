@@ -106,7 +106,7 @@ await $`
 cd lynx
 uv venv .venv
 source .venv/bin/activate
-uv pip install pyyaml
+uv pip install pip
 source tools/envsetup.sh
 ../habitat/venv/bin/hab sync .
 `.pipe(process.stdout);
@@ -114,7 +114,6 @@ source tools/envsetup.sh
 // build from source
 await $`
 cd lynx
-source .venv/bin/activate
 source tools/envsetup.sh
 gn gen --args='enable_unittests=true enable_trace="perfetto" jsengine_type="quickjs" enable_frozen_mode=true' out/Default
 ninja -C out/Default benchx_cli
