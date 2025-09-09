@@ -7,7 +7,12 @@ import path from 'node:path';
 
 import { $ } from 'zx';
 
-if (!process.env.CI) {
+if (
+  !process.env.CI
+  // rspack-ecosystem-ci would set this
+  // https://github.com/rspack-contrib/rspack-ecosystem-ci/blob/113d2338da254ca341313a4a54afe789b45b1508/utils.ts#L108
+  || process.env['ECOSYSTEM_CI']
+) {
   // eslint-disable-next-line n/no-process-exit
   process.exit(0);
 }
@@ -85,9 +90,9 @@ rm -rf lynx
 await $`
 git clone --branch=0.3.142 --depth=1 https://github.com/lynx-family/habitat
 cd habitat
-python3 -m venv venv
+uv venv venv
 source venv/bin/activate
-pip install .
+uv pip install .
 `.pipe(process.stdout);
 
 // prepare the lynx repo
@@ -104,6 +109,9 @@ git cherry-pick -n ${PICK_COMMIT}
 // hab sync .
 await $`
 cd lynx
+uv venv .venv
+source .venv/bin/activate
+uv pip install pip
 source tools/envsetup.sh
 ../habitat/venv/bin/hab sync .
 `.pipe(process.stdout);
