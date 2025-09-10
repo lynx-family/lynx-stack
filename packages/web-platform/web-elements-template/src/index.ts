@@ -175,6 +175,10 @@ export const templateXOverlayNg = `<style>
     top: 0;
     width: 100%;
     height: 100%;
+    pointer-events: none;
+  }
+  .overlay-inner > * {
+    pointer-events: auto;
   }
   .overlay-placeholder {
     width: 100%;
