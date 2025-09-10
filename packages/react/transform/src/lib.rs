@@ -468,9 +468,7 @@ fn transform_react_lynx_inner(
       visit_mut_pass(
         JSXTransformer::new(
           snapshot_plugin_config,
-          cm.clone(),
           Some(&comments),
-          top_level_mark,
           unresolved_mark,
           options.mode.unwrap_or(TransformMode::Production),
         )
