@@ -192,7 +192,7 @@ export const templateXOverlayNg = `<style>
   <div class="overlay-inner">
     <slot></slot>
   </div>
-  <div class="overlay-placeholder" />
+  <div class="overlay-placeholder"></div>
 </dialog>`;
 
 export const templateXRefreshView = `<style>
