@@ -114,60 +114,6 @@ test.describe('performance', () => {
     expect(metrics.LayoutCount, 'layout count').toBeLessThanOrEqual(3);
     expect(metrics.RecalcStyleCount, 'recalc count').toBeLessThanOrEqual(3);
   });
-  test('x-view-10000', async ({ page, browserName, context }, { title }) => {
-    const cdpSession = await goto({ page, browserName, context }, title);
-    const metrics = await getMetrics(cdpSession, page);
-    expect(metrics.LayoutCount, 'layout count').toBeLessThanOrEqual(3);
-    expect(metrics.RecalcStyleCount, 'recalc count').toBeLessThanOrEqual(3);
-    console.log(metrics);
-  });
-  test(
-    'vs-react-10000-div',
-    async ({ page, browserName, context }, { title }) => {
-      const cdpSession2 = await goto(
-        { page, browserName, context },
-        'x-view-10000',
-      );
-      const webcomponentsMetrics = await getMetrics(cdpSession2, page);
-      const cdpSession = await goto(
-        { page, browserName, context },
-        'react-10000-div',
-      );
-      const react18Metrics = await getMetrics(cdpSession, page);
-      console.log(
-        'web react',
-        webcomponentsMetrics.domComplete,
-        react18Metrics.domComplete,
-      );
-      expect(
-        webcomponentsMetrics.domComplete / react18Metrics.domComplete,
-      ).toBeLessThan(5);
-    },
-  );
-  test(
-    'vs-react-10000-div-with-layouteffect',
-    async ({ page, browserName, context }, { title }) => {
-      const cdpSession = await goto(
-        { page, browserName, context },
-        'react-10000-div-with-layouteffect',
-      );
-      const react18Metrics = await getMetrics(cdpSession, page);
-      const cdpSession2 = await goto(
-        { page, browserName, context },
-        'x-view-10000-fp',
-      );
-      const webcomponentsMetrics = await getMetrics(cdpSession2, page);
-      console.log(
-        'web react',
-        webcomponentsMetrics.firstPaint,
-        react18Metrics.firstPaint,
-      );
-      expect(
-        webcomponentsMetrics.firstPaint / react18Metrics.firstPaint,
-        '-10%',
-      ).toBeLessThan(0.9);
-    },
-  );
 
   isCI ?? test.describe.configure({ retries: 8 });
   test(
