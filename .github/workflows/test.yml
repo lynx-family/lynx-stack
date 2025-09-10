@@ -72,7 +72,7 @@ jobs:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
     with:
-      runs-on: lynx-custom-container
+      runs-on: lynx-custom-container-anti
       is-web: true
       run: |
         export NODE_OPTIONS="--max-old-space-size=32768"
@@ -93,7 +93,7 @@ jobs:
           - thread: MULTI_THREAD
             render: SSR
     with:
-      runs-on: lynx-custom-container
+      runs-on: lynx-custom-container-anti
       is-web: true
       web-report-name: "playwright-${{ matrix.thread }}-${{ matrix.render }}-shard${{ matrix.shard }}"
       codecov-flags: "e2e"
