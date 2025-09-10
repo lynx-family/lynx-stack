@@ -20,6 +20,7 @@ export class XSvgFeatures
 {
   static observedAttributes = ['src', 'content'];
   #dom: XSvg;
+  #url: string | null = null;
 
   #getImg = genDomGetter<HTMLImageElement>(() => this.#dom.shadowRoot!, '#img');
 
@@ -34,9 +35,16 @@ export class XSvgFeatures
 
   @registerAttributeHandler('content', true)
   #handleContent(content: string | null) {
-    if (!content) return;
-    const src = 'data:image/svg+xml;base64,'
-      + btoa(unescape(encodeURIComponent(content)));
+    this.#url && URL.revokeObjectURL(this.#url);
+    if (!content) {
+      this.#url = '';
+      return;
+    }
+    const blob = new Blob([content], {
+      type: 'image/svg+xml;charset=UTF-8',
+    });
+    const src = URL.createObjectURL(blob);
+    this.#url = src;
     this.#getImg().src = src;
   }
 
