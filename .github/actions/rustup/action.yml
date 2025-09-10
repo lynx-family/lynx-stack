@@ -68,7 +68,6 @@ runs:
           -c rust-std \
           -c clippy \
           -c rustfmt
-        rustup target add --toolchain "$toolchain" wasm32-unknown-unknown
     - name: Save rustup cache
       uses: lynx-infra/cache/save@5c6160a6a4c7fca80a2f3057bb9dfc9513fcb732
       if: ${{ inputs.save-if == 'true' && steps.restore.outputs.cache-hit != 'true' }}

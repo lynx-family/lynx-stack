@@ -11,17 +11,13 @@ _pnpm_: Make sure that pnpm is available. You can use `corepack enable` to autom
 _Rust_: ReactLynx utilizes SWC plugins, necessitating the Rust toolchain for building.
 
 - Ensure you have [`rustup`](https://rustup.rs/) installed.
-- Install the required WASM target by running the following command (you only need to do this once):
-  ```sh
-  rustup target add wasm32-unknown-unknown
-  ```
-- `rustup` will automatically use the correct toolchain when you run build commands inside this project, thanks to the `rust-toolchain` file.
 
 ### Setup
 
 To setup the project, run:
 
 ```sh
+rustup toolchain install
 pnpm install
 ```
 
