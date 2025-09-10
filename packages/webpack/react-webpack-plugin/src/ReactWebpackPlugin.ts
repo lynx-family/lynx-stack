@@ -64,6 +64,11 @@ interface ReactWebpackPluginOptions {
    * @defaultValue `false` when production, `true` when development
    */
   profile?: boolean | undefined;
+
+  /**
+   * The file path of `@lynx-js/react/worklet-runtime`.
+   */
+  workletRuntimePath: string;
 }
 
 /**
@@ -137,6 +142,7 @@ class ReactWebpackPlugin {
       extractStr: false,
       experimental_isLazyBundle: false,
       profile: undefined,
+      workletRuntimePath: '',
     });
 
   /**
@@ -259,14 +265,10 @@ class ReactWebpackPlugin {
               'registerWorkletInternal',
             )
           ) {
-            const path = compiler.options.mode === 'development'
-              ? '@lynx-js/react/worklet-dev-runtime'
-              : '@lynx-js/react/worklet-runtime';
-            const runtimeFile = require.resolve(path);
             lepusCode.chunks.push({
               name: 'worklet-runtime',
               source: new RawSource(fs.readFileSync(
-                runtimeFile,
+                options.workletRuntimePath,
                 'utf8',
               )),
               info: {
