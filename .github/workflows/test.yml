@@ -82,13 +82,13 @@ jobs:
     uses: ./.github/workflows/workflow-test.yml
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-    name: Playwright (${{ matrix.thread }}-${{ matrix.render }}) ${{ matrix.shard }}/4
+    name: Playwright ${{ matrix.thread }}-${{ matrix.render }} (${{ matrix.shard }}/4)
     strategy:
       fail-fast: false
       matrix:
-        thread: [ALL_ON_UI, MULTI_THREAD]
-        render: [CSR, SSR]
-        shard: [1, 2, 3]
+        thread: [MULTI_THREAD, ALL_ON_UI]
+        render: [SSR, CSR]
+        shard: [1, 2, 3, 4]
         exclude:
           - thread: MULTI_THREAD
             render: SSR
@@ -106,7 +106,7 @@ jobs:
         fi
         export NODE_OPTIONS="--max-old-space-size=32768"
         export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
-        pnpm --filter @lynx-js/web-tests run test --reporter='github,dot,junit,html' --shard=${{ matrix.shard }}/3
+        pnpm --filter @lynx-js/web-tests run test --reporter='github,dot,junit,html' --shard=${{ matrix.shard }}/4
         pnpm --filter @lynx-js/web-tests run coverage:ci
   test-api:
     needs: build

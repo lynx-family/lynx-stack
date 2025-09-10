@@ -4,7 +4,13 @@
 
 import { defineConfig, devices } from '@playwright/test';
 import os from 'node:os';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
+const __dirname = fileURLToPath(import.meta.url);
+const dir = path.join(__dirname, '..', '.nyc_output');
+fs.mkdir(dir, { recursive: true }).catch(() => {/* */});
 process.env['LIBGL_ALWAYS_SOFTWARE'] = 'true'; // https://github.com/microsoft/playwright/issues/32151
 process.env['GALLIUM_HUD_SCALE'] = '1';
 const isCI = !!process.env.CI;
