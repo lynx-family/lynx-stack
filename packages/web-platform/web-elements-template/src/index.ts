@@ -167,6 +167,9 @@ export const templateXOverlayNg = `<style>
     overscroll-behavior: contain;
     scrollbar-width: none;
   }
+  #dialog[open]::-webkit-scrollbar {
+    display: none;
+  }
   #dialog::backdrop {
     background-color: transparent;
   }
