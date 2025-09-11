@@ -1963,7 +1963,7 @@ describe('Config Validation', () => {
         [Error: Invalid configuration.
 
         Invalid config on \`$input.resolve.aliasStrategy\`.
-          - Expect to be ("prefer-tsconfig" | "prefer-alias" | undefined)
+          - Expect to be ("prefer-alias" | "prefer-tsconfig" | undefined)
           - Got: string
         ]
       `)
@@ -1978,7 +1978,7 @@ describe('Config Validation', () => {
         [Error: Invalid configuration.
 
         Invalid config on \`$input.resolve.aliasStrategy\`.
-          - Expect to be ("prefer-tsconfig" | "prefer-alias" | undefined)
+          - Expect to be ("prefer-alias" | "prefer-tsconfig" | undefined)
           - Got: number
         ]
       `)
