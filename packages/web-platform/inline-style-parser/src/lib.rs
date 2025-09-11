@@ -1,8 +1,9 @@
 #![allow(clippy::manual_range_contains)]
 pub mod char_code_definitions;
+pub mod dimension_parser;
 pub mod parse_inline_style;
-mod tokenize;
-mod types;
+pub mod tokenize;
+pub mod types;
 mod utils;
 
 #[cfg(test)]

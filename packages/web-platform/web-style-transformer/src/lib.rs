@@ -25,8 +25,8 @@ pub fn transform_raw_u16_inline_style_ptr_parsed(name: &str, value: &str) -> Opt
   for (key, value) in result {
     // we need to push the key and value as a string
     let pair = js_sys::Array::new();
-    pair.push(&JsValue::from_str(key));
-    pair.push(&JsValue::from_str(value));
+    pair.push(&JsValue::from_str(&key));
+    pair.push(&JsValue::from_str(&value));
     current_result_js_arr.push(&pair.into());
   }
   ret.push(&current_result_js_arr.into());
@@ -37,8 +37,8 @@ pub fn transform_raw_u16_inline_style_ptr_parsed(name: &str, value: &str) -> Opt
     for (key, value) in children_result {
       // we need to push the key and value as a string
       let pair = js_sys::Array::new();
-      pair.push(&JsValue::from_str(key));
-      pair.push(&JsValue::from_str(value));
+      pair.push(&JsValue::from_str(&key));
+      pair.push(&JsValue::from_str(&value));
       children_result_js_arr.push(&pair.into());
     }
     ret.push(&children_result_js_arr.into());

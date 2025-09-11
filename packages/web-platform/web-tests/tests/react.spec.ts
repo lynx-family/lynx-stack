@@ -4342,4 +4342,239 @@ test.describe('reactlynx3 tests', () => {
       },
     );
   });
+
+  test.describe('rpx style transformer', () => {
+    test('inline-style-rpx', async ({ page }, { title }) => {
+      await goto(page, title);
+      await page.locator('lynx-view').evaluate(el => {
+        el.style.setProperty('--rpx', '1px');
+      });
+
+      // Test basic rpx transformation
+      const basicElement = await page.locator('#basic-rpx');
+      const width = await basicElement.evaluate(el =>
+        getComputedStyle(el).width
+      );
+      const height = await basicElement.evaluate(el =>
+        getComputedStyle(el).height
+      );
+      const margin = await basicElement.evaluate(el =>
+        getComputedStyle(el).marginTop
+      );
+
+      expect(parseFloat(width)).toBeGreaterThan(0);
+      expect(parseFloat(height)).toBeGreaterThan(0);
+      expect(parseFloat(margin)).toBeGreaterThan(0);
+
+      // Test ratio between different rpx values (100rpx should be 2x 50rpx)
+      const widthValue = parseFloat(width);
+      const heightValue = parseFloat(height);
+      const ratio = widthValue / heightValue;
+      expect(ratio).toBeCloseTo(2, 1); // 100rpx / 50rpx = 2
+
+      // Test mixed units
+      const mixedElement = await page.locator('#mixed-units');
+      const mixedWidth = await mixedElement.evaluate(el =>
+        getComputedStyle(el).width
+      );
+      const paddingTop = await mixedElement.evaluate(el =>
+        getComputedStyle(el).paddingTop
+      );
+      const paddingRight = await mixedElement.evaluate(el =>
+        getComputedStyle(el).paddingRight
+      );
+      const paddingLeft = await mixedElement.evaluate(el =>
+        getComputedStyle(el).paddingLeft
+      );
+
+      expect(parseFloat(mixedWidth)).toBeGreaterThan(0);
+      expect(paddingTop).toBe('10px');
+      expect(parseFloat(paddingRight)).toBeGreaterThan(0); // 5rpx
+      expect(parseFloat(paddingLeft)).toBeGreaterThan(0); // 20rpx
+
+      // Test ratio: 20rpx should be 4x 5rpx
+      const rightPadding = parseFloat(paddingRight);
+      const leftPadding = parseFloat(paddingLeft);
+      const paddingRatio = leftPadding / rightPadding;
+      expect(paddingRatio).toBeCloseTo(4, 1); // 20rpx / 5rpx = 4
+
+      // Test negative rpx values
+      const negativeElement = await page.locator('#negative-rpx');
+      const marginTop = await negativeElement.evaluate(el =>
+        getComputedStyle(el).marginTop
+      );
+      expect(marginTop).toBe('-10px'); // -10rpx -> -10px
+
+      // Test decimal rpx values
+      const decimalElement = await page.locator('#decimal-rpx');
+      await expect(decimalElement).toHaveCSS('width', '100.5px');
+      await expect(decimalElement).toHaveCSS('height', '50.25px');
+
+      // Test rpx with !important
+      const importantElement = await page.locator('#important-rpx');
+      await expect(importantElement).toHaveCSS('width', '150px');
+      await expect(importantElement).toHaveCSS('height', '75px');
+
+      // Test complex rpx values
+      const complexElement = await page.locator('#complex-rpx');
+      const marginTopComplex = await complexElement.evaluate(el =>
+        getComputedStyle(el).marginTop
+      );
+      const marginRightComplex = await complexElement.evaluate(el =>
+        getComputedStyle(el).marginRight
+      );
+      const marginBottomComplex = await complexElement.evaluate(el =>
+        getComputedStyle(el).marginBottom
+      );
+      const marginLeftComplex = await complexElement.evaluate(el =>
+        getComputedStyle(el).marginLeft
+      );
+
+      expect(marginTopComplex).toBe('5px');
+      expect(marginRightComplex).toBe('10px');
+      expect(marginBottomComplex).toBe('15px');
+      expect(marginLeftComplex).toBe('20px');
+
+      // Test zero rpx values
+      const zeroElement = await page.locator('#zero-rpx');
+      await expect(zeroElement).toHaveCSS('margin-top', '0px');
+      await expect(zeroElement).toHaveCSS('padding-top', '0px');
+
+      await diffScreenShot(page, title, 'index');
+    });
+
+    test('css-style-rpx', async ({ page }, { title }) => {
+      await goto(page, title);
+      await page.locator('lynx-view').evaluate(el => {
+        el.style.setProperty('--rpx', '1px');
+      });
+
+      // Test basic rpx units in CSS classes
+      const basicElement = await page.locator('#basic-css-rpx');
+      await expect(basicElement).toHaveCSS('width', '120px');
+      await expect(basicElement).toHaveCSS('height', '60px');
+      await expect(basicElement).toHaveCSS('margin-top', '15px');
+      await expect(basicElement).toHaveCSS('padding-top', '8px');
+
+      // Test mixed units with rpx in CSS
+      const mixedElement = await page.locator('#mixed-css-units');
+      await expect(mixedElement).toHaveCSS('width', '180px');
+      await expect(mixedElement).toHaveCSS('height', '90px');
+
+      // Check mixed margin: 10px 5rpx -> 10px 5px
+      const marginTop = await mixedElement.evaluate(el =>
+        getComputedStyle(el).marginTop
+      );
+      const marginRight = await mixedElement.evaluate(el =>
+        getComputedStyle(el).marginRight
+      );
+      expect(marginTop).toBe('10px');
+      expect(marginRight).toBe('5px'); // 5rpx -> 5px
+
+      // Test responsive rpx values in CSS
+      const responsiveElement = await page.locator('#responsive-css-rpx');
+      await expect(responsiveElement).toHaveCSS('width', '100px');
+      await expect(responsiveElement).toHaveCSS('min-width', '80px');
+      await expect(responsiveElement).toHaveCSS('max-width', '200px');
+      await expect(responsiveElement).toHaveCSS('height', '50px');
+      await expect(responsiveElement).toHaveCSS('min-height', '30px');
+      await expect(responsiveElement).toHaveCSS('max-height', '100px');
+
+      // Test CSS variables with rpx
+      const varElement = await page.locator('#var-css-rpx');
+      await expect(varElement).toHaveCSS('width', '140px');
+      await expect(varElement).toHaveCSS('height', '70px');
+      await expect(varElement).toHaveCSS('margin-top', '12px');
+
+      // Test complex selectors with rpx
+      const childElement = await page.locator('#child-css-rpx');
+      await expect(childElement).toHaveCSS('width', '80px');
+      await expect(childElement).toHaveCSS('height', '40px');
+
+      await diffScreenShot(page, title, 'index');
+    });
+
+    test('edge-cases-rpx', async ({ page }, { title }) => {
+      await goto(page, title);
+      await page.locator('lynx-view').evaluate(el => {
+        el.style.setProperty('--rpx', '1px');
+      });
+
+      // Test that rpx is not transformed in URL strings
+      const urlElement = await page.locator('#url-rpx');
+      await expect(urlElement).toHaveCSS('width', '100px'); // width should be transformed
+
+      // Check that background-image URL is preserved
+      const backgroundImage = await urlElement.evaluate(el =>
+        getComputedStyle(el).backgroundImage
+      );
+      expect(backgroundImage).toContain('image-1rpx.png'); // URL should not be transformed
+
+      // Test that rpx is not transformed in string literals
+      const stringElement = await page.locator('#string-rpx');
+      await expect(stringElement).toHaveCSS('width', '100px'); // width should be transformed
+
+      // Check content property (if supported)
+      const content = await stringElement.evaluate(el =>
+        getComputedStyle(el).content
+      );
+      if (content && content !== 'none') {
+        expect(content).toContain('1rpx'); // String content should not be transformed
+      }
+
+      // Test with existing CSS transformations (flex)
+      const flexElement = await page.locator('#flex-rpx');
+      await expect(flexElement).toHaveCSS('display', 'flex');
+      await expect(flexElement).toHaveCSS('margin-top', '10px');
+
+      // Check flex-basis transformation (might be converted by web-style-transformer)
+      await expect(flexElement).toHaveCSS('--flex-basis', 'calc(100 * 1px)'); // 100rpx -> 100px
+
+      // Test large rpx values
+      const largeElement = await page.locator('#large-rpx');
+      await expect(largeElement).toHaveCSS('width', '9999px');
+      await expect(largeElement).toHaveCSS('height', '1000px');
+
+      // Test rpx in transform functions
+      const transformElement = await page.locator('#transform-rpx');
+      const transform = await transformElement.evaluate(el =>
+        getComputedStyle(el).transform
+      );
+
+      // Should contain translateX(50px) and translateY(25px)
+      // matrix(a, b, c, d, tx, ty)
+      const matrixValues = transform.match(/matrix\(([^)]+)\)/)?.[1]?.split(',')
+        .map(v => parseFloat(v.trim()));
+      expect(matrixValues?.[4]).toBeCloseTo(50, 1); // tx
+      expect(matrixValues?.[5]).toBeCloseTo(25, 1); // ty
+
+      // Test multiple rpx values in one property
+      const multipleElement = await page.locator('#multiple-rpx');
+      const boxShadow = await multipleElement.evaluate(el =>
+        getComputedStyle(el).boxShadow
+      );
+
+      // Should transform all rpx values in box-shadow
+      expect(boxShadow).toMatch(/1px.*2px.*3px.*4px.*5px.*6px/);
+
+      // Test very small decimal rpx values (Chrome bug? 0.1px -> 0.09375px)
+      // This test is skipped due to browser rendering differences
+      test.skip(
+        'should handle very small decimal rpx values',
+        {
+          annotation: {
+            type: 'browser-diff',
+            description: 'Chrome bug? 0.1px -> 0.09375px',
+          },
+        },
+        async () => {
+          const smallElement = await page.locator('#small-decimal-rpx');
+          await expect(smallElement).toHaveCSS('width', '0.1px');
+          await expect(smallElement).toHaveCSS('height', '0.01px');
+        },
+      );
+
+      await diffScreenShot(page, title, 'index');
+    });
+  });
 });

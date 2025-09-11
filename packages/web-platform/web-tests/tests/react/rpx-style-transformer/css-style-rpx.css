@@ -1,0 +1,151 @@
+/* Copyright 2023 The Lynx Authors. All rights reserved.
+ * Licensed under the Apache License Version 2.0 that can be found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+/* Basic rpx transformation in CSS */
+.basic-rpx-class {
+  width: 120rpx;
+  height: 60rpx;
+  margin: 15rpx;
+  padding: 8rpx;
+  background-color: lightblue;
+}
+
+/* Mixed units with rpx */
+.mixed-units-class {
+  width: 180rpx;
+  height: 90rpx;
+  margin: 10px 5rpx;
+  padding: 12rpx 8px;
+  border: 2px solid green;
+  background-color: lightgreen;
+}
+
+/* Responsive rpx values */
+.responsive-rpx {
+  width: 100rpx;
+  min-width: 80rpx;
+  max-width: 200rpx;
+  height: 50rpx;
+  min-height: 30rpx;
+  max-height: 100rpx;
+  background-color: lightyellow;
+}
+
+/* Animation with rpx */
+.animated-rpx {
+  width: 100rpx;
+  height: 100rpx;
+  background-color: lightcoral;
+  animation: move-rpx 2s infinite;
+}
+
+@keyframes move-rpx {
+  0% {
+    transform: translateX(0rpx);
+  }
+  50% {
+    transform: translateX(50rpx);
+  }
+  100% {
+    transform: translateX(0rpx);
+  }
+}
+
+/* Pseudo elements with rpx */
+.pseudo-rpx::before {
+  content: "";
+  display: block;
+  width: 20rpx;
+  height: 20rpx;
+  background-color: red;
+  margin: 5rpx;
+}
+
+.pseudo-rpx::after {
+  content: "";
+  display: block;
+  width: 15rpx;
+  height: 15rpx;
+  background-color: blue;
+  margin: 3rpx;
+}
+
+/* Complex selectors with rpx */
+.container {
+  padding: 20rpx;
+  background-color: lightgray;
+}
+
+.container .child-rpx {
+  width: 80rpx;
+  height: 40rpx;
+  margin: 10rpx auto;
+  background-color: orange;
+}
+
+/* Media queries with rpx */
+@media (min-width: 600px) {
+  .media-rpx {
+    width: 150rpx;
+    height: 75rpx;
+    margin: 20rpx;
+    background-color: lightpink;
+  }
+}
+
+@media (max-width: 599px) {
+  .media-rpx {
+    width: 100rpx;
+    height: 50rpx;
+    margin: 10rpx;
+    background-color: lightsteelblue;
+  }
+}
+
+/* CSS variables with rpx */
+.var-rpx {
+  --custom-width: 140rpx;
+  --custom-height: 70rpx;
+  --custom-margin: 12rpx;
+
+  width: var(--custom-width);
+  height: var(--custom-height);
+  margin: var(--custom-margin);
+  background-color: lavender;
+}
+
+/* Complex rpx values */
+.complex-rpx-values {
+  margin: 5rpx 10rpx 15rpx 20rpx;
+  padding: 8rpx 12rpx 16rpx 20rpx;
+  border-radius: 4rpx 6rpx 8rpx 10rpx;
+  box-shadow: 2rpx 4rpx 6rpx rgba(0, 0, 0, 0.3);
+}
+
+/* RPX in background properties */
+.background-rpx {
+  background-size: 100rpx 50rpx;
+  background-position: 10rpx 20rpx;
+  border: 1rpx solid black;
+}
+
+/* RPX in transform functions */
+.transform-rpx {
+  transform: translateX(30rpx) translateY(20rpx) scale(1.2);
+}
+
+/* Negative and decimal rpx values */
+.negative-decimal-rpx {
+  margin: -5rpx;
+  padding: 2.5rpx;
+  transform: translateX(-10.5rpx);
+}
+
+/* Zero rpx values */
+.zero-rpx {
+  margin: 0rpx;
+  padding: 0rpx;
+  border-width: 0rpx;
+}
