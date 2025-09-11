@@ -8,6 +8,7 @@ import { delayExecUntilJsReady, initEventDelay } from './delayWorkletEvent.js';
 import { initEomImpl } from './eomImpl.js';
 import { hydrateCtx } from './hydrate.js';
 import { JsFunctionLifecycleManager, isRunOnBackgroundEnabled } from './jsFunctionLifecycle.js';
+import { runRunOnMainThreadTask } from './runOnMainThread.js';
 import { profile } from './utils/profile.js';
 import { getFromWorkletRefMap, initWorkletRef } from './workletRef.js';
 
@@ -19,6 +20,7 @@ function initWorklet(): void {
     _hydrateCtx: hydrateCtx,
     _eventDelayImpl: initEventDelay(),
     _eomImpl: initEomImpl(),
+    _runRunOnMainThreadTask: runRunOnMainThreadTask,
   };
 
   if (isRunOnBackgroundEnabled()) {

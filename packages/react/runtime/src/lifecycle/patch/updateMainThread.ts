@@ -2,7 +2,12 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { updateWorkletRefInitValueChanges } from '@lynx-js/react/worklet-runtime/bindings';
+import type { ClosureValueType } from '@lynx-js/react/worklet-runtime/bindings';
+import {
+  runRunOnMainThreadTask,
+  setEomShouldFlushElementTree,
+  updateWorkletRefInitValueChanges,
+} from '@lynx-js/react/worklet-runtime/bindings';
 
 import type { PatchList, PatchOptions } from './commit.js';
 import { setMainThreadHydrating } from './isMainThreadHydrating.js';
@@ -12,6 +17,7 @@ import { markTiming, setPipeline } from '../../lynx/performance.js';
 import { __pendingListUpdates } from '../../pendingListUpdates.js';
 import { applyRefQueue } from '../../snapshot/workletRef.js';
 import { __page } from '../../snapshot.js';
+import { isMtsEnabled } from '../../worklet/functionality.js';
 import { getReloadVersion } from '../pass.js';
 
 function updateMainThread(
@@ -36,7 +42,7 @@ function updateMainThread(
   setPipeline(patchOptions.pipelineOptions);
   markTiming('mtsRenderStart');
   markTiming('parseChangesStart');
-  const { patchList, flushOptions = {} } = JSON.parse(data) as PatchList;
+  const { patchList, flushOptions = {}, delayedRunOnMainThreadData } = JSON.parse(data) as PatchList;
 
   markTiming('parseChangesEnd');
   markTiming('patchChangesStart');
@@ -62,6 +68,18 @@ function updateMainThread(
     }
   }
   applyRefQueue();
+  if (delayedRunOnMainThreadData && isMtsEnabled()) {
+    setEomShouldFlushElementTree(false);
+    for (const data of delayedRunOnMainThreadData) {
+      try {
+        runRunOnMainThreadTask(data.worklet, data.params as ClosureValueType[], data.resolveId);
+        /* v8 ignore next 3 */
+      } catch (e) {
+        lynx.reportError(e as Error);
+      }
+    }
+    setEomShouldFlushElementTree(true);
+  }
   if (patchOptions.pipelineOptions) {
     flushOptions.pipelineOptions = patchOptions.pipelineOptions;
   }

@@ -22,6 +22,7 @@ import { __root } from '../root.js';
 import { backgroundSnapshotInstanceManager } from '../snapshot.js';
 import type { SerializedSnapshotInstance } from '../snapshot.js';
 import { destroyWorklet } from '../worklet/destroy.js';
+import { delayedRunOnMainThreadData, takeDelayedRunOnMainThreadData } from '../worklet/runOnMainThread.js';
 
 export { runWithForce };
 
@@ -120,6 +121,9 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
       const patchList: PatchList = {
         patchList: [{ snapshotPatch, id: commitTaskId }],
       };
+      if (delayedRunOnMainThreadData.length) {
+        patchList.delayedRunOnMainThreadData = takeDelayedRunOnMainThreadData();
+      }
       const obj = commitPatchUpdate(patchList, { isHydration: true });
 
       lynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
