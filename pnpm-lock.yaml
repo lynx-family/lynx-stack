@@ -161,8 +161,8 @@ importers:
         specifier: ^0.0.4
         version: 0.0.4
       magic-string:
-        specifier: ^0.30.18
-        version: 0.30.18
+        specifier: ^0.30.19
+        version: 0.30.19
       tinybench:
         specifier: ^5.0.1
         version: 5.0.1
@@ -2674,6 +2674,7 @@ packages:
   '@rslib/core@0.13.1':
     resolution: {integrity: sha512-XDyTHHXtLs9Cki5vzaabgFXbn/EksCmR571SVbIxJZB05zD7LwbbpcyTXgXk2DrW/6nOm7aTceh/mQHF5qq9gQ==}
     engines: {node: '>=18.12.0'}
+    deprecated: deprecated due to bug, please consider using 0.12.2 or >= 0.13.2
     hasBin: true
     peerDependencies:
       '@microsoft/api-extractor': ^7
@@ -5930,9 +5931,6 @@ packages:
   lz-string@1.5.0:
     resolution: {integrity: sha512-h5bgJWpxJNswbU7qCrV0tIKQCaS3blPDrqKWx+QxzuzL1zGUzij9XCWLrSLsJPu5t+eWA/ycetzYAO5IOMcWAQ==}
     hasBin: true
-
-  magic-string@0.30.18:
-    resolution: {integrity: sha512-yi8swmWbO17qHhwIBNeeZxTceJMeBvWJaId6dyvTSOwTipqeHhMhOrz6513r1sOKnpvQ7zkhlG8tPrpilwTxHQ==}
 
   magic-string@0.30.19:
     resolution: {integrity: sha512-2N21sPY9Ws53PZvsEpVtNuSW+ScYbQdp4b9qUaL+9QkHUrGFKo56Lg9Emg5s9V/qrtNBmiR01sYhUOwu3H+VOw==}
@@ -13719,10 +13717,6 @@ snapshots:
       yallist: 4.0.0
 
   lz-string@1.5.0: {}
-
-  magic-string@0.30.18:
-    dependencies:
-      '@jridgewell/sourcemap-codec': 1.5.5
 
   magic-string@0.30.19:
     dependencies:
