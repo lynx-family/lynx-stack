@@ -589,6 +589,33 @@ describe('Config - toRsBuildConfig', () => {
       })
       expect(rsbuildConfig.resolve?.dedupe).toStrictEqual(['foo', 'bar', 'baz'])
     })
+
+    test('transform resolve.aliasStrategy with prefer-tsconfig', () => {
+      const rsbuildConfig = toRsbuildConfig({
+        resolve: {
+          aliasStrategy: 'prefer-tsconfig',
+        },
+      })
+      expect(rsbuildConfig.resolve?.aliasStrategy).toBe('prefer-tsconfig')
+    })
+
+    test('transform resolve.aliasStrategy with prefer-alias', () => {
+      const rsbuildConfig = toRsbuildConfig({
+        resolve: {
+          aliasStrategy: 'prefer-alias',
+        },
+      })
+      expect(rsbuildConfig.resolve?.aliasStrategy).toBe('prefer-alias')
+    })
+
+    test('transform resolve.aliasStrategy with undefined', () => {
+      const rsbuildConfig = toRsbuildConfig({
+        resolve: {
+          aliasStrategy: undefined,
+        },
+      })
+      expect(rsbuildConfig.resolve?.aliasStrategy).toBeUndefined()
+    })
   })
 
   describe('Source', () => {

@@ -1791,6 +1791,9 @@ describe('Config Validation', () => {
         { dedupe: [] },
         { dedupe: ['foo'] },
         { dedupe: ['foo', 'bar', 'baz'] },
+        { aliasStrategy: undefined },
+        { aliasStrategy: 'prefer-tsconfig' },
+        { aliasStrategy: 'prefer-alias' },
       ]
 
       resolveCases.forEach(resolve => {
@@ -1947,6 +1950,36 @@ describe('Config Validation', () => {
         Invalid config on \`$input.resolve.dedupe[2]\`.
           - Expect to be string
           - Got: null
+        ]
+      `)
+
+      expect(() =>
+        validate({
+          resolve: {
+            aliasStrategy: 'invalid-strategy',
+          },
+        })
+      ).toThrowErrorMatchingInlineSnapshot(`
+        [Error: Invalid configuration.
+
+        Invalid config on \`$input.resolve.aliasStrategy\`.
+          - Expect to be ("prefer-tsconfig" | "prefer-alias" | undefined)
+          - Got: string
+        ]
+      `)
+
+      expect(() =>
+        validate({
+          resolve: {
+            aliasStrategy: 123,
+          },
+        })
+      ).toThrowErrorMatchingInlineSnapshot(`
+        [Error: Invalid configuration.
+
+        Invalid config on \`$input.resolve.aliasStrategy\`.
+          - Expect to be ("prefer-tsconfig" | "prefer-alias" | undefined)
+          - Got: number
         ]
       `)
     })

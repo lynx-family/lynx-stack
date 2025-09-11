@@ -92,6 +92,32 @@ export interface Resolve {
   alias?: Record<string, string | false | string[]> | undefined
 
   /**
+   * Set the strategy for path alias resolution, to control the priority relationship
+   * between the `paths` option in `tsconfig.json` and the `resolve.alias` option of Rsbuild.
+   * - `prefer-tsconfig`: The `paths` option in `tsconfig.json` will take precedence over the
+   * `resolve.alias` option of Rsbuild.
+   * - `prefer-alias`: The `resolve.alias` option of Rsbuild will take precedence over the
+   * `paths` option in `tsconfig.json`.
+   * @default 'prefer-tsconfig'
+   *
+   * @example
+   *
+   * ```js
+   * import { defineConfig } from '@lynx-js/rspeedy'
+   *
+   * export default defineConfig({
+   *   resolve: {
+   *     alias: {
+   *       '@': './src',
+   *     },
+   *     aliasStrategy: 'prefer-alias',
+   *   },
+   * })
+   * ```
+   */
+  aliasStrategy?: 'prefer-tsconfig' | 'prefer-alias' | undefined
+
+  /**
    * Force to resolve the specified packages from project root, which is useful for deduplicating packages and reducing the bundle size.
    *
    * @remarks
