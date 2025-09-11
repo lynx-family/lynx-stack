@@ -24,7 +24,9 @@ const runAfterLoadScript = (() => {
   r.flush = () => { for (const cb of q) { cb(); } };
   return r;
 })();
-Codspeed.startBenchmark();
+if (typeof Codspeed !== "undefined") {
+  Codspeed.startBenchmark();
+}
 `;
           },
         }),
@@ -40,8 +42,10 @@ Codspeed.startBenchmark();
             const chunkName = filename.replace(/^\.rspeedy\//, '');
             // dprint-ignore
             return `\
-Codspeed.stopBenchmark();
-Codspeed.setExecutedBenchmark(\`${caseDir}::\${${JSON.stringify(chunkName)}}_LoadScript\`);
+if (typeof Codspeed !== "undefined") {
+  Codspeed.stopBenchmark();
+  Codspeed.setExecutedBenchmark(\`${caseDir}::\${${JSON.stringify(chunkName)}}_LoadScript\`);
+}
 runAfterLoadScript.flush();
 `;
           },
