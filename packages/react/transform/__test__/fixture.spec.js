@@ -225,14 +225,14 @@ describe('errors and warnings', () => {
         "errors": [
           {
             "location": {
-              "column": 1,
+              "column": 7,
               "file": "",
-              "length": 4,
+              "length": 0,
               "line": 1,
               "lineText": "<view>;",
             },
             "pluginName": "",
-            "text": "Unexpected token \`view\`. Expected jsx identifier",
+            "text": "Expected '</', got '<eof>'",
           },
         ],
         "warnings": [],
@@ -699,14 +699,14 @@ describe('transformBundle', () => {
       [
         {
           "location": {
-            "column": 11,
+            "column": 31,
             "file": "",
-            "length": 3,
+            "length": 0,
             "line": 1,
             "lineText": "const p = <any>Promise.all([]);",
           },
           "pluginName": "",
-          "text": "Unexpected token \`any\`. Expected jsx identifier",
+          "text": "Expected '</', got '<eof>'",
         },
       ]
     `);
