@@ -43,9 +43,16 @@ function createIFrameRealm(parent: Node): JSRealm {
   });
   iframe.style.display = 'none';
   iframe.src = 'about:blank';
+  iframe.sandbox = 'allow-same-origin allow-scripts'; // Restrict capabilities for security
   parent.appendChild(iframe);
   const iframeWindow = iframe.contentWindow! as unknown as typeof globalThis;
   const iframeDocument = iframe.contentDocument!;
+  try {
+    // @ts-expect-error
+    iframeWindow.parent = null;
+  } catch (e) {
+    console.warn('Failed to override iframe parent:', e);
+  }
   const loadScript: (url: string) => Promise<unknown> = (url) => {
     return new Promise(async (resolve, reject) => {
       if (iframeDocument.readyState !== 'complete') {
