@@ -4,13 +4,13 @@
 
 The UI Variants plugin (`uiVariants`) enables Tailwind-compatible variants based on a component's internal state or configuration using a unified class-based `ui-*` prefix.
 
-This mirrors patterns found in Headless UI or Radix UI, where internal states like `open`, `disabled`, or layout configurations like `side="left"` are surfaced via attribute selectors for styling purposes. Since Lynx doesn't support attribute selectors, this plugin provides a class-based alternative: instead of `[data-state="open"]`, you can write `.ui-open:*`.
+This mirrors patterns found in Headless UI or Radix UI, where internal states like `open`, `disabled`, or layout configurations like `side="left"` are surfaced via attribute selectors for styling purposes. Since Lynx doesn't support attribute selectors, this plugin provides a class-based alternative: instead of `[data-state="open"]`, you can write `ui-open:*`.
 
 ## How to Enable and Customize
 
 ### Enable with Default Values
 
-Enable the plugin with built-in `ui-*` prefixes and common component states:
+Enable the plugin with built-in `ui-*` prefix and common component states:
 
 ```ts
 createLynxPreset({
@@ -22,7 +22,7 @@ createLynxPreset({
 
 ### Customize Prefixes and Values
 
-Use a custom mapping to align with your component state structure (e.g., data-* patterns):
+Use a custom mapping to align with your component state structure (e.g., `data-*` patterns):
 
 ```ts
 createLynxPreset({
