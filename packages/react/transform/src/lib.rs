@@ -772,11 +772,6 @@ pub fn transform_bundle_result(
 
 #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
 mod wasm {
-  #[link(wasm_import_module = "getrandom")]
-  extern "C" {
-    fn random_fill_sync(offset: *mut u8, size: usize);
-  }
-
   use ::napi::{JsObject, NapiValue};
 
   const fn max(a: usize, b: usize) -> usize {
