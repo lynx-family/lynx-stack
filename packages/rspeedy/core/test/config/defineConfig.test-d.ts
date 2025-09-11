@@ -1,9 +1,12 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { describe, expectTypeOf, test } from 'vitest'
+import { assertType, describe, expectTypeOf, test } from 'vitest'
 
-import type { ConfigExport } from '../../src/config/defineConfig.js'
+import type {
+  ConfigExport,
+  ConfigParams,
+} from '../../src/config/defineConfig.js'
 import type { Config } from '../../src/config/index.js'
 import { defineConfig } from '../../src/index.js'
 
@@ -27,12 +30,22 @@ describe('Config - defineConfig', () => {
   })
 
   test('defineConfig accepts function returning Config', () => {
-    expectTypeOf(defineConfig(configFn)).toEqualTypeOf<() => Config>()
+    expectTypeOf(defineConfig(configFn)).toEqualTypeOf<
+      (params: ConfigParams) => Config
+    >()
   })
 
   test('defineConfig accepts function returning Promise<Config>', () => {
     expectTypeOf(defineConfig(configAsyncFn)).toEqualTypeOf<
-      () => Promise<Config>
+      (params: ConfigParams) => Promise<Config>
     >()
+  })
+
+  test('ConfigParams', () => {
+    defineConfig(({ env, command }) => {
+      assertType<string>(env)
+      assertType<string>(command)
+      return {}
+    })
   })
 })

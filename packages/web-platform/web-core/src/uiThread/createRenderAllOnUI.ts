@@ -56,7 +56,12 @@ function createIFrameRealm(parent: Node): JSRealm {
       script.fetchPriority = 'high';
       script.defer = true;
       script.async = false;
-      script.onload = () => resolve(iframeWindow?.module?.exports);
+      script.onload = () => {
+        const ret = iframeWindow?.module?.exports;
+        // @ts-expect-error
+        iframeWindow.module = { exports: undefined };
+        resolve(ret);
+      };
       script.onerror = (err) =>
         reject(new Error(`Failed to load script: ${url}`, { cause: err }));
       // @ts-expect-error
@@ -74,7 +79,10 @@ function createIFrameRealm(parent: Node): JSRealm {
       // @ts-expect-error
       iframeWindow.module = { exports: undefined };
       iframe.contentDocument!.head.appendChild(script);
-      return iframeWindow?.module?.exports;
+      const ret = iframeWindow?.module?.exports;
+      // @ts-expect-error
+      iframeWindow.module = { exports: undefined };
+      return ret;
     } else {
       throw new Error(`Failed to load script: ${url}`, { cause: xhr });
     }

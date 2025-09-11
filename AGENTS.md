@@ -1,4 +1,4 @@
-# Lynx Stack - Copilot Coding Agent Instructions
+# Lynx Stack
 
 This repository contains the **core JavaScript stack** of Lynx, including ReactLynx, Rspeedy, Lynx for Web, and testing utilities. This document provides essential information for coding agents to work efficiently with this codebase.
 
@@ -19,6 +19,8 @@ This repository contains the **core JavaScript stack** of Lynx, including ReactL
 
 ```bash
 # Install dependencies (required first)
+npm install -g corepack
+corepack enable
 pnpm install --frozen-lockfile
 
 # Verify toolchain
@@ -33,7 +35,7 @@ rustc --version  # Required for native bindings
 # Full build (REQUIRED before running tests)
 pnpm turbo build
 
-# Development build with watching (TypeScript only)
+# Development build with watching
 pnpm turbo watch build
 ```
 

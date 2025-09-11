@@ -34,16 +34,20 @@ const { prepareMainThreadAPIs } = await import(
   '@lynx-js/web-mainthread-apis'
 );
 function loadScriptSync(url: string): unknown {
+  globalThis.module.exports = null;
   importScripts(url);
-  return (globalThis as any).module?.exports;
+  const ret = globalThis.module?.exports;
+  return ret;
 }
 
 function loadScript(url: string): Promise<unknown> {
   return new Promise((resolve, reject) => {
     fetch(url)
       .then(() => {
+        globalThis.module.exports = null;
         importScripts(url);
-        resolve((globalThis as any).module?.exports);
+        const ret = globalThis.module?.exports;
+        resolve(ret);
       }).catch(reject);
   });
 }

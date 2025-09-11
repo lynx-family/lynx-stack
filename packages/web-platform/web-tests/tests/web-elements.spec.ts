@@ -5,7 +5,8 @@ import { swipe, dragAndHold } from './utils.js';
 import { test, expect } from './coverage-fixture.js';
 import type { Page } from '@playwright/test';
 import path from 'node:path';
-
+const ENABLE_MULTI_THREAD = !!process.env['ENABLE_MULTI_THREAD'];
+const isSSR = !!process.env['ENABLE_SSR'];
 const wait = async (ms: number) => {
   await new Promise((resolve) => {
     setTimeout(resolve, ms);
@@ -40,6 +41,7 @@ const getTitle = (titlePath: string[]) => {
 };
 
 test.describe('web-elements test suite', () => {
+  test.skip(isSSR || ENABLE_MULTI_THREAD, 'no difference for different mode');
   test.describe('layout', () => {
     test('layout/percentage-cyclic', async ({ page }, { title }) => {
       await gotoWebComponentPage(page, title);

@@ -48,9 +48,7 @@ describe('Config Validation', () => {
     test('valid type', () => {
       const cases = [
         {},
-        () => ({}),
         new Promise(p => p({})),
-        () => new Promise(p => p({})),
       ]
       cases.forEach(config => {
         expect(validate(config)).toStrictEqual(config)

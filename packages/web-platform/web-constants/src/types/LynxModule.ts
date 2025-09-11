@@ -38,6 +38,7 @@ export interface LynxTemplate {
   };
   elementTemplate: Record<string, ElementTemplateData[]>;
   version?: number;
+  appType: 'card' | 'lazy';
 }
 
 export interface LynxJSModule {

@@ -3032,6 +3032,60 @@ describe('list componentAtIndexes', () => {
       ]
     `);
   });
+
+  it('should update signMap before __FlushElementTree', () => {
+    const b = new SnapshotInstance(s0);
+    b.ensureElements();
+    const listRef = b.__elements[3];
+    const d0 = new SnapshotInstance(s1);
+    const d1 = new SnapshotInstance(s1);
+    const d2 = new SnapshotInstance(s1);
+    d0.setAttribute(0, { 'item-key': 'list-item-0' });
+    d1.setAttribute(0, { 'item-key': 'list-item-1' });
+    d2.setAttribute(0, { 'item-key': 'list-item-2' });
+    b.insertBefore(d0);
+    b.insertBefore(d1);
+    b.insertBefore(d2);
+    __pendingListUpdates.flush();
+
+    const listID = __GetElementUniqueID(listRef);
+    const signMap = gSignMap[listID];
+    const recycleMap = gRecycleMap[listID];
+
+    {
+      const flushElementTreeSpy = vi.spyOn(globalThis, '__FlushElementTree');
+      const signMapSetSpy = vi.spyOn(signMap, 'set');
+
+      const component = [];
+      component[0] = elementTree.triggerComponentAtIndex(listRef, 0);
+      component[1] = elementTree.triggerComponentAtIndex(listRef, 1);
+      elementTree.triggerEnqueueComponent(listRef, component[0]);
+      elementTree.triggerEnqueueComponent(listRef, component[1]);
+      // no reuse occurs
+      expect(signMapSetSpy).toHaveBeenCalled();
+      expect(flushElementTreeSpy).toHaveBeenCalled();
+      expect(signMapSetSpy.mock.invocationCallOrder[0])
+        .toBeLessThan(flushElementTreeSpy.mock.invocationCallOrder[0]);
+
+      flushElementTreeSpy.mockRestore();
+      signMapSetSpy.mockRestore();
+    }
+
+    // re-spy
+    const flushElementTreeSpy = vi.spyOn(globalThis, '__FlushElementTree');
+    const signMapSetSpy = vi.spyOn(signMap, 'set');
+    const recycleSignMap = recycleMap.get(s1);
+    expect(Array.from(recycleSignMap.keys()).length).toBe(2);
+    // reuse occurs
+    elementTree.triggerComponentAtIndex(listRef, 2);
+    expect(signMapSetSpy).toHaveBeenCalled();
+    expect(flushElementTreeSpy).toHaveBeenCalled();
+    expect(signMapSetSpy.mock.invocationCallOrder[0])
+      .toBeLessThan(flushElementTreeSpy.mock.invocationCallOrder[0]);
+
+    flushElementTreeSpy.mockRestore();
+    signMapSetSpy.mockRestore();
+  });
 });
 
 describe('list-item with "defer" attribute', () => {

@@ -227,6 +227,8 @@ function F() {
   );
 }
 
-root.render(
-  <F />,
-);
+runAfterLoadScript(() => {
+  root.render(
+    <F />,
+  );
+});

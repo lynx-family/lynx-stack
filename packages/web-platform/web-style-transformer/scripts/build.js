@@ -24,7 +24,7 @@ execSync(
   { cwd: packageRoot, stdio: 'inherit' },
 );
 execSync(
-  `pnpm wasm-opt ./dist/standard_bg.wasm -O3 -o ./dist/standard_bg.wasm`,
+  `pnpm wasm-opt --enable-bulk-memory ./dist/standard_bg.wasm -O3 -o ./dist/standard_bg.wasm`,
   { cwd: packageRoot, stdio: 'inherit' },
 );
 
@@ -42,6 +42,6 @@ execSync(
   { cwd: packageRoot, stdio: 'inherit' },
 );
 execSync(
-  `pnpm wasm-opt ./dist/legacy_bg.wasm -O3 -o ./dist/legacy_bg.wasm`,
+  `pnpm wasm-opt --enable-bulk-memory ./dist/legacy_bg.wasm -O3 -o ./dist/legacy_bg.wasm`,
   { cwd: packageRoot, stdio: 'inherit' },
 );

@@ -10,6 +10,8 @@ const __dirname = fileURLToPath(import.meta.url);
 
 export const test: typeof base = base.extend({
   context: async ({ browserName, context }, use, testInfo) => {
+    const dir = path.join(__dirname, '..', '..', '..', '.nyc_output');
+    await fs.mkdir(dir, { recursive: true });
     if (browserName !== 'chromium') {
       // Coverage is not supported on non-chromium browsers
       return use(context);
@@ -26,9 +28,6 @@ export const test: typeof base = base.extend({
     });
 
     await use(context);
-
-    const dir = path.join(__dirname, '..', '..', '..', '.nyc_output');
-    await fs.mkdir(dir, { recursive: true });
 
     await Promise.all(
       Array.from(pages.values()).flatMap(async (page, index) => {

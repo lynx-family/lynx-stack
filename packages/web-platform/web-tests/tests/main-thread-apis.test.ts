@@ -7,6 +7,7 @@ import { test, expect } from './coverage-fixture.js';
 import type { Page } from '@playwright/test';
 
 const ENABLE_MULTI_THREAD = !!process.env.ENABLE_MULTI_THREAD;
+const isSSR = !!process.env['ENABLE_SSR'];
 
 const wait = async (ms: number) => {
   await new Promise((resolve) => {
@@ -15,6 +16,7 @@ const wait = async (ms: number) => {
 };
 
 test.describe('main thread api tests', () => {
+  test.skip(isSSR, 'mts api tests not support ssr');
   test.beforeEach(async ({ page }) => {
     await page.goto(`/main-thread-test.html`, {
       waitUntil: 'domcontentloaded',

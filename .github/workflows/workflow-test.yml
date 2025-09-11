@@ -17,6 +17,10 @@ on:
         required: false
         type: boolean
         default: false
+      web-report-name:
+        required: false
+        type: string
+        default: "playwright-report"
       codecov-flags:
         required: false
         type: string
@@ -46,7 +50,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: "24"
+          node-version: "22"
       - name: TurboCache
         uses: lynx-infra/cache@5c6160a6a4c7fca80a2f3057bb9dfc9513fcb732
         with:
@@ -88,7 +92,7 @@ jobs:
         if: ${{ inputs.is-web && failure() }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: playwright-report
+          name: ${{ inputs.web-report-name }}
           path: packages/web-platform/web-tests/playwright-report
           if-no-files-found: error
           retention-days: 1

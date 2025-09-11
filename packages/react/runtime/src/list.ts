@@ -155,6 +155,11 @@ export function componentAtIndexFactory(
       }
       const root = childCtx.__element_root!;
       applyRefQueue();
+      // In the defer `list-item` scenario, `componentAtIndex` occurs with delay.
+      // Within `componentAtIndex`, nodes that quickly appear and disappear due to re-layout will be enqueued again,
+      // causing the mapping relationship between sign and SnapshotInstance to become corrupted.
+      // This results in a SnapshotInstance without `__elements` being enqueued.
+      signMap.set(sign, childCtx);
       if (!enableBatchRender) {
         const flushOptions: FlushOptions = {
           triggerLayout: true,
@@ -181,7 +186,6 @@ export function componentAtIndexFactory(
         }
         __FlushElementTree(root, flushOptions);
       }
-      signMap.set(sign, childCtx);
       return sign;
     }
 
@@ -190,6 +194,7 @@ export function componentAtIndexFactory(
     __AppendElement(list, root);
     const sign = __GetElementUniqueID(root);
     applyRefQueue();
+    signMap.set(sign, childCtx);
     if (!enableBatchRender) {
       __FlushElementTree(root, {
         triggerLayout: true,
@@ -202,7 +207,6 @@ export function componentAtIndexFactory(
         asyncFlush: true,
       });
     }
-    signMap.set(sign, childCtx);
     return sign;
   };
 

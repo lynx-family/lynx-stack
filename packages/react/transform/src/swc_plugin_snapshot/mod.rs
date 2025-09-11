@@ -8,9 +8,8 @@ use swc_core::{
   common::{
     comments::{CommentKind, Comments},
     errors::HANDLER,
-    sync::Lrc,
     util::take::Take,
-    Mark, SourceMap, Span, Spanned, SyntaxContext, DUMMY_SP,
+    Mark, Span, Spanned, SyntaxContext, DUMMY_SP,
   },
   ecma::{
     ast::{JSXExpr, *},
@@ -1029,9 +1028,7 @@ where
 
   pub fn new(
     cfg: JSXTransformerConfig,
-    _cm: Lrc<SourceMap>,
     comments: Option<C>,
-    _top_level_mark: Mark,
     unresolved_mark: Mark,
     mode: TransformMode,
   ) -> Self {
@@ -1629,9 +1626,7 @@ mod tests {
             preserve_jsx: true,
             ..Default::default()
           },
-          t.cm.clone(),
           Some(t.comments.clone()),
-          top_level_mark,
           unresolved_mark,
           TransformMode::Test,
         )),
@@ -1664,9 +1659,7 @@ mod tests {
             preserve_jsx: true,
             ..Default::default()
           },
-          t.cm.clone(),
           Some(t.comments.clone()),
-          top_level_mark,
           unresolved_mark,
           TransformMode::Test,
         )),
@@ -1694,9 +1687,7 @@ mod tests {
             preserve_jsx: true,
             ..Default::default()
           },
-          t.cm.clone(),
           Some(t.comments.clone()),
-          top_level_mark,
           unresolved_mark,
           TransformMode::Test,
         )),
@@ -1725,9 +1716,7 @@ mod tests {
         preserve_jsx: true,
         ..Default::default()
       },
-      t.cm.clone(),
       Some(t.comments.clone()),
-      Mark::new(),
       Mark::new(),
       TransformMode::Test,
     )),
@@ -1751,9 +1740,7 @@ mod tests {
         preserve_jsx: true,
         ..Default::default()
       },
-      t.cm.clone(),
       Some(t.comments.clone()),
-      Mark::new(),
       Mark::new(),
       TransformMode::Test,
     )),
@@ -1780,9 +1767,7 @@ mod tests {
         preserve_jsx: true,
         ..Default::default()
       },
-      t.cm.clone(),
       Some(t.comments.clone()),
-      Mark::new(),
       Mark::new(),
       TransformMode::Development,
     )),
@@ -1809,9 +1794,7 @@ mod tests {
         preserve_jsx: true,
         ..Default::default()
       },
-      t.cm.clone(),
       Some(t.comments.clone()),
-      Mark::new(),
       Mark::new(),
       TransformMode::Test,
     )),
@@ -1838,9 +1821,7 @@ mod tests {
         preserve_jsx: true,
         ..Default::default()
       },
-      t.cm.clone(),
       Some(t.comments.clone()),
-      Mark::new(),
       Mark::new(),
       TransformMode::Test
     )),
@@ -1869,9 +1850,7 @@ mod tests {
             preserve_jsx: false,
             ..Default::default()
           },
-          t.cm.clone(),
           None,
-          top_level_mark,
           unresolved_mark,
           TransformMode::Test,
         )),
@@ -1919,9 +1898,7 @@ mod tests {
             preserve_jsx: false,
             ..Default::default()
           },
-          t.cm.clone(),
           None,
-          top_level_mark,
           unresolved_mark,
           TransformMode::Test,
         )),
@@ -1965,9 +1942,7 @@ mod tests {
         preserve_jsx: true,
         ..Default::default()
       },
-      t.cm.clone(),
       Some(t.comments.clone()),
-      Mark::new(),
       Mark::new(),
       TransformMode::Test
     )),
@@ -1991,9 +1966,7 @@ mod tests {
         preserve_jsx: true,
         ..Default::default()
       },
-      t.cm.clone(),
       Some(t.comments.clone()),
-      Mark::new(),
       Mark::new(),
       TransformMode::Test
     )),
@@ -2018,9 +1991,7 @@ mod tests {
         preserve_jsx: true,
         ..Default::default()
       },
-      t.cm.clone(),
       Some(t.comments.clone()),
-      Mark::new(),
       Mark::new(),
       TransformMode::Test
     )),
@@ -2055,9 +2026,7 @@ mod tests {
         preserve_jsx: true,
         ..Default::default()
       },
-      t.cm.clone(),
       Some(t.comments.clone()),
-      Mark::new(),
       Mark::new(),
       TransformMode::Test
     )),
@@ -2084,9 +2053,7 @@ mod tests {
         preserve_jsx: true,
         ..Default::default()
       },
-      t.cm.clone(),
       Some(t.comments.clone()),
-      Mark::new(),
       Mark::new(),
       TransformMode::Test
     )),
@@ -2111,7 +2078,7 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |t| {
+    |_| {
       let unresolved_mark = Mark::new();
       let top_level_mark = Mark::new();
 
@@ -2122,9 +2089,7 @@ mod tests {
             preserve_jsx: true,
             ..Default::default()
           },
-          t.cm.clone(),
           None,
-          top_level_mark,
           unresolved_mark,
           TransformMode::Test,
         )),
@@ -2156,9 +2121,7 @@ mod tests {
         preserve_jsx: true,
         ..Default::default()
       },
-      t.cm.clone(),
       Some(t.comments.clone()),
-      Mark::new(),
       Mark::new(),
       TransformMode::Test
     )),
@@ -2190,9 +2153,7 @@ mod tests {
         preserve_jsx: true,
         ..Default::default()
       },
-      t.cm.clone(),
       Some(t.comments.clone()),
-      Mark::new(),
       Mark::new(),
       TransformMode::Test
     )),
@@ -2217,9 +2178,7 @@ mod tests {
         preserve_jsx: true,
         ..Default::default()
       },
-      t.cm.clone(),
       Some(t.comments.clone()),
-      Mark::new(),
       Mark::new(),
       TransformMode::Test
     )),
@@ -2244,9 +2203,7 @@ mod tests {
         preserve_jsx: true,
         ..Default::default()
       },
-      t.cm.clone(),
       Some(t.comments.clone()),
-      Mark::new(),
       Mark::new(),
       TransformMode::Test
     )),
@@ -2275,9 +2232,7 @@ mod tests {
         is_dynamic_component: Some(true),
         ..Default::default()
       },
-      t.cm.clone(),
       Some(t.comments.clone()),
-      Mark::new(),
       Mark::new(),
       TransformMode::Test
     )),
@@ -2306,9 +2261,7 @@ mod tests {
         is_dynamic_component: Some(true),
         ..Default::default()
       },
-      t.cm.clone(),
       Some(t.comments.clone()),
-      Mark::new(),
       Mark::new(),
       TransformMode::Test
     )),
@@ -2337,9 +2290,7 @@ mod tests {
             preserve_jsx: false,
             ..Default::default()
           },
-          t.cm.clone(),
           None,
-          top_level_mark,
           unresolved_mark,
           TransformMode::Test,
         )),
@@ -2377,17 +2328,14 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |t| {
-      let top_level_mark = Mark::new();
+    |_| {
       let unresolved_mark = Mark::new();
       visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
         super::JSXTransformerConfig {
           preserve_jsx: false,
           ..Default::default()
         },
-        t.cm.clone(),
         None,
-        top_level_mark,
         unresolved_mark,
         TransformMode::Test,
       ))
@@ -2406,17 +2354,14 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |t| {
-      let top_level_mark = Mark::new();
+    |_| {
       let unresolved_mark = Mark::new();
       visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
         super::JSXTransformerConfig {
           preserve_jsx: false,
           ..Default::default()
         },
-        t.cm.clone(),
         None,
-        top_level_mark,
         unresolved_mark,
         TransformMode::Test,
       ))
@@ -2435,17 +2380,14 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |t| {
-      let top_level_mark = Mark::new();
+    |_| {
       let unresolved_mark = Mark::new();
       visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
         super::JSXTransformerConfig {
           preserve_jsx: false,
           ..Default::default()
         },
-        t.cm.clone(),
         None,
-        top_level_mark,
         unresolved_mark,
         TransformMode::Test,
       ))
@@ -2463,8 +2405,7 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |t| {
-      let top_level_mark = Mark::new();
+    |_| {
       let unresolved_mark = Mark::new();
       visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
         super::JSXTransformerConfig {
@@ -2472,9 +2413,7 @@ mod tests {
           runtime_pkg: "@lynx-js/react/internal".into(),
           ..Default::default()
         },
-        t.cm.clone(),
         None,
-        top_level_mark,
         unresolved_mark,
         TransformMode::Development,
       ))
@@ -2503,9 +2442,7 @@ mod tests {
             target: TransformTarget::MIXED,
             ..Default::default()
           },
-          t.cm.clone(),
           None,
-          top_level_mark,
           unresolved_mark,
           TransformMode::Development,
         )),
@@ -2558,9 +2495,7 @@ mod tests {
             target: TransformTarget::MIXED,
             ..Default::default()
           },
-          t.cm.clone(),
           None,
-          top_level_mark,
           unresolved_mark,
           TransformMode::Development,
         )),
@@ -2615,9 +2550,7 @@ mod tests {
             target: TransformTarget::MIXED,
             ..Default::default()
           },
-          t.cm.clone(),
           None,
-          top_level_mark,
           unresolved_mark,
           TransformMode::Development,
         )),
@@ -2672,9 +2605,7 @@ mod tests {
             target: TransformTarget::MIXED,
             ..Default::default()
           },
-          t.cm.clone(),
           None,
-          top_level_mark,
           unresolved_mark,
           TransformMode::Development,
         )),
@@ -2727,9 +2658,7 @@ mod tests {
             target: TransformTarget::MIXED,
             ..Default::default()
           },
-          t.cm.clone(),
           None,
-          top_level_mark,
           unresolved_mark,
           TransformMode::Development,
         )),
@@ -2776,9 +2705,7 @@ mod tests {
         preserve_jsx: true,
         ..Default::default()
       },
-      t.cm.clone(),
       Some(t.comments.clone()),
-      Mark::new(),
       Mark::new(),
       TransformMode::Test,
     )),
@@ -2829,9 +2756,7 @@ aaaaa
         preserve_jsx: true,
         ..Default::default()
       },
-      t.cm.clone(),
       Some(t.comments.clone()),
-      Mark::new(),
       Mark::new(),
       TransformMode::Test,
     )),

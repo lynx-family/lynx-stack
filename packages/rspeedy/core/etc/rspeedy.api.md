@@ -76,6 +76,12 @@ export interface Config {
 }
 
 // @public
+export interface ConfigParams {
+    command: 'build' | 'dev' | 'inspect' | 'preview' | (string & Record<never, never>);
+    env: 'production' | 'development' | 'test' | (string & Record<never, never>);
+}
+
+// @public
 export type ConsoleType = 'log' | 'warn' | 'error' | 'info' | 'debug' | 'profile' | 'profileEnd' | (string & Record<never, never>);
 
 // @public
@@ -141,13 +147,13 @@ export interface Decorators {
 export function defineConfig(config: Config): Config;
 
 // @public
-export function defineConfig(config: () => Config): () => Config;
+export function defineConfig(config: (params: ConfigParams) => Config): (params: ConfigParams) => Config;
 
 // @public
 export function defineConfig(config: Promise<Config>): Promise<Config>;
 
 // @public
-export function defineConfig(config: () => Promise<Config>): () => Promise<Config>;
+export function defineConfig(config: (params: ConfigParams) => Promise<Config>): (params: ConfigParams) => Promise<Config>;
 
 // @public
 export interface Dev {

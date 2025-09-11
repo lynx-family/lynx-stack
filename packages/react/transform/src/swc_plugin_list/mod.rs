@@ -304,7 +304,6 @@ mod tests {
       ..Default::default()
     }),
     |t| {
-      let top_level_mark = Mark::new();
       let unresolved_mark = Mark::new();
       (
         visit_mut_pass(ListVisitor::new(Some(t.comments.clone()))),
@@ -314,9 +313,7 @@ mod tests {
             target: TransformTarget::MIXED,
             ..Default::default()
           },
-          t.cm.clone(),
           None,
-          top_level_mark,
           unresolved_mark,
           TransformMode::Development,
         )),
