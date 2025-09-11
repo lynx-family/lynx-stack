@@ -270,6 +270,7 @@ export interface Performance {
 // @public
 export interface Resolve {
     alias?: Record<string, string | false | string[]> | undefined;
+    aliasStrategy?: 'prefer-tsconfig' | 'prefer-alias' | undefined;
     dedupe?: string[] | undefined;
 }
 
