@@ -40,6 +40,9 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
         lazy ? ['lazy', 'import'] : ['import'],
       )
       const resolvePreact = createLazyResolver(reactLynxDir, ['import'])
+      api.expose(Symbol.for('@lynx-js/react/internal:resolve'), {
+        resolve,
+      })
 
       api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
         return mergeRsbuildConfig(config, {
