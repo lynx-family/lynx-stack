@@ -38,6 +38,7 @@ export {
   options,
   // Component is not an internal API, but refresh needs it from 'react/internal'
   Component,
+  process,
 } from 'preact';
 export type { Options } from 'preact';
 
