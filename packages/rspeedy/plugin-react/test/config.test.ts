@@ -1566,6 +1566,19 @@ describe('Config', () => {
   })
 
   describe('Bundle Splitting', () => {
+    const splitChunksDefault = {
+      "cacheGroups": {
+        "extract-entry-common-css": {
+          "chunks": "all",
+          "enforce": true,
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          "name": expect.any(Function),
+          "type": "css/mini-extract",
+        },
+      },
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      "chunks": expect.any(Function),
+    }
     test('default', async () => {
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
@@ -1580,7 +1593,7 @@ describe('Config', () => {
 
       const [config] = await rsbuild.initConfigs()
 
-      expect(config?.optimization?.splitChunks).toBe(false)
+      expect(config?.optimization?.splitChunks).toStrictEqual(splitChunksDefault)
     })
 
     test('performance.chunkSplit.strategy: "all-in-one"', async () => {
@@ -1602,7 +1615,7 @@ describe('Config', () => {
 
       const [config] = await rsbuild.initConfigs()
 
-      expect(config?.optimization?.splitChunks).toBe(false)
+      expect(config?.optimization?.splitChunks).toStrictEqual(splitChunksDefault)
     })
 
     test('performance.chunkSplit.strategy: "split-by-size"', async () => {
@@ -1633,7 +1646,7 @@ describe('Config', () => {
       if (config.optimization.splitChunks === false) {
         expect.unreachable('splitChunks is not false')
       }
-      expect(config.optimization.splitChunks.cacheGroups).toStrictEqual({})
+      expect(config.optimization.splitChunks.cacheGroups).toStrictEqual(splitChunksDefault.cacheGroups)
       expect(config.optimization.splitChunks).toHaveProperty('maxSize')
       expect(config.optimization.splitChunks).toHaveProperty('minSize')
     })

@@ -129,11 +129,15 @@ describe('Lazy', () => {
       await rsbuild.build()
 
       const handler = {
-        get: function() {
+        get: function(_target: any, prop: string) {
+          if (prop === 'Promise') return Promise
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-return
           return new Proxy(() => infiniteNestedObject, handler)
         },
       }
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const infiniteNestedObject = new Proxy(
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         () => infiniteNestedObject,
         handler,
       )
@@ -150,6 +154,7 @@ describe('Lazy', () => {
         },
         require: (key: string) => {
           // biome-ignore lint/suspicious/noExplicitAny: args passed to tt.define of lazy bundle
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-return
           const args: any[] = Array(18).fill(0).map(() => infiniteNestedObject)
           args[2] = exports
           args[10] = console
@@ -159,6 +164,7 @@ describe('Lazy', () => {
           )
         },
       }
+      // TODO: fix here, should not generate .x() for css merging
       eval(backgroundJSContent)
 
       expect(exports).toHaveProperty(
