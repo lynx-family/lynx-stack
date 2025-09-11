@@ -63,6 +63,15 @@ function setEomShouldFlushElementTree(value: boolean) {
   globalThis.lynxWorkletImpl?._eomImpl.setShouldFlush(value);
 }
 
+/**
+ * Runs a task on the main thread.
+ *
+ * @internal
+ */
+function runRunOnMainThreadTask(task: Worklet, params: ClosureValueType[], resolveId: number): void {
+  globalThis.lynxWorkletImpl?._runRunOnMainThreadTask(task, params, resolveId);
+}
+
 export {
   runWorkletCtx,
   updateWorkletRef,
@@ -70,4 +79,5 @@ export {
   registerWorklet,
   delayRunOnBackground,
   setEomShouldFlushElementTree,
+  runRunOnMainThreadTask,
 };

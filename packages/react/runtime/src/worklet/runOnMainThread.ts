@@ -7,6 +7,16 @@ import { WorkletEvents } from '@lynx-js/react/worklet-runtime/bindings';
 import { onPostWorkletCtx } from './ctx.js';
 import { isMtsEnabled } from './functionality.js';
 import { onFunctionCall } from './functionCall.js';
+import { isRendering } from '../lifecycle/isRendering.js';
+import { __globalSnapshotPatch } from '../lifecycle/patch/snapshotPatch.js';
+
+export let delayedRunOnMainThreadData: RunWorkletCtxData[] = [];
+
+export function takeDelayedRunOnMainThreadData(): typeof delayedRunOnMainThreadData {
+  const data = delayedRunOnMainThreadData;
+  delayedRunOnMainThreadData = [];
+  return data;
+}
 
 /**
  * `runOnMainThread` allows triggering main thread functions on the main thread asynchronously.
@@ -37,13 +47,19 @@ export function runOnMainThread<R, Fn extends (...args: any[]) => R>(fn: Fn): (.
     return new Promise((resolve) => {
       onPostWorkletCtx(fn as any as Worklet);
       const resolveId = onFunctionCall(resolve);
+      const data = {
+        worklet: fn as any as Worklet,
+        params,
+        resolveId,
+      } as RunWorkletCtxData;
+      if (__globalSnapshotPatch === undefined || isRendering.value) {
+        // before hydration or is rendering
+        delayedRunOnMainThreadData.push(data);
+        return;
+      }
       lynx.getCoreContext().dispatchEvent({
         type: WorkletEvents.runWorkletCtx,
-        data: JSON.stringify({
-          worklet: fn as any as Worklet,
-          params,
-          resolveId,
-        } as RunWorkletCtxData),
+        data: JSON.stringify(data),
       });
     });
   };
