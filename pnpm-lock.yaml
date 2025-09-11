@@ -595,10 +595,10 @@ importers:
         version: link:../../web-platform/web-elements
       '@rsbuild/plugin-less':
         specifier: 1.5.0
-        version: 1.5.0(@rsbuild/core@1.5.6)
+        version: 1.5.0(@rsbuild/core@1.5.4)
       '@rsbuild/plugin-sass':
         specifier: 1.4.0
-        version: 1.4.0(@rsbuild/core@1.5.6)
+        version: 1.4.0(@rsbuild/core@1.5.4)
       commander:
         specifier: ^13.1.0
         version: 13.1.0
@@ -613,7 +613,7 @@ importers:
         version: 1.1.1
       rsbuild-plugin-tailwindcss:
         specifier: 0.2.3
-        version: 0.2.3(@rsbuild/core@1.5.6)(tailwindcss@3.4.17)
+        version: 0.2.3(@rsbuild/core@1.5.4)(tailwindcss@3.4.17)
       rslog:
         specifier: ^1.2.11
         version: 1.2.11
@@ -1267,13 +1267,13 @@ importers:
         version: 7.30.7(@types/node@24.3.0)
       '@rsbuild/plugin-sass':
         specifier: 1.4.0
-        version: 1.4.0(@rsbuild/core@1.5.6)
+        version: 1.4.0(@rsbuild/core@1.5.4)
       '@rsbuild/plugin-type-check':
         specifier: 1.2.4
-        version: 1.2.4(@rsbuild/core@1.5.6)(@rspack/core@1.5.2(@swc/helpers@0.5.17))(typescript@5.9.2)
+        version: 1.2.4(@rsbuild/core@1.5.4)(@rspack/core@1.5.2(@swc/helpers@0.5.17))(typescript@5.9.2)
       '@rsbuild/plugin-typed-css-modules':
         specifier: 1.1.0
-        version: 1.1.0(@rsbuild/core@1.5.6)
+        version: 1.1.0(@rsbuild/core@1.5.4)
       '@rspress/core':
         specifier: 2.0.0-beta.28
         version: 2.0.0-beta.28(@types/react@19.1.10)(acorn@8.15.0)
@@ -9761,9 +9761,9 @@ snapshots:
       - lightningcss
       - webpack
 
-  '@rsbuild/plugin-less@1.5.0(@rsbuild/core@1.5.6)':
+  '@rsbuild/plugin-less@1.5.0(@rsbuild/core@1.5.4)':
     dependencies:
-      '@rsbuild/core': 1.5.6
+      '@rsbuild/core': 1.5.4
       deepmerge: 4.3.1
       reduce-configs: 1.1.1
 
@@ -9784,14 +9784,17 @@ snapshots:
       reduce-configs: 1.1.1
       sass-embedded: 1.90.0
 
-  '@rsbuild/plugin-sass@1.4.0(@rsbuild/core@1.5.6)':
+  '@rsbuild/plugin-type-check@1.2.4(@rsbuild/core@1.5.4)(@rspack/core@1.5.2(@swc/helpers@0.5.17))(typescript@5.9.2)':
     dependencies:
-      '@rsbuild/core': 1.5.6
       deepmerge: 4.3.1
-      loader-utils: 2.0.4
-      postcss: 8.5.6
+      json5: 2.2.3
       reduce-configs: 1.1.1
-      sass-embedded: 1.90.0
+      ts-checker-rspack-plugin: 1.1.4(@rspack/core@1.5.2(@swc/helpers@0.5.17))(typescript@5.9.2)
+    optionalDependencies:
+      '@rsbuild/core': 1.5.4
+    transitivePeerDependencies:
+      - '@rspack/core'
+      - typescript
 
   '@rsbuild/plugin-type-check@1.2.4(@rsbuild/core@1.5.6)(@rspack/core@1.5.2(@swc/helpers@0.5.17))(typescript@5.9.2)':
     dependencies:
@@ -9808,10 +9811,6 @@ snapshots:
   '@rsbuild/plugin-typed-css-modules@1.1.0(@rsbuild/core@1.5.4)':
     optionalDependencies:
       '@rsbuild/core': 1.5.4
-
-  '@rsbuild/plugin-typed-css-modules@1.1.0(@rsbuild/core@1.5.6)':
-    optionalDependencies:
-      '@rsbuild/core': 1.5.6
 
   '@rsdoctor/client@1.2.3': {}
 
@@ -10871,7 +10870,7 @@ snapshots:
       istanbul-lib-report: 3.0.1
       istanbul-lib-source-maps: 5.0.6
       istanbul-reports: 3.1.7
-      magic-string: 0.30.18
+      magic-string: 0.30.19
       magicast: 0.3.5
       std-env: 3.9.0
       test-exclude: 7.0.1
@@ -10903,7 +10902,7 @@ snapshots:
     dependencies:
       '@vitest/spy': 3.2.4
       estree-walker: 3.0.3
-      magic-string: 0.30.18
+      magic-string: 0.30.19
     optionalDependencies:
       vite: 5.4.2(@types/node@24.3.0)(sass-embedded@1.90.0)(sass@1.90.0)(terser@5.31.6)
 
@@ -10920,7 +10919,7 @@ snapshots:
   '@vitest/snapshot@3.2.4':
     dependencies:
       '@vitest/pretty-format': 3.2.4
-      magic-string: 0.30.18
+      magic-string: 0.30.19
       pathe: 2.0.3
 
   '@vitest/spy@3.2.4':
@@ -15257,6 +15256,12 @@ snapshots:
     optionalDependencies:
       '@rsbuild/core': 1.5.6
 
+  rsbuild-plugin-tailwindcss@0.2.3(@rsbuild/core@1.5.4)(tailwindcss@3.4.17):
+    dependencies:
+      tailwindcss: 3.4.17
+    optionalDependencies:
+      '@rsbuild/core': 1.5.4
+
   rsbuild-plugin-tailwindcss@0.2.3(@rsbuild/core@1.5.6)(tailwindcss@3.4.17):
     dependencies:
       tailwindcss: 3.4.17
@@ -16391,7 +16396,7 @@ snapshots:
       chai: 5.2.0
       debug: 4.4.1
       expect-type: 1.2.1
-      magic-string: 0.30.18
+      magic-string: 0.30.19
       pathe: 2.0.3
       picomatch: 4.0.3
       std-env: 3.9.0
