@@ -23,8 +23,7 @@ swc_core = { workspace = true, features = ["base", "ecma_codegen", "ecma_parser"
 version-compare = { workspace = true }
 
 [target."cfg(all(target_arch = \"wasm32\", target_os = \"unknown\"))".dependencies.getrandom]
-version = "0.2.15"
-features = ["custom"]
+version = "0.3.3"
 
 [build-dependencies]
 napi-build = "2.1.3"

@@ -18,7 +18,8 @@ await fs.mkdir('dist', { recursive: true });
 execSync(`cargo build --release --target wasm32-unknown-unknown --features noop`, {
   env: {
     ...process.env,
-    RUSTFLAGS: '-C link-arg=--export-table -C link-arg=-s',
+    // eslint-disable-next-line no-useless-escape
+    RUSTFLAGS: '-C link-arg=--export-table -C link-arg=-s --cfg getrandom_backend="custom"',
   },
   stdio: 'inherit',
 });

@@ -221,6 +221,7 @@ impl napi::bindgen_prelude::ToNapiValue for IsModuleConfig {
     match val.0 {
       IsModule::Bool(v) => <bool>::to_napi_value(env, v),
       IsModule::Unknown => <&str>::to_napi_value(env, "unknown"),
+      IsModule::CommonJS => <&str>::to_napi_value(env, "commonjs"),
     }
   }
 }
@@ -636,6 +637,7 @@ fn transform_react_lynx_inner(
         source_root: "".into(), // TODO: add root
         source_file_name: options.source_file_name.as_deref(),
         source_map_url: None,
+        source_map_ignore_list: None,
         output_path: None,
         inline_sources_content: options.inline_sources_content.unwrap_or(true),
         source_map: match options.sourcemap {
@@ -759,22 +761,22 @@ pub fn transform_bundle_result(
 
 #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
 mod wasm {
-  use getrandom::register_custom_getrandom;
-  use getrandom::Error;
+  // use getrandom::register_custom_getrandom;
+  // use getrandom::Error;
 
   #[link(wasm_import_module = "getrandom")]
   extern "C" {
     fn random_fill_sync(offset: *mut u8, size: usize);
   }
 
-  fn custom_getrandom(buf: &mut [u8]) -> Result<(), Error> {
-    unsafe {
-      random_fill_sync(buf.as_mut_ptr(), buf.len());
-    }
-    Ok(())
-  }
+  // fn custom_getrandom(buf: &mut [u8]) -> Result<(), Error> {
+  //   unsafe {
+  //     random_fill_sync(buf.as_mut_ptr(), buf.len());
+  //   }
+  //   Ok(())
+  // }
 
-  register_custom_getrandom!(custom_getrandom);
+  // register_custom_getrandom!(custom_getrandom);
 
   use ::napi::{JsObject, NapiValue};
 
