@@ -2,7 +2,7 @@ import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
 import * as ReactLynx from "@lynx-js/react";
 import './foo.css';
 import bar from './bar.css';
-const __snapshot_da39a_test_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_test_1", function() {
+const __snapshot_2d408_test_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_2d408_test_1", function() {
     const pageId = ReactLynx.__pageId;
     const el = __CreateView(pageId);
     return [
@@ -11,7 +11,7 @@ const __snapshot_da39a_test_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapsh
 }, null, null, undefined, globDynamicComponentEntry, null);
 function App() {
     return /*#__PURE__*/ _jsx(Baz, {
-        foo: /*#__PURE__*/ _jsx(__snapshot_da39a_test_1, {})
+        foo: /*#__PURE__*/ _jsx(__snapshot_2d408_test_1, {})
     });
 }
 bar, App;

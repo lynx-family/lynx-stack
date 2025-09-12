@@ -1,14 +1,14 @@
 /*#__PURE__*/ import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
 import * as ReactLynx from "@lynx-js/react";
-const __snapshot_da39a_test_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_test_1", function() {
+const __snapshot_2d408_test_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_2d408_test_1", function() {
     const pageId = ReactLynx.__pageId;
     const el = __CreateView(pageId);
     return [
         el
     ];
 }, null, null, 0, globDynamicComponentEntry, null);
-_jsx(__snapshot_da39a_test_1, {});
-const __snapshot_da39a_test_2 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_test_2", function() {
+_jsx(__snapshot_2d408_test_1, {});
+const __snapshot_2d408_test_2 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_2d408_test_2", function() {
     const pageId = ReactLynx.__pageId;
     const el = __CreateText(pageId);
     const el1 = __CreateRawText("foo");
@@ -18,8 +18,8 @@ const __snapshot_da39a_test_2 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapsh
         el1
     ];
 }, null, null, 0, globDynamicComponentEntry, null);
-/*#__PURE__*/ _jsx(__snapshot_da39a_test_2, {});
-const __snapshot_da39a_test_3 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_test_3", function() {
+/*#__PURE__*/ _jsx(__snapshot_2d408_test_2, {});
+const __snapshot_2d408_test_3 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_2d408_test_3", function() {
     const pageId = ReactLynx.__pageId;
     const el = __CreateView(pageId);
     return [
@@ -28,10 +28,10 @@ const __snapshot_da39a_test_3 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapsh
 }, null, null, 0, globDynamicComponentEntry, null);
 function Foo() {
     return /*#__PURE__*/ _jsx(Bar, {
-        children: /*#__PURE__*/ _jsx(__snapshot_da39a_test_3, {})
+        children: /*#__PURE__*/ _jsx(__snapshot_2d408_test_3, {})
     });
 }
-const __snapshot_da39a_test_4 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_test_4", function() {
+const __snapshot_2d408_test_4 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_2d408_test_4", function() {
     const pageId = ReactLynx.__pageId;
     const el = __CreateView(pageId);
     return [
@@ -40,7 +40,7 @@ const __snapshot_da39a_test_4 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapsh
 }, null, null, 0, globDynamicComponentEntry, null);
 function App() {
     return /*#__PURE__*/ _jsx(Baz, {
-        foo: /*#__PURE__*/ _jsx(__snapshot_da39a_test_4, {})
+        foo: /*#__PURE__*/ _jsx(__snapshot_2d408_test_4, {})
     });
 }
 Foo, App;

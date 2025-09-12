@@ -85,7 +85,7 @@ const transformReactLynx = async (
   }
 
   const transformOptions: SwcTransformOptions = {
-    filename: options.filename ?? 'test.js',
+    filename: options?.filename ?? 'test.js',
     sourceMaps: options?.sourcemap ?? false,
     isModule: options?.isModule ?? true,
     jsc: {
