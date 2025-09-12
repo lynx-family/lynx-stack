@@ -2,30 +2,44 @@
   "name": "@lynx-js/web-mainthread-apis",
   "version": "0.16.0",
   "private": false,
-  "description": "",
-  "keywords": [],
+  "description": "High-performance Rust-based main thread APIs for Lynx web platform",
+  "keywords": [
+    "lynx",
+    "rust",
+    "wasm",
+    "web-apis",
+    "mainthread"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/lynx-family/lynx-stack.git",
     "directory": "packages/web-platform/web-mainthread-apis"
   },
   "license": "Apache-2.0",
+  "sideEffects": false,
   "type": "module",
-  "main": "dist/index.js",
-  "typings": "dist/index.d.ts",
+  "main": "index.js",
+  "typings": "index.d.ts",
   "files": [
     "dist",
-    "binary",
     "!dist/**/*.js.map",
+    "*.d.ts",
+    "*.js",
     "LICENSE.txt",
     "Notice.txt",
     "CHANGELOG.md",
-    "README.md",
-    "**/*.css"
+    "README.md"
   ],
+  "scripts": {
+    "build": "node scripts/build.js",
+    "build:wasm-bindgen": "wasm-bindgen --version || cargo install wasm-bindgen-cli --version 0.2.101",
+    "test": "wasm-pack test --node"
+  },
   "dependencies": {
     "@lynx-js/web-constants": "workspace:*",
-    "@lynx-js/web-style-transformer": "workspace:*",
-    "hyphenate-style-name": "^1.1.0"
+    "wasm-feature-detect": "^1.8.0"
+  },
+  "devDependencies": {
+    "binaryen": "^124.0.0"
   }
 }

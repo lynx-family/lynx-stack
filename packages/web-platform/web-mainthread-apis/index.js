@@ -29,5 +29,5 @@ export async function initWasm() {
 }
 
 // Re-export main functions for backwards compatibility
-export { prepareMainThreadAPIs } from './prepareMainThreadAPIs.js';
-export * from './createMainThreadGlobalThis.js';
+export { prepareMainThreadAPIs } from './src/prepareMainThreadAPIs.js';
+export * from './src/createMainThreadGlobalThis.js';

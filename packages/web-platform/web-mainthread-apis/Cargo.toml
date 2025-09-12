@@ -1,0 +1,19 @@
+[package]
+name = "web_mainthread_apis"
+version = "0.16.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+js-sys = { workspace = true }
+lazy_static = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+wasm-bindgen = { workspace = true, features = ["serde-serialize"] }
+wasm-bindgen-futures = "0.4"
+web-sys = { workspace = true, features = ["console", "Document", "Element", "HtmlElement", "Node", "Window", "EventTarget", "Event", "CustomEvent", "Performance", "DomRect", "DomRectReadOnly", "CssStyleDeclaration", "HtmlStyleElement", "HtmlHeadElement", "ShadowRoot", "WorkerGlobalScope", "Worker", "MessageEvent", "MessagePort", "MessageChannel", "Location", "Url"] }
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3"
