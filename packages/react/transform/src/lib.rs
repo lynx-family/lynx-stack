@@ -481,7 +481,6 @@ fn transform_react_lynx_inner(
         JSXTransformer::new(
           snapshot_plugin_config,
           Some(&comments),
-          unresolved_mark,
           options.mode.unwrap_or(TransformMode::Production),
         )
         .with_content_hash(content_hash.clone()),

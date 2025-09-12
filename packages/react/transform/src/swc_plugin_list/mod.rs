@@ -182,7 +182,7 @@ where
 #[cfg(test)]
 mod tests {
   use swc_core::{
-    common::{comments::SingleThreadedComments, Mark},
+    common::comments::SingleThreadedComments,
     ecma::{
       parser::{EsSyntax, Syntax},
       transforms::testing::test,
@@ -304,7 +304,6 @@ mod tests {
       ..Default::default()
     }),
     |t| {
-      let unresolved_mark = Mark::new();
       (
         visit_mut_pass(ListVisitor::new(Some(t.comments.clone()))),
         visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
@@ -314,7 +313,6 @@ mod tests {
             ..Default::default()
           },
           None,
-          unresolved_mark,
           TransformMode::Development,
         )),
       )
