@@ -1,1 +1,1 @@
-const a = <view bindtap catchtap />;
+const a = <view bindtap catchtap/>;

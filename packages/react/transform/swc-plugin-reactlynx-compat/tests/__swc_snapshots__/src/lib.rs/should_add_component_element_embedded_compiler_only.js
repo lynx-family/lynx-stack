@@ -1,7 +1,1 @@
-<view>
-  <Component>
-    <view>
-      <Component />
-    </view>
-  </Component>
-</view>;
+<view><Component><view><Component/></view></Component></view>;

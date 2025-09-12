@@ -1,1 +1,1 @@
-const a = <view />;
+const a = <view/>;

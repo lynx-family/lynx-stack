@@ -1,1 +1,1 @@
-const a = <View.View />;
+const a = <View.View/>;

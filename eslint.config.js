@@ -49,9 +49,7 @@ export default tseslint.config(
       'packages/react/transform/tests/__swc_snapshots__/**',
       'packages/react/transform/__test__/**/__snapshots__/**',
 
-      'packages/react/transform/__test__/css/__snapshots__/**',
       'packages/react/transform/**/tests/__swc_snapshots__/**',
-      'packages/react/transform/swc-plugin-reactlynx/__test__/**',
 
       // Configs
       'eslint.config.js',

@@ -1,4 +1,4 @@
 {
-  const View2 = View;
-  const a = <View2 />;
+    const View2 = View;
+    const a = <View2/>;
 }
