@@ -125,18 +125,16 @@ describe('uiVariants plugin', () => {
     const variants = extractVariants(vi.mocked(api.matchVariant));
 
     expect(Object.keys(variants)).toEqual(
-      expect(Object.keys(variants)).toEqual(
-        expect.arrayContaining([
-          'custom',
-          'group-custom',
-          'peer-custom',
-          'parent-custom',
-          'custom-side',
-          'group-custom-side',
-          'peer-custom-side',
-          'parent-custom-side',
-        ]),
-      ),
+      expect.arrayContaining([
+        'custom',
+        'group-custom',
+        'peer-custom',
+        'parent-custom',
+        'custom-side',
+        'group-custom-side',
+        'peer-custom-side',
+        'parent-custom-side',
+      ]),
     );
 
     expect(variants['custom']?.('open', {})).toBe('&.custom-open');

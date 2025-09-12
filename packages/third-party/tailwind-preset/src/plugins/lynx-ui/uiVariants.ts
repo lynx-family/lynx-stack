@@ -118,7 +118,9 @@ const uiVariants: PluginWithOptions<UIVariantsOptions> = createPlugin
           (value: string) => {
             const mapped = valueMap[value];
             if (!mapped || typeof mapped !== 'string') return '';
-            return `&.${prefix}-${mapped}`;
+
+            const cls = escapeClassName(`${prefix}-${mapped}`);
+            return `&.${cls}`;
           },
           {
             values: valueMap,
@@ -138,8 +140,9 @@ const uiVariants: PluginWithOptions<UIVariantsOptions> = createPlugin
             const groupSelector = modifier
               ? `:merge(.${projectPrefix}group\\/${escapeClassName(modifier)})`
               : `:merge(.${projectPrefix}group)`;
+            const cls = escapeClassName(`${prefix}-${mapped}`);
 
-            return `${groupSelector}.${prefix}-${mapped} &`;
+            return `${groupSelector}.${cls} &`;
           },
           {
             values: valueMap,
@@ -160,7 +163,9 @@ const uiVariants: PluginWithOptions<UIVariantsOptions> = createPlugin
               ? `:merge(.${projectPrefix}peer\\/${escapeClassName(modifier)})`
               : `:merge(.${projectPrefix}peer)`;
 
-            return `${peerSelector}.${prefix}-${mapped} ~ &`;
+            const cls = escapeClassName(`${prefix}-${mapped}`);
+
+            return `${peerSelector}.${cls} ~ &`;
           },
           {
             values: valueMap,
@@ -178,7 +183,9 @@ const uiVariants: PluginWithOptions<UIVariantsOptions> = createPlugin
           (value: string) => {
             const mapped = valueMap[value];
             if (!mapped || typeof mapped !== 'string') return '';
-            return `.${prefix}-${mapped} > &`;
+
+            const cls = escapeClassName(`${prefix}-${mapped}`);
+            return `.${cls} > &`;
           },
           {
             values: valueMap,

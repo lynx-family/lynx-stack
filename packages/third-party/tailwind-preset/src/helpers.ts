@@ -132,7 +132,13 @@ export type { ShadowPart };
 /**
  * @internal Tailwind implementation detail. Use via TW_NO_PREFIX to avoid prefixing of class candidates.
  */
-export { INTERNAL_FEATURES };
-export const TW_NO_PREFIX = {
+
+interface InternalFeatures {
+  [INTERNAL_FEATURES]: {
+    respectPrefix: false;
+  };
+}
+
+export const TW_NO_PREFIX: InternalFeatures = {
   [INTERNAL_FEATURES]: { respectPrefix: false },
-} as const;
+};
