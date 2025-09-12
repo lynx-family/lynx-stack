@@ -174,7 +174,7 @@
     "api-extractor": "api-extractor run --verbose"
   },
   "dependencies": {
-    "preact": "npm:@hongzhiyuan/preact@10.24.0-00213bad"
+    "preact": "npm:@upupming/preact@10.24.0-c76271e"
   },
   "devDependencies": {
     "@lynx-js/types": "3.4.11",
