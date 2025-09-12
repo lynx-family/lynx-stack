@@ -1,5 +1,25 @@
 # @lynx-js/web-elements
 
+## 0.8.6
+
+### Patch Changes
+
+- fix: 1. svg use image tag to render, to differentiate background-image styles ([#1668](https://github.com/lynx-family/lynx-stack/pull/1668))
+
+  1. use blob instead of raw data-uri
+
+  > Not using data-uri(data:image/svg+xml;utf8,${props.content})
+  > since it has follow limitations:
+  >
+  > < and > must be encoded to %3C and %3E.
+  > Double quotes must be converted to single quotes.
+  > Colors must use a non-hex format because # will not work inside data-uri.
+  > See: https://codepen.io/zvuc/pen/BWNLJL
+  > Instead, we use modern Blob API to create SVG URL that have the same support
+
+- Updated dependencies [[`d618304`](https://github.com/lynx-family/lynx-stack/commit/d6183049a2f67a5ec68c2e1ef9efbdf26af4c343), [`1d97fce`](https://github.com/lynx-family/lynx-stack/commit/1d97fce68178418f6af8d50e54ab24a5567452b7)]:
+  - @lynx-js/web-elements-template@0.8.6
+
 ## 0.8.5
 
 ### Patch Changes

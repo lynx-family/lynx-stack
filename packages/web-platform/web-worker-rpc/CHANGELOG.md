@@ -1,5 +1,7 @@
 # @lynx-js/web-worker-rpc
 
+## 0.16.1
+
 ## 0.16.0
 
 ### Minor Changes
