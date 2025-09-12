@@ -5,19 +5,19 @@ import { createRequire } from 'node:module';
 
 import type { LoaderContext } from '@rspack/core';
 
-import { getBackgroundTransformOptions } from './options.js';
-import type { ReactLoaderOptions } from './options.js';
+import { getBackgroundTransformOptions } from './loader-options.js';
+import type { ReactLoaderOptions } from './loader-options.js';
 
-function backgroundLoader(
+async function backgroundLoader(
   this: LoaderContext<ReactLoaderOptions>,
   content: string,
-): void {
+): Promise<void> {
+  const callback = this.async();
   const require = createRequire(import.meta.url);
-  const { transformPath = '@lynx-js/react/transform' } = this.getOptions();
-  const { transformReactLynxSync } = require(
-    transformPath,
+  const { transformReactLynx } = require(
+    '@lynx-js/react/transform',
   ) as typeof import('@lynx-js/react/transform');
-  const result = transformReactLynxSync(
+  const result = await transformReactLynx(
     content,
     getBackgroundTransformOptions.call(this),
   );
@@ -25,30 +25,24 @@ function backgroundLoader(
   if (result.errors.length > 0) {
     for (const error of result.errors) {
       if (this.experiments?.emitDiagnostic) {
-        // Rspack with `emitDiagnostic` API
         try {
           this.experiments.emitDiagnostic({
-            message: error.text!,
+            message: error,
             sourceCode: content,
-            location: {
-              line: error.location?.line ?? 1,
-              column: error.location?.column ?? 0,
-              length: error.location?.length ?? 0,
-              text: error.text ?? '',
-            },
             severity: 'error',
           });
         } catch {
           // Rspack may throw on invalid line & column when containing UTF-8.
           // We catch it up here.
-          this.emitError(new Error(error.text));
+          this.emitError(new Error(error));
         }
       } else {
         // Webpack or legacy Rspack
-        this.emitError(new Error(error.text));
+        this.emitError(new Error(error));
       }
     }
-    this.callback(new Error('react-transform failed'));
+
+    callback(new Error('react-transform failed'));
 
     return;
   }
@@ -58,27 +52,21 @@ function backgroundLoader(
       // Rspack with `emitDiagnostic` API
       try {
         this.experiments.emitDiagnostic({
-          message: warning.text!,
+          message: warning,
           sourceCode: content,
-          location: {
-            line: warning.location?.line ?? 1,
-            column: warning.location?.column ?? 0,
-            length: warning.location?.length ?? 0,
-            text: warning.text ?? '',
-          },
           severity: 'warning',
         });
       } catch {
         // Rspack may throw on invalid line & column when containing UTF-8.
         // We catch it up here.
-        this.emitWarning(new Error(warning.text));
+        this.emitWarning(new Error(warning));
       }
     } else {
       // Webpack or legacy Rspack
-      this.emitWarning(new Error(warning.text));
+      this.emitWarning(new Error(warning));
     }
   }
-  this.callback(null, result.code, result.map);
+  callback(null, result.code, result.map);
 }
 
 export default backgroundLoader;

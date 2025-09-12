@@ -4,7 +4,7 @@
 
 import { bench, describe } from 'vitest';
 
-import { transformReactLynx } from '../main.js';
+import { transformReactLynx } from '../index';
 
 describe('Basic', () => {
   const largeInputContent = `
@@ -19,17 +19,15 @@ export function App() {
 }`;
 
   const config = {
-    pluginName: '',
     filename: '',
     sourcemap: false,
     cssScope: false,
-    jsx: true,
+    snapshot: true,
     directiveDCE: false,
     defineDCE: false,
     shake: true,
     compat: false,
     worklet: false,
-    refresh: false,
   };
 
   bench('transform 1000 view elements', async () => {

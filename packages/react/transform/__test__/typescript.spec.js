@@ -3,14 +3,17 @@
 // LICENSE file in the root directory of this source tree.
 import { describe, expect, it } from 'vitest';
 
-import { transformReactLynx } from '../main.js';
+import { transformReactLynx } from '../index';
 
 describe('TypeScript', () => {
   it('import type {  } from "lynx-js/react-runtime"', async () => {
     const inputContent = `
 import type {  } from "lynx-js/react-runtime";
 `;
-    const { code } = await transformReactLynx(inputContent);
+    const { code } = await transformReactLynx(inputContent, {
+      syntaxConfig: { syntax: 'typescript', tsx: false },
+    });
+
     expect(code).toMatchInlineSnapshot(`
       "export { };
       "
@@ -21,7 +24,9 @@ import type {  } from "lynx-js/react-runtime";
     const inputContent = `
 import type { Foo } from "lynx-js/react-runtime";
 `;
-    const { code } = await transformReactLynx(inputContent);
+    const { code } = await transformReactLynx(inputContent, {
+      syntaxConfig: { syntax: 'typescript', tsx: false },
+    });
     expect(code).toMatchInlineSnapshot(`
       "export { };
       "
@@ -32,7 +37,9 @@ import type { Foo } from "lynx-js/react-runtime";
     const inputContent = `
 import { type Foo } from "lynx-js/react-runtime";
 `;
-    const { code } = await transformReactLynx(inputContent);
+    const { code } = await transformReactLynx(inputContent, {
+      syntaxConfig: { syntax: 'typescript', tsx: false },
+    });
     expect(code).toMatchInlineSnapshot(`
       "export { };
       "
@@ -43,7 +50,9 @@ import { type Foo } from "lynx-js/react-runtime";
     const inputContent = `
 import { type Foo, type Bar } from "lynx-js/react-runtime";
 `;
-    const { code } = await transformReactLynx(inputContent);
+    const { code } = await transformReactLynx(inputContent, {
+      syntaxConfig: { syntax: 'typescript', tsx: false },
+    });
     expect(code).toMatchInlineSnapshot(`
       "export { };
       "
@@ -55,7 +64,9 @@ import { type Foo, type Bar } from "lynx-js/react-runtime";
 import { type Foo, type Bar } from "lynx-js/react-runtime";
 export const a: Foo = {};
 `;
-    const { code } = await transformReactLynx(inputContent);
+    const { code } = await transformReactLynx(inputContent, {
+      syntaxConfig: { syntax: 'typescript', tsx: false },
+    });
     expect(code).toMatchInlineSnapshot(`
       "export const a = {};
       "
@@ -66,7 +77,9 @@ export const a: Foo = {};
     const inputContent = `
 import { type Foo, Bar } from "lynx-js/react-runtime";
 `;
-    const { code } = await transformReactLynx(inputContent);
+    const { code } = await transformReactLynx(inputContent, {
+      syntaxConfig: { syntax: 'typescript', tsx: false },
+    });
     expect(code).toMatchInlineSnapshot(`
       "export { };
       "
@@ -77,7 +90,9 @@ import { type Foo, Bar } from "lynx-js/react-runtime";
     const inputContent = `
 import { Foo } from "lynx-js/react-runtime";
 `;
-    const { code } = await transformReactLynx(inputContent);
+    const { code } = await transformReactLynx(inputContent, {
+      syntaxConfig: { syntax: 'typescript', tsx: false },
+    });
     expect(code).toMatchInlineSnapshot(`
       "export { };
       "
@@ -88,7 +103,9 @@ import { Foo } from "lynx-js/react-runtime";
     const inputContent = `
 import {  } from "lynx-js/react-runtime";
 `;
-    const { code } = await transformReactLynx(inputContent);
+    const { code } = await transformReactLynx(inputContent, {
+      syntaxConfig: { syntax: 'typescript', tsx: false },
+    });
     expect(code).toMatchInlineSnapshot(`
       "import "lynx-js/react-runtime";
       "

@@ -1,11 +1,34 @@
 WARNING in ./compat/utf-8/index.jsx
 Module Warning (from ../../lib/loaders/background.js):
-DEPRECATED: old JSXElementName "Text" is changed to "text"
+  ! DEPRECATED: old JSXElementName "Text" is changed to "text"
+   ,-[<LINE:COLUMN>]
+ 1 | import { Text } from '@lynx-js/react-components'
+ 2 | 
+ 3 | function App() {
+ 4 |   return <Text>你好，世界</Text>
+   :                            ^^^^
+ 5 | }
+   `----
 
 WARNING in ./compat/utf-8/index.jsx
 Module Warning (from ../../lib/loaders/background.js):
-DEPRECATED: old JSXElementName "Text" is changed to "text"
+  ! DEPRECATED: old JSXElementName "Text" is changed to "text"
+   ,-[<LINE:COLUMN>]
+ 1 | import { Text } from '@lynx-js/react-components'
+ 2 | 
+ 3 | function App() {
+ 4 |   return <Text>你好，世界</Text>
+   :           ^^^^
+ 5 | }
+   `----
 
 WARNING in ./compat/utf-8/index.jsx
 Module Warning (from ../../lib/loaders/background.js):
-DEPRECATED: old package "@lynx-js/react-components" is removed
+  ! DEPRECATED: old package "@lynx-js/react-components" is removed
+   ,-[<LINE:COLUMN>]
+ 1 | import { Text } from '@lynx-js/react-components'
+   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ 2 | 
+ 3 | function App() {
+ 4 |   return <Text>你好，世界</Text>
+   `----

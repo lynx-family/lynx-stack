@@ -4,45 +4,21 @@
 
 ```ts
 
+import { AddComponentElementConfig } from '@lynx-js/react/transform/swc-plugin-reactlynx-compat';
+import { CompatVisitorConfig } from '@lynx-js/react/transform/swc-plugin-reactlynx-compat';
+import { DefineDceVisitorConfig } from '@lynx-js/react/transform/swc-plugin-reactlynx';
+import { ExtractStrConfig } from '@lynx-js/react/transform/swc-plugin-reactlynx';
 import { LAYERS } from '@lynx-js/react-webpack-plugin';
 import type { RsbuildPlugin } from '@rsbuild/core';
+import { ShakeVisitorConfig } from '@lynx-js/react/transform/swc-plugin-reactlynx';
 
-// @public
-export interface AddComponentElementConfig {
-    compilerOnly: boolean
-}
+export { AddComponentElementConfig }
 
-// @public
-export interface CompatVisitorConfig {
-    addComponentElement: boolean | AddComponentElementConfig
-    additionalComponentAttributes: Array<string>
-    componentsPkg: Array<string>
-    // Warning: (ae-forgotten-export) The symbol "DarkModeConfig" needs to be exported by the entry point index.d.ts
-    //
-    // @deprecated (undocumented)
-    darkMode?: boolean | DarkModeConfig
-    disableDeprecatedWarning: boolean
-    newRuntimePkg: string
-    oldRuntimePkg: Array<string>
-    // @deprecated
-    removeComponentAttrRegex?: string
-    // @deprecated
-    simplifyCtorLikeReactLynx2: boolean
-    // @internal (undocumented)
-    target: 'LEPUS' | 'JS' | 'MIXED'
-}
+export { CompatVisitorConfig }
 
-// @public
-export interface DefineDceVisitorConfig {
-    define: Record<string, string>
-}
+export { DefineDceVisitorConfig }
 
-// @public
-export interface ExtractStrConfig {
-    // @internal (undocumented)
-    extractedStrArr?: Array<string>
-    strLength: number
-}
+export { ExtractStrConfig }
 
 export { LAYERS }
 
@@ -79,11 +55,6 @@ export interface PluginReactLynxOptions {
     targetSdkVersion?: string;
 }
 
-// @public
-export interface ShakeVisitorConfig {
-    pkgName: Array<string>
-    removeCallParams: Array<string>
-    retainProp: Array<string>
-}
+export { ShakeVisitorConfig }
 
 ```

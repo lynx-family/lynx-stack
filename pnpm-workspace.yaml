@@ -8,6 +8,7 @@ packages:
   - packages/react/runtime
   - packages/react/testing-library
   - packages/react/transform
+  - packages/react/transform/*
   - packages/react/worklet-runtime
   - packages/rspeedy/*
   - packages/testing-library/*
@@ -45,7 +46,6 @@ overrides:
   "@rsbuild/core>@rspack/core": "$@rspack/core"
 
 patchedDependencies:
-  "@napi-rs/cli@2.18.4": "patches/@napi-rs__cli@2.18.4.patch"
   "@rollup/plugin-typescript": "patches/@rollup__plugin-typescript.patch"
 
 strictDepBuilds: true
