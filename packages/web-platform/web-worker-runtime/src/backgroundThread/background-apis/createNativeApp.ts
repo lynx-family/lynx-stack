@@ -103,6 +103,7 @@ export async function createNativeApp(
       const manifestUrl = templateCache.get(entryName!)
         ?.manifest[`/${sourceURL}`];
       if (manifestUrl) sourceURL = manifestUrl;
+      else throw Error(`Cannot find ${sourceURL} in manifest`);
       globalThis.module.exports = null;
       globalThis.__bundle__holder = null;
       import(
@@ -117,6 +118,7 @@ export async function createNativeApp(
       const manifestUrl = templateCache.get(entryName!)
         ?.manifest[`/${sourceURL}`];
       if (manifestUrl) sourceURL = manifestUrl;
+      else throw Error(`Cannot find ${sourceURL} in manifest`);
       globalThis.module.exports = null;
       globalThis.__bundle__holder = null;
       importScripts(sourceURL);

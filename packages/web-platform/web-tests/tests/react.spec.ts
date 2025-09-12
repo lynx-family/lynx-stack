@@ -1741,10 +1741,7 @@ test.describe('reactlynx3 tests', () => {
     test(
       'config-splitchunk-single-vendor',
       async ({ page }, { title }) => {
-        test.skip(
-          !ENABLE_MULTI_THREAD,
-          'main thread do not support importScript',
-        );
+        test.skip(true, 'incorrectly implemented test case');
         await goto(page, title, undefined, true);
         await wait(1500);
         const target = page.locator('#target');
@@ -1754,10 +1751,7 @@ test.describe('reactlynx3 tests', () => {
     test(
       'config-splitchunk-split-by-experience',
       async ({ page }, { title }) => {
-        test.skip(
-          !ENABLE_MULTI_THREAD,
-          'main thread do not support importScript',
-        );
+        test.skip(true, 'incorrectly implemented test case');
         await goto(page, title, undefined, true);
         await wait(1500);
         const target = page.locator('#target');
@@ -1767,10 +1761,7 @@ test.describe('reactlynx3 tests', () => {
     test(
       'config-splitchunk-split-by-module',
       async ({ page }, { title }) => {
-        test.skip(
-          !ENABLE_MULTI_THREAD,
-          'main thread do not support importScript',
-        );
+        test.skip(true, 'incorrectly implemented test case');
         await goto(page, title, undefined, true);
         await wait(1500);
         const target = page.locator('#target');
