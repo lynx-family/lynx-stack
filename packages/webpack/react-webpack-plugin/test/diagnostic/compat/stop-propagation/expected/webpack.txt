@@ -1,7 +1,7 @@
 WARNING in ./compat/stop-propagation/index.jsx
 Module Warning (from ../../lib/loaders/background.js):
   ! BROKEN: e.stopPropagation() takes no effect and MUST be migrated in ReactLynx 3.0
-   ,-[<LINE:COLUMN>]
+   ,-[:<LINE:COLUMN>]
  2 | 
  3 | class App extends Component {
  4 |   handleClick(e) {

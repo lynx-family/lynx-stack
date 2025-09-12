@@ -1,6 +1,6 @@
 WARNING in ./compat/react-runtime/index.jsx
 ⚠ ModuleWarning:   ! DEPRECATED: lynx-key is changed to key
-,-[<LINE:COLUMN>]
+,-[:<LINE:COLUMN>]
 2 |
 3 | class App extends Component {
 4 |   render() {

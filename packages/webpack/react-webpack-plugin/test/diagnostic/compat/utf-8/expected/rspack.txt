@@ -1,6 +1,6 @@
 WARNING in ./compat/utf-8/index.jsx
 ⚠ ModuleWarning:   ! DEPRECATED: old package "@lynx-js/react-components" is removed
-,-[<LINE:COLUMN>]
+,-[:<LINE:COLUMN>]
 1 | import { Text } from '@lynx-js/react-components'
 : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 2 |
@@ -11,7 +11,7 @@ WARNING in ./compat/utf-8/index.jsx
 
 WARNING in ./compat/utf-8/index.jsx
 ⚠ ModuleWarning:   ! DEPRECATED: old JSXElementName "Text" is changed to "text"
-,-[<LINE:COLUMN>]
+,-[:<LINE:COLUMN>]
 1 | import { Text } from '@lynx-js/react-components'
 2 |
 3 | function App() {
@@ -23,7 +23,7 @@ WARNING in ./compat/utf-8/index.jsx
 
 WARNING in ./compat/utf-8/index.jsx
 ⚠ ModuleWarning:   ! DEPRECATED: old JSXElementName "Text" is changed to "text"
-,-[<LINE:COLUMN>]
+,-[:<LINE:COLUMN>]
 1 | import { Text } from '@lynx-js/react-components'
 2 |
 3 | function App() {

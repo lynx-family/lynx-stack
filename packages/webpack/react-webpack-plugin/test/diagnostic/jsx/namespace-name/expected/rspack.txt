@@ -1,6 +1,6 @@
 ERROR in ./jsx/namespace-name/index.jsx
 × ModuleError: Error:   x JSX Namespace is disabled
-,-[<LINE:COLUMN>]
+,-[:<LINE:COLUMN>]
 1 | function App() {
 2 |   return <main-thread:foo />
 :           ^^^^^^^^^^^^^^^

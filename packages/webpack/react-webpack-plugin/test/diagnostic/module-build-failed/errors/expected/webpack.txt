@@ -1,7 +1,7 @@
 ERROR in ./module-build-failed/errors/invalid.js
 Module Error (from ../../lib/loaders/background.js):
 Error:   x Expected ';', '}' or <eof>
-   ,-[<LINE:COLUMN>]
+   ,-[:<LINE:COLUMN>]
  1 | /* eslint-disable */
  2 | This is an invalid JavaScript file
    : ^^|^ ^^

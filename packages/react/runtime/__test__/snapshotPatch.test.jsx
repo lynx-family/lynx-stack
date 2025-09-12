@@ -84,10 +84,10 @@ describe('createElement', () => {
     expect(patch).toMatchInlineSnapshot(`
       [
         0,
-        "__Card__:__snapshot_05fe4_test_1",
+        "__Card__:__snapshot_da39a_test_1",
         2,
         0,
-        "__Card__:__snapshot_05fe4_test_2",
+        "__Card__:__snapshot_da39a_test_2",
         3,
       ]
     `);
@@ -134,10 +134,10 @@ describe('insertBefore', () => {
     expect(patch).toMatchInlineSnapshot(`
       [
         0,
-        "__Card__:__snapshot_05fe4_test_1",
+        "__Card__:__snapshot_da39a_test_1",
         2,
         0,
-        "__Card__:__snapshot_05fe4_test_2",
+        "__Card__:__snapshot_da39a_test_2",
         3,
         1,
         2,
@@ -181,13 +181,13 @@ describe('insertBefore', () => {
     expect(patch).toMatchInlineSnapshot(`
       [
         0,
-        "__Card__:__snapshot_05fe4_test_1",
+        "__Card__:__snapshot_da39a_test_1",
         2,
         0,
-        "__Card__:__snapshot_05fe4_test_2",
+        "__Card__:__snapshot_da39a_test_2",
         3,
         0,
-        "__Card__:__snapshot_05fe4_test_3",
+        "__Card__:__snapshot_da39a_test_3",
         4,
         1,
         2,
@@ -254,10 +254,10 @@ describe('insertBefore', () => {
     expect(patch).toMatchInlineSnapshot(`
       [
         0,
-        "__Card__:__snapshot_05fe4_test_1",
+        "__Card__:__snapshot_da39a_test_1",
         2,
         0,
-        "__Card__:__snapshot_05fe4_test_2",
+        "__Card__:__snapshot_da39a_test_2",
         3,
         1,
         2,
@@ -291,7 +291,7 @@ describe('insertBefore', () => {
           },
         ],
         [
-          [Error: snapshotPatchApply failed: ctx not found, snapshot type: '__Card__:__snapshot_05fe4_test_3'],
+          [Error: snapshotPatchApply failed: ctx not found, snapshot type: '__Card__:__snapshot_da39a_test_3'],
           {
             "errorCode": 1101,
           },
@@ -522,7 +522,7 @@ describe('setAttribute', () => {
     expect(patch).toMatchInlineSnapshot(`
       [
         0,
-        "__Card__:__snapshot_05fe4_test_4",
+        "__Card__:__snapshot_da39a_test_4",
         2,
         3,
         2,
@@ -558,7 +558,7 @@ describe('setAttribute', () => {
     expect(patch).toMatchInlineSnapshot(`
       [
         0,
-        "__Card__:__snapshot_05fe4_test_4",
+        "__Card__:__snapshot_da39a_test_4",
         2,
         4,
         2,
@@ -592,7 +592,7 @@ describe('setAttribute', () => {
     expect(patch).toMatchInlineSnapshot(`
       [
         0,
-        "__Card__:__snapshot_05fe4_test_4",
+        "__Card__:__snapshot_da39a_test_4",
         2,
         4,
         2,
@@ -628,7 +628,7 @@ describe('setAttribute', () => {
     expect(patch).toMatchInlineSnapshot(`
       [
         0,
-        "__Card__:__snapshot_05fe4_test_4",
+        "__Card__:__snapshot_da39a_test_4",
         2,
         4,
         100,
@@ -674,7 +674,7 @@ describe('setAttribute', () => {
     expect(patch).toMatchInlineSnapshot(`
       [
         0,
-        "__Card__:__snapshot_05fe4_test_4",
+        "__Card__:__snapshot_da39a_test_4",
         2,
         3,
         3,

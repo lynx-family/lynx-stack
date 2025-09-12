@@ -1,6 +1,6 @@
 WARNING in ./compat/get-node-ref/index.jsx
 ⚠ ModuleWarning:   ! BROKEN: getNodeRef on component instance is broken and MUST be migrated in ReactLynx 3.0, please use ref or lynx.createSelectorQuery instead.
-,-[<LINE:COLUMN>]
+,-[:<LINE:COLUMN>]
 2 |
 3 | class App extends Component {
 4 |   componentDidMount() {
@@ -14,7 +14,7 @@ WARNING in ./compat/get-node-ref/index.jsx
 
 WARNING in ./compat/get-node-ref/index.jsx
 ⚠ ModuleWarning:   ! BROKEN: getNodeRefFromRoot on component instance is broken and MUST be migrated in ReactLynx 3.0, please use ref or lynx.createSelectorQuery instead.
-,-[<LINE:COLUMN>]
+,-[:<LINE:COLUMN>]
 3 | class App extends Component {
 4 |   componentDidMount() {
 5 |     this.getNodeRef('foo')

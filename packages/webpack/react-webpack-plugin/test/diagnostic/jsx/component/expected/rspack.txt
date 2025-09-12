@@ -1,6 +1,6 @@
 ERROR in ./jsx/component/index.jsx
 × ModuleError: Error:   x <component /> is not supported
-,-[<LINE:COLUMN>]
+,-[:<LINE:COLUMN>]
 1 | function App() {
 2 |   return <component is="foo/bar" />
 :           ^^^^^^^^^

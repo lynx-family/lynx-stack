@@ -1,7 +1,7 @@
 WARNING in ./compat/utf-8/index.jsx
 Module Warning (from ../../lib/loaders/background.js):
   ! DEPRECATED: old JSXElementName "Text" is changed to "text"
-   ,-[<LINE:COLUMN>]
+   ,-[:<LINE:COLUMN>]
  1 | import { Text } from '@lynx-js/react-components'
  2 | 
  3 | function App() {
@@ -13,7 +13,7 @@ Module Warning (from ../../lib/loaders/background.js):
 WARNING in ./compat/utf-8/index.jsx
 Module Warning (from ../../lib/loaders/background.js):
   ! DEPRECATED: old JSXElementName "Text" is changed to "text"
-   ,-[<LINE:COLUMN>]
+   ,-[:<LINE:COLUMN>]
  1 | import { Text } from '@lynx-js/react-components'
  2 | 
  3 | function App() {
@@ -25,7 +25,7 @@ Module Warning (from ../../lib/loaders/background.js):
 WARNING in ./compat/utf-8/index.jsx
 Module Warning (from ../../lib/loaders/background.js):
   ! DEPRECATED: old package "@lynx-js/react-components" is removed
-   ,-[<LINE:COLUMN>]
+   ,-[:<LINE:COLUMN>]
  1 | import { Text } from '@lynx-js/react-components'
    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
  2 | 

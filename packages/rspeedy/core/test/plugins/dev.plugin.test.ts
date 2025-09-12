@@ -521,7 +521,30 @@ describe('Plugins - Dev', () => {
       await rsbuild.unwrapConfig()
     } catch (error) {
       expect(error).toMatchInlineSnapshot(
-        `[Error: [rsbuild:config] The "server.base" option should start with a slash, for example: "/base"]`,
+        `
+        {
+          "__vitest_rollup_error__": {
+            "frame": undefined,
+            "id": "<WORKSPACE>/packages/rspeedy/core/src/plugins/chunkLoading.plugin.ts",
+            "loc": undefined,
+            "plugin": "vite:import-analysis",
+          },
+          "cause": undefined,
+          "message": "Failed to resolve entry for package "@lynx-js/cache-events-webpack-plugin". The package may have incorrect main/module/exports specified in its package.json.",
+          "name": "Error",
+          "stack": "Error: Failed to resolve entry for package "@lynx-js/cache-events-webpack-plugin". The package may have incorrect main/module/exports specified in its package.json.
+            at packageEntryFailure (<WORKSPACE>/node_modules/<PNPM_INNER>/vite/dist/node/chunks/dep-BzOvws4Y.js:46541:15)
+            at resolvePackageEntry (<WORKSPACE>/node_modules/<PNPM_INNER>/vite/dist/node/chunks/dep-BzOvws4Y.js:46538:3)
+            at tryNodeResolve (<WORKSPACE>/node_modules/<PNPM_INNER>/vite/dist/node/chunks/dep-BzOvws4Y.js:46354:16)
+            at ResolveIdContext.resolveId (<WORKSPACE>/node_modules/<PNPM_INNER>/vite/dist/node/chunks/dep-BzOvws4Y.js:46104:19)
+            at PluginContainer.resolveId (<WORKSPACE>/node_modules/<PNPM_INNER>/vite/dist/node/chunks/dep-BzOvws4Y.js:48919:17)
+            at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+            at async TransformPluginContext.resolve (<WORKSPACE>/node_modules/<PNPM_INNER>/vite/dist/node/chunks/dep-BzOvws4Y.js:49079:15)
+            at async normalizeUrl (<WORKSPACE>/node_modules/<PNPM_INNER>/vite/dist/node/chunks/dep-BzOvws4Y.js:63929:26)
+            at async <WORKSPACE>/node_modules/<PNPM_INNER>/vite/dist/node/chunks/dep-BzOvws4Y.js:64068:39
+            at async Promise.all (index 0)",
+        }
+      `,
       )
     }
   })

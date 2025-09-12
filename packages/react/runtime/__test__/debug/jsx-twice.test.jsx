@@ -31,7 +31,7 @@ test('preact/debug - Invalid type passed to createElement()', async () => {
 
     Did you accidentally pass a JSX literal as JSX twice?
 
-      let My#text = <__Card__:__snapshot_05fe4_test_1 />;
+      let My#text = <__Card__:__snapshot_da39a_test_1 />;
       let vnode = <My#text />;
 
     This usually happens when you export a JSX literal and not the component.

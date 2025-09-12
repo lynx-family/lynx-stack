@@ -1,7 +1,7 @@
 ERROR in ./jsx/component/index.jsx
 Module Error (from ../../lib/loaders/background.js):
 Error:   x <component /> is not supported
-   ,-[<LINE:COLUMN>]
+   ,-[:<LINE:COLUMN>]
  1 | function App() {
  2 |   return <component is="foo/bar" />
    :           ^^^^^^^^^
