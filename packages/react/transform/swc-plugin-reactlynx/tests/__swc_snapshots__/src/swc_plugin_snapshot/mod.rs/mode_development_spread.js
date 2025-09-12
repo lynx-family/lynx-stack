@@ -1,12 +1,13 @@
-const __snapshot_2d408_test_1 = require('@lynx-js/react/internal').createSnapshot("__snapshot_2d408_test_1", function() {
-    const pageId = require('@lynx-js/react/internal').__pageId;
+import * as ReactLynx from "@lynx-js/react/internal";
+const __snapshot_2d408_test_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_2d408_test_1", function() {
+    const pageId = ReactLynx.__pageId;
     const el = __CreateView(pageId);
     return [
         el
     ];
 }, [
-    (snapshot, index, oldValue)=>require('@lynx-js/react/internal').updateSpread(snapshot, index, oldValue, 0)
-], require('@lynx-js/react/internal').__DynamicPartChildren_0, undefined, globDynamicComponentEntry, [
+    (snapshot, index, oldValue)=>ReactLynx.updateSpread(snapshot, index, oldValue, 0)
+], ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry, [
     0
 ]);
 <__snapshot_2d408_test_1 values={[

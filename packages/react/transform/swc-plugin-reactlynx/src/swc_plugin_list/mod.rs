@@ -182,7 +182,7 @@ where
 #[cfg(test)]
 mod tests {
   use swc_core::{
-    common::{comments::SingleThreadedComments, Mark},
+    common::comments::SingleThreadedComments,
     ecma::{
       parser::{EsSyntax, Syntax},
       transforms::testing::test,

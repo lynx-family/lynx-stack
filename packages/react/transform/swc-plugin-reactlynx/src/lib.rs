@@ -260,7 +260,7 @@ pub fn process_transform(program: Program, metadata: TransformPluginProgramMetad
     visit_mut_pass(
       JSXTransformer::new(
         snapshot_plugin_config,
-        cm.clone(),
+        Some(&comments),
         filename.clone(),
         options.mode.unwrap_or(TransformMode::Production),
       )

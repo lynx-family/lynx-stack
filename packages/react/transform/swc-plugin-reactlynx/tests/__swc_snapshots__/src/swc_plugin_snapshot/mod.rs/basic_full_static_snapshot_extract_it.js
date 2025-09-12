@@ -1,4 +1,3 @@
-import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
 import * as ReactLynx from "@lynx-js/react";
 const __snapshot_2d408_test_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_2d408_test_1", function() {
     const pageId = ReactLynx.__pageId;
@@ -12,18 +11,10 @@ const __snapshot_2d408_test_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapsh
         el1,
         el2
     ];
-}, [
-    (snapshot, index, oldValue)=>ReactLynx.updateSpread(snapshot, index, oldValue, 1)
-], null, undefined, globDynamicComponentEntry, [
-    0
-]);
-_jsx(__snapshot_2d408_test_1, {
-    values: [
-        {
-            "before": "bbb",
-            ...obj,
-            "after": "aaa",
-            __spread: true
-        }
-    ]
+}, null, null, undefined, globDynamicComponentEntry, null);
+it('basic', async function() {
+    const run = withEnv(function() {
+        let s = __SNAPSHOT__(<__snapshot_2d408_test_1/>);
+    });
+    await run();
 });

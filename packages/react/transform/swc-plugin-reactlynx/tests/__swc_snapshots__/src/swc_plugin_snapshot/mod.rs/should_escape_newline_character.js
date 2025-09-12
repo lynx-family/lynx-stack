@@ -25,7 +25,7 @@ const __snapshot_2d408_test_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapsh
     __AppendElement(el, el7);
     const el8 = __CreateElement("svg", pageId);
     __SetAttribute(el8, "content", '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"> <path d="M14.3723 11.9999L7.53902 5.16659C7.34376 4.97133 7.34376 4.65475 7.53902 4.45948L8.45826 3.54025C8.65353 3.34498 8.97011 3.34498 9.16537 3.54025L17.2714 11.6463C17.4667 11.8416 17.4667 12.1582 17.2714 12.3534L9.16537 20.4595C8.97011 20.6547 8.65353 20.6547 8.45826 20.4595L7.53902 19.5402C7.34376 19.345 7.34376 19.0284 7.53903 18.8331L14.3723 11.9999Z" fill="white"/> </svg>');
-    __SetInlineStyles(el8, "width:24rpx;height:24rpx;opacity:0.4");
+    __SetInlineStyles(el8, "height:24rpx;opacity:0.4;width:24rpx");
     __SetID(el8, "x y");
     __AddDataset(el8, "attr", "x y");
     __AppendElement(el, el8);

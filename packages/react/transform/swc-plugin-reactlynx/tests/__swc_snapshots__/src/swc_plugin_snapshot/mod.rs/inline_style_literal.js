@@ -1,8 +1,8 @@
 import * as ReactLynx from "@lynx-js/react";
-const __snapshot_2d408_test_1 = ReactLynx.createSnapshot("__snapshot_2d408_test_1", function() {
+const __snapshot_2d408_test_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_2d408_test_1", function() {
     const pageId = ReactLynx.__pageId;
     const el = __CreateView(pageId);
-    __SetInlineStyles(el, "color:red;height:100px;flex-shrink:1");
+    __SetInlineStyles(el, "color:red;flex-shrink:1;height:100px");
     return [
         el
     ];
