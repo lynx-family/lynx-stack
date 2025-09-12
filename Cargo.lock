@@ -3508,6 +3508,7 @@ version = "0.16.0"
 dependencies = [
  "js-sys",
  "lazy_static",
+ "once_cell",
  "serde",
  "serde_json",
  "wasm-bindgen",

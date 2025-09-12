@@ -5,6 +5,7 @@
 use js_sys::Function;
 use wasm_bindgen::prelude::*;
 use web_sys::{window, Window};
+use crate::create_main_thread_global_this::MainThreadRuntimeConfig;
 
 #[wasm_bindgen]
 pub struct MainThreadLynx {
@@ -131,4 +132,95 @@ pub fn create_main_thread_lynx(
   system_info: JsValue,
 ) -> Result<MainThreadLynx, JsValue> {
   MainThreadLynx::new(config, system_info)
+}
+
+// Implementation function that creates MainThreadLynx from config
+pub fn create_main_thread_lynx_impl(config: &MainThreadRuntimeConfig) -> JsValue {
+    let lynx = js_sys::Object::new();
+    
+    // Get window and document from config
+    let window = window().unwrap();
+    let document = config.document.clone();
+    let performance = window.performance();
+    
+    // Request animation frame function
+    let raf_window = window.clone();
+    let request_animation_frame = Closure::wrap(Box::new(move |callback: Function| -> Result<i32, JsValue> {
+        raf_window.request_animation_frame(&callback)
+    }) as Box<dyn FnMut(Function) -> Result<i32, JsValue>>);
+    
+    // Cancel animation frame function
+    let caf_window = window.clone();
+    let cancel_animation_frame = Closure::wrap(Box::new(move |handle: i32| {
+        let _ = caf_window.cancel_animation_frame(handle);
+    }) as Box<dyn FnMut(i32)>);
+    
+    // Set timeout function
+    let st_window = window.clone();
+    let set_timeout = Closure::wrap(Box::new(move |callback: Function, delay: i32| -> Result<i32, JsValue> {
+        st_window.set_timeout_with_callback_and_timeout_and_arguments_0(&callback, delay)
+    }) as Box<dyn FnMut(Function, i32) -> Result<i32, JsValue>>);
+    
+    // Clear timeout function
+    let ct_window = window.clone();
+    let clear_timeout = Closure::wrap(Box::new(move |handle: i32| {
+        ct_window.clear_timeout_with_handle(handle);
+    }) as Box<dyn FnMut(i32)>);
+    
+    // Set interval function
+    let si_window = window.clone();
+    let set_interval = Closure::wrap(Box::new(move |callback: Function, delay: i32| -> Result<i32, JsValue> {
+        si_window.set_interval_with_callback_and_timeout_and_arguments_0(&callback, delay)
+    }) as Box<dyn FnMut(Function, i32) -> Result<i32, JsValue>>);
+    
+    // Clear interval function
+    let ci_window = window.clone();
+    let clear_interval = Closure::wrap(Box::new(move |handle: i32| {
+        ci_window.clear_interval_with_handle(handle);
+    }) as Box<dyn FnMut(i32)>);
+    
+    // Performance now function
+    let perf_clone = performance.clone();
+    let now = Closure::wrap(Box::new(move || -> f64 {
+        if let Some(perf) = &perf_clone {
+            perf.now()
+        } else {
+            js_sys::Date::now()
+        }
+    }) as Box<dyn FnMut() -> f64>);
+    
+    // Mark timing function
+    let mark_perf = performance.clone();
+    let mark_timing = Closure::wrap(Box::new(move |name: String| -> Result<(), JsValue> {
+        if let Some(perf) = &mark_perf {
+            perf.mark(&name)?;
+        }
+        Ok(())
+    }) as Box<dyn FnMut(String) -> Result<(), JsValue>>);
+    
+    // Set all methods on the lynx object
+    js_sys::Reflect::set(&lynx, &"requestAnimationFrame".into(), request_animation_frame.as_ref().unchecked_ref()).unwrap();
+    js_sys::Reflect::set(&lynx, &"cancelAnimationFrame".into(), cancel_animation_frame.as_ref().unchecked_ref()).unwrap();
+    js_sys::Reflect::set(&lynx, &"setTimeout".into(), set_timeout.as_ref().unchecked_ref()).unwrap();
+    js_sys::Reflect::set(&lynx, &"clearTimeout".into(), clear_timeout.as_ref().unchecked_ref()).unwrap();
+    js_sys::Reflect::set(&lynx, &"setInterval".into(), set_interval.as_ref().unchecked_ref()).unwrap();
+    js_sys::Reflect::set(&lynx, &"clearInterval".into(), clear_interval.as_ref().unchecked_ref()).unwrap();
+    js_sys::Reflect::set(&lynx, &"now".into(), now.as_ref().unchecked_ref()).unwrap();
+    js_sys::Reflect::set(&lynx, &"markTiming".into(), mark_timing.as_ref().unchecked_ref()).unwrap();
+    
+    // Set document and window references
+    js_sys::Reflect::set(&lynx, &"document".into(), &document).unwrap();
+    js_sys::Reflect::set(&lynx, &"window".into(), &window).unwrap();
+    
+    // Keep closures alive
+    request_animation_frame.forget();
+    cancel_animation_frame.forget();
+    set_timeout.forget();
+    clear_timeout.forget();
+    set_interval.forget();
+    clear_interval.forget();
+    now.forget();
+    mark_timing.forget();
+    
+    lynx.into()
 }
