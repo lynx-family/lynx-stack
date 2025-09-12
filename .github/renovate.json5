@@ -19,10 +19,11 @@
   ],
 
   "enabledManagers": [
+    "cargo",
+    "custom.regex",
+    "github-actions",
     "npm",
     "nvm",
-    "github-actions",
-    "custom.regex",
   ],
 
   "labels": ["bot:renovate"],
@@ -150,6 +151,27 @@
       // Schedule once a month on the first day of the month before 4 AM.
       "schedule": [
         "* 0-3 1 * *",
+      ],
+    },
+        {
+      "groupName": "Rust Crates",
+      "groupSlug": "rust-crates",
+      "matchManagers": ["cargo"],
+      "matchPackageNames": [
+        "!swc",
+        "!swc_*",
+      ],
+    },
+    {
+      "groupName": "SWC",
+      "groupSlug": "swc",
+      "matchManagers": ["cargo"],
+      "matchPackageNames": [
+        "swc",
+        "swc_*",
+      ],
+      "matchUpdateTypes": [
+        "major",
       ],
     },
   ],
