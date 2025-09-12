@@ -10,7 +10,7 @@ exports[`template > template/defaults/compile-options > template/defaults/compil
   "enableCSSSelector": true,
   "enableFiberArch": true,
   "enableLepusDebug": true,
-  "enableParallelElement": true,
+  "enableParallelElement": false,
   "enableRemoveCSSScope": false,
   "enableReuseContext": true,
   "targetSdkVersion": "3.2",
@@ -29,7 +29,7 @@ exports[`template > template/defaults/config > template/defaults/config > templa
   "enableNewGesture": false,
   "enableNewIntersectionObserver": true,
   "lepusStrict": true,
-  "pipelineSchedulerConfig": 65536,
+  "pipelineSchedulerConfig": 0,
   "removeDescendantSelectorScope": false,
   "useNewSwiper": true,
 }
