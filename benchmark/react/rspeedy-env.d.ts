@@ -21,3 +21,11 @@ declare const Codspeed: {
 declare function runAfterLoadScript(cb: () => void): void;
 
 declare const __REPO_FILEPATH__: string;
+declare const __GENERATE_JSX__: (
+  seed: number,
+  complexity: number,
+) => (
+  apis: Partial<typeof import('react')>,
+  genRandom: typeof import('./plugins/gen.ts').genRandom,
+  genValue: typeof import('./plugins/gen.ts').genValue,
+) => import('react').FC<{ seed: number }>;

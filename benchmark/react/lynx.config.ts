@@ -6,6 +6,7 @@ import { pluginQRCode } from '@lynx-js/qrcode-rsbuild-plugin';
 import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin';
 import { defineConfig } from '@lynx-js/rspeedy';
 
+import { pluginGenJSX } from './plugins/pluginGenJSX.mjs';
 import { pluginRepoFilePath } from './plugins/pluginRepoFilePath.mjs';
 import { pluginScriptLoad } from './plugins/pluginScriptLoad.mjs';
 
@@ -45,9 +46,18 @@ export default defineConfig({
       '005-load-script': [
         './cases/005-load-script/index.tsx',
       ],
+      '006-fuzz-complex-1000': [
+        './src/patchProfile.ts',
+        './cases/006-fuzz-complex-1000/index.tsx',
+      ],
+      '006-fuzz-complex-2000': [
+        './src/patchProfile.ts',
+        './cases/006-fuzz-complex-2000/index.tsx',
+      ],
     },
   },
   plugins: [
+    pluginGenJSX(),
     pluginRepoFilePath(),
     pluginReactLynx({
       enableParallelElement: false,

@@ -185,6 +185,9 @@ importers:
       '@types/react':
         specifier: ^18.3.23
         version: 18.3.23
+      human-id:
+        specifier: 4.1.1
+        version: 4.1.1
 
   examples/react:
     dependencies:
