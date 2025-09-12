@@ -1,0 +1,15 @@
+<view><Component/></view>;
+<view><Component/></view>;
+<view id="1" exposure-screen-margin-top><Component/></view>;
+<view bindtap={()=>{}} id="1"><Component/></view>;
+<view ui:bindtap={()=>{}} id="1"><Component/></view>;
+<view><Component key="222"/></view>;
+<view style={s}><Component key="222"/></view>;
+<Component {...props} key="222"/>;
+<Component {...props} key="222" id="!!!" className="!!!!"/>;
+<Component {...props} key="222" id="!!!" className="!!!!"/>;
+<Component {...props} key="222" id="!!!" className="!!!!" someProps={p}/>;
+<Component {...props} key="222" id="!!!" className="!!!!" style={s}/>;
+<Component/>;
+<view><Component/></view>;
+<Component/>;

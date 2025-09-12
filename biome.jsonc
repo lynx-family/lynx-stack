@@ -34,8 +34,12 @@
       "__swc_snapshots__/**",
       "__snapshots__/**",
       "__preparation__/**",
+
+      // REMOVE ME
       "packages/react/transform/index.d.ts",
       "packages/react/transform/index.cjs",
+
+      "packages/react/transform/**/index.d.ts",
 
       "packages/react/index.d.ts",
       "packages/react/runtime/**",
