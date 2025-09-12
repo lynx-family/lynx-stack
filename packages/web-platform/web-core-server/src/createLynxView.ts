@@ -190,6 +190,7 @@ export async function createLynxView(
       i18nResources.setData(initI18nResources);
       return i18nResources;
     },
+    (() => {}) as any,
     {
       __AddEvent(element, eventName, eventData, eventOptions) {
         events.push([

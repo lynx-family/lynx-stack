@@ -16,10 +16,12 @@ import {
   lynxUniqueIdAttribute,
   type SSRDumpInfo,
   type JSRealm,
+  type TemplateLoader,
 } from '@lynx-js/web-constants';
 import { Rpc } from '@lynx-js/web-worker-rpc';
 import { dispatchLynxViewEvent } from '../utils/dispatchLynxViewEvent.js';
 import { createExposureMonitor } from './crossThreadHandlers/createExposureMonitor.js';
+import type { StartUIThreadCallbacks } from './startUIThread.js';
 
 const {
   prepareMainThreadAPIs,
@@ -93,15 +95,14 @@ function createIFrameRealm(parent: Node): JSRealm {
 export function createRenderAllOnUI(
   mainToBackgroundRpc: Rpc,
   shadowRoot: ShadowRoot,
+  loadTemplate: TemplateLoader,
   markTimingInternal: (
     timingKey: string,
     pipelineId?: string,
     timeStamp?: number,
   ) => void,
   flushMarkTimingInternal: () => void,
-  callbacks: {
-    onError?: (err: Error, release: string, fileName: string) => void;
-  },
+  callbacks: StartUIThreadCallbacks,
   ssrDumpInfo: SSRDumpInfo | undefined,
 ) {
   if (!globalThis.module) {
@@ -138,6 +139,7 @@ export function createRenderAllOnUI(
       i18nResources.setData(initI18nResources);
       return i18nResources;
     },
+    loadTemplate,
   );
   const pendingUpdateCalls: Parameters<
     RpcCallType<typeof updateDataEndpoint>

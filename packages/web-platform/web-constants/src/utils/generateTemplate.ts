@@ -59,15 +59,9 @@ const templateUpgraders: templateUpgrader[] = [
     template.manifest = Object.fromEntries(
       Object.entries(template.manifest).map(([key, value]) => [
         key,
-        `module.exports={init: (lynxCoreInject) => { var {${defaultInjectStr}} = lynxCoreInject.tt; var module = {exports:null}; ${value}\n return module.exports; } }`,
+        `module.exports={init: (lynxCoreInject) => { var {${defaultInjectStr}} = lynxCoreInject.tt; var module = {exports:{}}; var exports=module.exports; ${value}\n return module.exports; } }`,
       ]),
     ) as typeof template.manifest;
-    template.lepusCode = Object.fromEntries(
-      Object.entries(template.lepusCode).map(([key, value]) => [
-        key,
-        `(()=>{${value}\n})();`,
-      ]),
-    ) as typeof template.lepusCode;
     template.version = 2;
     return template;
   },
@@ -76,6 +70,7 @@ const templateUpgraders: templateUpgrader[] = [
 const generateModuleContent = (
   content: string,
   eager: boolean,
+  appType: 'card' | 'lazy',
 ) =>
   /**
    * About the `allFunctionsCalledOnLoad` directive:
@@ -92,6 +87,7 @@ const generateModuleContent = (
     '\n(function() { "use strict"; const ',
     globalDisallowedVars.join('=void 0,'),
     '=void 0;\n',
+    appType === 'lazy' ? 'module.exports=\n' : '',
     content,
     '\n})()',
   ].join('');
@@ -100,6 +96,7 @@ async function generateJavascriptUrl<T extends Record<string, string | {}>>(
   obj: T,
   createJsModuleUrl: (content: string, name: string) => Promise<string>,
   eager: boolean,
+  appType: 'card' | 'lazy',
   templateName?: string,
 ): Promise<T> {
   const processEntry = async ([name, content]: [string, string]) => [
@@ -108,6 +105,7 @@ async function generateJavascriptUrl<T extends Record<string, string | {}>>(
       generateModuleContent(
         content,
         eager,
+        appType,
       ),
       `${templateName}-${name.replaceAll('/', '')}.js`,
     ),
@@ -147,12 +145,14 @@ export async function generateTemplate(
       template.lepusCode,
       createJsModuleUrl as (content: string, name: string) => Promise<string>,
       true,
+      template.appType!,
       templateName,
     ),
     manifest: await generateJavascriptUrl(
       template.manifest,
       createJsModuleUrl as (content: string, name: string) => Promise<string>,
       false,
+      template.appType!,
       templateName,
     ),
   };

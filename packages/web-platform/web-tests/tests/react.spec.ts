@@ -438,6 +438,277 @@ test.describe('reactlynx3 tests', () => {
         await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
       },
     );
+
+    // lazy component
+    test(
+      'basic-lazy-component',
+      async ({ page }, { title }) => {
+        test.skip(isSSR, 'Lazy Component not support on SSR');
+        await goto(page, title);
+        await wait(500);
+        await expect(page.locator('#target1')).toHaveCSS(
+          'background-color',
+          'rgb(0, 128, 0)',
+        ); // green
+        await page.locator('#target2').click();
+        await wait(100);
+        await expect(page.locator('#target1')).toHaveCSS(
+          'background-color',
+          'rgb(255, 192, 203)',
+        ); // pink
+        await page.locator('#target2').click();
+        await wait(100);
+        await expect(page.locator('#target1')).toHaveCSS(
+          'background-color',
+          'rgb(0, 128, 0)',
+        ); // green
+      },
+    );
+    // lazy component with relative path
+    test(
+      'basic-lazy-component-relative-path',
+      async ({ page }, { title }) => {
+        test.skip(isSSR, 'Lazy Component not support on SSR');
+        await goto(page, title);
+        await wait(500);
+        await expect(page.locator('#target1')).toHaveCSS(
+          'background-color',
+          'rgb(0, 128, 0)',
+        ); // green
+        await page.locator('#target2').click();
+        await wait(100);
+        await expect(page.locator('#target1')).toHaveCSS(
+          'background-color',
+          'rgb(255, 192, 203)',
+        ); // pink
+        await page.locator('#target2').click();
+        await wait(100);
+        await expect(page.locator('#target1')).toHaveCSS(
+          'background-color',
+          'rgb(0, 128, 0)',
+        ); // green
+      },
+    );
+    test(
+      'basic-lazy-component-fail',
+      async ({ page }, { title }) => {
+        test.skip(isSSR, 'Lazy Component not support on SSR');
+        await goto(page, title);
+        await wait(500);
+        const result = await page.locator('#fallback').first().innerText();
+        expect(result).toBe('Loading...');
+      },
+    );
+    test(
+      'basic-lazy-component-effect',
+      async ({ page }, { title }) => {
+        test.skip(isSSR, 'Lazy Component not support on SSR');
+        await goto(page, title);
+        await wait(500);
+        await expect(page.locator('#target')).toHaveCSS(
+          'background-color',
+          'rgb(255, 192, 203)',
+        ); // pink
+      },
+    );
+    // use the same lazy component multiple times
+    test(
+      'basic-lazy-component-multi',
+      async ({ page }, { title }) => {
+        test.skip(isSSR, 'Lazy Component not support on SSR');
+        await goto(page, title);
+        await wait(500);
+        await expect(page.locator('#target1').nth(0)).toHaveCSS(
+          'background-color',
+          'rgb(0, 128, 0)',
+        ); // green
+        await expect(page.locator('#target1').nth(1)).toHaveCSS(
+          'background-color',
+          'rgb(0, 128, 0)',
+        ); // green
+        await page.locator('#target2').nth(0).click();
+        await wait(100);
+        await expect(page.locator('#target1').nth(0)).toHaveCSS(
+          'background-color',
+          'rgb(255, 192, 203)',
+        ); // pink
+        await expect(page.locator('#target1').nth(1)).toHaveCSS(
+          'background-color',
+          'rgb(0, 128, 0)',
+        ); // green
+        await page.locator('#target2').nth(1).click();
+        await wait(100);
+        await expect(page.locator('#target1').nth(0)).toHaveCSS(
+          'background-color',
+          'rgb(255, 192, 203)',
+        ); // pink
+        await expect(page.locator('#target1').nth(1)).toHaveCSS(
+          'background-color',
+          'rgb(255, 192, 203)',
+        ); // pink
+      },
+    );
+    // import the same lazy component multiple times and use it multiple times
+    test(
+      'basic-lazy-component-multi-import',
+      async ({ page }, { title }) => {
+        test.skip(isSSR, 'Lazy Component not support on SSR');
+        await goto(page, title);
+        await wait(500);
+        await expect(page.locator('#target1').nth(0)).toHaveCSS(
+          'background-color',
+          'rgb(0, 128, 0)',
+        ); // green
+        await expect(page.locator('#target1').nth(1)).toHaveCSS(
+          'background-color',
+          'rgb(0, 128, 0)',
+        ); // green
+        await page.locator('#target2').nth(0).click();
+        await wait(100);
+        await expect(page.locator('#target1').nth(0)).toHaveCSS(
+          'background-color',
+          'rgb(255, 192, 203)',
+        ); // pink
+        await expect(page.locator('#target1').nth(1)).toHaveCSS(
+          'background-color',
+          'rgb(0, 128, 0)',
+        ); // green
+        await page.locator('#target2').nth(1).click();
+        await wait(100);
+        await expect(page.locator('#target1').nth(0)).toHaveCSS(
+          'background-color',
+          'rgb(255, 192, 203)',
+        ); // pink
+        await expect(page.locator('#target1').nth(1)).toHaveCSS(
+          'background-color',
+          'rgb(255, 192, 203)',
+        ); // pink
+      },
+    );
+    // the card's style and lazy component are displayed correctly.
+    test(
+      'basic-lazy-component-css',
+      async ({ page }, { title }) => {
+        test.skip(isSSR, 'Lazy Component not support on SSR');
+        await goto(page, title);
+        await wait(500);
+        await expect(page.locator('.container').nth(0)).toHaveCSS(
+          'background-color',
+          'rgb(255, 0, 0)',
+        ); // red
+        await expect(page.locator('.container').nth(1)).toHaveCSS(
+          'background-color',
+          'rgb(255, 165, 0)',
+        ); // orange
+      },
+    );
+    // the card's style should not affect the lazy component.
+    test(
+      'basic-lazy-component-css-blank',
+      async ({ page }, { title }) => {
+        test.skip(isSSR, 'Lazy Component not support on SSR');
+        await goto(page, title);
+        await wait(500);
+        await expect(page.locator('.container').nth(0)).toHaveCSS(
+          'background-color',
+          'rgb(255, 0, 0)',
+        ); // red
+        await expect(page.locator('.container').nth(1)).not.toHaveCSS(
+          'background-color',
+          'rgb(255, 165, 0)',
+        ); // orange
+      },
+    );
+    // two different lazy component
+    // the styles between lazy components need to be independent
+    test(
+      'basic-lazy-component-css-multi',
+      async ({ page }, { title }) => {
+        test.skip(isSSR, 'Lazy Component not support on SSR');
+        await goto(page, title);
+        await wait(500);
+        await expect(page.locator('.container').nth(0)).toHaveCSS(
+          'background-color',
+          'rgb(255, 0, 0)',
+        ); // red
+        await expect(page.locator('.container').nth(1)).toHaveCSS(
+          'background-color',
+          'rgb(255, 165, 0)',
+        ); // orange
+        await expect(page.locator('.container').nth(2)).toHaveCSS(
+          'background-color',
+          'rgb(128, 128, 128)',
+        ); // gray
+      },
+    );
+    // load lazy component when needed
+    test(
+      'basic-lazy-component-when-needed',
+      async ({ page }, { title }) => {
+        test.skip(isSSR, 'Lazy Component not support on SSR');
+        await goto(page, title);
+        await wait(500);
+        await page.locator('#target').click();
+        await wait(300);
+        await expect(page.locator('#target1')).toHaveCSS(
+          'background-color',
+          'rgb(0, 128, 0)',
+        ); // green
+        await page.locator('#target2').click();
+        await wait(100);
+        await expect(page.locator('#target1')).toHaveCSS(
+          'background-color',
+          'rgb(255, 192, 203)',
+        ); // pink
+        await page.locator('#target2').click();
+        await wait(100);
+        await expect(page.locator('#target1')).toHaveCSS(
+          'background-color',
+          'rgb(0, 128, 0)',
+        ); // green
+      },
+    );
+    // load the same lazy component twice: use it directly, use it when needed
+    test(
+      'basic-lazy-component-when-need-with-itself',
+      async ({ page }, { title }) => {
+        test.skip(isSSR, 'Lazy Component not support on SSR');
+        await goto(page, title);
+        await wait(500);
+        await page.locator('#target').click();
+        await wait(300);
+        await expect(page.locator('#target1').nth(0)).toHaveCSS(
+          'background-color',
+          'rgb(0, 128, 0)',
+        ); // green
+        await page.locator('#target2').nth(0).click();
+        await wait(100);
+        await expect(page.locator('#target1').nth(0)).toHaveCSS(
+          'background-color',
+          'rgb(255, 192, 203)',
+        ); // pink
+        await page.locator('#target').click();
+        await wait(100);
+        await expect(page.locator('#target1').nth(0)).toHaveCSS(
+          'background-color',
+          'rgb(255, 192, 203)',
+        ); // pink
+        await expect(page.locator('#target1').nth(1)).toHaveCSS(
+          'background-color',
+          'rgb(0, 128, 0)',
+        ); // green
+        await page.locator('#target2').nth(1).click();
+        await wait(100);
+        await expect(page.locator('#target1').nth(0)).toHaveCSS(
+          'background-color',
+          'rgb(255, 192, 203)',
+        ); // pink
+        await expect(page.locator('#target1').nth(1)).toHaveCSS(
+          'background-color',
+          'rgb(255, 192, 203)',
+        ); // pink
+      },
+    );
   });
   test.describe('basic-css', () => {
     test('basic-css-asset-in-css', async ({ page }, { title }) => {
