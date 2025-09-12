@@ -1615,67 +1615,6 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |t| {
-      let unresolved_mark = Mark::new();
-      let top_level_mark = Mark::new();
-
-      (
-        resolver(unresolved_mark, top_level_mark, true),
-        visit_mut_pass(JSXTransformer::new(
-          super::JSXTransformerConfig {
-            preserve_jsx: true,
-            ..Default::default()
-          },
-          Some(t.comments.clone()),
-          TransformMode::Test,
-        )),
-      )
-    },
-    basic_full_static_snapshot_extract,
-    // Input codes
-    r#"let s = __SNAPSHOT__(<view><text>!!!</text></view>);"#
-  );
-
-  test!(
-    module,
-    Syntax::Es(EsSyntax {
-      jsx: true,
-      ..Default::default()
-    }),
-    |t| {
-      let unresolved_mark = Mark::new();
-      let top_level_mark = Mark::new();
-
-      (
-        resolver(unresolved_mark, top_level_mark, true),
-        visit_mut_pass(JSXTransformer::new(
-          super::JSXTransformerConfig {
-            preserve_jsx: true,
-            ..Default::default()
-          },
-          Some(t.comments.clone()),
-          TransformMode::Test,
-        )),
-      )
-    },
-    basic_full_static_snapshot_extract_it,
-    // Input codes
-    r#"
-    it('basic', async function() {
-      const run = withEnv(function() {
-        let s = __SNAPSHOT__(<view><text>!!!</text></view>);
-      });
-      await run();
-    });
-    "#
-  );
-
-  test!(
-    module,
-    Syntax::Es(EsSyntax {
-      jsx: true,
-      ..Default::default()
-    }),
     |t| visit_mut_pass(JSXTransformer::new(
       super::JSXTransformerConfig {
         preserve_jsx: true,

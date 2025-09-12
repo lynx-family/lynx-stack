@@ -31,7 +31,10 @@ const __snapshot_da39a_test_1 = ReactLynx.createSnapshot("__snapshot_da39a_test_
         0
     ]
 ], undefined, globDynamicComponentEntry, null);
-let a = __snapshot_da39a_test_1;
+let a = __SNAPSHOT__(<__snapshot_da39a_test_1>{[
+    <__snapshot_da39a_test_2/>,
+    <__snapshot_da39a_test_3/>
+]}</__snapshot_da39a_test_1>);
 const __snapshot_da39a_test_4 = ReactLynx.createSnapshot("__snapshot_da39a_test_4", function() {
     const pageId = ReactLynx.__pageId;
     const el = __CreateElement("list-item", pageId);
@@ -42,4 +45,4 @@ const __snapshot_da39a_test_4 = ReactLynx.createSnapshot("__snapshot_da39a_test_
         el1
     ];
 }, null, null, undefined, globDynamicComponentEntry, null);
-let b = __snapshot_da39a_test_4;
+let b = __SNAPSHOT__(<__snapshot_da39a_test_4/>);
