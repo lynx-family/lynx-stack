@@ -1,5 +1,13 @@
 # @lynx-js/web-mainthread-apis
 
+## 0.16.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-constants@0.16.1
+  - @lynx-js/web-style-transformer@0.16.1
+
 ## 0.16.0
 
 ### Minor Changes

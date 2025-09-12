@@ -1,5 +1,11 @@
 # @lynx-js/template-webpack-plugin
 
+## 0.8.6
+
+### Patch Changes
+
+- fix: add appType field for lazy bundle for web ([#1738](https://github.com/lynx-family/lynx-stack/pull/1738))
+
 ## 0.8.5
 
 ### Patch Changes
