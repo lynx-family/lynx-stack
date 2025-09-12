@@ -2,18 +2,20 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { createRequire } from 'node:module';
-import { rspack, type SwcLoaderParserConfig } from '@rspack/core';
+
+import { rspack } from '@rspack/core';
+import type { SwcLoaderParserConfig } from '@rspack/core';
 
 import type {
   CssScopeVisitorConfig,
-  JsxTransformerConfig,
-  ShakeVisitorConfig,
   DefineDceVisitorConfig,
   DirectiveDceVisitorConfig,
-  WorkletVisitorConfig,
   DynamicImportVisitorConfig,
   InjectVisitorConfig,
-  SwcPluginReactLynxOptions
+  JsxTransformerConfig,
+  ShakeVisitorConfig,
+  SwcPluginReactLynxOptions,
+  WorkletVisitorConfig,
 } from '@lynx-js/swc-plugin-reactlynx';
 import type { CompatVisitorConfig } from '@lynx-js/swc-plugin-reactlynx-compat';
 
@@ -23,6 +25,7 @@ export interface TransformReactLynxOptions {
    * This is used internally to make sure the test output is consistent.
    */
   mode?: 'production' | 'development' | 'test';
+  filename?: string;
   sourceFileName?: string;
   sourcemap: boolean | 'inline';
   sourceMapColumns?: boolean;
@@ -82,6 +85,7 @@ const transformReactLynx = async (
   }
 
   const transformOptions: SwcTransformOptions = {
+    filename: options.filename ?? 'test.js',
     sourceMaps: options?.sourcemap ?? false,
     isModule: options?.isModule ?? true,
     jsc: {
@@ -110,12 +114,12 @@ const transformReactLynx = async (
 
   if (options?.compat) {
     if (typeof options?.compat === 'object') {
-      transformOptions!.jsc!.experimental!.plugins!.unshift([
+      transformOptions.jsc!.experimental!.plugins!.unshift([
         require.resolve('@lynx-js/swc-plugin-reactlynx-compat'),
         options?.compat,
       ]);
     } else {
-      transformOptions!.jsc!.experimental!.plugins!.unshift([
+      transformOptions.jsc!.experimental!.plugins!.unshift([
         require.resolve('@lynx-js/swc-plugin-reactlynx-compat'),
         {},
       ]);
@@ -123,15 +127,15 @@ const transformReactLynx = async (
   }
 
   if (options?.sourceFileName) {
-    transformOptions!.sourceFileName = options?.sourceFileName;
+    transformOptions.sourceFileName = options?.sourceFileName;
   }
 
   if (options?.inlineSourcesContent) {
-    transformOptions!.inlineSourcesContent = options?.inlineSourcesContent;
+    transformOptions.inlineSourcesContent = options?.inlineSourcesContent;
   }
 
   if (options?.syntaxConfig) {
-    transformOptions!.jsc!.parser = options?.syntaxConfig;
+    transformOptions.jsc!.parser = options?.syntaxConfig;
   }
 
   const result: TransformReactLynxOutput = {
