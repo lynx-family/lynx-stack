@@ -77,11 +77,7 @@ export const applySplitChunksRule: (
     })
   })
 
-  api.modifyRspackConfig((rspackConfig, { environment }) => {
-    if (environment.name !== 'lynx') {
-      return rspackConfig
-    }
-
+  api.modifyRspackConfig((rspackConfig) => {
     if (!rspackConfig.optimization) {
       return rspackConfig
     }

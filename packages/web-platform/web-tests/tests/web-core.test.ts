@@ -107,8 +107,10 @@ test.describe('web core tests', () => {
     expect(isSuccess).toBeTruthy();
   });
   test('lynx.requireModuleAsync', async ({ page, browserName }) => {
-    // firefox dose not support this.
-    test.skip(browserName === 'firefox');
+    test.skip(
+      browserName === 'firefox' && ENABLE_MULTI_THREAD,
+      'firefox flaky',
+    );
     await goto(page);
     const mainWorker = await getMainThreadWorker(page);
     await mainWorker.evaluate(() => {
@@ -128,8 +130,10 @@ test.describe('web core tests', () => {
     expect(importedValue).toBe('hello');
   });
   test('lynx.requireModuleAsync-2', async ({ page, browserName }) => {
-    // firefox dose not support this.
-    test.skip(browserName === 'firefox');
+    test.skip(
+      browserName === 'firefox' && ENABLE_MULTI_THREAD,
+      'firefox flaky',
+    );
     await goto(page);
     const mainWorker = await getMainThreadWorker(page);
     await mainWorker.evaluate(() => {
@@ -157,8 +161,10 @@ test.describe('web core tests', () => {
     expect(world).toBe('world');
   });
   test('lynx.requireModule+sync', async ({ page, browserName }) => {
-    // firefox dose not support this.
-    test.skip(browserName === 'firefox');
+    test.skip(
+      browserName === 'firefox' && ENABLE_MULTI_THREAD,
+      'firefox flaky',
+    );
     await goto(page);
     const mainWorker = await getMainThreadWorker(page);
     await mainWorker.evaluate(() => {
@@ -184,8 +190,6 @@ test.describe('web core tests', () => {
   });
 
   test('loadLepusChunk', async ({ page, browserName }) => {
-    // firefox dose not support this.
-    test.skip(browserName === 'firefox');
     await goto(page);
     const mainWorker = await getMainThreadWorker(page);
     await mainWorker.evaluate(() => {

@@ -1320,6 +1320,16 @@ test.describe('reactlynx3 tests', () => {
       },
     );
     test(
+      'config-css-remove-scope-false-import-css',
+      async ({ page }, { title }) => {
+        await goto(page, title);
+        await wait(100);
+        await expect(
+          page.locator('#sub'),
+        ).toHaveCSS('background-color', 'rgb(0, 128, 0)');
+      },
+    );
+    test(
       'config-css-remove-scope-true',
       async ({ page }, { title }) => {
         await goto(page, title);

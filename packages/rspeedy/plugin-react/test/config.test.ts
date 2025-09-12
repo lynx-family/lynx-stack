@@ -1857,7 +1857,7 @@ describe('Config', () => {
 
       expect(config?.optimization?.splitChunks).toHaveProperty(
         'chunks',
-        'all',
+        expect.any(Function),
       )
     })
 
