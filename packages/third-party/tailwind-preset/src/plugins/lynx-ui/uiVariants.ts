@@ -23,7 +23,7 @@
  * - Custom mappings via object syntax
  */
 
-import { INTERNAL_FEATURES, createPlugin } from '../../helpers.js';
+import { TW_NO_PREFIX, createPlugin } from '../../helpers.js';
 import type { PluginWithOptions } from '../../helpers.js';
 import type { KeyValuePairOrList } from '../../types/plugin-types.js';
 
@@ -92,7 +92,10 @@ const uiVariants: PluginWithOptions<UIVariantsOptions> = createPlugin
     ({ matchVariant, e: escapeClassName, config }) => {
       options = options ?? {};
 
-      const projectPrefix: string = config('prefix') ?? '';
+      const cfgPrefix = config('prefix');
+      const projectPrefix: string = typeof cfgPrefix === 'string'
+        ? cfgPrefix
+        : '';
 
       const resolvedPrefixes = normalizePrefixes(options?.prefixes);
 
@@ -119,8 +122,7 @@ const uiVariants: PluginWithOptions<UIVariantsOptions> = createPlugin
           },
           {
             values: valueMap,
-            // @ts-expect-error hack internal api
-            [INTERNAL_FEATURES]: { respectPrefix: false },
+            ...TW_NO_PREFIX,
           },
         );
 
@@ -141,8 +143,7 @@ const uiVariants: PluginWithOptions<UIVariantsOptions> = createPlugin
           },
           {
             values: valueMap,
-            // @ts-expect-error hack internal api
-            [INTERNAL_FEATURES]: { respectPrefix: false },
+            ...TW_NO_PREFIX,
           },
         );
 
@@ -163,8 +164,7 @@ const uiVariants: PluginWithOptions<UIVariantsOptions> = createPlugin
           },
           {
             values: valueMap,
-            // @ts-expect-error hack internal api
-            [INTERNAL_FEATURES]: { respectPrefix: false },
+            ...TW_NO_PREFIX,
           },
         );
 
@@ -172,7 +172,7 @@ const uiVariants: PluginWithOptions<UIVariantsOptions> = createPlugin
         // Matches when the *direct parent* element has the given state class
         // Example: `.ui-open > &`
 
-        // Not Tailwind Default Variants, added for performance considerantion on Lynx
+        // Not Tailwind Default Variants, added for performance consideration on Lynx
         matchVariant(
           `parent-${prefix}`,
           (value: string) => {
@@ -182,8 +182,7 @@ const uiVariants: PluginWithOptions<UIVariantsOptions> = createPlugin
           },
           {
             values: valueMap,
-            // @ts-expect-error hack internal api
-            [INTERNAL_FEATURES]: { respectPrefix: false },
+            ...TW_NO_PREFIX,
           },
         );
       }

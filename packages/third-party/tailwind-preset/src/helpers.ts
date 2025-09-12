@@ -129,5 +129,10 @@ export { parseBoxShadowValue, formatBoxShadowValue };
 export type { ShadowPart };
 
 /* ──────────────── for handling variants that do not respect the project prefix ─────────── */
-
+/**
+ * @internal Tailwind implementation detail. Use via TW_NO_PREFIX to avoid prefixing of class candidates.
+ */
 export { INTERNAL_FEATURES };
+export const TW_NO_PREFIX = {
+  [INTERNAL_FEATURES]: { respectPrefix: false },
+} as const;

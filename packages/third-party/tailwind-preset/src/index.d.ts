@@ -80,5 +80,6 @@ declare module 'tailwindcss/lib/util/parseBoxShadowValue.js' {
 }
 
 declare module 'tailwindcss/lib/lib/setupContextUtils.js' {
+  /** Internal Tailwind symbol — not a public API; subject to change across patch releases. */
   export const INTERNAL_FEATURES: unique symbol;
 }

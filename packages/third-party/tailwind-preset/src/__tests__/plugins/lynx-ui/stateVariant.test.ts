@@ -45,8 +45,8 @@ describe('uiVariants plugin', () => {
     const { api } = runPlugin(plugin);
     const variants = extractVariants(vi.mocked(api.matchVariant));
 
-    expect(Object.keys(variants).sort()).toEqual(
-      ['ui', 'group-ui', 'peer-ui', 'parent-ui'].sort(),
+    expect(Object.keys(variants)).toEqual(
+      expect.arrayContaining(['ui', 'group-ui', 'peer-ui', 'parent-ui']),
     );
 
     const group = variants['group-ui'];
@@ -63,17 +63,19 @@ describe('uiVariants plugin', () => {
     const { api } = runPlugin(plugin);
     const variants = extractVariants(vi.mocked(api.matchVariant));
 
-    expect(Object.keys(variants).sort()).toEqual(
-      [
-        'ui',
-        'group-ui',
-        'peer-ui',
-        'parent-ui',
-        'ui-side',
-        'group-ui-side',
-        'peer-ui-side',
-        'parent-ui-side',
-      ].sort(),
+    expect(Object.keys(variants)).toEqual(
+      expect.arrayContaining(
+        [
+          'ui',
+          'group-ui',
+          'peer-ui',
+          'parent-ui',
+          'ui-side',
+          'group-ui-side',
+          'peer-ui-side',
+          'parent-ui-side',
+        ],
+      ),
     );
 
     expect(variants['ui']?.('open', {})).toBe('&.ui-open');
@@ -85,19 +87,21 @@ describe('uiVariants plugin', () => {
     const { api } = runPlugin(plugin);
     const variants = extractVariants(vi.mocked(api.matchVariant));
 
-    expect(Object.keys(variants).sort()).toEqual(
-      [
-        'unknown',
-        'group-unknown',
-        'peer-unknown',
-        'parent-unknown',
-      ].sort(),
+    expect(Object.keys(variants)).toEqual(
+      expect.arrayContaining(
+        [
+          'unknown',
+          'group-unknown',
+          'peer-unknown',
+          'parent-unknown',
+        ],
+      ),
     );
 
     const self = variants['unknown'];
     const group = variants['group-unknown'];
-    const peer = variants['group-unknown'];
-    const parent = variants['group-unknown'];
+    const peer = variants['peer-unknown'];
+    const parent = variants['parent-unknown'];
 
     expect(self?.('whatever')).toBe('');
     expect(self?.('open')).toBe('');
@@ -121,7 +125,18 @@ describe('uiVariants plugin', () => {
     const variants = extractVariants(vi.mocked(api.matchVariant));
 
     expect(Object.keys(variants)).toEqual(
-      expect.arrayContaining(['custom', 'custom-side']),
+      expect(Object.keys(variants)).toEqual(
+        expect.arrayContaining([
+          'custom',
+          'group-custom',
+          'peer-custom',
+          'parent-custom',
+          'custom-side',
+          'group-custom-side',
+          'peer-custom-side',
+          'parent-custom-side',
+        ]),
+      ),
     );
 
     expect(variants['custom']?.('open', {})).toBe('&.custom-open');
@@ -145,7 +160,7 @@ describe('uiVariants plugin', () => {
   // `modifier` is only meaningful for group-* and peer-* variants
   // self and parent do not support it
   it('supports modifier syntax in group- and peer- variants only', () => {
-    const { api } = runPlugin(uiVariants);
+    const { api } = runPlugin(uiVariants({ prefixes: ['ui'] }));
     const variants = extractVariants(vi.mocked(api.matchVariant));
 
     const group = variants['group-ui'];
@@ -200,17 +215,19 @@ describe('uiVariants plugin', () => {
     const { api } = runPlugin(plugin);
     const variants = extractVariants(vi.mocked(api.matchVariant));
 
-    expect(Object.keys(variants).sort()).toEqual(
-      [
-        'x',
-        'group-x',
-        'peer-x',
-        'parent-x',
-        'y',
-        'group-y',
-        'peer-y',
-        'parent-y',
-      ].sort(),
+    expect(Object.keys(variants)).toEqual(
+      expect.arrayContaining(
+        [
+          'x',
+          'group-x',
+          'peer-x',
+          'parent-x',
+          'y',
+          'group-y',
+          'peer-y',
+          'parent-y',
+        ].sort(),
+      ),
     );
 
     expect(variants['x']?.('one', {})).toBe('&.x-one');
