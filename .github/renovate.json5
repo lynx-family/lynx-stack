@@ -19,10 +19,11 @@
   ],
 
   "enabledManagers": [
+    "cargo",
+    "custom.regex",
+    "github-actions",
     "npm",
     "nvm",
-    "github-actions",
-    "custom.regex",
   ],
 
   "labels": ["bot:renovate"],
@@ -152,6 +153,27 @@
         "* 0-3 1 * *",
       ],
     },
+        {
+      "groupName": "Rust Crates",
+      "groupSlug": "rust-crates",
+      "matchManagers": ["cargo"],
+      "matchPackageNames": [
+        "!swc",
+        "!swc_*",
+      ],
+    },
+    {
+      "groupName": "SWC",
+      "groupSlug": "swc",
+      "matchManagers": ["cargo"],
+      "matchPackageNames": [
+        "swc",
+        "swc_*",
+      ],
+      "matchUpdateTypes": [
+        "major",
+      ],
+    },
   ],
 
   "customManagers": [
@@ -184,5 +206,7 @@
     "@emnapi/core",
     "@emnapi/runtime",
     "@napi-rs/cli",
+    "napi",
+    "napi-derive",
   ],
 }
