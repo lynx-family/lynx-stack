@@ -23,7 +23,7 @@
  * - Custom mappings via object syntax
  */
 
-import { createPlugin } from '../../helpers.js';
+import { INTERNAL_FEATURES, createPlugin } from '../../helpers.js';
 import type { PluginWithOptions } from '../../helpers.js';
 import type { KeyValuePairOrList } from '../../types/plugin-types.js';
 
@@ -88,8 +88,12 @@ const uiVariants: PluginWithOptions<UIVariantsOptions> = createPlugin
   .withOptions<
     UIVariantsOptions
   >(
-    (options?: UIVariantsOptions) => ({ matchVariant }) => {
+    (options?: UIVariantsOptions) =>
+    ({ matchVariant, e: escapeClassName, config }) => {
       options = options ?? {};
+
+      const projectPrefix: string = config('prefix') ?? '';
+
       const resolvedPrefixes = normalizePrefixes(options?.prefixes);
 
       const entries: [string, KeyValuePairOrList][] = Object.entries(
@@ -103,18 +107,83 @@ const uiVariants: PluginWithOptions<UIVariantsOptions> = createPlugin
 
         const valueMap = Object.fromEntries(stateEntries);
 
+        // {prefix}-* (Self)
+        // Matches when the element itself has the given state class
+        // Example: `&.ui-checked`
         matchVariant(
           prefix,
-          (value: string, { modifier }: { modifier?: string | null } = {}) => {
+          (value: string) => {
             const mapped = valueMap[value];
             if (!mapped || typeof mapped !== 'string') return '';
-            const selector = `&.${prefix}-${mapped}`;
-            return (modifier && typeof modifier === 'string')
-              ? `${selector}\\/${modifier}`
-              : selector;
+            return `&.${prefix}-${mapped}`;
           },
           {
             values: valueMap,
+            // @ts-expect-error hack internal api
+            [INTERNAL_FEATURES]: { respectPrefix: false },
+          },
+        );
+
+        // 2) group-{prefix}-* (Ancestor)
+        // Matches when an ancestor element with `.group` also has the given state class
+        // Example: `.group.ui-open &`  (with project prefix `tw-` => `.tw-group.ui-open &`)
+        matchVariant(
+          `group-${prefix}`,
+          (value: string, { modifier }: { modifier?: string | null } = {}) => {
+            const mapped = valueMap[value];
+            if (!mapped || typeof mapped !== 'string') return '';
+
+            const groupSelector = modifier
+              ? `:merge(.${projectPrefix}group\\/${escapeClassName(modifier)})`
+              : `:merge(.${projectPrefix}group)`;
+
+            return `${groupSelector}.${prefix}-${mapped} &`;
+          },
+          {
+            values: valueMap,
+            // @ts-expect-error hack internal api
+            [INTERNAL_FEATURES]: { respectPrefix: false },
+          },
+        );
+
+        // 3) peer-{prefix}-* (Sibling)
+        // Matches when a preceding sibling with `.peer` also has the given state class
+        // Example: `.peer.ui-open ~ &` (with project prefix `tw-` => `.tw-peer.ui-open ~ &`)
+        matchVariant(
+          `peer-${prefix}`,
+          (value: string, { modifier }: { modifier?: string | null } = {}) => {
+            const mapped = valueMap[value];
+            if (!mapped || typeof mapped !== 'string') return '';
+
+            const peerSelector = modifier
+              ? `:merge(.${projectPrefix}peer\\/${escapeClassName(modifier)})`
+              : `:merge(.${projectPrefix}peer)`;
+
+            return `${peerSelector}.${prefix}-${mapped} ~ &`;
+          },
+          {
+            values: valueMap,
+            // @ts-expect-error hack internal api
+            [INTERNAL_FEATURES]: { respectPrefix: false },
+          },
+        );
+
+        // 4) parent-{prefix}-* (Parent)
+        // Matches when the *direct parent* element has the given state class
+        // Example: `.ui-open > &`
+
+        // Not Tailwind Default Variants, added for performance considerantion on Lynx
+        matchVariant(
+          `parent-${prefix}`,
+          (value: string) => {
+            const mapped = valueMap[value];
+            if (!mapped || typeof mapped !== 'string') return '';
+            return `.${prefix}-${mapped} > &`;
+          },
+          {
+            values: valueMap,
+            // @ts-expect-error hack internal api
+            [INTERNAL_FEATURES]: { respectPrefix: false },
           },
         );
       }

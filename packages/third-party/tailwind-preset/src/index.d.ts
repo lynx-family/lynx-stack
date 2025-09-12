@@ -78,3 +78,7 @@ declare module 'tailwindcss/lib/util/parseBoxShadowValue.js' {
 
   export default defaultExport;
 }
+
+declare module 'tailwindcss/lib/lib/setupContextUtils.js' {
+  export const INTERNAL_FEATURES: unique symbol;
+}
