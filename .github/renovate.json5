@@ -206,5 +206,7 @@
     "@emnapi/core",
     "@emnapi/runtime",
     "@napi-rs/cli",
+    "napi",
+    "napi-derive",
   ],
 }
