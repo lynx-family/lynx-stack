@@ -90,6 +90,8 @@ export function toRsbuildConfig(
 
       port: config.server?.port,
 
+      proxy: config.server?.proxy,
+
       strictPort: config.server?.strictPort,
     },
     plugins: config.plugins,

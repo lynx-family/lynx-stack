@@ -2,6 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import type { ProxyConfig } from '@rsbuild/core'
+
 /**
  * {@inheritdoc Config.server}
  * @public
@@ -89,6 +91,25 @@ export interface Server {
    * ```
    */
   port?: number | undefined
+
+  /**
+   * Configure proxy rules for the dev server or preview server to proxy requests to the specified service.
+   *
+   * @example
+   *
+   * ```js
+   * export default {
+   *   server: {
+   *     proxy: {
+   *       // http://localhost:3000/api -> http://localhost:3000/api
+   *       // http://localhost:3000/api/foo -> http://localhost:3000/api/foo
+   *       '/api': 'http://localhost:3000',
+   *     },
+   *   },
+   * }
+   * ```
+   */
+  proxy?: ProxyConfig | undefined
 
   /**
    * When a port is occupied, Rspeedy will automatically increment the port number until an available port is found.

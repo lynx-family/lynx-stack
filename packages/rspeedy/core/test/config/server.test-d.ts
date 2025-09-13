@@ -1,6 +1,9 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import type { IncomingMessage, ServerResponse } from 'node:http'
+
+import type { ProxyOptions } from '@rsbuild/core'
 import { assertType, describe, test } from 'vitest'
 
 import type { Server } from '../../src/index.js'
@@ -45,5 +48,48 @@ describe('Config - Server', () => {
     assertType<Server>({ strictPort: undefined })
     assertType<Server>({ strictPort: false })
     assertType<Server>({ strictPort: true })
+  })
+
+  test('server.proxy', () => {
+    assertType<Server>({})
+    assertType<Server>({ proxy: undefined })
+    assertType<Server>({ proxy: { '/api': 'https://nodejs.org' } })
+    assertType<Server>({
+      proxy: {
+        '/api': {
+          target: 'http://localhost:3000',
+          pathRewrite: { '^/api': '' },
+        },
+      },
+    })
+    assertType<Server>({
+      proxy: {
+        '/rspeedy-hmr': {
+          target: 'http://localhost:3000',
+          ws: true,
+        },
+      },
+    })
+    assertType<Server>({
+      proxy: {
+        '/api': {
+          target: 'http://localhost:3000',
+          bypass(req, res, proxyOptions) {
+            assertType<IncomingMessage>(req)
+            assertType<ServerResponse>(res)
+            assertType<ProxyOptions>(proxyOptions)
+            return ''
+          },
+        },
+      },
+    })
+    assertType<Server>({
+      proxy: [
+        {
+          context: ['/auth', '/api'],
+          target: 'http://localhost:3000',
+        },
+      ],
+    })
   })
 })
