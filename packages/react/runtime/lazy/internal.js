@@ -5,7 +5,6 @@
 import { sExportsReactInternal, target } from './target.js';
 
 export const {
-  BackgroundSnapshotInstance,
   Component,
   __ComponentIsPolyfill,
   __DynamicPartChildren,

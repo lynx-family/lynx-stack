@@ -3,7 +3,6 @@
 // LICENSE file in the root directory of this source tree.
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { BackgroundSnapshotInstance } from '../src/backgroundSnapshot';
 import { globalEnvManager } from './utils/envManager';
 import { elementTree } from './utils/nativeMethod';
 import { registerWorkletOnBackground } from '../src/internal';
@@ -16,6 +15,7 @@ import {
 import { snapshotPatchApply } from '../src/lifecycle/patch/snapshotPatchApply';
 import { SnapshotInstance, createSnapshot, snapshotInstanceManager, snapshotManager } from '../src/snapshot';
 import { DynamicPartType } from '../src/snapshot/dynamicPartType';
+import { setupDom } from '../src/backgroundSnapshot';
 
 const HOLE = null;
 
@@ -78,8 +78,8 @@ describe('createElement', () => {
   });
 
   it('basic', async function() {
-    const bsi1 = new BackgroundSnapshotInstance(snapshot1);
-    const bsi2 = new BackgroundSnapshotInstance(snapshot2);
+    const bsi1 = setupDom({ type: snapshot1 });
+    const bsi2 = setupDom({ type: snapshot2 });
     const patch = takeGlobalSnapshotPatch();
     expect(patch).toMatchInlineSnapshot(`
       [
@@ -127,8 +127,8 @@ describe('insertBefore', () => {
   });
 
   it('basic', async function() {
-    const bsi1 = new BackgroundSnapshotInstance(snapshot1);
-    const bsi2 = new BackgroundSnapshotInstance(snapshot2);
+    const bsi1 = setupDom({ type: snapshot1 });
+    const bsi2 = setupDom({ type: snapshot2 });
     bsi1.insertBefore(bsi2);
     const patch = takeGlobalSnapshotPatch();
     expect(patch).toMatchInlineSnapshot(`
@@ -172,9 +172,9 @@ describe('insertBefore', () => {
   });
 
   it('insert in the middle', async function() {
-    const bsi1 = new BackgroundSnapshotInstance(snapshot1);
-    const bsi2 = new BackgroundSnapshotInstance(snapshot2);
-    const bsi3 = new BackgroundSnapshotInstance(snapshot3);
+    const bsi1 = setupDom({ type: snapshot1 });
+    const bsi2 = setupDom({ type: snapshot2 });
+    const bsi3 = setupDom({ type: snapshot3 });
     bsi1.insertBefore(bsi3);
     bsi1.insertBefore(bsi2, bsi3);
     const patch = takeGlobalSnapshotPatch();
@@ -233,10 +233,10 @@ describe('insertBefore', () => {
   });
 
   it('error', async function() {
-    const bsi1 = new BackgroundSnapshotInstance(snapshot1);
-    const bsi2 = new BackgroundSnapshotInstance(snapshot2);
+    const bsi1 = setupDom({ type: snapshot1 });
+    const bsi2 = setupDom({ type: snapshot2 });
     const patch = takeGlobalSnapshotPatch();
-    const bsi3 = new BackgroundSnapshotInstance(snapshot3);
+    const bsi3 = setupDom({ type: snapshot3 });
     patch.push(
       SnapshotOperation.InsertBefore,
       2,
@@ -321,8 +321,8 @@ describe('removeChild', () => {
   });
 
   it('basic', async function() {
-    const bsi1 = new BackgroundSnapshotInstance(snapshot1);
-    const bsi2 = new BackgroundSnapshotInstance(snapshot2);
+    const bsi1 = setupDom({ type: snapshot1 });
+    const bsi2 = setupDom({ type: snapshot2 });
     bsi1.insertBefore(bsi2);
     let patch = takeGlobalSnapshotPatch();
     snapshotPatchApply(patch);
@@ -371,9 +371,9 @@ describe('removeChild', () => {
   });
 
   it('basic 2', async function() {
-    const bsi1 = new BackgroundSnapshotInstance(snapshot1);
-    const bsi2 = new BackgroundSnapshotInstance(snapshot2);
-    const bsi3 = new BackgroundSnapshotInstance(snapshot3);
+    const bsi1 = setupDom({ type: snapshot1 });
+    const bsi2 = setupDom({ type: snapshot2 });
+    const bsi3 = setupDom({ type: snapshot3 });
     bsi1.insertBefore(bsi2);
     bsi1.insertBefore(bsi3);
     let patch = takeGlobalSnapshotPatch();
@@ -515,7 +515,7 @@ describe('setAttribute', () => {
   });
 
   it('basic', async function() {
-    const bsi1 = new BackgroundSnapshotInstance(snapshot4);
+    const bsi1 = setupDom({ type: snapshot4 });
     bsi1.setAttribute(0, 'attr 1');
     bsi1.setAttribute(1, 'attr 2');
     const patch = takeGlobalSnapshotPatch();
@@ -552,7 +552,7 @@ describe('setAttribute', () => {
   });
 
   it('basic - setAttributes', async function() {
-    const bsi1 = new BackgroundSnapshotInstance(snapshot4);
+    const bsi1 = setupDom({ type: snapshot4 });
     bsi1.setAttribute('values', ['attr 1', 'attr 2']);
     const patch = takeGlobalSnapshotPatch();
     expect(patch).toMatchInlineSnapshot(`
@@ -586,7 +586,7 @@ describe('setAttribute', () => {
   });
 
   it('basic - setAttributes - when __values exists', async function() {
-    const bsi1 = new BackgroundSnapshotInstance(snapshot4);
+    const bsi1 = setupDom({ type: snapshot4 });
     bsi1.setAttribute('values', ['attr 1', 'attr 2']);
     const patch = takeGlobalSnapshotPatch();
     expect(patch).toMatchInlineSnapshot(`
@@ -622,7 +622,7 @@ describe('setAttribute', () => {
   });
 
   it('basic - setAttributes - error', async function() {
-    const bsi1 = new BackgroundSnapshotInstance(snapshot4);
+    const bsi1 = setupDom({ type: snapshot4 });
     const patch = takeGlobalSnapshotPatch();
     patch.push(SnapshotOperation.SetAttributes, 100, ['attr']);
     expect(patch).toMatchInlineSnapshot(`
@@ -668,7 +668,7 @@ describe('setAttribute', () => {
   });
 
   it('error', async function() {
-    const bsi1 = new BackgroundSnapshotInstance(snapshot4);
+    const bsi1 = setupDom({ type: snapshot4 });
     const patch = takeGlobalSnapshotPatch();
     patch.push(SnapshotOperation.SetAttribute, 3, 2, 1, 'attr');
     expect(patch).toMatchInlineSnapshot(`
@@ -1314,7 +1314,7 @@ describe('list', () => {
   });
 
   it('should works when created by `snapshotPatchApply`', () => {
-    const bsi1 = new BackgroundSnapshotInstance(snapshot1);
+    const bsi1 = setupDom({ type: snapshot1 });
 
     let patch;
     patch = takeGlobalSnapshotPatch();
@@ -1323,7 +1323,7 @@ describe('list', () => {
     const si1 = snapshotInstanceManager.values.get(bsi1.__id);
     si1.ensureElements();
 
-    const bsi2 = new BackgroundSnapshotInstance(snapshot5);
+    const bsi2 = setupDom({ type: snapshot5 });
     bsi2.setAttribute('values', ['test']);
     bsi1.insertBefore(bsi2);
     patch = takeGlobalSnapshotPatch();
@@ -1352,7 +1352,7 @@ describe('missing snapshot', () => {
   });
 
   it('should throw error when missing snapshot', () => {
-    const bsi1 = new BackgroundSnapshotInstance('missing-snapshot');
+    const bsi1 = setupDom({ type: 'missing-snapshot' });
     let patch;
     patch = takeGlobalSnapshotPatch();
     expect(patch.length).toMatchInlineSnapshot(`3`);

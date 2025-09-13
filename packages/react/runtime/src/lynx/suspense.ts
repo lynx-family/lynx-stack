@@ -8,7 +8,7 @@ import { useRef } from 'preact/hooks';
 
 import { createElement as createElementMainThread } from '@lynx-js/react/lepus';
 
-import type { BackgroundSnapshotInstance } from '../backgroundSnapshot.js';
+import type { BackgroundDOM } from '../backgroundSnapshot.js';
 import { globalBackgroundSnapshotInstancesToRemove } from '../lifecycle/patch/commit.js';
 
 export const Suspense: FunctionComponent<{ children: VNode | VNode[]; fallback: VNode }> = (
@@ -16,11 +16,11 @@ export const Suspense: FunctionComponent<{ children: VNode | VNode[]; fallback: 
 ) => {
   const __createElement =
     (__MAIN_THREAD__ ? createElementMainThread : createElementBackground) as typeof createElementBackground;
-  const childrenRef = useRef<BackgroundSnapshotInstance>();
+  const childrenRef = useRef<BackgroundDOM>();
 
   // @ts-expect-error wrapper is a valid element type
   const newChildren = __createElement('wrapper', {
-    ref: (bsi: BackgroundSnapshotInstance) => {
+    ref: (bsi: BackgroundDOM) => {
       if (bsi) {
         childrenRef.current = bsi;
       }
@@ -29,7 +29,7 @@ export const Suspense: FunctionComponent<{ children: VNode | VNode[]; fallback: 
 
   // @ts-expect-error wrapper is a valid element type
   const newFallback = __createElement('wrapper', {
-    ref: (bsi: BackgroundSnapshotInstance) => {
+    ref: (bsi: BackgroundDOM) => {
       if (bsi && childrenRef.current) {
         const i = globalBackgroundSnapshotInstancesToRemove.indexOf(childrenRef.current.__id);
         if (i !== -1) {

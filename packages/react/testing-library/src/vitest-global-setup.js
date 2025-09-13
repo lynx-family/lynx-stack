@@ -1,6 +1,5 @@
 import { options } from 'preact';
 
-import { BackgroundSnapshotInstance } from '../../runtime/lib/backgroundSnapshot.js';
 import { clearCommitTaskId, replaceCommitHook } from '../../runtime/lib/lifecycle/patch/commit.js';
 import { deinitGlobalSnapshotPatch } from '../../runtime/lib/lifecycle/patch/snapshotPatch.js';
 import { injectUpdateMainThread } from '../../runtime/lib/lifecycle/patch/updateMainThread.js';
@@ -16,6 +15,7 @@ import { destroyWorklet } from '../../runtime/lib/worklet/destroy.js';
 import { initApiEnv } from '../../worklet-runtime/lib/api/lynxApi.js';
 import { initEventListeners } from '../../worklet-runtime/lib/listeners.js';
 import { initWorklet } from '../../worklet-runtime/lib/workletRuntime.js';
+import { setupDom } from '../../runtime/lib/backgroundSnapshot.js';
 
 const {
   onInjectMainThreadGlobals,
@@ -87,29 +87,8 @@ globalThis.onInjectBackgroundThreadGlobals = (target) => {
 
   backgroundSnapshotInstanceManager.clear();
   backgroundSnapshotInstanceManager.nextId = 0;
-  target.__root = new BackgroundSnapshotInstance('root');
+  target.__root = setupDom({ type: 'root' });
 
-  function setupBackgroundDocument(document) {
-    document.createElement = function(type) {
-      return new BackgroundSnapshotInstance(type);
-    };
-    document.createElementNS = function(_ns, type) {
-      return new BackgroundSnapshotInstance(type);
-    };
-    document.createTextNode = function(text) {
-      const i = new BackgroundSnapshotInstance(null);
-      i.setAttribute(0, text);
-      Object.defineProperty(i, 'data', {
-        set(v) {
-          i.setAttribute(0, v);
-        },
-      });
-      return i;
-    };
-    return document;
-  }
-
-  target._document = setupBackgroundDocument({});
   target.globalPipelineOptions = undefined;
 
   // TODO: can we only inject to target(mainThread.globalThis) instead of globalThis?

@@ -5,10 +5,9 @@
 */
 import { noop } from './hook';
 
-import { render } from 'preact';
+import { render, options } from 'preact';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { setupDocument } from '../../src/document';
 import { setupPage, snapshotInstanceManager } from '../../src/snapshot';
 import { initProfileHook } from '../../src/debug/profile';
 
@@ -16,13 +15,12 @@ describe('profile', () => {
   let scratch;
   beforeAll(() => {
     initProfileHook();
-    setupDocument();
     setupPage(__CreatePage('0', 0));
   });
 
   beforeEach(() => {
     snapshotInstanceManager.clear();
-    scratch = document.createElement('root');
+    scratch = options.setupDom({ type: 'root' });
   });
 
   test('original options hooks should be called', async () => {

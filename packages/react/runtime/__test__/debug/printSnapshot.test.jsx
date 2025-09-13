@@ -6,7 +6,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { backgroundSnapshotInstanceManager, snapshotInstanceManager } from '../../src/snapshot';
 import { elementTree } from '../utils/nativeMethod';
-import { BackgroundSnapshotInstance } from '../../src/backgroundSnapshot';
+import { BackgroundSnapshotInstance, setupDom } from '../../src/backgroundSnapshot';
 import { printSnapshotInstance } from '../../src/debug/printSnapshot';
 
 const HOLE = null;
@@ -51,10 +51,10 @@ describe('printSnapshotInstance', () => {
   });
 
   it('basic', async function() {
-    const bsi1 = new BackgroundSnapshotInstance(snapshot1);
-    const bsi2 = new BackgroundSnapshotInstance(snapshot2);
-    const bsi22 = new BackgroundSnapshotInstance(snapshot2);
-    const bsi3 = new BackgroundSnapshotInstance(snapshot3);
+    const bsi1 = setupDom({ type: snapshot1 });
+    const bsi2 = setupDom({ type: snapshot2 });
+    const bsi22 = setupDom({ type: snapshot2 });
+    const bsi3 = setupDom({ type: snapshot3 });
     bsi1.insertBefore(bsi2);
     bsi1.insertBefore(bsi22);
     bsi2.insertBefore(bsi3);
@@ -73,10 +73,10 @@ describe('printSnapshotInstance', () => {
   });
 
   it('printToScreen', async function() {
-    const bsi1 = new BackgroundSnapshotInstance(snapshot1);
-    const bsi2 = new BackgroundSnapshotInstance(snapshot2);
-    const bsi22 = new BackgroundSnapshotInstance(snapshot2);
-    const bsi3 = new BackgroundSnapshotInstance(snapshot3);
+    const bsi1 = setupDom({ type: snapshot1 });
+    const bsi2 = setupDom({ type: snapshot2 });
+    const bsi22 = setupDom({ type: snapshot2 });
+    const bsi3 = setupDom({ type: snapshot3 });
     bsi1.insertBefore(bsi2);
     bsi1.insertBefore(bsi22);
     bsi2.insertBefore(bsi3);

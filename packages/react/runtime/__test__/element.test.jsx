@@ -1,15 +1,15 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { BackgroundSnapshotInstance } from '../src/backgroundSnapshot';
+import { setupDom } from '../src/backgroundSnapshot';
 
 describe('BackgroundSnapshotInstance', () => {
   let root, child1, child2, child3;
 
   beforeEach(() => {
-    root = new BackgroundSnapshotInstance('');
-    child1 = new BackgroundSnapshotInstance('');
-    child2 = new BackgroundSnapshotInstance('');
-    child3 = new BackgroundSnapshotInstance('');
+    root = setupDom({ type: '' });
+    child1 = setupDom({ type: '' });
+    child2 = setupDom({ type: '' });
+    child3 = setupDom({ type: '' });
   });
 
   it('insertBefore', () => {
@@ -25,6 +25,9 @@ describe('BackgroundSnapshotInstance', () => {
 
   it('removeChild', () => {
     root.insertBefore(child1);
+    expect(root.__removed_from_tree).toEqual(undefined);
+    expect(root.lastChild).toEqual(child1);
+    expect(child2.parentNode).toEqual(null);
     root.insertBefore(child2);
     root.insertBefore(child3);
     expect(root.childNodes).toEqual([child1, child2, child3]);

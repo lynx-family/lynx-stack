@@ -5,27 +5,35 @@
 */
 import { EventEmitter } from 'node:events';
 
-import { render } from 'preact';
+import { render, options } from 'preact';
 import { useState } from 'preact/compat';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { BackgroundSnapshotInstance } from '../../src/backgroundSnapshot';
-import { setupBackgroundDocument } from '../../src/document';
 import { useLynxGlobalEventListener } from '../../src/lynx-api';
 import { SnapshotInstance, backgroundSnapshotInstanceManager, setupPage } from '../../src/snapshot';
 import { backgroundSnapshotInstanceToJSON } from '../utils/debug.js';
 import { elementTree } from '../utils/nativeMethod';
+import { globalEnvManager } from '../utils/envManager';
 
 describe('useLynxGlobalEventListener', () => {
   /** @type {SnapshotInstance} */
   let scratch;
+  let switchToBackground = globalEnvManager.switchToBackground.bind(globalEnvManager);
   const ee = new EventEmitter();
 
   beforeAll(() => {
-    setupBackgroundDocument();
     setupPage(__CreatePage('0', 0));
 
-    BackgroundSnapshotInstance.prototype.toJSON = backgroundSnapshotInstanceToJSON;
+    globalEnvManager.switchToBackground = () => {
+      switchToBackground();
+      const oldSetupDom = options.setupDom;
+      options.setupDom = (vnode) => {
+        vnode = oldSetupDom(vnode);
+        vnode.toJSON = backgroundSnapshotInstanceToJSON;
+        return vnode;
+      };
+    };
 
     const lynx = {
       ...globalThis.lynx,
@@ -39,11 +47,12 @@ describe('useLynxGlobalEventListener', () => {
   });
 
   afterAll(() => {
-    delete BackgroundSnapshotInstance.prototype.toJSON;
+    globalEnvManager.switchToBackground = switchToBackground;
   });
 
   beforeEach(() => {
-    scratch = document.createElement('root');
+    globalEnvManager.switchToBackground();
+    scratch = options.setupDom({ type: 'root' });
   });
 
   afterEach(() => {

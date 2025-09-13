@@ -9,7 +9,7 @@ function snapshotInstanceToJSON() {
   }
   const json = {
     type: this.type,
-    children: this.childNodes,
+    children: this.childNodes.map(child => child.toJSON()),
     props: Object.fromEntries(
       this.__values?.map((v, i) => [`__${i}`, v]) ?? [],
     ),
@@ -26,7 +26,7 @@ function backgroundSnapshotInstanceToJSON() {
   }
   const json = {
     type: this.type,
-    children: this.childNodes,
+    children: this.childNodes.map(child => child.toJSON()),
     props: Object.fromEntries(
       this.__values?.map((v, i) => [`${i}`, v]) ?? [],
     ),

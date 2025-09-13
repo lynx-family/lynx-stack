@@ -1,10 +1,14 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { elementTree } from './utils/nativeMethod';
-import { backgroundSnapshotInstanceManager, setupPage, snapshotInstanceManager } from '../src/snapshot';
+import {
+  backgroundSnapshotInstanceManager,
+  setupPage,
+  SnapshotInstance,
+  snapshotInstanceManager,
+} from '../src/snapshot';
 import { ComponentFromReactRuntime, wrapWithLynxComponent } from '../src/compat/lynxComponent';
-import { setupDocument } from '../src/document';
-import { Fragment, render } from 'preact';
+import { Fragment, options, render } from 'preact';
 import { globalEnvManager } from './utils/envManager';
 
 const HOLE = null;
@@ -13,7 +17,6 @@ let scratch;
 
 beforeAll(() => {
   globalEnvManager.switchToMainThread();
-  setupDocument();
   setupPage(__CreatePage('0', 0));
 });
 
@@ -22,7 +25,7 @@ beforeEach(() => {
   backgroundSnapshotInstanceManager.nextId = 0;
   snapshotInstanceManager.clear();
   snapshotInstanceManager.nextId = 0;
-  scratch = document.createElement('root');
+  scratch = new SnapshotInstance('root');
 });
 
 afterEach(() => {

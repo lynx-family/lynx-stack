@@ -11,7 +11,7 @@
 
 import type { Element, Worklet, WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bindings';
 
-import type { BackgroundSnapshotInstance } from '../backgroundSnapshot.js';
+import type { BackgroundDOM } from '../backgroundSnapshot.js';
 import { ListUpdateInfoRecording } from '../listUpdateInfo.js';
 import { __pendingListUpdates } from '../pendingListUpdates.js';
 import { SnapshotInstance } from '../snapshot.js';
@@ -295,7 +295,7 @@ function updateSpread(
 }
 
 function transformSpread(
-  snapshot: BackgroundSnapshotInstance | SnapshotInstance,
+  snapshot: BackgroundDOM | SnapshotInstance,
   index: number,
   spread: Record<string, unknown>,
 ): Record<string, unknown> {

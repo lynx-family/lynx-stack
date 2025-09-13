@@ -33,10 +33,6 @@
       "lazy": "./runtime/lazy/internal.js",
       "default": "./runtime/lib/internal.js"
     },
-    "./internal/document": {
-      "types": "./runtime/lib/document.d.ts",
-      "default": "./runtime/lib/document.js"
-    },
     "./jsx-runtime": {
       "types": "./runtime/jsx-runtime/index.d.ts",
       "lazy": "./runtime/lazy/jsx-runtime.js",
@@ -174,7 +170,7 @@
     "api-extractor": "api-extractor run --verbose"
   },
   "dependencies": {
-    "preact": "npm:@hongzhiyuan/preact@10.24.0-00213bad"
+    "preact": "npm:@upupming/preact@10.24.0-simple-bsi.4"
   },
   "devDependencies": {
     "@lynx-js/types": "3.4.11",

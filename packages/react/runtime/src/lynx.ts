@@ -6,9 +6,9 @@ import { options } from 'preact';
 import './hooks/react.js';
 
 import { initAlog } from './alog/index.js';
+import { setupDom } from './backgroundSnapshot.js';
 import { setupComponentStack } from './debug/component-stack.js';
 import { initProfileHook } from './debug/profile.js';
-import { document, setupBackgroundDocument } from './document.js';
 import { replaceCommitHook } from './lifecycle/patch/commit.js';
 import { addCtxNotFoundEventListener } from './lifecycle/patch/error.js';
 import { injectUpdateMainThread } from './lifecycle/patch/updateMainThread.js';
@@ -52,10 +52,8 @@ if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
 }
 
 if (__BACKGROUND__) {
-  // Trick Preact and TypeScript to accept our custom document adapter.
-  options.document = document as unknown as Document;
   options.requestAnimationFrame = lynxQueueMicrotask;
-  setupBackgroundDocument();
+  options.setupDom = setupDom;
   injectTt();
   addCtxNotFoundEventListener();
 

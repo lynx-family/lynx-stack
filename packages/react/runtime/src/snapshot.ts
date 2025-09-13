@@ -16,7 +16,7 @@
 
 import type { Worklet, WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bindings';
 
-import type { BackgroundSnapshotInstance } from './backgroundSnapshot.js';
+import type { BackgroundDOM } from './backgroundSnapshot.js';
 import { SnapshotOperation, __globalSnapshotPatch } from './lifecycle/patch/snapshotPatch.js';
 import { ListUpdateInfoRecording } from './listUpdateInfo.js';
 import { __pendingListUpdates } from './pendingListUpdates.js';
@@ -137,13 +137,13 @@ export const snapshotInstanceManager: {
 
 export const backgroundSnapshotInstanceManager: {
   nextId: number;
-  values: Map<number, BackgroundSnapshotInstance>;
+  values: Map<number, BackgroundDOM>;
   clear(): void;
   updateId(id: number, newId: number): void;
   getValueBySign(str: string): unknown;
 } = {
   nextId: 0,
-  values: /* @__PURE__ */ new Map<number, BackgroundSnapshotInstance>(),
+  values: /* @__PURE__ */ new Map<number, BackgroundDOM>(),
   clear() {
     // not resetting `nextId` to prevent id collision
     this.values.clear();
