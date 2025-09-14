@@ -87,7 +87,7 @@ When enabled with `true`, the plugin registers the following default variants:
 
 These defaults are designed to support common component states and layout roles found in design systems and headless UI libraries.
 
-## Usage Examples
+## Basic Usagle Examples
 
 ```tsx
 // Generates: .ui-open:bg-blue-500
@@ -105,7 +105,198 @@ These variants enable component-aware styling by aligning Tailwind utilities wit
 To make these variants effective, your component needs to append the corresponding `ui-*` class dynamically based on its internal state or configuration. For example:
 
 ```tsx
-<Popover className={isOpen ? 'ui-open container' : 'container'}>
-  <div className='ui-open:bg-blue-500 ui-side-left:border-l' />
+<Popover className={isOpen ? 'container ui-open' : 'container'}>
+  <view className='ui-open:bg-blue-500 ui-side-left:border-l' />
 </Popover>;
 ```
+
+## Advanced Usage Examples
+
+Beyond the **self state** shown in the basic examples, the `uiVariants` plugin defines **three scopes in total** for styling based on context:
+
+- **Self state** → `ui-*` variants
+
+  Never prefixed. Behaves like `data-*` / `aria-*`.
+
+- **Direct parent scope** → `parent-*` modifiers
+
+  Style an element based on its immediate parent’s `ui-*` state.
+
+- **Ancestor / sibling scopes** → `group-*` and `peer-*` modifiers
+
+  Require a marker class on the ancestor (`group`) or sibling (`peer`).
+  These **scope markers adopt your project prefix**, while `ui-*` state markers remain unprefixed.
+
+Learn more in Tailwind‘s own docs [`group-*`](https://v3.tailwindcss.com/docs/hover-focus-and-other-states#styling-based-on-parent-state) and [`peer-*`](https://v3.tailwindcss.com/docs/hover-focus-and-other-states#styling-based-on-sibling-state)modifiers, as well as the underlying [plugin mechanism for parent and sibling states](https://v3.tailwindcss.com/docs/plugins#parent-and-sibling-states).
+
+### Self
+
+```tsx
+// Styles apply when the same element has `ui-open`
+<view className='ui-open:bg-blue-500' />;
+```
+
+Compiles to:
+
+```css
+.ui-open\:bg-blue-500.ui-open {
+  background-color: #3b82f6;
+}
+```
+
+### Direct-parent: `parent-*`
+
+Style a child based on its **direct parent's** state. The parent carries the `ui-*` class; you use `parent-ui-*:...` on the child. There is **no** `parent` marker class to add.
+
+```tsx
+<view className='ui-open'>
+  <view className='parent-ui-open:bg-emerald-500' />
+</view>;
+```
+
+Compiles to:
+
+```css
+.ui-open > .parent-ui-open\:bg-emerald-500 {
+  background-color: #10b981;
+}
+```
+
+#### Why add `parent-*`?
+
+The `parent-*` modifier fills the gap between self and group scopes.
+It lets a child react to its **immediate container's** state without requiring any extra marker class:
+
+- **Clear mental model** — "my direct parent controls me."
+- **Safer matching** — avoids accidental wide matches that ancestor‐based `group-*` could introduce.
+- **Efficient** — one level lookup is cheaper than scanning arbitrary ancestor chains.
+- **Prefix simplicity** — no special prefixing rules are needed beyond the parent's `ui-*` state.
+
+> Note: Tailwind itself does not provide a `parent-*` modifier.
+> This scope is introduced by `uiVariants` plugin to complement Tailwind's existing `group-*` (ancestor) and `peer-*` (sibling) patterns.
+
+### Ancestor: `group-*`
+
+Add a **marker class** to any ancestor and style descendants based on that ancestor’s `ui-*` state.
+
+- In **prefixed** projects the marker is **prefixed**: `.tw-group`.
+- The `ui-*` **state** is remains **unprefixed** (behaves like `data-*` / `aria-*`)
+- The `group-ui-*` variant label also remains **unprefixed**, following Tailwind's own `group-*` pattern.
+
+```tsx
+<Ancestor className='group'>
+  <view>
+    {/* Somewhere inside the tree */}
+    <Self className='group-ui-open:bg-indigo-500' />
+  </view>
+</Ancestor>;
+```
+
+Compiles to:
+
+```css
+.group.ui-open .group-ui-open\:bg-indigo-500 {
+  background-color: #6366f1;
+}
+```
+
+> Mental model: **scope markers are part of your app shell** (and adopt your project prefix); **states are part of the component library** (and must be portable → never prefixed).
+
+### Sibling: `peer-*`
+
+Add a **marker class** to the peer element and style siblings after it.
+
+- In **prefixed** projects the marker is **prefixed**: `.tw-peer`.
+- The `ui-*` **state** is remains **unprefixed** (behaves like `data-*` / `aria-*`)
+- The `peer-ui-*` variant label also remains **unprefixed**, following Tailwind's own `peer-*` pattern.
+
+```tsx
+<Field className='flex items-center gap-2'>
+  <Checkbox className='peer' />
+  <Label className='peer-ui-checked:text-rose-600'>Enable alerts</span>
+</Field>;
+```
+
+Compiles to:
+
+```css
+.peer.ui-checked ~ .peer-ui-checked\:text-rose-600 {
+  color: #e11d48;
+}
+```
+
+### Named `group-*`/`peer-*` with slash `/`
+
+You can create **named scope markers** to disambiguate multiple groups/peers. Slash labels are **kept** for scoped markers (standard Tailwind pattern), and the marker still respects your project prefix.
+
+```tsx
+{/* Mark two separate groups */}
+<Dialog className='group/dialog'>
+  <Menu className='group/menu'>
+    <Button className='group-ui-open/menu:bg-amber-500'>Menu Button</Button>
+  </Menu>
+  <Button className='group-ui-open/dialog:bg-sky-500'>Dialog Button</Button>
+</Dialog>;
+```
+
+### Mixed example
+
+```tsx
+<Ancestor className='tw-group/sheet'>
+  <Parent className={open ? 'ui-open' : 'ui-closed'}>
+    {/* highlights only when this node is open */}
+    <StylingOnSelf className='ui-open:ring-2 ui-closed:opacity-60' />
+
+    {/* highlights ONLY when the direct parent is open */}
+    <StylingOnParent className='parent-ui-open:bg-green-500' />
+
+    {/* requires an ancestor with .group/sheet somewhere above */}
+    <StylingOnAncestor className='group-ui-open/sheet:shadow-lg' />
+
+    {/* needs a preceding sibling with the .peer marker */}
+    <StylingOnSibling className='peer-ui-open:shadow-sm' />
+  </Parent>
+</Ancestor>;
+```
+
+### Prefix behavior at a glance
+
+| What                                         | Gets project prefix? | Example marker class                   | Why                                                         |
+| -------------------------------------------- | -------------------- | -------------------------------------- | ----------------------------------------------------------- |
+| `ui-*` states                                | **No**               | `ui-open`, `ui-checked`                | Behave like `data-*`/`aria-*`; must be portable across apps |
+| Scope markers: `group`, `peer` (incl. named) | **Yes**              | `tw-group`, `tw-group/menu`, `tw-peer` | Part of app structure; align with Tailwind prefixing        |
+
+**Do**:
+
+```tsx
+// Prefix ON markers and utilities:
+<view className="tw-group">
+  <view className="group-ui-selected:tw-bg-blue-500" />
+</view>
+
+// Prefix OFF on states:
+<view className="ui-active">
+  <view className="ui-active:tw-text-red-500" />
+</view>
+```
+
+**Don't**:
+
+```tsx
+// 🚫 Wrong: prefixed state class (would break library portability)
+<view className='tw-ui-active' />;
+```
+
+### Why `ui-*` is never prefixed
+
+We treat `ui-*` as a **state surface**, equivalent to `data-*` / `aria-*`. Libraries can ship `ui-*` classes in their markup without worrying about the host app's Tailwind `prefix`. Meanwhile, **scope markers** (`group`, `peer`) belong to the **host layout**, so they follow your `prefix`.
+
+Under the hood we set Tailwind's internal `INTERNAL_FEATURES.respectPrefix = false` for `ui-*` selectors so they won't be auto-prefixed, while we **explicitly** build prefixed selectors for `group`/`peer` (including named scopes).
+
+### Quick reference
+
+- **Self**: `ui-open:bg-*`
+- **Parent**: `parent-ui-open:bg-*` (parent has `ui-open`)
+- **Group**: `group-ui-open:bg-*` (ancestor has `.group` / `.tw-group`)
+- **Peer**: `peer-ui-checked:bg-*` (sibling has `.peer` / `.tw-peer`)
+- **Named scopes**: `group-ui-open/menu:*`, `peer-ui-active/tab:*` (marker on DOM: `.group/menu` / `.tw-group/menu`, `.peer/tab` / `.tw-peer/menu`)
