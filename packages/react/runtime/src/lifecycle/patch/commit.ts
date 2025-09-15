@@ -34,7 +34,10 @@ import { getReloadVersion } from '../pass.js';
 import type { SnapshotPatch } from './snapshotPatch.js';
 import { takeGlobalSnapshotPatch } from './snapshotPatch.js';
 import { profileEnd, profileStart } from '../../debug/utils.js';
-import { delayedRunOnMainThreadData, takeDelayedRunOnMainThreadData } from '../../worklet/runOnMainThread.js';
+import {
+  delayedRunOnMainThreadData,
+  takeDelayedRunOnMainThreadData,
+} from '../../worklet/delayedRunOnMainThreadData.js';
 import { isRendering } from '../isRendering.js';
 
 let globalFlushOptions: FlushOptions = {};

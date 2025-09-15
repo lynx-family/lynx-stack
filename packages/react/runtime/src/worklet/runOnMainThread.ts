@@ -5,18 +5,11 @@ import type { RunWorkletCtxData, Worklet } from '@lynx-js/react/worklet-runtime/
 import { WorkletEvents } from '@lynx-js/react/worklet-runtime/bindings';
 
 import { onPostWorkletCtx } from './ctx.js';
+import { delayedRunOnMainThreadData } from './delayedRunOnMainThreadData.js';
 import { isMtsEnabled } from './functionality.js';
 import { onFunctionCall } from './functionCall.js';
 import { isRendering } from '../lifecycle/isRendering.js';
 import { __globalSnapshotPatch } from '../lifecycle/patch/snapshotPatch.js';
-
-export let delayedRunOnMainThreadData: RunWorkletCtxData[] = [];
-
-export function takeDelayedRunOnMainThreadData(): typeof delayedRunOnMainThreadData {
-  const data = delayedRunOnMainThreadData;
-  delayedRunOnMainThreadData = [];
-  return data;
-}
 
 /**
  * `runOnMainThread` allows triggering main thread functions on the main thread asynchronously.
