@@ -1,5 +1,16 @@
 # @lynx-js/web-worker-runtime
 
+## 0.16.1
+
+### Patch Changes
+
+- feat: supports lazy bundle. (This feature requires `@lynx-js/lynx-core >= 0.1.3`) ([#1235](https://github.com/lynx-family/lynx-stack/pull/1235))
+
+- Updated dependencies [[`608f375`](https://github.com/lynx-family/lynx-stack/commit/608f375e20732cc4c9f141bfbf9800ba6896100b)]:
+  - @lynx-js/web-mainthread-apis@0.16.1
+  - @lynx-js/web-constants@0.16.1
+  - @lynx-js/web-worker-rpc@0.16.1
+
 ## 0.16.0
 
 ### Minor Changes

@@ -1,5 +1,14 @@
 # @lynx-js/web-constants
 
+## 0.16.1
+
+### Patch Changes
+
+- feat: supports lazy bundle. (This feature requires `@lynx-js/lynx-core >= 0.1.3`) ([#1235](https://github.com/lynx-family/lynx-stack/pull/1235))
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.16.1
+
 ## 0.16.0
 
 ### Minor Changes

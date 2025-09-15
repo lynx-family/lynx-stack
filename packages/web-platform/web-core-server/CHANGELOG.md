@@ -1,5 +1,13 @@
 # @lynx-js/web-core-server
 
+## 0.16.1
+
+### Patch Changes
+
+- refactor: improve chunk loading ([#1703](https://github.com/lynx-family/lynx-stack/pull/1703))
+
+- feat: supports lazy bundle. (This feature requires `@lynx-js/lynx-core >= 0.1.3`) ([#1235](https://github.com/lynx-family/lynx-stack/pull/1235))
+
 ## 0.16.0
 
 ### Minor Changes

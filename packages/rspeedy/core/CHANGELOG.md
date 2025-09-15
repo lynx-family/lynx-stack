@@ -1,5 +1,68 @@
 # @lynx-js/rspeedy
 
+## 0.11.2
+
+### Patch Changes
+
+- Support `server.proxy`. ([#1745](https://github.com/lynx-family/lynx-stack/pull/1745))
+
+- Support `command` and `env` parameters in the function exported by `lynx.config.js`. ([#1669](https://github.com/lynx-family/lynx-stack/pull/1669))
+
+  ```js
+  import { defineConfig } from '@lynx-js/rspeedy'
+
+  export default defineConfig(({ command, env }) => {
+    const isBuild = command === 'build'
+    const isTest = env === 'test'
+
+    return {
+      output: {
+        minify: !isTest,
+      },
+      performance: {
+        buildCache: isBuild,
+      },
+    }
+  })
+  ```
+
+- Support `resolve.dedupe`. ([#1671](https://github.com/lynx-family/lynx-stack/pull/1671))
+
+  This is useful when having multiple duplicated packages in the bundle:
+
+  ```js
+  import { defineConfig } from '@lynx-js/rspeedy'
+
+  export default defineConfig({
+    resolve: {
+      dedupe: ['tslib'],
+    },
+  })
+  ```
+
+- Support `resolve.aliasStrategy` for controlling priority between `tsconfig.json` paths and `resolve.alias` ([#1722](https://github.com/lynx-family/lynx-stack/pull/1722))
+
+  ```js
+  import { defineConfig } from '@lynx-js/rspeedy'
+
+  export default defineConfig({
+    resolve: {
+      alias: {
+        '@': './src',
+      },
+      // 'prefer-tsconfig' (default): tsconfig.json paths take priority
+      // 'prefer-alias': resolve.alias takes priority
+      aliasStrategy: 'prefer-alias',
+    },
+  })
+  ```
+
+- Bump Rsbuild v1.5.4 with Rspack v1.5.2. ([#1644](https://github.com/lynx-family/lynx-stack/pull/1644))
+
+- Updated dependencies [[`d7c5da3`](https://github.com/lynx-family/lynx-stack/commit/d7c5da329caddfb12ed77159fb8b1b8f38717cff)]:
+  - @lynx-js/chunk-loading-webpack-plugin@0.3.3
+  - @lynx-js/cache-events-webpack-plugin@0.0.2
+
 ## 0.11.1
 
 ### Patch Changes
