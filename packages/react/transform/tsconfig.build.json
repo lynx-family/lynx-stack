@@ -1,0 +1,19 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "plugins": [
+      {
+        "transform": "typia/lib/transform",
+      },
+    ],
+    "strictNullChecks": true,
+    "strict": true,
+    "composite": true,
+    "outDir": "./dist",
+    "baseUrl": "./",
+    "resolveJsonModule": true,
+  },
+  "include": [
+    "./index.ts",
+  ],
+}

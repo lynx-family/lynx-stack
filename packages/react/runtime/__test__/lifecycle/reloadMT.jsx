@@ -3,7 +3,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 */
-
+/* v8 ignore start */
 /** @jsxImportSource ../../lepus */
 
 import { useState } from '../../src/index';
@@ -74,3 +74,4 @@ function CompListConditional() {
 }
 
 export const ListConditionalMT = <CompListConditional />;
+/* v8 ignore stop */

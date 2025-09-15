@@ -66,14 +66,14 @@ export const createVitestConfig = async (options) => {
     return {
       name: 'transformReactLynxPlugin',
       enforce: 'pre',
-      transform(sourceText, sourcePath) {
+      async transform(sourceText, sourcePath) {
         const id = sourcePath;
         // Only transform JS files
         // Using the same regex as rspack's `CHAIN_ID.RULE.JS` rule
         const regex = /\.(?:js|jsx|mjs|cjs|ts|tsx|mts|cts)(\?.*)?$/;
         if (!regex.test(id)) return null;
 
-        const { transformReactLynxSync } = require(
+        const { transformReactLynx } = require(
           '@lynx-js/react/transform',
         );
         // relativePath should be stable between different runs with different cwd
@@ -81,46 +81,48 @@ export const createVitestConfig = async (options) => {
           __dirname,
           sourcePath,
         ));
-        const basename = path.basename(sourcePath);
-        const result = transformReactLynxSync(sourceText, {
+
+        const isTS = /\.[mc]?ts$/.exec(relativePath);
+        const isTSX = /\.tsx$/.exec(relativePath);
+        const syntax = (isTS || isTSX) ? 'typescript' : 'ecmascript';
+        const syntaxConfig = {
+          syntax,
+          decorators: true,
+          tsx: !isTS,
+          jsx: true,
+        };
+
+        const result = await transformReactLynx(sourceText, {
           mode: 'test',
-          pluginName: '',
-          filename: basename,
           sourcemap: true,
           snapshot: {
-            preserveJsx: false,
             runtimePkg: `${runtimePkgName}/internal`,
             jsxImportSource: runtimePkgName,
-            filename: relativePath,
             target: 'MIXED',
           },
-          // snapshot: true,
+          syntaxConfig,
           directiveDCE: false,
           defineDCE: false,
           shake: false,
           compat: false,
           worklet: {
-            filename: relativePath,
             runtimePkg: `${runtimePkgName}/internal`,
             target: 'MIXED',
           },
-          refresh: false,
           cssScope: false,
         });
         if (result.errors.length > 0) {
           // https://rollupjs.org/plugin-development/#this-error
           result.errors.forEach(error => {
             this.error(
-              error.text,
-              error.location,
+              error,
             );
           });
         }
         if (result.warnings.length > 0) {
           result.warnings.forEach(warning => {
             this.warn(
-              warning.text,
-              warning.location,
+              warning,
             );
           });
         }

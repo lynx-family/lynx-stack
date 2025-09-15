@@ -69,11 +69,16 @@
       "default": "./components/lib/index.js"
     },
     "./transform": {
-      "require": "./transform/cjs/main.cjs",
-      "import": {
-        "types": "./transform/index.d.ts",
-        "default": "./transform/main.js"
-      }
+      "types": "./transform/dist/index.d.ts",
+      "default": "./transform/dist/index.js"
+    },
+    "./transform/swc-plugin-reactlynx-compat": {
+      "types": "./transform/swc-plugin-reactlynx-compat/index.d.ts",
+      "default": "./transform/swc-plugin-reactlynx-compat/swc_plugin_reactlynx_compat.wasm"
+    },
+    "./transform/swc-plugin-reactlynx": {
+      "types": "./transform/swc-plugin-reactlynx/index.d.ts",
+      "default": "./transform/swc-plugin-reactlynx/swc_plugin_reactlynx.wasm"
     },
     "./worklet-runtime": {
       "types": "./worklet-runtime/lib/index.d.ts",

@@ -3,27 +3,22 @@
 // LICENSE file in the root directory of this source tree.
 import { describe, expect, it } from 'vitest';
 
-import { transformReactLynx } from '../../main.js';
+import { transformReactLynx } from '../../index';
 
 /** @type {import('../../index.d.ts').TransformNodiffOptions} */
 const defaultOptions = {
   mode: 'test',
-  pluginName: '',
-  filename: 'test.js',
   sourcemap: false,
   snapshot: {
-    preserveJsx: false,
     runtimePkg: '@lynx-js/react',
     jsxImportSource: '@lynx-js/react',
     target: 'MIXED',
-    filename: 'test.js',
   },
   directiveDCE: false,
   defineDCE: false,
   shake: false,
   compat: false,
   worklet: false,
-  refresh: false,
 };
 
 describe('CSS Scope', () => {
@@ -79,7 +74,6 @@ bar, styles, styles0, styles1
           ...defaultOptions,
           cssScope: {
             mode,
-            filename: defaultOptions.filename,
           },
         },
       );
@@ -105,7 +99,6 @@ bar, styles, styles0, styles1
           ...defaultOptions,
           cssScope: {
             mode,
-            filename: defaultOptions.filename,
           },
         },
       );
@@ -135,7 +128,6 @@ Foo, App
           ...defaultOptions,
           cssScope: {
             mode,
-            filename: defaultOptions.filename,
           },
         },
       );
@@ -163,13 +155,12 @@ Foo, App
 `,
         {
           ...defaultOptions,
-          jsx: {
-            ...defaultOptions.jsx,
+          snapshot: {
+            ...defaultOptions.snapshot,
             isDynamicComponent: true,
           },
           cssScope: {
             mode,
-            filename: defaultOptions.filename,
           },
         },
       );
@@ -196,7 +187,6 @@ bar, App
           ...defaultOptions,
           cssScope: {
             mode,
-            filename: defaultOptions.filename,
           },
         },
       );

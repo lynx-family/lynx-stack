@@ -1,7 +1,23 @@
 WARNING in ./compat/lynx-key/index.jsx
 Module Warning (from ../../lib/loaders/background.js):
-DEPRECATED: lynx-key is changed to key
+  ! DEPRECATED: lynx-key is changed to key
+   ,-[<LINE:COLUMN>]
+ 2 | 
+ 3 | export class App extends Component {
+ 4 |   render() {
+ 5 |     return <view lynx-key="foo"></view>
+   :                  ^^^^^^^^
+ 6 |   }
+ 7 | }
+   `----
 
 WARNING in ./compat/lynx-key/index.jsx
 Module Warning (from ../../lib/loaders/background.js):
-DEPRECATED: old runtime package "@lynx-js/react-runtime" is changed to "@lynx-js/react"
+  ! DEPRECATED: old runtime package "@lynx-js/react-runtime" is changed to "@lynx-js/react"
+   ,-[<LINE:COLUMN>]
+ 1 | import { Component } from '@lynx-js/react-runtime'
+   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ 2 | 
+ 3 | export class App extends Component {
+ 4 |   render() {
+   `----
