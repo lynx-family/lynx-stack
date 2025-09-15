@@ -21,6 +21,12 @@ import { decodeCssOG } from './decodeCssOG.js';
 function topologicalSort(
   styleInfo: StyleInfo,
 ): string[] {
+  /**
+   * kahn's algorithm
+   * 1. The styleInfo is already equivalent to a adjacency list. (cssId, import)
+   * 2. The styleInfo is a DAG therefore we don't need to do cyclic detection
+   */
+  const queue: string[] = [];
   const inDegreeMap = new Map<string, number>();
   for (const [cssId, oneStyleInfo] of Object.entries(styleInfo)) {
     !inDegreeMap.has(cssId) && inDegreeMap.set(cssId, 0); // initialize
@@ -29,9 +35,26 @@ function topologicalSort(
       inDegreeMap.set(importCssId, currentInDegree + 1);
     }
   }
-  const sortedCssIds: string[] = [...inDegreeMap.entries()].sort((a, b) =>
-    a[1] - b[1]
-  ).map(entry => entry[0]);
+  for (const [cssId, inDegree] of inDegreeMap.entries()) {
+    if (inDegree === 0) {
+      queue.push(cssId);
+    }
+  }
+  const sortedCssIds: string[] = [];
+  while (queue.length > 0) {
+    const currentCssId = queue.shift()!;
+    sortedCssIds.push(currentCssId);
+    const currentAdjunction = styleInfo[currentCssId]?.imports;
+    if (currentAdjunction) {
+      for (const importCssId of currentAdjunction) {
+        const importInDegree = inDegreeMap.get(importCssId)! - 1;
+        inDegreeMap.set(importCssId, importInDegree);
+        if (importInDegree === 0) {
+          queue.push(importCssId);
+        }
+      }
+    }
+  }
   return sortedCssIds;
 }
 function generateImportByMap(
