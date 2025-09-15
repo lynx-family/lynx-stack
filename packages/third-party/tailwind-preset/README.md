@@ -17,13 +17,13 @@ This preset is not a 1:1 port of Tailwind's core. Instead, it provides a **Lynx-
 
 ```ts
 // tailwind.config.ts
+import type { Config } from 'tailwindcss';
 import preset from '@lynx-js/tailwind-preset';
 
-const config: Config = {
+export default {
   content: ['./src/**/*.{ts,tsx}'],
   presets: [preset],
-};
-export default config;
+} satisfies Config;
 ```
 
 ```ts

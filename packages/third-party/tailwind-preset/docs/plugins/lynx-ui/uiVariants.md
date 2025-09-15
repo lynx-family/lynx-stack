@@ -87,7 +87,7 @@ When enabled with `true`, the plugin registers the following default variants:
 
 These defaults are designed to support common component states and layout roles found in design systems and headless UI libraries.
 
-## Basic Usagle Examples
+## Basic Usage Examples
 
 ```tsx
 // Generates: .ui-open:bg-blue-500
@@ -127,7 +127,7 @@ Beyond the **self state** shown in the basic examples, the `uiVariants` plugin d
   Require a marker class on the ancestor (`group`) or sibling (`peer`).
   These **scope markers adopt your project prefix**, while `ui-*` state markers remain unprefixed.
 
-Learn more in Tailwind‘s own docs [`group-*`](https://v3.tailwindcss.com/docs/hover-focus-and-other-states#styling-based-on-parent-state) and [`peer-*`](https://v3.tailwindcss.com/docs/hover-focus-and-other-states#styling-based-on-sibling-state)modifiers, as well as the underlying [plugin mechanism for parent and sibling states](https://v3.tailwindcss.com/docs/plugins#parent-and-sibling-states).
+Learn more in Tailwind‘s own docs [`group-*`](https://v3.tailwindcss.com/docs/hover-focus-and-other-states#styling-based-on-parent-state) and [`peer-*`](https://v3.tailwindcss.com/docs/hover-focus-and-other-states#styling-based-on-sibling-state) modifiers, as well as the underlying [plugin mechanism for parent and sibling states](https://v3.tailwindcss.com/docs/plugins#parent-and-sibling-states).
 
 ### Self
 
@@ -180,7 +180,7 @@ It lets a child react to its **immediate container's** state without requiring a
 Add a **marker class** to any ancestor and style descendants based on that ancestor’s `ui-*` state.
 
 - In **prefixed** projects the marker is **prefixed**: `.tw-group`.
-- The `ui-*` **state** is remains **unprefixed** (behaves like `data-*` / `aria-*`)
+- The `ui-*` **state** remains **unprefixed** (behaves like `data-*` / `aria-*`)
 - The `group-ui-*` variant label also remains **unprefixed**, following Tailwind's own `group-*` pattern.
 
 ```tsx
@@ -207,13 +207,13 @@ Compiles to:
 Add a **marker class** to the peer element and style siblings after it.
 
 - In **prefixed** projects the marker is **prefixed**: `.tw-peer`.
-- The `ui-*` **state** is remains **unprefixed** (behaves like `data-*` / `aria-*`)
+- The `ui-*` **state** remains **unprefixed** (behaves like `data-*` / `aria-*`)
 - The `peer-ui-*` variant label also remains **unprefixed**, following Tailwind's own `peer-*` pattern.
 
 ```tsx
 <Field className='flex items-center gap-2'>
   <Checkbox className='peer' />
-  <Label className='peer-ui-checked:text-rose-600'>Enable alerts</span>
+  <Label className='peer-ui-checked:text-rose-600'>Enable alerts</Label>
 </Field>;
 ```
 
@@ -299,4 +299,4 @@ Under the hood we set Tailwind's internal `INTERNAL_FEATURES.respectPrefix = fal
 - **Parent**: `parent-ui-open:bg-*` (parent has `ui-open`)
 - **Group**: `group-ui-open:bg-*` (ancestor has `.group` / `.tw-group`)
 - **Peer**: `peer-ui-checked:bg-*` (sibling has `.peer` / `.tw-peer`)
-- **Named scopes**: `group-ui-open/menu:*`, `peer-ui-active/tab:*` (marker on DOM: `.group/menu` / `.tw-group/menu`, `.peer/tab` / `.tw-peer/menu`)
+- **Named scopes**: `group-ui-open/menu:*`, `peer-ui-active/tab:*` (marker on DOM: `.group/menu` / `.tw-group/menu`, `.peer/tab` / `.tw-peer/tab`)
