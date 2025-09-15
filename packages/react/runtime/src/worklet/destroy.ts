@@ -7,7 +7,9 @@ import { takeWorkletRefInitValuePatch } from './workletRefPool.js';
 export const destroyTasks: (() => void)[] = [];
 
 export function destroyWorklet(): void {
-  takeWorkletRefInitValuePatch();
+  if (__BACKGROUND__) {
+    takeWorkletRefInitValuePatch();
+  }
 
   for (const task of destroyTasks) {
     task();
