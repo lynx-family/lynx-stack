@@ -59,7 +59,7 @@ export const __ComponentIsPolyfill: FC<{ is: string }> = /* @__PURE__ */ factory
 
 export { loadLazyBundle } from './lynx/lazy-bundle.js';
 
-export { transformToWorklet } from './worklet/transformToWorklet.js';
+export { transformToWorklet } from './worklet/call/transformToWorklet.js';
 export { registerWorkletOnBackground } from './worklet/hmr.js';
 
 export { loadWorkletRuntime } from '@lynx-js/react/worklet-runtime/bindings';

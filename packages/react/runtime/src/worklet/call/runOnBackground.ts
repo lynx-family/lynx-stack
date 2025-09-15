@@ -10,9 +10,9 @@ import type {
 } from '@lynx-js/react/worklet-runtime/bindings';
 import { WorkletEvents, delayRunOnBackground } from '@lynx-js/react/worklet-runtime/bindings';
 
-import { destroyTasks } from './destroy.js';
+import { destroyTasks } from '../destroy.js';
 import { WorkletExecIdMap } from './execMap.js';
-import { isRunOnBackgroundEnabled } from './functionality.js';
+import { isRunOnBackgroundEnabled } from '../functionality.js';
 import { onFunctionCall } from './functionCall.js';
 
 /**

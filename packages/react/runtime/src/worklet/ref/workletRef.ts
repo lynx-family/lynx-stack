@@ -7,7 +7,7 @@ import type { WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bindings';
 import { WorkletEvents } from '@lynx-js/react/worklet-runtime/bindings';
 
 import { addWorkletRefInitValue } from './workletRefPool.js';
-import { useMemo } from '../hooks/react.js';
+import { useMemo } from '../../hooks/react.js';
 
 // Split into two variables for testing purposes
 let lastIdBG = 0;

@@ -5,8 +5,8 @@
 import { WorkletEvents } from '@lynx-js/react/worklet-runtime/bindings';
 import type { RunWorkletCtxRetData } from '@lynx-js/react/worklet-runtime/bindings';
 
-import { destroyTasks } from './destroy.js';
-import { IndexMap } from './indexMap.js';
+import { destroyTasks } from '../destroy.js';
+import { IndexMap } from '../indexMap.js';
 
 let resolveMap: IndexMap<(value: any) => void> | undefined;
 

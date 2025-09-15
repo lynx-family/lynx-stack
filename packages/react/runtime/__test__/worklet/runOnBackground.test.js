@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { onPostWorkletCtx } from '../../src/worklet/ctx';
 import { destroyWorklet } from '../../src/worklet/destroy';
 import { clearConfigCacheForTesting } from '../../src/worklet/functionality';
-import { runOnBackground } from '../../src/worklet/runOnBackground';
+import { runOnBackground } from '../../src/worklet/call/runOnBackground';
 import { globalEnvManager } from '../utils/envManager';
 
 beforeEach(() => {

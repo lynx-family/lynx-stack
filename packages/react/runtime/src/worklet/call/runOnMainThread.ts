@@ -4,12 +4,12 @@
 import type { RunWorkletCtxData, Worklet } from '@lynx-js/react/worklet-runtime/bindings';
 import { WorkletEvents } from '@lynx-js/react/worklet-runtime/bindings';
 
-import { onPostWorkletCtx } from './ctx.js';
+import { isRendering } from '../../lifecycle/isRendering.js';
+import { __globalSnapshotPatch } from '../../lifecycle/patch/snapshotPatch.js';
+import { onPostWorkletCtx } from '../ctx.js';
 import { delayedRunOnMainThreadData } from './delayedRunOnMainThreadData.js';
-import { isMtsEnabled } from './functionality.js';
+import { isMtsEnabled } from '../functionality.js';
 import { onFunctionCall } from './functionCall.js';
-import { isRendering } from '../lifecycle/isRendering.js';
-import { __globalSnapshotPatch } from '../lifecycle/patch/snapshotPatch.js';
 
 /**
  * `runOnMainThread` allows triggering main thread functions on the main thread asynchronously.

@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import type { JsFnHandle, Worklet } from '@lynx-js/react/worklet-runtime/bindings';
 
-import { IndexMap } from './indexMap.js';
+import { IndexMap } from '../indexMap.js';
 
 /**
  * `WorkletExecIdMap` ensures the worklet object is not released in js context when the main thread is still holding the

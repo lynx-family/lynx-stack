@@ -21,7 +21,10 @@ import { CHILDREN } from '../renderToOpcodes/constants.js';
 import { __root } from '../root.js';
 import { backgroundSnapshotInstanceManager } from '../snapshot.js';
 import type { SerializedSnapshotInstance } from '../snapshot.js';
-import { delayedRunOnMainThreadData, takeDelayedRunOnMainThreadData } from '../worklet/delayedRunOnMainThreadData.js';
+import {
+  delayedRunOnMainThreadData,
+  takeDelayedRunOnMainThreadData,
+} from '../worklet/call/delayedRunOnMainThreadData.js';
 import { destroyWorklet } from '../worklet/destroy.js';
 
 export { runWithForce };

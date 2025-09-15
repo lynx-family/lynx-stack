@@ -12,7 +12,7 @@ import { __root } from '../../src/root';
 import { setupPage } from '../../src/snapshot';
 import { destroyWorklet } from '../../src/worklet/destroy';
 import { clearConfigCacheForTesting } from '../../src/worklet/functionality';
-import { MainThreadRef, useMainThreadRef } from '../../src/worklet/workletRef';
+import { MainThreadRef, useMainThreadRef } from '../../src/worklet/ref/workletRef';
 import { globalEnvManager } from '../utils/envManager';
 
 beforeAll(() => {

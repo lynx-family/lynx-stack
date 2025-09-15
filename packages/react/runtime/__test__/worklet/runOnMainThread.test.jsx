@@ -9,7 +9,7 @@ import { WorkletEvents } from '@lynx-js/react/worklet-runtime/bindings';
 
 import { destroyWorklet } from '../../src/worklet/destroy';
 import { clearConfigCacheForTesting } from '../../src/worklet/functionality';
-import { runOnMainThread } from '../../src/worklet/runOnMainThread';
+import { runOnMainThread } from '../../src/worklet/call/runOnMainThread';
 import { globalEnvManager } from '../utils/envManager';
 import { initGlobalSnapshotPatch } from '../../src/lifecycle/patch/snapshotPatch';
 import { replaceCommitHook } from '../../src/lifecycle/patch/commit';

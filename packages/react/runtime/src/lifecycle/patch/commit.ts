@@ -29,7 +29,7 @@ import { COMMIT } from '../../renderToOpcodes/constants.js';
 import { applyQueuedRefs } from '../../snapshot/ref.js';
 import { backgroundSnapshotInstanceManager } from '../../snapshot.js';
 import { hook, isEmptyObject } from '../../utils.js';
-import { takeWorkletRefInitValuePatch } from '../../worklet/workletRefPool.js';
+import { takeWorkletRefInitValuePatch } from '../../worklet/ref/workletRefPool.js';
 import { getReloadVersion } from '../pass.js';
 import type { SnapshotPatch } from './snapshotPatch.js';
 import { takeGlobalSnapshotPatch } from './snapshotPatch.js';
@@ -37,7 +37,7 @@ import { profileEnd, profileStart } from '../../debug/utils.js';
 import {
   delayedRunOnMainThreadData,
   takeDelayedRunOnMainThreadData,
-} from '../../worklet/delayedRunOnMainThreadData.js';
+} from '../../worklet/call/delayedRunOnMainThreadData.js';
 import { isRendering } from '../isRendering.js';
 
 let globalFlushOptions: FlushOptions = {};
