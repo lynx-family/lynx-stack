@@ -273,8 +273,8 @@ You can create **named scope markers** to disambiguate multiple groups/peers. Sl
 </view>
 
 // Prefix OFF on states:
-<view className="ui-active">
-  <view className="ui-active:tw-text-red-500" />
+<view className="ui-selected">
+  <view className="group-ui-selected:tw-text-blue-500 ui-active:tw-text-red-500 ui-active" />
 </view>
 ```
 
