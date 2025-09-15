@@ -23,11 +23,12 @@ import { options } from 'preact';
 
 import type { RunWorkletCtxData } from '@lynx-js/react/worklet-runtime/bindings';
 
+import type { BackgroundDOM } from '../../backgroundSnapshot.js';
 import { LifecycleConstant } from '../../lifecycleConstant.js';
 import { globalPipelineOptions, markTiming, markTimingLegacy, setPipeline } from '../../lynx/performance.js';
 import { COMMIT } from '../../renderToOpcodes/constants.js';
 import { applyQueuedRefs } from '../../snapshot/ref.js';
-import { backgroundSnapshotInstanceManager } from '../../snapshot.js';
+import { backgroundSnapshotInstanceManager, traverseSnapshotInstance } from '../../snapshot.js';
 import { hook, isEmptyObject } from '../../utils.js';
 import { takeWorkletRefInitValuePatch } from '../../worklet/workletRefPool.js';
 import { getReloadVersion } from '../pass.js';
@@ -94,6 +95,15 @@ function takeGlobalPatchOptions(): GlobalPatchOptions {
   return res;
 }
 
+export function tearDown(dom: BackgroundDOM): void {
+  traverseSnapshotInstance(dom, v => {
+    v.parentNode = null;
+    v.previousSibling = null;
+    v.nextSibling = null;
+    backgroundSnapshotInstanceManager.values.delete(v.__id);
+  });
+}
+
 /**
  * Replaces Preact's default commit hook with our custom implementation
  */
@@ -129,7 +139,8 @@ function replaceCommitHook(): void {
         if (backgroundSnapshotInstancesToRemove.length) {
           setTimeout(() => {
             backgroundSnapshotInstancesToRemove.forEach(id => {
-              backgroundSnapshotInstanceManager.values.get(id)?.tearDown();
+              const dom = backgroundSnapshotInstanceManager.values.get(id);
+              if (dom) tearDown(dom);
             });
           }, 10000);
         }

@@ -1,12 +1,11 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+/* eslint-disable @typescript-eslint/unbound-method */
 
 import { root, useEffect, useState } from '@lynx-js/react';
-import {
-  BackgroundSnapshotInstance,
-  SnapshotInstance,
-} from '@lynx-js/react/internal';
+import { SnapshotInstance, options } from '@lynx-js/react/internal';
+import type { BackgroundDOM } from '@lynx-js/react/internal';
 import type { CSSProperties, MainThread, NodesRef } from '@lynx-js/types';
 
 import { hook, isMainThread } from '../../src/hook.js';
@@ -89,26 +88,32 @@ if (typeof Codspeed !== 'undefined' && __MAIN_THREAD__) {
 
 if (typeof Codspeed !== 'undefined' && __BACKGROUND__) {
   hook(
-    BackgroundSnapshotInstance.prototype,
-    'setAttribute',
-    function(this: BackgroundSnapshotInstance, old, key, value) {
-      const values = value as unknown[];
-      if (
-        key === 'values' && values[values.length - 1] === 'stop-benchmark-true'
-      ) {
-        // we only care about the update that stops the benchmark
+    options,
+    'setupDom',
+    function(old: typeof options.setupDom, vnode: BackgroundDOM) {
+      old?.(vnode);
+      const oldSetAttribute = vnode.setAttribute;
+      vnode.setAttribute = function(this: BackgroundDOM, key, value) {
+        const values = value as unknown[];
+        if (
+          key === 'values'
+          && values[values.length - 1] === 'stop-benchmark-true'
+        ) {
+          // we only care about the update that stops the benchmark
 
-        Codspeed.startBenchmark();
-        const ret = old!.call(this, key, value);
-        Codspeed.stopBenchmark();
-        Codspeed.setExecutedBenchmark(
-          `${__REPO_FILEPATH__}::${__webpack_chunkname__}-setAttribute__BatchedValues`,
-        );
-        return ret;
-      }
+          Codspeed.startBenchmark();
+          const ret = oldSetAttribute.call(this, key, value);
+          Codspeed.stopBenchmark();
+          Codspeed.setExecutedBenchmark(
+            `${__REPO_FILEPATH__}::${__webpack_chunkname__}-setAttribute__BatchedValues`,
+          );
+          return ret;
+        }
 
-      return old!.call(this, key, value);
-    },
+        return oldSetAttribute.call(this, key, value);
+      };
+      return vnode;
+    } as never,
   );
 }
 

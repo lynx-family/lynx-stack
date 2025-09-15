@@ -2,8 +2,6 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { getJSModule } from './jsModule.js';
-import { BackgroundSnapshotInstance } from '../../src/backgroundSnapshot.js';
-import { setupBackgroundDocument, setupDocument } from '../../src/document.js';
 import { deinitGlobalSnapshotPatch } from '../../src/lifecycle/patch/snapshotPatch.js';
 import { shouldDelayUiOps } from '../../src/lifecycle/ref/delay.js';
 import { clearListGlobal } from '../../src/list.js';
@@ -12,6 +10,8 @@ import { __root, setRoot } from '../../src/root.js';
 import { SnapshotInstance, backgroundSnapshotInstanceManager, snapshotInstanceManager } from '../../src/snapshot.js';
 import { hydrationMap } from '../../src/snapshotInstanceHydrationMap.js';
 import { clearWorkletRefLastIdForTesting } from '../../src/worklet/workletRef.js';
+import { setupDom, type BackgroundDOM } from '../../src/backgroundSnapshot.js';
+import { options, type VNode } from 'preact';
 
 export class EnvManager {
   root: typeof __root | undefined;
@@ -39,7 +39,14 @@ export class EnvManager {
     this.target.__JS__ = false;
     this.target.__MAIN_THREAD__ = true;
     this.target.__BACKGROUND__ = false;
-    setupDocument();
+
+    options.setupDom = (vnode: VNode & SnapshotInstance) => {
+      Object.assign(vnode, new SnapshotInstance(vnode.type));
+      // @ts-expect-error expected
+      vnode.__proto__ = SnapshotInstance.prototype;
+      snapshotInstanceManager.values.set(vnode.__id, vnode);
+      return vnode;
+    };
   }
 
   switchToBackground(): void {
@@ -51,14 +58,14 @@ export class EnvManager {
       setPipeline(this.pipelineOptions);
       this.pipelineOptions = pipelineOptions;
     }
-    if (!(__root instanceof BackgroundSnapshotInstance)) {
-      setRoot(new BackgroundSnapshotInstance('root'));
+    if (__root instanceof SnapshotInstance || __root == null) {
+      setRoot(setupDom({ type: 'root' } as unknown as BackgroundDOM));
     }
     this.target.__LEPUS__ = false;
     this.target.__JS__ = true;
     this.target.__MAIN_THREAD__ = false;
     this.target.__BACKGROUND__ = true;
-    setupBackgroundDocument();
+    options.setupDom = setupDom;
   }
 
   resetEnv(): void {

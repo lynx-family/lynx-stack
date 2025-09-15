@@ -3,15 +3,12 @@
 // LICENSE file in the root directory of this source tree.
 import { __injectElementApi } from './inject.ts';
 import '../../src/lynx.ts';
-import { document } from '../../src/document.ts';
 
 import { afterEach, expect } from 'vitest';
 
 function inject() {
   __injectElementApi();
   // __injectGlobals();
-
-  globalThis.document = document;
 }
 
 inject();

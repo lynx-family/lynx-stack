@@ -6,7 +6,8 @@ import { process, render } from 'preact';
 import { LifecycleConstant, NativeUpdateDataType } from '../lifecycleConstant.js';
 import type { FirstScreenData } from '../lifecycleConstant.js';
 import { PerformanceTimingFlags, PipelineOrigins, beginPipeline, markTiming } from './performance.js';
-import { BackgroundSnapshotInstance, hydrate } from '../backgroundSnapshot.js';
+import { hydrate } from '../backgroundSnapshot.js';
+import type { BackgroundDOM } from '../backgroundSnapshot.js';
 import { runWithForce } from './runWithForce.js';
 import { profileEnd, profileStart } from '../debug/utils.js';
 import { destroyBackground } from '../lifecycle/destroy.js';
@@ -88,7 +89,7 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
       markTiming('diffVdomStart');
       const snapshotPatch = hydrate(
         before,
-        __root as BackgroundSnapshotInstance,
+        __root as BackgroundDOM,
       );
       if (__PROFILE__) {
         profileEnd();

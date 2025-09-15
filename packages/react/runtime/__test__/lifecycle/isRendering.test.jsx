@@ -42,7 +42,7 @@ describe('isRendering in background', () => {
 
     globalEnvManager.switchToBackground();
     root.render(<Comp />);
-    expect(__root.__firstChild.__firstChild.__values).toEqual(['Hello World']);
+    expect(__root.firstChild.firstChild.__values).toEqual(['Hello World']);
     expect(isRenderingValue).toBe(true);
     expect(isRendering.value).toBe(false);
   });
@@ -86,7 +86,7 @@ describe('isRendering in background', () => {
     await waitSchedule();
     expect(isRenderingValue).toBe(true); // update
     expect(isRendering.value).toBe(false);
-    expect(__root.__firstChild.__firstChild.__values).toEqual(['World']);
+    expect(__root.firstChild.firstChild.__values).toEqual(['World']);
   });
 
   it('should set isRendering to true during reload and false after', async () => {
@@ -108,6 +108,6 @@ describe('isRendering in background', () => {
     await waitSchedule();
     expect(isRenderingValue).toBe(true);
     expect(isRendering.value).toBe(false);
-    expect(__root.__firstChild.__firstChild.__values).toEqual(['World']);
+    expect(__root.firstChild.firstChild.__values).toEqual(['World']);
   });
 });

@@ -6,7 +6,6 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 
 import { elementTree, waitSchedule } from './utils/nativeMethod';
 import { globalEnvManager } from './utils/envManager';
-import { setupDocument } from '../src/document';
 import { renderOpcodesInto } from '../src/opcodes';
 import renderToString from '../src/renderToOpcodes';
 import { setupPage, SnapshotInstance, snapshotInstanceManager } from '../src/snapshot';
@@ -601,13 +600,9 @@ describe('renderOpcodesInto', () => {
   /** @type {SnapshotInstance} */
   let scratch;
 
-  beforeAll(() => {
-    setupDocument();
-  });
-
   beforeEach(() => {
     setupPage(__CreatePage('0', 0));
-    scratch = document.createElement('root');
+    scratch = new SnapshotInstance('root');
   });
 
   afterEach(() => {

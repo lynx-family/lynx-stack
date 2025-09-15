@@ -1,16 +1,16 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type { BackgroundSnapshotInstance } from '../backgroundSnapshot.js';
+import type { BackgroundDOM } from '../backgroundSnapshot.js';
 import { SnapshotInstance } from '../snapshot.js';
 import { logDebug } from './debug.js';
 
 export function printSnapshotInstance(
-  instance: BackgroundSnapshotInstance | SnapshotInstance,
+  instance: BackgroundDOM | SnapshotInstance,
   log?: (...data: any[]) => void,
 ): void {
   const impl = (
-    instance: BackgroundSnapshotInstance | SnapshotInstance,
+    instance: BackgroundDOM | SnapshotInstance,
     level: number,
   ) => {
     let msg = '';
