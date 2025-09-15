@@ -1614,6 +1614,15 @@ test.describe('reactlynx3 tests', () => {
       },
     );
     test(
+      'config-css-remove-scope-false-display-linear',
+      async ({ page }, { title }) => {
+        await goto(page, title);
+        await wait(100);
+        const target = page.locator('#sub');
+        await expect(target).toHaveCSS('--lynx-display', 'linear'); // green
+      },
+    );
+    test(
       'config-css-selector-false-exchange-class',
       async ({ page }, { title }) => {
         await goto(page, title);

@@ -3,7 +3,6 @@
 // LICENSE file in the root directory of this source tree.
 
 import {
-  type OneInfo,
   type StyleInfo,
   type CssOGInfo,
   type PageConfig,
@@ -13,45 +12,117 @@ import {
   type SSRHydrateInfo,
   lynxUniqueIdAttribute,
   lynxEntryNameAttribute,
+  type FlattenedStyleInfo,
+  type FlattenedOneInfo,
 } from '@lynx-js/web-constants';
 import { transformParsedStyles } from './tokenizer.js';
 import { decodeCssOG } from './decodeCssOG.js';
 
+function topologicalSort(
+  styleInfo: StyleInfo,
+): string[] {
+  const inDegreeMap = new Map<string, number>();
+  for (const [cssId, oneStyleInfo] of Object.entries(styleInfo)) {
+    !inDegreeMap.has(cssId) && inDegreeMap.set(cssId, 0); // initialize
+    for (const importCssId of oneStyleInfo.imports ?? []) {
+      const currentInDegree = inDegreeMap.get(importCssId) ?? 0;
+      inDegreeMap.set(importCssId, currentInDegree + 1);
+    }
+  }
+  const sortedCssIds: string[] = [...inDegreeMap.entries()].sort((a, b) =>
+    a[1] - b[1]
+  ).map(entry => entry[0]);
+  return sortedCssIds;
+}
+function generateImportByMap(
+  styleInfo: StyleInfo,
+  sortedCssIds: string[],
+): Map<string, Set<string>> {
+  const cssIdToImportBy = new Map<string, Set<string>>();
+  for (const cssId of sortedCssIds) {
+    const currentAdjunction = styleInfo[cssId]?.imports;
+    if (currentAdjunction) {
+      const currentImportBy = cssIdToImportBy.get(cssId) ?? new Set([cssId]);
+      for (const importCssId of currentAdjunction) {
+        const importDeps = cssIdToImportBy.get(importCssId)
+          ?? new Set([importCssId]);
+        importDeps.add(cssId);
+        cssIdToImportBy.set(importCssId, currentImportBy.union(importDeps));
+      }
+      cssIdToImportBy.set(cssId, currentImportBy);
+    }
+  }
+  return cssIdToImportBy;
+}
+function generateImportMap(
+  styleInfo: StyleInfo,
+  sortedCssIds: string[],
+): Map<string, Set<string>> {
+  const cssIdToImports = new Map<string, Set<string>>();
+  for (const cssId of sortedCssIds) {
+    const currentAdjunction = styleInfo[cssId]?.imports;
+    if (currentAdjunction) {
+      let currentImports = cssIdToImports.get(cssId) ?? new Set([cssId]);
+      for (const importCssId of currentAdjunction) {
+        const importDeps = cssIdToImports.get(importCssId);
+        if (importDeps) {
+          currentImports = currentImports.union(importDeps);
+          currentImports.add(importCssId);
+        }
+      }
+      cssIdToImports.set(cssId, currentImports);
+    }
+  }
+  return cssIdToImports;
+}
+/**
+ * get Transitive Closure of a Direct Acyclic Graph (DAG)
+ * 1. for each css, find all the imported by css files (directly and indirectly)
+ * 2. for each css, find all the importing css files (directly and indirectly)
+ * 3. return the flattened style info, do not modify the content and rules
+ */
 export function flattenStyleInfo(
   styleInfo: StyleInfo,
   enableCSSSelector: boolean,
-): void {
-  function flattenOneStyleInfo(cssId: string): OneInfo | undefined {
-    const oneInfo = styleInfo[cssId];
-    const imports = oneInfo?.imports;
-    if (oneInfo && imports?.length) {
-      for (const im of imports) {
-        const flatInfo = flattenOneStyleInfo(im);
-        if (flatInfo) {
-          oneInfo.content.push(...flatInfo.content);
-          // oneInfo.rules.push(...flatInfo.rules);
-          oneInfo.rules.push(
-            ...(enableCSSSelector
-              ? flatInfo.rules
-              // when enableCSSSelector is false, need to make a shallow copy of rules.sel
-              // otherwise updating `oneCssInfo.sel` in `genCssOGInfo()` will affect other imported cssInfo
-              : flatInfo.rules.map(i => ({ ...i }))),
-          );
+): FlattenedStyleInfo {
+  // Step 1. Topological sorting
+  const sortedCssIds = topologicalSort(styleInfo);
+
+  // Step 2. generate deps;
+  const cssIdToImportBy = generateImportByMap(styleInfo, sortedCssIds);
+  sortedCssIds.reverse();
+  // Step 3. generates flattened imports
+  // for enableCSSSelector, we do not need to flatten the imports
+  const cssIdToImports: Map<string, Set<string>> = enableCSSSelector
+    ? new Map()
+    : generateImportMap(styleInfo, sortedCssIds);
+
+  // Step 4. generate the flattened style info
+  return Object.fromEntries(
+    sortedCssIds.map(cssId => {
+      const oneInfo = styleInfo[cssId];
+      const flattenedInfo: FlattenedOneInfo = oneInfo
+        ? {
+          content: oneInfo.content,
+          rules: oneInfo.rules,
+          imports: Array.from(cssIdToImports.get(cssId) ?? [cssId]),
+          importBy: Array.from(cssIdToImportBy.get(cssId) ?? [cssId]),
         }
-      }
-      oneInfo.imports = undefined;
-    }
-    return oneInfo;
-  }
-  Object.keys(styleInfo).map((cssId) => {
-    flattenOneStyleInfo(cssId);
-  });
+        : {
+          content: [],
+          rules: [],
+          imports: [cssId],
+          importBy: [cssId],
+        };
+      return [cssId, flattenedInfo];
+    }),
+  );
 }
 
 /**
  * apply the lynx css -> web css transformation
  */
-export function transformToWebCss(styleInfo: StyleInfo) {
+export function transformToWebCss(styleInfo: FlattenedStyleInfo) {
   for (const cssInfos of Object.values(styleInfo)) {
     for (const rule of cssInfos.rules) {
       const { sel: selectors, decl: declarations } = rule;
@@ -84,21 +155,16 @@ export function transformToWebCss(styleInfo: StyleInfo) {
  * generate those styles applied by <style>...</style>
  */
 export function genCssContent(
-  styleInfo: StyleInfo,
+  styleInfo: FlattenedStyleInfo,
   pageConfig: PageConfig,
   entryName?: string,
 ): string {
   function getExtraSelectors(
-    cssId?: string,
+    cssId: string,
   ) {
     let suffix;
     if (!pageConfig.enableRemoveCSSScope) {
-      if (cssId !== undefined) {
-        suffix = `[${cssIdAttribute}="${cssId}"]`;
-      } else {
-        // To make sure the Specificity correct
-        suffix = `[${lynxTagAttribute}]`;
-      }
+      suffix = `[${cssIdAttribute}="${cssId}"]`;
     } else {
       suffix = `[${lynxTagAttribute}]`;
     }
@@ -112,16 +178,18 @@ export function genCssContent(
     return suffix;
   }
   const finalCssContent: string[] = [];
-  for (const [cssId, cssInfos] of Object.entries(styleInfo)) {
-    const suffix = getExtraSelectors(cssId);
+  for (const cssInfos of Object.values(styleInfo)) {
     const declarationContent = cssInfos.rules.map((rule) => {
       const { sel: selectorList, decl: declarations } = rule;
       // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/splice
-      const selectorString = selectorList.map(
-        (selectors) => {
-          return selectors.toSpliced(-4, 0, [suffix]).flat().join('');
-        },
-      ).join(',');
+      const selectorString = cssInfos.importBy.map(cssId => {
+        const suffix = getExtraSelectors(cssId);
+        return selectorList.map(
+          (selectors) => {
+            return selectors.toSpliced(-4, 0, [suffix]).flat().join('');
+          },
+        ).join(',');
+      }).join(',');
       const declarationString = declarations.map(([k, v]) => `${k}:${v};`).join(
         '',
       );
@@ -190,14 +258,14 @@ export function appendStyleElement(
    * 4. create the style element
    * 5. append the style element to the root dom
    */
-  flattenStyleInfo(
+  const flattenedStyleInfo = flattenStyleInfo(
     styleInfo,
     pageConfig.enableCSSSelector,
   );
-  transformToWebCss(styleInfo);
+  transformToWebCss(flattenedStyleInfo);
   const cssOGInfo: CssOGInfo = pageConfig.enableCSSSelector
     ? {}
-    : genCssOGInfo(styleInfo);
+    : genCssOGInfo(flattenedStyleInfo);
   let cardStyleElement: HTMLStyleElement;
   if (ssrHydrateInfo?.cardStyleElement) {
     cardStyleElement = ssrHydrateInfo.cardStyleElement;
@@ -206,7 +274,7 @@ export function appendStyleElement(
       'style',
     ) as unknown as HTMLStyleElement;
     cardStyleElement.textContent = genCssContent(
-      styleInfo,
+      flattenedStyleInfo,
       pageConfig,
       entryName,
     );
