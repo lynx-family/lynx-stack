@@ -54,27 +54,6 @@ function generateImportByMap(
   }
   return cssIdToImportBy;
 }
-function generateImportMap(
-  styleInfo: StyleInfo,
-  sortedCssIds: string[],
-): Map<string, Set<string>> {
-  const cssIdToImports = new Map<string, Set<string>>();
-  for (const cssId of sortedCssIds) {
-    const currentAdjunction = styleInfo[cssId]?.imports;
-    if (currentAdjunction) {
-      let currentImports = cssIdToImports.get(cssId) ?? new Set([cssId]);
-      for (const importCssId of currentAdjunction) {
-        const importDeps = cssIdToImports.get(importCssId);
-        if (importDeps) {
-          currentImports = currentImports.union(importDeps);
-          currentImports.add(importCssId);
-        }
-      }
-      cssIdToImports.set(cssId, currentImports);
-    }
-  }
-  return cssIdToImports;
-}
 /**
  * get Transitive Closure of a Direct Acyclic Graph (DAG)
  * 1. for each css, find all the imported by css files (directly and indirectly)
@@ -83,7 +62,6 @@ function generateImportMap(
  */
 export function flattenStyleInfo(
   styleInfo: StyleInfo,
-  enableCSSSelector: boolean,
 ): FlattenedStyleInfo {
   // Step 1. Topological sorting
   const sortedCssIds = topologicalSort(styleInfo);
@@ -91,39 +69,30 @@ export function flattenStyleInfo(
   // Step 2. generate deps;
   const cssIdToImportBy = generateImportByMap(styleInfo, sortedCssIds);
   sortedCssIds.reverse();
-  // Step 3. generates flattened imports
-  // for enableCSSSelector, we do not need to flatten the imports
-  const cssIdToImports: Map<string, Set<string>> = enableCSSSelector
-    ? new Map()
-    : generateImportMap(styleInfo, sortedCssIds);
 
-  // Step 4. generate the flattened style info
-  return Object.fromEntries(
-    sortedCssIds.map(cssId => {
-      const oneInfo = styleInfo[cssId];
-      const flattenedInfo: FlattenedOneInfo = oneInfo
-        ? {
-          content: oneInfo.content,
-          rules: oneInfo.rules,
-          imports: Array.from(cssIdToImports.get(cssId) ?? [cssId]),
-          importBy: Array.from(cssIdToImportBy.get(cssId) ?? [cssId]),
-        }
-        : {
-          content: [],
-          rules: [],
-          imports: [cssId],
-          importBy: [cssId],
-        };
-      return [cssId, flattenedInfo];
-    }),
-  );
+  // Step 3. generate the flattened style info
+  return sortedCssIds.map(cssId => {
+    const oneInfo = styleInfo[cssId];
+    const flattenedInfo: FlattenedOneInfo = oneInfo
+      ? {
+        content: oneInfo.content,
+        rules: oneInfo.rules,
+        importBy: Array.from(cssIdToImportBy.get(cssId) ?? [cssId]),
+      }
+      : {
+        content: [],
+        rules: [],
+        importBy: [cssId],
+      };
+    return flattenedInfo;
+  });
 }
 
 /**
  * apply the lynx css -> web css transformation
  */
 export function transformToWebCss(styleInfo: FlattenedStyleInfo) {
-  for (const cssInfos of Object.values(styleInfo)) {
+  for (const cssInfos of styleInfo) {
     for (const rule of cssInfos.rules) {
       const { sel: selectors, decl: declarations } = rule;
       const { transformedStyle, childStyle } = transformParsedStyles(
@@ -178,7 +147,7 @@ export function genCssContent(
     return suffix;
   }
   const finalCssContent: string[] = [];
-  for (const cssInfos of Object.values(styleInfo)) {
+  for (const cssInfos of styleInfo) {
     const declarationContent = cssInfos.rules.map((rule) => {
       const { sel: selectorList, decl: declarations } = rule;
       // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/splice
@@ -203,41 +172,45 @@ export function genCssContent(
 /**
  * generate the css-in-js data
  */
-export function genCssOGInfo(styleInfo: StyleInfo): CssOGInfo {
-  return Object.fromEntries(
-    Object.entries(styleInfo).map(([cssId, cssInfos]) => {
-      const oneCssOGInfo: Record<string, [string, string][]> = {};
-      cssInfos.rules = cssInfos.rules.filter(oneCssInfo => {
-        oneCssInfo.sel = oneCssInfo.sel.filter(selectorList => {
-          const [
-            classSelectors,
-            pseudoClassSelectors,
-            pseudoElementSelectors,
-            combinator,
-          ] = selectorList;
-          if (
-            // only one class selector
-            classSelectors.length === 1 && classSelectors[0]![0] === '.'
-            && pseudoClassSelectors.length === 0
-            && pseudoElementSelectors.length === 0
-            && combinator.length === 0
-          ) {
-            const selectorName = classSelectors[0]!.substring(1);
-            const currentDeclarations = oneCssOGInfo[selectorName];
-            if (currentDeclarations) {
-              currentDeclarations.push(...oneCssInfo.decl);
-            } else {
-              oneCssOGInfo[selectorName] = oneCssInfo.decl;
+export function genCssOGInfo(styleInfo: FlattenedStyleInfo): CssOGInfo {
+  const cssOGInfo: CssOGInfo = {};
+  for (const oneInfo of styleInfo) {
+    oneInfo.rules = oneInfo.rules.filter(oneRule => {
+      oneRule.sel = oneRule.sel.filter(selectorList => {
+        const [
+          classSelectors,
+          pseudoClassSelectors,
+          pseudoElementSelectors,
+          combinator,
+        ] = selectorList;
+        if (
+          // only one class selector
+          classSelectors.length === 1 && classSelectors[0]![0] === '.'
+          && pseudoClassSelectors.length === 0
+          && pseudoElementSelectors.length === 0
+          && combinator.length === 0
+        ) {
+          const selectorName = classSelectors[0]!.substring(1);
+          for (const cssId of oneInfo.importBy) {
+            if (!cssOGInfo[cssId]) {
+              cssOGInfo[cssId] = {};
             }
-            return false; // remove this selector from style info
+            const currentDeclarations = cssOGInfo[cssId][selectorName];
+            if (currentDeclarations) {
+              currentDeclarations.push(...oneRule.decl);
+            } else {
+              cssOGInfo[cssId][selectorName] = oneRule.decl;
+            }
           }
-          return true;
-        });
-        return oneCssInfo.sel.length > 0;
+
+          return false; // remove this selector from style info
+        }
+        return true;
       });
-      return [cssId, oneCssOGInfo];
-    }),
-  );
+      return oneRule.sel.length > 0;
+    });
+  }
+  return cssOGInfo;
 }
 
 export function appendStyleElement(
@@ -260,7 +233,6 @@ export function appendStyleElement(
    */
   const flattenedStyleInfo = flattenStyleInfo(
     styleInfo,
-    pageConfig.enableCSSSelector,
   );
   transformToWebCss(flattenedStyleInfo);
   const cssOGInfo: CssOGInfo = pageConfig.enableCSSSelector
@@ -308,12 +280,15 @@ export function appendStyleElement(
     styleInfo: StyleInfo,
     entryName: string,
   ) => {
-    flattenStyleInfo(
+    const flattenedStyleInfo = flattenStyleInfo(
       styleInfo,
-      pageConfig.enableCSSSelector,
     );
-    transformToWebCss(styleInfo);
-    const newStyleSheet = genCssContent(styleInfo, pageConfig, entryName);
+    transformToWebCss(flattenedStyleInfo);
+    const newStyleSheet = genCssContent(
+      flattenedStyleInfo,
+      pageConfig,
+      entryName,
+    );
     cardStyleElement.textContent += newStyleSheet;
   };
   return { updateCssOGStyle, updateLazyComponentStyle };
