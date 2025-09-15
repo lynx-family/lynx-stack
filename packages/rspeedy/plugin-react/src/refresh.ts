@@ -1,7 +1,6 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { createRequire } from 'node:module'
 import path from 'node:path'
 
 import type {
@@ -17,37 +16,49 @@ import {
 import { LAYERS } from '@lynx-js/react-webpack-plugin'
 
 const PLUGIN_NAME_REACT_REFRESH = 'lynx:react:refresh'
-const require = createRequire(import.meta.url)
 
 export function applyRefresh(api: RsbuildPluginAPI): void {
-  api.modifyWebpackChain((chain, { CHAIN_ID, isProd }) => {
+  api.modifyWebpackChain(async (chain, { CHAIN_ID, isProd }) => {
     if (!isProd) {
-      applyRefreshRules(chain, CHAIN_ID, ReactRefreshWebpackPlugin)
+      await applyRefreshRules(api, chain, CHAIN_ID, ReactRefreshWebpackPlugin)
     }
   })
 
-  api.modifyBundlerChain((chain, { isProd, CHAIN_ID }) => {
+  api.modifyBundlerChain(async (chain, { isProd, CHAIN_ID }) => {
     if (!isProd) {
-      applyRefreshRules(chain, CHAIN_ID, ReactRefreshRspackPlugin)
+      // biome-ignore lint/correctness/useHookAtTopLevel: not react hooks
+      const { resolve } = api.useExposed<
+        { resolve: (request: string) => Promise<string> }
+      >(Symbol.for('@lynx-js/react/internal:resolve'))!
 
-      chain
-        .resolve
-        .alias
-        .set(
-          '@lynx-js/react/refresh$',
-          require.resolve('@lynx-js/react/refresh'),
-        )
-        .end()
+      await Promise.all([
+        applyRefreshRules(api, chain, CHAIN_ID, ReactRefreshRspackPlugin),
+        resolve('@lynx-js/react/refresh').then(refresh => {
+          chain.resolve.alias.set('@lynx-js/react/refresh$', refresh)
+        }),
+      ])
     }
   })
 }
 
-function applyRefreshRules<Bundler extends 'webpack' | 'rspack'>(
+async function applyRefreshRules<Bundler extends 'webpack' | 'rspack'>(
+  api: RsbuildPluginAPI,
   chain: RspackChain,
   CHAIN_ID: ChainIdentifier,
   ReactRefreshPlugin: Bundler extends 'rspack' ? typeof ReactRefreshRspackPlugin
     : typeof ReactRefreshWebpackPlugin,
 ) {
+  // biome-ignore lint/correctness/useHookAtTopLevel: not react hooks
+  const { resolve } = api.useExposed<
+    { resolve: (request: string) => Promise<string> }
+  >(Symbol.for('@lynx-js/react/internal:resolve'))!
+
+  const [reactRuntime, refresh, workletRuntime] = await Promise.all([
+    resolve('@lynx-js/react/package.json'),
+    resolve('@lynx-js/react/refresh'),
+    resolve('@lynx-js/react/worklet-runtime'),
+  ])
+
   // Place the ReactRefreshRspackPlugin at beginning to make the `react-refresh`
   // being injected at first.
   // dprint-ignore
@@ -63,9 +74,9 @@ function applyRefreshRules<Bundler extends 'webpack' | 'rspack'>(
         .test(/\.[jt]sx$/)
         .exclude
           .add(/node_modules/)
-          .add(path.dirname(require.resolve('@lynx-js/react/package.json')))
-          .add(path.dirname(require.resolve('@lynx-js/react/refresh')))
-          .add(path.dirname(require.resolve('@lynx-js/react/worklet-runtime')))
+          .add(path.dirname(reactRuntime))
+          .add(path.dirname(refresh))
+          .add(path.dirname(workletRuntime))
           .add(ReactRefreshPlugin.loader)
         .end()
         .use('ReactRefresh')
