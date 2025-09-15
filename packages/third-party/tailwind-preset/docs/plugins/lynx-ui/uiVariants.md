@@ -105,9 +105,7 @@ These variants enable component-aware styling by aligning Tailwind utilities wit
 To make these variants effective, your component needs to append the corresponding `ui-*` class dynamically based on its internal state or configuration. For example:
 
 ```tsx
-<Popover className={isOpen ? 'container ui-open' : 'container'}>
-  <view className='ui-open:bg-blue-500 ui-side-left:border-l' />
-</Popover>;
+<Popover className={clsx('ui-open:bg-blue-500', isOpen && 'ui-open')} />;
 ```
 
 ## Advanced Usage Examples
@@ -120,7 +118,7 @@ Beyond the **self state** shown in the basic examples, the `uiVariants` plugin d
 
 - **Direct parent scope** → `parent-*` modifiers
 
-  Style an element based on its immediate parent’s `ui-*` state.
+  Style an element based on its immediate parent's `ui-*` state.
 
 - **Ancestor / sibling scopes** → `group-*` and `peer-*` modifiers
 
