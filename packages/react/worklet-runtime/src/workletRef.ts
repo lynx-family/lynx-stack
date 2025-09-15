@@ -64,7 +64,7 @@ const getFromWorkletRefMap = <T>(
 
   /* v8 ignore next 3 */
   if (__DEV__ && value === undefined) {
-    throw new Error('Worklet: ref is not initialized: ' + id);
+    throw new Error('MainThreadRef: ref is not initialized: ' + id);
   }
   return value;
 };

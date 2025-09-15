@@ -16,6 +16,7 @@ import { replaceCommitHook } from '../../src/lifecycle/patch/commit';
 import { __root } from '../../src/root';
 import { root } from '../../src/lynx-api';
 import { waitSchedule } from '../utils/nativeMethod';
+import { delayedRunOnMainThreadData } from '../../src/worklet/delayedRunOnMainThreadData';
 
 const App = ({ fn, attr }) => {
   fn?.();
@@ -319,5 +320,28 @@ describe('runOnMainThread', () => {
       `);
       expect(lynx.getCoreContext().dispatchEvent.mock.calls).toMatchInlineSnapshot(`[]`);
     }
+  });
+
+  it('should clear delayedRunOnMainThreadData when destroy', async () => {
+    const MTF_during_render = 'MTF_during_render';
+    const MTF_after_render = 'MTF_after_render';
+
+    // 1. MTS init render
+    {
+      __root.__jsx = <App />;
+      renderPage();
+    }
+
+    // 2. hydration
+    {
+      globalEnvManager.switchToBackground();
+      root.render(<App fn={runOnMainThread(MTF_during_render)} attr={{ 'main-thread:ref': { _wkltId: 'MTRef' } }} />);
+      await waitSchedule();
+      runOnMainThread(MTF_after_render)();
+    }
+
+    expect(delayedRunOnMainThreadData.length).toBe(2);
+    destroyWorklet();
+    expect(delayedRunOnMainThreadData.length).toBe(0);
   });
 });

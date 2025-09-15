@@ -51,7 +51,7 @@ function registerWorklet(_type: string, id: string, worklet: (...args: unknown[]
  */
 function runWorklet(ctx: Worklet, params: ClosureValueType[]): unknown {
   if (!validateWorklet(ctx)) {
-    console.warn('Worklet: Invalid worklet object: ' + JSON.stringify(ctx));
+    console.warn('Main Thread Function: Invalid function ctx: ' + JSON.stringify(ctx));
     return;
   }
   if ('_lepusWorkletHash' in ctx) {
