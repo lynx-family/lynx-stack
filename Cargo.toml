@@ -6,6 +6,7 @@ members = [
   "packages/react/transform/swc-plugin-reactlynx",
   "packages/react/transform/swc-plugin-reactlynx-compat",
   "packages/web-platform/inline-style-parser",
+  "packages/web-platform/web-mainthread-apis",
   "packages/web-platform/web-style-transformer",
 ]
 
@@ -25,6 +26,7 @@ sha-1 = "0.10.1"
 swc_core = "39.0.3"
 version-compare = "0.2.0"
 wasm-bindgen = "0.2.101"
+web-sys = "0.3.77"
 
 [profile.release]
 codegen-units = 1
