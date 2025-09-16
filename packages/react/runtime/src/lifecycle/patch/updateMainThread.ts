@@ -3,11 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import type { ClosureValueType } from '@lynx-js/react/worklet-runtime/bindings';
-import {
-  runRunOnMainThreadTask,
-  setEomShouldFlushElementTree,
-  updateWorkletRefInitValueChanges,
-} from '@lynx-js/react/worklet-runtime/bindings';
+import { runRunOnMainThreadTask, setEomShouldFlushElementTree } from '@lynx-js/react/worklet-runtime/bindings';
 
 import type { PatchList, PatchOptions } from './commit.js';
 import { setMainThreadHydrating } from './isMainThreadHydrating.js';
@@ -50,8 +46,7 @@ function updateMainThread(
     setMainThreadHydrating(true);
   }
   try {
-    for (const { snapshotPatch, workletRefInitValuePatch } of patchList) {
-      updateWorkletRefInitValueChanges(workletRefInitValuePatch);
+    for (const { snapshotPatch } of patchList) {
       __pendingListUpdates.clearAttachedLists();
       if (snapshotPatch) {
         snapshotPatchApply(snapshotPatch);

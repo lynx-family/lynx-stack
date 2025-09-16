@@ -26,6 +26,7 @@ import {
   takeDelayedRunOnMainThreadData,
 } from '../worklet/call/delayedRunOnMainThreadData.js';
 import { destroyWorklet } from '../worklet/destroy.js';
+import { sendMTRefInitValueToMainThread } from '../worklet/ref/updateInitValue.js';
 
 export { runWithForce };
 
@@ -128,7 +129,7 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
         patchList.delayedRunOnMainThreadData = takeDelayedRunOnMainThreadData();
       }
       const obj = commitPatchUpdate(patchList, { isHydration: true });
-
+      sendMTRefInitValueToMainThread();
       lynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
         globalCommitTaskMap.forEach((commitTask, id) => {
           if (id > commitTaskId) {
