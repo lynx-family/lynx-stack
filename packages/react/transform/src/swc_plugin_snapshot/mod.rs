@@ -1989,15 +1989,10 @@ mod tests {
     basic_list_toplevel,
     // Input codes
     r#"
-    let a = __SNAPSHOT__(
-      <list>
-        <list-item>!!!</list-item>
-        <list-item>!!!</list-item>
-      </list>
-    );
-    let b = __SNAPSHOT__(
+    <list>
       <list-item>!!!</list-item>
-    );
+      <list-item>!!!</list-item>
+    </list>
     "#
   );
 
