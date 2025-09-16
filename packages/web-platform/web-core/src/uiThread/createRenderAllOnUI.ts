@@ -48,10 +48,17 @@ function createIFrameRealm(parent: Node): JSRealm {
   parent.appendChild(iframe);
   const iframeWindow = iframe.contentWindow! as unknown as typeof globalThis;
   const loadScript: (url: string) => Promise<unknown> = async (url) => {
-    const script = document.createElement('script');
+    const script = iframe.contentDocument!.createElement('script');
     script.fetchPriority = 'high';
     script.defer = true;
     script.async = false;
+    if (!iframe.contentDocument!.head) {
+      await new Promise<void>((resolve) => {
+        iframe.onload = () => resolve();
+        // In case iframe is already loaded, wait a macro task
+        setTimeout(() => resolve(), 0);
+      });
+    }
     iframe.contentDocument!.head.appendChild(script);
     return new Promise(async (resolve, reject) => {
       script.onload = () => {
@@ -72,7 +79,7 @@ function createIFrameRealm(parent: Node): JSRealm {
     xhr.open('GET', url, false); // Synchronous request
     xhr.send(null);
     if (xhr.status === 200) {
-      const script = document.createElement('script');
+      const script = iframe.contentDocument!.createElement('script');
       script.textContent = xhr.responseText;
       // @ts-expect-error
       iframeWindow.module = { exports: undefined };

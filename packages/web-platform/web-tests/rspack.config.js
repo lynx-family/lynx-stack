@@ -49,7 +49,7 @@ const config = {
       meta: {
         viewport:
           'width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no',
-        'apple-mobile-web-app-capable': 'yes',
+        'mobile-web-app-capable': 'yes',
         'apple-mobile-web-app-status-bar-style': 'default',
         'screen-orientation': 'portrait',
         'format-detection': 'telephone=no',
