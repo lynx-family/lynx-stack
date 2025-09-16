@@ -3,6 +3,7 @@ resolver = "2"
 
 members = [
   "packages/react/transform",
+  "packages/react/transform/crates/*",
   "packages/react/transform/swc-plugin-reactlynx",
   "packages/react/transform/swc-plugin-reactlynx-compat",
   "packages/web-platform/inline-style-parser",
@@ -16,6 +17,8 @@ hex = "0.4.3"
 indexmap = "2.7.0"
 js-sys = "0.3.77"
 lazy_static = "1.5.0"
+napi = { version = "2.7.0", default-features = false, features = ["napi4"] }
+napi-derive = "2.7.0"
 once_cell = "1.20.2"
 regex = "1.11.1"
 rustc-hash = "2.1.1"

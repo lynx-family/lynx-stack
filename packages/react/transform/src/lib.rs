@@ -8,7 +8,6 @@ mod css;
 mod esbuild;
 mod swc_plugin_compat;
 mod swc_plugin_compat_post;
-mod swc_plugin_css_scope;
 mod swc_plugin_define_dce;
 mod swc_plugin_directive_dce;
 mod swc_plugin_dynamic_import;
@@ -21,7 +20,6 @@ mod swc_plugin_snapshot;
 mod swc_plugin_worklet;
 mod swc_plugin_worklet_post_process;
 mod target;
-mod utils;
 
 use std::vec;
 
@@ -64,7 +62,7 @@ use swc_core::{
 // So we have to use different name
 use swc_plugin_compat::{CompatVisitor, CompatVisitorConfig};
 use swc_plugin_compat_post::CompatPostVisitor;
-use swc_plugin_css_scope::{CSSScopeVisitor, CSSScopeVisitorConfig};
+use swc_plugin_css_scope::napi::{CSSScopeVisitor, CSSScopeVisitorConfig};
 use swc_plugin_define_dce::DefineDCEVisitorConfig;
 use swc_plugin_directive_dce::{DirectiveDCEVisitor, DirectiveDCEVisitorConfig};
 use swc_plugin_dynamic_import::{DynamicImportVisitor, DynamicImportVisitorConfig};
@@ -73,7 +71,7 @@ use swc_plugin_refresh::{RefreshVisitor, RefreshVisitorConfig};
 use swc_plugin_shake::{ShakeVisitor, ShakeVisitorConfig};
 use swc_plugin_snapshot::{JSXTransformer, JSXTransformerConfig};
 use swc_plugin_worklet::{WorkletVisitor, WorkletVisitorConfig};
-use utils::calc_hash;
+use swc_plugins_shared::utils::calc_hash;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum TransformMode {

@@ -23,10 +23,8 @@ mod attr_name;
 pub mod jsx_helpers;
 mod slot_marker;
 
-use crate::{
-  css::get_string_inline_style_from_literal, target::TransformTarget, utils::calc_hash,
-  TransformMode,
-};
+use crate::{css::get_string_inline_style_from_literal, target::TransformTarget, TransformMode};
+use swc_plugins_shared::utils::calc_hash;
 
 use self::{
   attr_name::AttrName,

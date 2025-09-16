@@ -13,6 +13,7 @@
 
     // Snapshot
     "transform/tests/__swc_snapshots__/**",
+    "transform/**/tests/__swc_snapshots__/**",
     "transform/__test__/**/__snapshots__/**",
   ],
 }

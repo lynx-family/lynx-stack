@@ -1,5 +1,3 @@
-use crate::calc_hash;
-use napi_derive::napi;
 use regex::Regex;
 use swc_core::{
   common::{
@@ -11,6 +9,9 @@ use swc_core::{
     visit::{VisitMut, VisitMutWith},
   },
 };
+use swc_plugins_shared::utils::calc_hash;
+
+pub mod napi;
 
 /// CSSScope refers to the
 ///
@@ -31,54 +32,9 @@ pub enum CSSScope {
   Modules,
 }
 
-impl napi::bindgen_prelude::FromNapiValue for CSSScope {
-  unsafe fn from_napi_value(
-    env: napi::bindgen_prelude::sys::napi_env,
-    napi_val: napi::bindgen_prelude::sys::napi_value,
-  ) -> napi::bindgen_prelude::Result<Self> {
-    let val = <&str>::from_napi_value(env, napi_val).map_err(|e| {
-      napi::bindgen_prelude::error!(
-        e.status,
-        "Failed to convert napi value into enum `{}`. {}",
-        "RemoveCSSScope",
-        e,
-      )
-    })?;
-    match val {
-      "all" => Ok(CSSScope::All),
-      "none" => Ok(CSSScope::None),
-      "modules" => Ok(CSSScope::Modules),
-      _ => Err(napi::bindgen_prelude::error!(
-        napi::bindgen_prelude::Status::InvalidArg,
-        "value `{}` does not match any variant of enum `{}`",
-        val,
-        "RemoveCSSScope"
-      )),
-    }
-  }
-}
-
-impl napi::bindgen_prelude::ToNapiValue for CSSScope {
-  unsafe fn to_napi_value(
-    env: napi::bindgen_prelude::sys::napi_env,
-    val: Self,
-  ) -> napi::bindgen_prelude::Result<napi::bindgen_prelude::sys::napi_value> {
-    match val {
-      CSSScope::All => <&str>::to_napi_value(env, "all"),
-      CSSScope::None => <&str>::to_napi_value(env, "none"),
-      CSSScope::Modules => <&str>::to_napi_value(env, "modules"),
-    }
-  }
-}
-
-#[napi(object)]
 #[derive(Clone, Debug)]
 pub struct CSSScopeVisitorConfig {
-  #[napi(ts_type = "'all' | 'none' | 'modules'")]
-  /// @public
   pub mode: CSSScope,
-
-  /// @public
   pub filename: String,
 }
 
@@ -96,11 +52,8 @@ where
   C: Comments,
 {
   cfg: CSSScopeVisitorConfig,
-
   comments: Option<C>,
-
   css_id: usize,
-
   has_jsx: bool,
 }
 
@@ -111,9 +64,6 @@ where
   pub fn new(cfg: CSSScopeVisitorConfig, comments: Option<C>) -> Self {
     CSSScopeVisitor {
       css_id: usize::from_str_radix(&calc_hash(&cfg.filename), 16).expect("should have css id")
-        // cssId for `@file` starts from `1` and auto increases one by one
-        // to avoid cssId collision, we start our cssId from `1e6`, so that
-        // we will never collide with `cssId` of `@file` if user have less than 1e6 css files
         + 1e6 as usize,
       comments,
       cfg,
@@ -129,8 +79,6 @@ where
   fn visit_mut_expr(&mut self, n: &mut Expr) {
     if matches!(n, Expr::JSXElement(_) | Expr::JSXFragment(_)) {
       self.has_jsx = true;
-
-      // No need to traverse children if we already know it is JSX
       return;
     }
     n.visit_mut_children_with(self);
@@ -138,14 +86,12 @@ where
 
   fn visit_mut_module(&mut self, n: &mut Module) {
     if matches!(self.cfg.mode, CSSScope::None) {
-      // css scope is removed, nothing to do
       return;
     }
 
     n.visit_mut_children_with(self);
 
     if !self.has_jsx {
-      // No JSX found, do not modify CSS imports
       return;
     }
 
@@ -156,30 +102,22 @@ where
         if let ModuleItem::ModuleDecl(ModuleDecl::Import(import_decl)) = module_item {
           return Some(import_decl);
         }
-
         None
       })
       .collect::<Vec<_>>();
 
     let mut has_css_import = false;
-
     let re = Regex::new(r"\.(scss|sass|css|less)$").unwrap();
 
     for import_decl in import_decls {
       if matches!(self.cfg.mode, CSSScope::Modules) && import_decl.specifiers.is_empty() {
-        // Is named/default/namespace import, nothing to do
         continue;
       }
-      // Is sideEffects import or force scoped
 
       if re.is_match(import_decl.src.value.to_string().as_str()) {
-        // Is CSS files
-        //
-        // Add cssId to the import
         import_decl.src = Box::new(Str {
           span: import_decl.src.span,
           raw: None,
-          // TODO(wangqingyu): deal with src that already have query(`?`)
           value: format!("{}?cssId={}", import_decl.src.value, self.css_id).into(),
         });
         has_css_import = true;
