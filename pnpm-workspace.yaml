@@ -8,6 +8,7 @@ packages:
   - packages/react/runtime
   - packages/react/testing-library
   - packages/react/transform
+  - packages/react/transform/*
   - packages/react/worklet-runtime
   - packages/rspeedy/*
   - packages/testing-library/*

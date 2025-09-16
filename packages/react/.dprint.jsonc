@@ -11,7 +11,6 @@
     "transform/index.d.ts",
     "transform/index.js",
 
-
     // REMOVE ME
     "transform/tests/__swc_snapshots__/**",
     // Snapshot

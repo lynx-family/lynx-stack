@@ -10,11 +10,12 @@ import { fileURLToPath } from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const RUSTFLAGS = `${
+  process.env.RUSTFLAGS ? process.env.RUSTFLAGS + ' ' : ''
+}-C link-arg=--export-table -C link-arg=-s`;
+
 execSync('cargo build-wasi --release', {
-  env: {
-    ...process.env,
-    RUSTFLAGS: '-C link-arg=--export-table -C link-arg=-s',
-  },
+  env: { ...process.env, RUSTFLAGS },
   stdio: 'inherit',
 });
 
