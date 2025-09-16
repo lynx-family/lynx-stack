@@ -2,7 +2,10 @@ use crate::{
   CSSScope as CoreCSSScope, CSSScopeVisitor as CoreVisitor, CSSScopeVisitorConfig as CoreConfig,
 };
 use napi_derive::napi;
-use swc_core::common::comments::Comments;
+use swc_core::{
+  common::comments::Comments,
+  ecma::{ast::*, visit::VisitMut},
+};
 
 #[derive(Clone, Copy, Debug)]
 pub enum CSSScope {
@@ -91,7 +94,6 @@ impl Default for CSSScopeVisitorConfig {
   }
 }
 
-/// Convert from NAPI config to core config
 impl From<CSSScopeVisitorConfig> for CoreConfig {
   fn from(val: CSSScopeVisitorConfig) -> Self {
     CoreConfig {
@@ -128,15 +130,15 @@ where
   }
 }
 
-impl<C> swc_core::ecma::visit::VisitMut for CSSScopeVisitor<C>
+impl<C> VisitMut for CSSScopeVisitor<C>
 where
   C: Comments,
 {
-  fn visit_mut_expr(&mut self, n: &mut swc_core::ecma::ast::Expr) {
+  fn visit_mut_expr(&mut self, n: &mut Expr) {
     self.inner.visit_mut_expr(n);
   }
 
-  fn visit_mut_module(&mut self, n: &mut swc_core::ecma::ast::Module) {
+  fn visit_mut_module(&mut self, n: &mut Module) {
     self.inner.visit_mut_module(n);
   }
 }
