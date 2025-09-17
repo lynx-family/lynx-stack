@@ -7,4 +7,4 @@ const __snapshot_da39a_test_1 = ReactLynx.createSnapshot("__snapshot_da39a_test_
         el
     ];
 }, null, ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null);
-<__snapshot_da39a_test_1>{[]}</__snapshot_da39a_test_1>;
+<__snapshot_da39a_test_1 $0={[]}/>;

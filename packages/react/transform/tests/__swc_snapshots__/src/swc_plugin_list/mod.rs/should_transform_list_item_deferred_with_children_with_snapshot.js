@@ -37,7 +37,7 @@ const __snapshot_da39a_test_4 = require('@lynx-js/react/internal').createSnapsho
             "item-key": "1"
         },
         noop
-    ]}>{__c}</__snapshot_da39a_test_1>} renderChildren={()=>[
+    ]} $0={__c}/>} renderChildren={()=>[
         <__snapshot_da39a_test_2/>,
         <__snapshot_da39a_test_3/>,
         <__snapshot_da39a_test_4/>
@@ -66,7 +66,7 @@ const __snapshot_da39a_test_6 = require('@lynx-js/react/internal').createSnapsho
             "item-key": "1"
         },
         noop
-    ]}>{__c}</__snapshot_da39a_test_5>} renderChildren={()=><__snapshot_da39a_test_6/>} key="1" defer/>;
+    ]} $0={__c}/>} renderChildren={()=><__snapshot_da39a_test_6/>} key="1" defer/>;
 const __snapshot_da39a_test_7 = require('@lynx-js/react/internal').createSnapshot("__snapshot_da39a_test_7", function() {
     const pageId = require('@lynx-js/react/internal').__pageId;
     const el = __CreateElement("list-item", pageId);
@@ -84,4 +84,4 @@ const __snapshot_da39a_test_7 = require('@lynx-js/react/internal').createSnapsho
             "item-key": "1"
         },
         noop
-    ]}>{__c}</__snapshot_da39a_test_7>} renderChildren={()=><App/>} key="1" defer/>;
+    ]} $0={__c}/>} renderChildren={()=><App/>} key="1" defer/>;

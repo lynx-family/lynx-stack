@@ -19,4 +19,4 @@ const __snapshot_da39a_test_1 = require('@lynx-js/react/internal').createSnapsho
         "main-thread:bindtap": xxx,
         __spread: true
     }
-]}>{[]}</__snapshot_da39a_test_1>;
+]} $0={[]}/>;
