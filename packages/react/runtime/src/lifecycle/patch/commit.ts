@@ -29,7 +29,7 @@ import { COMMIT } from '../../renderToOpcodes/constants.js';
 import { applyQueuedRefs } from '../../snapshot/ref.js';
 import { backgroundSnapshotInstanceManager } from '../../snapshot.js';
 import { hook, isEmptyObject } from '../../utils.js';
-import { takeWorkletRefInitValuePatch } from '../../worklet/ref/workletRefPool.js';
+import { sendMTRefInitValueToMainThread } from '../../worklet/ref/updateInitValue.js';
 import { getReloadVersion } from '../pass.js';
 import type { SnapshotPatch } from './snapshotPatch.js';
 import { takeGlobalSnapshotPatch } from './snapshotPatch.js';
@@ -60,7 +60,6 @@ interface Patch {
   // TODO: ref: do we need `id`?
   id: number;
   snapshotPatch?: SnapshotPatch;
-  workletRefInitValuePatch?: [id: number, value: unknown][];
 }
 
 /**
@@ -135,12 +134,13 @@ function replaceCommitHook(): void {
         }
       });
 
+      sendMTRefInitValueToMainThread();
+
       // Collect patches for this update
       const snapshotPatch = takeGlobalSnapshotPatch();
       const flushOptions = takeGlobalFlushOptions();
       const patchOptions = takeGlobalPatchOptions();
-      const workletRefInitValuePatch = takeWorkletRefInitValuePatch();
-      if (!snapshotPatch && workletRefInitValuePatch.length === 0) {
+      if (!snapshotPatch) {
         // before hydration, skip patch
         applyQueuedRefs();
         originalPreactCommit?.(vnode, commitQueue);
@@ -153,9 +153,6 @@ function replaceCommitHook(): void {
       // TODO: check all fields in `flushOptions` from runtime3
       if (snapshotPatch?.length) {
         patch.snapshotPatch = snapshotPatch;
-      }
-      if (workletRefInitValuePatch.length) {
-        patch.workletRefInitValuePatch = workletRefInitValuePatch;
       }
       const patchList: PatchList = {
         patchList: [patch],

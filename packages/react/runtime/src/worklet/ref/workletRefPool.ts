@@ -4,8 +4,9 @@
 
 import { isMtsEnabled } from '../functionality.js';
 
-let initValuePatch: [number, unknown][] = [];
-const initValueIdSet = /*#__PURE__*/ new Set<number>();
+export type workletRefInitValuePatch = [id: number, value: unknown][];
+
+let initValuePatch: workletRefInitValuePatch = [];
 
 /**
  * @internal
@@ -15,14 +16,13 @@ export function addWorkletRefInitValue(id: number, value: unknown): void {
     return;
   }
 
-  initValueIdSet.add(id);
   initValuePatch.push([id, value]);
 }
 
 /**
  * @internal
  */
-export function takeWorkletRefInitValuePatch(): [number, unknown][] {
+export function takeWorkletRefInitValuePatch(): workletRefInitValuePatch {
   const res = initValuePatch;
   initValuePatch = [];
   return res;
