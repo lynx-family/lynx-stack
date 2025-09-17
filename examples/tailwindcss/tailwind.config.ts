@@ -2,7 +2,7 @@ import type { Config } from 'tailwindcss';
 
 import preset from '@lynx-js/tailwind-preset';
 
-export default {
+const config: Config = {
   content: [],
   presets: [preset],
   theme: {
@@ -64,4 +64,6 @@ export default {
       },
     },
   },
-} satisfies Config;
+};
+
+export default config;
