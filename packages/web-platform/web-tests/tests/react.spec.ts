@@ -2253,6 +2253,11 @@ test.describe('reactlynx3 tests', () => {
         await diffScreenShot(page, 'svg', 'with-css');
       });
 
+      test('basic-element-svg-with-position', async ({ page }, { title }) => {
+        await goto(page, title);
+        await diffScreenShot(page, 'svg', 'with-position');
+      });
+
       test(
         'basic-element-svg-background-image',
         async ({ page }, { title }) => {

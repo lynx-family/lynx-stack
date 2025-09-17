@@ -56,7 +56,7 @@ x-image[auto-size] {
   display: contents;
 }
 
-x-image[auto-size]::part(img), x-svg::part(img) {
+x-image[auto-size]::part(img) {
   margin: inherit;
   padding: inherit;
   width: inherit;
