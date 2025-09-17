@@ -30,11 +30,7 @@ export function App() {
             Translate & Scale
           </text>
           <view className='translate-y-4'>
-            <text
-              className={cn(
-                'text-primary-content text-xl translate-x-10',
-              )}
-            >
+            <text className='text-primary-content text-xl translate-x-10'>
               Translate
             </text>
           </view>
