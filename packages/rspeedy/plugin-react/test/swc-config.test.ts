@@ -69,7 +69,6 @@ describe('SWC configuration', () => {
               "optimizer": {
                 "simplify": true,
               },
-              "useDefineForClassFields": false,
             },
           },
           "rspackExperiments": {
