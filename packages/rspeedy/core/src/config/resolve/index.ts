@@ -162,6 +162,13 @@ export interface Resolve {
    *
    * - `./index.cjs`
    *
+   * @remarks
+   * The difference between `resolve.extensions` and `tools.rspack.resolve.extensions`:
+   *
+   * `resolve.extensions`: Completely overrides Rspeedy's default resolution.
+   *
+   * `tools.rspack.resolve.extensions`: Merges with the default configuration using [`webpack-merge`](https://github.com/survivejs/webpack-merge).
+   *
    * @example
    * ```js
    * export default {
