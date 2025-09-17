@@ -4,12 +4,11 @@
 import { cssTransformDefault } from './transform.js';
 import { createPlugin } from '../../helpers.js';
 import type { Plugin } from '../../helpers.js';
-// import { cssTransformValue } from './transform.js';
 
 export const defaults: Plugin = createPlugin(({ addBase }) => {
   addBase(
     {
-      ':root': {
+      '*': {
         ...cssTransformDefault,
         // Lynx does not support Nested CSS Variables, uncomment in the future
         // '--tw-transform': cssTransformValue,
