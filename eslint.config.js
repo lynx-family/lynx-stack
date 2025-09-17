@@ -47,6 +47,8 @@ export default tseslint.config(
       'packages/react/transform/tests/__swc_snapshots__/**',
       'packages/react/transform/__test__/**/__snapshots__/**',
 
+      'packages/react/transform/**/tests/__swc_snapshots__/**',
+
       // Configs
       'eslint.config.js',
       'vitest.config.ts',

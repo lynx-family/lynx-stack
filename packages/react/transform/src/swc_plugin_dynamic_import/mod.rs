@@ -16,7 +16,7 @@ use swc_core::{
   },
 };
 
-use crate::utils::jsonify;
+use swc_plugins_shared::utils::jsonify;
 
 #[napi(object)]
 #[derive(Clone, Debug)]

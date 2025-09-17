@@ -273,6 +273,7 @@ export interface Resolve {
     alias?: Record<string, string | false | string[]> | undefined;
     aliasStrategy?: 'prefer-tsconfig' | 'prefer-alias' | undefined;
     dedupe?: string[] | undefined;
+    extensions?: string[] | undefined;
 }
 
 export { RsbuildPlugin }

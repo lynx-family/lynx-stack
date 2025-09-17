@@ -8,6 +8,7 @@ export const enum LifecycleConstant {
   jsReady = 'rLynxJSReady',
   patchUpdate = 'rLynxChange',
   publishEvent = 'rLynxPublishEvent',
+  updateMTRefInitValue = 'rLynxChangeRefInitValue',
 }
 
 export interface FirstScreenData {

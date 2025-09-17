@@ -1,5 +1,3 @@
-use crate::calc_hash;
-use napi_derive::napi;
 use regex::Regex;
 use swc_core::{
   common::{
@@ -11,6 +9,9 @@ use swc_core::{
     visit::{VisitMut, VisitMutWith},
   },
 };
+use swc_plugins_shared::utils::calc_hash;
+
+pub mod napi;
 
 /// CSSScope refers to the
 ///
@@ -31,50 +32,8 @@ pub enum CSSScope {
   Modules,
 }
 
-impl napi::bindgen_prelude::FromNapiValue for CSSScope {
-  unsafe fn from_napi_value(
-    env: napi::bindgen_prelude::sys::napi_env,
-    napi_val: napi::bindgen_prelude::sys::napi_value,
-  ) -> napi::bindgen_prelude::Result<Self> {
-    let val = <&str>::from_napi_value(env, napi_val).map_err(|e| {
-      napi::bindgen_prelude::error!(
-        e.status,
-        "Failed to convert napi value into enum `{}`. {}",
-        "RemoveCSSScope",
-        e,
-      )
-    })?;
-    match val {
-      "all" => Ok(CSSScope::All),
-      "none" => Ok(CSSScope::None),
-      "modules" => Ok(CSSScope::Modules),
-      _ => Err(napi::bindgen_prelude::error!(
-        napi::bindgen_prelude::Status::InvalidArg,
-        "value `{}` does not match any variant of enum `{}`",
-        val,
-        "RemoveCSSScope"
-      )),
-    }
-  }
-}
-
-impl napi::bindgen_prelude::ToNapiValue for CSSScope {
-  unsafe fn to_napi_value(
-    env: napi::bindgen_prelude::sys::napi_env,
-    val: Self,
-  ) -> napi::bindgen_prelude::Result<napi::bindgen_prelude::sys::napi_value> {
-    match val {
-      CSSScope::All => <&str>::to_napi_value(env, "all"),
-      CSSScope::None => <&str>::to_napi_value(env, "none"),
-      CSSScope::Modules => <&str>::to_napi_value(env, "modules"),
-    }
-  }
-}
-
-#[napi(object)]
 #[derive(Clone, Debug)]
 pub struct CSSScopeVisitorConfig {
-  #[napi(ts_type = "'all' | 'none' | 'modules'")]
   /// @public
   pub mode: CSSScope,
 

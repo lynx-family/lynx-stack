@@ -4,6 +4,7 @@ import { BackgroundSnapshotInstance } from '../../runtime/lib/backgroundSnapshot
 import { clearCommitTaskId, replaceCommitHook } from '../../runtime/lib/lifecycle/patch/commit.js';
 import { deinitGlobalSnapshotPatch } from '../../runtime/lib/lifecycle/patch/snapshotPatch.js';
 import { injectUpdateMainThread } from '../../runtime/lib/lifecycle/patch/updateMainThread.js';
+import { injectUpdateMTRefInitValue } from '../../runtime/lib/worklet/ref/updateInitValue.js';
 import { injectCalledByNative } from '../../runtime/lib/lynx/calledByNative.js';
 import { flushDelayedLifecycleEvents, injectTt } from '../../runtime/lib/lynx/tt.js';
 import { setRoot } from '../../runtime/lib/root.js';
@@ -28,6 +29,7 @@ const {
 
 injectCalledByNative();
 injectUpdateMainThread();
+injectUpdateMTRefInitValue();
 replaceCommitHook();
 
 globalThis.onInitWorkletRuntime = () => {
