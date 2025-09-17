@@ -144,7 +144,7 @@ export interface Resolve {
   /**
    * Automatically resolve file extensions when importing modules. This means you can import files without explicitly writing their extensions.
    *
-   * default: ['.ts', '.tsx', '.mjs', '.js', '.jsx', '.json', '.cjs']
+   * Default: `['.ts', '.tsx', '.mjs', '.js', '.jsx', '.json', '.cjs']`
    *
    * For example, if importing './index', Rsbuild will try to resolve using the following order:
    *
