@@ -148,13 +148,19 @@ export interface Resolve {
    *
    * For example, if importing './index', Rsbuild will try to resolve using the following order:
    *
-   * ./index.ts
-   * ./index.tsx
-   * ./index.mjs
-   * ./index.js
-   * ./index.jsx
-   * ./index.json
-   * ./index.cjs
+   * - `./index.ts`
+   *
+   * - `./index.tsx`
+   *
+   * - `./index.mjs`
+   *
+   * - `./index.js`
+   *
+   * - `./index.jsx`
+   *
+   * - `./index.json`
+   *
+   * - `./index.cjs`
    *
    * @example
    * ```js
