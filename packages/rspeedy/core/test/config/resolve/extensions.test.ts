@@ -48,4 +48,29 @@ describe('Config - Resolve.extensions', () => {
 
     expect(config.resolve?.extensions).toEqual(['.cjs'])
   })
+
+  test('tools.rspack.resolve.extensions with custom extensions', async () => {
+    const rspeedy = await createStubRspeedy({
+      tools: {
+        rspack: {
+          resolve: {
+            extensions: ['.foo'],
+          },
+        },
+      },
+    })
+
+    const config = await rspeedy.unwrapConfig()
+
+    expect(config.resolve?.extensions).toEqual([
+      '.ts',
+      '.tsx',
+      '.mjs',
+      '.js',
+      '.jsx',
+      '.json',
+      '.cjs',
+      '.foo',
+    ])
+  })
 })
