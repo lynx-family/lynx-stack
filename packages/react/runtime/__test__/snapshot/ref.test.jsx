@@ -6,6 +6,8 @@
 import { render } from 'preact';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { runDelayedUiOps, shouldDelayUiOps } from '../../src/lifecycle/ref/delay';
+
 import { Component, createRef, useState } from '../../src/index';
 import { clearCommitTaskId, replaceCommitHook } from '../../src/lifecycle/patch/commit';
 import { injectUpdateMainThread } from '../../src/lifecycle/patch/updateMainThread';
@@ -1907,5 +1909,17 @@ describe('ui operations', () => {
         ]
       `);
     }
+  });
+});
+
+describe('runDelayedUiOps helper', () => {
+  it('should reset shouldDelayUiOps when no tasks queued', () => {
+    // flush any queued tasks from previous tests
+    shouldDelayUiOps.value = false;
+    runDelayedUiOps();
+
+    shouldDelayUiOps.value = true;
+    runDelayedUiOps();
+    expect(shouldDelayUiOps.value).toBe(false);
   });
 });

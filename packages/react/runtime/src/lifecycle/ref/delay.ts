@@ -6,6 +6,12 @@ import type { NodesRef, SelectorQuery } from '@lynx-js/types';
 
 import { hydrationMap } from '../../snapshotInstanceHydrationMap.js';
 
+type FunctionPropertyNames<T> = {
+  [K in keyof T]: T[K] extends (...args: unknown[]) => unknown ? K : never;
+}[keyof T];
+
+type ForwardableNodesRefMethod = Exclude<FunctionPropertyNames<NodesRef>, 'exec'>;
+
 type RefTask = (nodesRef: NodesRef) => SelectorQuery;
 
 /**
@@ -39,11 +45,13 @@ function runOrDelay(task: () => void): void {
  * Executes all delayed UI operations.
  */
 function runDelayedUiOps(): void {
-  for (const task of delayedUiOps) {
+  const tasks = delayedUiOps.slice();
+  delayedUiOps.length = 0;
+  shouldDelayUiOps.value = false;
+
+  for (const task of tasks) {
     task();
   }
-  shouldDelayUiOps.value = false;
-  delayedUiOps.length = 0;
 }
 
 /**
@@ -56,32 +64,39 @@ class RefProxy {
 
   constructor(refAttr: [snapshotInstanceId: number, expIndex: number]) {
     this.refAttr = refAttr;
+    this.task = undefined;
+
+    return new Proxy(this, {
+      get: (target, prop, receiver) => {
+        if (
+          typeof prop === 'symbol'
+          || prop === 'then'
+          || prop in target
+          || typeof prop !== 'string'
+        ) {
+          return Reflect.get(target, prop, receiver);
+        }
+
+        const forward = <K extends ForwardableNodesRefMethod>(method: K) => {
+          return (...args: Parameters<NodesRef[K]>) => {
+            return new RefProxy(target.refAttr).setTask(method, args);
+          };
+        };
+
+        return forward(prop as ForwardableNodesRefMethod);
+      },
+    }) as RefProxy;
   }
 
-  private setTask<K extends keyof NodesRef>(
+  private setTask<K extends ForwardableNodesRefMethod>(
     method: K,
     args: Parameters<NodesRef[K]>,
   ): this {
     this.task = (nodesRef) => {
-      return (nodesRef[method] as unknown as (...args: any[]) => SelectorQuery)(...args);
+      const nodesRefMethod = nodesRef[method] as (...params: Parameters<NodesRef[K]>) => SelectorQuery;
+      return nodesRefMethod.apply(nodesRef, args);
     };
     return this;
-  }
-
-  invoke(...args: Parameters<NodesRef['invoke']>): RefProxy {
-    return new RefProxy(this.refAttr).setTask('invoke', args);
-  }
-
-  path(...args: Parameters<NodesRef['path']>): RefProxy {
-    return new RefProxy(this.refAttr).setTask('path', args);
-  }
-
-  fields(...args: Parameters<NodesRef['fields']>): RefProxy {
-    return new RefProxy(this.refAttr).setTask('fields', args);
-  }
-
-  setNativeProps(...args: Parameters<NodesRef['setNativeProps']>): RefProxy {
-    return new RefProxy(this.refAttr).setTask('setNativeProps', args);
   }
 
   exec(): void {
@@ -92,6 +107,12 @@ class RefProxy {
     });
   }
 }
+
+type RefProxyForwardedMethods = {
+  [K in ForwardableNodesRefMethod]: (...args: Parameters<NodesRef[K]>) => RefProxy;
+};
+
+interface RefProxy extends RefProxyForwardedMethods {}
 
 /**
  * @internal
