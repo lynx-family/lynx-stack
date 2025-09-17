@@ -2,4 +2,4 @@
 "@lynx-js/rspeedy": patch
 ---
 
-rspeedy support resolve.extensions
+Support `resolve.extensions`
