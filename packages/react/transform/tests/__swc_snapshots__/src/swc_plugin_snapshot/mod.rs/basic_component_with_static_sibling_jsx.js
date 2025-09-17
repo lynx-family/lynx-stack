@@ -22,5 +22,5 @@ const __snapshot_da39a_test_1 = ReactLynx.createSnapshot("__snapshot_da39a_test_
     ]
 ], undefined, globDynamicComponentEntry, null);
 _jsx(__snapshot_da39a_test_1, {
-    children: _jsx(A, {})
+    $0: _jsx(A, {})
 });

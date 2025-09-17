@@ -22,11 +22,11 @@ const __snapshot_da39a_test_1 = ReactLynx.createSnapshot("__snapshot_da39a_test_
     ]
 ], undefined, globDynamicComponentEntry, null);
 _jsxDEV(__snapshot_da39a_test_1, {
-    children: _jsxDEV(A, {}, void 0, false, {
+    $0: _jsxDEV(A, {}, void 0, false, {
         fileName: "input.js",
         lineNumber: 4,
         columnNumber: 7
-    }, this)
+    }, void 0)
 }, void 0, false, {
     fileName: "input.js",
     lineNumber: 2,
