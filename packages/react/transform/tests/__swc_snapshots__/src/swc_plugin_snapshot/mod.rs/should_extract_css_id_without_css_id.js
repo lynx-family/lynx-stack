@@ -1,5 +1,5 @@
 import * as ReactLynx from "@lynx-js/react";
-const __snapshot_da39a_test_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_test_1", function() {
+const __snapshot_da39a_test_1 = ReactLynx.createSnapshot("__snapshot_da39a_test_1", function() {
     const pageId = ReactLynx.__pageId;
     const el = __CreateView(pageId);
     __SetInlineStyles(el, "background-color: red;");
@@ -8,7 +8,7 @@ const __snapshot_da39a_test_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapsh
     ];
 }, null, null, undefined, globDynamicComponentEntry, null);
 <__snapshot_da39a_test_1/>;
-const __snapshot_da39a_test_2 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_test_2", function() {
+const __snapshot_da39a_test_2 = ReactLynx.createSnapshot("__snapshot_da39a_test_2", function() {
     const pageId = ReactLynx.__pageId;
     const el = __CreateView(pageId);
     return [
@@ -24,7 +24,7 @@ const __snapshot_da39a_test_2 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapsh
 <__snapshot_da39a_test_2 values={[
     `background-color: red; width: ${w};`
 ]}/>;
-const __snapshot_da39a_test_3 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_test_3", function() {
+const __snapshot_da39a_test_3 = ReactLynx.createSnapshot("__snapshot_da39a_test_3", function() {
     const pageId = ReactLynx.__pageId;
     const el = __CreateView(pageId);
     return [
@@ -44,7 +44,7 @@ const __snapshot_da39a_test_3 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapsh
         height: "100rpx"
     }
 ]}/>;
-const __snapshot_da39a_test_4 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_test_4", function() {
+const __snapshot_da39a_test_4 = ReactLynx.createSnapshot("__snapshot_da39a_test_4", function() {
     const pageId = ReactLynx.__pageId;
     const el = __CreateView(pageId);
     return [
