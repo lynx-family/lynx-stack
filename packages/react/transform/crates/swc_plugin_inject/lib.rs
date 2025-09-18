@@ -1,6 +1,5 @@
 use std::{collections::HashMap, fmt::Debug};
 
-use napi_derive::napi;
 use swc_core::{
   common::{errors::HANDLER, sync::Lrc, util::take::Take, FileName, Mark, SourceMap, DUMMY_SP},
   ecma::{
@@ -12,6 +11,8 @@ use swc_core::{
   },
 };
 
+pub mod napi;
+
 #[derive(Debug, PartialEq, Clone)]
 pub enum InjectAs {
   Expr(String),
@@ -20,69 +21,8 @@ pub enum InjectAs {
   ImportNamed(String, String),
 }
 
-impl napi::bindgen_prelude::FromNapiValue for InjectAs {
-  unsafe fn from_napi_value(
-    env: napi::bindgen_prelude::sys::napi_env,
-    napi_val: napi::bindgen_prelude::sys::napi_value,
-  ) -> napi::bindgen_prelude::Result<Self> {
-    // let bool_val = <bool>::from_napi_value(env, napi_val);
-    // if bool_val.is_ok() {
-    //   return Ok(IsModuleConfig(IsModule::Bool(bool_val.unwrap())));
-    // }
-
-    let array_val = <Vec<String>>::from_napi_value(env, napi_val);
-    if array_val.is_ok() {
-      let v = array_val.unwrap();
-
-      return match v[0].as_str() {
-        "expr" => Ok(InjectAs::Expr(v[1].clone())),
-        "importDefault" => Ok(InjectAs::ImportDefault(v[1].clone())),
-        "importStarAs" => Ok(InjectAs::ImportStarAs(v[1].clone())),
-        "importNamed" => Ok(InjectAs::ImportNamed(v[1].clone(), v[2].clone())),
-
-        _ => Err(napi::bindgen_prelude::error!(
-          napi::bindgen_prelude::Status::InvalidArg,
-          "value does not match any variant of enum `{}`",
-          "InjectAs"
-        )),
-      };
-    }
-
-    Err(napi::bindgen_prelude::error!(
-      napi::bindgen_prelude::Status::InvalidArg,
-      "value does not match any variant of enum `{}`",
-      "IsModuleConfig"
-    ))
-  }
-}
-
-impl napi::bindgen_prelude::ToNapiValue for InjectAs {
-  unsafe fn to_napi_value(
-    env: napi::bindgen_prelude::sys::napi_env,
-    val: Self,
-  ) -> napi::bindgen_prelude::Result<napi::bindgen_prelude::sys::napi_value> {
-    match val {
-      InjectAs::Expr(expr) => <Vec<String>>::to_napi_value(env, vec!["expr".into(), expr]),
-
-      InjectAs::ImportDefault(pkg_name) => {
-        <Vec<String>>::to_napi_value(env, vec!["importDefault".into(), pkg_name])
-      }
-      InjectAs::ImportStarAs(pkg_name) => {
-        <Vec<String>>::to_napi_value(env, vec!["importStarAs".into(), pkg_name])
-      }
-      InjectAs::ImportNamed(pkg_name, imported) => {
-        <Vec<String>>::to_napi_value(env, vec!["importNamed".into(), pkg_name, imported])
-      }
-    }
-  }
-}
-
-#[napi(object)]
 #[derive(Clone, Debug)]
 pub struct InjectVisitorConfig {
-  #[napi(
-    ts_type = "Record<string, ['expr', string] | ['importDefault', string] | ['importStarAs', string] | ['importNamed', string, string]>"
-  )]
   pub inject: HashMap<String, InjectAs>,
 }
 
@@ -246,7 +186,7 @@ mod tests {
     ecma::{transforms::base::resolver, visit::visit_mut_pass},
   };
 
-  use crate::swc_plugin_inject::{InjectAs, InjectVisitor, InjectVisitorConfig};
+  use crate::{InjectAs, InjectVisitor, InjectVisitorConfig};
 
   test!(
     module,

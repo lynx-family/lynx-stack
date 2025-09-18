@@ -4,13 +4,11 @@
 #[macro_use]
 extern crate napi_derive;
 mod bundle;
-mod css;
 mod esbuild;
 mod swc_plugin_compat;
 mod swc_plugin_compat_post;
 mod swc_plugin_dynamic_import;
 mod swc_plugin_extract_str;
-mod swc_plugin_inject;
 mod swc_plugin_list;
 mod swc_plugin_refresh;
 mod swc_plugin_shake;
@@ -63,7 +61,7 @@ use swc_plugin_css_scope::napi::{CSSScopeVisitor, CSSScopeVisitorConfig};
 use swc_plugin_define_dce::napi::DefineDCEVisitorConfig;
 use swc_plugin_directive_dce::napi::{DirectiveDCEVisitor, DirectiveDCEVisitorConfig};
 use swc_plugin_dynamic_import::{DynamicImportVisitor, DynamicImportVisitorConfig};
-use swc_plugin_inject::{InjectVisitor, InjectVisitorConfig};
+use swc_plugin_inject::napi::{InjectVisitor, InjectVisitorConfig};
 use swc_plugin_refresh::{RefreshVisitor, RefreshVisitorConfig};
 use swc_plugin_shake::{ShakeVisitor, ShakeVisitorConfig};
 use swc_plugin_snapshot::{JSXTransformer, JSXTransformerConfig};

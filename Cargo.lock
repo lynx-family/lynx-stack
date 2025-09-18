@@ -1653,6 +1653,7 @@ dependencies = [
  "swc_plugin_css_scope",
  "swc_plugin_define_dce",
  "swc_plugin_directive_dce",
+ "swc_plugin_inject",
  "swc_plugins_shared",
  "version-compare",
 ]
@@ -3101,6 +3102,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "swc_plugin_inject"
+version = "0.1.0"
+dependencies = [
+ "napi",
+ "napi-derive",
+ "swc_core",
+ "swc_plugins_shared",
+]
+
+[[package]]
 name = "swc_plugin_macro"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3163,6 +3174,7 @@ dependencies = [
 name = "swc_plugins_shared"
 version = "0.1.0"
 dependencies = [
+ "convert_case",
  "hex",
  "napi",
  "napi-derive",

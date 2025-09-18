@@ -7,7 +7,7 @@ use swc_core::{
   ecma::{ast::Expr, utils::is_literal},
 };
 
-use swc_plugins_shared::utils::jsonify;
+use crate::utils::jsonify;
 
 static EXTRACT_CSS_DIAGNOSTIC_ID: &str = "react-lynx-extract-css";
 

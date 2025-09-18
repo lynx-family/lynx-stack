@@ -8,10 +8,8 @@ use swc_core::{
   },
 };
 
-use crate::{
-  swc_plugin_compat::{CompatVisitorConfig, DarkModeConfig},
-  swc_plugin_inject::{InjectAs, InjectVisitor, InjectVisitorConfig},
-};
+use crate::swc_plugin_compat::{CompatVisitorConfig, DarkModeConfig};
+use swc_plugin_inject::napi::{InjectAs, InjectVisitor, InjectVisitorConfig};
 
 pub struct CompatPostVisitor {
   // opts: CompatVisitorConfig,
