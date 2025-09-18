@@ -152,4 +152,47 @@ describe('createLynxPreset - Lynx UI plugin behavior', () => {
     LYNX_UI_PLUGIN_MAP[firstUIPlugin] = original;
     debugSpy.mockRestore();
   });
+
+  it('enables uiVariants by default (no options passed)', () => {
+    const spy = Object.assign(vi.fn(), { __isOptionsFunction: true as const });
+    const original = LYNX_UI_PLUGIN_MAP.uiVariants;
+    LYNX_UI_PLUGIN_MAP.uiVariants = spy;
+
+    // Call with defaults
+    createLynxPreset();
+
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledWith({});
+
+    // restore
+    LYNX_UI_PLUGIN_MAP.uiVariants = original;
+  });
+
+  it('does NOT enable uiVariants when explicitly disabled', () => {
+    const spy = Object.assign(vi.fn(), { __isOptionsFunction: true as const });
+    const original = LYNX_UI_PLUGIN_MAP.uiVariants;
+    LYNX_UI_PLUGIN_MAP.uiVariants = spy;
+
+    createLynxPreset({
+      lynxUIPlugins: { uiVariants: false },
+    });
+
+    expect(spy).not.toHaveBeenCalled();
+
+    // restore
+    LYNX_UI_PLUGIN_MAP.uiVariants = original;
+  });
+
+  it('enables uiVariants by default even when lynxUIPlugins is an empty object', () => {
+    const spy = Object.assign(vi.fn(), { __isOptionsFunction: true as const });
+    const original = LYNX_UI_PLUGIN_MAP.uiVariants;
+    LYNX_UI_PLUGIN_MAP.uiVariants = spy;
+
+    createLynxPreset({ lynxUIPlugins: {} });
+
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledWith({});
+
+    LYNX_UI_PLUGIN_MAP.uiVariants = original;
+  });
 });
