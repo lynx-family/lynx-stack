@@ -203,3 +203,56 @@ describe('createLynxPreset - Lynx UI plugin behavior', () => {
     LYNX_UI_PLUGIN_MAP.uiVariants = original;
   });
 });
+
+describe('createLynxPreset - defensive branches', () => {
+  const firstUIPlugin = ORDERED_LYNX_UI_PLUGIN_NAMES[0]!;
+
+  it('prints debug when invariant is broken (missing plugin impl)', () => {
+    const debugSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
+
+    const original = LYNX_UI_PLUGIN_MAP[firstUIPlugin];
+    // Simulate missing plugin implementation
+    (LYNX_UI_PLUGIN_MAP as unknown as Record<string, any>)[firstUIPlugin] =
+      undefined;
+
+    try {
+      createLynxPreset({ debug: true });
+      expect(debugSpy).toHaveBeenCalledWith(
+        `[Lynx] invariant: missing UI plugin impl for '${firstUIPlugin}'`,
+      );
+    } finally {
+      // Restore original plugin implementation
+      (LYNX_UI_PLUGIN_MAP as unknown as Record<string, any>)[firstUIPlugin] =
+        original;
+      debugSpy.mockRestore();
+    }
+  });
+
+  it('logs warning when UI plugin throws during initialization', () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const original = LYNX_UI_PLUGIN_MAP[firstUIPlugin];
+
+    // Simulate plugin throwing an error
+    (LYNX_UI_PLUGIN_MAP as unknown as Record<string, any>)[firstUIPlugin] =
+      () => {
+        throw new Error('boom');
+      };
+
+    try {
+      createLynxPreset({
+        lynxUIPlugins: { [firstUIPlugin]: true },
+        debug: true,
+      });
+
+      expect(warnSpy).toHaveBeenCalledWith(
+        `[Lynx] failed to initialize UI plugin '${firstUIPlugin}'`,
+        expect.any(Error),
+      );
+    } finally {
+      // Restore original plugin implementation
+      (LYNX_UI_PLUGIN_MAP as unknown as Record<string, any>)[firstUIPlugin] =
+        original;
+      warnSpy.mockRestore();
+    }
+  });
+});
