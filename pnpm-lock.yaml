@@ -193,8 +193,8 @@ importers:
         version: link:../../packages/react
     devDependencies:
       '@lynx-js/preact-devtools':
-        specifier: ^5.0.1-6664329
-        version: 5.0.1-6664329
+        specifier: ^5.0.1-cf9aef5
+        version: 5.0.1-cf9aef5
       '@lynx-js/qrcode-rsbuild-plugin':
         specifier: workspace:*
         version: link:../../packages/rspeedy/plugin-qrcode
@@ -2237,8 +2237,8 @@ packages:
   '@lynx-js/lynx-core@0.1.3':
     resolution: {integrity: sha512-uWzKKYJUK4Q09ZRZxWSAFINnmZb9piWPbvWF9SkLn+3snBl9u/BJa4ekPRcKWAhBmpbtxWH1x27fxe3Q3p5l3Q==}
 
-  '@lynx-js/preact-devtools@5.0.1-6664329':
-    resolution: {integrity: sha512-T+AVH31ZtIez6ue7e3vKR2bPs0ssF3T+X7GRnnOL9KP+IJoIctCjp59TNdGI8sSppT6IYo72ORFMRBUyAAE0tw==}
+  '@lynx-js/preact-devtools@5.0.1-cf9aef5':
+    resolution: {integrity: sha512-e2OwROwoarzjVl8NxkjBlc6Jt0Ba7dIi9jX1y/mVsGp9y5jI3+5YpgYJYy7pTQYCscu/6omuACKNDk5N86ldkQ==}
 
   '@lynx-js/tasm@0.0.18':
     resolution: {integrity: sha512-6Kl1eUxooceWcSLYnCtys38r9KPIouTam/fU81pzOrH/xIal60+WY47nj+MzDXq94i9jbUusM+IQSZAkeRistw==}
@@ -9345,7 +9345,7 @@ snapshots:
 
   '@lynx-js/lynx-core@0.1.3': {}
 
-  '@lynx-js/preact-devtools@5.0.1-6664329':
+  '@lynx-js/preact-devtools@5.0.1-cf9aef5':
     dependencies:
       errorstacks: 2.4.1
       htm: 3.1.1
