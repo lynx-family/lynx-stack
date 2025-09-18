@@ -675,43 +675,45 @@ class LynxTemplatePluginImpl {
     )!;
 
     await Promise.all(
-      Object.entries(asyncChunkGroups).map(([entryName, chunkGroups]) => {
-        const chunkNames =
-          // We use the chunk name(provided by `webpackChunkName`) as filename
-          chunkGroups
-            .filter(cg => cg.name !== null && cg.name !== undefined)
-            .map(cg => hooks.asyncChunkName.call(cg.name!));
+      Object.entries(asyncChunkGroups).map(
+        ([entryName, chunkGroups]): Promise<void> => {
+          const chunkNames =
+            // We use the chunk name(provided by `webpackChunkName`) as filename
+            chunkGroups
+              .filter(cg => cg.name !== null && cg.name !== undefined)
+              .map(cg => hooks.asyncChunkName.call(cg.name!));
 
-        const filename = Array.from(new Set(chunkNames)).join('_');
+          const filename = Array.from(new Set(chunkNames)).join('_');
 
-        // If no filename is found, avoid generating async template
-        if (!filename) {
-          return;
-        }
+          // If no filename is found, avoid generating async template
+          if (!filename) {
+            return Promise.resolve();
+          }
 
-        const filenameTemplate = this.#getAsyncFilenameTemplate(filename);
+          const filenameTemplate = this.#getAsyncFilenameTemplate(filename);
 
-        // Ignore the encoded templates
-        if (encodedTemplate.has(filenameTemplate)) {
-          return;
-        }
+          // Ignore the encoded templates
+          if (encodedTemplate.has(filenameTemplate)) {
+            return Promise.resolve();
+          }
 
-        encodedTemplate.add(filenameTemplate);
+          encodedTemplate.add(filenameTemplate);
 
-        const asyncAssetsInfoByGroups = this.#getAssetsInformationByFilenames(
-          compilation,
-          chunkGroups.flatMap(cg => cg.getFiles()),
-        );
+          const asyncAssetsInfoByGroups = this.#getAssetsInformationByFilenames(
+            compilation,
+            chunkGroups.flatMap(cg => cg.getFiles()),
+          );
 
-        return this.#encodeByAssetsInformation(
-          compilation,
-          asyncAssetsInfoByGroups,
-          [entryName],
-          filenameTemplate,
-          path.join(intermediateRoot, 'async', filename),
-          /** isAsync */ true,
-        );
-      }),
+          return this.#encodeByAssetsInformation(
+            compilation,
+            asyncAssetsInfoByGroups,
+            [entryName],
+            filenameTemplate,
+            path.join(intermediateRoot, 'async', filename),
+            /** isAsync */ true,
+          );
+        },
+      ),
     );
   }
 

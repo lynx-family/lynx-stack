@@ -137,7 +137,7 @@ export async function loadConfig(
     const [exports, { validate }] = await Promise.all([
       import(
         /* webpackIgnore: true */ `${specifier}?t=${Date.now()}`
-      ) as { default: ConfigExport } | ConfigExport,
+      ) as Promise<{ default: ConfigExport } | ConfigExport>,
       import('./validate.js'),
     ])
 
