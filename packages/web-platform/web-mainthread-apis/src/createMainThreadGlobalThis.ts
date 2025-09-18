@@ -60,6 +60,7 @@ import {
   type ElementFromBinaryPAPI,
   type JSRealm,
   type QueryComponentPAPI,
+  lynxEntryNameAttribute,
 } from '@lynx-js/web-constants';
 import { createMainThreadLynx } from './createMainThreadLynx.js';
 import {
@@ -134,6 +135,7 @@ export interface MainThreadRuntimeCallbacks {
     uniqueId: number,
     newClassName: string,
     cssID: string | null,
+    entryName: string | null,
   ) => void;
   __QueryComponent: QueryComponentPAPI;
 }
@@ -544,9 +546,11 @@ export function createMainThreadGlobalThis(
   const __SetCSSIdForCSSOG: SetCSSIdPAPI = (
     elements,
     cssId,
+    entryName,
   ) => {
     for (const element of elements) {
       element.setAttribute(cssIdAttribute, cssId + '');
+      entryName && element.setAttribute(lynxEntryNameAttribute, entryName);
       const cls = element.getAttribute('class');
       cls && __SetClassesForCSSOG(element, cls);
     }
@@ -562,10 +566,12 @@ export function createMainThreadGlobalThis(
     element.setAttribute('class', newClassName);
     const cssId = element.getAttribute(cssIdAttribute);
     const uniqueId = Number(element.getAttribute(lynxUniqueIdAttribute));
+    const entryName = element.getAttribute(lynxEntryNameAttribute);
     callbacks.updateCssOGStyle(
       uniqueId,
       newClassName,
       cssId,
+      entryName,
     );
   };
 
@@ -576,10 +582,12 @@ export function createMainThreadGlobalThis(
     __SetClasses(element, classNames);
     const cssId = element.getAttribute(cssIdAttribute);
     const uniqueId = Number(element.getAttribute(lynxUniqueIdAttribute));
+    const entryName = element.getAttribute(lynxEntryNameAttribute);
     callbacks.updateCssOGStyle(
       uniqueId,
       classNames ?? '',
       cssId,
+      entryName,
     );
   };
 
