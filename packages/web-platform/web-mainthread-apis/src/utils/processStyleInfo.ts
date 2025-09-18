@@ -305,15 +305,14 @@ export function appendStyleElement(
   ) => {
     const flattenedStyleInfo = flattenStyleInfo(styleInfo);
     transformToWebCss(flattenedStyleInfo);
-    const cssOGInfo: CssOGInfo = pageConfig.enableCSSSelector
-      ? {}
-      : genCssOGInfo(flattenedStyleInfo);
+    if (!pageConfig.enableCSSSelector) {
+      lazyCSSOGInfo[entryName] = genCssOGInfo(flattenedStyleInfo);
+    }
     const newStyleSheet = genCssContent(
       flattenedStyleInfo,
       pageConfig,
       entryName,
     );
-    lazyCSSOGInfo[entryName] = cssOGInfo;
     cardStyleElement.textContent += newStyleSheet;
   };
   return { updateCssOGStyle, updateLazyComponentStyle };
