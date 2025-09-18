@@ -26,7 +26,7 @@ import { lynxTheme } from './theme.js';
 
 function createLynxPreset({
   lynxPlugins = true,
-  lynxUIPlugins = false,
+  lynxUIPlugins = true,
   debug = false,
   theme,
 }: {
