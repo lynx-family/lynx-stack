@@ -6,7 +6,7 @@ const __snapshot_da39a_test_1 = require('@lynx-js/react/internal').createSnapsho
     ];
 }, [
     (snapshot, index, oldValue)=>require('@lynx-js/react/internal').updateSpread(snapshot, index, oldValue, 0)
-], require('@lynx-js/react/internal').__DynamicPartChildren_0, undefined, globDynamicComponentEntry, [
+], require('@lynx-js/react/internal').__DynamicPartSlotV2_0, undefined, globDynamicComponentEntry, [
     0
 ]);
 <__snapshot_da39a_test_1 values={[
@@ -19,4 +19,4 @@ const __snapshot_da39a_test_1 = require('@lynx-js/react/internal').createSnapsho
         "main-thread:bindtap": xxx,
         __spread: true
     }
-]}>{[]}</__snapshot_da39a_test_1>;
+]} $0={[]}/>;

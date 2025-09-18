@@ -174,7 +174,7 @@
     "api-extractor": "api-extractor run --verbose"
   },
   "dependencies": {
-    "preact": "npm:@hongzhiyuan/preact@10.24.0-00213bad"
+    "preact": "https://tosv.byted.org/obj/inspirecloud-cn-bytedance-internal/baas/ttywdh/b033d0fcbe34364d_1758205491336.tgz"
   },
   "devDependencies": {
     "@lynx-js/types": "3.4.11",

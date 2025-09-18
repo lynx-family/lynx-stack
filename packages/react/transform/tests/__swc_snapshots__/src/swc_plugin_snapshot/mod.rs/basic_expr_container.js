@@ -5,5 +5,5 @@ const __snapshot_da39a_test_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapsh
     return [
         el
     ];
-}, null, ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null);
-<__snapshot_da39a_test_1>{a}</__snapshot_da39a_test_1>;
+}, null, ReactLynx.__DynamicPartSlotV2_0, undefined, globDynamicComponentEntry, null);
+<__snapshot_da39a_test_1 $0={a}/>;
