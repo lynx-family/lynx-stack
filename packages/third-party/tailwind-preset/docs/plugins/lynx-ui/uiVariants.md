@@ -49,6 +49,8 @@ createLynxPreset({
 });
 ```
 
+Tip: `uiVariants: {}` (empty object) and `uiVariants: true` both enable the plugin with default options.
+
 ### Customize Prefixes and Values
 
 Use a custom mapping to align with your component state structure (e.g., `data-*` patterns):

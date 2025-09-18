@@ -44,7 +44,7 @@ export default config;
 
 ### Plugin Defaults
 
-Like Tailwind itself, all Lynx plugins (including UI plugins such as `uiVariants`) are **enabled by default** when not explicitly configured.
+In this preset, all Lynx plugins (including UI plugins such as `uiVariants`) are **enabled by default** when not explicitly configured.
 You can disable individual plugins by setting them to `false`, or override their options with an object.
 
 ```ts
@@ -119,6 +119,13 @@ createLynxPreset({
       },
     },
   },
+});
+```
+
+```ts
+// keep defaults explicitly (same as `true`)
+createLynxPreset({
+  lynxUIPlugins: {},
 });
 ```
 
