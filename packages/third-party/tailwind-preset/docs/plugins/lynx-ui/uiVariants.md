@@ -49,7 +49,10 @@ createLynxPreset({
 });
 ```
 
-Tip: `uiVariants: {}` (empty object) and `uiVariants: true` both enable the plugin with default options.
+> Tip: `uiVariants: {}` (empty object) and `uiVariants: true` both enable the plugin with default options.
+
+> Note: Passing an object replaces the default prefixes.
+> To extend/merge with defaults, use the function form shown below.
 
 ### Customize Prefixes and Values
 
@@ -298,7 +301,7 @@ You can create **named scope markers** to disambiguate multiple groups/peers. Sl
 **Do**:
 
 ```tsx
-// Prefix ON markers and utilities:
+// Prefix ON markers and utilities (assuming tailwind.config.ts has: prefix: 'tw-'):
 <view className="tw-group ui-selected">
   <view className="group-ui-selected:tw-bg-blue-500" />
 </view>
