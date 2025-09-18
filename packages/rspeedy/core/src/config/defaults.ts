@@ -32,6 +32,10 @@ export function applyDefaultRspeedyConfig(config: Config): Config {
 
       // inlineScripts defaults to false when chunk splitting is enabled, true otherwise
       inlineScripts: !enableChunkSplitting,
+
+      cssModules: {
+        localIdentName: '[local]-[hash:base64:6]',
+      },
     },
 
     performance: {
