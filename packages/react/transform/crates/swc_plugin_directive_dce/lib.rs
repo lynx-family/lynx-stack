@@ -1,6 +1,4 @@
 use std::fmt::Debug;
-
-use napi_derive::napi;
 use swc_core::{
   common::{errors::HANDLER, Span},
   ecma::{
@@ -9,7 +7,9 @@ use swc_core::{
   },
 };
 
-use crate::target::TransformTarget;
+use swc_plugins_shared::target::TransformTarget;
+
+pub mod napi;
 
 trait Eliminate {
   fn eliminate(&mut self);
@@ -35,11 +35,9 @@ impl Eliminate for ArrowExpr {
   }
 }
 
-#[napi(object)]
 #[derive(Clone, Debug)]
 pub struct DirectiveDCEVisitorConfig {
   /// @internal
-  #[napi(ts_type = "'LEPUS' | 'JS' | 'MIXED'")]
   pub target: TransformTarget,
 }
 
@@ -209,15 +207,13 @@ impl VisitMut for DirectiveDCEVisitor {
 
 #[cfg(test)]
 mod tests {
-  use crate::{
-    swc_plugin_directive_dce::{DirectiveDCEVisitor, DirectiveDCEVisitorConfig},
-    target::TransformTarget,
-  };
+  use crate::{DirectiveDCEVisitor, DirectiveDCEVisitorConfig};
   use swc_core::{
     ecma::parser::Syntax,
     ecma::visit::visit_mut_pass,
     ecma::{parser::EsSyntax, transforms::testing::test},
   };
+  use swc_plugins_shared::target::TransformTarget;
 
   // use crate::{DirectiveDCEVisitor, DirectiveDCEVisitorConfig};
 

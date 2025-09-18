@@ -193,9 +193,9 @@ mod tests {
   use super::ListVisitor;
   use crate::{
     swc_plugin_snapshot::{JSXTransformer, JSXTransformerConfig},
-    target::TransformTarget,
     TransformMode,
   };
+  use swc_plugins_shared::target_napi::TransformTarget;
 
   test!(
     module,

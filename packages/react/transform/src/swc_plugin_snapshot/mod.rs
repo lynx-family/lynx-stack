@@ -23,8 +23,8 @@ mod attr_name;
 pub mod jsx_helpers;
 mod slot_marker;
 
-use crate::{css::get_string_inline_style_from_literal, target::TransformTarget, TransformMode};
-use swc_plugins_shared::utils::calc_hash;
+use crate::{css::get_string_inline_style_from_literal, TransformMode};
+use swc_plugins_shared::{target_napi::TransformTarget, utils::calc_hash};
 
 use self::{
   attr_name::AttrName,
@@ -1560,8 +1560,8 @@ mod tests {
     },
   };
 
-  use crate::target::TransformTarget;
   use crate::{swc_plugin_snapshot::JSXTransformer, TransformMode};
+  use swc_plugins_shared::target_napi::TransformTarget;
 
   test!(
     module,

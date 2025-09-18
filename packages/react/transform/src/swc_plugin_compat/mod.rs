@@ -18,7 +18,7 @@ use swc_core::{
   quote,
 };
 
-use crate::target::TransformTarget;
+use swc_plugins_shared::target_napi::TransformTarget;
 
 mod is_component_class;
 mod simplify_ctor_like_react_lynx_2;

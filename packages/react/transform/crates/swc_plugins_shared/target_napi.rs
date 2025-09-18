@@ -1,9 +1,30 @@
-#[allow(clippy::upper_case_acronyms)]
+use crate::target::TransformTarget as CoreTarget;
+
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum TransformTarget {
   LEPUS,
   JS,
   MIXED,
+}
+
+impl From<TransformTarget> for CoreTarget {
+  fn from(val: TransformTarget) -> Self {
+    match val {
+      TransformTarget::LEPUS => CoreTarget::LEPUS,
+      TransformTarget::JS => CoreTarget::JS,
+      TransformTarget::MIXED => CoreTarget::MIXED,
+    }
+  }
+}
+
+impl From<CoreTarget> for TransformTarget {
+  fn from(val: CoreTarget) -> Self {
+    match val {
+      CoreTarget::LEPUS => TransformTarget::LEPUS,
+      CoreTarget::JS => TransformTarget::JS,
+      CoreTarget::MIXED => TransformTarget::MIXED,
+    }
+  }
 }
 
 impl napi::bindgen_prelude::FromNapiValue for TransformTarget {

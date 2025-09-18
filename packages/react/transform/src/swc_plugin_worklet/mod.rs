@@ -21,8 +21,8 @@ use swc_core::ecma::utils::prepend_stmts;
 use swc_core::ecma::visit::VisitMutWith;
 use swc_core::ecma::visit::{noop_visit_mut_type, VisitMut};
 
-use crate::target::TransformTarget;
 use crate::TransformMode;
+use swc_plugins_shared::target_napi::TransformTarget;
 
 #[derive(Clone, Debug)]
 #[napi(object)]

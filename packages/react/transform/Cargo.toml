@@ -21,6 +21,8 @@ serde_json = { workspace = true, features = ["preserve_order"] }
 sha-1 = { workspace = true }
 swc_core = { workspace = true, features = ["base", "ecma_codegen", "ecma_parser", "ecma_minifier", "ecma_transforms_typescript", "ecma_utils", "ecma_quote", "ecma_transforms_react", "ecma_transforms_optimization", "css_parser", "css_ast", "css_visit", "css_codegen", "__visit", "__testing_transform"] }
 swc_plugin_css_scope = { path = "./crates/swc_plugin_css_scope" }
+swc_plugin_define_dce = { path = "./crates/swc_plugin_define_dce" }
+swc_plugin_directive_dce = { path = "./crates/swc_plugin_directive_dce" }
 swc_plugins_shared = { path = './crates/swc_plugins_shared' }
 version-compare = { workspace = true }
 

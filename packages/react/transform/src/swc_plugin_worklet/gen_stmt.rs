@@ -1,12 +1,12 @@
 use crate::swc_plugin_worklet::extract_ident::ExtractingIdentsCollector;
 use crate::swc_plugin_worklet::worklet_type::WorkletType;
-use crate::target::TransformTarget;
 use crate::TransformMode;
 use std::collections::HashSet;
 use std::vec;
 use swc_core::common::DUMMY_SP;
 use swc_core::ecma::ast::*;
 use swc_core::{quote, quote_expr};
+use swc_plugins_shared::target_napi::TransformTarget;
 
 pub struct StmtGen {}
 
