@@ -38,7 +38,7 @@ import { lynxTheme } from './theme.js';
  *
  * @defaultValue
  * - `lynxPlugins`: `true`
- * - `lynxUIPlugins`: `true` (since v0.4.x; includes `uiVariants`)
+ * - `lynxUIPlugins`: `true` (starting with v0.4.0; includes `uiVariants`)
  * - `debug`: `false`
  * - `theme`: `undefined`
  *
@@ -89,8 +89,24 @@ function createLynxPreset({
   // Lynx UI Plugins
   for (const [name, options] of resolveUIPluginEntries(lynxUIPlugins)) {
     const fn = LYNX_UI_PLUGIN_MAP[name];
-    plugins.push(fn(options));
-    if (debug) console.debug(`[Lynx] enabled UI plugin: ${name}`);
+
+    // Invariant: map must contain every ordered name
+    if (!fn) {
+      if (debug) {
+        const msg = `[Lynx] invariant: missing UI plugin impl for '${name}'`;
+        console.debug(msg);
+      }
+      continue;
+    }
+    try {
+      plugins.push(fn(options));
+      if (debug) console.debug(`[Lynx] enabled UI plugin: ${name}`);
+    } catch (err) {
+      // Keep the stack; no need for instanceof / String(err)
+      if (debug) {
+        console.warn(`[Lynx] failed to initialize UI plugin '${name}'`, err);
+      }
+    }
   }
 
   return {
