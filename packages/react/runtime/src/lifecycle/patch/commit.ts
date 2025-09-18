@@ -23,6 +23,8 @@ import { options } from 'preact';
 
 import type { RunWorkletCtxData } from '@lynx-js/react/worklet-runtime/bindings';
 
+import { prettyFormatSnapshotPatch } from '../../debug/formatPatch.js';
+import { printSnapshotInstance } from '../../debug/printSnapshot.js';
 import { LifecycleConstant } from '../../lifecycleConstant.js';
 import { globalPipelineOptions, markTiming, markTimingLegacy, setPipeline } from '../../lynx/performance.js';
 import { COMMIT } from '../../renderToOpcodes/constants.js';
@@ -190,11 +192,11 @@ function commitPatchUpdate(patchList: PatchList, patchOptions: GlobalPatchOption
   data: string;
   patchOptions: PatchOptions;
 } {
-  // console.debug('********** JS update:');
-  // printSnapshotInstance(
-  //   (backgroundSnapshotInstanceManager.values.get(1) ?? backgroundSnapshotInstanceManager.values.get(-1))!,
-  // );
-  // console.debug('commitPatchUpdate:', prettyFormatSnapshotPatch(patchList.patchList[0]?.snapshotPatch));
+  console.log('********** JS update:');
+  printSnapshotInstance(
+    (backgroundSnapshotInstanceManager.values.get(1) ?? backgroundSnapshotInstanceManager.values.get(-1))!,
+  );
+  console.log('commitPatchUpdate:', prettyFormatSnapshotPatch(patchList.patchList[0]?.snapshotPatch));
 
   if (__PROFILE__) {
     profileStart('ReactLynx::commitChanges');

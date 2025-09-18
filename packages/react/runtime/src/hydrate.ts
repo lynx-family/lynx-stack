@@ -379,7 +379,10 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
         // The `before` & `after` target to the same list element, so we need to
         // avoid the newly created list's (behind snapshot instance `after`) "update-list-info" being recorded.
         __pendingListUpdates.clear(after.__id);
+        break;
       }
+      default:
+        throw new Error('Unexpected slot type: ' + type);
     }
   });
 }

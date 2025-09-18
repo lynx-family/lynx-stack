@@ -36,6 +36,7 @@ export interface Snapshot {
   slot: [DynamicPartType, number][];
 
   isListHolder?: boolean;
+  isSlotV2?: boolean;
   cssId?: number | undefined;
   entryName?: string | undefined;
   refAndSpreadIndexes?: number[] | null;
@@ -236,8 +237,11 @@ export function createSnapshot(
 
   const s: Snapshot = { create, update, slot, cssId, entryName, refAndSpreadIndexes };
   snapshotManager.values.set(uniqID, s);
-  if (slot && slot[0] && slot[0][0] === DynamicPartType.ListChildren) {
-    s.isListHolder = true;
+  if (slot && slot[0]) {
+    const v = slot[0][0];
+    if (v === DynamicPartType.ListChildren || v === DynamicPartType.ListSlotV2) {
+      s.isListHolder = true;
+    }
   }
   return uniqID;
 }
@@ -285,6 +289,7 @@ export class SnapshotInstance {
   __worklet_ref_set?: Set<WorkletRefImpl<any> | Worklet>;
   __listItemPlatformInfo?: PlatformInfo;
   __extraProps?: Record<string, unknown> | undefined;
+  __slotIndex?: number | undefined;
 
   constructor(public type: string, id?: number) {
     this.__snapshot_def = snapshotManager.values.get(type)!;
@@ -366,6 +371,8 @@ export class SnapshotInstance {
             __AppendElement(elements[elementIndex]!, child.__element_root!);
             break;
           }
+          default:
+            throw new Error('Unexpected slot type: ' + type);
         }
 
         child = child.__nextSibling;
@@ -538,18 +545,29 @@ export class SnapshotInstance {
     }
 
     const count = __snapshot_def.slot.length;
-    if (count === 1) {
-      const [, elementIndex] = __snapshot_def.slot[0]!;
+    if (
+      count === 1
+      || (__snapshot_def.isSlotV2 ??= __snapshot_def.slot.every(([type]) =>
+        type === DynamicPartType.SlotV2 || type === DynamicPartType.ListSlotV2
+      ))
+    ) {
+      const [, elementIndex] = __snapshot_def.slot[typeof newNode.__slotIndex === 'number' ? newNode.__slotIndex : 0]!;
       const parent = __elements[elementIndex]!;
       if (shouldRemove) {
         __RemoveElement(parent, newNode.__element_root!);
       }
       if (existingNode) {
-        __InsertElementBefore(
-          parent,
-          newNode.__element_root!,
-          existingNode.__element_root,
-        );
+        if (__snapshot_def.isSlotV2) {
+          if (newNode.__slotIndex! < existingNode.__slotIndex!) {
+            __AppendElement(parent, newNode.__element_root!);
+          }
+        } else {
+          __InsertElementBefore(
+            parent,
+            newNode.__element_root!,
+            existingNode.__element_root,
+          );
+        }
       } else {
         __AppendElement(parent, newNode.__element_root!);
       }

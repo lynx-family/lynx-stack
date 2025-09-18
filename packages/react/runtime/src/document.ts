@@ -34,14 +34,14 @@ const document: SnapshotDocumentAdapter = {} as SnapshotDocumentAdapter;
  * All DOM operations are intercepted to create {@link BackgroundSnapshotInstance}.
  */
 function setupBackgroundDocument(): void {
-  document.createElement = function(type: string) {
-    return new BackgroundSnapshotInstance(type);
+  document.createElement = function(type: string, slotIndex?: number) {
+    return new BackgroundSnapshotInstance(type, slotIndex);
   };
-  document.createElementNS = function(_ns: string, type: string) {
-    return new BackgroundSnapshotInstance(type);
+  document.createElementNS = function(_ns: string, type: string, _is?: string, slotIndex?: number) {
+    return new BackgroundSnapshotInstance(type, slotIndex);
   };
-  document.createTextNode = function(text: string) {
-    const i = new BackgroundSnapshotInstance(null as unknown as string);
+  document.createTextNode = function(text: string, slotIndex?: number) {
+    const i = new BackgroundSnapshotInstance(null as unknown as string, slotIndex);
     i.setAttribute(0, text);
     Object.defineProperty(i, 'data', {
       set(v) {

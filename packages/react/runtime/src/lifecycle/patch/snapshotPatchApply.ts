@@ -37,7 +37,9 @@ export function snapshotPatchApply(snapshotPatch: SnapshotPatch): void {
       case SnapshotOperation.CreateElement: {
         const type = snapshotPatch[++i] as string;
         const id = snapshotPatch[++i] as number;
-        new SnapshotInstance(type, id);
+        const s = new SnapshotInstance(type, id);
+        s.__slotIndex = snapshotPatch[++i] as number | undefined;
+        console.log('snapshotPatchApply: CreateElement', type, id, s.__slotIndex);
         break;
       }
       case SnapshotOperation.InsertBefore: {
@@ -50,6 +52,14 @@ export function snapshotPatchApply(snapshotPatch: SnapshotPatch): void {
         if (!parent || !child) {
           sendCtxNotFoundEventToBackground(parent ? childId : parentId);
         } else {
+          console.log(
+            'snapshotPatchApply: InsertBefore',
+            parentId,
+            childId,
+            child.__slotIndex,
+            beforeId,
+            existingNode?.__slotIndex,
+          );
           parent.insertBefore(child, existingNode);
         }
         break;

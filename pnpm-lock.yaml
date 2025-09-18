@@ -259,8 +259,8 @@ importers:
   packages/react:
     dependencies:
       preact:
-        specifier: npm:@hongzhiyuan/preact@10.24.0-00213bad
-        version: '@hongzhiyuan/preact@10.24.0-00213bad'
+        specifier: https://tosv.byted.org/obj/inspirecloud-cn-bytedance-internal/baas/ttywdh/b033d0fcbe34364d_1758205491336.tgz
+        version: https://tosv.byted.org/obj/inspirecloud-cn-bytedance-internal/baas/ttywdh/b033d0fcbe34364d_1758205491336.tgz
     devDependencies:
       '@lynx-js/types':
         specifier: 3.4.11
@@ -279,7 +279,7 @@ importers:
         version: link:..
       '@prefresh/core':
         specifier: ^1.5.7
-        version: 1.5.7(preact@10.23.2)
+        version: 1.5.7(preact@10.24.0)
       '@prefresh/utils':
         specifier: ^1.2.1
         version: 1.2.1
@@ -595,10 +595,10 @@ importers:
         version: link:../../web-platform/web-elements
       '@rsbuild/plugin-less':
         specifier: 1.5.0
-        version: 1.5.0(@rsbuild/core@1.5.4)
+        version: 1.5.0(@rsbuild/core@1.5.6)
       '@rsbuild/plugin-sass':
         specifier: 1.4.0
-        version: 1.4.0(@rsbuild/core@1.5.4)
+        version: 1.4.0(@rsbuild/core@1.5.6)
       commander:
         specifier: ^13.1.0
         version: 13.1.0
@@ -613,7 +613,7 @@ importers:
         version: 1.1.1
       rsbuild-plugin-tailwindcss:
         specifier: 0.2.3
-        version: 0.2.3(@rsbuild/core@1.5.4)(tailwindcss@3.4.17)
+        version: 0.2.3(@rsbuild/core@1.5.6)(tailwindcss@3.4.17)
       rslog:
         specifier: ^1.2.11
         version: 1.2.11
@@ -1267,13 +1267,13 @@ importers:
         version: 7.30.7(@types/node@24.3.0)
       '@rsbuild/plugin-sass':
         specifier: 1.4.0
-        version: 1.4.0(@rsbuild/core@1.5.4)
+        version: 1.4.0(@rsbuild/core@1.5.6)
       '@rsbuild/plugin-type-check':
         specifier: 1.2.4
-        version: 1.2.4(@rsbuild/core@1.5.4)(@rspack/core@1.5.2(@swc/helpers@0.5.17))(typescript@5.9.2)
+        version: 1.2.4(@rsbuild/core@1.5.6)(@rspack/core@1.5.2(@swc/helpers@0.5.17))(typescript@5.9.2)
       '@rsbuild/plugin-typed-css-modules':
         specifier: 1.1.0
-        version: 1.1.0(@rsbuild/core@1.5.4)
+        version: 1.1.0(@rsbuild/core@1.5.6)
       '@rspress/core':
         specifier: 2.0.0-beta.28
         version: 2.0.0-beta.28(@types/react@19.1.10)(acorn@8.15.0)
@@ -2103,9 +2103,6 @@ packages:
   '@eslint/plugin-kit@0.3.5':
     resolution: {integrity: sha512-Z5kJ+wU3oA7MMIqVR9tyZRtjYPr4OC004Q4Rw7pgOKUOKkJfZ3O24nz3WYfGRpMDNmcOi3TwQOmgm7B7Tpii0w==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
-
-  '@hongzhiyuan/preact@10.24.0-00213bad':
-    resolution: {integrity: sha512-bHWp4ZDK5ZimcY+bTWw3S3xGiB8eROpZj0RK3FClNIaTOajb0b11CsT3K+pdeakgPgq1jWN3T2e2rfrPm40JsQ==}
 
   '@humanfs/core@0.19.1':
     resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
@@ -6820,8 +6817,12 @@ packages:
     resolution: {integrity: sha512-3Ybi1tAuwAP9s0r1UQ2J4n5Y0G05bJkpUIO0/bI9MhwmD70S5aTWbXGBwxHrelT+XM1k6dM0pk+SwNkpTRN7Pg==}
     engines: {node: ^10 || ^12 || >=14}
 
-  preact@10.23.2:
-    resolution: {integrity: sha512-kKYfePf9rzKnxOAKDpsWhg/ysrHPqT+yQ7UW4JjdnqjFIeNUnNcEJvhuA8fDenxAGWzUqtd51DfVg7xp/8T9NA==}
+  preact@10.24.0:
+    resolution: {integrity: sha512-aK8Cf+jkfyuZ0ZZRG9FbYqwmEiGQ4y/PUO4SuTWoyWL244nZZh7bd5h2APd4rSNDYTBNghg1L+5iJN3Skxtbsw==}
+
+  preact@https://tosv.byted.org/obj/inspirecloud-cn-bytedance-internal/baas/ttywdh/b033d0fcbe34364d_1758205491336.tgz:
+    resolution: {tarball: https://tosv.byted.org/obj/inspirecloud-cn-bytedance-internal/baas/ttywdh/b033d0fcbe34364d_1758205491336.tgz}
+    version: 10.24.0
 
   prelude-ls@1.2.1:
     resolution: {integrity: sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==}
@@ -9205,8 +9206,6 @@ snapshots:
       '@eslint/core': 0.15.2
       levn: 0.4.1
 
-  '@hongzhiyuan/preact@10.24.0-00213bad': {}
-
   '@humanfs/core@0.19.1': {}
 
   '@humanfs/node@0.16.6':
@@ -9628,9 +9627,9 @@ snapshots:
 
   '@polka/url@1.0.0-next.25': {}
 
-  '@prefresh/core@1.5.7(preact@10.23.2)':
+  '@prefresh/core@1.5.7(preact@10.24.0)':
     dependencies:
-      preact: 10.23.2
+      preact: 10.24.0
 
   '@prefresh/utils@1.2.1': {}
 
@@ -9761,9 +9760,9 @@ snapshots:
       - lightningcss
       - webpack
 
-  '@rsbuild/plugin-less@1.5.0(@rsbuild/core@1.5.4)':
+  '@rsbuild/plugin-less@1.5.0(@rsbuild/core@1.5.6)':
     dependencies:
-      '@rsbuild/core': 1.5.4
+      '@rsbuild/core': 1.5.6
       deepmerge: 4.3.1
       reduce-configs: 1.1.1
 
@@ -9784,17 +9783,14 @@ snapshots:
       reduce-configs: 1.1.1
       sass-embedded: 1.90.0
 
-  '@rsbuild/plugin-type-check@1.2.4(@rsbuild/core@1.5.4)(@rspack/core@1.5.2(@swc/helpers@0.5.17))(typescript@5.9.2)':
+  '@rsbuild/plugin-sass@1.4.0(@rsbuild/core@1.5.6)':
     dependencies:
+      '@rsbuild/core': 1.5.6
       deepmerge: 4.3.1
-      json5: 2.2.3
+      loader-utils: 2.0.4
+      postcss: 8.5.6
       reduce-configs: 1.1.1
-      ts-checker-rspack-plugin: 1.1.4(@rspack/core@1.5.2(@swc/helpers@0.5.17))(typescript@5.9.2)
-    optionalDependencies:
-      '@rsbuild/core': 1.5.4
-    transitivePeerDependencies:
-      - '@rspack/core'
-      - typescript
+      sass-embedded: 1.90.0
 
   '@rsbuild/plugin-type-check@1.2.4(@rsbuild/core@1.5.6)(@rspack/core@1.5.2(@swc/helpers@0.5.17))(typescript@5.9.2)':
     dependencies:
@@ -9811,6 +9807,10 @@ snapshots:
   '@rsbuild/plugin-typed-css-modules@1.1.0(@rsbuild/core@1.5.4)':
     optionalDependencies:
       '@rsbuild/core': 1.5.4
+
+  '@rsbuild/plugin-typed-css-modules@1.1.0(@rsbuild/core@1.5.6)':
+    optionalDependencies:
+      '@rsbuild/core': 1.5.6
 
   '@rsdoctor/client@1.2.3': {}
 
@@ -14844,7 +14844,9 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
-  preact@10.23.2: {}
+  preact@10.24.0: {}
+
+  preact@https://tosv.byted.org/obj/inspirecloud-cn-bytedance-internal/baas/ttywdh/b033d0fcbe34364d_1758205491336.tgz: {}
 
   prelude-ls@1.2.1: {}
 
@@ -15255,12 +15257,6 @@ snapshots:
       publint: 0.3.12
     optionalDependencies:
       '@rsbuild/core': 1.5.6
-
-  rsbuild-plugin-tailwindcss@0.2.3(@rsbuild/core@1.5.4)(tailwindcss@3.4.17):
-    dependencies:
-      tailwindcss: 3.4.17
-    optionalDependencies:
-      '@rsbuild/core': 1.5.4
 
   rsbuild-plugin-tailwindcss@0.2.3(@rsbuild/core@1.5.6)(tailwindcss@3.4.17):
     dependencies:
