@@ -1,7 +1,7 @@
-use napi_derive::napi;
 use std::{collections::HashMap, fmt::Debug};
 
 use crate::DefineDCEVisitorConfig as CoreConfig;
+use napi_derive::napi;
 
 impl From<DefineDCEVisitorConfig> for CoreConfig {
   fn from(val: DefineDCEVisitorConfig) -> Self {
@@ -51,9 +51,9 @@ pub struct DefineDCEVisitorConfig {
   ///
   /// Then, `__FOO__` and `process.env.PLATFORM` could be used in source code.
   ///
-  /// ```
-  /// if (process.env.PLATFORM === "lynx") {
-  ///   console.log("lynx")
+  /// ```javascript
+  /// if (process.env.PLATFORM === 'lynx') {
+  ///   console.log('lynx')
   /// }
   ///
   /// function FooOrBar() {
