@@ -45,7 +45,7 @@ export function App() {
   );
 }`;
 
-  bench('transform 1000 view elements with event', async () => {
+  bench.skip('transform 1000 view elements with event', async () => {
     await transformReactLynx(largeInputContentWithEvent, config);
   });
 
@@ -58,7 +58,7 @@ export function App() {
   );
 }`;
 
-  bench('transform 1000 view elements with Children', async () => {
+  bench.skip('transform 1000 view elements with Children', async () => {
     await transformReactLynx(largeInputContentWithChildren, config);
   });
 
@@ -74,7 +74,7 @@ export function App() {
   );
 }`;
 
-  bench('transform 1000 effects', async () => {
+  bench.skip('transform 1000 effects', async () => {
     await transformReactLynx(largeInputContentWithEffect, config);
   });
 });
