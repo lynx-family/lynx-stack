@@ -11,6 +11,7 @@ import {
 } from '../core.js';
 import type { LynxUIPluginOptionsMap } from '../core.js';
 import preset, { createLynxPreset } from '../lynx.js';
+import type { UIVariantsOptions } from '../plugins/lynx-ui/uiVariants.js';
 
 const firstUIPlugin = ORDERED_LYNX_UI_PLUGIN_NAMES[0]!;
 type FirstUIPluginOptions = LynxUIPluginOptionsMap[typeof firstUIPlugin];
@@ -134,7 +135,6 @@ describe('createLynxPreset - Lynx UI plugin behavior', () => {
 
   it('prints debug info when UI plugin is enabled and debug is true', () => {
     const spy = Object.assign(vi.fn(), { __isOptionsFunction: true as const });
-    Object.assign(spy, { __isOptionsFunction: true });
 
     const original = LYNX_UI_PLUGIN_MAP[firstUIPlugin];
     LYNX_UI_PLUGIN_MAP[firstUIPlugin] = spy;
@@ -154,18 +154,25 @@ describe('createLynxPreset - Lynx UI plugin behavior', () => {
   });
 
   it('enables uiVariants by default (no options passed)', () => {
-    const spy = Object.assign(vi.fn(), { __isOptionsFunction: true as const });
-    const original = LYNX_UI_PLUGIN_MAP.uiVariants;
-    LYNX_UI_PLUGIN_MAP.uiVariants = spy;
+    const handler = vi.fn();
+    const pluginObject = { handler } as const;
 
-    // Call with defaults
-    createLynxPreset();
+    const spy = vi
+      .spyOn(LYNX_UI_PLUGIN_MAP, 'uiVariants')
+      .mockImplementation((_opts?: UIVariantsOptions) => pluginObject);
 
-    expect(spy).toHaveBeenCalledTimes(1);
-    expect(spy).toHaveBeenCalledWith({});
+    try {
+      const cfg = createLynxPreset();
 
-    // restore
-    LYNX_UI_PLUGIN_MAP.uiVariants = original;
+      expect(spy).toHaveBeenCalledTimes(1);
+      expect(spy).toHaveBeenCalledWith({});
+
+      expect(cfg.plugins).toEqual(
+        expect.arrayContaining([expect.objectContaining({ handler })]),
+      );
+    } finally {
+      spy.mockRestore();
+    }
   });
 
   it('does NOT enable uiVariants when explicitly disabled', () => {

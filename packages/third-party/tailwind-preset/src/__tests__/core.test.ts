@@ -9,7 +9,6 @@ import {
   getReplaceablePlugins,
   isPluginReplaceable,
   resolveUIPluginEntries,
-  toEnabledLynxUIPluginSet,
   toEnabledSet,
 } from '../core.js';
 import type { LynxUIPluginsOption } from '../core.js';
@@ -70,35 +69,6 @@ describe('core plugin utilities', () => {
 });
 
 describe('lynx-ui plugin helpers', () => {
-  it('toEnabledLynxUIPluginSet handles true', () => {
-    const set = toEnabledLynxUIPluginSet(true);
-    expect([...set]).toEqual(
-      expect.arrayContaining([...ORDERED_LYNX_UI_PLUGIN_NAMES]),
-    );
-  });
-
-  it('toEnabledLynxUIPluginSet handles false', () => {
-    const set = toEnabledLynxUIPluginSet(false);
-    expect(set.size).toBe(0);
-  });
-
-  it('toEnabledLynxUIPluginSet handles array form', () => {
-    const subset = ORDERED_LYNX_UI_PLUGIN_NAMES.slice(0, 2);
-    const set = toEnabledLynxUIPluginSet(subset);
-    expect([...set]).toEqual(subset);
-  });
-
-  it.each([
-    [{ [firstUIPlugin]: true }, true],
-    [{ [firstUIPlugin]: false }, false],
-  ])(
-    'toEnabledLynxUIPluginSet handles object form %j',
-    (input, expectedHas) => {
-      const set = toEnabledLynxUIPluginSet(input);
-      expect(set.has(firstUIPlugin)).toBe(expectedHas);
-    },
-  );
-
   it('resolveUIPluginEntries handles true', () => {
     const entries = resolveUIPluginEntries(true);
     expect(entries).toEqual(
