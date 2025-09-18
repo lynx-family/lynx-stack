@@ -123,7 +123,7 @@ jobs:
           registry-url: "https://registry.npmjs.org"
       - name: Install
         run: |
-          npm install -g corepack@latest npm@latest
+          npm install -g corepack@latest
           corepack enable && corepack prepare
           corepack pnpm install --frozen-lockfile
       - name: Download Turbo Cache
@@ -151,7 +151,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     if: github.repository == 'lynx-family/lynx-stack'
-    environment: main branch
+    environment: npm
     permissions:
       contents: read
       pull-requests: read
@@ -170,7 +170,7 @@ jobs:
           registry-url: "https://registry.npmjs.org"
       - name: Install
         run: |
-          npm install -g corepack@latest npm@latest
+          npm install -g corepack@latest
           corepack enable && corepack prepare
           corepack pnpm install --frozen-lockfile
       - name: Download Turbo Cache
