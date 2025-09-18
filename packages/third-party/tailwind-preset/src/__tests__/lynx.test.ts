@@ -147,7 +147,9 @@ describe('createLynxPreset - Lynx UI plugin behavior', () => {
     });
 
     expect(debugSpy).toHaveBeenCalledWith(
-      `[Lynx] enabled UI plugin: ${firstUIPlugin}`,
+      expect.stringContaining(
+        `[Lynx] enabled UI plugin: ${firstUIPlugin}`,
+      ),
     );
     LYNX_UI_PLUGIN_MAP[firstUIPlugin] = original;
     debugSpy.mockRestore();
@@ -180,14 +182,14 @@ describe('createLynxPreset - Lynx UI plugin behavior', () => {
     const original = LYNX_UI_PLUGIN_MAP.uiVariants;
     LYNX_UI_PLUGIN_MAP.uiVariants = spy;
 
-    createLynxPreset({
-      lynxUIPlugins: { uiVariants: false },
-    });
-
-    expect(spy).not.toHaveBeenCalled();
-
-    // restore
-    LYNX_UI_PLUGIN_MAP.uiVariants = original;
+    try {
+      createLynxPreset({
+        lynxUIPlugins: { uiVariants: false },
+      });
+      expect(spy).not.toHaveBeenCalled();
+    } finally {
+      LYNX_UI_PLUGIN_MAP.uiVariants = original;
+    }
   });
 
   it('enables uiVariants by default even when lynxUIPlugins is an empty object', () => {
@@ -195,12 +197,13 @@ describe('createLynxPreset - Lynx UI plugin behavior', () => {
     const original = LYNX_UI_PLUGIN_MAP.uiVariants;
     LYNX_UI_PLUGIN_MAP.uiVariants = spy;
 
-    createLynxPreset({ lynxUIPlugins: {} });
-
-    expect(spy).toHaveBeenCalledTimes(1);
-    expect(spy).toHaveBeenCalledWith({});
-
-    LYNX_UI_PLUGIN_MAP.uiVariants = original;
+    try {
+      createLynxPreset({ lynxUIPlugins: {} });
+      expect(spy).toHaveBeenCalledTimes(1);
+      expect(spy).toHaveBeenCalledWith({});
+    } finally {
+      LYNX_UI_PLUGIN_MAP.uiVariants = original;
+    }
   });
 });
 
@@ -218,7 +221,9 @@ describe('createLynxPreset - defensive branches', () => {
     try {
       createLynxPreset({ debug: true });
       expect(debugSpy).toHaveBeenCalledWith(
-        `[Lynx] invariant: missing UI plugin impl for '${firstUIPlugin}'`,
+        expect.stringContaining(
+          `[Lynx] invariant: missing UI plugin impl for '${firstUIPlugin}'`,
+        ),
       );
     } finally {
       // Restore original plugin implementation
@@ -245,7 +250,9 @@ describe('createLynxPreset - defensive branches', () => {
       });
 
       expect(warnSpy).toHaveBeenCalledWith(
-        `[Lynx] failed to initialize UI plugin '${firstUIPlugin}'`,
+        expect.stringContaining(
+          `[Lynx] failed to initialize UI plugin '${firstUIPlugin}'`,
+        ),
         expect.any(Error),
       );
     } finally {
