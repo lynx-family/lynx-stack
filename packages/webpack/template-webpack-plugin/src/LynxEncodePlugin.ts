@@ -171,7 +171,6 @@ export class LynxEncodePluginImpl {
             encodeData.lepusCode.root,
             ...encodeData.lepusCode.chunks,
             ...Object.keys(inlinedManifest).map(name => ({ name })),
-            ...encodeData.css.chunks,
           ]
             .filter(asset => asset !== undefined)
             .forEach(asset => inlinedAssets.add(asset.name));

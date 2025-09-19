@@ -317,9 +317,7 @@ interface EncodeRawData {
    * background thread
    */
   manifest: Record<string, string>;
-  css: {
-    chunks: Asset[];
-  } & ReturnType<typeof cssChunksToMap>;
+  css: ReturnType<typeof cssChunksToMap>;
   // `customSections` option only takes effect on Lynx >= 2.16.
   customSections: Record<string, {
     type?: 'lazy';
@@ -424,16 +422,7 @@ export class LynxTemplatePlugin {
    * )));
    * ```
    */
-  static convertCSSChunksToMap(
-    cssChunks: string[],
-    plugins: CSS.Plugin[],
-    enableCSSSelector: boolean,
-  ): {
-    cssMap: Record<string, CSS.LynxStyleNode[]>;
-    cssSource: Record<string, string>;
-  } {
-    return cssChunksToMap(cssChunks, plugins, enableCSSSelector);
-  }
+  static convertCSSChunksToMap: typeof cssChunksToMap = cssChunksToMap;
 
   /**
    * The entry point of a webpack plugin.
@@ -743,20 +732,11 @@ class LynxTemplatePluginImpl {
       targetSdkVersion,
       defaultOverflowVisible,
       dsl,
-      cssPlugins,
     } = this.#options;
 
     const isDev = process.env['NODE_ENV'] === 'development'
       || compiler.options.mode === 'development';
 
-    const css = cssChunksToMap(
-      assetsInfoByGroups.css
-        .map(chunk => compilation.getAsset(chunk.name))
-        .filter((v): v is Asset => !!v)
-        .map(asset => asset.source.source().toString()),
-      cssPlugins,
-      enableCSSSelector,
-    );
     const encodeRawData: EncodeRawData = {
       compilerOptions: {
         enableFiberArch: true,
@@ -792,8 +772,9 @@ class LynxTemplatePluginImpl {
         },
       },
       css: {
-        ...css,
-        chunks: assetsInfoByGroups.css,
+        cssMap: {},
+        cssSource: {},
+        contentMap: new Map(),
       },
       lepusCode: {
         // TODO: support multiple lepus chunks
@@ -822,9 +803,7 @@ class LynxTemplatePluginImpl {
     const resolvedEncodeOptions: EncodeOptions = {
       ...encodeData,
       css: {
-        ...css,
-        chunks: undefined,
-        contentMap: undefined,
+        ...encodeData.css,
       },
       lepusCode: {
         // TODO: support multiple lepus chunks

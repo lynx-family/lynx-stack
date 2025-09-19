@@ -59,7 +59,6 @@ export class WebEncodePlugin {
               { name },
               encodeData.lepusCode.root,
               ...encodeData.lepusCode.chunks,
-              ...encodeData.css.chunks,
             ]
               .filter(asset => asset !== undefined)
               .forEach(asset => inlinedAssets.add(asset.name));
