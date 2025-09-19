@@ -36,7 +36,7 @@ describe('Web', () => {
     ).toBeFalsy()
   })
 
-  test('should not have runtime wrapper plugin for web', async () => {
+  test('should have runtime wrapper plugin for web', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
     const rsbuild = await createRspeedy({
@@ -59,7 +59,7 @@ describe('Web', () => {
       config?.plugins?.some(p =>
         p?.constructor.name === 'RuntimeWrapperWebpackPlugin'
       ),
-    ).toBeFalsy()
+    ).toBeTruthy()
   })
 
   test('should have template plugin for lynx but not for web', async () => {
