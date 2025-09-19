@@ -59,10 +59,10 @@ function runDelayedUiOps(): void {
  * It delays the execution of tasks until hydration is complete.
  */
 class RefProxy {
-  private readonly refAttr: [snapshotInstanceId: number, expIndex: number];
+  private readonly refAttr: [snapshotInstanceId: number];
   private task: RefTask | undefined;
 
-  constructor(refAttr: [snapshotInstanceId: number, expIndex: number]) {
+  constructor(refAttr: [snapshotInstanceId: number]) {
     this.refAttr = refAttr;
     this.task = undefined;
 
@@ -102,7 +102,7 @@ class RefProxy {
   exec(): void {
     runOrDelay(() => {
       const realRefId = hydrationMap.get(this.refAttr[0]) ?? this.refAttr[0];
-      const refSelector = `[react-ref-${realRefId}-${this.refAttr[1]}]`;
+      const refSelector = `[react-ref-${realRefId}]`;
       this.task!(lynx.createSelectorQuery().select(refSelector)).exec();
     });
   }

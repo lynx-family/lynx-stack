@@ -173,11 +173,14 @@ function flushDelayedLifecycleEvents(): void {
   flushingDelayedLifecycleEvents = false;
 }
 
-function publishEvent(handlerName: string, data: unknown) {
+function publishEvent(label: string, data: unknown) {
   lynxCoreInject.tt.callBeforePublishEvent?.(data);
-  const eventHandler = backgroundSnapshotInstanceManager.getValueBySign(
-    handlerName,
-  );
+  const [snapshotInstanceId, qualifiedName] = label.split(':');
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+  const eventHandler = backgroundSnapshotInstanceManager.values.get(Number(snapshotInstanceId))!.__attributes[
+    // @ts-expect-error fix it later
+    qualifiedName
+  ];
   if (eventHandler) {
     try {
       (eventHandler as (...args: unknown[]) => void)(data);

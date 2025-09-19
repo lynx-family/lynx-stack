@@ -27,8 +27,7 @@ export const __DynamicPartListChildren: DynamicPartType = DynamicPartType.ListCh
 export { __DynamicPartChildren_0 } from './snapshot.js';
 
 export { updateSpread } from './snapshot/spread.js';
-export { updateEvent } from './snapshot/event.js';
-export { updateRef, transformRef } from './snapshot/ref.js';
+export { transformRef } from './snapshot/ref.js';
 export { updateWorkletEvent } from './snapshot/workletEvent.js';
 export { updateWorkletRef } from './snapshot/workletRef.js';
 export { updateGesture } from './snapshot/gesture.js';

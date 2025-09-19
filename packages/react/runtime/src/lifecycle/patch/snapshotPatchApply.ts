@@ -68,22 +68,11 @@ export function snapshotPatchApply(snapshotPatch: SnapshotPatch): void {
       }
       case SnapshotOperation.SetAttribute: {
         const id = snapshotPatch[++i] as number;
-        const dynamicPartIndex = snapshotPatch[++i] as number;
-        const value = snapshotPatch[++i];
+        const key = snapshotPatch[++i] as string;
+        const value = snapshotPatch[++i] as string;
         const si = snapshotInstanceManager.values.get(id);
         if (si) {
-          si.setAttribute(dynamicPartIndex, value);
-        } else {
-          sendCtxNotFoundEventToBackground(id);
-        }
-        break;
-      }
-      case SnapshotOperation.SetAttributes: {
-        const id = snapshotPatch[++i] as number;
-        const values = snapshotPatch[++i];
-        const si = snapshotInstanceManager.values.get(id);
-        if (si) {
-          si.setAttribute('values', values);
+          si.setAttribute(key, value);
         } else {
           sendCtxNotFoundEventToBackground(id);
         }
@@ -93,7 +82,7 @@ export function snapshotPatchApply(snapshotPatch: SnapshotPatch): void {
         if (__DEV__) {
           const uniqID = snapshotPatch[++i] as string;
           const create = snapshotPatch[++i] as string;
-          const update = snapshotPatch[++i] as string[];
+          const setAttribute = snapshotPatch[++i] as string;
           const slot = snapshotPatch[++i] as [DynamicPartType, number][];
           const cssId = (snapshotPatch[++i] ?? 0) as number;
           const entryName = snapshotPatch[++i] as string | undefined;
@@ -104,8 +93,7 @@ export function snapshotPatchApply(snapshotPatch: SnapshotPatch): void {
             createSnapshot(
               uniqID,
               evaluate<(ctx: SnapshotInstance) => FiberElement[]>(create),
-              // eslint-disable-next-line unicorn/no-array-callback-reference
-              update.map<(ctx: SnapshotInstance, index: number, oldValue: any) => void>(evaluate),
+              evaluate(setAttribute),
               slot,
               cssId,
               entryName,

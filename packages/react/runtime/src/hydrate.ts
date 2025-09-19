@@ -222,13 +222,17 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
   }
 
   __pendingListUpdates.runWithoutUpdates(() => {
-    after.__values?.forEach((value, index) => {
-      const old = before.__values![index];
-      if (value !== old) {
-        after.__values![index] = old;
-        after.setAttribute(index, value);
-      }
-    });
+    if (after.__attributes) {
+      Object.keys(after.__attributes).forEach(key => {
+        const value = after.__attributes![key]!;
+        const old = before.__attributes?.[key];
+        if (value !== old) {
+          // @ts-expect-error solve it later
+          after.__attributes[key] = old;
+          after.setAttribute(key, value);
+        }
+      });
+    }
   });
 
   const { slot } = after.__snapshot_def;

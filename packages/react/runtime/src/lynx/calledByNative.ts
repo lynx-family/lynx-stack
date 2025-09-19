@@ -9,7 +9,6 @@ import { LifecycleConstant } from '../lifecycleConstant.js';
 import { ssrHydrateByOpcodes } from '../opcodes.js';
 import { __pendingListUpdates } from '../pendingListUpdates.js';
 import { __root, setRoot } from '../root.js';
-import { applyRefQueue } from '../snapshot/workletRef.js';
 import { SnapshotInstance, __page, setupPage } from '../snapshot.js';
 import { isEmptyObject } from '../utils.js';
 import { markTiming, setPipeline } from './performance.js';
@@ -29,7 +28,7 @@ function ssrEncode() {
   };
 
   try {
-    return JSON.stringify({ __opcodes, __root_values: __root.__values });
+    return JSON.stringify({ __opcodes, __root_attributes: __root.__attributes });
   } finally {
     SnapshotInstance.prototype.toJSON = oldToJSON;
   }
@@ -45,12 +44,14 @@ function ssrHydrate(info: string) {
   setupPage(nativePage);
   const refsMap = __GetTemplateParts(nativePage);
 
-  const { __opcodes, __root_values } = JSON.parse(info) as {
+  const { __opcodes, __root_attributes } = JSON.parse(info) as {
     __opcodes: unknown[];
-    __root_values: unknown[] | undefined;
+    __root_attributes: Record<string, string> | undefined;
   };
-  if (__root_values) {
-    __root.setAttribute('values', __root_values);
+  if (__root_attributes) {
+    for (const key of Object.keys(__root_attributes)) {
+      __root.setAttribute(key, __root_attributes[key]!);
+    }
   }
   ssrHydrateByOpcodes(__opcodes, __root as SnapshotInstance, refsMap);
 
@@ -94,7 +95,6 @@ function renderPage(data: Record<string, unknown> | undefined): void {
   // always call this before `__FlushElementTree`
   // (There is an implicit `__FlushElementTree` in `renderPage`)
   __pendingListUpdates.flush();
-  applyRefQueue();
 
   if (__FIRST_SCREEN_SYNC_TIMING__ === 'immediately') {
     jsReady();
@@ -137,7 +137,6 @@ function updatePage(data: Record<string, unknown> | undefined, options?: UpdateP
 
       // always call this before `__FlushElementTree`
       __pendingListUpdates.flush();
-      applyRefQueue();
     }
     flushOptions.triggerDataUpdated = true;
     markTiming('updateDiffVdomEnd');

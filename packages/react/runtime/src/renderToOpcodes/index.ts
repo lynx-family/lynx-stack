@@ -293,7 +293,8 @@ function _renderToString(
       // VDOM-specific props
       /* c8 ignore next 5 */
       case 'key':
-      case 'ref':
+      // ref is supported now
+      // case 'ref':
       case '__self':
       case '__source':
         continue;
@@ -302,8 +303,12 @@ function _renderToString(
     }
 
     // write this attribute to the buffer
-    if (v != null && v !== false && typeof v !== 'function') {
-      opcodes.push(__OpAttr, name, v);
+    if (v != null && v !== false) {
+      if (typeof v !== 'function') {
+        opcodes.push(__OpAttr, name, v);
+      } else {
+        opcodes.push(__OpAttr, name, '');
+      }
     }
   }
 
