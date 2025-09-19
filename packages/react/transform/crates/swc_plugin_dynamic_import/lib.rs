@@ -1,6 +1,5 @@
 use std::{collections::HashSet, fmt::Debug};
 
-use napi_derive::napi;
 use serde_json::Value;
 use swc_core::{
   common::{
@@ -18,7 +17,8 @@ use swc_core::{
 
 use swc_plugins_shared::utils::jsonify;
 
-#[napi(object)]
+pub mod napi;
+
 #[derive(Clone, Debug)]
 pub struct DynamicImportVisitorConfig {
   /// @internal
