@@ -221,7 +221,7 @@ const config = {
       {
         directory: path.join(__dirname, 'node_modules'),
         publicPath: '/node_modules',
-        watch: !isCI,
+        watch: false,
       },
       {
         directory: path.join(__dirname, 'dist'),

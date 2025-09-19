@@ -30,8 +30,7 @@ describe('Plugins - chunkLoading', () => {
 
       const config = await rspeedy.unwrapConfig()
 
-      expect(config.output?.chunkLoading).toBe('import-scripts')
-      expect(config.output?.chunkFormat).not.toBe('commonjs')
+      expect(config.output?.chunkFormat).toBe('commonjs')
       expect(config.output?.iife).not.toBe(false)
     })
 
@@ -45,8 +44,7 @@ describe('Plugins - chunkLoading', () => {
 
       const [webConfig, lynxConfig] = await rspeedy.initConfigs()
 
-      expect(webConfig?.output?.chunkLoading).toBe('import-scripts')
-      expect(webConfig?.output?.chunkFormat).not.toBe('commonjs')
+      expect(webConfig?.output?.chunkFormat).toBe('commonjs')
       expect(webConfig?.output?.iife).not.toBe(false)
 
       expect(lynxConfig?.output?.chunkLoading).toBe('lynx')

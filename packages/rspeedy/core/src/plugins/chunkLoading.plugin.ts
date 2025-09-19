@@ -7,36 +7,23 @@ import type { RsbuildPlugin } from '@rsbuild/core'
 import { LynxCacheEventsPlugin } from '@lynx-js/cache-events-webpack-plugin'
 import { ChunkLoadingWebpackPlugin } from '@lynx-js/chunk-loading-webpack-plugin'
 
-import { isLynx } from '../utils/is-lynx.js'
-import { isWeb } from '../utils/is-web.js'
-
 export function pluginChunkLoading(): RsbuildPlugin {
   return {
     name: 'lynx:rsbuild:chunk-loading',
     setup(api) {
-      api.modifyBundlerChain((chain, { environment }) => {
-        if (isWeb(environment)) {
-          chain
-            .output
-            .chunkLoading('import-scripts')
-            .end()
-          return
-        }
-
-        if (isLynx(environment)) {
-          // dprint-ignore
-          chain
-          .plugin('lynx:chunk-loading')
-            .use(ChunkLoadingWebpackPlugin)
-          .end()
-          .plugin('lynx:cache-events')
-            .use(LynxCacheEventsPlugin)
-          .end()
-          .output
-            .chunkLoading('lynx')
-            .chunkFormat('commonjs')
-          .end()
-        }
+      api.modifyBundlerChain((chain) => {
+        // dprint-ignore
+        chain
+        .plugin('lynx:chunk-loading')
+          .use(ChunkLoadingWebpackPlugin)
+        .end()
+        .plugin('lynx:cache-events')
+          .use(LynxCacheEventsPlugin)
+        .end()
+        .output
+          .chunkLoading('lynx')
+          .chunkFormat('commonjs')
+        .end()
       })
     },
   }
