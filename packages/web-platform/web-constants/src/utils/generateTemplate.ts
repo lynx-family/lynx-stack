@@ -48,7 +48,7 @@ const templateUpgraders: templateUpgrader[] = [
       'requestAnimationFrame',
       'cancelAnimationFrame',
     ].join(',');
-    template.appType = template.appType ?? template.lepusCode.root.startsWith(
+    template.appType = template.lepusCode.root.startsWith(
         '(function (globDynamicComponentEntry',
       )
       ? 'lazy'
@@ -87,7 +87,7 @@ const generateModuleContent = (
     '\n(function() { "use strict"; const ',
     globalDisallowedVars.join('=void 0,'),
     '=void 0;\n',
-    appType !== 'card' ? 'module.exports=\n' : '',
+    appType === 'lazy' ? 'module.exports=\n' : '',
     content,
     '\n})()',
   ].join('');
