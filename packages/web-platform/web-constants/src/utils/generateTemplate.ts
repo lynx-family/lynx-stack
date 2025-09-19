@@ -48,11 +48,11 @@ const templateUpgraders: templateUpgrader[] = [
       'requestAnimationFrame',
       'cancelAnimationFrame',
     ].join(',');
-    template.appType = template.appType ?? template.lepusCode.root.startsWith(
+    template.appType = template.appType ?? (template.lepusCode.root.startsWith(
         '(function (globDynamicComponentEntry',
       )
       ? 'lazy'
-      : 'card';
+      : 'card');
     /**
      * The template version 1 has no module wrapper for bts code
      */
