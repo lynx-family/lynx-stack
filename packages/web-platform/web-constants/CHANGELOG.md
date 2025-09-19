@@ -1,5 +1,16 @@
 # @lynx-js/web-constants
 
+## 0.17.0
+
+### Patch Changes
+
+- fix: avoid duplicate style transformation ([#1748](https://github.com/lynx-family/lynx-stack/pull/1748))
+
+  After this commit, we use DAG methods to handle the styleInfos
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.17.0
+
 ## 0.16.1
 
 ### Patch Changes

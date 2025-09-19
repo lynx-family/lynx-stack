@@ -1,5 +1,13 @@
 # @lynx-js/template-webpack-plugin
 
+## 0.9.0
+
+### Minor Changes
+
+- **BREAKING CHANGE:** Remove the `enableParallelElement` and `pipelineSchedulerConfig` options. ([#1705](https://github.com/lynx-family/lynx-stack/pull/1705))
+
+  Since the thread element resolution is still in experimental stage and may have stability risks, it will be disabled by default after this change.
+
 ## 0.8.6
 
 ### Patch Changes

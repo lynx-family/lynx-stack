@@ -1,5 +1,25 @@
 # @lynx-js/react-rsbuild-plugin
 
+## 0.11.0
+
+### Minor Changes
+
+- **BREAKING CHANGE:** Remove the `enableParallelElement` and `pipelineSchedulerConfig` options. ([#1705](https://github.com/lynx-family/lynx-stack/pull/1705))
+
+  Since the thread element resolution is still in experimental stage and may have stability risks, it will be disabled by default after this change.
+
+### Patch Changes
+
+- Be compat with `@lynx-js/react` v0.114.0 ([#1781](https://github.com/lynx-family/lynx-stack/pull/1781))
+
+- Updated dependencies [[`24100ab`](https://github.com/lynx-family/lynx-stack/commit/24100ab63302f8f2bc10578c70ac5cceeffe312a), [`24100ab`](https://github.com/lynx-family/lynx-stack/commit/24100ab63302f8f2bc10578c70ac5cceeffe312a)]:
+  - @lynx-js/template-webpack-plugin@0.9.0
+  - @lynx-js/react-webpack-plugin@0.7.1
+  - @lynx-js/css-extract-webpack-plugin@0.6.3
+  - @lynx-js/react-alias-rsbuild-plugin@0.11.0
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/react-refresh-webpack-plugin@0.3.4
+
 ## 0.10.14
 
 ### Patch Changes
