@@ -1651,6 +1651,7 @@ dependencies = [
  "sha-1",
  "swc_core",
  "swc_plugin_css_scope",
+ "swc_plugin_dynamic_import",
  "swc_plugins_shared",
  "version-compare",
 ]
@@ -3075,6 +3076,17 @@ dependencies = [
  "napi",
  "napi-derive",
  "regex",
+ "swc_core",
+ "swc_plugins_shared",
+]
+
+[[package]]
+name = "swc_plugin_dynamic_import"
+version = "0.1.0"
+dependencies = [
+ "napi",
+ "napi-derive",
+ "serde_json",
  "swc_core",
  "swc_plugins_shared",
 ]
