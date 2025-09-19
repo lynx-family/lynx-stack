@@ -1,5 +1,11 @@
 # @lynx-js/css-extract-webpack-plugin
 
+## 0.6.3
+
+### Patch Changes
+
+- Supports `@lynx-js/template-webpack-plugin` 0.9.0. ([#1705](https://github.com/lynx-family/lynx-stack/pull/1705))
+
 ## 0.6.2
 
 ### Patch Changes
