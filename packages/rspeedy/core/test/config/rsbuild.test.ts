@@ -618,6 +618,15 @@ describe('Config - toRsBuildConfig', () => {
     })
   })
 
+  describe('Server', () => {
+    test('transform empty server.compress', () => {
+      const rsbuildConfig = toRsbuildConfig({
+        server: {},
+      })
+      expect(rsbuildConfig.server?.compress).toBe(true)
+    })
+  })
+
   describe('Source', () => {
     test('transform empty source.alias', () => {
       const rsbuildConfig = toRsbuildConfig({

@@ -4,6 +4,7 @@
 
 ```ts
 
+import type { CompressOptions } from '@rsbuild/core';
 import type { CreateRsbuildOptions } from '@rsbuild/core';
 import type { DataUriLimit } from '@rsbuild/core';
 import type { DistPathConfig } from '@rsbuild/core';
@@ -304,6 +305,7 @@ export type RspeedyInstance = RsbuildInstance & {
 // @public
 export interface Server {
     base?: string | undefined;
+    compress?: boolean | CompressOptions | undefined;
     headers?: Record<string, string | string[]> | undefined;
     host?: string | undefined;
     port?: number | undefined;

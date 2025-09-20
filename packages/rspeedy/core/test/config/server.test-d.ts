@@ -14,6 +14,23 @@ describe('Config - Server', () => {
     assertType<Server>({ base: '/foo' })
   })
 
+  test('server.compress', () => {
+    assertType<Server>({})
+    assertType<Server>({ compress: undefined })
+    assertType<Server>({ compress: false })
+    assertType<Server>({ compress: true })
+    assertType<Server>({ compress: { level: 1 } })
+    assertType<Server>({
+      compress: {
+        filter: (req, res) => {
+          assertType<IncomingMessage>(req)
+          assertType<ServerResponse>(res)
+          return true
+        },
+      },
+    })
+  })
+
   test('server.headers', () => {
     assertType<Server>({})
     assertType<Server>({
