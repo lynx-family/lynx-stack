@@ -2,4 +2,4 @@
 "@lynx-js/rspeedy": patch
 ---
 
-Support server.compress
+Support `server.compress`
