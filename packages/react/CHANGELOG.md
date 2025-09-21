@@ -1,5 +1,25 @@
 # @lynx-js/react
 
+## 0.114.0
+
+### Minor Changes
+
+- Partially fix the "cannot read property 'update' of undefined" error. ([#1771](https://github.com/lynx-family/lynx-stack/pull/1771))
+
+  This error happens when rendering a JSX expression in a [background-only](https://lynxjs.org/react/thinking-in-reactlynx.html) context.
+
+  See [lynx-family/lynx-stack#894](https://github.com/lynx-family/lynx-stack/issues/894) for more details.
+
+### Patch Changes
+
+- Reduce extra snapshot when children are pure text ([#1562](https://github.com/lynx-family/lynx-stack/pull/1562))
+
+- feat: Support `SelectorQuery` `animation` APIs ([#1768](https://github.com/lynx-family/lynx-stack/pull/1768))
+
+- Fix spread props inside list-item caused redundant snapshot patch ([#1760](https://github.com/lynx-family/lynx-stack/pull/1760))
+
+- fix: `ref is not initialized` error on template reload ([#1757](https://github.com/lynx-family/lynx-stack/pull/1757))
+
 ## 0.113.0
 
 ### Minor Changes

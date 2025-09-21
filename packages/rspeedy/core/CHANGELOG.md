@@ -1,5 +1,15 @@
 # @lynx-js/rspeedy
 
+## 0.11.3
+
+### Patch Changes
+
+- Use `output.chunkLoading: 'lynx'` for `environments.web`. ([#1737](https://github.com/lynx-family/lynx-stack/pull/1737))
+
+- Support `resolve.extensions` ([#1759](https://github.com/lynx-family/lynx-stack/pull/1759))
+
+- Set the default value of `output.cssModules.localIdentName` to `[local]-[hash:base64:6]`. ([#1783](https://github.com/lynx-family/lynx-stack/pull/1783))
+
 ## 0.11.2
 
 ### Patch Changes
