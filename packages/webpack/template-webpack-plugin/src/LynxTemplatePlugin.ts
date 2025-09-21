@@ -236,11 +236,6 @@ export interface LynxTemplatePluginOptions {
   enableAccessibilityElement: boolean;
 
   /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableICU}
-   */
-  enableICU: boolean;
-
-  /**
    * Use Android View level APIs and system implementations.
    */
   enableA11y: boolean;
@@ -388,7 +383,6 @@ export class LynxTemplatePlugin {
       // lynx-specific
       customCSSInheritanceList: undefined,
       debugInfoOutside: true,
-      enableICU: false,
       enableA11y: true,
       enableAccessibilityElement: false,
       enableCSSInheritance: false,
@@ -731,7 +725,6 @@ class LynxTemplatePluginImpl {
       customCSSInheritanceList,
       debugInfoOutside,
       defaultDisplayLinear,
-      enableICU,
       enableA11y,
       enableAccessibilityElement,
       enableCSSInheritance,
@@ -780,7 +773,6 @@ class LynxTemplatePluginImpl {
         config: {
           lepusStrict: true,
           useNewSwiper: true,
-          enableICU,
           enableNewIntersectionObserver: true,
           enableNativeList: true,
           enableA11y,

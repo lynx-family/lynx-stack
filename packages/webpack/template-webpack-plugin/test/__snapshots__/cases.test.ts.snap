@@ -23,7 +23,6 @@ exports[`template > template/defaults/config > template/defaults/config > templa
   "enableA11y": true,
   "enableAccessibilityElement": false,
   "enableCSSInheritance": false,
-  "enableICU": false,
   "enableNativeList": true,
   "enableNewGesture": false,
   "enableNewIntersectionObserver": true,

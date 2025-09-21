@@ -119,7 +119,6 @@ export interface LynxTemplatePluginOptions {
     enableCSSInheritance: boolean;
     enableCSSInvalidation: boolean;
     enableCSSSelector: boolean;
-    enableICU: boolean;
     enableNewGesture: boolean;
     enableRemoveCSSScope: boolean;
     excludeChunks?: string[];

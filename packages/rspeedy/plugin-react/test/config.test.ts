@@ -1961,7 +1961,6 @@ describe('Config', () => {
         "enableCSSInheritance": false,
         "enableCSSInvalidation": true,
         "enableCSSSelector": true,
-        "enableICU": false,
         "enableNewGesture": false,
         "enableRemoveCSSScope": true,
         "experimental_isLazyBundle": false,
