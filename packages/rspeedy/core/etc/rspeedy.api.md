@@ -307,7 +307,7 @@ export type RspeedyInstance = RsbuildInstance & {
 export interface Server {
     base?: string | undefined;
     compress?: boolean | CompressOptions | undefined;
-    cors?: ServerConfig['cors'];
+    cors?: ServerConfig['cors'] | undefined;
     headers?: Record<string, string | string[]> | undefined;
     host?: string | undefined;
     port?: number | undefined;
