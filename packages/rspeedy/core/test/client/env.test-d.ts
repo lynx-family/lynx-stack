@@ -10,35 +10,49 @@ describe('Client - env type check', () => {
   describe('import.meta.webpackHot', () => {
     test('hot.accept', () => {
       expectTypeOf(import.meta.webpackHot)
+        .exclude(undefined)
         .toHaveProperty('accept')
         .toBeCallableWith((error, { moduleId }) => {
           expectTypeOf(error).toEqualTypeOf<Error>()
           expectTypeOf(moduleId).toEqualTypeOf<string | number>()
         })
 
-      expectTypeOf(import.meta.webpackHot.accept).toBeCallableWith()
-      expectTypeOf(import.meta.webpackHot.accept('deps')).toBeVoid()
-      expectTypeOf(import.meta.webpackHot.accept(['deps'])).toBeVoid()
+      expectTypeOf(import.meta.webpackHot)
+        .exclude(undefined)
+        .toHaveProperty('accept')
+        .toBeCallableWith()
+      expectTypeOf(import.meta.webpackHot?.accept('deps')).toBeVoid()
+      expectTypeOf(import.meta.webpackHot?.accept(['deps'])).toBeVoid()
       expectTypeOf(
-        import.meta.webpackHot.accept(['deps'], (outdatedDependencies) => {
+        import.meta.webpackHot?.accept(['deps'], (outdatedDependencies) => {
           expectTypeOf(outdatedDependencies).toEqualTypeOf<string[]>()
         }),
       ).toBeVoid()
     })
 
     test('hot.status', () => {
-      expectTypeOf(import.meta.webpackHot).toHaveProperty('status')
+      expectTypeOf(import.meta.webpackHot)
+        .exclude(undefined)
+        .toHaveProperty('status')
         .toBeCallableWith()
-      expectTypeOf(import.meta.webpackHot.status()).toEqualTypeOf<
-        Rspack.HotUpdateStatus
-      >()
+      expectTypeOf(import.meta.webpackHot)
+        .exclude(undefined)
+        .toHaveProperty('status')
+        .returns
+        .toEqualTypeOf<
+          Rspack.HotUpdateStatus
+        >()
     })
 
     test('hot.check', () => {
-      expectTypeOf(import.meta.webpackHot).toHaveProperty('check')
+      expectTypeOf(import.meta.webpackHot)
+        .exclude(undefined)
+        .toHaveProperty('check')
         .toBeCallableWith(true)
 
-      expectTypeOf(import.meta.webpackHot).toHaveProperty('check')
+      expectTypeOf(import.meta.webpackHot)
+        .exclude(undefined)
+        .toHaveProperty('check')
         .toBeCallableWith({
           ignoreErrored: true,
           onAccepted(event) {
@@ -58,9 +72,13 @@ describe('Client - env type check', () => {
     })
 
     test('hot.apply', () => {
-      expectTypeOf(import.meta.webpackHot).toHaveProperty('apply')
+      expectTypeOf(import.meta.webpackHot)
+        .exclude(undefined)
+        .toHaveProperty('apply')
         .toBeCallableWith()
-      expectTypeOf(import.meta.webpackHot).toHaveProperty('apply')
+      expectTypeOf(import.meta.webpackHot)
+        .exclude(undefined)
+        .toHaveProperty('apply')
         .toBeCallableWith({
           ignoreErrored: true,
           onAccepted(event) {
@@ -80,12 +98,16 @@ describe('Client - env type check', () => {
     })
 
     test('hot.dispose', () => {
-      expectTypeOf(import.meta.webpackHot).toHaveProperty('dispose')
+      expectTypeOf(import.meta.webpackHot)
+        .exclude(undefined)
+        .toHaveProperty('dispose')
         .toBeCallableWith(() => void 0)
     })
 
     test('hot.invalidate', () => {
-      expectTypeOf(import.meta.webpackHot).toHaveProperty('invalidate')
+      expectTypeOf(import.meta.webpackHot)
+        .exclude(undefined)
+        .toHaveProperty('invalidate')
         .toBeCallableWith()
     })
   })
