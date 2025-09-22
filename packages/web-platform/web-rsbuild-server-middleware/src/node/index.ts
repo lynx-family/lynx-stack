@@ -1,15 +1,15 @@
 import type { RequestHandler } from '@rsbuild/core';
 import path from 'node:path';
 import fs from 'node:fs';
-const __dirname = path.dirname(new URL(import.meta.url).pathname);
+const __dirname = path.posix.dirname(new URL(import.meta.url).pathname);
 const packageRoot = (() => {
   let currentDir = __dirname;
-  while (fs.existsSync(path.join(currentDir, 'package.json')) === false) {
-    currentDir = path.dirname(currentDir);
+  while (fs.existsSync(path.posix.join(currentDir, 'package.json')) === false) {
+    currentDir = path.posix.dirname(currentDir);
   }
   return currentDir;
 })();
-const WEB_CORE_DIST = path.join(packageRoot, 'www');
+const WEB_CORE_DIST = path.posix.join(packageRoot, 'www');
 
 export function createWebVirtualFilesMiddleware(
   subPath: string,
@@ -23,13 +23,13 @@ export function createWebVirtualFilesMiddleware(
       if (url.startsWith(subPath)) {
         // get the relative path by removing origin
         // http://example.com:port/path/to/web/file.js -> /web/file.js
-        let relativePath = path.relative(subPath, req.url);
+        let relativePath = path.posix.relative(subPath, req.url);
         if (relativePath === '') {
           relativePath = 'index.html';
         }
         try {
-          const filePath = path.join(WEB_CORE_DIST, relativePath);
-          const fileName = path.basename(filePath);
+          const filePath = path.posix.join(WEB_CORE_DIST, relativePath);
+          const fileName = path.posix.basename(filePath);
           const fileContent = fs.readFileSync(filePath, 'utf-8');
           const mimeType = fileName.endsWith('.js')
             ? 'application/javascript'
