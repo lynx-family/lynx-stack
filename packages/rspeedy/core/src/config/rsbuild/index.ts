@@ -90,6 +90,8 @@ export function toRsbuildConfig(
 
       compress: config.server?.compress,
 
+      cors: config.server?.cors,
+
       headers: config.server?.headers,
 
       host: config.server?.host,

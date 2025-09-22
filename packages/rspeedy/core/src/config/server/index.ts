@@ -2,7 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { CompressOptions, ProxyConfig } from '@rsbuild/core'
+import type { CompressOptions, ProxyConfig, ServerConfig } from '@rsbuild/core'
+
 
 /**
  * {@inheritdoc Config.server}
@@ -85,6 +86,31 @@ export interface Server {
    * ```
    */
   compress?: boolean | CompressOptions | undefined
+
+  /**
+   * Configure CORS for the dev server or preview server.
+   *
+   * - Set to an object to enable CORS with the specified options.
+   *
+   * - Set to `true` to enable CORS with the default options (allows all origins, not recommended).
+   *
+   * - Set to `false` to disable CORS.
+   *
+   * See {@link https://rsbuild.rs/config/server/cors | Rsbuild - server.cors } for details.
+   *
+   * @example
+   *
+   * ```js
+   * export default {
+   *   server: {
+   *     cors: {
+   *       origin: 'https://example.com',
+   *     },
+   *   },
+   * }
+   * ```
+   */
+  cors?: ServerConfig['cors'] | undefined
 
   /**
    * Adds headers to all responses.

@@ -21,6 +21,7 @@ import { version as rsbuildVersion } from '@rsbuild/core';
 import type { RsdoctorRspackPlugin } from '@rsdoctor/rspack-plugin';
 import { Rspack } from '@rsbuild/core';
 import { rspack } from '@rsbuild/core';
+import type { ServerConfig } from '@rsbuild/core';
 import type { ToolsConfig } from '@rsbuild/core';
 import type { WatchFiles } from '@rsbuild/core';
 
@@ -306,6 +307,7 @@ export type RspeedyInstance = RsbuildInstance & {
 export interface Server {
     base?: string | undefined;
     compress?: boolean | CompressOptions | undefined;
+    cors?: ServerConfig['cors'];
     headers?: Record<string, string | string[]> | undefined;
     host?: string | undefined;
     port?: number | undefined;

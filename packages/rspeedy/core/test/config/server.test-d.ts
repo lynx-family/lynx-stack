@@ -31,6 +31,23 @@ describe('Config - Server', () => {
     })
   })
 
+  test('server.cors', () => {
+    assertType<Server>({})
+    assertType<Server>({ cors: undefined })
+    assertType<Server>({ cors: false })
+    assertType<Server>({ cors: true })
+    assertType<Server>({ cors: { origin: 'https://example.com' } })
+    assertType<Server>({
+      cors: {
+        origin: (origin, callback) => {
+          assertType<string | undefined>(origin)
+          callback(null, '*')
+        },
+        credentials: true,
+      },
+    })
+  })
+
   test('server.headers', () => {
     assertType<Server>({})
     assertType<Server>({
