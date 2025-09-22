@@ -1761,9 +1761,29 @@ function ba(e) {
 const ba2 = (e, f) => {
     'background';
     console.log("background action", e, f);
-}
+}  
+const ba3 = useCallback(function(e){
+    'background';
+    console.log("useCallback fn", e);
+}, []);
+const ba4 = useCallback((e) => {
+    'background';
+    console.log("useCallback arrow", e);
+}, []);
+const ba5 = useMemo(function(){
+    'background';
+    return function(e){
+      console.log("useMemo arrow", e);
+    };
+}, []);
+const ba6 = useMemo(() => {
+    'background';
+    return (e) => {
+      console.log("useMemo fn", e);
+    };
+}, []);
 export function BTC() {
-    return <MTC onClick={ba} onMouseEnter={ba2}/>;
+    return <MTC onClick={ba} onMouseEnter={ba2} onFocus={ba3} onBlur={ba4} onMouseLeave={ba5} onKeyDown={ba6}/>;
 }
 `,
         {
@@ -1806,10 +1826,42 @@ export function BTC() {
                   console.log("background action", e, f);
               })
           };
+          const ba3 = {
+              __type: "$$mtc_ba",
+              __runtimeId: ReactLynx.registerBgAction(ReactLynx.useCallback(function(e) {
+                  console.log("useCallback fn", e);
+              }))
+          };
+          const ba4 = {
+              __type: "$$mtc_ba",
+              __runtimeId: ReactLynx.registerBgAction(ReactLynx.useCallback((e)=>{
+                  console.log("useCallback arrow", e);
+              }))
+          };
+          const ba5 = {
+              __type: "$$mtc_ba",
+              __runtimeId: ReactLynx.registerBgAction(ReactLynx.useMemo(function() {
+                  return function(e) {
+                      console.log("useMemo arrow", e);
+                  };
+              }))
+          };
+          const ba6 = {
+              __type: "$$mtc_ba",
+              __runtimeId: ReactLynx.registerBgAction(ReactLynx.useMemo(()=>{
+                  return (e)=>{
+                      console.log("useMemo fn", e);
+                  };
+              }))
+          };
           export function BTC() {
               return /*#__PURE__*/ _jsx(MTC, {
                   onClick: ba,
-                  onMouseEnter: ba2
+                  onMouseEnter: ba2,
+                  onFocus: ba3,
+                  onBlur: ba4,
+                  onMouseLeave: ba5,
+                  onKeyDown: ba6
               });
           }
           "
@@ -1830,10 +1882,42 @@ export function BTC() {
                   console.log("background action", e, f);
               })
           };
+          const ba3 = {
+              __type: "$$mtc_ba",
+              __runtimeId: ReactLynx.registerBgAction(ReactLynx.useCallback(function(e) {
+                  console.log("useCallback fn", e);
+              }))
+          };
+          const ba4 = {
+              __type: "$$mtc_ba",
+              __runtimeId: ReactLynx.registerBgAction(ReactLynx.useCallback((e)=>{
+                  console.log("useCallback arrow", e);
+              }))
+          };
+          const ba5 = {
+              __type: "$$mtc_ba",
+              __runtimeId: ReactLynx.registerBgAction(ReactLynx.useMemo(function() {
+                  return function(e) {
+                      console.log("useMemo arrow", e);
+                  };
+              }))
+          };
+          const ba6 = {
+              __type: "$$mtc_ba",
+              __runtimeId: ReactLynx.registerBgAction(ReactLynx.useMemo(()=>{
+                  return (e)=>{
+                      console.log("useMemo fn", e);
+                  };
+              }))
+          };
           export function BTC() {
               return /*#__PURE__*/ _jsx(MTC, {
                   onClick: ba,
-                  onMouseEnter: ba2
+                  onMouseEnter: ba2,
+                  onFocus: ba3,
+                  onBlur: ba4,
+                  onMouseLeave: ba5,
+                  onKeyDown: ba6
               });
           }
           "
@@ -1854,10 +1938,42 @@ export function BTC() {
                   console.log("background action", e, f);
               })
           };
+          const ba3 = {
+              __type: "$$mtc_ba",
+              __runtimeId: ReactLynx.registerBgAction(ReactLynx.useCallback(function(e) {
+                  console.log("useCallback fn", e);
+              }))
+          };
+          const ba4 = {
+              __type: "$$mtc_ba",
+              __runtimeId: ReactLynx.registerBgAction(ReactLynx.useCallback((e)=>{
+                  console.log("useCallback arrow", e);
+              }))
+          };
+          const ba5 = {
+              __type: "$$mtc_ba",
+              __runtimeId: ReactLynx.registerBgAction(ReactLynx.useMemo(function() {
+                  return function(e) {
+                      console.log("useMemo arrow", e);
+                  };
+              }))
+          };
+          const ba6 = {
+              __type: "$$mtc_ba",
+              __runtimeId: ReactLynx.registerBgAction(ReactLynx.useMemo(()=>{
+                  return (e)=>{
+                      console.log("useMemo fn", e);
+                  };
+              }))
+          };
           export function BTC() {
               return /*#__PURE__*/ _jsx(MTC, {
                   onClick: ba,
-                  onMouseEnter: ba2
+                  onMouseEnter: ba2,
+                  onFocus: ba3,
+                  onBlur: ba4,
+                  onMouseLeave: ba5,
+                  onKeyDown: ba6
               });
           }
           "

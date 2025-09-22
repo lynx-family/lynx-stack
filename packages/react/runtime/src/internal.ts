@@ -8,7 +8,7 @@ import type { FC } from 'react';
 import './lynx.js';
 
 import { factory as factory2 } from './compat/componentIs.js';
-import { useMemo } from './hooks/react.js';
+import { useCallback, useMemo } from './hooks/react.js';
 import { loadLazyBundle } from './lynx/lazy-bundle.js';
 import { __root } from './root.js';
 import { DynamicPartType } from './snapshot/dynamicPartType.js';
@@ -67,5 +67,5 @@ export { renderFakeMTCSlot, renderMTCSlot } from './mtc/renderMTCSlot.js';
 export { pickJSXFromProps } from './mtc/pickJSXFromProps.js';
 export { genMTCInstanceId } from './mtc/genMTCIntanceId.js';
 export { registerBgAction } from './mtc/registerBgAction.js';
-export { useMemo };
+export { useMemo, useCallback };
 export { createElement };

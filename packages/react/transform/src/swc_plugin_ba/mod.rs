@@ -77,7 +77,7 @@ impl BaVisitor {
     }
   }
 
-  fn create_ba_object_from_fn(&mut self, function: &Function) -> Expr {
+  fn create_ba_object_from_fn(&mut self, function: &Function, callee: Option<Expr>) -> Expr {
     let mut func = function.clone();
     self.remove_ba_directive(&mut func);
 
@@ -100,10 +100,10 @@ impl BaVisitor {
       }),
     });
 
-    self.create_ba_object_expr(fn_expr)
+    self.create_ba_object_expr(fn_expr, callee)
   }
 
-  fn create_ba_object_from_arrow(&mut self, arrow: &ArrowExpr) -> Expr {
+  fn create_ba_object_from_arrow(&mut self, arrow: &ArrowExpr, callee: Option<Expr>) -> Expr {
     let mut arrow_clone = arrow.clone();
 
     if let BlockStmtOrExpr::BlockStmt(ref mut block) = &mut *arrow_clone.body {
@@ -121,17 +121,47 @@ impl BaVisitor {
       ctxt: SyntaxContext::default(),
     });
 
-    self.create_ba_object_expr(arrow_expr)
+    self.create_ba_object_expr(arrow_expr, callee)
   }
 
-  fn create_ba_object_expr(&self, func: Expr) -> Expr {
-    let register_ba_call = quote!(
-        r#"$runtime_id.registerBgAction(
-           $func,
-        )"# as Expr,
-        runtime_id: Expr = self.runtime_id.clone(),
-        func: Expr = func,
-    );
+  fn create_ba_object_expr(&self, func: Expr, callee: Option<Expr>) -> Expr {
+    let register_ba_call = if let Some(callee_expr) = callee {
+      let member_expr = MemberExpr {
+        obj: Box::new(self.runtime_id.clone()),
+        prop: MemberProp::Ident(match callee_expr {
+          Expr::Ident(ident) => IdentName {
+            span: ident.span,
+            sym: ident.sym.clone(),
+          },
+          _ => unreachable!(),
+        }),
+        span: DUMMY_SP,
+      };
+
+      let member_call = CallExpr {
+        callee: Callee::Expr(Box::new(member_expr.into())),
+        args: vec![ExprOrSpread::from(func)],
+        span: DUMMY_SP,
+        type_args: None,
+        ctxt: SyntaxContext::empty(),
+      };
+
+      quote!(
+          r#"$runtime_id.registerBgAction(
+              $member_call,
+            )"# as Expr,
+          runtime_id: Expr = self.runtime_id.clone(),
+          member_call: Expr = member_call.into(),
+      )
+    } else {
+      quote!(
+          r#"$runtime_id.registerBgAction(
+               $func,
+            )"# as Expr,
+          runtime_id: Expr = self.runtime_id.clone(),
+          func: Expr = func,
+      )
+    };
 
     Expr::Object(ObjectLit {
       span: DUMMY_SP,
@@ -151,6 +181,18 @@ impl BaVisitor {
       ],
     })
   }
+
+  fn is_fn_returning_hook(&self, call_expr: &CallExpr) -> bool {
+    if let Callee::Expr(expr) = &call_expr.callee {
+      if let Expr::Ident(ident) = expr.as_ref() {
+        matches!(ident.sym.as_ref(), "useCallback" | "useMemo")
+      } else {
+        false
+      }
+    } else {
+      false
+    }
+  }
 }
 
 impl VisitMut for BaVisitor {
@@ -158,7 +200,7 @@ impl VisitMut for BaVisitor {
     // function ba(e) { 'background'; }
     if let Stmt::Decl(Decl::Fn(fn_decl)) = stmt {
       if self.check_ba_directive_fn_decl(fn_decl) {
-        let ba_object = self.create_ba_object_from_fn(&fn_decl.function);
+        let ba_object = self.create_ba_object_from_fn(&fn_decl.function, None);
 
         *stmt = Stmt::Decl(Decl::Var(Box::new(VarDecl {
           span: DUMMY_SP,
@@ -186,7 +228,7 @@ impl VisitMut for BaVisitor {
           // // const ba = (e) => { 'background'; }
           if let Expr::Arrow(arrow_expr) = init.as_mut() {
             if self.check_ba_directive_arrow(arrow_expr) {
-              let ba_object = self.create_ba_object_from_arrow(arrow_expr);
+              let ba_object = self.create_ba_object_from_arrow(arrow_expr, None);
 
               **init = ba_object;
               return;
@@ -195,8 +237,33 @@ impl VisitMut for BaVisitor {
           // const ba = function(e) { 'background'; }
           else if let Expr::Fn(fn_expr) = init.as_mut() {
             if self.check_ba_directive_fn_expr(fn_expr) {
-              **init = self.create_ba_object_from_fn(&fn_expr.function);
+              **init = self.create_ba_object_from_fn(&fn_expr.function, None);
               return;
+            }
+          // useCallback
+          } else if let Expr::Call(call_expr) = init.as_mut() {
+            if self.is_fn_returning_hook(call_expr) {
+              if let Some(first_arg) = call_expr.args.get_mut(0) {
+                let callee = call_expr.callee.as_expr().map(|expr| *expr.clone());
+                match first_arg.expr.as_mut() {
+                  // useCallback(() => { 'background'; }, [])
+                  Expr::Arrow(arrow_expr) => {
+                    if self.check_ba_directive_arrow(arrow_expr) {
+                      let ba_object = self.create_ba_object_from_arrow(arrow_expr, callee);
+                      **init = ba_object;
+                      return;
+                    }
+                  }
+                  // useCallback(function() { 'background'; }, [])
+                  Expr::Fn(fn_expr) => {
+                    if self.check_ba_directive_fn_expr(fn_expr) {
+                      **init = self.create_ba_object_from_fn(&fn_expr.function, callee);
+                      return;
+                    }
+                  }
+                  _ => {}
+                }
+              }
             }
           }
         }
@@ -378,6 +445,53 @@ function BTC() {
       console.log("background action", e);
     }
     return <MTC onClick={ba}/>;
+}
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    |_t| {
+      let unresolved_mark = Mark::new();
+      let top_level_mark = Mark::new();
+      (
+        resolver(unresolved_mark, top_level_mark, true),
+        visit_mut_pass(BaVisitor::new(Expr::Ident(private_ident!("ReactLynx")))),
+      )
+    },
+    background_action_fn_returning_hook,
+    // Input codes
+    r#"
+function BTC() {
+    const ba = useCallback((e) => {
+      'background';
+      console.log("useCallback arrow", e);
+    }, []);
+    
+    const ba2 = useCallback(function(e){
+      'background';
+      console.log("useCallback function", e);
+    }, []);
+    
+    const ba3 = useMemo(() => {
+      'background';
+      return (e) => {
+        console.log("useMemo arrow", e);
+      };
+    }, []);
+    
+    const ba4 = useMemo(function() {
+      'background';
+      return function(e) {
+        console.log("seMemo function", e);
+      };
+    }, []);
+    
+    return <MTC onClick={ba} onMouseEnter={ba2} onFocus={ba3} onBlur={ba4}/>;
 }
     "#
   );
