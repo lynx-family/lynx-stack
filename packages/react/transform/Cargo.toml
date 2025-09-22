@@ -26,6 +26,7 @@ swc_plugin_directive_dce = { path = "./crates/swc_plugin_directive_dce" }
 swc_plugin_dynamic_import = { path = './crates/swc_plugin_dynamic_import' }
 swc_plugin_inject = { path = "./crates/swc_plugin_inject" }
 swc_plugin_shake = { path = './crates/swc_plugin_shake' }
+swc_plugin_worklet = { path = "./crates/swc_plugin_worklet" }
 swc_plugins_shared = { path = './crates/swc_plugins_shared' }
 version-compare = { workspace = true }
 

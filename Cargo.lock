@@ -1656,6 +1656,7 @@ dependencies = [
  "swc_plugin_dynamic_import",
  "swc_plugin_inject",
  "swc_plugin_shake",
+ "swc_plugin_worklet",
  "swc_plugins_shared",
  "version-compare",
 ]
@@ -3189,6 +3190,20 @@ version = "0.1.0"
 dependencies = [
  "napi",
  "napi-derive",
+ "swc_core",
+ "swc_plugins_shared",
+]
+
+[[package]]
+name = "swc_plugin_worklet"
+version = "0.1.0"
+dependencies = [
+ "hex",
+ "napi",
+ "napi-derive",
+ "once_cell",
+ "rustc-hash",
+ "sha-1",
  "swc_core",
  "swc_plugins_shared",
 ]

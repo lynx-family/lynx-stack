@@ -5,13 +5,9 @@ mod globals;
 mod hash;
 mod worklet_type;
 
-use crate::swc_plugin_worklet::extract_ident::{
-  ExtractingIdentsCollector, ExtractingIdentsCollectorConfig,
-};
-use crate::swc_plugin_worklet::gen_stmt::StmtGen;
-use crate::swc_plugin_worklet::hash::WorkletHash;
-use crate::swc_plugin_worklet::worklet_type::WorkletType;
-use napi_derive::napi;
+use extract_ident::{ExtractingIdentsCollector, ExtractingIdentsCollectorConfig};
+use gen_stmt::StmtGen;
+use hash::WorkletHash;
 use std::collections::HashSet;
 use std::vec;
 use swc_core::common::util::take::Take;
@@ -20,12 +16,13 @@ use swc_core::ecma::ast::*;
 use swc_core::ecma::utils::prepend_stmts;
 use swc_core::ecma::visit::VisitMutWith;
 use swc_core::ecma::visit::{noop_visit_mut_type, VisitMut};
+use worklet_type::WorkletType;
 
-use crate::TransformMode;
-use swc_plugins_shared::target_napi::TransformTarget;
+use swc_plugins_shared::{target::TransformTarget, transform_mode::TransformMode};
+
+pub mod napi;
 
 #[derive(Clone, Debug)]
-#[napi(object)]
 pub struct WorkletVisitorConfig {
   /// @public
   /// During the compilation of worklet, when extracting external variable identifiers,
@@ -37,7 +34,6 @@ pub struct WorkletVisitorConfig {
   /// @internal
   pub filename: String,
   /// @internal
-  #[napi(ts_type = "'LEPUS' | 'JS' | 'MIXED'")]
   pub target: TransformTarget,
   pub runtime_pkg: String,
 }
@@ -473,8 +469,7 @@ impl WorkletVisitor {
 
 #[cfg(test)]
 mod tests {
-  use crate::swc_plugin_worklet::{TransformTarget, WorkletVisitor, WorkletVisitorConfig};
-  use crate::TransformMode;
+  use crate::{TransformMode, TransformTarget, WorkletVisitor, WorkletVisitorConfig};
   use swc_core::common::Mark;
   use swc_core::ecma::parser::TsSyntax;
   use swc_core::ecma::transforms::base::hygiene::hygiene;

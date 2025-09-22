@@ -1,8 +1,6 @@
-#![allow(clippy::vec_box)]
-use crate::swc_plugin_worklet::decl_collect::{
-  collect_current_scope_decls, collect_inner_scope_decls,
-};
-use crate::swc_plugin_worklet::globals::{DEFAULT_GLOBALS, LYNX_GLOBALS};
+#![allow(clippy::vec_box, clippy::borrowed_box)]
+use crate::decl_collect::{collect_current_scope_decls, collect_inner_scope_decls};
+use crate::globals::{DEFAULT_GLOBALS, LYNX_GLOBALS};
 use rustc_hash::FxHashSet;
 use std::cmp::max;
 use std::mem::{swap, take};
