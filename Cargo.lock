@@ -1653,7 +1653,9 @@ dependencies = [
  "swc_plugin_css_scope",
  "swc_plugin_define_dce",
  "swc_plugin_directive_dce",
+ "swc_plugin_dynamic_import",
  "swc_plugin_inject",
+ "swc_plugin_shake",
  "swc_plugins_shared",
  "version-compare",
 ]
@@ -3102,6 +3104,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "swc_plugin_dynamic_import"
+version = "0.1.0"
+dependencies = [
+ "napi",
+ "napi-derive",
+ "serde_json",
+ "swc_core",
+ "swc_plugins_shared",
+]
+
+[[package]]
 name = "swc_plugin_inject"
 version = "0.1.0"
 dependencies = [
@@ -3168,6 +3181,16 @@ dependencies = [
  "serde",
  "serde_json",
  "swc_core",
+]
+
+[[package]]
+name = "swc_plugin_shake"
+version = "0.1.0"
+dependencies = [
+ "napi",
+ "napi-derive",
+ "swc_core",
+ "swc_plugins_shared",
 ]
 
 [[package]]

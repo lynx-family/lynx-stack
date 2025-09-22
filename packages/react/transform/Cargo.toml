@@ -23,7 +23,9 @@ swc_core = { workspace = true, features = ["base", "ecma_codegen", "ecma_parser"
 swc_plugin_css_scope = { path = "./crates/swc_plugin_css_scope" }
 swc_plugin_define_dce = { path = "./crates/swc_plugin_define_dce" }
 swc_plugin_directive_dce = { path = "./crates/swc_plugin_directive_dce" }
+swc_plugin_dynamic_import = { path = './crates/swc_plugin_dynamic_import' }
 swc_plugin_inject = { path = "./crates/swc_plugin_inject" }
+swc_plugin_shake = { path = './crates/swc_plugin_shake' }
 swc_plugins_shared = { path = './crates/swc_plugins_shared' }
 version-compare = { workspace = true }
 
