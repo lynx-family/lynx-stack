@@ -5,7 +5,7 @@
 // Copyright 2024 Bloomberg Finance L.P.
 // Distributed under the terms of the Apache 2.0 license.
 
-import module from 'node:module'
+import nodeModule from 'node:module'
 
 /**
  * Register the ESM loader for TypeScript.
@@ -14,7 +14,7 @@ import module from 'node:module'
  */
 export function register(options) {
   // eslint-disable-next-line n/no-unsupported-features/node-builtins
-  if (!module.register) {
+  if (!nodeModule.register) {
     throw new Error(
       [
         `This version of Node.js (${process.version}) does not support module.register(). You can either:`,
@@ -28,7 +28,7 @@ export function register(options) {
 
   // We have checked if `module.register` exists before.
   // eslint-disable-next-line n/no-unsupported-features/node-builtins
-  module.register(
+  nodeModule.register(
     // Load a copy of loader so it can be registered multiple times
     `./hooks.js?${Date.now()}`,
     import.meta.url,
