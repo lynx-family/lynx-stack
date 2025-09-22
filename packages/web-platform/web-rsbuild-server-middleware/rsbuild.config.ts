@@ -18,11 +18,18 @@ export default defineConfig({
     filenameHash: false,
     polyfill: 'off',
     overrideBrowserslist: ['last 2 Chrome versions'],
-    assetPrefix: 'auto',
+    assetPrefix: 'http://lynx-web-core-mocked.localhost/',
   },
   performance: {
     chunkSplit: {
       strategy: 'all-in-one',
+    },
+  },
+  tools: {
+    rspack: {
+      experiments: {
+        asyncWebAssembly: true,
+      },
     },
   },
 });

@@ -1,19 +1,28 @@
 import type { RequestHandler } from '@rsbuild/core';
 import path from 'node:path';
 import fs from 'node:fs';
-const __dirname = path.posix.dirname(new URL(import.meta.url).pathname);
-const packageRoot = (() => {
+const __dirname: string = path.dirname(new URL(import.meta.url).pathname);
+const packageRoot: string = (() => {
   let currentDir = __dirname;
-  while (fs.existsSync(path.posix.join(currentDir, 'package.json')) === false) {
-    currentDir = path.posix.dirname(currentDir);
+  while (
+    currentDir.length
+    && fs.existsSync(path.join(currentDir, 'package.json')) === false
+  ) {
+    currentDir = path.dirname(currentDir);
+  }
+  if (currentDir.length === 0) {
+    throw new Error('Cannot find package root');
   }
   return currentDir;
 })();
-const WEB_CORE_DIST = path.posix.join(packageRoot, 'www');
-
+const WEB_CORE_DIST: string = path.join(packageRoot, 'www');
+const fileCache = new Map<string, string | Buffer>();
 export function createWebVirtualFilesMiddleware(
   subPath: string,
 ): RequestHandler {
+  if (subPath.endsWith('/')) {
+    subPath = subPath.slice(0, -1);
+  }
   return (req, res, next) => {
     if (req.url) {
       let url = req.url;
@@ -21,25 +30,47 @@ export function createWebVirtualFilesMiddleware(
         url = url.slice(1);
       }
       if (url.startsWith(subPath)) {
-        // get the relative path by removing origin
+        // get the relative path by removing origin and query
         // http://example.com:port/path/to/web/file.js -> /web/file.js
-        let relativePath = path.posix.relative(subPath, req.url);
+        if (url.includes('?')) url = url.split('?')[0]!;
+        let relativePath = path.posix.relative(subPath, url);
         if (relativePath === '') {
           relativePath = 'index.html';
         }
         try {
-          const filePath = path.posix.join(WEB_CORE_DIST, relativePath);
-          const fileName = path.posix.basename(filePath);
-          const fileContent = fs.readFileSync(filePath, 'utf-8');
-          const mimeType = fileName.endsWith('.js')
-            ? 'application/javascript'
-            : fileName.endsWith('.css')
-            ? 'text/css'
-            : fileName.endsWith('.html')
-            ? 'text/html'
+          const filePath = path.join(
+            WEB_CORE_DIST,
+            ...relativePath.split(path.posix.sep),
+          );
+          const extname = path.extname(filePath);
+          let fileContent: string | Buffer;
+          if (fileCache.has(filePath)) {
+            fileContent = fileCache.get(filePath)!;
+          } else {
+            fileContent = extname === '.wasm'
+              ? fs.readFileSync(filePath)
+              : fs.readFileSync(filePath, 'utf-8');
+            if (typeof fileContent === 'string') {
+              fileContent = fileContent.replaceAll(
+                'http://lynx-web-core-mocked.localhost/',
+                subPath + '/',
+              );
+            }
+            fileCache.set(filePath, fileContent);
+          }
+          const contextType = extname === '.js'
+            ? 'application/javascript; charset=utf-8'
+            : extname === '.css'
+            ? 'text/css; charset=utf-8'
+            : extname === '.html'
+            ? 'text/html; charset=utf-8'
+            : extname === '.wasm'
+            ? 'application/wasm'
+            : extname === '.json'
+            ? 'application/json'
             : 'text/plain';
           res.setHeader('Content-Length', Buffer.byteLength(fileContent));
-          res.setHeader('Content-Type', mimeType + '; charset=utf-8');
+          res.setHeader('Content-Type', contextType);
           // enable cross-origin-isolate to enable SAB
           res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
           res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');

@@ -55,3 +55,9 @@ test('web/index.js', async () => {
     'application/javascript; charset=utf-8',
   );
 });
+
+test('with get query', async () => {
+  const body = await (await GET('/web?casename=/examples/basic')).text();
+
+  expect(body.toLowerCase().startsWith('<!doctype html>')).toBe(true);
+});
