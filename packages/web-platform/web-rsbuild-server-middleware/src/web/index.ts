@@ -5,8 +5,8 @@ import '@lynx-js/web-elements/index.css';
 import './index.css';
 import type { LynxView } from '@lynx-js/web-core';
 
-const lynxView = document.createElement('lynx-view');
-document.body.appendChild(lynxView) as LynxView;
+const lynxView = document.createElement('lynx-view') as LynxView;
+document.body.appendChild(lynxView);
 const searchParams = new URLSearchParams(document.location.search);
 const casename = searchParams.get('casename');
 if (casename) {
