@@ -8,11 +8,11 @@ import path from 'node:path';
 import {
   BasicRunnerFactory,
   ECompilerType,
-  NormalRunner,
+  NodeRunner,
   TestContext,
 } from '@rspack/test-tools';
 import type {
-  IBasicGlobalContext,
+  IGlobalContext,
   ITestContext,
   ITestEnv,
   ITestProcessor,
@@ -75,7 +75,7 @@ export function createVitestEnv(): ITestEnv {
 
 interface TRunnerOutput {
   exports: unknown;
-  context: IBasicGlobalContext;
+  context: IGlobalContext;
 }
 
 export function createRunner(
@@ -192,7 +192,7 @@ export function createRunner(
 
 export class RspeedyNormalRunner<
   T extends ECompilerType = ECompilerType.Rspack,
-> extends NormalRunner<T> {
+> extends NodeRunner<T> {
   override async run<T>(
     file: string,
   ): Promise<{ exports: T; context: typeof globalThis }> {
