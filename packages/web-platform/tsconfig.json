@@ -22,6 +22,7 @@
     { "path": "./web-core-server/tsconfig.json" },
     { "path": "./web-core/tsconfig.json" },
     { "path": "./web-rsbuild-plugin/tsconfig.json" },
+    { "path": "./web-rsbuild-server-middleware/tsconfig.json" },
     /** packages-end */
   ],
   "include": [],
