@@ -8,7 +8,7 @@ use swc_core::{
   },
 };
 
-use crate::swc_plugin_compat::{CompatVisitorConfig, DarkModeConfig};
+use swc_plugin_compat::napi::{CompatVisitorConfig, DarkModeConfig};
 use swc_plugin_inject::napi::{InjectAs, InjectVisitor, InjectVisitorConfig};
 
 pub struct CompatPostVisitor {
@@ -70,6 +70,7 @@ impl VisitMut for CompatPostVisitor {
 
 #[cfg(test)]
 mod tests {
+  use crate::swc_plugin_compat_post::CompatPostVisitor;
   use swc_core::{
     common::Mark,
     ecma::{
@@ -78,11 +79,7 @@ mod tests {
       visit::visit_mut_pass,
     },
   };
-
-  use crate::{
-    swc_plugin_compat::{CompatVisitorConfig, DarkModeConfig},
-    swc_plugin_compat_post::CompatPostVisitor,
-  };
+  use swc_plugin_compat::napi::{CompatVisitorConfig, DarkModeConfig};
 
   test!(
     module,

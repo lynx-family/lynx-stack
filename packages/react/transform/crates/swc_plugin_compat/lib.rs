@@ -1,8 +1,6 @@
 use std::vec;
 
 use convert_case::{Case, Casing};
-use napi::Either;
-use napi_derive::napi;
 use once_cell::sync::Lazy;
 use regex::Regex;
 use swc_core::common::comments::Comments;
@@ -18,12 +16,20 @@ use swc_core::{
   quote,
 };
 
-use swc_plugins_shared::target_napi::TransformTarget;
+use swc_plugins_shared::target::TransformTarget;
 
 mod is_component_class;
 mod simplify_ctor_like_react_lynx_2;
 
+pub mod napi;
+
 type Stack<T> = Vec<T>;
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum Either<A, B> {
+  A(A),
+  B(B),
+}
 
 // Note: Should sync with Lynx/tasm/component_attributes.cc
 static COMPONENT_ATTRIBUTES: Lazy<Vec<&str>> = Lazy::new(|| {
@@ -56,7 +62,6 @@ static COMPONENT_ATTRIBUTES: Lazy<Vec<&str>> = Lazy::new(|| {
   ]
 });
 
-#[napi(object)]
 #[derive(Clone, Debug)]
 pub struct DarkModeConfig {
   /// @public
@@ -66,7 +71,6 @@ pub struct DarkModeConfig {
 
 /// {@inheritdoc CompatVisitorConfig.addComponentElement}
 /// @public
-#[napi(object)]
 #[derive(Clone, Debug)]
 pub struct AddComponentElementConfig {
   /// @public
@@ -95,11 +99,9 @@ pub struct AddComponentElementConfig {
 
 /// {@inheritdoc PluginReactLynxOptions.compat}
 /// @public
-#[napi(object)]
 #[derive(Clone, Debug)]
 pub struct CompatVisitorConfig {
   /// @internal
-  #[napi(ts_type = "'LEPUS' | 'JS' | 'MIXED'")]
   pub target: TransformTarget,
   /// @public
   /// Specifies the list of component package names that need compatibility processing
@@ -1246,7 +1248,6 @@ where
 
 #[cfg(test)]
 mod tests {
-  use napi::Either;
   use swc_core::{
     common::Mark,
     ecma::{
@@ -1259,8 +1260,7 @@ mod tests {
     },
   };
 
-  use crate::CompatVisitorConfig;
-  use crate::{swc_plugin_compat::AddComponentElementConfig, CompatVisitor};
+  use crate::{AddComponentElementConfig, CompatVisitor, CompatVisitorConfig, Either};
 
   test!(
     module,
