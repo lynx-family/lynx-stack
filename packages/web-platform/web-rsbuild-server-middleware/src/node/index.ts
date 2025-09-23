@@ -74,8 +74,6 @@ export function createWebVirtualFilesMiddleware(
           // enable cross-origin-isolate to enable SAB
           res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
           res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
-          // loosen CORS for easier testing
-          res.setHeader('Access-Control-Allow-Origin', '*');
           res.statusCode = 200;
           res.end(fileContent);
           return;
