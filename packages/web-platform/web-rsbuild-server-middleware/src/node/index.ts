@@ -1,11 +1,13 @@
 import type { RequestHandler } from '@rsbuild/core';
 import path from 'node:path';
 import fs from 'node:fs';
-const __dirname: string = path.dirname(new URL(import.meta.url).pathname);
+import { fileURLToPath } from 'node:url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const packageRoot: string = (() => {
   let currentDir = __dirname;
   while (
-    currentDir.length
+    currentDir.length && currentDir !== '/'
     && fs.existsSync(path.join(currentDir, 'package.json')) === false
   ) {
     currentDir = path.dirname(currentDir);

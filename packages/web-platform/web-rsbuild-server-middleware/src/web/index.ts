@@ -68,9 +68,9 @@ function help() {
   );
   console.table(
     Object.entries(methods).map(([name, fn]) => ({
-      Method: name,
+      Method: name + '()',
       Description: fn.description || 'No description available',
-    })),
+    }), ['Method', 'Description']),
   );
 }
 help.description = 'Print all available methods and their descriptions.';

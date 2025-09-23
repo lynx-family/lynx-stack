@@ -1,10 +1,6 @@
 import { test, expect, beforeAll } from 'vitest';
 import { createRsbuild, type RsbuildDevServer } from '@rsbuild/core';
 import { createWebVirtualFilesMiddleware } from '../src/node/index.js';
-import http from 'node:http';
-import fs from 'node:fs';
-import path from 'node:path';
-import os from 'node:os';
 
 let rsbuildServer!: RsbuildDevServer;
 let port!: number;
