@@ -5,7 +5,6 @@
 extern crate napi_derive;
 mod bundle;
 mod esbuild;
-mod swc_plugin_compat;
 mod swc_plugin_compat_post;
 mod swc_plugin_extract_str;
 mod swc_plugin_list;
@@ -52,7 +51,7 @@ use swc_core::{
 
 // currently `use xxx as yyy` is not supported by napi-rs
 // So we have to use different name
-use swc_plugin_compat::{CompatVisitor, CompatVisitorConfig};
+use swc_plugin_compat::napi::{CompatVisitor, CompatVisitorConfig};
 use swc_plugin_compat_post::CompatPostVisitor;
 use swc_plugin_css_scope::napi::{CSSScopeVisitor, CSSScopeVisitorConfig};
 use swc_plugin_define_dce::napi::DefineDCEVisitorConfig;

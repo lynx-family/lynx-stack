@@ -1650,6 +1650,7 @@ dependencies = [
  "serde_json",
  "sha-1",
  "swc_core",
+ "swc_plugin_compat",
  "swc_plugin_css_scope",
  "swc_plugin_define_dce",
  "swc_plugin_directive_dce",
@@ -3072,6 +3073,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "92b27449420554de6ad8d49004ad3d36e6ac64ecb51d1b0fe1002afcd7a45d85"
 dependencies = [
  "once_cell",
+]
+
+[[package]]
+name = "swc_plugin_compat"
+version = "0.1.0"
+dependencies = [
+ "convert_case",
+ "napi",
+ "napi-derive",
+ "once_cell",
+ "regex",
+ "rustc-hash",
+ "swc_core",
+ "swc_plugins_shared",
 ]
 
 [[package]]
