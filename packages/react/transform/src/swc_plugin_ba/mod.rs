@@ -193,6 +193,54 @@ impl BaVisitor {
       false
     }
   }
+
+  fn process_expr_for_background_action(&mut self, expr: &mut Expr) -> bool {
+    match expr {
+      // const ba = (e) => { 'background'; }
+      Expr::Arrow(arrow_expr) => {
+        if self.check_ba_directive_arrow(arrow_expr) {
+          let ba_object = self.create_ba_object_from_arrow(arrow_expr, None);
+          *expr = ba_object;
+          return true;
+        }
+      }
+      // const ba = function(e) { 'background'; }
+      Expr::Fn(fn_expr) => {
+        if self.check_ba_directive_fn_expr(fn_expr) {
+          *expr = self.create_ba_object_from_fn(&fn_expr.function, None);
+          return true;
+        }
+      }
+      // useCallback & useMemo
+      Expr::Call(call_expr) => {
+        if self.is_fn_returning_hook(call_expr) {
+          if let Some(first_arg) = call_expr.args.get_mut(0) {
+            let callee = call_expr.callee.as_expr().map(|expr| *expr.clone());
+            match first_arg.expr.as_mut() {
+              // useCallback(() => { 'background'; }, [])
+              Expr::Arrow(arrow_expr) => {
+                if self.check_ba_directive_arrow(arrow_expr) {
+                  let ba_object = self.create_ba_object_from_arrow(arrow_expr, callee);
+                  *expr = ba_object;
+                  return true;
+                }
+              }
+              // useCallback(function() { 'background'; }, [])
+              Expr::Fn(fn_expr) => {
+                if self.check_ba_directive_fn_expr(fn_expr) {
+                  *expr = self.create_ba_object_from_fn(&fn_expr.function, callee);
+                  return true;
+                }
+              }
+              _ => {}
+            }
+          }
+        }
+      }
+      _ => {}
+    }
+    false
+  }
 }
 
 impl VisitMut for BaVisitor {
@@ -225,52 +273,23 @@ impl VisitMut for BaVisitor {
     if let Stmt::Decl(Decl::Var(var_decl)) = stmt {
       for declarator in &mut var_decl.decls {
         if let Some(init) = &mut declarator.init {
-          // // const ba = (e) => { 'background'; }
-          if let Expr::Arrow(arrow_expr) = init.as_mut() {
-            if self.check_ba_directive_arrow(arrow_expr) {
-              let ba_object = self.create_ba_object_from_arrow(arrow_expr, None);
-
-              **init = ba_object;
-              return;
-            }
-          }
-          // const ba = function(e) { 'background'; }
-          else if let Expr::Fn(fn_expr) = init.as_mut() {
-            if self.check_ba_directive_fn_expr(fn_expr) {
-              **init = self.create_ba_object_from_fn(&fn_expr.function, None);
-              return;
-            }
-          // useCallback
-          } else if let Expr::Call(call_expr) = init.as_mut() {
-            if self.is_fn_returning_hook(call_expr) {
-              if let Some(first_arg) = call_expr.args.get_mut(0) {
-                let callee = call_expr.callee.as_expr().map(|expr| *expr.clone());
-                match first_arg.expr.as_mut() {
-                  // useCallback(() => { 'background'; }, [])
-                  Expr::Arrow(arrow_expr) => {
-                    if self.check_ba_directive_arrow(arrow_expr) {
-                      let ba_object = self.create_ba_object_from_arrow(arrow_expr, callee);
-                      **init = ba_object;
-                      return;
-                    }
-                  }
-                  // useCallback(function() { 'background'; }, [])
-                  Expr::Fn(fn_expr) => {
-                    if self.check_ba_directive_fn_expr(fn_expr) {
-                      **init = self.create_ba_object_from_fn(&fn_expr.function, callee);
-                      return;
-                    }
-                  }
-                  _ => {}
-                }
-              }
-            }
+          if self.process_expr_for_background_action(init) {
+            return;
           }
         }
       }
     }
 
     stmt.visit_mut_children_with(self);
+  }
+
+  fn visit_mut_jsx_expr_container(&mut self, jsx_expr: &mut JSXExprContainer) {
+    if let JSXExpr::Expr(expr) = &mut jsx_expr.expr {
+      if self.process_expr_for_background_action(expr) {
+        return;
+      }
+    }
+    jsx_expr.visit_mut_children_with(self);
   }
 }
 
@@ -492,6 +511,32 @@ function BTC() {
     }, []);
     
     return <MTC onClick={ba} onMouseEnter={ba2} onFocus={ba3} onBlur={ba4}/>;
+}
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    |_t| {
+      let unresolved_mark = Mark::new();
+      let top_level_mark = Mark::new();
+      (
+        resolver(unresolved_mark, top_level_mark, true),
+        visit_mut_pass(BaVisitor::new(Expr::Ident(private_ident!("ReactLynx")))),
+      )
+    },
+    background_action_jsx_inlined,
+    // Input codes
+    r#"
+function BTC() {
+    return <MTC onClick={(e) => {
+      'background';
+      console.log("background action", e);
+    }} />;
 }
     "#
   );
