@@ -12,7 +12,6 @@ import type {
   CssExtractWebpackPluginOptions,
 } from '@lynx-js/css-extract-webpack-plugin'
 import { LAYERS } from '@lynx-js/react-webpack-plugin'
-import { CSSPlugins } from '@lynx-js/template-webpack-plugin'
 
 import type { PluginReactLynxOptions } from './pluginReactLynx.js'
 
@@ -41,7 +40,7 @@ export function applyCSS(
   const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
   api.modifyBundlerChain(
-    async function handler(chain, { CHAIN_ID, environment }) {
+    async function handler(chain, { CHAIN_ID }) {
       const { CssExtractRspackPlugin, CssExtractWebpackPlugin } = await import(
         '@lynx-js/css-extract-webpack-plugin'
       )
@@ -137,8 +136,6 @@ export function applyCSS(
         if (
           // Webpack does not have lightningcss-loader
           rule.uses.has(CHAIN_ID.USE.LIGHTNINGCSS)
-          // We only disable lightningcss for Lynx
-          && environment.name === 'lynx'
         ) {
           rule.uses.delete(CHAIN_ID.USE.LIGHTNINGCSS)
         }
@@ -154,9 +151,7 @@ export function applyCSS(
               enableCSSSelector,
               enableCSSInvalidation,
               targetSdkVersion,
-              cssPlugins: [
-                CSSPlugins.parserPlugins.removeFunctionWhiteSpace(),
-              ],
+              cssPlugins: [],
             } as CssExtractWebpackPluginOptions | CssExtractRspackPluginOptions,
           ]
         })

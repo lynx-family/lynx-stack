@@ -6,13 +6,14 @@ import fs from 'node:fs';
 import { join } from 'node:path';
 
 import { pluginSass } from '@rsbuild/plugin-sass';
-import type { Sidebar } from '@rspress/shared';
+import { defineConfig } from '@rspress/core';
+import type { Sidebar, UserConfig } from '@rspress/core';
 import {
   transformerNotationDiff,
   transformerNotationFocus,
   transformerNotationHighlight,
 } from '@shikijs/transformers';
-import { defineConfig } from 'rspress/config';
+import { camelCase } from 'change-case';
 
 import { createAPI, createChangelogs } from './sidebars/index.js';
 
@@ -87,12 +88,12 @@ const SIDEBARS = {
     },
     {
       link: '/api/rspeedy.config.environments',
-      text: 'Environments',
+      text: 'environments',
       collapsible: false,
     },
     {
       link: '/api/rspeedy.config.mode',
-      text: 'Mode',
+      text: 'mode',
       collapsible: false,
     },
     ...createAPI({
@@ -108,6 +109,7 @@ const SIDEBARS = {
         'ChunkSplit',
         'ChunkSplitBySize',
         'ChunkSplitCustom',
+        'ConfigParams',
         'ConsoleType',
         'CssExtract',
         'CssExtractRspackLoaderOptions',
@@ -144,7 +146,12 @@ const SIDEBARS = {
       ],
       collapsed: true,
       depth: 3,
-    }).items as Sidebar[string],
+    }).items.map(i => {
+      if ('items' in i) {
+        i.text = camelCase(i.text);
+      }
+      return i;
+    }),
   ],
 } satisfies Sidebar;
 
@@ -218,12 +225,12 @@ const SIDEBARS_ZH = {
     },
     {
       link: '/zh/api/rspeedy.config.environments',
-      text: 'Environments',
+      text: 'environments',
       collapsible: false,
     },
     {
       link: '/zh/api/rspeedy.config.mode',
-      text: 'Mode',
+      text: 'mode',
       collapsible: false,
     },
     ...createAPI({
@@ -239,6 +246,7 @@ const SIDEBARS_ZH = {
         'ChunkSplit',
         'ChunkSplitBySize',
         'ChunkSplitCustom',
+        'ConfigParams',
         'ConsoleType',
         'CssExtract',
         'CssExtractRspackLoaderOptions',
@@ -275,7 +283,12 @@ const SIDEBARS_ZH = {
       ],
       collapsed: true,
       depth: 3,
-    }).items as Sidebar[string],
+    }).items.map(i => {
+      if ('items' in i) {
+        i.text = camelCase(i.text);
+      }
+      return i;
+    }),
   ],
 } satisfies Sidebar;
 
@@ -346,7 +359,7 @@ const CHANGELOG_ZH = {
   ),
 };
 
-export default defineConfig({
+const config: UserConfig = defineConfig({
   root: 'docs',
   lang: 'en',
   title: 'Lynx Stack',
@@ -361,7 +374,6 @@ export default defineConfig({
   },
   icon: '/rspeedy.png',
   markdown: {
-    checkDeadLinks: true,
     shiki: {
       transformers: [
         transformerNotationDiff(),
@@ -383,7 +395,7 @@ export default defineConfig({
         editLink: {
           docRepoBaseUrl:
             'https://github.com/lynx-family/lynx-stack/tree/main/website/docs',
-          text: '📝 在 GitHub 上编辑此页',
+          text: '在 GitHub 上编辑此页',
         },
         searchNoResultsText: '未搜索到相关结果',
         searchPlaceholderText: '搜索文档',
@@ -402,7 +414,7 @@ export default defineConfig({
         editLink: {
           docRepoBaseUrl:
             'https://github.com/lynx-family/lynx-stack/tree/main/website/docs',
-          text: '📝 Edit this page on GitHub',
+          text: 'Edit this page on GitHub',
         },
       },
     ],
@@ -522,32 +534,71 @@ export default defineConfig({
         {
           'text': 'Getting Started',
           items: [
-            '/guide/installation',
+            {
+              text: 'Installation',
+              link: '/guide/installation',
+            },
             // '/guide/glossary',
           ],
         },
         {
           text: 'Features',
           items: [
-            '/guide/cli',
+            {
+              text: 'CLI',
+              link: '/guide/cli',
+            },
             // '/guide/hmr',
-            '/guide/typescript',
-            '/guide/css',
-            '/guide/assets',
-            '/guide/output',
-            '/guide/resolve',
-            '/guide/i18n',
-            '/guide/plugin',
-            '/guide/code-splitting',
+            {
+              text: 'TypeScript',
+              link: '/guide/typescript',
+            },
+            {
+              text: 'CSS',
+              link: '/guide/css',
+            },
+            {
+              text: 'Static Assets',
+              link: '/guide/assets',
+            },
+            {
+              text: 'Output Files',
+              link: '/guide/output',
+            },
+            {
+              text: 'Module Resolution',
+              link: '/guide/resolve',
+            },
+            {
+              text: 'Internationalization',
+              link: '/guide/i18n',
+            },
+            {
+              text: 'Plugin',
+              link: '/guide/plugin',
+            },
+            {
+              text: 'Code Splitting',
+              link: '/guide/code-splitting',
+            },
             // '/guide/compatibility',
-            '/guide/upgrade-rspeedy',
+            {
+              text: 'Upgrade Rspeedy',
+              link: '/guide/upgrade-rspeedy',
+            },
           ],
         },
         {
           text: 'Debug',
           items: [
-            '/guide/build-profiling',
-            '/guide/use-rsdoctor',
+            {
+              text: 'Build Profiling',
+              link: '/guide/build-profiling',
+            },
+            {
+              text: 'Use Rsdoctor',
+              link: '/guide/use-rsdoctor',
+            },
           ],
         },
       ],
@@ -561,32 +612,71 @@ export default defineConfig({
         {
           'text': '入门',
           items: [
-            '/zh/guide/installation',
+            {
+              text: '安装',
+              link: '/zh/guide/installation',
+            },
             // '/guide/glossary',
           ],
         },
         {
           text: '特性',
           items: [
-            '/zh/guide/cli',
+            {
+              text: '命令行界面',
+              link: '/zh/guide/cli',
+            },
             // '/guide/hmr',
-            '/zh/guide/typescript',
-            '/zh/guide/css',
-            '/zh/guide/assets',
-            '/zh/guide/output',
-            '/zh/guide/resolve',
-            '/guide/i18n',
-            '/zh/guide/plugin',
-            '/zh/guide/code-splitting',
+            {
+              text: 'TypeScript',
+              link: '/zh/guide/typescript',
+            },
+            {
+              text: '样式',
+              link: '/zh/guide/css',
+            },
+            {
+              text: '使用静态资源',
+              link: '/zh/guide/assets',
+            },
+            {
+              text: '构建输出文件',
+              link: '/zh/guide/output',
+            },
+            {
+              text: '模块解析',
+              link: '/zh/guide/resolve',
+            },
+            {
+              text: '国际化',
+              link: '/guide/i18n',
+            },
+            {
+              text: '插件',
+              link: '/zh/guide/plugin',
+            },
+            {
+              text: '代码拆分',
+              link: '/zh/guide/code-splitting',
+            },
             // '/guide/compatibility',
-            '/zh/guide/upgrade-rspeedy',
+            {
+              text: '升级 Rspeedy',
+              link: '/zh/guide/upgrade-rspeedy',
+            },
           ],
         },
         {
           text: '调试',
           items: [
-            '/zh/guide/build-profiling',
-            '/zh/guide/use-rsdoctor',
+            {
+              text: '构建性能分析',
+              link: '/zh/guide/build-profiling',
+            },
+            {
+              text: '使用 Rsdoctor',
+              link: '/zh/guide/use-rsdoctor',
+            },
           ],
         },
       ],
@@ -651,24 +741,24 @@ export default defineConfig({
     enableScrollToTop: true,
   },
   ssg: true,
-  // We use GitHub Pages to host the website, so we need to set the base path to `/lynx-stack/`
-  base: '/lynx-stack/',
   globalStyles: join(__dirname, 'src', 'styles', 'global.scss'),
   builderConfig: {
     output: {
       assetPrefix: `//${CDN_HOST}/`,
     },
-    server: {
-      open: 'http://localhost:<port>/lynx-stack/',
-    },
-    source: {
+    resolve: {
       alias: {
         '@site': __dirname,
         '@components': join(__dirname, 'src', 'components'),
       },
+    },
+    server: {
+      open: 'http://localhost:<port>/',
     },
     plugins: [
       pluginSass(),
     ],
   },
 });
+
+export default config;

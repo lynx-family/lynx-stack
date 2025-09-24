@@ -4,20 +4,24 @@
 import {
   lynxUniqueIdAttribute,
   type ExposureWorkerEvent,
+  type MinimalRawEventObject,
+  type postExposureEndpoint,
+  type RpcCallType,
 } from '@lynx-js/web-constants';
 import { createCrossThreadEvent } from './createCrossThreadEvent.js';
-import type { MainThreadRuntime } from '../MainThreadRuntime.js';
 
-export function createExposureService(runtime: MainThreadRuntime) {
-  const postExposure = runtime.config.callbacks.postExposure;
+export function createExposureService(
+  rootDom: Pick<EventTarget, 'addEventListener'>,
+  postExposure: RpcCallType<typeof postExposureEndpoint>,
+) {
   let working = true;
   let exposureCache: ExposureWorkerEvent[] = [];
   let disexposureCache: ExposureWorkerEvent[] = [];
+  let delayCallback: ReturnType<typeof setTimeout> | null = null;
   const onScreen = new Map<string, ExposureWorkerEvent>();
   function exposureEventHandler(ev: Event) {
     const exposureEvent = createCrossThreadEvent(
-      runtime,
-      ev,
+      ev as MinimalRawEventObject,
       ev.type,
     ) as ExposureWorkerEvent;
     exposureEvent.detail['unique-id'] = parseFloat(
@@ -31,23 +35,26 @@ export function createExposureService(runtime: MainThreadRuntime) {
       disexposureCache.push(exposureEvent);
       onScreen.delete(exposureID);
     }
-  }
-  setInterval(() => {
-    if (exposureCache.length > 0 || disexposureCache.length > 0) {
-      const currentExposure = exposureCache;
-      const currentDisexposure = disexposureCache;
-      exposureCache = [];
-      disexposureCache = [];
-      postExposure({
-        exposures: currentExposure,
-        disExposures: currentDisexposure,
-      });
+    if (!delayCallback) {
+      delayCallback = setTimeout(() => {
+        if (exposureCache.length > 0 || disexposureCache.length > 0) {
+          const currentExposure = exposureCache;
+          const currentDisexposure = disexposureCache;
+          exposureCache = [];
+          disexposureCache = [];
+          postExposure({
+            exposures: currentExposure,
+            disExposures: currentDisexposure,
+          });
+        }
+        delayCallback = null;
+      }, 1000 / 20);
     }
-  }, 1000 / 20);
-  runtime._rootDom.addEventListener('exposure', exposureEventHandler, {
+  }
+  rootDom.addEventListener('exposure', exposureEventHandler, {
     passive: true,
   });
-  runtime._rootDom.addEventListener('disexposure', exposureEventHandler, {
+  rootDom.addEventListener('disexposure', exposureEventHandler, {
     passive: true,
   });
 

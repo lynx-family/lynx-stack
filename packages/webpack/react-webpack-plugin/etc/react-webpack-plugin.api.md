@@ -50,6 +50,7 @@ export interface ReactWebpackPluginOptions {
     firstScreenSyncTiming?: 'immediately' | 'jsReady';
     mainThreadChunks?: string[] | undefined;
     profile?: boolean | undefined;
+    workletRuntimePath: string;
 }
 
 ```

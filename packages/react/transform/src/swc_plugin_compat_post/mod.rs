@@ -8,10 +8,8 @@ use swc_core::{
   },
 };
 
-use crate::{
-  swc_plugin_compat::{CompatVisitorConfig, DarkModeConfig},
-  swc_plugin_inject::{InjectAs, InjectVisitor, InjectVisitorConfig},
-};
+use swc_plugin_compat::napi::{CompatVisitorConfig, DarkModeConfig};
+use swc_plugin_inject::napi::{InjectAs, InjectVisitor, InjectVisitorConfig};
 
 pub struct CompatPostVisitor {
   // opts: CompatVisitorConfig,
@@ -64,15 +62,15 @@ impl CompatPostVisitor {
 
 impl VisitMut for CompatPostVisitor {
   fn visit_mut_module(&mut self, n: &mut Module) {
-    match &mut self.inject_plugin {
-      Some(ref mut inject_plugin) => n.visit_mut_with(inject_plugin),
-      None => {}
+    if let Some(ref mut inject_plugin) = &mut self.inject_plugin {
+      n.visit_mut_with(inject_plugin)
     }
   }
 }
 
 #[cfg(test)]
 mod tests {
+  use crate::swc_plugin_compat_post::CompatPostVisitor;
   use swc_core::{
     common::Mark,
     ecma::{
@@ -81,11 +79,7 @@ mod tests {
       visit::visit_mut_pass,
     },
   };
-
-  use crate::{
-    swc_plugin_compat::{CompatVisitorConfig, DarkModeConfig},
-    swc_plugin_compat_post::CompatPostVisitor,
-  };
+  use swc_plugin_compat::napi::{CompatVisitorConfig, DarkModeConfig};
 
   test!(
     module,

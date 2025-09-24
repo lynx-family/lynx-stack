@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/web-worker-runtime",
-  "version": "0.13.3",
+  "version": "0.17.0",
   "private": false,
   "description": "",
   "keywords": [],
@@ -28,9 +28,9 @@
     "@lynx-js/web-worker-rpc": "workspace:*"
   },
   "devDependencies": {
-    "@lynx-js/lynx-core": "0.1.2"
+    "@lynx-js/lynx-core": "0.1.3"
   },
   "peerDependencies": {
-    "@lynx-js/lynx-core": "0.1.2"
+    "@lynx-js/lynx-core": "0.1.3"
   }
 }

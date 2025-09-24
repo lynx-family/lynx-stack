@@ -1,12 +1,34 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { runWorkletCtx, updateWorkletRef as update } from '@lynx-js/react/worklet-runtime/bindings';
+
+import { onWorkletCtxUpdate, runWorkletCtx, updateWorkletRef as update } from '@lynx-js/react/worklet-runtime/bindings';
 import type { Element, Worklet, WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bindings';
 
+import { isMainThreadHydrating } from '../lifecycle/patch/isMainThreadHydrating.js';
 import type { SnapshotInstance } from '../snapshot.js';
 
-function workletUnRef(value: Worklet | WorkletRefImpl<Element>): void {
+let mtRefQueue: (WorkletRefImpl<Element> | Worklet | Element)[] = [];
+
+export function applyRefQueue(): void {
+  const queue = mtRefQueue;
+  mtRefQueue = [];
+  for (let i = 0; i < queue.length; i += 2) {
+    const worklet = queue[i] as Worklet | WorkletRefImpl<Element>;
+    const element = queue[i + 1] as Element;
+    if ('_wvid' in worklet) {
+      update(worklet as WorkletRefImpl<Element>, element);
+    } else if ('_wkltId' in worklet) {
+      worklet._unmount = runWorkletCtx(worklet, [{ elementRefptr: element }]) as () => void;
+    }
+  }
+}
+
+function addToRefQueue(worklet: Worklet | WorkletRefImpl<Element>, element: Element): void {
+  mtRefQueue.push(worklet, element);
+}
+
+export function workletUnRef(value: Worklet | WorkletRefImpl<Element>): void {
   if ('_wvid' in value) {
     update(value as WorkletRefImpl<Element>, null);
   } else if ('_wkltId' in value) {
@@ -18,10 +40,10 @@ function workletUnRef(value: Worklet | WorkletRefImpl<Element>): void {
   }
 }
 
-function updateWorkletRef(
+export function updateWorkletRef(
   snapshot: SnapshotInstance,
   expIndex: number,
-  oldValue: WorkletRefImpl<Element> | Worklet | undefined,
+  oldValue: WorkletRefImpl<Element> | Worklet | null | undefined,
   elementIndex: number,
   _workletType: string,
 ): void {
@@ -38,11 +60,17 @@ function updateWorkletRef(
   if (value === null || value === undefined) {
     // do nothing
   } else if (value._wvid) {
-    update(value as WorkletRefImpl<Element>, snapshot.__elements[elementIndex]!);
+    const element = snapshot.__elements[elementIndex]! as Element;
+    addToRefQueue(value as Worklet, element);
   } else if ((value as Worklet)._wkltId) {
-    (value as Worklet)._unmount = runWorkletCtx(value as Worklet, [{
-      elementRefptr: (snapshot.__elements[elementIndex]!) as any,
-    }]) as () => void;
+    const element = snapshot.__elements[elementIndex]! as Element;
+    onWorkletCtxUpdate(
+      value as Worklet,
+      oldValue as Worklet | undefined,
+      isMainThreadHydrating,
+      element,
+    );
+    addToRefQueue(value as Worklet, element);
     /* v8 ignore next 3 */
   } else if (value._type === '__LEPUS__' || (value as Worklet)._lepusWorkletHash) {
     // for pre-0.99 compatibility
@@ -58,5 +86,3 @@ function updateWorkletRef(
   // Add an arbitrary attribute to avoid this element being layout-only
   __SetAttribute(snapshot.__elements[elementIndex]!, 'has-react-ref', true);
 }
-
-export { updateWorkletRef, workletUnRef };

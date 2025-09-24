@@ -1,7 +1,6 @@
 import { createRequire } from 'node:module';
 import * as path from 'node:path';
 
-import react from '@vitejs/plugin-react';
 import type { Plugin } from 'vitest/config';
 import { defineConfig } from 'vitest/config';
 
@@ -17,13 +16,21 @@ function transformReactLynxPlugin(): Plugin {
         '@lynx-js/react-transform',
       ) as typeof import('@lynx-js/react-transform');
       const relativePath = path.basename(sourcePath);
+
+      if (!relativePath.endsWith('.jsx') && !relativePath.endsWith('.tsx')) {
+        return {
+          code: sourceText,
+          map: null,
+        };
+      }
+
       const result = transformReactLynxSync(sourceText, {
         mode: 'test',
         pluginName: '',
         filename: relativePath,
         sourcemap: true,
         snapshot: {
-          preserveJsx: true,
+          preserveJsx: false,
           runtimePkg,
           jsxImportSource: '@lynx-js/react',
           filename: 'test',
@@ -50,10 +57,10 @@ function transformReactLynxPlugin(): Plugin {
 export default defineConfig({
   plugins: [
     transformReactLynxPlugin(),
-    react({ jsxImportSource: '@lynx-js/react' }),
   ],
   resolve: {
     alias: {
+      '@lynx-js/react/compat': path.resolve(__dirname, './compat/index.js'),
       '@lynx-js/react/worklet-runtime/bindings': path.resolve(__dirname, '../worklet-runtime/lib/bindings/index.js'),
       '@lynx-js/react/runtime-components': path.resolve(__dirname, '../components/src/index.ts'),
       '@lynx-js/react/internal': path.resolve(__dirname, './src/internal.ts'),
@@ -67,27 +74,27 @@ export default defineConfig({
   test: {
     name: 'react/runtime',
     coverage: {
-      // # Should be sync with .codebase/apps.yaml
       exclude: [
+        'debug',
         'jsx-runtime',
         'jsx-dev-runtime',
+        'lepus/jsx-dev-runtime',
         'lepus/index.d.ts',
         'vitest.config.ts',
         '__test__/utils/**',
         'lib/**',
         'src/index.ts',
-        'src/lynx-api.ts',
         'src/lynx.ts',
         'src/root.ts',
+        'src/debug/component-stack.ts',
         'src/debug/debug.ts',
+        'src/debug/utils.ts',
         'src/lynx/calledByNative.ts',
         'src/lynx/component.ts',
-        'src/lynx/lazy-bundle.ts',
         'src/lynx/dynamic-js.ts',
         'src/lynx/env.ts',
         'src/lynx/tt.ts',
         'src/compat/componentIs.ts',
-        'src/compat/initData.ts',
 
         '__test__/page.test.jsx',
         '**/*.d.ts',

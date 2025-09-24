@@ -15,6 +15,7 @@
       ".vscode/settings.json",
       "tsconfig.json",
       "tsconfig.build.json",
+      "tsconfig.node.json",
       "api-extractor.json",
     ],
   },
@@ -22,7 +23,6 @@
   },
   "toml": {
   },
-  // cSpell:disable-next-line
   "malva": {
   },
   "markup": {

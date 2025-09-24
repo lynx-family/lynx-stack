@@ -7,8 +7,11 @@ import * as typia from 'typia'
 
 import type { Config } from './index.js'
 
-export const validateConfig: (input: unknown) => typia.IValidation<Config> =
-  typia.createValidateEquals<Config>()
+export const validateConfig: (
+  input: unknown,
+) => typia.IValidation<Config> = typia.createValidateEquals<
+  Config
+>()
 
 export function validate(input: unknown, configPath?: string): Config {
   const result = validateConfig(input)

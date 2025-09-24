@@ -4,7 +4,7 @@ import './foo.css';
 import bar from "./bar.css?cssId=1185352";
 import * as styles from "./baz.scss?cssId=1185352";
 import { styles0, styles1 } from "./foo.modules.css?cssId=1185352";
-const __snapshot_2d408_test_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_2d408_test_1", function() {
+const __snapshot_2d408_test_1 = ReactLynx.createSnapshot("__snapshot_2d408_test_1", function() {
     const pageId = ReactLynx.__pageId;
     const el = __CreateView(pageId);
     return [
@@ -14,7 +14,7 @@ const __snapshot_2d408_test_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapsh
     function(ctx) {
         if (ctx.__elements) __SetClasses(ctx.__elements[0], ctx.__values[0] || '');
     }
-], null, 1185352, globDynamicComponentEntry);
+], null, 1185352, globDynamicComponentEntry, null);
 /*#__PURE__*/ _jsx(__snapshot_2d408_test_1, {
     values: [
         `foo ${styles.bar} ${styles2.baz} ${clsA} ${clsB}`

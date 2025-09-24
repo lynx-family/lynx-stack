@@ -94,7 +94,9 @@ export const templateXImage = (attributes: { src?: string }) => {
       'detected <script, this is a potential XSS attack, please check your src',
     );
   }
-  return `<img part="img" alt="" id="img" ${src ? `src="${src}"` : ''}/> `;
+  return `<img part="img" alt="" loading="lazy" id="img" ${
+    src ? `src="${src}"` : ''
+  }/> `;
 };
 
 export const templateFilterImage = templateXImage;
@@ -162,13 +164,35 @@ export const templateXOverlayNg = `<style>
     right: 0;
     bottom: 0;
     position: fixed;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+  }
+  #dialog[open]::-webkit-scrollbar {
+    display: none;
   }
   #dialog::backdrop {
     background-color: transparent;
   }
+  .overlay-inner {
+    position: sticky;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+  .overlay-inner > * {
+    pointer-events: auto;
+  }
+  .overlay-placeholder {
+    width: 100%;
+    height: 1px;
+  }
 </style>
 <dialog id="dialog" part="dialog">
-  <slot></slot>
+  <div class="overlay-inner">
+    <slot></slot>
+  </div>
+  <div class="overlay-placeholder"></div>
 </dialog>`;
 
 export const templateXRefreshView = `<style>
@@ -218,6 +242,10 @@ export const templateXRefreshView = `<style>
   ></div>
 </div>`;
 
+/* https://bugs.webkit.org/show_bug.cgi?id=296048
+  The animation name should be defined in the template
+  This is a workaround for safari
+*/
 export const templateXSwiper = `<style>
   #bounce-padding {
     display: none;
@@ -245,6 +273,10 @@ export const templateXSwiper = `<style>
   }
   #indicator-container {
     display: none;
+  }
+  #indicator-container > div {
+    animation-name: indicator-dot;
+    animation-duration: 100ms;
   }
   @keyframes indicator-dot {
     30%,
@@ -309,3 +341,7 @@ export const templateXViewpageNg = `<style>
 <div id="content" part="content">
   <slot></slot>
 </div>`;
+
+export const templateXSvg = () => {
+  return `<img part="img" alt="" loading="lazy" id="img" /> `;
+};

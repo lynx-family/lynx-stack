@@ -4,7 +4,8 @@
 export type Cloneable<T = string | number | null | boolean | undefined> =
   | T
   | Record<string, T>
-  | T[];
+  | T[]
+  | Array<Record<string, Cloneable>>;
 
 export type CloneableObject<T = string | number | null | boolean | undefined> =
   Record<

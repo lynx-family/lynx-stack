@@ -13,7 +13,6 @@ const ssrIDMap = new Map();
 
 beforeAll(() => {
   globalEnvManager.switchToMainThread();
-  globalThis.__TESTING_FORCE_RENDER_TO_OPCODE__ = true;
 
   let ssrID = 666;
   options.onCreateElement = element => {
@@ -212,7 +211,7 @@ describe('ssr', () => {
               "color": "red",
             },
             "-2:2:",
-            "-2:3:",
+            "react-ref--2-3",
             {
               "_wkltId": "1",
               "_workletType": "main-thread",
@@ -274,7 +273,7 @@ describe('ssr', () => {
               "main-thread:ref": {
                 "_wkltId": "2",
               },
-              "ref": "-2:0:ref",
+              "ref": "react-ref--2-0",
               "style": {
                 "color": "red",
               },

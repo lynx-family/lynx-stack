@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/testing-environment",
-  "version": "0.1.0",
+  "version": "0.1.7",
   "description": "A subset of a Lynx environment to be useful for testing",
   "keywords": [
     "Lynx",
@@ -43,7 +43,8 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "CHANGELOG.md"
   ],
   "scripts": {
     "api-extractor": "api-extractor run --verbose",
@@ -51,8 +52,8 @@
     "dev": "rslib build --watch"
   },
   "devDependencies": {
-    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/jest-dom": "^6.8.0",
     "@types/jsdom": "^21.1.7",
-    "rsbuild-plugin-publint": "0.3.2"
+    "rsbuild-plugin-publint": "0.3.3"
   }
 }

@@ -1,0 +1,50 @@
+{
+  "name": "@lynx-js/cache-events-webpack-plugin",
+  "version": "0.0.2",
+  "description": "Cache Lynx native events until the BTS chunk is fully loaded, and replay them when the BTS chunk is ready.",
+  "keywords": [
+    "webpack",
+    "Lynx"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/webpack/cache-events-webpack-plugin"
+  },
+  "license": "Apache-2.0",
+  "author": {
+    "name": "Yiming Li",
+    "email": "yimingli.cs@gmail.com"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "import": "./lib/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "types": "./lib/index.d.ts",
+  "files": [
+    "lib",
+    "!lib/**/*.js.map",
+    "CHANGELOG.md",
+    "README.md"
+  ],
+  "scripts": {
+    "api-extractor": "api-extractor run --verbose",
+    "test": "pnpm vitest --project webpack/cache-events"
+  },
+  "dependencies": {
+    "@lynx-js/webpack-runtime-globals": "workspace:^"
+  },
+  "devDependencies": {
+    "@lynx-js/chunk-loading-webpack-plugin": "workspace:*",
+    "@lynx-js/test-tools": "workspace:*",
+    "@lynx-js/vitest-setup": "workspace:*",
+    "webpack": "^5.101.3"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

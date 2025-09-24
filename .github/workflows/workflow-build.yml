@@ -8,7 +8,9 @@ env:
   TURBO_TELEMETRY_DISABLED: 1
 jobs:
   get-merge-base:
+    permissions: {}
     runs-on: lynx-ubuntu-24.04-medium
+    timeout-minutes: 5
     env:
       # We have 2 cases:
       #   1. Pull request
@@ -18,7 +20,7 @@ jobs:
     outputs:
       merge-base: ${{ steps.merge-base.outputs.merge-base }}
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
         with:
           ref: ${{ env.HEAD_REF }}
           repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
@@ -61,32 +63,50 @@ jobs:
         run: |
           echo "merge-base=$(git merge-base "$CLEAN_BASE_REF" "$CLEAN_HEAD_REF" || git rev-parse "$CLEAN_BASE_REF")" >> $GITHUB_OUTPUT
   build-all:
-    runs-on: lynx-ubuntu-24.04-xlarge
+    permissions: {}
+    name: Build (${{ matrix.runs-on.name }})
+    runs-on: ${{ matrix.runs-on.label }}
+    strategy:
+      fail-fast: false
+      matrix:
+        runs-on:
+          - label: lynx-ubuntu-24.04-xlarge
+            name: Ubuntu
+          - label: lynx-windows-2022-large
+            name: Windows
+    timeout-minutes: 30
     needs: get-merge-base
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
         with:
           persist-credentials: false
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
           node-version: "22"
+          package-manager-cache: false
+      - name: Setup Rust
+        uses: ./.github/actions/rustup
+        with:
+          key: build
+          save-if: ${{ github.ref_name == 'main' }}
+      - uses: astral-sh/setup-uv@b75a909f75acd358c2196fb9a5f1299a9a8868a4 # v6
       - name: TurboCache
         uses: lynx-infra/cache@5c6160a6a4c7fca80a2f3057bb9dfc9513fcb732
         with:
           path: .turbo
-          key: turbo-v3-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ github.sha }}
-          # We can restore caches from
-          #   1. Runs in the same PR
-          #   2. Previous commit from base branch
-          #     2.1 Use the merge base
-          #     2.2 Use the base SHA
-          #   3. Any cache
+          key: turbo-v4-${{ runner.os }}-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ github.sha }}
+          # We can restore caches from:
+          #   1. Previous commit from base branch (merge base or base SHA)
+          #   2. Any cache
           restore-keys: |
-            turbo-pull-request-${{ github.event.pull_request.number || 'non-exists' }}-${{ github.run_number }}
-            turbo-pull-request-${{ github.event.pull_request.number || 'non-exists' }}-
-            turbo-v3-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ needs.get-merge-base.outputs.merge-base }}
-            turbo-v3-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.push.before }}
-            turbo-v3-${{ hashFiles('**/packages/**/src/**/*.rs') }}-
+            turbo-v4-${{ runner.os }}-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ needs.get-merge-base.outputs.merge-base }}
+            turbo-v4-${{ runner.os }}-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.push.before }}
+            turbo-v4-${{ runner.os }}-${{ hashFiles('**/packages/**/src/**/*.rs') }}-
+            turbo-v4-${{ runner.os }}-
+      - name: Install wasm-bindgen
+        uses: taiki-e/install-action@8ea32481661d5e04d602f215b94f17e4014b44f9 # v2
+        with:
+          tool: wasm-bindgen@0.2.101
       - name: Install
         run: |
           npm install -g corepack@latest
@@ -97,8 +117,8 @@ jobs:
         run: |
           pnpm turbo build --summarize
         env:
+          NODE_OPTIONS: --max-old-space-size=32768
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-        continue-on-error: true
       - name: Upload turbo summary
         if: runner.debug == '1'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
@@ -108,21 +128,3 @@ jobs:
           retention-days: 1
           overwrite: true
           include-hidden-files: true
-      - name: Setup Rust and retry build if failed
-        if: steps.build.outcome == 'failure'
-        uses: actions-rust-lang/setup-rust-toolchain@9d7e65c320fdb52dcd45ffaa68deb6c02c8754d9 # v1
-        with:
-          target: wasm32-unknown-unknown
-          cache-key: test-${{ runner.os }}
-      - name: Retry Build
-        if: steps.build.outcome == 'failure'
-        run: |
-          pnpm turbo build --summarize
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-      - name: Save turbo cache
-        if: github.event_name == 'pull_request'
-        uses: lynx-infra/cache/save@5c6160a6a4c7fca80a2f3057bb9dfc9513fcb732
-        with:
-          path: .turbo
-          key: turbo-pull-request-${{ github.event.pull_request.number }}-${{ github.run_number }}-${{ github.run_attempt }}

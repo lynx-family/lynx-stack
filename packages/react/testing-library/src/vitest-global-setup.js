@@ -1,9 +1,11 @@
 import { options } from 'preact';
+import { expect } from 'vitest';
 
 import { BackgroundSnapshotInstance } from '../../runtime/lib/backgroundSnapshot.js';
 import { clearCommitTaskId, replaceCommitHook } from '../../runtime/lib/lifecycle/patch/commit.js';
 import { deinitGlobalSnapshotPatch } from '../../runtime/lib/lifecycle/patch/snapshotPatch.js';
 import { injectUpdateMainThread } from '../../runtime/lib/lifecycle/patch/updateMainThread.js';
+import { injectUpdateMTRefInitValue } from '../../runtime/lib/worklet/ref/updateInitValue.js';
 import { injectCalledByNative } from '../../runtime/lib/lynx/calledByNative.js';
 import { flushDelayedLifecycleEvents, injectTt } from '../../runtime/lib/lynx/tt.js';
 import { setRoot } from '../../runtime/lib/root.js';
@@ -17,6 +19,31 @@ import { initApiEnv } from '../../worklet-runtime/lib/api/lynxApi.js';
 import { initEventListeners } from '../../worklet-runtime/lib/listeners.js';
 import { initWorklet } from '../../worklet-runtime/lib/workletRuntime.js';
 
+expect.addSnapshotSerializer({
+  test(val) {
+    return Boolean(
+      val
+        && typeof val === 'object'
+        && Array.isArray(val.refAttr)
+        && Object.prototype.hasOwnProperty.call(val, 'task')
+        && typeof val.exec === 'function',
+    );
+  },
+  print(val, serialize) {
+    const printed = serialize({
+      refAttr: Array.isArray(val.refAttr) ? [...val.refAttr] : val.refAttr,
+      task: val.task,
+    });
+    if (printed.startsWith('Object')) {
+      return printed.replace(/^Object/, 'RefProxy');
+    }
+    if (printed.startsWith('{')) {
+      return `RefProxy ${printed}`;
+    }
+    return printed;
+  },
+});
+
 const {
   onInjectMainThreadGlobals,
   onInjectBackgroundThreadGlobals,
@@ -28,6 +55,7 @@ const {
 
 injectCalledByNative();
 injectUpdateMainThread();
+injectUpdateMTRefInitValue();
 replaceCommitHook();
 
 globalThis.onInitWorkletRuntime = () => {
@@ -35,9 +63,6 @@ globalThis.onInitWorkletRuntime = () => {
     onInitWorkletRuntime();
   }
 
-  if (process.env.DEBUG) {
-    console.log('initWorkletRuntime');
-  }
   lynx.setTimeout = setTimeout;
   lynx.setInterval = setInterval;
   lynx.clearTimeout = clearTimeout;
@@ -52,10 +77,7 @@ globalThis.onInitWorkletRuntime = () => {
 
 globalThis.onInjectMainThreadGlobals = (target) => {
   if (onInjectMainThreadGlobals) {
-    onInjectMainThreadGlobals();
-  }
-  if (process.env.DEBUG) {
-    console.log('onInjectMainThreadGlobals');
+    onInjectMainThreadGlobals(target);
   }
 
   snapshotInstanceManager.clear();
@@ -88,10 +110,7 @@ globalThis.onInjectMainThreadGlobals = (target) => {
 };
 globalThis.onInjectBackgroundThreadGlobals = (target) => {
   if (onInjectBackgroundThreadGlobals) {
-    onInjectBackgroundThreadGlobals();
-  }
-  if (process.env.DEBUG) {
-    console.log('onInjectBackgroundThreadGlobals');
+    onInjectBackgroundThreadGlobals(target);
   }
 
   backgroundSnapshotInstanceManager.clear();
@@ -145,9 +164,6 @@ globalThis.onResetLynxTestingEnv = () => {
   if (onResetLynxTestingEnv) {
     onResetLynxTestingEnv();
   }
-  if (process.env.DEBUG) {
-    console.log('onResetLynxTestingEnv');
-  }
 
   flushDelayedLifecycleEvents();
   destroyWorklet();
@@ -161,9 +177,6 @@ globalThis.onSwitchedToMainThread = () => {
   if (onSwitchedToMainThread) {
     onSwitchedToMainThread();
   }
-  if (process.env.DEBUG) {
-    console.log('onSwitchedToMainThread');
-  }
 
   setRoot(globalThis.__root);
   options.document = globalThis._document;
@@ -171,9 +184,6 @@ globalThis.onSwitchedToMainThread = () => {
 globalThis.onSwitchedToBackgroundThread = () => {
   if (onSwitchedToBackgroundThread) {
     onSwitchedToBackgroundThread();
-  }
-  if (process.env.DEBUG) {
-    console.log('onSwitchedToBackgroundThread');
   }
 
   setRoot(globalThis.__root);

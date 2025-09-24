@@ -98,6 +98,7 @@ Build the project in production mode
 
 Options:
   --environment <name...>  specify the name of environment to build
+  --watch                  Enable watch mode to automatically rebuild on file changes
   -c --config <config>     specify the configuration file, can be a relative or absolute path
   --env-mode <mode>        specify the env mode to load the .env.[mode] file
   --no-env                 disable loading `.env` files"
@@ -171,7 +172,7 @@ Inspect Rspeedy config succeed, open following files to view the content:
 
 ### Specifying Mode
 
-By default, the inspect command outputs the configuration for the development mode. You can add the `--env production` option to output the configuration for the production mode:
+By default, the inspect command outputs the configuration for the development mode. You can add the `--mode production` option to output the configuration for the production mode:
 
 ```bash
 rspeedy inspect --mode production

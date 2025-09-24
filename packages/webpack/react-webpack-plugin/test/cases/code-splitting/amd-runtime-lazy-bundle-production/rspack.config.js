@@ -21,7 +21,7 @@ export default {
     new LynxTemplatePlugin({
       ...LynxTemplatePlugin.defaultOptions,
       experimental_isLazyBundle: true,
-      chunks: ['main:main-thread', 'main:background'],
+      chunks: ['main__main-thread', 'main__background'],
       filename: 'main/template.js',
       intermediate: '.rspeedy/main',
     }),

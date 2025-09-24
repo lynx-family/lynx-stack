@@ -3,15 +3,17 @@
 // LICENSE file in the root directory of this source tree.
 
 import js from '@eslint/js';
+import markdown from '@eslint/markdown';
 import vitest from '@vitest/eslint-plugin';
 import headers from 'eslint-plugin-headers';
 import importPlugin from 'eslint-plugin-import';
-import markdownPlugin from 'eslint-plugin-markdown';
 import nodePlugin from 'eslint-plugin-n';
 import * as regexpPlugin from 'eslint-plugin-regexp';
 import eslintPluginUnicorn from 'eslint-plugin-unicorn';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
+import reactHooks from 'eslint-plugin-react-hooks';
+import reactRefresh from 'eslint-plugin-react-refresh';
 
 export default tseslint.config(
   // Global ignores
@@ -45,6 +47,8 @@ export default tseslint.config(
       'packages/react/transform/tests/__swc_snapshots__/**',
       'packages/react/transform/__test__/**/__snapshots__/**',
 
+      'packages/react/transform/**/tests/__swc_snapshots__/**',
+
       // Configs
       'eslint.config.js',
       'vitest.config.ts',
@@ -52,6 +56,7 @@ export default tseslint.config(
 
       // Ignored packages
       'packages/**/vitest.config.ts',
+      'packages/react/runtime/compat/**',
       'packages/rspeedy/create-rspeedy/template-*/**',
       'packages/{rspeedy,webpack}/*/test/**/cases/**',
       'packages/{rspeedy,webpack}/*/test/**/hotCases/**',
@@ -66,16 +71,18 @@ export default tseslint.config(
 
       // TODO: enable eslint for react
       // react
-      'examples/**',
       'packages/react/types/**',
       'packages/react/runtime/__test__/**',
       'packages/react/runtime/jsx-dev-runtime/**',
       'packages/react/runtime/jsx-runtime/**',
       'packages/react/runtime/lazy/**',
       'packages/react/runtime/lepus/**',
-      'packages/react/runtime/src/**/*',
+      'packages/react/runtime/src/renderToOpcodes/**',
       'packages/react/runtime/types/**',
-      '!packages/react/runtime/src/worklet/**',
+
+      // TODO: enable eslint for react-runtime
+      'packages/react/runtime/src/compat/**',
+      'packages/react/runtime/src/opcodes.ts',
 
       // TODO: enable eslint for tools
       // tools
@@ -105,7 +112,7 @@ export default tseslint.config(
           style: 'line',
           content: [
             'Copyright (year) {authors}. All rights reserved.',
-            'Licensed under the Apache License Version 2.0 that can be found in the',
+            'Licensed under the (license) that can be found in the',
             'LICENSE file in the root directory of this source tree.',
           ].join('\n'),
           variables: {
@@ -116,22 +123,21 @@ export default tseslint.config(
               pattern: '\\d{4}',
               defaultValue: new Date().getFullYear().toString(),
             },
+            license: {
+              pattern: [
+                'Apache License Version 2.0',
+                'MIT license',
+              ].join('|'),
+              defaultValue: 'Apache License Version 2.0',
+            },
           },
         },
       ],
     },
   },
   regexpPlugin.configs['flat/recommended'],
-  ...markdownPlugin.configs.recommended,
-  {
-    rules: {
-      'jsdoc/require-jsdoc': 'off',
-      'jsdoc/require-returns': 'off',
-      'jsdoc/check-alignment': 'off',
-
-      'jsdoc/tag-lines': 'off',
-    },
-  },
+  ...markdown.configs.recommended,
+  ...markdown.configs.processor,
   // Rules from eslint-plugin-n
   nodePlugin.configs['flat/recommended-module'],
   {
@@ -213,7 +219,7 @@ export default tseslint.config(
         'error',
         {
           ignoreCase: false,
-          ignoreDeclarationSort: true, // don"t want to sort import lines, use eslint-plugin-import instead
+          ignoreDeclarationSort: true, // don't want to sort import lines, use eslint-plugin-import instead
           ignoreMemberSort: false,
           memberSyntaxSortOrder: ['none', 'all', 'multiple', 'single'],
           allowSeparatedGroups: true,
@@ -256,6 +262,9 @@ export default tseslint.config(
         },
         tsconfigRootDir: import.meta.dirname,
       },
+    },
+    rules: {
+      '@typescript-eslint/consistent-generic-constructors': 'off',
     },
   },
   // JavaScript-related
@@ -375,6 +384,33 @@ export default tseslint.config(
       '@typescript-eslint/prefer-literal-enum-member': 'off',
       '@typescript-eslint/prefer-optional-chain': 'off',
       '@typescript-eslint/require-await': 'off',
+    },
+  },
+  // React-related
+  {
+    files: [
+      'examples/**/*.{jsx,tsx}',
+    ],
+    extends: [
+      reactHooks.configs['recommended-latest'],
+      reactRefresh.configs.vite,
+    ],
+  },
+  {
+    files: [
+      'examples/**',
+    ],
+    settings: {
+      'import/resolver': {
+        typescript: {
+          project: 'examples/**/tsconfig.json',
+          noWarnOnMultipleProjects: true,
+        },
+      },
+    },
+    rules: {
+      // TODO: enable header for examples
+      'headers/header-format': 'off',
     },
   },
 );

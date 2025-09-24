@@ -10,12 +10,12 @@ import type {
 import type { Cloneable, CloneableObject } from './types/Cloneable.js';
 import type { StartMainThreadContextConfig } from './types/MainThreadStartConfigs.js';
 import type { IdentifierType, InvokeCallbackRes } from './types/NativeApp.js';
-import type { LynxTemplate } from './types/LynxModule.js';
-import type { NapiModulesMap } from './types/NapiModules.js';
-import type { NativeModulesMap } from './types/NativeModules.js';
-import type { ElementOperation } from '@lynx-js/offscreen-document';
-import type { BrowserConfig } from './types/PageConfig.js';
 import type { ElementAnimationOptions } from './types/Element.js';
+import type {
+  BackMainThreadContextConfig,
+  LynxTemplate,
+  MarkTiming,
+} from './types/index.js';
 
 export const postExposureEndpoint = createRpcEndpoint<
   [{ exposures: ExposureWorkerEvent[]; disExposures: ExposureWorkerEvent[] }],
@@ -76,29 +76,20 @@ export const disposeEndpoint = createRpcEndpoint<
 >('dispose', false, true);
 
 export const BackgroundThreadStartEndpoint = createRpcEndpoint<[
-  {
-    initData: unknown;
-    globalProps: unknown;
-    template: LynxTemplate;
-    cardType: string;
-    customSections: Record<string, Cloneable>;
-    nativeModulesMap: NativeModulesMap;
-    napiModulesMap: NapiModulesMap;
-    browserConfig: BrowserConfig;
-  },
+  BackMainThreadContextConfig,
 ], void>('start', false, true);
 
 /**
  * Error message, info
  */
 export const reportErrorEndpoint = createRpcEndpoint<
-  [string, unknown],
+  [Error, unknown, string],
   void
 >('reportError', false, false);
 
 export const flushElementTreeEndpoint = createRpcEndpoint<
   [
-    operations: ElementOperation[],
+    operations: (string | number)[],
   ],
   void
 >('flushElementTree', false, true);
@@ -107,6 +98,11 @@ export const callLepusMethodEndpoint = createRpcEndpoint<
   [name: string, data: unknown],
   void
 >('callLepusMethod', false, true);
+
+export const multiThreadExposureChangedEndpoint = createRpcEndpoint<
+  [string[]],
+  void
+>('multiThreadExposureChangedEndpoint', false, false);
 
 export const invokeUIMethodEndpoint = createRpcEndpoint<
   [
@@ -132,6 +128,17 @@ export const setNativePropsEndpoint = createRpcEndpoint<
   void
 >('__setNativeProps', false, true);
 
+export const getPathInfoEndpoint = createRpcEndpoint<
+  [
+    type: IdentifierType,
+    identifier: string,
+    component_id: string,
+    first_only: boolean,
+    root_unique_id?: number | undefined,
+  ],
+  InvokeCallbackRes
+>('__getPathInfo', false, true);
+
 export const nativeModulesCallEndpoint = createRpcEndpoint<
   [name: string, data: Cloneable, moduleName: string],
   any
@@ -148,11 +155,7 @@ export const getCustomSectionsEndpoint = createRpcEndpoint<
 >('getCustomSections', false, true);
 
 export const markTimingEndpoint = createRpcEndpoint<
-  [
-    timingKey: string,
-    pipelineId: string | undefined,
-    timeStamp: number,
-  ],
+  [MarkTiming[]],
   void
 >('markTiming', false, false);
 
@@ -226,3 +229,33 @@ export const updateGlobalPropsEndpoint = createRpcEndpoint<
   [Cloneable],
   void
 >('updateGlobalProps', false, false);
+
+export const updateI18nResourcesEndpoint = createRpcEndpoint<
+  [Cloneable],
+  void
+>('updateI18nResources', false, false);
+
+export const updateI18nResourceEndpoint = createRpcEndpoint<
+  [Cloneable | undefined],
+  void
+>('updateI18nResource', false, false);
+
+export const dispatchI18nResourceEndpoint = createRpcEndpoint<
+  [Cloneable],
+  void
+>('dispatchI18nResource', false, false);
+
+export const queryComponentEndpoint = createRpcEndpoint<
+  [string],
+  { code: number; detail: { schema: string } }
+>('queryComponent', false, true);
+
+export const updateBTSTemplateCacheEndpoint = createRpcEndpoint<
+  [/** url */ string, LynxTemplate],
+  void
+>('updateBTSTemplateCacheEndpoint', false, true);
+
+export const loadTemplateMultiThread = createRpcEndpoint<
+  [string],
+  LynxTemplate
+>('loadTemplateMultiThread', false, true);

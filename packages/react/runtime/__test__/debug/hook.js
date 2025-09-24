@@ -4,10 +4,11 @@
 import { options } from 'preact';
 import { vi } from 'vitest';
 
-import { DIFF, DIFFED, RENDER } from '../../src/renderToOpcodes/constants';
+import { DIFF, DIFF2, DIFFED, RENDER } from '../../src/renderToOpcodes/constants';
 
 export const noop = vi.fn();
 
 options[DIFF] = noop;
+options[DIFF2] = noop;
 options[RENDER] = noop;
 options[DIFFED] = noop;

@@ -20,22 +20,27 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     if: github.repository == 'lynx-family/lynx-stack'
     permissions:
       contents: read
       actions: read
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
         with:
           fetch-depth: 0
           persist-credentials: false
-      - uses: actions-rust-lang/setup-rust-toolchain@9d7e65c320fdb52dcd45ffaa68deb6c02c8754d9 # v1
+      - uses: actions-rust-lang/setup-rust-toolchain@2fcdc490d667999e01ddbbf0f2823181beef6b39 # v1
         with:
-          target: wasm32-unknown-unknown
           cache: false
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
-          node-version: "22"
+          node-version: "24"
+          package-manager-cache: false
+      - name: Install wasm-bindgen
+        uses: taiki-e/install-action@8ea32481661d5e04d602f215b94f17e4014b44f9 # v2
+        with:
+          tool: wasm-bindgen@0.2.101
       - name: Install
         run: |
           npm install -g corepack@latest
@@ -43,7 +48,7 @@ jobs:
           corepack pnpm install --frozen-lockfile
       - name: build
         run: |
-          corepack pnpm turbo --filter !@lynx-js/web-tests build --summarize
+          corepack pnpm turbo --filter !@lynx-js/web-tests --filter !benchx_cli --filter "!@lynx-js/benchmark-*" build --summarize
       - name: Save Turbo Result
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
@@ -58,7 +63,7 @@ jobs:
   build-all:
     concurrency:
       group: ${{ github.workflow }}-build-${{ github.ref }}
-      cancel-in-progress: true
+      cancel-in-progress: false
     uses: ./.github/workflows/workflow-build.yml
     if: github.repository == 'lynx-family/lynx-stack'
     permissions: {}
@@ -83,7 +88,8 @@ jobs:
       runs-on: lynx-ubuntu-24.04-medium
       run: >
         pnpm run test
-        --test-timeout=50000
+        --testTimeout=50000
+        --hookTimeout=50000
         --reporter=dot
         --reporter=junit
         --outputFile=test-report.junit.xml
@@ -92,13 +98,14 @@ jobs:
         --logHeapUsage
         --silent
   publish:
+    timeout-minutes: 30
     needs: build
     runs-on: ubuntu-latest
     if: github.repository == 'lynx-family/lynx-stack'
     concurrency:
       group: ${{ github.workflow }}-publish-${{ github.ref }}
       cancel-in-progress: false
-    environment: main branch
+    environment: npm
     permissions:
       contents: write
       pull-requests: write
@@ -107,28 +114,29 @@ jobs:
       # See: https://docs.npmjs.com/generating-provenance-statements#publishing-packages-with-provenance-via-github-actions
       id-token: write
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
         with:
           fetch-depth: 0
           persist-credentials: false
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
-          node-version: "22"
+          node-version: "24"
           registry-url: "https://registry.npmjs.org"
+          package-manager-cache: false
       - name: Install
         run: |
           npm install -g corepack@latest
           corepack enable && corepack prepare
           corepack pnpm install --frozen-lockfile
       - name: Download Turbo Cache
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
         timeout-minutes: 5
         with:
           name: deploy-${{ github.sha }}
           path: .turbo
       - name: build
         run: |
-          corepack pnpm turbo --filter !@lynx-js/web-tests build --summarize
+          corepack pnpm turbo --filter !@lynx-js/web-tests build --filter !benchx_cli --filter "!@lynx-js/benchmark-*" --summarize
       - name: Get current date
         id: date
         run: echo "::set-output name=date::$(date -u +'%Y-%m-%d %H:%M:%S')"
@@ -136,16 +144,16 @@ jobs:
         uses: changesets/action@e0145edc7d9d8679003495b11f87bd8ef63c0cba # v1.5.3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         with:
           publish: pnpm changeset publish
           title: "chore: Release ${{ steps.date.outputs.date }}"
 
   canary-publish:
+    timeout-minutes: 30
     needs: build
     runs-on: ubuntu-latest
     if: github.repository == 'lynx-family/lynx-stack'
-    environment: main branch
+    environment: npm
     permissions:
       contents: read
       pull-requests: read
@@ -154,28 +162,29 @@ jobs:
       # See: https://docs.npmjs.com/generating-provenance-statements#publishing-packages-with-provenance-via-github-actions
       id-token: write
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
         with:
           fetch-depth: 0
           persist-credentials: false
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
-          node-version: "22"
+          node-version: "24"
           registry-url: "https://registry.npmjs.org"
+          package-manager-cache: false
       - name: Install
         run: |
           npm install -g corepack@latest
           corepack enable && corepack prepare
           corepack pnpm install --frozen-lockfile
       - name: Download Turbo Cache
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
         timeout-minutes: 5
         with:
           name: deploy-${{ github.sha }}
           path: .turbo
       - name: build
         run: |
-          corepack pnpm turbo --filter !@lynx-js/web-tests build --summarize
+          corepack pnpm turbo --filter !@lynx-js/web-tests --filter !benchx_cli --filter "!@lynx-js/benchmark-*" build --summarize
       - name: version canary packages
         env:
           # changesets-changelog-github requires a GITHUB_TOKEN
@@ -186,14 +195,13 @@ jobs:
       - name: publish canary packages
         run: |
           pnpm --recursive publish --no-git-checks --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
   website-build:
     needs: build-all
     if: github.repository == 'lynx-family/lynx-stack'
     uses: ./.github/workflows/workflow-website.yml
     permissions: {}
   website-deploy:
+    timeout-minutes: 10
     needs: website-build
     if: github.repository == 'lynx-family/lynx-stack'
     runs-on: ubuntu-latest

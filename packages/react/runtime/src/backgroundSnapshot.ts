@@ -10,6 +10,7 @@
 
 import type { Worklet } from '@lynx-js/react/worklet-runtime/bindings';
 
+import { profileEnd, profileStart } from './debug/utils.js';
 import { processGestureBackground } from './gesture/processGestureBagkround.js';
 import type { GestureKind } from './gesture/types.js';
 import { diffArrayAction, diffArrayLepus } from './hydrate.js';
@@ -22,22 +23,20 @@ import {
   takeGlobalSnapshotPatch,
 } from './lifecycle/patch/snapshotPatch.js';
 import { globalPipelineOptions } from './lynx/performance.js';
-import type { SerializedSnapshotInstance } from './snapshot.js';
-import {
-  DynamicPartType,
-  backgroundSnapshotInstanceManager,
-  snapshotManager,
-  traverseSnapshotInstance,
-} from './snapshot.js';
-import { markRefToRemove } from './snapshot/ref.js';
+import { DynamicPartType } from './snapshot/dynamicPartType.js';
+import { applyRef, clearQueuedRefs, queueRefAttrUpdate } from './snapshot/ref.js';
+import type { Ref } from './snapshot/ref.js';
 import { transformSpread } from './snapshot/spread.js';
+import type { SerializedSnapshotInstance, Snapshot } from './snapshot.js';
+import { backgroundSnapshotInstanceManager, snapshotManager, traverseSnapshotInstance } from './snapshot.js';
+import { hydrationMap } from './snapshotInstanceHydrationMap.js';
 import { isDirectOrDeepEqual } from './utils.js';
 import { onPostWorkletCtx } from './worklet/ctx.js';
 
 export class BackgroundSnapshotInstance {
   constructor(public type: string) {
-    let id;
-    id = this.__id = backgroundSnapshotInstanceManager.nextId += 1;
+    this.__snapshot_def = snapshotManager.values.get(type)!;
+    const id = this.__id = backgroundSnapshotInstanceManager.nextId += 1;
     backgroundSnapshotInstanceManager.values.set(id, this);
 
     __globalSnapshotPatch?.push(SnapshotOperation.CreateElement, type, id);
@@ -45,12 +44,15 @@ export class BackgroundSnapshotInstance {
 
   __id: number;
   __values: any[] | undefined;
+  __snapshot_def: Snapshot;
+  __extraProps?: Record<string, unknown> | undefined;
 
   private __parent: BackgroundSnapshotInstance | null = null;
   private __firstChild: BackgroundSnapshotInstance | null = null;
   private __lastChild: BackgroundSnapshotInstance | null = null;
   private __previousSibling: BackgroundSnapshotInstance | null = null;
   private __nextSibling: BackgroundSnapshotInstance | null = null;
+  private __removed_from_tree?: boolean;
 
   get parentNode(): BackgroundSnapshotInstance | null {
     return this.__parent;
@@ -68,25 +70,28 @@ export class BackgroundSnapshotInstance {
     return child.parentNode === this;
   }
 
-  // TODO: write tests for this
   // This will be called in `lazy`/`Suspense`.
-  // We currently ignore this since we did not find a way to test.
-  /* v8 ignore start */
   appendChild(child: BackgroundSnapshotInstance): void {
     return this.insertBefore(child);
   }
-  /* v8 ignore stop */
 
   insertBefore(
     node: BackgroundSnapshotInstance,
     beforeNode?: BackgroundSnapshotInstance,
   ): void {
-    __globalSnapshotPatch?.push(
-      SnapshotOperation.InsertBefore,
-      this.__id,
-      node.__id,
-      beforeNode?.__id,
-    );
+    if (node.__removed_from_tree) {
+      node.__removed_from_tree = false;
+      // This is only called by `lazy`/`Suspense` through `appendChild` so beforeNode is always undefined.
+      /* v8 ignore next */
+      reconstructInstanceTree([node], this.__id, beforeNode?.__id);
+    } else {
+      __globalSnapshotPatch?.push(
+        SnapshotOperation.InsertBefore,
+        this.__id,
+        node.__id,
+        beforeNode?.__id,
+      );
+    }
 
     // If the node already has a parent, remove it from its current parent
     const p = node.__parent;
@@ -137,6 +142,7 @@ export class BackgroundSnapshotInstance {
       this.__id,
       node.__id,
     );
+    node.__removed_from_tree = true;
 
     if (node.__parent !== this) {
       throw new Error('The node to be removed is not a child of this node.');
@@ -158,9 +164,37 @@ export class BackgroundSnapshotInstance {
     node.__previousSibling = null;
     node.__nextSibling = null;
 
-    traverseSnapshotInstance(node, v => {
+    queueRefAttrUpdate(
+      () => {
+        traverseSnapshotInstance(node, v => {
+          if (v.__values) {
+            v.__snapshot_def.refAndSpreadIndexes?.forEach((i) => {
+              const value = v.__values![i] as unknown;
+              if (value && (typeof value === 'object' || typeof value === 'function')) {
+                if ('__spread' in value && 'ref' in value) {
+                  applyRef(value.ref as Ref, null);
+                } else if ('__ref' in value) {
+                  applyRef(value as Ref, null);
+                }
+              }
+            });
+          }
+        });
+      },
+      null,
+      0,
+      0,
+    );
+
+    globalBackgroundSnapshotInstancesToRemove.push(node.__id);
+  }
+
+  tearDown(): void {
+    traverseSnapshotInstance(this, v => {
       v.__parent = null;
-      globalBackgroundSnapshotInstancesToRemove.push(v.__id);
+      v.__previousSibling = null;
+      v.__nextSibling = null;
+      backgroundSnapshotInstanceManager.values.delete(v.__id);
     });
   }
 
@@ -177,18 +211,22 @@ export class BackgroundSnapshotInstance {
     return nodes;
   }
 
-  setAttribute(key: string | number, value: any): void {
+  setAttribute(key: string | number, value: unknown): void {
     if (__PROFILE__) {
-      console.profile('setAttribute');
+      profileStart('ReactLynx::BSI::setAttribute');
     }
     if (key === 'values') {
       if (__globalSnapshotPatch) {
         const oldValues = this.__values;
         if (oldValues) {
-          for (let index = 0; index < value.length; index++) {
-            const { needUpdate, valueToCommit } = this.setAttributeImpl(value[index], oldValues[index], index);
+          for (let index = 0; index < (value as unknown[]).length; index++) {
+            const { needUpdate, valueToCommit } = this.setAttributeImpl(
+              (value as unknown[])[index],
+              oldValues[index],
+              index,
+            );
             if (needUpdate) {
-              __globalSnapshotPatch?.push(
+              __globalSnapshotPatch.push(
                 SnapshotOperation.SetAttribute,
                 this.__id,
                 index,
@@ -198,100 +236,112 @@ export class BackgroundSnapshotInstance {
           }
         } else {
           const patch = [];
-          const length = value.length;
+          const length = (value as unknown[]).length;
           for (let index = 0; index < length; ++index) {
-            const { valueToCommit } = this.setAttributeImpl(value[index], null, index);
+            const { valueToCommit } = this.setAttributeImpl((value as unknown[])[index], null, index);
             patch[index] = valueToCommit;
           }
-          __globalSnapshotPatch?.push(
+          __globalSnapshotPatch.push(
             SnapshotOperation.SetAttributes,
             this.__id,
             patch,
           );
         }
+      } else {
+        this.__snapshot_def.refAndSpreadIndexes?.forEach((index) => {
+          const v = (value as unknown[])[index];
+          if (v && (typeof v === 'object' || typeof v === 'function')) {
+            if ('__spread' in v && 'ref' in v) {
+              queueRefAttrUpdate(null, v.ref as Ref, this.__id, index);
+            } else if ('__ref' in v) {
+              queueRefAttrUpdate(null, v as Ref, this.__id, index);
+            }
+          }
+        });
       }
-      this.__values = value;
+      this.__values = value as unknown[];
       if (__PROFILE__) {
-        console.profileEnd();
+        profileEnd();
       }
       return;
     }
 
-    // old path (`<__snapshot_xxxx_xxxx __0={} __1={} />` or `this.setAttribute(0, xxx)`)
-    // is reserved as slow path
-    const index = typeof key === 'string' ? Number(key.slice(2)) : key;
-    (this.__values ??= [])[index] = value;
-
+    if (typeof key === 'string') {
+      (this.__extraProps ??= {})[key] = value;
+    } else {
+      // old path (`this.setAttribute(0, xxx)`)
+      // is reserved as slow path
+      (this.__values ??= [])[key] = value;
+    }
     __globalSnapshotPatch?.push(
       SnapshotOperation.SetAttribute,
       this.__id,
-      index,
+      key,
       value,
     );
     if (__PROFILE__) {
-      console.profileEnd();
+      profileEnd();
     }
   }
 
-  private setAttributeImpl(newValue: any, oldValue: any, index: number): {
+  private setAttributeImpl(newValue: unknown, oldValue: unknown, index: number): {
     needUpdate: boolean;
-    valueToCommit: any;
+    valueToCommit: unknown;
   } {
     if (!newValue) {
-      if (oldValue && oldValue.__ref) {
-        markRefToRemove(`${this.__id}:${index}:`, oldValue);
+      // `oldValue` can't be a spread.
+      if (oldValue && typeof oldValue === 'object' && '__ref' in oldValue) {
+        queueRefAttrUpdate(oldValue as Ref, null, this.__id, index);
       }
       return { needUpdate: oldValue !== newValue, valueToCommit: newValue };
     }
 
     const newType = typeof newValue;
     if (newType === 'object') {
-      if (newValue.__spread) {
-        const oldSpread = oldValue ? oldValue.__spread : oldValue;
-        const newSpread = transformSpread(this, index, newValue);
+      const newValueObj = newValue as Record<string, unknown>;
+      if ('__spread' in newValueObj) {
+        const oldSpread = (oldValue as { __spread?: Record<string, unknown> } | undefined)?.__spread;
+        const newSpread = transformSpread(this, index, newValueObj);
         const needUpdate = !isDirectOrDeepEqual(oldSpread, newSpread);
         // use __spread to cache the transform result for next diff
-        newValue.__spread = newSpread;
+        newValueObj['__spread'] = newSpread;
+        queueRefAttrUpdate(
+          oldSpread && ((oldValue as { ref?: Ref }).ref),
+          newValueObj['ref'] as Ref,
+          this.__id,
+          index,
+        );
         if (needUpdate) {
-          if (oldSpread && oldSpread.ref) {
-            markRefToRemove(`${this.__id}:${index}:ref`, oldValue.ref);
-          }
-          for (let key in newSpread) {
+          for (const key in newSpread) {
             const newSpreadValue = newSpread[key];
             if (!newSpreadValue) {
               continue;
             }
-            if ((newSpreadValue as any)._wkltId) {
+            if ((newSpreadValue as { _wkltId?: string })._wkltId) {
               newSpread[key] = onPostWorkletCtx(newSpreadValue as Worklet);
-            } else if ((newSpreadValue as any).__isGesture) {
+            } else if ((newSpreadValue as { __isGesture?: boolean }).__isGesture) {
               processGestureBackground(newSpreadValue as GestureKind);
-            } else if (key == '__lynx_timing_flag' && oldSpread?.[key] != newSpreadValue) {
-              if (globalPipelineOptions) {
-                globalPipelineOptions.needTimestamps = true;
-              }
+            } else if (key == '__lynx_timing_flag' && oldSpread?.[key] != newSpreadValue && globalPipelineOptions) {
+              globalPipelineOptions.needTimestamps = true;
             }
           }
         }
         return { needUpdate, valueToCommit: newSpread };
       }
-      if (newValue.__ref) {
-        // force update to update ref value
-        // TODO: ref: optimize this. The ref update maybe can be done on the background thread to reduce updating.
-        // The old ref must have a place to be stored because it needs to be cleared when the main thread returns.
-        markRefToRemove(`${this.__id}:${index}:`, oldValue);
-        // update ref. On the main thread, the ref id will be replaced with value's sign when updating.
-        return { needUpdate: true, valueToCommit: newValue.__ref };
+      if ('__ref' in newValueObj) {
+        queueRefAttrUpdate(oldValue as Ref, newValueObj as Ref, this.__id, index);
+        return { needUpdate: false, valueToCommit: 1 };
       }
-      if (newValue._wkltId) {
-        return { needUpdate: true, valueToCommit: onPostWorkletCtx(newValue) };
+      if ('_wkltId' in newValueObj) {
+        return { needUpdate: true, valueToCommit: onPostWorkletCtx(newValueObj as Worklet) };
       }
-      if (newValue.__isGesture) {
-        processGestureBackground(newValue);
+      if ('__isGesture' in newValueObj) {
+        processGestureBackground(newValueObj as unknown as GestureKind);
         return { needUpdate: true, valueToCommit: newValue };
       }
-      if (newValue.__ltf) {
+      if ('__ltf' in newValueObj) {
         // __lynx_timing_flag
-        if (globalPipelineOptions && oldValue?.__ltf != newValue.__ltf) {
+        if (globalPipelineOptions && (oldValue as { __ltf?: unknown } | undefined)?.__ltf != newValueObj['__ltf']) {
           globalPipelineOptions.needTimestamps = true;
           return { needUpdate: true, valueToCommit: newValue };
         }
@@ -300,9 +350,9 @@ export class BackgroundSnapshotInstance {
       return { needUpdate: !isDirectOrDeepEqual(oldValue, newValue), valueToCommit: newValue };
     }
     if (newType === 'function') {
-      if (newValue.__ref) {
-        markRefToRemove(`${this.__id}:${index}:`, oldValue);
-        return { needUpdate: true, valueToCommit: newValue.__ref };
+      if ((newValue as { __ref?: unknown }).__ref) {
+        queueRefAttrUpdate(oldValue as Ref, newValue as Ref, this.__id, index);
+        return { needUpdate: false, valueToCommit: 1 };
       }
       /* event */
       return { needUpdate: !oldValue, valueToCommit: 1 };
@@ -317,71 +367,85 @@ export function hydrate(
 ): SnapshotPatch {
   initGlobalSnapshotPatch();
 
-  const helper2 = (afters: BackgroundSnapshotInstance[], parentId: number) => {
-    for (const child of afters) {
-      const id = child.__id;
-      __globalSnapshotPatch!.push(SnapshotOperation.CreateElement, child.type, id);
-      const values = child.__values;
-      if (values) {
-        child.__values = undefined;
-        child.setAttribute('values', values);
-      }
-      helper2(child.childNodes, id);
-      __globalSnapshotPatch!.push(SnapshotOperation.InsertBefore, parentId, id, undefined);
-    }
-  };
-
   const helper = (
     before: SerializedSnapshotInstance,
     after: BackgroundSnapshotInstance,
   ) => {
+    hydrationMap.set(after.__id, before.id);
     backgroundSnapshotInstanceManager.updateId(after.__id, before.id);
-    after.__values?.forEach((value, index) => {
-      const old = before.values![index];
+    after.__values?.forEach((value: unknown, index) => {
+      const old: unknown = before.values![index];
 
       if (value) {
-        if (value.__spread) {
-          // `value.__spread` my contain event ids using snapshot ids before hydration. Remove it.
-          delete value.__spread;
-          value = transformSpread(after, index, value);
-          for (let key in value) {
-            if (value[key] && value[key]._wkltId) {
-              onPostWorkletCtx(value[key]);
-            } else if (value[key] && value[key].__isGesture) {
-              processGestureBackground(value[key] as GestureKind);
+        if (typeof value === 'object') {
+          if ('__spread' in value) {
+            // `value.__spread` my contain event ids using snapshot ids before hydration. Remove it.
+            delete value.__spread;
+            const __spread = transformSpread(after, index, value);
+            for (const key in __spread) {
+              const v = __spread[key];
+              if (v && typeof v === 'object') {
+                if ('_wkltId' in v) {
+                  onPostWorkletCtx(v as Worklet);
+                } else if ('__isGesture' in v) {
+                  processGestureBackground(v as GestureKind);
+                }
+              }
             }
+            (after.__values![index]! as Record<string, unknown>)['__spread'] = __spread;
+            value = __spread;
+          } else if ('__ref' in value) {
+            // skip patch
+            value = old;
+          } else if ('_wkltId' in value) {
+            onPostWorkletCtx(value as Worklet);
+          } else if ('__isGesture' in value) {
+            processGestureBackground(value as GestureKind);
           }
-          after.__values![index]!.__spread = value;
-        } else if (value.__ref) {
-          if (old) {
+        } else if (typeof value === 'function') {
+          if ('__ref' in value) {
             // skip patch
             value = old;
           } else {
-            value = value.__ref;
+            value = `${after.__id}:${index}:`;
           }
-        } else if (typeof value === 'function') {
-          value = `${after.__id}:${index}:`;
         }
       }
 
-      if (value && value._wkltId) {
-        onPostWorkletCtx(value);
-      } else if (value && value.__isGesture) {
-        processGestureBackground(value);
-      }
       if (!isDirectOrDeepEqual(value, old)) {
-        __globalSnapshotPatch!.push(
-          SnapshotOperation.SetAttribute,
-          after.__id,
-          index,
-          value,
-        );
+        if (value === undefined && old === null) {
+          // This is a workaround for the case where we set an attribute to `undefined` in the main thread,
+          // but the old value becomes `null` during JSON serialization.
+          // In this case, we should not patch the value.
+        } else {
+          __globalSnapshotPatch!.push(
+            SnapshotOperation.SetAttribute,
+            after.__id,
+            index,
+            value,
+          );
+        }
       }
     });
 
-    const { slot } = snapshotManager.values.get(after.type)!;
+    if (after.__extraProps) {
+      for (const key in after.__extraProps) {
+        const value = after.__extraProps[key];
+        const old = before.extraProps?.[key];
+        if (!isDirectOrDeepEqual(value, old)) {
+          __globalSnapshotPatch!.push(
+            SnapshotOperation.SetAttribute,
+            after.__id,
+            key,
+            value,
+          );
+        }
+      }
+    }
 
-    const beforeChildNodes = before.children || [];
+    const { slot } = after.__snapshot_def;
+
+    const beforeChildNodes = before.children ?? [];
     const afterChildNodes = after.childNodes;
 
     if (!slot) {
@@ -412,23 +476,7 @@ export function hydrate(
             beforeChildNodes,
             diffResult,
             (node, target) => {
-              __globalSnapshotPatch!.push(
-                SnapshotOperation.CreateElement,
-                node.type,
-                node.__id,
-              );
-              helper2(node.childNodes, node.__id);
-              const values = node.__values;
-              if (values) {
-                node.__values = undefined;
-                node.setAttribute('values', values);
-              }
-              __globalSnapshotPatch!.push(
-                SnapshotOperation.InsertBefore,
-                before.id,
-                node.__id,
-                target?.id,
-              );
+              reconstructInstanceTree([node], before.id, target?.id);
               return undefined as unknown as SerializedSnapshotInstance;
             },
             node => {
@@ -455,5 +503,25 @@ export function hydrate(
   };
 
   helper(before, after);
+  // Hydration should not trigger ref updates. They were incorrectly triggered when using `setAttribute` to add values to the patch list.
+  clearQueuedRefs();
   return takeGlobalSnapshotPatch()!;
+}
+
+function reconstructInstanceTree(afters: BackgroundSnapshotInstance[], parentId: number, targetId?: number): void {
+  for (const child of afters) {
+    const id = child.__id;
+    __globalSnapshotPatch?.push(SnapshotOperation.CreateElement, child.type, id);
+    const values = child.__values;
+    if (values) {
+      child.__values = undefined;
+      child.setAttribute('values', values);
+    }
+    const extraProps = child.__extraProps;
+    for (const key in extraProps) {
+      child.setAttribute(key, extraProps[key]);
+    }
+    reconstructInstanceTree(child.childNodes, id);
+    __globalSnapshotPatch?.push(SnapshotOperation.InsertBefore, parentId, id, targetId);
+  }
 }

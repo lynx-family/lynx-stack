@@ -1,5 +1,175 @@
 # @lynx-js/web-elements
 
+## 0.8.7
+
+### Patch Changes
+
+- The img within svg does not inherit the position ([#1769](https://github.com/lynx-family/lynx-stack/pull/1769))
+
+- Updated dependencies []:
+  - @lynx-js/web-elements-template@0.8.7
+
+## 0.8.6
+
+### Patch Changes
+
+- fix: 1. svg use image tag to render, to differentiate background-image styles ([#1668](https://github.com/lynx-family/lynx-stack/pull/1668))
+
+  1. use blob instead of raw data-uri
+
+  > Not using data-uri(data:image/svg+xml;utf8,${props.content})
+  > since it has follow limitations:
+  >
+  > < and > must be encoded to %3C and %3E.
+  > Double quotes must be converted to single quotes.
+  > Colors must use a non-hex format because # will not work inside data-uri.
+  > See: https://codepen.io/zvuc/pen/BWNLJL
+  > Instead, we use modern Blob API to create SVG URL that have the same support
+
+- Updated dependencies [[`d618304`](https://github.com/lynx-family/lynx-stack/commit/d6183049a2f67a5ec68c2e1ef9efbdf26af4c343), [`1d97fce`](https://github.com/lynx-family/lynx-stack/commit/1d97fce68178418f6af8d50e54ab24a5567452b7)]:
+  - @lynx-js/web-elements-template@0.8.6
+
+## 0.8.5
+
+### Patch Changes
+
+- fix: register attr of width is set to height incorrectly ([#1649](https://github.com/lynx-family/lynx-stack/pull/1649))
+
+- Updated dependencies []:
+  - @lynx-js/web-elements-template@0.8.5
+
+## 0.8.4
+
+### Patch Changes
+
+- feat: add autocomplete attribute support for x-input component ([#1444](https://github.com/lynx-family/lynx-stack/pull/1444))
+
+  Implements autocomplete attribute forwarding from the x-input custom element to the internal HTML input element in the shadow DOM. This enables standard browser autocomplete functionality for x-input elements.
+
+- Add referrerpolicy attribute support to x-image web component ([#1420](https://github.com/lynx-family/lynx-stack/pull/1420))
+
+- Updated dependencies []:
+  - @lynx-js/web-elements-template@0.8.4
+
+## 0.8.3
+
+### Patch Changes
+
+- feat: support color style for x-textarea ([#1382](https://github.com/lynx-family/lynx-stack/pull/1382))
+
+- Updated dependencies []:
+  - @lynx-js/web-elements-template@0.8.3
+
+## 0.8.2
+
+### Patch Changes
+
+- Add crossorigin attribute support to x-image component ([#1340](https://github.com/lynx-family/lynx-stack/pull/1340))
+
+  - Added `crossorigin` to the `observedAttributes` array in `ImageSrc.ts`
+  - Implemented `#handleCrossorigin` handler using the `bindToAttribute` helper to forward the crossorigin attribute from the custom element to the internal `<img>` element
+  - Added comprehensive test coverage to verify the attribute is properly passed through to the shadow DOM
+
+  This enables CORS-enabled image loading when using `<x-image crossorigin="anonymous">` or similar configurations.
+
+- Updated dependencies []:
+  - @lynx-js/web-elements-template@0.8.2
+
+## 0.8.1
+
+### Patch Changes
+
+- fix: indicator dots' bg-color on safari 26 ([#1298](https://github.com/lynx-family/lynx-stack/pull/1298))
+
+  https://bugs.webkit.org/show_bug.cgi?id=296048
+  The animation name should be defined in the template
+
+- fix: list may only render only one column in ReactLynx. ([#1280](https://github.com/lynx-family/lynx-stack/pull/1280))
+
+  This is because `span-count` may not be specified when `list-type` is specified, resulting in layout according to `span-count="1"`. Postponing the acquisition of `span-count` until layoutListItem can solve this problem.
+
+- Updated dependencies [[`443f3d5`](https://github.com/lynx-family/lynx-stack/commit/443f3d57fc9ac41c3e845bdba5adfa4df16e5519)]:
+  - @lynx-js/web-elements-template@0.8.1
+
+## 0.8.0
+
+### Minor Changes
+
+- refactor: move exposure system to web-core ([#1254](https://github.com/lynx-family/lynx-stack/pull/1254))
+
+  **THIS IS A BREAKING CHANGE**
+
+  **You'll need to upgrade your @lynx-js/web-elements to >= 0.8.0**
+
+  For SSR and better performance, we moved the lynx's exposure system from web-element to web-core.
+
+  Before this commit, we create Intersection observers by creating HTMLElements.
+
+  After this commit, we will create such Intersection observers after dom stabled.
+
+  Also, the setInterval for exposure has been removed, now we use an on time lazy timer for such features.
+
+### Patch Changes
+
+- feat: add support for scrollTo method in x-swiper, remove scrollToNext && scrollToPrevious method ([#1197](https://github.com/lynx-family/lynx-stack/pull/1197))
+
+- refactor: improve `linear-weight-sum` performance ([#1216](https://github.com/lynx-family/lynx-stack/pull/1216))
+
+- Updated dependencies []:
+  - @lynx-js/web-elements-template@0.8.0
+
+## 0.7.7
+
+### Patch Changes
+
+- fix: the param `index` of list scrollToPosition function should be `position`. ([#1135](https://github.com/lynx-family/lynx-stack/pull/1135))
+
+- fix: in lynx-view all-on-ui mode, the input event of input and textarea is triggered twice, and the first e.detail is a string, which does not conform to the expected data format. ([#1179](https://github.com/lynx-family/lynx-stack/pull/1179))
+
+- Updated dependencies []:
+  - @lynx-js/web-elements-template@0.7.7
+
+## 0.7.6
+
+### Patch Changes
+
+- fix: incorrect syntax for x-canvas part ([#1067](https://github.com/lynx-family/lynx-stack/pull/1067))
+
+- feat: x-input && x-textarea add attribute input-filter, which can filter input value. ([#1037](https://github.com/lynx-family/lynx-stack/pull/1037))
+
+- fix: incorrect top style of x-foldview-slot-ng if the toolbar is wrapped in lynx-wrapper ([#1101](https://github.com/lynx-family/lynx-stack/pull/1101))
+
+- perf: add loading="lazy" for image element ([#1056](https://github.com/lynx-family/lynx-stack/pull/1056))
+
+  https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/img#loading
+
+- fix: --lynx-color will be removed, and if color contains `gradient` it will be processed as transparent. ([#1069](https://github.com/lynx-family/lynx-stack/pull/1069))
+
+- Updated dependencies [[`62d1078`](https://github.com/lynx-family/lynx-stack/commit/62d1078e67f2aba216a0d97bf1ad9ece624e498e)]:
+  - @lynx-js/web-elements-template@0.7.6
+
+## 0.7.5
+
+### Patch Changes
+
+- feat: x-input && x-textarea add new method: `getValue`, which returns the value of the input element, selectionStart and selectEnd when success. ([#982](https://github.com/lynx-family/lynx-stack/pull/982))
+
+- feat: x-input and x-textarea bindinput event return structures add `selectionStart`, `selectionEnd`, and `textLength`, `textLength` are marked as @deprecated ([#996](https://github.com/lynx-family/lynx-stack/pull/996))
+
+- feat: x-input and x-textarea support bindselection event, the returned type structure is `{ selectionStart: number; selectionEnd: number }`. ([#990](https://github.com/lynx-family/lynx-stack/pull/990))
+
+- Updated dependencies []:
+  - @lynx-js/web-elements-template@0.7.5
+
+## 0.7.4
+
+### Patch Changes
+
+- fix: x-foldview-ng `overflow-y: scroll` add !important to avoid being covered. ([#932](https://github.com/lynx-family/lynx-stack/pull/932))
+
+- Updated dependencies []:
+  - @lynx-js/web-elements-template@0.7.4
+
 ## 0.7.3
 
 ### Patch Changes

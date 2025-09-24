@@ -3,8 +3,8 @@
 // LICENSE file in the root directory of this source tree.
 import type { Worklet } from '@lynx-js/react/worklet-runtime/bindings';
 
+import { registerWorkletCtx } from './call/runOnBackground.js';
 import { isMtsEnabled, isRunOnBackgroundEnabled } from './functionality.js';
-import { registerWorkletCtx } from './runOnBackground.js';
 
 /**
  * @internal

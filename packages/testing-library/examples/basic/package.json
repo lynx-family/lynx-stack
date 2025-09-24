@@ -6,7 +6,8 @@
   "scripts": {
     "build": "rspeedy build",
     "dev": "rspeedy dev",
-    "test": "vitest"
+    "test": "vitest",
+    "test:type": "vitest --typecheck.only"
   },
   "dependencies": {
     "@lynx-js/react": "workspace:*"
@@ -14,6 +15,6 @@
   "devDependencies": {
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@lynx-js/rspeedy": "workspace:*",
-    "@testing-library/jest-dom": "^6.6.3"
+    "@testing-library/jest-dom": "^6.8.0"
   }
 }

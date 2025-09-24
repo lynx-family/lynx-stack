@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/web-platform-rsbuild-plugin",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "private": false,
   "description": "A rsbuild plugin for Web projects in Lynx Web Platform",
   "keywords": [
@@ -34,8 +34,8 @@
     "@rsbuild/core": "catalog:rsbuild",
     "@types/loader-utils": "^2.0.6",
     "@types/webpack": "^5.28.5",
-    "typescript": "^5.8.3",
-    "vitest": "^3.1.4"
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
   },
   "peerDependencies": {
     "@lynx-js/web-core": ">0.13.0",

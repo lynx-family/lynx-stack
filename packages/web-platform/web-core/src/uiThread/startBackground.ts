@@ -1,9 +1,12 @@
 import {
+  getCacheI18nResourcesKey,
   markTimingEndpoint,
   sendGlobalEventEndpoint,
   updateDataEndpoint,
-  type NapiModulesCall,
-  type NativeModulesCall,
+  updateI18nResourceEndpoint,
+  type Cloneable,
+  type I18nResourceTranslationOptions,
+  type InitI18nResources,
 } from '@lynx-js/web-constants';
 import type { Rpc } from '@lynx-js/web-worker-rpc';
 import { registerInvokeUIMethodHandler } from './crossThreadHandlers/registerInvokeUIMethodHandler.js';
@@ -14,14 +17,14 @@ import { registerSelectComponentHandler } from './crossThreadHandlers/registerSe
 import { registerNapiModulesCallHandler } from './crossThreadHandlers/registerNapiModulesCallHandler.js';
 import { registerDispatchLynxViewEventHandler } from './crossThreadHandlers/registerDispatchLynxViewEventHandler.js';
 import { registerTriggerElementMethodEndpointHandler } from './crossThreadHandlers/registerTriggerElementMethodEndpointHandler.js';
+import type { StartUIThreadCallbacks } from './startUIThread.js';
+import { registerReportErrorHandler } from './crossThreadHandlers/registerReportErrorHandler.js';
+import { registerGetPathInfoHandler } from './crossThreadHandlers/registerGetPathInfoHandler.js';
 
 export function startBackground(
   backgroundRpc: Rpc,
   shadowRoot: ShadowRoot,
-  callbacks: {
-    nativeModulesCall: NativeModulesCall;
-    napiModulesCall: NapiModulesCall;
-  },
+  callbacks: StartUIThreadCallbacks,
 ) {
   registerInvokeUIMethodHandler(
     backgroundRpc,
@@ -47,15 +50,37 @@ export function startBackground(
     backgroundRpc,
     callbacks.napiModulesCall,
   );
+  registerGetPathInfoHandler(
+    backgroundRpc,
+    shadowRoot,
+  );
   registerDispatchLynxViewEventHandler(backgroundRpc, shadowRoot);
   registerTriggerElementMethodEndpointHandler(backgroundRpc, shadowRoot);
+  registerReportErrorHandler(
+    backgroundRpc,
+    'app-service.js',
+    callbacks.onError,
+  );
 
   const sendGlobalEvent = backgroundRpc.createCall(sendGlobalEventEndpoint);
   const markTiming = backgroundRpc.createCall(markTimingEndpoint);
   const updateDataBackground = backgroundRpc.createCall(updateDataEndpoint);
+  const updateI18nResourceBackground = (
+    data: InitI18nResources,
+    options: I18nResourceTranslationOptions,
+  ) => {
+    const matchedResources = data.find(i =>
+      getCacheI18nResourcesKey(i.options)
+        === getCacheI18nResourcesKey(options)
+    );
+    backgroundRpc.invoke(updateI18nResourceEndpoint, [
+      matchedResources?.resource as Cloneable,
+    ]);
+  };
   return {
     sendGlobalEvent,
     markTiming,
     updateDataBackground,
+    updateI18nResourceBackground,
   };
 }

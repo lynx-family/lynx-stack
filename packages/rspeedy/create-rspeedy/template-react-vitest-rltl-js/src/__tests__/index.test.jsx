@@ -73,7 +73,7 @@ test('App', async () => {
             >
               Edit
               <text
-                style="font-style: italic;"
+                style="font-style:italic;color:rgba(255, 255, 255, 0.85)"
               >
                  src/App.tsx 
               </text>
@@ -81,7 +81,7 @@ test('App', async () => {
             </text>
           </view>
           <view
-            style="flex: 1;"
+            style="flex:1"
           />
         </view>
       </view>

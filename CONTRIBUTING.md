@@ -4,24 +4,20 @@ Contributions are always welcome, no matter how large or small!
 
 ## Developing
 
-_Node_: Check that Node is [installed](https://nodejs.org/en/download/) with version `>= 22`. You can check this with `node -v`.
+_Node_: Check that Node is [installed](https://nodejs.org/en/download/) with version `>= 24`. You can check this with `node -v`.
 
 _pnpm_: Make sure that pnpm is available. You can use `corepack enable` to automatically setup pnpm.
 
 _Rust_: ReactLynx utilizes SWC plugins, necessitating the Rust toolchain for building.
 
 - Ensure you have [`rustup`](https://rustup.rs/) installed.
-- Install the required WASM target by running the following command (you only need to do this once):
-  ```sh
-  rustup target add wasm32-unknown-unknown
-  ```
-- `rustup` will automatically use the correct toolchain when you run build commands inside this project, thanks to the `rust-toolchain` file.
 
 ### Setup
 
 To setup the project, run:
 
 ```sh
+rustup toolchain install
 pnpm install
 ```
 
@@ -103,7 +99,7 @@ _This works with any code ran in Node, so will work with most JS testing framewo
 
 See [Debugging Vitest](https://vitest.dev/guide/debugging.html) for more details.
 
-You can combine debug with `--project` or `.only` to debug a subset of tests. If you plan to stay long in the debugger (which you'll likely do!), you may increase the test timeout by setting `--test-timeout`.
+You can combine debug with `--project` or `.only` to debug a subset of tests. If you plan to stay long in the debugger (which you'll likely do!), you may increase the test timeout by setting `--testTimeout`.
 
 To overwrite any test fixtures when fixing a bug or anything, add the `--update`
 

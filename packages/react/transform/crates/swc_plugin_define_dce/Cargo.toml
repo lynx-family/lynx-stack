@@ -1,0 +1,11 @@
+[package]
+name = "swc_plugin_define_dce"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+napi = { workspace = true }
+napi-derive = { workspace = true }

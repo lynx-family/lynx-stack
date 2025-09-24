@@ -19,6 +19,7 @@ export type FilterUnderscoreKeys<T> = {
 
 // @public (undocumented)
 export const initElementTree: () => {
+    uniqueId2Element: Map<number, LynxElement>;
     root: LynxElement | undefined;
     countElement(element: LynxElement, parentComponentUniqueId: number): void;
     __CreatePage(_tag: string, parentComponentUniqueId: number): LynxElement;
@@ -34,7 +35,7 @@ export const initElementTree: () => {
     __CreateWrapperElement(parentComponentUniqueId: number): LynxElement;
     __AddInlineStyle(e: HTMLElement, key: number, value: string): void;
     __AppendElement(parent: LynxElement, child: LynxElement): void;
-    __SetCSSId(e: LynxElement | LynxElement[], id: string, entryName?: string): void;
+    __SetCSSId(e: LynxElement[] | LynxElement, id: string, entryName?: string | undefined): void;
     __SetAttribute(e: LynxElement, key: string, value: any): void;
     __AddEvent(e: LynxElement, eventType: string, eventName: string, eventHandler: string | Record<string, any>): void;
     __GetEvent(e: LynxElement, eventType: string, eventName: string): {
@@ -49,7 +50,7 @@ export const initElementTree: () => {
     __SetGestureDetector(e: LynxElement, id: number, type: number, config: any, relationMap: Record<string, number[]>): void;
     __GetDataset(e: LynxElement): DOMStringMap;
     __RemoveElement(parent: LynxElement, child: LynxElement): void;
-    __InsertElementBefore(parent: LynxElement, child: LynxElement, ref?: LynxElement): void;
+    __InsertElementBefore(parent: LynxElement, child: LynxElement, ref?: LynxElement | undefined): void;
     __ReplaceElement(newElement: LynxElement, oldElement: LynxElement): void;
     __FlushElementTree(): void;
     __UpdateListComponents(_list: LynxElement, _components: string[]): void;
@@ -67,6 +68,8 @@ export const initElementTree: () => {
 
 // @public
 export interface LynxElement extends HTMLElement {
+    // @internal
+    $$uiSign: number;
     cssId?: string;
     eventMap?: {
         [key: string]: any;
@@ -76,6 +79,8 @@ export interface LynxElement extends HTMLElement {
         [key: string]: any;
     };
     nextSibling: LynxElement;
+    // @internal
+    parentComponentUniqueId: number;
     parentNode: LynxElement;
 }
 
@@ -83,12 +88,16 @@ export interface LynxElement extends HTMLElement {
 export interface LynxGlobalThis {
     // (undocumented)
     [key: string]: any;
+    // @internal (undocumented)
+    _globalObject: any;
+    // @internal (undocumented)
+    _globalProxy: any;
     globalThis: LynxGlobalThis;
 }
 
 // @public
 export class LynxTestingEnv {
-    constructor();
+    constructor(jsdom?: JSDOM);
     backgroundThread: LynxGlobalThis;
     // (undocumented)
     clearGlobal(): void;
@@ -107,5 +116,7 @@ export class LynxTestingEnv {
 
 // @public (undocumented)
 export type PickUnderscoreKeys<T> = Pick<T, FilterUnderscoreKeys<T>>;
+
+// (No @packageDocumentation comment for this package)
 
 ```

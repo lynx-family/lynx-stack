@@ -18,28 +18,19 @@ import type { Worklet, WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bin
 
 import type { BackgroundSnapshotInstance } from './backgroundSnapshot.js';
 import { SnapshotOperation, __globalSnapshotPatch } from './lifecycle/patch/snapshotPatch.js';
-import { ListUpdateInfoRecording, __pendingListUpdates, snapshotDestroyList } from './list.js';
+import { ListUpdateInfoRecording } from './listUpdateInfo.js';
+import { __pendingListUpdates } from './pendingListUpdates.js';
+import { DynamicPartType } from './snapshot/dynamicPartType.js';
+import { snapshotDestroyList } from './snapshot/list.js';
+import type { PlatformInfo } from './snapshot/platformInfo.js';
 import { unref } from './snapshot/ref.js';
 import { isDirectOrDeepEqual } from './utils.js';
-
-/**
- * Types of dynamic parts that can be updated in a snapshot
- * These are determined at compile time through static analysis
- */
-export const enum DynamicPartType {
-  Attr = 0, // Regular attribute updates
-  Spread, // Spread operator in JSX
-  Slot, // Slot for component children
-  Children, // Regular children updates
-  ListChildren, // List/array children updates
-  MultiChildren, // Multiple children updates (compat layer)
-}
 
 /**
  * A snapshot definition that contains all the information needed to create and update elements
  * This is generated at compile time through static analysis of the JSX
  */
-interface Snapshot {
+export interface Snapshot {
   create: null | ((ctx: SnapshotInstance) => FiberElement[]);
   update: null | ((ctx: SnapshotInstance, index: number, oldValue: any) => void)[];
   slot: [DynamicPartType, number][];
@@ -47,6 +38,7 @@ interface Snapshot {
   isListHolder?: boolean;
   cssId?: number | undefined;
   entryName?: string | undefined;
+  refAndSpreadIndexes?: number[] | null;
 }
 
 export let __page: FiberElement;
@@ -60,6 +52,8 @@ export function clearPage(): void {
   __page = undefined as unknown as FiberElement;
   __pageId = 0;
 }
+
+export const __DynamicPartChildren_0: [DynamicPartType, number][] = [[DynamicPartType.Children, 0]];
 
 export const snapshotManager: {
   values: Map<string, Snapshot>;
@@ -77,7 +71,7 @@ export const snapshotManager: {
           return [__page!];
         },
         update: [],
-        slot: [[DynamicPartType.Children, 0]],
+        slot: __DynamicPartChildren_0,
         isListHolder: false,
         cssId: 0,
       },
@@ -94,7 +88,7 @@ export const snapshotManager: {
           return [__CreateWrapperElement(__pageId)];
         },
         update: [],
-        slot: [[DynamicPartType.Children, 0]],
+        slot: __DynamicPartChildren_0,
         isListHolder: false,
       },
     ],
@@ -107,7 +101,7 @@ export const snapshotManager: {
             return [];
           }
           /* v8 ignore stop */
-          return [__CreateElement('raw-text', __pageId)];
+          return [__CreateRawText('')];
         },
         update: [
           ctx => {
@@ -157,6 +151,17 @@ export const backgroundSnapshotInstanceManager: {
   updateId(id: number, newId: number) {
     const values = this.values;
     const si = values.get(id)!;
+    // For PreactDevtools, on first hydration,
+    // PreactDevtools can get the real snapshot instance id in main-thread
+    if (__DEV__) {
+      lynx.getJSModule('GlobalEventEmitter').emit('onBackgroundSnapshotInstanceUpdateId', [
+        {
+          backgroundSnapshotInstance: si,
+          oldId: id,
+          newId,
+        },
+      ]);
+    }
     values.delete(id);
     values.set(newId, si);
     si.__id = newId;
@@ -166,17 +171,24 @@ export const backgroundSnapshotInstanceManager: {
     if (!res || (res.length != 2 && res.length != 3)) {
       throw new Error('Invalid ctx format: ' + str);
     }
-    let id = Number(res[0]);
+    const id = Number(res[0]);
     const expIndex = Number(res[1]);
     const ctx = this.values.get(id);
     if (!ctx) {
       return null;
     }
     const spreadKey = res[2];
-    if (spreadKey) {
-      return ctx.__values![expIndex][spreadKey];
+    if (res[1] === '__extraProps') {
+      if (spreadKey) {
+        return ctx.__extraProps![spreadKey];
+      }
+      throw new Error('unreachable');
     } else {
-      return ctx.__values![expIndex];
+      if (spreadKey) {
+        return (ctx.__values![expIndex] as { [spreadKey]: unknown })[spreadKey];
+      } else {
+        return ctx.__values![expIndex];
+      }
     }
   },
 };
@@ -190,8 +202,9 @@ export function createSnapshot(
   create: Snapshot['create'] | null,
   update: Snapshot['update'] | null,
   slot: Snapshot['slot'],
-  cssId?: number,
-  entryName?: string,
+  cssId: number | undefined,
+  entryName: string | undefined,
+  refAndSpreadIndexes: number[] | null,
 ): string {
   if (
     __DEV__ && __JS__
@@ -221,7 +234,7 @@ export function createSnapshot(
 
   uniqID = entryUniqID(uniqID, entryName);
 
-  const s: Snapshot = { create, update, slot, cssId, entryName };
+  const s: Snapshot = { create, update, slot, cssId, entryName, refAndSpreadIndexes };
   snapshotManager.values.set(uniqID, s);
   if (slot && slot[0] && slot[0][0] === DynamicPartType.ListChildren) {
     s.isListHolder = true;
@@ -248,6 +261,7 @@ export interface SerializedSnapshotInstance {
   id: number;
   type: string;
   values?: any[] | undefined;
+  extraProps?: Record<string, unknown> | undefined;
   children?: SerializedSnapshotInstance[] | undefined;
 }
 
@@ -266,16 +280,20 @@ export class SnapshotInstance {
   __snapshot_def: Snapshot;
   __elements?: FiberElement[] | undefined;
   __element_root?: FiberElement | undefined;
-  __values?: any[] | undefined;
+  __values?: unknown[] | undefined;
   __current_slot_index = 0;
-  __ref_set?: Set<string>;
   __worklet_ref_set?: Set<WorkletRefImpl<any> | Worklet>;
-  __listItemPlatformInfo?: any;
+  __listItemPlatformInfo?: PlatformInfo;
+  __extraProps?: Record<string, unknown> | undefined;
 
   constructor(public type: string, id?: number) {
     this.__snapshot_def = snapshotManager.values.get(type)!;
+    // Suspense uses 'div'
+    if (!this.__snapshot_def && type !== 'div') {
+      throw new Error('Snapshot not found: ' + type);
+    }
 
-    id ||= snapshotInstanceManager.nextId -= 1;
+    id ??= snapshotInstanceManager.nextId -= 1;
     this.__id = id;
     snapshotInstanceManager.values.set(id, this);
   }
@@ -291,26 +309,33 @@ export class SnapshotInstance {
       //   CSS Scope is removed(We only need to call `__SetCSSId` when there is `entryName`)
       //   Or an old bundle(`__SetCSSId` is called in `create`), we skip calling `__SetCSSId`
       if (entryName !== DEFAULT_ENTRY_NAME && entryName !== undefined) {
-        __SetCSSId(this.__elements!, DEFAULT_CSS_ID, entryName);
+        __SetCSSId(this.__elements, DEFAULT_CSS_ID, entryName);
       }
     } else {
       // cssId !== undefined
       if (entryName !== DEFAULT_ENTRY_NAME && entryName !== undefined) {
         // For lazy bundle, we need add `entryName` to the third params
-        __SetCSSId(this.__elements!, cssId, entryName);
+        __SetCSSId(this.__elements, cssId, entryName);
       } else {
-        __SetCSSId(this.__elements!, cssId);
+        __SetCSSId(this.__elements, cssId);
       }
     }
 
-    const values = this.__values;
-    if (values) {
-      this.__values = undefined;
-      this.setAttribute('values', values);
-    }
+    __pendingListUpdates.runWithoutUpdates(() => {
+      const values = this.__values;
+      if (values) {
+        this.__values = undefined;
+        this.setAttribute('values', values);
+      }
+    });
 
     if (isListHolder) {
       // never recurse into list's children
+
+      // In nested list scenarios, there are some `list` that are lazily created.
+      // We need to `flush` them during `ensureElements`.
+      // Also, `flush` is a safe operation since it checks if the `list` is in `__pendingListUpdates`.
+      __pendingListUpdates.flushWithId(this.__id);
     } else {
       let index = 0;
       let child = this.__firstChild;
@@ -386,6 +411,14 @@ export class SnapshotInstance {
     this.__elements = undefined;
     this.__element_root = undefined;
     return a;
+  }
+
+  tearDown(): void {
+    traverseSnapshotInstance(this, v => {
+      v.__parent = null;
+      v.__previousSibling = null;
+      v.__nextSibling = null;
+    });
   }
 
   // onCreate?: () => void;
@@ -484,9 +517,11 @@ export class SnapshotInstance {
   insertBefore(newNode: SnapshotInstance, existingNode?: SnapshotInstance): void {
     const __snapshot_def = this.__snapshot_def;
     if (__snapshot_def.isListHolder) {
-      (__pendingListUpdates.values[this.__id] ??= new ListUpdateInfoRecording(
-        this,
-      )).onInsertBefore(newNode, existingNode);
+      if (__pendingListUpdates.values) {
+        (__pendingListUpdates.values[this.__id] ??= new ListUpdateInfoRecording(
+          this,
+        )).onInsertBefore(newNode, existingNode);
+      }
       this.__insertBefore(newNode, existingNode);
       return;
     }
@@ -539,26 +574,24 @@ export class SnapshotInstance {
   }
 
   removeChild(child: SnapshotInstance): void {
-    const r = () => {
-      this.__removeChild(child);
-      traverseSnapshotInstance(child, v => {
-        v.__parent = null;
-        snapshotInstanceManager.values.delete(v.__id);
-      });
-    };
-
     const __snapshot_def = this.__snapshot_def;
     if (__snapshot_def.isListHolder) {
-      (__pendingListUpdates.values[this.__id] ??= new ListUpdateInfoRecording(
-        this,
-      )).onRemoveChild(child);
-      r();
+      if (__pendingListUpdates.values) {
+        (__pendingListUpdates.values[this.__id] ??= new ListUpdateInfoRecording(
+          this,
+        )).onRemoveChild(child);
+      }
+
+      this.__removeChild(child);
+      traverseSnapshotInstance(child, v => {
+        snapshotInstanceManager.values.delete(v.__id);
+      });
+      // mark this child as deleted
+      child.__id = 0;
       return;
     }
 
-    // TODO: ref: can this be done on the background thread?
     unref(child, true);
-    r();
     if (this.__elements) {
       const [, elementIndex] = __snapshot_def.slot[0]!;
       __RemoveElement(this.__elements[elementIndex]!, child.__element_root!);
@@ -567,34 +600,43 @@ export class SnapshotInstance {
     if (child.__snapshot_def.isListHolder) {
       snapshotDestroyList(child);
     }
+
+    this.__removeChild(child);
+    traverseSnapshotInstance(child, v => {
+      v.__parent = null;
+      v.__previousSibling = null;
+      v.__nextSibling = null;
+      delete v.__elements;
+      delete v.__element_root;
+      snapshotInstanceManager.values.delete(v.__id);
+    });
   }
 
   setAttribute(key: string | number, value: any): void {
-    const helper = (index: number, oldValue: any, newValue: any) => {
-      if (isDirectOrDeepEqual(oldValue, newValue)) {}
-      else {
-        this.__snapshot_def.update![index]!(this, index, oldValue);
-      }
-    };
-
     if (key === 'values') {
       const oldValues = this.__values;
-      this.__values = value;
+      const values = value as unknown[];
+      this.__values = values;
       if (oldValues) {
-        for (let index = 0; index < value.length; index++) {
-          helper(index, oldValues[index], value[index]);
+        for (let index = 0; index < values.length; index++) {
+          this.callUpdateIfNotDirectOrDeepEqual(index, oldValues[index], values[index]);
         }
       } else {
-        for (let index = 0; index < value.length; index++) {
-          helper(index, undefined, value[index]);
+        for (let index = 0; index < values.length; index++) {
+          this.callUpdateIfNotDirectOrDeepEqual(index, undefined, values[index]);
         }
       }
       return;
     }
 
-    const index = typeof key === 'string' ? Number(key.slice(2)) : key;
+    if (typeof key === 'string') {
+      // for more flexible usage, we allow setting non-indexed attributes
+      (this.__extraProps ??= {})[key] = value;
+      return;
+    }
+
     this.__values ??= [];
-    helper(index, this.__values[index], this.__values[index] = value);
+    this.callUpdateIfNotDirectOrDeepEqual(key, this.__values[key], this.__values[key] = value);
   }
 
   toJSON(): Omit<SerializedSnapshotInstance, 'children'> & { children: SnapshotInstance[] | undefined } {
@@ -602,7 +644,15 @@ export class SnapshotInstance {
       id: this.__id,
       type: this.type,
       values: this.__values,
+      extraProps: this.__extraProps,
       children: this.__firstChild ? this.childNodes : undefined,
     };
+  }
+
+  callUpdateIfNotDirectOrDeepEqual(index: number, oldValue: any, newValue: any): void {
+    if (isDirectOrDeepEqual(oldValue, newValue)) {}
+    else {
+      this.__snapshot_def.update![index]!(this, index, oldValue);
+    }
   }
 }

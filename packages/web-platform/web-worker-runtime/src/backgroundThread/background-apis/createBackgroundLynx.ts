@@ -6,19 +6,15 @@ import {
   dispatchCoreContextOnBackgroundEndpoint,
   dispatchJSContextOnMainThreadEndpoint,
   LynxCrossThreadContext,
-  type Cloneable,
+  type BackMainThreadContextConfig,
   type NativeApp,
 } from '@lynx-js/web-constants';
 import type { Rpc } from '@lynx-js/web-worker-rpc';
 import { createGetCustomSection } from './crossThreadHandlers/createGetCustomSection.js';
 import { createElement } from './createElement.js';
-export interface CreateLynxConfig {
-  globalProps: unknown;
-  customSections: Record<string, Cloneable>;
-}
 
 export function createBackgroundLynx(
-  config: CreateLynxConfig,
+  config: BackMainThreadContextConfig,
   nativeApp: NativeApp,
   mainThreadRpc: Rpc,
   uiThreadRpc: Rpc,
@@ -51,5 +47,15 @@ export function createBackgroundLynx(
     createElement(_: string, id: string) {
       return createElement(id, uiThreadRpc);
     },
+    getI18nResource: () => nativeApp.i18nResource.data,
+    QueryComponent: (
+      source: string,
+      callback: (
+        ret: { __hasReady: boolean } | {
+          code: number;
+          detail?: { schema: string };
+        },
+      ) => void,
+    ) => nativeApp.queryComponent(source, callback),
   };
 }

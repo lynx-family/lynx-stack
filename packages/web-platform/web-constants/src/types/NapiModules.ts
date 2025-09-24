@@ -11,7 +11,11 @@ export type NapiModulesCall = (
   data: any,
   moduleName: string,
   dispatchNapiModules: (data: Cloneable) => void,
-) => Promise<{ data: unknown; transfer?: unknown[] }> | {
-  data: unknown;
-  transfer?: unknown[];
-} | undefined;
+) =>
+  | Promise<{ data: unknown; transfer?: unknown[] } | undefined>
+  | {
+    data: unknown;
+    transfer?: unknown[];
+  }
+  | undefined
+  | Promise<undefined>;

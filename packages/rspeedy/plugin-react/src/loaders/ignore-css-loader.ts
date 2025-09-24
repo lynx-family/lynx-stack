@@ -7,7 +7,7 @@ export default function ignoreCssLoader(
   this: Rspack.LoaderContext,
   source: string,
 ): string {
-  this.cacheable(true) // cSpell:disable-line
+  this.cacheable(true)
 
   // if the source code include '___CSS_LOADER_EXPORT___'
   // It is not a CSS Modules file because exportOnlyLocals is enabled,

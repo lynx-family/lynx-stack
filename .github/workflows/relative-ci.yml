@@ -12,7 +12,9 @@ permissions: {}
 
 jobs:
   upload:
+    timeout-minutes: 10
     strategy:
+      fail-fast: false
       matrix:
         project:
           - path: ./examples/react
@@ -32,7 +34,7 @@ jobs:
       RELATIVE_CI_PROJECT_RSPEEDY_CORE_KEY: ${{ secrets.RELATIVE_CI_PROJECT_RSPEEDY_CORE_KEY }}
     steps:
       - name: Send bundle stats and build information to RelativeCI - ${{ matrix.project.name }}
-        uses: relative-ci/agent-action@350cdbe8a51f6f64d7dca3fbfa2ae2c01db619cd # v3
+        uses: relative-ci/agent-action@1707825cbfcc7452b2913d273414705415ae64d4 # v3
         with:
           artifactName: ${{ matrix.project.name }}-relative-ci-artifacts
           key: ${{ env[matrix.project.key] }}

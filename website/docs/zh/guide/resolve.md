@@ -37,15 +37,15 @@
 更多细节可参考 [TypeScript - paths](https://typescriptlang.org/tsconfig#paths) 官方文档。
 :::
 
-### 使用 `source.alias` 配置
+### 使用 `resolve.alias` 配置
 
-Rsbuild 提供 [source.alias](../../api/rspeedy.source.alias) 配置项，对应 webpack/Rspack 原生的 [resolve.alias](https://rspack.dev/config/resolve#resolvealias) 配置。可通过对象或函数形式进行配置。
+Rsbuild 提供 [resolve.alias](../../api/rspeedy.resolve.alias) 配置项，对应 webpack/Rspack 原生的 [resolve.alias](https://rspack.dev/config/resolve#resolvealias) 配置。可通过对象或函数形式进行配置。
 
 #### 使用场景
 
 `tsconfig.json` 的 `paths` 配置是静态的，缺乏动态性。且 `paths` 仅在模块被包含在 [`source.include`](../../api/rspeedy.source.include) 时生效。
 
-`source.alias` 配置能突破这些限制，允许通过 JavaScript 代码动态设置别名。例如为所有依赖使用工作区版本的 `lodash-es`：
+`resolve.alias` 配置能突破这些限制，允许通过 JavaScript 代码动态设置别名。例如为所有依赖使用工作区版本的 `lodash-es`：
 
 ```js title="lynx.config.ts"
 import { createRequire } from 'node:module';
@@ -55,7 +55,7 @@ import { defineConfig } from '@lynx-js/rspeedy';
 const require = createRequire(import.meta.url);
 
 export default defineConfig({
-  source: {
+  resolve: {
     alias: {
       'lodash-es': require.resolve('lodash-es'),
     },

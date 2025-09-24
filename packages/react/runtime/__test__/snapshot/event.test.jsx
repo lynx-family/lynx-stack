@@ -988,7 +988,6 @@ describe('event in spread', () => {
 describe('event when firstScreenSyncTiming is jsReady', () => {
   beforeAll(() => {
     globalThis.__FIRST_SCREEN_SYNC_TIMING__ = 'jsReady';
-    globalThis.__TESTING_FORCE_RENDER_TO_OPCODE__ = false;
   });
 
   afterAll(() => {
@@ -1161,7 +1160,6 @@ describe('event when firstScreenSyncTiming is jsReady', () => {
                 "-5": -8,
                 "-6": -9,
               },
-              "refPatch": "{}",
               "root": "{"id":-7,"type":"root","children":[{"id":-8,"type":"__Card__:__snapshot_a94a8_test_12","children":[{"id":-9,"type":"__Card__:__snapshot_a94a8_test_11","values":["-9:0:"]}]}]}",
             },
           ],
@@ -1189,7 +1187,6 @@ describe('event when firstScreenSyncTiming is jsReady', () => {
 describe('call `root.render()` async', () => {
   beforeAll(() => {
     // globalThis.__FIRST_SCREEN_SYNC_TIMING__ = 'jsReady';
-    globalThis.__TESTING_FORCE_RENDER_TO_OPCODE__ = false;
   });
 
   afterAll(() => {
@@ -1272,7 +1269,6 @@ describe('call `root.render()` async', () => {
             "rLynxFirstScreen",
             {
               "jsReadyEventIdSwap": {},
-              "refPatch": "{}",
               "root": "{"id":-1,"type":"root","children":[{"id":-2,"type":"__Card__:__snapshot_a94a8_test_14","children":[{"id":-3,"type":"__Card__:__snapshot_a94a8_test_13","values":["-3:0:"]}]}]}",
             },
           ],

@@ -54,11 +54,23 @@ declare namespace CSSPlugins {
 }
 
 // @public
-export interface EncodeCSSOptions {
-    enableCSSInvalidation: boolean;
-    enableCSSSelector: boolean;
-    enableRemoveCSSScope: boolean;
-    targetSdkVersion: string;
+export interface EncodeOptions {
+    // (undocumented)
+    [k: string]: unknown;
+    // (undocumented)
+    compilerOptions: Record<string, string | boolean>;
+    // (undocumented)
+    customSections: Record<string, {
+        type?: 'lazy';
+        content: string | Record<string, unknown>;
+    }>;
+    // (undocumented)
+    lepusCode: {
+        root: string | undefined;
+        lepusChunk: Record<string, string>;
+    };
+    // (undocumented)
+    manifest: Record<string, string | undefined>;
 }
 
 // @public
@@ -69,17 +81,16 @@ export class LynxEncodePlugin {
     static BEFORE_ENCODE_STAGE: number;
     static defaultOptions: Readonly<Required<LynxEncodePluginOptions>>;
     static ENCODE_STAGE: number;
-    static encodeCSS(cssChunks: string[], options: EncodeCSSOptions, plugins?: CSS.Plugin[], encode?: (options: any) => Promise<{
-        buffer: Buffer;
-    }>): Promise<Buffer>;
     // (undocumented)
     protected options?: LynxEncodePluginOptions | undefined;
 }
 
 // @public
 export interface LynxEncodePluginOptions {
+    // Warning: (ae-forgotten-export) The symbol "InlineChunkConfig" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
-    inlineScripts?: boolean | undefined;
+    inlineScripts?: InlineChunkConfig | undefined;
 }
 
 // @public
@@ -108,9 +119,7 @@ export interface LynxTemplatePluginOptions {
     enableCSSInheritance: boolean;
     enableCSSInvalidation: boolean;
     enableCSSSelector: boolean;
-    enableICU: boolean;
     enableNewGesture: boolean;
-    enableParallelElement?: boolean;
     enableRemoveCSSScope: boolean;
     excludeChunks?: string[];
     // @alpha
@@ -118,7 +127,6 @@ export interface LynxTemplatePluginOptions {
     filename?: string | ((entryName: string) => string);
     intermediate?: string;
     lazyBundleFilename?: string;
-    pipelineSchedulerConfig: number;
     removeDescendantSelectorScope: boolean;
     targetSdkVersion: string;
 }
@@ -130,7 +138,7 @@ export interface TemplateHooks {
         outputName: string;
     }>;
     // @alpha
-    asyncChunkName: SyncWaterfallHook<string | undefined | null>;
+    asyncChunkName: SyncWaterfallHook<string>;
     // @alpha
     beforeEmit: AsyncSeriesWaterfallHook<{
         finalEncodeOptions: EncodeOptions;
@@ -138,6 +146,7 @@ export interface TemplateHooks {
         template: Buffer;
         outputName: string;
         mainThreadAssets: Asset[];
+        cssChunks: Asset[];
     }>;
     // @alpha
     beforeEncode: AsyncSeriesWaterfallHook<{
@@ -148,7 +157,7 @@ export interface TemplateHooks {
     // @alpha
     encode: AsyncSeriesBailHook<{
         encodeOptions: EncodeOptions;
-        intermediate: string;
+        intermediate?: string;
     }, {
         buffer: Buffer;
         debugInfo: string;
@@ -174,7 +183,6 @@ export class WebEncodePlugin {
 
 // Warnings were encountered during analysis:
 //
-// lib/LynxTemplatePlugin.d.ts:58:9 - (ae-forgotten-export) The symbol "EncodeRawData" needs to be exported by the entry point index.d.ts
-// lib/LynxTemplatePlugin.d.ts:68:9 - (ae-forgotten-export) The symbol "EncodeOptions" needs to be exported by the entry point index.d.ts
+// lib/LynxTemplatePlugin.d.ts:67:9 - (ae-forgotten-export) The symbol "EncodeRawData" needs to be exported by the entry point index.d.ts
 
 ```

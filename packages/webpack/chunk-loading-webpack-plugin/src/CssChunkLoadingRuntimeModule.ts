@@ -40,16 +40,19 @@ export function createCssChunkLoadingRuntimeModule(
         return '';
       }
       return Template.asString([
-        CssRuntimeModule.generateLoadStyleRuntime(),
+        CssRuntimeModule.generateLoadStyleRuntime(webpack),
         '',
         withLoading
           ? CssRuntimeModule.generateChunkLoadingRuntime(
+            webpack,
             chunkMap,
             chunk!.ids ?? [],
           )
           : '// no chunk loading',
         '',
-        withHmr ? CssRuntimeModule.generateHMRLoadChunkRuntime() : '// no hmr',
+        withHmr
+          ? CssRuntimeModule.generateHMRLoadChunkRuntime(webpack)
+          : '// no hmr',
       ]);
     }
   };

@@ -1,5 +1,65 @@
 # create-rspeedy
 
+## 0.11.3
+
+## 0.11.2
+
+## 0.11.1
+
+## 0.11.0
+
+### Patch Changes
+
+- Use TypeScript [Project References](https://www.typescriptlang.org/docs/handbook/project-references.html) in templates. ([#1612](https://github.com/lynx-family/lynx-stack/pull/1612))
+
+## 0.10.8
+
+### Patch Changes
+
+- Add `@lynx-js/preact-devtools` by default. ([#1593](https://github.com/lynx-family/lynx-stack/pull/1593))
+
+## 0.10.7
+
+## 0.10.6
+
+### Patch Changes
+
+- Support ESLint for ReactLynx templates ([#1274](https://github.com/lynx-family/lynx-stack/pull/1274))
+
+## 0.10.5
+
+## 0.10.4
+
+## 0.10.3
+
+## 0.10.2
+
+### Patch Changes
+
+- Add `import '@lynx-js/react/debug'` for all templates. ([#1250](https://github.com/lynx-family/lynx-stack/pull/1250))
+
+## 0.10.1
+
+### Patch Changes
+
+- Fix missing color in nested `<text>`. ([#1233](https://github.com/lynx-family/lynx-stack/pull/1233))
+
+## 0.10.0
+
+## 0.9.11
+
+## 0.9.10
+
+### Patch Changes
+
+- Enable TypeScript check in templates. ([#1093](https://github.com/lynx-family/lynx-stack/pull/1093))
+
+- Fix a bug in ReactLynx Testing Library that rendered snapshot of inline style was normalized incorrectly (eg. `flex:1` was normalized to `flex: 1 1 0%;` incorrectly). ([#1040](https://github.com/lynx-family/lynx-stack/pull/1040))
+
+## 0.9.9
+
+## 0.9.8
+
 ## 0.9.7
 
 ## 0.9.6

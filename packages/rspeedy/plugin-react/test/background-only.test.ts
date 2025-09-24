@@ -7,7 +7,8 @@ import { fileURLToPath } from 'node:url'
 import { describe, expect, test, vi } from 'vitest'
 
 import { LAYERS } from '@lynx-js/react-webpack-plugin'
-import { createRspeedy } from '@lynx-js/rspeedy'
+
+import { createStubRspeedy as createRspeedy } from './createRspeedy.js'
 
 vi
   .stubEnv('USE_RSPACK', 'true')
@@ -39,7 +40,9 @@ describe('Config', () => {
         if (
           Object.prototype.hasOwnProperty.call(alias, 'background-only$')
           && typeof alias['background-only$'] === 'string'
-          && alias['background-only$'].includes('background-only/empty.js')
+          && alias['background-only$'].includes(
+            'background-only/empty.js'.replaceAll('/', path.sep),
+          )
         ) {
           return true
         }
@@ -56,7 +59,9 @@ describe('Config', () => {
         if (
           Object.prototype.hasOwnProperty.call(alias, 'background-only$')
           && typeof alias['background-only$'] === 'string'
-          && alias['background-only$'].includes('background-only/error.js')
+          && alias['background-only$'].includes(
+            'background-only/error.js'.replaceAll('/', path.sep),
+          )
         ) {
           return true
         }
@@ -180,7 +185,6 @@ describe('Build background-only', () => {
     const rsbuild = await createRspeedy({
       rspeedyConfig: {
         source: {
-          tsconfigPath: new URL('./tsconfig.json', import.meta.url).pathname,
           entry: {
             main:
               new URL('./fixtures/background-only/success.tsx', import.meta.url)

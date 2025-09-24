@@ -1,2 +1,2 @@
-ERROR in ./main-thread/error/index.jsx <LINE:COLUMN>-91
-Module not found: Error: Can't resolve './non-exist-file.js' in '<PROJECT_ROOT>/packages/webpack/react-webpack-plugin/test/diagnostic/main-thread/error'
+ERROR in ./main-thread/error/index.jsx <LINE:COLUMN>-92
+Module not found: Error: Can't resolve './non-exist-file.js' in '<ROOT>/packages/webpack/react-webpack-plugin/test/diagnostic/main-thread/error'

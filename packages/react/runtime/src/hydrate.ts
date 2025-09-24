@@ -2,9 +2,11 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { __pendingListUpdates, componentAtIndexFactory, enqueueComponentFactory } from './list.js';
+import { componentAtIndexFactory, enqueueComponentFactory, gRecycleMap, gSignMap } from './list.js';
+import { __pendingListUpdates } from './pendingListUpdates.js';
+import { DynamicPartType } from './snapshot/dynamicPartType.js';
 import { unref } from './snapshot/ref.js';
-import { DynamicPartType, SnapshotInstance } from './snapshot.js';
+import type { SnapshotInstance } from './snapshot.js';
 import { isEmptyObject } from './utils.js';
 
 export interface DiffResult<K> {
@@ -215,16 +217,18 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
   }
 
   let swap;
-  if (swap = options?.swap) {
+  if ((swap = options?.swap)) {
     swap[before.__id] = after.__id;
   }
 
-  after.__values?.forEach((value, index) => {
-    const old = before.__values![index];
-    if (value !== old) {
-      after.__values![index] = old;
-      after.setAttribute(index, value);
-    }
+  __pendingListUpdates.runWithoutUpdates(() => {
+    after.__values?.forEach((value, index) => {
+      const old = before.__values![index];
+      if (value !== old) {
+        after.__values![index] = old;
+        after.setAttribute(index, value);
+      }
+    });
   });
 
   const { slot } = after.__snapshot_def;
@@ -292,11 +296,15 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
         const insertions: number[] = [];
         const updateAction: any[] = [];
 
+        const listID = __GetElementUniqueID(before.__elements![elementIndex]!);
+        const signMap = gSignMap[listID]!;
+        const recycleMap = gRecycleMap[listID]!;
+
         const diffResult = diffArrayLepus(
           beforeChildNodes,
           afterChildNodes,
           (a, b) => a.type === b.type,
-          (a, b, oldIndex, newIndex) => {
+          (a, b, _oldIndex, newIndex) => {
             if (
               JSON.stringify(a.__listItemPlatformInfo)
                 !== JSON.stringify(b.__listItemPlatformInfo)
@@ -307,19 +315,30 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
                 to: newIndex,
                 // no flush
                 flush: false,
+                type: b.type,
               });
             }
 
-            // Mark list-item which is rendered (has `__elements`) as DELETE
-            // so list platform will call `enqueueComponent` on it
-            // and will call `componentAtIndex` on the inserted one
-            // In this way:
-            //  1. we make sure `<list/>` for hydrate is like a leaf node
-            //  2. we avoid hydrate so modifying recycleMap can be avoid
-            //  3. the delete list-item is recycled for later use, so no waste
             if (a.__elements) {
-              removals.push(oldIndex);
-              insertions.push(newIndex);
+              // transfer a's elements to b
+              hydrate(a, b, options);
+
+              // if a list-item has `elements`, it may be:
+              //   - `enqueueComponent` already called on it: so we need to update the `signMap` and the `recycleMap`
+              //   - `enqueueComponent` not called on it: update the `signMap`
+              const listItemID = __GetElementUniqueID(a.__element_root!);
+              if (signMap.has(listItemID)) {
+                signMap.set(listItemID, b);
+              }
+              if (recycleMap.has(a.type)) {
+                const recycleSignMap = recycleMap.get(a.type)!;
+                // Should only update `list-item` in the recycling pool
+                // Because if an on-screen `list-item` is added to the recycling pool,
+                // it could cause a blank screen when reused next time, as it may still be visible.
+                if (recycleSignMap.has(listItemID)) {
+                  recycleSignMap.set(listItemID, b);
+                }
+              }
             }
           },
         );
@@ -349,7 +368,7 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
 
         const listElement = before.__elements![elementIndex]!;
         __SetAttribute(listElement, 'update-list-info', info);
-        const [componentAtIndex, componentAtIndexes] = componentAtIndexFactory(afterChildNodes);
+        const [componentAtIndex, componentAtIndexes] = componentAtIndexFactory(afterChildNodes, hydrate);
         __UpdateListCallbacks(
           listElement,
           componentAtIndex,
@@ -359,7 +378,7 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
 
         // The `before` & `after` target to the same list element, so we need to
         // avoid the newly created list's (behind snapshot instance `after`) "update-list-info" being recorded.
-        delete __pendingListUpdates.values[after.__id];
+        __pendingListUpdates.clear(after.__id);
       }
     }
   });

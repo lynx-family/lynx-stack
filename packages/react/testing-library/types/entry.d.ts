@@ -9,9 +9,56 @@
 
 import { queries, Queries, BoundFunction } from '@testing-library/dom';
 import { LynxElement, type ElementTree, type LynxTestingEnv } from '@lynx-js/testing-environment';
-import { ComponentChild, ComponentType } from 'preact';
+import { act } from 'preact/test-utils';
+import type { EventType, FireFunction, FireObject } from '@testing-library/dom';
 export * from '@testing-library/dom';
-export { ElementTree, LynxTestingEnv };
+export { ElementTree, LynxTestingEnv, act };
+
+declare type LynxEventType =
+  | 'focus'
+  | 'blur'
+  | 'scroll'
+  | 'wheel'
+  | 'tap'
+  | 'longtap'
+  | 'bgload'
+  | 'bgerror'
+  | 'touchstart'
+  | 'touchmove'
+  | 'touchcancel'
+  | 'touchend'
+  | 'longpress'
+  | 'transitionstart'
+  | 'transitioncancel'
+  | 'transitionend'
+  | 'animationstart'
+  | 'animationiteration'
+  | 'animationcancel'
+  | 'animationend'
+  | 'mousedown'
+  | 'mouseup'
+  | 'mousemove'
+  | 'mouseclick'
+  | 'mousedblclick'
+  | 'mouselongpress'
+  | 'keydown'
+  | 'keyup'
+  | 'layoutchange'
+  | 'scrolltoupper'
+  | 'scrolltolower'
+  | 'scrollend'
+  | 'contentsizechanged'
+  | 'scrolltoupperedge'
+  | 'scrolltoloweredge'
+  | 'scrolltonormalstate';
+
+declare type LynxFireObject = {
+  [K in LynxEventType]: FireObject[EventType];
+};
+
+declare const fireEvent: FireFunction & LynxFireObject;
+
+export { fireEvent, LynxEventType as EventType, LynxFireObject as FireObject };
 
 /**
  * The options for {@link render}.
@@ -68,7 +115,7 @@ export interface RenderOptions<Q extends Queries = typeof queries> {
    * export { customRender as render }
    * ```
    */
-  wrapper?: ComponentChild;
+  wrapper?: React.JSXElementConstructor<{ children: React.ReactNode }> | undefined;
   /**
    * Render your component in the main thread or not.
    *
@@ -94,8 +141,9 @@ export interface RenderOptions<Q extends Queries = typeof queries> {
  */
 export type RenderResult<Q extends Queries = typeof queries> = {
   container: LynxElement;
-  rerender: (ui: ComponentChild) => void;
+  rerender: (ui: React.ReactNode) => void;
   unmount: () => boolean;
+  asFragment: () => DocumentFragment;
 } & { [P in keyof Q]: BoundFunction<Q[P]> };
 
 /**
@@ -131,7 +179,7 @@ export type RenderResult<Q extends Queries = typeof queries> = {
  * @public
  */
 export function render<Q extends Queries>(
-  ui: ComponentChild,
+  ui: React.ReactNode,
   options?: RenderOptions<Q>,
 ): RenderResult<Q>;
 /**
@@ -212,7 +260,7 @@ export interface RenderHookOptions<Props> {
    * export { customRender as renderHook }
    * ```
    */
-  wrapper?: ComponentType<{ children: LynxElement }>;
+  wrapper?: React.JSXElementConstructor<{ children: React.ReactNode }> | undefined;
 }
 
 /**
@@ -252,6 +300,6 @@ export function renderHook<Result, Props>(
  *
  * It will be useful when you want to wait for the next event loop to finish.
  *
- * @public
+ * @deprecated Please use `act` instead
  */
 export function waitSchedule(): Promise<void>;

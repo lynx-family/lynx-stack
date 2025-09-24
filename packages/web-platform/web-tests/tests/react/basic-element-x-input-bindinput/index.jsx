@@ -8,7 +8,13 @@ function App() {
   const [result, setResult] = useState();
 
   const onInput = ({ detail }) => {
-    const { value, cursor, textLength } = detail;
+    if (typeof detail !== 'object') {
+      throw new Error(
+        `detail type not match. expect object, got ${typeof detail}`,
+      );
+    }
+
+    const { value, cursor, textLength, selectionStart, selectionEnd } = detail;
 
     if (value.length !== textLength) {
       throw new Error(
@@ -16,7 +22,7 @@ function App() {
       );
     }
 
-    setResult(value);
+    setResult(`${value}-${selectionStart}-${selectionStart}`);
   };
 
   return (

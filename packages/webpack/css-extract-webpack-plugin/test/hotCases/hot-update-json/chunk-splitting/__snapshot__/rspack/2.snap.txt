@@ -1,0 +1,335 @@
+# Case chunk-splitting - rspack: Step 2
+
+## Changed Files
+- lib-common.module.css
+
+## Asset Files
+- Bundle: index.js
+- Bundle: index/template.js
+- Bundle: lib-common.js
+- Bundle: main1/template.js
+- Bundle: main2.js
+- Bundle: main2/template.js
+- Bundle: main3.js
+- Bundle: main3/template.js
+- Bundle: main4.js
+- Bundle: main4/template.js
+- Manifest: index.LAST_HASH.css.hot-update.json, size: 1390
+- Manifest: index.LAST_HASH.hot-update.json, size: 42
+- Manifest: lib-common.CURRENT_HASH.css.hot-update.json, size: 1378
+- Manifest: lib-common.LAST_HASH.css.hot-update.json, size: 1378
+- Manifest: main2.CURRENT_HASH.css.hot-update.json, size: 1390
+- Manifest: main2.LAST_HASH.hot-update.json, size: 42
+- Manifest: main3.CURRENT_HASH.css.hot-update.json, size: 1390
+- Manifest: main3.LAST_HASH.hot-update.json, size: 42
+- Manifest: main4.CURRENT_HASH.css.hot-update.json, size: 1390
+- Manifest: main4.LAST_HASH.hot-update.json, size: 42
+- Update: index.LAST_HASH.hot-update.js, size: 358
+- Update: lib-common.LAST_HASH.hot-update.js, size: 964
+- Update: main2.LAST_HASH.hot-update.js, size: 358
+- Update: main3.LAST_HASH.hot-update.js, size: 358
+- Update: main4.LAST_HASH.hot-update.js, size: 358
+
+## Manifest
+
+### index.LAST_HASH.css.hot-update.json
+
+```json
+{"content":"eyJjb21waWxlck9wdGlvbnMiOnsiZW5hYmxlRmliZXJBcmNoIjp0cnVlLCJ1c2VMZXB1c05HIjp0cnVlLCJlbmFibGVSZXVzZUNvbnRleHQiOnRydWUsImJ1bmRsZU1vZHVsZU1vZGUiOiJSZXR1cm5CeUZ1bmN0aW9uIiwiZGVidWdJbmZvT3V0c2lkZSI6dHJ1ZSwiZGVmYXVsdERpc3BsYXlMaW5lYXIiOnRydWUsImVuYWJsZUNTU0ludmFsaWRhdGlvbiI6ZmFsc2UsImVuYWJsZUNTU1NlbGVjdG9yIjp0cnVlLCJlbmFibGVMZXB1c0RlYnVnIjp0cnVlLCJlbmFibGVSZW1vdmVDU1NTY29wZSI6ZmFsc2UsInRhcmdldFNka1ZlcnNpb24iOiIzLjIiLCJkZWZhdWx0T3ZlcmZsb3dWaXNpYmxlIjp0cnVlfSwic291cmNlQ29udGVudCI6eyJkc2wiOiJyZWFjdF9ub2RpZmYiLCJhcHBUeXBlIjoiY2FyZCIsImNvbmZpZyI6eyJsZXB1c1N0cmljdCI6dHJ1ZSwidXNlTmV3U3dpcGVyIjp0cnVlLCJlbmFibGVOZXdJbnRlcnNlY3Rpb25PYnNlcnZlciI6dHJ1ZSwiZW5hYmxlTmF0aXZlTGlzdCI6dHJ1ZSwiZW5hYmxlQTExeSI6dHJ1ZSwiZW5hYmxlQWNjZXNzaWJpbGl0eUVsZW1lbnQiOmZhbHNlLCJlbmFibGVDU1NJbmhlcml0YW5jZSI6ZmFsc2UsImVuYWJsZU5ld0dlc3R1cmUiOmZhbHNlLCJyZW1vdmVEZXNjZW5kYW50U2VsZWN0b3JTY29wZSI6ZmFsc2V9fSwiY3NzIjp7ImNzc01hcCI6eyIwIjpbeyJ0eXBlIjoiU3R5bGVSdWxlIiwic3R5bGUiOlt7Im5hbWUiOiJiYWNrZ3JvdW5kLWNvbG9yIiwidmFsdWUiOiJibGFjayIsImtleUxvYyI6eyJsaW5lIjoxLCJjb2x1bW4iOjM1fSwidmFsTG9jIjp7ImxpbmUiOjEsImNvbHVtbiI6NDJ9fVXsInNlbGVjdG9yVGV4dCI6eyJ2YWx1ZSI6Ii5YQVl1dWFxMnJFSVdpWE02IiwibG9jIjp7ImxpbmUiOjEsImNvbHVtbiI6MTh9fSwidmFyaWFibGVzIjp7fX1dfSwiY3NzU291cmNlIjp7IjAiOiIvY3NzSWQvMC5jc3MifSwiY29udGVudE1hcCI6e319LCJsZXB1c0NvZGUiOnsibGVwdXNDaHVuayI6e319LCJtYW5pZmVzdCI6eXsImN1c3RvbVNlY3Rpb25zIjp7fX0=","deps":{"0":[]}}
+```
+
+
+
+### index.LAST_HASH.hot-update.json
+
+```json
+{"c":["index","lib-common"],"r":[],"m":[]}
+```
+
+
+
+### lib-common.CURRENT_HASH.css.hot-update.json
+
+```json
+{"content":"eyJjb21waWxlck9wdGlvbnMiOnsiZW5hYmxlRmliZXJBcmNoIjp0cnVlLCJ1c2VMZXB1c05HIjp0cnVlLCJlbmFibGVSZXVzZUNvbnRleHQiOnRydWUsImJ1bmRsZU1vZHVsZU1vZGUiOiJSZXR1cm5CeUZ1bmN0aW9uIiwiZGVidWdJbmZvT3V0c2lkZSI6dHJ1ZSwiZGVmYXVsdERpc3BsYXlMaW5lYXIiOnRydWUsImVuYWJsZUNTU0ludmFsaWRhdGlvbiI6ZmFsc2UsImVuYWJsZUNTU1NlbGVjdG9yIjp0cnVlLCJlbmFibGVMZXB1c0RlYnVnIjp0cnVlLCJlbmFibGVSZW1vdmVDU1NTY29wZSI6ZmFsc2UsInRhcmdldFNka1ZlcnNpb24iOiIzLjIiLCJkZWZhdWx0T3ZlcmZsb3dWaXNpYmxlIjp0cnVlfSwic291cmNlQ29udGVudCI6eyJkc2wiOiJyZWFjdF9ub2RpZmYiLCJhcHBUeXBlIjoiY2FyZCIsImNvbmZpZyI6eyJsZXB1c1N0cmljdCI6dHJ1ZSwidXNlTmV3U3dpcGVyIjp0cnVlLCJlbmFibGVOZXdJbnRlcnNlY3Rpb25PYnNlcnZlciI6dHJ1ZSwiZW5hYmxlTmF0aXZlTGlzdCI6dHJ1ZSwiZW5hYmxlQTExeSI6dHJ1ZSwiZW5hYmxlQWNjZXNzaWJpbGl0eUVsZW1lbnQiOmZhbHNlLCJlbmFibGVDU1NJbmhlcml0YW5jZSI6ZmFsc2UsImVuYWJsZU5ld0dlc3R1cmUiOmZhbHNlLCJyZW1vdmVEZXNjZW5kYW50U2VsZWN0b3JTY29wZSI6ZmFsc2V9fSwiY3NzIjp7ImNzc01hcCI6eyIwIjpbeyJ0eXBlIjoiU3R5bGVSdWxlIiwic3R5bGUiOlt7Im5hbWUiOiJjb2xvciIsInZhbHVlIjoiXCJibHVlXCIiLCJrZXlMb2MiOnsibGluZSI6MSwiYXsdW1uIjoyNHXsInZhbExvYyI6eyJsaW5lIjoxLCJjb2x1bW4iOjMyfX1dLCJzZWxlY3RvclRleHQiOnsidmFsdWUiOiIuREVuMlpnTWQzWGdWZ1plTCIsImxvYyI6eyJsaW5lIjoxLCJjb2x1bW4iOjE4fXXsInZhcmlhYmxlcyI6e319XXXsImNzc1NvdXJjZSI6eyIwIjoiL2Nzc0lkLzAuY3NzInXsImNvbnRlbnRNYXAiOnt9fSwibGVwdXNDb2RlIjp7ImxlcHVzQ2h1bmsiOnt9fSwibWFuaWZlc3QiOnt9LCJjdXN0b21TZWN0aW9ucyI6e319","deps":{"0":[]}}
+```
+
+
+
+### lib-common.LAST_HASH.css.hot-update.json
+
+```json
+{"content":"eyJjb21waWxlck9wdGlvbnMiOnsiZW5hYmxlRmliZXJBcmNoIjp0cnVlLCJ1c2VMZXB1c05HIjp0cnVlLCJlbmFibGVSZXVzZUNvbnRleHQiOnRydWUsImJ1bmRsZU1vZHVsZU1vZGUiOiJSZXR1cm5CeUZ1bmN0aW9uIiwiZGVidWdJbmZvT3V0c2lkZSI6dHJ1ZSwiZGVmYXVsdERpc3BsYXlMaW5lYXIiOnRydWUsImVuYWJsZUNTU0ludmFsaWRhdGlvbiI6ZmFsc2UsImVuYWJsZUNTU1NlbGVjdG9yIjp0cnVlLCJlbmFibGVMZXB1c0RlYnVnIjp0cnVlLCJlbmFibGVSZW1vdmVDU1NTY29wZSI6ZmFsc2UsInRhcmdldFNka1ZlcnNpb24iOiIzLjIiLCJkZWZhdWx0T3ZlcmZsb3dWaXNpYmxlIjp0cnVlfSwic291cmNlQ29udGVudCI6eyJkc2wiOiJyZWFjdF9ub2RpZmYiLCJhcHBUeXBlIjoiY2FyZCIsImNvbmZpZyI6eyJsZXB1c1N0cmljdCI6dHJ1ZSwidXNlTmV3U3dpcGVyIjp0cnVlLCJlbmFibGVOZXdJbnRlcnNlY3Rpb25PYnNlcnZlciI6dHJ1ZSwiZW5hYmxlTmF0aXZlTGlzdCI6dHJ1ZSwiZW5hYmxlQTExeSI6dHJ1ZSwiZW5hYmxlQWNjZXNzaWJpbGl0eUVsZW1lbnQiOmZhbHNlLCJlbmFibGVDU1NJbmhlcml0YW5jZSI6ZmFsc2UsImVuYWJsZU5ld0dlc3R1cmUiOmZhbHNlLCJyZW1vdmVEZXNjZW5kYW50U2VsZWN0b3JTY29wZSI6ZmFsc2V9fSwiY3NzIjp7ImNzc01hcCI6eyIwIjpbeyJ0eXBlIjoiU3R5bGVSdWxlIiwic3R5bGUiOlt7Im5hbWUiOiJjb2xvciIsInZhbHVlIjoiXCJibHVlXCIiLCJrZXlMb2MiOnsibGluZSI6MSwiYXsdW1uIjoyNHXsInZhbExvYyI6eyJsaW5lIjoxLCJjb2x1bW4iOjMyfX1dLCJzZWxlY3RvclRleHQiOnsidmFsdWUiOiIuREVuMlpnTWQzWGdWZ1plTCIsImxvYyI6eyJsaW5lIjoxLCJjb2x1bW4iOjE4fXXsInZhcmlhYmxlcyI6e319XXXsImNzc1NvdXJjZSI6eyIwIjoiL2Nzc0lkLzAuY3NzInXsImNvbnRlbnRNYXAiOnt9fSwibGVwdXNDb2RlIjp7ImxlcHVzQ2h1bmsiOnt9fSwibWFuaWZlc3QiOnt9LCJjdXN0b21TZWN0aW9ucyI6e319","deps":{"0":[]}}
+```
+
+
+
+### main2.CURRENT_HASH.css.hot-update.json
+
+```json
+{"content":"eyJjb21waWxlck9wdGlvbnMiOnsiZW5hYmxlRmliZXJBcmNoIjp0cnVlLCJ1c2VMZXB1c05HIjp0cnVlLCJlbmFibGVSZXVzZUNvbnRleHQiOnRydWUsImJ1bmRsZU1vZHVsZU1vZGUiOiJSZXR1cm5CeUZ1bmN0aW9uIiwiZGVidWdJbmZvT3V0c2lkZSI6dHJ1ZSwiZGVmYXVsdERpc3BsYXlMaW5lYXIiOnRydWUsImVuYWJsZUNTU0ludmFsaWRhdGlvbiI6ZmFsc2UsImVuYWJsZUNTU1NlbGVjdG9yIjp0cnVlLCJlbmFibGVMZXB1c0RlYnVnIjp0cnVlLCJlbmFibGVSZW1vdmVDU1NTY29wZSI6ZmFsc2UsInRhcmdldFNka1ZlcnNpb24iOiIzLjIiLCJkZWZhdWx0T3ZlcmZsb3dWaXNpYmxlIjp0cnVlfSwic291cmNlQ29udGVudCI6eyJkc2wiOiJyZWFjdF9ub2RpZmYiLCJhcHBUeXBlIjoiY2FyZCIsImNvbmZpZyI6eyJsZXB1c1N0cmljdCI6dHJ1ZSwidXNlTmV3U3dpcGVyIjp0cnVlLCJlbmFibGVOZXdJbnRlcnNlY3Rpb25PYnNlcnZlciI6dHJ1ZSwiZW5hYmxlTmF0aXZlTGlzdCI6dHJ1ZSwiZW5hYmxlQTExeSI6dHJ1ZSwiZW5hYmxlQWNjZXNzaWJpbGl0eUVsZW1lbnQiOmZhbHNlLCJlbmFibGVDU1NJbmhlcml0YW5jZSI6ZmFsc2UsImVuYWJsZU5ld0dlc3R1cmUiOmZhbHNlLCJyZW1vdmVEZXNjZW5kYW50U2VsZWN0b3JTY29wZSI6ZmFsc2V9fSwiY3NzIjp7ImNzc01hcCI6eyIwIjpbeyJ0eXBlIjoiU3R5bGVSdWxlIiwic3R5bGUiOlt7Im5hbWUiOiJiYWNrZ3JvdW5kLWNvbG9yIiwidmFsdWUiOiJibGFjayIsImtleUxvYyI6eyJsaW5lIjoxLCJjb2x1bW4iOjM1fSwidmFsTG9jIjp7ImxpbmUiOjEsImNvbHVtbiI6NDJ9fVXsInNlbGVjdG9yVGV4dCI6eyJ2YWx1ZSI6Ii5YQVl1dWFxMnJFSVdpWE02IiwibG9jIjp7ImxpbmUiOjEsImNvbHVtbiI6MTh9fSwidmFyaWFibGVzIjp7fX1dfSwiY3NzU291cmNlIjp7IjAiOiIvY3NzSWQvMC5jc3MifSwiY29udGVudE1hcCI6e319LCJsZXB1c0NvZGUiOnsibGVwdXNDaHVuayI6e319LCJtYW5pZmVzdCI6eXsImN1c3RvbVNlY3Rpb25zIjp7fX0=","deps":{"0":[]}}
+```
+
+
+
+### main2.LAST_HASH.hot-update.json
+
+```json
+{"c":["lib-common","main2"],"r":[],"m":[]}
+```
+
+
+
+### main3.CURRENT_HASH.css.hot-update.json
+
+```json
+{"content":"eyJjb21waWxlck9wdGlvbnMiOnsiZW5hYmxlRmliZXJBcmNoIjp0cnVlLCJ1c2VMZXB1c05HIjp0cnVlLCJlbmFibGVSZXVzZUNvbnRleHQiOnRydWUsImJ1bmRsZU1vZHVsZU1vZGUiOiJSZXR1cm5CeUZ1bmN0aW9uIiwiZGVidWdJbmZvT3V0c2lkZSI6dHJ1ZSwiZGVmYXVsdERpc3BsYXlMaW5lYXIiOnRydWUsImVuYWJsZUNTU0ludmFsaWRhdGlvbiI6ZmFsc2UsImVuYWJsZUNTU1NlbGVjdG9yIjp0cnVlLCJlbmFibGVMZXB1c0RlYnVnIjp0cnVlLCJlbmFibGVSZW1vdmVDU1NTY29wZSI6ZmFsc2UsInRhcmdldFNka1ZlcnNpb24iOiIzLjIiLCJkZWZhdWx0T3ZlcmZsb3dWaXNpYmxlIjp0cnVlfSwic291cmNlQ29udGVudCI6eyJkc2wiOiJyZWFjdF9ub2RpZmYiLCJhcHBUeXBlIjoiY2FyZCIsImNvbmZpZyI6eyJsZXB1c1N0cmljdCI6dHJ1ZSwidXNlTmV3U3dpcGVyIjp0cnVlLCJlbmFibGVOZXdJbnRlcnNlY3Rpb25PYnNlcnZlciI6dHJ1ZSwiZW5hYmxlTmF0aXZlTGlzdCI6dHJ1ZSwiZW5hYmxlQTExeSI6dHJ1ZSwiZW5hYmxlQWNjZXNzaWJpbGl0eUVsZW1lbnQiOmZhbHNlLCJlbmFibGVDU1NJbmhlcml0YW5jZSI6ZmFsc2UsImVuYWJsZU5ld0dlc3R1cmUiOmZhbHNlLCJyZW1vdmVEZXNjZW5kYW50U2VsZWN0b3JTY29wZSI6ZmFsc2V9fSwiY3NzIjp7ImNzc01hcCI6eyIwIjpbeyJ0eXBlIjoiU3R5bGVSdWxlIiwic3R5bGUiOlt7Im5hbWUiOiJiYWNrZ3JvdW5kLWNvbG9yIiwidmFsdWUiOiJibGFjayIsImtleUxvYyI6eyJsaW5lIjoxLCJjb2x1bW4iOjM1fSwidmFsTG9jIjp7ImxpbmUiOjEsImNvbHVtbiI6NDJ9fVXsInNlbGVjdG9yVGV4dCI6eyJ2YWx1ZSI6Ii5YQVl1dWFxMnJFSVdpWE02IiwibG9jIjp7ImxpbmUiOjEsImNvbHVtbiI6MTh9fSwidmFyaWFibGVzIjp7fX1dfSwiY3NzU291cmNlIjp7IjAiOiIvY3NzSWQvMC5jc3MifSwiY29udGVudE1hcCI6e319LCJsZXB1c0NvZGUiOnsibGVwdXNDaHVuayI6e319LCJtYW5pZmVzdCI6eXsImN1c3RvbVNlY3Rpb25zIjp7fX0=","deps":{"0":[]}}
+```
+
+
+
+### main3.LAST_HASH.hot-update.json
+
+```json
+{"c":["lib-common","main3"],"r":[],"m":[]}
+```
+
+
+
+### main4.CURRENT_HASH.css.hot-update.json
+
+```json
+{"content":"eyJjb21waWxlck9wdGlvbnMiOnsiZW5hYmxlRmliZXJBcmNoIjp0cnVlLCJ1c2VMZXB1c05HIjp0cnVlLCJlbmFibGVSZXVzZUNvbnRleHQiOnRydWUsImJ1bmRsZU1vZHVsZU1vZGUiOiJSZXR1cm5CeUZ1bmN0aW9uIiwiZGVidWdJbmZvT3V0c2lkZSI6dHJ1ZSwiZGVmYXVsdERpc3BsYXlMaW5lYXIiOnRydWUsImVuYWJsZUNTU0ludmFsaWRhdGlvbiI6ZmFsc2UsImVuYWJsZUNTU1NlbGVjdG9yIjp0cnVlLCJlbmFibGVMZXB1c0RlYnVnIjp0cnVlLCJlbmFibGVSZW1vdmVDU1NTY29wZSI6ZmFsc2UsInRhcmdldFNka1ZlcnNpb24iOiIzLjIiLCJkZWZhdWx0T3ZlcmZsb3dWaXNpYmxlIjp0cnVlfSwic291cmNlQ29udGVudCI6eyJkc2wiOiJyZWFjdF9ub2RpZmYiLCJhcHBUeXBlIjoiY2FyZCIsImNvbmZpZyI6eyJsZXB1c1N0cmljdCI6dHJ1ZSwidXNlTmV3U3dpcGVyIjp0cnVlLCJlbmFibGVOZXdJbnRlcnNlY3Rpb25PYnNlcnZlciI6dHJ1ZSwiZW5hYmxlTmF0aXZlTGlzdCI6dHJ1ZSwiZW5hYmxlQTExeSI6dHJ1ZSwiZW5hYmxlQWNjZXNzaWJpbGl0eUVsZW1lbnQiOmZhbHNlLCJlbmFibGVDU1NJbmhlcml0YW5jZSI6ZmFsc2UsImVuYWJsZU5ld0dlc3R1cmUiOmZhbHNlLCJyZW1vdmVEZXNjZW5kYW50U2VsZWN0b3JTY29wZSI6ZmFsc2V9fSwiY3NzIjp7ImNzc01hcCI6eyIwIjpbeyJ0eXBlIjoiU3R5bGVSdWxlIiwic3R5bGUiOlt7Im5hbWUiOiJiYWNrZ3JvdW5kLWNvbG9yIiwidmFsdWUiOiJibGFjayIsImtleUxvYyI6eyJsaW5lIjoxLCJjb2x1bW4iOjM1fSwidmFsTG9jIjp7ImxpbmUiOjEsImNvbHVtbiI6NDJ9fVXsInNlbGVjdG9yVGV4dCI6eyJ2YWx1ZSI6Ii5YQVl1dWFxMnJFSVdpWE02IiwibG9jIjp7ImxpbmUiOjEsImNvbHVtbiI6MTh9fSwidmFyaWFibGVzIjp7fX1dfSwiY3NzU291cmNlIjp7IjAiOiIvY3NzSWQvMC5jc3MifSwiY29udGVudE1hcCI6e319LCJsZXB1c0NvZGUiOnsibGVwdXNDaHVuayI6e319LCJtYW5pZmVzdCI6eXsImN1c3RvbVNlY3Rpb25zIjp7fX0=","deps":{"0":[]}}
+```
+
+
+
+### main4.LAST_HASH.hot-update.json
+
+```json
+{"c":["lib-common","main4"],"r":[],"m":[]}
+```
+
+
+## Update
+
+
+### index.LAST_HASH.hot-update.js
+
+#### Changed Modules
+
+
+#### Changed Runtime Modules
+- webpack/runtime/get_full_hash
+
+#### Changed Content
+```js
+"use strict";
+exports.ids = ["index"];
+exports.modules = {};
+exports.runtime = function(__webpack_require__) {
+// webpack/runtime/get_full_hash
+(() => {
+__webpack_require__.h = () => ("CURRENT_HASH")
+})();
+// webpack/runtime/lynx css hot update
+(() => {
+
+__webpack_require__.cssHotUpdateList = [["index","index.LAST_HASH.css.hot-update.json"]];
+
+})();
+
+}
+;
+;
+```
+
+
+
+### lib-common.LAST_HASH.hot-update.js
+
+#### Changed Modules
+- ./hot-update-json/chunk-splitting/lib-common.module.css
+
+#### Changed Runtime Modules
+
+
+#### Changed Content
+```js
+"use strict";
+exports.ids = ["lib-common"];
+exports.modules = {
+"./hot-update-json/chunk-splitting/lib-common.module.css": (function (module, __webpack_exports__, __webpack_require__) {
+__webpack_require__.r(__webpack_exports__);
+__webpack_require__.d(__webpack_exports__, {
+  bar: () => (_1)
+});
+// extracted by mini-css-extract-plugin
+var _1 = "DEn2ZgMd3XgVgZeL";
+
+
+  if (true) {
+    (function() {
+      var localsJsonString = "{\"bar\":\"DEn2ZgMd3XgVgZeL\"}";
+      var cssReload = __webpack_require__("../../runtime/hotModuleReplacement.cjs")(module.id, {}, "");
+      // only invalidate when locals change
+      if (
+        module.hot.data &&
+        module.hot.data.value &&
+        module.hot.data.value !== localsJsonString
+      ) {
+        module.hot.invalidate();
+      } else {
+        module.hot.accept();
+      }
+      module.hot.dispose(function(data) {
+        data.value = localsJsonString;
+        cssReload();
+      });
+    })();
+  }
+
+}),
+
+};
+;
+```
+
+
+
+### main2.LAST_HASH.hot-update.js
+
+#### Changed Modules
+
+
+#### Changed Runtime Modules
+- webpack/runtime/get_full_hash
+
+#### Changed Content
+```js
+"use strict";
+exports.ids = ["main2"];
+exports.modules = {};
+exports.runtime = function(__webpack_require__) {
+// webpack/runtime/get_full_hash
+(() => {
+__webpack_require__.h = () => ("CURRENT_HASH")
+})();
+// webpack/runtime/lynx css hot update
+(() => {
+
+__webpack_require__.cssHotUpdateList = [["main2","main2.LAST_HASH.css.hot-update.json"]];
+
+})();
+
+}
+;
+;
+```
+
+
+
+### main3.LAST_HASH.hot-update.js
+
+#### Changed Modules
+
+
+#### Changed Runtime Modules
+- webpack/runtime/get_full_hash
+
+#### Changed Content
+```js
+"use strict";
+exports.ids = ["main3"];
+exports.modules = {};
+exports.runtime = function(__webpack_require__) {
+// webpack/runtime/get_full_hash
+(() => {
+__webpack_require__.h = () => ("CURRENT_HASH")
+})();
+// webpack/runtime/lynx css hot update
+(() => {
+
+__webpack_require__.cssHotUpdateList = [["main3","main3.LAST_HASH.css.hot-update.json"]];
+
+})();
+
+}
+;
+;
+```
+
+
+
+### main4.LAST_HASH.hot-update.js
+
+#### Changed Modules
+
+
+#### Changed Runtime Modules
+- webpack/runtime/get_full_hash
+
+#### Changed Content
+```js
+"use strict";
+exports.ids = ["main4"];
+exports.modules = {};
+exports.runtime = function(__webpack_require__) {
+// webpack/runtime/get_full_hash
+(() => {
+__webpack_require__.h = () => ("CURRENT_HASH")
+})();
+// webpack/runtime/lynx css hot update
+(() => {
+
+__webpack_require__.cssHotUpdateList = [["main4","main4.LAST_HASH.css.hot-update.json"]];
+
+})();
+
+}
+;
+;
+```
+
+
+
+
+## Runtime
+### Status
+
+```txt
+check => prepare => dispose => apply => idle
+```
+
+
+
+### JavaScript
+
+#### Outdated
+
+Outdated Modules:
+- ./hot-update-json/chunk-splitting/lib-common.module.css
+
+
+Outdated Dependencies:
+```json
+{}
+```
+
+#### Updated
+
+Updated Modules:
+- ./hot-update-json/chunk-splitting/lib-common.module.css
+
+Updated Runtime:
+- `__webpack_require__.cssHotUpdateList`
+- `__webpack_require__.h`
+
+
+#### Callback
+
+Accepted Callback:
+
+
+Disposed Callback:
+- ./hot-update-json/chunk-splitting/lib-common.module.css

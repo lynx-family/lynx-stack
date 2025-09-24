@@ -9,10 +9,11 @@
  * optimized attribute updates at compile time, avoiding runtime object spreads.
  */
 
-import type { Worklet } from '@lynx-js/react/worklet-runtime/bindings';
+import type { Element, Worklet, WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bindings';
 
-import { BackgroundSnapshotInstance } from '../backgroundSnapshot.js';
-import { ListUpdateInfoRecording, __pendingListUpdates } from '../list.js';
+import type { BackgroundSnapshotInstance } from '../backgroundSnapshot.js';
+import { ListUpdateInfoRecording } from '../listUpdateInfo.js';
+import { __pendingListUpdates } from '../pendingListUpdates.js';
 import { SnapshotInstance } from '../snapshot.js';
 import { isDirectOrDeepEqual, isEmptyObject, pick } from '../utils.js';
 import { updateEvent } from './event.js';
@@ -22,6 +23,7 @@ import { transformRef, updateRef } from './ref.js';
 import { updateWorkletEvent } from './workletEvent.js';
 import { updateWorkletRef } from './workletRef.js';
 
+// eslint-disable-next-line regexp/no-unused-capturing-group
 const eventRegExp = /^(([A-Za-z-]*):)?(bind|catch|capture-bind|capture-catch|global-bind)([A-Za-z]+)$/;
 const eventTypeMap: Record<string, string> = {
   bind: 'bindEvent',
@@ -38,21 +40,27 @@ const noFlattenAttributes = /* @__PURE__ */ new Set<string>([
   'exposure-id',
 ]);
 
-function updateSpread(snapshot: SnapshotInstance, index: number, oldValue: any, elementIndex: number): void {
+function updateSpread(
+  snapshot: SnapshotInstance,
+  index: number,
+  oldValue: Record<string, unknown> | undefined | null,
+  elementIndex: number,
+): void {
   oldValue ??= {};
-  let newValue: Record<string, any> = snapshot.__values![index]; // compiler guarantee this must be an object;
+  let newValue: Record<string, unknown> = snapshot.__values![index] as Record<string, unknown>; // compiler guarantee this must be an object;
 
-  // @ts-ignore
-  const list = snapshot.__parent;
+  const list = snapshot.parentNode;
   if (list?.__snapshot_def.isListHolder) {
     const oldPlatformInfo = pick(oldValue, platformInfoAttributes);
     const platformInfo = pick(newValue, platformInfoAttributes);
     if (!isDirectOrDeepEqual(oldPlatformInfo, platformInfo)) {
-      (__pendingListUpdates.values[list.__id] ??= new ListUpdateInfoRecording(list)).onSetAttribute(
-        snapshot,
-        platformInfo,
-        oldPlatformInfo,
-      );
+      if (__pendingListUpdates.values) {
+        (__pendingListUpdates.values[list.__id] ??= new ListUpdateInfoRecording(list)).onSetAttribute(
+          snapshot,
+          platformInfo,
+          oldPlatformInfo,
+        );
+      }
       snapshot.__listItemPlatformInfo = platformInfo;
 
       // The fakeSnapshot is missing `__parent`, so no `ListUpdateInfoRecording#onSetAttribute` will be called
@@ -69,31 +77,30 @@ function updateSpread(snapshot: SnapshotInstance, index: number, oldValue: any, 
     }
   }
 
-  if (!snapshot.__elements) {
-    return;
-  }
-
   if ('__spread' in newValue) {
     // first screen
     newValue = transformSpread(snapshot, index, newValue);
     snapshot.__values![index] = newValue;
   }
 
-  const dataset: Record<string, any> = {};
+  if (!snapshot.__elements) {
+    return;
+  }
+
+  const dataset: Record<string, unknown> = {};
   let match: RegExpMatchArray | null = null;
   for (const key in newValue) {
     const v = newValue[key];
     if (v !== oldValue[key]) {
       if (key === 'className') {
-        __SetClasses(snapshot.__elements[elementIndex]!, v);
+        __SetClasses(snapshot.__elements[elementIndex]!, v as string);
       } else if (key === 'style') {
-        __SetInlineStyles(snapshot.__elements[elementIndex]!, v);
+        __SetInlineStyles(snapshot.__elements[elementIndex]!, v as string);
       } else if (key === 'id') {
-        __SetID(snapshot.__elements[elementIndex]!, v);
+        __SetID(snapshot.__elements[elementIndex]!, v as string);
       } else if (key.startsWith('data-')) {
         // collected below
       } else if (key === 'ref') {
-        snapshot.__ref_set ??= new Set();
         const fakeSnapshot = {
           __values: {
             get [index]() {
@@ -106,9 +113,8 @@ function updateSpread(snapshot: SnapshotInstance, index: number, oldValue: any, 
           },
           __id: snapshot.__id,
           __elements: snapshot.__elements,
-          __ref_set: snapshot.__ref_set,
         } as SnapshotInstance;
-        updateRef(fakeSnapshot, index, oldValue[key], elementIndex, key);
+        updateRef(fakeSnapshot, index, oldValue[key] as string | null, elementIndex);
       } else if (key.endsWith(':ref')) {
         snapshot.__worklet_ref_set ??= new Set();
         const fakeSnapshot = {
@@ -121,7 +127,13 @@ function updateSpread(snapshot: SnapshotInstance, index: number, oldValue: any, 
           __elements: snapshot.__elements,
           __worklet_ref_set: snapshot.__worklet_ref_set,
         } as SnapshotInstance;
-        updateWorkletRef(fakeSnapshot, index, oldValue[key], elementIndex, key.slice(0, -4));
+        updateWorkletRef(
+          fakeSnapshot,
+          index,
+          oldValue[key] as WorkletRefImpl<Element> | Worklet | null | undefined,
+          elementIndex,
+          key.slice(0, -4),
+        );
       } else if (key.endsWith(':gesture')) {
         const workletType = key.slice(0, -8);
         const fakeSnapshot = {
@@ -189,7 +201,6 @@ function updateSpread(snapshot: SnapshotInstance, index: number, oldValue: any, 
       } else if (key.startsWith('data-')) {
         // collected below
       } else if (key === 'ref') {
-        snapshot.__ref_set ??= new Set();
         const fakeSnapshot = {
           __values: {
             get [index]() {
@@ -202,9 +213,8 @@ function updateSpread(snapshot: SnapshotInstance, index: number, oldValue: any, 
           },
           __id: snapshot.__id,
           __elements: snapshot.__elements,
-          __ref_set: snapshot.__ref_set,
         } as SnapshotInstance;
-        updateRef(fakeSnapshot, index, oldValue[key], elementIndex, key);
+        updateRef(fakeSnapshot, index, oldValue[key] as string | null, elementIndex);
       } else if (key.endsWith(':ref')) {
         snapshot.__worklet_ref_set ??= new Set();
         const fakeSnapshot = {
@@ -217,7 +227,13 @@ function updateSpread(snapshot: SnapshotInstance, index: number, oldValue: any, 
           __elements: snapshot.__elements,
           __worklet_ref_set: snapshot.__worklet_ref_set,
         } as SnapshotInstance;
-        updateWorkletRef(fakeSnapshot, index, oldValue[key], elementIndex, key.slice(0, -4));
+        updateWorkletRef(
+          fakeSnapshot,
+          index,
+          oldValue[key] as WorkletRefImpl<Element> | Worklet | null | undefined,
+          elementIndex,
+          key.slice(0, -4),
+        );
       } else if (key.endsWith(':gesture')) {
         const workletType = key.slice(0, -8);
         const fakeSnapshot = {
@@ -247,7 +263,15 @@ function updateSpread(snapshot: SnapshotInstance, index: number, oldValue: any, 
           __elements: snapshot.__elements,
         } as SnapshotInstance;
         if (workletType) {
-          updateWorkletEvent(fakeSnapshot, index, oldValue[key], elementIndex, workletType, eventType, eventName);
+          updateWorkletEvent(
+            fakeSnapshot,
+            index,
+            oldValue[key] as Worklet,
+            elementIndex,
+            workletType,
+            eventType,
+            eventName,
+          );
         } else {
           updateEvent(fakeSnapshot, index, oldValue[key], elementIndex, eventType, eventName, key);
         }
@@ -284,10 +308,15 @@ function transformSpread(
       value ??= '';
       result['className'] = value;
     } else if (key === 'ref') {
-      // @ts-ignore
-      result[key] = transformRef(value)?.__ref;
+      if (__LEPUS__) {
+        result[key] = value ? 1 : undefined;
+      } else {
+        result[key] = transformRef(value)?.__ref;
+      }
     } else if (typeof value === 'function') {
       result[key] = `${snapshot.__id}:${index}:${key}`;
+    } else if (key === '__self' || key === '__source') {
+      // for react debug tools
     } else {
       if (!hasNoFlattenAttributes && noFlattenAttributes.has(key)) {
         hasNoFlattenAttributes = true;

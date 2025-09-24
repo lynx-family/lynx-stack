@@ -5,7 +5,8 @@ import { createRequire } from 'node:module'
 import path from 'node:path'
 
 import type { RsbuildPlugin } from '@rsbuild/core'
-import type { ResolveFunction } from 'enhanced-resolve'
+import gte from 'semver/functions/gte.js'
+import type { ResolveResult } from 'unrs-resolver'
 
 export interface Options {
   lazy?: boolean | undefined
@@ -26,24 +27,22 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
   return {
     name: 'lynx:react-alias',
     setup(api) {
-      const hasAlias = api.useExposed<boolean>(S_PLUGIN_REACT_ALIAS)
-      if (hasAlias) {
-        // We make sure that only make aliased once
-        return
-      }
-      api.expose(S_PLUGIN_REACT_ALIAS, true)
-
       const require = createRequire(import.meta.url)
 
-      const reactLynxDir = path.dirname(
-        require.resolve('@lynx-js/react/package.json', {
-          paths: [rootPath ?? api.context.rootPath],
-        }),
-      )
+      const reactLynxPkg = require.resolve('@lynx-js/react/package.json', {
+        paths: [rootPath ?? api.context.rootPath],
+      })
+      const { version } = require(reactLynxPkg) as { version: string }
+
+      const reactLynxDir = path.dirname(reactLynxPkg)
       const resolve = createLazyResolver(
-        reactLynxDir,
+        rootPath ?? api.context.rootPath,
         lazy ? ['lazy', 'import'] : ['import'],
       )
+      const resolvePreact = createLazyResolver(reactLynxDir, ['import'])
+      api.expose(Symbol.for('@lynx-js/react/internal:resolve'), {
+        resolve,
+      })
 
       api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
         return mergeRsbuildConfig(config, {
@@ -53,19 +52,45 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
         })
       })
 
-      api.modifyBundlerChain(async chain => {
-        // FIXME(colinaaa): use `Promise.all`
+      api.modifyBundlerChain(async (chain, { isProd, environment }) => {
+        if (Object.hasOwn(environment, S_PLUGIN_REACT_ALIAS)) {
+          // This environment has already been processed
+          return
+        }
+        Object.defineProperty(environment, S_PLUGIN_REACT_ALIAS, {
+          value: true,
+        })
+        const [
+          jsxRuntimeBackground,
+          jsxRuntimeMainThread,
+          jsxDevRuntimeBackground,
+          jsxDevRuntimeMainThread,
+          reactLepusBackground,
+          reactLepusMainThread,
+          reactCompat,
+        ] = await Promise.all([
+          resolve('@lynx-js/react/jsx-runtime'),
+          resolve('@lynx-js/react/lepus/jsx-runtime'),
+          resolve('@lynx-js/react/jsx-dev-runtime'),
+          resolve('@lynx-js/react/lepus/jsx-dev-runtime'),
+          resolve('@lynx-js/react'),
+          resolve('@lynx-js/react/lepus'),
+          gte(version, '0.111.9999')
+            ? resolve('@lynx-js/react/compat')
+            : Promise.resolve(null),
+        ])
+
         const jsxRuntime = {
-          background: await resolve('@lynx-js/react/jsx-runtime'),
-          mainThread: await resolve('@lynx-js/react/lepus/jsx-runtime'),
+          background: jsxRuntimeBackground,
+          mainThread: jsxRuntimeMainThread,
         }
         const jsxDevRuntime = {
-          background: await resolve('@lynx-js/react/jsx-dev-runtime'),
-          mainThread: await resolve('@lynx-js/react/lepus/jsx-dev-runtime'),
+          background: jsxDevRuntimeBackground,
+          mainThread: jsxDevRuntimeMainThread,
         }
         const reactLepus = {
-          background: await resolve('@lynx-js/react'),
-          mainThread: await resolve('@lynx-js/react/lepus'),
+          background: reactLepusBackground,
+          mainThread: reactLepusMainThread,
         }
 
         // dprint-ignore
@@ -102,6 +127,8 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
         // react-transform may add imports of the following entries
         // We need to add aliases for that
         const transformedEntries = [
+          // TODO: add `debug` after bump peerDependencies['@lynx-js/react'] to 0.111.1
+          // 'debug',
           'experimental/lazy/import',
           'internal',
           'legacy-react-runtime',
@@ -122,17 +149,35 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
             ),
         )
 
+        if (isProd) {
+          chain.resolve.alias.set('@lynx-js/react/debug$', false)
+          chain.resolve.alias.set('@lynx-js/preact-devtools$', false)
+        }
+
+        if (!chain.resolve.alias.has('react$')) {
+          chain.resolve.alias.set(
+            'react$',
+            reactLepus.background,
+          )
+        }
+
         chain
           .resolve
           .alias
           .set(
-            'react$',
-            reactLepus.background,
-          )
-          .set(
             '@lynx-js/react$',
             reactLepus.background,
           )
+
+        if (reactCompat) {
+          chain
+            .resolve
+            .alias
+            .set(
+              '@lynx-js/react/compat$',
+              reactCompat,
+            )
+        }
 
         const preactEntries = [
           'preact',
@@ -152,7 +197,7 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
         ]
         await Promise.all(
           preactEntries.map(entry =>
-            resolve(entry).then(value => {
+            resolvePreact(entry).then(value => {
               chain
                 .resolve
                 .alias
@@ -165,21 +210,36 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
   }
 }
 
-export function createLazyResolver(context: string, conditionNames: string[]) {
-  let lazyExports: Record<string, string | false>
-  let resolverLazy: ResolveFunction
+export function createLazyResolver(
+  directory: string,
+  conditionNames: string[],
+) {
+  let lazyExports: Record<string, string>
+  let resolverLazy: (directory: string, request: string) => ResolveResult
 
   return async (
     request: string,
   ): Promise<string> => {
-    const { default: resolver } = await import('enhanced-resolve')
+    if (!lazyExports) {
+      lazyExports = {}
+    }
 
-    return (
-      (lazyExports ??= {})[request] ??=
-        (resolverLazy ??= resolver.create.sync({ conditionNames }))(
-          context,
-          request,
-        )
-    ) as string
+    if (lazyExports[request] === undefined) {
+      if (!resolverLazy) {
+        const { ResolverFactory } = await import('unrs-resolver')
+        const resolver = new ResolverFactory({ conditionNames })
+        resolverLazy = (dir: string, req: string) => resolver.sync(dir, req)
+      }
+      const resolveResult = resolverLazy(directory, request)
+      if (resolveResult.error) {
+        throw new Error(resolveResult.error)
+      }
+      if (!resolveResult.path) {
+        throw new Error(`Failed to resolve ${request}`)
+      }
+      lazyExports[request] = resolveResult.path
+    }
+
+    return lazyExports[request]
   }
 }

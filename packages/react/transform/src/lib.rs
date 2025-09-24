@@ -1,25 +1,14 @@
 #![deny(clippy::all)]
+#![allow(clippy::boxed_local, clippy::borrowed_box, clippy::deprecated_cfg_attr)]
 
 #[macro_use]
 extern crate napi_derive;
 mod bundle;
-mod css;
 mod esbuild;
-mod swc_plugin_compat;
 mod swc_plugin_compat_post;
-mod swc_plugin_css_scope;
-mod swc_plugin_define_dce;
-mod swc_plugin_directive_dce;
-mod swc_plugin_dynamic_import;
 mod swc_plugin_extract_str;
-mod swc_plugin_inject;
 mod swc_plugin_refresh;
-mod swc_plugin_shake;
-mod swc_plugin_snapshot;
-mod swc_plugin_worklet;
 mod swc_plugin_worklet_post_process;
-mod target;
-mod utils;
 
 use std::vec;
 
@@ -60,69 +49,18 @@ use swc_core::{
 
 // currently `use xxx as yyy` is not supported by napi-rs
 // So we have to use different name
-use swc_plugin_compat::{CompatVisitor, CompatVisitorConfig};
+use swc_plugin_compat::napi::{CompatVisitor, CompatVisitorConfig};
 use swc_plugin_compat_post::CompatPostVisitor;
-use swc_plugin_css_scope::{CSSScopeVisitor, CSSScopeVisitorConfig};
-use swc_plugin_define_dce::DefineDCEVisitorConfig;
-use swc_plugin_directive_dce::{DirectiveDCEVisitor, DirectiveDCEVisitorConfig};
-use swc_plugin_dynamic_import::{DynamicImportVisitor, DynamicImportVisitorConfig};
-use swc_plugin_inject::{InjectVisitor, InjectVisitorConfig};
+use swc_plugin_css_scope::napi::{CSSScopeVisitor, CSSScopeVisitorConfig};
+use swc_plugin_define_dce::napi::DefineDCEVisitorConfig;
+use swc_plugin_directive_dce::napi::{DirectiveDCEVisitor, DirectiveDCEVisitorConfig};
+use swc_plugin_dynamic_import::napi::{DynamicImportVisitor, DynamicImportVisitorConfig};
+use swc_plugin_inject::napi::{InjectVisitor, InjectVisitorConfig};
 use swc_plugin_refresh::{RefreshVisitor, RefreshVisitorConfig};
-use swc_plugin_shake::{ShakeVisitor, ShakeVisitorConfig};
-use swc_plugin_snapshot::{JSXTransformer, JSXTransformerConfig};
-use swc_plugin_worklet::{WorkletVisitor, WorkletVisitorConfig};
-use utils::calc_hash;
-
-#[derive(Debug, PartialEq, Clone, Copy)]
-pub enum TransformMode {
-  /// Transform for production.
-  Production,
-  /// Transform for development.
-  Development,
-  /// Transform for testing.
-  Test,
-}
-
-impl napi::bindgen_prelude::FromNapiValue for TransformMode {
-  unsafe fn from_napi_value(
-    env: napi::bindgen_prelude::sys::napi_env,
-    napi_val: napi::bindgen_prelude::sys::napi_value,
-  ) -> napi::bindgen_prelude::Result<Self> {
-    let val = <&str>::from_napi_value(env, napi_val).map_err(|e| {
-      napi::bindgen_prelude::error!(
-        e.status,
-        "Failed to convert napi value into enum `{}`. {}",
-        "TransformMode",
-        e,
-      )
-    })?;
-    match val {
-      "production" => Ok(TransformMode::Production),
-      "development" => Ok(TransformMode::Development),
-      "test" => Ok(TransformMode::Test),
-      _ => Err(napi::bindgen_prelude::error!(
-        napi::bindgen_prelude::Status::InvalidArg,
-        "value `{}` does not match any variant of enum `{}`",
-        val,
-        "TransformMode"
-      )),
-    }
-  }
-}
-
-impl napi::bindgen_prelude::ToNapiValue for TransformMode {
-  unsafe fn to_napi_value(
-    env: napi::bindgen_prelude::sys::napi_env,
-    val: Self,
-  ) -> napi::bindgen_prelude::Result<napi::bindgen_prelude::sys::napi_value> {
-    let val = match val {
-      TransformMode::Production => "production",
-      TransformMode::Development => "development",
-      TransformMode::Test => "test",
-    };
-    <&str>::to_napi_value(env, val)
-  }
-}
+use swc_plugin_shake::napi::{ShakeVisitor, ShakeVisitorConfig};
+use swc_plugin_snapshot::napi::{JSXTransformer, JSXTransformerConfig};
+use swc_plugin_worklet::napi::{WorkletVisitor, WorkletVisitorConfig};
+use swc_plugins_shared::{transform_mode_napi::TransformMode, utils::calc_hash};
 
 #[derive(Debug, Clone, Copy)]
 pub struct SyntaxConfig(Syntax);
@@ -194,15 +132,23 @@ impl napi::bindgen_prelude::FromNapiValue for IsModuleConfig {
     napi_val: napi::bindgen_prelude::sys::napi_value,
   ) -> napi::bindgen_prelude::Result<Self> {
     let bool_val = <bool>::from_napi_value(env, napi_val);
-    if bool_val.is_ok() {
-      return Ok(IsModuleConfig(IsModule::Bool(bool_val.unwrap())));
+    if let Ok(bool_val) = bool_val {
+      return Ok(IsModuleConfig(IsModule::Bool(bool_val)));
     }
 
     let str_val = <&str>::from_napi_value(env, napi_val);
-    if str_val.is_ok() {
-      match str_val.unwrap() {
+
+    if let Ok(val) = str_val {
+      match val {
         "unknown" => return Ok(IsModuleConfig(IsModule::Unknown)),
-        _ => {}
+        "commonjs" => return Ok(IsModuleConfig(IsModule::CommonJS)),
+        _ => {
+          return Err(napi::bindgen_prelude::error!(
+            napi::bindgen_prelude::Status::InvalidArg,
+            "Invalid variant '{}' for enum IsModuleConfig",
+            val
+          ));
+        }
       }
     }
 
@@ -222,6 +168,7 @@ impl napi::bindgen_prelude::ToNapiValue for IsModuleConfig {
     match val.0 {
       IsModule::Bool(v) => <bool>::to_napi_value(env, v),
       IsModule::Unknown => <&str>::to_napi_value(env, "unknown"),
+      IsModule::CommonJS => <&str>::to_napi_value(env, "commonjs"),
     }
   }
 }
@@ -326,7 +273,7 @@ fn transform_react_lynx_inner(
   options: TransformNodiffOptions,
 ) -> TransformNodiffOutput {
   let content_hash = match options.mode {
-    Some(val) if val == TransformMode::Test => "test".into(),
+    Some(TransformMode::Test) => "test".into(),
     _ => calc_hash(code.as_str()),
   };
   let comments = SingleThreadedComments::default();
@@ -450,7 +397,7 @@ fn transform_react_lynx_inner(
           import_source: snapshot_plugin_config
             .jsx_import_source
             .clone()
-            .map(|s| Atom::from(s)),
+            .map(Atom::from),
           pragma: None,
           pragma_frag: None,
           // We may want `main-thread:foo={fooMainThreadFunc}` to work
@@ -469,14 +416,16 @@ fn transform_react_lynx_inner(
       visit_mut_pass(
         JSXTransformer::new(
           snapshot_plugin_config,
-          cm.clone(),
           Some(&comments),
-          top_level_mark,
-          unresolved_mark,
           options.mode.unwrap_or(TransformMode::Production),
         )
         .with_content_hash(content_hash.clone()),
       ),
+      enabled,
+    );
+
+    let list_plugin = Optional::new(
+      visit_mut_pass(swc_plugin_list::ListVisitor::new(Some(&comments))),
       enabled,
     );
 
@@ -603,7 +552,7 @@ fn transform_react_lynx_inner(
       compat_plugin,
       worklet_plugin,
       css_scope_plugin,
-      snapshot_plugin,
+      (list_plugin, snapshot_plugin),
       directive_dce_plugin,
       define_dce_plugin,
       simplify_pass_1, // do simplify after DCE above to make shake below works better
@@ -632,8 +581,9 @@ fn transform_react_lynx_inner(
       PrintArgs {
         output: None,
         source_root: "".into(), // TODO: add root
-        source_file_name: options.source_file_name.as_ref().map(String::as_str),
+        source_file_name: options.source_file_name.as_deref(),
         source_map_url: None,
+        source_map_ignore_list: None,
         output_path: None,
         inline_sources_content: options.inline_sources_content.unwrap_or(true),
         source_map: match options.sourcemap {
@@ -644,7 +594,7 @@ fn transform_react_lynx_inner(
         orig: None,
         comments: Some(&comments),
         emit_source_map_columns: options.source_map_columns.unwrap_or(true),
-        preamble: "".into(),
+        preamble: "",
         codegen_config: codegen::Config::default()
           .with_target(EsVersion::latest())
           .with_minify(false)
@@ -757,23 +707,6 @@ pub fn transform_bundle_result(
 
 #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
 mod wasm {
-  use getrandom::register_custom_getrandom;
-  use getrandom::Error;
-
-  #[link(wasm_import_module = "getrandom")]
-  extern "C" {
-    fn random_fill_sync(offset: *mut u8, size: usize);
-  }
-
-  fn custom_getrandom(buf: &mut [u8]) -> Result<(), Error> {
-    unsafe {
-      random_fill_sync(buf.as_mut_ptr(), buf.len());
-    }
-    Ok(())
-  }
-
-  register_custom_getrandom!(custom_getrandom);
-
   use ::napi::{JsObject, NapiValue};
 
   const fn max(a: usize, b: usize) -> usize {
@@ -843,7 +776,7 @@ mod tests {
 
     // println!("{:?}", serde_json::to_string(&s));
 
-    assert_eq!(s.typescript(), true);
-    assert_eq!(s.decorators(), false); // default to false
+    assert!(s.typescript());
+    assert!(!s.decorators()); // default to false
   }
 }

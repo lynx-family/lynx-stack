@@ -1,5 +1,24 @@
 # @lynx-js/chunk-loading-webpack-plugin
 
+## 0.3.3
+
+### Patch Changes
+
+- Fix unmet peer dependency "@rspack/core@'^1.3.10". ([#1660](https://github.com/lynx-family/lynx-stack/pull/1660))
+
+## 0.3.2
+
+### Patch Changes
+
+- Should not load initial CSS chunks. ([#1601](https://github.com/lynx-family/lynx-stack/pull/1601))
+
+## 0.3.1
+
+### Patch Changes
+
+- Updated dependencies [[`aaca8f9`](https://github.com/lynx-family/lynx-stack/commit/aaca8f91d177061c7b0430cc5cb21a3602897534)]:
+  - @lynx-js/webpack-runtime-globals@0.0.6
+
 ## 0.3.0
 
 ### Minor Changes

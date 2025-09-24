@@ -6,18 +6,19 @@ import { isJSReady, jsReady, jsReadyEventIdSwap, resetJSReady } from '../lifecyc
 import { reloadMainThread } from '../lifecycle/reload.js';
 import { renderMainThread } from '../lifecycle/render.js';
 import { LifecycleConstant } from '../lifecycleConstant.js';
-import { __pendingListUpdates } from '../list.js';
 import { ssrHydrateByOpcodes } from '../opcodes.js';
+import { __pendingListUpdates } from '../pendingListUpdates.js';
 import { __root, setRoot } from '../root.js';
-import { takeGlobalRefPatchMap } from '../snapshot/ref.js';
+import { applyRefQueue } from '../snapshot/workletRef.js';
 import { SnapshotInstance, __page, setupPage } from '../snapshot.js';
 import { isEmptyObject } from '../utils.js';
-import { PerformanceTimingKeys, markTiming, setPipeline } from './performance.js';
+import { markTiming, setPipeline } from './performance.js';
 
 function ssrEncode() {
   const { __opcodes } = __root;
   delete __root.__opcodes;
 
+  // eslint-disable-next-line @typescript-eslint/unbound-method
   const oldToJSON = SnapshotInstance.prototype.toJSON;
   SnapshotInstance.prototype.toJSON = function(this: SnapshotInstance): any {
     return [
@@ -44,8 +45,13 @@ function ssrHydrate(info: string) {
   setupPage(nativePage);
   const refsMap = __GetTemplateParts(nativePage);
 
-  const { __opcodes, __root_values } = JSON.parse(info);
-  __root_values && __root.setAttribute('values', __root_values);
+  const { __opcodes, __root_values } = JSON.parse(info) as {
+    __opcodes: unknown[];
+    __root_values: unknown[] | undefined;
+  };
+  if (__root_values) {
+    __root.setAttribute('values', __root_values);
+  }
   ssrHydrateByOpcodes(__opcodes, __root as SnapshotInstance, refsMap);
 
   (__root as SnapshotInstance).__elements = [nativePage];
@@ -74,11 +80,11 @@ function injectCalledByNative(): void {
   });
 }
 
-function renderPage(data: any): void {
+function renderPage(data: Record<string, unknown> | undefined): void {
   // reset `jsReady` state
   resetJSReady();
 
-  lynx.__initData = data || {};
+  lynx.__initData = data ?? {};
 
   setupPage(__CreatePage('0', 0));
   (__root as SnapshotInstance).ensureElements();
@@ -88,13 +94,14 @@ function renderPage(data: any): void {
   // always call this before `__FlushElementTree`
   // (There is an implicit `__FlushElementTree` in `renderPage`)
   __pendingListUpdates.flush();
+  applyRefQueue();
 
   if (__FIRST_SCREEN_SYNC_TIMING__ === 'immediately') {
     jsReady();
   }
 }
 
-function updatePage(data: any, options?: UpdatePageOption): void {
+function updatePage(data: Record<string, unknown> | undefined, options?: UpdatePageOption): void {
   if (options?.reloadTemplate) {
     reloadMainThread(data, options);
     return;
@@ -109,18 +116,16 @@ function updatePage(data: any, options?: UpdatePageOption): void {
     Object.assign(lynx.__initData, data);
   }
 
+  const flushOptions = options ?? {};
   if (!isJSReady) {
     const oldRoot = __root;
     setRoot(new SnapshotInstance('root'));
     __root.__jsx = oldRoot.__jsx;
 
     setPipeline(options?.pipelineOptions);
-    markTiming(PerformanceTimingKeys.updateDiffVdomStart);
+    markTiming('updateDiffVdomStart');
     {
-      __pendingListUpdates.clear();
-
-      // ignore ref & unref before jsReady
-      takeGlobalRefPatchMap();
+      __pendingListUpdates.clearAttachedLists();
       renderMainThread();
       // As said by codename `jsReadyEventIdSwap`, this swap will only be used for event remap,
       // because ref & unref cause by previous render will be ignored
@@ -132,15 +137,13 @@ function updatePage(data: any, options?: UpdatePageOption): void {
 
       // always call this before `__FlushElementTree`
       __pendingListUpdates.flush();
+      applyRefQueue();
     }
-    markTiming(PerformanceTimingKeys.updateDiffVdomEnd);
+    flushOptions.triggerDataUpdated = true;
+    markTiming('updateDiffVdomEnd');
   }
 
-  if (options) {
-    __FlushElementTree(__page, options);
-  } else {
-    __FlushElementTree();
-  }
+  __FlushElementTree(__page, flushOptions);
 }
 
 function updateGlobalProps(_data: any, options?: UpdatePageOption): void {

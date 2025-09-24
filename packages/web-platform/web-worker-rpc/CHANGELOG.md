@@ -1,5 +1,49 @@
 # @lynx-js/web-worker-rpc
 
+## 0.17.0
+
+## 0.16.1
+
+## 0.16.0
+
+### Minor Changes
+
+- refactor: provide the mts a real globalThis ([#1589](https://github.com/lynx-family/lynx-stack/pull/1589))
+
+  Before this change, We create a function wrapper and a fake globalThis for Javascript code.
+
+  This caused some issues.
+
+  After this change, we will create an iframe for createing an isolated Javascript context.
+
+  This means the globalThis will be the real one.
+
+## 0.15.7
+
+## 0.15.6
+
+## 0.15.5
+
+## 0.15.4
+
+## 0.15.3
+
+## 0.15.2
+
+## 0.15.1
+
+## 0.15.0
+
+## 0.14.2
+
+## 0.14.1
+
+## 0.14.0
+
+## 0.13.5
+
+## 0.13.4
+
 ## 0.13.3
 
 ## 0.13.2

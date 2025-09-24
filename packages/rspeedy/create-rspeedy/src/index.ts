@@ -104,8 +104,20 @@ void create({
   ),
   version: devDependencies,
   getTemplateName,
-  mapESLintTemplate() {
-    // TODO: support ESLint later
-    return null
+  mapESLintTemplate(templateName) {
+    const lang = TEMPLATES.find(({ template }) =>
+      templateName.startsWith(template)
+    )?.lang
+
+    if (!lang) return null
+
+    switch (lang) {
+      case 'js':
+        return 'react-js'
+      case 'ts':
+        return 'react-ts'
+      default:
+        return null
+    }
   },
 })

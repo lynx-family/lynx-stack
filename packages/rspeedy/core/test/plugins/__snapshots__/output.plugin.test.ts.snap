@@ -8,11 +8,10 @@ exports[`Plugins - Output > defaults - Production 1`] = `
   "chunkLoading": "lynx",
   "filename": "static/js/[name].[contenthash:8].js",
   "hashFunction": "xxhash64",
-  "iife": false,
   "path": "<WORKSPACE>/dist",
   "pathinfo": false,
   "publicPath": "/",
-  "webassemblyModuleFilename": "static/wasm/[hash].module.wasm",
+  "webassemblyModuleFilename": "static/wasm/[contenthash:8].module.wasm",
 }
 `;
 
@@ -24,11 +23,10 @@ exports[`Plugins - Output > defaults 1`] = `
   "chunkLoading": "lynx",
   "filename": "static/js/[name].js",
   "hashFunction": "xxhash64",
-  "iife": false,
   "path": "<WORKSPACE>/dist",
   "pathinfo": false,
   "publicPath": "/",
-  "webassemblyModuleFilename": "static/wasm/[hash].module.wasm",
+  "webassemblyModuleFilename": "static/wasm/[contenthash:8].module.wasm",
 }
 `;
 
@@ -40,11 +38,10 @@ exports[`Plugins - Output > output.filename 1`] = `
   "chunkLoading": "lynx",
   "filename": "static/js/[name].js",
   "hashFunction": "xxhash64",
-  "iife": false,
   "path": "<WORKSPACE>/dist",
   "pathinfo": false,
   "publicPath": "/",
-  "webassemblyModuleFilename": "static/wasm/[hash].module.wasm",
+  "webassemblyModuleFilename": "static/wasm/[contenthash:8].module.wasm",
 }
 `;
 
@@ -56,10 +53,9 @@ exports[`Plugins - Output > output.filename.js 1`] = `
   "chunkLoading": "lynx",
   "filename": "static/js/[name].js",
   "hashFunction": "xxhash64",
-  "iife": false,
   "path": "<WORKSPACE>/dist",
   "pathinfo": false,
   "publicPath": "/",
-  "webassemblyModuleFilename": "static/wasm/[hash].module.wasm",
+  "webassemblyModuleFilename": "static/wasm/[contenthash:8].module.wasm",
 }
 `;

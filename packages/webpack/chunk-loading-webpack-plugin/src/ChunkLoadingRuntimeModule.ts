@@ -59,19 +59,22 @@ export function createChunkLoadingRuntimeModule(
         ),
         '};',
         withOnload
-          ? JavaScriptRuntimeModule.generateChunkOnloadRuntime()
+          ? JavaScriptRuntimeModule.generateChunkOnloadRuntime(webpack)
           : '// no on chunks loaded',
         withLoading
-          ? JavaScriptRuntimeModule.generateInstallChunkRuntime(withOnload)
+          ? JavaScriptRuntimeModule.generateInstallChunkRuntime(
+            webpack,
+            withOnload,
+          )
           : '// no chunk install function needed',
         withLoading
-          ? JavaScriptRuntimeModule.generateChunkLoadingRuntime('true') // TODO: JS_MATCHER
+          ? JavaScriptRuntimeModule.generateChunkLoadingRuntime(webpack, 'true') // TODO: JS_MATCHER
           : '// no chunk loading',
         withHmr
-          ? JavaScriptRuntimeModule.generateHMRRuntime()
+          ? JavaScriptRuntimeModule.generateHMRRuntime(webpack)
           : '// no HMR',
         withHmrManifest
-          ? JavaScriptRuntimeModule.generateHMRManifestRuntime()
+          ? JavaScriptRuntimeModule.generateHMRManifestRuntime(webpack)
           : '// no HMR manifest',
       ]);
     }
@@ -96,9 +99,18 @@ export function createChunkLoadingRuntimeModule(
     ): boolean {
       if (chunkGraph.getNumberOfEntryModules(chunk) > 0) return true;
 
-      return chunkGraph.getChunkModulesIterableBySourceType(chunk, 'javascript')
-        ? true
-        : false;
+      const chunkModules = chunkGraph.getChunkModulesIterableBySourceType(
+        chunk,
+        'javascript',
+      );
+
+      // Webpack would return `undefined` when no chunk module is found
+      if (!chunkModules) {
+        return false;
+      }
+
+      // Rspack would return an empty array instead of `undefined`.
+      return chunkModules[Symbol.iterator]().next().done !== true;
     }
   };
 }

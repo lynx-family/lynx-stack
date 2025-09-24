@@ -4,8 +4,8 @@
 import { onWorkletCtxUpdate } from '@lynx-js/react/worklet-runtime/bindings';
 import type { Worklet } from '@lynx-js/react/worklet-runtime/bindings';
 
+import { isMainThreadHydrating } from '../lifecycle/patch/isMainThreadHydrating.js';
 import { SnapshotInstance } from '../snapshot.js';
-import { isMainThreadHydrationFinished } from '../lifecycle/patch/isMainThreadHydrationFinished.js';
 
 function updateWorkletEvent(
   snapshot: SnapshotInstance,
@@ -23,7 +23,7 @@ function updateWorkletEvent(
   value._workletType = workletType;
 
   if (workletType === 'main-thread') {
-    onWorkletCtxUpdate(value, oldValue, !isMainThreadHydrationFinished, snapshot.__elements[elementIndex]!);
+    onWorkletCtxUpdate(value, oldValue, isMainThreadHydrating, snapshot.__elements[elementIndex]!);
     const event = {
       type: 'worklet',
       value,

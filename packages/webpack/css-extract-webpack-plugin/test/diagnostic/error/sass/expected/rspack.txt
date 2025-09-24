@@ -4,12 +4,9 @@ ERROR in × Module build failed:
 1  ..foo {}
 ^
 ╵
-<PROJECT_ROOT>/packages/webpack/css-extract-webpack-plugin/test/diagnostic/error/sass/index.scss <LINE:COLUMN>  root stylesheet
+<ROOT>/packages/webpack/css-extract-webpack-plugin/test/diagnostic/error/sass/index.scss <LINE:COLUMN>  root stylesheet
 
 ERROR in ./error/sass/index.scss
 × Module build failed:
-╰─▶   × TypeError: Cannot read properties of undefined (reading '__esModule')
-at isCJSExports (file://<PROJECT_ROOT>/packages/webpack/css-extract-webpack-plugin/src/loader.ts:<LINE:COLUMN>)
-at isNamedExports (file://<PROJECT_ROOT>/packages/webpack/css-extract-webpack-plugin/src/loader.ts:<LINE:COLUMN>)
-at Object.load (file://<PROJECT_ROOT>/packages/webpack/css-extract-webpack-plugin/src/loader.ts:<LINE:COLUMN>)
-at Object.pitch (file://<PROJECT_ROOT>/packages/webpack/css-extract-webpack-plugin/src/rspack-loader.ts:<LINE:COLUMN>)
+╰─▶   × Error: Module build failed:
+at <ROOT>/node_modules/<PNPM_INNER>/@rspack/core/dist/index.js:<LINE:COLUMN>

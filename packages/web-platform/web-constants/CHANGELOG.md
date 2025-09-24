@@ -1,5 +1,285 @@
 # @lynx-js/web-constants
 
+## 0.17.0
+
+### Patch Changes
+
+- fix: avoid duplicate style transformation ([#1748](https://github.com/lynx-family/lynx-stack/pull/1748))
+
+  After this commit, we use DAG methods to handle the styleInfos
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.17.0
+
+## 0.16.1
+
+### Patch Changes
+
+- feat: supports lazy bundle. (This feature requires `@lynx-js/lynx-core >= 0.1.3`) ([#1235](https://github.com/lynx-family/lynx-stack/pull/1235))
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.16.1
+
+## 0.16.0
+
+### Minor Changes
+
+- refactor: provide the mts a real globalThis ([#1589](https://github.com/lynx-family/lynx-stack/pull/1589))
+
+  Before this change, We create a function wrapper and a fake globalThis for Javascript code.
+
+  This caused some issues.
+
+  After this change, we will create an iframe for createing an isolated Javascript context.
+
+  This means the globalThis will be the real one.
+
+### Patch Changes
+
+- refactor: add `:not([l-e-name])` at the end of selector for lazy component ([#1622](https://github.com/lynx-family/lynx-stack/pull/1622))
+
+- fix: the SystemInfo in bts should be assigned to the globalThis ([#1599](https://github.com/lynx-family/lynx-stack/pull/1599))
+
+- Updated dependencies [[`c1f8715`](https://github.com/lynx-family/lynx-stack/commit/c1f8715a81b2e69ff46fc363013626db4468c209)]:
+  - @lynx-js/web-worker-rpc@0.16.0
+
+## 0.15.7
+
+### Patch Changes
+
+- fix: globalThis is never accessible in MTS ([#1531](https://github.com/lynx-family/lynx-stack/pull/1531))
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.15.7
+
+## 0.15.6
+
+### Patch Changes
+
+- fix: systeminfo in mts function ([#1537](https://github.com/lynx-family/lynx-stack/pull/1537))
+
+- feat: add MTS API: \_\_UpdateComponentInfo ([#1485](https://github.com/lynx-family/lynx-stack/pull/1485))
+
+- fix: `__ElementFromBinary` needs to correctly apply the dataset in elementTemplate to the Element ([#1487](https://github.com/lynx-family/lynx-stack/pull/1487))
+
+- fix: all attributes except `id` and `type` under ElementTemplateData are optional. ([#1483](https://github.com/lynx-family/lynx-stack/pull/1483))
+
+- feat: add MTS API \_\_GetAttributeByName ([#1486](https://github.com/lynx-family/lynx-stack/pull/1486))
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.15.6
+
+## 0.15.5
+
+### Patch Changes
+
+- fix: load main-thread chunk in ESM format ([#1437](https://github.com/lynx-family/lynx-stack/pull/1437))
+
+  See [nodejs/node#59362](https://github.com/nodejs/node/issues/59362) for more details.
+
+- feat: support path() for `createQuerySelector` ([#1456](https://github.com/lynx-family/lynx-stack/pull/1456))
+
+  - Added `getPathInfo` API to `NativeApp` and its cross-thread handler for retrieving the path from a DOM node to the root.
+  - Implemented endpoint and handler registration in both background and UI threads.
+  - Implemented `nativeApp.getPathInfo()`
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.15.5
+
+## 0.15.4
+
+### Patch Changes
+
+- feat: support `__ElementFromBinary` ([#1391](https://github.com/lynx-family/lynx-stack/pull/1391))
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.15.4
+
+## 0.15.3
+
+### Patch Changes
+
+- fix: improve compatibility with legacy template ([#1337](https://github.com/lynx-family/lynx-stack/pull/1337))
+
+  avoid "object Object" error for old version rspeedy outputs
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.15.3
+
+## 0.15.2
+
+### Patch Changes
+
+- feat: move SSR hydrate essential info to the ssr attribute ([#1292](https://github.com/lynx-family/lynx-stack/pull/1292))
+
+  We found that in browser there is no simple tool to decode a base64 string
+
+  Therefore we move the data to `ssr` attribute
+
+  Also fix some ssr issues
+
+- feat: support \_\_MarkTemplateElement, \_\_MarkPartElement and \_\_GetTemplateParts for all-on-ui ([#1275](https://github.com/lynx-family/lynx-stack/pull/1275))
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.15.2
+
+## 0.15.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.15.1
+
+## 0.15.0
+
+### Minor Changes
+
+- refactor: move exposure system to web-core ([#1254](https://github.com/lynx-family/lynx-stack/pull/1254))
+
+  **THIS IS A BREAKING CHANGE**
+
+  **You'll need to upgrade your @lynx-js/web-elements to >= 0.8.0**
+
+  For SSR and better performance, we moved the lynx's exposure system from web-element to web-core.
+
+  Before this commit, we create Intersection observers by creating HTMLElements.
+
+  After this commit, we will create such Intersection observers after dom stabled.
+
+  Also, the setInterval for exposure has been removed, now we use an on time lazy timer for such features.
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.15.0
+
+## 0.14.2
+
+### Patch Changes
+
+- feat: merge multiple markTiming RPC communication events together and send them together, which can effectively reduce the number of RPC communications. ([#1178](https://github.com/lynx-family/lynx-stack/pull/1178))
+
+- chore: extract shared logic from web-core and web-core-server's loadTemplate into a unified generateTemplate function ([#1211](https://github.com/lynx-family/lynx-stack/pull/1211))
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.14.2
+
+## 0.14.1
+
+### Patch Changes
+
+- feat: support BTS API `lynx.reportError` && `__SetSourceMapRelease`, now you can use it and handle it in lynx-view error event. ([#1059](https://github.com/lynx-family/lynx-stack/pull/1059))
+
+- fix: in lynx-view all-on-ui mode, the input event of input and textarea is triggered twice, and the first e.detail is a string, which does not conform to the expected data format. ([#1179](https://github.com/lynx-family/lynx-stack/pull/1179))
+
+- fix: under the all-on-ui strategy, reload() will add two page elements. ([#1147](https://github.com/lynx-family/lynx-stack/pull/1147))
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.14.1
+
+## 0.14.0
+
+### Patch Changes
+
+- feat: add `_SetSourceMapRelease(errInfo)` MTS API. ([#1118](https://github.com/lynx-family/lynx-stack/pull/1118))
+
+  You can get `errInfo.release` through `e.detail.release` in the error event callback of lynx-view.
+
+  The `_SetSourceMapRelease` function is not complete yet, because it is currently limited by the Web platform and some functions and some props such as `err.stack` do not need to be supported for the time being.
+
+- feat: add `_I18nResourceTranslation` api in mts && `init-i18n-resources` attr, `i18nResourceMissed` event of lynx-view. ([#1065](https://github.com/lynx-family/lynx-stack/pull/1065))
+
+  `init-i18n-resource` is the complete set of i18nResources that need to be maintained on the container side. Note: You need to pass this value when lynx-view is initialized.
+
+  You can use `_I18nResourceTranslation` in MTS to get the corresponding i18nResource from `init-i18n-resources`. If it is undefined, the `i18nResourceMissed` event will be dispatched.
+
+  ```js
+  // ui thread
+  lynxView.initI18nResources = [
+    {
+      options: {
+        locale: 'en',
+        channel: '1',
+        fallback_url: '',
+      },
+      resource: {
+        hello: 'hello',
+        lynx: 'lynx web platform1',
+      },
+    },
+  ];
+  lynxView.addEventListener('i18nResourceMissed', (e) => {
+    console.log(e);
+  });
+
+  // mts
+  _I18nResourceTranslation({
+    locale: 'en',
+    channel: '1',
+    fallback_url: '',
+  });
+  ```
+
+- feat: supports `lynx.getI18nResource()` and `onI18nResourceReady` event in bts. ([#1088](https://github.com/lynx-family/lynx-stack/pull/1088))
+
+  - `lynx.getI18nResource()` can be used to get i18nResource in bts, it has two data sources:
+    - the result of `_I18nResourceTranslation()`
+    - lynx-view `updateI18nResources(data: InitI18nResources, options: I18nResourceTranslationOptions)`, it will be matched to the correct i8nResource as a result of `lynx.getI18nResource()`
+  - `onI18nResourceReady` event can be used to listen `_I18nResourceTranslation` and lynx-view `updateI18nResources` execution.
+
+- refactor: make the opcode be a plain array ([#1051](https://github.com/lynx-family/lynx-stack/pull/1051))
+
+  #1042
+
+- feat: add `updateI18nResources` method of lynx-view. ([#1085](https://github.com/lynx-family/lynx-stack/pull/1085))
+
+  Now you can use `updateI18nResources` to update i18nResources, and then use \_I18nResourceTranslation() to get the updated result.
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.14.0
+
+## 0.13.5
+
+### Patch Changes
+
+- refactor: move some internal status to dom's attribute ([#945](https://github.com/lynx-family/lynx-stack/pull/945))
+
+  It's essential for SSR
+
+- fix: target.id is undefined ([#1016](https://github.com/lynx-family/lynx-stack/pull/1016))
+
+- feat: add new pageConfig configuration: enableJSDataProcessor ([#886](https://github.com/lynx-family/lynx-stack/pull/886))
+
+- refactor: move component config info to attribute ([#984](https://github.com/lynx-family/lynx-stack/pull/984))
+
+- refactor: save dataset on an attribute ([#981](https://github.com/lynx-family/lynx-stack/pull/981))
+
+  On lynx, the `data-*` attributes have different behaviors than the HTMLElement has.
+
+  The dataset will be treated as properties, the key will not be applied the camel-case <-> hyphenate name transformation.
+
+  Before this commit we use it as a runtime data, but after this commit we will use encodeURI(JSON.stringify(dataset)) to encode it as a string.
+
+- refactor: create elements of `elementToRuntimeInfoMap` on demand ([#986](https://github.com/lynx-family/lynx-stack/pull/986))
+
+- refactor: implement mts apis in closure pattern ([#1004](https://github.com/lynx-family/lynx-stack/pull/1004))
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.13.5
+
+## 0.13.4
+
+### Patch Changes
+
+- feat: lynx-view supports `updateGlobalProps` method, which can be used to update lynx.\_\_globalProps ([#918](https://github.com/lynx-family/lynx-stack/pull/918))
+
+- feat: supports `lynx.getElementById()` && `animate()`. ([#912](https://github.com/lynx-family/lynx-stack/pull/912))
+
+  After this commit, you can use `lynx.getElementById()` to get the element by id, and use `element.animate()` to animate the element.
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.13.4
+
 ## 0.13.3
 
 ### Patch Changes

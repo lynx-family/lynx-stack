@@ -12,9 +12,6 @@ const fix = {
     'cargo fmt --',
   ],
   'package.json': 'sort-package-json',
-  '*': [
-    'cspell lint --config cspell.jsonc --gitignore --no-must-find-files',
-  ],
 };
 
 export default fix;

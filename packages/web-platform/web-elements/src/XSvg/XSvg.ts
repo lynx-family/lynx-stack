@@ -7,50 +7,65 @@ import {
   type AttributeReactiveClass,
   Component,
   bindToStyle,
+  genDomGetter,
   registerAttributeHandler,
+  registerEventEnableStatusChangeHandler,
 } from '@lynx-js/web-elements-reactive';
 import { CommonEventsAndMethods } from '../common/CommonEventsAndMethods.js';
 import { commonComponentEventSetting } from '../common/commonEventInitConfiguration.js';
+import { templateXSvg } from '@lynx-js/web-elements-template';
 
 export class XSvgFeatures
   implements InstanceType<AttributeReactiveClass<typeof XSvg>>
 {
   static observedAttributes = ['src', 'content'];
   #dom: XSvg;
-  #loadEventInvoker = new Image();
+  #url: string | null = null;
+
+  #getImg = genDomGetter<HTMLImageElement>(() => this.#dom.shadowRoot!, '#img');
 
   @registerAttributeHandler('src', true)
-  #handleSrc = bindToStyle(
-    () => this.#dom,
-    'background-image',
-    (src) => {
-      this.#loadEventInvoker.src = src;
-      return `url(${src})`;
-    },
-  );
+  #handleSrc(newVal: string | null) {
+    if (!newVal) {
+      this.#getImg().src = '';
+    } else {
+      this.#getImg().src = newVal;
+    }
+  }
 
   @registerAttributeHandler('content', true)
-  #handleContent = bindToStyle(
-    () => this.#dom,
-    'background-image',
-    (content) => {
-      if (!content) return '';
-      // https://stackoverflow.com/questions/23223718/failed-to-execute-btoa-on-window-the-string-to-be-encoded-contains-characte
-      const src = 'data:image/svg+xml;base64,'
-        + btoa(unescape(encodeURIComponent(content)));
-      this.#loadEventInvoker.src = src;
-      return `url("${src}")`;
-    },
-  );
+  #handleContent(content: string | null) {
+    this.#url && URL.revokeObjectURL(this.#url);
+    if (!content) {
+      this.#url = '';
+      return;
+    }
+    const blob = new Blob([content], {
+      type: 'image/svg+xml;charset=UTF-8',
+    });
+    const src = URL.createObjectURL(blob);
+    this.#url = src;
+    this.#getImg().src = src;
+  }
 
-  #fireLoadEvent = () => {
-    const { width, height } = this.#loadEventInvoker;
+  @registerEventEnableStatusChangeHandler('load')
+  #enableLoadEvent(status: boolean) {
+    if (status) {
+      this.#getImg().addEventListener('load', this.#teleportLoadEvent, {
+        passive: true,
+      });
+    } else {
+      this.#getImg().removeEventListener('load', this.#teleportLoadEvent);
+    }
+  }
+
+  #teleportLoadEvent = () => {
     this.#dom.dispatchEvent(
       new CustomEvent('load', {
         ...commonComponentEventSetting,
         detail: {
-          width,
-          height,
+          width: this.#getImg().naturalWidth,
+          height: this.#getImg().naturalHeight,
         },
       }),
     );
@@ -58,9 +73,12 @@ export class XSvgFeatures
 
   constructor(dom: HTMLElement) {
     this.#dom = dom as XSvg;
-    this.#loadEventInvoker.addEventListener('load', this.#fireLoadEvent);
   }
 }
 
-@Component<typeof XSvg>('x-svg', [CommonEventsAndMethods, XSvgFeatures])
+@Component<typeof XSvg>(
+  'x-svg',
+  [CommonEventsAndMethods, XSvgFeatures],
+  templateXSvg(),
+)
 export class XSvg extends HTMLElement {}

@@ -58,7 +58,9 @@ describe('Plugins - Dev', () => {
     assert(config.resolve?.alias)
 
     expect(config.resolve.alias['webpack/hot/emitter.js']).toStrictEqual(
-      expect.stringContaining('@rspack/core/hot/emitter.js'),
+      expect.stringContaining(
+        ('@rspack/core/hot/emitter.js').replaceAll('/', path.sep),
+      ),
     )
   })
 
@@ -87,11 +89,13 @@ describe('Plugins - Dev', () => {
 
     expect(config.resolve?.alias).toHaveProperty(
       '@rspack/core/hot/dev-server',
-      expect.stringContaining('hot/dev-server.js'),
+      expect.stringContaining('hot/dev-server.js'.replaceAll('/', path.sep)),
     )
     expect(config.resolve?.alias).toHaveProperty(
       '@lynx-js/webpack-dev-transport/client',
-      expect.stringContaining('packages/webpack/webpack-dev-transport'),
+      expect.stringContaining(
+        'packages/webpack/webpack-dev-transport'.replaceAll('/', path.sep),
+      ),
     )
   })
 
@@ -136,14 +140,14 @@ describe('Plugins - Dev', () => {
     expect(compiler.hooks.invalid.taps.map(i => i.name)).toMatchInlineSnapshot(`
       [
         "rsbuild-dev-server",
-        "webpack-dev-middleware",
+        "rsbuild-dev-middleware",
       ]
     `)
 
     expect(compiler.hooks.done.taps.map(i => i.name)).toMatchInlineSnapshot(`
       [
         "rsbuild-dev-server",
-        "webpack-dev-middleware",
+        "rsbuild-dev-middleware",
       ]
     `)
   })
@@ -177,7 +181,9 @@ describe('Plugins - Dev', () => {
       },
     })
 
-    const config = await rsbuild.unwrapConfig()
+    const config = await rsbuild.unwrapConfig({
+      action: 'build',
+    })
 
     expect(config.output?.publicPath).toBe('/')
   })
@@ -335,6 +341,23 @@ describe('Plugins - Dev', () => {
 
     expect(typeof config.output?.publicPath).toBe('string')
     expect(config.output?.publicPath).toBe('/')
+  })
+
+  test('assetPrefix with mode production', async () => {
+    const rsbuild = await createStubRspeedy({
+      mode: 'production',
+    })
+
+    // dev.plugin.js will not be applied by default in production mode
+    rsbuild.addPlugins([
+      await import('../../src/plugins/dev.plugin.js').then(
+        ({ pluginDev }) => pluginDev(),
+      ),
+    ])
+
+    const config = await rsbuild.unwrapConfig()
+
+    expect(config.output?.publicPath).not.toBe('/')
   })
 
   // The result of this test is not correct, since Rsbuild is using `context.devServer?.port || DEFAULT_PORT`

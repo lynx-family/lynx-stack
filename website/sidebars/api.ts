@@ -7,11 +7,12 @@ import { fileURLToPath } from 'node:url';
 
 import {
   ApiDeclaredItem,
+  ApiDocumentedItem,
   ApiItemKind,
   ApiModel,
 } from '@microsoft/api-extractor-model';
 import type { ApiItem } from '@microsoft/api-extractor-model';
-import type { SidebarGroup } from '@rspress/shared';
+import type { SidebarGroup } from '@rspress/core';
 import { pascalCase } from 'change-case';
 
 function transformSingle(
@@ -135,7 +136,10 @@ function transform(
       s.add(text);
 
       return {
-        text,
+        text:
+          isApiDocumentedItem(report) && report.tsdocComment?.deprecatedBlock
+            ? `~~${text}~~`
+            : text,
         link: link!,
         collapsed: depth < 3,
         // Force non-collapsible when no children
@@ -176,7 +180,7 @@ export function createAPI(options: {
   const items = apiPackage.members[0]!.members.filter(({ displayName }) =>
     !s.has(displayName)
   );
-  const link = `${base}/${name}`;
+  const link = `/${base}/${name}`;
 
   return {
     collapsed,
@@ -185,4 +189,8 @@ export function createAPI(options: {
     text,
     items: transform(apiModel, items, link, depth),
   };
+}
+
+function isApiDocumentedItem(apiItem: ApiItem): apiItem is ApiDocumentedItem {
+  return apiItem instanceof ApiDocumentedItem;
 }

@@ -4,13 +4,14 @@
 // LICENSE file in the root directory of this source tree.
 */
 import rspack from '@rspack/core'
+import { plugins } from '../../../../test/plugins.js'
 import { CssExtractRspackPlugin } from '../../../../src'
 import path from 'node:path'
 
 /** @type {import('webpack').Configuration} */
 export default {
   output: {
-    publicPath: './',
+    publicPath: 'http://localhost:3000/',
     pathinfo: false,
   },
   optimization: {
@@ -46,6 +47,7 @@ export default {
     css: false,
   },
   plugins: [
+    ...plugins,
     new rspack.DefinePlugin({
       HMR_RUNTIME_LEPUS: JSON.stringify(
         path.resolve(

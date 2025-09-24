@@ -6,13 +6,21 @@ import { readFile } from 'node:fs/promises';
 import rspack from '@rspack/core';
 import { fileURLToPath } from 'node:url';
 import { genHtml } from './server.js';
+import {
+  getNativeModulesPathRule,
+  getNapiModulesPathRule,
+} from '@lynx-js/web-platform-rsbuild-plugin';
+import { createWebVirtualFilesMiddleware } from '@lynx-js/web-rsbuild-server-middleware';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const isCI = !!process.env.CI;
 const port = process.env.PORT ?? 3080;
+
+const main = createWebVirtualFilesMiddleware('/middleware');
 /** @type {import('@rspack/cli').Configuration} */
 const config = {
+  cache: false,
   entry: {
     main: './shell-project/index.ts',
     'web-elements': './shell-project/web-elements.ts',
@@ -20,6 +28,11 @@ const config = {
     'rpc-test': './shell-project/rpc-test/index.ts',
     'web-core': './shell-project/web-core.ts',
     'fp-only': './shell-project/fp-only.ts',
+  },
+  resolve: {
+    fallback: {
+      'module': false,
+    },
   },
   output: {
     filename: '[name].js',
@@ -30,7 +43,24 @@ const config = {
   },
   plugins: [
     new rspack.DefinePlugin({
-      'process.env.ALL_ON_UI': JSON.stringify(process.env.ALL_ON_UI),
+      'process.env.ENABLE_MULTI_THREAD': JSON.stringify(
+        process.env.ENABLE_MULTI_THREAD,
+      ),
+    }),
+    new rspack.HtmlRspackPlugin({
+      title: 'lynx-for-web-test',
+      meta: {
+        viewport:
+          'width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no',
+        'mobile-web-app-capable': 'yes',
+        'apple-mobile-web-app-status-bar-style': 'default',
+        'screen-orientation': 'portrait',
+        'format-detection': 'telephone=no',
+        'x5-orientation': 'portrait',
+      },
+      chunks: ['main'],
+      scriptLoading: 'module',
+      filename: 'index.html',
     }),
     new rspack.HtmlRspackPlugin({
       title: 'lynx-for-web-test',
@@ -45,7 +75,7 @@ const config = {
       },
       chunks: ['main'],
       scriptLoading: 'module',
-      filename: 'index.html',
+      filename: 'ssr.html',
     }),
     new rspack.HtmlRspackPlugin({
       title: 'mainthread-test',
@@ -148,35 +178,72 @@ const config = {
             next();
           }
         },
+      }, {
+        name: 'ssr',
+        path: '/ssr',
+        middleware: async (req, res, next) => {
+          try {
+            const html = await readFile(
+              path.join(__dirname, 'www', 'index.html'),
+              'utf-8',
+            );
+            const casename = req.query.casename;
+            if (!casename) {
+              res.statusCode = 400;
+              res.send('casename is required');
+              next();
+              return;
+            }
+
+            res.send(await genHtml(html, casename, 'main'));
+            next();
+          } catch (e) {
+            res.statusCode = 500;
+            console.error(e);
+            res.send(e.toString() + '\n' + e.stack?.toString());
+            next();
+          }
+        },
       });
+      middlewares.push(main);
       return middlewares;
     },
-    watchFiles: ['./dist/**/*', './node_modules/@lynx-js/**/*'],
+    watchFiles: isCI
+      ? []
+      : ['./node_modules/@lynx-js/**/*.js'],
     static: [
       {
         directory: path.join(__dirname, 'resources'),
         publicPath: '/resources',
+        watch: !isCI,
       },
       {
         directory: path.join(__dirname, 'tests', 'web-elements'),
         publicPath: '/web-element-tests',
+        watch: !isCI,
       },
       {
         directory: path.join(__dirname, 'node_modules'),
         publicPath: '/node_modules',
+        watch: false,
       },
       {
         directory: path.join(__dirname, 'dist'),
         publicPath: '/dist',
+        watch: !isCI,
       },
       {
         directory: path.join(__dirname, 'tests', 'common.css'),
         publicPath: '/common.css',
+        watch: !isCI,
       },
     ],
     hot: false,
   },
   watch: false,
+  watchOptions: {
+    ignored: isCI ? /.*/ : undefined,
+  },
   module: {
     rules: [
       {
@@ -204,10 +271,18 @@ const config = {
         enforce: 'pre',
         use: ['source-map-loader'],
       },
+      getNativeModulesPathRule(path.resolve(
+        __dirname,
+        './shell-project/index.native-modules.ts',
+      )),
+      getNapiModulesPathRule(path.resolve(
+        __dirname,
+        './shell-project/index.napi-modules.ts',
+      )),
     ],
   },
   experiments: {
-    css: true,
+    futureDefaults: true,
   },
 };
 

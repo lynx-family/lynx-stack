@@ -9,7 +9,9 @@ import { getLoaderOptions } from '../getLoaderOptions.js'
 
 describe('Plugins - SWC', () => {
   test('defaults', async () => {
-    const rsbuild = await createStubRspeedy({})
+    const rsbuild = await createStubRspeedy({
+      mode: 'production',
+    })
 
     const config = await rsbuild.unwrapConfig()
 
@@ -23,6 +25,50 @@ describe('Plugins - SWC', () => {
               "keepImportAttributes": true,
             },
             "externalHelpers": true,
+            "output": {
+              "charset": "utf8",
+            },
+            "parser": {
+              "decorators": true,
+              "syntax": "typescript",
+              "tsx": false,
+            },
+            "target": "es2015",
+            "transform": {
+              "decoratorVersion": "2022-03",
+              "legacyDecorator": false,
+            },
+          },
+          "rspackExperiments": {
+            "collectTypeScriptInfo": {
+              "exportedEnum": true,
+              "typeExports": true,
+            },
+          },
+        }
+      `)
+  })
+
+  test('defaults development', async () => {
+    const rsbuild = await createStubRspeedy({
+      mode: 'development',
+    })
+
+    const config = await rsbuild.unwrapConfig()
+
+    expect(getLoaderOptions(config, 'builtin:swc-loader'))
+      .toMatchInlineSnapshot(`
+        {
+          "isModule": "unknown",
+          "jsc": {
+            "experimental": {
+              "cacheRoot": "<WORKSPACE>/node_modules/.cache/.swc",
+              "keepImportAttributes": true,
+            },
+            "externalHelpers": true,
+            "output": {
+              "charset": "utf8",
+            },
             "parser": {
               "decorators": true,
               "syntax": "typescript",
@@ -32,6 +78,12 @@ describe('Plugins - SWC', () => {
             "transform": {
               "decoratorVersion": "2022-03",
               "legacyDecorator": false,
+            },
+          },
+          "rspackExperiments": {
+            "collectTypeScriptInfo": {
+              "exportedEnum": false,
+              "typeExports": true,
             },
           },
         }
@@ -71,6 +123,9 @@ describe('Plugins - SWC', () => {
               "keepImportAttributes": true,
             },
             "externalHelpers": true,
+            "output": {
+              "charset": "utf8",
+            },
             "parser": {
               "decorators": true,
               "syntax": "typescript",
@@ -83,6 +138,12 @@ describe('Plugins - SWC', () => {
             },
           },
           "minify": true,
+          "rspackExperiments": {
+            "collectTypeScriptInfo": {
+              "exportedEnum": false,
+              "typeExports": true,
+            },
+          },
         }
       `)
   })

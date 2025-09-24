@@ -12,7 +12,6 @@ import color from 'picocolors'
 import type { Dev } from '../config/dev/index.js'
 import type { Server } from '../config/server/index.js'
 import { debug } from '../debug.js'
-import { CompilationIdPlugin } from '../webpack/CompilationIdPlugin.js'
 import { ProvidePlugin } from '../webpack/ProvidePlugin.js'
 
 export function pluginDev(
@@ -21,6 +20,9 @@ export function pluginDev(
 ): RsbuildPlugin {
   return {
     name: 'lynx:rsbuild:dev',
+    apply(config, { action }) {
+      return action === 'dev' || config.mode === 'development'
+    },
     async setup(api) {
       const hostname = server?.host ?? await findIp('v4')
 
@@ -78,21 +80,44 @@ export function pluginDev(
             client: {
               // Lynx cannot use `location.hostname`.
               host: hostname,
+              port: '<port>',
             },
           },
+          // When using `rspeedy dev --mode production`
+          // Rsbuild would use `output.assetPrefix` instead of `dev.assetPrefix`
+          output: { assetPrefix },
         } as RsbuildConfig)
       })
 
       const require = createRequire(import.meta.url)
 
-      api.modifyBundlerChain((chain, { isProd }) => {
-        if (isProd) {
+      api.modifyBundlerChain((chain, { isDev, environment }) => {
+        // We should modify public path in 3 cases:
+        //   1. `rspeedy dev`
+        //   2. `rspeedy dev --mode=production`
+        //   3. `rspeedy build --mode=development`
+        const { action } = api.context
+        if (action !== 'dev' && !isDev) {
           return
         }
         const rsbuildPath = require.resolve('@rsbuild/core')
         const rspeedyDir = path.dirname(
           require.resolve('@lynx-js/rspeedy/package.json'),
         )
+
+        const searchParams = new URLSearchParams({
+          hostname,
+          port: api.context.devServer?.port?.toString() ?? '',
+          pathname: '/rsbuild-hmr',
+          hot: (options?.hmr ?? true) ? 'true' : 'false',
+          'live-reload': (options?.liveReload ?? true) ? 'true' : 'false',
+          protocol: 'ws',
+        })
+
+        // Only add token if it's defined
+        if (environment.webSocketToken) {
+          searchParams.set('token', environment.webSocketToken)
+        }
 
         // dprint-ignore
         chain
@@ -112,11 +137,7 @@ export function pluginDev(
               )
               .set(
                 '@lynx-js/webpack-dev-transport/client',
-                `${require.resolve('@lynx-js/webpack-dev-transport/client')}?hostname=${
-                  hostname
-                }&port=${
-                  api.context.devServer?.port
-                }&pathname=/rsbuild-hmr&hot=${options?.hmr ?? true}&live-reload=${options?.liveReload ?? true}&protocol=ws`
+                `${require.resolve('@lynx-js/webpack-dev-transport/client')}?${searchParams.toString()}`
               )
               .set(
                 '@rspack/core/hot/dev-server',
@@ -144,9 +165,6 @@ export function pluginDev(
                 ],
               }
             ])
-          .end()
-          .plugin('lynx.hmr.compilation-id')
-            .use(CompilationIdPlugin, [])
           .end()
       })
     },

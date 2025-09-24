@@ -16,8 +16,8 @@ export function toRsbuildConfig(
   config: Config,
 ): UndefinedOnPartialDeep<RsbuildConfig> {
   return {
-    provider: config.provider,
     dev: {
+      lazyCompilation: false,
       watchFiles: config.dev?.watchFiles,
       // We expect to use different default writeToDisk with Rsbuild
       writeToDisk: config.dev?.writeToDisk ?? true,
@@ -55,6 +55,15 @@ export function toRsbuildConfig(
       // TODO: update the Rsbuild type to allow `sourceMap.js` to be `*-debugids`
       sourceMap: config.output?.sourceMap as SourceMap,
     },
+    resolve: {
+      alias: config.resolve?.alias,
+
+      aliasStrategy: config.resolve?.aliasStrategy,
+
+      dedupe: config.resolve?.dedupe,
+
+      extensions: config.resolve?.extensions,
+    },
     source: {
       alias: config.source?.alias,
 
@@ -79,11 +88,17 @@ export function toRsbuildConfig(
     server: {
       base: config.server?.base,
 
+      compress: config.server?.compress,
+
+      cors: config.server?.cors,
+
       headers: config.server?.headers,
 
       host: config.server?.host,
 
       port: config.server?.port,
+
+      proxy: config.server?.proxy,
 
       strictPort: config.server?.strictPort,
     },

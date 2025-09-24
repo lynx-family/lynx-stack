@@ -5,12 +5,13 @@
 */
 import rspack from '@rspack/core'
 import { CssExtractRspackPlugin } from '../../../../src'
+import { getPlugins } from '../../../../test/plugins.js'
 import path from 'node:path'
 
 /** @type {import('webpack').Configuration} */
 export default {
   output: {
-    publicPath: './',
+    publicPath: 'http://localhost:3000/',
     pathinfo: false,
   },
   optimization: {
@@ -33,6 +34,12 @@ export default {
     css: false,
   },
   plugins: [
+    ...getPlugins({
+      lynxTemplatePluginOptions: {
+        enableCSSSelector: true,
+        enableRemoveCSSScope: true,
+      }
+    }),
     new rspack.DefinePlugin({
       HMR_RUNTIME_LEPUS: JSON.stringify(
         path.resolve(
@@ -41,9 +48,6 @@ export default {
         ),
       ),
     }),
-    new CssExtractRspackPlugin({
-      enableCSSSelector: true,
-      enableRemoveCSSScope: true,
-    }),
+    new CssExtractRspackPlugin(),
   ],
 }

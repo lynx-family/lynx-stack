@@ -1,4 +1,4 @@
-WARNING in ./compat/stop-propagation/index.jsx
+WARNING in ./compat/stop-propagation/index.jsx <LINE:COLUMN>-23
 ⚠ ModuleWarning: BROKEN: e.stopPropagation() takes no effect and MUST be migrated in ReactLynx 3.0
 ╭─[<LINE:COLUMN>]
 3  class App extends Component {

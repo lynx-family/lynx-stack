@@ -21,7 +21,7 @@ export default {
           compilation,
         );
         compilation.hooks.processAssets.tap('test', () => {
-          const asset = compilation.getAsset('main:main-thread.js');
+          const asset = compilation.getAsset('main__main-thread.js');
           expect(asset).not.toBe(undefined);
           hooks.beforeEncode.promise({
             encodeData: {

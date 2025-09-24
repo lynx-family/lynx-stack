@@ -2,18 +2,19 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { updateWorkletRefInitValueChanges } from '@lynx-js/react/worklet-runtime/bindings';
+import type { ClosureValueType } from '@lynx-js/react/worklet-runtime/bindings';
+import { runRunOnMainThreadTask, setEomShouldFlushElementTree } from '@lynx-js/react/worklet-runtime/bindings';
 
 import type { PatchList, PatchOptions } from './commit.js';
+import { setMainThreadHydrating } from './isMainThreadHydrating.js';
 import { snapshotPatchApply } from './snapshotPatchApply.js';
 import { LifecycleConstant } from '../../lifecycleConstant.js';
-import { __pendingListUpdates } from '../../list.js';
-import { markTiming, PerformanceTimingKeys, setPipeline } from '../../lynx/performance.js';
-import { takeGlobalRefPatchMap } from '../../snapshot/ref.js';
+import { markTiming, setPipeline } from '../../lynx/performance.js';
+import { __pendingListUpdates } from '../../pendingListUpdates.js';
+import { applyRefQueue } from '../../snapshot/workletRef.js';
 import { __page } from '../../snapshot.js';
-import { isEmptyObject } from '../../utils.js';
+import { isMtsEnabled } from '../../worklet/functionality.js';
 import { getReloadVersion } from '../pass.js';
-import { setMainThreadHydrationFinished } from './isMainThreadHydrationFinished.js';
 
 function updateMainThread(
   { data, patchOptions }: {
@@ -25,50 +26,70 @@ function updateMainThread(
     return;
   }
 
-  setPipeline(patchOptions.pipelineOptions);
-  markTiming(PerformanceTimingKeys.mtsRenderStart);
-  markTiming(PerformanceTimingKeys.parseChangesStart);
-  const { patchList, flushOptions = {} } = JSON.parse(data) as PatchList;
-
-  markTiming(PerformanceTimingKeys.parseChangesEnd);
-  markTiming(PerformanceTimingKeys.patchChangesStart);
-
-  for (const { snapshotPatch, workletRefInitValuePatch, id } of patchList) {
-    updateWorkletRefInitValueChanges(workletRefInitValuePatch);
-    __pendingListUpdates.clear();
-    if (snapshotPatch) {
-      snapshotPatchApply(snapshotPatch);
-    }
-    __pendingListUpdates.flush();
-    // console.debug('********** Lepus updatePatch:');
-    // printSnapshotInstance(snapshotInstanceManager.values.get(-1)!);
-
-    commitMainThreadPatchUpdate(id);
+  const flowIds = patchOptions.flowIds;
+  if (flowIds) {
+    lynx.performance.profileStart('ReactLynx::patch', {
+      flowId: flowIds[0],
+      // @ts-expect-error flowIds is not defined in the type, for now
+      flowIds,
+    });
   }
-  markTiming(PerformanceTimingKeys.patchChangesEnd);
-  markTiming(PerformanceTimingKeys.mtsRenderEnd);
+
+  setPipeline(patchOptions.pipelineOptions);
+  markTiming('mtsRenderStart');
+  markTiming('parseChangesStart');
+  const { patchList, flushOptions = {}, delayedRunOnMainThreadData } = JSON.parse(data) as PatchList;
+
+  markTiming('parseChangesEnd');
+  markTiming('patchChangesStart');
   if (patchOptions.isHydration) {
-    setMainThreadHydrationFinished(true);
+    setMainThreadHydrating(true);
+  }
+  try {
+    for (const { snapshotPatch } of patchList) {
+      __pendingListUpdates.clearAttachedLists();
+      if (snapshotPatch) {
+        snapshotPatchApply(snapshotPatch);
+      }
+      __pendingListUpdates.flush();
+      // console.debug('********** Lepus updatePatch:');
+      // printSnapshotInstance(snapshotInstanceManager.values.get(-1)!);
+    }
+  } finally {
+    markTiming('patchChangesEnd');
+    markTiming('mtsRenderEnd');
+    if (patchOptions.isHydration) {
+      setMainThreadHydrating(false);
+    }
+  }
+  applyRefQueue();
+  if (delayedRunOnMainThreadData && isMtsEnabled()) {
+    setEomShouldFlushElementTree(false);
+    for (const data of delayedRunOnMainThreadData) {
+      try {
+        runRunOnMainThreadTask(data.worklet, data.params as ClosureValueType[], data.resolveId);
+        /* v8 ignore next 3 */
+      } catch (e) {
+        lynx.reportError(e as Error);
+      }
+    }
+    setEomShouldFlushElementTree(true);
   }
   if (patchOptions.pipelineOptions) {
     flushOptions.pipelineOptions = patchOptions.pipelineOptions;
   }
-  // TODO: triggerDataUpdated?
   __FlushElementTree(__page, flushOptions);
+
+  if (flowIds) {
+    lynx.performance.profileEnd();
+  }
 }
 
 function injectUpdateMainThread(): void {
   Object.assign(globalThis, { [LifecycleConstant.patchUpdate]: updateMainThread });
 }
 
-function commitMainThreadPatchUpdate(commitTaskId?: number): void {
-  const refPatch = takeGlobalRefPatchMap();
-  if (!isEmptyObject(refPatch)) {
-    __OnLifecycleEvent([LifecycleConstant.ref, { commitTaskId, refPatch: JSON.stringify(refPatch) }]);
-  }
-}
-
 /**
  * @internal
  */
-export { commitMainThreadPatchUpdate, injectUpdateMainThread };
+export { injectUpdateMainThread };

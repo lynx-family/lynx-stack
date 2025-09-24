@@ -19,31 +19,36 @@
  * its [options](https://preactjs.com/guide/v10/options/) API
  */
 
-import type { VNode } from 'preact';
 import { options } from 'preact';
-import type { Component } from 'preact/compat';
+
+import type { RunWorkletCtxData } from '@lynx-js/react/worklet-runtime/bindings';
 
 import { LifecycleConstant } from '../../lifecycleConstant.js';
-import {
-  PerformanceTimingKeys,
-  globalPipelineOptions,
-  markTiming,
-  markTimingLegacy,
-  setPipeline,
-} from '../../lynx/performance.js';
-import { CATCH_ERROR, COMMIT, RENDER_CALLBACKS, VNODE } from '../../renderToOpcodes/constants.js';
+import { globalPipelineOptions, markTiming, markTimingLegacy, setPipeline } from '../../lynx/performance.js';
+import { COMMIT } from '../../renderToOpcodes/constants.js';
+import { applyQueuedRefs } from '../../snapshot/ref.js';
 import { backgroundSnapshotInstanceManager } from '../../snapshot.js';
-import { updateBackgroundRefs } from '../../snapshot/ref.js';
-import { isEmptyObject } from '../../utils.js';
-import { takeWorkletRefInitValuePatch } from '../../worklet/workletRefPool.js';
-import { runDelayedUnmounts, takeDelayedUnmounts } from '../delayUnmount.js';
+import { hook, isEmptyObject } from '../../utils.js';
+import { sendMTRefInitValueToMainThread } from '../../worklet/ref/updateInitValue.js';
 import { getReloadVersion } from '../pass.js';
 import type { SnapshotPatch } from './snapshotPatch.js';
 import { takeGlobalSnapshotPatch } from './snapshotPatch.js';
+import { profileEnd, profileStart } from '../../debug/utils.js';
+import {
+  delayedRunOnMainThreadData,
+  takeDelayedRunOnMainThreadData,
+} from '../../worklet/call/delayedRunOnMainThreadData.js';
+import { isRendering } from '../isRendering.js';
 
 let globalFlushOptions: FlushOptions = {};
 
-const globalCommitTaskMap: Map<number, () => void> = /*@__PURE__*/ new Map();
+function takeGlobalFlushOptions() {
+  const res = globalFlushOptions;
+  globalFlushOptions = {};
+  return res;
+}
+
+const globalCommitTaskMap: Map<number, () => void> = /*@__PURE__*/ new Map<number, () => void>();
 let nextCommitTaskId = 1;
 
 let globalBackgroundSnapshotInstancesToRemove: number[] = [];
@@ -52,9 +57,9 @@ let globalBackgroundSnapshotInstancesToRemove: number[] = [];
  * A single patch operation.
  */
 interface Patch {
+  // TODO: ref: do we need `id`?
   id: number;
   snapshotPatch?: SnapshotPatch;
-  workletRefInitValuePatch?: [id: number, value: unknown][];
 }
 
 /**
@@ -62,6 +67,7 @@ interface Patch {
  */
 interface PatchList {
   patchList: Patch[];
+  delayedRunOnMainThreadData?: RunWorkletCtxData[];
   flushOptions?: FlushOptions;
 }
 
@@ -72,123 +78,125 @@ interface PatchOptions {
   pipelineOptions?: PipelineOptions;
   reloadVersion: number;
   isHydration?: boolean;
+  flowIds?: number[];
+}
+
+/**
+ * Allow to pass options to the patch operation
+ */
+export type GlobalPatchOptions = Omit<PatchOptions, 'reloadVersion'>;
+export let globalPatchOptions: GlobalPatchOptions = {};
+
+function takeGlobalPatchOptions(): GlobalPatchOptions {
+  const res = globalPatchOptions;
+  globalPatchOptions = {};
+  return res;
 }
 
 /**
  * Replaces Preact's default commit hook with our custom implementation
  */
 function replaceCommitHook(): void {
-  const originalPreactCommit = options[COMMIT];
-  const commit = async (vnode: VNode, commitQueue: any[]) => {
-    // Skip commit phase for MT runtime
-    if (__MAIN_THREAD__) {
-      // for testing only
-      commitQueue.length = 0;
-      return;
-    }
+  hook(
+    options,
+    COMMIT,
+    (
+      originalPreactCommit, // This is actually not used since Preact use `hooks._commit` for callbacks of `useLayoutEffect`.
+      vnode,
+      commitQueue,
+    ) => {
+      // Skip commit phase for MT runtime
+      if (__MAIN_THREAD__) {
+        // for testing only
+        commitQueue.length = 0;
+        return;
+      }
 
-    // Mark the end of virtual DOM diffing phase for performance tracking
-    markTimingLegacy(PerformanceTimingKeys.updateDiffVdomEnd);
-    markTiming(PerformanceTimingKeys.diffVdomEnd);
+      isRendering.value = false;
 
-    // The callback functions to be called after components are rendered.
-    const renderCallbacks = commitQueue.map((component: Component<any>) => {
-      const ret = {
-        component,
-        [RENDER_CALLBACKS]: component[RENDER_CALLBACKS],
-        [VNODE]: component[VNODE],
-      };
-      component[RENDER_CALLBACKS] = [];
-      return ret;
-    });
-    commitQueue.length = 0;
+      // Mark the end of virtual DOM diffing phase for performance tracking
+      markTimingLegacy('updateDiffVdomEnd');
+      markTiming('diffVdomEnd');
 
-    const delayedUnmounts = takeDelayedUnmounts();
+      const backgroundSnapshotInstancesToRemove = globalBackgroundSnapshotInstancesToRemove;
+      globalBackgroundSnapshotInstancesToRemove = [];
 
-    const backgroundSnapshotInstancesToRemove = globalBackgroundSnapshotInstancesToRemove;
-    globalBackgroundSnapshotInstancesToRemove = [];
+      const commitTaskId = genCommitTaskId();
 
-    const commitTaskId = genCommitTaskId();
-
-    // Register the commit task
-    globalCommitTaskMap.set(commitTaskId, () => {
-      updateBackgroundRefs(commitTaskId);
-      runDelayedUnmounts(delayedUnmounts);
-      originalPreactCommit?.(vnode, renderCallbacks);
-      renderCallbacks.some(wrapper => {
-        try {
-          wrapper[RENDER_CALLBACKS].some((cb: (this: Component) => void) => {
-            cb.call(wrapper.component);
-          });
-        } catch (e) {
-          options[CATCH_ERROR](e, wrapper[VNODE]!);
+      // Register the commit task
+      globalCommitTaskMap.set(commitTaskId, () => {
+        if (backgroundSnapshotInstancesToRemove.length) {
+          setTimeout(() => {
+            backgroundSnapshotInstancesToRemove.forEach(id => {
+              backgroundSnapshotInstanceManager.values.get(id)?.tearDown();
+            });
+          }, 10000);
         }
       });
-      if (backgroundSnapshotInstancesToRemove.length) {
-        setTimeout(() => {
-          backgroundSnapshotInstancesToRemove.forEach(id => {
-            backgroundSnapshotInstanceManager.values.delete(id);
-          });
-        }, 10000);
+
+      sendMTRefInitValueToMainThread();
+
+      // Collect patches for this update
+      const snapshotPatch = takeGlobalSnapshotPatch();
+      const flushOptions = takeGlobalFlushOptions();
+      const patchOptions = takeGlobalPatchOptions();
+      if (!snapshotPatch) {
+        // before hydration, skip patch
+        applyQueuedRefs();
+        originalPreactCommit?.(vnode, commitQueue);
+        return;
       }
-    });
 
-    // Collect patches for this update
-    const snapshotPatch = takeGlobalSnapshotPatch();
-    const flushOptions = globalFlushOptions;
-    const workletRefInitValuePatch = takeWorkletRefInitValuePatch();
-    globalFlushOptions = {};
-    if (!snapshotPatch && workletRefInitValuePatch.length === 0) {
-      // before hydration, skip patch
-      return;
-    }
-
-    const patch: Patch = {
-      id: commitTaskId,
-    };
-    // TODO: check all fields in `flushOptions` from runtime3
-    if (snapshotPatch?.length) {
-      patch.snapshotPatch = snapshotPatch;
-    }
-    if (workletRefInitValuePatch.length) {
-      patch.workletRefInitValuePatch = workletRefInitValuePatch;
-    }
-    const patchList: PatchList = {
-      patchList: [patch],
-    };
-    if (!isEmptyObject(flushOptions)) {
-      patchList.flushOptions = flushOptions;
-    }
-    const obj = commitPatchUpdate(patchList, {});
-
-    // Send the update to the native layer
-    lynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
-      const commitTask = globalCommitTaskMap.get(commitTaskId);
-      if (commitTask) {
-        commitTask();
-        globalCommitTaskMap.delete(commitTaskId);
+      const patch: Patch = {
+        id: commitTaskId,
+      };
+      // TODO: check all fields in `flushOptions` from runtime3
+      if (snapshotPatch?.length) {
+        patch.snapshotPatch = snapshotPatch;
       }
-    });
-  };
-  options[COMMIT] = commit as ((...args: Parameters<typeof commit>) => void);
+      const patchList: PatchList = {
+        patchList: [patch],
+      };
+      if (!isEmptyObject(flushOptions)) {
+        patchList.flushOptions = flushOptions;
+      }
+      if (snapshotPatch && delayedRunOnMainThreadData.length) {
+        patchList.delayedRunOnMainThreadData = takeDelayedRunOnMainThreadData();
+      }
+      const obj = commitPatchUpdate(patchList, patchOptions);
+
+      // Send the update to the native layer
+      lynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
+        const commitTask = globalCommitTaskMap.get(commitTaskId);
+        if (commitTask) {
+          commitTask();
+          globalCommitTaskMap.delete(commitTaskId);
+        }
+      });
+
+      applyQueuedRefs();
+      originalPreactCommit?.(vnode, commitQueue);
+    },
+  );
 }
 
 /**
  * Prepares the patch update for transmission to the native layer
  */
-function commitPatchUpdate(patchList: PatchList, patchOptions: Omit<PatchOptions, 'reloadVersion'>): {
+function commitPatchUpdate(patchList: PatchList, patchOptions: GlobalPatchOptions): {
   data: string;
   patchOptions: PatchOptions;
 } {
   // console.debug('********** JS update:');
   // printSnapshotInstance(
-  //   (backgroundSnapshotInstanceManager.values.get(1) || backgroundSnapshotInstanceManager.values.get(-1))!,
+  //   (backgroundSnapshotInstanceManager.values.get(1) ?? backgroundSnapshotInstanceManager.values.get(-1))!,
   // );
-  // console.debug('commitPatchUpdate: ', JSON.stringify(patchList));
+  // console.debug('commitPatchUpdate:', prettyFormatSnapshotPatch(patchList.patchList[0]?.snapshotPatch));
+
   if (__PROFILE__) {
-    console.profile('commitChanges');
+    profileStart('ReactLynx::commitChanges');
   }
-  markTiming(PerformanceTimingKeys.packChangesStart);
+  markTiming('packChangesStart');
   const obj: {
     data: string;
     patchOptions: PatchOptions;
@@ -199,13 +207,13 @@ function commitPatchUpdate(patchList: PatchList, patchOptions: Omit<PatchOptions
       reloadVersion: getReloadVersion(),
     },
   };
-  markTiming(PerformanceTimingKeys.packChangesEnd);
+  markTiming('packChangesEnd');
   if (globalPipelineOptions) {
     obj.patchOptions.pipelineOptions = globalPipelineOptions;
     setPipeline(undefined);
   }
   if (__PROFILE__) {
-    console.profileEnd();
+    profileEnd();
   }
 
   return obj;
@@ -225,14 +233,6 @@ function clearCommitTaskId(): void {
   nextCommitTaskId = 1;
 }
 
-function replaceRequestAnimationFrame(): void {
-  // to make afterPaintEffects run faster
-  const resolvedPromise = Promise.resolve();
-  options.requestAnimationFrame = (cb: () => void) => {
-    void resolvedPromise.then(cb);
-  };
-}
-
 /**
  * @internal
  */
@@ -243,9 +243,7 @@ export {
   globalBackgroundSnapshotInstancesToRemove,
   globalCommitTaskMap,
   globalFlushOptions,
-  nextCommitTaskId,
   replaceCommitHook,
-  replaceRequestAnimationFrame,
   type PatchList,
   type PatchOptions,
 };

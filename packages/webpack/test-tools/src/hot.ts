@@ -49,7 +49,7 @@ export function createHotOptions<T extends ECompilerType>({
       options.output ??= {};
       options.output.path ??= dist;
       options.output.filename ??= `${compilerType}-bundle.js`;
-      options.output.chunkFilename ??= '[name].chunk.[fullhash].js'; // cspell:disable-line
+      options.output.chunkFilename ??= '[name].chunk.[fullhash].js';
       options.output.pathinfo ??= true;
       options.output.publicPath ??= 'https://test.cases/path/';
       options.output.chunkFormat ??= 'commonjs';

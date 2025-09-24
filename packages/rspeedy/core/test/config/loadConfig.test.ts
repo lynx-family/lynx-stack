@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { mkdtemp, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { join, sep } from 'node:path'
 
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
@@ -11,7 +11,7 @@ import {
   TEST_ONLY_hasNativeTSSupport as hasNativeTSSupport,
   loadConfig,
 } from '../../src/config/loadConfig.js'
-import type { Config } from '../../src/index.js'
+import type { Config, ConfigParams } from '../../src/index.js'
 
 describe('Config - loadConfig', () => {
   test('load with default lynx.config.ts', async () => {
@@ -253,7 +253,8 @@ describe('Config - loadConfig', () => {
     test('load non-exists default config', async () => {
       await expect(() => loadConfig({ cwd: 'non-exist-path' })).rejects
         .toThrowError(
-          `Cannot find the default config file: non-exist-path/lynx.config.ts. Use custom config with \`--config <config>\` options.`,
+          `Cannot find the default config file: non-exist-path/lynx.config.ts. Use custom config with \`--config <config>\` options.`
+            .replaceAll('/', sep),
         )
     })
 
@@ -308,6 +309,82 @@ describe('Config - loadConfig', () => {
         `Unknown property: \`$input["default"]\` in configuration`,
       )
     })
+  })
+
+  test('load function config', async () => {
+    const cwd = join(__dirname, 'fixtures', 'custom')
+    const actual = await loadConfig({ cwd, configPath: './function.ts' })
+    const expected = await import(join(cwd, 'function.ts')) as {
+      default: () => Config
+    }
+    expect(actual.content).toStrictEqual(expected.default())
+  })
+
+  test('load promise config', async () => {
+    const cwd = join(__dirname, 'fixtures', 'custom')
+    const actual = await loadConfig({ cwd, configPath: './promise.ts' })
+    const expected = await import(join(cwd, 'promise.ts')) as {
+      default: Promise<Config>
+    }
+    expect(actual.content).toStrictEqual(await expected.default)
+  })
+
+  test('load function-promise config', async () => {
+    const cwd = join(__dirname, 'fixtures', 'custom')
+    const actual = await loadConfig({
+      cwd,
+      configPath: './function-promise.ts',
+    })
+    const expected = await import(join(cwd, 'function-promise.ts')) as {
+      default: () => Promise<Config>
+    }
+    expect(actual.content).toStrictEqual(await expected.default())
+  })
+
+  test('load config with function params', async () => {
+    vi.stubEnv('NODE_ENV', 'foo')
+    const argv = process.argv
+    process.argv = ['node', 'rspeedy', 'dev']
+
+    const cwd = join(__dirname, 'fixtures', 'custom')
+    const actual = await loadConfig({
+      cwd,
+      configPath: './function-params.js',
+    })
+    const expected = await import(join(cwd, 'function-params.js')) as {
+      default: (params: ConfigParams) => Promise<Config>
+    }
+    expect(actual.content).toStrictEqual(
+      await expected.default({
+        env: 'foo',
+        command: 'dev',
+      }),
+    )
+
+    process.argv = argv
+  })
+
+  test('load config with function params and default value', async () => {
+    vi.stubEnv('NODE_ENV', undefined)
+    const argv = process.argv
+    process.argv = ['node', 'rspeedy']
+
+    const cwd = join(__dirname, 'fixtures', 'custom')
+    const actual = await loadConfig({
+      cwd,
+      configPath: './function-params.js',
+    })
+    const expected = await import(join(cwd, 'function-params.js')) as {
+      default: (params: ConfigParams) => Promise<Config>
+    }
+    expect(actual.content).toStrictEqual(
+      await expected.default({
+        env: 'production',
+        command: 'build',
+      }),
+    )
+
+    process.argv = argv
   })
 })
 

@@ -8,71 +8,47 @@ import '@lynx-js/web-elements-compat/LinearContainer';
 import '@lynx-js/web-core/index.css';
 import './index.css';
 
-const ALL_ON_UI = !!process.env.ALL_ON_UI;
-const color_environment = URL.createObjectURL(
-  new Blob(
-    [`export default function(NapiModules, NapiModulesCall) {
-  return {
-    getColor() {
-      NapiModules.color_methods.getColor({ color: 'green' }, data => {
-        console.log(data.color);
-        console.log(data.tagName);
-      });
-    },
-    ColorEngine: class ColorEngine {
-      getColor(name) {
-        NapiModules.color_methods.getColor({ color: 'green' }, data => {
-          console.log(data.color);
-        console.log(data.tagName);
-        });
-      }
-    },
-  };
-};`],
-    { type: 'text/javascript' },
-  ),
-);
-const color_methods = URL.createObjectURL(
-  new Blob(
-    [`export default function(NapiModules, NapiModulesCall) {
-  return {
-    async getColor(data, callback) {
-      const handledData = await NapiModulesCall('getColor', data);
-      callback(handledData);
-    },
-  };
-};`],
-    { type: 'text/javascript' },
-  ),
-);
-const event_method = URL.createObjectURL(
-  new Blob(
-    [`export default function(NapiModules, NapiModulesCall, handleDispatch) {
-  return {
-    async bindEvent() {
-      await NapiModulesCall('bindEvent');
-      handleDispatch((data) => console.log(\`bts:\${data}\`))
-    },
-  };
-};`],
-    { type: 'text/javascript' },
-  ),
-);
+const ENABLE_MULTI_THREAD = !!process.env.ENABLE_MULTI_THREAD;
+const wait = async (ms: number) => {
+  await new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+};
+
+const searchParams = new URLSearchParams(document.location.search);
+const casename = searchParams.get('casename');
 
 async function run() {
   const lepusjs = '/resources/web-core.main-thread.json';
   const lynxView = document.createElement('lynx-view') as LynxView;
-  lynxView.setAttribute('url', lepusjs);
-  if (ALL_ON_UI) lynxView.setAttribute('thread-strategy', `all-on-ui`);
+  if (casename === 'enable-css-selector-false') {
+    lynxView.setAttribute(
+      'url',
+      '/resources/web-core.enable-css-selector-false.json',
+    );
+  } else {
+    lynxView.setAttribute('url', lepusjs);
+  }
+  ENABLE_MULTI_THREAD
+    ? lynxView.setAttribute('thread-strategy', 'multi-thread')
+    : lynxView.setAttribute('thread-strategy', 'all-on-ui');
   lynxView.initData = { mockData: 'mockData' };
   lynxView.globalProps = { backgroundColor: 'pink' };
   lynxView.setAttribute('height', 'auto');
-  lynxView.napiModulesMap = {
-    'color_environment': color_environment,
-    'color_methods': color_methods,
-    'event_method': event_method,
-  };
-  lynxView.onNapiModulesCall = (
+  lynxView.initI18nResources = [
+    {
+      options: {
+        locale: 'en',
+        channel: '1',
+        fallback_url: '',
+      },
+      resource: {
+        hello: 'hello',
+        lynx: 'lynx web platform1',
+      },
+    },
+  ];
+  lynxView.onNapiModulesCall = async (
     name,
     data,
     moduleName,
@@ -94,6 +70,9 @@ async function run() {
   lynxView.addEventListener('error', () => {
     lynxView.setAttribute('style', 'display:none');
     lynxView.innerHTML = '';
+  });
+  lynxView.addEventListener('i18nResourceMissed', (e) => {
+    console.log(e);
   });
   lynxView.addEventListener('timing', (ev) => {
     // @ts-expect-error
