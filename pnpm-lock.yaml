@@ -866,13 +866,13 @@ importers:
         version: link:../web-elements
       '@rsbuild/core':
         specifier: catalog:rsbuild
-        version: 1.5.4
+        version: 1.5.12
       rsbuild-plugin-arethetypeswrong:
         specifier: 0.1.1
-        version: 0.1.1(@rsbuild/core@1.5.4)(typescript@5.9.2)
+        version: 0.1.1(@rsbuild/core@1.5.12)(typescript@5.9.2)
       rsbuild-plugin-publint:
         specifier: 0.3.3
-        version: 0.3.3(@rsbuild/core@1.5.4)
+        version: 0.3.3(@rsbuild/core@1.5.12)
 
   packages/web-platform/web-style-transformer:
     dependencies:
