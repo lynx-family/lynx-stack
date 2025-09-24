@@ -12,7 +12,7 @@
   "license": "Apache-2.0",
   "type": "module",
   "main": "dist/index.js",
-  "typings": "dist/node/index.d.ts",
+  "typings": "dist/index.d.ts",
   "files": [
     "dist",
     "!dist/**/*.js.map",
@@ -23,9 +23,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "npm run build:web && npm run build:lib",
-    "build:lib": "rslib build",
-    "build:web": "rsbuild build"
+    "build": "rsbuild build"
   },
   "devDependencies": {
     "@lynx-js/web-core": "workspace:*",
