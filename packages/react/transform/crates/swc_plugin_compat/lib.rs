@@ -3,6 +3,7 @@ use std::vec;
 use convert_case::{Case, Casing};
 use once_cell::sync::Lazy;
 use regex::Regex;
+use serde::Deserialize;
 use swc_core::common::comments::Comments;
 use swc_core::common::util::take::Take;
 use swc_core::common::Span;
@@ -25,7 +26,7 @@ pub mod napi;
 
 type Stack<T> = Vec<T>;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Deserialize, Debug, Clone, PartialEq)]
 pub enum Either<A, B> {
   A(A),
   B(B),
@@ -62,7 +63,7 @@ static COMPONENT_ATTRIBUTES: Lazy<Vec<&str>> = Lazy::new(|| {
   ]
 });
 
-#[derive(Clone, Debug)]
+#[derive(Deserialize, Clone, Debug)]
 pub struct DarkModeConfig {
   /// @public
   /// Theme expression to be used for dark mode
@@ -71,7 +72,7 @@ pub struct DarkModeConfig {
 
 /// {@inheritdoc CompatVisitorConfig.addComponentElement}
 /// @public
-#[derive(Clone, Debug)]
+#[derive(Deserialize, Clone, Debug)]
 pub struct AddComponentElementConfig {
   /// @public
   /// Whether to only add component element during compilation
@@ -99,7 +100,7 @@ pub struct AddComponentElementConfig {
 
 /// {@inheritdoc PluginReactLynxOptions.compat}
 /// @public
-#[derive(Clone, Debug)]
+#[derive(Deserialize, Clone, Debug)]
 pub struct CompatVisitorConfig {
   /// @internal
   pub target: TransformTarget,

@@ -3087,6 +3087,7 @@ dependencies = [
  "once_cell",
  "regex",
  "rustc-hash",
+ "serde",
  "swc_core",
  "swc_plugins_shared",
 ]
@@ -3201,13 +3202,10 @@ dependencies = [
 name = "swc_plugin_reactlynx_compat"
 version = "0.1.0"
 dependencies = [
- "convert_case",
- "once_cell",
- "regex",
- "rustc-hash",
  "serde",
  "serde_json",
  "swc_core",
+ "swc_plugin_compat",
 ]
 
 [[package]]
