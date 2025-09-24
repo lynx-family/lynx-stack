@@ -12,6 +12,7 @@ import color from 'picocolors'
 import type { Dev } from '../config/dev/index.js'
 import type { Server } from '../config/server/index.js'
 import { debug } from '../debug.js'
+import { isLynx } from '../utils/is-lynx.js'
 import { ProvidePlugin } from '../webpack/ProvidePlugin.js'
 
 export function pluginDev(
@@ -149,11 +150,21 @@ export function pluginDev(
           .end()
           .plugin('lynx.hmr.provide')
             .use(ProvidePlugin, [
-              {
+              isLynx(environment) ? {
                 WebSocket: [
                   options?.client?.websocketTransport ?? require.resolve('@lynx-js/websocket'),
                   'default',
                 ],
+                __webpack_dev_server_client__: [
+                  require.resolve(
+                    './client/hmr/WebSocketClient.js',
+                    {
+                      paths: [rspeedyDir],
+                    },
+                  ),
+                  'default'
+                ],
+              } : {
                 __webpack_dev_server_client__: [
                   require.resolve(
                     './client/hmr/WebSocketClient.js',

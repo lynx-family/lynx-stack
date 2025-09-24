@@ -99,6 +99,27 @@ describe('Plugins - Dev', () => {
     )
   })
 
+  test('no Websocket class injected for web', async () => {
+    const rsbuild = await createStubRspeedy({
+      environments: {
+        web: {},
+      },
+    })
+
+    await rsbuild.unwrapConfig()
+
+    const { ProvidePlugin } = await import('../../src/webpack/ProvidePlugin.js')
+
+    expect(vi.isMockFunction(ProvidePlugin)).toBe(true)
+    expect(vi.mocked(ProvidePlugin)).toBeCalled()
+    expect(ProvidePlugin).toBeCalledWith({
+      __webpack_dev_server_client__: [
+        require.resolve('../../client/hmr/WebSocketClient.js'),
+        'default',
+      ],
+    })
+  })
+
   test('not inject entry and provide variables in production', async () => {
     vi.stubEnv('NODE_ENV', 'production')
     const rsbuild = await createStubRspeedy({})
