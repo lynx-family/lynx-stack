@@ -140,14 +140,14 @@ describe('Plugins - Dev', () => {
     expect(compiler.hooks.invalid.taps.map(i => i.name)).toMatchInlineSnapshot(`
       [
         "rsbuild-dev-server",
-        "webpack-dev-middleware",
+        "rsbuild-dev-middleware",
       ]
     `)
 
     expect(compiler.hooks.done.taps.map(i => i.name)).toMatchInlineSnapshot(`
       [
         "rsbuild-dev-server",
-        "webpack-dev-middleware",
+        "rsbuild-dev-middleware",
       ]
     `)
   })
