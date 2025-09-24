@@ -6,12 +6,11 @@ use swc_core::{
   },
 };
 
-use super::{
-  jsx_helpers::{
-    jsx_children_to_expr, jsx_has_dynamic_key, jsx_is_children_full_dynamic, jsx_is_custom,
-    jsx_is_list, jsx_name, jsx_text_to_str,
-  },
-  WRAPPER_NODE_2,
+use super::WRAPPER_NODE_2;
+
+use swc_plugins_shared::jsx_helpers::{
+  jsx_children_to_expr, jsx_has_dynamic_key, jsx_is_children_full_dynamic, jsx_is_custom,
+  jsx_is_list, jsx_name, jsx_text_to_str,
 };
 
 pub static INTERNAL_SLOT_STR: &str = "internal-slot";

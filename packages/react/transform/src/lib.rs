@@ -7,9 +7,7 @@ mod bundle;
 mod esbuild;
 mod swc_plugin_compat_post;
 mod swc_plugin_extract_str;
-mod swc_plugin_list;
 mod swc_plugin_refresh;
-mod swc_plugin_snapshot;
 mod swc_plugin_worklet_post_process;
 
 use std::vec;
@@ -60,7 +58,7 @@ use swc_plugin_dynamic_import::napi::{DynamicImportVisitor, DynamicImportVisitor
 use swc_plugin_inject::napi::{InjectVisitor, InjectVisitorConfig};
 use swc_plugin_refresh::{RefreshVisitor, RefreshVisitorConfig};
 use swc_plugin_shake::napi::{ShakeVisitor, ShakeVisitorConfig};
-use swc_plugin_snapshot::{JSXTransformer, JSXTransformerConfig};
+use swc_plugin_snapshot::napi::{JSXTransformer, JSXTransformerConfig};
 use swc_plugin_worklet::napi::{WorkletVisitor, WorkletVisitorConfig};
 use swc_plugins_shared::{transform_mode_napi::TransformMode, utils::calc_hash};
 

@@ -20,21 +20,24 @@ use swc_core::{
 };
 
 mod attr_name;
-pub mod jsx_helpers;
 mod slot_marker;
 
-use crate::TransformMode;
-use swc_plugins_shared::{
-  css::get_string_inline_style_from_literal, target_napi::TransformTarget, utils::calc_hash,
-};
+pub mod napi;
 
-use self::{
-  attr_name::AttrName,
+use swc_plugins_shared::{
+  css::get_string_inline_style_from_literal,
   jsx_helpers::{
     jsx_attr_name, jsx_attr_to_prop, jsx_attr_value, jsx_children_to_expr,
     jsx_is_children_full_dynamic, jsx_is_custom, jsx_is_list, jsx_is_list_item, jsx_name,
     jsx_props_to_obj, jsx_text_to_str, transform_jsx_attr_str,
   },
+  target::TransformTarget,
+  transform_mode::TransformMode,
+  utils::calc_hash,
+};
+
+use self::{
+  attr_name::AttrName,
   slot_marker::{jsx_is_internal_slot, jsx_unwrap_internal_slot, WrapperMarker},
 };
 
@@ -967,7 +970,6 @@ where
 }
 
 /// @internal
-#[napi(object)]
 #[derive(Clone, Debug)]
 pub struct JSXTransformerConfig {
   /// @internal
@@ -979,7 +981,6 @@ pub struct JSXTransformerConfig {
   /// @internal
   pub filename: String,
   /// @internal
-  #[napi(ts_type = "'LEPUS' | 'JS' | 'MIXED'")]
   pub target: TransformTarget,
   /// @internal
   pub is_dynamic_component: Option<bool>,
@@ -1562,8 +1563,8 @@ mod tests {
     },
   };
 
-  use crate::{swc_plugin_snapshot::JSXTransformer, TransformMode};
-  use swc_plugins_shared::target_napi::TransformTarget;
+  use crate::JSXTransformer;
+  use swc_plugins_shared::{target::TransformTarget, transform_mode::TransformMode};
 
   test!(
     module,

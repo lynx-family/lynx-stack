@@ -8,9 +8,7 @@ use swc_core::{
   quote,
 };
 
-use crate::swc_plugin_snapshot::jsx_helpers::{
-  jsx_attr_value, jsx_children_to_expr, jsx_is_list_item,
-};
+use swc_plugins_shared::jsx_helpers::{jsx_attr_value, jsx_children_to_expr, jsx_is_list_item};
 
 pub struct ListVisitor<C>
 where
@@ -191,11 +189,8 @@ mod tests {
   };
 
   use super::ListVisitor;
-  use crate::{
-    swc_plugin_snapshot::{JSXTransformer, JSXTransformerConfig},
-    TransformMode,
-  };
-  use swc_plugins_shared::target_napi::TransformTarget;
+  use swc_plugin_snapshot::napi::{JSXTransformer, JSXTransformerConfig};
+  use swc_plugins_shared::{target_napi::TransformTarget, transform_mode_napi::TransformMode};
 
   test!(
     module,
