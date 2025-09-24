@@ -449,6 +449,10 @@ importers:
         version: 1.2.4(@rsbuild/core@1.5.12)(@rspack/core@1.5.6(@swc/helpers@0.5.17))(typescript@5.9.2)
 
   packages/rspeedy/plugin-qrcode:
+    dependencies:
+      '@lynx-js/web-rsbuild-server-middleware':
+        specifier: workspace:*
+        version: link:../../web-platform/web-rsbuild-server-middleware
     devDependencies:
       '@clack/prompts':
         specifier: 1.0.0-alpha.5
