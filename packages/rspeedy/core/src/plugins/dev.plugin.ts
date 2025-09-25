@@ -148,23 +148,9 @@ export function pluginDev(
               )
             .end()
           .end()
-          .plugin('lynx.hmr.provide')
+          .plugin('lynx.hmr.provide.dev_server_client')
             .use(ProvidePlugin, [
-              isLynx(environment) ? {
-                WebSocket: [
-                  options?.client?.websocketTransport ?? require.resolve('@lynx-js/websocket'),
-                  'default',
-                ],
-                __webpack_dev_server_client__: [
-                  require.resolve(
-                    './client/hmr/WebSocketClient.js',
-                    {
-                      paths: [rspeedyDir],
-                    },
-                  ),
-                  'default'
-                ],
-              } : {
+              {
                 __webpack_dev_server_client__: [
                   require.resolve(
                     './client/hmr/WebSocketClient.js',
@@ -177,6 +163,17 @@ export function pluginDev(
               }
             ])
           .end()
+        if (isLynx(environment)) {
+          chain.plugin('lynx.hmr.provide.websocket')
+            .use(ProvidePlugin, [{
+              WebSocket: [
+                options?.client?.websocketTransport
+                  ?? require.resolve('@lynx-js/websocket'),
+                'default',
+              ],
+            }])
+            .end()
+        }
       })
     },
   }
