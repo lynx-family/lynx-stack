@@ -57,23 +57,22 @@ async function generateJavascriptUrl<T extends Record<string, string | {}>>(
   createJsModuleUrl: (content: string, name: string) => Promise<string>,
   eager: boolean,
   appType: 'card' | 'lazy',
-  templateName?: string,
+  templateName: string,
 ): Promise<T> {
   return Promise.all(
     (Object.entries(obj).filter(([_, content]) =>
       typeof content === 'string'
     ) as [string, string][]).map(async ([name, content]) => {
-      const fileName = `${templateName}/${name.replaceAll('/', '_')}.js`;
       return [
         name,
         await createJsModuleUrl(
           generateModuleContent(
-            fileName,
+            `${templateName}/${name.replaceAll('/', '_')}.js`,
             content,
             eager,
             appType,
           ),
-          fileName,
+          `${templateName}-${name.replaceAll('/', '_')}.js`,
         ),
       ];
     }),
