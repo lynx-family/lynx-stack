@@ -2,6 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import path from 'node:path'
+
 import type { RsbuildMode } from '@rsbuild/core'
 import type { Command } from 'commander'
 
@@ -16,6 +18,7 @@ export interface CommonOptions {
   envMode?: string
   noEnv?: boolean
   mode?: RsbuildMode
+  root?: string
 }
 
 function applyCommonOptions(command: Command) {
@@ -36,10 +39,18 @@ function applyCommonOptions(command: Command) {
       '-m --mode <mode>',
       'specify the build mode, can be `development`, `production` or `none`',
     )
+    .option(
+      '-r --root <root>',
+      'set the project root directory (absolute path or relative to cwd)',
+    )
+}
+
+function resolveRoot(cwd: string, root?: string): string {
+  if (!root) return cwd
+  return path.isAbsolute(root) ? root : path.resolve(cwd, root)
 }
 
 export function apply(program: Command): Command {
-  // TODO(cli): support custom cwd
   const cwd = process.cwd()
 
   program
@@ -65,12 +76,11 @@ export function apply(program: Command): Command {
       '--watch',
       'Enable watch mode to automatically rebuild on file changes',
     )
-    .action(
-      (buildOptions: BuildOptions) =>
-        import('./build.js').then(({ build }) =>
-          build.call(buildCommand, cwd, buildOptions)
-        ),
-    )
+    .action(async (buildOptions: BuildOptions) => {
+      const actualRoot = resolveRoot(cwd, buildOptions.root)
+      const { build } = await import('./build.js')
+      return await build.call(buildCommand, actualRoot, buildOptions)
+    })
 
   const devCommand = program.command('dev')
   devCommand
@@ -82,33 +92,32 @@ export function apply(program: Command): Command {
       '--environment <name...>',
       'specify the name of environment to build',
     )
-    .action(
-      (devOptions: DevOptions) =>
-        import('./dev.js').then(({ dev }) =>
-          dev.call(devCommand, cwd, devOptions)
-        ),
-    )
+    .action(async (devOptions: DevOptions) => {
+      const actualRoot = resolveRoot(cwd, devOptions.root)
+      const { dev } = await import('./dev.js')
+      return await dev.call(devCommand, actualRoot, devOptions)
+    })
 
   const inspectCommand = program.command('inspect')
   inspectCommand
     .description('View the Rsbuild config and Rspack config of the project.')
     .option('--output <output>', 'specify inspect content output path')
     .option('--verbose', 'show full function definitions in output')
-    .action((inspectOptions: InspectOptions) =>
-      import('./inspect.js').then(({ inspect }) =>
-        inspect.call(inspectCommand, cwd, inspectOptions)
-      )
-    )
+    .action(async (inspectOptions: InspectOptions) => {
+      const actualRoot = resolveRoot(cwd, inspectOptions.root)
+      const { inspect } = await import('./inspect.js')
+      return await inspect.call(inspectCommand, actualRoot, inspectOptions)
+    })
 
   const previewCommand = program.command('preview')
   previewCommand
     .description('Preview the production build outputs locally.')
     .option('--base <base>', 'specify the base path of the server')
-    .action((previewOptions: PreviewOptions) =>
-      import('./preview.js').then(({ preview }) =>
-        preview.call(previewCommand, cwd, previewOptions)
-      )
-    )
+    .action(async (previewOptions: PreviewOptions) => {
+      const actualRoot = resolveRoot(cwd, previewOptions.root)
+      const { preview } = await import('./preview.js')
+      return await preview.call(previewCommand, actualRoot, previewOptions)
+    })
 
   const commonCommands = [
     devCommand,
