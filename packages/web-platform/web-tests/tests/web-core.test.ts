@@ -204,6 +204,24 @@ test.describe('web core tests', () => {
     expect(success).toBe(true);
     expect(fail).toBe(false);
   });
+
+  test('api-nativeApp-readScript', async ({ page, browserName }) => {
+    // firefox dose not support this.
+    test.skip(browserName === 'firefox');
+    await goto(page);
+    const mainWorker = await getMainThreadWorker(page);
+    await mainWorker.evaluate(() => {
+      globalThis.runtime.renderPage = () => {};
+    });
+    await wait(3000);
+    const backWorker = await getBackgroundThreadWorker(page);
+    const jsonContent = await backWorker.evaluate(() => {
+      const nativeApp = globalThis.runtime.lynx.getNativeApp();
+      return nativeApp.readScript('json');
+    });
+    await wait(100);
+    expect(jsonContent).toBe('{}');
+  });
   test('registerDataProcessor-as-global-var-update', async ({ page, browserName }) => {
     await goto(page);
     const mainWorker = await getMainThreadWorker(page);
