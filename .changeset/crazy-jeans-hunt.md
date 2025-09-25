@@ -2,4 +2,4 @@
 "@lynx-js/rspeedy": patch
 ---
 
-fix: error `lynx.getJSModule` is not a function on web platform
+Fix the "lynx.getJSModule is not a function" error on Web platform
