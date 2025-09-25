@@ -1,5 +1,11 @@
 # @lynx-js/qrcode-rsbuild-plugin
 
+## 0.4.2
+
+### Patch Changes
+
+- Bump @clack/prompts v1.0.0-alpha.5. ([#1809](https://github.com/lynx-family/lynx-stack/pull/1809))
+
 ## 0.4.1
 
 ### Patch Changes

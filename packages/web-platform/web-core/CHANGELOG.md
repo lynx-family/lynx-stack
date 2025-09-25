@@ -1,5 +1,15 @@
 # @lynx-js/web-core
 
+## 0.17.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-constants@0.17.1
+  - @lynx-js/web-mainthread-apis@0.17.1
+  - @lynx-js/web-worker-rpc@0.17.1
+  - @lynx-js/web-worker-runtime@0.17.1
+
 ## 0.17.0
 
 ### Minor Changes

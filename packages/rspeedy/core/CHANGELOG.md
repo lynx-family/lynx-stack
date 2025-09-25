@@ -1,5 +1,17 @@
 # @lynx-js/rspeedy
 
+## 0.11.4
+
+### Patch Changes
+
+- Bump Rsbuild v1.5.12 with Rspack v1.5.7. ([#1708](https://github.com/lynx-family/lynx-stack/pull/1708))
+
+- Fix the "lynx.getJSModule is not a function" error on Web platform ([#1830](https://github.com/lynx-family/lynx-stack/pull/1830))
+
+- Support `server.compress` ([#1799](https://github.com/lynx-family/lynx-stack/pull/1799))
+
+- Support `server.cors` ([#1808](https://github.com/lynx-family/lynx-stack/pull/1808))
+
 ## 0.11.3
 
 ### Patch Changes

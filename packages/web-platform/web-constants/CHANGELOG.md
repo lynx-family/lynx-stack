@@ -1,5 +1,12 @@
 # @lynx-js/web-constants
 
+## 0.17.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.17.1
+
 ## 0.17.0
 
 ### Patch Changes
