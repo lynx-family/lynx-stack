@@ -177,7 +177,12 @@ async function loop(
       options.schema,
       options.port,
     )
-    return { lynx: lynx[currentSchema], web }
+    const lynxEnabled = options.entries.lynx.includes(currentEntry)
+    const webEnabled = options.entries.web.includes(currentEntry)
+    return {
+      lynx: lynxEnabled ? lynx[currentSchema] : undefined,
+      web: webEnabled ? web : undefined,
+    }
   }
 
   function exit(code?: number) {

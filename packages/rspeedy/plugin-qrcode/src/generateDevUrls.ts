@@ -43,6 +43,7 @@ export default function generateDevUrls(
       assetPrefix.replaceAll('<port>', String(port)),
     ).toString()
   } catch {
+    // the assetPrefix is not a valid URL, fallback to localhost
     base = `http://localhost:${port}/`
   }
   const customSchema = schemaFn(
