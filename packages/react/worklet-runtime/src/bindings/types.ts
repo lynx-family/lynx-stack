@@ -66,3 +66,7 @@ export interface JsFnHandle {
    */
   _delayIndices?: number[];
 }
+
+export interface EventCtx {
+  '_eventReturnResult'?: number;
+}
