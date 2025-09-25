@@ -66,3 +66,17 @@ export interface JsFnHandle {
    */
   _delayIndices?: number[];
 }
+
+export interface EventCtx {
+  _eventReturnResult?: number;
+}
+
+export enum RunWorkletSource {
+  NONE = 0,
+  EVENT = 1,
+  GESTURE = 2,
+}
+
+export interface RunWorkletOptions {
+  source: RunWorkletSource;
+}
