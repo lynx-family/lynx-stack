@@ -1,5 +1,8 @@
+use inline_style_parser::dimension_parser::{parse_dimension_from_source, ParseDimensionResult};
 use inline_style_parser::parse_inline_style::Transformer;
-use inline_style_parser::{char_code_definitions::is_white_space, parse_inline_style};
+use inline_style_parser::tokenize::Parser;
+use inline_style_parser::types::DIMENSION_TOKEN;
+use inline_style_parser::{char_code_definitions::is_white_space, parse_inline_style, tokenize};
 
 use crate::transformer::rules::{get_rename_rule_value, get_replace_rule_value};
 pub struct TransformerData<'a> {
@@ -7,6 +10,11 @@ pub struct TransformerData<'a> {
   transformed_source: String,
   offset: usize,                 // current the tail offset of the original source
   extra_children_styles: String, // used to store the extra styles for children elements
+}
+
+pub struct RpxTransformerData<'a> {
+  source: &'a str,
+  transformed_source: String,
 }
 
 #[inline(always)]
@@ -21,10 +29,29 @@ pub fn is_digit_only(source: &str) -> bool {
 
 type CSSPair<'a> = (&'a str, &'a str);
 
+// Function to transform rpx values to px
+pub fn transform_rpx_value<'a>(value: &'a str) -> &'a str {
+  let mut parser = RpxTransformerData {
+    source: value,
+    transformed_source: String::new(),
+  };
+
+  tokenize::tokenize(value.as_bytes(), &mut parser);
+
+  if parser.transformed_source.is_empty() {
+    value
+  } else {
+    let leaked = Box::leak(parser.transformed_source.into_boxed_str());
+    unsafe { std::mem::transmute::<&'static str, &'a str>(leaked) }
+  }
+}
+
 pub fn query_transform_rules<'a>(
   name: &'a str,
-  value: &'a str,
+  origin_value: &'a str,
 ) -> (Vec<CSSPair<'a>>, Vec<CSSPair<'a>>) {
+  let value: &'a str = transform_rpx_value(origin_value);
+
   let mut result: Vec<CSSPair<'a>> = Vec::new();
   let mut result_children: Vec<CSSPair<'a>> = Vec::new();
   if let Some(renamed_value) = get_rename_rule_value(name) {
@@ -186,7 +213,38 @@ pub fn query_transform_rules<'a>(
   if name == "linear-weight" && value != "0" {
     result.push(("--lynx-linear-weight-basis", "0"));
   }
+
+  if value != origin_value && result.is_empty() {
+    result.push((name, value));
+  }
+
   (result, result_children)
+}
+
+impl Parser for RpxTransformerData<'_> {
+  fn on_token(&mut self, token_type: u8, start: usize, end: usize) {
+    if token_type == DIMENSION_TOKEN {
+      let dimension_result = parse_dimension_from_source(self.source.as_bytes(), start, end);
+      match dimension_result {
+        ParseDimensionResult::Dimension(dim) => {
+          // dim unit has been transformed to lower case, so we just compare with rpx
+          if dim.unit.as_ref() == "rpx" {
+            self
+              .transformed_source
+              .push_str(&format!("calc({} * var(--rpx))", dim.value));
+          } else {
+            self.transformed_source.push_str(&self.source[start..end]);
+          }
+        }
+        ParseDimensionResult::InvalidFormat => {
+          self.transformed_source.push_str(&self.source[start..end]);
+        }
+      }
+    } else {
+      // For non-dimension tokens, just copy the original content
+      self.transformed_source.push_str(&self.source[start..end]);
+    }
+  }
 }
 
 impl Transformer for TransformerData<'_> {
@@ -508,5 +566,86 @@ mod tests {
     let source = "linear-layout-gravity: start;";
     let result = transform_inline_style_string(source).0;
     assert_eq!(result, "--align-self-row:start;--align-self-column:start;");
+  }
+
+  // Tests for rpx transformation
+  #[test]
+  fn test_query_transform_rules_rpx() {
+    // Test basic rpx values
+    let test_cases = vec![
+      ("width", "20rpx", "calc(20 * var(--rpx))"),
+      ("height", "12.5rpx", "calc(12.5 * var(--rpx))"),
+      ("margin", "-10rpx", "calc(-10 * var(--rpx))"),
+      ("padding", "0rpx", "calc(0 * var(--rpx))"),
+      (
+        "margin",
+        "10rpx 20px 30rpx",
+        "calc(10 * var(--rpx)) 20px calc(30 * var(--rpx))",
+      ),
+      (
+        "padding",
+        "10rpx 15rpx 20rpx 25rpx",
+        "calc(10 * var(--rpx)) calc(15 * var(--rpx)) calc(20 * var(--rpx)) calc(25 * var(--rpx))",
+      ),
+    ];
+
+    for (name, input_value, expected_value) in test_cases {
+      let (result, _) = query_transform_rules(name, input_value);
+      assert_eq!(result.len(), 1, "Failed for {}: {}", name, input_value);
+      assert_eq!(result[0].0, name);
+      assert_eq!(
+        result[0].1, expected_value,
+        "Value transformation failed for {}: {}",
+        name, input_value
+      );
+    }
+
+    // Test no transformation case
+    let (result, _) = query_transform_rules("width", "10px");
+    assert_eq!(result.len(), 0, "Should not transform non-rpx values");
+  }
+
+  #[test]
+  fn test_query_transform_rpx_complex() {
+    let test_cases = vec![
+      (
+        "background", 
+        "linear-gradient(0deg, blue, green 20rpx, gray var(--some-variable-name-with-rpx), brown -40rpx, url(image-1rpx.png) 60px, red 100%)",
+        "linear-gradient(0deg, blue, green calc(20 * var(--rpx)), gray var(--some-variable-name-with-rpx), brown calc(-40 * var(--rpx)), url(image-1rpx.png) 60px, red 100%)"
+      ),
+      (
+        "width", 
+        "calc(100rpx - 20rpx)", 
+        "calc(calc(100 * var(--rpx)) - calc(20 * var(--rpx)))"
+      ),
+      (
+        "height", 
+        "calc(var(--some-rpx) - 20rpx)", 
+        "calc(var(--some-rpx) - calc(20 * var(--rpx)))"
+      ),
+    ];
+
+    for (name, input_value, expected_value) in test_cases {
+      let (result, _) = query_transform_rules(name, input_value);
+      assert_eq!(result.len(), 1, "Failed for {}: {}", name, input_value);
+      assert_eq!(result[0].0, name);
+      assert_eq!(
+        result[0].1, expected_value,
+        "Value transformation failed for {}: {}",
+        name, input_value
+      );
+    }
+  }
+
+  #[test]
+  fn test_transform_rpx_value() {
+    // Test basic transformations
+    assert_eq!(transform_rpx_value("20rpx"), "calc(20 * var(--rpx))");
+    assert_eq!(transform_rpx_value("12.5rpx"), "calc(12.5 * var(--rpx))");
+    assert_eq!(transform_rpx_value("-10rpx"), "calc(-10 * var(--rpx))");
+
+    // Test complex transformation
+    let result = transform_rpx_value("linear-gradient(0deg, blue, green 20rpx, gray var(--some-variable-name-with-rpx), brown -40rpx, url(image-1rpx.png) 60px, red 100%)");
+    assert_eq!(result, "linear-gradient(0deg, blue, green calc(20 * var(--rpx)), gray var(--some-variable-name-with-rpx), brown calc(-40 * var(--rpx)), url(image-1rpx.png) 60px, red 100%)");
   }
 }
