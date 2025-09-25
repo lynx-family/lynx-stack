@@ -35,6 +35,7 @@ export function createTemplateLoader(
           const decodedTemplate = await generateTemplate(
             template,
             createJsModuleUrl,
+            encodeURIComponent(url),
           );
           resolve(decodedTemplate);
         } catch (e) {

@@ -9,65 +9,23 @@ const globalDisallowedVars = ['navigator', 'postMessage'];
 type templateUpgrader = (template: LynxTemplate) => LynxTemplate;
 const templateUpgraders: templateUpgrader[] = [
   (template) => {
-    const defaultInjectStr = [
-      'Card',
-      'setTimeout',
-      'setInterval',
-      'clearInterval',
-      'clearTimeout',
-      'NativeModules',
-      'Component',
-      'ReactLynx',
-      'nativeAppId',
-      'Behavior',
-      'LynxJSBI',
-      'lynx',
-
-      // BOM API
-      'window',
-      'document',
-      'frames',
-      'location',
-      'navigator',
-      'localStorage',
-      'history',
-      'Caches',
-      'screen',
-      'alert',
-      'confirm',
-      'prompt',
-      'fetch',
-      'XMLHttpRequest',
-      '__WebSocket__', // We would provide `WebSocket` using `ProvidePlugin`
-      'webkit',
-      'Reporter',
-      'print',
-      'global',
-
-      // Lynx API
-      'requestAnimationFrame',
-      'cancelAnimationFrame',
-    ].join(',');
     template.appType = template.appType ?? (template.lepusCode.root.startsWith(
         '(function (globDynamicComponentEntry',
       )
       ? 'lazy'
       : 'card');
-    /**
-     * The template version 1 has no module wrapper for bts code
-     */
-    template.manifest = Object.fromEntries(
-      Object.entries(template.manifest).map(([key, value]) => [
-        key,
-        `module.exports={init: (lynxCoreInject) => { var {${defaultInjectStr}} = lynxCoreInject.tt; var module = {exports:{}}; var exports=module.exports; ${value}\n return module.exports; } }`,
-      ]),
-    ) as typeof template.manifest;
     template.version = 2;
+    template.lepusCode = Object.fromEntries(
+      Object.entries(template.lepusCode).filter(([_, content]) =>
+        typeof content === 'string'
+      ),
+    ) as typeof template.lepusCode;
     return template;
   },
 ];
 
 const generateModuleContent = (
+  fileName: string,
   content: string,
   eager: boolean,
   appType: 'card' | 'lazy',
@@ -90,6 +48,8 @@ const generateModuleContent = (
     appType !== 'card' ? 'module.exports=\n' : '',
     content,
     '\n})()',
+    '\n//# sourceURL=',
+    fileName,
   ].join('');
 
 async function generateJavascriptUrl<T extends Record<string, string | {}>>(
@@ -99,21 +59,24 @@ async function generateJavascriptUrl<T extends Record<string, string | {}>>(
   appType: 'card' | 'lazy',
   templateName?: string,
 ): Promise<T> {
-  const processEntry = async ([name, content]: [string, string]) => [
-    name,
-    await createJsModuleUrl(
-      generateModuleContent(
-        content,
-        eager,
-        appType,
-      ),
-      `${templateName}-${name.replaceAll('/', '')}.js`,
-    ),
-  ];
   return Promise.all(
     (Object.entries(obj).filter(([_, content]) =>
       typeof content === 'string'
-    ) as [string, string][]).map(processEntry),
+    ) as [string, string][]).map(async ([name, content]) => {
+      const fileName = `${templateName}/${name.replaceAll('/', '_')}.js`;
+      return [
+        name,
+        await createJsModuleUrl(
+          generateModuleContent(
+            fileName,
+            content,
+            eager,
+            appType,
+          ),
+          fileName,
+        ),
+      ];
+    }),
   ).then(
     Object.fromEntries,
   );
@@ -124,7 +87,7 @@ export async function generateTemplate(
   createJsModuleUrl:
     | ((content: string, name: string) => Promise<string>)
     | ((content: string) => string),
-  templateName?: string,
+  templateName: string,
 ): Promise<LynxTemplate> {
   template.version = template.version ?? 1;
   if (template.version > currentSupportedTemplateVersion) {
@@ -145,13 +108,6 @@ export async function generateTemplate(
       template.lepusCode,
       createJsModuleUrl as (content: string, name: string) => Promise<string>,
       true,
-      template.appType!,
-      templateName,
-    ),
-    manifest: await generateJavascriptUrl(
-      template.manifest,
-      createJsModuleUrl as (content: string, name: string) => Promise<string>,
-      false,
       template.appType!,
       templateName,
     ),
