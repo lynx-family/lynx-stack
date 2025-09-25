@@ -61,6 +61,7 @@ export function createChunkLoading(initialTemplate: LynxTemplate): {
     fileName: string,
   ): BundleInitReturnObj => {
     const foo = new Function(
+      'postMessage',
       'module',
       'exports',
       'lynxCoreInject',
@@ -109,6 +110,7 @@ export function createChunkLoading(initialTemplate: LynxTemplate): {
         const module = { exports: {} };
         const tt = lynxCoreInject.tt as any;
         foo(
+          undefined,
           module,
           module.exports,
           lynxCoreInject,

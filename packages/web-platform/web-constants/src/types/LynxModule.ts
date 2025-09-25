@@ -42,6 +42,7 @@ export interface LynxTemplate {
 }
 
 export type BTSChunkEntry = (
+  postMessage: undefined,
   module: { exports: unknown },
   exports: unknown,
   lynxCoreInject: unknown,
