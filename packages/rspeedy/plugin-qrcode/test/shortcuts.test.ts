@@ -38,7 +38,11 @@ describe('PluginQRCode - CLI Shortcuts', () => {
 
     const unregister = await registerConsoleShortcuts({
       api: mockedRsbuildAPI,
-      entries: ['foo', 'bar'],
+      entries: {
+        all: ['foo', 'bar'],
+        lynx: ['foo', 'bar'],
+        web: [],
+      },
       schema: i => i,
       port: 3000,
       customShortcuts: {
@@ -47,7 +51,10 @@ describe('PluginQRCode - CLI Shortcuts', () => {
       onPrint,
     })
 
-    expect(onPrint).toBeCalledWith('https://example.com/foo.lynx.bundle')
+    expect(onPrint).toBeCalledWith(
+      'https://example.com/foo.lynx.bundle',
+      undefined,
+    )
     await expect.poll(() => selectKey).toBeCalledTimes(2)
     expect(onPrint).toBeCalledTimes(2)
 

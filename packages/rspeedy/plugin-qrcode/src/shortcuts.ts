@@ -13,14 +13,18 @@ const gExistingShortcuts = new WeakSet<Options>()
 
 interface Options {
   api: RsbuildPluginAPI
-  entries: string[]
+  entries: {
+    all: string[]
+    lynx: string[]
+    web: string[]
+  }
   schema: CustomizedSchemaFn
   port: number
   customShortcuts?: Record<
     string,
     { value: string, label: string, hint?: string, action?(): Promise<void> }
   >
-  onPrint?: ((url: string) => Promise<void>) | undefined
+  onPrint?: ((lynx?: string, web?: string) => Promise<void>) | undefined
 }
 
 export async function registerConsoleShortcuts(
@@ -32,7 +36,8 @@ export async function registerConsoleShortcuts(
     import('./showQRCode.js'),
   ])
 
-  const currentEntry = options.entries[0]!
+  // keep the default entry to be lynx explorer entry if exists
+  const currentEntry = (options.entries.lynx[0] ?? options.entries.web[0])!
   const devUrls = generateDevUrls(
     options.api,
     currentEntry,
@@ -40,14 +45,20 @@ export async function registerConsoleShortcuts(
     options.port,
   )
 
-  const value: string | symbol = Object.values(devUrls)[0]!
-  await options.onPrint?.(value)
-  showQRCode(value)
+  const hasLynxEntry = options.entries.lynx.includes(currentEntry)
+  const hasWebEntry = options.entries.web.includes(currentEntry)
+  const lynxUrl = hasLynxEntry ? Object.values(devUrls.lynx)[0] : undefined
+  const webUrl = hasWebEntry ? devUrls.web : undefined
+  await options.onPrint?.(
+    lynxUrl,
+    webUrl,
+  )
+  showQRCode(lynxUrl, webUrl)
 
   gExistingShortcuts.add(options)
 
   // We should not `await` on this since it would block the NodeJS main thread.
-  void loop(options, value, devUrls)
+  void loop(options, { lynx: lynxUrl, web: webUrl }, devUrls, currentEntry)
 
   function off() {
     gExistingShortcuts.delete(options)
@@ -57,8 +68,9 @@ export async function registerConsoleShortcuts(
 
 async function loop(
   options: Options,
-  value: string | symbol,
-  devUrls: Record<string, string>,
+  value: { lynx: string | symbol | undefined, web: string | undefined },
+  devUrls: { lynx: Record<string, string | symbol>, web: string },
+  currentEntry: string,
 ) {
   const [
     { autocomplete, select, selectKey, isCancel, cancel },
@@ -70,10 +82,11 @@ async function loop(
 
   const selectFn = (length: number) => length > 5 ? autocomplete : select
 
-  let currentEntry = options.entries[0]!
-  let currentSchema = Object.keys(devUrls)[0]!
+  let currentSchema = Object.keys(devUrls.lynx)[0]!
 
-  while (!isCancel(value)) {
+  while (
+    !(value.lynx && isCancel(value.lynx) || value.web && isCancel(value.web))
+  ) {
     const name = await selectKey({
       message: 'Usage',
       options: [
@@ -95,18 +108,21 @@ async function loop(
       break
     }
     if (name === 'r') {
-      const selection = await selectFn(options.entries.length)({
+      const selection = await selectFn(options.entries.all.length)({
         message: 'Select entry',
-        options: options.entries.map(entry => ({
-          value: entry,
-          label: entry,
-          hint: generateDevUrls(
+        options: options.entries.all.map(entry => {
+          const newDevUrls = generateDevUrls(
             options.api,
             entry,
             options.schema,
             options.port,
-          )[currentSchema]!,
-        })),
+          )
+          return {
+            value: entry,
+            label: entry,
+            hint: (newDevUrls.lynx[currentSchema] ?? newDevUrls.web),
+          }
+        }),
         initialValue: currentEntry,
       })
       if (isCancel(selection)) {
@@ -121,9 +137,9 @@ async function loop(
         options.schema,
         options.port,
       )
-      const selection = await selectFn(Object.keys(devUrls).length)({
+      const selection = await selectFn(Object.keys(devUrls.lynx).length)({
         message: 'Select schema',
-        options: Object.entries(devUrls).map(([name, url]) => ({
+        options: Object.entries(devUrls.lynx).map(([name, url]) => ({
           value: name,
           label: name,
           hint: url,
@@ -138,8 +154,8 @@ async function loop(
     } else if (options.customShortcuts?.[name]) {
       await options.customShortcuts[name].action?.()
     }
-    await options.onPrint?.(value)
-    showQRCode(value)
+    await options.onPrint?.(value.lynx as string | undefined, value.web)
+    showQRCode(value.lynx as string, value.web)
   }
 
   // If the `options` is not deleted from `gExistingShortcuts`, means that this is an explicitly
@@ -151,13 +167,22 @@ async function loop(
 
   return
 
-  function getCurrentUrl(): string {
-    return generateDevUrls(
+  function getCurrentUrl(): {
+    lynx: string | undefined
+    web: string | undefined
+  } {
+    const { lynx, web } = generateDevUrls(
       options.api,
       currentEntry,
       options.schema,
       options.port,
-    )[currentSchema]!
+    )
+    const lynxEnabled = options.entries.lynx.includes(currentEntry)
+    const webEnabled = options.entries.web.includes(currentEntry)
+    return {
+      lynx: lynxEnabled ? lynx[currentSchema] : undefined,
+      web: webEnabled ? web : undefined,
+    }
   }
 
   function exit(code?: number) {
