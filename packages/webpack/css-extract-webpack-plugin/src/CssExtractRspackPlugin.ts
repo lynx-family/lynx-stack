@@ -126,6 +126,23 @@ class CssExtractRspackPluginImpl {
   name = 'CssExtractRspackPlugin';
   private hash: string | null = null;
 
+  /**
+   * Check if Hot Module Replacement (HMR) is enabled
+   * @param compiler - the webpack/rspack compiler
+   * @returns true if HMR is enabled, false otherwise
+   */
+  private isHMREnabled(compiler: Compiler): boolean {
+    const hasHMRPlugin = compiler.options.plugins?.some(
+      plugin => plugin && plugin.name === 'HotModuleReplacementPlugin',
+    ) ?? false;
+
+    const hasDevServerHot = (compiler.options.devServer
+      && compiler.options.devServer.hot !== false) ?? false;
+
+    // Return true only if HMR plugin exists or devServer.hot is not false
+    return hasHMRPlugin || hasDevServerHot;
+  }
+
   constructor(
     compiler: Compiler,
     public options: CssExtractRspackPluginOptions,
@@ -142,8 +159,7 @@ class CssExtractRspackPluginImpl {
 
     compiler.hooks.thisCompilation.tap(this.name, (compilation) => {
       if (
-        compiler.options.mode === 'development'
-        || process.env['NODE_ENV'] === 'development'
+        this.isHMREnabled(compiler)
       ) {
         const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(
           // @ts-expect-error Rspack to Webpack Compilation
