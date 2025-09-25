@@ -5,7 +5,7 @@
 import type { LynxTemplate } from '../types/LynxModule.js';
 
 const currentSupportedTemplateVersion = 2;
-const globalDisallowedVars = ['navigator', 'postMessage'];
+const globalDisallowedVars = ['navigator', 'postMessage', 'window'];
 type templateUpgrader = (template: LynxTemplate) => LynxTemplate;
 const templateUpgraders: templateUpgrader[] = [
   (template) => {
