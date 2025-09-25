@@ -1,0 +1,6 @@
+@import './imported.css';
+@import url('./imported.css');
+
+.common {
+  background-color: red;
+}

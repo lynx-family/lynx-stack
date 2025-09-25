@@ -6,12 +6,15 @@ import { createRequire } from 'node:module';
 
 import type {
   Chunk,
+  ChunkGroup,
   Compiler,
   CssExtractRspackPluginOptions as ExternalCssExtractRspackPluginOptions,
   RspackError,
 } from '@rspack/core';
 
 import { CSS, LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin';
+
+import type { CSSModuleId2Deps } from './loader.js';
 
 /**
  * The options for {@link @lynx-js/css-extract-webpack-plugin#CssExtractRspackPlugin}
@@ -126,30 +129,211 @@ class CssExtractRspackPluginImpl {
   name = 'CssExtractRspackPlugin';
   private hash: string | null = null;
 
+  /**
+   * `main` -> `main`
+   * `main__main-thread` -> `main`
+   * `./Foo.jsx-react__main-thread` -> `./Foo.jsx`
+   * `./Foo.jsx-react__background` -> `./Foo.jsx`
+   */
+  private normalizeEntryName(name: string) {
+    let isMainThread = false, entryName = name;
+    // lazy bundle will append `-react__main-thread`
+    if (name.endsWith('-react__main-thread')) {
+      entryName = name.slice(0, -'-react__main-thread'.length);
+      isMainThread = true;
+    } else if (name.endsWith('-react__background')) {
+      entryName = name.slice(0, -'-react__background'.length);
+    } else if (name.endsWith('__main-thread')) {
+      entryName = name.slice(0, -'__main-thread'.length);
+      isMainThread = true;
+    }
+    return { entryName, isMainThread };
+  }
+
   constructor(
     compiler: Compiler,
     public options: CssExtractRspackPluginOptions,
   ) {
-    new compiler.webpack.CssExtractRspackPlugin({
-      filename: options.filename ?? '[name].css',
-      chunkFilename: options.chunkFilename ?? '',
-      ignoreOrder: options.ignoreOrder ?? false,
-      insert: options.insert ?? '',
-      attributes: options.attributes ?? {},
-      linkType: options.linkType ?? '',
-      runtime: options.runtime ?? false,
-    }).apply(compiler);
-
     compiler.hooks.thisCompilation.tap(this.name, (compilation) => {
+      const _compiler = compiler as unknown as {
+        cssModuleId2Deps: CSSModuleId2Deps;
+      };
+      _compiler.cssModuleId2Deps ??= {};
+      const cssModuleId2Deps = _compiler.cssModuleId2Deps;
+
+      /**
+       * The map from entry name to CSS module set.
+       *
+       * An entry `main` will generate two entries (different layers) in rspeedy:
+       * `main` and `main__main-thread`, we will merge the two sets into one to
+       * ensure all css modules will be extracted into one `main.lynx.bundle`.
+       *
+       * For example:
+       *
+       * `main` -> `Set(['./src/CompMain.css', './src/CompBackground.css'])`
+       *
+       * `./Foo.jsx` -> `Set(['./src/CompFoo.css'])`
+       */
+      const cssModuleId2PreOrder = new Map<string, number>();
+      const entryName2CssContent: Map<string, string> = new Map<
+        string,
+        string
+      >();
+
+      // This hook is before module concatenation so we can
+      // get all css modules before concatenated
+      compilation.hooks.afterOptimizeModules.tap(this.name, () => {
+        const entryName2MainThreadChunkGroup = new Map<string, ChunkGroup>();
+        const groupName2BackgroundChunkGroup = new Map<string, ChunkGroup>();
+        const entryName2CssModuleSet = new Map<string, Set<string>>();
+        /**
+         * Map from the chunk group to all css modules it contains
+         */
+        const chunkGroup2CssModuleSet = new WeakMap<ChunkGroup, Set<string>>();
+        for (const group of compilation.chunkGroups) {
+          if (!group.name) {
+            continue;
+          }
+          const { entryName, isMainThread } = this.normalizeEntryName(
+            group.name,
+          );
+          if (isMainThread) {
+            entryName2MainThreadChunkGroup.set(entryName, group);
+          } else {
+            groupName2BackgroundChunkGroup.set(entryName, group);
+          }
+          const cssModuleSet = new Set<string>();
+          for (const chunk of group.chunks) {
+            for (
+              const module of compilation.chunkGraph.getChunkModules(chunk)
+            ) {
+              const id = module.identifier();
+              if (cssModuleId2Deps[id]) {
+                cssModuleSet.add(id);
+                // Always make main-thread group before background group
+                // this will keep css order consistent in both
+                // development and production environment
+                cssModuleId2PreOrder.set(
+                  id,
+                  group.getModulePreOrderIndex(module)!
+                    - (isMainThread ? 1e10 : 0),
+                );
+              }
+            }
+          }
+
+          chunkGroup2CssModuleSet.set(group, cssModuleSet);
+        }
+
+        for (
+          const entryName of new Set([
+            ...entryName2MainThreadChunkGroup.keys(),
+            ...groupName2BackgroundChunkGroup.keys(),
+          ])
+        ) {
+          const mainThreadChunkGroup = entryName2MainThreadChunkGroup.get(
+            entryName,
+          );
+          const backgroundChunkGroup = groupName2BackgroundChunkGroup.get(
+            entryName,
+          );
+
+          let cssModuleSet = new Set<string>();
+
+          if (mainThreadChunkGroup) {
+            const mainThreadCssModuleSet = chunkGroup2CssModuleSet.get(
+              mainThreadChunkGroup,
+            )!;
+            cssModuleSet = new Set([
+              ...cssModuleSet,
+              ...mainThreadCssModuleSet,
+            ]);
+          }
+          if (backgroundChunkGroup) {
+            const backgroundCssModuleSet = chunkGroup2CssModuleSet.get(
+              backgroundChunkGroup,
+            )!;
+            cssModuleSet = new Set([
+              ...cssModuleSet,
+              ...backgroundCssModuleSet,
+            ]);
+          }
+
+          entryName2CssModuleSet.set(entryName, cssModuleSet);
+        }
+
+        for (const [entryName, cssModuleSet] of entryName2CssModuleSet) {
+          let cssContent = '';
+          for (
+            const cssModule of [...cssModuleSet].sort((a, b) =>
+              cssModuleId2PreOrder.get(a)! - cssModuleId2PreOrder.get(b)!
+            )
+          ) {
+            const deps = cssModuleId2Deps[cssModule]!;
+            deps.forEach(dep => {
+              cssContent += dep.content.toString() + '\n';
+            });
+          }
+          if (cssContent) {
+            compilation.emitAsset(
+              this.options.filename!.replaceAll('[name]', entryName),
+              new compiler.webpack.sources.RawSource(cssContent),
+            );
+          }
+          entryName2CssContent.set(entryName, cssContent);
+        }
+      });
+
+      const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(
+        // @ts-expect-error Rspack to Webpack Compilation
+        compilation,
+      );
+
+      hooks.beforeEncode.tapPromise({
+        name: this.name,
+        stage: -256,
+      }, async (args) => {
+        const { entryNames } = args;
+        const entrySet = new Set(
+          entryNames.map(entryName =>
+            this.normalizeEntryName(entryName).entryName
+          ),
+        );
+        const cssContentList = [];
+        for (const entryName of entrySet) {
+          cssContentList.push(entryName2CssContent.get(entryName) ?? '');
+        }
+
+        const css = LynxTemplatePlugin.convertCSSChunksToMap(
+          cssContentList,
+          options.cssPlugins,
+          Boolean(
+            args.encodeData.compilerOptions.enableCSSSelector,
+          ),
+        );
+
+        return {
+          ...args,
+          encodeData: {
+            ...args.encodeData,
+            css: {
+              ...css,
+              chunks: [...entrySet].map(entryName => ({
+                name: this.options.filename!.replaceAll('[name]', entryName),
+                source: new compiler.webpack.sources.RawSource(
+                  entryName2CssContent.get(entryName) ?? '',
+                ),
+                info: {},
+              })),
+            },
+          },
+        };
+      });
+
       if (
         compiler.options.mode === 'development'
         || process.env['NODE_ENV'] === 'development'
       ) {
-        const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(
-          // @ts-expect-error Rspack to Webpack Compilation
-          compilation,
-        );
-
         hooks.beforeEmit.tapPromise(this.name, async (args) => {
           for (
             const {

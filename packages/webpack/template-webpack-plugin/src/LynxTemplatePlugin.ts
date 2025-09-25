@@ -418,16 +418,7 @@ export class LynxTemplatePlugin {
    * )));
    * ```
    */
-  static convertCSSChunksToMap(
-    cssChunks: string[],
-    plugins: CSS.Plugin[],
-    enableCSSSelector: boolean,
-  ): {
-    cssMap: Record<string, CSS.LynxStyleNode[]>;
-    cssSource: Record<string, string>;
-  } {
-    return cssChunksToMap(cssChunks, plugins, enableCSSSelector);
-  }
+  static convertCSSChunksToMap: typeof cssChunksToMap = cssChunksToMap;
 
   /**
    * The entry point of a webpack plugin.
@@ -814,7 +805,7 @@ class LynxTemplatePluginImpl {
     const resolvedEncodeOptions: EncodeOptions = {
       ...encodeData,
       css: {
-        ...css,
+        ...encodeData.css,
         chunks: undefined,
         contentMap: undefined,
       },
@@ -891,7 +882,7 @@ class LynxTemplatePluginImpl {
         outputName: filename,
         mainThreadAssets: [lepusCode.root, ...encodeData.lepusCode.chunks]
           .filter(i => i !== undefined),
-        cssChunks: assetsInfoByGroups.css,
+        cssChunks: encodeData.css.chunks,
       });
 
       compilation.emitAsset(filename, new RawSource(template, false));

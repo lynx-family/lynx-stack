@@ -1,0 +1,39 @@
+/*
+// Copyright 2024 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+*/
+.lSCZcGo4VS484j8B {
+  color: 'red';
+}
+
+/*
+// Copyright 2024 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+*/
+.no-change-main-thread {
+  background-color: black;
+}
+
+.imported {
+  color: sienna;
+}
+
+.imported {
+  color: sienna;
+}
+
+.common {
+  background-color: red;
+}
+
+/*
+// Copyright 2024 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+*/
+.no-change-background {
+  background-color: black;
+}
+
