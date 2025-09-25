@@ -1,14 +1,11 @@
 packages:
   - benchmark/react
   - examples/*
-<<<<<<< HEAD
   - packages/vue
   - packages/vue/runtime
   - packages/vue/runtime-lynx
-=======
   - packages/background-only
   - packages/lynx/*
->>>>>>> upstream/main
   - packages/react
   - packages/react/refresh
   - packages/react/runtime
