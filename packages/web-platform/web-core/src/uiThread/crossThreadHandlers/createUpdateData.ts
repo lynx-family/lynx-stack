@@ -4,25 +4,16 @@
 
 import type { RpcCallType } from '@lynx-js/web-worker-rpc';
 import type { LynxView } from '../../apis/createLynxView.js';
-import {
-  updateDataEndpoint,
-  type Cloneable,
-  type UpdateDataType,
-} from '@lynx-js/web-constants';
+import { updateDataEndpoint, type Cloneable } from '@lynx-js/web-constants';
 
 export function createUpdateData(
   updateDataMainThread: RpcCallType<typeof updateDataEndpoint>,
-  updateDataBackground: RpcCallType<typeof updateDataEndpoint>,
 ): LynxView['updateData'] {
   return (
     data: Cloneable,
-    _updateDataType: UpdateDataType,
+    processorName?: string,
     callback?: () => void,
   ) => {
-    Promise.all([
-      // There is no need to process options for now, as they have default values.
-      updateDataMainThread(data, {}),
-      updateDataBackground(data, {}),
-    ]).then(() => callback?.());
+    updateDataMainThread(data, { processorName }).then(() => callback?.());
   };
 }

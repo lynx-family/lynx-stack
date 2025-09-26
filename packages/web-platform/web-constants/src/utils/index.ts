@@ -5,3 +5,4 @@
 export { LynxCrossThreadContext } from './LynxCrossThreadContext.js';
 export { dispatchMarkTiming, flushMarkTiming } from './markTiming.js';
 export { generateTemplate } from './generateTemplate.js';
+export { handleUpdatedData } from './handleUpdateData.js';
