@@ -20,12 +20,14 @@
  */
 
 import { options } from 'preact';
+import type { VNode } from 'preact';
+import type { Component } from 'preact/compat';
 
 import type { RunWorkletCtxData } from '@lynx-js/react/worklet-runtime/bindings';
 
 import { LifecycleConstant } from '../../lifecycleConstant.js';
 import { globalPipelineOptions, markTiming, markTimingLegacy, setPipeline } from '../../lynx/performance.js';
-import { COMMIT } from '../../renderToOpcodes/constants.js';
+import { CATCH_ERROR, COMMIT, RENDER_CALLBACKS, VNODE } from '../../renderToOpcodes/constants.js';
 import { applyQueuedRefs } from '../../snapshot/ref.js';
 import { backgroundSnapshotInstanceManager } from '../../snapshot.js';
 import { hook, isEmptyObject } from '../../utils.js';
@@ -118,6 +120,31 @@ function replaceCommitHook(): void {
       markTimingLegacy('updateDiffVdomEnd');
       markTiming('diffVdomEnd');
 
+      const snapshotPatch = takeGlobalSnapshotPatch();
+      const isFirst = !snapshotPatch;
+      let renderCallbacks:
+        | Array<
+          {
+            component: Component<any, {}>;
+            [RENDER_CALLBACKS]: ((this: Component<any, {}>) => void)[];
+            [VNODE]: VNode<any> | null | undefined;
+          }
+        >
+        | undefined;
+      if (isFirst) {
+        // The callback functions to be called after components are rendered.
+        renderCallbacks = commitQueue.map((component: Component<any>) => {
+          const ret = {
+            component,
+            [RENDER_CALLBACKS]: component[RENDER_CALLBACKS],
+            [VNODE]: component[VNODE],
+          };
+          component[RENDER_CALLBACKS] = [];
+          return ret;
+        });
+        commitQueue.length = 0;
+      }
+
       const backgroundSnapshotInstancesToRemove = globalBackgroundSnapshotInstancesToRemove;
       globalBackgroundSnapshotInstancesToRemove = [];
 
@@ -125,6 +152,18 @@ function replaceCommitHook(): void {
 
       // Register the commit task
       globalCommitTaskMap.set(commitTaskId, () => {
+        if (isFirst) {
+          originalPreactCommit?.(vnode, commitQueue);
+          renderCallbacks!.some(wrapper => {
+            try {
+              wrapper[RENDER_CALLBACKS].some((cb) => {
+                cb.call(wrapper.component);
+              });
+            } catch (e) {
+              options[CATCH_ERROR](e, wrapper[VNODE]!);
+            }
+          });
+        }
         if (backgroundSnapshotInstancesToRemove.length) {
           setTimeout(() => {
             backgroundSnapshotInstancesToRemove.forEach(id => {
@@ -137,13 +176,11 @@ function replaceCommitHook(): void {
       sendMTRefInitValueToMainThread();
 
       // Collect patches for this update
-      const snapshotPatch = takeGlobalSnapshotPatch();
       const flushOptions = takeGlobalFlushOptions();
       const patchOptions = takeGlobalPatchOptions();
-      if (!snapshotPatch) {
+      if (isFirst) {
         // before hydration, skip patch
         applyQueuedRefs();
-        originalPreactCommit?.(vnode, commitQueue);
         return;
       }
 
