@@ -2,10 +2,11 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { Element } from './api/element.js';
-import type { ClosureValueType, Worklet, WorkletRefImpl } from './bindings/types.js';
+import type { ClosureValueType, EventCtx, Worklet, WorkletRefImpl } from './bindings/types.js';
 import { initRunOnBackgroundDelay } from './delayRunOnBackground.js';
 import { delayExecUntilJsReady, initEventDelay } from './delayWorkletEvent.js';
 import { initEomImpl } from './eomImpl.js';
+import { addEventPropagationMethods, isEventObject } from './eventPropagation.js';
 import { hydrateCtx } from './hydrate.js';
 import { JsFunctionLifecycleManager, isRunOnBackgroundEnabled } from './jsFunctionLifecycle.js';
 import { runRunOnMainThreadTask } from './runOnMainThread.js';
@@ -70,7 +71,25 @@ function runWorkletImpl(ctx: Worklet, params: ClosureValueType[]): unknown {
     'transformWorkletParams',
     () => transformWorklet(params || [], false),
   );
-  return profile('runWorklet', () => worklet(...params_));
+
+  const eventCtx: EventCtx = {};
+
+  if (isEventObject(params_)) {
+    addEventPropagationMethods(params_, eventCtx);
+  }
+  const result = profile('runWorklet', () => worklet(...params_));
+
+  const eventReturnResult = eventCtx._eventReturnResult;
+
+  // Check if any event object has _eventResult set and include it in return
+  if (isEventObject(params_)) {
+    return {
+      returnValue: result,
+      __EventReturnResult: eventReturnResult,
+    };
+  }
+
+  return result;
 }
 
 function validateWorklet(ctx: unknown): ctx is Worklet {
@@ -107,6 +126,7 @@ function transformWorklet(
   if (isWorklet) {
     workletCache.set(ctx, worklet.main);
   }
+
   return worklet.main;
 }
 

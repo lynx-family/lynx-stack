@@ -1043,22 +1043,8 @@ where
   }
 
   fn visit_mut_call_expr(&mut self, n: &mut CallExpr) {
-    // check if it is e.stopPropagation()
     if let Callee::Expr(e) = &mut n.callee {
       if let Expr::Member(m) = &**e {
-        // check if it is e.stopPropagation
-        if let MemberProp::Ident(id) = &m.prop {
-          if id.sym == "stopPropagation" {
-            HANDLER.with(|handler| {
-              handler
-              .struct_span_warn(
-                n.span,
-                "BROKEN: e.stopPropagation() takes no effect and MUST be migrated in ReactLynx 3.0",
-              )
-              .emit()
-            });
-          }
-        }
         if let Expr::This(_) = &*m.obj {
           if let MemberProp::Ident(id) = &m.prop {
             match id.sym.to_string().as_str() {
