@@ -149,7 +149,7 @@ export async function createNativeApp(
         tt,
       );
       registerUpdateDataHandler(
-        uiThreadRpc,
+        mainThreadRpc,
         tt,
       );
       registerSendGlobalEventHandler(

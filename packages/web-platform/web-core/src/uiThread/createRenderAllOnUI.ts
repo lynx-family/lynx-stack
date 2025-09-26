@@ -5,7 +5,7 @@
 import {
   type StartMainThreadContextConfig,
   type RpcCallType,
-  type updateDataEndpoint,
+  updateDataEndpoint,
   type MainThreadGlobalThis,
   type I18nResourceTranslationOptions,
   type CloneableObject,
@@ -19,6 +19,7 @@ import {
   type TemplateLoader,
 } from '@lynx-js/web-constants';
 import { Rpc } from '@lynx-js/web-worker-rpc';
+import { handleUpdatedData } from '@lynx-js/web-mainthread-apis';
 import { dispatchLynxViewEvent } from '../utils/dispatchLynxViewEvent.js';
 import { createExposureMonitor } from './crossThreadHandlers/createExposureMonitor.js';
 import type { StartUIThreadCallbacks } from './startUIThread.js';
@@ -148,6 +149,9 @@ export function createRenderAllOnUI(
     RpcCallType<typeof updateDataEndpoint>
   >[] = [];
 
+  const updateDataBackground = mainToBackgroundRpc.createCall(
+    updateDataEndpoint,
+  );
   const start = async (configs: StartMainThreadContextConfig) => {
     if (ssrDumpInfo) {
       const lynxUniqueIdToElement: WeakRef<HTMLElement>[] = [];
@@ -194,19 +198,25 @@ export function createRenderAllOnUI(
     }
 
     // Process any pending update calls that were queued while mtsGlobalThis was undefined
-    for (const args of pendingUpdateCalls) {
-      mtsGlobalThis.updatePage?.(...args);
+    for (const [newData, options] of pendingUpdateCalls) {
+      handleUpdatedData(newData, options, mtsGlobalThis, updateDataBackground);
     }
     pendingUpdateCalls.length = 0;
   };
   const updateDataMainThread: RpcCallType<typeof updateDataEndpoint> = async (
-    ...args
+    newData,
+    options,
   ) => {
     if (mtsGlobalThis) {
-      mtsGlobalThis.updatePage?.(...args);
+      return handleUpdatedData(
+        newData,
+        options,
+        mtsGlobalThis,
+        updateDataBackground,
+      );
     } else {
       // Cache the call if mtsGlobalThis is not yet initialized
-      pendingUpdateCalls.push(args);
+      pendingUpdateCalls.push([newData, options]);
     }
   };
   const updateI18nResourcesMainThread = (data: Cloneable) => {

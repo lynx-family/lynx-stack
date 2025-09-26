@@ -4,3 +4,4 @@
 
 export { prepareMainThreadAPIs } from './prepareMainThreadAPIs.js';
 export * from './createMainThreadGlobalThis.js';
+export { handleUpdatedData } from './utils/handleUpdateData.js';
