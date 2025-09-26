@@ -121,6 +121,7 @@ export async function startMainThreadWorker(
       await startMainThread(config);
       registerUpdateDataHandler(
         uiThreadRpc,
+        backgroundThreadRpc,
         globalThis as typeof globalThis & MainThreadGlobalThis,
       );
     },
