@@ -17,7 +17,6 @@ import {
   multiThreadExposureChangedEndpoint,
   lynxUniqueIdAttribute,
   type JSRealm,
-  type MainThreadGlobalThis,
   loadTemplateMultiThread,
 } from '@lynx-js/web-constants';
 import { Rpc } from '@lynx-js/web-worker-rpc';
@@ -92,7 +91,7 @@ export async function startMainThreadWorker(
     multiThreadExposureChangedEndpoint,
   );
   const loadTemplate = uiThreadRpc.createCall(loadTemplateMultiThread);
-  const { startMainThread } = prepareMainThreadAPIs(
+  const { startMainThread, handleUpdatedData } = prepareMainThreadAPIs(
     backgroundThreadRpc,
     document, // rootDom
     document,
@@ -121,7 +120,7 @@ export async function startMainThreadWorker(
       await startMainThread(config);
       registerUpdateDataHandler(
         uiThreadRpc,
-        globalThis as typeof globalThis & MainThreadGlobalThis,
+        handleUpdatedData,
       );
     },
   );

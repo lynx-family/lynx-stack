@@ -16,6 +16,7 @@ import type {
   LynxTemplate,
   MarkTiming,
 } from './types/index.js';
+import type { UpdateDataOptions } from './types/UpdateDataOptions.js';
 
 export const postExposureEndpoint = createRpcEndpoint<
   [{ exposures: ExposureWorkerEvent[]; disExposures: ExposureWorkerEvent[] }],
@@ -61,7 +62,7 @@ export const mainThreadStartEndpoint = createRpcEndpoint<
 >('mainThreadStart', false, false);
 
 export const updateDataEndpoint = createRpcEndpoint<
-  [Cloneable, Record<string, string>],
+  [Cloneable, UpdateDataOptions | undefined],
   void
 >('updateData', false, true);
 
