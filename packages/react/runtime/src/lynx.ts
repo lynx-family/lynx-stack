@@ -6,12 +6,14 @@ import { options } from 'preact';
 import './hooks/react.js';
 
 import { initAlog } from './alog/index.js';
+import type { BackgroundSnapshotInstance } from './backgroundSnapshot.js';
 import { setupComponentStack } from './debug/component-stack.js';
 import { initProfileHook } from './debug/profile.js';
 import { document, setupBackgroundDocument } from './document.js';
 import { replaceCommitHook } from './lifecycle/patch/commit.js';
 import { addCtxNotFoundEventListener } from './lifecycle/patch/error.js';
 import { injectUpdateMainThread } from './lifecycle/patch/updateMainThread.js';
+import { RefProxy } from './lifecycle/ref/delay.js';
 import { injectCalledByNative } from './lynx/calledByNative.js';
 import { setupLynxEnv } from './lynx/env.js';
 import { injectLepusMethods } from './lynx/injectLepusMethods.js';
@@ -57,6 +59,13 @@ if (__BACKGROUND__) {
   // Trick Preact and TypeScript to accept our custom document adapter.
   options.document = document as unknown as Document;
   options.requestAnimationFrame = lynxQueueMicrotask;
+  options.refProxy = (dom: BackgroundSnapshotInstance | null): RefProxy | null => {
+    return dom?.__id
+      ? new RefProxy(
+        [dom.__id],
+      )
+      : null;
+  };
   setupBackgroundDocument();
   injectTt();
   addCtxNotFoundEventListener();

@@ -14,7 +14,7 @@ export interface ListUpdateInfo {
     existingNode?: SnapshotInstance,
   ): void;
   onRemoveChild(child: SnapshotInstance): void;
-  onSetAttribute(child: SnapshotInstance, attr: any, oldAttr: any): void;
+  onSetAttribute(child: SnapshotInstance, attr: any): void;
 }
 
 // class ListUpdateInfoDiffing implements ListUpdateInfo {
@@ -133,7 +133,7 @@ export class ListUpdateInfoRecording implements ListUpdateInfo {
     this.removeChild.add(child);
   }
 
-  onSetAttribute(child: SnapshotInstance, attr: any, _oldAttr: any): void {
+  onSetAttribute(child: SnapshotInstance, attr: any): void {
     this.platformInfoUpdate.set(child, attr);
   }
 

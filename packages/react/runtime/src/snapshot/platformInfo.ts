@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { ListUpdateInfoRecording } from '../listUpdateInfo.js';
 import { __pendingListUpdates } from '../pendingListUpdates.js';
-import { SnapshotInstance } from '../snapshot.js';
+import type { SnapshotInstance } from '../snapshot.js';
 
 const platformInfoVirtualAttributes: Set<string> = /* @__PURE__ */ new Set<string>([
   'reuse-identifier',
@@ -36,19 +36,19 @@ export interface PlatformInfo {
 
 function updateListItemPlatformInfo(
   ctx: SnapshotInstance,
-  index: number,
-  oldValue: any,
-  elementIndex: number,
+  qualifiedName: string,
+  value: string,
 ): void {
-  const newValue = ctx.__listItemPlatformInfo = ctx.__values![index] as PlatformInfo;
+  ctx.__listItemPlatformInfo ||= {};
+  // @ts-expect-error solve it later
+  ctx.__listItemPlatformInfo[qualifiedName] = value;
 
   if (__pendingListUpdates.values) {
     const list = ctx.parentNode;
     if (list?.__snapshot_def.isListHolder) {
       (__pendingListUpdates.values[list.__id] ??= new ListUpdateInfoRecording(list)).onSetAttribute(
         ctx,
-        newValue,
-        oldValue,
+        ctx.__listItemPlatformInfo,
       );
     }
   }
@@ -56,13 +56,9 @@ function updateListItemPlatformInfo(
   // In this updater, unlike `updateSpread`, the shape of the value is guaranteed to be an fixed object.
   // No adding / removing keys.
   if (ctx.__elements) {
-    const e = ctx.__elements[elementIndex]!;
-    const value = ctx.__values![index] as Record<string, unknown>;
-    for (const k in value) {
-      if (platformInfoVirtualAttributes.has(k)) {
-        continue;
-      }
-      __SetAttribute(e, k, value[k]);
+    const el = ctx.__elements[0]!;
+    if (!platformInfoVirtualAttributes.has(qualifiedName)) {
+      __SetAttribute(el, qualifiedName, value);
     }
   }
 }

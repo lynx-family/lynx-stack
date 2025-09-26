@@ -8,8 +8,6 @@ import type { SnapshotInstance } from '../snapshot.js';
 
 export function snapshotCreateList(
   pageId: number,
-  _ctx: SnapshotInstance,
-  _expIndex: number,
 ): FiberElement {
   const signMap = new Map<number, SnapshotInstance>();
   const recycleMap = new Map<string, Map<number, SnapshotInstance>>();

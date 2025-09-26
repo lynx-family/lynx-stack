@@ -17,7 +17,7 @@ export function printSnapshotInstance(
     for (let i = 0; i < level; ++i) {
       msg += '  ';
     }
-    msg += `| ${instance.__id}(${instance.type}): ${JSON.stringify(instance.__values)}`;
+    msg += `| ${instance.__id}(${instance.type})`;
     (log ?? logDebug)(msg);
     for (const c of instance.childNodes) {
       impl(c, level + 1);

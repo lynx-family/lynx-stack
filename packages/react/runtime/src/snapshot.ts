@@ -1,6 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 
 /**
  * Core snapshot system that implements a compiler-hinted virtual DOM.
@@ -21,7 +22,8 @@ import { SnapshotOperation, __globalSnapshotPatch } from './lifecycle/patch/snap
 import { ListUpdateInfoRecording } from './listUpdateInfo.js';
 import { __pendingListUpdates } from './pendingListUpdates.js';
 import { DynamicPartType } from './snapshot/dynamicPartType.js';
-import { snapshotDestroyList } from './snapshot/list.js';
+import { snapshotCreateList, snapshotDestroyList } from './snapshot/list.js';
+import { platformInfoAttributes, updateListItemPlatformInfo } from './snapshot/platformInfo.js';
 import type { PlatformInfo } from './snapshot/platformInfo.js';
 import { unref } from './snapshot/ref.js';
 import { isDirectOrDeepEqual } from './utils.js';
@@ -32,7 +34,7 @@ import { isDirectOrDeepEqual } from './utils.js';
  */
 export interface Snapshot {
   create: null | ((ctx: SnapshotInstance) => FiberElement[]);
-  update: null | ((ctx: SnapshotInstance, index: number, oldValue: any) => void)[];
+  setAttribute: null | ((ctx: SnapshotInstance, qualifiedName: string, value: string) => void);
   slot: [DynamicPartType, number][];
 
   isListHolder?: boolean;
@@ -54,6 +56,79 @@ export function clearPage(): void {
 }
 
 export const __DynamicPartChildren_0: [DynamicPartType, number][] = [[DynamicPartType.Children, 0]];
+export const __DynamicPartListChildren_0: [DynamicPartType, number][] = [[DynamicPartType.ListChildren, 0]];
+
+// const eventRegExp = /^(?:[A-Za-z-]*:)?(?:bind|catch|capture-bind|capture-catch|global-bind)[A-Za-z]+$/;
+const eventTypeMap = {
+  bind: 'bindEvent',
+  catch: 'catchEvent',
+  'capture-bind': 'capture-bind',
+  'capture-catch': 'capture-catch',
+  'global-bind': 'global-bindEvent',
+};
+const eventTypeKeys = Object.keys(eventTypeMap);
+function setAttribute(ctx: SnapshotInstance, qualifiedName: string, value: string) {
+  // if (
+  //       key === 'style'
+  //       || key === 'class'
+  //       || key === 'className'
+  //       || key === 'key'
+  //       || key === 'id'
+  //       || key === 'ref'
+  //       || (/^data-/.exec(key))
+  //       || (/^(bind|catch|global-bind|capture-bind|capture-catch)[A-Za-z]/.exec(
+  //         key,
+  //       ))
+  //     ) {
+  //       throw new Error(`Cannot use __SetAttribute for "${key}"`);
+  //     }
+  if (!ctx.__elements) return;
+  const el = ctx.__elements[0]!;
+  if (qualifiedName.startsWith('data-')) {
+    __AddDataset(el, qualifiedName.slice(5), value);
+    return;
+  }
+
+  switch (qualifiedName) {
+    case 'style':
+      // if (typeof value === 'object') {
+      //   for (const key in value as Record<string, unknown>) {
+      //     (value  as Record<string, unknown>)[key] = value[key]
+      //   }
+      // } else {
+
+      // }
+      __SetInlineStyles(el, value);
+      break;
+    // TODO: make sure if this will happen
+    case 'class':
+    case 'className':
+      __SetClasses(el, value);
+      break;
+    // TODO: make sure if this will happen
+    case 'key':
+      break;
+    case 'id':
+      __SetID(el, value);
+      break;
+    // TODO: make ref works
+    case 'ref':
+      {
+        const ref = `react-ref-${ctx.__id}`;
+        __SetAttribute(el, ref, 1);
+      }
+      break;
+    default:
+      for (const eventType of eventTypeKeys) {
+        if (qualifiedName.startsWith(eventType)) {
+          // @ts-expect-error fix it later
+          __AddEvent(el, eventTypeMap[eventType], qualifiedName.slice(4), `${ctx.__id}:${qualifiedName}`);
+          return;
+        }
+      }
+      __SetAttribute(el, qualifiedName, value);
+  }
+}
 
 export const snapshotManager: {
   values: Map<string, Snapshot>;
@@ -70,7 +145,7 @@ export const snapshotManager: {
           /* v8 ignore stop */
           return [__page!];
         },
-        update: [],
+        setAttribute,
         slot: __DynamicPartChildren_0,
         isListHolder: false,
         cssId: 0,
@@ -87,7 +162,7 @@ export const snapshotManager: {
           /* v8 ignore stop */
           return [__CreateWrapperElement(__pageId)];
         },
-        update: [],
+        setAttribute,
         slot: __DynamicPartChildren_0,
         isListHolder: false,
       },
@@ -103,19 +178,114 @@ export const snapshotManager: {
           /* v8 ignore stop */
           return [__CreateRawText('')];
         },
-        update: [
-          ctx => {
-            /* v8 ignore start */
-            if (__JS__ && !__DEV__) {
-              return;
-            }
-            /* v8 ignore stop */
-            if (ctx.__elements) {
-              __SetAttribute(ctx.__elements[0]!, 'text', ctx.__values![0]);
-            }
-          },
-        ],
+        setAttribute,
         slot: [],
+        isListHolder: false,
+      },
+    ],
+    [
+      'view',
+      {
+        create() {
+          /* v8 ignore start */
+          if (__JS__ && !__DEV__) {
+            return [];
+          }
+          /* v8 ignore stop */
+          return [__CreateView(__pageId)];
+        },
+        setAttribute,
+        slot: __DynamicPartChildren_0,
+        isListHolder: false,
+      },
+    ],
+    [
+      'text',
+      {
+        create() {
+          /* v8 ignore start */
+          if (__JS__ && !__DEV__) {
+            return [];
+          }
+          /* v8 ignore stop */
+          return [__CreateText(__pageId)];
+        },
+        setAttribute,
+        slot: __DynamicPartChildren_0,
+        isListHolder: false,
+      },
+    ],
+    [
+      'image',
+      {
+        create() {
+          /* v8 ignore start */
+          if (__JS__ && !__DEV__) {
+            return [];
+          }
+          /* v8 ignore stop */
+          return [__CreateImage(__pageId)];
+        },
+        setAttribute,
+        slot: __DynamicPartChildren_0,
+        isListHolder: false,
+      },
+    ],
+    [
+      'list-item',
+      {
+        create() {
+          /* v8 ignore start */
+          if (__JS__ && !__DEV__) {
+            return [];
+          }
+          /* v8 ignore stop */
+          return [__CreateElement('list-item', __pageId)];
+        },
+        setAttribute: (ctx, qualifiedName, value) => {
+          if (platformInfoAttributes.has(qualifiedName)) {
+            updateListItemPlatformInfo(
+              ctx,
+              qualifiedName,
+              value,
+            );
+          } else {
+            setAttribute(ctx, qualifiedName, value);
+          }
+        },
+        slot: __DynamicPartChildren_0,
+        isListHolder: false,
+      },
+    ],
+    [
+      'list',
+      {
+        create() {
+          /* v8 ignore start */
+          if (__JS__ && !__DEV__) {
+            return [];
+          }
+          /* v8 ignore stop */
+          return [snapshotCreateList(__pageId)];
+        },
+        setAttribute,
+        slot: __DynamicPartListChildren_0,
+        isListHolder: true,
+      },
+    ],
+    [
+      'scroll-view',
+      {
+        create() {
+          /* v8 ignore start */
+          if (__JS__ && !__DEV__) {
+            return [];
+          }
+          /* v8 ignore stop */
+          return [__CreateElement('scroll-view', __pageId)];
+        },
+        setAttribute,
+        slot: __DynamicPartListChildren_0,
         isListHolder: false,
       },
     ],
@@ -140,7 +310,7 @@ export const backgroundSnapshotInstanceManager: {
   values: Map<number, BackgroundSnapshotInstance>;
   clear(): void;
   updateId(id: number, newId: number): void;
-  getValueBySign(str: string): unknown;
+  // getValueBySign(str: string): unknown;
 } = {
   nextId: 0,
   values: /* @__PURE__ */ new Map<number, BackgroundSnapshotInstance>(),
@@ -166,31 +336,32 @@ export const backgroundSnapshotInstanceManager: {
     values.set(newId, si);
     si.__id = newId;
   },
-  getValueBySign(str: string): unknown {
-    const res = str?.split(':');
-    if (!res || (res.length != 2 && res.length != 3)) {
-      throw new Error('Invalid ctx format: ' + str);
-    }
-    const id = Number(res[0]);
-    const expIndex = Number(res[1]);
-    const ctx = this.values.get(id);
-    if (!ctx) {
-      return null;
-    }
-    const spreadKey = res[2];
-    if (res[1] === '__extraProps') {
-      if (spreadKey) {
-        return ctx.__extraProps![spreadKey];
-      }
-      throw new Error('unreachable');
-    } else {
-      if (spreadKey) {
-        return (ctx.__values![expIndex] as { [spreadKey]: unknown })[spreadKey];
-      } else {
-        return ctx.__values![expIndex];
-      }
-    }
-  },
+  // getValueBySign(str: string): unknown {
+  //   const res = str?.split(':');
+  //   if (!res || (res.length != 2 && res.length != 3)) {
+  //     throw new Error('Invalid ctx format: ' + str);
+  //   }
+  //   const id = Number(res[0]);
+  //   // const expIndex = Number(res[1]);
+  //   const ctx = this.values.get(id);
+  //   if (!ctx) {
+  //     return null;
+  //   }
+  //   // const spreadKey = res[2];
+  //   throw new Error('not implemeneted')
+  //   // if (res[1] === '__extraProps') {
+  //   //   if (spreadKey) {
+  //   //     return ctx.__extraProps![spreadKey];
+  //   //   }
+  //   //   throw new Error('unreachable');
+  //   // } else {
+  //     // if (spreadKey) {
+  //     //   return (ctx.__values![expIndex] as { [spreadKey]: unknown })[spreadKey];
+  //     // } else {
+  //     //   return ctx.__values![expIndex];
+  //     // }
+  //   // }
+  // },
 };
 
 export function entryUniqID(uniqID: string, entryName?: string): string {
@@ -200,7 +371,7 @@ export function entryUniqID(uniqID: string, entryName?: string): string {
 export function createSnapshot(
   uniqID: string,
   create: Snapshot['create'] | null,
-  update: Snapshot['update'] | null,
+  setAttribute: Snapshot['setAttribute'] | null,
   slot: Snapshot['slot'],
   cssId: number | undefined,
   entryName: string | undefined,
@@ -214,6 +385,7 @@ export function createSnapshot(
     && !snapshotManager.values.has(entryUniqID(uniqID, entryName))
     // `create` may be `null` when loading a lazy bundle after hydration.
     && create !== null
+    && setAttribute !== null
   ) {
     // We only update the lepus snapshot if the `uniqID` is different.
     // This means that `uniqID` is considered the "hash" of the snapshot.
@@ -225,7 +397,7 @@ export function createSnapshot(
       // This allows the updates to be applied to Lepus.
       // As a result, both the static part (`create`) and the dynamic parts (`update` and `slot`) can be updated.
       create.toString(),
-      update?.map(f => f.toString()) ?? [],
+      setAttribute.toString(),
       slot,
       cssId,
       entryName,
@@ -234,7 +406,7 @@ export function createSnapshot(
 
   uniqID = entryUniqID(uniqID, entryName);
 
-  const s: Snapshot = { create, update, slot, cssId, entryName, refAndSpreadIndexes };
+  const s: Snapshot = { create, setAttribute, slot, cssId, entryName, refAndSpreadIndexes };
   snapshotManager.values.set(uniqID, s);
   if (slot && slot[0] && slot[0][0] === DynamicPartType.ListChildren) {
     s.isListHolder = true;
@@ -260,8 +432,7 @@ export function traverseSnapshotInstance<I extends WithChildren>(
 export interface SerializedSnapshotInstance {
   id: number;
   type: string;
-  values?: any[] | undefined;
-  extraProps?: Record<string, unknown> | undefined;
+  attributes?: Record<string, unknown> | undefined;
   children?: SerializedSnapshotInstance[] | undefined;
 }
 
@@ -280,7 +451,7 @@ export class SnapshotInstance {
   __snapshot_def: Snapshot;
   __elements?: FiberElement[] | undefined;
   __element_root?: FiberElement | undefined;
-  __values?: unknown[] | undefined;
+  __attributes?: Record<string, string> | undefined;
   __current_slot_index = 0;
   __worklet_ref_set?: Set<WorkletRefImpl<any> | Worklet>;
   __listItemPlatformInfo?: PlatformInfo;
@@ -304,6 +475,14 @@ export class SnapshotInstance {
     this.__elements = elements;
     this.__element_root = elements[0];
 
+    if (this.__attributes) {
+      const attributes = this.__attributes;
+      delete this.__attributes;
+      for (const key in attributes) {
+        this.setAttribute(key, attributes[key]!);
+      }
+    }
+
     if (cssId === undefined) {
       // This means either:
       //   CSS Scope is removed(We only need to call `__SetCSSId` when there is `entryName`)
@@ -321,13 +500,13 @@ export class SnapshotInstance {
       }
     }
 
-    __pendingListUpdates.runWithoutUpdates(() => {
-      const values = this.__values;
-      if (values) {
-        this.__values = undefined;
-        this.setAttribute('values', values);
-      }
-    });
+    // __pendingListUpdates.runWithoutUpdates(() => {
+    //   const values = this.__values;
+    //   if (values) {
+    //     this.__values = undefined;
+    //     this.setAttribute('values', values);
+    //   }
+    // });
 
     if (isListHolder) {
       // never recurse into list's children
@@ -394,7 +573,6 @@ export class SnapshotInstance {
 
     a.__id = this.__id;
     a.__snapshot_def = this.__snapshot_def;
-    a.__values = this.__values;
 
     // all clear
     a.__parent = null;
@@ -612,47 +790,23 @@ export class SnapshotInstance {
     });
   }
 
-  setAttribute(key: string | number, value: any): void {
-    if (key === 'values') {
-      const oldValues = this.__values;
-      const values = value as unknown[];
-      this.__values = values;
-      if (oldValues) {
-        for (let index = 0; index < values.length; index++) {
-          this.callUpdateIfNotDirectOrDeepEqual(index, oldValues[index], values[index]);
-        }
-      } else {
-        for (let index = 0; index < values.length; index++) {
-          this.callUpdateIfNotDirectOrDeepEqual(index, undefined, values[index]);
-        }
-      }
-      return;
-    }
+  setAttribute(qualifiedName: string, value: string): void {
+    this.__attributes ??= {};
 
-    if (typeof key === 'string') {
-      // for more flexible usage, we allow setting non-indexed attributes
-      (this.__extraProps ??= {})[key] = value;
-      return;
+    const oldValue = this.__attributes[qualifiedName];
+    if (isDirectOrDeepEqual(oldValue, value)) {}
+    else {
+      this.__attributes[qualifiedName] = value;
+      this.__snapshot_def.setAttribute!(this, qualifiedName, value);
     }
-
-    this.__values ??= [];
-    this.callUpdateIfNotDirectOrDeepEqual(key, this.__values[key], this.__values[key] = value);
   }
 
   toJSON(): Omit<SerializedSnapshotInstance, 'children'> & { children: SnapshotInstance[] | undefined } {
     return {
       id: this.__id,
       type: this.type,
-      values: this.__values,
-      extraProps: this.__extraProps,
+      attributes: this.__attributes,
       children: this.__firstChild ? this.childNodes : undefined,
     };
-  }
-
-  callUpdateIfNotDirectOrDeepEqual(index: number, oldValue: any, newValue: any): void {
-    if (isDirectOrDeepEqual(oldValue, newValue)) {}
-    else {
-      this.__snapshot_def.update![index]!(this, index, oldValue);
-    }
   }
 }

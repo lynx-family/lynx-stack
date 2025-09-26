@@ -2,7 +2,6 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { LifecycleConstant } from './lifecycleConstant.js';
-import { applyRefQueue } from './snapshot/workletRef.js';
 import type { SnapshotInstance } from './snapshot.js';
 import { maybePromise } from './utils.js';
 
@@ -154,7 +153,6 @@ export function componentAtIndexFactory(
         }]);
       }
       const root = childCtx.__element_root!;
-      applyRefQueue();
       // In the defer `list-item` scenario, `componentAtIndex` occurs with delay.
       // Within `componentAtIndex`, nodes that quickly appear and disappear due to re-layout will be enqueued again,
       // causing the mapping relationship between sign and SnapshotInstance to become corrupted.
@@ -193,7 +191,6 @@ export function componentAtIndexFactory(
     const root = childCtx.__element_root!;
     __AppendElement(list, root);
     const sign = __GetElementUniqueID(root);
-    applyRefQueue();
     signMap.set(sign, childCtx);
     if (!enableBatchRender) {
       __FlushElementTree(root, {

@@ -1,14 +1,13 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type { Element, Worklet, WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bindings';
+// import type { Element, Worklet, WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bindings';
 
-import type { SnapshotInstance } from '../snapshot.js';
-import { workletUnRef } from './workletRef.js';
 import { RefProxy } from '../lifecycle/ref/delay.js';
+import type { SnapshotInstance } from '../snapshot.js';
 
 const refsToClear: Ref[] = [];
-const refsToApply: (Ref | [snapshotInstanceId: number, expIndex: number])[] = [];
+const refsToApply: (Ref | [snapshotInstanceId: number])[] = [];
 
 type Ref = (((ref: RefProxy) => (() => void) | void) | { current: RefProxy | null }) & {
   _unmount?: (() => void) | void;
@@ -18,7 +17,7 @@ type Ref = (((ref: RefProxy) => (() => void) | void) | { current: RefProxy | nul
 function unref(snapshot: SnapshotInstance, recursive: boolean): void {
   snapshot.__worklet_ref_set?.forEach(v => {
     if (v) {
-      workletUnRef(v as Worklet | WorkletRefImpl<Element>);
+      // workletUnRef(v as Worklet | WorkletRefImpl<Element>);
     }
   });
   snapshot.__worklet_ref_set?.clear();
@@ -31,7 +30,7 @@ function unref(snapshot: SnapshotInstance, recursive: boolean): void {
 }
 
 // This function is modified from preact source code.
-function applyRef(ref: Ref, value: null | [snapshotInstanceId: number, expIndex: number]): void {
+function applyRef(ref: Ref, value: null | [snapshotInstanceId: number]): void {
   const newRef = value && new RefProxy(value);
 
   try {
@@ -53,31 +52,6 @@ function applyRef(ref: Ref, value: null | [snapshotInstanceId: number, expIndex:
     lynx.reportError(e as Error);
   }
   /* v8 ignore stop */
-}
-
-function updateRef(
-  snapshot: SnapshotInstance,
-  expIndex: number,
-  oldValue: string | null,
-  elementIndex: number,
-): void {
-  const value: unknown = snapshot.__values![expIndex];
-  let ref;
-  if (typeof value === 'string') {
-    ref = value;
-  } else {
-    ref = `react-ref-${snapshot.__id}-${expIndex}`;
-  }
-
-  snapshot.__values![expIndex] = ref;
-  if (snapshot.__elements && oldValue !== ref) {
-    if (oldValue) {
-      __SetAttribute(snapshot.__elements[elementIndex]!, oldValue, undefined);
-    }
-    if (ref) {
-      __SetAttribute(snapshot.__elements[elementIndex]!, ref, 1);
-    }
-  }
 }
 
 function transformRef(ref: unknown): Ref | null | undefined {
@@ -103,7 +77,7 @@ function applyQueuedRefs(): void {
     }
     for (let i = 0; i < refsToApply.length; i += 2) {
       const ref = refsToApply[i] as Ref;
-      const value = refsToApply[i + 1] as [snapshotInstanceId: number, expIndex: number] | null;
+      const value = refsToApply[i + 1] as [snapshotInstanceId: number] | null;
       applyRef(ref, value);
     }
   } finally {
@@ -111,22 +85,22 @@ function applyQueuedRefs(): void {
   }
 }
 
-function queueRefAttrUpdate(
-  oldRef: Ref | null | undefined,
-  newRef: Ref | null | undefined,
-  snapshotInstanceId: number,
-  expIndex: number,
-): void {
-  if (oldRef === newRef) {
-    return;
-  }
-  if (oldRef) {
-    refsToClear.push(oldRef);
-  }
-  if (newRef) {
-    refsToApply.push(newRef, [snapshotInstanceId, expIndex]);
-  }
-}
+// function queueRefAttrUpdate(
+//   oldRef: Ref | null | undefined,
+//   newRef: Ref | null | undefined,
+//   snapshotInstanceId: number,
+//   expIndex: number,
+// ): void {
+//   if (oldRef === newRef) {
+//     return;
+//   }
+//   if (oldRef) {
+//     refsToClear.push(oldRef);
+//   }
+//   if (newRef) {
+//     refsToApply.push(newRef, [snapshotInstanceId, expIndex]);
+//   }
+// }
 
 function clearQueuedRefs(): void {
   refsToClear.length = 0;
@@ -136,4 +110,4 @@ function clearQueuedRefs(): void {
 /**
  * @internal
  */
-export { queueRefAttrUpdate, updateRef, unref, transformRef, applyRef, applyQueuedRefs, clearQueuedRefs, type Ref };
+export { unref, transformRef, applyRef, applyQueuedRefs, clearQueuedRefs, type Ref };

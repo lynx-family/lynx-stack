@@ -552,7 +552,7 @@ fn transform_react_lynx_inner(
       compat_plugin,
       worklet_plugin,
       css_scope_plugin,
-      (list_plugin, snapshot_plugin),
+      list_plugin,
       directive_dce_plugin,
       define_dce_plugin,
       simplify_pass_1, // do simplify after DCE above to make shake below works better
