@@ -606,8 +606,8 @@ importers:
         specifier: ^7.0.2
         version: 7.0.2
       memfs:
-        specifier: ^4.43.0
-        version: 4.43.0
+        specifier: ^4.46.1
+        version: 4.46.1
       picocolors:
         specifier: ^1.1.1
         version: 1.1.1
@@ -6033,9 +6033,8 @@ packages:
     resolution: {integrity: sha512-FpWsVHpAkoSh/LfY1BgAl72BVd374ooMRtDi2VqzBycX4XEfvC0XKACCe0C9VRZoYq5viuoyTv6lYXZ/Q7TrLQ==}
     engines: {node: '>= 4.0.0'}
 
-  memfs@4.43.0:
-    resolution: {integrity: sha512-XCdhMy33sgxCwJ4JgjSasLGgOjFm9/i+IEhO03gPHroJeTBhM7ZQ1+v3j7di9nNKtcLGjVvKjHVOkTbVop/R/Q==}
-    engines: {node: '>= 4.0.0'}
+  memfs@4.46.1:
+    resolution: {integrity: sha512-2wjHDg7IjP+ufAqqqSxjiNePFDrvWviA79ajUwG9lkHhk3HzZOLBzzoUG8cx9vCagj6VvBQD7oXuLuFz5LaAOQ==}
 
   merge-descriptors@1.0.3:
     resolution: {integrity: sha512-gaNvAS7TZ897/rVaZ0nMtAyxNyi/pdbjbAwUpFQpN70GqnVfOiXpeUUMKRBmzXaSQ8DdTX4/0ms62r2K+hE6mQ==}
@@ -13907,7 +13906,7 @@ snapshots:
       tree-dump: 1.0.3(tslib@2.8.1)
       tslib: 2.8.1
 
-  memfs@4.43.0:
+  memfs@4.46.1:
     dependencies:
       '@jsonjoy.com/json-pack': 1.11.0(tslib@2.8.1)
       '@jsonjoy.com/util': 1.9.0(tslib@2.8.1)
@@ -16005,7 +16004,7 @@ snapshots:
       '@rspack/lite-tapable': 1.0.1
       chokidar: 3.6.0
       is-glob: 4.0.3
-      memfs: 4.43.0
+      memfs: 4.46.1
       minimatch: 9.0.5
       picocolors: 1.1.1
       typescript: 5.9.2
@@ -16407,7 +16406,7 @@ snapshots:
   webpack-dev-middleware@7.4.2(webpack@5.101.3):
     dependencies:
       colorette: 2.0.20
-      memfs: 4.43.0
+      memfs: 4.46.1
       mime-types: 2.1.35
       on-finished: 2.4.1
       range-parser: 1.2.1
