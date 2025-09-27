@@ -2,6 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import path from 'node:path'
+
 import type { RsbuildMode } from '@rsbuild/core'
 import type { Command } from 'commander'
 
@@ -16,6 +18,7 @@ export interface CommonOptions {
   envMode?: string
   noEnv?: boolean
   mode?: RsbuildMode
+  root?: string
 }
 
 function applyCommonOptions(command: Command) {
@@ -36,6 +39,15 @@ function applyCommonOptions(command: Command) {
       '-m --mode <mode>',
       'specify the build mode, can be `development`, `production` or `none`',
     )
+    .option(
+      '-r --root <root>',
+      'set the project root directory (absolute path or relative to cwd)',
+    )
+}
+
+function resolveRoot(cwd: string, root?: string): string {
+  if (!root) return cwd
+  return path.isAbsolute(root) ? root : path.resolve(cwd, root)
 }
 
 export function apply(program: Command): Command {
@@ -66,10 +78,11 @@ export function apply(program: Command): Command {
       'Enable watch mode to automatically rebuild on file changes',
     )
     .action(
-      (buildOptions: BuildOptions) =>
-        import('./build.js').then(({ build }) =>
-          build.call(buildCommand, cwd, buildOptions)
-        ),
+      async (buildOptions: BuildOptions) => {
+        const actualRoot = resolveRoot(cwd, buildOptions.root)
+        const { build } = await import('./build.js')
+        return await build.call(buildCommand, actualRoot, buildOptions)
+      },
     )
 
   const devCommand = program.command('dev')
