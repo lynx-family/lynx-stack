@@ -830,6 +830,30 @@ test.describe('reactlynx3 tests', () => {
         await expect(target).toHaveCSS('height', '100px');
       },
     );
+
+    test(
+      'basic-bindmouse',
+      async ({ page, browserName, context }, { title }) => {
+        test.skip(browserName !== 'chromium', 'not support CDPsession');
+        await goto(page, title);
+        await wait(300);
+        await page.locator('#target').hover();
+        await page.mouse.down();
+        await page.mouse.up();
+        expect(page.locator('#target1'), 'has touches').toHaveCSS(
+          'background-color',
+          'rgb(0, 128, 0)',
+        ); // green
+        expect(page.locator('#target2'), 'has target touches').toHaveCSS(
+          'background-color',
+          'rgb(0, 128, 0)',
+        ); // green
+        expect(page.locator('#target3'), 'has changed touches').toHaveCSS(
+          'background-color',
+          'rgb(0, 128, 0)',
+        ); // green
+      },
+    );
   });
   test.describe('basic-css', () => {
     test('basic-css-asset-in-css', async ({ page }, { title }) => {
