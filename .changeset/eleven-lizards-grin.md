@@ -2,4 +2,4 @@
 "@lynx-js/css-extract-webpack-plugin": patch
 ---
 
-Change the generation conditions of the css.hot-update.json to whether HMR is enabled
+Avoid generating `.css.hot-update.json` when HMR is disabled.
