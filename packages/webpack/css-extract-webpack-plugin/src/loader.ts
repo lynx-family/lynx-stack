@@ -14,6 +14,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const BASE_URI = 'webpack://';
 
+export type CSSModuleId2Deps = Record<string, Dep[]>;
+
 /**
  * The options of CSS extract loader.
  *
@@ -239,8 +241,14 @@ ${content}
         };
       },
     );
-
     addDependencies(dependencies);
+
+    const compiler = this._compiler! as unknown as {
+      cssModuleId2Deps: CSSModuleId2Deps;
+    };
+    if (compiler.cssModuleId2Deps) {
+      compiler.cssModuleId2Deps[this._module!.identifier()] = dependencies;
+    }
   } else {
     dependencies = [[null, exportContent]];
   }

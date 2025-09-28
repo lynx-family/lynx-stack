@@ -11,7 +11,7 @@ import path from 'node:path'
 
 import { update } from '@lynx-js/test-tools/update.js'
 
-import styles from './entry1.js'
+import styles from './entry.js'
 import { createStubLynx } from '../../../helper/stubLynx.js'
 
 const __FlushElementTree = vi.fn()
@@ -44,6 +44,11 @@ expect.extend({
   },
 })
 
+it('should merge main-thread and background css into one css', async () => {
+  const content = fs.readFileSync(path.join(__dirname, 'index', 'index.css'), 'utf-8')
+  expect(content).toMatchFileSnapshot(path.join(__dirname, '../__snapshot__', 'index.css').replace(/test((\/)|(\\))js/, 'test$1hotCases').replace(/((\/)|(\\))hot-snapshot/, '$1'))
+})
+
 it('should generate css.hot-update.json', () =>
   new Promise((resolve, reject) => {
     expect(styles).toHaveProperty('foo')
@@ -56,18 +61,22 @@ it('should generate css.hot-update.json', () =>
         resolve()
       }
     }
-
     let prevHash = __webpack_hash__
     
     NEXT(
       update(done, true, async () => {
-        const { default: styles } = await import('./entry1.js')
+        const { default: styles } = await import('./entry.js')
         expect(styles).toHaveProperty('foo')
         expect(styles.foo).toStrictEqual(expect.any(String))
 
-        const jsonPath = path.join(__dirname, `index.${prevHash}.css.hot-update.json`)
+        expect(__webpack_require__.cssHotUpdateList).toContainEqual([
+          'index',
+          `index/index.${prevHash}.css.hot-update.json`,
+        ])
+
+        const jsonPath = path.join(__dirname, 'index', `index.${prevHash}.css.hot-update.json`)
         expect(fs.existsSync(jsonPath)).toBeTruthy()
-        const { content } = __non_webpack_require__(`./index.${prevHash}.css.hot-update.json`)
+        const { content } = __non_webpack_require__(`./index/index.${prevHash}.css.hot-update.json`)
 
         expect(content).toBeBase64EncodedMatching(styles.foo)
         expect(content).toBeBase64EncodedMatching(
@@ -79,15 +88,18 @@ it('should generate css.hot-update.json', () =>
 
         NEXT(
           update(done, true, async () => {
-            const { default: styles } = await import('./entry1.js')
+            const { default: styles } = await import('./entry.js')
             expect(styles).toHaveProperty('bar')
             expect(styles['bar']).toStrictEqual(expect.any(String))
 
-            const jsonPath = path.join(__dirname, `index.${prevHash}.css.hot-update.json`)
-            expect(fs.existsSync(jsonPath)).toBeTruthy()
-            const { content } = __non_webpack_require__(`./index.${prevHash}.css.hot-update.json`)
+            expect(__webpack_require__.cssHotUpdateList).toContainEqual([
+              'index',
+              `index/index.${prevHash}.css.hot-update.json`,
+            ])
 
-            console.log(content)
+            const jsonPath = path.join(__dirname, 'index', `index.${prevHash}.css.hot-update.json`)
+            expect(fs.existsSync(jsonPath)).toBeTruthy()
+            const { content } = __non_webpack_require__(`./index/index.${prevHash}.css.hot-update.json`)
 
             expect(content).toBeBase64EncodedMatching(styles.bar)
             expect(content).toBeBase64EncodedMatching(

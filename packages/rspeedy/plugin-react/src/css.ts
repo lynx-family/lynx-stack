@@ -2,18 +2,16 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
-
 import type { CSSLoaderOptions, RsbuildPluginAPI, Rspack } from '@rsbuild/core'
 
 import type {
   CssExtractRspackPluginOptions,
   CssExtractWebpackPluginOptions,
 } from '@lynx-js/css-extract-webpack-plugin'
-import { LAYERS } from '@lynx-js/react-webpack-plugin'
 
 import type { PluginReactLynxOptions } from './pluginReactLynx.js'
+
+const CSS_LAYER = 'css-layer'
 
 export function applyCSS(
   api: RsbuildPluginAPI,
@@ -36,8 +34,6 @@ export function applyCSS(
       output: { injectStyles: false },
     })
   })
-
-  const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
   api.modifyBundlerChain(
     async function handler(chain, { CHAIN_ID }) {
@@ -65,55 +61,20 @@ export function applyCSS(
           // Replace the CssExtractRspackPlugin.loader with ours.
           // This is for scoped CSS.
           rule
-            .issuerLayer(LAYERS.BACKGROUND)
             .use(CHAIN_ID.USE.MINI_CSS_EXTRACT)
             .loader(CssExtractPlugin.loader)
             .end()
+            .use(ruleName)
+            .tap(options =>
+              normalizeCssLoaderOptions(
+                options as CSSLoaderOptions,
+                true,
+              )
+            )
 
-          // The Rsbuild default loaders
-          //   - CssExtractRspackPlugin.loader
-          //   - css-loader
-          //   - resolve-url-loader(for sass/less)
-          //   - sass-loader/less-loader(for sass/less)
-          const uses = rule.uses.entries()
-          const ruleEntries = rule.entries() as Rspack.RuleSetRule
-
-          const cssLoaderRule = uses[CHAIN_ID.USE.CSS]!
-            .entries() as Rspack.RuleSetRule
-
-          // We add an additional rule for background layer.
-          // With only the following loaders:
-          //   - ignore-css-loader
-          //   - css-loader
-          //   - resolve-url-loader(for sass/less)
-          //   - sass-loader/less-loader(for sass/less)
-          // dprint-ignore
-          chain
-            .module
-              .rule(`${ruleName}:${LAYERS.MAIN_THREAD}`)
-              .merge(ruleEntries)
-              .issuerLayer(LAYERS.MAIN_THREAD)
-              .use(CHAIN_ID.USE.IGNORE_CSS)
-                .loader(path.resolve(__dirname, './loaders/ignore-css-loader'))
-              .end()
-              .uses
-                .merge(uses)
-                .delete(CHAIN_ID.USE.MINI_CSS_EXTRACT)
-                .delete(CHAIN_ID.USE.LIGHTNINGCSS)
-                .delete(CHAIN_ID.USE.CSS)
-              .end()
-              // We replace the css-loader rules with the normalized one
-              // to force setting `exportOnlyLocals: true`.
-              .use(CHAIN_ID.USE.CSS)
-                .after(CHAIN_ID.USE.IGNORE_CSS)
-                .merge(cssLoaderRule)
-                .options(
-                  normalizeCssLoaderOptions(
-                    cssLoaderRule.options as CSSLoaderOptions,
-                    true
-                  )
-                )
-              .end()
+          chain.module.rule(CSS_LAYER)
+            .test(rule.get('test') as Rspack.RuleSetCondition)
+            .layer(CSS_LAYER)
         })
 
       const inlineCSSRules = [
