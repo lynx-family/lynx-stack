@@ -2030,6 +2030,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7da8b5736845d9f2fcb837ea5d9e2628564b3b043a70948a3f0b778838c5fb4f"
 
 [[package]]
+name = "sugar_path"
+version = "1.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8230d5b8a65a6d4d4a7e5ee8dbdd9312ba447a8b8329689a390a0945d69b57ce"
+
+[[package]]
 name = "swc"
 version = "40.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3262,6 +3268,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha-1",
+ "sugar_path",
  "swc_core",
 ]
 
