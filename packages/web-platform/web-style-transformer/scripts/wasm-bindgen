@@ -3,7 +3,7 @@
 // AUTO GENERATED. DO NOT MODIFY
 
 // This is generated with
-// `uv run ./scripts/generate-dotslash.py --config ./scripts/dotslash-config.json --local-config --repo wasm-bindgen/wasm-bindgen --output ./scripts --tag 0.2.104`
+// `uv run https://gist.githubusercontent.com/colinaaa/090b404e09f6628be90076765b4d455d/raw/dotslash-publish-release.py --config ./scripts/dotslash-config.json --local-config --repo wasm-bindgen/wasm-bindgen --output ./scripts --tag 0.2.104`
 
 {
   "name": "wasm-bindgen",
