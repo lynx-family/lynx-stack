@@ -16,7 +16,7 @@
         },
         "windows-x86_64": {
           "regex": ".*-x86_64-pc-windows-msvc",
-          "path": "wasm-bindgen-{tag}-pc-windows-msvc/wasm-bindgen.exe"
+          "path": "wasm-bindgen-{tag}-x86_64-pc-windows-msvc/wasm-bindgen.exe"
         }
       }
     }

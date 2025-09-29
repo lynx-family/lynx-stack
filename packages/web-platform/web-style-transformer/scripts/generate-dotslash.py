@@ -242,7 +242,7 @@ def generate_manifest_file(
 // AUTO GENERATED. DO NOT MODIFY
 
 // This is generated with
-// `uv run ./scripts/generate-dotslash.py --config ./scripts/dotslash-config.json --repo wasm-bindgen/wasm-bindgen --tag {tag} --local-config --output ./scripts`
+// `uv run ./scripts/generate-dotslash.py --config ./scripts/dotslash-config.json --local-config --repo wasm-bindgen/wasm-bindgen --output ./scripts --tag {tag}`
 
 {json.dumps(manifest, indent=2)}
 """

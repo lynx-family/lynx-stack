@@ -3,7 +3,7 @@
 // AUTO GENERATED. DO NOT MODIFY
 
 // This is generated with
-// `uv run ./scripts/generate-dotslash.py --config ./scripts/dotslash-config.json --repo wasm-bindgen/wasm-bindgen --tag 0.2.104 --local-config --output ./scripts`
+// `uv run ./scripts/generate-dotslash.py --config ./scripts/dotslash-config.json --local-config --repo wasm-bindgen/wasm-bindgen --output ./scripts --tag 0.2.104`
 
 {
   "name": "wasm-bindgen",
@@ -67,7 +67,7 @@
       "hash": "blake3",
       "digest": "27433d89a0af12a5bdbcee8c3a95daa44f2306e37d4d5bc4195f792705abf184",
       "format": "tar.gz",
-      "path": "wasm-bindgen-0.2.104-pc-windows-msvc/wasm-bindgen.exe",
+      "path": "wasm-bindgen-0.2.104-x86_64-pc-windows-msvc/wasm-bindgen.exe",
       "providers": [
         {
           "url": "https://github.com/wasm-bindgen/wasm-bindgen/releases/download/0.2.104/wasm-bindgen-0.2.104-x86_64-pc-windows-msvc.tar.gz"
