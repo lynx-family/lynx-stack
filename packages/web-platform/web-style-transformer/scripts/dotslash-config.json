@@ -1,0 +1,24 @@
+{
+  "outputs": {
+    "wasm-bindgen": {
+      "platforms": {
+        "macos-x86_64": {
+          "regex": ".*-x86_64-apple-darwin",
+          "path": "wasm-bindgen-{tag}-x86_64-apple-darwin/wasm-bindgen"
+        },
+        "macos-aarch64": {
+          "regex": ".*-aarch64-apple-darwin",
+          "path": "wasm-bindgen-{tag}-aarch64-apple-darwin/wasm-bindgen"
+        },
+        "linux-x86_64": {
+          "regex": ".*-x86_64-unknown-linux-musl",
+          "path": "wasm-bindgen-{tag}-x86_64-unknown-linux-musl/wasm-bindgen"
+        },
+        "windows-x86_64": {
+          "regex": ".*-x86_64-pc-windows-msvc",
+          "path": "wasm-bindgen-{tag}-pc-windows-msvc/wasm-bindgen.exe"
+        }
+      }
+    }
+  }
+}

@@ -103,10 +103,6 @@ jobs:
             turbo-v4-${{ runner.os }}-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.push.before }}
             turbo-v4-${{ runner.os }}-${{ hashFiles('**/packages/**/src/**/*.rs') }}-
             turbo-v4-${{ runner.os }}-
-      - name: Install wasm-bindgen
-        uses: taiki-e/install-action@8ea32481661d5e04d602f215b94f17e4014b44f9 # v2
-        with:
-          tool: wasm-bindgen@0.2.101
       - name: Install
         run: |
           npm install -g corepack@latest

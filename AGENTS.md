@@ -191,7 +191,6 @@ The CI runs these checks (replicate locally for confidence):
 - **Node.js** (specified in .nvmrc)
 - **pnpm** (specified in package.json, see `packageManager` field)
 - **Rust** (for native bindings compilation)
-- **wasm-bindgen** (for WebAssembly builds)
 
 ### VS Code Setup
 

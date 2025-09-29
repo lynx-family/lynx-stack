@@ -3,20 +3,14 @@
   "extends": ["//"],
   "tasks": {
     "build": {
-      "dependsOn": [
-        "build:wasm-bindgen"
-      ],
+      "dependsOn": [],
       "inputs": [
+        "scripts/**",
         "src/**"
       ],
       "outputs": [
         "dist"
       ]
-    },
-    "build:wasm-bindgen": {
-      "dependsOn": [],
-      "inputs": [],
-      "outputs": []
     }
   }
 }
