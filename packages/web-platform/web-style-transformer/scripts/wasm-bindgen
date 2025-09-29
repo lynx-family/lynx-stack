@@ -62,6 +62,24 @@
         }
       ]
     },
+    "linux-aarch64": {
+      "size": 7229719,
+      "hash": "blake3",
+      "digest": "6bedb202a8762000ae6dd72f39ddfdfe00b4eb926d8285cf063d56cf0ba7df4a",
+      "format": "tar.gz",
+      "path": "wasm-bindgen-0.2.104-aarch64-unknown-linux-gnu/wasm-bindgen",
+      "providers": [
+        {
+          "url": "https://github.com/wasm-bindgen/wasm-bindgen/releases/download/0.2.104/wasm-bindgen-0.2.104-aarch64-unknown-linux-gnu.tar.gz"
+        },
+        {
+          "type": "github-release",
+          "repo": "https://github.com/wasm-bindgen/wasm-bindgen",
+          "tag": "0.2.104",
+          "name": "wasm-bindgen-0.2.104-aarch64-unknown-linux-gnu.tar.gz"
+        }
+      ]
+    },
     "windows-x86_64": {
       "size": 6121375,
       "hash": "blake3",

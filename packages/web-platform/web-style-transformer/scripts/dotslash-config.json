@@ -14,6 +14,10 @@
           "regex": ".*-x86_64-unknown-linux-musl",
           "path": "wasm-bindgen-{tag}-x86_64-unknown-linux-musl/wasm-bindgen"
         },
+        "linux-aarch64": {
+          "regex": ".*-aarch64-unknown-linux-gnu",
+          "path": "wasm-bindgen-{tag}-aarch64-unknown-linux-gnu/wasm-bindgen"
+        },
         "windows-x86_64": {
           "regex": ".*-x86_64-pc-windows-msvc",
           "path": "wasm-bindgen-{tag}-x86_64-pc-windows-msvc/wasm-bindgen.exe"
