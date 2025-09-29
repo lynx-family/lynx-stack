@@ -399,7 +399,7 @@ mod tests {
     let json_data = r#"
     {
       "directiveDCE":{      
-        "target": 'JS'
+        "target": "JS"
       }
     }"#;
     let options: ReactLynxTransformOptions = serde_json::from_str(json_data).unwrap();
