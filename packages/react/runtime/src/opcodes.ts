@@ -16,6 +16,7 @@ const enum Opcode {
 interface SSRFiberElement {
   ssrID: string;
 }
+
 export type SSRSnapshotInstance = [string, number, SSRFiberElement[]];
 
 export function ssrHydrateByOpcodes(
@@ -97,7 +98,7 @@ export function ssrHydrateByOpcodes(
   }
 }
 
-export function renderOpcodesInto(opcodes: any[], into: SnapshotInstance): void {
+export function renderOpcodesInto(opcodes: any[], into: SnapshotInstance, refs: any[]): void {
   let top: SnapshotInstance = into;
   const stack: SnapshotInstance[] = [into];
   for (let i = 0; i < opcodes.length;) {
@@ -132,6 +133,10 @@ export function renderOpcodesInto(opcodes: any[], into: SnapshotInstance): void 
       case Opcode.Attr: {
         const key = opcodes[i + 1];
         const value = opcodes[i + 2];
+        if (key === 'mtc:ref') {
+          const top2 = top;
+          refs.push(() => value(top2));
+        }
         top.setAttribute(key, value);
 
         i += 3;

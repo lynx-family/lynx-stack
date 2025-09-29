@@ -302,7 +302,7 @@ function _renderToString(
     }
 
     // write this attribute to the buffer
-    if (v != null && v !== false && typeof v !== 'function') {
+    if (v != null && v !== false) {
       opcodes.push(__OpAttr, name, v);
     }
   }

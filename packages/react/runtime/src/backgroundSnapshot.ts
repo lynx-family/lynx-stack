@@ -84,12 +84,14 @@ export class BackgroundSnapshotInstance {
       /* v8 ignore next */
       reconstructInstanceTree([node], this.__id, beforeNode?.__id);
     } else {
-      __globalSnapshotPatch?.push(
-        SnapshotOperation.InsertBefore,
-        this.__id,
-        node.__id,
-        beforeNode?.__id,
-      );
+      if (this.type !== 'ignore' && node.type !== 'ignore') {
+        __globalSnapshotPatch?.push(
+          SnapshotOperation.InsertBefore,
+          this.__id,
+          node.__id,
+          beforeNode?.__id,
+        );
+      }
     }
 
     // If the node already has a parent, remove it from its current parent

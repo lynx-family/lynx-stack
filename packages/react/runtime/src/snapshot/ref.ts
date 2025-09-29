@@ -86,6 +86,7 @@ function updateRef(
     snapshot.__worklet_ref_set ??= new Set();
     snapshot.__worklet_ref_set.add(value as any);
     ref = 'react-ref-mtc';
+    snapshot.__values![expIndex] = ref;
   } else {
     ref = `react-ref-${snapshot.__id}-${expIndex}`;
     snapshot.__values![expIndex] = ref;

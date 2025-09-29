@@ -43,7 +43,7 @@ export function pickJSXFromProps(props?: Record<string, any>): [[VNode, any][], 
     }
 
     if (typeof item === 'function') {
-      const jsx = item();
+      const jsx = item(props);
       if (isPreactVnode(jsx)) {
         const placeholder = {
           $$typeof: MTC_TYPE,

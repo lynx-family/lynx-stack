@@ -10,6 +10,7 @@ function createVNode(type, props, _key) {
     const r = new SnapshotInstance(type);
 
     r.props = props;
+    r.ref = props['mtc:ref'];
 
     r.constructor = undefined;
     r.__k = null;
@@ -21,6 +22,7 @@ function createVNode(type, props, _key) {
     r.__v = --vnodeId;
     r.__i = -1;
     r.__u = 0;
+    r.$$typeof = Symbol.for('react.element');
 
     return r;
   } else if (typeof type === 'function') {
@@ -62,6 +64,7 @@ function createVNode(type, props, _key) {
       __v: --vnodeId,
       __i: -1,
       __u: 0,
+      $$typeof: Symbol.for('react.element'),
     };
   }
 }

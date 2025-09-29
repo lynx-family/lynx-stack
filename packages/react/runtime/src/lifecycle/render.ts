@@ -42,8 +42,13 @@ function renderMainThread(): void {
   if (__PROFILE__) {
     console.profile('renderOpcodesInto');
   }
+
+  const refs: any[] = [];
   // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-  renderOpcodesInto(opcodes, __root as any);
+  renderOpcodesInto(opcodes, __root as any, refs);
+  refs.forEach((ref) => ref());
+  refs.length = 0;
+
   if (__ENABLE_SSR__) {
     __root.__opcodes = opcodes;
   }

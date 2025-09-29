@@ -22,17 +22,18 @@ import { jsx as createVNode } from 'preact/jsx-runtime';
 import type { Worklet, WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bindings';
 
 import type { BackgroundSnapshotInstance } from './backgroundSnapshot.js';
+// import { printSnapshotInstance } from './debug/printSnapshot.js';
 import { SnapshotOperation, __globalSnapshotPatch } from './lifecycle/patch/snapshotPatch.js';
 import { ListUpdateInfoRecording } from './listUpdateInfo.js';
 import { mtcComponentTypes } from './mtc/mtcComponentTypes.js';
 import { mtcComponentVNodes } from './mtc/mtcComponentVNodes.js';
+import { transformMTCProps } from './mtc/props.js';
 import { __pendingListUpdates } from './pendingListUpdates.js';
 import { DynamicPartType } from './snapshot/dynamicPartType.js';
 import { snapshotDestroyList } from './snapshot/list.js';
 import type { PlatformInfo } from './snapshot/platformInfo.js';
 import { unref } from './snapshot/ref.js';
 import { isDirectOrDeepEqual } from './utils.js';
-import { transformMTCProps } from './mtc/props.js';
 
 /**
  * A snapshot definition that contains all the information needed to create and update elements
@@ -129,8 +130,9 @@ export const snapshotManager: {
           return [__CreateWrapperElement(__pageId)];
         },
         update: [],
-        slot: [],
+        slot: __DynamicPartChildren_0,
         isListHolder: false,
+        // isIgnore: true,
       },
     ],
     [
@@ -338,13 +340,14 @@ export class SnapshotInstance {
     id ??= snapshotInstanceManager.nextId -= 1;
     this.__id = id;
     snapshotInstanceManager.values.set(id, this);
-    if (type === 'ignore') {
-      this.insertBefore = () => {};
-      this.removeChild = () => {};
-    }
+    // if (type === 'ignore') {
+    //   this.insertBefore = () => {};
+    //   this.removeChild = () => {};
+    // }
   }
 
   ensureElements(): void {
+    // console.log('zzzz ensureElements', this.__id, this.type);
     const { create, slot, isListHolder, cssId, entryName } = this.__snapshot_def;
     const elements = create!(this);
     this.__elements = elements;
@@ -387,6 +390,7 @@ export class SnapshotInstance {
           const [type, elementIndex] = slot[index]!;
           switch (type) {
             case DynamicPartType.Slot: {
+              // console.log('zzzz __ReplaceElement 2', child.__id);
               __ReplaceElement(child.__element_root!, elements[elementIndex]!);
               elements[elementIndex] = child.__element_root!;
               index++;
@@ -395,8 +399,10 @@ export class SnapshotInstance {
             /* v8 ignore start */
             case DynamicPartType.MultiChildren: {
               if (__GetTag(elements[elementIndex]!) === 'wrapper') {
+                // console.log('zzzz __ReplaceElement 3', child.__id);
                 __ReplaceElement(child.__element_root!, elements[elementIndex]!);
               } else {
+                // console.log('zzzz __AppendElement 3', this.__id, child.__id);
                 __AppendElement(elements[elementIndex]!, child.__element_root!);
               }
               index++;
@@ -405,6 +411,7 @@ export class SnapshotInstance {
             /* v8 ignore end */
             case DynamicPartType.Children:
             case DynamicPartType.ListChildren: {
+              // console.log('zzzz __AppendElement 4', this.__id, child.__id);
               __AppendElement(elements[elementIndex]!, child.__element_root!);
               break;
             }
@@ -571,6 +578,7 @@ export class SnapshotInstance {
     }
 
     const shouldRemove = newNode.__parent === this;
+    const oldParent = newNode.__parent;
     this.__insertBefore(newNode, existingNode);
     const __elements = this.__elements;
     if (__elements) {
@@ -586,15 +594,21 @@ export class SnapshotInstance {
       const [, elementIndex] = __snapshot_def.slot[0]!;
       const parent = __elements[elementIndex]!;
       if (shouldRemove) {
+        // console.log('zzzz __RemoveElement 3', this.__id, newNode.__id);
         __RemoveElement(parent, newNode.__element_root!);
+      } else if (oldParent && oldParent.__element_root) {
+        // console.log('zzzz __RemoveElement 2', oldParent.__id, newNode.__id);
+        __RemoveElement(oldParent.__element_root, newNode.__element_root!);
       }
       if (existingNode) {
+        // console.log('zzzz __InsertElementBefore 1', this.__id, newNode.__id);
         __InsertElementBefore(
           parent,
           newNode.__element_root!,
           existingNode.__element_root,
         );
       } else {
+        // console.log('zzzz __AppendElement 1', this.__id, newNode.__id);
         __AppendElement(parent, newNode.__element_root!);
       }
     } else if (count > 1) {
@@ -610,6 +624,7 @@ export class SnapshotInstance {
         if (__GetTag(__elements[elementIndex]!) === 'wrapper') {
           __ReplaceElement(newNode.__element_root!, __elements[elementIndex]!);
         } else {
+          // console.log('zzzz __AppendElement 2', this.__id, newNode.__id);
           __AppendElement(__elements[elementIndex]!, newNode.__element_root!);
         }
       }
@@ -617,7 +632,7 @@ export class SnapshotInstance {
     }
   }
 
-  removeChild(child: SnapshotInstance): void {
+  removeChild(child: SnapshotInstance, options?: { keepSubTree: boolean }): void {
     const __snapshot_def = this.__snapshot_def;
     if (__snapshot_def.isListHolder) {
       if (__pendingListUpdates.values) {
@@ -639,6 +654,7 @@ export class SnapshotInstance {
     unref(child, true);
     if (this.__elements) {
       const [, elementIndex] = __snapshot_def.slot[0]!;
+      // console.log('zzzz __RemoveElement 4', this.__id, child.__id);
       __RemoveElement(this.__elements[elementIndex]!, child.__element_root!);
     }
 
@@ -647,15 +663,17 @@ export class SnapshotInstance {
     }
 
     this.__removeChild(child);
-    traverseSnapshotInstance(child, v => {
-      v.__onDestroy?.();
-      v.__parent = null;
-      v.__previousSibling = null;
-      v.__nextSibling = null;
-      delete v.__elements;
-      delete v.__element_root;
-      snapshotInstanceManager.values.delete(v.__id);
-    });
+    if (!options?.keepSubTree) {
+      traverseSnapshotInstance(child, v => {
+        v.__onDestroy?.();
+        v.__parent = null;
+        v.__previousSibling = null;
+        v.__nextSibling = null;
+        delete v.__elements;
+        delete v.__element_root;
+        snapshotInstanceManager.values.delete(v.__id);
+      });
+    }
   }
 
   setAttribute(key: string | number, value: any): void {
@@ -756,7 +774,19 @@ function renderMTC(snapshotInstance: SnapshotInstance, props: MTCProps) {
     const [vnode, wrapper] = mtcComponentVNodes.get(instanceId)!;
     const newVnode = cloneElement(vnode, props);
     wrapper.insertBefore(vnode.__e as SnapshotInstance);
+
+    // console.log('zzzz renderMTC render update', vnode.__e, vnode.__e !== undefined);
+    // console.debug('********** renderMTC render update before:');
+    // printSnapshotInstance(snapshotInstanceManager.values.get(-1)!);
+    // console.debug('********** renderMTC render update wrapper before:');
+    // printSnapshotInstance(wrapper);
     render(newVnode, wrapper as unknown as ContainerNode);
+    // console.debug('********** renderMTC render update after:');
+    // printSnapshotInstance(snapshotInstanceManager.values.get(-1)!);
+    // console.debug('********** renderMTC render update wrapper after:');
+    // printSnapshotInstance(wrapper);
+
+    // console.log('zzzz renderMTC update insertBefore', snapshotInstance.__id, vnode.__e!.__id);
     snapshotInstance.insertBefore(newVnode.__e as SnapshotInstance);
     mtcComponentVNodes.set(instanceId, [newVnode, wrapper]);
   } else {
@@ -769,11 +799,19 @@ function renderMTC(snapshotInstance: SnapshotInstance, props: MTCProps) {
     // @ts-ignore
     wrapper.nodeType = 1;
     render(vnode, wrapper as unknown as ContainerNode);
-    wrapper.ensureElements();
+    // console.log('zzzz renderMTC ensureElements', wrapper.__id);
+    // wrapper.ensureElements();
     // console.log('yra renderMTC render-1', vnode.__e, vnode.__e !== undefined);
     if (vnode.__e) {
+      // @ts-ignore
+      vnode.__e.toJSON = function(this: SnapshotInstance) {
+        return undefined;
+      };
+      // console.log('zzzz renderMTC create insertBefore', snapshotInstance.__id, vnode.__e.__id);
       snapshotInstance.insertBefore(vnode.__e as SnapshotInstance);
       (vnode.__e as SnapshotInstance).__onDestroy = () => {
+        // console.log('zzzz renderMTC __onDestroy', vnode.__e!.__id);
+        delete (vnode.__e as SnapshotInstance).__onDestroy;
         wrapper.insertBefore(vnode.__e as SnapshotInstance);
         unmountComponentAtNode(wrapper as unknown as ContainerNode);
         // TODO: destroy wrapper

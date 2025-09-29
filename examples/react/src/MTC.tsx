@@ -1,72 +1,29 @@
-'main thread';
+'main thread'
 
-import { useRef } from '@lynx-js/react';
-import {
-  batch,
-  signal,
-  computed,
-  effect,
-  useSignal,
-  useComputed,
-  useSignalEffect,
-} from '@lynx-js/react/signals';
-import { MainThread } from '@lynx-js/types';
+import {useState} from '@lynx-js/react';
+import {MainThread} from '@lynx-js/types';
 
-const todos = signal([
-  { text: 'MTC RFC', completed: true },
-  { text: 'MTC Production', completed: false },
-]);
+let first = true;
 
-const color = signal('blue');
+export function MTComponent(props) {
+  const [num, setNum] = useState(0);
 
-const showA = signal(true)
-
-const completed = computed(() => {
-  return todos.value.filter(todo => todo.completed).length;
-});
-
-export function MTC(props: any) {
-  // const todos = useSignal([
-  //   { text: 'MTC RFC', completed: true },
-  //   { text: 'MTC Production', completed: false },
-  // ]);
-  // const completed = useComputed(() => {
-  //   return todos.value.filter(todo => todo.completed).length;
-  // });
-  // useSignalEffect(() => {
-  //   console.log(completed.value);
-  // });
-  // const color = useSignal('blue');
-  const ref = useRef(null);
   return (
     <view
-      bindtap={(e: MainThread.TouchEvent) => {
-        console.log('click');
-        // ref.current.setStyleProperties({
-        //   'background-color': color.value,
-        // });
-        // color.value = 'red';
-
-        props.ba()
-
-        batch(() => {
-          color.value = 'red';
-
-          todos.value[1]!.completed = true;
-          todos.value = [...todos.value];
-
-          showA.value = false;
-        });
+      ref={(e: MainThread.Element) => {
+        // console.log('user ref e', e);
+        if (e && first) {
+          e.setStyleProperties({
+            'background-color': 'red',
+          });
+          first = false;
+          // color.value = 'red';
+        }
       }}
     >
-      {todos.value.map((todo) => {
-        return <text ref={ref}>{todo.text}</text>;
-      })}
-
-      <text>{completed}</text>
-      <text>{color}</text>
-      {showA.value && props.btc1 }
-      {!showA.value && props.btc2}
+      <text bindtap={() => setNum(num + 1)}>HELLO {num}</text>
+      {props.btc1}
+      {props.btc2}
     </view>
   );
 }

@@ -46,6 +46,9 @@ export function diffArrayLepus<A extends Typed, B extends Typed>(
 
   for (let i = 0; i < before.length; i++) {
     const node = before[i]!;
+    if (!node) {
+      continue;
+    }
     (beforeMap[node.type] ??= new Set()).add([node, i]);
   }
 
