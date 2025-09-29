@@ -175,9 +175,9 @@ def generate_manifest_file(
                 logging.error(f"missing 'name' field in asset: {asset}")
                 return 1
 
-            # lynx-stack modifed start: add `.format(tag=tag)`
+            # lynx-stack modified start: add `.format(tag=tag)`
             path = platform_config.get("path").format(tag=tag)
-            # lynx-stack modifed end.
+            # lynx-stack modified end.
             if not path:
                 logging.error(f"missing `path` field in asset: {asset}")
                 return 1
