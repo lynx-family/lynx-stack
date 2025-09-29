@@ -4,9 +4,21 @@
 // LICENSE file in the root directory of this source tree.
 */
 
+@property --rpx {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0.5px;
+}
+
 lynx-view {
   contain: strict;
   display: flex;
+  /**
+   * @see https://lynxjs.org/zh/api/css/data-type/length.html
+   * 1rpx = 100vw / 750
+   * you can define the --rpx value by add style to lynx-view
+   */
+  --rpx: clac(100vw / 750);
 }
 
 lynx-view[width="auto"] {
