@@ -1,3 +1,4 @@
+use serde::Deserialize;
 use std::{
   cell::RefCell,
   collections::{HashMap, HashSet},
@@ -970,7 +971,8 @@ where
 }
 
 /// @internal
-#[derive(Clone, Debug)]
+#[derive(Deserialize, PartialEq, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct JSXTransformerConfig {
   /// @internal
   pub preserve_jsx: bool,

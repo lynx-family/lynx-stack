@@ -1,0 +1,11 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "dependsOn": [],
+      "inputs": [".cargo/**", "src/**/*.rs", "Cargo.toml", "build.js"],
+      "outputs": ["swc_plugin_reactlynx.wasm"]
+    }
+  }
+}

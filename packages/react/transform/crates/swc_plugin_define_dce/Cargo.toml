@@ -9,3 +9,4 @@ path = "lib.rs"
 [dependencies]
 napi = { workspace = true }
 napi-derive = { workspace = true }
+serde = { workspace = true }

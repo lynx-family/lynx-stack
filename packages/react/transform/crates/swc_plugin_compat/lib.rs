@@ -27,6 +27,7 @@ pub mod napi;
 type Stack<T> = Vec<T>;
 
 #[derive(Deserialize, Debug, Clone, PartialEq)]
+#[serde(rename_all = "camelCase", untagged)]
 pub enum Either<A, B> {
   A(A),
   B(B),

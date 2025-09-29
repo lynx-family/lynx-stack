@@ -1,3 +1,4 @@
+use serde::Deserialize;
 use std::fmt::Debug;
 use swc_core::{
   common::{errors::HANDLER, Span},
@@ -35,7 +36,7 @@ impl Eliminate for ArrowExpr {
   }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Deserialize, Clone, Debug, PartialEq)]
 pub struct DirectiveDCEVisitorConfig {
   /// @internal
   pub target: TransformTarget,
