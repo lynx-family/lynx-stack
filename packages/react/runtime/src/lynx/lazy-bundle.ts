@@ -2,6 +2,85 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { useEffect } from 'preact/hooks';
+
+/**
+ * @public
+ */
+export interface LazyBundleResponse {
+  code: 0 | 1601 | 1602 | 1603;
+  detail: {
+    schema: string;
+    cache: boolean;
+    errMsg: string;
+  };
+  /** Detail info when loading failed */
+  data?: any;
+}
+/**
+ * @public
+ */
+export type OnLazyBundleResponse = (response: LazyBundleResponse) => void;
+
+/**
+ * @public
+ */
+export interface GlobalLazyBundleResponseListenerProps {
+  /**
+   * @public
+   */
+  onResponse: OnLazyBundleResponse;
+}
+
+let onResponse: OnLazyBundleResponse | null = null;
+let globalLazyBundleResponseListenerMounted = false;
+
+/**
+ * Lets you listen on response of loading a lazy bundle.
+ *
+ * @see {@link https://lynxjs.org/react/code-splitting#code-splitting}
+ *
+ * @param onResponse - A function that will be called when a lazy bundle response is received.
+ *
+ * @example
+ *
+ * ```tsx
+ * import { GlobalLazyBundleResponseListener } from '@lynx-js/react';
+ *
+ * root.render(
+ *  <>
+ *    <App />
+ *    <GlobalLazyBundleResponseListener
+ *      onResponse={(response) => {
+ *        console.log("response", response);
+ *      }}
+ *    />
+ *  </>
+ * )
+ * ```
+ *
+ * @public
+ */
+export function GlobalLazyBundleResponseListener({ onResponse: _onResponse }: GlobalLazyBundleResponseListenerProps) {
+  useEffect(() => {
+    if (globalLazyBundleResponseListenerMounted) {
+      throw new Error('<GlobalLazyBundleResponseListener /> can only be used once in the whole page');
+    }
+    globalLazyBundleResponseListenerMounted = true;
+
+    return () => {
+      globalLazyBundleResponseListenerMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    onResponse = _onResponse;
+    return () => onResponse = null;
+  }, [_onResponse]);
+
+  return null;
+}
+
 /**
  * To make code below works
  * const App1 = lazy(() => import("./x").then(({App1}) => ({default: App1})))
@@ -91,7 +170,8 @@ export const loadLazyBundle: <
     } else if (__JS__) {
       const resolver = withSyncResolvers<T>();
 
-      const callback: (result: { code: number; detail: { schema: string } }) => void = result => {
+      const callback: (result: LazyBundleResponse) => void = result => {
+        onResponse?.(result);
         const { code, detail } = result;
         if (code === 0) {
           const { schema } = detail;
