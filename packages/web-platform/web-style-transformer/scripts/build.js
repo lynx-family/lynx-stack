@@ -20,7 +20,7 @@ execSync(
   { cwd: packageRoot, stdio: 'inherit' },
 );
 execSync(
-  `wasm-bindgen --out-dir dist --target bundler --out-name standard ${cargoOutput}`,
+  `pnpm exec dotslash ./scripts/wasm-bindgen --out-dir dist --target bundler --out-name standard ${cargoOutput}`,
   { cwd: packageRoot, stdio: 'inherit' },
 );
 execSync(
@@ -38,7 +38,7 @@ execSync(
   },
 );
 execSync(
-  `wasm-bindgen --out-dir dist --target bundler --out-name legacy ${cargoOutput}`,
+  `pnpm exec dotslash ./scripts/wasm-bindgen --out-dir dist --target bundler --out-name legacy ${cargoOutput}`,
   { cwd: packageRoot, stdio: 'inherit' },
 );
 execSync(

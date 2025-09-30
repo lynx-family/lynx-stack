@@ -2,10 +2,11 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { Element } from './api/element.js';
-import type { ClosureValueType, Worklet, WorkletRefImpl } from './bindings/types.js';
+import type { ClosureValueType, RunWorkletOptions, Worklet, WorkletRefImpl } from './bindings/types.js';
 import { initRunOnBackgroundDelay } from './delayRunOnBackground.js';
 import { delayExecUntilJsReady, initEventDelay } from './delayWorkletEvent.js';
 import { initEomImpl } from './eomImpl.js';
+import { addEventMethodsIfNeeded } from './eventPropagation.js';
 import { hydrateCtx } from './hydrate.js';
 import { JsFunctionLifecycleManager, isRunOnBackgroundEnabled } from './jsFunctionLifecycle.js';
 import { runRunOnMainThreadTask } from './runOnMainThread.js';
@@ -48,8 +49,9 @@ function registerWorklet(_type: string, id: string, worklet: (...args: unknown[]
  * Native event touch handler will call this function.
  * @param ctx worklet object.
  * @param params worklet params.
+ * @param options run worklet options.
  */
-function runWorklet(ctx: Worklet, params: ClosureValueType[]): unknown {
+function runWorklet(ctx: Worklet, params: ClosureValueType[], options?: RunWorkletOptions): unknown {
   if (!validateWorklet(ctx)) {
     console.warn('Worklet: Invalid worklet object: ' + JSON.stringify(ctx));
     return;
@@ -58,10 +60,10 @@ function runWorklet(ctx: Worklet, params: ClosureValueType[]): unknown {
     delayExecUntilJsReady(ctx._lepusWorkletHash, params);
     return;
   }
-  return runWorkletImpl(ctx, params);
+  return runWorkletImpl(ctx, params, options);
 }
 
-function runWorkletImpl(ctx: Worklet, params: ClosureValueType[]): unknown {
+function runWorkletImpl(ctx: Worklet, params: ClosureValueType[], options?: RunWorkletOptions): unknown {
   const worklet: (...args: unknown[]) => unknown = profile(
     'transformWorkletCtx ' + ctx._wkltId,
     () => transformWorklet(ctx, true),
@@ -70,7 +72,19 @@ function runWorkletImpl(ctx: Worklet, params: ClosureValueType[]): unknown {
     'transformWorkletParams',
     () => transformWorklet(params || [], false),
   );
-  return profile('runWorklet', () => worklet(...params_));
+
+  const [hasEventMethods, eventCtx] = addEventMethodsIfNeeded(params_, options);
+
+  const result = profile('runWorklet', () => worklet(...params_));
+
+  if (hasEventMethods) {
+    return {
+      returnValue: result,
+      eventReturnResult: eventCtx._eventReturnResult,
+    };
+  }
+
+  return result;
 }
 
 function validateWorklet(ctx: unknown): ctx is Worklet {
@@ -107,6 +121,7 @@ function transformWorklet(
   if (isWorklet) {
     workletCache.set(ctx, worklet.main);
   }
+
   return worklet.main;
 }
 
