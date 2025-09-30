@@ -13,6 +13,7 @@ const env = {
 
     const lynxTestingEnv = new LynxTestingEnv(fakeGlobal.jsdom as JSDOM);
     global.lynxTestingEnv = lynxTestingEnv;
+    global.Node = lynxTestingEnv.jsdom.window.Node;
 
     return {
       teardown(global) {
