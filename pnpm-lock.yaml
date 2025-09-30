@@ -18,8 +18,8 @@ catalogs:
       specifier: 1.5.8
       version: 1.5.8
     '@rspack/test-tools':
-      specifier: 1.5.8
-      version: 1.5.8
+      specifier: 1.5.6
+      version: 1.5.6
 
 overrides:
   '@rspack/core': 1.5.8
@@ -1194,7 +1194,7 @@ importers:
         version: 1.5.8(@swc/helpers@0.5.17)
       '@rspack/test-tools':
         specifier: catalog:rspack
-        version: 1.5.8(@rspack/core@1.5.8(@swc/helpers@0.5.17))
+        version: 1.5.6(@rspack/core@1.5.8(@swc/helpers@0.5.17))
       '@types/fs-extra':
         specifier: 11.0.4
         version: 11.0.4
@@ -2792,8 +2792,8 @@ packages:
       webpack-hot-middleware:
         optional: true
 
-  '@rspack/test-tools@1.5.8':
-    resolution: {integrity: sha512-jWbVsB4FtbCzJLXK2SOXTGnsXu/IGG3WdAfkyGkProR0fLuuClo5gIb1jqzkD21sbcR7zO5H4XP/QPSS1Oa/7A==}
+  '@rspack/test-tools@1.5.6':
+    resolution: {integrity: sha512-CZGsCClGB3gElLryuk42dRKFz//X6b1nAA4UczojskBOfdsvjlQkfc/QFpM/tk4zRKtFw5QZoPTX3ZDn3uTYyQ==}
     peerDependencies:
       '@rspack/core': 1.5.8
 
@@ -6036,6 +6036,10 @@ packages:
 
   medium-zoom@1.1.0:
     resolution: {integrity: sha512-ewyDsp7k4InCUp3jRmwHBRFGyjBimKps/AJLjRSox+2q/2H4p/PNpQf+pwONWlJiOudkBXtbdmVbFjqyybfTmQ==}
+
+  memfs@4.38.2:
+    resolution: {integrity: sha512-FpWsVHpAkoSh/LfY1BgAl72BVd374ooMRtDi2VqzBycX4XEfvC0XKACCe0C9VRZoYq5viuoyTv6lYXZ/Q7TrLQ==}
+    engines: {node: '>= 4.0.0'}
 
   memfs@4.43.0:
     resolution: {integrity: sha512-XCdhMy33sgxCwJ4JgjSasLGgOjFm9/i+IEhO03gPHroJeTBhM7ZQ1+v3j7di9nNKtcLGjVvKjHVOkTbVop/R/Q==}
@@ -10015,7 +10019,7 @@ snapshots:
       html-entities: 2.6.0
       react-refresh: 0.17.0
 
-  '@rspack/test-tools@1.5.8(@rspack/core@1.5.8(@swc/helpers@0.5.17))':
+  '@rspack/test-tools@1.5.6(@rspack/core@1.5.8(@swc/helpers@0.5.17))':
     dependencies:
       '@babel/generator': 7.28.3
       '@babel/parser': 7.28.4
@@ -10034,7 +10038,7 @@ snapshots:
       jest-snapshot: 29.7.0
       jsdom: 26.1.0
       loader-utils: 2.0.4
-      memfs: 4.46.0
+      memfs: 4.38.2
       path-serializer: 0.5.1
       pretty-format: 29.7.0
       rimraf: 5.0.10
@@ -13906,6 +13910,15 @@ snapshots:
   media-typer@0.3.0: {}
 
   medium-zoom@1.1.0: {}
+
+  memfs@4.38.2:
+    dependencies:
+      '@jsonjoy.com/json-pack': 1.11.0(tslib@2.8.1)
+      '@jsonjoy.com/util': 1.9.0(tslib@2.8.1)
+      glob-to-regex.js: 1.0.1(tslib@2.8.1)
+      thingies: 2.5.0(tslib@2.8.1)
+      tree-dump: 1.0.3(tslib@2.8.1)
+      tslib: 2.8.1
 
   memfs@4.43.0:
     dependencies:
