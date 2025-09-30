@@ -19,7 +19,6 @@ import {
   type NapiModulesMap,
   type NativeModulesCall,
   type NativeModulesMap,
-  type UpdateDataType,
 } from '@lynx-js/web-constants';
 
 export type INapiModulesCall = (
@@ -274,10 +273,10 @@ export class LynxView extends HTMLElement {
    */
   updateData(
     data: Cloneable,
-    updateDataType: UpdateDataType,
+    processorName?: string,
     callback?: () => void,
   ) {
-    this.#instance?.updateData(data, updateDataType, callback);
+    this.#instance?.updateData(data, processorName, callback);
   }
 
   /**

@@ -6,15 +6,20 @@ import {
   type MainThreadGlobalThis,
 } from '@lynx-js/web-constants';
 import type { Rpc } from '@lynx-js/web-worker-rpc';
+import { handleUpdatedData } from '@lynx-js/web-mainthread-apis';
 
 export function registerUpdateDataHandler(
-  rpc: Rpc,
+  mainThreadRpc: Rpc,
+  backgroundThreadRpc: Rpc,
   runtime: MainThreadGlobalThis,
 ): void {
-  rpc.registerHandler(
+  const updateDataBackground = backgroundThreadRpc.createCall(
     updateDataEndpoint,
-    (...args) => {
-      runtime.updatePage?.(...args);
-    },
+  );
+
+  mainThreadRpc.registerHandler(
+    updateDataEndpoint,
+    (newData, options) =>
+      handleUpdatedData(newData, options, runtime, updateDataBackground),
   );
 }
