@@ -24,7 +24,7 @@ use swc_plugins_shared::{target::TransformTarget, transform_mode::TransformMode}
 pub mod napi;
 
 #[derive(Deserialize, Clone, Debug, PartialEq)]
-#[serde[rename_all = "camelCase"]]
+#[serde(rename_all = "camelCase")]
 pub struct WorkletVisitorConfig {
   /// @public
   /// During the compilation of worklet, when extracting external variable identifiers,
