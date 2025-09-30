@@ -1,4 +1,5 @@
 ---
+"@lynx-js/react": patch
 "@lynx-js/testing-environment": patch
 ---
 
