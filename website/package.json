@@ -34,7 +34,7 @@
     "@microsoft/api-extractor-model": "^7.30.7",
     "@rsbuild/plugin-sass": "1.4.0",
     "@rsbuild/plugin-type-check": "1.2.4",
-    "@rsbuild/plugin-typed-css-modules": "1.1.0",
+    "@rsbuild/plugin-typed-css-modules": "1.1.1",
     "@rspress/core": "2.0.0-beta.28",
     "@rspress/plugin-client-redirects": "2.0.0-beta.28",
     "@shikijs/transformers": "3.11.0",
