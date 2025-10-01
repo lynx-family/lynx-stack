@@ -34,6 +34,6 @@
     "@lynx-js/rspeedy": "workspace:*",
     "@lynx-js/type-element-api": "0.0.2",
     "@lynx-js/types": "3.4.11",
-    "@types/react": "^18.3.24"
+    "@types/react": "^18.3.25"
   }
 }
