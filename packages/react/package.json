@@ -179,7 +179,7 @@
   "devDependencies": {
     "@lynx-js/types": "3.4.11",
     "@microsoft/api-extractor": "catalog:",
-    "@types/react": "^18.3.24"
+    "@types/react": "^18.3.25"
   },
   "peerDependencies": {
     "@lynx-js/types": "*",
