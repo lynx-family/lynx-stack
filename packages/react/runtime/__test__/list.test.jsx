@@ -416,7 +416,7 @@ describe(`list componentAtIndex`, () => {
       elementTree.triggerComponentAtIndex(listRef, 0);
     }).toThrowErrorMatchingInlineSnapshot(`[Error: childCtx not found]`);
 
-    // only call componentAtIndx after flush
+    // only call componentAtIndex after flush
     __pendingListUpdates.flush();
     expect(elementTree.triggerComponentAtIndex(listRef, 0)).toMatchInlineSnapshot(`4`);
     expect(elementTree.triggerComponentAtIndex(listRef, 1)).toMatchInlineSnapshot(`7`);
@@ -1119,7 +1119,7 @@ describe(`list componentAtIndex`, () => {
       elementTree.triggerComponentAtIndex(listRef, 0);
     }).toThrowErrorMatchingInlineSnapshot(`[Error: childCtx not found]`);
 
-    // only call componentAtIndx after flush
+    // only call componentAtIndex after flush
     __pendingListUpdates.flush();
     expect(elementTree.triggerComponentAtIndex(listRef, 0)).toMatchInlineSnapshot(`4`);
     expect(elementTree.triggerComponentAtIndex(listRef, 0)).toMatchInlineSnapshot(`7`); // should return a new uiSign
@@ -1148,7 +1148,7 @@ describe(`list componentAtIndex`, () => {
       elementTree.triggerComponentAtIndex(listRef, 0);
     }).toThrowErrorMatchingInlineSnapshot(`[Error: childCtx not found]`);
 
-    // only call componentAtIndx after flush
+    // only call componentAtIndex after flush
     __pendingListUpdates.flush();
     let uiSign;
     expect(uiSign = elementTree.triggerComponentAtIndex(listRef, 0)).toMatchInlineSnapshot(`4`);

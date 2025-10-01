@@ -40,14 +40,14 @@ export class XSwiperCircular
   #changeEventHandler(eventLikeObject: {
     detail: { current: number; isDragged: boolean; __isFirstLayout?: boolean };
   }) {
-    const numberOfChlidren = this.#dom.childElementCount;
-    if (numberOfChlidren > 2) {
+    const numberOfChildren = this.#dom.childElementCount;
+    if (numberOfChildren > 2) {
       const { current, isDragged, __isFirstLayout } = eventLikeObject.detail;
       if (
         current === 0
-        || current === numberOfChlidren - 1
+        || current === numberOfChildren - 1
         || current === 2
-        || current === numberOfChlidren - 2
+        || current === numberOfChildren - 2
       ) {
         /**
          * for current = 0
@@ -72,7 +72,7 @@ export class XSwiperCircular
           elementsAtEnd.forEach((e) => e.removeAttribute('slot'));
           lastElement.setAttribute('slot', 'circular-start');
           targetElement = firstElement;
-        } else if (current === numberOfChlidren - 1) {
+        } else if (current === numberOfChildren - 1) {
           elementsAtStart.forEach((e) => e.removeAttribute('slot'));
           firstElement.setAttribute('slot', 'circular-end');
           targetElement = lastElement;
