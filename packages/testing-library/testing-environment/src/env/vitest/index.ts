@@ -1,4 +1,4 @@
-import { builtinEnvironments } from 'vitest/environments';
+import { builtinEnvironments, Environment } from 'vitest/environments';
 import { LynxTestingEnv } from '@lynx-js/testing-environment';
 import { JSDOM } from 'jsdom';
 
@@ -19,9 +19,10 @@ const env = {
       teardown(global) {
         delete global.lynxTestingEnv;
         delete global.jsdom;
+        delete global.Node;
       },
     };
   },
-};
+} satisfies Environment;
 
 export default env;
