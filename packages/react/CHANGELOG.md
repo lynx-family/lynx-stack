@@ -1,5 +1,39 @@
 # @lynx-js/react
 
+## 0.114.1
+
+### Patch Changes
+
+- Add `event.stopPropagation` and `event.stopImmediatePropagation` in MTS, to help with event propagation control ([#1835](https://github.com/lynx-family/lynx-stack/pull/1835))
+
+  ```tsx
+  function App() {
+    function handleInnerTap(event: MainThread.TouchEvent) {
+      'main thread';
+      event.stopPropagation();
+      // Or stop immediate propagation with
+      // event.stopImmediatePropagation();
+    }
+
+    // OuterTap will not be triggered
+    return (
+      <view main-thread:bindtap={handleOuterTap}>
+        <view main-thread:bindtap={handleInnerTap}>
+          <text>Hello, world</text>
+        </view>
+      </view>
+    );
+  }
+  ```
+
+  Note, if this feature is used in [Lazy Loading Standalone Project](https://lynxjs.org/react/code-splitting.html#lazy-loading-standalone-project), both the Producer and the Consumer should update to latest version of `@lynx-js/react` to make sure the feature is available.
+
+- Fix the "ReferenceError: Node is not defined" error. ([#1850](https://github.com/lynx-family/lynx-stack/pull/1850))
+
+  This error would happen when upgrading to `@testing-library/jest-dom` [v6.9.0](https://github.com/testing-library/jest-dom/releases/tag/v6.9.0).
+
+- fix: optimize main thread event error message ([#1838](https://github.com/lynx-family/lynx-stack/pull/1838))
+
 ## 0.114.0
 
 ### Minor Changes
