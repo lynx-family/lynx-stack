@@ -49,10 +49,11 @@
   "scripts": {
     "api-extractor": "api-extractor run --verbose",
     "build": "rslib build",
-    "dev": "rslib build --watch"
+    "dev": "rslib build --watch",
+    "test": "vitest"
   },
   "devDependencies": {
-    "@testing-library/jest-dom": "^6.8.0",
+    "@testing-library/jest-dom": "^6.9.0",
     "@types/jsdom": "^21.1.7",
     "rsbuild-plugin-publint": "0.3.3"
   }
