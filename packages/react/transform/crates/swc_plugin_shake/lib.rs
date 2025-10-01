@@ -1,5 +1,5 @@
+use serde::Deserialize;
 use std::collections::HashMap;
-
 use swc_core::{
   ecma::ast::*,
   ecma::visit::{VisitMut, VisitMutWith, VisitWith},
@@ -10,7 +10,8 @@ pub mod napi;
 
 /// {@inheritdoc PluginReactLynxOptions.shake}
 /// @public
-#[derive(Clone, Debug)]
+#[derive(Deserialize, PartialEq, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct ShakeVisitorConfig {
   /// Package names to identify runtime imports that need to be processed
   ///

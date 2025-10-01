@@ -8,6 +8,7 @@ mod worklet_type;
 use extract_ident::{ExtractingIdentsCollector, ExtractingIdentsCollectorConfig};
 use gen_stmt::StmtGen;
 use hash::WorkletHash;
+use serde::Deserialize;
 use std::collections::HashSet;
 use std::vec;
 use swc_core::common::util::take::Take;
@@ -22,7 +23,8 @@ use swc_plugins_shared::{target::TransformTarget, transform_mode::TransformMode}
 
 pub mod napi;
 
-#[derive(Clone, Debug)]
+#[derive(Deserialize, Clone, Debug, PartialEq)]
+#[serde(rename_all = "camelCase")]
 pub struct WorkletVisitorConfig {
   /// @public
   /// During the compilation of worklet, when extracting external variable identifiers,

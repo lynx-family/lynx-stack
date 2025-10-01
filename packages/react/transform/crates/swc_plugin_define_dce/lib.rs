@@ -1,8 +1,9 @@
+use serde::Deserialize;
 use std::{collections::HashMap, fmt::Debug};
 
 pub mod napi;
 
-#[derive(Clone, Debug)]
+#[derive(Deserialize, Clone, Debug, PartialEq)]
 pub struct DefineDCEVisitorConfig {
   pub define: HashMap<String, String>,
 }

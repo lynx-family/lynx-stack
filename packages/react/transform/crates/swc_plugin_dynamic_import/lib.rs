@@ -1,6 +1,6 @@
-use std::{collections::HashSet, fmt::Debug};
-
+use serde::Deserialize;
 use serde_json::Value;
+use std::{collections::HashSet, fmt::Debug};
 use swc_core::{
   common::{
     comments::{Comment, CommentKind, Comments},
@@ -19,7 +19,8 @@ use swc_plugins_shared::utils::jsonify;
 
 pub mod napi;
 
-#[derive(Clone, Debug)]
+#[derive(Deserialize, Clone, Debug, PartialEq)]
+#[serde(rename_all = "camelCase")]
 pub struct DynamicImportVisitorConfig {
   /// @internal
   pub runtime_pkg: String,
