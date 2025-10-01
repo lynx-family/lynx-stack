@@ -1424,7 +1424,7 @@
   ```
   * @param {string} url [required] The url of the entry of your Lynx card
   * @param {Cloneable} globalProps [optional] The globalProps value of this Lynx card
-  * @param {Cloneable} initData [oprional] The initial data of this Lynx card
+  * @param {Cloneable} initData [optional] The initial data of this Lynx card
   * @param {Record<string,string>} overrideLynxTagToHTMLTagMap [optional] use this property/attribute to override the lynx tag -> html tag map
   * @param {NativeModulesCallHandler} onNativeModulesCall [optional] the NativeModules.bridge.call value handler. Arguments will be cached before this property is assigned.
   *
