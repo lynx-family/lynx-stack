@@ -10,6 +10,6 @@
     "prepare": "node scripts/prepare.mjs"
   },
   "dependencies": {
-    "zx": "^8.8.3"
+    "zx": "^8.8.4"
   }
 }
