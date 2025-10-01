@@ -30,7 +30,7 @@ jobs:
         with:
           node-version: "24"
           package-manager-cache: false
-      - uses: actions-rust-lang/setup-rust-toolchain@2fcdc490d667999e01ddbbf0f2823181beef6b39 # v1
+      - uses: actions-rust-lang/setup-rust-toolchain@02be93da58aa71fb456aa9c43b301149248829d8 # v1
         with:
           cache-key: test-ubuntu-copilot-setup-steps
       - name: Install
