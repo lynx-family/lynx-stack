@@ -1,5 +1,11 @@
 # @lynx-js/css-extract-webpack-plugin
 
+## 0.6.4
+
+### Patch Changes
+
+- Avoid generating `.css.hot-update.json` when HMR is disabled. ([#1811](https://github.com/lynx-family/lynx-stack/pull/1811))
+
 ## 0.6.3
 
 ### Patch Changes
