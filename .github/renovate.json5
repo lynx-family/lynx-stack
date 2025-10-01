@@ -199,12 +199,12 @@
       "datasourceTemplate": "git-refs",
     },
     {
-      customType: "regex",
-      managerFilePatterns: [".github/workflows/*"],
-      matchStrings: [
+      "customType": "regex",
+      "managerFilePatterns": [".github/workflows/*"],
+      "matchStrings": [
         "'(?<packageName>mcr\\.microsoft\\.com/playwright):(?<currentValue>[^\\s]+)'"
       ],
-      datasourceTemplate: "docker",
+      "datasourceTemplate": "docker",
     },
   ],
 
