@@ -19,7 +19,7 @@
   "devDependencies": {
     "path-serializer": "^0.5.1",
     "vitest": "^3.2.4",
-    "webpack": "^5.101.3"
+    "webpack": "^5.102.0"
   },
   "engines": {
     "node": ">=18"

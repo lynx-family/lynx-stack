@@ -45,7 +45,7 @@
     "@microsoft/api-extractor": "catalog:",
     "@rspack/core": "catalog:rspack",
     "swc-loader": "^0.2.6",
-    "webpack": "^5.101.3"
+    "webpack": "^5.102.0"
   },
   "peerDependencies": {
     "@lynx-js/react-webpack-plugin": "^0.3.0 || ^0.4.0 || ^0.5.0 || ^0.6.0 || ^0.7.0"

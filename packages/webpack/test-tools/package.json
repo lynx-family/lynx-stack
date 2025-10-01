@@ -27,7 +27,7 @@
     "rimraf": "^6.0.1",
     "source-map": "^0.7.6",
     "tiny-invariant": "^1.3.3",
-    "webpack": "^5.101.3",
+    "webpack": "^5.102.0",
     "webpack-merge": "^6.0.1"
   },
   "engines": {
