@@ -31,7 +31,7 @@
     "@lynx-js/template-webpack-plugin": "workspace:*",
     "@lynx-js/webpack-runtime-globals": "workspace:*",
     "@microsoft/api-documenter": "~7.23.38",
-    "@microsoft/api-extractor-model": "^7.30.7",
+    "@microsoft/api-extractor-model": "^7.30.9",
     "@rsbuild/plugin-sass": "1.4.0",
     "@rsbuild/plugin-type-check": "1.2.4",
     "@rsbuild/plugin-typed-css-modules": "1.1.1",
