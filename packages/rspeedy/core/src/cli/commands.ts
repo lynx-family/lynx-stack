@@ -19,6 +19,7 @@ export interface CommonOptions {
   noEnv?: boolean
   mode?: RsbuildMode
   root?: string
+  logLevel?: 'info' | 'warn' | 'error' | 'silent'
 }
 
 function applyCommonOptions(command: Command) {
