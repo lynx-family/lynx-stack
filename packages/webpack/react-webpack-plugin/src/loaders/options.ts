@@ -76,6 +76,13 @@ export interface ReactLoaderOptions {
    * @internal
    */
   transformPath?: string | undefined;
+
+  /**
+   * @internal
+   *
+   * See: https://www.typescriptlang.org/tsconfig/#verbatimModuleSyntax
+   */
+  verbatimModuleSyntax?: boolean | undefined;
 }
 
 function normalizeSlashes(file: string) {
@@ -95,6 +102,7 @@ function getCommonOptions(
     inlineSourcesContent,
     isDynamicComponent,
     defineDCE = { define: {} },
+    verbatimModuleSyntax = false,
   } = this.getOptions();
 
   const syntax = (/\.[mc]?tsx?$/.exec(this.resourcePath))
@@ -181,6 +189,7 @@ function getCommonOptions(
     defineDCE,
     refresh: false,
     isModule: 'unknown',
+    verbatimModuleSyntax,
   } satisfies Partial<TransformNodiffOptions>;
 
   return commonOptions;
