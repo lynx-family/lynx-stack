@@ -12,7 +12,7 @@ export default function generateDevUrls(
   entry: string,
   schemaFn: CustomizedSchemaFn,
   port: number,
-): Record<string, string> {
+): { lynx: Record<string, string>, web: string } {
   const { dev: { assetPrefix } } = api.getNormalizedConfig()
   const { config } = api.useExposed<ExposedAPI>(
     Symbol.for('rspeedy.api'),
@@ -35,15 +35,36 @@ export default function generateDevUrls(
     name = filename
   }
 
+  // <port> is supported in `dev.assetPrefix`, we should replace it with the real port
+  let base: string
+  try {
+    base = new URL(
+      '',
+      assetPrefix.replaceAll('<port>', String(port)),
+    ).toString()
+  } catch {
+    // the assetPrefix is not a valid URL, fallback to localhost
+    base = `http://localhost:${port}/`
+  }
   const customSchema = schemaFn(
     new URL(
       name.replace('[name]', entry).replace('[platform]', 'lynx'),
-      // <port> is supported in `dev.assetPrefix`, we should replace it with the real port
-      assetPrefix.replaceAll('<port>', String(port)),
+      base,
     ).toString(),
   )
 
-  return typeof customSchema === 'string'
+  const outputPathname = new URL(
+    name.replace('[name]', entry).replace('[platform]', 'web'),
+    base,
+  ).pathname
+  const web = new URL(
+    `/web?casename=${outputPathname}`,
+    base,
+  ).toString()
+
+  const lynx = typeof customSchema === 'string'
     ? { default: customSchema }
     : customSchema
+
+  return { lynx, web }
 }

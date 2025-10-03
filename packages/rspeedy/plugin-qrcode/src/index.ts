@@ -10,6 +10,8 @@
 
 import type { EnvironmentContext, RsbuildPlugin } from '@rsbuild/core'
 
+import { createWebVirtualFilesMiddleware } from '@lynx-js/web-rsbuild-server-middleware'
+
 import { registerConsoleShortcuts } from './shortcuts.js'
 
 /**
@@ -101,8 +103,13 @@ export function pluginQRCode(
     name: 'lynx:rsbuild:qrcode',
     pre: ['lynx:rsbuild:api'],
     setup(api) {
+      api.onBeforeStartDevServer(({ environments, server }) => {
+        if (environments['web']) {
+          server.middlewares.use(createWebVirtualFilesMiddleware('/web'))
+        }
+      })
       api.onAfterStartProdServer(async ({ environments, port }) => {
-        await main(environments['lynx'], port)
+        await main(environments, port)
       })
 
       let printedQRCode = false
@@ -122,7 +129,7 @@ export function pluginQRCode(
 
         printedQRCode = true
 
-        await main(environments['lynx'], api.context.devServer.port)
+        await main(environments, api.context.devServer.port)
       })
 
       api.modifyRsbuildConfig((config) => {
@@ -138,23 +145,29 @@ export function pluginQRCode(
       })
 
       async function main(
-        environmentContext: EnvironmentContext | undefined,
+        environments: Record<string, EnvironmentContext>,
         port: number,
       ) {
-        if (!environmentContext) {
-          // Not lynx environment, skip print QRCode
-          return
-        }
-
-        const entries = Object.keys(environmentContext.entry)
-
-        if (entries.length === 0) {
+        const lynxEntries = Object.keys(environments['lynx']?.entry ?? {})
+        const webEntries = Object.keys(environments['web']?.entry ?? {})
+        const allEntries = [
+          ...new Set([
+            ...lynxEntries,
+            ...webEntries,
+          ]),
+        ]
+        if (allEntries.length === 0) {
+          // Not lynx or web environment, skip print
           return
         }
 
         const unregister = await registerConsoleShortcuts(
           {
-            entries,
+            entries: {
+              all: allEntries,
+              lynx: lynxEntries,
+              web: webEntries,
+            },
             api,
             port,
             schema,
