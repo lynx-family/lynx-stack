@@ -3115,6 +3115,7 @@ dependencies = [
  "napi",
  "napi-derive",
  "regex",
+ "serde",
  "swc_core",
  "swc_plugins_shared",
 ]
@@ -3125,6 +3126,7 @@ version = "0.1.0"
 dependencies = [
  "napi",
  "napi-derive",
+ "serde",
 ]
 
 [[package]]
@@ -3133,6 +3135,7 @@ version = "0.1.0"
 dependencies = [
  "napi",
  "napi-derive",
+ "serde",
  "swc_core",
  "swc_plugin_define_dce",
  "swc_plugins_shared",
@@ -3144,6 +3147,7 @@ version = "0.1.0"
 dependencies = [
  "napi",
  "napi-derive",
+ "serde",
  "serde_json",
  "swc_core",
  "swc_plugins_shared",
@@ -3155,6 +3159,8 @@ version = "0.1.0"
 dependencies = [
  "napi",
  "napi-derive",
+ "serde",
+ "serde_json",
  "swc_core",
  "swc_plugins_shared",
 ]
@@ -3200,18 +3206,21 @@ dependencies = [
 name = "swc_plugin_reactlynx"
 version = "0.1.0"
 dependencies = [
- "convert_case 0.8.0",
- "dashmap",
- "hex",
  "indexmap",
- "once_cell",
- "regex",
  "rustc-hash",
  "serde",
  "serde_json",
- "sha-1",
  "swc_core",
- "version-compare",
+ "swc_plugin_css_scope",
+ "swc_plugin_define_dce",
+ "swc_plugin_directive_dce",
+ "swc_plugin_dynamic_import",
+ "swc_plugin_inject",
+ "swc_plugin_list",
+ "swc_plugin_shake",
+ "swc_plugin_snapshot",
+ "swc_plugin_worklet",
+ "swc_plugins_shared",
 ]
 
 [[package]]
@@ -3230,6 +3239,7 @@ version = "0.1.0"
 dependencies = [
  "napi",
  "napi-derive",
+ "serde",
  "swc_core",
  "swc_plugins_shared",
 ]
@@ -3260,6 +3270,7 @@ dependencies = [
  "napi-derive",
  "once_cell",
  "rustc-hash",
+ "serde",
  "sha-1",
  "swc_core",
  "swc_plugins_shared",
