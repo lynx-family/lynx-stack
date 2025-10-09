@@ -47,9 +47,9 @@
     "@lynx-js/test-tools": "workspace:*",
     "@lynx-js/vitest-setup": "workspace:*",
     "@microsoft/api-extractor": "catalog:",
-    "@types/css-tree": "^2.3.10",
+    "@types/css-tree": "^2.3.11",
     "@types/object.groupby": "^1.0.4",
-    "webpack": "^5.101.3"
+    "webpack": "^5.102.0"
   },
   "engines": {
     "node": ">=18"

@@ -1,6 +1,6 @@
 {
   "name": "upgrade-rspeedy",
-  "version": "0.11.4",
+  "version": "0.11.5",
   "description": "Upgrade Rspeedy-related packages",
   "keywords": [
     "webpack",
@@ -45,11 +45,11 @@
     "@rsbuild/plugin-sass": "1.4.0",
     "commander": "^13.1.0",
     "detect-indent": "^7.0.2",
-    "memfs": "^4.43.0",
+    "memfs": "^4.47.0",
     "picocolors": "^1.1.1",
     "rsbuild-plugin-tailwindcss": "0.2.3",
     "rslog": "^1.2.11",
-    "type-fest": "^4.41.0"
+    "type-fest": "^5.0.1"
   },
   "engines": {
     "node": ">=18"

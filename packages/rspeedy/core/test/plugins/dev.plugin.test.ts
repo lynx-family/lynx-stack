@@ -154,16 +154,13 @@ describe('Plugins - Dev', () => {
     await rsbuild.createDevServer({ compiler })
 
     // See: https://github.com/web-infra-dev/rsbuild/pull/2303
-    expect(compiler.hooks.compile.taps.map(i => i.name)).toMatchInlineSnapshot(`
-      [
-        "rsbuild-dev-server",
-      ]
-    `)
+    expect(compiler.hooks.compile.taps.map(i => i.name)).toMatchInlineSnapshot(
+      `[]`,
+    )
 
     expect(compiler.hooks.invalid.taps.map(i => i.name)).toMatchInlineSnapshot(`
       [
         "rsbuild-dev-server",
-        "rsbuild-dev-middleware",
       ]
     `)
 

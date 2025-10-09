@@ -78,6 +78,7 @@ Options:
   --env-mode <mode>        specify the env mode to load the .env.[mode] file
   --no-env                 disable loading `.env` files"
   -m --mode <mode>         specify the build mode, can be `development`, `production` or `none`
+  -r --root <root>         set the project root directory (absolute path or relative to cwd)
   -h, --help               display help for command
 ```
 
@@ -101,6 +102,7 @@ Options:
   --env-mode <mode>        specify the env mode to load the .env.[mode] file
   --no-env                 disable loading `.env` files"
   -m --mode <mode>         specify the build mode, can be `development`, `production` or `none`
+  -r --root <root>         set the project root directory (absolute path or relative to cwd)
   -h, --help               display help for command
 ```
 
@@ -121,6 +123,7 @@ Options:
   --env-mode <mode>     specify the env mode to load the .env.[mode] file
   --no-env              disable loading `.env` files"
   -m --mode <mode>      specify the build mode, can be `development`, `production` or `none`
+  -r --root <root>      set the project root directory (absolute path or relative to cwd)
   -h, --help            display help for command
 ```
 
@@ -146,6 +149,7 @@ Options:
   --env-mode <mode>     specify the env mode to load the .env.[mode] file
   --no-env              disable loading `.env` files"
   -m --mode <mode>      specify the build mode, can be `development`, `production` or `none`
+  -r --root <root>      set the project root directory (absolute path or relative to cwd)
   -h, --help            display help for command
 ```
 

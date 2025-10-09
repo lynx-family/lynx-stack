@@ -1,5 +1,22 @@
 # @lynx-js/web-core
 
+## 0.17.2
+
+### Patch Changes
+
+- feat: support load bts chunk from remote address ([#1834](https://github.com/lynx-family/lynx-stack/pull/1834))
+
+  - re-support chunk splitting
+  - support lynx.requireModule with a json file
+  - support lynx.requireModule, lynx.requireModuleAsync with a remote url
+  - support to add a breakpoint in chrome after reloading the web page
+
+- Updated dependencies [[`a35a245`](https://github.com/lynx-family/lynx-stack/commit/a35a2452e5355bda3c475f9a750a86085e0cf56a)]:
+  - @lynx-js/web-worker-runtime@0.17.2
+  - @lynx-js/web-constants@0.17.2
+  - @lynx-js/web-mainthread-apis@0.17.2
+  - @lynx-js/web-worker-rpc@0.17.2
+
 ## 0.17.1
 
 ### Patch Changes
@@ -1407,7 +1424,7 @@
   ```
   * @param {string} url [required] The url of the entry of your Lynx card
   * @param {Cloneable} globalProps [optional] The globalProps value of this Lynx card
-  * @param {Cloneable} initData [oprional] The initial data of this Lynx card
+  * @param {Cloneable} initData [optional] The initial data of this Lynx card
   * @param {Record<string,string>} overrideLynxTagToHTMLTagMap [optional] use this property/attribute to override the lynx tag -> html tag map
   * @param {NativeModulesCallHandler} onNativeModulesCall [optional] the NativeModules.bridge.call value handler. Arguments will be cached before this property is assigned.
   *
