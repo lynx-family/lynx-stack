@@ -47,6 +47,9 @@
     "build": "rslib build",
     "test": "pnpm -w run test --project rspeedy/qrcode"
   },
+  "dependencies": {
+    "@lynx-js/web-rsbuild-server-middleware": "workspace:*"
+  },
   "devDependencies": {
     "@clack/prompts": "1.0.0-alpha.5",
     "@lynx-js/rspeedy": "workspace:*",

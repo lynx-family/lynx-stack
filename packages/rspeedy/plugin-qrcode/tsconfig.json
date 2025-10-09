@@ -7,5 +7,6 @@
   "include": ["src", "test", "vitest.config.ts"],
   "references": [
     { "path": "../core/tsconfig.build.json" },
+    { "path": "../../web-platform/web-rsbuild-server-middleware/tsconfig.json" },
   ],
 }

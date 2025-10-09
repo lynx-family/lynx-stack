@@ -5,8 +5,18 @@ import { log } from '@clack/prompts'
 import color from 'picocolors'
 import { renderUnicodeCompact } from 'uqr'
 
-export default function showQRCode(url: string): void {
-  log.info(color.green('Scan with Lynx'))
-  log.success(renderUnicodeCompact(url))
-  log.success(url)
+export default function showQRCode(
+  lynxUrl?: string,
+  webUrls?: Record<string, string>,
+): void {
+  if (lynxUrl) {
+    log.info(color.green('Scan with Lynx'))
+    log.success(renderUnicodeCompact(lynxUrl))
+    log.success('Lynx Explorer: ' + lynxUrl)
+  }
+  if (webUrls) {
+    for (const [name, webUrl] of Object.entries(webUrls)) {
+      log.success(`Web Preview for ${name}: ` + webUrl)
+    }
+  }
 }
