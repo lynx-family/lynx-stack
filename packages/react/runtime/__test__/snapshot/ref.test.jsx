@@ -200,7 +200,7 @@ describe('element ref', () => {
       render(<Comp show={true} />, __root);
       expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1].data).toMatchInlineSnapshot(
-        `"{"patchList":[{"id":3,"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_4",2,4,2,[1,1],1,-1,2,null]}]}"`,
+        `"{"patchList":[{"id":3,"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_4",2,0,4,2,[1,1],1,-1,2,null]}]}"`,
       );
     }
 
@@ -936,7 +936,7 @@ describe('element ref', () => {
       lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
       expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1].data).toMatchInlineSnapshot(
-        `"{"patchList":[{"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_18",3,4,3,[1],1,-2,3,null],"id":2}]}"`,
+        `"{"patchList":[{"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_18",3,0,4,3,[1],1,-2,3,null],"id":2}]}"`,
       );
 
       // rLynxChange
@@ -1891,7 +1891,7 @@ describe('ui operations', () => {
       render(<Comp />, __root);
 
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1].data).toMatchInlineSnapshot(
-        `"{"patchList":[{"id":3,"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_30",3,4,3,[1],1,-2,3,null]}]}"`,
+        `"{"patchList":[{"id":3,"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_30",3,0,4,3,[1],1,-2,3,null]}]}"`,
       );
       expect(lynx.createSelectorQuery().constructor.execLog.mock.calls).toMatchInlineSnapshot(`
         [

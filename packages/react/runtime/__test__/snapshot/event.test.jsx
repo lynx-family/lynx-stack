@@ -315,6 +315,7 @@ describe('eventUpdate', () => {
         0,
         "__Card__:__snapshot_a94a8_test_4",
         3,
+        0,
         4,
         3,
         [
@@ -943,6 +944,7 @@ describe('event in spread', () => {
         0,
         "__Card__:__snapshot_a94a8_test_10",
         3,
+        0,
         4,
         3,
         [

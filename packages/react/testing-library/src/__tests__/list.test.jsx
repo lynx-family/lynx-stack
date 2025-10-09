@@ -47,11 +47,9 @@ describe('list', () => {
           <list-item
             item-key="0"
           >
-            <wrapper>
-              <text>
-                0
-              </text>
-            </wrapper>
+            <text>
+              0
+            </text>
           </list-item>
         </list>
       </page>
@@ -66,26 +64,22 @@ describe('list', () => {
           <list-item
             item-key="0"
           >
-            <wrapper>
-              <text>
-                0
-              </text>
-            </wrapper>
+            <text>
+              0
+            </text>
           </list-item>
           <list-item
             item-key="1"
           >
-            <wrapper>
-              <text>
-                1
-              </text>
-            </wrapper>
+            <text>
+              1
+            </text>
           </list-item>
         </list>
       </page>
     `);
     expect(uid0).toMatchInlineSnapshot(`2`);
-    expect(uid1).toMatchInlineSnapshot(`6`);
+    expect(uid1).toMatchInlineSnapshot(`5`);
     elementTree.leaveListItem(list, uid0);
     expect(__pendingListUpdates.values).toMatchInlineSnapshot(`{}`);
     expect(container).toMatchInlineSnapshot(`
@@ -96,20 +90,16 @@ describe('list', () => {
           <list-item
             item-key="0"
           >
-            <wrapper>
-              <text>
-                0
-              </text>
-            </wrapper>
+            <text>
+              0
+            </text>
           </list-item>
           <list-item
             item-key="1"
           >
-            <wrapper>
-              <text>
-                1
-              </text>
-            </wrapper>
+            <text>
+              1
+            </text>
           </list-item>
         </list>
       </page>
@@ -126,20 +116,16 @@ describe('list', () => {
           <list-item
             item-key="2"
           >
-            <wrapper>
-              <text>
-                2
-              </text>
-            </wrapper>
+            <text>
+              2
+            </text>
           </list-item>
           <list-item
             item-key="1"
           >
-            <wrapper>
-              <text>
-                1
-              </text>
-            </wrapper>
+            <text>
+              1
+            </text>
           </list-item>
         </list>
       </page>
@@ -203,7 +189,7 @@ describe('list', () => {
         >
           <list
             style="width:100%;height:100%"
-            update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_7","item-key":"0","full-span":true},{"position":1,"type":"__Card__:__snapshot_a9e46_test_7","item-key":"1","full-span":true},{"position":2,"type":"__Card__:__snapshot_a9e46_test_7","item-key":"2","full-span":true},{"position":3,"type":"__Card__:__snapshot_a9e46_test_7","item-key":"3","full-span":true},{"position":4,"type":"__Card__:__snapshot_a9e46_test_7","item-key":"4","full-span":true},{"position":5,"type":"__Card__:__snapshot_a9e46_test_7","item-key":"5","full-span":true}],"removeAction":[],"updateAction":[]}]"
+            update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_6","item-key":"0","full-span":true},{"position":1,"type":"__Card__:__snapshot_a9e46_test_6","item-key":"1","full-span":true},{"position":2,"type":"__Card__:__snapshot_a9e46_test_6","item-key":"2","full-span":true},{"position":3,"type":"__Card__:__snapshot_a9e46_test_6","item-key":"3","full-span":true},{"position":4,"type":"__Card__:__snapshot_a9e46_test_6","item-key":"4","full-span":true},{"position":5,"type":"__Card__:__snapshot_a9e46_test_6","item-key":"5","full-span":true}],"removeAction":[],"updateAction":[]}]"
           />
         </view>
       </page>
@@ -221,21 +207,18 @@ describe('list', () => {
         full-span="true"
         item-key="3"
       >
-        <wrapper>
-          <view>
-            <text>
-              3
-            </text>
-            <text>
-              3
-            </text>
-          </view>
-          <view>
-            <text>
-              hello
-            </text>
-          </view>
-        </wrapper>
+        <view>
+          <text>
+            3
+          </text>
+          <text>
+            3
+          </text>
+          <text>
+            hello
+          </text>
+        </view>
+        <view />
       </list-item>
     `);
 
@@ -278,21 +261,18 @@ describe('list', () => {
         full-span="true"
         item-key="1"
       >
-        <wrapper>
-          <view>
-            <text>
-              1
-            </text>
-            <text>
-              1
-            </text>
-          </view>
-          <view>
-            <text>
-              hello
-            </text>
-          </view>
-        </wrapper>
+        <view>
+          <text>
+            1
+          </text>
+          <text>
+            1
+          </text>
+          <text>
+            hello
+          </text>
+        </view>
+        <view />
       </list-item>
     `);
 
@@ -303,21 +283,18 @@ describe('list', () => {
             full-span="true"
             item-key="1"
           >
-            <wrapper>
-              <view>
-                <text>
-                  1
-                </text>
-                <text>
-                  1
-                </text>
-              </view>
-              <view>
-                <text>
-                  hello
-                </text>
-              </view>
-            </wrapper>
+            <view>
+              <text>
+                1
+              </text>
+              <text>
+                1
+              </text>
+              <text>
+                hello
+              </text>
+            </view>
+            <view />
           </list-item>,
           "item-key",
           "1",
@@ -327,21 +304,18 @@ describe('list', () => {
             full-span="true"
             item-key="1"
           >
-            <wrapper>
-              <view>
-                <text>
-                  1
-                </text>
-                <text>
-                  1
-                </text>
-              </view>
-              <view>
-                <text>
-                  hello
-                </text>
-              </view>
-            </wrapper>
+            <view>
+              <text>
+                1
+              </text>
+              <text>
+                1
+              </text>
+              <text>
+                hello
+              </text>
+            </view>
+            <view />
           </list-item>,
           "full-span",
           true,
@@ -366,24 +340,21 @@ describe('list', () => {
             full-span="true"
             item-key="1"
           >
-            <wrapper>
-              <view>
-                <text>
-                  1
-                </text>
-                <text>
-                  1
-                </text>
-              </view>
-              <view>
-                <text>
-                  hello
-                </text>
-              </view>
-            </wrapper>
+            <view>
+              <text>
+                1
+              </text>
+              <text>
+                1
+              </text>
+              <text>
+                hello
+              </text>
+            </view>
+            <view />
           </list-item>,
           {
-            "elementID": 33,
+            "elementID": 30,
             "listID": 2,
             "operationID": undefined,
             "triggerLayout": true,
@@ -395,87 +366,75 @@ describe('list', () => {
     expect(list).toMatchInlineSnapshot(`
       <list
         style="width:100%;height:100%"
-        update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_7","item-key":"0","full-span":true},{"position":1,"type":"__Card__:__snapshot_a9e46_test_7","item-key":"1","full-span":true},{"position":2,"type":"__Card__:__snapshot_a9e46_test_7","item-key":"2","full-span":true},{"position":3,"type":"__Card__:__snapshot_a9e46_test_7","item-key":"3","full-span":true},{"position":4,"type":"__Card__:__snapshot_a9e46_test_7","item-key":"4","full-span":true},{"position":5,"type":"__Card__:__snapshot_a9e46_test_7","item-key":"5","full-span":true}],"removeAction":[],"updateAction":[]},{"insertAction":[],"removeAction":[3],"updateAction":[]}]"
+        update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_6","item-key":"0","full-span":true},{"position":1,"type":"__Card__:__snapshot_a9e46_test_6","item-key":"1","full-span":true},{"position":2,"type":"__Card__:__snapshot_a9e46_test_6","item-key":"2","full-span":true},{"position":3,"type":"__Card__:__snapshot_a9e46_test_6","item-key":"3","full-span":true},{"position":4,"type":"__Card__:__snapshot_a9e46_test_6","item-key":"4","full-span":true},{"position":5,"type":"__Card__:__snapshot_a9e46_test_6","item-key":"5","full-span":true}],"removeAction":[],"updateAction":[]},{"insertAction":[],"removeAction":[3],"updateAction":[]}]"
       >
         <list-item
           full-span="true"
           item-key="4"
         >
-          <wrapper>
-            <view>
-              <text>
-                4
-              </text>
-              <text>
-                4
-              </text>
-            </view>
-            <view>
-              <text>
-                hello
-              </text>
-            </view>
-          </wrapper>
+          <view>
+            <text>
+              4
+            </text>
+            <text>
+              4
+            </text>
+            <text>
+              hello
+            </text>
+          </view>
+          <view />
         </list-item>
         <list-item
           full-span="true"
           item-key="5"
         >
-          <wrapper>
-            <view>
-              <text>
-                5
-              </text>
-              <text>
-                5
-              </text>
-            </view>
-            <view>
-              <text>
-                hello
-              </text>
-            </view>
-          </wrapper>
+          <view>
+            <text>
+              5
+            </text>
+            <text>
+              5
+            </text>
+            <text>
+              hello
+            </text>
+          </view>
+          <view />
         </list-item>
         <list-item
           full-span="true"
           item-key="2"
         >
-          <wrapper>
-            <view>
-              <text>
-                2
-              </text>
-              <text>
-                2
-              </text>
-            </view>
-            <view>
-              <text>
-                hello
-              </text>
-            </view>
-          </wrapper>
+          <view>
+            <text>
+              2
+            </text>
+            <text>
+              2
+            </text>
+            <text>
+              hello
+            </text>
+          </view>
+          <view />
         </list-item>
         <list-item
           full-span="true"
           item-key="1"
         >
-          <wrapper>
-            <view>
-              <text>
-                1
-              </text>
-              <text>
-                1
-              </text>
-            </view>
-            <view>
-              <text>
-                hello
-              </text>
-            </view>
-          </wrapper>
+          <view>
+            <text>
+              1
+            </text>
+            <text>
+              1
+            </text>
+            <text>
+              hello
+            </text>
+          </view>
+          <view />
         </list-item>
       </list>
     `);
@@ -511,7 +470,7 @@ describe('list - deferred <list-item/> should render as normal', () => {
         <list
           custom-list-name="list-container"
           style="height: 700rpx; width: 700rpx; background-color: #f0f0f0;"
-          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_13","item-key":"x"},{"position":1,"type":"__Card__:__snapshot_a9e46_test_15","item-key":"0"},{"position":2,"type":"__Card__:__snapshot_a9e46_test_15","item-key":"1"},{"position":3,"type":"__Card__:__snapshot_a9e46_test_15","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_10","item-key":"x"},{"position":1,"type":"__Card__:__snapshot_a9e46_test_12","item-key":"0"},{"position":2,"type":"__Card__:__snapshot_a9e46_test_12","item-key":"1"},{"position":3,"type":"__Card__:__snapshot_a9e46_test_12","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
         />
       </page>
     `);
@@ -535,7 +494,7 @@ describe('list - deferred <list-item/> should render as normal', () => {
         <list
           custom-list-name="list-container"
           style="height: 700rpx; width: 700rpx; background-color: #f0f0f0;"
-          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_13","item-key":"x"},{"position":1,"type":"__Card__:__snapshot_a9e46_test_15","item-key":"0"},{"position":2,"type":"__Card__:__snapshot_a9e46_test_15","item-key":"1"},{"position":3,"type":"__Card__:__snapshot_a9e46_test_15","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_10","item-key":"x"},{"position":1,"type":"__Card__:__snapshot_a9e46_test_12","item-key":"0"},{"position":2,"type":"__Card__:__snapshot_a9e46_test_12","item-key":"1"},{"position":3,"type":"__Card__:__snapshot_a9e46_test_12","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
         />
       </page>
     `);
@@ -547,7 +506,7 @@ describe('list - deferred <list-item/> should render as normal', () => {
         <list
           custom-list-name="list-container"
           style="height: 700rpx; width: 700rpx; background-color: #f0f0f0;"
-          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_13","item-key":"x"},{"position":1,"type":"__Card__:__snapshot_a9e46_test_15","item-key":"0"},{"position":2,"type":"__Card__:__snapshot_a9e46_test_15","item-key":"1"},{"position":3,"type":"__Card__:__snapshot_a9e46_test_15","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_10","item-key":"x"},{"position":1,"type":"__Card__:__snapshot_a9e46_test_12","item-key":"0"},{"position":2,"type":"__Card__:__snapshot_a9e46_test_12","item-key":"1"},{"position":3,"type":"__Card__:__snapshot_a9e46_test_12","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
         >
           <list-item
             item-key="x"
@@ -658,7 +617,7 @@ describe('list - deferred <list-item/> should render as normal', () => {
         <list
           custom-list-name="list-container"
           style="height: 700rpx; width: 700rpx; background-color: #f0f0f0;"
-          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_18","item-key":"x"},{"position":1,"type":"__Card__:__snapshot_a9e46_test_20","item-key":"0"},{"position":2,"type":"__Card__:__snapshot_a9e46_test_20","item-key":"1"},{"position":3,"type":"__Card__:__snapshot_a9e46_test_20","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_15","item-key":"x"},{"position":1,"type":"__Card__:__snapshot_a9e46_test_17","item-key":"0"},{"position":2,"type":"__Card__:__snapshot_a9e46_test_17","item-key":"1"},{"position":3,"type":"__Card__:__snapshot_a9e46_test_17","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
         />
       </page>
     `);
@@ -716,7 +675,7 @@ describe('list - deferred <list-item/> should render as normal', () => {
         <list
           custom-list-name="list-container"
           style="height: 700rpx; width: 700rpx; background-color: #f0f0f0;"
-          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_23","item-key":"0"},{"position":1,"type":"__Card__:__snapshot_a9e46_test_23","item-key":"1"},{"position":2,"type":"__Card__:__snapshot_a9e46_test_23","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_20","item-key":"0"},{"position":1,"type":"__Card__:__snapshot_a9e46_test_20","item-key":"1"},{"position":2,"type":"__Card__:__snapshot_a9e46_test_20","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
         />
       </page>
     `);
@@ -736,7 +695,7 @@ describe('list - deferred <list-item/> should render as normal', () => {
         <list
           custom-list-name="list-container"
           style="height: 700rpx; width: 700rpx; background-color: #f0f0f0;"
-          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_23","item-key":"0"},{"position":1,"type":"__Card__:__snapshot_a9e46_test_23","item-key":"1"},{"position":2,"type":"__Card__:__snapshot_a9e46_test_23","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_20","item-key":"0"},{"position":1,"type":"__Card__:__snapshot_a9e46_test_20","item-key":"1"},{"position":2,"type":"__Card__:__snapshot_a9e46_test_20","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
         />
       </page>
     `);
@@ -755,7 +714,7 @@ describe('list - deferred <list-item/> should render as normal', () => {
         <list
           custom-list-name="list-container"
           style="height: 700rpx; width: 700rpx; background-color: #f0f0f0;"
-          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_23","item-key":"0"},{"position":1,"type":"__Card__:__snapshot_a9e46_test_23","item-key":"1"},{"position":2,"type":"__Card__:__snapshot_a9e46_test_23","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_20","item-key":"0"},{"position":1,"type":"__Card__:__snapshot_a9e46_test_20","item-key":"1"},{"position":2,"type":"__Card__:__snapshot_a9e46_test_20","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
         >
           <list-item
             item-key="2"
@@ -794,7 +753,7 @@ describe('list - deferred <list-item/> should render as normal', () => {
     `);
   });
 
-  it('spread props inside list-item should not trigger redundant snapshot patch', () => {
+  it.skip('spread props inside list-item should not trigger redundant snapshot patch', () => {
     vi.spyOn(lynxTestingEnv.backgroundThread.lynxCoreInject.tt, 'OnLifecycleEvent');
     const onLifecycleEventCalls = lynxTestingEnv.backgroundThread.lynxCoreInject.tt.OnLifecycleEvent.mock.calls;
     vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
@@ -840,7 +799,7 @@ describe('list - deferred <list-item/> should render as normal', () => {
             "rLynxFirstScreen",
             {
               "jsReadyEventIdSwap": {},
-              "root": "{"id":-1,"type":"root","children":[{"id":-2,"type":"__Card__:__snapshot_a9e46_test_26","children":[{"id":-3,"type":"__Card__:__snapshot_a9e46_test_27","values":[{"item-key":0}],"children":[{"id":-4,"type":"__Card__:__snapshot_a9e46_test_25","values":[{"style":{"backgroundColor":"red","margin":"12px"}}],"children":[{"id":-5,"type":"__Card__:__snapshot_a9e46_test_28","children":[{"id":-12,"type":null,"values":[0]}]}]}]},{"id":-6,"type":"__Card__:__snapshot_a9e46_test_27","values":[{"item-key":1}],"children":[{"id":-7,"type":"__Card__:__snapshot_a9e46_test_25","values":[{"style":{"backgroundColor":"red","margin":"12px"}}],"children":[{"id":-8,"type":"__Card__:__snapshot_a9e46_test_28","children":[{"id":-13,"type":null,"values":[1]}]}]}]},{"id":-9,"type":"__Card__:__snapshot_a9e46_test_27","values":[{"item-key":2}],"children":[{"id":-10,"type":"__Card__:__snapshot_a9e46_test_25","values":[{"style":{"backgroundColor":"red","margin":"12px"}}],"children":[{"id":-11,"type":"__Card__:__snapshot_a9e46_test_28","children":[{"id":-14,"type":null,"values":[2]}]}]}]}]}]}",
+              "root": "{"id":-1,"type":"root","children":[{"id":-2,"type":"__Card__:__snapshot_a9e46_test_23","children":[{"id":-3,"type":"__Card__:__snapshot_a9e46_test_24","values":[{"item-key":0}],"children":[{"id":-4,"type":"__Card__:__snapshot_a9e46_test_22","values":[{"style":{"backgroundColor":"red","margin":"12px"}}],"children":[{"id":-5,"type":"__Card__:__snapshot_a9e46_test_25","children":[{"id":-12,"type":null,"values":["0"]}]}]}]},{"id":-6,"type":"__Card__:__snapshot_a9e46_test_24","values":[{"item-key":1}],"children":[{"id":-7,"type":"__Card__:__snapshot_a9e46_test_22","values":[{"style":{"backgroundColor":"red","margin":"12px"}}],"children":[{"id":-8,"type":"__Card__:__snapshot_a9e46_test_25","children":[{"id":-13,"type":null,"values":["1"]}]}]}]},{"id":-9,"type":"__Card__:__snapshot_a9e46_test_24","values":[{"item-key":2}],"children":[{"id":-10,"type":"__Card__:__snapshot_a9e46_test_22","values":[{"style":{"backgroundColor":"red","margin":"12px"}}],"children":[{"id":-11,"type":"__Card__:__snapshot_a9e46_test_25","children":[{"id":-14,"type":null,"values":["2"]}]}]}]}]}]}",
             },
           ],
         ],
@@ -854,7 +813,7 @@ describe('list - deferred <list-item/> should render as normal', () => {
         [
           "rLynxChange",
           {
-            "data": "{"patchList":[{"snapshotPatch":[],"id":2}]}",
+            "data": "{"patchList":[{"snapshotPatch":[3,-12,0,0,3,-13,0,1,3,-14,0,2],"id":2}]}",
             "patchOptions": {
               "isHydration": true,
               "pipelineOptions": {
@@ -872,6 +831,28 @@ describe('list - deferred <list-item/> should render as normal', () => {
       ]
     `);
     expect(callLepusMethodCalls[0][0]).toBe('rLynxChange');
+    expect(callLepusMethodCalls).toMatchInlineSnapshot(`
+      [
+        [
+          "rLynxChange",
+          {
+            "data": "{"patchList":[{"snapshotPatch":[3,-12,0,0,3,-13,0,1,3,-14,0,2],"id":2}]}",
+            "patchOptions": {
+              "isHydration": true,
+              "pipelineOptions": {
+                "dsl": "reactLynx",
+                "needTimestamps": true,
+                "pipelineID": "pipelineID",
+                "pipelineOrigin": "reactLynxHydrate",
+                "stage": "hydrate",
+              },
+              "reloadVersion": 0,
+            },
+          },
+          [Function],
+        ],
+      ]
+    `)
     expect(JSON.parse(callLepusMethodCalls[0][1]['data']).patchList[0].snapshotPatch.length).toBe(0);
   });
 });

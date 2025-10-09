@@ -81,6 +81,7 @@ export class BackgroundSnapshotInstance {
     node: BackgroundSnapshotInstance,
     beforeNode?: BackgroundSnapshotInstance,
   ): void {
+    console.log('bts insertBefore', node.type, beforeNode?.type)
     if (node.__removed_from_tree) {
       node.__removed_from_tree = false;
       // This is only called by `lazy`/`Suspense` through `appendChild` so beforeNode is always undefined.
@@ -466,7 +467,8 @@ export function hydrate(
         }
         case DynamicPartType.Children:
         case DynamicPartType.ListChildren:
-        case DynamicPartType.SlotV2: {
+        case DynamicPartType.SlotV2:
+        case DynamicPartType.ListSlotV2: {
           const diffResult = diffArrayLepus(
             beforeChildNodes,
             afterChildNodes,

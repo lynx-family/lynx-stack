@@ -173,7 +173,7 @@ describe('list', () => {
                 text="111"
               />
             </text>
-            <wrapper />
+            <list />
             <wrapper />
           </view>
           <text>
@@ -238,15 +238,15 @@ describe(`list "update-list-info"`, () => {
             "insertAction": [
               {
                 "position": 0,
-                "type": "__Card__:__snapshot_a94a8_test_14",
+                "type": "__Card__:__snapshot_a94a8_test_13",
               },
               {
                 "position": 1,
-                "type": "__Card__:__snapshot_a94a8_test_14",
+                "type": "__Card__:__snapshot_a94a8_test_13",
               },
               {
                 "position": 2,
-                "type": "__Card__:__snapshot_a94a8_test_14",
+                "type": "__Card__:__snapshot_a94a8_test_13",
               },
             ],
             "removeAction": [],
@@ -274,19 +274,19 @@ describe(`list "update-list-info"`, () => {
               "insertAction": [
                 {
                   "position": 1,
-                  "type": "__Card__:__snapshot_a94a8_test_14",
+                  "type": "__Card__:__snapshot_a94a8_test_13",
                 },
                 {
                   "position": 2,
-                  "type": "__Card__:__snapshot_a94a8_test_15",
+                  "type": "__Card__:__snapshot_a94a8_test_14",
                 },
                 {
                   "position": 3,
-                  "type": "__Card__:__snapshot_a94a8_test_15",
+                  "type": "__Card__:__snapshot_a94a8_test_14",
                 },
                 {
                   "position": 5,
-                  "type": "__Card__:__snapshot_a94a8_test_14",
+                  "type": "__Card__:__snapshot_a94a8_test_13",
                 },
               ],
               "removeAction": [
@@ -309,7 +309,7 @@ describe(`list "update-list-info"`, () => {
               "insertAction": [
                 {
                   "position": 5,
-                  "type": "__Card__:__snapshot_a94a8_test_14",
+                  "type": "__Card__:__snapshot_a94a8_test_13",
                 },
               ],
               "removeAction": [
@@ -362,14 +362,14 @@ describe(`list "update-list-info"`, () => {
                 "from": 0,
                 "item-key": 1,
                 "to": 0,
-                "type": "__Card__:__snapshot_a94a8_test_17",
+                "type": "__Card__:__snapshot_a94a8_test_16",
               },
               {
                 "flush": false,
                 "from": 2,
                 "item-key": 3,
                 "to": 2,
-                "type": "__Card__:__snapshot_a94a8_test_17",
+                "type": "__Card__:__snapshot_a94a8_test_16",
               },
             ],
           },
@@ -532,32 +532,32 @@ describe(`list componentAtIndex`, () => {
                 {
                   "item-key": "key-0",
                   "position": 0,
-                  "type": "__Card__:__snapshot_a94a8_test_21",
+                  "type": "__Card__:__snapshot_a94a8_test_20",
                 },
                 {
                   "item-key": "key-1",
                   "position": 1,
-                  "type": "__Card__:__snapshot_a94a8_test_21",
+                  "type": "__Card__:__snapshot_a94a8_test_20",
                 },
                 {
                   "item-key": "key-2",
                   "position": 2,
-                  "type": "__Card__:__snapshot_a94a8_test_21",
+                  "type": "__Card__:__snapshot_a94a8_test_20",
                 },
                 {
                   "item-key": "key-3",
                   "position": 3,
-                  "type": "__Card__:__snapshot_a94a8_test_21",
+                  "type": "__Card__:__snapshot_a94a8_test_20",
                 },
                 {
                   "item-key": "key-4",
                   "position": 4,
-                  "type": "__Card__:__snapshot_a94a8_test_21",
+                  "type": "__Card__:__snapshot_a94a8_test_20",
                 },
                 {
                   "item-key": "key-5",
                   "position": 5,
-                  "type": "__Card__:__snapshot_a94a8_test_21",
+                  "type": "__Card__:__snapshot_a94a8_test_20",
                 },
               ],
               "removeAction": [],
@@ -687,6 +687,11 @@ describe(`list componentAtIndex`, () => {
             text="Hello"
           />
         </text>
+        <text>
+          <raw-text
+            text="World"
+          />
+        </text>
       </list-item>
     `);
 
@@ -714,6 +719,11 @@ describe(`list componentAtIndex`, () => {
 
     expect(__FirstElement(listRef)).toMatchInlineSnapshot(`
       <list-item>
+        <text>
+          <raw-text
+            text="Hello"
+          />
+        </text>
         <text>
           <raw-text
             text="World"
@@ -788,11 +798,11 @@ describe(`list componentAtIndex`, () => {
               "insertAction": [
                 {
                   "position": 0,
-                  "type": "__Card__:__snapshot_a94a8_test_25",
+                  "type": "__Card__:__snapshot_a94a8_test_24",
                 },
                 {
                   "position": 1,
-                  "type": "__Card__:__snapshot_a94a8_test_25",
+                  "type": "__Card__:__snapshot_a94a8_test_24",
                 },
               ],
               "removeAction": [],
@@ -839,11 +849,11 @@ describe(`list componentAtIndex`, () => {
               "insertAction": [
                 {
                   "position": 0,
-                  "type": "__Card__:__snapshot_a94a8_test_25",
+                  "type": "__Card__:__snapshot_a94a8_test_24",
                 },
                 {
                   "position": 1,
-                  "type": "__Card__:__snapshot_a94a8_test_25",
+                  "type": "__Card__:__snapshot_a94a8_test_24",
                 },
               ],
               "removeAction": [],
@@ -860,12 +870,12 @@ describe(`list componentAtIndex`, () => {
           </text>
           <text>
             <raw-text
-              text="!"
+              text="World"
             />
           </text>
           <text>
             <raw-text
-              text="World"
+              text="!"
             />
           </text>
           <text>
@@ -1031,7 +1041,10 @@ describe(`list componentAtIndex`, () => {
         {HOLE}!{HOLE}
       </list-item>,
     );
+    const x = <view id='!'>{HOLE}</view>
+    console.log('x', x)
     const slot = __SNAPSHOT__(<view id='!'>{HOLE}</view>);
+    const slotInner = __SNAPSHOT__(<text/>)
 
     const c0 = new SnapshotInstance(s3);
     const c1 = new SnapshotInstance(s3);
@@ -1039,12 +1052,16 @@ describe(`list componentAtIndex`, () => {
     b.insertBefore(c1);
 
     const c0_d0 = new SnapshotInstance(slot);
+    c0_d0.insertBefore(new SnapshotInstance(slotInner));
     const c0_d1 = new SnapshotInstance(slot);
+    c0_d1.insertBefore(new SnapshotInstance(slotInner));
     c0.insertBefore(c0_d0);
     c0.insertBefore(c0_d1);
 
     const c1_d0 = new SnapshotInstance(slot);
+    c1_d0.insertBefore(new SnapshotInstance(slotInner));
     const c1_d1 = new SnapshotInstance(slot);
+    c1_d1.insertBefore(new SnapshotInstance(slotInner));
     c1.insertBefore(c1_d0);
     c1.insertBefore(c1_d1);
 
@@ -1068,11 +1085,11 @@ describe(`list componentAtIndex`, () => {
               "insertAction": [
                 {
                   "position": 0,
-                  "type": "__Card__:__snapshot_a94a8_test_29",
+                  "type": "__Card__:__snapshot_a94a8_test_28",
                 },
                 {
                   "position": 1,
-                  "type": "__Card__:__snapshot_a94a8_test_29",
+                  "type": "__Card__:__snapshot_a94a8_test_28",
                 },
               ],
               "removeAction": [],
@@ -1082,15 +1099,22 @@ describe(`list componentAtIndex`, () => {
         }
       >
         <list-item>
-          <view
-            id="!"
-          />
+          <wrapper>
+            <view
+              id="!"
+            >
+              <text />
+            </view>
+            <view
+              id="!"
+            >
+              <text />
+            </view>
+          </wrapper>
           <raw-text
             text="!"
           />
-          <view
-            id="!"
-          />
+          <wrapper />
         </list-item>
       </list>
     `);
@@ -1359,15 +1383,15 @@ describe('list reload', () => {
                 "insertAction": [
                   {
                     "position": 0,
-                    "type": "__Card__:__snapshot_a94a8_test_35",
+                    "type": "__Card__:__snapshot_a94a8_test_36",
                   },
                   {
                     "position": 1,
-                    "type": "__Card__:__snapshot_a94a8_test_35",
+                    "type": "__Card__:__snapshot_a94a8_test_36",
                   },
                   {
                     "position": 2,
-                    "type": "__Card__:__snapshot_a94a8_test_35",
+                    "type": "__Card__:__snapshot_a94a8_test_36",
                   },
                 ],
                 "removeAction": [],
@@ -1404,15 +1428,15 @@ describe('list reload', () => {
                 "insertAction": [
                   {
                     "position": 0,
-                    "type": "__Card__:__snapshot_a94a8_test_35",
+                    "type": "__Card__:__snapshot_a94a8_test_36",
                   },
                   {
                     "position": 1,
-                    "type": "__Card__:__snapshot_a94a8_test_35",
+                    "type": "__Card__:__snapshot_a94a8_test_36",
                   },
                   {
                     "position": 2,
-                    "type": "__Card__:__snapshot_a94a8_test_35",
+                    "type": "__Card__:__snapshot_a94a8_test_36",
                   },
                 ],
                 "removeAction": [],
@@ -1429,7 +1453,7 @@ describe('list reload', () => {
                 "insertAction": [
                   {
                     "position": 2,
-                    "type": "__Card__:__snapshot_a94a8_test_35",
+                    "type": "__Card__:__snapshot_a94a8_test_36",
                   },
                 ],
                 "removeAction": [],
@@ -1500,19 +1524,19 @@ describe('list reload', () => {
                 "insertAction": [
                   {
                     "position": 0,
-                    "type": "__Card__:__snapshot_a94a8_test_36",
-                  },
-                  {
-                    "position": 1,
-                    "type": "__Card__:__snapshot_a94a8_test_36",
-                  },
-                  {
-                    "position": 2,
                     "type": "__Card__:__snapshot_a94a8_test_37",
                   },
                   {
+                    "position": 1,
+                    "type": "__Card__:__snapshot_a94a8_test_37",
+                  },
+                  {
+                    "position": 2,
+                    "type": "__Card__:__snapshot_a94a8_test_38",
+                  },
+                  {
                     "position": 3,
-                    "type": "__Card__:__snapshot_a94a8_test_36",
+                    "type": "__Card__:__snapshot_a94a8_test_37",
                   },
                 ],
                 "removeAction": [],
@@ -1522,7 +1546,7 @@ describe('list reload', () => {
                 "insertAction": [
                   {
                     "position": 2,
-                    "type": "__Card__:__snapshot_a94a8_test_36",
+                    "type": "__Card__:__snapshot_a94a8_test_37",
                   },
                 ],
                 "removeAction": [
@@ -1588,15 +1612,15 @@ describe('list reload', () => {
                 "insertAction": [
                   {
                     "position": 0,
-                    "type": "__Card__:__snapshot_a94a8_test_38",
+                    "type": "__Card__:__snapshot_a94a8_test_39",
                   },
                   {
                     "position": 1,
-                    "type": "__Card__:__snapshot_a94a8_test_38",
+                    "type": "__Card__:__snapshot_a94a8_test_39",
                   },
                   {
                     "position": 2,
-                    "type": "__Card__:__snapshot_a94a8_test_38",
+                    "type": "__Card__:__snapshot_a94a8_test_39",
                   },
                 ],
                 "removeAction": [],
@@ -1679,19 +1703,19 @@ describe('list reload', () => {
                     "full-span": true,
                     "item-key": "1",
                     "position": 0,
-                    "type": "__Card__:__snapshot_a94a8_test_39",
+                    "type": "__Card__:__snapshot_a94a8_test_40",
                   },
                   {
                     "full-span": true,
                     "item-key": "2",
                     "position": 1,
-                    "type": "__Card__:__snapshot_a94a8_test_39",
+                    "type": "__Card__:__snapshot_a94a8_test_40",
                   },
                   {
                     "full-span": true,
                     "item-key": "3",
                     "position": 2,
-                    "type": "__Card__:__snapshot_a94a8_test_39",
+                    "type": "__Card__:__snapshot_a94a8_test_40",
                   },
                 ],
                 "removeAction": [],
@@ -1707,7 +1731,7 @@ describe('list reload', () => {
                     "full-span": false,
                     "item-key": "2",
                     "to": 1,
-                    "type": "__Card__:__snapshot_a94a8_test_39",
+                    "type": "__Card__:__snapshot_a94a8_test_40",
                   },
                 ],
               },
@@ -1795,19 +1819,19 @@ describe('list reload', () => {
                 "insertAction": [
                   {
                     "position": 0,
-                    "type": "__Card__:__snapshot_a94a8_test_40",
+                    "type": "__Card__:__snapshot_a94a8_test_41",
                   },
                   {
                     "position": 1,
-                    "type": "__Card__:__snapshot_a94a8_test_40",
+                    "type": "__Card__:__snapshot_a94a8_test_41",
                   },
                   {
                     "position": 2,
-                    "type": "__Card__:__snapshot_a94a8_test_40",
+                    "type": "__Card__:__snapshot_a94a8_test_41",
                   },
                   {
                     "position": 3,
-                    "type": "__Card__:__snapshot_a94a8_test_40",
+                    "type": "__Card__:__snapshot_a94a8_test_41",
                   },
                 ],
                 "removeAction": [],
@@ -1817,7 +1841,7 @@ describe('list reload', () => {
                 "insertAction": [
                   {
                     "position": 0,
-                    "type": "__Card__:__snapshot_a94a8_test_41",
+                    "type": "__Card__:__snapshot_a94a8_test_42",
                   },
                 ],
                 "removeAction": [
@@ -1876,19 +1900,19 @@ describe('list reload', () => {
                 "insertAction": [
                   {
                     "position": 0,
-                    "type": "__Card__:__snapshot_a94a8_test_40",
+                    "type": "__Card__:__snapshot_a94a8_test_41",
                   },
                   {
                     "position": 1,
-                    "type": "__Card__:__snapshot_a94a8_test_40",
+                    "type": "__Card__:__snapshot_a94a8_test_41",
                   },
                   {
                     "position": 2,
-                    "type": "__Card__:__snapshot_a94a8_test_40",
+                    "type": "__Card__:__snapshot_a94a8_test_41",
                   },
                   {
                     "position": 3,
-                    "type": "__Card__:__snapshot_a94a8_test_40",
+                    "type": "__Card__:__snapshot_a94a8_test_41",
                   },
                 ],
                 "removeAction": [],
@@ -1898,7 +1922,7 @@ describe('list reload', () => {
                 "insertAction": [
                   {
                     "position": 0,
-                    "type": "__Card__:__snapshot_a94a8_test_41",
+                    "type": "__Card__:__snapshot_a94a8_test_42",
                   },
                 ],
                 "removeAction": [
@@ -2038,15 +2062,15 @@ describe('list bug', () => {
             "insertAction": [
               {
                 "position": 0,
-                "type": "__Card__:__snapshot_a94a8_test_46",
+                "type": "__Card__:__snapshot_a94a8_test_47",
               },
               {
                 "position": 1,
-                "type": "__Card__:__snapshot_a94a8_test_46",
+                "type": "__Card__:__snapshot_a94a8_test_47",
               },
               {
                 "position": 2,
-                "type": "__Card__:__snapshot_a94a8_test_46",
+                "type": "__Card__:__snapshot_a94a8_test_47",
               },
             ],
             "removeAction": [],
@@ -2055,19 +2079,19 @@ describe('list bug', () => {
                 "flush": false,
                 "from": 0,
                 "to": 0,
-                "type": "__Card__:__snapshot_a94a8_test_46",
+                "type": "__Card__:__snapshot_a94a8_test_47",
               },
               {
                 "flush": false,
                 "from": 1,
                 "to": 1,
-                "type": "__Card__:__snapshot_a94a8_test_46",
+                "type": "__Card__:__snapshot_a94a8_test_47",
               },
               {
                 "flush": false,
                 "from": 2,
                 "to": 2,
-                "type": "__Card__:__snapshot_a94a8_test_46",
+                "type": "__Card__:__snapshot_a94a8_test_47",
               },
             ],
           },
@@ -2085,7 +2109,7 @@ describe('list bug', () => {
               "insertAction": [
                 {
                   "position": 2,
-                  "type": "__Card__:__snapshot_a94a8_test_46",
+                  "type": "__Card__:__snapshot_a94a8_test_47",
                 },
               ],
               "removeAction": [
@@ -2096,19 +2120,19 @@ describe('list bug', () => {
                   "flush": false,
                   "from": 0,
                   "to": 0,
-                  "type": "__Card__:__snapshot_a94a8_test_46",
+                  "type": "__Card__:__snapshot_a94a8_test_47",
                 },
                 {
                   "flush": false,
                   "from": 1,
                   "to": 1,
-                  "type": "__Card__:__snapshot_a94a8_test_46",
+                  "type": "__Card__:__snapshot_a94a8_test_47",
                 },
                 {
                   "flush": false,
                   "from": 2,
                   "to": 2,
-                  "type": "__Card__:__snapshot_a94a8_test_46",
+                  "type": "__Card__:__snapshot_a94a8_test_47",
                 },
               ],
             },
@@ -2133,13 +2157,13 @@ describe('list bug', () => {
                   "flush": false,
                   "from": 0,
                   "to": 0,
-                  "type": "__Card__:__snapshot_a94a8_test_46",
+                  "type": "__Card__:__snapshot_a94a8_test_47",
                 },
                 {
                   "flush": false,
                   "from": 1,
                   "to": 1,
-                  "type": "__Card__:__snapshot_a94a8_test_46",
+                  "type": "__Card__:__snapshot_a94a8_test_47",
                 },
               ],
             },
@@ -2221,21 +2245,21 @@ describe('list-item JSXSpread', () => {
                     "item-key": "1",
                     "position": 0,
                     "recyclable": true,
-                    "type": "__Card__:__snapshot_a94a8_test_48",
+                    "type": "__Card__:__snapshot_a94a8_test_49",
                   },
                   {
                     "full-span": true,
                     "item-key": "2",
                     "position": 1,
                     "recyclable": true,
-                    "type": "__Card__:__snapshot_a94a8_test_48",
+                    "type": "__Card__:__snapshot_a94a8_test_49",
                   },
                   {
                     "full-span": true,
                     "item-key": "3",
                     "position": 2,
                     "recyclable": true,
-                    "type": "__Card__:__snapshot_a94a8_test_48",
+                    "type": "__Card__:__snapshot_a94a8_test_49",
                   },
                 ],
                 "removeAction": [],
@@ -2252,7 +2276,7 @@ describe('list-item JSXSpread', () => {
                     "item-key": "1",
                     "recyclable": false,
                     "to": 0,
-                    "type": "__Card__:__snapshot_a94a8_test_48",
+                    "type": "__Card__:__snapshot_a94a8_test_49",
                   },
                   {
                     "flush": false,
@@ -2261,7 +2285,7 @@ describe('list-item JSXSpread', () => {
                     "item-key": "2",
                     "recyclable": false,
                     "to": 1,
-                    "type": "__Card__:__snapshot_a94a8_test_48",
+                    "type": "__Card__:__snapshot_a94a8_test_49",
                   },
                   {
                     "flush": false,
@@ -2270,7 +2294,7 @@ describe('list-item JSXSpread', () => {
                     "item-key": "3",
                     "recyclable": false,
                     "to": 2,
-                    "type": "__Card__:__snapshot_a94a8_test_48",
+                    "type": "__Card__:__snapshot_a94a8_test_49",
                   },
                 ],
               },
@@ -2300,21 +2324,21 @@ describe('list-item JSXSpread', () => {
                     "item-key": "1",
                     "position": 0,
                     "recyclable": true,
-                    "type": "__Card__:__snapshot_a94a8_test_48",
+                    "type": "__Card__:__snapshot_a94a8_test_49",
                   },
                   {
                     "full-span": true,
                     "item-key": "2",
                     "position": 1,
                     "recyclable": true,
-                    "type": "__Card__:__snapshot_a94a8_test_48",
+                    "type": "__Card__:__snapshot_a94a8_test_49",
                   },
                   {
                     "full-span": true,
                     "item-key": "3",
                     "position": 2,
                     "recyclable": true,
-                    "type": "__Card__:__snapshot_a94a8_test_48",
+                    "type": "__Card__:__snapshot_a94a8_test_49",
                   },
                 ],
                 "removeAction": [],
@@ -2331,7 +2355,7 @@ describe('list-item JSXSpread', () => {
                     "item-key": "1",
                     "recyclable": false,
                     "to": 0,
-                    "type": "__Card__:__snapshot_a94a8_test_48",
+                    "type": "__Card__:__snapshot_a94a8_test_49",
                   },
                   {
                     "flush": false,
@@ -2340,7 +2364,7 @@ describe('list-item JSXSpread', () => {
                     "item-key": "2",
                     "recyclable": false,
                     "to": 1,
-                    "type": "__Card__:__snapshot_a94a8_test_48",
+                    "type": "__Card__:__snapshot_a94a8_test_49",
                   },
                   {
                     "flush": false,
@@ -2349,7 +2373,7 @@ describe('list-item JSXSpread', () => {
                     "item-key": "3",
                     "recyclable": false,
                     "to": 2,
-                    "type": "__Card__:__snapshot_a94a8_test_48",
+                    "type": "__Card__:__snapshot_a94a8_test_49",
                   },
                 ],
               },
@@ -2390,21 +2414,21 @@ describe('list-item JSXSpread', () => {
                     "item-key": "1",
                     "position": 0,
                     "recyclable": true,
-                    "type": "__Card__:__snapshot_a94a8_test_48",
+                    "type": "__Card__:__snapshot_a94a8_test_49",
                   },
                   {
                     "full-span": true,
                     "item-key": "2",
                     "position": 1,
                     "recyclable": true,
-                    "type": "__Card__:__snapshot_a94a8_test_48",
+                    "type": "__Card__:__snapshot_a94a8_test_49",
                   },
                   {
                     "full-span": true,
                     "item-key": "3",
                     "position": 2,
                     "recyclable": true,
-                    "type": "__Card__:__snapshot_a94a8_test_48",
+                    "type": "__Card__:__snapshot_a94a8_test_49",
                   },
                 ],
                 "removeAction": [],
@@ -2421,7 +2445,7 @@ describe('list-item JSXSpread', () => {
                     "item-key": "1",
                     "recyclable": false,
                     "to": 0,
-                    "type": "__Card__:__snapshot_a94a8_test_48",
+                    "type": "__Card__:__snapshot_a94a8_test_49",
                   },
                   {
                     "flush": false,
@@ -2430,7 +2454,7 @@ describe('list-item JSXSpread', () => {
                     "item-key": "2",
                     "recyclable": false,
                     "to": 1,
-                    "type": "__Card__:__snapshot_a94a8_test_48",
+                    "type": "__Card__:__snapshot_a94a8_test_49",
                   },
                   {
                     "flush": false,
@@ -2439,7 +2463,7 @@ describe('list-item JSXSpread', () => {
                     "item-key": "3",
                     "recyclable": false,
                     "to": 2,
-                    "type": "__Card__:__snapshot_a94a8_test_48",
+                    "type": "__Card__:__snapshot_a94a8_test_49",
                   },
                 ],
               },
@@ -2562,7 +2586,7 @@ describe('list-item with platform info attributes', () => {
                     "reuse-identifier": "A",
                     "sticky-bottom": false,
                     "sticky-top": true,
-                    "type": "__Card__:__snapshot_a94a8_test_50",
+                    "type": "__Card__:__snapshot_a94a8_test_51",
                   },
                   {
                     "estimated-height": 100,
@@ -2575,7 +2599,7 @@ describe('list-item with platform info attributes', () => {
                     "reuse-identifier": "A",
                     "sticky-bottom": false,
                     "sticky-top": false,
-                    "type": "__Card__:__snapshot_a94a8_test_50",
+                    "type": "__Card__:__snapshot_a94a8_test_51",
                   },
                   {
                     "estimated-height": 100,
@@ -2588,7 +2612,7 @@ describe('list-item with platform info attributes', () => {
                     "reuse-identifier": "A",
                     "sticky-bottom": true,
                     "sticky-top": false,
-                    "type": "__Card__:__snapshot_a94a8_test_50",
+                    "type": "__Card__:__snapshot_a94a8_test_51",
                   },
                 ],
                 "removeAction": [],
@@ -2625,7 +2649,7 @@ describe('list-item with platform info attributes', () => {
                   "reuse-identifier": "A",
                   "sticky-bottom": false,
                   "sticky-top": true,
-                  "type": "__Card__:__snapshot_a94a8_test_50",
+                  "type": "__Card__:__snapshot_a94a8_test_51",
                 },
                 {
                   "estimated-height": 100,
@@ -2638,7 +2662,7 @@ describe('list-item with platform info attributes', () => {
                   "reuse-identifier": "A",
                   "sticky-bottom": false,
                   "sticky-top": false,
-                  "type": "__Card__:__snapshot_a94a8_test_50",
+                  "type": "__Card__:__snapshot_a94a8_test_51",
                 },
                 {
                   "estimated-height": 100,
@@ -2651,7 +2675,7 @@ describe('list-item with platform info attributes', () => {
                   "reuse-identifier": "A",
                   "sticky-bottom": true,
                   "sticky-top": false,
-                  "type": "__Card__:__snapshot_a94a8_test_50",
+                  "type": "__Card__:__snapshot_a94a8_test_51",
                 },
               ],
               "removeAction": [],
@@ -3126,7 +3150,7 @@ describe('list-item with "defer" attribute', () => {
                   {
                     "item-key": "1",
                     "position": 0,
-                    "type": "__Card__:__snapshot_a94a8_test_54",
+                    "type": "__Card__:__snapshot_a94a8_test_55",
                   },
                 ],
                 "removeAction": [],
@@ -3163,7 +3187,7 @@ describe('list-item with "defer" attribute', () => {
                   {
                     "item-key": "1",
                     "position": 0,
-                    "type": "__Card__:__snapshot_a94a8_test_54",
+                    "type": "__Card__:__snapshot_a94a8_test_55",
                   },
                 ],
                 "removeAction": [],
@@ -3228,6 +3252,42 @@ describe('list-item with "defer" attribute', () => {
 
     renderPage();
     __pendingListUpdates.flush();
+    
+    expect(elementTree).toMatchInlineSnapshot(`
+      "<page
+        cssId="default-entry-from-native:0"
+      >
+        <list
+          custom-list-name="list-container"
+          id="list"
+          update-list-info={
+            Array [
+              Object {
+                "insertAction": Array [
+                  Object {
+                    "item-key": "0",
+                    "position": 0,
+                    "type": "__Card__:__snapshot_a94a8_test_60",
+                  },
+                  Object {
+                    "item-key": "1",
+                    "position": 1,
+                    "type": "__Card__:__snapshot_a94a8_test_61",
+                  },
+                  Object {
+                    "item-key": "2",
+                    "position": 2,
+                    "type": "__Card__:__snapshot_a94a8_test_62",
+                  },
+                ],
+                "removeAction": Array [],
+                "updateAction": Array [],
+              },
+            ]
+          }
+        />
+      </page>"
+    `)
 
     const listRef = elementTree.getElementById('list');
     const __FlushElementTree = vi.fn();
@@ -3256,17 +3316,17 @@ describe('list-item with "defer" attribute', () => {
                     {
                       "item-key": "0",
                       "position": 0,
-                      "type": "__Card__:__snapshot_a94a8_test_59",
+                      "type": "__Card__:__snapshot_a94a8_test_60",
                     },
                     {
                       "item-key": "1",
                       "position": 1,
-                      "type": "__Card__:__snapshot_a94a8_test_60",
+                      "type": "__Card__:__snapshot_a94a8_test_61",
                     },
                     {
                       "item-key": "2",
                       "position": 2,
-                      "type": "__Card__:__snapshot_a94a8_test_61",
+                      "type": "__Card__:__snapshot_a94a8_test_62",
                     },
                   ],
                   "removeAction": [],
@@ -3339,17 +3399,17 @@ describe('list-item with "defer" attribute', () => {
                     {
                       "item-key": "0",
                       "position": 0,
-                      "type": "__Card__:__snapshot_a94a8_test_59",
+                      "type": "__Card__:__snapshot_a94a8_test_60",
                     },
                     {
                       "item-key": "1",
                       "position": 1,
-                      "type": "__Card__:__snapshot_a94a8_test_60",
+                      "type": "__Card__:__snapshot_a94a8_test_61",
                     },
                     {
                       "item-key": "2",
                       "position": 2,
-                      "type": "__Card__:__snapshot_a94a8_test_61",
+                      "type": "__Card__:__snapshot_a94a8_test_62",
                     },
                   ],
                   "removeAction": [],
@@ -3420,17 +3480,17 @@ describe('list-item with "defer" attribute', () => {
                   {
                     "item-key": "0",
                     "position": 0,
-                    "type": "__Card__:__snapshot_a94a8_test_64",
+                    "type": "__Card__:__snapshot_a94a8_test_65",
                   },
                   {
                     "item-key": "1",
                     "position": 1,
-                    "type": "__Card__:__snapshot_a94a8_test_64",
+                    "type": "__Card__:__snapshot_a94a8_test_65",
                   },
                   {
                     "item-key": "2",
                     "position": 2,
-                    "type": "__Card__:__snapshot_a94a8_test_64",
+                    "type": "__Card__:__snapshot_a94a8_test_65",
                   },
                 ],
                 "removeAction": [],
@@ -3467,17 +3527,17 @@ describe('list-item with "defer" attribute', () => {
                   {
                     "item-key": "0",
                     "position": 0,
-                    "type": "__Card__:__snapshot_a94a8_test_64",
+                    "type": "__Card__:__snapshot_a94a8_test_65",
                   },
                   {
                     "item-key": "1",
                     "position": 1,
-                    "type": "__Card__:__snapshot_a94a8_test_64",
+                    "type": "__Card__:__snapshot_a94a8_test_65",
                   },
                   {
                     "item-key": "2",
                     "position": 2,
-                    "type": "__Card__:__snapshot_a94a8_test_64",
+                    "type": "__Card__:__snapshot_a94a8_test_65",
                   },
                 ],
                 "removeAction": [],
@@ -3526,17 +3586,17 @@ describe('list-item with "defer" attribute', () => {
                     {
                       "item-key": "0",
                       "position": 0,
-                      "type": "__Card__:__snapshot_a94a8_test_64",
+                      "type": "__Card__:__snapshot_a94a8_test_65",
                     },
                     {
                       "item-key": "1",
                       "position": 1,
-                      "type": "__Card__:__snapshot_a94a8_test_64",
+                      "type": "__Card__:__snapshot_a94a8_test_65",
                     },
                     {
                       "item-key": "2",
                       "position": 2,
-                      "type": "__Card__:__snapshot_a94a8_test_64",
+                      "type": "__Card__:__snapshot_a94a8_test_65",
                     },
                   ],
                   "removeAction": [],
@@ -3668,15 +3728,15 @@ describe('nested list', () => {
             "insertAction": [
               {
                 "position": 0,
-                "type": "__Card__:__snapshot_a94a8_test_69",
+                "type": "__Card__:__snapshot_a94a8_test_70",
               },
               {
                 "position": 1,
-                "type": "__Card__:__snapshot_a94a8_test_69",
+                "type": "__Card__:__snapshot_a94a8_test_70",
               },
               {
                 "position": 2,
-                "type": "__Card__:__snapshot_a94a8_test_69",
+                "type": "__Card__:__snapshot_a94a8_test_70",
               },
             ],
             "removeAction": [],
@@ -3688,7 +3748,7 @@ describe('nested list', () => {
             "insertAction": [
               {
                 "position": 0,
-                "type": "__Card__:__snapshot_a94a8_test_70",
+                "type": "__Card__:__snapshot_a94a8_test_71",
               },
             ],
             "removeAction": [],
@@ -3700,7 +3760,7 @@ describe('nested list', () => {
             "insertAction": [
               {
                 "position": 0,
-                "type": "__Card__:__snapshot_a94a8_test_70",
+                "type": "__Card__:__snapshot_a94a8_test_71",
               },
             ],
             "removeAction": [],
@@ -3712,7 +3772,7 @@ describe('nested list', () => {
             "insertAction": [
               {
                 "position": 0,
-                "type": "__Card__:__snapshot_a94a8_test_70",
+                "type": "__Card__:__snapshot_a94a8_test_71",
               },
             ],
             "removeAction": [],
@@ -3732,7 +3792,7 @@ describe('nested list', () => {
             "insertAction": [
               {
                 "position": 0,
-                "type": "__Card__:__snapshot_a94a8_test_70",
+                "type": "__Card__:__snapshot_a94a8_test_71",
               },
             ],
             "removeAction": [],
@@ -3744,7 +3804,7 @@ describe('nested list', () => {
             "insertAction": [
               {
                 "position": 0,
-                "type": "__Card__:__snapshot_a94a8_test_70",
+                "type": "__Card__:__snapshot_a94a8_test_71",
               },
             ],
             "removeAction": [],
@@ -3756,7 +3816,7 @@ describe('nested list', () => {
             "insertAction": [
               {
                 "position": 0,
-                "type": "__Card__:__snapshot_a94a8_test_70",
+                "type": "__Card__:__snapshot_a94a8_test_71",
               },
             ],
             "removeAction": [],
@@ -3795,15 +3855,15 @@ describe('nested list', () => {
                 "insertAction": Array [
                   Object {
                     "position": 0,
-                    "type": "__Card__:__snapshot_a94a8_test_69",
+                    "type": "__Card__:__snapshot_a94a8_test_70",
                   },
                   Object {
                     "position": 1,
-                    "type": "__Card__:__snapshot_a94a8_test_69",
+                    "type": "__Card__:__snapshot_a94a8_test_70",
                   },
                   Object {
                     "position": 2,
-                    "type": "__Card__:__snapshot_a94a8_test_69",
+                    "type": "__Card__:__snapshot_a94a8_test_70",
                   },
                 ],
                 "removeAction": Array [],
@@ -3825,7 +3885,7 @@ describe('nested list', () => {
                     "insertAction": Array [
                       Object {
                         "position": 0,
-                        "type": "__Card__:__snapshot_a94a8_test_70",
+                        "type": "__Card__:__snapshot_a94a8_test_71",
                       },
                     ],
                     "removeAction": Array [],
@@ -3856,7 +3916,7 @@ describe('nested list', () => {
                     "insertAction": Array [
                       Object {
                         "position": 0,
-                        "type": "__Card__:__snapshot_a94a8_test_70",
+                        "type": "__Card__:__snapshot_a94a8_test_71",
                       },
                     ],
                     "removeAction": Array [],
@@ -3887,7 +3947,7 @@ describe('nested list', () => {
                     "insertAction": Array [
                       Object {
                         "position": 0,
-                        "type": "__Card__:__snapshot_a94a8_test_70",
+                        "type": "__Card__:__snapshot_a94a8_test_71",
                       },
                     ],
                     "removeAction": Array [],

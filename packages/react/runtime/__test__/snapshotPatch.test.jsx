@@ -86,9 +86,11 @@ describe('createElement', () => {
         0,
         "__Card__:__snapshot_a94a8_test_1",
         2,
+        undefined,
         0,
         "__Card__:__snapshot_a94a8_test_2",
         3,
+        undefined,
       ]
     `);
 
@@ -136,9 +138,11 @@ describe('insertBefore', () => {
         0,
         "__Card__:__snapshot_a94a8_test_1",
         2,
+        undefined,
         0,
         "__Card__:__snapshot_a94a8_test_2",
         3,
+        undefined,
         1,
         2,
         3,
@@ -183,12 +187,15 @@ describe('insertBefore', () => {
         0,
         "__Card__:__snapshot_a94a8_test_1",
         2,
+        undefined,
         0,
         "__Card__:__snapshot_a94a8_test_2",
         3,
+        undefined,
         0,
         "__Card__:__snapshot_a94a8_test_3",
         4,
+        undefined,
         1,
         2,
         4,
@@ -256,9 +263,11 @@ describe('insertBefore', () => {
         0,
         "__Card__:__snapshot_a94a8_test_1",
         2,
+        undefined,
         0,
         "__Card__:__snapshot_a94a8_test_2",
         3,
+        undefined,
         1,
         2,
         100,
@@ -524,6 +533,7 @@ describe('setAttribute', () => {
         0,
         "__Card__:__snapshot_a94a8_test_4",
         2,
+        undefined,
         3,
         2,
         0,
@@ -560,6 +570,7 @@ describe('setAttribute', () => {
         0,
         "__Card__:__snapshot_a94a8_test_4",
         2,
+        undefined,
         4,
         2,
         [
@@ -594,6 +605,7 @@ describe('setAttribute', () => {
         0,
         "__Card__:__snapshot_a94a8_test_4",
         2,
+        undefined,
         4,
         2,
         [
@@ -630,6 +642,7 @@ describe('setAttribute', () => {
         0,
         "__Card__:__snapshot_a94a8_test_4",
         2,
+        undefined,
         4,
         100,
         [
@@ -676,6 +689,7 @@ describe('setAttribute', () => {
         0,
         "__Card__:__snapshot_a94a8_test_4",
         2,
+        undefined,
         3,
         3,
         2,
@@ -1318,7 +1332,7 @@ describe('list', () => {
 
     let patch;
     patch = takeGlobalSnapshotPatch();
-    expect(patch.length).toMatchInlineSnapshot(`3`);
+    expect(patch.length).toMatchInlineSnapshot(`4`);
     snapshotPatchApply(patch);
     const si1 = snapshotInstanceManager.values.get(bsi1.__id);
     si1.ensureElements();
@@ -1327,7 +1341,7 @@ describe('list', () => {
     bsi2.setAttribute('values', ['test']);
     bsi1.insertBefore(bsi2);
     patch = takeGlobalSnapshotPatch();
-    expect(patch.length).toMatchInlineSnapshot(`10`);
+    expect(patch.length).toMatchInlineSnapshot(`11`);
     snapshotPatchApply(patch);
     expect(si1.__element_root).toMatchInlineSnapshot(`
       <view>
@@ -1355,7 +1369,7 @@ describe('missing snapshot', () => {
     const bsi1 = new BackgroundSnapshotInstance('missing-snapshot');
     let patch;
     patch = takeGlobalSnapshotPatch();
-    expect(patch.length).toMatchInlineSnapshot(`3`);
+    expect(patch.length).toMatchInlineSnapshot(`4`);
     expect(() => snapshotPatchApply(patch)).toThrowError('Snapshot not found: missing-snapshot');
   });
 });

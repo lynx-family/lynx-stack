@@ -9,7 +9,7 @@ use swc_core::{
 };
 
 use crate::swc_plugin_snapshot::jsx_helpers::{
-  jsx_attr_value, jsx_children_to_expr, jsx_is_list, jsx_is_list_item,
+  jsx_attr_value, jsx_children_to_expr, jsx_is_list_item,
 };
 
 pub struct ListVisitor<C>
@@ -72,13 +72,6 @@ where
   //   renderChildren={() => <>...</>}
   // />
   fn visit_mut_jsx_element(&mut self, n: &mut JSXElement) {
-    if jsx_is_list(n) {
-      n.children = vec![JSXElementChild::JSXExprContainer(JSXExprContainer {
-        expr: JSXExpr::Expr(Box::new(jsx_children_to_expr(n.children.take()))),
-        span: DUMMY_SP,
-      })];
-    }
-
     n.visit_mut_children_with(self);
 
     if jsx_list_item_deferred(n) {
@@ -171,21 +164,6 @@ where
     }
   }
 
-  fn visit_mut_jsx_element_child(&mut self, node: &mut JSXElementChild) {
-    if let JSXElementChild::JSXElement(jsx_element) = node {
-      if jsx_is_list(jsx_element) {
-        jsx_element.visit_mut_with(self);
-        *node = JSXElementChild::JSXExprContainer(JSXExprContainer {
-          expr: JSXExpr::Expr(Box::new(Expr::JSXElement(Box::new(*jsx_element.take())))),
-          span: DUMMY_SP,
-        });
-        return;
-      }
-    }
-
-    node.visit_mut_children_with(self);
-  }
-
   fn visit_mut_module_items(&mut self, n: &mut Vec<ModuleItem>) {
     let mut new_items: Vec<ModuleItem> = vec![];
     for item in n.iter_mut() {
@@ -218,181 +196,6 @@ mod tests {
     target::TransformTarget,
     TransformMode,
   };
-
-  test!(
-    module,
-    Syntax::Es(EsSyntax {
-      jsx: true,
-      ..Default::default()
-    }),
-    |t| visit_mut_pass(ListVisitor::new(Some(t.comments.clone()))),
-    should_transform_list_in_view,
-    r#"
-    <view>
-      <list>
-        <list-item key="1" item-key="1"></list-item>
-        <list-item key="2" item-key="2"></list-item>
-      </list>
-    </view>;
-    "#
-  );
-
-  test!(
-    module,
-    Syntax::Es(EsSyntax {
-      jsx: true,
-      ..Default::default()
-    }),
-    |t| {
-      let unresolved_mark = Mark::new();
-      (
-        visit_mut_pass(ListVisitor::new(Some(t.comments.clone()))),
-        visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
-          JSXTransformerConfig {
-            preserve_jsx: false,
-            target: TransformTarget::MIXED,
-            ..Default::default()
-          },
-          None,
-          unresolved_mark,
-          TransformMode::Development,
-        )),
-      )
-    },
-    should_transform_list_in_view_with_snapshot,
-    r#"
-    <view>
-      <list>
-        <list-item key="1" item-key="1"></list-item>
-        <list-item key="2" item-key="2"></list-item>
-      </list>
-    </view>;
-    "#
-  );
-
-  test!(
-    module,
-    Syntax::Es(EsSyntax {
-      jsx: true,
-      ..Default::default()
-    }),
-    |t| {
-      let unresolved_mark = Mark::new();
-      (
-        visit_mut_pass(ListVisitor::new(Some(t.comments.clone()))),
-        visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
-          JSXTransformerConfig {
-            preserve_jsx: false,
-            target: TransformTarget::MIXED,
-            ..Default::default()
-          },
-          None,
-          unresolved_mark,
-          TransformMode::Development,
-        )),
-      )
-    },
-    should_transform_list_in_view_with_static_sibling_with_snapshot,
-    r#"
-    <view>
-      <list>
-        <list-item key="1" item-key="1"></list-item>
-        <list-item key="2" item-key="2"></list-item>
-      </list>
-      <view/>
-    </view>;
-    "#
-  );
-
-  test!(
-    module,
-    Syntax::Es(EsSyntax {
-      jsx: true,
-      ..Default::default()
-    }),
-    |t| { visit_mut_pass(ListVisitor::new(Some(t.comments.clone()))) },
-    should_transform_list_in_view_with_static_sibling_nested,
-    r#"
-    <view>
-      <list>
-        <list-item key="1" item-key="1"></list-item>
-        <list-item key="2" item-key="2"></list-item>
-        <list-item key="3" item-key="3">
-          <view>
-            <list>
-              <list-item key="1" item-key="1"></list-item>
-              <list-item key="2" item-key="2"></list-item>
-            </list>
-            <view />
-          </view>
-        </list-item>
-      </list>
-      <view/>
-    </view>;
-    "#
-  );
-
-  test!(
-    module,
-    Syntax::Es(EsSyntax {
-      jsx: true,
-      ..Default::default()
-    }),
-    |t| {
-      let unresolved_mark = Mark::new();
-      (
-        visit_mut_pass(ListVisitor::new(Some(t.comments.clone()))),
-        visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
-          JSXTransformerConfig {
-            preserve_jsx: false,
-            target: TransformTarget::MIXED,
-            ..Default::default()
-          },
-          None,
-          unresolved_mark,
-          TransformMode::Development,
-        )),
-      )
-    },
-    should_transform_list_in_view_with_static_sibling_with_snapshot_nested,
-    r#"
-    <view>
-      <list>
-        <list-item key="1" item-key="1"></list-item>
-        <list-item key="2" item-key="2"></list-item>
-        <list-item key="3" item-key="3">
-          <view>
-            <list>
-              <list-item key="1" item-key="1"></list-item>
-              <list-item key="2" item-key="2"></list-item>
-            </list>
-            <view />
-          </view>
-        </list-item>
-      </list>
-      <view/>
-    </view>;
-    "#
-  );
-
-  test!(
-    module,
-    Syntax::Es(EsSyntax {
-      jsx: true,
-      ..Default::default()
-    }),
-    |t| { visit_mut_pass(ListVisitor::new(Some(t.comments.clone()))) },
-    should_transform_list_in_view_with_static_sibling,
-    r#"
-    <view>
-      <list>
-        <list-item key="1" item-key="1"></list-item>
-        <list-item key="2" item-key="2"></list-item>
-      </list>
-      <view/>
-    </view>;
-    "#
-  );
 
   test!(
     module,
@@ -501,6 +304,7 @@ mod tests {
       ..Default::default()
     }),
     |t| {
+      let top_level_mark = Mark::new();
       let unresolved_mark = Mark::new();
       (
         visit_mut_pass(ListVisitor::new(Some(t.comments.clone()))),
@@ -510,7 +314,9 @@ mod tests {
             target: TransformTarget::MIXED,
             ..Default::default()
           },
+          t.cm.clone(),
           None,
+          top_level_mark,
           unresolved_mark,
           TransformMode::Development,
         )),

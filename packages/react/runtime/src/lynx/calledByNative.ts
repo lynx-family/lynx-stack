@@ -86,16 +86,21 @@ function renderPage(data: Record<string, unknown> | undefined): void {
 
   lynx.__initData = data ?? {};
 
+  console.log('setupPage')
   setupPage(__CreatePage('0', 0));
+  console.log('__root.ensureElements');
   (__root as SnapshotInstance).ensureElements();
 
+  console.log('renderMainThread');
   renderMainThread();
 
+  console.log('__pendingListUpdates.flush');
   // always call this before `__FlushElementTree`
   // (There is an implicit `__FlushElementTree` in `renderPage`)
   __pendingListUpdates.flush();
   applyRefQueue();
 
+  console.log('jsReady');
   if (__FIRST_SCREEN_SYNC_TIMING__ === 'immediately') {
     jsReady();
   }

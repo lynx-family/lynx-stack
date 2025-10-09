@@ -66,7 +66,7 @@ export function renderToString(vnode: any, context: any): any[] {
     _renderToString(
       vnode,
       context || EMPTY_OBJ,
-      false,
+      0,
       undefined,
       parent,
       opcodes,
@@ -141,7 +141,7 @@ function renderClassComponent(vnode, context) {
  * Recursively render VNodes to HTML.
  * @param {VNode|any} vnode
  * @param {any} context
- * @param {number | boolean} slotIndex
+ * @param {number | true} slotIndex
  * @param {any} selectValue
  * @param {VNode} parent
  * @param opcodes
@@ -175,7 +175,7 @@ function _renderToString(
       const child = vnode[i];
       if (child == null || typeof child === 'boolean') continue;
 
-      _renderToString(child, context, slotIndex === true ? i : undefined, selectValue, parent, opcodes, opcodes.length);
+      _renderToString(child, context, slotIndex === true ? i : slotIndex, selectValue, parent, opcodes, opcodes.length);
     }
     return;
   }
@@ -320,7 +320,7 @@ function _renderToString(
     opcodes.push(__OpText, children);
   } else if (children != null && children !== false && children !== true) {
     // recurse into this element VNode's children
-    _renderToString(children, context, hasNamedChildren, selectValue, vnode, opcodes, opcodes.length);
+    _renderToString(children, context, hasNamedChildren ? true : slotIndex, selectValue, vnode, opcodes, opcodes.length);
   }
 
   if (afterDiff) afterDiff(vnode);
