@@ -10,7 +10,7 @@ const config: RslibConfig = defineConfig({
     },
   },
   lib: [
-    { format: 'esm', syntax: ['esnext'], dts: false, autoExternal: true },
+    { format: 'esm', syntax: ['esnext'], dts: true, autoExternal: true },
   ],
   output: {
     sourceMap: true,
