@@ -61,3 +61,4 @@ ignoredBuiltDependencies:
   - "@swc/core"
   - core-js
   - unrs-resolver
+  - puppeteer
