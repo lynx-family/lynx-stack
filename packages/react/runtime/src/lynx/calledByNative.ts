@@ -86,7 +86,7 @@ function renderPage(data: Record<string, unknown> | undefined): void {
 
   lynx.__initData = data ?? {};
 
-  console.log('setupPage')
+  console.log('setupPage');
   setupPage(__CreatePage('0', 0));
   console.log('__root.ensureElements');
   (__root as SnapshotInstance).ensureElements();

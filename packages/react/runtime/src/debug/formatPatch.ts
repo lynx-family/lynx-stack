@@ -21,7 +21,7 @@ export function prettyFormatSnapshotPatch(snapshotPatch: SnapshotPatch | undefin
       result.push(formattedOp);
       i += 1 + config.params.length;
     } else {
-      console.log('op', op, typeof op, op.toString(), `Unknown snapshot operation: ${op}`)
+      console.log('op', op, typeof op, op.toString(), `Unknown snapshot operation: ${op}`);
       throw new Error(`Unknown snapshot operation: ${op}`);
     }
   }
