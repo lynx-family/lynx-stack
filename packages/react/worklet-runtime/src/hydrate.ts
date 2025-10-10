@@ -20,8 +20,15 @@ export function hydrateCtx(ctx: Worklet, firstScreenCtx: Worklet): void {
   });
 }
 
-function hydrateCtxImpl(ctx: ClosureValueType, firstScreenCtx: ClosureValueType, execId: number): void {
-  if (!ctx || typeof ctx !== 'object' || !firstScreenCtx || typeof firstScreenCtx !== 'object') return;
+function hydrateCtxImpl(
+  ctx: ClosureValueType,
+  firstScreenCtx: ClosureValueType,
+  execId: number,
+): void {
+  if (
+    !ctx || typeof ctx !== 'object' || !firstScreenCtx
+    || typeof firstScreenCtx !== 'object'
+  ) return;
 
   const ctxObj = ctx as Record<string, ClosureValueType>;
   const firstScreenCtxObj = firstScreenCtx as Record<string, ClosureValueType>;
@@ -33,7 +40,10 @@ function hydrateCtxImpl(ctx: ClosureValueType, firstScreenCtx: ClosureValueType,
   // eslint-disable-next-line @typescript-eslint/no-for-in-array
   for (const key in ctx) {
     if (key === '_wvid') {
-      hydrateMainThreadRef(ctxObj[key] as WorkletRefId, firstScreenCtxObj as unknown as WorkletRefImpl<unknown>);
+      hydrateMainThreadRef(
+        ctxObj[key] as WorkletRefId,
+        firstScreenCtxObj as unknown as WorkletRefImpl<unknown>,
+      );
     } else if (key === '_jsFn') {
       hydrateDelayRunOnBackgroundTasks(
         ctxObj[key] as Record<string, JsFnHandle>,
@@ -57,7 +67,10 @@ function hydrateCtxImpl(ctx: ClosureValueType, firstScreenCtx: ClosureValueType,
  * @param refId The ID of the WorkletRef to hydrate.
  * @param value The new value for the WorkletRef.
  */
-function hydrateMainThreadRef(refId: WorkletRefId, value: WorkletRefImpl<unknown> | { current: unknown }) {
+function hydrateMainThreadRef(
+  refId: WorkletRefId,
+  value: WorkletRefImpl<unknown> | { current: unknown },
+) {
   if ('_initValue' in value) {
     // The ref has not been accessed yet.
     return;
@@ -81,10 +94,16 @@ function hydrateDelayRunOnBackgroundTasks(
     const fnObj = fnObjs[fnName]!;
     const firstScreenFnObj: JsFnHandle | undefined = firstScreenFnObjs[fnName];
     if (!firstScreenFnObj?._delayIndices) {
+      if (firstScreenFnObj) {
+        firstScreenFnObj._isFirstScreen = false;
+        firstScreenFnObj._execId = execId;
+        Object.assign(firstScreenFnObj, fnObj);
+      }
       continue;
     }
     for (const index of firstScreenFnObj._delayIndices) {
-      const details = lynxWorkletImpl!._runOnBackgroundDelayImpl.delayedBackgroundFunctionArray[index]!;
+      const details = lynxWorkletImpl!._runOnBackgroundDelayImpl
+        .delayedBackgroundFunctionArray[index]!;
       fnObj._execId = execId;
       details.jsFnHandle = fnObj;
     }

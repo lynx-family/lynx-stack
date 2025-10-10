@@ -27,21 +27,41 @@ describe('runOnBackground', () => {
     };
     const worklet = {
       _wkltId: 'ctx1',
-      _jsFn: { '_jsFn1': { '_jsFnId': 1 }, '_jsFn2': { '_jsFnId': 2 }, '_jsFn3': { '_jsFnId': 3 } },
+      _jsFn: {
+        '_jsFn1': { '_jsFnId': 1 },
+        '_jsFn2': { '_jsFnId': 2 },
+        '_jsFn3': { '_jsFnId': 3 },
+      },
       _execId: 8,
     };
-    // If the functions are not used in the first screen, they will not be hydrated
+    // If the functions are not used in the first screen, they should not be called
     globalThis.lynxWorkletImpl._hydrateCtx(worklet, firstScreenWorklet);
-    expect(globalThis.lynxWorkletImpl._runOnBackgroundDelayImpl.delayedBackgroundFunctionArray.length).toBe(0);
+    expect(
+      globalThis.lynxWorkletImpl._runOnBackgroundDelayImpl
+        .delayedBackgroundFunctionArray.length,
+    ).toBe(0);
+    // functions in `firstScreenWorklet` should be hydrated
+    expect(firstScreenWorklet._jsFn._jsFn1._isFirstScreen).toBe(false);
+    expect(firstScreenWorklet._jsFn._jsFn1._jsFnId).toBe(1);
+    expect(firstScreenWorklet._jsFn._jsFn1._execId).toBe(8);
+    expect(firstScreenWorklet._jsFn._jsFn2._isFirstScreen).toBe(false);
+    expect(firstScreenWorklet._jsFn._jsFn2._jsFnId).toBe(2);
+    expect(firstScreenWorklet._jsFn._jsFn2._execId).toBe(8);
 
     // If the functions are used in the first screen, they will be hydrated
     const task = vi.fn();
     globalThis.registerWorklet('main-thread', 'ctx1', function() {
       const { _jsFn1 } = this._jsFn;
-      globalThis.lynxWorkletImpl._runOnBackgroundDelayImpl.delayRunOnBackground(_jsFn1, task);
+      globalThis.lynxWorkletImpl._runOnBackgroundDelayImpl.delayRunOnBackground(
+        _jsFn1,
+        task,
+      );
     });
     globalThis.runWorklet(firstScreenWorklet, []);
-    expect(globalThis.lynxWorkletImpl._runOnBackgroundDelayImpl.delayedBackgroundFunctionArray).toMatchInlineSnapshot(`
+    expect(
+      globalThis.lynxWorkletImpl._runOnBackgroundDelayImpl
+        .delayedBackgroundFunctionArray,
+    ).toMatchInlineSnapshot(`
       [
         {
           "task": [MockFunction spy],
@@ -49,7 +69,10 @@ describe('runOnBackground', () => {
       ]
     `);
     globalThis.lynxWorkletImpl._hydrateCtx(worklet, firstScreenWorklet);
-    expect(globalThis.lynxWorkletImpl._runOnBackgroundDelayImpl.delayedBackgroundFunctionArray).toMatchInlineSnapshot(`
+    expect(
+      globalThis.lynxWorkletImpl._runOnBackgroundDelayImpl
+        .delayedBackgroundFunctionArray,
+    ).toMatchInlineSnapshot(`
       [
         {
           "jsFnHandle": {
@@ -61,7 +84,8 @@ describe('runOnBackground', () => {
       ]
     `);
 
-    globalThis.lynxWorkletImpl._runOnBackgroundDelayImpl.runDelayedBackgroundFunctions();
+    globalThis.lynxWorkletImpl._runOnBackgroundDelayImpl
+      .runDelayedBackgroundFunctions();
     expect(task.mock.calls).toMatchInlineSnapshot(`
       [
         [
@@ -70,6 +94,9 @@ describe('runOnBackground', () => {
         ],
       ]
     `);
-    expect(globalThis.lynxWorkletImpl._runOnBackgroundDelayImpl.delayedBackgroundFunctionArray.length).toBe(0);
+    expect(
+      globalThis.lynxWorkletImpl._runOnBackgroundDelayImpl
+        .delayedBackgroundFunctionArray.length,
+    ).toBe(0);
   });
 });
