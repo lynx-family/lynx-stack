@@ -1,8 +1,33 @@
-import puppeteer from 'puppeteer';
+import puppeteer, { type Browser, type Page } from 'puppeteer';
 
-const browser = await puppeteer.launch({ headless: true });
-export async function createPuppeteerPage(url: string) {
-  const page = await browser.newPage();
+let browser: Browser | null = null;
+
+export async function getBrowser(): Promise<Browser> {
+  if (browser) {
+    return browser;
+  }
+  try {
+    browser = await puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    });
+    return browser;
+  } catch (error) {
+    console.error('Failed to launch Puppeteer browser:', error);
+    throw error; // Re-throw the error to be caught by the caller
+  }
+}
+
+export async function closeBrowser(): Promise<void> {
+  if (browser) {
+    await browser.close();
+    browser = null;
+  }
+}
+
+export async function createPuppeteerPage(url: string): Promise<Page> {
+  const currentBrowser = await getBrowser();
+  const page = await currentBrowser.newPage();
   try {
     await page.goto(url, {
       waitUntil: 'networkidle0',
