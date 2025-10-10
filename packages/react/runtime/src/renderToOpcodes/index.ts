@@ -164,7 +164,7 @@ function _renderToString(
   if (typeof vnode !== 'object') {
     if (typeof vnode === 'function') return;
 
-    opcodes.push(__OpText, vnode + '', slotIndex);
+    opcodes.push(__OpText, vnode, slotIndex);
     return;
   }
 
@@ -320,7 +320,15 @@ function _renderToString(
     opcodes.push(__OpText, children);
   } else if (children != null && children !== false && children !== true) {
     // recurse into this element VNode's children
-    _renderToString(children, context, hasNamedChildren ? true : slotIndex, selectValue, vnode, opcodes, opcodes.length);
+    _renderToString(
+      children,
+      context,
+      hasNamedChildren ? true : slotIndex,
+      selectValue,
+      vnode,
+      opcodes,
+      opcodes.length,
+    );
   }
 
   if (afterDiff) afterDiff(vnode);

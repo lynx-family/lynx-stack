@@ -872,8 +872,7 @@ where
         )));
       };
 
-      let is_list = jsx_is_list(n);
-      let is_children_full_dynamic = is_list || jsx_is_children_full_dynamic(n);
+      let is_children_full_dynamic = jsx_is_children_full_dynamic(n);
 
       if !is_children_full_dynamic {
         self.element_index += 1;
@@ -885,7 +884,7 @@ where
       } else {
         n.visit_mut_children_with(self.dynamic_part_visitor);
         let children_expr = jsx_children_to_expr(n.children.take());
-        if is_list {
+        if jsx_is_list(n) {
           self
             .dynamic_parts
             .push(DynamicPart::ListSlot(children_expr, self.element_index));

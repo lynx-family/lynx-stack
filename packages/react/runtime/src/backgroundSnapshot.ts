@@ -81,7 +81,7 @@ export class BackgroundSnapshotInstance {
     node: BackgroundSnapshotInstance,
     beforeNode?: BackgroundSnapshotInstance,
   ): void {
-    console.log('bts insertBefore', node.type, beforeNode?.type)
+    console.log('bts insertBefore', node.type, beforeNode?.type);
     if (node.__removed_from_tree) {
       node.__removed_from_tree = false;
       // This is only called by `lazy`/`Suspense` through `appendChild` so beforeNode is always undefined.
@@ -215,6 +215,7 @@ export class BackgroundSnapshotInstance {
   }
 
   setAttribute(key: string | number, value: unknown): void {
+    console.log('BSI setAttribute', this.type, key, value, typeof value);
     if (__PROFILE__) {
       profileStart('ReactLynx::BSI::setAttribute');
     }
@@ -229,6 +230,7 @@ export class BackgroundSnapshotInstance {
               index,
             );
             if (needUpdate) {
+              console.log('SetAttribute in hydrate', this.__id, index, valueToCommit);
               __globalSnapshotPatch.push(
                 SnapshotOperation.SetAttribute,
                 this.__id,
@@ -421,6 +423,16 @@ export function hydrate(
           // but the old value becomes `null` during JSON serialization.
           // In this case, we should not patch the value.
         } else {
+          console.log(
+            'SetAttribute1 in hydrate',
+            after.__id,
+            index,
+            value,
+            old,
+            typeof value,
+            typeof old,
+            value === old,
+          );
           __globalSnapshotPatch!.push(
             SnapshotOperation.SetAttribute,
             after.__id,
@@ -436,6 +448,7 @@ export function hydrate(
         const value = after.__extraProps[key];
         const old = before.extraProps?.[key];
         if (!isDirectOrDeepEqual(value, old)) {
+          console.log('SetAttribute2 in hydrate', after.__id, key, value);
           __globalSnapshotPatch!.push(
             SnapshotOperation.SetAttribute,
             after.__id,
@@ -455,6 +468,7 @@ export function hydrate(
       return;
     }
 
+    console.log('slot', after.type, slot, slot.length);
     slot.forEach(([type], index) => {
       switch (type) {
         case DynamicPartType.Slot:
@@ -462,23 +476,36 @@ export function hydrate(
           // TODO: the following null assertions are not 100% safe
           const v1 = beforeChildNodes[index]!;
           const v2 = afterChildNodes[index]!;
+          console.log('v1', before.type, v1.type);
+          console.log('v2', after.type, v2.type);
           helper(v1, v2);
           break;
         }
-        case DynamicPartType.Children:
-        case DynamicPartType.ListChildren:
         case DynamicPartType.SlotV2:
-        case DynamicPartType.ListSlotV2: {
+        case DynamicPartType.ListSlotV2:
+        case DynamicPartType.Children:
+        case DynamicPartType.ListChildren: {
+          // TODO: optimize time complexity
+          let filteredBeforeChildNodes = beforeChildNodes;
+          let filteredAfterChildNodes = afterChildNodes;
+          if (type === DynamicPartType.SlotV2 || type === DynamicPartType.ListSlotV2) {
+            filteredBeforeChildNodes = beforeChildNodes.filter(v => v.__slotIndex === index);
+            filteredAfterChildNodes = afterChildNodes.filter(v => v.__slotIndex === index);
+          }
+          console.log('after.type, slotType, slotIndex', after.type, type, index);
+          console.log('beforeChildNodes', beforeChildNodes.map(v => v.type));
+          console.log('afterChildNodes', afterChildNodes.map(v => v.type));
+
           const diffResult = diffArrayLepus(
-            beforeChildNodes,
-            afterChildNodes,
+            filteredBeforeChildNodes,
+            filteredAfterChildNodes,
             (a, b) => a.type === b.type,
             (a, b) => {
               helper(a, b);
             },
           );
           diffArrayAction(
-            beforeChildNodes,
+            filteredBeforeChildNodes,
             diffResult,
             (node, target) => {
               reconstructInstanceTree([node], before.id, target?.id);

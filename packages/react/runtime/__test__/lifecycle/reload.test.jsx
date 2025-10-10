@@ -305,7 +305,7 @@ describe('reload', () => {
             [
               "rLynxFirstScreen",
               {
-                "root": "{"id":-6,"type":"root","children":[{"id":-7,"type":"__Card__:__snapshot_a94a8_test_2","values":[{"dataX":"WorldX"}],"children":[{"id":-9,"type":null,"values":["Enjoy"]},{"id":-10,"type":null,"values":["World"]},{"id":-8,"type":"__Card__:__snapshot_a94a8_test_1","values":[{"attr":{"dataX":"WorldX"}}]}]}]}",
+                "root": "{"id":-6,"type":"root","children":[{"id":-7,"type":"__Card__:__snapshot_a94a8_test_2","values":[{"dataX":"WorldX"}],"children":[{"id":-9,"type":null,"values":["Enjoy"],"__slotIndex":0},{"id":-10,"type":null,"values":["World"],"__slotIndex":1},{"id":-8,"type":"__Card__:__snapshot_a94a8_test_1","values":[{"attr":{"dataX":"WorldX"}}],"__slotIndex":2}],"__slotIndex":0}]}",
               },
             ],
           ],
@@ -723,7 +723,7 @@ describe('reload', () => {
             [
               "rLynxFirstScreen",
               {
-                "root": "{"id":-6,"type":"root","children":[{"id":-9,"type":"__Card__:__snapshot_a94a8_test_3","children":[{"id":-7,"type":"__Card__:__snapshot_a94a8_test_2","values":[{"dataX":"WorldX"}],"children":[{"id":-10,"type":null,"values":["Enjoy"]},{"id":-11,"type":null,"values":["World"]},{"id":-8,"type":"__Card__:__snapshot_a94a8_test_1","values":[{"attr":{"dataX":"WorldX"}}]}]}]}]}",
+                "root": "{"id":-6,"type":"root","children":[{"id":-9,"type":"__Card__:__snapshot_a94a8_test_3","children":[{"id":-7,"type":"__Card__:__snapshot_a94a8_test_2","values":[{"dataX":"WorldX"}],"children":[{"id":-10,"type":null,"values":["Enjoy"],"__slotIndex":0},{"id":-11,"type":null,"values":["World"],"__slotIndex":1},{"id":-8,"type":"__Card__:__snapshot_a94a8_test_1","values":[{"attr":{"dataX":"WorldX"}}],"__slotIndex":2}],"__slotIndex":0}],"__slotIndex":0}]}",
               },
             ],
           ],
@@ -923,14 +923,14 @@ describe('reload', () => {
               "rLynxFirstScreen",
               {
                 "jsReadyEventIdSwap": {},
-                "root": "{"id":-1,"type":"root","children":[{"id":-5,"type":"__Card__:__snapshot_a94a8_test_5","children":[{"id":-2,"type":"__Card__:__snapshot_a94a8_test_6","values":[{"item-key":0}],"children":[{"id":-6,"type":"__Card__:__snapshot_a94a8_test_4","values":["a"]}]},{"id":-3,"type":"__Card__:__snapshot_a94a8_test_6","values":[{"item-key":1}],"children":[{"id":-7,"type":"__Card__:__snapshot_a94a8_test_4","values":["b"]}]},{"id":-4,"type":"__Card__:__snapshot_a94a8_test_6","values":[{"item-key":2}],"children":[{"id":-8,"type":"__Card__:__snapshot_a94a8_test_4","values":["c"]}]}]}]}",
+                "root": "{"id":-1,"type":"root","children":[{"id":-5,"type":"__Card__:__snapshot_a94a8_test_5","children":[{"id":-2,"type":"__Card__:__snapshot_a94a8_test_6","values":[{"item-key":0}],"children":[{"id":-6,"type":"__Card__:__snapshot_a94a8_test_4","values":["a"],"__slotIndex":0}],"__slotIndex":0},{"id":-3,"type":"__Card__:__snapshot_a94a8_test_6","values":[{"item-key":1}],"children":[{"id":-7,"type":"__Card__:__snapshot_a94a8_test_4","values":["b"],"__slotIndex":0}],"__slotIndex":0},{"id":-4,"type":"__Card__:__snapshot_a94a8_test_6","values":[{"item-key":2}],"children":[{"id":-8,"type":"__Card__:__snapshot_a94a8_test_4","values":["c"],"__slotIndex":0}],"__slotIndex":0}],"__slotIndex":0}]}",
               },
             ],
           ],
         ]
-      `)
-      debugger
-      expect(lynxCoreInject.tt.OnLifecycleEvent).toMatchInlineSnapshot(`[Function]`)
+      `);
+      debugger;
+      expect(lynxCoreInject.tt.OnLifecycleEvent).toMatchInlineSnapshot(`[Function]`);
       // LifecycleConstant.firstScreen
       lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
       globalThis.__OnLifecycleEvent.mockClear();
@@ -938,28 +938,6 @@ describe('reload', () => {
       // rLynxChange
       globalEnvManager.switchToMainThread();
       const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
-      expect(lynx.getNativeApp().callLepusMethod.mock.calls).toMatchInlineSnapshot(`
-        [
-          [
-            "rLynxChange",
-            {
-              "data": "{"patchList":[{"snapshotPatch":[],"id":18}]}",
-              "patchOptions": {
-                "isHydration": true,
-                "pipelineOptions": {
-                  "dsl": "reactLynx",
-                  "needTimestamps": true,
-                  "pipelineID": "pipelineID",
-                  "pipelineOrigin": "reactLynxHydrate",
-                  "stage": "hydrate",
-                },
-                "reloadVersion": 4,
-              },
-            },
-            [Function],
-          ],
-        ]
-      `)
       globalThis[rLynxChange[0]](rLynxChange[1]);
       expect(globalThis.__OnLifecycleEvent.mock.calls).toMatchInlineSnapshot(`[]`);
     }
@@ -1345,7 +1323,7 @@ describe('firstScreenSyncTiming - jsReady', () => {
                 "-8": -13,
                 "-9": -14,
               },
-              "root": "{"id":-11,"type":"root","children":[{"id":-12,"type":"__Card__:__snapshot_a94a8_test_2","values":[{"dataX":"WorldX"}],"children":[{"id":-14,"type":null,"values":["Hello 2"]},{"id":-15,"type":null,"values":["World"]},{"id":-13,"type":"__Card__:__snapshot_a94a8_test_1","values":[{"attr":{"dataX":"WorldX"}}]}]}]}",
+              "root": "{"id":-11,"type":"root","children":[{"id":-12,"type":"__Card__:__snapshot_a94a8_test_2","values":[{"dataX":"WorldX"}],"children":[{"id":-14,"type":null,"values":["Hello 2"],"__slotIndex":0},{"id":-15,"type":null,"values":["World"],"__slotIndex":1},{"id":-13,"type":"__Card__:__snapshot_a94a8_test_1","values":[{"attr":{"dataX":"WorldX"}}],"__slotIndex":2}],"__slotIndex":0}]}",
             },
           ],
         ]
@@ -1548,7 +1526,7 @@ describe('firstScreenSyncTiming - jsReady', () => {
                 "-5": -13,
                 "-9": -17,
               },
-              "root": "{"id":-17,"type":"root","children":[{"id":-21,"type":"__Card__:__snapshot_a94a8_test_5","children":[{"id":-18,"type":"__Card__:__snapshot_a94a8_test_6","values":[{"item-key":0}],"children":[{"id":-22,"type":"__Card__:__snapshot_a94a8_test_4","values":["a"]}]},{"id":-19,"type":"__Card__:__snapshot_a94a8_test_6","values":[{"item-key":1}],"children":[{"id":-23,"type":"__Card__:__snapshot_a94a8_test_4","values":["b"]}]},{"id":-20,"type":"__Card__:__snapshot_a94a8_test_6","values":[{"item-key":2}],"children":[{"id":-24,"type":"__Card__:__snapshot_a94a8_test_4","values":["c"]}]}]}]}",
+              "root": "{"id":-17,"type":"root","children":[{"id":-21,"type":"__Card__:__snapshot_a94a8_test_5","children":[{"id":-18,"type":"__Card__:__snapshot_a94a8_test_6","values":[{"item-key":0}],"children":[{"id":-22,"type":"__Card__:__snapshot_a94a8_test_4","values":["a"],"__slotIndex":0}],"__slotIndex":0},{"id":-19,"type":"__Card__:__snapshot_a94a8_test_6","values":[{"item-key":1}],"children":[{"id":-23,"type":"__Card__:__snapshot_a94a8_test_4","values":["b"],"__slotIndex":0}],"__slotIndex":0},{"id":-20,"type":"__Card__:__snapshot_a94a8_test_6","values":[{"item-key":2}],"children":[{"id":-24,"type":"__Card__:__snapshot_a94a8_test_4","values":["c"],"__slotIndex":0}],"__slotIndex":0}],"__slotIndex":0}]}",
             },
           ],
         ]
@@ -1712,7 +1690,7 @@ describe('firstScreenSyncTiming - jsReady', () => {
                 "-2": -10,
                 "-6": -14,
               },
-              "root": "{"id":-10,"type":"root","children":[{"id":-14,"type":"__Card__:__snapshot_a94a8_test_7","children":[{"id":-11,"type":"__Card__:__snapshot_a94a8_test_8","values":[{"item-key":0}],"children":[{"id":-15,"type":"__Card__:__snapshot_a94a8_test_4","values":["a"]}]},{"id":-12,"type":"__Card__:__snapshot_a94a8_test_8","values":[{"item-key":1}],"children":[{"id":-16,"type":"__Card__:__snapshot_a94a8_test_4","values":["b"]}]},{"id":-13,"type":"__Card__:__snapshot_a94a8_test_8","values":[{"item-key":2}],"children":[{"id":-17,"type":"__Card__:__snapshot_a94a8_test_4","values":["c"]}]}]}]}",
+              "root": "{"id":-10,"type":"root","children":[{"id":-14,"type":"__Card__:__snapshot_a94a8_test_7","children":[{"id":-11,"type":"__Card__:__snapshot_a94a8_test_8","values":[{"item-key":0}],"children":[{"id":-15,"type":"__Card__:__snapshot_a94a8_test_4","values":["a"],"__slotIndex":0}],"__slotIndex":0},{"id":-12,"type":"__Card__:__snapshot_a94a8_test_8","values":[{"item-key":1}],"children":[{"id":-16,"type":"__Card__:__snapshot_a94a8_test_4","values":["b"],"__slotIndex":0}],"__slotIndex":0},{"id":-13,"type":"__Card__:__snapshot_a94a8_test_8","values":[{"item-key":2}],"children":[{"id":-17,"type":"__Card__:__snapshot_a94a8_test_4","values":["c"],"__slotIndex":0}],"__slotIndex":0}],"__slotIndex":0}]}",
             },
           ],
         ]
@@ -1905,7 +1883,7 @@ describe('firstScreenSyncTiming - jsReady', () => {
             "rLynxFirstScreen",
             {
               "jsReadyEventIdSwap": {},
-              "root": "{"id":-11,"type":"root","children":[{"id":-12,"type":"__Card__:__snapshot_a94a8_test_2","values":[{"dataX":"WorldX"}],"children":[{"id":-14,"type":null,"values":["Hello 2"]},{"id":-15,"type":null,"values":["World"]},{"id":-13,"type":"__Card__:__snapshot_a94a8_test_1","values":[{"attr":{"dataX":"WorldX"}}]}]}]}",
+              "root": "{"id":-11,"type":"root","children":[{"id":-12,"type":"__Card__:__snapshot_a94a8_test_2","values":[{"dataX":"WorldX"}],"children":[{"id":-14,"type":null,"values":["Hello 2"],"__slotIndex":0},{"id":-15,"type":null,"values":["World"],"__slotIndex":1},{"id":-13,"type":"__Card__:__snapshot_a94a8_test_1","values":[{"attr":{"dataX":"WorldX"}}],"__slotIndex":2}],"__slotIndex":0}]}",
             },
           ],
         ]

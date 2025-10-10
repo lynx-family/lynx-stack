@@ -239,6 +239,7 @@ export function createSnapshot(
   snapshotManager.values.set(uniqID, s);
   if (slot && slot[0]) {
     const v = slot[0][0];
+    console.log('createSnapshot', uniqID, v);
     if (v === DynamicPartType.ListChildren || v === DynamicPartType.ListSlotV2) {
       s.isListHolder = true;
     }
@@ -267,6 +268,7 @@ export interface SerializedSnapshotInstance {
   values?: any[] | undefined;
   extraProps?: Record<string, unknown> | undefined;
   children?: SerializedSnapshotInstance[] | undefined;
+  __slotIndex?: number | undefined;
 }
 
 const DEFAULT_ENTRY_NAME = '__Card__';
@@ -304,7 +306,7 @@ export class SnapshotInstance {
   }
 
   ensureElements(): void {
-    console.log('ensureElements', this.__id, this.type)
+    console.log('ensureElements', this.__id, this.type);
     const { create, slot, isListHolder, cssId, entryName } = this.__snapshot_def;
     const elements = create!(this);
     this.__elements = elements;
@@ -381,7 +383,7 @@ export class SnapshotInstance {
         child = child.__nextSibling;
       }
     }
-    console.log('ensureElements end')
+    console.log('ensureElements end');
   }
 
   unRenderElements(): void {
@@ -526,9 +528,21 @@ export class SnapshotInstance {
   }
 
   insertBefore(newNode: SnapshotInstance, existingNode?: SnapshotInstance): void {
-    console.log('insertBefore', 'newNode', newNode.__id, newNode.type, newNode.__slotIndex, 'existingNode', existingNode?.__id, existingNode?.type, existingNode?.__slotIndex)
+    console.log(
+      'insertBefore',
+      'parent',
+      this.type,
+      'newNode',
+      newNode.__id,
+      newNode.type,
+      newNode.__slotIndex,
+      'existingNode',
+      existingNode?.__id,
+      existingNode?.type,
+      existingNode?.__slotIndex,
+    );
     const __snapshot_def = this.__snapshot_def;
-    console.log('__snapshot_def.isListHolder', this.type, __snapshot_def.isListHolder)
+    console.log('__snapshot_def.isListHolder', this.type, __snapshot_def.isListHolder);
     if (__snapshot_def.isListHolder) {
       if (__pendingListUpdates.values) {
         (__pendingListUpdates.values[this.__id] ??= new ListUpdateInfoRecording(
@@ -551,22 +565,22 @@ export class SnapshotInstance {
     }
 
     const count = __snapshot_def.slot.length;
-    console.log('count', count)
+    console.log('count', count);
     if (
       count === 1
       || (__snapshot_def.isSlotV2 ??= __snapshot_def.slot.every(([type]) =>
         type === DynamicPartType.SlotV2 || type === DynamicPartType.ListSlotV2
       ))
     ) {
-      console.log('count === 1 or slotv2')
-      console.log('newNode.__slotIndex', newNode.__slotIndex)
+      console.log('count === 1 or slotv2');
+      console.log('newNode.__slotIndex', newNode.__slotIndex);
       const [, elementIndex] = __snapshot_def.slot[typeof newNode.__slotIndex === 'number' ? newNode.__slotIndex : 0]!;
       const parent = __elements[elementIndex]!;
       if (shouldRemove) {
         __RemoveElement(parent, newNode.__element_root!);
       }
       if (existingNode) {
-        console.log('existingNode.__slotIndex', existingNode.__slotIndex)
+        console.log('existingNode.__slotIndex', existingNode.__slotIndex);
         if (__snapshot_def.isSlotV2 && newNode.__slotIndex! < existingNode.__slotIndex!) {
           __AppendElement(parent, newNode.__element_root!);
         } else {
@@ -580,7 +594,7 @@ export class SnapshotInstance {
         __AppendElement(parent, newNode.__element_root!);
       }
     } else if (count > 1) {
-      console.log('count > 1')
+      console.log('count > 1');
       const index = this.__current_slot_index++;
       const [s, elementIndex] = __snapshot_def.slot[index]!;
 
@@ -620,7 +634,15 @@ export class SnapshotInstance {
 
     unref(child, true);
     if (this.__elements) {
-      console.log('this.type', this.type, '__snapshot_def.slot', __snapshot_def.slot, 'child', child, child.__slotIndex)
+      console.log(
+        'this.type',
+        this.type,
+        '__snapshot_def.slot',
+        __snapshot_def.slot,
+        'child',
+        child.type,
+        child.__slotIndex,
+      );
       const [, elementIndex] = __snapshot_def.slot[typeof child.__slotIndex === 'number' ? child.__slotIndex : 0]!;
       __RemoveElement(this.__elements[elementIndex]!, child.__element_root!);
     }
@@ -641,6 +663,7 @@ export class SnapshotInstance {
   }
 
   setAttribute(key: string | number, value: any): void {
+    console.log('SnapshotInstance setAttribute', this.type, key, value, typeof value);
     if (key === 'values') {
       const oldValues = this.__values;
       const values = value as unknown[];
@@ -674,6 +697,7 @@ export class SnapshotInstance {
       values: this.__values,
       extraProps: this.__extraProps,
       children: this.__firstChild ? this.childNodes : undefined,
+      __slotIndex: this.__slotIndex,
     };
   }
 

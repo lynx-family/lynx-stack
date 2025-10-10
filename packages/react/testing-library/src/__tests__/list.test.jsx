@@ -9,6 +9,7 @@ import { Component, useState } from '@lynx-js/react';
 
 import { render } from '..';
 import { __pendingListUpdates } from '../../../runtime/lib/pendingListUpdates.js';
+import { prettyFormatSnapshotPatch } from '../../../runtime/lib/debug/formatPatch.js';
 
 describe('list', () => {
   it('basic', async () => {
@@ -753,7 +754,7 @@ describe('list - deferred <list-item/> should render as normal', () => {
     `);
   });
 
-  it.skip('spread props inside list-item should not trigger redundant snapshot patch', () => {
+  it('spread props inside list-item should not trigger redundant snapshot patch', () => {
     vi.spyOn(lynxTestingEnv.backgroundThread.lynxCoreInject.tt, 'OnLifecycleEvent');
     const onLifecycleEventCalls = lynxTestingEnv.backgroundThread.lynxCoreInject.tt.OnLifecycleEvent.mock.calls;
     vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
@@ -799,7 +800,7 @@ describe('list - deferred <list-item/> should render as normal', () => {
             "rLynxFirstScreen",
             {
               "jsReadyEventIdSwap": {},
-              "root": "{"id":-1,"type":"root","children":[{"id":-2,"type":"__Card__:__snapshot_a9e46_test_23","children":[{"id":-3,"type":"__Card__:__snapshot_a9e46_test_24","values":[{"item-key":0}],"children":[{"id":-4,"type":"__Card__:__snapshot_a9e46_test_22","values":[{"style":{"backgroundColor":"red","margin":"12px"}}],"children":[{"id":-5,"type":"__Card__:__snapshot_a9e46_test_25","children":[{"id":-12,"type":null,"values":["0"]}]}]}]},{"id":-6,"type":"__Card__:__snapshot_a9e46_test_24","values":[{"item-key":1}],"children":[{"id":-7,"type":"__Card__:__snapshot_a9e46_test_22","values":[{"style":{"backgroundColor":"red","margin":"12px"}}],"children":[{"id":-8,"type":"__Card__:__snapshot_a9e46_test_25","children":[{"id":-13,"type":null,"values":["1"]}]}]}]},{"id":-9,"type":"__Card__:__snapshot_a9e46_test_24","values":[{"item-key":2}],"children":[{"id":-10,"type":"__Card__:__snapshot_a9e46_test_22","values":[{"style":{"backgroundColor":"red","margin":"12px"}}],"children":[{"id":-11,"type":"__Card__:__snapshot_a9e46_test_25","children":[{"id":-14,"type":null,"values":["2"]}]}]}]}]}]}",
+              "root": "{"id":-1,"type":"root","children":[{"id":-2,"type":"__Card__:__snapshot_a9e46_test_23","children":[{"id":-3,"type":"__Card__:__snapshot_a9e46_test_24","values":[{"item-key":0}],"children":[{"id":-4,"type":"__Card__:__snapshot_a9e46_test_22","values":[{"style":{"backgroundColor":"red","margin":"12px"}}],"children":[{"id":-5,"type":"__Card__:__snapshot_a9e46_test_25","children":[{"id":-12,"type":null,"values":[0],"__slotIndex":0}],"__slotIndex":0}],"__slotIndex":0}],"__slotIndex":0},{"id":-6,"type":"__Card__:__snapshot_a9e46_test_24","values":[{"item-key":1}],"children":[{"id":-7,"type":"__Card__:__snapshot_a9e46_test_22","values":[{"style":{"backgroundColor":"red","margin":"12px"}}],"children":[{"id":-8,"type":"__Card__:__snapshot_a9e46_test_25","children":[{"id":-13,"type":null,"values":[1],"__slotIndex":0}],"__slotIndex":0}],"__slotIndex":0}],"__slotIndex":0},{"id":-9,"type":"__Card__:__snapshot_a9e46_test_24","values":[{"item-key":2}],"children":[{"id":-10,"type":"__Card__:__snapshot_a9e46_test_22","values":[{"style":{"backgroundColor":"red","margin":"12px"}}],"children":[{"id":-11,"type":"__Card__:__snapshot_a9e46_test_25","children":[{"id":-14,"type":null,"values":[2],"__slotIndex":0}],"__slotIndex":0}],"__slotIndex":0}],"__slotIndex":0}],"__slotIndex":0}]}",
             },
           ],
         ],
@@ -813,7 +814,7 @@ describe('list - deferred <list-item/> should render as normal', () => {
         [
           "rLynxChange",
           {
-            "data": "{"patchList":[{"snapshotPatch":[3,-12,0,0,3,-13,0,1,3,-14,0,2],"id":2}]}",
+            "data": "{"patchList":[{"snapshotPatch":[],"id":2}]}",
             "patchOptions": {
               "isHydration": true,
               "pipelineOptions": {
@@ -831,28 +832,6 @@ describe('list - deferred <list-item/> should render as normal', () => {
       ]
     `);
     expect(callLepusMethodCalls[0][0]).toBe('rLynxChange');
-    expect(callLepusMethodCalls).toMatchInlineSnapshot(`
-      [
-        [
-          "rLynxChange",
-          {
-            "data": "{"patchList":[{"snapshotPatch":[3,-12,0,0,3,-13,0,1,3,-14,0,2],"id":2}]}",
-            "patchOptions": {
-              "isHydration": true,
-              "pipelineOptions": {
-                "dsl": "reactLynx",
-                "needTimestamps": true,
-                "pipelineID": "pipelineID",
-                "pipelineOrigin": "reactLynxHydrate",
-                "stage": "hydrate",
-              },
-              "reloadVersion": 0,
-            },
-          },
-          [Function],
-        ],
-      ]
-    `)
     expect(JSON.parse(callLepusMethodCalls[0][1]['data']).patchList[0].snapshotPatch.length).toBe(0);
   });
 });

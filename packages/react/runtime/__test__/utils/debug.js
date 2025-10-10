@@ -30,6 +30,7 @@ function backgroundSnapshotInstanceToJSON() {
     props: Object.fromEntries(
       this.__values?.map((v, i) => [`${i}`, v]) ?? [],
     ),
+    __slotIndex: this.__slotIndex,
   };
   Object.defineProperty(json, '$$typeof', {
     value: Symbol.for('react.test.json'),

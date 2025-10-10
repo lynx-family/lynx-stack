@@ -152,11 +152,12 @@ describe('document', () => {
             <raw-text
               text="Hello"
             />
+          </text>
+          <text>
             <raw-text
               text="World"
             />
           </text>
-          <text />
         </image>
       </page>
     `);

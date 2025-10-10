@@ -614,7 +614,7 @@ describe('attribute timing api', () => {
             __lynx_timing_flag="__lynx_timing_actual_fmp"
           >
             <raw-text
-              text="1"
+              text={1}
             />
           </text>
         </view>
@@ -652,21 +652,21 @@ describe('attribute timing api', () => {
             __lynx_timing_flag={true}
           >
             <raw-text
-              text="1"
+              text={1}
             />
           </text>
           <text
             __lynx_timing_flag={123}
           >
             <raw-text
-              text="1"
+              text={1}
             />
           </text>
           <text
             __lynx_timing_flag={{}}
           >
             <raw-text
-              text="1"
+              text={1}
             />
           </text>
         </view>

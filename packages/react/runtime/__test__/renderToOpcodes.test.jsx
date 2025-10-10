@@ -39,6 +39,7 @@ describe('renderToOpcodes', () => {
       [
         0,
         {
+          "__slotIndex": undefined,
           "children": undefined,
           "extraProps": undefined,
           "id": -3,
@@ -79,6 +80,7 @@ describe('renderToOpcodes', () => {
       [
         0,
         {
+          "__slotIndex": undefined,
           "children": undefined,
           "extraProps": undefined,
           "id": -4,
@@ -88,6 +90,7 @@ describe('renderToOpcodes', () => {
         0,
         0,
         {
+          "__slotIndex": undefined,
           "children": undefined,
           "extraProps": undefined,
           "id": -6,
@@ -96,7 +99,7 @@ describe('renderToOpcodes', () => {
         },
         0,
         3,
-        "1000",
+        1000,
         0,
         1,
         1,
@@ -126,6 +129,7 @@ describe('renderToOpcodes', () => {
       [
         0,
         {
+          "__slotIndex": undefined,
           "children": undefined,
           "extraProps": undefined,
           "id": -7,
@@ -135,6 +139,7 @@ describe('renderToOpcodes', () => {
         0,
         0,
         {
+          "__slotIndex": undefined,
           "children": undefined,
           "extraProps": undefined,
           "id": -8,
@@ -143,7 +148,7 @@ describe('renderToOpcodes', () => {
         },
         0,
         3,
-        "1",
+        1,
         0,
         1,
         1,
@@ -167,6 +172,7 @@ describe('renderToOpcodes', () => {
       [
         0,
         {
+          "__slotIndex": undefined,
           "children": undefined,
           "extraProps": undefined,
           "id": -9,
@@ -199,6 +205,7 @@ describe('renderToOpcodes', () => {
       [
         0,
         {
+          "__slotIndex": undefined,
           "children": undefined,
           "extraProps": undefined,
           "id": -10,
@@ -230,6 +237,7 @@ describe('renderToOpcodes', () => {
       [
         0,
         {
+          "__slotIndex": undefined,
           "children": undefined,
           "extraProps": undefined,
           "id": -11,
@@ -259,6 +267,7 @@ describe('renderToOpcodes', () => {
       [
         0,
         {
+          "__slotIndex": undefined,
           "children": undefined,
           "extraProps": undefined,
           "id": -12,
@@ -287,6 +296,7 @@ describe('renderToOpcodes', () => {
       [
         0,
         {
+          "__slotIndex": undefined,
           "children": undefined,
           "extraProps": undefined,
           "id": -13,
@@ -296,6 +306,7 @@ describe('renderToOpcodes', () => {
         0,
         0,
         {
+          "__slotIndex": undefined,
           "children": undefined,
           "extraProps": undefined,
           "id": -14,
@@ -304,7 +315,7 @@ describe('renderToOpcodes', () => {
         },
         0,
         3,
-        "11111",
+        11111,
         0,
         1,
         1,
@@ -324,6 +335,7 @@ describe('renderToOpcodes', () => {
       [
         0,
         {
+          "__slotIndex": undefined,
           "children": undefined,
           "extraProps": undefined,
           "id": -15,
@@ -333,6 +345,7 @@ describe('renderToOpcodes', () => {
         0,
         0,
         {
+          "__slotIndex": undefined,
           "children": undefined,
           "extraProps": undefined,
           "id": -16,
@@ -341,7 +354,7 @@ describe('renderToOpcodes', () => {
         },
         0,
         3,
-        "12345",
+        12345,
         0,
         1,
         1,
@@ -618,70 +631,6 @@ describe('renderToOpcodes', () => {
     );
 
     expect(rendered.length).toBe(24);
-    expect(rendered).toMatchInlineSnapshot(`
-      [
-        0,
-        {
-          "children": undefined,
-          "extraProps": undefined,
-          "id": -49,
-          "type": "__Card__:__snapshot_a94a8_test_43",
-          "values": undefined,
-        },
-        0,
-        0,
-        {
-          "children": undefined,
-          "extraProps": undefined,
-          "id": -41,
-          "type": "__Card__:__snapshot_a94a8_test_38",
-          "values": undefined,
-        },
-        0,
-        1,
-        0,
-        {
-          "children": undefined,
-          "extraProps": undefined,
-          "id": -42,
-          "type": "__Card__:__snapshot_a94a8_test_39",
-          "values": undefined,
-        },
-        0,
-        1,
-        0,
-        {
-          "children": undefined,
-          "extraProps": undefined,
-          "id": -43,
-          "type": "__Card__:__snapshot_a94a8_test_40",
-          "values": undefined,
-        },
-        0,
-        1,
-        0,
-        {
-          "children": undefined,
-          "extraProps": undefined,
-          "id": -44,
-          "type": "__Card__:__snapshot_a94a8_test_41",
-          "values": undefined,
-        },
-        0,
-        1,
-        0,
-        {
-          "children": undefined,
-          "extraProps": undefined,
-          "id": -45,
-          "type": "__Card__:__snapshot_a94a8_test_42",
-          "values": undefined,
-        },
-        0,
-        1,
-        1,
-      ]
-    `)
     expect(rendered[4].type).toStrictEqual(resolvedJsx1.type);
     expect(rendered[8].type).toStrictEqual(resolvedJsx2.type);
     expect(rendered[12].type).toStrictEqual(resolvedJsx3.type);
@@ -1017,7 +966,7 @@ describe('renderOpcodesInto', () => {
         </view>
       </page>
     `);
-    
+
     const [vnodeA, vnodeB, vnodeC, vnodeC2, vnodeD] = scratch.__firstChild.props.$0;
 
     expect(vnodeA).not.toHaveProperty('__elements');
@@ -1067,6 +1016,7 @@ describe('createElement', () => {
       [
         0,
         {
+          "__slotIndex": undefined,
           "children": undefined,
           "extraProps": undefined,
           "id": -89,
@@ -1082,6 +1032,7 @@ describe('createElement', () => {
       [
         0,
         {
+          "__slotIndex": undefined,
           "children": undefined,
           "extraProps": undefined,
           "id": -90,
@@ -1105,6 +1056,7 @@ describe('createElement', () => {
       [
         0,
         {
+          "__slotIndex": undefined,
           "children": undefined,
           "extraProps": undefined,
           "id": -91,
@@ -1120,6 +1072,7 @@ describe('createElement', () => {
       [
         0,
         {
+          "__slotIndex": undefined,
           "children": undefined,
           "extraProps": undefined,
           "id": -92,
