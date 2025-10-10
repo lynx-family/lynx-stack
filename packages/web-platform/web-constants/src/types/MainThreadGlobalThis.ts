@@ -10,6 +10,7 @@ import type { FlushElementTreeOptions } from './FlushElementTreeOptions.js';
 import type { I18nResourceTranslationOptions } from './index.js';
 import type { MainThreadLynx } from './MainThreadLynx.js';
 import type { ProcessDataCallback } from './ProcessDataCallback.js';
+import type { UpdateDataOptions } from './UpdateDataOptions.js';
 
 type ElementPAPIEventHandler =
   | string
@@ -401,6 +402,6 @@ export interface MainThreadGlobalThis {
   ) => unknown;
   // the following methods is assigned by the main thread user code
   renderPage: ((data: unknown) => void) | undefined;
-  updatePage?: (data: Cloneable, options?: Record<string, string>) => void;
+  updatePage?: (data: Cloneable, options?: UpdateDataOptions) => void;
   runWorklet?: (obj: unknown, event: unknown) => void;
 }
