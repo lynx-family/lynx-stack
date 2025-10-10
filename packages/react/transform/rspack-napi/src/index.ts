@@ -65,6 +65,7 @@ const transformReactLynx = async (
   options?: TransformReactLynxOptions,
 ): Promise<TransformReactLynxOutput> => {
   const swcPluginReactLynxOptions: ReactLynxTransformOptions = {
+    filename: options?.filename ?? 'test.js',
     mode: options?.mode ?? 'production',
     cssScope: options?.cssScope ?? {
       mode: 'none',

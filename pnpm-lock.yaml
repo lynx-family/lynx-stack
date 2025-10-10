@@ -335,8 +335,6 @@ importers:
         specifier: 0.2.9
         version: 0.2.9
 
-  packages/react/transform/cjs: {}
-
   packages/react/transform/rspack-napi:
     dependencies:
       '@lynx-js/swc-plugin-reactlynx':
