@@ -1040,9 +1040,7 @@ test.describe('reactlynx3 tests', () => {
       await expect(target).toHaveCSS('background-color', 'rgb(255, 192, 203)'); // pink
       await page.evaluate(() => {
         // @ts-expect-error
-        globalThis.lynxView.updateData({ mockData: 'updatedData' }, 1, () => {
-          console.log('update Data success');
-        });
+        globalThis.lynxView.updateData({ mockData: 'updatedData' });
       });
       await wait(50);
       await expect(target).toHaveCSS(
@@ -1071,13 +1069,76 @@ test.describe('reactlynx3 tests', () => {
       await wait(1000);
       await page.evaluate(() => {
         // @ts-expect-error
-        globalThis.lynxView.updateData({ mockData: 'updatedData' }, 0, () => {
-          console.log('update Data success');
-        });
+        globalThis.lynxView.updateData(
+          { mockData: 'updatedData' },
+          'default',
+          () => {
+            console.log('update Data success');
+          },
+        );
       });
       await wait(100);
       await expect(successCallback).toBe(true);
     });
+
+    // use default
+    test('api-updateData-processData', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(100);
+      const target = page.locator('#target');
+      await wait(100);
+      await expect(target).toHaveCSS(
+        'background-color',
+        'rgb(255, 192, 203)',
+      ); // pink
+      await page.evaluate(() => {
+        // @ts-expect-error
+        globalThis.lynxView.updateData({ mockData: 'updatedData' });
+      });
+      await expect(target).toHaveCSS(
+        'background-color',
+        'rgb(0, 128, 0)',
+      ); // green;
+    });
+    // not use default
+    test(
+      'api-updateData-processData-not-default',
+      async ({ page }, { title }) => {
+        await goto(page, 'api-updateData-processData');
+        await wait(100);
+        const target = page.locator('#target');
+        await wait(100);
+        await expect(target).toHaveCSS(
+          'background-color',
+          'rgb(255, 192, 203)',
+        ); // pink
+        await page.evaluate(() => {
+          // @ts-expect-error
+          globalThis.lynxView.updateData(
+            { mockData: 'updatedData' },
+            'useless',
+          );
+        });
+        await wait(100);
+        await expect(target).toHaveCSS(
+          'background-color',
+          'rgb(255, 192, 203)',
+        ); // pink
+        await wait(100);
+        await page.evaluate(() => {
+          // @ts-expect-error
+          globalThis.lynxView.updateData(
+            { mockData: 'updatedData' },
+            'processData',
+          );
+        });
+        await wait(100);
+        await expect(target).toHaveCSS(
+          'background-color',
+          'rgb(0, 128, 0)',
+        ); // green;
+      },
+    );
 
     test('basic-at-rule-animation', async ({ page }, { title }) => {
       await goto(page, title);
