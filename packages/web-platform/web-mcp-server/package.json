@@ -12,6 +12,7 @@
   },
   "scripts": {
     "build": "rslib build",
+    "postinstall": "npx puppeteer browsers install chrome",
     "test": "vitest"
   },
   "devDependencies": {
