@@ -186,11 +186,6 @@ pub fn query_transform_rules<'a>(
   if name == "linear-weight" && value != "0" {
     result.push(("--lynx-linear-weight-basis", "0"));
   }
-
-  // For input element with font-size, also add --placeholder-font-size
-  if name == "font-size" {
-    result.extend([("--font-size-for-placeholder", value), ("font-size", value)]);
-  }
   (result, result_children)
 }
 
@@ -513,12 +508,5 @@ mod tests {
     let source = "linear-layout-gravity: start;";
     let result = transform_inline_style_string(source).0;
     assert_eq!(result, "--align-self-row:start;--align-self-column:start;");
-  }
-
-  #[test]
-  fn linear_layout_gravity_end() {
-    let source = "font-size: 20px;";
-    let result = transform_inline_style_string(source).0;
-    assert_eq!(result, "--font-size-for-placeholder:20px;font-size:20px;");
   }
 }

@@ -32,7 +32,7 @@ x-input::part(input), x-input::part(form) {
 
 x-input::part(input) {
   --placeholder-color: grey;
-  --placeholder-font-size: var(--font-size-for-placeholder, 14px);
+  --placeholder-font-size: 14px;
   --placeholder-font-weight: normal;
 }
 
