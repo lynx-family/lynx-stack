@@ -6,10 +6,5 @@ const __snapshot_da39a_test_1 = ReactLynx.createSnapshot("__snapshot_da39a_test_
     return [
         el
     ];
-<<<<<<< HEAD:packages/react/transform/tests/__swc_snapshots__/src/swc_plugin_snapshot/mod.rs/inline_style_literal_unknown_property.js
-}, null, ReactLynx.__DynamicPartSlotV2_0, undefined, globDynamicComponentEntry, null);
-<__snapshot_da39a_test_1 $0={[]}/>;
-=======
 }, null, null, undefined, globDynamicComponentEntry, null);
 <__snapshot_da39a_test_1/>;
->>>>>>> gh/main:packages/react/transform/crates/swc_plugin_snapshot/tests/__swc_snapshots__/lib.rs/inline_style_literal_unknown_property.js

@@ -222,6 +222,100 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
+    |t| {
+      (
+        visit_mut_pass(ListVisitor::new(Some(t.comments.clone()))),
+        visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
+          JSXTransformerConfig {
+            preserve_jsx: true,
+            ..Default::default()
+          },
+          None,
+          TransformMode::Test,
+        )),
+      )
+    },
+    basic_list,
+    // Input codes
+    r#"
+    <view>
+      <list>
+        <list-item full-span={true} reuse-identifier={x}></list-item>
+      </list>
+      <view><A/></view>
+    </view>;
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    |t| {
+      (
+        visit_mut_pass(ListVisitor::new(Some(t.comments.clone()))),
+        visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
+          JSXTransformerConfig {
+            preserve_jsx: true,
+            ..Default::default()
+          },
+          None,
+          TransformMode::Test,
+        )),
+      )
+    },
+    basic_list_with_fragment,
+    // Input codes
+    r#"
+    <view>
+      <list>
+        <>
+          <list-item></list-item>
+          <list-item></list-item>
+        </>
+      </list>
+      <view><A/></view>
+    </view>;
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    |t| {
+      (
+        visit_mut_pass(ListVisitor::new(Some(t.comments.clone()))),
+        visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
+          JSXTransformerConfig {
+            preserve_jsx: true,
+            ..Default::default()
+          },
+          None,
+          TransformMode::Test,
+        )),
+      )
+    },
+    basic_list_toplevel,
+    // Input codes
+    r#"
+    <list>
+      <list-item>!!!</list-item>
+      <list-item>!!!</list-item>
+    </list>
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
     |t| visit_mut_pass(ListVisitor::new(Some(t.comments.clone()))),
     should_transform_list_in_view,
     r#"
