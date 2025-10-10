@@ -2,7 +2,7 @@
   "name": "@lynx-js/react-transfom-rspack-napi",
   "version": "0.1.0",
   "private": true,
-  "description": "",
+  "description": "Rspack transform NAPI with swc-plugin-reactlynx & swc-plugin-reactlynx-compat",
   "keywords": [
     "lynx",
     "react",
