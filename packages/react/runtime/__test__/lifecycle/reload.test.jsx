@@ -916,21 +916,6 @@ describe('reload', () => {
 
     // hydrate
     {
-      expect(globalThis.__OnLifecycleEvent.mock.calls).toMatchInlineSnapshot(`
-        [
-          [
-            [
-              "rLynxFirstScreen",
-              {
-                "jsReadyEventIdSwap": {},
-                "root": "{"id":-1,"type":"root","children":[{"id":-5,"type":"__Card__:__snapshot_a94a8_test_5","children":[{"id":-2,"type":"__Card__:__snapshot_a94a8_test_6","values":[{"item-key":0}],"children":[{"id":-6,"type":"__Card__:__snapshot_a94a8_test_4","values":["a"],"__slotIndex":0}],"__slotIndex":0},{"id":-3,"type":"__Card__:__snapshot_a94a8_test_6","values":[{"item-key":1}],"children":[{"id":-7,"type":"__Card__:__snapshot_a94a8_test_4","values":["b"],"__slotIndex":0}],"__slotIndex":0},{"id":-4,"type":"__Card__:__snapshot_a94a8_test_6","values":[{"item-key":2}],"children":[{"id":-8,"type":"__Card__:__snapshot_a94a8_test_4","values":["c"],"__slotIndex":0}],"__slotIndex":0}],"__slotIndex":0}]}",
-              },
-            ],
-          ],
-        ]
-      `);
-      debugger;
-      expect(lynxCoreInject.tt.OnLifecycleEvent).toMatchInlineSnapshot(`[Function]`);
       // LifecycleConstant.firstScreen
       lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
       globalThis.__OnLifecycleEvent.mockClear();

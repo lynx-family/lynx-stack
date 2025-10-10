@@ -286,6 +286,10 @@ describe('document', () => {
                 />
               </text>
             </view>
+          </wrapper>
+          <view
+            class="result-cell"
+          >
             <view
               class="err"
             >
@@ -297,10 +301,7 @@ describe('document', () => {
                 />
               </text>
             </view>
-          </wrapper>
-          <view
-            class="result-cell"
-          />
+          </view>
         </view>
       </page>
     `);

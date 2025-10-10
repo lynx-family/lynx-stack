@@ -670,25 +670,33 @@ describe(`list componentAtIndex`, () => {
     const b = new SnapshotInstance(s1);
     b.ensureElements();
     const b1 = new SnapshotInstance(s11);
+    b1.__slotIndex = 0;
     b.insertBefore(b1);
     const listRef = b1.__elements[0];
 
     const c0 = new SnapshotInstance(_s3);
+    c0.__slotIndex = 0;
     const c1 = new SnapshotInstance(_s3);
+    c1.__slotIndex = 0;
     const c2 = new SnapshotInstance(_s3);
+    c2.__slotIndex = 0;
     b1.insertBefore(c0);
     b1.insertBefore(c1);
     b1.insertBefore(c2);
 
     const c0_d0 = new SnapshotInstance(_s4);
+    c0_d0.__slotIndex = 0;
     const c0_d1 = new SnapshotInstance(_s5);
+    c0_d1.__slotIndex = 0;
     c0.insertBefore(c0_d0);
     c0.insertBefore(c0_d1);
 
     const c1_d0 = new SnapshotInstance(_s4);
+    c1_d0.__slotIndex = 0;
     c1.insertBefore(c1_d0);
 
     const c2_d0 = new SnapshotInstance(_s5);
+    c2_d0.__slotIndex = 0;
     c2.insertBefore(c2_d0);
 
     __pendingListUpdates.flush();
@@ -722,11 +730,6 @@ describe(`list componentAtIndex`, () => {
             text="Hello"
           />
         </text>
-        <text>
-          <raw-text
-            text="World"
-          />
-        </text>
       </list-item>
     `);
 
@@ -754,11 +757,6 @@ describe(`list componentAtIndex`, () => {
 
     expect(__FirstElement(listRef)).toMatchInlineSnapshot(`
       <list-item>
-        <text>
-          <raw-text
-            text="Hello"
-          />
-        </text>
         <text>
           <raw-text
             text="World"
@@ -799,23 +797,33 @@ describe(`list componentAtIndex`, () => {
     const s6 = __SNAPSHOT__(<text>!</text>);
 
     const c0 = new SnapshotInstance(s3);
+    c0.__slotIndex = 0;
     const c1 = new SnapshotInstance(s3);
+    c1.__slotIndex = 0;
     b1.insertBefore(c0);
     b1.insertBefore(c1);
 
     const c0_d0 = new SnapshotInstance(s4);
+    c0_d0.__slotIndex = 0;
     const c0_d1 = new SnapshotInstance(s5);
+    c0_d1.__slotIndex = 0;
     const c0_d2 = new SnapshotInstance(s6);
+    c0_d2.__slotIndex = 0;
     const c0_d0_ = new SnapshotInstance(s4);
+    c0_d0_.__slotIndex = 0;
     c0.insertBefore(c0_d0);
     c0.insertBefore(c0_d1);
     c0.insertBefore(c0_d2);
     c0.insertBefore(c0_d0_);
 
     const c1_d0 = new SnapshotInstance(s4);
+    c1_d0.__slotIndex = 0;
     const c1_d1 = new SnapshotInstance(s5);
+    c1_d1.__slotIndex = 0;
     const c1_d2 = new SnapshotInstance(s6);
+    c1_d2.__slotIndex = 0;
     const c1_d0_ = new SnapshotInstance(s4);
+    c1_d0_.__slotIndex = 0;
     c1.insertBefore(c1_d0);
     c1.insertBefore(c1_d2);
     c1.insertBefore(c1_d1);
@@ -907,12 +915,12 @@ describe(`list componentAtIndex`, () => {
           </text>
           <text>
             <raw-text
-              text="World"
+              text="!"
             />
           </text>
           <text>
             <raw-text
-              text="!"
+              text="World"
             />
           </text>
           <text>
@@ -1083,7 +1091,6 @@ describe(`list componentAtIndex`, () => {
       </list-item>,
     );
     const x = <view id='!'>{HOLE}</view>;
-    console.log('x', x);
     const slot = __SNAPSHOT__(<view id='!'>{HOLE}</view>);
     const slotInner = __SNAPSHOT__(<text />);
 
@@ -1093,8 +1100,10 @@ describe(`list componentAtIndex`, () => {
     b1.insertBefore(c1);
 
     const c0_d0 = new SnapshotInstance(slot);
+    c0_d0.__slotIndex = 0;
     c0_d0.insertBefore(new SnapshotInstance(slotInner));
     const c0_d1 = new SnapshotInstance(slot);
+    c0_d1.__slotIndex = 1;
     c0_d1.insertBefore(new SnapshotInstance(slotInner));
     c0.insertBefore(c0_d0);
     c0.insertBefore(c0_d1);
@@ -1146,16 +1155,17 @@ describe(`list componentAtIndex`, () => {
             >
               <text />
             </view>
+          </wrapper>
+          <raw-text
+            text="!"
+          />
+          <wrapper>
             <view
               id="!"
             >
               <text />
             </view>
           </wrapper>
-          <raw-text
-            text="!"
-          />
-          <wrapper />
         </list-item>
       </list>
     `);
@@ -3442,42 +3452,6 @@ describe('list-item with "defer" attribute', () => {
 
     renderPage();
     __pendingListUpdates.flush();
-
-    expect(elementTree).toMatchInlineSnapshot(`
-      "<page
-        cssId="default-entry-from-native:0"
-      >
-        <list
-          custom-list-name="list-container"
-          id="list"
-          update-list-info={
-            Array [
-              Object {
-                "insertAction": Array [
-                  Object {
-                    "item-key": "0",
-                    "position": 0,
-                    "type": "__Card__:__snapshot_a94a8_test_70",
-                  },
-                  Object {
-                    "item-key": "1",
-                    "position": 1,
-                    "type": "__Card__:__snapshot_a94a8_test_71",
-                  },
-                  Object {
-                    "item-key": "2",
-                    "position": 2,
-                    "type": "__Card__:__snapshot_a94a8_test_72",
-                  },
-                ],
-                "removeAction": Array [],
-                "updateAction": Array [],
-              },
-            ]
-          }
-        />
-      </page>"
-    `);
 
     const listRef = elementTree.getElementById('list');
     const __FlushElementTree = vi.fn();

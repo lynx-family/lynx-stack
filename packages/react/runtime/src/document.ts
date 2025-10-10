@@ -62,7 +62,7 @@ function setupDocument(): void {
     si.__slotIndex = slotIndex;
     return si;
   };
-  document.createElementNS = function(_ns: string, type: string, slotIndex: number = 0) {
+  document.createElementNS = function(_ns: string, type: string, _is?: string, slotIndex: number = 0) {
     const si = new SnapshotInstance(type);
     si.__slotIndex = slotIndex;
     return si;

@@ -46,8 +46,11 @@ describe('dual-runtime hydrate', () => {
     const a = new SnapshotInstance(s);
     a.ensureElements();
     const b1 = new SnapshotInstance(s1);
+    b1.__slotIndex = 0;
     const b2 = new SnapshotInstance(s1);
+    b2.__slotIndex = 0;
     const b3 = new SnapshotInstance(s1);
+    b3.__slotIndex = 0;
     b1.setAttribute(0, 'id~');
     a.insertBefore(b1);
     a.insertBefore(b2);
@@ -95,10 +98,15 @@ describe('dual-runtime hydrate', () => {
       const aa = new BackgroundSnapshotInstance(s);
 
       const bb1 = new BackgroundSnapshotInstance(s1);
+      bb1.__slotIndex = 0;
       const bb2 = new BackgroundSnapshotInstance(s2);
+      bb2.__slotIndex = 0;
       const bb3 = new BackgroundSnapshotInstance(s1);
+      bb3.__slotIndex = 0;
       const bb4 = new BackgroundSnapshotInstance(s1);
+      bb4.__slotIndex = 0;
       const bb5 = new BackgroundSnapshotInstance(s1);
+      bb5.__slotIndex = 0;
       bb1.setAttribute(0, '~id');
       bb5.setAttribute(0, '~id2');
       aa.insertBefore(bb1);
@@ -115,7 +123,64 @@ describe('dual-runtime hydrate', () => {
       bb2.insertBefore(cc2);
       bb2.insertBefore(cc3);
 
-      expect(hydrate(JSON.parse(JSON.stringify(a)), aa)).toMatchInlineSnapshot(`[]`);
+      expect(hydrate(JSON.parse(JSON.stringify(a)), aa)).toMatchInlineSnapshot(`
+        [
+          3,
+          -2,
+          0,
+          "~id",
+          0,
+          "__Card__:__snapshot_a94a8_test_3",
+          3,
+          0,
+          0,
+          "__Card__:__snapshot_a94a8_test_4",
+          7,
+          undefined,
+          1,
+          3,
+          7,
+          undefined,
+          0,
+          "__Card__:__snapshot_a94a8_test_4",
+          8,
+          undefined,
+          1,
+          3,
+          8,
+          undefined,
+          0,
+          "__Card__:__snapshot_a94a8_test_2",
+          9,
+          undefined,
+          4,
+          9,
+          [
+            "~id3",
+          ],
+          1,
+          3,
+          9,
+          undefined,
+          1,
+          -1,
+          3,
+          -3,
+          0,
+          "__Card__:__snapshot_a94a8_test_2",
+          6,
+          0,
+          4,
+          6,
+          [
+            "~id2",
+          ],
+          1,
+          -1,
+          6,
+          undefined,
+        ]
+      `);
       backgroundSnapshotInstanceManager.values.forEach((v, k) => {
         expect(k).toEqual(v.__id);
       });
@@ -126,9 +191,13 @@ describe('dual-runtime hydrate', () => {
     const a = new SnapshotInstance(s);
     a.ensureElements();
     const b1 = new SnapshotInstance(s1);
+    b1.__slotIndex = 0;
     const b2 = new SnapshotInstance(s1);
+    b2.__slotIndex = 0;
     const b3 = new SnapshotInstance(s1);
+    b3.__slotIndex = 0;
     const b4 = new SnapshotInstance(s1);
+    b4.__slotIndex = 0;
     a.insertBefore(b1);
     a.insertBefore(b2);
     a.insertBefore(b3);
@@ -137,22 +206,35 @@ describe('dual-runtime hydrate', () => {
     const aa = new BackgroundSnapshotInstance(s);
 
     const bb1 = new BackgroundSnapshotInstance(s1);
+    bb1.__slotIndex = 0;
     const bb2 = new BackgroundSnapshotInstance(s1);
+    bb2.__slotIndex = 0;
     const bb3 = new BackgroundSnapshotInstance(s1);
+    bb3.__slotIndex = 0;
     aa.insertBefore(bb1);
     aa.insertBefore(bb2);
     aa.insertBefore(bb3);
 
-    expect(hydrate(JSON.parse(JSON.stringify(a)), aa)).toMatchInlineSnapshot(`[]`);
+    expect(hydrate(JSON.parse(JSON.stringify(a)), aa)).toMatchInlineSnapshot(`
+      [
+        2,
+        -1,
+        -5,
+      ]
+    `);
   });
 
   it('should works - move', async function() {
     const a = new SnapshotInstance(s);
     a.ensureElements();
     const b1 = new SnapshotInstance(s1);
+    b1.__slotIndex = 0;
     const b2 = new SnapshotInstance(s1);
+    b2.__slotIndex = 0;
     const b3 = new SnapshotInstance(s2);
+    b3.__slotIndex = 0;
     const b4 = new SnapshotInstance(s1);
+    b4.__slotIndex = 0;
     a.insertBefore(b1);
     a.insertBefore(b2);
     a.insertBefore(b3);
@@ -161,15 +243,26 @@ describe('dual-runtime hydrate', () => {
     const aa = new BackgroundSnapshotInstance(s);
 
     const bb1 = new BackgroundSnapshotInstance(s1);
+    bb1.__slotIndex = 0;
     const bb2 = new BackgroundSnapshotInstance(s2);
+    bb2.__slotIndex = 0;
     const bb3 = new BackgroundSnapshotInstance(s1);
+    bb3.__slotIndex = 0;
     const bb4 = new BackgroundSnapshotInstance(s1);
+    bb4.__slotIndex = 0;
     aa.insertBefore(bb1);
     aa.insertBefore(bb2);
     aa.insertBefore(bb3);
     aa.insertBefore(bb4);
 
-    expect(hydrate(JSON.parse(JSON.stringify(a)), aa)).toMatchInlineSnapshot(`[]`);
+    expect(hydrate(JSON.parse(JSON.stringify(a)), aa)).toMatchInlineSnapshot(`
+      [
+        1,
+        -1,
+        -3,
+        -5,
+      ]
+    `);
   });
 
   it('should works - upon empty render', async function() {
