@@ -13,10 +13,13 @@ const reactBasicCases = await Array.fromAsync(glob(
     path.join(import.meta.dirname, 'basic-*', 'index.jsx'),
   ],
 ));
+const filteredCases = reactBasicCases.filter(filePath => {
+  return !filePath.includes('basic-lazy-component-css-selector-false');
+});
 
 const config: Config = mergeRspeedyConfig(commonConfig(), {
   source: {
-    entry: Object.fromEntries(reactBasicCases.map((reactBasicEntry) => {
+    entry: Object.fromEntries(filteredCases.map((reactBasicEntry) => {
       return [path.basename(path.dirname(reactBasicEntry)), {
         import: reactBasicEntry,
         publicPath: '/dist/',

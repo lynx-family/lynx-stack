@@ -27,18 +27,19 @@ resolutionMode: "lowest-direct"
 
 # Default catalogs
 catalog:
-  "@microsoft/api-extractor": "7.52.11"
+  "@microsoft/api-extractor": "7.52.15"
 
 catalogs:
   # Rsbuild monorepo packages
   rsbuild:
-    "@rsbuild/core": "1.5.4"
+    "@rsbuild/core": "1.5.13"
 
   # Rspack monorepo packages
   rspack:
-    "@rspack/cli": "1.5.2"
-    "@rspack/core": "1.5.2"
-    "@rspack/test-tools": "1.5.2"
+    "@rspack/cli": "1.5.8"
+    "@rspack/core": "1.5.8"
+    # TODO: Upgrade `@rspack/test-tools` to latest
+    "@rspack/test-tools": "1.5.6"
 
 overrides:
   "@rspack/core": "$@rspack/core"

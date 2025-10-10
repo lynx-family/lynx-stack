@@ -1,5 +1,59 @@
 # @lynx-js/react
 
+## 0.114.1
+
+### Patch Changes
+
+- Add `event.stopPropagation` and `event.stopImmediatePropagation` in MTS, to help with event propagation control ([#1835](https://github.com/lynx-family/lynx-stack/pull/1835))
+
+  ```tsx
+  function App() {
+    function handleInnerTap(event: MainThread.TouchEvent) {
+      'main thread';
+      event.stopPropagation();
+      // Or stop immediate propagation with
+      // event.stopImmediatePropagation();
+    }
+
+    // OuterTap will not be triggered
+    return (
+      <view main-thread:bindtap={handleOuterTap}>
+        <view main-thread:bindtap={handleInnerTap}>
+          <text>Hello, world</text>
+        </view>
+      </view>
+    );
+  }
+  ```
+
+  Note, if this feature is used in [Lazy Loading Standalone Project](https://lynxjs.org/react/code-splitting.html#lazy-loading-standalone-project), both the Producer and the Consumer should update to latest version of `@lynx-js/react` to make sure the feature is available.
+
+- Fix the "ReferenceError: Node is not defined" error. ([#1850](https://github.com/lynx-family/lynx-stack/pull/1850))
+
+  This error would happen when upgrading to `@testing-library/jest-dom` [v6.9.0](https://github.com/testing-library/jest-dom/releases/tag/v6.9.0).
+
+- fix: optimize main thread event error message ([#1838](https://github.com/lynx-family/lynx-stack/pull/1838))
+
+## 0.114.0
+
+### Minor Changes
+
+- Partially fix the "cannot read property 'update' of undefined" error. ([#1771](https://github.com/lynx-family/lynx-stack/pull/1771))
+
+  This error happens when rendering a JSX expression in a [background-only](https://lynxjs.org/react/thinking-in-reactlynx.html) context.
+
+  See [lynx-family/lynx-stack#894](https://github.com/lynx-family/lynx-stack/issues/894) for more details.
+
+### Patch Changes
+
+- Reduce extra snapshot when children are pure text ([#1562](https://github.com/lynx-family/lynx-stack/pull/1562))
+
+- feat: Support `SelectorQuery` `animation` APIs ([#1768](https://github.com/lynx-family/lynx-stack/pull/1768))
+
+- Fix spread props inside list-item caused redundant snapshot patch ([#1760](https://github.com/lynx-family/lynx-stack/pull/1760))
+
+- fix: `ref is not initialized` error on template reload ([#1757](https://github.com/lynx-family/lynx-stack/pull/1757))
+
 ## 0.113.0
 
 ### Minor Changes

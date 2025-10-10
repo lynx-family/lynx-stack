@@ -11,6 +11,7 @@ import {
 } from '../core.js';
 import type { LynxUIPluginOptionsMap } from '../core.js';
 import preset, { createLynxPreset } from '../lynx.js';
+import type { UIVariantsOptions } from '../plugins/lynx-ui/uiVariants.js';
 
 const firstUIPlugin = ORDERED_LYNX_UI_PLUGIN_NAMES[0]!;
 type FirstUIPluginOptions = LynxUIPluginOptionsMap[typeof firstUIPlugin];
@@ -134,7 +135,6 @@ describe('createLynxPreset - Lynx UI plugin behavior', () => {
 
   it('prints debug info when UI plugin is enabled and debug is true', () => {
     const spy = Object.assign(vi.fn(), { __isOptionsFunction: true as const });
-    Object.assign(spy, { __isOptionsFunction: true });
 
     const original = LYNX_UI_PLUGIN_MAP[firstUIPlugin];
     LYNX_UI_PLUGIN_MAP[firstUIPlugin] = spy;
@@ -147,9 +147,119 @@ describe('createLynxPreset - Lynx UI plugin behavior', () => {
     });
 
     expect(debugSpy).toHaveBeenCalledWith(
-      `[Lynx] enabled UI plugin: ${firstUIPlugin}`,
+      expect.stringContaining(
+        `[Lynx] enabled UI plugin: ${firstUIPlugin}`,
+      ),
     );
     LYNX_UI_PLUGIN_MAP[firstUIPlugin] = original;
     debugSpy.mockRestore();
+  });
+
+  it('enables uiVariants by default (no options passed)', () => {
+    const handler = vi.fn();
+    const pluginObject = { handler } as const;
+
+    const spy = vi
+      .spyOn(LYNX_UI_PLUGIN_MAP, 'uiVariants')
+      .mockImplementation((_opts?: UIVariantsOptions) => pluginObject);
+
+    try {
+      const cfg = createLynxPreset();
+
+      expect(spy).toHaveBeenCalledTimes(1);
+      expect(spy).toHaveBeenCalledWith({});
+
+      expect(cfg.plugins).toEqual(
+        expect.arrayContaining([expect.objectContaining({ handler })]),
+      );
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  it('does NOT enable uiVariants when explicitly disabled', () => {
+    const spy = Object.assign(vi.fn(), { __isOptionsFunction: true as const });
+    const original = LYNX_UI_PLUGIN_MAP.uiVariants;
+    LYNX_UI_PLUGIN_MAP.uiVariants = spy;
+
+    try {
+      createLynxPreset({
+        lynxUIPlugins: { uiVariants: false },
+      });
+      expect(spy).not.toHaveBeenCalled();
+    } finally {
+      LYNX_UI_PLUGIN_MAP.uiVariants = original;
+    }
+  });
+
+  it('enables uiVariants by default even when lynxUIPlugins is an empty object', () => {
+    const spy = Object.assign(vi.fn(), { __isOptionsFunction: true as const });
+    const original = LYNX_UI_PLUGIN_MAP.uiVariants;
+    LYNX_UI_PLUGIN_MAP.uiVariants = spy;
+
+    try {
+      createLynxPreset({ lynxUIPlugins: {} });
+      expect(spy).toHaveBeenCalledTimes(1);
+      expect(spy).toHaveBeenCalledWith({});
+    } finally {
+      LYNX_UI_PLUGIN_MAP.uiVariants = original;
+    }
+  });
+});
+
+describe('createLynxPreset - defensive branches', () => {
+  const firstUIPlugin = ORDERED_LYNX_UI_PLUGIN_NAMES[0]!;
+
+  it('prints debug when invariant is broken (missing plugin impl)', () => {
+    const debugSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
+
+    const original = LYNX_UI_PLUGIN_MAP[firstUIPlugin];
+    // Simulate missing plugin implementation
+    (LYNX_UI_PLUGIN_MAP as unknown as Record<string, any>)[firstUIPlugin] =
+      undefined;
+
+    try {
+      createLynxPreset({ debug: true });
+      expect(debugSpy).toHaveBeenCalledWith(
+        expect.stringContaining(
+          `[Lynx] invariant: missing UI plugin impl for '${firstUIPlugin}'`,
+        ),
+      );
+    } finally {
+      // Restore original plugin implementation
+      (LYNX_UI_PLUGIN_MAP as unknown as Record<string, any>)[firstUIPlugin] =
+        original;
+      debugSpy.mockRestore();
+    }
+  });
+
+  it('logs warning when UI plugin throws during initialization', () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const original = LYNX_UI_PLUGIN_MAP[firstUIPlugin];
+
+    // Simulate plugin throwing an error
+    (LYNX_UI_PLUGIN_MAP as unknown as Record<string, any>)[firstUIPlugin] =
+      () => {
+        throw new Error('boom');
+      };
+
+    try {
+      createLynxPreset({
+        lynxUIPlugins: { [firstUIPlugin]: true },
+        debug: true,
+      });
+
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining(
+          `[Lynx] failed to initialize UI plugin '${firstUIPlugin}'`,
+        ),
+        expect.any(Error),
+      );
+    } finally {
+      // Restore original plugin implementation
+      (LYNX_UI_PLUGIN_MAP as unknown as Record<string, any>)[firstUIPlugin] =
+        original;
+      warnSpy.mockRestore();
+    }
   });
 });

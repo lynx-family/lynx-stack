@@ -1,5 +1,33 @@
 # @lynx-js/rspeedy
 
+## 0.11.5
+
+### Patch Changes
+
+- Bump Rsbuild v1.5.13 with Rspack v1.5.8. ([#1849](https://github.com/lynx-family/lynx-stack/pull/1849))
+
+## 0.11.4
+
+### Patch Changes
+
+- Bump Rsbuild v1.5.12 with Rspack v1.5.7. ([#1708](https://github.com/lynx-family/lynx-stack/pull/1708))
+
+- Fix the "lynx.getJSModule is not a function" error on Web platform ([#1830](https://github.com/lynx-family/lynx-stack/pull/1830))
+
+- Support `server.compress` ([#1799](https://github.com/lynx-family/lynx-stack/pull/1799))
+
+- Support `server.cors` ([#1808](https://github.com/lynx-family/lynx-stack/pull/1808))
+
+## 0.11.3
+
+### Patch Changes
+
+- Use `output.chunkLoading: 'lynx'` for `environments.web`. ([#1737](https://github.com/lynx-family/lynx-stack/pull/1737))
+
+- Support `resolve.extensions` ([#1759](https://github.com/lynx-family/lynx-stack/pull/1759))
+
+- Set the default value of `output.cssModules.localIdentName` to `[local]-[hash:base64:6]`. ([#1783](https://github.com/lynx-family/lynx-stack/pull/1783))
+
 ## 0.11.2
 
 ### Patch Changes

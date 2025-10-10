@@ -106,7 +106,6 @@ export function prepareMainThreadAPIs(
       pageConfig,
       rootDom as unknown as Node,
       document,
-      undefined,
       ssrHydrateInfo,
     );
     const mtsGlobalThisRef: { mtsGlobalThis: MainThreadGlobalThis } = {

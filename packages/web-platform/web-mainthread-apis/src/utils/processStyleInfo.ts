@@ -241,7 +241,6 @@ export function appendStyleElement(
   pageConfig: PageConfig,
   rootDom: Node,
   document: Document,
-  entryName?: string,
   ssrHydrateInfo?: SSRHydrateInfo,
 ) {
   const lynxUniqueIdToStyleRulesIndex: number[] =
@@ -261,6 +260,7 @@ export function appendStyleElement(
   const cssOGInfo: CssOGInfo = pageConfig.enableCSSSelector
     ? {}
     : genCssOGInfo(flattenedStyleInfo);
+  const lazyCSSOGInfo: Record<string, CssOGInfo> = {};
   let cardStyleElement: HTMLStyleElement;
   if (ssrHydrateInfo?.cardStyleElement) {
     cardStyleElement = ssrHydrateInfo.cardStyleElement;
@@ -271,22 +271,22 @@ export function appendStyleElement(
     cardStyleElement.textContent = genCssContent(
       flattenedStyleInfo,
       pageConfig,
-      entryName,
+      undefined,
     );
     rootDom.appendChild(cardStyleElement);
   }
-  const cardStyleElementSheet =
-    (cardStyleElement as unknown as HTMLStyleElement).sheet!;
   const updateCssOGStyle: (
     uniqueId: number,
     newClassName: string,
     cssID: string | null,
-  ) => void = (uniqueId, newClassName, cssID) => {
-    const newStyles = decodeCssOG(
-      newClassName,
-      cssOGInfo,
-      cssID,
-    );
+    entryName: string | null,
+  ) => void = (uniqueId, newClassName, cssID, entryName) => {
+    const cardStyleElementSheet =
+      (cardStyleElement as unknown as HTMLStyleElement).sheet!;
+    const styleMap = entryName && lazyCSSOGInfo[entryName]
+      ? lazyCSSOGInfo[entryName]
+      : cssOGInfo;
+    const newStyles = decodeCssOG(newClassName, styleMap, cssID);
     if (lynxUniqueIdToStyleRulesIndex[uniqueId] !== undefined) {
       const rule = cardStyleElementSheet
         .cssRules[lynxUniqueIdToStyleRulesIndex[uniqueId]] as CSSStyleRule;
@@ -303,10 +303,11 @@ export function appendStyleElement(
     styleInfo: StyleInfo,
     entryName: string,
   ) => {
-    const flattenedStyleInfo = flattenStyleInfo(
-      styleInfo,
-    );
+    const flattenedStyleInfo = flattenStyleInfo(styleInfo);
     transformToWebCss(flattenedStyleInfo);
+    if (!pageConfig.enableCSSSelector) {
+      lazyCSSOGInfo[entryName] = genCssOGInfo(flattenedStyleInfo);
+    }
     const newStyleSheet = genCssContent(
       flattenedStyleInfo,
       pageConfig,

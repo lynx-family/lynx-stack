@@ -1,5 +1,37 @@
 # @lynx-js/web-constants
 
+## 0.17.2
+
+### Patch Changes
+
+- feat: support load bts chunk from remote address ([#1834](https://github.com/lynx-family/lynx-stack/pull/1834))
+
+  - re-support chunk splitting
+  - support lynx.requireModule with a json file
+  - support lynx.requireModule, lynx.requireModuleAsync with a remote url
+  - support to add a breakpoint in chrome after reloading the web page
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.17.2
+
+## 0.17.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.17.1
+
+## 0.17.0
+
+### Patch Changes
+
+- fix: avoid duplicate style transformation ([#1748](https://github.com/lynx-family/lynx-stack/pull/1748))
+
+  After this commit, we use DAG methods to handle the styleInfos
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.17.0
+
 ## 0.16.1
 
 ### Patch Changes

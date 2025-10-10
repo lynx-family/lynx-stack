@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { ProxyConfig } from '@rsbuild/core'
+import type { CompressOptions, ProxyConfig, ServerConfig } from '@rsbuild/core'
 
 /**
  * {@inheritdoc Config.server}
@@ -31,6 +31,85 @@ export interface Server {
    * ```
    */
   base?: string | undefined
+
+  /**
+   * Configure whether to enable {@link https://developer.mozilla.org/en-US/docs/Glossary/gzip_compression | gzip compression } for static assets served by the dev server or preview server.
+   *
+   * Default: true
+   *
+   * See {@link https://rsbuild.rs/config/server/compress | Rsbuild - server.compress } for details.
+   *
+   * @example
+   *
+   * To disable the gzip compression, set compress to false:
+   *
+   * ```js
+   * export default {
+   *   server: {
+   *     compress: false,
+   *   },
+   * }
+   * ```
+   *
+   * @example
+   *
+   * Compress if it starts with /foo
+   *
+   * ```js
+   * export default {
+   *   server: {
+   *     compress: {
+   *       filter: (req) => {
+   *         if (req.url?.includes('/foo')) {
+   *           return false;
+   *         }
+   *         return true;
+   *       },
+   *     },
+   *   },
+   * }
+   * ```
+   *
+   * @example
+   *
+   * set level of zlib compression
+   *
+   * ```js
+   * export default {
+   *   server: {
+   *     compress: {
+   *       level: 6,
+   *     },
+   *   },
+   * }
+   * ```
+   */
+  compress?: boolean | CompressOptions | undefined
+
+  /**
+   * Configure CORS for the dev server or preview server.
+   *
+   * - Set to an object to enable CORS with the specified options.
+   *
+   * - Set to `true` to enable CORS with the default options (allows all origins, not recommended).
+   *
+   * - Set to `false` to disable CORS.
+   *
+   * See {@link https://rsbuild.rs/config/server/cors | Rsbuild - server.cors } for details.
+   *
+   * @example
+   *
+   * ```js
+   * export default {
+   *   server: {
+   *     cors: {
+   *       origin: 'https://example.com',
+   *     },
+   *   },
+   * }
+   * ```
+   */
+  cors?: ServerConfig['cors'] | undefined
 
   /**
    * Adds headers to all responses.

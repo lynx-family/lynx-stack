@@ -37,7 +37,7 @@ describe('rspeedy config test', () => {
     )
   })
 
-  test('createRspeedy with env-mode ', async () => {
+  test('createRspeedy with env-mode', async () => {
     const root = join(fixturesRoot, 'project-with-env')
     const rsbuild = await createRspeedy({
       cwd: root,
@@ -69,7 +69,7 @@ describe('rspeedy config test', () => {
     )
   })
 
-  test('createRspeedy with no-env ', async () => {
+  test('createRspeedy with no-env', async () => {
     const root = join(fixturesRoot, 'project-with-env')
     const rsbuild = await createRspeedy({
       cwd: root,
@@ -157,7 +157,7 @@ describe('rspeedy environment test', () => {
     },
     { name: 'empty array', environment: [], expected: ['web', 'lynx'] },
   ])(
-    'test environment combinations - $name',
+    'environment combinations - $name',
     async ({ environment, expected }) => {
       const root = join(fixturesRoot, 'environment')
       const rsbuild = await createRspeedy({

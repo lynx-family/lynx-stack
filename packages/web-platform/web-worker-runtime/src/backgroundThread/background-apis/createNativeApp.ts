@@ -7,13 +7,11 @@ import {
   setNativePropsEndpoint,
   triggerComponentEventEndpoint,
   selectComponentEndpoint,
-  type BundleInitReturnObj,
   type NativeApp,
   type LynxCrossThreadContext,
   type BackMainThreadContextConfig,
   I18nResource,
   reportErrorEndpoint,
-  type LynxTemplate,
   queryComponentEndpoint,
   updateBTSTemplateCacheEndpoint,
 } from '@lynx-js/web-constants';
@@ -30,6 +28,7 @@ import type { TimingSystem } from './createTimingSystem.js';
 import { registerUpdateGlobalPropsHandler } from './crossThreadHandlers/registerUpdateGlobalPropsHandler.js';
 import { registerUpdateI18nResource } from './crossThreadHandlers/registerUpdateI18nResource.js';
 import { createGetPathInfo } from './crossThreadHandlers/createGetPathInfo.js';
+import { createChunkLoading } from './createChunkLoading.js';
 
 let nativeAppCount = 0;
 const sharedData: Record<string, unknown> = {};
@@ -67,13 +66,9 @@ export async function createNativeApp(
     queryComponentEndpoint,
   );
   const reportError = uiThreadRpc.createCall(reportErrorEndpoint);
-  const createBundleInitReturnObj = (): BundleInitReturnObj => {
-    const ret = globalThis.module.exports ?? globalThis.__bundle__holder;
-    globalThis.module.exports = null;
-    globalThis.__bundle__holder = null;
-    return ret as unknown as BundleInitReturnObj;
-  };
-  const templateCache = new Map<string, LynxTemplate>([['__Card__', template]]);
+  const { templateCache, loadScript, loadScriptAsync, readScript } =
+    createChunkLoading(template);
+
   mainThreadRpc.registerHandler(
     updateBTSTemplateCacheEndpoint,
     (url, template) => {
@@ -94,36 +89,9 @@ export async function createNativeApp(
       mainThreadRpc,
       nativeModulesMap,
     ),
-    loadScriptAsync: function(
-      sourceURL: string,
-      callback: (message: string | null, exports?: BundleInitReturnObj) => void,
-      entryName?: string,
-    ): void {
-      entryName = entryName ?? '__Card__';
-      const manifestUrl = templateCache.get(entryName!)
-        ?.manifest[`/${sourceURL}`];
-      if (manifestUrl) sourceURL = manifestUrl;
-      else throw Error(`Cannot find ${sourceURL} in manifest`);
-      globalThis.module.exports = null;
-      globalThis.__bundle__holder = null;
-      import(
-        /* webpackIgnore: true */
-        sourceURL
-      ).catch(callback).then(async () => {
-        callback(null, createBundleInitReturnObj());
-      });
-    },
-    loadScript: (sourceURL: string, entryName?: string) => {
-      entryName = entryName ?? '__Card__';
-      const manifestUrl = templateCache.get(entryName!)
-        ?.manifest[`/${sourceURL}`];
-      if (manifestUrl) sourceURL = manifestUrl;
-      else throw Error(`Cannot find ${sourceURL} in manifest`);
-      globalThis.module.exports = null;
-      globalThis.__bundle__holder = null;
-      importScripts(sourceURL);
-      return createBundleInitReturnObj();
-    },
+    readScript,
+    loadScriptAsync,
+    loadScript,
     requestAnimationFrame(cb: FrameRequestCallback) {
       return requestAnimationFrame(cb);
     },

@@ -11,6 +11,7 @@ import { replaceCommitHook } from '../../src/lifecycle/patch/commit';
 import { injectUpdateMainThread } from '../../src/lifecycle/patch/updateMainThread';
 import { __root } from '../../src/root';
 import { setupPage } from '../../src/snapshot';
+import { updateWorkletEvent } from '../../src/snapshot/workletEvent';
 import { globalEnvManager } from '../utils/envManager';
 import { elementTree, waitSchedule } from '../utils/nativeMethod';
 
@@ -418,6 +419,143 @@ describe('WorkletEvent', () => {
         </page>
       `);
     }
+  });
+
+  it('should report error when worklet event is a background function', async function() {
+    function Comp(props) {
+      return (
+        <view>
+          {props.show && (
+            <text
+              main-thread:bindtap={vi.fn()}
+            >
+              1
+            </text>
+          )}
+        </view>
+      );
+    }
+
+    // main thread render
+    {
+      __root.__jsx = <Comp show={false} />;
+      renderPage();
+      expect(__root.__element_root).toMatchInlineSnapshot(`
+        <page
+          cssId="default-entry-from-native:0"
+        >
+          <view />
+        </page>
+      `);
+    }
+
+    // background render
+    {
+      globalEnvManager.switchToBackground();
+      render(<Comp show={false} />, __root);
+    }
+
+    // hydrate
+    {
+      // LifecycleConstant.firstScreen
+      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+
+      // rLynxChange
+      globalEnvManager.switchToMainThread();
+      const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
+      globalThis[rLynxChange[0]](rLynxChange[1]);
+    }
+
+    // update
+    {
+      const reportErrorSpy = vi.spyOn(lynx, 'reportError').mockImplementation(() => {});
+      try {
+        globalEnvManager.switchToBackground();
+        lynx.getNativeApp().callLepusMethod.mockClear();
+        render(<Comp show={true} />, __root);
+        await waitSchedule();
+
+        globalEnvManager.switchToMainThread();
+        const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
+        expect(() => {
+          globalThis[rLynxChange[0]](rLynxChange[1]);
+        }).not.toThrow();
+
+        expect(reportErrorSpy).toHaveBeenCalledTimes(1);
+        expect(reportErrorSpy).toHaveBeenCalledWith(
+          expect.objectContaining({
+            message: expect.stringContaining('"main-thread:bindtap"'),
+          }),
+        );
+
+        expect(__root.__element_root).toMatchInlineSnapshot(`
+          <page
+            cssId="default-entry-from-native:0"
+          >
+            <view>
+              <text>
+                <raw-text
+                  text="1"
+                />
+              </text>
+            </view>
+          </page>
+        `);
+      } finally {
+        reportErrorSpy.mockRestore();
+      }
+    }
+  });
+
+  describe('dev warnings', () => {
+    function createSnapshot(rawValue, options = {}) {
+      const { withElements = true } = options;
+      return {
+        __elements: withElements ? [__CreateElement('view', 0)] : undefined,
+        __values: [rawValue],
+        __id: 42,
+        type: 'TestSnapshot',
+      };
+    }
+
+    function getErrorMessage(spy) {
+      const [error] = spy.mock.calls[0];
+      expect(error).toBeInstanceOf(Error);
+      return error.message;
+    }
+
+    it('reports non-object main-thread handler values in dev mode', () => {
+      const snapshot = createSnapshot('not-a-worklet');
+      const reportErrorSpy = vi.spyOn(lynx, 'reportError');
+      const addEventSpy = vi.spyOn(globalThis, '__AddEvent');
+
+      updateWorkletEvent(snapshot, 0, {}, 0, 'main-thread', 'bindEvent', 'tap');
+
+      expect(reportErrorSpy).toHaveBeenCalledTimes(1);
+      expect(addEventSpy).not.toHaveBeenCalled();
+      expect(getErrorMessage(reportErrorSpy)).toContain('"main-thread:bindtap" on <view>');
+    });
+
+    it('formats attribute names without the Event suffix correctly', () => {
+      const snapshot = createSnapshot('still-not-a-worklet');
+      const reportErrorSpy = vi.spyOn(lynx, 'reportError');
+
+      updateWorkletEvent(snapshot, 0, {}, 0, 'background', 'bind', 'tap');
+
+      expect(reportErrorSpy).toHaveBeenCalledTimes(1);
+      expect(getErrorMessage(reportErrorSpy)).toContain('"background:bindtap" on <view>');
+    });
+
+    it('reports unknown elements when the snapshot lacks the target index', () => {
+      const snapshot = createSnapshot('not-a-worklet');
+      snapshot.__elements = [];
+      const reportErrorSpy = vi.spyOn(lynx, 'reportError');
+
+      updateWorkletEvent(snapshot, 0, {}, 0, 'main-thread', 'bindEvent', 'tap');
+
+      expect(reportErrorSpy).toHaveBeenCalledTimes(1);
+      expect(getErrorMessage(reportErrorSpy)).toContain('<unknown>');
+    });
   });
 });
 
@@ -872,17 +1010,17 @@ describe('WorkletEvent in list', () => {
                     {
                       "item-key": 0,
                       "position": 0,
-                      "type": "__Card__:__snapshot_a94a8_test_13",
+                      "type": "__Card__:__snapshot_a94a8_test_15",
                     },
                     {
                       "item-key": 1,
                       "position": 1,
-                      "type": "__Card__:__snapshot_a94a8_test_13",
+                      "type": "__Card__:__snapshot_a94a8_test_15",
                     },
                     {
                       "item-key": 2,
                       "position": 2,
-                      "type": "__Card__:__snapshot_a94a8_test_13",
+                      "type": "__Card__:__snapshot_a94a8_test_15",
                     },
                   ],
                   "removeAction": [],
@@ -931,17 +1069,17 @@ describe('WorkletEvent in list', () => {
                     {
                       "item-key": 0,
                       "position": 0,
-                      "type": "__Card__:__snapshot_a94a8_test_13",
+                      "type": "__Card__:__snapshot_a94a8_test_15",
                     },
                     {
                       "item-key": 1,
                       "position": 1,
-                      "type": "__Card__:__snapshot_a94a8_test_13",
+                      "type": "__Card__:__snapshot_a94a8_test_15",
                     },
                     {
                       "item-key": 2,
                       "position": 2,
-                      "type": "__Card__:__snapshot_a94a8_test_13",
+                      "type": "__Card__:__snapshot_a94a8_test_15",
                     },
                   ],
                   "removeAction": [],
@@ -1008,17 +1146,17 @@ describe('WorkletEvent in list', () => {
                     {
                       "item-key": 0,
                       "position": 0,
-                      "type": "__Card__:__snapshot_a94a8_test_13",
+                      "type": "__Card__:__snapshot_a94a8_test_15",
                     },
                     {
                       "item-key": 1,
                       "position": 1,
-                      "type": "__Card__:__snapshot_a94a8_test_13",
+                      "type": "__Card__:__snapshot_a94a8_test_15",
                     },
                     {
                       "item-key": 2,
                       "position": 2,
-                      "type": "__Card__:__snapshot_a94a8_test_13",
+                      "type": "__Card__:__snapshot_a94a8_test_15",
                     },
                   ],
                   "removeAction": [],
@@ -1085,17 +1223,17 @@ describe('WorkletEvent in list', () => {
                     {
                       "item-key": 0,
                       "position": 0,
-                      "type": "__Card__:__snapshot_a94a8_test_13",
+                      "type": "__Card__:__snapshot_a94a8_test_15",
                     },
                     {
                       "item-key": 1,
                       "position": 1,
-                      "type": "__Card__:__snapshot_a94a8_test_13",
+                      "type": "__Card__:__snapshot_a94a8_test_15",
                     },
                     {
                       "item-key": 2,
                       "position": 2,
-                      "type": "__Card__:__snapshot_a94a8_test_13",
+                      "type": "__Card__:__snapshot_a94a8_test_15",
                     },
                   ],
                   "removeAction": [],

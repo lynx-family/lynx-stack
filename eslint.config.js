@@ -47,6 +47,8 @@ export default tseslint.config(
       'packages/react/transform/tests/__swc_snapshots__/**',
       'packages/react/transform/__test__/**/__snapshots__/**',
 
+      'packages/react/transform/**/tests/__swc_snapshots__/**',
+
       // Configs
       'eslint.config.js',
       'vitest.config.ts',
@@ -66,6 +68,7 @@ export default tseslint.config(
       // Generated
       'packages/react/transform/index.d.ts',
       'packages/react/transform/index.cjs',
+      'packages/react/transform/**/index.d.ts',
 
       // TODO: enable eslint for react
       // react

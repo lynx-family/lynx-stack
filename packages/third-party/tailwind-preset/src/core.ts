@@ -193,21 +193,6 @@ export function toEnabledSet(
   return set;
 }
 
-export function toEnabledLynxUIPluginSet(
-  opt: LynxUIPluginsOption = true,
-): Set<LynxUIPluginName> {
-  if (opt === true) return new Set(ORDERED_LYNX_UI_PLUGIN_NAMES);
-  if (opt === false) return new Set();
-  if (Array.isArray(opt)) return new Set(opt);
-
-  const set = new Set(ORDERED_LYNX_UI_PLUGIN_NAMES);
-  for (const [k, on] of Object.entries(opt)) {
-    if (on === false) set.delete(k as LynxUIPluginName);
-    else if (on === true) set.add(k as LynxUIPluginName);
-  }
-  return set;
-}
-
 export function resolveUIPluginEntries(
   raw: LynxUIPluginsOption,
 ): {

@@ -18,6 +18,7 @@ import { injectLepusMethods } from './lynx/injectLepusMethods.js';
 import { initTimingAPI } from './lynx/performance.js';
 import { injectTt } from './lynx/tt.js';
 import { lynxQueueMicrotask } from './utils.js';
+import { injectUpdateMTRefInitValue } from './worklet/ref/updateInitValue.js';
 
 export { runWithForce } from './lynx/runWithForce.js';
 
@@ -32,6 +33,7 @@ if (__MAIN_THREAD__ && typeof globalThis.processEvalResult === 'undefined') {
 if (__MAIN_THREAD__) {
   injectCalledByNative();
   injectUpdateMainThread();
+  injectUpdateMTRefInitValue();
   if (__DEV__) {
     injectLepusMethods();
   }

@@ -251,7 +251,7 @@ describe(`list "update-list-info"`, () => {
 
     expect(__pendingListUpdates.values).toMatchInlineSnapshot(`
       {
-        "-3": [
+        "-8": [
           {
             "insertAction": [
               {
@@ -287,7 +287,7 @@ describe(`list "update-list-info"`, () => {
       b1.removeChild(d2);
       expect(__pendingListUpdates.values).toMatchInlineSnapshot(`
         {
-          "-3": [
+          "-8": [
             {
               "insertAction": [
                 {
@@ -322,7 +322,7 @@ describe(`list "update-list-info"`, () => {
       b1.insertBefore(d3); // move
       expect(__pendingListUpdates.values).toMatchInlineSnapshot(`
         {
-          "-3": [
+          "-8": [
             {
               "insertAction": [
                 {
@@ -376,7 +376,7 @@ describe(`list "update-list-info"`, () => {
     d3.setAttribute(0, { 'item-key': 3 });
     expect(__pendingListUpdates.values).toMatchInlineSnapshot(`
       {
-        "-2": [
+        "-4": [
           {
             "insertAction": [],
             "removeAction": [],
@@ -445,7 +445,7 @@ describe(`list componentAtIndex`, () => {
       elementTree.triggerComponentAtIndex(listRef, 0);
     }).toThrowErrorMatchingInlineSnapshot(`[Error: childCtx not found]`);
 
-    // only call componentAtIndx after flush
+    // only call componentAtIndex after flush
     __pendingListUpdates.flush();
     expect(elementTree.triggerComponentAtIndex(listRef, 0)).toMatchInlineSnapshot(`5`);
     expect(elementTree.triggerComponentAtIndex(listRef, 1)).toMatchInlineSnapshot(`8`);
@@ -605,7 +605,7 @@ describe(`list componentAtIndex`, () => {
           <text
             event={
               {
-                "bindEvent:tap": "-7:1:",
+                "bindEvent:tap": "-8:1:",
               }
             }
           >
@@ -620,7 +620,7 @@ describe(`list componentAtIndex`, () => {
           <text
             event={
               {
-                "bindEvent:tap": "-8:1:",
+                "bindEvent:tap": "-9:1:",
               }
             }
           >
@@ -635,7 +635,7 @@ describe(`list componentAtIndex`, () => {
           <text
             event={
               {
-                "bindEvent:tap": "-5:1:",
+                "bindEvent:tap": "-6:1:",
               }
             }
           >
@@ -650,7 +650,7 @@ describe(`list componentAtIndex`, () => {
           <text
             event={
               {
-                "bindEvent:tap": "-6:1:",
+                "bindEvent:tap": "-7:1:",
               }
             }
           >
@@ -1196,7 +1196,7 @@ describe(`list componentAtIndex`, () => {
       elementTree.triggerComponentAtIndex(listRef, 0);
     }).toThrowErrorMatchingInlineSnapshot(`[Error: childCtx not found]`);
 
-    // only call componentAtIndx after flush
+    // only call componentAtIndex after flush
     __pendingListUpdates.flush();
     expect(elementTree.triggerComponentAtIndex(listRef, 0)).toMatchInlineSnapshot(`5`);
     expect(elementTree.triggerComponentAtIndex(listRef, 0)).toMatchInlineSnapshot(`8`); // should return a new uiSign
@@ -1227,7 +1227,7 @@ describe(`list componentAtIndex`, () => {
       elementTree.triggerComponentAtIndex(listRef, 0);
     }).toThrowErrorMatchingInlineSnapshot(`[Error: childCtx not found]`);
 
-    // only call componentAtIndx after flush
+    // only call componentAtIndex after flush
     __pendingListUpdates.flush();
     let uiSign;
     expect(uiSign = elementTree.triggerComponentAtIndex(listRef, 0)).toMatchInlineSnapshot(`5`);
@@ -2211,7 +2211,7 @@ describe('list bug', () => {
 
     expect(__pendingListUpdates.values).toMatchInlineSnapshot(`
       {
-        "-3": [
+        "-7": [
           {
             "insertAction": [
               {
@@ -2258,7 +2258,7 @@ describe('list bug', () => {
       b1.insertBefore(d3); // move
       expect(__pendingListUpdates.values).toMatchInlineSnapshot(`
         {
-          "-3": [
+          "-7": [
             {
               "insertAction": [
                 {
@@ -2300,7 +2300,7 @@ describe('list bug', () => {
       b1.removeChild(d3); // move
       expect(__pendingListUpdates.values).toMatchInlineSnapshot(`
         {
-          "-3": [
+          "-7": [
             {
               "insertAction": [],
               "removeAction": [
@@ -3789,7 +3789,7 @@ describe('list-item with "defer" attribute', () => {
               "rLynxPublishEvent",
               {
                 "data": {},
-                "handlerName": "-6:__extraProps:onComponentAtIndex",
+                "handlerName": "-7:__extraProps:onComponentAtIndex",
               },
             ],
           ],
@@ -3798,7 +3798,7 @@ describe('list-item with "defer" attribute', () => {
               "rLynxPublishEvent",
               {
                 "data": {},
-                "handlerName": "-4:__extraProps:onRecycleComponent",
+                "handlerName": "-5:__extraProps:onRecycleComponent",
               },
             ],
           ],
@@ -3903,7 +3903,43 @@ describe('nested list', () => {
 
     expect(__pendingListUpdates.values).toMatchInlineSnapshot(`
       {
-        "-3": [
+        "-10": [
+          {
+            "insertAction": [
+              {
+                "position": 0,
+                "type": "__Card__:__snapshot_a94a8_test_83",
+              },
+            ],
+            "removeAction": [],
+            "updateAction": [],
+          },
+        ],
+        "-12": [
+          {
+            "insertAction": [
+              {
+                "position": 0,
+                "type": "__Card__:__snapshot_a94a8_test_83",
+              },
+            ],
+            "removeAction": [],
+            "updateAction": [],
+          },
+        ],
+        "-14": [
+          {
+            "insertAction": [
+              {
+                "position": 0,
+                "type": "__Card__:__snapshot_a94a8_test_83",
+              },
+            ],
+            "removeAction": [],
+            "updateAction": [],
+          },
+        ],
+        "-8": [
           {
             "insertAction": [
               {
@@ -3923,42 +3959,6 @@ describe('nested list', () => {
             "updateAction": [],
           },
         ],
-        "-5": [
-          {
-            "insertAction": [
-              {
-                "position": 0,
-                "type": "__Card__:__snapshot_a94a8_test_83",
-              },
-            ],
-            "removeAction": [],
-            "updateAction": [],
-          },
-        ],
-        "-7": [
-          {
-            "insertAction": [
-              {
-                "position": 0,
-                "type": "__Card__:__snapshot_a94a8_test_83",
-              },
-            ],
-            "removeAction": [],
-            "updateAction": [],
-          },
-        ],
-        "-9": [
-          {
-            "insertAction": [
-              {
-                "position": 0,
-                "type": "__Card__:__snapshot_a94a8_test_83",
-              },
-            ],
-            "removeAction": [],
-            "updateAction": [],
-          },
-        ],
       }
     `);
     expect(parentListRef).toMatchInlineSnapshot(`<list />`);
@@ -3967,7 +3967,7 @@ describe('nested list', () => {
     // children list should not be cleared
     expect(__pendingListUpdates.values).toMatchInlineSnapshot(`
       {
-        "-5": [
+        "-10": [
           {
             "insertAction": [
               {
@@ -3979,7 +3979,7 @@ describe('nested list', () => {
             "updateAction": [],
           },
         ],
-        "-7": [
+        "-12": [
           {
             "insertAction": [
               {
@@ -3991,7 +3991,7 @@ describe('nested list', () => {
             "updateAction": [],
           },
         ],
-        "-9": [
+        "-14": [
           {
             "insertAction": [
               {

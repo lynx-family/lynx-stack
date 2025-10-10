@@ -712,6 +712,124 @@ test.describe('reactlynx3 tests', () => {
         ); // pink
       },
     );
+
+    // lazy component with CSSOG
+    test(
+      'basic-lazy-component-css-selector-false-exchange-class',
+      async ({ page }, { title }) => {
+        await goto(page, title);
+        await wait(100);
+        const target = page.locator('#target');
+        await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
+        await target.click();
+        await expect(target).toHaveCSS('background-color', 'rgb(255, 255, 0)'); // yellow
+        await target.click();
+        await expect(target).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)'); // unset
+      },
+    );
+    test(
+      'basic-lazy-component-css-selector-false-inline-css-change-same-time',
+      async ({ page }, { title }) => {
+        await goto(page, title);
+        await wait(100);
+        const target = page.locator('#target');
+        await expect(target).toHaveCSS('background-color', 'rgb(255, 255, 0)'); // yellow
+        await target.click();
+        await expect(target).toHaveCSS('background-color', 'rgb(255, 0, 0)'); // red
+        await target.click();
+        await expect(target).toHaveCSS('background-color', 'rgb(255, 255, 0)'); // yellow
+      },
+    );
+    test(
+      'basic-lazy-component-css-selector-false-inline-remove-css-remove-inline',
+      async ({ page }, { title }) => {
+        await goto(page, title);
+        await wait(100);
+        const target = page.locator('#target');
+        await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
+        await target.click();
+        await expect(target).toHaveCSS('background-color', 'rgb(255, 0, 0)'); // red
+        await target.click();
+        await expect(target).toHaveCSS('background-color', 'rgb(255, 0, 0)'); // red
+        await target.click();
+        await expect(target).toHaveCSS('background-color', 'rgb(255, 255, 0)'); // yellow
+        await target.click();
+        await expect(target).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)'); // unset
+      },
+    );
+    test(
+      'basic-lazy-component-css-selector-false-multi-level-selector',
+      async ({ page }, { title }) => {
+        await goto(page, title);
+        await wait(100);
+        const target = page.locator('#target');
+        await expect(target).toHaveCSS(
+          'background-color',
+          'rgb(255, 192, 203)',
+        ); // pink
+      },
+    );
+    test(
+      'basic-lazy-component-css-selector-false-remove-all',
+      async ({ page }, { title }) => {
+        await goto(page, title);
+        await wait(100);
+        const target = page.locator('#target');
+        await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
+        await target.click();
+        await expect(target).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)'); // unset
+      },
+    );
+    test(
+      'basic-lazy-component-css-selector-false-remove-css-and-reuse-css',
+      async ({ page }, { title }) => {
+        await goto(page, title);
+        await wait(100);
+        const target = page.locator('#target');
+        await expect(target).toHaveCSS('background-color', 'rgb(255, 255, 0)'); // yellow
+        await target.click();
+        await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
+        await target.click();
+        await expect(target).toHaveCSS('background-color', 'rgb(255, 255, 0)'); // yellow
+      },
+    );
+    test(
+      'basic-lazy-component-css-selector-false-remove-css-and-style-collapsed',
+      async ({ page }, { title }) => {
+        await goto(page, title);
+        await wait(100);
+        const target = page.locator('#target');
+        await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
+        await target.click();
+        await expect(target).toHaveCSS('background-color', 'rgb(255, 255, 0)'); // yellow
+        await target.click();
+        await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
+      },
+    );
+    test(
+      'basic-lazy-component-css-selector-false-remove-inline-style-and-reuse-css',
+      async ({ page }, { title }) => {
+        await goto(page, title);
+        await wait(100);
+        const target = page.locator('#target');
+        await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
+        await target.click();
+        await expect(target).toHaveCSS('background-color', 'rgb(255, 0, 0)'); // red
+        await target.click();
+        await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
+      },
+    );
+    test(
+      'config-css-selector-false-type-selector',
+      async ({ page }, { title }) => {
+        await goto(page, title);
+        await wait(100);
+        const target = page.locator('#target');
+        await expect(target).toHaveCSS('background-color', 'rgb(255, 255, 0)'); // yellow
+        await expect(target).toHaveCSS('width', '100px');
+        await expect(target).toHaveCSS('height', '100px');
+      },
+    );
   });
   test.describe('basic-css', () => {
     test('basic-css-asset-in-css', async ({ page }, { title }) => {
@@ -1754,7 +1872,7 @@ test.describe('reactlynx3 tests', () => {
     test(
       'config-splitchunk-split-by-experience',
       async ({ page }, { title }) => {
-        test.skip(true, 'incorrectly implemented test case');
+        test.skip(isSSR, 'incorrectly implemented test case');
         await goto(page, title, undefined, true);
         await wait(1500);
         const target = page.locator('#target');
@@ -1764,7 +1882,7 @@ test.describe('reactlynx3 tests', () => {
     test(
       'config-splitchunk-split-by-module',
       async ({ page }, { title }) => {
-        test.skip(true, 'incorrectly implemented test case');
+        test.skip(isSSR, 'incorrectly implemented test case');
         await goto(page, title, undefined, true);
         await wait(1500);
         const target = page.locator('#target');
@@ -2251,6 +2369,11 @@ test.describe('reactlynx3 tests', () => {
       test('basic-element-svg-with-css', async ({ page }, { title }) => {
         await goto(page, title);
         await diffScreenShot(page, 'svg', 'with-css');
+      });
+
+      test('basic-element-svg-with-position', async ({ page }, { title }) => {
+        await goto(page, title);
+        await diffScreenShot(page, 'svg', 'with-position');
       });
 
       test(

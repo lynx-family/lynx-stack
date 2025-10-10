@@ -1,5 +1,24 @@
 # @lynx-js/tailwind-preset
 
+## 0.4.0
+
+### Minor Changes
+
+- Enable `lynxUIPlugins` (incl. `uiVariants`) by default. Fills the gap left by missing pseudo- and data-attribute selectors in Lynx, offering state and structural variants out of the box. ([#1774](https://github.com/lynx-family/lynx-stack/pull/1774))
+
+  Opt-out globally or per plugin:
+
+  ```ts
+  // disable all UI plugins
+  createLynxPreset({ lynxUIPlugins: false });
+  // or disable one plugin
+  createLynxPreset({ lynxUIPlugins: { uiVariants: false } });
+  ```
+
+### Patch Changes
+
+- Fixed transform-related CSS variables previously defined on `:root`; they are now reset on `*` to prevent inheritance between parent and child elements. ([#1773](https://github.com/lynx-family/lynx-stack/pull/1773))
+
 ## 0.3.0
 
 ### Minor Changes

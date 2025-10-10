@@ -19,10 +19,11 @@
   ],
 
   "enabledManagers": [
+    "cargo",
+    "custom.regex",
+    "github-actions",
     "npm",
     "nvm",
-    "github-actions",
-    "custom.regex",
   ],
 
   "labels": ["bot:renovate"],
@@ -152,6 +153,38 @@
         "* 0-3 1 * *",
       ],
     },
+        {
+      "groupName": "Rust Crates",
+      "groupSlug": "rust-crates",
+      "matchManagers": ["cargo"],
+      "matchPackageNames": [
+        "!swc",
+        "!swc_*",
+      ],
+    },
+    {
+      "groupName": "SWC",
+      "groupSlug": "swc",
+      "matchManagers": ["cargo"],
+      "matchPackageNames": [
+        "swc",
+        "swc_*",
+      ],
+      "matchUpdateTypes": [
+        "major",
+      ],
+    },
+    {
+      "extends": [
+        "monorepo:playwright",
+      ],
+      "groupName": "playwright monorepo",
+      "matchPackageNames": [
+        "playwright",
+        "@playwright/**",
+        "mcr.microsoft.com/playwright",
+      ],
+    },
   ],
 
   "customManagers": [
@@ -164,6 +197,14 @@
       "depNameTemplate": "lynx",
       "packageNameTemplate": "https://github.com/lynx-family/lynx",
       "datasourceTemplate": "git-refs",
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [".github/workflows/*"],
+      "matchStrings": [
+        "'(?<packageName>mcr\\.microsoft\\.com/playwright):(?<currentValue>[^\\s]+)'"
+      ],
+      "datasourceTemplate": "docker",
     },
   ],
 
@@ -180,9 +221,18 @@
     // Not following SemVer
     "stormslowly/rust-cache",
 
+    // Too many breaking change in 1.5.7. Manually upgrade later.
+    "@rspack/test-tools",
+
+    // Need update dotslash
+    // See comments in packages/web-platform/web-style-transformer/scripts/wasm-bindgen
+    "wasm-bindgen",
+
     // TODO: remove this after drop napi-rs
     "@emnapi/core",
     "@emnapi/runtime",
     "@napi-rs/cli",
+    "napi",
+    "napi-derive",
   ],
 }

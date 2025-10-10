@@ -36,6 +36,7 @@
       "__preparation__/**",
       "packages/react/transform/index.d.ts",
       "packages/react/transform/index.cjs",
+      "packages/react/transform/**/index.d.ts",
 
       "packages/react/index.d.ts",
       "packages/react/runtime/**",

@@ -1,0 +1,20 @@
+[package]
+name = "swc_plugin_snapshot"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+convert_case = { workspace = true }
+hex = { workspace = true }
+napi = { workspace = true }
+napi-derive = { workspace = true }
+once_cell = { workspace = true }
+regex = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true, features = ["preserve_order"] }
+sha-1 = { workspace = true }
+swc_core = { workspace = true, features = ["base", "ecma_codegen", "ecma_parser", "ecma_minifier", "ecma_transforms_typescript", "ecma_utils", "ecma_quote", "ecma_transforms_react", "ecma_transforms_optimization"] }
+swc_plugins_shared = { path = "../swc_plugins_shared" }

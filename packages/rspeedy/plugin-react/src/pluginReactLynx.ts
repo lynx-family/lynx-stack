@@ -115,15 +115,6 @@ export interface PluginReactLynxOptions {
   enableAccessibilityElement?: boolean
 
   /**
-   * enableICU enables the Intl API to be enabled globally.
-   *
-   * If enabled, please double check the compatibility with Lynx Share Context feature to avoid using shared Intl API from other destroyed card.
-   *
-   * @defaultValue `false`
-   */
-  enableICU?: boolean
-
-  /**
    * enableCSSInheritance enables the default inheritance properties.
    *
    * @remarks
@@ -302,7 +293,6 @@ export function pluginReactLynx(
     debugInfoOutside: true,
     defaultDisplayLinear: true,
     enableAccessibilityElement: false,
-    enableICU: false,
     enableCSSInheritance: false,
     enableCSSInvalidation: true,
     enableCSSSelector: true,

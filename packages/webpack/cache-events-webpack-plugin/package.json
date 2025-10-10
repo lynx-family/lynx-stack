@@ -42,7 +42,7 @@
     "@lynx-js/chunk-loading-webpack-plugin": "workspace:*",
     "@lynx-js/test-tools": "workspace:*",
     "@lynx-js/vitest-setup": "workspace:*",
-    "webpack": "^5.101.3"
+    "webpack": "^5.102.0"
   },
   "engines": {
     "node": ">=18"

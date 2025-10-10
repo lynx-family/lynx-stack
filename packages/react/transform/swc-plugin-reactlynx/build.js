@@ -21,7 +21,7 @@ execSync('cargo build-wasi --release', {
 await fs.copyFile(
   path.resolve(
     __dirname,
-    '../../../../target/wasm32-wasip1/release/swc_plugin_reactlynx_compat.wasm',
+    '../../../../target/wasm32-wasip1/release/swc_plugin_reactlynx.wasm',
   ),
-  path.resolve(__dirname, 'swc_plugin_reactlynx_compat.wasm'),
+  path.resolve(__dirname, 'swc_plugin_reactlynx.wasm'),
 );

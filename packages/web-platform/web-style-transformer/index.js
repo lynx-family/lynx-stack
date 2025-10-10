@@ -16,7 +16,6 @@ export async function initWasm() {
       /* webpackMode: "lazy" */
       /* webpackChunkName: "legacy-wasm-chunk" */
       /* webpackPrefetch: false */
-      /* webpackPreload: false */
       './legacy.js'
     );
   }

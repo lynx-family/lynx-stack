@@ -72,6 +72,30 @@ class SelectorQuery {
     return this;
   }
 
+  animate(...args) {
+    this.method = 'animate';
+    this.params = args;
+    return this;
+  }
+
+  playAnimation(...args) {
+    this.method = 'playAnimation';
+    this.params = args;
+    return this;
+  }
+
+  pauseAnimation(...args) {
+    this.method = 'pauseAnimation';
+    this.params = args;
+    return this;
+  }
+
+  cancelAnimation(...args) {
+    this.method = 'cancelAnimation';
+    this.params = args;
+    return this;
+  }
+
   setNativeProps(...args) {
     this.method = 'setNativeProps';
     this.params = args;
@@ -132,6 +156,10 @@ function injectGlobals() {
   };
   globalThis.requestAnimationFrame = setTimeout;
   globalThis.cancelAnimationFrame = clearTimeout;
+
+  globalThis.__SNAPSHOT__ = (snapshot) => {
+    return snapshot.type;
+  };
 
   console.profile = vi.fn();
   console.profileEnd = vi.fn();

@@ -1,5 +1,39 @@
 # @lynx-js/web-worker-runtime
 
+## 0.17.2
+
+### Patch Changes
+
+- feat: support load bts chunk from remote address ([#1834](https://github.com/lynx-family/lynx-stack/pull/1834))
+
+  - re-support chunk splitting
+  - support lynx.requireModule with a json file
+  - support lynx.requireModule, lynx.requireModuleAsync with a remote url
+  - support to add a breakpoint in chrome after reloading the web page
+
+- Updated dependencies [[`a35a245`](https://github.com/lynx-family/lynx-stack/commit/a35a2452e5355bda3c475f9a750a86085e0cf56a)]:
+  - @lynx-js/web-constants@0.17.2
+  - @lynx-js/web-mainthread-apis@0.17.2
+  - @lynx-js/web-worker-rpc@0.17.2
+
+## 0.17.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-constants@0.17.1
+  - @lynx-js/web-mainthread-apis@0.17.1
+  - @lynx-js/web-worker-rpc@0.17.1
+
+## 0.17.0
+
+### Patch Changes
+
+- Updated dependencies [[`721635d`](https://github.com/lynx-family/lynx-stack/commit/721635de6c1d2d617c7cbaa86e7d816c42d62930), [`93d707b`](https://github.com/lynx-family/lynx-stack/commit/93d707b82a59f7256952e21da6dcad2999f8233d), [`d150ed4`](https://github.com/lynx-family/lynx-stack/commit/d150ed440a4f1e9d9a3a2911adf6e6fa39a0c589)]:
+  - @lynx-js/web-mainthread-apis@0.17.0
+  - @lynx-js/web-constants@0.17.0
+  - @lynx-js/web-worker-rpc@0.17.0
+
 ## 0.16.1
 
 ### Patch Changes

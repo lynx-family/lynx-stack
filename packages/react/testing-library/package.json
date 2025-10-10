@@ -13,6 +13,6 @@
     "@lynx-js/react": "workspace:*",
     "@lynx-js/testing-environment": "workspace:*",
     "@testing-library/dom": "^10.4.1",
-    "@testing-library/jest-dom": "^6.8.0"
+    "@testing-library/jest-dom": "^6.9.0"
   }
 }

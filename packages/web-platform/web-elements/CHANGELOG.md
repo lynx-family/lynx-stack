@@ -1,5 +1,14 @@
 # @lynx-js/web-elements
 
+## 0.8.7
+
+### Patch Changes
+
+- The img within svg does not inherit the position ([#1769](https://github.com/lynx-family/lynx-stack/pull/1769))
+
+- Updated dependencies []:
+  - @lynx-js/web-elements-template@0.8.7
+
 ## 0.8.6
 
 ### Patch Changes

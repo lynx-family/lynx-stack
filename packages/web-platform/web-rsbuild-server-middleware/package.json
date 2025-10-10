@@ -1,0 +1,35 @@
+{
+  "name": "@lynx-js/web-rsbuild-server-middleware",
+  "version": "0.17.2",
+  "private": false,
+  "description": "a dev server middleware for rsbuild to serve Lynx Web Platform shell project",
+  "keywords": [],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/web-platform/web-rsbuild-server-middleware"
+  },
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "!dist/**/*.js.map",
+    "www",
+    "LICENSE.txt",
+    "Notice.txt",
+    "CHANGELOG.md",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "rsbuild build"
+  },
+  "devDependencies": {
+    "@lynx-js/web-core": "workspace:*",
+    "@lynx-js/web-elements": "workspace:*",
+    "@rsbuild/core": "catalog:rsbuild",
+    "rsbuild-plugin-arethetypeswrong": "0.1.1",
+    "rsbuild-plugin-publint": "0.3.3"
+  }
+}

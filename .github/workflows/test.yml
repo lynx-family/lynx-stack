@@ -38,9 +38,10 @@ jobs:
           # We need full history for changeset status check
           fetch-depth: 0
           persist-credentials: false
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
           node-version: "24"
+          package-manager-cache: false
       - name: Install
         run: |
           npm install -g corepack@latest
@@ -198,7 +199,7 @@ jobs:
     runs-on: lynx-ubuntu-24.04-medium
     steps:
       - uses: taiki-e/checkout-action@b13d20b7cda4e2f325ef19895128f7ff735c0b3d # v1.3.1
-      - uses: crate-ci/typos@65f69f021b736bdbe548ce72200500752d42b40e # v1.35.7
+      - uses: crate-ci/typos@6d35b835f6f431bbe715c4c1ccd2c7d3264e11fb # v1.37.0
         with:
           files: .
   test-vitest:

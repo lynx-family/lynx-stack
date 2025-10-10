@@ -1,5 +1,13 @@
 # @lynx-js/testing-environment
 
+## 0.1.8
+
+### Patch Changes
+
+- Fix the "ReferenceError: Node is not defined" error. ([#1850](https://github.com/lynx-family/lynx-stack/pull/1850))
+
+  This error would happen when upgrading to `@testing-library/jest-dom` [v6.9.0](https://github.com/testing-library/jest-dom/releases/tag/v6.9.0).
+
 ## 0.1.7
 
 ### Patch Changes

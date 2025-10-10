@@ -1,9 +1,11 @@
 import { options } from 'preact';
+import { expect } from 'vitest';
 
 import { BackgroundSnapshotInstance } from '../../runtime/lib/backgroundSnapshot.js';
 import { clearCommitTaskId, replaceCommitHook } from '../../runtime/lib/lifecycle/patch/commit.js';
 import { deinitGlobalSnapshotPatch } from '../../runtime/lib/lifecycle/patch/snapshotPatch.js';
 import { injectUpdateMainThread } from '../../runtime/lib/lifecycle/patch/updateMainThread.js';
+import { injectUpdateMTRefInitValue } from '../../runtime/lib/worklet/ref/updateInitValue.js';
 import { injectCalledByNative } from '../../runtime/lib/lynx/calledByNative.js';
 import { flushDelayedLifecycleEvents, injectTt } from '../../runtime/lib/lynx/tt.js';
 import { setRoot } from '../../runtime/lib/root.js';
@@ -17,6 +19,31 @@ import { initApiEnv } from '../../worklet-runtime/lib/api/lynxApi.js';
 import { initEventListeners } from '../../worklet-runtime/lib/listeners.js';
 import { initWorklet } from '../../worklet-runtime/lib/workletRuntime.js';
 
+expect.addSnapshotSerializer({
+  test(val) {
+    return Boolean(
+      val
+        && typeof val === 'object'
+        && Array.isArray(val.refAttr)
+        && Object.prototype.hasOwnProperty.call(val, 'task')
+        && typeof val.exec === 'function',
+    );
+  },
+  print(val, serialize) {
+    const printed = serialize({
+      refAttr: Array.isArray(val.refAttr) ? [...val.refAttr] : val.refAttr,
+      task: val.task,
+    });
+    if (printed.startsWith('Object')) {
+      return printed.replace(/^Object/, 'RefProxy');
+    }
+    if (printed.startsWith('{')) {
+      return `RefProxy ${printed}`;
+    }
+    return printed;
+  },
+});
+
 const {
   onInjectMainThreadGlobals,
   onInjectBackgroundThreadGlobals,
@@ -28,6 +55,7 @@ const {
 
 injectCalledByNative();
 injectUpdateMainThread();
+injectUpdateMTRefInitValue();
 replaceCommitHook();
 
 globalThis.onInitWorkletRuntime = () => {

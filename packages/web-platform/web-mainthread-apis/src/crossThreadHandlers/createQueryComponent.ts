@@ -24,24 +24,32 @@ export function createQueryComponent(
   const updateBTSTemplateCache = backgroundThreadRpc.createCall(
     updateBTSTemplateCacheEndpoint,
   );
+  const lazyCache: Map<string, Promise<unknown>> = new Map();
   const __QueryComponentImpl: QueryComponentPAPI = (url, callback) => {
-    loadTemplate(url).then(async (template) => {
-      const updateBTSCachePromise = updateBTSTemplateCache(url, template);
-      let lepusRootChunkExport = await mtsRealm.loadScript(
-        template.lepusCode.root,
-      );
-      if (mtsGlobalThisRef.mtsGlobalThis.processEvalResult) {
-        lepusRootChunkExport = mtsGlobalThisRef.mtsGlobalThis.processEvalResult(
-          lepusRootChunkExport,
-          url,
+    const cacheLazy = lazyCache.get(url);
+    const loadPromise = cacheLazy
+      ?? loadTemplate(url).then(async (template) => {
+        const updateBTSCachePromise = updateBTSTemplateCache(url, template);
+        let lepusRootChunkExport = await mtsRealm.loadScript(
+          template.lepusCode.root,
         );
-      }
-      updateLazyComponentStyle(template.styleInfo, url);
-      await updateBTSCachePromise;
-      jsContext.dispatchEvent({
-        type: '__OnDynamicJSSourcePrepared',
-        data: url,
+        if (mtsGlobalThisRef.mtsGlobalThis.processEvalResult) {
+          lepusRootChunkExport = mtsGlobalThisRef.mtsGlobalThis
+            .processEvalResult(
+              lepusRootChunkExport,
+              url,
+            );
+        }
+        updateLazyComponentStyle(template.styleInfo, url);
+        await updateBTSCachePromise;
+        jsContext.dispatchEvent({
+          type: '__OnDynamicJSSourcePrepared',
+          data: url,
+        });
+        return lepusRootChunkExport;
       });
+    !cacheLazy && lazyCache.set(url, loadPromise);
+    loadPromise.then(lepusRootChunkExport => {
       callback?.({
         code: 0,
         data: {
@@ -51,6 +59,7 @@ export function createQueryComponent(
       });
     }).catch((error) => {
       console.error(`lynx web: lazy bundle load failed:`, error);
+      lazyCache.delete(url);
       callback?.({
         code: -1,
         data: undefined,

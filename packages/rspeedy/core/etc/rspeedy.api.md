@@ -4,6 +4,7 @@
 
 ```ts
 
+import type { CompressOptions } from '@rsbuild/core';
 import type { CreateRsbuildOptions } from '@rsbuild/core';
 import type { DataUriLimit } from '@rsbuild/core';
 import type { DistPathConfig } from '@rsbuild/core';
@@ -20,6 +21,7 @@ import { version as rsbuildVersion } from '@rsbuild/core';
 import type { RsdoctorRspackPlugin } from '@rsdoctor/rspack-plugin';
 import { Rspack } from '@rsbuild/core';
 import { rspack } from '@rsbuild/core';
+import type { ServerConfig } from '@rsbuild/core';
 import type { ToolsConfig } from '@rsbuild/core';
 import type { WatchFiles } from '@rsbuild/core';
 
@@ -273,6 +275,7 @@ export interface Resolve {
     alias?: Record<string, string | false | string[]> | undefined;
     aliasStrategy?: 'prefer-tsconfig' | 'prefer-alias' | undefined;
     dedupe?: string[] | undefined;
+    extensions?: string[] | undefined;
 }
 
 export { RsbuildPlugin }
@@ -303,6 +306,8 @@ export type RspeedyInstance = RsbuildInstance & {
 // @public
 export interface Server {
     base?: string | undefined;
+    compress?: boolean | CompressOptions | undefined;
+    cors?: ServerConfig['cors'] | undefined;
     headers?: Record<string, string | string[]> | undefined;
     host?: string | undefined;
     port?: number | undefined;

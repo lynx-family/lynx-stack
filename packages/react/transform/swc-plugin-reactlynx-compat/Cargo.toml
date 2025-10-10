@@ -7,13 +7,10 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [dependencies]
-convert_case = { workspace = true }
-once_cell = { workspace = true }
-regex = { workspace = true }
-rustc-hash = { workspace = true }
-serde = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true, default-features = false }
 swc_core = { workspace = true, features = ["base", "ecma_plugin_transform", "ecma_visit", "ecma_utils", "ecma_quote", "ecma_parser"] }
+swc_plugin_compat = { path = "../crates/swc_plugin_compat" }
 
 # .cargo/config.toml defines few alias to build plugin.
 # cargo build-wasi generates wasm-wasi32 binary

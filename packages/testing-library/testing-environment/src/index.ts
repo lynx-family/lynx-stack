@@ -100,7 +100,7 @@ function createPolyfills() {
       globalThis[rLynxChange[0]](rLynxChange[1]);
 
       globalThis.lynxTestingEnv.switchToBackgroundThread();
-      rLynxChange[2]();
+      rLynxChange[2]?.();
       globalThis.lynxTestingEnv.switchToMainThread();
 
       // restore the original thread state

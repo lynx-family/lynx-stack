@@ -10,11 +10,14 @@ import {
   getNativeModulesPathRule,
   getNapiModulesPathRule,
 } from '@lynx-js/web-platform-rsbuild-plugin';
+import { createWebVirtualFilesMiddleware } from '@lynx-js/web-rsbuild-server-middleware';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const isCI = !!process.env.CI;
 const port = process.env.PORT ?? 3080;
+
+const main = createWebVirtualFilesMiddleware('/middleware');
 /** @type {import('@rspack/cli').Configuration} */
 const config = {
   cache: false,
@@ -202,6 +205,7 @@ const config = {
           }
         },
       });
+      middlewares.push(main);
       return middlewares;
     },
     watchFiles: isCI
@@ -221,7 +225,7 @@ const config = {
       {
         directory: path.join(__dirname, 'node_modules'),
         publicPath: '/node_modules',
-        watch: !isCI,
+        watch: false,
       },
       {
         directory: path.join(__dirname, 'dist'),

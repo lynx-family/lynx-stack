@@ -9,7 +9,6 @@ import {
   LYNX_UI_PLUGIN_MAP,
   ORDERED_LYNX_PLUGIN_NAMES,
   resolveUIPluginEntries,
-  toEnabledLynxUIPluginSet,
   toEnabledSet,
 } from './core.js';
 import type {
@@ -20,13 +19,50 @@ import type {
 import { lynxTheme } from './theme.js';
 
 /**
- * Should be used with Tailwind v3+ (JIT is enabled by default) and configured with `content`,
- * otherwise the generated CSS bundle may include unused utilities.
+ * Creates a Tailwind preset tailored for the Lynx ecosystem.
+ *
+ * @param options - Configuration options for the preset
+ * @param options.lynxPlugins - Controls which Lynx core plugins to enable
+ * @param options.lynxUIPlugins - Controls which Lynx UI plugins to enable
+ * @param options.debug - Whether to enable debug logging
+ * @param options.theme - Custom theme configuration to merge with Lynx theme
+ *
+ * @returns A partial Tailwind configuration object
+ *
+ * @remarks
+ * - Requires **Tailwind v3+** (JIT enabled by default).
+ * - Configure the `content` option in your Tailwind config;
+ *   otherwise the generated CSS bundle may include unused utilities.
+ * - The `defaults` plugin is always enabled regardless of configuration.
+ * - Debug mode will log enabled plugins to the console.
+ *
+ * @defaultValue
+ * - `lynxPlugins`: `true`
+ * - `lynxUIPlugins`: `true` (starting with v0.4.0; includes `uiVariants`)
+ * - `debug`: `false`
+ * - `theme`: `undefined`
+ *
+ * @example Basic usage with all defaults
+ * ```ts
+ * const preset = createLynxPreset();
+ * ```
+ *
+ * @example Opt out globally or per plugin
+ * ```ts
+ * // turn off all UI plugins
+ * createLynxPreset({ lynxUIPlugins: false });
+ *
+ * // turn off a single UI plugin
+ * createLynxPreset({ lynxUIPlugins: { uiVariants: false } });
+ *
+ * // enable debug mode
+ * createLynxPreset({ debug: true });
+ *
+ * @since 0.1.0
  */
-
 function createLynxPreset({
   lynxPlugins = true,
-  lynxUIPlugins = false,
+  lynxUIPlugins = true,
   debug = false,
   theme,
 }: {
@@ -36,7 +72,6 @@ function createLynxPreset({
   theme?: Config['theme'];
 } = {}): Partial<Config> {
   const coreSetEnabled = toEnabledSet(lynxPlugins);
-  const uiSetEnabled = toEnabledLynxUIPluginSet(lynxUIPlugins);
 
   const defaultPluginName: LynxPluginName = 'defaults';
 
@@ -53,10 +88,24 @@ function createLynxPreset({
 
   // Lynx UI Plugins
   for (const [name, options] of resolveUIPluginEntries(lynxUIPlugins)) {
-    if (uiSetEnabled.has(name)) {
-      const fn = LYNX_UI_PLUGIN_MAP[name];
+    const fn = LYNX_UI_PLUGIN_MAP[name];
+
+    // Invariant: map must contain every ordered name
+    if (!fn) {
+      if (debug) {
+        const msg = `[Lynx] invariant: missing UI plugin impl for '${name}'`;
+        console.debug(msg);
+      }
+      continue;
+    }
+    try {
       plugins.push(fn(options));
       if (debug) console.debug(`[Lynx] enabled UI plugin: ${name}`);
+    } catch (err) {
+      // Keep the stack; no need for instanceof / String(err)
+      if (debug) {
+        console.warn(`[Lynx] failed to initialize UI plugin '${name}'`, err);
+      }
     }
   }
 

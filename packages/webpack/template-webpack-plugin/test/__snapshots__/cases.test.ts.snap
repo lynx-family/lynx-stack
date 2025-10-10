@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`template > template/defaults/compile-options > template/defaults/compile-options > template/defaults/compile-options - rspack > template/defaults/compile-options - rspack should run async 1`] = `
+exports[`template > templateCases/defaults/compile-options > templateCases/defaults/compile-options > templateCases/defaults/compile-options - rspack > templateCases/defaults/compile-options - rspack should run async 1`] = `
 {
   "bundleModuleMode": "ReturnByFunction",
   "debugInfoOutside": true,
@@ -18,12 +18,11 @@ exports[`template > template/defaults/compile-options > template/defaults/compil
 }
 `;
 
-exports[`template > template/defaults/config > template/defaults/config > template/defaults/config - rspack > template/defaults/config - rspack should run async 1`] = `
+exports[`template > templateCases/defaults/config > templateCases/defaults/config > templateCases/defaults/config - rspack > templateCases/defaults/config - rspack should run async 1`] = `
 {
   "enableA11y": true,
   "enableAccessibilityElement": false,
   "enableCSSInheritance": false,
-  "enableICU": false,
   "enableNativeList": true,
   "enableNewGesture": false,
   "enableNewIntersectionObserver": true,

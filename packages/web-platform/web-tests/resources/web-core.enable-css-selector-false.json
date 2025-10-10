@@ -13,6 +13,7 @@
   },
   "customSections": {},
   "cardType": "react",
+  "appType": "card",
   "pageConfig": {
     "enableFiberArch": true,
     "useLepusNG": true,
