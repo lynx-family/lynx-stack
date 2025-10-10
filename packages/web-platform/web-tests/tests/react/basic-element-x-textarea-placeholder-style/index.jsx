@@ -18,6 +18,7 @@ function App() {
   return (
     <view class='page'>
       <view class='block' bindtap={switchPlaceholderStyle}></view>
+      {/* placeholder font-size 20px */}
       <x-textarea
         class='textarea'
         placeholder='placeholder'
@@ -31,6 +32,28 @@ function App() {
         placeholder-color={placeholderColor}
         placeholder-font-size={placeholderFontSize}
         placeholder-font-weight={placeholderFontWeight}
+      />
+      {/* placeholder font-size 30px */}
+      <x-textarea
+        class='textarea textarea-font-size-30'
+        placeholder='placeholder'
+        placeholder-color='#DFA878'
+        placeholder-font-weight='normal'
+      />
+      {/* placeholder font-size 20px */}
+      <x-textarea
+        class='textarea textarea-font-size-30'
+        placeholder='placeholder'
+        placeholder-color='#DFA878'
+        placeholder-font-size='20px'
+        placeholder-font-weight='normal'
+      />
+      {/* placeholder default font-size 14px */}
+      <x-textarea
+        class='textarea'
+        placeholder='placeholder'
+        placeholder-color='#DFA878'
+        placeholder-font-weight='normal'
       />
     </view>
   );
