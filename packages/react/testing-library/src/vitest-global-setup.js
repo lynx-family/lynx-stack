@@ -102,7 +102,7 @@ globalThis.onInjectBackgroundThreadGlobals = (target) => {
       return new BackgroundSnapshotInstance(type, slotIndex);
     };
     document.createTextNode = function(text, slotIndex = 0) {
-      const i = new BackgroundSnapshotInstance(null, slotIndex = 0);
+      const i = new BackgroundSnapshotInstance(null, slotIndex);
       i.setAttribute(0, text);
       Object.defineProperty(i, 'data', {
         set(v) {

@@ -76,11 +76,12 @@ describe('dynamic key in snapshot', () => {
                 <text>
                   foo
                 </text>
+              </view>
+              <view>
                 <text>
                   bar
                 </text>
               </view>
-              <view />
             </view>
           </wrapper>
         </view>
@@ -110,23 +111,24 @@ describe('dynamic key in snapshot', () => {
         <view>
           <text>
             Hello 
-            <wrapper>
-              <view
-                class="foo"
-              >
-                <view>
-                  <text>
-                    foo
-                  </text>
-                  <text>
-                    bar
-                  </text>
-                </view>
-                <view />
-              </view>
-            </wrapper>
+            <wrapper />
           </text>
-          <wrapper />
+          <wrapper>
+            <view
+              class="foo"
+            >
+              <view>
+                <text>
+                  foo
+                </text>
+              </view>
+              <view>
+                <text>
+                  bar
+                </text>
+              </view>
+            </view>
+          </wrapper>
         </view>
       </page>
     `);
@@ -160,11 +162,12 @@ describe('dynamic key in snapshot', () => {
                 <text>
                   foo
                 </text>
+              </view>
+              <view>
                 <text>
                   bar
                 </text>
               </view>
-              <view />
             </view>
           </wrapper>
           <text>
@@ -202,11 +205,12 @@ describe('dynamic key in snapshot', () => {
               <text>
                 foo
               </text>
+            </view>
+            <view>
               <text>
                 bar
               </text>
             </view>
-            <view />
           </view>
         </view>
       </page>
@@ -240,13 +244,14 @@ describe('dynamic key in snapshot', () => {
                 <text>
                   foo
                 </text>
+              </view>
+              <wrapper>
                 <view>
                   <text>
                     bar
                   </text>
                 </view>
-              </view>
-              <wrapper />
+              </wrapper>
             </view>
           </wrapper>
         </view>

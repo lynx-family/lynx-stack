@@ -52,12 +52,12 @@ test('unmounts a component', async () => {
     <page>
       <view>
         <text>
-          <wrapper>
-            Start
-          </wrapper>
+          <wrapper />
           ms
         </text>
-        <text />
+        <text>
+          Start
+        </text>
         <text>
           Clear
         </text>

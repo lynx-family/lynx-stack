@@ -215,11 +215,12 @@ describe('list', () => {
           <text>
             3
           </text>
+        </view>
+        <view>
           <text>
             hello
           </text>
         </view>
-        <view />
       </list-item>
     `);
 
@@ -269,11 +270,12 @@ describe('list', () => {
           <text>
             1
           </text>
+        </view>
+        <view>
           <text>
             hello
           </text>
         </view>
-        <view />
       </list-item>
     `);
 
@@ -291,11 +293,12 @@ describe('list', () => {
               <text>
                 1
               </text>
+            </view>
+            <view>
               <text>
                 hello
               </text>
             </view>
-            <view />
           </list-item>,
           "item-key",
           "1",
@@ -312,11 +315,12 @@ describe('list', () => {
               <text>
                 1
               </text>
+            </view>
+            <view>
               <text>
                 hello
               </text>
             </view>
-            <view />
           </list-item>,
           "full-span",
           true,
@@ -348,11 +352,12 @@ describe('list', () => {
               <text>
                 1
               </text>
+            </view>
+            <view>
               <text>
                 hello
               </text>
             </view>
-            <view />
           </list-item>,
           {
             "elementID": 30,
@@ -380,11 +385,12 @@ describe('list', () => {
             <text>
               4
             </text>
+          </view>
+          <view>
             <text>
               hello
             </text>
           </view>
-          <view />
         </list-item>
         <list-item
           full-span="true"
@@ -397,11 +403,12 @@ describe('list', () => {
             <text>
               5
             </text>
+          </view>
+          <view>
             <text>
               hello
             </text>
           </view>
-          <view />
         </list-item>
         <list-item
           full-span="true"
@@ -414,11 +421,12 @@ describe('list', () => {
             <text>
               2
             </text>
+          </view>
+          <view>
             <text>
               hello
             </text>
           </view>
-          <view />
         </list-item>
         <list-item
           full-span="true"
@@ -431,11 +439,12 @@ describe('list', () => {
             <text>
               1
             </text>
+          </view>
+          <view>
             <text>
               hello
             </text>
           </view>
-          <view />
         </list-item>
       </list>
     `);

@@ -89,13 +89,13 @@ describe('alog', () => {
     expect(lynxTestingEnv.backgroundThread.console.alog.mock.calls).toMatchInlineSnapshot(`
       [
         [
-          "[BackgroundThread Component Render] name: ClassComponent, uniqID: __Card__:__snapshot_426db_test_2, __id: 4",
+          "[BackgroundThread Component Render] name: ClassComponent, uniqID: __Card__:__snapshot_426db_test_2, __id: -3",
         ],
         [
-          "[BackgroundThread Component Render] name: FunctionComponent, uniqID: __Card__:__snapshot_426db_test_3, __id: 5",
+          "[BackgroundThread Component Render] name: FunctionComponent, uniqID: __Card__:__snapshot_426db_test_3, __id: -4",
         ],
         [
-          "[BackgroundThread Component Render] name: Fragment, uniqID: __Card__:__snapshot_426db_test_2, __id: 4",
+          "[BackgroundThread Component Render] name: Fragment, uniqID: __Card__:__snapshot_426db_test_2, __id: -3",
         ],
         [
           "[BackgroundThread Component Render] name: App, uniqID: __Card__:__snapshot_426db_test_1, __id: -2",
