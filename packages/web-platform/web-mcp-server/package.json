@@ -6,6 +6,7 @@
   "license": "Apache-2.0",
   "type": "module",
   "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
   "bin": {
     "lynx-web-mcp-tool": "dist/index.js"
   },
