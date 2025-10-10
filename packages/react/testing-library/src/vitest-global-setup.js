@@ -62,7 +62,7 @@ globalThis.onInjectMainThreadGlobals = (target) => {
       si.__slotIndex = slotIndex;
       return si;
     };
-    document.createElementNS = function(_ns, type, slotIndex = 0) {
+    document.createElementNS = function(_ns, type, _is, slotIndex = 0) {
       const si = new SnapshotInstance(type);
       si.__slotIndex = slotIndex;
       return si;
@@ -98,7 +98,7 @@ globalThis.onInjectBackgroundThreadGlobals = (target) => {
     document.createElement = function(type, slotIndex = 0) {
       return new BackgroundSnapshotInstance(type, slotIndex);
     };
-    document.createElementNS = function(_ns, type, slotIndex = 0) {
+    document.createElementNS = function(_ns, type, _is, slotIndex = 0) {
       return new BackgroundSnapshotInstance(type, slotIndex);
     };
     document.createTextNode = function(text, slotIndex = 0) {
