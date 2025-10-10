@@ -50,7 +50,6 @@ function injectTt(): void {
 
 function onLifecycleEvent([type, data]: [LifecycleConstant, unknown]) {
   const hasRootRendered = CHILDREN in __root;
-  console.log('hasRootRendered', hasRootRendered);
   // never called `render(<App/>, __root)`
   // happens if user call `root.render()` async
   if (!hasRootRendered) {
@@ -74,7 +73,6 @@ function onLifecycleEvent([type, data]: [LifecycleConstant, unknown]) {
 }
 
 function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
-  console.log('onLifecycleEventImpl', type);
   switch (type) {
     case LifecycleConstant.firstScreen: {
       let processErr;
@@ -92,17 +90,10 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
       const before = JSON.parse(lepusSide) as SerializedSnapshotInstance;
       markTiming('hydrateParseSnapshotEnd');
       markTiming('diffVdomStart');
-      console.log('start BTS hydrate');
-      let snapshotPatch;
-      try {
-        snapshotPatch = hydrate(
-          before,
-          __root as BackgroundSnapshotInstance,
-        );
-      } catch (e) {
-        console.log('error', e);
-      }
-      console.log('end BTS hydrate');
+      const snapshotPatch = hydrate(
+        before,
+        __root as BackgroundSnapshotInstance,
+      );
       if (__PROFILE__) {
         profileEnd();
       }
@@ -132,7 +123,6 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
       // printSnapshotInstance(__root as BackgroundSnapshotInstance);
       const commitTaskId = genCommitTaskId();
       const patchList: PatchList = {
-        // @ts-expect-error delete me!
         patchList: [{ snapshotPatch, id: commitTaskId }],
       };
       if (delayedRunOnMainThreadData.length) {

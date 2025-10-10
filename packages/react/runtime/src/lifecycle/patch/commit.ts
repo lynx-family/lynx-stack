@@ -187,11 +187,11 @@ function commitPatchUpdate(patchList: PatchList, patchOptions: GlobalPatchOption
   data: string;
   patchOptions: PatchOptions;
 } {
-  // console.log('********** JS update:');
+  // console.debug('********** JS update:');
   // printSnapshotInstance(
   //   (backgroundSnapshotInstanceManager.values.get(1) ?? backgroundSnapshotInstanceManager.values.get(-1))!,
   // );
-  // console.log('commitPatchUpdate:', prettyFormatSnapshotPatch(patchList.patchList[0]?.snapshotPatch));
+  // console.debug('commitPatchUpdate:', prettyFormatSnapshotPatch(patchList.patchList[0]?.snapshotPatch));
 
   if (__PROFILE__) {
     profileStart('ReactLynx::commitChanges');

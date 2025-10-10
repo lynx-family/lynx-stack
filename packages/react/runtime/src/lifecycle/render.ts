@@ -20,7 +20,6 @@ function renderMainThread(): void {
     if (__PROFILE__) {
       profileStart('ReactLynx::renderMainThread');
     }
-    console.log('renderToString');
     opcodes = renderToString(__root.__jsx, undefined);
   } catch (e) {
     lynx.reportError(e as Error);
@@ -44,7 +43,6 @@ function renderMainThread(): void {
   if (__PROFILE__) {
     profileStart('ReactLynx::renderOpcodes');
   }
-  console.log('renderOpcodesInto');
   // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   renderOpcodesInto(opcodes, __root as any);
   if (__ENABLE_SSR__) {
