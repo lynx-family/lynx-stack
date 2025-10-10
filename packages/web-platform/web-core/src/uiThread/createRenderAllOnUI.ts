@@ -5,7 +5,7 @@
 import {
   type StartMainThreadContextConfig,
   type RpcCallType,
-  type updateDataEndpoint,
+  updateDataEndpoint,
   type MainThreadGlobalThis,
   type I18nResourceTranslationOptions,
   type CloneableObject,
@@ -126,7 +126,7 @@ export function createRenderAllOnUI(
   const mtsGlobalThis = mtsRealm.globalWindow as
     & typeof globalThis
     & MainThreadGlobalThis;
-  const { startMainThread } = prepareMainThreadAPIs(
+  const { startMainThread, handleUpdatedData } = prepareMainThreadAPIs(
     mainToBackgroundRpc,
     shadowRoot,
     document,
@@ -194,19 +194,23 @@ export function createRenderAllOnUI(
     }
 
     // Process any pending update calls that were queued while mtsGlobalThis was undefined
-    for (const args of pendingUpdateCalls) {
-      mtsGlobalThis.updatePage?.(...args);
+    for (const [newData, options] of pendingUpdateCalls) {
+      handleUpdatedData(newData, options);
     }
     pendingUpdateCalls.length = 0;
   };
   const updateDataMainThread: RpcCallType<typeof updateDataEndpoint> = async (
-    ...args
+    newData,
+    options,
   ) => {
     if (mtsGlobalThis) {
-      mtsGlobalThis.updatePage?.(...args);
+      return handleUpdatedData(
+        newData,
+        options,
+      );
     } else {
       // Cache the call if mtsGlobalThis is not yet initialized
-      pendingUpdateCalls.push(args);
+      pendingUpdateCalls.push([newData, options]);
     }
   };
   const updateI18nResourcesMainThread = (data: Cloneable) => {
