@@ -4206,6 +4206,25 @@ test.describe('reactlynx3 tests', () => {
       );
       // x-textarea/placeholder-style test-case end
 
+      // x-textarea/placeholder-font-size test-case start
+      test(
+        'basic-element-x-textarea-placeholder-font-size',
+        async ({ page }, { title }) => {
+          await goto(page, title);
+          await wait(100);
+          await diffScreenShot(
+            page,
+            'x-textarea',
+            'placeholder-font-size/font-size',
+            'index',
+            {
+              maxDiffPixelRatio: 0.02,
+            },
+          );
+        },
+      );
+      // x-textarea/placeholder-font-size test-case end
+
       // x-textarea/bindinput test-case start
       test(
         'basic-element-x-textarea-bindinput',
