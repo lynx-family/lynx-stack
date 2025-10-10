@@ -1,0 +1,22 @@
+{
+  "name": "@lynx-js/react-transfom-rspack-napi",
+  "version": "0.1.0",
+  "private": true,
+  "description": "",
+  "keywords": [
+    "lynx",
+    "react",
+    "transform",
+    "rspack",
+    "napi",
+    "swc"
+  ],
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "dependencies": {
+    "@lynx-js/swc-plugin-reactlynx": "workspace:*",
+    "@lynx-js/swc-plugin-reactlynx-compat": "workspace:*",
+    "@rspack/core": "catalog:rspack"
+  }
+}
