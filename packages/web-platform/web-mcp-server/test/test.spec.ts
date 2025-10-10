@@ -21,9 +21,10 @@ client.connect(
 );
 // now create rsbuild dev server
 const reactLynxExampleRoot = path.join(__dirname, '../../../../examples/react');
-const rspeedy = spawn('npx', ['pnpm', 'dev'], {
+const rspeedy = spawn('pnpm', ['dev'], {
   cwd: reactLynxExampleRoot,
   stdio: 'ignore',
+  shell: true,
 });
 
 // describe('get_element_hierarchy tool', () => {
