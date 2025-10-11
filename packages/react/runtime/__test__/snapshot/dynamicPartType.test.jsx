@@ -1,3 +1,5 @@
+/** @jsxImportSource ../../lepus */
+
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as ReactLynx from '../../src/internal';
 import { setupPage, SnapshotInstance, backgroundSnapshotInstanceManager } from '../../src/snapshot';
@@ -12,6 +14,10 @@ import { jsx } from '../../lepus/jsx-runtime';
 import { globalEnvManager } from '../utils/envManager';
 
 const HOLE = null;
+
+afterEach(() => {
+  elementTree.clear();
+});
 
 describe('legacy DynamicPartType should work', () => {
   it('DynamicPartType.Slot', () => {
@@ -117,9 +123,9 @@ describe('legacy DynamicPartType should work', () => {
       expect(prettyFormatSnapshotPatch(backgroundHydrate(JSON.parse(JSON.stringify(a)), aa))).toMatchInlineSnapshot(`
         [
           {
-            "childId": -4,
+            "childId": -7,
             "op": "RemoveChild",
-            "parentId": -3,
+            "parentId": -6,
           },
           {
             "id": 3,
@@ -131,12 +137,12 @@ describe('legacy DynamicPartType should work', () => {
             "beforeId": undefined,
             "childId": 3,
             "op": "InsertBefore",
-            "parentId": -3,
+            "parentId": -6,
           },
           {
-            "childId": -6,
+            "childId": -9,
             "op": "RemoveChild",
-            "parentId": -5,
+            "parentId": -8,
           },
           {
             "id": 5,
@@ -148,7 +154,7 @@ describe('legacy DynamicPartType should work', () => {
             "beforeId": undefined,
             "childId": 5,
             "op": "InsertBefore",
-            "parentId": -5,
+            "parentId": -8,
           },
         ]
       `);
@@ -310,12 +316,7 @@ describe('legacy DynamicPartType should work', () => {
       </list>
     `);
   });
-  it('DynamicPartType.Children with single text child', () => {
-    globalEnvManager.switchToMainThread();
-    setupPage(__CreatePage('0', 0));
-    const scratch = document.createElement('root');
-    scratch.ensureElements();
-
+  describe('DynamicPartType.Children', () => {
     // Input:
     // <view>
     // 	<text>{HOLE}</text>
@@ -343,64 +344,116 @@ describe('legacy DynamicPartType should work', () => {
       globDynamicComponentEntry,
       null,
     );
+    globalEnvManager.switchToMainThread();
 
-    const opcodes = renderToString(
-      jsx(s0, {
-        children: 'hello',
-      }),
-    );
+    it('with single text child', () => {
+      setupPage(__CreatePage('0', 0));
+      const scratch = document.createElement('root');
+      scratch.ensureElements();
 
-    expect(opcodes).toMatchInlineSnapshot(`
-      [
-        0,
-        {
-          "__slotIndex": undefined,
-          "children": undefined,
-          "extraProps": undefined,
-          "id": -16,
-          "type": "__Card__:s0",
-          "values": undefined,
-        },
-        0,
-        3,
-        "hello",
-        0,
-        1,
-      ]
-    `);
+      const opcodes = renderToString(
+        jsx(s0, {
+          children: 'hello',
+        }),
+      );
 
-    renderOpcodesInto(opcodes, scratch);
-    expect(scratch.__element_root).toMatchInlineSnapshot(`
-      <view
-        cssId="default-entry-from-native:0"
-      >
-        <text>
-          <raw-text
-            text="Hello, ReactLynx, "
-          />
-          <wrapper>
+      expect(opcodes).toMatchInlineSnapshot(`
+        [
+          0,
+          {
+            "__slotIndex": undefined,
+            "children": undefined,
+            "extraProps": undefined,
+            "id": -22,
+            "type": "__Card__:s0",
+            "values": undefined,
+          },
+          0,
+          3,
+          "hello",
+          0,
+          1,
+        ]
+      `);
+
+      renderOpcodesInto(opcodes, scratch);
+      expect(scratch.__element_root).toMatchInlineSnapshot(`
+        <page
+          cssId="default-entry-from-native:0"
+        >
+          <view>
             <text>
               <raw-text
-                text="hello1"
+                text="Hello, ReactLynx, "
+              />
+              <raw-text
+                text="hello"
               />
             </text>
-          </wrapper>
-        </text>
-        <wrapper>
-          <text>
-            <raw-text
-              text="hello2"
-            />
-          </text>
-        </wrapper>
-        <view>
-          <text>
-            <raw-text
-              text="hello"
-            />
-          </text>
-        </view>
-      </view>
-    `);
+            <wrapper />
+          </view>
+        </page>
+      `);
+    });
+
+    it('with single children', () => {
+      setupPage(__CreatePage('0', 0));
+      const scratch = document.createElement('root');
+      scratch.ensureElements();
+
+      const opcodes = renderToString(
+        jsx(s0, {
+          children: <text>children</text>,
+        }),
+      );
+
+      expect(opcodes).toMatchInlineSnapshot(`
+        [
+          0,
+          {
+            "__slotIndex": undefined,
+            "children": undefined,
+            "extraProps": undefined,
+            "id": -26,
+            "type": "__Card__:s0",
+            "values": undefined,
+          },
+          0,
+          0,
+          {
+            "__slotIndex": undefined,
+            "children": undefined,
+            "extraProps": undefined,
+            "id": -25,
+            "type": "__Card__:__snapshot_a94a8_test_7",
+            "values": undefined,
+          },
+          0,
+          1,
+          1,
+        ]
+      `);
+
+      renderOpcodesInto(opcodes, scratch);
+      expect(scratch.__element_root).toMatchInlineSnapshot(`
+        <page
+          cssId="default-entry-from-native:0"
+        >
+          <view>
+            <text>
+              <raw-text
+                text="Hello, ReactLynx, "
+              />
+              <text>
+                <raw-text
+                  text="children"
+                />
+              </text>
+            </text>
+            <wrapper />
+          </view>
+        </page>
+      `);
+    });
   });
 });
