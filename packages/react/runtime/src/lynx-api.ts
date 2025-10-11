@@ -462,3 +462,10 @@ export { useLynxGlobalEventListener } from './hooks/useLynxGlobalEventListener.j
 export { runOnBackground } from './worklet/call/runOnBackground.js';
 export { runOnMainThread } from './worklet/call/runOnMainThread.js';
 export { MainThreadRef, useMainThreadRef } from './worklet/ref/workletRef.js';
+
+export { GlobalLazyBundleResponseListener } from './lynx/lazy-bundle.js';
+export type {
+  GlobalLazyBundleResponseListenerProps,
+  OnLazyBundleResponse,
+  LazyBundleResponse,
+} from './lynx/lazy-bundle.js';
