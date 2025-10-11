@@ -1,5 +1,11 @@
 # @lynx-js/rspeedy
 
+## 0.11.6
+
+### Patch Changes
+
+- Support CLI flag `--root` to specify the root of the project. ([#1836](https://github.com/lynx-family/lynx-stack/pull/1836))
+
 ## 0.11.5
 
 ### Patch Changes

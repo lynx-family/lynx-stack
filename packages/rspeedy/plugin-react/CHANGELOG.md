@@ -1,5 +1,17 @@
 # @lynx-js/react-rsbuild-plugin
 
+## 0.11.2
+
+### Patch Changes
+
+- Fix using wrong version of `@lynx-js/react/refresh`. ([#1756](https://github.com/lynx-family/lynx-stack/pull/1756))
+
+- Updated dependencies []:
+  - @lynx-js/react-alias-rsbuild-plugin@0.11.2
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/react-refresh-webpack-plugin@0.3.4
+  - @lynx-js/react-webpack-plugin@0.7.1
+
 ## 0.11.1
 
 ### Patch Changes
