@@ -68,10 +68,10 @@ describe('dynamic key in snapshot', () => {
     expect(container).toMatchInlineSnapshot(`
       <page>
         <view>
-          <view
-            class="foo"
-          >
-            <wrapper>
+          <wrapper>
+            <view
+              class="foo"
+            >
               <view>
                 <text>
                   foo
@@ -82,8 +82,8 @@ describe('dynamic key in snapshot', () => {
                   bar
                 </text>
               </view>
-            </wrapper>
-          </view>
+            </view>
+          </wrapper>
         </view>
       </page>
     `);
@@ -113,10 +113,10 @@ describe('dynamic key in snapshot', () => {
             Hello 
             <wrapper />
           </text>
-          <view
-            class="foo"
-          >
-            <wrapper>
+          <wrapper>
+            <view
+              class="foo"
+            >
               <view>
                 <text>
                   foo
@@ -127,8 +127,8 @@ describe('dynamic key in snapshot', () => {
                   bar
                 </text>
               </view>
-            </wrapper>
-          </view>
+            </view>
+          </wrapper>
         </view>
       </page>
     `);
@@ -154,10 +154,10 @@ describe('dynamic key in snapshot', () => {
     expect(container).toMatchInlineSnapshot(`
       <page>
         <view>
-          <view
-            class="foo"
-          >
-            <wrapper>
+          <wrapper>
+            <view
+              class="foo"
+            >
               <view>
                 <text>
                   foo
@@ -168,8 +168,8 @@ describe('dynamic key in snapshot', () => {
                   bar
                 </text>
               </view>
-            </wrapper>
-          </view>
+            </view>
+          </wrapper>
           <text>
             Hello 
             <wrapper />
@@ -200,20 +200,18 @@ describe('dynamic key in snapshot', () => {
         <view
           class="foo"
         >
-          <wrapper>
+          <view>
             <view>
-              <view>
-                <text>
-                  foo
-                </text>
-              </view>
-              <view>
-                <text>
-                  bar
-                </text>
-              </view>
+              <text>
+                foo
+              </text>
             </view>
-          </wrapper>
+            <view>
+              <text>
+                bar
+              </text>
+            </view>
+          </view>
         </view>
       </page>
     `);
@@ -238,22 +236,24 @@ describe('dynamic key in snapshot', () => {
     expect(container).toMatchInlineSnapshot(`
       <page>
         <view>
-          <view
-            class="foo"
-          >
-            <wrapper>
+          <wrapper>
+            <view
+              class="foo"
+            >
               <view>
                 <text>
                   foo
                 </text>
               </view>
-              <view>
-                <text>
-                  bar
-                </text>
-              </view>
-            </wrapper>
-          </view>
+              <wrapper>
+                <view>
+                  <text>
+                    bar
+                  </text>
+                </view>
+              </wrapper>
+            </view>
+          </wrapper>
         </view>
       </page>
     `);

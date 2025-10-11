@@ -33,10 +33,11 @@ export function ssrHydrateByOpcodes(
         const [type, __id, elements] = opcodes[i + 1] as SSRSnapshotInstance;
         top = new SnapshotInstance(type, __id);
         top.__pendingElements = elements;
+        top.__slotIndex = opcodes[i + 2];
         p.insertBefore(top);
         stack.push(top);
 
-        i += 2;
+        i += 3;
         break;
       }
       case Opcode.End: {
@@ -86,11 +87,12 @@ export function ssrHydrateByOpcodes(
       case Opcode.Text: {
         const [[type, __id, elements], text] = opcodes[i + 1] as [SSRSnapshotInstance, string];
         const s = new SnapshotInstance(type, __id);
+        s.__slotIndex = opcodes[i + 2];
         s.setAttribute(0, text);
         top.insertBefore(s);
         s.__elements = elements.map(({ ssrID }) => refMap![ssrID]!);
         s.__element_root = s.__elements[0];
-        i += 2;
+        i += 3;
         break;
       }
     }
@@ -112,10 +114,11 @@ export function renderOpcodesInto(opcodes: any[], into: SnapshotInstance): void 
           top = new SnapshotInstance(top.type);
           opcodes[i + 1] = top;
         }
+        top.__slotIndex = opcodes[i + 2];
         p.insertBefore(top);
         stack.push(top);
 
-        i += 2;
+        i += 3;
         break;
       }
       case Opcode.End: {
@@ -144,10 +147,11 @@ export function renderOpcodesInto(opcodes: any[], into: SnapshotInstance): void 
           // We need store the just created SnapshotInstance, or it will be lost when we leave the function
           opcodes[i + 1] = [s, text];
         }
+        s.__slotIndex = opcodes[i + 2];
         s.setAttribute(0, text);
         top.insertBefore(s);
 
-        i += 2;
+        i += 3;
         break;
       }
     }

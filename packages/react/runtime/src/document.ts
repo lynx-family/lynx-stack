@@ -34,14 +34,14 @@ const document: SnapshotDocumentAdapter = {} as SnapshotDocumentAdapter;
  * All DOM operations are intercepted to create {@link BackgroundSnapshotInstance}.
  */
 function setupBackgroundDocument(): void {
-  document.createElement = function(type: string) {
-    return new BackgroundSnapshotInstance(type);
+  document.createElement = function(type: string, slotIndex: number = 0) {
+    return new BackgroundSnapshotInstance(type, slotIndex);
   };
-  document.createElementNS = function(_ns: string, type: string) {
-    return new BackgroundSnapshotInstance(type);
+  document.createElementNS = function(_ns: string, type: string, _is?: string, slotIndex: number = 0) {
+    return new BackgroundSnapshotInstance(type, slotIndex);
   };
-  document.createTextNode = function(text: string) {
-    const i = new BackgroundSnapshotInstance(null as unknown as string);
+  document.createTextNode = function(text: string, slotIndex: number = 0) {
+    const i = new BackgroundSnapshotInstance(null as unknown as string, slotIndex);
     i.setAttribute(0, text);
     Object.defineProperty(i, 'data', {
       set(v) {
@@ -57,14 +57,19 @@ function setupBackgroundDocument(): void {
  * All DOM operations are intercepted to create {@link SnapshotInstance}.
  */
 function setupDocument(): void {
-  document.createElement = function(type: string) {
-    return new SnapshotInstance(type);
+  document.createElement = function(type: string, slotIndex: number = 0) {
+    const si = new SnapshotInstance(type);
+    si.__slotIndex = slotIndex;
+    return si;
   };
-  document.createElementNS = function(_ns: string, type: string) {
-    return new SnapshotInstance(type);
+  document.createElementNS = function(_ns: string, type: string, _is?: string, slotIndex: number = 0) {
+    const si = new SnapshotInstance(type);
+    si.__slotIndex = slotIndex;
+    return si;
   };
-  document.createTextNode = function(text: string) {
+  document.createTextNode = function(text: string, slotIndex: number = 0) {
     const i = new SnapshotInstance(null as unknown as string);
+    i.__slotIndex = slotIndex;
     i.setAttribute(0, text);
     Object.defineProperty(i, 'data', {
       set(v) {
