@@ -23,6 +23,9 @@ export function toRsbuildConfig(
       writeToDisk: config.dev?.writeToDisk ?? true,
 
       progressBar: config.dev?.progressBar ?? true,
+
+      hmr: config.dev?.hmr ?? true,
+      liveReload: config.dev?.liveReload ?? true,
     },
     environments: config.environments ?? { lynx: {} },
     mode: config.mode,
