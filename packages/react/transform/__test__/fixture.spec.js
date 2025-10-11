@@ -181,7 +181,7 @@ describe('jsx', () => {
           ];
       }, [
           (snapshot, index, oldValue)=>ReactLynx.updateListItemPlatformInfo(snapshot, index, oldValue, 0)
-      ], ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null);
+      ], ReactLynx.__DynamicPartSlotV2_0, undefined, globDynamicComponentEntry, null);
       const __snapshot_da39a_04d8c_1 = ReactLynx.createSnapshot("__snapshot_da39a_04d8c_1", function(snapshotInstance) {
           const pageId = ReactLynx.__pageId;
           const el = ReactLynx.snapshotCreateList(pageId, snapshotInstance, 0);
@@ -190,19 +190,19 @@ describe('jsx', () => {
           ];
       }, null, [
           [
-              ReactLynx.__DynamicPartListChildren,
+              ReactLynx.__DynamicPartListSlotV2,
               0
           ]
       ], undefined, globDynamicComponentEntry, null);
       /*#__PURE__*/ _jsx(__snapshot_da39a_04d8c_1, {
-          children: /*#__PURE__*/ _jsx(ReactLynxRuntimeComponents.DeferredListItem, {
+          $0: /*#__PURE__*/ _jsx(ReactLynxRuntimeComponents.DeferredListItem, {
               renderListItem: (__c)=>_jsx(__snapshot_da39a_04d8c_2, {
                       values: [
                           {
                               "item-key": "1"
                           }
                       ],
-                      children: __c
+                      $0: __c
                   }),
               renderChildren: ()=>[],
               defer: true
@@ -404,7 +404,7 @@ Component, View
             ];
         }, [
             (snapshot, index, oldValue)=>ReactLynx.updateSpread(snapshot, index, oldValue, 0)
-        ], ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry, [
+        ], ReactLynx.__DynamicPartSlotV2_0, undefined, globDynamicComponentEntry, [
             0
         ]);
         /*#__PURE__*/ ReactLynx1.wrapWithLynxComponent((__c, __spread)=>/*#__PURE__*/ _jsx(__snapshot_da39a_89b7f_1, {
@@ -414,7 +414,7 @@ Component, View
                         __spread: true
                     }
                 ],
-                children: __c
+                $0: __c
             }), _jsx(Comp, {
             ...s
         }));

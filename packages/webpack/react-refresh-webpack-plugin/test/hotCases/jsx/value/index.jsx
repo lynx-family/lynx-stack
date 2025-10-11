@@ -5,7 +5,14 @@ import { App } from "./app.jsx";
 
 const createFn = vi.fn();
 vi.stubGlobal("__RenderContent", (vnode) => {
-  createFn(vnode.props.children);
+  let { children } = vnode.props;
+  for (let key in vnode.props) {
+    if (typeof key === 'string' && key[0] === '$') {
+      children ??= [];
+      children[+(key.slice(1))] = vnode.props[key];
+    }
+  }
+  createFn(children);
   return vnode;
 });
 
@@ -40,10 +47,10 @@ lynxCoreInject.tt.OnLifecycleEvent([
 
 it("should call renderer", () =>
   new Promise((done) => {
-    expect(createFn.mock.calls[0][0]).toEqual("content 1");
+    expect(createFn.mock.calls[0][0]).toEqual(["content 1"]);
     NEXT(
       update(done, true, () => {
-        expect(createFn.mock.calls[1][0]).toEqual("content 2");
+        expect(createFn.mock.calls[1][0]).toEqual(["content 2"]);
 
         const { patchList } = JSON.parse(
           callLepusMethod.mock.calls[1][1].data
@@ -62,7 +69,7 @@ it("should call renderer", () =>
 
         NEXT(
           update(done, true, () => {
-            expect(createFn.mock.calls[2][0]).toEqual("content 3");
+            expect(createFn.mock.calls[2][0]).toEqual(["content 3"]);
             const { snapshotPatch } = JSON.parse(
               callLepusMethod.mock.calls[2][1].data
             );

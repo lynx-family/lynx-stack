@@ -6,7 +6,7 @@
 ## Asset Files
 - Bundle: rspack-bundle.js
 - Manifest: main.LAST_HASH.hot-update.json, size: 28
-- Update: main.LAST_HASH.hot-update.js, size: 3448
+- Update: main.LAST_HASH.hot-update.js, size: 3438
 
 ## Manifest
 
@@ -58,14 +58,14 @@ const __snapshot_4953c_00662_1 = (__webpack_require__(/*! @lynx-js/react/interna
     ];
 }, null, [
     [
-        (__webpack_require__(/*! @lynx-js/react/internal */ "../../../../../../react/runtime/lib/internal.js")/* .__DynamicPartChildren */.__DynamicPartChildren),
+        (__webpack_require__(/*! @lynx-js/react/internal */ "../../../../../../react/runtime/lib/internal.js")/* .__DynamicPartSlotV2 */.__DynamicPartSlotV2),
         1
     ]
 ], undefined, globDynamicComponentEntry, null);
 function App() {
     const value = "content 3";
     return __RenderContent(/*#__PURE__*/ (0,_lynx_js_react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxDEV)(__snapshot_4953c_00662_1, {
-        children: value
+        $0: value
     }, void 0, false, {
         fileName: "<ROOT>/packages/webpack/react-refresh-webpack-plugin/test/hotCases/jsx/value/app.jsx",
         lineNumber: 3,
