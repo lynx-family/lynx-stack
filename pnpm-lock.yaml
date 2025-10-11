@@ -335,6 +335,22 @@ importers:
         specifier: 0.2.9
         version: 0.2.9
 
+  packages/react/transform/rspack-napi:
+    dependencies:
+      '@lynx-js/swc-plugin-reactlynx':
+        specifier: workspace:*
+        version: link:../swc-plugin-reactlynx
+      '@lynx-js/swc-plugin-reactlynx-compat':
+        specifier: workspace:*
+        version: link:../swc-plugin-reactlynx-compat
+      '@rspack/core':
+        specifier: 1.5.8
+        version: 1.5.8(@swc/helpers@0.5.17)
+
+  packages/react/transform/swc-plugin-reactlynx: {}
+
+  packages/react/transform/swc-plugin-reactlynx-compat: {}
+
   packages/react/worklet-runtime:
     devDependencies:
       '@lynx-js/types':
