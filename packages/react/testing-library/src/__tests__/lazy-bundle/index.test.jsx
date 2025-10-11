@@ -35,11 +35,9 @@ describe('lazy bundle', () => {
 
     expect(container.firstChild).toMatchInlineSnapshot(`
       <view>
-        <wrapper>
-          <text>
-            loading...
-          </text>
-        </wrapper>
+        <text>
+          loading...
+        </text>
       </view>
     `);
 
@@ -49,14 +47,12 @@ describe('lazy bundle', () => {
 
     expect(container.firstChild).toMatchInlineSnapshot(`
       <view>
-        <wrapper>
-          <text>
-            Hello from LazyComponent
-          </text>
-          <text>
-            Hello from LazyComponent
-          </text>
-        </wrapper>
+        <text>
+          Hello from LazyComponent
+        </text>
+        <text>
+          Hello from LazyComponent
+        </text>
       </view>
     `);
   });
