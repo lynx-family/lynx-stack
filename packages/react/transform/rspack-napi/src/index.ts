@@ -82,7 +82,7 @@ const transformReactLynx = async (
     inject: options?.inject ?? false,
   };
 
-  if (typeof options?.snapshot === 'object') {
+  if (typeof options?.snapshot === 'object' || typeof options?.snapshot === 'boolean') {
     swcPluginReactLynxOptions.snapshot = options.snapshot;
   }
 
