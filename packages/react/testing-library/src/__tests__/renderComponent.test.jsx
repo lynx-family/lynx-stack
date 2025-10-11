@@ -4,7 +4,157 @@ import { Component, useState } from '@lynx-js/react';
 import { render, act } from '..';
 import { prettyFormatSnapshotPatch } from '../../../runtime/lib/debug/formatPatch';
 
-test.only('setState triggered renderComponent should have correct slotIndex', async () => {
+test('setState generates insertBefore operation', async () => {
+  vi.spyOn(lynxTestingEnv.backgroundThread.lynxCoreInject.tt, 'OnLifecycleEvent');
+  const onLifecycleEventCalls = lynxTestingEnv.backgroundThread.lynxCoreInject.tt.OnLifecycleEvent.mock.calls;
+  vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
+  const callLepusMethodCalls = lynx.getNativeApp().callLepusMethod.mock.calls;
+
+  let setList;
+  const App = () => {
+    const [list, _setList] = useState([1, 2, 3, 4]);
+    setList = _setList;
+    return (
+      <view>
+        <view></view>
+        {list.map(key => (
+          <view key={key}>
+            <text>{key}</text>
+          </view>
+        ))}
+      </view>
+    );
+  };
+
+  render(<App />, {
+    enableMainThread: true,
+    enableBackgroundThread: true,
+  });
+
+  expect(callLepusMethodCalls[0]).toMatchInlineSnapshot(`
+    [
+      "rLynxChange",
+      {
+        "data": "{"patchList":[{"snapshotPatch":[],"id":2}]}",
+        "patchOptions": {
+          "isHydration": true,
+          "pipelineOptions": {
+            "dsl": "reactLynx",
+            "needTimestamps": true,
+            "pipelineID": "pipelineID",
+            "pipelineOrigin": "reactLynxHydrate",
+            "stage": "hydrate",
+          },
+          "reloadVersion": 0,
+        },
+      },
+      [Function],
+    ]
+  `);
+  {
+    const snapshotPatch = JSON.parse(callLepusMethodCalls[0][1]['data']).patchList[0].snapshotPatch;
+    const formattedSnapshotPatch = prettyFormatSnapshotPatch(snapshotPatch);
+    expect(formattedSnapshotPatch).toMatchInlineSnapshot(`[]`);
+  }
+
+  expect(elementTree).toMatchInlineSnapshot(`
+    <page>
+      <view>
+        <view />
+        <wrapper>
+          <view>
+            <text>
+              1
+            </text>
+          </view>
+          <view>
+            <text>
+              2
+            </text>
+          </view>
+          <view>
+            <text>
+              3
+            </text>
+          </view>
+          <view>
+            <text>
+              4
+            </text>
+          </view>
+        </wrapper>
+      </view>
+    </page>
+  `);
+
+  act(() => {
+    setList([1, 3, 2, 4]);
+  });
+
+  expect(callLepusMethodCalls[1]).toMatchInlineSnapshot(`
+    [
+      "rLynxChange",
+      {
+        "data": "{"patchList":[{"id":3,"snapshotPatch":[1,-2,-4,-6]}]}",
+        "patchOptions": {
+          "pipelineOptions": {
+            "dsl": "reactLynx",
+            "needTimestamps": true,
+            "pipelineID": "pipelineID",
+            "pipelineOrigin": "reactLynxHydrate",
+            "stage": "hydrate",
+          },
+          "reloadVersion": 0,
+        },
+      },
+      [Function],
+    ]
+  `);
+  const snapshotPatch = JSON.parse(callLepusMethodCalls[1][1]['data']).patchList[0].snapshotPatch;
+  const formattedSnapshotPatch = prettyFormatSnapshotPatch(snapshotPatch);
+  expect(formattedSnapshotPatch).toMatchInlineSnapshot(`
+    [
+      {
+        "beforeId": -6,
+        "childId": -4,
+        "op": "InsertBefore",
+        "parentId": -2,
+      },
+    ]
+  `);
+
+  expect(elementTree).toMatchInlineSnapshot(`
+    <page>
+      <view>
+        <view />
+        <wrapper>
+          <view>
+            <text>
+              1
+            </text>
+          </view>
+          <view>
+            <text>
+              3
+            </text>
+          </view>
+          <view>
+            <text>
+              2
+            </text>
+          </view>
+          <view>
+            <text>
+              4
+            </text>
+          </view>
+        </wrapper>
+      </view>
+    </page>
+  `);
+});
+
+test('setState triggered renderComponent should have correct slotIndex', async () => {
   vi.spyOn(lynxTestingEnv.backgroundThread.lynxCoreInject.tt, 'OnLifecycleEvent');
   const onLifecycleEventCalls = lynxTestingEnv.backgroundThread.lynxCoreInject.tt.OnLifecycleEvent.mock.calls;
   vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
@@ -58,7 +208,7 @@ test.only('setState triggered renderComponent should have correct slotIndex', as
       "children": [
         {
           "id": -2,
-          "type": "__Card__:__snapshot_e2a8d_test_1",
+          "type": "__Card__:__snapshot_e2a8d_test_3",
           "children": [
             {
               "id": -4,
@@ -70,7 +220,7 @@ test.only('setState triggered renderComponent should have correct slotIndex', as
             },
             {
               "id": -3,
-              "type": "__Card__:__snapshot_e2a8d_test_2",
+              "type": "__Card__:__snapshot_e2a8d_test_4",
               "children": [
                 {
                   "id": -5,
@@ -118,7 +268,7 @@ test.only('setState triggered renderComponent should have correct slotIndex', as
     [
       "rLynxChange",
       {
-        "data": "{"patchList":[{"id":3,"snapshotPatch":[2,-2,-3,0,"__Card__:__snapshot_e2a8d_test_3",6,1,0,null,7,0,3,7,0,1,1,6,7,null,1,-2,6,null]}]}",
+        "data": "{"patchList":[{"id":3,"snapshotPatch":[2,-2,-3,0,"__Card__:__snapshot_e2a8d_test_5",6,1,0,null,7,0,3,7,0,1,1,6,7,null,1,-2,6,null]}]}",
         "patchOptions": {
           "pipelineOptions": {
             "dsl": "reactLynx",
@@ -146,7 +296,7 @@ test.only('setState triggered renderComponent should have correct slotIndex', as
         "id": 6,
         "op": "CreateElement",
         "slotIndex": 1,
-        "type": "__Card__:__snapshot_e2a8d_test_3",
+        "type": "__Card__:__snapshot_e2a8d_test_5",
       },
       {
         "id": 7,
