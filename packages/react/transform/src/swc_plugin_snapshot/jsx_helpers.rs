@@ -2,6 +2,7 @@ use regex::Regex;
 use std::borrow::Cow;
 
 use once_cell::sync::Lazy;
+use semver::{Version, VersionReq};
 use swc_core::{
   common::{errors::HANDLER, iter::IdentifyLast, Spanned, DUMMY_SP},
   ecma::{
@@ -252,6 +253,20 @@ pub fn jsx_is_list_item(jsx: &JSXElement) -> bool {
   }
 }
 
+pub fn jsx_is_single_static_text(n: &JSXElement) -> bool {
+  match &n.opening.name {
+    JSXElementName::Ident(ident) => {
+      ident.sym == "text"
+        && n.children.len() == 1
+        && match &n.children[0] {
+          JSXElementChild::JSXText(text) => !jsx_text_to_str(&text.value).is_empty(),
+          _ => false,
+        }
+    }
+    _ => false,
+  }
+}
+
 pub fn jsx_is_children_full_dynamic(n: &JSXElement) -> bool {
   if n.children.is_empty() {
     return false;
@@ -399,3 +414,35 @@ pub fn transform_jsx_attr_str(v: &str) -> String {
 //       })
 //   }
 // }
+
+pub fn is_sdk_version_ge_3_1(target_sdk_version: &Option<String>) -> bool {
+  if let Some(version_str) = target_sdk_version {
+    let normalized_version = if version_str.contains(".") {
+      let parts: Vec<&str> = version_str.split(".").collect();
+      if parts.len() == 2 {
+        format!("{version_str}.0")
+      } else {
+        version_str.clone()
+      }
+    } else {
+      version_str.clone()
+    };
+    if let Ok(version) = Version::parse(&normalized_version) {
+      if let Ok(req) = VersionReq::parse(">= 3.1") {
+        return req.matches(&version);
+      }
+    }
+  }
+  false
+}
+
+#[test]
+fn test_is_sdk_version_ge_3_1() {
+  assert!(is_sdk_version_ge_3_1(&Some("3.1".to_string())));
+  assert!(is_sdk_version_ge_3_1(&Some("3.2".to_string())));
+  assert!(is_sdk_version_ge_3_1(&Some("3.2.2".to_string())));
+  assert!(!is_sdk_version_ge_3_1(&Some("3.0".to_string())));
+  assert!(!is_sdk_version_ge_3_1(&Some("3.0.1".to_string())));
+  assert!(!is_sdk_version_ge_3_1(&Some("2.11".to_string())));
+  assert!(!is_sdk_version_ge_3_1(&None));
+}

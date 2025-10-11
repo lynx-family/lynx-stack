@@ -1646,6 +1646,7 @@ dependencies = [
  "once_cell",
  "regex",
  "rustc-hash",
+ "semver",
  "serde",
  "serde_json",
  "sha-1",

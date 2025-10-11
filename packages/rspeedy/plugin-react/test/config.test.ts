@@ -388,6 +388,7 @@ describe('Config', () => {
         "enableRemoveCSSScope": true,
         "inlineSourcesContent": true,
         "isDynamicComponent": false,
+        "targetSdkVersion": "3.2",
       }
     `)
   })
@@ -414,6 +415,7 @@ describe('Config', () => {
         "enableRemoveCSSScope": undefined,
         "inlineSourcesContent": true,
         "isDynamicComponent": false,
+        "targetSdkVersion": "3.2",
       }
     `)
 
