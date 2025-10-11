@@ -317,7 +317,7 @@ function _renderToString(
 
   if (typeof children === 'string' || typeof children === 'number') {
     // single text child
-    opcodes.push(__OpText, children);
+    opcodes.push(__OpText, children, 0);
   } else if (children != null && children !== false && children !== true) {
     // recurse into this element VNode's children
     _renderToString(
