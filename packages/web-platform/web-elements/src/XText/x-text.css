@@ -240,7 +240,8 @@ inline-text > lynx-wrapper > raw-text {
   display: contents !important;
 }
 
-raw-text:not(:defined)::before, x-text:not(:defined)::before {
+raw-text:not(:defined)::before,
+x-text:not(:has(x-text, raw-text)):not(:defined)::before {
   content: attr(text);
   display: contents;
 }
