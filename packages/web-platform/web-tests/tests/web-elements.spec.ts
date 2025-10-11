@@ -126,6 +126,21 @@ test.describe('web-elements test suite', () => {
     });
   });
   test.describe('x-text', () => {
+    test('raw-text-no-js', async ({ page }, { titlePath }) => {
+      const title = getTitle(titlePath);
+      await gotoWebComponentPage(page, title);
+      await diffScreenShot(page, title, 'index');
+    });
+    test('text-no-js', async ({ page }, { titlePath }) => {
+      const title = getTitle(titlePath);
+      await gotoWebComponentPage(page, title);
+      await diffScreenShot(page, title, 'index');
+    });
+    test('text-attribute-text', async ({ page }, { titlePath }) => {
+      const title = getTitle(titlePath);
+      await gotoWebComponentPage(page, title);
+      await diffScreenShot(page, title, 'index');
+    });
     test('x-text/view-in-text', async ({ page }, { title }) => {
       await gotoWebComponentPage(page, title);
       await diffScreenShot(page, title, 'index');
