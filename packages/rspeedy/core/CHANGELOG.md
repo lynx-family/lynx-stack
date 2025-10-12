@@ -1,5 +1,13 @@
 # @lynx-js/rspeedy
 
+## 0.11.6
+
+### Patch Changes
+
+- Should apply `dev.hmr` and `dev.liveReload` to Rsbuild config. ([#1882](https://github.com/lynx-family/lynx-stack/pull/1882))
+
+- Support CLI flag `--root` to specify the root of the project. ([#1836](https://github.com/lynx-family/lynx-stack/pull/1836))
+
 ## 0.11.5
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @lynx-js/react
 
+## 0.114.2
+
+### Patch Changes
+
+- fix: main thread functions created during the initial render cannot correctly call `runOnBackground()` after hydration ([#1878](https://github.com/lynx-family/lynx-stack/pull/1878))
+
 ## 0.114.1
 
 ### Patch Changes
