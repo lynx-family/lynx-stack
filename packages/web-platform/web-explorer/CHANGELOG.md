@@ -1,5 +1,11 @@
 # @lynx-js/web-explorer
 
+## 0.0.10
+
+### Patch Changes
+
+- chore: update `@lynx-js/lynx-core` to `0.1.3`, `@lynx-js/web-core` to `0.17.1`. ([#1839](https://github.com/lynx-family/lynx-stack/pull/1839))
+
 ## 0.0.9
 
 ### Patch Changes
