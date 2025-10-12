@@ -16,7 +16,9 @@ describe('Config - toRsBuildConfig', () => {
       })
       expect(rsbuildConfig.dev).toMatchInlineSnapshot(`
         {
+          "hmr": true,
           "lazyCompilation": false,
+          "liveReload": true,
           "progressBar": true,
           "watchFiles": undefined,
           "writeToDisk": true,

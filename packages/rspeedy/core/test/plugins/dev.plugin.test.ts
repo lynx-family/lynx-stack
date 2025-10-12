@@ -452,10 +452,48 @@ describe('Plugins - Dev', () => {
     )
   })
 
+  test('environment.dev.hmr: false', async () => {
+    const rsbuild = await createStubRspeedy({
+      environments: {
+        lynx: {
+          dev: {
+            hmr: false,
+          },
+        },
+      },
+    })
+
+    const config = await rsbuild.unwrapConfig()
+
+    expect(config.resolve?.alias).toHaveProperty(
+      '@lynx-js/webpack-dev-transport/client',
+      expect.stringContaining('hot=false'),
+    )
+  })
+
   test('dev.hmr: true', async () => {
     const rsbuild = await createStubRspeedy({
       dev: {
         hmr: true,
+      },
+    })
+
+    const config = await rsbuild.unwrapConfig()
+
+    expect(config.resolve?.alias).toHaveProperty(
+      '@lynx-js/webpack-dev-transport/client',
+      expect.stringContaining('hot=true'),
+    )
+  })
+
+  test('environment dev.hmr: true', async () => {
+    const rsbuild = await createStubRspeedy({
+      environments: {
+        lynx: {
+          dev: {
+            hmr: true,
+          },
+        },
       },
     })
 
@@ -493,10 +531,48 @@ describe('Plugins - Dev', () => {
     )
   })
 
+  test('environment dev.liveReload: false', async () => {
+    const rsbuild = await createStubRspeedy({
+      environments: {
+        lynx: {
+          dev: {
+            liveReload: false,
+          },
+        },
+      },
+    })
+
+    const config = await rsbuild.unwrapConfig()
+
+    expect(config.resolve?.alias).toHaveProperty(
+      '@lynx-js/webpack-dev-transport/client',
+      expect.stringContaining('live-reload=false'),
+    )
+  })
+
   test('dev.liveReload: true', async () => {
     const rsbuild = await createStubRspeedy({
       dev: {
         liveReload: true,
+      },
+    })
+
+    const config = await rsbuild.unwrapConfig()
+
+    expect(config.resolve?.alias).toHaveProperty(
+      '@lynx-js/webpack-dev-transport/client',
+      expect.stringContaining('live-reload=true'),
+    )
+  })
+
+  test('environments dev.liveReload: true', async () => {
+    const rsbuild = await createStubRspeedy({
+      environments: {
+        lynx: {
+          dev: {
+            liveReload: true,
+          },
+        },
       },
     })
 
