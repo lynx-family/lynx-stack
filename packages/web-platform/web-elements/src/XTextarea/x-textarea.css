@@ -5,6 +5,7 @@
 */
 x-textarea {
   display: contents;
+  font-size: 14px;
 }
 
 x-textarea::part(form) {
@@ -32,7 +33,6 @@ x-textarea::part(textarea), x-textarea::part(form) {
 }
 x-textarea::part(textarea) {
   --placeholder-color: grey;
-  --placeholder-font-size: 14px;
   --placeholder-font-weight: normal;
   --placeholder-font-family: inherit;
   resize: none;
@@ -40,7 +40,7 @@ x-textarea::part(textarea) {
 
 x-textarea::part(textarea)::placeholder {
   color: var(--placeholder-color);
-  font-size: var(--placeholder-font-size);
+  font-size: var(--placeholder-font-size, inherit);
   font-weight: var(--placeholder-font-weight);
   font-family: var(--placeholder-font-family);
 }
