@@ -1422,6 +1422,93 @@ describe('Config', () => {
         }
       `)
     })
+
+    test('disables hot clients when hmr and liveReload are false', async () => {
+      vi.stubEnv('NODE_ENV', 'development')
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+      const hmrOffConfig = {
+        hmr: false,
+        liveReload: false,
+      } as const
+
+      const rsbuild = await createRspeedy({
+        rspeedyConfig: {
+          source: {
+            entry: {
+              main: './fixtures/basic.tsx',
+            },
+          },
+          environments: {
+            lynx: {
+              dev: hmrOffConfig,
+            },
+          },
+          plugins: [
+            pluginReactLynx(),
+            pluginStubRspeedyAPI(),
+          ],
+        },
+      })
+
+      const [config] = await rsbuild.initConfigs()
+
+      if (!config?.entry) {
+        expect.fail('should have config.entry')
+      }
+
+      const entry = config.entry as Record<string, { import: string[] }>
+      expect(entry['main']?.import).toEqual([
+        './fixtures/basic.tsx',
+      ])
+      expect(entry['main__main-thread']?.import).toEqual([
+        './fixtures/basic.tsx',
+      ])
+    })
+
+    test('disables css hmr when hmr is false but keeps live reload', async () => {
+      vi.stubEnv('NODE_ENV', 'development')
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+      const rsbuild = await createRspeedy({
+        rspeedyConfig: {
+          source: {
+            entry: {
+              main: './fixtures/basic.tsx',
+            },
+          },
+          environments: {
+            lynx: {
+              dev: {
+                hmr: false,
+                liveReload: true,
+              },
+            },
+          },
+          plugins: [
+            pluginReactLynx(),
+            pluginStubRspeedyAPI(),
+          ],
+        },
+      })
+
+      const [config] = await rsbuild.initConfigs()
+
+      if (!config?.entry) {
+        expect.fail('should have config.entry')
+      }
+
+      const entry = config.entry as Record<string, { import: string[] }>
+      expect(entry['main']?.import).toEqual([
+        '@lynx-js/react/refresh',
+        '@lynx-js/webpack-dev-transport/client',
+        '@rspack/core/hot/dev-server',
+        './fixtures/basic.tsx',
+      ])
+      expect(entry['main__main-thread']?.import).toEqual([
+        './fixtures/basic.tsx',
+      ])
+    })
   })
 
   describe('Output SourceMap', () => {

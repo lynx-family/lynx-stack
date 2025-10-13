@@ -63,6 +63,8 @@ export function applyEntry(
     const isLynx = environment.name === 'lynx'
     const isWeb = environment.name === 'web'
 
+    const { hmr, liveReload } = environment.config.dev ?? {}
+
     chain.entryPoints.clear()
 
     const mainThreadChunks: string[] = []
@@ -116,7 +118,7 @@ export function applyEntry(
           import: imports,
           filename: mainThreadName,
         })
-        .when(isDev && !isWeb, entry => {
+        .when(isDev && !isWeb && hmr !== false, entry => {
           const require = createRequire(import.meta.url)
           // use prepend to make sure it does not affect the exports
           // from the entry
@@ -137,25 +139,28 @@ export function applyEntry(
         })
         // in standalone lazy bundle mode, we do not add
         // other entries to avoid wrongly exporting from other entries
-        .when(isDev && !isWeb, entry => {
-          // use prepend to make sure it does not affect the exports
-          // from the entry
-          entry
-            // This is aliased in `@lynx-js/rspeedy`
-            .prepend({
-              layer: LAYERS.BACKGROUND,
-              import: '@rspack/core/hot/dev-server',
-            })
-            .prepend({
-              layer: LAYERS.BACKGROUND,
-              import: '@lynx-js/webpack-dev-transport/client',
-            })
-            // This is aliased in `./refresh.ts`
-            .prepend({
-              layer: LAYERS.BACKGROUND,
-              import: '@lynx-js/react/refresh',
-            })
-        })
+        .when(
+          isDev && !isWeb && !(hmr === false && liveReload === false),
+          entry => {
+            // use prepend to make sure it does not affect the exports
+            // from the entry
+            entry
+              // This is aliased in `@lynx-js/rspeedy`
+              .prepend({
+                layer: LAYERS.BACKGROUND,
+                import: '@rspack/core/hot/dev-server',
+              })
+              .prepend({
+                layer: LAYERS.BACKGROUND,
+                import: '@lynx-js/webpack-dev-transport/client',
+              })
+              // This is aliased in `./refresh.ts`
+              .prepend({
+                layer: LAYERS.BACKGROUND,
+                import: '@lynx-js/react/refresh',
+              })
+          },
+        )
         .end()
         .plugin(`${PLUGIN_NAME_TEMPLATE}-${entryName}`)
         .use(LynxTemplatePlugin, [{
