@@ -232,7 +232,7 @@ export function createSnapshot(
     );
   }
 
-  uniqID = entryUniqID(uniqID, entryName);
+  // uniqID = entryUniqID(uniqID, entryName);
 
   const s: Snapshot = { create, update, slot, cssId, entryName, refAndSpreadIndexes };
   snapshotManager.values.set(uniqID, s);
