@@ -6,6 +6,7 @@
 import { Component } from '@lynx-js/web-elements-reactive';
 import { XTextTruncation } from './XTextTruncation.js';
 import { ScrollIntoView } from '../ScrollView/ScrollIntoView.js';
+import { RawTextAttributes } from './RawText.js';
 import {
   CommonEventsAndMethods,
   layoutChangeTarget,
@@ -14,7 +15,7 @@ import { templateXText } from '@lynx-js/web-elements-template';
 
 @Component<typeof XText>(
   'x-text',
-  [CommonEventsAndMethods, XTextTruncation],
+  [CommonEventsAndMethods, XTextTruncation, RawTextAttributes],
   templateXText,
 )
 export class XText extends HTMLElement {
