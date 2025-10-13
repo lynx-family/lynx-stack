@@ -1149,7 +1149,7 @@ where
     self.snapshot_counter += 1;
 
     let snapshot_uid = format!(
-      "__snapshot_{}_{}_{}",
+      "snapshot_{}_{}_{}",
       self.filename_hash, self.content_hash, self.snapshot_counter
     );
     let snapshot_id = Ident::new(
@@ -1413,7 +1413,7 @@ where
     };
 
     let snapshot_create_call = quote!(
-        r#"$runtime_id.createSnapshot(
+        r#"$runtime_id.snapshotCreatorMap[$snapshot_uid] = () => $runtime_id.createSnapshot(
              $snapshot_uid,
              $snapshot_creator,
              $snapshot_dynamic_parts_def,
@@ -1444,9 +1444,8 @@ where
     );
 
     let snapshot_def = ModuleItem::Stmt(quote!(
-        r#"const $snapshot_id = $snapshot_create_call"#
+        r#"$snapshot_create_call"#
             as Stmt,
-        snapshot_id = snapshot_id.clone(),
         snapshot_create_call: Expr = snapshot_create_call,
     ));
 

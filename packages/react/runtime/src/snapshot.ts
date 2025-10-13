@@ -135,6 +135,8 @@ export const snapshotInstanceManager: {
   },
 };
 
+export const snapshotCreatorMap: Record<string, () => string> = {};
+
 export const backgroundSnapshotInstanceManager: {
   nextId: number;
   values: Map<number, BackgroundSnapshotInstance>;
@@ -287,6 +289,9 @@ export class SnapshotInstance {
   __extraProps?: Record<string, unknown> | undefined;
 
   constructor(public type: string, id?: number) {
+    if (!snapshotManager.values.has(type)) {
+      snapshotCreatorMap[type]!();
+    }
     this.__snapshot_def = snapshotManager.values.get(type)!;
     // Suspense uses 'div'
     if (!this.__snapshot_def && type !== 'div') {
