@@ -26,10 +26,10 @@ export class CommonEventsAndMethods {
       if (!this.#resizeObserver) {
         this.#resizeObserver = new ResizeObserver(([entry]) => {
           if (entry) {
-            // The layoutchange event is the border box of the element
-            const { width, height, left, right, top, bottom } =
-              entry.contentRect;
             const id = this.#dom.id;
+            // Reuse getBoundingClientRect to get left and top, because ResizeObserver-contentRect is calculated based on padding box
+            const { top, bottom, left, right, width, height } = entry.target
+              .getBoundingClientRect();
             this.#dom.dispatchEvent(
               new CustomEvent('layoutchange', {
                 detail: {
