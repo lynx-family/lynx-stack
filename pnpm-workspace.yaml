@@ -57,6 +57,7 @@ strictDepBuilds: true
 onlyBuiltDependencies:
   - dprint
   - esbuild
+  - puppeteer
 
 ignoredBuiltDependencies:
   - "@biomejs/biome"
@@ -64,4 +65,3 @@ ignoredBuiltDependencies:
   - "@swc/core"
   - core-js
   - unrs-resolver
-  - puppeteer
