@@ -1780,6 +1780,12 @@ test.describe('reactlynx3 tests', () => {
         expect(bts).toBe(true);
       },
     );
+    test('api-bindlauoutchange', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(100);
+      const target = page.locator('#target');
+      await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
+    });
   });
 
   test.describe('configs', () => {
