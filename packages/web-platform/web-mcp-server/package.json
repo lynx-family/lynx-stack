@@ -1,0 +1,33 @@
+{
+  "name": "@lynx-js/web-mcp-server",
+  "version": "0.0.1",
+  "private": true,
+  "description": "A MCP tool for AI to inspect lynx pages",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "bin": {
+    "lynx-web-mcp-server": "dist/index.js"
+  },
+  "scripts": {
+    "build": "rslib build",
+    "test": "vitest"
+  },
+  "devDependencies": {
+    "@lynx-js/web-core": "workspace:*",
+    "@lynx-js/web-elements": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.18.0",
+    "puppeteer": "^24.22.0",
+    "rsbuild-plugin-arethetypeswrong": "0.1.1",
+    "rsbuild-plugin-publint": "0.3.3",
+    "vitest": "^3.2.4",
+    "zod": "^3.25.76"
+  },
+  "peerDependencies": {
+    "puppeteer": "^24.22.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

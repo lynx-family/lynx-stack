@@ -57,6 +57,7 @@ strictDepBuilds: true
 onlyBuiltDependencies:
   - dprint
   - esbuild
+  - puppeteer
 
 ignoredBuiltDependencies:
   - "@biomejs/biome"
