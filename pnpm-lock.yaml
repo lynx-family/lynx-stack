@@ -365,6 +365,9 @@ importers:
       '@lynx-js/chunk-loading-webpack-plugin':
         specifier: workspace:^
         version: link:../../webpack/chunk-loading-webpack-plugin
+      '@lynx-js/web-rsbuild-server-middleware':
+        specifier: workspace:*
+        version: link:../../web-platform/web-rsbuild-server-middleware
       '@lynx-js/webpack-dev-transport':
         specifier: workspace:^
         version: link:../../webpack/webpack-dev-transport
