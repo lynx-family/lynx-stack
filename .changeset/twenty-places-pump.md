@@ -4,5 +4,5 @@
 
 feat: support web preview in rspeedy dev
 
-- support web preview in rspeedy dev(experimental)
-- make urls printed with label
+- support web preview in rspeedy dev (experimental)
+- print URLs with labels
