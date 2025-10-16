@@ -9,8 +9,6 @@ import { logger } from '@rsbuild/core'
 import type { RsbuildConfig, RsbuildPlugin } from '@rsbuild/core'
 import color from 'picocolors'
 
-import { createWebVirtualFilesMiddleware } from '@lynx-js/web-rsbuild-server-middleware'
-
 import type { Dev } from '../config/dev/index.js'
 import type { Server } from '../config/server/index.js'
 import { debug } from '../debug.js'
@@ -77,8 +75,12 @@ export function pluginDev(
 
       debug(`dev.assetPrefix is normalized to ${assetPrefix}`)
 
-      api.onBeforeStartDevServer(({ environments, server }) => {
+      api.onBeforeStartDevServer(async ({ environments, server }) => {
         if (environments['web']) {
+          const { createWebVirtualFilesMiddleware } = await import(
+            '@lynx-js/web-rsbuild-server-middleware'
+          )
+          // Add the web preview middleware
           server.middlewares.use(
             createWebVirtualFilesMiddleware('/__web_preview'),
           )
