@@ -76,8 +76,7 @@ test.describe('reactlynx3 tests', () => {
       await expect(target).toHaveCSS('background-color', 'rgb(255, 192, 203)');
     });
 
-    test('basic-reload', async ({ page, browserName }, { title }) => {
-      test.skip(browserName === 'webkit', 'playwright issue, tested locally');
+    test('basic-reload', async ({ page }, { title }) => {
       await goto(page, title);
       await wait(100);
       const target = page.locator('#target');
@@ -91,8 +90,7 @@ test.describe('reactlynx3 tests', () => {
       await wait(100);
       await expect(await target.getAttribute('style')).toContain('pink');
     });
-    test('basic-reload-page-only-one', async ({ page, browserName }) => {
-      test.skip(browserName === 'webkit', 'playwright issue, tested locally');
+    test('basic-reload-page-only-one', async ({ page }) => {
       await goto(page, 'basic-reload');
       await wait(100);
       await page.evaluate(() => {
@@ -175,8 +173,7 @@ test.describe('reactlynx3 tests', () => {
         'green',
       );
     });
-    test('basic-globalProps-reload', async ({ page, browserName }, {}) => {
-      test.skip(browserName === 'webkit', 'playwright issue, tested locally');
+    test('basic-globalProps-reload', async ({ page }, {}) => {
       await goto(page, 'basic-globalProps');
       await wait(100);
       expect(await page.locator('#target').getAttribute('style')).toContain(
