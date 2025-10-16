@@ -41,7 +41,9 @@ async function createIFrameRealm(parent: Node): Promise<JSRealm> {
   const iframe = document.createElement('iframe');
   const iframeReadyPromise = new Promise<void>((resolve) => {
     const listener = (event: MessageEvent) => {
-      if ((event as MessageEvent).data === 'lynx:mtsready') {
+      if (
+        event.data === 'lynx:mtsready' && event.source === iframe.contentWindow
+      ) {
         resolve();
         globalThis.removeEventListener('message', listener);
       }
@@ -50,7 +52,7 @@ async function createIFrameRealm(parent: Node): Promise<JSRealm> {
   });
   iframe.style.display = 'none';
   iframe.srcdoc =
-    '<!DOCTYPE html><html><head><script>parent.postMessage("lynx:mtsready")</script></head><body style="display:none"></body></html>';
+    '<!DOCTYPE html><html><head><script>parent.postMessage("lynx:mtsready","*")</script></head><body style="display:none"></body></html>';
   iframe.sandbox = 'allow-same-origin allow-scripts'; // Restrict capabilities for security
   iframe.loading = 'eager';
   parent.appendChild(iframe);
