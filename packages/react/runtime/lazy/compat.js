@@ -42,6 +42,7 @@ export const {
   useState,
   useSyncExternalStore,
   withInitDataInState,
+  GlobalLazyBundleResponseListener,
 
   // compat
   startTransition,

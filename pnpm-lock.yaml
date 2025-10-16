@@ -211,6 +211,28 @@ importers:
         specifier: ^18.3.25
         version: 18.3.25
 
+  examples/react-dynamic-import:
+    dependencies:
+      '@lynx-js/react':
+        specifier: workspace:*
+        version: link:../../packages/react
+    devDependencies:
+      '@lynx-js/qrcode-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/plugin-qrcode
+      '@lynx-js/react-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/plugin-react
+      '@lynx-js/rspeedy':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/core
+      '@lynx-js/types':
+        specifier: 3.4.11
+        version: 3.4.11
+      '@types/react':
+        specifier: ^18.3.25
+        version: 18.3.25
+
   examples/tailwindcss:
     dependencies:
       '@lynx-js/react':

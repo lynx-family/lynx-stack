@@ -1,0 +1,20 @@
+{
+  "name": "@lynx-js/example-react-dynamic-import",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "rspeedy build",
+    "dev": "rspeedy dev"
+  },
+  "dependencies": {
+    "@lynx-js/react": "workspace:*"
+  },
+  "devDependencies": {
+    "@lynx-js/qrcode-rsbuild-plugin": "workspace:*",
+    "@lynx-js/react-rsbuild-plugin": "workspace:*",
+    "@lynx-js/rspeedy": "workspace:*",
+    "@lynx-js/types": "3.4.11",
+    "@types/react": "^18.3.25"
+  }
+}
