@@ -68,11 +68,13 @@ describe('suspense', () => {
         <page
           cssId="default-entry-from-native:0"
         >
-          <text>
-            <raw-text
-              text="loading"
-            />
-          </text>
+          <wrapper>
+            <text>
+              <raw-text
+                text="loading"
+              />
+            </text>
+          </wrapper>
         </page>
       `);
     }
@@ -99,11 +101,13 @@ describe('suspense', () => {
         <page
           cssId="default-entry-from-native:0"
         >
-          <text>
-            <raw-text
-              text="loading"
-            />
-          </text>
+          <wrapper>
+            <text>
+              <raw-text
+                text="loading"
+              />
+            </text>
+          </wrapper>
         </page>
       `);
 
@@ -131,11 +135,13 @@ describe('suspense', () => {
         <page
           cssId="default-entry-from-native:0"
         >
-          <text>
-            <raw-text
-              text="foo"
-            />
-          </text>
+          <wrapper>
+            <text>
+              <raw-text
+                text="foo"
+              />
+            </text>
+          </wrapper>
         </page>
       `);
 
@@ -184,11 +190,13 @@ describe('suspense', () => {
         <page
           cssId="default-entry-from-native:0"
         >
-          <text>
-            <raw-text
-              text="loading"
-            />
-          </text>
+          <wrapper>
+            <text>
+              <raw-text
+                text="loading"
+              />
+            </text>
+          </wrapper>
         </page>
       `);
     }
@@ -215,11 +223,13 @@ describe('suspense', () => {
         <page
           cssId="default-entry-from-native:0"
         >
-          <text>
-            <raw-text
-              text="loading"
-            />
-          </text>
+          <wrapper>
+            <text>
+              <raw-text
+                text="loading"
+              />
+            </text>
+          </wrapper>
         </page>
       `);
 
@@ -243,14 +253,26 @@ describe('suspense', () => {
             "id": 2,
             "op": "CreateElement",
             "slotIndex": 0,
+            "type": "wrapper",
+          },
+          {
+            "id": 3,
+            "op": "CreateElement",
+            "slotIndex": 0,
             "type": "__Card__:__snapshot_a94a8_test_4",
           },
           {
-            "id": 2,
+            "id": 3,
             "op": "SetAttributes",
             "values": [
               "an attr",
             ],
+          },
+          {
+            "beforeId": null,
+            "childId": 3,
+            "op": "InsertBefore",
+            "parentId": 2,
           },
           {
             "beforeId": null,
@@ -259,21 +281,21 @@ describe('suspense', () => {
             "parentId": -1,
           },
           {
-            "childId": -2,
+            "childId": -3,
             "op": "RemoveChild",
             "parentId": -1,
           },
           {
-            "id": 5,
+            "id": 7,
             "op": "CreateElement",
             "slotIndex": 0,
             "type": "__Card__:__snapshot_a94a8_test_5",
           },
           {
             "beforeId": null,
-            "childId": 5,
+            "childId": 7,
             "op": "InsertBefore",
-            "parentId": 2,
+            "parentId": 3,
           },
           {
             "beforeId": null,
@@ -295,15 +317,17 @@ describe('suspense', () => {
         <page
           cssId="default-entry-from-native:0"
         >
-          <view
-            attr="an attr"
-          >
-            <text>
-              <raw-text
-                text="foo"
-              />
-            </text>
-          </view>
+          <wrapper>
+            <view
+              attr="an attr"
+            >
+              <text>
+                <raw-text
+                  text="foo"
+                />
+              </text>
+            </view>
+          </wrapper>
         </page>
       `);
 
@@ -358,6 +382,8 @@ describe('suspense', () => {
         [
           -1,
           -2,
+          -3,
+          -4,
         ]
       `);
     }
@@ -406,15 +432,17 @@ describe('suspense', () => {
         <page
           cssId="default-entry-from-native:0"
         >
-          <view
-            attr="an attr"
-          >
-            <text>
-              <raw-text
-                text="foo"
-              />
-            </text>
-          </view>
+          <wrapper>
+            <view
+              attr="an attr"
+            >
+              <text>
+                <raw-text
+                  text="foo"
+                />
+              </text>
+            </view>
+          </wrapper>
         </page>
       `);
 
@@ -424,9 +452,11 @@ describe('suspense', () => {
       vi.runAllTimers();
       expect([...backgroundSnapshotInstanceManager.values.keys()]).toMatchInlineSnapshot(`
         [
+          2,
           3,
+          4,
           -1,
-          5,
+          7,
         ]
       `);
     }
@@ -453,6 +483,7 @@ describe('suspense', () => {
       expect([...snapshotInstanceManager.values.keys()]).toMatchInlineSnapshot(`
         [
           -1,
+          -2,
         ]
       `);
 
@@ -462,12 +493,11 @@ describe('suspense', () => {
       vi.runAllTimers();
       expect([...backgroundSnapshotInstanceManager.values.keys()]).toMatchInlineSnapshot(`
         [
-          3,
+          4,
           -1,
-          5,
         ]
       `);
-      expect(backgroundSnapshotInstanceManager.values.get(3).type).toBe('div');
+      expect(backgroundSnapshotInstanceManager.values.get(4).type).toBe('div');
     }
   });
 
@@ -554,15 +584,17 @@ describe('suspense', () => {
         <page
           cssId="default-entry-from-native:0"
         >
-          <view
-            attr="an attr"
-          >
-            <text>
-              <raw-text
-                text="foo"
-              />
-            </text>
-          </view>
+          <wrapper>
+            <view
+              attr="an attr"
+            >
+              <text>
+                <raw-text
+                  text="foo"
+                />
+              </text>
+            </view>
+          </wrapper>
         </page>
       `);
 
@@ -616,15 +648,17 @@ describe('suspense', () => {
         <page
           cssId="default-entry-from-native:0"
         >
-          <view
-            attr="an attr"
-          >
-            <text>
-              <raw-text
-                text="foo"
-              />
-            </text>
-          </view>
+          <wrapper>
+            <view
+              attr="an attr"
+            >
+              <text>
+                <raw-text
+                  text="foo"
+                />
+              </text>
+            </view>
+          </wrapper>
         </page>
       `);
 
@@ -674,7 +708,9 @@ describe('suspense', () => {
       expect(__root.__element_root).toMatchInlineSnapshot(`
         <page
           cssId="default-entry-from-native:0"
-        />
+        >
+          <wrapper />
+        </page>
       `);
     }
 
@@ -699,7 +735,9 @@ describe('suspense', () => {
       expect(__root.__element_root).toMatchInlineSnapshot(`
         <page
           cssId="default-entry-from-native:0"
-        />
+        >
+          <wrapper />
+        </page>
       `);
 
       // rLynxChange callback
@@ -728,15 +766,17 @@ describe('suspense', () => {
         <page
           cssId="default-entry-from-native:0"
         >
-          <view
-            attr="an attr"
-          >
-            <text>
-              <raw-text
-                text="foo"
-              />
-            </text>
-          </view>
+          <wrapper>
+            <view
+              attr="an attr"
+            >
+              <text>
+                <raw-text
+                  text="foo"
+                />
+              </text>
+            </view>
+          </wrapper>
         </page>
       `);
 
@@ -793,16 +833,20 @@ describe('suspense', () => {
           cssId="default-entry-from-native:0"
         >
           <view>
-            <text>
-              <raw-text
-                text="loading 1"
-              />
-            </text>
-            <text>
-              <raw-text
-                text="loading 2"
-              />
-            </text>
+            <wrapper>
+              <text>
+                <raw-text
+                  text="loading 1"
+                />
+              </text>
+            </wrapper>
+            <wrapper>
+              <text>
+                <raw-text
+                  text="loading 2"
+                />
+              </text>
+            </wrapper>
           </view>
         </page>
       `);
@@ -831,16 +875,20 @@ describe('suspense', () => {
           cssId="default-entry-from-native:0"
         >
           <view>
-            <text>
-              <raw-text
-                text="loading 1"
-              />
-            </text>
-            <text>
-              <raw-text
-                text="loading 2"
-              />
-            </text>
+            <wrapper>
+              <text>
+                <raw-text
+                  text="loading 1"
+                />
+              </text>
+            </wrapper>
+            <wrapper>
+              <text>
+                <raw-text
+                  text="loading 2"
+                />
+              </text>
+            </wrapper>
           </view>
         </page>
       `);
@@ -870,16 +918,20 @@ describe('suspense', () => {
           cssId="default-entry-from-native:0"
         >
           <view>
-            <text>
-              <raw-text
-                text="foo"
-              />
-            </text>
-            <text>
-              <raw-text
-                text="loading 2"
-              />
-            </text>
+            <wrapper>
+              <text>
+                <raw-text
+                  text="foo"
+                />
+              </text>
+            </wrapper>
+            <wrapper>
+              <text>
+                <raw-text
+                  text="loading 2"
+                />
+              </text>
+            </wrapper>
           </view>
         </page>
       `);
@@ -909,16 +961,20 @@ describe('suspense', () => {
           cssId="default-entry-from-native:0"
         >
           <view>
-            <text>
-              <raw-text
-                text="foo"
-              />
-            </text>
-            <text>
-              <raw-text
-                text="bar"
-              />
-            </text>
+            <wrapper>
+              <text>
+                <raw-text
+                  text="foo"
+                />
+              </text>
+            </wrapper>
+            <wrapper>
+              <text>
+                <raw-text
+                  text="bar"
+                />
+              </text>
+            </wrapper>
           </view>
         </page>
       `);
@@ -967,13 +1023,17 @@ describe('suspense', () => {
         <page
           cssId="default-entry-from-native:0"
         >
-          <view>
-            <text>
-              <raw-text
-                text="loading inner"
-              />
-            </text>
-          </view>
+          <wrapper>
+            <view>
+              <wrapper>
+                <text>
+                  <raw-text
+                    text="loading inner"
+                  />
+                </text>
+              </wrapper>
+            </view>
+          </wrapper>
         </page>
       `);
     }
@@ -1000,13 +1060,17 @@ describe('suspense', () => {
         <page
           cssId="default-entry-from-native:0"
         >
-          <view>
-            <text>
-              <raw-text
-                text="loading inner"
-              />
-            </text>
-          </view>
+          <wrapper>
+            <view>
+              <wrapper>
+                <text>
+                  <raw-text
+                    text="loading inner"
+                  />
+                </text>
+              </wrapper>
+            </view>
+          </wrapper>
         </page>
       `);
 
@@ -1034,13 +1098,17 @@ describe('suspense', () => {
         <page
           cssId="default-entry-from-native:0"
         >
-          <view>
-            <text>
-              <raw-text
-                text="foo"
-              />
-            </text>
-          </view>
+          <wrapper>
+            <view>
+              <wrapper>
+                <text>
+                  <raw-text
+                    text="foo"
+                  />
+                </text>
+              </wrapper>
+            </view>
+          </wrapper>
         </page>
       `);
 
@@ -1078,11 +1146,13 @@ describe('suspense', () => {
         <page
           cssId="default-entry-from-native:0"
         >
-          <text>
-            <raw-text
-              text="loading"
-            />
-          </text>
+          <wrapper>
+            <text>
+              <raw-text
+                text="loading"
+              />
+            </text>
+          </wrapper>
         </page>
       `);
     }
@@ -1110,11 +1180,13 @@ describe('suspense', () => {
         <page
           cssId="default-entry-from-native:0"
         >
-          <text>
-            <raw-text
-              text="foo"
-            />
-          </text>
+          <wrapper>
+            <text>
+              <raw-text
+                text="foo"
+              />
+            </text>
+          </wrapper>
         </page>
       `);
 
@@ -1247,11 +1319,13 @@ describe('suspense', () => {
         <page
           cssId="default-entry-from-native:0"
         >
-          <text>
-            <raw-text
-              text="loading"
-            />
-          </text>
+          <wrapper>
+            <text>
+              <raw-text
+                text="loading"
+              />
+            </text>
+          </wrapper>
         </page>
       `);
     }
@@ -1278,11 +1352,13 @@ describe('suspense', () => {
         <page
           cssId="default-entry-from-native:0"
         >
-          <text>
-            <raw-text
-              text="loading"
-            />
-          </text>
+          <wrapper>
+            <text>
+              <raw-text
+                text="loading"
+              />
+            </text>
+          </wrapper>
         </page>
       `);
 
@@ -1310,11 +1386,13 @@ describe('suspense', () => {
         <page
           cssId="default-entry-from-native:0"
         >
-          <text>
-            <raw-text
-              text="foo"
-            />
-          </text>
+          <wrapper>
+            <text>
+              <raw-text
+                text="foo"
+              />
+            </text>
+          </wrapper>
         </page>
       `);
 
@@ -1342,11 +1420,13 @@ describe('suspense', () => {
         <page
           cssId="default-entry-from-native:0"
         >
-          <text>
-            <raw-text
-              text="bar"
-            />
-          </text>
+          <wrapper>
+            <text>
+              <raw-text
+                text="bar"
+              />
+            </text>
+          </wrapper>
         </page>
       `);
 
@@ -1407,11 +1487,13 @@ describe('suspense', () => {
         <page
           cssId="default-entry-from-native:0"
         >
-          <text>
-            <raw-text
-              text="foo"
-            />
-          </text>
+          <wrapper>
+            <text>
+              <raw-text
+                text="foo"
+              />
+            </text>
+          </wrapper>
         </page>
       `);
 
