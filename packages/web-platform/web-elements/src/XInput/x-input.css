@@ -5,6 +5,7 @@
 */
 x-input {
   display: contents;
+  font-size: 14px;
 }
 
 x-input::part(form) {
@@ -32,13 +33,12 @@ x-input::part(input), x-input::part(form) {
 
 x-input::part(input) {
   --placeholder-color: grey;
-  --placeholder-font-size: 14px;
   --placeholder-font-weight: normal;
 }
 
 x-input::part(input)::placeholder {
   color: var(--placeholder-color);
   font-family: var(--placeholder-font-family);
-  font-size: var(--placeholder-font-size);
+  font-size: var(--placeholder-font-size, inherit);
   font-weight: var(--placeholder-font-weight);
 }

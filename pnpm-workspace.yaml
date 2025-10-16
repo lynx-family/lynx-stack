@@ -8,6 +8,9 @@ packages:
   - packages/react/runtime
   - packages/react/testing-library
   - packages/react/transform
+  - packages/react/transform/rspack-napi
+  - packages/react/transform/swc-plugin-reactlynx
+  - packages/react/transform/swc-plugin-reactlynx-compat
   - packages/react/worklet-runtime
   - packages/rspeedy/*
   - packages/testing-library/*
@@ -32,7 +35,7 @@ catalog:
 catalogs:
   # Rsbuild monorepo packages
   rsbuild:
-    "@rsbuild/core": "1.5.13"
+    "@rsbuild/core": "1.5.17"
 
   # Rspack monorepo packages
   rspack:

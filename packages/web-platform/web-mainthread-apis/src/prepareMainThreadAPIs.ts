@@ -43,7 +43,7 @@ export function prepareMainThreadAPIs(
   backgroundThreadRpc: Rpc,
   rootDom: Document | ShadowRoot,
   document: Document,
-  mtsRealm: JSRealm,
+  mtsRealmPromise: JSRealm | Promise<JSRealm>,
   commitDocument: (
     exposureChangedElements: HTMLElement[],
   ) => Promise<void> | void,
@@ -97,6 +97,7 @@ export function prepareMainThreadAPIs(
       customSections,
       cardType,
     } = template;
+    const mtsRealm = await mtsRealmPromise;
     markTimingInternal('decode_start');
     await initWasmPromise;
     const jsContext = new LynxCrossThreadContext({
@@ -254,10 +255,11 @@ export function prepareMainThreadAPIs(
     await mtsRealm.loadScript(template.lepusCode.root);
     jsContext.__start(); // start the jsContext after the runtime is created
   }
-  function handleUpdatedData(
+  async function handleUpdatedData(
     newData: Cloneable,
     options: UpdateDataOptions | undefined,
   ) {
+    const mtsRealm = await mtsRealmPromise;
     const runtime = mtsRealm.globalWindow as
       & typeof globalThis
       & MainThreadGlobalThis;
