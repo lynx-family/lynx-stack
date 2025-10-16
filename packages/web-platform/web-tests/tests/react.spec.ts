@@ -76,8 +76,7 @@ test.describe('reactlynx3 tests', () => {
       await expect(target).toHaveCSS('background-color', 'rgb(255, 192, 203)');
     });
 
-    test('basic-reload', async ({ page, browserName }, { title }) => {
-      test.skip(browserName === 'webkit', 'playwright issue, tested locally');
+    test('basic-reload', async ({ page }, { title }) => {
       await goto(page, title);
       await wait(100);
       const target = page.locator('#target');
@@ -91,8 +90,7 @@ test.describe('reactlynx3 tests', () => {
       await wait(100);
       await expect(await target.getAttribute('style')).toContain('pink');
     });
-    test('basic-reload-page-only-one', async ({ page, browserName }) => {
-      test.skip(browserName === 'webkit', 'playwright issue, tested locally');
+    test('basic-reload-page-only-one', async ({ page }) => {
       await goto(page, 'basic-reload');
       await wait(100);
       await page.evaluate(() => {
@@ -175,8 +173,7 @@ test.describe('reactlynx3 tests', () => {
         'green',
       );
     });
-    test('basic-globalProps-reload', async ({ page, browserName }, {}) => {
-      test.skip(browserName === 'webkit', 'playwright issue, tested locally');
+    test('basic-globalProps-reload', async ({ page }, {}) => {
       await goto(page, 'basic-globalProps');
       await wait(100);
       expect(await page.locator('#target').getAttribute('style')).toContain(
@@ -830,6 +827,30 @@ test.describe('reactlynx3 tests', () => {
         await expect(target).toHaveCSS('height', '100px');
       },
     );
+
+    test(
+      'basic-bindmouse',
+      async ({ page, browserName, context }, { title }) => {
+        test.skip(browserName !== 'chromium', 'not support CDPsession');
+        await goto(page, title);
+        await wait(300);
+        await page.locator('#target').hover();
+        await page.mouse.down();
+        await page.mouse.up();
+        expect(page.locator('#target1'), 'mouse down event captured').toHaveCSS(
+          'background-color',
+          'rgb(0, 128, 0)',
+        ); // green
+        expect(page.locator('#target2'), 'mouse up event captured').toHaveCSS(
+          'background-color',
+          'rgb(0, 128, 0)',
+        ); // green
+        expect(page.locator('#target3'), 'mouse move event captured').toHaveCSS(
+          'background-color',
+          'rgb(0, 128, 0)',
+        ); // green
+      },
+    );
   });
   test.describe('basic-css', () => {
     test('basic-css-asset-in-css', async ({ page }, { title }) => {
@@ -1040,9 +1061,7 @@ test.describe('reactlynx3 tests', () => {
       await expect(target).toHaveCSS('background-color', 'rgb(255, 192, 203)'); // pink
       await page.evaluate(() => {
         // @ts-expect-error
-        globalThis.lynxView.updateData({ mockData: 'updatedData' }, 1, () => {
-          console.log('update Data success');
-        });
+        globalThis.lynxView.updateData({ mockData: 'updatedData' });
       });
       await wait(50);
       await expect(target).toHaveCSS(
@@ -1071,13 +1090,76 @@ test.describe('reactlynx3 tests', () => {
       await wait(1000);
       await page.evaluate(() => {
         // @ts-expect-error
-        globalThis.lynxView.updateData({ mockData: 'updatedData' }, 0, () => {
-          console.log('update Data success');
-        });
+        globalThis.lynxView.updateData(
+          { mockData: 'updatedData' },
+          'default',
+          () => {
+            console.log('update Data success');
+          },
+        );
       });
       await wait(100);
       await expect(successCallback).toBe(true);
     });
+
+    // use default
+    test('api-updateData-processData', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(100);
+      const target = page.locator('#target');
+      await wait(100);
+      await expect(target).toHaveCSS(
+        'background-color',
+        'rgb(255, 192, 203)',
+      ); // pink
+      await page.evaluate(() => {
+        // @ts-expect-error
+        globalThis.lynxView.updateData({ mockData: 'updatedData' });
+      });
+      await expect(target).toHaveCSS(
+        'background-color',
+        'rgb(0, 128, 0)',
+      ); // green;
+    });
+    // not use default
+    test(
+      'api-updateData-processData-not-default',
+      async ({ page }, { title }) => {
+        await goto(page, 'api-updateData-processData');
+        await wait(100);
+        const target = page.locator('#target');
+        await wait(100);
+        await expect(target).toHaveCSS(
+          'background-color',
+          'rgb(255, 192, 203)',
+        ); // pink
+        await page.evaluate(() => {
+          // @ts-expect-error
+          globalThis.lynxView.updateData(
+            { mockData: 'updatedData' },
+            'useless',
+          );
+        });
+        await wait(100);
+        await expect(target).toHaveCSS(
+          'background-color',
+          'rgb(255, 192, 203)',
+        ); // pink
+        await wait(100);
+        await page.evaluate(() => {
+          // @ts-expect-error
+          globalThis.lynxView.updateData(
+            { mockData: 'updatedData' },
+            'processData',
+          );
+        });
+        await wait(100);
+        await expect(target).toHaveCSS(
+          'background-color',
+          'rgb(0, 128, 0)',
+        ); // green;
+      },
+    );
 
     test('basic-at-rule-animation', async ({ page }, { title }) => {
       await goto(page, title);
@@ -1695,6 +1777,12 @@ test.describe('reactlynx3 tests', () => {
         expect(bts).toBe(true);
       },
     );
+    test('api-bindlauoutchange', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(100);
+      const target = page.locator('#target');
+      await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
+    });
   });
 
   test.describe('configs', () => {
@@ -4205,6 +4293,25 @@ test.describe('reactlynx3 tests', () => {
         },
       );
       // x-textarea/placeholder-style test-case end
+
+      // x-textarea/placeholder-font-size test-case start
+      test(
+        'basic-element-x-textarea-placeholder-font-size',
+        async ({ page }, { title }) => {
+          await goto(page, title);
+          await wait(100);
+          await diffScreenShot(
+            page,
+            'x-textarea',
+            'placeholder-font-size/font-size',
+            'index',
+            {
+              maxDiffPixelRatio: 0.02,
+            },
+          );
+        },
+      );
+      // x-textarea/placeholder-font-size test-case end
 
       // x-textarea/bindinput test-case start
       test(

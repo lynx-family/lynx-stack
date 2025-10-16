@@ -67,6 +67,18 @@ export function createCrossThreadEvent(
         )
         : changedTouches,
     });
+  } else if (type.startsWith('mouse')) {
+    const mouseEvent = domEvent as MouseEvent;
+    Object.assign(otherProperties, {
+      button: mouseEvent.button,
+      buttons: mouseEvent.buttons,
+      x: mouseEvent.x,
+      y: mouseEvent.y,
+      pageX: mouseEvent.pageX,
+      pageY: mouseEvent.pageY,
+      clientX: mouseEvent.clientX,
+      clientY: mouseEvent.clientY,
+    });
   }
   const currentTargetDatasetString = currentTargetElement?.getAttribute(
     lynxDatasetAttribute,

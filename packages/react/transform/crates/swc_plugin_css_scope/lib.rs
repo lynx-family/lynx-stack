@@ -1,4 +1,5 @@
 use regex::Regex;
+use serde::{Deserialize, Deserializer};
 use swc_core::{
   common::{
     comments::{Comment, CommentKind, Comments},
@@ -25,14 +26,31 @@ pub mod napi;
 ///   Instead, we use import types to determinate if the imported CSS is a module.
 ///   - A sideEffects import(`import './foo.module.css`) is not considered as a CSS Module. Even it has `.module.` in filename.
 ///   - A named/namespace/default import is considered as a CSS Module. No matter what the `css-loader` options is given.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum CSSScope {
   All,
   None,
   Modules,
 }
 
-#[derive(Clone, Debug)]
+impl<'de> Deserialize<'de> for CSSScope {
+  fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+  where
+    D: Deserializer<'de>,
+  {
+    let s = String::deserialize(deserializer)?;
+    match s.as_str() {
+      "all" => Ok(CSSScope::All),
+      "none" => Ok(CSSScope::None),
+      "modules" => Ok(CSSScope::Modules),
+      _ => Err(serde::de::Error::custom(format!(
+        "value `{s}` does not match any variant of CSSScope"
+      ))),
+    }
+  }
+}
+
+#[derive(Deserialize, Clone, Debug, PartialEq)]
 pub struct CSSScopeVisitorConfig {
   /// @public
   pub mode: CSSScope,

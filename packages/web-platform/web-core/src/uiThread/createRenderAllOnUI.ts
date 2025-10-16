@@ -5,8 +5,7 @@
 import {
   type StartMainThreadContextConfig,
   type RpcCallType,
-  type updateDataEndpoint,
-  type MainThreadGlobalThis,
+  updateDataEndpoint,
   type I18nResourceTranslationOptions,
   type CloneableObject,
   i18nResourceMissedEventName,
@@ -38,27 +37,32 @@ const {
  * Creates a isolated JavaScript context for executing mts code.
  * This context has its own global variables and functions.
  */
-function createIFrameRealm(parent: Node): JSRealm {
+async function createIFrameRealm(parent: Node): Promise<JSRealm> {
   const iframe = document.createElement('iframe');
+  const iframeReadyPromise = new Promise<void>((resolve) => {
+    const listener = (event: MessageEvent) => {
+      if (
+        event.data === 'lynx:mtsready' && event.source === iframe.contentWindow
+      ) {
+        resolve();
+        globalThis.removeEventListener('message', listener);
+      }
+    };
+    globalThis.addEventListener('message', listener);
+  });
   iframe.style.display = 'none';
   iframe.srcdoc =
-    '<!DOCTYPE html><html><head></head><body style="display:none"></body></html>';
+    '<!DOCTYPE html><html><head><script>parent.postMessage("lynx:mtsready","*")</script></head><body style="display:none"></body></html>';
   iframe.sandbox = 'allow-same-origin allow-scripts'; // Restrict capabilities for security
   iframe.loading = 'eager';
   parent.appendChild(iframe);
+  await iframeReadyPromise;
   const iframeWindow = iframe.contentWindow! as unknown as typeof globalThis;
   const loadScript: (url: string) => Promise<unknown> = async (url) => {
     const script = iframe.contentDocument!.createElement('script');
     script.fetchPriority = 'high';
     script.defer = true;
     script.async = false;
-    if (!iframe.contentDocument!.head) {
-      await new Promise<void>((resolve) => {
-        iframe.onload = () => resolve();
-        // In case iframe is already loaded, wait a macro task
-        setTimeout(() => resolve(), 0);
-      });
-    }
     iframe.contentDocument!.head.appendChild(script);
     return new Promise(async (resolve, reject) => {
       script.onload = () => {
@@ -123,10 +127,7 @@ export function createRenderAllOnUI(
   const i18nResources = new I18nResources();
   const { exposureChangedCallback } = createExposureMonitor(shadowRoot);
   const mtsRealm = createIFrameRealm(shadowRoot);
-  const mtsGlobalThis = mtsRealm.globalWindow as
-    & typeof globalThis
-    & MainThreadGlobalThis;
-  const { startMainThread } = prepareMainThreadAPIs(
+  const { startMainThread, handleUpdatedData } = prepareMainThreadAPIs(
     mainToBackgroundRpc,
     shadowRoot,
     document,
@@ -144,9 +145,6 @@ export function createRenderAllOnUI(
     },
     loadTemplate,
   );
-  const pendingUpdateCalls: Parameters<
-    RpcCallType<typeof updateDataEndpoint>
-  >[] = [];
 
   const start = async (configs: StartMainThreadContextConfig) => {
     if (ssrDumpInfo) {
@@ -192,22 +190,15 @@ export function createRenderAllOnUI(
     } else {
       await startMainThread(configs);
     }
-
-    // Process any pending update calls that were queued while mtsGlobalThis was undefined
-    for (const args of pendingUpdateCalls) {
-      mtsGlobalThis.updatePage?.(...args);
-    }
-    pendingUpdateCalls.length = 0;
   };
   const updateDataMainThread: RpcCallType<typeof updateDataEndpoint> = async (
-    ...args
+    newData,
+    options,
   ) => {
-    if (mtsGlobalThis) {
-      mtsGlobalThis.updatePage?.(...args);
-    } else {
-      // Cache the call if mtsGlobalThis is not yet initialized
-      pendingUpdateCalls.push(args);
-    }
+    return handleUpdatedData(
+      newData,
+      options,
+    );
   };
   const updateI18nResourcesMainThread = (data: Cloneable) => {
     i18nResources.setData(data as InitI18nResources);

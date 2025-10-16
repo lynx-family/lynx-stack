@@ -1,5 +1,36 @@
 # @lynx-js/web-constants
 
+## 0.18.0
+
+### Patch Changes
+
+- fix: ([#1837](https://github.com/lynx-family/lynx-stack/pull/1837))
+
+  1. `LynxView.updateData()` cannot trigger `dataProcessor`.
+
+  2. **This is a break change:** The second parameter of `LynxView.updateData()` has been changed from `UpdateDataType` to `string`, which is the `processorName` (default is `default` which will use `defaultDataProcessor`). This change is to better align with Native. The current complete type is as follows:
+
+  ```ts
+  LynxView.updateData(data: Cloneable, processorName?: string | undefined, callback?: (() => void) | undefined): void
+  ```
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.18.0
+
+## 0.17.2
+
+### Patch Changes
+
+- feat: support load bts chunk from remote address ([#1834](https://github.com/lynx-family/lynx-stack/pull/1834))
+
+  - re-support chunk splitting
+  - support lynx.requireModule with a json file
+  - support lynx.requireModule, lynx.requireModuleAsync with a remote url
+  - support to add a breakpoint in chrome after reloading the web page
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.17.2
+
 ## 0.17.1
 
 ### Patch Changes

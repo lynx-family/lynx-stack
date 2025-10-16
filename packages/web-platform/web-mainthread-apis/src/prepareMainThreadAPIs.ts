@@ -27,6 +27,8 @@ import {
   type JSRealm,
   type MainThreadGlobalThis,
   type TemplateLoader,
+  type UpdateDataOptions,
+  updateDataEndpoint,
 } from '@lynx-js/web-constants';
 import { registerCallLepusMethodHandler } from './crossThreadHandlers/registerCallLepusMethodHandler.js';
 import { registerGetCustomSectionHandler } from './crossThreadHandlers/registerGetCustomSectionHandler.js';
@@ -41,7 +43,7 @@ export function prepareMainThreadAPIs(
   backgroundThreadRpc: Rpc,
   rootDom: Document | ShadowRoot,
   document: Document,
-  mtsRealm: JSRealm,
+  mtsRealmPromise: JSRealm | Promise<JSRealm>,
   commitDocument: (
     exposureChangedElements: HTMLElement[],
   ) => Promise<void> | void,
@@ -71,6 +73,9 @@ export function prepareMainThreadAPIs(
   const dispatchI18nResource = backgroundThreadRpc.createCall(
     dispatchI18nResourceEndpoint,
   );
+  const updateDataBackground = backgroundThreadRpc.createCall(
+    updateDataEndpoint,
+  );
   markTimingInternal('lepus_execute_start');
   async function startMainThread(
     config: StartMainThreadContextConfig,
@@ -92,6 +97,7 @@ export function prepareMainThreadAPIs(
       customSections,
       cardType,
     } = template;
+    const mtsRealm = await mtsRealmPromise;
     markTimingInternal('decode_start');
     await initWasmPromise;
     const jsContext = new LynxCrossThreadContext({
@@ -249,5 +255,19 @@ export function prepareMainThreadAPIs(
     await mtsRealm.loadScript(template.lepusCode.root);
     jsContext.__start(); // start the jsContext after the runtime is created
   }
-  return { startMainThread };
+  async function handleUpdatedData(
+    newData: Cloneable,
+    options: UpdateDataOptions | undefined,
+  ) {
+    const mtsRealm = await mtsRealmPromise;
+    const runtime = mtsRealm.globalWindow as
+      & typeof globalThis
+      & MainThreadGlobalThis;
+    const processedData = runtime.processData
+      ? runtime.processData(newData, options?.processorName)
+      : newData;
+    runtime.updatePage?.(processedData, options);
+    return updateDataBackground(processedData, options);
+  }
+  return { startMainThread, handleUpdatedData };
 }

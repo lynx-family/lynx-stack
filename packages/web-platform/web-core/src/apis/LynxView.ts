@@ -19,7 +19,6 @@ import {
   type NapiModulesMap,
   type NativeModulesCall,
   type NativeModulesMap,
-  type UpdateDataType,
 } from '@lynx-js/web-constants';
 
 export type INapiModulesCall = (
@@ -44,7 +43,7 @@ export type INapiModulesCall = (
 /**
  * @property {string} url [required] (attribute: "url") The url of the entry of your Lynx card
  * @property {Cloneable} globalProps [optional] (attribute: "global-props") The globalProps value of this Lynx card
- * @property {Cloneable} initData [oprional] (attribute: "init-data") The initial data of this Lynx card
+ * @property {Cloneable} initData [optional] (attribute: "init-data") The initial data of this Lynx card
  * @property {Record<string,string>} overrideLynxTagToHTMLTagMap [optional] use this property/attribute to override the lynx tag -> html tag map
  * @property {NativeModulesMap} nativeModulesMap [optional] use to customize NativeModules. key is module-name, value is esm url.
  * @property {NativeModulesCall} onNativeModulesCall [optional] the NativeModules value handler. Arguments will be cached before this property is assigned.
@@ -274,10 +273,10 @@ export class LynxView extends HTMLElement {
    */
   updateData(
     data: Cloneable,
-    updateDataType: UpdateDataType,
+    processorName?: string,
     callback?: () => void,
   ) {
-    this.#instance?.updateData(data, updateDataType, callback);
+    this.#instance?.updateData(data, processorName, callback);
   }
 
   /**

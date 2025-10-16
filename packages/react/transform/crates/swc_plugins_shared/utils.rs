@@ -1,5 +1,6 @@
 use serde_json::{json, Value};
 use sha1::{Digest, Sha1};
+use sugar_path::SugarPath;
 use swc_core::ecma::ast::*;
 
 // https://github.com/swc-project/swc/blob/v1.5.8/crates/swc_ecma_transforms_optimization/src/json_parse.rs#L95
@@ -66,4 +67,69 @@ pub fn calc_hash(s: &str) -> String {
   let sum = hasher.finalize();
 
   hex::encode(sum)[0..5].to_string()
+}
+
+pub fn get_relative_path(cwd: &str, filename: &str) -> String {
+  let cwd_path = cwd.replace('\\', "/").as_path().normalize();
+  let file_path = filename.replace('\\', "/").as_path().normalize();
+
+  if cwd.is_empty() {
+    return file_path.to_string_lossy().to_string();
+  }
+
+  if file_path.starts_with(&cwd_path) {
+    file_path.relative(&cwd_path).to_string_lossy().to_string()
+  } else {
+    file_path
+      .file_name()
+      .map(|name| name.to_string_lossy().to_string())
+      .unwrap_or_else(|| filename.to_string())
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn test_get_relative_path() {
+    assert_eq!(
+      get_relative_path("/Users/john/project", "/Users/john/project/src/Button.js"),
+      "src/Button.js"
+    );
+
+    assert_eq!(
+      get_relative_path(
+        r"C:\Users\john\project",
+        r"C:\Users\john\project\src\Button.js"
+      ),
+      "src/Button.js"
+    );
+
+    assert_eq!(
+      get_relative_path(
+        "C:\\Users\\john\\project",
+        "C:\\Users\\john\\project\\src\\Button.js"
+      ),
+      "src/Button.js"
+    );
+
+    assert_eq!(
+      get_relative_path("/", "/src/components/Button.js"),
+      "src/components/Button.js"
+    );
+
+    assert_eq!(
+      get_relative_path(r"C:\", r"C:\src\components\Button.js"),
+      "src/components/Button.js"
+    );
+
+    assert_eq!(get_relative_path("/", "test.js"), "test.js");
+    assert_eq!(get_relative_path("/any/path", "test.js"), "test.js");
+
+    assert_eq!(
+      get_relative_path("/Users/john/project", "/Users/other/file.js"),
+      "file.js"
+    );
+  }
 }

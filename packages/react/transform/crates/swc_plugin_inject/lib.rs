@@ -1,5 +1,5 @@
+use serde::{Deserialize, Deserializer};
 use std::{collections::HashMap, fmt::Debug};
-
 use swc_core::{
   common::{errors::HANDLER, sync::Lrc, util::take::Take, FileName, Mark, SourceMap, DUMMY_SP},
   ecma::{
@@ -21,9 +21,80 @@ pub enum InjectAs {
   ImportNamed(String, String),
 }
 
-#[derive(Clone, Debug)]
+#[derive(Deserialize, Clone, Debug, PartialEq)]
+#[serde(rename_all = "camelCase")]
 pub struct InjectVisitorConfig {
   pub inject: HashMap<String, InjectAs>,
+}
+
+impl<'de> Deserialize<'de> for InjectAs {
+  fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+  where
+    D: Deserializer<'de>,
+  {
+    let value: Vec<serde_json::Value> = Vec::deserialize(deserializer)?;
+
+    if value.is_empty() {
+      return Err(serde::de::Error::custom(
+        "Expected at least one element in InjectAs array",
+      ));
+    }
+    let variant = value[0]
+      .as_str()
+      .ok_or_else(|| serde::de::Error::custom("First element of InjectAs must be a string"))?;
+    match variant {
+      "expr" => {
+        if value.len() != 2 {
+          return Err(serde::de::Error::custom(
+            "`expr` variant expects 1 argument",
+          ));
+        }
+        let expr = value[1]
+          .as_str()
+          .ok_or_else(|| serde::de::Error::custom("Second element of `expr` must be a string"))?;
+        Ok(InjectAs::Expr(expr.to_string()))
+      }
+      "importDefault" => {
+        if value.len() != 2 {
+          return Err(serde::de::Error::custom(
+            "`importDefault` variant expects 1 argument",
+          ));
+        }
+        let import = value[1].as_str().ok_or_else(|| {
+          serde::de::Error::custom("Second element of `importDefault` must be a string")
+        })?;
+        Ok(InjectAs::ImportDefault(import.to_string()))
+      }
+      "importStarAs" => {
+        if value.len() != 2 {
+          return Err(serde::de::Error::custom(
+            "`importStarAs` variant expects 1 argument",
+          ));
+        }
+        let import = value[1].as_str().ok_or_else(|| {
+          serde::de::Error::custom("Second element of `importStarAs` must be a string")
+        })?;
+        Ok(InjectAs::ImportStarAs(import.to_string()))
+      }
+      "importNamed" => {
+        if value.len() != 3 {
+          return Err(serde::de::Error::custom(
+            "`importNamed` variant expects 2 arguments",
+          ));
+        }
+        let module = value[1].as_str().ok_or_else(|| {
+          serde::de::Error::custom("Second element of `importNamed` must be a string")
+        })?;
+        let alias = value[2].as_str().ok_or_else(|| {
+          serde::de::Error::custom("Third element of `importNamed` must be a string")
+        })?;
+        Ok(InjectAs::ImportNamed(module.to_string(), alias.to_string()))
+      }
+      _ => Err(serde::de::Error::custom(format!(
+        "value `{variant}` does not match any variant of InjectAs"
+      ))),
+    }
+  }
 }
 
 impl Default for InjectVisitorConfig {

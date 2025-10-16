@@ -10,7 +10,6 @@ import type {
   NapiModulesMap,
   NativeModulesMap,
   sendGlobalEventEndpoint,
-  UpdateDataType,
 } from '@lynx-js/web-constants';
 import {
   startUIThread,
@@ -39,7 +38,7 @@ export interface LynxViewConfigs {
 export interface LynxView {
   updateData(
     data: Cloneable,
-    updateDataType: UpdateDataType,
+    processorName?: string,
     callback?: () => void,
   ): void;
   dispose(): Promise<void>;

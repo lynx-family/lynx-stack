@@ -18,10 +18,10 @@
     "@lynx-js/rspeedy": "workspace:*",
     "@lynx-js/types": "3.4.11",
     "@rsbuild/plugin-type-check": "1.2.4",
-    "@testing-library/jest-dom": "^6.8.0",
-    "@types/react": "^18.3.24",
+    "@testing-library/jest-dom": "^6.9.0",
+    "@types/react": "^18.3.25",
     "jsdom": "^26.1.0",
-    "typescript": "~5.9.2",
+    "typescript": "~5.9.3",
     "vitest": "^3.2.4"
   },
   "engines": {
