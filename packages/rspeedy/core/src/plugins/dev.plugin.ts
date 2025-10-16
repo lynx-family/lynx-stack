@@ -9,8 +9,6 @@ import { logger } from '@rsbuild/core'
 import type { RsbuildConfig, RsbuildPlugin } from '@rsbuild/core'
 import color from 'picocolors'
 
-import { createWebVirtualFilesMiddleware } from '@lynx-js/web-rsbuild-server-middleware'
-
 import type { Dev } from '../config/dev/index.js'
 import type { Server } from '../config/server/index.js'
 import { debug } from '../debug.js'
