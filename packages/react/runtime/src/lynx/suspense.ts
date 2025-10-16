@@ -25,7 +25,8 @@ export const Suspense: FunctionComponent<{ children: VNode | VNode[]; fallback: 
         childrenRef.current = bsi;
       }
     },
-  }, children);
+    $0: children,
+  });
 
   // @ts-expect-error wrapper is a valid element type
   const newFallback = __createElement('wrapper', {
@@ -38,7 +39,8 @@ export const Suspense: FunctionComponent<{ children: VNode | VNode[]; fallback: 
         childrenRef.current = undefined;
       }
     },
-  }, fallback);
+    $0: fallback,
+  });
 
   return __createElement(PreactSuspense, { fallback: newFallback }, newChildren);
 };
