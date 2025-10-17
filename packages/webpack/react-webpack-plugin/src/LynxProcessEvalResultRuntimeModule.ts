@@ -19,7 +19,7 @@ export function createLynxProcessEvalResultRuntimeModule(
 
     override generate(): string {
       const chunk = this.chunk;
-      const compilation = this.compilation!;
+      const compilation = this.compilation;
 
       if (!chunk || !compilation) {
         return '';
