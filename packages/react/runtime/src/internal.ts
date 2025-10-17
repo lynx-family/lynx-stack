@@ -26,6 +26,11 @@ export const __DynamicPartChildren: DynamicPartType = DynamicPartType.Children;
 export const __DynamicPartListChildren: DynamicPartType = DynamicPartType.ListChildren;
 export { __DynamicPartChildren_0 } from './snapshot.js';
 
+// v2 slot
+export const __DynamicPartSlotV2: DynamicPartType = DynamicPartType.SlotV2;
+export const __DynamicPartListSlotV2: DynamicPartType = DynamicPartType.ListSlotV2;
+export const __DynamicPartSlotV2_0: [DynamicPartType, number][] = [[DynamicPartType.SlotV2, 0]];
+
 export { updateSpread } from './snapshot/spread.js';
 export { updateEvent } from './snapshot/event.js';
 export { updateRef, transformRef } from './snapshot/ref.js';

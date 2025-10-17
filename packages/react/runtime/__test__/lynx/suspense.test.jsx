@@ -252,11 +252,13 @@ describe('suspense', () => {
           {
             "id": 2,
             "op": "CreateElement",
+            "slotIndex": 0,
             "type": "wrapper",
           },
           {
             "id": 3,
             "op": "CreateElement",
+            "slotIndex": 0,
             "type": "__Card__:__snapshot_a94a8_test_4",
           },
           {
@@ -286,6 +288,7 @@ describe('suspense', () => {
           {
             "id": 7,
             "op": "CreateElement",
+            "slotIndex": 0,
             "type": "__Card__:__snapshot_a94a8_test_5",
           },
           {
