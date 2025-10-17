@@ -650,4 +650,22 @@ describe('Plugins - Dev', () => {
     expect(hostname).toBe('example.com')
     expect(pathname).toBe('/dist/')
   })
+
+  test('environment.web to have middleware installed', async () => {
+    const rsbuild = await createStubRspeedy({
+      source: {
+        entry: path.resolve(__dirname, './fixtures/hello-world/index.js'),
+      },
+      environments: {
+        web: {},
+        lynx: {},
+      },
+    })
+    const middleware = await import('@lynx-js/web-rsbuild-server-middleware')
+    vi.spyOn(middleware, 'createWebVirtualFilesMiddleware')
+
+    await using server = await rsbuild.usingDevServer()
+    await server.waitDevCompileDone()
+    expect(vi.mocked(middleware.createWebVirtualFilesMiddleware)).toBeCalled()
+  })
 })

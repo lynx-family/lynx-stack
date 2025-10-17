@@ -74,6 +74,18 @@ export function pluginDev(
 
       debug(`dev.assetPrefix is normalized to ${assetPrefix}`)
 
+      api.onBeforeStartDevServer(async ({ environments, server }) => {
+        if (environments['web']) {
+          const { createWebVirtualFilesMiddleware } = await import(
+            '@lynx-js/web-rsbuild-server-middleware'
+          )
+          // Add the web preview middleware
+          server.middlewares.use(
+            createWebVirtualFilesMiddleware('/__web_preview'),
+          )
+        }
+      })
+
       api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
         return mergeRsbuildConfig(config, {
           dev: {
