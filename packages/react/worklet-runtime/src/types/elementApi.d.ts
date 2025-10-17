@@ -13,6 +13,8 @@ declare function __FlushElementTree(element?: ElementNode): void;
 
 declare function __GetAttributeByName(e: ElementNode, name: string): undefined | string;
 
+declare function __GetComputedStyle(e: ElementNode): Record<string, string>;
+
 declare function __GetAttributeNames(e: ElementNode): string[];
 
 declare function __GetPageElement(): ElementNode;
