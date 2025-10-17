@@ -1,5 +1,21 @@
 # @lynx-js/web-core
 
+## 0.18.1
+
+### Patch Changes
+
+- fix: mts freeze after reload() ([#1892](https://github.com/lynx-family/lynx-stack/pull/1892))
+
+  The mts may be freezed after reload() called.
+
+  We fixed it by waiting until the all-on-ui Javascript realm implementation, an iframe, to be fully loaded.
+
+- Updated dependencies [[`70a18fc`](https://github.com/lynx-family/lynx-stack/commit/70a18fce0083743e4516eefc91c0392d748b855f)]:
+  - @lynx-js/web-mainthread-apis@0.18.1
+  - @lynx-js/web-worker-runtime@0.18.1
+  - @lynx-js/web-constants@0.18.1
+  - @lynx-js/web-worker-rpc@0.18.1
+
 ## 0.18.0
 
 ### Minor Changes

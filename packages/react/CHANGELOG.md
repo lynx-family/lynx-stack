@@ -1,5 +1,11 @@
 # @lynx-js/react
 
+## 0.114.3
+
+### Patch Changes
+
+- fix: main thread functions created during the initial render cannot correctly modify `MainThreadRef`s after hydration ([#1884](https://github.com/lynx-family/lynx-stack/pull/1884))
+
 ## 0.114.2
 
 ### Patch Changes
