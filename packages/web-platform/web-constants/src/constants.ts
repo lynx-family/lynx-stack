@@ -18,7 +18,7 @@ export const lynxDatasetAttribute = 'l-dset' as const;
 
 export const lynxComponentConfigAttribute = 'l-comp-cfg' as const;
 
-export const lynxDisposedAttribute = 'l-disposed' as const;
+export const lynxDisposedPropertyName = 'l-disposed' as const;
 
 export const lynxElementTemplateMarkerAttribute = 'l-template' as const;
 
@@ -31,6 +31,12 @@ export const lynxDefaultOverflowVisibleAttribute =
   'lynx-default-overflow-visible' as const;
 
 export const __lynx_timing_flag = '__lynx_timing_flag' as const;
+
+export const componentAtIndexPropertyName = '__componentAtIndex' as const;
+
+export const enqueueComponentPropertyName = '__enqueueComponent' as const;
+
+export const eventHandlerMapPropertyName = '__eventHandlerMap' as const;
 
 export const systemInfo = {
   platform: 'web',
