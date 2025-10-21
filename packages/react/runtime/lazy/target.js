@@ -7,6 +7,7 @@ export const sExportsReact = Symbol.for('__REACT_LYNX_EXPORTS__(@lynx-js/react)'
 export const sExportsReactCompat = Symbol.for('__REACT_LYNX_EXPORTS__(@lynx-js/react/compat)');
 export const sExportsReactLepus = Symbol.for('__REACT_LYNX_EXPORTS__(@lynx-js/react/lepus)');
 export const sExportsReactInternal = Symbol.for('__REACT_LYNX_EXPORTS__(@lynx-js/react/internal)');
+export const sExportsReactRuntimeComponents = Symbol.for('__REACT_LYNX_EXPORTS__(@lynx-js/react/runtime-components)');
 export const sExportsJSXRuntime = Symbol.for('__REACT_LYNX_EXPORTS__(@lynx-js/react/jsx-runtime)');
 export const sExportsJSXDevRuntime = Symbol.for('__REACT_LYNX_EXPORTS__(@lynx-js/react/jsx-dev-runtime)');
 export const sExportsLegacyReactRuntime = Symbol.for('__REACT_LYNX_EXPORTS__(@lynx-js/react/legacy-react-runtime)');

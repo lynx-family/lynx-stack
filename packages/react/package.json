@@ -66,6 +66,7 @@
     },
     "./runtime-components": {
       "types": "./components/lib/index.d.ts",
+      "lazy": "./runtime/lazy/runtime-components.js",
       "default": "./components/lib/index.js"
     },
     "./transform": {

@@ -7,6 +7,7 @@ import * as ReactInternal from '@lynx-js/react/internal';
 import * as ReactJSXDevRuntime from '@lynx-js/react/jsx-dev-runtime';
 import * as ReactJSXRuntime from '@lynx-js/react/jsx-runtime';
 import * as ReactLegacyReactRuntime from '@lynx-js/react/legacy-react-runtime';
+import * as ReactRuntimeComponents from '@lynx-js/react/runtime-components';
 import * as ReactLepusAPIs from '@lynx-js/react/lepus';
 
 import {
@@ -16,6 +17,7 @@ import {
   sExportsReact,
   sExportsReactCompat,
   sExportsReactInternal,
+  sExportsReactRuntimeComponents,
   sExportsReactLepus,
   target,
 } from './target.js';
@@ -43,6 +45,13 @@ Object.defineProperty(target, sExportsReactLepus, {
 
 Object.defineProperty(target, sExportsReactInternal, {
   value: ReactInternal,
+  enumerable: false,
+  writable: false,
+  configurable: true,
+});
+
+Object.defineProperty(target, sExportsReactRuntimeComponents, {
+  value: ReactRuntimeComponents,
   enumerable: false,
   writable: false,
   configurable: true,

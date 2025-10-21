@@ -5,6 +5,7 @@ import * as ReactExports from '../lazy/react.js';
 import * as ReactCompatExports from '../lazy/compat.js';
 import * as ReactLepusExports from '../lazy/react-lepus.js';
 import * as ReactInternalExports from '../lazy/internal.js';
+import * as ReactRuntimeComponentsExports from '../lazy/runtime-components.js';
 import * as ReactJSXRuntimeExports from '../lazy/jsx-runtime.js';
 import * as ReactJSXDevRuntimeExports from '../lazy/jsx-dev-runtime.js';
 import * as ReactLegacyReactRuntimeExports from '../lazy/legacy-react-runtime.js';
@@ -62,14 +63,14 @@ describe('Lazy Exports', () => {
     );
   });
 
-  test('export APIs from "jsx-runtime"', async () => {
+  test('export APIs from "runtime-components"', async () => {
     const realAPIs = Object.assign(
       {},
-      await import('@lynx-js/react/jsx-runtime'),
+      await import('@lynx-js/react/runtime-components'),
     );
 
     expect(
-      new Set(Object.keys(ReactJSXRuntimeExports)),
+      new Set(Object.keys(ReactRuntimeComponentsExports)),
     ).toStrictEqual(
       new Set(Object.keys(realAPIs)),
     );
