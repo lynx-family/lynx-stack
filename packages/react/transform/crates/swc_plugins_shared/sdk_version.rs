@@ -1,5 +1,19 @@
 use semver::{Version, VersionReq};
 
+/// Checks whether an optional SDK version satisfies or exceeds a required version.
+///
+/// The function normalizes both versions by appending `.0` and evaluates whether the
+/// provided `target_sdk_version` meets the minimum `required_version`. Returns `false`
+/// if `target_sdk_version` is `None` or if version parsing fails.
+///
+/// # Examples
+///
+/// ```
+/// assert!(is_sdk_version_ge(&Some("3.1".to_string()), "3.1"));
+/// assert!(is_sdk_version_ge(&Some("3.2".to_string()), "3.1"));
+/// assert!(!is_sdk_version_ge(&Some("3.0".to_string()), "3.1"));
+/// assert!(!is_sdk_version_ge(&None, "3.1"));
+/// ```
 pub fn is_sdk_version_ge(target_sdk_version: &Option<String>, required_version: &str) -> bool {
   if let Some(version_str) = target_sdk_version {
     let normalized_version = format!("{version_str}.0");

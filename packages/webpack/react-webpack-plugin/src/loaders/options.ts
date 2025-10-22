@@ -82,10 +82,23 @@ export interface ReactLoaderOptions {
   targetSdkVersion?: string | undefined;
 }
 
+/**
+ * Normalize path separators to use forward slashes.
+ *
+ * @param file - The file path to normalize
+ * @returns The input path with Windows backslashes (`\`) replaced by forward slashes (`/`)
+ */
 function normalizeSlashes(file: string) {
   return file.replaceAll(path.win32.sep, '/');
 }
 
+/**
+ * Builds the shared transform options used by both main-thread and background transforms from the loader context and provided loader options.
+ *
+ * The returned options include resolved filename and css scope, source/sourcemap settings, syntax configuration, worklet settings, normalized `compat` when present, `defineDCE`, and a `snapshot` object that carries runtime metadata (including `targetSdkVersion`). Mode is set to `'development'` when HMR is active; `inlineSourcesContent` and other fields are chosen based on the loader context and options.
+ *
+ * @returns A Partial<TransformNodiffOptions> containing the computed common transform options (e.g. `mode`, `compat` or `false`, `pluginName`, `filename`, `cssScope`, `sourceFileName`, `sourcemap`, `sourceMapColumns`, `inlineSourcesContent`, `snapshot` including `targetSdkVersion`, `syntaxConfig`, `worklet`, `directiveDCE`, `defineDCE`, `refresh`, and `isModule`).
+ */
 function getCommonOptions(
   this: LoaderContext<ReactLoaderOptions>,
 ) {

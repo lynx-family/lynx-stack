@@ -245,6 +245,18 @@ pub fn jsx_is_list(jsx: &JSXElement) -> bool {
   }
 }
 
+/// Determines whether a JSX element's tag name is the literal string "list-item".
+///
+/// # Returns
+///
+/// `true` if the element's name is the string `"list-item"`, `false` otherwise.
+///
+/// # Examples
+///
+/// ```
+/// // Given a JSX element whose opening name resolves to the string "list-item":
+/// // assert!(jsx_is_list_item(&jsx));
+/// ```
 pub fn jsx_is_list_item(jsx: &JSXElement) -> bool {
   match *jsx_name(jsx.opening.name.clone()) {
     Expr::Lit(Lit::Str(s)) => s.value.as_ref() == "list-item",
@@ -252,6 +264,15 @@ pub fn jsx_is_list_item(jsx: &JSXElement) -> bool {
   }
 }
 
+/// Determines whether a JSX element is a single static text node named `"text"`.
+///
+/// The function returns `true` only when the element's opening name is the identifier
+/// `text`, it has exactly one child, and that child is a `JSXText` whose normalized
+/// content is not empty.
+///
+/// # Returns
+///
+/// `true` if the element matches the described single static text shape, `false` otherwise.
 pub fn jsx_is_single_static_text(n: &JSXElement) -> bool {
   match &n.opening.name {
     JSXElementName::Ident(ident) => {
@@ -266,6 +287,24 @@ pub fn jsx_is_single_static_text(n: &JSXElement) -> bool {
   }
 }
 
+/// Determines whether a JSX element's children are all dynamic and begin with a dynamic child.
+///
+/// A child is considered dynamic if it is:
+/// - an expression container with a real expression, or
+/// - a custom JSX element (as determined by `jsx_is_custom`).
+/// Whitespace-only text nodes, empty expression containers, and fragments are treated as non-dynamic and are ignored for the purposes of determining substantive children. An element with no substantive children returns `false`.
+///
+/// # Returns
+///
+/// `true` if the first substantive child is dynamic and every remaining substantive child is dynamic, `false` otherwise.
+///
+/// # Examples
+///
+/// ```no_run
+/// // Construct a JSXElement and call the helper:
+/// // let jsx: JSXElement = /* ... */;
+/// // assert!(jsx_is_children_full_dynamic(&jsx));
+/// ```
 pub fn jsx_is_children_full_dynamic(n: &JSXElement) -> bool {
   if n.children.is_empty() {
     return false;

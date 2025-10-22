@@ -42,6 +42,27 @@ impl Default for JSXTransformerConfig {
 }
 
 impl From<JSXTransformerConfig> for CoreJSXTransformerConfig {
+  /// Converts a `JSXTransformerConfig` (public JS-facing config) into a `CoreJSXTransformerConfig`.
+  ///
+  /// The returned core config copies all corresponding fields from the provided value and
+  /// initializes `target_sdk_version` to `None`.
+  ///
+  /// # Examples
+  ///
+  /// ```
+  /// let js_cfg = JSXTransformerConfig {
+  ///     preserve_jsx: true,
+  ///     runtime_pkg: "@lynx-js/react".to_string(),
+  ///     jsx_import_source: None,
+  ///     filename: "src/lib.rs".to_string(),
+  ///     target: TransformTarget::LEPUS,
+  ///     is_dynamic_component: None,
+  /// };
+  ///
+  /// let core_cfg: CoreJSXTransformerConfig = js_cfg.into();
+  /// assert_eq!(core_cfg.preserve_jsx, true);
+  /// assert!(core_cfg.target_sdk_version.is_none());
+  /// ```
   fn from(val: JSXTransformerConfig) -> Self {
     Self {
       preserve_jsx: val.preserve_jsx,

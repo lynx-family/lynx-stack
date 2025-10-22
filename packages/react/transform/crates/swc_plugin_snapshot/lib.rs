@@ -257,6 +257,24 @@ impl<'a, V> DynamicPartExtractor<'a, V>
 where
   V: VisitMut,
 {
+  /// Constructs a `DynamicPartExtractor` configured to collect dynamic parts from a JSX tree.
+  ///
+  /// The returned extractor is initialized with the provided transformer configuration, the
+  /// runtime expression to emit runtime helper calls against, an expected dynamic part count,
+  /// and a mutable visitor used to traverse nested dynamic parts. Other internal fields are set
+  /// to sensible defaults (no parent element, element index 0, empty id/statement collections,
+  /// and no snapshot creator).
+  ///
+  /// # Examples
+  ///
+  /// ```no_run
+  /// // Create placeholders for required arguments (types omitted for brevity)
+  /// let cfg = JSXTransformerConfig::default();
+  /// let runtime_expr = /* an `Expr` pointing to the runtime */ unimplemented!();
+  /// let mut visitor = /* a visitor implementing the required trait */ unimplemented!();
+  ///
+  /// let extractor = DynamicPartExtractor::new(cfg, runtime_expr, 0, &mut visitor);
+  /// ```
   fn new(
     cfg: JSXTransformerConfig,
     runtime_id: Expr,
@@ -364,6 +382,19 @@ impl<V> VisitMut for DynamicPartExtractor<'_, V>
 where
   V: VisitMut,
 {
+  /// Extracts dynamic parts from a JSX element and emits corresponding static creation statements while visiting the element during transformation.
+  ///
+  /// This method processes a single `JSXElement`: it handles internal slot unwrapping, ensures page-scoped initialization for non-custom elements, emits static element-creation and attribute-setting statements, collects dynamic parts (attributes, spreads, children, slots, list item platform info), manages parent/child relationships, and constructs a snapshot-creator function for top-level elements. It also applies SDK-version gated behavior for treating a single static text child as a static `text` attribute when appropriate.
+  ///
+  /// # Examples
+  ///
+  /// ```no_run
+  /// // Pseudocode usage: create an extractor and mutate a JSXElement in place.
+  /// // The concrete construction of `DynamicPartExtractor` and `JSXElement` depends on the transformer context.
+  /// let mut extractor = /* DynamicPartExtractor::new(...) */;
+  /// let mut jsx_element = /* a JSXElement to transform */;
+  /// extractor.visit_mut_jsx_element(&mut jsx_element);
+  /// ```
   fn visit_mut_jsx_element(&mut self, n: &mut JSXElement) {
     if jsx_is_internal_slot(n) {
       if self.dynamic_part_count > 1 {
@@ -1009,6 +1040,27 @@ pub struct JSXTransformerConfig {
 }
 
 impl Default for JSXTransformerConfig {
+  /// Creates a `JSXTransformerConfig` populated with the library's recommended defaults.
+  ///
+  /// Defaults:
+  /// - `preserve_jsx`: `false`
+  /// - `runtime_pkg`: `"@lynx-js/react"`
+  /// - `jsx_import_source`: `Some("@lynx-js/react")`
+  /// - `filename`: empty string
+  /// - `target`: `TransformTarget::LEPUS`
+  /// - `is_dynamic_component`: `Some(false)`
+  /// - `target_sdk_version`: `None`
+  ///
+  /// # Examples
+  ///
+  /// ```
+  /// let cfg = JSXTransformerConfig::default();
+  /// assert_eq!(cfg.preserve_jsx, false);
+  /// assert_eq!(cfg.runtime_pkg, "@lynx-js/react");
+  /// assert_eq!(cfg.jsx_import_source.as_deref(), Some("@lynx-js/react"));
+  /// assert_eq!(cfg.is_dynamic_component, Some(false));
+  /// assert!(cfg.target_sdk_version.is_none());
+  /// ```
   fn default() -> Self {
     Self {
       preserve_jsx: false,
@@ -1117,6 +1169,33 @@ impl<C> VisitMut for JSXTransformer<C>
 where
   C: Comments + Clone,
 {
+  /// Transforms a JSX element into a runtime snapshot node and extracts its dynamic parts.
+  ///
+  /// This visitor method replaces the given JSX element `node` with a generated snapshot-backed
+  /// JSX element when the element contains dynamic parts. It:
+  /// - handles special element names ("wrapper", "page", "component") with the appropriate
+  ///   short-circuit behavior (e.g., traverses children for "wrapper" and "page", emits an error
+  ///   for "component"),
+  /// - collects dynamic attribute/children/slot parts and builds updater/slot definitions,
+  /// - creates a snapshot factory and a snapshot creation statement and appends it to
+  ///   `self.current_snapshot_defs`,
+  /// - sets `self.current_snapshot_id` to the generated snapshot identifier,
+  /// - may set `self.runtime_components_module_item` when rewriting a "page" element.
+  ///
+  /// Side effects:
+  /// - mutates `node` in place to the snapshot element,
+  /// - updates transform state on `self` (snapshot counter, current snapshot defs/id, and possibly
+  ///   runtime components import).
+  ///
+  /// # Examples
+  ///
+  /// ```
+  /// // Illustrative example (types abbreviated for brevity):
+  /// // let mut transformer = JSXTransformer::new(cfg, comments, mode);
+  /// // let mut element: JSXElement = parse_jsx("<view><text>hi</text></view>");
+  /// // transformer.visit_mut_jsx_element(&mut element);
+  /// // assert!(transformer.current_snapshot_id.is_some());
+  /// ```
   fn visit_mut_jsx_element(&mut self, node: &mut JSXElement) {
     match *jsx_name(node.opening.name.clone()) {
       Expr::Lit(lit) => {

@@ -7,6 +7,21 @@ import { LAYERS, ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'
 
 import type { PluginReactLynxOptions } from './pluginReactLynx.js'
 
+/**
+ * Configures the bundler chain to route JS handling through React-Lynx loader layers.
+ *
+ * Modifies the bundler chain to enable layer experiments and to add two layer-specific
+ * rules (BACKGROUND and MAIN_THREAD) that apply ReactWebpackPlugin loaders with options
+ * derived from the provided `options` and the current Rsbuild output configuration.
+ * Computes `inlineSourcesContent` from `output.sourceMap`, merges existing rule uses into
+ * the new layer rules, replaces any existing SWC loader with a SWC configuration whose
+ * `jsc.target` is forced to `es2019`, forwards `compat`, `enableRemoveCSSScope`,
+ * `defineDCE`, `shake`, `targetSdkVersion`, and `experimental_isLazyBundle` into the
+ * plugin loader options, and clears the default Rsbuild JS loader to avoid duplicate JSX
+ * transformation.
+ *
+ * @param options - Plugin options used to configure loader behavior (e.g., `compat`, `enableRemoveCSSScope`, `shake`, `defineDCE`, `targetSdkVersion`, `experimental_isLazyBundle`)
+ */
 export function applyLoaders(
   api: RsbuildPluginAPI,
   options: Required<PluginReactLynxOptions>,
