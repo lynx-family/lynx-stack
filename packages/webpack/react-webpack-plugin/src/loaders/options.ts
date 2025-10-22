@@ -76,6 +76,10 @@ export interface ReactLoaderOptions {
    * @internal
    */
   transformPath?: string | undefined;
+  /**
+   * The target SDK version.
+   */
+  targetSdkVersion?: string | undefined;
 }
 
 function normalizeSlashes(file: string) {
@@ -94,6 +98,7 @@ function getCommonOptions(
     enableRemoveCSSScope,
     inlineSourcesContent,
     isDynamicComponent,
+    targetSdkVersion,
     defineDCE = { define: {} },
   } = this.getOptions();
 
@@ -162,6 +167,7 @@ function getCommonOptions(
       runtimePkg: RUNTIME_PKG,
       filename,
       isDynamicComponent: isDynamicComponent ?? false,
+      targetSdkVersion: targetSdkVersion ?? '',
     },
     syntaxConfig: JSON.stringify({
       syntax,

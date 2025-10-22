@@ -3286,6 +3286,7 @@ dependencies = [
  "napi-derive",
  "once_cell",
  "regex",
+ "semver",
  "serde",
  "serde_json",
  "sha-1",

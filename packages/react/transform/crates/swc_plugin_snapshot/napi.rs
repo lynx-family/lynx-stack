@@ -50,6 +50,7 @@ impl From<JSXTransformerConfig> for CoreJSXTransformerConfig {
       filename: val.filename,
       target: val.target.into(),
       is_dynamic_component: val.is_dynamic_component,
+      target_sdk_version: None,
     }
   }
 }

@@ -29,9 +29,10 @@ use swc_plugins_shared::{
   css::get_string_inline_style_from_literal,
   jsx_helpers::{
     jsx_attr_name, jsx_attr_to_prop, jsx_attr_value, jsx_children_to_expr,
-    jsx_is_children_full_dynamic, jsx_is_custom, jsx_is_list, jsx_is_list_item, jsx_name,
-    jsx_props_to_obj, jsx_text_to_str, transform_jsx_attr_str,
+    jsx_is_children_full_dynamic, jsx_is_custom, jsx_is_list, jsx_is_list_item,
+    jsx_is_single_static_text, jsx_name, jsx_props_to_obj, jsx_text_to_str, transform_jsx_attr_str,
   },
+  sdk_version::is_sdk_version_ge,
   target::TransformTarget,
   transform_mode::TransformMode,
   utils::calc_hash,
@@ -237,6 +238,7 @@ pub struct DynamicPartExtractor<'a, V>
 where
   V: VisitMut,
 {
+  cfg: JSXTransformerConfig,
   page_id: Lazy<Ident>,
   runtime_id: Expr,
   parent_element: Option<Ident>,
@@ -255,8 +257,14 @@ impl<'a, V> DynamicPartExtractor<'a, V>
 where
   V: VisitMut,
 {
-  fn new(runtime_id: Expr, dynamic_part_count: i32, dynamic_part_visitor: &'a mut V) -> Self {
+  fn new(
+    cfg: JSXTransformerConfig,
+    runtime_id: Expr,
+    dynamic_part_count: i32,
+    dynamic_part_visitor: &'a mut V,
+  ) -> Self {
     DynamicPartExtractor {
+      cfg,
       page_id: Lazy::new(|| private_ident!("pageId")),
       runtime_id,
       parent_element: None,
@@ -804,8 +812,18 @@ where
 
       let is_list = jsx_is_list(n);
       let is_children_full_dynamic = is_list || jsx_is_children_full_dynamic(n);
+      let is_single_static_text = jsx_is_single_static_text(n);
+      let is_ge_3_1 = is_sdk_version_ge(&self.cfg.target_sdk_version, "3.1");
 
-      if !is_children_full_dynamic {
+      if is_single_static_text && is_ge_3_1 {
+        if let JSXElementChild::JSXText(text) = &n.children[0] {
+          self.static_stmts.push(RefCell::new(quote!(
+            r#"__SetAttribute($element, "text", $value)"# as Stmt,
+            element: Ident = el.clone(),
+            value: Expr = Expr::Lit(Lit::Str(jsx_text_to_str(&text.value).into())),
+          )));
+        }
+      } else if !is_children_full_dynamic {
         self.element_index += 1;
 
         let pre_parent_element = self.parent_element.take();
@@ -986,6 +1004,8 @@ pub struct JSXTransformerConfig {
   pub target: TransformTarget,
   /// @internal
   pub is_dynamic_component: Option<bool>,
+  /// @internal
+  pub target_sdk_version: Option<String>,
 }
 
 impl Default for JSXTransformerConfig {
@@ -997,6 +1017,7 @@ impl Default for JSXTransformerConfig {
       filename: Default::default(),
       target: TransformTarget::LEPUS,
       is_dynamic_component: Some(false),
+      target_sdk_version: None,
     }
   }
 }
@@ -1168,6 +1189,7 @@ where
     let target = self.cfg.target;
     let runtime_id = self.runtime_id.clone();
     let mut dynamic_part_extractor = DynamicPartExtractor::new(
+      self.cfg.clone(),
       self.runtime_id.clone(),
       wrap_dynamic_part.dynamic_part_count,
       self,
@@ -2817,6 +2839,88 @@ aaaaa
       <text>Hello, ReactLynx, {hello}</text>
       <text key={hello}>{hello}</text>
       <text key="hello">{hello}</text>
+    </view>
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    |t| visit_mut_pass(JSXTransformer::new(
+      super::JSXTransformerConfig {
+        preserve_jsx: true,
+        target_sdk_version: Some("3.2".to_string()),
+        ..Default::default()
+      },
+      Some(t.comments.clone()),
+      TransformMode::Test,
+    )),
+    should_set_static_text_attribute_sdk_ge_3_1,
+    // Input codes
+    r#"
+    <view>
+      <text>Hello, ReactLynx</text>
+      <text> </text>
+      <text></text>
+      <x-text>Hello, ReactLynx</x-text>
+      <text>
+        Hello
+        <text>
+          ReactLynx
+        </text>
+      </text>
+    </view>
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    |t| visit_mut_pass(JSXTransformer::new(
+      super::JSXTransformerConfig {
+        preserve_jsx: true,
+        target_sdk_version: Some("3.2".to_string()),
+        ..Default::default()
+      },
+      Some(t.comments.clone()),
+      TransformMode::Test,
+    )),
+    should_create_raw_text_node_for_dynamic_children_sdk_ge_3_1,
+    // Input codes
+    r#"
+    <view>
+      <text>{hello}</text>
+    </view>
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    |t| visit_mut_pass(JSXTransformer::new(
+      super::JSXTransformerConfig {
+        preserve_jsx: true,
+        target_sdk_version: Some("3.2".to_string()),
+        ..Default::default()
+      },
+      Some(t.comments.clone()),
+      TransformMode::Test,
+    )),
+    should_create_raw_text_node_for_dynamic_slot_sdk_ge_3_1,
+    // Input codes
+    r#"
+    <view>
+      <text>{hello}, ReactLynx</text>
+      <text>{hello}</text>
     </view>
     "#
   );

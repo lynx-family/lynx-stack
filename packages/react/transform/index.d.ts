@@ -561,6 +561,8 @@ export interface JsxTransformerConfig {
   target: 'LEPUS' | 'JS' | 'MIXED'
   /** @internal */
   isDynamicComponent?: boolean
+  /** @internal */
+  targetSdkVersion?: string
 }
 export interface WorkletVisitorConfig {
   /**

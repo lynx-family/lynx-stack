@@ -45,6 +45,9 @@ export default defineConfig({
       '005-load-script': [
         './cases/005-load-script/index.tsx',
       ],
+      '006-raw-text': [
+        './cases/006-raw-text/index.tsx',
+      ],
     },
   },
   plugins: [
