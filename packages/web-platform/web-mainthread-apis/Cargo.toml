@@ -10,4 +10,4 @@ crate-type = ["cdylib"]
 js-sys = { workspace = true }
 lazy_static = { workspace = true }
 wasm-bindgen = { workspace = true }
-web-sys = { workspace = true, features = ["Element", "Document", "Window", "Event"] }
+web-sys = { workspace = true, features = ["Element", "Document", "Window", "Event", "MessagePort"] }

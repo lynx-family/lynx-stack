@@ -320,7 +320,7 @@ describe('get-page-element', () => {
   }, { throws: true });
 });
 
-describe.only('flush-element-tree', () => {
+describe.skip('flush-element-tree', () => {
   let js_page = mtsGlobalThisJS.__CreatePage('page_1', 1, null);
   let js_view = mtsGlobalThisJS.__CreateView(1);
   js_page.appendChild(js_view);

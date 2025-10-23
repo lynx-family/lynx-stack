@@ -4,11 +4,10 @@ use wasm_bindgen::prelude::*;
 use crate::{constants, js_helpers, pure_element_papis};
 
 struct FiberElementData {
-  unique_id: i32,
   css_id: i32,
   parent_component_unique_id: i32,
   tag: String,
-  dom_ref: js_sys::WeakRef,
+  dom_ref: web_sys::Element,
 }
 
 #[wasm_bindgen]
@@ -97,15 +96,14 @@ impl MainThreadGlobalThis {
         );
       }
     }
-    let element_weak_ref = js_sys::WeakRef::new(&element);
+    // let element_weak_ref = js_sys::WeakRef::new(&element);
     self.unique_id_to_element_data_map.insert(
       unique_id,
       FiberElementData {
-        unique_id,
         css_id: 0,
         parent_component_unique_id,
         tag: tag.to_string(),
-        dom_ref: element_weak_ref,
+        dom_ref: element.clone(),
       },
     );
     element
@@ -245,9 +243,9 @@ impl MainThreadGlobalThis {
         .unique_id_to_element_data_map
         .get(&parent_component_unique_id)
       {
-        if let Some(dom) = parent_component_data.dom_ref.deref().as_ref() {
-          return Some(dom.clone().unchecked_into());
-        }
+        // if let Some(dom) = parent_component_data.dom_ref.deref().as_ref() {
+        return Some(parent_component_data.dom_ref.clone());
+        // }
       }
     }
     None
@@ -271,19 +269,18 @@ impl MainThreadGlobalThis {
     //       let _ = self.root_node.append_child(page_element);
     //     }
     // }
-    let _ = self.callback_flush_element_tree.call3(
-      &wasm_bindgen::JsValue::NULL,
-      options,
-      &timing_flags,
-      &wasm_bindgen::JsValue::NULL,
-    );
+    // let _ = self.callback_flush_element_tree.call3(
+    //   &wasm_bindgen::JsValue::NULL,
+    //   options,
+    //   &timing_flags,
+    //   &wasm_bindgen::JsValue::NULL,
+    // );
   }
 
-  // #[wasm_bindgen(js_name = "__wasm_GC")]
-  // pub fn gc(&mut self) {
-  //   self.unique_id_to_element_data_map.retain(|_, element_data| {
-  //     let dom = element_data.dom_ref.deref();
-  //     dom.is_some()
-  //   });
-  // }
+  #[wasm_bindgen(js_name = "__wasm_GC")]
+  pub fn gc(&mut self) {
+    self
+      .unique_id_to_element_data_map
+      .retain(|_, element_data| element_data.dom_ref.is_connected());
+  }
 }
