@@ -1,5 +1,18 @@
 # @lynx-js/web-elements
 
+## 0.8.9
+
+### Patch Changes
+
+- fix: layoutchange event result `detail.top` and `detail.left` was `0` incorrectly ([#1887](https://github.com/lynx-family/lynx-stack/pull/1887))
+
+- textarea placeholder inherits font-size by default ([#1874](https://github.com/lynx-family/lynx-stack/pull/1874))
+
+- feat: support <x-text text="content"></x-text> ([#1881](https://github.com/lynx-family/lynx-stack/pull/1881))
+
+- Updated dependencies []:
+  - @lynx-js/web-elements-template@0.8.9
+
 ## 0.8.8
 
 ### Patch Changes

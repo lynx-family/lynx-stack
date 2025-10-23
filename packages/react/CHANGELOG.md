@@ -1,5 +1,13 @@
 # @lynx-js/react
 
+## 0.114.3
+
+### Patch Changes
+
+- Initialize `ctxNotFoundEventListener` before each test in testing library ([#1888](https://github.com/lynx-family/lynx-stack/pull/1888))
+
+- fix: main thread functions created during the initial render cannot correctly modify `MainThreadRef`s after hydration ([#1884](https://github.com/lynx-family/lynx-stack/pull/1884))
+
 ## 0.114.2
 
 ### Patch Changes
