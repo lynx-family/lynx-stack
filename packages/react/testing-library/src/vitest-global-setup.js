@@ -8,6 +8,7 @@ import { injectUpdateMainThread } from '../../runtime/lib/lifecycle/patch/update
 import { injectUpdateMTRefInitValue } from '../../runtime/lib/worklet/ref/updateInitValue.js';
 import { injectCalledByNative } from '../../runtime/lib/lynx/calledByNative.js';
 import { flushDelayedLifecycleEvents, injectTt } from '../../runtime/lib/lynx/tt.js';
+import { addCtxNotFoundEventListener } from '../../runtime/lib/lifecycle/patch/error.js';
 import { setRoot } from '../../runtime/lib/root.js';
 import {
   SnapshotInstance,
@@ -140,14 +141,6 @@ globalThis.onInjectBackgroundThreadGlobals = (target) => {
   target._document = setupBackgroundDocument({});
   target.globalPipelineOptions = undefined;
 
-  // TODO: can we only inject to target(mainThread.globalThis) instead of globalThis?
-  // packages/react/runtime/src/lynx.ts
-  // intercept lynxCoreInject assignments to lynxTestingEnv.backgroundThread.globalThis.lynxCoreInject
-  const oldLynxCoreInject = globalThis.lynxCoreInject;
-  globalThis.lynxCoreInject = target.lynxCoreInject;
-  injectTt();
-  globalThis.lynxCoreInject = oldLynxCoreInject;
-
   target.lynx.requireModuleAsync = async (url, callback) => {
     try {
       callback(null, await __vite_ssr_dynamic_import__(url));
@@ -171,6 +164,8 @@ globalThis.onResetLynxTestingEnv = () => {
   lynxTestingEnv.switchToMainThread();
   initEventListeners();
   lynxTestingEnv.switchToBackgroundThread();
+  injectTt();
+  addCtxNotFoundEventListener();
 };
 
 globalThis.onSwitchedToMainThread = () => {
