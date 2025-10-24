@@ -2,6 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { render } from 'preact';
+import { act } from 'preact/test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 /* global lynx */
@@ -504,6 +506,107 @@ describe('loadLazyBundle', () => {
 
       expect(thenCalled).toBeTruthy();
       expect.assertions(3);
+    });
+
+    test('GlobalLazyBundleResponseListener', async () => {
+      vi.stubGlobal('lynx', {
+        queueMicrotask: Promise.prototype.then.bind(Promise.resolve()),
+        getNativeLynx: () => ({
+          QueryComponent: function(source, callback) {
+            callback({
+              'code': source === 'Foo' ? 0 : 1601,
+              'data': {
+                'url': `http://example.com/async/./${source}.jsx.bundle`,
+                'sync': false,
+                'error_msg': '',
+                'mode': 'normal',
+              },
+              'detail': {
+                'schema': `http://example.com/async/./${source}.jsx.bundle`,
+                'cache': false,
+                'errMsg': '',
+              },
+            });
+          },
+        }),
+      });
+      const scratch = document.createElement('root');
+      console.log('scratch', scratch);
+      const onResponse = vi.fn();
+
+      const { GlobalLazyBundleResponseListener, loadLazyBundle } = await import('../../src/lynx/lazy-bundle');
+      act(() => {
+        render(
+          <GlobalLazyBundleResponseListener onResponse={onResponse} />,
+          scratch,
+        );
+      });
+
+      loadLazyBundle('Foo');
+      expect(loadLazyBundle('Bar')).rejects.toThrowErrorMatchingInlineSnapshot(
+        `[Error: Lazy bundle load failed: {"code":1601,"data":{"url":"http://example.com/async/./Bar.jsx.bundle","sync":false,"error_msg":"","mode":"normal"},"detail":{"schema":"http://example.com/async/./Bar.jsx.bundle","cache":false,"errMsg":""}}]`,
+      );
+
+      expect(onResponse.mock.calls.length).toBe(2);
+      expect(onResponse.mock.calls).toMatchInlineSnapshot(`
+        [
+          [
+            {
+              "code": 0,
+              "data": {
+                "error_msg": "",
+                "mode": "normal",
+                "sync": false,
+                "url": "http://example.com/async/./Foo.jsx.bundle",
+              },
+              "detail": {
+                "cache": false,
+                "errMsg": "",
+                "schema": "http://example.com/async/./Foo.jsx.bundle",
+              },
+            },
+          ],
+          [
+            {
+              "code": 1601,
+              "data": {
+                "error_msg": "",
+                "mode": "normal",
+                "sync": false,
+                "url": "http://example.com/async/./Bar.jsx.bundle",
+              },
+              "detail": {
+                "cache": false,
+                "errMsg": "",
+                "schema": "http://example.com/async/./Bar.jsx.bundle",
+              },
+            },
+          ],
+        ]
+      `);
+
+      render(
+        null,
+        scratch,
+      );
+      loadLazyBundle('Foo');
+      expect(onResponse.mock.calls.length).toBe(2);
+
+      expect(
+        () => {
+          act(() => {
+            render(
+              <>
+                <GlobalLazyBundleResponseListener onResponse={onResponse} />
+                <GlobalLazyBundleResponseListener onResponse={onResponse} />
+              </>,
+              scratch,
+            );
+          });
+        },
+      ).toThrowErrorMatchingInlineSnapshot(
+        `[Error: <GlobalLazyBundleResponseListener /> can only be used once in the whole page]`,
+      );
     });
   });
 

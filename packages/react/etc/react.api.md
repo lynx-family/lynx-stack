@@ -67,6 +67,15 @@ export { forwardRef }
 export { Fragment }
 
 // @public
+export function GlobalLazyBundleResponseListener({ onResponse: _onResponse }: GlobalLazyBundleResponseListenerProps): null;
+
+// @public (undocumented)
+export interface GlobalLazyBundleResponseListenerProps {
+    // (undocumented)
+    onResponse: OnLazyBundleResponse;
+}
+
+// @public
 export interface InitData {
 }
 
@@ -90,6 +99,19 @@ export { isValidElement }
 
 export { lazy }
 
+// @public (undocumented)
+export interface LazyBundleResponse {
+    // (undocumented)
+    code: 0 | 1601 | 1602 | 1603;
+    data?: any;
+    // (undocumented)
+    detail: {
+        schema: string;
+        cache: boolean;
+        errMsg: string;
+    };
+}
+
 // @public
 export interface Lynx {
     registerDataProcessors: (dataProcessorDefinition?: DataProcessorDefinition) => void;
@@ -104,6 +126,9 @@ export class MainThreadRef<T> extends WorkletRef<T> {
 }
 
 export { memo }
+
+// @public (undocumented)
+export type OnLazyBundleResponse = (response: LazyBundleResponse) => void;
 
 export { PureComponent }
 
