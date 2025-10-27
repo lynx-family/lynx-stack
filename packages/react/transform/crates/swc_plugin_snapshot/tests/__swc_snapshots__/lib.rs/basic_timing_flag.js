@@ -1,5 +1,6 @@
 import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
-require('@lynx-js/react/internal').snapshotCreatorMap["snapshot_da39a_test_1"] = ()=>require('@lynx-js/react/internal').createSnapshot("snapshot_da39a_test_1", function() {
+const __snapshot_da39a_test_1 = "__snapshot_da39a_test_1";
+require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_1] = ()=>require('@lynx-js/react/internal').createSnapshot("__snapshot_da39a_test_1", function() {
         const pageId = require('@lynx-js/react/internal').__pageId;
         const el = __CreateView(pageId);
         const el1 = __CreateText(pageId);
@@ -17,9 +18,9 @@ require('@lynx-js/react/internal').snapshotCreatorMap["snapshot_da39a_test_1"] =
                 __SetAttribute(ctx.__elements[1], '__lynx_timing_flag', ctx.__values[0].__ltf);
             }
         }
-    ], null, undefined, globDynamicComponentEntry, null);
+    ], null, undefined, globDynamicComponentEntry, null, __snapshot_da39a_test_1);
 function Comp() {
-    return _jsx("snapshot_da39a_test_1", {
+    return _jsx(__snapshot_da39a_test_1, {
         values: [
             {
                 __ltf: 'timing_flag'

@@ -1,5 +1,6 @@
 import * as ReactLynxRuntimeComponents from '@lynx-js/react/runtime-components';
-require('@lynx-js/react/internal').snapshotCreatorMap["snapshot_da39a_test_1"] = ()=>require('@lynx-js/react/internal').createSnapshot("snapshot_da39a_test_1", function() {
+const __snapshot_da39a_test_1 = "__snapshot_da39a_test_1";
+require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_1] = ()=>require('@lynx-js/react/internal').createSnapshot("__snapshot_da39a_test_1", function() {
         const pageId = require('@lynx-js/react/internal').__pageId;
         const el = __CreateElement("list-item", pageId);
         __SetInlineStyles(el, "color: red; width: 100rpx;");
@@ -10,39 +11,43 @@ require('@lynx-js/react/internal').snapshotCreatorMap["snapshot_da39a_test_1"] =
     }, [
         (snapshot, index, oldValue)=>require('@lynx-js/react/internal').updateListItemPlatformInfo(snapshot, index, oldValue, 0),
         (snapshot, index, oldValue)=>require('@lynx-js/react/internal').updateEvent(snapshot, index, oldValue, 0, "bindEvent", "tap", '')
-    ], require('@lynx-js/react/internal').__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null);
-require('@lynx-js/react/internal').snapshotCreatorMap["snapshot_da39a_test_2"] = ()=>require('@lynx-js/react/internal').createSnapshot("snapshot_da39a_test_2", function() {
+    ], require('@lynx-js/react/internal').__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null, __snapshot_da39a_test_1);
+const __snapshot_da39a_test_2 = "__snapshot_da39a_test_2";
+require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_2] = ()=>require('@lynx-js/react/internal').createSnapshot("__snapshot_da39a_test_2", function() {
         const pageId = require('@lynx-js/react/internal').__pageId;
         const el = __CreateView(pageId);
         return [
             el
         ];
-    }, null, null, undefined, globDynamicComponentEntry, null);
-require('@lynx-js/react/internal').snapshotCreatorMap["snapshot_da39a_test_3"] = ()=>require('@lynx-js/react/internal').createSnapshot("snapshot_da39a_test_3", function() {
+    }, null, null, undefined, globDynamicComponentEntry, null, __snapshot_da39a_test_2);
+const __snapshot_da39a_test_3 = "__snapshot_da39a_test_3";
+require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_3] = ()=>require('@lynx-js/react/internal').createSnapshot("__snapshot_da39a_test_3", function() {
         const pageId = require('@lynx-js/react/internal').__pageId;
         const el = __CreateText(pageId);
         return [
             el
         ];
-    }, null, null, undefined, globDynamicComponentEntry, null);
-require('@lynx-js/react/internal').snapshotCreatorMap["snapshot_da39a_test_4"] = ()=>require('@lynx-js/react/internal').createSnapshot("snapshot_da39a_test_4", function() {
+    }, null, null, undefined, globDynamicComponentEntry, null, __snapshot_da39a_test_3);
+const __snapshot_da39a_test_4 = "__snapshot_da39a_test_4";
+require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_4] = ()=>require('@lynx-js/react/internal').createSnapshot("__snapshot_da39a_test_4", function() {
         const pageId = require('@lynx-js/react/internal').__pageId;
         const el = __CreateImage(pageId);
         return [
             el
         ];
-    }, null, null, undefined, globDynamicComponentEntry, null);
-<ReactLynxRuntimeComponents.DeferredListItem renderListItem={(__c)=><snapshot_da39a_test_1 values={[
+    }, null, null, undefined, globDynamicComponentEntry, null, __snapshot_da39a_test_4);
+<ReactLynxRuntimeComponents.DeferredListItem renderListItem={(__c)=><__snapshot_da39a_test_1 values={[
         {
             "item-key": "1"
         },
         noop
-    ]}>{__c}</snapshot_da39a_test_1>} renderChildren={()=>[
-        <snapshot_da39a_test_2/>,
-        <snapshot_da39a_test_3/>,
-        <snapshot_da39a_test_4/>
+    ]}>{__c}</__snapshot_da39a_test_1>} renderChildren={()=>[
+        <__snapshot_da39a_test_2/>,
+        <__snapshot_da39a_test_3/>,
+        <__snapshot_da39a_test_4/>
     ]} key="1" defer/>;
-require('@lynx-js/react/internal').snapshotCreatorMap["snapshot_da39a_test_5"] = ()=>require('@lynx-js/react/internal').createSnapshot("snapshot_da39a_test_5", function() {
+const __snapshot_da39a_test_5 = "__snapshot_da39a_test_5";
+require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_5] = ()=>require('@lynx-js/react/internal').createSnapshot("__snapshot_da39a_test_5", function() {
         const pageId = require('@lynx-js/react/internal').__pageId;
         const el = __CreateElement("list-item", pageId);
         __SetInlineStyles(el, "color: red; width: 100rpx;");
@@ -53,21 +58,23 @@ require('@lynx-js/react/internal').snapshotCreatorMap["snapshot_da39a_test_5"] =
     }, [
         (snapshot, index, oldValue)=>require('@lynx-js/react/internal').updateListItemPlatformInfo(snapshot, index, oldValue, 0),
         (snapshot, index, oldValue)=>require('@lynx-js/react/internal').updateEvent(snapshot, index, oldValue, 0, "bindEvent", "tap", '')
-    ], require('@lynx-js/react/internal').__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null);
-require('@lynx-js/react/internal').snapshotCreatorMap["snapshot_da39a_test_6"] = ()=>require('@lynx-js/react/internal').createSnapshot("snapshot_da39a_test_6", function() {
+    ], require('@lynx-js/react/internal').__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null, __snapshot_da39a_test_5);
+const __snapshot_da39a_test_6 = "__snapshot_da39a_test_6";
+require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_6] = ()=>require('@lynx-js/react/internal').createSnapshot("__snapshot_da39a_test_6", function() {
         const pageId = require('@lynx-js/react/internal').__pageId;
         const el = __CreateView(pageId);
         return [
             el
         ];
-    }, null, null, undefined, globDynamicComponentEntry, null);
-<ReactLynxRuntimeComponents.DeferredListItem renderListItem={(__c)=><snapshot_da39a_test_5 values={[
+    }, null, null, undefined, globDynamicComponentEntry, null, __snapshot_da39a_test_6);
+<ReactLynxRuntimeComponents.DeferredListItem renderListItem={(__c)=><__snapshot_da39a_test_5 values={[
         {
             "item-key": "1"
         },
         noop
-    ]}>{__c}</snapshot_da39a_test_5>} renderChildren={()=><snapshot_da39a_test_6/>} key="1" defer/>;
-require('@lynx-js/react/internal').snapshotCreatorMap["snapshot_da39a_test_7"] = ()=>require('@lynx-js/react/internal').createSnapshot("snapshot_da39a_test_7", function() {
+    ]}>{__c}</__snapshot_da39a_test_5>} renderChildren={()=><__snapshot_da39a_test_6/>} key="1" defer/>;
+const __snapshot_da39a_test_7 = "__snapshot_da39a_test_7";
+require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_7] = ()=>require('@lynx-js/react/internal').createSnapshot("__snapshot_da39a_test_7", function() {
         const pageId = require('@lynx-js/react/internal').__pageId;
         const el = __CreateElement("list-item", pageId);
         __SetInlineStyles(el, "color: red; width: 100rpx;");
@@ -78,10 +85,10 @@ require('@lynx-js/react/internal').snapshotCreatorMap["snapshot_da39a_test_7"] =
     }, [
         (snapshot, index, oldValue)=>require('@lynx-js/react/internal').updateListItemPlatformInfo(snapshot, index, oldValue, 0),
         (snapshot, index, oldValue)=>require('@lynx-js/react/internal').updateEvent(snapshot, index, oldValue, 0, "bindEvent", "tap", '')
-    ], require('@lynx-js/react/internal').__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null);
-<ReactLynxRuntimeComponents.DeferredListItem renderListItem={(__c)=><snapshot_da39a_test_7 values={[
+    ], require('@lynx-js/react/internal').__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null, __snapshot_da39a_test_7);
+<ReactLynxRuntimeComponents.DeferredListItem renderListItem={(__c)=><__snapshot_da39a_test_7 values={[
         {
             "item-key": "1"
         },
         noop
-    ]}>{__c}</snapshot_da39a_test_7>} renderChildren={()=><App/>} key="1" defer/>;
+    ]}>{__c}</__snapshot_da39a_test_7>} renderChildren={()=><App/>} key="1" defer/>;

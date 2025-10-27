@@ -19,8 +19,8 @@ import { SnapshotOperation } from './snapshotPatch.js';
 import type { DynamicPartType } from '../../snapshot/dynamicPartType.js';
 import {
   SnapshotInstance,
+  calcEntryUniqID,
   createSnapshot,
-  entryUniqID,
   snapshotInstanceManager,
   snapshotManager,
 } from '../../snapshot.js';
@@ -97,8 +97,11 @@ export function snapshotPatchApply(snapshotPatch: SnapshotPatch): void {
           const slot = snapshotPatch[++i] as [DynamicPartType, number][];
           const cssId = (snapshotPatch[++i] ?? 0) as number;
           const entryName = snapshotPatch[++i] as string | undefined;
+          let entryUniqID = snapshotPatch[++i] as string | undefined;
 
-          if (!snapshotManager.values.has(entryUniqID(uniqID, entryName))) {
+          entryUniqID ??= calcEntryUniqID(uniqID, entryName);
+
+          if (!snapshotManager.values.has(entryUniqID)) {
             // HMR-related
             // Update the evaluated snapshots from JS.
             createSnapshot(
@@ -110,6 +113,7 @@ export function snapshotPatchApply(snapshotPatch: SnapshotPatch): void {
               cssId,
               entryName,
               null,
+              entryUniqID,
             );
           }
         }

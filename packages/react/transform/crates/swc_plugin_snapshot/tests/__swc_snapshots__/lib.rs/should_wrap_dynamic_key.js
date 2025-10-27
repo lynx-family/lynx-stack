@@ -1,19 +1,22 @@
 import * as ReactLynx from "@lynx-js/react";
-ReactLynx.snapshotCreatorMap["snapshot_da39a_test_2"] = ()=>ReactLynx.createSnapshot("snapshot_da39a_test_2", function() {
+const __snapshot_da39a_test_2 = "__snapshot_da39a_test_2";
+ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_2] = ()=>ReactLynx.createSnapshot("__snapshot_da39a_test_2", function() {
         const pageId = ReactLynx.__pageId;
         const el = __CreateText(pageId);
         return [
             el
         ];
-    }, null, ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null);
-ReactLynx.snapshotCreatorMap["snapshot_da39a_test_3"] = ()=>ReactLynx.createSnapshot("snapshot_da39a_test_3", function() {
+    }, null, ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null, __snapshot_da39a_test_2);
+const __snapshot_da39a_test_3 = "__snapshot_da39a_test_3";
+ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_3] = ()=>ReactLynx.createSnapshot("__snapshot_da39a_test_3", function() {
         const pageId = ReactLynx.__pageId;
         const el = __CreateText(pageId);
         return [
             el
         ];
-    }, null, ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null);
-ReactLynx.snapshotCreatorMap["snapshot_da39a_test_1"] = ()=>ReactLynx.createSnapshot("snapshot_da39a_test_1", function() {
+    }, null, ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null, __snapshot_da39a_test_3);
+const __snapshot_da39a_test_1 = "__snapshot_da39a_test_1";
+ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_1] = ()=>ReactLynx.createSnapshot("__snapshot_da39a_test_1", function() {
         const pageId = ReactLynx.__pageId;
         const el = __CreateView(pageId);
         const el1 = __CreateText(pageId);
@@ -47,5 +50,5 @@ ReactLynx.snapshotCreatorMap["snapshot_da39a_test_1"] = ()=>ReactLynx.createSnap
             ReactLynx.__DynamicPartSlot,
             5
         ]
-    ], undefined, globDynamicComponentEntry, null);
-<snapshot_da39a_test_1><wrapper>{hello}</wrapper><snapshot_da39a_test_2 key={hello}>{hello}</snapshot_da39a_test_2><snapshot_da39a_test_3 key="hello">{hello}</snapshot_da39a_test_3></snapshot_da39a_test_1>;
+    ], undefined, globDynamicComponentEntry, null, __snapshot_da39a_test_1);
+<__snapshot_da39a_test_1><wrapper>{hello}</wrapper><__snapshot_da39a_test_2 key={hello}>{hello}</__snapshot_da39a_test_2><__snapshot_da39a_test_3 key="hello">{hello}</__snapshot_da39a_test_3></__snapshot_da39a_test_1>;

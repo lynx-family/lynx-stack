@@ -1,5 +1,6 @@
 import * as ReactLynx from "@lynx-js/react";
-ReactLynx.snapshotCreatorMap["snapshot_da39a_test_1"] = ()=>ReactLynx.createSnapshot("snapshot_da39a_test_1", function() {
+const __snapshot_da39a_test_1 = "__snapshot_da39a_test_1";
+ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_1] = ()=>ReactLynx.createSnapshot("__snapshot_da39a_test_1", function() {
         const pageId = ReactLynx.__pageId;
         const el = __CreateView(pageId);
         const el1 = __CreateText(pageId);
@@ -19,5 +20,5 @@ ReactLynx.snapshotCreatorMap["snapshot_da39a_test_1"] = ()=>ReactLynx.createSnap
             ReactLynx.__DynamicPartChildren,
             3
         ]
-    ], undefined, globDynamicComponentEntry, null);
-<snapshot_da39a_test_1>{a}</snapshot_da39a_test_1>;
+    ], undefined, globDynamicComponentEntry, null, __snapshot_da39a_test_1);
+<__snapshot_da39a_test_1>{a}</__snapshot_da39a_test_1>;

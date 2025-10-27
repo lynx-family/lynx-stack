@@ -1149,7 +1149,7 @@ where
     self.snapshot_counter += 1;
 
     let snapshot_uid = format!(
-      "snapshot_{}_{}_{}",
+      "__snapshot_{}_{}_{}",
       self.filename_hash, self.content_hash, self.snapshot_counter
     );
     let snapshot_id = Ident::new(
@@ -1413,18 +1413,19 @@ where
     };
 
     let snapshot_create_call = quote!(
-        r#"$runtime_id.snapshotCreatorMap[$snapshot_uid] = () => $runtime_id.createSnapshot(
+        r#"$runtime_id.snapshotCreatorMap[$snapshot_id] = () => $runtime_id.createSnapshot(
              $snapshot_uid,
              $snapshot_creator,
              $snapshot_dynamic_parts_def,
              $slot,
              $css_id,
              globDynamicComponentEntry,
-             $snapshot_refs_and_spread_index
+             $snapshot_refs_and_spread_index,
+             $snapshot_id
         )"# as Expr,
         runtime_id: Expr = self.runtime_id.clone(),
-        // FIXME(colinaaa): Use snapshot_uid with entry_name
-        snapshot_uid: Expr = Expr::Lit(Lit::Str(snapshot_uid.into())),
+        snapshot_id = snapshot_id.clone(),
+        snapshot_uid: Expr = Expr::Lit(Lit::Str(snapshot_uid.clone().into())),
         snapshot_creator: Expr = snapshot_creator,
         snapshot_dynamic_parts_def: Expr = match (target, snapshot_dynamic_part_def.len()) {
           (TransformTarget::JS, _) | (_, 0) => Expr::Lit(Lit::Null(Null { span: DUMMY_SP })),
@@ -1443,6 +1444,17 @@ where
         // has_multi_children: Expr = Expr::Lit(Lit::Num(Number { span: DUMMY_SP, value: wrap_dynamic_part.dynamic_part_count as f64, raw: None })),
     );
 
+    let mut entry_snapshot_uid = quote!("$snapshot_uid" as Expr, snapshot_uid: Expr = Expr::Lit(Lit::Str(snapshot_uid.clone().into())));
+    if matches!(self.cfg.is_dynamic_component, Some(true)) {
+      entry_snapshot_uid = quote!("`${globDynamicComponentEntry}:${$snapshot_uid}`" as Expr, snapshot_uid: Expr = Expr::Lit(Lit::Str(snapshot_uid.clone().into())));
+    }
+
+    let entry_snapshot_uid_def = ModuleItem::Stmt(quote!(
+        r#"const $snapshot_id = $entry_snapshot_uid"#
+            as Stmt,
+        snapshot_id = snapshot_id.clone(),
+        entry_snapshot_uid: Expr = entry_snapshot_uid.clone(),
+    ));
     let snapshot_def = ModuleItem::Stmt(quote!(
         r#"$snapshot_create_call"#
             as Stmt,
@@ -1450,6 +1462,7 @@ where
     ));
 
     self.current_snapshot_id = Some(snapshot_id.clone());
+    self.current_snapshot_defs.push(entry_snapshot_uid_def);
     self.current_snapshot_defs.push(snapshot_def);
 
     *node = JSXElement {
