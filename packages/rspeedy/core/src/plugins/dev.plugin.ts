@@ -122,36 +122,32 @@ export function pluginDev(
           || config.server?.printUrls === true
         ) {
           const environmentNames = Object.keys(config.environments ?? {})
-          const hasWeb = !!config.environments?.['web']
           return mergeRsbuildConfig(config, {
             server: {
               printUrls: (param) => {
                 const finalUrls: { label: string, url: string }[] = []
+                const baseForUrls = (
+                  typeof assetPrefix === 'string'
+                    ? assetPrefix
+                    : `http://${hostname}:<port>/`
+                ).replaceAll('<port>', String(param.port))
                 for (const entry of Object.keys(config.source?.entry ?? {})) {
                   for (const environmentName of environmentNames) {
-                    const pathname = name.replace('[name]', entry).replace(
-                      '[platform]',
-                      environmentName,
-                    )
+                    const pathname = name
+                      .replaceAll('[name]', entry)
+                      .replaceAll('[platform]', environmentName)
                     finalUrls.push({
                       label: environmentName,
-                      url: new URL(
-                        pathname,
-                        (assetPrefix as string).replaceAll(
-                          '<port>',
-                          String(param.port),
-                        ),
-                      ).toString(),
+                      url: new URL(pathname, baseForUrls).toString(),
                     })
-                    if (hasWeb) {
+                    if (environmentName === 'web') {
                       finalUrls.push({
                         label: `Web Preview`,
                         url: new URL(
-                          `__web_preview?casename=${pathname}`,
-                          (assetPrefix as string).replaceAll(
-                            '<port>',
-                            String(param.port),
-                          ),
+                          `/__web_preview?casename=${
+                            encodeURIComponent(pathname)
+                          }`,
+                          baseForUrls,
                         ).toString(),
                       })
                     }
