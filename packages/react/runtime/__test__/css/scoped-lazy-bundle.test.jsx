@@ -5,18 +5,24 @@
  * @jsxCSSId 1000
  */
 
-import { expect, it } from 'vitest';
+import { expect, it, beforeEach, afterEach } from 'vitest';
 
 import { SnapshotInstance } from '../../src/snapshot';
 
-const prevEntryName = globalThis.globDynamicComponentEntry;
-globalThis.globDynamicComponentEntry = 'FOO';
+let prevEntryName;
+beforeEach(() => {
+  prevEntryName = globalThis.globDynamicComponentEntry;
+  globalThis.globDynamicComponentEntry = 'FOO';
+});
+afterEach(() => {
+  globalThis.globDynamicComponentEntry = prevEntryName;
+});
+
 const snapshot1 = __SNAPSHOT__(
   <view>
     <text>Hello, World</text>
   </view>,
 );
-globalThis.globDynamicComponentEntry = prevEntryName;
 
 it('cssId with entry', function() {
   const a = new SnapshotInstance(snapshot1);
@@ -24,13 +30,13 @@ it('cssId with entry', function() {
 
   expect(a.__element_root).toMatchInlineSnapshot(`
     <view
-      cssId="default-entry-from-native:1000"
+      cssId="FOO:1000"
     >
       <text
-        cssId="default-entry-from-native:1000"
+        cssId="FOO:1000"
       >
         <raw-text
-          cssId="default-entry-from-native:1000"
+          cssId="FOO:1000"
           text="Hello, World"
         />
       </text>

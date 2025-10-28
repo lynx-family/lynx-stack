@@ -162,69 +162,69 @@ describe('Suspense', () => {
         const formattedSnapshotPatch = prettyFormatSnapshotPatch(snapshotPatch);
         if (name === 'PreactSuspense') {
           expect(formattedSnapshotPatch).toMatchInlineSnapshot(`
-        [
-          {
-            "id": 2,
-            "op": "CreateElement",
-            "type": "__Card__:__snapshot_fffe1_test_3",
-          },
-          {
-            "id": 7,
-            "op": "CreateElement",
-            "type": "__Card__:__snapshot_fffe1_test_4",
-          },
-          {
-            "beforeId": null,
-            "childId": 7,
-            "op": "InsertBefore",
-            "parentId": 2,
-          },
-          {
-            "beforeId": null,
-            "childId": 2,
-            "op": "InsertBefore",
-            "parentId": -1,
-          },
-        ]
-      `);
+            [
+              {
+                "id": 2,
+                "op": "CreateElement",
+                "type": "__snapshot_fffe1_test_3",
+              },
+              {
+                "id": 7,
+                "op": "CreateElement",
+                "type": "__snapshot_fffe1_test_4",
+              },
+              {
+                "beforeId": null,
+                "childId": 7,
+                "op": "InsertBefore",
+                "parentId": 2,
+              },
+              {
+                "beforeId": null,
+                "childId": 2,
+                "op": "InsertBefore",
+                "parentId": -1,
+              },
+            ]
+          `);
         } else {
           expect(formattedSnapshotPatch).toMatchInlineSnapshot(`
-          [
-            {
-              "id": 2,
-              "op": "CreateElement",
-              "type": "__Card__:__snapshot_fffe1_test_3",
-            },
-            {
-              "id": 8,
-              "op": "CreateElement",
-              "type": "wrapper",
-            },
-            {
-              "id": 9,
-              "op": "CreateElement",
-              "type": "__Card__:__snapshot_fffe1_test_4",
-            },
-            {
-              "beforeId": null,
-              "childId": 9,
-              "op": "InsertBefore",
-              "parentId": 8,
-            },
-            {
-              "beforeId": null,
-              "childId": 8,
-              "op": "InsertBefore",
-              "parentId": 2,
-            },
-            {
-              "beforeId": null,
-              "childId": 2,
-              "op": "InsertBefore",
-              "parentId": -1,
-            },
-          ]
-        `);
+            [
+              {
+                "id": 2,
+                "op": "CreateElement",
+                "type": "__snapshot_fffe1_test_3",
+              },
+              {
+                "id": 8,
+                "op": "CreateElement",
+                "type": "wrapper",
+              },
+              {
+                "id": 9,
+                "op": "CreateElement",
+                "type": "__snapshot_fffe1_test_4",
+              },
+              {
+                "beforeId": null,
+                "childId": 9,
+                "op": "InsertBefore",
+                "parentId": 8,
+              },
+              {
+                "beforeId": null,
+                "childId": 8,
+                "op": "InsertBefore",
+                "parentId": 2,
+              },
+              {
+                "beforeId": null,
+                "childId": 2,
+                "op": "InsertBefore",
+                "parentId": -1,
+              },
+            ]
+          `);
         }
       }
 
@@ -295,48 +295,48 @@ describe('Suspense', () => {
         // <view className="lazy-wrapper"> is torn down, (it is triggered in first render but delayed 10_000ms to execute, we use `vi.runAllTimers()` to simulate the situation that will cause the bug)
         // <text>loading...</text> is torn down
         expect(tearDownInstances).toMatchInlineSnapshot(`
-        [
-          {
-            "__id": 3,
-            "create": "function() {
-          const pageId = __vite_ssr_import_1__.__pageId;
-          const el = __CreateView(pageId);
-          __SetClasses(el, "lazy-wrapper");
-          const el1 = __CreateWrapperElement(pageId);
-          __AppendElement(el, el1);
-          const el2 = __CreateText(pageId);
-          __AppendElement(el, el2);
-          const el3 = __CreateRawText("Hello, ReactLynx");
-          __AppendElement(el2, el3);
-          const el4 = __CreateWrapperElement(pageId);
-          __AppendElement(el, el4);
-          return [
-            el,
-            el1,
-            el2,
-            el3,
-            el4
-          ];
-        }",
-            "type": "__Card__:__snapshot_fffe1_test_5",
-          },
-          {
-            "__id": 7,
-            "create": "function() {
-          const pageId = __vite_ssr_import_1__.__pageId;
-          const el = __CreateText(pageId);
-          __SetClasses(el, "loading");
-          const el1 = __CreateRawText("loading...");
-          __AppendElement(el, el1);
-          return [
-            el,
-            el1
-          ];
-        }",
-            "type": "__Card__:__snapshot_fffe1_test_4",
-          },
-        ]
-      `);
+          [
+            {
+              "__id": 3,
+              "create": "function() {
+            const pageId = __vite_ssr_import_1__.__pageId;
+            const el = __CreateView(pageId);
+            __SetClasses(el, "lazy-wrapper");
+            const el1 = __CreateWrapperElement(pageId);
+            __AppendElement(el, el1);
+            const el2 = __CreateText(pageId);
+            __AppendElement(el, el2);
+            const el3 = __CreateRawText("Hello, ReactLynx");
+            __AppendElement(el2, el3);
+            const el4 = __CreateWrapperElement(pageId);
+            __AppendElement(el, el4);
+            return [
+              el,
+              el1,
+              el2,
+              el3,
+              el4
+            ];
+          }",
+              "type": "__snapshot_fffe1_test_5",
+            },
+            {
+              "__id": 7,
+              "create": "function() {
+            const pageId = __vite_ssr_import_1__.__pageId;
+            const el = __CreateText(pageId);
+            __SetClasses(el, "loading");
+            const el1 = __CreateRawText("loading...");
+            __AppendElement(el, el1);
+            return [
+              el,
+              el1
+            ];
+          }",
+              "type": "__snapshot_fffe1_test_4",
+            },
+          ]
+        `);
       } else {
         expect(tearDownInstances).toMatchInlineSnapshot(`
           [
