@@ -1,5 +1,21 @@
 # @lynx-js/template-webpack-plugin
 
+## 0.9.0
+
+### Minor Changes
+
+- **BREAKING CHANGE:** Remove the `enableParallelElement` and `pipelineSchedulerConfig` options. ([#1705](https://github.com/lynx-family/lynx-stack/pull/1705))
+
+  Since the thread element resolution is still in experimental stage and may have stability risks, it will be disabled by default after this change.
+
+- **BREAKING CHANGE**: Remove the `enableICU` option. ([#1800](https://github.com/lynx-family/lynx-stack/pull/1800))
+
+## 0.8.6
+
+### Patch Changes
+
+- fix: add appType field for lazy bundle for web ([#1738](https://github.com/lynx-family/lynx-stack/pull/1738))
+
 ## 0.8.5
 
 ### Patch Changes

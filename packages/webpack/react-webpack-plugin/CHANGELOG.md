@@ -1,5 +1,19 @@
 # @lynx-js/react-webpack-plugin
 
+## 0.7.1
+
+### Patch Changes
+
+- Supports `@lynx-js/template-webpack-plugin` 0.9.0. ([#1705](https://github.com/lynx-family/lynx-stack/pull/1705))
+
+## 0.7.0
+
+### Minor Changes
+
+- Remove `@lynx-js/react` from peerDependencies. ([#1711](https://github.com/lynx-family/lynx-stack/pull/1711))
+
+- Add a new required option `workletRuntimePath`. ([#1711](https://github.com/lynx-family/lynx-stack/pull/1711))
+
 ## 0.6.20
 
 ### Patch Changes

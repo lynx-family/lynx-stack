@@ -8,26 +8,36 @@ crate-type = ["cdylib"]
 
 [dependencies]
 # Default enable napi4 feature, see https://nodejs.org/api/n-api.html#node-api-version-matrix
-convert_case = "0.6.0"
-hex = "0.4.3"
-indexmap = "2.7.0"
-napi = { version = "2.7.0", default-features = false, features = ["napi4"] }
-napi-derive = "2.7.0"
-once_cell = "1.20.2"
-regex = "1.11.1"
-rustc-hash = "2.1.1"
-serde = "1.0.217"
-serde_json = { version = "1.0.134", features = ["preserve_order"] }
-sha-1 = "0.10.1"
-swc_core = { version = "23.2.0", features = ["base", "ecma_codegen", "ecma_parser", "ecma_minifier", "ecma_transforms_typescript", "ecma_utils", "ecma_quote", "ecma_transforms_react", "ecma_transforms_optimization", "css_parser", "css_ast", "css_visit", "css_codegen", "__visit", "__testing_transform"] }
-version-compare = "0.2.0"
+convert_case = { workspace = true }
+hex = { workspace = true }
+indexmap = { workspace = true }
+napi = { workspace = true }
+napi-derive = { workspace = true }
+once_cell = { workspace = true }
+regex = { workspace = true }
+rustc-hash = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true, features = ["preserve_order"] }
+sha-1 = { workspace = true }
+swc_core = { workspace = true, features = ["base", "ecma_codegen", "ecma_parser", "ecma_minifier", "ecma_transforms_typescript", "ecma_utils", "ecma_quote", "ecma_transforms_react", "ecma_transforms_optimization", "css_parser", "css_ast", "css_visit", "css_codegen", "__visit", "__testing_transform"] }
+swc_plugin_compat = { path = "./crates/swc_plugin_compat" }
+swc_plugin_css_scope = { path = "./crates/swc_plugin_css_scope" }
+swc_plugin_define_dce = { path = "./crates/swc_plugin_define_dce" }
+swc_plugin_directive_dce = { path = "./crates/swc_plugin_directive_dce" }
+swc_plugin_dynamic_import = { path = './crates/swc_plugin_dynamic_import' }
+swc_plugin_inject = { path = "./crates/swc_plugin_inject" }
+swc_plugin_list = { path = "./crates/swc_plugin_list" }
+swc_plugin_shake = { path = './crates/swc_plugin_shake' }
+swc_plugin_snapshot = { path = "./crates/swc_plugin_snapshot" }
+swc_plugin_worklet = { path = "./crates/swc_plugin_worklet" }
+swc_plugins_shared = { path = './crates/swc_plugins_shared' }
+version-compare = { workspace = true }
 
 [target."cfg(all(target_arch = \"wasm32\", target_os = \"unknown\"))".dependencies.getrandom]
-version = "0.2.15"
-features = ["custom"]
+version = "0.3.3"
 
 [build-dependencies]
-napi-build = "2.1.3"
+napi-build = "2.2.3"
 
 [features]
 noop = []

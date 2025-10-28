@@ -31,7 +31,7 @@ export const createVitestConfig = async (options) => {
   const runtimeDir = path.dirname(require.resolve(`${runtimePkgName}/package.json`));
   const runtimeOSSDir = path.dirname(
     require.resolve(`${runtimeOSSPkgName}/package.json`, {
-      paths: [runtimeDir],
+      paths: [runtimeDir, __dirname],
     }),
   );
   const preactDir = path.dirname(
@@ -48,7 +48,7 @@ export const createVitestConfig = async (options) => {
       pkgAlias.push({
         find: new RegExp('^' + name + '$'),
         replacement: require.resolve(name, {
-          paths: [resolveDir],
+          paths: [resolveDir, __dirname],
         }),
       });
     });

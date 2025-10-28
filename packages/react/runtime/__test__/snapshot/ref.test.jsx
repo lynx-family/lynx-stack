@@ -6,6 +6,8 @@
 import { render } from 'preact';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { RefProxy, runDelayedUiOps, shouldDelayUiOps } from '../../src/lifecycle/ref/delay';
+
 import { Component, createRef, useState } from '../../src/index';
 import { clearCommitTaskId, replaceCommitHook } from '../../src/lifecycle/patch/commit';
 import { injectUpdateMainThread } from '../../src/lifecycle/patch/updateMainThread';
@@ -1789,6 +1791,73 @@ describe('ui operations', () => {
     }
   });
 
+  it('should forward animation operations via ref proxy', () => {
+    const selectorQueryConstructor = lynx.createSelectorQuery().constructor;
+    selectorQueryConstructor.execLog.mockClear();
+    shouldDelayUiOps.value = true;
+
+    const animations = [{ duration: 350, name: 'fade' }];
+    const animationIds = ['anim-1', 'anim-2'];
+
+    const ref = new RefProxy([-2, 0]);
+
+    ref.animate(animations).exec();
+    ref.playAnimation(animationIds).exec();
+    ref.pauseAnimation('anim-2').exec();
+    ref.cancelAnimation(animationIds).exec();
+
+    expect(selectorQueryConstructor.execLog.mock.calls).toMatchInlineSnapshot(`[]`);
+
+    runDelayedUiOps();
+
+    expect(selectorQueryConstructor.execLog.mock.calls).toMatchInlineSnapshot(`
+      [
+        [
+          "[react-ref--2-0]",
+          "animate",
+          [
+            [
+              {
+                "duration": 350,
+                "name": "fade",
+              },
+            ],
+          ],
+        ],
+        [
+          "[react-ref--2-0]",
+          "playAnimation",
+          [
+            [
+              "anim-1",
+              "anim-2",
+            ],
+          ],
+        ],
+        [
+          "[react-ref--2-0]",
+          "pauseAnimation",
+          [
+            "anim-2",
+          ],
+        ],
+        [
+          "[react-ref--2-0]",
+          "cancelAnimation",
+          [
+            [
+              "anim-1",
+              "anim-2",
+            ],
+          ],
+        ],
+      ]
+    `);
+
+    selectorQueryConstructor.execLog.mockClear();
+    shouldDelayUiOps.value = true;
+  });
+
   it('should not delay after hydration', async function() {
     const ref1 = createRef();
 
@@ -1907,5 +1976,17 @@ describe('ui operations', () => {
         ]
       `);
     }
+  });
+});
+
+describe('runDelayedUiOps helper', () => {
+  it('should reset shouldDelayUiOps when no tasks queued', () => {
+    // flush any queued tasks from previous tests
+    shouldDelayUiOps.value = false;
+    runDelayedUiOps();
+
+    shouldDelayUiOps.value = true;
+    runDelayedUiOps();
+    expect(shouldDelayUiOps.value).toBe(false);
   });
 });

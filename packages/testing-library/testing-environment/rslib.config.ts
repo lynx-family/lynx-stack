@@ -15,7 +15,7 @@ export default defineConfig({
       bundle: false,
       format: 'esm',
       syntax: 'es2021',
-      dts: true,
+      dts: { tsgo: true },
     },
     {
       bundle: false,

@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/react-webpack-plugin",
-  "version": "0.6.20",
+  "version": "0.7.1",
   "description": "A webpack plugin for ReactLynx",
   "keywords": [
     "webpack",
@@ -54,11 +54,10 @@
     "babel-plugin-react-compiler": "0.0.0-experimental-0566679-20250709",
     "css-loader": "^7.1.2",
     "swc-loader": "^0.2.6",
-    "webpack": "^5.101.3"
+    "webpack": "^5.102.0"
   },
   "peerDependencies": {
-    "@lynx-js/react": "^0.103.0 || ^0.104.0 || ^0.105.0 || ^0.106.0 || ^0.107.0 || ^0.108.0 || ^0.109.0 || ^0.110.0 || ^0.111.0 || ^0.112.0",
-    "@lynx-js/template-webpack-plugin": "^0.4.0 || ^0.5.0 || ^0.6.0 || ^0.7.0 || ^0.8.0"
+    "@lynx-js/template-webpack-plugin": "^0.4.0 || ^0.5.0 || ^0.6.0 || ^0.7.0 || ^0.8.0 || ^0.9.0"
   },
   "peerDependenciesMeta": {
     "@lynx-js/react": {

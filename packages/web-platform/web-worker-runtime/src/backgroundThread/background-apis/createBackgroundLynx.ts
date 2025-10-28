@@ -48,5 +48,14 @@ export function createBackgroundLynx(
       return createElement(id, uiThreadRpc);
     },
     getI18nResource: () => nativeApp.i18nResource.data,
+    QueryComponent: (
+      source: string,
+      callback: (
+        ret: { __hasReady: boolean } | {
+          code: number;
+          detail?: { schema: string };
+        },
+      ) => void,
+    ) => nativeApp.queryComponent(source, callback),
   };
 }

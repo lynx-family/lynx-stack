@@ -27,9 +27,9 @@ const isPlainObject = (obj: unknown): obj is Record<string, unknown> =>
   && typeof obj === 'object'
   && Object.prototype.toString.call(obj) === '[object Object]'
 
-export const applySplitChunksRule = (
+export const applySplitChunksRule: (
   api: RsbuildPluginAPI,
-): void => {
+) => void = (api): void => {
   // Defaults to `all-in-one`.
   api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
     const userConfig = api.getRsbuildConfig('original')
@@ -77,11 +77,7 @@ export const applySplitChunksRule = (
     })
   })
 
-  api.modifyRspackConfig((rspackConfig, { environment }) => {
-    if (environment.name !== 'lynx') {
-      return rspackConfig
-    }
-
+  api.modifyRspackConfig((rspackConfig) => {
     if (!rspackConfig.optimization) {
       return rspackConfig
     }

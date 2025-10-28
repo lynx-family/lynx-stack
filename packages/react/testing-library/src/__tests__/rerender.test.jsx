@@ -17,10 +17,17 @@ test('rerender will re-render the element', async () => {
 
   {
     rerender(<Greeting message='hey' />);
-    const container = asFragment();
     expect(container.firstChild).toHaveTextContent('hey');
 
     expect(container).toMatchInlineSnapshot(`
+      <page>
+        <text>
+          hey
+        </text>
+      </page>
+    `);
+
+    expect(asFragment()).toMatchInlineSnapshot(`
       <DocumentFragment>
         <text>
           hey

@@ -2,5 +2,6 @@
   "recommendations": [
     "dprint.dprint",
     "editorconfig.editorconfig",
+    "typescriptteam.native-preview",
   ],
 }

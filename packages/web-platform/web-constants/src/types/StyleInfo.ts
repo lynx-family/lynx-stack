@@ -19,6 +19,12 @@ export interface OneInfo {
 export interface StyleInfo {
   [cssId: string]: OneInfo;
 }
+export interface FlattenedOneInfo {
+  content: string[];
+  rules: CSSRule[];
+  importBy: string[];
+}
+export type FlattenedStyleInfo = FlattenedOneInfo[];
 
 /**
  * CSS Info for Old Generation CSS System

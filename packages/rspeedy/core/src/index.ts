@@ -31,6 +31,7 @@ export { mergeRspeedyConfig } from './config/mergeRspeedyConfig.js'
 
 // Config
 export { defineConfig } from './config/defineConfig.js'
+export type { ConfigParams } from './config/defineConfig.js'
 export {
   loadConfig,
   type LoadConfigOptions,

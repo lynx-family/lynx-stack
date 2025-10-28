@@ -7,9 +7,11 @@ import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin';
 import { defineConfig } from '@lynx-js/rspeedy';
 
 import { pluginRepoFilePath } from './plugins/pluginRepoFilePath.mjs';
+import { pluginScriptLoad } from './plugins/pluginScriptLoad.mjs';
 
 export default defineConfig({
   output: {
+    filenameHash: false,
     minify: {
       js: true,
       jsOptions: {
@@ -25,7 +27,7 @@ export default defineConfig({
     entry: {
       '001-fib': [
         'event-target-polyfill',
-        './src/dummyRoot.jsx',
+        './src/dummyRoot.tsx',
         './cases/001-fib/index.ts',
       ],
       '002-hello-reactLynx': [
@@ -40,15 +42,17 @@ export default defineConfig({
       '004-various-update': [
         './cases/004-various-update/index.tsx',
       ],
+      '005-load-script': [
+        './cases/005-load-script/index.tsx',
+      ],
     },
   },
   plugins: [
     pluginRepoFilePath(),
     pluginReactLynx({
-      enableParallelElement: false,
-      pipelineSchedulerConfig: 0,
       debugInfoOutside: false,
     }),
+    pluginScriptLoad(),
     pluginQRCode({}),
   ],
   performance: {

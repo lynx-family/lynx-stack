@@ -7,7 +7,8 @@ import { componentAtIndexFactory, enqueueComponentFactory } from './list.js';
 import type { SnapshotInstance } from './snapshot.js';
 
 export interface ListUpdateInfo {
-  flush(): void;
+  flush(): number | undefined;
+  getAttachedListId(): number | undefined;
   onInsertBefore(
     newNode: SnapshotInstance,
     existingNode?: SnapshotInstance,
@@ -71,9 +72,12 @@ export class ListUpdateInfoRecording implements ListUpdateInfo {
   //   this.platformInfoUpdate.clear();
   // }
 
-  flush(): void {
+  flush(): undefined | number {
+    if (!this.list.__elements) {
+      return undefined;
+    }
     const elementIndex = this.list.__snapshot_def.slot[0]![1];
-    const listElement = this.list.__elements![elementIndex]!;
+    const listElement = this.list.__elements[elementIndex]!;
     // this.__pendingAttributes?.forEach(pendingAttribute => {
     //   __SetAttribute(listElement, "update-list-info", pendingAttribute);
     //   __FlushElementTree(listElement);
@@ -86,6 +90,14 @@ export class ListUpdateInfoRecording implements ListUpdateInfo {
       enqueueComponentFactory(),
       componentAtIndexes,
     );
+    return this.list.__id;
+  }
+
+  getAttachedListId(): undefined | number {
+    if (!this.list.__elements) {
+      return undefined;
+    }
+    return this.list.__id;
   }
 
   private oldChildNodes: SnapshotInstance[];

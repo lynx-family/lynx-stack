@@ -1,6 +1,6 @@
 /*#__PURE__*/ import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
 import * as ReactLynx from "@lynx-js/react";
-const __snapshot_da39a_4683e_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_4683e_1", function() {
+const __snapshot_da39a_4683e_1 = ReactLynx.createSnapshot("__snapshot_da39a_4683e_1", function() {
     const pageId = ReactLynx.__pageId;
     const el = __CreateView(pageId);
     return [
@@ -8,7 +8,7 @@ const __snapshot_da39a_4683e_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snaps
     ];
 }, null, null, undefined, globDynamicComponentEntry, null);
 _jsx(__snapshot_da39a_4683e_1, {});
-const __snapshot_da39a_4683e_2 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_4683e_2", function() {
+const __snapshot_da39a_4683e_2 = ReactLynx.createSnapshot("__snapshot_da39a_4683e_2", function() {
     const pageId = ReactLynx.__pageId;
     const el = __CreateText(pageId);
     const el1 = __CreateRawText("foo");
@@ -19,7 +19,7 @@ const __snapshot_da39a_4683e_2 = /*#__PURE__*/ ReactLynx.createSnapshot("__snaps
     ];
 }, null, null, undefined, globDynamicComponentEntry, null);
 /*#__PURE__*/ _jsx(__snapshot_da39a_4683e_2, {});
-const __snapshot_da39a_4683e_3 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_4683e_3", function() {
+const __snapshot_da39a_4683e_3 = ReactLynx.createSnapshot("__snapshot_da39a_4683e_3", function() {
     const pageId = ReactLynx.__pageId;
     const el = __CreateView(pageId);
     return [
@@ -31,7 +31,7 @@ function Foo() {
         children: /*#__PURE__*/ _jsx(__snapshot_da39a_4683e_3, {})
     });
 }
-const __snapshot_da39a_4683e_4 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_4683e_4", function() {
+const __snapshot_da39a_4683e_4 = ReactLynx.createSnapshot("__snapshot_da39a_4683e_4", function() {
     const pageId = ReactLynx.__pageId;
     const el = __CreateView(pageId);
     return [

@@ -1,0 +1,28 @@
+[package]
+name = "swc_plugin_reactlynx"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+indexmap = { workspace = true }
+rustc-hash = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+swc_core = { workspace = true, features = ["base", "ecma_codegen", "ecma_parser", "ecma_minifier", "ecma_transforms_typescript", "ecma_utils", "ecma_quote", "ecma_transforms_react", "ecma_transforms_optimization", "css_parser", "css_ast", "css_visit", "css_codegen", "__visit", "__testing_transform", "ecma_plugin_transform"] }
+swc_plugin_css_scope = { path = "../crates/swc_plugin_css_scope" }
+swc_plugin_define_dce = { path = "../crates/swc_plugin_define_dce" }
+swc_plugin_directive_dce = { path = "../crates/swc_plugin_directive_dce" }
+swc_plugin_dynamic_import = { path = "../crates/swc_plugin_dynamic_import" }
+swc_plugin_inject = { path = "../crates/swc_plugin_inject" }
+swc_plugin_list = { path = "../crates/swc_plugin_list" }
+swc_plugin_shake = { path = "../crates/swc_plugin_shake" }
+swc_plugin_snapshot = { path = "../crates/swc_plugin_snapshot" }
+swc_plugin_worklet = { path = "../crates/swc_plugin_worklet" }
+swc_plugins_shared = { path = "../crates/swc_plugins_shared" }
+
+# .cargo/config.toml defines few alias to build plugin.
+# cargo build-wasi generates wasm-wasi32 binary
+# cargo build-wasm32 generates wasm32-unknown-unknown binary.

@@ -43,6 +43,9 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
         lazy ? ['lazy', 'import'] : ['import'],
       )
       const resolvePreact = createLazyResolver(reactLynxDir, ['import'])
+      api.expose(Symbol.for('@lynx-js/react/internal:resolve'), {
+        resolve,
+      })
 
       api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
         return mergeRsbuildConfig(config, {
@@ -154,13 +157,16 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
           chain.resolve.alias.set('@lynx-js/preact-devtools$', false)
         }
 
-        chain
-          .resolve
-          .alias
-          .set(
+        if (!chain.resolve.alias.has('react$')) {
+          chain.resolve.alias.set(
             'react$',
             reactLepus.background,
           )
+        }
+
+        chain
+          .resolve
+          .alias
           .set(
             '@lynx-js/react$',
             reactLepus.background,

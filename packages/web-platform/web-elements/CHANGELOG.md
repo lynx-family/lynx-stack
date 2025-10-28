@@ -1,5 +1,73 @@
 # @lynx-js/web-elements
 
+## 0.8.9
+
+### Patch Changes
+
+- fix: layoutchange event result `detail.top` and `detail.left` was `0` incorrectly ([#1887](https://github.com/lynx-family/lynx-stack/pull/1887))
+
+- textarea placeholder inherits font-size by default ([#1874](https://github.com/lynx-family/lynx-stack/pull/1874))
+
+- feat: support <x-text text="content"></x-text> ([#1881](https://github.com/lynx-family/lynx-stack/pull/1881))
+
+- Updated dependencies []:
+  - @lynx-js/web-elements-template@0.8.9
+
+## 0.8.8
+
+### Patch Changes
+
+- fix: ([#1837](https://github.com/lynx-family/lynx-stack/pull/1837))
+
+  1. `LynxView.updateData()` cannot trigger `dataProcessor`.
+
+  2. **This is a break change:** The second parameter of `LynxView.updateData()` has been changed from `UpdateDataType` to `string`, which is the `processorName` (default is `default` which will use `defaultDataProcessor`). This change is to better align with Native. The current complete type is as follows:
+
+  ```ts
+  LynxView.updateData(data: Cloneable, processorName?: string | undefined, callback?: (() => void) | undefined): void
+  ```
+
+- Updated dependencies []:
+  - @lynx-js/web-elements-template@0.8.8
+
+## 0.8.7
+
+### Patch Changes
+
+- The img within svg does not inherit the position ([#1769](https://github.com/lynx-family/lynx-stack/pull/1769))
+
+- Updated dependencies []:
+  - @lynx-js/web-elements-template@0.8.7
+
+## 0.8.6
+
+### Patch Changes
+
+- fix: 1. svg use image tag to render, to differentiate background-image styles ([#1668](https://github.com/lynx-family/lynx-stack/pull/1668))
+
+  1. use blob instead of raw data-uri
+
+  > Not using data-uri(data:image/svg+xml;utf8,${props.content})
+  > since it has follow limitations:
+  >
+  > < and > must be encoded to %3C and %3E.
+  > Double quotes must be converted to single quotes.
+  > Colors must use a non-hex format because # will not work inside data-uri.
+  > See: https://codepen.io/zvuc/pen/BWNLJL
+  > Instead, we use modern Blob API to create SVG URL that have the same support
+
+- Updated dependencies [[`d618304`](https://github.com/lynx-family/lynx-stack/commit/d6183049a2f67a5ec68c2e1ef9efbdf26af4c343), [`1d97fce`](https://github.com/lynx-family/lynx-stack/commit/1d97fce68178418f6af8d50e54ab24a5567452b7)]:
+  - @lynx-js/web-elements-template@0.8.6
+
+## 0.8.5
+
+### Patch Changes
+
+- fix: register attr of width is set to height incorrectly ([#1649](https://github.com/lynx-family/lynx-stack/pull/1649))
+
+- Updated dependencies []:
+  - @lynx-js/web-elements-template@0.8.5
+
 ## 0.8.4
 
 ### Patch Changes

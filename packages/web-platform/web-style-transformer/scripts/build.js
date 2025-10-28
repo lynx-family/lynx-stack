@@ -20,11 +20,11 @@ execSync(
   { cwd: packageRoot, stdio: 'inherit' },
 );
 execSync(
-  `wasm-bindgen --out-dir dist --target bundler --out-name standard ${cargoOutput}`,
+  `pnpm exec dotslash ./scripts/wasm-bindgen --out-dir dist --target bundler --out-name standard ${cargoOutput}`,
   { cwd: packageRoot, stdio: 'inherit' },
 );
 execSync(
-  `pnpm wasm-opt ./dist/standard_bg.wasm -O3 -o ./dist/standard_bg.wasm`,
+  `pnpm wasm-opt --enable-bulk-memory ./dist/standard_bg.wasm -O3 -o ./dist/standard_bg.wasm`,
   { cwd: packageRoot, stdio: 'inherit' },
 );
 
@@ -38,10 +38,10 @@ execSync(
   },
 );
 execSync(
-  `wasm-bindgen --out-dir dist --target bundler --out-name legacy ${cargoOutput}`,
+  `pnpm exec dotslash ./scripts/wasm-bindgen --out-dir dist --target bundler --out-name legacy ${cargoOutput}`,
   { cwd: packageRoot, stdio: 'inherit' },
 );
 execSync(
-  `pnpm wasm-opt ./dist/legacy_bg.wasm -O3 -o ./dist/legacy_bg.wasm`,
+  `pnpm wasm-opt --enable-bulk-memory ./dist/legacy_bg.wasm -O3 -o ./dist/legacy_bg.wasm`,
   { cwd: packageRoot, stdio: 'inherit' },
 );

@@ -130,7 +130,14 @@ export async function createLynxView(
   const loadScriptSync = (url: string) => {
     const scriptContent = fs.readFileSync(url);
     const script = new vm.Script(scriptContent.toString(), { filename: url });
-    return script.runInContext(mtsVMContext);
+    // @ts-expect-error
+    mtsVMContext.module = { exports: null };
+    script.runInContext(mtsVMContext);
+    // @ts-expect-error
+    const ret = mtsVMContext.module.exports;
+    // @ts-expect-error
+    mtsVMContext.module = { exports: null };
+    return ret;
   };
   const loadScript = async (url: string) => {
     return new Promise((resolve, reject) => {
@@ -141,8 +148,14 @@ export async function createLynxView(
         }
         try {
           const script = new vm.Script(data.toString(), { filename: url });
-          const result = script.runInContext(mtsVMContext);
-          resolve(result);
+          // @ts-expect-error
+          mtsVMContext.module = { exports: null };
+          script.runInContext(mtsVMContext);
+          // @ts-expect-error
+          const ret = mtsVMContext.module.exports;
+          // @ts-expect-error
+          mtsVMContext.module = { exports: null };
+          resolve(ret);
         } catch (e) {
           reject(e);
         }
@@ -177,6 +190,7 @@ export async function createLynxView(
       i18nResources.setData(initI18nResources);
       return i18nResources;
     },
+    (() => {}) as any,
     {
       __AddEvent(element, eventName, eventData, eventOptions) {
         events.push([

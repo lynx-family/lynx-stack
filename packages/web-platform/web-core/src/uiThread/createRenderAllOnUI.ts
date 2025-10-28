@@ -5,8 +5,7 @@
 import {
   type StartMainThreadContextConfig,
   type RpcCallType,
-  type updateDataEndpoint,
-  type MainThreadGlobalThis,
+  updateDataEndpoint,
   type I18nResourceTranslationOptions,
   type CloneableObject,
   i18nResourceMissedEventName,
@@ -16,10 +15,12 @@ import {
   lynxUniqueIdAttribute,
   type SSRDumpInfo,
   type JSRealm,
+  type TemplateLoader,
 } from '@lynx-js/web-constants';
 import { Rpc } from '@lynx-js/web-worker-rpc';
 import { dispatchLynxViewEvent } from '../utils/dispatchLynxViewEvent.js';
 import { createExposureMonitor } from './crossThreadHandlers/createExposureMonitor.js';
+import type { StartUIThreadCallbacks } from './startUIThread.js';
 
 const {
   prepareMainThreadAPIs,
@@ -36,32 +37,45 @@ const {
  * Creates a isolated JavaScript context for executing mts code.
  * This context has its own global variables and functions.
  */
-function createIFrameRealm(parent: Node): JSRealm {
+async function createIFrameRealm(parent: Node): Promise<JSRealm> {
   const iframe = document.createElement('iframe');
-  const iframeLoaded = new Promise<void>((resolve) => {
-    iframe.onload = () => resolve();
+  const iframeReadyPromise = new Promise<void>((resolve) => {
+    const listener = (event: MessageEvent) => {
+      if (
+        event.data === 'lynx:mtsready' && event.source === iframe.contentWindow
+      ) {
+        resolve();
+        globalThis.removeEventListener('message', listener);
+      }
+    };
+    globalThis.addEventListener('message', listener);
   });
   iframe.style.display = 'none';
-  iframe.src = 'about:blank';
+  iframe.srcdoc =
+    '<!DOCTYPE html><html><head><script>parent.postMessage("lynx:mtsready","*")</script></head><body style="display:none"></body></html>';
+  iframe.sandbox = 'allow-same-origin allow-scripts'; // Restrict capabilities for security
+  iframe.loading = 'eager';
   parent.appendChild(iframe);
+  await iframeReadyPromise;
   const iframeWindow = iframe.contentWindow! as unknown as typeof globalThis;
-  const iframeDocument = iframe.contentDocument!;
-  const loadScript: (url: string) => Promise<unknown> = (url) => {
+  const loadScript: (url: string) => Promise<unknown> = async (url) => {
+    const script = iframe.contentDocument!.createElement('script');
+    script.fetchPriority = 'high';
+    script.defer = true;
+    script.async = false;
+    iframe.contentDocument!.head.appendChild(script);
     return new Promise(async (resolve, reject) => {
-      if (iframeDocument.readyState !== 'complete') {
-        await iframeLoaded;
-      }
-      const script = iframeDocument.createElement('script');
-      script.src = url;
-      script.fetchPriority = 'high';
-      script.defer = true;
-      script.async = false;
-      script.onload = () => resolve(iframeWindow?.module?.exports);
+      script.onload = () => {
+        const ret = iframeWindow?.module?.exports;
+        // @ts-expect-error
+        iframeWindow.module = { exports: undefined };
+        resolve(ret);
+      };
       script.onerror = (err) =>
         reject(new Error(`Failed to load script: ${url}`, { cause: err }));
       // @ts-expect-error
       iframeWindow.module = { exports: undefined };
-      iframe.contentDocument!.head.appendChild(script);
+      script.src = url;
     });
   };
   const loadScriptSync: (url: string) => unknown = (url) => {
@@ -74,7 +88,10 @@ function createIFrameRealm(parent: Node): JSRealm {
       // @ts-expect-error
       iframeWindow.module = { exports: undefined };
       iframe.contentDocument!.head.appendChild(script);
-      return iframeWindow?.module?.exports;
+      const ret = iframeWindow?.module?.exports;
+      // @ts-expect-error
+      iframeWindow.module = { exports: undefined };
+      return ret;
     } else {
       throw new Error(`Failed to load script: ${url}`, { cause: xhr });
     }
@@ -85,15 +102,14 @@ function createIFrameRealm(parent: Node): JSRealm {
 export function createRenderAllOnUI(
   mainToBackgroundRpc: Rpc,
   shadowRoot: ShadowRoot,
+  loadTemplate: TemplateLoader,
   markTimingInternal: (
     timingKey: string,
     pipelineId?: string,
     timeStamp?: number,
   ) => void,
   flushMarkTimingInternal: () => void,
-  callbacks: {
-    onError?: (err: Error, release: string, fileName: string) => void;
-  },
+  callbacks: StartUIThreadCallbacks,
   ssrDumpInfo: SSRDumpInfo | undefined,
 ) {
   if (!globalThis.module) {
@@ -111,10 +127,7 @@ export function createRenderAllOnUI(
   const i18nResources = new I18nResources();
   const { exposureChangedCallback } = createExposureMonitor(shadowRoot);
   const mtsRealm = createIFrameRealm(shadowRoot);
-  const mtsGlobalThis = mtsRealm.globalWindow as
-    & typeof globalThis
-    & MainThreadGlobalThis;
-  const { startMainThread } = prepareMainThreadAPIs(
+  const { startMainThread, handleUpdatedData } = prepareMainThreadAPIs(
     mainToBackgroundRpc,
     shadowRoot,
     document,
@@ -130,10 +143,8 @@ export function createRenderAllOnUI(
       i18nResources.setData(initI18nResources);
       return i18nResources;
     },
+    loadTemplate,
   );
-  const pendingUpdateCalls: Parameters<
-    RpcCallType<typeof updateDataEndpoint>
-  >[] = [];
 
   const start = async (configs: StartMainThreadContextConfig) => {
     if (ssrDumpInfo) {
@@ -179,22 +190,15 @@ export function createRenderAllOnUI(
     } else {
       await startMainThread(configs);
     }
-
-    // Process any pending update calls that were queued while mtsGlobalThis was undefined
-    for (const args of pendingUpdateCalls) {
-      mtsGlobalThis.updatePage?.(...args);
-    }
-    pendingUpdateCalls.length = 0;
   };
   const updateDataMainThread: RpcCallType<typeof updateDataEndpoint> = async (
-    ...args
+    newData,
+    options,
   ) => {
-    if (mtsGlobalThis) {
-      mtsGlobalThis.updatePage?.(...args);
-    } else {
-      // Cache the call if mtsGlobalThis is not yet initialized
-      pendingUpdateCalls.push(args);
-    }
+    return handleUpdatedData(
+      newData,
+      options,
+    );
   };
   const updateI18nResourcesMainThread = (data: Cloneable) => {
     i18nResources.setData(data as InitI18nResources);

@@ -92,7 +92,7 @@ describe('Plugins - CSS', () => {
     expect(config).not.toHaveLoader('builtin:lightningcss-loader')
   })
 
-  test('Not removing lightningcss-loader when using web', async () => {
+  test('Remove lightningcss-loader when using web', async () => {
     const rsbuild = await createRspeedy({
       rspeedyConfig: {
         environments: {
@@ -105,21 +105,7 @@ describe('Plugins - CSS', () => {
     const [config] = await rsbuild.initConfigs()
 
     // Has `lightningcss-loader`
-    expect(config).toHaveLoader('builtin:lightningcss-loader')
-
-    const lightningcssLoaderOptionsLoaderOptions = getLoaderOptions<
-      Rspack.LightningcssLoaderOptions
-    >(
-      config!,
-      'builtin:lightningcss-loader',
-    )
-
-    expect(lightningcssLoaderOptionsLoaderOptions).toHaveProperty('targets', [
-      'chrome >= 87',
-      'edge >= 88',
-      'firefox >= 78',
-      'safari >= 14',
-    ])
+    expect(config).not.toHaveLoader('builtin:lightningcss-loader')
   })
 
   test('Not removing lightningcss-loader when using web and lynx', async () => {
@@ -147,23 +133,8 @@ describe('Plugins - CSS', () => {
 
     // Lynx not has `lightningcss-loader`
     expect(lynxConfig).not.toHaveLoader('builtin:lightningcss-loader')
-    // Web has `lightningcss-loader`
-    expect(webConfig).toHaveLoader('builtin:lightningcss-loader')
-
-    const lightningcssLoaderOptionsLoaderOptions = getLoaderOptions<
-      Rspack.LightningcssLoaderOptions
-    >(
-      webConfig!,
-      'builtin:lightningcss-loader',
-    )
-
-    expect(lightningcssLoaderOptionsLoaderOptions).toHaveProperty('targets', [
-      'iOS >= 9',
-      'Android >= 4.4',
-      'last 2 versions',
-      '> 0.2%',
-      'not dead',
-    ])
+    // Web not has `lightningcss-loader`
+    expect(webConfig).not.toHaveLoader('builtin:lightningcss-loader')
   })
 
   describe('Layers', () => {

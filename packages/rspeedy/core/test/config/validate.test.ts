@@ -12,6 +12,7 @@ import type {
   Minify,
   Output,
   Performance,
+  Resolve,
   Server,
   Source,
   Tools,
@@ -47,9 +48,7 @@ describe('Config Validation', () => {
     test('valid type', () => {
       const cases = [
         {},
-        () => ({}),
         new Promise(p => p({})),
-        () => new Promise(p => p({})),
       ]
       cases.forEach(config => {
         expect(validate(config)).toStrictEqual(config)
@@ -1783,6 +1782,23 @@ describe('Config Validation', () => {
       cases.forEach(source => {
         expect(validate({ source })).toStrictEqual({ source })
       })
+
+      const resolveCases: Resolve[] = [
+        {},
+        { alias: {} },
+        { alias: { foo: 'bar', bar$: 'baz', baz: false } },
+        { alias: { foo: 'bar', bar$: ['baz'] } },
+        { dedupe: [] },
+        { dedupe: ['foo'] },
+        { dedupe: ['foo', 'bar', 'baz'] },
+        { aliasStrategy: undefined },
+        { aliasStrategy: 'prefer-tsconfig' },
+        { aliasStrategy: 'prefer-alias' },
+      ]
+
+      resolveCases.forEach(resolve => {
+        expect(validate({ resolve })).toStrictEqual({ resolve })
+      })
     })
 
     test('invalid type', () => {
@@ -1827,11 +1843,13 @@ describe('Config Validation', () => {
       ).toThrowErrorMatchingInlineSnapshot(`
         [Error: Invalid configuration.
 
+        Invalid config on \`$input.resolve.extensions\`.
+          - Expect to be (Array<string> | undefined)
+          - Got: string
+
         Unknown property: \`$input.resolve.aliasFields\` in configuration
 
         Unknown property: \`$input.resolve.conditionNames\` in configuration
-
-        Unknown property: \`$input.resolve.extensions\` in configuration
 
         Unknown property: \`$input.resolve.extensionAlias\` in configuration
         ]
@@ -1898,6 +1916,74 @@ describe('Config Validation', () => {
           - Got: array
         ]
       `)
+
+      expect(() =>
+        validate({
+          resolve: {
+            dedupe: {},
+          },
+        })
+      ).toThrowErrorMatchingInlineSnapshot(`
+        [Error: Invalid configuration.
+
+        Invalid config on \`$input.resolve.dedupe\`.
+          - Expect to be (Array<string> | undefined)
+          - Got: object
+        ]
+      `)
+
+      expect(() =>
+        validate({
+          resolve: {
+            dedupe: [Symbol.for('foo'), 0, null],
+          },
+        })
+      ).toThrowErrorMatchingInlineSnapshot(`
+        [Error: Invalid configuration.
+
+        Invalid config on \`$input.resolve.dedupe[0]\`.
+          - Expect to be string
+          - Got: symbol
+
+        Invalid config on \`$input.resolve.dedupe[1]\`.
+          - Expect to be string
+          - Got: number
+
+        Invalid config on \`$input.resolve.dedupe[2]\`.
+          - Expect to be string
+          - Got: null
+        ]
+      `)
+
+      expect(() =>
+        validate({
+          resolve: {
+            aliasStrategy: 'invalid-strategy',
+          },
+        })
+      ).toThrowErrorMatchingInlineSnapshot(`
+        [Error: Invalid configuration.
+
+        Invalid config on \`$input.resolve.aliasStrategy\`.
+          - Expect to be ("prefer-alias" | "prefer-tsconfig" | undefined)
+          - Got: string
+        ]
+      `)
+
+      expect(() =>
+        validate({
+          resolve: {
+            aliasStrategy: 123,
+          },
+        })
+      ).toThrowErrorMatchingInlineSnapshot(`
+        [Error: Invalid configuration.
+
+        Invalid config on \`$input.resolve.aliasStrategy\`.
+          - Expect to be ("prefer-alias" | "prefer-tsconfig" | undefined)
+          - Got: number
+        ]
+      `)
     })
   })
 
@@ -1914,6 +2000,17 @@ describe('Config Validation', () => {
         { host: '0.0.0.0' },
         { port: 8000 },
         { host: 'example.com', port: 3000 },
+        { cors: true },
+        { cors: false },
+        { cors: { origin: 'https://example.com' } },
+        { cors: { origin: /example/ } },
+        {
+          cors: {
+            origin: (origin, callback) => {
+              callback(null, origin ?? '*')
+            },
+          },
+        },
       ]
 
       cases.forEach(server => {
@@ -1952,12 +2049,42 @@ describe('Config Validation', () => {
           ]
         `)
 
+      expect(() => validate({ server: { cors: null } }))
+        .toThrowErrorMatchingInlineSnapshot(`
+          [Error: Invalid configuration.
+
+          Invalid config on \`$input.server.cors\`.
+            - Expect to be (boolean | e.CorsOptions | undefined)
+            - Got: null
+          ]
+        `)
+
       expect(() => validate({ server: { headers: 123 } }))
         .toThrowErrorMatchingInlineSnapshot(`
           [Error: Invalid configuration.
 
           Invalid config on \`$input.server.headers\`.
             - Expect to be (Record<string, string | string[]> | undefined)
+            - Got: number
+          ]
+        `)
+
+      expect(() => validate({ server: { cors: 123 } }))
+        .toThrowErrorMatchingInlineSnapshot(`
+          [Error: Invalid configuration.
+
+          Invalid config on \`$input.server.cors\`.
+            - Expect to be (boolean | e.CorsOptions | undefined)
+            - Got: number
+          ]
+        `)
+
+      expect(() => validate({ server: { cors: { origin: 123 } } }))
+        .toThrowErrorMatchingInlineSnapshot(`
+          [Error: Invalid configuration.
+
+          Invalid config on \`$input.server.cors.origin\`.
+            - Expect to be (Array<string | boolean | RegExp> | RegExp | boolean | string | undefined)
             - Got: number
           ]
         `)

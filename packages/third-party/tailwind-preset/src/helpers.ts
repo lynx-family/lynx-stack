@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { INTERNAL_FEATURES } from 'tailwindcss/lib/lib/setupContextUtils.js';
 import _createUtilityPlugin from 'tailwindcss/lib/util/createUtilityPlugin.js';
 import {
   formatBoxShadowValue,
@@ -126,3 +127,18 @@ export const transformThemeValue: (key: ThemeKey) => ValueTransformer =
   _transformThemeValue;
 export { parseBoxShadowValue, formatBoxShadowValue };
 export type { ShadowPart };
+
+/* ──────────────── for handling variants that do not respect the project prefix ─────────── */
+/**
+ * @internal Tailwind implementation detail. Use via TW_NO_PREFIX to avoid prefixing of class candidates.
+ */
+
+interface InternalFeatures {
+  [INTERNAL_FEATURES]: {
+    respectPrefix: false;
+  };
+}
+
+export const TW_NO_PREFIX: InternalFeatures = {
+  [INTERNAL_FEATURES]: { respectPrefix: false },
+};

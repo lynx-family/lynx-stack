@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/rspeedy",
-  "version": "0.11.0",
+  "version": "0.11.7",
   "description": "A webpack/rspack-based frontend toolchain for Lynx",
   "keywords": [
     "webpack",
@@ -56,6 +56,7 @@
   "dependencies": {
     "@lynx-js/cache-events-webpack-plugin": "workspace:^",
     "@lynx-js/chunk-loading-webpack-plugin": "workspace:^",
+    "@lynx-js/web-rsbuild-server-middleware": "workspace:*",
     "@lynx-js/webpack-dev-transport": "workspace:^",
     "@lynx-js/websocket": "workspace:^",
     "@rsbuild/core": "catalog:rsbuild",
@@ -77,11 +78,11 @@
     "rsbuild-plugin-publint": "0.3.3",
     "tiny-invariant": "^1.3.3",
     "ts-blank-space": "^0.6.2",
-    "type-fest": "^4.41.0",
-    "typia": "9.7.1",
-    "typia-rspack-plugin": "2.2.1",
+    "type-fest": "^5.0.1",
+    "typia": "9.7.2",
+    "typia-rspack-plugin": "2.2.2",
     "vitest": "^3.2.4",
-    "webpack": "^5.101.3"
+    "webpack": "^5.102.0"
   },
   "peerDependencies": {
     "typescript": "5.1.6 - 5.9.x"

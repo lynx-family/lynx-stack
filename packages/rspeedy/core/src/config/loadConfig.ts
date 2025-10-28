@@ -11,6 +11,7 @@ import color from 'picocolors'
 import { register } from '#register'
 
 import { debug } from '../debug.js'
+import type { ConfigExport } from './defineConfig.js'
 
 import type { Config } from './index.js'
 
@@ -136,20 +137,22 @@ export async function loadConfig(
     const [exports, { validate }] = await Promise.all([
       import(
         /* webpackIgnore: true */ `${specifier}?t=${Date.now()}`
-      ) as {
-        default: Config
-      } | Config,
+      ) as Promise<{ default: ConfigExport } | ConfigExport>,
       import('./validate.js'),
     ])
 
-    const content = validate(
-      'default' in exports ? exports.default : exports,
-      configPath,
-    )
+    const configExport = 'default' in exports ? exports.default : exports
+
+    const rawContent: Config = typeof configExport === 'function'
+      ? await configExport({
+        command: process.argv[2] ?? 'build',
+        env: process.env['NODE_ENV'] ?? 'production',
+      })
+      : await configExport
 
     return {
       configPath,
-      content: typeof content === 'function' ? await content() : await content,
+      content: validate(rawContent, configPath),
     }
   } finally {
     unregister()

@@ -17,19 +17,21 @@ This preset is not a 1:1 port of Tailwind's core. Instead, it provides a **Lynx-
 
 ```ts
 // tailwind.config.ts
+import type { Config } from 'tailwindcss';
 import preset from '@lynx-js/tailwind-preset';
 
 export default {
   content: ['./src/**/*.{ts,tsx}'],
   presets: [preset],
-};
+} satisfies Config;
 ```
 
 ```ts
 // tailwind.config.ts
+import type { Config } from 'tailwindcss';
 import { createLynxPreset } from '@lynx-js/tailwind-preset';
 
-export default {
+const config: Config = {
   content: ['./src/**/*.{js,ts,jsx,tsx}'],
   presets: [
     createLynxPreset({
@@ -37,6 +39,20 @@ export default {
     }),
   ],
 };
+export default config;
+```
+
+### Plugin Defaults
+
+In this preset, all Lynx plugins (including UI plugins such as `uiVariants`) are **enabled by default** when not explicitly configured.
+You can disable individual plugins by setting them to `false`, or override their options with an object.
+
+```ts
+createLynxPreset({
+  lynxUIPlugins: {
+    uiVariants: false, // disable uiVariants
+  },
+});
 ```
 
 ## Integration Notes
@@ -68,27 +84,33 @@ export default {
 
 Beyond core utility coverage, this preset supports ecosystem-level extensions to improve component styling DX and support common Tailwind ecosystem patterns adapted for Lynx.
 
-### Enabling Lynx UI Plugins
+### Lynx UI Plugins
 
-UI plugins are not enabled by default. You can enable all plugins with:
+UI plugins (such as `uiVariants`) are **enabled by default**, consistent with Tailwind’s behavior.
+This is because Lynx currently lacks pseudo-selectors and data-attribute selectors at the core level.
+UI plugins are therefore recommended to bridge these gaps and provide practical ways to express component states.
+
+Enabling them by default does **not** change core behavior.
+If Lynx later adds native support for attribute selectors, this design choice will remain compatible and won't affect existing usage.
+
+You can still disable or configure them explicitly:
 
 ```ts
+// disable all UI plugins
 createLynxPreset({
-  lynxUIPlugins: true,
+  lynxUIPlugins: false,
 });
 ```
 
-Or enable individual plugins with their default options:
-
 ```ts
+// disable a single plugin
 createLynxPreset({
-  lynxUIPlugins: { uiVariants: true },
+  lynxUIPlugins: { uiVariants: false },
 });
 ```
 
-Or configure each plugin individually — see each plugin's documentation for available options:
-
 ```ts
+// configure a plugin with custom options
 createLynxPreset({
   lynxUIPlugins: {
     uiVariants: {
@@ -97,6 +119,13 @@ createLynxPreset({
       },
     },
   },
+});
+```
+
+```ts
+// keep defaults explicitly (same as `true`)
+createLynxPreset({
+  lynxUIPlugins: {},
 });
 ```
 

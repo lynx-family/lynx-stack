@@ -38,9 +38,10 @@ jobs:
           # We need full history for changeset status check
           fetch-depth: 0
           persist-credentials: false
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
           node-version: "24"
+          package-manager-cache: false
       - name: Install
         run: |
           npm install -g corepack@latest
@@ -82,31 +83,31 @@ jobs:
     uses: ./.github/workflows/workflow-test.yml
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-    name: Playwright (${{ matrix.config.name }})
+    name: Playwright ${{ matrix.thread }}-${{ matrix.render }} (${{ matrix.shard }}/4)
     strategy:
       fail-fast: false
       matrix:
-        config:
-          - name: Default
-            env: []
-          - name: MULTI_THREAD
-            env:
-              - ENABLE_MULTI_THREAD=true
-          - name: FP only
-            env:
-              - ENABLE_SSR=true
-              - TEST_FP_ONLY=true
-          - name: SSR-ALL-ON-UI
-            env:
-              - ENABLE_SSR=true
+        thread: [MULTI_THREAD, ALL_ON_UI]
+        render: [SSR, CSR]
+        shard: [1, 2, 3, 4]
+        exclude:
+          - thread: MULTI_THREAD
+            render: SSR
     with:
       runs-on: lynx-custom-container
       is-web: true
+      web-report-name: "playwright-${{ matrix.thread }}-${{ matrix.render }}-shard${{ matrix.shard }}"
       codecov-flags: "e2e"
       run: |
-        export NODE_OPTIONS="--max-old-space-size=32768" ${{ join(matrix.config.env, ' ') }}
+        if [ "${{ matrix.thread }}" = "MULTI_THREAD" ]; then
+          export ENABLE_MULTI_THREAD=true
+        fi
+        if [ "${{ matrix.render }}" = "SSR" ]; then
+          export ENABLE_SSR=true
+        fi
+        export NODE_OPTIONS="--max-old-space-size=32768"
         export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
-        pnpm --filter @lynx-js/web-tests run test --reporter='github,dot,junit,html'
+        pnpm --filter @lynx-js/web-tests run test --reporter='github,dot,junit,html' --shard=${{ matrix.shard }}/4
         pnpm --filter @lynx-js/web-tests run coverage:ci
   test-api:
     needs: build
@@ -198,7 +199,7 @@ jobs:
     runs-on: lynx-ubuntu-24.04-medium
     steps:
       - uses: taiki-e/checkout-action@b13d20b7cda4e2f325ef19895128f7ff735c0b3d # v1.3.1
-      - uses: crate-ci/typos@65f69f021b736bdbe548ce72200500752d42b40e # v1.35.7
+      - uses: crate-ci/typos@6d35b835f6f431bbe715c4c1ccd2c7d3264e11fb # v1.37.0
         with:
           files: .
   test-vitest:
@@ -237,6 +238,7 @@ jobs:
     uses: ./.github/workflows/workflow-website.yml
   done:
     needs:
+      - benchmark
       - code-style-check
       - eslint
       - playwright-linux

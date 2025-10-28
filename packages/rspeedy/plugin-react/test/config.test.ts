@@ -1,6 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { createRequire } from 'node:module'
 import path from 'node:path'
 
 import type { RsbuildInstance } from '@rsbuild/core'
@@ -261,6 +262,32 @@ describe('Config', () => {
         '/use-sync-external-store/with-selector.js'.replaceAll('/', path.sep),
       ),
     )
+  })
+
+  test('user customized `react$` alias should work', async () => {
+    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
+        resolve: {
+          alias: {
+            react$: 'foo',
+          },
+        },
+        plugins: [
+          pluginReactLynx(),
+          pluginStubRspeedyAPI(),
+        ],
+      },
+    })
+
+    const [config] = await rsbuild.initConfigs()
+
+    if (!config?.resolve?.alias) {
+      expect.fail('should have config.resolve.alias')
+    }
+
+    expect(config.resolve?.alias).toHaveProperty('react$', 'foo')
   })
 
   test('extensionAlias with tsConfig', async () => {
@@ -1830,7 +1857,7 @@ describe('Config', () => {
 
       expect(config?.optimization?.splitChunks).toHaveProperty(
         'chunks',
-        'all',
+        expect.any(Function),
       )
     })
 
@@ -1934,14 +1961,11 @@ describe('Config', () => {
         "enableCSSInheritance": false,
         "enableCSSInvalidation": true,
         "enableCSSSelector": true,
-        "enableICU": false,
         "enableNewGesture": false,
-        "enableParallelElement": true,
         "enableRemoveCSSScope": true,
         "experimental_isLazyBundle": false,
         "filename": "main.lynx.bundle",
         "intermediate": ".rspeedy/main",
-        "pipelineSchedulerConfig": 65536,
         "removeDescendantSelectorScope": true,
         "targetSdkVersion": "3.2",
       }
@@ -2231,6 +2255,101 @@ describe('Config', () => {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(ReactLynxWebpackPlugin?.options.profile).toBe(false)
     })
+  })
+
+  test('worklet runtime (mode: production)', async () => {
+    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+    const rspeedy = await createRspeedy({
+      rspeedyConfig: {
+        mode: 'production',
+        plugins: [
+          pluginReactLynx(),
+          pluginStubRspeedyAPI(),
+        ],
+      },
+    })
+
+    const [config] = await rspeedy.initConfigs()
+
+    const reactWebpackPluginInstance = config?.plugins?.find((
+      p,
+    ): p is ReactWebpackPlugin =>
+      !!(p && p.constructor.name === 'ReactWebpackPlugin')
+    )
+
+    if (!reactWebpackPluginInstance) {
+      expect.fail('Should have ReactWebpackPlugin instance')
+    }
+
+    // @ts-expect-error private property
+    expect(reactWebpackPluginInstance.options).toHaveProperty(
+      'workletRuntimePath',
+      require.resolve('@lynx-js/react/worklet-runtime'),
+    )
+  })
+
+  test('worklet runtime (mode: development)', async () => {
+    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+    const rspeedy = await createRspeedy({
+      rspeedyConfig: {
+        mode: 'development',
+        plugins: [
+          pluginReactLynx(),
+          pluginStubRspeedyAPI(),
+        ],
+      },
+    })
+
+    const [config] = await rspeedy.initConfigs()
+
+    const reactWebpackPluginInstance = config?.plugins?.find((
+      p,
+    ): p is ReactWebpackPlugin =>
+      !!(p && p.constructor.name === 'ReactWebpackPlugin')
+    )
+
+    if (!reactWebpackPluginInstance) {
+      expect.fail('Should have ReactWebpackPlugin instance')
+    }
+
+    // @ts-expect-error private property
+    expect(reactWebpackPluginInstance.options).toHaveProperty(
+      'workletRuntimePath',
+      require.resolve('@lynx-js/react/worklet-dev-runtime'),
+    )
+  })
+
+  test('worklet runtime (mode: none)', async () => {
+    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+    const rspeedy = await createRspeedy({
+      rspeedyConfig: {
+        mode: 'none',
+        plugins: [
+          pluginReactLynx(),
+          pluginStubRspeedyAPI(),
+        ],
+      },
+    })
+
+    const [config] = await rspeedy.initConfigs()
+
+    const reactWebpackPluginInstance = config?.plugins?.find((
+      p,
+    ): p is ReactWebpackPlugin =>
+      !!(p && p.constructor.name === 'ReactWebpackPlugin')
+    )
+
+    if (!reactWebpackPluginInstance) {
+      expect.fail('Should have ReactWebpackPlugin instance')
+    }
+
+    const require = createRequire(import.meta.url)
+
+    // @ts-expect-error private property
+    expect(reactWebpackPluginInstance.options).toHaveProperty(
+      'workletRuntimePath',
+      require.resolve('@lynx-js/react/worklet-runtime'),
+    )
   })
 })
 

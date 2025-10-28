@@ -119,9 +119,7 @@ export interface LynxTemplatePluginOptions {
     enableCSSInheritance: boolean;
     enableCSSInvalidation: boolean;
     enableCSSSelector: boolean;
-    enableICU: boolean;
     enableNewGesture: boolean;
-    enableParallelElement?: boolean;
     enableRemoveCSSScope: boolean;
     excludeChunks?: string[];
     // @alpha
@@ -129,7 +127,6 @@ export interface LynxTemplatePluginOptions {
     filename?: string | ((entryName: string) => string);
     intermediate?: string;
     lazyBundleFilename?: string;
-    pipelineSchedulerConfig: number;
     removeDescendantSelectorScope: boolean;
     targetSdkVersion: string;
 }

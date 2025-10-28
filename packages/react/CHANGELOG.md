@@ -1,5 +1,103 @@
 # @lynx-js/react
 
+## 0.114.3
+
+### Patch Changes
+
+- Initialize `ctxNotFoundEventListener` before each test in testing library ([#1888](https://github.com/lynx-family/lynx-stack/pull/1888))
+
+- fix: main thread functions created during the initial render cannot correctly modify `MainThreadRef`s after hydration ([#1884](https://github.com/lynx-family/lynx-stack/pull/1884))
+
+## 0.114.2
+
+### Patch Changes
+
+- fix: main thread functions created during the initial render cannot correctly call `runOnBackground()` after hydration ([#1878](https://github.com/lynx-family/lynx-stack/pull/1878))
+
+## 0.114.1
+
+### Patch Changes
+
+- Add `event.stopPropagation` and `event.stopImmediatePropagation` in MTS, to help with event propagation control ([#1835](https://github.com/lynx-family/lynx-stack/pull/1835))
+
+  ```tsx
+  function App() {
+    function handleInnerTap(event: MainThread.TouchEvent) {
+      'main thread';
+      event.stopPropagation();
+      // Or stop immediate propagation with
+      // event.stopImmediatePropagation();
+    }
+
+    // OuterTap will not be triggered
+    return (
+      <view main-thread:bindtap={handleOuterTap}>
+        <view main-thread:bindtap={handleInnerTap}>
+          <text>Hello, world</text>
+        </view>
+      </view>
+    );
+  }
+  ```
+
+  Note, if this feature is used in [Lazy Loading Standalone Project](https://lynxjs.org/react/code-splitting.html#lazy-loading-standalone-project), both the Producer and the Consumer should update to latest version of `@lynx-js/react` to make sure the feature is available.
+
+- Fix the "ReferenceError: Node is not defined" error. ([#1850](https://github.com/lynx-family/lynx-stack/pull/1850))
+
+  This error would happen when upgrading to `@testing-library/jest-dom` [v6.9.0](https://github.com/testing-library/jest-dom/releases/tag/v6.9.0).
+
+- fix: optimize main thread event error message ([#1838](https://github.com/lynx-family/lynx-stack/pull/1838))
+
+## 0.114.0
+
+### Minor Changes
+
+- Partially fix the "cannot read property 'update' of undefined" error. ([#1771](https://github.com/lynx-family/lynx-stack/pull/1771))
+
+  This error happens when rendering a JSX expression in a [background-only](https://lynxjs.org/react/thinking-in-reactlynx.html) context.
+
+  See [lynx-family/lynx-stack#894](https://github.com/lynx-family/lynx-stack/issues/894) for more details.
+
+### Patch Changes
+
+- Reduce extra snapshot when children are pure text ([#1562](https://github.com/lynx-family/lynx-stack/pull/1562))
+
+- feat: Support `SelectorQuery` `animation` APIs ([#1768](https://github.com/lynx-family/lynx-stack/pull/1768))
+
+- Fix spread props inside list-item caused redundant snapshot patch ([#1760](https://github.com/lynx-family/lynx-stack/pull/1760))
+
+- fix: `ref is not initialized` error on template reload ([#1757](https://github.com/lynx-family/lynx-stack/pull/1757))
+
+## 0.113.0
+
+### Minor Changes
+
+- fix: Delay execution of `runOnMainThread()` during initial render ([#1667](https://github.com/lynx-family/lynx-stack/pull/1667))
+
+  When called during the initial render, `runOnMainThread()` would execute before the `main-thread:ref` was hydrated, causing it to be incorrectly set to null.
+
+  This change delays the function's execution to ensure the ref is available and correctly assigned.
+
+### Patch Changes
+
+- Fix "TypeError: cannot read property '0' of undefined" in deferred list-item scenarios. ([#1692](https://github.com/lynx-family/lynx-stack/pull/1692))
+
+  Deferred `componentAtIndex` causes nodes that quickly appear/disappear to be enqueued without `__elements`. Update `signMap` before `__FlushElementTree` to resolve the issue.
+
+- Keep the same `<page/>` element when calling `rerender` in testing library. ([#1656](https://github.com/lynx-family/lynx-stack/pull/1656))
+
+- Bump `swc_core` to `39.0.3`. ([#1721](https://github.com/lynx-family/lynx-stack/pull/1721))
+
+## 0.112.6
+
+### Patch Changes
+
+- Support nested list. ([#1581](https://github.com/lynx-family/lynx-stack/pull/1581))
+
+- Should only recycle off-screen `list-item` in recursive hydration. ([#1641](https://github.com/lynx-family/lynx-stack/pull/1641))
+
+- fix `fireEvent` type error in testing library ([#1596](https://github.com/lynx-family/lynx-stack/pull/1596))
+
 ## 0.112.5
 
 ### Patch Changes

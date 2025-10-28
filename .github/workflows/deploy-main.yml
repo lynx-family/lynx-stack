@@ -30,17 +30,13 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - uses: actions-rust-lang/setup-rust-toolchain@ac90e63697ac2784f4ecfe2964e1a285c304003a # v1
+      - uses: actions-rust-lang/setup-rust-toolchain@02be93da58aa71fb456aa9c43b301149248829d8 # v1
         with:
-          target: wasm32-unknown-unknown
           cache: false
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
           node-version: "24"
-      - name: Install wasm-bindgen
-        uses: taiki-e/install-action@14083e64ac8cf1f5e54356df00b9779b23e192a1 # v2
-        with:
-          tool: wasm-bindgen
+          package-manager-cache: false
       - name: Install
         run: |
           npm install -g corepack@latest
@@ -63,7 +59,7 @@ jobs:
   build-all:
     concurrency:
       group: ${{ github.workflow }}-build-${{ github.ref }}
-      cancel-in-progress: true
+      cancel-in-progress: false
     uses: ./.github/workflows/workflow-build.yml
     if: github.repository == 'lynx-family/lynx-stack'
     permissions: {}
@@ -105,7 +101,7 @@ jobs:
     concurrency:
       group: ${{ github.workflow }}-publish-${{ github.ref }}
       cancel-in-progress: false
-    environment: main branch
+    environment: npm
     permissions:
       contents: write
       pull-requests: write
@@ -118,10 +114,11 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
           node-version: "24"
           registry-url: "https://registry.npmjs.org"
+          package-manager-cache: false
       - name: Install
         run: |
           npm install -g corepack@latest
@@ -135,7 +132,7 @@ jobs:
           path: .turbo
       - name: build
         run: |
-          corepack pnpm turbo --filter !@lynx-js/web-tests build --summarize
+          corepack pnpm turbo --filter !@lynx-js/web-tests build --filter !benchx_cli --filter "!@lynx-js/benchmark-*" --summarize
       - name: Get current date
         id: date
         run: echo "::set-output name=date::$(date -u +'%Y-%m-%d %H:%M:%S')"
@@ -143,7 +140,6 @@ jobs:
         uses: changesets/action@e0145edc7d9d8679003495b11f87bd8ef63c0cba # v1.5.3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         with:
           publish: pnpm changeset publish
           title: "chore: Release ${{ steps.date.outputs.date }}"
@@ -153,7 +149,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     if: github.repository == 'lynx-family/lynx-stack'
-    environment: main branch
+    environment: npm
     permissions:
       contents: read
       pull-requests: read
@@ -166,10 +162,11 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
           node-version: "24"
           registry-url: "https://registry.npmjs.org"
+          package-manager-cache: false
       - name: Install
         run: |
           npm install -g corepack@latest
@@ -183,7 +180,7 @@ jobs:
           path: .turbo
       - name: build
         run: |
-          corepack pnpm turbo --filter !@lynx-js/web-tests build --summarize
+          corepack pnpm turbo --filter !@lynx-js/web-tests --filter !benchx_cli --filter "!@lynx-js/benchmark-*" build --summarize
       - name: version canary packages
         env:
           # changesets-changelog-github requires a GITHUB_TOKEN
@@ -194,8 +191,6 @@ jobs:
       - name: publish canary packages
         run: |
           pnpm --recursive publish --no-git-checks --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
   website-build:
     needs: build-all
     if: github.repository == 'lynx-family/lynx-stack'

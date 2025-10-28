@@ -2,8 +2,9 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { WorkletEvents } from './bindings/events.js';
-import type { ReleaseWorkletRefData, RunWorkletCtxData, RunWorkletCtxRetData } from './bindings/events.js';
+import type { ReleaseWorkletRefData, RunWorkletCtxData } from './bindings/events.js';
 import type { ClosureValueType } from './bindings/types.js';
+import { runRunOnMainThreadTask } from './runOnMainThread.js';
 import type { Event } from './types/runtimeProxy.js';
 import { removeValueFromWorkletRefMap } from './workletRef.js';
 
@@ -13,14 +14,7 @@ function initEventListeners(): void {
     WorkletEvents.runWorkletCtx,
     (event: Event) => {
       const data = JSON.parse(event.data as string) as RunWorkletCtxData;
-      const returnValue = runWorklet(data.worklet, data.params as ClosureValueType[]);
-      jsContext.dispatchEvent({
-        type: WorkletEvents.FunctionCallRet,
-        data: JSON.stringify({
-          resolveId: data.resolveId,
-          returnValue,
-        } as RunWorkletCtxRetData),
-      });
+      runRunOnMainThreadTask(data.worklet, data.params as ClosureValueType[], data.resolveId);
     },
   );
   jsContext.addEventListener(

@@ -29,7 +29,9 @@ describe('uiVariants plugin', () => {
     const { api } = runPlugin(plugin);
     const variants = extractVariants(vi.mocked(api.matchVariant));
 
-    expect(Object.keys(variants)).toEqual(['ui']);
+    expect(Object.keys(variants)).toEqual(
+      expect.arrayContaining(['ui']),
+    );
 
     const ui = variants['ui'];
     expect(ui?.('checked', {})).toBe('&.ui-checked');
@@ -38,12 +40,43 @@ describe('uiVariants plugin', () => {
     expect(ui?.('readonly', {})).toBe('&.ui-readonly');
   });
 
+  it('registers group, peer, and parent variants', () => {
+    const plugin = uiVariants({ prefixes: ['ui'] });
+    const { api } = runPlugin(plugin);
+    const variants = extractVariants(vi.mocked(api.matchVariant));
+
+    expect(Object.keys(variants)).toEqual(
+      expect.arrayContaining(['ui', 'group-ui', 'peer-ui', 'parent-ui']),
+    );
+
+    const group = variants['group-ui'];
+    const peer = variants['peer-ui'];
+    const parent = variants['parent-ui'];
+
+    expect(group?.('open')).toBe(':merge(.group).ui-open &');
+    expect(peer?.('open')).toBe(':merge(.peer).ui-open ~ &');
+    expect(parent?.('open')).toBe('.ui-open > &');
+  });
+
   it('registers variants from array of known prefixes', () => {
     const plugin = uiVariants({ prefixes: ['ui', 'ui-side'] });
     const { api } = runPlugin(plugin);
     const variants = extractVariants(vi.mocked(api.matchVariant));
 
-    expect(Object.keys(variants)).toEqual(['ui', 'ui-side']);
+    expect(Object.keys(variants)).toEqual(
+      expect.arrayContaining(
+        [
+          'ui',
+          'group-ui',
+          'peer-ui',
+          'parent-ui',
+          'ui-side',
+          'group-ui-side',
+          'peer-ui-side',
+          'parent-ui-side',
+        ],
+      ),
+    );
 
     expect(variants['ui']?.('open', {})).toBe('&.ui-open');
     expect(variants['ui-side']?.('left', {})).toBe('&.ui-side-left');
@@ -54,11 +87,30 @@ describe('uiVariants plugin', () => {
     const { api } = runPlugin(plugin);
     const variants = extractVariants(vi.mocked(api.matchVariant));
 
-    expect(Object.keys(variants)).toEqual(['unknown']);
+    expect(Object.keys(variants)).toEqual(
+      expect.arrayContaining(
+        [
+          'unknown',
+          'group-unknown',
+          'peer-unknown',
+          'parent-unknown',
+        ],
+      ),
+    );
 
-    const unknown = variants['unknown'];
-    expect(unknown?.('whatever')).toBe('');
-    expect(unknown?.('open')).toBe('');
+    const self = variants['unknown'];
+    const group = variants['group-unknown'];
+    const peer = variants['peer-unknown'];
+    const parent = variants['parent-unknown'];
+
+    expect(self?.('whatever')).toBe('');
+    expect(self?.('open')).toBe('');
+    expect(group?.('whatever')).toBe('');
+    expect(group?.('checked')).toBe('');
+    expect(peer?.('whatever')).toBe('');
+    expect(peer?.('disabled')).toBe('');
+    expect(parent?.('whatever')).toBe('');
+    expect(parent?.('active')).toBe('');
   });
 
   it('allows function-based prefixes config with default inheritance', () => {
@@ -72,7 +124,18 @@ describe('uiVariants plugin', () => {
     const { api } = runPlugin(plugin);
     const variants = extractVariants(vi.mocked(api.matchVariant));
 
-    expect(Object.keys(variants)).toEqual(['custom', 'custom-side']);
+    expect(Object.keys(variants)).toEqual(
+      expect.arrayContaining([
+        'custom',
+        'group-custom',
+        'peer-custom',
+        'parent-custom',
+        'custom-side',
+        'group-custom-side',
+        'peer-custom-side',
+        'parent-custom-side',
+      ]),
+    );
 
     expect(variants['custom']?.('open', {})).toBe('&.custom-open');
     expect(variants['custom']?.('custom-state', {})).toBe(
@@ -92,14 +155,51 @@ describe('uiVariants plugin', () => {
     expect(ui?.({ foo: 'bar' }, {})).toBe('');
   });
 
-  it('supports modifier syntax', () => {
-    const { api } = runPlugin(uiVariants);
+  // `modifier` is only meaningful for group-* and peer-* variants
+  // self and parent do not support it
+  it('supports modifier syntax in group- and peer- variants only', () => {
+    const { api } = runPlugin(uiVariants({ prefixes: ['ui'] }));
     const variants = extractVariants(vi.mocked(api.matchVariant));
 
-    const ui = variants['ui'];
-    expect(ui?.('selected', { modifier: 'some-id' })).toBe(
-      '&.ui-selected\\/some-id',
+    const group = variants['group-ui'];
+    const peer = variants['peer-ui'];
+    const self = variants['ui'];
+    const parent = variants['parent-ui'];
+
+    expect(group?.('selected', { modifier: 'menu' })).toBe(
+      ':merge(.group\\/menu).ui-selected &',
     );
+    expect(peer?.('selected', { modifier: 'tab' })).toBe(
+      ':merge(.peer\\/tab).ui-selected ~ &',
+    );
+
+    // Self & Parent variant should ignore modifier — no escaped suffix
+    expect(self?.('selected', { modifier: 'should-not-affect' })).toBe(
+      '&.ui-selected',
+    );
+
+    expect(parent?.('selected', { modifier: 'should-not-affect' })).toBe(
+      '.ui-selected > &',
+    );
+  });
+
+  it('respects Tailwind prefix in group and peer variants, but not in ui variants themselves', () => {
+    const plugin = uiVariants({ prefixes: ['ui'] });
+    const { api } = runPlugin(plugin, { config: { prefix: 'tw-' } });
+
+    const variants = extractVariants(vi.mocked(api.matchVariant));
+    const self = variants['ui'];
+    const group = variants['group-ui'];
+    const peer = variants['peer-ui'];
+    const parent = variants['parent-ui'];
+
+    // Self
+    expect(self?.('open')).toBe('&.ui-open');
+    // Group/Peer
+    expect(group?.('open')).toBe(':merge(.tw-group).ui-open &');
+    expect(peer?.('open')).toBe(':merge(.tw-peer).ui-open ~ &');
+    // Parent
+    expect(parent?.('open')).toBe('.ui-open > &');
   });
 
   it('registers variants from object prefixes with array/string map', () => {
@@ -113,7 +213,20 @@ describe('uiVariants plugin', () => {
     const { api } = runPlugin(plugin);
     const variants = extractVariants(vi.mocked(api.matchVariant));
 
-    expect(Object.keys(variants)).toEqual(['x', 'y']);
+    expect(Object.keys(variants)).toEqual(
+      expect.arrayContaining(
+        [
+          'x',
+          'group-x',
+          'peer-x',
+          'parent-x',
+          'y',
+          'group-y',
+          'peer-y',
+          'parent-y',
+        ].sort(),
+      ),
+    );
 
     expect(variants['x']?.('one', {})).toBe('&.x-one');
     expect(variants['x']?.('two', {})).toBe('&.x-two');
@@ -147,12 +260,16 @@ describe('uiVariants plugin', () => {
     const { api } = runPlugin(plugin);
     const variants = extractVariants(vi.mocked(api.matchVariant));
 
-    const test = variants['test'];
-    expect(test?.('a', {})).toBe('&.test-valid');
-    expect(test?.('b', {})).toBe('');
-    expect(test?.('c', {})).toBe('');
-    expect(test?.('d', {})).toBe('');
-    expect(test?.('e', {})).toBe('');
+    const all = ['test', 'group-test', 'peer-test', 'parent-test'];
+
+    for (const prefix of all) {
+      const fn = variants[prefix];
+      expect(fn?.('a', {})).toContain('valid');
+      expect(fn?.('b', {})).toBe('');
+      expect(fn?.('c', {})).toBe('');
+      expect(fn?.('d', {})).toBe('');
+      expect(fn?.('e', {})).toBe('');
+    }
   });
 
   it('returns empty string when mapped value is undefined', () => {

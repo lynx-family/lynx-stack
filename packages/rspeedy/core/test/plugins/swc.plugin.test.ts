@@ -82,7 +82,7 @@ describe('Plugins - SWC', () => {
           },
           "rspackExperiments": {
             "collectTypeScriptInfo": {
-              "exportedEnum": true,
+              "exportedEnum": false,
               "typeExports": true,
             },
           },
@@ -140,7 +140,7 @@ describe('Plugins - SWC', () => {
           "minify": true,
           "rspackExperiments": {
             "collectTypeScriptInfo": {
-              "exportedEnum": true,
+              "exportedEnum": false,
               "typeExports": true,
             },
           },

@@ -5,7 +5,7 @@ import { pluginPublint } from 'rsbuild-plugin-publint';
 
 const config: RslibConfig = defineConfig({
   lib: [
-    { format: 'esm', syntax: ['esnext'], dts: true },
+    { format: 'esm', syntax: ['esnext'], dts: { tsgo: true } },
   ],
   output: {
     filename: {

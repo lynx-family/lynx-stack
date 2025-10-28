@@ -7,19 +7,19 @@ import type { Chunk, Compilation, Module } from 'webpack';
 
 import { RuntimeGlobals as LynxRuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
-import rspack from '@rspack/core';
-
-const RuntimeGlobals = Object.assign(
-  {},
-  rspack.RuntimeGlobals,
-  LynxRuntimeGlobals,
-);
-
-const { Template } = rspack;
-
 export const MODULE_TYPE = 'css/mini-extract';
 
-export function generateFromTemplate(runtime: () => void): string {
+export function generateFromTemplate(
+  webpack: typeof import('webpack'),
+  runtime: () => void,
+): string {
+  const { Template, RuntimeGlobals: WebpackRuntimeGlobals } = webpack;
+
+  const RuntimeGlobals = Object.assign(
+    {},
+    WebpackRuntimeGlobals,
+    LynxRuntimeGlobals,
+  );
   return Template.getFunctionContent(runtime).replace(
     /\$RuntimeGlobals_(\w+)\$/g,
     (_, name: keyof typeof RuntimeGlobals) => RuntimeGlobals[name],

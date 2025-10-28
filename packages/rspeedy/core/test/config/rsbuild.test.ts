@@ -1,6 +1,8 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import type { IncomingMessage } from 'node:http'
+
 import type { RsbuildPlugin } from '@rsbuild/core'
 import { describe, expect, test } from 'vitest'
 
@@ -14,7 +16,9 @@ describe('Config - toRsBuildConfig', () => {
       })
       expect(rsbuildConfig.dev).toMatchInlineSnapshot(`
         {
+          "hmr": true,
           "lazyCompilation": false,
+          "liveReload": true,
           "progressBar": true,
           "watchFiles": undefined,
           "writeToDisk": true,
@@ -579,6 +583,100 @@ describe('Config - toRsBuildConfig', () => {
       expect(rsbuildConfig.resolve?.alias).not.toStrictEqual({
         foo: 'baz',
       })
+    })
+
+    test('transform resolve.dedupe', () => {
+      const rsbuildConfig = toRsbuildConfig({
+        resolve: {
+          dedupe: ['foo', 'bar', 'baz'],
+        },
+      })
+      expect(rsbuildConfig.resolve?.dedupe).toStrictEqual(['foo', 'bar', 'baz'])
+    })
+
+    test('transform resolve.aliasStrategy with prefer-tsconfig', () => {
+      const rsbuildConfig = toRsbuildConfig({
+        resolve: {
+          aliasStrategy: 'prefer-tsconfig',
+        },
+      })
+      expect(rsbuildConfig.resolve?.aliasStrategy).toBe('prefer-tsconfig')
+    })
+
+    test('transform resolve.aliasStrategy with prefer-alias', () => {
+      const rsbuildConfig = toRsbuildConfig({
+        resolve: {
+          aliasStrategy: 'prefer-alias',
+        },
+      })
+      expect(rsbuildConfig.resolve?.aliasStrategy).toBe('prefer-alias')
+    })
+
+    test('transform resolve.aliasStrategy with undefined', () => {
+      const rsbuildConfig = toRsbuildConfig({
+        resolve: {
+          aliasStrategy: undefined,
+        },
+      })
+      expect(rsbuildConfig.resolve?.aliasStrategy).toBeUndefined()
+    })
+  })
+
+  describe('Server', () => {
+    test('transform server.compress: undefined (no server)', () => {
+      const rsbuildConfig = toRsbuildConfig({})
+      expect(rsbuildConfig.server?.compress).toBeUndefined()
+    })
+
+    test('transform server.compress: undefined (empty server)', () => {
+      const rsbuildConfig = toRsbuildConfig({ server: {} })
+      expect(rsbuildConfig.server?.compress).toBeUndefined()
+    })
+
+    test('transform server.compress: false', () => {
+      const rsbuildConfig = toRsbuildConfig({
+        server: { compress: false },
+      })
+      expect(rsbuildConfig.server?.compress).toBe(false)
+    })
+
+    test('transform server.compress: true', () => {
+      const rsbuildConfig = toRsbuildConfig({
+        server: { compress: true },
+      })
+      expect(rsbuildConfig.server?.compress).toBe(true)
+    })
+
+    test('transform server.compress: { level } object format', () => {
+      const rsbuildConfig = toRsbuildConfig({
+        server: { compress: { level: 6 } },
+      })
+      expect(rsbuildConfig.server?.compress).toMatchInlineSnapshot(`
+        {
+          "level": 6,
+        }
+      `)
+    })
+
+    test('transform server.compress: { filter } object format', () => {
+      const filter = (req: IncomingMessage) =>
+        !(req.url ?? '').startsWith('/nozip')
+      const rsbuildConfig = toRsbuildConfig({
+        server: { compress: { filter } },
+      })
+      expect(
+        rsbuildConfig.server
+          && typeof rsbuildConfig.server.compress === 'object',
+      ).toBe(true)
+      const compress = rsbuildConfig.server!.compress as {
+        filter: typeof filter
+      }
+      expect(typeof compress.filter).toBe('function')
+      const expectFunction = compress.filter
+      expect(expectFunction({ url: '/nozip/a.js' } as IncomingMessage)).toBe(
+        false,
+      )
+      expect(expectFunction({ url: '/ok/b.js' } as IncomingMessage)).toBe(true)
     })
   })
 

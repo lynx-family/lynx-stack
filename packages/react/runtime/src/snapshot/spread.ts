@@ -77,14 +77,14 @@ function updateSpread(
     }
   }
 
-  if (!snapshot.__elements) {
-    return;
-  }
-
   if ('__spread' in newValue) {
     // first screen
     newValue = transformSpread(snapshot, index, newValue);
     snapshot.__values![index] = newValue;
+  }
+
+  if (!snapshot.__elements) {
+    return;
   }
 
   const dataset: Record<string, unknown> = {};

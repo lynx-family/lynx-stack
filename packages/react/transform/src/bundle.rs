@@ -158,6 +158,7 @@ pub fn transform_bundle_result_inner(
         source_root: "".into(), // TODO: add root
         source_file_name: options.source_file_name.as_deref(),
         source_map_url: None,
+        source_map_ignore_list: None,
         output_path: None,
         inline_sources_content: true,
         source_map: match options.sourcemap {

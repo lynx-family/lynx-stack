@@ -26,13 +26,13 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
           node-version: "24"
-      - name: Install wasm-bindgen
-        uses: taiki-e/install-action@14083e64ac8cf1f5e54356df00b9779b23e192a1 # v2
+          package-manager-cache: false
+      - uses: actions-rust-lang/setup-rust-toolchain@02be93da58aa71fb456aa9c43b301149248829d8 # v1
         with:
-          tool: wasm-bindgen
+          cache-key: test-ubuntu-copilot-setup-steps
       - name: Install
         run: |
           npm install -g corepack@latest
@@ -41,22 +41,9 @@ jobs:
       - name: Build
         id: build
         run: |
-          pnpm turbo build --summarize
+          pnpm turbo build --filter !benchx_cli --filter "!@lynx-js/benchmark-*" --summarize
         env:
           NODE_OPTIONS: --max-old-space-size=6144
-        continue-on-error: true
-      - name: Setup Rust and retry build if failed
-        if: steps.build.outcome == 'failure'
-        uses: actions-rust-lang/setup-rust-toolchain@ac90e63697ac2784f4ecfe2964e1a285c304003a # v1
-        with:
-          target: wasm32-unknown-unknown
-          cache-key: test-ubuntu-copilot-setup-steps
-      - name: Retry Build
-        if: steps.build.outcome == 'failure'
-        run: |
-          pnpm turbo build --summarize
-        env:
-          NODE_OPTIONS: --max-old-space-size=32768
       - name: Test essential runtime dependencies
         run: |
           pnpm dprint fmt

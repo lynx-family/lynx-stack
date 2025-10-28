@@ -7,6 +7,7 @@ test-results
 trace.zip
 .turbo
 **/test/js
+.swc
 
 # api-extractor
 packages/*/temp

@@ -73,6 +73,7 @@ export class WebEncodePlugin {
             },
             customSections: encodeData.customSections,
             cardType: encodeData.sourceContent.dsl.substring(0, 5),
+            appType: encodeData.sourceContent.appType,
             pageConfig: {
               ...encodeData.compilerOptions,
               ...encodeData.sourceContent.config,
@@ -90,6 +91,7 @@ export class WebEncodePlugin {
               styleInfo: encodeOptions['styleInfo'],
               manifest: encodeOptions.manifest,
               cardType: encodeOptions['cardType'],
+              appType: encodeOptions['appType'],
               pageConfig: encodeOptions['pageConfig'],
               lepusCode: {
                 // flatten the lepusCode to a single object

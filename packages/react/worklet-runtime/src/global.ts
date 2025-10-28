@@ -18,6 +18,7 @@ declare global {
     _runOnBackgroundDelayImpl: RunOnBackgroundDelayImpl;
     _hydrateCtx: (worklet: Worklet, firstScreenWorklet: Worklet) => void;
     _eomImpl: EomImpl;
+    _runRunOnMainThreadTask: (task: Worklet, params: ClosureValueType[], resolveId: number) => void;
   };
 
   function runWorklet(ctx: Worklet, params: ClosureValueType[]): unknown;

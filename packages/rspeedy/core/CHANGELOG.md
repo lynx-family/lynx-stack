@@ -1,5 +1,140 @@
 # @lynx-js/rspeedy
 
+## 0.11.7
+
+### Patch Changes
+
+- Bump Rsbuild v1.5.17. ([#1889](https://github.com/lynx-family/lynx-stack/pull/1889))
+
+- feat: support web preview in rspeedy dev ([#1893](https://github.com/lynx-family/lynx-stack/pull/1893))
+
+  - support web preview in rspeedy dev (experimental)
+
+- Updated dependencies []:
+  - @lynx-js/web-rsbuild-server-middleware@0.18.1
+
+## 0.11.6
+
+### Patch Changes
+
+- Should apply `dev.hmr` and `dev.liveReload` to Rsbuild config. ([#1882](https://github.com/lynx-family/lynx-stack/pull/1882))
+
+- Support CLI flag `--root` to specify the root of the project. ([#1836](https://github.com/lynx-family/lynx-stack/pull/1836))
+
+## 0.11.5
+
+### Patch Changes
+
+- Bump Rsbuild v1.5.13 with Rspack v1.5.8. ([#1849](https://github.com/lynx-family/lynx-stack/pull/1849))
+
+## 0.11.4
+
+### Patch Changes
+
+- Bump Rsbuild v1.5.12 with Rspack v1.5.7. ([#1708](https://github.com/lynx-family/lynx-stack/pull/1708))
+
+- Fix the "lynx.getJSModule is not a function" error on Web platform ([#1830](https://github.com/lynx-family/lynx-stack/pull/1830))
+
+- Support `server.compress` ([#1799](https://github.com/lynx-family/lynx-stack/pull/1799))
+
+- Support `server.cors` ([#1808](https://github.com/lynx-family/lynx-stack/pull/1808))
+
+## 0.11.3
+
+### Patch Changes
+
+- Use `output.chunkLoading: 'lynx'` for `environments.web`. ([#1737](https://github.com/lynx-family/lynx-stack/pull/1737))
+
+- Support `resolve.extensions` ([#1759](https://github.com/lynx-family/lynx-stack/pull/1759))
+
+- Set the default value of `output.cssModules.localIdentName` to `[local]-[hash:base64:6]`. ([#1783](https://github.com/lynx-family/lynx-stack/pull/1783))
+
+## 0.11.2
+
+### Patch Changes
+
+- Support `server.proxy`. ([#1745](https://github.com/lynx-family/lynx-stack/pull/1745))
+
+- Support `command` and `env` parameters in the function exported by `lynx.config.js`. ([#1669](https://github.com/lynx-family/lynx-stack/pull/1669))
+
+  ```js
+  import { defineConfig } from '@lynx-js/rspeedy'
+
+  export default defineConfig(({ command, env }) => {
+    const isBuild = command === 'build'
+    const isTest = env === 'test'
+
+    return {
+      output: {
+        minify: !isTest,
+      },
+      performance: {
+        buildCache: isBuild,
+      },
+    }
+  })
+  ```
+
+- Support `resolve.dedupe`. ([#1671](https://github.com/lynx-family/lynx-stack/pull/1671))
+
+  This is useful when having multiple duplicated packages in the bundle:
+
+  ```js
+  import { defineConfig } from '@lynx-js/rspeedy'
+
+  export default defineConfig({
+    resolve: {
+      dedupe: ['tslib'],
+    },
+  })
+  ```
+
+- Support `resolve.aliasStrategy` for controlling priority between `tsconfig.json` paths and `resolve.alias` ([#1722](https://github.com/lynx-family/lynx-stack/pull/1722))
+
+  ```js
+  import { defineConfig } from '@lynx-js/rspeedy'
+
+  export default defineConfig({
+    resolve: {
+      alias: {
+        '@': './src',
+      },
+      // 'prefer-tsconfig' (default): tsconfig.json paths take priority
+      // 'prefer-alias': resolve.alias takes priority
+      aliasStrategy: 'prefer-alias',
+    },
+  })
+  ```
+
+- Bump Rsbuild v1.5.4 with Rspack v1.5.2. ([#1644](https://github.com/lynx-family/lynx-stack/pull/1644))
+
+- Updated dependencies [[`d7c5da3`](https://github.com/lynx-family/lynx-stack/commit/d7c5da329caddfb12ed77159fb8b1b8f38717cff)]:
+  - @lynx-js/chunk-loading-webpack-plugin@0.3.3
+  - @lynx-js/cache-events-webpack-plugin@0.0.2
+
+## 0.11.1
+
+### Patch Changes
+
+- Disable lazyCompilation by default. ([#1647](https://github.com/lynx-family/lynx-stack/pull/1647))
+
+- Bump Rsbuild v1.5.2 with Rspack v1.5.1. ([#1624](https://github.com/lynx-family/lynx-stack/pull/1624))
+
+- Add `output.dataUriLimit.*` for fine-grained control of asset inlining. ([#1648](https://github.com/lynx-family/lynx-stack/pull/1648))
+
+  ```js
+  import { defineConfig } from '@lynx-js/rspeedy'
+
+  export default defineConfig({
+    output: {
+      dataUriLimit: {
+        image: 5000,
+        media: 0,
+      },
+    },
+  })
+  ```
+
 ## 0.11.0
 
 ### Minor Changes

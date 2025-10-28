@@ -236,11 +236,6 @@ export interface LynxTemplatePluginOptions {
   enableAccessibilityElement: boolean;
 
   /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableICU}
-   */
-  enableICU: boolean;
-
-  /**
    * Use Android View level APIs and system implementations.
    */
   enableA11y: boolean;
@@ -266,19 +261,9 @@ export interface LynxTemplatePluginOptions {
   enableNewGesture: boolean;
 
   /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableParallelElement}
-   */
-  enableParallelElement?: boolean;
-
-  /**
    * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableRemoveCSSScope}
    */
   enableRemoveCSSScope: boolean;
-
-  /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.pipelineSchedulerConfig}
-   */
-  pipelineSchedulerConfig: number;
 
   /**
    * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.removeDescendantSelectorScope}
@@ -398,17 +383,14 @@ export class LynxTemplatePlugin {
       // lynx-specific
       customCSSInheritanceList: undefined,
       debugInfoOutside: true,
-      enableICU: false,
       enableA11y: true,
       enableAccessibilityElement: false,
       enableCSSInheritance: false,
       enableCSSInvalidation: false,
       enableCSSSelector: true,
       enableNewGesture: false,
-      enableParallelElement: true,
       defaultDisplayLinear: true,
       enableRemoveCSSScope: false,
-      pipelineSchedulerConfig: 0x00010000,
       targetSdkVersion: '3.2',
       defaultOverflowVisible: true,
       removeDescendantSelectorScope: false,
@@ -687,43 +669,45 @@ class LynxTemplatePluginImpl {
     )!;
 
     await Promise.all(
-      Object.entries(asyncChunkGroups).map(([entryName, chunkGroups]) => {
-        const chunkNames =
-          // We use the chunk name(provided by `webpackChunkName`) as filename
-          chunkGroups
-            .filter(cg => cg.name !== null && cg.name !== undefined)
-            .map(cg => hooks.asyncChunkName.call(cg.name!));
+      Object.entries(asyncChunkGroups).map(
+        ([entryName, chunkGroups]): Promise<void> => {
+          const chunkNames =
+            // We use the chunk name(provided by `webpackChunkName`) as filename
+            chunkGroups
+              .filter(cg => cg.name !== null && cg.name !== undefined)
+              .map(cg => hooks.asyncChunkName.call(cg.name!));
 
-        const filename = Array.from(new Set(chunkNames)).join('_');
+          const filename = Array.from(new Set(chunkNames)).join('_');
 
-        // If no filename is found, avoid generating async template
-        if (!filename) {
-          return;
-        }
+          // If no filename is found, avoid generating async template
+          if (!filename) {
+            return Promise.resolve();
+          }
 
-        const filenameTemplate = this.#getAsyncFilenameTemplate(filename);
+          const filenameTemplate = this.#getAsyncFilenameTemplate(filename);
 
-        // Ignore the encoded templates
-        if (encodedTemplate.has(filenameTemplate)) {
-          return;
-        }
+          // Ignore the encoded templates
+          if (encodedTemplate.has(filenameTemplate)) {
+            return Promise.resolve();
+          }
 
-        encodedTemplate.add(filenameTemplate);
+          encodedTemplate.add(filenameTemplate);
 
-        const asyncAssetsInfoByGroups = this.#getAssetsInformationByFilenames(
-          compilation,
-          chunkGroups.flatMap(cg => cg.getFiles()),
-        );
+          const asyncAssetsInfoByGroups = this.#getAssetsInformationByFilenames(
+            compilation,
+            chunkGroups.flatMap(cg => cg.getFiles()),
+          );
 
-        return this.#encodeByAssetsInformation(
-          compilation,
-          asyncAssetsInfoByGroups,
-          [entryName],
-          filenameTemplate,
-          path.join(intermediateRoot, 'async', filename),
-          /** isAsync */ true,
-        );
-      }),
+          return this.#encodeByAssetsInformation(
+            compilation,
+            asyncAssetsInfoByGroups,
+            [entryName],
+            filenameTemplate,
+            path.join(intermediateRoot, 'async', filename),
+            /** isAsync */ true,
+          );
+        },
+      ),
     );
   }
 
@@ -741,16 +725,13 @@ class LynxTemplatePluginImpl {
       customCSSInheritanceList,
       debugInfoOutside,
       defaultDisplayLinear,
-      enableICU,
       enableA11y,
       enableAccessibilityElement,
       enableCSSInheritance,
       enableCSSInvalidation,
       enableCSSSelector,
       enableNewGesture,
-      enableParallelElement,
       enableRemoveCSSScope,
-      pipelineSchedulerConfig,
       removeDescendantSelectorScope,
       targetSdkVersion,
       defaultOverflowVisible,
@@ -782,7 +763,6 @@ class LynxTemplatePluginImpl {
         enableCSSInvalidation,
         enableCSSSelector,
         enableLepusDebug: isDev,
-        enableParallelElement,
         enableRemoveCSSScope,
         targetSdkVersion,
         defaultOverflowVisible,
@@ -793,7 +773,6 @@ class LynxTemplatePluginImpl {
         config: {
           lepusStrict: true,
           useNewSwiper: true,
-          enableICU,
           enableNewIntersectionObserver: true,
           enableNativeList: true,
           enableA11y,
@@ -801,7 +780,6 @@ class LynxTemplatePluginImpl {
           customCSSInheritanceList,
           enableCSSInheritance,
           enableNewGesture,
-          pipelineSchedulerConfig,
           removeDescendantSelectorScope,
         },
       },

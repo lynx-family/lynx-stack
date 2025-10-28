@@ -331,6 +331,11 @@ export class SnapshotInstance {
 
     if (isListHolder) {
       // never recurse into list's children
+
+      // In nested list scenarios, there are some `list` that are lazily created.
+      // We need to `flush` them during `ensureElements`.
+      // Also, `flush` is a safe operation since it checks if the `list` is in `__pendingListUpdates`.
+      __pendingListUpdates.flushWithId(this.__id);
     } else {
       let index = 0;
       let child = this.__firstChild;

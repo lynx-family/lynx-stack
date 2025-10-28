@@ -4,44 +4,34 @@
 
 import { defineConfig, devices } from '@playwright/test';
 import os from 'node:os';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
+const __dirname = fileURLToPath(import.meta.url);
+const dir = path.join(__dirname, '..', '.nyc_output');
+fs.mkdir(dir, { recursive: true }).catch(() => {/* */});
 process.env['LIBGL_ALWAYS_SOFTWARE'] = 'true'; // https://github.com/microsoft/playwright/issues/32151
 process.env['GALLIUM_HUD_SCALE'] = '1';
 const isCI = !!process.env.CI;
-const enableMultiThread = !!process.env.ENABLE_MULTI_THREAD;
-const enableSSR = !!process.env.ENABLE_SSR;
-const testFPOnly = !!process.env.TEST_FP_ONLY;
 const port = process.env.PORT ?? 3080;
 const workerLimit = Math.floor(((cpuCount, envCPULimit) => {
-  if (envCPULimit) {
-    return envCPULimit / 2;
-  } else {
-    if (cpuCount <= 32) {
-      return cpuCount / 2;
+  if (isCI) {
+    if (envCPULimit) {
+      return envCPULimit / 2;
     } else {
-      return 16 + (cpuCount - 32) / 6;
+      if (cpuCount <= 32) {
+        return 8;
+      } else {
+        return 8 + (cpuCount - 32) / 6;
+      }
     }
   }
+  return cpuCount / 2;
 })(os.cpus().length, parseFloat(process.env['cpu_limit'] ?? '0')));
-
-const testMatch: string | undefined = (() => {
-  if (testFPOnly) {
-    return '**/fp-only.spec.ts';
-  }
-  if (enableSSR) {
-    return '**/react.{test,spec}.ts';
-  }
-  if (enableMultiThread) {
-    return '**/{react,web-core,main-thread-apis}.{test,spec}.ts';
-  }
-  return undefined;
-})();
 
 const testIgnore: string[] = (() => {
   const ignore = ['**vitest**'];
-  if (isCI && !testFPOnly) {
-    ignore.push('**/fp-only.spec.ts'); // fp-only tests has its own test steps
-  }
   return ignore;
 })();
 
@@ -58,7 +48,7 @@ export default defineConfig({
   /** global timeout https://playwright.dev/docs/test-timeouts#global-timeout */
   globalTimeout: 20 * 60 * 1000,
   testDir: './tests',
-  testMatch,
+  // testMatch,
   testIgnore,
   /* Run tests in files in parallel */
   fullyParallel: true,

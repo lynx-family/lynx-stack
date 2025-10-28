@@ -5,13 +5,54 @@
 import type { Config } from './index.js'
 
 /**
+ *  Parameters for the function exported from `lynx.config.js`.
+ *
+ * @public
+ */
+export interface ConfigParams {
+  /**
+   * The value of `process.env['NODE_ENV']`
+   *
+   * @remarks
+   * Common values include (non-exhaustive):
+   * - `'production'`
+   *
+   * - `'development'`
+   *
+   * - `'test'`
+   */
+  env: 'production' | 'development' | 'test' | (string & Record<never, never>)
+  /**
+   * The CLI command of Rspeedy.
+   *
+   * @remarks
+   *
+   * Possible values:
+   *
+   * - `'build'`
+   *
+   * - `'dev'`
+   *
+   * - `'inspect'`
+   *
+   * - `'preview'`
+   */
+  command:
+    | 'build'
+    | 'dev'
+    | 'inspect'
+    | 'preview'
+    | (string & Record<never, never>)
+}
+
+/**
  * The types that `lynx.config.ts` exports.
  */
 export type ConfigExport =
   | Config
   | Promise<Config>
-  | (() => Config)
-  | (() => Promise<Config>)
+  | ((params: ConfigParams) => Config)
+  | ((params: ConfigParams) => Promise<Config>)
 
 /**
  * The `defineConfig` method is a helper function used to get TypeScript intellisense.
@@ -52,9 +93,28 @@ export function defineConfig(config: Config): Config
  * })
  * ```
  *
+ * @example
+ *
+ * Use `defineConfig` with parameters in `lynx.config.ts`:
+ *
+ * ```ts
+ * import { defineConfig } from '@lynx-js/rspeedy'
+ *
+ * export default defineConfig(({ env }) => {
+ *   const isTest = env === 'test'
+ *   return {
+ *     output: {
+ *       minify: isTest ? false : true,
+ *     },
+ *   }
+ * })
+ * ```
+ *
  * @public
  */
-export function defineConfig(config: () => Config): () => Config
+export function defineConfig(
+  config: (params: ConfigParams) => Config,
+): (params: ConfigParams) => Config
 /**
  * The `defineConfig` method is a helper function used to get TypeScript intellisense.
  *
@@ -98,11 +158,29 @@ export function defineConfig(config: Promise<Config>): Promise<Config>
  * })
  * ```
  *
+ * @example
+ *
+ * Use `defineConfig` with parameters in `lynx.config.ts`:
+ *
+ * ```ts
+ * import { defineConfig } from '@lynx-js/rspeedy'
+ *
+ * export default defineConfig(async ({ env }) => {
+ *   const foo = await bar()
+ *   const isTest = env === 'test'
+ *   return {
+ *     output: {
+ *       minify: isTest ? false : true,
+ *     },
+ *   }
+ * })
+ * ```
+ *
  * @public
  */
 export function defineConfig(
-  config: () => Promise<Config>,
-): () => Promise<Config>
+  config: (params: ConfigParams) => Promise<Config>,
+): (params: ConfigParams) => Promise<Config>
 export function defineConfig(config: ConfigExport): ConfigExport {
   return config
 }

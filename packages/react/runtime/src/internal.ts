@@ -7,6 +7,7 @@ import type { FC } from 'react';
 
 import './lynx.js';
 
+import { BackgroundSnapshotInstance } from './backgroundSnapshot.js';
 import { factory as factory2 } from './compat/componentIs.js';
 import { useMemo } from './hooks/react.js';
 import { loadLazyBundle } from './lynx/lazy-bundle.js';
@@ -17,7 +18,7 @@ import { SnapshotInstance, __page, __pageId, createSnapshot, snapshotManager } f
 
 export { __page, __pageId, __root };
 
-export { SnapshotInstance, snapshotCreateList, createSnapshot, snapshotManager };
+export { BackgroundSnapshotInstance, SnapshotInstance, snapshotCreateList, createSnapshot, snapshotManager };
 
 export const __DynamicPartSlot: DynamicPartType = DynamicPartType.Slot;
 export const __DynamicPartMultiChildren: DynamicPartType = DynamicPartType.MultiChildren;
@@ -37,6 +38,7 @@ export {
   options,
   // Component is not an internal API, but refresh needs it from 'react/internal'
   Component,
+  process,
 } from 'preact';
 export type { Options } from 'preact';
 
@@ -57,7 +59,7 @@ export const __ComponentIsPolyfill: FC<{ is: string }> = /* @__PURE__ */ factory
 
 export { loadLazyBundle } from './lynx/lazy-bundle.js';
 
-export { transformToWorklet } from './worklet/transformToWorklet.js';
+export { transformToWorklet } from './worklet/call/transformToWorklet.js';
 export { registerWorkletOnBackground } from './worklet/hmr.js';
 
 export { loadWorkletRuntime } from '@lynx-js/react/worklet-runtime/bindings';

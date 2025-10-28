@@ -10,6 +10,7 @@ import type { FlushElementTreeOptions } from './FlushElementTreeOptions.js';
 import type { I18nResourceTranslationOptions } from './index.js';
 import type { MainThreadLynx } from './MainThreadLynx.js';
 import type { ProcessDataCallback } from './ProcessDataCallback.js';
+import type { UpdateDataOptions } from './UpdateDataOptions.js';
 
 type ElementPAPIEventHandler =
   | string
@@ -270,6 +271,7 @@ export type SetInlineStylesPAPI = (
 export type SetCSSIdPAPI = (
   elements: WebFiberElementImpl[],
   cssId: number | null,
+  entryName: string | undefined,
 ) => void;
 
 export type GetPageElementPAPI = () => WebFiberElementImpl | undefined;
@@ -300,6 +302,17 @@ export type GetAttributeByNamePAPI = (
   element: WebFiberElementImpl,
   name: string,
 ) => string | null;
+
+export type QueryComponentPAPI = (
+  source: string,
+  resultCallback?: (result: {
+    code: number;
+    data?: {
+      url: string;
+      evalResult: unknown;
+    };
+  }) => void,
+) => null;
 
 export interface MainThreadGlobalThis {
   __ElementFromBinary: ElementFromBinaryPAPI;
@@ -381,8 +394,14 @@ export interface MainThreadGlobalThis {
   ) => unknown | undefined;
   // This is an empty implementation, just to avoid business call errors
   _AddEventListener: (...args: unknown[]) => void;
+  __QueryComponent: QueryComponentPAPI;
+  // DSL runtime binding
+  processEvalResult?: (
+    exports: unknown,
+    schema: string,
+  ) => unknown;
   // the following methods is assigned by the main thread user code
   renderPage: ((data: unknown) => void) | undefined;
-  updatePage?: (data: Cloneable, options?: Record<string, string>) => void;
+  updatePage?: (data: Cloneable, options?: UpdateDataOptions) => void;
   runWorklet?: (obj: unknown, event: unknown) => void;
 }

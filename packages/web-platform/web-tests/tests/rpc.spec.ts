@@ -5,8 +5,11 @@ function waitImpl(ms: number): Promise<void> {
   setTimeout(() => resolve(), ms);
   return promise;
 }
+const ENABLE_MULTI_THREAD = !!process.env['ENABLE_MULTI_THREAD'];
+const isSSR = !!process.env['ENABLE_SSR'];
 
 test.describe('rpc tests', () => {
+  test.skip(isSSR || ENABLE_MULTI_THREAD, 'no difference for different mode');
   test.beforeEach(async ({ page }) => {
     await page.goto('/rpc-test.html');
     await waitImpl(100);

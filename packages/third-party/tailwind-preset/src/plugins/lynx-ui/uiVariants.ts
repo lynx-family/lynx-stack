@@ -23,7 +23,7 @@
  * - Custom mappings via object syntax
  */
 
-import { createPlugin } from '../../helpers.js';
+import { TW_NO_PREFIX, createPlugin } from '../../helpers.js';
 import type { PluginWithOptions } from '../../helpers.js';
 import type { KeyValuePairOrList } from '../../types/plugin-types.js';
 
@@ -38,7 +38,11 @@ const DEFAULT_PREFIXES = {
     'readonly',
     'checked',
     'selected',
+    'indeterminate',
+    'invalid',
+    'initial',
     'open',
+    'closed',
     'leaving',
     'entering',
     'animating',
@@ -84,8 +88,15 @@ const uiVariants: PluginWithOptions<UIVariantsOptions> = createPlugin
   .withOptions<
     UIVariantsOptions
   >(
-    (options?: UIVariantsOptions) => ({ matchVariant }) => {
+    (options?: UIVariantsOptions) =>
+    ({ matchVariant, e: escapeClassName, config }) => {
       options = options ?? {};
+
+      const cfgPrefix = config('prefix');
+      const projectPrefix: string = typeof cfgPrefix === 'string'
+        ? cfgPrefix
+        : '';
+
       const resolvedPrefixes = normalizePrefixes(options?.prefixes);
 
       const entries: [string, KeyValuePairOrList][] = Object.entries(
@@ -99,18 +110,86 @@ const uiVariants: PluginWithOptions<UIVariantsOptions> = createPlugin
 
         const valueMap = Object.fromEntries(stateEntries);
 
+        // {prefix}-* (Self)
+        // Matches when the element itself has the given state class
+        // Example: `&.ui-checked`
         matchVariant(
           prefix,
-          (value: string, { modifier }: { modifier?: string | null } = {}) => {
+          (value: string) => {
             const mapped = valueMap[value];
             if (!mapped || typeof mapped !== 'string') return '';
-            const selector = `&.${prefix}-${mapped}`;
-            return (modifier && typeof modifier === 'string')
-              ? `${selector}\\/${modifier}`
-              : selector;
+
+            const cls = escapeClassName(`${prefix}-${mapped}`);
+            return `&.${cls}`;
           },
           {
             values: valueMap,
+            ...TW_NO_PREFIX,
+          },
+        );
+
+        // 2) group-{prefix}-* (Ancestor)
+        // Matches when an ancestor element with `.group` also has the given state class
+        // Example: `.group.ui-open &`  (with project prefix `tw-` => `.tw-group.ui-open &`)
+        matchVariant(
+          `group-${prefix}`,
+          (value: string, { modifier }: { modifier?: string | null } = {}) => {
+            const mapped = valueMap[value];
+            if (!mapped || typeof mapped !== 'string') return '';
+
+            const groupSelector = modifier
+              ? `:merge(.${projectPrefix}group\\/${escapeClassName(modifier)})`
+              : `:merge(.${projectPrefix}group)`;
+            const cls = escapeClassName(`${prefix}-${mapped}`);
+
+            return `${groupSelector}.${cls} &`;
+          },
+          {
+            values: valueMap,
+            ...TW_NO_PREFIX,
+          },
+        );
+
+        // 3) peer-{prefix}-* (Sibling)
+        // Matches when a preceding sibling with `.peer` also has the given state class
+        // Example: `.peer.ui-open ~ &` (with project prefix `tw-` => `.tw-peer.ui-open ~ &`)
+        matchVariant(
+          `peer-${prefix}`,
+          (value: string, { modifier }: { modifier?: string | null } = {}) => {
+            const mapped = valueMap[value];
+            if (!mapped || typeof mapped !== 'string') return '';
+
+            const peerSelector = modifier
+              ? `:merge(.${projectPrefix}peer\\/${escapeClassName(modifier)})`
+              : `:merge(.${projectPrefix}peer)`;
+
+            const cls = escapeClassName(`${prefix}-${mapped}`);
+
+            return `${peerSelector}.${cls} ~ &`;
+          },
+          {
+            values: valueMap,
+            ...TW_NO_PREFIX,
+          },
+        );
+
+        // 4) parent-{prefix}-* (Parent)
+        // Matches when the *direct parent* element has the given state class
+        // Example: `.ui-open > &`
+
+        // Not Tailwind Default Variants, added for performance consideration on Lynx
+        matchVariant(
+          `parent-${prefix}`,
+          (value: string) => {
+            const mapped = valueMap[value];
+            if (!mapped || typeof mapped !== 'string') return '';
+
+            const cls = escapeClassName(`${prefix}-${mapped}`);
+            return `.${cls} > &`;
+          },
+          {
+            values: valueMap,
+            ...TW_NO_PREFIX,
           },
         );
       }

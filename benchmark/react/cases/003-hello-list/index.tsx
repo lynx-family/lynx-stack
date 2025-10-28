@@ -68,6 +68,8 @@ function BenchmarkList() {
   );
 }
 
-root.render(
-  <BenchmarkList />,
-);
+runAfterLoadScript(() => {
+  root.render(
+    <BenchmarkList />,
+  );
+});

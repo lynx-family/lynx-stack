@@ -1,5 +1,81 @@
 # @lynx-js/web-mainthread-apis
 
+## 0.18.1
+
+### Patch Changes
+
+- fix: mts freeze after reload() ([#1892](https://github.com/lynx-family/lynx-stack/pull/1892))
+
+  The mts may be freezed after reload() called.
+
+  We fixed it by waiting until the all-on-ui Javascript realm implementation, an iframe, to be fully loaded.
+
+- Updated dependencies []:
+  - @lynx-js/web-constants@0.18.1
+  - @lynx-js/web-style-transformer@0.18.1
+
+## 0.18.0
+
+### Patch Changes
+
+- fix: ([#1837](https://github.com/lynx-family/lynx-stack/pull/1837))
+
+  1. `LynxView.updateData()` cannot trigger `dataProcessor`.
+
+  2. **This is a break change:** The second parameter of `LynxView.updateData()` has been changed from `UpdateDataType` to `string`, which is the `processorName` (default is `default` which will use `defaultDataProcessor`). This change is to better align with Native. The current complete type is as follows:
+
+  ```ts
+  LynxView.updateData(data: Cloneable, processorName?: string | undefined, callback?: (() => void) | undefined): void
+  ```
+
+- feat: mouse event output structures remain aligned ([#1820](https://github.com/lynx-family/lynx-stack/pull/1820))
+
+- Updated dependencies [[`77397fd`](https://github.com/lynx-family/lynx-stack/commit/77397fd535cf60556f8f82f7ef8dae8a623d1625)]:
+  - @lynx-js/web-constants@0.18.0
+  - @lynx-js/web-style-transformer@0.18.0
+
+## 0.17.2
+
+### Patch Changes
+
+- Updated dependencies [[`a35a245`](https://github.com/lynx-family/lynx-stack/commit/a35a2452e5355bda3c475f9a750a86085e0cf56a)]:
+  - @lynx-js/web-constants@0.17.2
+  - @lynx-js/web-style-transformer@0.17.2
+
+## 0.17.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-constants@0.17.1
+  - @lynx-js/web-style-transformer@0.17.1
+
+## 0.17.0
+
+### Patch Changes
+
+- fix: \_\_QueryComponentImpl in mts should execute only once for same url ([#1763](https://github.com/lynx-family/lynx-stack/pull/1763))
+
+- fix: avoid duplicate style transformation ([#1748](https://github.com/lynx-family/lynx-stack/pull/1748))
+
+  After this commit, we use DAG methods to handle the styleInfos
+
+- feat: support lazy bundle with CSSOG(`enableCSSSelector: false`). ([#1770](https://github.com/lynx-family/lynx-stack/pull/1770))
+
+- Updated dependencies [[`93d707b`](https://github.com/lynx-family/lynx-stack/commit/93d707b82a59f7256952e21da6dcad2999f8233d)]:
+  - @lynx-js/web-constants@0.17.0
+  - @lynx-js/web-style-transformer@0.17.0
+
+## 0.16.1
+
+### Patch Changes
+
+- feat: supports lazy bundle. (This feature requires `@lynx-js/lynx-core >= 0.1.3`) ([#1235](https://github.com/lynx-family/lynx-stack/pull/1235))
+
+- Updated dependencies [[`608f375`](https://github.com/lynx-family/lynx-stack/commit/608f375e20732cc4c9f141bfbf9800ba6896100b)]:
+  - @lynx-js/web-constants@0.16.1
+  - @lynx-js/web-style-transformer@0.16.1
+
 ## 0.16.0
 
 ### Minor Changes

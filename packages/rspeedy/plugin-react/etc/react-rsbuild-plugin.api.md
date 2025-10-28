@@ -62,9 +62,7 @@ export interface PluginReactLynxOptions {
     enableCSSInheritance?: boolean;
     enableCSSInvalidation?: boolean;
     enableCSSSelector?: boolean;
-    enableICU?: boolean;
     enableNewGesture?: boolean;
-    enableParallelElement?: boolean;
     enableRemoveCSSScope?: boolean | undefined;
     enableSSR?: boolean;
     engineVersion?: string;
@@ -73,7 +71,6 @@ export interface PluginReactLynxOptions {
     experimental_isLazyBundle?: boolean;
     extractStr?: Partial<ExtractStrConfig> | boolean;
     firstScreenSyncTiming?: 'immediately' | 'jsReady';
-    pipelineSchedulerConfig?: number;
     removeDescendantSelectorScope?: boolean;
     shake?: Partial<ShakeVisitorConfig> | undefined;
     // @deprecated

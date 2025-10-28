@@ -13,6 +13,7 @@
   },
   "customSections": {},
   "cardType": "react",
+  "appType": "card",
   "pageConfig": {
     "enableFiberArch": true,
     "useLepusNG": true,
@@ -24,7 +25,6 @@
     "enableCSSInvalidation": true,
     "enableCSSSelector": false,
     "enableLepusDebug": false,
-    "enableParallelElement": true,
     "enableRemoveCSSScope": true,
     "targetSdkVersion": "2.10"
   }

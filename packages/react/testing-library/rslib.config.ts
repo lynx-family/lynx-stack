@@ -1,4 +1,8 @@
-import { defineConfig, type rsbuild } from '@rslib/core';
+import { createRequire } from 'node:module';
+
+import { defineConfig } from '@rslib/core';
+
+const require = createRequire(import.meta.url);
 
 export default defineConfig({
   lib: [
@@ -45,6 +49,7 @@ export default defineConfig({
       format: 'esm',
       dts: {
         bundle: true,
+        tsgo: true,
       },
       source: {
         entry: {
@@ -54,8 +59,8 @@ export default defineConfig({
     },
   ],
   tools: {
-    rspack(config) {
-      config.module!.rules!.push({
+    rspack(_, { appendRules }) {
+      appendRules({
         test: /\.jsx$/,
         use: [
           {

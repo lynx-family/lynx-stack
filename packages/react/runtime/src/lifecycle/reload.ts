@@ -17,7 +17,6 @@ import { destroyBackground } from './destroy.js';
 import { applyRefQueue } from '../snapshot/workletRef.js';
 import { SnapshotInstance, __page, snapshotInstanceManager } from '../snapshot.js';
 import { isEmptyObject } from '../utils.js';
-import { destroyWorklet } from '../worklet/destroy.js';
 import { clearJSReadyEventIdSwap, isJSReady } from './event/jsReady.js';
 import { increaseReloadVersion } from './pass.js';
 import { deinitGlobalSnapshotPatch } from './patch/snapshotPatch.js';
@@ -36,9 +35,8 @@ function reloadMainThread(data: unknown, options: UpdatePageOption): void {
     Object.assign(lynx.__initData, data);
   }
 
-  destroyWorklet();
   snapshotInstanceManager.clear();
-  __pendingListUpdates.clear();
+  __pendingListUpdates.clearAttachedLists();
   clearJSReadyEventIdSwap();
 
   const oldRoot = __root;

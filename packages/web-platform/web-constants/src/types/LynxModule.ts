@@ -38,7 +38,49 @@ export interface LynxTemplate {
   };
   elementTemplate: Record<string, ElementTemplateData[]>;
   version?: number;
+  appType: 'card' | 'lazy';
 }
+
+export type BTSChunkEntry = (
+  postMessage: undefined,
+  module: { exports: unknown },
+  exports: unknown,
+  lynxCoreInject: unknown,
+  Card: unknown,
+  setTimeout: unknown,
+  setInterval: unknown,
+  clearInterval: unknown,
+  clearTimeout: unknown,
+  NativeModules: unknown,
+  Component: unknown,
+  ReactLynx: unknown,
+  nativeAppId: unknown,
+  Behavior: unknown,
+  LynxJSBI: unknown,
+  lynx: unknown,
+  // BOM API
+  window: unknown,
+  document: unknown,
+  frames: unknown,
+  location: unknown,
+  navigator: unknown,
+  localStorage: unknown,
+  history: unknown,
+  Caches: unknown,
+  screen: unknown,
+  alert: unknown,
+  confirm: unknown,
+  prompt: unknown,
+  fetch: unknown,
+  XMLHttpRequest: unknown,
+  webkit: unknown,
+  Reporter: unknown,
+  print: unknown,
+  global: unknown,
+  // Lynx API
+  requestAnimationFrame: unknown,
+  cancelAnimationFrame: unknown,
+) => unknown;
 
 export interface LynxJSModule {
   exports?: (lynx_runtime: any) => unknown;

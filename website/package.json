@@ -14,7 +14,7 @@
     "preview": "rspress preview"
   },
   "dependencies": {
-    "@rstack-dev/doc-ui": "1.10.11",
+    "@rstack-dev/doc-ui": "1.11.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
   },
@@ -31,15 +31,15 @@
     "@lynx-js/template-webpack-plugin": "workspace:*",
     "@lynx-js/webpack-runtime-globals": "workspace:*",
     "@microsoft/api-documenter": "~7.23.38",
-    "@microsoft/api-extractor-model": "^7.30.7",
+    "@microsoft/api-extractor-model": "^7.30.9",
     "@rsbuild/plugin-sass": "1.4.0",
     "@rsbuild/plugin-type-check": "1.2.4",
-    "@rsbuild/plugin-typed-css-modules": "1.0.3",
-    "@rspress/core": "2.0.0-beta.28",
-    "@rspress/plugin-client-redirects": "2.0.0-beta.28",
-    "@shikijs/transformers": "3.11.0",
-    "@types/react": "npm:@types/react@^19.1.10",
-    "@types/react-dom": "^19.1.7",
+    "@rsbuild/plugin-typed-css-modules": "1.1.1",
+    "@rspress/core": "2.0.0-beta.34",
+    "@rspress/plugin-client-redirects": "2.0.0-beta.34",
+    "@shikijs/transformers": "3.13.0",
+    "@types/react": "npm:@types/react@^19.1.16",
+    "@types/react-dom": "^19.1.9",
     "change-case": "^5.4.4",
     "tailwindcss": "^3.4.17"
   },

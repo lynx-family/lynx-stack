@@ -7,9 +7,11 @@ import { root } from '@lynx-js/react';
 import RecursiveText from './RecursiveText.js';
 import { RunBenchmarkUntilHydrate } from '../../src/RunBenchmarkUntil.js';
 
-root.render(
-  <>
-    <RecursiveText text='Hello, ReactLynx 🎉!' />
-    <RunBenchmarkUntilHydrate />
-  </>,
-);
+runAfterLoadScript(() => {
+  root.render(
+    <>
+      <RecursiveText text='Hello, ReactLynx 🎉!' />
+      <RunBenchmarkUntilHydrate />
+    </>,
+  );
+});

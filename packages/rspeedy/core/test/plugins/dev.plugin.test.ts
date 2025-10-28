@@ -73,8 +73,10 @@ describe('Plugins - Dev', () => {
 
     expect(vi.isMockFunction(ProvidePlugin)).toBe(true)
     expect(vi.mocked(ProvidePlugin)).toBeCalled()
-    expect(ProvidePlugin).toBeCalledWith({
+    expect(ProvidePlugin).toHaveBeenCalledWith({
       WebSocket: [require.resolve('@lynx-js/websocket'), 'default'],
+    })
+    expect(ProvidePlugin).toHaveBeenCalledWith({
       __webpack_dev_server_client__: [
         require.resolve('../../client/hmr/WebSocketClient.js'),
         'default',
@@ -97,6 +99,27 @@ describe('Plugins - Dev', () => {
         'packages/webpack/webpack-dev-transport'.replaceAll('/', path.sep),
       ),
     )
+  })
+
+  test('no Websocket class injected for web', async () => {
+    const rsbuild = await createStubRspeedy({
+      environments: {
+        web: {},
+      },
+    })
+
+    await rsbuild.unwrapConfig()
+
+    const { ProvidePlugin } = await import('../../src/webpack/ProvidePlugin.js')
+
+    expect(vi.isMockFunction(ProvidePlugin)).toBe(true)
+    expect(vi.mocked(ProvidePlugin)).toBeCalled()
+    expect(ProvidePlugin).toBeCalledWith({
+      __webpack_dev_server_client__: [
+        require.resolve('../../client/hmr/WebSocketClient.js'),
+        'default',
+      ],
+    })
   })
 
   test('not inject entry and provide variables in production', async () => {
@@ -131,23 +154,20 @@ describe('Plugins - Dev', () => {
     await rsbuild.createDevServer({ compiler })
 
     // See: https://github.com/web-infra-dev/rsbuild/pull/2303
-    expect(compiler.hooks.compile.taps.map(i => i.name)).toMatchInlineSnapshot(`
-      [
-        "rsbuild-dev-server",
-      ]
-    `)
+    expect(compiler.hooks.compile.taps.map(i => i.name)).toMatchInlineSnapshot(
+      `[]`,
+    )
 
     expect(compiler.hooks.invalid.taps.map(i => i.name)).toMatchInlineSnapshot(`
       [
         "rsbuild-dev-server",
-        "webpack-dev-middleware",
       ]
     `)
 
     expect(compiler.hooks.done.taps.map(i => i.name)).toMatchInlineSnapshot(`
       [
         "rsbuild-dev-server",
-        "webpack-dev-middleware",
+        "rsbuild-dev-middleware",
       ]
     `)
   })
@@ -432,10 +452,48 @@ describe('Plugins - Dev', () => {
     )
   })
 
+  test('environment.dev.hmr: false', async () => {
+    const rsbuild = await createStubRspeedy({
+      environments: {
+        lynx: {
+          dev: {
+            hmr: false,
+          },
+        },
+      },
+    })
+
+    const config = await rsbuild.unwrapConfig()
+
+    expect(config.resolve?.alias).toHaveProperty(
+      '@lynx-js/webpack-dev-transport/client',
+      expect.stringContaining('hot=false'),
+    )
+  })
+
   test('dev.hmr: true', async () => {
     const rsbuild = await createStubRspeedy({
       dev: {
         hmr: true,
+      },
+    })
+
+    const config = await rsbuild.unwrapConfig()
+
+    expect(config.resolve?.alias).toHaveProperty(
+      '@lynx-js/webpack-dev-transport/client',
+      expect.stringContaining('hot=true'),
+    )
+  })
+
+  test('environment dev.hmr: true', async () => {
+    const rsbuild = await createStubRspeedy({
+      environments: {
+        lynx: {
+          dev: {
+            hmr: true,
+          },
+        },
       },
     })
 
@@ -473,10 +531,48 @@ describe('Plugins - Dev', () => {
     )
   })
 
+  test('environment dev.liveReload: false', async () => {
+    const rsbuild = await createStubRspeedy({
+      environments: {
+        lynx: {
+          dev: {
+            liveReload: false,
+          },
+        },
+      },
+    })
+
+    const config = await rsbuild.unwrapConfig()
+
+    expect(config.resolve?.alias).toHaveProperty(
+      '@lynx-js/webpack-dev-transport/client',
+      expect.stringContaining('live-reload=false'),
+    )
+  })
+
   test('dev.liveReload: true', async () => {
     const rsbuild = await createStubRspeedy({
       dev: {
         liveReload: true,
+      },
+    })
+
+    const config = await rsbuild.unwrapConfig()
+
+    expect(config.resolve?.alias).toHaveProperty(
+      '@lynx-js/webpack-dev-transport/client',
+      expect.stringContaining('live-reload=true'),
+    )
+  })
+
+  test('environments dev.liveReload: true', async () => {
+    const rsbuild = await createStubRspeedy({
+      environments: {
+        lynx: {
+          dev: {
+            liveReload: true,
+          },
+        },
       },
     })
 
@@ -501,8 +597,10 @@ describe('Plugins - Dev', () => {
 
     const { ProvidePlugin } = await import('../../src/webpack/ProvidePlugin.js')
 
-    expect(ProvidePlugin).toBeCalledWith({
+    expect(ProvidePlugin).toHaveBeenCalledWith({
       WebSocket: ['/foo', 'default'],
+    })
+    expect(ProvidePlugin).toHaveBeenCalledWith({
       __webpack_dev_server_client__: [
         require.resolve('../../client/hmr/WebSocketClient.js'),
         'default',
@@ -551,5 +649,122 @@ describe('Plugins - Dev', () => {
     expect(isIP(hostname)).toBe(0)
     expect(hostname).toBe('example.com')
     expect(pathname).toBe('/dist/')
+  })
+
+  test('environment.web to have middleware installed', async () => {
+    const rsbuild = await createStubRspeedy({
+      source: {
+        entry: path.resolve(__dirname, './fixtures/hello-world/index.js'),
+      },
+      environments: {
+        web: {},
+        lynx: {},
+      },
+    })
+    const middleware = await import('@lynx-js/web-rsbuild-server-middleware')
+    vi.spyOn(middleware, 'createWebVirtualFilesMiddleware')
+
+    await using server = await rsbuild.usingDevServer()
+    await server.waitDevCompileDone()
+    expect(vi.mocked(middleware.createWebVirtualFilesMiddleware)).toBeCalled()
+  })
+
+  test('dev.assetPrefix with server.printUrls', async () => {
+    const rsbuild = await createStubRspeedy({
+      source: {
+        entry: path.resolve(__dirname, './fixtures/hello-world/index.js'),
+      },
+      dev: {
+        assetPrefix: 'http://example.com:8000/',
+      },
+      server: {
+        port: 8080,
+      },
+    })
+
+    let printedUrls: undefined | (string | { url: string, label?: string })[] =
+      undefined
+
+    rsbuild.modifyRsbuildConfig({
+      handler: (config, { mergeRsbuildConfig }) => {
+        if (typeof config.server?.printUrls === 'function') {
+          const originalPrintUrls = config.server.printUrls
+          return mergeRsbuildConfig(config, {
+            server: {
+              printUrls: (...args) => {
+                const result = originalPrintUrls(...args)
+                printedUrls = result ?? undefined
+                return result
+              },
+            },
+          })
+        }
+        return config
+      },
+      order: 'post',
+    })
+
+    await using server = await rsbuild.usingDevServer()
+
+    await server.waitDevCompileDone()
+
+    expect(printedUrls).toContainEqual({
+      'label': 'Lynx',
+      'url': 'http://example.com:8080/main.lynx.bundle',
+    })
+  })
+
+  test('dev.assetPrefix with environment.web', async () => {
+    const rsbuild = await createStubRspeedy({
+      source: {
+        entry: path.resolve(__dirname, './fixtures/hello-world/index.js'),
+      },
+      dev: {
+        assetPrefix: 'http://example.com:8000/',
+      },
+      server: {
+        port: 8080,
+      },
+      environments: {
+        web: {},
+        lynx: {},
+      },
+    })
+
+    let printedUrls: undefined | (string | { url: string, label?: string })[] =
+      undefined
+
+    rsbuild.modifyRsbuildConfig({
+      handler: (config, { mergeRsbuildConfig }) => {
+        if (typeof config.server?.printUrls === 'function') {
+          const originalPrintUrls = config.server.printUrls
+          return mergeRsbuildConfig(config, {
+            server: {
+              printUrls: (...args) => {
+                const result = originalPrintUrls(...args)
+                printedUrls = result ?? undefined
+                return result
+              },
+            },
+          })
+        }
+        return config
+      },
+      order: 'post',
+    })
+
+    await using server = await rsbuild.usingDevServer()
+
+    await server.waitDevCompileDone()
+
+    expect(printedUrls).toContainEqual({
+      'label': 'Web',
+      'url': 'http://example.com:8080/main.web.bundle',
+    })
+
+    expect(printedUrls).toContainEqual({
+      'label': 'Web Preview',
+      'url': 'http://example.com:8080/__web_preview?casename=main.web.bundle',
+    })
   })
 })

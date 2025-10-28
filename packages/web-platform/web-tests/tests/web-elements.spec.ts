@@ -5,7 +5,8 @@ import { swipe, dragAndHold } from './utils.js';
 import { test, expect } from './coverage-fixture.js';
 import type { Page } from '@playwright/test';
 import path from 'node:path';
-
+const ENABLE_MULTI_THREAD = !!process.env['ENABLE_MULTI_THREAD'];
+const isSSR = !!process.env['ENABLE_SSR'];
 const wait = async (ms: number) => {
   await new Promise((resolve) => {
     setTimeout(resolve, ms);
@@ -40,6 +41,7 @@ const getTitle = (titlePath: string[]) => {
 };
 
 test.describe('web-elements test suite', () => {
+  test.skip(isSSR || ENABLE_MULTI_THREAD, 'no difference for different mode');
   test.describe('layout', () => {
     test('layout/percentage-cyclic', async ({ page }, { title }) => {
       await gotoWebComponentPage(page, title);
@@ -124,6 +126,21 @@ test.describe('web-elements test suite', () => {
     });
   });
   test.describe('x-text', () => {
+    test('raw-text-no-js', async ({ page }, { titlePath }) => {
+      const title = getTitle(titlePath);
+      await gotoWebComponentPage(page, title);
+      await diffScreenShot(page, title, 'index');
+    });
+    test('text-no-js', async ({ page }, { titlePath }) => {
+      const title = getTitle(titlePath);
+      await gotoWebComponentPage(page, title);
+      await diffScreenShot(page, title, 'index');
+    });
+    test('text-attribute-text', async ({ page }, { titlePath }) => {
+      const title = getTitle(titlePath);
+      await gotoWebComponentPage(page, title);
+      await diffScreenShot(page, title, 'index');
+    });
     test('x-text/view-in-text', async ({ page }, { title }) => {
       await gotoWebComponentPage(page, title);
       await diffScreenShot(page, title, 'index');
@@ -2926,6 +2943,88 @@ test.describe('web-elements test suite', () => {
       expect(typeof detail.bottom).toBe('number');
       expect(detail.id).toBe('target');
     });
+
+    test(
+      'scroll-prevent-through',
+      async ({ page, browserName, context }, { titlePath }) => {
+        test.skip(browserName !== 'chromium', 'not support CDPsession');
+        const title = getTitle(titlePath);
+        await gotoWebComponentPage(page, title);
+        await wait(300);
+
+        const getScrollTop = () => {
+          return page.evaluate(() => {
+            const pageScrollTop = document.documentElement.scrollTop
+              || document.body.scrollTop;
+            const innerScrollTop =
+              document.querySelector('.inner-scroll')!.scrollTop;
+            return { pageScrollTop, innerScrollTop };
+          });
+        };
+
+        const cdpSession = await context.newCDPSession(page);
+
+        // 1. Test scrolling outside the popup
+        let {
+          pageScrollTop: initialPageScrollTop,
+          innerScrollTop: initialInnerScrollTop,
+        } = await getScrollTop();
+        expect(initialPageScrollTop).toBe(0);
+        await swipe(cdpSession, { x: 20, y: 20, xDistance: 0, yDistance: 100 });
+        await wait(200);
+        let {
+          pageScrollTop: scrolledPageScrollTop1,
+          innerScrollTop: scrolledInnerScrollTop1,
+        } = await getScrollTop();
+        expect(scrolledPageScrollTop1).toBe(0);
+        expect(scrolledInnerScrollTop1).toBe(initialInnerScrollTop);
+
+        // 2. Test scrolling on the popup title area
+        await swipe(cdpSession, {
+          x: 150,
+          y: 70,
+          xDistance: 0,
+          yDistance: 100,
+        });
+        await wait(200);
+        let {
+          pageScrollTop: scrolledPageScrollTop2,
+          innerScrollTop: scrolledInnerScrollTop2,
+        } = await getScrollTop();
+        expect(scrolledPageScrollTop2).toBe(0);
+        expect(scrolledInnerScrollTop2).toBe(initialInnerScrollTop);
+
+        // 3. Test scrolling inside the scroll-view
+        await swipe(cdpSession, {
+          x: 150,
+          y: 200,
+          xDistance: 0,
+          yDistance: -100,
+        });
+        await wait(200);
+        let {
+          pageScrollTop: scrolledPageScrollTop3,
+          innerScrollTop: scrolledInnerScrollTop3,
+        } = await getScrollTop();
+        expect(scrolledPageScrollTop3).toBe(0);
+        expect(scrolledInnerScrollTop3).toBeGreaterThan(initialInnerScrollTop);
+
+        // 4. Test scrolling after closing the overlay
+        await page.evaluate(() => {
+          document.querySelector('x-overlay-ng')!.removeAttribute('visible');
+        });
+        await wait(200);
+        await swipe(cdpSession, {
+          x: 20,
+          y: 20,
+          xDistance: 0,
+          yDistance: -100,
+        });
+        await wait(200);
+        let { pageScrollTop: finalPageScrollTop } = await getScrollTop();
+        expect(finalPageScrollTop).toBeGreaterThan(0);
+      },
+    );
   });
 
   test.describe('x-refresh-view', () => {

@@ -21,7 +21,12 @@ import { CHILDREN } from '../renderToOpcodes/constants.js';
 import { __root } from '../root.js';
 import { backgroundSnapshotInstanceManager } from '../snapshot.js';
 import type { SerializedSnapshotInstance } from '../snapshot.js';
+import {
+  delayedRunOnMainThreadData,
+  takeDelayedRunOnMainThreadData,
+} from '../worklet/call/delayedRunOnMainThreadData.js';
 import { destroyWorklet } from '../worklet/destroy.js';
+import { sendMTRefInitValueToMainThread } from '../worklet/ref/updateInitValue.js';
 
 export { runWithForce };
 
@@ -120,8 +125,11 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
       const patchList: PatchList = {
         patchList: [{ snapshotPatch, id: commitTaskId }],
       };
+      if (delayedRunOnMainThreadData.length) {
+        patchList.delayedRunOnMainThreadData = takeDelayedRunOnMainThreadData();
+      }
       const obj = commitPatchUpdate(patchList, { isHydration: true });
-
+      sendMTRefInitValueToMainThread();
       lynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
         globalCommitTaskMap.forEach((commitTask, id) => {
           if (id > commitTaskId) {

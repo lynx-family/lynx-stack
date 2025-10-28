@@ -17,6 +17,10 @@ on:
         required: false
         type: boolean
         default: false
+      web-report-name:
+        required: false
+        type: string
+        default: "playwright-report"
       codecov-flags:
         required: false
         type: string
@@ -34,7 +38,7 @@ jobs:
     runs-on: ${{ inputs.runs-on }}
     permissions: {}
     container:
-      image: ${{ inputs.is-web && 'mcr.microsoft.com/playwright:v1.55.0-noble' || null }}
+      image: ${{ inputs.is-web && 'mcr.microsoft.com/playwright:v1.56.0-noble' || null }}
       env:
         CI: 1
         TURBO_TELEMETRY_DISABLED: 1
@@ -44,9 +48,10 @@ jobs:
           # Codecov requires fetch-depth: 0
           fetch-depth: 0
           persist-credentials: false
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
-          node-version: "24"
+          node-version: "22"
+          package-manager-cache: false
       - name: TurboCache
         uses: lynx-infra/cache@5c6160a6a4c7fca80a2f3057bb9dfc9513fcb732
         with:
@@ -72,7 +77,7 @@ jobs:
           LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
         run: ${{ inputs.run }}
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@fdcc8476540edceab3de004e990f80d881c6cc00 # v5
+        uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 # v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           flags: ${{ inputs.codecov-flags }}
@@ -88,7 +93,7 @@ jobs:
         if: ${{ inputs.is-web && failure() }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: playwright-report
+          name: ${{ inputs.web-report-name }}
           path: packages/web-platform/web-tests/playwright-report
           if-no-files-found: error
           retention-days: 1

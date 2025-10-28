@@ -1,5 +1,11 @@
 # @lynx-js/chunk-loading-webpack-plugin
 
+## 0.3.3
+
+### Patch Changes
+
+- Fix unmet peer dependency "@rspack/core@'^1.3.10". ([#1660](https://github.com/lynx-family/lynx-stack/pull/1660))
+
 ## 0.3.2
 
 ### Patch Changes
