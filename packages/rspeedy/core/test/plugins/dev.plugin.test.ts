@@ -709,7 +709,7 @@ describe('Plugins - Dev', () => {
     await server.waitDevCompileDone()
 
     expect(printedUrls).toContainEqual({
-      'label': 'lynx',
+      'label': 'Lynx',
       'url': 'http://example.com:8080/main.lynx.bundle',
     })
   })
@@ -758,7 +758,7 @@ describe('Plugins - Dev', () => {
     await server.waitDevCompileDone()
 
     expect(printedUrls).toContainEqual({
-      'label': 'web',
+      'label': 'Web',
       'url': 'http://example.com:8080/main.web.bundle',
     })
 

@@ -153,7 +153,13 @@ export function pluginDev(
                     }
                   }
                 }
-                return finalUrls
+                return finalUrls.map((urlInfo) => {
+                  // capitalize the first letter of label
+                  const label = urlInfo.label.charAt(0).toUpperCase()
+                    + urlInfo.label.slice(1)
+                  urlInfo.label = label
+                  return urlInfo
+                })
               },
             },
           })
