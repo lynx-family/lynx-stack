@@ -12,6 +12,7 @@ import color from 'picocolors'
 import type { Dev } from '../config/dev/index.js'
 import type { Server } from '../config/server/index.js'
 import { debug } from '../debug.js'
+import type { ExposedAPI } from '../index.js'
 import { isLynx } from '../utils/is-lynx.js'
 import { ProvidePlugin } from '../webpack/ProvidePlugin.js'
 
@@ -100,6 +101,70 @@ export function pluginDev(
           // Rsbuild would use `output.assetPrefix` instead of `dev.assetPrefix`
           output: { assetPrefix },
         } as RsbuildConfig)
+      })
+
+      api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
+        const rspeedyAPIs = api.useExposed<ExposedAPI>(
+          Symbol.for('rspeedy.api'),
+        )!
+        const defaultFilename = '[name].[platform].bundle'
+        const { filename } = rspeedyAPIs.config.output ?? {}
+        let name: string
+        if (!filename) {
+          name = defaultFilename
+        } else if (typeof filename === 'object') {
+          name = filename.bundle ?? filename.template ?? defaultFilename
+        } else {
+          name = filename
+        }
+        if (
+          config.server?.printUrls === undefined
+          || config.server?.printUrls === true
+        ) {
+          const environmentNames = Object.keys(config.environments ?? {})
+          return mergeRsbuildConfig(config, {
+            server: {
+              printUrls: (param) => {
+                const finalUrls: { label: string, url: string }[] = []
+                const baseForUrls = (
+                  typeof assetPrefix === 'string'
+                    ? assetPrefix
+                    : `http://${hostname}:<port>/`
+                ).replaceAll('<port>', String(param.port))
+                for (const entry of Object.keys(config.source?.entry ?? {})) {
+                  for (const environmentName of environmentNames) {
+                    const pathname = name
+                      .replaceAll('[name]', entry)
+                      .replaceAll('[platform]', environmentName)
+                    finalUrls.push({
+                      label: environmentName,
+                      url: new URL(pathname, baseForUrls).toString(),
+                    })
+                    if (environmentName === 'web') {
+                      finalUrls.push({
+                        label: `Web Preview`,
+                        url: new URL(
+                          `/__web_preview?casename=${
+                            encodeURIComponent(pathname)
+                          }`,
+                          baseForUrls,
+                        ).toString(),
+                      })
+                    }
+                  }
+                }
+                return finalUrls.map((urlInfo) => {
+                  // capitalize the first letter of label
+                  const label = urlInfo.label.charAt(0).toUpperCase()
+                    + urlInfo.label.slice(1)
+                  urlInfo.label = label
+                  return urlInfo
+                })
+              },
+            },
+          })
+        }
+        return config
       })
 
       const require = createRequire(import.meta.url)
