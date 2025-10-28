@@ -1,7 +1,9 @@
-use inline_style_parser::parse_inline_style::Transformer;
-use inline_style_parser::{char_code_definitions::is_white_space, parse_inline_style};
+use crate::style::inline_style_parser::parse_inline_style::Transformer;
+use crate::style::inline_style_parser::{
+  char_code_definitions::is_white_space, parse_inline_style,
+};
+use crate::style::transformer::rules::{get_rename_rule_value, get_replace_rule_value};
 
-use crate::transformer::rules::{get_rename_rule_value, get_replace_rule_value};
 pub struct TransformerData<'a> {
   source: &'a str,
   transformed_source: String,

@@ -27,3 +27,13 @@ execSync(
   `pnpm wasm-opt --enable-bulk-memory ./dist/standard_bg.wasm -O3 -o ./dist/standard_bg.wasm`,
   { cwd: packageRoot, stdio: 'inherit' },
 );
+
+// build the debug wasm package
+execSync(
+  `cargo build --target wasm32-unknown-unknown`,
+  { cwd: packageRoot, stdio: 'inherit' },
+);
+execSync(
+  `pnpm exec dotslash ./scripts/wasm-bindgen --out-dir dist --target bundler --out-name debug ${cargoOutput}`,
+  { cwd: packageRoot, stdio: 'inherit' },
+);
