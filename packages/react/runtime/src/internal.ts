@@ -18,7 +18,14 @@ import { SnapshotInstance, __page, __pageId, createSnapshot, snapshotCreatorMap,
 
 export { __page, __pageId, __root };
 
-export { BackgroundSnapshotInstance, SnapshotInstance, snapshotCreateList, createSnapshot, snapshotManager, snapshotCreatorMap };
+export {
+  BackgroundSnapshotInstance,
+  SnapshotInstance,
+  snapshotCreateList,
+  createSnapshot,
+  snapshotManager,
+  snapshotCreatorMap,
+};
 
 export const __DynamicPartSlot: DynamicPartType = DynamicPartType.Slot;
 export const __DynamicPartMultiChildren: DynamicPartType = DynamicPartType.MultiChildren;

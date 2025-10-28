@@ -1,7 +1,7 @@
 import { jsxDEV as _jsxDEV } from "@lynx-js/react/jsx-dev-runtime";
 import * as ReactLynx from "@lynx-js/react";
 const __snapshot_da39a_test_1 = "__snapshot_da39a_test_1";
-ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_1] = ()=>ReactLynx.createSnapshot("__snapshot_da39a_test_1", function() {
+ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_1] = ()=>ReactLynx.createSnapshot(__snapshot_da39a_test_1, function() {
         const pageId = ReactLynx.__pageId;
         const el = __CreateView(pageId);
         const el1 = __CreateText(pageId);
@@ -21,7 +21,7 @@ ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_1] = ()=>ReactLynx.createSnap
             ReactLynx.__DynamicPartChildren,
             3
         ]
-    ], undefined, globDynamicComponentEntry, null, __snapshot_da39a_test_1);
+    ], undefined, globDynamicComponentEntry, null);
 _jsxDEV(__snapshot_da39a_test_1, {
     children: _jsxDEV(A, {}, void 0, false, {
         fileName: "input.js",

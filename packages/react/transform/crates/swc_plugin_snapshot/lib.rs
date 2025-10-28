@@ -1414,18 +1414,16 @@ where
 
     let snapshot_create_call = quote!(
         r#"$runtime_id.snapshotCreatorMap[$snapshot_id] = () => $runtime_id.createSnapshot(
-             $snapshot_uid,
+             $snapshot_id,
              $snapshot_creator,
              $snapshot_dynamic_parts_def,
              $slot,
              $css_id,
              globDynamicComponentEntry,
-             $snapshot_refs_and_spread_index,
-             $snapshot_id
+             $snapshot_refs_and_spread_index
         )"# as Expr,
         runtime_id: Expr = self.runtime_id.clone(),
         snapshot_id = snapshot_id.clone(),
-        snapshot_uid: Expr = Expr::Lit(Lit::Str(snapshot_uid.clone().into())),
         snapshot_creator: Expr = snapshot_creator,
         snapshot_dynamic_parts_def: Expr = match (target, snapshot_dynamic_part_def.len()) {
           (TransformTarget::JS, _) | (_, 0) => Expr::Lit(Lit::Null(Null { span: DUMMY_SP })),

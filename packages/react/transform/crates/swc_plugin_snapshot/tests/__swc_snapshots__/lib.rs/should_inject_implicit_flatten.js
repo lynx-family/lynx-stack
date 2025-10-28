@@ -1,15 +1,15 @@
 import * as ReactLynx from "@lynx-js/react";
 const __snapshot_da39a_test_2 = "__snapshot_da39a_test_2";
-ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_2] = ()=>ReactLynx.createSnapshot("__snapshot_da39a_test_2", function() {
+ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_2] = ()=>ReactLynx.createSnapshot(__snapshot_da39a_test_2, function() {
         const pageId = ReactLynx.__pageId;
         const el = __CreateView(pageId);
         __SetClasses(el, 'commdityV1TextVerticalWrapper');
         return [
             el
         ];
-    }, null, ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null, __snapshot_da39a_test_2);
+    }, null, ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null);
 const __snapshot_da39a_test_1 = "__snapshot_da39a_test_1";
-ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_1] = ()=>ReactLynx.createSnapshot("__snapshot_da39a_test_1", function() {
+ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_1] = ()=>ReactLynx.createSnapshot(__snapshot_da39a_test_1, function() {
         const pageId = ReactLynx.__pageId;
         const el = __CreateView(pageId);
         const el1 = __CreateView(pageId);
@@ -55,7 +55,7 @@ ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_1] = ()=>ReactLynx.createSnap
             ReactLynx.__DynamicPartSlot,
             6
         ]
-    ], undefined, globDynamicComponentEntry, null, __snapshot_da39a_test_1);
+    ], undefined, globDynamicComponentEntry, null);
 <__snapshot_da39a_test_1 values={[
     id
 ]}><__snapshot_da39a_test_2>{[

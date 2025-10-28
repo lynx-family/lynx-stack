@@ -195,10 +195,6 @@ export const backgroundSnapshotInstanceManager: {
   },
 };
 
-export function calcEntryUniqID(uniqID: string, entryName?: string): string {
-  return entryName ? `${entryName}:${uniqID}` : uniqID;
-}
-
 export function createSnapshot(
   uniqID: string,
   create: Snapshot['create'] | null,
@@ -207,16 +203,13 @@ export function createSnapshot(
   cssId: number | undefined,
   entryName: string | undefined,
   refAndSpreadIndexes: number[] | null,
-  entryUniqID: string | undefined,
 ): string {
-  entryUniqID ??= calcEntryUniqID(uniqID, entryName);
-
   if (
     __DEV__ && __JS__
     // `__globalSnapshotPatch` does not exist before hydration,
     // so the snapshot of the first screen will not be sent to the main thread.
     && __globalSnapshotPatch
-    && !snapshotManager.values.has(entryUniqID)
+    && !snapshotManager.values.has(uniqID)
     // `create` may be `null` when loading a lazy bundle after hydration.
     && create !== null
   ) {
@@ -234,16 +227,15 @@ export function createSnapshot(
       slot,
       cssId,
       entryName,
-      entryUniqID,
     );
   }
 
   const s: Snapshot = { create, update, slot, cssId, entryName, refAndSpreadIndexes };
-  snapshotManager.values.set(entryUniqID, s);
+  snapshotManager.values.set(uniqID, s);
   if (slot && slot[0] && slot[0][0] === DynamicPartType.ListChildren) {
     s.isListHolder = true;
   }
-  return entryUniqID;
+  return uniqID;
 }
 
 export interface WithChildren {

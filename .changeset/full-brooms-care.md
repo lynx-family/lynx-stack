@@ -1,5 +1,5 @@
 ---
-"@lynx-js/react": patch
+"@lynx-js/react": minor
 ---
 
-Delay the `createSnapshot` operation to speed up IFR
+**BREAKING CHANGE**: Delay the `createSnapshot` operation to `Snapshot` constructor to speed up IFR.

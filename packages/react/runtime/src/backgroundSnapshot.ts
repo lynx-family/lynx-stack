@@ -28,7 +28,12 @@ import { applyRef, clearQueuedRefs, queueRefAttrUpdate } from './snapshot/ref.js
 import type { Ref } from './snapshot/ref.js';
 import { transformSpread } from './snapshot/spread.js';
 import type { SerializedSnapshotInstance, Snapshot } from './snapshot.js';
-import { backgroundSnapshotInstanceManager, snapshotCreatorMap,snapshotManager,traverseSnapshotInstance } from './snapshot.js';
+import {
+  backgroundSnapshotInstanceManager,
+  snapshotCreatorMap,
+  snapshotManager,
+  traverseSnapshotInstance,
+} from './snapshot.js';
 import { hydrationMap } from './snapshotInstanceHydrationMap.js';
 import { isDirectOrDeepEqual } from './utils.js';
 import { onPostWorkletCtx } from './worklet/ctx.js';

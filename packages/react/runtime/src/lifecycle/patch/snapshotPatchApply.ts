@@ -17,13 +17,7 @@ import { sendCtxNotFoundEventToBackground } from './error.js';
 import type { SnapshotPatch } from './snapshotPatch.js';
 import { SnapshotOperation } from './snapshotPatch.js';
 import type { DynamicPartType } from '../../snapshot/dynamicPartType.js';
-import {
-  SnapshotInstance,
-  calcEntryUniqID,
-  createSnapshot,
-  snapshotInstanceManager,
-  snapshotManager,
-} from '../../snapshot.js';
+import { SnapshotInstance, createSnapshot, snapshotInstanceManager, snapshotManager } from '../../snapshot.js';
 
 /**
  * Applies a patch of snapshot operations to the main thread.
@@ -97,11 +91,8 @@ export function snapshotPatchApply(snapshotPatch: SnapshotPatch): void {
           const slot = snapshotPatch[++i] as [DynamicPartType, number][];
           const cssId = (snapshotPatch[++i] ?? 0) as number;
           const entryName = snapshotPatch[++i] as string | undefined;
-          let entryUniqID = snapshotPatch[++i] as string | undefined;
 
-          entryUniqID ??= calcEntryUniqID(uniqID, entryName);
-
-          if (!snapshotManager.values.has(entryUniqID)) {
+          if (!snapshotManager.values.has(uniqID)) {
             // HMR-related
             // Update the evaluated snapshots from JS.
             createSnapshot(
@@ -113,7 +104,6 @@ export function snapshotPatchApply(snapshotPatch: SnapshotPatch): void {
               cssId,
               entryName,
               null,
-              entryUniqID,
             );
           }
         }
