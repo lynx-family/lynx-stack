@@ -69,14 +69,13 @@ function hydrateCtxImpl(
  */
 function hydrateMainThreadRef(
   refId: WorkletRefId,
-  value: WorkletRefImpl<unknown> | { current: unknown },
+  value: WorkletRefImpl<unknown>,
 ) {
   if ('_initValue' in value) {
     // The ref has not been accessed yet.
     return;
   }
-  const ref = lynxWorkletImpl!._refImpl._workletRefMap[refId]!;
-  ref.current = value.current;
+  lynxWorkletImpl!._refImpl._workletRefMap[refId] = value;
 }
 
 /**
