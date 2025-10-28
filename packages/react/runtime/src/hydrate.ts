@@ -303,7 +303,8 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
         const diffResult = diffArrayLepus(
           beforeChildNodes,
           afterChildNodes,
-          (a, b) => a.type === b.type,
+          (a, b) =>
+            a.type === b.type && a.__listItemPlatformInfo?.['item-key'] === b.__listItemPlatformInfo?.['item-key'],
           (a, b, _oldIndex, newIndex) => {
             if (
               JSON.stringify(a.__listItemPlatformInfo)
