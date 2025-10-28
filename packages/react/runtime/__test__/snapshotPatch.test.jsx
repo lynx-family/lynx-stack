@@ -84,10 +84,10 @@ describe('createElement', () => {
     expect(patch).toMatchInlineSnapshot(`
       [
         0,
-        "__Card__:__snapshot_a94a8_test_1",
+        "__snapshot_a94a8_test_1",
         2,
         0,
-        "__Card__:__snapshot_a94a8_test_2",
+        "__snapshot_a94a8_test_2",
         3,
       ]
     `);
@@ -134,10 +134,10 @@ describe('insertBefore', () => {
     expect(patch).toMatchInlineSnapshot(`
       [
         0,
-        "__Card__:__snapshot_a94a8_test_1",
+        "__snapshot_a94a8_test_1",
         2,
         0,
-        "__Card__:__snapshot_a94a8_test_2",
+        "__snapshot_a94a8_test_2",
         3,
         1,
         2,
@@ -181,13 +181,13 @@ describe('insertBefore', () => {
     expect(patch).toMatchInlineSnapshot(`
       [
         0,
-        "__Card__:__snapshot_a94a8_test_1",
+        "__snapshot_a94a8_test_1",
         2,
         0,
-        "__Card__:__snapshot_a94a8_test_2",
+        "__snapshot_a94a8_test_2",
         3,
         0,
-        "__Card__:__snapshot_a94a8_test_3",
+        "__snapshot_a94a8_test_3",
         4,
         1,
         2,
@@ -254,10 +254,10 @@ describe('insertBefore', () => {
     expect(patch).toMatchInlineSnapshot(`
       [
         0,
-        "__Card__:__snapshot_a94a8_test_1",
+        "__snapshot_a94a8_test_1",
         2,
         0,
-        "__Card__:__snapshot_a94a8_test_2",
+        "__snapshot_a94a8_test_2",
         3,
         1,
         2,
@@ -291,7 +291,7 @@ describe('insertBefore', () => {
           },
         ],
         [
-          [Error: snapshotPatchApply failed: ctx not found, snapshot type: '__Card__:__snapshot_a94a8_test_3'],
+          [Error: snapshotPatchApply failed: ctx not found, snapshot type: '__snapshot_a94a8_test_3'],
           {
             "errorCode": 1101,
           },
@@ -522,7 +522,7 @@ describe('setAttribute', () => {
     expect(patch).toMatchInlineSnapshot(`
       [
         0,
-        "__Card__:__snapshot_a94a8_test_4",
+        "__snapshot_a94a8_test_4",
         2,
         3,
         2,
@@ -558,7 +558,7 @@ describe('setAttribute', () => {
     expect(patch).toMatchInlineSnapshot(`
       [
         0,
-        "__Card__:__snapshot_a94a8_test_4",
+        "__snapshot_a94a8_test_4",
         2,
         4,
         2,
@@ -592,7 +592,7 @@ describe('setAttribute', () => {
     expect(patch).toMatchInlineSnapshot(`
       [
         0,
-        "__Card__:__snapshot_a94a8_test_4",
+        "__snapshot_a94a8_test_4",
         2,
         4,
         2,
@@ -628,7 +628,7 @@ describe('setAttribute', () => {
     expect(patch).toMatchInlineSnapshot(`
       [
         0,
-        "__Card__:__snapshot_a94a8_test_4",
+        "__snapshot_a94a8_test_4",
         2,
         4,
         100,
@@ -674,7 +674,7 @@ describe('setAttribute', () => {
     expect(patch).toMatchInlineSnapshot(`
       [
         0,
-        "__Card__:__snapshot_a94a8_test_4",
+        "__snapshot_a94a8_test_4",
         2,
         3,
         3,
@@ -1069,7 +1069,7 @@ describe('DEV_ONLY_addSnapshot', () => {
     const entryName = 'FOO';
     // We have to use `createSnapshot` so that is can be created after `initGlobalSnapshotPatch`
     const uniqID1 = createSnapshot(
-      'with-cssId-entryName-0',
+      `${entryName}:with-cssId-entryName-0`,
       // The `create` function is stringified and called by `new Function()`
       /* v8 ignore start */
       () => {
@@ -1099,7 +1099,7 @@ describe('DEV_ONLY_addSnapshot', () => {
     expect(patch).toMatchInlineSnapshot(`
       [
         100,
-        "with-cssId-entryName-0",
+        "FOO:with-cssId-entryName-0",
         "() => {
               const pageId = 0;
               const el = __CreateView(pageId);
@@ -1148,7 +1148,7 @@ describe('DEV_ONLY_addSnapshot', () => {
     const entryName = 'BAR';
     // We have to use `createSnapshot` so that is can be created after `initGlobalSnapshotPatch`
     const uniqID1 = createSnapshot(
-      'with-entryName-only-0',
+      `${entryName}:with-entryName-only-0`,
       // The `create` function is stringified and called by `new Function()`
       /* v8 ignore start */
       () => {
@@ -1177,7 +1177,7 @@ describe('DEV_ONLY_addSnapshot', () => {
     expect(patch).toMatchInlineSnapshot(`
       [
         100,
-        "with-entryName-only-0",
+        "BAR:with-entryName-only-0",
         "() => {
               const pageId = 0;
               const el = __CreateView(pageId);
@@ -1352,10 +1352,9 @@ describe('missing snapshot', () => {
   });
 
   it('should throw error when missing snapshot', () => {
-    const bsi1 = new BackgroundSnapshotInstance('missing-snapshot');
-    let patch;
-    patch = takeGlobalSnapshotPatch();
-    expect(patch.length).toMatchInlineSnapshot(`3`);
-    expect(() => snapshotPatchApply(patch)).toThrowError('Snapshot not found: missing-snapshot');
+    expect(() => new BackgroundSnapshotInstance('missing-snapshot')).toThrowError(
+      'Snapshot not found: missing-snapshot',
+    );
+    expect(() => new SnapshotInstance('missing-snapshot')).toThrowError('Snapshot not found: missing-snapshot');
   });
 });

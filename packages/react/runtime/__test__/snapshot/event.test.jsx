@@ -312,8 +312,26 @@ describe('eventUpdate', () => {
     patch = takeGlobalSnapshotPatch();
     expect(patch).toMatchInlineSnapshot(`
       [
+        100,
+        "__snapshot_a94a8_test_4",
+        "function() {
+        const pageId = __vite_ssr_import_1__.__pageId;
+        const el = __CreateText(pageId);
+        const el1 = __CreateRawText("1");
+        __AppendElement(el, el1);
+        return [
+          el,
+          el1
+        ];
+      }",
+        [
+          "(snapshot, index, oldValue) => __vite_ssr_import_1__.updateEvent(snapshot, index, oldValue, 0, "bindEvent", "tap", "")",
+        ],
+        null,
+        undefined,
+        "__Card__",
         0,
-        "__Card__:__snapshot_a94a8_test_4",
+        "__snapshot_a94a8_test_4",
         3,
         4,
         3,
@@ -940,8 +958,26 @@ describe('event in spread', () => {
     patch = takeGlobalSnapshotPatch();
     expect(patch).toMatchInlineSnapshot(`
       [
+        100,
+        "__snapshot_a94a8_test_10",
+        "function() {
+        const pageId = __vite_ssr_import_1__.__pageId;
+        const el = __CreateText(pageId);
+        const el1 = __CreateRawText("1");
+        __AppendElement(el, el1);
+        return [
+          el,
+          el1
+        ];
+      }",
+        [
+          "(snapshot, index, oldValue) => __vite_ssr_import_1__.updateSpread(snapshot, index, oldValue, 0)",
+        ],
+        null,
+        undefined,
+        "__Card__",
         0,
-        "__Card__:__snapshot_a94a8_test_10",
+        "__snapshot_a94a8_test_10",
         3,
         4,
         3,
@@ -1160,7 +1196,7 @@ describe('event when firstScreenSyncTiming is jsReady', () => {
                 "-5": -8,
                 "-6": -9,
               },
-              "root": "{"id":-7,"type":"root","children":[{"id":-8,"type":"__Card__:__snapshot_a94a8_test_12","children":[{"id":-9,"type":"__Card__:__snapshot_a94a8_test_11","values":["-9:0:"]}]}]}",
+              "root": "{"id":-7,"type":"root","children":[{"id":-8,"type":"__snapshot_a94a8_test_12","children":[{"id":-9,"type":"__snapshot_a94a8_test_11","values":["-9:0:"]}]}]}",
             },
           ],
         ]
@@ -1269,7 +1305,7 @@ describe('call `root.render()` async', () => {
             "rLynxFirstScreen",
             {
               "jsReadyEventIdSwap": {},
-              "root": "{"id":-1,"type":"root","children":[{"id":-2,"type":"__Card__:__snapshot_a94a8_test_14","children":[{"id":-3,"type":"__Card__:__snapshot_a94a8_test_13","values":["-3:0:"]}]}]}",
+              "root": "{"id":-1,"type":"root","children":[{"id":-2,"type":"__snapshot_a94a8_test_14","children":[{"id":-3,"type":"__snapshot_a94a8_test_13","values":["-3:0:"]}]}]}",
             },
           ],
         ]

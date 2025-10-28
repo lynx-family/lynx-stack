@@ -3,7 +3,7 @@
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
-import { snapshotManager } from '@lynx-js/react/internal';
+import { snapshotManager, SnapshotInstance } from '@lynx-js/react/internal';
 
 const importPromise = import('./foo.js');
 
@@ -27,6 +27,11 @@ it('should have globDynamicComponentEntry', async () => {
 
   const jsx = <view id='xxx' />;
   expect(jsx).toBeDefined();
+
+  expect(snapshotManager.values.get(jsx.type)).toBeUndefined();
+
+  // lazy creation of snapshot
+  new SnapshotInstance(jsx.type);
 
   expect(snapshotManager.values.get(jsx.type).entryName).toBe(
     globDynamicComponentEntry,

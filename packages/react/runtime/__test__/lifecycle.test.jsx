@@ -120,7 +120,7 @@ describe('componentDidMount', () => {
     expect(mtCallback[0]).toEqual(LifecycleConstant.patchUpdate);
     expect(mtCallback[1]).toMatchInlineSnapshot(`
       {
-        "data": "{"patchList":[{"id":6,"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_3",2,0,null,3,3,3,0,1,1,2,3,null,1,1,2,null]}]}",
+        "data": "{"patchList":[{"id":6,"snapshotPatch":[100,"__snapshot_a94a8_test_3","function() {\\n  const pageId = __vite_ssr_import_1__.__pageId;\\n  const el = __CreateText(pageId);\\n  return [\\n    el\\n  ];\\n}",[],[[3,0]],null,"__Card__",0,"__snapshot_a94a8_test_3",2,0,null,3,3,3,0,1,1,2,3,null,1,1,2,null]}]}",
         "patchOptions": {
           "reloadVersion": 0,
         },
@@ -167,7 +167,7 @@ describe('componentDidMount', () => {
     expect(mtCallback[0]).toEqual(LifecycleConstant.patchUpdate);
     expect(mtCallback[1]).toMatchInlineSnapshot(`
       {
-        "data": "{"patchList":[{"id":9,"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_4",2,0,null,3,3,3,0,1,1,2,3,null,1,1,2,null]}]}",
+        "data": "{"patchList":[{"id":9,"snapshotPatch":[100,"__snapshot_a94a8_test_4","function() {\\n  const pageId = __vite_ssr_import_1__.__pageId;\\n  const el = __CreateText(pageId);\\n  return [\\n    el\\n  ];\\n}",[],[[3,0]],null,"__Card__",0,"__snapshot_a94a8_test_4",2,0,null,3,3,3,0,1,1,2,3,null,1,1,2,null]}]}",
         "patchOptions": {
           "reloadVersion": 0,
         },
@@ -559,7 +559,7 @@ describe('useState', () => {
       await waitSchedule();
       expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1].data).toMatchInlineSnapshot(
-        `"{"patchList":[{"id":27,"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_15",2,4,2,[false,{"str":"str"}],1,-1,2,null]}]}"`,
+        `"{"patchList":[{"id":27,"snapshotPatch":[100,"__snapshot_a94a8_test_15","function() {\\n  const pageId = __vite_ssr_import_1__.__pageId;\\n  const el = __CreateView(pageId);\\n  const el1 = __CreateText(pageId);\\n  __AppendElement(el, el1);\\n  const el2 = __CreateText(pageId);\\n  __AppendElement(el, el2);\\n  return [\\n    el,\\n    el1,\\n    el2\\n  ];\\n}",["function(ctx) {\\n    if (ctx.__elements) __SetAttribute(ctx.__elements[1], \\"attr\\", ctx.__values[0]);\\n  }","function(ctx) {\\n    if (ctx.__elements) __SetAttribute(ctx.__elements[2], \\"attr\\", ctx.__values[1]);\\n  }"],null,null,"__Card__",0,"__snapshot_a94a8_test_15",2,4,2,[false,{"str":"str"}],1,-1,2,null]}]}"`,
       );
     }
   });

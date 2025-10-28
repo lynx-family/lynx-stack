@@ -6,7 +6,7 @@
 ## Asset Files
 - Bundle: rspack-bundle.js
 - Manifest: main.LAST_HASH.hot-update.json, size: 28
-- Update: main.LAST_HASH.hot-update.js, size: 4138
+- Update: main.LAST_HASH.hot-update.js, size: 4412
 
 ## Manifest
 
@@ -49,24 +49,25 @@ __webpack_require__.d(__webpack_exports__, {
 /* provided dependency */ var __prefresh_utils__ = __webpack_require__(/*! ../../../../runtime/refresh.cjs */ "../../../../runtime/refresh.cjs");
 
 
-const __snapshot_4953c_43c2c_1 = (__webpack_require__(/*! @lynx-js/react/internal */ "../../../../../../react/runtime/lib/internal.js")/* .createSnapshot */.createSnapshot)("__snapshot_4953c_43c2c_1", function() {
-    const pageId = (__webpack_require__(/*! @lynx-js/react/internal */ "../../../../../../react/runtime/lib/internal.js")/* .__pageId */.__pageId);
-    const el = __CreateText(pageId);
-    const el1 = __CreateRawText("after: ");
-    __AppendElement(el, el1);
-    const el2 = __CreateWrapperElement(pageId);
-    __AppendElement(el, el2);
-    return [
-        el,
-        el1,
-        el2
-    ];
-}, null, [
-    [
-        (__webpack_require__(/*! @lynx-js/react/internal */ "../../../../../../react/runtime/lib/internal.js")/* .__DynamicPartChildren */.__DynamicPartChildren),
-        2
-    ]
-], undefined, globDynamicComponentEntry, null);
+const __snapshot_4953c_43c2c_1 = "__snapshot_4953c_43c2c_1";
+(__webpack_require__(/*! @lynx-js/react/internal */ "../../../../../../react/runtime/lib/internal.js")/* .snapshotCreatorMap */.snapshotCreatorMap)[__snapshot_4953c_43c2c_1] = ()=>(__webpack_require__(/*! @lynx-js/react/internal */ "../../../../../../react/runtime/lib/internal.js")/* .createSnapshot */.createSnapshot)(__snapshot_4953c_43c2c_1, function() {
+        const pageId = (__webpack_require__(/*! @lynx-js/react/internal */ "../../../../../../react/runtime/lib/internal.js")/* .__pageId */.__pageId);
+        const el = __CreateText(pageId);
+        const el1 = __CreateRawText("after: ");
+        __AppendElement(el, el1);
+        const el2 = __CreateWrapperElement(pageId);
+        __AppendElement(el, el2);
+        return [
+            el,
+            el1,
+            el2
+        ];
+    }, null, [
+        [
+            (__webpack_require__(/*! @lynx-js/react/internal */ "../../../../../../react/runtime/lib/internal.js")/* .__DynamicPartChildren */.__DynamicPartChildren),
+            2
+        ]
+    ], undefined, globDynamicComponentEntry, null);
 function Inner({ theme }) {
     __RenderContent(`after: ${theme}`);
     return /*#__PURE__*/ (0,_lynx_js_react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxDEV)(__snapshot_4953c_43c2c_1, {

@@ -67,7 +67,7 @@ test('state change will cause re-render', async () => {
             "children": undefined,
             "extraProps": undefined,
             "id": 2,
-            "type": "__Card__:__snapshot_354a3_test_1",
+            "type": "__snapshot_354a3_test_1",
             "values": undefined,
           },
         ],
@@ -80,7 +80,7 @@ test('state change will cause re-render', async () => {
         "children": undefined,
         "extraProps": undefined,
         "id": 2,
-        "type": "__Card__:__snapshot_354a3_test_1",
+        "type": "__snapshot_354a3_test_1",
         "values": undefined,
       },
     }
@@ -100,7 +100,7 @@ test('state change will cause re-render', async () => {
       [
         "rLynxChange",
         {
-          "data": "{"patchList":[{"snapshotPatch":[0,"__Card__:__snapshot_354a3_test_1",2,1,-1,2,null],"id":2}]}",
+          "data": "{"patchList":[{"snapshotPatch":[0,"__snapshot_354a3_test_1",2,1,-1,2,null],"id":2}]}",
           "patchOptions": {
             "isHydration": true,
             "pipelineOptions": {
@@ -118,7 +118,7 @@ test('state change will cause re-render', async () => {
       [
         "rLynxChange",
         {
-          "data": "{"patchList":[{"id":3,"snapshotPatch":[2,-1,2,0,"__Card__:__snapshot_354a3_test_2",3,0,null,4,3,4,0,"Hello World",1,3,4,null,1,-1,3,null]}]}",
+          "data": "{"patchList":[{"id":3,"snapshotPatch":[2,-1,2,100,"__snapshot_354a3_test_2","function() {\\n  const pageId = __vite_ssr_import_1__.__pageId;\\n  const el = __CreateText(pageId);\\n  __AddDataset(el, \\"testid\\", \\"message\\");\\n  const el1 = __CreateRawText(\\"Loaded this message: \\");\\n  __AppendElement(el, el1);\\n  const el2 = __CreateWrapperElement(pageId);\\n  __AppendElement(el, el2);\\n  const el3 = __CreateRawText(\\"!\\");\\n  __AppendElement(el, el3);\\n  return [\\n    el,\\n    el1,\\n    el2,\\n    el3\\n  ];\\n}",[],[[3,2]],null,"__Card__",0,"__snapshot_354a3_test_2",3,0,null,4,3,4,0,"Hello World",1,3,4,null,1,-1,3,null]}]}",
           "patchOptions": {
             "pipelineOptions": {
               "dsl": "reactLynx",

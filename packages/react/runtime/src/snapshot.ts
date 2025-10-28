@@ -283,14 +283,15 @@ export class SnapshotInstance {
   __extraProps?: Record<string, unknown> | undefined;
 
   constructor(public type: string, id?: number) {
-    if (!snapshotManager.values.has(type)) {
-      snapshotCreatorMap[type]!();
+    // Suspense uses 'div'
+    if (!snapshotManager.values.has(type) && type !== 'div') {
+      if (snapshotCreatorMap[type]) {
+        snapshotCreatorMap[type]();
+      } else {
+        throw new Error('Snapshot not found: ' + type);
+      }
     }
     this.__snapshot_def = snapshotManager.values.get(type)!;
-    // Suspense uses 'div'
-    if (!this.__snapshot_def && type !== 'div') {
-      throw new Error('Snapshot not found: ' + type);
-    }
 
     id ??= snapshotInstanceManager.nextId -= 1;
     this.__id = id;

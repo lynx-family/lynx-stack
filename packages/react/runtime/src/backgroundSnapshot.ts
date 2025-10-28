@@ -40,8 +40,13 @@ import { onPostWorkletCtx } from './worklet/ctx.js';
 
 export class BackgroundSnapshotInstance {
   constructor(public type: string) {
-    if (!snapshotManager.values.has(type)) {
-      snapshotCreatorMap[type]!();
+    // Suspense uses 'div'
+    if (!snapshotManager.values.has(type) && type !== 'div') {
+      if (snapshotCreatorMap[type]) {
+        snapshotCreatorMap[type]();
+      } else {
+        throw new Error('BackgroundSnapshot not found: ' + type);
+      }
     }
     this.__snapshot_def = snapshotManager.values.get(type)!;
     const id = this.__id = backgroundSnapshotInstanceManager.nextId += 1;

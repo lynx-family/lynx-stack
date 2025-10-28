@@ -26,7 +26,7 @@ it('basic', async function() {
         <text>{HOLE}</text>
       </view>,
     ),
-  ).toMatchInlineSnapshot(`"__Card__:__snapshot_a94a8_test_1"`);
+  ).toMatchInlineSnapshot(`"__snapshot_a94a8_test_1"`);
 });
 
 const snapshot1 = __SNAPSHOT__(

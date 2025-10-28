@@ -24,13 +24,13 @@ it('cssId with entry', function() {
 
   expect(a.__element_root).toMatchInlineSnapshot(`
     <view
-      cssId="FOO:1000"
+      cssId="default-entry-from-native:1000"
     >
       <text
-        cssId="FOO:1000"
+        cssId="default-entry-from-native:1000"
       >
         <raw-text
-          cssId="FOO:1000"
+          cssId="default-entry-from-native:1000"
           text="Hello, World"
         />
       </text>
