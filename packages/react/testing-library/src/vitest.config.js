@@ -71,6 +71,18 @@ export const createVitestConfig = async (options) => {
         paths: [runtimeDir],
       }),
     },
+    {
+      find: /^react\/jsx-runtime$/,
+      replacement: require.resolve(path.posix.join(runtimeOSSPkgName, 'jsx-runtime'), {
+        paths: [runtimeDir],
+      }),
+    },
+    {
+      find: /^react\/jsx-dev-runtime$/,
+      replacement: require.resolve(path.posix.join(runtimeOSSPkgName, 'jsx-dev-runtime'), {
+        paths: [runtimeDir],
+      }),
+    },
   ];
   let reactCompilerRuntimeAlias = [];
   try {
