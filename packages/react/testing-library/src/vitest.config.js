@@ -121,27 +121,17 @@ export const createVitestConfig = async (options) => {
       }\` in your project root to use React Compiler.`;
     }
 
+    const { isReactCompilerRequired } = require(swcReactCompilerPath);
+    const babel = require(babelPath);
+
     return {
       name: 'transformReactCompilerPlugin',
       enforce: 'pre',
       async transform(sourceText, sourcePath) {
-        const id = sourcePath;
-        if (
-          id.endsWith('.css') || id.endsWith('.less') || id.endsWith('.scss')
-        ) {
-          if (process.env['DEBUG']) {
-            console.log('ignoring css file', id);
-          }
-          return '';
-        }
-
-        const { isReactCompilerRequired } = require(swcReactCompilerPath);
         if (/\.(?:jsx|tsx)$/.test(sourcePath)) {
           const needReactCompiler = await isReactCompilerRequired(Buffer.from(sourceText));
           if (needReactCompiler) {
             try {
-              const babel = require(babelPath);
-
               const result = babel.transformSync(sourceText, {
                 plugins: [
                   // We use '17' to make `babel-plugin-react-compiler` compiles our code
@@ -161,7 +151,7 @@ export const createVitestConfig = async (options) => {
                 };
               } else {
                 this.error(
-                  `babel-plugin-react-compiler transform failed for ${this.resourcePath}: ${
+                  `babel-plugin-react-compiler transform failed for ${sourcePath}: ${
                     result ? 'missing code or map' : 'no result'
                   }`,
                 );
@@ -171,6 +161,8 @@ export const createVitestConfig = async (options) => {
             }
           }
         }
+
+        return null;
       },
     };
   }
