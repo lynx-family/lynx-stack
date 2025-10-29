@@ -1461,7 +1461,7 @@ describe('missing snapshot', () => {
 
   it('should throw error when missing snapshot', () => {
     expect(() => new BackgroundSnapshotInstance('missing-snapshot')).toThrowError(
-      'Snapshot not found: missing-snapshot',
+      'BackgroundSnapshot not found: missing-snapshot',
     );
     expect(() => new SnapshotInstance('missing-snapshot')).toThrowError('Snapshot not found: missing-snapshot');
   });
