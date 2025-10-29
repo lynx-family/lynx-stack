@@ -1051,7 +1051,7 @@ describe('DEV_ONLY_addSnapshot', () => {
     // We have to use `snapshotCreatorMap[uniqID1] =` so that is can be created after `initGlobalSnapshotPatch`
     snapshotCreatorMap[uniqID1] = (uniqID1) => {
       globalThis.createSnapshot(
-        'with-cssId-0',
+        uniqID1,
         // The `create` function is stringified and called by `new Function()`
         /* v8 ignore start */
         () => {
