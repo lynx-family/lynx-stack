@@ -284,24 +284,6 @@ describe('suspense', () => {
             "parentId": -1,
           },
           {
-            "create": "function() {
-          const pageId = __vite_ssr_import_1__.__pageId;
-          const el = __CreateText(pageId);
-          const el1 = __CreateRawText("foo");
-          __AppendElement(el, el1);
-          return [
-            el,
-            el1
-          ];
-        }",
-            "cssId": null,
-            "entryName": "__Card__",
-            "op": "DEV_ONLY_AddSnapshot",
-            "slot": null,
-            "uniqID": "__snapshot_a94a8_test_5",
-            "update": [],
-          },
-          {
             "id": 7,
             "op": "CreateElement",
             "type": "__snapshot_a94a8_test_5",

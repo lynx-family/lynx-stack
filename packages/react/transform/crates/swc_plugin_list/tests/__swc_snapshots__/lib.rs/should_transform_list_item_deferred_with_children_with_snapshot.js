@@ -1,6 +1,6 @@
 import * as ReactLynxRuntimeComponents from '@lynx-js/react/runtime-components';
 const __snapshot_da39a_test_1 = "__snapshot_da39a_test_1";
-require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_1] = ()=>require('@lynx-js/react/internal').createSnapshot(__snapshot_da39a_test_1, function() {
+require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_1] = (__snapshot_da39a_test_1)=>require('@lynx-js/react/internal').createSnapshot(__snapshot_da39a_test_1, function() {
         const pageId = require('@lynx-js/react/internal').__pageId;
         const el = __CreateElement("list-item", pageId);
         __SetInlineStyles(el, "color: red; width: 100rpx;");
@@ -13,7 +13,7 @@ require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_1] =
         (snapshot, index, oldValue)=>require('@lynx-js/react/internal').updateEvent(snapshot, index, oldValue, 0, "bindEvent", "tap", '')
     ], require('@lynx-js/react/internal').__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null);
 const __snapshot_da39a_test_2 = "__snapshot_da39a_test_2";
-require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_2] = ()=>require('@lynx-js/react/internal').createSnapshot(__snapshot_da39a_test_2, function() {
+require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_2] = (__snapshot_da39a_test_2)=>require('@lynx-js/react/internal').createSnapshot(__snapshot_da39a_test_2, function() {
         const pageId = require('@lynx-js/react/internal').__pageId;
         const el = __CreateView(pageId);
         return [
@@ -21,7 +21,7 @@ require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_2] =
         ];
     }, null, null, undefined, globDynamicComponentEntry, null);
 const __snapshot_da39a_test_3 = "__snapshot_da39a_test_3";
-require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_3] = ()=>require('@lynx-js/react/internal').createSnapshot(__snapshot_da39a_test_3, function() {
+require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_3] = (__snapshot_da39a_test_3)=>require('@lynx-js/react/internal').createSnapshot(__snapshot_da39a_test_3, function() {
         const pageId = require('@lynx-js/react/internal').__pageId;
         const el = __CreateText(pageId);
         return [
@@ -29,7 +29,7 @@ require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_3] =
         ];
     }, null, null, undefined, globDynamicComponentEntry, null);
 const __snapshot_da39a_test_4 = "__snapshot_da39a_test_4";
-require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_4] = ()=>require('@lynx-js/react/internal').createSnapshot(__snapshot_da39a_test_4, function() {
+require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_4] = (__snapshot_da39a_test_4)=>require('@lynx-js/react/internal').createSnapshot(__snapshot_da39a_test_4, function() {
         const pageId = require('@lynx-js/react/internal').__pageId;
         const el = __CreateImage(pageId);
         return [
@@ -47,7 +47,7 @@ require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_4] =
         <__snapshot_da39a_test_4/>
     ]} key="1" defer/>;
 const __snapshot_da39a_test_5 = "__snapshot_da39a_test_5";
-require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_5] = ()=>require('@lynx-js/react/internal').createSnapshot(__snapshot_da39a_test_5, function() {
+require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_5] = (__snapshot_da39a_test_5)=>require('@lynx-js/react/internal').createSnapshot(__snapshot_da39a_test_5, function() {
         const pageId = require('@lynx-js/react/internal').__pageId;
         const el = __CreateElement("list-item", pageId);
         __SetInlineStyles(el, "color: red; width: 100rpx;");
@@ -60,7 +60,7 @@ require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_5] =
         (snapshot, index, oldValue)=>require('@lynx-js/react/internal').updateEvent(snapshot, index, oldValue, 0, "bindEvent", "tap", '')
     ], require('@lynx-js/react/internal').__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null);
 const __snapshot_da39a_test_6 = "__snapshot_da39a_test_6";
-require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_6] = ()=>require('@lynx-js/react/internal').createSnapshot(__snapshot_da39a_test_6, function() {
+require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_6] = (__snapshot_da39a_test_6)=>require('@lynx-js/react/internal').createSnapshot(__snapshot_da39a_test_6, function() {
         const pageId = require('@lynx-js/react/internal').__pageId;
         const el = __CreateView(pageId);
         return [
@@ -74,7 +74,7 @@ require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_6] =
         noop
     ]}>{__c}</__snapshot_da39a_test_5>} renderChildren={()=><__snapshot_da39a_test_6/>} key="1" defer/>;
 const __snapshot_da39a_test_7 = "__snapshot_da39a_test_7";
-require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_7] = ()=>require('@lynx-js/react/internal').createSnapshot(__snapshot_da39a_test_7, function() {
+require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_7] = (__snapshot_da39a_test_7)=>require('@lynx-js/react/internal').createSnapshot(__snapshot_da39a_test_7, function() {
         const pageId = require('@lynx-js/react/internal').__pageId;
         const el = __CreateElement("list-item", pageId);
         __SetInlineStyles(el, "color: red; width: 100rpx;");

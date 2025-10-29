@@ -135,7 +135,27 @@ export const snapshotInstanceManager: {
   },
 };
 
-export const snapshotCreatorMap: Record<string, () => string> = {};
+export let snapshotCreatorMap: Record<string, (uniqId: string) => string> = {};
+
+if (__DEV__ && __JS__) {
+  snapshotCreatorMap = new Proxy(snapshotCreatorMap, {
+    set(target, prop: string, value: (uniqId: string) => string) {
+      // `__globalSnapshotPatch` does not exist before hydration,
+      // so the snapshot of the first screen will not be sent to the main thread.
+      if (__globalSnapshotPatch) {
+        __globalSnapshotPatch.push(
+          SnapshotOperation.DEV_ONLY_AddSnapshot,
+          prop,
+          // We use `Function.prototype.toString` to serialize the `() => createSnapshot()` function for main thread.
+          // This allows the updates to be applied to main thread.
+          value.toString(),
+        );
+      }
+      target[prop] = value;
+      return true;
+    },
+  });
+}
 
 export const backgroundSnapshotInstanceManager: {
   nextId: number;
@@ -204,32 +224,6 @@ export function createSnapshot(
   entryName: string | undefined,
   refAndSpreadIndexes: number[] | null,
 ): string {
-  if (
-    __DEV__ && __JS__
-    // `__globalSnapshotPatch` does not exist before hydration,
-    // so the snapshot of the first screen will not be sent to the main thread.
-    && __globalSnapshotPatch
-    && !snapshotManager.values.has(uniqID)
-    // `create` may be `null` when loading a lazy bundle after hydration.
-    && create !== null
-  ) {
-    // We only update the lepus snapshot if the `uniqID` is different.
-    // This means that `uniqID` is considered the "hash" of the snapshot.
-    // When HMR (Hot Module Replacement) or fast refresh updates occur, `createSnapshot` will be re-executed with the new snapshot definition.
-    __globalSnapshotPatch.push(
-      SnapshotOperation.DEV_ONLY_AddSnapshot,
-      uniqID,
-      // We use `Function.prototype.toString` to serialize the `create` and `update` functions for Lepus.
-      // This allows the updates to be applied to Lepus.
-      // As a result, both the static part (`create`) and the dynamic parts (`update` and `slot`) can be updated.
-      create.toString(),
-      update?.map(f => f.toString()) ?? [],
-      slot,
-      cssId,
-      entryName,
-    );
-  }
-
   const s: Snapshot = { create, update, slot, cssId, entryName, refAndSpreadIndexes };
   snapshotManager.values.set(uniqID, s);
   if (slot && slot[0] && slot[0][0] === DynamicPartType.ListChildren) {
@@ -286,7 +280,7 @@ export class SnapshotInstance {
     // Suspense uses 'div'
     if (!snapshotManager.values.has(type) && type !== 'div') {
       if (snapshotCreatorMap[type]) {
-        snapshotCreatorMap[type]();
+        snapshotCreatorMap[type](type);
       } else {
         throw new Error('Snapshot not found: ' + type);
       }

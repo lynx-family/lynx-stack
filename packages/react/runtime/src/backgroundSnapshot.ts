@@ -43,7 +43,7 @@ export class BackgroundSnapshotInstance {
     // Suspense uses 'div'
     if (!snapshotManager.values.has(type) && type !== 'div') {
       if (snapshotCreatorMap[type]) {
-        snapshotCreatorMap[type]();
+        snapshotCreatorMap[type](type);
       } else {
         throw new Error('BackgroundSnapshot not found: ' + type);
       }

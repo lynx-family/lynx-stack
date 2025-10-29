@@ -1413,7 +1413,7 @@ where
     };
 
     let snapshot_create_call = quote!(
-        r#"$runtime_id.snapshotCreatorMap[$snapshot_id] = () => $runtime_id.createSnapshot(
+        r#"$runtime_id.snapshotCreatorMap[$snapshot_id] = ($snapshot_id) => $runtime_id.createSnapshot(
              $snapshot_id,
              $snapshot_creator,
              $snapshot_dynamic_parts_def,

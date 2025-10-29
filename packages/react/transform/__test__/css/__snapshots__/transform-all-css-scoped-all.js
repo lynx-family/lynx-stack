@@ -3,7 +3,7 @@ import * as ReactLynx from "@lynx-js/react";
 import "./foo.css?cssId=1185352";
 import bar from "./bar.css?cssId=1185352";
 const __snapshot_2d408_test_1 = "__snapshot_2d408_test_1";
-ReactLynx.snapshotCreatorMap[__snapshot_2d408_test_1] = ()=>ReactLynx.createSnapshot(__snapshot_2d408_test_1, function() {
+ReactLynx.snapshotCreatorMap[__snapshot_2d408_test_1] = (__snapshot_2d408_test_1)=>ReactLynx.createSnapshot(__snapshot_2d408_test_1, function() {
         const pageId = ReactLynx.__pageId;
         const el = __CreateView(pageId);
         return [

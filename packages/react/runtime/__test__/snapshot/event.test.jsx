@@ -312,24 +312,6 @@ describe('eventUpdate', () => {
     patch = takeGlobalSnapshotPatch();
     expect(patch).toMatchInlineSnapshot(`
       [
-        100,
-        "__snapshot_a94a8_test_4",
-        "function() {
-        const pageId = __vite_ssr_import_1__.__pageId;
-        const el = __CreateText(pageId);
-        const el1 = __CreateRawText("1");
-        __AppendElement(el, el1);
-        return [
-          el,
-          el1
-        ];
-      }",
-        [
-          "(snapshot, index, oldValue) => __vite_ssr_import_1__.updateEvent(snapshot, index, oldValue, 0, "bindEvent", "tap", "")",
-        ],
-        null,
-        undefined,
-        "__Card__",
         0,
         "__snapshot_a94a8_test_4",
         3,
@@ -958,24 +940,6 @@ describe('event in spread', () => {
     patch = takeGlobalSnapshotPatch();
     expect(patch).toMatchInlineSnapshot(`
       [
-        100,
-        "__snapshot_a94a8_test_10",
-        "function() {
-        const pageId = __vite_ssr_import_1__.__pageId;
-        const el = __CreateText(pageId);
-        const el1 = __CreateRawText("1");
-        __AppendElement(el, el1);
-        return [
-          el,
-          el1
-        ];
-      }",
-        [
-          "(snapshot, index, oldValue) => __vite_ssr_import_1__.updateSpread(snapshot, index, oldValue, 0)",
-        ],
-        null,
-        undefined,
-        "__Card__",
         0,
         "__snapshot_a94a8_test_10",
         3,

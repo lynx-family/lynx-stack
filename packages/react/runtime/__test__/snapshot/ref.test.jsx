@@ -202,7 +202,7 @@ describe('element ref', () => {
       render(<Comp show={true} />, __root);
       expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1].data).toMatchInlineSnapshot(
-        `"{"patchList":[{"id":3,"snapshotPatch":[100,"__snapshot_a94a8_test_4","function() {\\n  const pageId = __vite_ssr_import_1__.__pageId;\\n  const el = __CreateView(pageId);\\n  const el1 = __CreateView(pageId);\\n  __AppendElement(el, el1);\\n  const el2 = __CreateView(pageId);\\n  __AppendElement(el, el2);\\n  return [\\n    el,\\n    el1,\\n    el2\\n  ];\\n}",["(snapshot, index, oldValue) => __vite_ssr_import_1__.updateRef(snapshot, index, oldValue, 1)","(snapshot, index, oldValue) => __vite_ssr_import_1__.updateRef(snapshot, index, oldValue, 2)"],null,null,"__Card__",0,"__snapshot_a94a8_test_4",2,4,2,[1,1],1,-1,2,null]}]}"`,
+        `"{"patchList":[{"id":3,"snapshotPatch":[0,"__snapshot_a94a8_test_4",2,4,2,[1,1],1,-1,2,null]}]}"`,
       );
     }
 
@@ -1960,7 +1960,7 @@ describe('ui operations', () => {
       render(<Comp />, __root);
 
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1].data).toMatchInlineSnapshot(
-        `"{"patchList":[{"id":3,"snapshotPatch":[100,"__snapshot_a94a8_test_30","function() {\\n  const pageId = __vite_ssr_import_1__.__pageId;\\n  const el = __CreateView(pageId);\\n  return [\\n    el\\n  ];\\n}",["(snapshot, index, oldValue) => __vite_ssr_import_1__.updateRef(snapshot, index, oldValue, 0)"],null,null,"__Card__",0,"__snapshot_a94a8_test_30",3,4,3,[1],1,-2,3,null]}]}"`,
+        `"{"patchList":[{"id":3,"snapshotPatch":[0,"__snapshot_a94a8_test_30",3,4,3,[1],1,-2,3,null]}]}"`,
       );
       expect(lynx.createSelectorQuery().constructor.execLog.mock.calls).toMatchInlineSnapshot(`
         [

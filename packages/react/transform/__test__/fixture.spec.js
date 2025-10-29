@@ -80,7 +80,7 @@ export class A extends Component {
       import * as ReactLynx from "@lynx-js/react";
       import { Component } from "@lynx-js/react/legacy-react-runtime";
       const __snapshot_da39a_test_1 = "__snapshot_da39a_test_1";
-      ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_1] = ()=>ReactLynx.createSnapshot(__snapshot_da39a_test_1, function() {
+      ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_1] = (__snapshot_da39a_test_1)=>ReactLynx.createSnapshot(__snapshot_da39a_test_1, function() {
               const pageId = ReactLynx.__pageId;
               const el = __CreateView(pageId);
               return [
@@ -101,7 +101,7 @@ export class A extends Component {
       import * as ReactLynx from "@lynx-js/react";
       import { Component } from "@lynx-js/react/legacy-react-runtime";
       const __snapshot_da39a_test_1 = "__snapshot_da39a_test_1";
-      ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_1] = ()=>ReactLynx.createSnapshot(__snapshot_da39a_test_1, function() {
+      ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_1] = (__snapshot_da39a_test_1)=>ReactLynx.createSnapshot(__snapshot_da39a_test_1, function() {
               const pageId = ReactLynx.__pageId;
               const el = __CreateView(pageId);
               return [
@@ -176,7 +176,7 @@ describe('jsx', () => {
       import * as ReactLynx from "@lynx-js/react";
       import * as ReactLynxRuntimeComponents from '@lynx-js/react/runtime-components';
       const __snapshot_da39a_04d8c_2 = "__snapshot_da39a_04d8c_2";
-      ReactLynx.snapshotCreatorMap[__snapshot_da39a_04d8c_2] = ()=>ReactLynx.createSnapshot(__snapshot_da39a_04d8c_2, function() {
+      ReactLynx.snapshotCreatorMap[__snapshot_da39a_04d8c_2] = (__snapshot_da39a_04d8c_2)=>ReactLynx.createSnapshot(__snapshot_da39a_04d8c_2, function() {
               const pageId = ReactLynx.__pageId;
               const el = __CreateElement("list-item", pageId);
               return [
@@ -186,7 +186,7 @@ describe('jsx', () => {
               (snapshot, index, oldValue)=>ReactLynx.updateListItemPlatformInfo(snapshot, index, oldValue, 0)
           ], ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null);
       const __snapshot_da39a_04d8c_1 = "__snapshot_da39a_04d8c_1";
-      ReactLynx.snapshotCreatorMap[__snapshot_da39a_04d8c_1] = ()=>ReactLynx.createSnapshot(__snapshot_da39a_04d8c_1, function(snapshotInstance) {
+      ReactLynx.snapshotCreatorMap[__snapshot_da39a_04d8c_1] = (__snapshot_da39a_04d8c_1)=>ReactLynx.createSnapshot(__snapshot_da39a_04d8c_1, function(snapshotInstance) {
               const pageId = ReactLynx.__pageId;
               const el = ReactLynx.snapshotCreateList(pageId, snapshotInstance, 0);
               return [
@@ -401,7 +401,7 @@ Component, View
         import * as ReactLynx from "@lynx-js/react";
         import * as ReactLynx1 from "@lynx-js/react/internal";
         const __snapshot_da39a_89b7f_1 = "__snapshot_da39a_89b7f_1";
-        ReactLynx.snapshotCreatorMap[__snapshot_da39a_89b7f_1] = ()=>ReactLynx.createSnapshot(__snapshot_da39a_89b7f_1, function() {
+        ReactLynx.snapshotCreatorMap[__snapshot_da39a_89b7f_1] = (__snapshot_da39a_89b7f_1)=>ReactLynx.createSnapshot(__snapshot_da39a_89b7f_1, function() {
                 const pageId = ReactLynx.__pageId;
                 const el = __CreateView(pageId);
                 return [
@@ -889,7 +889,7 @@ export default class App extends Component {
       import * as ReactLynx from "@lynx-js/react";
       let c = 1;
       const __snapshot_da39a_b7447_1 = "__snapshot_da39a_b7447_1";
-      ReactLynx.snapshotCreatorMap[__snapshot_da39a_b7447_1] = ()=>ReactLynx.createSnapshot(__snapshot_da39a_b7447_1, function() {
+      ReactLynx.snapshotCreatorMap[__snapshot_da39a_b7447_1] = (__snapshot_da39a_b7447_1)=>ReactLynx.createSnapshot(__snapshot_da39a_b7447_1, function() {
               const pageId = ReactLynx.__pageId;
               const el = __CreateView(pageId);
               return [
@@ -1366,7 +1366,7 @@ class X extends Component {
       "import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
       import * as ReactLynx from "@lynx-js/react";
       const __snapshot_da39a_e2935_1 = "__snapshot_da39a_e2935_1";
-      ReactLynx.snapshotCreatorMap[__snapshot_da39a_e2935_1] = ()=>ReactLynx.createSnapshot(__snapshot_da39a_e2935_1, function() {
+      ReactLynx.snapshotCreatorMap[__snapshot_da39a_e2935_1] = (__snapshot_da39a_e2935_1)=>ReactLynx.createSnapshot(__snapshot_da39a_e2935_1, function() {
               const pageId = ReactLynx.__pageId;
               const el = __CreateView(pageId);
               return [

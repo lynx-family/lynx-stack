@@ -5,7 +5,7 @@ import bar from './bar.css';
 import * as styles from './baz.scss';
 import { styles0, styles1 } from './foo.modules.css';
 const __snapshot_2d408_test_1 = "__snapshot_2d408_test_1";
-ReactLynx.snapshotCreatorMap[__snapshot_2d408_test_1] = ()=>ReactLynx.createSnapshot(__snapshot_2d408_test_1, function() {
+ReactLynx.snapshotCreatorMap[__snapshot_2d408_test_1] = (__snapshot_2d408_test_1)=>ReactLynx.createSnapshot(__snapshot_2d408_test_1, function() {
         const pageId = ReactLynx.__pageId;
         const el = __CreateView(pageId);
         return [

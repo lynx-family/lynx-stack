@@ -1,6 +1,6 @@
 import * as ReactLynx from "@lynx-js/react";
 const __snapshot_da39a_test_3 = "__snapshot_da39a_test_3";
-ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_3] = ()=>ReactLynx.createSnapshot(__snapshot_da39a_test_3, function() {
+ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_3] = (__snapshot_da39a_test_3)=>ReactLynx.createSnapshot(__snapshot_da39a_test_3, function() {
         const pageId = ReactLynx.__pageId;
         const el = __CreateElement("list-item", pageId);
         return [
@@ -8,7 +8,7 @@ ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_3] = ()=>ReactLynx.createSnap
         ];
     }, null, null, undefined, globDynamicComponentEntry, null);
 const __snapshot_da39a_test_4 = "__snapshot_da39a_test_4";
-ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_4] = ()=>ReactLynx.createSnapshot(__snapshot_da39a_test_4, function() {
+ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_4] = (__snapshot_da39a_test_4)=>ReactLynx.createSnapshot(__snapshot_da39a_test_4, function() {
         const pageId = ReactLynx.__pageId;
         const el = __CreateElement("list-item", pageId);
         return [
@@ -16,7 +16,7 @@ ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_4] = ()=>ReactLynx.createSnap
         ];
     }, null, null, undefined, globDynamicComponentEntry, null);
 const __snapshot_da39a_test_2 = "__snapshot_da39a_test_2";
-ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_2] = ()=>ReactLynx.createSnapshot(__snapshot_da39a_test_2, function(snapshotInstance) {
+ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_2] = (__snapshot_da39a_test_2)=>ReactLynx.createSnapshot(__snapshot_da39a_test_2, function(snapshotInstance) {
         const pageId = ReactLynx.__pageId;
         const el = ReactLynx.snapshotCreateList(pageId, snapshotInstance, 0);
         return [
@@ -29,7 +29,7 @@ ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_2] = ()=>ReactLynx.createSnap
         ]
     ], undefined, globDynamicComponentEntry, null);
 const __snapshot_da39a_test_5 = "__snapshot_da39a_test_5";
-ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_5] = ()=>ReactLynx.createSnapshot(__snapshot_da39a_test_5, function() {
+ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_5] = (__snapshot_da39a_test_5)=>ReactLynx.createSnapshot(__snapshot_da39a_test_5, function() {
         const pageId = ReactLynx.__pageId;
         const el = __CreateView(pageId);
         return [
@@ -37,7 +37,7 @@ ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_5] = ()=>ReactLynx.createSnap
         ];
     }, null, ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null);
 const __snapshot_da39a_test_1 = "__snapshot_da39a_test_1";
-ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_1] = ()=>ReactLynx.createSnapshot(__snapshot_da39a_test_1, function() {
+ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_1] = (__snapshot_da39a_test_1)=>ReactLynx.createSnapshot(__snapshot_da39a_test_1, function() {
         const pageId = ReactLynx.__pageId;
         const el = __CreateView(pageId);
         const el1 = __CreateWrapperElement(pageId);
