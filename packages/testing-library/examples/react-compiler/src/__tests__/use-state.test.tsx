@@ -4,7 +4,9 @@
 
 import { render, fireEvent, screen } from '@lynx-js/react/testing-library';
 import { useState } from '@lynx-js/react';
-import { expectLogsAndClear, log } from './expectLogs';
+// @ts-ignore
+import { expectLogsAndClear, log } from './expectLogs.jsx';
+import { test, expect } from 'vitest';
 
 function Counter() {
   let [state, setState] = useState(0);
@@ -19,7 +21,7 @@ function Counter() {
   );
 }
 
-function Title({ text }) {
+function Title({ text }: { text: string }) {
   log(`rendering: ${text}`);
   return <text>{text}</text>;
 }
@@ -76,3 +78,7 @@ test('use-state', async () => {
 
   expectLogsAndClear(__FORGET__ ? [] : ['rendering: Counter']);
 });
+
+declare global {
+  var __FORGET__: boolean;
+}

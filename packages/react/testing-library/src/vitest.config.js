@@ -98,11 +98,13 @@ export const createVitestConfig = async (options) => {
       babelPath,
       babelPluginReactCompilerPath,
       babelPluginSyntaxJsxPath,
+      babelPluginSyntaxTypescriptPath,
     ] = [
       '@swc/react-compiler',
       '@babel/core',
       'babel-plugin-react-compiler',
       '@babel/plugin-syntax-jsx',
+      '@babel/plugin-syntax-typescript',
     ].map((name) => {
       try {
         return require.resolve(name, {
@@ -131,6 +133,8 @@ export const createVitestConfig = async (options) => {
         if (/\.(?:jsx|tsx)$/.test(sourcePath)) {
           const needReactCompiler = await isReactCompilerRequired(Buffer.from(sourceText));
           if (needReactCompiler) {
+            const isTSX = sourcePath.endsWith('.tsx');
+
             try {
               const result = babel.transformSync(sourceText, {
                 plugins: [
@@ -139,7 +143,8 @@ export const createVitestConfig = async (options) => {
                   // for the `useMemoCache` hook
                   [babelPluginReactCompilerPath, { target: '17' }],
                   babelPluginSyntaxJsxPath,
-                ],
+                  isTSX ? [babelPluginSyntaxTypescriptPath, { isTSX: true }] : null,
+                ].filter(Boolean),
                 filename: sourcePath,
                 ast: false,
                 sourceMaps: true,

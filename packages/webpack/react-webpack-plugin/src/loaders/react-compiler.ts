@@ -52,14 +52,13 @@ async function reactCompilerLoader(
     swcReactCompilerPath!,
   ) as typeof import('@swc/react-compiler');
   if (/\.(?:jsx|tsx)$/.test(this.resourcePath)) {
-    const isTSX = this.resourcePath.endsWith('.tsx');
-
     const needReactCompiler = await isReactCompilerRequired(
       Buffer.from(content),
     );
     if (needReactCompiler) {
       try {
         const babel = require(babelPath!) as typeof import('@babel/core');
+        const isTSX = this.resourcePath.endsWith('.tsx');
 
         const result = babel.transformSync(content, {
           plugins: [
