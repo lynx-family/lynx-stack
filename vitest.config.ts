@@ -24,7 +24,7 @@ export default defineConfig({
         'website/**',
 
         'packages/react/transform/tests/__swc_snapshots__/**',
-        'packages/rspeedy/create-rspeedy/template-*/**',
+        '**/tests/__swc_snapshots__/**',
 
         '.lintstagedrc.mjs',
         'eslint.config.js',
