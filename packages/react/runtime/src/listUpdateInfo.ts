@@ -83,17 +83,19 @@ export class ListUpdateInfoRecording implements ListUpdateInfo {
     //   __SetAttribute(listElement, "update-list-info", pendingAttribute);
     //   __FlushElementTree(listElement);
     // });
+    const updateListInfo = this.__toAttribute();
+
     if (__PROFILE__) {
       const listID = __GetElementUniqueID(this.list.__elements[elementIndex]!);
       profileStart(`[flush] update-list-info`, {
         args: {
           'list id': String(listID),
-          'update list info': JSON.stringify(this.__toAttribute()),
+          'update list info': JSON.stringify(updateListInfo),
         },
       });
     }
 
-    __SetAttribute(listElement, 'update-list-info', this.__toAttribute());
+    __SetAttribute(listElement, 'update-list-info', updateListInfo);
     const [componentAtIndex, componentAtIndexes] = componentAtIndexFactory(this.list.childNodes, hydrate);
     __UpdateListCallbacks(
       listElement,
