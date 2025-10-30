@@ -2110,6 +2110,29 @@ test.describe('web-elements test suite', () => {
       },
     );
     test(
+      'auto-scroll-waterfall',
+      async ({ page }, { titlePath }) => {
+        let scrolled = 0;
+        await page.on('console', async (msg) => {
+          const event = await msg.args()[0]?.evaluate((e) => ({
+            type: e.type,
+          }));
+          if (!event) return;
+          if (event.type === 'lynxscroll') {
+            scrolled++;
+          }
+        });
+
+        const title = getTitle(titlePath);
+        await gotoWebComponentPage(page, title);
+        await diffScreenShot(page, title, 'initial');
+        await wait(1000);
+        await page.locator('#autoScroll').click();
+        await wait(4000);
+        await expect(scrolled).toBe(4);
+      },
+    );
+    test(
       'get-visible-cells',
       async ({ page, browserName }, { titlePath }) => {
         // contentvisibilityautostatechange not propagate

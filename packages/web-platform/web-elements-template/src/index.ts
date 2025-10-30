@@ -120,6 +120,11 @@ export const templateXInput = `<style>
   />
 </form>`;
 export const templateXList = `<style>
+.placeholder {
+    visibility: hidden;
+    width: 0;
+    height: 0;
+  }
   .placeholder-dom {
     display: none;
     flex: 0 0 0;
@@ -136,6 +141,7 @@ export const templateXList = `<style>
   }
 </style>
 <div id="content" part="content">
+  <div class="placeholder"></div>
   <div
     class="observer-container placeholder-dom"
     part="upper-threshold-observer"
