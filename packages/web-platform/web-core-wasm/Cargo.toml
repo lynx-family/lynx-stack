@@ -1,5 +1,5 @@
 [package]
-name = "web-mainthread-apis"
+name = "web-core-wasm"
 version = "0.0.0"
 edition = "2021"
 
