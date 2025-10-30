@@ -37,7 +37,8 @@ export function snapshotPatchApply(snapshotPatch: SnapshotPatch): void {
       case SnapshotOperation.CreateElement: {
         const type = snapshotPatch[++i] as string;
         const id = snapshotPatch[++i] as number;
-        new SnapshotInstance(type, id);
+        const s = new SnapshotInstance(type, id);
+        s.__slotIndex = snapshotPatch[++i] as number | undefined;
         break;
       }
       case SnapshotOperation.InsertBefore: {

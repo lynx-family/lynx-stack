@@ -66,7 +66,7 @@ export function renderToString(vnode: any, context: any): any[] {
     _renderToString(
       vnode,
       context || EMPTY_OBJ,
-      false,
+      0,
       undefined,
       parent,
       opcodes,
@@ -141,7 +141,7 @@ function renderClassComponent(vnode, context) {
  * Recursively render VNodes to HTML.
  * @param {VNode|any} vnode
  * @param {any} context
- * @param {boolean} isSvgMode
+ * @param {number | true} slotIndex
  * @param {any} selectValue
  * @param {VNode} parent
  * @param opcodes
@@ -149,7 +149,7 @@ function renderClassComponent(vnode, context) {
 function _renderToString(
   vnode,
   context,
-  isSvgMode,
+  slotIndex,
   selectValue,
   parent,
   opcodes,
@@ -164,7 +164,7 @@ function _renderToString(
   if (typeof vnode !== 'object') {
     if (typeof vnode === 'function') return;
 
-    opcodes.push(__OpText, vnode + '');
+    opcodes.push(__OpText, vnode, slotIndex);
     return;
   }
 
@@ -175,7 +175,7 @@ function _renderToString(
       const child = vnode[i];
       if (child == null || typeof child === 'boolean') continue;
 
-      _renderToString(child, context, isSvgMode, selectValue, parent, opcodes, opcodes.length);
+      _renderToString(child, context, slotIndex === true ? i : slotIndex, selectValue, parent, opcodes, opcodes.length);
     }
     return;
   }
@@ -253,7 +253,7 @@ function _renderToString(
 
     // Recurse into children before invoking the after-diff hook
     try {
-      _renderToString(rendered, context, isSvgMode, selectValue, vnode, opcodes, opcodes.length);
+      _renderToString(rendered, context, slotIndex, selectValue, vnode, opcodes, opcodes.length);
     } catch (e) {
       if (e && typeof e === 'object' && e.then && component && /* _childDidSuspend */ component.__c) {
         component.setState({ /* _suspended */ __a: true });
@@ -263,7 +263,7 @@ function _renderToString(
           component = vnode[COMPONENT];
 
           opcodes.length = opcodesLength;
-          _renderToString(rendered, context, isSvgMode, selectValue, vnode, opcodes, opcodes.length);
+          _renderToString(rendered, context, slotIndex, selectValue, vnode, opcodes, opcodes.length);
         }
       } else {
         throw e;
@@ -279,8 +279,9 @@ function _renderToString(
   }
 
   let children;
+  let hasNamedChildren = false;
 
-  opcodes.push(__OpBegin, vnode);
+  opcodes.push(__OpBegin, vnode, slotIndex);
 
   for (const name in props) {
     const v = props[name];
@@ -298,7 +299,14 @@ function _renderToString(
       case '__source':
         continue;
 
-      default: {}
+      default: {
+        if (name.startsWith('$')) {
+          children ??= [];
+          children[+name.slice(1)] = v;
+          hasNamedChildren = true;
+          continue;
+        }
+      }
     }
 
     // write this attribute to the buffer
@@ -309,10 +317,18 @@ function _renderToString(
 
   if (typeof children === 'string' || typeof children === 'number') {
     // single text child
-    opcodes.push(__OpText, children);
+    opcodes.push(__OpText, children, 0);
   } else if (children != null && children !== false && children !== true) {
     // recurse into this element VNode's children
-    _renderToString(children, context, false, selectValue, vnode, opcodes, opcodes.length);
+    _renderToString(
+      children,
+      context,
+      hasNamedChildren ? true : slotIndex,
+      selectValue,
+      vnode,
+      opcodes,
+      opcodes.length,
+    );
   }
 
   if (afterDiff) afterDiff(vnode);
