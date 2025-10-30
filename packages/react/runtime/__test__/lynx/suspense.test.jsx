@@ -257,7 +257,7 @@ describe('suspense', () => {
           {
             "id": 3,
             "op": "CreateElement",
-            "type": "__Card__:__snapshot_a94a8_test_4",
+            "type": "__snapshot_a94a8_test_4",
           },
           {
             "id": 3,
@@ -286,7 +286,7 @@ describe('suspense', () => {
           {
             "id": 7,
             "op": "CreateElement",
-            "type": "__Card__:__snapshot_a94a8_test_5",
+            "type": "__snapshot_a94a8_test_5",
           },
           {
             "beforeId": null,

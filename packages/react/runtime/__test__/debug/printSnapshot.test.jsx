@@ -64,10 +64,10 @@ describe('printSnapshotInstance', () => {
     printSnapshotInstance(bsi1, log);
     expect(msg).toMatchInlineSnapshot(`
       "
-      | 1(__Card__:__snapshot_a94a8_test_1): undefined
-        | 2(__Card__:__snapshot_a94a8_test_2): undefined
-          | 4(__Card__:__snapshot_a94a8_test_3): ["attr 1","attr 2"]
-        | 3(__Card__:__snapshot_a94a8_test_2): undefined
+      | 1(__snapshot_a94a8_test_1): undefined
+        | 2(__snapshot_a94a8_test_2): undefined
+          | 4(__snapshot_a94a8_test_3): ["attr 1","attr 2"]
+        | 3(__snapshot_a94a8_test_2): undefined
       "
     `);
   });

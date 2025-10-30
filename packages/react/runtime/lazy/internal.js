@@ -26,6 +26,7 @@ export const {
   registerWorkletOnBackground,
   snapshotCreateList,
   snapshotManager,
+  snapshotCreatorMap,
   SnapshotInstance,
   transformRef,
   transformToWorklet,

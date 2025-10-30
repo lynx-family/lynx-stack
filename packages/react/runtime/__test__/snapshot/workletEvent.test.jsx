@@ -1010,17 +1010,17 @@ describe('WorkletEvent in list', () => {
                     {
                       "item-key": 0,
                       "position": 0,
-                      "type": "__Card__:__snapshot_a94a8_test_15",
+                      "type": "__snapshot_a94a8_test_15",
                     },
                     {
                       "item-key": 1,
                       "position": 1,
-                      "type": "__Card__:__snapshot_a94a8_test_15",
+                      "type": "__snapshot_a94a8_test_15",
                     },
                     {
                       "item-key": 2,
                       "position": 2,
-                      "type": "__Card__:__snapshot_a94a8_test_15",
+                      "type": "__snapshot_a94a8_test_15",
                     },
                   ],
                   "removeAction": [],
@@ -1069,17 +1069,17 @@ describe('WorkletEvent in list', () => {
                     {
                       "item-key": 0,
                       "position": 0,
-                      "type": "__Card__:__snapshot_a94a8_test_15",
+                      "type": "__snapshot_a94a8_test_15",
                     },
                     {
                       "item-key": 1,
                       "position": 1,
-                      "type": "__Card__:__snapshot_a94a8_test_15",
+                      "type": "__snapshot_a94a8_test_15",
                     },
                     {
                       "item-key": 2,
                       "position": 2,
-                      "type": "__Card__:__snapshot_a94a8_test_15",
+                      "type": "__snapshot_a94a8_test_15",
                     },
                   ],
                   "removeAction": [],
@@ -1146,17 +1146,17 @@ describe('WorkletEvent in list', () => {
                     {
                       "item-key": 0,
                       "position": 0,
-                      "type": "__Card__:__snapshot_a94a8_test_15",
+                      "type": "__snapshot_a94a8_test_15",
                     },
                     {
                       "item-key": 1,
                       "position": 1,
-                      "type": "__Card__:__snapshot_a94a8_test_15",
+                      "type": "__snapshot_a94a8_test_15",
                     },
                     {
                       "item-key": 2,
                       "position": 2,
-                      "type": "__Card__:__snapshot_a94a8_test_15",
+                      "type": "__snapshot_a94a8_test_15",
                     },
                   ],
                   "removeAction": [],
@@ -1223,17 +1223,17 @@ describe('WorkletEvent in list', () => {
                     {
                       "item-key": 0,
                       "position": 0,
-                      "type": "__Card__:__snapshot_a94a8_test_15",
+                      "type": "__snapshot_a94a8_test_15",
                     },
                     {
                       "item-key": 1,
                       "position": 1,
-                      "type": "__Card__:__snapshot_a94a8_test_15",
+                      "type": "__snapshot_a94a8_test_15",
                     },
                     {
                       "item-key": 2,
                       "position": 2,
-                      "type": "__Card__:__snapshot_a94a8_test_15",
+                      "type": "__snapshot_a94a8_test_15",
                     },
                   ],
                   "removeAction": [],
