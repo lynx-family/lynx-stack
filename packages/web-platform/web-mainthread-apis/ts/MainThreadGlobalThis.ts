@@ -1,4 +1,5 @@
-import { MainThreadGlobalThis as MainThreadGlobalThisWASM } from '../dist/standard.js';
+import { MainThreadGlobalThis as MainThreadGlobalThisWASM } from '../dist/debug.js';
+export { LynxEvent } from '../dist/standard.js';
 import {
   eventHandlerMapPropertyName,
   W3cEventNameToLynx,

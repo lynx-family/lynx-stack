@@ -3,98 +3,98 @@
 // AUTO GENERATED. DO NOT MODIFY
 
 // This is generated with
-// `uv run https://gist.githubusercontent.com/colinaaa/090b404e09f6628be90076765b4d455d/raw/dotslash-publish-release.py --config ./scripts/dotslash-config.json --local-config --repo wasm-bindgen/wasm-bindgen --output ./scripts --tag 0.2.104`
+// `uv run https://gist.githubusercontent.com/colinaaa/090b404e09f6628be90076765b4d455d/raw/dotslash-publish-release.py --config ./scripts/dotslash-config.json --local-config --repo wasm-bindgen/wasm-bindgen --output ./scripts --tag 0.2.105`
 
 {
   "name": "wasm-bindgen",
   "platforms": {
     "macos-x86_64": {
-      "size": 7135038,
+      "size": 8215239,
       "hash": "blake3",
-      "digest": "5e24a55189ededa6724f1b0d9783537315f81e30901728253b0976c854400425",
+      "digest": "f2a0b8a710efeea9c312f9f3517f813566277abec6204f9055eea267674fd676",
       "format": "tar.gz",
-      "path": "wasm-bindgen-0.2.104-x86_64-apple-darwin/wasm-bindgen",
+      "path": "wasm-bindgen-0.2.105-x86_64-apple-darwin/wasm-bindgen",
       "providers": [
         {
-          "url": "https://github.com/wasm-bindgen/wasm-bindgen/releases/download/0.2.104/wasm-bindgen-0.2.104-x86_64-apple-darwin.tar.gz"
+          "url": "https://github.com/wasm-bindgen/wasm-bindgen/releases/download/0.2.105/wasm-bindgen-0.2.105-x86_64-apple-darwin.tar.gz"
         },
         {
           "type": "github-release",
           "repo": "https://github.com/wasm-bindgen/wasm-bindgen",
-          "tag": "0.2.104",
-          "name": "wasm-bindgen-0.2.104-x86_64-apple-darwin.tar.gz"
+          "tag": "0.2.105",
+          "name": "wasm-bindgen-0.2.105-x86_64-apple-darwin.tar.gz"
         }
       ]
     },
     "macos-aarch64": {
-      "size": 6784484,
+      "size": 7792381,
       "hash": "blake3",
-      "digest": "eff1f9db61ffc9dd29ca3e7e233399aee2fdbcd45862acd11de6751f85dcb756",
+      "digest": "a44bf5447c976fe2c9a34a5d4058dbd6ac1fd93d87c456d493b9b99b297712bd",
       "format": "tar.gz",
-      "path": "wasm-bindgen-0.2.104-aarch64-apple-darwin/wasm-bindgen",
+      "path": "wasm-bindgen-0.2.105-aarch64-apple-darwin/wasm-bindgen",
       "providers": [
         {
-          "url": "https://github.com/wasm-bindgen/wasm-bindgen/releases/download/0.2.104/wasm-bindgen-0.2.104-aarch64-apple-darwin.tar.gz"
+          "url": "https://github.com/wasm-bindgen/wasm-bindgen/releases/download/0.2.105/wasm-bindgen-0.2.105-aarch64-apple-darwin.tar.gz"
         },
         {
           "type": "github-release",
           "repo": "https://github.com/wasm-bindgen/wasm-bindgen",
-          "tag": "0.2.104",
-          "name": "wasm-bindgen-0.2.104-aarch64-apple-darwin.tar.gz"
+          "tag": "0.2.105",
+          "name": "wasm-bindgen-0.2.105-aarch64-apple-darwin.tar.gz"
         }
       ]
     },
     "linux-x86_64": {
-      "size": 7724698,
+      "size": 8815954,
       "hash": "blake3",
-      "digest": "12378ccca9d2a6a0bb6c8ca95ca2a245c808d58a9947ba3b58ca4415ebc971ee",
+      "digest": "4c317cf9e0cfed5272098f101f8567ccf2f1e4b7df0f8fce5903fe14da4cfb43",
       "format": "tar.gz",
-      "path": "wasm-bindgen-0.2.104-x86_64-unknown-linux-musl/wasm-bindgen",
+      "path": "wasm-bindgen-0.2.105-x86_64-unknown-linux-musl/wasm-bindgen",
       "providers": [
         {
-          "url": "https://github.com/wasm-bindgen/wasm-bindgen/releases/download/0.2.104/wasm-bindgen-0.2.104-x86_64-unknown-linux-musl.tar.gz"
+          "url": "https://github.com/wasm-bindgen/wasm-bindgen/releases/download/0.2.105/wasm-bindgen-0.2.105-x86_64-unknown-linux-musl.tar.gz"
         },
         {
           "type": "github-release",
           "repo": "https://github.com/wasm-bindgen/wasm-bindgen",
-          "tag": "0.2.104",
-          "name": "wasm-bindgen-0.2.104-x86_64-unknown-linux-musl.tar.gz"
+          "tag": "0.2.105",
+          "name": "wasm-bindgen-0.2.105-x86_64-unknown-linux-musl.tar.gz"
         }
       ]
     },
     "linux-aarch64": {
-      "size": 7229719,
+      "size": 8302471,
       "hash": "blake3",
-      "digest": "6bedb202a8762000ae6dd72f39ddfdfe00b4eb926d8285cf063d56cf0ba7df4a",
+      "digest": "f4e63e3f454247595e512db000070a9ad3927fd9d7053f5a13a597f73957bc91",
       "format": "tar.gz",
-      "path": "wasm-bindgen-0.2.104-aarch64-unknown-linux-gnu/wasm-bindgen",
+      "path": "wasm-bindgen-0.2.105-aarch64-unknown-linux-gnu/wasm-bindgen",
       "providers": [
         {
-          "url": "https://github.com/wasm-bindgen/wasm-bindgen/releases/download/0.2.104/wasm-bindgen-0.2.104-aarch64-unknown-linux-gnu.tar.gz"
+          "url": "https://github.com/wasm-bindgen/wasm-bindgen/releases/download/0.2.105/wasm-bindgen-0.2.105-aarch64-unknown-linux-gnu.tar.gz"
         },
         {
           "type": "github-release",
           "repo": "https://github.com/wasm-bindgen/wasm-bindgen",
-          "tag": "0.2.104",
-          "name": "wasm-bindgen-0.2.104-aarch64-unknown-linux-gnu.tar.gz"
+          "tag": "0.2.105",
+          "name": "wasm-bindgen-0.2.105-aarch64-unknown-linux-gnu.tar.gz"
         }
       ]
     },
     "windows-x86_64": {
-      "size": 6121375,
+      "size": 7278855,
       "hash": "blake3",
-      "digest": "27433d89a0af12a5bdbcee8c3a95daa44f2306e37d4d5bc4195f792705abf184",
+      "digest": "40b82300518d67a8b0f36e0507834c252dbc6a6f673958765ec10c8b20544ff6",
       "format": "tar.gz",
-      "path": "wasm-bindgen-0.2.104-x86_64-pc-windows-msvc/wasm-bindgen.exe",
+      "path": "wasm-bindgen-0.2.105-x86_64-pc-windows-msvc/wasm-bindgen.exe",
       "providers": [
         {
-          "url": "https://github.com/wasm-bindgen/wasm-bindgen/releases/download/0.2.104/wasm-bindgen-0.2.104-x86_64-pc-windows-msvc.tar.gz"
+          "url": "https://github.com/wasm-bindgen/wasm-bindgen/releases/download/0.2.105/wasm-bindgen-0.2.105-x86_64-pc-windows-msvc.tar.gz"
         },
         {
           "type": "github-release",
           "repo": "https://github.com/wasm-bindgen/wasm-bindgen",
-          "tag": "0.2.104",
-          "name": "wasm-bindgen-0.2.104-x86_64-pc-windows-msvc.tar.gz"
+          "tag": "0.2.105",
+          "name": "wasm-bindgen-0.2.105-x86_64-pc-windows-msvc.tar.gz"
         }
       ]
     }

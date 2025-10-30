@@ -47,7 +47,7 @@ extern "C" {
   pub fn add_dataset(element: &web_sys::Element, key: &str, value: &JsValue);
 
   #[wasm_bindgen(js_name = __GetDataset)]
-  pub fn get_dataset(element: &web_sys::Element) -> Object;
+  pub fn get_dataset(element: &web_sys::Element) -> JsValue;
 
   #[wasm_bindgen(js_name = __GetDataByKey)]
   pub fn get_data_by_key(element: &web_sys::Element, key: &str) -> JsValue;

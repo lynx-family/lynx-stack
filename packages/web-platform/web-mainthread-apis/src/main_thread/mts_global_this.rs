@@ -1,7 +1,6 @@
+use crate::{constants, js_helpers, main_thread::pure_element_papis};
 use std::{collections::HashMap, vec};
 use wasm_bindgen::prelude::*;
-
-use crate::{constants, js_helpers, pure_element_papis};
 
 struct FiberElementData {
   css_id: i32,
@@ -15,7 +14,7 @@ pub struct MainThreadGlobalThis {
   unique_id_counter: i32,
   unique_id_to_element_data_map: HashMap<i32, FiberElementData>,
   tag_name_to_html_tag_map: HashMap<String, wasm_bindgen::JsValue>,
-  timing_flags: Vec<wasm_bindgen::JsValue>,
+  timing_flags: Vec<String>,
   document: web_sys::Document,
   root_node: web_sys::Node,
   page_element: Option<web_sys::Element>,
@@ -25,11 +24,15 @@ pub struct MainThreadGlobalThis {
   config_default_display_linear: bool,
   config_default_overflow_visible: bool,
   config_enable_js_dataprocessor: bool,
-  callback_flush_element_tree: js_sys::Function,
 }
 
 #[wasm_bindgen]
 impl MainThreadGlobalThis {
+  // #[wasm_bindgen(js_name = "__common_event_handler", skip_typescript)]
+  // fn common_event_handler(&self, event: web_sys::Event) {
+  //   js_helpers::common_event_handler_js_impl(event);
+  // }
+
   #[wasm_bindgen(constructor)]
   pub fn new(
     tag_name_to_html_tag_map: js_sys::Object,
@@ -40,7 +43,6 @@ impl MainThreadGlobalThis {
     default_display_linear: bool,
     default_overflow_visible: bool,
     enable_js_dataprocessor: bool,
-    flush_element_tree_callback: js_sys::Function,
   ) -> MainThreadGlobalThis {
     let unique_id_counter = 1;
     let tag_name_to_html_tag_map: HashMap<String, wasm_bindgen::JsValue> =
@@ -67,14 +69,8 @@ impl MainThreadGlobalThis {
       config_default_display_linear: default_display_linear,
       config_default_overflow_visible: default_overflow_visible,
       config_enable_js_dataprocessor: enable_js_dataprocessor,
-      callback_flush_element_tree: flush_element_tree_callback,
     }
   }
-
-  // #[wasm_bindgen(js_name = "__common_event_handler", skip_typescript)]
-  // fn common_event_handler(&self, event: web_sys::Event) {
-  //   js_helpers::common_event_handler_js_impl(event);
-  // }
 
   #[wasm_bindgen(js_name = "__CreateElement")]
   pub fn create_element(&mut self, tag: &str, parent_component_unique_id: i32) -> web_sys::Element {
@@ -181,7 +177,7 @@ impl MainThreadGlobalThis {
       let unique_id = pure_element_papis::get_element_unique_id(element);
       self.exposure_changed_elements.push(unique_id);
     } else if key == constants::LYNX_TIMING_FLAG {
-      self.timing_flags.push(value);
+      self.timing_flags.push(value.as_string().unwrap());
     } else if key == "update-list-info" {
       let unique_id = pure_element_papis::get_element_unique_id(element);
       let element_data = self.unique_id_to_element_data_map.get(&unique_id);
@@ -253,28 +249,10 @@ impl MainThreadGlobalThis {
 
   #[wasm_bindgen(js_name = "__FlushElementTree")]
   pub fn flush_element_tree(&mut self, _: wasm_bindgen::JsValue, options: &wasm_bindgen::JsValue) {
-    let timing_flags = js_sys::Array::from_iter(self.timing_flags.iter());
+    // let timing_flags = js_sys::Array::from_iter(self.timing_flags.iter());
+
     self.timing_flags.clear();
-    // let exposure_changed_elements = js_sys::Array::from_iter(
-    //   self.exposure_changed_elements.iter().filter_map(|unique_id|{
-    //     self.unique_id_to_element_data_map.get(unique_id).and_then(|element_data|{
-    //       element_data.dom_ref.deref()
-    //     })
-    //   })
-    // );
     self.exposure_changed_elements.clear();
-    // if let Some(page_element) = &self.page_element {
-    //   if page_element.parent_node().is_none()
-    //     && js_sys::Reflect::get(page_element, &wasm_bindgen::JsValue::from_str(constants::LYNX_DISPOSED_PROPERTY_NAME)).unwrap().is_falsy() {
-    //       let _ = self.root_node.append_child(page_element);
-    //     }
-    // }
-    // let _ = self.callback_flush_element_tree.call3(
-    //   &wasm_bindgen::JsValue::NULL,
-    //   options,
-    //   &timing_flags,
-    //   &wasm_bindgen::JsValue::NULL,
-    // );
   }
 
   #[wasm_bindgen(js_name = "__wasm_GC")]

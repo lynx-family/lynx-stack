@@ -31,7 +31,7 @@ sugar_path = "1.2.0"
 swc_core = "47.0.3"
 swc_sourcemap = "9.3.0"
 version-compare = "0.2.0"
-wasm-bindgen = "0.2.104"
+wasm-bindgen = "0.2.105"
 web-sys = { version = "0.3.81" }
 
 [profile.release]

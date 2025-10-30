@@ -3,7 +3,11 @@ import { bench, describe } from 'vitest';
 // import { SSR, loadTemplate } from '../server.js';
 import { Window } from 'happy-dom';
 import { createMainThreadGlobalThis } from '@lynx-js/web-mainthread-apis/ts/createMainThreadGlobalThis.js';
-import { createMainThreadGlobalThis as createMainThreadGlobalThisWasm } from '@lynx-js/web-mainthread-apis/dist/MainThreadGlobalThis.js';
+import {
+  LynxEvent,
+  createMainThreadGlobalThis as createMainThreadGlobalThisWasm,
+} from '@lynx-js/web-mainthread-apis/dist/MainThreadGlobalThis.js';
+import { createCrossThreadEvent } from '@lynx-js/web-mainthread-apis/ts/utils/createCrossThreadEvent.js';
 // const cases = {
 //   'basic-performance-div-10000': await loadTemplate(
 //     'basic-performance-div-10000',
@@ -40,7 +44,12 @@ import { createMainThreadGlobalThis as createMainThreadGlobalThisWasm } from '@l
 // });
 
 const window = new Window();
-// Object.assign(globalThis, window);
+Object.assign(globalThis, {
+  HTMLElement: window.HTMLElement,
+  Document: window.Document,
+  Node: window.Node,
+  Element: window.Element,
+});
 const lynxView = window.document.createElement('lynx-view');
 const shadowroot = lynxView.attachShadow({ mode: 'open' });
 // @ts-expect-error
@@ -95,7 +104,7 @@ const mtsGlobalThisWasm = createMainThreadGlobalThisWasm(
   () => {},
 );
 
-describe('create-view', async () => {
+describe.only('create-view', async () => {
   bench('create-view-js', () => {
     mtsGlobalThisJS.__CreateView(1);
   }, { throws: true });
@@ -360,5 +369,43 @@ describe.skip('flush-element-tree', () => {
       null,
       {},
     );
+  }, { throws: true });
+});
+
+describe.skip('copy event', () => {
+  let js_page = mtsGlobalThisJS.__CreatePage('page_1', 1, null);
+  let wasm_page = mtsGlobalThisWasm.__CreatePage('page_2', 1, null);
+  window.document.body.appendChild(js_page);
+  window.document.body.appendChild(wasm_page);
+  bench('copy-event-js', () => {
+    let error;
+    const event = new window.MouseEvent('click');
+    js_page.addEventListener('click', (e: Event) => {
+      try {
+        createCrossThreadEvent(e);
+      } catch (e) {
+        error = e;
+      }
+    }, { once: true });
+    js_page.dispatchEvent(event);
+    if (error) {
+      throw error;
+    }
+  }, { throws: true });
+
+  bench('copy-event-wasm', () => {
+    const event = new window.MouseEvent('click');
+    let error;
+    wasm_page.addEventListener('click', (e: Event) => {
+      try {
+        new LynxEvent(e);
+      } catch (e) {
+        error = e;
+      }
+    }, { once: true });
+    wasm_page.dispatchEvent(event);
+    if (error) {
+      throw error;
+    }
   }, { throws: true });
 });

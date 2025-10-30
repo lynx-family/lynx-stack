@@ -1,35 +1,7 @@
-use crate::{
-  constants,
-  style::{style_sheet, transformer::transform},
-};
+use crate::template::template_loader::{Selector, StyleInfo, StyleRule};
+use crate::{constants, style::transformer::transform};
 use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
-
-/**
- * Selectors are stored as 4 separate lists:
- * - plain selectors (e.g., "div", "span")
- * - pseudo-classes (e.g., ":hover", ":active")
- * - pseudo-elements (e.g., "::before", "::after")
- * - combinator selectors (e.g., ">", "+", "~")
- */
-pub type Selector = Vec<(Vec<String>, Vec<String>, Vec<String>, Vec<String>)>;
-#[derive(Clone, Debug, PartialEq)]
-pub struct StyleRule {
-  pub selectors: Vec<Selector>,
-  pub declarations: Vec<(String, String)>,
-}
-
-pub struct StyleSheet {
-  pub rules: Vec<StyleRule>,
-  pub at_rules: String,
-  pub imports: Vec<i32>,
-}
-
-/**
- * key: cssId
- * value: StyleSheet
- */
-pub type StyleInfo = HashMap<i32, StyleSheet>;
 
 pub struct FlattenedStyleSheet {
   pub rules: Vec<StyleRule>,
@@ -38,10 +10,9 @@ pub struct FlattenedStyleSheet {
 }
 
 /**
- * key: cssId
  * value: FlattenedStyleSheet
  */
-type FlattenedStyleInfo = Vec<FlattenedStyleSheet>;
+pub type FlattenedStyleInfo = Vec<FlattenedStyleSheet>;
 
 /**
  * get Transitive Closure of a Direct Acyclic Graph (DAG)
@@ -360,6 +331,7 @@ pub fn transform_to_web_style_css_og(
 #[cfg(test)]
 mod tests {
   use super::*;
+  use crate::template::template_loader::StyleSheet;
   use std::collections::{HashMap, HashSet};
 
   #[test]

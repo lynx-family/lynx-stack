@@ -3,7 +3,10 @@
 // LICENSE file in the root directory of this source tree.
 
 use lazy_static::lazy_static;
-use std::collections::{HashMap, HashSet};
+use std::{
+  collections::{HashMap, HashSet},
+  hash::Hash,
+};
 
 pub const LYNX_UNIQUE_ID_ATTRIBUTE: &str = "l-uid";
 pub const CSS_ID_ATTRIBUTE: &str = "l-css-id";
@@ -37,5 +40,25 @@ lazy_static! {
     ]
     .into_iter()
     .collect()
+  };
+  pub static ref WEB_EVENT_NAME_TO_LYNX_MAPPING: HashMap<&'static str, &'static str> = {
+    HashMap::from({
+      [
+        ("click", "tap"),
+        ("lynxscroll", "scroll"),
+        ("lynxscrollend", "scrollend"),
+        ("overlaytouch", "touch"),
+        ("lynxfocus", "focus"),
+        ("lynxblur", "blur"),
+        ("lynxinput", "input"),
+      ]
+    })
+  };
+  pub static ref LYNX_EVENT_NAME_TO_WEB_MAPPING: HashMap<&'static str, &'static str> = {
+    let mut map = HashMap::new();
+    for (web_event, lynx_event) in WEB_EVENT_NAME_TO_LYNX_MAPPING.iter() {
+      map.insert(*lynx_event, *web_event);
+    }
+    map
   };
 }
