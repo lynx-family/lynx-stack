@@ -1,5 +1,16 @@
 # @lynx-js/rspeedy
 
+## 0.11.8
+
+### Patch Changes
+
+- feat: support web preview in rspeedy dev ([#1891](https://github.com/lynx-family/lynx-stack/pull/1891))
+
+  - print URLs with labels
+
+- Updated dependencies []:
+  - @lynx-js/web-rsbuild-server-middleware@0.18.2
+
 ## 0.11.7
 
 ### Patch Changes
