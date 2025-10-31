@@ -3003,6 +3003,16 @@ test.describe('reactlynx3 tests', () => {
         const result = await page.locator('.result').first().innerText();
         expect(result).toBe('foobar-6-6');
       });
+      // input/bindinput test-case start for <input>
+      test('basic-element-input-bindinput', async ({ page }, { title }) => {
+        await goto(page, title);
+        await page.locator('input').press('Enter');
+        await wait(200);
+        await page.locator('input').fill('foobar');
+        await wait(200);
+        const result = await page.locator('.result').first().innerText();
+        expect(result).toBe('foobar-6-6');
+      });
       // input/bindinput test-case end
       test(
         'basic-element-x-input-getValue',
