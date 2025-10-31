@@ -16,6 +16,8 @@ export function createLazyResolver(directory: string, conditionNames: string[]):
 // @public (undocumented)
 export interface Options {
     // (undocumented)
+    experimental_enableReactCompiler?: boolean | undefined;
+    // (undocumented)
     LAYERS: {
         MAIN_THREAD: string;
         BACKGROUND: string;
