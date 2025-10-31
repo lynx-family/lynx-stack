@@ -60,7 +60,9 @@ use swc_plugin_refresh::{RefreshVisitor, RefreshVisitorConfig};
 use swc_plugin_shake::napi::{ShakeVisitor, ShakeVisitorConfig};
 use swc_plugin_snapshot::napi::{JSXTransformer, JSXTransformerConfig};
 use swc_plugin_worklet::napi::{WorkletVisitor, WorkletVisitorConfig};
-use swc_plugins_shared::{transform_mode_napi::TransformMode, utils::calc_hash};
+use swc_plugins_shared::{
+  engine_version::is_engine_version_ge, transform_mode_napi::TransformMode, utils::calc_hash,
+};
 
 #[derive(Debug, Clone, Copy)]
 pub struct SyntaxConfig(Syntax);
@@ -194,6 +196,7 @@ pub struct TransformNodiffOptions {
   pub is_module: Option<IsModuleConfig>,
   pub css_scope: Either<bool, CSSScopeVisitorConfig>,
   pub snapshot: Option<Either<bool, JSXTransformerConfig>>,
+  pub engine_version: Option<String>,
   pub shake: Either<bool, ShakeVisitorConfig>,
   pub compat: Either<bool, CompatVisitorConfig>,
   pub refresh: Either<bool, RefreshVisitorConfig>,
@@ -221,6 +224,7 @@ impl Default for TransformNodiffOptions {
       is_module: Default::default(),
       css_scope: Either::B(Default::default()),
       snapshot: Default::default(),
+      engine_version: None,
       shake: Either::A(false),
       compat: Either::A(false),
       refresh: Either::A(false),
@@ -429,6 +433,12 @@ fn transform_react_lynx_inner(
       enabled,
     );
 
+    let is_ge_3_1: bool = is_engine_version_ge(&options.engine_version, "3.1");
+    let text_plugin = Optional::new(
+      visit_mut_pass(swc_plugin_text::TextVisitor {}),
+      enabled && is_ge_3_1,
+    );
+
     let shake_plugin = match options.shake.clone() {
       Either::A(config) => Optional::new(visit_mut_pass(ShakeVisitor::default()), config),
       Either::B(config) => Optional::new(visit_mut_pass(ShakeVisitor::new(config)), true),
@@ -552,7 +562,7 @@ fn transform_react_lynx_inner(
       compat_plugin,
       worklet_plugin,
       css_scope_plugin,
-      (list_plugin, snapshot_plugin),
+      (text_plugin, list_plugin, snapshot_plugin),
       directive_dce_plugin,
       define_dce_plugin,
       simplify_pass_1, // do simplify after DCE above to make shake below works better
