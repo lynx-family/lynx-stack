@@ -208,6 +208,7 @@ export interface ReactLynxTransformOptions {
   filename?: string;
   cssScope: boolean | CssScopeVisitorConfig;
   snapshot?: boolean | JsxTransformerConfig;
+  engineVersion?: string;
   shake: boolean | ShakeVisitorConfig;
   defineDCE: boolean | DefineDceVisitorConfig;
   directiveDCE: boolean | DirectiveDceVisitorConfig;

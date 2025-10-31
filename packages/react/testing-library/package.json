@@ -6,7 +6,9 @@
   "scripts": {
     "build": "rslib build",
     "dev": "rslib build --watch",
-    "test": "vitest",
+    "test": "npm run test:base && npm run test:3.1",
+    "test:3.1": "vitest --config vitest.3.1.config.ts",
+    "test:base": "vitest",
     "test:ui": "vitest --ui"
   },
   "devDependencies": {
