@@ -32,6 +32,7 @@
     "@lynx-js/web-constants": "workspace:*",
     "@lynx-js/web-core": "workspace:*",
     "@lynx-js/web-core-server": "workspace:*",
+    "@lynx-js/web-core-wasm": "workspace:*",
     "@lynx-js/web-elements": "workspace:*",
     "@lynx-js/web-elements-compat": "workspace:*",
     "@lynx-js/web-elements-reactive": "workspace:*",

@@ -4,5 +4,5 @@
 
 export { prepareMainThreadAPIs } from './prepareMainThreadAPIs.js';
 export * from './createMainThreadGlobalThis.js';
-export * from './rustHelpers.js';
-export * from './MainThreadGlobalThis.js';
+// export * from './rustHelpers.js';
+// export * from './MainThreadGlobalThis.js';

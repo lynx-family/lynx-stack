@@ -1,0 +1,32 @@
+{
+  "name": "@lynx-js/web-core-wasm",
+  "version": "0.17.2",
+  "private": false,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/web-platform/web-core-wasm"
+  },
+  "license": "Apache-2.0",
+  "sideEffects": false,
+  "type": "module",
+  "main": "index.js",
+  "typings": "index.d.ts",
+  "files": [
+    "dist",
+    "!dist/**/*.js.map",
+    "*.d.ts",
+    "*.js",
+    "LICENSE.txt",
+    "Notice.txt",
+    "CHANGELOG.md",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "node scripts/build.js"
+  },
+  "devDependencies": {
+    "binaryen": "^124.0.0",
+    "fb-dotslash": "^0.5.8"
+  }
+}

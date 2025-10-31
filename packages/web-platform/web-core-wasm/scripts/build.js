@@ -12,7 +12,7 @@ const cargoOutput = path.join(
   'target',
   'wasm32-unknown-unknown',
   'release',
-  'web_mainthread_apis.wasm',
+  'web_core_wasm.wasm',
 );
 // build the standard wasm package
 execSync(

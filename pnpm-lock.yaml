@@ -930,6 +930,15 @@ importers:
         specifier: 0.3.3
         version: 0.3.3(@rsbuild/core@1.5.17)
 
+  packages/web-platform/web-core-wasm:
+    devDependencies:
+      binaryen:
+        specifier: ^124.0.0
+        version: 124.0.0
+      fb-dotslash:
+        specifier: ^0.5.8
+        version: 0.5.8
+
   packages/web-platform/web-elements:
     dependencies:
       '@lynx-js/web-elements-reactive':
@@ -1081,6 +1090,9 @@ importers:
       '@lynx-js/web-core-server':
         specifier: workspace:*
         version: link:../web-core-server
+      '@lynx-js/web-core-wasm':
+        specifier: workspace:*
+        version: link:../web-core-wasm
       '@lynx-js/web-elements':
         specifier: workspace:*
         version: link:../web-elements
