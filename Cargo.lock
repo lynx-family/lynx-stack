@@ -1669,6 +1669,7 @@ dependencies = [
  "swc_plugin_list",
  "swc_plugin_shake",
  "swc_plugin_snapshot",
+ "swc_plugin_text",
  "swc_plugin_worklet",
  "swc_plugins_shared",
  "version-compare",
@@ -3219,6 +3220,7 @@ dependencies = [
  "swc_plugin_list",
  "swc_plugin_shake",
  "swc_plugin_snapshot",
+ "swc_plugin_text",
  "swc_plugin_worklet",
  "swc_plugins_shared",
 ]
@@ -3262,6 +3264,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "swc_plugin_text"
+version = "0.1.0"
+dependencies = [
+ "swc_core",
+ "swc_plugins_shared",
+]
+
+[[package]]
 name = "swc_plugin_worklet"
 version = "0.1.0"
 dependencies = [
@@ -3286,6 +3296,7 @@ dependencies = [
  "napi-derive",
  "once_cell",
  "regex",
+ "semver",
  "serde",
  "serde_json",
  "sha-1",

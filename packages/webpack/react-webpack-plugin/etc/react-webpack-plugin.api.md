@@ -26,6 +26,7 @@ export interface ReactLoaderOptions {
     compat?: CompatVisitorConfig | undefined;
     defineDCE?: DefineDceVisitorConfig | undefined;
     enableRemoveCSSScope?: boolean | undefined;
+    engineVersion?: string | undefined;
     inlineSourcesContent?: boolean | undefined;
     jsx?: JsxTransformerConfig | undefined;
     refresh?: boolean | undefined;

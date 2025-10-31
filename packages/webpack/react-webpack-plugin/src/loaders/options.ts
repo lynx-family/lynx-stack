@@ -76,6 +76,10 @@ export interface ReactLoaderOptions {
    * @internal
    */
   transformPath?: string | undefined;
+  /**
+   * The engine version.
+   */
+  engineVersion?: string | undefined;
 }
 
 function normalizeSlashes(file: string) {
@@ -94,6 +98,7 @@ function getCommonOptions(
     enableRemoveCSSScope,
     inlineSourcesContent,
     isDynamicComponent,
+    engineVersion,
     defineDCE = { define: {} },
   } = this.getOptions();
 
@@ -163,6 +168,7 @@ function getCommonOptions(
       filename,
       isDynamicComponent: isDynamicComponent ?? false,
     },
+    engineVersion: engineVersion ?? '',
     syntaxConfig: JSON.stringify({
       syntax,
       decorators: true,
