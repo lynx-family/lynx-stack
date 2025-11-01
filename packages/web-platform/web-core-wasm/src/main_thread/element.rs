@@ -1,19 +1,70 @@
-use std::{cell::RefCell, collections::HashMap, rc::Rc};
-
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
+use std::{cell::RefCell, collections::HashMap, hash::Hash, rc::Rc};
 use wasm_bindgen::prelude::*;
 
 use crate::constants;
+#[derive(Serialize, Deserialize, Default, PartialEq)]
+pub enum ConfigValueType {
+  #[default]
+  String,
+  Object,
+}
 
+#[derive(Serialize, Deserialize)]
+pub struct ConfigValue {
+  value_type: ConfigValueType,
+  /**
+   * if it is not a String value we
+   */
+  pub(crate) value: String,
+}
+
+impl ConfigValue {
+  pub fn new(value: &wasm_bindgen::JsValue) -> ConfigValue {
+    if value.is_string() {
+      ConfigValue {
+        value_type: ConfigValueType::String,
+        value: value.as_string().unwrap(),
+      }
+    } else {
+      ConfigValue {
+        value_type: ConfigValueType::Object,
+        value: js_sys::JSON::stringify(&value)
+          .unwrap()
+          .as_string()
+          .unwrap(),
+      }
+    }
+  }
+
+  pub fn as_js_value(&self) -> wasm_bindgen::JsValue {
+    match self.value_type {
+      ConfigValueType::String => wasm_bindgen::JsValue::from_str(&self.value),
+      ConfigValueType::Object => js_sys::JSON::parse(&self.value).unwrap(),
+    }
+  }
+}
+
+impl std::cmp::PartialEq for ConfigValue {
+  fn eq(&self, other: &Self) -> bool {
+    self.value_type == other.value_type && self.value == other.value
+  }
+}
+
+#[derive(Serialize, Deserialize, Default)]
 pub struct LynxElementData {
   pub(crate) unique_id: i32,
   pub(crate) css_id: i32,
   pub(crate) tag: String,
   pub(crate) parent_component_unique_id: i32,
   pub(crate) id: Option<String>,
-  pub(crate) part_id: Option<i32>,
-  pub(crate) dataset: HashMap<String, String>,
+  pub(crate) part_id: Option<String>,
+  pub(crate) dataset: Option<HashMap<String, ConfigValue>>,
+  pub(crate) component_id: Option<String>,
+  pub(crate) component_config: Option<HashMap<String, ConfigValue>>,
+  #[serde(skip)]
   pub(crate) component_at_index: Option<JsValue>,
+  #[serde(skip)]
   pub(crate) enqueue_component: Option<JsValue>,
 }
 
@@ -31,7 +82,7 @@ pub struct LynxElement {
 #[derive(Serialize)]
 pub struct LynxElementJsonData {
   #[serde(rename = "ssrID")]
-  ssr_id: i32,
+  ssr_id: String,
 }
 
 #[wasm_bindgen]
@@ -40,7 +91,7 @@ impl LynxElement {
   pub fn to_json(&self) -> JsValue {
     let data = self.data.borrow();
     let json_data = LynxElementJsonData {
-      ssr_id: data.part_id.unwrap_or(data.unique_id),
+      ssr_id: data.part_id.clone().unwrap_or(data.unique_id.to_string()),
     };
     serde_wasm_bindgen::to_value(&json_data).unwrap()
   }
@@ -53,6 +104,7 @@ impl LynxElement {
     css_id: i32,
     tag: String,
     parent_component_unique_id: i32,
+    component_id: Option<String>,
     dom: web_sys::Element,
   ) -> Self {
     let _ = dom.set_attribute(constants::LYNX_TAG_ATTRIBUTE, tag.as_str());
@@ -69,7 +121,9 @@ impl LynxElement {
           parent_component_unique_id,
           id: None,
           part_id: None,
-          dataset: HashMap::new(),
+          dataset: None,
+          component_id,
+          component_config: None,
           component_at_index: None,
           enqueue_component: None,
         }
