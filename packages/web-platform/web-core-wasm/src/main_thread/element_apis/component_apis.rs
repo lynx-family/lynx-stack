@@ -1,8 +1,20 @@
-use std::collections::HashMap;
+use crate::constants;
+use serde::Deserialize;
 
 use super::element::{ConfigValue, LynxElement};
 use super::mts_global_this::MainThreadGlobalThis;
 use wasm_bindgen::prelude::*;
+
+#[derive(Deserialize)]
+pub struct ComponentInfoParams {
+  #[serde(rename = "componentID")]
+  component_id: Option<String>,
+  name: Option<String>,
+  path: Option<String>,
+  entry: Option<String>,
+  #[serde(rename = "cssID")]
+  css_id: Option<i32>,
+}
 
 #[wasm_bindgen]
 impl MainThreadGlobalThis {
@@ -52,5 +64,27 @@ impl MainThreadGlobalThis {
   pub fn update_component_id(&self, element: &LynxElement, component_id: &str) {
     let mut element_data = element.data.borrow_mut();
     element_data.component_id = Some(component_id.to_string());
+  }
+
+  #[wasm_bindgen(js_name = "__UpdateComponentInfo")]
+  pub fn update_component_info(
+    &self,
+    element: &LynxElement,
+    component_info: wasm_bindgen::JsValue,
+  ) {
+    let component_info =
+      serde_wasm_bindgen::from_value::<ComponentInfoParams>(component_info).unwrap();
+    let mut element_data = element.data.borrow_mut();
+    let dom = element.dom_ref.as_ref().unwrap();
+    element_data.component_id = component_info.component_id;
+    if let Some(css_id) = component_info.css_id {
+      if css_id != element_data.css_id {
+        element_data.css_id = css_id;
+        let _ = dom.set_attribute(constants::CSS_ID_ATTRIBUTE, &css_id.to_string());
+      }
+    }
+    if let Some(name) = component_info.name {
+      let _ = dom.set_attribute("name", &name);
+    }
   }
 }

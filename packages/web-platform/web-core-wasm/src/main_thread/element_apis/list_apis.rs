@@ -1,7 +1,6 @@
 use super::element::LynxElement;
 use super::mts_global_this::MainThreadGlobalThis;
 use serde::Deserialize;
-use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 
 #[derive(Deserialize)]

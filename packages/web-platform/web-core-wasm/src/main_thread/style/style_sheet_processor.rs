@@ -1,5 +1,6 @@
+use super::transformer::transform;
+use crate::constants;
 use crate::template::template_loader::{Selector, StyleInfo, StyleRule};
-use crate::{constants, style::transformer::transform};
 use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
 

@@ -1,9 +1,14 @@
+use crate::main_thread::element::LynxElement;
+use crate::main_thread::event::lynx_event::LynxEventTarget;
+use crate::main_thread::mts_global_this;
+use crate::main_thread::mts_global_this::MainThreadGlobalThis;
+
 use super::*;
+use js_sys::Reflect;
 use std::collections::HashMap;
+use std::rc::Weak;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
-
-use crate::main_thread::pure_element_papis;
 
 /**
  * Lynx Event Types passed from __AddEvent
@@ -134,9 +139,9 @@ impl LynxEventStorage {
  * 3. Generation 2 apis could not remove the "worklet handler" added by Generation 1 apis.
  *
  */
-pub struct EventSystem {
+pub struct EventSystem<'a> {
   root_node: web_sys::Node,
-  mts_window: wasm_bindgen::JsValue,
+  mts_global_this: &'a MainThreadGlobalThis,
   /**
    * event_name -> element_id -> LynxEventStorage
    */
@@ -145,15 +150,15 @@ pub struct EventSystem {
   common_event_options: web_sys::AddEventListenerOptions,
 }
 
-impl EventSystem {
-  pub fn new(root_node: &web_sys::Node, mts_window: wasm_bindgen::JsValue) -> Self {
+impl<'a> EventSystem<'a> {
+  pub fn new(root_node: &web_sys::Node, mts_global_this: &'a MainThreadGlobalThis) -> Self {
     let common_event_handler = web_sys::EventListener::new();
     let common_event_options = web_sys::AddEventListenerOptions::new();
     common_event_options.set_capture(true);
     common_event_options.set_passive(true);
     EventSystem {
+      mts_global_this,
       root_node: root_node.clone(),
-      mts_window,
       handler_storage: HashMap::new(),
       common_event_handler,
       common_event_options,
@@ -342,48 +347,93 @@ impl EventSystem {
 
   fn common_event_handler_impl(&self, event: web_sys::Event) {
     let event_name = event.type_();
-    if let Some(element_map) = self.handler_storage.get(&event_name) {
-      let target_element = event
+    if let Some(element_handler_map) = self.handler_storage.get(&event_name) {
+      let target_dom = event
         .target()
         .unwrap()
         .dyn_into::<web_sys::Element>()
         .unwrap();
-      if self.root_node.contains(Some(&target_element)) {
-        let mut capture_path: Vec<web_sys::Element> = Vec::new();
-        // build the capture path from target to root, only check the parent_element which is an Element
-        let mut parent_element = target_element.parent_element();
-        while let Some(elem) = parent_element {
-          if self.root_node.is_equal_node(Some(&elem)) {
-            break;
+      if self.root_node.contains(Some(&target_dom)) {
+        let target_element = self.mts_global_this.get_lynx_element_by_dom(&target_dom);
+        if let Some(target_element) = target_element {
+          let mut capture_path: Vec<&LynxElement> = Vec::new();
+          // build the capture path from target to root, only check the parent_element which is an Element
+          let mut parent_element = target_dom.parent_element();
+          while let Some(elem) = parent_element {
+            if self.root_node.is_equal_node(Some(&elem)) {
+              break;
+            }
+            parent_element = elem.parent_element();
+            if let Some(parent_element) = &parent_element {
+              if let Some(parent_lynx_element) =
+                self.mts_global_this.get_lynx_element_by_dom(parent_element)
+              {
+                capture_path.push(parent_lynx_element);
+              }
+            }
           }
-          parent_element = elem.parent_element();
-          capture_path.push(elem);
+          capture_path.reverse();
+          let mut cross_thread_event_path: Vec<LynxEventTarget> = vec![];
+          let synthetic_event_data = lynx_event::LynxEventData::new(event_name.clone(), &event);
+          let mut synthetic_event_js_object: Option<wasm_bindgen::JsValue> = None;
+          let mut event_target_js_object: Option<wasm_bindgen::JsValue> = None;
+          // capture phase
+          for elem in capture_path {
+            let element_data = elem.data.borrow();
+            let event_current_target = LynxEventTarget::new(elem);
+            if let Some(lynx_handler_storage) = element_handler_map.get(&element_data.unique_id) {
+              if lynx_handler_storage.mts_run_worklet_value_capture.is_some()
+                || !lynx_handler_storage.mts_function_handler.is_empty()
+              {
+                if synthetic_event_js_object.is_none() {
+                  synthetic_event_js_object =
+                    Some(serde_wasm_bindgen::to_value(&synthetic_event_data).unwrap());
+                }
+                if event_target_js_object.is_none() {
+                  let event_target = LynxEventTarget::new(target_element);
+                  event_target_js_object = Some(event_target.into());
+                };
+                let current_target_js_object: wasm_bindgen::JsValue =
+                  wasm_bindgen::JsValue::from(event_current_target.clone());
+                Reflect::set(
+                  &synthetic_event_js_object.clone().unwrap(),
+                  &JsValue::from_str("target"),
+                  &event_target_js_object.clone().unwrap(),
+                )
+                .unwrap();
+                Reflect::set(
+                  &synthetic_event_js_object.clone().unwrap(),
+                  &JsValue::from_str("currentTarget"),
+                  &current_target_js_object,
+                )
+                .unwrap();
+                // mts runWorklet capture handler
+                if let Some(worklet_value) = &lynx_handler_storage.mts_run_worklet_value_capture {
+                  todo!("call runWorklet with worklet_value and synthetic_event_js_object");
+                }
+                for mts_function_handler in &lynx_handler_storage.mts_function_handler {
+                  if mts_function_handler.is_capture {
+                    let this = JsValue::NULL;
+                    let _ = mts_function_handler
+                      .handler
+                      .call1(&this, &synthetic_event_js_object.clone().unwrap());
+                  }
+                }
+                if lynx_handler_storage.is_cross_thread_capture_stop_propagation
+                  || lynx_handler_storage.is_mts_run_worklet_capture_stop_propagation
+                  || synthetic_event_data.propagation_stopped
+                {
+                  return;
+                }
+              }
+              // cross thread capture handler
+              if let Some(handler_id) = &lynx_handler_storage.cross_thread_handler_capture {
+                // send synthetic_event_data, target and currentTargets
+                cross_thread_event_path.push(event_current_target);
+              }
+            }
+          }
         }
-        capture_path.reverse();
-        let target = lynx_event::LynxTarget::new(&target_element);
-        let mut synthetic_event = lynx_event::LynxSyntheticEvent::new(event_name.clone(), &event);
-        let mut synthetic_event_js_clone: Option<wasm_bindgen::JsValue> = None;
-        // capture phase
-        // for elem in &capture_path {
-        //   let unique_id = pure_element_papis::get_element_unique_id(elem);
-        //   if let Some(lynx_handler_storage) = element_map.get(&unique_id) {
-        //     // cross thread capture handler
-        //     if let Some(handler_id) = &lynx_handler_storage.cross_thread_handler_capture {
-        //       let current_target = lynx_event::LynxTarget::new(elem);
-        //       synthetic_event.set_current_target(current_target);
-        //       todo!("dispatch to worker thread with handler_id: {}", handler_id);
-        //     }
-        //     // mts runWorklet capture handler
-        //     if let Some(worklet_value) = &lynx_handler_storage.mts_run_worklet_value_capture {
-        //       let current_target = lynx_event::LynxTarget::new(elem);
-        //       let current_target_js = serde_wasm_bindgen::to_value(&current_target).unwrap();
-        //       synthetic_event_js_clone = synthetic_event_js_clone.or_else(|| {
-        //         Some(serde_wasm_bindgen::to_value(&synthetic_event).unwrap())
-        //       });
-        //       // we need to assign the elementRefptr to the js object of the currentTarget
-        //     }
-        //   }
-        // }
       }
     }
   }

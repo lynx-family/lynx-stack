@@ -5,7 +5,7 @@ import { Window } from 'happy-dom';
 import { createMainThreadGlobalThis } from '@lynx-js/web-mainthread-apis/src/createMainThreadGlobalThis.js';
 import {
   MainThreadGlobalThis as MainThreadGlobalThisWasm,
-} from '@lynx-js/web-core-wasm/dist/standard.js';
+} from '@lynx-js/web-core-wasm/dist/debug.js';
 // import { createCrossThreadEvent } from '@lynx-js/web-mainthread-apis/ts/utils/createCrossThreadEvent.js';
 // const cases = {
 //   'basic-performance-div-10000': await loadTemplate(
@@ -352,52 +352,52 @@ describe('get-element-unique-id', () => {
   }, { throws: true });
 });
 
-describe('append-element', () => {
-  const parentElementJS = mtsGlobalThisJS.__CreateView(1);
-  const parentElementWasm = mtsGlobalThisWasm.__CreateView(1);
-  const childElementJS = mtsGlobalThisJS.__CreateView(1);
-  const childElementWasm = mtsGlobalThisWasm.__CreateView(1);
+// describe('append-element', () => {
+//   const parentElementJS = mtsGlobalThisJS.__CreateView(1);
+//   const parentElementWasm = mtsGlobalThisWasm.__CreateView(1);
+//   const childElementJS = mtsGlobalThisJS.__CreateView(1);
+//   const childElementWasm = mtsGlobalThisWasm.__CreateView(1);
 
-  bench('append-element-js', () => {
-    mtsGlobalThisJS.__AppendElement(
-      parentElementJS,
-      childElementJS,
-    );
-  }, { throws: true });
+//   bench('append-element-js', () => {
+//     mtsGlobalThisJS.__AppendElement(
+//       parentElementJS,
+//       childElementJS,
+//     );
+//   }, { throws: true });
 
-  bench('append-element-wasm', () => {
-    mtsGlobalThisWasm.__AppendElement(
-      parentElementWasm,
-      childElementWasm,
-    );
-  }, { throws: true });
-});
+//   bench('append-element-wasm', () => {
+//     mtsGlobalThisWasm.__AppendElement(
+//       parentElementWasm,
+//       childElementWasm,
+//     );
+//   }, { throws: true });
+// });
 
-describe.only('insert-element-before', () => {
-  const parentElementJS = mtsGlobalThisJS.__CreateView(1);
-  const parentElementWasm = mtsGlobalThisWasm.__CreateView(1);
-  const referenceElementJS = mtsGlobalThisJS.__CreateView(1);
-  const referenceElementWasm = mtsGlobalThisWasm.__CreateView(1);
-  const newElementJS = mtsGlobalThisJS.__CreateView(1);
-  const newElementWasm = mtsGlobalThisWasm.__CreateView(1);
-  mtsGlobalThisJS.__AppendElement(parentElementJS, referenceElementJS);
-  mtsGlobalThisWasm.__AppendElement(parentElementWasm, referenceElementWasm);
-  bench('insert-element-before-js', () => {
-    mtsGlobalThisJS.__InsertElementBefore(
-      parentElementJS,
-      newElementJS,
-      referenceElementJS,
-    );
-  }, { throws: true });
+// describe('insert-element-before', () => {
+//   const parentElementJS = mtsGlobalThisJS.__CreateView(1);
+//   const parentElementWasm = mtsGlobalThisWasm.__CreateView(1);
+//   const referenceElementJS = mtsGlobalThisJS.__CreateView(1);
+//   const referenceElementWasm = mtsGlobalThisWasm.__CreateView(1);
+//   const newElementJS = mtsGlobalThisJS.__CreateView(1);
+//   const newElementWasm = mtsGlobalThisWasm.__CreateView(1);
+//   mtsGlobalThisJS.__AppendElement(parentElementJS, referenceElementJS);
+//   mtsGlobalThisWasm.__AppendElement(parentElementWasm, referenceElementWasm);
+//   bench('insert-element-before-js', () => {
+//     mtsGlobalThisJS.__InsertElementBefore(
+//       parentElementJS,
+//       newElementJS,
+//       referenceElementJS,
+//     );
+//   }, { throws: true });
 
-  bench('insert-element-before-wasm', () => {
-    mtsGlobalThisWasm.__InsertElementBefore(
-      parentElementWasm,
-      newElementWasm,
-      referenceElementWasm,
-    );
-  }, { throws: true });
-});
+//   bench('insert-element-before-wasm', () => {
+//     mtsGlobalThisWasm.__InsertElementBefore(
+//       parentElementWasm,
+//       newElementWasm,
+//       referenceElementWasm,
+//     );
+//   }, { throws: true });
+// });
 
 describe('set-dataset', () => {
   const elementJS = mtsGlobalThisJS.__CreateView(1);

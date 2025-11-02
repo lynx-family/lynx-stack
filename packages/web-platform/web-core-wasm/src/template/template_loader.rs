@@ -1,4 +1,4 @@
-use crate::style::style_sheet_processor::{flatten_style_info, FlattenedStyleInfo};
+use crate::main_thread::style::style_sheet_processor::{flatten_style_info, FlattenedStyleInfo};
 use std::{collections::HashMap, future::Future};
 
 /**

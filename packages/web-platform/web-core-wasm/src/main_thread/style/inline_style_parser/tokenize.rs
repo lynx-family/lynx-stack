@@ -1,4 +1,4 @@
-use crate::style::inline_style_parser::{
+use super::{
   char_code_definitions::{self, *},
   types::*,
   utils::*,
@@ -539,7 +539,7 @@ pub fn tokenize<T: Parser>(source: &[u8], parser: &mut T) {
 
 #[cfg(test)]
 mod test {
-  use crate::style::inline_style_parser::tokenize::*;
+  use super::*;
 
   struct TokenStreamRecorder {
     tokens: Vec<(u8, usize, usize)>,

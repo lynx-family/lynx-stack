@@ -3,14 +3,14 @@ use std::{cell::RefCell, collections::HashMap, hash::Hash, rc::Rc};
 use wasm_bindgen::prelude::*;
 
 use crate::constants;
-#[derive(Serialize, Deserialize, Default, PartialEq)]
+#[derive(Serialize, Deserialize, Default, PartialEq, Clone)]
 pub enum ConfigValueType {
   #[default]
   String,
   Object,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct ConfigValue {
   value_type: ConfigValueType,
   /**
@@ -51,7 +51,6 @@ impl std::cmp::PartialEq for ConfigValue {
   }
 }
 
-#[derive(Serialize, Deserialize, Default)]
 pub struct LynxElementData {
   pub(crate) unique_id: i32,
   pub(crate) css_id: i32,
@@ -62,9 +61,7 @@ pub struct LynxElementData {
   pub(crate) dataset: Option<HashMap<String, ConfigValue>>,
   pub(crate) component_id: Option<String>,
   pub(crate) component_config: Option<HashMap<String, ConfigValue>>,
-  #[serde(skip)]
   pub(crate) component_at_index: Option<JsValue>,
-  #[serde(skip)]
   pub(crate) enqueue_component: Option<JsValue>,
 }
 
@@ -76,7 +73,7 @@ pub struct LynxElementData {
 pub struct LynxElement {
   pub(crate) data: Rc<RefCell<LynxElementData>>,
   pub(crate) dom_ref: Option<web_sys::Element>,
-  pub(crate) self_js_value: wasm_bindgen::JsValue,
+  self_js_value: wasm_bindgen::JsValue,
 }
 
 #[derive(Serialize)]
@@ -139,5 +136,9 @@ impl LynxElement {
   pub fn ssr_set_dom_ref(&mut self, dom: web_sys::Element) {
     assert!(self.dom_ref.is_none(), "DOM ref is already set");
     self.dom_ref = Some(dom);
+  }
+
+  pub fn as_js_value(&self) -> wasm_bindgen::JsValue {
+    self.self_js_value.clone()
   }
 }

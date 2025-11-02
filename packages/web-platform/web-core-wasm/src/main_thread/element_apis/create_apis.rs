@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use crate::constants;
 use wasm_bindgen::prelude::*;
 
@@ -15,21 +13,21 @@ impl MainThreadGlobalThis {
   ) -> wasm_bindgen::JsValue {
     self
       .create_element_impl(tag, parent_component_unique_id, None, None)
-      .self_js_value
+      .as_js_value()
   }
 
   #[wasm_bindgen(js_name = "__CreateView")]
   pub fn create_view(&mut self, parent_component_unique_id: i32) -> wasm_bindgen::JsValue {
     self
       .create_element_impl("view", parent_component_unique_id, None, None)
-      .self_js_value
+      .as_js_value()
   }
 
   #[wasm_bindgen(js_name = "__CreateText")]
   pub fn create_text(&mut self, parent_component_unique_id: i32) -> wasm_bindgen::JsValue {
     self
       .create_element_impl("text", parent_component_unique_id, None, None)
-      .self_js_value
+      .as_js_value()
   }
 
   #[wasm_bindgen(js_name = "__CreateRawText")]
@@ -40,21 +38,21 @@ impl MainThreadGlobalThis {
       .as_ref()
       .unwrap()
       .set_attribute("text", text);
-    element.self_js_value
+    element.as_js_value()
   }
 
   #[wasm_bindgen(js_name = "__CreateImage")]
   pub fn create_image(&mut self, parent_component_unique_id: i32) -> wasm_bindgen::JsValue {
     self
       .create_element_impl("image", parent_component_unique_id, None, None)
-      .self_js_value
+      .as_js_value()
   }
 
   #[wasm_bindgen(js_name = "__CreateScrollView")]
   pub fn create_scroll_view(&mut self, parent_component_unique_id: i32) -> wasm_bindgen::JsValue {
     self
       .create_element_impl("scroll-view", parent_component_unique_id, None, None)
-      .self_js_value
+      .as_js_value()
   }
 
   #[wasm_bindgen(js_name = "__CreateWrapperElement")]
@@ -64,7 +62,7 @@ impl MainThreadGlobalThis {
   ) -> wasm_bindgen::JsValue {
     self
       .create_element_impl("lynx-wrapper", parent_component_unique_id, None, None)
-      .self_js_value
+      .as_js_value()
   }
 
   #[wasm_bindgen(js_name = "__CreatePage")]
@@ -93,6 +91,25 @@ impl MainThreadGlobalThis {
     }
     // the page element is supposed to leak because it's the root of the app
     self.page = Some(page.clone());
-    page.self_js_value
+    page.as_js_value()
+  }
+
+  #[wasm_bindgen(js_name = "__CreateComponent")]
+  pub fn create_component(
+    &mut self,
+    component_parent_unique_id: i32,
+    component_id: &str,
+    css_id: i32,
+  ) -> wasm_bindgen::JsValue {
+    let component = self.create_element_impl(
+      "view",
+      component_parent_unique_id,
+      Some(css_id),
+      Some(component_id.to_string()),
+    );
+    self
+      .component_id_to_unique_id_map
+      .insert(component_id.to_string(), component.data.borrow().unique_id);
+    component.as_js_value()
   }
 }
