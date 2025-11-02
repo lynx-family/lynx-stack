@@ -75,15 +75,16 @@ impl MainThreadGlobalThis {
     let component_info =
       serde_wasm_bindgen::from_value::<ComponentInfoParams>(component_info).unwrap();
     let mut element_data = element.data.borrow_mut();
-    let dom = element.dom_ref.as_ref().unwrap();
     element_data.component_id = component_info.component_id;
     if let Some(css_id) = component_info.css_id {
       if css_id != element_data.css_id {
         element_data.css_id = css_id;
+        let dom = element_data.dom_ref.as_ref().unwrap();
         let _ = dom.set_attribute(constants::CSS_ID_ATTRIBUTE, &css_id.to_string());
       }
     }
     if let Some(name) = component_info.name {
+      let dom = element_data.dom_ref.as_ref().unwrap();
       let _ = dom.set_attribute("name", &name);
     }
   }

@@ -1,5 +1,4 @@
 use crate::main_thread::element::LynxElement;
-use crate::main_thread::event::lynx_event::LynxEventTarget;
 use crate::main_thread::mts_global_this;
 use crate::main_thread::mts_global_this::MainThreadGlobalThis;
 

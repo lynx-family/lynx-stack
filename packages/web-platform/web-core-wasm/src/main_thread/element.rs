@@ -1,8 +1,7 @@
-use serde::{Deserialize, Serialize};
-use std::{cell::RefCell, collections::HashMap, hash::Hash, rc::Rc};
-use wasm_bindgen::prelude::*;
-
 use crate::constants;
+use serde::{Deserialize, Serialize};
+use std::{cell::RefCell, collections::HashMap, rc::Rc};
+use wasm_bindgen::prelude::*;
 #[derive(Serialize, Deserialize, Default, PartialEq, Clone)]
 pub enum ConfigValueType {
   #[default]
@@ -16,7 +15,7 @@ pub struct ConfigValue {
   /**
    * if it is not a String value we
    */
-  pub(crate) value: String,
+  value: String,
 }
 
 impl ConfigValue {
@@ -43,6 +42,10 @@ impl ConfigValue {
       ConfigValueType::Object => js_sys::JSON::parse(&self.value).unwrap(),
     }
   }
+
+  pub fn to_string(&self) -> String {
+    self.value.clone()
+  }
 }
 
 impl std::cmp::PartialEq for ConfigValue {
@@ -63,17 +66,13 @@ pub struct LynxElementData {
   pub(crate) component_config: Option<HashMap<String, ConfigValue>>,
   pub(crate) component_at_index: Option<JsValue>,
   pub(crate) enqueue_component: Option<JsValue>,
+  pub(crate) dom_ref: Option<web_sys::Element>,
 }
 
-/**
- * This this the struct that owned by Javascript World
- */
 #[wasm_bindgen]
 #[derive(Clone)]
 pub struct LynxElement {
   pub(crate) data: Rc<RefCell<LynxElementData>>,
-  pub(crate) dom_ref: Option<web_sys::Element>,
-  self_js_value: wasm_bindgen::JsValue,
 }
 
 #[derive(Serialize)]
@@ -94,7 +93,6 @@ impl LynxElement {
   }
 }
 
-#[wasm_bindgen]
 impl LynxElement {
   pub fn new(
     unique_id: i32,
@@ -109,12 +107,12 @@ impl LynxElement {
     if css_id != 0 {
       let _ = dom.set_attribute(constants::CSS_ID_ATTRIBUTE, &css_id.to_string());
     }
-    let mut lynx_element = LynxElement {
+    LynxElement {
       data: Rc::new(
         LynxElementData {
           unique_id,
           css_id,
-          tag,
+          tag: tag.clone(),
           parent_component_unique_id,
           id: None,
           part_id: None,
@@ -123,22 +121,15 @@ impl LynxElement {
           component_config: None,
           component_at_index: None,
           enqueue_component: None,
+          dom_ref: Some(dom),
         }
         .into(),
       ),
-      dom_ref: Some(dom),
-      self_js_value: JsValue::NULL,
-    };
-    lynx_element.self_js_value = lynx_element.clone().into();
-    lynx_element
+    }
   }
+}
 
-  pub fn ssr_set_dom_ref(&mut self, dom: web_sys::Element) {
-    assert!(self.dom_ref.is_none(), "DOM ref is already set");
-    self.dom_ref = Some(dom);
-  }
-
-  pub fn as_js_value(&self) -> wasm_bindgen::JsValue {
-    self.self_js_value.clone()
-  }
+#[wasm_bindgen(inline_js = "export function downcast_lynx_element(value) { return value; }")]
+extern "C" {
+  pub fn downcast_lynx_element(value: wasm_bindgen::JsValue) -> LynxElement;
 }

@@ -7,13 +7,60 @@ use wasm_bindgen::{convert::TryFromJsValue, prelude::*};
 
 #[wasm_bindgen]
 impl MainThreadGlobalThis {
+  #[wasm_bindgen(js_name = "__SetDataset")]
+  pub fn set_dataset(&self, element: &LynxElement, dataset: &js_sys::Object) {
+    let new_dataset_map: HashMap<String, ConfigValue> = js_sys::Object::entries(dataset)
+      .iter()
+      .map(|entry| {
+        let entry_array: js_sys::Array = entry.into();
+        let key = entry_array.get(0).as_string().unwrap();
+        let value = entry_array.get(1);
+        (key, ConfigValue::new(&value))
+      })
+      .collect();
+
+    let mut element_data = element.data.borrow_mut();
+    let dom = element_data.dom_ref.as_ref().unwrap();
+
+    if let Some(existing_dataset) = &element_data.dataset {
+      // 1. for each key in the new dataset, if the value is different from the existing one, set it to the dom
+      for (key, value) in &new_dataset_map {
+        let mut should_set = true;
+        if let Some(existing_value) = existing_dataset.get(key) {
+          if existing_value == value {
+            should_set = false;
+          }
+        }
+        if should_set {
+          dom
+            .set_attribute(&format!("data-{}", key.to_lowercase()), &value.to_string())
+            .unwrap();
+        }
+      }
+      // 2. for each key in the existing dataset, if it's not in the new dataset, remove it from the dom
+      for key in existing_dataset.keys() {
+        if !new_dataset_map.contains_key(key) {
+          dom
+            .remove_attribute(&format!("data-{}", key.to_lowercase()))
+            .unwrap();
+        }
+      }
+    } else {
+      // if there's no existing dataset, just set all the new dataset to the dom
+      for (key, value) in &new_dataset_map {
+        dom
+          .set_attribute(&format!("data-{}", key.to_lowercase()), &value.to_string())
+          .unwrap();
+      }
+    }
+    element_data.dataset = Some(new_dataset_map);
+  }
+
   #[wasm_bindgen(js_name = "__MarkTemplateElement")]
   pub fn mark_template_element(&mut self, element: &LynxElement) {
-    let _ = element
-      .dom_ref
-      .as_ref()
-      .unwrap()
-      .set_attribute(constants::LYNX_ELEMENT_TEMPLATE_MARKER_ATTRIBUTE, "true");
+    let element_data = element.data.borrow();
+    let dom = element_data.dom_ref.as_ref().unwrap();
+    let _ = dom.set_attribute(constants::LYNX_ELEMENT_TEMPLATE_MARKER_ATTRIBUTE, "true");
   }
 
   #[wasm_bindgen(js_name = "__SetAttribute")]
@@ -30,7 +77,7 @@ impl MainThreadGlobalThis {
       } else if constants::EXPOSURE_RELATED_ATTRIBUTES.contains(key) {
         self.exposure_changed_elements.push(unique_id);
       } else {
-        let dom = element.dom_ref.as_ref().unwrap();
+        let dom = element_data.dom_ref.as_ref().unwrap();
         let _ = dom.set_attribute(key, &value);
       }
     }
@@ -49,195 +96,201 @@ impl MainThreadGlobalThis {
   #[wasm_bindgen(js_name = "__SwapElement")]
   pub fn swap_element(&mut self, child_a: &LynxElement, child_b: &LynxElement) {
     let temp = self.document.create_element("div").unwrap();
-    let child_a_dom = child_a.dom_ref.as_ref().unwrap();
-    let child_b_dom = child_b.dom_ref.as_ref().unwrap();
+    let child_a_data = child_a.data.borrow();
+    let child_b_data = child_b.data.borrow();
+    let child_a_dom = child_a_data.dom_ref.as_ref().unwrap();
+    let child_b_dom = child_b_data.dom_ref.as_ref().unwrap();
     child_a_dom.replace_with_with_node_1(&temp).unwrap();
     child_b_dom.replace_with_with_node_1(child_a_dom).unwrap();
     temp.replace_with_with_node_1(child_b_dom).unwrap();
   }
 
   #[wasm_bindgen(js_name = "__GetPageElement")]
-  pub fn get_page_element(&self) -> Option<wasm_bindgen::JsValue> {
-    self.page.clone().map(|e| e.as_js_value())
+  pub fn get_page_element(&self) -> Option<LynxElement> {
+    self.page.clone()
   }
 
   #[wasm_bindgen(js_name = "__AppendElement")]
   pub fn append_element(&self, parent: &LynxElement, child: &LynxElement) {
-    let parent_dom = parent.dom_ref.as_ref().unwrap();
-    let child_dom = child.dom_ref.as_ref().unwrap();
+    let parent_data = parent.data.borrow();
+    let child_data = child.data.borrow();
+    let parent_dom = parent_data.dom_ref.as_ref().unwrap();
+    let child_dom = child_data.dom_ref.as_ref().unwrap();
     parent_dom.append_child(child_dom).unwrap();
   }
 
   #[wasm_bindgen(js_name = "__ElementIsEqual")]
   pub fn element_is_equal(&self, left: &LynxElement, right: &LynxElement) -> bool {
-    left
-      .dom_ref
-      .as_ref()
-      .unwrap()
-      .is_equal_node(Some(right.dom_ref.as_ref().unwrap()))
+    let left_data = left.data.borrow();
+    let right_data = right.data.borrow();
+    let left_dom = left_data.dom_ref.as_ref().unwrap();
+    let right_dom = right_data.dom_ref.as_ref().unwrap();
+    left_dom.is_equal_node(Some(right_dom))
   }
 
   #[wasm_bindgen(js_name = "__FirstElement")]
-  pub fn first_element(&self, element: &LynxElement) -> Option<wasm_bindgen::JsValue> {
-    element
+  pub fn first_element(&self, element: &LynxElement) -> Option<LynxElement> {
+    let element_data = element.data.borrow();
+    element_data
       .dom_ref
       .as_ref()
       .unwrap()
       .first_element_child()
-      .and_then(|e| {
-        self
-          .get_lynx_element_by_dom(&e)
-          .map(|b| b.as_js_value().clone())
-      })
+      .and_then(|e| self.get_lynx_element_by_dom(&e).map(|b| b.clone()))
   }
 
   #[wasm_bindgen(js_name = "__GetChildren")]
-  pub fn get_children(&self, element: &LynxElement) -> js_sys::Array {
-    let children = element.dom_ref.as_ref().unwrap().children();
-    let array = js_sys::Array::new();
+  pub fn get_children(&self, element: &LynxElement) -> Vec<LynxElement> {
+    let element_data = element.data.borrow();
+    let children = element_data.dom_ref.as_ref().unwrap().children();
+    let mut array = Vec::new();
     let children_length = children.length();
     for i in 0..children_length {
       let child = children.item(i).unwrap();
       if let Some(element) = self.get_lynx_element_by_dom(&child) {
-        let element: wasm_bindgen::JsValue = element.as_js_value().clone();
-        array.push(&element);
+        array.push(element.clone());
       }
     }
     array
   }
 
   #[wasm_bindgen(js_name = "__GetParent")]
-  pub fn get_parent(&self, element: &LynxElement) -> Option<wasm_bindgen::JsValue> {
-    let parent_dom_option = element.dom_ref.as_ref().unwrap().parent_element();
+  pub fn get_parent(&self, element: &LynxElement) -> Option<LynxElement> {
+    let element_data = element.data.borrow();
+    let parent_dom_option = element_data.dom_ref.as_ref().unwrap().parent_element();
     if let Some(parent_dom) = parent_dom_option {
-      self
-        .get_lynx_element_by_dom(&parent_dom)
-        .map(|element| element.as_js_value().clone())
+      self.get_lynx_element_by_dom(&parent_dom).map(|e| e.clone())
     } else {
       None
     }
   }
 
-  #[wasm_bindgen(js_name = "__InsertElementBefore")]
-  pub fn insert_element_before(
-    &self,
-    parent: &LynxElement,
-    child: &LynxElement,
-    ref_node: &LynxElement,
-  ) {
-    let parent_dom = parent.dom_ref.as_ref().unwrap();
-    let child_dom = child.dom_ref.as_ref().unwrap();
-    let ref_node_dom = ref_node.dom_ref.as_ref().map(|e| e as &web_sys::Node);
-    parent_dom.insert_before(child_dom, ref_node_dom).unwrap();
-  }
+  // #[wasm_bindgen(js_name = "__InsertElementBefore")]
+  // pub fn insert_element_before(
+  //   &self,
+  //   parent: &LynxElement,
+  //   child: &LynxElement,
+  //   ref_node: &wasm_bindgen::JsValue,
+  // ) {
+  //   let parent_ = parent.data.borrow();
+  //   let parent_dom = parent_.dom_ref.as_ref().unwrap();
+  //   let child_data = child.data.borrow();
+  //   let child_dom = child_data.dom_ref.as_ref().unwrap();
+
+  //   let ref_node_dom = if ref_node.is_falsy() {
+  //     None
+  //   } else {
+  //     let ref_node_element = LynxElement::try_from_js_value_ref(ref_node).unwrap();
+  //     let ref_node_data = ref_node_element.data.borrow();
+  //     Some(ref_node_data.dom_ref.as_ref().unwrap().as_ref())
+  //   };
+
+  //   parent_dom
+  //     .insert_before(child_dom, ref_node_dom)
+  //     .unwrap();
+  // }
 
   #[wasm_bindgen(js_name = "__LastElement")]
-  pub fn last_element(&self, element: &LynxElement) -> Option<wasm_bindgen::JsValue> {
-    element
-      .dom_ref
-      .as_ref()
-      .unwrap()
+  pub fn last_element(&self, element: &LynxElement) -> Option<LynxElement> {
+    let element_data = element.data.borrow();
+    let dom = element_data.dom_ref.as_ref().unwrap();
+    dom
       .last_element_child()
-      .and_then(|e| {
-        self
-          .get_lynx_element_by_dom(&e)
-          .map(|b| b.as_js_value().clone())
-      })
+      .and_then(|e| self.get_lynx_element_by_dom(&e).map(|b| b.clone()))
   }
 
   #[wasm_bindgen(js_name = "__NextElement")]
-  pub fn next_element(&self, element: &LynxElement) -> Option<wasm_bindgen::JsValue> {
-    element
-      .dom_ref
-      .as_ref()
-      .unwrap()
+  pub fn next_element(&self, element: &LynxElement) -> Option<LynxElement> {
+    let element_data = element.data.borrow();
+    let dom = element_data.dom_ref.as_ref().unwrap();
+    dom
       .next_element_sibling()
-      .and_then(|e| {
-        self
-          .get_lynx_element_by_dom(&e)
-          .map(|b| b.as_js_value().clone())
-      })
+      .and_then(|e| self.get_lynx_element_by_dom(&e).map(|b| b.clone()))
   }
 
   #[wasm_bindgen(js_name = "__RemoveElement")]
   pub fn remove_element(&self, parent: &LynxElement, child: &LynxElement) {
-    let parent_dom = parent.dom_ref.as_ref().unwrap();
-    let child_dom = child.dom_ref.as_ref().unwrap();
+    let parent_data = parent.data.borrow();
+    let parent_dom = parent_data.dom_ref.as_ref().unwrap();
+    let child_data = child.data.borrow();
+    let child_dom = child_data.dom_ref.as_ref().unwrap();
     parent_dom.remove_child(child_dom).unwrap();
   }
 
   #[wasm_bindgen(js_name = "__ReplaceElement")]
   pub fn replace_element(&self, new_element: &LynxElement, old_element: &LynxElement) {
-    let old_element_dom = old_element.dom_ref.as_ref().unwrap();
-    let new_element_dom = new_element.dom_ref.as_ref().unwrap();
+    let old_element_data = old_element.data.borrow();
+    let new_element_data = new_element.data.borrow();
+    let old_element_dom = old_element_data.dom_ref.as_ref().unwrap();
+    let new_element_dom = new_element_data.dom_ref.as_ref().unwrap();
     old_element_dom
       .replace_with_with_node_1(new_element_dom)
       .unwrap();
   }
 
-  #[wasm_bindgen(js_name = "__ReplaceElements")]
-  pub fn replace_elements(
-    &self,
-    parent: &LynxElement,
-    new_children: &wasm_bindgen::JsValue,
-    old_children: &wasm_bindgen::JsValue,
-  ) {
-    let new_children: js_sys::Array = {
-      // the new_children could be 1. array of LynxElement 2. single LynxElement
-      if new_children.is_array() {
-        let new_children_array: js_sys::Array = js_sys::Array::from(new_children);
-        new_children_array.map(&mut |lynx_element, _, _| {
-          let lynx_element = LynxElement::try_from_js_value(lynx_element).unwrap();
-          let dom = lynx_element.dom_ref.clone().unwrap();
-          dom.into()
-        })
-      } else if new_children.is_object() {
-        let arr = js_sys::Array::new();
-        arr.push(
-          &LynxElement::try_from_js_value_ref(new_children)
-            .unwrap()
-            .dom_ref
-            .as_ref()
-            .unwrap()
-            .clone()
-            .into(),
-        );
-        arr
-      } else {
-        js_sys::Array::new()
-      }
-    };
-    let old_children: Vec<LynxElement> = {
-      // the old_children could be 1. array of LynxElement 2. single LynxElement
-      if old_children.is_array() {
-        let old_children_array: js_sys::Array =
-          old_children.unchecked_ref::<js_sys::Array>().clone();
-        old_children_array
-          .iter()
-          .map(|v| LynxElement::try_from_js_value(v).unwrap())
-          .collect()
-      } else if old_children.is_object() {
-        vec![LynxElement::try_from_js_value_ref(old_children).unwrap()]
-      } else {
-        vec![]
-      }
-    };
+  // #[wasm_bindgen(js_name = "__ReplaceElements")]
+  // pub fn replace_elements(
+  //   &self,
+  //   parent: &LynxElement,
+  //   new_children: &wasm_bindgen::JsValue,
+  //   old_children: &wasm_bindgen::JsValue,
+  // ) {
+  //   let new_children: js_sys::Array = {
+  //     // the new_children could be 1. array of LynxElement 2. single LynxElement
+  //     if new_children.is_array() {
+  //       let new_children_array: js_sys::Array = js_sys::Array::from(new_children);
+  //       new_children_array.map(&mut |lynx_element, _, _| {
+  //         let lynx_element = LynxElement::try_from_js_value(lynx_element).unwrap();
+  //         let dom = lynx_element.dom_ref.clone().unwrap();
+  //         dom.into()
+  //       })
+  //     } else if new_children.is_object() {
+  //       let arr = js_sys::Array::new();
+  //       arr.push(
+  //         &LynxElement::try_from_js_value_ref(new_children)
+  //           .unwrap()
+  //           .dom_ref
+  //           .as_ref()
+  //           .unwrap()
+  //           .clone()
+  //           .into(),
+  //       );
+  //       arr
+  //     } else {
+  //       js_sys::Array::new()
+  //     }
+  //   };
+  //   let old_children: Vec<LynxElement> = {
+  //     // the old_children could be 1. array of LynxElement 2. single LynxElement
+  //     if old_children.is_array() {
+  //       let old_children_array: js_sys::Array =
+  //         old_children.unchecked_ref::<js_sys::Array>().clone();
+  //       old_children_array
+  //         .iter()
+  //         .map(|v| LynxElement::try_from_js_value(v).unwrap())
+  //         .collect()
+  //     } else if old_children.is_object() {
+  //       vec![LynxElement::try_from_js_value_ref(old_children).unwrap()]
+  //     } else {
+  //       vec![]
+  //     }
+  //   };
 
-    let parent_dom = parent.dom_ref.as_ref().unwrap();
+  //   let parent_dom = parent.dom_ref.as_ref().unwrap();
 
-    if old_children.is_empty() {
-      // just append new children
-      parent_dom.append_with_node(&new_children).unwrap();
-    } else {
-      let first_old_child_dom = old_children[0].dom_ref.as_ref().unwrap();
-      for child in &old_children[1..] {
-        self.remove_element(parent, child);
-      }
-      first_old_child_dom
-        .replace_with_with_node(&new_children)
-        .unwrap();
-    }
-  }
+  //   if old_children.is_empty() {
+  //     // just append new children
+  //     parent_dom.append_with_node(&new_children).unwrap();
+  //   } else {
+  //     let first_old_child_dom = old_children[0].dom_ref.as_ref().unwrap();
+  //     for child in &old_children[1..] {
+  //       self.remove_element(parent, child);
+  //     }
+  //     first_old_child_dom
+  //       .replace_with_with_node(&new_children)
+  //       .unwrap();
+  //   }
+  // }
 
   #[wasm_bindgen(js_name = "__AddConfig")]
   pub fn add_config(&mut self, element: &LynxElement, type_: &str, value: &wasm_bindgen::JsValue) {
@@ -254,20 +307,24 @@ impl MainThreadGlobalThis {
 
   #[wasm_bindgen(js_name = "__AddDataset")]
   pub fn add_dataset(&self, element: &LynxElement, key: &str, value: &wasm_bindgen::JsValue) {
-    let dataset = &mut element.data.borrow_mut().dataset;
-    let dom = element.dom_ref.as_ref().unwrap();
+    let element_data = element.data.borrow();
+    let dom = element_data.dom_ref.as_ref().unwrap();
+    let dataset = &element_data.dataset;
     if value.is_truthy() {
       // if the value is string, set it directly, otherwise convert it to string by using JSON.stringify
       let value = ConfigValue::new(value);
+      let mut element_data_mut = element.data.borrow_mut();
+      let dataset = &mut element_data_mut.dataset;
       let map = dataset.get_or_insert_with(HashMap::new);
       // check if the value is different
       if map.get(key) != Some(&value) {
-        let _ = dom.set_attribute(key, &value.value);
+        let _ = dom.set_attribute(key, &value.to_string());
         map.insert(key.to_string(), value);
       }
     } else {
       // remove the key
-      if let Some(map) = dataset {
+      let mut element_data_mut = element.data.borrow_mut();
+      if let Some(map) = &mut element_data_mut.dataset {
         map.remove(key);
       }
       let _ = dom.remove_attribute(key);
@@ -303,7 +360,8 @@ impl MainThreadGlobalThis {
 
   #[wasm_bindgen(js_name = "__GetAttributeByName")]
   pub fn get_attribute_by_name(&self, element: &LynxElement, name: &str) -> Option<String> {
-    element.dom_ref.as_ref().unwrap().get_attribute(name)
+    let element_data = element.data.borrow();
+    element_data.dom_ref.as_ref().unwrap().get_attribute(name)
   }
 
   #[wasm_bindgen(js_name = "__GetID")]
@@ -314,7 +372,7 @@ impl MainThreadGlobalThis {
   #[wasm_bindgen(js_name = "__SetID")]
   pub fn set_id(&self, element: &LynxElement, id: Option<String>) {
     let mut element_data = element.data.borrow_mut();
-    let dom = element.dom_ref.as_ref().unwrap();
+    let dom = element_data.dom_ref.as_ref().unwrap();
     if let Some(id) = &id {
       let _ = dom.set_attribute("id", &id);
     } else {

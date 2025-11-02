@@ -1,6 +1,6 @@
 use super::{
   element::{ConfigValue, LynxElement},
-  event::event_delegation::EventSystem,
+  // event::event_delegation::EventSystem,
 };
 use crate::constants;
 use std::{collections::HashMap, rc::Rc, vec};
@@ -60,122 +60,14 @@ impl MainThreadGlobalThis {
     }
   }
 
-  #[wasm_bindgen(js_name = "__SetDataset")]
-  pub fn set_dataset(&self, element: &LynxElement, dataset: &js_sys::Object) {
-    let mut element_data = element.data.borrow_mut();
-    let dom = element.dom_ref.as_ref().unwrap();
-    let new_dataset_map: HashMap<String, ConfigValue> = js_sys::Object::entries(dataset)
-      .iter()
-      .map(|entry| {
-        let entry_array: js_sys::Array = entry.into();
-        let key = entry_array.get(0).as_string().unwrap();
-        let value = entry_array.get(1);
-        (key, ConfigValue::new(&value))
-      })
-      .collect();
-
-    // 1. for each key in the new dataset, if the value is different from the existing one, set it to the dom
-    for (key, value) in &new_dataset_map {
-      let mut should_set = true;
-      if let Some(existing_dataset) = &element_data.dataset {
-        if let Some(existing_value) = existing_dataset.get(key) {
-          if existing_value == value {
-            should_set = false;
-          }
-        }
-      }
-      if should_set {
-        let _ = dom.set_attribute(key, &value.value);
-      }
-    }
-
-    // remove attributes that are in the old dataset but not in the new one
-    if let Some(existing_dataset) = &element_data.dataset {
-      for key in existing_dataset.keys() {
-        if !new_dataset_map.contains_key(key) {
-          let _ = dom.remove_attribute(key);
-        }
-      }
-    }
-
-    // 2. replace the existing dataset with the new one
-    element_data.dataset = Some(new_dataset_map);
-  }
-
-  #[wasm_bindgen(js_name = "__GetClasses")]
-  pub fn get_classes(&self, element: &LynxElement) -> js_sys::Array {
-    let dom = element.dom_ref.as_ref().unwrap();
-    let class_list = dom.class_list();
-    let array = js_sys::Array::new_with_length(class_list.length());
-    for i in 0..class_list.length() {
-      if let Some(class) = class_list.item(i) {
-        array.set(i, class.into());
-      }
-    }
-    array
-  }
-
-  #[wasm_bindgen(js_name = "__SetCSSId")]
-  pub fn set_css_id(&self, elements: &js_sys::Array, css_id: &str, entry_name: Option<String>) {
-    for element in elements.iter() {
-      let element: LynxElement = LynxElement::try_from_js_value(element).unwrap();
-      let dom = element.dom_ref.as_ref().unwrap();
-      let element_data = &mut element.data.borrow_mut();
-      element_data.css_id = css_id.parse::<i32>().unwrap_or(0);
-      let _ = dom.set_attribute(constants::CSS_ID_ATTRIBUTE, css_id);
-      if let Some(entry_name) = &entry_name {
-        if !entry_name.is_empty() {
-          let _ = dom.set_attribute(constants::LYNX_ENTRY_NAME_ATTRIBUTE, entry_name);
-        }
-      }
-    }
-  }
-
-  #[wasm_bindgen(js_name = "__SetClasses")]
-  pub fn set_classes(&self, element: &LynxElement, classname: Option<String>) {
-    let dom = element.dom_ref.as_ref().unwrap();
-    if let Some(classname) = classname {
-      let _ = dom.set_attribute("class", &classname);
-    } else {
-      let _ = dom.remove_attribute("class");
-    }
-  }
-
-  // #[wasm_bindgen(js_name = __AddInlineStyle)]
-  // pub fn add_inline_style(&self, element: &LynxElement, key: &wasm_bindgen::JsValue, value: &wasm_bindgen::JsValue) {
-  //   let style = js_helpers::get_property(element.dom_ref.as_ref().unwrap(), "style").unwrap();
-  //   js_helpers::get_function(&style, "setProperty")
-  //       .unwrap()
-  //       .call2(&style, key, value)
-  //       .unwrap();
-  // }
-
-  #[wasm_bindgen(js_name = "__AddClass")]
-  pub fn add_class(&self, element: &LynxElement, class_name: &str) {
-    element
-      .dom_ref
-      .as_ref()
-      .unwrap()
-      .class_list()
-      .add_1(class_name)
-      .unwrap();
-  }
-
-  // #[wasm_bindgen(js_name = __SetInlineStyles)]
-  // pub fn set_inline_styles(&self, element: &LynxElement, value: &wasm_bindgen::JsValue) {
-  //     let style = js_helpers::get_property(element.dom_ref.as_ref().unwrap(), "style").unwrap();
-  //     js_helpers::set_property(&style, "cssText", value).unwrap();
-  // }
-
   // #[wasm_bindgen(js_name = __GetTemplateParts)]
   // pub fn get_template_parts(&self, _template_element: &LynxElement) -> Object {
   //   // TODO
   //   Object::new()
-  // }
-
   #[wasm_bindgen(js_name = "__MarkPartElement")]
   pub fn mark_part_element(&self, element: &LynxElement, part_id: Option<String>) {
-    let dom = element.dom_ref.as_ref().unwrap();
+    let data = element.data.borrow();
+    let dom = data.dom_ref.as_ref().unwrap();
     let element_data = &mut element.data.borrow_mut();
     if let Some(part_id) = &part_id {
       let _ = dom.set_attribute("part", part_id);
@@ -190,14 +82,11 @@ impl MainThreadGlobalThis {
 
   //   self.timing_flags.clear();
   //   self.exposure_changed_elements.clear();
-  // }
-
   #[wasm_bindgen(js_name = "__wasm_GC")]
   pub fn gc(&mut self) {
     self.unique_id_to_element_data_map.retain(|_, value| {
-      value.dom_ref.is_some()
-        && Rc::strong_count(&value.data) == 1
-        && value.dom_ref.as_ref().unwrap().is_connected()
+      let value = value.data.borrow();
+      value.dom_ref.as_ref().unwrap().is_connected()
     });
   }
 }
@@ -222,15 +111,15 @@ impl MainThreadGlobalThis {
     } else {
       tag
     };
-    let parent_component_data = self
+    let parent_component = self
       .unique_id_to_element_data_map
       .get(&parent_component_unique_id);
     let element = self.document.create_element(&html_tag_string).unwrap();
     let css_id = {
       if let Some(css_id) = css_id {
         css_id
-      } else if let Some(parent_component_data) = parent_component_data {
-        parent_component_data.data.borrow().css_id
+      } else if let Some(parent_component) = parent_component {
+        parent_component.data.borrow().css_id
       } else {
         0
       }
@@ -243,11 +132,10 @@ impl MainThreadGlobalThis {
       component_id,
       element,
     ));
-    let cloned_element = (*element).clone();
     self
       .unique_id_to_element_data_map
-      .insert(unique_id, element);
-    cloned_element
+      .insert(unique_id, element.clone());
+    *element
   }
 
   pub(crate) fn get_lynx_element_by_dom(&self, dom: &web_sys::Element) -> Option<&LynxElement> {
