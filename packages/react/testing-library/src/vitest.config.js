@@ -94,6 +94,7 @@ export const createVitestConfig = async (options) => {
             filename: relativePath,
             target: 'MIXED',
           },
+          engineVersion: options?.engineVersion ?? '',
           // snapshot: true,
           directiveDCE: false,
           defineDCE: false,
@@ -151,6 +152,7 @@ export const createVitestConfig = async (options) => {
       globals: true,
       setupFiles: [path.join(__dirname, 'vitest-global-setup')],
       alias: [...runtimeOSSAlias, ...runtimeAlias, ...preactAlias],
+      include: options?.include ?? ['src/**/*.test.{js,jsx,ts,tsx}'],
     },
   });
 };
