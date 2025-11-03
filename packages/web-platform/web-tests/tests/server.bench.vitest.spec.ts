@@ -5,7 +5,7 @@ import { Window } from 'happy-dom';
 import { createMainThreadGlobalThis } from '@lynx-js/web-mainthread-apis/src/createMainThreadGlobalThis.js';
 import {
   MainThreadGlobalThis as MainThreadGlobalThisWasm,
-} from '@lynx-js/web-core-wasm/dist/debug.js';
+} from '@lynx-js/web-core-wasm/dist/standard.js';
 // import { createCrossThreadEvent } from '@lynx-js/web-mainthread-apis/ts/utils/createCrossThreadEvent.js';
 // const cases = {
 //   'basic-performance-div-10000': await loadTemplate(
@@ -352,52 +352,69 @@ describe('get-element-unique-id', () => {
   }, { throws: true });
 });
 
-// describe('append-element', () => {
-//   const parentElementJS = mtsGlobalThisJS.__CreateView(1);
-//   const parentElementWasm = mtsGlobalThisWasm.__CreateView(1);
-//   const childElementJS = mtsGlobalThisJS.__CreateView(1);
-//   const childElementWasm = mtsGlobalThisWasm.__CreateView(1);
+describe('append-element', () => {
+  const parentElementJS = mtsGlobalThisJS.__CreateView(1);
+  const parentElementWasm = mtsGlobalThisWasm.__CreateView(1);
+  const childElementJS = mtsGlobalThisJS.__CreateView(1);
+  const childElementWasm = mtsGlobalThisWasm.__CreateView(1);
 
-//   bench('append-element-js', () => {
-//     mtsGlobalThisJS.__AppendElement(
-//       parentElementJS,
-//       childElementJS,
-//     );
-//   }, { throws: true });
+  bench('append-element-js', () => {
+    mtsGlobalThisJS.__AppendElement(
+      parentElementJS,
+      childElementJS,
+    );
+  }, { throws: true });
 
-//   bench('append-element-wasm', () => {
-//     mtsGlobalThisWasm.__AppendElement(
-//       parentElementWasm,
-//       childElementWasm,
-//     );
-//   }, { throws: true });
-// });
+  bench('append-element-wasm', () => {
+    mtsGlobalThisWasm.__AppendElement(
+      parentElementWasm,
+      childElementWasm,
+    );
+  }, { throws: true });
+});
 
-// describe('insert-element-before', () => {
-//   const parentElementJS = mtsGlobalThisJS.__CreateView(1);
-//   const parentElementWasm = mtsGlobalThisWasm.__CreateView(1);
-//   const referenceElementJS = mtsGlobalThisJS.__CreateView(1);
-//   const referenceElementWasm = mtsGlobalThisWasm.__CreateView(1);
-//   const newElementJS = mtsGlobalThisJS.__CreateView(1);
-//   const newElementWasm = mtsGlobalThisWasm.__CreateView(1);
-//   mtsGlobalThisJS.__AppendElement(parentElementJS, referenceElementJS);
-//   mtsGlobalThisWasm.__AppendElement(parentElementWasm, referenceElementWasm);
-//   bench('insert-element-before-js', () => {
-//     mtsGlobalThisJS.__InsertElementBefore(
-//       parentElementJS,
-//       newElementJS,
-//       referenceElementJS,
-//     );
-//   }, { throws: true });
+describe('insert-element-before', () => {
+  const parentElementJS = mtsGlobalThisJS.__CreateView(1);
+  const parentElementWasm = mtsGlobalThisWasm.__CreateView(1);
+  const referenceElementJS = mtsGlobalThisJS.__CreateView(1);
+  const referenceElementWasm = mtsGlobalThisWasm.__CreateView(1);
+  const newElementJS = mtsGlobalThisJS.__CreateView(1);
+  const newElementWasm = mtsGlobalThisWasm.__CreateView(1);
+  mtsGlobalThisJS.__AppendElement(parentElementJS, referenceElementJS);
+  mtsGlobalThisWasm.__AppendElement(parentElementWasm, referenceElementWasm);
+  bench('insert-element-before-js', () => {
+    mtsGlobalThisJS.__InsertElementBefore(
+      parentElementJS,
+      newElementJS,
+      referenceElementJS,
+    );
+  }, { throws: true });
 
-//   bench('insert-element-before-wasm', () => {
-//     mtsGlobalThisWasm.__InsertElementBefore(
-//       parentElementWasm,
-//       newElementWasm,
-//       referenceElementWasm,
-//     );
-//   }, { throws: true });
-// });
+  bench('insert-element-before-wasm', () => {
+    mtsGlobalThisWasm.__InsertElementBefore(
+      parentElementWasm,
+      newElementWasm,
+      referenceElementWasm,
+    );
+  }, { throws: true });
+
+  const anotherNewElementJS = mtsGlobalThisJS.__CreateView(1);
+  bench('insert-element-before-null-js', () => {
+    mtsGlobalThisJS.__InsertElementBefore(
+      parentElementJS,
+      anotherNewElementJS,
+      undefined,
+    );
+  }, { throws: true });
+  const anotherNewElementWasm = mtsGlobalThisWasm.__CreateView(1);
+  bench('insert-element-before-null-wasm', () => {
+    mtsGlobalThisWasm.__InsertElementBefore(
+      parentElementWasm,
+      anotherNewElementWasm,
+      undefined,
+    );
+  }, { throws: true });
+});
 
 describe('get-element-unique-id', () => {
   const elementJS = mtsGlobalThisJS.__CreateView(1);
@@ -416,7 +433,7 @@ describe('get-element-unique-id', () => {
   }, { throws: true });
 });
 
-describe.only('set-css-id', () => {
+describe('set-css-id', () => {
   const elementJS = mtsGlobalThisJS.__CreateView(1);
   const elementWasm = mtsGlobalThisWasm.__CreateView(1);
 
@@ -437,52 +454,52 @@ describe.only('set-css-id', () => {
   }, { throws: true });
 });
 
-// describe.only('set-dataset', () => {
-//   const elementJS = mtsGlobalThisJS.__CreateView(1);
-//   const elementWasm = mtsGlobalThisWasm.__CreateView(1);
-//   const dataset = {
-//     key1: 'value1',
-//     key2: 'value2',
-//     key3: 'value3',
-//   };
+describe('set-dataset', () => {
+  const elementJS = mtsGlobalThisJS.__CreateView(1);
+  const elementWasm = mtsGlobalThisWasm.__CreateView(1);
+  const dataset = {
+    key1: 'value1',
+    key2: 'value2',
+    key3: 'value3',
+  };
 
-//   bench('set-dataset-js', () => {
-//     mtsGlobalThisJS.__SetDataset(
-//       elementJS,
-//       dataset,
-//     );
-//   }, { throws: true });
+  bench('set-dataset-js', () => {
+    mtsGlobalThisJS.__SetDataset(
+      elementJS,
+      dataset,
+    );
+  }, { throws: true });
 
-//   bench('set-dataset-wasm', () => {
-//     mtsGlobalThisWasm.__SetDataset(
-//       elementWasm,
-//       dataset,
-//     );
-//   }, { throws: true });
-// });
+  bench('set-dataset-wasm', () => {
+    mtsGlobalThisWasm.__SetDataset(
+      elementWasm,
+      dataset,
+    );
+  }, { throws: true });
+});
 
-// describe('set-dataset-large', () => {
-//   const elementJS = mtsGlobalThisJS.__CreateView(1);
-//   const elementWasm = mtsGlobalThisWasm.__CreateView(1);
-//   const largeDataset: Record<string, string> = {};
-//   for (let i = 0; i < 1000; i++) {
-//     largeDataset[`key${i}`] = `value${i}`;
-//   }
+describe('set-dataset-large', () => {
+  const elementJS = mtsGlobalThisJS.__CreateView(1);
+  const elementWasm = mtsGlobalThisWasm.__CreateView(1);
+  const largeDataset: Record<string, string> = {};
+  for (let i = 0; i < 1000; i++) {
+    largeDataset[`key${i}`] = `value${i}`;
+  }
 
-//   bench('set-dataset-large-js', () => {
-//     mtsGlobalThisJS.__SetDataset(
-//       elementJS,
-//       largeDataset,
-//     );
-//   }, { throws: true });
+  bench('set-dataset-large-js', () => {
+    mtsGlobalThisJS.__SetDataset(
+      elementJS,
+      largeDataset,
+    );
+  }, { throws: true });
 
-//   bench('set-dataset-large-wasm', () => {
-//     mtsGlobalThisWasm.__SetDataset(
-//       elementWasm,
-//       largeDataset,
-//     );
-//   }, { throws: true });
-// });
+  bench('set-dataset-large-wasm', () => {
+    mtsGlobalThisWasm.__SetDataset(
+      elementWasm,
+      largeDataset,
+    );
+  }, { throws: true });
+});
 // describe.skip('flush-element-tree', () => {
 //   let js_page = mtsGlobalThisJS.__CreatePage('page_1', 1, null);
 //   let js_view = mtsGlobalThisJS.__CreateView(1);

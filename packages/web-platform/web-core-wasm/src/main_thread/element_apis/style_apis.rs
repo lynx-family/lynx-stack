@@ -1,7 +1,6 @@
 use crate::constants;
-use crate::main_thread::element;
 
-use super::element::{ConfigValue, LynxElement};
+use super::element::LynxElement;
 use super::mts_global_this::MainThreadGlobalThis;
 use wasm_bindgen::prelude::*;
 
@@ -22,17 +21,23 @@ impl MainThreadGlobalThis {
   }
 
   #[wasm_bindgen(js_name = "__SetCSSId")]
-  pub fn set_css_id(&self, elements: Vec<LynxElement>, css_id: i32, entry_name: Option<String>) {
-    for element in elements.iter() {
-      let element_data = element.data.borrow();
-      let dom = element_data.dom_ref.as_ref().unwrap();
+  pub fn set_css_id(
+    &self,
+    #[wasm_bindgen(unchecked_param_type = "LynxElement[]")] elements: js_sys::Array,
+    css_id: i32,
+    entry_name: Option<String>,
+  ) {
+    let elements = wasm_bindgen_derive::try_from_js_array::<LynxElement>(elements).unwrap();
+    for element in elements.iter().cloned() {
+      let mut element_data = element.data.borrow_mut();
       if element_data.css_id != css_id {
-        let element_data = &mut element.data.borrow_mut();
         element_data.css_id = css_id;
+        let dom = element_data.dom_ref.as_ref().unwrap();
         let _ = dom.set_attribute(constants::CSS_ID_ATTRIBUTE, css_id.to_string().as_str());
       }
       if let Some(entry_name) = &entry_name {
         if !entry_name.is_empty() {
+          let dom = element_data.dom_ref.as_ref().unwrap();
           let _ = dom.set_attribute(constants::LYNX_ENTRY_NAME_ATTRIBUTE, entry_name);
         }
       }

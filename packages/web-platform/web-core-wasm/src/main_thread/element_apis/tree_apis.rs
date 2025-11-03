@@ -3,7 +3,8 @@ use std::collections::HashMap;
 use super::element::{ConfigValue, LynxElement};
 use super::mts_global_this::MainThreadGlobalThis;
 use crate::constants;
-use wasm_bindgen::{convert::TryFromJsValue, prelude::*};
+use wasm_bindgen::prelude::*;
+use wasm_bindgen_derive::{try_from_js_array, try_from_js_option};
 
 #[wasm_bindgen]
 impl MainThreadGlobalThis {
@@ -85,8 +86,9 @@ impl MainThreadGlobalThis {
 
   #[wasm_bindgen(js_name = "__GetElementUniqueID")]
   pub fn get_element_unique_id(&self, element: wasm_bindgen::JsValue) -> i32 {
-    let lynx_element = LynxElement::try_from_js_value(element);
+    let lynx_element = try_from_js_option::<LynxElement>(element);
     if let Ok(lynx_element) = lynx_element {
+      let lynx_element = lynx_element.unwrap();
       let element_data = &lynx_element.data.borrow();
       return element_data.unique_id;
     }
@@ -136,7 +138,7 @@ impl MainThreadGlobalThis {
       .as_ref()
       .unwrap()
       .first_element_child()
-      .and_then(|e| self.get_lynx_element_by_dom(&e).map(|b| b.clone()))
+      .and_then(|e| self.get_lynx_element_by_dom(&e).cloned())
   }
 
   #[wasm_bindgen(js_name = "__GetChildren")]
@@ -159,36 +161,37 @@ impl MainThreadGlobalThis {
     let element_data = element.data.borrow();
     let parent_dom_option = element_data.dom_ref.as_ref().unwrap().parent_element();
     if let Some(parent_dom) = parent_dom_option {
-      self.get_lynx_element_by_dom(&parent_dom).map(|e| e.clone())
+      self.get_lynx_element_by_dom(&parent_dom).cloned()
     } else {
       None
     }
   }
 
-  // #[wasm_bindgen(js_name = "__InsertElementBefore")]
-  // pub fn insert_element_before(
-  //   &self,
-  //   parent: &LynxElement,
-  //   child: &LynxElement,
-  //   ref_node: &wasm_bindgen::JsValue,
-  // ) {
-  //   let parent_ = parent.data.borrow();
-  //   let parent_dom = parent_.dom_ref.as_ref().unwrap();
-  //   let child_data = child.data.borrow();
-  //   let child_dom = child_data.dom_ref.as_ref().unwrap();
+  #[wasm_bindgen(js_name = "__InsertElementBefore")]
+  pub fn insert_element_before(
+    &self,
+    parent: &LynxElement,
+    child: &LynxElement,
+    ref_node: &wasm_bindgen::JsValue,
+  ) {
+    let parent_ = parent.data.borrow();
+    let parent_dom = parent_.dom_ref.as_ref().unwrap();
+    let child_data = child.data.borrow();
+    let child_dom = child_data.dom_ref.as_ref().unwrap();
 
-  //   let ref_node_dom = if ref_node.is_falsy() {
-  //     None
-  //   } else {
-  //     let ref_node_element = LynxElement::try_from_js_value_ref(ref_node).unwrap();
-  //     let ref_node_data = ref_node_element.data.borrow();
-  //     Some(ref_node_data.dom_ref.as_ref().unwrap().as_ref())
-  //   };
-
-  //   parent_dom
-  //     .insert_before(child_dom, ref_node_dom)
-  //     .unwrap();
-  // }
+    if ref_node.is_truthy() {
+      let ref_node = try_from_js_option::<LynxElement>(ref_node)
+        .unwrap()
+        .unwrap();
+      let ref_node_data = ref_node.data.borrow();
+      let ref_node_dom = ref_node_data.dom_ref.as_ref().unwrap();
+      parent_dom
+        .insert_before(child_dom, Some(ref_node_dom))
+        .unwrap();
+    } else {
+      parent_dom.insert_before(child_dom, None).unwrap();
+    };
+  }
 
   #[wasm_bindgen(js_name = "__LastElement")]
   pub fn last_element(&self, element: &LynxElement) -> Option<LynxElement> {
@@ -196,7 +199,7 @@ impl MainThreadGlobalThis {
     let dom = element_data.dom_ref.as_ref().unwrap();
     dom
       .last_element_child()
-      .and_then(|e| self.get_lynx_element_by_dom(&e).map(|b| b.clone()))
+      .and_then(|e| self.get_lynx_element_by_dom(&e).cloned())
   }
 
   #[wasm_bindgen(js_name = "__NextElement")]
@@ -205,7 +208,7 @@ impl MainThreadGlobalThis {
     let dom = element_data.dom_ref.as_ref().unwrap();
     dom
       .next_element_sibling()
-      .and_then(|e| self.get_lynx_element_by_dom(&e).map(|b| b.clone()))
+      .and_then(|e| self.get_lynx_element_by_dom(&e).cloned())
   }
 
   #[wasm_bindgen(js_name = "__RemoveElement")]
@@ -228,69 +231,67 @@ impl MainThreadGlobalThis {
       .unwrap();
   }
 
-  // #[wasm_bindgen(js_name = "__ReplaceElements")]
-  // pub fn replace_elements(
-  //   &self,
-  //   parent: &LynxElement,
-  //   new_children: &wasm_bindgen::JsValue,
-  //   old_children: &wasm_bindgen::JsValue,
-  // ) {
-  //   let new_children: js_sys::Array = {
-  //     // the new_children could be 1. array of LynxElement 2. single LynxElement
-  //     if new_children.is_array() {
-  //       let new_children_array: js_sys::Array = js_sys::Array::from(new_children);
-  //       new_children_array.map(&mut |lynx_element, _, _| {
-  //         let lynx_element = LynxElement::try_from_js_value(lynx_element).unwrap();
-  //         let dom = lynx_element.dom_ref.clone().unwrap();
-  //         dom.into()
-  //       })
-  //     } else if new_children.is_object() {
-  //       let arr = js_sys::Array::new();
-  //       arr.push(
-  //         &LynxElement::try_from_js_value_ref(new_children)
-  //           .unwrap()
-  //           .dom_ref
-  //           .as_ref()
-  //           .unwrap()
-  //           .clone()
-  //           .into(),
-  //       );
-  //       arr
-  //     } else {
-  //       js_sys::Array::new()
-  //     }
-  //   };
-  //   let old_children: Vec<LynxElement> = {
-  //     // the old_children could be 1. array of LynxElement 2. single LynxElement
-  //     if old_children.is_array() {
-  //       let old_children_array: js_sys::Array =
-  //         old_children.unchecked_ref::<js_sys::Array>().clone();
-  //       old_children_array
-  //         .iter()
-  //         .map(|v| LynxElement::try_from_js_value(v).unwrap())
-  //         .collect()
-  //     } else if old_children.is_object() {
-  //       vec![LynxElement::try_from_js_value_ref(old_children).unwrap()]
-  //     } else {
-  //       vec![]
-  //     }
-  //   };
-
-  //   let parent_dom = parent.dom_ref.as_ref().unwrap();
-
-  //   if old_children.is_empty() {
-  //     // just append new children
-  //     parent_dom.append_with_node(&new_children).unwrap();
-  //   } else {
-  //     let first_old_child_dom = old_children[0].dom_ref.as_ref().unwrap();
-  //     for child in &old_children[1..] {
-  //       self.remove_element(parent, child);
-  //     }
-  //     first_old_child_dom
-  //       .replace_with_with_node(&new_children)
-  //       .unwrap();
-  //   }
-  // }
+  #[wasm_bindgen(js_name = "__ReplaceElements")]
+  pub fn replace_elements(
+    &self,
+    parent: &LynxElement,
+    new_children: &wasm_bindgen::JsValue,
+    old_children: &wasm_bindgen::JsValue,
+  ) {
+    let new_children: js_sys::Array = {
+      // the new_children could be 1. array of LynxElement 2. single LynxElement
+      if new_children.is_array() {
+        js_sys::Array::from_iter(
+          try_from_js_array::<LynxElement>(new_children)
+            .unwrap()
+            .iter()
+            .map(|element| {
+              let element_data = element.data.borrow();
+              let dom = element_data.dom_ref.clone().unwrap();
+              wasm_bindgen::JsValue::from(dom)
+            }),
+        )
+      } else if new_children.is_object() {
+        let arr = js_sys::Array::new();
+        arr.push(&{
+          let element = try_from_js_option::<LynxElement>(new_children)
+            .unwrap()
+            .unwrap();
+          let element_data = element.data.borrow();
+          let dom = element_data.dom_ref.clone().unwrap();
+          wasm_bindgen::JsValue::from(dom)
+        });
+        arr
+      } else {
+        return;
+      }
+    };
+    let parent_data = parent.data.borrow();
+    let parent_dom = parent_data.dom_ref.as_ref().unwrap();
+    if old_children.is_falsy() {
+      // just append new children
+      let _ = parent_dom.append_with_node(&new_children);
+    } else if !old_children.is_array() {
+      // old_children is a single LynxElement
+      let old_child_element = try_from_js_option::<LynxElement>(old_children)
+        .unwrap()
+        .unwrap();
+      let old_child_data = old_child_element.data.borrow();
+      let old_child_dom = old_child_data.dom_ref.as_ref().unwrap();
+      old_child_dom.replace_with_with_node(&new_children).unwrap();
+    } else {
+      let old_children = try_from_js_array::<LynxElement>(old_children).unwrap();
+      for (ii, old_child) in old_children.iter().enumerate() {
+        let old_child_data = old_child.data.borrow();
+        let old_child_dom = old_child_data.dom_ref.as_ref().unwrap();
+        if ii == 0 {
+          let _ = old_child_dom.replace_with_with_node(&new_children);
+        } else {
+          parent_dom.remove_child(old_child_dom).unwrap();
+        }
+      }
+    }
+  }
 
   #[wasm_bindgen(js_name = "__AddConfig")]
   pub fn add_config(&mut self, element: &LynxElement, type_: &str, value: &wasm_bindgen::JsValue) {
@@ -309,7 +310,6 @@ impl MainThreadGlobalThis {
   pub fn add_dataset(&self, element: &LynxElement, key: &str, value: &wasm_bindgen::JsValue) {
     let element_data = element.data.borrow();
     let dom = element_data.dom_ref.as_ref().unwrap();
-    let dataset = &element_data.dataset;
     if value.is_truthy() {
       // if the value is string, set it directly, otherwise convert it to string by using JSON.stringify
       let value = ConfigValue::new(value);
@@ -374,7 +374,7 @@ impl MainThreadGlobalThis {
     let mut element_data = element.data.borrow_mut();
     let dom = element_data.dom_ref.as_ref().unwrap();
     if let Some(id) = &id {
-      let _ = dom.set_attribute("id", &id);
+      let _ = dom.set_attribute("id", id);
     } else {
       let _ = dom.remove_attribute("id");
     }

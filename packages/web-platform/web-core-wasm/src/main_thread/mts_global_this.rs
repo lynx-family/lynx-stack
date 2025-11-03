@@ -4,7 +4,7 @@ use super::{
 };
 use crate::constants;
 use std::{collections::HashMap, rc::Rc, vec};
-use wasm_bindgen::{convert::TryFromJsValue, prelude::*};
+use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 pub struct MainThreadGlobalThis {
@@ -66,9 +66,8 @@ impl MainThreadGlobalThis {
   //   Object::new()
   #[wasm_bindgen(js_name = "__MarkPartElement")]
   pub fn mark_part_element(&self, element: &LynxElement, part_id: Option<String>) {
-    let data = element.data.borrow();
-    let dom = data.dom_ref.as_ref().unwrap();
     let element_data = &mut element.data.borrow_mut();
+    let dom = element_data.dom_ref.as_ref().unwrap();
     if let Some(part_id) = &part_id {
       let _ = dom.set_attribute("part", part_id);
     } else {

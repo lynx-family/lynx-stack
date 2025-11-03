@@ -1,15 +1,17 @@
 use crate::constants;
 use serde::{Deserialize, Serialize};
-use std::{cell::RefCell, collections::HashMap, rc::Rc};
+use std::{cell::RefCell, collections::HashMap, fmt::Display, rc::Rc};
 use wasm_bindgen::prelude::*;
-#[derive(Serialize, Deserialize, Default, PartialEq, Clone)]
+use wasm_bindgen_derive::TryFromJsValue;
+
+#[derive(Serialize, Deserialize, Default, PartialEq, Clone, Debug)]
 pub enum ConfigValueType {
   #[default]
   String,
   Object,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ConfigValue {
   value_type: ConfigValueType,
   /**
@@ -42,10 +44,6 @@ impl ConfigValue {
       ConfigValueType::Object => js_sys::JSON::parse(&self.value).unwrap(),
     }
   }
-
-  pub fn to_string(&self) -> String {
-    self.value.clone()
-  }
 }
 
 impl std::cmp::PartialEq for ConfigValue {
@@ -54,6 +52,13 @@ impl std::cmp::PartialEq for ConfigValue {
   }
 }
 
+impl Display for ConfigValue {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    write!(f, "{}", self.value)
+  }
+}
+
+#[derive(Debug)]
 pub struct LynxElementData {
   pub(crate) unique_id: i32,
   pub(crate) css_id: i32,
@@ -69,8 +74,8 @@ pub struct LynxElementData {
   pub(crate) dom_ref: Option<web_sys::Element>,
 }
 
+#[derive(Clone, TryFromJsValue, Debug)]
 #[wasm_bindgen]
-#[derive(Clone)]
 pub struct LynxElement {
   pub(crate) data: Rc<RefCell<LynxElementData>>,
 }
@@ -127,9 +132,4 @@ impl LynxElement {
       ),
     }
   }
-}
-
-#[wasm_bindgen(inline_js = "export function downcast_lynx_element(value) { return value; }")]
-extern "C" {
-  pub fn downcast_lynx_element(value: wasm_bindgen::JsValue) -> LynxElement;
 }
