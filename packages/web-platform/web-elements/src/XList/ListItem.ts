@@ -5,6 +5,10 @@
 */
 import { Component } from '@lynx-js/web-elements-reactive';
 import { CommonEventsAndMethods } from '../common/CommonEventsAndMethods.js';
+import { ListItemAttributes } from './ListItemAttributes.js';
 
-@Component<typeof ListItem>('list-item', [CommonEventsAndMethods])
+@Component<typeof ListItem>('list-item', [
+  CommonEventsAndMethods,
+  ListItemAttributes,
+])
 export class ListItem extends HTMLElement {}
