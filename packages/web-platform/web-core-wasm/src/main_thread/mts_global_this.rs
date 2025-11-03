@@ -60,22 +60,6 @@ impl MainThreadGlobalThis {
     }
   }
 
-  // #[wasm_bindgen(js_name = __GetTemplateParts)]
-  // pub fn get_template_parts(&self, _template_element: &LynxElement) -> Object {
-  //   // TODO
-  //   Object::new()
-  #[wasm_bindgen(js_name = "__MarkPartElement")]
-  pub fn mark_part_element(&self, element: &LynxElement, part_id: Option<String>) {
-    let element_data = &mut element.data.borrow_mut();
-    let dom = element_data.dom_ref.as_ref().unwrap();
-    if let Some(part_id) = &part_id {
-      let _ = dom.set_attribute("part", part_id);
-    } else {
-      let _ = dom.remove_attribute("part");
-    }
-    element_data.part_id = part_id;
-  }
-
   // #[wasm_bindgen(js_name = "__FlushElementTree")]
   //   let timing_flags = js_sys::Array::from_iter(self.timing_flags.iter().map(JsValue::from));
 

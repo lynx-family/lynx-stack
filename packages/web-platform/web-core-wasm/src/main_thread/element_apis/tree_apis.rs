@@ -56,13 +56,6 @@ impl MainThreadGlobalThis {
     element_data.dataset = Some(new_dataset_map);
   }
 
-  #[wasm_bindgen(js_name = "__MarkTemplateElement")]
-  pub fn mark_template_element(&mut self, element: &LynxElement) {
-    let element_data = element.data.borrow();
-    let dom = element_data.dom_ref.as_ref().unwrap();
-    let _ = dom.set_attribute(constants::LYNX_ELEMENT_TEMPLATE_MARKER_ATTRIBUTE, "true");
-  }
-
   #[wasm_bindgen(js_name = "__SetAttribute")]
   pub fn set_attribute(&mut self, element: &LynxElement, key: &str, value: wasm_bindgen::JsValue) {
     let element_data = element.data.borrow();
