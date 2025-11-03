@@ -86,7 +86,7 @@ export class ListUpdateInfoRecording implements ListUpdateInfo {
     const updateListInfo = this.__toAttribute();
 
     if (__PROFILE__) {
-      const listID = __GetElementUniqueID(this.list.__elements[elementIndex]!);
+      const listID = __GetElementUniqueID(listElement);
       profileStart(`[flush] update-list-info`, {
         args: {
           'list id': String(listID),
