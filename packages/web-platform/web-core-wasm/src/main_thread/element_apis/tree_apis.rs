@@ -4,7 +4,6 @@ use super::element::{ConfigValue, LynxElement};
 use super::mts_global_this::MainThreadGlobalThis;
 use crate::constants;
 use wasm_bindgen::prelude::*;
-use wasm_bindgen_derive::{try_from_js_array, try_from_js_option};
 
 #[wasm_bindgen]
 impl MainThreadGlobalThis {
@@ -84,15 +83,18 @@ impl MainThreadGlobalThis {
     }
   }
 
-  #[wasm_bindgen(js_name = "__GetElementUniqueID")]
-  pub fn get_element_unique_id(&self, element: wasm_bindgen::JsValue) -> i32 {
-    let lynx_element = try_from_js_option::<LynxElement>(element);
-    if let Ok(lynx_element) = lynx_element {
-      let lynx_element = lynx_element.unwrap();
-      let element_data = &lynx_element.data.borrow();
-      return element_data.unique_id;
-    }
-    -1
+  /**
+   * Get the unique ID of the element
+   * It has a special feature:
+   * if the element is not a LynxElement, it will return -1
+   * But after benchmarking, casting JsValue to LynxElement dynamically is very slow.
+   * So we provide a pure Rust version of this function for internal use.
+   * It should be wrapped by a JS function that does the type checking first.
+   */
+  #[wasm_bindgen(js_name = "__GetElementUniqueID_wasm_impl")]
+  pub fn get_element_unique_id_pure(&self, element: &LynxElement) -> i32 {
+    let element_data = element.data.borrow();
+    element_data.unique_id
   }
 
   #[wasm_bindgen(js_name = "__SwapElement")]
@@ -179,8 +181,8 @@ impl MainThreadGlobalThis {
     let child_data = child.data.borrow();
     let child_dom = child_data.dom_ref.as_ref().unwrap();
 
-    if ref_node.is_truthy() {
-      let ref_node = try_from_js_option::<LynxElement>(ref_node)
+    if !ref_node.is_null_or_undefined() {
+      let ref_node = wasm_bindgen_derive::try_from_js_option::<LynxElement>(ref_node)
         .unwrap()
         .unwrap();
       let ref_node_data = ref_node.data.borrow();
@@ -242,7 +244,7 @@ impl MainThreadGlobalThis {
       // the new_children could be 1. array of LynxElement 2. single LynxElement
       if new_children.is_array() {
         js_sys::Array::from_iter(
-          try_from_js_array::<LynxElement>(new_children)
+          wasm_bindgen_derive::try_from_js_array::<LynxElement>(new_children)
             .unwrap()
             .iter()
             .map(|element| {
@@ -254,7 +256,7 @@ impl MainThreadGlobalThis {
       } else if new_children.is_object() {
         let arr = js_sys::Array::new();
         arr.push(&{
-          let element = try_from_js_option::<LynxElement>(new_children)
+          let element = wasm_bindgen_derive::try_from_js_option::<LynxElement>(new_children)
             .unwrap()
             .unwrap();
           let element_data = element.data.borrow();
@@ -273,14 +275,15 @@ impl MainThreadGlobalThis {
       let _ = parent_dom.append_with_node(&new_children);
     } else if !old_children.is_array() {
       // old_children is a single LynxElement
-      let old_child_element = try_from_js_option::<LynxElement>(old_children)
+      let old_child_element = wasm_bindgen_derive::try_from_js_option::<LynxElement>(old_children)
         .unwrap()
         .unwrap();
       let old_child_data = old_child_element.data.borrow();
       let old_child_dom = old_child_data.dom_ref.as_ref().unwrap();
       old_child_dom.replace_with_with_node(&new_children).unwrap();
     } else {
-      let old_children = try_from_js_array::<LynxElement>(old_children).unwrap();
+      let old_children =
+        wasm_bindgen_derive::try_from_js_array::<LynxElement>(old_children).unwrap();
       for (ii, old_child) in old_children.iter().enumerate() {
         let old_child_data = old_child.data.borrow();
         let old_child_dom = old_child_data.dom_ref.as_ref().unwrap();

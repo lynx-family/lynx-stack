@@ -5,6 +5,7 @@ import { Window } from 'happy-dom';
 import { createMainThreadGlobalThis } from '@lynx-js/web-mainthread-apis/src/createMainThreadGlobalThis.js';
 import {
   MainThreadGlobalThis as MainThreadGlobalThisWasm,
+  LynxElement,
 } from '@lynx-js/web-core-wasm/dist/standard.js';
 // import { createCrossThreadEvent } from '@lynx-js/web-mainthread-apis/ts/utils/createCrossThreadEvent.js';
 // const cases = {
@@ -416,7 +417,7 @@ describe('insert-element-before', () => {
   }, { throws: true });
 });
 
-describe('get-element-unique-id', () => {
+describe.only('get-element-unique-id', () => {
   const elementJS = mtsGlobalThisJS.__CreateView(1);
   const elementWasm = mtsGlobalThisWasm.__CreateView(1);
 
@@ -427,9 +428,11 @@ describe('get-element-unique-id', () => {
   }, { throws: true });
 
   bench('get-element-unique-id-wasm', () => {
-    mtsGlobalThisWasm.__GetElementUniqueID(
-      elementWasm,
-    );
+    if (elementWasm instanceof LynxElement) {
+      mtsGlobalThisWasm.__GetElementUniqueID_wasm_impl(
+        elementWasm,
+      );
+    }
   }, { throws: true });
 });
 

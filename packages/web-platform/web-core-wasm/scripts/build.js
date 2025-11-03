@@ -32,8 +32,17 @@ execSync(
   `pnpm exec dotslash ./scripts/wasm-bindgen --out-dir dist --target bundler --out-name standard ${cargoOutput}`,
   { cwd: packageRoot, stdio: 'inherit' },
 );
+/**
+ * https://webassembly.org/features/
+ * feature    |   chrome | firefox |  safari
+ * bulk-memory|   75     |  79     |   15
+ * sign-ext   |   74     |  62     |   14.1
+ * simd       |   91     |  89     |   16.4
+ * ref-typs   |   96     |  79     |   15
+ * multivalue |   85     |  78     |   13.1
+ */
 execSync(
-  `pnpm wasm-opt --enable-bulk-memory ./dist/standard_bg.wasm -O3 -o ./dist/standard_bg.wasm`,
+  `pnpm wasm-opt --enable-bulk-memory --enable-bulk-memory-opt --enable-sign-ext --enable-simd --enable-reference-types ./dist/standard_bg.wasm -O3 -o ./dist/standard_bg.wasm`,
   { cwd: packageRoot, stdio: 'inherit' },
 );
 

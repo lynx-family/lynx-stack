@@ -211,8 +211,9 @@ export const __GetAttributeByName: GetAttributeByNamePAPI = /*#__PURE__*/ (
 export const __GetElementUniqueID: GetElementUniqueIDPAPI = /*#__PURE__*/ (
   element,
 ) => (
-  // @ts-expect-error
-  element[lynxUniqueIdAttribute] ?? -1
+  element && element.getAttribute
+    ? Number(element.getAttribute(lynxUniqueIdAttribute))
+    : -1
 );
 
 export const __GetID: GetIDPAPI = /*#__PURE__*/ (element) =>
