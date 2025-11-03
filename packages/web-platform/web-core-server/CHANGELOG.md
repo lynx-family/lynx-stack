@@ -1,5 +1,11 @@
 # @lynx-js/web-core-server
 
+## 0.18.2
+
+### Patch Changes
+
+- feat: builtinTagTransformMap add `'input': 'x-input'` ([#1907](https://github.com/lynx-family/lynx-stack/pull/1907))
+
 ## 0.18.1
 
 ## 0.18.0
