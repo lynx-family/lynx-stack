@@ -596,7 +596,7 @@ fn transform_react_lynx_inner(
         orig: match &options.input_source_map {
           Some(s) => {
             let bytes = s.as_bytes();
-            Some(swc_sourcemap::SourceMap::from_reader(bytes).unwrap())
+            swc_sourcemap::SourceMap::from_reader(bytes).ok()
           }
           None => None,
         },
