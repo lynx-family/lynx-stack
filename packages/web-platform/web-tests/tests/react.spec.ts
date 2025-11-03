@@ -4521,6 +4521,83 @@ test.describe('reactlynx3 tests', () => {
           await diffScreenShot(page, elementName, title, 'initial');
         },
       );
+
+      test(
+        'basic-element-list-estimated-main-axis-size-px',
+        async ({ page, browserName }, { title }) => {
+          let scrolltolower = false;
+          await page.on('console', async (msg) => {
+            const event = await msg.args()[0]?.evaluate((e) => ({
+              type: e.type,
+            }));
+            if (!event) return;
+            if (event.type === 'scrolltolower') {
+              scrolltolower = true;
+            }
+          });
+
+          await goto(page, title);
+          await wait(3000);
+          expect(scrolltolower).toBeTruthy();
+        },
+      );
+      test(
+        'basic-element-list-estimated-main-axis-size-px-waterfall',
+        async ({ page, browserName }, { title }) => {
+          let scrolltolower = false;
+          await page.on('console', async (msg) => {
+            const event = await msg.args()[0]?.evaluate((e) => ({
+              type: e.type,
+            }));
+            if (!event) return;
+            if (event.type === 'scrolltolower') {
+              scrolltolower = true;
+            }
+          });
+
+          await goto(page, title);
+          await wait(5000);
+          expect(scrolltolower).toBeTruthy();
+        },
+      );
+      test(
+        'basic-element-list-horizontal-estimated-main-axis-size-px',
+        async ({ page, browserName }, { title }) => {
+          let scrolltolower = false;
+          await page.on('console', async (msg) => {
+            const event = await msg.args()[0]?.evaluate((e) => ({
+              type: e.type,
+            }));
+            if (!event) return;
+            if (event.type === 'scrolltolower') {
+              scrolltolower = true;
+            }
+          });
+
+          await goto(page, title);
+          await wait(5000);
+          expect(scrolltolower).toBeTruthy();
+        },
+      );
+      test(
+        'basic-element-list-horizontal-estimated-main-axis-size-px-waterfall',
+        async ({ page, browserName }, { title }) => {
+          let scrolltolower = false;
+          await page.on('console', async (msg) => {
+            const event = await msg.args()[0]?.evaluate((e) => ({
+              type: e.type,
+            }));
+            if (!event) return;
+            if (event.type === 'scrolltolower') {
+              scrolltolower = true;
+            }
+          });
+
+          await goto(page, title);
+          await wait(5000);
+          expect(scrolltolower).toBeTruthy();
+        },
+      );
     });
   });
 

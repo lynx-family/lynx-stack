@@ -14,3 +14,4 @@ import './XTextarea/index.js';
 import './XView/index.js';
 import './XViewpagerNg/index.js';
 import './XList/index.js';
+import './XList/ListItem.js';
