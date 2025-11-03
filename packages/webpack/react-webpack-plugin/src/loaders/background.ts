@@ -3,23 +3,32 @@
 // LICENSE file in the root directory of this source tree.
 import { createRequire } from 'node:module';
 
-import type { LoaderContext } from '@rspack/core';
+import type { LoaderDefinitionFunction } from '@rspack/core';
 
 import { getBackgroundTransformOptions } from './options.js';
 import type { ReactLoaderOptions } from './options.js';
 
-function backgroundLoader(
-  this: LoaderContext<ReactLoaderOptions>,
-  content: string,
+const backgroundLoader: LoaderDefinitionFunction<ReactLoaderOptions> = function(
+  content,
+  sourceMap,
 ): void {
   const require = createRequire(import.meta.url);
   const { transformPath = '@lynx-js/react/transform' } = this.getOptions();
   const { transformReactLynxSync } = require(
     transformPath,
   ) as typeof import('@lynx-js/react/transform');
+  let swcInputSourceMap: string | undefined;
+  if (sourceMap) {
+    if (typeof sourceMap === 'string') {
+      swcInputSourceMap = sourceMap;
+    } else {
+      swcInputSourceMap = JSON.stringify(sourceMap);
+    }
+  }
+
   const result = transformReactLynxSync(
     content,
-    getBackgroundTransformOptions.call(this),
+    getBackgroundTransformOptions.call(this, swcInputSourceMap),
   );
 
   if (result.errors.length > 0) {
@@ -79,6 +88,6 @@ function backgroundLoader(
     }
   }
   this.callback(null, result.code, result.map);
-}
+};
 
 export default backgroundLoader;

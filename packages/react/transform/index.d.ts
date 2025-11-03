@@ -607,6 +607,7 @@ export interface TransformNodiffOptions {
   dynamicImport?: boolean | DynamicImportVisitorConfig
   /** @internal */
   inject?: boolean | InjectVisitorConfig
+  inputSourceMap?: string
 }
 export interface TransformNodiffOutput {
   code: string

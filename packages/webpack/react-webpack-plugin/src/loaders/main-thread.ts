@@ -3,23 +3,32 @@
 // LICENSE file in the root directory of this source tree.
 import { createRequire } from 'node:module';
 
-import type { LoaderContext } from '@rspack/core';
+import type { LoaderDefinitionFunction } from '@rspack/core';
 
 import { getMainThreadTransformOptions } from './options.js';
 import type { ReactLoaderOptions } from './options.js';
 
-function mainThreadLoader(
-  this: LoaderContext<ReactLoaderOptions>,
-  content: string,
+const mainThreadLoader: LoaderDefinitionFunction<ReactLoaderOptions> = function(
+  content,
+  sourceMap,
 ): void {
   const require = createRequire(import.meta.url);
   const { transformPath = '@lynx-js/react/transform' } = this.getOptions();
   const { transformReactLynxSync } = require(
     transformPath,
   ) as typeof import('@lynx-js/react/transform');
+  let swcInputSourceMap: string | undefined;
+  if (sourceMap) {
+    if (typeof sourceMap === 'string') {
+      swcInputSourceMap = sourceMap;
+    } else {
+      swcInputSourceMap = JSON.stringify(sourceMap);
+    }
+  }
+
   const result = transformReactLynxSync(
     content,
-    getMainThreadTransformOptions.call(this),
+    getMainThreadTransformOptions.call(this, swcInputSourceMap),
   );
 
   if (result.errors.length > 0) {
@@ -100,6 +109,6 @@ function mainThreadLoader(
     ),
     result.map,
   );
-}
+};
 
 export default mainThreadLoader;
