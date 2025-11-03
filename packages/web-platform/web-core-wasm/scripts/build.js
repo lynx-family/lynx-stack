@@ -25,7 +25,7 @@ const cargoOutputDebug = path.join(
 );
 // build the standard wasm package
 execSync(
-  `cargo build --release --target wasm32-unknown-unknown `,
+  `RUSTFLAGS="-C target_feature=+simd128" cargo build  --release --target wasm32-unknown-unknown `,
   { cwd: packageRoot, stdio: 'inherit' },
 );
 execSync(
@@ -34,15 +34,19 @@ execSync(
 );
 /**
  * https://webassembly.org/features/
+ * https://doc.rust-lang.org/reference/attributes/codegen.html#wasm32-or-wasm64
+ * https://doc.rust-lang.org/rustc/platform-support/wasm32-unknown-unknown.html
  * feature    |   chrome | firefox |  safari
  * bulk-memory|   75     |  79     |   15
  * sign-ext   |   74     |  62     |   14.1
  * simd       |   91     |  89     |   16.4
  * ref-typs   |   96     |  79     |   15
  * multivalue |   85     |  78     |   13.1
+ * nontrapping-float-to-int | 75 | 64 | 15
+ * mutable-globals | 74 | 61 | 13.1
  */
 execSync(
-  `pnpm wasm-opt --enable-bulk-memory --enable-bulk-memory-opt --enable-sign-ext --enable-simd --enable-reference-types ./dist/standard_bg.wasm -O3 -o ./dist/standard_bg.wasm`,
+  `pnpm wasm-opt --enable-bulk-memory --enable-bulk-memory-opt --enable-sign-ext --enable-simd --enable-reference-types --enable-nontrapping-float-to-int --enable-mutable-globals ./dist/standard_bg.wasm -O3 -o ./dist/standard_bg.wasm`,
   { cwd: packageRoot, stdio: 'inherit' },
 );
 
