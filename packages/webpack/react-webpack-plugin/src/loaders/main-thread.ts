@@ -18,7 +18,7 @@ const mainThreadLoader: LoaderDefinitionFunction<ReactLoaderOptions> = function(
     transformPath,
   ) as typeof import('@lynx-js/react/transform');
   let swcInputSourceMap: string | undefined;
-  if (sourceMap) {
+  if (this.sourceMap && sourceMap) {
     if (typeof sourceMap === 'string') {
       swcInputSourceMap = sourceMap;
     } else {
