@@ -84,67 +84,91 @@ export const createVitestConfig = async (options) => {
       }),
     },
   ];
-  let reactCompilerRuntimeAlias = [];
-  try {
-    reactCompilerRuntimeAlias = [
-      {
-        find: /^react-compiler-runtime$/,
-        replacement: path.join(
-          path.dirname(require.resolve('react-compiler-runtime/package.json', {
-            paths: [process.cwd()],
-          })),
-          // Use ts to ensure `react` can be aliased to `@lynx-js/react`
-          'src',
-          'index.ts',
-        ),
-      },
-    ];
-  } catch (e) {
-    // console.log('react-compiler-runtime not found, skip alias');
-  }
 
   function transformReactCompilerPlugin() {
-    const missingBabelPackages = [];
-    const [
-      swcReactCompilerPath,
-      babelPath,
-      babelPluginReactCompilerPath,
-      babelPluginSyntaxJsxPath,
-      babelPluginSyntaxTypescriptPath,
-    ] = [
-      '@swc/react-compiler',
-      '@babel/core',
-      'babel-plugin-react-compiler',
-      '@babel/plugin-syntax-jsx',
-      '@babel/plugin-syntax-typescript',
-    ].map((name) => {
-      try {
-        return require.resolve(name, {
-          paths: [process.cwd()],
-        });
-      } catch {
-        missingBabelPackages.push(name);
-      }
-      return '';
-    });
-    if (missingBabelPackages.length > 0) {
-      throw `With \`experimental_enableReactCompiler\` enabled, you need to install \`${
-        missingBabelPackages.join(
-          '`, `',
-        )
-      }\` in your project root to use React Compiler.`;
-    }
+    let rootContext, compilerDeps, isReactCompilerRequired, babel;
 
-    const { isReactCompilerRequired } = require(swcReactCompilerPath);
-    const babel = require(babelPath);
+    function resolveCompilerDeps(rootContext) {
+      const missingBabelPackages = [];
+      const [
+        swcReactCompilerPath,
+        babelPath,
+        babelPluginReactCompilerPath,
+        babelPluginSyntaxJsxPath,
+        babelPluginSyntaxTypescriptPath,
+      ] = [
+        '@swc/react-compiler',
+        '@babel/core',
+        'babel-plugin-react-compiler',
+        '@babel/plugin-syntax-jsx',
+        '@babel/plugin-syntax-typescript',
+      ].map((name) => {
+        try {
+          return require.resolve(name, {
+            paths: [rootContext],
+          });
+        } catch {
+          missingBabelPackages.push(name);
+        }
+        return '';
+      });
+      if (missingBabelPackages.length > 0) {
+        throw new Error(
+          `With \`experimental_enableReactCompiler\` enabled, you need to install \`${
+            missingBabelPackages.join(
+              '`, `',
+            )
+          }\` in your project root to use React Compiler.`,
+        );
+      }
+
+      return {
+        swcReactCompilerPath,
+        babelPath,
+        babelPluginReactCompilerPath,
+        babelPluginSyntaxJsxPath,
+        babelPluginSyntaxTypescriptPath,
+      };
+    }
 
     return {
       name: 'transformReactCompilerPlugin',
       enforce: 'pre',
+      config(config) {
+        rootContext = config.root;
+
+        const reactCompilerRuntimeAlias = [];
+        try {
+          reactCompilerRuntimeAlias.push(
+            {
+              find: /^react-compiler-runtime$/,
+              replacement: path.join(
+                path.dirname(require.resolve('react-compiler-runtime/package.json', {
+                  paths: [rootContext],
+                })),
+                // Use ts to ensure `react` can be aliased to `@lynx-js/react`
+                'src',
+                'index.ts',
+              ),
+            },
+          );
+        } catch (e) {
+          // console.log('react-compiler-runtime not found, skip alias');
+        }
+
+        config.test.alias.push(...reactCompilerRuntimeAlias);
+
+        compilerDeps = resolveCompilerDeps(rootContext);
+        const { swcReactCompilerPath, babelPath } = compilerDeps;
+        isReactCompilerRequired = require(swcReactCompilerPath).isReactCompilerRequired;
+        babel = require(babelPath);
+      },
       async transform(sourceText, sourcePath) {
         if (/\.(?:jsx|tsx)$/.test(sourcePath)) {
           const needReactCompiler = await isReactCompilerRequired(Buffer.from(sourceText));
           if (needReactCompiler) {
+            const { babelPluginReactCompilerPath, babelPluginSyntaxJsxPath, babelPluginSyntaxTypescriptPath } =
+              compilerDeps;
             const isTSX = sourcePath.endsWith('.tsx');
 
             try {
@@ -277,7 +301,7 @@ export const createVitestConfig = async (options) => {
       ),
       globals: true,
       setupFiles: [path.join(__dirname, 'vitest-global-setup')],
-      alias: [...runtimeOSSAlias, ...runtimeAlias, ...preactAlias, ...reactAlias, ...reactCompilerRuntimeAlias],
+      alias: [...runtimeOSSAlias, ...runtimeAlias, ...preactAlias, ...reactAlias],
     },
   });
 };

@@ -5,23 +5,15 @@ import type { RsbuildPluginAPI } from '@rsbuild/core'
 
 import { ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'
 
-import type { PluginReactLynxOptions } from './pluginReactLynx.js'
-
 export function applyReactCompiler(
   api: RsbuildPluginAPI,
-  options: Required<PluginReactLynxOptions>,
 ): void {
-  const {
-    experimental_enableReactCompiler,
-  } = options
-
-  api.modifyBundlerChain((chain, { CHAIN_ID }) => {
-    const rule = chain.module.rules.get(CHAIN_ID.RULE.JS)
-
-    if (experimental_enableReactCompiler) {
-      rule.use('react-compiler')
-        .loader(ReactWebpackPlugin.loaders.REACT_COMPILER)
-        .end()
-    }
+  api.modifyBundlerChain((chain) => {
+    const rule = chain.module.rule('react:compiler')
+    rule
+      .test(/\.[jt]sx$/)
+      .use('ReactCompiler')
+      .loader(ReactWebpackPlugin.loaders.REACT_COMPILER)
+      .end()
   })
 }

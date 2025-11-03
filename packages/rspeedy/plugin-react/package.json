@@ -54,7 +54,6 @@
     "@microsoft/api-extractor": "catalog:",
     "@rollup/plugin-typescript": "^12.1.4",
     "@rsbuild/core": "catalog:rsbuild",
-    "@rsbuild/plugin-babel": "1.0.5",
     "@rsbuild/plugin-sass": "1.4.0",
     "@rsbuild/plugin-typed-css-modules": "1.1.1",
     "rsbuild-plugin-arethetypeswrong": "0.1.1",

@@ -51,7 +51,6 @@
     "@rspack/core": "catalog:rspack",
     "@swc/react-compiler": "^1.13.1",
     "@types/babel__core": "^7.20.5",
-    "babel-plugin-react-compiler": "0.0.0-experimental-0566679-20250709",
     "css-loader": "^7.1.2",
     "swc-loader": "^0.2.6",
     "webpack": "^5.102.0"
