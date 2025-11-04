@@ -8,21 +8,21 @@ use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 pub struct MainThreadGlobalThis {
-  unique_id_counter: i32,
-  pub(crate) unique_id_to_element_data_map: HashMap<i32, Box<LynxElement>>,
-  pub(crate) unique_id_to_config_map: HashMap<i32, HashMap<String, String>>,
-  pub(crate) component_id_to_unique_id_map: HashMap<String, i32>,
-  tag_name_to_html_tag_map: HashMap<String, String>,
-  pub(crate) timing_flags: Vec<String>,
-  pub(crate) document: web_sys::Document,
+  pub(super) unique_id_counter: i32,
+  pub(super) tag_name_to_html_tag_map: HashMap<String, String>,
+  pub(super) unique_id_to_element_data_map: HashMap<i32, Box<LynxElement>>,
+  pub(super) unique_id_to_config_map: HashMap<i32, HashMap<String, String>>,
+  pub(super) component_id_to_unique_id_map: HashMap<String, i32>,
+  pub(super) timing_flags: Vec<String>,
+  pub(super) document: web_sys::Document,
   root_node: web_sys::Node,
-  pub(crate) exposure_changed_elements: Vec<i32>,
-  pub(crate) page: Option<LynxElement>,
-  pub(crate) config_enable_css_selector: bool,
-  pub(crate) config_enable_remove_css_scope: bool,
-  pub(crate) config_default_display_linear: bool,
-  pub(crate) config_default_overflow_visible: bool,
-  pub(crate) config_enable_js_dataprocessor: bool,
+  pub(super) exposure_changed_elements: Vec<i32>,
+  pub(super) page: Option<LynxElement>,
+  pub(super) config_enable_css_selector: bool,
+  pub(super) config_enable_remove_css_scope: bool,
+  pub(super) config_default_display_linear: bool,
+  pub(super) config_default_overflow_visible: bool,
+  pub(super) config_enable_js_dataprocessor: bool,
 }
 
 #[wasm_bindgen]
@@ -71,65 +71,5 @@ impl MainThreadGlobalThis {
       let value = value.data.borrow();
       value.dom_ref.as_ref().unwrap().is_connected()
     });
-  }
-}
-
-/**
- * methods for internal use
- */
-impl MainThreadGlobalThis {
-  pub(crate) fn create_element_impl(
-    &mut self,
-    tag: &str,
-    parent_component_unique_id: i32,
-    css_id: Option<i32>,
-    component_id: Option<String>,
-  ) -> LynxElement {
-    self.unique_id_counter += 1;
-    let unique_id = self.unique_id_counter;
-    let tag = tag.to_string();
-    let html_tag = self.tag_name_to_html_tag_map.get(&tag);
-    let html_tag_string = if let Some(html_tag) = html_tag {
-      html_tag.clone()
-    } else {
-      tag
-    };
-    let parent_component = self
-      .unique_id_to_element_data_map
-      .get(&parent_component_unique_id);
-    let element = self.document.create_element(&html_tag_string).unwrap();
-    let css_id = {
-      if let Some(css_id) = css_id {
-        css_id
-      } else if let Some(parent_component) = parent_component {
-        parent_component.data.borrow().css_id
-      } else {
-        0
-      }
-    };
-    let element = Box::new(LynxElement::new(
-      unique_id,
-      css_id,
-      html_tag_string,
-      parent_component_unique_id,
-      component_id,
-      element,
-    ));
-    self
-      .unique_id_to_element_data_map
-      .insert(unique_id, element.clone());
-    *element
-  }
-
-  pub(crate) fn get_lynx_element_by_dom(&self, dom: &web_sys::Element) -> Option<&LynxElement> {
-    let unique_id_str = dom
-      .get_attribute(constants::LYNX_UNIQUE_ID_ATTRIBUTE)
-      .unwrap_or("0".to_string());
-    let unique_id = unique_id_str.parse::<i32>().unwrap_or(0);
-    if let Some(element) = self.unique_id_to_element_data_map.get(&unique_id) {
-      Some(element)
-    } else {
-      None
-    }
   }
 }

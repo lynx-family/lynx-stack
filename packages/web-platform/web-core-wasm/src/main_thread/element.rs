@@ -108,7 +108,6 @@ impl LynxElement {
     dom: web_sys::Element,
   ) -> Self {
     let _ = dom.set_attribute(constants::LYNX_TAG_ATTRIBUTE, tag.as_str());
-    let _ = dom.set_attribute(constants::LYNX_UNIQUE_ID_ATTRIBUTE, &unique_id.to_string());
     if css_id != 0 {
       let _ = dom.set_attribute(constants::CSS_ID_ATTRIBUTE, &css_id.to_string());
     }
