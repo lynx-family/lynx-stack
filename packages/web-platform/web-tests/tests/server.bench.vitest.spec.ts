@@ -336,23 +336,6 @@ describe('add-class', () => {
   }, { throws: true });
 });
 
-describe('get-element-unique-id', () => {
-  const elementJS = mtsGlobalThisJS.__CreateView(1);
-  const elementWasm = mtsGlobalThisWasm.__CreateView(1);
-
-  bench('get-element-unique-id-js', () => {
-    mtsGlobalThisJS.__GetElementUniqueID(
-      elementJS,
-    );
-  }, { throws: true });
-
-  bench('get-element-unique-id-wasm', () => {
-    mtsGlobalThisWasm.__GetElementUniqueID(
-      elementWasm,
-    );
-  }, { throws: true });
-});
-
 describe('append-element', () => {
   const parentElementJS = mtsGlobalThisJS.__CreateView(1);
   const parentElementWasm = mtsGlobalThisWasm.__CreateView(1);
@@ -417,7 +400,7 @@ describe('insert-element-before', () => {
   }, { throws: true });
 });
 
-describe.only('get-element-unique-id', () => {
+describe('get-element-unique-id', () => {
   const elementJS = mtsGlobalThisJS.__CreateView(1);
   const elementWasm = mtsGlobalThisWasm.__CreateView(1);
 
