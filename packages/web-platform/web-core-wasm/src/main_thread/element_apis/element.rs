@@ -1,4 +1,5 @@
-use crate::constants;
+use super::MainThreadGlobalThis;
+use crate::{constants, main_thread::mts_global_this};
 use serde::{Deserialize, Serialize};
 use std::{cell::RefCell, collections::HashMap, fmt::Display, rc::Rc};
 use wasm_bindgen::prelude::*;
@@ -100,23 +101,61 @@ impl LynxElement {
 
 impl LynxElement {
   pub fn new(
-    unique_id: i32,
-    css_id: i32,
-    tag: String,
+    mts_global_this: &mut MainThreadGlobalThis,
+    tag: &str,
     parent_component_unique_id: i32,
+    css_id: Option<i32>,
     component_id: Option<String>,
-    dom: web_sys::Element,
   ) -> Self {
-    let _ = dom.set_attribute(constants::LYNX_TAG_ATTRIBUTE, tag.as_str());
+    // tag and html element creating
+    let tag = tag.to_string();
+    let html_tag = if let Some(html_tag) = mts_global_this.tag_name_to_html_tag_map.get(&tag) {
+      html_tag.clone()
+    } else {
+      tag
+    };
+    let parent_component = mts_global_this
+      .unique_id_to_element_map
+      .get(&parent_component_unique_id);
+    let dom = mts_global_this.document.create_element(&html_tag).unwrap();
+    let _ = dom.set_attribute(constants::LYNX_TAG_ATTRIBUTE, html_tag.as_str());
+
+    // css id
+    let css_id = {
+      if let Some(css_id) = css_id {
+        css_id
+      } else if let Some(parent_component) = parent_component {
+        parent_component.data.borrow().css_id
+      } else {
+        0
+      }
+    };
     if css_id != 0 {
       let _ = dom.set_attribute(constants::CSS_ID_ATTRIBUTE, &css_id.to_string());
     }
-    LynxElement {
+
+    // unique id
+    /*
+     if the css selector is disabled, we need to set the unique id attribute for element lookup by using attribute selector
+    */
+    mts_global_this.unique_id_counter += 1;
+    let unique_id = mts_global_this.unique_id_counter;
+    if !mts_global_this.config_enable_css_selector {
+      let _ = dom.set_attribute(constants::LYNX_UNIQUE_ID_ATTRIBUTE, &unique_id.to_string());
+    }
+    js_sys::Reflect::set(
+      &dom,
+      &wasm_bindgen::JsValue::from_str(constants::LYNX_UNIQUE_ID_ATTRIBUTE),
+      &wasm_bindgen::JsValue::from(unique_id),
+    )
+    .unwrap();
+
+    let element = Box::new(LynxElement {
       data: Rc::new(
         LynxElementData {
           unique_id,
           css_id,
-          tag: tag.clone(),
+          tag: html_tag,
           parent_component_unique_id,
           id: None,
           part_id: None,
@@ -129,6 +168,45 @@ impl LynxElement {
         }
         .into(),
       ),
+    });
+
+    mts_global_this
+      .unique_id_to_element_map
+      .insert(unique_id, element.clone());
+    *element
+  }
+
+  pub fn clone_with_cloned_dom(
+    &self,
+    mts_global_this: &mut MainThreadGlobalThis,
+    dom: web_sys::Element,
+  ) -> Self {
+    let unique_id = mts_global_this.unique_id_counter + 1;
+    mts_global_this.unique_id_counter = unique_id;
+    // unique id, same logic as LynxElement::new
+    mts_global_this.unique_id_counter += 1;
+    let unique_id = mts_global_this.unique_id_counter;
+    if !mts_global_this.config_enable_css_selector {
+      let _ = dom.set_attribute(constants::LYNX_UNIQUE_ID_ATTRIBUTE, &unique_id.to_string());
+    }
+
+    let data = self.data.borrow();
+    let new_data = LynxElementData {
+      unique_id,
+      css_id: data.css_id,
+      tag: data.tag.clone(),
+      parent_component_unique_id: data.parent_component_unique_id,
+      id: data.id.clone(),
+      part_id: data.part_id.clone(),
+      dataset: data.dataset.clone(),
+      component_id: data.component_id.clone(),
+      component_config: data.component_config.clone(),
+      component_at_index: data.component_at_index.clone(),
+      enqueue_component: data.enqueue_component.clone(),
+      dom_ref: Some(dom),
+    };
+    LynxElement {
+      data: Rc::new(RefCell::new(new_data)),
     }
   }
 }

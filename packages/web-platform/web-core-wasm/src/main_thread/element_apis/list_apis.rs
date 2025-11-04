@@ -29,7 +29,7 @@ impl MainThreadGlobalThis {
     component_at_index: wasm_bindgen::JsValue,
     enqueue_component: wasm_bindgen::JsValue,
   ) -> LynxElement {
-    let mut element = self.create_element_impl("list", parent_component_unique_id, None, None);
+    let mut element = LynxElement::new(self, "list", parent_component_unique_id, None, None);
     self.update_list_callbacks(&mut element, component_at_index, enqueue_component);
     element
   }

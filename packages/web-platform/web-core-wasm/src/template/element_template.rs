@@ -1,4 +1,4 @@
-use crate::main_thread::LynxCrossThreadEventRegistration;
+use crate::main_thread::{LynxCrossThreadEventRegistration, LynxElement, MainThreadGlobalThis};
 use std::collections::HashMap;
 
 pub struct ElementTemplate {
@@ -13,11 +13,4 @@ pub struct ElementTemplate {
   children: Option<Vec<ElementTemplate>>,
   events: Option<Vec<LynxCrossThreadEventRegistration>>,
   dataset: Option<HashMap<String, String>>,
-}
-
-impl ElementTemplate {
-  // pub(crate) fn hydrate_to_element(
-  //   document: &web_sys::Document,
-
-  // )
 }

@@ -1,8 +1,8 @@
 use super::{
-  element::{ConfigValue, LynxElement},
-  // event::event_delegation::EventSystem,
+  LynxElement, // event::event_delegation::EventSystem,
 };
 use crate::constants;
+use crate::template::ElementTemplate;
 use std::{collections::HashMap, rc::Rc, vec};
 use wasm_bindgen::prelude::*;
 
@@ -10,12 +10,12 @@ use wasm_bindgen::prelude::*;
 pub struct MainThreadGlobalThis {
   pub(super) unique_id_counter: i32,
   pub(super) tag_name_to_html_tag_map: HashMap<String, String>,
-  pub(super) unique_id_to_element_data_map: HashMap<i32, Box<LynxElement>>,
+  pub(super) unique_id_to_element_map: HashMap<i32, Box<LynxElement>>,
   pub(super) unique_id_to_config_map: HashMap<i32, HashMap<String, String>>,
   pub(super) component_id_to_unique_id_map: HashMap<String, i32>,
   pub(super) timing_flags: Vec<String>,
   pub(super) document: web_sys::Document,
-  root_node: web_sys::Node,
+  pub(super) root_node: web_sys::Node,
   pub(super) exposure_changed_elements: Vec<i32>,
   pub(super) page: Option<LynxElement>,
   pub(super) config_enable_css_selector: bool,
@@ -43,7 +43,7 @@ impl MainThreadGlobalThis {
       serde_wasm_bindgen::from_value(tag_name_to_html_tag_map).unwrap();
     MainThreadGlobalThis {
       unique_id_counter,
-      unique_id_to_element_data_map: HashMap::new(),
+      unique_id_to_element_map: HashMap::new(),
       unique_id_to_config_map: HashMap::new(),
       component_id_to_unique_id_map: HashMap::new(),
       timing_flags: vec![],
@@ -67,7 +67,7 @@ impl MainThreadGlobalThis {
   //   self.exposure_changed_elements.clear();
   #[wasm_bindgen(js_name = "__wasm_GC")]
   pub fn gc(&mut self) {
-    self.unique_id_to_element_data_map.retain(|_, value| {
+    self.unique_id_to_element_map.retain(|_, value| {
       let value = value.data.borrow();
       value.dom_ref.as_ref().unwrap().is_connected()
     });

@@ -1,4 +1,4 @@
-use super::{flatten_style_info, FlattenedStyleInfo, StyleInfo};
+use super::{flatten_style_info, ElementTemplate, FlattenedStyleInfo, StyleInfo};
 use std::collections::HashMap;
 
 pub enum LynxEventType {
@@ -28,17 +28,6 @@ pub struct PageConfig {
   default_display_linear: bool,
   default_overflow_visible: bool,
   enable_js_data_processor: bool,
-}
-
-pub struct ElementTemplate {
-  id: String,
-  type_str: String,
-  id_selector: Option<String>,
-  class_selectors: Option<Vec<String>>,
-  attributes: Option<HashMap<String, String>>,
-  children: Option<Vec<ElementTemplate>>,
-  events: Option<Vec<EventSetting>>,
-  dataset: Option<HashMap<String, String>>,
 }
 
 pub struct LynxTemplate {

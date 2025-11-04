@@ -1,9 +1,12 @@
+use super::{LynxElement, MainThreadGlobalThis};
 use crate::constants;
 use serde::Deserialize;
 use std::collections::HashMap;
 use wasm_bindgen::prelude::*;
 
-use super::{LynxElement, MainThreadGlobalThis};
+pub struct ElementTemplateInstance {
+  // dom:
+}
 
 #[wasm_bindgen]
 impl MainThreadGlobalThis {
@@ -73,8 +76,18 @@ impl MainThreadGlobalThis {
     .unwrap()
   }
 
-  #[wasm_bindgen(js_name = "__ElementFromBinary")]
-  pub fn element_from_binary(&mut self, binary: &[u8]) -> LynxElement {
-    todo!()
-  }
+  // #[wasm_bindgen(js_name = "__ElementFromBinary")]
+  // pub fn element_from_binary(&mut self, template_id: String, parent_component_unique_id: i32) -> Vec<LynxElement> {
+  //   let created_elements = Vec::new();
+  //   if self.element_templates.contains_key(&template_id) {
+  //     if self.element_templates_dom_cache.contains_key(&template_id) {
+  //       let template_dom = self.element_templates_dom_cache.get(&template_id).unwrap();
+  //       let content = template_dom.content();
+  //       // clone the content
+  //       let cloned_content = content.clone_node_with_deep(true).unwrap();
+  //       let nodes = cloned_content.child_nodes();
+  //     }
+  //   }
+  //   created_elements
+  // }
 }
