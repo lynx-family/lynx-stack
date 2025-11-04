@@ -39,6 +39,11 @@ impl MainThreadGlobalThis {
           let _ = dom.set_attribute(constants::LYNX_ENTRY_NAME_ATTRIBUTE, entry_name);
         }
       }
+      if !self.config_enable_css_selector {
+        let dom = element_data.dom_ref.as_ref().unwrap();
+        let class_value: Option<String> = dom.get_attribute("class");
+        self.set_classes(&element, class_value);
+      }
     }
   }
 
@@ -50,6 +55,15 @@ impl MainThreadGlobalThis {
       let _ = dom.set_attribute("class", &classname);
     } else {
       let _ = dom.remove_attribute("class");
+    }
+    if !self.config_enable_css_selector {
+      let class_list: Vec<String> = dom
+        .class_list()
+        .values()
+        .into_iter()
+        .filter_map(|v| v.ok())
+        .filter_map(|v| v.as_string())
+        .collect();
     }
   }
 

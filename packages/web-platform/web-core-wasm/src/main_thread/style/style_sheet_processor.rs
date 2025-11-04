@@ -139,6 +139,8 @@ pub fn transform_to_web_style_css_ng(
   css_content_buffer.join("")
 }
 
+pub(super) type CssOgCssIdToClassNameToDeclarationsMap =
+  HashMap<i32, HashMap<String, HashMap<String, String>>>;
 /**
  * For Old generation css system
  * The css OG is different from the new generation css system
@@ -153,13 +155,9 @@ pub fn transform_to_web_style_css_og(
   flattened_style_info: &FlattenedStyleInfo,
   enable_remove_css_scope: bool,
   entry_name: Option<&str>,
-) -> (
-  String,
-  HashMap<i32, HashMap<String, HashMap<String, String>>>,
-) {
+) -> (String, CssOgCssIdToClassNameToDeclarationsMap) {
   let mut css_content_buffer: Vec<Cow<'_, str>> = Vec::new();
-  let mut css_og_style_resolve_map: HashMap<i32, HashMap<String, HashMap<String, String>>> =
-    HashMap::new();
+  let mut css_og_style_resolve_map: CssOgCssIdToClassNameToDeclarationsMap = HashMap::new();
   for style_sheet in flattened_style_info.iter() {
     css_content_buffer.push(Cow::Borrowed(style_sheet.at_rules.as_str()));
     for style_rule in style_sheet.rules.iter() {

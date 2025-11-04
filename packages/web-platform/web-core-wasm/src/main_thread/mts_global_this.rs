@@ -1,8 +1,12 @@
 use super::{
+  style::StyleManager,
   LynxElement, // event::event_delegation::EventSystem,
 };
-use crate::constants;
-use crate::template::ElementTemplate;
+use crate::{
+  constants,
+  template::{ElementTemplate, FlattenedStyleInfo},
+};
+use bincode::config;
 use std::{collections::HashMap, rc::Rc, vec};
 use wasm_bindgen::prelude::*;
 
@@ -23,15 +27,15 @@ pub struct MainThreadGlobalThis {
   pub(super) config_default_display_linear: bool,
   pub(super) config_default_overflow_visible: bool,
   pub(super) config_enable_js_dataprocessor: bool,
+  style_manager: StyleManager,
 }
 
-#[wasm_bindgen]
 impl MainThreadGlobalThis {
-  #[wasm_bindgen(constructor)]
-  pub fn new(
+  pub(crate) fn new(
     tag_name_to_html_tag_map: wasm_bindgen::JsValue,
     document: web_sys::Document,
     root_node: web_sys::Node,
+    style_manager: StyleManager,
     enable_css_selector: bool,
     enable_remove_css_scope: bool,
     default_display_linear: bool,
@@ -52,6 +56,7 @@ impl MainThreadGlobalThis {
       exposure_changed_elements: vec![],
       page: None,
       root_node,
+      style_manager,
       config_enable_css_selector: enable_css_selector,
       config_enable_remove_css_scope: enable_remove_css_scope,
       config_default_display_linear: default_display_linear,
@@ -59,7 +64,10 @@ impl MainThreadGlobalThis {
       config_enable_js_dataprocessor: enable_js_dataprocessor,
     }
   }
+}
 
+#[wasm_bindgen]
+impl MainThreadGlobalThis {
   // #[wasm_bindgen(js_name = "__FlushElementTree")]
   //   let timing_flags = js_sys::Array::from_iter(self.timing_flags.iter().map(JsValue::from));
 
