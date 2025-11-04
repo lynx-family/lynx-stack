@@ -549,7 +549,7 @@ importers:
         specifier: 0.3.3
         version: 0.3.3(@rsbuild/core@1.5.17)
       source-map:
-        specifier: ^0.7.4
+        specifier: ^0.7.6
         version: 0.7.6
       tailwindcss:
         specifier: ^3.4.17

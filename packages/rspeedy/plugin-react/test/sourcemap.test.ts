@@ -82,7 +82,7 @@ describe('Sourcemap', async () => {
 
     const result = await rsbuild.build()
     await result.close()
-  })
+  }, 50000)
 
   test('sourcemap should map from compiled code to original source code', async () => {
     // find all `*.js.map` files inside tmp
@@ -94,7 +94,7 @@ describe('Sourcemap', async () => {
         path.join(tmp, '.*/**/*.js.map'),
       ])
     ) {
-      sourceMapFiles.push(path.relative(tmp, file))
+      sourceMapFiles.push(normalizeSlashes(path.relative(tmp, file)))
     }
 
     expect(sourceMapFiles).toMatchInlineSnapshot(`
@@ -158,3 +158,7 @@ describe('Sourcemap', async () => {
     `)
   })
 })
+
+function normalizeSlashes(file: string) {
+  return file.replaceAll(path.win32.sep, '/')
+}
