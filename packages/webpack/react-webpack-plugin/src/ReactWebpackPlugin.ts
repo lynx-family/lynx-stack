@@ -119,10 +119,9 @@ class ReactWebpackPlugin {
    *
    * @public
    */
-  static loaders: Record<keyof typeof LAYERS | 'REACT_COMPILER', string> = {
+  static loaders: Record<keyof typeof LAYERS, string> = {
     BACKGROUND: require.resolve('../lib/loaders/background.js'),
     MAIN_THREAD: require.resolve('../lib/loaders/main-thread.js'),
-    REACT_COMPILER: require.resolve('../lib/loaders/react-compiler.js'),
   };
 
   constructor(

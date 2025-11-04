@@ -17,15 +17,12 @@ export interface Options {
   }
 
   rootPath?: string | undefined
-
-  experimental_enableReactCompiler?: boolean | undefined
 }
 
 const S_PLUGIN_REACT_ALIAS = Symbol.for('@lynx-js/plugin-react-alias')
 
 export function pluginReactAlias(options: Options): RsbuildPlugin {
-  const { LAYERS, lazy, rootPath, experimental_enableReactCompiler = false } =
-    options ?? {}
+  const { LAYERS, lazy, rootPath } = options ?? {}
 
   return {
     name: 'lynx:react-alias',
@@ -171,14 +168,6 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
             '@lynx-js/react$',
             reactLepus.background,
           )
-        if (experimental_enableReactCompiler) {
-          chain.resolve.alias.set(
-            'react-compiler-runtime$',
-            require.resolve('react-compiler-runtime', {
-              paths: [api.context.rootPath],
-            }),
-          )
-        }
 
         if (reactCompat) {
           chain

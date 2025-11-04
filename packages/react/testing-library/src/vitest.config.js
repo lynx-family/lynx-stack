@@ -86,18 +86,16 @@ export const createVitestConfig = async (options) => {
   ];
 
   function transformReactCompilerPlugin() {
-    let rootContext, compilerDeps, isReactCompilerRequired, babel;
+    let rootContext, compilerDeps, babel;
 
     function resolveCompilerDeps(rootContext) {
       const missingBabelPackages = [];
       const [
-        swcReactCompilerPath,
         babelPath,
         babelPluginReactCompilerPath,
         babelPluginSyntaxJsxPath,
         babelPluginSyntaxTypescriptPath,
       ] = [
-        '@swc/react-compiler',
         '@babel/core',
         'babel-plugin-react-compiler',
         '@babel/plugin-syntax-jsx',
@@ -123,7 +121,6 @@ export const createVitestConfig = async (options) => {
       }
 
       return {
-        swcReactCompilerPath,
         babelPath,
         babelPluginReactCompilerPath,
         babelPluginSyntaxJsxPath,
@@ -159,47 +156,43 @@ export const createVitestConfig = async (options) => {
         config.test.alias.push(...reactCompilerRuntimeAlias);
 
         compilerDeps = resolveCompilerDeps(rootContext);
-        const { swcReactCompilerPath, babelPath } = compilerDeps;
-        isReactCompilerRequired = require(swcReactCompilerPath).isReactCompilerRequired;
+        const { babelPath } = compilerDeps;
         babel = require(babelPath);
       },
       async transform(sourceText, sourcePath) {
         if (/\.(?:jsx|tsx)$/.test(sourcePath)) {
-          const needReactCompiler = await isReactCompilerRequired(Buffer.from(sourceText));
-          if (needReactCompiler) {
-            const { babelPluginReactCompilerPath, babelPluginSyntaxJsxPath, babelPluginSyntaxTypescriptPath } =
-              compilerDeps;
-            const isTSX = sourcePath.endsWith('.tsx');
+          const { babelPluginReactCompilerPath, babelPluginSyntaxJsxPath, babelPluginSyntaxTypescriptPath } =
+            compilerDeps;
+          const isTSX = sourcePath.endsWith('.tsx');
 
-            try {
-              const result = babel.transformSync(sourceText, {
-                plugins: [
-                  // We use '17' to make `babel-plugin-react-compiler` compiles our code
-                  // to use `react-compiler-runtime` instead of `react/compiler-runtime`
-                  // for the `useMemoCache` hook
-                  [babelPluginReactCompilerPath, { target: '17' }],
-                  babelPluginSyntaxJsxPath,
-                  isTSX ? [babelPluginSyntaxTypescriptPath, { isTSX: true }] : null,
-                ].filter(Boolean),
-                filename: sourcePath,
-                ast: false,
-                sourceMaps: true,
-              });
-              if (result?.code != null && result?.map != null) {
-                return {
-                  code: result.code,
-                  map: result.map,
-                };
-              } else {
-                this.error(
-                  `babel-plugin-react-compiler transform failed for ${sourcePath}: ${
-                    result ? 'missing code or map' : 'no result'
-                  }`,
-                );
-              }
-            } catch (e) {
-              this.error(e);
+          try {
+            const result = babel.transformSync(sourceText, {
+              plugins: [
+                // We use '17' to make `babel-plugin-react-compiler` compiles our code
+                // to use `react-compiler-runtime` instead of `react/compiler-runtime`
+                // for the `useMemoCache` hook
+                [babelPluginReactCompilerPath, { target: '17' }],
+                babelPluginSyntaxJsxPath,
+                isTSX ? [babelPluginSyntaxTypescriptPath, { isTSX: true }] : null,
+              ].filter(Boolean),
+              filename: sourcePath,
+              ast: false,
+              sourceMaps: true,
+            });
+            if (result?.code != null && result?.map != null) {
+              return {
+                code: result.code,
+                map: result.map,
+              };
+            } else {
+              this.error(
+                `babel-plugin-react-compiler transform failed for ${sourcePath}: ${
+                  result ? 'missing code or map' : 'no result'
+                }`,
+              );
             }
+          } catch (e) {
+            this.error(e);
           }
         }
 

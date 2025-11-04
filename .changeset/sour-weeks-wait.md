@@ -1,15 +1,28 @@
 ---
 "@lynx-js/react-rsbuild-plugin": patch
-"@lynx-js/react-alias-rsbuild-plugin": patch
 ---
 
-Support [React Compiler](https://react.dev/learn/react-compiler) for ReactLynx, enable it by set `experimental_enableReactCompiler` to `true` in `lynx.config.js`:
+Add `react-compiler-runtime` to `resolve.dedupe`.
+
+With this change you can setup [React Compiler](https://react.dev/learn/react-compiler) for ReactLynx by `pluginBabel`:
 
 ```js
+import { pluginBabel } from '@rsbuild/plugin-babel';
+
 export default defineConfig({
   plugins: [
-    pluginReactLynx({
-      experimental_enableReactCompiler: true,
+    pluginBabel({
+      include: /\.(?:jsx|tsx)$/,
+      babelLoaderOptions(opts) {
+        opts.plugins?.unshift([
+          'babel-plugin-react-compiler',
+          // See https://react.dev/reference/react-compiler/configuration for config
+          {
+            // ReactLynx only supports target to version 17
+            target: '17',
+          },
+        ]);
+      },
     }),
   ],
 });
