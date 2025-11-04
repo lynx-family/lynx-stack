@@ -1,5 +1,11 @@
 # @lynx-js/template-webpack-plugin
 
+## 0.9.1
+
+### Patch Changes
+
+- Remove `compiler.hooks.initialize` as [it's not called in child compilers](https://github.com/web-infra-dev/rspack/blob/aa4ad886b900770787ecddd625d3e24a51b6b99c/packages/rspack/src/rspack.ts#L78). ([#1898](https://github.com/lynx-family/lynx-stack/pull/1898))
+
 ## 0.9.0
 
 ### Minor Changes

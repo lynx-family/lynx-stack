@@ -13,7 +13,7 @@ x-foldview-ng {
   scrollbar-width: none;
 }
 
-x-foldivew-ng::-webkit-scrollbar {
+x-foldview-ng::-webkit-scrollbar {
   display: none;
 }
 
