@@ -208,6 +208,7 @@ pub struct TransformNodiffOptions {
   pub dynamic_import: Option<Either<bool, DynamicImportVisitorConfig>>,
   /// @internal
   pub inject: Option<Either<bool, InjectVisitorConfig>>,
+  pub input_source_map: Option<String>,
 }
 
 impl Default for TransformNodiffOptions {
@@ -233,6 +234,7 @@ impl Default for TransformNodiffOptions {
       worklet: Either::A(false),
       dynamic_import: Some(Either::B(Default::default())),
       inject: Some(Either::A(false)),
+      input_source_map: None,
     }
   }
 }
@@ -601,7 +603,13 @@ fn transform_react_lynx_inner(
           Either::B(s) => SourceMapsConfig::Str(s),
         },
         source_map_names: &Default::default(),
-        orig: None,
+        orig: match &options.input_source_map {
+          Some(s) => {
+            let bytes = s.as_bytes();
+            swc_sourcemap::SourceMap::from_reader(bytes).ok()
+          }
+          None => None,
+        },
         comments: Some(&comments),
         emit_source_map_columns: options.source_map_columns.unwrap_or(true),
         preamble: "",

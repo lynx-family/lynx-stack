@@ -1672,6 +1672,7 @@ dependencies = [
  "swc_plugin_text",
  "swc_plugin_worklet",
  "swc_plugins_shared",
+ "swc_sourcemap",
  "version-compare",
 ]
 
