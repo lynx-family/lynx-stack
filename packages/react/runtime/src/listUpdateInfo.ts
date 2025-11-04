@@ -87,7 +87,7 @@ export class ListUpdateInfoRecording implements ListUpdateInfo {
 
     if (__PROFILE__) {
       const listID = __GetElementUniqueID(listElement);
-      profileStart(`[flush] update-list-info`, {
+      profileStart(`ReactLynx::listFlush::updateListInfo`, {
         args: {
           'list id': String(listID),
           'update list info': JSON.stringify(updateListInfo),

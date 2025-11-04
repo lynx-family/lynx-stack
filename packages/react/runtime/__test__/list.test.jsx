@@ -4007,7 +4007,7 @@ describe('update-list-info profile', () => {
     expect(lynx.performance.profileStart.mock.calls).toMatchInlineSnapshot(`
       [
         [
-          "[flush] update-list-info",
+          "ReactLynx::listFlush::updateListInfo",
           {
             "args": {
               "list id": "3",
@@ -4016,7 +4016,7 @@ describe('update-list-info profile', () => {
           },
         ],
         [
-          "[hydrate] update-list-info",
+          "ReactLynx::listHydrate::updateListInfo",
           {
             "args": {
               "list id": "3",

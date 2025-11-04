@@ -368,7 +368,7 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
         };
 
         if (__PROFILE__) {
-          profileStart(`[hydrate] update-list-info`, {
+          profileStart('ReactLynx::listHydrate::updateListInfo', {
             args: {
               'list id': String(listID),
               'update list info': JSON.stringify(info),
