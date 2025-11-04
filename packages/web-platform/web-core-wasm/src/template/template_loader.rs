@@ -1,31 +1,5 @@
-use crate::main_thread::style::style_sheet_processor::{flatten_style_info, FlattenedStyleInfo};
-use std::{collections::HashMap, future::Future};
-
-/**
- * Selectors are stored as 4 separate lists:
- * - plain selectors (e.g., "div", "span")
- * - pseudo-classes (e.g., ":hover", ":active")
- * - pseudo-elements (e.g., "::before", "::after")
- * - combinator selectors (e.g., ">", "+", "~")
- */
-pub type Selector = Vec<(Vec<String>, Vec<String>, Vec<String>, Vec<String>)>;
-#[derive(Clone, Debug, PartialEq)]
-pub struct StyleRule {
-  pub selectors: Vec<Selector>,
-  pub declarations: Vec<(String, String)>,
-}
-
-pub struct StyleSheet {
-  pub rules: Vec<StyleRule>,
-  pub at_rules: String,
-  pub imports: Vec<i32>,
-}
-
-/**
- * key: cssId
- * value: StyleSheet
- */
-pub type StyleInfo = HashMap<i32, StyleSheet>;
+use super::{flatten_style_info, FlattenedStyleInfo, StyleInfo};
+use std::collections::HashMap;
 
 pub enum LynxEventType {
   Bind,

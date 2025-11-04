@@ -1,5 +1,9 @@
-pub mod element;
+mod element;
 mod element_apis;
-pub mod event;
-pub mod mts_global_this;
-pub mod style;
+mod event;
+mod mts_global_this;
+mod style;
+
+use element::*;
+pub(crate) use event::{LynxCrossThreadEventRegistration, LynxEventType};
+use mts_global_this::MainThreadGlobalThis;

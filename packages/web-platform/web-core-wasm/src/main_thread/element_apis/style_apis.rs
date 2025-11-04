@@ -1,7 +1,5 @@
+use super::{LynxElement, MainThreadGlobalThis};
 use crate::constants;
-
-use super::element::LynxElement;
-use super::mts_global_this::MainThreadGlobalThis;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]

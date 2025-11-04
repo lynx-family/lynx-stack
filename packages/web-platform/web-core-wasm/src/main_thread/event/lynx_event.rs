@@ -3,8 +3,35 @@
 // use bincode::config::Config;
 // use serde::{Deserialize, Serialize};
 // use wasm_bindgen::prelude::*;
-
 // use crate::main_thread::element::{ConfigValue, LynxElement};
+
+/**
+ * Lynx Event Types passed from __AddEvent
+ */
+pub(crate) enum LynxEventType {
+  /**
+   * bubble phase event
+   */
+  BindEvent,
+  /**
+   * bubble phase and stop propagation event
+   */
+  CatchEvent,
+  /**
+   * capture phase event
+   */
+  CaptureBind,
+  /**
+   * capture phase and stop propagation event
+   */
+  CaptureCatch,
+}
+
+pub(crate) struct LynxCrossThreadEventRegistration {
+  pub event_type: LynxEventType,
+  pub event_name: String,
+  pub event_value: String,
+}
 
 // #[derive(Serialize, Deserialize)]
 // #[serde(rename_all = "camelCase")]

@@ -1,5 +1,4 @@
-use super::element::LynxElement;
-use super::mts_global_this::MainThreadGlobalThis;
+use super::{LynxElement, MainThreadGlobalThis};
 use serde::Deserialize;
 use wasm_bindgen::prelude::*;
 

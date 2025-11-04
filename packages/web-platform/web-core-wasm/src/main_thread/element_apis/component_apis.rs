@@ -1,8 +1,6 @@
+use super::{ConfigValue, LynxElement, MainThreadGlobalThis};
 use crate::constants;
 use serde::Deserialize;
-
-use super::element::{ConfigValue, LynxElement};
-use super::mts_global_this::MainThreadGlobalThis;
 use wasm_bindgen::prelude::*;
 
 #[derive(Deserialize)]

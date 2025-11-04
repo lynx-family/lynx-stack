@@ -1,7 +1,7 @@
 use crate::constants;
 use wasm_bindgen::prelude::*;
 
-use super::{element::LynxElement, mts_global_this::MainThreadGlobalThis};
+use super::{LynxElement, MainThreadGlobalThis};
 
 #[wasm_bindgen]
 impl MainThreadGlobalThis {
@@ -95,7 +95,7 @@ impl MainThreadGlobalThis {
  * methods for internal use
  */
 impl MainThreadGlobalThis {
-  pub(crate) fn create_element_impl(
+  pub(super) fn create_element_impl(
     &mut self,
     tag: &str,
     parent_component_unique_id: i32,

@@ -1,8 +1,6 @@
-use std::collections::HashMap;
-
-use super::element::{ConfigValue, LynxElement};
-use super::mts_global_this::MainThreadGlobalThis;
+use super::{ConfigValue, LynxElement, MainThreadGlobalThis};
 use crate::constants;
+use std::collections::HashMap;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]

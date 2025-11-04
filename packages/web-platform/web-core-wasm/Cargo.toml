@@ -15,4 +15,4 @@ serde_json.workspace = true
 wasm-bindgen = { workspace = true }
 wasm-bindgen-derive = "0.3.0"
 wasm-bindgen-futures = "0.4.55"
-web-sys = { workspace = true, features = ["Element", "Document", "Window", "Event", "MessagePort", "MessageEvent", "EventListener", "AddEventListenerOptions", "HtmlCollection", "NamedNodeMap", "DomTokenList"] }
+web-sys = { workspace = true, features = ["Element", "Document", "Window", "Event", "MessagePort", "MessageEvent", "EventListener", "AddEventListenerOptions", "HtmlCollection", "NamedNodeMap", "DomTokenList", "NodeList"] }
