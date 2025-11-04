@@ -723,7 +723,7 @@ describe('DEV_ONLY_addSnapshot', () => {
 
   it('basic', () => {
     const uniqID1 = 'basic-0';
-    // We have to use `snapshotCreatorMap[uniqID1] =` so that is can be created after `initGlobalSnapshotPatch`
+    // We have to use `snapshotCreatorMap[uniqID1] =` so that it can be created after `initGlobalSnapshotPatch`
     snapshotCreatorMap[uniqID1] = (uniqID1) => {
       globalThis.createSnapshot(
         uniqID1,
@@ -803,7 +803,7 @@ describe('DEV_ONLY_addSnapshot', () => {
 
   it('with update', () => {
     const uniqID1 = 'with-update-0';
-    // We have to use `snapshotCreatorMap[uniqID1] =` so that is can be created after `initGlobalSnapshotPatch`
+    // We have to use `snapshotCreatorMap[uniqID1] =` so that it can be created after `initGlobalSnapshotPatch`
     snapshotCreatorMap[uniqID1] = (uniqID1) => {
       globalThis.createSnapshot(
         uniqID1,
@@ -1048,7 +1048,7 @@ describe('DEV_ONLY_addSnapshot', () => {
 
   it('with cssId', () => {
     const uniqID1 = 'with-cssId-0';
-    // We have to use `snapshotCreatorMap[uniqID1] =` so that is can be created after `initGlobalSnapshotPatch`
+    // We have to use `snapshotCreatorMap[uniqID1] =` so that it can be created after `initGlobalSnapshotPatch`
     snapshotCreatorMap[uniqID1] = (uniqID1) => {
       globalThis.createSnapshot(
         uniqID1,
@@ -1082,7 +1082,7 @@ describe('DEV_ONLY_addSnapshot', () => {
         "with-cssId-0",
         "(uniqID12) => {
             globalThis.createSnapshot(
-              "with-cssId-0",
+              uniqID12,
               // The \`create\` function is stringified and called by \`new Function()\`
               /* v8 ignore start */
               () => {
@@ -1136,7 +1136,7 @@ describe('DEV_ONLY_addSnapshot', () => {
   it('with cssId and entryName', () => {
     globalThis.entryName = 'FOO';
     const uniqID1 = `${entryName}:with-cssId-entryName-0`;
-    // We have to use `snapshotCreatorMap[uniqID1] =` so that is can be created after `initGlobalSnapshotPatch`
+    // We have to use `snapshotCreatorMap[uniqID1] =` so that it can be created after `initGlobalSnapshotPatch`
     snapshotCreatorMap[uniqID1] = (uniqID1) => {
       globalThis.createSnapshot(
         uniqID1,
@@ -1229,7 +1229,7 @@ describe('DEV_ONLY_addSnapshot', () => {
   it('with entryName only', () => {
     globalThis.entryName = 'BAR';
     const uniqID1 = `${entryName}:with-entryName-only-0`;
-    // We have to use `snapshotCreatorMap[uniqID1] =` so that is can be created after `initGlobalSnapshotPatch`
+    // We have to use `snapshotCreatorMap[uniqID1] =` so that it can be created after `initGlobalSnapshotPatch`
     snapshotCreatorMap[uniqID1] = (uniqID1) => {
       globalThis.createSnapshot(
         uniqID1,
