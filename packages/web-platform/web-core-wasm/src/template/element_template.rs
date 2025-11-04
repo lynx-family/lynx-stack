@@ -1,6 +1,9 @@
 use crate::main_thread::{LynxCrossThreadEventRegistration, LynxElement, MainThreadGlobalThis};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+#[derive(Deserialize)]
+#[cfg_attr(feature = "encode", derive(Serialize))]
 pub struct ElementTemplate {
   /**
    * tag name

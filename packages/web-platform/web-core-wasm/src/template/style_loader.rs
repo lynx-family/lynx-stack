@@ -1,3 +1,4 @@
+use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 
 /**
@@ -6,6 +7,8 @@ use std::collections::{HashMap, HashSet};
  */
 pub(crate) type StyleInfo = HashMap<i32, StyleSheet>;
 
+pub(crate) type OneSelectorAtom = (Vec<String>, Vec<String>, Vec<String>, Vec<String>);
+
 /**
  * Selectors are stored as 4 separate lists:
  * - plain selectors (e.g., "div", "span")
@@ -13,13 +16,17 @@ pub(crate) type StyleInfo = HashMap<i32, StyleSheet>;
  * - pseudo-elements (e.g., "::before", "::after")
  * - combinator selectors (e.g., ">", "+", "~")
  */
-pub type Selector = Vec<(Vec<String>, Vec<String>, Vec<String>, Vec<String>)>;
-#[derive(Clone, Debug, PartialEq)]
+pub(crate) type Selector = Vec<OneSelectorAtom>;
+
+#[derive(Clone, Debug, PartialEq, Deserialize)]
+#[cfg_attr(feature = "encode", derive(Serialize))]
 pub struct StyleRule {
   pub selectors: Vec<Selector>,
   pub declarations: Vec<(String, String)>,
 }
 
+#[derive(Deserialize)]
+#[cfg_attr(feature = "encode", derive(Serialize))]
 pub struct StyleSheet {
   pub rules: Vec<StyleRule>,
   pub at_rules: String,

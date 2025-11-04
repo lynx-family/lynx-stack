@@ -1,13 +1,14 @@
-// use std::collections::HashMap;
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 // use bincode::config::Config;
-// use serde::{Deserialize, Serialize};
 // use wasm_bindgen::prelude::*;
 // use crate::main_thread::element::{ConfigValue, LynxElement};
 
 /**
  * Lynx Event Types passed from __AddEvent
  */
+#[derive(Deserialize, Serialize)]
 pub(crate) enum LynxEventType {
   /**
    * bubble phase event
@@ -26,7 +27,7 @@ pub(crate) enum LynxEventType {
    */
   CaptureCatch,
 }
-
+#[derive(Deserialize, Serialize)]
 pub(crate) struct LynxCrossThreadEventRegistration {
   pub event_type: LynxEventType,
   pub event_name: String,

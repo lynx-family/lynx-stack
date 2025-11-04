@@ -7,6 +7,7 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [dependencies]
+bincode = { version = "2.0.1", features = ["serde"] }
 js-sys = { workspace = true }
 lazy_static = { workspace = true }
 serde.workspace = true
@@ -15,4 +16,7 @@ serde_json.workspace = true
 wasm-bindgen = { workspace = true }
 wasm-bindgen-derive = "0.3.0"
 wasm-bindgen-futures = "0.4.55"
-web-sys = { workspace = true, features = ["Element", "HtmlTemplateElement", "DocumentFragment", "Document", "Window", "Event", "MessagePort", "MessageEvent", "EventListener", "AddEventListenerOptions", "HtmlCollection", "NamedNodeMap", "DomTokenList", "NodeList"] }
+web-sys = { workspace = true, optional = true, features = ["Element", "HtmlTemplateElement", "DocumentFragment", "Document", "Window", "Event", "MessagePort", "MessageEvent", "EventListener", "AddEventListenerOptions", "HtmlCollection", "NamedNodeMap", "DomTokenList", "NodeList"] }
+[features]
+default = ["web-sys"]
+encode = []

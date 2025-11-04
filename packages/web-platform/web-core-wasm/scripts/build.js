@@ -24,14 +24,36 @@ const cargoOutputDebug = path.join(
   'web_core_wasm.wasm',
 );
 // build the standard wasm package
-execSync(
-  `RUSTFLAGS="-C target_feature=+simd128" cargo build  --release --target wasm32-unknown-unknown `,
-  { cwd: packageRoot, stdio: 'inherit' },
-);
-execSync(
-  `pnpm exec dotslash ./scripts/wasm-bindgen --out-dir dist --target bundler --out-name standard ${cargoOutput}`,
-  { cwd: packageRoot, stdio: 'inherit' },
-);
+
+function build(release, rustFlags, outName, optimizeArgs, rust_features) {
+  execSync(
+    `cargo build  ${
+      release ? '--release' : ''
+    } --target wasm32-unknown-unknown  ${
+      rust_features ? `--features ${rust_features}` : ''
+    }`,
+    {
+      cwd: packageRoot,
+      stdio: 'inherit',
+      env: { ...process.env, RUSTFLAGS: rustFlags },
+      shell: true,
+    },
+  );
+  execSync(
+    `pnpm exec dotslash ./scripts/wasm-bindgen ${
+      release ? '' : '--keep-debug'
+    } --out-dir dist --target bundler --out-name ${outName} ${
+      release ? cargoOutput : cargoOutputDebug
+    }`,
+    { cwd: packageRoot, stdio: 'inherit' },
+  );
+  if (release) {
+    execSync(
+      `pnpm wasm-opt --enable-bulk-memory  ${optimizeArgs} ./dist/${outName}_bg.wasm -O3 -o ./dist/${outName}_bg.wasm`,
+      { cwd: packageRoot, stdio: 'inherit' },
+    );
+  }
+}
 /**
  * https://webassembly.org/features/
  * https://doc.rust-lang.org/reference/attributes/codegen.html#wasm32-or-wasm64
@@ -45,17 +67,12 @@ execSync(
  * nontrapping-float-to-int | 75 | 64 | 15
  * mutable-globals | 74 | 61 | 13.1
  */
-execSync(
-  `pnpm wasm-opt --enable-bulk-memory --enable-bulk-memory-opt --enable-sign-ext --enable-simd --enable-reference-types --enable-nontrapping-float-to-int --enable-mutable-globals ./dist/standard_bg.wasm -O3 -o ./dist/standard_bg.wasm`,
-  { cwd: packageRoot, stdio: 'inherit' },
-);
 
-// build the debug wasm package
-execSync(
-  `cargo build --target wasm32-unknown-unknown`,
-  { cwd: packageRoot, stdio: 'inherit' },
+build(
+  true,
+  '-C target_feature=+simd128',
+  'standard',
+  '--enable-bulk-memory-opt --enable-sign-ext --enable-simd --enable-reference-types --enable-nontrapping-float-to-int --enable-mutable-globals',
 );
-execSync(
-  `pnpm exec dotslash ./scripts/wasm-bindgen --keep-debug --out-dir dist --target bundler --out-name debug ${cargoOutputDebug}`,
-  { cwd: packageRoot, stdio: 'inherit' },
-);
+build(true, '', 'encoder', '', '"encode"');
+build(false, '', 'debug', '');
