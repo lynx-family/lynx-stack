@@ -98,7 +98,7 @@ if (!supportContainerStyleQuery) {
     'scroll-view',
     'x-foldview-header-ng',
     'x-foldview-ng',
-    'x-foldivew-slot-drag-ng',
+    'x-foldview-slot-drag-ng',
     'x-foldview-slot-ng',
     'x-foldview-toolbar-ng',
     'x-refresh-footer',
