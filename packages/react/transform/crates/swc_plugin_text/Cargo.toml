@@ -1,0 +1,11 @@
+[package]
+name = "swc_plugin_text"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+swc_core = { workspace = true, features = ["base", "ecma_parser", "__visit", "__testing_transform"] }
+swc_plugins_shared = { path = "../swc_plugins_shared" }

@@ -386,6 +386,7 @@ describe('Config', () => {
         "compat": undefined,
         "defineDCE": undefined,
         "enableRemoveCSSScope": true,
+        "engineVersion": "3.2",
         "inlineSourcesContent": true,
         "isDynamicComponent": false,
       }
@@ -412,6 +413,7 @@ describe('Config', () => {
         "compat": undefined,
         "defineDCE": undefined,
         "enableRemoveCSSScope": undefined,
+        "engineVersion": "3.2",
         "inlineSourcesContent": true,
         "isDynamicComponent": false,
       }

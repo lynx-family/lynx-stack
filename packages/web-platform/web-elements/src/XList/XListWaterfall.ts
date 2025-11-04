@@ -7,6 +7,7 @@ import {
   genDomGetter,
   registerAttributeHandler,
   type AttributeReactiveClass,
+  registerEventEnableStatusChangeHandler,
 } from '@lynx-js/web-elements-reactive';
 import type { XList } from './XList.js';
 
@@ -27,6 +28,51 @@ export class XListWaterfall
 
   #resizeObserver?: ResizeObserver;
   #childrenObserver: MutationObserver | undefined;
+
+  @registerEventEnableStatusChangeHandler('scrolltolower')
+  #handleXEnableHeaderOffsetEvent(enableScrollToLower: boolean) {
+    enableScrollToLower
+      ? this.#dom.setAttribute('x-enable-scrolltolower-event', '')
+      : this.#dom.removeAttribute('x-enable-scrolltolower-event'); // css needs this;
+
+    if (enableScrollToLower) {
+      const lower = this.#getLowerThresholdObserver();
+      const scrollOrientation = this.#dom.getAttribute('scroll-orientation')
+        || 'vertical';
+      const listContent = this.#getListContainer();
+
+      // under waterfall, and when the list-item does not have a specified height, obtaining the correct scrollable value takes some time.
+      setTimeout(() => {
+        if (scrollOrientation === 'vertical') {
+          lower.style.setProperty(
+            'top',
+            // Firefox cannot trigger the bottom IntersectionObserver
+            `${String(listContent.scrollHeight - 1)}px`,
+            'important',
+          );
+          // Firefox needs this
+          lower.style.setProperty(
+            'bottom',
+            'unset',
+            'important',
+          );
+        } else {
+          lower.style.setProperty(
+            'left',
+            // Firefox cannot trigger the bottom IntersectionObserver
+            `${String(listContent.scrollWidth - 1)}px`,
+            'important',
+          );
+          // Firefox needs this
+          lower.style.setProperty(
+            'right',
+            'unset',
+            'important',
+          );
+        }
+      }, 100);
+    }
+  }
 
   #createWaterfallContainer = () => {
     const waterfallSlot = document.createElement('slot');
@@ -139,44 +185,6 @@ export class XListWaterfall
         listItem.getAttribute(`${WATERFALL_STYLE}-top`),
       );
       listItem.setAttribute('slot', WATERFALL_SLOT);
-    }
-
-    // The reasons why it is not unified in #updateScrollToLowerEventSwitches is:
-    // It is impossible to ensure that list-item is not rendered, so it will cause incorrect listContent.scrollHeight/scrollWidth as height/width.
-    const enableScrollToLower = this.#dom.getAttribute(
-      'x-enable-scrolltolower-event',
-    );
-    if (enableScrollToLower !== null && enableScrollToLower !== 'false') {
-      const lower = this.#getLowerThresholdObserver();
-      const scrollOrientation = this.#dom.getAttribute('scroll-orientation')
-        || 'vertical';
-      const listContent = this.#getListContainer();
-
-      if (scrollOrientation === 'vertical') {
-        lower.style.setProperty(
-          'top',
-          // Firefox cannot trigger the bottom IntersectionObserver
-          `${String(listContent.scrollHeight - 1)}px`,
-          'important',
-        );
-        // Firefox needs this
-        lower.style.setProperty(
-          'bottom',
-          'unset',
-          'important',
-        );
-      } else {
-        lower.style.setProperty(
-          'left',
-          // Firefox cannot trigger the bottom IntersectionObserver
-          `${String(listContent.scrollHeight - 1)}px`,
-        );
-        // Firefox needs this
-        lower.style.setProperty(
-          'right',
-          'unset',
-        );
-      }
     }
   };
 

@@ -598,6 +598,7 @@ export interface TransformNodiffOptions {
   isModule?: boolean | 'unknown'
   cssScope: boolean | CssScopeVisitorConfig
   snapshot?: boolean | JsxTransformerConfig
+  engineVersion?: string
   shake: boolean | ShakeVisitorConfig
   compat: boolean | CompatVisitorConfig
   refresh: boolean | RefreshVisitorConfig
@@ -607,6 +608,7 @@ export interface TransformNodiffOptions {
   dynamicImport?: boolean | DynamicImportVisitorConfig
   /** @internal */
   inject?: boolean | InjectVisitorConfig
+  inputSourceMap?: string
 }
 export interface TransformNodiffOutput {
   code: string

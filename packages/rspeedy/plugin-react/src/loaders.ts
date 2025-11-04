@@ -16,7 +16,7 @@ export function applyLoaders(
     enableRemoveCSSScope,
     shake,
     defineDCE,
-
+    engineVersion,
     experimental_isLazyBundle,
   } = options
 
@@ -65,6 +65,7 @@ export function applyLoaders(
           isDynamicComponent: experimental_isLazyBundle,
           inlineSourcesContent,
           defineDCE,
+          engineVersion,
         })
       .end()
 
@@ -102,6 +103,7 @@ export function applyLoaders(
           enableRemoveCSSScope,
           inlineSourcesContent,
           isDynamicComponent: experimental_isLazyBundle,
+          engineVersion,
           shake,
           defineDCE,
         })

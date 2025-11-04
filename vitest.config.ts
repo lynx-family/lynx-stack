@@ -24,7 +24,7 @@ export default defineConfig({
         'website/**',
 
         'packages/react/transform/tests/__swc_snapshots__/**',
-        'packages/rspeedy/create-rspeedy/template-*/**',
+        '**/tests/__swc_snapshots__/**',
 
         '.lintstagedrc.mjs',
         'eslint.config.js',
@@ -67,6 +67,7 @@ export default defineConfig({
     projects: [
       'examples/*/vitest.config.ts',
       'packages/react/*/vitest.config.ts',
+      'packages/react/*/vitest.**.config.ts',
       'packages/rspeedy/*/vitest.config.ts',
       'packages/testing-library/*/vitest.config.mts',
       'packages/testing-library/examples/*/vitest.config.ts',

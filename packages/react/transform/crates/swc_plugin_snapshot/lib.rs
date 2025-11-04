@@ -2830,4 +2830,61 @@ aaaaa
     </view>
     "#
   );
+
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    |t| visit_mut_pass(JSXTransformer::new(
+      super::JSXTransformerConfig {
+        preserve_jsx: true,
+        ..Default::default()
+      },
+      Some(t.comments.clone()),
+      TransformMode::Test,
+    )),
+    should_set_attribute_for_text_node,
+    // Input codes
+    r#"
+    <view>
+      <text text="Hello World 0"></text>
+      <text text=" "></text>
+      <text></text>
+      <text class="hello" text="Hello World 1"></text>
+      <text {...attrs} text="Hello World 2"></text>
+      <text text="Hello Lynx" text="Hello World 3"></text>
+    </view>
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    |t| visit_mut_pass(JSXTransformer::new(
+      super::JSXTransformerConfig {
+        preserve_jsx: true,
+        ..Default::default()
+      },
+      Some(t.comments.clone()),
+      TransformMode::Test,
+    )),
+    should_create_raw_text_node_for_text_node,
+    // Input codes
+    r#"
+    <view>
+      <text>{hello}, ReactLynx 1</text>
+      <text>{hello}</text>
+      <text>
+        Hello
+        <text text="ReactLynx 2"></text>
+      </text>
+      <x-text>Hello, ReactLynx 3</x-text>
+    </view>
+    "#
+  );
 }
