@@ -2,7 +2,7 @@
 "@lynx-js/react": patch
 ---
 
-During hydration, replace update with insert + remove for same-type `<list-item />` with different `item-key` so the Lynx SDK detects changes.
+During hydration, replace update with insert + remove for same-type `<list-item />` with different `item-key` so the Lynx Engine detects changes.
 
 ```html
 Hydrate List B into List A:
