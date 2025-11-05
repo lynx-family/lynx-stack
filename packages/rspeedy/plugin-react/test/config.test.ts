@@ -2801,4 +2801,26 @@ describe('MPA Config', () => {
       ]
     `)
   })
+
+  test('default value of resolve.dedupe', async () => {
+    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+    const rspeedy = await createRspeedy({
+      rspeedyConfig: {
+        plugins: [
+          pluginReactLynx(),
+          pluginStubRspeedyAPI(),
+        ],
+      },
+    })
+
+    await rspeedy.initConfigs()
+    const rsbuildConfig = rspeedy.getNormalizedConfig()
+
+    expect(rsbuildConfig.resolve?.dedupe).toMatchInlineSnapshot(`
+      [
+        "react-compiler-runtime",
+      ]
+    `)
+  })
 })
