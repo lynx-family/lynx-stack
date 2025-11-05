@@ -1,0 +1,17 @@
+{
+  // Visit https://aka.ms/tsconfig to read more about this file
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "emitDeclarationOnly": true,
+
+    "lib": ["ES2024.Promise"],
+
+    "isolatedDeclarations": false,
+    "noEmit": true,
+  },
+  "include": [
+    "debug-router-connector.*",
+    "src",
+  ],
+}
