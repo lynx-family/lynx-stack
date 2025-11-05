@@ -7,6 +7,7 @@ Add `react-compiler-runtime` to `resolve.dedupe`.
 With this change you can setup [React Compiler](https://react.dev/learn/react-compiler) for ReactLynx by `pluginBabel`:
 
 ```js
+import { defineConfig } from '@lynx-js/rspeedy';
 import { pluginBabel } from '@rsbuild/plugin-babel';
 
 export default defineConfig({
