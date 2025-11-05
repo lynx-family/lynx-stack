@@ -4146,7 +4146,7 @@ describe('update-list-info profile', () => {
           {
             "args": {
               "list id": "3",
-              "update list info": "{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a94a8_test_75"},{"position":1,"type":"__Card__:__snapshot_a94a8_test_75"},{"position":2,"type":"__Card__:__snapshot_a94a8_test_75"}],"removeAction":[],"updateAction":[]}",
+              "update list info": "{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a94a8_test_76"},{"position":1,"type":"__Card__:__snapshot_a94a8_test_76"},{"position":2,"type":"__Card__:__snapshot_a94a8_test_76"}],"removeAction":[],"updateAction":[]}",
             },
           },
         ],
