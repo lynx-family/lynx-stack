@@ -8,7 +8,7 @@ pub struct ComponentInfoParams {
   #[serde(rename = "componentID")]
   component_id: Option<String>,
   name: Option<String>,
-  path: Option<String>,
+  // path: Option<String>,
   entry: Option<String>,
   #[serde(rename = "cssID")]
   css_id: Option<i32>,
@@ -26,8 +26,8 @@ impl MainThreadGlobalThis {
     let element_config = &element.data.borrow().component_config;
     if let Some(config) = element_config {
       let entries: js_sys::Array = js_sys::Array::from_iter(config.iter().map(|(key, value)| {
-        let value: wasm_bindgen::JsValue = value.as_js_value().clone();
-        js_sys::Array::from_iter(vec![wasm_bindgen::JsValue::from_str(key), value.into()])
+        let value: wasm_bindgen::JsValue = value.as_js_value();
+        js_sys::Array::from_iter(vec![wasm_bindgen::JsValue::from_str(key), value])
       }));
       js_sys::Object::from_entries(&entries).unwrap().into()
     } else {
@@ -63,8 +63,8 @@ impl MainThreadGlobalThis {
     let element_data = element.data.borrow();
     if let Some(config) = &element_data.component_config {
       let entries: js_sys::Array = js_sys::Array::from_iter(config.iter().map(|(key, value)| {
-        let value: wasm_bindgen::JsValue = value.as_js_value().clone();
-        js_sys::Array::from_iter(vec![wasm_bindgen::JsValue::from_str(key), value.into()])
+        let value: wasm_bindgen::JsValue = value.as_js_value();
+        js_sys::Array::from_iter(vec![wasm_bindgen::JsValue::from_str(key), value])
       }));
       js_sys::Object::from_entries(&entries).unwrap()
     } else {
@@ -98,6 +98,10 @@ impl MainThreadGlobalThis {
     if let Some(name) = component_info.name {
       let dom = element_data.dom_ref.as_ref().unwrap();
       let _ = dom.set_attribute("name", &name);
+    }
+    if let Some(entry) = component_info.entry {
+      let dom = element_data.dom_ref.as_ref().unwrap();
+      let _ = dom.set_attribute(constants::LYNX_ENTRY_NAME_ATTRIBUTE, &entry);
     }
   }
 }

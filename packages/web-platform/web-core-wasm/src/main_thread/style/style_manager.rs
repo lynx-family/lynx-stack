@@ -3,7 +3,7 @@ use super::style_sheet_processor::{
   CssOgCssIdToClassNameToDeclarationsMap,
 };
 use crate::template::FlattenedStyleInfo;
-use std::{collections::HashMap, fmt::format};
+use std::collections::HashMap;
 use wasm_bindgen::JsCast;
 
 /**
