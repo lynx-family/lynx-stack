@@ -22,7 +22,7 @@ pub fn jsx_name(name: JSXElementName) -> Box<Expr> {
         Box::new(Expr::Lit(Lit::Str(Str {
           span,
           raw: None,
-          value: i.sym,
+          value: i.sym.into(),
         })))
       } else {
         Box::new(Expr::Ident(i))
@@ -82,7 +82,7 @@ pub fn jsx_attr_name(name: &JSXAttrName) -> Atom {
 
 pub fn jsx_attr_value(value: Option<JSXAttrValue>) -> Box<Expr> {
   match value {
-    Some(JSXAttrValue::Lit(l)) => Box::new(Expr::Lit(l)),
+    Some(JSXAttrValue::Str(s)) => Box::new(Expr::Lit(Lit::Str(s))),
     Some(JSXAttrValue::JSXExprContainer(JSXExprContainer { expr, .. })) => match expr {
       JSXExpr::Expr(expr) => expr,
       JSXExpr::JSXEmptyExpr(_) => Box::new(Expr::Lit(Lit::Null(Null { span: DUMMY_SP }))),
@@ -103,7 +103,7 @@ pub fn jsx_attr_to_prop(attr: &JSXAttr) -> PropOrSpread {
     key: PropName::Str(Str {
       span: attr.span,
       raw: None,
-      value: id,
+      value: id.into(),
     }),
     value: jsx_attr_value(attr.value.clone()),
   })))
@@ -170,7 +170,7 @@ pub fn jsx_children_to_expr(children: Vec<JSXElementChild>) -> Expr {
         } else {
           Some(Expr::Lit(Lit::Str(Str {
             span: DUMMY_SP,
-            value: s,
+            value: s.into(),
             raw: None,
           })))
         }
@@ -207,7 +207,7 @@ pub fn jsx_children_to_expr(children: Vec<JSXElementChild>) -> Expr {
 pub fn jsx_is_custom(jsx: &JSXElement) -> bool {
   match *jsx_name(jsx.opening.name.clone()) {
     Expr::Lit(Lit::Str(s)) => {
-      if s.value.as_ref() == "page" {
+      if s.value.to_string_lossy().as_ref() == "page" {
         return true;
       }
       false
@@ -240,14 +240,14 @@ pub fn jsx_has_dynamic_key(jsx: &JSXElement) -> bool {
 
 pub fn jsx_is_list(jsx: &JSXElement) -> bool {
   match *jsx_name(jsx.opening.name.clone()) {
-    Expr::Lit(Lit::Str(s)) => s.value.as_ref() == "list",
+    Expr::Lit(Lit::Str(s)) => s.value.to_string_lossy().as_ref() == "list",
     _ => false,
   }
 }
 
 pub fn jsx_is_list_item(jsx: &JSXElement) -> bool {
   match *jsx_name(jsx.opening.name.clone()) {
-    Expr::Lit(Lit::Str(s)) => s.value.as_ref() == "list-item",
+    Expr::Lit(Lit::Str(s)) => s.value.to_string_lossy().as_ref() == "list-item",
     _ => false,
   }
 }

@@ -28,11 +28,11 @@ impl VisitMut for TextVisitor {
         n.opening.attrs.push(JSXAttrOrSpread::JSXAttr(JSXAttr {
           span: DUMMY_SP,
           name: JSXAttrName::Ident(IdentName::new("text".into(), DUMMY_SP)),
-          value: Some(JSXAttrValue::Lit(Lit::Str(Str {
+          value: Some(JSXAttrValue::Str(Str {
             span: DUMMY_SP,
             raw: None,
-            value: text_content,
-          }))),
+            value: text_content.into(),
+          })),
         }));
         n.children = vec![];
       }

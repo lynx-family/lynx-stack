@@ -6,6 +6,7 @@ use std::{
 
 use once_cell::sync::Lazy;
 use swc_core::{
+  atoms as swc_atoms,
   common::{
     comments::{CommentKind, Comments},
     errors::HANDLER,
@@ -118,6 +119,16 @@ pub fn i32_to_expr(i: &i32) -> Expr {
     value: *i as f64,
     raw: None,
   }))
+}
+
+fn bool_jsx_attr(value: bool) -> JSXAttrValue {
+  JSXAttrValue::JSXExprContainer(JSXExprContainer {
+    span: DUMMY_SP,
+    expr: JSXExpr::Expr(Box::new(Expr::Lit(Lit::Bool(Bool {
+      span: DUMMY_SP,
+      value,
+    })))),
+  })
 }
 
 impl DynamicPart {
@@ -276,7 +287,8 @@ where
     let mut static_stmt: Stmt = Stmt::Empty(EmptyStmt { span: DUMMY_SP });
 
     if let Expr::Lit(Lit::Str(str)) = *jsx_name(n.opening.name.clone()) {
-      match str.value.as_ref() {
+      let tag = str.value.to_string_lossy();
+      match tag.as_ref() {
         "view" => {
           static_stmt = quote!(
             r#"const $element = __CreateView($page_id)"# as Stmt,
@@ -398,7 +410,7 @@ where
               flatten = Some(JSXAttrOrSpread::JSXAttr(JSXAttr {
                 span: DUMMY_SP,
                 name: JSXAttrName::Ident(IdentName::new("flatten".into(), DUMMY_SP)),
-                value: Some(JSXAttrValue::Lit(false.into())),
+                value: Some(bool_jsx_attr(false)),
               }));
               break;
             }
@@ -411,7 +423,7 @@ where
             if let JSXAttrOrSpread::JSXAttr(attr) = attr {
               let name = jsx_attr_name(&attr.name.clone()).to_string();
               if name == *"flatten" {
-                attr.value = Some(JSXAttrValue::Lit(false.into()));
+                attr.value = Some(bool_jsx_attr(false));
                 has_origin_flatten = true;
               }
             }
@@ -521,13 +533,10 @@ where
           .for_each(|attr_or_spread| match attr_or_spread {
             JSXAttrOrSpread::SpreadElement(_) => todo!(),
             JSXAttrOrSpread::JSXAttr(JSXAttr { name, value, .. }) => {
-              if let Some(JSXAttrValue::Lit(Lit::Str(s))) = value {
-                let transformed_value = transform_jsx_attr_str(&s.value);
-                *value = Some(JSXAttrValue::Lit(Lit::Str(Str {
-                  span: s.span,
-                  raw: None,
-                  value: transformed_value.into(),
-                })));
+              if let Some(JSXAttrValue::Str(s)) = value {
+                let transformed_value =
+                  transform_jsx_attr_str(s.value.to_string_lossy().as_ref());
+                s.value = transformed_value.into();
               }
 
               match name {
@@ -545,12 +554,12 @@ where
                           );
                           self.static_stmts.push(RefCell::new(stmt));
                         }
-                        Some(JSXAttrValue::Lit(value)) => {
+                        Some(JSXAttrValue::Str(value)) => {
                           let stmt = quote!(
                               r#"__SetAttribute($element, $name, $value)"# as Stmt,
                               element: Expr = el.clone(),
                               name: Expr =  name.clone().into(),
-                              value: Expr = Expr::Lit(value.clone())
+                              value: Expr = Expr::Lit(Lit::Str(value.clone()))
                           );
                           self.static_stmts.push(RefCell::new(stmt));
                         }
@@ -599,12 +608,12 @@ where
                           );
                           self.static_stmts.push(RefCell::new(stmt));
                         }
-                        Some(JSXAttrValue::Lit(value)) => {
+                        Some(JSXAttrValue::Str(value)) => {
                           let stmt = quote!(
                               r#"__AddDataset($element, $name, $value)"# as Stmt,
                               element: Expr = el.clone(),
                               name: Expr =  name.clone().into(),
-                              value: Expr = Expr::Lit(value.clone())
+                              value: Expr = Expr::Lit(Lit::Str(value.clone()))
                           );
                           self.static_stmts.push(RefCell::new(stmt));
                         }
@@ -643,12 +652,12 @@ where
                     AttrName::Style => {
                       match value {
                         None => {}
-                        Some(JSXAttrValue::Lit(value)) => {
+                        Some(JSXAttrValue::Str(value)) => {
                           // <view style="width: 100rpx" />;
                           let stmt = quote!(
                               r#"__SetInlineStyles($element, $value)"# as Stmt,
                               element: Expr = el.clone(),
-                              value: Expr = Expr::Lit(value.clone())
+                              value: Expr = Expr::Lit(Lit::Str(value.clone()))
                           );
                           self.static_stmts.push(RefCell::new(stmt));
                         }
@@ -695,11 +704,11 @@ where
                     AttrName::Class => {
                       match value {
                         None => {}
-                        Some(JSXAttrValue::Lit(value)) => {
+                        Some(JSXAttrValue::Str(value)) => {
                           let stmt = quote!(
                               r#"__SetClasses($element, $value)"# as Stmt,
                               element: Expr = el.clone(),
-                              value: Expr = Expr::Lit(value.clone())
+                              value: Expr = Expr::Lit(Lit::Str(value.clone()))
                           );
                           self.static_stmts.push(RefCell::new(stmt));
                         }
@@ -734,11 +743,11 @@ where
                     AttrName::ID => {
                       match value {
                         None => {}
-                        Some(JSXAttrValue::Lit(value)) => {
+                        Some(JSXAttrValue::Str(value)) => {
                           let stmt = quote!(
                               r#"__SetID($element, $value)"# as Stmt,
                               element: Expr = el.clone(),
-                              value: Expr = Expr::Lit(value.clone())
+                              value: Expr = Expr::Lit(Lit::Str(value.clone()))
                           );
                           self.static_stmts.push(RefCell::new(stmt));
                         }
@@ -1100,10 +1109,12 @@ where
     match *jsx_name(node.opening.name.clone()) {
       Expr::Lit(lit) => {
         if let Lit::Str(s) = &lit {
-          if s.value.as_ref() == "wrapper" {
+          let tag = s.value.to_string_lossy();
+          let tag_str = tag.as_ref();
+          if tag_str == "wrapper" {
             return node.visit_mut_children_with(self);
           }
-          if s.value.as_ref() == "page" {
+          if tag_str == "page" {
             if self.runtime_components_module_item.is_none() {
               self.runtime_components_module_item = Some(quote!(
                 r#"import * as $runtime_components_ident from '@lynx-js/react/runtime-components';"#
@@ -1132,7 +1143,7 @@ where
             return node.visit_mut_children_with(self);
           }
 
-          if s.value.as_ref() == "component" {
+          if tag_str == "component" {
             HANDLER.with(|handler| {
               handler
                 .struct_span_err(node.opening.name.span(), "<component /> is not supported")
