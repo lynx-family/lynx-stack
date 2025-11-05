@@ -6,5 +6,5 @@
     "outDir": "./dist",
     "lib": ["DOM"],
   },
-  "include": ["src"],
+  "include": ["ts"],
 }

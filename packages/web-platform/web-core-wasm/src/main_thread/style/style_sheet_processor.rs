@@ -78,8 +78,8 @@ fn generate_declarations_to_buffer<'a>(
   css_content_buffer.push(Cow::Borrowed("}"));
 }
 
-fn transform_declarations(
-  declarations: &Vec<(String, String)>,
+pub(crate) fn transform_declarations(
+  declarations: &[(String, String)],
 ) -> (Vec<(&str, &str)>, Vec<(&str, &str)>) {
   let mut new_declarations: Vec<(&str, &str)> = Vec::new();
   let mut children_declarations: Vec<(&str, &str)> = Vec::new();

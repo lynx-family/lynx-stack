@@ -60,16 +60,17 @@ impl MainThreadGlobalThis {
       let _ = dom.set_attribute("part", "page");
       let _ = dom.set_attribute(constants::CSS_ID_ATTRIBUTE, &css_id.to_string());
       self.mark_template_element(&page);
-      if !self.config_default_display_linear {
+      if !self.page_config.default_display_linear {
         let _ = dom.set_attribute(constants::LYNX_DEFAULT_DISPLAY_LINEAR_ATTRIBUTE, "false");
       }
-      if self.config_default_overflow_visible {
+      if self.page_config.default_overflow_visible {
         let _ = dom.set_attribute(constants::LYNX_DEFAULT_OVERFLOW_VISIBLE_ATTRIBUTE, "true");
       }
       self.page = Some(page.clone());
     }
     page
   }
+
   #[wasm_bindgen(js_name = "__CreateComponent")]
   pub fn create_component(
     &mut self,
@@ -95,7 +96,7 @@ impl MainThreadGlobalThis {
  * methods for internal use
  */
 impl MainThreadGlobalThis {
-  pub(crate) fn get_lynx_element_by_dom(&self, dom: &web_sys::Element) -> Option<&LynxElement> {
+  pub(crate) fn get_lynx_element_by_dom(&self, dom: &web_sys::HtmlElement) -> Option<&LynxElement> {
     let unique_id: i32 = js_sys::Reflect::get(
       dom,
       &wasm_bindgen::JsValue::from_str(constants::LYNX_UNIQUE_ID_ATTRIBUTE),

@@ -328,7 +328,7 @@ use wasm_bindgen::JsCast;
 //       let target_dom = event
 //         .target()
 //         .unwrap()
-//         .dyn_into::<web_sys::Element>()
+//         .dyn_into::<web_sys::HtmlElement>()
 //         .unwrap();
 //       if self.root_node.contains(Some(&target_dom)) {
 //         let target_element = self.mts_global_this.get_lynx_element_by_dom(&target_dom);

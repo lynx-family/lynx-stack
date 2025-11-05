@@ -58,6 +58,20 @@ impl MainThreadGlobalThis {
     element_data.component_config = Some(new_component_config);
   }
 
+  #[wasm_bindgen(js_name = "__GetConfig")]
+  pub fn get_config(&self, element: &LynxElement) -> js_sys::Object {
+    let element_data = element.data.borrow();
+    if let Some(config) = &element_data.component_config {
+      let entries: js_sys::Array = js_sys::Array::from_iter(config.iter().map(|(key, value)| {
+        let value: wasm_bindgen::JsValue = value.as_js_value().clone();
+        js_sys::Array::from_iter(vec![wasm_bindgen::JsValue::from_str(key), value.into()])
+      }));
+      js_sys::Object::from_entries(&entries).unwrap()
+    } else {
+      js_sys::Object::new()
+    }
+  }
+
   #[wasm_bindgen(js_name = "__UpdateComponentID")]
   pub fn update_component_id(&self, element: &LynxElement, component_id: &str) {
     let mut element_data = element.data.borrow_mut();

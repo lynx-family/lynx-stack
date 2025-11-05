@@ -1,5 +1,5 @@
 use super::MainThreadGlobalThis;
-use crate::{constants, main_thread::mts_global_this};
+use crate::constants;
 use serde::{Deserialize, Serialize};
 use std::{cell::RefCell, collections::HashMap, fmt::Display, rc::Rc};
 use wasm_bindgen::prelude::*;
@@ -72,7 +72,7 @@ pub struct LynxElementData {
   pub(crate) component_config: Option<HashMap<String, ConfigValue>>,
   pub(crate) component_at_index: Option<JsValue>,
   pub(crate) enqueue_component: Option<JsValue>,
-  pub(crate) dom_ref: Option<web_sys::Element>,
+  pub(crate) dom_ref: Option<web_sys::HtmlElement>,
 }
 
 #[derive(Clone, TryFromJsValue, Debug)]
@@ -117,7 +117,11 @@ impl LynxElement {
     let parent_component = mts_global_this
       .unique_id_to_element_map
       .get(&parent_component_unique_id);
-    let dom = mts_global_this.document.create_element(&html_tag).unwrap();
+    let dom: web_sys::HtmlElement = mts_global_this
+      .document
+      .create_element(&html_tag)
+      .unwrap()
+      .unchecked_into();
     let _ = dom.set_attribute(constants::LYNX_TAG_ATTRIBUTE, html_tag.as_str());
 
     // css id
@@ -140,7 +144,7 @@ impl LynxElement {
     */
     mts_global_this.unique_id_counter += 1;
     let unique_id = mts_global_this.unique_id_counter;
-    if !mts_global_this.config_enable_css_selector {
+    if !mts_global_this.page_config.enable_css_selector {
       let _ = dom.set_attribute(constants::LYNX_UNIQUE_ID_ATTRIBUTE, &unique_id.to_string());
     }
     js_sys::Reflect::set(
@@ -179,14 +183,14 @@ impl LynxElement {
   pub fn clone_with_cloned_dom(
     &self,
     mts_global_this: &mut MainThreadGlobalThis,
-    dom: web_sys::Element,
+    dom: web_sys::HtmlElement,
   ) -> Self {
     let unique_id = mts_global_this.unique_id_counter + 1;
     mts_global_this.unique_id_counter = unique_id;
     // unique id, same logic as LynxElement::new
     mts_global_this.unique_id_counter += 1;
     let unique_id = mts_global_this.unique_id_counter;
-    if !mts_global_this.config_enable_css_selector {
+    if !mts_global_this.page_config.enable_css_selector {
       let _ = dom.set_attribute(constants::LYNX_UNIQUE_ID_ATTRIBUTE, &unique_id.to_string());
     }
 

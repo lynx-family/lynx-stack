@@ -131,7 +131,7 @@ impl MainThreadGlobalThis {
       .as_ref()
       .unwrap()
       .first_element_child()
-      .and_then(|e| self.get_lynx_element_by_dom(&e).cloned())
+      .and_then(|e| self.get_lynx_element_by_dom(&e.unchecked_into()).cloned())
   }
 
   #[wasm_bindgen(js_name = "__GetChildren")]
@@ -142,7 +142,7 @@ impl MainThreadGlobalThis {
     let children_length = children.length();
     for i in 0..children_length {
       let child = children.item(i).unwrap();
-      if let Some(element) = self.get_lynx_element_by_dom(&child) {
+      if let Some(element) = self.get_lynx_element_by_dom(&child.unchecked_into()) {
         array.push(element.clone());
       }
     }
@@ -154,7 +154,9 @@ impl MainThreadGlobalThis {
     let element_data = element.data.borrow();
     let parent_dom_option = element_data.dom_ref.as_ref().unwrap().parent_element();
     if let Some(parent_dom) = parent_dom_option {
-      self.get_lynx_element_by_dom(&parent_dom).cloned()
+      self
+        .get_lynx_element_by_dom(&parent_dom.unchecked_into())
+        .cloned()
     } else {
       None
     }
@@ -192,7 +194,7 @@ impl MainThreadGlobalThis {
     let dom = element_data.dom_ref.as_ref().unwrap();
     dom
       .last_element_child()
-      .and_then(|e| self.get_lynx_element_by_dom(&e).cloned())
+      .and_then(|e| self.get_lynx_element_by_dom(&e.unchecked_into()).cloned())
   }
 
   #[wasm_bindgen(js_name = "__NextElement")]
@@ -201,7 +203,7 @@ impl MainThreadGlobalThis {
     let dom = element_data.dom_ref.as_ref().unwrap();
     dom
       .next_element_sibling()
-      .and_then(|e| self.get_lynx_element_by_dom(&e).cloned())
+      .and_then(|e| self.get_lynx_element_by_dom(&e.unchecked_into()).cloned())
   }
 
   #[wasm_bindgen(js_name = "__RemoveElement")]
@@ -356,6 +358,26 @@ impl MainThreadGlobalThis {
   pub fn get_attribute_by_name(&self, element: &LynxElement, name: &str) -> Option<String> {
     let element_data = element.data.borrow();
     element_data.dom_ref.as_ref().unwrap().get_attribute(name)
+  }
+
+  #[wasm_bindgen(js_name = "__GetAttributes")]
+  pub fn get_attributes(&self, element: &LynxElement) -> js_sys::Object {
+    let element_data = element.data.borrow();
+    let dom = element_data.dom_ref.as_ref().unwrap();
+    let attrs = dom.attributes();
+    let entries = js_sys::Array::new();
+    for i in 0..attrs.length() {
+      if let Some(attr) = attrs.item(i) {
+        let name = attr.name();
+        let value = attr.value();
+        let entry = js_sys::Array::from_iter(vec![
+          wasm_bindgen::JsValue::from_str(&name),
+          wasm_bindgen::JsValue::from_str(&value),
+        ]);
+        entries.push(&entry);
+      }
+    }
+    js_sys::Object::from_entries(&entries).unwrap()
   }
 
   #[wasm_bindgen(js_name = "__GetID")]

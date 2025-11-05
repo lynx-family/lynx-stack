@@ -3,7 +3,7 @@ use super::style_sheet_processor::{
   CssOgCssIdToClassNameToDeclarationsMap,
 };
 use crate::template::FlattenedStyleInfo;
-use std::{collections::HashMap, rc::Rc};
+use std::{collections::HashMap, fmt::format};
 use wasm_bindgen::JsCast;
 
 /**
@@ -18,6 +18,7 @@ pub(crate) struct StyleManager {
   css_query_map_by_entry_name: Option<HashMap<String, CssOgCssIdToClassNameToDeclarationsMap>>,
   style_element: web_sys::HtmlStyleElement,
   style_sheet: Option<web_sys::CssStyleSheet>,
+  unique_id_to_style_declarations_map: Option<HashMap<i32, web_sys::CssStyleDeclaration>>,
 }
 
 impl StyleManager {
@@ -41,6 +42,7 @@ impl StyleManager {
         css_query_map_by_entry_name: None,
         style_element,
         style_sheet: None,
+        unique_id_to_style_declarations_map: None,
       }
     } else {
       let (style_content, map): (String, CssOgCssIdToClassNameToDeclarationsMap) =
@@ -57,7 +59,56 @@ impl StyleManager {
         css_query_map_by_entry_name: Some(css_query_map_by_entry_name),
         style_element,
         style_sheet: Some(style_sheet),
+        unique_id_to_style_declarations_map: Some(HashMap::new()),
       }
+    }
+  }
+
+  pub(crate) fn update_css_og_style(
+    &mut self,
+    unique_id: i32,
+    css_id: i32,
+    entry_name: &str,
+    class_names: &Vec<String>,
+  ) {
+    let new_declarations = class_names
+      .iter()
+      .filter_map(|class_name| {
+        if let Some(css_query_map_by_entry_name) = &self.css_query_map_by_entry_name {
+          if let Some(css_id_to_class_name_map) = css_query_map_by_entry_name.get(entry_name) {
+            if let Some(class_name_to_declarations_map) = css_id_to_class_name_map.get(&css_id) {
+              if let Some(declaration) = class_name_to_declarations_map.get(class_name) {
+                return Some(declaration.iter().map(|(k, v)| format!("{k}: {v};")));
+              }
+            }
+          }
+        }
+        None
+      })
+      .flatten()
+      .collect::<Vec<String>>()
+      .join("");
+
+    // update style declaration
+
+    let style_sheet = self.style_sheet.as_ref().unwrap();
+    let unique_id_to_style_declarations_map =
+      self.unique_id_to_style_declarations_map.as_mut().unwrap();
+    if let Some(style_declaration) = unique_id_to_style_declarations_map.get(&unique_id) {
+      style_declaration.set_css_text(&new_declarations);
+    } else {
+      let rule_index = style_sheet
+        .insert_rule(&format!(
+          "[unique-id=\"{unique_id}\"] {{{new_declarations}}}"
+        ))
+        .unwrap();
+      let style_declaration = style_sheet
+        .css_rules()
+        .unwrap()
+        .get(rule_index)
+        .unwrap()
+        .unchecked_into::<web_sys::CssStyleDeclaration>();
+      unique_id_to_style_declarations_map.insert(unique_id, style_declaration);
     }
   }
 }

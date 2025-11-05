@@ -55,7 +55,7 @@ impl MainThreadGlobalThis {
         ))
         .unwrap();
       for i in 0..part_elements_node_list.length() {
-        let part_element_node: web_sys::Element =
+        let part_element_node: web_sys::HtmlElement =
           part_elements_node_list.item(i).unwrap().dyn_into().unwrap();
         let part_element = self.get_lynx_element_by_dom(&part_element_node).unwrap();
         let part_element_data = part_element.data.borrow();

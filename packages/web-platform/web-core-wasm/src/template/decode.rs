@@ -1,5 +1,7 @@
 use super::decode_legacy_json::JsonTemplateRaw;
-use super::{flatten_style_info, ElementTemplate, FlattenedStyleInfo, StyleInfo, CURRENT_VERSION};
+use super::{
+  style_loader::flatten_style_info, ElementTemplate, FlattenedStyleInfo, StyleInfo, CURRENT_VERSION,
+};
 use serde::{Deserialize, Deserializer, Serialize};
 use std::collections::HashMap;
 pub enum LynxEventType {
@@ -27,18 +29,18 @@ pub enum DslType {
   React,
   InternalDslNameTbd,
 }
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 pub struct PageConfig {
   #[serde(rename = "enableCSSSelector")]
-  enable_css_selector: bool,
+  pub(crate) enable_css_selector: bool,
   #[serde(rename = "enableRemoveCSSScope")]
-  enable_remove_css_scope: bool,
+  pub(crate) enable_remove_css_scope: bool,
   #[serde(rename = "defaultDisplayLinear")]
-  default_display_linear: bool,
+  pub(crate) default_display_linear: bool,
   #[serde(rename = "defaultOverflowVisible")]
-  default_overflow_visible: bool,
+  pub(crate) default_overflow_visible: bool,
   #[serde(rename = "enableJSDataProcessor")]
-  enable_js_data_processor: bool,
+  pub(crate) enable_js_data_processor: bool,
 }
 
 #[derive(Deserialize)]
@@ -54,7 +56,7 @@ pub struct LynxTemplate {
 }
 
 pub struct DecodedTemplate {
-  lepus_code: HashMap<String, String>,
+  lepus_code_urls: HashMap<String, String>,
   manifest_code: HashMap<String, String>,
   app_type: TemplateType,
   card_type: DslType,
@@ -63,11 +65,26 @@ pub struct DecodedTemplate {
   element_template: HashMap<String, ElementTemplate>,
 }
 
+impl DecodedTemplate {
+  pub fn get_lepus_code_url(&self, chunk_name: &str) -> Option<&String> {
+    self.lepus_code_urls.get(chunk_name)
+  }
+}
+
 impl From<LynxTemplate> for DecodedTemplate {
   fn from(template: LynxTemplate) -> Self {
     let decoded_style_info = flatten_style_info(template.style_info);
     DecodedTemplate {
-      lepus_code: template.lepus_code,
+      lepus_code_urls: template
+        .lepus_code
+        .into_iter()
+        .map(|(k, v)| {
+          let buffer = js_sys::Uint8Array::from(v.as_bytes());
+          let blob = web_sys::Blob::new_with_buffer_source_sequence(&buffer).unwrap();
+          let url = web_sys::Url::create_object_url_with_blob(&blob).unwrap();
+          (k, url)
+        })
+        .collect(),
       manifest_code: template.manifest_code,
       app_type: template.app_type,
       card_type: template.card_type,

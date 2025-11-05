@@ -1,5 +1,7 @@
+use super::super::style::{transform_declarations, STYLE_PROPERTY_MAP};
 use super::{LynxElement, MainThreadGlobalThis};
 use crate::constants;
+use crate::main_thread::element_apis::element;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -20,7 +22,7 @@ impl MainThreadGlobalThis {
 
   #[wasm_bindgen(js_name = "__SetCSSId")]
   pub fn set_css_id(
-    &self,
+    &mut self,
     #[wasm_bindgen(unchecked_param_type = "LynxElement[]")] elements: js_sys::Array,
     css_id: i32,
     entry_name: Option<String>,
@@ -39,7 +41,7 @@ impl MainThreadGlobalThis {
           let _ = dom.set_attribute(constants::LYNX_ENTRY_NAME_ATTRIBUTE, entry_name);
         }
       }
-      if !self.config_enable_css_selector {
+      if !self.page_config.enable_css_selector {
         let dom = element_data.dom_ref.as_ref().unwrap();
         let class_value: Option<String> = dom.get_attribute("class");
         self.set_classes(&element, class_value);
@@ -48,7 +50,7 @@ impl MainThreadGlobalThis {
   }
 
   #[wasm_bindgen(js_name = "__SetClasses")]
-  pub fn set_classes(&self, element: &LynxElement, classname: Option<String>) {
+  pub fn set_classes(&mut self, element: &LynxElement, classname: Option<String>) {
     let element_data = element.data.borrow();
     let dom = element_data.dom_ref.as_ref().unwrap();
     if let Some(classname) = classname {
@@ -56,7 +58,7 @@ impl MainThreadGlobalThis {
     } else {
       let _ = dom.remove_attribute("class");
     }
-    if !self.config_enable_css_selector {
+    if !self.page_config.enable_css_selector {
       let class_list: Vec<String> = dom
         .class_list()
         .values()
@@ -64,17 +66,68 @@ impl MainThreadGlobalThis {
         .filter_map(|v| v.ok())
         .filter_map(|v| v.as_string())
         .collect();
+      let css_id = element_data.css_id;
+      let entry_name = if let Some(name) = dom.get_attribute(constants::LYNX_ENTRY_NAME_ATTRIBUTE) {
+        name
+      } else {
+        "".to_string()
+      };
+      let unique_id = element_data.unique_id;
+      self
+        .style_manager
+        .update_css_og_style(unique_id, css_id, &entry_name, &class_list);
     }
   }
 
-  // #[wasm_bindgen(js_name = __AddInlineStyle)]
-  // pub fn add_inline_style(&self, element: &LynxElement, key: &wasm_bindgen::JsValue, value: &wasm_bindgen::JsValue) {
-  //   let style = js_helpers::get_property(element.dom_ref.as_ref().unwrap(), "style").unwrap();
-  //   js_helpers::get_function(&style, "setProperty")
-  //       .unwrap()
-  //       .call2(&style, key, value)
-  //       .unwrap();
-  // }
+  #[wasm_bindgen(js_name = __AddInlineStyle)]
+  /**
+   * The key could be string or number
+   * The value could be string or number or null or undefined
+   */
+  pub fn add_inline_style(
+    &self,
+    element: &LynxElement,
+    key: &wasm_bindgen::JsValue,
+    value: &wasm_bindgen::JsValue,
+  ) {
+    // firstly we should map the number back to string
+    let key_str: String = if let Some(key) = key.as_string() {
+      key
+    } else if let Some(num) = key.as_f64() {
+      if let Some(key) = STYLE_PROPERTY_MAP.get(&(num as i32)) {
+        key.to_string()
+      } else {
+        panic!("Unsupported key number {num}");
+      }
+    } else {
+      panic!("Unsupported key type for inline style key");
+    };
+    let element_data = element.data.borrow();
+    let dom = element_data.dom_ref.as_ref().unwrap();
+    if value.is_null_or_undefined() {
+      dom.style().remove_property(&key_str).unwrap();
+    } else {
+      let value_str = if let Some(v) = value.as_string() {
+        v
+      } else if let Some(num) = value.as_f64() {
+        num.to_string()
+      } else {
+        panic!("Unsupported value type for inline style value");
+      };
+      // now do the transform
+      let declaration = [(key_str, value_str)];
+      let (new_declarations, _) = transform_declarations(&declaration);
+      for (k, v) in new_declarations.iter() {
+        dom.style().set_property(k, v).unwrap();
+      }
+    }
+  }
+
+  #[wasm_bindgen(js_name = "__SetInlineStyles")]
+  /**
+   * The value could be a map of string/number or null/undefined or a string
+   */
+  pub fn set_inline_styles(&self, element: &LynxElement, styles: &wasm_bindgen::JsValue) {}
 
   #[wasm_bindgen(js_name = "__AddClass")]
   pub fn add_class(&self, element: &LynxElement, class_name: &str) {

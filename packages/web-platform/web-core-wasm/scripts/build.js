@@ -74,5 +74,5 @@ build(
   'standard',
   '--enable-bulk-memory-opt --enable-sign-ext --enable-simd --enable-reference-types --enable-nontrapping-float-to-int --enable-mutable-globals',
 );
-build(true, '', 'encoder', '', '"encode"');
+// build(true, '', 'encoder', '', '"encode"');
 build(false, '', 'debug', '');

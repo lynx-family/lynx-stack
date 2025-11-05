@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 lazy_static::lazy_static! {
-  static ref STYLE_PROPERTY_MAP: HashMap<i32, &'static str> = {
+  pub(crate) static ref STYLE_PROPERTY_MAP: HashMap<i32, &'static str> = {
     [
       "",
       "top",
