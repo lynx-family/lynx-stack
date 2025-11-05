@@ -533,12 +533,6 @@ where
           .for_each(|attr_or_spread| match attr_or_spread {
             JSXAttrOrSpread::SpreadElement(_) => todo!(),
             JSXAttrOrSpread::JSXAttr(JSXAttr { name, value, .. }) => {
-              if let Some(JSXAttrValue::Str(s)) = value {
-                let transformed_value =
-                  transform_jsx_attr_str(s.value.to_string_lossy().as_ref());
-                s.value = transformed_value.into();
-              }
-
               match name {
                 JSXAttrName::Ident(ident_name) => {
                   let attr_name = AttrName::from(<IdentName as Into<Ident>>::into(ident_name.clone()));
@@ -554,12 +548,13 @@ where
                           );
                           self.static_stmts.push(RefCell::new(stmt));
                         }
-                        Some(JSXAttrValue::Str(value)) => {
+                        Some(JSXAttrValue::Str(s)) => {
+                          let value = transform_jsx_attr_str(&s.value);
                           let stmt = quote!(
                               r#"__SetAttribute($element, $name, $value)"# as Stmt,
                               element: Expr = el.clone(),
                               name: Expr =  name.clone().into(),
-                              value: Expr = Expr::Lit(Lit::Str(value.clone()))
+                              value: Expr = Expr::Lit(Lit::Str(Str { span: s.span, value: value.into(), raw: None }))
                           );
                           self.static_stmts.push(RefCell::new(stmt));
                         }
@@ -608,12 +603,13 @@ where
                           );
                           self.static_stmts.push(RefCell::new(stmt));
                         }
-                        Some(JSXAttrValue::Str(value)) => {
+                        Some(JSXAttrValue::Str(s)) => {
+                          let value = transform_jsx_attr_str(&s.value);
                           let stmt = quote!(
                               r#"__AddDataset($element, $name, $value)"# as Stmt,
                               element: Expr = el.clone(),
                               name: Expr =  name.clone().into(),
-                              value: Expr = Expr::Lit(Lit::Str(value.clone()))
+                              value: Expr = Expr::Lit(Lit::Str(Str { span: s.span, value: value.into(), raw: None }))
                           );
                           self.static_stmts.push(RefCell::new(stmt));
                         }
@@ -652,12 +648,13 @@ where
                     AttrName::Style => {
                       match value {
                         None => {}
-                        Some(JSXAttrValue::Str(value)) => {
+                        Some(JSXAttrValue::Str(s)) => {
                           // <view style="width: 100rpx" />;
+                          let value = transform_jsx_attr_str(&s.value);
                           let stmt = quote!(
                               r#"__SetInlineStyles($element, $value)"# as Stmt,
                               element: Expr = el.clone(),
-                              value: Expr = Expr::Lit(Lit::Str(value.clone()))
+                              value: Expr = Expr::Lit(Lit::Str(Str { span: s.span, value: value.into(), raw: None }))
                           );
                           self.static_stmts.push(RefCell::new(stmt));
                         }
@@ -704,11 +701,12 @@ where
                     AttrName::Class => {
                       match value {
                         None => {}
-                        Some(JSXAttrValue::Str(value)) => {
+                        Some(JSXAttrValue::Str(s)) => {
+                          let value = transform_jsx_attr_str(&s.value);
                           let stmt = quote!(
                               r#"__SetClasses($element, $value)"# as Stmt,
                               element: Expr = el.clone(),
-                              value: Expr = Expr::Lit(Lit::Str(value.clone()))
+                              value: Expr = Expr::Lit(Lit::Str(Str { span: s.span, value: value.into(), raw: None }))
                           );
                           self.static_stmts.push(RefCell::new(stmt));
                         }
@@ -743,11 +741,12 @@ where
                     AttrName::ID => {
                       match value {
                         None => {}
-                        Some(JSXAttrValue::Str(value)) => {
+                        Some(JSXAttrValue::Str(s)) => {
+                          let value = transform_jsx_attr_str(&s.value);
                           let stmt = quote!(
                               r#"__SetID($element, $value)"# as Stmt,
                               element: Expr = el.clone(),
-                              value: Expr = Expr::Lit(Lit::Str(value.clone()))
+                              value: Expr = Expr::Lit(Lit::Str(Str { span: s.span, value: value.into(), raw: None }))
                           );
                           self.static_stmts.push(RefCell::new(stmt));
                         }

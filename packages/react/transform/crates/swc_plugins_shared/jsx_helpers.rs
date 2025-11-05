@@ -3,6 +3,7 @@ use std::borrow::Cow;
 
 use once_cell::sync::Lazy;
 use swc_core::{
+  atoms::wtf8::{Wtf8, Wtf8Buf},
   common::{errors::HANDLER, iter::IdentifyLast, Spanned, DUMMY_SP},
   ecma::{
     ast::{JSXExpr, *},
@@ -82,7 +83,14 @@ pub fn jsx_attr_name(name: &JSXAttrName) -> Atom {
 
 pub fn jsx_attr_value(value: Option<JSXAttrValue>) -> Box<Expr> {
   match value {
-    Some(JSXAttrValue::Str(s)) => Box::new(Expr::Lit(Lit::Str(s))),
+    Some(JSXAttrValue::Str(s)) => {
+      let value = transform_jsx_attr_str(&s.value);
+      Box::new(Expr::Lit(Lit::Str(Str {
+        span: s.span,
+        value: value.into(),
+        raw: None,
+      })))
+    }
     Some(JSXAttrValue::JSXExprContainer(JSXExprContainer { expr, .. })) => match expr {
       JSXExpr::Expr(expr) => expr,
       JSXExpr::JSXEmptyExpr(_) => Box::new(Expr::Lit(Lit::Null(Null { span: DUMMY_SP }))),
@@ -330,46 +338,54 @@ pub fn jsx_is_children_full_dynamic(n: &JSXElement) -> bool {
   filtered.all(is_dynamic)
 }
 
-// Copied from https://github.com/swc-project/swc/blob/main/crates/swc_ecma_transforms_react/src/jsx/mod.rs#L1423
-pub fn transform_jsx_attr_str(v: &str) -> String {
+// Copied from https://github.com/swc-project/swc/blob/6a9fa49117e037aa77bcdd1b0b50f2e08697c05e/crates/swc_ecma_transforms_react/src/jsx/mod.rs#L1613
+pub fn transform_jsx_attr_str(v: &Wtf8) -> Wtf8Buf {
   let single_quote = false;
-  let mut buf = String::with_capacity(v.len());
-  let mut iter = v.chars().peekable();
+  let mut buf = Wtf8Buf::with_capacity(v.len());
+  let mut iter = v.code_points().peekable();
 
-  while let Some(c) = iter.next() {
-    match c {
-      '\u{0008}' => buf.push_str("\\b"),
-      '\u{000c}' => buf.push_str("\\f"),
-      ' ' => buf.push(' '),
+  while let Some(code_point) = iter.next() {
+    if let Some(c) = code_point.to_char() {
+      match c {
+        '\u{0008}' => buf.push_str("\\b"),
+        '\u{000c}' => buf.push_str("\\f"),
+        ' ' => buf.push_char(' '),
 
-      '\n' | '\r' | '\t' => {
-        buf.push(' ');
+        '\n' | '\r' | '\t' => {
+          buf.push_char(' ');
 
-        while let Some(' ') = iter.peek() {
-          iter.next();
+          while let Some(next) = iter.peek() {
+            if next.to_char() == Some(' ') {
+              iter.next();
+            } else {
+              break;
+            }
+          }
+        }
+        '\u{000b}' => buf.push_str("\\v"),
+        '\0' => buf.push_str("\\x00"),
+
+        '\'' if single_quote => buf.push_str("\\'"),
+        '"' if !single_quote => buf.push_char('"'),
+
+        '\x01'..='\x0f' | '\x10'..='\x1f' => {
+          buf.push_char(c);
+        }
+
+        '\x20'..='\x7e' => {
+          //
+          buf.push_char(c);
+        }
+        '\u{7f}'..='\u{ff}' => {
+          buf.push_char(c);
+        }
+
+        _ => {
+          buf.push_char(c);
         }
       }
-      '\u{000b}' => buf.push_str("\\v"),
-      '\0' => buf.push_str("\\x00"),
-
-      '\'' if single_quote => buf.push_str("\\'"),
-      '"' if !single_quote => buf.push('\"'),
-
-      '\x01'..='\x0f' | '\x10'..='\x1f' => {
-        buf.push(c);
-      }
-
-      '\x20'..='\x7e' => {
-        //
-        buf.push(c);
-      }
-      '\u{7f}'..='\u{ff}' => {
-        buf.push(c);
-      }
-
-      _ => {
-        buf.push(c);
-      }
+    } else {
+      buf.push(code_point);
     }
   }
 
