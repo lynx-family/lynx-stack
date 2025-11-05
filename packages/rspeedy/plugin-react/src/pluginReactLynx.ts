@@ -367,6 +367,12 @@ export function pluginReactLynx(
             },
           }, config)
 
+          config = mergeRsbuildConfig({
+            resolve: {
+              dedupe: ['react-compiler-runtime'],
+            },
+          }, config)
+
           return config
         })
 

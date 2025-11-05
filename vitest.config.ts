@@ -67,9 +67,12 @@ export default defineConfig({
     projects: [
       'examples/*/vitest.config.ts',
       'packages/react/*/vitest.config.ts',
+      'packages/react/*/vitest.**.config.ts',
       'packages/rspeedy/*/vitest.config.ts',
       'packages/testing-library/*/vitest.config.mts',
       'packages/testing-library/examples/*/vitest.config.ts',
+      '!packages/testing-library/examples/react-compiler/vitest.config.ts',
+      'packages/testing-library/examples/react-compiler/vitest.config.*.ts',
       'packages/third-party/*/vitest.config.ts',
       'packages/tools/*/vitest.config.ts',
       'packages/use-sync-external-store/vitest.config.ts',

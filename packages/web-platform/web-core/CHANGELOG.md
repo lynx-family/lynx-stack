@@ -1,5 +1,17 @@
 # @lynx-js/web-core
 
+## 0.18.2
+
+### Patch Changes
+
+- feat: builtinTagTransformMap add `'input': 'x-input'` ([#1907](https://github.com/lynx-family/lynx-stack/pull/1907))
+
+- Updated dependencies []:
+  - @lynx-js/web-constants@0.18.2
+  - @lynx-js/web-mainthread-apis@0.18.2
+  - @lynx-js/web-worker-rpc@0.18.2
+  - @lynx-js/web-worker-runtime@0.18.2
+
 ## 0.18.1
 
 ### Patch Changes
