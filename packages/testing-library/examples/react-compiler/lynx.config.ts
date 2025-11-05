@@ -8,7 +8,6 @@ export default defineConfig({
   plugins: [
     pluginReactLynx({
       enableRemoveCSSScope: true,
-      experimental_enableReactCompiler: true,
     }),
   ],
 });
