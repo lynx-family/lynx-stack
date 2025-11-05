@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { profileEnd, profileStart } from './debug/utils.js';
 import { componentAtIndexFactory, enqueueComponentFactory, gRecycleMap, gSignMap } from './list.js';
 import { __pendingListUpdates } from './pendingListUpdates.js';
 import { DynamicPartType } from './snapshot/dynamicPartType.js';
@@ -379,6 +380,15 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
           updateAction,
         };
 
+        if (__PROFILE__) {
+          profileStart('ReactLynx::listHydrate::updateListInfo', {
+            args: {
+              'list id': String(listID),
+              'update list info': JSON.stringify(info),
+            },
+          });
+        }
+
         const listElement = before.__elements![elementIndex]!;
         __SetAttribute(listElement, 'update-list-info', info);
         const [componentAtIndex, componentAtIndexes] = componentAtIndexFactory(afterChildNodes, hydrate);
@@ -392,6 +402,10 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
         // The `before` & `after` target to the same list element, so we need to
         // avoid the newly created list's (behind snapshot instance `after`) "update-list-info" being recorded.
         __pendingListUpdates.clear(after.__id);
+
+        if (__PROFILE__) {
+          profileEnd();
+        }
       }
     }
   });

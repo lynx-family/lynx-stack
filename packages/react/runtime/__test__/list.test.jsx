@@ -4099,3 +4099,67 @@ describe('nested list', () => {
     expect(Object.keys(__pendingListUpdates.values).length).toBe(2);
   });
 });
+
+describe('update-list-info profile', () => {
+  const s1 = __SNAPSHOT__(
+    <view>
+      <text>111</text>
+      <list id='list'>{HOLE}</list>
+    </view>,
+  );
+
+  it('flush & hydrate', () => {
+    const b = new SnapshotInstance(s1);
+    b.ensureElements();
+    const root = b.__element_root;
+
+    const s3 = __SNAPSHOT__(
+      <list-item item-key={HOLE}>
+        <text>World</text>
+      </list-item>,
+    );
+
+    const d1 = new SnapshotInstance(s3);
+    const d2 = new SnapshotInstance(s3);
+    const d3 = new SnapshotInstance(s3);
+    b.insertBefore(d1);
+    b.insertBefore(d2);
+    b.insertBefore(d3);
+
+    __pendingListUpdates.flush();
+
+    const bb = new SnapshotInstance(s1);
+    {
+      const d1 = new SnapshotInstance(s3);
+      const d2 = new SnapshotInstance(s3);
+      bb.insertBefore(d1);
+      bb.insertBefore(d2);
+    }
+
+    hydrate(b, bb);
+
+    expect(lynx.performance.profileStart).toHaveBeenCalled();
+    expect(lynx.performance.profileStart.mock.calls).toMatchInlineSnapshot(`
+      [
+        [
+          "ReactLynx::listFlush::updateListInfo",
+          {
+            "args": {
+              "list id": "3",
+              "update list info": "{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a94a8_test_75"},{"position":1,"type":"__Card__:__snapshot_a94a8_test_75"},{"position":2,"type":"__Card__:__snapshot_a94a8_test_75"}],"removeAction":[],"updateAction":[]}",
+            },
+          },
+        ],
+        [
+          "ReactLynx::listHydrate::updateListInfo",
+          {
+            "args": {
+              "list id": "3",
+              "update list info": "{"insertAction":[],"removeAction":[2],"updateAction":[]}",
+            },
+          },
+        ],
+      ]
+    `);
+  });
+});
