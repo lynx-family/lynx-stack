@@ -91,7 +91,7 @@ function updateSpread(
   let match: RegExpMatchArray | null = null;
   for (const key in newValue) {
     const v = newValue[key];
-    if (v !== oldValue[key]) {
+    if (!isDirectOrDeepEqual(v, oldValue[key])) {
       if (key === 'className') {
         __SetClasses(snapshot.__elements[elementIndex]!, v as string);
       } else if (key === 'style') {
