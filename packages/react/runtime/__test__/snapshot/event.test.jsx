@@ -313,7 +313,7 @@ describe('eventUpdate', () => {
     expect(patch).toMatchInlineSnapshot(`
       [
         0,
-        "__Card__:__snapshot_a94a8_test_4",
+        "__snapshot_a94a8_test_4",
         3,
         4,
         3,
@@ -941,7 +941,7 @@ describe('event in spread', () => {
     expect(patch).toMatchInlineSnapshot(`
       [
         0,
-        "__Card__:__snapshot_a94a8_test_10",
+        "__snapshot_a94a8_test_10",
         3,
         4,
         3,
@@ -1160,7 +1160,7 @@ describe('event when firstScreenSyncTiming is jsReady', () => {
                 "-5": -8,
                 "-6": -9,
               },
-              "root": "{"id":-7,"type":"root","children":[{"id":-8,"type":"__Card__:__snapshot_a94a8_test_12","children":[{"id":-9,"type":"__Card__:__snapshot_a94a8_test_11","values":["-9:0:"]}]}]}",
+              "root": "{"id":-7,"type":"root","children":[{"id":-8,"type":"__snapshot_a94a8_test_12","children":[{"id":-9,"type":"__snapshot_a94a8_test_11","values":["-9:0:"]}]}]}",
             },
           ],
         ]
@@ -1269,7 +1269,7 @@ describe('call `root.render()` async', () => {
             "rLynxFirstScreen",
             {
               "jsReadyEventIdSwap": {},
-              "root": "{"id":-1,"type":"root","children":[{"id":-2,"type":"__Card__:__snapshot_a94a8_test_14","children":[{"id":-3,"type":"__Card__:__snapshot_a94a8_test_13","values":["-3:0:"]}]}]}",
+              "root": "{"id":-1,"type":"root","children":[{"id":-2,"type":"__snapshot_a94a8_test_14","children":[{"id":-3,"type":"__snapshot_a94a8_test_13","values":["-3:0:"]}]}]}",
             },
           ],
         ]
