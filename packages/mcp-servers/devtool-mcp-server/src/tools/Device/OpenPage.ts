@@ -20,7 +20,13 @@ export const OpenPage = /*#__PURE__*/ defineTool({
     const connector = context.connector();
 
     const clients = params.clientId
-      ? [connector.usbClients.get(params.clientId)!]
+      ? (() => {
+        const client = connector.usbClients.get(params.clientId);
+        if (!client) {
+          throw new Error(`Lynx client not found for id: ${params.clientId}`);
+        }
+        return [client];
+      })()
       : connector.getAllUsbClients();
 
     if (clients.length === 0) {
