@@ -91,11 +91,13 @@ function updateSpread(
   let match: RegExpMatchArray | null = null;
   for (const key in newValue) {
     const v = newValue[key];
-    if (!isDirectOrDeepEqual(v, oldValue[key])) {
+    if (v !== oldValue[key]) {
       if (key === 'className') {
         __SetClasses(snapshot.__elements[elementIndex]!, v as string);
       } else if (key === 'style') {
-        __SetInlineStyles(snapshot.__elements[elementIndex]!, v as string);
+        if (!isDirectOrDeepEqual(v, oldValue[key])) {
+          __SetInlineStyles(snapshot.__elements[elementIndex]!, v);
+        }
       } else if (key === 'id') {
         __SetID(snapshot.__elements[elementIndex]!, v as string);
       } else if (key.startsWith('data-')) {
