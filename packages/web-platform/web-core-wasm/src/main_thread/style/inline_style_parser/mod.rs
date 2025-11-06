@@ -10,7 +10,7 @@ mod tests {
   use super::*;
   use parse_inline_style::{parse_inline_style, Transformer};
 
-  #[derive(Debug, PartialEq)]
+  #[derive(PartialEq)]
   struct Declaration {
     name_start: usize,
     name_end: usize,
