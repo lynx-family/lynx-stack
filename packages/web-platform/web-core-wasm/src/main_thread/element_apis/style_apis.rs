@@ -28,17 +28,17 @@ impl MainThreadGlobalThis {
     entry_name: Option<String>,
   ) {
     let elements = wasm_bindgen_derive::try_from_js_array::<LynxElement>(elements).unwrap();
-    for element in elements.iter().cloned() {
+    for element in elements.iter() {
       element.set_css_id(css_id);
       if let Some(entry_name) = &entry_name {
         if !entry_name.is_empty() {
-          element.set_attribute(constants::LYNX_ENTRY_NAME_ATTRIBUTE, entry_name);
+          let _ = element.set_attribute(constants::LYNX_ENTRY_NAME_ATTRIBUTE, entry_name);
         }
       }
       if !self.page_config.enable_css_selector {
         let dom = element.get_dom();
         let class_value: Option<String> = dom.get_attribute("class");
-        self.set_classes(&element, class_value);
+        self.set_classes(element, class_value);
       }
     }
   }
