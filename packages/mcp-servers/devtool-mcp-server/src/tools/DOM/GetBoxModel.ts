@@ -6,7 +6,7 @@ import { defineTool } from '../defineTool.ts';
 
 export const GetBoxModel = /*#__PURE__*/ defineTool({
   name: 'DOM_getBoxModel',
-  description: 'Get the document model of a Lynx element.',
+  description: 'Get the box model of a Lynx element.',
   schema: {
     clientId,
     sessionId,
