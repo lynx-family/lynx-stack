@@ -41,9 +41,7 @@ impl MainThreadGlobalThis {
     component_at_index: wasm_bindgen::JsValue,
     enqueue_component: wasm_bindgen::JsValue,
   ) {
-    let mut data = element.data.borrow_mut();
-    data.component_at_index = Some(component_at_index);
-    data.enqueue_component = Some(enqueue_component);
+    element.set_list_callbacks(component_at_index, enqueue_component);
   }
 }
 
@@ -56,9 +54,9 @@ impl MainThreadGlobalThis {
     // make sure the value is an object
     if value.is_object() {
       let list_info: UpdateListInfoValue = serde_wasm_bindgen::from_value(value).unwrap();
-      let element_data = element.data.borrow();
-      let unique_id = JsValue::from(element_data.unique_id);
-      if let Some(component_at_index) = &element_data.component_at_index {
+      let unique_id = element.get_unique_id();
+      let (component_at_index, enqueue_component) = element.get_list_callbacks();
+      if let Some(component_at_index) = component_at_index {
         // check it is a function
         if component_at_index.is_function() {
           // convert it to js_sys::Function
@@ -69,7 +67,7 @@ impl MainThreadGlobalThis {
             let _ = component_at_index.call5(
               &this,
               &element.clone().into(),
-              &unique_id,
+              &JsValue::from(unique_id),
               &position,
               &JsValue::from(0),
               &JsValue::FALSE,
@@ -77,7 +75,7 @@ impl MainThreadGlobalThis {
           }
         }
       }
-      if let Some(enqueue_component) = &element_data.enqueue_component {
+      if let Some(enqueue_component) = enqueue_component {
         // check it is a function
         if enqueue_component.is_function() {
           // convert it to js_sys::Function
@@ -85,7 +83,12 @@ impl MainThreadGlobalThis {
           for remove_action in list_info.remove_actions.iter() {
             let this = JsValue::NULL;
             let position = JsValue::from(remove_action.position);
-            let _ = enqueue_component.call3(&this, &element.clone().into(), &unique_id, &position);
+            let _ = enqueue_component.call3(
+              &this,
+              &element.clone().into(),
+              &JsValue::from(unique_id),
+              &position,
+            );
           }
         }
       }

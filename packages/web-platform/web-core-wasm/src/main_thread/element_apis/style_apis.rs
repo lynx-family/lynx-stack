@@ -9,8 +9,7 @@ use wasm_bindgen::prelude::*;
 impl MainThreadGlobalThis {
   #[wasm_bindgen(js_name = "__GetClasses")]
   pub fn get_classes(&self, element: &LynxElement) -> js_sys::Array {
-    let element_data = element.data.borrow();
-    let dom = element_data.dom_ref.as_ref().unwrap();
+    let dom = element.get_dom();
     let class_list = dom.class_list();
     let array = js_sys::Array::new_with_length(class_list.length());
     for i in 0..class_list.length() {
@@ -30,20 +29,14 @@ impl MainThreadGlobalThis {
   ) {
     let elements = wasm_bindgen_derive::try_from_js_array::<LynxElement>(elements).unwrap();
     for element in elements.iter().cloned() {
-      let mut element_data = element.data.borrow_mut();
-      if element_data.css_id != css_id {
-        element_data.css_id = css_id;
-        let dom = element_data.dom_ref.as_ref().unwrap();
-        let _ = dom.set_attribute(constants::CSS_ID_ATTRIBUTE, css_id.to_string().as_str());
-      }
+      element.set_css_id(css_id);
       if let Some(entry_name) = &entry_name {
         if !entry_name.is_empty() {
-          let dom = element_data.dom_ref.as_ref().unwrap();
-          let _ = dom.set_attribute(constants::LYNX_ENTRY_NAME_ATTRIBUTE, entry_name);
+          element.set_attribute(constants::LYNX_ENTRY_NAME_ATTRIBUTE, entry_name);
         }
       }
       if !self.page_config.enable_css_selector {
-        let dom = element_data.dom_ref.as_ref().unwrap();
+        let dom = element.get_dom();
         let class_value: Option<String> = dom.get_attribute("class");
         self.set_classes(&element, class_value);
       }
@@ -52,14 +45,9 @@ impl MainThreadGlobalThis {
 
   #[wasm_bindgen(js_name = "__SetClasses")]
   pub fn set_classes(&mut self, element: &LynxElement, classname: Option<String>) {
-    let element_data = element.data.borrow();
-    let dom = element_data.dom_ref.as_ref().unwrap();
-    if let Some(classname) = classname {
-      let _ = dom.set_attribute("class", &classname);
-    } else {
-      let _ = dom.remove_attribute("class");
-    }
+    let _ = element.set_or_remove_attribute("class", classname.as_deref());
     if !self.page_config.enable_css_selector {
+      let dom = element.get_dom();
       let class_list: Vec<String> = dom
         .class_list()
         .values()
@@ -67,13 +55,13 @@ impl MainThreadGlobalThis {
         .filter_map(|v| v.ok())
         .filter_map(|v| v.as_string())
         .collect();
-      let css_id = element_data.css_id;
+      let css_id = element.get_css_id();
       let entry_name = if let Some(name) = dom.get_attribute(constants::LYNX_ENTRY_NAME_ATTRIBUTE) {
         name
       } else {
         "".to_string()
       };
-      let unique_id = element_data.unique_id;
+      let unique_id = element.get_unique_id();
       self
         .style_manager
         .update_css_og_style(unique_id, css_id, &entry_name, &class_list);
@@ -103,8 +91,7 @@ impl MainThreadGlobalThis {
     } else {
       panic!("Unsupported key type for inline style key");
     };
-    let element_data = element.data.borrow();
-    let dom = element_data.dom_ref.as_ref().unwrap();
+    let dom = element.get_dom();
     if value.is_null_or_undefined() {
       dom.style().remove_property(&key_str).unwrap();
     } else {
@@ -129,8 +116,7 @@ impl MainThreadGlobalThis {
    * The value could be a map of string/number or null/undefined or a string
    */
   pub fn set_inline_styles(&self, element: &LynxElement, styles: &wasm_bindgen::JsValue) {
-    let element_data = element.data.borrow();
-    let dom = element_data.dom_ref.as_ref().unwrap();
+    let dom = element.get_dom();
     if styles.is_null_or_undefined() {
       dom.remove_attribute("style").unwrap();
     } else if styles.is_string() {
@@ -166,19 +152,7 @@ impl MainThreadGlobalThis {
 
   #[wasm_bindgen(js_name = "__AddClass")]
   pub fn add_class(&self, element: &LynxElement, class_name: &str) {
-    let element_data = element.data.borrow();
-    element_data
-      .dom_ref
-      .as_ref()
-      .unwrap()
-      .class_list()
-      .add_1(class_name)
-      .unwrap();
+    let dom = element.get_dom();
+    dom.class_list().add_1(class_name).unwrap();
   }
-
-  // #[wasm_bindgen(js_name = __SetInlineStyles)]
-  // pub fn set_inline_styles(&self, element: &LynxElement, value: &wasm_bindgen::JsValue) {
-  //     let style = js_helpers::get_property(element.dom_ref.as_ref().unwrap(), "style").unwrap();
-  //     js_helpers::set_property(&style, "cssText", value).unwrap();
-  // }
 }

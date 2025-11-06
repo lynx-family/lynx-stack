@@ -23,13 +23,7 @@ impl MainThreadGlobalThis {
   #[wasm_bindgen(js_name = "__CreateRawText")]
   pub fn create_raw_text(&mut self, text: &str) -> LynxElement {
     let element = LynxElement::new(self, "raw-text", -1, None, None);
-    let _ = element
-      .data
-      .borrow()
-      .dom_ref
-      .as_ref()
-      .unwrap()
-      .set_attribute("text", text);
+    let _ = element.set_attribute("text", text);
     element
   }
 
@@ -50,21 +44,23 @@ impl MainThreadGlobalThis {
 
   #[wasm_bindgen(js_name = "__CreatePage")]
   pub fn create_page(&mut self, component_id: &str, css_id: i32) -> LynxElement {
-    let page: LynxElement = LynxElement::new(self, "page", 0, None, Some(component_id.to_string()));
+    let page: LynxElement = LynxElement::new(
+      self,
+      "page",
+      0,
+      Some(css_id),
+      Some(component_id.to_string()),
+    );
     {
-      let page_data = page.data.borrow();
+      let unique_id = page.get_unique_id();
       self
         .component_id_to_unique_id_map
-        .insert(component_id.to_string(), page_data.unique_id);
-      let dom = page_data.dom_ref.as_ref().unwrap();
-      let _ = dom.set_attribute("part", "page");
-      let _ = dom.set_attribute(constants::CSS_ID_ATTRIBUTE, &css_id.to_string());
-      self.mark_template_element(&page);
+        .insert(component_id.to_string(), unique_id);
       if !self.page_config.default_display_linear {
-        let _ = dom.set_attribute(constants::LYNX_DEFAULT_DISPLAY_LINEAR_ATTRIBUTE, "false");
+        let _ = page.set_attribute(constants::LYNX_DEFAULT_DISPLAY_LINEAR_ATTRIBUTE, "false");
       }
       if self.page_config.default_overflow_visible {
-        let _ = dom.set_attribute(constants::LYNX_DEFAULT_OVERFLOW_VISIBLE_ATTRIBUTE, "true");
+        let _ = page.set_attribute(constants::LYNX_DEFAULT_OVERFLOW_VISIBLE_ATTRIBUTE, "true");
       }
       self.page = Some(page.clone());
     }
@@ -87,7 +83,7 @@ impl MainThreadGlobalThis {
     );
     self
       .component_id_to_unique_id_map
-      .insert(component_id.to_string(), component.data.borrow().unique_id);
+      .insert(component_id.to_string(), component.get_unique_id());
     component
   }
 }

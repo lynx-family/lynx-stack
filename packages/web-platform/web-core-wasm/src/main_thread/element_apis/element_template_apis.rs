@@ -1,6 +1,5 @@
 use super::{LynxElement, MainThreadGlobalThis};
 use crate::constants;
-use serde::Deserialize;
 use std::collections::HashMap;
 use wasm_bindgen::prelude::*;
 
@@ -12,38 +11,24 @@ pub struct ElementTemplateInstance {
 impl MainThreadGlobalThis {
   #[wasm_bindgen(js_name = "__MarkTemplateElement")]
   pub fn mark_template_element(&mut self, element: &LynxElement) {
-    let element_data = element.data.borrow();
-    let unique_id = element_data.unique_id;
-    let dom = element_data.dom_ref.as_ref().unwrap();
-    let _ = dom.set_attribute(
-      constants::LYNX_ELEMENT_TEMPLATE_MARKER_ATTRIBUTE,
-      &unique_id.to_string(),
-    );
+    element.mark_template();
   }
 
   #[wasm_bindgen(js_name = "__MarkPartElement")]
-  pub fn mark_part_element(&self, element: &LynxElement, part_id: Option<String>) {
-    let element_data = &mut element.data.borrow_mut();
-    let dom = element_data.dom_ref.as_ref().unwrap();
-    if let Some(part_id) = &part_id {
-      let _ = dom.set_attribute(constants::LYNX_PART_ID_ATTRIBUTE, part_id);
-    } else {
-      let _ = dom.remove_attribute(constants::LYNX_PART_ID_ATTRIBUTE);
-    }
-    element_data.part_id = part_id;
+  pub fn mark_part_element(&self, element: &mut LynxElement, part_id: Option<String>) {
+    element.mark_part(part_id.as_deref());
   }
 
   #[wasm_bindgen(js_name = "__GetTemplateParts")]
   pub fn get_template_parts(&self, element: &LynxElement) -> js_sys::Object {
     // check if the element is marked as template
-    let element_data = element.data.borrow();
-    let dom = element_data.dom_ref.as_ref().unwrap();
+    let dom = element.get_dom();
     let is_template = dom
       .get_attribute(constants::LYNX_ELEMENT_TEMPLATE_MARKER_ATTRIBUTE)
       .is_some();
     let mut part_id_to_element_map: HashMap<String, LynxElement> = HashMap::new();
     if is_template {
-      let unique_id = element_data.unique_id;
+      let unique_id = element.get_unique_id();
       let part_elements_node_list = dom
         .query_selector_all(&format!(
           "[{}]:not([{}=\"{}\"] [{}] [{}])",
@@ -58,8 +43,7 @@ impl MainThreadGlobalThis {
         let part_element_node: web_sys::HtmlElement =
           part_elements_node_list.item(i).unwrap().dyn_into().unwrap();
         let part_element = self.get_lynx_element_by_dom(&part_element_node).unwrap();
-        let part_element_data = part_element.data.borrow();
-        let part_id = part_element_data.part_id.as_ref().unwrap().clone();
+        let part_id = part_element.get_part_id();
         part_id_to_element_map.insert(part_id, part_element.clone());
       }
     }

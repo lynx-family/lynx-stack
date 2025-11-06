@@ -17,7 +17,6 @@ pub struct MainThreadGlobalThis {
   pub(super) unique_id_counter: i32,
   pub(super) tag_name_to_html_tag_map: HashMap<String, String>,
   pub(super) unique_id_to_element_map: HashMap<i32, Box<LynxElement>>,
-  pub(super) unique_id_to_config_map: HashMap<i32, HashMap<String, String>>,
   pub(super) component_id_to_unique_id_map: HashMap<String, i32>,
   pub(super) timing_flags: Vec<String>,
   pub(super) document: web_sys::Document,
@@ -56,7 +55,6 @@ impl MainThreadGlobalThis {
       template_url,
       unique_id_counter,
       unique_id_to_element_map: HashMap::new(),
-      unique_id_to_config_map: HashMap::new(),
       component_id_to_unique_id_map: HashMap::new(),
       timing_flags: vec![],
       document,
@@ -97,8 +95,7 @@ impl MainThreadGlobalThis {
     let result = self.mts_realm.loadScriptSync(lepus_chunk_url);
     if result.is_err() {
       web_sys::console::error_1(&wasm_bindgen::JsValue::from(format!(
-        "Failed to load lepus chunk from url: {}",
-        lepus_chunk_url
+        "Failed to load lepus chunk from url: {lepus_chunk_url}"
       )));
       return false;
     }
@@ -108,8 +105,8 @@ impl MainThreadGlobalThis {
   #[wasm_bindgen(js_name = "__wasm_GC")]
   pub fn gc(&mut self) {
     self.unique_id_to_element_map.retain(|_, value| {
-      let value = value.data.borrow();
-      value.dom_ref.as_ref().unwrap().is_connected()
+      let dom = value.get_dom();
+      dom.is_connected()
     });
   }
 }

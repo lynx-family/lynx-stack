@@ -1,4 +1,4 @@
-use super::{ConfigValue, LynxElement, MainThreadGlobalThis};
+use super::{LynxElement, MainThreadGlobalThis};
 use crate::constants;
 use serde::Deserialize;
 use wasm_bindgen::prelude::*;
@@ -18,21 +18,12 @@ pub struct ComponentInfoParams {
 impl MainThreadGlobalThis {
   #[wasm_bindgen(js_name = "__GetComponentID")]
   pub fn get_component_id(&self, element: &LynxElement) -> Option<String> {
-    element.data.borrow().component_id.clone()
+    element.get_component_id()
   }
 
   #[wasm_bindgen(js_name = "__GetElementConfig")]
   pub fn get_element_config(&self, element: &LynxElement) -> wasm_bindgen::JsValue {
-    let element_config = &element.data.borrow().component_config;
-    if let Some(config) = element_config {
-      let entries: js_sys::Array = js_sys::Array::from_iter(config.iter().map(|(key, value)| {
-        let value: wasm_bindgen::JsValue = value.as_js_value();
-        js_sys::Array::from_iter(vec![wasm_bindgen::JsValue::from_str(key), value])
-      }));
-      js_sys::Object::from_entries(&entries).unwrap().into()
-    } else {
-      wasm_bindgen::JsValue::UNDEFINED
-    }
+    element.get_component_config_js_object().into()
   }
 
   #[wasm_bindgen(js_name = "__SetConfig")]
@@ -40,68 +31,41 @@ impl MainThreadGlobalThis {
    * key: String
    * value: stringifyed js value
    */
-  pub fn set_config(&self, element: &LynxElement, config: &js_sys::Object) {
-    let mut element_data = element.data.borrow_mut();
+  pub fn set_config(&self, element: &mut LynxElement, config: &js_sys::Object) {
     // convert Object to HashMap<String, String>, we should stringify the values
     // traverse the object properties
-    element_data.component_config.take();
-
-    let new_component_config = js_sys::Object::entries(config)
-      .iter()
-      .map(|entry| {
-        let entry_array: js_sys::Array = entry.into();
-        let key = entry_array.get(0).as_string().unwrap();
-        let value = entry_array.get(1);
-        (key, ConfigValue::new(&value))
-      })
-      .collect();
-    element_data.component_config = Some(new_component_config);
+    element.replace_component_config(config);
   }
 
   #[wasm_bindgen(js_name = "__GetConfig")]
   pub fn get_config(&self, element: &LynxElement) -> js_sys::Object {
-    let element_data = element.data.borrow();
-    if let Some(config) = &element_data.component_config {
-      let entries: js_sys::Array = js_sys::Array::from_iter(config.iter().map(|(key, value)| {
-        let value: wasm_bindgen::JsValue = value.as_js_value();
-        js_sys::Array::from_iter(vec![wasm_bindgen::JsValue::from_str(key), value])
-      }));
-      js_sys::Object::from_entries(&entries).unwrap()
-    } else {
-      js_sys::Object::new()
-    }
+    element.get_component_config_js_object()
   }
 
   #[wasm_bindgen(js_name = "__UpdateComponentID")]
-  pub fn update_component_id(&self, element: &LynxElement, component_id: &str) {
-    let mut element_data = element.data.borrow_mut();
-    element_data.component_id = Some(component_id.to_string());
+  pub fn update_component_id(&self, element: &mut LynxElement, component_id: &str) {
+    element.set_component_id(Some(component_id.to_string()));
   }
 
   #[wasm_bindgen(js_name = "__UpdateComponentInfo")]
   pub fn update_component_info(
     &self,
-    element: &LynxElement,
+    element: &mut LynxElement,
     component_info: wasm_bindgen::JsValue,
   ) {
     let component_info =
       serde_wasm_bindgen::from_value::<ComponentInfoParams>(component_info).unwrap();
-    let mut element_data = element.data.borrow_mut();
-    element_data.component_id = component_info.component_id;
+    element.set_component_id(component_info.component_id);
     if let Some(css_id) = component_info.css_id {
-      if css_id != element_data.css_id {
-        element_data.css_id = css_id;
-        let dom = element_data.dom_ref.as_ref().unwrap();
-        let _ = dom.set_attribute(constants::CSS_ID_ATTRIBUTE, &css_id.to_string());
+      if css_id != element.get_css_id() {
+        element.set_css_id(css_id);
       }
     }
     if let Some(name) = component_info.name {
-      let dom = element_data.dom_ref.as_ref().unwrap();
-      let _ = dom.set_attribute("name", &name);
+      let _ = element.set_or_remove_attribute("name", Some(&name));
     }
     if let Some(entry) = component_info.entry {
-      let dom = element_data.dom_ref.as_ref().unwrap();
-      let _ = dom.set_attribute(constants::LYNX_ENTRY_NAME_ATTRIBUTE, &entry);
+      let _ = element.set_or_remove_attribute(constants::LYNX_ENTRY_NAME_ATTRIBUTE, Some(&entry));
     }
   }
 }
