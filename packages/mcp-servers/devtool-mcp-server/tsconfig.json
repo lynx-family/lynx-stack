@@ -3,7 +3,6 @@
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
     "allowImportingTsExtensions": true,
-    "emitDeclarationOnly": true,
 
     "lib": ["ES2024.Promise"],
 
