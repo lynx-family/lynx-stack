@@ -125,18 +125,6 @@ export function pluginQRCode(
         await main(environments['lynx'], api.context.devServer.port)
       })
 
-      api.modifyRsbuildConfig((config) => {
-        const originalPrintUrl = config.server?.printUrls
-        if (
-          originalPrintUrl === false || typeof originalPrintUrl === 'function'
-        ) {
-          return
-        }
-
-        config.server ??= {}
-        config.server.printUrls = false
-      })
-
       async function main(
         environmentContext: EnvironmentContext | undefined,
         port: number,
