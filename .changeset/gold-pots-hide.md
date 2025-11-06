@@ -2,4 +2,4 @@
 "@lynx-js/rspeedy": minor
 ---
 
-Bump Rsbuild v1.6.0 with Rspack v1.6.0.
+Bump Rsbuild v1.6.2 with Rspack v1.6.1.
