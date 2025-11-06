@@ -4,7 +4,8 @@ use crate::main_thread::mts_global_this::MainThreadGlobalThis;
 
 use super::*;
 use js_sys::Reflect;
-use std::collections::HashMap;
+use std::collections::hash_set::Iter;
+use std::collections::HashSet;
 use std::rc::Weak;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
@@ -69,22 +70,21 @@ use wasm_bindgen::JsCast;
 //  */
 pub struct EventSystem {
   root_node: web_sys::Node,
-  enabled_events: Vec<String>,
+  enabled_events: HashSet<String>,
 }
 
 impl EventSystem {
   pub(crate) fn new(root_node: &web_sys::Node) -> Self {
     EventSystem {
       root_node: root_node.clone(),
-      enabled_events: vec![],
+      enabled_events: HashSet::new(),
     }
   }
 
-  pub(crate) fn get_enabled_events(&self) -> &Vec<String> {
-    &self.enabled_events
+  pub(crate) fn get_enabled_events(&self) -> Iter<'_, String> {
+    self.enabled_events.iter()
   }
 }
-
 // impl<'a> EventSystem<'a> {
 //   pub fn new(root_node: &web_sys::Node, mts_global_this: &'a MainThreadGlobalThis) -> Self {
 //     let common_event_handler = web_sys::EventListener::new();

@@ -70,7 +70,7 @@ function build(release, rustFlags, outName, optimizeArgs, rust_features) {
 
 build(
   true,
-  '-C target_feature=+simd128',
+  '-C target_feature=+bulk-memory,+sign-ext,+simd128,+reference-types,+nontrapping-fptoint,+mutable-globals',
   'standard',
   '--enable-bulk-memory-opt --enable-sign-ext --enable-simd --enable-reference-types --enable-nontrapping-float-to-int --enable-mutable-globals',
 );

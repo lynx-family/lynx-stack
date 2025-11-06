@@ -243,22 +243,21 @@ impl MainThreadGlobalThis {
   }
 
   #[wasm_bindgen(js_name = "__GetAttributes")]
-  pub fn get_attributes(&self, element: &LynxElement) -> js_sys::Object {
+  pub fn get_attributes(&self, element: &LynxElement) -> Vec<js_sys::Array> {
     let dom = element.get_dom();
     let attrs = dom.attributes();
-    let entries = js_sys::Array::new();
+    let mut entries = Vec::new();
     for i in 0..attrs.length() {
       if let Some(attr) = attrs.item(i) {
         let name = attr.name();
         let value = attr.value();
-        let entry = js_sys::Array::from_iter(vec![
-          wasm_bindgen::JsValue::from_str(&name),
-          wasm_bindgen::JsValue::from_str(&value),
-        ]);
-        entries.push(&entry);
+        entries.push(js_sys::Array::of2(
+          &wasm_bindgen::JsValue::from_str(&name),
+          &wasm_bindgen::JsValue::from_str(&value),
+        ));
       }
     }
-    js_sys::Object::from_entries(&entries).unwrap()
+    entries
   }
 
   #[wasm_bindgen(js_name = "__GetID")]

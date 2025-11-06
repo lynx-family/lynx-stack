@@ -53,7 +53,7 @@ impl MainThreadGlobalThis {
         .map(|(k, v)| {
           let key = wasm_bindgen::JsValue::from_str(&k);
           let value = wasm_bindgen::JsValue::from(v);
-          js_sys::Array::from_iter(vec![key, value])
+          js_sys::Array::of2(&key, &value)
         })
         .collect::<js_sys::Array>(),
     )

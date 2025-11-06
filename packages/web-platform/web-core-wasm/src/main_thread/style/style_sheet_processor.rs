@@ -49,7 +49,7 @@ fn generate_css_selector_by_css_id<'a>(
 
 fn generate_selectors_to_buffer<'a>(
   css_content_buffer: &mut Vec<Cow<'a, str>>,
-  selector_strings: &Vec<Vec<Cow<'a, str>>>,
+  selector_strings: &[Vec<Cow<'a, str>>],
   append_children_combinator: bool,
 ) {
   let mut selector_strings_iter = selector_strings.iter().peekable();
@@ -66,7 +66,7 @@ fn generate_selectors_to_buffer<'a>(
 
 fn generate_declarations_to_buffer<'a>(
   css_content_buffer: &mut Vec<Cow<'a, str>>,
-  declarations: &Vec<(&'a str, &'a str)>,
+  declarations: &[(&'a str, &'a str)],
 ) {
   css_content_buffer.push(Cow::Borrowed("{"));
   for (prop, value) in declarations {
@@ -224,7 +224,7 @@ pub fn transform_to_web_style_css_og(
       // Generate CSS rules for children combinators if they exist
       if !children_combinator_rule_declarations.is_empty() {
         // These rules apply to both simple and complex selectors
-        let all_selectors = transformed_simple_selector_strings
+        let all_selectors: Vec<Vec<Cow<'_, str>>> = transformed_simple_selector_strings
           .iter()
           .chain(transformed_complex_selector_strings.iter())
           .cloned()

@@ -69,7 +69,7 @@ impl StyleManager {
     unique_id: i32,
     css_id: i32,
     entry_name: &str,
-    class_names: &Vec<String>,
+    class_names: &[String],
   ) {
     let new_declarations = class_names
       .iter()

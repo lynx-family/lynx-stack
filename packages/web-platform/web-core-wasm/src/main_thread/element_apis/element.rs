@@ -1,18 +1,17 @@
 use super::MainThreadGlobalThis;
 use crate::constants;
-use serde::{Deserialize, Serialize};
 use std::{cell::RefCell, collections::HashMap, fmt::Display, rc::Rc};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_derive::TryFromJsValue;
 
-#[derive(Serialize, Deserialize, Default, PartialEq, Clone)]
+#[derive(Default, PartialEq, Clone)]
 enum ConfigValueType {
   #[default]
   String,
   Object,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Clone)]
 pub struct ConfigValue {
   value_type: ConfigValueType,
   /**
@@ -80,8 +79,9 @@ impl CommonConfigObject {
   fn clone_to_js_object(&self) -> js_sys::Object {
     let entries: js_sys::Array =
       js_sys::Array::from_iter(self.config_map.iter().map(|(key, value)| {
-        let value: wasm_bindgen::JsValue = value.as_js_value();
-        js_sys::Array::from_iter(vec![wasm_bindgen::JsValue::from_str(key), value])
+        let js_value: wasm_bindgen::JsValue = value.as_js_value();
+        let js_key = wasm_bindgen::JsValue::from_str(key);
+        js_sys::Array::of2(&js_key, &js_value)
       }));
     js_sys::Object::from_entries(&entries).unwrap()
   }
@@ -560,14 +560,5 @@ impl LynxElement {
   pub fn get_parent_component_unique_id(&self) -> i32 {
     let element_data = self.data.borrow();
     element_data.parent_component_unique_id
-  }
-
-  pub fn get_registered_event_names(&self) -> Vec<String> {
-    let element_data = self.data.borrow();
-    if let Some(event_handlers_map) = &element_data.event_handlers_map {
-      event_handlers_map.keys().cloned().collect()
-    } else {
-      vec![]
-    }
   }
 }
