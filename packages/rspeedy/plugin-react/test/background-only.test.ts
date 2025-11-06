@@ -2,7 +2,6 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 
 import { describe, expect, test, vi } from 'vitest'
 
@@ -134,35 +133,13 @@ describe('Build background-only', () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
     const rsbuild = await createRspeedy({
+      // eslint-disable-next-line n/no-unsupported-features/node-builtins
+      cwd: import.meta.dirname,
       rspeedyConfig: {
         source: {
-          tsconfigPath: new URL('./tsconfig.json', import.meta.url).pathname,
           entry: {
-            main:
-              new URL('./fixtures/background-only/fail.tsx', import.meta.url)
-                .pathname,
+            main: './fixtures/background-only/fail.tsx',
           },
-        },
-        tools: {
-          swc(config) {
-            delete config.env
-            return config
-          },
-          rspack: {
-            output: {
-              chunkFormat: 'commonjs',
-            },
-            context: path.dirname(fileURLToPath(import.meta.url)),
-            resolve: {
-              extensionAlias: {
-                '.js': ['.ts', '.js'],
-                '.jsx': ['.tsx', '.jsx'],
-              },
-            },
-          },
-        },
-        environments: {
-          lynx: {},
         },
         plugins: [
           pluginReactLynx(),
@@ -183,34 +160,13 @@ describe('Build background-only', () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
     const rsbuild = await createRspeedy({
+      // eslint-disable-next-line n/no-unsupported-features/node-builtins
+      cwd: import.meta.dirname,
       rspeedyConfig: {
         source: {
           entry: {
-            main:
-              new URL('./fixtures/background-only/success.tsx', import.meta.url)
-                .pathname,
+            main: './fixtures/background-only/success.tsx',
           },
-        },
-        tools: {
-          swc(config) {
-            delete config.env
-            return config
-          },
-          rspack: {
-            output: {
-              chunkFormat: 'commonjs',
-            },
-            context: path.dirname(fileURLToPath(import.meta.url)),
-            resolve: {
-              extensionAlias: {
-                '.js': ['.ts', '.js'],
-                '.jsx': ['.tsx', '.jsx'],
-              },
-            },
-          },
-        },
-        environments: {
-          lynx: {},
         },
         plugins: [
           pluginReactLynx(),
