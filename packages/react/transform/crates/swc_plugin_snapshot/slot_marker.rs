@@ -17,7 +17,7 @@ pub static INTERNAL_SLOT_STR: &str = "internal-slot";
 
 pub fn jsx_is_internal_slot(jsx: &JSXElement) -> bool {
   match *jsx_name(jsx.opening.name.clone()) {
-    Expr::Lit(Lit::Str(s)) => s.value.as_ref() == INTERNAL_SLOT_STR,
+    Expr::Lit(Lit::Str(s)) => s.value.to_string_lossy().as_ref() == INTERNAL_SLOT_STR,
     _ => false,
   }
 }
