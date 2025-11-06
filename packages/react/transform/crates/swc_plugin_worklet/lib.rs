@@ -458,7 +458,9 @@ impl WorkletVisitor {
     if !stmts.is_empty() {
       match &mut stmts[0] {
         Stmt::Expr(ExprStmt { expr, span: _ }) => match &mut **expr {
-          Expr::Lit(Lit::Str(str)) => WorkletType::from_directive(str.value.to_string()),
+          Expr::Lit(Lit::Str(str)) => {
+            WorkletType::from_directive(str.value.to_string_lossy().into_owned())
+          }
           _ => None,
         },
         _ => None,

@@ -514,13 +514,20 @@ where
    * Traverse imports, mark whether they come from a specific package
    */
   fn visit_mut_import_decl(&mut self, n: &mut ImportDecl) {
-    if self.opts.components_pkg.contains(&n.src.value.to_string()) {
+    let import_src = n.src.value.to_string_lossy();
+    let import_src_str = import_src.as_ref();
+    if self
+      .opts
+      .components_pkg
+      .iter()
+      .any(|pkg| pkg == import_src_str)
+    {
       if !self.opts.disable_deprecated_warning {
         HANDLER.with(|handler| {
           handler
             .struct_span_warn(
               n.span,
-              format!("DEPRECATED: old package \"{}\" is removed", n.src.value).as_str(),
+              format!("DEPRECATED: old package \"{import_src_str}\" is removed").as_str(),
             )
             .emit()
         });
@@ -529,15 +536,20 @@ where
       self.is_components_pkg = true;
     }
 
-    if self.opts.old_runtime_pkg.contains(&n.src.value.to_string()) {
+    if self
+      .opts
+      .old_runtime_pkg
+      .iter()
+      .any(|pkg| pkg == import_src_str)
+    {
+      let new_runtime_pkg = &self.opts.new_runtime_pkg;
       if !self.opts.disable_deprecated_warning {
         HANDLER.with(|handler| {
           handler
             .struct_span_warn(
               n.span,
               format!(
-                "DEPRECATED: old runtime package \"{}\" is changed to \"{}\"",
-                n.src.value, self.opts.new_runtime_pkg
+                "DEPRECATED: old runtime package \"{import_src_str}\" is changed to \"{new_runtime_pkg}\""
               )
               .as_str(),
             )

@@ -142,6 +142,7 @@ export async function createNativeApp(
     i18nResource,
     reportException: (err: Error, _: unknown) => reportError(err, _, release),
     __SetSourceMapRelease: (err: Error) => release = err.message,
+    __GetSourceMapRelease: (_url: string) => release,
     queryComponent: (source, callback) => {
       if (templateCache.has(source)) {
         callback({ __hasReady: true });

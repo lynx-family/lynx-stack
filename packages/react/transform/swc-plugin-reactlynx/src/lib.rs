@@ -28,8 +28,11 @@ use swc_plugin_inject::{InjectVisitor, InjectVisitorConfig};
 use swc_plugin_list::ListVisitor;
 use swc_plugin_shake::{ShakeVisitor, ShakeVisitorConfig};
 use swc_plugin_snapshot::{JSXTransformer, JSXTransformerConfig};
+use swc_plugin_text::TextVisitor;
 use swc_plugin_worklet::{WorkletVisitor, WorkletVisitorConfig};
-use swc_plugins_shared::{transform_mode::TransformMode, utils::get_relative_path};
+use swc_plugins_shared::{
+  engine_version::is_engine_version_ge, transform_mode::TransformMode, utils::get_relative_path,
+};
 
 #[derive(Deserialize, Debug, Clone, PartialEq)]
 #[serde(rename_all = "camelCase", untagged)]
@@ -49,6 +52,8 @@ pub struct ReactLynxTransformOptions {
   pub css_scope: Either<bool, CSSScopeVisitorConfig>,
 
   pub snapshot: Option<Either<bool, JSXTransformerConfig>>,
+
+  pub engine_version: Option<String>,
 
   pub shake: Either<bool, ShakeVisitorConfig>,
 
@@ -73,6 +78,7 @@ impl Default for ReactLynxTransformOptions {
       mode: Some(TransformMode::Production),
       css_scope: Either::B(Default::default()),
       snapshot: Default::default(),
+      engine_version: None,
       shake: Either::A(false),
       define_dce: Either::A(false),
       directive_dce: Either::A(false),
@@ -209,6 +215,9 @@ pub fn process_transform(program: Program, metadata: TransformPluginProgramMetad
 
   let list_plugin = Optional::new(visit_mut_pass(ListVisitor::new(Some(&comments))), enabled);
 
+  let is_ge_3_1: bool = is_engine_version_ge(&options.engine_version, "3.1");
+  let text_plugin = Optional::new(visit_mut_pass(TextVisitor {}), enabled && is_ge_3_1);
+
   let shake_plugin = match options.shake.clone() {
     Either::A(config) => Optional::new(visit_mut_pass(ShakeVisitor::default()), config),
     Either::B(config) => Optional::new(visit_mut_pass(ShakeVisitor::new(config)), true),
@@ -277,7 +286,7 @@ pub fn process_transform(program: Program, metadata: TransformPluginProgramMetad
     dynamic_import_plugin,
     worklet_plugin,
     css_scope_plugin,
-    (list_plugin, snapshot_plugin),
+    (text_plugin, list_plugin, snapshot_plugin),
     directive_dce_plugin,
     define_dce_plugin,
     simplify_pass_1, // do simplify after DCE above to make shake below works better
@@ -326,6 +335,7 @@ mod tests {
     assert_eq!(options.worklet, Either::A(true));
     assert_eq!(options.dynamic_import, Some(Either::B(Default::default())));
     assert_eq!(options.inject, Some(Either::A(false)));
+    assert_eq!(options.engine_version, None);
   }
 
   #[test]
@@ -481,5 +491,15 @@ mod tests {
     } else {
       panic!("Expected snapshot config, got boolean or None");
     }
+  }
+
+  #[test]
+  fn test_engine_version() {
+    let json_data = r#"
+    {
+      "engineVersion": "3.2"
+    }"#;
+    let options: ReactLynxTransformOptions = serde_json::from_str(json_data).unwrap();
+    assert_eq!(options.engine_version, Some("3.2".to_string()));
   }
 }

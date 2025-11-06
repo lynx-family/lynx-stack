@@ -109,6 +109,8 @@ export class XList extends HTMLElement {
 
     if (!this.#autoScrollOptions.lastTimestamp) {
       this.#autoScrollOptions.lastTimestamp = timestamp;
+      requestAnimationFrame(this.#autoScroll);
+      return;
     }
 
     const scrollContainer = this.#getListContainer();
@@ -118,16 +120,26 @@ export class XList extends HTMLElement {
     scrollContainer.scrollBy({
       left: tickDistance,
       top: tickDistance,
-      behavior: 'smooth',
+      // smooth might cause lag when scrolling.
+      behavior: 'auto',
     });
 
     this.#autoScrollOptions.lastTimestamp = timestamp;
-    if (
-      scrollContainer.scrollTop + scrollContainer.clientHeight
-        >= scrollContainer.scrollHeight && this.#autoScrollOptions.autoStop
-    ) {
-      scrollContainer.scrollTop = scrollContainer.scrollHeight
-        - scrollContainer.clientHeight;
+    const isScrollVertical = (this.getAttribute('scroll-orientation')
+      || 'vertical') === 'vertical';
+    const isContainerScrollable = isScrollVertical
+      ? scrollContainer.scrollTop + scrollContainer.clientHeight
+        >= scrollContainer.scrollHeight
+      : scrollContainer.scrollLeft + scrollContainer.clientWidth
+        >= scrollContainer.scrollWidth;
+    if (isContainerScrollable && this.#autoScrollOptions.autoStop) {
+      if (isScrollVertical) {
+        scrollContainer.scrollTop = scrollContainer.scrollHeight
+          - scrollContainer.clientHeight;
+      } else {
+        scrollContainer.scrollLeft = scrollContainer.scrollWidth
+          - scrollContainer.clientWidth;
+      }
       this.#autoScrollOptions.isScrolling = false;
     } else {
       requestAnimationFrame(this.#autoScroll);
@@ -164,7 +176,20 @@ export class XList extends HTMLElement {
         isScrolling: true,
         autoStop: params.autoStop !== false ? true : false,
       };
-      requestAnimationFrame(this.#autoScroll);
+
+      const scrollContainer = this.#getListContainer();
+      const isScrollVertical = (this.getAttribute('scroll-orientation')
+        || 'vertical') === 'vertical';
+      const isContainerScrollable = isScrollVertical
+        ? scrollContainer.clientHeight <= scrollContainer.scrollHeight
+        : scrollContainer.clientWidth <= scrollContainer.scrollWidth;
+      this.#autoScrollOptions.lastTimestamp = 0;
+      if (isContainerScrollable) {
+        // During the initial render, there might be instances in raq where scrollContainer hasn't fully expanded (rendering hasn't succeeded yet), so use setTimeout.
+        setTimeout(() => requestAnimationFrame(this.#autoScroll), 0);
+      } else {
+        requestAnimationFrame(this.#autoScroll);
+      }
     } else {
       this.#autoScrollOptions.isScrolling = false;
     }

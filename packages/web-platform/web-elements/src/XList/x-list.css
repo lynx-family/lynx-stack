@@ -60,6 +60,8 @@ list-item {
   content-visibility: auto;
   flex: 0 0 auto !important;
   position: static;
+  contain: size;
+  contain-intrinsic-size: auto var(--estimated-main-axis-size-px);
 }
 
 x-list > list-item, x-list > lynx-wrapper > list-item {
@@ -266,5 +268,6 @@ x-list[list-type="waterfall"]::part(lower-threshold-observer) {
 }
 
 x-list[list-type="waterfall"][scroll-orientation="horizontal"]::part(lower-threshold-observer) {
+  bottom: unset;
   right: -999px;
 }

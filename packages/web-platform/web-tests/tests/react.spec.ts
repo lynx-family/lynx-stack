@@ -118,6 +118,17 @@ test.describe('reactlynx3 tests', () => {
       await wait(100);
       await expect(await target.getAttribute('style')).toContain('pink');
     });
+    test('basic-bindtap-detail', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(100);
+      const target = page.locator('#target');
+      await target.click();
+      await wait(100);
+      await expect(await target.getAttribute('style')).toContain('green');
+      await target.click();
+      await wait(100);
+      await expect(await target.getAttribute('style')).toContain('pink');
+    });
     test('basic-event-target-id', async ({ page }, { title }) => {
       await goto(page, title);
       await wait(100);
@@ -3003,6 +3014,16 @@ test.describe('reactlynx3 tests', () => {
         const result = await page.locator('.result').first().innerText();
         expect(result).toBe('foobar-6-6');
       });
+      // input/bindinput test-case start for <input>
+      test('basic-element-input-bindinput', async ({ page }, { title }) => {
+        await goto(page, title);
+        await page.locator('input').press('Enter');
+        await wait(200);
+        await page.locator('input').fill('foobar');
+        await wait(200);
+        const result = await page.locator('.result').first().innerText();
+        expect(result).toBe('foobar-6-6');
+      });
       // input/bindinput test-case end
       test(
         'basic-element-x-input-getValue',
@@ -4509,6 +4530,83 @@ test.describe('reactlynx3 tests', () => {
           await goto(page, title);
           await wait(500);
           await diffScreenShot(page, elementName, title, 'initial');
+        },
+      );
+
+      test(
+        'basic-element-list-estimated-main-axis-size-px',
+        async ({ page, browserName }, { title }) => {
+          let scrolltolower = false;
+          await page.on('console', async (msg) => {
+            const event = await msg.args()[0]?.evaluate((e) => ({
+              type: e.type,
+            }));
+            if (!event) return;
+            if (event.type === 'scrolltolower') {
+              scrolltolower = true;
+            }
+          });
+
+          await goto(page, title);
+          await wait(3000);
+          expect(scrolltolower).toBeTruthy();
+        },
+      );
+      test(
+        'basic-element-list-estimated-main-axis-size-px-waterfall',
+        async ({ page, browserName }, { title }) => {
+          let scrolltolower = false;
+          await page.on('console', async (msg) => {
+            const event = await msg.args()[0]?.evaluate((e) => ({
+              type: e.type,
+            }));
+            if (!event) return;
+            if (event.type === 'scrolltolower') {
+              scrolltolower = true;
+            }
+          });
+
+          await goto(page, title);
+          await wait(5000);
+          expect(scrolltolower).toBeTruthy();
+        },
+      );
+      test(
+        'basic-element-list-horizontal-estimated-main-axis-size-px',
+        async ({ page, browserName }, { title }) => {
+          let scrolltolower = false;
+          await page.on('console', async (msg) => {
+            const event = await msg.args()[0]?.evaluate((e) => ({
+              type: e.type,
+            }));
+            if (!event) return;
+            if (event.type === 'scrolltolower') {
+              scrolltolower = true;
+            }
+          });
+
+          await goto(page, title);
+          await wait(5000);
+          expect(scrolltolower).toBeTruthy();
+        },
+      );
+      test(
+        'basic-element-list-horizontal-estimated-main-axis-size-px-waterfall',
+        async ({ page, browserName }, { title }) => {
+          let scrolltolower = false;
+          await page.on('console', async (msg) => {
+            const event = await msg.args()[0]?.evaluate((e) => ({
+              type: e.type,
+            }));
+            if (!event) return;
+            if (event.type === 'scrolltolower') {
+              scrolltolower = true;
+            }
+          });
+
+          await goto(page, title);
+          await wait(5000);
+          expect(scrolltolower).toBeTruthy();
         },
       );
     });

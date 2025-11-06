@@ -64,7 +64,7 @@ impl DirectiveDCEVisitor {
     if !stmts.is_empty() {
       match &stmts[0] {
         Stmt::Expr(ExprStmt { expr, span }) => match &**expr {
-          Expr::Lit(Lit::Str(str)) => match str.value.to_string().as_str() {
+          Expr::Lit(Lit::Str(str)) => match str.value.to_string_lossy().as_ref() {
             "use js only" | "background only" | "background-only" => {
               (self.opts.target == TransformTarget::LEPUS, Some(*span))
             }

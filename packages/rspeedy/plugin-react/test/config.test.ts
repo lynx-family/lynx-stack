@@ -386,6 +386,7 @@ describe('Config', () => {
         "compat": undefined,
         "defineDCE": undefined,
         "enableRemoveCSSScope": true,
+        "engineVersion": "3.2",
         "inlineSourcesContent": true,
         "isDynamicComponent": false,
       }
@@ -412,6 +413,7 @@ describe('Config', () => {
         "compat": undefined,
         "defineDCE": undefined,
         "enableRemoveCSSScope": undefined,
+        "engineVersion": "3.2",
         "inlineSourcesContent": true,
         "isDynamicComponent": false,
       }
@@ -2796,6 +2798,28 @@ describe('MPA Config', () => {
         ".rspeedy/foo/main-thread.js",
         ".rspeedy/bar/main-thread.js",
         ".rspeedy/baz/main-thread.js",
+      ]
+    `)
+  })
+
+  test('default value of resolve.dedupe', async () => {
+    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+    const rspeedy = await createRspeedy({
+      rspeedyConfig: {
+        plugins: [
+          pluginReactLynx(),
+          pluginStubRspeedyAPI(),
+        ],
+      },
+    })
+
+    await rspeedy.initConfigs()
+    const rsbuildConfig = rspeedy.getNormalizedConfig()
+
+    expect(rsbuildConfig.resolve?.dedupe).toMatchInlineSnapshot(`
+      [
+        "react-compiler-runtime",
       ]
     `)
   })

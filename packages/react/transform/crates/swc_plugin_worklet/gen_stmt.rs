@@ -4,6 +4,7 @@ use crate::worklet_type::WorkletType;
 use crate::TransformMode;
 use std::collections::HashSet;
 use std::vec;
+use swc_core::atoms as swc_atoms;
 use swc_core::common::DUMMY_SP;
 use swc_core::ecma::ast::*;
 use swc_core::{quote, quote_expr};

@@ -18,6 +18,8 @@ const otherPropertyNames = [
   'touches',
   'targetTouches',
   'changedTouches',
+  'x',
+  'y',
 ];
 const blockList = new Set([
   'isTrusted',

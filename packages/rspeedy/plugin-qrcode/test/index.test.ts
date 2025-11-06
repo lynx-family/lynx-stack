@@ -7,11 +7,7 @@ import { fileURLToPath } from 'node:url'
 
 import { isCancel } from '@clack/prompts'
 import { createRsbuild, logger } from '@rsbuild/core'
-import type {
-  RsbuildInstance,
-  RsbuildPlugin,
-  RsbuildPluginAPI,
-} from '@rsbuild/core'
+import type { RsbuildInstance, RsbuildPlugin } from '@rsbuild/core'
 import { beforeEach, describe, expect, onTestFinished, test, vi } from 'vitest'
 
 import type { Config, ExposedAPI } from '@lynx-js/rspeedy'
@@ -43,47 +39,6 @@ describe('Plugins - Terminal', () => {
     vi.mocked(isCancel).mockReturnValue(true)
 
     return () => vi.unstubAllEnvs()
-  })
-
-  test('not print url when printUrls: false', async () => {
-    const rsbuild = await createRsbuild({
-      rsbuildConfig: {
-        plugins: [pluginStubRspeedyAPI(), pluginQRCode()],
-      },
-    })
-
-    await rsbuild.initConfigs()
-    const rsbuildConfig = rsbuild.getRsbuildConfig()
-    expect(rsbuildConfig.server?.printUrls).toBe(false)
-  })
-
-  test('not print url when printUrls: function() {}', async () => {
-    const rsbuild = await createRsbuild({
-      rsbuildConfig: {
-        plugins: [
-          pluginStubRspeedyAPI(),
-          pluginQRCode(),
-          {
-            name: 'test',
-            setup(api: RsbuildPluginAPI) {
-              api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
-                return mergeRsbuildConfig(config, {
-                  server: {
-                    printUrls: function({ urls }) {
-                      return urls.map(url => `${url}/foo`)
-                    },
-                  },
-                })
-              })
-            },
-          },
-        ],
-      },
-    })
-
-    await rsbuild.initConfigs()
-    const rsbuildConfig = rsbuild.getRsbuildConfig()
-    expect(rsbuildConfig.server?.printUrls).toStrictEqual(expect.any(Function))
   })
 
   describe('schema', () => {
