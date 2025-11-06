@@ -5,35 +5,6 @@ use std::collections::HashMap;
 // use wasm_bindgen::prelude::*;
 // use crate::main_thread::element::{ConfigValue, LynxElement};
 
-/**
- * Lynx Event Types passed from __AddEvent
- */
-#[derive(Deserialize, Serialize)]
-pub(crate) enum LynxEventType {
-  /**
-   * bubble phase event
-   */
-  BindEvent,
-  /**
-   * bubble phase and stop propagation event
-   */
-  CatchEvent,
-  /**
-   * capture phase event
-   */
-  CaptureBind,
-  /**
-   * capture phase and stop propagation event
-   */
-  CaptureCatch,
-}
-#[derive(Deserialize, Serialize)]
-pub(crate) struct LynxCrossThreadEventRegistration {
-  pub event_type: LynxEventType,
-  pub event_name: String,
-  pub event_value: String,
-}
-
 // #[derive(Serialize, Deserialize)]
 // #[serde(rename_all = "camelCase")]
 // pub struct ListItemEventItem {

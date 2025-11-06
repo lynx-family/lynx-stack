@@ -1,4 +1,5 @@
 use super::{
+  event::EventSystem,
   main_thread_manager::JSRealm,
   style::StyleManager,
   LynxElement, // event::event_delegation::EventSystem,
@@ -25,6 +26,7 @@ pub struct MainThreadGlobalThis {
   pub(super) page_config: template::PageConfig,
   pub(super) page: Option<LynxElement>,
   pub(super) style_manager: StyleManager,
+  pub(super) event_system: EventSystem,
   mts_realm: JSRealm,
   template_url: String,
 }
@@ -59,6 +61,7 @@ impl MainThreadGlobalThis {
       timing_flags: vec![],
       document,
       style_manager,
+      event_system: EventSystem::new(&root_node),
       tag_name_to_html_tag_map,
       exposure_changed_elements: vec![],
       page: None,

@@ -14,55 +14,6 @@ use wasm_bindgen::JsCast;
 //   is_capture: bool,
 // }
 
-// struct LynxEventStorage {
-//   /**
-//    * for cross thread event handler, it is a string id
-//    * There is only one bind handler and one catch handler for one event type on one element
-//    */
-//   cross_thread_handler_bind: Option<String>,
-//   is_cross_thread_bind_stop_propagation: bool,
-//   cross_thread_handler_capture: Option<String>,
-//   is_cross_thread_capture_stop_propagation: bool,
-
-//   /**
-//    * for mts runWorklet() event handler, the value is stored here
-//    * there is also only one bind handler and one catch handler for one event type on one element
-//    */
-//   mts_run_worklet_value_bind: Option<wasm_bindgen::JsValue>,
-//   is_mts_run_worklet_bind_stop_propagation: bool,
-//   mts_run_worklet_value_capture: Option<wasm_bindgen::JsValue>,
-//   is_mts_run_worklet_capture_stop_propagation: bool,
-
-//   /**
-//    * we can have multiple mts function handlers for one event type on one element
-//    */
-//   mts_function_handler: Vec<MTSFunctionEventHandler>,
-// }
-
-// impl LynxEventStorage {
-//   pub fn new() -> Self {
-//     LynxEventStorage {
-//       cross_thread_handler_bind: None,
-//       is_cross_thread_bind_stop_propagation: false,
-//       cross_thread_handler_capture: None,
-//       is_cross_thread_capture_stop_propagation: false,
-//       mts_run_worklet_value_bind: None,
-//       is_mts_run_worklet_bind_stop_propagation: false,
-//       mts_run_worklet_value_capture: None,
-//       is_mts_run_worklet_capture_stop_propagation: false,
-//       mts_function_handler: vec![],
-//     }
-//   }
-
-//   pub fn is_empty(&self) -> bool {
-//     self.cross_thread_handler_bind.is_none()
-//       && self.cross_thread_handler_capture.is_none()
-//       && self.mts_run_worklet_value_bind.is_none()
-//       && self.mts_run_worklet_value_capture.is_none()
-//       && self.mts_function_handler.is_empty()
-//   }
-// }
-
 // /**
 //  * Event delegation system for handling events in the web platform.
 //  * This module provides functionalities to delegate events efficiently.
@@ -116,16 +67,23 @@ use wasm_bindgen::JsCast;
 //  * 3. Generation 2 apis could not remove the "worklet handler" added by Generation 1 apis.
 //  *
 //  */
-// pub struct EventSystem<'a> {
-//   root_node: web_sys::Node,
-//   mts_global_this: &'a MainThreadGlobalThis,
-//   /**
-//    * event_name -> element_id -> LynxEventStorage
-//    */
-//   handler_storage: HashMap<String, HashMap<i32, LynxEventStorage>>,
-//   common_event_handler: web_sys::EventListener,
-//   common_event_options: web_sys::AddEventListenerOptions,
-// }
+pub struct EventSystem {
+  root_node: web_sys::Node,
+  enabled_events: Vec<String>,
+}
+
+impl EventSystem {
+  pub(crate) fn new(root_node: &web_sys::Node) -> Self {
+    EventSystem {
+      root_node: root_node.clone(),
+      enabled_events: vec![],
+    }
+  }
+
+  pub(crate) fn get_enabled_events(&self) -> &Vec<String> {
+    &self.enabled_events
+  }
+}
 
 // impl<'a> EventSystem<'a> {
 //   pub fn new(root_node: &web_sys::Node, mts_global_this: &'a MainThreadGlobalThis) -> Self {

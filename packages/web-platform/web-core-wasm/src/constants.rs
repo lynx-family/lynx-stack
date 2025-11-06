@@ -19,6 +19,10 @@ pub const LYNX_DEFAULT_OVERFLOW_VISIBLE_ATTRIBUTE: &str = "lynx-default-overflow
 pub const LYNX_TIMING_FLAG: &str = "__lynx_timing_flag";
 pub const LYNX_DISPOSED_PROPERTY_NAME: &str = "__lynx_disposed";
 
+thread_local! {
+  pub static NOOP_JS_FUNCTION: js_sys::Function = js_sys::Function::new_no_args("");
+}
+
 lazy_static! {
   pub static ref EXPOSURE_RELATED_ATTRIBUTES: HashSet<&'static str> = {
     vec![

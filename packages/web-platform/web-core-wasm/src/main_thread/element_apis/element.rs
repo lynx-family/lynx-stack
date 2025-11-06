@@ -31,10 +31,7 @@ impl ConfigValue {
     } else {
       ConfigValue {
         value_type: ConfigValueType::Object,
-        value: js_sys::JSON::stringify(&value)
-          .unwrap()
-          .as_string()
-          .unwrap(),
+        value: js_sys::JSON::stringify(value).unwrap().as_string().unwrap(),
       }
     }
   }
@@ -68,7 +65,7 @@ struct CommonConfigObject {
 
 impl CommonConfigObject {
   fn new(new_map: &js_sys::Object) -> Self {
-    let config_map: HashMap<String, ConfigValue> = js_sys::Object::entries(&new_map)
+    let config_map: HashMap<String, ConfigValue> = js_sys::Object::entries(new_map)
       .iter()
       .map(|entry| {
         let entry_array: js_sys::Array = entry.into();
@@ -90,6 +87,16 @@ impl CommonConfigObject {
   }
 }
 
+#[derive(Default, Clone)]
+struct EventHandler {
+  /* bind capture-bind catch capture-catch */
+  framework_cross_thread_identifier: HashMap<String, String>,
+  /* bind capture-bind catch capture-catch */
+  framework_run_worklet_identifier: HashMap<String, wasm_bindgen::JsValue>,
+  /* bind capture-bind catch capture-catch */
+  event_type_to_handlers: HashMap<String, Vec<js_sys::Function>>,
+}
+
 pub struct LynxElementData {
   unique_id: i32,
   css_id: i32,
@@ -103,6 +110,7 @@ pub struct LynxElementData {
   component_at_index: Option<JsValue>,
   enqueue_component: Option<JsValue>,
   dom_ref: Option<web_sys::HtmlElement>,
+  event_handlers_map: Option<HashMap<String, EventHandler>>,
 }
 
 #[derive(Clone, TryFromJsValue)]
@@ -180,6 +188,7 @@ impl LynxElement {
           component_config: None,
           component_at_index: None,
           enqueue_component: None,
+          event_handlers_map: None,
           dom_ref: Some(dom),
         }
         .into(),
@@ -374,6 +383,7 @@ impl LynxElement {
       component_config: data.component_config.clone(),
       component_at_index: data.component_at_index.clone(),
       enqueue_component: data.enqueue_component.clone(),
+      event_handlers_map: data.event_handlers_map.clone(),
       dom_ref: Some(dom),
     };
     LynxElement {
@@ -426,24 +436,138 @@ impl LynxElement {
     element_data.part_id.clone().unwrap_or_default()
   }
 
-  pub fn get_dom(&self) -> web_sys::HtmlElement {
+  pub(crate) fn get_dom(&self) -> web_sys::HtmlElement {
     let element_data = self.data.borrow();
     element_data.dom_ref.clone().unwrap()
   }
 
-  pub fn set_id(&self, id: Option<String>) {
+  pub(crate) fn set_id(&self, id: Option<String>) {
     let mut element_data = self.data.borrow_mut();
     element_data.id = id;
     let _ = self.set_or_remove_attribute("id", element_data.id.as_deref());
   }
 
-  pub fn get_id(&self) -> Option<String> {
+  pub(crate) fn get_id(&self) -> Option<String> {
     let element_data = self.data.borrow();
     element_data.id.clone()
   }
 
-  pub fn get_tag(&self) -> String {
+  pub(crate) fn get_tag(&self) -> String {
     let element_data = self.data.borrow();
     element_data.tag.clone()
+  }
+
+  pub(crate) fn get_framework_cross_thread_event_handler(
+    &self,
+    event_name: &str,
+    event_type: &str,
+  ) -> Option<String> {
+    let element_data = self.data.borrow();
+    let event_handlers_map = element_data.event_handlers_map.as_ref()?;
+    let event_handler_store = event_handlers_map.get(event_name)?;
+    event_handler_store
+      .framework_cross_thread_identifier
+      .get(event_type)
+      .cloned()
+  }
+
+  pub(crate) fn replace_framework_cross_thread_event_handler(
+    &self,
+    event_name: String,
+    event_type: String,
+    identifier: Option<String>,
+  ) {
+    let mut element_data = self.data.borrow_mut();
+    let event_handlers_map = element_data.event_handlers_map.get_or_insert_default();
+    let event_handler_store = event_handlers_map.entry(event_name).or_default();
+    if let Some(identifier) = identifier {
+      event_handler_store
+        .framework_cross_thread_identifier
+        .insert(event_type, identifier);
+    } else {
+      event_handler_store
+        .framework_cross_thread_identifier
+        .remove(&event_type);
+    }
+  }
+
+  pub(crate) fn get_framework_run_worklet_event_handler(
+    &self,
+    event_name: &str,
+    event_type: &str,
+  ) -> Option<wasm_bindgen::JsValue> {
+    let element_data = self.data.borrow();
+    let event_handlers_map = element_data.event_handlers_map.as_ref()?;
+    let event_handler_store = event_handlers_map.get(event_name)?;
+    event_handler_store
+      .framework_run_worklet_identifier
+      .get(event_type)
+      .cloned()
+  }
+
+  pub(crate) fn replace_framework_run_worklet_event_handler(
+    &self,
+    event_name: String,
+    event_type: String,
+    mts_event_identifier: Option<wasm_bindgen::JsValue>,
+  ) {
+    let mut element_data = self.data.borrow_mut();
+    let event_handlers_map = element_data.event_handlers_map.get_or_insert_default();
+    let event_handler_store = event_handlers_map.entry(event_name).or_default();
+    if let Some(identifier) = mts_event_identifier {
+      event_handler_store
+        .framework_run_worklet_identifier
+        .insert(event_type, identifier);
+    } else {
+      event_handler_store
+        .framework_run_worklet_identifier
+        .remove(&event_type);
+    }
+  }
+
+  pub fn add_event_listener_with_js_function(
+    &self,
+    event_name: String,
+    event_type: String,
+    js_function: js_sys::Function,
+  ) {
+    let mut element_data = self.data.borrow_mut();
+    let event_handlers_map = element_data.event_handlers_map.get_or_insert_default();
+    let event_handler_store = event_handlers_map.entry(event_name).or_default();
+    event_handler_store
+      .event_type_to_handlers
+      .entry(event_type)
+      .or_default()
+      .push(js_function);
+  }
+
+  pub fn remove_js_function_event_listener(
+    &self,
+    event_name: String,
+    event_type: &str,
+    js_function: js_sys::Function,
+  ) {
+    let mut element_data = self.data.borrow_mut();
+    let event_handlers_map = element_data.event_handlers_map.get_or_insert_default();
+    let event_handler_store = event_handlers_map.entry(event_name).or_default();
+    event_handler_store
+      .event_type_to_handlers
+      .entry(event_type.to_string())
+      .or_default()
+      .retain(|f| !f.loose_eq(&js_function));
+  }
+
+  pub fn get_parent_component_unique_id(&self) -> i32 {
+    let element_data = self.data.borrow();
+    element_data.parent_component_unique_id
+  }
+
+  pub fn get_registered_event_names(&self) -> Vec<String> {
+    let element_data = self.data.borrow();
+    if let Some(event_handlers_map) = &element_data.event_handlers_map {
+      event_handlers_map.keys().cloned().collect()
+    } else {
+      vec![]
+    }
   }
 }

@@ -1,7 +1,12 @@
-use crate::main_thread::{LynxCrossThreadEventRegistration, LynxElement, MainThreadGlobalThis};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+#[derive(Deserialize, Serialize)]
+pub(crate) struct LynxCrossThreadEventRegistration {
+  pub event_type: String,
+  pub event_name: String,
+  pub event_value: String,
+}
 #[derive(Deserialize)]
 #[cfg_attr(feature = "encode", derive(Serialize))]
 pub struct ElementTemplate {
