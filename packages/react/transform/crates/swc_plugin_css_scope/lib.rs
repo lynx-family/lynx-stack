@@ -149,7 +149,8 @@ where
       }
       // Is sideEffects import or force scoped
 
-      if re.is_match(import_decl.src.value.to_string().as_str()) {
+      let src_value = import_decl.src.value.to_string_lossy();
+      if re.is_match(src_value.as_ref()) {
         // Is CSS files
         //
         // Add cssId to the import
@@ -157,7 +158,7 @@ where
           span: import_decl.src.span,
           raw: None,
           // TODO(wangqingyu): deal with src that already have query(`?`)
-          value: format!("{}?cssId={}", import_decl.src.value, self.css_id).into(),
+          value: format!("{}?cssId={}", src_value.as_ref(), self.css_id).into(),
         });
         has_css_import = true;
       }

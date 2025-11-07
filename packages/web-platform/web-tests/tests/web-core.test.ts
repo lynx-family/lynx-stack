@@ -690,4 +690,27 @@ test.describe('web core tests', () => {
     await wait(500);
     expect(height).toBe('100px');
   });
+  test('source-map-release', async ({ page, browserName }) => {
+    // firefox not support
+    test.skip(browserName === 'firefox');
+    await goto(page);
+    const mainWorker = await getMainThreadWorker(page);
+    await mainWorker.evaluate(() => {
+      globalThis.runtime.renderPage = () => {};
+    });
+    const backWorker = await getBackgroundThreadWorker(page);
+    const isSuccess = await backWorker.evaluate(() => {
+      return new Promise(resolve => {
+        globalThis.runtime.lynx.getNativeApp().__SetSourceMapRelease({
+          message: 'd73160119ef7e77776246caca2a7b98e',
+        });
+        resolve(
+          globalThis.runtime.lynx.getNativeApp().__GetSourceMapRelease()
+            === 'd73160119ef7e77776246caca2a7b98e',
+        );
+      });
+    });
+    await wait(1000);
+    expect(isSuccess).toBeTruthy();
+  });
 });
