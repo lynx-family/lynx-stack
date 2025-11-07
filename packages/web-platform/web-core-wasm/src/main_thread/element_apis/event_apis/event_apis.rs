@@ -1,3 +1,7 @@
+use std::collections::hash_set::Iter;
+
+use crate::constants;
+
 use super::{LynxElement, MainThreadGlobalThis};
 use wasm_bindgen::prelude::*;
 
@@ -63,7 +67,7 @@ impl MainThreadGlobalThis {
     let mut event_infos: Vec<EventInfo> = vec![];
     let event_types = vec!["bind", "capture-bind", "catch", "capture-catch"];
     for event_type in event_types {
-      for event_name in self.event_system.get_enabled_events() {
+      for event_name in self.get_enabled_events() {
         if let Some(event_handlers) =
           element.get_framework_cross_thread_event_handler(event_name, event_type)
         {
@@ -97,5 +101,37 @@ impl MainThreadGlobalThis {
         event.event_handler,
       );
     }
+  }
+}
+
+/**
+ * Event delegation system for handling events in the web platform.
+ * This module provides functionalities to delegate events efficiently.
+ * It helps in managing event listeners and propagating events
+ * through the DOM tree.
+ *
+ * This event system is designed to work with the Lynx web platform,
+ * allowing for optimized event handling and improved performance.
+ * It includes features such as event bubbling, capturing.
+ *
+ * The exposure events are also managed in this module.
+ *
+ *
+ */
+impl MainThreadGlobalThis {
+  fn get_enabled_events(&self) -> Iter<'_, String> {
+    self.enabled_events.iter()
+  }
+
+  fn common_event_handler(&self, event: &web_sys::Event) {
+    let event_name = event.type_();
+    let event_name = if let Some(mapped_name) =
+      constants::WEB_EVENT_NAME_TO_LYNX_MAPPING.get(&event_name as &str)
+    {
+      mapped_name.to_string()
+    } else {
+      event_name
+    };
+    if self.enabled_events.contains(&event_name) {}
   }
 }

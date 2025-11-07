@@ -1,5 +1,4 @@
 use super::{
-  event::EventSystem,
   main_thread_manager::JSRealm,
   style::StyleManager,
   LynxElement, // event::event_delegation::EventSystem,
@@ -10,7 +9,11 @@ use crate::{
   template::{self, ElementTemplate, FlattenedStyleInfo},
   TEMPLATE_MANAGER,
 };
-use std::{collections::HashMap, rc::Rc, vec};
+use std::{
+  collections::{HashMap, HashSet},
+  rc::{Rc, Weak},
+  vec,
+};
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -26,7 +29,7 @@ pub struct MainThreadGlobalThis {
   pub(super) page_config: template::PageConfig,
   pub(super) page: Option<LynxElement>,
   pub(super) style_manager: StyleManager,
-  pub(super) event_system: EventSystem,
+  pub(super) enabled_events: HashSet<String>,
   mts_realm: JSRealm,
   template_url: String,
 }
@@ -58,10 +61,10 @@ impl MainThreadGlobalThis {
       unique_id_counter,
       unique_id_to_element_map: HashMap::new(),
       component_id_to_unique_id_map: HashMap::new(),
+      enabled_events: HashSet::new(),
       timing_flags: vec![],
       document,
       style_manager,
-      event_system: EventSystem::new(&root_node),
       tag_name_to_html_tag_map,
       exposure_changed_elements: vec![],
       page: None,

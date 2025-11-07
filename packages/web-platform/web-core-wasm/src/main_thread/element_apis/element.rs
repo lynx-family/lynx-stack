@@ -1,18 +1,19 @@
 use super::MainThreadGlobalThis;
 use crate::constants;
+use serde::{Deserialize, Serialize};
 use std::{cell::RefCell, collections::HashMap, fmt::Display, rc::Rc};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_derive::TryFromJsValue;
 
-#[derive(Default, PartialEq, Clone)]
+#[derive(Default, PartialEq, Clone, Serialize, Deserialize)]
 enum ConfigValueType {
   #[default]
   String,
   Object,
 }
 
-#[derive(Clone)]
-pub struct ConfigValue {
+#[derive(Clone, Serialize, Deserialize)]
+struct ConfigValue {
   value_type: ConfigValueType,
   /**
    * if it is not a String value we
@@ -57,9 +58,11 @@ impl Display for ConfigValue {
 /**
  * designed for store the one level Record<String, ConfigValue> in js
  */
-#[derive(Clone, Default)]
-struct CommonConfigObject {
+#[derive(Clone, Default, Serialize, Deserialize)]
+pub(crate) struct CommonConfigObject {
   config_map: HashMap<String, ConfigValue>,
+  #[serde(skip)]
+  js_object_cache: RefCell<Option<js_sys::Object>>,
 }
 
 impl CommonConfigObject {
@@ -73,17 +76,26 @@ impl CommonConfigObject {
         (key, ConfigValue::new(&value))
       })
       .collect();
-    CommonConfigObject { config_map }
+    CommonConfigObject {
+      config_map,
+      js_object_cache: RefCell::new(None),
+    }
   }
 
-  fn clone_to_js_object(&self) -> js_sys::Object {
-    let entries: js_sys::Array =
-      js_sys::Array::from_iter(self.config_map.iter().map(|(key, value)| {
-        let js_value: wasm_bindgen::JsValue = value.as_js_value();
-        let js_key = wasm_bindgen::JsValue::from_str(key);
-        js_sys::Array::of2(&js_key, &js_value)
-      }));
-    js_sys::Object::from_entries(&entries).unwrap()
+  pub(crate) fn clone_to_js_object(&self) -> js_sys::Object {
+    if let Some(cached_obj) = &*self.js_object_cache.borrow() {
+      cached_obj.clone()
+    } else {
+      let entries: js_sys::Array =
+        js_sys::Array::from_iter(self.config_map.iter().map(|(key, value)| {
+          let js_value: wasm_bindgen::JsValue = value.as_js_value();
+          let js_key = wasm_bindgen::JsValue::from_str(key);
+          js_sys::Array::of2(&js_key, &js_value)
+        }));
+      let ret = js_sys::Object::from_entries(&entries).unwrap();
+      *self.js_object_cache.borrow_mut() = Some(ret.clone());
+      ret
+    }
   }
 }
 
@@ -278,6 +290,15 @@ impl LynxElement {
     wasm_bindgen::JsValue::UNDEFINED
   }
 
+  pub(crate) fn get_dataset_clone(&self) -> CommonConfigObject {
+    let element_data = self.data.borrow();
+    if let Some(dataset) = &element_data.dataset {
+      dataset.clone()
+    } else {
+      CommonConfigObject::default()
+    }
+  }
+
   fn update_dataset_impl(
     &self,
     new_dataset: impl Iterator<Item = (String, wasm_bindgen::JsValue)>,
@@ -329,9 +350,7 @@ impl LynxElement {
       }
     } else {
       if element_data.component_config.is_none() {
-        element_data.component_config = Some(CommonConfigObject {
-          config_map: HashMap::new(),
-        });
+        element_data.component_config = Some(CommonConfigObject::default());
       }
       if let Some(config) = &mut element_data.component_config {
         let value = ConfigValue::new(value);
