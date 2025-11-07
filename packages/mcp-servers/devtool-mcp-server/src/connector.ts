@@ -8,7 +8,6 @@ import {
 } from '@lynx-js/debug-router-connector';
 import createDebug from 'debug';
 import EventEmitter from 'node:events';
-import { setTimeout } from 'node:timers/promises';
 
 const debug = createDebug('lynx-devtool-mcp:cdp');
 
@@ -470,6 +469,11 @@ export async function ensureLynxConnected(): Promise<DebugRouterConnector> {
       },
     });
     await connector.startWSServer();
+
+    connector.on('device-connected', (device) => {
+      device.startWatchClient();
+    });
+
     connector.on('client-connected', async client => {
       const devtoolEnabled = await connector?.getGlobalSwitch(
         client.clientId(),
@@ -495,8 +499,16 @@ export async function ensureLynxConnected(): Promise<DebugRouterConnector> {
     devices.forEach((device) => {
       device.startWatchClient();
     });
-    await setTimeout(1000);
+  } else {
+    for (const device of connector.devices.values()) {
+      device.startWatchClient();
+    }
   }
 
   return connector;
+}
+
+export async function reconnect(): Promise<void> {
+  connector = null;
+  await ensureLynxConnected();
 }

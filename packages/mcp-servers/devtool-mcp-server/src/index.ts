@@ -19,6 +19,7 @@ import { ListClients } from './tools/Device/ListClients.ts';
 import { ListDevices } from './tools/Device/ListDevices.ts';
 import { ListSessions } from './tools/Device/ListSessions.ts';
 import { OpenPage } from './tools/Device/OpenPage.ts';
+import { Reconnect } from './tools/Device/Reconnect.ts';
 import { GetAttributes } from './tools/DOM/GetAttributes.ts';
 import { GetBoxModel } from './tools/DOM/GetBoxModel.ts';
 import { GetDocument } from './tools/DOM/GetDocument.ts';
@@ -55,6 +56,7 @@ const TOOLS = [
   ListDevices,
   ListSessions,
   OpenPage,
+  Reconnect,
 
   // DOM
   GetAttributes,
