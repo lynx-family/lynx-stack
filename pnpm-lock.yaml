@@ -315,6 +315,40 @@ importers:
         specifier: ^3.25.76
         version: 3.25.76
 
+  packages/mcp-servers/docs-mcp-server:
+    dependencies:
+      '@modelcontextprotocol/sdk':
+        specifier: ^1.20.0
+        version: 1.20.0
+      commander:
+        specifier: ^13.1.0
+        version: 13.1.0
+      debug:
+        specifier: ^4.4.3
+        version: 4.4.3
+      empathic:
+        specifier: ^2.0.0
+        version: 2.0.0
+      mdast-util-from-markdown:
+        specifier: ^2.0.2
+        version: 2.0.2
+      mdast-util-to-markdown:
+        specifier: ^2.1.2
+        version: 2.1.2
+      undici:
+        specifier: ^6.22.0
+        version: 6.22.0
+    devDependencies:
+      '@types/debug':
+        specifier: ^4.1.12
+        version: 4.1.12
+      '@types/mdast':
+        specifier: ^4.0.4
+        version: 4.0.4
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
   packages/react:
     dependencies:
       preact:
@@ -8848,6 +8882,10 @@ packages:
 
   undici-types@7.13.0:
     resolution: {integrity: sha512-Ov2Rr9Sx+fRgagJ5AX0qvItZG/JKKoBRAVITs1zk7IqZGTJUwgUr7qoYBpWwakpWilTZFM98rG/AFRocu10iIQ==}
+
+  undici@6.22.0:
+    resolution: {integrity: sha512-hU/10obOIu62MGYjdskASR3CUAiYaFTtC9Pa6vHyf//mAipSvSQg6od2CnJswq7fvzNS3zJhxoRkgNVaHurWKw==}
+    engines: {node: '>=18.17'}
 
   unhead@2.0.17:
     resolution: {integrity: sha512-xX3PCtxaE80khRZobyWCVxeFF88/Tg9eJDcJWY9us727nsTC7C449B8BUfVBmiF2+3LjPcmqeoB2iuMs0U4oJQ==}
@@ -18368,6 +18406,8 @@ snapshots:
       which-boxed-primitive: 1.1.1
 
   undici-types@7.13.0: {}
+
+  undici@6.22.0: {}
 
   unhead@2.0.17:
     dependencies:
