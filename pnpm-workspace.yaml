@@ -3,6 +3,7 @@ packages:
   - examples/*
   - packages/background-only
   - packages/lynx/*
+  - packages/mcp-servers/*
   - packages/react
   - packages/react/refresh
   - packages/react/runtime
