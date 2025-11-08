@@ -1,5 +1,44 @@
 # @lynx-js/react-rsbuild-plugin
 
+## 0.11.4
+
+### Patch Changes
+
+- When engineVersion is greater than or equal to 3.1, use `__SetAttribute` to set text attribute for text node instead of creating a raw text node. ([#1880](https://github.com/lynx-family/lynx-stack/pull/1880))
+
+- Add `react-compiler-runtime` to `resolve.dedupe`. ([#1269](https://github.com/lynx-family/lynx-stack/pull/1269))
+
+  With this change you can setup [React Compiler](https://react.dev/learn/react-compiler) for ReactLynx by `pluginBabel`:
+
+  ```js
+  import { defineConfig } from '@lynx-js/rspeedy'
+  import { pluginBabel } from '@rsbuild/plugin-babel'
+
+  export default defineConfig({
+    plugins: [
+      pluginBabel({
+        include: /\.(?:jsx|tsx)$/,
+        babelLoaderOptions(opts) {
+          opts.plugins?.unshift([
+            'babel-plugin-react-compiler',
+            // See https://react.dev/reference/react-compiler/configuration for config
+            {
+              // ReactLynx only supports target to version 17
+              target: '17',
+            },
+          ])
+        },
+      }),
+    ],
+  })
+  ```
+
+- Updated dependencies [[`e7d186a`](https://github.com/lynx-family/lynx-stack/commit/e7d186a6fcf08fecf18b5ab82b004b955bb1a2b3), [`0d7a4c3`](https://github.com/lynx-family/lynx-stack/commit/0d7a4c3d49d63e30d5f05c372ef99ee5cf2fcadd)]:
+  - @lynx-js/react-webpack-plugin@0.7.2
+  - @lynx-js/react-alias-rsbuild-plugin@0.11.4
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/react-refresh-webpack-plugin@0.3.4
+
 ## 0.11.3
 
 ### Patch Changes
