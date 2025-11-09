@@ -1,5 +1,15 @@
 # @lynx-js/web-mainthread-apis
 
+## 0.18.3
+
+### Patch Changes
+
+- fix: The `e.detail` in the `bindtap` callback needs to correctly include `x` and `y`. ([#1913](https://github.com/lynx-family/lynx-stack/pull/1913))
+
+- Updated dependencies [[`ebc1a60`](https://github.com/lynx-family/lynx-stack/commit/ebc1a606318e9809e8a07457e18536b59be12a18)]:
+  - @lynx-js/web-constants@0.18.3
+  - @lynx-js/web-style-transformer@0.18.3
+
 ## 0.18.2
 
 ### Patch Changes

@@ -1,5 +1,14 @@
 # @lynx-js/web-constants
 
+## 0.18.3
+
+### Patch Changes
+
+- feat: add \_\_GetSourceMapRelease API for nativeApp. ([#1923](https://github.com/lynx-family/lynx-stack/pull/1923))
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.18.3
+
 ## 0.18.2
 
 ### Patch Changes
