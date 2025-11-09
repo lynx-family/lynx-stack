@@ -14,6 +14,7 @@ import { __root } from './root.js';
 import { DynamicPartType } from './snapshot/dynamicPartType.js';
 import { snapshotCreateList } from './snapshot/list.js';
 import { SnapshotInstance, __page, __pageId, createSnapshot, snapshotManager } from './snapshot.js';
+import { createElement as createElementLepus } from '../lepus/index.js';
 
 export { __page, __pageId, __root };
 
@@ -32,7 +33,6 @@ export { updateWorkletEvent } from './snapshot/workletEvent.js';
 export { updateWorkletRef } from './snapshot/workletRef.js';
 export { updateGesture } from './snapshot/gesture.js';
 export { updateListItemPlatformInfo } from './snapshot/platformInfo.js';
-
 export {
   options,
   // Component is not an internal API, but refresh needs it from 'react/internal'
@@ -68,4 +68,4 @@ export { pickJSXFromProps } from './mtc/pickJSXFromProps.js';
 export { genMTCInstanceId } from './mtc/genMTCIntanceId.js';
 export { registerBgAction } from './mtc/registerBgAction.js';
 export { useMemo, useCallback };
-export { createElement };
+export { createElement, createElementLepus };

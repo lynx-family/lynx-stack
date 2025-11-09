@@ -1693,6 +1693,19 @@ export function MTC(props) {
           ""main thread";
           import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
           import * as ReactLynx from "@lynx-js/react";
+          export function MTC(props) {
+              const componentInstanceId = ReactLynx.useMemo(ReactLynx.genMTCInstanceId, []);
+              const [jsxs, transformedProps] = ReactLynx.pickJSXFromProps(props);
+              transformedProps.__MTCProps = {
+                  componentTypeId: "$$mtc_2d408_87544_1",
+                  componentInstanceId
+              };
+              return ReactLynx.createElementLepus('mtc-container', {
+                  values: [
+                      transformedProps
+                  ]
+              }, ReactLynx.renderFakeMTCSlot(jsxs));
+          }
           const __snapshot_da39a_87544_1 = /*#__PURE__*/ ReactLynx.createSnapshot("__snapshot_da39a_87544_1", function() {
               const pageId = ReactLynx.__pageId;
               const el = __CreateView(pageId);
@@ -1705,7 +1718,7 @@ export function MTC(props) {
                   children: ReactLynx.renderMTCSlot(props.p3)
               });
           }
-          export const MTC = /*#__PURE__*/ ReactLynx.registerMTC("$$mtc_2d408_87544_1", $$mtc_MTC);
+          ReactLynx.registerMTC("$$mtc_2d408_87544_1", $$mtc_MTC);
           "
         `);
       } else if (target === 'JS') {

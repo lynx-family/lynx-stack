@@ -569,12 +569,8 @@ fn transform_react_lynx_inner(
     let ba_plugin = visit_mut_pass(BaVisitor::new(runtime_id.clone()));
 
     let mtc_plugin = visit_mut_pass(
-      MTCVisitor::new(
-        options.mtc.unwrap_or_default(),
-        Some(&comments),
-        runtime_id.clone(),
-      )
-      .with_content_hash(content_hash.clone()),
+      MTCVisitor::new(options.mtc.unwrap_or_default(), runtime_id.clone())
+        .with_content_hash(content_hash.clone()),
     );
 
     let worklet_plugin = match options.worklet {

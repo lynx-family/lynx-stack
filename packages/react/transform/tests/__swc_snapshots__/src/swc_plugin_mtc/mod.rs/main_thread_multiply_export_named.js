@@ -1,4 +1,31 @@
 "main thread";
+function RealMTC(props) {
+    const componentInstanceId = ReactLynx.useMemo(ReactLynx.genMTCInstanceId, []);
+    const [jsxs, transformedProps] = ReactLynx.pickJSXFromProps(props);
+    transformedProps.__MTCProps = {
+        componentTypeId: "$$mtc_2d408_test_1",
+        componentInstanceId
+    };
+    return ReactLynx.createElementLepus('mtc-container', {
+        values: [
+            transformedProps
+        ]
+    }, ReactLynx.renderFakeMTCSlot(jsxs));
+}
+function RealMTC2(props) {
+    const componentInstanceId = ReactLynx.useMemo(ReactLynx.genMTCInstanceId, []);
+    const [jsxs, transformedProps] = ReactLynx.pickJSXFromProps(props);
+    transformedProps.__MTCProps = {
+        componentTypeId: "$$mtc_2d408_test_2",
+        componentInstanceId
+    };
+    return ReactLynx.createElementLepus('mtc-container', {
+        values: [
+            transformedProps
+        ]
+    }, ReactLynx.renderFakeMTCSlot(jsxs));
+}
+export { RealMTC, RealMTC2 };
 function $$mtc_RealMTC(props) {
     return <view>
       {ReactLynx.renderMTCSlot(props.p3)}
@@ -9,5 +36,5 @@ function $$mtc_RealMTC2(props) {
       {ReactLynx.renderMTCSlot(props.p3)}
     </view>;
 }
-export const RealMTC = /*#__PURE__*/ ReactLynx.registerMTC("$$mtc_2d408_test_1", $$mtc_RealMTC);
-export const RealMTC2 = /*#__PURE__*/ ReactLynx.registerMTC("$$mtc_2d408_test_2", $$mtc_RealMTC2);
+ReactLynx.registerMTC("$$mtc_2d408_test_1", $$mtc_RealMTC);
+ReactLynx.registerMTC("$$mtc_2d408_test_2", $$mtc_RealMTC2);
