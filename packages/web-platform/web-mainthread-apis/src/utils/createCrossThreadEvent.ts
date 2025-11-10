@@ -37,6 +37,7 @@ export function createCrossThreadEvent(
   const params: Cloneable = {};
   const isTrusted = domEvent.isTrusted;
   const otherProperties: CloneableObject = {};
+  let detail = domEvent.detail ?? {};
   if (type.match(/^transition/)) {
     Object.assign(params, {
       'animation_type': 'keyframe-animation',
@@ -79,6 +80,11 @@ export function createCrossThreadEvent(
       clientX: mouseEvent.clientX,
       clientY: mouseEvent.clientY,
     });
+  } else if (type === 'click') {
+    detail = {
+      x: (domEvent as MouseEvent).x,
+      y: (domEvent as MouseEvent).y,
+    };
   }
   const currentTargetDatasetString = currentTargetElement?.getAttribute(
     lynxDatasetAttribute,
@@ -109,7 +115,7 @@ export function createCrossThreadEvent(
       }
       : null,
     // @ts-expect-error
-    detail: domEvent.detail ?? {},
+    detail,
     params,
     ...otherProperties,
   };

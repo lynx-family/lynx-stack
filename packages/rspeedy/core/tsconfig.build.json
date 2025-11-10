@@ -23,5 +23,6 @@
     { "path": "../../webpack/cache-events-webpack-plugin/tsconfig.build.json" },
     { "path": "../../webpack/chunk-loading-webpack-plugin/tsconfig.build.json" },
     { "path": "../../webpack/css-extract-webpack-plugin/tsconfig.build.json" },
+    { "path": "../../web-platform/web-rsbuild-server-middleware/tsconfig.json" },
   ],
 }

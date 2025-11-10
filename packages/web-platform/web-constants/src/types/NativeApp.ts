@@ -222,6 +222,7 @@ export interface NativeApp {
 
   reportException: (error: Error, _: unknown) => void;
   __SetSourceMapRelease: (err: Error) => void;
+  __GetSourceMapRelease: (url: string) => string | undefined;
 
   queryComponent: (
     source: string,

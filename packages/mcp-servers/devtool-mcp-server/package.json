@@ -1,0 +1,59 @@
+{
+  "name": "@lynx-js/devtool-mcp-server",
+  "version": "0.4.0",
+  "description": "The Lynx DevTool for coding agent.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/mcp-servers/devtool-mcp-server"
+  },
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./debug-router-connector.js": {
+      "types": "./debug-router-connector.d.ts",
+      "import": "./debug-router-connector.js",
+      "default": "./debug-router-connector.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": "./dist/main.js",
+  "files": [
+    "debug-router-connector.js",
+    "debug-router-connector.d.ts",
+    "dist"
+  ],
+  "scripts": {
+    "build": "rslib build"
+  },
+  "dependencies": {
+    "@lynx-js/debug-router-connector": "0.0.6"
+  },
+  "devDependencies": {
+    "@microsoft/api-extractor": "^7.53.1",
+    "@modelcontextprotocol/sdk": "^1.20.0",
+    "@types/debug": "^4.1.12",
+    "core-js": "^3.46.0",
+    "debug": "^4.4.3",
+    "rsbuild-plugin-publint": "0.3.3",
+    "zod": "^3.25.76"
+  },
+  "peerDependencies": {
+    "@modelcontextprotocol/sdk": "*"
+  },
+  "peerDependenciesMeta": {
+    "@modelcontextprotocol/sdk": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=18.19"
+  }
+}

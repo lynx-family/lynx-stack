@@ -469,57 +469,55 @@ class LynxTemplatePluginImpl {
 
     this.hash = createHash(compiler.options.output.hashFunction ?? 'xxhash64');
 
-    compiler.hooks.initialize.tap(this.name, () => {
-      // entryName to fileName conversion function
-      const userOptionFilename = this.#options.filename;
+    // entryName to fileName conversion function
+    const userOptionFilename = this.#options.filename;
 
-      const filenameFunction = typeof userOptionFilename === 'function'
-        ? userOptionFilename
-        // Replace '[name]' with entry name
-        : (entryName: string) =>
-          userOptionFilename.replace(/\[name\]/g, entryName);
+    const filenameFunction = typeof userOptionFilename === 'function'
+      ? userOptionFilename
+      // Replace '[name]' with entry name
+      : (entryName: string) =>
+        userOptionFilename.replace(/\[name\]/g, entryName);
 
-      /** output filenames for the given entry names */
-      const entryNames = Object.keys(compiler.options.entry);
-      const outputFileNames = new Set(
-        (entryNames.length > 0 ? entryNames : ['main']).map((name) =>
-          filenameFunction(name)
-        ),
-      );
+    /** output filenames for the given entry names */
+    const entryNames = Object.keys(compiler.options.entry);
+    const outputFileNames = new Set(
+      (entryNames.length > 0 ? entryNames : ['main']).map((name) =>
+        filenameFunction(name)
+      ),
+    );
 
-      outputFileNames.forEach((outputFileName) => {
-        // convert absolute filename into relative so that webpack can
-        // generate it at correct location
-        let filename = outputFileName;
-        if (path.resolve(filename) === path.normalize(filename)) {
-          filename = path.relative(
-            /** Once initialized the path is always a string */
-            compiler.options.output.path!,
-            filename,
-          );
-        }
+    outputFileNames.forEach((outputFileName) => {
+      // convert absolute filename into relative so that webpack can
+      // generate it at correct location
+      let filename = outputFileName;
+      if (path.resolve(filename) === path.normalize(filename)) {
+        filename = path.relative(
+          /** Once initialized the path is always a string */
+          compiler.options.output.path!,
+          filename,
+        );
+      }
 
-        compiler.hooks.thisCompilation.tap(this.name, (compilation) => {
-          compilation.hooks.processAssets.tapPromise(
-            {
-              name: this.name,
-              stage:
-                /**
-                 * Generate the html after minification and dev tooling is done
-                 * and source-map is generated
-                 */
-                compiler.webpack.Compilation
-                  .PROCESS_ASSETS_STAGE_OPTIMIZE_HASH,
-            },
-            () => {
-              return this.#generateTemplate(
-                compiler,
-                compilation,
-                filename,
-              );
-            },
-          );
-        });
+      compiler.hooks.thisCompilation.tap(this.name, (compilation) => {
+        compilation.hooks.processAssets.tapPromise(
+          {
+            name: this.name,
+            stage:
+              /**
+               * Generate the html after minification and dev tooling is done
+               * and source-map is generated
+               */
+              compiler.webpack.Compilation
+                .PROCESS_ASSETS_STAGE_OPTIMIZE_HASH,
+          },
+          () => {
+            return this.#generateTemplate(
+              compiler,
+              compilation,
+              filename,
+            );
+          },
+        );
       });
     });
 

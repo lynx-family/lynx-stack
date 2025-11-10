@@ -1,0 +1,39 @@
+{
+  "name": "@lynx-js/docs-mcp-server",
+  "version": "0.2.1",
+  "description": "A MCP Server providing Lynx documentation resources for LLMs, with carefully designed prompting.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/mcp-servers/docs-mcp-server"
+  },
+  "type": "module",
+  "bin": "./main.ts",
+  "files": [
+    "dist",
+    "main.ts"
+  ],
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.20.0",
+    "commander": "^13.1.0",
+    "debug": "^4.4.3",
+    "empathic": "^2.0.0",
+    "mdast-util-from-markdown": "^2.0.2",
+    "mdast-util-to-markdown": "^2.1.2",
+    "undici": "^6.22.0"
+  },
+  "devDependencies": {
+    "@types/debug": "^4.1.12",
+    "@types/mdast": "^4.0.4",
+    "typescript": "^5.9.3"
+  },
+  "engines": {
+    "node": ">=18.17"
+  },
+  "publishConfig": {
+    "bin": "./dist/main.js"
+  }
+}

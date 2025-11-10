@@ -11,6 +11,17 @@
     "prepare": "husky && ts-patch install",
     "test": "vitest"
   },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx,cjs,mjs,css,sass,scss,less,html,yml,yaml,rs,toml,md,json}": [
+      "eslint --cache --fix --no-warn-ignored --flag v10_config_lookup_from_file",
+      "biome lint --write --no-errors-on-unmatched --files-ignore-unknown=true",
+      "dprint fmt --allow-no-files --"
+    ],
+    "*.rs": [
+      "cargo fmt --"
+    ],
+    "package.json": "sort-package-json"
+  },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
     "@changesets/cli": "^2.29.7",

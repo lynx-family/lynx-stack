@@ -45,6 +45,10 @@ export default defineConfig({
       '005-load-script': [
         './cases/005-load-script/index.tsx',
       ],
+      '006-static-raw-text': [
+        './src/patchProfile.ts',
+        './cases/006-static-raw-text/index.tsx',
+      ],
     },
   },
   plugins: [
