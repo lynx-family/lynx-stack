@@ -1,8 +1,9 @@
 use super::{
-  main_thread_manager::JSRealm,
   style::StyleManager,
   LynxElement, // event::event_delegation::EventSystem,
 };
+
+use crate::js_binding::JSRealm;
 use crate::template::{DecodedTemplateImpl, PageConfig};
 use std::{
   collections::{HashMap, HashSet},

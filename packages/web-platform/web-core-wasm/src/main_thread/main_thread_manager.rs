@@ -1,21 +1,6 @@
-use std::collections::HashMap;
-use wasm_bindgen::prelude::*;
-// use super::main_thread_context::MainThreadContext;
+use crate::js_binding::JSRealm;
 use crate::template::TemplateManager;
-
-#[wasm_bindgen]
-extern "C" {
-  pub type JSRealm;
-
-  #[wasm_bindgen(getter, js_name = "globalThis")]
-  pub fn getGlobalThis(this: &JSRealm) -> web_sys::Window;
-
-  #[wasm_bindgen(catch, method, js_name = "loadScriptSync")]
-  pub fn loadScriptSync(this: &JSRealm, url: &str) -> Result<JsValue, JsValue>;
-
-  #[wasm_bindgen(catch, method, js_name = "loadScript")]
-  pub async fn loadScript(this: &JSRealm, url: &str) -> Result<JsValue, JsValue>;
-}
+use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 #[derive(Default)]
