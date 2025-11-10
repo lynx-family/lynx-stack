@@ -95,7 +95,7 @@ test('setState generates insertBefore operation', async () => {
     [
       "rLynxChange",
       {
-        "data": "{"patchList":[{"id":3,"snapshotPatch":[1,-2,-4,-6]}]}",
+        "data": "{"patchList":[{"id":3,"snapshotPatch":[1,-2,-4,-6,0]}]}",
         "patchOptions": {
           "pipelineOptions": {
             "dsl": "reactLynx",
@@ -119,6 +119,7 @@ test('setState generates insertBefore operation', async () => {
         "childId": -4,
         "op": "InsertBefore",
         "parentId": -2,
+        "slotIndex": 0,
       },
     ]
   `);
@@ -268,7 +269,7 @@ test('setState triggered renderComponent should have correct slotIndex', async (
     [
       "rLynxChange",
       {
-        "data": "{"patchList":[{"id":3,"snapshotPatch":[2,-2,-3,0,"__Card__:__snapshot_e2a8d_test_5",6,1,0,null,7,0,3,7,0,1,1,6,7,null,1,-2,6,null]}]}",
+        "data": "{"patchList":[{"id":3,"snapshotPatch":[2,-2,-3,0,"__Card__:__snapshot_e2a8d_test_5",6,0,null,7,3,7,0,1,1,6,7,null,0,1,-2,6,null,1]}]}",
         "patchOptions": {
           "pipelineOptions": {
             "dsl": "reactLynx",
@@ -295,13 +296,11 @@ test('setState triggered renderComponent should have correct slotIndex', async (
       {
         "id": 6,
         "op": "CreateElement",
-        "slotIndex": 1,
         "type": "__Card__:__snapshot_e2a8d_test_5",
       },
       {
         "id": 7,
         "op": "CreateElement",
-        "slotIndex": 0,
         "type": null,
       },
       {
@@ -315,17 +314,17 @@ test('setState triggered renderComponent should have correct slotIndex', async (
         "childId": 7,
         "op": "InsertBefore",
         "parentId": 6,
+        "slotIndex": 0,
       },
       {
         "beforeId": null,
         "childId": 6,
         "op": "InsertBefore",
         "parentId": -2,
+        "slotIndex": 1,
       },
     ]
   `);
-  expect(formattedSnapshotPatch[1].slotIndex).toBe(1);
-
   expect(elementTree).toMatchInlineSnapshot(`
     <page>
       <view>

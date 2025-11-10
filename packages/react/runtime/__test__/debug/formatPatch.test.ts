@@ -8,11 +8,11 @@ describe('formatPatch', () => {
       SnapshotOperation.CreateElement,
       'span',
       2,
-      0,
       SnapshotOperation.InsertBefore,
       1,
       2,
       undefined,
+      0,
       SnapshotOperation.RemoveChild,
       1,
       2,
@@ -36,8 +36,8 @@ describe('formatPatch', () => {
     ];
     const formatted = prettyFormatSnapshotPatch(snapshotPatch);
     expect(formatted).toEqual([
-      { op: 'CreateElement', type: 'span', id: 2, slotIndex: 0 },
-      { op: 'InsertBefore', parentId: 1, childId: 2, beforeId: undefined },
+      { op: 'CreateElement', type: 'span', id: 2 },
+      { op: 'InsertBefore', parentId: 1, childId: 2, beforeId: undefined, slotIndex: 0 },
       { op: 'RemoveChild', parentId: 1, childId: 2 },
       { op: 'SetAttribute', id: 2, dynamicPartIndex: 1, value: 'disabled' },
       { op: 'SetAttributes', id: 2, values: { hidden: true } },

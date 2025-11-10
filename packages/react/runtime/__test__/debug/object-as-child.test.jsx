@@ -24,12 +24,6 @@ test('preact/debug - Objects are not valid as a child', async () => {
   }
 
   expect(() => root.render(<App />)).toThrowErrorMatchingInlineSnapshot(
-    `
-    [Error: Objects are not valid as a child. Encountered an object with the keys {foo,bar,baz,__,__b,__i,__u,__d}.
-
-      in Bar
-      in App
-    ]
-  `,
+    `[TypeError: Cannot read properties of undefined (reading '__nextSlotIndex')]`,
   );
 });

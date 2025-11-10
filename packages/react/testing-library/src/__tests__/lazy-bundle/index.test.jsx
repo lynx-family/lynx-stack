@@ -166,13 +166,11 @@ describe('Suspense', () => {
               {
                 "id": 2,
                 "op": "CreateElement",
-                "slotIndex": 0,
                 "type": "__Card__:__snapshot_fffe1_test_3",
               },
               {
                 "id": 5,
                 "op": "CreateElement",
-                "slotIndex": 0,
                 "type": "__Card__:__snapshot_fffe1_test_4",
               },
               {
@@ -180,12 +178,14 @@ describe('Suspense', () => {
                 "childId": 5,
                 "op": "InsertBefore",
                 "parentId": 2,
+                "slotIndex": 0,
               },
               {
                 "beforeId": null,
                 "childId": 2,
                 "op": "InsertBefore",
                 "parentId": -1,
+                "slotIndex": 0,
               },
             ]
           `);
@@ -195,19 +195,16 @@ describe('Suspense', () => {
               {
                 "id": 2,
                 "op": "CreateElement",
-                "slotIndex": 0,
                 "type": "__Card__:__snapshot_fffe1_test_3",
               },
               {
                 "id": 6,
                 "op": "CreateElement",
-                "slotIndex": 0,
                 "type": "wrapper",
               },
               {
                 "id": 7,
                 "op": "CreateElement",
-                "slotIndex": 0,
                 "type": "__Card__:__snapshot_fffe1_test_4",
               },
               {
@@ -215,18 +212,21 @@ describe('Suspense', () => {
                 "childId": 7,
                 "op": "InsertBefore",
                 "parentId": 6,
+                "slotIndex": 0,
               },
               {
                 "beforeId": null,
                 "childId": 6,
                 "op": "InsertBefore",
                 "parentId": 2,
+                "slotIndex": 0,
               },
               {
                 "beforeId": null,
                 "childId": 2,
                 "op": "InsertBefore",
                 "parentId": -1,
+                "slotIndex": 0,
               },
             ]
           `);

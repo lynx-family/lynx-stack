@@ -130,7 +130,6 @@ describe('legacy DynamicPartType should work', () => {
           {
             "id": 3,
             "op": "CreateElement",
-            "slotIndex": undefined,
             "type": "__Card__:__snapshot_a94a8_test_3",
           },
           {
@@ -138,6 +137,7 @@ describe('legacy DynamicPartType should work', () => {
             "childId": 3,
             "op": "InsertBefore",
             "parentId": -6,
+            "slotIndex": undefined,
           },
           {
             "childId": -9,
@@ -147,7 +147,6 @@ describe('legacy DynamicPartType should work', () => {
           {
             "id": 5,
             "op": "CreateElement",
-            "slotIndex": undefined,
             "type": "__Card__:__snapshot_a94a8_test_4",
           },
           {
@@ -155,6 +154,7 @@ describe('legacy DynamicPartType should work', () => {
             "childId": 5,
             "op": "InsertBefore",
             "parentId": -8,
+            "slotIndex": undefined,
           },
         ]
       `);

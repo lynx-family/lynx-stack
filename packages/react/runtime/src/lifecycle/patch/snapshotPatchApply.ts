@@ -37,20 +37,21 @@ export function snapshotPatchApply(snapshotPatch: SnapshotPatch): void {
       case SnapshotOperation.CreateElement: {
         const type = snapshotPatch[++i] as string;
         const id = snapshotPatch[++i] as number;
-        const s = new SnapshotInstance(type, id);
-        s.__slotIndex = snapshotPatch[++i] as number | undefined;
+        new SnapshotInstance(type, id);
         break;
       }
       case SnapshotOperation.InsertBefore: {
         const parentId = snapshotPatch[++i] as number;
         const childId = snapshotPatch[++i] as number;
         const beforeId = snapshotPatch[++i] as number | undefined;
+        const __slotIndex = snapshotPatch[++i] as number | undefined;
         const parent = snapshotInstanceManager.values.get(parentId);
         const child = snapshotInstanceManager.values.get(childId);
         const existingNode = snapshotInstanceManager.values.get(beforeId!);
         if (!parent || !child) {
           sendCtxNotFoundEventToBackground(parent ? childId : parentId);
         } else {
+          child.__slotIndex = __slotIndex;
           parent.insertBefore(child, existingNode);
         }
         break;

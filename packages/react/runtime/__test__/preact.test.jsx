@@ -673,7 +673,6 @@ describe('document - dual-runtime', () => {
           0,
           "__Card__:__snapshot_a94a8_test_22",
           91,
-          0,
           3,
           91,
           "k",
@@ -681,7 +680,6 @@ describe('document - dual-runtime', () => {
           0,
           null,
           92,
-          0,
           4,
           92,
           [
@@ -691,10 +689,12 @@ describe('document - dual-runtime', () => {
           91,
           92,
           undefined,
+          0,
           1,
           -61,
           91,
           undefined,
+          0,
         ]
       `);
 
@@ -712,7 +712,6 @@ describe('document - dual-runtime', () => {
         0,
         "__Card__:__snapshot_a94a8_test_22",
         93,
-        0,
         3,
         93,
         "k",
@@ -720,7 +719,6 @@ describe('document - dual-runtime', () => {
         0,
         null,
         94,
-        0,
         3,
         94,
         0,
@@ -729,10 +727,12 @@ describe('document - dual-runtime', () => {
         93,
         94,
         undefined,
+        0,
         1,
         -61,
         93,
         -66,
+        0,
       ]
     `);
 

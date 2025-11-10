@@ -104,7 +104,7 @@ test('state change will cause re-render', async () => {
       [
         "rLynxChange",
         {
-          "data": "{"patchList":[{"snapshotPatch":[0,"__Card__:__snapshot_354a3_test_1",2,0,1,-1,2,null],"id":2}]}",
+          "data": "{"patchList":[{"snapshotPatch":[0,"__Card__:__snapshot_354a3_test_1",2,1,-1,2,null,0],"id":2}]}",
           "patchOptions": {
             "isHydration": true,
             "pipelineOptions": {
@@ -122,7 +122,7 @@ test('state change will cause re-render', async () => {
       [
         "rLynxChange",
         {
-          "data": "{"patchList":[{"id":3,"snapshotPatch":[2,-1,2,0,"__Card__:__snapshot_354a3_test_2",3,0,0,null,4,0,3,4,0,"Hello World",1,3,4,null,1,-1,3,null]}]}",
+          "data": "{"patchList":[{"id":3,"snapshotPatch":[2,-1,2,0,"__Card__:__snapshot_354a3_test_2",3,0,null,4,3,4,0,"Hello World",1,3,4,null,0,1,-1,3,null,0]}]}",
           "patchOptions": {
             "pipelineOptions": {
               "dsl": "reactLynx",

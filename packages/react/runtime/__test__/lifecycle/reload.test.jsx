@@ -1316,7 +1316,7 @@ describe('firstScreenSyncTiming - jsReady', () => {
       expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1]).toMatchInlineSnapshot(`
         {
-          "data": "{"patchList":[{"snapshotPatch":[2,-11,-12,0,"__Card__:__snapshot_a94a8_test_3",2,0,0,"__Card__:__snapshot_a94a8_test_2",3,0,4,3,[{"dataX":"WorldX"}],0,null,4,0,4,4,["Hello 2"],1,3,4,null,0,null,5,1,4,5,["World"],1,3,5,null,0,"__Card__:__snapshot_a94a8_test_1",6,2,4,6,[{"attr":{"dataX":"WorldX"}}],1,3,6,null,1,2,3,null,1,-11,2,null],"id":21}]}",
+          "data": "{"patchList":[{"snapshotPatch":[2,-11,-12,0,"__Card__:__snapshot_a94a8_test_3",2,0,"__Card__:__snapshot_a94a8_test_2",3,4,3,[{"dataX":"WorldX"}],0,null,4,4,4,["Hello 2"],1,3,4,null,0,0,null,5,4,5,["World"],1,3,5,null,1,0,"__Card__:__snapshot_a94a8_test_1",6,4,6,[{"attr":{"dataX":"WorldX"}}],1,3,6,null,2,1,2,3,null,0,1,-11,2,null,0],"id":21}]}",
           "patchOptions": {
             "isHydration": true,
             "pipelineOptions": {
@@ -1876,7 +1876,7 @@ describe('firstScreenSyncTiming - jsReady', () => {
       expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1]).toMatchInlineSnapshot(`
         {
-          "data": "{"patchList":[{"snapshotPatch":[2,-11,-12,0,"__Card__:__snapshot_a94a8_test_3",2,0,0,"__Card__:__snapshot_a94a8_test_2",3,0,4,3,[{"dataX":"WorldX"}],0,null,4,0,4,4,["Hello 2"],1,3,4,null,0,null,5,1,4,5,["World"],1,3,5,null,0,"__Card__:__snapshot_a94a8_test_1",6,2,4,6,[{"attr":{"dataX":"WorldX"}}],1,3,6,null,1,2,3,null,1,-11,2,null],"id":27}]}",
+          "data": "{"patchList":[{"snapshotPatch":[2,-11,-12,0,"__Card__:__snapshot_a94a8_test_3",2,0,"__Card__:__snapshot_a94a8_test_2",3,4,3,[{"dataX":"WorldX"}],0,null,4,4,4,["Hello 2"],1,3,4,null,0,0,null,5,4,5,["World"],1,3,5,null,1,0,"__Card__:__snapshot_a94a8_test_1",6,4,6,[{"attr":{"dataX":"WorldX"}}],1,3,6,null,2,1,2,3,null,0,1,-11,2,null,0],"id":27}]}",
           "patchOptions": {
             "isHydration": true,
             "pipelineOptions": {

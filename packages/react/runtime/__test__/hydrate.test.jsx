@@ -133,26 +133,24 @@ describe('dual-runtime hydrate', () => {
           "__Card__:__snapshot_a94a8_test_3",
           3,
           0,
-          0,
           "__Card__:__snapshot_a94a8_test_4",
           7,
-          undefined,
           1,
           3,
           7,
           undefined,
+          undefined,
           0,
           "__Card__:__snapshot_a94a8_test_4",
           8,
-          undefined,
           1,
           3,
           8,
+          undefined,
           undefined,
           0,
           "__Card__:__snapshot_a94a8_test_2",
           9,
-          undefined,
           4,
           9,
           [
@@ -162,14 +160,15 @@ describe('dual-runtime hydrate', () => {
           3,
           9,
           undefined,
+          undefined,
           1,
           -1,
           3,
           -3,
           0,
+          0,
           "__Card__:__snapshot_a94a8_test_2",
           6,
-          0,
           4,
           6,
           [
@@ -179,6 +178,7 @@ describe('dual-runtime hydrate', () => {
           -1,
           6,
           undefined,
+          0,
         ]
       `);
       backgroundSnapshotInstanceManager.values.forEach((v, k) => {
@@ -261,6 +261,7 @@ describe('dual-runtime hydrate', () => {
         -1,
         -3,
         -5,
+        0,
       ]
     `);
   });
@@ -279,18 +280,18 @@ describe('dual-runtime hydrate', () => {
         0,
         "__Card__:__snapshot_a94a8_test_2",
         2,
-        undefined,
         1,
         -1,
         2,
         undefined,
+        undefined,
         0,
         "__Card__:__snapshot_a94a8_test_3",
         3,
-        undefined,
         1,
         -1,
         3,
+        undefined,
         undefined,
       ]
     `);
@@ -434,11 +435,11 @@ describe('dual-runtime hydrate - with slot (multi-children)', () => {
         0,
         "__Card__:__snapshot_a94a8_test_8",
         6,
-        0,
         1,
         -3,
         6,
         undefined,
+        0,
       ]
     `);
     expect(prettyFormatSnapshotPatch(snapshotPatch)).toMatchInlineSnapshot(`
@@ -451,7 +452,6 @@ describe('dual-runtime hydrate - with slot (multi-children)', () => {
         {
           "id": 6,
           "op": "CreateElement",
-          "slotIndex": 0,
           "type": "__Card__:__snapshot_a94a8_test_8",
         },
         {
@@ -459,6 +459,7 @@ describe('dual-runtime hydrate - with slot (multi-children)', () => {
           "childId": 6,
           "op": "InsertBefore",
           "parentId": -3,
+          "slotIndex": 0,
         },
       ]
     `);

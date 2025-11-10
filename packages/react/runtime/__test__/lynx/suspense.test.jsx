@@ -252,13 +252,11 @@ describe('suspense', () => {
           {
             "id": 2,
             "op": "CreateElement",
-            "slotIndex": 0,
             "type": "wrapper",
           },
           {
             "id": 3,
             "op": "CreateElement",
-            "slotIndex": 0,
             "type": "__Card__:__snapshot_a94a8_test_4",
           },
           {
@@ -273,12 +271,14 @@ describe('suspense', () => {
             "childId": 3,
             "op": "InsertBefore",
             "parentId": 2,
+            "slotIndex": 0,
           },
           {
             "beforeId": null,
             "childId": 2,
             "op": "InsertBefore",
             "parentId": -1,
+            "slotIndex": 0,
           },
           {
             "childId": -3,
@@ -288,7 +288,6 @@ describe('suspense', () => {
           {
             "id": 7,
             "op": "CreateElement",
-            "slotIndex": 0,
             "type": "__Card__:__snapshot_a94a8_test_5",
           },
           {
@@ -296,12 +295,14 @@ describe('suspense', () => {
             "childId": 7,
             "op": "InsertBefore",
             "parentId": 3,
+            "slotIndex": 0,
           },
           {
             "beforeId": null,
             "childId": 2,
             "op": "InsertBefore",
             "parentId": -1,
+            "slotIndex": 0,
           },
         ]
       `);
