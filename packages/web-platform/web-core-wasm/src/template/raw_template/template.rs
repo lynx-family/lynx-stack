@@ -41,7 +41,7 @@ pub(crate) struct LynxRawTemplate {
   pub(crate) card_type: DslType,
   pub(crate) page_config: PageConfig,
   pub(crate) style_info: StyleInfo,
-  pub(crate) element_template: HashMap<String, ElementTemplate>,
+  pub(crate) element_templates: HashMap<String, Vec<ElementTemplate>>,
 }
 
 impl From<&js_sys::Uint8Array> for LynxRawTemplate {

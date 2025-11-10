@@ -13,12 +13,12 @@ pub(crate) struct ElementTemplate {
   /**
    * tag name
    */
-  type_name: String,
-  id_selector: Option<String>,
-  class: Option<Vec<String>>,
-  attributes: Option<HashMap<String, String>>,
-  built_in_attributes: Option<HashMap<String, String>>,
-  children: Option<Vec<ElementTemplate>>,
-  events: Option<Vec<LynxCrossThreadEventRegistration>>,
-  dataset: Option<HashMap<String, String>>,
+  pub(crate) type_name: String,
+  pub(crate) id_selector: Option<String>,
+  pub(crate) class: Option<Vec<String>>,
+  pub(crate) attributes: Option<HashMap<String, String>>,
+  pub(crate) built_in_attributes: Option<HashMap<String, String>>,
+  pub(crate) children: Option<Vec<ElementTemplate>>,
+  pub(crate) events: Option<Vec<LynxCrossThreadEventRegistration>>,
+  pub(crate) dataset: Option<HashMap<String, String>>,
 }

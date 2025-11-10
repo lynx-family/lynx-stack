@@ -1,4 +1,5 @@
 use super::{
+  element_apis::ElementTemplatesInstance,
   style::StyleManager,
   LynxElement, // event::event_delegation::EventSystem,
 };
@@ -26,6 +27,7 @@ pub struct MainThreadGlobalThis {
   pub(super) style_manager: StyleManager,
   pub(super) enabled_events: HashSet<String>,
   pub(super) template: DecodedTemplateImpl,
+  pub(super) element_templates_instances: HashMap<String, ElementTemplatesInstance>,
   mts_realm: JSRealm,
 }
 
@@ -53,6 +55,7 @@ impl MainThreadGlobalThis {
       template,
       mts_realm,
       unique_id_counter,
+      element_templates_instances: HashMap::new(),
       unique_id_to_element_map: HashMap::new(),
       component_id_to_unique_id_map: HashMap::new(),
       enabled_events: HashSet::new(),

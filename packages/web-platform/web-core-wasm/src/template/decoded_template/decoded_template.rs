@@ -1,7 +1,5 @@
 use std::{collections::HashMap, rc::Rc};
 
-use bincode::de;
-
 use super::{
   flatten_style_info, DslType, ElementTemplate, FlattenedStyleInfo, LynxRawTemplate, PageConfig,
   TemplateType,
@@ -14,7 +12,7 @@ pub(crate) struct DecodedTemplate {
   pub(crate) card_type: DslType,
   pub(crate) page_config: PageConfig,
   pub(crate) style_info: FlattenedStyleInfo,
-  pub(crate) element_template: HashMap<String, ElementTemplate>,
+  pub(crate) element_templates: HashMap<String, Vec<ElementTemplate>>,
 }
 
 impl From<LynxRawTemplate> for DecodedTemplate {
@@ -36,7 +34,7 @@ impl From<LynxRawTemplate> for DecodedTemplate {
       card_type: template.card_type,
       page_config: template.page_config,
       style_info: decoded_style_info,
-      element_template: template.element_template,
+      element_templates: template.element_templates,
     }
   }
 }
@@ -59,5 +57,9 @@ impl DecodedTemplateImpl {
 
   pub fn get_style_info(&self) -> &FlattenedStyleInfo {
     &self.template.style_info
+  }
+
+  pub fn get_element_templates_by_id(&self, template_id: &str) -> Option<&Vec<ElementTemplate>> {
+    self.template.element_templates.get(template_id)
   }
 }

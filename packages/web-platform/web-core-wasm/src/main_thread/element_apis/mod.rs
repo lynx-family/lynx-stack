@@ -8,3 +8,4 @@ mod style_apis;
 mod tree_apis;
 use super::*;
 pub(crate) use element::*;
+pub(crate) use element_template_apis::ElementTemplatesInstance;
