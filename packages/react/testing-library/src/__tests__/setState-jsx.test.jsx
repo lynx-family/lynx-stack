@@ -16,12 +16,12 @@ test('setState changes jsx', async () => {
   const Comp = () => {
     const [text0, setText0] = useState(jsx0);
     const [text1, setText1] = useState(jsx1);
-    const hanldeTap = () => {
+    const handleTap = () => {
       setText0(jsx1);
       setText1(jsx0);
     };
     return (
-      <view bindtap={hanldeTap} data-testid='view'>
+      <view bindtap={handleTap} data-testid='view'>
         {text0}
         <text>---</text>
         {text1}
@@ -54,12 +54,7 @@ test('setState changes jsx', async () => {
   `);
 
   const view = await findByTestId('view');
-  debugger;
-  try {
-    fireEvent.tap(view);
-  } catch (e) {
-    console.log('e', e);
-  }
+  fireEvent.tap(view);
 
   {
     const snapshotPatch = JSON.parse(callLepusMethodCalls[0][1]['data']).patchList[0].snapshotPatch;
