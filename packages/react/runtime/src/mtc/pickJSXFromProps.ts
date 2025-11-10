@@ -42,7 +42,8 @@ export function pickJSXFromProps(props?: Record<string, any>): [[VNode, any][], 
       return placeholder;
     }
 
-    if (typeof item === 'function') {
+    // Only props.children as a function is allowed for now.
+    if (typeof item === 'function' && item.name === 'children') {
       const jsx = item(props);
       if (isPreactVnode(jsx)) {
         const placeholder = {
