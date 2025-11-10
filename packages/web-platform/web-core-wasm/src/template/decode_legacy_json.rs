@@ -6,19 +6,21 @@ use super::{
   decode::{DslType, LynxTemplate, PageConfig, TemplateType},
   ElementTemplate, OneSelectorAtom, Selector, StyleInfo, StyleRule,
 };
+#[derive(Deserialize)]
 /**
- * export interface CSSRule {
+* ```ts
+ export interface CSSRule {
   sel: [
-    plainSelectors: string[],
-    pseudoClassSelectors: string[],
-    pseudoElementSelectors: string[],
-    combinator: string[],
-    ...string[][],
+   plainSelectors: string[],
+   pseudoClassSelectors: string[],
+   pseudoElementSelectors: string[],
+   combinator: string[],
+   ...string[][],
   ][];
   decl: [string, string][];
-}
- */
-#[derive(Deserialize)]
+ }
+  ```
+*/
 struct CSSRule {
   sel: Vec<Vec<Vec<String>>>,
   decl: Vec<[String; 2]>,

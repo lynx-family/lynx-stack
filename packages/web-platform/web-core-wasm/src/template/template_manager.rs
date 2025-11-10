@@ -1,6 +1,9 @@
 use wasm_bindgen::JsCast;
 
-use super::{DecodedTemplate, LynxTemplate};
+use super::{
+  decoded_template::{DecodedTemplate, DecodedTemplateImpl},
+  raw_template::LynxRawTemplate,
+};
 use std::collections::HashMap;
 #[derive(Default)]
 pub struct TemplateManager {
@@ -8,7 +11,7 @@ pub struct TemplateManager {
    * key: template_url
    * value: DecodedTemplate
    */
-  cache: HashMap<String, DecodedTemplate>,
+  cache: HashMap<String, DecodedTemplateImpl>,
 }
 
 impl TemplateManager {
@@ -18,20 +21,17 @@ impl TemplateManager {
     }
   }
 
-  pub(crate) fn get_decoded_template_by_url(
-    &self,
-    template_url: &String,
-  ) -> Option<&DecodedTemplate> {
-    self.cache.get(template_url)
+  pub(crate) fn get_cached_template(&self, template_url: &String) -> Option<DecodedTemplateImpl> {
+    self.cache.get(template_url).cloned()
   }
 
   pub(crate) async fn load_template(
     &mut self,
     template_url: &String,
     custom_template_loader: &js_sys::Function,
-  ) -> Result<&DecodedTemplate, wasm_bindgen::JsValue> {
+  ) -> Result<DecodedTemplateImpl, wasm_bindgen::JsValue> {
     if self.cache.contains_key(template_url) {
-      return Ok(self.cache.get(template_url).unwrap());
+      return Ok(self.cache.get(template_url).unwrap().clone());
     }
     let buffer_value: js_sys::Uint8Array = {
       if custom_template_loader.is_null_or_undefined() {
@@ -59,13 +59,12 @@ impl TemplateManager {
           .dyn_into::<js_sys::Uint8Array>()?
       }
     };
-    let lynx_template: LynxTemplate = LynxTemplate::from(&buffer_value);
+    let lynx_template: LynxRawTemplate = LynxRawTemplate::from(&buffer_value);
     let decoded_template: DecodedTemplate = lynx_template.into();
-    self.cache.insert(template_url.clone(), decoded_template);
-    Ok(self.cache.get(template_url).unwrap())
-  }
-
-  pub(crate) fn get_cached_template(&self, template_url: &String) -> Option<&DecodedTemplate> {
-    self.cache.get(template_url)
+    self.cache.insert(
+      template_url.clone(),
+      DecodedTemplateImpl::new(decoded_template),
+    );
+    Ok(self.cache.get(template_url).unwrap().clone())
   }
 }

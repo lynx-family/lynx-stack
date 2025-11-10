@@ -9,7 +9,7 @@ pub(crate) struct LynxCrossThreadEventRegistration {
 }
 #[derive(Deserialize)]
 #[cfg_attr(feature = "encode", derive(Serialize))]
-pub struct ElementTemplate {
+pub(crate) struct ElementTemplate {
   /**
    * tag name
    */

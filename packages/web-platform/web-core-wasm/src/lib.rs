@@ -5,7 +5,7 @@ mod template;
 extern crate alloc;
 use lazy_static::lazy_static;
 
-lazy_static! {
-  pub(crate) static ref TEMPLATE_MANAGER: template::TemplateManager =
-    template::TemplateManager::new();
-}
+// lazy_static! {
+//   pub(crate) static ref TEMPLATE_MANAGER: template::TemplateManager =
+//     template::TemplateManager::new();
+// }

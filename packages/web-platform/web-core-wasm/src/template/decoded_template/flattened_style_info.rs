@@ -1,37 +1,5 @@
-use serde::{Deserialize, Serialize};
+use super::{StyleInfo, StyleRule};
 use std::collections::{HashMap, HashSet};
-
-/**
- * key: cssId
- * value: StyleSheet
- */
-pub(crate) type StyleInfo = HashMap<i32, StyleSheet>;
-
-pub(crate) type OneSelectorAtom = (Vec<String>, Vec<String>, Vec<String>, Vec<String>);
-
-/**
- * Selectors are stored as 4 separate lists:
- * - plain selectors (e.g., "div", "span")
- * - pseudo-classes (e.g., ":hover", ":active")
- * - pseudo-elements (e.g., "::before", "::after")
- * - combinator selectors (e.g., ">", "+", "~")
- */
-pub(crate) type Selector = Vec<OneSelectorAtom>;
-
-#[derive(Clone, Debug, PartialEq, Deserialize)]
-#[cfg_attr(feature = "encode", derive(Serialize))]
-pub struct StyleRule {
-  pub selectors: Vec<Selector>,
-  pub declarations: Vec<(String, String)>,
-}
-
-#[derive(Deserialize)]
-#[cfg_attr(feature = "encode", derive(Serialize))]
-pub struct StyleSheet {
-  pub rules: Vec<StyleRule>,
-  pub at_rules: String,
-  pub imports: Vec<i32>,
-}
 
 pub(crate) struct FlattenedStyleSheet {
   pub rules: Vec<StyleRule>,
@@ -40,7 +8,8 @@ pub(crate) struct FlattenedStyleSheet {
 }
 
 /**
- * value: FlattenedStyleSheet
+ * key: cssId
+ * value: StyleSheet
  */
 pub(crate) type FlattenedStyleInfo = Vec<FlattenedStyleSheet>;
 
@@ -121,8 +90,8 @@ pub(crate) fn flatten_style_info(mut style_info: StyleInfo) -> FlattenedStyleInf
 }
 #[cfg(test)]
 mod tests {
+  use super::super::super::raw_template::style_info::StyleSheet;
   use super::*;
-  use crate::template::StyleSheet;
   use std::collections::{HashMap, HashSet};
 
   #[test]
