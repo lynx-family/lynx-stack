@@ -62,4 +62,8 @@ impl DecodedTemplateImpl {
   pub fn get_element_templates_by_id(&self, template_id: &str) -> Option<&Vec<ElementTemplate>> {
     self.template.element_templates.get(template_id)
   }
+
+  pub fn get_page_config(&self) -> &PageConfig {
+    &self.template.page_config
+  }
 }

@@ -87,23 +87,3 @@ impl MainThreadGlobalThis {
     component
   }
 }
-
-/**
- * methods for internal use
- */
-impl MainThreadGlobalThis {
-  pub(crate) fn get_lynx_element_by_dom(&self, dom: &web_sys::HtmlElement) -> Option<&LynxElement> {
-    let unique_id: i32 = js_sys::Reflect::get(
-      dom,
-      &wasm_bindgen::JsValue::from_str(constants::LYNX_UNIQUE_ID_ATTRIBUTE),
-    )
-    .unwrap()
-    .as_f64()
-    .unwrap() as i32;
-    if let Some(element) = self.unique_id_to_element_map.get(&unique_id) {
-      Some(element)
-    } else {
-      None
-    }
-  }
-}

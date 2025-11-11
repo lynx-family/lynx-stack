@@ -4,7 +4,8 @@ use super::{
   LynxElement, // event::event_delegation::EventSystem,
 };
 
-use crate::js_binding::JSRealm;
+use crate::constants;
+use crate::js_binding::{BackgroundThreadRPC, JSRealm, MainThreadJSBinding};
 use crate::template::{DecodedTemplateImpl, PageConfig};
 use std::{
   collections::{HashMap, HashSet},
@@ -29,6 +30,8 @@ pub struct MainThreadGlobalThis {
   pub(super) template: DecodedTemplateImpl,
   pub(super) element_templates_instances: HashMap<String, ElementTemplatesInstance>,
   mts_realm: JSRealm,
+  pub(super) mts_binding: MainThreadJSBinding,
+  pub(super) bts_rpc: BackgroundThreadRPC,
 }
 
 impl MainThreadGlobalThis {
@@ -38,9 +41,11 @@ impl MainThreadGlobalThis {
     document: web_sys::Document,
     root_node: web_sys::Node,
     mts_realm: JSRealm,
+    mts_binding: MainThreadJSBinding,
+    bts_rpc: BackgroundThreadRPC,
     tag_name_to_html_tag_map: wasm_bindgen::JsValue,
-    page_config: PageConfig,
   ) -> MainThreadGlobalThis {
+    let page_config = template.get_page_config().clone();
     let unique_id_counter = 1;
     let tag_name_to_html_tag_map: HashMap<String, String> =
       serde_wasm_bindgen::from_value(tag_name_to_html_tag_map).unwrap();
@@ -54,6 +59,8 @@ impl MainThreadGlobalThis {
     MainThreadGlobalThis {
       template,
       mts_realm,
+      mts_binding,
+      bts_rpc,
       unique_id_counter,
       element_templates_instances: HashMap::new(),
       unique_id_to_element_map: HashMap::new(),
@@ -68,6 +75,24 @@ impl MainThreadGlobalThis {
       root_node,
       page_config,
     }
+  }
+
+  pub(crate) fn get_lynx_element_by_dom(&self, dom: &web_sys::HtmlElement) -> Option<&LynxElement> {
+    let unique_id: i32 = js_sys::Reflect::get(
+      dom,
+      &wasm_bindgen::JsValue::from_str(constants::LYNX_UNIQUE_ID_ATTRIBUTE),
+    )
+    .unwrap()
+    .as_f64()
+    .unwrap() as i32;
+    self.get_lynx_element_by_unique_id(unique_id)
+  }
+
+  pub(crate) fn get_lynx_element_by_unique_id(&self, unique_id: i32) -> Option<&LynxElement> {
+    self
+      .unique_id_to_element_map
+      .get(&unique_id)
+      .map(|boxed_element| boxed_element.as_ref())
   }
 }
 
