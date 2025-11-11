@@ -9,7 +9,16 @@ export default defineConfig({
     pluginPublint({ throwOn: 'suggestion' }),
   ],
   lib: [
-    { format: 'esm', syntax: 'es2022', dts: { bundle: true } },
+    {
+      format: 'esm',
+      syntax: 'es2022',
+      dts: {
+        bundle: {
+          // Avoid bundling `zod` types.
+          bundledPackages: [],
+        },
+      },
+    },
     {
       format: 'esm',
       syntax: 'es2022',

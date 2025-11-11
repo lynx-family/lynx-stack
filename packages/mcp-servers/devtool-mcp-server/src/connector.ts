@@ -496,13 +496,6 @@ export async function ensureLynxConnected(): Promise<DebugRouterConnector> {
     if (devices.length === 0) {
       throw new Error('Failed to connect to Lynx: no device found.');
     }
-    devices.forEach((device) => {
-      device.startWatchClient();
-    });
-  } else {
-    for (const device of connector.devices.values()) {
-      device.startWatchClient();
-    }
   }
 
   return connector;
