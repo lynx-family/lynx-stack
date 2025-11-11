@@ -82,6 +82,7 @@ const builtinTagTransformMap = {
   'list': 'x-list',
   'svg': 'x-svg',
   'input': 'x-input',
+  'x-input-ng': 'x-input',
 };
 
 // @ts-expect-error
