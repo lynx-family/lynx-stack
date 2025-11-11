@@ -1,10 +1,10 @@
-use wasm_bindgen::JsCast;
-
 use super::{
   decoded_template::{DecodedTemplate, DecodedTemplateImpl},
   raw_template::LynxRawTemplate,
 };
 use std::collections::HashMap;
+use wasm_bindgen::prelude::*;
+#[wasm_bindgen]
 #[derive(Default)]
 pub struct TemplateManager {
   /**
@@ -14,13 +14,15 @@ pub struct TemplateManager {
   cache: HashMap<String, DecodedTemplateImpl>,
 }
 
+#[wasm_bindgen]
 impl TemplateManager {
-  pub(crate) fn new() -> Self {
-    TemplateManager {
-      cache: HashMap::new(),
-    }
+  #[wasm_bindgen(constructor)]
+  pub fn new() -> Self {
+    TemplateManager::default()
   }
+}
 
+impl TemplateManager {
   pub(crate) fn get_cached_template(&self, template_url: &String) -> Option<DecodedTemplateImpl> {
     self.cache.get(template_url).cloned()
   }
@@ -59,12 +61,16 @@ impl TemplateManager {
           .dyn_into::<js_sys::Uint8Array>()?
       }
     };
-    let lynx_template: LynxRawTemplate = LynxRawTemplate::from(&buffer_value);
-    let decoded_template: DecodedTemplate = lynx_template.into();
-    self.cache.insert(
-      template_url.clone(),
-      DecodedTemplateImpl::new(decoded_template),
-    );
-    Ok(self.cache.get(template_url).unwrap().clone())
+    if self.cache.contains_key(template_url) {
+      Ok(self.cache.get(template_url).unwrap().clone())
+    } else {
+      let lynx_template: LynxRawTemplate = LynxRawTemplate::from(&buffer_value);
+      let decoded_template: DecodedTemplate = lynx_template.into();
+      self.cache.insert(
+        template_url.clone(),
+        DecodedTemplateImpl::new(decoded_template),
+      );
+      Ok(self.cache.get(template_url).unwrap().clone())
+    }
   }
 }

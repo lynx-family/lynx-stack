@@ -4,6 +4,7 @@ mod element;
 mod element_template_apis;
 mod event_apis;
 mod list_apis;
+mod query_component;
 mod style_apis;
 mod tree_apis;
 use super::*;

@@ -4,7 +4,7 @@ use wasm_bindgen::prelude::*;
 extern "C" {
   pub(crate) type JSRealm;
 
-  #[wasm_bindgen(getter, js_name = "globalThis")]
+  #[wasm_bindgen(getter, method, js_name = "globalThis")]
   pub(crate) fn getGlobalThis(this: &JSRealm) -> web_sys::Window;
 
   #[wasm_bindgen(catch, method, js_name = "loadScriptSync")]

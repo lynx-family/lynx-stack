@@ -19,6 +19,8 @@ pub(crate) struct StyleManager {
   style_element: web_sys::HtmlStyleElement,
   style_sheet: Option<web_sys::CssStyleSheet>,
   unique_id_to_style_declarations_map: Option<HashMap<i32, web_sys::CssStyleDeclaration>>,
+  config_enable_css_selector: bool,
+  config_enable_remove_css_scope: bool,
 }
 
 impl StyleManager {
@@ -43,6 +45,8 @@ impl StyleManager {
         style_element,
         style_sheet: None,
         unique_id_to_style_declarations_map: None,
+        config_enable_css_selector,
+        config_enable_remove_css_scope,
       }
     } else {
       let (style_content, map): (String, CssOgCssIdToClassNameToDeclarationsMap) =
@@ -60,6 +64,8 @@ impl StyleManager {
         style_element,
         style_sheet: Some(style_sheet),
         unique_id_to_style_declarations_map: Some(HashMap::new()),
+        config_enable_css_selector,
+        config_enable_remove_css_scope,
       }
     }
   }
@@ -110,5 +116,44 @@ impl StyleManager {
         .unchecked_into::<web_sys::CssStyleDeclaration>();
       unique_id_to_style_declarations_map.insert(unique_id, style_declaration);
     }
+  }
+
+  pub(crate) fn push_lazy_component_style_sheet(
+    &mut self,
+    flattened_style_info: &FlattenedStyleInfo,
+    entry_name: &str,
+  ) {
+    let parent_dom = self.style_element.parent_node().unwrap();
+    let new_style_element = self
+      .style_element
+      .owner_document()
+      .unwrap()
+      .create_element("style")
+      .unwrap()
+      .unchecked_into::<web_sys::HtmlStyleElement>();
+    if self.config_enable_css_selector {
+      let style_content = transform_to_web_style_css_ng(
+        flattened_style_info,
+        self.config_enable_remove_css_scope,
+        Some(entry_name),
+      );
+      new_style_element.set_inner_text(&style_content);
+    } else {
+      let (style_content, map): (String, CssOgCssIdToClassNameToDeclarationsMap) =
+        transform_to_web_style_css_og(
+          flattened_style_info,
+          self.config_enable_remove_css_scope,
+          Some(entry_name),
+        );
+      new_style_element.set_inner_text(&style_content);
+      self
+        .css_query_map_by_entry_name
+        .as_mut()
+        .unwrap()
+        .insert(entry_name.to_string(), map);
+    }
+    parent_dom
+      .insert_before(&new_style_element, Some(&self.style_element))
+      .unwrap();
   }
 }

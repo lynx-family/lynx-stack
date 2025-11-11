@@ -7,12 +7,21 @@ use super::{
 
 pub(crate) struct DecodedTemplate {
   pub(crate) lepus_code_urls: HashMap<String, String>,
-  pub(crate) manifest_code: HashMap<String, String>,
+  pub(crate) manifest_code_urls: HashMap<String, String>,
   pub(crate) app_type: TemplateType,
   pub(crate) card_type: DslType,
   pub(crate) page_config: PageConfig,
   pub(crate) style_info: FlattenedStyleInfo,
   pub(crate) element_templates: HashMap<String, Vec<ElementTemplate>>,
+}
+
+fn to_blob_url_from_code(code: &str) -> String {
+  let buffer = js_sys::Uint8Array::from(code.as_bytes());
+  let blob_option = web_sys::BlobPropertyBag::new();
+  blob_option.set_type("text/javascript; charset=utf-8");
+  let blob =
+    web_sys::Blob::new_with_buffer_source_sequence_and_options(&buffer, &blob_option).unwrap();
+  web_sys::Url::create_object_url_with_blob(&blob).unwrap()
 }
 
 impl From<LynxRawTemplate> for DecodedTemplate {
@@ -23,13 +32,18 @@ impl From<LynxRawTemplate> for DecodedTemplate {
         .lepus_code
         .into_iter()
         .map(|(k, v)| {
-          let buffer = js_sys::Uint8Array::from(v.as_bytes());
-          let blob = web_sys::Blob::new_with_buffer_source_sequence(&buffer).unwrap();
-          let url = web_sys::Url::create_object_url_with_blob(&blob).unwrap();
+          let url = to_blob_url_from_code(&v);
           (k, url)
         })
         .collect(),
-      manifest_code: template.manifest_code,
+      manifest_code_urls: template
+        .manifest_code
+        .into_iter()
+        .map(|(k, v)| {
+          let url = to_blob_url_from_code(&v);
+          (k, url)
+        })
+        .collect(),
       app_type: template.app_type,
       card_type: template.card_type,
       page_config: template.page_config,
@@ -47,6 +61,10 @@ pub(crate) struct DecodedTemplateImpl {
 impl DecodedTemplateImpl {
   pub fn get_lepus_code_url(&self, chunk_name: &str) -> Option<&String> {
     self.template.lepus_code_urls.get(chunk_name)
+  }
+
+  pub fn get_manifest_urls(&self) -> &HashMap<String, String> {
+    &self.template.manifest_code_urls
   }
 
   pub fn new(template: DecodedTemplate) -> Self {

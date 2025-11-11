@@ -29,13 +29,12 @@ pub struct MainThreadGlobalThis {
   pub(super) enabled_events: HashSet<String>,
   pub(super) template: DecodedTemplateImpl,
   pub(super) element_templates_instances: HashMap<String, ElementTemplatesInstance>,
-  mts_realm: JSRealm,
+  pub(super) mts_realm: JSRealm,
   pub(super) mts_binding: MainThreadJSBinding,
   pub(super) bts_rpc: BackgroundThreadRPC,
 }
 
 impl MainThreadGlobalThis {
-  #[allow(clippy::too_many_arguments)]
   pub(crate) fn new(
     template: DecodedTemplateImpl,
     document: web_sys::Document,
