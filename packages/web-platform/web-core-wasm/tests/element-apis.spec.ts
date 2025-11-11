@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, test, expect, beforeAll } from 'vitest';
 import { MainThreadGlobalThis } from '../dist/debug.js';
 import { GlobalWindow, Window } from 'happy-dom';
 const window = new Window();
@@ -21,4 +21,8 @@ const mtsGlobalThis = new MainThreadGlobalThis(
   true,
 );
 describe('Element APIs', () => {
+  test('createElementView', () => {
+    const element = mtsGlobalThis.__CreateElement('view', 0);
+    expect(mtsGlobalThis.__GetTag(element)).toBe('view');
+  });
 });
