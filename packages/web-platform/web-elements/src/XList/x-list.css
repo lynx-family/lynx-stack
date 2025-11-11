@@ -6,6 +6,7 @@
 x-list {
   contain: layout;
   scrollbar-width: none;
+  container-type: size;
   --list-item-sticky-offset: 0;
   --list-item-span-count: 0;
   --list-main-axis-gap: 0px;
@@ -61,7 +62,11 @@ list-item {
   flex: 0 0 auto !important;
   position: static;
   contain: size;
-  contain-intrinsic-size: auto var(--estimated-main-axis-size-px);
+  contain-intrinsic-size: none auto var(--estimated-main-axis-size-px, 100cqh);
+}
+
+x-list[scroll-orientation="horizontal"] list-item {
+  contain-intrinsic-size: auto var(--estimated-main-axis-size-px, 100cqw) none;
 }
 
 x-list > list-item, x-list > lynx-wrapper > list-item {

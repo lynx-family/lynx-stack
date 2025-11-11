@@ -4553,6 +4553,42 @@ test.describe('reactlynx3 tests', () => {
         },
       );
       test(
+        'basic-element-list-estimated-main-axis-size-px-default',
+        async ({ page }, { title }) => {
+          await goto(page, title);
+          await diffScreenShot(page, elementName, title, 'initial');
+          await wait(1000);
+          await page.evaluate(() => {
+            document.querySelector('lynx-view')!.shadowRoot!.querySelector(
+              'x-list',
+            )?.shadowRoot?.querySelector(
+              '#content',
+            )
+              ?.scrollTo(0, 300);
+          });
+          await wait(1000);
+          await diffScreenShot(page, elementName, title, 'scroll');
+        },
+      );
+      test(
+        'basic-element-list-estimated-main-axis-size-px-horizontal-default',
+        async ({ page }, { title }) => {
+          await goto(page, title);
+          await diffScreenShot(page, elementName, title, 'initial');
+          await wait(1000);
+          await page.evaluate(() => {
+            document.querySelector('lynx-view')!.shadowRoot!.querySelector(
+              'x-list',
+            )?.shadowRoot?.querySelector(
+              '#content',
+            )
+              ?.scrollTo(300, 0);
+          });
+          await wait(1000);
+          await diffScreenShot(page, elementName, title, 'scroll');
+        },
+      );
+      test(
         'basic-element-list-estimated-main-axis-size-px-waterfall',
         async ({ page, browserName }, { title }) => {
           let scrolltolower = false;
