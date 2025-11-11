@@ -174,6 +174,7 @@ test('fireEvent triggers useEffect calls', async () => {
   expect(snapshotInstanceManager.values).toMatchInlineSnapshot(`
     Map {
       -1 => {
+        "__slotIndex": undefined,
         "children": undefined,
         "extraProps": undefined,
         "id": -1,
@@ -201,7 +202,7 @@ test('fireEvent triggers useEffect calls', async () => {
       [
         "rLynxChange",
         {
-          "data": "{"patchList":[{"snapshotPatch":[0,"__Card__:__snapshot_e8d0a_test_4",2,4,2,[1],0,null,3,4,3,[0],1,2,3,null,1,-1,2,null],"id":2}]}",
+          "data": "{"patchList":[{"snapshotPatch":[0,"__Card__:__snapshot_e8d0a_test_4",2,4,2,[1],0,null,3,4,3,[0],1,2,3,null,0,1,-1,2,null,0],"id":2}]}",
           "patchOptions": {
             "isHydration": true,
             "pipelineOptions": {
@@ -221,10 +222,13 @@ test('fireEvent triggers useEffect calls', async () => {
   expect(snapshotInstanceManager.values).toMatchInlineSnapshot(`
     Map {
       -1 => {
+        "__slotIndex": undefined,
         "children": [
           {
+            "__slotIndex": 0,
             "children": [
               {
+                "__slotIndex": 0,
                 "children": undefined,
                 "extraProps": undefined,
                 "id": 3,
@@ -248,8 +252,10 @@ test('fireEvent triggers useEffect calls', async () => {
         "values": undefined,
       },
       2 => {
+        "__slotIndex": 0,
         "children": [
           {
+            "__slotIndex": 0,
             "children": undefined,
             "extraProps": undefined,
             "id": 3,
@@ -267,6 +273,7 @@ test('fireEvent triggers useEffect calls', async () => {
         ],
       },
       3 => {
+        "__slotIndex": 0,
         "children": undefined,
         "extraProps": undefined,
         "id": 3,
@@ -285,7 +292,7 @@ test('fireEvent triggers useEffect calls', async () => {
       [
         "rLynxChange",
         {
-          "data": "{"patchList":[{"snapshotPatch":[0,"__Card__:__snapshot_e8d0a_test_4",2,4,2,[1],0,null,3,4,3,[0],1,2,3,null,1,-1,2,null],"id":2}]}",
+          "data": "{"patchList":[{"snapshotPatch":[0,"__Card__:__snapshot_e8d0a_test_4",2,4,2,[1],0,null,3,4,3,[0],1,2,3,null,0,1,-1,2,null,0],"id":2}]}",
           "patchOptions": {
             "isHydration": true,
             "pipelineOptions": {

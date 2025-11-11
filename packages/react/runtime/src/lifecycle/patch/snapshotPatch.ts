@@ -20,10 +20,18 @@ export const SnapshotOperation = {
 } as const;
 
 export const SnapshotOperationParams: Record<number, { name: string; params: string[] }> = /* @__PURE__ */ {
-  [SnapshotOperation.CreateElement]: { name: 'CreateElement', params: ['type', /* string */ 'id' /* number */] },
+  [SnapshotOperation.CreateElement]: {
+    name: 'CreateElement',
+    params: ['type', /* string */ 'id' /* number */],
+  },
   [SnapshotOperation.InsertBefore]: {
     name: 'InsertBefore',
-    params: ['parentId', /* number */ 'childId', /* number */ 'beforeId' /* number | undefined */],
+    params: [
+      'parentId',
+      /* number */ 'childId',
+      /* number */ 'beforeId',
+      /* number | undefined */ 'slotIndex', /* number | undefined */
+    ],
   },
   [SnapshotOperation.RemoveChild]: { name: 'RemoveChild', params: ['parentId', /* number */ 'childId' /* number */] },
   [SnapshotOperation.SetAttribute]: {

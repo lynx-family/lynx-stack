@@ -143,6 +143,7 @@ describe('insertBefore', () => {
         2,
         3,
         undefined,
+        undefined,
       ]
     `);
 
@@ -193,10 +194,12 @@ describe('insertBefore', () => {
         2,
         4,
         undefined,
+        undefined,
         1,
         2,
         3,
         4,
+        undefined,
       ]
     `);
 
@@ -242,14 +245,17 @@ describe('insertBefore', () => {
       2,
       100,
       null,
+      0,
       SnapshotOperation.InsertBefore,
       100,
       2,
       null,
+      1,
       SnapshotOperation.InsertBefore,
       4,
       100,
       null,
+      2,
     );
     expect(patch).toMatchInlineSnapshot(`
       [
@@ -263,14 +269,17 @@ describe('insertBefore', () => {
         2,
         100,
         null,
+        0,
         1,
         100,
         2,
         null,
         1,
+        1,
         4,
         100,
         null,
+        2,
       ]
     `);
 
@@ -1327,7 +1336,7 @@ describe('list', () => {
     bsi2.setAttribute('values', ['test']);
     bsi1.insertBefore(bsi2);
     patch = takeGlobalSnapshotPatch();
-    expect(patch.length).toMatchInlineSnapshot(`10`);
+    expect(patch.length).toMatchInlineSnapshot(`11`);
     snapshotPatchApply(patch);
     expect(si1.__element_root).toMatchInlineSnapshot(`
       <view>

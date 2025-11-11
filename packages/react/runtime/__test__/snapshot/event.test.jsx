@@ -324,6 +324,7 @@ describe('eventUpdate', () => {
         -2,
         3,
         undefined,
+        0,
       ]
     `);
     globalEnvManager.switchToMainThread();
@@ -954,6 +955,7 @@ describe('event in spread', () => {
         -2,
         3,
         undefined,
+        0,
       ]
     `);
     globalEnvManager.switchToMainThread();
@@ -1160,7 +1162,7 @@ describe('event when firstScreenSyncTiming is jsReady', () => {
                 "-5": -8,
                 "-6": -9,
               },
-              "root": "{"id":-7,"type":"root","children":[{"id":-8,"type":"__Card__:__snapshot_a94a8_test_12","children":[{"id":-9,"type":"__Card__:__snapshot_a94a8_test_11","values":["-9:0:"]}]}]}",
+              "root": "{"id":-7,"type":"root","children":[{"id":-8,"type":"__Card__:__snapshot_a94a8_test_12","children":[{"id":-9,"type":"__Card__:__snapshot_a94a8_test_11","values":["-9:0:"],"__slotIndex":0}],"__slotIndex":0}]}",
             },
           ],
         ]
@@ -1269,7 +1271,7 @@ describe('call `root.render()` async', () => {
             "rLynxFirstScreen",
             {
               "jsReadyEventIdSwap": {},
-              "root": "{"id":-1,"type":"root","children":[{"id":-2,"type":"__Card__:__snapshot_a94a8_test_14","children":[{"id":-3,"type":"__Card__:__snapshot_a94a8_test_13","values":["-3:0:"]}]}]}",
+              "root": "{"id":-1,"type":"root","children":[{"id":-2,"type":"__Card__:__snapshot_a94a8_test_14","children":[{"id":-3,"type":"__Card__:__snapshot_a94a8_test_13","values":["-3:0:"],"__slotIndex":0}],"__slotIndex":0}]}",
             },
           ],
         ]

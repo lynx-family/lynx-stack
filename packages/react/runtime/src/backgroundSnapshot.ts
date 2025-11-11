@@ -46,6 +46,7 @@ export class BackgroundSnapshotInstance {
   __values: any[] | undefined;
   __snapshot_def: Snapshot;
   __extraProps?: Record<string, unknown> | undefined;
+  __slotIndex?: number | undefined;
 
   private __parent: BackgroundSnapshotInstance | null = null;
   private __firstChild: BackgroundSnapshotInstance | null = null;
@@ -90,6 +91,7 @@ export class BackgroundSnapshotInstance {
         this.__id,
         node.__id,
         beforeNode?.__id,
+        node.__slotIndex,
       );
     }
 
@@ -462,11 +464,21 @@ export function hydrate(
           helper(v1, v2);
           break;
         }
+        case DynamicPartType.SlotV2:
+        case DynamicPartType.ListSlotV2:
         case DynamicPartType.Children:
         case DynamicPartType.ListChildren: {
+          // TODO: optimize time complexity
+          let filteredBeforeChildNodes = beforeChildNodes;
+          let filteredAfterChildNodes = afterChildNodes;
+          if (type === DynamicPartType.SlotV2 || type === DynamicPartType.ListSlotV2) {
+            filteredBeforeChildNodes = beforeChildNodes.filter(v => v.__slotIndex === index);
+            filteredAfterChildNodes = afterChildNodes.filter(v => v.__slotIndex === index);
+          }
+
           const diffResult = diffArrayLepus(
-            beforeChildNodes,
-            afterChildNodes,
+            filteredBeforeChildNodes,
+            filteredAfterChildNodes,
             (a, b) => a.type === b.type,
             (a, b) => {
               helper(a, b);
@@ -475,7 +487,7 @@ export function hydrate(
             false,
           );
           diffArrayAction(
-            beforeChildNodes,
+            filteredBeforeChildNodes,
             diffResult,
             (node, target) => {
               reconstructInstanceTree([node], before.id, target?.id);
@@ -495,11 +507,14 @@ export function hydrate(
                 before.id,
                 node.id,
                 target?.id,
+                node.__slotIndex,
               );
             },
           );
           break;
         }
+        default:
+          throw new Error('Unexpected slot type: ' + type);
       }
     });
   };
@@ -524,6 +539,6 @@ function reconstructInstanceTree(afters: BackgroundSnapshotInstance[], parentId:
       child.setAttribute(key, extraProps[key]);
     }
     reconstructInstanceTree(child.childNodes, id);
-    __globalSnapshotPatch?.push(SnapshotOperation.InsertBefore, parentId, id, targetId);
+    __globalSnapshotPatch?.push(SnapshotOperation.InsertBefore, parentId, id, targetId, child.__slotIndex);
   }
 }

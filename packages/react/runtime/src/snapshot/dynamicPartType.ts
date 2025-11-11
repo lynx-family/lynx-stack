@@ -13,4 +13,6 @@ export const enum DynamicPartType {
   Children, // Regular children updates
   ListChildren, // List/array children updates
   MultiChildren, // Multiple children updates (compat layer)
+  SlotV2,
+  ListSlotV2,
 }

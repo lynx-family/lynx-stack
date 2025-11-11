@@ -86,14 +86,19 @@ globalThis.onInjectMainThreadGlobals = (target) => {
   target.__root = new SnapshotInstance('root');
 
   function setupDocument(document) {
-    document.createElement = function(type) {
-      return new SnapshotInstance(type);
+    document.createElement = function(type, slotIndex = 0) {
+      const si = new SnapshotInstance(type);
+      si.__slotIndex = slotIndex;
+      return si;
     };
-    document.createElementNS = function(_ns, type) {
-      return new SnapshotInstance(type);
+    document.createElementNS = function(_ns, type, _is, slotIndex = 0) {
+      const si = new SnapshotInstance(type);
+      si.__slotIndex = slotIndex;
+      return si;
     };
-    document.createTextNode = function(text) {
+    document.createTextNode = function(text, slotIndex = 0) {
       const i = new SnapshotInstance(null);
+      i.__slotIndex = slotIndex;
       i.setAttribute(0, text);
       Object.defineProperty(i, 'data', {
         set(v) {
@@ -119,14 +124,14 @@ globalThis.onInjectBackgroundThreadGlobals = (target) => {
   target.__root = new BackgroundSnapshotInstance('root');
 
   function setupBackgroundDocument(document) {
-    document.createElement = function(type) {
-      return new BackgroundSnapshotInstance(type);
+    document.createElement = function(type, slotIndex = 0) {
+      return new BackgroundSnapshotInstance(type, slotIndex);
     };
-    document.createElementNS = function(_ns, type) {
-      return new BackgroundSnapshotInstance(type);
+    document.createElementNS = function(_ns, type, _is, slotIndex = 0) {
+      return new BackgroundSnapshotInstance(type, slotIndex);
     };
-    document.createTextNode = function(text) {
-      const i = new BackgroundSnapshotInstance(null);
+    document.createTextNode = function(text, slotIndex = 0) {
+      const i = new BackgroundSnapshotInstance(null, slotIndex);
       i.setAttribute(0, text);
       Object.defineProperty(i, 'data', {
         set(v) {

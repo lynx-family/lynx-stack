@@ -41,6 +41,7 @@ describe('lynx global API', () => {
           1e10,
           1e10,
           null,
+          0,
         );
         args[1].data = JSON.stringify(data);
       }
@@ -69,12 +70,14 @@ describe('lynx global API', () => {
           "childId": 2,
           "op": "InsertBefore",
           "parentId": -1,
+          "slotIndex": 0,
         },
         {
           "beforeId": null,
           "childId": 10000000000,
           "op": "InsertBefore",
           "parentId": 10000000000,
+          "slotIndex": 0,
         },
       ]
     `);

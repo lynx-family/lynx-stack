@@ -60,6 +60,7 @@ describe('ssr', () => {
               },
             ],
           ],
+          0,
           1,
         ],
       }
@@ -113,6 +114,7 @@ describe('ssr', () => {
             ],
           ],
           0,
+          0,
           [
             "__Card__:__snapshot_a94a8_test_3",
             -3,
@@ -132,6 +134,7 @@ describe('ssr', () => {
             ],
           ],
           0,
+          0,
           [
             "__Card__:__snapshot_a94a8_test_4",
             -4,
@@ -141,6 +144,7 @@ describe('ssr', () => {
               },
             ],
           ],
+          0,
           0,
           [
             "__Card__:__snapshot_a94a8_test_5",
@@ -163,6 +167,7 @@ describe('ssr', () => {
               },
             ],
           ],
+          0,
           1,
           1,
           1,
@@ -203,6 +208,7 @@ describe('ssr', () => {
               },
             ],
           ],
+          0,
           2,
           "values",
           [
@@ -259,6 +265,7 @@ describe('ssr', () => {
               },
             ],
           ],
+          0,
           2,
           "values",
           [
@@ -324,6 +331,7 @@ describe('ssr', () => {
             ],
           ],
           0,
+          0,
           [
             "__Card__:__snapshot_a94a8_test_9",
             -3,
@@ -343,6 +351,7 @@ describe('ssr', () => {
             ],
           ],
           0,
+          0,
           [
             "__Card__:__snapshot_a94a8_test_10",
             -4,
@@ -352,6 +361,7 @@ describe('ssr', () => {
               },
             ],
           ],
+          0,
           1,
           1,
           1,

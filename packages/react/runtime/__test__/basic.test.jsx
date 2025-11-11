@@ -102,6 +102,8 @@ describe('insertBefore', () => {
 
     const b = new SnapshotInstance(snapshot2);
     const c = new SnapshotInstance(snapshot2);
+    b.__slotIndex = 0;
+    c.__slotIndex = 1;
 
     a.insertBefore(b);
     a.insertBefore(c);
@@ -114,23 +116,27 @@ describe('insertBefore', () => {
           />
         </text>
         <text>
-          <view>
-            <text>
-              <raw-text
-                text="Hello World"
-              />
-            </text>
-          </view>
+          <wrapper>
+            <view>
+              <text>
+                <raw-text
+                  text="Hello World"
+                />
+              </text>
+            </view>
+          </wrapper>
           <raw-text
             text="!!!"
           />
-          <view>
-            <text>
-              <raw-text
-                text="Hello World"
-              />
-            </text>
-          </view>
+          <wrapper>
+            <view>
+              <text>
+                <raw-text
+                  text="Hello World"
+                />
+              </text>
+            </view>
+          </wrapper>
         </text>
       </view>
     `);
@@ -155,6 +161,9 @@ describe('insertBefore', () => {
     const a = new SnapshotInstance(snapshot1);
     const b = new SnapshotInstance(snapshot2);
     const c = new SnapshotInstance(snapshot2);
+    b.__slotIndex = 0;
+    c.__slotIndex = 1;
+
     a.insertBefore(b);
     a.insertBefore(c);
 
@@ -168,23 +177,27 @@ describe('insertBefore', () => {
           />
         </text>
         <text>
-          <view>
-            <text>
-              <raw-text
-                text="Hello World"
-              />
-            </text>
-          </view>
+          <wrapper>
+            <view>
+              <text>
+                <raw-text
+                  text="Hello World"
+                />
+              </text>
+            </view>
+          </wrapper>
           <raw-text
             text="!!!"
           />
-          <view>
-            <text>
-              <raw-text
-                text="Hello World"
-              />
-            </text>
-          </view>
+          <wrapper>
+            <view>
+              <text>
+                <raw-text
+                  text="Hello World"
+                />
+              </text>
+            </view>
+          </wrapper>
         </text>
       </view>
     `);
@@ -388,11 +401,7 @@ describe('dynamic key in snapshot', () => {
 
     expect(a.__element_root).toMatchInlineSnapshot(`
       <view>
-        <view
-          class="foo"
-        >
-          <wrapper />
-        </view>
+        <wrapper />
       </view>
     `);
   });
@@ -418,7 +427,10 @@ describe('dynamic key in snapshot', () => {
       <view
         class="foo"
       >
-        <wrapper />
+        <view>
+          <view />
+          <view />
+        </view>
       </view>
     `);
   });
@@ -449,11 +461,7 @@ describe('dynamic key in snapshot', () => {
           />
           <wrapper />
         </text>
-        <view
-          class="foo"
-        >
-          <wrapper />
-        </view>
+        <wrapper />
       </view>
     `);
   });

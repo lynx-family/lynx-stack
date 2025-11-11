@@ -262,10 +262,18 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
         hydrate(v1, v2, options);
         break;
       }
+      case DynamicPartType.SlotV2:
       case DynamicPartType.Children: {
+        let filteredBeforeChildNodes = beforeChildNodes;
+        let filteredAfterChildNodes = afterChildNodes;
+        if (type === DynamicPartType.SlotV2) {
+          filteredBeforeChildNodes = beforeChildNodes.filter(v => v.__slotIndex === index);
+          filteredAfterChildNodes = afterChildNodes.filter(v => v.__slotIndex === index);
+        }
+
         const diffResult = diffArrayLepus(
-          beforeChildNodes,
-          afterChildNodes,
+          filteredBeforeChildNodes,
+          filteredAfterChildNodes,
           (a, b) => a.type === b.type,
           (a, b) => {
             hydrate(a, b, options);
@@ -273,7 +281,7 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
           false,
         );
         diffArrayAction(
-          beforeChildNodes,
+          filteredBeforeChildNodes,
           diffResult,
           (node, target) => {
             node.ensureElements();
@@ -304,7 +312,15 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
         );
         break;
       }
+      case DynamicPartType.ListSlotV2:
       case DynamicPartType.ListChildren: {
+        let filteredBeforeChildNodes = beforeChildNodes;
+        let filteredAfterChildNodes = afterChildNodes;
+        if (type === DynamicPartType.ListSlotV2) {
+          filteredBeforeChildNodes = beforeChildNodes.filter(v => v.__slotIndex === index);
+          filteredAfterChildNodes = afterChildNodes.filter(v => v.__slotIndex === index);
+        }
+
         const removals: number[] = [];
         const insertions: number[] = [];
         const updateAction: any[] = [];
@@ -314,8 +330,8 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
         const recycleMap = gRecycleMap[listID]!;
 
         const diffResult = diffArrayLepus(
-          beforeChildNodes,
-          afterChildNodes,
+          filteredBeforeChildNodes,
+          filteredAfterChildNodes,
           (a, b) => a.type === b.type,
           (a, b, _oldIndex, newIndex) => {
             if (
@@ -406,7 +422,10 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
         if (__PROFILE__) {
           profileEnd();
         }
+        break;
       }
+      default:
+        throw new Error('Unexpected slot type: ' + type);
     }
   });
 }

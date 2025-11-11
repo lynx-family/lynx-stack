@@ -37,7 +37,7 @@ function setupBackgroundDocument(): void {
   document.createElement = function(type: string) {
     return new BackgroundSnapshotInstance(type);
   };
-  document.createElementNS = function(_ns: string, type: string) {
+  document.createElementNS = function(_ns: string, type: string, _is?: string) {
     return new BackgroundSnapshotInstance(type);
   };
   document.createTextNode = function(text: string) {
@@ -58,10 +58,12 @@ function setupBackgroundDocument(): void {
  */
 function setupDocument(): void {
   document.createElement = function(type: string) {
-    return new SnapshotInstance(type);
+    const si = new SnapshotInstance(type);
+    return si;
   };
-  document.createElementNS = function(_ns: string, type: string) {
-    return new SnapshotInstance(type);
+  document.createElementNS = function(_ns: string, type: string, _is?: string) {
+    const si = new SnapshotInstance(type);
+    return si;
   };
   document.createTextNode = function(text: string) {
     const i = new SnapshotInstance(null as unknown as string);

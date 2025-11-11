@@ -22,14 +22,12 @@ use swc_core::{
 };
 
 mod attr_name;
-mod slot_marker;
-
 pub mod napi;
 
 use swc_plugins_shared::{
   css::get_string_inline_style_from_literal,
   jsx_helpers::{
-    jsx_attr_name, jsx_attr_to_prop, jsx_attr_value, jsx_children_to_expr,
+    jsx_attr_name, jsx_attr_to_prop, jsx_attr_value, jsx_children_to_expr, jsx_has_dynamic_key,
     jsx_is_children_full_dynamic, jsx_is_custom, jsx_is_list, jsx_is_list_item, jsx_name,
     jsx_props_to_obj, jsx_text_to_str, transform_jsx_attr_str,
   },
@@ -38,10 +36,7 @@ use swc_plugins_shared::{
   utils::calc_hash,
 };
 
-use self::{
-  attr_name::AttrName,
-  slot_marker::{jsx_is_internal_slot, jsx_unwrap_internal_slot, WrapperMarker},
-};
+use self::attr_name::AttrName;
 
 // impl From<i32> for Expr {
 //     fn from(value: i32) -> Self {
@@ -108,9 +103,8 @@ static NO_FLATTEN_ATTRIBUTES: Lazy<HashSet<String>> = Lazy::new(|| {
 pub enum DynamicPart {
   Attr(Expr, i32, AttrName),
   Spread(Expr, i32),
-  Slot(JSXElement, i32),
-  Children(Expr, i32),
-  ListChildren(Expr, i32),
+  Slot(Expr, i32),
+  ListSlot(Expr, i32),
 }
 
 pub fn i32_to_expr(i: &i32) -> Expr {
@@ -236,8 +230,7 @@ impl DynamicPart {
           element_index: Expr = i32_to_expr(element_index)
         ),
         DynamicPart::Slot(_, _) => Expr::Lit(Lit::Null(Null { span: DUMMY_SP })),
-        DynamicPart::Children(_, _) => Expr::Lit(Lit::Null(Null { span: DUMMY_SP })),
-        DynamicPart::ListChildren(_, _) => Expr::Lit(Lit::Null(Null { span: DUMMY_SP })),
+        DynamicPart::ListSlot(_, _) => Expr::Lit(Lit::Null(Null { span: DUMMY_SP })),
       },
       TransformTarget::JS => Expr::Lit(Lit::Null(Null { span: DUMMY_SP })),
     }
@@ -256,7 +249,6 @@ where
   static_stmts: Vec<RefCell<Stmt>>,
   si_id: Lazy<Ident>,
   snapshot_creator: Option<Function>,
-  dynamic_part_count: i32,
   dynamic_parts: Vec<DynamicPart>,
   dynamic_part_visitor: &'a mut V,
   key: Option<JSXAttrValue>,
@@ -266,7 +258,7 @@ impl<'a, V> DynamicPartExtractor<'a, V>
 where
   V: VisitMut,
 {
-  fn new(runtime_id: Expr, dynamic_part_count: i32, dynamic_part_visitor: &'a mut V) -> Self {
+  fn new(runtime_id: Expr, dynamic_part_visitor: &'a mut V) -> Self {
     DynamicPartExtractor {
       page_id: Lazy::new(|| private_ident!("pageId")),
       runtime_id,
@@ -276,7 +268,6 @@ where
       static_stmts: vec![],
       si_id: Lazy::new(|| private_ident!("snapshotInstance")),
       snapshot_creator: None,
-      dynamic_part_count,
       dynamic_parts: vec![],
       dynamic_part_visitor,
       key: None,
@@ -368,20 +359,83 @@ impl<V> VisitMut for DynamicPartExtractor<'_, V>
 where
   V: VisitMut,
 {
-  fn visit_mut_jsx_element(&mut self, n: &mut JSXElement) {
-    if jsx_is_internal_slot(n) {
-      if self.dynamic_part_count > 1 {
-        n.visit_mut_children_with(self.dynamic_part_visitor);
-        self.dynamic_parts.push(DynamicPart::Slot(
-          jsx_unwrap_internal_slot(n.take()),
-          self.element_index,
-        ));
-        *n = WRAPPER_NODE_2.clone();
+  fn visit_mut_jsx_element_childs(&mut self, n: &mut Vec<JSXElementChild>) {
+    if n.is_empty() {
+      return;
+    }
+
+    // merge dynamic parts together to reduce wrapper node count
+
+    let mut merged_children: Vec<JSXElementChild> = vec![];
+    let mut current_chunk: Vec<JSXElementChild> = vec![];
+
+    for mut child in n.take() {
+      let should_merge: bool;
+      match child {
+        JSXElementChild::JSXText(ref text) => {
+          if jsx_text_to_str(&text.value).is_empty() {
+            should_merge = current_chunk.is_empty();
+          } else {
+            should_merge = true;
+          }
+        }
+        JSXElementChild::JSXElement(ref element) => {
+          should_merge = !jsx_is_custom(element);
+        }
+        JSXElementChild::JSXExprContainer(JSXExprContainer {
+          expr: JSXExpr::Expr(ref _expr),
+          ..
+        }) => {
+          should_merge = false;
+        }
+        JSXElementChild::JSXFragment(_)
+        | JSXElementChild::JSXExprContainer(JSXExprContainer {
+          expr: JSXExpr::JSXEmptyExpr(_),
+          ..
+        }) => {
+          should_merge = true;
+        }
+        JSXElementChild::JSXSpreadChild(_) => {
+          unreachable!("JSXSpreadChild is not supported yet");
+        }
+      }
+
+      if should_merge {
+        if !current_chunk.is_empty() {
+          current_chunk.visit_mut_with(self.dynamic_part_visitor);
+          self.dynamic_parts.push(DynamicPart::Slot(
+            jsx_children_to_expr(current_chunk.take()),
+            self.element_index,
+          ));
+
+          let mut child = JSXElementChild::JSXElement(Box::new(WRAPPER_NODE_2.clone()));
+          child.visit_mut_with(self);
+          merged_children.push(child);
+        }
+
+        child.visit_mut_with(self);
+        merged_children.push(child);
       } else {
-        *n = jsx_unwrap_internal_slot(n.take());
+        current_chunk.push(child);
       }
     }
 
+    if !current_chunk.is_empty() {
+      current_chunk.visit_mut_with(self.dynamic_part_visitor);
+      self.dynamic_parts.push(DynamicPart::Slot(
+        jsx_children_to_expr(current_chunk.take()),
+        self.element_index,
+      ));
+
+      let mut child = JSXElementChild::JSXElement(Box::new(WRAPPER_NODE_2.clone()));
+      child.visit_mut_with(self);
+      merged_children.push(child);
+    }
+
+    *n = merged_children;
+  }
+
+  fn visit_mut_jsx_element(&mut self, n: &mut JSXElement) {
     if !jsx_is_custom(n) {
       match Lazy::<Ident>::get(&self.page_id) {
         Some(_) => {}
@@ -396,6 +450,23 @@ where
 
       let el = private_ident!("el");
       self.element_ids.insert(self.element_index, el.clone());
+
+      if (jsx_has_dynamic_key(n)) && self.parent_element.is_some() {
+        n.visit_mut_with(self.dynamic_part_visitor);
+        let expr = Expr::JSXElement(Box::new(n.take()));
+
+        if jsx_is_list(n) {
+          self
+            .dynamic_parts
+            .push(DynamicPart::ListSlot(expr, self.element_index));
+        } else {
+          self
+            .dynamic_parts
+            .push(DynamicPart::Slot(expr, self.element_index));
+        }
+
+        *n = WRAPPER_NODE_2.clone();
+      }
 
       let static_stmt = self.static_stmt_from_jsx_element(n, el.clone());
       let static_stmt = RefCell::new(static_stmt);
@@ -810,76 +881,26 @@ where
         )));
       };
 
-      let is_list = jsx_is_list(n);
-      let is_children_full_dynamic = is_list || jsx_is_children_full_dynamic(n);
+      let is_children_full_dynamic = jsx_is_children_full_dynamic(n);
 
       if !is_children_full_dynamic {
         self.element_index += 1;
 
         let pre_parent_element = self.parent_element.take();
         self.parent_element = Some(el.clone());
-        // n.children.iter_mut().for_each(|child| match child {
-        //     JSXElementChild::JSXText(_) => {
-        //         child.visit_mut_children_with(self);
-        //     }
-        //     JSXElementChild::JSXElement(_) => {
-        //         child.visit_mut_children_with(self);
-        //     }
-        //     JSXElementChild::JSXFragment(_) => {
-        //         child.visit_mut_children_with(self);
-        //     }
-        //     JSXElementChild::JSXExprContainer(JSXExprContainer {
-        //         expr: JSXExpr::Expr(_expr),
-        //         ..
-        //     }) => {
-        //         unreachable!("should be handled by WrapDynamicPart");
-        //     }
-        //     JSXElementChild::JSXExprContainer(JSXExprContainer {
-        //         expr: JSXExpr::JSXEmptyExpr(_),
-        //         ..
-        //     }) => {
-        //         // comment, just ignore
-        //     }
-        //     JSXElementChild::JSXSpreadChild(_) => {
-        //         unreachable!("JSXSpreadChild is not supported yet");
-        //     }
-        // });
-
         n.visit_mut_children_with(self);
-
         self.parent_element = pre_parent_element;
       } else {
-        if self.dynamic_part_count <= 1 {
-          n.visit_mut_children_with(self.dynamic_part_visitor);
-          let children_expr = jsx_children_to_expr(n.children.take());
-          if is_list {
-            self
-              .dynamic_parts
-              .push(DynamicPart::ListChildren(children_expr, self.element_index));
-          } else {
-            self
-              .dynamic_parts
-              .push(DynamicPart::Children(children_expr, self.element_index));
-          }
+        n.visit_mut_children_with(self.dynamic_part_visitor);
+        let children_expr = jsx_children_to_expr(n.children.take());
+        if jsx_is_list(n) {
+          self
+            .dynamic_parts
+            .push(DynamicPart::ListSlot(children_expr, self.element_index));
         } else {
-          // static_stmt.replace_with(|_| {
-          //     let r = WRAPPER_NODE.clone();
-          //     let (static_stmt, _) =
-          //         self.static_stmt_from_jsx_element(&r, el.clone());
-          //     static_stmt
-          // });
-
-          // n.map_with_mut(|value| value.fold_with(self.dynamic_part_visitor));
-          // if is_list {
-          //     // unreachable!()
-          //     self.dynamic_parts
-          //         .push(DynamicPart::Slot(n.take(), self.element_index));
-          // } else {
-          //     self.dynamic_parts
-          //         .push(DynamicPart::Slot(n.take(), self.element_index));
-          // }
-
-          unreachable!("should be handled by WrapDynamicPart");
+          self
+            .dynamic_parts
+            .push(DynamicPart::Slot(children_expr, self.element_index));
         }
 
         self.element_index += 1;
@@ -940,7 +961,7 @@ where
       n.visit_mut_children_with(self.dynamic_part_visitor);
 
       if self.parent_element.is_some() {
-        self.dynamic_parts.push(DynamicPart::Children(
+        self.dynamic_parts.push(DynamicPart::Slot(
           Expr::JSXElement(Box::new(n.take())),
           self.element_index,
         ));
@@ -1169,26 +1190,16 @@ where
       SyntaxContext::default().apply_mark(Mark::fresh(Mark::root())),
     );
 
-    let mut wrap_dynamic_part = WrapperMarker {
-      current_is_children_full_dynamic: false,
-      dynamic_part_count: 0,
-    };
-    node.visit_mut_with(&mut wrap_dynamic_part);
-
     let target = self.cfg.target;
     let runtime_id = self.runtime_id.clone();
-    let mut dynamic_part_extractor = DynamicPartExtractor::new(
-      self.runtime_id.clone(),
-      wrap_dynamic_part.dynamic_part_count,
-      self,
-    );
+    let mut dynamic_part_extractor = DynamicPartExtractor::new(self.runtime_id.clone(), self);
 
     node.visit_mut_with(&mut dynamic_part_extractor);
 
     let mut snapshot_values: Vec<Option<ExprOrSpread>> = vec![];
     let mut snapshot_values_has_attr = false;
     let mut snapshot_attrs: Vec<JSXAttrOrSpread> = vec![];
-    let mut snapshot_children: Vec<JSXElementChild> = vec![];
+    let mut snapshot_children: Vec<Expr> = vec![];
     let mut snapshot_dynamic_part_def: Vec<Option<ExprOrSpread>> = vec![];
     let mut snapshot_refs_and_spread_index: Vec<Option<ExprOrSpread>> = vec![];
     let mut snapshot_slot_def: Vec<Option<ExprOrSpread>> = vec![];
@@ -1206,205 +1217,106 @@ where
       .into_iter()
       .partition(|dynamic_part| match dynamic_part {
         DynamicPart::Attr(_, _, _) | DynamicPart::Spread(_, _) => true,
-        DynamicPart::Slot(_, _) | DynamicPart::Children(_, _) | DynamicPart::ListChildren(_, _) => {
-          false
-        }
+        DynamicPart::Slot(_, _) | DynamicPart::ListSlot(_, _) => false,
       });
 
-    dynamic_part_attr
-      .into_iter()
-      .enumerate()
-      .map(|(index, dynamic_part)| {
-        (
-          JSXAttrName::Ident(IdentName::new(format!("__{index}").into(), DUMMY_SP)),
-          JSXAttrName::Ident(IdentName::new(format!("_c{index}").into(), DUMMY_SP)),
-          JSXElementName::Ident(Ident::new(
-            format!("s{index}").into(),
-            DUMMY_SP,
-            SyntaxContext::default(),
-          )),
-          dynamic_part,
-        )
-      })
-      .map(|(name, child_name, ref jsx_name, dynamic_part)| {
-        (
-          name,
-          child_name,
-          JSXOpeningElement {
-            name: jsx_name.clone(),
-            span: DUMMY_SP,
-            attrs: vec![],
-            self_closing: false,
-            type_args: None,
-          },
-          JSXClosingElement {
-            name: jsx_name.clone(),
-            span: DUMMY_SP,
-          },
-          dynamic_part,
-        )
-      })
-      .for_each(
-        |(_name, _child_name, _jsx_opening, _jsx_closing, dynamic_part)| {
-          match &dynamic_part {
-            DynamicPart::Attr(_, _, _) | DynamicPart::Spread(_, _) => {
-              if let DynamicPart::Attr(_, _, AttrName::Ref) | DynamicPart::Spread(_, _) =
-                dynamic_part
-              {
-                snapshot_refs_and_spread_index.push(Some(
-                  Expr::Lit(Lit::Num(snapshot_dynamic_part_def.len().into())).into(),
-                ));
-              }
-              snapshot_dynamic_part_def.push(Some(ExprOrSpread {
-                spread: None,
-                expr: Box::new(dynamic_part.to_updater(
-                  runtime_id.clone(),
-                  target,
-                  snapshot_dynamic_part_def.len() as i32,
-                )),
-              }));
-            }
-            DynamicPart::Slot(_, _) => {}
-            DynamicPart::Children(_, _) => {}
-            DynamicPart::ListChildren(_, _) => {}
+    dynamic_part_attr.into_iter().for_each(|dynamic_part| {
+      match &dynamic_part {
+        DynamicPart::Attr(_, _, _) | DynamicPart::Spread(_, _) => {
+          if let DynamicPart::Attr(_, _, AttrName::Ref) | DynamicPart::Spread(_, _) = dynamic_part {
+            snapshot_refs_and_spread_index.push(Some(
+              Expr::Lit(Lit::Num(snapshot_dynamic_part_def.len().into())).into(),
+            ));
           }
+          snapshot_dynamic_part_def.push(Some(ExprOrSpread {
+            spread: None,
+            expr: Box::new(dynamic_part.to_updater(
+              runtime_id.clone(),
+              target,
+              snapshot_dynamic_part_def.len() as i32,
+            )),
+          }));
+        }
+        DynamicPart::Slot(_, _) => {}
+        DynamicPart::ListSlot(_, _) => {}
+      }
 
-          match dynamic_part {
-            DynamicPart::Attr(value, _, attr_name) => {
-              snapshot_values.push(Some(ExprOrSpread {
-                spread: None,
-                expr: Box::new(if let AttrName::Event(_, _) = attr_name {
-                  if target == TransformTarget::LEPUS {
-                    quote!("1" as Expr)
-                  } else {
-                    value
-                  }
-                } else if let AttrName::Ref = attr_name {
-                  if target == TransformTarget::LEPUS {
-                    quote!("1" as Expr)
-                  } else {
-                    quote!(
-                      "$runtime_id.transformRef($value)" as Expr,
-                      runtime_id: Expr = runtime_id.clone(),
-                      value: Expr = value,
-                    )
-                  }
-                } else {
-                  value
-                }),
-              }));
-              snapshot_values_has_attr = true;
-              // snapshot_attrs.push(JSXAttrOrSpread::JSXAttr(JSXAttr {
-              //   span: DUMMY_SP,
-              //   name,
-              //   value: Some(JSXAttrValue::JSXExprContainer(JSXExprContainer {
-              //     span: DUMMY_SP,
-              //     expr: JSXExpr::Expr(Box::new(if let AttrName::Event(_, _) = attr_name {
-              //       if target == TransformTarget::LEPUS {
-              //         Expr::Lit(Lit::Null(Null { span: DUMMY_SP }))
-              //       } else {
-              //         value
-              //       }
-              //     } else {
-              //       value
-              //     })),
-              //   })),
-              // }));
-            }
-            DynamicPart::Spread(value, _) => {
-              snapshot_values.push(Some(ExprOrSpread {
-                spread: None,
-                expr: Box::new(value),
-              }));
-              snapshot_values_has_attr = true;
-              // snapshot_attrs.push(JSXAttrOrSpread::JSXAttr(JSXAttr {
-              //   span: DUMMY_SP,
-              //   name,
-              //   value: Some(JSXAttrValue::JSXExprContainer(JSXExprContainer {
-              //     span: DUMMY_SP,
-              //     expr: JSXExpr::Expr(Box::new(value)),
-              //   })),
-              // }));
-            }
-            DynamicPart::ListChildren(_, _) => {}
-            DynamicPart::Children(_, _) => {}
-            DynamicPart::Slot(_, _) => {}
-          }
-        },
-      );
+      match dynamic_part {
+        DynamicPart::Attr(value, _, attr_name) => {
+          snapshot_values.push(Some(ExprOrSpread {
+            spread: None,
+            expr: Box::new(if let AttrName::Event(_, _) = attr_name {
+              if target == TransformTarget::LEPUS {
+                quote!("1" as Expr)
+              } else {
+                value
+              }
+            } else if let AttrName::Ref = attr_name {
+              if target == TransformTarget::LEPUS {
+                quote!("1" as Expr)
+              } else {
+                quote!(
+                  "$runtime_id.transformRef($value)" as Expr,
+                  runtime_id: Expr = runtime_id.clone(),
+                  value: Expr = value,
+                )
+              }
+            } else {
+              value
+            }),
+          }));
+          snapshot_values_has_attr = true;
+        }
+        DynamicPart::Spread(value, _) => {
+          snapshot_values.push(Some(ExprOrSpread {
+            spread: None,
+            expr: Box::new(value),
+          }));
+          snapshot_values_has_attr = true;
+        }
+        DynamicPart::ListSlot(_, _) => {}
+        DynamicPart::Slot(_, _) => {}
+      }
+    });
 
     let slot_expr = match (dynamic_part_children.len(), dynamic_part_children.first()) {
       (0, _) => Expr::Lit(Lit::Null(Null { span: DUMMY_SP })),
-      (1, Some(DynamicPart::Children(expr, 0))) => {
-        let expr = expr.clone();
-        snapshot_children.push(match expr {
-          Expr::JSXElement(jsx) => JSXElementChild::JSXElement(jsx),
-          _ => JSXElementChild::JSXExprContainer(JSXExprContainer {
-            span: DUMMY_SP,
-            expr: JSXExpr::Expr(Box::new(expr)),
-          }),
-        });
-
+      (1, Some(DynamicPart::Slot(expr, 0))) => {
+        snapshot_children.push(expr.clone());
         quote!(
-          "$runtime_id.__DynamicPartChildren_0" as Expr,
+          "$runtime_id.__DynamicPartSlotV2_0" as Expr,
           runtime_id: Expr = runtime_id.clone(),
         )
       }
       _ => {
-        dynamic_part_children.into_iter().for_each(|dynamic_part| {
-          match dynamic_part {
+        dynamic_part_children
+          .into_iter()
+          .for_each(|dynamic_part| match dynamic_part {
             DynamicPart::Attr(_, _, _) => {}
             DynamicPart::Spread(_, _) => {}
-            DynamicPart::ListChildren(expr, element_index) => {
-              // snapshot_values.push(None);
-              snapshot_children.push(match expr {
-                Expr::JSXElement(jsx) => JSXElementChild::JSXElement(jsx),
-                _ => JSXElementChild::JSXExprContainer(JSXExprContainer {
-                  span: DUMMY_SP,
-                  expr: JSXExpr::Expr(Box::new(expr)),
-                }),
-              });
+            DynamicPart::ListSlot(expr, element_index) => {
+              snapshot_children.push(expr);
               snapshot_slot_def.push(Some(ExprOrSpread {
                 spread: None,
                 expr: Box::new(quote!(
-                  "[$runtime_id.__DynamicPartListChildren, $element_index]" as Expr,
+                  "[$runtime_id.__DynamicPartListSlotV2, $element_index]" as Expr,
                   runtime_id: Expr = runtime_id.clone(),
                   element_index: Expr = i32_to_expr(&element_index),
                 )),
               }));
             }
-            DynamicPart::Children(expr, element_index) => {
-              // snapshot_values.push(None);
-              snapshot_children.push(match expr {
-                Expr::JSXElement(jsx) => JSXElementChild::JSXElement(jsx),
-                _ => JSXElementChild::JSXExprContainer(JSXExprContainer {
-                  span: DUMMY_SP,
-                  expr: JSXExpr::Expr(Box::new(expr)),
-                }),
-              });
+            DynamicPart::Slot(expr, element_index) => {
+              snapshot_children.push(expr);
               snapshot_slot_def.push(Some(ExprOrSpread {
                 spread: None,
                 expr: Box::new(quote!(
-                  "[$runtime_id.__DynamicPartChildren, $element_index]" as Expr,
+                  "[$runtime_id.__DynamicPartSlotV2, $element_index]" as Expr,
                   runtime_id: Expr = runtime_id.clone(),
                   element_index: Expr = i32_to_expr(&element_index),
                 )),
               }));
             }
-            DynamicPart::Slot(jsx, element_index) => {
-              // snapshot_values.push(None);
-              snapshot_children.push(JSXElementChild::JSXElement(Box::new(jsx)));
-              snapshot_slot_def.push(Some(ExprOrSpread {
-                spread: None,
-                expr: Box::new(quote!(
-                  "[$runtime_id.__DynamicPartSlot, $element_index]" as Expr,
-                  runtime_id: Expr = runtime_id.clone(),
-                  element_index: Expr = i32_to_expr(&element_index),
-                )),
-              }));
-            }
-          }
-        });
+          });
 
         Expr::Array(ArrayLit {
           span: DUMMY_SP,
@@ -1463,40 +1375,46 @@ where
     self.current_snapshot_id = Some(snapshot_id.clone());
     self.current_snapshot_defs.push(snapshot_def);
 
-    *node = JSXElement {
-      span: node.span(),
-      opening: JSXOpeningElement {
-        name: JSXElementName::Ident(snapshot_id.clone()),
-        span: node.span,
-        attrs: {
-          if snapshot_values_has_attr {
-            snapshot_attrs.push(JSXAttrOrSpread::JSXAttr(JSXAttr {
-              span: DUMMY_SP,
-              name: JSXAttrName::Ident(IdentName::new("values".into(), DUMMY_SP)),
-              value: Some(JSXAttrValue::JSXExprContainer(JSXExprContainer {
-                span: DUMMY_SP,
-                expr: JSXExpr::Expr(Box::new(Expr::Array(ArrayLit {
-                  span: DUMMY_SP,
-                  elems: snapshot_values,
-                }))),
-              })),
-            }))
-          };
-          snapshot_attrs
-        },
-        self_closing: wrap_dynamic_part.dynamic_part_count == 0,
-        type_args: None,
-      },
-      children: snapshot_children,
-      closing: if wrap_dynamic_part.dynamic_part_count == 0 {
-        None
-      } else {
-        Some(JSXClosingElement {
+    *node =
+      JSXElement {
+        span: node.span(),
+        opening: JSXOpeningElement {
           name: JSXElementName::Ident(snapshot_id.clone()),
-          span: DUMMY_SP,
-        })
-      },
-    };
+          span: node.span,
+          attrs: {
+            if snapshot_values_has_attr {
+              snapshot_attrs.push(JSXAttrOrSpread::JSXAttr(JSXAttr {
+                span: DUMMY_SP,
+                name: JSXAttrName::Ident(IdentName::new("values".into(), DUMMY_SP)),
+                value: Some(JSXAttrValue::JSXExprContainer(JSXExprContainer {
+                  span: DUMMY_SP,
+                  expr: JSXExpr::Expr(Box::new(Expr::Array(ArrayLit {
+                    span: DUMMY_SP,
+                    elems: snapshot_values,
+                  }))),
+                })),
+              }))
+            };
+            snapshot_attrs.extend(snapshot_children.iter_mut().enumerate().map(
+              |(index, child)| {
+                JSXAttrOrSpread::JSXAttr(JSXAttr {
+                  span: DUMMY_SP,
+                  name: JSXAttrName::Ident(IdentName::new(format!("${index}").into(), DUMMY_SP)),
+                  value: Some(JSXAttrValue::JSXExprContainer(JSXExprContainer {
+                    span: DUMMY_SP,
+                    expr: JSXExpr::Expr(Box::new(child.take())),
+                  })),
+                })
+              },
+            ));
+            snapshot_attrs
+          },
+          self_closing: true,
+          type_args: None,
+        },
+        children: vec![],
+        closing: None,
+      };
   }
 
   fn visit_mut_module_items(&mut self, n: &mut Vec<ModuleItem>) {
@@ -2102,93 +2020,6 @@ mod tests {
         {unit}
       </view>
     </view>;
-    "#
-  );
-
-  test!(
-    module,
-    Syntax::Es(EsSyntax {
-      jsx: true,
-      ..Default::default()
-    }),
-    |t| visit_mut_pass(JSXTransformer::new(
-      super::JSXTransformerConfig {
-        preserve_jsx: true,
-        ..Default::default()
-      },
-      Some(t.comments.clone()),
-      TransformMode::Test
-    )),
-    basic_list,
-    // Input codes
-    r#"
-    <view>
-      <list>
-        <list-item full-span={true} reuse-identifier={x}></list-item>
-      </list>
-      <view><A/></view>
-    </view>;
-    "#
-  );
-
-  test!(
-    module,
-    Syntax::Es(EsSyntax {
-      jsx: true,
-      ..Default::default()
-    }),
-    |t| visit_mut_pass(JSXTransformer::new(
-      super::JSXTransformerConfig {
-        preserve_jsx: true,
-        ..Default::default()
-      },
-      Some(t.comments.clone()),
-      TransformMode::Test
-    )),
-    basic_list_with_fragment,
-    // Input codes
-    r#"
-    <view>
-      <list>
-        <>
-          <list-item></list-item>
-          <list-item></list-item>
-        </>
-      </list>
-      <view><A/></view>
-    </view>;
-    "#
-  );
-
-  test!(
-    module,
-    Syntax::Es(EsSyntax {
-      jsx: true,
-      ..Default::default()
-    }),
-    |_| {
-      let unresolved_mark = Mark::new();
-      let top_level_mark = Mark::new();
-
-      (
-        resolver(unresolved_mark, top_level_mark, true),
-        visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
-          super::JSXTransformerConfig {
-            preserve_jsx: true,
-            ..Default::default()
-          },
-          None,
-          TransformMode::Test,
-        )),
-      )
-    },
-    basic_list_toplevel,
-    // Input codes
-    r#"
-    <list>
-      <list-item>!!!</list-item>
-      <list-item>!!!</list-item>
-    </list>
     "#
   );
 

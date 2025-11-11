@@ -39,12 +39,14 @@ describe('renderToOpcodes', () => {
       [
         0,
         {
+          "__slotIndex": undefined,
           "children": undefined,
           "extraProps": undefined,
           "id": -3,
           "type": "__Card__:__snapshot_a94a8_test_1",
           "values": undefined,
         },
+        0,
         2,
         "values",
         [
@@ -52,6 +54,7 @@ describe('renderToOpcodes', () => {
         ],
         3,
         "hello world",
+        0,
         1,
       ]
     `);
@@ -77,6 +80,7 @@ describe('renderToOpcodes', () => {
       [
         0,
         {
+          "__slotIndex": undefined,
           "children": undefined,
           "extraProps": undefined,
           "id": -4,
@@ -84,15 +88,19 @@ describe('renderToOpcodes', () => {
           "values": undefined,
         },
         0,
+        0,
         {
+          "__slotIndex": undefined,
           "children": undefined,
           "extraProps": undefined,
           "id": -6,
           "type": "__Card__:__snapshot_a94a8_test_2",
           "values": undefined,
         },
+        0,
         3,
         1000,
+        0,
         1,
         1,
       ]
@@ -121,6 +129,7 @@ describe('renderToOpcodes', () => {
       [
         0,
         {
+          "__slotIndex": undefined,
           "children": undefined,
           "extraProps": undefined,
           "id": -7,
@@ -128,15 +137,19 @@ describe('renderToOpcodes', () => {
           "values": undefined,
         },
         0,
+        0,
         {
+          "__slotIndex": undefined,
           "children": undefined,
           "extraProps": undefined,
           "id": -8,
           "type": "__Card__:__snapshot_a94a8_test_4",
           "values": undefined,
         },
+        0,
         3,
         1,
+        0,
         1,
         1,
       ]
@@ -159,12 +172,14 @@ describe('renderToOpcodes', () => {
       [
         0,
         {
+          "__slotIndex": undefined,
           "children": undefined,
           "extraProps": undefined,
           "id": -9,
           "type": "__Card__:__snapshot_a94a8_test_6",
           "values": undefined,
         },
+        0,
         2,
         "values",
         [
@@ -190,14 +205,17 @@ describe('renderToOpcodes', () => {
       [
         0,
         {
+          "__slotIndex": undefined,
           "children": undefined,
           "extraProps": undefined,
           "id": -10,
           "type": "__Card__:__snapshot_a94a8_test_7",
           "values": undefined,
         },
+        0,
         3,
         "111",
+        0,
         1,
       ]
     `);
@@ -219,14 +237,17 @@ describe('renderToOpcodes', () => {
       [
         0,
         {
+          "__slotIndex": undefined,
           "children": undefined,
           "extraProps": undefined,
           "id": -11,
           "type": "__Card__:__snapshot_a94a8_test_8",
           "values": undefined,
         },
+        0,
         3,
         "111",
+        0,
         1,
       ]
     `);
@@ -246,14 +267,17 @@ describe('renderToOpcodes', () => {
       [
         0,
         {
+          "__slotIndex": undefined,
           "children": undefined,
           "extraProps": undefined,
           "id": -12,
           "type": "__Card__:__snapshot_a94a8_test_9",
           "values": undefined,
         },
+        0,
         3,
         "111",
+        0,
         1,
       ]
     `);
@@ -272,6 +296,7 @@ describe('renderToOpcodes', () => {
       [
         0,
         {
+          "__slotIndex": undefined,
           "children": undefined,
           "extraProps": undefined,
           "id": -13,
@@ -279,15 +304,19 @@ describe('renderToOpcodes', () => {
           "values": undefined,
         },
         0,
+        0,
         {
+          "__slotIndex": undefined,
           "children": undefined,
           "extraProps": undefined,
           "id": -14,
           "type": "__Card__:__snapshot_a94a8_test_11",
           "values": undefined,
         },
+        0,
         3,
         11111,
+        0,
         1,
         1,
       ]
@@ -306,6 +335,7 @@ describe('renderToOpcodes', () => {
       [
         0,
         {
+          "__slotIndex": undefined,
           "children": undefined,
           "extraProps": undefined,
           "id": -15,
@@ -313,15 +343,19 @@ describe('renderToOpcodes', () => {
           "values": undefined,
         },
         0,
+        0,
         {
+          "__slotIndex": undefined,
           "children": undefined,
           "extraProps": undefined,
           "id": -16,
           "type": "__Card__:__snapshot_a94a8_test_13",
           "values": undefined,
         },
+        0,
         3,
         12345,
+        0,
         1,
         1,
       ]
@@ -415,10 +449,12 @@ describe('renderToOpcodes', () => {
       </Suspense>,
     );
 
-    expect(rendered.length).toBe(3);
+    expect(rendered.length).toBe(4);
     expect(rendered[0]).toStrictEqual(0);
     expect(rendered[1].type).toStrictEqual(fallbackJsx.type);
-    expect(rendered[2]).toStrictEqual(1);
+    // slotIndex
+    expect(rendered[2]).toStrictEqual(0);
+    expect(rendered[3]).toStrictEqual(1);
   });
 
   it('should render fallback when suspended component is not a direct child', async () => {
@@ -436,10 +472,12 @@ describe('renderToOpcodes', () => {
       </Suspense>,
     );
 
-    expect(rendered.length).toBe(3);
+    expect(rendered.length).toBe(4);
     expect(rendered[0]).toStrictEqual(0);
     expect(rendered[1].type).toStrictEqual(fallbackJsx.type);
-    expect(rendered[2]).toStrictEqual(1);
+    // slotIndex
+    expect(rendered[2]).toStrictEqual(0);
+    expect(rendered[3]).toStrictEqual(1);
   });
 
   it('should render a fallback that is a Fragment', async () => {
@@ -466,7 +504,7 @@ describe('renderToOpcodes', () => {
     );
 
     expect(rendered[1].type).toStrictEqual(fallbackJsx1.type);
-    expect(rendered[6].type).toStrictEqual(fallbackJsx2.type);
+    expect(rendered[8].type).toStrictEqual(fallbackJsx2.type);
   });
 
   it('should render outer fallback when nested child suspends', async () => {
@@ -491,10 +529,12 @@ describe('renderToOpcodes', () => {
       </Suspense>,
     );
 
-    expect(rendered.length).toBe(3);
+    expect(rendered.length).toBe(4);
     expect(rendered[0]).toStrictEqual(0);
     expect(rendered[1].type).toStrictEqual(fallbackJsx1.type);
-    expect(rendered[2]).toStrictEqual(1);
+    // slotIndex
+    expect(rendered[2]).toStrictEqual(0);
+    expect(rendered[3]).toStrictEqual(1);
   });
 
   it('should render inner fallback and resolved content when outer suspense is resolved', async () => {
@@ -524,10 +564,10 @@ describe('renderToOpcodes', () => {
       </Suspense>,
     );
 
-    expect(rendered.length).toBe(9);
+    expect(rendered.length).toBe(12);
     expect(rendered[1].type).toStrictEqual(resolvedJsx1.type);
-    expect(rendered[4].type).toStrictEqual(fallbackJsx2.type);
-    expect(rendered[7].type).toStrictEqual(resolvedJsx2.type);
+    expect(rendered[5].type).toStrictEqual(fallbackJsx2.type);
+    expect(rendered[9].type).toStrictEqual(resolvedJsx2.type);
   });
 
   it('should render text with resolved suspense', async () => {
@@ -545,10 +585,12 @@ describe('renderToOpcodes', () => {
       </Suspense>,
     );
 
-    expect(rendered.length).toBe(3);
+    expect(rendered.length).toBe(4);
     expect(rendered[0]).toStrictEqual(0);
     expect(rendered[1].type).toStrictEqual(resolvedJsx.type);
-    expect(rendered[2]).toStrictEqual(1);
+    // slotIndex
+    expect(rendered[2]).toStrictEqual(0);
+    expect(rendered[3]).toStrictEqual(1);
   });
 
   it('should render text with nested suspense', async () => {
@@ -588,12 +630,12 @@ describe('renderToOpcodes', () => {
       </view>,
     );
 
-    expect(rendered.length).toBe(18);
-    expect(rendered[3].type).toStrictEqual(resolvedJsx1.type);
-    expect(rendered[6].type).toStrictEqual(resolvedJsx2.type);
-    expect(rendered[9].type).toStrictEqual(resolvedJsx3.type);
-    expect(rendered[12].type).toStrictEqual(resolvedJsx4.type);
-    expect(rendered[15].type).toStrictEqual(resolvedJsx5.type);
+    expect(rendered.length).toBe(24);
+    expect(rendered[4].type).toStrictEqual(resolvedJsx1.type);
+    expect(rendered[8].type).toStrictEqual(resolvedJsx2.type);
+    expect(rendered[12].type).toStrictEqual(resolvedJsx3.type);
+    expect(rendered[16].type).toStrictEqual(resolvedJsx4.type);
+    expect(rendered[20].type).toStrictEqual(resolvedJsx5.type);
   });
 });
 
@@ -925,7 +967,7 @@ describe('renderOpcodesInto', () => {
       </page>
     `);
 
-    const [vnodeA, vnodeB, vnodeC, vnodeC2, vnodeD] = scratch.__firstChild.props.children;
+    const [vnodeA, vnodeB, vnodeC, vnodeC2, vnodeD] = scratch.__firstChild.props.$0;
 
     expect(vnodeA).not.toHaveProperty('__elements');
     expect(vnodeA).not.toHaveProperty('__element_root');
@@ -937,7 +979,7 @@ describe('renderOpcodesInto', () => {
     expect(vnodeD).not.toHaveProperty('__element_root');
 
     {
-      const componentVNodeC = vnodeC2.props.children;
+      const componentVNodeC = vnodeC2.props.$0;
       expect(componentVNodeC.type).toBe(Fragment);
       expect(componentVNodeC.props.children).toHaveLength(4);
       // FIXME(hzy): there is still a cycle reference
@@ -948,8 +990,8 @@ describe('renderOpcodesInto', () => {
       });
     }
 
-    expect(vnodeD.props.children).toHaveLength(4);
-    vnodeD.props.children.forEach((vnode) => {
+    expect(vnodeD.props.$0).toHaveLength(4);
+    vnodeD.props.$0.forEach((vnode) => {
       expect(vnode).not.toHaveProperty('__elements');
       expect(vnode).not.toHaveProperty('__element_root');
     });
@@ -974,12 +1016,14 @@ describe('createElement', () => {
       [
         0,
         {
+          "__slotIndex": undefined,
           "children": undefined,
           "extraProps": undefined,
           "id": -89,
           "type": "__Card__:__snapshot_a94a8_test_74",
           "values": undefined,
         },
+        0,
         1,
       ]
     `);
@@ -988,12 +1032,14 @@ describe('createElement', () => {
       [
         0,
         {
+          "__slotIndex": undefined,
           "children": undefined,
           "extraProps": undefined,
           "id": -90,
           "type": "__Card__:__snapshot_a94a8_test_74",
           "values": undefined,
         },
+        0,
         1,
       ]
     `);
@@ -1010,12 +1056,14 @@ describe('createElement', () => {
       [
         0,
         {
+          "__slotIndex": undefined,
           "children": undefined,
           "extraProps": undefined,
           "id": -91,
           "type": "__Card__:__snapshot_a94a8_test_75",
           "values": undefined,
         },
+        0,
         1,
       ]
     `);
@@ -1024,12 +1072,14 @@ describe('createElement', () => {
       [
         0,
         {
+          "__slotIndex": undefined,
           "children": undefined,
           "extraProps": undefined,
           "id": -92,
           "type": "__Card__:__snapshot_a94a8_test_75",
           "values": undefined,
         },
+        0,
         1,
       ]
     `);

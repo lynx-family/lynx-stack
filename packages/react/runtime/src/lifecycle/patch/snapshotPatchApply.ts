@@ -44,12 +44,14 @@ export function snapshotPatchApply(snapshotPatch: SnapshotPatch): void {
         const parentId = snapshotPatch[++i] as number;
         const childId = snapshotPatch[++i] as number;
         const beforeId = snapshotPatch[++i] as number | undefined;
+        const __slotIndex = snapshotPatch[++i] as number | undefined;
         const parent = snapshotInstanceManager.values.get(parentId);
         const child = snapshotInstanceManager.values.get(childId);
         const existingNode = snapshotInstanceManager.values.get(beforeId!);
         if (!parent || !child) {
           sendCtxNotFoundEventToBackground(parent ? childId : parentId);
         } else {
+          child.__slotIndex = __slotIndex;
           parent.insertBefore(child, existingNode);
         }
         break;
