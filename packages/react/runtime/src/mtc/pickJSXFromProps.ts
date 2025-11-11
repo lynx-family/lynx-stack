@@ -64,7 +64,8 @@ export function pickJSXFromProps(props?: Record<string, any>): [[VNode, any][], 
       return item.map((item) => traverse(item));
     }
 
-    if (typeof item === 'object') {
+    // This cannot be a preact signal; otherwise, it would cause a loop.
+    if (typeof item === 'object' && item.brand !== Symbol.for("preact-signals")) {
       const result: any = {};
       for (const [key, value] of Object.entries(item)) {
         result[key] = traverse(value);

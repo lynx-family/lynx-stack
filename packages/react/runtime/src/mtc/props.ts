@@ -15,6 +15,10 @@ function transformMTCPropsImpl(props: unknown): void {
 
   for (const key in props) {
     const value = (props as Record<string, unknown>)[key];
+    // This cannot be a preact signal; otherwise, it would cause a loop.
+    if (typeof value === 'object' && value !== null && (value as any).brand === Symbol.for('preact-signals')) {
+      continue;
+    }
     if (typeof value === 'object' && value !== null && '__type' in value && value.__type === '$$mtc_ba') {
       (props as Record<string, unknown>)[key] = runOnBackground(value as any);
     } else {
