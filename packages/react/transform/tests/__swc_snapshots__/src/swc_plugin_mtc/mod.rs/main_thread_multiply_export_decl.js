@@ -25,6 +25,7 @@ export function RealMTC2(props) {
         ]
     }, ReactLynx.renderFakeMTCSlot(jsxs));
 }
+ReactLynx.loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry);
 function $$mtc_RealMTC(props) {
     return <view>
       {ReactLynx.renderMTCSlot(props.p3)}
@@ -35,5 +36,5 @@ function $$mtc_RealMTC2(props) {
       {ReactLynx.renderMTCSlot(props.p3)}
     </view>;
 }
-ReactLynx.registerMTC("$$mtc_2d408_test_2", $$mtc_RealMTC2);
 ReactLynx.registerMTC("$$mtc_2d408_test_1", $$mtc_RealMTC);
+ReactLynx.registerMTC("$$mtc_2d408_test_2", $$mtc_RealMTC2);

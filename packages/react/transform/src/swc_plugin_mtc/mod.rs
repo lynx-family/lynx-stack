@@ -49,6 +49,7 @@ pub struct MTCVisitor {
   mtc_collecter: HashMap<String, String>,
   mtc_sym_to_expr: HashMap<String, Ident>,
   mtc_fn_decl: Vec<FnDecl>,
+  // should_inject_load_worklet_runtime: bool,
 }
 
 impl MTCVisitor {
@@ -63,6 +64,7 @@ impl MTCVisitor {
       cfg,
       mtc_counter: 0,
       content_hash: "test".into(),
+      // should_inject_load_worklet_runtime: false,
     }
   }
 
@@ -188,6 +190,19 @@ impl MTCVisitor {
     }))
   }
 
+  fn create_load_worklet_runtime(&self) -> ModuleItem {
+    let load_worklet_runtime_call = quote!(
+      r#"$runtime_id.loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry)"#
+        as Expr,
+        runtime_id: Expr = self.runtime_id.clone(),
+    );
+
+    ModuleItem::Stmt(Stmt::Expr(ExprStmt {
+      span: DUMMY_SP,
+      expr: Box::new(load_worklet_runtime_call),
+    }))
+  }
+
   fn transform_mtc(&self, fn_decl: &mut FnDecl, mtc_uid: &str) {
     let props_identifier = if let Some(param) = fn_decl.function.params.first_mut() {
       match &param.pat {
@@ -300,6 +315,8 @@ impl VisitMut for MTCVisitor {
     }
 
     if self.cfg.target == TransformTarget::LEPUS {
+      module.body.push(self.create_load_worklet_runtime());
+
       for item in &module.body {
         let fn_decl = match item {
           // function Foo() {}
