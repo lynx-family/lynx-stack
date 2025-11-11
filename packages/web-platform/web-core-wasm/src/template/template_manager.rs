@@ -1,5 +1,5 @@
 use super::{
-  decoded_template::{DecodedTemplate, DecodedTemplateImpl},
+  decoded::{DecodedTemplate, DecodedTemplateImpl},
   raw_template::LynxRawTemplate,
 };
 use std::collections::HashMap;

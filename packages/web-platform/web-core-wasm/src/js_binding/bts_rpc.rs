@@ -12,14 +12,10 @@ extern "C" {
   );
 
   #[wasm_bindgen(method, js_name = "publishEvent")]
-  pub(crate) async fn publish_event(
-    this: &BackgroundThreadRPC,
-    handler_name: &str,
-    event_data: &JsValue,
-  );
+  pub(crate) fn publish_event(this: &BackgroundThreadRPC, handler_name: &str, event_data: &JsValue);
 
   #[wasm_bindgen(method, js_name = "publishComponentEvent")]
-  pub(crate) async fn publish_component_event(
+  pub(crate) fn publish_component_event(
     this: &BackgroundThreadRPC,
     component_id: &str,
     event_name: &str,
@@ -27,17 +23,17 @@ extern "C" {
   );
 
   #[wasm_bindgen(method, js_name = "postTimingFlags")]
-  pub(crate) async fn post_timing_flag(
+  pub(crate) fn post_timing_flag(
     this: &BackgroundThreadRPC,
     timing_flags: Vec<String>,
     pipeline_id: Option<&str>,
   );
 
   #[wasm_bindgen(method, js_name = "dispatchI18nResource")]
-  pub(crate) async fn dispatch_i18n_resource(this: &BackgroundThreadRPC, resource: &JsValue);
+  pub(crate) fn dispatch_i18n_resource(this: &BackgroundThreadRPC, resource: &JsValue);
 
   #[wasm_bindgen(method, js_name = "updateDataBackground")]
-  pub(crate) async fn update_data_background(
+  pub(crate) fn update_data_background(
     this: &BackgroundThreadRPC,
     new_data: &JsValue,
     options: &JsValue,

@@ -3,10 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 use lazy_static::lazy_static;
-use std::{
-  collections::{HashMap, HashSet},
-  hash::Hash,
-};
+use std::collections::{HashMap, HashSet};
 
 pub const LYNX_UNIQUE_ID_ATTRIBUTE: &str = "l-uid";
 pub const CSS_ID_ATTRIBUTE: &str = "l-css-id";

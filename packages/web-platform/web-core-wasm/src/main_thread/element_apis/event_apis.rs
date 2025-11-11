@@ -195,10 +195,10 @@ impl MainThreadGlobalThis {
               self.bts_rpc.publish_component_event(
                 parent_component_id,
                 event_name,
-                &serialized_event,
+                serialized_event,
               );
             } else {
-              self.bts_rpc.publish_event(&handler, &serialized_event);
+              self.bts_rpc.publish_event(&handler, serialized_event);
             }
           }
           if let Some(handler) = catch_handler {
@@ -207,10 +207,10 @@ impl MainThreadGlobalThis {
               self.bts_rpc.publish_component_event(
                 parent_component_id,
                 event_name,
-                &serialized_event,
+                serialized_event,
               );
             } else {
-              self.bts_rpc.publish_event(&handler, &serialized_event);
+              self.bts_rpc.publish_event(&handler, serialized_event);
             }
           }
         }
@@ -234,10 +234,10 @@ impl MainThreadGlobalThis {
             &wasm_bindgen::JsValue::from((*current_element).clone()),
           );
           if let Some(handler) = bind_handler {
-            self.mts_binding.run_worklet(&handler, &serialized_event);
+            self.mts_binding.run_worklet(&handler, serialized_event);
           }
           if let Some(handler) = catch_handler {
-            self.mts_binding.run_worklet(&handler, &serialized_event);
+            self.mts_binding.run_worklet(&handler, serialized_event);
           }
         }
       }
