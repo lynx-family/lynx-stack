@@ -1,5 +1,10 @@
-import { LynxElement, MainThreadGlobalThis } from '../dist/standard.js';
+import {
+  LynxElement,
+  MainThreadGlobalThis,
+  TemplateManager,
+} from '../dist/standard.js';
 import { systemInfo } from './constants.js';
+const templateManager = new TemplateManager();
 export function bindGlobalThis(
   globalThisObj: any,
   mtsGlobalThis: MainThreadGlobalThis,
@@ -85,7 +90,36 @@ export function bindGlobalThis(
       __SetInlineStyles: mtsGlobalThis.__SetInlineStyles.bind(mtsGlobalThis),
       __LoadLepusChunk: mtsGlobalThis.__LoadLepusChunk.bind(mtsGlobalThis),
       __GetPageElement: mtsGlobalThis.__GetPageElement.bind(mtsGlobalThis),
-      __QueryComponent: mtsGlobalThis.__QueryComponent.bind(mtsGlobalThis),
+      __QueryComponent: (
+        url: string,
+        resultCallback?: (result: {
+          code: number;
+          data?: {
+            url: string;
+            evalResult: unknown;
+          };
+        }) => void,
+      ) => {
+        try {
+          const result = mtsGlobalThis.__wasm_binding_queryComponent(
+            url,
+            templateManager,
+          );
+          resultCallback?.({
+            code: 0,
+            data: {
+              url,
+              evalResult: result,
+            },
+          });
+        } catch (e) {
+          console.error(`lynx web: lazy bundle load failed:`, e);
+          resultCallback?.({
+            code: -1,
+            data: undefined,
+          });
+        }
+      },
       SystemInfo: systemInfo,
       lynx: createMainThreadLynx(config, SystemInfo),
       _ReportError: mtsGlobalThis._ReportError.bind(mtsGlobalThis),

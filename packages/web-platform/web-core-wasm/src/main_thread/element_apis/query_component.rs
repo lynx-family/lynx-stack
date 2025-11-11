@@ -13,9 +13,8 @@ impl MainThreadGlobalThis {
   pub async fn query_component(
     &mut self,
     url: String,
-    result_callback: js_sys::Function,
     template_manager: &mut TemplateManager,
-  ) -> Result<(), wasm_bindgen::JsValue> {
+  ) -> Result<wasm_bindgen::JsValue, wasm_bindgen::JsValue> {
     let maybe_template = template_manager.get_cached_template(&url);
     if let Some(template) = maybe_template {
       if let Some(root_chunk_url) = template.get_lepus_code_url("root") {
@@ -40,7 +39,6 @@ impl MainThreadGlobalThis {
             )
             .unwrap_err();
         }
-        let _ = result_callback.call1(&JsValue::NULL, &lepus_root_chunk_export);
         let manifest_chunk = template.get_manifest_urls();
         let manifest_js_object = js_sys::Object::from(js_sys::Array::from_iter(
           manifest_chunk.iter().map(|(k, v)| {
@@ -64,8 +62,9 @@ impl MainThreadGlobalThis {
             &wasm_bindgen::JsValue::from_str(&url),
           )
           .await;
+        return Ok(lepus_root_chunk_export);
       }
     }
-    Ok(())
+    Ok(wasm_bindgen::JsValue::NULL)
   }
 }
