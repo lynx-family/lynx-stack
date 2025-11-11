@@ -4,9 +4,9 @@ use super::{
   LynxElement, // event::event_delegation::EventSystem,
 };
 
-use crate::constants;
 use crate::js_binding::{BackgroundThreadRPC, JSRealm, MainThreadJSBinding};
 use crate::template::{DecodedTemplateImpl, PageConfig};
+use crate::{constants, template};
 use std::{
   collections::{HashMap, HashSet},
   vec,
@@ -35,47 +35,6 @@ pub struct MainThreadGlobalThis {
 }
 
 impl MainThreadGlobalThis {
-  pub(crate) fn new(
-    template: DecodedTemplateImpl,
-    document: web_sys::Document,
-    root_node: web_sys::Node,
-    mts_realm: JSRealm,
-    mts_binding: MainThreadJSBinding,
-    bts_rpc: BackgroundThreadRPC,
-    tag_name_to_html_tag_map: wasm_bindgen::JsValue,
-  ) -> MainThreadGlobalThis {
-    let page_config = template.get_page_config().clone();
-    let unique_id_counter = 1;
-    let tag_name_to_html_tag_map: HashMap<String, String> =
-      serde_wasm_bindgen::from_value(tag_name_to_html_tag_map).unwrap();
-    let style_manager = StyleManager::new(
-      &document,
-      &root_node,
-      template.get_style_info(),
-      page_config.enable_css_selector,
-      page_config.enable_remove_css_scope,
-    );
-    MainThreadGlobalThis {
-      template,
-      mts_realm,
-      mts_binding,
-      bts_rpc,
-      unique_id_counter,
-      element_templates_instances: HashMap::new(),
-      unique_id_to_element_map: HashMap::new(),
-      component_id_to_unique_id_map: HashMap::new(),
-      enabled_events: HashSet::new(),
-      timing_flags: vec![],
-      document,
-      style_manager,
-      tag_name_to_html_tag_map,
-      exposure_changed_elements: vec![],
-      page: None,
-      root_node,
-      page_config,
-    }
-  }
-
   pub(crate) fn get_lynx_element_by_dom(&self, dom: &web_sys::HtmlElement) -> Option<&LynxElement> {
     let unique_id: i32 = js_sys::Reflect::get(
       dom,
@@ -97,6 +56,49 @@ impl MainThreadGlobalThis {
 
 #[wasm_bindgen]
 impl MainThreadGlobalThis {
+  #[wasm_bindgen(constructor)]
+  pub fn new(
+    url: String,
+    template_manager: &template::TemplateManager,
+    document: web_sys::Document,
+    root_node: web_sys::Node,
+    mts_realm: JSRealm,
+    mts_binding: MainThreadJSBinding,
+    bts_rpc: BackgroundThreadRPC,
+    // tag_name_to_html_tag_map: wasm_bindgen::JsValue,
+  ) -> MainThreadGlobalThis {
+    let template = template_manager.get_cached_template(&url).unwrap();
+    let page_config = template.get_page_config().clone();
+    let unique_id_counter = 1;
+    // let tag_name_to_html_tag_map: HashMap<String, String> =
+    //   serde_wasm_bindgen::from_value(tag_name_to_html_tag_map).unwrap();
+    let style_manager = StyleManager::new(
+      &document,
+      &root_node,
+      template.get_style_info(),
+      page_config.enable_css_selector,
+      page_config.enable_remove_css_scope,
+    );
+    MainThreadGlobalThis {
+      template,
+      mts_realm,
+      mts_binding,
+      bts_rpc,
+      unique_id_counter,
+      element_templates_instances: HashMap::new(),
+      unique_id_to_element_map: HashMap::new(),
+      component_id_to_unique_id_map: HashMap::new(),
+      enabled_events: HashSet::new(),
+      timing_flags: vec![],
+      document,
+      style_manager,
+      tag_name_to_html_tag_map: HashMap::new(),
+      exposure_changed_elements: vec![],
+      page: None,
+      root_node,
+      page_config,
+    }
+  }
   // #[wasm_bindgen(js_name = "__FlushElementTree")]
   //   let timing_flags = js_sys::Array::from_iter(self.timing_flags.iter().map(JsValue::from));
 

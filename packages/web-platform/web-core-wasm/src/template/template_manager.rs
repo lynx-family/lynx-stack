@@ -22,6 +22,11 @@ impl TemplateManager {
   }
 
   #[wasm_bindgen]
+  pub fn has_template_in_cache(&self, template_url: String) -> bool {
+    self.cache.contains_key(&template_url)
+  }
+
+  #[wasm_bindgen]
   pub fn push_template_to_cache(&mut self, template_url: String, binary: js_sys::Uint8Array) {
     let lynx_template: LynxRawTemplate = LynxRawTemplate::from(&binary);
     let decoded_template: DecodedTemplate = lynx_template.into();

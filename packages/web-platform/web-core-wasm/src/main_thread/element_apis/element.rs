@@ -104,7 +104,7 @@ struct EventHandler {
   /* bind capture-bind catch capture-catch */
   framework_run_worklet_identifier: HashMap<String, wasm_bindgen::JsValue>,
   /* bind capture-bind catch capture-catch */
-  event_type_to_handlers: HashMap<String, Vec<js_sys::Function>>,
+  // event_type_to_handlers: HashMap<String, Vec<js_sys::Function>>,
 }
 
 pub struct LynxElementData {
@@ -366,15 +366,6 @@ impl LynxElement {
     wasm_bindgen::JsValue::UNDEFINED
   }
 
-  pub(crate) fn get_dataset_clone(&self) -> CommonConfigObject {
-    let element_data = self.data.borrow();
-    if let Some(dataset) = &element_data.dataset {
-      dataset.clone()
-    } else {
-      CommonConfigObject::default()
-    }
-  }
-
   fn update_dataset_impl(
     &self,
     new_dataset: impl Iterator<Item = (String, wasm_bindgen::JsValue)>,
@@ -604,37 +595,37 @@ impl LynxElement {
     }
   }
 
-  pub(crate) fn add_event_listener_with_js_function(
-    &self,
-    event_name: String,
-    event_type: String,
-    js_function: js_sys::Function,
-  ) {
-    let mut element_data = self.data.borrow_mut();
-    let event_handlers_map = element_data.event_handlers_map.get_or_insert_default();
-    let event_handler_store = event_handlers_map.entry(event_name).or_default();
-    event_handler_store
-      .event_type_to_handlers
-      .entry(event_type)
-      .or_default()
-      .push(js_function);
-  }
+  // pub(crate) fn add_event_listener_with_js_function(
+  //   &self,
+  //   event_name: String,
+  //   event_type: String,
+  //   js_function: js_sys::Function,
+  // ) {
+  //   let mut element_data = self.data.borrow_mut();
+  //   let event_handlers_map = element_data.event_handlers_map.get_or_insert_default();
+  //   let event_handler_store = event_handlers_map.entry(event_name).or_default();
+  //   event_handler_store
+  //     .event_type_to_handlers
+  //     .entry(event_type)
+  //     .or_default()
+  //     .push(js_function);
+  // }
 
-  pub(crate) fn remove_js_function_event_listener(
-    &self,
-    event_name: String,
-    event_type: &str,
-    js_function: js_sys::Function,
-  ) {
-    let mut element_data = self.data.borrow_mut();
-    let event_handlers_map = element_data.event_handlers_map.get_or_insert_default();
-    let event_handler_store = event_handlers_map.entry(event_name).or_default();
-    event_handler_store
-      .event_type_to_handlers
-      .entry(event_type.to_string())
-      .or_default()
-      .retain(|f| !f.loose_eq(&js_function));
-  }
+  // pub(crate) fn remove_js_function_event_listener(
+  //   &self,
+  //   event_name: String,
+  //   event_type: &str,
+  //   js_function: js_sys::Function,
+  // ) {
+  //   let mut element_data = self.data.borrow_mut();
+  //   let event_handlers_map = element_data.event_handlers_map.get_or_insert_default();
+  //   let event_handler_store = event_handlers_map.entry(event_name).or_default();
+  //   event_handler_store
+  //     .event_type_to_handlers
+  //     .entry(event_type.to_string())
+  //     .or_default()
+  //     .retain(|f| !f.loose_eq(&js_function));
+  // }
 
   pub(crate) fn get_parent_component_unique_id(&self) -> i32 {
     let element_data = self.data.borrow();

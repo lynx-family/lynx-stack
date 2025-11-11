@@ -4,11 +4,55 @@ import {
   TemplateManager,
 } from '../dist/standard.js';
 import { systemInfo } from './constants.js';
+import { createIFrameRealm } from './mtsRealm.js';
+import { MainThreadJSBinding } from './mtsBinding.js';
 const templateManager = new TemplateManager();
-export function bindGlobalThis(
-  globalThisObj: any,
-  mtsGlobalThis: MainThreadGlobalThis,
+
+async function fetchTemplate(
+  templateUrl: string,
+  custom_template_loader?: (url: string) => Promise<Uint8Array>,
+): Promise<void> {
+  const loader = custom_template_loader || ((url) =>
+    fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/octet-stream',
+      },
+    }).then(response => {
+      if (!response.ok) {
+        throw new Error(
+          `Failed to load template from ${url}: ${response.statusText}`,
+        );
+      }
+      return response.arrayBuffer().then(buffer => new Uint8Array(buffer));
+    }));
+  if (!templateManager.has_template_in_cache(templateUrl)) {
+    const buffer = await loader(templateUrl);
+    templateManager.push_template_to_cache(templateUrl, buffer);
+  }
+}
+
+export async function StartMainThread(
+  templateUrl: string,
+  document: Document,
+  rootDom: ShadowRoot,
+  custom_template_loader?: (url: string) => Promise<Uint8Array>,
 ) {
+  // fetch
+  const [_, mtsRealm] = await Promise.all([
+    fetchTemplate(templateUrl, custom_template_loader),
+    createIFrameRealm(rootDom),
+  ]);
+
+  const mtsGlobalThis = new MainThreadGlobalThis(
+    templateUrl,
+    templateManager,
+    document,
+    rootDom,
+    mtsRealm,
+    new MainThreadJSBinding(mtsRealm, rootDom),
+    {},
+  );
   Object.assign(
     globalThisObj,
     {
