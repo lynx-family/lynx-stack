@@ -13,5 +13,4 @@ extern "C" {
 
   #[wasm_bindgen(method, js_name = "enableEvent")]
   pub(crate) fn enable_event(this: &MainThreadJSBinding, event_name: &str);
-
 }
