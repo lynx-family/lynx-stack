@@ -34,8 +34,7 @@ import { isDirectOrDeepEqual } from './utils.js';
 import { onPostWorkletCtx } from './worklet/ctx.js';
 
 export class BackgroundSnapshotInstance {
-  constructor(public type: string, __slotIndex?: number) {
-    this.__slotIndex = __slotIndex;
+  constructor(public type: string) {
     this.__snapshot_def = snapshotManager.values.get(type)!;
     const id = this.__id = backgroundSnapshotInstanceManager.nextId += 1;
     backgroundSnapshotInstanceManager.values.set(id, this);

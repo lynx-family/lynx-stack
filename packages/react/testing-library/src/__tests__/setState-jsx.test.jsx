@@ -12,6 +12,7 @@ test('setState changes jsx', async () => {
 
   const jsx0 = <text>Hello 0</text>;
   const jsx1 = <text>Hello 1</text>;
+  const jsx2 = <text>Hello 2</text>;
 
   const Comp = () => {
     const [text0, setText0] = useState(jsx0);
@@ -24,7 +25,9 @@ test('setState changes jsx', async () => {
       <view bindtap={handleTap} data-testid='view'>
         {text0}
         <text>---</text>
-        {text1}
+        {[0, 1, 2].map((i) => text1)}
+        <text>---</text>
+        {jsx2}
       </view>
     );
   };
@@ -48,6 +51,20 @@ test('setState changes jsx', async () => {
           <text>
             Hello 1
           </text>
+          <text>
+            Hello 1
+          </text>
+          <text>
+            Hello 1
+          </text>
+        </wrapper>
+        <text>
+          ---
+        </text>
+        <wrapper>
+          <text>
+            Hello 2
+          </text>
         </wrapper>
       </view>
     </page>
@@ -64,7 +81,7 @@ test('setState changes jsx', async () => {
         {
           "id": 2,
           "op": "CreateElement",
-          "type": "__Card__:__snapshot_cd8d7_test_3",
+          "type": "__Card__:__snapshot_cd8d7_test_4",
         },
         {
           "id": 2,
@@ -98,6 +115,42 @@ test('setState changes jsx', async () => {
           "slotIndex": 1,
         },
         {
+          "id": 5,
+          "op": "CreateElement",
+          "type": "__Card__:__snapshot_cd8d7_test_2",
+        },
+        {
+          "beforeId": null,
+          "childId": 5,
+          "op": "InsertBefore",
+          "parentId": 2,
+          "slotIndex": 1,
+        },
+        {
+          "id": 6,
+          "op": "CreateElement",
+          "type": "__Card__:__snapshot_cd8d7_test_2",
+        },
+        {
+          "beforeId": null,
+          "childId": 6,
+          "op": "InsertBefore",
+          "parentId": 2,
+          "slotIndex": 1,
+        },
+        {
+          "id": 7,
+          "op": "CreateElement",
+          "type": "__Card__:__snapshot_cd8d7_test_3",
+        },
+        {
+          "beforeId": null,
+          "childId": 7,
+          "op": "InsertBefore",
+          "parentId": 2,
+          "slotIndex": 2,
+        },
+        {
           "beforeId": null,
           "childId": 2,
           "op": "InsertBefore",
@@ -114,18 +167,79 @@ test('setState changes jsx', async () => {
     expect(formattedSnapshotPatch).toMatchInlineSnapshot(`
       [
         {
+          "childId": 3,
+          "op": "RemoveChild",
+          "parentId": 2,
+        },
+        {
+          "id": 8,
+          "op": "CreateElement",
+          "type": "__Card__:__snapshot_cd8d7_test_2",
+        },
+        {
           "beforeId": null,
-          "childId": 4,
+          "childId": 8,
           "op": "InsertBefore",
           "parentId": 2,
           "slotIndex": 0,
         },
         {
+          "childId": 4,
+          "op": "RemoveChild",
+          "parentId": 2,
+        },
+        {
+          "childId": 5,
+          "op": "RemoveChild",
+          "parentId": 2,
+        },
+        {
+          "childId": 6,
+          "op": "RemoveChild",
+          "parentId": 2,
+        },
+        {
+          "id": 9,
+          "op": "CreateElement",
+          "type": "__Card__:__snapshot_cd8d7_test_1",
+        },
+        {
           "beforeId": null,
-          "childId": 3,
+          "childId": 9,
           "op": "InsertBefore",
           "parentId": 2,
           "slotIndex": 1,
+        },
+        {
+          "id": 10,
+          "op": "CreateElement",
+          "type": "__Card__:__snapshot_cd8d7_test_1",
+        },
+        {
+          "beforeId": null,
+          "childId": 10,
+          "op": "InsertBefore",
+          "parentId": 2,
+          "slotIndex": 1,
+        },
+        {
+          "id": 11,
+          "op": "CreateElement",
+          "type": "__Card__:__snapshot_cd8d7_test_1",
+        },
+        {
+          "beforeId": null,
+          "childId": 11,
+          "op": "InsertBefore",
+          "parentId": 2,
+          "slotIndex": 1,
+        },
+        {
+          "beforeId": null,
+          "childId": 7,
+          "op": "InsertBefore",
+          "parentId": 2,
+          "slotIndex": 2,
         },
       ]
     `);
@@ -147,6 +261,20 @@ test('setState changes jsx', async () => {
         <wrapper>
           <text>
             Hello 0
+          </text>
+          <text>
+            Hello 0
+          </text>
+          <text>
+            Hello 0
+          </text>
+        </wrapper>
+        <text>
+          ---
+        </text>
+        <wrapper>
+          <text>
+            Hello 2
           </text>
         </wrapper>
       </view>

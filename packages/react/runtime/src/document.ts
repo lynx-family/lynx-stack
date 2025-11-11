@@ -34,14 +34,14 @@ const document: SnapshotDocumentAdapter = {} as SnapshotDocumentAdapter;
  * All DOM operations are intercepted to create {@link BackgroundSnapshotInstance}.
  */
 function setupBackgroundDocument(): void {
-  document.createElement = function(type: string, slotIndex: number = 0) {
-    return new BackgroundSnapshotInstance(type, slotIndex);
+  document.createElement = function(type: string) {
+    return new BackgroundSnapshotInstance(type);
   };
-  document.createElementNS = function(_ns: string, type: string, _is?: string, slotIndex: number = 0) {
-    return new BackgroundSnapshotInstance(type, slotIndex);
+  document.createElementNS = function(_ns: string, type: string, _is?: string) {
+    return new BackgroundSnapshotInstance(type);
   };
-  document.createTextNode = function(text: string, slotIndex: number = 0) {
-    const i = new BackgroundSnapshotInstance(null as unknown as string, slotIndex);
+  document.createTextNode = function(text: string) {
+    const i = new BackgroundSnapshotInstance(null as unknown as string);
     i.setAttribute(0, text);
     Object.defineProperty(i, 'data', {
       set(v) {
@@ -57,19 +57,16 @@ function setupBackgroundDocument(): void {
  * All DOM operations are intercepted to create {@link SnapshotInstance}.
  */
 function setupDocument(): void {
-  document.createElement = function(type: string, slotIndex: number = 0) {
+  document.createElement = function(type: string) {
     const si = new SnapshotInstance(type);
-    si.__slotIndex = slotIndex;
     return si;
   };
-  document.createElementNS = function(_ns: string, type: string, _is?: string, slotIndex: number = 0) {
+  document.createElementNS = function(_ns: string, type: string, _is?: string) {
     const si = new SnapshotInstance(type);
-    si.__slotIndex = slotIndex;
     return si;
   };
-  document.createTextNode = function(text: string, slotIndex: number = 0) {
+  document.createTextNode = function(text: string) {
     const i = new SnapshotInstance(null as unknown as string);
-    i.__slotIndex = slotIndex;
     i.setAttribute(0, text);
     Object.defineProperty(i, 'data', {
       set(v) {
