@@ -1,7 +1,8 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize)]
+#[cfg_attr(feature = "encode", derive(Serialize))]
 pub(crate) struct LynxCrossThreadEventRegistration {
   pub event_type: String,
   pub event_name: String,

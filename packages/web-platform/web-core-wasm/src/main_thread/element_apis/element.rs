@@ -1,18 +1,17 @@
 use super::MainThreadGlobalThis;
 use crate::constants;
-use serde::{Deserialize, Serialize};
 use std::{cell::RefCell, collections::HashMap, fmt::Display, rc::Rc};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_derive::TryFromJsValue;
 
-#[derive(Default, PartialEq, Clone, Serialize, Deserialize)]
+#[derive(Default, PartialEq, Clone)]
 enum ConfigValueType {
   #[default]
   String,
   Object,
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone)]
 struct ConfigValue {
   value_type: ConfigValueType,
   /**
@@ -58,10 +57,9 @@ impl Display for ConfigValue {
 /**
  * designed for store the one level Record<String, ConfigValue> in js
  */
-#[derive(Clone, Default, Serialize, Deserialize)]
+#[derive(Clone, Default)]
 pub(crate) struct CommonConfigObject {
   config_map: HashMap<String, ConfigValue>,
-  #[serde(skip)]
   js_object_cache: RefCell<Option<js_sys::Object>>,
 }
 
