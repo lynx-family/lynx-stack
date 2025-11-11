@@ -2,10 +2,11 @@ import {
   LynxElement,
   MainThreadGlobalThis,
   TemplateManager,
-} from '../dist/standard.js';
+} from '../dist/debug.js';
 import { systemInfo } from './constants.js';
 import { createIFrameRealm } from './mtsRealm.js';
 import { MainThreadJSBinding } from './mtsBinding.js';
+import { BTSRpc } from './btsRpc.js';
 const templateManager = new TemplateManager();
 
 async function fetchTemplate(
@@ -36,6 +37,7 @@ export async function StartMainThread(
   templateUrl: string,
   document: Document,
   rootDom: ShadowRoot,
+  crossThreadMessagePort: MessagePort,
   custom_template_loader?: (url: string) => Promise<Uint8Array>,
 ) {
   // fetch
@@ -51,7 +53,7 @@ export async function StartMainThread(
     rootDom,
     mtsRealm,
     new MainThreadJSBinding(mtsRealm, rootDom),
-    {},
+    new BTSRpc(crossThreadMessagePort),
   );
   Object.assign(
     globalThisObj,
@@ -165,20 +167,21 @@ export async function StartMainThread(
         }
       },
       SystemInfo: systemInfo,
-      lynx: createMainThreadLynx(config, SystemInfo),
-      _ReportError: mtsGlobalThis._ReportError.bind(mtsGlobalThis),
-      _SetSourceMapRelease: mtsGlobalThis._SetSourceMapRelease.bind(
-        mtsGlobalThis,
-      ),
-      __OnLifecycleEvent: mtsGlobalThis.__OnLifecycleEvent.bind(mtsGlobalThis),
-      __FlushElementTree: mtsGlobalThis.__FlushElementTree.bind(mtsGlobalThis),
-      _I18nResourceTranslation: mtsGlobalThis._I18nResourceTranslation.bind(
-        mtsGlobalThis,
-      ),
+      // lynx: createMainThreadLynx(config, SystemInfo),
+      // _ReportError: mtsGlobalThis._ReportError.bind(mtsGlobalThis),
+      // _SetSourceMapRelease: mtsGlobalThis._SetSourceMapRelease.bind(
+      //   mtsGlobalThis,
+      // ),
+      // __OnLifecycleEvent: mtsGlobalThis.__OnLifecycleEvent.bind(mtsGlobalThis),
+      // __FlushElementTree: mtsGlobalThis.__FlushElementTree.bind(mtsGlobalThis),
+      // _I18nResourceTranslation: mtsGlobalThis._I18nResourceTranslation.bind(
+      //   mtsGlobalThis,
+      // ),
       _AddEventListener: () => {},
       renderPage: undefined,
     },
   );
+  return mtsGlobalThis;
 }
 
 export function scheduleGC(mtsGlobalThis: MainThreadGlobalThis) {

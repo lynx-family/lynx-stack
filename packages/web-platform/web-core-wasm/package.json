@@ -26,10 +26,13 @@
     "build": "node scripts/build.js"
   },
   "dependencies": {
+    "@lynx-js/web-worker-rpc": "workspace:*",
     "wasm-feature-detect": "^1.8.0"
   },
   "devDependencies": {
     "binaryen": "^124.0.0",
-    "fb-dotslash": "^0.5.8"
+    "fb-dotslash": "^0.5.8",
+    "happy-dom": "^20.0.4",
+    "vite-plugin-wasm": "^3.5.0"
   }
 }

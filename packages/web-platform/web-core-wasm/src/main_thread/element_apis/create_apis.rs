@@ -56,10 +56,10 @@ impl MainThreadGlobalThis {
       self
         .component_id_to_unique_id_map
         .insert(component_id.to_string(), unique_id);
-      if !self.page_config.default_display_linear {
+      if !self.config_default_display_linear {
         let _ = page.set_attribute(constants::LYNX_DEFAULT_DISPLAY_LINEAR_ATTRIBUTE, "false");
       }
-      if self.page_config.default_overflow_visible {
+      if self.config_default_overflow_visible {
         let _ = page.set_attribute(constants::LYNX_DEFAULT_OVERFLOW_VISIBLE_ATTRIBUTE, "true");
       }
       self.page = Some(page.clone());

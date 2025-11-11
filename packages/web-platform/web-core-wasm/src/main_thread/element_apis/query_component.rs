@@ -50,7 +50,7 @@ impl MainThreadGlobalThis {
         ));
         self
           .style_manager
-          .push_lazy_component_style_sheet(template.get_style_info(), &url);
+          .push_style_sheet(template.get_style_info(), Some(&url));
         self
           .bts_rpc
           .update_background_js_module_cache(&manifest_js_object)

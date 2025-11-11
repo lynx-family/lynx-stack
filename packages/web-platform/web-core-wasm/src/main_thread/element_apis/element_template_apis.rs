@@ -1,6 +1,6 @@
 use super::{LynxElement, MainThreadGlobalThis};
 use crate::constants;
-use crate::template::ElementTemplate;
+use crate::template::{ElementTemplate, TemplateManager};
 use std::collections::HashMap;
 use wasm_bindgen::prelude::*;
 
@@ -180,53 +180,60 @@ impl MainThreadGlobalThis {
     .unwrap()
   }
 
-  #[wasm_bindgen(js_name = "__ElementFromBinary")]
+  #[wasm_bindgen(js_name = "__wasm_binding__ElementFromBinary")]
   pub fn element_from_binary(
     &mut self,
+    template_manager: &TemplateManager,
     template_id: String,
     parent_component_unique_id: i32,
   ) -> Vec<LynxElement> {
-    if let Some(element_template) = self.template.get_element_templates_by_id(&template_id) {
-      let instance = if let Some(instance) = self.element_templates_instances.get(&template_id) {
-        instance
-      } else {
-        let new_instance = ElementTemplatesInstance::new(element_template, self);
-        self
-          .element_templates_instances
-          .insert(template_id.clone(), new_instance);
-        self.element_templates_instances.get(&template_id).unwrap()
-      };
-      let (cloned_dom_map, template_content) = instance.clone_dom();
-      for (dummy_id, cloned_dom) in cloned_dom_map {
-        let unique_id = self.unique_id_counter + 1;
-        self.unique_id_counter = unique_id;
-        // unique id, same logic as LynxElement::new
-        self.unique_id_counter += 1;
-        let unique_id = self.unique_id_counter;
-        if !self.page_config.enable_css_selector {
-          let _ =
-            cloned_dom.set_attribute(constants::LYNX_UNIQUE_ID_ATTRIBUTE, &unique_id.to_string());
-        }
-        let lynx_element = instance
-          .lynx_elements
-          .get(&dummy_id)
-          .unwrap()
-          .clone_with_new_dom(self, cloned_dom, parent_component_unique_id, unique_id);
-        self
-          .unique_id_to_element_map
-          .insert(unique_id, Box::new(lynx_element.clone()));
-      }
-      let mut result_elements: Vec<LynxElement> = vec![];
-      let children = template_content.children();
-      for i in 0..children.length() {
-        if let Some(child) = children.item(i) {
-          if let Some(e) = self.get_lynx_element_by_dom(&child.unchecked_into()) {
-            result_elements.push(e.clone());
+    if let Some(template_url) = &self.entry_template_url {
+      if let Some(cached_template) = template_manager.get_cached_template(template_url) {
+        if let Some(element_templates) = cached_template.get_element_templates_by_id(&template_id) {
+          let instance = if let Some(instance) = self.element_templates_instances.get(&template_id)
+          {
+            instance
+          } else {
+            let new_instance = ElementTemplatesInstance::new(element_templates, self);
+            self
+              .element_templates_instances
+              .insert(template_id.clone(), new_instance);
+            self.element_templates_instances.get(&template_id).unwrap()
+          };
+          let (cloned_dom_map, template_content) = instance.clone_dom();
+          for (dummy_id, cloned_dom) in cloned_dom_map {
+            let unique_id = self.unique_id_counter + 1;
+            self.unique_id_counter = unique_id;
+            // unique id, same logic as LynxElement::new
+            self.unique_id_counter += 1;
+            let unique_id = self.unique_id_counter;
+            if !self.config_enable_css_selector {
+              let _ = cloned_dom
+                .set_attribute(constants::LYNX_UNIQUE_ID_ATTRIBUTE, &unique_id.to_string());
+            }
+            let lynx_element = instance
+              .lynx_elements
+              .get(&dummy_id)
+              .unwrap()
+              .clone_with_new_dom(self, cloned_dom, parent_component_unique_id, unique_id);
+            self
+              .unique_id_to_element_map
+              .insert(unique_id, Box::new(lynx_element.clone()));
           }
+          let mut result_elements: Vec<LynxElement> = vec![];
+          let children = template_content.children();
+          for i in 0..children.length() {
+            if let Some(child) = children.item(i) {
+              if let Some(e) = self.get_lynx_element_by_dom(&child.unchecked_into()) {
+                result_elements.push(e.clone());
+              }
+            }
+          }
+          return result_elements;
         }
       }
-      return result_elements;
     }
+
     vec![]
   }
 }

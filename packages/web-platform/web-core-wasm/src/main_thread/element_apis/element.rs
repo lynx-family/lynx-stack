@@ -174,7 +174,7 @@ impl LynxElement {
     */
     mts_global_this.unique_id_counter += 1;
     let unique_id = mts_global_this.unique_id_counter;
-    if !mts_global_this.page_config.enable_css_selector {
+    if !mts_global_this.config_enable_css_selector {
       let _ = dom.set_attribute(constants::LYNX_UNIQUE_ID_ATTRIBUTE, &unique_id.to_string());
     }
     js_sys::Reflect::set(

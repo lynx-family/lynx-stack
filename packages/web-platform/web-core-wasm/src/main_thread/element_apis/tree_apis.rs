@@ -36,7 +36,7 @@ impl MainThreadGlobalThis {
    * So we provide a pure Rust version of this function for internal use.
    * It should be wrapped by a JS function that does the type checking first.
    */
-  #[wasm_bindgen(js_name = "__GetElementUniqueID_wasm_impl")]
+  #[wasm_bindgen(js_name = "__wasm_binding__GetElementUniqueID")]
   pub fn get_element_unique_id_pure(&self, element: &LynxElement) -> i32 {
     element.get_unique_id()
   }

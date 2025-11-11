@@ -15,8 +15,8 @@ use wasm_bindgen::JsCast;
  *    based on entry_name, css_id, class_name, and applied by using [unique-id="x"] selectors.
  */
 pub(crate) struct StyleManager {
+  root_node: web_sys::Node,
   css_query_map_by_entry_name: Option<HashMap<String, CssOgCssIdToClassNameToDeclarationsMap>>,
-  style_element: web_sys::HtmlStyleElement,
   style_sheet: Option<web_sys::CssStyleSheet>,
   unique_id_to_style_declarations_map: Option<HashMap<i32, web_sys::CssStyleDeclaration>>,
   config_enable_css_selector: bool,
@@ -25,48 +25,17 @@ pub(crate) struct StyleManager {
 
 impl StyleManager {
   pub(crate) fn new(
-    document: &web_sys::Document,
-    root_node: &web_sys::Node,
-    entry_style_info: &FlattenedStyleInfo,
+    root_node: web_sys::Node,
     config_enable_css_selector: bool,
     config_enable_remove_css_scope: bool,
   ) -> Self {
-    let style_element = document
-      .create_element("style")
-      .unwrap()
-      .unchecked_into::<web_sys::HtmlStyleElement>();
-    root_node.append_child(&style_element).unwrap();
-    if config_enable_css_selector {
-      let style_content =
-        transform_to_web_style_css_ng(entry_style_info, config_enable_remove_css_scope, None);
-      style_element.set_inner_text(&style_content);
-      StyleManager {
-        css_query_map_by_entry_name: None,
-        style_element,
-        style_sheet: None,
-        unique_id_to_style_declarations_map: None,
-        config_enable_css_selector,
-        config_enable_remove_css_scope,
-      }
-    } else {
-      let (style_content, map): (String, CssOgCssIdToClassNameToDeclarationsMap) =
-        transform_to_web_style_css_og(entry_style_info, config_enable_remove_css_scope, None);
-      style_element.set_inner_text(&style_content);
-      let style_sheet = style_element
-        .sheet()
-        .unwrap()
-        .unchecked_into::<web_sys::CssStyleSheet>();
-      let mut css_query_map_by_entry_name: HashMap<String, CssOgCssIdToClassNameToDeclarationsMap> =
-        HashMap::new();
-      css_query_map_by_entry_name.insert("".to_string(), map);
-      StyleManager {
-        css_query_map_by_entry_name: Some(css_query_map_by_entry_name),
-        style_element,
-        style_sheet: Some(style_sheet),
-        unique_id_to_style_declarations_map: Some(HashMap::new()),
-        config_enable_css_selector,
-        config_enable_remove_css_scope,
-      }
+    StyleManager {
+      root_node,
+      css_query_map_by_entry_name: None,
+      style_sheet: None,
+      unique_id_to_style_declarations_map: None,
+      config_enable_css_selector,
+      config_enable_remove_css_scope,
     }
   }
 
@@ -96,37 +65,38 @@ impl StyleManager {
       .join("");
 
     // update style declaration
-
-    let style_sheet = self.style_sheet.as_ref().unwrap();
-    let unique_id_to_style_declarations_map =
-      self.unique_id_to_style_declarations_map.as_mut().unwrap();
-    if let Some(style_declaration) = unique_id_to_style_declarations_map.get(&unique_id) {
-      style_declaration.set_css_text(&new_declarations);
-    } else {
-      let rule_index = style_sheet
-        .insert_rule(&format!(
-          "[unique-id=\"{unique_id}\"] {{{new_declarations}}}"
-        ))
-        .unwrap();
-      let style_declaration = style_sheet
-        .css_rules()
-        .unwrap()
-        .get(rule_index)
-        .unwrap()
-        .unchecked_into::<web_sys::CssStyleDeclaration>();
-      unique_id_to_style_declarations_map.insert(unique_id, style_declaration);
+    if self.style_sheet.is_some() && self.css_query_map_by_entry_name.is_some() {
+      let style_sheet = self.style_sheet.as_ref().unwrap();
+      let unique_id_to_style_declarations_map = self
+        .unique_id_to_style_declarations_map
+        .get_or_insert_with(Default::default);
+      if let Some(style_declaration) = unique_id_to_style_declarations_map.get(&unique_id) {
+        style_declaration.set_css_text(&new_declarations);
+      } else {
+        let rule_index = style_sheet
+          .insert_rule(&format!(
+            "[unique-id=\"{unique_id}\"] {{{new_declarations}}}"
+          ))
+          .unwrap();
+        let style_declaration = style_sheet
+          .css_rules()
+          .unwrap()
+          .get(rule_index)
+          .unwrap()
+          .unchecked_into::<web_sys::CssStyleDeclaration>();
+        unique_id_to_style_declarations_map.insert(unique_id, style_declaration);
+      }
     }
   }
 
-  pub(crate) fn push_lazy_component_style_sheet(
+  pub(crate) fn push_style_sheet(
     &mut self,
     flattened_style_info: &FlattenedStyleInfo,
-    entry_name: &str,
+    entry_name: Option<&str>,
   ) {
-    let parent_dom = self.style_element.parent_node().unwrap();
-    let new_style_element = self
-      .style_element
-      .owner_document()
+    let new_style_element = web_sys::window()
+      .unwrap()
+      .document()
       .unwrap()
       .create_element("style")
       .unwrap()
@@ -135,7 +105,7 @@ impl StyleManager {
       let style_content = transform_to_web_style_css_ng(
         flattened_style_info,
         self.config_enable_remove_css_scope,
-        Some(entry_name),
+        entry_name,
       );
       new_style_element.set_inner_text(&style_content);
     } else {
@@ -143,17 +113,14 @@ impl StyleManager {
         transform_to_web_style_css_og(
           flattened_style_info,
           self.config_enable_remove_css_scope,
-          Some(entry_name),
+          entry_name,
         );
       new_style_element.set_inner_text(&style_content);
       self
         .css_query_map_by_entry_name
-        .as_mut()
-        .unwrap()
-        .insert(entry_name.to_string(), map);
+        .get_or_insert_with(Default::default)
+        .insert(entry_name.unwrap_or("").to_string(), map);
     }
-    parent_dom
-      .insert_before(&new_style_element, Some(&self.style_element))
-      .unwrap();
+    self.root_node.append_child(&new_style_element).unwrap();
   }
 }

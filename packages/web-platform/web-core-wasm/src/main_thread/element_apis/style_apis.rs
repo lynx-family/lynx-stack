@@ -35,7 +35,7 @@ impl MainThreadGlobalThis {
           let _ = element.set_attribute(constants::LYNX_ENTRY_NAME_ATTRIBUTE, entry_name);
         }
       }
-      if !self.page_config.enable_css_selector {
+      if !self.config_enable_css_selector {
         let dom = element.get_dom();
         let class_value: Option<String> = dom.get_attribute("class");
         self.set_classes(element, class_value);
@@ -46,7 +46,7 @@ impl MainThreadGlobalThis {
   #[wasm_bindgen(js_name = "__SetClasses")]
   pub fn set_classes(&mut self, element: &LynxElement, classname: Option<String>) {
     let _ = element.set_or_remove_attribute("class", classname.as_deref());
-    if !self.page_config.enable_css_selector {
+    if !self.config_enable_css_selector {
       let dom = element.get_dom();
       let class_list: Vec<String> = dom
         .class_list()

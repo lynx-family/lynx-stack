@@ -932,6 +932,9 @@ importers:
 
   packages/web-platform/web-core-wasm:
     dependencies:
+      '@lynx-js/web-worker-rpc':
+        specifier: workspace:*
+        version: link:../web-worker-rpc
       wasm-feature-detect:
         specifier: ^1.8.0
         version: 1.8.0
@@ -942,6 +945,12 @@ importers:
       fb-dotslash:
         specifier: ^0.5.8
         version: 0.5.8
+      happy-dom:
+        specifier: ^20.0.4
+        version: 20.0.4
+      vite-plugin-wasm:
+        specifier: ^3.5.0
+        version: 3.5.0(vite@5.4.2(@types/node@24.6.1)(sass-embedded@1.90.0)(sass@1.90.0)(terser@5.31.6))
 
   packages/web-platform/web-elements:
     dependencies:
