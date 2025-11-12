@@ -80,7 +80,7 @@ declare global {
     key: number | string,
     value: any,
   ): void;
-  declare function __SetInlineStyles(e: FiberElement, style: string): void;
+  declare function __SetInlineStyles(e: FiberElement, style: unknown): void;
   declare function __AddEvent(
     e: FiberElement,
     eventType: string,
