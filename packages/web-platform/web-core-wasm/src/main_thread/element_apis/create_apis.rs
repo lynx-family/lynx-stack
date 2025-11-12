@@ -44,6 +44,9 @@ impl MainThreadGlobalThis {
 
   #[wasm_bindgen(js_name = "__CreatePage")]
   pub fn create_page(&mut self, component_id: &str, css_id: i32) -> LynxElement {
+    if self.page.is_some() {
+      return self.page.as_ref().unwrap().clone();
+    }
     let page: LynxElement = LynxElement::new(
       self,
       "page",
@@ -73,6 +76,8 @@ impl MainThreadGlobalThis {
     component_parent_unique_id: i32,
     component_id: &str,
     css_id: i32,
+    entry_name: Option<String>,
+    name: Option<String>,
   ) -> LynxElement {
     let component = LynxElement::new(
       self,
@@ -84,6 +89,12 @@ impl MainThreadGlobalThis {
     self
       .component_id_to_unique_id_map
       .insert(component_id.to_string(), component.get_unique_id());
+    if let Some(entry_name) = entry_name {
+      let _ = component.set_attribute(constants::LYNX_ENTRY_NAME_ATTRIBUTE, &entry_name);
+    }
+    if let Some(name) = name {
+      let _ = component.set_attribute("name", &name);
+    }
     component
   }
 }

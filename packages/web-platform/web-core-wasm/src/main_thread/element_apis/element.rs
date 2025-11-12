@@ -370,30 +370,30 @@ impl LynxElement {
     &self,
     new_dataset: impl Iterator<Item = (String, wasm_bindgen::JsValue)>,
   ) {
-    let element_data = &mut self.data.borrow_mut();
-    let dom = self.get_dom();
-    let mut dataset = element_data.dataset.take().unwrap_or_default();
-    {
-      let config_map = &mut dataset.config_map;
-      for (key, value_option) in new_dataset {
-        let value_option = if value_option.is_null_or_undefined() {
-          None
+    let mut element_data = self.data.borrow_mut();
+    let dom = element_data.dom_ref.as_ref().unwrap().clone();
+    if element_data.dataset.is_none() {
+      element_data.dataset = Some(CommonConfigObject::default());
+    }
+    let dataset = element_data.dataset.as_mut().unwrap();
+    let config_map = &mut dataset.config_map;
+    for (key, value_option) in new_dataset {
+      let value_option = if value_option.is_null_or_undefined() {
+        None
+      } else {
+        Some(ConfigValue::new(&value_option))
+      };
+      if value_option.as_ref() != config_map.get(&key) {
+        if let Some(value) = value_option {
+          let value_str = value.to_string();
+          let _ = dom.set_attribute(&format!("data-{}", key.to_lowercase()), &value_str);
+          config_map.insert(key, value);
         } else {
-          Some(ConfigValue::new(&value_option))
-        };
-        if value_option.as_ref() != config_map.get(&key) {
-          if let Some(value) = value_option {
-            let value_str = value.to_string();
-            let _ = dom.set_attribute(&format!("data-{}", key.to_lowercase()), &value_str);
-            config_map.insert(key, value);
-          } else {
-            let _ = dom.remove_attribute(&format!("data-{}", key.to_lowercase()));
-            config_map.remove(&key);
-          }
+          let _ = dom.remove_attribute(&format!("data-{}", key.to_lowercase()));
+          config_map.remove(&key);
         }
       }
     }
-    element_data.dataset = Some(dataset);
   }
 
   /**
@@ -512,9 +512,9 @@ impl LynxElement {
   }
 
   pub(crate) fn set_id(&self, id: Option<String>) {
+    let _ = self.set_or_remove_attribute("id", id.as_deref());
     let mut element_data = self.data.borrow_mut();
     element_data.id = id;
-    let _ = self.set_or_remove_attribute("id", element_data.id.as_deref());
   }
 
   pub(crate) fn get_id(&self) -> Option<String> {

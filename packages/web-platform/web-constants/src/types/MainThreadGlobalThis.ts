@@ -66,8 +66,8 @@ export type AppendElementPAPI = (
 ) => void;
 
 export type ElementIsEqualPAPI = (
-  left: Element,
-  right: Element,
+  left: Element | null,
+  right: Element | null,
 ) => boolean;
 
 export type FirstElementPAPI = (
@@ -76,7 +76,7 @@ export type FirstElementPAPI = (
 
 export type GetChildrenPAPI = (
   element: Element,
-) => Element[] | null;
+) => Element[];
 
 export type GetParentPAPI = (
   element: Element,

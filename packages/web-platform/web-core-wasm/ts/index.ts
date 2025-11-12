@@ -1,13 +1,12 @@
 import {
   LynxElement,
   MainThreadGlobalThis,
-  TemplateManager,
+  // TemplateManager,
 } from '../dist/debug.js';
 import { systemInfo } from './constants.js';
 import { createIFrameRealm } from './mtsRealm.js';
 import { MainThreadJSBinding } from './mtsBinding.js';
 import { BTSRpc } from './btsRpc.js';
-const templateManager = new TemplateManager();
 
 async function fetchTemplate(
   templateUrl: string,

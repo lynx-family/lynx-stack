@@ -103,11 +103,15 @@ impl MainThreadGlobalThis {
       config_default_overflow_visible,
     }
   }
-  // #[wasm_bindgen(js_name = "__FlushElementTree")]
-  //   let timing_flags = js_sys::Array::from_iter(self.timing_flags.iter().map(JsValue::from));
-
-  //   self.timing_flags.clear();
-  //   self.exposure_changed_elements.clear();
+  #[wasm_bindgen(js_name = "__FlushElementTree")]
+  pub fn flush_element_tree(&mut self) {
+    if let Some(page) = &mut self.page {
+      let page_dom = page.get_dom();
+      if !page_dom.is_connected() {
+        self.root_node.append_child(&page_dom).unwrap();
+      }
+    }
+  }
 
   // #[wasm_bindgen(js_name = "__LoadLepusChunk")]
   // pub fn load_lepus_chunk(&mut self, chunk_url: &str) -> bool {

@@ -15,15 +15,26 @@ impl MainThreadGlobalThis {
     let tag = element.get_tag();
     if key == "update-list-info" && tag == "list" {
       self.handle_update_list_info_attribute(element, value);
-    } else if let Some(value) = value.as_string() {
-      if key == constants::LYNX_TIMING_FLAG {
-        // do not set attributes for timing flag, just record it
-        self.timing_flags.push(value);
-      } else if constants::EXPOSURE_RELATED_ATTRIBUTES.contains(key) {
-        self.exposure_changed_elements.push(unique_id);
+    } else if constants::EXPOSURE_RELATED_ATTRIBUTES.contains(key) {
+      self.exposure_changed_elements.push(unique_id);
+    } else {
+      let value_str: Option<String> = if let Some(value) = value.as_string() {
+        Some(value)
+      } else if let Some(value_bool) = value.as_bool() {
+        Some(if value_bool {
+          "true".to_string()
+        } else {
+          "false".to_string()
+        })
       } else {
-        let dom = element.get_dom();
-        let _ = dom.set_attribute(key, &value);
+        value.as_f64().map(|value_f64| value_f64.to_string())
+      };
+      if key == constants::LYNX_TIMING_FLAG {
+        if let Some(value_str) = &value_str {
+          self.timing_flags.push(value_str.clone());
+        }
+      } else {
+        let _ = element.set_or_remove_attribute(key, value_str.as_deref());
       }
     }
   }
@@ -63,11 +74,9 @@ impl MainThreadGlobalThis {
     parent_dom.append_child(&child_dom).unwrap();
   }
 
-  #[wasm_bindgen(js_name = "__ElementIsEqual")]
+  #[wasm_bindgen(js_name = "__wasm_binding_ElementIsEqual")]
   pub fn element_is_equal(&self, left: &LynxElement, right: &LynxElement) -> bool {
-    let left_dom = left.get_dom();
-    let right_dom = right.get_dom();
-    left_dom.is_equal_node(Some(&right_dom))
+    left.get_unique_id() == right.get_unique_id()
   }
 
   #[wasm_bindgen(js_name = "__FirstElement")]
@@ -154,9 +163,7 @@ impl MainThreadGlobalThis {
   pub fn replace_element(&self, new_element: &LynxElement, old_element: &LynxElement) {
     let new_element_dom = new_element.get_dom();
     let old_element_dom = old_element.get_dom();
-    old_element_dom
-      .replace_with_with_node_1(&new_element_dom)
-      .unwrap();
+    let _ = old_element_dom.replace_with_with_node_1(&new_element_dom);
   }
 
   #[wasm_bindgen(js_name = "__ReplaceElements")]
