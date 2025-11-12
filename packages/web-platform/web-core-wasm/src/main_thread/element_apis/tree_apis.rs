@@ -4,11 +4,6 @@ use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 impl MainThreadGlobalThis {
-  #[wasm_bindgen(js_name = "__SetDataset")]
-  pub fn set_dataset(&self, element: &mut LynxElement, dataset: &js_sys::Object) {
-    element.replace_dataset(dataset);
-  }
-
   #[wasm_bindgen(js_name = "__SetAttribute")]
   pub fn set_attribute(&mut self, element: &LynxElement, key: &str, value: wasm_bindgen::JsValue) {
     let unique_id = element.get_unique_id();
@@ -224,24 +219,29 @@ impl MainThreadGlobalThis {
     }
   }
 
-  #[wasm_bindgen(js_name = "__AddConfig")]
-  pub fn add_config(&mut self, element: &LynxElement, type_: &str, value: &wasm_bindgen::JsValue) {
-    element.set_component_config(type_, value);
+  #[wasm_bindgen(js_name = "__SetDataset")]
+  pub fn set_dataset(&self, element: &mut LynxElement, dataset: &js_sys::Object) {
+    element.set_dataset(dataset);
   }
 
   #[wasm_bindgen(js_name = "__AddDataset")]
-  pub fn add_dataset(&self, element: &LynxElement, key: &str, value: &wasm_bindgen::JsValue) {
-    element.set_dataset(key, value);
+  pub fn add_dataset(
+    &self,
+    element: &mut LynxElement,
+    key: &wasm_bindgen::JsValue,
+    value: &wasm_bindgen::JsValue,
+  ) {
+    element.set_dataset_by_key(key, value);
   }
 
   #[wasm_bindgen(js_name = "__GetDataset")]
   pub fn get_dataset(&self, element: &LynxElement) -> js_sys::Object {
-    element.get_dataset_js_object()
+    element.get_dataset()
   }
 
   #[wasm_bindgen(js_name = "__GetDataByKey")]
   pub fn get_data_by_key(&self, element: &LynxElement, key: &str) -> wasm_bindgen::JsValue {
-    element.get_dataset(key)
+    element.get_dataset_by_key(key)
   }
 
   #[wasm_bindgen(js_name = "__GetAttributeByName")]

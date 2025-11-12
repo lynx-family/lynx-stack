@@ -4,99 +4,6 @@ use std::{cell::RefCell, collections::HashMap, fmt::Display, rc::Rc};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_derive::TryFromJsValue;
 
-#[derive(Default, PartialEq, Clone)]
-enum ConfigValueType {
-  #[default]
-  String,
-  Object,
-}
-
-#[derive(Clone)]
-struct ConfigValue {
-  value_type: ConfigValueType,
-  /**
-   * if it is not a String value we
-   */
-  value: String,
-}
-
-impl ConfigValue {
-  pub fn new(value: &wasm_bindgen::JsValue) -> ConfigValue {
-    if value.is_string() {
-      ConfigValue {
-        value_type: ConfigValueType::String,
-        value: value.as_string().unwrap(),
-      }
-    } else {
-      ConfigValue {
-        value_type: ConfigValueType::Object,
-        value: js_sys::JSON::stringify(value).unwrap().as_string().unwrap(),
-      }
-    }
-  }
-
-  pub fn as_js_value(&self) -> wasm_bindgen::JsValue {
-    match self.value_type {
-      ConfigValueType::String => wasm_bindgen::JsValue::from_str(&self.value),
-      ConfigValueType::Object => js_sys::JSON::parse(&self.value).unwrap(),
-    }
-  }
-}
-
-impl std::cmp::PartialEq for ConfigValue {
-  fn eq(&self, other: &Self) -> bool {
-    self.value_type == other.value_type && self.value == other.value
-  }
-}
-
-impl Display for ConfigValue {
-  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-    write!(f, "{}", self.value)
-  }
-}
-/**
- * designed for store the one level Record<String, ConfigValue> in js
- */
-#[derive(Clone, Default)]
-pub(crate) struct CommonConfigObject {
-  config_map: HashMap<String, ConfigValue>,
-  js_object_cache: RefCell<Option<js_sys::Object>>,
-}
-
-impl CommonConfigObject {
-  fn new(new_map: &js_sys::Object) -> Self {
-    let config_map: HashMap<String, ConfigValue> = js_sys::Object::entries(new_map)
-      .iter()
-      .map(|entry| {
-        let entry_array: js_sys::Array = entry.into();
-        let key = entry_array.get(0).as_string().unwrap();
-        let value = entry_array.get(1);
-        (key, ConfigValue::new(&value))
-      })
-      .collect();
-    CommonConfigObject {
-      config_map,
-      js_object_cache: RefCell::new(None),
-    }
-  }
-
-  pub(crate) fn clone_to_js_object(&self) -> js_sys::Object {
-    if let Some(cached_obj) = &*self.js_object_cache.borrow() {
-      cached_obj.clone()
-    } else {
-      let entries: js_sys::Array =
-        js_sys::Array::from_iter(self.config_map.iter().map(|(key, value)| {
-          let js_value: wasm_bindgen::JsValue = value.as_js_value();
-          let js_key = wasm_bindgen::JsValue::from_str(key);
-          js_sys::Array::of2(&js_key, &js_value)
-        }));
-      let ret = js_sys::Object::from_entries(&entries).unwrap();
-      *self.js_object_cache.borrow_mut() = Some(ret.clone());
-      ret
-    }
-  }
-}
-
 #[derive(Default, Clone)]
 struct EventHandler {
   /* bind capture-bind catch capture-catch */
@@ -115,8 +22,8 @@ pub struct LynxElementData {
   id: Option<String>,
   part_id: Option<String>,
   component_id: Option<String>,
-  dataset: Option<CommonConfigObject>,
-  component_config: Option<CommonConfigObject>,
+  dataset: Option<js_sys::Object>,
+  component_config: Option<js_sys::Object>,
   component_at_index: Option<JsValue>,
   enqueue_component: Option<JsValue>,
   dom_ref: Option<web_sys::HtmlElement>,
@@ -347,120 +254,6 @@ impl LynxElement {
     }
   }
 
-  pub(crate) fn get_dataset_js_object(&self) -> js_sys::Object {
-    let element_data = self.data.borrow();
-    if let Some(dataset) = &element_data.dataset {
-      dataset.clone_to_js_object()
-    } else {
-      js_sys::Object::new()
-    }
-  }
-
-  pub(crate) fn get_dataset(&self, key: &str) -> wasm_bindgen::JsValue {
-    let element_data = self.data.borrow();
-    if let Some(dataset) = &element_data.dataset {
-      if let Some(value) = dataset.config_map.get(key) {
-        return value.as_js_value();
-      }
-    }
-    wasm_bindgen::JsValue::UNDEFINED
-  }
-
-  fn update_dataset_impl(
-    &self,
-    new_dataset: impl Iterator<Item = (String, wasm_bindgen::JsValue)>,
-  ) {
-    let mut element_data = self.data.borrow_mut();
-    let dom = element_data.dom_ref.as_ref().unwrap().clone();
-    if element_data.dataset.is_none() {
-      element_data.dataset = Some(CommonConfigObject::default());
-    }
-    let dataset = element_data.dataset.as_mut().unwrap();
-    let config_map = &mut dataset.config_map;
-    for (key, value_option) in new_dataset {
-      let value_option = if value_option.is_null_or_undefined() {
-        None
-      } else {
-        Some(ConfigValue::new(&value_option))
-      };
-      if value_option.as_ref() != config_map.get(&key) {
-        if let Some(value) = value_option {
-          let value_str = value.to_string();
-          let _ = dom.set_attribute(&format!("data-{}", key.to_lowercase()), &value_str);
-          config_map.insert(key, value);
-        } else {
-          let _ = dom.remove_attribute(&format!("data-{}", key.to_lowercase()));
-          config_map.remove(&key);
-        }
-      }
-    }
-  }
-
-  /**
-   * this method is only used in element template instantiation
-   * no remove operation is supported
-   */
-  pub(crate) fn set_dataset_by_string_map(&self, new_dataset: &HashMap<String, String>) {
-    let data = &mut self.data.borrow_mut();
-    let dom = self.get_dom();
-    for (key, value) in new_dataset {
-      let _ = dom.set_attribute(&format!("data-{}", key.to_lowercase()), value);
-      data.dataset.get_or_insert_default().config_map.insert(
-        key.to_string(),
-        ConfigValue {
-          value_type: ConfigValueType::String,
-          value: value.to_string(),
-        },
-      );
-    }
-  }
-
-  pub(crate) fn set_dataset(&self, key: &str, value: &wasm_bindgen::JsValue) {
-    self.update_dataset_impl(std::iter::once((key.to_string(), value.clone())));
-  }
-
-  pub(crate) fn replace_dataset(&mut self, new_dataset: &js_sys::Object) {
-    self.update_dataset_impl(js_sys::Object::entries(new_dataset).iter().map(|entry| {
-      let entry_array: js_sys::Array = entry.into();
-      let key = entry_array.get(0).as_string().unwrap();
-      let value = entry_array.get(1);
-      (key, value)
-    }));
-  }
-
-  pub(crate) fn set_component_config(&self, key: &str, value: &wasm_bindgen::JsValue) {
-    let mut element_data = self.data.borrow_mut();
-    if value.is_null_or_undefined() {
-      if let Some(config) = &mut element_data.component_config {
-        config.config_map.remove(key);
-      }
-    } else {
-      if element_data.component_config.is_none() {
-        element_data.component_config = Some(CommonConfigObject::default());
-      }
-      if let Some(config) = &mut element_data.component_config {
-        let value = ConfigValue::new(value);
-        if config.config_map.get(key) != Some(&value) {
-          config.config_map.insert(key.to_string(), value);
-        }
-      }
-    }
-  }
-
-  pub(crate) fn get_component_config_js_object(&self) -> js_sys::Object {
-    let element_data = self.data.borrow();
-    if let Some(config) = &element_data.component_config {
-      config.clone_to_js_object()
-    } else {
-      js_sys::Object::new()
-    }
-  }
-
-  pub(crate) fn replace_component_config(&mut self, new_config: &js_sys::Object) {
-    let mut element_data = self.data.borrow_mut();
-    element_data.component_config = Some(CommonConfigObject::new(new_config));
-  }
-
   pub(crate) fn set_list_callbacks(
     &mut self,
     component_at_index: wasm_bindgen::JsValue,
@@ -630,5 +423,103 @@ impl LynxElement {
   pub(crate) fn get_parent_component_unique_id(&self) -> i32 {
     let element_data = self.data.borrow();
     element_data.parent_component_unique_id
+  }
+
+  pub(crate) fn get_element_config(&self) -> Option<js_sys::Object> {
+    let element_data = self.data.borrow();
+    element_data.component_config.clone()
+  }
+
+  pub(crate) fn set_element_config(&mut self, config: &js_sys::Object) {
+    let mut element_data = self.data.borrow_mut();
+    element_data.component_config = Some(config.clone());
+  }
+
+  pub(crate) fn set_element_config_by_key(
+    &mut self,
+    key: &wasm_bindgen::JsValue,
+    value: &wasm_bindgen::JsValue,
+  ) {
+    let mut element_data = self.data.borrow_mut();
+    let config = element_data
+      .component_config
+      .get_or_insert_with(js_sys::Object::new);
+    js_sys::Reflect::set(config, key, value).unwrap();
+  }
+
+  pub(crate) fn get_dataset(&self) -> js_sys::Object {
+    let element_data = self.data.borrow();
+    if let Some(dataset) = &element_data.dataset {
+      js_sys::Object::assign(&js_sys::Object::new(), dataset)
+    } else {
+      js_sys::Object::new()
+    }
+  }
+
+  pub(crate) fn get_dataset_by_key(&self, key: &str) -> wasm_bindgen::JsValue {
+    let element_data = self.data.borrow();
+    if let Some(dataset) = &element_data.dataset {
+      js_sys::Reflect::get(dataset, &wasm_bindgen::JsValue::from_str(key))
+        .unwrap_or(wasm_bindgen::JsValue::UNDEFINED)
+    } else {
+      wasm_bindgen::JsValue::UNDEFINED
+    }
+  }
+
+  pub(crate) fn set_dataset_by_key(
+    &mut self,
+    key: &wasm_bindgen::JsValue,
+    value: &wasm_bindgen::JsValue,
+  ) {
+    let mut element_data = self.data.borrow_mut();
+    let dataset = element_data.dataset.get_or_insert_with(js_sys::Object::new);
+    let old_value = js_sys::Reflect::get(dataset, key).unwrap_or(wasm_bindgen::JsValue::UNDEFINED);
+    if old_value == *value {
+    } else {
+      js_sys::Reflect::set(dataset, key, value).unwrap();
+      let dom = element_data.dom_ref.as_ref().unwrap();
+      let key_str = key.as_string().unwrap();
+      if value.is_undefined() || value.is_null() {
+        let _ = dom.remove_attribute(&format!("data-{key_str}"));
+      } else {
+        let value_str = value.as_string().unwrap_or_default();
+        let _ = dom.set_attribute(&format!("data-{key_str}"), &value_str);
+      }
+    }
+  }
+
+  pub(crate) fn set_dataset(&mut self, new_dataset: &js_sys::Object) {
+    let mut element_data = self.data.borrow_mut();
+    let dom = element_data.dom_ref.as_ref().unwrap().clone();
+    let dataset = element_data.dataset.get_or_insert_with(js_sys::Object::new);
+    // compare old dataset and new dataset and update dom attributes
+    let old_keys = js_sys::Object::keys(dataset);
+    let new_keys = js_sys::Object::keys(new_dataset);
+    // remove old keys not in new dataset
+    for i in 0..old_keys.length() {
+      let key = old_keys.get(i);
+      if !js_sys::Reflect::has(new_dataset, &key).unwrap_or(false) {
+        let key_str = key.as_string().unwrap();
+        let _ = dom.remove_attribute(&format!("data-{key_str}"));
+      }
+    }
+    // set/ update new keys
+    for i in 0..new_keys.length() {
+      let key = new_keys.get(i);
+      let new_value =
+        js_sys::Reflect::get(new_dataset, &key).unwrap_or(wasm_bindgen::JsValue::UNDEFINED);
+      let old_value =
+        js_sys::Reflect::get(dataset, &key).unwrap_or(wasm_bindgen::JsValue::UNDEFINED);
+      if old_value != new_value {
+        let key_str = key.as_string().unwrap();
+        if new_value.is_undefined() || new_value.is_null() {
+          let _ = dom.remove_attribute(&format!("data-{key_str}"));
+        } else {
+          let value_str = new_value.as_string().unwrap_or_default();
+          let _ = dom.set_attribute(&format!("data-{key_str}"), &value_str);
+        }
+      }
+    }
+    element_data.dataset = Some(new_dataset.clone());
   }
 }

@@ -273,6 +273,10 @@ describe('Element APIs', () => {
     mtsGlobalThis.__SetAttribute(node1, 'test', 'test-value');
     let attr_map = mtsGlobalThis.__GetAttributes(node1);
     expect(attr_map).toContainEqual(['test', 'test-value']);
+    let page = mtsGlobalThis.__CreatePage('page', 0);
+    mtsGlobalThis.__AppendElement(page, node1);
+    mtsGlobalThis.__FlushElementTree();
+    expect(rootDom.querySelector('[test="test-value"]')).not.toBeNull();
   });
 
   test('__GetAttributeByName', () => {
@@ -280,6 +284,9 @@ describe('Element APIs', () => {
     mtsGlobalThis.__SetAttribute(page, 'test-attr', 'val');
     mtsGlobalThis.__FlushElementTree();
     expect(mtsGlobalThis.__GetAttributeByName(page, 'test-attr')).toBe('val');
+    expect(
+      rootDom.querySelector('[test-attr="val"]'),
+    ).not.toBeNull();
   });
 
   test('__SetDataset', () => {
@@ -287,13 +294,15 @@ describe('Element APIs', () => {
     let node1 = mtsGlobalThis.__CreateText(0);
     mtsGlobalThis.__SetDataset(node1, { 'test': 'test-value' });
     let ret_0 = mtsGlobalThis.__GetDataset(node1);
-    // mtsGlobalThis.__AddDataset(node1, 'test1', 'test-value1');
-    // let ret_2 = mtsGlobalThis.__GetDataByKey(node1, 'test1');
-    // mtsGlobalThis.__AppendElement(root, node1);
-    // mtsGlobalThis.__AppendElement(root, node1);
-    // mtsGlobalThis.__FlushElementTree();
-    // expect(ret_0).toEqual({ 'test': 'test-value' });
-    // expect(ret_2).toBe('test-value1');
+    mtsGlobalThis.__AddDataset(node1, 'test1', 'test-value1');
+    let ret_2 = mtsGlobalThis.__GetDataByKey(node1, 'test1');
+    mtsGlobalThis.__AppendElement(root, node1);
+    mtsGlobalThis.__AppendElement(root, node1);
+    mtsGlobalThis.__FlushElementTree();
+    expect(ret_0).toEqual({ 'test': 'test-value' });
+    expect(ret_2).toBe('test-value1');
+    expect(rootDom.querySelector('[data-test="test-value"]')).not.toBeNull();
+    expect(rootDom.querySelector('[data-test1="test-value1"]')).not.toBeNull();
   });
 
   //   test('__GetClasses', () => {

@@ -16,7 +16,7 @@ impl ElementTemplatesInstance {
     lynx_elements: &mut HashMap<i32, LynxElement>,
   ) -> web_sys::HtmlElement {
     let dummy_id = -1 - lynx_elements.len() as i32;
-    let element = LynxElement::create_dummy_element(
+    let mut element = LynxElement::create_dummy_element(
       mts_global_this,
       element_template.type_name.as_str(),
       dummy_id,
@@ -46,7 +46,18 @@ impl ElementTemplatesInstance {
       }
     }
     if let Some(dataset) = &element_template.dataset {
-      element.set_dataset_by_string_map(dataset);
+      let dataset_obj = js_sys::Object::from_entries(
+        &dataset
+          .iter()
+          .map(|(k, v)| {
+            let key = wasm_bindgen::JsValue::from_str(k);
+            let value = wasm_bindgen::JsValue::from_str(v);
+            js_sys::Array::of2(&key, &value)
+          })
+          .collect::<js_sys::Array>(),
+      )
+      .unwrap();
+      element.set_dataset(&dataset_obj);
     }
     if let Some(events) = &element_template.events {
       for event_registration in events {
