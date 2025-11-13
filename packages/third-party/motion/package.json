@@ -1,0 +1,44 @@
+{
+  "name": "@lynx-js/motion-lynx",
+  "version": "0.0.1",
+  "private": true,
+  "description": "This is a motion adapter for Lynx.js",
+  "keywords": [
+    "react",
+    "lynx",
+    "motion",
+    "framer-motion"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/third-party/motion"
+  },
+  "license": "MIT",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "dependencies": {
+    "framer-motion": "12.23.12",
+    "motion-dom": "12.23.12"
+  },
+  "devDependencies": {
+    "@lynx-js/react": "workspace:*",
+    "@lynx-js/types": "3.4.11"
+  },
+  "peerDependencies": {
+    "@lynx-js/react": "*",
+    "@lynx-js/types": "*"
+  },
+  "peerDependenciesMeta": {
+    "@lynx-js/types": {
+      "optional": true
+    }
+  }
+}
