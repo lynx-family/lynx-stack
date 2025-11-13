@@ -78,10 +78,12 @@ fn generate_declarations_to_buffer<'a>(
   css_content_buffer.push(Cow::Borrowed("}"));
 }
 
+type Declarations<'a> = Vec<(&'a str, &'a str)>;
+
 pub(crate) fn transform_declarations(
   declarations: &[(String, String)],
-) -> (Vec<(&str, &str)>, Vec<(&str, &str)>) {
-  let mut new_declarations: Vec<(&str, &str)> = Vec::new();
+) -> (Declarations, Declarations) {
+  let mut new_declarations: Declarations = Vec::new();
   let mut children_declarations: Vec<(&str, &str)> = Vec::new();
   for (prop, value) in declarations.iter() {
     let (current_declarations, children_combinator_declarations) =

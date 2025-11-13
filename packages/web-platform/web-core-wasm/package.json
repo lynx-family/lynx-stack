@@ -26,6 +26,7 @@
     "build": "node scripts/build.js"
   },
   "dependencies": {
+    "@lynx-js/web-constants": "workspace:*",
     "@lynx-js/web-worker-rpc": "workspace:*",
     "wasm-feature-detect": "^1.8.0"
   },

@@ -5,7 +5,7 @@ import {
 } from '../dist/debug.js';
 import type { MainThreadGlobalThis as IMainThreadGlobalThis } from '@lynx-js/web-constants';
 
-const templateManager = new TemplateManager();
+export const templateManager = new TemplateManager();
 export function createMtsGlobalThis(
   ...args: ConstructorParameters<typeof MainThreadGlobalThis>
 ): IMainThreadGlobalThis {

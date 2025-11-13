@@ -4,6 +4,7 @@
 
 import { type JSRealm } from './mtsRealm.js';
 import { type MainThreadGlobalThis } from '../dist/standard.js';
+import { createCrossThreadEvent } from './createCrossThreadEvent.js';
 
 export class MainThreadJSBinding {
   #mtsGlobalThis: MainThreadGlobalThis | undefined;
@@ -21,9 +22,16 @@ export class MainThreadJSBinding {
     if (this.#mtsGlobalThis) {
       this.rootDom.addEventListener(
         eventName,
-        this.#mtsGlobalThis.__WasmBindingCommonEventHandler.bind(
-          this.#mtsGlobalThis,
-        ),
+        (event) => {
+          const serializedEvent = createCrossThreadEvent(
+            event,
+          );
+          this.#mtsGlobalThis?.__wasm_bindingCommonEventHandler(
+            event.type,
+            event.target as HTMLElement,
+            serializedEvent,
+          );
+        },
         { capture: true, passive: true },
       );
     }

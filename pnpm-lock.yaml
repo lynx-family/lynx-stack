@@ -932,6 +932,9 @@ importers:
 
   packages/web-platform/web-core-wasm:
     dependencies:
+      '@lynx-js/web-constants':
+        specifier: workspace:*
+        version: link:../web-constants
       '@lynx-js/web-worker-rpc':
         specifier: workspace:*
         version: link:../web-worker-rpc
