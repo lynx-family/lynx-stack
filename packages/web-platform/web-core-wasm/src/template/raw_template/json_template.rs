@@ -1,11 +1,12 @@
-use crate::template::StyleSheet;
 use serde::{Deserialize, Deserializer};
 use std::collections::HashMap;
 
+use crate::template::raw_template::LynxRawTemplate;
+
 use super::{
-  decode::{DslType, LynxTemplate, PageConfig, TemplateType},
-  ElementTemplate, OneSelectorAtom, Selector, StyleInfo, StyleRule,
+  DslType, ElementTemplate, PageConfig, Selector, StyleInfo, StyleRule, StyleSheet, TemplateType,
 };
+
 #[derive(Deserialize)]
 /**
 * ```ts
@@ -35,13 +36,13 @@ struct OneInfo {
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct JsonTemplateRaw {
+pub struct JSONRawTemplate {
   page_config: PageConfig,
   card_type: Option<String>,
   #[serde(deserialize_with = "deserialize_tolerant_string_map")]
   lepus_code: HashMap<String, String>,
   manifest: HashMap<String, String>,
-  element_template: Option<HashMap<String, ElementTemplate>>,
+  element_template: Option<HashMap<String, Vec<ElementTemplate>>>,
   app_type: Option<String>,
   style_info: HashMap<String, OneInfo>,
 }
@@ -71,8 +72,8 @@ where
   }
 }
 
-impl From<JsonTemplateRaw> for LynxTemplate {
-  fn from(value: JsonTemplateRaw) -> Self {
+impl From<JSONRawTemplate> for LynxRawTemplate {
+  fn from(value: JSONRawTemplate) -> Self {
     let app_type = match value.card_type.as_deref() {
       Some("card") => TemplateType::Card,
       Some("lazy") => TemplateType::Lazy,
@@ -96,7 +97,7 @@ impl From<JsonTemplateRaw> for LynxTemplate {
       Some("react") => DslType::React,
       _ => DslType::InternalDslNameTbd,
     };
-    LynxTemplate {
+    LynxRawTemplate {
       lepus_code: value.lepus_code,
       manifest_code: value.manifest,
       app_type,
@@ -159,12 +160,12 @@ impl From<JsonTemplateRaw> for LynxTemplate {
         }
         style_info
       },
-      element_template: value.element_template.unwrap_or_default(),
+      element_templates: value.element_template.unwrap_or_default(),
     }
   }
 }
 
-impl From<&js_sys::Uint8Array> for JsonTemplateRaw {
+impl From<&js_sys::Uint8Array> for JSONRawTemplate {
   fn from(value: &js_sys::Uint8Array) -> Self {
     let bytes = value.to_vec();
     let s = std::str::from_utf8(&bytes).unwrap();

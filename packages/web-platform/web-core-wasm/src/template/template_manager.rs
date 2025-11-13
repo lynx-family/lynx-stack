@@ -29,10 +29,9 @@ impl TemplateManager {
   #[wasm_bindgen]
   pub fn push_template_to_cache(&mut self, template_url: String, binary: js_sys::Uint8Array) {
     let lynx_template: LynxRawTemplate = LynxRawTemplate::from(&binary);
-    let decoded_template: DecodedTemplate = lynx_template.into();
     self.cache.insert(
       template_url.clone(),
-      DecodedTemplateImpl::new(decoded_template),
+      DecodedTemplateImpl::new(lynx_template, &template_url),
     );
   }
 }

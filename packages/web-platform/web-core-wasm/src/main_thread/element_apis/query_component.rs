@@ -39,7 +39,7 @@ impl MainThreadGlobalThis {
             )
             .unwrap_err();
         }
-        let manifest_chunk = template.get_manifest_urls();
+        let manifest_chunk = template.get_manifest_code();
         let manifest_js_object = js_sys::Object::from(js_sys::Array::from_iter(
           manifest_chunk.iter().map(|(k, v)| {
             js_sys::Array::of2(

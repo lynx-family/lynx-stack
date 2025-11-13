@@ -2,7 +2,7 @@ use crate::template::CURRENT_VERSION;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-use super::{ElementTemplate, StyleInfo};
+use super::{ElementTemplate, JSONRawTemplate, StyleInfo};
 
 #[derive(Deserialize)]
 #[cfg_attr(feature = "encode", derive(Serialize))]
@@ -49,8 +49,8 @@ impl From<&js_sys::Uint8Array> for LynxRawTemplate {
     let first_byte = array_buffer.get_index(0);
     if first_byte == b'{' {
       todo!("Support legacy JSON template decoding");
-      // let json_template: JsonTemplateRaw = array_buffer.into();
-      // LynxTemplate::from(json_template)
+      // let json_template: JSONRawTemplate = array_buffer.into();
+      // LynxRawTemplate::from(json_template)
     } else {
       let bytes = array_buffer.to_vec();
       let version_bytes = &bytes[0..4];
