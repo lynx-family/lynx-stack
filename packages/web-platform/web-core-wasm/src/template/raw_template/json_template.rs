@@ -39,7 +39,7 @@ struct OneInfo {
 pub struct JSONRawTemplate {
   page_config: PageConfig,
   card_type: Option<String>,
-  #[serde(deserialize_with = "deserialize_tolerant_string_map")]
+  // #[serde(deserialize_with = "deserialize_tolerant_string_map")]
   lepus_code: HashMap<String, String>,
   manifest: HashMap<String, String>,
   element_template: Option<HashMap<String, Vec<ElementTemplate>>>,
@@ -47,30 +47,30 @@ pub struct JSONRawTemplate {
   style_info: HashMap<String, OneInfo>,
 }
 
-fn deserialize_tolerant_string_map<'de, D>(
-  deserializer: D,
-) -> Result<HashMap<String, String>, D::Error>
-where
-  D: Deserializer<'de>,
-{
-  let value = serde_json::Value::deserialize(deserializer)?;
+// fn deserialize_tolerant_string_map<'de, D>(
+//   deserializer: D,
+// ) -> Result<HashMap<String, String>, D::Error>
+// where
+//   D: Deserializer<'de>,
+// {
+//   let value = serde_wasm_bindgen::Value::deserialize(deserializer)?;
 
-  match value {
-    serde_json::Value::Object(map) => {
-      let mut result_map = HashMap::new();
+//   match value {
+//     serde_wasm_bindgen::Value::Object(map) => {
+//       let mut result_map = HashMap::new();
 
-      for (key, val) in map {
-        if let serde_json::Value::String(s) = val {
-          result_map.insert(key, s);
-        }
-      }
-      Ok(result_map)
-    }
+//       for (key, val) in map {
+//         if let serde_wasm_bindgen::Value::String(s) = val {
+//           result_map.insert(key, s);
+//         }
+//       }
+//       Ok(result_map)
+//     }
 
-    serde_json::Value::Null => Ok(HashMap::new()),
-    _ => Err(serde::de::Error::custom("Expected a JSON object or null")),
-  }
-}
+//     serde_wasm_bindgen::Value::Null => Ok(HashMap::new()),
+//     _ => Err(serde::de::Error::custom("Expected a JSON object or null")),
+//   }
+// }
 
 impl From<JSONRawTemplate> for LynxRawTemplate {
   fn from(value: JSONRawTemplate) -> Self {
@@ -165,10 +165,8 @@ impl From<JSONRawTemplate> for LynxRawTemplate {
   }
 }
 
-impl From<&js_sys::Uint8Array> for JSONRawTemplate {
-  fn from(value: &js_sys::Uint8Array) -> Self {
-    let bytes = value.to_vec();
-    let s = std::str::from_utf8(&bytes).unwrap();
-    serde_json::from_str(s).unwrap()
+impl From<&wasm_bindgen::JsValue> for JSONRawTemplate {
+  fn from(value: &wasm_bindgen::JsValue) -> Self {
+    serde_wasm_bindgen::from_value(value.clone()).unwrap()
   }
 }

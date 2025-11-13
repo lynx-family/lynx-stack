@@ -1,3 +1,5 @@
+use crate::template::raw_template::JSONRawTemplate;
+
 use super::{
   decoded::{DecodedTemplate, DecodedTemplateImpl},
   raw_template::LynxRawTemplate,
@@ -29,6 +31,15 @@ impl TemplateManager {
   #[wasm_bindgen]
   pub fn push_template_to_cache(&mut self, template_url: String, binary: js_sys::Uint8Array) {
     let lynx_template: LynxRawTemplate = LynxRawTemplate::from(&binary);
+    self.cache.insert(
+      template_url.clone(),
+      DecodedTemplateImpl::new(lynx_template, &template_url),
+    );
+  }
+  #[wasm_bindgen]
+  pub fn push_json_template_to_cache(&mut self, template_url: String, json: wasm_bindgen::JsValue) {
+    let json_template: JSONRawTemplate = JSONRawTemplate::from(&json);
+    let lynx_template: LynxRawTemplate = LynxRawTemplate::from(json_template);
     self.cache.insert(
       template_url.clone(),
       DecodedTemplateImpl::new(lynx_template, &template_url),
