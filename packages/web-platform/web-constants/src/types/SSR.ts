@@ -1,4 +1,3 @@
-import type { WebFiberElementImpl } from './Element.js';
 import type { AddEventPAPI } from './MainThreadGlobalThis.js';
 
 export type SSREventReplayInfo = [
@@ -15,10 +14,9 @@ export type SSRDumpInfo = {
 
 export interface SSRHydrateInfo extends SSRDumpInfo {
   /** WeakRef<Element> */
-  lynxUniqueIdToElement: WeakRef<WebFiberElementImpl>[];
+  lynxUniqueIdToElement: WeakRef<HTMLElement>[];
   /** for cssog */
   lynxUniqueIdToStyleRulesIndex: number[];
-  // @ts-expect-error
   cardStyleElement: HTMLStyleElement | null;
 }
 

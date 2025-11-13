@@ -4,16 +4,20 @@
 
 import type { LynxEventType } from './EventType.js';
 
-export type EventHandlerMap = Record<string, {
-  capture: {
-    type: LynxEventType;
-    handler: string | { type: 'worklet'; value: unknown };
-  } | undefined;
-  bind: {
-    type: LynxEventType;
-    handler: string | { type: 'worklet'; value: unknown };
-  } | undefined;
-}>;
+export interface LynxRuntimeInfo {
+  eventHandlerMap: Record<string, {
+    capture: {
+      type: LynxEventType;
+      handler: string | { type: 'worklet'; value: unknown };
+    } | undefined;
+    bind: {
+      type: LynxEventType;
+      handler: string | { type: 'worklet'; value: unknown };
+    } | undefined;
+  }>;
+  componentAtIndex?: ComponentAtIndexCallback;
+  enqueueComponent?: EnqueueComponentCallback;
+}
 
 export type ComponentAtIndexCallback = (
   list: HTMLElement,
