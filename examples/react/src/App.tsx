@@ -5,11 +5,34 @@ import arrow from './assets/arrow.png';
 import lynxLogo from './assets/lynx-logo.png';
 import reactLynxLogo from './assets/react-logo.png';
 
+// Demo class with private property
+class DemoClass {
+  #privateProperty: string;
+
+  constructor() {
+    this.#privateProperty = 'This is private';
+  }
+
+  getPrivate(): string {
+    return this.#privateProperty;
+  }
+
+  setPrivate(value: string): void {
+    this.#privateProperty = value;
+  }
+}
+
 export function App() {
   const [alterLogo, setAlterLogo] = useState(false);
 
   useEffect(() => {
     console.info('Hello, ReactLynx');
+
+    // Test private property
+    const demo = new DemoClass();
+    console.info('Private property initial value:', demo.getPrivate());
+    demo.setPrivate('Updated private value');
+    console.info('Private property updated value:', demo.getPrivate());
   }, []);
 
   const onTap = useCallback(() => {
