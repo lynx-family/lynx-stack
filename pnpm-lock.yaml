@@ -1010,13 +1010,6 @@ importers:
       hyphenate-style-name:
         specifier: ^1.1.0
         version: 1.1.0
-    devDependencies:
-      binaryen:
-        specifier: ^124.0.0
-        version: 124.0.0
-      fb-dotslash:
-        specifier: ^0.5.8
-        version: 0.5.8
 
   packages/web-platform/web-rsbuild-plugin:
     dependencies:
