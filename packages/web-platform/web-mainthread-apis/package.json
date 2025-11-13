@@ -23,16 +23,9 @@
     "README.md",
     "**/*.css"
   ],
-  "scripts": {
-    "build": "node ./scripts/build.js"
-  },
   "dependencies": {
     "@lynx-js/web-constants": "workspace:*",
     "@lynx-js/web-style-transformer": "workspace:*",
     "hyphenate-style-name": "^1.1.0"
-  },
-  "devDependencies": {
-    "binaryen": "^124.0.0",
-    "fb-dotslash": "^0.5.8"
   }
 }

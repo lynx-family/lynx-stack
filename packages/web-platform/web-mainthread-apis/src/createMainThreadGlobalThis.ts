@@ -53,7 +53,7 @@ import {
   type GetPageElementPAPI,
   type MinimalRawEventObject,
   type I18nResourceTranslationOptions,
-  lynxDisposedPropertyName,
+  lynxDisposedAttribute,
   type SSRHydrateInfo,
   type SSRDehydrateHooks,
   type ElementTemplateData,
@@ -383,7 +383,6 @@ export function createMainThreadGlobalThis(
       htmlTag,
     ) as unknown as WebFiberElementImpl;
     lynxUniqueIdToElement[uniqueId] = new WeakRef(element);
-    element[lynxUniqueIdAttribute] = uniqueId;
     const parentComponentCssID = lynxUniqueIdToElement[parentComponentUniqueId]
       ?.deref()?.getAttribute(cssIdAttribute);
     parentComponentCssID && parentComponentCssID !== '0'
@@ -614,7 +613,7 @@ export function createMainThreadGlobalThis(
     timingFlags = [];
     if (
       pageElement && !pageElement.parentNode
-      && pageElement[lynxDisposedPropertyName] !== ''
+      && pageElement.getAttribute(lynxDisposedAttribute) !== ''
     ) {
       // @ts-expect-error
       rootDom.append(pageElement);

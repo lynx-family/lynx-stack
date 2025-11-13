@@ -12,8 +12,6 @@ import {
   lynxPartIdAttribute,
   lynxTagAttribute,
   lynxUniqueIdAttribute,
-  componentAtIndexPropertyName,
-  enqueueComponentPropertyName,
   type AddClassPAPI,
   type AddConfigPAPI,
   type AddDatasetPAPI,
@@ -50,7 +48,7 @@ import {
   type SetInlineStylesPAPI,
   type UpdateComponentIDPAPI,
   type UpdateComponentInfoPAPI,
-  type UpdateListCallbacksPAPI,
+  type WebFiberElementImpl,
 } from '@lynx-js/web-constants';
 import { queryCSSProperty } from './style/cssPropertyMap.js';
 import {
@@ -385,13 +383,4 @@ export const __MarkPartElement: MarkPartElementPAPI = (
   partId,
 ) => {
   element.setAttribute(lynxPartIdAttribute, partId);
-};
-
-export const __UpdateListCallbacks: UpdateListCallbacksPAPI = /*#__PURE__*/ (
-  element,
-  componentAtIndex,
-  enqueueComponent,
-) => {
-  element[componentAtIndexPropertyName] = componentAtIndex;
-  element[enqueueComponentPropertyName] = enqueueComponent;
 };
