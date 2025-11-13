@@ -18,7 +18,7 @@ pub(crate) type OneSelectorAtom = (Vec<String>, Vec<String>, Vec<String>, Vec<St
  */
 pub(crate) type Selector = Vec<OneSelectorAtom>;
 
-#[derive(Clone, Debug, PartialEq, Deserialize)]
+#[derive(Deserialize)]
 #[cfg_attr(feature = "encode", derive(Serialize))]
 pub(crate) struct StyleRule {
   pub selectors: Vec<Selector>,

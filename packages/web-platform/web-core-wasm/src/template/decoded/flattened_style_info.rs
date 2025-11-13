@@ -371,7 +371,7 @@ mod tests {
     style_info.insert(
       1,
       StyleSheet {
-        rules: vec![rule1.clone(), rule2.clone()],
+        rules: vec![rule1, rule2],
         at_rules: "@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }".to_string(),
         imports: vec![2],
       },
