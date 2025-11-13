@@ -208,13 +208,13 @@ impl MainThreadGlobalThis {
     } else {
       let old_children =
         wasm_bindgen_derive::try_from_js_array::<LynxElement>(old_children).unwrap();
-      for (ii, old_child) in old_children.iter().enumerate() {
+      for old_child in old_children[1..].iter() {
         let old_child_dom = old_child.get_dom();
-        if ii == 0 {
-          let _ = old_child_dom.replace_with_with_node(&new_children);
-        } else {
-          parent_dom.remove_child(&old_child_dom).unwrap();
-        }
+        parent_dom.remove_child(&old_child_dom).unwrap();
+      }
+      if let Some(first_old_child) = &old_children.first() {
+        let first_old_child_dom = first_old_child.get_dom();
+        let _ = first_old_child_dom.replace_with_with_node(&new_children);
       }
     }
   }

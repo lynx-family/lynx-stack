@@ -144,7 +144,7 @@ importers:
         version: 8.45.0(eslint@9.36.0(jiti@2.6.1))(typescript@5.9.3)
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.6.1)(@vitest/ui@3.2.4)(happy-dom@20.0.4)(jsdom@26.1.0)(sass-embedded@1.90.0)(sass@1.90.0)(terser@5.31.6)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.6.1)(@vitest/ui@3.2.4)(happy-dom@20.0.10)(jsdom@26.1.0)(sass-embedded@1.90.0)(sass@1.90.0)(terser@5.31.6)
 
   benchmark/react:
     dependencies:
@@ -533,7 +533,7 @@ importers:
         version: 2.2.2(typescript@5.9.3)(typia@9.7.2(typescript@5.9.3))
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.6.1)(@vitest/ui@3.2.4)(happy-dom@20.0.4)(jsdom@26.1.0)(sass-embedded@1.90.0)(sass@1.90.0)(terser@5.31.6)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.6.1)(@vitest/ui@3.2.4)(happy-dom@20.0.10)(jsdom@26.1.0)(sass-embedded@1.90.0)(sass@1.90.0)(terser@5.31.6)
       webpack:
         specifier: ^5.102.0
         version: 5.102.0
@@ -858,7 +858,7 @@ importers:
         version: 0.5.1
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.6.1)(@vitest/ui@3.2.4)(happy-dom@20.0.4)(jsdom@26.1.0)(sass-embedded@1.90.0)(sass@1.90.0)(terser@5.31.6)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.6.1)(@vitest/ui@3.2.4)(happy-dom@20.0.10)(jsdom@26.1.0)(sass-embedded@1.90.0)(sass@1.90.0)(terser@5.31.6)
       webpack:
         specifier: ^5.102.0
         version: 5.102.0
@@ -946,8 +946,8 @@ importers:
         specifier: ^0.5.8
         version: 0.5.8
       happy-dom:
-        specifier: ^20.0.4
-        version: 20.0.4
+        specifier: ^20.0.10
+        version: 20.0.10
       vite-plugin-wasm:
         specifier: ^3.5.0
         version: 3.5.0(vite@5.4.2(@types/node@24.6.1)(sass-embedded@1.90.0)(sass@1.90.0)(terser@5.31.6))
@@ -1037,7 +1037,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.6.1)(@vitest/ui@3.2.4)(happy-dom@20.0.4)(jsdom@26.1.0)(sass-embedded@1.90.0)(sass@1.90.0)(terser@5.31.6)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.6.1)(@vitest/ui@3.2.4)(happy-dom@20.0.10)(jsdom@26.1.0)(sass-embedded@1.90.0)(sass@1.90.0)(terser@5.31.6)
 
   packages/web-platform/web-rsbuild-server-middleware:
     devDependencies:
@@ -1136,8 +1136,8 @@ importers:
         specifier: 1.6.1
         version: 1.6.1(@swc/helpers@0.5.17)
       happy-dom:
-        specifier: ^20.0.4
-        version: 20.0.4
+        specifier: ^20.0.10
+        version: 20.0.10
       nyc:
         specifier: ^17.1.0
         version: 17.1.0
@@ -6005,8 +6005,8 @@ packages:
   handle-thing@2.0.1:
     resolution: {integrity: sha512-9Qn4yBxelxoh2Ow62nP+Ka/kMnOXRi8BXnRaUwezLNhqelnN49xKz4F/dPP8OYLxLxq6JDtZb2i9XznUQbNPTg==}
 
-  happy-dom@20.0.4:
-    resolution: {integrity: sha512-WxFtvnij6G64/MtMimnZhF0nKx3LUQKc20zjATD6tKiqOykUwQkd+2FW/DZBAFNjk4oWh0xdv/HBleGJmSY/Iw==}
+  happy-dom@20.0.10:
+    resolution: {integrity: sha512-6umCCHcjQrhP5oXhrHQQvLB0bwb1UzHAHdsXy+FjtKoYjUhmNZsQL8NivwM1vDvNEChJabVrUYxUnp/ZdYmy2g==}
     engines: {node: '>=20.0.0'}
 
   has-bigints@1.0.2:
@@ -10539,7 +10539,7 @@ snapshots:
     dependencies:
       '@codspeed/core': 4.0.1
       vite: 5.4.2(@types/node@24.6.1)(sass-embedded@1.90.0)(sass@1.90.0)(terser@5.31.6)
-      vitest: 3.2.4(@types/debug@4.1.12)(@types/node@24.6.1)(@vitest/ui@3.2.4)(happy-dom@20.0.4)(jsdom@26.1.0)(sass-embedded@1.90.0)(sass@1.90.0)(terser@5.31.6)
+      vitest: 3.2.4(@types/debug@4.1.12)(@types/node@24.6.1)(@vitest/ui@3.2.4)(happy-dom@20.0.10)(jsdom@26.1.0)(sass-embedded@1.90.0)(sass@1.90.0)(terser@5.31.6)
     transitivePeerDependencies:
       - debug
 
@@ -12955,7 +12955,7 @@ snapshots:
       std-env: 3.9.0
       test-exclude: 7.0.1
       tinyrainbow: 2.0.0
-      vitest: 3.2.4(@types/debug@4.1.12)(@types/node@24.6.1)(@vitest/ui@3.2.4)(happy-dom@20.0.4)(jsdom@26.1.0)(sass-embedded@1.90.0)(sass@1.90.0)(terser@5.31.6)
+      vitest: 3.2.4(@types/debug@4.1.12)(@types/node@24.6.1)(@vitest/ui@3.2.4)(happy-dom@20.0.10)(jsdom@26.1.0)(sass-embedded@1.90.0)(sass@1.90.0)(terser@5.31.6)
     transitivePeerDependencies:
       - supports-color
 
@@ -12966,7 +12966,7 @@ snapshots:
       eslint: 9.36.0(jiti@2.6.1)
     optionalDependencies:
       typescript: 5.9.3
-      vitest: 3.2.4(@types/debug@4.1.12)(@types/node@24.6.1)(@vitest/ui@3.2.4)(happy-dom@20.0.4)(jsdom@26.1.0)(sass-embedded@1.90.0)(sass@1.90.0)(terser@5.31.6)
+      vitest: 3.2.4(@types/debug@4.1.12)(@types/node@24.6.1)(@vitest/ui@3.2.4)(happy-dom@20.0.10)(jsdom@26.1.0)(sass-embedded@1.90.0)(sass@1.90.0)(terser@5.31.6)
     transitivePeerDependencies:
       - supports-color
 
@@ -13015,7 +13015,7 @@ snapshots:
       sirv: 3.0.1
       tinyglobby: 0.2.15
       tinyrainbow: 2.0.0
-      vitest: 3.2.4(@types/debug@4.1.12)(@types/node@24.6.1)(@vitest/ui@3.2.4)(happy-dom@20.0.4)(jsdom@26.1.0)(sass-embedded@1.90.0)(sass@1.90.0)(terser@5.31.6)
+      vitest: 3.2.4(@types/debug@4.1.12)(@types/node@24.6.1)(@vitest/ui@3.2.4)(happy-dom@20.0.10)(jsdom@26.1.0)(sass-embedded@1.90.0)(sass@1.90.0)(terser@5.31.6)
 
   '@vitest/utils@3.2.4':
     dependencies:
@@ -15011,7 +15011,7 @@ snapshots:
 
   handle-thing@2.0.1: {}
 
-  happy-dom@20.0.4:
+  happy-dom@20.0.10:
     dependencies:
       '@types/node': 20.19.22
       '@types/whatwg-mimetype': 3.0.2
@@ -18662,7 +18662,7 @@ snapshots:
       sass-embedded: 1.90.0
       terser: 5.31.6
 
-  vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.6.1)(@vitest/ui@3.2.4)(happy-dom@20.0.4)(jsdom@26.1.0)(sass-embedded@1.90.0)(sass@1.90.0)(terser@5.31.6):
+  vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.6.1)(@vitest/ui@3.2.4)(happy-dom@20.0.10)(jsdom@26.1.0)(sass-embedded@1.90.0)(sass@1.90.0)(terser@5.31.6):
     dependencies:
       '@types/chai': 5.2.2
       '@vitest/expect': 3.2.4
@@ -18691,7 +18691,7 @@ snapshots:
       '@types/debug': 4.1.12
       '@types/node': 24.6.1
       '@vitest/ui': 3.2.4(vitest@3.2.4)
-      happy-dom: 20.0.4
+      happy-dom: 20.0.10
       jsdom: 26.1.0
     transitivePeerDependencies:
       - less

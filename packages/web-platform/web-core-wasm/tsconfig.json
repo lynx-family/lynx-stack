@@ -5,7 +5,6 @@
     "rootDir": "./ts",
     "outDir": "./dist",
     "lib": ["DOM", "ESNext", "WebWorker"],
-    "noCheck": true,
   },
   "include": ["ts"],
   "references": [

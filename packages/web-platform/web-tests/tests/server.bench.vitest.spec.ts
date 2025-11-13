@@ -489,7 +489,7 @@ describe('set-dataset-large', () => {
   }, { throws: true });
 });
 
-describe.only('set-inline-styles', () => {
+describe('set-inline-styles', () => {
   const elementJS = mtsGlobalThisJS.__CreateView(1);
   const elementWasm = mtsGlobalThisWasm.__CreateView(1);
   const styles = {
@@ -497,18 +497,86 @@ describe.only('set-inline-styles', () => {
     height: '200px',
     backgroundColor: 'red',
   };
+  const styleStr = Object.entries(styles).map(([key, value]) => {
+    return `${key}: ${value};`;
+  }).join(' ');
 
-  bench('set-inline-styles-js', () => {
+  bench('set-inline-styles-obj-js', () => {
     mtsGlobalThisJS.__SetInlineStyles(
       elementJS,
       styles,
     );
   }, { throws: true });
 
-  bench('set-inline-styles-wasm', () => {
+  bench('set-inline-styles-obj-wasm', () => {
     mtsGlobalThisWasm.__SetInlineStyles(
       elementWasm,
       styles,
+    );
+  }, { throws: true });
+
+  bench('set-inline-styles-str-js', () => {
+    mtsGlobalThisJS.__SetInlineStyles(
+      elementJS,
+      styleStr,
+    );
+  }, { throws: true });
+
+  bench('set-inline-styles-str-wasm', () => {
+    mtsGlobalThisWasm.__SetInlineStyles(
+      elementWasm,
+      styleStr,
+    );
+  }, { throws: true });
+
+  bench('set-inline-styles-clear-js', () => {
+    mtsGlobalThisJS.__SetInlineStyles(
+      elementJS,
+      undefined,
+    );
+  }, { throws: true });
+
+  bench('set-inline-styles-clear-wasm', () => {
+    mtsGlobalThisWasm.__SetInlineStyles(
+      elementWasm,
+      undefined,
+    );
+  }, { throws: true });
+});
+
+describe.only('add-inline-style', () => {
+  const elementJS = mtsGlobalThisJS.__CreateView(1);
+  const elementWasm = mtsGlobalThisWasm.__CreateView(1);
+
+  bench('add-inline-style-str-key-js', () => {
+    mtsGlobalThisJS.__AddInlineStyle(
+      elementJS,
+      'width',
+      '100px',
+    );
+  }, { throws: true });
+
+  bench('add-inline-style-str-key-wasm', () => {
+    mtsGlobalThisWasm.__AddInlineStyle(
+      elementWasm,
+      'width',
+      '100px',
+    );
+  }, { throws: true });
+
+  bench('add-inline-style-number-key-js', () => {
+    mtsGlobalThisJS.__AddInlineStyle(
+      elementJS,
+      1,
+      '100px',
+    );
+  }, { throws: true });
+
+  bench('add-inline-style-number-key-wasm', () => {
+    mtsGlobalThisWasm.__AddInlineStyle(
+      elementWasm,
+      1,
+      '100px',
     );
   }, { throws: true });
 });

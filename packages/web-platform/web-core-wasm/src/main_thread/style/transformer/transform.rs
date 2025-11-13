@@ -251,12 +251,9 @@ pub fn transform_inline_style_string<'a>(source: &'a str) -> (String, String) {
   };
   let bytes = source.as_bytes();
   parse_inline_style(bytes, &mut transformer);
-  if transformer.offset != 0 {
-    // append the remaining part of the source
-    transformer
-      .transformed_source
-      .push_str(&source[transformer.offset..]);
-  }
+  transformer
+    .transformed_source
+    .push_str(&source[transformer.offset..]);
   (
     transformer.transformed_source,
     transformer.extra_children_styles,
@@ -266,6 +263,13 @@ pub fn transform_inline_style_string<'a>(source: &'a str) -> (String, String) {
 #[cfg(test)]
 mod tests {
   use super::*;
+
+  #[test]
+  fn basic_one_simple_decl() {
+    let source = "height:1px;";
+    let result = transform_inline_style_string(source).0;
+    assert_eq!(result, "height:1px;");
+  }
 
   #[test]
   fn transform_basic() {

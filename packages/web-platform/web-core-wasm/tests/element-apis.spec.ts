@@ -406,20 +406,653 @@ describe('Element APIs', () => {
     expect(rootDomElement.style.height).toBe('80px');
   });
 
-  //   test('__UpdateComponentInfo', () => {
-  //     let e1 = mtsGlobalThis.__CreateComponent(
-  //       'test_entry',
-  //       7,
-  //       'name1',
-  //     );
-  //     mtsGlobalThis.__UpdateComponentInfo(e1, 'id2', 8);
-  //     expect(mtsGlobalThis.__GetComponentID(e1)).toBe('id2');
-  //     expect(mtsGlobalThis.__GetAttributeByName(e1, 'css-id')).toBe('8');
-  //   });
-  // });
+  test('complicated_dom_tree_opt', () => {
+    let root = mtsGlobalThis.__CreatePage('page', 0);
 
-  //   test('__UpdateComponentID', () => {
-  //     let e1 = mtsGlobalThis.__CreateComponent(
+    let view_0 = mtsGlobalThis.__CreateView(0);
+    let view_1 = mtsGlobalThis.__CreateView(0);
+    let view_2 = mtsGlobalThis.__CreateView(0);
+    mtsGlobalThis.__ReplaceElements(root, [view_0, view_1, view_2], null);
+
+    expect(
+      mtsGlobalThis.__ElementIsEqual(
+        mtsGlobalThis.__GetChildren(root)![0],
+        view_0,
+      ),
+    ).toBe(true);
+    expect(
+      mtsGlobalThis.__ElementIsEqual(
+        mtsGlobalThis.__GetChildren(root)![1],
+        view_1,
+      ),
+    ).toBe(true);
+    expect(
+      mtsGlobalThis.__ElementIsEqual(
+        mtsGlobalThis.__GetChildren(root)![2],
+        view_2,
+      ),
+    ).toBe(true);
+    let view_3 = mtsGlobalThis.__CreateView(0);
+    let view_4 = mtsGlobalThis.__CreateView(0);
+    let view_5 = mtsGlobalThis.__CreateView(0);
+    mtsGlobalThis.__ReplaceElements(root, [view_3, view_4, view_5], [
+      view_0,
+      view_1,
+      view_2,
+    ]);
+
+    expect(
+      mtsGlobalThis.__ElementIsEqual(
+        mtsGlobalThis.__GetChildren(root)![0],
+        view_3,
+      ),
+    ).toBe(true);
+    expect(
+      mtsGlobalThis.__ElementIsEqual(
+        mtsGlobalThis.__GetChildren(root)![1],
+        view_4,
+      ),
+    ).toBe(true);
+    expect(
+      mtsGlobalThis.__ElementIsEqual(
+        mtsGlobalThis.__GetChildren(root)![2],
+        view_5,
+      ),
+    ).toBe(true);
+    mtsGlobalThis.__FlushElementTree();
+
+    mtsGlobalThis.__ReplaceElements(root, [view_0, view_1, view_2], [
+      view_3,
+      view_4,
+      view_5,
+    ]);
+    expect(
+      mtsGlobalThis.__ElementIsEqual(
+        mtsGlobalThis.__GetChildren(root)![0],
+        view_0,
+      ),
+    ).toBe(true);
+    expect(
+      mtsGlobalThis.__ElementIsEqual(
+        mtsGlobalThis.__GetChildren(root)![1],
+        view_1,
+      ),
+    ).toBe(true);
+    expect(
+      mtsGlobalThis.__ElementIsEqual(
+        mtsGlobalThis.__GetChildren(root)![2],
+        view_2,
+      ),
+    ).toBe(true);
+    expect(mtsGlobalThis.__GetChildren(root)!.length).toBe(3);
+
+    mtsGlobalThis.__ReplaceElements(root, [view_0, view_1, view_2], [
+      view_0,
+      view_1,
+      view_2,
+    ]);
+    return; // fixme: @PupilTong upgrade happy-dom once they fix https://github.com/capricorn86/happy-dom/issues/1915
+    expect(
+      mtsGlobalThis.__ElementIsEqual(
+        mtsGlobalThis.__GetChildren(root)![0],
+        view_0,
+      ),
+    ).toBe(true);
+    expect(
+      mtsGlobalThis.__ElementIsEqual(
+        mtsGlobalThis.__GetChildren(root)![1],
+        view_1,
+      ),
+    ).toBe(true);
+    expect(
+      mtsGlobalThis.__ElementIsEqual(
+        mtsGlobalThis.__GetChildren(root)![2],
+        view_2,
+      ),
+    ).toBe(true);
+    expect(mtsGlobalThis.__GetChildren(root)!.length).toBe(3);
+
+    // mtsGlobalThis.__ReplaceElements(root, [view_0, view_1, view_2], [
+    //   view_0,
+    //   view_1,
+    //   view_2,
+    // ]);
+    // mtsGlobalThis.__ReplaceElements(root, [view_0, view_1, view_2], [
+    //   view_0,
+    //   view_1,
+    //   view_2,
+    // ]);
+    // mtsGlobalThis.__ReplaceElements(root, [view_0, view_1, view_2], [
+    //   view_0,
+    //   view_1,
+    //   view_2,
+    // ]);
+    // res =
+    //   res &&
+    //   mtsGlobalThis.__ElementIsEqual(
+    //     mtsGlobalThis.__GetChildren(root)![0],
+    //     view_0,
+    //   );
+    // res =
+    //   res &&
+    //   mtsGlobalThis.__ElementIsEqual(
+    //     mtsGlobalThis.__GetChildren(root)![1],
+    //     view_1,
+    //   );
+    // res =
+    //   res &&
+    //   mtsGlobalThis.__ElementIsEqual(
+    //     mtsGlobalThis.__GetChildren(root)![2],
+    //     view_2,
+    //   );
+    // mtsGlobalThis.__FlushElementTree();
+    // expect(res).toBe(true);
+  });
+
+  test('__ReplaceElements', () => {
+    let root = mtsGlobalThis.__CreatePage('page', 0);
+    let view_0 = mtsGlobalThis.__CreateView(0);
+    let view_1 = mtsGlobalThis.__CreateView(0);
+    let view_2 = mtsGlobalThis.__CreateView(0);
+    mtsGlobalThis.__ReplaceElements(root, [view_0, view_1, view_2], null);
+    expect(mtsGlobalThis.__GetChildren(root)!.length).toBe(3);
+    expect(
+      mtsGlobalThis.__ElementIsEqual(
+        mtsGlobalThis.__GetChildren(root)![0],
+        view_0,
+      ),
+    ).toBe(true);
+    expect(
+      mtsGlobalThis.__ElementIsEqual(
+        mtsGlobalThis.__GetChildren(root)![1],
+        view_1,
+      ),
+    ).toBe(true);
+    expect(
+      mtsGlobalThis.__ElementIsEqual(
+        mtsGlobalThis.__GetChildren(root)![2],
+        view_2,
+      ),
+    ).toBe(true);
+    mtsGlobalThis.__ReplaceElements(root, [view_2, view_1, view_0], [
+      view_0,
+      view_1,
+      view_2,
+    ]);
+    return; // fixme: @PupilTong upgrade happy-dom once they fix https://github.com/capricorn86/happy-dom/issues/1915
+    expect(mtsGlobalThis.__GetChildren(root)!.length).toBe(3);
+    expect(
+      mtsGlobalThis.__ElementIsEqual(
+        mtsGlobalThis.__GetChildren(root)![0],
+        view_2,
+      ),
+    ).toBe(true);
+    expect(
+      mtsGlobalThis.__ElementIsEqual(
+        mtsGlobalThis.__GetChildren(root)![1],
+        view_1,
+      ),
+    ).toBe(true);
+    expect(
+      mtsGlobalThis.__ElementIsEqual(
+        mtsGlobalThis.__GetChildren(root)![2],
+        view_0,
+      ),
+    ).toBe(true);
+    mtsGlobalThis.__FlushElementTree();
+  });
+
+  test('__ReplaceElements_2', () => {
+    let res = true;
+    let root = mtsGlobalThis.__CreatePage('page', 0);
+    let view_0 = mtsGlobalThis.__CreateView(0);
+    let view_1 = mtsGlobalThis.__CreateView(0);
+    let view_2 = mtsGlobalThis.__CreateView(0);
+    mtsGlobalThis.__ReplaceElements(root, [view_0, view_1, view_2], null);
+    expect(mtsGlobalThis.__GetChildren(root)!.length).toBe(3);
+    expect(
+      mtsGlobalThis.__ElementIsEqual(
+        mtsGlobalThis.__GetChildren(root)![0],
+        view_0,
+      ),
+    ).toBe(true);
+    expect(
+      mtsGlobalThis.__ElementIsEqual(
+        mtsGlobalThis.__GetChildren(root)![1],
+        view_1,
+      ),
+    ).toBe(true);
+    expect(
+      mtsGlobalThis.__ElementIsEqual(
+        mtsGlobalThis.__GetChildren(root)![2],
+        view_2,
+      ),
+    ).toBe(true);
+    mtsGlobalThis.__FlushElementTree();
+
+    let view_3 = mtsGlobalThis.__CreateView(0);
+    let view_4 = mtsGlobalThis.__CreateView(0);
+    mtsGlobalThis.__ReplaceElements(root, [view_0, view_1, view_3, view_4], [
+      view_0,
+      view_1,
+    ]);
+    return; // fixme: @PupilTong upgrade happy-dom once they fix https://github.com/capricorn86/happy-dom/issues/1915
+    expect(mtsGlobalThis.__GetChildren(root)!.length).toBe(5);
+    expect(
+      mtsGlobalThis.__ElementIsEqual(
+        mtsGlobalThis.__GetChildren(root)![0],
+        view_0,
+      ),
+    ).toBe(true);
+    expect(
+      mtsGlobalThis.__ElementIsEqual(
+        mtsGlobalThis.__GetChildren(root)![1],
+        view_1,
+      ),
+    ).toBe(true);
+    expect(
+      mtsGlobalThis.__ElementIsEqual(
+        mtsGlobalThis.__GetChildren(root)![2],
+        view_3,
+      ),
+    ).toBe(true);
+    expect(
+      mtsGlobalThis.__ElementIsEqual(
+        mtsGlobalThis.__GetChildren(root)![3],
+        view_4,
+      ),
+    ).toBe(true);
+    expect(
+      mtsGlobalThis.__ElementIsEqual(
+        mtsGlobalThis.__GetChildren(root)![4],
+        view_2,
+      ),
+    ).toBe(true);
+    mtsGlobalThis.__FlushElementTree();
+
+    let view_5 = mtsGlobalThis.__CreateView(0);
+    mtsGlobalThis.__ReplaceElements(root, [view_5], null);
+    mtsGlobalThis.__FlushElementTree();
+    expect(mtsGlobalThis.__GetChildren(root)!.length).toBe(6);
+    expect(
+      mtsGlobalThis.__ElementIsEqual(
+        mtsGlobalThis.__GetChildren(root)![5],
+        view_5,
+      ),
+    ).toBe(true);
+
+    let view_6 = mtsGlobalThis.__CreateView(0);
+    mtsGlobalThis.__ReplaceElements(root, [view_6], [view_3]);
+    mtsGlobalThis.__FlushElementTree();
+
+    expect(mtsGlobalThis.__GetChildren(root)!.length).toBe(6);
+    expect(
+      mtsGlobalThis.__ElementIsEqual(
+        mtsGlobalThis.__GetChildren(root)![2],
+        view_6,
+      ),
+    ).toBe(true);
+    expect(
+      mtsGlobalThis.__ElementIsEqual(
+        mtsGlobalThis.__GetChildren(root)![3],
+        view_4,
+      ),
+    ).toBe(true);
+  });
+
+  test('__ReplaceElements_3', () => {
+    let root = mtsGlobalThis.__CreatePage('page', 0);
+    let view_0 = mtsGlobalThis.__CreateView(0);
+    let view_1 = mtsGlobalThis.__CreateView(0);
+    let view_2 = mtsGlobalThis.__CreateView(0);
+    let view_3 = mtsGlobalThis.__CreateView(0);
+    let view_4 = mtsGlobalThis.__CreateView(0);
+    mtsGlobalThis.__ReplaceElements(
+      root,
+      [view_0, view_1, view_2, view_3, view_4],
+      null,
+    );
+    mtsGlobalThis.__FlushElementTree();
+    expect(
+      mtsGlobalThis.__ElementIsEqual(
+        mtsGlobalThis.__GetChildren(root)![0],
+        view_0,
+      ),
+    ).toBe(true);
+    expect(
+      mtsGlobalThis.__ElementIsEqual(
+        mtsGlobalThis.__GetChildren(root)![1],
+        view_1,
+      ),
+    ).toBe(true);
+    expect(
+      mtsGlobalThis.__ElementIsEqual(
+        mtsGlobalThis.__GetChildren(root)![2],
+        view_2,
+      ),
+    ).toBe(true);
+    expect(
+      mtsGlobalThis.__ElementIsEqual(
+        mtsGlobalThis.__GetChildren(root)![3],
+        view_3,
+      ),
+    ).toBe(true);
+    expect(
+      mtsGlobalThis.__ElementIsEqual(
+        mtsGlobalThis.__GetChildren(root)![4],
+        view_4,
+      ),
+    ).toBe(true);
+
+    mtsGlobalThis.__ReplaceElements(root, [view_1, view_0, view_2], [
+      view_0,
+      view_1,
+      view_2,
+    ]);
+    mtsGlobalThis.__FlushElementTree();
+    expect(
+      mtsGlobalThis.__ElementIsEqual(
+        mtsGlobalThis.__GetChildren(root)![0],
+        view_1,
+      ),
+    ).toBe(true);
+    return; // fixme: @PupilTong upgrade happy-dom once they fix https://github.com/capricorn86/happy-dom/issues/1915
+
+    expect(
+      mtsGlobalThis.__ElementIsEqual(
+        mtsGlobalThis.__GetChildren(root)![1],
+        view_0,
+      ),
+    ).toBe(true);
+    expect(
+      mtsGlobalThis.__ElementIsEqual(
+        mtsGlobalThis.__GetChildren(root)![2],
+        view_2,
+      ),
+    ).toBe(true);
+    expect(
+      mtsGlobalThis.__ElementIsEqual(
+        mtsGlobalThis.__GetChildren(root)![3],
+        view_3,
+      ),
+    ).toBe(true);
+    expect(
+      mtsGlobalThis.__ElementIsEqual(
+        mtsGlobalThis.__GetChildren(root)![4],
+        view_4,
+      ),
+    ).toBe(true);
+
+    mtsGlobalThis.__ReplaceElements(root, [view_1, view_0, view_3, view_2], [
+      view_1,
+      view_0,
+      view_2,
+      view_3,
+    ]);
+    mtsGlobalThis.__FlushElementTree();
+    expect(
+      mtsGlobalThis.__ElementIsEqual(
+        mtsGlobalThis.__GetChildren(root)![0],
+        view_1,
+      ),
+    ).toBe(true);
+    expect(
+      mtsGlobalThis.__ElementIsEqual(
+        mtsGlobalThis.__GetChildren(root)![1],
+        view_0,
+      ),
+    ).toBe(true);
+    expect(
+      mtsGlobalThis.__ElementIsEqual(
+        mtsGlobalThis.__GetChildren(root)![2],
+        view_3,
+      ),
+    ).toBe(true);
+    expect(
+      mtsGlobalThis.__ElementIsEqual(
+        mtsGlobalThis.__GetChildren(root)![3],
+        view_2,
+      ),
+    ).toBe(true);
+    expect(
+      mtsGlobalThis.__ElementIsEqual(
+        mtsGlobalThis.__GetChildren(root)![4],
+        view_4,
+      ),
+    ).toBe(true);
+
+    let view_5 = mtsGlobalThis.__CreateView(0);
+    mtsGlobalThis.__ReplaceElements(root, [view_5], null);
+    mtsGlobalThis.__FlushElementTree();
+    expect(
+      mtsGlobalThis.__ElementIsEqual(
+        mtsGlobalThis.__GetChildren(root)![5],
+        view_5,
+      ),
+    ).toBe(true);
+
+    mtsGlobalThis.__ReplaceElements(
+      root,
+      [view_1, view_3, view_2, view_0, view_4],
+      [view_1, view_0, view_3, view_2, view_4],
+    );
+    expect(
+      mtsGlobalThis.__GetChildren(root),
+    ).toStrictEqual([
+      view_1,
+      view_3,
+      view_2,
+      view_0,
+      view_4,
+      view_5,
+    ]);
+  });
+
+  test('with_querySelector', () => {
+    let page = mtsGlobalThis.__CreatePage('0', 0);
+    let parent = mtsGlobalThis.__CreateComponent(
+      0,
+      'id1',
+      0,
+      'test_entry',
+      'name',
+      'path',
+      {},
+    );
+    mtsGlobalThis.__AppendElement(page, parent);
+    let child_0 = mtsGlobalThis.__CreateView(0);
+    let child_1 = mtsGlobalThis.__CreateView(0);
+    let child_component = mtsGlobalThis.__CreateComponent(
+      mtsGlobalThis.__GetElementUniqueID(parent),
+      'id2',
+      0,
+      'test_entry',
+      'name',
+      'path',
+      {},
+    );
+    let child_2 = mtsGlobalThis.__CreateView(0);
+    mtsGlobalThis.__AppendElement(parent, child_0);
+    mtsGlobalThis.__AppendElement(parent, child_1);
+    mtsGlobalThis.__AppendElement(parent, child_component);
+    mtsGlobalThis.__AppendElement(child_component, child_2);
+    mtsGlobalThis.__SetID(child_1, 'node_id');
+    mtsGlobalThis.__SetID(child_2, 'node_id_2');
+
+    mtsGlobalThis.__FlushElementTree();
+    let ret_node = rootDom.querySelector('#node_id');
+    let ret_id = ret_node?.getAttribute('id');
+
+    let ret_u = rootDom.querySelector('#node_id_u');
+
+    let ret_child = rootDom.querySelector('#node_id_2');
+    let ret_child_id = ret_child?.getAttribute('id');
+
+    expect(ret_id).toBe('node_id');
+    expect(ret_u).toBe(null);
+    expect(ret_child_id).toBe('node_id_2');
+  });
+
+  test('__setAttribute_null_value', () => {
+    const ret = mtsGlobalThis.__CreatePage('page', 0);
+    mtsGlobalThis.__SetAttribute(ret, 'test-attr', 'val');
+    mtsGlobalThis.__SetAttribute(ret, 'test-attr', null);
+    mtsGlobalThis.__FlushElementTree();
+    expect(rootDom.querySelector('[test-attr="val"]')).toBeNull();
+  });
+
+  test('__ReplaceElements should accept not array', () => {
+    let root = mtsGlobalThis.__CreatePage('page', 0);
+    let ret0 = mtsGlobalThis.__NextElement(root);
+    let child_0 = mtsGlobalThis.__CreateView(0);
+    let child_1 = mtsGlobalThis.__CreateImage(0);
+    let child_2 = mtsGlobalThis.__CreateText(0);
+    let child_3 = mtsGlobalThis.__CreateScrollView(0);
+    mtsGlobalThis.__InsertElementBefore(root, child_0, null);
+    mtsGlobalThis.__InsertElementBefore(root, child_1, child_0);
+    mtsGlobalThis.__InsertElementBefore(root, child_2, child_1);
+    mtsGlobalThis.__AppendElement(root, child_3);
+    mtsGlobalThis.__ReplaceElements(
+      mtsGlobalThis.__GetParent(child_3),
+      child_3,
+      child_1,
+    );
+    mtsGlobalThis.__FlushElementTree();
+    expect(
+      mtsGlobalThis.__ElementIsEqual(
+        mtsGlobalThis.__GetChildren(root)[0],
+        child_2,
+      ),
+    ).toBe(true);
+    expect(
+      mtsGlobalThis.__ElementIsEqual(
+        mtsGlobalThis.__GetChildren(root)[1],
+        child_3,
+      ),
+    ).toBe(true);
+    expect(
+      mtsGlobalThis.__ElementIsEqual(
+        mtsGlobalThis.__GetChildren(root)[2],
+        child_0,
+      ),
+    ).toBe(true);
+    let ret1 = mtsGlobalThis.__NextElement(mtsGlobalThis.__FirstElement(root)!);
+    return; // fixme: @PupilTong upgrade happy-dom once they fix https://github.com/capricorn86/happy-dom/issues/1915
+    // mtsGlobalThis.__ReplaceElements(
+    //   mtsGlobalThis.__GetParent(child_1),
+    //   child_1,
+    //   child_1,
+    // );
+    // mtsGlobalThis.__ReplaceElements(
+    //   mtsGlobalThis.__GetParent(child_1),
+    //   child_1,
+    //   child_1,
+    // );
+    // expect(ret0).toBeFalsy();
+    expect(mtsGlobalThis.__GetTag(ret1!)).toBe('scroll-view');
+  });
+
+  test('create element infer css id from parent component id', () => {
+    const root = mtsGlobalThis.__CreatePage('page', 0);
+    const parentComponent = mtsGlobalThis.__CreateComponent(
+      0,
+      'id',
+      100, // cssid
+      'test_entry',
+      'name',
+      'path',
+      '',
+      {},
+    );
+    const parentComponentUniqueId = mtsGlobalThis.__GetElementUniqueID(
+      parentComponent,
+    );
+    const view = mtsGlobalThis.__CreateText(parentComponentUniqueId);
+
+    mtsGlobalThis.__AppendElement(root, view);
+    mtsGlobalThis.__SetID(view, 'target');
+    mtsGlobalThis.__AppendElement(root, parentComponent);
+    mtsGlobalThis.__FlushElementTree();
+    expect(rootDom.querySelector('#target')?.getAttribute('l-css-id')).toBe(
+      '100',
+    );
+  });
+
+  test('create element wont infer for cssid 0', () => {
+    const root = mtsGlobalThis.__CreatePage('page', 0);
+    const parentComponent = mtsGlobalThis.__CreateComponent(
+      0,
+      'id',
+      0, // cssid
+      'test_entry',
+      'name',
+      'path',
+      '',
+      {},
+    );
+    const parentComponentUniqueId = mtsGlobalThis.__GetElementUniqueID(
+      parentComponent,
+    );
+    const view = mtsGlobalThis.__CreateText(parentComponentUniqueId);
+
+    mtsGlobalThis.__AppendElement(root, view);
+    mtsGlobalThis.__SetID(view, 'target');
+    mtsGlobalThis.__AppendElement(root, parentComponent);
+    mtsGlobalThis.__FlushElementTree();
+    expect(rootDom.querySelector('#target')?.hasAttribute('l-css-id')).toBe(
+      false,
+    );
+  });
+
+  test('__GetElementUniqueID for incorrect fiber object', () => {
+    const root = mtsGlobalThis.__CreatePage('page', 0);
+    const parentComponent = mtsGlobalThis.__CreateComponent(
+      0,
+      'id',
+      0, // cssid
+      'test_entry',
+      'name',
+      'path',
+      '',
+      {},
+    );
+    const list = mtsGlobalThis.__CreateList(
+      0,
+      () => {},
+      () => {},
+    );
+    mtsGlobalThis.__FlushElementTree();
+    const rootId = mtsGlobalThis.__GetElementUniqueID(root);
+    const parentComponentId = mtsGlobalThis.__GetElementUniqueID(
+      parentComponent,
+    );
+    const listId = mtsGlobalThis.__GetElementUniqueID(list);
+    const nul = mtsGlobalThis.__GetElementUniqueID(null);
+    const undef = mtsGlobalThis.__GetElementUniqueID(undefined);
+    const randomObject = mtsGlobalThis.__GetElementUniqueID({} as any);
+    expect(rootId).toBeGreaterThanOrEqual(0);
+    expect(parentComponentId).toBeGreaterThanOrEqual(0);
+    expect(listId).toBeGreaterThanOrEqual(0);
+    expect(nul).toBe(-1);
+    expect(undef).toBe(-1);
+    expect(randomObject).toBe(-1);
+  });
+
+  test('__AddInlineStyle_value_number_0', () => {
+    const root = mtsGlobalThis.__CreatePage('page', 0);
+    const view = mtsGlobalThis.__CreateView(0);
+    mtsGlobalThis.__AddInlineStyle(root, 24, 'flex'); // display: flex
+    mtsGlobalThis.__AddInlineStyle(view, 51, 0); // flex-shrink:0;
+    mtsGlobalThis.__SetID(view, 'target');
+    mtsGlobalThis.__AppendElement(root, view);
+    mtsGlobalThis.__FlushElementTree();
+    const inlineStyle = rootDom.querySelector('#target')?.getAttribute('style');
+    expect(inlineStyle).toContain('flex-shrink');
+  });
+
+  //   test('publicComponentEvent', () => {
+  //     let page = mtsGlobalThis.__CreatePage('0', 0);
+  //     let parent = mtsGlobalThis.__CreateComponent(
   //       0,
   //       'id1',
   //       0,
@@ -428,88 +1061,169 @@ describe('Element APIs', () => {
   //       'path',
   //       {},
   //     );
-  //     let e2 = mtsGlobalThis.__CreateComponent(
-  //       0,
-  //       'id2',
-  //       0,
-  //       'test_entry',
-  //       'name',
-  //       'path',
-  //       {},
-  //     );
-  //     mtsGlobalThis.__UpdateComponentID(e1, 'id2');
-  //     mtsGlobalThis.__UpdateComponentID(e2, 'id1');
-  //     expect(mtsGlobalThis.__GetComponentID(e1)).toBe('id2');
-  //     expect(mtsGlobalThis.__GetComponentID(e2)).toBe('id1');
-  //   });
-
-  //   test('__SetInlineStyles', () => {
-  //     const root = mtsGlobalThis.__CreatePage('page', 0);
-  //     let target = mtsGlobalThis.__CreateView(0);
-  //     mtsGlobalThis.__SetID(target, 'target');
-  //     mtsGlobalThis.__SetInlineStyles(target, undefined);
-  //     mtsGlobalThis.__SetInlineStyles(target, {
-  //       'margin': '10px',
-  //       'marginTop': '20px',
-  //       'marginLeft': '30px',
-  //       'marginRight': '20px',
-  //       'marginBottom': '10px',
+  //     let parentUid = mtsGlobalThis.__GetElementUniqueID(parent);
+  //     let child = mtsGlobalThis.__CreateView(parentUid);
+  //     mtsGlobalThis.__AppendElement(page, parent);
+  //     mtsGlobalThis.__AppendElement(parent, child);
+  //     mtsGlobalThis.__SetID(parent, 'parent_id');
+  //     mtsGlobalThis.__SetID(child, 'child_id');
+  //     mtsGlobalThis.__AddEvent(child, 'bindEvent', 'tap', 'hname');
+  //     mtsGlobalThis.__SetInlineStyles(parent, {
+  //       'display': 'flex',
   //     });
-  //     mtsGlobalThis.__AppendElement(root, target);
+  //     mtsGlobalThis.__SetInlineStyles(child, {
+  //       'width': '100px',
+  //       'height': '100px',
+  //     });
   //     mtsGlobalThis.__FlushElementTree();
-  //     const targetStyle = root.querySelector('#target').getAttribute('style');
-  //     expect(targetStyle).toContain('20px');
-  //     expect(targetStyle).toContain('30px');
-  //     expect(targetStyle).toContain('10px');
+  //     rootDom.querySelector('#child_id')?.dispatchEvent(new Event('click'));
+  //     const publicComponentEventArgs = (mtsGlobalThis as any)
+  //       .publicComponentEvent;
+  //     expect(publicComponentEventArgs.hname).toBe('hname');
+  //     expect(publicComponentEventArgs.componentId).toBe('id1');
   //   });
 
-  //   test('__GetConfig__AddConfig', () => {
-  //     let root = mtsGlobalThis.__CreatePage('page', 0);
-  //     mtsGlobalThis.__AddConfig(root, 'key1', 'value1');
-  //     mtsGlobalThis.__AddConfig(root, 'key2', 'value2');
-  //     mtsGlobalThis.__AddConfig(root, 'key3', 'value3');
+  //   test('__MarkTemplate_and_Get_Parts', () => {
+  //     /*
+  //      * <view template> <!-- grand parent template -->
+  //      *   <view part>
+  //      *    <view template> <!-- target template -->
+  //      *     <view> <!-- normal node -->
+  //      *       <view part id="target"> <!-- target part -->
+  //      *        <view template> <!-- sub template -->
+  //      *         <view part> <!-- sub part, should be able to "get part" from the target -->
+  //      *         </view>
+  //      *       </view>
+  //      *      </view>
+  //      *     </view>
+  //      *   </view>
+  //      * </view>
+  //      */
+  //     const root = mtsGlobalThis.__CreatePage('page', 0);
+  //     const grandParentTemplate = mtsGlobalThis.__CreateView(0);
+  //     mtsGlobalThis.__MarkTemplateElement(grandParentTemplate);
+  //     let view = mtsGlobalThis.__CreateView(0);
+  //     mtsGlobalThis.__MarkPartElement(view, 'grandParentPart');
+  //     mtsGlobalThis.__AppendElement(grandParentTemplate, view);
+  //     const targetTemplate = mtsGlobalThis.__CreateView(0);
+  //     mtsGlobalThis.__MarkTemplateElement(targetTemplate);
+  //     mtsGlobalThis.__AppendElement(view, targetTemplate);
+  //     view = mtsGlobalThis.__CreateView(0);
+  //     mtsGlobalThis.__AppendElement(targetTemplate, view);
+  //     const targetPart = mtsGlobalThis.__CreateView(0);
+  //     mtsGlobalThis.__MarkPartElement(targetPart, 'targetPart');
+  //     mtsGlobalThis.__AppendElement(view, targetPart);
+  //     const subTemplate = mtsGlobalThis.__CreateView(0);
+  //     mtsGlobalThis.__MarkTemplateElement(subTemplate);
+  //     mtsGlobalThis.__AppendElement(targetPart, subTemplate);
+  //     const subPart = mtsGlobalThis.__CreateView(0);
+  //     mtsGlobalThis.__MarkPartElement(subPart, 'subPart');
+  //     mtsGlobalThis.__AppendElement(subTemplate, subPart);
   //     mtsGlobalThis.__FlushElementTree();
-  //     let config = mtsGlobalThis.__GetConfig(root);
-  //     expect(config.key1).toBe('value1');
-  //     expect(config.key2).toBe('value2');
-  //     expect(config.key3).toBe('value3');
-  //   });
-
-  //   test('__AddInlineStyle', () => {
-  //     let root = mtsGlobalThis.__CreatePage('page', 0);
-  //     mtsGlobalThis.__AddInlineStyle(root, 26, '80px');
-  //     mtsGlobalThis.__FlushElementTree();
-  //     expect(root.style.height).toBe('80px');
-  //   });
-
-  // t
-  //   test('__AddInlineStyle_key_is_name', () => {
-  //     let root = mtsGlobalThis.__CreatePage('page', 0);
-  //     mtsGlobalThis.__AddInlineStyle(root, 'height', '80px');
-  //     mtsGlobalThis.__FlushElementTree();
-  //     expect(root.style.height).toBe('80px');
-  //   });
-
-  //   test('__AddInlineStyle_raw_string', () => {
-  //     let root = mtsGlobalThis.__CreatePage('page', 0);
-  //     mtsGlobalThis.__SetInlineStyles(root, 'height:80px');
-  //     mtsGlobalThis.__FlushElementTree();
-  //     expect(root.style.height).toBe('80px');
+  //     const targetPartLength = Object.keys(
+  //       mtsGlobalThis.__GetTemplateParts(targetTemplate)!,
+  //     ).length;
+  //     const targetPartExist =
+  //       mtsGlobalThis.__GetTemplateParts(targetTemplate)!['targetPart'] ===
+  //       targetPart;
+  //     expect(targetPartLength).toBe(1);
+  //     expect(targetPartExist).toBe(true);
   //   });
 
   //   test('__UpdateComponentInfo', () => {
-  //     let e1 = mtsGlobalThis.__CreateComponent(
+  //     let ele = mtsGlobalThis.__CreateComponent(
   //       0,
   //       'id1',
-  //       7,
+  //       0,
   //       'test_entry',
   //       'name1',
   //       'path',
   //       {},
   //     );
-  //     mtsGlobalThis.__UpdateComponentInfo(e1, 'id2', 8, 'name2');
-  //     expect(mtsGlobalThis.__GetComponentID(e1)).toBe('id2');
-  //     expect(e1.getAttribute('css-id')).toBe('8');
-  //     expect(e1.getAttribute('name')).toBe('name2');
+  //     mtsGlobalThis.__UpdateComponentInfo(ele, {
+  //       componentID: 'id2',
+  //       cssID: 8,
+  //       name: 'name2',
+  //     });
+  //     mtsGlobalThis.__UpdateComponentInfo(ele, 'id1');
+  //     const id = mtsGlobalThis.__GetComponentID(ele);
+  //     const cssID = mtsGlobalThis.__GetAttributeByName(ele, 'l-css-id');
+  //     const name = mtsGlobalThis.__GetAttributeByName(ele, 'name');
+  //     expect(id).toBe('id2');
+  //     expect(cssID).toBe('8');
+  //     expect(name).toBe('name2');
+  //   });
+
+  //   describe('__ElementFromBinary', () => {
+  //     beforeEach(() => {
+  //       mtsGlobalThis.__DefineTemplate(
+  //         'test-template',
+  //         new Uint8Array([
+  //           1, 0, 0, 0, 4, 118, 105, 101, 119, 1, 4, 97, 116, 116, 114, 49, 6,
+  //           118, 97, 108, 117, 101, 49, 2, 6, 99, 108, 97, 115, 115, 49, 6, 99,
+  //           108, 97, 115, 115, 50, 3, 4, 105, 100, 45, 49, 5, 1, 11, 99, 117,
+  //           115, 116, 111, 109, 100, 97, 116, 97, 6, 1, 3, 116, 97, 112, 9, 98,
+  //           105, 110, 100, 69, 118, 101, 110, 116, 7, 1, 1, 0, 0, 0, 4, 116, 101,
+  //           120, 116, 1, 5, 118, 97, 108, 117, 101, 19, 72, 101, 108, 108, 111,
+  //           32, 102, 114, 111, 109, 32, 116, 101, 109, 112, 108, 97, 116, 101, 4,
+  //           4, 105, 100, 45, 50, 0,
+  //         ]),
+  //       );
+  //     });
+
+  //     test('should create a basic element from template', () => {
+  //       const element = mtsGlobalThis.__ElementFromBinary('test-template', 0)[0];
+  //       expect(mtsGlobalThis.__GetTag(element)).toBe('view');
+  //     });
+
+  //     test('should apply attributes from template', () => {
+  //       const element = mtsGlobalThis.__ElementFromBinary('test-template', 0)[0];
+  //       const attrs = mtsGlobalThis.__GetAttributes(element);
+  //       expect(attrs).toContainEqual(['attr1', 'value1']);
+  //     });
+
+  //     test('should apply classes from template', () => {
+  //       const element = mtsGlobalThis.__ElementFromBinary('test-template', 0)[0];
+  //       const classes = mtsGlobalThis.__GetClasses(element);
+  //       expect(classes).toEqual(['class1', 'class2']);
+  //     });
+
+  //     test('should apply id from template', () => {
+  //       const element = mtsGlobalThis.__ElementFromBinary('test-template', 0)[0];
+  //       const id = mtsGlobalThis.__GetID(element);
+  //       expect(id).toBe('id-1');
+  //     });
+
+  //     test('should create child elements from template', () => {
+  //       const element = mtsGlobalThis.__ElementFromBinary('test-template', 0)[0];
+  //       const child = mtsGlobalThis.__FirstElement(element);
+  //       expect(mtsGlobalThis.__GetTag(child!)).toBe('text');
+  //       expect(mtsGlobalThis.__GetAttributeByName(child!, 'value')).toBe(
+  //         'Hello from template',
+  //       );
+  //     });
+
+  //     test('should apply events from template', () => {
+  //       const element = mtsGlobalThis.__ElementFromBinary('test-template', 0)[0];
+  //       const events = mtsGlobalThis.__GetEvents(element);
+  //       expect(events!.length).toBe(1);
+  //       expect(events![0].name).toBe('tap');
+  //       expect(events![0].type).toBe('bindEvent');
+  //     });
+
+  //     test('should mark part element', () => {
+  //       const element = mtsGlobalThis.__ElementFromBinary('test-template', 0)[0];
+  //       const child = mtsGlobalThis.__FirstElement(element);
+  //       const parts = mtsGlobalThis.__GetTemplateParts(element);
+  //       expect(Object.keys(parts!).length).toBe(1);
+  //       expect(parts!['id-2']).toBe(child);
+  //     });
+
+  //     test('should apply dataset from template', () => {
+  //       const element = mtsGlobalThis.__ElementFromBinary('test-template', 0)[0];
+  //       expect(mtsGlobalThis.__GetDataByKey(element, 'customdata')).toBe(
+  //         'customdata',
+  //       );
+  //     });
   //   });
 });

@@ -89,9 +89,57 @@ export function createMtsGlobalThis(
     __GetClasses: mtsGlobalThis.__GetClasses.bind(mtsGlobalThis),
     __AddClass: mtsGlobalThis.__AddClass.bind(mtsGlobalThis),
     __SetClasses: mtsGlobalThis.__SetClasses.bind(mtsGlobalThis),
-    __AddInlineStyle: mtsGlobalThis.__AddInlineStyle.bind(mtsGlobalThis),
+    __AddInlineStyle: (
+      element: LynxElement,
+      key: string | number,
+      value: string | number | null | undefined,
+    ) => {
+      if (typeof value === 'number') {
+        value = (value as number).toString();
+      }
+      if (typeof key === 'number') {
+        return mtsGlobalThis.__wasm_binding_AddInlineStyle_number_key(
+          element,
+          key,
+          value as string | null,
+        );
+      } else {
+        return mtsGlobalThis.__wasm_binding_AddInlineStyle_str_key(
+          element,
+          key.toString(),
+          value as string | null,
+        );
+      }
+    },
     __SetCSSId: mtsGlobalThis.__SetCSSId.bind(mtsGlobalThis),
-    __SetInlineStyles: mtsGlobalThis.__SetInlineStyles.bind(mtsGlobalThis),
+    __SetInlineStyles: (
+      element: LynxElement,
+      value: string | Record<string, string | number> | undefined,
+    ) => {
+      if (typeof value === 'string') {
+        return mtsGlobalThis.__wasm_binding_SetInlineStyles(
+          element,
+          value,
+        );
+      } else {
+        // Clear all inline styles
+        mtsGlobalThis.__wasm_binding_SetInlineStyles(
+          element,
+          '',
+        );
+        if (value) {
+          for (const [key, val] of Object.entries(value)) {
+            if (val !== null) {
+              mtsGlobalThis.__wasm_binding_AddInlineStyle_str_key(
+                element,
+                key,
+                val.toString(),
+              );
+            }
+          }
+        }
+      }
+    },
     __FlushElementTree: mtsGlobalThis.__FlushElementTree.bind(mtsGlobalThis),
     // __LoadLepusChunk: mtsGlobalThis.__LoadLepusChunk.bind(mtsGlobalThis),
     __GetPageElement: mtsGlobalThis.__GetPageElement.bind(mtsGlobalThis),

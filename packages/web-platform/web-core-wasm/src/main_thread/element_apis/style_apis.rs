@@ -68,86 +68,51 @@ impl MainThreadGlobalThis {
     }
   }
 
-  #[wasm_bindgen(js_name = "__AddInlineStyle")]
+  #[wasm_bindgen(js_name = "__wasm_binding_AddInlineStyle_str_key")]
   /**
    * The key could be string or number
    * The value could be string or number or null or undefined
    */
-  pub fn add_inline_style(
+  pub fn add_inline_style_raw_string_key(
     &self,
     element: &LynxElement,
-    key: &wasm_bindgen::JsValue,
-    value: &wasm_bindgen::JsValue,
+    key: String,
+    value: Option<String>,
   ) {
-    // firstly we should map the number back to string
-    let key_str: String = if let Some(key) = key.as_string() {
-      key
-    } else if let Some(num) = key.as_f64() {
-      if let Some(key) = STYLE_PROPERTY_MAP.get(&(num as i32)) {
-        key.to_string()
-      } else {
-        panic!("Unsupported key number {num}");
-      }
-    } else {
-      panic!("Unsupported key type for inline style key");
-    };
     let dom = element.get_dom();
-    if value.is_null_or_undefined() {
-      dom.style().remove_property(&key_str).unwrap();
-    } else {
-      let value_str = if let Some(v) = value.as_string() {
-        v
-      } else if let Some(num) = value.as_f64() {
-        num.to_string()
-      } else {
-        panic!("Unsupported value type for inline style value");
-      };
-      // now do the transform
-      let declaration = [(key_str, value_str)];
-      let (new_declarations, _) = transform_declarations(&declaration);
-      for (k, v) in new_declarations.iter() {
-        dom.style().set_property(k, v).unwrap();
+    if let Some(value) = value {
+      let declarations = vec![(key, value)];
+      let (transformed, _) = transform_declarations(&declarations);
+      let style = dom.style();
+      for (k, v) in transformed.iter() {
+        style.set_property(k, v).unwrap();
       }
+    } else {
+      dom.style().remove_property(&key).unwrap();
     }
   }
 
-  #[wasm_bindgen(js_name = "__SetInlineStyles")]
-  /**
-   * The value could be a map of string/number or null/undefined or a string
-   */
-  pub fn set_inline_styles(&self, element: &LynxElement, styles: &wasm_bindgen::JsValue) {
-    let dom = element.get_dom();
-    if styles.is_null_or_undefined() {
-      dom.remove_attribute("style").unwrap();
-    } else if styles.is_string() {
-      let style_str = styles.as_string().unwrap();
-      let (transformed_style_str, _) = transform_inline_style_string(&style_str);
-      dom.set_attribute("style", &transformed_style_str).unwrap();
-    } else {
-      let styles: &js_sys::Object = styles.dyn_ref::<js_sys::Object>().unwrap();
-      let declarations: Vec<(String, String)> = js_sys::Object::entries(styles)
-        .iter()
-        .map(|entry| {
-          let entry_array: js_sys::Array = entry.into();
-          let key = entry_array.get(0).as_string().unwrap();
-          let value_js = entry_array.get(1);
-          let value = if value_js.is_null_or_undefined() {
-            "".to_string()
-          } else if let Some(v) = value_js.as_string() {
-            v
-          } else if let Some(num) = value_js.as_f64() {
-            num.to_string()
-          } else {
-            panic!("Unsupported value type for inline style value");
-          };
-          (key, value)
-        })
-        .collect();
-      let (new_declarations, _) = transform_declarations(&declarations);
-      for (k, v) in new_declarations.iter() {
-        dom.style().set_property(k, v).unwrap();
-      }
+  #[wasm_bindgen(js_name = "__wasm_binding_AddInlineStyle_number_key")]
+  pub fn set_inline_styles_number_key(
+    &self,
+    element: &LynxElement,
+    key: i32,
+    value: Option<String>,
+  ) {
+    if let Some(style_property) = STYLE_PROPERTY_MAP.get(key as usize) {
+      self.add_inline_style_raw_string_key(element, style_property.to_string(), value.clone());
     }
+  }
+
+  #[wasm_bindgen(js_name = "__wasm_binding_SetInlineStyles")]
+  pub fn set_inline_styles_in_str(&self, element: &LynxElement, styles: String) {
+    let dom = element.get_dom();
+    if styles.is_empty() {
+      let _ = dom.remove_attribute("style");
+      return;
+    }
+    let (transformed_style_str, _) = transform_inline_style_string(&styles);
+    let _ = dom.set_attribute("style", &transformed_style_str);
   }
 
   #[wasm_bindgen(js_name = "__AddClass")]

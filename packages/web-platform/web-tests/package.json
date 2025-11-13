@@ -45,7 +45,7 @@
     "@playwright/test": "^1.56.0",
     "@rspack/cli": "catalog:rspack",
     "@rspack/core": "catalog:rspack",
-    "happy-dom": "^20.0.4",
+    "happy-dom": "^20.0.10",
     "nyc": "^17.1.0",
     "source-map-loader": "^5.0.0",
     "tslib": "^2.8.1",
