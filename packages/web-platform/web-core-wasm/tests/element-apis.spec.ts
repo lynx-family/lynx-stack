@@ -305,85 +305,106 @@ describe('Element APIs', () => {
     expect(rootDom.querySelector('[data-test1="test-value1"]')).not.toBeNull();
   });
 
-  //   test('__GetClasses', () => {
-  //     let node1 = mtsGlobalThis.__CreateText(0);
-  //     mtsGlobalThis.__AddClass(node1, 'a');
-  //     mtsGlobalThis.__AddClass(node1, 'b');
-  //     mtsGlobalThis.__AddClass(node1, 'c');
-  //     let class_1 = mtsGlobalThis.__GetClasses(node1);
-  //     mtsGlobalThis.__SetClasses(node1, 'c b a');
-  //     let class_2 = mtsGlobalThis.__GetClasses(node1);
-  //     expect(class_1.length).toBe(3);
-  //     expect(class_1).toStrictEqual(['a', 'b', 'c']);
-  //     expect(class_2.length).toBe(3);
-  //     expect(class_2).toStrictEqual(['c', 'b', 'a']);
-  //   });
+  test('__GetClasses', () => {
+    let root = mtsGlobalThis.__CreatePage('page', 0);
+    let node1 = mtsGlobalThis.__CreateText(0);
+    mtsGlobalThis.__AddClass(node1, 'a');
+    mtsGlobalThis.__AddClass(node1, 'b');
+    mtsGlobalThis.__AddClass(node1, 'c');
+    let class_1 = mtsGlobalThis.__GetClasses(node1);
+    expect(class_1.length).toBe(3);
+    expect(class_1).toStrictEqual(['a', 'b', 'c']);
+    mtsGlobalThis.__AppendElement(root, node1);
+    mtsGlobalThis.__FlushElementTree();
+    expect(rootDom.querySelector('[class="a b c"]')).not.toBeNull();
+    mtsGlobalThis.__SetClasses(node1, 'c b a');
+    let class_2 = mtsGlobalThis.__GetClasses(node1);
+    mtsGlobalThis.__FlushElementTree();
+    expect(class_2.length).toBe(3);
+    expect(class_2).toStrictEqual(['c', 'b', 'a']);
+  });
 
-  //   test('__UpdateComponentID', () => {
-  //     let e1 = mtsGlobalThis.__CreateComponent(
-  //       'test_entry',
-  //       0,
-  //       'name',
-  //     );
-  //     let e2 = mtsGlobalThis.__CreateComponent(
-  //       'test_entry',
-  //       0,
-  //       'name',
-  //     );
-  //     mtsGlobalThis.__UpdateComponentID(e1, 'id2');
-  //     mtsGlobalThis.__UpdateComponentID(e2, 'id1');
-  //     expect(mtsGlobalThis.__GetComponentID(e1)).toBe('id2');
-  //     expect(mtsGlobalThis.__GetComponentID(e2)).toBe('id1');
-  //   });
+  test('__UpdateComponentID', () => {
+    let e1 = mtsGlobalThis.__CreateComponent(
+      0,
+      'id1',
+      0,
+      'test_entry',
+      'name',
+      'path',
+      {},
+    );
+    let e2 = mtsGlobalThis.__CreateComponent(
+      0,
+      'id2',
+      0,
+      'test_entry',
+      'name',
+      'path',
+      {},
+    );
+    mtsGlobalThis.__UpdateComponentID(e1, 'id2');
+    mtsGlobalThis.__UpdateComponentID(e2, 'id1');
+    expect(mtsGlobalThis.__GetComponentID(e1)).toBe('id2');
+    expect(mtsGlobalThis.__GetComponentID(e2)).toBe('id1');
+  });
 
-  //   test('__SetInlineStyles', () => {
-  //     const root = mtsGlobalThis.__CreatePage('page', 0);
-  //     let target = mtsGlobalThis.__CreateView(0);
-  //     mtsGlobalThis.__SetID(target, 'target');
-  //     mtsGlobalThis.__SetInlineStyles(target, undefined);
-  //     mtsGlobalThis.__SetInlineStyles(target, {
-  //       'margin': '10px',
-  //       'marginTop': '20px',
-  //       'marginLeft': '30px',
-  //       'marginRight': '20px',
-  //       'marginBottom': '10px',
-  //     });
-  //     mtsGlobalThis.__AppendElement(root, target);
-  //     const style = mtsGlobalThis.__GetStyle(target);
-  //     expect(style.marginTop).toBe('20px');
-  //     expect(style.marginLeft).toBe('30px');
-  //     expect(style.marginRight).toBe('20px');
-  //     expect(style.marginBottom).toBe('10px');
-  //   });
+  test('__SetInlineStyles', () => {
+    const root = mtsGlobalThis.__CreatePage('page', 0);
+    let target = mtsGlobalThis.__CreateView(0);
+    mtsGlobalThis.__SetID(target, 'target');
+    mtsGlobalThis.__SetInlineStyles(target, undefined);
+    mtsGlobalThis.__SetInlineStyles(target, {
+      'margin': '10px',
+      'marginTop': '20px',
+      'marginLeft': '30px',
+      'marginRight': '20px',
+      'marginBottom': '10px',
+    });
+    mtsGlobalThis.__AppendElement(root, target);
+    mtsGlobalThis.__FlushElementTree();
+    const targetDom = rootDom.querySelector('#target') as HTMLElement;
+    const targetStyle = targetDom.getAttribute('style');
+    expect(targetStyle).toContain('20px');
+    expect(targetStyle).toContain('30px');
+    expect(targetStyle).toContain('10px');
+  });
 
-  //   test('__GetConfig__AddConfig', () => {
-  //     let root = mtsGlobalThis.__CreatePage('page', 0);
-  //     mtsGlobalThis.__AddConfig(root, 'key1', 'value1');
-  //     mtsGlobalThis.__AddConfig(root, 'key2', 'value2');
-  //     mtsGlobalThis.__AddConfig(root, 'key3', 'value3');
-  //     let config = mtsGlobalThis.__GetConfig(root);
-  //     expect(config['key1']).toBe('value1');
-  //     expect(config['key2']).toBe('value2');
-  //     expect(config['key3']).toBe('value3');
-  //   });
+  test('__GetConfig__AddConfig', () => {
+    let root = mtsGlobalThis.__CreatePage('page', 0);
+    mtsGlobalThis.__AddConfig(root, 'key1', 'value1');
+    mtsGlobalThis.__AddConfig(root, 'key2', 'value2');
+    mtsGlobalThis.__AddConfig(root, 'key3', 'value3');
+    mtsGlobalThis.__FlushElementTree();
+    let config = mtsGlobalThis.__GetConfig(root);
+    expect(config['key1']).toBe('value1');
+    expect(config['key2']).toBe('value2');
+    expect(config['key3']).toBe('value3');
+  });
 
-  //   test('__AddInlineStyle', () => {
-  //     let root = mtsGlobalThis.__CreatePage('page', 0);
-  //     mtsGlobalThis.__AddInlineStyle(root, 26, '80px');
-  //     expect(mtsGlobalThis.__GetStyle(root).height).toBe('80px');
-  //   });
+  test('__AddInlineStyle', () => {
+    let root = mtsGlobalThis.__CreatePage('page', 0);
+    mtsGlobalThis.__AddInlineStyle(root, 26, '80px');
+    mtsGlobalThis.__FlushElementTree();
+    const rootDomElement = rootDom.firstElementChild as HTMLElement;
+    expect(rootDomElement.style.height).toBe('80px');
+  });
 
-  //   test('__AddInlineStyle_key_is_name', () => {
-  //     let root = mtsGlobalThis.__CreatePage('page', 0);
-  //     mtsGlobalThis.__AddInlineStyle(root, 'height', '80px');
-  //     expect(mtsGlobalThis.__GetStyle(root).height).toBe('80px');
-  //   });
+  test('__AddInlineStyle_key_is_name', () => {
+    let root = mtsGlobalThis.__CreatePage('page', 0);
+    mtsGlobalThis.__AddInlineStyle(root, 'height', '80px');
+    mtsGlobalThis.__FlushElementTree();
+    const rootDomElement = rootDom.firstElementChild as HTMLElement;
+    expect(rootDomElement.style.height).toBe('80px');
+  });
 
-  //   test('__AddInlineStyle_raw_string', () => {
-  //     let root = mtsGlobalThis.__CreatePage('page', 0);
-  //     mtsGlobalThis.__SetInlineStyles(root, 'height:80px');
-  //     expect(mtsGlobalThis.__GetStyle(root).height).toBe('80px');
-  //   });
+  test('__AddInlineStyle_raw_string', () => {
+    let root = mtsGlobalThis.__CreatePage('page', 0);
+    mtsGlobalThis.__SetInlineStyles(root, 'height:80px');
+    mtsGlobalThis.__FlushElementTree();
+    const rootDomElement = rootDom.firstElementChild as HTMLElement;
+    expect(rootDomElement.style.height).toBe('80px');
+  });
 
   //   test('__UpdateComponentInfo', () => {
   //     let e1 = mtsGlobalThis.__CreateComponent(

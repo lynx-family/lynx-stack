@@ -4,9 +4,8 @@ import { bench, describe } from 'vitest';
 import { Window } from 'happy-dom';
 import { createMainThreadGlobalThis } from '@lynx-js/web-mainthread-apis/src/createMainThreadGlobalThis.js';
 import {
-  MainThreadGlobalThis as MainThreadGlobalThisWasm,
-  LynxElement,
-} from '@lynx-js/web-core-wasm/dist/standard.js';
+  createMtsGlobalThis as createMainThreadGlobalThisWasm,
+} from '@lynx-js/web-core-wasm/ts/createMtsGlobalThis.js';
 // import { createCrossThreadEvent } from '@lynx-js/web-mainthread-apis/ts/utils/createCrossThreadEvent.js';
 // const cases = {
 //   'basic-performance-div-10000': await loadTemplate(
@@ -49,9 +48,12 @@ Object.assign(globalThis, {
   Document: window.Document,
   Node: window.Node,
   Element: window.Element,
+  Window: window.Window,
+  document: window.document,
+  window,
 });
 const lynxView = window.document.createElement('lynx-view');
-const shadowroot = lynxView.attachShadow({ mode: 'open' });
+const rootDom = lynxView.attachShadow({ mode: 'open' });
 // @ts-expect-error
 globalThis.requestAnimationFrame = window.requestAnimationFrame.bind(window);
 // @ts-expect-error
@@ -73,7 +75,7 @@ const mtsGlobalThisJS = createMainThreadGlobalThis({
   lynxTemplate: {},
   browserConfig: {},
   tagMap,
-  rootDom: shadowroot,
+  rootDom,
   jsContext: {},
   mtsRealm: {
     globalWindow: window,
@@ -81,14 +83,16 @@ const mtsGlobalThisJS = createMainThreadGlobalThis({
   document: window.document,
 } as any);
 
-const mtsGlobalThisWasm = new MainThreadGlobalThisWasm(
-  tagMap,
-  window.document,
-  shadowroot,
+const mtsGlobalThisWasm = createMainThreadGlobalThisWasm(
+  rootDom,
+  {
+    globalWindow: window,
+  } as any,
+  {} as any,
+  {} as any,
   true,
   true,
   true,
-  false,
   true,
 );
 
@@ -411,11 +415,9 @@ describe('get-element-unique-id', () => {
   }, { throws: true });
 
   bench('get-element-unique-id-wasm', () => {
-    if (elementWasm instanceof LynxElement) {
-      mtsGlobalThisWasm.__GetElementUniqueID_wasm_impl(
-        elementWasm,
-      );
-    }
+    mtsGlobalThisWasm.__GetElementUniqueID(
+      elementWasm,
+    );
   }, { throws: true });
 });
 
@@ -486,6 +488,31 @@ describe('set-dataset-large', () => {
     );
   }, { throws: true });
 });
+
+describe.only('set-inline-styles', () => {
+  const elementJS = mtsGlobalThisJS.__CreateView(1);
+  const elementWasm = mtsGlobalThisWasm.__CreateView(1);
+  const styles = {
+    width: '100px',
+    height: '200px',
+    backgroundColor: 'red',
+  };
+
+  bench('set-inline-styles-js', () => {
+    mtsGlobalThisJS.__SetInlineStyles(
+      elementJS,
+      styles,
+    );
+  }, { throws: true });
+
+  bench('set-inline-styles-wasm', () => {
+    mtsGlobalThisWasm.__SetInlineStyles(
+      elementWasm,
+      styles,
+    );
+  }, { throws: true });
+});
+
 // describe.skip('flush-element-tree', () => {
 //   let js_page = mtsGlobalThisJS.__CreatePage('page_1', 1, null);
 //   let js_view = mtsGlobalThisJS.__CreateView(1);

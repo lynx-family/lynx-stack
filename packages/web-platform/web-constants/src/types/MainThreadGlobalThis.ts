@@ -254,7 +254,7 @@ export type CreateElementPAPI = (
 export type CreatePagePAPI = (
   componentID: string,
   cssID: number,
-  info: Record<string, Cloneable> | null | undefined,
+  info?: Record<string, Cloneable> | null | undefined,
 ) => Element;
 
 export type CreateListPAPI = (
@@ -402,8 +402,8 @@ export interface MainThreadGlobalThis {
   __OnLifecycleEvent: (lifeCycleEvent: Cloneable) => void;
   __LoadLepusChunk: (path: string) => boolean;
   __FlushElementTree: (
-    _subTree: unknown,
-    options: FlushElementTreeOptions,
+    _subTree?: unknown,
+    options?: FlushElementTreeOptions,
   ) => void;
   _I18nResourceTranslation: (
     options: I18nResourceTranslationOptions,
