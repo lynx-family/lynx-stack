@@ -1,5 +1,11 @@
 # @lynx-js/qrcode-rsbuild-plugin
 
+## 0.4.3
+
+### Patch Changes
+
+- fix: print out the output chunk urls ([#1921](https://github.com/lynx-family/lynx-stack/pull/1921))
+
 ## 0.4.2
 
 ### Patch Changes

@@ -1,5 +1,15 @@
 # @lynx-js/web-core
 
+## 0.18.3
+
+### Patch Changes
+
+- Updated dependencies [[`fece7d0`](https://github.com/lynx-family/lynx-stack/commit/fece7d0a92fa76948488373757a27dff52a90437), [`e1db63f`](https://github.com/lynx-family/lynx-stack/commit/e1db63fac8a351f98711b9b47acbb871f7a23701), [`ebc1a60`](https://github.com/lynx-family/lynx-stack/commit/ebc1a606318e9809e8a07457e18536b59be12a18)]:
+  - @lynx-js/web-mainthread-apis@0.18.3
+  - @lynx-js/web-worker-runtime@0.18.3
+  - @lynx-js/web-constants@0.18.3
+  - @lynx-js/web-worker-rpc@0.18.3
+
 ## 0.18.2
 
 ### Patch Changes

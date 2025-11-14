@@ -1,5 +1,11 @@
 # @lynx-js/web-explorer
 
+## 0.0.12
+
+### Patch Changes
+
+- feat: update @lynx-js/web-elements to 0.8.10 ([#1914](https://github.com/lynx-family/lynx-stack/pull/1914))
+
 ## 0.0.11
 
 ### Patch Changes
