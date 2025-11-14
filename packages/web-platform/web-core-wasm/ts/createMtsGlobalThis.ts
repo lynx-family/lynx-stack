@@ -2,7 +2,7 @@ import {
   LynxElement,
   MainThreadGlobalThis,
   TemplateManager,
-} from '../dist/debug.js';
+} from '../dist/standard.js';
 import type { MainThreadGlobalThis as IMainThreadGlobalThis } from '@lynx-js/web-constants';
 
 export const templateManager = new TemplateManager();

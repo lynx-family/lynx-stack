@@ -8,7 +8,7 @@
     "directory": "packages/web-platform/web-core-wasm"
   },
   "license": "Apache-2.0",
-  "sideEffects": false,
+  "sideEffects": true,
   "type": "module",
   "main": "index.js",
   "typings": "index.d.ts",

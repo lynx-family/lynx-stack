@@ -20,4 +20,4 @@ export async function initWasm() {
     );
   }
 }
-// await initWasm();
+await initWasm();
