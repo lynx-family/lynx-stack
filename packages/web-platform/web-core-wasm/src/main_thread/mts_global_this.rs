@@ -1,5 +1,5 @@
 use super::{
-  element_apis::ElementTemplatesInstance,
+  // element_apis::ElementTemplatesInstance,
   style::StyleManager,
   LynxElement, // event::event_delegation::EventSystem,
 };
@@ -27,7 +27,7 @@ pub struct MainThreadGlobalThis {
   pub(super) style_manager: StyleManager,
   pub(super) enabled_events: HashSet<String>,
   // pub(super) template: DecodedTemplateImpl,
-  pub(super) element_templates_instances: HashMap<String, ElementTemplatesInstance>,
+  // pub(super) element_templates_instances: HashMap<String, ElementTemplatesInstance>,
   pub(super) mts_realm: JSRealm,
   pub(super) mts_binding: MainThreadJSBinding,
   pub(super) bts_rpc: BackgroundThreadRPC,
@@ -71,7 +71,6 @@ impl MainThreadGlobalThis {
     config_default_overflow_visible: bool,
     // tag_name_to_html_tag_map: wasm_bindgen::JsValue,
   ) -> MainThreadGlobalThis {
-    let unique_id_counter = 1;
     // let tag_name_to_html_tag_map: HashMap<String, String> =
     //   serde_wasm_bindgen::from_value(tag_name_to_html_tag_map).unwrap();
     let style_manager = StyleManager::new(
@@ -85,8 +84,8 @@ impl MainThreadGlobalThis {
       mts_realm,
       mts_binding,
       bts_rpc,
-      unique_id_counter,
-      element_templates_instances: HashMap::new(),
+      unique_id_counter: 1,
+      // element_templates_instances: HashMap::new(),
       unique_id_to_element_map: HashMap::new(),
       component_id_to_unique_id_map: HashMap::new(),
       enabled_events: HashSet::new(),
