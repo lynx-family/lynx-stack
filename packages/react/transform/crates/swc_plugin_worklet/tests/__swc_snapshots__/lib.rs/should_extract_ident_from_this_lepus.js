@@ -5,7 +5,9 @@ let onTapLepus = {
 };
 loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "a123:test:1", function(event: ReactLynx.Worklet.ITouchEvent) {
     const onTapLepus = lynxWorkletImpl._workletMap["a123:test:1"].bind(this);
-    "main thread";
-    let a = 1;
-    this.a;
+    {
+        "main thread";
+        let a = 1;
+        this.a;
+    }
 });

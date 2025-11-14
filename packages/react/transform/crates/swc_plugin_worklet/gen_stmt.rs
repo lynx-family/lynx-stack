@@ -239,15 +239,32 @@ impl StmtGen {
       ));
     }
 
-    // let { y1, y2, y3, y4, y8, y5, y6, y7 } = this["_c"];
-    if !extracted_idents.is_empty() {
-      stmts.push(StmtGen::gen_destructure_stmt(
+    // Generate destructuring with temporary variable names to avoid conflicts
+    // let { __y1 = y1, __y2 = y2 } = this["_c"];
+    // let y1 = __y1; let y2 = __y2; (these reassignment stmts go into the original function body)
+    let (destructure_stmt, reassignment_stmts) = if !extracted_idents.is_empty() {
+      StmtGen::gen_destructure_with_reassignment(
         Ident::new("_c".into(), DUMMY_SP, Default::default()),
         extracted_idents,
-      ));
+      )
+    } else {
+      (None, vec![])
+    };
+
+    if let Some(stmt) = destructure_stmt {
+      stmts.push(stmt);
     }
 
-    stmts.append(&mut function.body.unwrap().stmts);
+    // Wrap original function body in a block, including reassignment statements
+    let mut original_stmts = function.body.unwrap().stmts;
+    let mut function_body_stmts = reassignment_stmts;
+    function_body_stmts.append(&mut original_stmts);
+
+    stmts.push(Stmt::Block(BlockStmt {
+      ctxt: Default::default(),
+      span: DUMMY_SP,
+      stmts: function_body_stmts,
+    }));
 
     Function {
       body: BlockStmt {
@@ -260,6 +277,65 @@ impl StmtGen {
     }
   }
 
+  // Generate destructuring statement with temporary variable names and reassignment statements
+  // Returns: (destructuring_stmt, reassignment_stmts)
+  // Example: for extracted_idents [y1, y2], returns:
+  // - let { __y1 = y1, __y2 = y2 } = this["_c"]
+  // - [let y1 = __y1;, let y2 = __y2;]
+  fn gen_destructure_with_reassignment(
+    obj_ident: Ident,
+    extracted_idents: Vec<Ident>,
+  ) -> (Option<Stmt>, Vec<Stmt>) {
+    if extracted_idents.is_empty() {
+      return (None, vec![]);
+    }
+
+    let mut s = HashSet::new();
+    let mut temp_decls = vec![];
+    let mut reassign_stmts = vec![];
+
+    // Generate temporary variable names and reassignment statements
+    for ident in &extracted_idents {
+      if !s.contains(&ident.sym) {
+        s.insert(ident.sym.clone());
+        let temp_name = format!("__{}", ident.sym);
+        let temp_ident = Ident::new(temp_name.clone().into(), DUMMY_SP, Default::default());
+
+        // Add to destructuring pattern with temporary name
+        temp_decls.push(ObjectPatProp::Assign(AssignPatProp {
+          span: DUMMY_SP,
+          key: BindingIdent {
+            id: temp_ident.clone(),
+            type_ann: None,
+          },
+          value: Some(Box::new(Expr::Ident(ident.clone()))),
+        }));
+
+        // Add reassignment statement
+        reassign_stmts.push(quote!("let $original = $temp" as Stmt,
+          original: Ident = ident.clone(),
+          temp: Ident = temp_ident,
+        ));
+      }
+    }
+
+    // Create the destructuring statement with temporary names
+    let destructure_stmt = quote!("let $pat = this[$obj_ident]" as Stmt,
+      obj_ident: Expr = Expr::Lit(Lit::Str(obj_ident.sym.into())),
+      pat: Pat = Pat::Object(ObjectPat {
+        span: DUMMY_SP,
+        props: temp_decls,
+        type_ann: None,
+        optional: false,
+      })
+    );
+
+    (Some(destructure_stmt), reassign_stmts)
+  }
+
+  // Generate simple destructuring statement (without temporary variables)
+  // Used for destructuring JS function references from this._jsFn
+  // Example: let { _jsFn1, _jsFn2 } = this["_jsFn"]
   fn gen_destructure_stmt(obj_ident: Ident, extracted_idents: Vec<Ident>) -> Stmt {
     let mut s = HashSet::new();
     quote!("let $pat = this[$obj_ident]" as Stmt,
@@ -276,7 +352,7 @@ impl StmtGen {
                 Some(ObjectPatProp::Assign(AssignPatProp {
                   span: DUMMY_SP,
                   key: BindingIdent{ id: ident.clone(), type_ann: None },
-                  value: None,
+                  value: Some(Box::new(Expr::Ident(ident.clone()))),
                 }))
               }
             })

@@ -10,8 +10,11 @@ class App extends Component {
     };
 }
 loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "a77b:test:1", function(event) {
-    let { a } = this["_c"];
-    "main thread";
-    console.log(a);
-    console.log(this.a);
+    let { __a = a } = this["_c"];
+    {
+        let a = __a;
+        "main thread";
+        console.log(a);
+        console.log(this.a);
+    }
 });

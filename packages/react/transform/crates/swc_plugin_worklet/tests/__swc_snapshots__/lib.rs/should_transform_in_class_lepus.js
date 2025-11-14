@@ -8,6 +8,8 @@ class App extends Component {
 }
 loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "a77b:test:1", function(event) {
     this["onTapLepus"] = lynxWorkletImpl._workletMap["a77b:test:1"].bind(this);
-    "main thread";
-    console.log(this.a);
+    {
+        "main thread";
+        console.log(this.a);
+    }
 });

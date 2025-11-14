@@ -8,7 +8,11 @@ let X = {
     _wkltId: "a77b:test:1"
 };
 loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "a77b:test:1", function(event) {
-    let { y1, y2 } = this["_c"];
-    "main thread";
-    console.log(y1[y2 + 1]);
+    let { __y1 = y1, __y2 = y2 } = this["_c"];
+    {
+        let y1 = __y1;
+        let y2 = __y2;
+        "main thread";
+        console.log(y1[y2 + 1]);
+    }
 });

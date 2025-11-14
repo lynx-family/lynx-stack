@@ -5,8 +5,10 @@ let enableScroll = {
 };
 loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "a123:test:1", function(enable: boolean) {
     const enableScroll = lynxWorkletImpl._workletMap["a123:test:1"].bind(this);
-    'main thread';
-    function x() {
-        this.a;
+    {
+        'main thread';
+        function x() {
+            this.a;
+        }
     }
 });
