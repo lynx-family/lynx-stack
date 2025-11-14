@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fmt::format, rc::Rc};
+use std::{collections::HashMap, rc::Rc};
 
 use super::{
   flatten_style_info, DslType, ElementTemplate, FlattenedStyleInfo, LynxRawTemplate, PageConfig,
