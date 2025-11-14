@@ -8,7 +8,10 @@ let onTapLepus = {
 };
 loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("ui", "a123:test:1", function(event: ReactLynx.Worklet.ITouchEvent) {
     const onTapLepus = lynxWorkletImpl._workletMap["a123:test:1"].bind(this);
-    let { a } = this["_c"];
-    "use worklet";
-    a;
+    let { __a = a } = this["_c"];
+    {
+        let a = __a;
+        "use worklet";
+        a;
+    }
 });

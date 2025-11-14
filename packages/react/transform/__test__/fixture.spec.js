@@ -1428,9 +1428,12 @@ describe('worklet', () => {
           };
           loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "da39:75a1b:1", function(event) {
               const getCurrentDelta = lynxWorkletImpl._workletMap["da39:75a1b:1"].bind(this);
-              let { foo } = this["_c"];
-              "main thread";
-              return foo.bar.baz;
+              let { __foo = foo } = this["_c"];
+              {
+                  let foo = __foo;
+                  "main thread";
+                  return foo.bar.baz;
+              }
           });
           "
         `);
@@ -1464,9 +1467,12 @@ describe('worklet', () => {
           };
           loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "da39:75a1b:1", function(event) {
               const getCurrentDelta = lynxWorkletImpl._workletMap["da39:75a1b:1"].bind(this);
-              let { foo } = this["_c"];
-              "main thread";
-              return foo.bar.baz;
+              let { __foo = foo } = this["_c"];
+              {
+                  let foo = __foo;
+                  "main thread";
+                  return foo.bar.baz;
+              }
           });
           "
         `);
@@ -1529,9 +1535,13 @@ export function foo(event) {
       };
       loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "da39:64631:1", function(event) {
           const foo = lynxWorkletImpl._workletMap["da39:64631:1"].bind(this);
-          let { bar, qux } = this["_c"];
-          "main thread";
-          return bar.baz['qux'] || bar.qux['baz'] || qux.bar.baz;
+          let { __bar = bar, __qux = qux } = this["_c"];
+          {
+              let bar = __bar;
+              let qux = __qux;
+              "main thread";
+              return bar.baz['qux'] || bar.qux['baz'] || qux.bar.baz;
+          }
       });
       "
     `);
@@ -1594,9 +1604,12 @@ console.log(bar)
       });
       loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "da39:80ef4:2", function() {
           const bar = lynxWorkletImpl._workletMap["da39:80ef4:2"].bind(this);
-          let { foo } = this["_c"];
-          "main thread";
-          foo();
+          let { __foo = foo } = this["_c"];
+          {
+              let foo = __foo;
+              "main thread";
+              foo();
+          }
       });
       "
     `);
@@ -1642,10 +1655,15 @@ function getCurrentDelta(event) {
       var loadWorkletRuntime = __loadWorkletRuntime;
       loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "da39:059d0:1", function(event) {
           lynxWorkletImpl._workletMap["da39:059d0:1"].bind(this);
-          let { foo, a, b } = this["_c"];
-          "main thread";
-          if (foo(a)) foo(b);
-          return null;
+          let { __foo = foo, __a = a, __b = b } = this["_c"];
+          {
+              let foo = __foo;
+              let a = __a;
+              let b = __b;
+              "main thread";
+              if (foo(a)) foo(b);
+              return null;
+          }
       });
       "
     `);
