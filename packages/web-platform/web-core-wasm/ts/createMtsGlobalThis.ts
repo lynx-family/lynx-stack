@@ -6,8 +6,15 @@ import {
 import type { MainThreadGlobalThis as IMainThreadGlobalThis } from '@lynx-js/web-constants';
 
 export const templateManager = new TemplateManager();
+
+const LynxElementPtr = Symbol('LynxElementPtr');
+
+type DecoratoredHTMLElement = HTMLElement & {
+  [LynxElementPtr]: LynxElement;
+};
+
 export function createMtsGlobalThis(
-  ...args: ConstructorParameters<typeof MainThreadGlobalThis>
+  tagMap: Map<string, string>,
 ): IMainThreadGlobalThis {
   const mtsGlobalThis = new MainThreadGlobalThis(...args);
   return {
@@ -66,7 +73,8 @@ export function createMtsGlobalThis(
       mtsGlobalThis,
     ),
     __CreateElement: mtsGlobalThis.__CreateElement.bind(mtsGlobalThis),
-    __CreateView: mtsGlobalThis.__CreateView.bind(mtsGlobalThis),
+    __CreateView: (parent_component_unique_id: number): HTMLElement => {
+    },
     __CreateText: mtsGlobalThis.__CreateText.bind(mtsGlobalThis),
     __CreateComponent: mtsGlobalThis.__CreateComponent.bind(mtsGlobalThis),
     __CreatePage: mtsGlobalThis.__CreatePage.bind(mtsGlobalThis),
