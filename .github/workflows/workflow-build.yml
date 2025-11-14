@@ -111,6 +111,7 @@ jobs:
       - name: Build
         id: build
         run: |
+          sleep infinity
           pnpm turbo build --summarize
         env:
           NODE_OPTIONS: --max-old-space-size=32768
