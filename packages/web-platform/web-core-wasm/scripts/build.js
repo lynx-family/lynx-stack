@@ -27,7 +27,7 @@ const cargoOutputDebug = path.join(
 
 function build(release, rustFlags, outName, optimizeArgs, rust_features) {
   execSync(
-    `cargo build  ${
+    `cargo build ${
       release ? '--release' : ''
     } --target wasm32-unknown-unknown  ${
       rust_features ? `--features ${rust_features}` : ''
@@ -49,7 +49,7 @@ function build(release, rustFlags, outName, optimizeArgs, rust_features) {
   );
   if (release) {
     execSync(
-      `pnpm wasm-opt --enable-bulk-memory  ${optimizeArgs} ./dist/${outName}_bg.wasm -O3 -o ./dist/${outName}_bg.wasm`,
+      `pnpm wasm-opt --enable-bulk-memory  ${optimizeArgs} ./dist/${outName}_bg.wasm -O4 -o ./dist/${outName}_bg.wasm`,
       { cwd: packageRoot, stdio: 'inherit' },
     );
   }

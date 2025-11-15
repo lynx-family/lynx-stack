@@ -3,7 +3,12 @@ import {
   MainThreadGlobalThis,
   TemplateManager,
 } from '../dist/standard.js';
-import type { MainThreadGlobalThis as IMainThreadGlobalThis } from '@lynx-js/web-constants';
+import {
+  lynxEntryNameAttribute,
+  type ComponentAtIndexCallback,
+  type EnqueueComponentCallback,
+  type MainThreadGlobalThis as IMainThreadGlobalThis,
+} from '@lynx-js/web-constants';
 
 export const templateManager = new TemplateManager();
 
@@ -11,6 +16,8 @@ const LynxElementPtr = Symbol('LynxElementPtr');
 
 type DecoratedHTMLElement = HTMLElement & {
   [LynxElementPtr]: LynxElement;
+  componentAtIndex?: ComponentAtIndexCallback;
+  enqueueComponent?: EnqueueComponentCallback;
 };
 
 export function createMtsGlobalThis(
@@ -34,22 +41,111 @@ export function createMtsGlobalThis(
       // cssId,
       // componentId
     );
-    dom.LynxElementPtr = lynxElement;
+    dom[LynxElementPtr] = lynxElement;
     return dom;
   }
-  const dataMap = new WeakMap<HTMLElement, LynxElement>();
+  const elementMap = new Map<HTMLElement, LynxElement>();
   // mtsGlobalThis.__CreateView = (parent_component_unique_id) => createElementCommon('x-view', parent_component_unique_id);
+  let page: DecoratedHTMLElement | null = null;
   return {
-    // __CreateView: (parent_component_unique_id) => createElementCommon('x-view', parent_component_unique_id),
-    __CreateView(parentComponentUniqueId: number): HTMLElement {
+    __CreateView(parentComponentUniqueId: number) {
       const dom = document.createElement('x-view') as DecoratedHTMLElement;
       const lynxElement = new LynxElement(
         wasmContext,
         parentComponentUniqueId,
         dom,
       );
-      dataMap.set(dom, lynxElement);
-      // dom[LynxElementPtr] = lynxElement;
+      elementMap.set(dom, lynxElement);
+      return dom;
+    },
+    __CreateText(parentComponentUniqueId) {
+      const dom = document.createElement('x-text') as DecoratedHTMLElement;
+      const lynxElement = new LynxElement(
+        wasmContext,
+        parentComponentUniqueId,
+        dom,
+      );
+      elementMap.set(dom, lynxElement);
+      return dom;
+    },
+    __CreateImage(parentComponentUniqueId) {
+      const dom = document.createElement('x-image') as DecoratedHTMLElement;
+      const lynxElement = new LynxElement(
+        wasmContext,
+        parentComponentUniqueId,
+        dom,
+      );
+      elementMap.set(dom, lynxElement);
+      return dom;
+    },
+    __CreateRawText(text) {
+      const dom = document.createElement('raw-text') as DecoratedHTMLElement;
+      dom.setAttribute('text', text);
+      const lynxElement = new LynxElement(
+        wasmContext,
+        -1,
+        dom,
+      );
+      elementMap.set(dom, lynxElement);
+      return dom;
+    },
+    __CreateScrollView(parentComponentUniqueId) {
+      const dom = document.createElement('scroll-view') as DecoratedHTMLElement;
+      const lynxElement = new LynxElement(
+        wasmContext,
+        parentComponentUniqueId,
+        dom,
+      );
+      elementMap.set(dom, lynxElement);
+      return dom;
+    },
+    __CreateComponent(
+      componentParentUniqueID,
+      componentID,
+      cssID,
+      entryName,
+      name,
+    ) {
+      const dom = document.createElement('x-view') as DecoratedHTMLElement;
+      const lynxElement = new LynxElement(
+        wasmContext,
+        componentParentUniqueID,
+        dom,
+        cssID,
+        componentID,
+      );
+      if (entryName) {
+        dom.setAttribute(lynxEntryNameAttribute, entryName);
+      }
+      if (name) {
+        dom.setAttribute('name', name);
+      }
+
+      elementMap.set(dom, lynxElement);
+      return dom;
+    },
+    __CreateWrapperElement(parentComponentUniqueId) {
+      const dom = document.createElement(
+        'lynx-wrapper',
+      ) as DecoratedHTMLElement;
+      const lynxElement = new LynxElement(
+        wasmContext,
+        parentComponentUniqueId,
+        dom,
+      );
+      elementMap.set(dom, lynxElement);
+      return dom;
+    },
+    __CreateList(parentComponentUniqueId, componentAtIndex, enqueueComponent) {
+      const dom = document.createElement('x-list') as DecoratedHTMLElement;
+      dom.componentAtIndex = componentAtIndex;
+      dom.enqueueComponent = enqueueComponent;
+      const lynxElement = new LynxElement(
+        wasmContext,
+        parentComponentUniqueId,
+        dom,
+      );
+      elementMap.set(dom, lynxElement);
       return dom;
     },
   };
@@ -109,18 +205,6 @@ export function createMtsGlobalThis(
   //   mtsGlobalThis,
   // ),
   // __CreateElement: mtsGlobalThis.__CreateElement.bind(mtsGlobalThis),
-  // __CreateView: (parent_component_unique_id) => {
-  // },
-  //   __CreateText: mtsGlobalThis.__CreateText.bind(mtsGlobalThis),
-  //   __CreateComponent: mtsGlobalThis.__CreateComponent.bind(mtsGlobalThis),
-  //   __CreatePage: mtsGlobalThis.__CreatePage.bind(mtsGlobalThis),
-  //   __CreateRawText: mtsGlobalThis.__CreateRawText.bind(mtsGlobalThis),
-  //   __CreateImage: mtsGlobalThis.__CreateImage.bind(mtsGlobalThis),
-  //   __CreateScrollView: mtsGlobalThis.__CreateScrollView.bind(mtsGlobalThis),
-  //   __CreateWrapperElement: mtsGlobalThis.__CreateWrapperElement.bind(
-  //     mtsGlobalThis,
-  //   ),
-  //   __CreateList: mtsGlobalThis.__CreateList.bind(mtsGlobalThis),
   //   __SetAttribute: mtsGlobalThis.__SetAttribute.bind(mtsGlobalThis),
   //   __SwapElement: mtsGlobalThis.__SwapElement.bind(mtsGlobalThis),
   //   __UpdateListCallbacks: mtsGlobalThis.__UpdateListCallbacks.bind(
