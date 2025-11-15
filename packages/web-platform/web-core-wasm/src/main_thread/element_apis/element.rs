@@ -15,17 +15,15 @@ struct EventHandler {
 }
 
 pub struct LynxElementData {
-  unique_id: i32,
-  css_id: i32,
-  parent_component_unique_id: i32,
-  part_id: Option<String>,
-  component_id: Option<String>,
-  dataset: Option<js_sys::Object>,
-  component_config: Option<js_sys::Object>,
-  component_at_index: Option<JsValue>,
-  enqueue_component: Option<JsValue>,
-  event_handlers_map: Option<HashMap<String, EventHandler>>,
-  dom_ref: web_sys::HtmlElement,
+  pub unique_id: i32,
+  pub css_id: i32,
+  pub parent_component_unique_id: i32,
+  pub part_id: Option<String>,
+  pub component_id: Option<String>,
+  // dataset: Option<js_sys::Object>,
+  // component_config: Option<js_sys::Object>,
+  // event_handlers_map: Option<HashMap<String, EventHandler>>,
+  pub dom_ref: web_sys::HtmlElement,
 }
 
 #[derive(Clone, TryFromJsValue)]
@@ -33,7 +31,7 @@ pub struct LynxElementData {
 pub struct LynxElement {
   data: Rc<RefCell<LynxElementData>>,
 }
-
+/*
 #[wasm_bindgen]
 impl LynxElement {
   #[wasm_bindgen(constructor)]
@@ -96,7 +94,7 @@ impl LynxElement {
     *element
   }
 }
-
+*/
 impl LynxElement {
   //   pub(crate) fn create_dummy_element(
   //     mts_global_this: &MainThreadGlobalThis,

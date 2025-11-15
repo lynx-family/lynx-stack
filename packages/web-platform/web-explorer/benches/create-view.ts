@@ -53,69 +53,69 @@ bench
   })
   .add('create-view-js', () => {
     mtsGlobalThisJS.__CreateView(1);
-  })
-  .add('create-text-wasm', () => {
-    mtsGlobalThisWasm.__CreateText(1);
-  })
-  .add('create-text-js', () => {
-    mtsGlobalThisJS.__CreateText(1);
-  })
-  .add('create-raw-text-wasm', () => {
-    mtsGlobalThisWasm.__CreateRawText('hello');
-  })
-  .add('create-raw-text-js', () => {
-    mtsGlobalThisJS.__CreateRawText('hello');
-  })
-  .add('create-scroll-view-wasm', () => {
-    mtsGlobalThisWasm.__CreateScrollView(1);
-  })
-  .add('create-scroll-view-js', () => {
-    mtsGlobalThisJS.__CreateScrollView(1);
-  })
-  .add('create-component-wasm', () => {
-    mtsGlobalThisWasm.__CreateComponent(
-      0,
-      'comp_2',
-      0,
-      'entryName',
-      'name',
-      'path',
-      {},
-      {},
-    );
-  })
-  .add('create-component-js', () => {
-    mtsGlobalThisJS.__CreateComponent(
-      0,
-      'comp_1',
-      0,
-      'entryName',
-      'name',
-      'path',
-      {},
-      {},
-    );
-  })
-  .add('create-list-wasm', () => {
-    mtsGlobalThisWasm.__CreateList(
-      1,
-      () => null,
-      () => {},
-    );
-  })
-  .add('create-list-js', () => {
-    mtsGlobalThisJS.__CreateList(
-      1,
-      () => null,
-      () => {},
-    );
-  })
-  .add('create-page-wasm', () => {
-    mtsGlobalThisWasm.__CreatePage('page_2', 0, null);
-  })
-  .add('create-page-js', () => {
-    mtsGlobalThisJS.__CreatePage('page_1', 0, null);
   });
+// .add('create-text-wasm', () => {
+//   mtsGlobalThisWasm.__CreateText(1);
+// })
+// .add('create-text-js', () => {
+//   mtsGlobalThisJS.__CreateText(1);
+// })
+// .add('create-raw-text-wasm', () => {
+//   mtsGlobalThisWasm.__CreateRawText('hello');
+// })
+// .add('create-raw-text-js', () => {
+//   mtsGlobalThisJS.__CreateRawText('hello');
+// })
+// .add('create-scroll-view-wasm', () => {
+//   mtsGlobalThisWasm.__CreateScrollView(1);
+// })
+// .add('create-scroll-view-js', () => {
+//   mtsGlobalThisJS.__CreateScrollView(1);
+// })
+// .add('create-component-wasm', () => {
+//   mtsGlobalThisWasm.__CreateComponent(
+//     0,
+//     'comp_2',
+//     0,
+//     'entryName',
+//     'name',
+//     'path',
+//     {},
+//     {},
+//   );
+// })
+// .add('create-component-js', () => {
+//   mtsGlobalThisJS.__CreateComponent(
+//     0,
+//     'comp_1',
+//     0,
+//     'entryName',
+//     'name',
+//     'path',
+//     {},
+//     {},
+//   );
+// })
+// .add('create-list-wasm', () => {
+//   mtsGlobalThisWasm.__CreateList(
+//     1,
+//     () => null,
+//     () => {},
+//   );
+// })
+// .add('create-list-js', () => {
+//   mtsGlobalThisJS.__CreateList(
+//     1,
+//     () => null,
+//     () => {},
+//   );
+// })
+// .add('create-page-wasm', () => {
+//   mtsGlobalThisWasm.__CreatePage('page_2', 0, null);
+// })
+// .add('create-page-js', () => {
+//   mtsGlobalThisJS.__CreatePage('page_1', 0, null);
+// });
 
 // const elementJS = mtsGlobalThisJS.__CreateView(1);
 // const elementWasm = mtsGlobalThisWasm.__CreateView(1);

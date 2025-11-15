@@ -1,10 +1,11 @@
 import {
-  LynxElement,
+  // LynxElement,
   MainThreadGlobalThis,
   TemplateManager,
 } from '../dist/standard.js';
 import {
   lynxEntryNameAttribute,
+  lynxUniqueIdAttribute,
   type ComponentAtIndexCallback,
   type EnqueueComponentCallback,
   type MainThreadGlobalThis as IMainThreadGlobalThis,
@@ -15,101 +16,88 @@ export const templateManager = new TemplateManager();
 const LynxElementPtr = Symbol('LynxElementPtr');
 
 type DecoratedHTMLElement = HTMLElement & {
-  [LynxElementPtr]: LynxElement;
+  [LynxElementPtr]: number;
   componentAtIndex?: ComponentAtIndexCallback;
   enqueueComponent?: EnqueueComponentCallback;
 };
 
 export function createMtsGlobalThis(
-  ...args: ConstructorParameters<typeof MainThreadGlobalThis>
+  root_node: Node,
+  mts_realm: any,
+  mts_binding: any,
+  bts_rpc: any,
+  config_enable_css_selector: boolean,
+  config_enable_remove_css_scope: boolean,
+  config_default_display_linear: boolean,
+  config_default_overflow_visible: boolean,
 ): IMainThreadGlobalThis {
   // let uniqueIdCounter = 1;
-  const wasmContext = new MainThreadGlobalThis(...args);
+  const wasmContext = new MainThreadGlobalThis(
+    root_node,
+    mts_realm,
+    mts_binding,
+    bts_rpc,
+    config_enable_css_selector,
+    config_enable_remove_css_scope,
+    config_default_display_linear,
+    config_default_overflow_visible,
+  );
   const mtsGlobalThis = Object.create(null) as IMainThreadGlobalThis;
-  function createElementCommon(
-    tag: string,
-    parentComponentUniqueId: number,
-    cssId?: number,
-    componentId?: string,
-  ): HTMLElement {
-    // const uniqueId = uniqueIdCounter++;
-    const dom = document.createElement(tag) as DecoratedHTMLElement;
-    const lynxElement = new LynxElement(
-      wasmContext,
-      parentComponentUniqueId,
-      dom,
-      // cssId,
-      // componentId
-    );
-    dom[LynxElementPtr] = lynxElement;
-    return dom;
-  }
-  const elementMap = new Map<HTMLElement, LynxElement>();
   // mtsGlobalThis.__CreateView = (parent_component_unique_id) => createElementCommon('x-view', parent_component_unique_id);
   let page: DecoratedHTMLElement | null = null;
   return {
     __CreateView(parentComponentUniqueId: number) {
       const dom = document.createElement('x-view') as DecoratedHTMLElement;
-      const lynxElement = new LynxElement(
-        wasmContext,
+      dom[LynxElementPtr] = wasmContext.__CreateElementCommon(
         parentComponentUniqueId,
         dom,
       );
-      elementMap.set(dom, lynxElement);
+      if (!config_enable_css_selector) {
+        dom.setAttribute(lynxUniqueIdAttribute, dom[LynxElementPtr].toString());
+      }
       return dom;
     },
     __CreateText(parentComponentUniqueId) {
       const dom = document.createElement('x-text') as DecoratedHTMLElement;
-      const lynxElement = new LynxElement(
-        wasmContext,
+      dom[LynxElementPtr] = wasmContext.__CreateElementCommon(
         parentComponentUniqueId,
         dom,
       );
-      elementMap.set(dom, lynxElement);
       return dom;
     },
     __CreateImage(parentComponentUniqueId) {
       const dom = document.createElement('x-image') as DecoratedHTMLElement;
-      const lynxElement = new LynxElement(
-        wasmContext,
+      dom[LynxElementPtr] = wasmContext.__CreateElementCommon(
         parentComponentUniqueId,
         dom,
       );
-      elementMap.set(dom, lynxElement);
       return dom;
     },
     __CreateRawText(text) {
       const dom = document.createElement('raw-text') as DecoratedHTMLElement;
       dom.setAttribute('text', text);
-      const lynxElement = new LynxElement(
-        wasmContext,
-        -1,
-        dom,
-      );
-      elementMap.set(dom, lynxElement);
+      dom[LynxElementPtr] = wasmContext.__CreateElementCommon(-1, dom);
       return dom;
     },
     __CreateScrollView(parentComponentUniqueId) {
       const dom = document.createElement('scroll-view') as DecoratedHTMLElement;
-      const lynxElement = new LynxElement(
-        wasmContext,
+
+      dom[LynxElementPtr] = wasmContext.__CreateElementCommon(
         parentComponentUniqueId,
         dom,
       );
-      elementMap.set(dom, lynxElement);
       return dom;
     },
     __CreateComponent(
-      componentParentUniqueID,
+      parentComponentUniqueId,
       componentID,
       cssID,
       entryName,
       name,
     ) {
       const dom = document.createElement('x-view') as DecoratedHTMLElement;
-      const lynxElement = new LynxElement(
-        wasmContext,
-        componentParentUniqueID,
+      dom[LynxElementPtr] = wasmContext.__CreateElementCommon(
+        parentComponentUniqueId,
         dom,
         cssID,
         componentID,
@@ -121,31 +109,26 @@ export function createMtsGlobalThis(
         dom.setAttribute('name', name);
       }
 
-      elementMap.set(dom, lynxElement);
       return dom;
     },
     __CreateWrapperElement(parentComponentUniqueId) {
       const dom = document.createElement(
         'lynx-wrapper',
       ) as DecoratedHTMLElement;
-      const lynxElement = new LynxElement(
-        wasmContext,
+      dom[LynxElementPtr] = wasmContext.__CreateElementCommon(
         parentComponentUniqueId,
         dom,
       );
-      elementMap.set(dom, lynxElement);
       return dom;
     },
     __CreateList(parentComponentUniqueId, componentAtIndex, enqueueComponent) {
       const dom = document.createElement('x-list') as DecoratedHTMLElement;
       dom.componentAtIndex = componentAtIndex;
       dom.enqueueComponent = enqueueComponent;
-      const lynxElement = new LynxElement(
-        wasmContext,
+      dom[LynxElementPtr] = wasmContext.__CreateElementCommon(
         parentComponentUniqueId,
         dom,
       );
-      elementMap.set(dom, lynxElement);
       return dom;
     },
   };
