@@ -138,9 +138,9 @@ impl MainThreadGlobalThis {
     */
     self.unique_id_counter += 1;
     let unique_id = self.unique_id_counter;
-    // if !self.config_enable_css_selector {
-    //   let _ = dom.set_attribute(constants::LYNX_UNIQUE_ID_ATTRIBUTE, &unique_id.to_string());
-    // }
+    if !self.config_enable_css_selector {
+      let _ = dom.set_attribute(constants::LYNX_UNIQUE_ID_ATTRIBUTE, &unique_id.to_string());
+    }
     self.unique_id_to_element_map.insert(
       unique_id,
       Rc::new(RefCell::new(Box::new(LynxElementData {

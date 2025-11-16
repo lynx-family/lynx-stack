@@ -4,12 +4,20 @@ import {
   TemplateManager,
 } from '../dist/standard.js';
 import {
+  lynxDefaultDisplayLinearAttribute,
   lynxEntryNameAttribute,
   lynxUniqueIdAttribute,
   type ComponentAtIndexCallback,
   type EnqueueComponentCallback,
   type MainThreadGlobalThis as IMainThreadGlobalThis,
 } from '@lynx-js/web-constants';
+import {
+  __AppendElement,
+  __ElementIsEqual,
+  __FirstElement,
+  __GetChildren,
+  __GetParent,
+} from './pureElementPAPIs.js';
 
 export const templateManager = new TemplateManager();
 
@@ -131,6 +139,29 @@ export function createMtsGlobalThis(
       );
       return dom;
     },
+    __CreatePage(componentID, cssID) {
+      if (page) return page;
+      const dom = document.createElement(
+        'div',
+      ) as HTMLElement as DecoratedHTMLElement;
+      dom[LynxElementPtr] = wasmContext.__CreateElementCommon(
+        0,
+        dom,
+        cssID,
+        componentID,
+      );
+      if (config_default_overflow_visible) {
+        dom.setAttribute(lynxDefaultDisplayLinearAttribute, 'true');
+      }
+      if (!config_default_display_linear) {
+        dom.setAttribute(lynxDefaultDisplayLinearAttribute, 'false');
+      }
+      page = dom;
+      return dom;
+    },
+    __AppendElement,
+    __ElementIsEqual,
+    __FirstElement,
   };
   // return {
   // __ElementFromBinary: mtsGlobalThis.__ElementFromBinary.bind(

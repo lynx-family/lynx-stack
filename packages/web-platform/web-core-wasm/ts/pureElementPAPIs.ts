@@ -3,12 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import {
-  lynxEntryNameAttribute,
   lynxTagAttribute,
-  type AddClassPAPI,
-  type AddConfigPAPI,
-  type AddDatasetPAPI,
-  type AddInlineStylePAPI,
   type AppendElementPAPI,
   type ElementIsEqualPAPI,
   type FirstElementPAPI,
@@ -16,10 +11,6 @@ import {
   type GetAttributesPAPI,
   type GetChildrenPAPI,
   type GetClassesPAPI,
-  type GetComponentIdPAPI,
-  type GetDataByKeyPAPI,
-  type GetDatasetPAPI,
-  type GetElementConfigPAPI,
   type GetElementUniqueIDPAPI,
   type GetIDPAPI,
   type GetParentPAPI,
@@ -33,14 +24,7 @@ import {
   type RemoveElementPAPI,
   type ReplaceElementPAPI,
   type ReplaceElementsPAPI,
-  type SetClassesPAPI,
-  type SetConfigPAPI,
-  type SetCSSIdPAPI,
-  type SetDatasetPAPI,
   type SetIDPAPI,
-  type SetInlineStylesPAPI,
-  type UpdateComponentIDPAPI,
-  type UpdateComponentInfoPAPI,
 } from '@lynx-js/web-constants';
 
 export const __AppendElement: AppendElementPAPI = /*#__PURE__*/ (
@@ -148,40 +132,40 @@ export const __GetTag: GetTagPAPI = /*#__PURE__*/ (element) =>
 
 export const __GetClasses: GetClassesPAPI = /*#__PURE__*/ (
   element,
-) => [...element.classList.values()];
+) => [...(element.classList as any as string[])];
 
-export const __GetTemplateParts: GetTemplatePartsPAPI = (
-  templateElement,
-) => {
-  const isTemplate =
-    templateElement.getAttribute(lynxElementTemplateMarkerAttribute)
-      !== null;
-  if (!isTemplate) {
-    return {};
-  }
-  const templateUniqueId = __GetElementUniqueID(templateElement);
-  const parts: Record<string, HTMLElement> = {};
-  const partElements = templateElement.querySelectorAll!(
-    `[${lynxUniqueIdAttribute}="${templateUniqueId}"] [${lynxPartIdAttribute}]:not([${lynxUniqueIdAttribute}="${templateUniqueId}"] [${lynxElementTemplateMarkerAttribute}] [${lynxPartIdAttribute}])`,
-  ) as unknown as HTMLElement[];
-  for (const partElement of partElements) {
-    const partId = partElement.getAttribute(lynxPartIdAttribute);
-    if (partId) {
-      parts[partId] = partElement as HTMLElement;
-    }
-  }
-  return parts;
-};
+// export const __GetTemplateParts: GetTemplatePartsPAPI = (
+//   templateElement,
+// ) => {
+//   const isTemplate =
+//     templateElement.getAttribute(lynxElementTemplateMarkerAttribute)
+//       !== null;
+//   if (!isTemplate) {
+//     return {};
+//   }
+//   const templateUniqueId = __GetElementUniqueID(templateElement);
+//   const parts: Record<string, HTMLElement> = {};
+//   const partElements = templateElement.querySelectorAll!(
+//     `[${lynxUniqueIdAttribute}="${templateUniqueId}"] [${lynxPartIdAttribute}]:not([${lynxUniqueIdAttribute}="${templateUniqueId}"] [${lynxElementTemplateMarkerAttribute}] [${lynxPartIdAttribute}])`,
+//   ) as unknown as HTMLElement[];
+//   for (const partElement of partElements) {
+//     const partId = partElement.getAttribute(lynxPartIdAttribute);
+//     if (partId) {
+//       parts[partId] = partElement as HTMLElement;
+//     }
+//   }
+//   return parts;
+// };
 
-export const __MarkTemplateElement: MarkTemplateElementPAPI = (
-  element,
-) => {
-  element.setAttribute(lynxElementTemplateMarkerAttribute, '');
-};
+// export const __MarkTemplateElement: MarkTemplateElementPAPI = (
+//   element,
+// ) => {
+//   element.setAttribute(lynxElementTemplateMarkerAttribute, '');
+// };
 
-export const __MarkPartElement: MarkPartElementPAPI = (
-  element,
-  partId,
-) => {
-  element.setAttribute(lynxPartIdAttribute, partId);
-};
+// export const __MarkPartElement: MarkPartElementPAPI = (
+//   element,
+//   partId,
+// ) => {
+//   element.setAttribute(lynxPartIdAttribute, partId);
+// };
