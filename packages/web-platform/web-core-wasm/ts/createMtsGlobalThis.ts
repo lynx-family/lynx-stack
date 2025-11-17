@@ -74,9 +74,6 @@ export function createMtsGlobalThis(
         parentComponentUniqueId,
         dom,
       );
-      if (!config_enable_css_selector) {
-        dom.setAttribute(lynxUniqueIdAttribute, dom[uniqueIdSymbol].toString());
-      }
       dom.setAttribute(lynxTagAttribute, 'view');
       return dom;
     },
