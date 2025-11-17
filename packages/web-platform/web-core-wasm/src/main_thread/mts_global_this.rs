@@ -16,6 +16,24 @@ use std::{
 };
 use wasm_bindgen::prelude::*;
 
+// marco set css id
+#[inline(always)]
+pub(crate) fn set_css_id_status(element_data: &mut LynxElementData, css_id: i32) {
+  if css_id != element_data.css_id {
+    if css_id == 0 {
+      element_data
+        .dom_ref
+        .remove_attribute(constants::CSS_ID_ATTRIBUTE)
+        .unwrap();
+    } else {
+      let _ = element_data
+        .dom_ref
+        .set_attribute(constants::CSS_ID_ATTRIBUTE, &css_id.to_string());
+    }
+  }
+  element_data.css_id = css_id;
+}
+
 #[wasm_bindgen]
 pub struct MainThreadGlobalThis {
   pub(super) unique_id_counter: i32,
@@ -115,7 +133,28 @@ impl MainThreadGlobalThis {
     css_id: Option<i32>,
     component_id: Option<String>,
   ) -> i32 {
-    // css id
+    // unique id
+    /*
+     if the css selector is disabled, we need to set the unique id attribute for element lookup by using attribute selector
+    */
+    self.unique_id_counter += 1;
+    let unique_id = self.unique_id_counter;
+    if !self.config_enable_css_selector {
+      let _ = dom.set_attribute(constants::LYNX_UNIQUE_ID_ATTRIBUTE, &unique_id.to_string());
+    }
+    let mut element_data = Box::new(LynxElementData {
+      unique_id,
+      css_id: 0,
+      parent_component_unique_id,
+      part_id: None,
+      component_id,
+      dataset: None,
+      component_config: None,
+      // event_handlers_map: None,
+      // event_handlers_map: None,
+      dom_ref: dom,
+    });
+
     let css_id = {
       if let Some(css_id) = css_id {
         css_id
@@ -128,36 +167,10 @@ impl MainThreadGlobalThis {
         0
       }
     };
-    if css_id != 0 {
-      let _ = dom.set_attribute(constants::CSS_ID_ATTRIBUTE, &css_id.to_string());
-    }
-
-    // unique id
-    /*
-     if the css selector is disabled, we need to set the unique id attribute for element lookup by using attribute selector
-    */
-    self.unique_id_counter += 1;
-    let unique_id = self.unique_id_counter;
-    if !self.config_enable_css_selector {
-      let _ = dom.set_attribute(constants::LYNX_UNIQUE_ID_ATTRIBUTE, &unique_id.to_string());
-    }
-    self.unique_id_to_element_map.insert(
-      unique_id,
-      Rc::new(RefCell::new(Box::new(LynxElementData {
-        unique_id,
-        css_id,
-        parent_component_unique_id,
-        part_id: None,
-        component_id,
-        // dataset: None,
-        // component_config: None,
-        // component_at_index: None,
-        // enqueue_component: None,
-        // event_handlers_map: None,
-        // event_handlers_map: None,
-        dom_ref: dom,
-      }))),
-    );
+    set_css_id_status(&mut element_data, css_id);
+    self
+      .unique_id_to_element_map
+      .insert(unique_id, Rc::new(RefCell::new(element_data)));
     unique_id
   }
 

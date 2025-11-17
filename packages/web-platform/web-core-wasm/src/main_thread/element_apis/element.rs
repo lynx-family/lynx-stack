@@ -20,8 +20,8 @@ pub struct LynxElementData {
   pub parent_component_unique_id: i32,
   pub part_id: Option<String>,
   pub component_id: Option<String>,
-  // dataset: Option<js_sys::Object>,
-  // component_config: Option<js_sys::Object>,
+  pub dataset: Option<js_sys::Object>,
+  pub component_config: Option<js_sys::Object>,
   // event_handlers_map: Option<HashMap<String, EventHandler>>,
   pub dom_ref: web_sys::HtmlElement,
 }

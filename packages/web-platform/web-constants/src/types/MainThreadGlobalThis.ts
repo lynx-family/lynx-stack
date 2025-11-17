@@ -125,7 +125,7 @@ export type GetAttributesPAPI = (
 
 export type GetComponentIdPAPI = (
   element: HTMLElement,
-) => string | null;
+) => string | undefined;
 
 export type GetElementConfigPAPI = (
   element: HTMLElement,
@@ -312,8 +312,7 @@ export type QueryComponentPAPI = (
     };
   }) => void,
 ) => null;
-
-export interface MainThreadGlobalThis {
+export interface ElementPAPIs {
   __ElementFromBinary: ElementFromBinaryPAPI;
 
   // __GetTemplateParts currently only provided by the thread-strategy = "all-on-ui" (default)
@@ -373,6 +372,9 @@ export interface MainThreadGlobalThis {
   __SetCSSId: SetCSSIdPAPI;
   __GetPageElement: GetPageElementPAPI;
   __GetAttributeByName: GetAttributeByNamePAPI;
+}
+
+export interface MainThreadGlobalThis extends ElementPAPIs {
   __globalProps: unknown;
   SystemInfo: typeof systemInfo;
   globalThis?: MainThreadGlobalThis;

@@ -22,7 +22,7 @@ impl MainThreadGlobalThis {
   #[wasm_bindgen(js_name = "__AddEvent")]
   pub fn add_event(
     &mut self,
-    element: &LynxElement,
+    unique_id: i32,
     event_type: String,
     event_name: String,
     event_handler: wasm_bindgen::JsValue,

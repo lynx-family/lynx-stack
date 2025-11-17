@@ -544,7 +544,7 @@ describe('set-inline-styles', () => {
   }, { throws: true });
 });
 
-describe.only('add-inline-style', () => {
+describe('add-inline-style', () => {
   const elementJS = mtsGlobalThisJS.__CreateView(1);
   const elementWasm = mtsGlobalThisWasm.__CreateView(1);
 

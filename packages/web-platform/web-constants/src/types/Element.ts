@@ -3,6 +3,13 @@
 // LICENSE file in the root directory of this source tree.
 
 import type { LynxEventType } from './EventType.js';
+export const uniqueIdSymbol = Symbol('uniqueId');
+
+export type DecoratedHTMLElement = HTMLElement & {
+  [uniqueIdSymbol]: number;
+  componentAtIndex?: ComponentAtIndexCallback;
+  enqueueComponent?: EnqueueComponentCallback;
+};
 
 export interface LynxRuntimeInfo {
   eventHandlerMap: Record<string, {

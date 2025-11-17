@@ -4,12 +4,16 @@ import {
   TemplateManager,
 } from '../dist/standard.js';
 import {
+  cssIdAttribute,
   lynxDefaultDisplayLinearAttribute,
   lynxEntryNameAttribute,
+  lynxTagAttribute,
   lynxUniqueIdAttribute,
+  uniqueIdSymbol,
   type ComponentAtIndexCallback,
+  type DecoratedHTMLElement,
   type EnqueueComponentCallback,
-  type MainThreadGlobalThis as IMainThreadGlobalThis,
+  type ElementPAPIs,
 } from '@lynx-js/web-constants';
 import {
   __AppendElement,
@@ -17,17 +21,28 @@ import {
   __FirstElement,
   __GetChildren,
   __GetParent,
+  __InsertElementBefore,
+  __LastElement,
+  __NextElement,
+  __RemoveElement,
+  __ReplaceElement,
+  __ReplaceElements,
+  __GetAttributes,
+  __GetAttributeByName,
+  __GetID,
+  __SetID,
+  __GetTag,
+  __GetClasses,
+  __SetClasses,
+  __AddClass,
+  __MarkTemplateElement,
+  __MarkPartElement,
+  __GetElementUniqueID,
+  __GetTemplateParts,
+  __UpdateListCallbacks,
 } from './pureElementPAPIs.js';
 
 export const templateManager = new TemplateManager();
-
-const LynxElementPtr = Symbol('LynxElementPtr');
-
-type DecoratedHTMLElement = HTMLElement & {
-  [LynxElementPtr]: number;
-  componentAtIndex?: ComponentAtIndexCallback;
-  enqueueComponent?: EnqueueComponentCallback;
-};
 
 export function createMtsGlobalThis(
   root_node: Node,
@@ -38,7 +53,7 @@ export function createMtsGlobalThis(
   config_enable_remove_css_scope: boolean,
   config_default_display_linear: boolean,
   config_default_overflow_visible: boolean,
-): IMainThreadGlobalThis {
+): ElementPAPIs {
   // let uniqueIdCounter = 1;
   const wasmContext = new MainThreadGlobalThis(
     root_node,
@@ -50,50 +65,54 @@ export function createMtsGlobalThis(
     config_default_display_linear,
     config_default_overflow_visible,
   );
-  const mtsGlobalThis = Object.create(null) as IMainThreadGlobalThis;
-  // mtsGlobalThis.__CreateView = (parent_component_unique_id) => createElementCommon('x-view', parent_component_unique_id);
+  // mtsGlobalThis.__CreateView = (parent_component_uniqueId) => createElementCommon('x-view', parent_component_uniqueId);
   let page: DecoratedHTMLElement | null = null;
   return {
     __CreateView(parentComponentUniqueId: number) {
       const dom = document.createElement('x-view') as DecoratedHTMLElement;
-      dom[LynxElementPtr] = wasmContext.__CreateElementCommon(
+      dom[uniqueIdSymbol] = wasmContext.__CreateElementCommon(
         parentComponentUniqueId,
         dom,
       );
       if (!config_enable_css_selector) {
-        dom.setAttribute(lynxUniqueIdAttribute, dom[LynxElementPtr].toString());
+        dom.setAttribute(lynxUniqueIdAttribute, dom[uniqueIdSymbol].toString());
       }
+      dom.setAttribute(lynxTagAttribute, 'view');
       return dom;
     },
     __CreateText(parentComponentUniqueId) {
       const dom = document.createElement('x-text') as DecoratedHTMLElement;
-      dom[LynxElementPtr] = wasmContext.__CreateElementCommon(
+      dom[uniqueIdSymbol] = wasmContext.__CreateElementCommon(
         parentComponentUniqueId,
         dom,
       );
+      dom.setAttribute(lynxTagAttribute, 'text');
       return dom;
     },
     __CreateImage(parentComponentUniqueId) {
       const dom = document.createElement('x-image') as DecoratedHTMLElement;
-      dom[LynxElementPtr] = wasmContext.__CreateElementCommon(
+      dom[uniqueIdSymbol] = wasmContext.__CreateElementCommon(
         parentComponentUniqueId,
         dom,
       );
+      dom.setAttribute(lynxTagAttribute, 'image');
       return dom;
     },
     __CreateRawText(text) {
       const dom = document.createElement('raw-text') as DecoratedHTMLElement;
       dom.setAttribute('text', text);
-      dom[LynxElementPtr] = wasmContext.__CreateElementCommon(-1, dom);
+      dom[uniqueIdSymbol] = wasmContext.__CreateElementCommon(-1, dom);
+      dom.setAttribute(lynxTagAttribute, 'raw-text');
       return dom;
     },
     __CreateScrollView(parentComponentUniqueId) {
       const dom = document.createElement('scroll-view') as DecoratedHTMLElement;
 
-      dom[LynxElementPtr] = wasmContext.__CreateElementCommon(
+      dom[uniqueIdSymbol] = wasmContext.__CreateElementCommon(
         parentComponentUniqueId,
         dom,
       );
+      dom.setAttribute(lynxTagAttribute, 'scroll-view');
       return dom;
     },
     __CreateComponent(
@@ -104,7 +123,7 @@ export function createMtsGlobalThis(
       name,
     ) {
       const dom = document.createElement('x-view') as DecoratedHTMLElement;
-      dom[LynxElementPtr] = wasmContext.__CreateElementCommon(
+      dom[uniqueIdSymbol] = wasmContext.__CreateElementCommon(
         parentComponentUniqueId,
         dom,
         cssID,
@@ -123,7 +142,7 @@ export function createMtsGlobalThis(
       const dom = document.createElement(
         'lynx-wrapper',
       ) as DecoratedHTMLElement;
-      dom[LynxElementPtr] = wasmContext.__CreateElementCommon(
+      dom[uniqueIdSymbol] = wasmContext.__CreateElementCommon(
         parentComponentUniqueId,
         dom,
       );
@@ -133,10 +152,11 @@ export function createMtsGlobalThis(
       const dom = document.createElement('x-list') as DecoratedHTMLElement;
       dom.componentAtIndex = componentAtIndex;
       dom.enqueueComponent = enqueueComponent;
-      dom[LynxElementPtr] = wasmContext.__CreateElementCommon(
+      dom[uniqueIdSymbol] = wasmContext.__CreateElementCommon(
         parentComponentUniqueId,
         dom,
       );
+      dom.setAttribute(lynxTagAttribute, 'list');
       return dom;
     },
     __CreatePage(componentID, cssID) {
@@ -144,7 +164,7 @@ export function createMtsGlobalThis(
       const dom = document.createElement(
         'div',
       ) as HTMLElement as DecoratedHTMLElement;
-      dom[LynxElementPtr] = wasmContext.__CreateElementCommon(
+      dom[uniqueIdSymbol] = wasmContext.__CreateElementCommon(
         0,
         dom,
         cssID,
@@ -156,12 +176,154 @@ export function createMtsGlobalThis(
       if (!config_default_display_linear) {
         dom.setAttribute(lynxDefaultDisplayLinearAttribute, 'false');
       }
+      dom.setAttribute(lynxTagAttribute, 'page');
       page = dom;
       return dom;
+    },
+    __SetClasses: config_enable_css_selector
+      ? __SetClasses
+      : ((element, classname) => {
+        __SetClasses(element, classname);
+        // Also sync to wasm side
+        const uniqueId = (element as DecoratedHTMLElement)[uniqueIdSymbol];
+        wasmContext.__wasm_binding_update_css_og_style(uniqueId);
+      }),
+    __SetCSSId(elements, cssId, entryName) {
+      const uniqueIds = elements.map(
+        (element) => {
+          if (entryName) {
+            element.setAttribute(lynxEntryNameAttribute, entryName);
+          } else {
+            element.removeAttribute(lynxEntryNameAttribute);
+          }
+          return (element as DecoratedHTMLElement)[uniqueIdSymbol];
+        },
+      );
+      if (cssId !== null) {
+        wasmContext.__wasm_binding_update_css_id(
+          new Int32Array(uniqueIds),
+          cssId,
+        );
+      }
+    },
+    __AddInlineStyle: (
+      element,
+      key,
+      value,
+    ) => {
+      if (typeof value === 'number') {
+        value = (value as number).toString();
+      }
+      const uniqueId = (element as DecoratedHTMLElement)[uniqueIdSymbol];
+      if (typeof key === 'number') {
+        return wasmContext.__wasm_binding_AddInlineStyle_number_key(
+          uniqueId,
+          key,
+          value as string | null,
+        );
+      } else {
+        return wasmContext.__wasm_binding_AddInlineStyle_str_key(
+          uniqueId,
+          key.toString(),
+          value as string | null,
+        );
+      }
+    },
+    __SetInlineStyles: (
+      element,
+      value,
+    ) => {
+      const uniqueId = (element as DecoratedHTMLElement)[uniqueIdSymbol];
+      if (typeof value === 'string') {
+        return wasmContext.__wasm_binding_SetInlineStyles(
+          uniqueId,
+          value,
+        );
+      } else {
+        // Clear all inline styles
+        wasmContext.__wasm_binding_SetInlineStyles(
+          uniqueId,
+          '',
+        );
+        if (value) {
+          for (const [key, val] of Object.entries(value)) {
+            if (val !== null) {
+              wasmContext.__wasm_binding_AddInlineStyle_str_key(
+                uniqueId,
+                key,
+                val.toString(),
+              );
+            }
+          }
+        }
+      }
+    },
+    __AddConfig: (element, type, value) => {
+      const uniqueId = (element as DecoratedHTMLElement)[uniqueIdSymbol];
+      wasmContext.__AddConfig(uniqueId, type, value);
+    },
+    __UpdateComponentInfo: (element, componentInfo) => {
+      const uniqueId = (element as DecoratedHTMLElement)[uniqueIdSymbol];
+      wasmContext.__UpdateComponentInfo(uniqueId, componentInfo);
+    },
+    __UpdateComponentID: (element, componentID) => {
+      const uniqueId = (element as DecoratedHTMLElement)[uniqueIdSymbol];
+      wasmContext.__UpdateComponentID(uniqueId, componentID);
+    },
+    __GetConfig: (element) => {
+      const uniqueId = (element as DecoratedHTMLElement)[uniqueIdSymbol];
+      return wasmContext.__GetConfig(uniqueId) as any;
+    },
+    __SetConfig: (element, config) => {
+      const uniqueId = (element as DecoratedHTMLElement)[uniqueIdSymbol];
+      wasmContext.__SetConfig(uniqueId, config);
+    },
+    __GetElementConfig: (element) => {
+      const uniqueId = (element as DecoratedHTMLElement)[uniqueIdSymbol];
+      return wasmContext.__GetElementConfig(uniqueId) as any;
+    },
+    __GetComponentID: (element) => {
+      const uniqueId = (element as DecoratedHTMLElement)[uniqueIdSymbol];
+      return wasmContext.__GetComponentID(uniqueId);
+    },
+    __SetDataset: (element, dataset) => {
+      const uniqueId = (element as DecoratedHTMLElement)[uniqueIdSymbol];
+      wasmContext.__SetDataset(uniqueId, dataset);
+    },
+    __AddDataset: (element, key, value) => {
+      const uniqueId = (element as DecoratedHTMLElement)[uniqueIdSymbol];
+      wasmContext.__AddDataset(uniqueId, key, value);
+    },
+    __GetDataset: (element) => {
+      const uniqueId = (element as DecoratedHTMLElement)[uniqueIdSymbol];
+      return wasmContext.__GetDataset(uniqueId) as any;
+    },
+    __GetDataByKey: (element, key) => {
+      const uniqueId = (element as DecoratedHTMLElement)[uniqueIdSymbol];
+      return wasmContext.__GetDataByKey(uniqueId, key);
     },
     __AppendElement,
     __ElementIsEqual,
     __FirstElement,
+    __GetChildren,
+    __GetParent,
+    __InsertElementBefore,
+    __LastElement,
+    __NextElement,
+    __RemoveElement,
+    __ReplaceElement,
+    __GetAttributes,
+    __GetAttributeByName,
+    __ReplaceElements,
+    __GetID,
+    __SetID,
+    __GetTag,
+    __GetClasses,
+    __MarkTemplateElement,
+    __MarkPartElement,
+    __GetTemplateParts,
+    __GetElementUniqueID,
+    __UpdateListCallbacks,
   };
   // return {
   // __ElementFromBinary: mtsGlobalThis.__ElementFromBinary.bind(
