@@ -198,7 +198,7 @@ export const __MarkPartElement: MarkPartElementPAPI = (
 
 export const __GetElementUniqueID: GetElementUniqueIDPAPI = /*#__PURE__*/ (
   element,
-) => (element as DecoratedHTMLElement)[uniqueIdSymbol] ?? -1;
+) => (element && (element as DecoratedHTMLElement)[uniqueIdSymbol]) ?? -1;
 
 export const __UpdateListCallbacks: UpdateListCallbacksPAPI = /*#__PURE__*/ (
   element,

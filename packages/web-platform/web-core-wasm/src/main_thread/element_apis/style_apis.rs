@@ -1,13 +1,13 @@
 use super::super::style::{
   transform_declarations, transform_inline_style_string, STYLE_PROPERTY_MAP,
 };
-use super::{set_css_id_status, LynxElement, MainThreadGlobalThis};
+use super::{set_css_id_status, MainThreadGlobalThis};
 use crate::constants;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 impl MainThreadGlobalThis {
-  #[wasm_bindgen(js_name = "__wasm_binding_update_css_id")]
+  #[wasm_bindgen(js_name = "__wasm_update_css_id")]
   pub fn set_css_id(&mut self, elements_unique_id: Vec<i32>, css_id: i32) {
     for unique_id in elements_unique_id.iter() {
       {
@@ -24,7 +24,7 @@ impl MainThreadGlobalThis {
     }
   }
 
-  #[wasm_bindgen(js_name = "__wasm_binding_update_css_og_style")]
+  #[wasm_bindgen(js_name = "__wasm_update_css_og_style")]
   pub fn update_css_og_style(&mut self, unique_id: i32) {
     if let Some(element_data_cell) = self.unique_id_to_element_map.get(&unique_id) {
       let element_data = element_data_cell.borrow();
@@ -47,7 +47,7 @@ impl MainThreadGlobalThis {
     }
   }
 
-  #[wasm_bindgen(js_name = "__wasm_binding_AddInlineStyle_str_key")]
+  #[wasm_bindgen(js_name = "__wasm_AddInlineStyle_str_key")]
   /**
    * The key could be string or number
    * The value could be string or number or null or undefined
@@ -76,14 +76,14 @@ impl MainThreadGlobalThis {
     }
   }
 
-  #[wasm_bindgen(js_name = "__wasm_binding_AddInlineStyle_number_key")]
+  #[wasm_bindgen(js_name = "__wasm_AddInlineStyle_number_key")]
   pub fn set_inline_styles_number_key(&self, unique_id: i32, key: i32, value: Option<String>) {
     if let Some(style_property) = STYLE_PROPERTY_MAP.get(key as usize) {
       self.add_inline_style_raw_string_key(unique_id, style_property.to_string(), value.clone());
     }
   }
 
-  #[wasm_bindgen(js_name = "__wasm_binding_SetInlineStyles")]
+  #[wasm_bindgen(js_name = "__wasm_SetInlineStyles")]
   pub fn set_inline_styles_in_str(&self, unique_id: i32, styles: String) {
     let dom = &self
       .unique_id_to_element_map
@@ -91,10 +91,6 @@ impl MainThreadGlobalThis {
       .unwrap()
       .borrow()
       .dom_ref;
-    if styles.is_empty() {
-      let _ = dom.remove_attribute("style");
-      return;
-    }
     let (transformed_style_str, _) = transform_inline_style_string(&styles);
     let _ = dom.set_attribute("style", &transformed_style_str);
   }

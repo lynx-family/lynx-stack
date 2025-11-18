@@ -4,7 +4,7 @@ use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 impl MainThreadGlobalThis {
-  #[wasm_bindgen(js_name = "__wasm_binding_queryComponent")]
+  #[wasm_bindgen(js_name = "__wasm_queryComponent")]
   /**
    * The wasm binding for __queryComponent
    * This is a async function

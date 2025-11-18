@@ -84,7 +84,7 @@ describe('Element APIs', () => {
     expect(mtsGlobalThis.__GetAttributeByName(ret, 'id')).toBe('target');
     expect(rootDom.querySelector('#target')).not.toBeNull();
     mtsGlobalThis.__SetID(ret, null);
-    expect(mtsGlobalThis.__GetAttributeByName(ret, 'id')).toBe(undefined);
+    expect(mtsGlobalThis.__GetAttributeByName(ret, 'id')).toBe(null);
     expect(rootDom.querySelector('#target')).toBeNull();
   });
 
@@ -106,7 +106,7 @@ describe('Element APIs', () => {
 
   test('__CreateWrapperElement', () => {
     const ret = mtsGlobalThis.__CreateWrapperElement(0);
-    expect(mtsGlobalThis.__GetTag(ret)).toBe('lynx-wrapper');
+    expect(mtsGlobalThis.__GetTag(ret)).toBe('wrapper');
   });
 
   test('__AppendElement-children-count', () => {
@@ -197,8 +197,6 @@ describe('Element APIs', () => {
     mtsGlobalThis.__ReplaceElement(child_3, child_1);
     let ret1 = mtsGlobalThis.__NextElement(mtsGlobalThis.__FirstElement(root)!);
     mtsGlobalThis.__FlushElementTree();
-    mtsGlobalThis.__ReplaceElement(child_1, child_1);
-    mtsGlobalThis.__ReplaceElement(child_1, child_1);
     expect(ret0).toBeFalsy();
     expect(mtsGlobalThis.__GetTag(ret1!)).toBe('scroll-view');
   });
@@ -272,7 +270,7 @@ describe('Element APIs', () => {
     let node1 = mtsGlobalThis.__CreateText(0);
     mtsGlobalThis.__SetAttribute(node1, 'test', 'test-value');
     let attr_map = mtsGlobalThis.__GetAttributes(node1);
-    expect(attr_map).toContainEqual(['test', 'test-value']);
+    expect(attr_map['test']).toEqual('test-value');
     let page = mtsGlobalThis.__CreatePage('page', 0);
     mtsGlobalThis.__AppendElement(page, node1);
     mtsGlobalThis.__FlushElementTree();

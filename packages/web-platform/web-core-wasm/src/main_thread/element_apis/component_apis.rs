@@ -1,4 +1,4 @@
-use super::{LynxElement, MainThreadGlobalThis};
+use super::MainThreadGlobalThis;
 use crate::constants;
 use serde::Deserialize;
 use wasm_bindgen::prelude::*;

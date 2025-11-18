@@ -1,7 +1,6 @@
 use super::{
   // element_apis::ElementTemplatesInstance,
   style::StyleManager,
-  LynxElement, // event::event_delegation::EventSystem,
 };
 
 use crate::js_binding::{BackgroundThreadRPC, JSRealm, MainThreadJSBinding};
@@ -38,16 +37,14 @@ pub(crate) fn set_css_id_status(element_data: &mut LynxElementData, css_id: i32)
 pub struct MainThreadGlobalThis {
   pub(super) unique_id_counter: i32,
   pub(super) tag_name_to_html_tag_map: HashMap<String, String>,
-  // pub(super) unique_id_to_element_map: HashMap<i32, Box<LynxElement>>,
   pub(super) unique_id_to_element_map: HashMap<i32, Rc<RefCell<Box<LynxElementData>>>>,
-  pub(super) component_id_to_unique_id_map: HashMap<String, i32>,
   pub(super) timing_flags: Vec<String>,
   pub(super) document: web_sys::Document,
   pub(super) root_node: web_sys::Node,
   pub(super) exposure_changed_elements: Vec<i32>,
-  pub(super) page: Option<LynxElement>,
   pub(super) style_manager: StyleManager,
   pub(super) enabled_events: HashSet<String>,
+  pub(super) page_element_unique_id: Option<i32>,
   // pub(super) template: DecodedTemplateImpl,
   // pub(super) element_templates_instances: HashMap<String, ElementTemplatesInstance>,
   pub(super) mts_realm: JSRealm,
@@ -91,10 +88,7 @@ impl MainThreadGlobalThis {
     config_enable_remove_css_scope: bool,
     config_default_display_linear: bool,
     config_default_overflow_visible: bool,
-    // tag_name_to_html_tag_map: wasm_bindgen::JsValue,
   ) -> MainThreadGlobalThis {
-    // let tag_name_to_html_tag_map: HashMap<String, String> =
-    //   serde_wasm_bindgen::from_value(tag_name_to_html_tag_map).unwrap();
     let style_manager = StyleManager::new(
       root_node.clone(),
       config_enable_css_selector,
@@ -109,7 +103,6 @@ impl MainThreadGlobalThis {
       unique_id_counter: 1,
       // element_templates_instances: HashMap::new(),
       unique_id_to_element_map: HashMap::new(),
-      component_id_to_unique_id_map: HashMap::new(),
       enabled_events: HashSet::new(),
       tag_name_to_html_tag_map: HashMap::new(),
       timing_flags: vec![],
@@ -117,12 +110,17 @@ impl MainThreadGlobalThis {
       document,
       style_manager,
       entry_template_url: None,
-      page: None,
       root_node,
+      page_element_unique_id: None,
       config_enable_css_selector,
       config_default_display_linear,
       config_default_overflow_visible,
     }
+  }
+
+  #[wasm_bindgen(js_name = "__wasm_set_page_element_unique_id")]
+  pub fn set_page_element_unique_id(&mut self, unique_id: i32) {
+    self.page_element_unique_id = Some(unique_id);
   }
 
   #[wasm_bindgen(js_name = "__CreateElementCommon")]
@@ -146,12 +144,10 @@ impl MainThreadGlobalThis {
       unique_id,
       css_id: 0,
       parent_component_unique_id,
-      part_id: None,
       component_id,
       dataset: None,
       component_config: None,
-      // event_handlers_map: None,
-      // event_handlers_map: None,
+      event_handlers_map: None,
       dom_ref: dom,
     });
 
@@ -172,16 +168,6 @@ impl MainThreadGlobalThis {
       .unique_id_to_element_map
       .insert(unique_id, Rc::new(RefCell::new(element_data)));
     unique_id
-  }
-
-  #[wasm_bindgen(js_name = "__FlushElementTree")]
-  pub fn flush_element_tree(&mut self) {
-    if let Some(page) = &mut self.page {
-      let page_dom = page.get_dom();
-      if !page_dom.is_connected() {
-        self.root_node.append_child(&page_dom).unwrap();
-      }
-    }
   }
 
   // #[wasm_bindgen(js_name = "__LoadLepusChunk")]

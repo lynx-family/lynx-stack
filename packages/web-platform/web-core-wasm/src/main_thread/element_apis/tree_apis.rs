@@ -1,5 +1,4 @@
-use super::{LynxElement, MainThreadGlobalThis};
-use crate::constants;
+use super::MainThreadGlobalThis;
 use serde::Deserialize;
 use wasm_bindgen::prelude::*;
 
@@ -23,97 +22,44 @@ struct UpdateListInfoValue {
 
 #[wasm_bindgen]
 impl MainThreadGlobalThis {
-  #[wasm_bindgen(js_name = "__wasm_binding_update_list_info")]
-  pub fn handle_update_list_info_attribute(
-    &mut self,
-    unique_id: i32,
-    value: wasm_bindgen::JsValue,
-  ) {
-    // make sure the value is an object
-    if value.is_object() {
-      let list_info: UpdateListInfoValue = serde_wasm_bindgen::from_value(value).unwrap();
-      let dom = &self
-        .unique_id_to_element_map
-        .get(&unique_id)
-        .unwrap()
-        .borrow()
-        .dom_ref;
-      let component_at_index =
-        js_sys::Reflect::get(dom, &wasm_bindgen::JsValue::from_str("componentAtIndex")).unwrap();
-      let enqueue_component =
-        js_sys::Reflect::get(dom, &wasm_bindgen::JsValue::from_str("enqueueComponent")).unwrap();
-      // check it is a function
-      if component_at_index.is_function() {
-        // convert it to js_sys::Function
-        let component_at_index: js_sys::Function = component_at_index.clone().into();
-        for insert_action in list_info.insert_actions.iter() {
-          let this = JsValue::NULL;
-          let position = JsValue::from(insert_action.position);
-          let _ = component_at_index.call5(
-            &this,
-            &dom.clone().into(),
-            &JsValue::from(unique_id),
-            &position,
-            &JsValue::from(0),
-            &JsValue::FALSE,
-          );
-        }
-      }
-      // check it is a function
-      if enqueue_component.is_function() {
-        // convert it to js_sys::Function
-        let enqueue_component: js_sys::Function = enqueue_component.clone().into();
-        for remove_action in list_info.remove_actions.iter() {
-          let this = JsValue::NULL;
-          let position = JsValue::from(remove_action.position);
-          let _ = enqueue_component.call3(
-            &this,
-            &dom.clone().into(),
-            &JsValue::from(unique_id),
-            &position,
-          );
-        }
-      }
-    }
-  }
-
-  // #[wasm_bindgen(js_name = "__SetAttribute")]
-  // pub fn set_attribute(&mut self, element: &LynxElement, key: &str, value: wasm_bindgen::JsValue) {
-  //   let unique_id = element.get_unique_id();
-  //   let tag = element.get_tag();
-  //   if key == "update-list-info" && tag == "list" {
-  //     self.handle_update_list_info_attribute(element, value);
-  //   } else if constants::EXPOSURE_RELATED_ATTRIBUTES.contains(key) {
-  //     self.exposure_changed_elements.push(unique_id);
-  //   } else {
-  //     let value_str: Option<String> = if let Some(value) = value.as_string() {
-  //       Some(value)
-  //     } else if let Some(value_bool) = value.as_bool() {
-  //       Some(if value_bool {
-  //         "true".to_string()
-  //       } else {
-  //         "false".to_string()
-  //       })
-  //     } else {
-  //       value.as_f64().map(|value_f64| value_f64.to_string())
-  //     };
-  //     if key == constants::LYNX_TIMING_FLAG {
-  //       if let Some(value_str) = &value_str {
-  //         self.timing_flags.push(value_str.clone());
-  //       }
-  //     } else {
-  //       let _ = element.set_or_remove_attribute(key, value_str.as_deref());
-  //     }
-  //   }
-
   #[wasm_bindgen(js_name = "__SetDataset")]
-  pub fn set_dataset(&mut self, unique_id: i32, dataset: &js_sys::Object) {
+  pub fn set_dataset(&mut self, unique_id: i32, new_dataset: &js_sys::Object) {
     let mut element_data = self
       .unique_id_to_element_map
       .get(&unique_id)
       .unwrap()
       .borrow_mut();
-    element_data.dataset = Some(dataset.clone());
+    let dom = element_data.dom_ref.clone();
+    let dataset = element_data.dataset.get_or_insert_with(js_sys::Object::new);
+    // compare old dataset and new dataset and update dom attributes
+    let old_keys = js_sys::Object::keys(dataset);
+    let new_keys = js_sys::Object::keys(new_dataset);
+    // remove old keys not in new dataset
+    for i in 0..old_keys.length() {
+      let key = old_keys.get(i);
+      if !js_sys::Reflect::has(new_dataset, &key).unwrap_or(false) {
+        let key_str = key.as_string().unwrap();
+        let _ = dom.remove_attribute(&format!("data-{key_str}"));
+      }
+    }
+    // set/ update new keys
+    for i in 0..new_keys.length() {
+      let key = new_keys.get(i);
+      let new_value =
+        js_sys::Reflect::get(new_dataset, &key).unwrap_or(wasm_bindgen::JsValue::UNDEFINED);
+      let old_value =
+        js_sys::Reflect::get(dataset, &key).unwrap_or(wasm_bindgen::JsValue::UNDEFINED);
+      if old_value != new_value {
+        let key_str = key.as_string().unwrap();
+        if new_value.is_undefined() || new_value.is_null() {
+          let _ = dom.remove_attribute(&format!("data-{key_str}"));
+        } else {
+          let value_str = new_value.as_string().unwrap_or_default();
+          let _ = dom.set_attribute(&format!("data-{key_str}"), &value_str);
+        }
+      }
+    }
+    element_data.dataset = Some(new_dataset.clone());
   }
 
   #[wasm_bindgen(js_name = "__AddDataset")]

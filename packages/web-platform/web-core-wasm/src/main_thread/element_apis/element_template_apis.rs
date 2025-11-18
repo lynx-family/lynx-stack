@@ -1,48 +1,78 @@
-use super::{LynxElement, MainThreadGlobalThis};
+use super::MainThreadGlobalThis;
 use crate::constants;
+use crate::main_thread::element_apis::LynxElementData;
 use crate::template::{ElementTemplate, TemplateManager};
 use std::collections::HashMap;
 use wasm_bindgen::prelude::*;
 
 pub(crate) struct ElementTemplatesInstance {
   template_element: web_sys::HtmlTemplateElement,
-  lynx_elements: HashMap<i32, LynxElement>,
+  lynx_elements_data: HashMap<i32, LynxElementData>,
 }
 
 impl ElementTemplatesInstance {
+  fn new(lynx_element_api_templates: &[ElementTemplate]) -> Self {
+    let template_element: web_sys::HtmlTemplateElement = mts_global_this
+      .document
+      .create_element("template")
+      .unwrap()
+      .unchecked_into::<web_sys::HtmlTemplateElement>();
+    let template_content = template_element.content();
+    let mut lynx_elements_data: HashMap<i32, LynxElementData> = HashMap::new();
+    for template in lynx_element_api_templates {
+      let dom =
+        Self::create_element_for_current_template(template, mts_global_this, &mut lynx_elements);
+      template_content.append_child(&dom).unwrap();
+    }
+    mts_global_this
+      .root_node
+      .append_child(&template_element)
+      .unwrap();
+    Self {
+      template_element,
+      lynx_elements_data,
+    }
+  }
   fn create_element_for_current_template(
+    &mut self,
     element_template: &ElementTemplate,
-    mts_global_this: &MainThreadGlobalThis,
-    lynx_elements: &mut HashMap<i32, LynxElement>,
+    element_tag_to_html_tag_map: Option<&HashMap<String, String>>,
   ) -> web_sys::HtmlElement {
-    let dummy_id = -1 - lynx_elements.len() as i32;
-    let mut element = LynxElement::create_dummy_element(
-      mts_global_this,
-      element_template.type_name.as_str(),
-      dummy_id,
-    );
-    element.set_id(element_template.id_selector.clone());
+    let dummy_id = -1 - self.lynx_elements_data.len() as i32;
+    let dom = web_sys::window()
+      .unwrap()
+      .document()
+      .unwrap()
+      .create_element(
+        element_tag_to_html_tag_map
+          .and_then(|map| map.get(&element_template.type_name))
+          .map(|s| s.as_str())
+          .unwrap_or(&element_template.type_name),
+      )
+      .unwrap()
+      .unchecked_into::<web_sys::HtmlElement>();
+    let element_data = LynxElementData::new(dom.clone());
     if let Some(class_list) = &element_template.class {
       for class_name in class_list {
-        element.get_dom().class_list().add_1(class_name).unwrap();
+        dom.class_list().add_1(class_name).unwrap();
       }
     }
     if let Some(attributes) = &element_template.attributes {
       for (attr_name, attr_value) in attributes {
         if attr_name == "part" {
-          element.mark_part(Some(attr_value));
-          continue;
+          let _ = dom.set_attribute(constants::LYNX_PART_ID_ATTRIBUTE, attr_value);
+        } else {
+          let _ = dom.set_attribute(attr_name, attr_value);
         }
-        let _ = element.get_dom().set_attribute(attr_name, attr_value);
       }
     }
     if let Some(built_in_attributes) = &element_template.built_in_attributes {
       for (attr_name, attr_value) in built_in_attributes {
         if attr_name == "part" {
-          element.mark_part(Some(attr_value));
-          continue;
+          let _ = dom.set_attribute(constants::LYNX_PART_ID_ATTRIBUTE, attr_value);
+        } else {
+          let _ = dom.set_attribute(attr_name, attr_value);
         }
-        let _ = element.get_dom().set_attribute(attr_name, attr_value);
       }
     }
     if let Some(dataset) = &element_template.dataset {
@@ -57,7 +87,7 @@ impl ElementTemplatesInstance {
           .collect::<js_sys::Array>(),
       )
       .unwrap();
-      element.set_dataset(&dataset_obj);
+      element_data.dataset = Some(dataset_obj);
     }
     if let Some(events) = &element_template.events {
       for event_registration in events {
@@ -78,32 +108,6 @@ impl ElementTemplatesInstance {
     let dom = element.get_dom();
     lynx_elements.insert(dummy_id, element);
     dom
-  }
-
-  fn new(
-    lynx_element_api_templates: &[ElementTemplate],
-    mts_global_this: &MainThreadGlobalThis,
-  ) -> Self {
-    let template_element: web_sys::HtmlTemplateElement = mts_global_this
-      .document
-      .create_element("template")
-      .unwrap()
-      .unchecked_into::<web_sys::HtmlTemplateElement>();
-    let template_content = template_element.content();
-    let mut lynx_elements: HashMap<i32, LynxElement> = HashMap::new();
-    for template in lynx_element_api_templates {
-      let dom =
-        Self::create_element_for_current_template(template, mts_global_this, &mut lynx_elements);
-      template_content.append_child(&dom).unwrap();
-    }
-    mts_global_this
-      .root_node
-      .append_child(&template_element)
-      .unwrap();
-    Self {
-      template_element,
-      lynx_elements,
-    }
   }
 
   /**
@@ -140,13 +144,13 @@ impl ElementTemplatesInstance {
 
 #[wasm_bindgen]
 impl MainThreadGlobalThis {
-  #[wasm_bindgen(js_name = "__wasm_binding__ElementFromBinary")]
+  #[wasm_bindgen(js_name = "__wasm__ElementFromBinary")]
   pub fn element_from_binary(
     &mut self,
     template_manager: &TemplateManager,
     template_id: String,
     parent_component_unique_id: i32,
-  ) -> Vec<LynxElement> {
+  ) -> Vec<web_sys::HtmlElement> {
     if let Some(template_url) = &self.entry_template_url {
       if let Some(cached_template) = template_manager.get_cached_template(template_url) {
         if let Some(element_templates) = cached_template.get_element_templates_by_id(&template_id) {
@@ -180,7 +184,7 @@ impl MainThreadGlobalThis {
               .unique_id_to_element_map
               .insert(unique_id, Box::new(lynx_element.clone()));
           }
-          let mut result_elements: Vec<LynxElement> = vec![];
+          let mut result_elements: Vec<web_sys::HtmlElement> = vec![];
           let children = template_content.children();
           for i in 0..children.length() {
             if let Some(child) = children.item(i) {

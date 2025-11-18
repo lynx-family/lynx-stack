@@ -4,6 +4,7 @@ import {
   TemplateManager,
 } from '../dist/standard.js';
 import {
+  lynxDisposedAttribute,
   cssIdAttribute,
   lynxDefaultDisplayLinearAttribute,
   lynxEntryNameAttribute,
@@ -13,9 +14,11 @@ import {
   type ComponentAtIndexCallback,
   type DecoratedHTMLElement,
   type EnqueueComponentCallback,
+  type UpdateListInfoAttributeValue,
   type ElementPAPIs,
 } from '@lynx-js/web-constants';
 import {
+  __SwapElement,
   __AppendElement,
   __ElementIsEqual,
   __FirstElement,
@@ -45,7 +48,7 @@ import {
 export const templateManager = new TemplateManager();
 
 export function createMtsGlobalThis(
-  root_node: Node,
+  rootDom: Node,
   mts_realm: any,
   mts_binding: any,
   bts_rpc: any,
@@ -56,7 +59,7 @@ export function createMtsGlobalThis(
 ): ElementPAPIs {
   // let uniqueIdCounter = 1;
   const wasmContext = new MainThreadGlobalThis(
-    root_node,
+    rootDom,
     mts_realm,
     mts_binding,
     bts_rpc,
@@ -66,7 +69,7 @@ export function createMtsGlobalThis(
     config_default_overflow_visible,
   );
   // mtsGlobalThis.__CreateView = (parent_component_uniqueId) => createElementCommon('x-view', parent_component_uniqueId);
-  let page: DecoratedHTMLElement | null = null;
+  let page: DecoratedHTMLElement | undefined = undefined;
   return {
     __CreateView(parentComponentUniqueId: number) {
       const dom = document.createElement('x-view') as DecoratedHTMLElement;
@@ -112,6 +115,15 @@ export function createMtsGlobalThis(
       dom.setAttribute(lynxTagAttribute, 'scroll-view');
       return dom;
     },
+    __CreateElement(tagName, parentComponentUniqueId) {
+      const dom = document.createElement(tagName) as DecoratedHTMLElement;
+      dom[uniqueIdSymbol] = wasmContext.__CreateElementCommon(
+        parentComponentUniqueId,
+        dom,
+      );
+      dom.setAttribute(lynxTagAttribute, tagName);
+      return dom;
+    },
     __CreateComponent(
       parentComponentUniqueId,
       componentID,
@@ -139,6 +151,7 @@ export function createMtsGlobalThis(
       const dom = document.createElement(
         'lynx-wrapper',
       ) as DecoratedHTMLElement;
+      dom.setAttribute(lynxTagAttribute, 'wrapper');
       dom[uniqueIdSymbol] = wasmContext.__CreateElementCommon(
         parentComponentUniqueId,
         dom,
@@ -183,7 +196,7 @@ export function createMtsGlobalThis(
         __SetClasses(element, classname);
         // Also sync to wasm side
         const uniqueId = (element as DecoratedHTMLElement)[uniqueIdSymbol];
-        wasmContext.__wasm_binding_update_css_og_style(uniqueId);
+        wasmContext.__wasm_update_css_og_style(uniqueId);
       }),
     __SetCSSId(elements, cssId, entryName) {
       const uniqueIds = elements.map(
@@ -197,7 +210,7 @@ export function createMtsGlobalThis(
         },
       );
       if (cssId !== null) {
-        wasmContext.__wasm_binding_update_css_id(
+        wasmContext.__wasm_update_css_id(
           new Int32Array(uniqueIds),
           cssId,
         );
@@ -208,18 +221,18 @@ export function createMtsGlobalThis(
       key,
       value,
     ) => {
-      if (typeof value === 'number') {
+      if (typeof value != 'string') {
         value = (value as number).toString();
       }
       const uniqueId = (element as DecoratedHTMLElement)[uniqueIdSymbol];
       if (typeof key === 'number') {
-        return wasmContext.__wasm_binding_AddInlineStyle_number_key(
+        return wasmContext.__wasm_AddInlineStyle_number_key(
           uniqueId,
           key,
           value as string | null,
         );
       } else {
-        return wasmContext.__wasm_binding_AddInlineStyle_str_key(
+        return wasmContext.__wasm_AddInlineStyle_str_key(
           uniqueId,
           key.toString(),
           value as string | null,
@@ -231,28 +244,18 @@ export function createMtsGlobalThis(
       value,
     ) => {
       const uniqueId = (element as DecoratedHTMLElement)[uniqueIdSymbol];
-      if (typeof value === 'string') {
-        return wasmContext.__wasm_binding_SetInlineStyles(
+      if (!value) {
+        element.removeAttribute('style');
+      } else if (typeof value === 'string') {
+        return wasmContext.__wasm_SetInlineStyles(
           uniqueId,
           value,
         );
       } else {
-        // Clear all inline styles
-        wasmContext.__wasm_binding_SetInlineStyles(
+        wasmContext.__wasm_SetInlineStyles(
           uniqueId,
-          '',
+          Object.entries(value).map(([k, v]) => `${k}: ${v};`).join(),
         );
-        if (value) {
-          for (const [key, val] of Object.entries(value)) {
-            if (val !== null) {
-              wasmContext.__wasm_binding_AddInlineStyle_str_key(
-                uniqueId,
-                key,
-                val.toString(),
-              );
-            }
-          }
-        }
       }
     },
     __AddConfig: (element, type, value) => {
@@ -289,16 +292,92 @@ export function createMtsGlobalThis(
     },
     __AddDataset: (element, key, value) => {
       const uniqueId = (element as DecoratedHTMLElement)[uniqueIdSymbol];
+      if (value) {
+        element.setAttribute(
+          `data-${key}`,
+          typeof value === 'object' ? JSON.stringify(value) : value.toString(),
+        );
+      } else {
+        element.removeAttribute(`data-${key}`);
+      }
       wasmContext.__AddDataset(uniqueId, key, value);
     },
     __GetDataset: (element) => {
       const uniqueId = (element as DecoratedHTMLElement)[uniqueIdSymbol];
-      return wasmContext.__GetDataset(uniqueId) as any;
+      return Object.assign(
+        Object.create(null),
+        wasmContext.__GetDataset(uniqueId) as any,
+      );
     },
     __GetDataByKey: (element, key) => {
       const uniqueId = (element as DecoratedHTMLElement)[uniqueIdSymbol];
       return wasmContext.__GetDataByKey(uniqueId, key);
     },
+    __SetAttribute(element, name, value) {
+      if (name === 'update-list-info') {
+        const { insertAction, removeAction } =
+          value as UpdateListInfoAttributeValue;
+        queueMicrotask(() => {
+          const componentAtIndex =
+            (element as DecoratedHTMLElement).componentAtIndex;
+          const enqueueComponent =
+            (element as DecoratedHTMLElement).enqueueComponent;
+          const uniqueId = __GetElementUniqueID(element);
+          for (const action of insertAction) {
+            componentAtIndex?.(
+              element,
+              uniqueId,
+              action.position,
+              0,
+              false,
+            );
+          }
+          for (const action of removeAction) {
+            enqueueComponent?.(element, uniqueId, action.position);
+          }
+        });
+      } else {
+        if (value == null) {
+          element.removeAttribute(name);
+        } else {
+          element.setAttribute(name, value.toString());
+        }
+      }
+    },
+    __AddEvent: (
+      element,
+      eventType,
+      eventName,
+      frameworkCrossThreadIdentifier,
+    ) => {
+      const uniqueId = (element as DecoratedHTMLElement)[uniqueIdSymbol];
+      wasmContext.__AddEvent(
+        uniqueId,
+        eventType,
+        eventName,
+        frameworkCrossThreadIdentifier,
+      );
+    },
+    __GetEvent: (element, eventType, eventName) => {
+      const uniqueId = (element as DecoratedHTMLElement)[uniqueIdSymbol];
+      return wasmContext.__GetEvent(uniqueId, eventType, eventName);
+    },
+    __GetEvents: (element) => {
+      const uniqueId = (element as DecoratedHTMLElement)[uniqueIdSymbol];
+      return wasmContext.__GetEvents(uniqueId) as any;
+    },
+    __SetEvents: (element, events) => {
+      const uniqueId = (element as DecoratedHTMLElement)[uniqueIdSymbol];
+      for (const event of events) {
+        wasmContext.__AddEvent(
+          uniqueId,
+          event.type,
+          event.name,
+          event.function,
+        );
+      }
+    },
+    __GetPageElement: () => page,
     __AppendElement,
     __ElementIsEqual,
     __FirstElement,
@@ -315,12 +394,23 @@ export function createMtsGlobalThis(
     __GetID,
     __SetID,
     __GetTag,
+    __AddClass,
     __GetClasses,
     __MarkTemplateElement,
     __MarkPartElement,
     __GetTemplateParts,
     __GetElementUniqueID,
     __UpdateListCallbacks,
+    __SwapElement,
+    __FlushElementTree: () => {
+      if (
+        page && !page.parentNode
+        && page.getAttribute(lynxDisposedAttribute) !== ''
+      ) {
+        // @ts-expect-error
+        rootDom.append(page);
+      }
+    },
   };
   // return {
   // __ElementFromBinary: mtsGlobalThis.__ElementFromBinary.bind(
@@ -338,7 +428,7 @@ export function createMtsGlobalThis(
   // __AppendElement: mtsGlobalThis.__AppendElement.bind(mtsGlobalThis),
   // __ElementIsEqual: (a, b) => {
   //   if (a instanceof LynxElement && b instanceof LynxElement) {
-  //     return mtsGlobalThis.__wasm_binding_ElementIsEqual(a, b);
+  //     return mtsGlobalThis.__wasm_ElementIsEqual(a, b);
   //   }
   //   return false;
   // },
@@ -362,7 +452,7 @@ export function createMtsGlobalThis(
   // __GetElementConfig: mtsGlobalThis.__GetElementConfig.bind(mtsGlobalThis),
   // __GetElementUniqueID: (element: unknown) => {
   //   if (element instanceof LynxElement) {
-  //     return mtsGlobalThis.__wasm_binding__GetElementUniqueID(element);
+  //     return mtsGlobalThis.__wasm__GetElementUniqueID(element);
   //   }
   //   return -1;
   // },
@@ -399,13 +489,13 @@ export function createMtsGlobalThis(
   //       value = (value as number).toString();
   //     }
   //     if (typeof key === 'number') {
-  //       return mtsGlobalThis.__wasm_binding_AddInlineStyle_number_key(
+  //       return mtsGlobalThis.__wasm_AddInlineStyle_number_key(
   //         element,
   //         key,
   //         value as string | null,
   //       );
   //     } else {
-  //       return mtsGlobalThis.__wasm_binding_AddInlineStyle_str_key(
+  //       return mtsGlobalThis.__wasm_AddInlineStyle_str_key(
   //         element,
   //         key.toString(),
   //         value as string | null,
@@ -418,20 +508,20 @@ export function createMtsGlobalThis(
   //     value: string | Record<string, string | number> | undefined,
   //   ) => {
   //     if (typeof value === 'string') {
-  //       return mtsGlobalThis.__wasm_binding_SetInlineStyles(
+  //       return mtsGlobalThis.__wasm_SetInlineStyles(
   //         element,
   //         value,
   //       );
   //     } else {
   //       // Clear all inline styles
-  //       mtsGlobalThis.__wasm_binding_SetInlineStyles(
+  //       mtsGlobalThis.__wasm_SetInlineStyles(
   //         element,
   //         '',
   //       );
   //       if (value) {
   //         for (const [key, val] of Object.entries(value)) {
   //           if (val !== null) {
-  //             mtsGlobalThis.__wasm_binding_AddInlineStyle_str_key(
+  //             mtsGlobalThis.__wasm_AddInlineStyle_str_key(
   //               element,
   //               key,
   //               val.toString(),
@@ -443,13 +533,13 @@ export function createMtsGlobalThis(
   //   },
   //   __FlushElementTree: mtsGlobalThis.__FlushElementTree.bind(mtsGlobalThis),
   //   // __LoadLepusChunk: mtsGlobalThis.__LoadLepusChunk.bind(mtsGlobalThis),
-  //   __GetPageElement: mtsGlobalThis.__GetPageElement.bind(mtsGlobalThis),
+  //   __Getpage: mtsGlobalThis.__Getpage.bind(mtsGlobalThis),
   //   __QueryComponent: (
   //     url,
   //     resultCallback,
   //   ) => {
   //     try {
-  //       const result = mtsGlobalThis.__wasm_binding_queryComponent(
+  //       const result = mtsGlobalThis.__wasm_queryComponent(
   //         url,
   //         templateManager,
   //       );

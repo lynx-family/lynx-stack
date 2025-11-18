@@ -125,7 +125,7 @@ export type GetAttributesPAPI = (
 
 export type GetComponentIdPAPI = (
   element: HTMLElement,
-) => string | undefined;
+) => string | null | undefined;
 
 export type GetElementConfigPAPI = (
   element: HTMLElement,
@@ -197,8 +197,13 @@ export type UpdateListInfoAttributeValue = {
 };
 export type SetAttributePAPI = (
   element: HTMLElement,
-  key: string,
-  value: string | null | undefined | UpdateListInfoAttributeValue,
+  key: Exclude<string, 'update-list-info'>,
+  value: string | null | undefined | boolean,
+) => void;
+export type SetAttributePAPIUpdateListInfo = (
+  element: HTMLElement,
+  key: 'update-list-info',
+  value: UpdateListInfoAttributeValue | null,
 ) => void;
 
 export type UpdateListCallbacksPAPI = (
@@ -363,7 +368,7 @@ export interface ElementPAPIs {
   __CreateElement: CreateElementPAPI;
   __CreatePage: CreatePagePAPI;
   __CreateList: CreateListPAPI;
-  __SetAttribute: SetAttributePAPI;
+  __SetAttribute: SetAttributePAPI & SetAttributePAPIUpdateListInfo;
   __UpdateListCallbacks: UpdateListCallbacksPAPI;
   __AddClass: AddClassPAPI;
   __SetClasses: SetClassesPAPI;
@@ -372,6 +377,10 @@ export interface ElementPAPIs {
   __SetCSSId: SetCSSIdPAPI;
   __GetPageElement: GetPageElementPAPI;
   __GetAttributeByName: GetAttributeByNamePAPI;
+  __FlushElementTree: (
+    _subTree?: unknown,
+    options?: FlushElementTreeOptions,
+  ) => void;
 }
 
 export interface MainThreadGlobalThis extends ElementPAPIs {
@@ -386,10 +395,6 @@ export interface MainThreadGlobalThis extends ElementPAPIs {
   _SetSourceMapRelease: (errInfo: JSErrorInfo) => void;
   __OnLifecycleEvent: (lifeCycleEvent: Cloneable) => void;
   __LoadLepusChunk: (path: string) => boolean;
-  __FlushElementTree: (
-    _subTree?: unknown,
-    options?: FlushElementTreeOptions,
-  ) => void;
   _I18nResourceTranslation: (
     options: I18nResourceTranslationOptions,
   ) => unknown | undefined;

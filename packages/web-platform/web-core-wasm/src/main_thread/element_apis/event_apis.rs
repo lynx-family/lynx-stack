@@ -1,6 +1,6 @@
 use std::collections::hash_set::Iter;
 
-use super::{LynxElement, MainThreadGlobalThis};
+use super::MainThreadGlobalThis;
 use crate::constants;
 use wasm_bindgen::prelude::*;
 
@@ -27,51 +27,64 @@ impl MainThreadGlobalThis {
     event_name: String,
     event_handler: wasm_bindgen::JsValue,
   ) {
+    self.enable_event(&event_name);
+    let mut element_data = self
+      .unique_id_to_element_map
+      .get(&unique_id)
+      .unwrap()
+      .borrow_mut();
     if event_handler.is_null_or_undefined() {
-      element.replace_framework_cross_thread_event_handler(
+      element_data.replace_framework_cross_thread_event_handler(
         event_name.clone(),
         event_type.clone(),
         None,
       );
-      element.replace_framework_run_worklet_event_handler(event_name, event_type, None);
-    } else {
-      if event_handler.is_object() {
-        element.replace_framework_run_worklet_event_handler(
-          event_name.clone(),
-          event_type,
-          Some(event_handler),
-        );
-      } else if let Some(identifier) = event_handler.as_string() {
-        element.replace_framework_cross_thread_event_handler(
-          event_name.clone(),
-          event_type,
-          Some(identifier),
-        );
-      }
-      self.enable_event(&event_name);
+      element_data.replace_framework_run_worklet_event_handler(event_name, event_type, None);
+    } else if event_handler.is_object() {
+      element_data.replace_framework_run_worklet_event_handler(
+        event_name.clone(),
+        event_type,
+        Some(event_handler),
+      );
+    } else if let Some(identifier) = event_handler.as_string() {
+      element_data.replace_framework_cross_thread_event_handler(
+        event_name.clone(),
+        event_type,
+        Some(identifier),
+      );
     }
   }
 
   #[wasm_bindgen(js_name = "__GetEvent")]
   pub fn get_event(
     &self,
-    element: &LynxElement,
+    unique_id: i32,
     event_name: &str,
     event_type: &str,
   ) -> wasm_bindgen::JsValue {
+    let element_data = self
+      .unique_id_to_element_map
+      .get(&unique_id)
+      .unwrap()
+      .borrow();
     wasm_bindgen::JsValue::from(
-      element.get_framework_cross_thread_event_handler(event_name, event_type),
+      element_data.get_framework_cross_thread_event_handler(event_name, event_type),
     )
   }
 
   #[wasm_bindgen(js_name = "__GetEvents")]
-  pub fn get_events(&self, element: &LynxElement) -> Vec<EventInfo> {
+  pub fn get_events(&self, unique_id: i32) -> Vec<EventInfo> {
     let mut event_infos: Vec<EventInfo> = vec![];
     let event_types = vec!["bind", "capture-bind", "catch", "capture-catch"];
+    let element_data = self
+      .unique_id_to_element_map
+      .get(&unique_id)
+      .unwrap()
+      .borrow();
     for event_type in event_types {
       for event_name in self.get_enabled_events() {
         if let Some(event_handlers) =
-          element.get_framework_cross_thread_event_handler(event_name, event_type)
+          element_data.get_framework_cross_thread_event_handler(event_name, event_type)
         {
           event_infos.push(EventInfo {
             event_name: event_name.clone(),
@@ -80,7 +93,7 @@ impl MainThreadGlobalThis {
           });
         }
         if let Some(event_handlers) =
-          element.get_framework_run_worklet_event_handler(event_name, event_type)
+          element_data.get_framework_run_worklet_event_handler(event_name, event_type)
         {
           event_infos.push(EventInfo {
             event_name: event_name.clone(),
@@ -91,18 +104,6 @@ impl MainThreadGlobalThis {
       }
     }
     event_infos
-  }
-
-  #[wasm_bindgen(js_name = "__SetEvents")]
-  pub fn set_events(&mut self, element: &LynxElement, events: Vec<EventInfo>) {
-    for event in events {
-      self.add_event(
-        element,
-        event.event_type,
-        event.event_name,
-        event.event_handler,
-      );
-    }
   }
 }
 
@@ -134,31 +135,36 @@ impl MainThreadGlobalThis {
 
   fn dispatch_event_by_path(
     &self,
-    bubble_path: &Vec<&LynxElement>,
+    bubble_path: &Vec<i32>,
     event_name: &str,
-    target: &LynxElement,
+    target_unique_id: i32,
     serialized_event: &wasm_bindgen::JsValue,
     capture: bool,
   ) -> bool {
-    let target_js_object = create_event_target_object(target);
-    let page_unique_id = if let Some(page) = &self.page {
-      page.get_unique_id()
-    } else {
-      -1
-    };
+    let target_element_data = self
+      .unique_id_to_element_map
+      .get(&target_unique_id)
+      .unwrap()
+      .borrow();
+    let target_js_object = target_element_data.create_event_target_object();
     // if current is capture phase, we should iterate from root to target
-    let iter: Box<dyn Iterator<Item = &&LynxElement>> = if capture {
+    let iter: Box<dyn Iterator<Item = &i32>> = if capture {
       Box::new(bubble_path.iter().rev())
     } else {
       Box::new(bubble_path.iter())
     };
     let element_ref_ptr_str = wasm_bindgen::JsValue::from_str("elementRefptr");
-    for current_element in iter {
+    for unique_id in iter {
       let mut has_catched = false;
       // assign element target and currentTarget
       let target_js_object_shallow_copied =
         js_sys::Object::assign(&js_sys::Object::new(), &target_js_object);
-      let current_target_js_object = create_event_target_object(current_element);
+      let current_target_element_data = self
+        .unique_id_to_element_map
+        .get(unique_id)
+        .unwrap()
+        .borrow();
+      let current_target_js_object = current_target_element_data.create_event_target_object();
       let _ = js_sys::Reflect::set(
         serialized_event,
         &wasm_bindgen::JsValue::from_str("target"),
@@ -175,19 +181,22 @@ impl MainThreadGlobalThis {
       let catch_handler_name = format!("{}catch", if capture { "capture-" } else { "" });
       {
         // cross thread handler
-        let bind_handler =
-          current_element.get_framework_cross_thread_event_handler(event_name, &bind_handler_name);
-        let catch_handler =
-          current_element.get_framework_cross_thread_event_handler(event_name, &catch_handler_name);
+        let bind_handler = current_target_element_data
+          .get_framework_cross_thread_event_handler(event_name, &bind_handler_name);
+        let catch_handler = current_target_element_data
+          .get_framework_cross_thread_event_handler(event_name, &catch_handler_name);
         if bind_handler.is_some() || catch_handler.is_some() {
           let current_target_parent_component_id = {
-            let parent_component_unique_id = current_element.get_parent_component_unique_id();
-            if page_unique_id == parent_component_unique_id {
+            let parent_component_unique_id = current_target_element_data.parent_component_unique_id;
+            if self.page_element_unique_id == Some(parent_component_unique_id) {
               None
             } else {
-              self
-                .get_lynx_element_by_unique_id(current_element.get_parent_component_unique_id())
-                .and_then(|e| e.get_component_id())
+              let parent_component_element_data = self
+                .unique_id_to_element_map
+                .get(&parent_component_unique_id)
+                .unwrap()
+                .borrow();
+              parent_component_element_data.component_id.clone()
             }
           };
           if let Some(handler) = bind_handler {
@@ -217,21 +226,21 @@ impl MainThreadGlobalThis {
       }
       {
         // run worklet handler
-        let bind_handler =
-          current_element.get_framework_run_worklet_event_handler(event_name, &bind_handler_name);
-        let catch_handler =
-          current_element.get_framework_run_worklet_event_handler(event_name, &catch_handler_name);
+        let bind_handler = current_target_element_data
+          .get_framework_run_worklet_event_handler(event_name, &bind_handler_name);
+        let catch_handler = current_target_element_data
+          .get_framework_run_worklet_event_handler(event_name, &catch_handler_name);
         if bind_handler.is_some() || catch_handler.is_some() {
           // assign elementRefptr to event targets
           let _ = js_sys::Reflect::set(
             &target_js_object_shallow_copied,
             &element_ref_ptr_str,
-            &wasm_bindgen::JsValue::from(target.clone()),
+            &wasm_bindgen::JsValue::from(target_element_data.dom_ref.clone()),
           );
           let _ = js_sys::Reflect::set(
             &current_target_js_object,
             &element_ref_ptr_str,
-            &wasm_bindgen::JsValue::from((*current_element).clone()),
+            &wasm_bindgen::JsValue::from(current_target_element_data.dom_ref.clone()),
           );
           if let Some(handler) = bind_handler {
             self.mts_binding.run_worklet(&handler, serialized_event);
@@ -251,33 +260,13 @@ impl MainThreadGlobalThis {
   }
 }
 
-fn create_event_target_object(target_element: &LynxElement) -> js_sys::Object {
-  let entries = js_sys::Array::new();
-  entries.push(&js_sys::Array::of2(
-    &wasm_bindgen::JsValue::from_str("uniqueId"),
-    &wasm_bindgen::JsValue::from_f64(target_element.get_unique_id() as f64),
-  ));
-  entries.push(&js_sys::Array::of2(
-    &wasm_bindgen::JsValue::from_str("id"),
-    &match target_element.get_id() {
-      Some(id) => wasm_bindgen::JsValue::from_str(&id),
-      None => wasm_bindgen::JsValue::NULL,
-    },
-  ));
-  entries.push(&js_sys::Array::of2(
-    &wasm_bindgen::JsValue::from_str("dataset"),
-    &target_element.get_dataset(),
-  ));
-  js_sys::Object::from_entries(&entries).unwrap()
-}
-
 #[wasm_bindgen]
 impl MainThreadGlobalThis {
-  #[wasm_bindgen(js_name = "__wasm_bindingCommonEventHandler")]
-  pub fn __wasm_binding_common_event_handler(
+  #[wasm_bindgen(js_name = "__wasmCommonEventHandler")]
+  pub fn __wasm_common_event_handler(
     &self,
     event_name: &str,
-    target_dom: web_sys::HtmlElement,
+    mut bubble_path: Vec<i32>,
     serialized_event: wasm_bindgen::JsValue,
   ) {
     let event_name: String = constants::WEB_EVENT_NAME_TO_LYNX_MAPPING
@@ -293,27 +282,12 @@ impl MainThreadGlobalThis {
         &wasm_bindgen::JsValue::from_str(&event_name),
       )
       .unwrap();
-      let mut current_element: Option<web_sys::HtmlElement> = Some(target_dom);
-      let mut bubble_path: Vec<&LynxElement> = vec![];
-      while let Some(element) = current_element {
-        if let Some(lynx_element) = self.get_lynx_element_by_dom(&element) {
-          bubble_path.push(lynx_element);
-        }
-        if let Some(parent) = element.parent_element() {
-          let parent: web_sys::Node = parent.unchecked_into::<web_sys::Node>();
-          if self.root_node.is_same_node(Some(&parent)) {
-            break;
-          }
-          current_element = Some(parent.unchecked_into::<web_sys::HtmlElement>());
-        } else {
-          current_element = None;
-        }
-      }
-      let target_element = bubble_path[0];
+
+      let target_unique_id = bubble_path[0];
       self.dispatch_event_by_path(
         &bubble_path,
         &event_name,
-        target_element,
+        target_unique_id,
         &serialized_event,
         true,
       );
@@ -322,7 +296,7 @@ impl MainThreadGlobalThis {
       self.dispatch_event_by_path(
         &bubble_path,
         &event_name,
-        target_element,
+        target_unique_id,
         &serialized_event,
         false,
       );

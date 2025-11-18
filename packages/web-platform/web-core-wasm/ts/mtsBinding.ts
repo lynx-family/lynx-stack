@@ -26,7 +26,7 @@ export class MainThreadJSBinding {
           const serializedEvent = createCrossThreadEvent(
             event,
           );
-          this.#mtsGlobalThis?.__wasm_bindingCommonEventHandler(
+          this.#mtsGlobalThis?.__wasmCommonEventHandler(
             event.type,
             event.target as HTMLElement,
             serializedEvent,
