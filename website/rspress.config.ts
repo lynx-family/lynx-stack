@@ -64,6 +64,9 @@ const SIDEBARS = {
         'PluginQRCodeOptions',
       ],
     }),
+    createAPI({
+      name: 'lynx-bundle-rslib-config',
+    }),
   ],
   Webpack: [
     {
@@ -200,6 +203,10 @@ const SIDEBARS_ZH = {
       skips: [
         'PluginQRCodeOptions',
       ],
+    }),
+    createAPI({
+      base: 'zh/api',
+      name: 'lynx-bundle-rslib-config',
     }),
   ],
   Webpack: [
