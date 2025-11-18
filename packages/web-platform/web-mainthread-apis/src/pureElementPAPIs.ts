@@ -72,7 +72,8 @@ export const __FirstElement: FirstElementPAPI = /*#__PURE__*/ (
 
 export const __GetChildren: GetChildrenPAPI = /*#__PURE__*/ (
   element,
-) => element.children ? Array.from(element.children) as HTMLElement[] : [];
+) =>
+  element.children ? [...(element.children as unknown as HTMLElement[])] : null;
 
 export const __GetParent: GetParentPAPI = /*#__PURE__*/ (
   element,

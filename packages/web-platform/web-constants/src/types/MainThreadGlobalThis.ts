@@ -62,7 +62,7 @@ export type FirstElementPAPI = (
 
 export type GetChildrenPAPI = (
   element: HTMLElement,
-) => HTMLElement[];
+) => HTMLElement[] | null;
 
 export type GetParentPAPI = (
   element: HTMLElement,
