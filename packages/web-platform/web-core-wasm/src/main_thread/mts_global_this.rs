@@ -5,7 +5,6 @@ use super::{
 
 use crate::js_binding::{BackgroundThreadRPC, JSRealm, MainThreadJSBinding};
 use crate::main_thread::element_apis::LynxElementData;
-use crate::template::{DecodedTemplateImpl, PageConfig};
 use crate::{constants, template};
 use std::cell::RefCell;
 use std::{
@@ -39,8 +38,6 @@ pub struct MainThreadGlobalThis {
   pub(super) tag_name_to_html_tag_map: HashMap<String, String>,
   pub(super) unique_id_to_element_map: HashMap<i32, Rc<RefCell<Box<LynxElementData>>>>,
   pub(super) timing_flags: Vec<String>,
-  pub(super) document: web_sys::Document,
-  pub(super) root_node: web_sys::Node,
   pub(super) exposure_changed_elements: Vec<i32>,
   pub(super) style_manager: StyleManager,
   pub(super) enabled_events: HashSet<String>,
@@ -94,7 +91,6 @@ impl MainThreadGlobalThis {
       config_enable_css_selector,
       config_enable_remove_css_scope,
     );
-    let document = web_sys::window().unwrap().document().unwrap();
     MainThreadGlobalThis {
       // template,
       mts_realm,
@@ -107,10 +103,10 @@ impl MainThreadGlobalThis {
       tag_name_to_html_tag_map: HashMap::new(),
       timing_flags: vec![],
       exposure_changed_elements: vec![],
-      document,
+      // document,
       style_manager,
       entry_template_url: None,
-      root_node,
+      // root_node,
       page_element_unique_id: None,
       config_enable_css_selector,
       config_default_display_linear,
@@ -170,22 +166,31 @@ impl MainThreadGlobalThis {
     unique_id
   }
 
-  // #[wasm_bindgen(js_name = "__LoadLepusChunk")]
-  // pub fn load_lepus_chunk(&mut self, chunk_url: &str) -> bool {
-  //   let lepus_chunk_url = self.template.get_lepus_code_url(chunk_url);
-  //   let lepus_chunk_url = match lepus_chunk_url {
-  //     Some(url) => url,
-  //     None => chunk_url,
-  //   };
-  //   let result = self.mts_realm.loadScriptSync(lepus_chunk_url);
-  //   if result.is_err() {
-  //     web_sys::console::error_1(&wasm_bindgen::JsValue::from(format!(
-  //       "Failed to load lepus chunk from url: {lepus_chunk_url}"
-  //     )));
-  //     return false;
-  //   }
-  //   true
-  // }
+  #[wasm_bindgen(js_name = "__wasm_PushTemplate")]
+  pub fn push_template(
+    &mut self,
+    template_manager: &template::TemplateManager,
+    template_url: String,
+  ) {
+    if self.entry_template_url.is_none() {
+      self.entry_template_url = template_url.clone().into();
+      self.style_manager.push_style_sheet(
+        template_manager
+          .get_cached_template(&template_url)
+          .unwrap()
+          .get_style_info(),
+        None,
+      );
+    } else {
+      self.style_manager.push_style_sheet(
+        template_manager
+          .get_cached_template(&template_url)
+          .unwrap()
+          .get_style_info(),
+        Some(&template_url),
+      );
+    }
+  }
 
   // #[wasm_bindgen(js_name = "__wasm_GC")]
   // pub fn gc(&mut self) {

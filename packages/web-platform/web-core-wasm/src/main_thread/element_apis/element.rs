@@ -1,10 +1,6 @@
-use super::MainThreadGlobalThis;
-use crate::constants;
-use std::{cell::RefCell, collections::HashMap, rc::Rc};
-use wasm_bindgen::prelude::*;
-use wasm_bindgen_derive::TryFromJsValue;
+use std::collections::HashMap;
 
-#[derive(Default, Clone)]
+#[derive(Default)]
 pub(crate) struct EventHandler {
   /* bind capture-bind catch capture-catch */
   framework_cross_thread_identifier: HashMap<String, String>,
@@ -26,19 +22,6 @@ pub(crate) struct LynxElementData {
 }
 
 impl LynxElementData {
-  pub(crate) fn new(dom_ref: web_sys::HtmlElement) -> Self {
-    Self {
-      unique_id: -1,
-      css_id: 0,
-      parent_component_unique_id: -1,
-      component_id: None,
-      dataset: None,
-      component_config: None,
-      event_handlers_map: None,
-      dom_ref,
-    }
-  }
-
   pub(crate) fn get_framework_cross_thread_event_handler(
     &self,
     event_name: &str,
@@ -115,10 +98,7 @@ impl LynxElementData {
     ));
     entries.push(&js_sys::Array::of2(
       &wasm_bindgen::JsValue::from_str("dataset"),
-      &self
-        .dataset
-        .clone()
-        .unwrap_or_else(|| js_sys::Object::new()),
+      &self.dataset.clone().unwrap_or_default(),
     ));
     js_sys::Object::from_entries(&entries).unwrap()
   }

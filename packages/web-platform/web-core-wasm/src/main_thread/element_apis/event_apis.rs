@@ -135,7 +135,7 @@ impl MainThreadGlobalThis {
 
   fn dispatch_event_by_path(
     &self,
-    bubble_path: &Vec<i32>,
+    bubble_path: &[i32],
     event_name: &str,
     target_unique_id: i32,
     serialized_event: &wasm_bindgen::JsValue,

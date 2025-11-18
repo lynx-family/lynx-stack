@@ -1,24 +1,5 @@
 use super::MainThreadGlobalThis;
-use serde::Deserialize;
 use wasm_bindgen::prelude::*;
-
-#[derive(Deserialize)]
-struct InsertAction {
-  position: i32,
-}
-
-#[derive(Deserialize)]
-struct RemoveAction {
-  position: i32,
-}
-
-#[derive(Deserialize)]
-struct UpdateListInfoValue {
-  #[serde(rename = "insertAction", skip_serializing)]
-  insert_actions: Vec<InsertAction>,
-  #[serde(rename = "removeAction", skip_serializing)]
-  remove_actions: Vec<RemoveAction>,
-}
 
 #[wasm_bindgen]
 impl MainThreadGlobalThis {
