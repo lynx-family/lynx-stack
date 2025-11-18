@@ -32,6 +32,7 @@
     "@lynx-js/web-constants": "workspace:*",
     "@lynx-js/web-core": "workspace:*",
     "@lynx-js/web-core-server": "workspace:*",
+    "@lynx-js/web-core-wasm": "workspace:*",
     "@lynx-js/web-elements": "workspace:*",
     "@lynx-js/web-elements-compat": "workspace:*",
     "@lynx-js/web-elements-reactive": "workspace:*",
@@ -44,9 +45,11 @@
     "@playwright/test": "^1.56.0",
     "@rspack/cli": "catalog:rspack",
     "@rspack/core": "catalog:rspack",
+    "happy-dom": "^20.0.10",
     "nyc": "^17.1.0",
     "source-map-loader": "^5.0.0",
     "tslib": "^2.8.1",
-    "v8-to-istanbul": "^9.3.0"
+    "v8-to-istanbul": "^9.3.0",
+    "vite-plugin-wasm": "^3.5.0"
   }
 }
