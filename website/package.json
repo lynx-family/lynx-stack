@@ -21,6 +21,7 @@
   "devDependencies": {
     "@lynx-js/chunk-loading-webpack-plugin": "workspace:*",
     "@lynx-js/css-extract-webpack-plugin": "workspace:*",
+    "@lynx-js/lynx-bundle-rslib-config": "workspace:*",
     "@lynx-js/qrcode-rsbuild-plugin": "workspace:*",
     "@lynx-js/react": "workspace:*",
     "@lynx-js/react-refresh-webpack-plugin": "workspace:*",
