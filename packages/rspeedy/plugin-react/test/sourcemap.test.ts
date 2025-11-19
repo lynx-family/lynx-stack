@@ -9,7 +9,7 @@ import path from 'node:path'
 
 import type { RsbuildPlugin } from '@rsbuild/core'
 import { SourceMapConsumer } from 'source-map'
-import type { RawSourceMap } from 'source-map'
+import type { NullableMappedPosition, RawSourceMap } from 'source-map'
 import { beforeAll, describe, expect, test, vi } from 'vitest'
 
 import { createStubRspeedy as createRspeedy } from './createRspeedy.js'
@@ -118,7 +118,7 @@ describe('Sourcemap', async () => {
     ) as RawSourceMap
 
     const consumer = await new SourceMapConsumer(backgroundSourceMap)
-    const functionName2Source: Record<string, string | null> = {}
+    const functionName2Source: Record<string, NullableMappedPosition> = {}
     functionNames.forEach((name) => {
       const backgroundSourceLines = backgroundSource.split('\n')
       let line = -1, column = -1
@@ -133,6 +133,11 @@ describe('Sourcemap', async () => {
           line,
           column,
         })
+      if (functionName2Source[name].source) {
+        functionName2Source[name].source = path.basename(
+          functionName2Source[name].source,
+        )
+      }
     })
     expect(functionName2Source).toMatchInlineSnapshot(`
       {
@@ -140,19 +145,19 @@ describe('Sourcemap', async () => {
           "column": 0,
           "line": 296,
           "name": null,
-          "source": "../../../../../../../..<WORKSPACE>/node_modules/<PNPM_INNER>/@hongzhiyuan/preact/dist/preact.mjs",
+          "source": "preact.mjs",
         },
         "functionThatThrows": {
           "column": 0,
           "line": 18,
           "name": null,
-          "source": "../../../../../../../..<WORKSPACE>/packages/rspeedy/plugin-react/test/fixtures/sourcemap/index.tsx",
+          "source": "index.tsx",
         },
         "innerFunction": {
           "column": 0,
           "line": 13,
           "name": null,
-          "source": "../../../../../../../..<WORKSPACE>/packages/rspeedy/plugin-react/test/fixtures/sourcemap/index.tsx",
+          "source": "index.tsx",
         },
       }
     `)
