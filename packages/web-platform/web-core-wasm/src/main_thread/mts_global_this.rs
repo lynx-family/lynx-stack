@@ -3,7 +3,7 @@ use super::{
   style::StyleManager,
 };
 
-use crate::js_binding::{BackgroundThreadRPC, JSRealm, MainThreadJSBinding};
+use crate::js_binding::{JSRealm, MainThreadJSBinding};
 use crate::main_thread::element_apis::LynxElementData;
 use crate::{constants, template};
 use std::cell::RefCell;
@@ -34,19 +34,17 @@ pub(crate) fn set_css_id_status(element_data: &mut LynxElementData, css_id: i32)
 
 #[wasm_bindgen]
 pub struct MainThreadGlobalThis {
-  pub(super) unique_id_counter: i32,
   pub(super) tag_name_to_html_tag_map: HashMap<String, String>,
-  pub(super) unique_id_to_element_map: HashMap<i32, Rc<RefCell<Box<LynxElementData>>>>,
+  pub(super) unique_id_to_element_map: Vec<Option<Rc<RefCell<Box<LynxElementData>>>>>,
   pub(super) timing_flags: Vec<String>,
   pub(super) exposure_changed_elements: Vec<i32>,
   pub(super) style_manager: StyleManager,
   pub(super) enabled_events: HashSet<String>,
-  pub(super) page_element_unique_id: Option<i32>,
+  pub(super) page_element_unique_id: Option<usize>,
   // pub(super) template: DecodedTemplateImpl,
   // pub(super) element_templates_instances: HashMap<String, ElementTemplatesInstance>,
   pub(super) mts_realm: JSRealm,
   pub(super) mts_binding: MainThreadJSBinding,
-  pub(super) bts_rpc: BackgroundThreadRPC,
   pub(super) entry_template_url: Option<String>,
   pub(super) config_enable_css_selector: bool,
   pub(super) config_default_display_linear: bool,
@@ -54,23 +52,15 @@ pub struct MainThreadGlobalThis {
 }
 
 impl MainThreadGlobalThis {
-  // pub(crate) fn get_lynx_element_by_dom(&self, dom: &web_sys::HtmlElement) -> Option<&LynxElement> {
-  //   let unique_id: i32 = js_sys::Reflect::get(
-  //     dom,
-  //     &wasm_bindgen::JsValue::from_str(constants::LYNX_UNIQUE_ID_ATTRIBUTE),
-  //   )
-  //   .unwrap()
-  //   .as_f64()
-  //   .unwrap() as i32;
-  //   self.get_lynx_element_by_unique_id(unique_id)
-  // }
-
-  // pub(crate) fn get_lynx_element_by_unique_id(&self, unique_id: i32) -> Option<&LynxElement> {
-  //   self
-  //     .unique_id_to_element_map
-  //     .get(&unique_id)
-  //     .map(|boxed_element| boxed_element.as_ref())
-  // }
+  pub(crate) fn get_element_data_by_unique_id(
+    &self,
+    unique_id: usize,
+  ) -> Option<Rc<RefCell<Box<LynxElementData>>>> {
+    self
+      .unique_id_to_element_map
+      .get(unique_id)
+      .and_then(|opt| opt.clone())
+  }
 }
 
 #[wasm_bindgen]
@@ -80,7 +70,6 @@ impl MainThreadGlobalThis {
     root_node: web_sys::Node,
     mts_realm: JSRealm,
     mts_binding: MainThreadJSBinding,
-    bts_rpc: BackgroundThreadRPC,
     config_enable_css_selector: bool,
     config_enable_remove_css_scope: bool,
     config_default_display_linear: bool,
@@ -95,10 +84,8 @@ impl MainThreadGlobalThis {
       // template,
       mts_realm,
       mts_binding,
-      bts_rpc,
-      unique_id_counter: 1,
       // element_templates_instances: HashMap::new(),
-      unique_id_to_element_map: HashMap::new(),
+      unique_id_to_element_map: vec![None],
       enabled_events: HashSet::new(),
       tag_name_to_html_tag_map: HashMap::new(),
       timing_flags: vec![],
@@ -115,29 +102,28 @@ impl MainThreadGlobalThis {
   }
 
   #[wasm_bindgen(js_name = "__wasm_set_page_element_unique_id")]
-  pub fn set_page_element_unique_id(&mut self, unique_id: i32) {
+  pub fn set_page_element_unique_id(&mut self, unique_id: usize) {
     self.page_element_unique_id = Some(unique_id);
   }
 
   #[wasm_bindgen(js_name = "__CreateElementCommon")]
   pub fn create_element_common(
     self: &mut MainThreadGlobalThis,
-    parent_component_unique_id: i32,
+    parent_component_unique_id: usize,
     dom: web_sys::HtmlElement,
     css_id: Option<i32>,
     component_id: Option<String>,
-  ) -> i32 {
+  ) -> usize {
     // unique id
     /*
      if the css selector is disabled, we need to set the unique id attribute for element lookup by using attribute selector
     */
-    self.unique_id_counter += 1;
-    let unique_id = self.unique_id_counter;
+    let unique_id = self.unique_id_to_element_map.len();
     if !self.config_enable_css_selector {
       let _ = dom.set_attribute(constants::LYNX_UNIQUE_ID_ATTRIBUTE, &unique_id.to_string());
     }
+    let unique_id = self.unique_id_to_element_map.len();
     let mut element_data = Box::new(LynxElementData {
-      unique_id,
       css_id: 0,
       parent_component_unique_id,
       component_id,
@@ -150,11 +136,10 @@ impl MainThreadGlobalThis {
     let css_id = {
       if let Some(css_id) = css_id {
         css_id
-      } else if let Some(parent_component) = self
-        .unique_id_to_element_map
-        .get(&parent_component_unique_id)
+      } else if let Some(parent_component_data) =
+        self.get_element_data_by_unique_id(parent_component_unique_id)
       {
-        parent_component.borrow().css_id
+        parent_component_data.borrow().css_id
       } else {
         0
       }
@@ -162,7 +147,7 @@ impl MainThreadGlobalThis {
     set_css_id_status(&mut element_data, css_id);
     self
       .unique_id_to_element_map
-      .insert(unique_id, Rc::new(RefCell::new(element_data)));
+      .push(Some(Rc::new(RefCell::new(element_data))));
     unique_id
   }
 

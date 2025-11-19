@@ -9,7 +9,7 @@ const __dirname = path.dirname(__filename);
 export default defineConfig({
   test: {
     include: ['**/tests/*.spec.ts'],
-    name: 'web-platform/web-tests',
+    name: 'web-platform/web-core-tests',
     // benchmark: {
     //   include: ['**/tests/*.bench.vitest.spec.ts'],
     // },

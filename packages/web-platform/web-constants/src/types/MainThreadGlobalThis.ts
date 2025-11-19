@@ -321,7 +321,7 @@ export interface ElementPAPIs {
   __ElementFromBinary: ElementFromBinaryPAPI;
 
   // __GetTemplateParts currently only provided by the thread-strategy = "all-on-ui" (default)
-  __GetTemplateParts?: GetTemplatePartsPAPI;
+  __GetTemplateParts: GetTemplatePartsPAPI;
 
   __MarkPartElement: MarkPartElementPAPI;
   __MarkTemplateElement: MarkTemplateElementPAPI;

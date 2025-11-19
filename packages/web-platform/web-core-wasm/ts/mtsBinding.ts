@@ -5,35 +5,127 @@
 import { type JSRealm } from './mtsRealm.js';
 import { type MainThreadGlobalThis } from '../dist/standard.js';
 import { createCrossThreadEvent } from './createCrossThreadEvent.js';
+import {
+  type LynxCrossThreadEvent,
+  type LynxCrossThreadEventTarget,
+  type MinimalRawEventObject,
+  uniqueIdSymbol,
+  LynxEventNameToW3cCommon,
+  type DecoratedHTMLElement,
+} from '@lynx-js/web-constants';
 
 export class MainThreadJSBinding {
   #mtsGlobalThis: MainThreadGlobalThis | undefined;
   constructor(private mtsRealm: JSRealm, private rootDom: ShadowRoot) {
   }
 
+  #eventHandler = (event: Event) => {
+    const bubblePath: number[] = [];
+    let currentTarget = event.target as
+      | DecoratedHTMLElement
+      | ShadowRoot
+      | null;
+    while (currentTarget) {
+      if (currentTarget === this.rootDom) {
+        break;
+      }
+      bubblePath.push((currentTarget as DecoratedHTMLElement)[uniqueIdSymbol]);
+      currentTarget = currentTarget.parentElement as
+        | DecoratedHTMLElement
+        | null;
+    }
+    const serializedEvent = createCrossThreadEvent(
+      event as MinimalRawEventObject,
+    );
+    let catched = this.#mtsGlobalThis!.dispatch_event_by_path(
+      new Uint32Array(bubblePath.reverse()),
+      serializedEvent.type,
+      true,
+      event.target as HTMLElement,
+      serializedEvent,
+    );
+    if (catched) {
+      return;
+    }
+    this.#mtsGlobalThis!.dispatch_event_by_path(
+      new Uint32Array(bubblePath.reverse()),
+      serializedEvent.type,
+      false,
+      event.target as HTMLElement,
+      serializedEvent,
+    );
+  };
+
+  #generateTargetObject(
+    element: DecoratedHTMLElement,
+  ): LynxCrossThreadEventTarget {
+    const uniqueId = element[uniqueIdSymbol];
+    return {
+      dataset: this.#mtsGlobalThis!.__GetDataset(uniqueId) as {
+        [key: string]: string;
+      },
+      id: element.id || null,
+      uniqueId,
+    };
+  }
+
   setMainThreadInstance(mtsGlobalThis: MainThreadGlobalThis) {
     this.#mtsGlobalThis = mtsGlobalThis;
   }
-  runWorklet(handler: any, eventObject: any) {
-    this.mtsRealm.globalWindow.runWorklet?.(handler, eventObject);
+  runWorklet(
+    handler: unknown,
+    eventObject: LynxCrossThreadEvent,
+    target: HTMLElement,
+    currentTarget: HTMLElement,
+  ) {
+    eventObject.target = this.#generateTargetObject(
+      target as DecoratedHTMLElement,
+    );
+    eventObject.currentTarget = this.#generateTargetObject(
+      currentTarget as DecoratedHTMLElement,
+    );
+    // @ts-expect-error
+    eventObject.target.elementRefptr = target;
+    // @ts-expect-error
+    eventObject.currentTarget.elementRefptr = currentTarget;
+    // @ts-expect-error
+    this.mtsRealm.globalWindow.runWorklet?.(handler, [eventObject]);
+  }
+
+  publicComponentEvent(
+    componentId: string,
+    hname: string,
+    eventObject: LynxCrossThreadEvent,
+    target: HTMLElement,
+    currentTarget: HTMLElement,
+  ) {
+    eventObject.target = this.#generateTargetObject(
+      target as DecoratedHTMLElement,
+    );
+    eventObject.currentTarget = this.#generateTargetObject(
+      currentTarget as DecoratedHTMLElement,
+    );
+  }
+  publishEvent(
+    eventName: string,
+    eventObject: LynxCrossThreadEvent,
+    target: HTMLElement,
+    currentTarget: HTMLElement,
+  ) {
+    eventObject.target = this.#generateTargetObject(
+      target as DecoratedHTMLElement,
+    );
+    eventObject.currentTarget = this.#generateTargetObject(
+      currentTarget as DecoratedHTMLElement,
+    );
   }
 
   enableEvent(eventName: string) {
-    if (this.#mtsGlobalThis) {
-      this.rootDom.addEventListener(
-        eventName,
-        (event) => {
-          const serializedEvent = createCrossThreadEvent(
-            event,
-          );
-          this.#mtsGlobalThis?.__wasmCommonEventHandler(
-            event.type,
-            event.target as HTMLElement,
-            serializedEvent,
-          );
-        },
-        { capture: true, passive: true },
-      );
-    }
+    const htmlEventName = LynxEventNameToW3cCommon[eventName] || eventName;
+    this.rootDom.addEventListener(
+      htmlEventName,
+      this.#eventHandler,
+      { capture: true, passive: true },
+    );
   }
 }

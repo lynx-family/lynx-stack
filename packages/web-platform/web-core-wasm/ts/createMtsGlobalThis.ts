@@ -44,14 +44,15 @@ import {
   __GetTemplateParts,
   __UpdateListCallbacks,
 } from './pureElementPAPIs.js';
+import { type MainThreadJSBinding } from './mtsBinding.js';
 
 export const templateManager = new TemplateManager();
 
 export function createMtsGlobalThis(
   rootDom: Node,
-  mts_realm: any,
-  mts_binding: any,
-  bts_rpc: any,
+  mtsRealm: any,
+  mtsBinding: MainThreadJSBinding,
+  btsRpc: any,
   config_enable_css_selector: boolean,
   config_enable_remove_css_scope: boolean,
   config_default_display_linear: boolean,
@@ -60,16 +61,15 @@ export function createMtsGlobalThis(
   // let uniqueIdCounter = 1;
   const wasmContext = new MainThreadGlobalThis(
     rootDom,
-    mts_realm,
-    mts_binding,
-    bts_rpc,
+    mtsRealm,
+    mtsBinding,
     config_enable_css_selector,
     config_enable_remove_css_scope,
     config_default_display_linear,
     config_default_overflow_visible,
   );
-  // mtsGlobalThis.__CreateView = (parent_component_uniqueId) => createElementCommon('x-view', parent_component_uniqueId);
   let page: DecoratedHTMLElement | undefined = undefined;
+  mtsBinding.setMainThreadInstance(wasmContext);
   return {
     __CreateView(parentComponentUniqueId: number) {
       const dom = document.createElement('x-view') as DecoratedHTMLElement;
@@ -211,7 +211,7 @@ export function createMtsGlobalThis(
       );
       if (cssId !== null) {
         wasmContext.__wasm_update_css_id(
-          new Int32Array(uniqueIds),
+          new Uint32Array(uniqueIds),
           cssId,
         );
       }
@@ -260,7 +260,9 @@ export function createMtsGlobalThis(
     },
     __AddConfig: (element, type, value) => {
       const uniqueId = (element as DecoratedHTMLElement)[uniqueIdSymbol];
-      wasmContext.__AddConfig(uniqueId, type, value);
+      const config = wasmContext.__GetConfig(uniqueId);
+      // @ts-expect-error
+      config[type] = value;
     },
     __UpdateComponentInfo: (element, componentInfo) => {
       const uniqueId = (element as DecoratedHTMLElement)[uniqueIdSymbol];

@@ -172,7 +172,7 @@ export const __GetTemplateParts: GetTemplatePartsPAPI = (
   const templateUniqueId = __GetElementUniqueID(templateElement);
   const parts: Record<string, HTMLElement> = {};
   const partElements = templateElement.querySelectorAll!(
-    `[${lynxPartIdAttribute}]:not([${lynxUniqueIdAttribute}="${templateUniqueId}"] [${lynxElementTemplateMarkerAttribute}] [${lynxPartIdAttribute}])`,
+    `[${lynxPartIdAttribute}]:not([${lynxElementTemplateMarkerAttribute}="${templateUniqueId}"] [${lynxElementTemplateMarkerAttribute}] [${lynxPartIdAttribute}])`,
   ) as unknown as HTMLElement[];
   for (const partElement of partElements) {
     const partId = partElement.getAttribute(lynxPartIdAttribute);
@@ -186,7 +186,11 @@ export const __GetTemplateParts: GetTemplatePartsPAPI = (
 export const __MarkTemplateElement: MarkTemplateElementPAPI = (
   element,
 ) => {
-  element.setAttribute(lynxElementTemplateMarkerAttribute, '');
+  const templateUniqueId = __GetElementUniqueID(element);
+  element.setAttribute(
+    lynxElementTemplateMarkerAttribute,
+    templateUniqueId.toString(),
+  );
 };
 
 export const __MarkPartElement: MarkPartElementPAPI = (

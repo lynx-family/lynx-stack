@@ -5,6 +5,8 @@ import {
   type Cloneable,
   type CloneableObject,
   type LynxCrossThreadEvent,
+  type MinimalRawEventObject,
+  W3cEventNameToLynx,
 } from '@lynx-js/web-constants';
 
 function toCloneableObject(obj: any): CloneableObject {
@@ -22,7 +24,7 @@ function toCloneableObject(obj: any): CloneableObject {
 }
 
 export function createCrossThreadEvent(
-  domEvent: Event,
+  domEvent: MinimalRawEventObject,
 ): LynxCrossThreadEvent {
   const type = domEvent.type;
   const params: Cloneable = {};
@@ -78,7 +80,10 @@ export function createCrossThreadEvent(
     };
   }
 
+  const lynxEventName = W3cEventNameToLynx[domEvent.type] ?? domEvent.type;
+
   return {
+    type: lynxEventName,
     timestamp: domEvent.timeStamp,
     // @ts-expect-error
     detail,

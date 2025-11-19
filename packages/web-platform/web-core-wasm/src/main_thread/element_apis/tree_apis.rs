@@ -4,12 +4,9 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 impl MainThreadGlobalThis {
   #[wasm_bindgen(js_name = "__SetDataset")]
-  pub fn set_dataset(&mut self, unique_id: i32, new_dataset: &js_sys::Object) {
-    let mut element_data = self
-      .unique_id_to_element_map
-      .get(&unique_id)
-      .unwrap()
-      .borrow_mut();
+  pub fn set_dataset(&mut self, unique_id: usize, new_dataset: &js_sys::Object) {
+    let element_rc = self.get_element_data_by_unique_id(unique_id).unwrap();
+    let mut element_data = element_rc.borrow_mut();
     let dom = element_data.dom_ref.clone();
     let dataset = element_data.dataset.get_or_insert_with(js_sys::Object::new);
     // compare old dataset and new dataset and update dom attributes
@@ -46,16 +43,13 @@ impl MainThreadGlobalThis {
   #[wasm_bindgen(js_name = "__AddDataset")]
   pub fn add_dataset(
     &mut self,
-    unique_id: i32,
+    unique_id: usize,
     key: &wasm_bindgen::JsValue,
     value: &wasm_bindgen::JsValue,
   ) {
     // get the dataset object, create one if not exists
-    let mut element_data = self
-      .unique_id_to_element_map
-      .get(&unique_id)
-      .unwrap()
-      .borrow_mut();
+    let element_rc = self.get_element_data_by_unique_id(unique_id).unwrap();
+    let mut element_data = element_rc.borrow_mut();
     let dataset_obj = if let Some(dataset) = element_data.dataset.take() {
       dataset
     } else {
@@ -66,12 +60,9 @@ impl MainThreadGlobalThis {
   }
 
   #[wasm_bindgen(js_name = "__GetDataset")]
-  pub fn get_dataset(&self, unique_id: i32) -> js_sys::Object {
-    let element_data = self
-      .unique_id_to_element_map
-      .get(&unique_id)
-      .unwrap()
-      .borrow();
+  pub fn get_dataset(&self, unique_id: usize) -> js_sys::Object {
+    let element_rc = self.get_element_data_by_unique_id(unique_id).unwrap();
+    let element_data = element_rc.borrow();
     if let Some(dataset) = &element_data.dataset {
       dataset.clone()
     } else {
@@ -80,12 +71,9 @@ impl MainThreadGlobalThis {
   }
 
   #[wasm_bindgen(js_name = "__GetDataByKey")]
-  pub fn get_data_by_key(&self, unique_id: i32, key: &str) -> wasm_bindgen::JsValue {
-    let element_data = self
-      .unique_id_to_element_map
-      .get(&unique_id)
-      .unwrap()
-      .borrow();
+  pub fn get_data_by_key(&self, unique_id: usize, key: &str) -> wasm_bindgen::JsValue {
+    let element_rc = self.get_element_data_by_unique_id(unique_id).unwrap();
+    let element_data = element_rc.borrow();
     if let Some(dataset) = &element_data.dataset {
       if let Ok(value) = js_sys::Reflect::get(dataset, &wasm_bindgen::JsValue::from_str(key)) {
         value

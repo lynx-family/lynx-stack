@@ -39,7 +39,9 @@ const mtsGlobalThisWasm = createMtsGlobalThis(
   {
     globalWindow: window,
   } as any,
-  {} as any,
+  {
+    setMainThreadInstance: () => {},
+  } as any,
   {} as any,
   true,
   true,
@@ -48,52 +50,52 @@ const mtsGlobalThisWasm = createMtsGlobalThis(
 );
 
 bench
-  // .add('create-view-wasm', () => {
-  //   mtsGlobalThisWasm.__CreateView(1);
-  // })
-  // .add('create-view-js', () => {
-  //   mtsGlobalThisJS.__CreateView(1);
-  // })
-  // .add('set-inline-style-obj-wasm', () => {
-  //   const element = mtsGlobalThisWasm.__CreateView(1);
-  //   mtsGlobalThisWasm.__SetInlineStyles(element, {
-  //     width: '100px',
-  //     height: '100px',
-  //     backgroundColor: 'red',
-  //   });
-  // })
-  // .add('set-inline-style-obj-js', () => {
-  //   const element = mtsGlobalThisJS.__CreateView(1);
-  //   mtsGlobalThisJS.__SetInlineStyles(element, {
-  //     width: '100px',
-  //     height: '100px',
-  //     backgroundColor: 'red',
-  //   });
-  // })
-  // .add('set-inline-style-str-wasm', () => {
-  //   const element = mtsGlobalThisWasm.__CreateView(1);
-  //   mtsGlobalThisWasm.__SetInlineStyles(element, "width: 100px; height: 100px; background-color: red;");
-  // })
-  // .add('set-inline-style-str-js', () => {
-  //   const element = mtsGlobalThisJS.__CreateView(1);
-  //   mtsGlobalThisJS.__SetInlineStyles(element, "width: 100px; height: 100px; background-color: red;");
-  // })
-  .add('add-inline-style-wasm-str', () => {
-    const element = mtsGlobalThisWasm.__CreateView(1);
-    mtsGlobalThisWasm.__AddInlineStyle(element, 'width', '100px');
+  .add('create-view-wasm', () => {
+    mtsGlobalThisWasm.__CreateView(1);
   })
-  .add('add-inline-style-js-str', () => {
-    const element = mtsGlobalThisJS.__CreateView(1);
-    mtsGlobalThisJS.__AddInlineStyle(element, 'width', '100px');
-  })
-  .add('add-inline-style-wasm-num', () => {
-    const element = mtsGlobalThisWasm.__CreateView(1);
-    mtsGlobalThisWasm.__AddInlineStyle(element, 1, '100px');
-  })
-  .add('add-inline-style-js-num', () => {
-    const element = mtsGlobalThisJS.__CreateView(1);
-    mtsGlobalThisJS.__AddInlineStyle(element, 1, '100px');
+  .add('create-view-js', () => {
+    mtsGlobalThisJS.__CreateView(1);
   });
+//   .add('set-inline-style-obj-wasm', () => {
+//     const element = mtsGlobalThisWasm.__CreateView(1);
+//     mtsGlobalThisWasm.__SetInlineStyles(element, {
+//       width: '100px',
+//       height: '100px',
+//       backgroundColor: 'red',
+//     });
+//   })
+//   .add('set-inline-style-obj-js', () => {
+//     const element = mtsGlobalThisJS.__CreateView(1);
+//     mtsGlobalThisJS.__SetInlineStyles(element, {
+//       width: '100px',
+//       height: '100px',
+//       backgroundColor: 'red',
+//     });
+//   })
+//   .add('set-inline-style-str-wasm', () => {
+//     const element = mtsGlobalThisWasm.__CreateView(1);
+//     mtsGlobalThisWasm.__SetInlineStyles(element, "width: 100px; height: 100px; background-color: red;");
+//   })
+//   .add('set-inline-style-str-js', () => {
+//     const element = mtsGlobalThisJS.__CreateView(1);
+//     mtsGlobalThisJS.__SetInlineStyles(element, "width: 100px; height: 100px; background-color: red;");
+//   })
+//   .add('add-inline-style-wasm-str', () => {
+//     const element = mtsGlobalThisWasm.__CreateView(1);
+//     mtsGlobalThisWasm.__AddInlineStyle(element, 'width', '100px');
+//   })
+//   .add('add-inline-style-js-str', () => {
+//     const element = mtsGlobalThisJS.__CreateView(1);
+//     mtsGlobalThisJS.__AddInlineStyle(element, 'width', '100px');
+//   })
+//   .add('add-inline-style-wasm-num', () => {
+//     const element = mtsGlobalThisWasm.__CreateView(1);
+//     mtsGlobalThisWasm.__AddInlineStyle(element, 1, '100px');
+//   })
+//   .add('add-inline-style-js-num', () => {
+//     const element = mtsGlobalThisJS.__CreateView(1);
+//     mtsGlobalThisJS.__AddInlineStyle(element, 1, '100px');
+//   })
 
 // .add('create-text-wasm', () => {
 //   mtsGlobalThisWasm.__CreateText(1);

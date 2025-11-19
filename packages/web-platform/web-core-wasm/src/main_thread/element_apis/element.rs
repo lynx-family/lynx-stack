@@ -11,9 +11,8 @@ pub(crate) struct EventHandler {
 }
 
 pub(crate) struct LynxElementData {
-  pub(crate) unique_id: i32,
+  pub(crate) parent_component_unique_id: usize,
   pub(crate) css_id: i32,
-  pub(crate) parent_component_unique_id: i32,
   pub(crate) component_id: Option<String>,
   pub(crate) dataset: Option<js_sys::Object>,
   pub(crate) component_config: Option<js_sys::Object>,
@@ -86,22 +85,22 @@ impl LynxElementData {
     }
   }
 
-  pub(crate) fn create_event_target_object(&self) -> js_sys::Object {
-    let entries = js_sys::Array::new();
-    entries.push(&js_sys::Array::of2(
-      &wasm_bindgen::JsValue::from_str("uniqueId"),
-      &wasm_bindgen::JsValue::from_f64(self.unique_id as f64),
-    ));
-    entries.push(&js_sys::Array::of2(
-      &wasm_bindgen::JsValue::from_str("id"),
-      &self.dom_ref.id().into(),
-    ));
-    entries.push(&js_sys::Array::of2(
-      &wasm_bindgen::JsValue::from_str("dataset"),
-      &self.dataset.clone().unwrap_or_default(),
-    ));
-    js_sys::Object::from_entries(&entries).unwrap()
-  }
+  // pub(crate) fn create_event_target_object(&self) -> js_sys::Object {
+  //   let entries = js_sys::Array::new();
+  //   entries.push(&js_sys::Array::of2(
+  //     &wasm_bindgen::JsValue::from_str("uniqueId"),
+  //     &wasm_bindgen::JsValue::from_f64(self.unique_id as f64),
+  //   ));
+  //   entries.push(&js_sys::Array::of2(
+  //     &wasm_bindgen::JsValue::from_str("id"),
+  //     &self.dom_ref.id().into(),
+  //   ));
+  //   entries.push(&js_sys::Array::of2(
+  //     &wasm_bindgen::JsValue::from_str("dataset"),
+  //     &self.dataset.clone().unwrap_or_default(),
+  //   ));
+  //   js_sys::Object::from_entries(&entries).unwrap()
+  // }
 
   // pub(crate) fn add_event_listener_with_js_function(
   //   &self,

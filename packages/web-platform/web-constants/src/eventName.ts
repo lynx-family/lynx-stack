@@ -10,25 +10,13 @@ export const W3cEventNameToLynx: Record<string, string> = {
   lynxblur: 'blur',
   lynxinput: 'input',
 };
-export const LynxEventNameToW3cByTagName: Record<
-  string,
-  Record<string, string>
-> = {
-  'X-INPUT': {
-    'blur': 'lynxblur',
-    'focus': 'lynxfocus',
-    'input': 'lynxinput',
-  },
-  'X-TEXTAREA': {
-    'blur': 'lynxblur',
-    'focus': 'lynxfocus',
-    'input': 'lynxinput',
-  },
-};
 
 export const LynxEventNameToW3cCommon: Record<string, string> = {
   tap: 'click',
   scroll: 'lynxscroll',
   scrollend: 'lynxscrollend',
   touch: 'overlaytouch',
+  'lynxblur': 'lynxblur',
+  'lynxfocus': 'lynxfocus',
+  'lynxinput': 'lynxinput',
 };

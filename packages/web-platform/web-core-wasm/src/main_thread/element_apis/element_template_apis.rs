@@ -149,7 +149,7 @@ impl MainThreadGlobalThis {
     &mut self,
     template_manager: &TemplateManager,
     template_id: String,
-    parent_component_unique_id: i32,
+    parent_component_unique_id: usize,
   ) -> Vec<web_sys::HtmlElement> {
     if let Some(template_url) = &self.entry_template_url {
       if let Some(cached_template) = template_manager.get_cached_template(template_url) {

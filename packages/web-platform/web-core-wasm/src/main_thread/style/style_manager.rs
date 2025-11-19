@@ -18,7 +18,7 @@ pub(crate) struct StyleManager {
   root_node: web_sys::Node,
   css_query_map_by_entry_name: Option<HashMap<String, CssOgCssIdToClassNameToDeclarationsMap>>,
   style_sheet: Option<web_sys::CssStyleSheet>,
-  unique_id_to_style_declarations_map: Option<HashMap<i32, web_sys::CssStyleDeclaration>>,
+  unique_id_to_style_declarations_map: Option<HashMap<usize, web_sys::CssStyleDeclaration>>,
   config_enable_css_selector: bool,
   config_enable_remove_css_scope: bool,
 }
@@ -41,7 +41,7 @@ impl StyleManager {
 
   pub(crate) fn update_css_og_style(
     &mut self,
-    unique_id: i32,
+    unique_id: usize,
     css_id: i32,
     entry_name: &str,
     class_names: &[String],
