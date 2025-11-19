@@ -140,19 +140,19 @@ describe('Sourcemap', async () => {
           "column": 0,
           "line": 296,
           "name": null,
-          "source": "webpack:///node_modules/<PNPM_INNER>/@hongzhiyuan/preact/dist/preact.mjs",
+          "source": "../../../../../../../..<WORKSPACE>/node_modules/<PNPM_INNER>/@hongzhiyuan/preact/dist/preact.mjs",
         },
         "functionThatThrows": {
           "column": 0,
           "line": 18,
           "name": null,
-          "source": "webpack:///fixtures/sourcemap/index.tsx",
+          "source": "../../../../../../../..<WORKSPACE>/packages/rspeedy/plugin-react/test/fixtures/sourcemap/index.tsx",
         },
         "innerFunction": {
           "column": 0,
           "line": 13,
           "name": null,
-          "source": "webpack:///fixtures/sourcemap/index.tsx",
+          "source": "../../../../../../../..<WORKSPACE>/packages/rspeedy/plugin-react/test/fixtures/sourcemap/index.tsx",
         },
       }
     `)
