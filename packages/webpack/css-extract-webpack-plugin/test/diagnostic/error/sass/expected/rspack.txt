@@ -1,4 +1,4 @@
-ERROR in × Module build failed:
+ERROR in × Module build failed (from ../../../../../node_modules/<PNPM_INNER>/sass-loader/dist/cjs.js):
 ╰─▶   × Expected identifier.
 ╷
 1  ..foo {}
@@ -7,6 +7,6 @@ ERROR in × Module build failed:
 <ROOT>/packages/webpack/css-extract-webpack-plugin/test/diagnostic/error/sass/index.scss <LINE:COLUMN>  root stylesheet
 
 ERROR in ./error/sass/index.scss
-× Module build failed:
-╰─▶   × Error: Module build failed:
+× Module build failed (from ../../src/rspack-loader.js):
+╰─▶   × Error: Module build failed (from ../../../../../node_modules/<PNPM_INNER>/sass-loader/dist/cjs.js):
 at <ROOT>/node_modules/<PNPM_INNER>/@rspack/core/dist/index.js:<LINE:COLUMN>

@@ -421,6 +421,7 @@ export class LynxView extends HTMLElement {
             'list': 'x-list',
             'svg': 'x-svg',
             'input': 'x-input',
+            'x-input-ng': 'x-input',
             ...this.overrideLynxTagToHTMLTagMap,
           };
           if (!this.shadowRoot) {

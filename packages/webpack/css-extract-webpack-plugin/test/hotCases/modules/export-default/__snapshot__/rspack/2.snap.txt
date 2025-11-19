@@ -7,7 +7,7 @@
 - Bundle: rspack-bundle.js
 - Manifest: main.LAST_HASH.css.hot-update.json, size: 1674
 - Manifest: main.LAST_HASH.hot-update.json, size: 28
-- Update: main.LAST_HASH.hot-update.js, size: 1326
+- Update: main.LAST_HASH.hot-update.js, size: 1322
 
 ## Manifest
 
@@ -48,7 +48,7 @@ __webpack_require__.d(__webpack_exports__, {
   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 });
 // extracted by mini-css-extract-plugin
-/* ESM default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({"bar":"ceYtXbON1ZUaBizR"});
+/* export default */ const __WEBPACK_DEFAULT_EXPORT__ = ({"bar":"ceYtXbON1ZUaBizR"});
   if (true) {
     (function() {
       var localsJsonString = "{\"bar\":\"ceYtXbON1ZUaBizR\"}";

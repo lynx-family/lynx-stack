@@ -27,11 +27,16 @@ export const ListClients = /*#__PURE__*/ defineTool({
     connector.on('client-connected', onClientConnected);
     setTimeout(() => {
       connector.off('client-connected', onClientConnected);
-      reject(
-        new Error(
-          'List clients timeout. Please open App with Lynx Engine and try again.',
-        ),
-      );
+
+      if (connector.usbClients.size === 0) {
+        reject(
+          new Error(
+            'List clients timeout. Please open App with Lynx Engine and try again.',
+          ),
+        );
+      } else {
+        resolve();
+      }
     }, 1000);
     function onClientConnected() {
       connector.off('client-connected', onClientConnected);

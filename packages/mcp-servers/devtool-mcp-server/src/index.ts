@@ -85,7 +85,7 @@ const TOOLS = [
   ListConsole,
 ] as unknown as ToolDefinition[];
 
-function registerTool(mcpServer: McpServer, tool: ToolDefinition): void {
+export function registerTool(mcpServer: McpServer, tool: ToolDefinition): void {
   mcpServer.registerTool(
     tool.name,
     {
@@ -125,3 +125,6 @@ export function setupServer(mcpServer: McpServer): void {
 
   return;
 }
+
+export { defineTool, type ToolDefinition } from './tools/defineTool.ts';
+export * as Schema from './schema/index.ts';
