@@ -150,7 +150,13 @@ impl VisitMut for ShakeVisitor {
    * labeling import stmt
    */
   fn visit_mut_import_decl(&mut self, n: &mut ImportDecl) {
-    if self.opts.pkg_name.contains(&n.src.value.to_string()) {
+    let import_src = n.src.value.to_string_lossy();
+    if self
+      .opts
+      .pkg_name
+      .iter()
+      .any(|pkg| pkg == import_src.as_ref())
+    {
       self.is_runtime_import = true;
     }
     n.visit_mut_children_with(self);
@@ -244,7 +250,7 @@ impl VisitMut for ShakeVisitor {
             ref_names.push((method_name.into(), prop.sym.to_string()));
           } else if let Some(prop) = n.prop.as_computed() {
             if let Some(Lit::Str(l)) = prop.expr.as_lit() {
-              ref_names.push((method_name.into(), l.value.to_string()));
+              ref_names.push((method_name.into(), l.value.to_string_lossy().into_owned()));
             }
           }
         }

@@ -86,15 +86,6 @@ rm -rf habitat
 rm -rf lynx
 `;
 
-// We build habitat from source to workaround a bug
-await $`
-git clone --branch=0.3.142 --depth=1 https://github.com/lynx-family/habitat
-cd habitat
-uv venv venv
-source venv/bin/activate
-uv pip install .
-`.pipe(process.stdout);
-
 // prepare the lynx repo
 await $`
 git clone https://github.com/lynx-family/lynx
@@ -104,6 +95,7 @@ git checkout ${COMMIT}
 git remote add hzy https://github.com/hzy/lynx
 git fetch hzy ${PICK_COMMIT}
 git cherry-pick -n ${PICK_COMMIT}
+git apply ../patches/android_sdk_manager.diff
 `.pipe(process.stdout);
 
 // hab sync .
@@ -113,7 +105,7 @@ uv venv .venv
 source .venv/bin/activate
 uv pip install pip
 source tools/envsetup.sh
-../habitat/venv/bin/hab sync .
+tools/hab sync .
 `.pipe(process.stdout);
 
 // build from source

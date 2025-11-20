@@ -46,7 +46,7 @@ impl From<String> for AttrName {
 
 impl From<Str> for AttrName {
   fn from(name: Str) -> Self {
-    let name = name.value.as_ref().to_string();
+    let name = name.value.to_string_lossy().into_owned();
     Self::from(name)
   }
 }

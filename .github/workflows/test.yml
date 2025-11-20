@@ -62,7 +62,7 @@ jobs:
     permissions: {}
     with:
       runs-on: lynx-ubuntu-24.04-medium
-      run: pnpm eslint .
+      run: pnpm eslint . --flag v10_config_lookup_from_file
 
   lighthouse:
     needs: build

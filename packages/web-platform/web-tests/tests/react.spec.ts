@@ -3024,6 +3024,19 @@ test.describe('reactlynx3 tests', () => {
         const result = await page.locator('.result').first().innerText();
         expect(result).toBe('foobar-6-6');
       });
+      // input/bindinput test-case start for <x-input-ng>
+      test(
+        'basic-element-x-input-ng-bindinput',
+        async ({ page }, { title }) => {
+          await goto(page, title);
+          await page.locator('input').press('Enter');
+          await wait(200);
+          await page.locator('input').fill('foobar');
+          await wait(200);
+          const result = await page.locator('.result').first().innerText();
+          expect(result).toBe('foobar-6-6');
+        },
+      );
       // input/bindinput test-case end
       test(
         'basic-element-x-input-getValue',
@@ -4550,6 +4563,42 @@ test.describe('reactlynx3 tests', () => {
           await goto(page, title);
           await wait(3000);
           expect(scrolltolower).toBeTruthy();
+        },
+      );
+      test(
+        'basic-element-list-estimated-main-axis-size-px-default',
+        async ({ page }, { title }) => {
+          await goto(page, title);
+          await diffScreenShot(page, elementName, title, 'initial');
+          await wait(1000);
+          await page.evaluate(() => {
+            document.querySelector('lynx-view')!.shadowRoot!.querySelector(
+              'x-list',
+            )?.shadowRoot?.querySelector(
+              '#content',
+            )
+              ?.scrollTo(0, 300);
+          });
+          await wait(1000);
+          await diffScreenShot(page, elementName, title, 'scroll');
+        },
+      );
+      test(
+        'basic-element-list-estimated-main-axis-size-px-horizontal-default',
+        async ({ page }, { title }) => {
+          await goto(page, title);
+          await diffScreenShot(page, elementName, title, 'initial');
+          await wait(1000);
+          await page.evaluate(() => {
+            document.querySelector('lynx-view')!.shadowRoot!.querySelector(
+              'x-list',
+            )?.shadowRoot?.querySelector(
+              '#content',
+            )
+              ?.scrollTo(300, 0);
+          });
+          await wait(1000);
+          await diffScreenShot(page, elementName, title, 'scroll');
         },
       );
       test(

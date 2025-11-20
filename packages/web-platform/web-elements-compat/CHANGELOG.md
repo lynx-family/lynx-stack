@@ -1,5 +1,11 @@
 # @lynx-js/web-elements-compat
 
+## 0.2.4
+
+### Patch Changes
+
+- fix: define x-foldview-slot-drag-ng typo. ([#1915](https://github.com/lynx-family/lynx-stack/pull/1915))
+
 ## 0.2.3
 
 ### Patch Changes
