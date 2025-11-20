@@ -3,7 +3,7 @@ use super::{
   style::StyleManager,
 };
 
-use crate::js_binding::{JSRealm, MainThreadJSBinding};
+use crate::js_binding::MainThreadJSBinding;
 use crate::main_thread::element_apis::LynxElementData;
 use crate::{constants, template};
 use std::cell::RefCell;
@@ -43,7 +43,6 @@ pub struct MainThreadGlobalThis {
   pub(super) page_element_unique_id: Option<usize>,
   // pub(super) template: DecodedTemplateImpl,
   // pub(super) element_templates_instances: HashMap<String, ElementTemplatesInstance>,
-  pub(super) mts_realm: JSRealm,
   pub(super) mts_binding: MainThreadJSBinding,
   pub(super) entry_template_url: Option<String>,
   pub(super) config_enable_css_selector: bool,
@@ -68,7 +67,6 @@ impl MainThreadGlobalThis {
   #[wasm_bindgen(constructor)]
   pub fn new(
     root_node: web_sys::Node,
-    mts_realm: JSRealm,
     mts_binding: MainThreadJSBinding,
     config_enable_css_selector: bool,
     config_enable_remove_css_scope: bool,
@@ -82,7 +80,6 @@ impl MainThreadGlobalThis {
     );
     MainThreadGlobalThis {
       // template,
-      mts_realm,
       mts_binding,
       // element_templates_instances: HashMap::new(),
       unique_id_to_element_map: vec![None],

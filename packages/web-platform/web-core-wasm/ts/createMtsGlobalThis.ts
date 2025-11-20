@@ -61,7 +61,6 @@ export function createMtsGlobalThis(
   // let uniqueIdCounter = 1;
   const wasmContext = new MainThreadGlobalThis(
     rootDom,
-    mtsRealm,
     mtsBinding,
     config_enable_css_selector,
     config_enable_remove_css_scope,
