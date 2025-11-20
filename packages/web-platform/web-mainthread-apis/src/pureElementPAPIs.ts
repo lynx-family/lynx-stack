@@ -48,7 +48,6 @@ import {
   type SetInlineStylesPAPI,
   type UpdateComponentIDPAPI,
   type UpdateComponentInfoPAPI,
-  type WebFiberElementImpl,
 } from '@lynx-js/web-constants';
 import { queryCSSProperty } from './style/cssPropertyMap.js';
 import {
@@ -69,11 +68,12 @@ export const __ElementIsEqual: ElementIsEqualPAPI = /*#__PURE__*/ (
 
 export const __FirstElement: FirstElementPAPI = /*#__PURE__*/ (
   element,
-) => element.firstElementChild;
+) => element.firstElementChild as HTMLElement | null;
 
 export const __GetChildren: GetChildrenPAPI = /*#__PURE__*/ (
   element,
-) => element.children ? [...element.children] : null;
+) =>
+  element.children ? [...(element.children as unknown as HTMLElement[])] : null;
 
 export const __GetParent: GetParentPAPI = /*#__PURE__*/ (
   element,
@@ -83,15 +83,15 @@ export const __InsertElementBefore: InsertElementBeforePAPI = /*#__PURE__*/ (
   parent,
   child,
   ref,
-) => parent.insertBefore(child, ref);
+) => parent.insertBefore(child, ref as Node | null);
 
 export const __LastElement: LastElementPAPI = /*#__PURE__*/ (
   element,
-) => element.lastElementChild;
+) => element.lastElementChild as HTMLElement | null;
 
 export const __NextElement: NextElementPAPI = /*#__PURE__*/ (
   element,
-) => element.nextElementSibling;
+) => element.nextElementSibling as HTMLElement | null;
 
 export const __RemoveElement: RemoveElementPAPI = /*#__PURE__*/ (
   parent,
@@ -359,14 +359,14 @@ export const __GetTemplateParts: GetTemplatePartsPAPI = (
     return {};
   }
   const templateUniqueId = __GetElementUniqueID(templateElement);
-  const parts: Record<string, WebFiberElementImpl> = {};
+  const parts: Record<string, HTMLElement> = {};
   const partElements = templateElement.querySelectorAll!(
     `[${lynxUniqueIdAttribute}="${templateUniqueId}"] [${lynxPartIdAttribute}]:not([${lynxUniqueIdAttribute}="${templateUniqueId}"] [${lynxElementTemplateMarkerAttribute}] [${lynxPartIdAttribute}])`,
-  );
+  ) as unknown as HTMLElement[];
   for (const partElement of partElements) {
     const partId = partElement.getAttribute(lynxPartIdAttribute);
     if (partId) {
-      parts[partId] = partElement as WebFiberElementImpl;
+      parts[partId] = partElement as HTMLElement;
     }
   }
   return parts;

@@ -20,7 +20,7 @@ export interface LynxRuntimeInfo {
 }
 
 export type ComponentAtIndexCallback = (
-  list: WebFiberElementImpl,
+  list: HTMLElement,
   listID: number,
   cellIndex: number,
   operationID: number,
@@ -28,7 +28,7 @@ export type ComponentAtIndexCallback = (
 ) => void;
 
 export type EnqueueComponentCallback = (
-  list: WebFiberElementImpl,
+  list: HTMLElement,
   listID: number,
   sign: number,
 ) => void;
@@ -46,51 +46,4 @@ export interface ElementAnimationOptions {
   id: string;
   keyframes?: any;
   timingOptions?: Record<string, any>;
-}
-
-export interface WebFiberElementImpl {
-  querySelectorAll?: (selectors: string) => WebFiberElementImpl[];
-  getAttributeNames: () => string[];
-  getAttribute: (name: string) => string | null;
-  setAttribute: (name: string, value: string) => void;
-  removeAttribute: (name: string) => void;
-  append: (...children: WebFiberElementImpl[]) => void;
-  appendChild: (child: WebFiberElementImpl) => void;
-  removeChild: (child: WebFiberElementImpl) => WebFiberElementImpl;
-  insertBefore: (
-    child: WebFiberElementImpl,
-    ref?: WebFiberElementImpl | null,
-  ) => WebFiberElementImpl;
-  replaceWith: (...newElement: WebFiberElementImpl[]) => void;
-  addEventListener: (
-    type: string,
-    handler: (ev: Event) => void,
-    options: {
-      capture?: boolean;
-      passive?: boolean;
-    },
-  ) => void;
-  removeEventListener: (
-    type: string,
-    handler: (ev: Event) => void,
-    options?: {
-      capture?: boolean;
-    },
-  ) => void;
-  textContent: string;
-  readonly tagName: string;
-  readonly firstElementChild: WebFiberElementImpl | null;
-  readonly children: WebFiberElementImpl[];
-  readonly parentElement: WebFiberElementImpl | null;
-  readonly parentNode: WebFiberElementImpl | null;
-  readonly lastElementChild: WebFiberElementImpl | null;
-  readonly nextElementSibling: WebFiberElementImpl | null;
-  readonly style: {
-    removeProperty(name: string): void;
-    setProperty(
-      name: string,
-      value: string,
-      priority?: 'important' | '' | null,
-    ): void;
-  };
 }

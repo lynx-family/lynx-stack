@@ -17,7 +17,6 @@ import {
   lynxTagAttribute,
   lynxUniqueIdAttribute,
   type MainThreadGlobalThis,
-  type WebFiberElementImpl,
 } from '@lynx-js/web-constants';
 
 const ENABLE_MULTI_THREAD = !!process.env.ENABLE_MULTI_THREAD;
@@ -49,7 +48,7 @@ const { decodeOperation } = ENABLE_MULTI_THREAD
   : {};
 
 function serializeElementThreadElement(
-  element: WebFiberElementImpl,
+  element: HTMLElement,
 ): ComparableElementJson {
   const parent = runtime.__GetParent(element);
   const tag = runtime.__GetTag(element);
