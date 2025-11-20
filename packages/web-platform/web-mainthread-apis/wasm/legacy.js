@@ -1,1 +1,1 @@
-export * from './binary/legacy.js';
+export * from '../binary/legacy.js';

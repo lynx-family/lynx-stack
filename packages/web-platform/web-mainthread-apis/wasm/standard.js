@@ -1,1 +1,1 @@
-export * from './binary/standard.js';
+export * from '../binary/standard.js';

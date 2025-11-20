@@ -13,7 +13,8 @@
         "src/**"
       ],
       "outputs": [
-        "dist/**"
+        "dist/**",
+        "binary/**"
       ]
     }
   }
