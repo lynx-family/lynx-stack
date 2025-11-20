@@ -12,7 +12,6 @@ js-sys = { workspace = true }
 lazy_static = { workspace = true }
 serde.workspace = true
 serde-wasm-bindgen = "0.6.5"
-serde_json.workspace = true
 wasm-bindgen = { workspace = true }
 web-sys = { workspace = true, optional = true, features = ["CssStyleDeclaration", "CssRule", "CssRuleList", "HtmlElement", "Blob", "BlobPropertyBag", "Url", "HtmlTemplateElement", "HtmlStyleElement", "DocumentFragment", "Document", "Window", "DomTokenList", "CssStyleSheet", 'console'] }
 [features]
