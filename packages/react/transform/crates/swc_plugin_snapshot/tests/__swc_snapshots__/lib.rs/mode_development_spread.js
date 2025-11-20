@@ -5,7 +5,7 @@ const __snapshot_da39a_test_1 = require('@lynx-js/react/internal').createSnapsho
         el
     ];
 }, [
-    (snapshot, index, oldValue)=>require('@lynx-js/react/internal').updateSpread(snapshot, index, oldValue, 0)
+    (snapshot, index, oldValue)=>require('@lynx-js/react/internal').updateSpread(snapshot, index, oldValue, 0, false)
 ], null, undefined, globDynamicComponentEntry, [
     0
 ]);

@@ -107,7 +107,7 @@ static NO_FLATTEN_ATTRIBUTES: Lazy<HashSet<String>> = Lazy::new(|| {
 #[derive(Debug)]
 pub enum DynamicPart {
   Attr(Expr, i32, AttrName),
-  Spread(Expr, i32),
+  Spread(Expr, i32, bool),
   Slot(JSXElement, i32),
   Children(Expr, i32),
   ListChildren(Expr, i32),
@@ -118,6 +118,13 @@ pub fn i32_to_expr(i: &i32) -> Expr {
     span: DUMMY_SP,
     value: *i as f64,
     raw: None,
+  }))
+}
+
+pub fn bool_to_expr(b: &bool) -> Expr {
+  Expr::Lit(Lit::Bool(Bool {
+    span: DUMMY_SP,
+    value: *b,
   }))
 }
 
@@ -230,10 +237,11 @@ impl DynamicPart {
             ns: Expr = Expr::Lit(Lit::Str(ns.clone().into())),
           ),
         },
-        DynamicPart::Spread(_, element_index) => quote!(
-          "(snapshot, index, oldValue) => $runtime_id.updateSpread(snapshot, index, oldValue, $element_index)" as Expr,
+        DynamicPart::Spread(_, element_index, is_list_item) => quote!(
+          "(snapshot, index, oldValue) => $runtime_id.updateSpread(snapshot, index, oldValue, $element_index, $is_list_item )" as Expr,
           runtime_id: Expr = runtime_id.clone(),
-          element_index: Expr = i32_to_expr(element_index)
+          element_index: Expr = i32_to_expr(element_index),
+          is_list_item: Expr = bool_to_expr(is_list_item)
         ),
         DynamicPart::Slot(_, _) => Expr::Lit(Lit::Null(Null { span: DUMMY_SP })),
         DynamicPart::Children(_, _) => Expr::Lit(Lit::Null(Null { span: DUMMY_SP })),
@@ -523,6 +531,7 @@ where
         self.dynamic_parts.push(DynamicPart::Spread(
           Expr::Object(spread_obj),
           self.element_index,
+          jsx_is_list_item(n),
         ));
       } else {
         let el = Expr::Ident(el.clone());
@@ -1205,7 +1214,7 @@ where
       .dynamic_parts
       .into_iter()
       .partition(|dynamic_part| match dynamic_part {
-        DynamicPart::Attr(_, _, _) | DynamicPart::Spread(_, _) => true,
+        DynamicPart::Attr(_, _, _) | DynamicPart::Spread(_, _, _) => true,
         DynamicPart::Slot(_, _) | DynamicPart::Children(_, _) | DynamicPart::ListChildren(_, _) => {
           false
         }
@@ -1247,8 +1256,8 @@ where
       .for_each(
         |(_name, _child_name, _jsx_opening, _jsx_closing, dynamic_part)| {
           match &dynamic_part {
-            DynamicPart::Attr(_, _, _) | DynamicPart::Spread(_, _) => {
-              if let DynamicPart::Attr(_, _, AttrName::Ref) | DynamicPart::Spread(_, _) =
+            DynamicPart::Attr(_, _, _) | DynamicPart::Spread(_, _, _) => {
+              if let DynamicPart::Attr(_, _, AttrName::Ref) | DynamicPart::Spread(_, _, _) =
                 dynamic_part
               {
                 snapshot_refs_and_spread_index.push(Some(
@@ -1311,7 +1320,7 @@ where
               //   })),
               // }));
             }
-            DynamicPart::Spread(value, _) => {
+            DynamicPart::Spread(value, _, _) => {
               snapshot_values.push(Some(ExprOrSpread {
                 spread: None,
                 expr: Box::new(value),
@@ -1354,7 +1363,7 @@ where
         dynamic_part_children.into_iter().for_each(|dynamic_part| {
           match dynamic_part {
             DynamicPart::Attr(_, _, _) => {}
-            DynamicPart::Spread(_, _) => {}
+            DynamicPart::Spread(_, _, _) => {}
             DynamicPart::ListChildren(expr, element_index) => {
               // snapshot_values.push(None);
               snapshot_children.push(match expr {
@@ -2394,6 +2403,52 @@ mod tests {
     <view>
       <text before={"bbb"} {...obj} after={"aaa"}>!!!</text>
     </view>
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    |t| {
+      let top_level_mark = Mark::new();
+      let unresolved_mark = Mark::new();
+      (
+        visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
+          super::JSXTransformerConfig {
+            preserve_jsx: false,
+            ..Default::default()
+          },
+          None,
+          TransformMode::Test,
+        )),
+        react::react::<&SingleThreadedComments>(
+          t.cm.clone(),
+          None,
+          react::Options {
+            next: Some(false),
+            runtime: Some(react::Runtime::Automatic),
+            import_source: Some("@lynx-js/react".into()),
+            pragma: None,
+            pragma_frag: None,
+            throw_if_namespace: None,
+            development: Some(false),
+            refresh: None,
+            ..Default::default()
+          },
+          top_level_mark,
+          unresolved_mark,
+        ),
+      )
+    },
+    basic_spread_list_item,
+    // Input codes
+    r#"
+    <list>
+      <list-item key="hello" item-key="world" {...obj}>!!!</list-item>
+    </list>
     "#
   );
 
