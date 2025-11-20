@@ -62,10 +62,13 @@ function build(release, rustFlags, outName, optimizeArgs, rust_features) {
  * bulk-memory|   75     |  79     |   15
  * sign-ext   |   74     |  62     |   14.1
  * simd       |   91     |  89     |   16.4
- * ref-typs   |   96     |  79     |   15
+ * ref-types  |   96     |  79     |   15
  * multivalue |   85     |  78     |   13.1
- * nontrapping-float-to-int | 75 | 64 | 15
- * mutable-globals | 74 | 61 | 13.1
+ * nontrapping
+ * float-
+ * to-int     |   75    |   64     | 15
+ * mutable-
+ * globals    |   74    |   61     | 13.1
  */
 
 build(
