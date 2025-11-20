@@ -73,6 +73,7 @@ function updateSpread(
   index: number,
   oldValue: Record<string, unknown> | undefined | null,
   elementIndex: number,
+  isListItem: boolean,
 ): void {
   oldValue ??= {};
   let newValue: Record<string, unknown> = snapshot.__values![index] as Record<string, unknown>; // compiler guarantee this must be an object;
@@ -103,6 +104,9 @@ function updateSpread(
       } as SnapshotInstance;
       updateListItemPlatformInfo(fakeSnapshot, index, oldPlatformInfo, elementIndex);
     }
+  } else if (isListItem) {
+    const platformInfo = pick(newValue, platformInfoAttributes);
+    snapshot.__listItemPlatformInfo = platformInfo;
   }
 
   if ('__spread' in newValue) {
