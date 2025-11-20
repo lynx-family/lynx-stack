@@ -1,6 +1,6 @@
 use wasm_bindgen::prelude::*;
-
-pub mod transformer;
+mod inline_style_parser;
+mod transformer;
 
 #[wasm_bindgen]
 pub fn transform_raw_u16_inline_style_ptr(str: &str) -> Option<String> {

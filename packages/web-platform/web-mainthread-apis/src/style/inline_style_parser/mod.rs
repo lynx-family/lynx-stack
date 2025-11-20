@@ -10,7 +10,7 @@ mod tests {
   use super::*;
   use parse_inline_style::{parse_inline_style, Transformer};
 
-  #[derive(Debug, PartialEq)]
+  #[derive(PartialEq)]
   struct Declaration {
     name_start: usize,
     name_end: usize,
@@ -502,7 +502,7 @@ mod tests {
 
   #[test]
   fn test_character_classification_macros() {
-    use crate::char_code_definitions::*;
+    use super::char_code_definitions::*;
 
     // Test digit classification
     assert!(is_digit(b'0'));
@@ -585,7 +585,7 @@ mod tests {
 
   #[test]
   fn test_char_code_category() {
-    use crate::char_code_definitions::*;
+    use super::char_code_definitions::*;
 
     // Test basic categories
     assert_eq!(char_code_category(0x0020), WHITE_SPACE_CATEGORY); // SPACE
@@ -602,7 +602,7 @@ mod tests {
 
   #[test]
   fn test_utility_functions() {
-    use crate::utils::*;
+    use super::utils::*;
 
     // Test cmp_str function
     let test_str: &[u8] = b"hello";
@@ -707,7 +707,7 @@ mod tests {
 
   #[test]
   fn test_tokenizer_specific_cases() {
-    use crate::tokenize::{self, Parser};
+    use super::tokenize::{self, Parser};
 
     struct TokenCollector {
       tokens: Vec<(u8, usize, usize)>,
@@ -800,8 +800,8 @@ mod tests {
 
   #[test]
   fn test_string_tokenizer_edge_cases() {
-    use crate::tokenize::{tokenize, Parser};
-    use crate::types::*;
+    use super::tokenize::{tokenize, Parser};
+    use super::types::*;
 
     struct TokenCollector {
       tokens: Vec<(u8, usize, usize)>,
@@ -856,8 +856,8 @@ mod tests {
 
   #[test]
   fn test_url_tokenizer_edge_cases() {
-    use crate::tokenize::{tokenize, Parser};
-    use crate::types::*;
+    use super::tokenize::{tokenize, Parser};
+    use super::types::*;
 
     struct TokenCollector {
       tokens: Vec<(u8, usize, usize)>,
@@ -936,8 +936,8 @@ mod tests {
 
   #[test]
   fn test_numeric_tokenizer_edge_cases() {
-    use crate::tokenize::{tokenize, Parser};
-    use crate::types::*;
+    use super::tokenize::{tokenize, Parser};
+    use super::types::*;
 
     struct TokenCollector {
       tokens: Vec<(u8, usize, usize)>,
@@ -1048,8 +1048,8 @@ mod tests {
 
   #[test]
   fn test_comment_tokenizer() {
-    use crate::tokenize::{tokenize, Parser};
-    use crate::types::*;
+    use super::tokenize::{tokenize, Parser};
+    use super::types::*;
 
     struct TokenCollector {
       tokens: Vec<(u8, usize, usize)>,
@@ -1097,8 +1097,8 @@ mod tests {
 
   #[test]
   fn test_additional_edge_cases() {
-    use crate::char_code_definitions::*;
-    use crate::utils::*;
+    use super::char_code_definitions::*;
+    use super::utils::*;
 
     // Test cmp_char macro
     let source: &[u8] = "Hello".as_bytes();
@@ -1146,9 +1146,9 @@ mod tests {
 
   #[test]
   fn test_remaining_coverage_gaps() {
-    use crate::char_code_definitions::*;
-    use crate::tokenize::{tokenize, Parser};
-    use crate::utils::*;
+    use super::char_code_definitions::*;
+    use super::tokenize::{tokenize, Parser};
+    use super::utils::*;
 
     struct TokenCollector {
       tokens: Vec<(u8, usize, usize)>,

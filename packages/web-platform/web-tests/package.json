@@ -38,7 +38,6 @@
     "@lynx-js/web-mainthread-apis": "workspace:*",
     "@lynx-js/web-platform-rsbuild-plugin": "workspace:*",
     "@lynx-js/web-rsbuild-server-middleware": "workspace:*",
-    "@lynx-js/web-style-transformer": "workspace:*",
     "@lynx-js/web-worker-rpc": "workspace:*",
     "@lynx-js/webpack-dev-transport": "workspace:*",
     "@playwright/test": "^1.56.0",

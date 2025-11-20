@@ -1,5 +1,8 @@
-use crate::*;
-use crate::{char_code_definitions::*, types::*, utils::*};
+use super::{
+  char_code_definitions::{self, *},
+  types::*,
+  utils::*,
+};
 
 /*
  * this code forked from css-tree
@@ -536,7 +539,7 @@ pub fn tokenize<T: Parser>(source: &[u8], parser: &mut T) {
 
 #[cfg(test)]
 mod test {
-  use crate::tokenize::*;
+  use super::*;
 
   struct TokenStreamRecorder {
     tokens: Vec<(u8, usize, usize)>,
