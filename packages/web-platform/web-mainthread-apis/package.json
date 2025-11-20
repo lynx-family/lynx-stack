@@ -34,9 +34,7 @@
     "wasm-feature-detect": "^1.8.0"
   },
   "devDependencies": {
-    "binaryen": "^124.0.0",
-    "fb-dotslash": "^0.5.8",
-    "jsdom": "^27.2.0",
-    "vite-plugin-wasm": "^3.5.0"
+    "binaryen": "^125.0.0",
+    "fb-dotslash": "^0.5.8"
   }
 }
