@@ -49,7 +49,7 @@ struct OneInfo {
 pub struct JSONRawTemplate {
   page_config: JSONPageConfig,
   card_type: Option<String>,
-  #[serde(deserialize_with = "deserialize_tolerant_string_map")]
+  // #[serde(deserialize_with = "deserialize_tolerant_string_map")]
   lepus_code: HashMap<String, String>,
   manifest: HashMap<String, String>,
   element_template: Option<HashMap<String, Vec<ElementTemplate>>>,
@@ -57,25 +57,25 @@ pub struct JSONRawTemplate {
   style_info: HashMap<String, OneInfo>,
 }
 
-fn deserialize_tolerant_string_map<'de, D>(
-  deserializer: D,
-) -> Result<HashMap<String, String>, D::Error>
-where
-  D: Deserializer<'de>,
-{
-  // tolerant the value could be js_sys::Object or string
-  // the deserializer is serde_wasm_bindgen
-  let value: serde_json::Value = Deserialize::deserialize(deserializer)?;
-  let mut result_map = HashMap::new();
-  if let serde_json::Value::Object(map) = value {
-    for (key, val) in map {
-      if let serde_json::Value::String(val_str) = val {
-        result_map.insert(key, val_str);
-      }
-    }
-  }
-  Ok(result_map)
-}
+// fn deserialize_tolerant_string_map<'de, D>(
+//   deserializer: D,
+// ) -> Result<HashMap<String, String>, D::Error>
+// where
+//   D: Deserializer<'de>,
+// {
+//   // tolerant the value could be js_sys::Object or string
+//   // the deserializer is serde_wasm_bindgen
+//   let value: serde_json::Value = Deserialize::deserialize(deserializer)?;
+//   let mut result_map = HashMap::new();
+//   if let serde_json::Value::Object(map) = value {
+//     for (key, val) in map {
+//       if let serde_json::Value::String(val_str) = val {
+//         result_map.insert(key, val_str);
+//       }
+//     }
+//   }
+//   Ok(result_map)
+// }
 impl From<JSONRawTemplate> for LynxRawTemplate {
   fn from(value: JSONRawTemplate) -> Self {
     let app_type = match value.card_type.as_deref() {
