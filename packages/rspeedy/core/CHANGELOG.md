@@ -1,5 +1,16 @@
 # @lynx-js/rspeedy
 
+## 0.12.0
+
+### Minor Changes
+
+- Bump Rsbuild v1.6.7 with Rspack v1.6.4. ([#1905](https://github.com/lynx-family/lynx-stack/pull/1905))
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-rsbuild-server-middleware@0.18.4
+
 ## 0.11.9
 
 ### Patch Changes
