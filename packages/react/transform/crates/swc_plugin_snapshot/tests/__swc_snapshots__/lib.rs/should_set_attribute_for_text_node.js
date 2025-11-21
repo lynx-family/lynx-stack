@@ -30,7 +30,7 @@ const __snapshot_da39a_test_1 = ReactLynx.createSnapshot("__snapshot_da39a_test_
         el6
     ];
 }, [
-    (snapshot, index, oldValue)=>ReactLynx.updateSpread(snapshot, index, oldValue, 5)
+    (snapshot, index, oldValue)=>ReactLynx.updateSpread(snapshot, index, oldValue, 5, false)
 ], null, undefined, globDynamicComponentEntry, [
     0
 ]);
