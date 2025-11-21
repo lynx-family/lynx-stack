@@ -6,7 +6,7 @@ Fix the error when using dynamic `key` with spread attributes on `<list-item>`.
 
 **Error Message:**
 
-```
+```text
 Native error:
 code: 220201
 message: Error for illegal list item-key in parse insert with indexes: [0, ]

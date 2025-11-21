@@ -21,7 +21,7 @@ const Page: ForwardRefExoticComponent<Omit<PropsWithChildren, 'ref'> & RefAttrib
           return;
         }
         /* v8 ignore stop */
-        updateSpread(snapshot, index, oldValue, 0);
+        updateSpread(snapshot, index, oldValue, 0, false);
       };
     }
 
