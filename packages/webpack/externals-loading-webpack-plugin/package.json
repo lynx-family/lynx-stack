@@ -1,0 +1,46 @@
+{
+  "name": "@lynx-js/externals-loading-webpack-plugin",
+  "version": "0.1.0",
+  "description": "A webpack plugin to load externals in Lynx.",
+  "keywords": [
+    "webpack",
+    "Lynx"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/webpack/externals-loading-webpack-plugin"
+  },
+  "license": "Apache-2.0",
+  "author": {
+    "name": "Hengchang Lu",
+    "email": "luhengchang228@gmail.com"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "import": "./lib/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "types": "./lib/index.d.ts",
+  "files": [
+    "lib",
+    "!lib/**/*.js.map",
+    "CHANGELOG.md",
+    "README.md"
+  ],
+  "scripts": {
+    "api-extractor": "api-extractor run --verbose",
+    "test": "vitest"
+  },
+  "devDependencies": {
+    "@lynx-js/test-tools": "workspace:*",
+    "@rspack/core": "catalog:rspack",
+    "mock-module": "./test/mock-module"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

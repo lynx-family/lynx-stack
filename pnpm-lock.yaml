@@ -1216,6 +1216,18 @@ importers:
         specifier: ^5.102.0
         version: 5.102.0
 
+  packages/webpack/externals-loading-webpack-plugin:
+    devDependencies:
+      '@lynx-js/test-tools':
+        specifier: workspace:*
+        version: link:../test-tools
+      '@rspack/core':
+        specifier: 1.6.1
+        version: 1.6.1(@swc/helpers@0.5.17)
+      mock-module:
+        specifier: ./test/mock-module
+        version: link:test/mock-module
+
   packages/webpack/react-refresh-webpack-plugin:
     devDependencies:
       '@lynx-js/react':
