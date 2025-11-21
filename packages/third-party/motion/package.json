@@ -24,6 +24,9 @@
     "README.md",
     "CHANGELOG.md"
   ],
+  "scripts": {
+    "test": "vitest run"
+  },
   "dependencies": {
     "framer-motion": "12.23.12",
     "motion-dom": "12.23.12"

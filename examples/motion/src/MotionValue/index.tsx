@@ -1,4 +1,5 @@
-import { animate } from '@lynx-js/motion-lynx';
+import { type animate, motionValue } from '@lynx-js/motion-lynx';
+import type { MotionValue } from '@lynx-js/motion-lynx';
 import { runOnMainThread, useEffect, useMainThreadRef } from '@lynx-js/react';
 import type { MainThread } from '@lynx-js/types';
 
@@ -9,22 +10,28 @@ export default function Basic() {
     null,
   );
   const boxMTRef = useMainThreadRef<MainThread.Element>(null);
+  const valueMTRef = useMainThreadRef<MotionValue<number>>();
+
+  function bindMotionValueCallback() {
+    'main thread';
+
+    valueMTRef.current ??= motionValue(0.5);
+
+    valueMTRef.current.on('change', (value) => {
+      boxMTRef.current?.setStyleProperties({
+        transform: `scale(${value})`,
+      });
+    });
+  }
 
   function startAnimation() {
     'main thread';
 
-    if (boxMTRef.current) {
-      animateMTRef.current = animate(
-        boxMTRef.current,
-        { scale: 0.4, rotate: '45deg' },
-        {
-          ease: 'circInOut',
-          duration: 1,
-          repeat: Number.POSITIVE_INFINITY,
-          repeatType: 'reverse',
-        },
-      );
-    }
+    bindMotionValueCallback();
+
+    setInterval(() => {
+      valueMTRef.current?.set(valueMTRef.current.get() + 0.5);
+    }, 1000);
   }
 
   function endAnimation() {

@@ -4,8 +4,11 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "composite": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "@lynx-js/react",
   },
   "include": [
     "src",
+    "__tests__",
   ],
 }

@@ -47,10 +47,10 @@ if (__MAIN_THREAD__) {
   globalThis.performance = performance;
   globalThis.queueMicrotask = queueMicrotask;
   // @ts-expect-error error
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
   document.querySelector = lynx.querySelector;
   // @ts-expect-error error
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
   document.querySelectorAll = lynx.querySelectorAll;
   // @ts-expect-error error
   globalThis.NodeList = NodeList;
@@ -58,10 +58,10 @@ if (__MAIN_THREAD__) {
   globalThis.SVGElement = SVGElement;
   // @ts-expect-error error
   globalThis.window = window;
-  // @ts-expect-error error
   globalThis.getComputedStyle = window.getComputedStyle;
   // @ts-expect-error error
   globalThis.HTMLElement = HTMLElement;
   globalThis.ElementCompt = ElementCompt;
+  // @ts-expect-error error
   globalThis.Element = ElementCompt;
 }
