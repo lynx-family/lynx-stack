@@ -6,8 +6,7 @@ members = [
   "packages/react/transform/crates/*",
   "packages/react/transform/swc-plugin-reactlynx",
   "packages/react/transform/swc-plugin-reactlynx-compat",
-  "packages/web-platform/inline-style-parser",
-  "packages/web-platform/web-style-transformer",
+  "packages/web-platform/web-mainthread-apis",
 ]
 
 [workspace.dependencies]

@@ -985,10 +985,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "inline-style-parser"
-version = "0.0.0"
-
-[[package]]
 name = "is-macro"
 version = "0.3.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3784,10 +3780,9 @@ dependencies = [
 ]
 
 [[package]]
-name = "web-style-transformer"
+name = "web-mainthread-apis"
 version = "0.0.0"
 dependencies = [
- "inline-style-parser",
  "js-sys",
  "lazy_static",
  "wasm-bindgen",

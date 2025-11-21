@@ -1,7 +1,6 @@
-use inline_style_parser::parse_inline_style::Transformer;
-use inline_style_parser::{char_code_definitions::is_white_space, parse_inline_style};
+use super::super::inline_style_parser::{char_code_definitions::*, parse_inline_style::*};
+use super::rules::{get_rename_rule_value, get_replace_rule_value};
 
-use crate::transformer::rules::{get_rename_rule_value, get_replace_rule_value};
 pub struct TransformerData<'a> {
   source: &'a str,
   transformed_source: String,
@@ -251,13 +250,10 @@ pub fn transform_inline_style_string<'a>(source: &'a str) -> (String, String) {
     extra_children_styles: String::new(),
   };
   let bytes = source.as_bytes();
-  parse_inline_style::parse_inline_style(bytes, &mut transformer);
-  if transformer.offset != 0 {
-    // append the remaining part of the source
-    transformer
-      .transformed_source
-      .push_str(&source[transformer.offset..]);
-  }
+  parse_inline_style(bytes, &mut transformer);
+  transformer
+    .transformed_source
+    .push_str(&source[transformer.offset..]);
   (
     transformer.transformed_source,
     transformer.extra_children_styles,
@@ -267,6 +263,13 @@ pub fn transform_inline_style_string<'a>(source: &'a str) -> (String, String) {
 #[cfg(test)]
 mod tests {
   use super::*;
+
+  #[test]
+  fn basic_one_simple_decl() {
+    let source = "height:1px;";
+    let result = transform_inline_style_string(source).0;
+    assert_eq!(result, "height:1px;");
+  }
 
   #[test]
   fn transform_basic() {

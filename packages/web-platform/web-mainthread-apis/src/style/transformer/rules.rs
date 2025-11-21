@@ -236,7 +236,7 @@ pub fn get_replace_rule_value(
 
 #[cfg(test)]
 mod tests {
-  use crate::transformer::rules::{get_rename_rule_value, get_replace_rule_value};
+  use super::{get_rename_rule_value, get_replace_rule_value};
 
   #[test]
   fn test_rename_rule_flex_direction() {

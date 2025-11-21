@@ -1,4 +1,4 @@
-use crate::char_code_definitions::*;
+use super::char_code_definitions::*;
 
 pub fn cmp_str(test_str: &[u8], start: usize, end: usize, reference_str: &[u8]) -> bool {
   if (end - start) != reference_str.len() {

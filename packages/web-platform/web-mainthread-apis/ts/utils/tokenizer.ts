@@ -1,4 +1,4 @@
-import { wasm } from '@lynx-js/web-style-transformer';
+import { wasm } from '../../wasm/index.js';
 export function transformInlineStyleString(str: string): string {
   return wasm.transform_raw_u16_inline_style_ptr(str) ?? str;
 }

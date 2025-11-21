@@ -982,12 +982,19 @@ importers:
       '@lynx-js/web-constants':
         specifier: workspace:*
         version: link:../web-constants
-      '@lynx-js/web-style-transformer':
-        specifier: workspace:*
-        version: link:../web-style-transformer
       hyphenate-style-name:
         specifier: ^1.1.0
         version: 1.1.0
+      wasm-feature-detect:
+        specifier: ^1.8.0
+        version: 1.8.0
+    devDependencies:
+      binaryen:
+        specifier: ^125.0.0
+        version: 125.0.0
+      fb-dotslash:
+        specifier: ^0.5.8
+        version: 0.5.8
 
   packages/web-platform/web-rsbuild-plugin:
     dependencies:
@@ -1035,19 +1042,6 @@ importers:
         specifier: 0.3.3
         version: 0.3.3(@rsbuild/core@1.6.7)
 
-  packages/web-platform/web-style-transformer:
-    dependencies:
-      wasm-feature-detect:
-        specifier: ^1.8.0
-        version: 1.8.0
-    devDependencies:
-      binaryen:
-        specifier: ^124.0.0
-        version: 124.0.0
-      fb-dotslash:
-        specifier: ^0.5.8
-        version: 0.5.8
-
   packages/web-platform/web-tests:
     devDependencies:
       '@lynx-js/lynx-core':
@@ -1092,9 +1086,6 @@ importers:
       '@lynx-js/web-rsbuild-server-middleware':
         specifier: workspace:*
         version: link:../web-rsbuild-server-middleware
-      '@lynx-js/web-style-transformer':
-        specifier: workspace:*
-        version: link:../web-style-transformer
       '@lynx-js/web-worker-rpc':
         specifier: workspace:*
         version: link:../web-worker-rpc
@@ -4539,8 +4530,8 @@ packages:
     resolution: {integrity: sha512-Ceh+7ox5qe7LJuLHoY0feh3pHuUDHAcRUeyL2VYghZwfpkNIy/+8Ocg0a3UuSoYzavmylwuLWQOf3hl0jjMMIw==}
     engines: {node: '>=8'}
 
-  binaryen@124.0.0:
-    resolution: {integrity: sha512-RUv9bWl9C4kwjOmi4yA/yjW/w+YMtoEEpTFtI1nIl1m+1AGWRvxirGgd8AeqUnEB65HcsjZJ+WAIsGuVBwDxwA==}
+  binaryen@125.0.0:
+    resolution: {integrity: sha512-X7CUM9ZnwL/Ow++JH5AJKiemc82J7JyeryuPvXQdXBLcL/rqrC5KMUB1mHiORSolietH9sotvaOZlr6HSwPAlw==}
     hasBin: true
 
   bl@4.1.0:
@@ -13320,7 +13311,7 @@ snapshots:
 
   binary-extensions@2.3.0: {}
 
-  binaryen@124.0.0: {}
+  binaryen@125.0.0: {}
 
   bl@4.1.0:
     dependencies:

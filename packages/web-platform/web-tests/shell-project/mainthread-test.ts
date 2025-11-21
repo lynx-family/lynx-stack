@@ -6,8 +6,6 @@ import * as lynxTemplate from '../resources/web-core.main-thread.json' with {
 };
 import { createMainThreadGlobalThis } from '@lynx-js/web-mainthread-apis';
 import { initOffscreenDocument } from '@lynx-js/offscreen-document/main';
-import { initWasm } from '@lynx-js/web-style-transformer';
-await initWasm();
 import {
   _onEvent,
   OffscreenDocument,
