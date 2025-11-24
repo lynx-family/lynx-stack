@@ -7,9 +7,13 @@ import {
   animate as animateOriginal,
   stagger as staggerOriginal,
 } from 'framer-motion/dom';
+import type {
+  AnimationSequence,
+  ObjectTarget,
+  SequenceOptions,
+} from 'framer-motion/dom';
 import {
   mix as mixOrig,
-  motionValue as motionValueOrig,
   spring as springOrig,
   springValue as springValueOrig,
 } from 'motion-dom';
@@ -23,9 +27,17 @@ import type {
   MotionValue,
   MotionValueOptions,
   SpringOptions,
+  UnresolvedValueKeyframe,
+  ValueAnimationTransition,
 } from 'motion-dom';
 
+import { useMotionValueRefEvent } from '../hooks/useMotionEvent.js';
+import { motionValue as motionValueOrig } from '../modified/motionValue.js';
 import type { ElementOrElements } from '../types/index.js';
+import {
+  isMainThreadElement,
+  isMainThreadElementArray,
+} from '../utils/isMainThreadElement.js';
 import { registerCallable } from '../utils/registeredFunction.js';
 
 let animateHandle: string;
@@ -52,11 +64,53 @@ if (__MAIN_THREAD__) {
 }
 
 /**
+ * Animate a sequence
+ */
+function animate(
+  sequence: AnimationSequence,
+  options?: SequenceOptions,
+): AnimationPlaybackControlsWithThen;
+
+/**
  * Animate a string
  */
 function animate(
   value: string,
   keyframes: DOMKeyframesDefinition,
+  options?: AnimationOptions,
+): AnimationPlaybackControlsWithThen;
+
+/**
+ * Animate a string
+ */
+function animate(
+  value: string | MotionValue<string>,
+  keyframes: string | UnresolvedValueKeyframe<string>[],
+  options?: ValueAnimationTransition<string>,
+): AnimationPlaybackControlsWithThen;
+/**
+ * Animate a number
+ */
+function animate(
+  value: number | MotionValue<number>,
+  keyframes: number | UnresolvedValueKeyframe<number>[],
+  options?: ValueAnimationTransition<number>,
+): AnimationPlaybackControlsWithThen;
+/**
+ * Animate a generic motion value
+ */
+function animate<V extends string | number>(
+  value: V | MotionValue<V>,
+  keyframes: V | UnresolvedValueKeyframe<V>[],
+  options?: ValueAnimationTransition<V>,
+): AnimationPlaybackControlsWithThen;
+
+/**
+ * Animate an object
+ */
+function animate<O extends {}>(
+  object: O | O[],
+  keyframes: ObjectTarget<O>,
   options?: AnimationOptions,
 ): AnimationPlaybackControlsWithThen;
 
@@ -69,32 +123,69 @@ function animate(
   options?: AnimationOptions,
 ): AnimationPlaybackControlsWithThen;
 
-function animate(
-  element: ElementOrElements | string,
-  keyframes: DOMKeyframesDefinition,
-  options?: AnimationOptions,
+function animate<O extends {}>(
+  subjectOrSequence:
+    | MotionValue<number>
+    | MotionValue<string>
+    | number
+    | string
+    | ElementOrElements
+    | O
+    | O[]
+    | AnimationSequence,
+  optionsOrKeyframes?:
+    | number
+    | string
+    | UnresolvedValueKeyframe<number>[]
+    | UnresolvedValueKeyframe<string>[]
+    | DOMKeyframesDefinition
+    | ObjectTarget<O>
+    | SequenceOptions,
+  options?:
+    | ValueAnimationTransition<number>
+    | ValueAnimationTransition<string>
+    | AnimationOptions,
 ): AnimationPlaybackControlsWithThen {
   'main thread';
 
-  let originalElementNodes: ElementOrElements;
+  let realSubjectOrSequence:
+    | AnimationSequence
+    | MotionValue<number>
+    | MotionValue<string>
+    | number
+    | string
+    | ElementOrSelector
+    | O
+    | O[];
 
-  if (typeof element === 'string') {
-    originalElementNodes = lynx.querySelectorAll(element);
+  if (
+    typeof subjectOrSequence === 'string'
+    || isMainThreadElement(subjectOrSequence)
+    || isMainThreadElementArray(subjectOrSequence)
+  ) {
+    let elementNodes: ElementOrElements;
+    if (typeof subjectOrSequence === 'string') {
+      elementNodes = lynx.querySelectorAll(subjectOrSequence);
+    } else {
+      elementNodes = subjectOrSequence;
+    }
+    realSubjectOrSequence = (Array.isArray(elementNodes)
+      ? elementNodes.map(el => new globalThis.ElementCompt(el))
+      : new globalThis.ElementCompt(
+        elementNodes,
+      )) as unknown as ElementOrSelector;
   } else {
-    originalElementNodes = element;
+    realSubjectOrSequence = subjectOrSequence;
   }
-
-  const elementNodes = (Array.isArray(originalElementNodes)
-    ? originalElementNodes.map(el => new globalThis.ElementCompt(el))
-    : new globalThis.ElementCompt(
-      originalElementNodes,
-    )) as unknown as ElementOrSelector;
 
   // @TODO: Remove the globalThis trick when MTS can treat a module as MTS module
   return globalThis.runOnRegistered<typeof animateOriginal>(animateHandle)(
-    elementNodes,
-    keyframes,
-    options,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    realSubjectOrSequence as any,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    optionsOrKeyframes as any,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    options as any,
   );
 }
 
@@ -143,7 +234,10 @@ function springValue<T extends AnyResolvedKeyframe>(
 function mix<T>(from: T, to: T): Mixer<T> {
   'main thread';
   // @TODO: Remove the globalThis trick when MTS can treat a module as MTS module
-  return globalThis.runOnRegistered<typeof mixOrig>('mix')(from, to);
+  return globalThis.runOnRegistered<typeof mixOrig>(mixHandle)(from, to);
 }
 
+export const noop = (): void => {};
+
 export { animate, stagger, motionValue, spring, springValue, mix };
+export { useMotionValueRefEvent };

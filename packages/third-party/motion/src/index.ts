@@ -8,6 +8,10 @@ export {
   spring,
   springValue,
   mix,
+  noop,
+  useMotionValueRefEvent,
 } from './animation/index.js';
+
+export { useMotionValueRef } from './hooks/useMotionValueRef.js';
 
 export type { MotionValue } from 'motion-dom';
