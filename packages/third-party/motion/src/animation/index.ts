@@ -32,7 +32,7 @@ import type {
 } from 'motion-dom';
 
 import { useMotionValueRefEvent } from '../hooks/useMotionEvent.js';
-import { motionValue as motionValueOrig } from '../modified/motionValue.js';
+import { motionValue as motionValueOrig } from '../polyfill/MotionValue.js';
 import type { ElementOrElements } from '../types/index.js';
 import {
   isMainThreadElement,
