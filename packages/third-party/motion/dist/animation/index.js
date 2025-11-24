@@ -98,7 +98,13 @@ function springValue(source, options) {
 function mix(from, to, p) {
     'main thread';
     // @TODO: Remove the globalThis trick when MTS can treat a module as MTS module
-    return globalThis.runOnRegistered(mixHandle)(from, to, p);
+    return globalThis.runOnRegistered(mixHandle)(
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    from, 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    to, 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    p);
 }
 function progress(from, to, value) {
     'main thread';
