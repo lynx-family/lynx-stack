@@ -259,10 +259,13 @@ function mix(from: number, to: number, p: number): number;
 function mix<T>(from: T, to: T, p?: T): Mixer<T> | number {
   'main thread';
   // @TODO: Remove the globalThis trick when MTS can treat a module as MTS module
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+   
   return globalThis.runOnRegistered<typeof mixOrig>(mixHandle)(
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     from as any,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     to as any,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     p as any,
   );
 }

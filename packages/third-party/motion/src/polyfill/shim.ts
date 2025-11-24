@@ -31,9 +31,7 @@ if (__MAIN_THREAD__) {
   class SVGElement {}
 
   const window = {
-    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-    getComputedStyle: (ele: any) => {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    getComputedStyle: (ele: ElementCompt) => {
       return ele.getComputedStyle();
     },
   };
@@ -46,10 +44,8 @@ if (__MAIN_THREAD__) {
   globalThis.performance = performance;
   globalThis.queueMicrotask = queueMicrotask;
   // @ts-expect-error error
-
   document.querySelector = lynx.querySelector;
   // @ts-expect-error error
-
   document.querySelectorAll = lynx.querySelectorAll;
   // @ts-expect-error error
   globalThis.NodeList = NodeList;
@@ -57,6 +53,7 @@ if (__MAIN_THREAD__) {
   globalThis.SVGElement = SVGElement;
   // @ts-expect-error error
   globalThis.window = window;
+  // @ts-expect-error error
   globalThis.getComputedStyle = window.getComputedStyle;
   // @ts-expect-error error
   globalThis.HTMLElement = HTMLElement;
