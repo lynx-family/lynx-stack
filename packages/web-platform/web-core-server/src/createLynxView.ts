@@ -10,7 +10,6 @@ import {
   type MainThreadGlobalThis,
 } from '@lynx-js/web-constants';
 import { Rpc } from '@lynx-js/web-worker-rpc';
-import { prepareMainThreadAPIs } from '@lynx-js/web-mainthread-apis';
 import { loadTemplate } from './utils/loadTemplate.js';
 import {
   _attributes,
@@ -164,6 +163,9 @@ export async function createLynxView(
       });
     });
   };
+  const { prepareMainThreadAPIs } = await import(
+    '@lynx-js/web-mainthread-apis'
+  );
   const { startMainThread } = prepareMainThreadAPIs(
     backgroundThreadRpc,
     offscreenDocument,

@@ -1,5 +1,5 @@
 [package]
-name = "web-style-transformer"
+name = "web-mainthread-apis"
 version = "0.0.0"
 edition = "2021"
 
@@ -7,7 +7,6 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [dependencies]
-inline-style-parser = { path = "../inline-style-parser" }
 js-sys = { workspace = true }
 lazy_static = { workspace = true }
 wasm-bindgen = { workspace = true }

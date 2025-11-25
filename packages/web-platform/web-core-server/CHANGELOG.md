@@ -1,5 +1,15 @@
 # @lynx-js/web-core-server
 
+## 0.18.4
+
+### Patch Changes
+
+- feat: builtinTagTransformMap add `'x-input-ng': 'x-input'` ([#1932](https://github.com/lynx-family/lynx-stack/pull/1932))
+
+- chore: minor bundle output change ([#1946](https://github.com/lynx-family/lynx-stack/pull/1946))
+
+  the timing of loading wasm chunk has been changed
+
 ## 0.18.3
 
 ## 0.18.2

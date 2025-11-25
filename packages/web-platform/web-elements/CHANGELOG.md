@@ -1,5 +1,14 @@
 # @lynx-js/web-elements
 
+## 0.8.11
+
+### Patch Changes
+
+- fix: when estimated-main-axis-size-px is not set, should use the height of list ([#1930](https://github.com/lynx-family/lynx-stack/pull/1930))
+
+- Updated dependencies []:
+  - @lynx-js/web-elements-template@0.8.11
+
 ## 0.8.10
 
 ### Patch Changes

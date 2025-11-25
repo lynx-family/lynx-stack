@@ -117,6 +117,4 @@ export class LynxTestingEnv {
 // @public (undocumented)
 export type PickUnderscoreKeys<T> = Pick<T, FilterUnderscoreKeys<T>>;
 
-// (No @packageDocumentation comment for this package)
-
 ```

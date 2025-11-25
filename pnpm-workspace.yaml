@@ -36,7 +36,7 @@ catalog:
 catalogs:
   # Rsbuild monorepo packages
   rsbuild:
-    "@rsbuild/core": "1.5.17"
+    "@rsbuild/core": "1.6.7"
 
   # Rspack monorepo packages
   rspack:

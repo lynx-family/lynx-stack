@@ -1,5 +1,11 @@
 # @lynx-js/web-explorer
 
+## 0.0.13
+
+### Patch Changes
+
+- feat: builtinTagTransformMap add `'x-input-ng': 'x-input'` ([#1932](https://github.com/lynx-family/lynx-stack/pull/1932))
+
 ## 0.0.12
 
 ### Patch Changes

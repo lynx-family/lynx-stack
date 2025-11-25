@@ -3,7 +3,6 @@
 // LICENSE file in the root directory of this source tree.
 
 import type { Cloneable } from './Cloneable.js';
-import type { WebFiberElementImpl } from './Element.js';
 
 export type LynxEventType =
   | 'bindEvent'
@@ -60,8 +59,8 @@ export type ExposureWorkerEvent =
 
 export type MinimalRawEventObject = {
   type: string;
-  target: Pick<WebFiberElementImpl, 'getAttribute'> | null;
-  currentTarget: Pick<WebFiberElementImpl, 'getAttribute'> | null;
+  target: Pick<HTMLElement, 'getAttribute'> | null;
+  currentTarget: Pick<HTMLElement, 'getAttribute'> | null;
   detail?: Cloneable;
   isTrusted: boolean;
   timeStamp: number;
