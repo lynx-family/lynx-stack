@@ -34,10 +34,8 @@ import { registerCallLepusMethodHandler } from './crossThreadHandlers/registerCa
 import { registerGetCustomSectionHandler } from './crossThreadHandlers/registerGetCustomSectionHandler.js';
 import { createMainThreadGlobalThis } from './createMainThreadGlobalThis.js';
 import { createExposureService } from './utils/createExposureService.js';
-import { initWasm } from '@lynx-js/web-style-transformer';
 import { appendStyleElement } from './utils/processStyleInfo.js';
 import { createQueryComponent } from './crossThreadHandlers/createQueryComponent.js';
-const initWasmPromise = initWasm();
 
 export function prepareMainThreadAPIs(
   backgroundThreadRpc: Rpc,
@@ -99,7 +97,6 @@ export function prepareMainThreadAPIs(
     } = template;
     const mtsRealm = await mtsRealmPromise;
     markTimingInternal('decode_start');
-    await initWasmPromise;
     const jsContext = new LynxCrossThreadContext({
       rpc: backgroundThreadRpc,
       receiveEventEndpoint: dispatchJSContextOnMainThreadEndpoint,

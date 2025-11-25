@@ -1,5 +1,11 @@
 # @lynx-js/react
 
+## 0.114.5
+
+### Patch Changes
+
+- Reduce `__SetInlineStyles` element API call when attrs in spread not changed ([#1919](https://github.com/lynx-family/lynx-stack/pull/1919))
+
 ## 0.114.4
 
 ### Patch Changes

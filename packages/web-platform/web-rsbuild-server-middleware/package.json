@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/web-rsbuild-server-middleware",
-  "version": "0.18.3",
+  "version": "0.18.4",
   "private": false,
   "description": "a dev server middleware for rsbuild to serve Lynx Web Platform shell project",
   "keywords": [],

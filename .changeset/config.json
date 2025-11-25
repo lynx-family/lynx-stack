@@ -15,7 +15,6 @@
       "@lynx-js/web-mainthread-apis",
       "@lynx-js/web-worker-rpc",
       "@lynx-js/web-worker-runtime",
-      "@lynx-js/web-style-transformer",
       "@lynx-js/web-rsbuild-server-middleware"
     ],
     [
