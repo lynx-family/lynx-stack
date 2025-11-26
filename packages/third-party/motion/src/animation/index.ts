@@ -5,6 +5,8 @@ import '../polyfill/shim.js';
 
 import {
   animate as animateOriginal,
+  clamp as clampOrig,
+  progress as progressOrig,
   stagger as staggerOriginal,
 } from 'framer-motion/dom';
 import type {
@@ -13,9 +15,12 @@ import type {
   SequenceOptions,
 } from 'framer-motion/dom';
 import {
+  mapValue as mapValueOrig,
   mix as mixOrig,
   spring as springOrig,
   springValue as springValueOrig,
+  styleEffect as styleEffectOrig,
+  transformValue as transformValueOrig,
 } from 'motion-dom';
 import type {
   AnimationOptions,
@@ -23,10 +28,12 @@ import type {
   AnyResolvedKeyframe,
   DOMKeyframesDefinition,
   ElementOrSelector,
+  MapInputRange,
   Mixer,
   MotionValue,
   MotionValueOptions,
   SpringOptions,
+  TransformOptions,
   UnresolvedValueKeyframe,
   ValueAnimationTransition,
 } from 'motion-dom';
@@ -34,6 +41,7 @@ import type {
 import { useMotionValueRefEvent } from '../hooks/useMotionEvent.js';
 import { motionValue as motionValueOrig } from '../polyfill/MotionValue.js';
 import type { ElementOrElements } from '../types/index.js';
+import { elementOrSelector2Dom } from '../utils/elementHelper.js';
 import {
   isMainThreadElement,
   isMainThreadElementArray,
@@ -46,6 +54,11 @@ let motionValueHandle: string;
 let springHandle: string;
 let springValueHandle: string;
 let mixHandle: string;
+let progressHandle: string;
+let clampHandle: string;
+let mapValueHandle: string;
+let transformValueHandle: string;
+let styleEffectHandle: string;
 
 if (__MAIN_THREAD__) {
   animateHandle = registerCallable(animateOriginal, 'animate');
@@ -54,6 +67,11 @@ if (__MAIN_THREAD__) {
   springHandle = registerCallable(springOrig, 'spring');
   springValueHandle = registerCallable(springValueOrig, 'springValue');
   mixHandle = registerCallable(mixOrig, 'mix');
+  progressHandle = registerCallable(progressOrig, 'progress');
+  clampHandle = registerCallable(clampOrig, 'clamp');
+  mapValueHandle = registerCallable(mapValueOrig, 'mapValue');
+  transformValueHandle = registerCallable(transformValueOrig, 'transformValue');
+  styleEffectHandle = registerCallable(styleEffectOrig, 'styleEffect');
 } else {
   animateHandle = 'animate';
   staggerHandle = 'stagger';
@@ -61,6 +79,11 @@ if (__MAIN_THREAD__) {
   springHandle = 'spring';
   springValueHandle = 'springValue';
   mixHandle = 'mix';
+  progressHandle = 'progress';
+  clampHandle = 'clamp';
+  mapValueHandle = 'mapValue';
+  transformValueHandle = 'transformValue';
+  styleEffectHandle = 'styleEffect';
 }
 
 /**
@@ -231,13 +254,83 @@ function springValue<T extends AnyResolvedKeyframe>(
   );
 }
 
-function mix<T>(from: T, to: T): Mixer<T> {
+function mix<T>(from: T, to: T): Mixer<T>;
+function mix(from: number, to: number, p: number): number;
+function mix<T>(from: T, to: T, p?: T): Mixer<T> | number {
   'main thread';
   // @TODO: Remove the globalThis trick when MTS can treat a module as MTS module
-  return globalThis.runOnRegistered<typeof mixOrig>(mixHandle)(from, to);
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+  return globalThis.runOnRegistered<typeof mixOrig>(mixHandle)(
+    from as any,
+    to as any,
+    p as any,
+  );
+}
+
+function progress(from: number, to: number, value: number): number {
+  'main thread';
+  return globalThis.runOnRegistered<typeof progressOrig>(progressHandle)(
+    from,
+    to,
+    value,
+  );
+}
+
+function clamp(min: number, max: number, v: number): number {
+  'main thread';
+  return globalThis.runOnRegistered<typeof clampOrig>(clampHandle)(min, max, v);
+}
+
+function mapValue<O>(
+  inputValue: MotionValue<number>,
+  inputRange: MapInputRange,
+  outputRange: O[],
+  options?: TransformOptions<O>,
+): MotionValue<O> {
+  'main thread';
+  return globalThis.runOnRegistered<typeof mapValueOrig>(mapValueHandle)(
+    inputValue,
+    inputRange,
+    outputRange,
+    options,
+  );
+}
+
+function transformValue<O>(transform: () => O): MotionValue<O> {
+  'main thread';
+  return globalThis.runOnRegistered<typeof transformValueOrig>(
+    transformValueHandle,
+  )(transform);
+}
+
+function styleEffect(
+  subject: string | ElementOrElements,
+  values: Record<string, MotionValue>,
+): () => void {
+  'main thread';
+  const elements = elementOrSelector2Dom(subject);
+  if (!elements) {
+    return () => {};
+  }
+  return globalThis.runOnRegistered<typeof styleEffectOrig>(styleEffectHandle)(
+    elements,
+    values,
+  );
 }
 
 export const noop = (): void => {};
 
-export { animate, stagger, motionValue, spring, springValue, mix };
+export {
+  animate,
+  stagger,
+  motionValue,
+  spring,
+  springValue,
+  mix,
+  progress,
+  mapValue,
+  clamp,
+  transformValue,
+  styleEffect,
+};
 export { useMotionValueRefEvent };

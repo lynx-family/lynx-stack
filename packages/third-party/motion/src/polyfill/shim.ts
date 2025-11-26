@@ -10,7 +10,6 @@ const timeOrigin = Date.now();
 
 declare global {
   var ElementCompt: new(element: MainThread.Element) => ElementCompt;
-  var Element: new(element: MainThread.Element) => ElementCompt;
 }
 
 if (__MAIN_THREAD__) {
@@ -64,4 +63,6 @@ if (__MAIN_THREAD__) {
   globalThis.ElementCompt = ElementCompt;
   // @ts-expect-error error
   globalThis.Element = ElementCompt;
+  // @ts-expect-error error
+  globalThis.EventTarget = ElementCompt;
 }

@@ -8,6 +8,11 @@ export {
   spring,
   springValue,
   mix,
+  progress,
+  mapValue,
+  clamp,
+  transformValue,
+  styleEffect,
   noop,
   useMotionValueRefEvent,
 } from './animation/index.js';

@@ -4,6 +4,7 @@ import Basic from './Basic/index.js';
 import BasicPercent from './BasicPercent/index.js';
 import BasicSelector from './BasicSelector/index.js';
 import ColorInterception from './ColorInterception/index.js';
+import iOSSlider from './iOSSlider/index.js';
 import MotionValue from './MotionValue/index.js';
 import Spring from './Spring/index.js';
 import Stagger from './Stagger/index.js';
@@ -43,6 +44,10 @@ const CASES = [
   {
     name: 'MotionValue',
     comp: MotionValue,
+  },
+  {
+    name: 'iOSSlider',
+    comp: iOSSlider,
   },
 ];
 
