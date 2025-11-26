@@ -1305,8 +1305,8 @@ importers:
         specifier: workspace:*
         version: link:../../tools/css-serializer
       '@lynx-js/tasm':
-        specifier: 0.0.18
-        version: 0.0.18
+        specifier: 0.0.20
+        version: 0.0.20
       '@lynx-js/webpack-runtime-globals':
         specifier: workspace:^
         version: link:../webpack-runtime-globals
@@ -2709,8 +2709,8 @@ packages:
   '@lynx-js/preact-devtools@5.0.1':
     resolution: {integrity: sha512-ayUU8PJ0TVWABbd5/d/04KI18W9RY4kkaRekBXXbRE/eBkGMZ3lVJ0zOB+B+85B9RUpvEVK2FleqJkS+qBKG6Q==}
 
-  '@lynx-js/tasm@0.0.18':
-    resolution: {integrity: sha512-6Kl1eUxooceWcSLYnCtys38r9KPIouTam/fU81pzOrH/xIal60+WY47nj+MzDXq94i9jbUusM+IQSZAkeRistw==}
+  '@lynx-js/tasm@0.0.20':
+    resolution: {integrity: sha512-ezMq43s59jqFuQ1YygpsUuZmGXw4XH+00RsB5RVmkYZuHQxEaLt/ECTOixF+9RixvAyhmxzF2eSURvmNckO9xg==}
 
   '@lynx-js/type-element-api@0.0.2':
     resolution: {integrity: sha512-Unz3RHf2RM2vOWForwubjLYw9xbBP02ReuOL4KVLc3+0Vzryo8KbgqbhMUZCsJXHVmcaE2zXiE1AV/nqrBAoPA==}
@@ -10967,7 +10967,7 @@ snapshots:
       errorstacks: 2.4.1
       htm: 3.1.1
 
-  '@lynx-js/tasm@0.0.18': {}
+  '@lynx-js/tasm@0.0.20': {}
 
   '@lynx-js/type-element-api@0.0.2': {}
 
