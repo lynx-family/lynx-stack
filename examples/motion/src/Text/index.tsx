@@ -33,7 +33,7 @@ export default function Text() {
   useEffect(() => {
     void runOnMainThread(startAnimation)();
     return () => {
-      void runOnMainThread(endAnimation);
+      void runOnMainThread(endAnimation)();
     };
   }, []);
 

@@ -34,7 +34,7 @@ export default function Comp() {
 
   function measureSlider() {
     'main thread';
-    void sliderRef.current?.invoke('getBoundingClientRect').then(
+    void sliderRef.current?.invoke('boundingClientRect').then(
       (res: { top: number; bottom: number }) => {
         sizeRef.current = { top: res.top, bottom: res.bottom };
       },
@@ -62,7 +62,7 @@ export default function Comp() {
       [maxStretch, 1, 1, maxStretch],
     );
 
-    styleEffect(sliderRef.current!, { y, scaleX, scaleY });
+    styleEffect('.slider', { y, scaleX, scaleY });
 
     styleEffect('.indicator', {
       scaleY: transformValue(() => clamp(0, 1, progressRef.current.get())),
@@ -77,9 +77,7 @@ export default function Comp() {
   }
 
   useEffect(() => {
-    setTimeout(() => {
-      void runOnMainThread(initEffects)();
-    }, 1000);
+    void runOnMainThread(initEffects)();
   }, []);
 
   function onTouchStart(e: MainThread.TouchEvent) {
@@ -134,7 +132,7 @@ export default function Comp() {
       >
         <view className='indicator'></view>
         <view className='icon-container'>
-          <image src={SunPng} />
+          <image className='icon' src={SunPng} />
         </view>
       </view>
     </view>

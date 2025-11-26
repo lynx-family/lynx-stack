@@ -36,7 +36,7 @@ export default function BasicPercent() {
   useEffect(() => {
     void runOnMainThread(startAnimation)();
     return () => {
-      void runOnMainThread(endAnimation);
+      void runOnMainThread(endAnimation)();
     };
   }, []);
 

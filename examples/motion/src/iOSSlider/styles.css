@@ -3,6 +3,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  background-color: #555;
 }
 
 .slider {
@@ -40,4 +41,6 @@
   position: relative;
   z-index: 1;
   bottom: 20px;
+  width: 48px;
+  height: 48px;
 }

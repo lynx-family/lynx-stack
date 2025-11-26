@@ -38,7 +38,7 @@ export default function Basic() {
       void runOnMainThread(startAnimation)();
     }, 1000);
     return () => {
-      void runOnMainThread(endAnimation);
+      void runOnMainThread(endAnimation)();
     };
   }, []);
 

@@ -31,7 +31,7 @@ export default function Spring() {
   useEffect(() => {
     void runOnMainThread(startAnimation)();
     return () => {
-      void runOnMainThread(endAnimation);
+      void runOnMainThread(endAnimation)();
     };
   }, []);
 

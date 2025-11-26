@@ -31,11 +31,18 @@ export class ElementCompt {
     const styleObject = {} as StyleObject;
 
     styleObject.setProperty = (property: string, value: string) => {
+      if (property === 'transform' && value === 'none') {
+        return this.element.setStyleProperty('transform', 'scale(1, 1)');
+      }
       this.element.setStyleProperty(property, value);
     };
     return new Proxy(styleObject, {
       set: (target, prop, value) => {
         if (typeof prop === 'string' && prop !== 'setProperty') {
+          if (prop === 'transform' && value === 'none') {
+            this.element.setStyleProperty('transform', 'scale(1, 1)');
+            return true;
+          }
           this.element.setStyleProperty(prop, String(value));
           // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           target[prop] = value;

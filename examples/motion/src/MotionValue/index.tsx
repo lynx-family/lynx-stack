@@ -1,5 +1,5 @@
-import { type animate, motionValue } from '@lynx-js/motion-lynx';
-import type { MotionValue } from '@lynx-js/motion-lynx';
+import { motionValue } from '@lynx-js/motion-lynx';
+import type { MotionValue, animate } from '@lynx-js/motion-lynx';
 import { runOnMainThread, useEffect, useMainThreadRef } from '@lynx-js/react';
 import type { MainThread } from '@lynx-js/types';
 
@@ -45,7 +45,7 @@ export default function Basic() {
       void runOnMainThread(startAnimation)();
     }, 1000);
     return () => {
-      void runOnMainThread(endAnimation);
+      void runOnMainThread(endAnimation)();
     };
   }, []);
 

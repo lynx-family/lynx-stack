@@ -27,7 +27,7 @@ export default function Stagger() {
   useEffect(() => {
     void runOnMainThread(startAnimation)();
     return () => {
-      void runOnMainThread(endAnimation);
+      void runOnMainThread(endAnimation)();
     };
   }, []);
 
