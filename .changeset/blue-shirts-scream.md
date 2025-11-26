@@ -2,4 +2,4 @@
 "@lynx-js/react": patch
 ---
 
-Keep webpack runtime variables, like **webpack_public_path**, **webpack_require**.p, etc.
+Preserve assignments to webpack runtime variables like `__webpack_public_path__`, `__webpack_require__.p`, etc.
