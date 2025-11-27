@@ -1650,4 +1650,24 @@ function getCurrentDelta(event) {
       "
     `);
   });
+
+  it('should keep webpack runtime variables', async () => {
+    const inputContent = `
+__webpack_public_path__="a";
+__webpack_require__.p="b";
+__webpack_test__="a";
+import { Component } from "@lynx-js/react-runtime";
+export class A extends Component {}
+`;
+    const { code } = await transformReactLynx(inputContent);
+    expect(code).toMatchInlineSnapshot(`
+      "__webpack_public_path__ = "a";
+      __webpack_require__.p = "b";
+      "a";
+      import { Component } from "@lynx-js/react-runtime";
+      export class A extends Component {
+      }
+      "
+    `);
+  });
 });
