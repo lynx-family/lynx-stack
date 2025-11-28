@@ -745,6 +745,10 @@ describe('DEV_ONLY_addSnapshot', () => {
         /* v8 ignore stop */
         null,
         null,
+        undefined,
+        undefined,
+        null,
+        true,
       );
     };
     const patch = takeGlobalSnapshotPatch();
@@ -773,7 +777,11 @@ describe('DEV_ONLY_addSnapshot', () => {
               },
               /* v8 ignore stop */
               null,
-              null
+              null,
+              void 0,
+              void 0,
+              null,
+              true
             );
           }",
       ]
@@ -825,6 +833,10 @@ describe('DEV_ONLY_addSnapshot', () => {
         ],
         /* v8 ignore stop */
         null,
+        undefined,
+        undefined,
+        null,
+        true,
       );
     };
 
@@ -852,7 +864,11 @@ describe('DEV_ONLY_addSnapshot', () => {
                 }
               ],
               /* v8 ignore stop */
-              null
+              null,
+              void 0,
+              void 0,
+              null,
+              true
             );
           }",
       ]
@@ -906,6 +922,10 @@ describe('DEV_ONLY_addSnapshot', () => {
         ],
         /* v8 ignore stop */
         [globalThis.DynamicPartType.Children, 0],
+        undefined,
+        undefined,
+        null,
+        true,
       );
     };
 
@@ -937,7 +957,11 @@ describe('DEV_ONLY_addSnapshot', () => {
               [
                 globalThis.DynamicPartType.Children,
                 0
-              ]
+              ],
+              void 0,
+              void 0,
+              null,
+              true
             );
           }",
       ]
@@ -987,6 +1011,10 @@ describe('DEV_ONLY_addSnapshot', () => {
         ],
         /* v8 ignore stop */
         [[globalThis.DynamicPartType.ListChildren]],
+        undefined,
+        undefined,
+        null,
+        true,
       );
     };
 
@@ -1019,7 +1047,11 @@ describe('DEV_ONLY_addSnapshot', () => {
                 [
                   globalThis.DynamicPartType.ListChildren
                 ]
-              ]
+              ],
+              void 0,
+              void 0,
+              null,
+              true
             );
           }",
       ]
@@ -1071,6 +1103,9 @@ describe('DEV_ONLY_addSnapshot', () => {
         null,
         null,
         1000,
+        undefined,
+        null,
+        true,
       );
     };
 
@@ -1101,7 +1136,10 @@ describe('DEV_ONLY_addSnapshot', () => {
               /* v8 ignore stop */
               null,
               null,
-              1e3
+              1e3,
+              void 0,
+              null,
+              true
             );
           }",
       ]
@@ -1160,6 +1198,8 @@ describe('DEV_ONLY_addSnapshot', () => {
         null,
         1000,
         entryName,
+        null,
+        true,
       );
     };
 
@@ -1193,7 +1233,9 @@ describe('DEV_ONLY_addSnapshot', () => {
               null,
               null,
               1e3,
-              entryName
+              entryName,
+              null,
+              true
             );
           }",
       ]
@@ -1253,6 +1295,8 @@ describe('DEV_ONLY_addSnapshot', () => {
         null,
         undefined,
         entryName,
+        null,
+        true,
       );
     };
     expect(uniqID1.startsWith(entryName)).toBeTruthy();
@@ -1285,7 +1329,9 @@ describe('DEV_ONLY_addSnapshot', () => {
               null,
               null,
               void 0,
-              entryName
+              entryName,
+              null,
+              true
             );
           }",
       ]
@@ -1333,6 +1379,10 @@ describe('DEV_ONLY_addSnapshot', () => {
         /* v8 ignore stop */
         null,
         null,
+        undefined,
+        undefined,
+        null,
+        true,
       );
     };
 
@@ -1354,7 +1404,11 @@ describe('DEV_ONLY_addSnapshot', () => {
               },
               /* v8 ignore stop */
               null,
-              null
+              null,
+              void 0,
+              void 0,
+              null,
+              true
             );
           }",
       ]
