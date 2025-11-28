@@ -4045,6 +4045,223 @@ describe('nested list', () => {
     `);
   });
 
+  it('should record lazily created nested lists', () => {
+    const s1 = __SNAPSHOT__(
+      <view>
+        <text>s1</text>
+        <list>{HOLE}</list>
+      </view>,
+    );
+    const s2 = __SNAPSHOT__(
+      <list-item>
+        <text>s2</text>
+        <list>{HOLE}</list>
+      </list-item>,
+    );
+    const s3 = __SNAPSHOT__(
+      <list-item>
+        <text>s3</text>
+      </list-item>,
+    );
+
+    const a = new SnapshotInstance(s);
+
+    const b = new SnapshotInstance(s1);
+    a.insertBefore(b);
+    b.ensureElements();
+    const parentListRef = b.__elements[3];
+
+    const c1 = new SnapshotInstance(s2);
+    const c2 = new SnapshotInstance(s2);
+    const c3 = new SnapshotInstance(s2);
+
+    b.insertBefore(c1);
+    b.insertBefore(c2);
+    b.insertBefore(c3);
+
+    const d1 = new SnapshotInstance(s3);
+    c1.insertBefore(d1);
+
+    const d2 = new SnapshotInstance(s3);
+    c2.insertBefore(d2);
+
+    const d3 = new SnapshotInstance(s3);
+    c3.insertBefore(d3);
+    __pendingListUpdates.flush();
+
+    expect(__pendingListUpdates.values).toMatchInlineSnapshot(`
+       {
+         "-6": [
+           {
+             "insertAction": [
+               {
+                 "position": 0,
+                 "type": "__Card__:__snapshot_a94a8_test_74",
+               },
+             ],
+             "removeAction": [],
+             "updateAction": [],
+           },
+         ],
+         "-7": [
+           {
+             "insertAction": [
+               {
+                 "position": 0,
+                 "type": "__Card__:__snapshot_a94a8_test_74",
+               },
+             ],
+             "removeAction": [],
+             "updateAction": [],
+           },
+         ],
+         "-8": [
+           {
+             "insertAction": [
+               {
+                 "position": 0,
+                 "type": "__Card__:__snapshot_a94a8_test_74",
+               },
+             ],
+             "removeAction": [],
+             "updateAction": [],
+           },
+         ],
+       }
+     `);
+
+    elementTree.triggerComponentAtIndex(parentListRef, 0);
+    elementTree.triggerComponentAtIndex(parentListRef, 1);
+    // enqueue c1
+    elementTree.triggerEnqueueComponent(parentListRef, 0);
+    // c3 reuse c1
+    elementTree.triggerComponentAtIndex(parentListRef, 2);
+    // c1 re-create
+    elementTree.triggerComponentAtIndex(parentListRef, 0);
+    // should have 4 list-item now
+    expect(parentListRef).toMatchInlineSnapshot(`
+       <list
+         update-list-info={
+           [
+             {
+               "insertAction": [
+                 {
+                   "position": 0,
+                   "type": "__Card__:__snapshot_a94a8_test_73",
+                 },
+                 {
+                   "position": 1,
+                   "type": "__Card__:__snapshot_a94a8_test_73",
+                 },
+                 {
+                   "position": 2,
+                   "type": "__Card__:__snapshot_a94a8_test_73",
+                 },
+               ],
+               "removeAction": [],
+               "updateAction": [],
+             },
+           ]
+         }
+       >
+         <list-item>
+           <text>
+             <raw-text
+               text="s2"
+             />
+           </text>
+           <list
+             update-list-info={
+               [
+                 {
+                   "insertAction": [
+                     {
+                       "position": 0,
+                       "type": "__Card__:__snapshot_a94a8_test_74",
+                     },
+                   ],
+                   "removeAction": [],
+                   "updateAction": [],
+                 },
+               ]
+             }
+           />
+         </list-item>
+         <list-item>
+           <text>
+             <raw-text
+               text="s2"
+             />
+           </text>
+           <list
+             update-list-info={
+               [
+                 {
+                   "insertAction": [
+                     {
+                       "position": 0,
+                       "type": "__Card__:__snapshot_a94a8_test_74",
+                     },
+                   ],
+                   "removeAction": [],
+                   "updateAction": [],
+                 },
+               ]
+             }
+           />
+         </list-item>
+         <list-item>
+           <text>
+             <raw-text
+               text="s2"
+             />
+           </text>
+           <list
+             update-list-info={
+               [
+                 {
+                   "insertAction": [
+                     {
+                       "position": 0,
+                       "type": "__Card__:__snapshot_a94a8_test_74",
+                     },
+                   ],
+                   "removeAction": [],
+                   "updateAction": [],
+                 },
+               ]
+             }
+           />
+         </list-item>
+         <list-item>
+           <text>
+             <raw-text
+               text="s2"
+             />
+           </text>
+           <list
+             update-list-info={
+               [
+                 {
+                   "insertAction": [
+                     {
+                       "position": 0,
+                       "type": "__Card__:__snapshot_a94a8_test_74",
+                     },
+                   ],
+                   "removeAction": [
+                     0,
+                   ],
+                   "updateAction": [],
+                 },
+               ]
+             }
+           />
+         </list-item>
+       </list>
+     `);
+  });
+
   it('should clear attached lists & should flush during ensureElements', () => {
     const s1 = __SNAPSHOT__(
       <view>
@@ -4146,7 +4363,7 @@ describe('update-list-info profile', () => {
           {
             "args": {
               "list id": "3",
-              "update list info": "{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a94a8_test_76"},{"position":1,"type":"__Card__:__snapshot_a94a8_test_76"},{"position":2,"type":"__Card__:__snapshot_a94a8_test_76"}],"removeAction":[],"updateAction":[]}",
+              "update list info": "{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a94a8_test_79"},{"position":1,"type":"__Card__:__snapshot_a94a8_test_79"},{"position":2,"type":"__Card__:__snapshot_a94a8_test_79"}],"removeAction":[],"updateAction":[]}",
             },
           },
         ],
