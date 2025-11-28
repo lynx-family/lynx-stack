@@ -6,7 +6,7 @@
 ## Asset Files
 - Bundle: rspack-bundle.js
 - Manifest: main.LAST_HASH.hot-update.json, size: 28
-- Update: main.LAST_HASH.hot-update.js, size: 3444
+- Update: main.LAST_HASH.hot-update.js, size: 3421
 
 ## Manifest
 
@@ -43,7 +43,7 @@ __webpack_require__.r(__webpack_exports__);
 __webpack_require__.d(__webpack_exports__, {
   App: () => (App)
 });
-/* import */var _lynx_js_react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @lynx-js/react/jsx-dev-runtime */ "../../../../../../react/runtime/jsx-dev-runtime/index.js");
+/* import */ var _lynx_js_react_jsx_dev_runtime__rspack_import_0 = __webpack_require__(/*! @lynx-js/react/jsx-dev-runtime */ "../../../../../../react/runtime/jsx-dev-runtime/index.js");
 /* module decorator */ module = __webpack_require__.hmd(module);
 /* provided dependency */ var __prefresh_utils__ = __webpack_require__(/*! ../../../../runtime/refresh.cjs */ "../../../../runtime/refresh.cjs");
 
@@ -64,7 +64,7 @@ const __snapshot_4953c_170ee_1 = (__webpack_require__(/*! @lynx-js/react/interna
 ], undefined, globDynamicComponentEntry, null);
 function App() {
     const value = "content 2";
-    return __RenderContent(/*#__PURE__*/ (0,_lynx_js_react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxDEV)(__snapshot_4953c_170ee_1, {
+    return __RenderContent(/*#__PURE__*/ (0,_lynx_js_react_jsx_dev_runtime__rspack_import_0.jsxDEV)(__snapshot_4953c_170ee_1, {
         children: value
     }, void 0, false, {
         fileName: "<ROOT>/packages/webpack/react-refresh-webpack-plugin/test/hotCases/jsx/value/app.jsx",
