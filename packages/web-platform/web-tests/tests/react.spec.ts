@@ -862,6 +862,18 @@ test.describe('reactlynx3 tests', () => {
         ); // green
       },
     );
+
+    test('basic-page-event', async ({ page }, { title }) => {
+      await goto(page, title);
+      const target = page.locator('#target');
+      await expect(target).toHaveCSS('background-color', 'rgb(255, 192, 203)'); // pink
+      await target.click();
+      await wait(100);
+      await expect(target).toHaveCSS(
+        'background-color',
+        'rgb(0, 128, 0)',
+      ); // green;
+    });
   });
   test.describe('basic-css', () => {
     test('basic-css-asset-in-css', async ({ page }, { title }) => {
