@@ -7,7 +7,7 @@ ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_1] = (__snapshot_da39a_test_1
         return [
             el
         ];
-    }, null, null, 0, globDynamicComponentEntry, null);
+    }, null, null, 0, globDynamicComponentEntry, null, true);
 <__snapshot_da39a_test_1/>;
 const __snapshot_da39a_test_2 = `${globDynamicComponentEntry}:${"__snapshot_da39a_test_2"}`;
 ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_2] = (__snapshot_da39a_test_2)=>ReactLynx.createSnapshot(__snapshot_da39a_test_2, function() {
@@ -22,7 +22,7 @@ ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_2] = (__snapshot_da39a_test_2
                 __SetInlineStyles(ctx.__elements[0], ctx.__values[0]);
             }
         }
-    ], null, 0, globDynamicComponentEntry, null);
+    ], null, 0, globDynamicComponentEntry, null, true);
 <__snapshot_da39a_test_2 values={[
     `background-color: red; width: ${w};`
 ]}/>;
@@ -39,7 +39,7 @@ ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_3] = (__snapshot_da39a_test_3
                 __SetInlineStyles(ctx.__elements[0], ctx.__values[0]);
             }
         }
-    ], null, 0, globDynamicComponentEntry, null);
+    ], null, 0, globDynamicComponentEntry, null, true);
 <__snapshot_da39a_test_3 values={[
     {
         backgroundColor: "red",
@@ -60,7 +60,7 @@ ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_4] = (__snapshot_da39a_test_4
                 __SetInlineStyles(ctx.__elements[0], ctx.__values[0]);
             }
         }
-    ], null, 0, globDynamicComponentEntry, null);
+    ], null, 0, globDynamicComponentEntry, null, true);
 <__snapshot_da39a_test_4 values={[
     {
         backgroundColor: "red",

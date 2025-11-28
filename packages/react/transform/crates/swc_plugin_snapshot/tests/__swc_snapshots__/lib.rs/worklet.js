@@ -21,7 +21,7 @@ require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_1] =
     }, [
         (snapshot, index, oldValue)=>require('@lynx-js/react/internal').updateWorkletEvent(snapshot, index, oldValue, 1, "main-thread", "bindEvent", "tap"),
         (snapshot, index, oldValue)=>require('@lynx-js/react/internal').updateWorkletRef(snapshot, index, oldValue, 3, "main-thread")
-    ], null, undefined, globDynamicComponentEntry, null);
+    ], null, undefined, globDynamicComponentEntry, null, true);
 function Comp() {
     const handleTap = ()=>{};
     const handleRef = ()=>{};

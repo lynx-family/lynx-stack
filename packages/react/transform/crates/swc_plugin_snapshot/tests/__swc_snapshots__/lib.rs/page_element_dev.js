@@ -6,7 +6,7 @@ require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_1] =
         return [
             el
         ];
-    }, null, require('@lynx-js/react/internal').__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null);
+    }, null, require('@lynx-js/react/internal').__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null, true);
 <ReactLynxRuntimeComponents.Page custom-key-str="custom-value" custom-key-var={customVariable} class="classValue" data-attr={dataAttr}>
       <__snapshot_da39a_test_1>{[
     <ReactLynxRuntimeComponents.Page/>,

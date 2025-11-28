@@ -47,7 +47,7 @@ ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_1] = (__snapshot_da39a_test_1
                 __SetAttribute(ctx.__elements[8], '__lynx_timing_flag', ctx.__values[0].__ltf);
             }
         }
-    ], null, undefined, globDynamicComponentEntry, null);
+    ], null, undefined, globDynamicComponentEntry, null, true);
 <__snapshot_da39a_test_1 values={[
     {
         __ltf: " aaaaa "

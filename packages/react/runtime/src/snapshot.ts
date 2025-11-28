@@ -215,6 +215,10 @@ export const backgroundSnapshotInstanceManager: {
   },
 };
 
+export function entryUniqID(uniqID: string, entryName?: string): string {
+  return entryName ? `${entryName}:${uniqID}` : uniqID;
+}
+
 export function createSnapshot(
   uniqID: string,
   create: Snapshot['create'] | null,
@@ -223,7 +227,12 @@ export function createSnapshot(
   cssId: number | undefined,
   entryName: string | undefined,
   refAndSpreadIndexes: number[] | null,
+  isLazySnapshotSupported: boolean = false,
 ): string {
+  if (!isLazySnapshotSupported) {
+    uniqID = entryUniqID(uniqID, entryName);
+  }
+
   const s: Snapshot = { create, update, slot, cssId, entryName, refAndSpreadIndexes };
   snapshotManager.values.set(uniqID, s);
   if (slot && slot[0] && slot[0][0] === DynamicPartType.ListChildren) {

@@ -8,7 +8,7 @@ ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_3] = (__snapshot_da39a_test_3
         ];
     }, [
         (snapshot, index, oldValue)=>ReactLynx.updateListItemPlatformInfo(snapshot, index, oldValue, 0)
-    ], null, undefined, globDynamicComponentEntry, null);
+    ], null, undefined, globDynamicComponentEntry, null, true);
 const __snapshot_da39a_test_2 = "__snapshot_da39a_test_2";
 ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_2] = (__snapshot_da39a_test_2)=>ReactLynx.createSnapshot(__snapshot_da39a_test_2, function(snapshotInstance) {
         const pageId = ReactLynx.__pageId;
@@ -21,7 +21,7 @@ ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_2] = (__snapshot_da39a_test_2
             ReactLynx.__DynamicPartListChildren,
             0
         ]
-    ], undefined, globDynamicComponentEntry, null);
+    ], undefined, globDynamicComponentEntry, null, true);
 const __snapshot_da39a_test_4 = "__snapshot_da39a_test_4";
 ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_4] = (__snapshot_da39a_test_4)=>ReactLynx.createSnapshot(__snapshot_da39a_test_4, function() {
         const pageId = ReactLynx.__pageId;
@@ -29,7 +29,7 @@ ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_4] = (__snapshot_da39a_test_4
         return [
             el
         ];
-    }, null, ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null);
+    }, null, ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null, true);
 const __snapshot_da39a_test_1 = "__snapshot_da39a_test_1";
 ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_1] = (__snapshot_da39a_test_1)=>ReactLynx.createSnapshot(__snapshot_da39a_test_1, function() {
         const pageId = ReactLynx.__pageId;
@@ -52,7 +52,7 @@ ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_1] = (__snapshot_da39a_test_1
             ReactLynx.__DynamicPartSlot,
             2
         ]
-    ], undefined, globDynamicComponentEntry, null);
+    ], undefined, globDynamicComponentEntry, null, true);
 <__snapshot_da39a_test_1><__snapshot_da39a_test_2><__snapshot_da39a_test_3 values={[
     {
         "full-span": true,

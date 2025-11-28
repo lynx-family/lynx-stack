@@ -7,7 +7,7 @@ ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_1] = (__snapshot_da39a_test_1
         return [
             el
         ];
-    }, null, ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null);
+    }, null, ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null, true);
 <ReactLynxRuntimeComponents.Page custom-key-str="custom-value" custom-key-var={customVariable} class="classValue" data-attr={dataAttr}>
       <__snapshot_da39a_test_1>{[
     <ReactLynxRuntimeComponents.Page/>,

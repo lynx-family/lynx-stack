@@ -12,7 +12,7 @@ This change refactors how snapshots are created and registered:
 
 **⚠️ Lazy Bundle Compatibility:**
 
-- **Backward compatibility (new runtime → old lazy bundles)**: ✅ **Supported**. Old lazy bundles will work with the new runtime, but will lose their entryName prefix (e.g., `https://xxx/lynx.bundle:__snapshot_xxx` becomes `__snapshot_xxx`). This should not break functionality since snapshot IDs use `filename_hash`, `content_hash`, and `snapshot_counter` for uniqueness.
+- **Backward compatibility (new runtime → old lazy bundles)**: ✅ **Supported**. Old lazy bundles will work with the new runtime.
 
 - **Forward compatibility (old runtime → new lazy bundles)**: ❌ **NOT Supported**. Lower version consumers **will not be able to load lazy bundles produced by this version** due to the changed snapshot creation mechanism.
 

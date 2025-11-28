@@ -34,7 +34,7 @@ ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_1] = (__snapshot_da39a_test_1
         (snapshot, index, oldValue)=>ReactLynx.updateSpread(snapshot, index, oldValue, 5)
     ], null, undefined, globDynamicComponentEntry, [
         0
-    ]);
+    ], true);
 <__snapshot_da39a_test_1 values={[
     {
         ...attrs,

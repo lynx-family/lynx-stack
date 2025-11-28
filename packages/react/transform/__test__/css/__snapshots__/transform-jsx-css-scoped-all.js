@@ -7,7 +7,7 @@ ReactLynx.snapshotCreatorMap[__snapshot_2d408_test_1] = (__snapshot_2d408_test_1
         return [
             el
         ];
-    }, null, null, undefined, globDynamicComponentEntry, null);
+    }, null, null, undefined, globDynamicComponentEntry, null, true);
 _jsx(__snapshot_2d408_test_1, {});
 const __snapshot_2d408_test_2 = "__snapshot_2d408_test_2";
 ReactLynx.snapshotCreatorMap[__snapshot_2d408_test_2] = (__snapshot_2d408_test_2)=>ReactLynx.createSnapshot(__snapshot_2d408_test_2, function() {
@@ -19,7 +19,7 @@ ReactLynx.snapshotCreatorMap[__snapshot_2d408_test_2] = (__snapshot_2d408_test_2
             el,
             el1
         ];
-    }, null, null, undefined, globDynamicComponentEntry, null);
+    }, null, null, undefined, globDynamicComponentEntry, null, true);
 /*#__PURE__*/ _jsx(__snapshot_2d408_test_2, {});
 const __snapshot_2d408_test_3 = "__snapshot_2d408_test_3";
 ReactLynx.snapshotCreatorMap[__snapshot_2d408_test_3] = (__snapshot_2d408_test_3)=>ReactLynx.createSnapshot(__snapshot_2d408_test_3, function() {
@@ -28,7 +28,7 @@ ReactLynx.snapshotCreatorMap[__snapshot_2d408_test_3] = (__snapshot_2d408_test_3
         return [
             el
         ];
-    }, null, null, undefined, globDynamicComponentEntry, null);
+    }, null, null, undefined, globDynamicComponentEntry, null, true);
 function Foo() {
     return /*#__PURE__*/ _jsx(Bar, {
         children: /*#__PURE__*/ _jsx(__snapshot_2d408_test_3, {})
@@ -41,7 +41,7 @@ ReactLynx.snapshotCreatorMap[__snapshot_2d408_test_4] = (__snapshot_2d408_test_4
         return [
             el
         ];
-    }, null, null, undefined, globDynamicComponentEntry, null);
+    }, null, null, undefined, globDynamicComponentEntry, null, true);
 function App() {
     return /*#__PURE__*/ _jsx(Baz, {
         foo: /*#__PURE__*/ _jsx(__snapshot_2d408_test_4, {})

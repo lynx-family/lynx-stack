@@ -21,7 +21,7 @@ ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_1] = (__snapshot_da39a_test_1
             ReactLynx.__DynamicPartChildren,
             3
         ]
-    ], undefined, globDynamicComponentEntry, null);
+    ], undefined, globDynamicComponentEntry, null, true);
 _jsx(__snapshot_da39a_test_1, {
     children: _jsx(A, {})
 });

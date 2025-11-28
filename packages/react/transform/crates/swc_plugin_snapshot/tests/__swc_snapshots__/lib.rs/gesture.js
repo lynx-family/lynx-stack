@@ -14,7 +14,7 @@ require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_1] =
         ];
     }, [
         (snapshot, index, oldValue)=>require('@lynx-js/react/internal').updateGesture(snapshot, index, oldValue, 1, "main-thread")
-    ], null, undefined, globDynamicComponentEntry, null);
+    ], null, undefined, globDynamicComponentEntry, null, true);
 function Comp() {
     const gesture = {};
     return _jsx(__snapshot_da39a_test_1, {

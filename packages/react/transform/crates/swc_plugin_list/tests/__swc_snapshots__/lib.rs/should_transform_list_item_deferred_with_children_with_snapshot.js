@@ -11,7 +11,7 @@ require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_1] =
     }, [
         (snapshot, index, oldValue)=>require('@lynx-js/react/internal').updateListItemPlatformInfo(snapshot, index, oldValue, 0),
         (snapshot, index, oldValue)=>require('@lynx-js/react/internal').updateEvent(snapshot, index, oldValue, 0, "bindEvent", "tap", '')
-    ], require('@lynx-js/react/internal').__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null);
+    ], require('@lynx-js/react/internal').__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null, true);
 const __snapshot_da39a_test_2 = "__snapshot_da39a_test_2";
 require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_2] = (__snapshot_da39a_test_2)=>require('@lynx-js/react/internal').createSnapshot(__snapshot_da39a_test_2, function() {
         const pageId = require('@lynx-js/react/internal').__pageId;
@@ -19,7 +19,7 @@ require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_2] =
         return [
             el
         ];
-    }, null, null, undefined, globDynamicComponentEntry, null);
+    }, null, null, undefined, globDynamicComponentEntry, null, true);
 const __snapshot_da39a_test_3 = "__snapshot_da39a_test_3";
 require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_3] = (__snapshot_da39a_test_3)=>require('@lynx-js/react/internal').createSnapshot(__snapshot_da39a_test_3, function() {
         const pageId = require('@lynx-js/react/internal').__pageId;
@@ -27,7 +27,7 @@ require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_3] =
         return [
             el
         ];
-    }, null, null, undefined, globDynamicComponentEntry, null);
+    }, null, null, undefined, globDynamicComponentEntry, null, true);
 const __snapshot_da39a_test_4 = "__snapshot_da39a_test_4";
 require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_4] = (__snapshot_da39a_test_4)=>require('@lynx-js/react/internal').createSnapshot(__snapshot_da39a_test_4, function() {
         const pageId = require('@lynx-js/react/internal').__pageId;
@@ -35,7 +35,7 @@ require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_4] =
         return [
             el
         ];
-    }, null, null, undefined, globDynamicComponentEntry, null);
+    }, null, null, undefined, globDynamicComponentEntry, null, true);
 <ReactLynxRuntimeComponents.DeferredListItem renderListItem={(__c)=><__snapshot_da39a_test_1 values={[
         {
             "item-key": "1"
@@ -58,7 +58,7 @@ require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_5] =
     }, [
         (snapshot, index, oldValue)=>require('@lynx-js/react/internal').updateListItemPlatformInfo(snapshot, index, oldValue, 0),
         (snapshot, index, oldValue)=>require('@lynx-js/react/internal').updateEvent(snapshot, index, oldValue, 0, "bindEvent", "tap", '')
-    ], require('@lynx-js/react/internal').__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null);
+    ], require('@lynx-js/react/internal').__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null, true);
 const __snapshot_da39a_test_6 = "__snapshot_da39a_test_6";
 require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_6] = (__snapshot_da39a_test_6)=>require('@lynx-js/react/internal').createSnapshot(__snapshot_da39a_test_6, function() {
         const pageId = require('@lynx-js/react/internal').__pageId;
@@ -66,7 +66,7 @@ require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_6] =
         return [
             el
         ];
-    }, null, null, undefined, globDynamicComponentEntry, null);
+    }, null, null, undefined, globDynamicComponentEntry, null, true);
 <ReactLynxRuntimeComponents.DeferredListItem renderListItem={(__c)=><__snapshot_da39a_test_5 values={[
         {
             "item-key": "1"
@@ -85,7 +85,7 @@ require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_7] =
     }, [
         (snapshot, index, oldValue)=>require('@lynx-js/react/internal').updateListItemPlatformInfo(snapshot, index, oldValue, 0),
         (snapshot, index, oldValue)=>require('@lynx-js/react/internal').updateEvent(snapshot, index, oldValue, 0, "bindEvent", "tap", '')
-    ], require('@lynx-js/react/internal').__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null);
+    ], require('@lynx-js/react/internal').__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null, true);
 <ReactLynxRuntimeComponents.DeferredListItem renderListItem={(__c)=><__snapshot_da39a_test_7 values={[
         {
             "item-key": "1"

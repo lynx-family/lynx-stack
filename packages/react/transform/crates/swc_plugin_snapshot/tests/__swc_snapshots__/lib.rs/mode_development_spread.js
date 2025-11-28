@@ -9,7 +9,7 @@ require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_1] =
         (snapshot, index, oldValue)=>require('@lynx-js/react/internal').updateSpread(snapshot, index, oldValue, 0)
     ], null, undefined, globDynamicComponentEntry, [
         0
-    ]);
+    ], true);
 <__snapshot_da39a_test_1 values={[
     {
         ...{

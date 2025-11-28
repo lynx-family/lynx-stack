@@ -12,7 +12,7 @@ ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_1] = (__snapshot_da39a_test_1
             el1,
             el2
         ];
-    }, null, null, undefined, globDynamicComponentEntry, null);
+    }, null, null, undefined, globDynamicComponentEntry, null, true);
 it('basic', async function() {
     const run = withEnv(function() {
         let s = __SNAPSHOT__(<__snapshot_da39a_test_1/>);

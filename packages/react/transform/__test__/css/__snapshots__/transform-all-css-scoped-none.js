@@ -9,7 +9,7 @@ ReactLynx.snapshotCreatorMap[__snapshot_2d408_test_1] = (__snapshot_2d408_test_1
         return [
             el
         ];
-    }, null, null, undefined, globDynamicComponentEntry, null);
+    }, null, null, undefined, globDynamicComponentEntry, null, true);
 function App() {
     return /*#__PURE__*/ _jsx(Baz, {
         foo: /*#__PURE__*/ _jsx(__snapshot_2d408_test_1, {})

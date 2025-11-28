@@ -6,7 +6,7 @@
 ## Asset Files
 - Bundle: rspack-bundle.js
 - Manifest: main.LAST_HASH.hot-update.json, size: 28
-- Update: main.LAST_HASH.hot-update.js, size: 4838
+- Update: main.LAST_HASH.hot-update.js, size: 4844
 
 ## Manifest
 
@@ -68,7 +68,7 @@ const __snapshot_4953c_6688c_1 = "__snapshot_4953c_6688c_1";
             (__webpack_require__(/*! @lynx-js/react/internal */ "../../../../../../react/runtime/lib/internal.js")/* .__DynamicPartChildren */.__DynamicPartChildren),
             2
         ]
-    ], undefined, globDynamicComponentEntry, null);
+    ], undefined, globDynamicComponentEntry, null, true);
 function Inner() {
     const theme = (0,_lynx_js_react__WEBPACK_IMPORTED_MODULE_1__.useContext)(Theme);
     __RenderContent(`after: ${theme}`);

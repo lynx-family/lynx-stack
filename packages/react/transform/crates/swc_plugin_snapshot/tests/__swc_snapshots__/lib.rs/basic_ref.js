@@ -31,7 +31,7 @@ require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_1] =
     ], null, undefined, globDynamicComponentEntry, [
         0,
         2
-    ]);
+    ], true);
 function Comp() {
     const handleRef = ()=>{};
     return _jsx(__snapshot_da39a_test_1, {

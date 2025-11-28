@@ -1430,7 +1430,8 @@ where
              $slot,
              $css_id,
              globDynamicComponentEntry,
-             $snapshot_refs_and_spread_index
+             $snapshot_refs_and_spread_index,
+             true
         )"# as Expr,
         runtime_id: Expr = self.runtime_id.clone(),
         snapshot_id = snapshot_id.clone(),

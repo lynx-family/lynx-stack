@@ -86,7 +86,7 @@ export class A extends Component {
               return [
                   el
               ];
-          }, null, null, undefined, globDynamicComponentEntry, null);
+          }, null, null, undefined, globDynamicComponentEntry, null, true);
       export class A extends Component {
           render() {
               return /*#__PURE__*/ _jsx(__snapshot_da39a_test_1, {});
@@ -107,7 +107,7 @@ export class A extends Component {
               return [
                   el
               ];
-          }, null, null, undefined, globDynamicComponentEntry, null);
+          }, null, null, undefined, globDynamicComponentEntry, null, true);
       export class A extends Component {
           render() {
               return /*#__PURE__*/ _jsx(__snapshot_da39a_test_1, {});
@@ -184,7 +184,7 @@ describe('jsx', () => {
               ];
           }, [
               (snapshot, index, oldValue)=>ReactLynx.updateListItemPlatformInfo(snapshot, index, oldValue, 0)
-          ], ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null);
+          ], ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null, true);
       const __snapshot_da39a_04d8c_1 = "__snapshot_da39a_04d8c_1";
       ReactLynx.snapshotCreatorMap[__snapshot_da39a_04d8c_1] = (__snapshot_da39a_04d8c_1)=>ReactLynx.createSnapshot(__snapshot_da39a_04d8c_1, function(snapshotInstance) {
               const pageId = ReactLynx.__pageId;
@@ -197,7 +197,7 @@ describe('jsx', () => {
                   ReactLynx.__DynamicPartListChildren,
                   0
               ]
-          ], undefined, globDynamicComponentEntry, null);
+          ], undefined, globDynamicComponentEntry, null, true);
       /*#__PURE__*/ _jsx(__snapshot_da39a_04d8c_1, {
           children: /*#__PURE__*/ _jsx(ReactLynxRuntimeComponents.DeferredListItem, {
               renderListItem: (__c)=>_jsx(__snapshot_da39a_04d8c_2, {
@@ -411,7 +411,7 @@ Component, View
                 (snapshot, index, oldValue)=>ReactLynx.updateSpread(snapshot, index, oldValue, 0)
             ], ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry, [
                 0
-            ]);
+            ], true);
         /*#__PURE__*/ ReactLynx1.wrapWithLynxComponent((__c, __spread)=>/*#__PURE__*/ _jsx(__snapshot_da39a_89b7f_1, {
                 values: [
                     {
@@ -895,7 +895,7 @@ export default class App extends Component {
               return [
                   el
               ];
-          }, null, null, undefined, globDynamicComponentEntry, null);
+          }, null, null, undefined, globDynamicComponentEntry, null, true);
       export default class App extends Component {
           a() {}
           render() {
@@ -1372,7 +1372,7 @@ class X extends Component {
               return [
                   el
               ];
-          }, null, null, undefined, globDynamicComponentEntry, null);
+          }, null, null, undefined, globDynamicComponentEntry, null, true);
       class X extends Component {
           constructor(){}
           render() {
