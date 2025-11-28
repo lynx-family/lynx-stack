@@ -8,6 +8,7 @@ mod worklet_type;
 use extract_ident::{ExtractingIdentsCollector, ExtractingIdentsCollectorConfig};
 use gen_stmt::StmtGen;
 use hash::WorkletHash;
+use rustc_hash::FxHashSet;
 use serde::Deserialize;
 use std::collections::HashSet;
 use std::vec;
@@ -58,6 +59,7 @@ pub struct WorkletVisitor {
   stmts_to_insert_at_top_level: Vec<Stmt>,
   named_imports: HashSet<String>,
   hasher: WorkletHash,
+  shared_identifiers: FxHashSet<Id>,
 }
 
 impl Default for WorkletVisitor {
@@ -85,6 +87,7 @@ impl VisitMut for WorkletVisitor {
 
     let mut collector = ExtractingIdentsCollector::new(ExtractingIdentsCollectorConfig {
       custom_global_ident_names: self.cfg.custom_global_ident_names.clone(),
+      shared_identifiers: Some(self.shared_identifiers.clone()),
     });
     n.visit_mut_with(&mut collector);
 
@@ -144,6 +147,7 @@ impl VisitMut for WorkletVisitor {
 
     let mut collector = ExtractingIdentsCollector::new(ExtractingIdentsCollectorConfig {
       custom_global_ident_names: self.cfg.custom_global_ident_names.clone(),
+      shared_identifiers: Some(self.shared_identifiers.clone()),
     });
     n.visit_mut_with(&mut collector);
 
@@ -190,6 +194,7 @@ impl VisitMut for WorkletVisitor {
 
         let mut collector = ExtractingIdentsCollector::new(ExtractingIdentsCollectorConfig {
           custom_global_ident_names: self.cfg.custom_global_ident_names.clone(),
+          shared_identifiers: Some(self.shared_identifiers.clone()),
         });
         n.visit_mut_with(&mut collector);
 
@@ -244,6 +249,7 @@ impl VisitMut for WorkletVisitor {
 
         let mut collector = ExtractingIdentsCollector::new(ExtractingIdentsCollectorConfig {
           custom_global_ident_names: self.cfg.custom_global_ident_names.clone(),
+          shared_identifiers: Some(self.shared_identifiers.clone()),
         });
         n.visit_mut_with(&mut collector);
 
@@ -310,6 +316,7 @@ impl VisitMut for WorkletVisitor {
 
     let mut collector = ExtractingIdentsCollector::new(ExtractingIdentsCollectorConfig {
       custom_global_ident_names: self.cfg.custom_global_ident_names.clone(),
+      shared_identifiers: Some(self.shared_identifiers.clone()),
     });
     n.as_mut_export_default_decl()
       .unwrap()
@@ -358,6 +365,27 @@ impl VisitMut for WorkletVisitor {
   }
 
   fn visit_mut_module(&mut self, n: &mut Module) {
+    // First process imports to detect shared-runtime modules
+    for item in &n.body {
+      if let ModuleItem::ModuleDecl(ModuleDecl::Import(import_decl)) = item {
+        if is_shared_runtime_import(import_decl) {
+          for specifier in &import_decl.specifiers {
+            match specifier {
+              ImportSpecifier::Named(named) => {
+                self.shared_identifiers.insert(named.local.to_id());
+              }
+              ImportSpecifier::Default(default) => {
+                self.shared_identifiers.insert(default.local.to_id());
+              }
+              ImportSpecifier::Namespace(ns) => {
+                self.shared_identifiers.insert(ns.local.to_id());
+              }
+            }
+          }
+        }
+      }
+    }
+
     n.visit_mut_children_with(self);
 
     let mut specifiers = self.named_imports.iter().collect::<Vec<_>>();
@@ -436,6 +464,32 @@ impl VisitMut for WorkletVisitor {
   }
 }
 
+fn is_shared_runtime_import(import_decl: &ImportDecl) -> bool {
+  if let Some(with_clause) = &import_decl.with {
+    // Check if the with clause contains runtime: "shared"
+    for prop in &with_clause.props {
+      if let PropOrSpread::Prop(prop) = prop {
+        if let Prop::KeyValue(kv) = &**prop {
+          match &kv.key {
+            PropName::Ident(key) if key.sym == "runtime" => {
+              if let Expr::Lit(Lit::Str(value)) = &*kv.value {
+                return value.value == "shared";
+              }
+            }
+            PropName::Str(s) if s.value == "runtime" => {
+              if let Expr::Lit(Lit::Str(value)) = &*kv.value {
+                return value.value == "shared";
+              }
+            }
+            _ => {}
+          }
+        }
+      }
+    }
+  }
+  false
+}
+
 impl WorkletVisitor {
   pub fn with_content_hash(mut self, content_hash: String) -> Self {
     self.content_hash = content_hash;
@@ -450,6 +504,7 @@ impl WorkletVisitor {
       stmts_to_insert_at_top_level: vec![],
       hasher: WorkletHash::new(),
       named_imports: HashSet::default(),
+      shared_identifiers: FxHashSet::default(),
     }
   }
 
@@ -674,6 +729,210 @@ function X(event) {
     a, b, c;
     y6.m = y7;
     function xxx() {}
+}
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Typescript(TsSyntax {
+      ..Default::default()
+    }),
+    |_| (
+      resolver(Mark::new(), Mark::new(), true),
+      visit_mut_pass(WorkletVisitor::new(
+        TransformMode::Test,
+        WorkletVisitorConfig {
+          filename: "index.js".into(),
+          target: TransformTarget::JS,
+          custom_global_ident_names: None,
+          runtime_pkg: "@lynx-js/react".into(),
+        }
+      )),
+      hygiene()
+    ),
+    should_skip_shared_identifiers_js,
+    r#"
+import { sharedRuntime } from './utils.js' with {
+    runtime: "shared"
+};
+
+function worklet(event: Event) {
+    "main thread";
+    console.log(sharedRuntime);
+    console.log(this.y1);
+    let a: object = y1;
+}
+    "#
+  );
+
+  // default import should also be treated as shared-runtime and skipped from capture
+  test!(
+    module,
+    Syntax::Typescript(TsSyntax {
+      ..Default::default()
+    }),
+    |_| (
+      resolver(Mark::new(), Mark::new(), true),
+      visit_mut_pass(WorkletVisitor::new(
+        TransformMode::Test,
+        WorkletVisitorConfig {
+          filename: "index.js".into(),
+          target: TransformTarget::JS,
+          custom_global_ident_names: None,
+          runtime_pkg: "@lynx-js/react".into(),
+        }
+      )),
+      hygiene()
+    ),
+    should_skip_shared_identifiers_default_import_js,
+    r#"
+import sharedRuntime from './utils.js' with {
+    runtime: "shared"
+};
+
+function worklet(event: Event) {
+    "main thread";
+    console.log(sharedRuntime);
+    console.log(this.y1);
+    let a: object = y1;
+}
+    "#
+  );
+
+  // namespace import should be skipped from capture
+  test!(
+    module,
+    Syntax::Typescript(TsSyntax {
+      ..Default::default()
+    }),
+    |_| (
+      resolver(Mark::new(), Mark::new(), true),
+      visit_mut_pass(WorkletVisitor::new(
+        TransformMode::Test,
+        WorkletVisitorConfig {
+          filename: "index.js".into(),
+          target: TransformTarget::JS,
+          custom_global_ident_names: None,
+          runtime_pkg: "@lynx-js/react".into(),
+        }
+      )),
+      hygiene()
+    ),
+    should_skip_shared_identifiers_namespace_import_js,
+    r#"
+import * as SR from './utils.js' with {
+    runtime: "shared"
+};
+
+function worklet(event: Event) {
+    "main thread";
+    console.log(SR);
+    console.log(this.y1);
+    let a: object = y1;
+}
+    "#
+  );
+
+  // with clause key can be string literal
+  test!(
+    module,
+    Syntax::Typescript(TsSyntax {
+      ..Default::default()
+    }),
+    |_| (
+      resolver(Mark::new(), Mark::new(), true),
+      visit_mut_pass(WorkletVisitor::new(
+        TransformMode::Test,
+        WorkletVisitorConfig {
+          filename: "index.js".into(),
+          target: TransformTarget::JS,
+          custom_global_ident_names: None,
+          runtime_pkg: "@lynx-js/react".into(),
+        }
+      )),
+      hygiene()
+    ),
+    should_skip_shared_identifiers_string_key_js,
+    r#"
+import { sharedRuntime as sr } from './utils.js' with {
+    "runtime": "shared"
+};
+
+function worklet(event: Event) {
+    "main thread";
+    console.log(sr);
+    console.log(this.y1);
+    let a: object = y1;
+}
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Typescript(TsSyntax {
+      ..Default::default()
+    }),
+    |_| (
+      resolver(Mark::new(), Mark::new(), true),
+      visit_mut_pass(WorkletVisitor::new(
+        TransformMode::Test,
+        WorkletVisitorConfig {
+          filename: "index.js".into(),
+          target: TransformTarget::JS,
+          custom_global_ident_names: None,
+          runtime_pkg: "@lynx-js/react".into(),
+        }
+      )),
+      hygiene()
+    ),
+    should_handle_renamed_import_shadowing_js,
+    r#"
+import { sharedRuntime as sr } from './utils.js' with {
+    runtime: "shared"
+};
+
+(function() {
+  let sr = y1;
+  function worklet(event: Event) {
+      "main thread";
+      console.log(sr);
+      console.log(this.y1);
+      let a: object = y1;
+  }
+})();
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Typescript(TsSyntax {
+      ..Default::default()
+    }),
+    |_| (
+      resolver(Mark::new(), Mark::new(), true),
+      visit_mut_pass(WorkletVisitor::new(
+        TransformMode::Test,
+        WorkletVisitorConfig {
+          filename: "index.js".into(),
+          target: TransformTarget::LEPUS,
+          custom_global_ident_names: None,
+          runtime_pkg: "@lynx-js/react".into(),
+        }
+      )),
+      hygiene()
+    ),
+    should_skip_shared_identifiers_lepus,
+    r#"
+import { sharedRuntime } from './utils.js' with {
+    runtime: "shared"
+};
+
+function worklet(event: Event) {
+    "main thread";
+    console.log(sharedRuntime);
+    console.log(this.y1);
+    let a: object = y1;
 }
     "#
   );
