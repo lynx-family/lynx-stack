@@ -10,7 +10,6 @@ export function applySWC(api: RsbuildPluginAPI): void {
         swc: {
           jsc: {
             transform: {
-              // TODO: remove this in the next minor version
               useDefineForClassFields: false,
               optimizer: {
                 simplify: true,

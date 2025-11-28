@@ -338,6 +338,13 @@ export class SnapshotInstance {
       // In nested list scenarios, there are some `list` that are lazily created.
       // We need to `flush` them during `ensureElements`.
       // Also, `flush` is a safe operation since it checks if the `list` is in `__pendingListUpdates`.
+      if (__pendingListUpdates.values && !__pendingListUpdates.values[this.__id] && this.__firstChild !== null) {
+        let child: SnapshotInstance | null = this.__firstChild;
+        while (child) {
+          (__pendingListUpdates.values[this.__id] ??= new ListUpdateInfoRecording(this)).onInsertBefore(child);
+          child = child.__nextSibling;
+        }
+      }
       __pendingListUpdates.flushWithId(this.__id);
     } else {
       let index = 0;

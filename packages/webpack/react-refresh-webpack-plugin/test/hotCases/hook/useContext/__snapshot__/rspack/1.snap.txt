@@ -6,7 +6,7 @@
 ## Asset Files
 - Bundle: rspack-bundle.js
 - Manifest: main.LAST_HASH.hot-update.json, size: 28
-- Update: main.LAST_HASH.hot-update.js, size: 4844
+- Update: main.LAST_HASH.hot-update.js, size: 4762
 
 ## Manifest
 
@@ -43,13 +43,13 @@ __webpack_require__.r(__webpack_exports__);
 __webpack_require__.d(__webpack_exports__, {
   App: () => (App)
 });
-/* import */var _lynx_js_react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @lynx-js/react/jsx-dev-runtime */ "../../../../../../react/runtime/jsx-dev-runtime/index.js");
-/* import */var _lynx_js_react__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @lynx-js/react */ "../../../../../../react/runtime/lib/index.js");
+/* import */ var _lynx_js_react_jsx_dev_runtime__rspack_import_0 = __webpack_require__(/*! @lynx-js/react/jsx-dev-runtime */ "../../../../../../react/runtime/jsx-dev-runtime/index.js");
+/* import */ var _lynx_js_react__rspack_import_1 = __webpack_require__(/*! @lynx-js/react */ "../../../../../../react/runtime/lib/index.js");
 /* module decorator */ module = __webpack_require__.hmd(module);
 /* provided dependency */ var __prefresh_utils__ = __webpack_require__(/*! ../../../../runtime/refresh.cjs */ "../../../../runtime/refresh.cjs");
 
 
-const Theme = (0,_lynx_js_react__WEBPACK_IMPORTED_MODULE_1__.createContext)('light');
+const Theme = (0,_lynx_js_react__rspack_import_1.createContext)('light');
 const __snapshot_4953c_6688c_1 = "__snapshot_4953c_6688c_1";
 (__webpack_require__(/*! @lynx-js/react/internal */ "../../../../../../react/runtime/lib/internal.js")/* .snapshotCreatorMap */.snapshotCreatorMap)[__snapshot_4953c_6688c_1] = (__snapshot_4953c_6688c_1)=>(__webpack_require__(/*! @lynx-js/react/internal */ "../../../../../../react/runtime/lib/internal.js")/* .createSnapshot */.createSnapshot)(__snapshot_4953c_6688c_1, function() {
         const pageId = (__webpack_require__(/*! @lynx-js/react/internal */ "../../../../../../react/runtime/lib/internal.js")/* .__pageId */.__pageId);
@@ -70,9 +70,9 @@ const __snapshot_4953c_6688c_1 = "__snapshot_4953c_6688c_1";
         ]
     ], undefined, globDynamicComponentEntry, null, true);
 function Inner() {
-    const theme = (0,_lynx_js_react__WEBPACK_IMPORTED_MODULE_1__.useContext)(Theme);
+    const theme = (0,_lynx_js_react__rspack_import_1.useContext)(Theme);
     __RenderContent(`after: ${theme}`);
-    return /*#__PURE__*/ (0,_lynx_js_react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxDEV)(__snapshot_4953c_6688c_1, {
+    return /*#__PURE__*/ (0,_lynx_js_react_jsx_dev_runtime__rspack_import_0.jsxDEV)(__snapshot_4953c_6688c_1, {
         children: theme
     }, void 0, false, {
         fileName: "<ROOT>/packages/webpack/react-refresh-webpack-plugin/test/hotCases/hook/useContext/app.jsx",
@@ -81,9 +81,9 @@ function Inner() {
     }, this);
 }
 function App() {
-    return /*#__PURE__*/ (0,_lynx_js_react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxDEV)(Theme.Provider, {
+    return /*#__PURE__*/ (0,_lynx_js_react_jsx_dev_runtime__rspack_import_0.jsxDEV)(Theme.Provider, {
         value: "dark",
-        children: /*#__PURE__*/ (0,_lynx_js_react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxDEV)(Inner, {}, void 0, false, {
+        children: /*#__PURE__*/ (0,_lynx_js_react_jsx_dev_runtime__rspack_import_0.jsxDEV)(Inner, {}, void 0, false, {
             fileName: "<ROOT>/packages/webpack/react-refresh-webpack-plugin/test/hotCases/hook/useContext/app.jsx",
             lineNumber: 14,
             columnNumber: 7

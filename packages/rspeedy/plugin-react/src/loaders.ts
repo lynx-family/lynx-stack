@@ -21,15 +21,6 @@ export function applyLoaders(
   } = options
 
   api.modifyBundlerChain((chain, { CHAIN_ID }) => {
-    const experiments = chain.get(
-      'experiments',
-    ) as Rspack.Configuration['experiments']
-
-    chain.experiments({
-      ...experiments,
-      layers: true,
-    })
-
     const rule = chain.module.rules.get(CHAIN_ID.RULE.JS)
     // The Rsbuild default loaders:
     // - Rspack:
