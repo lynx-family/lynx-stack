@@ -165,6 +165,7 @@ jobs:
         npx --registry http://localhost:4873 create-rspeedy-canary@latest --template react --dir create-rspeedy-regression-yarn-pnp --tools eslint
         cd create-rspeedy-regression-yarn-pnp
         corepack yarn@4 install --mode update-lockfile --registry=http://localhost:4873
+        corepack use yarn@4
         yarn build
         yarn build --mode development
   test-react:
