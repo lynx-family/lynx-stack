@@ -9,6 +9,7 @@ export function applySWC(api: RsbuildPluginAPI): void {
       tools: {
         swc: {
           jsc: {
+            target: 'es2019',
             transform: {
               useDefineForClassFields: false,
               optimizer: {
