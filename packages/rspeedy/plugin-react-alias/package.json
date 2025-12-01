@@ -36,15 +36,13 @@
     "build": "rslib build",
     "test": "pnpm -w run test --project rspeedy/react-alias"
   },
-  "dependencies": {
-    "unrs-resolver": "1.11.1"
-  },
   "devDependencies": {
     "@lynx-js/react": "workspace:*",
     "@lynx-js/react-webpack-plugin": "workspace:*",
     "@lynx-js/vitest-setup": "workspace:*",
     "@microsoft/api-extractor": "catalog:",
     "@rsbuild/core": "catalog:rsbuild",
+    "@rspack/core": "catalog:rspack",
     "@types/semver": "^7.7.1",
     "semver": "^7.7.2"
   },

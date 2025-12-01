@@ -16,10 +16,14 @@ const ALIAS_BACKGROUND_ONLY_BACKGROUND =
 export function applyBackgroundOnly(
   api: RsbuildPluginAPI,
 ): void {
-  api.modifyBundlerChain(async chain => {
+  api.modifyBundlerChain(async (chain, { rspack }) => {
     const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
-    const { resolve, resolveMainThread } = await import('./resolve.js')
+    const { getImportResolver, getMainThreadResolver } = await import(
+      './resolve.js'
+    )
+    const resolve = getImportResolver(rspack)
+    const resolveMainThread = getMainThreadResolver(rspack)
 
     const [backgroundOnly, backgroundOnlyMainThread] = await Promise.all([
       resolve('background-only'),
