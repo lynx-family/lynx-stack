@@ -560,6 +560,25 @@ importers:
         specifier: 1.2.4
         version: 1.2.4(@rsbuild/core@1.6.9)(@rspack/core@1.6.5(@swc/helpers@0.5.17))(typescript@5.9.3)
 
+  packages/rspeedy/lynx-bundle-rslib-config:
+    dependencies:
+      '@lynx-js/runtime-wrapper-webpack-plugin':
+        specifier: workspace:*
+        version: link:../../webpack/runtime-wrapper-webpack-plugin
+      '@lynx-js/tasm':
+        specifier: 0.0.20
+        version: 0.0.20
+    devDependencies:
+      '@rslib/core':
+        specifier: ^0.15.0
+        version: 0.15.0(@microsoft/api-extractor@7.53.1(@types/node@24.6.1))(@typescript/native-preview@7.0.0-dev.20251106.1)(typescript@5.9.3)
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.6.1)(@vitest/ui@3.2.4)(jsdom@26.1.0)(sass-embedded@1.90.0)(sass@1.90.0)(terser@5.31.6)
+      webpack:
+        specifier: ^5.102.0
+        version: 5.102.0
+
   packages/rspeedy/plugin-qrcode:
     devDependencies:
       '@clack/prompts':
@@ -1305,8 +1324,8 @@ importers:
         specifier: workspace:*
         version: link:../../tools/css-serializer
       '@lynx-js/tasm':
-        specifier: 0.0.18
-        version: 0.0.18
+        specifier: 0.0.20
+        version: 0.0.20
       '@lynx-js/webpack-runtime-globals':
         specifier: workspace:^
         version: link:../webpack-runtime-globals
@@ -1408,6 +1427,9 @@ importers:
       '@lynx-js/css-extract-webpack-plugin':
         specifier: workspace:*
         version: link:../packages/webpack/css-extract-webpack-plugin
+      '@lynx-js/lynx-bundle-rslib-config':
+        specifier: workspace:*
+        version: link:../packages/rspeedy/lynx-bundle-rslib-config
       '@lynx-js/qrcode-rsbuild-plugin':
         specifier: workspace:*
         version: link:../packages/rspeedy/plugin-qrcode
@@ -2709,8 +2731,8 @@ packages:
   '@lynx-js/preact-devtools@5.0.1':
     resolution: {integrity: sha512-ayUU8PJ0TVWABbd5/d/04KI18W9RY4kkaRekBXXbRE/eBkGMZ3lVJ0zOB+B+85B9RUpvEVK2FleqJkS+qBKG6Q==}
 
-  '@lynx-js/tasm@0.0.18':
-    resolution: {integrity: sha512-6Kl1eUxooceWcSLYnCtys38r9KPIouTam/fU81pzOrH/xIal60+WY47nj+MzDXq94i9jbUusM+IQSZAkeRistw==}
+  '@lynx-js/tasm@0.0.20':
+    resolution: {integrity: sha512-ezMq43s59jqFuQ1YygpsUuZmGXw4XH+00RsB5RVmkYZuHQxEaLt/ECTOixF+9RixvAyhmxzF2eSURvmNckO9xg==}
 
   '@lynx-js/type-element-api@0.0.2':
     resolution: {integrity: sha512-Unz3RHf2RM2vOWForwubjLYw9xbBP02ReuOL4KVLc3+0Vzryo8KbgqbhMUZCsJXHVmcaE2zXiE1AV/nqrBAoPA==}
@@ -10969,7 +10991,7 @@ snapshots:
       errorstacks: 2.4.1
       htm: 3.1.1
 
-  '@lynx-js/tasm@0.0.18': {}
+  '@lynx-js/tasm@0.0.20': {}
 
   '@lynx-js/type-element-api@0.0.2': {}
 
@@ -11572,6 +11594,16 @@ snapshots:
       rsbuild-plugin-dts: 0.15.0(@microsoft/api-extractor@7.52.15(@types/node@24.6.1))(@rsbuild/core@1.5.17)(@typescript/native-preview@7.0.0-dev.20251106.1)(typescript@5.9.3)
     optionalDependencies:
       '@microsoft/api-extractor': 7.52.15(@types/node@24.6.1)
+      typescript: 5.9.3
+    transitivePeerDependencies:
+      - '@typescript/native-preview'
+
+  '@rslib/core@0.15.0(@microsoft/api-extractor@7.53.1(@types/node@24.6.1))(@typescript/native-preview@7.0.0-dev.20251106.1)(typescript@5.9.3)':
+    dependencies:
+      '@rsbuild/core': 1.5.17
+      rsbuild-plugin-dts: 0.15.0(@microsoft/api-extractor@7.53.1(@types/node@24.6.1))(@rsbuild/core@1.5.17)(@typescript/native-preview@7.0.0-dev.20251106.1)(typescript@5.9.3)
+    optionalDependencies:
+      '@microsoft/api-extractor': 7.53.1(@types/node@24.6.1)
       typescript: 5.9.3
     transitivePeerDependencies:
       - '@typescript/native-preview'
@@ -17410,6 +17442,15 @@ snapshots:
       '@rsbuild/core': 1.5.17
     optionalDependencies:
       '@microsoft/api-extractor': 7.52.15(@types/node@24.6.1)
+      '@typescript/native-preview': 7.0.0-dev.20251106.1
+      typescript: 5.9.3
+
+  rsbuild-plugin-dts@0.15.0(@microsoft/api-extractor@7.53.1(@types/node@24.6.1))(@rsbuild/core@1.5.17)(@typescript/native-preview@7.0.0-dev.20251106.1)(typescript@5.9.3):
+    dependencies:
+      '@ast-grep/napi': 0.37.0
+      '@rsbuild/core': 1.5.17
+    optionalDependencies:
+      '@microsoft/api-extractor': 7.53.1(@types/node@24.6.1)
       '@typescript/native-preview': 7.0.0-dev.20251106.1
       typescript: 5.9.3
 
