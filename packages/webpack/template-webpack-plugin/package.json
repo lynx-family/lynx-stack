@@ -49,6 +49,7 @@
     "@microsoft/api-extractor": "catalog:",
     "@types/css-tree": "^2.3.11",
     "@types/object.groupby": "^1.0.4",
+    "css-loader": "^7.1.2",
     "webpack": "^5.102.0"
   },
   "engines": {
