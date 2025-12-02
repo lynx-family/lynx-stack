@@ -2,7 +2,7 @@ import { defineConfig } from '@rslib/core'
 
 export default defineConfig({
   lib: [
-    { format: 'esm', syntax: 'es2022', dts: { tsgo: true } },
+    { format: 'esm', syntax: 'es2022', dts: { tsgo: false } },
   ],
   source: {
     entry: {
