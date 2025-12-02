@@ -208,6 +208,7 @@ class CssExtractRspackPluginImpl {
                   lepusCode: {
                     root: undefined,
                     lepusChunk: {},
+                    filename: undefined,
                   },
                   manifest: {},
                   customSections: {},
