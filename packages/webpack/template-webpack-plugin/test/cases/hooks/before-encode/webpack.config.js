@@ -32,6 +32,7 @@ export default {
                       ['lynx:main-thread']: true,
                     },
                   }],
+                  filename: 'hello.lepus.js',
                 },
               },
             };
