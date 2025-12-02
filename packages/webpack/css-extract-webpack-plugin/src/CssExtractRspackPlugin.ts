@@ -168,16 +168,16 @@ class CssExtractRspackPluginImpl {
         );
 
         hooks.beforeEmit.tapPromise(this.name, async (args) => {
+          const cssChunks = args.cssChunks;
+          const content: string[] = cssChunks.map((chunk) =>
+            chunk.source.source().toString('utf-8')
+          );
           for (const entryName of args.entryNames) {
             // generate hot update file which is required by cssHotUpdateList
             const hotUpdateFilePath = this.hotUpdateFiles.get(entryName);
             if (!hotUpdateFilePath) {
               continue;
             }
-            const cssChunks = args.cssChunks;
-            const content: string[] = cssChunks.map((chunk) =>
-              chunk.source.source().toString('utf-8')
-            );
             const css = LynxTemplatePlugin.convertCSSChunksToMap(
               content,
               options.cssPlugins,
@@ -290,10 +290,7 @@ class CssExtractRspackPluginImpl {
               this.hotUpdateFiles.set(chunkName!, hotUpdatePath);
               return [
                 chunkName!,
-                cssHotUpdatePath!.replace(
-                  '.css',
-                  `${this.hash ? `.${this.hash}` : ''}.css.hot-update.json`,
-                ),
+                hotUpdatePath,
               ];
             });
 
