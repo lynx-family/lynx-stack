@@ -5,7 +5,7 @@
   "references": [
     /** packages-start */
     { "path": "./tailwind-preset/tsconfig.build.json" },
-    { "path": "./motion/tsconfig.json" },
+    { "path": "./motion/tsconfig.build.json" },
     /** packages-end */
   ],
   "include": [],

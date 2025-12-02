@@ -3,12 +3,31 @@
 // LICENSE file in the root directory of this source tree.
 import '../polyfill/shim.js';
 
+// import {
+//   animate as animateOrig,
+//   clamp as clampOrig,
+//   progress as progressOrig,
+//   stagger as staggerOrig,
+// } from 'framer-motion/dom';
+// import type {
+//   AnimationSequence,
+//   ObjectTarget,
+//   SequenceOptions,
+// } from 'framer-motion/dom';
+// import {
+//   mapValue as mapValueOrig,
+//   mix as mixOrig,
+//   spring as springOrig,
+//   springValue as springValueOrig,
+//   styleEffect as styleEffectOrig,
+//   transformValue as transformValueOrig,
+// } from 'motion-dom';
 import {
-  animate as animateOriginal,
+  animate as animateOrig,
   clamp as clampOrig,
   progress as progressOrig,
-  stagger as staggerOriginal,
-} from 'framer-motion/dom';
+  stagger as staggerOrig,
+} from 'framer-motion/dom' with { runtime: 'shared' };
 import type {
   AnimationSequence,
   ObjectTarget,
@@ -21,7 +40,7 @@ import {
   springValue as springValueOrig,
   styleEffect as styleEffectOrig,
   transformValue as transformValueOrig,
-} from 'motion-dom';
+} from 'motion-dom' with { runtime: 'shared' };
 import type {
   AnimationOptions,
   AnimationPlaybackControlsWithThen,
@@ -46,45 +65,6 @@ import {
   isMainThreadElement,
   isMainThreadElementArray,
 } from '../utils/isMainThreadElement.js';
-import { registerCallable } from '../utils/registeredFunction.js';
-
-let animateHandle: string;
-let staggerHandle: string;
-let motionValueHandle: string;
-let springHandle: string;
-let springValueHandle: string;
-let mixHandle: string;
-let progressHandle: string;
-let clampHandle: string;
-let mapValueHandle: string;
-let transformValueHandle: string;
-let styleEffectHandle: string;
-
-if (__MAIN_THREAD__) {
-  animateHandle = registerCallable(animateOriginal, 'animate');
-  staggerHandle = registerCallable(staggerOriginal, 'stagger');
-  motionValueHandle = registerCallable(motionValueOrig, 'motionValue');
-  springHandle = registerCallable(springOrig, 'spring');
-  springValueHandle = registerCallable(springValueOrig, 'springValue');
-  mixHandle = registerCallable(mixOrig, 'mix');
-  progressHandle = registerCallable(progressOrig, 'progress');
-  clampHandle = registerCallable(clampOrig, 'clamp');
-  mapValueHandle = registerCallable(mapValueOrig, 'mapValue');
-  transformValueHandle = registerCallable(transformValueOrig, 'transformValue');
-  styleEffectHandle = registerCallable(styleEffectOrig, 'styleEffect');
-} else {
-  animateHandle = 'animate';
-  staggerHandle = 'stagger';
-  motionValueHandle = 'motionValue';
-  springHandle = 'spring';
-  springValueHandle = 'springValue';
-  mixHandle = 'mix';
-  progressHandle = 'progress';
-  clampHandle = 'clamp';
-  mapValueHandle = 'mapValue';
-  transformValueHandle = 'transformValue';
-  styleEffectHandle = 'styleEffect';
-}
 
 /**
  * Animate a sequence
@@ -202,7 +182,7 @@ function animate<O extends {}>(
   }
 
   // @TODO: Remove the globalThis trick when MTS can treat a module as MTS module
-  return globalThis.runOnRegistered<typeof animateOriginal>(animateHandle)(
+  return animateOrig(
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     realSubjectOrSequence as any,
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
@@ -213,11 +193,11 @@ function animate<O extends {}>(
 }
 
 function stagger(
-  ...args: Parameters<typeof staggerOriginal>
-): ReturnType<typeof staggerOriginal> {
+  ...args: Parameters<typeof staggerOrig>
+): ReturnType<typeof staggerOrig> {
   'main thread';
   // @TODO: Remove the globalThis trick when MTS can treat a module as MTS module
-  return globalThis.runOnRegistered<typeof staggerOriginal>(staggerHandle)(
+  return staggerOrig(
     ...args,
   );
 }
@@ -228,7 +208,7 @@ function motionValue<V>(
 ): MotionValue<V> {
   'main thread';
   // @TODO: Remove the globalThis trick when MTS can treat a module as MTS module
-  return globalThis.runOnRegistered<typeof motionValueOrig>(motionValueHandle)(
+  return motionValueOrig(
     init,
     options,
   );
@@ -239,7 +219,7 @@ function spring(
 ): ReturnType<typeof springOrig> {
   'main thread';
   // @TODO: Remove the globalThis trick when MTS can treat a module as MTS module
-  return globalThis.runOnRegistered<typeof springOrig>(springHandle)(...args);
+  return springOrig(...args);
 }
 
 function springValue<T extends AnyResolvedKeyframe>(
@@ -248,7 +228,7 @@ function springValue<T extends AnyResolvedKeyframe>(
 ): MotionValue<T> {
   'main thread';
   // @TODO: Remove the globalThis trick when MTS can treat a module as MTS module
-  return globalThis.runOnRegistered<typeof springValueOrig>(springValueHandle)(
+  return springValueOrig(
     source,
     options,
   );
@@ -259,8 +239,8 @@ function mix(from: number, to: number, p: number): number;
 function mix<T>(from: T, to: T, p?: T): Mixer<T> | number {
   'main thread';
   // @TODO: Remove the globalThis trick when MTS can treat a module as MTS module
-   
-  return globalThis.runOnRegistered<typeof mixOrig>(mixHandle)(
+
+  return mixOrig(
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     from as any,
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
@@ -272,7 +252,7 @@ function mix<T>(from: T, to: T, p?: T): Mixer<T> | number {
 
 function progress(from: number, to: number, value: number): number {
   'main thread';
-  return globalThis.runOnRegistered<typeof progressOrig>(progressHandle)(
+  return progressOrig(
     from,
     to,
     value,
@@ -281,7 +261,7 @@ function progress(from: number, to: number, value: number): number {
 
 function clamp(min: number, max: number, v: number): number {
   'main thread';
-  return globalThis.runOnRegistered<typeof clampOrig>(clampHandle)(min, max, v);
+  return clampOrig(min, max, v);
 }
 
 function mapValue<O>(
@@ -291,7 +271,7 @@ function mapValue<O>(
   options?: TransformOptions<O>,
 ): MotionValue<O> {
   'main thread';
-  return globalThis.runOnRegistered<typeof mapValueOrig>(mapValueHandle)(
+  return mapValueOrig(
     inputValue,
     inputRange,
     outputRange,
@@ -301,9 +281,7 @@ function mapValue<O>(
 
 function transformValue<O>(transform: () => O): MotionValue<O> {
   'main thread';
-  return globalThis.runOnRegistered<typeof transformValueOrig>(
-    transformValueHandle,
-  )(transform);
+  return transformValueOrig(transform);
 }
 
 function styleEffect(
@@ -315,7 +293,7 @@ function styleEffect(
   if (!elements) {
     return () => {};
   }
-  return globalThis.runOnRegistered<typeof styleEffectOrig>(styleEffectHandle)(
+  return styleEffectOrig(
     elements,
     values,
   );
