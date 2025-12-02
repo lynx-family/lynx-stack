@@ -1520,3 +1520,53 @@ describe('missing snapshot', () => {
     expect(() => new SnapshotInstance('missing-snapshot')).toThrowError('Snapshot not found: missing-snapshot');
   });
 });
+
+describe('lazy snapshot', () => {
+  it('lazy snapshot should work', () => {
+    let oriSize = snapshotManager.values.size;
+    expect(snapshotManager.values.size).toBe(oriSize);
+    snapshotCreatorMap['snapshot-0'] = (uniqID) => {
+      globalThis.createSnapshot(
+        uniqID,
+        /* v8 ignore start */
+        () => {
+          return [__CreateView(0)];
+        },
+        /* v8 ignore stop */
+        null,
+        null,
+        undefined,
+        undefined,
+        null,
+        true,
+      );
+    };
+    expect(snapshotManager.values.size).toBe(oriSize);
+    const si = new SnapshotInstance('snapshot-0');
+    expect(snapshotManager.values.size).toBe(oriSize + 1);
+    expect(si.type).toBe('snapshot-0');
+  });
+  it('legacy sync createSnapshot should work', () => {
+    let oriSize = snapshotManager.values.size;
+    expect(snapshotManager.values.size).toBe(oriSize);
+    const uniqieId = globalThis.createSnapshot(
+      'snapshot-1',
+      /* v8 ignore start */
+      () => {
+        return [__CreateView(0)];
+      },
+      /* v8 ignore stop */
+      null,
+      null,
+      undefined,
+      /** entryName */
+      'https://example.com/main.lynx.bundle',
+      null,
+      /** isLazySnapshotSupported */
+      false,
+    );
+    expect(snapshotManager.values.size).toBe(oriSize + 1);
+    const si = new SnapshotInstance(uniqieId);
+    expect(si.type).toBe('https://example.com/main.lynx.bundle:snapshot-1');
+  });
+});
