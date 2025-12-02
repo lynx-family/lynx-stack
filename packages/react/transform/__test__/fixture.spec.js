@@ -907,6 +907,57 @@ export default class App extends Component {
 });
 
 describe('dynamic import', () => {
+  it('lazy import', async () => {
+    const result = await transformReactLynx(`await import("https://www/a.js", { with: { type: "component" } });`, {
+      pluginName: '',
+      filename: '',
+      sourcemap: false,
+      parserConfig: {
+        tsx: true,
+      },
+      cssScope: false,
+      jsx: false,
+      directiveDCE: false,
+      defineDCE: false,
+      shake: false,
+      compat: false,
+      worklet: false,
+      refresh: false,
+    });
+    expect(result.code).toMatchInlineSnapshot(`
+      "import "@lynx-js/react/experimental/lazy/import";
+      import { __dynamicImport } from "@lynx-js/react/internal";
+      await __dynamicImport("https://www/a.js", {
+          with: {
+              type: "component"
+          }
+      });
+      "
+    `);
+  });
+  it('inline import', async () => {
+    const result = await transformReactLynx(`await import(/*webpackChunkName: "./index.js-test"*/"./index.js");`, {
+      pluginName: '',
+      filename: '',
+      sourcemap: false,
+      parserConfig: {
+        tsx: true,
+      },
+      cssScope: false,
+      jsx: false,
+      directiveDCE: false,
+      defineDCE: false,
+      shake: false,
+      compat: false,
+      worklet: false,
+      refresh: false,
+    });
+    expect(result.code).toMatchInlineSnapshot(`
+      "import 'data:text/javascript;charset=utf-8,import { loadLazyBundle } from "@lynx-js/react/internal";lynx.loadLazyBundle = loadLazyBundle;';
+      await import(/*webpackChunkName: "./index.js-test"*/ /*webpackChunkName: "./index.js-"*/ "./index.js");
+      "
+    `);
+  });
   it('badcase', async () => {
     const result = await transformReactLynx(
       `\
