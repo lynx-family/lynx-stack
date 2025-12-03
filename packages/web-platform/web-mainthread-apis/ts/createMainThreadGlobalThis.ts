@@ -184,12 +184,24 @@ export function createMainThreadGlobalThis(
   let uniqueIdInc = lynxUniqueIdToElement.length || 1;
   const exposureChangedElements = new Set<HTMLElement>();
 
-  const commonHandler = (event: Event) => {
+  const commonHandler = (event: Event, capture: boolean) => {
     if (!event.currentTarget) {
       return;
     }
+    // The `capture false` event should not be triggered during the capture-phase
+    // The `capture true` event should not be triggered during the bubbling phase
+    if (
+      (event.eventPhase === Event.CAPTURING_PHASE && capture === false)
+      || (event.eventPhase === Event.BUBBLING_PHASE && capture === true)
+    ) {
+      return;
+    }
     const currentTarget = event.currentTarget as HTMLElement;
-    const isCapture = event.eventPhase === Event.CAPTURING_PHASE;
+    // When the event is triggered by the target element, `event.eventPhase` is always `target`, and the listener type is determined by the passed-in `capture`.
+    // When the event is triggered by a non-target element, the listener type is determined by `event.eventPhase` (1, 3).
+    const isCapture = event.eventPhase === Event.AT_TARGET
+      ? capture
+      : event.eventPhase === event.CAPTURING_PHASE;
     const lynxEventName = W3cEventNameToLynx[event.type] ?? event.type;
     const runtimeInfo = elementToRuntimeInfoMap.get(
       currentTarget as any as HTMLElement,
@@ -240,9 +252,21 @@ export function createMainThreadGlobalThis(
     }
     return false;
   };
-  const commonCatchHandler = (event: Event) => {
-    const handlerTriggered = commonHandler(event);
+  const captureHandler = (e: Event) => {
+    commonHandler(e, true);
+  };
+  const defaultHandler = (e: Event) => {
+    commonHandler(e, false);
+  };
+  const commonCatchHandler = (event: Event, isCapture: boolean) => {
+    const handlerTriggered = commonHandler(event, isCapture);
     if (handlerTriggered) event.stopPropagation();
+  };
+  const catchCaptureHandler = (e: Event) => {
+    commonCatchHandler(e, true);
+  };
+  const defaultCatchHandler = (e: Event) => {
+    commonCatchHandler(e, false);
   };
   const __AddEvent: AddEventPAPI = (
     element,
@@ -262,8 +286,8 @@ export function createMainThreadGlobalThis(
       ? runtimeInfo.eventHandlerMap[eventName]?.capture
       : runtimeInfo.eventHandlerMap[eventName]?.bind;
     const currentRegisteredHandler = isCatch
-      ? commonCatchHandler
-      : commonHandler;
+      ? (isCapture ? catchCaptureHandler : defaultCatchHandler)
+      : (isCapture ? captureHandler : defaultHandler);
     if (currentHandler) {
       if (!newEventHandler) {
         /**
