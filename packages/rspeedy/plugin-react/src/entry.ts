@@ -62,6 +62,7 @@ export function applyEntry(
     const entries = chain.entryPoints.entries() ?? {}
     const isLynx = environment.name === 'lynx'
     const isWeb = environment.name === 'web'
+    const enabledHMR = isDev && !isWeb && environment.config.dev?.hmr !== false
 
     chain.entryPoints.clear()
 
@@ -116,7 +117,7 @@ export function applyEntry(
           import: imports,
           filename: mainThreadName,
         })
-        .when(isDev && !isWeb, entry => {
+        .when(enabledHMR, entry => {
           const require = createRequire(import.meta.url)
           // use prepend to make sure it does not affect the exports
           // from the entry
@@ -137,7 +138,7 @@ export function applyEntry(
         })
         // in standalone lazy bundle mode, we do not add
         // other entries to avoid wrongly exporting from other entries
-        .when(isDev && !isWeb, entry => {
+        .when(enabledHMR, entry => {
           // use prepend to make sure it does not affect the exports
           // from the entry
           entry
