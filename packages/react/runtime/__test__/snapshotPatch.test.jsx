@@ -1566,7 +1566,7 @@ describe('lazy snapshot', () => {
       false,
     );
     expect(snapshotManager.values.size).toBe(oriSize + 1);
-    const si = new SnapshotInstance(uniqieId);
+    const si = new SnapshotInstance(uniqueId);
     expect(si.type).toBe('https://example.com/main.lynx.bundle:snapshot-1');
   });
 });
