@@ -1549,7 +1549,7 @@ describe('lazy snapshot', () => {
   it('legacy sync createSnapshot should work', () => {
     let oriSize = snapshotManager.values.size;
     expect(snapshotManager.values.size).toBe(oriSize);
-    const uniqieId = globalThis.createSnapshot(
+    const uniqueId = globalThis.createSnapshot(
       'snapshot-1',
       /* v8 ignore start */
       () => {
