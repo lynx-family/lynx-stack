@@ -1,0 +1,141 @@
+// Copyright 2025 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+import type { Asset, Compilation, Compiler } from 'webpack'
+
+/**
+ * The options for {@link ExternalBundleWebpackPlugin}.
+ *
+ * @public
+ */
+export interface ExternalBundleWebpackPluginOptions {
+  /**
+   * The external bundle filename.
+   *
+   * @example
+   * ```js
+   * new ExternalBundleWebpackPlugin({
+   *   bundleFileName: 'lib.lynx.bundle'
+   * })
+   * ```
+   */
+  bundleFileName: string
+  /**
+   * The encode method which is exported from lynx-tasm package.
+   *
+   * @example
+   * ```js
+   * import { getEncodeMode } from '@lynx-js/tasm';
+   *
+   * new ExternalBundleWebpackPlugin({
+   *   encode: getEncodeMode()
+   * })
+   * ```
+   */
+  encode: (opts: unknown) => Promise<{ buffer: Buffer }>
+  /**
+   * The target SDK version of the external bundle.
+   *
+   * @defaultValue '3.4'
+   */
+  targetSdkVersion?: string | undefined
+}
+
+const isDebug = (): boolean => {
+  if (!process.env['DEBUG']) {
+    return false
+  }
+
+  const values = process.env['DEBUG'].toLocaleLowerCase().split(',')
+  return ['rsbuild', 'rspeedy', '*'].some((key) => values.includes(key))
+}
+
+/**
+ * The webpack plugin to build and emit the external bundle.
+ *
+ * @public
+ */
+export class ExternalBundleWebpackPlugin {
+  constructor(private options: ExternalBundleWebpackPluginOptions) {}
+
+  apply(compiler: Compiler): void {
+    compiler.hooks.thisCompilation.tap(
+      ExternalBundleWebpackPlugin.name,
+      (compilation) => {
+        compilation.hooks.processAssets.tapPromise(
+          {
+            name: ExternalBundleWebpackPlugin.name,
+            stage:
+              /**
+               * Generate the html after minification and dev tooling is done
+               * and source-map is generated
+               */
+              compiler.webpack.Compilation
+                .PROCESS_ASSETS_STAGE_OPTIMIZE_HASH,
+          },
+          () => {
+            return this.#generateExternalBundle(
+              compiler,
+              compilation,
+            )
+          },
+        )
+      },
+    )
+  }
+
+  async #generateExternalBundle(
+    compiler: Compiler,
+    compilation: Compilation,
+  ): Promise<void> {
+    const assets = compilation.getAssets()
+    const { buffer, encodeOptions } = await this.#encode(assets)
+
+    const { RawSource } = compiler.webpack.sources
+    compilation.emitAsset(
+      this.options.bundleFileName,
+      new RawSource(buffer, false),
+    )
+    if (isDebug()) {
+      compilation.emitAsset(
+        'tasm.json',
+        new RawSource(
+          JSON.stringify(encodeOptions, null, 2),
+        ),
+      )
+    } else {
+      assets.forEach(({ name }) => {
+        compilation.deleteAsset(name)
+      })
+    }
+  }
+
+  async #encode(assets: Readonly<Asset>[]) {
+    const customSections = assets
+      .filter(({ name }) => name.endsWith('.js'))
+      .reduce<Record<string, { content: string }>>((prev, cur) => ({
+        ...prev,
+        [cur.name.replace(/\.js$/, '')]: {
+          content: cur.source.source().toString(),
+        },
+      }), {})
+
+    const compilerOptions: Record<string, unknown> = {
+      enableFiberArch: true,
+      // lynx.fetchBundle requires targetSdkVersion >= 3.4
+      targetSdkVersion: this.options.targetSdkVersion ?? '3.4',
+    }
+
+    const encodeOptions = {
+      compilerOptions,
+      sourceContent: {
+        appType: 'DynamicComponent',
+      },
+      customSections,
+    }
+
+    const { buffer } = await this.options.encode(encodeOptions)
+
+    return { buffer, encodeOptions }
+  }
+}
