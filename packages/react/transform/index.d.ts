@@ -424,6 +424,8 @@ export interface DynamicImportVisitorConfig {
   runtimePkg: string
   /** @internal */
   layer: string
+  /** @internal */
+  injectLazyBundle?: boolean
 }
 /**
  * {@inheritdoc PluginReactLynxOptions.extractStr}

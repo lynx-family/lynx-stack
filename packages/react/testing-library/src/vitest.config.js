@@ -234,6 +234,11 @@ export const createVitestConfig = async (options) => {
             target: 'MIXED',
           },
           engineVersion: options?.engineVersion ?? '',
+          dynamicImport: {
+            injectLazyBundle: false,
+            layer: 'test',
+            runtimePkg: `${runtimePkgName}/internal`,
+          },
           // snapshot: true,
           directiveDCE: false,
           defineDCE: false,
