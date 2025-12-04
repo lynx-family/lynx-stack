@@ -10,6 +10,7 @@ import {
   SyncWaterfallHook,
 } from '@rspack/lite-tapable';
 import groupBy from 'object.groupby';
+import pick from 'object.pick';
 import type {
   Asset,
   Chunk,
@@ -20,6 +21,11 @@ import type {
 } from 'webpack';
 
 import type * as CSS from '@lynx-js/css-serializer';
+import type {
+  CompileOptions as LynxCompileOptions,
+  Config as LynxConfig,
+} from '@lynx-js/type-config';
+import { compileOptionsKeys, configKeys } from '@lynx-js/type-config';
 import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
 import { cssChunksToMap } from './css/cssChunksToMap.js';
@@ -37,7 +43,7 @@ export type OriginManifest = Record<string, {
  */
 export interface EncodeOptions {
   manifest: Record<string, string | undefined>;
-  compilerOptions: Record<string, string | boolean>;
+  compilerOptions: LynxCompileOptions;
   lepusCode: {
     root: string | undefined;
     lepusChunk: Record<string, string>;
@@ -149,12 +155,7 @@ function createLynxTemplatePluginHooks(): TemplateHooks {
   };
 }
 
-/**
- * The options for LynxTemplatePlugin
- *
- * @public
- */
-export interface LynxTemplatePluginOptions {
+export interface LynxTemplateOptions {
   /**
    * The file to write the template to.
    * Supports subdirectories eg: `assets/template.js`.
@@ -192,95 +193,11 @@ export interface LynxTemplatePluginOptions {
   excludeChunks?: string[];
 
   /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.customCSSInheritanceList}
-   *
-   * @example
-   *
-   * By setting `customCSSInheritanceList: ['direction', 'overflow']`, only the `direction` and `overflow` properties are inheritable.
-   *
-   * ```js
-   * import { defineConfig } from '@lynx-js/rspeedy'
-   *
-   * export default defineConfig({
-   *  plugins: [
-   *    pluginReactLynx({
-   *      enableCSSInheritance: true,
-   *      customCSSInheritanceList: ['direction', 'overflow']
-   *    }),
-   *  ],
-   * }
-   * ```
-   */
-  customCSSInheritanceList: string[] | undefined;
-
-  /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.debugInfoOutside}
-   */
-  debugInfoOutside: boolean;
-
-  /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.defaultDisplayLinear}
-   */
-  defaultDisplayLinear: boolean;
-
-  /**
    * Declare the current dsl to the encoder.
    *
    * @public
    */
   dsl?: 'tt' | 'react' | 'react_nodiff';
-
-  /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableAccessibilityElement}
-   */
-  enableAccessibilityElement: boolean;
-
-  /**
-   * Use Android View level APIs and system implementations.
-   */
-  enableA11y: boolean;
-
-  /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableCSSInheritance}
-   */
-  enableCSSInheritance: boolean;
-
-  /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableCSSInvalidation}
-   */
-  enableCSSInvalidation: boolean;
-
-  /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableCSSSelector}
-   */
-  enableCSSSelector: boolean;
-
-  /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableNewGesture}
-   */
-  enableNewGesture: boolean;
-
-  /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableRemoveCSSScope}
-   */
-  enableRemoveCSSScope: boolean;
-
-  /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.removeDescendantSelectorScope}
-   */
-  removeDescendantSelectorScope: boolean;
-
-  /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.targetSdkVersion}
-   */
-  targetSdkVersion: string;
-
-  /**
-   * When enabled, the default overflow CSS property for views and components will be `'visible'`. Otherwise, it will be `'hidden'`.
-   *
-   * @defaultValue `true`
-   */
-  defaultOverflowVisible?: boolean;
 
   /**
    * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.experimental_isLazyBundle}
@@ -295,12 +212,45 @@ export interface LynxTemplatePluginOptions {
   cssPlugins: CSS.Plugin[];
 }
 
+/**
+ * The options for LynxTemplatePlugin
+ *
+ * @public
+ */
+export interface LynxTemplatePluginOptions
+  extends LynxCompileOptions, LynxConfig, LynxTemplateOptions
+{}
+
+type SetRequired<T, K extends keyof T> =
+  & {
+    [P in keyof T]: T[P];
+  }
+  & { [P in K]-?: T[P] };
+
+export interface ResolvedLynxTemplatePluginOptions extends
+  SetRequired<
+    LynxCompileOptions,
+    | 'debugInfoOutside'
+    | 'defaultDisplayLinear'
+    | 'enableCSSInvalidation'
+    | 'enableCSSSelector'
+    | 'enableRemoveCSSScope'
+    | 'targetSdkVersion'
+    | 'defaultOverflowVisible'
+  >,
+  SetRequired<
+    LynxConfig,
+    | 'enableAccessibilityElement'
+    | 'enableCSSInheritance'
+    | 'enableNewGesture'
+    | 'removeDescendantSelectorScope'
+    | 'enableA11y'
+  >,
+  Required<LynxTemplateOptions>
+{}
+
 interface EncodeRawData {
-  compilerOptions: {
-    enableCSSSelector: boolean;
-    targetSdkVersion: string;
-    [k: string]: string | boolean;
-  };
+  compilerOptions: LynxCompileOptions;
   /**
    * main-thread
    */
@@ -323,7 +273,7 @@ interface EncodeRawData {
   sourceContent: {
     dsl: string;
     appType: string;
-    config: Record<string, unknown>;
+    config: LynxConfig;
   };
   [k: string]: unknown;
 }
@@ -372,8 +322,8 @@ export class LynxTemplatePlugin {
    *
    * @public
    */
-  static defaultOptions: Readonly<Required<LynxTemplatePluginOptions>> = Object
-    .freeze<Required<LynxTemplatePluginOptions>>({
+  static defaultOptions: Readonly<ResolvedLynxTemplatePluginOptions> = Object
+    .freeze<ResolvedLynxTemplatePluginOptions>({
       filename: '[name].bundle',
       lazyBundleFilename: 'async/[name].[fullhash].bundle',
       intermediate: '.rspeedy',
@@ -381,7 +331,6 @@ export class LynxTemplatePlugin {
       excludeChunks: [],
 
       // lynx-specific
-      customCSSInheritanceList: undefined,
       debugInfoOutside: true,
       enableA11y: true,
       enableAccessibilityElement: false,
@@ -461,7 +410,7 @@ class LynxTemplatePluginImpl {
 
   constructor(
     compiler: Compiler,
-    options: Required<LynxTemplatePluginOptions>,
+    options: ResolvedLynxTemplatePluginOptions,
   ) {
     this.#options = options;
 
@@ -722,21 +671,10 @@ class LynxTemplatePluginImpl {
     const compiler = compilation.compiler;
 
     const {
-      customCSSInheritanceList,
-      debugInfoOutside,
-      defaultDisplayLinear,
-      enableA11y,
-      enableAccessibilityElement,
-      enableCSSInheritance,
-      enableCSSInvalidation,
-      enableCSSSelector,
-      enableNewGesture,
-      enableRemoveCSSScope,
-      removeDescendantSelectorScope,
-      targetSdkVersion,
-      defaultOverflowVisible,
       dsl,
       cssPlugins,
+
+      ...otherOptions
     } = this.#options;
 
     const isDev = process.env['NODE_ENV'] === 'development'
@@ -748,7 +686,7 @@ class LynxTemplatePluginImpl {
         .filter((v): v is Asset => !!v)
         .map(asset => asset.source.source().toString()),
       cssPlugins,
-      enableCSSSelector,
+      otherOptions.enableCSSSelector,
     );
     const encodeRawData: EncodeRawData = {
       compilerOptions: {
@@ -757,15 +695,9 @@ class LynxTemplatePluginImpl {
         enableReuseContext: true,
         bundleModuleMode: 'ReturnByFunction',
         templateDebugUrl: '',
-
-        debugInfoOutside,
-        defaultDisplayLinear,
-        enableCSSInvalidation,
-        enableCSSSelector,
         enableLepusDebug: isDev,
-        enableRemoveCSSScope,
-        targetSdkVersion,
-        defaultOverflowVisible,
+
+        ...pick(otherOptions, compileOptionsKeys),
       },
       sourceContent: {
         dsl,
@@ -775,12 +707,8 @@ class LynxTemplatePluginImpl {
           useNewSwiper: true,
           enableNewIntersectionObserver: true,
           enableNativeList: true,
-          enableA11y,
-          enableAccessibilityElement,
-          customCSSInheritanceList,
-          enableCSSInheritance,
-          enableNewGesture,
-          removeDescendantSelectorScope,
+
+          ...pick(otherOptions, configKeys),
         },
       },
       css: {
@@ -840,7 +768,7 @@ class LynxTemplatePluginImpl {
       && compiler.options.output.publicPath !== 'auto'
       && compiler.options.output.publicPath !== '/'
     ) {
-      resolvedEncodeOptions.compilerOptions['templateDebugUrl'] = new URL(
+      resolvedEncodeOptions.compilerOptions.templateDebugUrl = new URL(
         debugInfoPath,
         compiler.options.output.publicPath,
       ).toString();
@@ -1016,7 +944,7 @@ class LynxTemplatePluginImpl {
     return assets;
   }
 
-  #options: Required<LynxTemplatePluginOptions>;
+  #options: ResolvedLynxTemplatePluginOptions;
 }
 
 interface AssetsInformationByGroups {

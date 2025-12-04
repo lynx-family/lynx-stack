@@ -508,12 +508,18 @@ importers:
       '@lynx-js/template-webpack-plugin':
         specifier: workspace:*
         version: link:../../webpack/template-webpack-plugin
+      '@lynx-js/type-config':
+        specifier: file:../../../npm/type-config.tgz
+        version: file:npm/type-config.tgz
       '@lynx-js/use-sync-external-store':
         specifier: workspace:*
         version: link:../../use-sync-external-store
       background-only:
         specifier: workspace:^
         version: link:../../background-only
+      object.pick:
+        specifier: ^1.3.0
+        version: 1.3.0
     devDependencies:
       '@lynx-js/react':
         specifier: workspace:*
@@ -542,6 +548,9 @@ importers:
       '@rsbuild/plugin-typed-css-modules':
         specifier: 1.1.1
         version: 1.1.1(@rsbuild/core@1.5.17)
+      '@types/object.pick':
+        specifier: ^1.3.4
+        version: 1.3.4
       rsbuild-plugin-arethetypeswrong:
         specifier: 0.1.1
         version: 0.1.1(@rsbuild/core@1.5.17)(typescript@5.9.3)
@@ -1186,10 +1195,16 @@ importers:
       object.groupby:
         specifier: ^1.0.3
         version: 1.0.3
+      object.pick:
+        specifier: ^1.3.0
+        version: 1.3.0
     devDependencies:
       '@lynx-js/test-tools':
         specifier: workspace:*
         version: link:../test-tools
+      '@lynx-js/type-config':
+        specifier: /home/liyiming.tech/projects/template-assembler/lynx/js_libraries/type-config
+        version: link:../../../../../../../../home/liyiming.tech/projects/template-assembler/lynx/js_libraries/type-config
       '@lynx-js/vitest-setup':
         specifier: workspace:*
         version: link:../../tools/vitest-setup
@@ -1202,6 +1217,9 @@ importers:
       '@types/object.groupby':
         specifier: ^1.0.4
         version: 1.0.4
+      '@types/object.pick':
+        specifier: ^1.3.4
+        version: 1.3.4
       webpack:
         specifier: ^5.102.0
         version: 5.102.0
@@ -2289,6 +2307,10 @@ packages:
   '@lynx-js/tasm@0.0.18':
     resolution: {integrity: sha512-6Kl1eUxooceWcSLYnCtys38r9KPIouTam/fU81pzOrH/xIal60+WY47nj+MzDXq94i9jbUusM+IQSZAkeRistw==}
 
+  '@lynx-js/type-config@file:npm/type-config.tgz':
+    resolution: {integrity: sha512-AacaQAu5iwjqkPpX0AbSiG9qeCVqzVAiVrdWhubL/7ReiSo2VXwgT5Yn/hGDP2uccI0HEN7K3DV81Uy3jOzTxA==, tarball: file:npm/type-config.tgz}
+    version: 0.0.1
+
   '@lynx-js/type-element-api@0.0.2':
     resolution: {integrity: sha512-Unz3RHf2RM2vOWForwubjLYw9xbBP02ReuOL4KVLc3+0Vzryo8KbgqbhMUZCsJXHVmcaE2zXiE1AV/nqrBAoPA==}
 
@@ -3205,6 +3227,9 @@ packages:
 
   '@types/object.groupby@1.0.4':
     resolution: {integrity: sha512-n5gXvoz1nuDLLLMgTl82b5VCkSlqt2zfBkSWxoCmMS/j+hN6W7BuPlpOm68B/RRluy2bYo67KOtMQ28cySqeYw==}
+
+  '@types/object.pick@1.3.4':
+    resolution: {integrity: sha512-5PjwB0uP2XDp3nt5u5NJAG2DORHIRClPzWT/TTZhJ2Ekwe8M5bA9tvPdi9NO/n2uvu2/ictat8kgqvLfcIE1SA==}
 
   '@types/prop-types@15.7.13':
     resolution: {integrity: sha512-hCZTSvwbzWGvhqxp/RqVqwU999pBf2vp7hzIjiYOsl8wqOmUxkQ6ddw1cV3l8811+kdUFus/q4d1Y3E3SyEifA==}
@@ -6367,6 +6392,10 @@ packages:
     resolution: {integrity: sha512-+Lhy3TQTuzXI5hevh8sBGqbmurHbbIjAi0Z4S63nthVLmLxfbj4T54a4CfZrXIrt9iP4mVAPYMo/v99taj3wjQ==}
     engines: {node: '>= 0.4'}
 
+  object.pick@1.3.0:
+    resolution: {integrity: sha512-tqa/UMy/CCoYmj+H5qc07qvSL9dqcs/WZENZ1JbtWBlATP+iVOe778gE6MSijnyCnORzDuX6hU+LA4SZ09YjFQ==}
+    engines: {node: '>=0.10.0'}
+
   object.values@1.2.1:
     resolution: {integrity: sha512-gXah6aZrcUxjWg2zR2MwouP2eHlCBzdV4pygudehaKXSGW4v2AsRQUK+lwwXhii6KFZcunEnmSUoYp5CXibxtA==}
     engines: {node: '>= 0.4'}
@@ -9383,6 +9412,8 @@ snapshots:
 
   '@lynx-js/tasm@0.0.18': {}
 
+  '@lynx-js/type-config@file:npm/type-config.tgz': {}
+
   '@lynx-js/type-element-api@0.0.2': {}
 
   '@lynx-js/types@3.4.11':
@@ -10549,6 +10580,8 @@ snapshots:
       undici-types: 7.13.0
 
   '@types/object.groupby@1.0.4': {}
+
+  '@types/object.pick@1.3.4': {}
 
   '@types/prop-types@15.7.13': {}
 
@@ -14375,6 +14408,10 @@ snapshots:
       call-bind: 1.0.8
       define-properties: 1.2.1
       es-abstract: 1.24.0
+
+  object.pick@1.3.0:
+    dependencies:
+      isobject: 3.0.1
 
   object.values@1.2.1:
     dependencies:

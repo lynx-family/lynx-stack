@@ -21,6 +21,10 @@ import type {
 } from '@lynx-js/react-transform'
 import { LAYERS } from '@lynx-js/react-webpack-plugin'
 import type { ExposedAPI } from '@lynx-js/rspeedy'
+import type {
+  CompileOptions as LynxCompileOptions,
+  Config as LynxConfig,
+} from '@lynx-js/type-config'
 
 import { applyBackgroundOnly } from './backgroundOnly.js'
 import { applyCSS } from './css.js'
@@ -34,12 +38,7 @@ import { applySWC } from './swc.js'
 import { applyUseSyncExternalStore } from './useSyncExternalStore.js'
 import { validateConfig } from './validate.js'
 
-/**
- * Options of {@link pluginReactLynx}
- *
- * @public
- */
-export interface PluginReactLynxOptions {
+export interface ReactLynxOptions {
   /**
    * The `compat` option controls compatibilities with ReactLynx2.0.
    *
@@ -69,132 +68,6 @@ export interface PluginReactLynxOptions {
     | undefined
 
   /**
-   * When {@link PluginReactLynxOptions.enableCSSInheritance} is enabled, `customCSSInheritanceList` can control which properties are inheritable, not just the default ones.
-   *
-   * @example
-   *
-   * By setting `customCSSInheritanceList: ['direction', 'overflow']`, only the `direction` and `overflow` properties are inheritable.
-   *
-   * ```js
-   * import { defineConfig } from '@lynx-js/rspeedy'
-   *
-   * export default defineConfig({
-   *  plugins: [
-   *    pluginReactLynx({
-   *      enableCSSInheritance: true,
-   *      customCSSInheritanceList: ['direction', 'overflow']
-   *    }),
-   *  ],
-   * }
-   * ```
-   */
-  customCSSInheritanceList?: string[] | undefined
-
-  /**
-   * debugInfoOutside controls whether the debug info is placed outside the template.
-   *
-   * @remarks
-   * This is recommended to be set to true to reduce template size.
-   *
-   * @public
-   */
-  debugInfoOutside?: boolean
-
-  /**
-   * defaultDisplayLinear controls whether the default value of `display` in CSS is `linear`.
-   *
-   * @remarks
-   *
-   * If `defaultDisplayLinear === false`, the default `display` would be `flex` instead of `linear`.
-   */
-  defaultDisplayLinear?: boolean
-
-  /**
-   * enableAccessibilityElement set the default value of `accessibility-element` for all `<view />` elements.
-   */
-  enableAccessibilityElement?: boolean
-
-  /**
-   * enableCSSInheritance enables the default inheritance properties.
-   *
-   * @remarks
-   *
-   * The following properties are inherited by default:
-   *
-   * - `direction`
-   *
-   * - `color`
-   *
-   * - `font-family`
-   *
-   * - `font-size`
-   *
-   * - `font-style`
-   *
-   * - `font-weight`
-   *
-   * - `letter-spacing`
-   *
-   * - `line-height`
-   *
-   * - `line-spacing`
-   *
-   * - `text-align`
-   *
-   * - `text-decoration`
-   *
-   * - `text-shadow`
-   *
-   * It is recommended to use with {@link PluginReactLynxOptions.customCSSInheritanceList} to avoid performance issues.
-   */
-  enableCSSInheritance?: boolean
-
-  /**
-   * CSS Invalidation refers to the process of determining which elements need to have their styles recalculated when the DOM is updated.
-   *
-   * @example
-   *
-   * If a descendant selector `.a .b` is defined in a CSS file, then when an element's class changes to `.a`, all nodes in its subtree with the className `.b` need to have their styles recalculated.
-   *
-   * @remarks
-   *
-   * When using combinator to determine the styles of various elements (including descendants, adjacent siblings, etc.), it is recommended to enable this feature. Otherwise, only the initial class setting can match the corresponding combinator, and subsequent updates will not recalculate the related styles.
-   *
-   * We find that collecting invalidation nodes and updating them is a relatively time-consuming process.
-   * If there is no such usage and better style matching performance is needed, this feature can be selectively disabled.
-   */
-  enableCSSInvalidation?: boolean
-
-  /**
-   * enableCSSSelector controls whether enabling the new CSS implementation.
-   *
-   * @public
-   */
-  enableCSSSelector?: boolean
-
-  /**
-   * enableNewGesture enables the new gesture system.
-   *
-   * @defaultValue `false`
-   */
-  enableNewGesture?: boolean
-
-  /**
-   * enableRemoveCSSScope controls whether CSS is restrict to use in the component scope.
-   *
-   * `true`: All CSS files are treated as global CSS.
-   *
-   * `false`: All CSS files are treated as scoped CSS, and only take effect in the component that explicitly imports it.
-   *
-   * `undefined`: Only use scoped CSS for CSS Modules, and treat other CSS files as global CSS. Scoped CSS is faster than global CSS, thus you can use CSS Modules to speedy up your CSS if there are performance issues.
-   *
-   * @defaultValue `true`
-   *
-   * @public
-   */
-  enableRemoveCSSScope?: boolean | undefined
-
-  /**
    * This flag controls when MainThread (Lepus) transfers control to Background after the first screen
    *
    * This flag has two options:
@@ -220,11 +93,6 @@ export interface PluginReactLynxOptions {
   enableSSR?: boolean
 
   /**
-   * removeDescendantSelectorScope is used to remove the scope of descendant selectors.
-   */
-  removeDescendantSelectorScope?: boolean
-
-  /**
    * How main-thread code will be shaken.
    */
   shake?: Partial<ShakeVisitorConfig> | undefined
@@ -242,14 +110,6 @@ export interface PluginReactLynxOptions {
   engineVersion?: string
 
   /**
-   * targetSdkVersion is used to specify the minimal Lynx Engine version that a App bundle can run on.
-   *
-   * @public
-   * @deprecated `targetSdkVersion` is now an alias of {@link PluginReactLynxOptions.engineVersion}. Use {@link PluginReactLynxOptions.engineVersion} instead.
-   */
-  targetSdkVersion?: string
-
-  /**
    * Merge same string literals in JS and Lepus to reduce output bundle size.
    * Set to `false` to disable.
    *
@@ -264,6 +124,42 @@ export interface PluginReactLynxOptions {
    */
   experimental_isLazyBundle?: boolean
 }
+
+/**
+ * Options of {@link pluginReactLynx}
+ *
+ * @public
+ */
+export interface PluginReactLynxOptions
+  extends LynxCompileOptions, LynxConfig, ReactLynxOptions
+{}
+
+type SetRequired<T, K extends keyof T> =
+  & {
+    [P in keyof T]: T[P]
+  }
+  & { [P in K]-?: T[P] }
+
+export interface ResolvedPluginReactLynxOptions extends
+  SetRequired<
+    LynxCompileOptions,
+    | 'debugInfoOutside'
+    | 'defaultDisplayLinear'
+    | 'enableCSSInvalidation'
+    | 'enableCSSSelector'
+    | 'enableRemoveCSSScope'
+    | 'targetSdkVersion'
+  >,
+  SetRequired<
+    LynxConfig,
+    | 'enableAccessibilityElement'
+    | 'enableCSSInheritance'
+    | 'enableNewGesture'
+    | 'removeDescendantSelectorScope'
+    | 'enableA11y'
+  >,
+  Required<ReactLynxOptions>
+{}
 
 /**
  * Create a rsbuild plugin for ReactLynx.
@@ -287,11 +183,11 @@ export function pluginReactLynx(
   const engineVersion = userOptions?.engineVersion
     ?? userOptions?.targetSdkVersion ?? '3.2'
 
-  const defaultOptions: Required<PluginReactLynxOptions> = {
+  const defaultOptions: ResolvedPluginReactLynxOptions = {
     compat: undefined,
-    customCSSInheritanceList: undefined,
     debugInfoOutside: true,
     defaultDisplayLinear: true,
+    enableA11y: true,
     enableAccessibilityElement: false,
     enableCSSInheritance: false,
     enableCSSInvalidation: true,

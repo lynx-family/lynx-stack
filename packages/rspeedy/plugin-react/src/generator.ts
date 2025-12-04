@@ -5,11 +5,11 @@ import type { RsbuildPluginAPI } from '@rsbuild/core'
 
 import { LAYERS } from '@lynx-js/react-webpack-plugin'
 
-import type { PluginReactLynxOptions } from './pluginReactLynx.js'
+import type { ResolvedPluginReactLynxOptions } from './pluginReactLynx.js'
 
 export function applyGenerator(
   api: RsbuildPluginAPI,
-  options: Required<PluginReactLynxOptions>,
+  options: ResolvedPluginReactLynxOptions,
 ): void {
   api.modifyBundlerChain({
     order: 'pre',

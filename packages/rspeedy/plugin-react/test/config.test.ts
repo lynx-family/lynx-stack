@@ -1952,7 +1952,6 @@ describe('Config', () => {
           "main",
         ],
         "cssPlugins": [],
-        "customCSSInheritanceList": undefined,
         "debugInfoOutside": true,
         "defaultDisplayLinear": true,
         "dsl": "react_nodiff",

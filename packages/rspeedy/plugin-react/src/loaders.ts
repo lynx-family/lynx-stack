@@ -5,11 +5,11 @@ import type { RsbuildPluginAPI, Rspack } from '@rsbuild/core'
 
 import { LAYERS, ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'
 
-import type { PluginReactLynxOptions } from './pluginReactLynx.js'
+import type { ResolvedPluginReactLynxOptions } from './pluginReactLynx.js'
 
 export function applyLoaders(
   api: RsbuildPluginAPI,
-  options: Required<PluginReactLynxOptions>,
+  options: ResolvedPluginReactLynxOptions,
 ): void {
   const {
     compat,
