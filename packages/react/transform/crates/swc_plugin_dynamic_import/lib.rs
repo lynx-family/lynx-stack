@@ -1,6 +1,6 @@
 use serde::Deserialize;
 use serde_json::Value;
-use std::{collections::HashSet, fmt::Debug};
+use std::{borrow::Cow, collections::HashSet, fmt::Debug};
 use swc_core::{
   common::{
     comments::{Comment, CommentKind, Comments},
@@ -68,14 +68,14 @@ where
   }
 }
 
-fn is_import_call_str_lit(call_expr: &CallExpr) -> (bool, bool, &str) {
+fn is_import_call_str_lit(call_expr: &CallExpr) -> (bool, bool, Cow<'_, str>) {
   match &call_expr.callee {
     Callee::Import(_) if !call_expr.args.is_empty() => match &*call_expr.args[0].expr {
-      Expr::Lit(Lit::Str(Str { value, .. })) => (true, true, value),
-      Expr::Lit(_) => (true, false, ""),
-      _ => (false, false, ""),
+      Expr::Lit(Lit::Str(Str { value, .. })) => (true, true, value.to_string_lossy()),
+      Expr::Lit(_) => (true, false, Cow::Borrowed("")),
+      _ => (false, false, Cow::Borrowed("")),
     },
-    _ => (false, false, ""),
+    _ => (false, false, Cow::Borrowed("")),
   }
 }
 

@@ -1,5 +1,44 @@
 # @lynx-js/web-elements
 
+## 0.8.11
+
+### Patch Changes
+
+- fix: when estimated-main-axis-size-px is not set, should use the height of list ([#1930](https://github.com/lynx-family/lynx-stack/pull/1930))
+
+- Updated dependencies []:
+  - @lynx-js/web-elements-template@0.8.11
+
+## 0.8.10
+
+### Patch Changes
+
+- fix: define x-foldview-slot-drag-ng typo. ([#1915](https://github.com/lynx-family/lynx-stack/pull/1915))
+
+- feat: 1. Added support for the list `estimated-main-axis-size-px` property; the width and height of `list-item` are no longer required. ([#1911](https://github.com/lynx-family/lynx-stack/pull/1911))
+
+  2. Fixed an issue where the list `lower-threshold-item-count` event would not trigger when using a horizontal layout under a waterfall layout.
+
+  3. Fixed an issue where calling the list `autoScroll` method in `useEffect` might not scroll.
+
+  4. Fixed an issue where the `scrolltolower` event might not be triggered in waterfall, because the lower styles was not updated in `registerEventEnableStatusChangeHandler`.
+
+- Updated dependencies []:
+  - @lynx-js/web-elements-template@0.8.10
+
+## 0.8.9
+
+### Patch Changes
+
+- fix: layoutchange event result `detail.top` and `detail.left` was `0` incorrectly ([#1887](https://github.com/lynx-family/lynx-stack/pull/1887))
+
+- textarea placeholder inherits font-size by default ([#1874](https://github.com/lynx-family/lynx-stack/pull/1874))
+
+- feat: support <x-text text="content"></x-text> ([#1881](https://github.com/lynx-family/lynx-stack/pull/1881))
+
+- Updated dependencies []:
+  - @lynx-js/web-elements-template@0.8.9
+
 ## 0.8.8
 
 ### Patch Changes

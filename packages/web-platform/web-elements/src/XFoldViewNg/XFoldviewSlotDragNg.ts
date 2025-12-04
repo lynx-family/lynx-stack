@@ -6,7 +6,7 @@
 import { Component } from '@lynx-js/web-elements-reactive';
 import { CommonEventsAndMethods } from '../common/CommonEventsAndMethods.js';
 
-@Component<typeof XFoldviewSlotDragNg>('x-foldivew-slot-drag-ng', [
+@Component<typeof XFoldviewSlotDragNg>('x-foldview-slot-drag-ng', [
   CommonEventsAndMethods,
 ])
 export class XFoldviewSlotDragNg extends HTMLElement {}

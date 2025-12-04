@@ -1,5 +1,45 @@
 # @lynx-js/web-worker-runtime
 
+## 0.18.4
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-constants@0.18.4
+  - @lynx-js/web-mainthread-apis@0.18.4
+  - @lynx-js/web-worker-rpc@0.18.4
+
+## 0.18.3
+
+### Patch Changes
+
+- fix: `this` may be undefined in Card(). ([#1922](https://github.com/lynx-family/lynx-stack/pull/1922))
+
+- feat: add \_\_GetSourceMapRelease API for nativeApp. ([#1923](https://github.com/lynx-family/lynx-stack/pull/1923))
+
+- Updated dependencies [[`fece7d0`](https://github.com/lynx-family/lynx-stack/commit/fece7d0a92fa76948488373757a27dff52a90437), [`ebc1a60`](https://github.com/lynx-family/lynx-stack/commit/ebc1a606318e9809e8a07457e18536b59be12a18)]:
+  - @lynx-js/web-mainthread-apis@0.18.3
+  - @lynx-js/web-constants@0.18.3
+  - @lynx-js/web-worker-rpc@0.18.3
+
+## 0.18.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-constants@0.18.2
+  - @lynx-js/web-mainthread-apis@0.18.2
+  - @lynx-js/web-worker-rpc@0.18.2
+
+## 0.18.1
+
+### Patch Changes
+
+- Updated dependencies [[`70a18fc`](https://github.com/lynx-family/lynx-stack/commit/70a18fce0083743e4516eefc91c0392d748b855f)]:
+  - @lynx-js/web-mainthread-apis@0.18.1
+  - @lynx-js/web-constants@0.18.1
+  - @lynx-js/web-worker-rpc@0.18.1
+
 ## 0.18.0
 
 ### Patch Changes

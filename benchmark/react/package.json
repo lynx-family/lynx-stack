@@ -10,6 +10,7 @@
     "bench:003-hello-list": "benchx_cli run dist/003-hello-list.lynx.bundle --wait-for-id=stop-benchmark-true",
     "bench:004-various-update": "benchx_cli run dist/004-various-update.lynx.bundle --wait-for-id=stop-benchmark-true",
     "bench:005-load-script": "benchx_cli run dist/005-load-script.lynx.bundle",
+    "bench:006-static-raw-text": "benchx_cli run dist/006-static-raw-text.lynx.bundle --wait-for-id=stop-benchmark-true",
     "build": "rspeedy build",
     "dev": "rspeedy dev",
     "perfetto": "pnpm run --sequential --stream --aggregate-output '/^perfetto:.*/'",
@@ -18,6 +19,7 @@
     "perfetto:003-hello-list": "benchx_cli -o dist/003-hello-list.ptrace run dist/003-hello-list.lynx.bundle --wait-for-id=stop-benchmark-true",
     "perfetto:004-various-update": "benchx_cli -o dist/004-various-update.ptrace run dist/004-various-update.lynx.bundle --wait-for-id=stop-benchmark-true",
     "perfetto:005-load-script": "benchx_cli -o dist/005-load-script.ptrace run dist/005-load-script.lynx.bundle",
+    "perfetto:006-static-raw-text": "benchx_cli -o dist/006-static-raw-text.ptrace run dist/006-static-raw-text.lynx.bundle --wait-for-id=stop-benchmark-true",
     "test": "echo 'No tests specified'"
   },
   "dependencies": {

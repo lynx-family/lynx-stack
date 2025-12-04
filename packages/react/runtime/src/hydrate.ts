@@ -2,12 +2,16 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { profileEnd, profileStart } from './debug/utils.js';
 import { componentAtIndexFactory, enqueueComponentFactory, gRecycleMap, gSignMap } from './list.js';
 import { __pendingListUpdates } from './pendingListUpdates.js';
 import { DynamicPartType } from './snapshot/dynamicPartType.js';
+import type { PlatformInfo } from './snapshot/platformInfo.js';
 import { unref } from './snapshot/ref.js';
 import type { SnapshotInstance } from './snapshot.js';
 import { isEmptyObject } from './utils.js';
+
+const UNREACHABLE_ITEM_KEY_NOT_FOUND = 'UNREACHABLE_ITEM_KEY_NOT_FOUND';
 
 export interface DiffResult<K> {
   $$diff: true;
@@ -21,6 +25,7 @@ export interface DiffResult<K> {
 
 export interface Typed {
   type: string;
+  __listItemPlatformInfo?: PlatformInfo;
 }
 
 export function isEmptyDiffResult<K>(diffResult: DiffResult<K>): boolean {
@@ -34,6 +39,7 @@ export function diffArrayLepus<A extends Typed, B extends Typed>(
   after: B[],
   isSameType: (a: A, b: B) => boolean,
   onDiffChildren: (a: A, b: B, oldIndex: number, newIndex: number) => void,
+  isListHasItemKey: boolean,
 ): DiffResult<B> {
   let lastPlacedIndex = 0;
   const result: DiffResult<B> = {
@@ -46,12 +52,18 @@ export function diffArrayLepus<A extends Typed, B extends Typed>(
 
   for (let i = 0; i < before.length; i++) {
     const node = before[i]!;
-    (beforeMap[node.type] ??= new Set()).add([node, i]);
+    const key = isListHasItemKey
+      ? node.__listItemPlatformInfo?.['item-key'] ?? UNREACHABLE_ITEM_KEY_NOT_FOUND
+      : node.type;
+    (beforeMap[key] ??= new Set()).add([node, i]);
   }
 
   for (let i = 0; i < after.length; i++) {
     const afterNode = after[i]!;
-    const beforeNodes = beforeMap[afterNode.type];
+    const key = isListHasItemKey
+      ? afterNode.__listItemPlatformInfo?.['item-key'] ?? UNREACHABLE_ITEM_KEY_NOT_FOUND
+      : afterNode.type;
+    const beforeNodes = beforeMap[key];
     let beforeNode: [A, number];
 
     if (
@@ -258,6 +270,7 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
           (a, b) => {
             hydrate(a, b, options);
           },
+          false,
         );
         diffArrayAction(
           beforeChildNodes,
@@ -341,6 +354,7 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
               }
             }
           },
+          true,
         );
 
         for (const i of diffResult.r) {
@@ -366,6 +380,15 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
           updateAction,
         };
 
+        if (__PROFILE__) {
+          profileStart('ReactLynx::listHydrate::updateListInfo', {
+            args: {
+              'list id': String(listID),
+              'update list info': JSON.stringify(info),
+            },
+          });
+        }
+
         const listElement = before.__elements![elementIndex]!;
         __SetAttribute(listElement, 'update-list-info', info);
         const [componentAtIndex, componentAtIndexes] = componentAtIndexFactory(afterChildNodes, hydrate);
@@ -379,6 +402,10 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
         // The `before` & `after` target to the same list element, so we need to
         // avoid the newly created list's (behind snapshot instance `after`) "update-list-info" being recorded.
         __pendingListUpdates.clear(after.__id);
+
+        if (__PROFILE__) {
+          profileEnd();
+        }
       }
     }
   });

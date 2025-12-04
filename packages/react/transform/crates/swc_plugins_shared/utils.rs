@@ -19,7 +19,7 @@ pub fn jsonify(e: Expr) -> Value {
         .map(|p: KeyValueProp| {
           let value = jsonify(*p.value);
           let key = match p.key {
-            PropName::Str(s) => s.value.to_string(),
+            PropName::Str(s) => s.value.to_string_lossy().into_owned(),
             PropName::Ident(id) => id.sym.to_string(),
             PropName::Num(n) => format!("{}", n.value),
             _ => unreachable!(
@@ -37,7 +37,7 @@ pub fn jsonify(e: Expr) -> Value {
         .map(|v| jsonify(*v.unwrap().expr))
         .collect(),
     ),
-    Expr::Lit(Lit::Str(Str { value, .. })) => Value::String(value.to_string()),
+    Expr::Lit(Lit::Str(Str { value, .. })) => Value::String(value.to_string_lossy().into_owned()),
     Expr::Lit(Lit::Num(Number { value, raw, .. })) => match raw {
       Some(raw_str) => match serde_json::from_str::<serde_json::Number>(&raw_str) {
         Ok(num) => Value::Number(num),
@@ -51,7 +51,7 @@ pub fn jsonify(e: Expr) -> Value {
       Some(TplElement {
         cooked: Some(value),
         ..
-      }) => value.to_string(),
+      }) => value.to_string_lossy().into_owned(),
       _ => String::new(),
     }),
     _ => unreachable!(
@@ -86,6 +86,10 @@ pub fn get_relative_path(cwd: &str, filename: &str) -> String {
       .unwrap_or_else(|| filename.to_string())
   }
 }
+
+// keep webpack runtime variables
+// https://rspack.rs/api/runtime-api/module-variables#runtime
+pub const WEBPACK_VARS: &[&str] = &["__webpack_require__", "__webpack_public_path__"];
 
 #[cfg(test)]
 mod tests {

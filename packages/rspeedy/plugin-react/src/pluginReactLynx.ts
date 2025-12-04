@@ -244,22 +244,16 @@ export function pluginReactLynx(
             })
           }
 
-          // This is used for compat with `@lynx-js/rspeedy` <= 0.9.6
-          // where the default value of `output.inlineScripts` is `false`.
-          // TODO: remove this when required Rspeedy version bumped to ^0.9.7
-          if (typeof userConfig.output?.inlineScripts === 'undefined') {
-            config = mergeRsbuildConfig(config, {
-              output: {
-                inlineScripts: true,
-              },
-            })
-          }
-
           // This is used to avoid the IIFE in main-thread.js, which would cause memory leak.
-          // TODO: remove this when required Rspeedy version bumped to ^0.10.0
           config = mergeRsbuildConfig({
             tools: {
               rspack: { output: { iife: false } },
+            },
+          }, config)
+
+          config = mergeRsbuildConfig({
+            resolve: {
+              dedupe: ['react-compiler-runtime'],
             },
           }, config)
 

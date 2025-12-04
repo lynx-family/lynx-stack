@@ -1,4 +1,7 @@
-use std::collections::{HashMap, HashSet};
+use std::{
+  borrow::Cow,
+  collections::{HashMap, HashSet},
+};
 
 use swc_core::{
   atoms::Atom,
@@ -77,7 +80,7 @@ impl RefreshVisitor {
 
 impl VisitMut for RefreshVisitor {
   fn visit_mut_import_decl(&mut self, import_decl: &mut ImportDecl) {
-    let import_from = import_decl.src.value.to_string();
+    let import_from = import_decl.src.value.to_string_lossy().into_owned();
     let is_library = self
       .config
       .library
@@ -100,11 +103,11 @@ impl VisitMut for RefreshVisitor {
         }
         ImportSpecifier::Named(spec) => {
           if let Some(imported) = &spec.imported {
-            let name = match imported {
-              ModuleExportName::Ident(ident) => &ident.sym,
-              ModuleExportName::Str(str) => &str.value,
+            let name: Cow<'_, str> = match imported {
+              ModuleExportName::Ident(ident) => Cow::Borrowed(ident.sym.as_ref()),
+              ModuleExportName::Str(str) => str.value.to_string_lossy(),
             };
-            if name == "createContext" {
+            if name.as_ref() == "createContext" {
               self.local.insert(spec.local.to_id());
             }
           } else if spec.local.sym == "createContext" {
@@ -217,7 +220,7 @@ impl VisitMut for RefreshVisitor {
     let key = obj_pat_prop
       .as_key_value()
       .and_then(|kv| kv.key.as_str())
-      .map(|s| s.value.to_string())
+      .map(|s| s.value.to_string_lossy().into_owned())
       .unwrap_or_default();
 
     if key.is_empty() {

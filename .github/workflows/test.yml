@@ -62,7 +62,7 @@ jobs:
     permissions: {}
     with:
       runs-on: lynx-ubuntu-24.04-medium
-      run: pnpm eslint .
+      run: pnpm eslint . --flag v10_config_lookup_from_file
 
   lighthouse:
     needs: build
@@ -153,6 +153,7 @@ jobs:
         pnpm run build
         pnpm run build --mode development
         pnpm run lint
+        cd `mktemp -d`
         npx --registry http://localhost:4873 create-rspeedy-canary@latest --template react-vitest-rltl --dir create-rspeedy-regression-vitest-rltl --tools eslint
         cd create-rspeedy-regression-vitest-rltl
         pnpm install --registry=http://localhost:4873

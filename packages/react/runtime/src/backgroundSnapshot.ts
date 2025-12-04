@@ -28,13 +28,26 @@ import { applyRef, clearQueuedRefs, queueRefAttrUpdate } from './snapshot/ref.js
 import type { Ref } from './snapshot/ref.js';
 import { transformSpread } from './snapshot/spread.js';
 import type { SerializedSnapshotInstance, Snapshot } from './snapshot.js';
-import { backgroundSnapshotInstanceManager, snapshotManager, traverseSnapshotInstance } from './snapshot.js';
+import {
+  backgroundSnapshotInstanceManager,
+  snapshotCreatorMap,
+  snapshotManager,
+  traverseSnapshotInstance,
+} from './snapshot.js';
 import { hydrationMap } from './snapshotInstanceHydrationMap.js';
 import { isDirectOrDeepEqual } from './utils.js';
 import { onPostWorkletCtx } from './worklet/ctx.js';
 
 export class BackgroundSnapshotInstance {
   constructor(public type: string) {
+    // Suspense uses 'div'
+    if (!snapshotManager.values.has(type) && type !== 'div') {
+      if (snapshotCreatorMap[type]) {
+        snapshotCreatorMap[type](type);
+      } else {
+        throw new Error('BackgroundSnapshot not found: ' + type);
+      }
+    }
     this.__snapshot_def = snapshotManager.values.get(type)!;
     const id = this.__id = backgroundSnapshotInstanceManager.nextId += 1;
     backgroundSnapshotInstanceManager.values.set(id, this);
@@ -471,6 +484,8 @@ export function hydrate(
             (a, b) => {
               helper(a, b);
             },
+            // Should be `false` in hydrate as SerializedSnapshotInstance has no item-key
+            false,
           );
           diffArrayAction(
             beforeChildNodes,

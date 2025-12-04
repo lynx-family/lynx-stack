@@ -178,7 +178,7 @@ class CssExtractRspackPluginImpl {
               [content],
               options.cssPlugins,
               Boolean(
-                args.finalEncodeOptions.compilerOptions['enableCSSSelector'],
+                args.finalEncodeOptions.compilerOptions.enableCSSSelector,
               ),
             );
             const cssDeps = Object.entries(css.cssMap).reduce<
@@ -208,6 +208,7 @@ class CssExtractRspackPluginImpl {
                   lepusCode: {
                     root: undefined,
                     lepusChunk: {},
+                    filename: undefined,
                   },
                   manifest: {},
                   customSections: {},

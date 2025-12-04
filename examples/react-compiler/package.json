@@ -1,0 +1,23 @@
+{
+  "name": "@lynx-js/example-react-compiler",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "rspeedy build",
+    "dev": "rspeedy dev"
+  },
+  "dependencies": {
+    "@lynx-js/react": "workspace:*",
+    "react-compiler-runtime": "0.0.0-experimental-0566679-20250709"
+  },
+  "devDependencies": {
+    "@lynx-js/qrcode-rsbuild-plugin": "workspace:*",
+    "@lynx-js/react-rsbuild-plugin": "workspace:*",
+    "@lynx-js/rspeedy": "workspace:*",
+    "@lynx-js/types": "3.4.11",
+    "@rsbuild/plugin-babel": "^1.0.6",
+    "@types/react": "^18.3.25",
+    "babel-plugin-react-compiler": "0.0.0-experimental-0566679-20250709"
+  }
+}

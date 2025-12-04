@@ -16,20 +16,11 @@ export function applyLoaders(
     enableRemoveCSSScope,
     shake,
     defineDCE,
-
+    engineVersion,
     experimental_isLazyBundle,
   } = options
 
   api.modifyBundlerChain((chain, { CHAIN_ID }) => {
-    const experiments = chain.get(
-      'experiments',
-    ) as Rspack.Configuration['experiments']
-
-    chain.experiments({
-      ...experiments,
-      layers: true,
-    })
-
     const rule = chain.module.rules.get(CHAIN_ID.RULE.JS)
     // The Rsbuild default loaders:
     // - Rspack:
@@ -65,6 +56,7 @@ export function applyLoaders(
           isDynamicComponent: experimental_isLazyBundle,
           inlineSourcesContent,
           defineDCE,
+          engineVersion,
         })
       .end()
 
@@ -102,6 +94,7 @@ export function applyLoaders(
           enableRemoveCSSScope,
           inlineSourcesContent,
           isDynamicComponent: experimental_isLazyBundle,
+          engineVersion,
           shake,
           defineDCE,
         })

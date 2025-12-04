@@ -668,4 +668,103 @@ describe('Plugins - Dev', () => {
     await server.waitDevCompileDone()
     expect(vi.mocked(middleware.createWebVirtualFilesMiddleware)).toBeCalled()
   })
+
+  test('dev.assetPrefix with server.printUrls', async () => {
+    const rsbuild = await createStubRspeedy({
+      source: {
+        entry: path.resolve(__dirname, './fixtures/hello-world/index.js'),
+      },
+      dev: {
+        assetPrefix: 'http://example.com:8000/',
+      },
+      server: {
+        port: 8080,
+      },
+    })
+
+    let printedUrls: undefined | (string | { url: string, label?: string })[] =
+      undefined
+
+    rsbuild.modifyRsbuildConfig({
+      handler: (config, { mergeRsbuildConfig }) => {
+        if (typeof config.server?.printUrls === 'function') {
+          const originalPrintUrls = config.server.printUrls
+          return mergeRsbuildConfig(config, {
+            server: {
+              printUrls: (...args) => {
+                const result = originalPrintUrls(...args)
+                printedUrls = result ?? undefined
+                return result
+              },
+            },
+          })
+        }
+        return config
+      },
+      order: 'post',
+    })
+
+    await using server = await rsbuild.usingDevServer()
+
+    await server.waitDevCompileDone()
+
+    expect(printedUrls).toContainEqual({
+      'label': 'Lynx',
+      'url': 'http://example.com:8080/main.lynx.bundle',
+    })
+  })
+
+  test('dev.assetPrefix with environment.web', async () => {
+    const rsbuild = await createStubRspeedy({
+      source: {
+        entry: path.resolve(__dirname, './fixtures/hello-world/index.js'),
+      },
+      dev: {
+        assetPrefix: 'http://example.com:8000/',
+      },
+      server: {
+        port: 8080,
+      },
+      environments: {
+        web: {},
+        lynx: {},
+      },
+    })
+
+    let printedUrls: undefined | (string | { url: string, label?: string })[] =
+      undefined
+
+    rsbuild.modifyRsbuildConfig({
+      handler: (config, { mergeRsbuildConfig }) => {
+        if (typeof config.server?.printUrls === 'function') {
+          const originalPrintUrls = config.server.printUrls
+          return mergeRsbuildConfig(config, {
+            server: {
+              printUrls: (...args) => {
+                const result = originalPrintUrls(...args)
+                printedUrls = result ?? undefined
+                return result
+              },
+            },
+          })
+        }
+        return config
+      },
+      order: 'post',
+    })
+
+    await using server = await rsbuild.usingDevServer()
+
+    await server.waitDevCompileDone()
+
+    expect(printedUrls).toContainEqual({
+      'label': 'Web',
+      'url': 'http://example.com:8080/main.web.bundle',
+    })
+
+    expect(printedUrls).toContainEqual({
+      'label': 'Web Preview',
+      'url': 'http://example.com:8080/__web_preview?casename=main.web.bundle',
+    })
+  })
 })
