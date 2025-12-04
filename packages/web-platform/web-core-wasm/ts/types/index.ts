@@ -14,3 +14,4 @@ export type * from './NapiModules.js';
 export type * from './I18n.js';
 export type * from './NativeApp.js';
 export type * from './LynxContextEventTarget.js';
+export type * from './MainThreadLynx.js';

@@ -4,7 +4,45 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import type { Cloneable, MainThreadGlobalAPIs } from '@types';
+import type { Cloneable, MainThreadGlobalAPIs, MainThreadLynx } from '@types';
+import { templateManager } from './wasm.js';
+import type { LynxCrossThreadContext } from '../LynxCrossThreadContext.js';
+
+function createMainThreadLynx(
+  globalProps: Cloneable,
+  jsContext: LynxCrossThreadContext,
+  templateUrl: string,
+  SystemInfo: Record<string, any>,
+): MainThreadLynx {
+  const requestAnimationFrameBrowserImpl = requestAnimationFrame;
+  const cancelAnimationFrameBrowserImpl = cancelAnimationFrame;
+  const setTimeoutBrowserImpl = setTimeout;
+  const clearTimeoutBrowserImpl = clearTimeout;
+  const setIntervalBrowserImpl = setInterval;
+  const clearIntervalBrowserImpl = clearInterval;
+  return {
+    getJSContext() {
+      return jsContext;
+    },
+    requestAnimationFrame(cb: FrameRequestCallback) {
+      return requestAnimationFrameBrowserImpl(cb);
+    },
+    cancelAnimationFrame(handler: number) {
+      return cancelAnimationFrameBrowserImpl(handler);
+    },
+    __globalProps: globalProps,
+    getCustomSectionSync(key: string) {
+      return (templateManager.getCustomSection(templateUrl) as any)[key]
+        ?.content;
+    },
+    markPipelineTiming: config.callbacks.markTiming,
+    SystemInfo,
+    setTimeout: setTimeoutBrowserImpl,
+    clearTimeout: clearTimeoutBrowserImpl,
+    setInterval: setIntervalBrowserImpl,
+    clearInterval: clearIntervalBrowserImpl,
+  };
+}
 
 export function createMainThreadGlobalAPIs(
   globalProps: Cloneable,
