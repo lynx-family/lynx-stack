@@ -1,4 +1,4 @@
-use super::super::inline_style_parser::{char_code_definitions::*, parse_inline_style::*};
+use super::super::inline_style_parser::parse_inline_style::*;
 use super::rules::{get_rename_rule_value, get_replace_rule_value};
 
 pub struct TransformerData<'a> {
@@ -6,16 +6,6 @@ pub struct TransformerData<'a> {
   transformed_source: String,
   offset: usize,                 // current the tail offset of the original source
   extra_children_styles: String, // used to store the extra styles for children elements
-}
-
-#[inline(always)]
-pub fn is_digit_only(source: &str) -> bool {
-  for code in source.as_bytes() {
-    if code > &b'9' as &u8 || code < &b'0' as &u8 {
-      return false;
-    }
-  }
-  true
 }
 
 type CSSPair<'a> = (&'a str, &'a str);
@@ -277,65 +267,62 @@ mod tests {
   fn flex_none() {
     let source = "flex:none;";
     let result = transform_inline_style_string(source).0;
-    assert_eq!(result, "--flex-shrink:0;--flex-grow:0;--flex-basis:auto;");
+    assert_eq!(result, "--flex:none;");
   }
 
   #[test]
   fn flex_auto() {
     let source = "flex:auto;";
     let result = transform_inline_style_string(source).0;
-    assert_eq!(result, "--flex-shrink:1;--flex-grow:1;--flex-basis:auto;");
+    assert_eq!(result, "--flex:auto;");
   }
 
   #[test]
   fn flex_1() {
     let source = "flex:1;";
     let result = transform_inline_style_string(source).0;
-    assert_eq!(result, "--flex-grow:1;--flex-shrink:1;--flex-basis:0%;");
+    assert_eq!(result, "--flex:1;");
   }
   #[test]
   fn flex_1_percent() {
     let source = "flex:1%;";
     let result = transform_inline_style_string(source).0;
-    assert_eq!(result, "--flex-grow:1;--flex-shrink:1;--flex-basis:1%;");
+    assert_eq!(result, "--flex:1%;");
   }
 
   #[test]
   fn flex_2_3() {
     let source = "flex:2 3;";
     let result = transform_inline_style_string(source).0;
-    assert_eq!(result, "--flex-grow:2;--flex-shrink:3;--flex-basis:0%;");
+    assert_eq!(result, "--flex:2 3;");
   }
 
   #[test]
   fn flex_2_3_percentage() {
     let source = "flex:2 3%;";
     let result = transform_inline_style_string(source).0;
-    assert_eq!(result, "--flex-grow:2;--flex-shrink:1;--flex-basis:3%;");
+    assert_eq!(result, "--flex:2 3%;");
   }
 
   #[test]
   fn flex_2_3_px() {
     let source = "flex:2 3px;";
     let result = transform_inline_style_string(source).0;
-    assert_eq!(result, "--flex-grow:2;--flex-shrink:1;--flex-basis:3px;");
+    assert_eq!(result, "--flex:2 3px;");
   }
 
   #[test]
   fn flex_3_4_5_percentage() {
     let source = "flex:3 4 5%;";
     let result = transform_inline_style_string(source).0;
-    assert_eq!(result, "--flex-grow:3;--flex-shrink:4;--flex-basis:5%;");
+    assert_eq!(result, "--flex:3 4 5%;");
   }
 
   #[test]
   fn flex_1_extra() {
     let source = "width:100px; flex:none; width:100px;";
     let result = transform_inline_style_string(source).0;
-    assert_eq!(
-      result,
-      "width:100px; --flex-shrink:0;--flex-grow:0;--flex-basis:auto; width:100px;"
-    );
+    assert_eq!(result, "width:100px; --flex:none; width:100px;");
   }
 
   #[test]
