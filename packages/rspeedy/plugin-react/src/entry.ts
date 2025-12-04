@@ -20,7 +20,7 @@ import {
   LynxTemplatePlugin,
   WebEncodePlugin,
 } from '@lynx-js/template-webpack-plugin'
-import { compileOptionsKeys, configKeys } from '@lynx-js/type-config'
+import { compilerOptionsKeys, configKeys } from '@lynx-js/type-config'
 
 import type { ResolvedPluginReactLynxOptions } from './pluginReactLynx.js'
 
@@ -164,7 +164,7 @@ export function applyEntry(
           experimental_isLazyBundle,
           cssPlugins: [],
 
-          ...pick(otherOptions, compileOptionsKeys),
+          ...pick(otherOptions, compilerOptionsKeys),
           ...pick(otherOptions, configKeys),
         }])
         .end()

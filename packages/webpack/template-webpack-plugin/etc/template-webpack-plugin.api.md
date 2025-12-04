@@ -15,6 +15,8 @@ import { Declaration } from '@lynx-js/css-serializer';
 import { FontFaceRule } from '@lynx-js/css-serializer';
 import { ImportRule } from '@lynx-js/css-serializer';
 import { KeyframesRule } from '@lynx-js/css-serializer';
+import type { CompilerOptions as LynxCompilerOptions } from '@lynx-js/type-config';
+import type { Config as LynxConfig } from '@lynx-js/type-config';
 import { LynxStyleNode } from '@lynx-js/css-serializer';
 import { parse } from '@lynx-js/css-serializer';
 import { Plugin } from '@lynx-js/css-serializer';
@@ -58,7 +60,7 @@ export interface EncodeOptions {
     // (undocumented)
     [k: string]: unknown;
     // (undocumented)
-    compilerOptions: Record<string, string | boolean>;
+    compilerOptions: LynxCompilerOptions;
     // (undocumented)
     customSections: Record<string, {
         type?: 'lazy';
@@ -73,6 +75,10 @@ export interface EncodeOptions {
     // (undocumented)
     manifest: Record<string, string | undefined>;
 }
+
+export { LynxCompilerOptions }
+
+export { LynxConfig }
 
 // @public
 export class LynxEncodePlugin {
@@ -94,6 +100,21 @@ export interface LynxEncodePluginOptions {
     inlineScripts?: InlineChunkConfig | undefined;
 }
 
+// Warning: (ae-missing-release-tag) "LynxTemplateOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface LynxTemplateOptions {
+    chunks?: 'all' | string[];
+    cssPlugins: CSS_2.Plugin[];
+    dsl?: 'tt' | 'react' | 'react_nodiff';
+    excludeChunks?: string[];
+    // @alpha
+    experimental_isLazyBundle?: boolean;
+    filename?: string | ((entryName: string) => string);
+    intermediate?: string;
+    lazyBundleFilename?: string;
+}
+
 // @public
 export class LynxTemplatePlugin {
     constructor(options?: LynxTemplatePluginOptions | undefined);
@@ -102,34 +123,19 @@ export class LynxTemplatePlugin {
         cssMap: Record<string, CSS_2.LynxStyleNode[]>;
         cssSource: Record<string, string>;
     };
-    static defaultOptions: Readonly<Required<LynxTemplatePluginOptions>>;
+    static defaultOptions: Readonly<ResolvedLynxTemplatePluginOptions>;
     static getLynxTemplatePluginHooks(compilation: Compilation): TemplateHooks;
 }
 
 // @public
-export interface LynxTemplatePluginOptions {
-    chunks?: 'all' | string[];
-    cssPlugins: CSS_2.Plugin[];
-    customCSSInheritanceList: string[] | undefined;
-    debugInfoOutside: boolean;
-    defaultDisplayLinear: boolean;
-    defaultOverflowVisible?: boolean;
-    dsl?: 'tt' | 'react' | 'react_nodiff';
-    enableA11y: boolean;
-    enableAccessibilityElement: boolean;
-    enableCSSInheritance: boolean;
-    enableCSSInvalidation: boolean;
-    enableCSSSelector: boolean;
-    enableNewGesture: boolean;
-    enableRemoveCSSScope: boolean;
-    excludeChunks?: string[];
-    // @alpha
-    experimental_isLazyBundle?: boolean;
-    filename?: string | ((entryName: string) => string);
-    intermediate?: string;
-    lazyBundleFilename?: string;
-    removeDescendantSelectorScope: boolean;
-    targetSdkVersion: string;
+export interface LynxTemplatePluginOptions extends LynxCompilerOptions, LynxConfig, LynxTemplateOptions {
+}
+
+// Warning: (ae-forgotten-export) The symbol "SetRequired" needs to be exported by the entry point index.d.ts
+// Warning: (ae-missing-release-tag) "ResolvedLynxTemplatePluginOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface ResolvedLynxTemplatePluginOptions extends SetRequired<LynxCompilerOptions, 'debugInfoOutside' | 'defaultDisplayLinear' | 'enableCSSInvalidation' | 'enableCSSSelector' | 'enableRemoveCSSScope' | 'targetSdkVersion' | 'defaultOverflowVisible'>, SetRequired<LynxConfig, 'enableAccessibilityElement' | 'enableCSSInheritance' | 'enableNewGesture' | 'removeDescendantSelectorScope' | 'enableA11y'>, Required<LynxTemplateOptions> {
 }
 
 // @public
@@ -184,6 +190,6 @@ export class WebEncodePlugin {
 
 // Warnings were encountered during analysis:
 //
-// lib/LynxTemplatePlugin.d.ts:68:9 - (ae-forgotten-export) The symbol "EncodeRawData" needs to be exported by the entry point index.d.ts
+// lib/LynxTemplatePlugin.d.ts:70:9 - (ae-forgotten-export) The symbol "EncodeRawData" needs to be exported by the entry point index.d.ts
 
 ```

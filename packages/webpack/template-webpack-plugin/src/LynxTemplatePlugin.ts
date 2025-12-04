@@ -22,14 +22,16 @@ import type {
 
 import type * as CSS from '@lynx-js/css-serializer';
 import type {
-  CompileOptions as LynxCompileOptions,
+  CompilerOptions as LynxCompilerOptions,
   Config as LynxConfig,
 } from '@lynx-js/type-config';
-import { compileOptionsKeys, configKeys } from '@lynx-js/type-config';
+import { compilerOptionsKeys, configKeys } from '@lynx-js/type-config';
 import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
 import { cssChunksToMap } from './css/cssChunksToMap.js';
 import { createLynxAsyncChunksRuntimeModule } from './LynxAsyncChunksRuntimeModule.js';
+
+export type { LynxCompilerOptions, LynxConfig };
 
 export type OriginManifest = Record<string, {
   content: string;
@@ -43,7 +45,7 @@ export type OriginManifest = Record<string, {
  */
 export interface EncodeOptions {
   manifest: Record<string, string | undefined>;
-  compilerOptions: LynxCompileOptions;
+  compilerOptions: LynxCompilerOptions;
   lepusCode: {
     root: string | undefined;
     lepusChunk: Record<string, string>;
@@ -219,7 +221,7 @@ export interface LynxTemplateOptions {
  * @public
  */
 export interface LynxTemplatePluginOptions
-  extends LynxCompileOptions, LynxConfig, LynxTemplateOptions
+  extends LynxCompilerOptions, LynxConfig, LynxTemplateOptions
 {}
 
 type SetRequired<T, K extends keyof T> =
@@ -230,7 +232,7 @@ type SetRequired<T, K extends keyof T> =
 
 export interface ResolvedLynxTemplatePluginOptions extends
   SetRequired<
-    LynxCompileOptions,
+    LynxCompilerOptions,
     | 'debugInfoOutside'
     | 'defaultDisplayLinear'
     | 'enableCSSInvalidation'
@@ -251,7 +253,7 @@ export interface ResolvedLynxTemplatePluginOptions extends
 {}
 
 interface EncodeRawData {
-  compilerOptions: LynxCompileOptions;
+  compilerOptions: LynxCompilerOptions;
   /**
    * main-thread
    */
@@ -697,7 +699,7 @@ class LynxTemplatePluginImpl {
         templateDebugUrl: '',
         enableLepusDebug: isDev,
 
-        ...pick(otherOptions, compileOptionsKeys),
+        ...pick(otherOptions, compilerOptionsKeys),
       },
       sourceContent: {
         dsl,

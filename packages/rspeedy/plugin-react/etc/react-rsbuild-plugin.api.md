@@ -5,6 +5,8 @@
 ```ts
 
 import { LAYERS } from '@lynx-js/react-webpack-plugin';
+import type { CompilerOptions as LynxCompilerOptions } from '@lynx-js/type-config';
+import type { Config as LynxConfig } from '@lynx-js/type-config';
 import type { RsbuildPlugin } from '@rsbuild/core';
 
 // @public
@@ -12,7 +14,9 @@ export interface AddComponentElementConfig {
     compilerOnly: boolean
 }
 
-// @public
+// Warning: (ae-unresolved-inheritdoc-reference) The @inheritDoc reference could not be resolved: No member was found with name "compat"
+//
+// @public (undocumented)
 export interface CompatVisitorConfig {
     addComponentElement: boolean | AddComponentElementConfig
     additionalComponentAttributes: Array<string>
@@ -32,12 +36,16 @@ export interface CompatVisitorConfig {
     target: 'LEPUS' | 'JS' | 'MIXED'
 }
 
-// @public
+// Warning: (ae-unresolved-inheritdoc-reference) The @inheritDoc reference could not be resolved: No member was found with name "defineDCE"
+//
+// @public (undocumented)
 export interface DefineDceVisitorConfig {
     define: Record<string, string>
 }
 
-// @public
+// Warning: (ae-unresolved-inheritdoc-reference) The @inheritDoc reference could not be resolved: No member was found with name "extractStr"
+//
+// @public (undocumented)
 export interface ExtractStrConfig {
     // @internal (undocumented)
     extractedStrArr?: Array<string>
@@ -46,37 +54,44 @@ export interface ExtractStrConfig {
 
 export { LAYERS }
 
+export { LynxCompilerOptions }
+
+export { LynxConfig }
+
 // @public
 export function pluginReactLynx(userOptions?: PluginReactLynxOptions): RsbuildPlugin[];
 
 // @public
-export interface PluginReactLynxOptions {
+export interface PluginReactLynxOptions extends LynxCompilerOptions, LynxConfig, ReactLynxOptions {
+}
+
+// Warning: (ae-missing-release-tag) "ReactLynxOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface ReactLynxOptions {
     compat?: Partial<CompatVisitorConfig> & {
         disableCreateSelectorQueryIncompatibleWarning?: boolean;
     } | undefined;
-    customCSSInheritanceList?: string[] | undefined;
-    debugInfoOutside?: boolean;
-    defaultDisplayLinear?: boolean;
     defineDCE?: Partial<DefineDceVisitorConfig> | undefined;
-    enableAccessibilityElement?: boolean;
-    enableCSSInheritance?: boolean;
-    enableCSSInvalidation?: boolean;
-    enableCSSSelector?: boolean;
-    enableNewGesture?: boolean;
-    enableRemoveCSSScope?: boolean | undefined;
     enableSSR?: boolean;
     engineVersion?: string;
     // @alpha
     experimental_isLazyBundle?: boolean;
     extractStr?: Partial<ExtractStrConfig> | boolean;
     firstScreenSyncTiming?: 'immediately' | 'jsReady';
-    removeDescendantSelectorScope?: boolean;
     shake?: Partial<ShakeVisitorConfig> | undefined;
-    // @deprecated
-    targetSdkVersion?: string;
 }
 
-// @public
+// Warning: (ae-forgotten-export) The symbol "SetRequired" needs to be exported by the entry point index.d.ts
+// Warning: (ae-missing-release-tag) "ResolvedPluginReactLynxOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface ResolvedPluginReactLynxOptions extends SetRequired<LynxCompilerOptions, 'debugInfoOutside' | 'defaultDisplayLinear' | 'enableCSSInvalidation' | 'enableCSSSelector' | 'enableRemoveCSSScope' | 'targetSdkVersion'>, SetRequired<LynxConfig, 'enableAccessibilityElement' | 'enableCSSInheritance' | 'enableNewGesture' | 'removeDescendantSelectorScope' | 'enableA11y'>, Required<ReactLynxOptions> {
+}
+
+// Warning: (ae-unresolved-inheritdoc-reference) The @inheritDoc reference could not be resolved: No member was found with name "shake"
+//
+// @public (undocumented)
 export interface ShakeVisitorConfig {
     pkgName: Array<string>
     removeCallParams: Array<string>

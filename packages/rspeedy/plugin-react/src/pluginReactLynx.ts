@@ -22,7 +22,7 @@ import type {
 import { LAYERS } from '@lynx-js/react-webpack-plugin'
 import type { ExposedAPI } from '@lynx-js/rspeedy'
 import type {
-  CompileOptions as LynxCompileOptions,
+  CompilerOptions as LynxCompilerOptions,
   Config as LynxConfig,
 } from '@lynx-js/type-config'
 
@@ -37,6 +37,8 @@ import { applySplitChunksRule } from './splitChunks.js'
 import { applySWC } from './swc.js'
 import { applyUseSyncExternalStore } from './useSyncExternalStore.js'
 import { validateConfig } from './validate.js'
+
+export type { LynxCompilerOptions, LynxConfig }
 
 export interface ReactLynxOptions {
   /**
@@ -131,7 +133,7 @@ export interface ReactLynxOptions {
  * @public
  */
 export interface PluginReactLynxOptions
-  extends LynxCompileOptions, LynxConfig, ReactLynxOptions
+  extends LynxCompilerOptions, LynxConfig, ReactLynxOptions
 {}
 
 type SetRequired<T, K extends keyof T> =
@@ -142,7 +144,7 @@ type SetRequired<T, K extends keyof T> =
 
 export interface ResolvedPluginReactLynxOptions extends
   SetRequired<
-    LynxCompileOptions,
+    LynxCompilerOptions,
     | 'debugInfoOutside'
     | 'defaultDisplayLinear'
     | 'enableCSSInvalidation'
