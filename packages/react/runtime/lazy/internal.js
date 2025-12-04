@@ -26,6 +26,7 @@ export const {
   registerWorkletOnBackground,
   snapshotCreateList,
   snapshotManager,
+  snapshotCreatorMap,
   SnapshotInstance,
   transformRef,
   transformToWorklet,
@@ -39,3 +40,11 @@ export const {
   withInitDataInState,
   wrapWithLynxComponent,
 } = target[sExportsReactInternal];
+
+/* v8 ignore start */
+if (__DEV__ && !snapshotCreatorMap) {
+  throw new Error(
+    'This lazy bundle requires `snapshotCreatorMap` to be exported by the ReactLynx runtime. Please upgrade the ReactLynx version of the consumer to the latest version (or the lowest version that is greater than or equal to the lazy bundle). More info at: https://github.com/lynx-family/lynx-stack/pull/1899',
+  );
+}
+/* v8 ignore stop */
