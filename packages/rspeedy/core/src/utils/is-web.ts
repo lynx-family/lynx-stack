@@ -5,7 +5,8 @@
 import type { EnvironmentContext } from '@rsbuild/core'
 
 export function isWeb(environment: EnvironmentContext | string): boolean {
-  return typeof environment === 'string'
-    ? environment === 'web'
-    : environment.name === 'web'
+  const environmentName = typeof environment === 'string'
+    ? environment
+    : environment.name
+  return environmentName === 'web' || environmentName.startsWith('web-')
 }

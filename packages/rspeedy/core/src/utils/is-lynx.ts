@@ -5,7 +5,8 @@
 import type { EnvironmentContext } from '@rsbuild/core'
 
 export function isLynx(environment: EnvironmentContext | string): boolean {
-  return typeof environment === 'string'
-    ? environment === 'lynx'
-    : environment.name === 'lynx'
+  const environmentName = typeof environment === 'string'
+    ? environment
+    : environment.name
+  return environmentName === 'lynx' || environmentName.startsWith('lynx-')
 }
