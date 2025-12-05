@@ -124,6 +124,9 @@
     },
     {
       "path": "./packages/third-party"
+    },
+    {
+      "path": "./packages/lynx"
     }
   ],
   "include": []

@@ -97,6 +97,9 @@ export default tseslint.config(
       // testing-library
       'packages/testing-library/**',
       'packages/react/testing-library/**',
+
+      // gesture-runtime-testing
+      'packages/lynx/gesture-runtime/__test__/**',
     ],
   },
   js.configs.recommended,
