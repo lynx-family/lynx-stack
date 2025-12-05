@@ -1,5 +1,18 @@
 # @lynx-js/web-elements
 
+## 0.9.0
+
+### Minor Changes
+
+- feat: new flex:val impl ([#1979](https://github.com/lynx-family/lynx-stack/pull/1979))
+
+### Patch Changes
+
+- fix: x-input display should add !important to avoid override ([#1960](https://github.com/lynx-family/lynx-stack/pull/1960))
+
+- Updated dependencies []:
+  - @lynx-js/web-elements-template@0.9.0
+
 ## 0.8.11
 
 ### Patch Changes

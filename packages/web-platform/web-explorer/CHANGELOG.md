@@ -1,5 +1,11 @@
 # @lynx-js/web-explorer
 
+## 0.0.14
+
+### Patch Changes
+
+- chore: update web-elements version of web-explorer ([#1962](https://github.com/lynx-family/lynx-stack/pull/1962))
+
 ## 0.0.13
 
 ### Patch Changes
