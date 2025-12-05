@@ -1,4 +1,4 @@
-use super::super::inline_style_parser::{char_code_definitions::*, parse_inline_style::*};
+use super::super::inline_style_parser::parse_inline_style::*;
 use super::rules::{get_rename_rule_value, get_replace_rule_value};
 
 pub struct TransformerData<'a> {
@@ -6,16 +6,6 @@ pub struct TransformerData<'a> {
   transformed_source: String,
   offset: usize,                 // current the tail offset of the original source
   extra_children_styles: String, // used to store the extra styles for children elements
-}
-
-#[inline(always)]
-pub fn is_digit_only(source: &str) -> bool {
-  for code in source.as_bytes() {
-    if code > &b'9' as &u8 || code < &b'0' as &u8 {
-      return false;
-    }
-  }
-  true
 }
 
 type CSSPair<'a> = (&'a str, &'a str);
@@ -64,111 +54,6 @@ pub fn query_transform_rules<'a>(
         ("color", value),
       ]);
     };
-  }
-  /* transform the flex 1 2 3 to
-  --flex-shrink:1;
-  --flex-grow:2;
-  --flex-basis:3;
-  */
-  else if name == "flex" {
-    // we will use the value as flex-basis, flex-grow, flex-shrink
-    let mut current_offset = 0;
-    let mut val_fields = [value.len(); 6]; // we will use 3 fields, but we will use 6 to avoid the need to check the length
-    let mut ii = 0;
-    let value_in_bytes = value.as_bytes();
-    while current_offset < value_in_bytes.len() && ii < val_fields.len() {
-      let code = value_in_bytes[current_offset];
-      if (ii % 2 == 0 && !is_white_space(code)) || (ii % 2 == 1 && is_white_space(code)) {
-        val_fields[ii] = current_offset;
-        ii += 1;
-      }
-      current_offset += 1;
-    }
-    let value_num: usize = ii.div_ceil(2); // we will have 3 values, but the last one is optional
-    match value_num {
-      0 => {
-        // if we have no value, we will ignore it
-        // we will not add any declaration
-      }
-      1 => {
-        if &value[val_fields[0]..val_fields[1]] == "none" {
-          /*
-           * --flex-shrink:0;
-           * --flex-grow:0;
-           * --flex-basis:auto;
-           */
-          result.extend([
-            ("--flex-shrink", "0"),
-            ("--flex-grow", "0"),
-            ("--flex-basis", "auto"),
-          ]);
-        } else if &value[val_fields[0]..val_fields[1]] == "auto" {
-          /*
-           * --flex-shrink:1;
-           * --flex-grow:1;
-           * --flex-basis:auto;
-           */
-          result.extend([
-            ("--flex-shrink", "1"),
-            ("--flex-grow", "1"),
-            ("--flex-basis", "auto"),
-          ]);
-        } else {
-          let is_flex_grow = is_digit_only(value);
-          if is_flex_grow {
-            // if we only have one pure number, we will use it as flex-grow
-            // flex: <flex-grow> 1 0
-            result.extend([
-              ("--flex-grow", &value[val_fields[0]..val_fields[1]]),
-              ("--flex-shrink", "1"),
-              ("--flex-basis", "0%"),
-            ]);
-          } else {
-            // else it is
-            // flex: 1 1 <flex-basis>
-            result.extend([
-              ("--flex-grow", "1"),
-              ("--flex-shrink", "1"),
-              ("--flex-basis", &value[val_fields[0]..val_fields[1]]),
-            ]);
-          }
-        }
-      }
-      2 => {
-        // The first value must be a valid value for flex-grow.
-        result.push(("--flex-grow", &value[val_fields[0]..val_fields[1]]));
-        let is_flex_shrink = is_digit_only(&value[val_fields[2]..val_fields[3]]);
-        if is_flex_shrink {
-          /*
-          a valid value for flex-shrink: then, in all the browsers,
-          the shorthand expands to flex: <flex-grow> <flex-shrink> 0%.
-           */
-          result.extend([
-            ("--flex-shrink", &value[val_fields[2]..val_fields[3]]),
-            ("--flex-basis", "0%"),
-          ]);
-        } else {
-          /*
-          a valid value for flex-basis: then the shorthand expands to flex: <flex-grow> 1 <flex-basis>.
-           */
-          result.extend([
-            ("--flex-shrink", "1"),
-            ("--flex-basis", &value[val_fields[2]..val_fields[3]]),
-          ]);
-        }
-      }
-      3 => {
-        // flex: <flex-grow> <flex-shrink> <flex-basis>
-        result.extend([
-          ("--flex-grow", &value[val_fields[0]..val_fields[1]]),
-          ("--flex-shrink", &value[val_fields[2]..val_fields[3]]),
-          ("--flex-basis", &value[val_fields[4]..val_fields[5]]),
-        ]);
-      }
-      _ => {
-        // we have more than 3 values, we will ignore the rest
-      }
-    }
   }
   /*
    now we're going to generate children style for linear-weight-sum
@@ -382,65 +267,62 @@ mod tests {
   fn flex_none() {
     let source = "flex:none;";
     let result = transform_inline_style_string(source).0;
-    assert_eq!(result, "--flex-shrink:0;--flex-grow:0;--flex-basis:auto;");
+    assert_eq!(result, "--flex:none;");
   }
 
   #[test]
   fn flex_auto() {
     let source = "flex:auto;";
     let result = transform_inline_style_string(source).0;
-    assert_eq!(result, "--flex-shrink:1;--flex-grow:1;--flex-basis:auto;");
+    assert_eq!(result, "--flex:auto;");
   }
 
   #[test]
   fn flex_1() {
     let source = "flex:1;";
     let result = transform_inline_style_string(source).0;
-    assert_eq!(result, "--flex-grow:1;--flex-shrink:1;--flex-basis:0%;");
+    assert_eq!(result, "--flex:1;");
   }
   #[test]
   fn flex_1_percent() {
     let source = "flex:1%;";
     let result = transform_inline_style_string(source).0;
-    assert_eq!(result, "--flex-grow:1;--flex-shrink:1;--flex-basis:1%;");
+    assert_eq!(result, "--flex:1%;");
   }
 
   #[test]
   fn flex_2_3() {
     let source = "flex:2 3;";
     let result = transform_inline_style_string(source).0;
-    assert_eq!(result, "--flex-grow:2;--flex-shrink:3;--flex-basis:0%;");
+    assert_eq!(result, "--flex:2 3;");
   }
 
   #[test]
   fn flex_2_3_percentage() {
     let source = "flex:2 3%;";
     let result = transform_inline_style_string(source).0;
-    assert_eq!(result, "--flex-grow:2;--flex-shrink:1;--flex-basis:3%;");
+    assert_eq!(result, "--flex:2 3%;");
   }
 
   #[test]
   fn flex_2_3_px() {
     let source = "flex:2 3px;";
     let result = transform_inline_style_string(source).0;
-    assert_eq!(result, "--flex-grow:2;--flex-shrink:1;--flex-basis:3px;");
+    assert_eq!(result, "--flex:2 3px;");
   }
 
   #[test]
   fn flex_3_4_5_percentage() {
     let source = "flex:3 4 5%;";
     let result = transform_inline_style_string(source).0;
-    assert_eq!(result, "--flex-grow:3;--flex-shrink:4;--flex-basis:5%;");
+    assert_eq!(result, "--flex:3 4 5%;");
   }
 
   #[test]
   fn flex_1_extra() {
     let source = "width:100px; flex:none; width:100px;";
     let result = transform_inline_style_string(source).0;
-    assert_eq!(
-      result,
-      "width:100px; --flex-shrink:0;--flex-grow:0;--flex-basis:auto; width:100px;"
-    );
+    assert_eq!(result, "width:100px; --flex:none; width:100px;");
   }
 
   #[test]
