@@ -62,10 +62,10 @@
 
 [lynx-computed-display="flex"] > *,
 [lynx-computed-display="flex"] > lynx-wrapper > * {
-  flex-grow: var(--flex-grow);
-  flex-shrink: var(--flex-shrink);
-  flex-basis: var(--flex-basis);
-  align-self: var(--align-self);
+  flex: var(
+    --flex,
+    var(--flex-grow) var(--flex-shrink) var(--flex-basis)
+  );
 }
 [lynx-computed-display="linear"] > *,
 [lynx-computed-display="linear"] > lynx-wrapper > * {

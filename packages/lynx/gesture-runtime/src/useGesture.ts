@@ -3,20 +3,18 @@
 // LICENSE file in the root directory of this source tree.
 import { useRef } from '@lynx-js/react';
 
-import type { DefaultGesture } from './defaultGesture.js';
+import type { DefaultScrollGesture } from './defaultScrollGesture.js';
 import type { FlingGesture } from './flingGesture.js';
 import type { LongPressGesture } from './longPressGesture.js';
-import type { NativeGesture } from './nativeGesture.js';
 import type { PanGesture } from './panGesture.js';
 import type { TapGesture } from './tapGesture.js';
 
 type IBasicGestures =
   | PanGesture
   | FlingGesture
-  | DefaultGesture
+  | DefaultScrollGesture
   | TapGesture
-  | LongPressGesture
-  | NativeGesture;
+  | LongPressGesture;
 
 function useGesture<T extends IBasicGestures>(
   GestureConstructor: new() => T,

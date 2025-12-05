@@ -628,17 +628,17 @@ describe('WorkletRef in list', () => {
                     {
                       "item-key": 0,
                       "position": 0,
-                      "type": "__Card__:__snapshot_a94a8_test_4",
+                      "type": "__snapshot_a94a8_test_4",
                     },
                     {
                       "item-key": 1,
                       "position": 1,
-                      "type": "__Card__:__snapshot_a94a8_test_4",
+                      "type": "__snapshot_a94a8_test_4",
                     },
                     {
                       "item-key": 2,
                       "position": 2,
-                      "type": "__Card__:__snapshot_a94a8_test_4",
+                      "type": "__snapshot_a94a8_test_4",
                     },
                   ],
                   "removeAction": [],

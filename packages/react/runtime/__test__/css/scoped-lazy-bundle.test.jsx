@@ -5,18 +5,24 @@
  * @jsxCSSId 1000
  */
 
-import { expect, it } from 'vitest';
+import { expect, it, beforeEach, afterEach } from 'vitest';
 
 import { SnapshotInstance } from '../../src/snapshot';
 
-const prevEntryName = globalThis.globDynamicComponentEntry;
-globalThis.globDynamicComponentEntry = 'FOO';
+let prevEntryName;
+beforeEach(() => {
+  prevEntryName = globalThis.globDynamicComponentEntry;
+  globalThis.globDynamicComponentEntry = 'FOO';
+});
+afterEach(() => {
+  globalThis.globDynamicComponentEntry = prevEntryName;
+});
+
 const snapshot1 = __SNAPSHOT__(
   <view>
     <text>Hello, World</text>
   </view>,
 );
-globalThis.globDynamicComponentEntry = prevEntryName;
 
 it('cssId with entry', function() {
   const a = new SnapshotInstance(snapshot1);

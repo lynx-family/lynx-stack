@@ -12,6 +12,7 @@ lazy_static::lazy_static! {
       ("flex-basis", "--flex-basis"),
       ("list-main-axis-gap", "--list-main-axis-gap"),
       ("list-cross-axis-gap", "--list-cross-axis-gap"),
+      ("flex", "--flex"),
     ])
   };
 
