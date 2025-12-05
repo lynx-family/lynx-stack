@@ -55,7 +55,7 @@
     "webpack": "^5.102.0"
   },
   "peerDependencies": {
-    "@lynx-js/type-config": "*"
+    "@lynx-js/type-config": "npm:@upupming/type-config@0.0.1"
   },
   "engines": {
     "node": ">=18"
