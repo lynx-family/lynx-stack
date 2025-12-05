@@ -1,6 +1,6 @@
 import { describe, test, expect, beforeEach, vi } from 'vitest';
 import { createElementAPI } from '@client/mainthread/elementAPIs/createElementAPI.js';
-import { MainThreadJSBinding } from '@client/mainthread/mtsBinding.js';
+import { MainThreadJSBinding } from '@client/mainthread/elementAPIs/MainThreadJSBinding.js';
 import { JSDOM } from 'jsdom';
 
 const { window } = new JSDOM(undefined, { url: 'http://localhost/' });
@@ -122,7 +122,7 @@ describe('Testing Library Port', () => {
 
     test('should add event listener', () => {
       // Spy on mtsBinding methods
-      vi.spyOn(mtsBinding, 'enableEvent');
+      vi.spyOn(mtsBinding, 'addEventListener');
       vi.spyOn(mtsBinding, 'publicComponentEvent');
 
       const page = mtsGlobalThis.__CreatePage('0', 0);
@@ -140,10 +140,9 @@ describe('Testing Library Port', () => {
       viewElement?.dispatchEvent(new window.Event('click'));
 
       // Verify spies
-      expect(mtsBinding.enableEvent).toBeCalledWith('tap');
+      expect(mtsBinding.addEventListener).toBeCalledWith('tap');
 
-      // publicComponentEvent is not called due to the panic or because it's not a component event
-      expect(mtsBinding.publicComponentEvent).not.toBeCalled();
+      expect(mtsBinding.publicComponentEvent).toBeCalled();
     });
 
     test('text should work with SetAttribute', () => {

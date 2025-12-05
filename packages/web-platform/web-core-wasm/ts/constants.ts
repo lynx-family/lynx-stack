@@ -96,3 +96,5 @@ export const defaultTagMap: Record<string, string> = {
   'input': 'x-input',
   'x-input-ng': 'x-input',
 };
+
+export const scrollContainerDom = Symbol.for('lynx-scroll-container-dom');

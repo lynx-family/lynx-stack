@@ -6,11 +6,17 @@ import type {
   EnqueueComponentCallback,
 } from './Element.js';
 import type { LynxEventType } from './EventType.js';
-import type { FlushElementTreeOptions } from './FlushElementTreeOptions.js';
-import type { I18nResourceTranslationOptions } from './index.js';
+import type {
+  I18nResourceTranslationOptions,
+  PerformancePipelineOptions,
+} from './index.js';
 import type { MainThreadLynx } from './MainThreadLynx.js';
 import type { ProcessDataCallback } from './ProcessDataCallback.js';
 import type { UpdateDataOptions } from './UpdateDataOptions.js';
+
+export interface FlushElementTreeOptions {
+  pipelineOptions?: PerformancePipelineOptions;
+}
 
 type ElementPAPIEventHandler =
   | string

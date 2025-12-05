@@ -2,7 +2,7 @@ import {
   // LynxElement,
   MainThreadWasmContext,
   templateManager,
-} from '../wasm.js';
+} from '../../wasm.js';
 import {
   lynxDisposedAttribute,
   lynxDefaultDisplayLinearAttribute,
@@ -38,7 +38,7 @@ import {
   __GetTemplateParts,
   __UpdateListCallbacks,
 } from './pureElementPAPIs.js';
-import { type MainThreadJSBinding } from '../mtsBinding.js';
+import { type MainThreadJSBinding } from './MainThreadJSBinding.js';
 import type {
   DecoratedHTMLElement,
   ElementPAPIs,
@@ -53,7 +53,6 @@ export function createElementAPI(
   config_default_display_linear: boolean,
   config_default_overflow_visible: boolean,
 ): ElementPAPIs {
-  // let uniqueIdCounter = 1;
   const wasmContext = new MainThreadWasmContext(
     rootDom,
     mtsBinding,
@@ -61,7 +60,7 @@ export function createElementAPI(
     config_enable_css_selector,
   );
   let page: DecoratedHTMLElement | undefined = undefined;
-  mtsBinding.setMainThreadInstance(wasmContext);
+  const timingFlags: string[] = [];
   return {
     __CreateView(parentComponentUniqueId: number) {
       const dom = document.createElement('x-view') as DecoratedHTMLElement;
@@ -355,6 +354,15 @@ export function createElementAPI(
         } else {
           element.setAttribute(name, value.toString());
         }
+        if (name === 'exposure-id') {
+          if (value != null) {
+            const uniqueId = (element as DecoratedHTMLElement)[uniqueIdSymbol];
+            wasmContext.__wasm_mark_exposure_id_assigned(uniqueId);
+          } else {
+            const uniqueId = (element as DecoratedHTMLElement)[uniqueIdSymbol];
+            wasmContext.__wasm_mark_exposure_id_removed(uniqueId);
+          }
+        }
       }
     },
     __AddEvent: (
@@ -415,7 +423,7 @@ export function createElementAPI(
     __GetElementUniqueID,
     __UpdateListCallbacks,
     __SwapElement,
-    __FlushElementTree: () => {
+    __FlushElementTree: (_, options) => {
       if (
         page && !page.parentNode
         && page.getAttribute(lynxDisposedAttribute) !== ''
@@ -423,6 +431,15 @@ export function createElementAPI(
         // @ts-expect-error
         rootDom.append(page);
       }
+      let timingFlagsAll = timingFlags.concat(
+        wasmContext.__wasm_take_timing_flags(),
+      );
+      timingFlags.length = 0;
+      const enabledExposureElements = wasmContext
+        .__wasm_take_exposure_enabled_elements();
+      mtsBinding.updateExposureStatus(
+        enabledExposureElements,
+      );
     },
   };
 }

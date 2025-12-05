@@ -5,8 +5,8 @@
  */
 
 import type { Cloneable, MainThreadGlobalAPIs, MainThreadLynx } from '@types';
-import { templateManager } from './wasm.js';
-import type { LynxCrossThreadContext } from '../LynxCrossThreadContext.js';
+import { templateManager } from '@client/wasm.js';
+import type { LynxCrossThreadContext } from '@client/LynxCrossThreadContext.js';
 
 function createMainThreadLynx(
   globalProps: Cloneable,

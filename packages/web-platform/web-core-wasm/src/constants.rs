@@ -9,6 +9,10 @@ pub const CSS_ID_ATTRIBUTE: &str = "l-css-id";
 pub const LYNX_ENTRY_NAME_ATTRIBUTE: &str = "l-e-name";
 pub const LYNX_TAG_ATTRIBUTE: &str = "lynx-tag"; //todo: optimize this by detecting usage
 pub const LYNX_TEMPLATE_MEMBER_ID_ATTRIBUTE: &str = "l-t-e-id";
+pub const APPEAR_EVENT_NAME: &str = "appear";
+pub const DISAPPEAR_EVENT_NAME: &str = "disappear";
+pub const LYNX_EXPOSURE_ID_ATTRIBUTE: &str = "exposure-id"; // if this attribute is present, the exposure event is enabled
+pub const LYNX_TIMING_FLAG_ATTRIBUTE: &str = "__lynx_timing_flag"; // if this attribute is present, we should collect timing flags on creating and send it on calling __flushElementTree
 pub(crate) const STYLE_PROPERTY_MAP: &[&str] = &[
   "",
   "top",

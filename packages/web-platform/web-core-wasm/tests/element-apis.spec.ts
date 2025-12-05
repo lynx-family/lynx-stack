@@ -1,10 +1,10 @@
 import { describe, test, expect, beforeEach, beforeAll } from 'vitest';
 import { createElementAPI } from '@client/mainthread/elementAPIs/createElementAPI.js';
-import { MainThreadJSBinding } from '@client/mainthread/mtsBinding.js';
+import { MainThreadJSBinding } from '@client/mainthread/elementAPIs/MainThreadJSBinding.js';
 import { JSDOM } from 'jsdom';
 import { vi } from 'vitest';
 import { cssIdAttribute } from '../ts/constants.js';
-import { templateManager } from '@client/mainthread/wasm.js';
+import { templateManager } from '@client/wasm.js';
 import { encodeElementTemplates } from '../ts/encode/encodeElementTemplate.js';
 const { window } = new JSDOM(undefined, { url: 'http://localhost/' });
 const document = window.document;
@@ -1053,7 +1053,7 @@ describe('Element APIs', () => {
   });
 
   test('publicComponentEvent', () => {
-    vi.spyOn(mtsBinding, 'enableEvent');
+    vi.spyOn(mtsBinding, 'addEventListener');
     vi.spyOn(mtsBinding, 'publicComponentEvent');
     let page = mtsGlobalThis.__CreatePage('0', 0);
     let parent = mtsGlobalThis.__CreateComponent(
@@ -1084,8 +1084,8 @@ describe('Element APIs', () => {
     rootDom.querySelector('#child_id')?.dispatchEvent(
       new window.Event('click'),
     );
-    expect(mtsBinding.enableEvent).toBeCalledTimes(1);
-    expect(mtsBinding.enableEvent).toBeCalledWith('tap');
+    expect(mtsBinding.addEventListener).toBeCalledTimes(1);
+    expect(mtsBinding.addEventListener).toBeCalledWith('tap');
     expect(mtsBinding.publicComponentEvent).toBeCalledTimes(1);
     expect(mtsBinding.publicComponentEvent).toBeCalledWith(
       'id1',

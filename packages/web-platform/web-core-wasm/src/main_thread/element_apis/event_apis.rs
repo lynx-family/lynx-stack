@@ -1,4 +1,5 @@
 use super::MainThreadWasmContext;
+use crate::js_binding::JSEvent;
 use wasm_bindgen::prelude::*;
 
 /**
@@ -95,12 +96,17 @@ impl MainThreadWasmContext {
     bubble_path: &[usize],
     event_name: &str,
     is_capture: bool,
-    target_element: &web_sys::HtmlElement,
-    serialized_event: &wasm_bindgen::JsValue,
+    target_element: &JsValue,
+    serialized_event: &JSEvent,
   ) -> bool {
     let event_name = event_name.to_ascii_lowercase();
-    for unique_id in bubble_path.iter() {
-      let mut has_catched = false;
+    let iter: Box<dyn Iterator<Item = &usize> + '_> = if is_capture {
+      Box::new(bubble_path.iter().rev())
+    } else {
+      Box::new(bubble_path.iter())
+    };
+    for unique_id in iter {
+      let mut is_catched = false;
       // now dispatch event
       // if has cross thread handler, we should get the parent component id
       let bind_handler_name = if is_capture {
@@ -132,7 +138,7 @@ impl MainThreadWasmContext {
                 .and_then(|binding| binding.borrow().component_id.clone())
             }
           };
-          has_catched = catch_handler.is_some();
+          is_catched = catch_handler.is_some();
           for handler in [bind_handler, catch_handler].iter().flatten() {
             if let Some(parent_component_id) = &current_target_parent_component_id {
               self.mts_binding.public_component_event(
@@ -160,7 +166,7 @@ impl MainThreadWasmContext {
         let catch_handler = current_target_element_data
           .get_framework_run_worklet_event_handler(&event_name, catch_handler_name);
         if bind_handler.is_some() || catch_handler.is_some() {
-          has_catched = catch_handler.is_some();
+          is_catched = catch_handler.is_some();
           if let Some(handler) = bind_handler {
             self.mts_binding.run_worklet(
               &handler,
@@ -181,11 +187,23 @@ impl MainThreadWasmContext {
       }
       // assign elementRefptr to target and current_target
 
-      if has_catched {
-        return has_catched;
+      if is_catched {
+        return true;
       }
     }
     false
+  }
+
+  #[wasm_bindgen(js_name = "__wasm_commonEventHandler")]
+  pub fn common_event_handler(&self, event: JSEvent) {
+    let bubble_path = self.mts_binding.get_bubble_path(&event);
+    let event_type = event.type_();
+    let target_element = event.target();
+    let catched =
+      self.dispatch_event_by_path(&bubble_path, &event_type, true, &target_element, &event);
+    if !catched {
+      self.dispatch_event_by_path(&bubble_path, &event_type, false, &target_element, &event);
+    }
   }
 }
 
@@ -207,7 +225,7 @@ impl MainThreadWasmContext {
   pub(super) fn enable_event(&mut self, event_name: &str) {
     if !self.enabled_events.contains(event_name) {
       self.enabled_events.insert(event_name.to_string());
-      self.mts_binding.enable_event(event_name);
+      self.mts_binding.add_event_listener(event_name);
     }
   }
 }

@@ -53,7 +53,10 @@ export type ExposureEvent = {
   detail: ExposureEventDetail;
 };
 
-export type ExposureWorkerEvent =
+/**
+ * event passed by the GlobalEventEmitter(`sendGlobalEvent()`)
+ */
+export type GlobalExposureEvent =
   & LynxCrossThreadEvent<ExposureEventDetail>
   & ExposureEventDetail;
 

@@ -5,7 +5,7 @@
  */
 
 import { TemplateSectionLabel, MagicHeader } from '@constants';
-import { templateManager } from './wasm.js';
+import { templateManager } from '@client/wasm.js';
 
 class StreamReader {
   private reader:

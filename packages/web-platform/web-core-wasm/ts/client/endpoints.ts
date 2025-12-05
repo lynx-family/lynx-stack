@@ -13,18 +13,9 @@ import type {
   ElementAnimationOptions,
   BackMainThreadContextConfig,
   LynxTemplate,
-  MarkTiming,
   UpdateDataOptions,
+  TimingEntry,
 } from '@types';
-
-export const postExposureEndpoint = createRpcEndpoint<
-  [{ exposures: ExposureWorkerEvent[]; disExposures: ExposureWorkerEvent[] }],
-  void
->(
-  '__postExposure',
-  false,
-  false,
-);
 
 export const publicComponentEventEndpoint = createRpcEndpoint<
   [componentId: string, hname: string, LynxCrossThreadEvent],
@@ -155,7 +146,7 @@ export const getCustomSectionsEndpoint = createRpcEndpoint<
 >('getCustomSections', false, true);
 
 export const markTimingEndpoint = createRpcEndpoint<
-  [MarkTiming[]],
+  [TimingEntry[]],
   void
 >('markTiming', false, false);
 

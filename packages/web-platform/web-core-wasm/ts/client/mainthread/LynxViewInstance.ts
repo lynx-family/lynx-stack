@@ -4,7 +4,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import type { RpcCallType } from '@lynx-js/web-worker-rpc';
+import type { Rpc, RpcCallType } from '@lynx-js/web-worker-rpc';
 import type {
   Cloneable,
   InitI18nResources,
@@ -40,15 +40,18 @@ function createWebWorker(): Worker {
 }
 
 export class LynxViewInstance implements AsyncDisposable {
-  static contextIdToBackgroundWorker: {
+  static contextIdToBackgroundWorker: ({
     worker: Worker;
     runningCards: number;
-  }[] = [];
+  } | undefined)[] = [];
 
-  #webWorker?: Worker;
+  #btsRpc: Rpc;
+  #lynxGroupId?: number;
+  #webWorker: Worker;
 
-  constructor(private configs: LynxViewConfigs) {
+  constructor(configs: LynxViewConfigs) {
     if (configs.lynxGroupId !== undefined) {
+      this.#lynxGroupId = configs.lynxGroupId;
       const group =
         LynxViewInstance.contextIdToBackgroundWorker[configs.lynxGroupId];
       if (group) {
@@ -59,11 +62,29 @@ export class LynxViewInstance implements AsyncDisposable {
           runningCards: 1,
         };
       }
+      this.#webWorker = LynxViewInstance.contextIdToBackgroundWorker[
+        configs.lynxGroupId
+      ]!.worker;
     } else {
       this.#webWorker = createWebWorker();
     }
   }
 
   async [Symbol.asyncDispose]() {
+    if (this.#lynxGroupId !== undefined) {
+      const group =
+        LynxViewInstance.contextIdToBackgroundWorker[this.#lynxGroupId];
+      if (group) {
+        group.runningCards -= 1;
+        if (group.runningCards === 0) {
+          group.worker.terminate();
+          LynxViewInstance.contextIdToBackgroundWorker[
+            this.#lynxGroupId
+          ] = undefined;
+        }
+      }
+    } else {
+      this.#webWorker?.terminate();
+    }
   }
 }

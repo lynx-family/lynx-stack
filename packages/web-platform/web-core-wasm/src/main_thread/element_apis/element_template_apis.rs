@@ -9,13 +9,15 @@ use crate::constants;
 use crate::leo_asm::LEOAsmOpcode;
 use crate::main_thread::main_thread_context::MainThreadWasmContext;
 use crate::template::template_manager::TemplateManager;
-use fnv::FnvHashMap;
+use fnv::{FnvHashMap, FnvHashSet};
 use std::cell::RefCell;
 use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 pub(crate) struct DecodedElementTemplate {
   id_to_prepared_element_data: FnvHashMap<i32, LynxElementData>,
   template_root_dom: web_sys::HtmlTemplateElement,
+  timing_flags: Vec<String>,
+  exposure_changed_elements: FnvHashSet<i32>,
 }
 
 #[wasm_bindgen]
@@ -43,7 +45,7 @@ impl MainThreadWasmContext {
         .query_selector_all(format!("[{}]", constants::LYNX_TEMPLATE_MEMBER_ID_ATTRIBUTE).as_str())
         .unwrap();
       for element in elements.values() {
-        let dom = element.unwrap().unchecked_into::<web_sys::Element>();
+        let dom = element.unwrap().unchecked_into::<web_sys::HtmlElement>();
         let unique_id_attr = dom
           .get_attribute(constants::LYNX_TEMPLATE_MEMBER_ID_ATTRIBUTE)
           .ok_or_else(|| JsError::new("Missing LYNX_TEMPLATE_MEMBER_ID_ATTRIBUTE"))?;
@@ -61,22 +63,6 @@ impl MainThreadWasmContext {
           } else {
             0
           };
-          let lynx_element_data = LynxElementData {
-            parent_component_unique_id,
-            css_id,
-            dom_ref: dom.clone().unchecked_into::<web_sys::HtmlElement>(),
-            dataset: prepared_element_data
-              .dataset
-              .as_ref()
-              .map(|dataset| js_sys::Object::assign(&js_sys::Object::default(), dataset)),
-            component_config: prepared_element_data.component_config.as_ref().map(
-              |component_config| {
-                js_sys::Object::assign(&js_sys::Object::default(), component_config)
-              },
-            ),
-            component_id: prepared_element_data.component_id.clone(),
-            event_handlers_map: prepared_element_data.event_handlers_map.clone(),
-          };
           let unique_id = self.unique_id_to_element_map.len();
           if !self.config_enable_css_selector {
             let _ = dom.set_attribute(constants::LYNX_UNIQUE_ID_ATTRIBUTE, &unique_id.to_string());
@@ -85,15 +71,29 @@ impl MainThreadWasmContext {
           if css_id != 0 {
             let _ = dom.set_attribute(constants::CSS_ID_ATTRIBUTE, &css_id.to_string());
           }
-          self
-            .unique_id_to_element_map
-            .push(Some(Rc::new(RefCell::new(Box::new(lynx_element_data)))));
           js_sys::Reflect::set(
             &dom,
             &self.unique_id_symbol,
             &JsValue::from_f64(unique_id as f64),
           )
           .unwrap();
+          let lynx_element_data =
+            prepared_element_data.clone_node(parent_component_unique_id, css_id, dom);
+          self
+            .unique_id_to_element_map
+            .push(Some(Rc::new(RefCell::new(Box::new(lynx_element_data)))));
+
+          if decoded_element_template
+            .exposure_changed_elements
+            .contains(&element_id)
+          {
+            self.exposure_changed_elements.push(unique_id);
+          }
+          if !decoded_element_template.timing_flags.is_empty() {
+            self
+              .timing_flags
+              .extend(decoded_element_template.timing_flags.iter().cloned());
+          }
         }
       }
       Ok(
@@ -103,6 +103,7 @@ impl MainThreadWasmContext {
           .unchecked_into::<web_sys::Element>(),
       )
     } else {
+      // create from raw template
       let raw_element_template = template_manager
         .get_raw_template_element(&template_url, &element_template_name)
         .map_err(JsError::new)?;
@@ -113,6 +114,8 @@ impl MainThreadWasmContext {
         .unchecked_into::<web_sys::HtmlTemplateElement>();
       let template_root_content = template_root_dom.content();
       let mut id_to_prepared_element_data: FnvHashMap<i32, LynxElementData> = FnvHashMap::default();
+      let mut timing_flags: Vec<String> = Vec::new();
+      let mut exposure_changed_elements: FnvHashSet<i32> = FnvHashSet::default();
       for operation in raw_element_template.operations.iter() {
         match operation.opcode {
           LEOAsmOpcode::CreateElement => {
@@ -134,15 +137,12 @@ impl MainThreadWasmContext {
             );
             id_to_prepared_element_data.insert(
               element_id,
-              LynxElementData {
-                parent_component_unique_id: 0, // placeholder
-                css_id: 0,                     // placeholder
-                dom_ref: dom.unchecked_into::<web_sys::HtmlElement>(),
-                dataset: None,
-                component_config: None,
-                component_id: None,
-                event_handlers_map: None,
-              },
+              LynxElementData::new(
+                parent_component_unique_id,
+                0,
+                None,
+                dom.unchecked_into::<web_sys::HtmlElement>(),
+              ),
             );
           }
           LEOAsmOpcode::SetAttribute => {
@@ -154,6 +154,15 @@ impl MainThreadWasmContext {
               .ok_or_else(|| JsError::new(&format!("Element {element_id} not found")))?
               .dom_ref;
             let _ = dom.set_attribute(attr_name, attr_value);
+            match attr_name.as_str() {
+              constants::LYNX_EXPOSURE_ID_ATTRIBUTE => {
+                exposure_changed_elements.insert(element_id);
+              }
+              constants::LYNX_TIMING_FLAG_ATTRIBUTE => {
+                timing_flags.push(attr_value.clone());
+              }
+              _ => {}
+            }
           }
           LEOAsmOpcode::AppendToRoot => {
             let element_id = operation.operands_num[0];
@@ -179,6 +188,12 @@ impl MainThreadWasmContext {
               event_type,
               identifier.cloned(),
             );
+            match event_name.as_str() {
+              constants::APPEAR_EVENT_NAME | constants::DISAPPEAR_EVENT_NAME => {
+                exposure_changed_elements.insert(element_id);
+              }
+              _ => {}
+            }
             self.enable_event(event_name);
           }
           LEOAsmOpcode::AppendChild => {
@@ -221,10 +236,7 @@ impl MainThreadWasmContext {
         }
       }
 
-      self
-        .root_node
-        .append_child(&template_root_dom)
-        .map_err(|e| JsError::new(&format!("Failed to append template root: {e:?}")))?;
+      let _ = self.root_node.append_child(&template_root_dom);
 
       self
         .element_templates_instances
@@ -235,6 +247,8 @@ impl MainThreadWasmContext {
           Box::new(DecodedElementTemplate {
             template_root_dom,
             id_to_prepared_element_data,
+            timing_flags,
+            exposure_changed_elements,
           }),
         );
       self.element_from_binary(
