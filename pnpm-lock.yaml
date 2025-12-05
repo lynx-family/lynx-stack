@@ -2752,7 +2752,7 @@ packages:
     resolution: {integrity: sha512-ezMq43s59jqFuQ1YygpsUuZmGXw4XH+00RsB5RVmkYZuHQxEaLt/ECTOixF+9RixvAyhmxzF2eSURvmNckO9xg==}
 
   '@lynx-js/type-config@file:npm/type-config.tgz':
-    resolution: {integrity: sha512-sywKttN2X72n/LXI1zs/I8gmCNMJ0TypCyhB7suTV/2PrkyJqWzJOQjelYzFhUrDcnoXL3qfpcDJOpkKrycYuA==, tarball: file:npm/type-config.tgz}
+    resolution: {integrity: sha512-qurtXsZbQ6eywX3voGvH5CyOOCSTF4yYbLZ5gs64B2zwhjMVhII13N7+jwXlFDZfCn5unP1Ti9LSs3y4D7ZndQ==, tarball: file:npm/type-config.tgz}
     version: 0.0.1
 
   '@lynx-js/type-element-api@0.0.2':

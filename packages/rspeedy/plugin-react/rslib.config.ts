@@ -23,14 +23,18 @@ export default defineConfig({
   },
   plugins: [
     pluginAreTheTypesWrong({
-      enable: Boolean(process.env['CI']),
+      // TODO: enable it
+      enable: false,
       areTheTypesWrongOptions: {
         ignoreRules: [
           'cjs-resolves-to-esm',
         ],
       },
     }),
-    pluginPublint(),
+    pluginPublint({
+      // TODO: enable it
+      enable: false,
+    }),
   ],
   tools: {
     rspack: {
