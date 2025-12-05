@@ -144,6 +144,8 @@ export function createRenderAllOnUI(
       return i18nResources;
     },
     loadTemplate,
+    undefined,
+    true,
   );
 
   const start = async (configs: StartMainThreadContextConfig) => {

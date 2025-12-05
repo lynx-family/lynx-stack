@@ -54,6 +54,7 @@ export function prepareMainThreadAPIs(
   initialI18nResources: (data: InitI18nResources) => I18nResources,
   loadTemplate: TemplateLoader,
   ssrHooks?: SSRDehydrateHooks,
+  allOnUI?: boolean,
 ) {
   const postTimingFlags = backgroundThreadRpc.createCall(
     postTimingFlagsEndpoint,
@@ -110,6 +111,7 @@ export function prepareMainThreadAPIs(
       rootDom as unknown as Node,
       document,
       ssrHydrateInfo,
+      allOnUI,
     );
     const mtsGlobalThisRef: { mtsGlobalThis: MainThreadGlobalThis } = {
       mtsGlobalThis: undefined as unknown as MainThreadGlobalThis,
