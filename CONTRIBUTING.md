@@ -25,15 +25,15 @@ pnpm install
 
 **Full Build (Required for Tests)**
 
-    ```sh
-    pnpm turbo build
-    ```
+```sh
+pnpm turbo build
+```
 
 **Build with Watching (TypeScript Only)**
 
-    ```sh
-    pnpm turbo watch build
-    ```
+```sh
+pnpm turbo watch build
+```
 
 ### Running linting/tests
 
