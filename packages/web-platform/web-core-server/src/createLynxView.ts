@@ -205,6 +205,7 @@ export async function createLynxView(
         ]);
       },
     },
+    threadStrategy === 'all-on-ui',
   );
   await startMainThread({
     template,

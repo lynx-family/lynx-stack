@@ -85,6 +85,7 @@ function generateImportByMap(
  */
 export function flattenStyleInfo(
   styleInfo: StyleInfo,
+  cloneDeep?: boolean,
 ): FlattenedStyleInfo {
   // Step 1. Topological sorting
   const sortedCssIds = topologicalSort(styleInfo);
@@ -98,8 +99,19 @@ export function flattenStyleInfo(
     const oneInfo = styleInfo[cssId];
     const flattenedInfo: FlattenedOneInfo = oneInfo
       ? {
-        content: oneInfo.content,
-        rules: oneInfo.rules,
+        content: cloneDeep
+          ? (oneInfo.content ? [...oneInfo.content] : [])
+          : (oneInfo.content ?? []),
+        rules: cloneDeep
+          ? (oneInfo.rules
+            ? oneInfo.rules.map(rule => ({
+              sel: rule.sel.map(selectors =>
+                selectors.map(arr => arr.slice()) as typeof selectors
+              ) as CSSRule['sel'],
+              decl: rule.decl.map(([k, v]) => [k, v]) as typeof rule.decl,
+            }))
+            : [])
+          : (oneInfo.rules ?? []),
         importBy: Array.from(cssIdToImportBy.get(cssId) ?? [cssId]),
       }
       : {
@@ -242,6 +254,7 @@ export function appendStyleElement(
   rootDom: Node,
   document: Document,
   ssrHydrateInfo?: SSRHydrateInfo,
+  allOnUI?: boolean,
 ) {
   const lynxUniqueIdToStyleRulesIndex: number[] =
     ssrHydrateInfo?.lynxUniqueIdToStyleRulesIndex ?? [];
@@ -255,6 +268,7 @@ export function appendStyleElement(
    */
   const flattenedStyleInfo = flattenStyleInfo(
     styleInfo,
+    !!allOnUI,
   );
   transformToWebCss(flattenedStyleInfo);
   const cssOGInfo: CssOGInfo = pageConfig.enableCSSSelector
@@ -303,7 +317,7 @@ export function appendStyleElement(
     styleInfo: StyleInfo,
     entryName: string,
   ) => {
-    const flattenedStyleInfo = flattenStyleInfo(styleInfo);
+    const flattenedStyleInfo = flattenStyleInfo(styleInfo, !!allOnUI);
     transformToWebCss(flattenedStyleInfo);
     if (!pageConfig.enableCSSSelector) {
       lazyCSSOGInfo[entryName] = genCssOGInfo(flattenedStyleInfo);
