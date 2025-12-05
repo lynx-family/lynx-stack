@@ -1,5 +1,15 @@
 # @lynx-js/template-webpack-plugin
 
+## 0.9.2
+
+### Patch Changes
+
+- Set main thread JS basename to `lepusCode.filename` in tasm encode data. It will ensure a filename is reported on MTS error without devtools enabled. ([#1949](https://github.com/lynx-family/lynx-stack/pull/1949))
+
+- Upgrade `@lynx-js/tasm` to `0.0.20`. ([#1943](https://github.com/lynx-family/lynx-stack/pull/1943))
+
+- refactor: move web style info generation to the encode phase ([#1975](https://github.com/lynx-family/lynx-stack/pull/1975))
+
 ## 0.9.1
 
 ### Patch Changes
