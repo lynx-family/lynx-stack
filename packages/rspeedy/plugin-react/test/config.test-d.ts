@@ -15,7 +15,7 @@ import type {
   ResolvedPluginReactLynxOptions,
 } from '../src/index.js'
 
-// Copyied from https://github.com/type-challenges/type-challenges/issues/737#issuecomment-3486953045
+// Copied from https://github.com/type-challenges/type-challenges/issues/737#issuecomment-3486953045
 type UnionToIntersection<U> = (
   U extends unknown ? (arg: U) => unknown : never
 ) extends (arg: infer I) => void ? I

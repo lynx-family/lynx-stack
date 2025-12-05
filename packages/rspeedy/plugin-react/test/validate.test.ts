@@ -8,6 +8,7 @@ import type {
   DefineDceVisitorConfig,
   JsxTransformerConfig,
 } from '@lynx-js/react/transform'
+import { compilerOptionsKeys, configKeys } from '@lynx-js/type-config'
 
 import { validateConfig } from '../src/validate.js'
 
@@ -182,5 +183,18 @@ describe('Validation', () => {
           - Got: null
         ]
       `)
+  })
+
+  compilerOptionsKeys.forEach((compilerOptionsKey: string) => {
+    test(compilerOptionsKey, () => {
+      expect(() => validateConfig({ [compilerOptionsKey]: Symbol.for('test') }))
+        .toThrowErrorMatchingSnapshot()
+    })
+  })
+  configKeys.forEach((configKey: string) => {
+    test(configKey, () => {
+      expect(() => validateConfig({ [configKey]: Symbol.for('test') }))
+        .toThrowErrorMatchingSnapshot()
+    })
   })
 })
