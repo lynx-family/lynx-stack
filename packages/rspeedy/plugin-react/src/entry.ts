@@ -9,6 +9,8 @@ import type {
   RsbuildPluginAPI,
   Rspack,
 } from '@rsbuild/core'
+import { compilerOptionsKeys, configKeys } from '@upupming/type-config'
+import pick from 'object.pick'
 import type { UndefinedOnPartialDeep } from 'type-fest'
 
 import { LAYERS, ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'
@@ -20,7 +22,7 @@ import {
   WebEncodePlugin,
 } from '@lynx-js/template-webpack-plugin'
 
-import type { PluginReactLynxOptions } from './pluginReactLynx.js'
+import type { ResolvedPluginReactLynxOptions } from './pluginReactLynx.js'
 
 const PLUGIN_NAME_REACT = 'lynx:react'
 const PLUGIN_NAME_TEMPLATE = 'lynx:template'
@@ -33,26 +35,16 @@ const EMPTY_HASH = ''
 
 export function applyEntry(
   api: RsbuildPluginAPI,
-  options: Required<PluginReactLynxOptions>,
+  options: ResolvedPluginReactLynxOptions,
 ): void {
   const {
     compat,
-    customCSSInheritanceList,
-    debugInfoOutside,
-    defaultDisplayLinear,
-    enableAccessibilityElement,
-    enableCSSInheritance,
-    enableCSSInvalidation,
-    enableCSSSelector,
-    enableNewGesture,
-    enableRemoveCSSScope,
     firstScreenSyncTiming,
     enableSSR,
-    removeDescendantSelectorScope,
-    targetSdkVersion,
     extractStr: originalExtractStr,
-
     experimental_isLazyBundle,
+
+    ...otherOptions
   } = options
 
   const { config, logger } = api.useExposed<ExposedAPI>(
@@ -169,21 +161,11 @@ export function applyEntry(
             DEFAULT_DIST_PATH_INTERMEDIATE,
             entryName,
           ),
-          customCSSInheritanceList,
-          debugInfoOutside,
-          defaultDisplayLinear,
-          enableA11y: true,
-          enableAccessibilityElement,
-          enableCSSInheritance,
-          enableCSSInvalidation,
-          enableCSSSelector,
-          enableNewGesture,
-          enableRemoveCSSScope: enableRemoveCSSScope ?? true,
-          removeDescendantSelectorScope,
-          targetSdkVersion,
-
           experimental_isLazyBundle,
           cssPlugins: [],
+
+          ...pick(otherOptions, compilerOptionsKeys),
+          ...pick(otherOptions, configKeys),
         }])
         .end()
     })
@@ -221,7 +203,7 @@ export function applyEntry(
               return name
             })
           },
-          targetSdkVersion,
+          targetSdkVersion: otherOptions.targetSdkVersion,
           // Inject runtime wrapper for all `.js` but not `main-thread.js` and `main-thread.[hash].js`.
           test: /^(?!.*main-thread(?:\.[A-Fa-f0-9]*)?\.js$).*\.js$/,
           experimental_isLazyBundle,

@@ -1,0 +1,1177 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Validation > CSSAlignWithLegacyW3C 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.CSSAlignWithLegacyW3C\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > absoluteInContentBound 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.absoluteInContentBound\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > asyncRedirect 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.asyncRedirect\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > autoExpose 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.autoExpose\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > autoResumeAnimation 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.autoResumeAnimation\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > bundleModuleMode 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.bundleModuleMode\`.
+  - Expect to be (string | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > cli 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.cli\`.
+  - Expect to be (string | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > compileRender 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.compileRender\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > customCSSInheritanceList 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.customCSSInheritanceList\`.
+  - Expect to be (Array<string> | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > customData 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.customData\`.
+  - Expect to be (string | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > dataStrictMode 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.dataStrictMode\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > debugInfoOutside 2`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.debugInfoOutside\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > defaultDisplayLinear 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.defaultDisplayLinear\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > defaultOverflowVisible 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.defaultOverflowVisible\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > disableLongpressAfterScroll 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.disableLongpressAfterScroll\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > disableMultipleCascadeCSS 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.disableMultipleCascadeCSS\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > disableQuickTracingGC 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.disableQuickTracingGC\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableA11y 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableA11y\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableA11yIDMutationObserver 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableA11yIDMutationObserver\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableAccessibilityElement 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableAccessibilityElement\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableAirDetectRemovedKeysWhenUpdateData 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableAirDetectRemovedKeysWhenUpdateData\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableAirRawCSS 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableAirRawCSS\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableAsyncDisplay 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableAsyncDisplay\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableAsyncInitVideoEngine 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableAsyncInitVideoEngine\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableAsyncRequestImage 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableAsyncRequestImage\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableAsyncResolveSubtree 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableAsyncResolveSubtree\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableBackgroundShapeLayer 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableBackgroundShapeLayer\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableCSSAsyncDecode 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableCSSAsyncDecode\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableCSSClassMerge 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableCSSClassMerge\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableCSSEngine 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableCSSEngine\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableCSSInheritance 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableCSSInheritance\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableCSSInlineVariables 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableCSSInlineVariables\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableCSSInvalidation 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableCSSInvalidation\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableCSSLazyDecode 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableCSSLazyDecode\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableCSSLazyImport 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableCSSLazyImport\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableCSSSelector 2`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableCSSSelector\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableCSSStrictMode 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableCSSStrictMode\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableCSSStrictMode 2`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableCSSStrictMode\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableCSSVariable 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableCSSVariable\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableCascadePseudo 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableCascadePseudo\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableCheckDataWhenUpdatePage 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableCheckDataWhenUpdatePage\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableCheckExposureOptimize 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableCheckExposureOptimize\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableCheckLocalImage 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableCheckLocalImage\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableCircularDataCheck 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableCircularDataCheck\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableComponentAsyncDecode 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableComponentAsyncDecode\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableComponentConfig 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableComponentConfig\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableComponentLayoutOnly 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableComponentLayoutOnly\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableComponentLifecycleAlignWebview 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableComponentLifecycleAlignWebview\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableComponentNullProp 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableComponentNullProp\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableCreateViewAsync 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableCreateViewAsync\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableCssExternalClass 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableCssExternalClass\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableDisexposureWhenLynxHidden 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableDisexposureWhenLynxHidden\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableDynamicComponent 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableDynamicComponent\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableEndGestureAtLastFingerUp 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableEndGestureAtLastFingerUp\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableEventHandleRefactor 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableEventHandleRefactor\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableEventRefactor 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableEventRefactor\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableEventThrough 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableEventThrough\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableExposureUIMargin 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableExposureUIMargin\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableExposureWhenLayout 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableExposureWhenLayout\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableExposureWhenReload 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableExposureWhenReload\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableFiberArch 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableFiberArch\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableFiberElementForRadonDiff 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableFiberElementForRadonDiff\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableFixedNew 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableFixedNew\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableFlexibleTemplate 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableFlexibleTemplate\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableGlobalComponentMap 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableGlobalComponentMap\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableHarmonyNewOverlay 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableHarmonyNewOverlay\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableHarmonyVisibleAreaChangeForExposure 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableHarmonyVisibleAreaChangeForExposure\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableICU 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableICU\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableImageDownsampling 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableImageDownsampling\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableJSDataProcessor 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableJSDataProcessor\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableJsBindingApiThrowException 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableJsBindingApiThrowException\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableKeepPageData 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableKeepPageData\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableLepusChunkAsyncDecode 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableLepusChunkAsyncDecode\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableLepusDebug 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableLepusDebug\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableListMoveOperation 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableListMoveOperation\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableListNewArchitecture 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableListNewArchitecture\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableListPlug 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableListPlug\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableLynxAir 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableLynxAir\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableLynxScrollFluency 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableLynxScrollFluency\`.
+  - Expect to be (boolean | number | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableMTSPreExecute 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableMTSPreExecute\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableMicrotaskPromisePolyfill 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableMicrotaskPromisePolyfill\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableMultiTouch 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableMultiTouch\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableMultiTouchParamsCompatible 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableMultiTouchParamsCompatible\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableNativeList 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableNativeList\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableNativeScheduleCreateViewAsync 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableNativeScheduleCreateViewAsync\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableNewAccessibility 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableNewAccessibility\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableNewAnimator 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableNewAnimator\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableNewClipMode 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableNewClipMode\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableNewGesture 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableNewGesture\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableNewImage 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableNewImage\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableNewIntersectionObserver 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableNewIntersectionObserver\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableNewLayoutOnly 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableNewLayoutOnly\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableNewListContainer 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableNewListContainer\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableNewTransformOrigin 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableNewTransformOrigin\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableOptPushStyleToBundle 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableOptPushStyleToBundle\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableOverlapForAccessibilityElement 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableOverlapForAccessibilityElement\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableParallelElement 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableParallelElement\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enablePlatformGesture 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enablePlatformGesture\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enablePropertyBasedSimpleStyle 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enablePropertyBasedSimpleStyle\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableQueryComponentSync 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableQueryComponentSync\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableRadon 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableRadon\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableReactOnlyPropsId 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableReactOnlyPropsId\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableReduceInitDataCopy 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableReduceInitDataCopy\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableReloadLifecycle 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableReloadLifecycle\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableRemoveCSSScope 2`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableRemoveCSSScope\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableRemoveComponentExtraData 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableRemoveComponentExtraData\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableReuseContext 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableReuseContext\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableReuseLoadScriptExports 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableReuseLoadScriptExports\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableSignalAPI 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableSignalAPI\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableSimpleStyling 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableSimpleStyling\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableSimultaneousTap 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableSimultaneousTap\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableTextBoringLayout 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableTextBoringLayout\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableTextGradientOpt 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableTextGradientOpt\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableTextLanguageAlignment 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableTextLanguageAlignment\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableTextLayerRender 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableTextLayerRender\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableTextLayoutCache 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableTextLayoutCache\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableTextNonContiguousLayout 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableTextNonContiguousLayout\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableTextOverflow 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableTextOverflow\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableTextRefactor 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableTextRefactor\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableTouchRefactor 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableTouchRefactor\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableUIOperationOptimize 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableUIOperationOptimize\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableUnifiedPipeline 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableUnifiedPipeline\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableUseContextPool 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableUseContextPool\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableUseMapBuffer 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableUseMapBuffer\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableViewReceiveTouch 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableViewReceiveTouch\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableVsyncAlignedFlush 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableVsyncAlignedFlush\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > enableXTextLayoutReused 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.enableXTextLayoutReused\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > experimental_encodeQuickjsBytecode 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.experimental_encodeQuickjsBytecode\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > extendedLayoutOnlyOpt 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.extendedLayoutOnlyOpt\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > extraInfo 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.extraInfo\`.
+  - Expect to be (Record<string, unknown> | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > fixCSSImportRuleOrder 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.fixCSSImportRuleOrder\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > flatten 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.flatten\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > fontScaleEffectiveOnlyOnSp 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.fontScaleEffectiveOnlyOnSp\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > forceCalcNewStyle 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.forceCalcNewStyle\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > forceCalcNewStyle 2`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.forceCalcNewStyle\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > implicit 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.implicit\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > implicitAnimation 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.implicitAnimation\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > includeFontPadding 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.includeFontPadding\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > keyboardCallbackPassRelativeHeight 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.keyboardCallbackPassRelativeHeight\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > lepusGCThreshold 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.lepusGCThreshold\`.
+  - Expect to be (number | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > lepusNullPropAsUndef 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.lepusNullPropAsUndef\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > lepusQuickjsStacksize 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.lepusQuickjsStacksize\`.
+  - Expect to be (number | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > lepusStrict 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.lepusStrict\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > longPressDuration 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.longPressDuration\`.
+  - Expect to be (number | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > lynxAirMode 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.lynxAirMode\`.
+  - Expect to be (number | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > mapContainerType 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.mapContainerType\`.
+  - Expect to be (number | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > observerFrameRate 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.observerFrameRate\`.
+  - Expect to be (number | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > pipelineSchedulerConfig 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.pipelineSchedulerConfig\`.
+  - Expect to be (number | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > preferredFps 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.preferredFps\`.
+  - Expect to be (string | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > quirksMode 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.quirksMode\`.
+  - Expect to be (boolean | string | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > reactVersion 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.reactVersion\`.
+  - Expect to be (string | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > redBoxImageSizeWarningThreshold 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.redBoxImageSizeWarningThreshold\`.
+  - Expect to be (number | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > removeCSSParserLog 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.removeCSSParserLog\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > removeComponentElement 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.removeComponentElement\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > removeDescendantSelectorScope 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.removeDescendantSelectorScope\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > strictPropType 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.strictPropType\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > syncImageAttach 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.syncImageAttach\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > tapSlop 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.tapSlop\`.
+  - Expect to be (string | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > targetSdkVersion 2`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.targetSdkVersion\`.
+  - Expect to be (string | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > templateDebugUrl 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.templateDebugUrl\`.
+  - Expect to be (string | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > trailNewImage 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.trailNewImage\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > trialOptions 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.trialOptions\`.
+  - Expect to be (Record<string, unknown> | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > unifyVWVHBehavior 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.unifyVWVHBehavior\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > useImagePostProcessor 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.useImagePostProcessor\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > useLepusNG 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.useLepusNG\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > useNewImage 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.useNewImage\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > useNewSwiper 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.useNewSwiper\`.
+  - Expect to be (boolean | undefined)
+  - Got: symbol
+]
+`;
+
+exports[`Validation > version 1`] = `
+[Error: Invalid config on pluginReactLynx: \`$input.version\`.
+  - Expect to be (string | undefined)
+  - Got: symbol
+]
+`;

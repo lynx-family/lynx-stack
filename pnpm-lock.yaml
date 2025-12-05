@@ -623,9 +623,15 @@ importers:
       '@lynx-js/use-sync-external-store':
         specifier: workspace:*
         version: link:../../use-sync-external-store
+      '@upupming/type-config':
+        specifier: 0.0.1
+        version: 0.0.1
       background-only:
         specifier: workspace:^
         version: link:../../background-only
+      object.pick:
+        specifier: ^1.3.0
+        version: 1.3.0
     devDependencies:
       '@lynx-js/react':
         specifier: workspace:*
@@ -654,6 +660,9 @@ importers:
       '@rsbuild/plugin-typed-css-modules':
         specifier: 1.1.1
         version: 1.1.1(@rsbuild/core@1.6.9)
+      '@types/object.pick':
+        specifier: ^1.3.4
+        version: 1.3.4
       rsbuild-plugin-arethetypeswrong:
         specifier: 0.1.1
         version: 0.1.1(@rsbuild/core@1.6.9)(typescript@5.9.3)
@@ -1337,6 +1346,9 @@ importers:
       object.groupby:
         specifier: ^1.0.3
         version: 1.0.3
+      object.pick:
+        specifier: ^1.3.0
+        version: 1.3.0
     devDependencies:
       '@lynx-js/test-tools':
         specifier: workspace:*
@@ -1353,6 +1365,12 @@ importers:
       '@types/object.groupby':
         specifier: ^1.0.4
         version: 1.0.4
+      '@types/object.pick':
+        specifier: ^1.3.4
+        version: 1.3.4
+      '@upupming/type-config':
+        specifier: 0.0.1
+        version: 0.0.1
       webpack:
         specifier: ^5.102.0
         version: 5.102.0
@@ -3920,6 +3938,9 @@ packages:
   '@types/object.groupby@1.0.4':
     resolution: {integrity: sha512-n5gXvoz1nuDLLLMgTl82b5VCkSlqt2zfBkSWxoCmMS/j+hN6W7BuPlpOm68B/RRluy2bYo67KOtMQ28cySqeYw==}
 
+  '@types/object.pick@1.3.4':
+    resolution: {integrity: sha512-5PjwB0uP2XDp3nt5u5NJAG2DORHIRClPzWT/TTZhJ2Ekwe8M5bA9tvPdi9NO/n2uvu2/ictat8kgqvLfcIE1SA==}
+
   '@types/prop-types@15.7.13':
     resolution: {integrity: sha512-hCZTSvwbzWGvhqxp/RqVqwU999pBf2vp7hzIjiYOsl8wqOmUxkQ6ddw1cV3l8811+kdUFus/q4d1Y3E3SyEifA==}
 
@@ -4203,6 +4224,9 @@ packages:
     resolution: {integrity: sha512-lrW200hZdbfRtztbygyaq/6jP6AKE8qQN2KvPcJ+x7wiD038YtnYtZ82IMNJ69GJibV7bwL3y9FgK+5w/pYt6g==}
     cpu: [x64]
     os: [win32]
+
+  '@upupming/type-config@0.0.1':
+    resolution: {integrity: sha512-EgfJz3grcBLz4H3oQn7LD6cZQ70rU0o+UqbsMyI/ajAic2p3k3eGF/RQohYMYDEJIs3s7rAf9BozGV+XgSmjkg==}
 
   '@vitest/coverage-v8@3.2.4':
     resolution: {integrity: sha512-EyF9SXU6kS5Ku/U82E259WSnvg6c8KTjppUncuNdm5QHpe17mwREHnjDzozC8x9MZ0xfBUFSaLkRv4TMA75ALQ==}
@@ -7200,6 +7224,10 @@ packages:
   object.groupby@1.0.3:
     resolution: {integrity: sha512-+Lhy3TQTuzXI5hevh8sBGqbmurHbbIjAi0Z4S63nthVLmLxfbj4T54a4CfZrXIrt9iP4mVAPYMo/v99taj3wjQ==}
     engines: {node: '>= 0.4'}
+
+  object.pick@1.3.0:
+    resolution: {integrity: sha512-tqa/UMy/CCoYmj+H5qc07qvSL9dqcs/WZENZ1JbtWBlATP+iVOe778gE6MSijnyCnORzDuX6hU+LA4SZ09YjFQ==}
+    engines: {node: '>=0.10.0'}
 
   object.values@1.2.1:
     resolution: {integrity: sha512-gXah6aZrcUxjWg2zR2MwouP2eHlCBzdV4pygudehaKXSGW4v2AsRQUK+lwwXhii6KFZcunEnmSUoYp5CXibxtA==}
@@ -12658,6 +12686,8 @@ snapshots:
 
   '@types/object.groupby@1.0.4': {}
 
+  '@types/object.pick@1.3.4': {}
+
   '@types/prop-types@15.7.13': {}
 
   '@types/qs@6.9.15': {}
@@ -12947,6 +12977,8 @@ snapshots:
 
   '@unrs/resolver-binding-win32-x64-msvc@1.11.1':
     optional: true
+
+  '@upupming/type-config@0.0.1': {}
 
   '@vitest/coverage-v8@3.2.4(vitest@3.2.4)':
     dependencies:
@@ -16650,6 +16682,10 @@ snapshots:
       call-bind: 1.0.8
       define-properties: 1.2.1
       es-abstract: 1.24.0
+
+  object.pick@1.3.0:
+    dependencies:
+      isobject: 3.0.1
 
   object.values@1.2.1:
     dependencies:

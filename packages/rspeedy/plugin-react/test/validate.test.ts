@@ -1,6 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { compilerOptionsKeys, configKeys } from '@upupming/type-config'
 import { describe, expect, test } from 'vitest'
 
 import type {
@@ -182,5 +183,18 @@ describe('Validation', () => {
           - Got: null
         ]
       `)
+  })
+
+  compilerOptionsKeys.forEach((compilerOptionsKey: string) => {
+    test(compilerOptionsKey, () => {
+      expect(() => validateConfig({ [compilerOptionsKey]: Symbol.for('test') }))
+        .toThrowErrorMatchingSnapshot()
+    })
+  })
+  configKeys.forEach((configKey: string) => {
+    test(configKey, () => {
+      expect(() => validateConfig({ [configKey]: Symbol.for('test') }))
+        .toThrowErrorMatchingSnapshot()
+    })
   })
 })

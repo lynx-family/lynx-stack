@@ -11,6 +11,10 @@
 import { createRequire } from 'node:module'
 
 import type { RsbuildPlugin } from '@rsbuild/core'
+import type {
+  CompilerOptions as LynxCompilerOptions,
+  Config as LynxConfig,
+} from '@upupming/type-config'
 
 import { pluginReactAlias } from '@lynx-js/react-alias-rsbuild-plugin'
 import type {
@@ -34,62 +38,14 @@ import { applySWC } from './swc.js'
 import { applyUseSyncExternalStore } from './useSyncExternalStore.js'
 import { validateConfig } from './validate.js'
 
+// This is kept to override tsdoc to let user know pluginReactLynx's
+// defaultValues are different from LynxCompilerOptions's default values.
 /**
- * Options of {@link pluginReactLynx}
+ * The default compiler options for ReactLynx.
  *
  * @public
  */
-export interface PluginReactLynxOptions {
-  /**
-   * The `compat` option controls compatibilities with ReactLynx2.0.
-   *
-   * @remarks
-   *
-   * These options should only be used for migrating from ReactLynx2.0.
-   */
-  compat?:
-    | Partial<CompatVisitorConfig> & {
-      /**
-       * Whether disable runtime warnings about using ReactLynx2.0-incompatible `SelectorQuery` APIs.
-       *
-       * @example
-       * Using the following APIs will have a runtime warning by default:
-       *
-       * ```ts
-       * this.createSelectorQuery()
-       * this.getElementById()
-       * this.getNodeRef()
-       * this.getNodeRefFromRoot()
-       * ```
-       *
-       * @defaultValue `false`
-       */
-      disableCreateSelectorQueryIncompatibleWarning?: boolean
-    }
-    | undefined
-
-  /**
-   * When {@link PluginReactLynxOptions.enableCSSInheritance} is enabled, `customCSSInheritanceList` can control which properties are inheritable, not just the default ones.
-   *
-   * @example
-   *
-   * By setting `customCSSInheritanceList: ['direction', 'overflow']`, only the `direction` and `overflow` properties are inheritable.
-   *
-   * ```js
-   * import { defineConfig } from '@lynx-js/rspeedy'
-   *
-   * export default defineConfig({
-   *  plugins: [
-   *    pluginReactLynx({
-   *      enableCSSInheritance: true,
-   *      customCSSInheritanceList: ['direction', 'overflow']
-   *    }),
-   *  ],
-   * }
-   * ```
-   */
-  customCSSInheritanceList?: string[] | undefined
-
+export interface ReactLynxDefaultCompilerOptions {
   /**
    * debugInfoOutside controls whether the debug info is placed outside the template.
    *
@@ -97,8 +53,10 @@ export interface PluginReactLynxOptions {
    * This is recommended to be set to true to reduce template size.
    *
    * @public
+   *
+   * @defaultValue `true`
    */
-  debugInfoOutside?: boolean
+  debugInfoOutside?: Required<LynxCompilerOptions>['debugInfoOutside']
 
   /**
    * defaultDisplayLinear controls whether the default value of `display` in CSS is `linear`.
@@ -106,13 +64,92 @@ export interface PluginReactLynxOptions {
    * @remarks
    *
    * If `defaultDisplayLinear === false`, the default `display` would be `flex` instead of `linear`.
+   *
+   * @defaultValue `true`
    */
-  defaultDisplayLinear?: boolean
+  defaultDisplayLinear?: Required<LynxCompilerOptions>['defaultDisplayLinear']
+
+  /**
+   * CSS Invalidation refers to the process of determining which elements need to have their styles recalculated when the DOM is updated.
+   *
+   * @example
+   *
+   * If a descendant selector `.a .b` is defined in a CSS file, then when an element's class changes to `.a`, all nodes in its subtree with the className `.b` need to have their styles recalculated.
+   *
+   * @remarks
+   *
+   * When using combinator to determine the styles of various elements (including descendants, adjacent siblings, etc.), it is recommended to enable this feature. Otherwise, only the initial class setting can match the corresponding combinator, and subsequent updates will not recalculate the related styles.
+   *
+   * We find that collecting invalidation nodes and updating them is a relatively time-consuming process.
+   * If there is no such usage and better style matching performance is needed, this feature can be selectively disabled.
+   *
+   * @defaultValue `true`
+   */
+  enableCSSInvalidation?: Required<LynxCompilerOptions>['enableCSSInvalidation']
+
+  /**
+   * enableCSSSelector controls whether enabling the new CSS implementation.
+   *
+   * @public
+   *
+   * @defaultValue `true`
+   */
+  enableCSSSelector?: Required<LynxCompilerOptions>['enableCSSSelector']
+
+  /**
+   * enableRemoveCSSScope controls whether CSS is restrict to use in the component scope.
+   *
+   * `true`: All CSS files are treated as global CSS.
+   *
+   * `false`: All CSS files are treated as scoped CSS, and only take effect in the component that explicitly imports it.
+   *
+   * `undefined`: Only use scoped CSS for CSS Modules, and treat other CSS files as global CSS. Scoped CSS is faster than global CSS, thus you can use CSS Modules to speedy up your CSS if there are performance issues.
+   *
+   * @defaultValue `true`
+   *
+   * @public
+   */
+  enableRemoveCSSScope?:
+    | Required<LynxCompilerOptions>['enableRemoveCSSScope']
+    | undefined
+
+  /**
+   * targetSdkVersion is used to specify the minimal Lynx Engine version that a App bundle can run on.
+   *
+   * @public
+   * @deprecated `targetSdkVersion` is now an alias of {@link ReactLynxOptions.engineVersion}. Use {@link ReactLynxOptions.engineVersion} instead.
+   */
+  targetSdkVersion?: Required<LynxCompilerOptions>['targetSdkVersion']
+}
+
+type RequiredNotUndefined<T> = {
+  // This will remove `undefined` type on `enableRemoveCSSScope`
+  [P in keyof T]-?: Exclude<T[P], undefined>
+}
+
+// This is kept to override tsdoc to let user know pluginReactLynx's
+// defaultValues are different from LynxConfig's default values.
+/**
+ * The default page config for ReactLynx.
+ *
+ * @public
+ */
+export interface ReactLynxDefaultLynxConfig {
+  /**
+   * Use Android View level APIs and system implementations.
+   *
+   * @defaultValue `true`
+   */
+  enableA11y?: Required<LynxConfig>['enableA11y']
 
   /**
    * enableAccessibilityElement set the default value of `accessibility-element` for all `<view />` elements.
+   *
+   * @defaultValue `false`
    */
-  enableAccessibilityElement?: boolean
+  enableAccessibilityElement?: Required<
+    LynxConfig
+  >['enableAccessibilityElement']
 
   /**
    * enableCSSInheritance enables the default inheritance properties.
@@ -145,54 +182,64 @@ export interface PluginReactLynxOptions {
    *
    * - `text-shadow`
    *
-   * It is recommended to use with {@link PluginReactLynxOptions.customCSSInheritanceList} to avoid performance issues.
+   * It is recommended to use with {@link LynxConfig.customCSSInheritanceList} to avoid performance issues.
+   *
+   * @defaultValue `false`
    */
-  enableCSSInheritance?: boolean
-
-  /**
-   * CSS Invalidation refers to the process of determining which elements need to have their styles recalculated when the DOM is updated.
-   *
-   * @example
-   *
-   * If a descendant selector `.a .b` is defined in a CSS file, then when an element's class changes to `.a`, all nodes in its subtree with the className `.b` need to have their styles recalculated.
-   *
-   * @remarks
-   *
-   * When using combinator to determine the styles of various elements (including descendants, adjacent siblings, etc.), it is recommended to enable this feature. Otherwise, only the initial class setting can match the corresponding combinator, and subsequent updates will not recalculate the related styles.
-   *
-   * We find that collecting invalidation nodes and updating them is a relatively time-consuming process.
-   * If there is no such usage and better style matching performance is needed, this feature can be selectively disabled.
-   */
-  enableCSSInvalidation?: boolean
-
-  /**
-   * enableCSSSelector controls whether enabling the new CSS implementation.
-   *
-   * @public
-   */
-  enableCSSSelector?: boolean
+  enableCSSInheritance?: Required<LynxConfig>['enableCSSInheritance']
 
   /**
    * enableNewGesture enables the new gesture system.
    *
    * @defaultValue `false`
    */
-  enableNewGesture?: boolean
+  enableNewGesture?: Required<LynxConfig>['enableNewGesture']
 
   /**
-   * enableRemoveCSSScope controls whether CSS is restrict to use in the component scope.
-   *
-   * `true`: All CSS files are treated as global CSS.
-   *
-   * `false`: All CSS files are treated as scoped CSS, and only take effect in the component that explicitly imports it.
-   *
-   * `undefined`: Only use scoped CSS for CSS Modules, and treat other CSS files as global CSS. Scoped CSS is faster than global CSS, thus you can use CSS Modules to speedy up your CSS if there are performance issues.
+   * removeDescendantSelectorScope is used to remove the scope of descendant selectors.
    *
    * @defaultValue `true`
-   *
-   * @public
    */
-  enableRemoveCSSScope?: boolean | undefined
+  removeDescendantSelectorScope?: Required<
+    LynxConfig
+  >['removeDescendantSelectorScope']
+}
+
+export type { LynxCompilerOptions, LynxConfig }
+
+/**
+ * The specific options which control the behavior of ReactLynx.
+ *
+ * @public
+ */
+export interface ReactLynxOptions {
+  /**
+   * The `compat` option controls compatibilities with ReactLynx2.0.
+   *
+   * @remarks
+   *
+   * These options should only be used for migrating from ReactLynx2.0.
+   */
+  compat?:
+    | Partial<CompatVisitorConfig> & {
+      /**
+       * Whether disable runtime warnings about using ReactLynx2.0-incompatible `SelectorQuery` APIs.
+       *
+       * @example
+       * Using the following APIs will have a runtime warning by default:
+       *
+       * ```ts
+       * this.createSelectorQuery()
+       * this.getElementById()
+       * this.getNodeRef()
+       * this.getNodeRefFromRoot()
+       * ```
+       *
+       * @defaultValue `false`
+       */
+      disableCreateSelectorQueryIncompatibleWarning?: boolean
+    }
+    | undefined
 
   /**
    * This flag controls when MainThread (Lepus) transfers control to Background after the first screen
@@ -220,11 +267,6 @@ export interface PluginReactLynxOptions {
   enableSSR?: boolean
 
   /**
-   * removeDescendantSelectorScope is used to remove the scope of descendant selectors.
-   */
-  removeDescendantSelectorScope?: boolean
-
-  /**
    * How main-thread code will be shaken.
    */
   shake?: Partial<ShakeVisitorConfig> | undefined
@@ -242,14 +284,6 @@ export interface PluginReactLynxOptions {
   engineVersion?: string
 
   /**
-   * targetSdkVersion is used to specify the minimal Lynx Engine version that a App bundle can run on.
-   *
-   * @public
-   * @deprecated `targetSdkVersion` is now an alias of {@link PluginReactLynxOptions.engineVersion}. Use {@link PluginReactLynxOptions.engineVersion} instead.
-   */
-  targetSdkVersion?: string
-
-  /**
    * Merge same string literals in JS and Lepus to reduce output bundle size.
    * Set to `false` to disable.
    *
@@ -264,6 +298,27 @@ export interface PluginReactLynxOptions {
    */
   experimental_isLazyBundle?: boolean
 }
+
+/**
+ * Options of {@link pluginReactLynx}
+ *
+ * @public
+ */
+export type PluginReactLynxOptions =
+  // We use `Omit` here to avoid merging the tsdoc of default
+  // keys, such as `debugInfoOutside`
+  & Omit<LynxCompilerOptions, keyof ReactLynxDefaultCompilerOptions>
+  & ReactLynxDefaultCompilerOptions
+  & Omit<LynxConfig, keyof ReactLynxDefaultLynxConfig>
+  & ReactLynxDefaultLynxConfig
+  & ReactLynxOptions
+
+export type ResolvedPluginReactLynxOptions =
+  & Omit<LynxCompilerOptions, keyof ReactLynxDefaultCompilerOptions>
+  & RequiredNotUndefined<ReactLynxDefaultCompilerOptions>
+  & Omit<LynxConfig, keyof ReactLynxDefaultLynxConfig>
+  & Required<ReactLynxDefaultLynxConfig>
+  & Required<ReactLynxOptions>
 
 /**
  * Create a rsbuild plugin for ReactLynx.
@@ -287,11 +342,11 @@ export function pluginReactLynx(
   const engineVersion = userOptions?.engineVersion
     ?? userOptions?.targetSdkVersion ?? '3.2'
 
-  const defaultOptions: Required<PluginReactLynxOptions> = {
+  const defaultOptions: ResolvedPluginReactLynxOptions = {
     compat: undefined,
-    customCSSInheritanceList: undefined,
     debugInfoOutside: true,
     defaultDisplayLinear: true,
+    enableA11y: true,
     enableAccessibilityElement: false,
     enableCSSInheritance: false,
     enableCSSInvalidation: true,

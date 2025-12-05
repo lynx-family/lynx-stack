@@ -222,4 +222,4 @@ export default defineConfig({
 
 Use `npx rspeedy dev --config lynx.config.consumer.js` to start developing the producer project.
 
-[`experimental_isLazyBundle`]: ../api/react-rsbuild-plugin.pluginreactlynxoptions.experimental_islazybundle
+[`experimental_isLazyBundle`]: ../api/react-rsbuild-plugin.reactlynxoptions.experimental_islazybundle.md
