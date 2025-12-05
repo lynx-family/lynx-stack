@@ -43,7 +43,7 @@
     "@lynx-js/react-webpack-plugin": "workspace:*",
     "@lynx-js/runtime-wrapper-webpack-plugin": "workspace:*",
     "@lynx-js/template-webpack-plugin": "workspace:*",
-    "@lynx-js/type-config": "file:../../../npm/type-config.tgz",
+    "@lynx-js/type-config": "npm:@upupming/type-config@0.0.1",
     "@lynx-js/use-sync-external-store": "workspace:*",
     "background-only": "workspace:^",
     "object.pick": "^1.3.0"

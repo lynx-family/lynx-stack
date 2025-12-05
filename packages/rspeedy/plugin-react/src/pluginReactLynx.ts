@@ -40,6 +40,11 @@ import { validateConfig } from './validate.js'
 
 // This is kept to override tsdoc to let user know pluginReactLynx's
 // defaultValues are different from LynxCompilerOptions's default values.
+/**
+ * The default compiler options for ReactLynx.
+ *
+ * @public
+ */
 export interface ReactLynxDefaultCompilerOptions {
   /**
    * debugInfoOutside controls whether the debug info is placed outside the template.
@@ -112,7 +117,7 @@ export interface ReactLynxDefaultCompilerOptions {
    * targetSdkVersion is used to specify the minimal Lynx Engine version that a App bundle can run on.
    *
    * @public
-   * @deprecated `targetSdkVersion` is now an alias of {@link PluginReactLynxOptions.engineVersion}. Use {@link PluginReactLynxOptions.engineVersion} instead.
+   * @deprecated `targetSdkVersion` is now an alias of {@link ReactLynxOptions.engineVersion}. Use {@link ReactLynxOptions.engineVersion} instead.
    */
   targetSdkVersion?: Required<LynxCompilerOptions>['targetSdkVersion']
 }
@@ -124,6 +129,11 @@ type RequiredNotUndefined<T> = {
 
 // This is kept to override tsdoc to let user know pluginReactLynx's
 // defaultValues are different from LynxConfig's default values.
+/**
+ * The default page config for ReactLynx.
+ *
+ * @public
+ */
 export interface ReactLynxDefaultLynxConfig {
   /**
    * Use Android View level APIs and system implementations.
@@ -172,7 +182,7 @@ export interface ReactLynxDefaultLynxConfig {
    *
    * - `text-shadow`
    *
-   * It is recommended to use with {@link PluginReactLynxOptions.customCSSInheritanceList} to avoid performance issues.
+   * It is recommended to use with {@link LynxConfig.customCSSInheritanceList} to avoid performance issues.
    *
    * @defaultValue `false`
    */
@@ -197,6 +207,11 @@ export interface ReactLynxDefaultLynxConfig {
 
 export type { LynxCompilerOptions, LynxConfig }
 
+/**
+ * The specific options which control the behavior of ReactLynx.
+ *
+ * @public
+ */
 export interface ReactLynxOptions {
   /**
    * The `compat` option controls compatibilities with ReactLynx2.0.

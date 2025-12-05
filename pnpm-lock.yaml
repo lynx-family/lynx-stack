@@ -621,8 +621,8 @@ importers:
         specifier: workspace:*
         version: link:../../webpack/template-webpack-plugin
       '@lynx-js/type-config':
-        specifier: file:../../../npm/type-config.tgz
-        version: file:npm/type-config.tgz
+        specifier: npm:@upupming/type-config@0.0.1
+        version: '@upupming/type-config@0.0.1'
       '@lynx-js/use-sync-external-store':
         specifier: workspace:*
         version: link:../../use-sync-external-store
@@ -1354,8 +1354,8 @@ importers:
         specifier: workspace:*
         version: link:../test-tools
       '@lynx-js/type-config':
-        specifier: file:../../../npm/type-config.tgz
-        version: file:npm/type-config.tgz
+        specifier: npm:@upupming/type-config@0.0.1
+        version: '@upupming/type-config@0.0.1'
       '@lynx-js/vitest-setup':
         specifier: workspace:*
         version: link:../../tools/vitest-setup
@@ -2750,10 +2750,6 @@ packages:
 
   '@lynx-js/tasm@0.0.20':
     resolution: {integrity: sha512-ezMq43s59jqFuQ1YygpsUuZmGXw4XH+00RsB5RVmkYZuHQxEaLt/ECTOixF+9RixvAyhmxzF2eSURvmNckO9xg==}
-
-  '@lynx-js/type-config@file:npm/type-config.tgz':
-    resolution: {integrity: sha512-LGuuhDm1owixfhpWscvvPZ9u//ly7vqcLpImFp+gmTr2oBRQMm0WFfX8WtJUaMNKnsgnMko+fcxrjq1Dsi6L+Q==, tarball: file:npm/type-config.tgz}
-    version: 0.0.1
 
   '@lynx-js/type-element-api@0.0.2':
     resolution: {integrity: sha512-Unz3RHf2RM2vOWForwubjLYw9xbBP02ReuOL4KVLc3+0Vzryo8KbgqbhMUZCsJXHVmcaE2zXiE1AV/nqrBAoPA==}
@@ -4228,6 +4224,9 @@ packages:
     resolution: {integrity: sha512-lrW200hZdbfRtztbygyaq/6jP6AKE8qQN2KvPcJ+x7wiD038YtnYtZ82IMNJ69GJibV7bwL3y9FgK+5w/pYt6g==}
     cpu: [x64]
     os: [win32]
+
+  '@upupming/type-config@0.0.1':
+    resolution: {integrity: sha512-EgfJz3grcBLz4H3oQn7LD6cZQ70rU0o+UqbsMyI/ajAic2p3k3eGF/RQohYMYDEJIs3s7rAf9BozGV+XgSmjkg==}
 
   '@vitest/coverage-v8@3.2.4':
     resolution: {integrity: sha512-EyF9SXU6kS5Ku/U82E259WSnvg6c8KTjppUncuNdm5QHpe17mwREHnjDzozC8x9MZ0xfBUFSaLkRv4TMA75ALQ==}
@@ -11049,8 +11048,6 @@ snapshots:
 
   '@lynx-js/tasm@0.0.20': {}
 
-  '@lynx-js/type-config@file:npm/type-config.tgz': {}
-
   '@lynx-js/type-element-api@0.0.2': {}
 
   '@lynx-js/types@3.4.11':
@@ -12980,6 +12977,8 @@ snapshots:
 
   '@unrs/resolver-binding-win32-x64-msvc@1.11.1':
     optional: true
+
+  '@upupming/type-config@0.0.1': {}
 
   '@vitest/coverage-v8@3.2.4(vitest@3.2.4)':
     dependencies:

@@ -62,12 +62,30 @@ export { LynxConfig }
 export function pluginReactLynx(userOptions?: PluginReactLynxOptions): RsbuildPlugin[];
 
 // @public
-export interface PluginReactLynxOptions extends LynxCompilerOptions, LynxConfig, ReactLynxOptions {
+export type PluginReactLynxOptions = Omit<LynxCompilerOptions, keyof ReactLynxDefaultCompilerOptions> & ReactLynxDefaultCompilerOptions & Omit<LynxConfig, keyof ReactLynxDefaultLynxConfig> & ReactLynxDefaultLynxConfig & ReactLynxOptions;
+
+// @public
+export interface ReactLynxDefaultCompilerOptions {
+    debugInfoOutside?: Required<LynxCompilerOptions>['debugInfoOutside'];
+    defaultDisplayLinear?: Required<LynxCompilerOptions>['defaultDisplayLinear'];
+    enableCSSInvalidation?: Required<LynxCompilerOptions>['enableCSSInvalidation'];
+    enableCSSSelector?: Required<LynxCompilerOptions>['enableCSSSelector'];
+    enableRemoveCSSScope?: Required<LynxCompilerOptions>['enableRemoveCSSScope'] | undefined;
+    // @deprecated
+    targetSdkVersion?: Required<LynxCompilerOptions>['targetSdkVersion'];
 }
 
-// Warning: (ae-missing-release-tag) "ReactLynxOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
-// @public (undocumented)
+// @public
+export interface ReactLynxDefaultLynxConfig {
+    enableA11y?: Required<LynxConfig>['enableA11y'];
+    enableAccessibilityElement?: Required<LynxConfig>['enableAccessibilityElement'];
+    // Warning: (ae-unresolved-link) The @link reference could not be resolved: This type of declaration is not supported yet by the resolver
+    enableCSSInheritance?: Required<LynxConfig>['enableCSSInheritance'];
+    enableNewGesture?: Required<LynxConfig>['enableNewGesture'];
+    removeDescendantSelectorScope?: Required<LynxConfig>['removeDescendantSelectorScope'];
+}
+
+// @public
 export interface ReactLynxOptions {
     compat?: Partial<CompatVisitorConfig> & {
         disableCreateSelectorQueryIncompatibleWarning?: boolean;
@@ -82,12 +100,11 @@ export interface ReactLynxOptions {
     shake?: Partial<ShakeVisitorConfig> | undefined;
 }
 
-// Warning: (ae-forgotten-export) The symbol "SetRequired" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "RequiredNotUndefined" needs to be exported by the entry point index.d.ts
 // Warning: (ae-missing-release-tag) "ResolvedPluginReactLynxOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export interface ResolvedPluginReactLynxOptions extends SetRequired<LynxCompilerOptions, 'debugInfoOutside' | 'defaultDisplayLinear' | 'enableCSSInvalidation' | 'enableCSSSelector' | 'enableRemoveCSSScope' | 'targetSdkVersion'>, SetRequired<LynxConfig, 'enableAccessibilityElement' | 'enableCSSInheritance' | 'enableNewGesture' | 'removeDescendantSelectorScope' | 'enableA11y'>, Required<ReactLynxOptions> {
-}
+export type ResolvedPluginReactLynxOptions = Omit<LynxCompilerOptions, keyof ReactLynxDefaultCompilerOptions> & RequiredNotUndefined<ReactLynxDefaultCompilerOptions> & Omit<LynxConfig, keyof ReactLynxDefaultLynxConfig> & Required<ReactLynxDefaultLynxConfig> & Required<ReactLynxOptions>;
 
 // Warning: (ae-unresolved-inheritdoc-reference) The @inheritDoc reference could not be resolved: No member was found with name "shake"
 //
