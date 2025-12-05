@@ -14,6 +14,7 @@ use swc_core::quote;
 
 pub struct ExtractingIdentsCollectorConfig {
   pub custom_global_ident_names: Option<Vec<String>>,
+  pub shared_identifiers: Option<FxHashSet<Id>>,
 }
 
 struct ScopeEnv {
@@ -252,6 +253,13 @@ impl VisitMut for ExtractingIdentsCollector {
   }
 
   fn visit_mut_ident(&mut self, n: &mut Ident) {
+    // Skip shared identifiers from shared-runtime imports
+    if let Some(ref shared_idents) = self.cfg.shared_identifiers {
+      if shared_idents.contains(&n.to_id()) {
+        return;
+      }
+    }
+
     if !self
       .scope_env
       .iter()
