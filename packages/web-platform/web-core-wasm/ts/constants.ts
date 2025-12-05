@@ -92,7 +92,7 @@ export const enum ErrorCode {
   NO_UI_FOR_NODE = 6,
 }
 
-export const defaultTagMap = {
+export const defaultTagMap: Record<string, string> = {
   'input': 'x-input',
   'x-input-ng': 'x-input',
 };

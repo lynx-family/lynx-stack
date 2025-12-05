@@ -119,8 +119,7 @@ impl MainThreadWasmContext {
             let tag_name = &operation.operands_str[0];
             let dom = document
               .create_element(
-                self
-                  .tag_name_to_html_tag_map
+                constants::TAG_NAME_TO_HTML_TAG_MAP
                   .get(tag_name)
                   .map(|s| s.as_str())
                   .unwrap_or(tag_name),

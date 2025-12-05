@@ -16,7 +16,6 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 pub struct MainThreadWasmContext {
   pub(super) root_node: web_sys::Node,
-  pub(super) tag_name_to_html_tag_map: FnvHashMap<String, String>,
   pub(super) unique_id_to_element_map: Vec<Option<Rc<RefCell<Box<LynxElementData>>>>>,
   pub(super) unique_id_symbol: wasm_bindgen::JsValue,
   pub(super) timing_flags: Vec<String>,
@@ -66,7 +65,6 @@ impl MainThreadWasmContext {
       unique_id_to_element_map: vec![None],
       unique_id_symbol,
       enabled_events: FnvHashSet::default(),
-      tag_name_to_html_tag_map: constants::TAG_NAME_TO_HTML_TAG_MAP.clone(),
       timing_flags: vec![],
       exposure_changed_elements: vec![],
       // document,

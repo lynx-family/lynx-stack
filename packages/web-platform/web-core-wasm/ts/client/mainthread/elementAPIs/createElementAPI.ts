@@ -52,7 +52,6 @@ export function createElementAPI(
   config_enable_css_selector: boolean,
   config_default_display_linear: boolean,
   config_default_overflow_visible: boolean,
-  tagMap: Record<string, string> = defaultTagMap,
 ): ElementPAPIs {
   // let uniqueIdCounter = 1;
   const wasmContext = new MainThreadWasmContext(
@@ -110,7 +109,7 @@ export function createElementAPI(
     },
     __CreateElement(tagName, parentComponentUniqueId) {
       const dom = document.createElement(
-        tagMap[tagName] ?? tagName,
+        defaultTagMap[tagName] ?? tagName,
       ) as DecoratedHTMLElement;
       dom[uniqueIdSymbol] = wasmContext.__CreateElementCommon(
         parentComponentUniqueId,
