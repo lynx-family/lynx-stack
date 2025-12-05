@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "composite": true,
+  },
+  "references": [
+    /** packages-start */
+    { "path": "./gesture-runtime/tsconfig.build.json" },
+    /** packages-end */
+  ],
+  "include": [],
+}
