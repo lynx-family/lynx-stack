@@ -11,10 +11,12 @@
 export { pluginReactLynx } from './pluginReactLynx.js'
 export type {
   PluginReactLynxOptions,
-  LynxCompilerOptions,
-  LynxConfig,
-  ReactLynxOptions,
   ResolvedPluginReactLynxOptions,
+  LynxCompilerOptions,
+  ReactLynxDefaultCompilerOptions,
+  LynxConfig,
+  ReactLynxDefaultLynxConfig,
+  ReactLynxOptions,
 } from './pluginReactLynx.js'
 
 export type {
