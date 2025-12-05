@@ -1973,6 +1973,57 @@ describe('Config', () => {
     `)
   })
 
+  test('customize LynxTemplatePlugin options', async () => {
+    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
+        plugins: [
+          pluginReactLynx({
+            enableCSSLazyDecode: true,
+            enableListNewArchitecture: true,
+          }),
+          pluginStubRspeedyAPI(),
+        ],
+      },
+    })
+
+    const [config] = await rsbuild.initConfigs()
+
+    const templatePlugin = config?.plugins?.find((
+      p,
+    ): p is LynxTemplatePlugin => p?.constructor.name === 'LynxTemplatePlugin')
+
+    expect(templatePlugin).toBeDefined()
+    // @ts-expect-error private field
+    expect(templatePlugin?.options).toMatchInlineSnapshot(`
+      {
+        "chunks": [
+          "main__main-thread",
+          "main",
+        ],
+        "cssPlugins": [],
+        "debugInfoOutside": true,
+        "defaultDisplayLinear": true,
+        "dsl": "react_nodiff",
+        "enableA11y": true,
+        "enableAccessibilityElement": false,
+        "enableCSSInheritance": false,
+        "enableCSSInvalidation": true,
+        "enableCSSLazyDecode": true,
+        "enableCSSSelector": true,
+        "enableListNewArchitecture": true,
+        "enableNewGesture": false,
+        "enableRemoveCSSScope": true,
+        "experimental_isLazyBundle": false,
+        "filename": "main.lynx.bundle",
+        "intermediate": ".rspeedy/main",
+        "removeDescendantSelectorScope": true,
+        "targetSdkVersion": "3.2",
+      }
+    `)
+  })
+
   test('targetSdkVersion', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 

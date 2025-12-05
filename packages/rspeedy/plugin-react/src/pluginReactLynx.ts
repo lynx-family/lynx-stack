@@ -104,7 +104,9 @@ export interface ReactLynxDefaultCompilerOptions {
    *
    * @public
    */
-  enableRemoveCSSScope?: Required<LynxCompilerOptions>['enableRemoveCSSScope']
+  enableRemoveCSSScope?:
+    | Required<LynxCompilerOptions>['enableRemoveCSSScope']
+    | undefined
 
   /**
    * targetSdkVersion is used to specify the minimal Lynx Engine version that a App bundle can run on.
@@ -115,9 +117,21 @@ export interface ReactLynxDefaultCompilerOptions {
   targetSdkVersion?: Required<LynxCompilerOptions>['targetSdkVersion']
 }
 
+type RequiredNotUndefined<T> = {
+  // This will remove `undefined` type on `enableRemoveCSSScope`
+  [P in keyof T]-?: Exclude<T[P], undefined>
+}
+
 // This is kept to override tsdoc to let user know pluginReactLynx's
 // defaultValues are different from LynxConfig's default values.
 export interface ReactLynxDefaultLynxConfig {
+  /**
+   * Use Android View level APIs and system implementations.
+   *
+   * @defaultValue `true`
+   */
+  enableA11y?: Required<LynxConfig>['enableA11y']
+
   /**
    * enableAccessibilityElement set the default value of `accessibility-element` for all `<view />` elements.
    *
@@ -179,13 +193,6 @@ export interface ReactLynxDefaultLynxConfig {
   removeDescendantSelectorScope?: Required<
     LynxConfig
   >['removeDescendantSelectorScope']
-
-  /**
-   * Use Android View level APIs and system implementations.
-   *
-   * @defaultValue `true`
-   */
-  enableA11y?: Required<LynxConfig>['enableA11y']
 }
 
 export type { LynxCompilerOptions, LynxConfig }
@@ -293,7 +300,7 @@ export type PluginReactLynxOptions =
 
 export type ResolvedPluginReactLynxOptions =
   & Omit<LynxCompilerOptions, keyof ReactLynxDefaultCompilerOptions>
-  & Required<ReactLynxDefaultCompilerOptions>
+  & RequiredNotUndefined<ReactLynxDefaultCompilerOptions>
   & Omit<LynxConfig, keyof ReactLynxDefaultLynxConfig>
   & Required<ReactLynxDefaultLynxConfig>
   & Required<ReactLynxOptions>
