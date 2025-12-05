@@ -9,6 +9,11 @@ import {
   AsyncSeriesWaterfallHook,
   SyncWaterfallHook,
 } from '@rspack/lite-tapable';
+import type {
+  CompilerOptions as LynxCompilerOptions,
+  Config as LynxConfig,
+} from '@upupming/type-config';
+import { compilerOptionsKeys, configKeys } from '@upupming/type-config';
 import groupBy from 'object.groupby';
 import pick from 'object.pick';
 import type {
@@ -21,11 +26,6 @@ import type {
 } from 'webpack';
 
 import type * as CSS from '@lynx-js/css-serializer';
-import type {
-  CompilerOptions as LynxCompilerOptions,
-  Config as LynxConfig,
-} from '@lynx-js/type-config';
-import { compilerOptionsKeys, configKeys } from '@lynx-js/type-config';
 import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
 import { cssChunksToMap } from './css/cssChunksToMap.js';

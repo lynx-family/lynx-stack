@@ -11,6 +11,10 @@
 import { createRequire } from 'node:module'
 
 import type { RsbuildPlugin } from '@rsbuild/core'
+import type {
+  CompilerOptions as LynxCompilerOptions,
+  Config as LynxConfig,
+} from '@upupming/type-config'
 
 import { pluginReactAlias } from '@lynx-js/react-alias-rsbuild-plugin'
 import type {
@@ -21,10 +25,6 @@ import type {
 } from '@lynx-js/react-transform'
 import { LAYERS } from '@lynx-js/react-webpack-plugin'
 import type { ExposedAPI } from '@lynx-js/rspeedy'
-import type {
-  CompilerOptions as LynxCompilerOptions,
-  Config as LynxConfig,
-} from '@lynx-js/type-config'
 
 import { applyBackgroundOnly } from './backgroundOnly.js'
 import { applyCSS } from './css.js'

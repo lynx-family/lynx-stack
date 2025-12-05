@@ -9,6 +9,7 @@ import type {
   RsbuildPluginAPI,
   Rspack,
 } from '@rsbuild/core'
+import { compilerOptionsKeys, configKeys } from '@upupming/type-config'
 import pick from 'object.pick'
 import type { UndefinedOnPartialDeep } from 'type-fest'
 
@@ -20,7 +21,6 @@ import {
   LynxTemplatePlugin,
   WebEncodePlugin,
 } from '@lynx-js/template-webpack-plugin'
-import { compilerOptionsKeys, configKeys } from '@lynx-js/type-config'
 
 import type { ResolvedPluginReactLynxOptions } from './pluginReactLynx.js'
 

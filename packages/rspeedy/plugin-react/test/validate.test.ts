@@ -1,6 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { compilerOptionsKeys, configKeys } from '@upupming/type-config'
 import { describe, expect, test } from 'vitest'
 
 import type {
@@ -8,7 +9,6 @@ import type {
   DefineDceVisitorConfig,
   JsxTransformerConfig,
 } from '@lynx-js/react/transform'
-import { compilerOptionsKeys, configKeys } from '@lynx-js/type-config'
 
 import { validateConfig } from '../src/validate.js'
 

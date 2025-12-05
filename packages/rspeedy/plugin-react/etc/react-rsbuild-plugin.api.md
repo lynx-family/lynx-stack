@@ -5,8 +5,8 @@
 ```ts
 
 import { LAYERS } from '@lynx-js/react-webpack-plugin';
-import type { CompilerOptions as LynxCompilerOptions } from '@lynx-js/type-config';
-import type { Config as LynxConfig } from '@lynx-js/type-config';
+import type { CompilerOptions as LynxCompilerOptions } from '@upupming/type-config';
+import type { Config as LynxConfig } from '@upupming/type-config';
 import type { RsbuildPlugin } from '@rsbuild/core';
 
 // @public
