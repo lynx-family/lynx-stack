@@ -1,22 +1,24 @@
-import path from 'node:path'
+import path, { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+
+import typescript from '@rollup/plugin-typescript'
 import { defineProject } from 'vitest/config'
 import type { UserWorkspaceConfig } from 'vitest/config'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const config: UserWorkspaceConfig = defineProject({
-  // plugins: [
-  //   typescript({
-  //     rootDir: 'src',
-  //     inlineSourceMap: true,
-  //     inlineSources: true,
-  //     sourceRoot: join(__dirname, 'src'),
-  //     incremental: true,
-  //     composite: true,
-  //     tsconfig: path.join(__dirname, './tsconfig.build.json'),
-  //   }),
-  // ],
+  plugins: [
+    typescript({
+      rootDir: 'src',
+      inlineSourceMap: true,
+      inlineSources: true,
+      sourceRoot: join(__dirname, 'src'),
+      incremental: true,
+      composite: true,
+      tsconfig: path.join(__dirname, './tsconfig.build.json'),
+    }),
+  ],
 
   test: {
     name: 'rspeedy/react',

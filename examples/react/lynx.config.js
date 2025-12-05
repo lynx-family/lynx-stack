@@ -6,9 +6,7 @@ const enableBundleAnalysis = !!process.env['RSPEEDY_BUNDLE_ANALYSIS'];
 
 export default defineConfig({
   plugins: [
-    pluginReactLynx({
-      enableCSSStrictMode: true,
-    }),
+    pluginReactLynx(),
     pluginQRCode({
       schema(url) {
         // We use `?fullscreen=true` to open the page in LynxExplorer in full screen mode
@@ -16,12 +14,7 @@ export default defineConfig({
       },
     }),
   ],
-  environments: {
-    web: {},
-    lynx: {
-      performance: {
-        profile: enableBundleAnalysis,
-      },
-    },
+  performance: {
+    profile: enableBundleAnalysis,
   },
 });

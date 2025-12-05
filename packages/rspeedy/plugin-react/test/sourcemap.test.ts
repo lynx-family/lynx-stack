@@ -149,13 +149,13 @@ describe('Sourcemap', async () => {
         },
         "functionThatThrows": {
           "column": 0,
-          "line": 16,
+          "line": 18,
           "name": null,
           "source": "index.tsx",
         },
         "innerFunction": {
           "column": 0,
-          "line": 12,
+          "line": 13,
           "name": null,
           "source": "index.tsx",
         },
