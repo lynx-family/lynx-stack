@@ -72,8 +72,8 @@ export const __FirstElement: FirstElementPAPI = /*#__PURE__*/ (
 
 export const __GetChildren: GetChildrenPAPI = /*#__PURE__*/ (
   element,
-) =>
-  element.children ? [...(element.children as unknown as HTMLElement[])] : null;
+  // @ts-expect-error
+) => element.children ? [...element.children] : null;
 
 export const __GetParent: GetParentPAPI = /*#__PURE__*/ (
   element,

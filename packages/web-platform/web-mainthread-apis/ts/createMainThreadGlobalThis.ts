@@ -625,8 +625,8 @@ export function createMainThreadGlobalThis(
   };
 
   const __FlushElementTree: (
-    _subTree: unknown,
-    options: FlushElementTreeOptions | undefined,
+    _subTree?: unknown,
+    options?: FlushElementTreeOptions,
   ) => void = (
     _subTree,
     options,
@@ -642,6 +642,7 @@ export function createMainThreadGlobalThis(
     const exposureChangedElementsArray = Array.from(exposureChangedElements);
     exposureChangedElements.clear();
     callbacks.flushElementTree(
+      // @ts-expect-error
       options,
       timingFlagsCopied,
       exposureChangedElementsArray,

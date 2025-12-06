@@ -1,0 +1,25 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "plugins": [
+      { "transform": "typescript-transform-paths", "afterDeclarations": true },
+    ],
+    "composite": true,
+    "rootDir": "./ts",
+    "outDir": "./dist",
+    "lib": ["DOM", "ESNext", "WebWorker"],
+    "paths": {
+      "@": ["./ts/"],
+      "@client/*": ["./ts/client/*"],
+      "@server/*": ["./ts/server/*"],
+      "@encode/*": ["./ts/encode/*"],
+      "@binary/*": ["./binary/*"],
+      "@constants": ["./ts/constants.js"],
+      "@types": ["./ts/types/index.js"],
+    },
+  },
+  "include": ["ts"],
+  "references": [
+    { "path": "../web-worker-rpc/tsconfig.json" },
+  ],
+}

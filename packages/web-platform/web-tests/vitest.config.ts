@@ -1,5 +1,6 @@
 import { defineConfig } from 'vitest/config';
 import codspeed from '@codspeed/vitest-plugin';
+import wasm from 'vite-plugin-wasm';
 
 export default defineConfig({
   test: {
@@ -12,5 +13,6 @@ export default defineConfig({
   },
   plugins: [
     process.env['CI'] ? codspeed() : undefined,
+    wasm(),
   ],
 });
