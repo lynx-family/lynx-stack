@@ -123,7 +123,7 @@ describe('Testing Library Port', () => {
     test('should add event listener', () => {
       // Spy on mtsBinding methods
       vi.spyOn(mtsBinding, 'addEventListener');
-      vi.spyOn(mtsBinding, 'publicComponentEvent');
+      vi.spyOn(mtsBinding, 'publishEvent');
 
       const page = mtsGlobalThis.__CreatePage('0', 0);
       const view0 = mtsGlobalThis.__CreateView(0);
@@ -142,7 +142,7 @@ describe('Testing Library Port', () => {
       // Verify spies
       expect(mtsBinding.addEventListener).toBeCalledWith('tap');
 
-      expect(mtsBinding.publicComponentEvent).toBeCalled();
+      expect(mtsBinding.publishEvent).toBeCalled();
     });
 
     test('text should work with SetAttribute', () => {

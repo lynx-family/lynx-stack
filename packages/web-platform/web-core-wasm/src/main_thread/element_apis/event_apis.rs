@@ -1,5 +1,4 @@
 use super::MainThreadWasmContext;
-use crate::js_binding::JSEvent;
 use wasm_bindgen::prelude::*;
 
 /**
@@ -25,7 +24,7 @@ impl MainThreadWasmContext {
     event_name: &str,
     event_handler: wasm_bindgen::JsValue,
   ) {
-    self.enable_event(&event_name);
+    self.enable_event(event_name);
     let binding = self.get_element_data_by_unique_id(unique_id).unwrap();
     let mut element_data = binding.borrow_mut();
     if event_handler.is_null_or_undefined() {
@@ -93,17 +92,27 @@ impl MainThreadWasmContext {
 
   pub fn dispatch_event_by_path(
     &self,
-    bubble_path: &[usize],
+    bubble_unique_id_path: &[usize],
     event_name: &str,
     is_capture: bool,
-    target_element: &JsValue,
-    serialized_event: &JSEvent,
+    serialized_event: &JsValue,
   ) -> bool {
     let event_name = event_name.to_ascii_lowercase();
+    let target_unique_id = bubble_unique_id_path.first().cloned().unwrap_or_default();
+
+    let binding = self
+      .get_element_data_by_unique_id(target_unique_id)
+      .unwrap();
+    let target_element_data = binding.borrow();
+
+    let target_element_dataset = target_element_data.dataset.clone();
+
+    let target_element = target_element_data.dom_ref.clone();
+
     let iter: Box<dyn Iterator<Item = &usize> + '_> = if is_capture {
-      Box::new(bubble_path.iter().rev())
+      Box::new(bubble_unique_id_path.iter().rev())
     } else {
-      Box::new(bubble_path.iter())
+      Box::new(bubble_unique_id_path.iter())
     };
     for unique_id in iter {
       let mut is_catched = false;
@@ -140,22 +149,15 @@ impl MainThreadWasmContext {
           };
           is_catched = catch_handler.is_some();
           for handler in [bind_handler, catch_handler].iter().flatten() {
-            if let Some(parent_component_id) = &current_target_parent_component_id {
-              self.mts_binding.public_component_event(
-                parent_component_id,
-                handler,
-                serialized_event,
-                target_element,
-                &current_target_element_data.dom_ref.clone(),
-              );
-            } else {
-              self.mts_binding.publish_event(
-                handler,
-                serialized_event,
-                target_element,
-                &current_target_element_data.dom_ref.clone(),
-              );
-            }
+            self.mts_binding.publish_event(
+              handler,
+              current_target_parent_component_id.as_deref(),
+              serialized_event,
+              &target_element,
+              &target_element_dataset.clone().into(),
+              &current_target_element_data.dom_ref,
+              &current_target_element_data.dataset.clone().into(),
+            );
           }
         }
       }
@@ -168,19 +170,23 @@ impl MainThreadWasmContext {
         if bind_handler.is_some() || catch_handler.is_some() {
           is_catched = catch_handler.is_some();
           if let Some(handler) = bind_handler {
-            self.mts_binding.run_worklet(
+            self.mts_binding.publish_mts_event(
               &handler,
               serialized_event,
-              target_element,
-              &current_target_element_data.dom_ref.clone(),
+              &target_element,
+              &target_element_dataset.clone().into(),
+              &current_target_element_data.dom_ref,
+              &current_target_element_data.dataset.clone().into(),
             );
           }
           if let Some(handler) = catch_handler {
-            self.mts_binding.run_worklet(
+            self.mts_binding.publish_mts_event(
               &handler,
               serialized_event,
-              target_element,
-              &current_target_element_data.dom_ref.clone(),
+              &target_element,
+              &target_element_dataset.clone().into(),
+              &current_target_element_data.dom_ref,
+              &current_target_element_data.dataset.clone().into(),
             );
           }
         }
@@ -195,14 +201,15 @@ impl MainThreadWasmContext {
   }
 
   #[wasm_bindgen(js_name = "__wasm_commonEventHandler")]
-  pub fn common_event_handler(&self, event: JSEvent) {
-    let bubble_path = self.mts_binding.get_bubble_path(&event);
-    let event_type = event.type_();
-    let target_element = event.target();
-    let catched =
-      self.dispatch_event_by_path(&bubble_path, &event_type, true, &target_element, &event);
+  pub fn common_event_handler(
+    &self,
+    event: JsValue,
+    bubble_unique_id_path: Vec<usize>,
+    event_name: &str,
+  ) {
+    let catched = self.dispatch_event_by_path(&bubble_unique_id_path, event_name, true, &event);
     if !catched {
-      self.dispatch_event_by_path(&bubble_path, &event_type, false, &target_element, &event);
+      self.dispatch_event_by_path(&bubble_unique_id_path, event_name, false, &event);
     }
   }
 }

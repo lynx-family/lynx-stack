@@ -80,7 +80,7 @@ export function createCrossThreadEvent(
     };
   }
 
-  const lynxEventName = W3cEventNameToLynx[domEvent.type] ?? domEvent.type;
+  const lynxEventName = W3cEventNameToLynx[type] ?? type;
 
   return {
     type: lynxEventName,

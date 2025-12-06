@@ -62,8 +62,8 @@ export type GlobalExposureEvent =
 
 export type MinimalRawEventObject = {
   type: string;
-  target: Pick<HTMLElement, 'getAttribute'> | null;
-  currentTarget: Pick<HTMLElement, 'getAttribute'> | null;
+  target: EventTarget | null;
+  currentTarget: EventTarget | null;
   detail?: Cloneable;
   isTrusted: boolean;
   timeStamp: number;

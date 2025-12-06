@@ -59,6 +59,7 @@ export function createElementAPI(
     uniqueIdSymbol,
     config_enable_css_selector,
   );
+  mtsBinding.wasmContext = wasmContext;
   let page: DecoratedHTMLElement | undefined = undefined;
   const timingFlags: string[] = [];
   return {

@@ -4,31 +4,34 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import type { CloneableObject } from './Cloneable.js';
+import type {
+  LynxCrossThreadEvent,
+  MinimalRawEventObject,
+} from './EventType.js';
+
 /**
  * The JS binding for the WASM main thread context instance.
  */
-export type RustMainthreadContextBinding = {
+export interface RustMainthreadContextBinding {
   runWorklet(
-    handler: any,
-    eventObject: any,
+    handler: unknown,
+    eventObject: LynxCrossThreadEvent,
     target: HTMLElement,
+    targetDataset: CloneableObject,
     currentTarget: HTMLElement,
+    currentTargetDataset: CloneableObject,
   ): void;
 
   publishEvent(
     handlerName: string,
-    eventData: any,
+    parentComponentId: string | undefined,
+    eventObject: LynxCrossThreadEvent,
     target: HTMLElement,
+    targetDataset: CloneableObject,
     currentTarget: HTMLElement,
-  ): void;
-
-  publicComponentEvent(
-    componentId: string,
-    eventName: string,
-    eventData: any,
-    target: HTMLElement,
-    currentTarget: HTMLElement,
+    currentTargetDataset: CloneableObject,
   ): void;
 
   addEventListener(event_name: string): void;
-};
+}

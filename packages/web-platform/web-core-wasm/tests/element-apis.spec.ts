@@ -1054,7 +1054,7 @@ describe('Element APIs', () => {
 
   test('publicComponentEvent', () => {
     vi.spyOn(mtsBinding, 'addEventListener');
-    vi.spyOn(mtsBinding, 'publicComponentEvent');
+    vi.spyOn(mtsBinding, 'publishEvent');
     let page = mtsGlobalThis.__CreatePage('0', 0);
     let parent = mtsGlobalThis.__CreateComponent(
       0,
@@ -1086,13 +1086,26 @@ describe('Element APIs', () => {
     );
     expect(mtsBinding.addEventListener).toBeCalledTimes(1);
     expect(mtsBinding.addEventListener).toBeCalledWith('tap');
-    expect(mtsBinding.publicComponentEvent).toBeCalledTimes(1);
-    expect(mtsBinding.publicComponentEvent).toBeCalledWith(
-      'id1',
+    expect(mtsBinding.publishEvent).toBeCalledTimes(1);
+    expect(mtsBinding.publishEvent).toBeCalledWith(
       'hname',
-      expect.anything(),
+      'id1',
+      expect.objectContaining({
+        currentTarget: expect.objectContaining({
+          id: 'child_id',
+          dataset: expect.any(Object),
+          uniqueId: expect.any(Number),
+        }),
+        target: expect.objectContaining({
+          id: 'child_id',
+          dataset: expect.any(Object),
+          uniqueId: expect.any(Number),
+        }),
+      }),
       child,
+      undefined,
       child,
+      undefined,
     );
   });
 

@@ -8,6 +8,8 @@ import type { Rpc, RpcCallType } from '@lynx-js/web-worker-rpc';
 import {
   markTimingEndpoint,
   postTimingFlagsEndpoint,
+  publicComponentEventEndpoint,
+  publishEventEndpoint,
   sendGlobalEventEndpoint,
 } from '@client/endpoints.js';
 import type { TimingEntry } from '@types';
@@ -21,12 +23,18 @@ export class BackgroundThread {
 
   postTimingFlags: RpcCallType<typeof postTimingFlagsEndpoint>;
   sendGlobalEvent: RpcCallType<typeof sendGlobalEventEndpoint>;
+  publicComponentEvent: RpcCallType<typeof publicComponentEventEndpoint>;
+  publishEvent: RpcCallType<typeof publishEventEndpoint>;
 
   constructor(rpc: Rpc) {
     this.rpc = rpc;
     this.batchSendTimingInfo = this.rpc.createCall(markTimingEndpoint);
     this.postTimingFlags = this.rpc.createCall(postTimingFlagsEndpoint);
     this.sendGlobalEvent = this.rpc.createCall(sendGlobalEventEndpoint);
+    this.publicComponentEvent = this.rpc.createCall(
+      publicComponentEventEndpoint,
+    );
+    this.publishEvent = this.rpc.createCall(publishEventEndpoint);
   }
 
   markTiming(
