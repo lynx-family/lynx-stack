@@ -6,9 +6,10 @@ import path from 'path';
 export default defineConfig({
   source: {
     entry: {
-      index: './index.ts',
+      // index: './index.ts',
+      'benches/create-view': './benches/create-view.ts',
     },
-    include: [/web/],
+    // include: [/web/],
   },
   output: {
     target: 'web',
@@ -23,18 +24,17 @@ export default defineConfig({
     hmr: false,
     liveReload: false,
   },
-  html: {},
   tools: {
-    htmlPlugin: false,
+    htmlPlugin: true,
     rspack: {
       resolve: {
         fallback: {
           'module': false,
         },
       },
-      output: {
-        publicPath: 'auto',
-      },
+      // output: {
+      //   publicPath: 'auto',
+      // },
       plugins: [
         process.env.RSDOCTOR === 'true'
         && new RsdoctorRspackPlugin({
@@ -43,6 +43,9 @@ export default defineConfig({
           },
         }),
       ],
+      experiments: {
+        futureDefaults: true,
+      },
     },
   },
   performance: {
@@ -51,10 +54,10 @@ export default defineConfig({
     },
     profile: true,
   },
-  plugins: [
-    pluginWebPlatform({
-      polyfill: false,
-      nativeModulesPath: path.resolve(__dirname, './index.native-modules.ts'),
-    }),
-  ],
+  // plugins: [
+  //   pluginWebPlatform({
+  //     polyfill: false,
+  //     nativeModulesPath: path.resolve(__dirname, './index.native-modules.ts'),
+  //   }),
+  // ],
 });

@@ -4,6 +4,9 @@
 
 import type { Compilation, Compiler } from 'webpack';
 
+import { encode } from '@lynx-js/web-core-wasm/encode';
+import type { TasmJSONInfo } from '@lynx-js/web-core-wasm/encode';
+
 import type { LynxStyleNode } from './css/index.js';
 import {
   LynxTemplatePlugin,
@@ -84,25 +87,35 @@ export class WebEncodePlugin {
           name: WebEncodePlugin.name,
           stage: WebEncodePlugin.ENCODE_HOOK_STAGE,
         }, ({ encodeOptions }) => {
+          const tasmJSONInfo: Record<string, unknown> = {
+            styleInfo: encodeOptions['styleInfo'],
+            manifest: encodeOptions.manifest as Record<string, string>,
+            cardType: encodeOptions['cardType'] as string,
+            appType: encodeOptions['appType'] as string,
+            pageConfig: encodeOptions['pageConfig'] as Record<string, unknown>,
+            lepusCode: {
+              // flatten the lepusCode to a single object
+              ...encodeOptions.lepusCode.lepusChunk,
+              root: encodeOptions.lepusCode.root!,
+            },
+            customSections: encodeOptions.customSections,
+            elementTemplate: encodeOptions['elementTemplate'],
+          };
+          const buffer = process.env['EXPERIMENTAL_USE_WEB_BINARY_TEMPLATE']
+            ? Buffer.from(encode(tasmJSONInfo as TasmJSONInfo))
+            : Buffer.from(
+              JSON.stringify({
+                ...tasmJSONInfo,
+                styleInfo: genStyleInfo(
+                  (encodeOptions['css'] as {
+                    cssMap: Record<string, LynxStyleNode[]>;
+                  }).cssMap,
+                ),
+              }),
+              'utf-8',
+            );
           return {
-            buffer: Buffer.from(JSON.stringify({
-              styleInfo: genStyleInfo(
-                (encodeOptions['css'] as {
-                  cssMap: Record<string, LynxStyleNode[]>;
-                }).cssMap,
-              ),
-              manifest: encodeOptions.manifest,
-              cardType: encodeOptions['cardType'],
-              appType: encodeOptions['appType'],
-              pageConfig: encodeOptions['pageConfig'],
-              lepusCode: {
-                // flatten the lepusCode to a single object
-                ...encodeOptions.lepusCode.lepusChunk,
-                root: encodeOptions.lepusCode.root,
-              },
-              customSections: encodeOptions.customSections,
-              elementTemplate: encodeOptions['elementTemplate'],
-            })),
+            buffer,
             debugInfo: '',
           };
         });

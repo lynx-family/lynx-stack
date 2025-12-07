@@ -1,0 +1,65 @@
+{
+  "name": "@lynx-js/web-core-wasm",
+  "version": "0.17.2",
+  "private": false,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/web-platform/web-core-wasm"
+  },
+  "license": "Apache-2.0",
+  "sideEffects": true,
+  "type": "module",
+  "exports": {
+    "./encode": {
+      "types": "./dist/encode/index.d.ts",
+      "import": "./dist/encode/index.js",
+      "default": "./dist/encode/index.js"
+    },
+    "./client": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "!dist/**/*.js.map",
+    "*.d.ts",
+    "*.js",
+    "LICENSE.txt",
+    "Notice.txt",
+    "CHANGELOG.md",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "node scripts/build.js"
+  },
+  "dependencies": {
+    "@lynx-js/web-worker-rpc": "workspace:*",
+    "wasm-feature-detect": "^1.8.0"
+  },
+  "devDependencies": {
+    "@lynx-js/css-serializer": "workspace:*",
+    "@lynx-js/lynx-core": "0.1.3",
+    "binaryen": "^124.0.0",
+    "fb-dotslash": "^0.5.8",
+    "jsdom": "^27.2.0",
+    "typescript-transform-paths": "^3.5.5",
+    "vite-plugin-wasm": "^3.5.0",
+    "vite-tsconfig-paths": "^5.1.4"
+  },
+  "peerDependencies": {
+    "@lynx-js/css-serializer": "workspace:*",
+    "@lynx-js/lynx-core": "0.1.3"
+  },
+  "peerDependenciesMeta": {
+    "@lynx-js/css-serializer": {
+      "optional": true
+    },
+    "@lynx-js/lynx-core": {
+      "optional": true
+    }
+  }
+}

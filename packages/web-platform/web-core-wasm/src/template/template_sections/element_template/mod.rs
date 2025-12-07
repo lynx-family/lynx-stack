@@ -1,0 +1,46 @@
+/*
+ * Copyright 2025 The Lynx Authors. All rights reserved.
+ * Licensed under the Apache License Version 2.0 that can be found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+// mod decoded_element_template;
+mod raw_element_template;
+use fnv::FnvHashMap;
+pub(crate) use raw_element_template::RawElementTemplate;
+use serde::{Deserialize, Serialize};
+use wasm_bindgen::prelude::*;
+#[derive(Deserialize)]
+#[cfg_attr(feature = "encode", derive(Serialize))]
+#[cfg_attr(feature = "encode", wasm_bindgen)]
+pub(crate) struct ElementTemplateSection {
+  pub(crate) element_templates_map: FnvHashMap<String, RawElementTemplate>,
+}
+
+#[cfg(feature = "encode")]
+#[wasm_bindgen]
+impl ElementTemplateSection {
+  #[cfg(feature = "encode")]
+  #[wasm_bindgen(constructor)]
+  pub fn new() -> Self {
+    ElementTemplateSection {
+      element_templates_map: FnvHashMap::default(),
+    }
+  }
+
+  #[cfg(feature = "encode")]
+  #[wasm_bindgen]
+  pub fn add_element_template(&mut self, id: String, raw_element_template: RawElementTemplate) {
+    self.element_templates_map.insert(id, raw_element_template);
+  }
+
+  #[cfg(feature = "encode")]
+  #[wasm_bindgen]
+  pub fn encode(&self) -> js_sys::Uint8Array {
+    js_sys::Uint8Array::from(
+      bincode::serde::encode_to_vec(self, bincode::config::standard())
+        .unwrap()
+        .as_slice(),
+    )
+  }
+}
