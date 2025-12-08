@@ -1,14 +1,11 @@
+import './jsdom.js';
 import { describe, test, expect, beforeEach, beforeAll } from 'vitest';
 import { createElementAPI } from '@client/mainthread/elementAPIs/createElementAPI.js';
 import { WASMJSBinding } from '@client/mainthread/elementAPIs/WASMJSBinding.js';
-import { JSDOM } from 'jsdom';
 import { vi } from 'vitest';
 import { cssIdAttribute } from '../ts/constants.js';
 import { templateManager } from '@client/wasm.js';
 import { encodeElementTemplates } from '../ts/encode/encodeElementTemplate.js';
-const { window } = new JSDOM(undefined, { url: 'http://localhost/' });
-const document = window.document;
-Object.assign(globalThis, { document, window, Window: window.Window });
 describe('Element APIs', () => {
   let lynxViewDom: HTMLElement;
   let rootDom: ShadowRoot;

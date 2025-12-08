@@ -4,7 +4,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import type { Rpc, RpcCallType } from '@lynx-js/web-worker-rpc';
+import { Rpc, type RpcCallType } from '@lynx-js/web-worker-rpc';
 import {
   dispatchCoreContextOnBackgroundEndpoint,
   dispatchJSContextOnMainThreadEndpoint,
@@ -18,12 +18,31 @@ import {
   updateDataEndpoint,
   updateGlobalPropsEndpoint,
 } from '@client/endpoints.js';
-import type { TimingEntry } from '@types';
+import type { TimingEntry, WorkerStartMessage } from '@types';
 import { LynxCrossThreadContext } from '@client/LynxCrossThreadContext.js';
+import { systemInfo } from './LynxViewInstance.js';
 
+function createWebWorker(): Worker {
+  return new Worker(
+    /* webpackFetchPriority: "high" */
+    /* webpackChunkName: "web-core-worker-runtime" */
+    /* webpackPrefetch: true */
+    /* webpackPreload: true */
+    new URL('../background/index.js', import.meta.url),
+    {
+      type: 'module',
+      name: 'lynx-bg',
+    },
+  );
+}
 export class BackgroundThread implements AsyncDisposable {
-  private rpc: Rpc;
+  static contextIdToBackgroundWorker: ({
+    worker: Worker;
+    runningCards: number;
+  } | undefined)[] = [];
 
+  private rpc: Rpc;
+  private webWorker?: Worker;
   private nextMacroTask: ReturnType<typeof setTimeout> | null = null;
   private catchedTimingInfo: TimingEntry[] = [];
   private batchSendTimingInfo: RpcCallType<typeof markTimingEndpoint>;
@@ -42,8 +61,9 @@ export class BackgroundThread implements AsyncDisposable {
   readonly updateData: RpcCallType<typeof updateDataEndpoint>;
   readonly updateGlobalProps: RpcCallType<typeof updateGlobalPropsEndpoint>;
 
-  constructor(rpc: Rpc) {
-    this.rpc = rpc;
+  constructor(private readonly lynxGroupId: number | undefined) {
+    const btsRpc = new Rpc(undefined, 'ui-to-bg');
+    this.rpc = btsRpc;
     this.jsContext = new LynxCrossThreadContext({
       rpc: this.rpc,
       receiveEventEndpoint: dispatchJSContextOnMainThreadEndpoint,
@@ -61,6 +81,36 @@ export class BackgroundThread implements AsyncDisposable {
     );
     this.updateData = this.rpc.createCall(updateDataEndpoint);
     this.updateGlobalProps = this.rpc.createCall(updateGlobalPropsEndpoint);
+  }
+
+  startWebWorker() {
+    // now start the background worker
+    if (this.lynxGroupId !== undefined) {
+      const group =
+        BackgroundThread.contextIdToBackgroundWorker[this.lynxGroupId];
+      if (group) {
+        group.runningCards += 1;
+      } else {
+        BackgroundThread.contextIdToBackgroundWorker[this.lynxGroupId] = {
+          worker: createWebWorker(),
+          runningCards: 1,
+        };
+      }
+      this.webWorker = BackgroundThread.contextIdToBackgroundWorker[
+        this.lynxGroupId
+      ]!.worker;
+    } else {
+      this.webWorker = createWebWorker();
+    }
+    const messageChannel = new MessageChannel();
+    this.webWorker.postMessage(
+      {
+        mainThreadMessagePort: messageChannel.port1,
+        systemInfo,
+      } as WorkerStartMessage,
+      [messageChannel.port2],
+    );
+    this.rpc.setMessagePort(messageChannel.port1);
   }
 
   markTiming(
@@ -91,6 +141,21 @@ export class BackgroundThread implements AsyncDisposable {
   }
 
   [Symbol.asyncDispose](): Promise<void> {
+    if (this.lynxGroupId !== undefined) {
+      const group =
+        BackgroundThread.contextIdToBackgroundWorker[this.lynxGroupId];
+      if (group) {
+        group.runningCards -= 1;
+        if (group.runningCards === 0) {
+          group.worker.terminate();
+          BackgroundThread.contextIdToBackgroundWorker[
+            this.lynxGroupId
+          ] = undefined;
+        }
+      }
+    } else {
+      this.webWorker?.terminate();
+    }
     this.nextMacroTask && clearTimeout(this.nextMacroTask);
     return this.rpc.invoke(disposeEndpoint, []);
   }

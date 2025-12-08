@@ -3,8 +3,6 @@
  * Licensed under the Apache License Version 2.0 that can be found in the
  * LICENSE file in the root directory of this source tree.
  */
-
-import { Rpc } from '@lynx-js/web-worker-rpc';
 import type {
   Cloneable,
   InitI18nResources,
@@ -12,7 +10,6 @@ import type {
   MainThreadGlobalThis,
   NapiModulesMap,
   NativeModulesMap,
-  WorkerStartMessage,
 } from '@types';
 import { systemInfoBase } from '@constants';
 import { BackgroundThread } from './Background.js';
@@ -43,29 +40,7 @@ export interface LynxViewConfigs {
   initI18nResources: InitI18nResources;
 }
 
-function createWebWorker(): Worker {
-  return new Worker(
-    /* webpackFetchPriority: "high" */
-    /* webpackChunkName: "web-core-worker-runtime" */
-    /* webpackPrefetch: true */
-    /* webpackPreload: true */
-    new URL('../background/index.js', import.meta.url),
-    {
-      type: 'module',
-      name: 'lynx-bg',
-    },
-  );
-}
-
 export class LynxViewInstance implements AsyncDisposable {
-  static contextIdToBackgroundWorker: ({
-    worker: Worker;
-    runningCards: number;
-  } | undefined)[] = [];
-
-  private lynxGroupId?: number;
-  private webWorker: Worker;
-
   readonly mainThreadGlobalThis: MainThreadGlobalThis;
   readonly mtsWasmBinding: WASMJSBinding;
   readonly backgroundThread: BackgroundThread;
@@ -85,34 +60,8 @@ export class LynxViewInstance implements AsyncDisposable {
     this.mainThreadGlobalThis = mtsRealm.globalWindow as
       & typeof globalThis
       & MainThreadGlobalThis;
-    // now start the background worker
-    if (lynxGroupId !== undefined) {
-      this.lynxGroupId = lynxGroupId;
-      const group = LynxViewInstance.contextIdToBackgroundWorker[lynxGroupId];
-      if (group) {
-        group.runningCards += 1;
-      } else {
-        LynxViewInstance.contextIdToBackgroundWorker[lynxGroupId] = {
-          worker: createWebWorker(),
-          runningCards: 1,
-        };
-      }
-      this.webWorker = LynxViewInstance.contextIdToBackgroundWorker[
-        lynxGroupId
-      ]!.worker;
-    } else {
-      this.webWorker = createWebWorker();
-    }
-    const messageChannel = new MessageChannel();
-    this.webWorker.postMessage(
-      {
-        mainThreadMessagePort: messageChannel.port1,
-        systemInfo,
-      } as WorkerStartMessage,
-      [messageChannel.port2],
-    );
-    const btsRpc = new Rpc(messageChannel.port1, 'ui-to-bg');
-    this.backgroundThread = new BackgroundThread(btsRpc);
+
+    this.backgroundThread = new BackgroundThread(lynxGroupId);
     this.i18nManager = new I18nManager(
       this.backgroundThread,
       this.rootDom,
@@ -161,20 +110,5 @@ export class LynxViewInstance implements AsyncDisposable {
 
   async [Symbol.asyncDispose]() {
     await this.backgroundThread[Symbol.asyncDispose]();
-    if (this.lynxGroupId !== undefined) {
-      const group =
-        LynxViewInstance.contextIdToBackgroundWorker[this.lynxGroupId];
-      if (group) {
-        group.runningCards -= 1;
-        if (group.runningCards === 0) {
-          group.worker.terminate();
-          LynxViewInstance.contextIdToBackgroundWorker[
-            this.lynxGroupId
-          ] = undefined;
-        }
-      }
-    } else {
-      this.webWorker?.terminate();
-    }
   }
 }

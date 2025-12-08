@@ -3,21 +3,11 @@
  * Licensed under the Apache License Version 2.0 that can be found in the
  * LICENSE file in the root directory of this source tree.
  */
-
+import './jsdom.js';
 import { describe, expect, test, vi } from 'vitest';
 import { I18nManager } from '../ts/client/mainthread/I18n.js';
 import { BackgroundThread } from '../ts/client/mainthread/Background.js';
-import { JSDOM } from 'jsdom';
 import { i18nResourceMissedEventName } from '../ts/constants.js';
-
-const { window } = new JSDOM(undefined, { url: 'http://localhost/' });
-const document = window.document;
-Object.assign(globalThis, {
-  document,
-  window,
-  Window: window.Window,
-  CustomEvent: window.CustomEvent,
-});
 
 describe('I18nManager', () => {
   const mockBackground = {
