@@ -27,7 +27,7 @@ jobs:
         runs-on:
           - label: lynx-ubuntu-24.04-xlarge
             name: Ubuntu
-          # - label: lynx-windows-2022-large
+          # - label: lynx-windows-2022-large-verify
           #   name: Windows
     timeout-minutes: 30
     permissions:
