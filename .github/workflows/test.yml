@@ -213,7 +213,7 @@ jobs:
           - name: Ubuntu
             label: lynx-ubuntu-24.04-medium
           - name: Windows
-            label: lynx-windows-2022-large
+            label: lynx-windows-2022-large-verify
     name: Vitest (${{ matrix.runs-on.name }})
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
