@@ -1353,6 +1353,9 @@ importers:
       '@types/object.groupby':
         specifier: ^1.0.4
         version: 1.0.4
+      css-loader:
+        specifier: ^7.1.2
+        version: 7.1.2(@rspack/core@1.6.5(@swc/helpers@0.5.17))(webpack@5.102.0)
       webpack:
         specifier: ^5.102.0
         version: 5.102.0
