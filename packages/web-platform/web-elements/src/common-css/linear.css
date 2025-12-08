@@ -85,6 +85,10 @@
   syntax: "*";
   inherits: false;
 }
+@property --flex {
+  syntax: "*";
+  inherits: false;
+}
 
 @property --linear-justify-content {
   syntax: "flex-start|flex-end|center|space-between|space-around";
@@ -330,9 +334,10 @@ list-item {
     x-textarea,
     x-list,
     list-item {
-      flex-grow: var(--flex-grow);
-      flex-shrink: var(--flex-shrink);
-      flex-basis: var(--flex-basis);
+      flex: var(
+        --flex,
+        var(--flex-grow) var(--flex-shrink) var(--flex-basis)
+      );
     }
   }
 

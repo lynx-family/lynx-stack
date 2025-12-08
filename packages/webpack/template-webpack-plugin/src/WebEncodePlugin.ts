@@ -4,6 +4,7 @@
 
 import type { Compilation, Compiler } from 'webpack';
 
+import type { LynxStyleNode } from './css/index.js';
 import {
   LynxTemplatePlugin,
   isDebug,
@@ -49,8 +50,6 @@ export class WebEncodePlugin {
           stage: WebEncodePlugin.BEFORE_ENCODE_HOOK_STAGE,
         }, (encodeOptions) => {
           const { encodeData } = encodeOptions;
-          const { cssMap } = encodeData.css;
-          const styleInfo = genStyleInfo(cssMap);
 
           const [name, content] = last(Object.entries(encodeData.manifest))!;
 
@@ -66,7 +65,6 @@ export class WebEncodePlugin {
           }
 
           Object.assign(encodeData, {
-            styleInfo,
             manifest: {
               // `app-service.js` is the entry point of a template.
               '/app-service.js': content,
@@ -88,7 +86,11 @@ export class WebEncodePlugin {
         }, ({ encodeOptions }) => {
           return {
             buffer: Buffer.from(JSON.stringify({
-              styleInfo: encodeOptions['styleInfo'],
+              styleInfo: genStyleInfo(
+                (encodeOptions['css'] as {
+                  cssMap: Record<string, LynxStyleNode[]>;
+                }).cssMap,
+              ),
               manifest: encodeOptions.manifest,
               cardType: encodeOptions['cardType'],
               appType: encodeOptions['appType'],

@@ -31,7 +31,7 @@ describe('list', () => {
     expect(container).toMatchInlineSnapshot(`
       <page>
         <list
-          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_2","item-key":0},{"position":1,"type":"__Card__:__snapshot_a9e46_test_2","item-key":1},{"position":2,"type":"__Card__:__snapshot_a9e46_test_2","item-key":2}],"removeAction":[],"updateAction":[]}]"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__snapshot_a9e46_test_2","item-key":0},{"position":1,"type":"__snapshot_a9e46_test_2","item-key":1},{"position":2,"type":"__snapshot_a9e46_test_2","item-key":2}],"removeAction":[],"updateAction":[]}]"
         />
       </page>
     `);
@@ -42,7 +42,7 @@ describe('list', () => {
     expect(container).toMatchInlineSnapshot(`
       <page>
         <list
-          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_2","item-key":0},{"position":1,"type":"__Card__:__snapshot_a9e46_test_2","item-key":1},{"position":2,"type":"__Card__:__snapshot_a9e46_test_2","item-key":2}],"removeAction":[],"updateAction":[]}]"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__snapshot_a9e46_test_2","item-key":0},{"position":1,"type":"__snapshot_a9e46_test_2","item-key":1},{"position":2,"type":"__snapshot_a9e46_test_2","item-key":2}],"removeAction":[],"updateAction":[]}]"
         >
           <list-item
             item-key="0"
@@ -61,7 +61,7 @@ describe('list', () => {
     expect(container).toMatchInlineSnapshot(`
       <page>
         <list
-          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_2","item-key":0},{"position":1,"type":"__Card__:__snapshot_a9e46_test_2","item-key":1},{"position":2,"type":"__Card__:__snapshot_a9e46_test_2","item-key":2}],"removeAction":[],"updateAction":[]}]"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__snapshot_a9e46_test_2","item-key":0},{"position":1,"type":"__snapshot_a9e46_test_2","item-key":1},{"position":2,"type":"__snapshot_a9e46_test_2","item-key":2}],"removeAction":[],"updateAction":[]}]"
         >
           <list-item
             item-key="0"
@@ -91,7 +91,7 @@ describe('list', () => {
     expect(container).toMatchInlineSnapshot(`
       <page>
         <list
-          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_2","item-key":0},{"position":1,"type":"__Card__:__snapshot_a9e46_test_2","item-key":1},{"position":2,"type":"__Card__:__snapshot_a9e46_test_2","item-key":2}],"removeAction":[],"updateAction":[]}]"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__snapshot_a9e46_test_2","item-key":0},{"position":1,"type":"__snapshot_a9e46_test_2","item-key":1},{"position":2,"type":"__snapshot_a9e46_test_2","item-key":2}],"removeAction":[],"updateAction":[]}]"
         >
           <list-item
             item-key="0"
@@ -121,7 +121,7 @@ describe('list', () => {
     expect(container).toMatchInlineSnapshot(`
       <page>
         <list
-          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_2","item-key":0},{"position":1,"type":"__Card__:__snapshot_a9e46_test_2","item-key":1},{"position":2,"type":"__Card__:__snapshot_a9e46_test_2","item-key":2}],"removeAction":[],"updateAction":[]}]"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__snapshot_a9e46_test_2","item-key":0},{"position":1,"type":"__snapshot_a9e46_test_2","item-key":1},{"position":2,"type":"__snapshot_a9e46_test_2","item-key":2}],"removeAction":[],"updateAction":[]}]"
         >
           <list-item
             item-key="2"
@@ -203,7 +203,7 @@ describe('list', () => {
         >
           <list
             style="width:100%;height:100%"
-            update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_7","item-key":"0","full-span":true},{"position":1,"type":"__Card__:__snapshot_a9e46_test_7","item-key":"1","full-span":true},{"position":2,"type":"__Card__:__snapshot_a9e46_test_7","item-key":"2","full-span":true},{"position":3,"type":"__Card__:__snapshot_a9e46_test_7","item-key":"3","full-span":true},{"position":4,"type":"__Card__:__snapshot_a9e46_test_7","item-key":"4","full-span":true},{"position":5,"type":"__Card__:__snapshot_a9e46_test_7","item-key":"5","full-span":true}],"removeAction":[],"updateAction":[]}]"
+            update-list-info="[{"insertAction":[{"position":0,"type":"__snapshot_a9e46_test_7","item-key":"0","full-span":true},{"position":1,"type":"__snapshot_a9e46_test_7","item-key":"1","full-span":true},{"position":2,"type":"__snapshot_a9e46_test_7","item-key":"2","full-span":true},{"position":3,"type":"__snapshot_a9e46_test_7","item-key":"3","full-span":true},{"position":4,"type":"__snapshot_a9e46_test_7","item-key":"4","full-span":true},{"position":5,"type":"__snapshot_a9e46_test_7","item-key":"5","full-span":true}],"removeAction":[],"updateAction":[]}]"
           />
         </view>
       </page>
@@ -395,7 +395,7 @@ describe('list', () => {
     expect(list).toMatchInlineSnapshot(`
       <list
         style="width:100%;height:100%"
-        update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_7","item-key":"0","full-span":true},{"position":1,"type":"__Card__:__snapshot_a9e46_test_7","item-key":"1","full-span":true},{"position":2,"type":"__Card__:__snapshot_a9e46_test_7","item-key":"2","full-span":true},{"position":3,"type":"__Card__:__snapshot_a9e46_test_7","item-key":"3","full-span":true},{"position":4,"type":"__Card__:__snapshot_a9e46_test_7","item-key":"4","full-span":true},{"position":5,"type":"__Card__:__snapshot_a9e46_test_7","item-key":"5","full-span":true}],"removeAction":[],"updateAction":[]},{"insertAction":[],"removeAction":[3],"updateAction":[]}]"
+        update-list-info="[{"insertAction":[{"position":0,"type":"__snapshot_a9e46_test_7","item-key":"0","full-span":true},{"position":1,"type":"__snapshot_a9e46_test_7","item-key":"1","full-span":true},{"position":2,"type":"__snapshot_a9e46_test_7","item-key":"2","full-span":true},{"position":3,"type":"__snapshot_a9e46_test_7","item-key":"3","full-span":true},{"position":4,"type":"__snapshot_a9e46_test_7","item-key":"4","full-span":true},{"position":5,"type":"__snapshot_a9e46_test_7","item-key":"5","full-span":true}],"removeAction":[],"updateAction":[]},{"insertAction":[],"removeAction":[3],"updateAction":[]}]"
       >
         <list-item
           full-span="true"
@@ -511,7 +511,7 @@ describe('list - deferred <list-item/> should render as normal', () => {
         <list
           custom-list-name="list-container"
           style="height: 700rpx; width: 700rpx; background-color: #f0f0f0;"
-          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_13","item-key":"x"},{"position":1,"type":"__Card__:__snapshot_a9e46_test_15","item-key":"0"},{"position":2,"type":"__Card__:__snapshot_a9e46_test_15","item-key":"1"},{"position":3,"type":"__Card__:__snapshot_a9e46_test_15","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__snapshot_a9e46_test_13","item-key":"x"},{"position":1,"type":"__snapshot_a9e46_test_15","item-key":"0"},{"position":2,"type":"__snapshot_a9e46_test_15","item-key":"1"},{"position":3,"type":"__snapshot_a9e46_test_15","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
         />
       </page>
     `);
@@ -535,7 +535,7 @@ describe('list - deferred <list-item/> should render as normal', () => {
         <list
           custom-list-name="list-container"
           style="height: 700rpx; width: 700rpx; background-color: #f0f0f0;"
-          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_13","item-key":"x"},{"position":1,"type":"__Card__:__snapshot_a9e46_test_15","item-key":"0"},{"position":2,"type":"__Card__:__snapshot_a9e46_test_15","item-key":"1"},{"position":3,"type":"__Card__:__snapshot_a9e46_test_15","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__snapshot_a9e46_test_13","item-key":"x"},{"position":1,"type":"__snapshot_a9e46_test_15","item-key":"0"},{"position":2,"type":"__snapshot_a9e46_test_15","item-key":"1"},{"position":3,"type":"__snapshot_a9e46_test_15","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
         />
       </page>
     `);
@@ -547,7 +547,7 @@ describe('list - deferred <list-item/> should render as normal', () => {
         <list
           custom-list-name="list-container"
           style="height: 700rpx; width: 700rpx; background-color: #f0f0f0;"
-          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_13","item-key":"x"},{"position":1,"type":"__Card__:__snapshot_a9e46_test_15","item-key":"0"},{"position":2,"type":"__Card__:__snapshot_a9e46_test_15","item-key":"1"},{"position":3,"type":"__Card__:__snapshot_a9e46_test_15","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__snapshot_a9e46_test_13","item-key":"x"},{"position":1,"type":"__snapshot_a9e46_test_15","item-key":"0"},{"position":2,"type":"__snapshot_a9e46_test_15","item-key":"1"},{"position":3,"type":"__snapshot_a9e46_test_15","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
         >
           <list-item
             item-key="x"
@@ -658,7 +658,7 @@ describe('list - deferred <list-item/> should render as normal', () => {
         <list
           custom-list-name="list-container"
           style="height: 700rpx; width: 700rpx; background-color: #f0f0f0;"
-          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_18","item-key":"x"},{"position":1,"type":"__Card__:__snapshot_a9e46_test_20","item-key":"0"},{"position":2,"type":"__Card__:__snapshot_a9e46_test_20","item-key":"1"},{"position":3,"type":"__Card__:__snapshot_a9e46_test_20","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__snapshot_a9e46_test_18","item-key":"x"},{"position":1,"type":"__snapshot_a9e46_test_20","item-key":"0"},{"position":2,"type":"__snapshot_a9e46_test_20","item-key":"1"},{"position":3,"type":"__snapshot_a9e46_test_20","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
         />
       </page>
     `);
@@ -716,7 +716,7 @@ describe('list - deferred <list-item/> should render as normal', () => {
         <list
           custom-list-name="list-container"
           style="height: 700rpx; width: 700rpx; background-color: #f0f0f0;"
-          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_23","item-key":"0"},{"position":1,"type":"__Card__:__snapshot_a9e46_test_23","item-key":"1"},{"position":2,"type":"__Card__:__snapshot_a9e46_test_23","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__snapshot_a9e46_test_23","item-key":"0"},{"position":1,"type":"__snapshot_a9e46_test_23","item-key":"1"},{"position":2,"type":"__snapshot_a9e46_test_23","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
         />
       </page>
     `);
@@ -736,7 +736,7 @@ describe('list - deferred <list-item/> should render as normal', () => {
         <list
           custom-list-name="list-container"
           style="height: 700rpx; width: 700rpx; background-color: #f0f0f0;"
-          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_23","item-key":"0"},{"position":1,"type":"__Card__:__snapshot_a9e46_test_23","item-key":"1"},{"position":2,"type":"__Card__:__snapshot_a9e46_test_23","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__snapshot_a9e46_test_23","item-key":"0"},{"position":1,"type":"__snapshot_a9e46_test_23","item-key":"1"},{"position":2,"type":"__snapshot_a9e46_test_23","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
         />
       </page>
     `);
@@ -755,7 +755,7 @@ describe('list - deferred <list-item/> should render as normal', () => {
         <list
           custom-list-name="list-container"
           style="height: 700rpx; width: 700rpx; background-color: #f0f0f0;"
-          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_23","item-key":"0"},{"position":1,"type":"__Card__:__snapshot_a9e46_test_23","item-key":"1"},{"position":2,"type":"__Card__:__snapshot_a9e46_test_23","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__snapshot_a9e46_test_23","item-key":"0"},{"position":1,"type":"__snapshot_a9e46_test_23","item-key":"1"},{"position":2,"type":"__snapshot_a9e46_test_23","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
         >
           <list-item
             item-key="2"
@@ -840,7 +840,7 @@ describe('list - deferred <list-item/> should render as normal', () => {
             "rLynxFirstScreen",
             {
               "jsReadyEventIdSwap": {},
-              "root": "{"id":-1,"type":"root","children":[{"id":-2,"type":"__Card__:__snapshot_a9e46_test_26","children":[{"id":-3,"type":"__Card__:__snapshot_a9e46_test_27","values":[{"item-key":0}],"children":[{"id":-4,"type":"__Card__:__snapshot_a9e46_test_25","values":[{"style":{"backgroundColor":"red","margin":"12px"}}],"children":[{"id":-5,"type":"__Card__:__snapshot_a9e46_test_28","children":[{"id":-12,"type":null,"values":[0]}]}]}]},{"id":-6,"type":"__Card__:__snapshot_a9e46_test_27","values":[{"item-key":1}],"children":[{"id":-7,"type":"__Card__:__snapshot_a9e46_test_25","values":[{"style":{"backgroundColor":"red","margin":"12px"}}],"children":[{"id":-8,"type":"__Card__:__snapshot_a9e46_test_28","children":[{"id":-13,"type":null,"values":[1]}]}]}]},{"id":-9,"type":"__Card__:__snapshot_a9e46_test_27","values":[{"item-key":2}],"children":[{"id":-10,"type":"__Card__:__snapshot_a9e46_test_25","values":[{"style":{"backgroundColor":"red","margin":"12px"}}],"children":[{"id":-11,"type":"__Card__:__snapshot_a9e46_test_28","children":[{"id":-14,"type":null,"values":[2]}]}]}]}]}]}",
+              "root": "{"id":-1,"type":"root","children":[{"id":-2,"type":"__snapshot_a9e46_test_26","children":[{"id":-3,"type":"__snapshot_a9e46_test_27","values":[{"item-key":0}],"children":[{"id":-4,"type":"__snapshot_a9e46_test_25","values":[{"style":{"backgroundColor":"red","margin":"12px"}}],"children":[{"id":-5,"type":"__snapshot_a9e46_test_28","children":[{"id":-12,"type":null,"values":[0]}]}]}]},{"id":-6,"type":"__snapshot_a9e46_test_27","values":[{"item-key":1}],"children":[{"id":-7,"type":"__snapshot_a9e46_test_25","values":[{"style":{"backgroundColor":"red","margin":"12px"}}],"children":[{"id":-8,"type":"__snapshot_a9e46_test_28","children":[{"id":-13,"type":null,"values":[1]}]}]}]},{"id":-9,"type":"__snapshot_a9e46_test_27","values":[{"item-key":2}],"children":[{"id":-10,"type":"__snapshot_a9e46_test_25","values":[{"style":{"backgroundColor":"red","margin":"12px"}}],"children":[{"id":-11,"type":"__snapshot_a9e46_test_28","children":[{"id":-14,"type":null,"values":[2]}]}]}]}]}]}",
             },
           ],
         ],

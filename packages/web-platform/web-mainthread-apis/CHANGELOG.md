@@ -1,5 +1,16 @@
 # @lynx-js/web-mainthread-apis
 
+## 0.19.0
+
+### Patch Changes
+
+- fix: capture and bind event listener should be trigger correctly ([#1972](https://github.com/lynx-family/lynx-stack/pull/1972))
+
+- fix: the l-p-comp-uid of page should be '1' ([#1970](https://github.com/lynx-family/lynx-stack/pull/1970))
+
+- Updated dependencies []:
+  - @lynx-js/web-constants@0.19.0
+
 ## 0.18.4
 
 ### Patch Changes
