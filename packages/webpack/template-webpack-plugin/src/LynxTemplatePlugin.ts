@@ -41,6 +41,7 @@ export interface EncodeOptions {
   lepusCode: {
     root: string | undefined;
     lepusChunk: Record<string, string>;
+    filename: string | undefined;
   };
   // `customSections` option only takes effect on Lynx >= 2.16.
   customSections: Record<string, {
@@ -308,6 +309,7 @@ interface EncodeRawData {
   lepusCode: {
     root: Asset | undefined;
     chunks: Asset[];
+    filename: string | undefined;
   };
   /**
    * background thread
@@ -790,6 +792,13 @@ class LynxTemplatePluginImpl {
         // TODO: support multiple lepus chunks
         root: assetsInfoByGroups.mainThread[0],
         chunks: [],
+        filename: (() => {
+          const name = assetsInfoByGroups.mainThread[0]?.name;
+          if (name) {
+            return path.basename(name);
+          }
+          return undefined;
+        })(),
       },
       manifest: Object.fromEntries(
         assetsInfoByGroups.backgroundThread.map(asset => {
@@ -825,6 +834,7 @@ class LynxTemplatePluginImpl {
             return [asset.name, asset.source.source().toString()];
           }),
         ),
+        filename: lepusCode.filename,
       },
     };
 

@@ -1,5 +1,11 @@
 # create-rspeedy
 
+## 0.12.1
+
+### Patch Changes
+
+- Bump `@rsbuild/plugin-type-check` v1.3.1. ([#1964](https://github.com/lynx-family/lynx-stack/pull/1964))
+
 ## 0.12.0
 
 ## 0.11.9

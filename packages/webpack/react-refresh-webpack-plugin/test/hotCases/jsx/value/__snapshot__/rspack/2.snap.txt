@@ -6,7 +6,7 @@
 ## Asset Files
 - Bundle: rspack-bundle.js
 - Manifest: main.LAST_HASH.hot-update.json, size: 28
-- Update: main.LAST_HASH.hot-update.js, size: 3421
+- Update: main.LAST_HASH.hot-update.js, size: 3713
 
 ## Manifest
 
@@ -47,21 +47,22 @@ __webpack_require__.d(__webpack_exports__, {
 /* module decorator */ module = __webpack_require__.hmd(module);
 /* provided dependency */ var __prefresh_utils__ = __webpack_require__(/*! ../../../../runtime/refresh.cjs */ "../../../../runtime/refresh.cjs");
 
-const __snapshot_4953c_00662_1 = (__webpack_require__(/*! @lynx-js/react/internal */ "../../../../../../react/runtime/lib/internal.js")/* .createSnapshot */.createSnapshot)("__snapshot_4953c_00662_1", function() {
-    const pageId = (__webpack_require__(/*! @lynx-js/react/internal */ "../../../../../../react/runtime/lib/internal.js")/* .__pageId */.__pageId);
-    const el = __CreateView(pageId);
-    const el1 = __CreateText(pageId);
-    __AppendElement(el, el1);
-    return [
-        el,
-        el1
-    ];
-}, null, [
-    [
-        (__webpack_require__(/*! @lynx-js/react/internal */ "../../../../../../react/runtime/lib/internal.js")/* .__DynamicPartChildren */.__DynamicPartChildren),
-        1
-    ]
-], undefined, globDynamicComponentEntry, null);
+const __snapshot_4953c_00662_1 = "__snapshot_4953c_00662_1";
+(__webpack_require__(/*! @lynx-js/react/internal */ "../../../../../../react/runtime/lib/internal.js")/* .snapshotCreatorMap */.snapshotCreatorMap)[__snapshot_4953c_00662_1] = (__snapshot_4953c_00662_1)=>(__webpack_require__(/*! @lynx-js/react/internal */ "../../../../../../react/runtime/lib/internal.js")/* .createSnapshot */.createSnapshot)(__snapshot_4953c_00662_1, function() {
+        const pageId = (__webpack_require__(/*! @lynx-js/react/internal */ "../../../../../../react/runtime/lib/internal.js")/* .__pageId */.__pageId);
+        const el = __CreateView(pageId);
+        const el1 = __CreateText(pageId);
+        __AppendElement(el, el1);
+        return [
+            el,
+            el1
+        ];
+    }, null, [
+        [
+            (__webpack_require__(/*! @lynx-js/react/internal */ "../../../../../../react/runtime/lib/internal.js")/* .__DynamicPartChildren */.__DynamicPartChildren),
+            1
+        ]
+    ], undefined, globDynamicComponentEntry, null, true);
 function App() {
     const value = "content 3";
     return __RenderContent(/*#__PURE__*/ (0,_lynx_js_react_jsx_dev_runtime__rspack_import_0.jsxDEV)(__snapshot_4953c_00662_1, {

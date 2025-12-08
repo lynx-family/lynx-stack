@@ -5,8 +5,9 @@
 import type { RsbuildPluginAPI } from '@rsbuild/core'
 
 export function applyUseSyncExternalStore(api: RsbuildPluginAPI): void {
-  api.modifyBundlerChain(async chain => {
-    const { resolve } = await import('./resolve.js')
+  api.modifyBundlerChain(async (chain, { rspack }) => {
+    const { getImportResolver } = await import('./resolve.js')
+    const resolve = getImportResolver(rspack)
     const useSyncExternalStoreEntries = [
       'use-sync-external-store',
       'use-sync-external-store/with-selector',

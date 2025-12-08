@@ -862,6 +862,35 @@ test.describe('reactlynx3 tests', () => {
         ); // green
       },
     );
+
+    test('basic-page-event', async ({ page }, { title }) => {
+      await goto(page, title);
+      const target = page.locator('#target');
+      await expect(target).toHaveCSS('background-color', 'rgb(255, 192, 203)'); // pink
+      await target.click();
+      await wait(100);
+      await expect(target).toHaveCSS(
+        'background-color',
+        'rgb(0, 128, 0)',
+      ); // green;
+    });
+
+    test('basic-event-target-trigger', async ({ page }, { title }) => {
+      await goto(page, 'basic-event-trigger');
+      await page.locator('#target1').click();
+      await wait(100);
+      await expect(page.locator('#target')).toHaveText(
+        '[capture tap][bind tap]',
+      );
+    });
+    test('basic-event-child-trigger', async ({ page }, { title }) => {
+      await goto(page, 'basic-event-trigger');
+      await page.locator('#target2').click();
+      await wait(100);
+      await expect(page.locator('#target')).toHaveText(
+        '[capture tap][bind tap]',
+      );
+    });
   });
   test.describe('basic-css', () => {
     test('basic-css-asset-in-css', async ({ page }, { title }) => {
