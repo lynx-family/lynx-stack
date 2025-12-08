@@ -13,7 +13,7 @@ use serde::Deserialize;
 use std::collections::HashSet;
 use std::vec;
 use swc_core::common::util::take::Take;
-use swc_core::common::{Spanned, DUMMY_SP};
+use swc_core::common::{errors::HANDLER, Span, Spanned, DUMMY_SP};
 use swc_core::ecma::ast::*;
 use swc_core::ecma::utils::prepend_stmts;
 use swc_core::ecma::visit::VisitMutWith;
@@ -464,6 +464,31 @@ impl VisitMut for WorkletVisitor {
   }
 }
 
+const INVALID_RUNTIME_MSG: &str = "Invalid runtime value. Only 'shared' is supported.";
+
+fn emit_invalid_runtime_error(span: Span) {
+  HANDLER.with(|handler| {
+    handler.struct_span_err(span, INVALID_RUNTIME_MSG).emit();
+  });
+}
+
+fn validate_runtime_value(expr: &Expr) -> bool {
+  match expr {
+    Expr::Lit(Lit::Str(value)) => {
+      if value.value == "shared" {
+        true
+      } else {
+        emit_invalid_runtime_error(value.span);
+        false
+      }
+    }
+    _ => {
+      emit_invalid_runtime_error(expr.span());
+      false
+    }
+  }
+}
+
 fn is_shared_runtime_import(import_decl: &ImportDecl) -> bool {
   if let Some(with_clause) = &import_decl.with {
     // Check if the with clause contains runtime: "shared"
@@ -472,14 +497,10 @@ fn is_shared_runtime_import(import_decl: &ImportDecl) -> bool {
         if let Prop::KeyValue(kv) = &**prop {
           match &kv.key {
             PropName::Ident(key) if key.sym == "runtime" => {
-              if let Expr::Lit(Lit::Str(value)) = &*kv.value {
-                return value.value == "shared";
-              }
+              return validate_runtime_value(&kv.value);
             }
             PropName::Str(s) if s.value == "runtime" => {
-              if let Expr::Lit(Lit::Str(value)) = &*kv.value {
-                return value.value == "shared";
-              }
+              return validate_runtime_value(&kv.value);
             }
             _ => {}
           }
