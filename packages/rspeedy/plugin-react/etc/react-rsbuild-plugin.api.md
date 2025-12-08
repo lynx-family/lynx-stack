@@ -14,9 +14,7 @@ export interface AddComponentElementConfig {
     compilerOnly: boolean
 }
 
-// Warning: (ae-unresolved-inheritdoc-reference) The @inheritDoc reference could not be resolved: No member was found with name "compat"
-//
-// @public (undocumented)
+// @public
 export interface CompatVisitorConfig {
     addComponentElement: boolean | AddComponentElementConfig
     additionalComponentAttributes: Array<string>
@@ -36,16 +34,12 @@ export interface CompatVisitorConfig {
     target: 'LEPUS' | 'JS' | 'MIXED'
 }
 
-// Warning: (ae-unresolved-inheritdoc-reference) The @inheritDoc reference could not be resolved: No member was found with name "defineDCE"
-//
-// @public (undocumented)
+// @public
 export interface DefineDceVisitorConfig {
     define: Record<string, string>
 }
 
-// Warning: (ae-unresolved-inheritdoc-reference) The @inheritDoc reference could not be resolved: No member was found with name "extractStr"
-//
-// @public (undocumented)
+// @public
 export interface ExtractStrConfig {
     // @internal (undocumented)
     extractedStrArr?: Array<string>
@@ -106,9 +100,7 @@ export interface ReactLynxOptions {
 // @public (undocumented)
 export type ResolvedPluginReactLynxOptions = Omit<LynxCompilerOptions, keyof ReactLynxDefaultCompilerOptions> & RequiredNotUndefined<ReactLynxDefaultCompilerOptions> & Omit<LynxConfig, keyof ReactLynxDefaultLynxConfig> & RequiredNotUndefined<ReactLynxDefaultLynxConfig> & Required<ReactLynxOptions>;
 
-// Warning: (ae-unresolved-inheritdoc-reference) The @inheritDoc reference could not be resolved: No member was found with name "shake"
-//
-// @public (undocumented)
+// @public
 export interface ShakeVisitorConfig {
     pkgName: Array<string>
     removeCallParams: Array<string>
