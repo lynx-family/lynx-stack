@@ -5,6 +5,7 @@
       { "transform": "typescript-transform-paths", "afterDeclarations": true },
     ],
     "composite": true,
+    "noEmit": true,
     "rootDir": "./ts",
     "outDir": "./dist",
     "lib": ["DOM", "ESNext", "WebWorker"],

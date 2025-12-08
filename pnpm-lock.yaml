@@ -988,6 +988,9 @@ importers:
       '@lynx-js/lynx-core':
         specifier: 0.1.3
         version: 0.1.3
+      '@rslib/core':
+        specifier: ^0.15.0
+        version: 0.15.0(@microsoft/api-extractor@7.53.1(@types/node@24.6.1))(@typescript/native-preview@7.0.0-dev.20251106.1)(typescript@5.9.3)
       binaryen:
         specifier: ^124.0.0
         version: 124.0.0
