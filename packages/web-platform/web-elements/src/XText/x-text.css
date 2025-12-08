@@ -54,7 +54,7 @@ inline-text > lynx-wrapper > inline-text,
 x-text > lynx-wrapper > *,
 inline-truncation > lynx-wrapper > inline-text,
 inline-truncation > lynx-wrapper > x-text {
-  display: inline;
+  display: inline !important;
   background-clip: inherit;
   -webkit-background-clip: inherit;
 }
