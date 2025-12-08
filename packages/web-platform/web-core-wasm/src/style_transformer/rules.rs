@@ -243,16 +243,6 @@ pub fn get_replace_rule_value(
   }
 }
 
-#[inline(always)]
-pub fn is_digit_only(source: &str) -> bool {
-  for code in source.as_bytes() {
-    if code > &b'9' as &u8 || code < &b'0' as &u8 {
-      return false;
-    }
-  }
-  true
-}
-
 type CSSPair<'a> = (&'a str, &'a str);
 
 pub(crate) fn query_transform_rules<'a>(

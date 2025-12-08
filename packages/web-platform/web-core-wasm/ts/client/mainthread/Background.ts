@@ -17,8 +17,15 @@ import {
   dispatchI18nResourceEndpoint,
   updateDataEndpoint,
   updateGlobalPropsEndpoint,
+  BackgroundThreadStartEndpoint,
 } from '@client/endpoints.js';
-import type { TimingEntry, WorkerStartMessage } from '@types';
+import type {
+  Cloneable,
+  NapiModulesMap,
+  NativeModulesMap,
+  TimingEntry,
+  WorkerStartMessage,
+} from '@types';
 import { LynxCrossThreadContext } from '@client/LynxCrossThreadContext.js';
 import { systemInfo } from './LynxViewInstance.js';
 
@@ -111,6 +118,28 @@ export class BackgroundThread implements AsyncDisposable {
       [messageChannel.port2],
     );
     this.rpc.setMessagePort(messageChannel.port1);
+  }
+
+  startBTS(
+    initData: Cloneable,
+    globalProps: Cloneable,
+    cardType: string,
+    customSections: Record<string, Cloneable>,
+    nativeModulesMap: NativeModulesMap,
+    napiModulesMap: NapiModulesMap,
+    initialBTSChunkUrls: Record<string, string>,
+  ) {
+    this.rpc.invoke(BackgroundThreadStartEndpoint, [
+      {
+        initData,
+        globalProps,
+        cardType,
+        customSections,
+        nativeModulesMap,
+        napiModulesMap,
+        initialBTSChunkUrls,
+      },
+    ]);
   }
 
   markTiming(

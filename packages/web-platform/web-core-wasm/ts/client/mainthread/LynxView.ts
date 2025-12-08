@@ -401,6 +401,7 @@ export class LynxView extends HTMLElement {
           }
           const lynxGroupId = this.lynxGroupId;
           this.#instance = new LynxViewInstance(
+            this.#initData,
             this.#globalProps,
             this.#url,
             this.shadowRoot!,

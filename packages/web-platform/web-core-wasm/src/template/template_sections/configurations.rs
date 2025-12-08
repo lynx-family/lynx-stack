@@ -21,12 +21,12 @@ impl Configurations {
     match self
       .config_data
       .get(key)
-      .ok_or_else(|| format!("Key '{}' not found in Configuration", key))?
+      .ok_or_else(|| format!("Key '{key}' not found in Configuration"))?
       .as_str()
     {
       "true" => Ok(true),
       "false" => Ok(false),
-      _ => Err(format!("Invalid value for boolean config key '{}'", key)),
+      _ => Err(format!("Invalid value for boolean config key '{key}'")),
     }
   }
 }

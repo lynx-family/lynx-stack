@@ -8,6 +8,7 @@ use super::element_apis::{DecodedElementTemplate, LynxElementData};
 use super::style_manager::StyleManager;
 use crate::constants;
 use crate::js_binding::RustMainthreadContextBinding;
+use crate::template::template_manager::TemplateManager;
 use fnv::{FnvHashMap, FnvHashSet};
 use std::cell::RefCell;
 use std::{rc::Rc, vec};
@@ -164,31 +165,21 @@ impl MainThreadWasmContext {
     elements
   }
 
-  // #[wasm_bindgen(js_name = "__wasm_update_style")]
-  // pub fn push_template(
-  //   &mut self,
-  //   template_manager: &template::TemplateManager,
-  //   template_url: String,
-  // ) {
-  //   if self.entry_template_url.is_none() {
-  //     self.entry_template_url = template_url.clone().into();
-  //     self.style_manager.push_style_sheet(
-  //       template_manager
-  //         .get_cached_template(&template_url)
-  //         .unwrap()
-  //         .get_style_info(),
-  //       None,
-  //     );
-  //   } else {
-  //     self.style_manager.push_style_sheet(
-  //       template_manager
-  //         .get_cached_template(&template_url)
-  //         .unwrap()
-  //         .get_style_info(),
-  //       Some(&template_url),
-  //     );
-  //   }
-  // }
+  #[wasm_bindgen(js_name = "__wasm_load_style")]
+  pub fn load_style(
+    &mut self,
+    template_manager: &TemplateManager,
+    template_url: String,
+  ) -> Result<(), JsValue> {
+    let style_info = template_manager
+      .get_template_by_url(&template_url)
+      .ok_or_else(|| JsValue::from_str("Template not found"))?
+      .style_info
+      .as_ref()
+      .ok_or_else(|| JsValue::from_str("StyleInfo not set"))?;
+    self.style_manager.push_style_sheet(style_info);
+    Ok(())
+  }
 
   // #[wasm_bindgen(js_name = "__wasm_GC")]
   // pub fn gc(&mut self) {

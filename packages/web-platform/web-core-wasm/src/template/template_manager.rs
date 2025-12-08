@@ -35,6 +35,10 @@ impl TemplateManager {
       .ok_or("RawElementTemplate not found")
   }
 
+  pub(crate) fn get_template_by_url(&self, template_url: &str) -> Option<&DecodedTemplate> {
+    self.cache.get(template_url)
+  }
+
   fn decode_and_set<T, F>(
     &mut self,
     template_url: String,
@@ -92,6 +96,21 @@ impl TemplateManager {
         Ok(())
       },
     )
+  }
+
+  #[wasm_bindgen(js_name = getConfig)]
+  pub fn get_config(&self, template_url: String, key: String) -> Result<bool, JsError> {
+    let template = self
+      .cache
+      .get(&template_url)
+      .ok_or_else(|| JsError::new("Template not found"))?;
+    let config = template
+      .configuration
+      .as_ref()
+      .ok_or_else(|| JsError::new("Configuration not loaded"))?;
+    config
+      .get_config_value_bool(&key)
+      .map_err(|e| JsError::new(&e))
   }
 
   #[wasm_bindgen(js_name = setStyleInfo)]
