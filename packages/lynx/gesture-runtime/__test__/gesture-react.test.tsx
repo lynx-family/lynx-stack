@@ -79,7 +79,7 @@ describe('create gesture', () => {
         // Non Main Thread Callback
       })
     ).toThrow(
-      `Gesture Callback Must be a Main Thread Function, check callback of onUpdate's callback`,
+      `Gesture callback for 'onUpdate' must be a main thread function`,
     );
   });
 

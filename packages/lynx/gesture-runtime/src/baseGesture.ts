@@ -29,7 +29,7 @@ function wrapCallback<TEvent extends GestureChangeEvent = GestureChangeEvent>(
 ): WrappedCallback {
   if (cb && !isWorkletObj(cb)) {
     throw new Error(
-      `Gesture Callback Must be a Main Thread Function, check callback of ${name}'s callback`,
+      `Gesture callback for '${name}' must be a main thread function.`,
     );
   }
 

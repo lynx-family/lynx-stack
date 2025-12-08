@@ -19,7 +19,3 @@ export default function Example() {
   return <view main-thread:gesture={pan}></view>;
 }
 ```
-
-## Docs
-
-- See the dedicated guide website for full documentation and API details.

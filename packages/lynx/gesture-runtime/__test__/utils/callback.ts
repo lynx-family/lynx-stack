@@ -8,7 +8,14 @@ import type {
   ConsumeGestureParams,
   SetGestureStateType,
 } from '../../src/gestureInterface.js';
-import type { GestureConfig } from '../../src/processGesture.js';
+
+interface ProcessesGestureConfig {
+  callbacks: {
+    name: string;
+    callback: Worklet;
+  }[];
+  config?: Record<string, unknown>;
+}
 
 export class MockGestureManager {
   __SetGestureState: Mock<
@@ -19,7 +26,7 @@ export class MockGestureManager {
   > = vi.fn((dom: any, id: number, params: ConsumeGestureParams) => {});
 }
 
-function getCallback(config: GestureConfig, method: string) {
+function getCallback(config: ProcessesGestureConfig, method: string) {
   if (config.callbacks) {
     return config.callbacks.find((callback) => callback.name === method);
   } else {
