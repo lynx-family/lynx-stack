@@ -104,7 +104,7 @@ export interface ReactLynxOptions {
 // Warning: (ae-missing-release-tag) "ResolvedPluginReactLynxOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export type ResolvedPluginReactLynxOptions = Omit<LynxCompilerOptions, keyof ReactLynxDefaultCompilerOptions> & RequiredNotUndefined<ReactLynxDefaultCompilerOptions> & Omit<LynxConfig, keyof ReactLynxDefaultLynxConfig> & Required<ReactLynxDefaultLynxConfig> & Required<ReactLynxOptions>;
+export type ResolvedPluginReactLynxOptions = Omit<LynxCompilerOptions, keyof ReactLynxDefaultCompilerOptions> & RequiredNotUndefined<ReactLynxDefaultCompilerOptions> & Omit<LynxConfig, keyof ReactLynxDefaultLynxConfig> & RequiredNotUndefined<ReactLynxDefaultLynxConfig> & Required<ReactLynxOptions>;
 
 // Warning: (ae-unresolved-inheritdoc-reference) The @inheritDoc reference could not be resolved: No member was found with name "shake"
 //

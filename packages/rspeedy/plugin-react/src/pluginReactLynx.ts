@@ -317,7 +317,7 @@ export type ResolvedPluginReactLynxOptions =
   & Omit<LynxCompilerOptions, keyof ReactLynxDefaultCompilerOptions>
   & RequiredNotUndefined<ReactLynxDefaultCompilerOptions>
   & Omit<LynxConfig, keyof ReactLynxDefaultLynxConfig>
-  & Required<ReactLynxDefaultLynxConfig>
+  & RequiredNotUndefined<ReactLynxDefaultLynxConfig>
   & Required<ReactLynxOptions>
 
 /**
