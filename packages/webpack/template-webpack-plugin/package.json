@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/template-webpack-plugin",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "description": "Simplifies creation of Lynx template files to serve your webpack bundles",
   "keywords": [
     "webpack",
@@ -52,6 +52,7 @@
     "@types/object.groupby": "^1.0.4",
     "@types/object.pick": "^1.3.4",
     "@upupming/type-config": "0.0.1",
+    "css-loader": "^7.1.2",
     "webpack": "^5.102.0"
   },
   "peerDependencies": {
