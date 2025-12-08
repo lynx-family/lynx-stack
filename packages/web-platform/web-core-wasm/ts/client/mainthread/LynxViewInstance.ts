@@ -115,7 +115,7 @@ export class LynxViewInstance implements AsyncDisposable {
       },
       set: (v) => {
         this.renderPageFunction = v;
-        this.onMTSScriptsReady();
+        this.onMTSScriptsExecuted();
       },
       configurable: true,
       enumerable: true,
@@ -129,12 +129,14 @@ export class LynxViewInstance implements AsyncDisposable {
     );
   }
 
-  onMTSScriptsLoaded(lepusCodeUrls: Record<string, string>) {
-    this.lepusCodeUrls = lepusCodeUrls;
+  onMTSScriptsLoaded() {
+    this.lepusCodeUrls = templateManager.getMainThreadCodeUrls(
+      this.templateUrl,
+    ) as Record<string, string>;
     this.mtsRealm.loadScript(this.lepusCodeUrls['root']!);
   }
 
-  onMTSScriptsReady() {
+  onMTSScriptsExecuted() {
     // start the webworker
     const processedData = this.mainThreadGlobalThis.processData
       ? this.mainThreadGlobalThis.processData(this.initData)

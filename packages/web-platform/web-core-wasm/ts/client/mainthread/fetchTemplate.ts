@@ -6,6 +6,7 @@
 
 import { TemplateSectionLabel, MagicHeader } from '@constants';
 import { templateManager } from '@client/wasm.js';
+import type { LynxViewInstance } from './LynxViewInstance.js';
 
 class StreamReader {
   private reader:
@@ -94,6 +95,7 @@ async function handleStream(
   url: string,
   stream: ReadableStreamBYOBReader | ReadableStreamDefaultReader,
   isBYOB: boolean,
+  lynxViewInstance: LynxViewInstance,
 ) {
   templateManager.createTemplate(url);
   const reader = new StreamReader(stream, isBYOB);
@@ -164,9 +166,11 @@ async function handleStream(
       switch (label) {
         case TemplateSectionLabel.Configurations:
           templateManager.setConfig(url, content);
+          lynxViewInstance.onPageConfigReady();
           break;
         case TemplateSectionLabel.StyleInfo:
           templateManager.setStyleInfo(url, content);
+          lynxViewInstance.onStyleInfoReady();
           break;
         case TemplateSectionLabel.LepusCode:
           templateManager.setLepusCode(url, content);
@@ -179,6 +183,7 @@ async function handleStream(
           const jsonStr = textDecoder.decode(content);
           const customSections = JSON.parse(jsonStr);
           templateManager.setCustomSection(url, customSections);
+          lynxViewInstance.onMTSScriptsLoaded();
           break;
         }
         case TemplateSectionLabel.Manifest:
@@ -197,6 +202,7 @@ async function handleStream(
 export function fetchTemplate(
   url: string,
   signal: AbortSignal,
+  lynxViewInstance: LynxViewInstance,
 ): Promise<void> {
   return fetch(url, { signal }).then(async (response) => {
     if (!response.body) {
@@ -212,6 +218,6 @@ export function fetchTemplate(
     } catch {
       reader = response.body.getReader();
     }
-    await handleStream(url, reader, isBYOB);
+    await handleStream(url, reader, isBYOB, lynxViewInstance);
   });
 }

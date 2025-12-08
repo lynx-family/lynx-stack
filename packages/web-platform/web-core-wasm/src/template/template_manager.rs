@@ -170,6 +170,21 @@ impl TemplateManager {
     )
   }
 
+  #[wasm_bindgen(js_name = getMainThreadCodeUrls)]
+  pub fn get_main_thread_code_urls(&self, template_url: String) -> Result<js_sys::Object, JsError> {
+    let template = self
+      .cache
+      .get(&template_url)
+      .ok_or_else(|| JsError::new("Template not found"))?;
+    Ok(
+      template
+        .lepus_code
+        .as_ref()
+        .ok_or_else(|| JsError::new("Lepus code not set"))?
+        .clone(),
+    )
+  }
+
   #[wasm_bindgen(js_name = setBackgroundCode)]
   pub fn set_background_code(
     &mut self,
