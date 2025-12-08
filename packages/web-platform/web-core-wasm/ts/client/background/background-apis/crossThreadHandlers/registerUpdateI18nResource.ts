@@ -1,13 +1,13 @@
 // Copyright 2023 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type { I18nResource, NativeTTObject } from '@types';
+import type { II18nResource, NativeTTObject } from '@types';
 import type { Rpc } from '@lynx-js/web-worker-rpc';
 import { dispatchI18nResourceEndpoint } from '@client/endpoints.js';
 
 export function registerUpdateI18nResource(
   mainThreadRpc: Rpc,
-  i18nResource: I18nResource,
+  i18nResource: II18nResource,
   tt: NativeTTObject,
 ): void {
   // dispatchI18nResource from mts

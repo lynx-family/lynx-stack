@@ -9,14 +9,16 @@ import type {
   Cloneable,
   InitI18nResources,
   JSRealm,
+  MainThreadGlobalThis,
   NapiModulesMap,
   NativeModulesMap,
   WorkerStartMessage,
 } from '@types';
 import { systemInfoBase } from '@constants';
 import { BackgroundThread } from './Background.js';
-import { createIFrameRealm } from './createIFrameRealm.js';
 import { I18nManager } from './I18n.js';
+import { WASMJSBinding } from './elementAPIs/WASMJSBinding.js';
+import { ExposureServices } from './ExposureServices.js';
 
 const pixelRatio = window.devicePixelRatio;
 const screenWidth = window.screen.availWidth * pixelRatio;
@@ -61,27 +63,28 @@ export class LynxViewInstance implements AsyncDisposable {
     runningCards: number;
   } | undefined)[] = [];
 
-  private btsRpc: Rpc;
   private lynxGroupId?: number;
   private webWorker: Worker;
-  private backgroundThread: BackgroundThread;
 
+  readonly mainThreadGlobalThis: MainThreadGlobalThis;
+  readonly mtsWasmBinding: WASMJSBinding;
+  readonly backgroundThread: BackgroundThread;
   readonly i18nManager: I18nManager;
+  readonly exposureServices: ExposureServices;
+
   lepusCodeUrls?: Record<string, string>;
-  mtsRealm?: JSRealm;
 
   constructor(
     public readonly globalprops: Cloneable,
     public readonly templateUrl: string,
-    private readonly rootDom: ShadowRoot,
+    public readonly rootDom: ShadowRoot,
+    public readonly mtsRealm: JSRealm,
     lynxGroupId: number | undefined,
     initI18nResources?: InitI18nResources,
   ) {
-    // start the main-thread first
-    createIFrameRealm(this.rootDom).then((realm) => {
-      this.mtsRealm = realm;
-    });
-
+    this.mainThreadGlobalThis = mtsRealm.globalWindow as
+      & typeof globalThis
+      & MainThreadGlobalThis;
     // now start the background worker
     if (lynxGroupId !== undefined) {
       this.lynxGroupId = lynxGroupId;
@@ -108,13 +111,34 @@ export class LynxViewInstance implements AsyncDisposable {
       } as WorkerStartMessage,
       [messageChannel.port2],
     );
-    this.btsRpc = new Rpc(messageChannel.port1, 'ui-to-bg');
-    this.backgroundThread = new BackgroundThread(this.btsRpc);
+    const btsRpc = new Rpc(messageChannel.port1, 'ui-to-bg');
+    this.backgroundThread = new BackgroundThread(btsRpc);
     this.i18nManager = new I18nManager(
       this.backgroundThread,
       this.rootDom,
       initI18nResources,
     );
+    this.mtsWasmBinding = new WASMJSBinding(
+      this,
+    );
+    this.exposureServices = new ExposureServices(
+      this,
+    );
+  }
+
+  async updateData(
+    data: Cloneable,
+    processorName?: string,
+  ): Promise<void> {
+    const processedData = this.mainThreadGlobalThis.processData
+      ? this.mainThreadGlobalThis.processData(data, processorName)
+      : data;
+    this.mainThreadGlobalThis.updatePage?.(processedData, { processorName });
+    await this.backgroundThread.updateData(processedData, { processorName });
+  }
+
+  async updateGlobalProps(data: Cloneable) {
+    await this.backgroundThread.updateGlobalProps(data);
   }
 
   reportError(error: Error, release: string, fileName: string) {

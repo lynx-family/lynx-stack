@@ -16,7 +16,8 @@ import {
   lynxDisposedAttribute,
   lynxTagAttribute,
 } from '@constants';
-import type { LynxViewInstance } from './LynxViewInstance.js';
+import { LynxViewInstance } from './LynxViewInstance.js';
+import { createIFrameRealm } from './createIFrameRealm.js';
 
 export type INapiModulesCall = (
   name: string,
@@ -51,7 +52,6 @@ export type INapiModulesCall = (
  * @property {"false" | "true" | null} injectHeadLinks [optional] (attribute: "inject-head-links") @default true set it to "false" to disable injecting the <link href="" ref="stylesheet"> styles into shadowroot
  * @property {string[]} injectStyleRules [optional] the css rules which will be injected into shadowroot. Each items will be inserted by `insertRule` method. @see https://developer.mozilla.org/docs/Web/API/CSSStyleSheet/insertRule
  * @property {number} lynxGroupId [optional] (attribute: "lynx-group-id") the background shared context id, which is used to share webworker between different lynx cards
- * @property {"all-on-ui" | "multi-thread"} threadStrategy [optional] @default "multi-thread" (attribute: "thread-strategy") controls the thread strategy for current lynx view
  * @property {(string)=>Promise<LynxTemplate>} customTemplateLoader [optional] the custom template loader, which is used to load the template
  * @property {InitI18nResources} initI18nResources [optional] (attribute: "init-i18n-resources") the complete set of i18nResources that on the container side, which can be obtained synchronously by _I18nResourceTranslation
  *
@@ -164,7 +164,7 @@ export class LynxView extends HTMLElement {
     data: InitI18nResources,
     options: I18nResourceTranslationOptions,
   ) {
-    this.#instance?.i18nManager.updateI18nResources(data, options);
+    this.#instance?.i18nManager.updateData(data, options);
   }
 
   #overrideLynxTagToHTMLTagMap: Record<string, string> = { 'page': 'div' };
@@ -273,7 +273,9 @@ export class LynxView extends HTMLElement {
     processorName?: string,
     callback?: () => void,
   ) {
-    this.#instance?.updateData(data, processorName, callback);
+    this.#instance?.updateData(data, processorName).then(() => {
+      callback?.();
+    });
   }
 
   /**
@@ -292,7 +294,7 @@ export class LynxView extends HTMLElement {
    * send global events, which can be listened to using the GlobalEventEmitter
    */
   sendGlobalEvent(eventName: string, params: Cloneable[]) {
-    this.#instance?.sendGlobalEvent(eventName, params);
+    this.#instance?.backgroundThread.sendGlobalEvent(eventName, params);
   }
 
   /**
@@ -338,22 +340,6 @@ export class LynxView extends HTMLElement {
     }
   }
 
-  /**
-   * @param
-   * @property
-   */
-  get threadStrategy(): 'all-on-ui' | 'multi-thread' {
-    // @ts-expect-error
-    return this.getAttribute('thread-strategy');
-  }
-  set threadStrategy(val: 'all-on-ui' | 'multi-thread') {
-    if (val) {
-      this.setAttribute('thread-strategy', val);
-    } else {
-      this.removeAttribute('thread-strategy');
-    }
-  }
-
   get injectHeadLinks(): boolean {
     return this.getAttribute('inject-head-links') !== 'false';
   }
@@ -396,8 +382,16 @@ export class LynxView extends HTMLElement {
   #render() {
     if (!this.#rendering && this.#connected) {
       this.#rendering = true;
-      queueMicrotask(() => {
+      const mtsRealmPromise = createIFrameRealm(this.shadowRoot!);
+      queueMicrotask(async () => {
         this.#rendering = false;
+        const styleElement = document.createElement('style');
+        this.shadowRoot!.append(styleElement);
+        const styleSheet = styleElement.sheet!;
+        for (const rule of inShadowRootStyles) {
+          styleSheet.insertRule(rule);
+        }
+        const mtsRealm = await mtsRealmPromise;
         if (this.#instance) {
           this.disconnectedCallback();
         }
@@ -406,9 +400,14 @@ export class LynxView extends HTMLElement {
             this.attachShadow({ mode: 'open' });
           }
           const lynxGroupId = this.lynxGroupId;
-          const threadStrategy = (this.threadStrategy ?? 'all-on-ui') as
-            | 'all-on-ui'
-            | 'multi-thread';
+          this.#instance = new LynxViewInstance(
+            this.#globalProps,
+            this.#url,
+            this.shadowRoot!,
+            mtsRealm,
+            lynxGroupId,
+            this.#initI18nResources,
+          );
         }
       });
     }

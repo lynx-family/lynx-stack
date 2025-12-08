@@ -4,24 +4,16 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { createCrossThreadEvent } from './createCrossThreadEvent.js';
 import type {
-  LynxCrossThreadEvent,
-  LynxCrossThreadEventTarget,
-  DecoratedHTMLElement,
-  RustMainthreadContextBinding,
-  JSRealm,
-  GlobalExposureEvent,
-  ExposureEventDetail,
   CloneableObject,
+  DecoratedHTMLElement,
+  ExposureEventDetail,
+  GlobalExposureEvent,
 } from '@types';
-import { LynxEventNameToW3cCommon, uniqueIdSymbol } from '@constants';
-import type { MainThreadWasmContext } from '@client/wasm.js';
-import type { BackgroundThread } from '@client/mainthread/Background.js';
-import { convertLengthToPx } from '../utils/convertLengthToPx.js';
-import { __GetElementUniqueID } from './pureElementPAPIs.js';
+import { convertLengthToPx } from './utils/convertLengthToPx.js';
+import type { LynxViewInstance } from './LynxViewInstance.js';
 
-export class MainThreadJSBinding implements RustMainthreadContextBinding {
+export class ExposureServices {
   private exposureEnabledElementsToIntersectionObserver: Map<
     HTMLElement,
     IntersectionObserver
@@ -45,127 +37,9 @@ export class MainThreadJSBinding implements RustMainthreadContextBinding {
    */
   private isExposureServiceOn: boolean = true;
 
-  wasmContext: InstanceType<typeof MainThreadWasmContext> | undefined;
-
   constructor(
-    private mtsRealm: JSRealm,
-    private rootDom: ShadowRoot,
-    private background?: BackgroundThread,
+    private lynxViewInstance: LynxViewInstance,
   ) {
-  }
-
-  private generateTargetObject(
-    element: DecoratedHTMLElement,
-    dataset: CloneableObject,
-  ): LynxCrossThreadEventTarget {
-    const uniqueId = element[uniqueIdSymbol];
-    return {
-      dataset: Object.assign(Object.create(null), dataset),
-      id: element.id || null,
-      uniqueId,
-    };
-  }
-
-  runWorklet(
-    handler: unknown,
-    eventObject: LynxCrossThreadEvent,
-    target: HTMLElement,
-    targetDataset: Record<string, string>,
-    currentTarget: HTMLElement,
-    currentTargetDataset: Record<string, string>,
-  ) {
-    eventObject.target = this.generateTargetObject(
-      target as DecoratedHTMLElement,
-      targetDataset,
-    );
-    eventObject.currentTarget = this.generateTargetObject(
-      currentTarget as DecoratedHTMLElement,
-      currentTargetDataset,
-    );
-    // @ts-expect-error
-    eventObject.target.elementRefptr = target;
-    // @ts-expect-error
-    eventObject.currentTarget.elementRefptr = currentTarget;
-    // @ts-expect-error
-    this.mtsRealm.globalWindow.runWorklet?.(handler, [eventObject]);
-  }
-
-  publishEvent(
-    handlerName: string,
-    parentComponentId: string | undefined,
-    eventObject: LynxCrossThreadEvent,
-    target: HTMLElement,
-    targetDataset: CloneableObject,
-    currentTarget: HTMLElement,
-    currentTargetDataset: CloneableObject,
-  ) {
-    eventObject.target = this.generateTargetObject(
-      target as DecoratedHTMLElement,
-      targetDataset,
-    );
-    eventObject.currentTarget = this.generateTargetObject(
-      currentTarget as DecoratedHTMLElement,
-      currentTargetDataset,
-    );
-    if (parentComponentId) {
-      this.background?.publicComponentEvent(
-        parentComponentId,
-        handlerName,
-        eventObject,
-      );
-    } else {
-      this.background?.publishEvent(
-        handlerName,
-        eventObject,
-      );
-    }
-  }
-
-  private commonEventHandler = (event: Event) => {
-    const target = event.target as HTMLElement;
-    let bubblePath: Uint32Array = new Uint32Array(32);
-    let bubblePathLength = 0;
-    bubblePath;
-    let currentTarget = target as
-      | DecoratedHTMLElement
-      | ShadowRoot
-      | null;
-    while (currentTarget) {
-      if (currentTarget === this.rootDom) {
-        break;
-      }
-      const uniqueId = __GetElementUniqueID(currentTarget as HTMLElement);
-      bubblePath[bubblePathLength++] = uniqueId;
-      if (bubblePathLength >= bubblePath.length) {
-        const newBubblePath = new Uint32Array(bubblePath.length * 2);
-        newBubblePath.set(bubblePath);
-        bubblePath = newBubblePath;
-      }
-      currentTarget = currentTarget.parentElement as
-        | DecoratedHTMLElement
-        | null;
-    }
-    const eventObject = createCrossThreadEvent(event);
-    this.wasmContext?.__wasm_commonEventHandler(
-      eventObject,
-      bubblePath.slice(0, bubblePathLength),
-      eventObject.type,
-    );
-  };
-
-  addEventListener(eventName: string) {
-    this.rootDom.addEventListener(
-      LynxEventNameToW3cCommon[eventName] ?? eventName,
-      this.commonEventHandler,
-      {
-        passive: true,
-        capture: true,
-      },
-    );
-  }
-
-  postTimingFlags(flags: string[], pipelineId?: string) {
-    this.background?.postTimingFlags(flags, pipelineId);
   }
 
   /**
@@ -292,7 +166,7 @@ export class MainThreadJSBinding implements RustMainthreadContextBinding {
         root = root.parentElement;
       }
     }
-    const rootContainer = root ?? this.rootDom.parentElement!;
+    const rootContainer = root ?? this.lynxViewInstance.rootDom.parentElement!;
     const intersectionObserver = new IntersectionObserver(
       this.IntersectionObserverEventHandler,
       {
@@ -321,7 +195,8 @@ export class MainThreadJSBinding implements RustMainthreadContextBinding {
   ) {
     exposureId = exposureId ?? target.getAttribute('exposure-id')!;
     const exposureScene = target.getAttribute('exposure-scene') ?? '';
-    const uniqueId = __GetElementUniqueID(target);
+    const uniqueId = this.lynxViewInstance.mainThreadGlobalThis
+      .__GetElementUniqueID(target);
     const detail: ExposureEventDetail = {
       'unique-id': uniqueId,
       exposureID: exposureId,
@@ -341,11 +216,14 @@ export class MainThreadJSBinding implements RustMainthreadContextBinding {
       );
       target.dispatchEvent(appearEvent);
     }
-    const serializedTargetInfo = this.generateTargetObject(
-      target as DecoratedHTMLElement,
-      this.wasmContext?.__GetDataset(uniqueId) as CloneableObject
-        ?? ({} as CloneableObject),
-    );
+    const serializedTargetInfo = this.lynxViewInstance.mtsWasmBinding
+      .generateTargetObject(
+        target as DecoratedHTMLElement,
+        this.lynxViewInstance.mainThreadGlobalThis.__GetDataset(
+          target,
+        ) as CloneableObject
+          ?? ({} as CloneableObject),
+      );
     const globalEvent: GlobalExposureEvent = {
       ...serializedTargetInfo.dataset,
       ...detail,
@@ -373,10 +251,15 @@ export class MainThreadJSBinding implements RustMainthreadContextBinding {
           const currentDisexposureEvents = this.globalDisexposureEventCache;
           this.globalExposureEventCache = [];
           this.globalDisexposureEventCache = [];
-          this.background?.sendGlobalEvent('exposure', [currentExposureEvents]);
-          this.background?.sendGlobalEvent('disexposure', [
-            currentDisexposureEvents,
+          this.lynxViewInstance.backgroundThread?.sendGlobalEvent('exposure', [
+            currentExposureEvents,
           ]);
+          this.lynxViewInstance.backgroundThread?.sendGlobalEvent(
+            'disexposure',
+            [
+              currentDisexposureEvents,
+            ],
+          );
         }
         this.globalExposureEventBatchTimer = null;
       }, 1000 / 20);

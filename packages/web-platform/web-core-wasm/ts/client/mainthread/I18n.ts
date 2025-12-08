@@ -27,8 +27,15 @@ export class I18nManager {
   ) {
   }
 
-  setData(data: InitI18nResources) {
+  updateData(data: InitI18nResources, options: I18nResourceTranslationOptions) {
     this.i18nResources = this.i18nResources.concat(data);
+    const matchedInitI18nResources = data.find(i =>
+      getCacheI18nResourcesKey(i.options)
+        === getCacheI18nResourcesKey(options)
+    );
+    this.background.dispatchI18nResource(
+      matchedInitI18nResources?.resource as Cloneable,
+    );
   }
 
   _I18nResourceTranslation = (

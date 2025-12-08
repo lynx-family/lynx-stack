@@ -3,9 +3,9 @@
 
 import type { ErrorCode } from '@constants';
 import type { CloneableObject } from './Cloneable.js';
-import type { I18nResource } from './I18nTypes.js';
 import type { LynxContextEventTarget } from './LynxContextEventTarget.js';
 import type { PerformancePipelineOptions } from './TimingAPIs.js';
+import type { II18nResource } from './I18nTypes.js';
 
 // LICENSE file in the root directory of this source tree.
 export const enum IdentifierType {
@@ -206,7 +206,7 @@ export interface NativeApp {
   setSharedData<T>(dataKey: string, dataVal: T): void;
   getSharedData<T = unknown>(dataKey: string): T | undefined;
 
-  i18nResource: I18nResource;
+  i18nResource: II18nResource;
 
   reportException: (error: Error, _: unknown) => void;
   __SetSourceMapRelease: (err: Error) => void;

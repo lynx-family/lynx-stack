@@ -2,13 +2,17 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import type { Rpc } from '@lynx-js/web-worker-rpc';
-import type { NativeApp, NativeModulesMap } from '@types';
+import type {
+  Cloneable,
+  II18nResource,
+  NativeApp,
+  NativeModulesMap,
+} from '@types';
 import {
   callLepusMethodEndpoint,
   setNativePropsEndpoint,
   triggerComponentEventEndpoint,
   selectComponentEndpoint,
-  I18nResource,
   reportErrorEndpoint,
   queryComponentEndpoint,
   updateBTSChunkEndpoint,
@@ -30,7 +34,15 @@ import type { LynxCrossThreadContext } from '../../LynxCrossThreadContext.js';
 
 let nativeAppCount = 0;
 const sharedData: Record<string, unknown> = {};
-
+class I18nResource implements II18nResource {
+  data?: Cloneable;
+  constructor(data?: Cloneable) {
+    this.data = data;
+  }
+  setData(data: Cloneable) {
+    this.data = data;
+  }
+}
 export async function createNativeApp(
   mainThreadRpc: Rpc,
   timingSystem: TimingSystem,

@@ -24,24 +24,7 @@ export type InitI18nResources = Array<{
   resource: Record<string, unknown>;
 }>;
 
-// The purpose of using class is to keep the reference when reassigning
-export class I18nResources {
-  data?: InitI18nResources;
-  constructor(data?: InitI18nResources) {
-    this.data = data;
-  }
-  setData(data: InitI18nResources) {
-    this.data = data;
-  }
-}
-
-// The purpose of using class is to keep the reference when reassigning
-export class I18nResource {
+export interface II18nResource {
   data?: Cloneable;
-  constructor(data?: Cloneable) {
-    this.data = data;
-  }
-  setData(data: Cloneable) {
-    this.data = data;
-  }
+  setData(data: Cloneable): void;
 }

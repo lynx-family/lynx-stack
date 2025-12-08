@@ -24,11 +24,12 @@ export function startBackgroundThread(
     BackgroundThreadStartEndpoint,
     async (config) => {
       timingSystem.markTimingInternal('load_core_end');
-      const nativeApp = await createNativeApp({
-        ...config,
+      const nativeApp = await createNativeApp(
         mainThreadRpc,
         timingSystem,
-      });
+        config.nativeModulesMap,
+        config.initialBTSChunkUrls,
+      );
       (globalThis as any)['napiLoaderOnRT' + nativeApp.id] =
         await createNapiLoader(
           mainThreadRpc,

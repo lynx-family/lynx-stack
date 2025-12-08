@@ -1,6 +1,6 @@
 import { describe, test, expect, beforeEach, vi } from 'vitest';
 import { createElementAPI } from '@client/mainthread/elementAPIs/createElementAPI.js';
-import { MainThreadJSBinding } from '@client/mainthread/elementAPIs/MainThreadJSBinding.js';
+import { WASMJSBinding } from '@client/mainthread/elementAPIs/WASMJSBinding.js';
 import { JSDOM } from 'jsdom';
 
 const { window } = new JSDOM(undefined, { url: 'http://localhost/' });
@@ -11,13 +11,30 @@ describe('Testing Library Port', () => {
   let lynxViewDom: HTMLElement;
   let rootDom: ShadowRoot;
   let mtsGlobalThis: ReturnType<typeof createElementAPI>;
-  let mtsBinding: MainThreadJSBinding;
-
+  let mtsBinding: WASMJSBinding;
+  const mockedBackground = vi.mockObject({
+    publishEvent: vi.fn(),
+    postTimingFlags: vi.fn(),
+  });
   beforeEach(() => {
     vi.resetAllMocks();
     lynxViewDom = document.createElement('div') as unknown as HTMLElement;
     rootDom = lynxViewDom.attachShadow({ mode: 'open' });
-    mtsBinding = new MainThreadJSBinding({} as any, rootDom);
+
+    mtsBinding = new WASMJSBinding(
+      vi.mockObject({
+        rootDom,
+        backgroundThread: vi.mockObject({
+          publicComponentEvent: vi.fn(),
+          publishEvent: vi.fn(),
+          postTimingFlags: vi.fn(),
+        } as any),
+        exposureServices: vi.mockObject({
+          updateExposureStatus: vi.fn(),
+        } as any),
+        publishEvent: vi.fn() as any,
+      }),
+    );
     mtsGlobalThis = createElementAPI(
       'test',
       rootDom,

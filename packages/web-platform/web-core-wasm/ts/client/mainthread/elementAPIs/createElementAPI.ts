@@ -38,17 +38,17 @@ import {
   __GetTemplateParts,
   __UpdateListCallbacks,
 } from './pureElementPAPIs.js';
-import { type MainThreadJSBinding } from './MainThreadJSBinding.js';
 import type {
   DecoratedHTMLElement,
   ElementPAPIs,
   UpdateListInfoAttributeValue,
 } from '@types';
+import type { WASMJSBinding } from './WASMJSBinding.js';
 
 export function createElementAPI(
   entry_template_url: string,
   rootDom: Node,
-  mtsBinding: MainThreadJSBinding,
+  mtsBinding: WASMJSBinding,
   config_enable_css_selector: boolean,
   config_default_display_linear: boolean,
   config_default_overflow_visible: boolean,
@@ -435,10 +435,14 @@ export function createElementAPI(
       let timingFlagsAll = timingFlags.concat(
         wasmContext.__wasm_take_timing_flags(),
       );
+      mtsBinding.postTimingFlags(
+        timingFlagsAll,
+        options?.pipelineOptions?.pipelineID,
+      );
       timingFlags.length = 0;
       const enabledExposureElements = wasmContext
         .__wasm_take_exposure_enabled_elements();
-      mtsBinding.updateExposureStatus(
+      mtsBinding?.updateExposureStatus(
         enabledExposureElements,
       );
     },

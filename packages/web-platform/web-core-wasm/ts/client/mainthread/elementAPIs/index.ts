@@ -1,2 +1,2 @@
-export { MainThreadJSBinding } from './MainThreadJSBinding.js';
+export { WASMJSBinding } from './WASMJSBinding.js';
 export { createElementAPI } from './createElementAPI.js';

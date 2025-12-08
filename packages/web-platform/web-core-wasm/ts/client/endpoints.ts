@@ -44,11 +44,6 @@ export const switchExposureServiceEndpoint = createRpcEndpoint<
   false,
 );
 
-export const mainThreadStartEndpoint = createRpcEndpoint<
-  [StartMainThreadContextConfig],
-  void
->('mainThreadStart', false, false);
-
 export const updateDataEndpoint = createRpcEndpoint<
   [Cloneable, UpdateDataOptions | undefined],
   void

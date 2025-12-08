@@ -15,6 +15,8 @@ import {
   publishEventEndpoint,
   sendGlobalEventEndpoint,
   dispatchI18nResourceEndpoint,
+  updateDataEndpoint,
+  updateGlobalPropsEndpoint,
 } from '@client/endpoints.js';
 import type { TimingEntry } from '@types';
 import { LynxCrossThreadContext } from '@client/LynxCrossThreadContext.js';
@@ -37,6 +39,8 @@ export class BackgroundThread implements AsyncDisposable {
   readonly dispatchI18nResource: RpcCallType<
     typeof dispatchI18nResourceEndpoint
   >;
+  readonly updateData: RpcCallType<typeof updateDataEndpoint>;
+  readonly updateGlobalProps: RpcCallType<typeof updateGlobalPropsEndpoint>;
 
   constructor(rpc: Rpc) {
     this.rpc = rpc;
@@ -55,6 +59,8 @@ export class BackgroundThread implements AsyncDisposable {
     this.dispatchI18nResource = this.rpc.createCall(
       dispatchI18nResourceEndpoint,
     );
+    this.updateData = this.rpc.createCall(updateDataEndpoint);
+    this.updateGlobalProps = this.rpc.createCall(updateGlobalPropsEndpoint);
   }
 
   markTiming(

@@ -6,11 +6,9 @@
 
 import type { MainThreadGlobalAPIs, MainThreadLynx } from '@types';
 import { templateManager } from '@client/wasm.js';
-import type { BackgroundThread } from './Background.js';
 import { systemInfo, type LynxViewInstance } from './LynxViewInstance.js';
 
 function createMainThreadLynx(
-  background: BackgroundThread,
   lynxViewInstance: LynxViewInstance,
 ): MainThreadLynx {
   const requestAnimationFrameBrowserImpl = requestAnimationFrame;
@@ -21,7 +19,7 @@ function createMainThreadLynx(
   const clearIntervalBrowserImpl = clearInterval;
   return {
     getJSContext() {
-      return background.jsContext;
+      return lynxViewInstance.backgroundThread.jsContext;
     },
     requestAnimationFrame(cb: FrameRequestCallback) {
       return requestAnimationFrameBrowserImpl(cb);
@@ -36,7 +34,9 @@ function createMainThreadLynx(
       ) as any)[key]
         ?.content;
     },
-    markPipelineTiming: background.markTiming.bind(background),
+    markPipelineTiming: lynxViewInstance.backgroundThread.markTiming.bind(
+      lynxViewInstance.backgroundThread,
+    ),
     SystemInfo: systemInfo,
     setTimeout: setTimeoutBrowserImpl,
     clearTimeout: clearTimeoutBrowserImpl,
@@ -46,7 +46,6 @@ function createMainThreadLynx(
 }
 
 export function createMainThreadGlobalAPIs(
-  background: BackgroundThread,
   lynxViewInstance: LynxViewInstance,
 ): MainThreadGlobalAPIs {
   let releaseSetting = '';
@@ -54,11 +53,10 @@ export function createMainThreadGlobalAPIs(
     __globalProps: lynxViewInstance.globalprops,
     SystemInfo: systemInfo,
     lynx: createMainThreadLynx(
-      background,
       lynxViewInstance,
     ),
     __OnLifecycleEvent: (data) => {
-      background.jsContext.dispatchEvent({
+      lynxViewInstance.backgroundThread.jsContext.dispatchEvent({
         type: '__OnLifecycleEvent',
         data,
       });

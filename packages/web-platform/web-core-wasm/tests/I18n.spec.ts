@@ -7,8 +7,8 @@
 import { describe, expect, test, vi } from 'vitest';
 import { I18nManager } from '../ts/client/mainthread/I18n.js';
 import { BackgroundThread } from '../ts/client/mainthread/Background.js';
-import { i18nResourceMissedEventName } from '../ts/types/I18nTypes.js';
 import { JSDOM } from 'jsdom';
+import { i18nResourceMissedEventName } from '../ts/constants.js';
 
 const { window } = new JSDOM(undefined, { url: 'http://localhost/' });
 const document = window.document;
@@ -65,12 +65,12 @@ describe('I18nManager', () => {
 
   test('should update data using setData', () => {
     const i18nManager = new I18nManager(mockBackground, rootDom, []);
-    i18nManager.setData([
+    i18nManager.updateData([
       {
         options: { locale: 'es', channel: 'default' },
         resource: { key: 'valor' },
       },
-    ]);
+    ], { locale: 'es', channel: 'default' });
 
     const result = i18nManager._I18nResourceTranslation({
       locale: 'es',
