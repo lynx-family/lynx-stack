@@ -5,7 +5,9 @@ import {
   Selector,
   RulePrelude,
   Declaration,
+  // @ts-ignore
 } from '../../binary/encode/encode.js';
+// @ts-ignore
 export * from '../../binary/encode/encode.js';
 
 export function encodeCSS(

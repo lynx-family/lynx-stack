@@ -131,7 +131,7 @@ impl TemplateManager {
           .get_config_value_bool("enableCSSSelector")
           .map_err(|e| JsError::new(&e))?;
         let is_lazy_component_template = config
-          .get_config_value_bool("isLazyComponentTemplate")
+          .get_config_value_bool("isLazy")
           .map_err(|e| JsError::new(&e))?;
         let entry_name = match is_lazy_component_template {
           true => Some(template.entry_name.clone()),
@@ -160,7 +160,7 @@ impl TemplateManager {
           .as_ref()
           .ok_or_else(|| JsError::new("Configuration not loaded"))?;
         let is_lazy_component_template = config
-          .get_config_value_bool("isLazyComponentTemplate")
+          .get_config_value_bool("isLazy")
           .map_err(|e| JsError::new(&e))?;
         let template_url = template.template_url.clone();
         let lepus_code = decode_lepus_code(code_section, is_lazy_component_template, &template_url);

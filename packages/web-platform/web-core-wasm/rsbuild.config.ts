@@ -1,4 +1,5 @@
 import { defineConfig } from '@rsbuild/core';
+import './scripts/build.js';
 
 export default defineConfig({
   source: {
@@ -12,9 +13,10 @@ export default defineConfig({
     },
     filename: {
       js: '[name].js',
+      css: '[name].css',
     },
     assetPrefix: 'auto',
-    minify: true,
+    overrideBrowserslist: ['Chrome >= 92', 'Safari >= 16.1'],
   },
   tools: {
     htmlPlugin: false,

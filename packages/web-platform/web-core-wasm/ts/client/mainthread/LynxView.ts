@@ -11,14 +11,14 @@ import type {
   NativeModulesCall,
   NativeModulesMap,
 } from '../../types/index.js';
-import { inShadowRootStyles, lynxDisposedAttribute } from '../../constants.js';
+import { lynxDisposedAttribute } from '../../constants.js';
 import { LynxViewInstance } from './LynxViewInstance.js';
 import { createIFrameRealm } from './createIFrameRealm.js';
-
-const WEB_ELEMENTS_CSS_URL = new URL(
-  '@lynx-js/web-elements/index.css',
-  import.meta.url,
-).href;
+// @ts-expect-error
+import CSS from '../../../css/in_shadow.css?inline';
+const IN_SHADOW_CSS = URL.createObjectURL(
+  new Blob([CSS], { type: 'text/css' }),
+);
 
 export type INapiModulesCall = (
   name: string,
@@ -378,11 +378,8 @@ export class LynxView extends HTMLElement {
         const styleElement = document.createElement('style');
         this.shadowRoot!.append(styleElement);
         const styleSheet = styleElement.sheet!;
-        for (const rule of inShadowRootStyles) {
-          styleSheet.insertRule(rule);
-        }
         styleSheet.insertRule(
-          `@import url("${WEB_ELEMENTS_CSS_URL}");`,
+          `@import url("${IN_SHADOW_CSS}");`,
         );
         const mtsRealm = await mtsRealmPromise;
         if (this.#instance) {

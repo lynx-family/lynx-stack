@@ -21,12 +21,18 @@
       "import": "./dist/client/index.js",
       "default": "./dist/client/index.js"
     },
-    "./client.prod.js": "./dist/client_prod/client.js",
-    "./index.css": "./index.css"
+    "./client.prod.js": {
+      "default": "./dist/client_prod/client.js"
+    },
+    "./index.css": {
+      "default": "./css/index.css"
+    }
   },
   "main": "./dist/client/index.js",
   "files": [
     "dist",
+    "binary",
+    "css",
     "!dist/**/*.js.map",
     "*.d.ts",
     "*.js",

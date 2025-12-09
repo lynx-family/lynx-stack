@@ -10,5 +10,7 @@ import(
   /* webpackFetchPriority: "high" */
   /* webpackPrefetch: true */
   /* webpackPreload: true */
+  // @ts-ignore
   '../../binary/client/client.js'
 );
+import '../../css/index.css';

@@ -256,7 +256,7 @@ export function createElementAPI(
     __AddConfig: (element, type, value) => {
       const uniqueId = (element as DecoratedHTMLElement)[uniqueIdSymbol];
       const config = wasmContext.__GetConfig(uniqueId);
-      // @ts-expect-error
+      // @ts-ignore
       config[type] = value;
     },
     __UpdateComponentInfo: (element, componentInfo) => {

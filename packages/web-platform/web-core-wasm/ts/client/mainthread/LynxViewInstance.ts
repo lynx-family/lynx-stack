@@ -146,10 +146,12 @@ export class LynxViewInstance implements AsyncDisposable {
 
   async onMTSScriptsExecuted() {
     await Promise.all(this.webElementsLoadingPromises);
+    this.webElementsLoadingPromises.length = 0;
     const processedData = this.mainThreadGlobalThis.processData
       ? this.mainThreadGlobalThis.processData(this.initData)
       : this.initData;
-    this.mainThreadGlobalThis.renderPage?.(processedData);
+    this.renderPageFunction?.(processedData);
+    this.mainThreadGlobalThis.__FlushElementTree();
     this.backgroundThread.startWebWorker();
   }
 

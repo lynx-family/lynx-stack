@@ -112,7 +112,7 @@ export class BackgroundThread implements AsyncDisposable {
     const messageChannel = new MessageChannel();
     this.webWorker.postMessage(
       {
-        mainThreadMessagePort: messageChannel.port1,
+        mainThreadMessagePort: messageChannel.port2,
         systemInfo,
       } as WorkerStartMessage,
       [messageChannel.port2],

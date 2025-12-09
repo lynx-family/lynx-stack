@@ -13,6 +13,7 @@ const WASMInstance = await ((async function initWasm() {
       /* webpackChunkName: "standard-wasm-chunk" */
       /* webpackPrefetch: true */
       /* webpackPreload: true */
+      // @ts-ignore
       '../../binary/client/client.js'
     );
   } else {

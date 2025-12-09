@@ -8,6 +8,7 @@ import type { ElementTemplateData } from '../types/index.js';
 import { encodeCSS } from './encodeCSS.js';
 import { encodeElementTemplates } from './encodeElementTemplate.js';
 import { MagicHeader, TemplateSectionLabel } from '../constants.js';
+// @ts-ignore
 import { CodeSection, Configurations } from '../../binary/encode/encode.js';
 
 export type TasmJSONInfo = {
@@ -54,7 +55,7 @@ export function encode(tasmJSON: TasmJSONInfo): Uint8Array {
   );
   const configurations = new Configurations();
   configurations.add_config('cardType', cardType);
-  configurations.add_config('appType', appType);
+  configurations.add_config('isLazy', appType !== 'card' ? 'true' : 'false');
   for (const [key, value] of Object.entries(pageConfig)) {
     configurations.add_config(key, String(value));
   }

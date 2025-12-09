@@ -5,6 +5,5 @@ const lynxView = document.createElement('lynx-view');
 lynxView.style.width = '100vw';
 lynxView.style.height = '100vh';
 // @ts-ignore
-lynxView.url =
-  'http://10.91.84.156:3000/__web_preview?casename=main.web.bundle';
+lynxView.setAttribute('url', 'http://192.168.3.117:3001/main.web.bundle');
 document.body.appendChild(lynxView);
