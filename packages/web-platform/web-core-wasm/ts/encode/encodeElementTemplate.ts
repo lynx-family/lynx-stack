@@ -7,7 +7,7 @@ import type { ElementTemplateData } from '../types/index.js';
 import {
   ElementTemplateSection,
   RawElementTemplate,
-} from '@binary/encode/encode.js';
+} from '../../binary/encode/encode.js';
 
 export function encodeElementTemplates(
   elementTemplates: Record<string, ElementTemplateData>,

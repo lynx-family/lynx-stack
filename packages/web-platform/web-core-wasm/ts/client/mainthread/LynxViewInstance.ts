@@ -10,8 +10,11 @@ import type {
   MainThreadGlobalThis,
   NapiModulesMap,
   NativeModulesMap,
-} from '@types';
-import { loadUnknownElementEventName, systemInfoBase } from '@constants';
+} from '../../types/index.js';
+import {
+  loadUnknownElementEventName,
+  systemInfoBase,
+} from '../../constants.js';
 import { BackgroundThread } from './Background.js';
 import { I18nManager } from './I18n.js';
 import { WASMJSBinding } from './elementAPIs/WASMJSBinding.js';
@@ -20,6 +23,7 @@ import { createElementAPI } from './elementAPIs/createElementAPI.js';
 import { createMainThreadGlobalAPIs } from './createMainThreadGlobalAPIs.js';
 import { templateManager } from '../wasm.js';
 import { loadWebElement } from '../webElementsDynamicLoader.js';
+import { fetchTemplate } from './fetchTemplate.js';
 
 const pixelRatio = window.devicePixelRatio;
 const screenWidth = window.screen.availWidth * pixelRatio;
@@ -53,6 +57,7 @@ export class LynxViewInstance implements AsyncDisposable {
   readonly webElementsLoadingPromises: Promise<void>[] = [];
 
   private renderPageFunction: ((data: Cloneable) => void) | null = null;
+  private abortIOController: AbortController = new AbortController();
 
   lepusCodeUrls?: Record<string, string>;
 
@@ -65,6 +70,7 @@ export class LynxViewInstance implements AsyncDisposable {
     lynxGroupId: number | undefined,
     initI18nResources?: InitI18nResources,
   ) {
+    fetchTemplate(this.templateUrl, this.abortIOController.signal, this);
     this.mainThreadGlobalThis = mtsRealm.globalWindow as
       & typeof globalThis
       & MainThreadGlobalThis;
@@ -205,6 +211,7 @@ export class LynxViewInstance implements AsyncDisposable {
   }
 
   async [Symbol.asyncDispose]() {
+    this.abortIOController.abort();
     await this.backgroundThread[Symbol.asyncDispose]();
   }
 }

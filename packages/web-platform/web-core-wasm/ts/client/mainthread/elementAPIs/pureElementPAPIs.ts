@@ -7,7 +7,7 @@ import {
   lynxElementTemplateMarkerAttribute,
   lynxPartIdAttribute,
   uniqueIdSymbol,
-} from '@constants';
+} from '../../../constants.js';
 
 import type {
   AddClassPAPI,
@@ -36,7 +36,7 @@ import type {
   SetIDPAPI,
   SwapElementPAPI,
   UpdateListCallbacksPAPI,
-} from '@types';
+} from '../../../types/index.js';
 
 export const __AppendElement: AppendElementPAPI = /*#__PURE__*/ (
   parent,

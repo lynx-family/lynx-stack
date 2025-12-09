@@ -13,7 +13,7 @@ import type {
   BackMainThreadContextConfig,
   UpdateDataOptions,
   TimingEntry,
-} from '@types';
+} from '../types/index.js';
 
 export const publicComponentEventEndpoint = createRpcEndpoint<
   [componentId: string, hname: string, LynxCrossThreadEvent],

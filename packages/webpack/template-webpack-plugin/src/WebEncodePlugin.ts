@@ -88,7 +88,9 @@ export class WebEncodePlugin {
           stage: WebEncodePlugin.ENCODE_HOOK_STAGE,
         }, ({ encodeOptions }) => {
           const tasmJSONInfo: Record<string, unknown> = {
-            styleInfo: encodeOptions['styleInfo'],
+            styleInfo: (encodeOptions['css'] as {
+              cssMap: Record<string, LynxStyleNode[]>;
+            }).cssMap,
             manifest: encodeOptions.manifest as Record<string, string>,
             cardType: encodeOptions['cardType'] as string,
             appType: encodeOptions['appType'] as string,
@@ -98,8 +100,8 @@ export class WebEncodePlugin {
               ...encodeOptions.lepusCode.lepusChunk,
               root: encodeOptions.lepusCode.root!,
             },
-            customSections: encodeOptions.customSections,
-            elementTemplate: encodeOptions['elementTemplate'],
+            customSections: encodeOptions.customSections ?? {},
+            elementTemplates: encodeOptions['elementTemplates'] ?? {},
           };
           const buffer = process.env['EXPERIMENTAL_USE_WEB_BINARY_TEMPLATE']
             ? Buffer.from(encode(tasmJSONInfo as TasmJSONInfo))
@@ -107,9 +109,7 @@ export class WebEncodePlugin {
               JSON.stringify({
                 ...tasmJSONInfo,
                 styleInfo: genStyleInfo(
-                  (encodeOptions['css'] as {
-                    cssMap: Record<string, LynxStyleNode[]>;
-                  }).cssMap,
+                  tasmJSONInfo['styleInfo'] as Record<string, LynxStyleNode[]>,
                 ),
               }),
               'utf-8',

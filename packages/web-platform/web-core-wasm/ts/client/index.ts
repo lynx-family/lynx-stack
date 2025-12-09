@@ -6,10 +6,9 @@ import(
   './mainthread/LynxView.js'
 );
 import(
-  /* webpackChunkName: "web-core-wasm-file" */
+  /* webpackMode: "eager" */
   /* webpackFetchPriority: "high" */
   /* webpackPrefetch: true */
   /* webpackPreload: true */
-  '../../binary/client/client_bg.wasm'
+  '../../binary/client/client.js'
 );
-import '../../index.css';

@@ -2,8 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { dispatchCoreContextOnBackgroundEndpoint } from '@client/endpoints.js';
-import type { LynxContextEventTarget } from '@types';
+import type { dispatchCoreContextOnBackgroundEndpoint } from './endpoints.js';
+import type { LynxContextEventTarget } from '../types/index.js';
 import type { Rpc } from '@lynx-js/web-worker-rpc';
 
 export const DispatchEventResult = {

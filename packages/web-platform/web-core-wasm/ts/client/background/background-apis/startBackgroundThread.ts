@@ -6,7 +6,7 @@ import { Rpc } from '@lynx-js/web-worker-rpc';
 import { createBackgroundLynx } from './createBackgroundLynx.js';
 import { createNativeApp } from './createNativeApp.js';
 import { registerDisposeHandler } from './crossThreadHandlers/registerDisposeHandler.js';
-import { BackgroundThreadStartEndpoint } from '@client/endpoints.js';
+import { BackgroundThreadStartEndpoint } from '../../endpoints.js';
 import { createNapiLoader } from './createNapiLoader.js';
 import { createTimingSystem } from './createTimingSystem.js';
 

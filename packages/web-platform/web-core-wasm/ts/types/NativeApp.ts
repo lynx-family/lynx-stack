@@ -1,7 +1,7 @@
 // Copyright 2023 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 
-import type { ErrorCode } from '@constants';
+import type { ErrorCode } from '../constants.js';
 import type { CloneableObject } from './Cloneable.js';
 import type { LynxContextEventTarget } from './LynxContextEventTarget.js';
 import type { PerformancePipelineOptions } from './TimingAPIs.js';

@@ -5,9 +5,12 @@ import type {
   DecoratedHTMLElement,
   RustMainthreadContextBinding,
   CloneableObject,
-} from '@types';
-import { LynxEventNameToW3cCommon, uniqueIdSymbol } from '@constants';
-import type { MainThreadWasmContext } from '@client/wasm.js';
+} from '../../../types/index.js';
+import {
+  LynxEventNameToW3cCommon,
+  uniqueIdSymbol,
+} from '../../../constants.js';
+import type { MainThreadWasmContext } from '../../wasm.js';
 import { __GetElementUniqueID } from './pureElementPAPIs.js';
 import type { BackgroundThread } from '../Background.js';
 import type { ExposureServices } from '../ExposureServices.js';

@@ -4,11 +4,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 import type * as CSS from '@lynx-js/css-serializer';
-import type { ElementTemplateData } from '@types';
+import type { ElementTemplateData } from '../types/index.js';
 import { encodeCSS } from './encodeCSS.js';
 import { encodeElementTemplates } from './encodeElementTemplate.js';
-import { MagicHeader, TemplateSectionLabel } from '@constants';
-import { CodeSection, Configurations } from '@binary/encode/encode.js';
+import { MagicHeader, TemplateSectionLabel } from '../constants.js';
+import { CodeSection, Configurations } from '../../binary/encode/encode.js';
 
 export type TasmJSONInfo = {
   styleInfo: Record<string, CSS.LynxStyleNode[]>;

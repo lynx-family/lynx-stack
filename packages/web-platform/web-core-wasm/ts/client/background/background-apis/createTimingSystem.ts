@@ -6,8 +6,12 @@ import {
   dispatchLynxViewEventEndpoint,
   markTimingEndpoint,
   postTimingFlagsEndpoint,
-} from '@client/endpoints.js';
-import type { EventEmitter, TimingEntry, TimingInfo } from '@types';
+} from '../../endpoints.js';
+import type {
+  EventEmitter,
+  TimingEntry,
+  TimingInfo,
+} from '../../../types/index.js';
 import type { Rpc } from '@lynx-js/web-worker-rpc';
 
 export type TimingSystem = {

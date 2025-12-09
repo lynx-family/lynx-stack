@@ -6,8 +6,8 @@ import type {
   CloneableObject,
   LynxCrossThreadEvent,
   MinimalRawEventObject,
-} from '@types';
-import { W3cEventNameToLynx } from '@constants';
+} from '../../../types/index.js';
+import { W3cEventNameToLynx } from '../../../constants.js';
 
 function toCloneableObject(obj: any): CloneableObject {
   const cloneableObj: CloneableObject = {};

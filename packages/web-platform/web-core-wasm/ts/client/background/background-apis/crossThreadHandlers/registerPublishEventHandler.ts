@@ -2,9 +2,9 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { NativeTTObject } from '@types';
+import type { NativeTTObject } from '../../../../types/index.js';
 import type { Rpc } from '@lynx-js/web-worker-rpc';
-import { publishEventEndpoint } from '@client/endpoints.js';
+import { publishEventEndpoint } from '../../../endpoints.js';
 
 export function registerPublishEventHandler(
   rpc: Rpc,

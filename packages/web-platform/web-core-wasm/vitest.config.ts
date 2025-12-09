@@ -23,7 +23,7 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      '@binary/client/client.js': path.join(
+      '../../binary/client/client.js': path.join(
         __dirname,
         'binary',
         'client',

@@ -5,11 +5,14 @@
 import {
   dispatchCoreContextOnBackgroundEndpoint,
   dispatchJSContextOnMainThreadEndpoint,
-} from '@client/endpoints.js';
+} from '../../endpoints.js';
 import type { Rpc } from '@lynx-js/web-worker-rpc';
 import { createGetCustomSection } from './crossThreadHandlers/createGetCustomSection.js';
 import { createElement } from './createElement.js';
-import type { BackMainThreadContextConfig, NativeApp } from '@types';
+import type {
+  BackMainThreadContextConfig,
+  NativeApp,
+} from '../../../types/index.js';
 import { LynxCrossThreadContext } from '../../LynxCrossThreadContext.js';
 
 export function createBackgroundLynx(

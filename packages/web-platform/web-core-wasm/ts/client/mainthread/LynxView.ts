@@ -10,13 +10,13 @@ import type {
   NapiModulesMap,
   NativeModulesCall,
   NativeModulesMap,
-} from '@types';
-import { inShadowRootStyles, lynxDisposedAttribute } from '@constants';
+} from '../../types/index.js';
+import { inShadowRootStyles, lynxDisposedAttribute } from '../../constants.js';
 import { LynxViewInstance } from './LynxViewInstance.js';
 import { createIFrameRealm } from './createIFrameRealm.js';
 
 const WEB_ELEMENTS_CSS_URL = new URL(
-  './web-elements.css',
+  '@lynx-js/web-elements/index.css',
   import.meta.url,
 ).href;
 
@@ -371,6 +371,7 @@ export class LynxView extends HTMLElement {
   #render() {
     if (!this.#rendering && this.#connected) {
       this.#rendering = true;
+      this.attachShadow({ mode: 'open' });
       const mtsRealmPromise = createIFrameRealm(this.shadowRoot!);
       queueMicrotask(async () => {
         this.#rendering = false;
@@ -388,9 +389,6 @@ export class LynxView extends HTMLElement {
           this.disconnectedCallback();
         }
         if (this.#url) {
-          if (!this.shadowRoot) {
-            this.attachShadow({ mode: 'open' });
-          }
           const lynxGroupId = this.lynxGroupId;
           this.#instance = new LynxViewInstance(
             this.#initData,

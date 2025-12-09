@@ -4,8 +4,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import type { MainThreadGlobalAPIs, MainThreadLynx } from '@types';
-import { templateManager } from '@client/wasm.js';
+import type {
+  MainThreadGlobalAPIs,
+  MainThreadLynx,
+} from '../../types/index.js';
+import { templateManager } from '../wasm.js';
 import { systemInfo, type LynxViewInstance } from './LynxViewInstance.js';
 
 function createMainThreadLynx(

@@ -6,9 +6,9 @@
 import {
   dispatchNapiModuleEndpoint,
   napiModulesCallEndpoint,
-} from '@client/endpoints.js';
+} from '../../endpoints.js';
 import type { Rpc } from '@lynx-js/web-worker-rpc';
-import type { Cloneable, NapiModulesMap } from '@types';
+import type { Cloneable, NapiModulesMap } from '../../../types/index.js';
 
 export const createNapiLoader = async (
   rpc: Rpc,

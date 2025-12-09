@@ -18,24 +18,24 @@ import {
   updateDataEndpoint,
   updateGlobalPropsEndpoint,
   BackgroundThreadStartEndpoint,
-} from '@client/endpoints.js';
+} from '../endpoints.js';
 import type {
   Cloneable,
   NapiModulesMap,
   NativeModulesMap,
   TimingEntry,
   WorkerStartMessage,
-} from '@types';
-import { LynxCrossThreadContext } from '@client/LynxCrossThreadContext.js';
+} from '../../types/index.js';
+import { LynxCrossThreadContext } from '../LynxCrossThreadContext.js';
 import { systemInfo } from './LynxViewInstance.js';
 
 function createWebWorker(): Worker {
   return new Worker(
     /* webpackFetchPriority: "high" */
-    /* webpackChunkName: "web-core-worker-runtime" */
+    /* webpackChunkName: "web-core-worker-chunk" */
     /* webpackPrefetch: true */
     /* webpackPreload: true */
-    new URL('../background.js', import.meta.url),
+    new URL('../background/index.js', import.meta.url),
     {
       type: 'module',
       name: 'lynx-bg',

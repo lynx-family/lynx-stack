@@ -3,11 +3,11 @@
 // LICENSE file in the root directory of this source tree.
 
 /* LYNX_NATIVE_MODULES_IMPORT */
-import { type Cloneable, type NativeModulesMap } from '@types';
+import { type Cloneable, type NativeModulesMap } from '../../../types/index.js';
 import {
   nativeModulesCallEndpoint,
   switchExposureServiceEndpoint,
-} from '@client/endpoints.js';
+} from '../../endpoints.js';
 import type { Rpc } from '@lynx-js/web-worker-rpc';
 
 export async function createNativeModules(

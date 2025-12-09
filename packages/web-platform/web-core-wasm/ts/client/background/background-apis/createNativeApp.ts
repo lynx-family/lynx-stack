@@ -7,7 +7,7 @@ import type {
   II18nResource,
   NativeApp,
   NativeModulesMap,
-} from '@types';
+} from '../../../types/index.js';
 import {
   callLepusMethodEndpoint,
   setNativePropsEndpoint,
@@ -16,7 +16,7 @@ import {
   reportErrorEndpoint,
   queryComponentEndpoint,
   updateBTSChunkEndpoint,
-} from '@client/endpoints.js';
+} from '../../endpoints.js';
 import { createInvokeUIMethod } from './crossThreadHandlers/createInvokeUIMethod.js';
 import { registerPublicComponentEventHandler } from './crossThreadHandlers/registerPublicComponentEventHandler.js';
 import { createNativeModules } from './createNativeModules.js';

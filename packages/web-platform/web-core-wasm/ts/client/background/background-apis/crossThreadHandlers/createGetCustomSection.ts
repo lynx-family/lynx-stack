@@ -3,8 +3,8 @@
 // LICENSE file in the root directory of this source tree.
 
 import type { Rpc } from '@lynx-js/web-worker-rpc';
-import type { Cloneable } from '@types';
-import { getCustomSectionsEndpoint } from '@client/endpoints.js';
+import type { Cloneable } from '../../../../types/index.js';
+import { getCustomSectionsEndpoint } from '../../../endpoints.js';
 
 export function createGetCustomSection(
   rpc: Rpc,

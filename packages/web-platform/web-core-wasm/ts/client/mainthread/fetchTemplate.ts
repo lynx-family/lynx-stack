@@ -4,8 +4,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { TemplateSectionLabel, MagicHeader } from '@constants';
-import { templateManager } from '@client/wasm.js';
+import { TemplateSectionLabel, MagicHeader } from '../../constants.js';
+import { templateManager } from '../wasm.js';
 import type { LynxViewInstance } from './LynxViewInstance.js';
 
 class StreamReader {

@@ -1,0 +1,14 @@
+{
+  "name": "@lynx-js/example-web-platform",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "rsbuild build",
+    "dev": "rsbuild dev"
+  },
+  "devDependencies": {
+    "@lynx-js/web-core-wasm": "workspace:*",
+    "@rsbuild/core": "^1.6.13"
+  }
+}

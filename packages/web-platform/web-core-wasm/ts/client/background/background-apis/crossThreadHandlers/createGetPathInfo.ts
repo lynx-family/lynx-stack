@@ -3,9 +3,9 @@
 // LICENSE file in the root directory of this source tree.
 
 import type { Rpc } from '@lynx-js/web-worker-rpc';
-import type { NativeApp } from '@types';
-import { getPathInfoEndpoint } from '@client/endpoints.js';
-import { ErrorCode } from '@constants';
+import type { NativeApp } from '../../../../types/index.js';
+import { getPathInfoEndpoint } from '../../../endpoints.js';
+import { ErrorCode } from '../../../../constants.js';
 
 export function createGetPathInfo(rpc: Rpc): NativeApp['getPathInfo'] {
   return (

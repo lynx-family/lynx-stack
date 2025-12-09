@@ -9,7 +9,7 @@ import type {
   DecoratedHTMLElement,
   ExposureEventDetail,
   GlobalExposureEvent,
-} from '@types';
+} from '../../types/index.js';
 import { convertLengthToPx } from './utils/convertLengthToPx.js';
 import type { LynxViewInstance } from './LynxViewInstance.js';
 

@@ -9,7 +9,7 @@ import {
   lynxEntryNameAttribute,
   uniqueIdSymbol,
   LYNX_TAG_TO_HTML_TAG_MAP,
-} from '@constants';
+} from '../../../constants.js';
 import {
   __SwapElement,
   __AppendElement,
@@ -41,7 +41,7 @@ import type {
   DecoratedHTMLElement,
   ElementPAPIs,
   UpdateListInfoAttributeValue,
-} from '@types';
+} from '../../../types/index.js';
 import type { WASMJSBinding } from './WASMJSBinding.js';
 
 export function createElementAPI(

@@ -5,8 +5,8 @@ import {
   Selector,
   RulePrelude,
   Declaration,
-} from '@binary/encode/encode.js';
-export * from '@binary/encode/encode.js';
+} from '../../binary/encode/encode.js';
+export * from '../../binary/encode/encode.js';
 
 export function encodeCSS(
   cssMap: Record<string, CSS.LynxStyleNode[]>,

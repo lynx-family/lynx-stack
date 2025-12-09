@@ -2,8 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { triggerElementMethodEndpoint } from '@client/endpoints.js';
-import type { AnimationOperation } from '@types';
+import { triggerElementMethodEndpoint } from '../../endpoints.js';
+import type { AnimationOperation } from '../../../types/index.js';
 import type { Rpc } from '@lynx-js/web-worker-rpc';
 
 export const createElement = (elementId: string, uiThreadRpc: Rpc) => {

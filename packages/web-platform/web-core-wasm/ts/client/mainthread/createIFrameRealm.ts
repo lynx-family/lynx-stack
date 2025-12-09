@@ -4,8 +4,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import type { JSRealm } from '@types';
-
+import type { JSRealm } from '../../types/index.js';
+const existingScript = document.querySelector('script[nonce]') as
+  | HTMLScriptElement
+  | null;
+const nonce = existingScript?.nonce || existingScript?.getAttribute('nonce');
 /**
  * Creates a isolated JavaScript context for executing mts code.
  * This context has its own global variables and functions.
@@ -36,6 +39,7 @@ export async function createIFrameRealm(parent: Node): Promise<JSRealm> {
     script.fetchPriority = 'high';
     script.defer = true;
     script.async = false;
+    script.nonce = nonce || '';
     iframe.contentDocument!.head.appendChild(script);
     return new Promise(async (resolve, reject) => {
       script.onload = () => {

@@ -9,9 +9,9 @@ import type {
   CloneableObject,
   I18nResourceTranslationOptions,
   InitI18nResources,
-} from '@types';
+} from '../../types/index.js';
 import type { BackgroundThread } from './Background.js';
-import { i18nResourceMissedEventName } from '@constants';
+import { i18nResourceMissedEventName } from '../../constants.js';
 
 export const getCacheI18nResourcesKey = (
   options: I18nResourceTranslationOptions,
