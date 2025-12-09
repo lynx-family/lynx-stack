@@ -1356,8 +1356,8 @@ describe('Config', () => {
           "main": {
             "filename": ".rspeedy/main/background.js",
             "import": [
-              "@lynx-js/react/refresh",
               "@lynx-js/webpack-dev-transport/client",
+              "@lynx-js/react/refresh",
               "@rspack/core/hot/dev-server",
               "./fixtures/basic.tsx",
             ],
@@ -1406,8 +1406,8 @@ describe('Config', () => {
           "main": {
             "filename": ".rspeedy/main/background.[contenthash].js",
             "import": [
-              "@lynx-js/react/refresh",
               "@lynx-js/webpack-dev-transport/client",
+              "@lynx-js/react/refresh",
               "@rspack/core/hot/dev-server",
               "./fixtures/basic.tsx",
             ],
@@ -2076,8 +2076,8 @@ describe('Config', () => {
             "main": {
               "filename": ".rspeedy/main/background.[contenthash:8].js",
               "import": [
-                "@lynx-js/react/refresh",
                 "@lynx-js/webpack-dev-transport/client",
+                "@lynx-js/react/refresh",
                 "@rspack/core/hot/dev-server",
                 "./src/index.js",
               ],

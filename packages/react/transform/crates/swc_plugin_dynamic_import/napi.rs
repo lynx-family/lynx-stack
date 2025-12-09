@@ -15,6 +15,8 @@ pub struct DynamicImportVisitorConfig {
   pub runtime_pkg: String,
   /// @internal
   pub layer: String,
+  /// @internal
+  pub inject_lazy_bundle: Option<bool>,
 }
 
 impl Default for DynamicImportVisitorConfig {
@@ -22,6 +24,7 @@ impl Default for DynamicImportVisitorConfig {
     DynamicImportVisitorConfig {
       layer: "".into(),
       runtime_pkg: "@lynx-js/react/internal".into(),
+      inject_lazy_bundle: Some(true),
     }
   }
 }
@@ -31,6 +34,7 @@ impl From<DynamicImportVisitorConfig> for CoreConfig {
     CoreConfig {
       layer: val.layer,
       runtime_pkg: val.runtime_pkg,
+      inject_lazy_bundle: val.inject_lazy_bundle,
     }
   }
 }
@@ -40,6 +44,7 @@ impl From<CoreConfig> for DynamicImportVisitorConfig {
     DynamicImportVisitorConfig {
       layer: val.layer,
       runtime_pkg: val.runtime_pkg,
+      inject_lazy_bundle: val.inject_lazy_bundle,
     }
   }
 }
