@@ -122,14 +122,13 @@ impl MainThreadWasmContext {
             let tag_name = &operation.operands_str[0];
             let dom = document
               .create_element(
-                constants::TAG_NAME_TO_HTML_TAG_MAP
+                constants::LYNX_TAG_TO_HTML_TAG_MAP
                   .get(tag_name)
                   .map(|s| s.as_str())
                   .unwrap_or(tag_name),
               )
               .map_err(|e| JsError::new(&format!("Failed to create element {tag_name}: {e:?}")))?;
             let element_id = operation.operands_num[0];
-            let _ = dom.set_attribute(constants::LYNX_TAG_ATTRIBUTE, tag_name);
             // reuse the unique id attribute
             let _ = dom.set_attribute(
               constants::LYNX_TEMPLATE_MEMBER_ID_ATTRIBUTE,

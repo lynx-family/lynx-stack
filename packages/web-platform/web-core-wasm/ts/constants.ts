@@ -10,8 +10,6 @@ export const parentComponentUniqueIdAttribute = 'l-p-comp-uid' as const;
 
 export const lynxEntryNameAttribute = 'l-e-name' as const;
 
-export const lynxTagAttribute = 'lynx-tag' as const;
-
 export const lynxDatasetAttribute = 'l-dset' as const;
 
 export const lynxComponentConfigAttribute = 'l-comp-cfg' as const;
@@ -94,9 +92,28 @@ export const enum ErrorCode {
   NO_UI_FOR_NODE = 6,
 }
 
-export const defaultTagMap: Record<string, string> = {
-  'input': 'x-input',
-  'x-input-ng': 'x-input',
-};
+export const LYNX_TAG_TO_HTML_TAG_MAP: Record<string, string> = Object.freeze(
+  Object.assign(Object.create(null), {
+    'view': 'x-view',
+    'text': 'x-text',
+    'image': 'x-image',
+    'raw-text': 'raw-text',
+    'scroll-view': 'x-scroll-view',
+    'wrapper': 'lynx-wrapper',
+    'list': 'x-list',
+    'page': 'div',
+    'input': 'x-input',
+    'x-input-ng': 'x-input',
+  }),
+);
+
+export const HTML_TAG_TO_LYNX_TAG_MAP: Record<string, string> = Object.freeze(
+  Object.assign(
+    Object.create(null),
+    Object.fromEntries(
+      Object.entries(LYNX_TAG_TO_HTML_TAG_MAP).map(([k, v]) => [v, k]),
+    ),
+  ),
+);
 
 export const scrollContainerDom = Symbol.for('lynx-scroll-container-dom');

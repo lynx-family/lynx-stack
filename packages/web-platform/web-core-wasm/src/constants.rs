@@ -7,7 +7,6 @@ use fnv::FnvHashMap;
 pub const LYNX_UNIQUE_ID_ATTRIBUTE: &str = "l-uid";
 pub const CSS_ID_ATTRIBUTE: &str = "l-css-id";
 pub const LYNX_ENTRY_NAME_ATTRIBUTE: &str = "l-e-name";
-pub const LYNX_TAG_ATTRIBUTE: &str = "lynx-tag"; //todo: optimize this by detecting usage
 pub const LYNX_TEMPLATE_MEMBER_ID_ATTRIBUTE: &str = "l-t-e-id";
 pub const APPEAR_EVENT_NAME: &str = "appear";
 pub const DISAPPEAR_EVENT_NAME: &str = "disappear";
@@ -233,7 +232,7 @@ pub(crate) const STYLE_PROPERTY_MAP: &[&str] = &[
 ];
 
 lazy_static::lazy_static! {
-  pub static ref TAG_NAME_TO_HTML_TAG_MAP: FnvHashMap<String, String> = FnvHashMap::from_iter(vec![
+  pub static ref LYNX_TAG_TO_HTML_TAG_MAP: FnvHashMap<String, String> = FnvHashMap::from_iter(vec![
     ("view".to_string(), "x-view".to_string()),
     ("text".to_string(), "x-text".to_string()),
     ("image".to_string(), "x-image".to_string()),
@@ -241,5 +240,11 @@ lazy_static::lazy_static! {
     ("scroll-view".to_string(), "x-scroll-view".to_string()),
     ("wrapper".to_string(), "lynx-wrapper".to_string()),
     ("list".to_string(), "x-list".to_string()),
+    ("page".to_string(), "div".to_string()),
   ]);
+
+  pub static ref HTML_TAG_TO_LYNX_TAG_MAP: FnvHashMap<String, String> = FnvHashMap::from_iter(LYNX_TAG_TO_HTML_TAG_MAP
+    .iter()
+    .map(|(k, v)| (v.clone(), k.clone()))
+  );
 }

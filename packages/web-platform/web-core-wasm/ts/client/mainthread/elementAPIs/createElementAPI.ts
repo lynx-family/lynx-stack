@@ -7,9 +7,8 @@ import {
   lynxDisposedAttribute,
   lynxDefaultDisplayLinearAttribute,
   lynxEntryNameAttribute,
-  lynxTagAttribute,
   uniqueIdSymbol,
-  defaultTagMap,
+  LYNX_TAG_TO_HTML_TAG_MAP,
 } from '@constants';
 import {
   __SwapElement,
@@ -69,7 +68,6 @@ export function createElementAPI(
         parentComponentUniqueId,
         dom,
       );
-      dom.setAttribute(lynxTagAttribute, 'view');
       return dom;
     },
     __CreateText(parentComponentUniqueId) {
@@ -78,7 +76,6 @@ export function createElementAPI(
         parentComponentUniqueId,
         dom,
       );
-      dom.setAttribute(lynxTagAttribute, 'text');
       return dom;
     },
     __CreateImage(parentComponentUniqueId) {
@@ -87,14 +84,12 @@ export function createElementAPI(
         parentComponentUniqueId,
         dom,
       );
-      dom.setAttribute(lynxTagAttribute, 'image');
       return dom;
     },
     __CreateRawText(text) {
       const dom = document.createElement('raw-text') as DecoratedHTMLElement;
       dom.setAttribute('text', text);
       dom[uniqueIdSymbol] = wasmContext.__CreateElementCommon(-1, dom);
-      dom.setAttribute(lynxTagAttribute, 'raw-text');
       return dom;
     },
     __CreateScrollView(parentComponentUniqueId) {
@@ -104,18 +99,16 @@ export function createElementAPI(
         parentComponentUniqueId,
         dom,
       );
-      dom.setAttribute(lynxTagAttribute, 'scroll-view');
       return dom;
     },
     __CreateElement(tagName, parentComponentUniqueId) {
       const dom = document.createElement(
-        defaultTagMap[tagName] ?? tagName,
+        LYNX_TAG_TO_HTML_TAG_MAP[tagName] ?? tagName,
       ) as DecoratedHTMLElement;
       dom[uniqueIdSymbol] = wasmContext.__CreateElementCommon(
         parentComponentUniqueId,
         dom,
       );
-      dom.setAttribute(lynxTagAttribute, tagName);
       return dom;
     },
     __CreateComponent(
@@ -145,7 +138,6 @@ export function createElementAPI(
       const dom = document.createElement(
         'lynx-wrapper',
       ) as DecoratedHTMLElement;
-      dom.setAttribute(lynxTagAttribute, 'wrapper');
       dom[uniqueIdSymbol] = wasmContext.__CreateElementCommon(
         parentComponentUniqueId,
         dom,
@@ -160,7 +152,6 @@ export function createElementAPI(
         parentComponentUniqueId,
         dom,
       );
-      dom.setAttribute(lynxTagAttribute, 'list');
       return dom;
     },
     __CreatePage(componentID, cssID) {
@@ -180,7 +171,7 @@ export function createElementAPI(
       if (!config_default_display_linear) {
         dom.setAttribute(lynxDefaultDisplayLinearAttribute, 'false');
       }
-      dom.setAttribute(lynxTagAttribute, 'page');
+      dom.setAttribute('part', 'page');
       page = dom;
       return dom;
     },

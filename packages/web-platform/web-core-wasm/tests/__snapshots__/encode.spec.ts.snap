@@ -1,8 +1,8 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`encodeCSS > :root 1`] = `"[lynx-tag="page"]:not([l-e-name]) {background:red;}"`;
+exports[`encodeCSS > :root 1`] = `"[part="page"]:not([l-e-name]) {background:red;}"`;
 
-exports[`encodeCSS > complex-root 1`] = `"[lynx-tag="page"].dark:not([l-e-name]) {background:red;}"`;
+exports[`encodeCSS > complex-root 1`] = `"[part="page"].dark:not([l-e-name]) {background:red;}"`;
 
 exports[`encodeCSS > font-family-at-rule 1`] = `"@font-face {font-family:"MyFont";src:url('myfont.woff');}"`;
 

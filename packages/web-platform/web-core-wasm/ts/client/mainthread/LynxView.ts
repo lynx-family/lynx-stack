@@ -11,11 +11,7 @@ import type {
   NativeModulesCall,
   NativeModulesMap,
 } from '@types';
-import {
-  inShadowRootStyles,
-  lynxDisposedAttribute,
-  lynxTagAttribute,
-} from '@constants';
+import { inShadowRootStyles, lynxDisposedAttribute } from '@constants';
 import { LynxViewInstance } from './LynxViewInstance.js';
 import { createIFrameRealm } from './createIFrameRealm.js';
 
@@ -361,7 +357,7 @@ export class LynxView extends HTMLElement {
     this.#instance = undefined;
     // under the all-on-ui strategy, when reload() triggers dsl flush, the previously removed pageElement will be used in __FlushElementTree.
     // This attribute is added to filter this issue.
-    this.shadowRoot?.querySelector(`[${lynxTagAttribute}="page"]`)
+    this.shadowRoot?.querySelector('[part="page"]')
       ?.setAttribute(
         lynxDisposedAttribute,
         '',

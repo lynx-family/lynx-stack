@@ -3,6 +3,7 @@ import { encode, type TasmJSONInfo } from '@encode/index.js';
 import { fetchTemplate } from '@client/mainthread/fetchTemplate.js';
 import { MagicHeader } from '@constants';
 import { templateManager } from '@client/wasm.js';
+import type { LynxViewInstance } from '@client/mainthread/LynxViewInstance.js';
 
 // Mock wasm-feature-detect to ensure we load the standard WASM
 vi.mock('wasm-feature-detect', () => ({
@@ -28,6 +29,12 @@ const sampleTasm: TasmJSONInfo = {
   },
   elementTemplates: {},
 };
+
+const mockLynxViewInstance = {
+  onPageConfigReady: vi.fn(),
+  onStyleInfoReady: vi.fn(),
+  onMTSScriptsLoaded: vi.fn(),
+} as unknown as LynxViewInstance;
 
 describe('Template Manager', () => {
   beforeEach(() => {
@@ -60,6 +67,7 @@ describe('Template Manager', () => {
     await fetchTemplate(
       templateUrl,
       new AbortController().signal,
+      mockLynxViewInstance,
     );
 
     // Verify data using getCustomSection
@@ -90,6 +98,7 @@ describe('Template Manager', () => {
       fetchTemplate(
         templateUrl,
         new AbortController().signal,
+        mockLynxViewInstance,
       ),
     )
       .rejects.toThrow('Unsupported version: 2');
@@ -128,6 +137,7 @@ describe('Template Manager', () => {
     await fetchTemplate(
       'http://example.com/template',
       new AbortController().signal,
+      mockLynxViewInstance,
     );
 
     // Verify data using getCustomSection
@@ -171,7 +181,11 @@ describe('Template Manager', () => {
     });
 
     await expect(
-      fetchTemplate(templateUrl, new AbortController().signal),
+      fetchTemplate(
+        templateUrl,
+        new AbortController().signal,
+        mockLynxViewInstance,
+      ),
     ).rejects.toThrow('Stream failed');
 
     expect(() => {

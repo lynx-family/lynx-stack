@@ -121,10 +121,9 @@ impl DecodedStyleInfo {
                 if simple_selector.selector_type == OneSimpleSelectorType::PseudoClassSelector
                   && simple_selector.value == "root"
                 {
-                  // transform :root to [lynx-tag="page"]
+                  // transform :root to [part="page"]
                   simple_selector.selector_type = OneSimpleSelectorType::AttributeSelector;
-                  simple_selector.value =
-                    format!("{}=\"page\"", crate::constants::LYNX_TAG_ATTRIBUTE);
+                  simple_selector.value = "part=\"page\"".to_string();
                   // find the position to insert
                   let mut compond_selector_start_index = simple_selector_index;
                   while compond_selector_start_index > 0 {
@@ -155,14 +154,13 @@ impl DecodedStyleInfo {
                   );
                   simple_selector_index += 1; // skip the newly inserted simple selector
                 } else if simple_selector.selector_type == OneSimpleSelectorType::TypeSelector {
-                  // transform type selector to [lynx-tag="type"]
+                  // transform type selector
                   let simple_selector = &mut selector.simple_selectors[simple_selector_index];
-                  simple_selector.selector_type = OneSimpleSelectorType::AttributeSelector;
-                  simple_selector.value = format!(
-                    "{}=\"{}\"",
-                    crate::constants::LYNX_TAG_ATTRIBUTE,
-                    simple_selector.value
-                  );
+                  if let Some(mapped_tag) =
+                    crate::constants::LYNX_TAG_TO_HTML_TAG_MAP.get(&simple_selector.value)
+                  {
+                    simple_selector.value = mapped_tag.clone();
+                  }
                 }
                 if matches!(
                   selector.simple_selectors[simple_selector_index].selector_type,
@@ -534,6 +532,67 @@ mod test {
     };
     let result = generate_string_buf(raw_style_info);
     let expected = "@keyframes animation-name {0% {width:calc(100 * var(--rpx-unit));}}";
+    assert_eq!(result.style_content, expected);
+  }
+
+  #[test]
+  fn test_type_selector() {
+    let raw_style_info = RawStyleInfo {
+      css_id_to_style_sheet: FnvHashMap::from_iter(vec![(
+        0,
+        StyleSheet {
+          imports: vec![],
+          rules: vec![
+            Rule {
+              nested_rules: vec![],
+              rule_type: RuleType::Declaration,
+              prelude: RulePrelude {
+                selector_list: vec![Selector {
+                  simple_selectors: vec![OneSimpleSelector {
+                    selector_type: OneSimpleSelectorType::TypeSelector,
+                    value: "view".to_string(),
+                  }],
+                }],
+              },
+              declaration_block: DeclarationBlock {
+                declarations: vec![Declaration {
+                  property_name: "width".to_string(),
+                  value_token_list: vec![ValueToken {
+                    token_type: crate::css_tokenizer::token_types::DIMENSION_TOKEN,
+                    value: "100px".to_string(),
+                  }],
+                }],
+              },
+            },
+            Rule {
+              nested_rules: vec![],
+              rule_type: RuleType::Declaration,
+              prelude: RulePrelude {
+                selector_list: vec![Selector {
+                  simple_selectors: vec![OneSimpleSelector {
+                    selector_type: OneSimpleSelectorType::TypeSelector,
+                    value: "unknown-tag".to_string(),
+                  }],
+                }],
+              },
+              declaration_block: DeclarationBlock {
+                declarations: vec![Declaration {
+                  property_name: "height".to_string(),
+                  value_token_list: vec![ValueToken {
+                    token_type: crate::css_tokenizer::token_types::DIMENSION_TOKEN,
+                    value: "100px".to_string(),
+                  }],
+                }],
+              },
+            },
+          ],
+        },
+      )]),
+      style_content_str_size_hint: 0,
+    };
+    let result = generate_string_buf(raw_style_info);
+    let expected =
+      "x-view:not([l-e-name]) {width:100px;}unknown-tag:not([l-e-name]) {height:100px;}";
     assert_eq!(result.style_content, expected);
   }
 }

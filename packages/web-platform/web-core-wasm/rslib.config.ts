@@ -1,5 +1,5 @@
 import { defineConfig } from '@rslib/core';
-// import './scripts/build.js';
+import './scripts/build.js';
 
 export default defineConfig({
   lib: [

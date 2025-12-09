@@ -3,9 +3,9 @@
 // LICENSE file in the root directory of this source tree.
 
 import {
+  HTML_TAG_TO_LYNX_TAG_MAP,
   lynxElementTemplateMarkerAttribute,
   lynxPartIdAttribute,
-  lynxTagAttribute,
   uniqueIdSymbol,
 } from '@constants';
 
@@ -129,8 +129,10 @@ export const __GetID: GetIDPAPI = /*#__PURE__*/ (element) =>
 export const __SetID: SetIDPAPI = /*#__PURE__*/ (element, id) =>
   id ? element.setAttribute('id', id) : element.removeAttribute('id');
 
-export const __GetTag: GetTagPAPI = /*#__PURE__*/ (element) =>
-  element.getAttribute(lynxTagAttribute)!;
+export const __GetTag: GetTagPAPI = /*#__PURE__*/ (element) => {
+  const tagName = element.tagName.toLowerCase();
+  return HTML_TAG_TO_LYNX_TAG_MAP[tagName] ?? tagName;
+};
 
 export const __GetClasses: GetClassesPAPI = /*#__PURE__*/ (
   element,
