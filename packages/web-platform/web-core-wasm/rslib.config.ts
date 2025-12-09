@@ -1,5 +1,5 @@
 import { defineConfig } from '@rslib/core';
-import './scripts/build.js';
+// import './scripts/build.js';
 
 export default defineConfig({
   lib: [
@@ -16,7 +16,12 @@ export default defineConfig({
         distPath: {
           root: './dist/encode',
         },
-        minify: true,
+        copy: [
+          {
+            from: './binary/encode/encode_bg.wasm',
+          },
+        ],
+        minify: false,
       },
       tools: {
         rspack: {

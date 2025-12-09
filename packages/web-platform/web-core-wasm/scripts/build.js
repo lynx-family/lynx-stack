@@ -25,7 +25,13 @@ const cargoOutputDebug = path.join(
 );
 // build the standard wasm package
 
-function build(featureName, rustFlags, wasmBindgenArgs, optimizeArgs) {
+function build(
+  featureName,
+  rustFlags,
+  wasmBindgenArgs,
+  optimizeArgs,
+  isNode = false,
+) {
   const outDir = path.join(packageRoot, 'binary', featureName);
   ``;
   const outputWasmName = `${featureName}`;
@@ -43,7 +49,9 @@ function build(featureName, rustFlags, wasmBindgenArgs, optimizeArgs) {
     },
   );
   execSync(
-    `pnpm exec dotslash ./scripts/wasm-bindgen ${wasmBindgenArgs} --out-dir ${outDir} --target bundler --out-name ${outputWasmName} ${cargoOutput}`,
+    `pnpm exec dotslash ./scripts/wasm-bindgen ${wasmBindgenArgs} --out-dir ${outDir} --target ${
+      isNode ? 'experimental-nodejs-module' : 'bundler'
+    } --out-name ${outputWasmName} ${cargoOutput}`,
     { cwd: packageRoot, stdio: 'inherit' },
   );
   execSync(
@@ -61,7 +69,9 @@ function build(featureName, rustFlags, wasmBindgenArgs, optimizeArgs) {
     },
   );
   execSync(
-    `pnpm exec dotslash ./scripts/wasm-bindgen ${wasmBindgenArgs} --keep-debug --out-dir ${outDir} --target bundler --out-name ${outputWasmDebugName} ${cargoOutputDebug}`,
+    `pnpm exec dotslash ./scripts/wasm-bindgen ${wasmBindgenArgs} --keep-debug --out-dir ${outDir} --target ${
+      isNode ? 'experimental-nodejs-module' : 'bundler'
+    } --out-name ${outputWasmDebugName} ${cargoOutputDebug}`,
     { cwd: packageRoot, stdio: 'inherit' },
   );
 }
@@ -85,4 +95,4 @@ build(
   '',
   '--enable-bulk-memory-opt --enable-sign-ext --enable-simd --enable-reference-types --enable-nontrapping-float-to-int --enable-mutable-globals',
 );
-build('encode', '', '', '--all-features');
+build('encode', '', '', '--all-features', true);
