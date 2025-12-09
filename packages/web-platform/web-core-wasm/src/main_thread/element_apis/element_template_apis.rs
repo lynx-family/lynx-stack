@@ -107,6 +107,14 @@ impl MainThreadWasmContext {
       let raw_element_template = template_manager
         .get_raw_template_element(&template_url, &element_template_name)
         .map_err(JsError::new)?;
+      // invoke element_load handler
+      for tag_name in raw_element_template.tag_names.iter() {
+        if let Some(id) = constants::LYNX_TAG_TO_DYNAMIC_LOAD_TAG_ID.get(tag_name.as_str()) {
+          self.mts_binding.load_internal_web_element(*id);
+        } else {
+          self.mts_binding.load_unknown_element(tag_name.as_str());
+        }
+      }
       let document = web_sys::window().unwrap().document().unwrap();
       let template_root_dom = document
         .create_element("template")
@@ -123,8 +131,8 @@ impl MainThreadWasmContext {
             let dom = document
               .create_element(
                 constants::LYNX_TAG_TO_HTML_TAG_MAP
-                  .get(tag_name)
-                  .map(|s| s.as_str())
+                  .get(tag_name.as_str())
+                  .copied()
                   .unwrap_or(tag_name),
               )
               .map_err(|e| JsError::new(&format!("Failed to create element {tag_name}: {e:?}")))?;

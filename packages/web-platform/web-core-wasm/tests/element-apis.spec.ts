@@ -27,7 +27,8 @@ describe('Element APIs', () => {
         exposureServices: vi.mockObject({
           updateExposureStatus: vi.fn(),
         }) as any,
-        publishEvent: vi.fn() as any,
+        loadWebElement: vi.fn(),
+        loadUnknownElement: vi.fn(),
       }),
     );
     mtsGlobalThis = createElementAPI(

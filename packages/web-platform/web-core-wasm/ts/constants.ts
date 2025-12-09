@@ -116,4 +116,33 @@ export const HTML_TAG_TO_LYNX_TAG_MAP: Record<string, string> = Object.freeze(
   ),
 );
 
+/**
+ * also see packages/web-platform/web-core-wasm/src/constants.rs
+ */
+export const LYNX_TAG_TO_DYNAMIC_LOAD_TAG_ID: Record<string, number> = Object
+  .freeze(
+    Object.assign(Object.create(null), {
+      'list': 0,
+      'x-swiper': 1,
+      'x-input': 2,
+      'x-input-ng': 2,
+      'input': 2,
+      'x-textarea': 3,
+      'x-audio-tt': 4,
+      'x-foldview-ng': 5,
+      'x-foldview-header-ng': 5,
+      'x-foldview-slot-drag-ng': 5,
+      'x-foldview-slot-ng': 5,
+      'x-foldview-toolbar-ng': 5,
+      'x-refresh-view': 6,
+      'x-refresh-header': 6,
+      'x-refresh-footer': 6,
+      'x-overlay-ng': 7,
+      'x-viewpager-ng': 8,
+      'x-viewpager-item-ng': 8,
+    }),
+  );
+
 export const scrollContainerDom = Symbol.for('lynx-scroll-container-dom');
+
+export const loadUnknownElementEventName = 'loadUnknownElement';

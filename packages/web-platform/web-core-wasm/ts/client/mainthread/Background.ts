@@ -35,7 +35,7 @@ function createWebWorker(): Worker {
     /* webpackChunkName: "web-core-worker-runtime" */
     /* webpackPrefetch: true */
     /* webpackPreload: true */
-    new URL('../background/index.js', import.meta.url),
+    new URL('../background.js', import.meta.url),
     {
       type: 'module',
       name: 'lynx-bg',

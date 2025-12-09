@@ -11,7 +11,7 @@ import type {
   NapiModulesMap,
   NativeModulesMap,
 } from '@types';
-import { systemInfoBase } from '@constants';
+import { loadUnknownElementEventName, systemInfoBase } from '@constants';
 import { BackgroundThread } from './Background.js';
 import { I18nManager } from './I18n.js';
 import { WASMJSBinding } from './elementAPIs/WASMJSBinding.js';
@@ -19,6 +19,7 @@ import { ExposureServices } from './ExposureServices.js';
 import { createElementAPI } from './elementAPIs/createElementAPI.js';
 import { createMainThreadGlobalAPIs } from './createMainThreadGlobalAPIs.js';
 import { templateManager } from '../wasm.js';
+import { loadWebElement } from '../webElementsDynamicLoader.js';
 
 const pixelRatio = window.devicePixelRatio;
 const screenWidth = window.screen.availWidth * pixelRatio;
@@ -49,6 +50,7 @@ export class LynxViewInstance implements AsyncDisposable {
   readonly backgroundThread: BackgroundThread;
   readonly i18nManager: I18nManager;
   readonly exposureServices: ExposureServices;
+  readonly webElementsLoadingPromises: Promise<void>[] = [];
 
   private renderPageFunction: ((data: Cloneable) => void) | null = null;
 
@@ -136,8 +138,8 @@ export class LynxViewInstance implements AsyncDisposable {
     this.mtsRealm.loadScript(this.lepusCodeUrls['root']!);
   }
 
-  onMTSScriptsExecuted() {
-    // start the webworker
+  async onMTSScriptsExecuted() {
+    await Promise.all(this.webElementsLoadingPromises);
     const processedData = this.mainThreadGlobalThis.processData
       ? this.mainThreadGlobalThis.processData(this.initData)
       : this.initData;
@@ -147,6 +149,26 @@ export class LynxViewInstance implements AsyncDisposable {
 
   onBTSScriptsLoaded() {
     // start executing in background thread
+  }
+
+  loadWebElement(id: number) {
+    const loadPromise = loadWebElement(id);
+    if (loadPromise) {
+      this.webElementsLoadingPromises.push(loadPromise);
+    }
+  }
+
+  loadUnknownElement(tagName: string) {
+    this.rootDom.dispatchEvent(
+      new CustomEvent(loadUnknownElementEventName, {
+        detail: {
+          tagName,
+        },
+      }),
+    );
+    this.webElementsLoadingPromises.push(
+      customElements.whenDefined(tagName).then(() => {}),
+    );
   }
 
   async updateData(

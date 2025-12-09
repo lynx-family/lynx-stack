@@ -157,9 +157,9 @@ impl DecodedStyleInfo {
                   // transform type selector
                   let simple_selector = &mut selector.simple_selectors[simple_selector_index];
                   if let Some(mapped_tag) =
-                    crate::constants::LYNX_TAG_TO_HTML_TAG_MAP.get(&simple_selector.value)
+                    crate::constants::LYNX_TAG_TO_HTML_TAG_MAP.get(simple_selector.value.as_str())
                   {
-                    simple_selector.value = mapped_tag.clone();
+                    simple_selector.value = mapped_tag.to_string();
                   }
                 }
                 if matches!(

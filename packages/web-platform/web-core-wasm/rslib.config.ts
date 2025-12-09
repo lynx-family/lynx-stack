@@ -30,6 +30,7 @@ export default defineConfig({
         entry: {
           index: './ts/client/index.ts',
           background: './ts/client/background/index.ts',
+          ['web-elements']: './node_modules/@lynx-js/web-elements/index.css',
         },
         tsconfigPath: './tsconfig.build.json',
       },
@@ -38,9 +39,7 @@ export default defineConfig({
         distPath: {
           root: './dist/client',
         },
-        minify: true,
       },
-      autoExternal: false,
       tools: {
         rspack: {
           target: [

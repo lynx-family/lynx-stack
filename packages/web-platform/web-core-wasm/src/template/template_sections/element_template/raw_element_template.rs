@@ -17,7 +17,7 @@ use wasm_bindgen::prelude::*;
 #[derive(Deserialize)]
 pub struct RawElementTemplate {
   pub(crate) operations: Vec<Operation>,
-  tag_names: FnvHashSet<String>,
+  pub(crate) tag_names: FnvHashSet<String>,
 }
 
 #[cfg_attr(feature = "encode", wasm_bindgen)]

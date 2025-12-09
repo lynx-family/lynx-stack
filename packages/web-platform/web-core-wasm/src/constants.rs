@@ -232,19 +232,45 @@ pub(crate) const STYLE_PROPERTY_MAP: &[&str] = &[
 ];
 
 lazy_static::lazy_static! {
-  pub static ref LYNX_TAG_TO_HTML_TAG_MAP: FnvHashMap<String, String> = FnvHashMap::from_iter(vec![
-    ("view".to_string(), "x-view".to_string()),
-    ("text".to_string(), "x-text".to_string()),
-    ("image".to_string(), "x-image".to_string()),
-    ("raw-text".to_string(), "raw-text".to_string()),
-    ("scroll-view".to_string(), "x-scroll-view".to_string()),
-    ("wrapper".to_string(), "lynx-wrapper".to_string()),
-    ("list".to_string(), "x-list".to_string()),
-    ("page".to_string(), "div".to_string()),
+  pub static ref LYNX_TAG_TO_HTML_TAG_MAP: FnvHashMap<&'static str, &'static str> = FnvHashMap::from_iter(vec![
+    ("view", "x-view"),
+    ("text", "x-text"),
+    ("image", "x-image"),
+    ("raw-text", "raw-text"),
+    ("scroll-view", "x-scroll-view"),
+    ("wrapper", "lynx-wrapper"),
+    ("list", "x-list"),
+    ("page", "div"),
   ]);
 
-  pub static ref HTML_TAG_TO_LYNX_TAG_MAP: FnvHashMap<String, String> = FnvHashMap::from_iter(LYNX_TAG_TO_HTML_TAG_MAP
+  pub static ref HTML_TAG_TO_LYNX_TAG_MAP: FnvHashMap<&'static str, &'static str> = FnvHashMap::from_iter(LYNX_TAG_TO_HTML_TAG_MAP
     .iter()
-    .map(|(k, v)| (v.clone(), k.clone()))
+    .map(|(k, v)| (*v, *k))
   );
+
+  /**
+   * See packages/web-platform/web-core-wasm/ts/client/webElementsDynamicLoader.ts
+   * This is a replica of the map in  packages/web-platform/web-core-wasm/ts/constants.ts
+   */
+  pub static ref LYNX_TAG_TO_DYNAMIC_LOAD_TAG_ID: FnvHashMap<&'static str, usize> = FnvHashMap::from_iter(vec![
+    ("list", 0),
+    ("x-swiper", 1),
+    ("x-input", 2),
+    ("x-input-ng", 2),
+    ("input", 2),
+    ("x-textarea", 3),
+    ("x-audio-tt", 4),
+    ("x-foldview-ng", 5),
+    ("x-foldview-header-ng", 5),
+    ("x-foldview-slot-drag-ng", 5),
+    ("x-foldview-slot-ng", 5),
+    ("x-foldview-toolbar-ng", 5),
+    ("x-refresh-view", 6),
+    ("x-refresh-header", 6),
+    ("x-refresh-footer", 6),
+    ("x-overlay-ng", 7),
+    ("x-viewpager-ng", 8),
+    ("x-viewpager-item-ng", 8),
+  ]);
+
 }

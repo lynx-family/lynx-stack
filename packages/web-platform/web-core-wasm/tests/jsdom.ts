@@ -6,4 +6,6 @@ Object.assign(globalThis, {
   window,
   Window: window.Window,
   CustomEvent: window.CustomEvent,
+  HTMLElement: window.HTMLElement,
+  customElements: window.customElements,
 });
