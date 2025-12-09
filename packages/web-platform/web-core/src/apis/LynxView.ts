@@ -120,7 +120,7 @@ export class LynxView extends HTMLElement {
     if (typeof val === 'string') {
       this.#globalProps = JSON.parse(val);
     } else {
-      this.#globalProps = val;
+      this.#globalProps = JSON.parse(JSON.stringify(val));
     }
   }
 
@@ -137,7 +137,7 @@ export class LynxView extends HTMLElement {
     if (typeof val === 'string') {
       this.#initData = JSON.parse(val);
     } else {
-      this.#initData = val;
+      this.#initData = JSON.parse(JSON.stringify(val));
     }
   }
 
@@ -154,7 +154,7 @@ export class LynxView extends HTMLElement {
     if (typeof val === 'string') {
       this.#initI18nResources = JSON.parse(val);
     } else {
-      this.#initI18nResources = val;
+      this.#initI18nResources = JSON.parse(JSON.stringify(val));
     }
   }
 
@@ -183,7 +183,7 @@ export class LynxView extends HTMLElement {
     if (typeof val === 'string') {
       this.#overrideLynxTagToHTMLTagMap = JSON.parse(val);
     } else {
-      this.#overrideLynxTagToHTMLTagMap = val;
+      this.#overrideLynxTagToHTMLTagMap = JSON.parse(JSON.stringify(val));
     }
   }
 
@@ -219,7 +219,7 @@ export class LynxView extends HTMLElement {
     return this.#nativeModulesMap;
   }
   set nativeModulesMap(map: NativeModulesMap) {
-    this.#nativeModulesMap = map;
+    this.#nativeModulesMap = JSON.parse(JSON.stringify(map));
   }
 
   #napiModulesMap: NapiModulesMap = {};
@@ -232,7 +232,7 @@ export class LynxView extends HTMLElement {
     return this.#napiModulesMap;
   }
   set napiModulesMap(map: NapiModulesMap) {
-    this.#napiModulesMap = map;
+    this.#napiModulesMap = JSON.parse(JSON.stringify(map));
   }
 
   #onNapiModulesCall?: NapiModulesCall;
