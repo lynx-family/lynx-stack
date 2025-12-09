@@ -112,7 +112,7 @@ tools/hab sync .
 await $`
 cd lynx
 source tools/envsetup.sh
-gn gen --args='enable_unittests=true enable_trace="perfetto" jsengine_type="quickjs" enable_frozen_mode=true' out/Default
+gn gen --args='enable_unittests=true enable_trace="none" jsengine_type="quickjs" enable_frozen_mode=true' out/Default
 ninja -C out/Default benchx_cli
 mkdir -p ../dist/bin
 cp ${
