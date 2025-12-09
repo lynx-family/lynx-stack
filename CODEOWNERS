@@ -1,6 +1,7 @@
 packages/web-platform/** @pupiltong
 packages/webpack/** @colinaaa @upupming
 packages/rspeedy/** @colinaaa @upupming
+packages/rspeedy/plugin-react/** @upupming
 packages/react/** @hzy @HuJean
 packages/react/transform/** @gaoachao
 benchmark/react/** @hzy @HuJean
