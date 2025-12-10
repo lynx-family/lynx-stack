@@ -34,6 +34,7 @@ const mockLynxViewInstance = {
   onPageConfigReady: vi.fn(),
   onStyleInfoReady: vi.fn(),
   onMTSScriptsLoaded: vi.fn(),
+  onBTSScriptsLoaded: vi.fn(),
 } as unknown as LynxViewInstance;
 
 describe('Template Manager', () => {

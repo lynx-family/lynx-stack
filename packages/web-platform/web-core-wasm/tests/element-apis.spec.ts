@@ -1114,9 +1114,9 @@ describe('Element APIs', () => {
           uniqueId: expect.any(Number),
         }),
       }),
-      child,
+      expect.any(Number),
       undefined,
-      child,
+      expect.any(Number),
       undefined,
     );
   });

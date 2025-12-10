@@ -247,4 +247,20 @@ describe('encodeCSS', () => {
     const decodedString = get_decoded_style_string(buffer, null, true);
     expect(decodedString.trim()).toMatchSnapshot();
   });
+
+  test('css cascading order', () => {
+    const cssMap = {
+      '0': CSS.parse(`
+        .foo {
+          background: red;
+        }
+        .foo, .bar {
+          height: 100px;
+        }
+      `).root,
+    };
+    const buffer = encodeCSS(cssMap);
+    const decodedString = get_decoded_style_string(buffer, null, true);
+    expect(decodedString.trim()).toMatchSnapshot();
+  });
 });

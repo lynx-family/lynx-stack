@@ -4,6 +4,8 @@ exports[`encodeCSS > :root 1`] = `"[part="page"]:not([l-e-name]) {background:red
 
 exports[`encodeCSS > complex-root 1`] = `"[part="page"].dark:not([l-e-name]) {background:red;}"`;
 
+exports[`encodeCSS > css cascading order 1`] = `".foo:not([l-e-name]) {background:red;}.foo:not([l-e-name]), .bar:not([l-e-name]) {height:100px;}"`;
+
 exports[`encodeCSS > font-family-at-rule 1`] = `"@font-face {font-family:"MyFont";src:url('myfont.woff');}"`;
 
 exports[`encodeCSS > normal css 1`] = `".foo:not([l-e-name]) {background:red;}"`;

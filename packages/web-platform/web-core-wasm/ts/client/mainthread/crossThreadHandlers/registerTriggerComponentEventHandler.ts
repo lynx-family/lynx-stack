@@ -2,11 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import type { Rpc } from '@lynx-js/web-worker-rpc';
-import { queryNodes } from './queryNodes.js';
-import {
-  selectComponentEndpoint,
-  triggerComponentEventEndpoint,
-} from '../../endpoints.js';
+import { triggerComponentEventEndpoint } from '../../endpoints.js';
 import type { LynxViewInstance } from '../LynxViewInstance.js';
 
 export function registerTriggerComponentEventHandler(

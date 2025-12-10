@@ -202,7 +202,7 @@ impl DecodedStyleInfo {
                 style_sheet.imported_by.iter().enumerate()
               {
                 // add a comma separator if not the last selector
-                if selector_index != 0 && imported_by_index != 0 {
+                if selector_index != 0 || imported_by_index != 0 {
                   self.style_content.push_str(", ");
                 }
 
@@ -593,6 +593,51 @@ mod test {
     let result = generate_string_buf(raw_style_info);
     let expected =
       "x-view:not([l-e-name]) {width:100px;}unknown-tag:not([l-e-name]) {height:100px;}";
+    assert_eq!(result.style_content, expected);
+  }
+
+  #[test]
+  fn test_multiple_selectors() {
+    let raw_style_info = RawStyleInfo {
+      css_id_to_style_sheet: FnvHashMap::from_iter(vec![(
+        0,
+        StyleSheet {
+          imports: vec![],
+          rules: vec![Rule {
+            nested_rules: vec![],
+            rule_type: RuleType::Declaration,
+            prelude: RulePrelude {
+              selector_list: vec![
+                Selector {
+                  simple_selectors: vec![OneSimpleSelector {
+                    selector_type: OneSimpleSelectorType::ClassSelector,
+                    value: "foo".to_string(),
+                  }],
+                },
+                Selector {
+                  simple_selectors: vec![OneSimpleSelector {
+                    selector_type: OneSimpleSelectorType::ClassSelector,
+                    value: "bar".to_string(),
+                  }],
+                },
+              ],
+            },
+            declaration_block: DeclarationBlock {
+              declarations: vec![Declaration {
+                property_name: "height".to_string(),
+                value_token_list: vec![ValueToken {
+                  token_type: crate::css_tokenizer::token_types::DIMENSION_TOKEN,
+                  value: "100px".to_string(),
+                }],
+              }],
+            },
+          }],
+        },
+      )]),
+      style_content_str_size_hint: 0,
+    };
+    let result = generate_string_buf(raw_style_info);
+    let expected = ".foo:not([l-e-name]), .bar:not([l-e-name]) {height:100px;}";
     assert_eq!(result.style_content, expected);
   }
 }
