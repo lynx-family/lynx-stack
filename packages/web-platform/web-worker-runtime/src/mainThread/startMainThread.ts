@@ -113,6 +113,8 @@ export async function startMainThreadWorker(
       return i18nResources;
     },
     loadTemplate,
+    undefined,
+    false,
   );
   uiThreadRpc.registerHandler(
     mainThreadStartEndpoint,

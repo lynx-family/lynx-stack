@@ -168,6 +168,8 @@ export interface DynamicImportVisitorConfig {
   runtimePkg: string;
   /** @internal */
   layer: string;
+  /** @internal */
+  injectLazyBundle?: boolean;
 }
 
 export interface DirectiveDceVisitorConfig {

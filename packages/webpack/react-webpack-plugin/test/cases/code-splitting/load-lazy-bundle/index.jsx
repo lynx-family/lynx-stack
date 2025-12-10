@@ -1,9 +1,8 @@
 /// <reference types="vitest/globals" />
+export {};
 
-import { lazy } from '@lynx-js/react';
-
-lazy(() => import('./foo.js'));
-
-it('should have lynx.loadLazyBundle', () => {
+it('should have lynx.loadLazyBundle', async () => {
+  await import('./foo.js');
+  await import('./foo2.js');
   expect(lynx.loadLazyBundle).not.toBeUndefined();
 });

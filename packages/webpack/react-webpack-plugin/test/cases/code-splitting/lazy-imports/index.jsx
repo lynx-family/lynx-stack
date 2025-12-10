@@ -25,6 +25,7 @@ it('should have experimental/lazy/import imported', async () => {
   } catch {
     // ignore error
   }
+  expect(lynx.loadLazyBundle).not.toBeUndefined();
   if (__BACKGROUND__) {
     expect(lynx[sExportsReact]).not.toBeUndefined();
     expect(lynx[sExportsReactLepus]).not.toBeUndefined();

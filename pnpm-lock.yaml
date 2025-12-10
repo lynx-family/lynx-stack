@@ -242,6 +242,31 @@ importers:
         specifier: 0.0.0-experimental-0566679-20250709
         version: 0.0.0-experimental-0566679-20250709
 
+  examples/react-lazy-bundle:
+    dependencies:
+      '@lynx-js/react':
+        specifier: workspace:*
+        version: link:../../packages/react
+    devDependencies:
+      '@lynx-js/preact-devtools':
+        specifier: ^5.0.1-cf9aef5
+        version: 5.0.1
+      '@lynx-js/qrcode-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/plugin-qrcode
+      '@lynx-js/react-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/plugin-react
+      '@lynx-js/rspeedy':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/core
+      '@lynx-js/types':
+        specifier: 3.4.11
+        version: 3.4.11
+      '@types/react':
+        specifier: ^18.3.25
+        version: 18.3.25
+
   examples/tailwindcss:
     dependencies:
       '@lynx-js/react':
@@ -1353,6 +1378,9 @@ importers:
       '@types/object.groupby':
         specifier: ^1.0.4
         version: 1.0.4
+      css-loader:
+        specifier: ^7.1.2
+        version: 7.1.2(@rspack/core@1.6.5(@swc/helpers@0.5.17))(webpack@5.102.0)
       webpack:
         specifier: ^5.102.0
         version: 5.102.0
