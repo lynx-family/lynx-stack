@@ -52,39 +52,43 @@ impl From<RawStyleInfo> for FlattenedStyleInfo {
       let css_id = sorted_css_ids[index];
       index += 1;
       // Decrease the in-in_degree of all imported CSS files
-      for imported_css_id in style_info.css_id_to_style_sheet[&css_id].imports.iter() {
-        let in_degree = in_degree_map.entry(*imported_css_id).or_insert(1);
-        *in_degree -= 1;
-        if *in_degree == 0 {
-          sorted_css_ids.push(*imported_css_id);
+      if let Some(style_sheet) = style_info.css_id_to_style_sheet.get(&css_id) {
+        for imported_css_id in style_sheet.imports.iter() {
+          let in_degree = in_degree_map.entry(*imported_css_id).or_insert(1);
+          *in_degree -= 1;
+          if *in_degree == 0 {
+            sorted_css_ids.push(*imported_css_id);
+          }
         }
       }
     }
 
     // Step 2. generate deps;
     for css_id in sorted_css_ids.iter() {
-      let style_sheet = &style_info.css_id_to_style_sheet[css_id];
-      // mark it is imported by itself
-      imported_by_map.entry(*css_id).or_default().insert(*css_id);
-      let current_css_id_imported_by = imported_by_map.get(css_id).unwrap().clone();
-      for importing_css_id in style_sheet.imports.iter() {
-        let importing_css_id_imported_by = imported_by_map.entry(*importing_css_id).or_default();
-        importing_css_id_imported_by.extend(current_css_id_imported_by.iter().cloned());
+      if let Some(style_sheet) = style_info.css_id_to_style_sheet.get(css_id) {
+        // mark it is imported by itself
+        imported_by_map.entry(*css_id).or_default().insert(*css_id);
+        let current_css_id_imported_by = imported_by_map.get(css_id).unwrap().clone();
+        for importing_css_id in style_sheet.imports.iter() {
+          let importing_css_id_imported_by = imported_by_map.entry(*importing_css_id).or_default();
+          importing_css_id_imported_by.extend(current_css_id_imported_by.iter().cloned());
+        }
       }
     }
 
     // Step 3. generate flattened style info
     for css_id in sorted_css_ids.iter() {
-      let style_sheet = style_info.css_id_to_style_sheet.remove(css_id).unwrap();
-      let imported_by_set = imported_by_map.get(css_id).unwrap();
-      let imported_by: Vec<i32> = imported_by_set.iter().cloned().collect();
-      let flattened_style_sheet = FlattenedStyleSheet {
-        imported_by,
-        rules: style_sheet.rules,
-      };
-      flattened_style_info
-        .css_id_to_style_sheet
-        .insert(*css_id, flattened_style_sheet);
+      if let Some(style_sheet) = style_info.css_id_to_style_sheet.remove(css_id) {
+        let imported_by_set = imported_by_map.get(css_id).unwrap();
+        let imported_by: Vec<i32> = imported_by_set.iter().cloned().collect();
+        let flattened_style_sheet = FlattenedStyleSheet {
+          imported_by,
+          rules: style_sheet.rules,
+        };
+        flattened_style_info
+          .css_id_to_style_sheet
+          .insert(*css_id, flattened_style_sheet);
+      }
     }
     flattened_style_info.style_content_str_size_hint = style_info.style_content_str_size_hint;
 

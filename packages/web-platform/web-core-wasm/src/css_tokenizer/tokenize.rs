@@ -559,7 +559,7 @@ mod test {
     let source = "\u{FEFF}";
     let mut parser = TokenStreamRecorder::new();
     tokenize(source, &mut parser);
-    assert_eq!(parser.tokens.len(), 1);
+    assert_eq!(parser.tokens.len(), 0);
   }
 
   #[test]

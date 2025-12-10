@@ -11,3 +11,9 @@ exports[`encodeCSS > font-family-at-rule 1`] = `"@font-face {font-family:"MyFont
 exports[`encodeCSS > normal css 1`] = `".foo:not([l-e-name]) {background:red;}"`;
 
 exports[`encodeCSS > scoped css 1`] = `".foo:where([l-css-id="1"]):not([l-e-name]) {background:red;}"`;
+
+exports[`encodeCSS > scoped css 2`] = `".foo:where([l-css-id="1"]):not([l-e-name]), .foo:where([l-css-id="2"]):not([l-e-name]) {background:red;}"`;
+
+exports[`encodeCSS > scoped css, import non existing 1`] = `".foo:where([l-css-id="1"]):not([l-e-name]), .foo:where([l-css-id="20"]):not([l-e-name]), .foo:where([l-css-id="2"]):not([l-e-name]) {background:red;}"`;
+
+exports[`encodeCSS > scoped css, multi import one 1`] = `".foo:where([l-css-id="1"]):not([l-e-name]), .foo:where([l-css-id="20"]):not([l-e-name]), .foo:where([l-css-id="2"]):not([l-e-name]) {background:red;}"`;

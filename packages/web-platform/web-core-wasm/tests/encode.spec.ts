@@ -248,6 +248,42 @@ describe('encodeCSS', () => {
     expect(decodedString.trim()).toMatchSnapshot();
   });
 
+  test('scoped css', () => {
+    const cssMap = {
+      '1': CSS.parse(`
+        @import "2";
+      `).root,
+      '2': CSS.parse(`
+        .foo {
+          background: red;
+        }
+      `).root,
+    };
+    const buffer = encodeCSS(cssMap);
+    const decodedString = get_decoded_style_string(buffer, null, true);
+    expect(decodedString.trim()).toMatchSnapshot();
+  });
+
+  test('scoped css, import non existing', () => {
+    const cssMap = {
+      '1': CSS.parse(`
+        @import "20";
+        @import "0";
+      `).root,
+      '2': CSS.parse(`
+        @import "20";
+      `).root,
+      '20': CSS.parse(`
+        .foo {
+          background: red;
+        }
+      `).root,
+    };
+    const buffer = encodeCSS(cssMap);
+    const decodedString = get_decoded_style_string(buffer, null, true);
+    expect(decodedString.trim()).toMatchSnapshot();
+  });
+
   test('css cascading order', () => {
     const cssMap = {
       '0': CSS.parse(`
@@ -262,5 +298,27 @@ describe('encodeCSS', () => {
     const buffer = encodeCSS(cssMap);
     const decodedString = get_decoded_style_string(buffer, null, true);
     expect(decodedString.trim()).toMatchSnapshot();
+  });
+
+  test('no css', () => {
+    const cssMap = {};
+    const buffer = encodeCSS(cssMap);
+    const decodedString = get_decoded_style_string(buffer, null, true);
+    expect(decodedString.trim()).toBe('');
+  });
+
+  test('non ascii characters', () => {
+    const cssMap = {
+      '0': CSS.parse(`
+        .class145[data-status="complete"]:before {
+          content: "✓ ";
+        }
+      `).root,
+    };
+    const buffer = encodeCSS(cssMap);
+    const decodedString = get_decoded_style_string(buffer, null, true);
+    expect(decodedString.trim()).toBe(
+      `.class145[[data-status="complete"]]:not([l-e-name]):before {content:"✓ ";}`,
+    );
   });
 });
