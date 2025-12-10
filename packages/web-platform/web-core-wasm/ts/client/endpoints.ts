@@ -7,13 +7,13 @@ import type {
   Cloneable,
   CloneableObject,
   LynxCrossThreadEvent,
-  IdentifierType,
   InvokeCallbackRes,
   ElementAnimationOptions,
   BackMainThreadContextConfig,
   UpdateDataOptions,
   TimingEntry,
 } from '../types/index.js';
+import type { IdentifierType } from '../constants.js';
 
 export const publicComponentEventEndpoint = createRpcEndpoint<
   [componentId: string, hname: string, LynxCrossThreadEvent],

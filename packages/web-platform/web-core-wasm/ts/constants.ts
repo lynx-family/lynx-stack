@@ -136,3 +136,20 @@ export const LYNX_TAG_TO_DYNAMIC_LOAD_TAG_ID: Record<string, number> = Object
 export const scrollContainerDom = Symbol.for('lynx-scroll-container-dom');
 
 export const loadUnknownElementEventName = 'loadUnknownElement';
+
+export const enum IdentifierType {
+  ID_SELECTOR, // css selector
+  /**
+   * @deprecated
+   */
+  REF_ID,
+  UNIQUE_ID, // element_id
+}
+
+export const enum AnimationOperation {
+  START = 0,
+  PLAY,
+  PAUSE,
+  CANCEL,
+  FINISH,
+}

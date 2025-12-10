@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import type { LynxEventType } from './EventType.js';
-import { uniqueIdSymbol } from '../constants.js';
+import { uniqueIdSymbol, type AnimationOperation } from '../constants.js';
 
 export type DecoratedHTMLElement = HTMLElement & {
   [uniqueIdSymbol]: number;
@@ -39,14 +39,6 @@ export type EnqueueComponentCallback = (
   listID: number,
   sign: number,
 ) => void;
-
-export const enum AnimationOperation {
-  START = 0,
-  PLAY,
-  PAUSE,
-  CANCEL,
-  FINISH,
-}
 
 export interface ElementAnimationOptions {
   operation: AnimationOperation;

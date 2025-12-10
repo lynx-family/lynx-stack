@@ -24,6 +24,7 @@ import { createMainThreadGlobalAPIs } from './createMainThreadGlobalAPIs.js';
 import { templateManager } from '../wasm.js';
 import { loadWebElement } from '../webElementsDynamicLoader.js';
 import { fetchTemplate } from './fetchTemplate.js';
+import type { LynxViewElement } from './LynxView.js';
 
 const pixelRatio = window.devicePixelRatio;
 const screenWidth = window.screen.availWidth * pixelRatio;
@@ -62,6 +63,7 @@ export class LynxViewInstance implements AsyncDisposable {
   lepusCodeUrls?: Record<string, string>;
 
   constructor(
+    public readonly parentDom: LynxViewElement,
     public readonly initData: Cloneable,
     public readonly globalprops: Cloneable,
     public readonly templateUrl: string,

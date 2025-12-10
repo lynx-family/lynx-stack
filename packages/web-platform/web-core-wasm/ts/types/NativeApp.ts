@@ -1,21 +1,13 @@
 // Copyright 2023 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
 
-import type { ErrorCode } from '../constants.js';
+import type { ErrorCode, IdentifierType } from '../constants.js';
 import type { CloneableObject } from './Cloneable.js';
 import type { LynxContextEventTarget } from './LynxContextEventTarget.js';
 import type { PerformancePipelineOptions } from './TimingAPIs.js';
 import type { II18nResource } from './I18nTypes.js';
 
-// LICENSE file in the root directory of this source tree.
-export const enum IdentifierType {
-  ID_SELECTOR, // css selector
-  /**
-   * @deprecated
-   */
-  REF_ID,
-  UNIQUE_ID, // element_id
-}
 export type LynxKernelInject = {
   init: (opt: { tt: LynxKernelInject }) => void;
   buildVersion?: string;

@@ -141,6 +141,21 @@ impl MainThreadWasmContext {
     Ok(())
   }
 
+  #[wasm_bindgen(js_name = "__wasm_get_unique_id_by_component_id")]
+  pub fn get_unique_id_by_component_id(&self, component_id: &str) -> Option<usize> {
+    for (unique_id, element_data_option) in self.unique_id_to_element_map.iter().enumerate() {
+      if let Some(element_data_cell) = element_data_option {
+        let element_data = element_data_cell.borrow();
+        if let Some(ref cid) = element_data.component_id {
+          if cid == component_id {
+            return Some(unique_id);
+          }
+        }
+      }
+    }
+    None
+  }
+
   // #[wasm_bindgen(js_name = "__wasm_GC")]
   // pub fn gc(&mut self) {
   //   self.unique_id_to_element_map.retain(|_, value| {

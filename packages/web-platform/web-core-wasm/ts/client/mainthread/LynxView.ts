@@ -24,7 +24,7 @@ export type INapiModulesCall = (
   name: string,
   data: any,
   moduleName: string,
-  lynxView: LynxView,
+  lynxView: LynxViewElement,
   dispatchNapiModules: (data: Cloneable) => void,
 ) =>
   | Promise<{ data: unknown; transfer?: Transferable[] } | undefined>
@@ -74,7 +74,7 @@ export type INapiModulesCall = (
  * </lynx-view>
  * ```
  */
-export class LynxView extends HTMLElement {
+export class LynxViewElement extends HTMLElement {
   static lynxViewCount = 0;
   static tag = 'lynx-view' as const;
   private static observedAttributeAsProperties = [
@@ -85,8 +85,8 @@ export class LynxView extends HTMLElement {
   /**
    * @private
    */
-  static observedAttributes = LynxView.observedAttributeAsProperties.map(nm =>
-    nm.toLowerCase()
+  static observedAttributes = LynxViewElement.observedAttributeAsProperties.map(
+    nm => nm.toLowerCase(),
   );
   #instance?: LynxViewInstance;
 
@@ -386,6 +386,7 @@ export class LynxView extends HTMLElement {
         if (this.#url) {
           const lynxGroupId = this.lynxGroupId;
           this.#instance = new LynxViewInstance(
+            this,
             this.#initData,
             this.#globalProps,
             this.#url,
@@ -409,8 +410,8 @@ export class LynxView extends HTMLElement {
   }
 }
 
-if (customElements.get(LynxView.tag)) {
-  console.warn(`[${LynxView.tag}] has already been defined`);
+if (customElements.get(LynxViewElement.tag)) {
+  console.error(`[${LynxViewElement.tag}] has already been defined`);
 } else {
-  customElements.define(LynxView.tag, LynxView);
+  customElements.define(LynxViewElement.tag, LynxViewElement);
 }

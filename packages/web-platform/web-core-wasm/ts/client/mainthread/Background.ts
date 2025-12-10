@@ -21,6 +21,7 @@ import {
   callLepusMethodEndpoint,
   switchExposureServiceEndpoint,
   reportErrorEndpoint,
+  dispatchLynxViewEventEndpoint,
 } from '../endpoints.js';
 import type {
   Cloneable,
@@ -31,6 +32,14 @@ import type {
 } from '../../types/index.js';
 import { LynxCrossThreadContext } from '../LynxCrossThreadContext.js';
 import { systemInfo, type LynxViewInstance } from './LynxViewInstance.js';
+import { registerInvokeUIMethodHandler } from './crossThreadHandlers/registerInvokeUIMethodHandler.js';
+import { registerNativePropsHandler } from './crossThreadHandlers/registerSetNativePropsHandler.js';
+import { registerGetPathInfoHandler } from './crossThreadHandlers/registerGetPathInfoHandler.js';
+import { registerSelectComponentHandler } from './crossThreadHandlers/registerSelectComponentHandler.js';
+import { registerTriggerComponentEventHandler } from './crossThreadHandlers/registerTriggerComponentEventHandler.js';
+import { registerTriggerElementMethodEndpointHandler } from './crossThreadHandlers/registerTriggerElementMethodEndpointHandler.js';
+import { registerNapiModulesCallHandler } from './crossThreadHandlers/registerNapiModulesCallHandler.js';
+import { registerNativeModulesCallHandler } from './crossThreadHandlers/registerNativeModulesCallHandler.js';
 
 function createWebWorker(): Worker {
   return new Worker(
@@ -167,6 +176,30 @@ export class BackgroundThread implements AsyncDisposable {
           this.lynxViewInstance.templateUrl,
         );
       },
+    );
+    this.rpc.registerHandler(
+      dispatchLynxViewEventEndpoint,
+      (eventType, detail) => {
+        this.lynxViewInstance.rootDom.dispatchEvent(
+          new CustomEvent(eventType, {
+            detail,
+            bubbles: true,
+            cancelable: true,
+            composed: true,
+          }),
+        );
+      },
+    );
+    registerGetPathInfoHandler(this.rpc, this.lynxViewInstance);
+    registerInvokeUIMethodHandler(this.rpc, this.lynxViewInstance);
+    registerNapiModulesCallHandler(this.rpc, this.lynxViewInstance);
+    registerNativeModulesCallHandler(this.rpc, this.lynxViewInstance);
+    registerSelectComponentHandler(this.rpc, this.lynxViewInstance);
+    registerNativePropsHandler(this.rpc, this.lynxViewInstance);
+    registerTriggerComponentEventHandler(this.rpc, this.lynxViewInstance);
+    registerTriggerElementMethodEndpointHandler(
+      this.rpc,
+      this.lynxViewInstance,
     );
 
     this.rpc.invoke(BackgroundThreadStartEndpoint, [

@@ -72,6 +72,18 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
     return undefined;
   }
 
+  getElementByComponentId(
+    componentId: string,
+  ): HTMLElement | undefined {
+    const uniqueId = this.wasmContext?.__wasm_get_unique_id_by_component_id(
+      componentId,
+    );
+    if (uniqueId != undefined) {
+      return this.getElementByUniqueId(uniqueId);
+    }
+    return undefined;
+  }
+
   runWorklet(
     handler: unknown,
     eventObject: LynxCrossThreadEvent,
