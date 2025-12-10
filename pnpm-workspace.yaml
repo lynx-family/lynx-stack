@@ -40,8 +40,8 @@ catalogs:
 
   # Rspack monorepo packages
   rspack:
-    "@rspack/cli": "1.6.7"
-    "@rspack/core": "1.6.7"
+    "@rspack/cli": "1.6.6"
+    "@rspack/core": "1.6.6"
     # TODO: Upgrade `@rspack/test-tools` to latest
     "@rspack/test-tools": "1.5.6"
 
