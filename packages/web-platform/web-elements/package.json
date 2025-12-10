@@ -18,6 +18,9 @@
     "./index.css": {
       "default": "./index.css"
     },
+    "./elements.css": {
+      "default": "./elements.css"
+    },
     "./all": {
       "types": "./dist/all.d.ts",
       "default": "./dist/all.js"
