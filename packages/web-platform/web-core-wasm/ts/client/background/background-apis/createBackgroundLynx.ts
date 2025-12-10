@@ -9,17 +9,14 @@ import {
 import type { Rpc } from '@lynx-js/web-worker-rpc';
 import { createGetCustomSection } from './crossThreadHandlers/createGetCustomSection.js';
 import { createElement } from './createElement.js';
-import type {
-  BackMainThreadContextConfig,
-  NativeApp,
-} from '../../../types/index.js';
+import type { Cloneable, NativeApp } from '../../../types/index.js';
 import { LynxCrossThreadContext } from '../../LynxCrossThreadContext.js';
 
 export function createBackgroundLynx(
-  config: BackMainThreadContextConfig,
+  globalProps: Cloneable,
+  customSections: Record<string, Cloneable>,
   nativeApp: NativeApp,
   mainThreadRpc: Rpc,
-  uiThreadRpc: Rpc,
 ) {
   const coreContext = new LynxCrossThreadContext({
     rpc: mainThreadRpc,
@@ -27,7 +24,7 @@ export function createBackgroundLynx(
     sendEventEndpoint: dispatchJSContextOnMainThreadEndpoint,
   });
   return {
-    __globalProps: config.globalProps,
+    __globalProps: globalProps,
     getJSModule(_moduleName: string): any {
     },
     getNativeApp(): NativeApp {
@@ -37,17 +34,17 @@ export function createBackgroundLynx(
       return coreContext;
     },
     getCustomSectionSync(key: string) {
-      return config.customSections[key];
+      return customSections[key];
     },
     getCustomSection: createGetCustomSection(
       mainThreadRpc,
-      config.customSections,
+      customSections,
     ),
     queueMicrotask: (callback: () => void) => {
       queueMicrotask(callback);
     },
     createElement(_: string, id: string) {
-      return createElement(id, uiThreadRpc);
+      return createElement(id, mainThreadRpc);
     },
     getI18nResource: () => nativeApp.i18nResource.data,
     QueryComponent: (

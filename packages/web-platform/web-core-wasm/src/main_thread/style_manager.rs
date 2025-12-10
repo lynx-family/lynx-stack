@@ -91,9 +91,10 @@ impl StyleManager {
       .unchecked_into::<web_sys::HtmlStyleElement>();
     let array_buffer =
       js_sys::Uint8Array::new_from_slice(flattened_style_info.style_content.as_bytes());
+    let parts = js_sys::Array::of1(&array_buffer);
     let blob_config = web_sys::BlobPropertyBag::new();
-    blob_config.set_type("text/css; charset=utf-8");
-    let blob = web_sys::Blob::new_with_u8_array_sequence_and_options(&array_buffer, &blob_config)
+    blob_config.set_type("text/css;charset=utf-8");
+    let blob = web_sys::Blob::new_with_u8_array_sequence_and_options(&parts, &blob_config)
       .expect("Failed to create CSS Blob");
     let blob_url = web_sys::Url::create_object_url_with_blob(&blob)
       .expect("Failed to create object URL for CSS Blob");

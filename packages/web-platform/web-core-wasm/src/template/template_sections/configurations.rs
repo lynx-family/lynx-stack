@@ -13,7 +13,7 @@ use wasm_bindgen::prelude::*;
 #[cfg_attr(feature = "encode", derive(Serialize))]
 #[cfg_attr(feature = "encode", wasm_bindgen)]
 pub(crate) struct Configurations {
-  config_data: FnvHashMap<String, String>,
+  pub(crate) config_data: FnvHashMap<String, String>,
 }
 
 impl Configurations {

@@ -74,6 +74,9 @@ export class Rpc {
    * @param name instance name
    */
   constructor(private port: MessagePort | undefined, private name: string) {
+    if (port) {
+      port.onmessage = (ev) => this.#onMessage(ev.data);
+    }
   }
 
   setMessagePort(port: MessagePort): void {
@@ -122,7 +125,7 @@ export class Rpc {
   ) => void = async (
     message,
   ) => {
-    // console.warn(`[rpc] on ${this.name} received ${message.name}`, message);
+    console.warn(`[rpc] on ${this.name} received ${message.name}`, message);
     const handler = this.#handlerMap.get(message.name);
     if (handler) {
       const lockViewer = message.sync

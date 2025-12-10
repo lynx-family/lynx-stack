@@ -68,6 +68,8 @@ export class LynxViewInstance implements AsyncDisposable {
     public readonly rootDom: ShadowRoot,
     public readonly mtsRealm: JSRealm,
     lynxGroupId: number | undefined,
+    private readonly nativeModulesMap: NativeModulesMap = {},
+    private readonly napiModulesMap: NapiModulesMap = {},
     initI18nResources?: InitI18nResources,
   ) {
     fetchTemplate(this.templateUrl, this.abortIOController.signal, this);
@@ -75,7 +77,7 @@ export class LynxViewInstance implements AsyncDisposable {
       & typeof globalThis
       & MainThreadGlobalThis;
 
-    this.backgroundThread = new BackgroundThread(lynxGroupId);
+    this.backgroundThread = new BackgroundThread(lynxGroupId, this);
     this.i18nManager = new I18nManager(
       this.backgroundThread,
       this.rootDom,
@@ -94,15 +96,15 @@ export class LynxViewInstance implements AsyncDisposable {
     const enableCSSSelector = templateManager.getConfig(
       this.templateUrl,
       'enableCSSSelector',
-    );
+    ) == 'true';
     const defaultDisplayLinear = templateManager.getConfig(
       this.templateUrl,
       'defaultDisplayLinear',
-    );
+    ) == 'true';
     const defaultOverflowVisible = templateManager.getConfig(
       this.templateUrl,
       'defaultOverflowVisible',
-    );
+    ) == 'true';
     Object.assign(
       this.mtsRealm.globalWindow,
       createElementAPI(
@@ -150,13 +152,28 @@ export class LynxViewInstance implements AsyncDisposable {
     const processedData = this.mainThreadGlobalThis.processData
       ? this.mainThreadGlobalThis.processData(this.initData)
       : this.initData;
+    this.backgroundThread.startWebWorker(
+      processedData,
+      this.globalprops,
+      templateManager.getConfig(this.templateUrl, 'cardType') || 'react',
+      templateManager.getCustomSection(this.templateUrl) as Record<
+        string,
+        Cloneable
+      >,
+      this.nativeModulesMap,
+      this.napiModulesMap,
+    );
     this.renderPageFunction?.(processedData);
     this.mainThreadGlobalThis.__FlushElementTree();
-    this.backgroundThread.startWebWorker();
   }
 
   onBTSScriptsLoaded() {
-    // start executing in background thread
+    this.backgroundThread.startBTS(
+      templateManager.getBackgroundCodeUrls(this.templateUrl) as Record<
+        string,
+        string
+      >,
+    );
   }
 
   loadWebElement(id: number) {

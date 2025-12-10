@@ -99,7 +99,7 @@ impl TemplateManager {
   }
 
   #[wasm_bindgen(js_name = getConfig)]
-  pub fn get_config(&self, template_url: String, key: String) -> Result<bool, JsError> {
+  pub fn get_config(&self, template_url: String, key: String) -> Result<Option<String>, JsError> {
     let template = self
       .cache
       .get(&template_url)
@@ -108,9 +108,7 @@ impl TemplateManager {
       .configuration
       .as_ref()
       .ok_or_else(|| JsError::new("Configuration not loaded"))?;
-    config
-      .get_config_value_bool(&key)
-      .map_err(|e| JsError::new(&e))
+    Ok(config.config_data.get(&key).cloned())
   }
 
   #[wasm_bindgen(js_name = setStyleInfo)]

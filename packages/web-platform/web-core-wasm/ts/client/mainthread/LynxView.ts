@@ -375,12 +375,10 @@ export class LynxView extends HTMLElement {
       const mtsRealmPromise = createIFrameRealm(this.shadowRoot!);
       queueMicrotask(async () => {
         this.#rendering = false;
-        const styleElement = document.createElement('style');
-        this.shadowRoot!.append(styleElement);
-        const styleSheet = styleElement.sheet!;
-        styleSheet.insertRule(
-          `@import url("${IN_SHADOW_CSS}");`,
-        );
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = IN_SHADOW_CSS;
+        this.shadowRoot!.appendChild(link);
         const mtsRealm = await mtsRealmPromise;
         if (this.#instance) {
           this.disconnectedCallback();
@@ -394,6 +392,8 @@ export class LynxView extends HTMLElement {
             this.shadowRoot!,
             mtsRealm,
             lynxGroupId,
+            this.#nativeModulesMap,
+            this.#napiModulesMap,
             this.#initI18nResources,
           );
         }

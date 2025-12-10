@@ -187,6 +187,8 @@ async function handleStream(
           break;
         }
         case TemplateSectionLabel.Manifest:
+          templateManager.setBackgroundCode(url, content);
+          lynxViewInstance.onBTSScriptsLoaded();
           break;
         default:
           throw new Error(`Unknown section label: ${label}`);

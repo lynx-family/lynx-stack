@@ -8,12 +8,12 @@ import { startBackgroundThread } from './background-apis/startBackgroundThread.j
 globalThis.nativeConsole = console;
 
 globalThis.onmessage = async (ev) => {
-  const { mainThreadMessagePort, systemInfo } = ev
+  const message = ev
     .data as WorkerStartMessage;
   if (!globalThis.SystemInfo) {
-    globalThis.SystemInfo = systemInfo;
+    globalThis.SystemInfo = message.systemInfo;
   }
-  startBackgroundThread(mainThreadMessagePort);
+  startBackgroundThread(message);
 };
 Object.assign(globalThis, {
   module: { exports: null },

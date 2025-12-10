@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-use fnv::FnvHashMap;
+use fnv::{FnvHashMap, FnvHashSet};
 
 pub const LYNX_UNIQUE_ID_ATTRIBUTE: &str = "l-uid";
 pub const CSS_ID_ATTRIBUTE: &str = "l-css-id";
@@ -273,4 +273,14 @@ lazy_static::lazy_static! {
     ("x-viewpager-item-ng", 8),
   ]);
 
+  pub static ref ALREADY_LOADED_TAGS: FnvHashSet<&'static str> = FnvHashSet::from_iter(vec![
+    "view",
+    "text",
+    "image",
+    "raw-text",
+    "scroll-view",
+    "wrapper",
+    "div",
+    "svg"
+  ]);
 }

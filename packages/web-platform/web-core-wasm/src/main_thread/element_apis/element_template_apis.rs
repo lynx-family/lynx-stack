@@ -111,7 +111,7 @@ impl MainThreadWasmContext {
       for tag_name in raw_element_template.tag_names.iter() {
         if let Some(id) = constants::LYNX_TAG_TO_DYNAMIC_LOAD_TAG_ID.get(tag_name.as_str()) {
           self.mts_binding.load_internal_web_element(*id);
-        } else {
+        } else if !constants::ALREADY_LOADED_TAGS.contains(tag_name.as_str()) {
           self.mts_binding.load_unknown_element(tag_name.as_str());
         }
       }

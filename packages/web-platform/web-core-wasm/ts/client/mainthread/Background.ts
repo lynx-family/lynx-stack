@@ -18,6 +18,9 @@ import {
   updateDataEndpoint,
   updateGlobalPropsEndpoint,
   BackgroundThreadStartEndpoint,
+  callLepusMethodEndpoint,
+  switchExposureServiceEndpoint,
+  reportErrorEndpoint,
 } from '../endpoints.js';
 import type {
   Cloneable,
@@ -27,7 +30,7 @@ import type {
   WorkerStartMessage,
 } from '../../types/index.js';
 import { LynxCrossThreadContext } from '../LynxCrossThreadContext.js';
-import { systemInfo } from './LynxViewInstance.js';
+import { systemInfo, type LynxViewInstance } from './LynxViewInstance.js';
 
 function createWebWorker(): Worker {
   return new Worker(
@@ -68,7 +71,10 @@ export class BackgroundThread implements AsyncDisposable {
   readonly updateData: RpcCallType<typeof updateDataEndpoint>;
   readonly updateGlobalProps: RpcCallType<typeof updateGlobalPropsEndpoint>;
 
-  constructor(private readonly lynxGroupId: number | undefined) {
+  constructor(
+    private readonly lynxGroupId: number | undefined,
+    private readonly lynxViewInstance: LynxViewInstance,
+  ) {
     const btsRpc = new Rpc(undefined, 'ui-to-bg');
     this.rpc = btsRpc;
     this.jsContext = new LynxCrossThreadContext({
@@ -90,7 +96,14 @@ export class BackgroundThread implements AsyncDisposable {
     this.updateGlobalProps = this.rpc.createCall(updateGlobalPropsEndpoint);
   }
 
-  startWebWorker() {
+  startWebWorker(
+    initData: Cloneable,
+    globalProps: Cloneable,
+    cardType: string,
+    customSections: Record<string, Cloneable>,
+    nativeModulesMap: NativeModulesMap,
+    napiModulesMap: NapiModulesMap,
+  ) {
     // now start the background worker
     if (this.lynxGroupId !== undefined) {
       const group =
@@ -114,6 +127,12 @@ export class BackgroundThread implements AsyncDisposable {
       {
         mainThreadMessagePort: messageChannel.port2,
         systemInfo,
+        initData,
+        globalProps,
+        cardType,
+        customSections,
+        nativeModulesMap,
+        napiModulesMap,
       } as WorkerStartMessage,
       [messageChannel.port2],
     );
@@ -121,22 +140,37 @@ export class BackgroundThread implements AsyncDisposable {
   }
 
   startBTS(
-    initData: Cloneable,
-    globalProps: Cloneable,
-    cardType: string,
-    customSections: Record<string, Cloneable>,
-    nativeModulesMap: NativeModulesMap,
-    napiModulesMap: NapiModulesMap,
     initialBTSChunkUrls: Record<string, string>,
   ) {
+    // prepare bts rpc handlers
+    this.rpc.registerHandler(
+      callLepusMethodEndpoint,
+      (methodName: string, data: unknown) => {
+        // @ts-expect-error
+        this.lynxViewInstance.mainThreadGlobalThis[methodName](data);
+      },
+    );
+
+    this.rpc.registerHandler(
+      switchExposureServiceEndpoint,
+      this.lynxViewInstance.exposureServices.switchExposureService.bind(
+        this.lynxViewInstance.exposureServices,
+      ),
+    );
+
+    this.rpc.registerHandler(
+      reportErrorEndpoint,
+      (e, _, release) => {
+        this.lynxViewInstance.reportError(
+          e,
+          release,
+          this.lynxViewInstance.templateUrl,
+        );
+      },
+    );
+
     this.rpc.invoke(BackgroundThreadStartEndpoint, [
       {
-        initData,
-        globalProps,
-        cardType,
-        customSections,
-        nativeModulesMap,
-        napiModulesMap,
         initialBTSChunkUrls,
       },
     ]);

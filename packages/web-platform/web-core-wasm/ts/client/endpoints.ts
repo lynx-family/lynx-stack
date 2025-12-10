@@ -25,16 +25,6 @@ export const publishEventEndpoint = createRpcEndpoint<
   void
 >('publishEvent', false, false);
 
-export const postOffscreenEventEndpoint = createRpcEndpoint<
-  [
-    eventType: string,
-    targetUniqueId: number,
-    bubbles: boolean,
-    Parameters<typeof structuredClone>[0],
-  ],
-  void
->('postOffscreenEventEndpoint', false, false);
-
 export const switchExposureServiceEndpoint = createRpcEndpoint<
   [boolean, boolean],
   void
@@ -70,13 +60,6 @@ export const reportErrorEndpoint = createRpcEndpoint<
   [Error, unknown, string],
   void
 >('reportError', false, false);
-
-export const flushElementTreeEndpoint = createRpcEndpoint<
-  [
-    operations: (string | number)[],
-  ],
-  void
->('flushElementTree', false, true);
 
 export const callLepusMethodEndpoint = createRpcEndpoint<
   [name: string, data: unknown],

@@ -9,14 +9,24 @@ import { registerDisposeHandler } from './crossThreadHandlers/registerDisposeHan
 import { BackgroundThreadStartEndpoint } from '../../endpoints.js';
 import { createNapiLoader } from './createNapiLoader.js';
 import { createTimingSystem } from './createTimingSystem.js';
+import type { WorkerStartMessage } from '../../../types/WorkerStartMessage.js';
 
 const lynxCore = import(
   /* webpackMode: "eager" */ '@lynx-js/lynx-core/web'
 );
 
 export function startBackgroundThread(
-  mainThreadPort: MessagePort,
+  startMessage: WorkerStartMessage,
 ): void {
+  const {
+    mainThreadMessagePort,
+    napiModulesMap,
+    nativeModulesMap,
+    initData,
+    globalProps,
+    customSections,
+  } = startMessage;
+  const mainThreadPort = mainThreadMessagePort;
   const mainThreadRpc = new Rpc(mainThreadPort, 'bg-to-main');
   const timingSystem = createTimingSystem(mainThreadRpc, mainThreadRpc);
   timingSystem.markTimingInternal('load_core_start');
@@ -27,19 +37,19 @@ export function startBackgroundThread(
       const nativeApp = await createNativeApp(
         mainThreadRpc,
         timingSystem,
-        config.nativeModulesMap,
+        nativeModulesMap,
         config.initialBTSChunkUrls,
       );
       (globalThis as any)['napiLoaderOnRT' + nativeApp.id] =
         await createNapiLoader(
           mainThreadRpc,
-          config.napiModulesMap,
+          napiModulesMap,
         );
 
       const nativeLynx = createBackgroundLynx(
-        config,
+        globalProps,
+        customSections,
         nativeApp,
-        mainThreadRpc,
         mainThreadRpc,
       );
       lynxCore.then(
@@ -59,7 +69,7 @@ export function startBackgroundThread(
           loadCard(nativeApp, {
             ...config,
             // @ts-ignore
-            updateData: config.initData,
+            updateData: initData,
           }, nativeLynx);
           registerDisposeHandler(
             mainThreadRpc,

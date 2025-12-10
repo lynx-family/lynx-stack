@@ -22,11 +22,10 @@ export function createChunkLoading(initialTemplate: Record<string, string>): {
     sourceURL,
     entryName = '__Card__',
   ) => {
-    const jsContentInTemplate = templateCache.get(entryName!)
-      ?.[`/${sourceURL}`];
-    if (jsContentInTemplate) return jsContentInTemplate;
+    const finalSourceURL = templateCache.get(entryName!)
+      ?.[`/${sourceURL}`] ?? sourceURL;
     const xhr = new XMLHttpRequest();
-    xhr.open('GET', sourceURL, false);
+    xhr.open('GET', finalSourceURL, false);
     xhr.send(null);
     if (xhr.status === 200) {
       return xhr.responseText;
@@ -38,11 +37,10 @@ export function createChunkLoading(initialTemplate: Record<string, string>): {
     sourceURL: string,
     entryName: string | undefined,
   ) => Promise<string> = async (sourceURL, entryName = '__Card__') => {
-    const jsContentInTemplate = templateCache.get(entryName!)
-      ?.[`/${sourceURL}`];
-    if (jsContentInTemplate) return jsContentInTemplate;
+    const finalSourceURL = templateCache.get(entryName!)
+      ?.[`/${sourceURL}`] ?? sourceURL;
     return new Promise((resolve, reject) => {
-      fetch(sourceURL).then((response) => {
+      fetch(finalSourceURL).then((response) => {
         if (response.ok) {
           response.text().then((text) => resolve(text), reject);
         } else {
@@ -57,7 +55,6 @@ export function createChunkLoading(initialTemplate: Record<string, string>): {
   };
   const createBundleInitReturnObj = (
     jsContent: string,
-    fileName: string,
   ): BundleInitReturnObj => {
     const foo = new Function(
       'postMessage',
@@ -98,11 +95,7 @@ export function createChunkLoading(initialTemplate: Record<string, string>): {
       // Lynx API
       'requestAnimationFrame',
       'cancelAnimationFrame',
-      [
-        jsContent,
-        '\n//# sourceURL=',
-        fileName,
-      ].join(''),
+      jsContent,
     ) as BTSChunkEntry;
     return {
       init(lynxCoreInject) {
@@ -157,7 +150,6 @@ export function createChunkLoading(initialTemplate: Record<string, string>): {
       const jsContent = readScript(sourceURL, entryName);
       return createBundleInitReturnObj(
         jsContent,
-        `${encodeURIComponent(entryName)}/${sourceURL}`,
       );
     },
     loadScriptAsync: async (sourceURL, callback, entryName = '__Card__') => {
@@ -166,7 +158,6 @@ export function createChunkLoading(initialTemplate: Record<string, string>): {
           null,
           createBundleInitReturnObj(
             jsContent,
-            `${encodeURIComponent(entryName)}/${sourceURL}`,
           ),
         );
       });
