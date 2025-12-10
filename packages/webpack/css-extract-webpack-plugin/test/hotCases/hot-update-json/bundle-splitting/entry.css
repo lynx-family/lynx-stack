@@ -1,0 +1,7 @@
+.entry {
+  color: red;
+}
+---
+.entry {
+  color: 'blue';
+}

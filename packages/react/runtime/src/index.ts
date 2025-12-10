@@ -15,8 +15,8 @@ import {
   createRef,
   forwardRef,
   isValidElement,
+  lazy,
   memo,
-  lazy as preactLazy,
   useSyncExternalStore,
 } from 'preact/compat';
 
@@ -32,17 +32,11 @@ import {
   useRef,
   useState,
 } from './hooks/react.js';
-import { loadLazyBundle } from './lynx/lazy-bundle.js';
 import { Suspense } from './lynx/suspense.js';
 
 export { Component, createContext } from 'preact';
 export { PureComponent } from 'preact/compat';
 export * from './hooks/react.js';
-
-const lazy: typeof import('preact/compat').lazy = /*#__PURE__*/ (() => {
-  lynx.loadLazyBundle = loadLazyBundle;
-  return preactLazy;
-})();
 
 /**
  * @internal

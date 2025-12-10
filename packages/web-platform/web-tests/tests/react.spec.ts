@@ -1840,6 +1840,23 @@ test.describe('reactlynx3 tests', () => {
       },
     );
     test(
+      'config-css-selector-false-reload',
+      async ({ page }, { title }) => {
+        await goto(page, title);
+        await wait(100);
+        await expect(
+          page.locator('#target'),
+        ).toHaveCSS('background-color', 'rgb(255, 0, 0)');
+        await page.evaluate(() => {
+          document.querySelector('lynx-view')?.reload();
+        });
+        await wait(1000);
+        await expect(
+          page.locator('#target'),
+        ).toHaveCSS('background-color', 'rgb(255, 0, 0)');
+      },
+    );
+    test(
       'config-css-remove-scope-false-import-css',
       async ({ page }, { title }) => {
         await goto(page, title);
