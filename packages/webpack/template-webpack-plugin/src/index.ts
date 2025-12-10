@@ -13,6 +13,10 @@ export type {
   LynxTemplatePluginOptions,
   TemplateHooks,
   EncodeOptions,
+  LynxCompilerOptions,
+  LynxConfig,
+  LynxTemplateOptions,
+  ResolvedLynxTemplatePluginOptions,
 } from './LynxTemplatePlugin.js';
 export { LynxEncodePlugin } from './LynxEncodePlugin.js';
 export type { LynxEncodePluginOptions } from './LynxEncodePlugin.js';

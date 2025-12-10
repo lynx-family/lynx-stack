@@ -9,7 +9,15 @@
  */
 
 export { pluginReactLynx } from './pluginReactLynx.js'
-export type { PluginReactLynxOptions } from './pluginReactLynx.js'
+export type {
+  PluginReactLynxOptions,
+  ResolvedPluginReactLynxOptions,
+  LynxCompilerOptions,
+  ReactLynxDefaultCompilerOptions,
+  LynxConfig,
+  ReactLynxDefaultLynxConfig,
+  ReactLynxOptions,
+} from './pluginReactLynx.js'
 
 export type {
   AddComponentElementConfig,

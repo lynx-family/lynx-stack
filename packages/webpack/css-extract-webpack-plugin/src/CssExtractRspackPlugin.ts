@@ -182,7 +182,7 @@ class CssExtractRspackPluginImpl {
               content,
               options.cssPlugins,
               Boolean(
-                args.finalEncodeOptions.compilerOptions['enableCSSSelector'],
+                args.finalEncodeOptions.compilerOptions.enableCSSSelector,
               ),
             );
             const cssDeps = Object.entries(css.cssMap).reduce<

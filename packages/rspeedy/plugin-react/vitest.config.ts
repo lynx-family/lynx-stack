@@ -23,6 +23,12 @@ const config: UserWorkspaceConfig = defineProject({
   test: {
     name: 'rspeedy/react',
     setupFiles: ['@lynx-js/vitest-setup/setup.ts'],
+
+    typecheck: {
+      enabled: true,
+      include: ['test/**/*.test-d.ts'],
+      tsconfig: './tsconfig.typecheck.json',
+    },
   },
 })
 

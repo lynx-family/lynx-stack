@@ -82,7 +82,7 @@ export interface AddComponentElementConfig {
   compilerOnly: boolean
 }
 /**
- * {@inheritdoc PluginReactLynxOptions.compat}
+ * {@inheritdoc ReactLynxOptions.compat}
  * @public
  */
 export interface CompatVisitorConfig {
@@ -363,7 +363,7 @@ export interface CssScopeVisitorConfig {
   filename: string
 }
 /**
- * {@inheritdoc PluginReactLynxOptions.defineDCE}
+ * {@inheritdoc ReactLynxOptions.defineDCE}
  * @public
  */
 export interface DefineDceVisitorConfig {
@@ -428,7 +428,7 @@ export interface DynamicImportVisitorConfig {
   injectLazyBundle?: boolean
 }
 /**
- * {@inheritdoc PluginReactLynxOptions.extractStr}
+ * {@inheritdoc ReactLynxOptions.extractStr}
  * @public
  */
 export interface ExtractStrConfig {
@@ -467,7 +467,7 @@ export interface RefreshVisitorConfig {
   library?: Array<string>
 }
 /**
- * {@inheritdoc PluginReactLynxOptions.shake}
+ * {@inheritdoc ReactLynxOptions.shake}
  * @public
  */
 export interface ShakeVisitorConfig {

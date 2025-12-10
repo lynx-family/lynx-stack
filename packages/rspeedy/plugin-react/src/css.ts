@@ -13,11 +13,11 @@ import type {
 } from '@lynx-js/css-extract-webpack-plugin'
 import { LAYERS } from '@lynx-js/react-webpack-plugin'
 
-import type { PluginReactLynxOptions } from './pluginReactLynx.js'
+import type { ResolvedPluginReactLynxOptions } from './pluginReactLynx.js'
 
 export function applyCSS(
   api: RsbuildPluginAPI,
-  options: Required<PluginReactLynxOptions>,
+  options: ResolvedPluginReactLynxOptions,
 ): void {
   const {
     enableRemoveCSSScope,
