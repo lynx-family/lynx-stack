@@ -23,4 +23,3 @@ export type * from './ProcessDataCallback.js';
 export type * from './UpdateDataOptions.js';
 export type * from './BTSChunk.js';
 export type * from './BackThreadStartConfigs.js';
-export { AnimationOperation } from '../constants.js';
