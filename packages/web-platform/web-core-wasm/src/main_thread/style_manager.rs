@@ -89,7 +89,15 @@ impl StyleManager {
       .create_element("style")
       .unwrap()
       .unchecked_into::<web_sys::HtmlStyleElement>();
-    new_style_element.set_inner_text(&flattened_style_info.style_content);
+    let array_buffer =
+      js_sys::Uint8Array::new_from_slice(flattened_style_info.style_content.as_bytes());
+    let blob_config = web_sys::BlobPropertyBag::new();
+    blob_config.set_type("text/css; charset=utf-8");
+    let blob = web_sys::Blob::new_with_u8_array_sequence_and_options(&array_buffer, &blob_config)
+      .expect("Failed to create CSS Blob");
+    let blob_url = web_sys::Url::create_object_url_with_blob(&blob)
+      .expect("Failed to create object URL for CSS Blob");
+    new_style_element.set_inner_text(&format!("@import url(\"{blob_url}\");"));
     self.root_node.append_child(&new_style_element).unwrap();
   }
 }

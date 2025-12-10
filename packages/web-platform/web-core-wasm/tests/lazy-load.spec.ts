@@ -1,8 +1,8 @@
 import './jsdom.js';
 import { describe, test, expect, beforeEach, beforeAll, vi } from 'vitest';
-import { createElementAPI } from '@client/mainthread/elementAPIs/createElementAPI.js';
-import { WASMJSBinding } from '@client/mainthread/elementAPIs/WASMJSBinding.js';
-import { templateManager } from '@client/wasm.js';
+import { createElementAPI } from '../ts/client/mainthread/elementAPIs/createElementAPI.js';
+import { WASMJSBinding } from '../ts/client/mainthread/elementAPIs/WASMJSBinding.js';
+import { templateManager } from '../ts/client/wasm.js';
 import { encodeElementTemplates } from '../ts/encode/encodeElementTemplate.js';
 
 describe('Lazy Load Web Elements', () => {

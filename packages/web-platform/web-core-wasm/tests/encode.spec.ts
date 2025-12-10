@@ -8,7 +8,7 @@ import {
   RulePrelude,
   Declaration,
   get_decoded_style_string,
-} from '@encode/encodeCSS.js';
+} from '../ts/encode/encodeCSS.js';
 import * as CSS from '@lynx-js/css-serializer';
 
 describe('RawStyleInfo', () => {

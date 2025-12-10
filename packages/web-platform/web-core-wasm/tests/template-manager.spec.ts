@@ -1,9 +1,9 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
-import { encode, type TasmJSONInfo } from '@encode/index.js';
-import { fetchTemplate } from '@client/mainthread/fetchTemplate.js';
-import { MagicHeader } from '@constants';
-import { templateManager } from '@client/wasm.js';
-import type { LynxViewInstance } from '@client/mainthread/LynxViewInstance.js';
+import { encode, type TasmJSONInfo } from '../ts/encode/index.js';
+import { fetchTemplate } from '../ts/client/mainthread/fetchTemplate.js';
+import { MagicHeader } from '../ts/constants.js';
+import { templateManager } from '../ts/client/wasm.js';
+import type { LynxViewInstance } from '../ts/client/mainthread/LynxViewInstance.js';
 
 // Mock wasm-feature-detect to ensure we load the standard WASM
 vi.mock('wasm-feature-detect', () => ({

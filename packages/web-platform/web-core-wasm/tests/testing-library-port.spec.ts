@@ -1,6 +1,6 @@
 import { describe, test, expect, beforeEach, vi } from 'vitest';
-import { createElementAPI } from '@client/mainthread/elementAPIs/createElementAPI.js';
-import { WASMJSBinding } from '@client/mainthread/elementAPIs/WASMJSBinding.js';
+import { createElementAPI } from '../ts/client/mainthread/elementAPIs/createElementAPI.js';
+import { WASMJSBinding } from '../ts/client/mainthread/elementAPIs/WASMJSBinding.js';
 import { JSDOM } from 'jsdom';
 
 const { window } = new JSDOM(undefined, { url: 'http://localhost/' });

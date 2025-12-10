@@ -1,10 +1,10 @@
 import './jsdom.js';
 import { describe, test, expect, beforeEach, beforeAll } from 'vitest';
-import { createElementAPI } from '@client/mainthread/elementAPIs/createElementAPI.js';
-import { WASMJSBinding } from '@client/mainthread/elementAPIs/WASMJSBinding.js';
+import { createElementAPI } from '../ts/client/mainthread/elementAPIs/createElementAPI.js';
+import { WASMJSBinding } from '../ts/client/mainthread/elementAPIs/WASMJSBinding.js';
 import { vi } from 'vitest';
 import { cssIdAttribute } from '../ts/constants.js';
-import { templateManager } from '@client/wasm.js';
+import { templateManager } from '../ts/client/wasm.js';
 import { encodeElementTemplates } from '../ts/encode/encodeElementTemplate.js';
 describe('Element APIs', () => {
   let lynxViewDom: HTMLElement;
